@@ -614,7 +614,5 @@ function frmMain_OnNotify( _
     end if
 
     function = 0
-end Function
+end function
 
-
-'

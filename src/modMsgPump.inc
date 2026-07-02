@@ -273,7 +273,7 @@ function handleEscKeyModeless( byval uMsg as MSG ) as boolean
     ' Close any open Find/Replace window with ESC key
     ' Close any open FindInFiles window with ESC key
     if (uMsg.message = WM_KEYDOWN) andAlso (uMsg.wParam = VK_ESCAPE) then
-        if IsWindowVisible( HWND_FRMMAIN_TOPTABSINFO ) THEN 
+        if (gTTabCtl.InfoPanelHeight <> TOPTABS_INFO_HEIGHT) then
             FindReplaceControls_Hide()
             return true
         end if
@@ -291,33 +291,53 @@ function handleKeysFindReplace( byval uMsg as MSG ) as boolean
     ' For Find textbox, an ENTER will move to the next selection. A SHIFT+ENTER
     ' will move to the previous. For Replace textbox, use the same logic but 
     ' also perform the replace action.
-    dim as HWND hFind = GetDlgItem( HWND_FRMMAIN_TOPTABSINFO, IDC_FRMTOPTABSINFO_TXTFIND )
+    dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
+    if pDoc = 0 then return false
+
+    dim as HWND hFocus   = GetFocus()
+    dim as HWND hFind    = GetDlgItem( HWND_FRMMAIN_TOPTABSINFO, IDC_FRMTOPTABSINFO_TXTFIND )
     dim as HWND hReplace = GetDlgItem( HWND_FRMMAIN_TOPTABSINFO, IDC_FRMTOPTABSINFO_TXTREPLACE )
-    if (GetFocus = hFind) orelse (GetFocus = hReplace) then
-        if (uMsg.message = WM_KEYDOWN) and (uMsg.wParam = VK_RETURN) then
-            if (GetAsyncKeyState(VK_CONTROL) and &H8000) andalso _
-            (GetAsyncKeyState(VK_MENU) and &H8000) THEN
-                ' Ctrl+Alt+Enter  Replace All
-                SendMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(IDM_REPLACEALL, 0), 0 )
-                return true
-            end if
-            if (GetAsyncKeyState(VK_SHIFT) and &H8000) then
-                if GetFocus = hFind then
-                    SendMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(IDM_FINDPREV, 0), 0 )
-                elseif GetFocus = hReplace then
-                    SendMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(IDM_REPLACEPREV, 0), 0 )
-                end if   
-                return true
-            else   
-                if GetFocus = hFind then
-                    SendMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(IDM_FINDNEXT, 0), 0 )
-                elseif GetFocus = hReplace then
-                    SendMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(IDM_REPLACENEXT, 0), 0 )
-                end if
-                return true
-            end if   
+    dim as HWND hEdit    = pDoc->hWndActiveScintilla
+
+    if (hFocus <> hFind) andalso (hFocus <> hReplace) then return false
+    
+    if (uMsg.message = WM_KEYDOWN) andalso (uMsg.wParam = VK_RETURN) then
+        if (GetAsyncKeyState(VK_CONTROL) and &H8000) andalso _
+                (GetAsyncKeyState(VK_MENU) and &H8000) then
+            ' Ctrl+Alt+Enter  Replace All
+            SendMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(IDM_REPLACEALL, 0), 0 )
+            return true
         end if
+        if (GetAsyncKeyState(VK_SHIFT) and &H8000) then
+            if hFocus = hFind then
+                SendMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(IDM_FINDPREV, 0), 0 )
+            elseif GetFocus = hReplace then
+                SendMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(IDM_REPLACEPREV, 0), 0 )
+            end if   
+            return true
+        else   
+            if hFocus = hFind then
+                SendMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(IDM_FINDNEXT, 0), 0 )
+            elseif GetFocus = hReplace then
+                SendMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(IDM_REPLACENEXT, 0), 0 )
+            end if
+            return true
+        end if   
+
+    elseif (uMsg.message = WM_KEYDOWN) andalso (uMsg.wParam = VK_TAB) then
+        ' Move between the Find Replace textboxes and the Edit window.
+        dim as HWND hNewFocus
+        if (GetAsyncKeyState(VK_SHIFT) and &H8000) then 
+            if (hFocus = hFind)    then hNewFocus = hEdit
+            if (hFocus = hReplace) then hNewFocus = hFind
+        else    
+            if (hFocus = hFind)    then hNewFocus = hReplace
+            if (hFocus = hReplace) then hNewFocus = hEdit
+        end if
+        SetFocus( hNewFocus )
+        return true
     end if
+    
     ' we want our message to continue so return FALSE
     return false
 end function

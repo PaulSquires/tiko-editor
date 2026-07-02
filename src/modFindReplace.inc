@@ -195,11 +195,12 @@ function FindReplace_HighlightSearches() as long
     
     dim txtFind as string = gFind.txtFind
         
-'    if IsWindowVisible(HWND_FRMMAIN_TOPTABSINFO) then
+    ' if Find or Replace is open then use their flags also.
+    if gTTabCtl.InfoPanelHeight <> TOPTABS_INFO_HEIGHT then
         if gFind.nMatchCase then findFlags = (findFlags or SCFIND_MATCHCASE)
         if gFind.nWholeWord then findFlags = (findFlags or SCFIND_WHOLEWORD)
         SciExec( hEdit, SCI_SETSEARCHFLAGS, findFlags, 0)
-'    end if
+    end if
         
     ' Remove all existing selection indicators
     nLength = SendMessage( hEdit, SCI_GETTEXTLENGTH, 0, 0)

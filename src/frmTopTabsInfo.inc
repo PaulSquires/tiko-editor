@@ -237,6 +237,45 @@ end function
 
 
 ' ========================================================================================
+' Process WM_COMMAND message for window/dialog: frmTopTabsInfo
+' ========================================================================================
+function frmTopTabsInfo_OnCommand( _
+            byval hwnd as HWND, _
+            byval id as Long, _
+            byval hwndCtl as HWND, _
+            byval codeNotify as UINT _
+            ) as LRESULT
+
+    dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
+    if pDoc = 0 then exit function
+
+    dim as HWND hEdit = pDoc->hWndActiveScintilla
+
+    select case id
+
+        case IDC_FRMTOPTABSINFO_TXTFIND
+            if (codeNotify = EN_CHANGE) then
+                gFind.txtFind = AfxGetWindowText(hwndCtl)
+                FindReplace_HighlightSearches()
+                dim as long startPos = SendMessage( hEdit, SCI_GETANCHOR, 0, 0) - 1
+                FindReplace_NextSelection(startPos, true, true)
+                SetFocus( hwndCtl )
+            elseif (codeNotify = EN_SETFOCUS) then
+                AfxRedrawWindow( hwnd )
+            end if
+                
+        case IDC_FRMTOPTABSINFO_TXTREPLACE
+            if (codeNotify = EN_SETFOCUS) then
+                AfxRedrawWindow( hwnd )
+            end if
+
+    end select
+    
+    function = 0
+end function
+
+
+' ========================================================================================
 ' frmTopTabsInfo Window procedure
 ' ========================================================================================
 function frmTopTabsInfo_WndProc( _
@@ -252,7 +291,8 @@ function frmTopTabsInfo_WndProc( _
 
     select Case uMsg
         HANDLE_MSG (hwnd, WM_SIZE, frmTopTabsInfo_OnSize)
-    
+        HANDLE_MSG (hwnd, WM_COMMAND, frmTopTabsInfo_OnCommand)
+            
     case WM_NCDESTROY
         dim pWindow as CWindow ptr = AfxCWindowPtr(hwnd)
         if pWindow = 0 then delete(pWindow)

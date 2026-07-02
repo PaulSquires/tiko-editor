@@ -1616,6 +1616,12 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
         if handleMouseTopMenu(uMsg) then continue do
         if handleAltKeyMenuBar(uMsg) then continue do
 
+        ' Close with ESC key: Find/Replace, FindInFiles, FunctionList window
+        if handleEscKeyModeless(uMsg) then continue do
+
+        ' Handle ENTER key for active FindReplace dialog
+        if handleKeysFindReplace(uMsg) then continue do
+        
         ' Processes accelerator keys for menu commands
         if (pWindow->AccelHandle = 0) orelse (TranslateAccelerator(pWindow->hWindow, pWindow->AccelHandle, @uMsg) = 0) then
          if (ghAccelUserTools = 0) orelse (TranslateAccelerator(pWindow->hWindow, ghAccelUserTools, @uMsg) = 0) then 
@@ -1643,20 +1649,11 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
             ' Was ENTER key pressed while scrolling the Explorer listbox via keyboard
             if handleKeysExplorerListBox(uMsg) then continue do
             
-            ' Close with ESC key: Find/Replace, FindInFiles, FunctionList window
-            if handleEscKeyModeless(uMsg) then continue do
-
-            ' Handle ENTER key for active FindReplace dialog
-            if handleKeysFindReplace(uMsg) then continue do
-            
             ' Check if the settings.ini file was changed by an external program.
             ' Reload the config file in case a user has automated a change to it since
             ' the application started (for example, changing the compiler path).
             gConfig.ReloadConfigFileTest()
             
-            ' Ensure keystrokes like TAB are properly handled by the modeless dialogs
-            if IsDialogMessage( HWND_FRMMAIN_TOPTABSINFO, @uMsg ) then continue Do
-
             if IsDialogMessage(pWindow->hWindow, @uMsg) = 0 then
                 TranslateMessage @uMsg    ' Translates virtual-key messages into character messages.
                 DispatchMessage @uMsg     ' Dispatches a message to a window procedure.

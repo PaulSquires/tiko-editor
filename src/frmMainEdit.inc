@@ -266,10 +266,11 @@ function OnCommand_EditFindActions( _
 
     dim as HWND hEdit = pDoc->hWndActiveScintilla
     dim as HWND hWndFind = GetDlgItem(HWND_FRMMAIN_TOPTABSINFO, IDC_FRMTOPTABSINFO_TXTFIND)
+    dim as HWND hFocus = GetFocus()
 
-    if GetFocus() = hWndFind then
+    if hFocus = hWndFind then
         gFind.txtFind = AfxGetWindowText(hWndFind)
-    elseif GetFocus() = hEdit then    
+    elseif hFocus = hEdit then    
         dim as string sFindText = pDoc->GetSelText
         if len(sFindText) then 
             gFind.foundCount = 0
@@ -302,6 +303,8 @@ function OnCommand_EditFindActions( _
 
     end select
     
+    SetFocus( hFocus )
+    
     function = 0
 end function
 
@@ -318,7 +321,7 @@ function OnCommand_EditReplaceActions( _
 
     select case id
         case IDM_REPLACENEXT, IDM_REPLACEPREV, IDM_REPLACEALL
-            if (GetForeGroundWindow() = HWND_FRMMAIN_TOPTABSINFO) then
+'            if (GetForeGroundWindow() = HWND_FRMMAIN_TOPTABSINFO) then
                 if gFind.foundCount = 0 then exit function
                 if id = IDM_REPLACEPREV then 
                     FindReplace_DoReplace( false, false )
@@ -330,7 +333,7 @@ function OnCommand_EditReplaceActions( _
                 FindReplace_HighlightSearches()
                 pDoc->CenterCurrentLine
                 AfxRedrawWindow( HWND_FRMMAIN_TOPTABSINFO )
-            end if
+'            end if
     end select
     
     function = 0
