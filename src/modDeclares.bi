@@ -199,7 +199,7 @@ dim shared as HCURSOR ghCursorSizeWE
 ' translations are replaced with the english version.
 redim shared gLangEnglish(any) as wstring * MAX_PATH
 redim shared gLocalPhrases(any) as wstring * MAX_PATH
-common shared gLocalPhrasesEdit as boolean   ' a localization language is being edited. 
+dim shared gLocalPhrasesEdit as boolean   ' a localization language is being edited. 
 
 ' Create a dynamic array that will hold all localization words/phrases. This
 ' array is resized and loaded using the LoadLocalizationFile function.
@@ -217,7 +217,7 @@ redim shared LL(any) as wstring * MAX_PATH
 
 #DEFINE GUIFONT_9      0
 #DEFINE GUIFONT_10     1
-#DEFINE INFOFONT_10    2
+#DEFINE INFOFONT_11    2
 #DEFINE SYMBOLFONT_9   3
 #DEFINE SYMBOLFONT_10  4
 #DEFINE SYMBOLFONT_12  5

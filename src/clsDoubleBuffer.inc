@@ -141,10 +141,18 @@ end function
 function clsDoubleBuffer.PaintRoundRect( _
             byval rc as RECT ptr, _
             byval bHitTest as boolean = false, _
+            byval nCurvature as long = 20 _
+            ) as long 
+    return this.PaintRectFactory( rc, PS_NULL, 1, nCurvature, bHitTest )
+end function
+
+function clsDoubleBuffer.PaintRoundBorderRect( _
+            byval rc as RECT ptr, _
+            byval bHitTest as boolean = false, _
             byval nCurvature as long = 20, _
             byval nPenWidth as long = 1 _
             ) as long 
-    return this.PaintRectFactory( rc, PS_NULL, nPenWidth, nCurvature, bHitTest )
+    return this.PaintRectFactory( rc, PS_SOLID, nPenWidth, nCurvature, bHitTest )
 end function
 
 function clsDoubleBuffer.PaintText( _

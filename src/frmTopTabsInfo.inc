@@ -15,12 +15,34 @@
 #include once "frmStatusBar.bi"
 #include once "frmPanelMenu.bi"
 
+function CenterSingleLineText( byval hRichEdit as HWND ) as long
+    dim as RECT rc
+    GetClientRect(hRichEdit, @rc)
+
+    dim as HFONT hFont = ghFont(INFOFONT_11)  ' cast(HFONT, SendMessage(hRichEdit, WM_GETFONT, 0, 0))
+    dim as HDC hdc = GetDC(hRichEdit)
+    dim as HFONT hOldFont = SelectObject(hdc, hFont)
+
+    dim as TEXTMETRIC tm
+    GetTextMetrics(hdc, @tm)
+
+    SelectObject(hdc, hOldFont)
+    ReleaseDC(hRichEdit, hdc)
+
+    dim as long topMargin = ((rc.bottom - rc.top) - tm.tmHeight) / 2
+    if (topMargin < 0) then topMargin = 0
+
+    rc.top = topMargin
+    SendMessage( hRichEdit, EM_SETRECT, 0, cast(LPARAM, @rc) )
+    
+    return 0
+end function
+
 
 ' ========================================================================================
-' Position all child windows. Called manually and/or by WM_SIZE
+' Calculate Position of all child windows.
 ' ========================================================================================
-function frmTopTabsInfo_PositionWindows() as LRESULT
-
+function frmTopTabsInfo_CalculatePositionWindows() as LRESULT
     dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN_TOPTABSINFO)
     if pWindow = 0 then exit function
     
@@ -58,9 +80,163 @@ function frmTopTabsInfo_PositionWindows() as LRESULT
             pWindow->ScaleX( getTextWidth(HWND_FRMMAIN_TOPTABSINFO, gSBPanels(FILETYPE_PANEL).wszText, GUIFONT_9) + (nPadding * 2))
     gTTabCtl.rcFileTypeButton.bottom = gTTabCtl.rcFileTypeButton.top + pWindow->ScaleY(TOPTABS_INFO_HEIGHT-1) - vmargin
     
+    ' FIND CONTROLS
+    gTTabCtl.rcFindRect = rc
+    gTTabCtl.rcFindRect.left      = pWindow->ScaleY(10)
+    gTTabCtl.rcFindRect.top       = pWindow->ScaleY(TOPTABS_INFO_HEIGHT)
+    gTTabCtl.rcFindRect.right     = gTTabCtl.rcDiskFilename.right - pWindow->ScaleX(200)
+    gTTabCtl.rcFindRect.bottom    = pWindow->ScaleY(TOPTABS_INFO_HEIGHT_FIND) - pWindow->ScaleY(8)
+    
+    ' REPLACE CONTROLS
+    gTTabCtl.rcReplaceRect = rc
+    gTTabCtl.rcReplaceRect.left   = gTTabCtl.rcFindRect.left
+    gTTabCtl.rcReplaceRect.top    = pWindow->ScaleY(TOPTABS_INFO_HEIGHT_FIND)
+    gTTabCtl.rcReplaceRect.right  = gTTabCtl.rcFindRect.right
+    gTTabCtl.rcReplaceRect.bottom = pWindow->ScaleY(TOPTABS_INFO_HEIGHT_REPLACE) - pWindow->ScaleY(8)
+        
+    return 0
+end function
+
+' ========================================================================================
+' Position all child windows. Called manually and/or by WM_SIZE
+' ========================================================================================
+function frmTopTabsInfo_PositionWindows() as LRESULT
+    dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN_TOPTABSINFO)
+    if pWindow = 0 then exit function
+
+    frmTopTabsInfo_CalculatePositionWindows()
+    
+    dim as HWND hCtlFind = GetDlgItem(HWND_FRMMAIN_TOPTABSINFO, IDC_FRMTOPTABSINFO_TXTFIND)
+    dim as HWND hCtlReplace = GetDlgItem(HWND_FRMMAIN_TOPTABSINFO, IDC_FRMTOPTABSINFO_TXTREPLACE)
+    
+    dim as RECT rc
+    dim as long vmargin = pWindow->ScaleY(1)
+     
+    if (gTTabCtl.InfoPanelHeight = TOPTABS_INFO_HEIGHT_FIND) then
+        ShowWindow( hCtlFind, SW_HIDE )
+        ShowWindow( hCtlReplace, SW_HIDE )
+    end if
+    
+    if (gTTabCtl.InfoPanelHeight = TOPTABS_INFO_HEIGHT_FIND) orelse _
+        (gTTabCtl.InfoPanelHeight = TOPTABS_INFO_HEIGHT_REPLACE) then
+        rc = gTTabCtl.rcFindRect
+        SetWindowPos( hCtlFind, 0, _
+            rc.left + vmargin + pWindow->ScaleX(10), rc.top + vmargin, _
+            (rc.right - rc.left - vmargin*2 - pWindow->ScaleX(10)), (rc.bottom - rc.top - vmargin*2), _
+            SWP_NOZORDER or SWP_SHOWWINDOW )
+        CenterSingleLineText( hCtlFind )    
+        SendMessage( hCtlFind, EM_SETEVENTMASK, 0, cast(LPARAM, ENM_SELCHANGE or ENM_CHANGE) )
+    end if
+
+    if (gTTabCtl.InfoPanelHeight = TOPTABS_INFO_HEIGHT_REPLACE) then
+        rc = gTTabCtl.rcReplaceRect
+        SetWindowPos( hCtlReplace, 0, _
+            rc.left + vmargin + pWindow->ScaleX(10), rc.top + vmargin, _
+            (rc.right - rc.left - vmargin*2 - pWindow->ScaleX(10)), (rc.bottom - rc.top - vmargin*2), _
+            SWP_NOZORDER or SWP_SHOWWINDOW )
+        SendMessage( hCtlReplace, EM_SETBKGNDCOLOR , 0, cast(LPARAM, ghTopTabs.BackColorHot) )
+        CenterSingleLineText( hCtlReplace )    
+        SendMessage( hCtlReplace, EM_SETEVENTMASK, 0, cast(LPARAM, ENM_SELCHANGE or ENM_CHANGE) )
+    end if
+        
     AfxRedrawWindow( HWND_FRMMAIN_TOPTABSINFO )
 
     function = 0
+end function
+
+
+' ========================================================================================
+' frmTopTabsInfo_RichEdit_SubclassProc Window procedure
+' ========================================================================================
+Function frmTopTabsInfo_RichEdit_SubclassProc ( _
+            byval hWin   as HWND, _                 ' // Control window handle
+            byval uMsg   as UINT, _                 ' // Type of message
+            byval _wParam as WPARAM, _               ' // First message parameter
+            byval _lParam as LPARAM, _               ' // Second message parameter
+            byval uIdSubclass as UINT_PTR, _        ' // The subclass ID
+            byval dwRefData as DWORD_PTR _          ' // Pointer to reference data
+            ) as LRESULT
+
+    dim pWindow as CWindow ptr = AfxCWindowPtr(hWin)
+
+    select case uMsg
+                            
+        case WM_PRINTCLIENT, WM_PAINT
+            dim as long textLength = AfxGetWindowTextLength(hWin)
+            if (textLength = 0 ) then 
+                ' Get the needed DC with DCX_INTERSECTUPDATE before the EDIT
+                ' control's WM_PAINT handler calls BeginPaint/EndPaint, which
+                ' validates the update rect and would otherwise lead to drawing
+                ' nothing later because the region is empty. Also, grab it from
+                ' the cache so we don't mess with the EDIT's DC.
+                dim as HDC hdc = _
+                    iif(uMsg = WM_PRINTCLIENT, GetDC(hWin), _
+                        GetDCEx(hWin, 0, DCX_INTERSECTUPDATE or DCX_CACHE or DCX_CLIPCHILDREN or DCX_CLIPSIBLINGS) )
+
+                ' Call the EDIT control so that the caret is properly handled,
+                ' no caret litter left on the screen after tabbing away.
+                dim as LRESULT result = DefSubclassProc(hWin, uMsg, _wParam, _lParam)
+
+                SaveDC(hdc)
+                
+                ' Get the font and margin so the cue banner text has a
+                ' consistent appearance and placement with existing text.
+                dim as RECT editRect: SendMessage( hWin, EM_GETRECT, 0, cast(LPARAM, @editRect) )
+
+                ' Ideally we would call Edit_GetCueBannerText, but since that message
+                ' returns nothing when ES_MULTILINE, use a window property instead.
+                dim cueBannerText as wstring * 250
+                if hWin = GetDlgItem( HWND_FRMFINDREPLACE, IDC_FRMTOPTABSINFO_TXTFIND ) then
+                    cueBannerText = L(158,"Find")
+                elseif hWin = GetDlgItem( HWND_FRMFINDREPLACE, IDC_FRMTOPTABSINFO_TXTREPLACE ) then
+                    cueBannerText = L(173,"Replace")
+                end if
+                SelectObject( hdc, gFind.hCueBannerFont )
+                SetTextColor( hdc, ghFindReplace.CueBannerForeColor )
+                SetBkMode(hdc, TRANSPARENT)
+                dim as long wsStyle = DT_TOP or DT_LEFT or DT_NOPREFIX or DT_NOCLIP or DT_SINGLELINE 
+                DrawText(hdc, cueBannerText, -1, @editRect, wsStyle)
+                RestoreDC( hdc, -1 )
+                ReleaseDC( hWin, hdc )
+
+                ' Return the EDIT's result (could probably safely just return zero here,
+                ' but seems safer to relay whatever value came from the edit).
+                return result
+            end if
+        
+        case WM_CONTEXTMENU 
+            ' Create the right click popup menu
+            dim as DWSTRING wszText = RichEdit_GetSelText( hWin )
+            dim hPopUpMenu As HMENU = CreatePopupMenu()
+            if len(wszText) then 
+                AppendMenu( hPopUpMenu, MF_ENABLED, IDM_CUT, wstr("Cut") )
+                AppendMenu( hPopUpMenu, MF_ENABLED, IDM_COPY, wstr("Copy") )
+            end if
+            if RichEdit_CanPaste( hWin, 0 ) then
+                if len(wszText) then 
+                    AppendMenu( hPopUpMenu, MF_SEPARATOR, 0, "" )
+                end if   
+                AppendMenu( hPopUpMenu, MF_ENABLED, IDM_PASTE, wstr("Paste") )
+            end if   
+
+            dim as long nResult
+            nResult = TrackPopupMenu( hPopUpMenu, TPM_RETURNCMD or TPM_NONOTIFY, _
+                            loword(_lParam), hiword(_lParam), 0, HWND_FRMFINDREPLACE, 0 ) 
+            select case nResult
+                case IDM_CUT:   SendMessage( hWin, WM_CUT, 0, 0 )
+                case IDM_COPY:  SendMessage( hWin, WM_COPY, 0, 0 )
+                case IDM_PASTE: SendMessage( hWin, WM_PASTE, 0, 0 )
+            end select
+            DestroyMenu hPopUpMenu
+
+        case WM_DESTROY
+            ' REQUIRED: Remove control subclassing
+            RemoveWindowSubclass( hWin, @frmTopTabsInfo_RichEdit_SubclassProc, uIdSubclass )
+    end select
+    
+    ' For messages that we don't deal with
+    function = DefSubclassProc(hWin, uMsg, _wParam, _lParam)
+
 end function
 
 
@@ -201,7 +377,7 @@ function frmTopTabsInfo_WndProc( _
             end if
             b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
             b.SetBackColors( ghTopTabs.BackColorHot, ghTopTabs.BackColor )
-            b.SetFont( INFOFONT_10 )
+            b.SetFont( INFOFONT_11 )
             b.PaintText( wszFilename, @gTTabCtl.rcDiskFilename, DT_LEFT )
 
             b.SetFont( SYMBOLFONT_10 )
@@ -209,8 +385,21 @@ function frmTopTabsInfo_WndProc( _
             b.PaintText( wszIconFind, @gTTabCtl.rcFindButton, DT_CENTER, true )
 
             b.SetFont( GUIFONT_10 )
-            b.PaintRect( @gTTabCtl.rcFileTypeButton, true )
+            b.PaintRoundRect( @gTTabCtl.rcFileTypeButton, true )
             b.PaintText( gSBPanels(FILETYPE_PANEL).wszText, @gTTabCtl.rcFileTypeButton, DT_CENTER, true )
+        end if
+        
+
+        ' If Find (or Replace) is active then draw the Find controls.
+        b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
+        b.SetBackColors( ghTopTabs.BackColorHot, ghTopTabs.BackColorHot )
+        b.SetPenColor( ghEditor.Divider )
+        if (gTTabCtl.InfoPanelHeight = TOPTABS_INFO_HEIGHT_FIND) orelse _
+            (gTTabCtl.InfoPanelHeight = TOPTABS_INFO_HEIGHT_REPLACE) then
+            b.PaintRoundBorderRect( @gTTabCtl.rcFindRect )
+        end if
+        if (gTTabCtl.InfoPanelHeight = TOPTABS_INFO_HEIGHT_REPLACE) then
+            b.PaintRoundBorderRect( @gTTabCtl.rcReplaceRect )
         end if
                 
         b.EndDoubleBuffer()
@@ -241,7 +430,43 @@ function frmTopTabsInfo_Show( byval hwndParent as HWND ) as LRESULT
     ' Disable background erasing by only assigning the one style
     pWindow->ClassStyle = CS_DBLCLKS
 
+    ' we use RichEdit controls because regular Edit controls can not easily have
+    ' their text vertically centered.
+    if gFind.hCueBannerFont = 0 then 
+        gFind.hCueBannerFont = pWindow->CreateFont(GUIFONT, 9, FW_NORMAL, , , , DEFAULT_CHARSET)
+    end if
+
+    dim as RECT rc
+    dim cf as CHARFORMATW 
+    cf.cbSize = sizeof(cf)
+    cf.dwMask = CFM_FACE or CFM_SIZE or CFM_CHARSET or CFM_COLOR
+    cf.crTextColor = ghTopTabs.ForeColorHot  'ghFindReplace.TextBoxForeColor
+    cf.yHeight = 11 * 20      ' in twips (1/20 pt)
+    cf.bCharSet = DEFAULT_CHARSET
+    cf.bPitchAndFamily = DEFAULT_PITCH or FF_DONTCARE
+    cf.szFaceName = "Consolas"
+    
+    dim as HWND hCtlFind
+    dim as HWND hCtlReplace
+    
+    hCtlFind = pWindow->AddControl("RICHEDIT", , IDC_FRMTOPTABSINFO_TXTFIND, "", _
+                0, 0, 0, 0, _
+                WS_CHILD or WS_TABSTOP or ES_LEFT or ES_AUTOHSCROLL, _
+                WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_RIGHTSCROLLBAR)
+    pWindow->SetControlSubclass(hCtlFind, @frmTopTabsInfo_RichEdit_SubclassProc, IDC_FRMTOPTABSINFO_TXTFIND, NULL)
+    SendMessage( hCtlFind, EM_SETCHARFORMAT, SCF_ALL, cast(LPARAM, @cf) ) 
+    SendMessage( hCtlFind, EM_SETBKGNDCOLOR , 0, cast(LPARAM, ghTopTabs.BackColorHot) )
+    
+    hCtlReplace = pWindow->AddControl("RICHEDIT", , IDC_FRMTOPTABSINFO_TXTREPLACE, gFind.txtReplace, _
+                0, 0, 0, 0, _
+                WS_CHILD or WS_TABSTOP or ES_LEFT or ES_AUTOHSCROLL, _
+                WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_RIGHTSCROLLBAR)
+    pWindow->SetControlSubclass(hCtlReplace, @frmTopTabsInfo_RichEdit_SubclassProc, IDC_FRMTOPTABSINFO_TXTREPLACE, NULL)
+    SendMessage( hCtlReplace, EM_SETCHARFORMAT, SCF_ALL, cast(LPARAM, @cf) ) 
+    SendMessage( hCtlReplace, EM_SETBKGNDCOLOR , 0, cast(LPARAM, ghFindReplace.TextBoxBackColor) )
+
     frmTopTabsInfo_PositionWindows()
+    
     function = 0
     
 end function

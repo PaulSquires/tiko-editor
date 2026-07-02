@@ -56,6 +56,11 @@ type clsDoubleBuffer
     declare function PaintRoundRect( _
                 byval rc as RECT ptr, _
                 byval bHitTest as boolean = false, _
+                byval nCurvature as long = 20 _
+                ) as long 
+    declare function PaintRoundBorderRect( _
+                byval rc as RECT ptr, _
+                byval bHitTest as boolean = false, _
                 byval nCurvature as long = 20, _
                 byval nPenWidth as long = 1 _
                 ) as long 

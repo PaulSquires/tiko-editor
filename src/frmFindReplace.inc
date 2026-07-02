@@ -1005,12 +1005,12 @@ function frmFindReplace_Show( _
         pWindow->ClassStyle = CS_DBLCLKS
         
         
+        ' we use RichEdit controls because regular Edit controls can not easily have
+        ' their text vertically centered.
         if gFind.hCueBannerFont = 0 then 
             gFind.hCueBannerFont = pWindow->CreateFont(GUIFONT, 9, FW_NORMAL, , , , DEFAULT_CHARSET)
         end if
 
-        ' we use RichEdit controls because regular Edit controls can not easily have
-        ' their text vertically centered.
         dim as RECT rc
         dim cf as CHARFORMATW 
         cf.cbSize = sizeof(cf)
