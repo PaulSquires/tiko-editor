@@ -15,5 +15,6 @@
 #Define IDC_FRMTOPTABSINFO_TXTFIND                  1000
 #Define IDC_FRMTOPTABSINFO_TXTREPLACE               1001
 
+declare function modFindReplace_HighlightSearches() as long
 declare function frmTopTabsInfo_PositionWindows() as LRESULT
 

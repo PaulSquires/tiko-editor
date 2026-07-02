@@ -14,29 +14,7 @@
 
 #include once "frmStatusBar.bi"
 #include once "frmPanelMenu.bi"
-
-function CenterSingleLineText( byval hRichEdit as HWND ) as long
-    dim as RECT rc
-    GetClientRect(hRichEdit, @rc)
-
-    dim as HFONT hFont = ghFont(INFOFONT_11)  ' cast(HFONT, SendMessage(hRichEdit, WM_GETFONT, 0, 0))
-    dim as HDC hdc = GetDC(hRichEdit)
-    dim as HFONT hOldFont = SelectObject(hdc, hFont)
-
-    dim as TEXTMETRIC tm
-    GetTextMetrics(hdc, @tm)
-
-    SelectObject(hdc, hOldFont)
-    ReleaseDC(hRichEdit, hdc)
-
-    dim as long topMargin = ((rc.bottom - rc.top) - tm.tmHeight) / 2
-    if (topMargin < 0) then topMargin = 0
-
-    rc.top = topMargin
-    SendMessage( hRichEdit, EM_SETRECT, 0, cast(LPARAM, @rc) )
-    
-    return 0
-end function
+#include once "modFindReplace.inc"
 
 
 ' ========================================================================================
@@ -186,10 +164,10 @@ Function frmTopTabsInfo_RichEdit_SubclassProc ( _
                 ' Ideally we would call Edit_GetCueBannerText, but since that message
                 ' returns nothing when ES_MULTILINE, use a window property instead.
                 dim cueBannerText as wstring * 250
-                if hWin = GetDlgItem( HWND_FRMFINDREPLACE, IDC_FRMTOPTABSINFO_TXTFIND ) then
-                    cueBannerText = L(158,"Find")
-                elseif hWin = GetDlgItem( HWND_FRMFINDREPLACE, IDC_FRMTOPTABSINFO_TXTREPLACE ) then
-                    cueBannerText = L(173,"Replace")
+                if hWin = GetDlgItem( HWND_FRMMAIN_TOPTABSINFO, IDC_FRMTOPTABSINFO_TXTFIND ) then
+                    cueBannerText = L(158,"Find") & "..."
+                elseif hWin = GetDlgItem( HWND_FRMMAIN_TOPTABSINFO, IDC_FRMTOPTABSINFO_TXTREPLACE ) then
+                    cueBannerText = L(173,"Replace") & "..."
                 end if
                 SelectObject( hdc, gFind.hCueBannerFont )
                 SetTextColor( hdc, ghFindReplace.CueBannerForeColor )
@@ -221,7 +199,7 @@ Function frmTopTabsInfo_RichEdit_SubclassProc ( _
 
             dim as long nResult
             nResult = TrackPopupMenu( hPopUpMenu, TPM_RETURNCMD or TPM_NONOTIFY, _
-                            loword(_lParam), hiword(_lParam), 0, HWND_FRMFINDREPLACE, 0 ) 
+                            loword(_lParam), hiword(_lParam), 0, HWND_FRMMAIN_TOPTABSINFO, 0 ) 
             select case nResult
                 case IDM_CUT:   SendMessage( hWin, WM_CUT, 0, 0 )
                 case IDM_COPY:  SendMessage( hWin, WM_COPY, 0, 0 )
@@ -433,7 +411,7 @@ function frmTopTabsInfo_Show( byval hwndParent as HWND ) as LRESULT
     ' we use RichEdit controls because regular Edit controls can not easily have
     ' their text vertically centered.
     if gFind.hCueBannerFont = 0 then 
-        gFind.hCueBannerFont = pWindow->CreateFont(GUIFONT, 9, FW_NORMAL, , , , DEFAULT_CHARSET)
+        gFind.hCueBannerFont = ghFont(INFOFONT_11)
     end if
 
     dim as RECT rc
@@ -444,7 +422,7 @@ function frmTopTabsInfo_Show( byval hwndParent as HWND ) as LRESULT
     cf.yHeight = 11 * 20      ' in twips (1/20 pt)
     cf.bCharSet = DEFAULT_CHARSET
     cf.bPitchAndFamily = DEFAULT_PITCH or FF_DONTCARE
-    cf.szFaceName = "Consolas"
+    cf.szFaceName = GUIFIXEDFONT
     
     dim as HWND hCtlFind
     dim as HWND hCtlReplace
@@ -465,8 +443,6 @@ function frmTopTabsInfo_Show( byval hwndParent as HWND ) as LRESULT
     SendMessage( hCtlReplace, EM_SETCHARFORMAT, SCF_ALL, cast(LPARAM, @cf) ) 
     SendMessage( hCtlReplace, EM_SETBKGNDCOLOR , 0, cast(LPARAM, ghFindReplace.TextBoxBackColor) )
 
-    frmTopTabsInfo_PositionWindows()
-    
     function = 0
     
 end function

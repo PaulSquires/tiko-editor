@@ -129,8 +129,8 @@ function OnCommand_ViewToggleFocus( byval pDoc as clsDocument ptr ) as LRESULT
     if pDoc = 0 then exit function
     
     dim hCurrent as HWND = pDoc->hWndActiveScintilla
-    dim hFindCtl as HWND = GetDlgItem( HWND_FRMFINDREPLACE, IDC_FRMFINDREPLACE_TXTFIND )
-    if IsWindowVisible(HWND_FRMFINDREPLACE) = false then hFindCtl = 0
+    dim hFindCtl as HWND = GetDlgItem( HWND_FRMMAIN_TOPTABSINFO, IDC_FRMTOPTABSINFO_TXTFIND )
+    if IsWindowVisible(HWND_FRMMAIN_TOPTABSINFO) = false then hFindCtl = 0
         
     dim idx as long
     

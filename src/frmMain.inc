@@ -770,10 +770,6 @@ function frmMain_PositionWindows() as LRESULT
         ShowWindow( HWND_FRMMAIN_TOPTABSINFO, SW_HIDE )
         nHeightTabControl = 0
         nHeightTabInfoControl = 0
-        ' If Find/Replace is open then close it
-        if IsWindowVisible( HWND_FRMFINDREPLACE ) then
-            DestroyWindow( HWND_FRMFINDREPLACE )
-        end if   
     else
         nHeightTabControl = AfxGetWindowHeight(HWND_FRMMAIN_TOPTABS)
         SetWindowPos( HWND_FRMMAIN_TOPTABS, 0, _
@@ -842,10 +838,6 @@ function frmMain_PositionWindows() as LRESULT
         AfxRedrawWindow(HWND_FRMEDITOR_VSCROLLBAR(0))
         AfxRedrawWindow(HWND_FRMEDITOR_VSCROLLBAR(1))
         
-        ' if the FIND/REPLACE window is open then ensure that it is positioned correctly
-        ' especially important if the Main window is resized.
-        frmFindReplace_PositionWindows()
-    
         ' Esure that the splitter paints
         AfxRedrawWindow(HWND_FRMMAIN)
     end if
@@ -1370,19 +1362,12 @@ function frmMain_WndProc( _
         case WM_ERASEBKGND
             return true      ' prevents painting the background
             
-        case WM_MOVE
-            ' Ensure that if the Find/Replace dialog is open that it moves with
-            ' underlying main editor window.   
-            if IsWindowVisible( HWND_FRMFINDREPLACE ) then  
-                frmFindReplace_PositionMainWindow()
-            end if
-                
         case WM_TIMER
             ' Handle any Spinner (used when compiling)
             if wParam = gApp.SpinnerTimerID then
                 ' Update Spinner display frame 
                 gApp.SpinnerCurrentFrame = (gApp.SpinnerCurrentFrame + 1) mod 8
-                frmMain_SetStatusbar
+                frmMain_SetStatusbar()
                 AfxRedrawWindow( HWND_FRMMAIN_STATUSBAR )
             end if
             
@@ -1538,7 +1523,7 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     
     ghFont(GUIFONT_9)     = pWindow->CreateFont(GUIFONT, 9, FW_NORMAL) 
     ghFont(GUIFONT_10)    = pWindow->CreateFont(GUIFONT, 10, FW_NORMAL)
-    ghFont(INFOFONT_11)   = pWindow->CreateFont("Consolas", 11, FW_NORMAL)
+    ghFont(INFOFONT_11)   = pWindow->CreateFont(GUIFIXEDFONT, 11, FW_NORMAL)
     ghFont(SYMBOLFONT_9)  = pWindow->CreateFont(SYMBOLFONT, 9, FW_NORMAL)
     ghFont(SYMBOLFONT_10) = pWindow->CreateFont(SYMBOLFONT, 10, FW_NORMAL)
     ghFont(SYMBOLFONT_12) = pWindow->CreateFont(SYMBOLFONT, 12, FW_NORMAL)
@@ -1670,7 +1655,7 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
             gConfig.ReloadConfigFileTest()
             
             ' Ensure keystrokes like TAB are properly handled by the modeless dialogs
-            if IsDialogMessage( HWND_FRMFINDREPLACE, @uMsg ) then continue Do
+            if IsDialogMessage( HWND_FRMMAIN_TOPTABSINFO, @uMsg ) then continue Do
 
             if IsDialogMessage(pWindow->hWindow, @uMsg) = 0 then
                 TranslateMessage @uMsg    ' Translates virtual-key messages into character messages.

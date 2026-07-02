@@ -64,7 +64,7 @@ function OnCommand_ProjectClose( byval hwnd As HWND ) As LRESULT
     gApp.RemoveAllDocuments()
     
     ' If the Find/Replace window is open then close it.
-    DestroyWindow(HWND_FRMFINDREPLACE)
+    DestroyWindow(HWND_FRMMAIN_TOPTABSINFO)
 
     ' Reset the Project variables
     gApp.IsProjectActive      = false

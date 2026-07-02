@@ -28,8 +28,8 @@ function OnCommand_EditCut( _
     select case GetFocus()
         case GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTNOTES), _
             GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTLOGFILE), _ 
-            GetDlgItem(HWND_FRMFINDREPLACE, IDC_FRMFINDREPLACE_TXTFIND), _
-            GetDlgItem(HWND_FRMFINDREPLACE, IDC_FRMFINDREPLACE_TXTREPLACE)
+            GetDlgItem(HWND_FRMMAIN_TOPTABSINFO, IDC_FRMTOPTABSINFO_TXTFIND), _
+            GetDlgItem(HWND_FRMMAIN_TOPTABSINFO, IDC_FRMTOPTABSINFO_TXTREPLACE)
             SendMessage( GetFocus, WM_CUT, 0, 0 )
         case else     
             SciExec( GetFocus(), iif(GetFocus()=hEdit, SCI_CUT, WM_CUT), 0, 0)
@@ -53,8 +53,8 @@ function OnCommand_EditCopy( _
     select case GetFocus()
         case GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTNOTES), _
             GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTLOGFILE), _ 
-            GetDlgItem(HWND_FRMFINDREPLACE, IDC_FRMFINDREPLACE_TXTFIND), _
-            GetDlgItem(HWND_FRMFINDREPLACE, IDC_FRMFINDREPLACE_TXTREPLACE)
+            GetDlgItem(HWND_FRMMAIN_TOPTABSINFO, IDC_FRMTOPTABSINFO_TXTFIND), _
+            GetDlgItem(HWND_FRMMAIN_TOPTABSINFO, IDC_FRMTOPTABSINFO_TXTREPLACE)
             SendMessage( GetFocus, WM_COPY, 0, 0 )
         case else     
             SciExec( GetFocus(), Iif(GetFocus()=hEdit, SCI_COPY, WM_COPY), 0, 0)
@@ -77,8 +77,8 @@ function OnCommand_EditPaste( _
     select case GetFocus()
         case GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTNOTES), _
             GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTLOGFILE), _ 
-            GetDlgItem(HWND_FRMFINDREPLACE, IDC_FRMFINDREPLACE_TXTFIND), _
-            GetDlgItem(HWND_FRMFINDREPLACE, IDC_FRMFINDREPLACE_TXTREPLACE)
+            GetDlgItem(HWND_FRMMAIN_TOPTABSINFO, IDC_FRMTOPTABSINFO_TXTFIND), _
+            GetDlgItem(HWND_FRMMAIN_TOPTABSINFO, IDC_FRMTOPTABSINFO_TXTREPLACE)
             SendMessage( GetFocus, WM_PASTE, 0, 0 )
         case else     
             SciExec( GetFocus(), Iif(GetFocus()=hEdit, SCI_PASTE, WM_PASTE), 0, 0)
@@ -104,10 +104,10 @@ function OnCommand_EditIndentBlock( _
         SciExec(hEdit, SCI_AUTOCCOMPLETE, 0, 0)
         return 0 
     end if
-    if GetFocus = GetDlgItem(HWND_FRMFINDREPLACE, IDC_FRMFINDREPLACE_TXTFIND) then
-        if gFind.bExpanded then SetFocus GetDlgItem(HWND_FRMFINDREPLACE, IDC_FRMFINDREPLACE_TXTREPLACE)
-    elseif GetFocus = GetDlgItem(HWND_FRMFINDREPLACE, IDC_FRMFINDREPLACE_TXTREPLACE) then
-        if gFind.bExpanded then SetFocus GetDlgItem(HWND_FRMFINDREPLACE, IDC_FRMFINDREPLACE_TXTFIND)
+    if GetFocus = GetDlgItem(HWND_FRMMAIN_TOPTABSINFO, IDC_FRMTOPTABSINFO_TXTFIND) then
+        if gFind.bExpanded then SetFocus GetDlgItem(HWND_FRMMAIN_TOPTABSINFO, IDC_FRMTOPTABSINFO_TXTREPLACE)
+    elseif GetFocus = GetDlgItem(HWND_FRMMAIN_TOPTABSINFO, IDC_FRMTOPTABSINFO_TXTREPLACE) then
+        if gFind.bExpanded then SetFocus GetDlgItem(HWND_FRMMAIN_TOPTABSINFO, IDC_FRMTOPTABSINFO_TXTFIND)
     elseif AfxGetFormHandle(GetFocus) = HWND_FRMFINDINFILES then
         Dim As HWnd hCtrl = GetNextDlgTabItem( HWND_FRMFINDINFILES, GetFocus, false )
         SetFocus(hCtrl)
@@ -133,10 +133,10 @@ function OnCommand_EditUnIndentBlock( _
             byval hEdit as HWND _
             ) as LRESULT
     
-    if GetFocus = GetDlgItem(HWND_FRMFINDREPLACE, IDC_FRMFINDREPLACE_TXTFIND) then
-        if gFind.bExpanded then SetFocus GetDlgItem(HWND_FRMFINDREPLACE, IDC_FRMFINDREPLACE_TXTREPLACE)
-    elseif GetFocus = GetDlgItem(HWND_FRMFINDREPLACE, IDC_FRMFINDREPLACE_TXTREPLACE) then
-        if gFind.bExpanded then SetFocus GetDlgItem(HWND_FRMFINDREPLACE, IDC_FRMFINDREPLACE_TXTFIND)
+    if GetFocus = GetDlgItem(HWND_FRMMAIN_TOPTABSINFO, IDC_FRMTOPTABSINFO_TXTFIND) then
+        if gFind.bExpanded then SetFocus GetDlgItem(HWND_FRMMAIN_TOPTABSINFO, IDC_FRMTOPTABSINFO_TXTREPLACE)
+    elseif GetFocus = GetDlgItem(HWND_FRMMAIN_TOPTABSINFO, IDC_FRMTOPTABSINFO_TXTREPLACE) then
+        if gFind.bExpanded then SetFocus GetDlgItem(HWND_FRMMAIN_TOPTABSINFO, IDC_FRMTOPTABSINFO_TXTFIND)
     elseif AfxGetFormHandle(GetFocus) = HWND_FRMFINDINFILES then
         Dim As HWND hCtrl = GetNextDlgTabItem( HWND_FRMFINDINFILES, GetFocus, true )
         SetFocus(hCtrl)
@@ -167,8 +167,8 @@ function OnCommand_EditSelectAll( _
     select case GetFocus()
         case GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTNOTES), _
             GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTLOGFILE), _ 
-            GetDlgItem(HWND_FRMFINDREPLACE, IDC_FRMFINDREPLACE_TXTFIND), _
-            GetDlgItem(HWND_FRMFINDREPLACE, IDC_FRMFINDREPLACE_TXTREPLACE)
+            GetDlgItem(HWND_FRMMAIN_TOPTABSINFO, IDC_FRMTOPTABSINFO_TXTFIND), _
+            GetDlgItem(HWND_FRMMAIN_TOPTABSINFO, IDC_FRMTOPTABSINFO_TXTREPLACE)
             Edit_SetSel( GetFocus(), 0, -1 )
         case else     
             SciExec(hEdit, SCI_SELECTALL, 0, 0)
@@ -228,7 +228,10 @@ end function
 ' Edit action Find
 ' ========================================================================================
 function OnCommand_EditFindDialog() as LRESULT
-    frmFindReplace_Show( HWND_FRMMAIN, false )
+    FindControls_Show()
+    frmMain_PositionWindows()
+    dim as HWND hCtl = GetDlgItem( HWND_FRMMAIN_TOPTABSINFO, IDC_FRMTOPTABSINFO_TXTFIND )
+    SetFocus( hCtl )
     function = 0
 end function
 
@@ -236,7 +239,11 @@ end function
 ' Edit action Replace
 ' ========================================================================================
 function OnCommand_EditReplaceDialog() as LRESULT
-    frmFindReplace_Show( HWND_FRMMAIN, true )
+    FindControls_Show()
+    ReplaceControls_Show()
+    frmMain_PositionWindows()
+    dim as HWND hCtl = GetDlgItem( HWND_FRMMAIN_TOPTABSINFO, IDC_FRMTOPTABSINFO_TXTFIND )
+    SetFocus( hCtl )
     function = 0
 end function
 
@@ -258,7 +265,7 @@ function OnCommand_EditFindActions( _
             ) as LRESULT
 
     dim as HWND hEdit = pDoc->hWndActiveScintilla
-    dim as HWND hWndFind = GetDlgItem(HWND_FRMFINDREPLACE, IDC_FRMFINDREPLACE_TXTFIND)
+    dim as HWND hWndFind = GetDlgItem(HWND_FRMMAIN_TOPTABSINFO, IDC_FRMTOPTABSINFO_TXTFIND)
 
     if GetFocus() = hWndFind then
         gFind.txtFind = AfxGetWindowText(hWndFind)
@@ -274,23 +281,23 @@ function OnCommand_EditFindActions( _
 
     select case id
         case IDM_FINDPREV
-            frmFindReplace_HighlightSearches()
-            if frmFindReplace_NextSelection(startPos, false, true) then pDoc->CenterCurrentLine
-            AfxRedrawWindow( HWND_FRMFINDREPLACE )
+            FindReplace_HighlightSearches()
+            if FindReplace_NextSelection(startPos, false, true) then pDoc->CenterCurrentLine
+            AfxRedrawWindow( HWND_FRMMAIN_TOPTABSINFO )
 
         case IDM_FINDNEXT
-            frmFindReplace_HighlightSearches()
-            if frmFindReplace_NextSelection(startPos, true, true) then pDoc->CenterCurrentLine
-            AfxRedrawWindow( HWND_FRMFINDREPLACE )
+            FindReplace_HighlightSearches()
+            if FindReplace_NextSelection(startPos, true, true) then pDoc->CenterCurrentLine
+            AfxRedrawWindow( HWND_FRMMAIN_TOPTABSINFO )
 
         case IDM_FINDPREVACCEL
-            frmFindReplace_HighlightSearches()
-            if frmFindReplace_NextSelection(startPos, false, true) then pDoc->CenterCurrentLine
+            FindReplace_HighlightSearches()
+            if FindReplace_NextSelection(startPos, false, true) then pDoc->CenterCurrentLine
             pDoc->RemoveSelectionAttributes()
 
         case IDM_FINDNEXTACCEL
-            frmFindReplace_HighlightSearches()
-            if frmFindReplace_NextSelection(startPos, true, true) then pDoc->CenterCurrentLine
+            FindReplace_HighlightSearches()
+            if FindReplace_NextSelection(startPos, true, true) then pDoc->CenterCurrentLine
             pDoc->RemoveSelectionAttributes()
 
     end select
@@ -311,18 +318,18 @@ function OnCommand_EditReplaceActions( _
 
     select case id
         case IDM_REPLACENEXT, IDM_REPLACEPREV, IDM_REPLACEALL
-            if (GetForeGroundWindow() = HWND_FRMFINDREPLACE) then
+            if (GetForeGroundWindow() = HWND_FRMMAIN_TOPTABSINFO) then
                 if gFind.foundCount = 0 then exit function
                 if id = IDM_REPLACEPREV then 
-                    frmFindReplace_DoReplace( false, false )
+                    FindReplace_DoReplace( false, false )
                 elseif id = IDM_REPLACENEXT then 
-                    frmFindReplace_DoReplace( false, true )
+                    FindReplace_DoReplace( false, true )
                 elseif id = IDM_REPLACEALL then 
-                    frmFindReplace_DoReplace( true, true )
+                    FindReplace_DoReplace( true, true )
                 end if   
-                frmFindReplace_HighlightSearches()
+                FindReplace_HighlightSearches()
                 pDoc->CenterCurrentLine
-                AfxRedrawWindow( HWND_FRMFINDREPLACE )
+                AfxRedrawWindow( HWND_FRMMAIN_TOPTABSINFO )
             end if
     end select
     

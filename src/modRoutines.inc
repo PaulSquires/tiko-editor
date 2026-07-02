@@ -450,7 +450,6 @@ end function
 ' ========================================================================================
 function DisableAllModeless() as long
     ' No need to enable/disable the modeless Help form.
-    if IsWindowVisible(HWND_FRMFINDREPLACE) then EnableWindow(HWND_FRMFINDREPLACE, false)
     EnableWindow(HWND_FRMMAIN, false)
     function = 0
 end function
@@ -461,7 +460,6 @@ end function
 ' ========================================================================================
 function EnableAllModeless() as long
     ' No need to enable/disable the modeless Help form.
-    if IsWindowVisible(HWND_FRMFINDREPLACE) then EnableWindow(HWND_FRMFINDREPLACE, true)
     EnableWindow(HWND_FRMMAIN, true)
     function = 0
 end function

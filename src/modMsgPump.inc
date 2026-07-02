@@ -273,8 +273,8 @@ function handleEscKeyModeless( byval uMsg as MSG ) as boolean
     ' Close any open Find/Replace window with ESC key
     ' Close any open FindInFiles window with ESC key
     if (uMsg.message = WM_KEYDOWN) andAlso (uMsg.wParam = VK_ESCAPE) then
-        if IsWindowVisible( HWND_FRMFINDREPLACE ) THEN 
-            SendMessage( HWND_FRMFINDREPLACE, WM_CLOSE, 0, 0 )
+        if IsWindowVisible( HWND_FRMMAIN_TOPTABSINFO ) THEN 
+            FindReplaceControls_Hide()
             return true
         end if
         if IsWindowVisible( HWND_FRMFINDINFILES ) then 
@@ -291,8 +291,8 @@ function handleKeysFindReplace( byval uMsg as MSG ) as boolean
     ' For Find textbox, an ENTER will move to the next selection. A SHIFT+ENTER
     ' will move to the previous. For Replace textbox, use the same logic but 
     ' also perform the replace action.
-    dim as HWND hFind = GetDlgItem( HWND_FRMFINDREPLACE, IDC_FRMFINDREPLACE_TXTFIND )
-    dim as HWND hReplace = GetDlgItem( HWND_FRMFINDREPLACE, IDC_FRMFINDREPLACE_TXTREPLACE )
+    dim as HWND hFind = GetDlgItem( HWND_FRMMAIN_TOPTABSINFO, IDC_FRMTOPTABSINFO_TXTFIND )
+    dim as HWND hReplace = GetDlgItem( HWND_FRMMAIN_TOPTABSINFO, IDC_FRMTOPTABSINFO_TXTREPLACE )
     if (GetFocus = hFind) orelse (GetFocus = hReplace) then
         if (uMsg.message = WM_KEYDOWN) and (uMsg.wParam = VK_RETURN) then
             if (GetAsyncKeyState(VK_CONTROL) and &H8000) andalso _
