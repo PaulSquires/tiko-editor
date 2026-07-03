@@ -492,7 +492,65 @@ function frmTopTabsInfo_WndProc( _
         elseif isMouseOverRECT(hwnd, gTTabCtl.rcFileTypeButton) then
             PostMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(IDM_PROJECTFILETYPE, 0), 0 )
         end if
+        
+        dim as HWND hEdit 
+        dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
+        if pDoc then hEdit = pDoc->hWndActiveScintilla
+        
+        if isMouseOverRECT( hwnd, gFind.rcToggle ) then
+            PostMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(IDM_REPLACE, 0), 0 )
 
+        elseif isMouseOverRECT( hwnd, gFind.rcMatchCase ) then
+            gFind.nMatchCase = not gFind.nMatchCase
+            FindReplace_HighlightSearches()
+            AfxRedrawWindow(hwnd)
+
+        elseif isMouseOverRECT( hwnd, gFind.rcWholeWord ) then
+            gFind.nWholeWord = not gFind.nWholeWord
+            FindReplace_HighlightSearches()
+            AfxRedrawWindow(hwnd)
+
+        elseif isMouseOverRECT( hwnd, gFind.rcUpArrow ) then
+            PostMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(IDM_FINDPREV, 0), 0 )
+
+        elseif isMouseOverRECT( hwnd, gFind.rcDownArrow ) then
+            PostMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(IDM_FINDNEXT, 0), 0 )
+
+        elseif isMouseOverRECT( hwnd, gFind.rcSelection ) then
+            if pDoc = 0 then exit function 
+            dim as boolean isOriginalSelectionMultiline = _
+                (pDoc->CurrentSelection.endline - pDoc->CurrentSelection.startline) 
+            if pDoc->CurrentSelection.isInitialized = false then isOriginalSelectionMultiline = false
+            if (isOriginalSelectionMultiline) orelse (pDoc->HasMarkerHighlight) then
+                gFind.nSelection = not gFind.nSelection
+            else
+                gFind.nSelection = false
+            end if
+            if gFind.nSelection then
+                pDoc->SetMarkerHighlight
+            else   
+                pDoc->RemoveMarkerHighlight
+            end if
+            FindReplace_HighlightSearches()
+            AfxRedrawWindow(hwnd)
+
+        elseif isMouseOverRECT( hwnd, gFind.rcPreserve ) then
+            if pDoc = 0 then exit function   
+            gFind.nPreserve = not gFind.nPreserve
+            AfxRedrawWindow(hwnd)
+
+        elseif isMouseOverRECT( hwnd, gFind.rcReplace ) then
+            if pDoc = 0 then exit function   
+            PostMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(IDM_REPLACENEXT, 0), 0 )
+
+        elseif isMouseOverRECT( hwnd, gFind.rcReplaceAll ) then
+            if pDoc = 0 then exit function   
+            PostMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(IDM_REPLACEALL, 0), 0 )
+
+        elseif isMouseOverRECT( hwnd, gFind.rcClose ) then
+            FindReplaceControls_Hide()
+        end if
+            
 
     case WM_PAINT
         dim as clsDoubleBuffer b
@@ -547,21 +605,53 @@ function frmTopTabsInfo_WndProc( _
         b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
         b.SetBackColors( ghTopTabs.BackColorHot, ghTopTabs.BackColorHot )
         b.SetPenColor( ghEditor.Divider )
+        
         if (gTTabCtl.InfoPanelHeight = TOPTABS_INFO_HEIGHT_FIND) orelse _
             (gTTabCtl.InfoPanelHeight = TOPTABS_INFO_HEIGHT_REPLACE) then
             b.PaintRoundBorderRect( @gTTabCtl.rcFindTextRect )
 
+            b.SetFont( GUIFONT_9 )
+            
+            ' Match Case
+            if gFind.nMatchCase then 
+                b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
+                b.SetBackColors( ghFindReplace.IconSelectedBackColor, ghFindReplace.IconSelectedBackColor )
+            else
+                b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
+                b.SetBackColors( ghTopTabs.BackColorHot, ghTopTabs.BackColor )
+            end if
+            b.PaintIconButton( wszIconMatchCase, @gFind.rcMatchCase )
+
+            ' Whole Word
+            if gFind.nWholeWord then 
+                b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
+                b.SetBackColors( ghFindReplace.IconSelectedBackColor, ghFindReplace.IconSelectedBackColor )
+            else
+                b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
+                b.SetBackColors( ghTopTabs.BackColorHot, ghTopTabs.BackColor )
+            end if
+            b.PaintIconButton( wszIconWholeWord, @gFind.rcWholeWord )
+
             b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
             b.SetBackColors( ghTopTabs.BackColorHot, ghTopTabs.BackColor )
-            
-            b.SetFont( GUIFONT_9 )
-            b.PaintIconButton( wszIconMatchCase, @gFind.rcMatchCase )
-            b.PaintIconButton( wszIconWholeWord, @gFind.rcWholeWord )
+
             b.PaintText( gFind.wszResults, @gFind.rcResults, DT_LEFT )
             
             b.SetFont( SYMBOLFONT_9 )
             b.PaintIconButton( wszIconToggleReplace, @gFind.rcToggle )
+            
+            if gFind.nSelection then 
+                b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
+                b.SetBackColors( ghFindReplace.IconSelectedBackColor, ghFindReplace.IconSelectedBackColor )
+            else
+                b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
+                b.SetBackColors( ghTopTabs.BackColorHot, ghTopTabs.BackColor )
+            end if
             b.PaintIconButton( wszIconSelection, @gFind.rcSelection )
+            
+            b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
+            b.SetBackColors( ghTopTabs.BackColorHot, ghTopTabs.BackColor )
+
             b.PaintIconButton( wszIconChevronLeft, @gFind.rcUpArrow )
             b.PaintIconButton( wszIconChevronRight, @gFind.rcDownArrow )
             b.PaintIconButton( wszIconClose, @gFind.rcClose )
@@ -576,11 +666,19 @@ function frmTopTabsInfo_WndProc( _
         if (gTTabCtl.InfoPanelHeight = TOPTABS_INFO_HEIGHT_REPLACE) then
             b.PaintRoundBorderRect( @gTTabCtl.rcReplaceTextRect )
 
+            b.SetFont( GUIFONT_9 )
+            if gFind.nPreserve then 
+                b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
+                b.SetBackColors( ghFindReplace.IconSelectedBackColor, ghFindReplace.IconSelectedBackColor )
+            else
+                b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
+                b.SetBackColors( ghTopTabs.BackColorHot, ghTopTabs.BackColor )
+            end if
+            b.PaintIconButton( wszIconPreserveCase, @gFind.rcPreserve )
+           
             b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
             b.SetBackColors( ghTopTabs.BackColorHot, ghTopTabs.BackColor )
 
-            b.SetFont( GUIFONT_9 )
-            b.PaintIconButton( wszIconPreserveCase, @gFind.rcPreserve )
             b.SetFont( SYMBOLFONT_9 )
             b.PaintIconButton( wszIconReplace, @gFind.rcReplace )
             b.PaintIconButton( wszIconReplaceAll, @gFind.rcReplaceAll )

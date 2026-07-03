@@ -239,8 +239,14 @@ end function
 ' Edit action Replace
 ' ========================================================================================
 function OnCommand_EditReplaceDialog() as LRESULT
-    FindControls_Show()
-    ReplaceControls_Show()
+    ' If Replace is already open then close it (toggle).
+    gFind.bExpanded = not gFind.bExpanded
+    if gFind.bExpanded = false then
+        gTTabCtl.InfoPanelHeight = TOPTABS_INFO_HEIGHT_FIND
+    else
+        FindControls_Show()
+        ReplaceControls_Show()
+    end if    
     frmMain_PositionWindows()
     dim as HWND hCtl = GetDlgItem( HWND_FRMMAIN_TOPTABSINFO, IDC_FRMTOPTABSINFO_TXTFIND )
     SetFocus( hCtl )

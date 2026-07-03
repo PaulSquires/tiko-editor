@@ -35,6 +35,7 @@ function FindControls_Show() as long
     AfxSetWindowText( GetDlgItem( HWND_FRMMAIN_TOPTABSINFO, IDC_FRMTOPTABSINFO_TXTFIND ), sFindText )
 
     gTTabCtl.InfoPanelHeight = TOPTABS_INFO_HEIGHT_FIND
+    gFind.bExpanded = false
 
     return 0
 end function
@@ -44,17 +45,20 @@ end function
 ' Expand the frmTopTabsInfo area to allow for the Replace controls.
 ' ========================================================================================
 function ReplaceControls_Show() as long
+    ' Display the Replace controls
     AfxSetWindowText( GetDlgItem( HWND_FRMMAIN_TOPTABSINFO, IDC_FRMTOPTABSINFO_TXTREPLACE ), "" )
     gTTabCtl.InfoPanelHeight = TOPTABS_INFO_HEIGHT_REPLACE
+    gFind.bExpanded = true
     return 0
 end function
 
 
 ' ========================================================================================
-' Hidethe the Find/Replace controls and collapse the frmTopTabsInfo area.
+' Hide the Find/Replace controls and collapse the frmTopTabsInfo area.
 ' ========================================================================================
 function FindReplaceControls_Hide() as long
     gTTabCtl.InfoPanelHeight = TOPTABS_INFO_HEIGHT
+    gFind.bExpanded = false
     frmMain_PositionWindows()
     frmMain_SetFocusToCurrentCodeWindow()
     return 0
