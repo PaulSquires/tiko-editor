@@ -46,7 +46,7 @@ function frmTopTabs_PositionWindows() as LRESULT
 
     dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN_TOPTABS)
     if pWindow = 0 then exit function
-    
+
     ' Get the entire client area
     dim as Rect rc: GetClientRect( HWND_FRMMAIN_TOPTABS, @rc )
             
@@ -214,6 +214,7 @@ function frmTopTabs_PositionWindows() as LRESULT
     frmTopTabsInfo_PositionWindows()
 
     AfxRedrawWindow( HWND_FRMMAIN_TOPTABS )
+    AfxRedrawWindow( HWND_FRMMAIN_TOPTABSINFO )
 
     function = 0
 end function
@@ -310,7 +311,7 @@ function frmTopTabs_WndProc( _
             hTooltip = AfxAddTooltip( hwnd, "", false, false )
             ' Set the tooltip max width in order to handle the multiline
             ' text needed for the split editor button.
-            SendMessage( hTooltip, TTM_SETMAXTIPWIDTH, 0, 200 )
+            SendMessage( hTooltip, TTM_SETMAXTIPWIDTH, 0, 300 )
         end if
     
         curr_idxHot = getHotTabHitTest( hwnd )

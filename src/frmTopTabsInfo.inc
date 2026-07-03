@@ -510,7 +510,7 @@ function frmTopTabsInfo_WndProc( _
         b.SetPenColor( ghEditor.Divider )
         b.PaintLine( 1, b.rcClient.left, b.rcClient.top, b.rcClient.right, b.rcClient.top )
         b.PaintLine( 1, b.rcClient.left, b.rcClient.bottom, b.rcClient.right, b.rcClient.bottom )
-        
+
         if gTTabCtl.GetItemCount then
             dim as long i = gTTabCtl.CurSel
             
