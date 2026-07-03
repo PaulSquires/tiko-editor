@@ -69,7 +69,7 @@ enum
     IDM_FIND, IDM_FINDNEXT, IDM_FINDPREV
     IDM_REPLACENEXT, IDM_REPLACEPREV, IDM_REPLACEALL
     IDM_FINDNEXTACCEL, IDM_FINDPREVACCEL 
-    IDM_FINDINFILES, IDM_REPLACE
+    IDM_FINDINFILES, IDM_REPLACE, IDM_TOGGLEREPLACE
     IDM_INDENTBLOCK, IDM_UNINDENTBLOCK, IDM_COMMENTBLOCK, IDM_UNCOMMENTBLOCK
     IDM_DUPLICATELINE, IDM_MOVELINEUP, IDM_MOVELINEDOWN, IDM_NEWLINEBELOWCURRENT
     IDM_TOUPPERCASE, IDM_TOLOWERCASE, IDM_TOMIXEDCASE
@@ -251,15 +251,16 @@ type FINDREPLACE_TYPE
     nSearchCurrentDoc   as long
     nSearchAllOpenDocs  as long
     nSearchProject      as long
-    wszResults          as DWSTRING
+    wszResults          as DWSTRING = "0/0"
     bExpanded           as boolean
-    rcExpand            as RECT
     rcMatchCase         as RECT
     rcWholeWord         as RECT
-    rcResults           as RECT
+    rcToggle            as RECT
+    rcSelection         as RECT
     rcUpArrow           as RECT  
     rcDownArrow         as RECT  
-    rcSelection         as RECT
+    rcDividerLine       as RECT  
+    rcResults           as RECT
     rcPreserve          as RECT 
     rcReplace           as RECT 
     rcReplaceAll        as RECT 
@@ -334,7 +335,8 @@ dim shared as wstring * 10 _
     wszIconSplitEditor, wszIconSplitLeftRight, wszIconSplitTopBottom, wszIconThemes, _
     wszIconSettings, wszIconCheckBoxEmpty, wszIconCheckBoxMarked, _
     wszIconContinue, wszIconStop, wszIconStepNext, wszIconStepOver, wszIconStepOut, wszIconRunToCursor, _
-    wszIconSave, wszIconFind         
+    wszIconSave, wszIconFind, _
+    wszIconToggleReplace 
 
 
 ' Braille spinner patterns - large clockwise rotation
@@ -384,6 +386,7 @@ dim shared spinner(0 to 7) as wstring * 2 => { _
     wszIconCheckBoxMarked    = !"\uE73A"
     wszIconSave              = !"\uE74E"      ' Save (diskette)
     wszIconFind              = !"\uE721"      ' Search (magnifying glass)
+    wszIconToggleReplace     = !"\uE8B4"      ' Toggle Replace
     ' Debugger Icons
     'wszIconDebug             = !"\uE62A"     ' form with magnifier
     'wszIconDebug             = !"\uE623"     ' next solid

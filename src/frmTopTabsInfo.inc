@@ -90,8 +90,8 @@ function frmTopTabsInfo_PositionWindows() as LRESULT
     dim as RECT rc
             
     ' Calculate the RECT positions for all of the top tabs
-    dim as long iconWidth = pWindow->ScaleX(30) 
-    dim as long iconHeight = pWindow->ScaleY(30) 
+    dim as long iconWidth
+    dim as long iconHeight 
     dim as long nPadding = 10   ' 5 left 5 right
     dim as long vmargin = pWindow->ScaleY(1)
     dim as long nLeft
@@ -99,9 +99,14 @@ function frmTopTabsInfo_PositionWindows() as LRESULT
     dim as long nWidth 
     dim as long nHeight
      
-    if (gTTabCtl.InfoPanelHeight = TOPTABS_INFO_HEIGHT_FIND) then
+    if (gTTabCtl.InfoPanelHeight = TOPTABS_INFO_HEIGHT) then
         ShowWindow( hCtlFind, SW_HIDE )
         ShowWindow( hCtlReplace, SW_HIDE )
+        dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
+        if pDoc then 
+            gFind.txtFind = ""
+            FindReplace_HighlightSearches()
+        end if
     end if
     
     if (gTTabCtl.InfoPanelHeight = TOPTABS_INFO_HEIGHT_FIND) orelse _
@@ -127,44 +132,58 @@ function frmTopTabsInfo_PositionWindows() as LRESULT
         ' Match Case RECT
         gFind.rcMatchCase.left   = nLeft + nWidth
         gFind.rcMatchCase.top    = nTop
-        gFind.rcMatchCase.right  = gFind.rcMatchCase.Left + iconWidth
+        gFind.rcMatchCase.right  = gFind.rcMatchCase.left + iconWidth
         gFind.rcMatchCase.bottom = gFind.rcMatchCase.top + nHeight
 
         ' Whole Word RECT
         gFind.rcWholeWord.left   = gFind.rcMatchCase.right
         gFind.rcWholeWord.top    = gFind.rcMatchCase.top
-        gFind.rcWholeWord.right  = gFind.rcWholeWord.Left + iconWidth
+        gFind.rcWholeWord.right  = gFind.rcWholeWord.left + iconWidth
         gFind.rcWholeWord.bottom = gFind.rcMatchCase.bottom
 
-'        ' Results from search eg. "1 of 10"
-'        gFind.rcResults.left = gFind.rcWholeWord.right + hmargin + hmargin
-'        gFind.rcResults.top = nTop
-'        gFind.rcResults.right = gFind.rcResults.Left + pWindow->ScaleX(nResultsWidth)
-'        gFind.rcResults.bottom = gFind.rcResults.top + pWindow->ScaleY(24)
+        ' Toggle Replace RECT
+        gFind.rcToggle.Left     = rc.right + pWindow->ScaleX(8)
+        gFind.rcToggle.top      = gFind.rcWholeWord.top
+        gFind.rcToggle.right    = gFind.rcToggle.left + iconWidth
+        gFind.rcToggle.bottom   = gFind.rcWholeWord.bottom
 
-'        ' UpArrow RECT
-'        gFind.rcUpArrow.left = gFind.rcResults.right + hmargin
-'        gFind.rcUpArrow.top = nTop
-'        gFind.rcUpArrow.right = gFind.rcUpArrow.Left + iconWidth
-'        gFind.rcUpArrow.bottom = gFind.rcUpArrow.top + iconWidth
+        ' Selection RECT
+        gFind.rcSelection.left   = gFind.rcToggle.right
+        gFind.rcSelection.top    = gFind.rcToggle.top
+        gFind.rcSelection.right  = gFind.rcSelection.left + iconWidth
+        gFind.rcSelection.bottom = gFind.rcToggle.bottom
 
-'        ' DownArrow RECT
-'        gFind.rcDownArrow.left = gFind.rcUpArrow.right + hmargin
-'        gFind.rcDownArrow.top = nTop
-'        gFind.rcDownArrow.right = gFind.rcDownArrow.Left + iconWidth
-'        gFind.rcDownArrow.bottom = gFind.rcDownArrow.top + iconWidth
+        ' Vertical Divider line
+        gFind.rcDividerLine.left   = gFind.rcSelection.right
+        gFind.rcDividerLine.top    = gFind.rcSelection.top + pWindow->ScaleY(4)
+        gFind.rcDividerLine.right  = gFind.rcDividerLine.left + (iconWidth / 2)
+        gFind.rcDividerLine.bottom = gFind.rcSelection.bottom - pWindow->ScaleY(4)
+        
+        ' UpArrow RECT
+        gFind.rcUpArrow.left       = gFind.rcDividerLine.right + (iconWidth / 2)
+        gFind.rcUpArrow.top        = gFind.rcSelection.top
+        gFind.rcUpArrow.right      = gFind.rcUpArrow.left + iconWidth
+        gFind.rcUpArrow.bottom     = gFind.rcSelection.bottom
 
-'        ' Selection RECT
-'        gFind.rcSelection.left = gFind.rcDownArrow.right + hmargin
-'        gFind.rcSelection.top = nTop
-'        gFind.rcSelection.right = gFind.rcSelection.Left + iconWidth
-'        gFind.rcSelection.bottom = gFind.rcSelection.top + iconWidth
+        ' DownArrow RECT
+        gFind.rcDownArrow.left     = gFind.rcUpArrow.right
+        gFind.rcDownArrow.top      = gFind.rcUpArrow.top
+        gFind.rcDownArrow.right    = gFind.rcDownArrow.left + iconWidth
+        gFind.rcDownArrow.bottom   = gFind.rcUpArrow.bottom
 
-        ' Close RECT
-'        gFind.rcClose.left = gFind.rcSelection.right + hmargin
-'        gFind.rcClose.top = nTop
-'        gFind.rcClose.right = gFind.rcClose.Left + iconWidth
-'        gFind.rcClose.bottom = gFind.rcClose.top + iconWidth
+        ' Close RECT (calculate this one prior ro the Results rect)
+        GetClientRect( HWND_FRMMAIN_TOPTABSINFO, @rc )
+        gFind.rcClose.right       = rc.right - (pWindow->ScaleX(SCROLLBAR_WIDTH_EDITOR) / 2)
+        gFind.rcClose.left        = gFind.rcClose.right - iconWidth
+        gFind.rcClose.top         = gFind.rcDownArrow.top
+        gFind.rcClose.bottom      = gFind.rcDownArrow.bottom
+
+        ' Results from search eg. "1 of 10"
+        gFind.rcResults.left       = gFind.rcDownArrow.right + pWindow->ScaleX(4)
+        gFind.rcResults.top        = gFind.rcDownArrow.top
+        gFind.rcResults.right      = gFind.rcClose.Left
+        gFind.rcResults.bottom     = gFind.rcDownArrow.bottom
+
     end if
 
     if (gTTabCtl.InfoPanelHeight = TOPTABS_INFO_HEIGHT_REPLACE) then
@@ -423,8 +442,29 @@ function frmTopTabsInfo_WndProc( _
             wszTooltip  = frmPanelMenu_FormatTooltip( IDM_FIND )
         elseif isMouseOverRECT(hwnd, gTTabCtl.rcFileTypeButton) then
 
+        elseif isMouseOverRECT( hwnd, gFind.rcToggle ) then
+            wszTooltip  = frmPanelMenu_FormatTooltip( IDM_TOGGLEREPLACE )
+        elseif isMouseOverRECT( hwnd, gFind.rcMatchCase ) then
+            wszTooltip = L(163,"Match Case")
+        elseif isMouseOverRECT( hwnd, gFind.rcWholeWord ) then
+            wszTooltip = L(162,"Match Whole Words")
+        elseif isMouseOverRECT(hwnd, gFind.rcUpArrow) then
+            wszTooltip  = frmPanelMenu_FormatTooltip( IDM_FINDPREVACCEL )
+        elseif isMouseOverRECT(hwnd, gFind.rcDownArrow) then
+            wszTooltip  = frmPanelMenu_FormatTooltip( IDM_FINDNEXTACCEL )
+        elseif isMouseOverRECT( hwnd, gFind.rcSelection ) then
+            wszTooltip = L(148,"Selection")
+        elseif isMouseOverRECT( hwnd, gFind.rcPreserve ) then
+            wszTooltip = L(424,"Preserve Case")
+        elseif isMouseOverRECT( hwnd, gFind.rcReplace ) then
+            wszTooltip = L(173,"Replace") & " (Enter)"
+        elseif isMouseOverRECT( hwnd, gFind.rcReplaceAll ) then
+            wszTooltip = L(174,"Replace All") & " (Ctrl+Alt+Enter)"
+        elseif isMouseOverRECT( hwnd, gFind.rcClose ) then
+            wszTooltip = L(161,"Close") & " (Esc)"
         end if
         
+                
         ' Display the tooltip
         if wszTooltip <> wszPrevTooltip then
             AfxSetTooltipText( hTooltip, hwnd, wszTooltip )
@@ -508,9 +548,23 @@ function frmTopTabsInfo_WndProc( _
             b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
             b.SetBackColors( ghTopTabs.BackColorHot, ghTopTabs.BackColor )
             
-            b.SetFont( GUIFONT_10 )
+            b.SetFont( GUIFONT_9 )
             b.PaintIconButton( wszIconMatchCase, @gFind.rcMatchCase )
             b.PaintIconButton( wszIconWholeWord, @gFind.rcWholeWord )
+            b.PaintText( gFind.wszResults, @gFind.rcResults, DT_LEFT )
+            
+            b.SetFont( SYMBOLFONT_9 )
+            b.PaintIconButton( wszIconToggleReplace, @gFind.rcToggle )
+            b.PaintIconButton( wszIconSelection, @gFind.rcSelection )
+            b.PaintIconButton( wszIconChevronLeft, @gFind.rcUpArrow )
+            b.PaintIconButton( wszIconChevronRight, @gFind.rcDownArrow )
+            b.PaintIconButton( wszIconClose, @gFind.rcClose )
+            
+            ' Vertical Divider Line
+            b.SetPenColor( ghEditor.Divider )
+            b.PaintLine( 1, gFind.rcDividerLine.right, gFind.rcDividerLine.top, _
+                                gFind.rcDividerLine.right, gFind.rcDividerLine.bottom )
+            
         end if
 
         if (gTTabCtl.InfoPanelHeight = TOPTABS_INFO_HEIGHT_REPLACE) then
@@ -519,9 +573,9 @@ function frmTopTabsInfo_WndProc( _
             b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
             b.SetBackColors( ghTopTabs.BackColorHot, ghTopTabs.BackColor )
 
-            b.SetFont( GUIFONT_10 )
+            b.SetFont( GUIFONT_9 )
             b.PaintIconButton( wszIconPreserveCase, @gFind.rcPreserve )
-            b.SetFont( SYMBOLFONT_10 )
+            b.SetFont( SYMBOLFONT_9 )
             b.PaintIconButton( wszIconReplace, @gFind.rcReplace )
             b.PaintIconButton( wszIconReplaceAll, @gFind.rcReplaceAll )
         end if

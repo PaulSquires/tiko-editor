@@ -158,7 +158,7 @@ function FindReplace_NextSelection( _
     end if
 
     if (mainIdx > 0) andalso (gFind.foundCount > 0) then
-        gFind.wszResults = mainIdx & " of " & gFind.foundCount 
+        gFind.wszResults = mainIdx & "/" & gFind.foundCount 
         ' make sure target line is unfolded
         if bRepositionCaret then
             dim as long currentLine = SciExec( hEdit, SCI_LINEFROMPOSITION, iPositions(mainIdx), 0)
@@ -167,9 +167,10 @@ function FindReplace_NextSelection( _
         end if
     else    
         SciExec( hEdit, SCI_SETSEL, startPos, startPos)
-        gFind.wszResults = L(269, "No results")
+        gFind.wszResults = "0/0"
     end if
-    frmTopTabsInfo_PositionWindows
+    
+    AfxRedrawWindow( HWND_FRMMAIN_TOPTABSINFO )
     
     return iif(mainIdx > 0, true, false)
     
@@ -194,6 +195,10 @@ function FindReplace_HighlightSearches() as long
     SciExec( hEdit, SCI_INDICSETALPHA, 8, 60 )   
     
     dim txtFind as string = gFind.txtFind
+
+    ' Remove all existing selection indicators
+    nLength = SendMessage( hEdit, SCI_GETTEXTLENGTH, 0, 0)
+    SciExec( hEdit, SCI_INDICATORCLEARRANGE, 0, nLength)
         
     ' if Find or Replace is open then use their flags also.
     if gTTabCtl.InfoPanelHeight <> TOPTABS_INFO_HEIGHT then
@@ -201,11 +206,7 @@ function FindReplace_HighlightSearches() as long
         if gFind.nWholeWord then findFlags = (findFlags or SCFIND_WHOLEWORD)
         SciExec( hEdit, SCI_SETSEARCHFLAGS, findFlags, 0)
     end if
-        
-    ' Remove all existing selection indicators
-    nLength = SendMessage( hEdit, SCI_GETTEXTLENGTH, 0, 0)
-    SciExec( hEdit, SCI_INDICATORCLEARRANGE, 0, nLength)
-    
+            
     ' Are we searching a selection or the whole document
     if pDoc->HasMarkerHighlight then
         startPos = SciExec( hEdit, SCI_POSITIONFROMLINE, pDoc->FirstMarkerHighlight, 0)
@@ -220,16 +221,17 @@ function FindReplace_HighlightSearches() as long
             SciExec( hEdit, SCI_SETTARGETSTART, startPos, 0)
             SciExec( hEdit, SCI_SETTARGETEND, endPos, 0)
             r = SciExec( hEdit, SCI_SEARCHINTARGET, len(txtFind), strptr(txtFind))
+
             if r = -1 then exit do
             
             SciExec( hEdit, SCI_SETINDICATORVALUE, 8, 0 )
             SciExec( hEdit, SCI_INDICATORFILLRANGE, r, len(txtFind))
 
-            ' Move start position after the replaced text
+            ' Move start position after the text
             startPos = SendMessage(hEdit, SCI_GETTARGETEND, 0, 0)
         loop
     end if
-        
+ 
     function = 0
 
 end function

@@ -110,6 +110,13 @@ Function getMenuText( byval idMenu as long ) As DWSTRING
         case IDM_MOVELINEDOWN: wszText = L(30,"Move Line Down")
         case IDM_SELECTLINE: wszText = L(41,"Select Line")
         case IDM_SELECTALL: wszText = L(40,"Select All")
+            
+        case IDM_TOGGLEREPLACE
+             wszText = L(270, "Toggle Replace mode")
+             idMenu = IDM_REPLACE
+
+        case IDM_FINDNEXTACCEL: wszText = L(44, "Find Next")
+        case IDM_FINDPREVACCEL: wszText = L(45, "Find Previous")
 
         case IDM_DEFINITION: wszText = L(47,"Sub/Function Definition")
         case IDM_LASTPOSITION: wszText = L(48,"Last Position")
