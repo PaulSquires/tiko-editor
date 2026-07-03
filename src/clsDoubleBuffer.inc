@@ -178,6 +178,18 @@ function clsDoubleBuffer.PaintText( _
     function = 0
 end function
 
+function clsDoubleBuffer.PaintIconButton( _
+            byval wszText as DWSTRING, _
+            byval rc as RECT ptr, _
+            byval bHitTest as boolean = true, _
+            byval nCurvature as long = 20 _
+            ) as long
+    this.PaintRoundRect( rc, bHitTest, nCurvature )
+    this.PaintText( wszText, rc, DT_CENTER, bHitTest )
+    
+    function = 0
+end function
+
 function clsDoubleBuffer.PaintLine( _
             byval nWidth as long, _
             byval nLeft as long, _

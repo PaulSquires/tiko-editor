@@ -332,6 +332,7 @@ function handleKeysFindReplace( byval uMsg as MSG ) as boolean
             if (hFocus = hReplace) then hNewFocus = hFind
         else    
             if (hFocus = hFind)    then hNewFocus = hReplace
+            if IsWindowVisible(hReplace) = 0 then hNewFocus = hEdit
             if (hFocus = hReplace) then hNewFocus = hEdit
         end if
         SetFocus( hNewFocus )

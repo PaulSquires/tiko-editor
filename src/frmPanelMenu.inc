@@ -163,8 +163,7 @@ function frmPanelMenu_OnPaint( byval hwnd as HWND ) as LRESULT
         b.SetBackColors( ghPanel.BackColor, ghPanel.BackColorHot )
         
         ' Draw the icon
-        b.PaintRoundRect( @rc, true )
-        b.PaintText( wszCaption, @rc, DT_CENTER, true )
+        b.PaintIconButton( wszCaption, @rc )
 
         ' Should we underline this icon as actively selected    
         dim as boolean bDrawUnderline = false

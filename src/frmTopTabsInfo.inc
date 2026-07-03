@@ -59,19 +59,19 @@ function frmTopTabsInfo_CalculatePositionWindows() as LRESULT
     gTTabCtl.rcFileTypeButton.bottom = gTTabCtl.rcFileTypeButton.top + pWindow->ScaleY(TOPTABS_INFO_HEIGHT-1) - vmargin
     
     ' FIND CONTROLS
-    gTTabCtl.rcFindRect = rc
-    gTTabCtl.rcFindRect.left      = pWindow->ScaleY(10)
-    gTTabCtl.rcFindRect.top       = pWindow->ScaleY(TOPTABS_INFO_HEIGHT)
-    gTTabCtl.rcFindRect.right     = gTTabCtl.rcDiskFilename.right - pWindow->ScaleX(200)
-    gTTabCtl.rcFindRect.bottom    = pWindow->ScaleY(TOPTABS_INFO_HEIGHT_FIND) - pWindow->ScaleY(8)
+    gTTabCtl.rcFindTextRect = rc
+    gTTabCtl.rcFindTextRect.left      = pWindow->ScaleY(10)
+    gTTabCtl.rcFindTextRect.top       = pWindow->ScaleY(TOPTABS_INFO_HEIGHT)
+    gTTabCtl.rcFindTextRect.right     = gTTabCtl.rcDiskFilename.right - pWindow->ScaleX(200)
+    gTTabCtl.rcFindTextRect.bottom    = pWindow->ScaleY(TOPTABS_INFO_HEIGHT_FIND) - pWindow->ScaleY(8)
     
     ' REPLACE CONTROLS
-    gTTabCtl.rcReplaceRect = rc
-    gTTabCtl.rcReplaceRect.left   = gTTabCtl.rcFindRect.left
-    gTTabCtl.rcReplaceRect.top    = pWindow->ScaleY(TOPTABS_INFO_HEIGHT_FIND)
-    gTTabCtl.rcReplaceRect.right  = gTTabCtl.rcFindRect.right
-    gTTabCtl.rcReplaceRect.bottom = pWindow->ScaleY(TOPTABS_INFO_HEIGHT_REPLACE) - pWindow->ScaleY(8)
-        
+    gTTabCtl.rcReplaceTextRect = rc
+    gTTabCtl.rcReplaceTextRect.left   = gTTabCtl.rcFindTextRect.left
+    gTTabCtl.rcReplaceTextRect.top    = pWindow->ScaleY(TOPTABS_INFO_HEIGHT_FIND)
+    gTTabCtl.rcReplaceTextRect.right  = gTTabCtl.rcFindTextRect.right
+    gTTabCtl.rcReplaceTextRect.bottom = pWindow->ScaleY(TOPTABS_INFO_HEIGHT_REPLACE) - pWindow->ScaleY(8)
+
     return 0
 end function
 
@@ -88,7 +88,16 @@ function frmTopTabsInfo_PositionWindows() as LRESULT
     dim as HWND hCtlReplace = GetDlgItem(HWND_FRMMAIN_TOPTABSINFO, IDC_FRMTOPTABSINFO_TXTREPLACE)
     
     dim as RECT rc
+            
+    ' Calculate the RECT positions for all of the top tabs
+    dim as long iconWidth = pWindow->ScaleX(30) 
+    dim as long iconHeight = pWindow->ScaleY(30) 
+    dim as long nPadding = 10   ' 5 left 5 right
     dim as long vmargin = pWindow->ScaleY(1)
+    dim as long nLeft
+    dim as long nTop
+    dim as long nWidth 
+    dim as long nHeight
      
     if (gTTabCtl.InfoPanelHeight = TOPTABS_INFO_HEIGHT_FIND) then
         ShowWindow( hCtlFind, SW_HIDE )
@@ -97,24 +106,105 @@ function frmTopTabsInfo_PositionWindows() as LRESULT
     
     if (gTTabCtl.InfoPanelHeight = TOPTABS_INFO_HEIGHT_FIND) orelse _
         (gTTabCtl.InfoPanelHeight = TOPTABS_INFO_HEIGHT_REPLACE) then
-        rc = gTTabCtl.rcFindRect
-        SetWindowPos( hCtlFind, 0, _
-            rc.left + vmargin + pWindow->ScaleX(10), rc.top + vmargin, _
-            (rc.right - rc.left - vmargin*2 - pWindow->ScaleX(10)), (rc.bottom - rc.top - vmargin*2), _
-            SWP_NOZORDER or SWP_SHOWWINDOW )
+        rc      = gTTabCtl.rcFindTextRect
+        nLeft   = rc.left + vmargin + pWindow->ScaleX(10)
+        nTop    = rc.top + vmargin
+        nWidth  = (rc.right - rc.left - vmargin*2 - pWindow->ScaleX(10))
+        nHeight = (rc.bottom - rc.top - vmargin*2)
+
+        ' Make the width of the textbox smaller because we want to visually fit the
+        ' Match Case and Whole Word icons into the rcDiskFilename rect also. nHeight
+        ' will be our icon height and width as well.
+        iconWidth = nHeight
+        iconHeight = nHeight
+        nWidth = nWidth - (iconWidth * 2) - pWindow->ScaleX(4)
+        
+        ' DiskFilename text
+        SetWindowPos( hCtlFind, 0, nLeft, nTop, nWidth, nHeight, SWP_NOZORDER or SWP_SHOWWINDOW )
         CenterSingleLineText( hCtlFind )    
         SendMessage( hCtlFind, EM_SETEVENTMASK, 0, cast(LPARAM, ENM_SELCHANGE or ENM_CHANGE) )
+
+        ' Match Case RECT
+        gFind.rcMatchCase.left   = nLeft + nWidth
+        gFind.rcMatchCase.top    = nTop
+        gFind.rcMatchCase.right  = gFind.rcMatchCase.Left + iconWidth
+        gFind.rcMatchCase.bottom = gFind.rcMatchCase.top + nHeight
+
+        ' Whole Word RECT
+        gFind.rcWholeWord.left   = gFind.rcMatchCase.right
+        gFind.rcWholeWord.top    = gFind.rcMatchCase.top
+        gFind.rcWholeWord.right  = gFind.rcWholeWord.Left + iconWidth
+        gFind.rcWholeWord.bottom = gFind.rcMatchCase.bottom
+
+'        ' Results from search eg. "1 of 10"
+'        gFind.rcResults.left = gFind.rcWholeWord.right + hmargin + hmargin
+'        gFind.rcResults.top = nTop
+'        gFind.rcResults.right = gFind.rcResults.Left + pWindow->ScaleX(nResultsWidth)
+'        gFind.rcResults.bottom = gFind.rcResults.top + pWindow->ScaleY(24)
+
+'        ' UpArrow RECT
+'        gFind.rcUpArrow.left = gFind.rcResults.right + hmargin
+'        gFind.rcUpArrow.top = nTop
+'        gFind.rcUpArrow.right = gFind.rcUpArrow.Left + iconWidth
+'        gFind.rcUpArrow.bottom = gFind.rcUpArrow.top + iconWidth
+
+'        ' DownArrow RECT
+'        gFind.rcDownArrow.left = gFind.rcUpArrow.right + hmargin
+'        gFind.rcDownArrow.top = nTop
+'        gFind.rcDownArrow.right = gFind.rcDownArrow.Left + iconWidth
+'        gFind.rcDownArrow.bottom = gFind.rcDownArrow.top + iconWidth
+
+'        ' Selection RECT
+'        gFind.rcSelection.left = gFind.rcDownArrow.right + hmargin
+'        gFind.rcSelection.top = nTop
+'        gFind.rcSelection.right = gFind.rcSelection.Left + iconWidth
+'        gFind.rcSelection.bottom = gFind.rcSelection.top + iconWidth
+
+        ' Close RECT
+'        gFind.rcClose.left = gFind.rcSelection.right + hmargin
+'        gFind.rcClose.top = nTop
+'        gFind.rcClose.right = gFind.rcClose.Left + iconWidth
+'        gFind.rcClose.bottom = gFind.rcClose.top + iconWidth
     end if
 
     if (gTTabCtl.InfoPanelHeight = TOPTABS_INFO_HEIGHT_REPLACE) then
-        rc = gTTabCtl.rcReplaceRect
-        SetWindowPos( hCtlReplace, 0, _
-            rc.left + vmargin + pWindow->ScaleX(10), rc.top + vmargin, _
-            (rc.right - rc.left - vmargin*2 - pWindow->ScaleX(10)), (rc.bottom - rc.top - vmargin*2), _
-            SWP_NOZORDER or SWP_SHOWWINDOW )
+        rc = gTTabCtl.rcReplaceTextRect
+        rc      = gTTabCtl.rcReplaceTextRect
+        nLeft   = rc.left + vmargin + pWindow->ScaleX(10)
+        nTop    = rc.top + vmargin
+        nWidth  = (rc.right - rc.left - vmargin*2 - pWindow->ScaleX(10))
+        nHeight = (rc.bottom - rc.top - vmargin*2)
+
+        ' Make the width of the textbox smaller because we want to visually fit the
+        ' Preserve Case icon into the rcDiskFilename rect. nHeight will be our icon 
+        ' height and width as well.
+        iconWidth = nHeight
+        iconHeight = nHeight
+        nWidth = nWidth - iconWidth - pWindow->ScaleX(4)
+
+        SetWindowPos( hCtlReplace, 0, nLeft, nTop, nWidth, nHeight, SWP_NOZORDER or SWP_SHOWWINDOW )
         SendMessage( hCtlReplace, EM_SETBKGNDCOLOR , 0, cast(LPARAM, ghTopTabs.BackColorHot) )
         CenterSingleLineText( hCtlReplace )    
         SendMessage( hCtlReplace, EM_SETEVENTMASK, 0, cast(LPARAM, ENM_SELCHANGE or ENM_CHANGE) )
+
+        ' Preserve Case RECT
+        gFind.rcPreserve.left   = nLeft + nWidth
+        gFind.rcPreserve.top    = nTop
+        gFind.rcPreserve.right  = gFind.rcPreserve.Left + iconWidth
+        gFind.rcPreserve.bottom = gFind.rcPreserve.top + iconHeight
+        
+        ' Replace RECT
+        gFind.rcReplace.Left    = rc.right + pWindow->ScaleX(8)
+        gFind.rcReplace.top     = gFind.rcPreserve.top
+        gFind.rcReplace.right   = gFind.rcReplace.Left + iconWidth
+        gFind.rcReplace.bottom  = gFind.rcPreserve.bottom
+
+        ' ReplaceAll RECT
+        gFind.rcReplaceAll.Left   = gFind.rcReplace.right 
+        gFind.rcReplaceAll.top    = gFind.rcReplace.top
+        gFind.rcReplaceAll.right  = gFind.rcReplaceAll.Left + iconWidth
+        gFind.rcReplaceAll.bottom = gFind.rcReplace.bottom
+
     end if
         
     AfxRedrawWindow( HWND_FRMMAIN_TOPTABSINFO )
@@ -399,8 +489,7 @@ function frmTopTabsInfo_WndProc( _
             b.PaintText( wszFilename, @gTTabCtl.rcDiskFilename, DT_LEFT )
 
             b.SetFont( SYMBOLFONT_10 )
-            b.PaintRoundRect( @gTTabCtl.rcFindButton, true )
-            b.PaintText( wszIconFind, @gTTabCtl.rcFindButton, DT_CENTER, true )
+            b.PaintIconButton( wszIconFind, @gTTabCtl.rcFindButton )
 
             b.SetFont( GUIFONT_10 )
             b.PaintRoundRect( @gTTabCtl.rcFileTypeButton, true )
@@ -414,10 +503,27 @@ function frmTopTabsInfo_WndProc( _
         b.SetPenColor( ghEditor.Divider )
         if (gTTabCtl.InfoPanelHeight = TOPTABS_INFO_HEIGHT_FIND) orelse _
             (gTTabCtl.InfoPanelHeight = TOPTABS_INFO_HEIGHT_REPLACE) then
-            b.PaintRoundBorderRect( @gTTabCtl.rcFindRect )
+            b.PaintRoundBorderRect( @gTTabCtl.rcFindTextRect )
+
+            b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
+            b.SetBackColors( ghTopTabs.BackColorHot, ghTopTabs.BackColor )
+            
+            b.SetFont( GUIFONT_10 )
+            b.PaintIconButton( wszIconMatchCase, @gFind.rcMatchCase )
+            b.PaintIconButton( wszIconWholeWord, @gFind.rcWholeWord )
         end if
+
         if (gTTabCtl.InfoPanelHeight = TOPTABS_INFO_HEIGHT_REPLACE) then
-            b.PaintRoundBorderRect( @gTTabCtl.rcReplaceRect )
+            b.PaintRoundBorderRect( @gTTabCtl.rcReplaceTextRect )
+
+            b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
+            b.SetBackColors( ghTopTabs.BackColorHot, ghTopTabs.BackColor )
+
+            b.SetFont( GUIFONT_10 )
+            b.PaintIconButton( wszIconPreserveCase, @gFind.rcPreserve )
+            b.SetFont( SYMBOLFONT_10 )
+            b.PaintIconButton( wszIconReplace, @gFind.rcReplace )
+            b.PaintIconButton( wszIconReplaceAll, @gFind.rcReplaceAll )
         end if
                 
         b.EndDoubleBuffer()

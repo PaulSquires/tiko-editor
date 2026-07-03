@@ -541,8 +541,7 @@ function frmTopTabs_WndProc( _
                     ' if we are hovered over the "X" close icon rect then highlight it
                     b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
                     b.SetBackColors( ghTopTabs.CloseBackColorHot, ghTopTabs.CloseBackColorHot )
-                    b.PaintRoundRect( @gTTabCtl.tabs(i).rcClose, true )
-                    b.PaintText( wszIconClose, @gTTabCtl.tabs(i).rcClose, DT_CENTER )
+                    b.PaintIconButton( wszIconClose, @gTTabCtl.tabs(i).rcClose )
                 end if   
             end if
             
@@ -565,20 +564,16 @@ function frmTopTabs_WndProc( _
             b.PaintRect( @gTTabCtl.rcActionPanel )
             
             ' Draw the PrevTabs button
-            b.PaintRoundRect( @gTTabCtl.rcPrevTabs, true )
-            b.PaintText( wszIconChevronLeft, @gTTabCtl.rcPrevTabs, DT_CENTER, true )
+            b.PaintIconButton( wszIconChevronLeft, @gTTabCtl.rcPrevTabs )
 
             ' Draw the NextTabs button
-            b.PaintRoundRect( @gTTabCtl.rcNextTabs, true )
-            b.PaintText( wszIconChevronRight, @gTTabCtl.rcNextTabs, DT_CENTER, true )
+            b.PaintIconButton( wszIconChevronRight, @gTTabCtl.rcNextTabs )
 
             ' Draw the SplitEditor button
-            b.PaintRoundRect( @gTTabCtl.rcSplitEditor, true )
-            b.PaintText( wszIconSplitEditor, @gTTabCtl.rcSplitEditor, DT_CENTER, true )
+            b.PaintIconButton( wszIconSplitEditor, @gTTabCtl.rcSplitEditor )
             
             ' Draw the Action button "..."
-            b.PaintRoundRect( @gTTabCtl.rcActionButton, true )
-            b.PaintText( wszIconMoreActions, @gTTabCtl.rcActionButton, DT_CENTER, true )
+            b.PaintIconButton( wszIconMoreActions, @gTTabCtl.rcActionButton )
         end if
     
         b.EndDoubleBuffer()

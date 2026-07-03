@@ -32,27 +32,27 @@ type clsTopTabCtl
     private:
         
     public:
-        hWindow          as HWND
-        ClientRightEdge  as long        ' the right edge (client right - action Panel)
-        CurSel           as long = -1
-        FirstDisplayTab  as long = 0   
-        LastDisplayTab   as long = 0    ' for positionign any "New File" from clicking + button
-        rcAddFileButton  as RECT
-        rcActionPanel    as RECT
-        rcActionButton   as RECT
-        rcPrevTabs       as RECT
-        rcNextTabs       as RECT
-        rcSplitEditor    as RECT
-        rcDiskFilename   as RECT
-        rcFindButton     as RECT
-        rcFileTypeButton as RECT        ' Main, Modulesm Normal, etc
-        rcFindRect       as RECT
-        rcReplaceRect    as RECT
-        wszFileType      as DWSTRING
-        InfoPanelHeight  as long = TOPTABS_INFO_HEIGHT
+        hWindow           as HWND
+        ClientRightEdge   as long        ' the right edge (client right - action Panel)
+        CurSel            as long = -1
+        FirstDisplayTab   as long = 0   
+        LastDisplayTab    as long = 0    ' for positionign any "New File" from clicking + button
+        rcAddFileButton   as RECT
+        rcActionPanel     as RECT
+        rcActionButton    as RECT
+        rcPrevTabs        as RECT
+        rcNextTabs        as RECT
+        rcSplitEditor     as RECT
+        rcDiskFilename    as RECT
+        rcFindButton      as RECT
+        rcFileTypeButton  as RECT        ' Main, Modulesm Normal, etc
+        rcFindTextRect    as RECT
+        rcReplaceTextRect as RECT
+        wszFileType       as DWSTRING
+        InfoPanelHeight   as long = TOPTABS_INFO_HEIGHT
             ' TOPTABS_INFO_HEIGHT, TOPTABS_INFO_HEIGHT_FIND, TOPTABS_INFO_HEIGHT_REPLACE
 
-        tabs(any)        as TOPTABS_TYPE
+        tabs(any)         as TOPTABS_TYPE
         
         declare function IsSafeIndex( byval idx as long ) as boolean
         declare function GetItemCount() as long

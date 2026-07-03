@@ -64,6 +64,12 @@ type clsDoubleBuffer
                 byval nCurvature as long = 20, _
                 byval nPenWidth as long = 1 _
                 ) as long 
+    declare function PaintIconButton( _
+            byval wszText as DWSTRING, _
+            byval rc as RECT ptr, _
+            byval bHitTest as boolean = true, _
+            byval nCurvature as long = 20 _
+            ) as long
     declare function PaintLine( _
                 byval nWidth as long, _
                 byval nLeft as long, _
