@@ -12,7 +12,6 @@
 '    GNU General Public License for more details.
 
 
-#include once "frmStatusBar.bi"
 #include once "frmPanelMenu.bi"
 #include once "modFindReplace.inc"
 
@@ -34,9 +33,17 @@ function frmTopTabsInfo_CalculatePositionWindows() as LRESULT
     dim as long vmargin = pWindow->ScaleY(1)
     dim as long nPadding = 10   ' 5 left 5 right
     
-    ' Ensure that the StatusBar info has been set because we depend on the gSBPanels(FILETYPE_PANEL).wszText
-    ' to calculate the filetype string size and value.
-    frmMain_SetStatusbar()
+    gTTabCtl.wszFileType = L(210,"Normal") 
+    dim as clsDocument ptr pDoc = gTTabCtl.GetActiveDocumentPtr()
+    if pDoc then 
+        select case pDoc->ProjectFileType
+            case FILETYPE_HEADER:    gTTabCtl.wszFileType = L(175,"Header") 
+            case FILETYPE_NORMAL:    gTTabCtl.wszFileType = L(210,"Normal") 
+            case FILETYPE_MODULE:    gTTabCtl.wszFileType = L(211,"Module")
+            case FILETYPE_MAIN:      gTTabCtl.wszFileType = L(212,"Main")
+            case FILETYPE_RESOURCE:  gTTabCtl.wszFileType = L(213,"Resource")
+        end select 
+    end if    
 
     ' Info area under the row of tabs 
     gTTabCtl.rcFindButton = rc
@@ -55,14 +62,14 @@ function frmTopTabsInfo_CalculatePositionWindows() as LRESULT
     gTTabCtl.rcFileTypeButton.left = gTTabCtl.rcFindButton.right + pWindow->ScaleX(6)
     gTTabCtl.rcFileTypeButton.top += vmargin
     gTTabCtl.rcFileTypeButton.right = gTTabCtl.rcFileTypeButton.left + _
-            pWindow->ScaleX( getTextWidth(HWND_FRMMAIN_TOPTABSINFO, gSBPanels(FILETYPE_PANEL).wszText, GUIFONT_9) + (nPadding * 2))
+            pWindow->ScaleX( getTextWidth(HWND_FRMMAIN_TOPTABSINFO, gTTabCtl.wszFileType, GUIFONT_9) + (nPadding * 2))
     gTTabCtl.rcFileTypeButton.bottom = gTTabCtl.rcFileTypeButton.top + pWindow->ScaleY(TOPTABS_INFO_HEIGHT-1) - vmargin
     
     ' FIND CONTROLS
     gTTabCtl.rcFindTextRect = rc
     gTTabCtl.rcFindTextRect.left      = pWindow->ScaleY(10)
     gTTabCtl.rcFindTextRect.top       = pWindow->ScaleY(TOPTABS_INFO_HEIGHT)
-    gTTabCtl.rcFindTextRect.right     = gTTabCtl.rcDiskFilename.right - pWindow->ScaleX(200)
+    gTTabCtl.rcFindTextRect.right     = gTTabCtl.rcDiskFilename.right - pWindow->ScaleX(150)
     gTTabCtl.rcFindTextRect.bottom    = pWindow->ScaleY(TOPTABS_INFO_HEIGHT_FIND) - pWindow->ScaleY(8)
     
     ' REPLACE CONTROLS
@@ -93,7 +100,7 @@ function frmTopTabsInfo_PositionWindows() as LRESULT
     dim as long iconWidth
     dim as long iconHeight 
     dim as long nPadding = 10   ' 5 left 5 right
-    dim as long vmargin = pWindow->ScaleY(1)
+    dim as long vmargin = pWindow->ScaleY(4)
     dim as long nLeft
     dim as long nTop
     dim as long nWidth 
@@ -175,7 +182,7 @@ function frmTopTabsInfo_PositionWindows() as LRESULT
         GetClientRect( HWND_FRMMAIN_TOPTABSINFO, @rc )
         gFind.rcClose.right       = rc.right - (pWindow->ScaleX(SCROLLBAR_WIDTH_EDITOR) / 2)
         gFind.rcClose.left        = gFind.rcClose.right - iconWidth
-        gFind.rcClose.top         = gFind.rcDownArrow.top
+        gFind.rcClose.top         = gFind.rcDownArrow.top + pWindow->ScaleY(4)
         gFind.rcClose.bottom      = gFind.rcDownArrow.bottom
 
         ' Results from search eg. "1 of 10"
@@ -441,7 +448,7 @@ function frmTopTabsInfo_WndProc( _
         if isMouseOverRECT(hwnd, gTTabCtl.rcFindButton) then
             wszTooltip  = frmPanelMenu_FormatTooltip( IDM_FIND )
         elseif isMouseOverRECT(hwnd, gTTabCtl.rcFileTypeButton) then
-
+            wszTooltip = ""
         elseif isMouseOverRECT( hwnd, gFind.rcToggle ) then
             wszTooltip  = frmPanelMenu_FormatTooltip( IDM_TOGGLEREPLACE )
         elseif isMouseOverRECT( hwnd, gFind.rcMatchCase ) then
@@ -449,9 +456,9 @@ function frmTopTabsInfo_WndProc( _
         elseif isMouseOverRECT( hwnd, gFind.rcWholeWord ) then
             wszTooltip = L(162,"Match Whole Words")
         elseif isMouseOverRECT(hwnd, gFind.rcUpArrow) then
-            wszTooltip  = frmPanelMenu_FormatTooltip( IDM_FINDPREVACCEL )
+            wszTooltip = L(45, "Find Previous") & " (Shift+Enter)"
         elseif isMouseOverRECT(hwnd, gFind.rcDownArrow) then
-            wszTooltip  = frmPanelMenu_FormatTooltip( IDM_FINDNEXTACCEL )
+            wszTooltip = L(44, "Find Next") & " (Enter)"
         elseif isMouseOverRECT( hwnd, gFind.rcSelection ) then
             wszTooltip = L(148,"Selection")
         elseif isMouseOverRECT( hwnd, gFind.rcPreserve ) then
@@ -464,7 +471,6 @@ function frmTopTabsInfo_WndProc( _
             wszTooltip = L(161,"Close") & " (Esc)"
         end if
         
-                
         ' Display the tooltip
         if wszTooltip <> wszPrevTooltip then
             AfxSetTooltipText( hTooltip, hwnd, wszTooltip )
@@ -533,7 +539,7 @@ function frmTopTabsInfo_WndProc( _
 
             b.SetFont( GUIFONT_10 )
             b.PaintRoundRect( @gTTabCtl.rcFileTypeButton, true )
-            b.PaintText( gSBPanels(FILETYPE_PANEL).wszText, @gTTabCtl.rcFileTypeButton, DT_CENTER, true )
+            b.PaintText( gTTabCtl.wszFileType, @gTTabCtl.rcFileTypeButton, DT_CENTER, true )
         end if
         
 

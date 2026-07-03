@@ -139,17 +139,6 @@ function frmMain_SetStatusbar() as long
             gSBPanels(BUILD_POPUP_PANEL).wszText = frmBuildConfig_GetSelectedBuildDescription()
         end if
         
-        ' PANEL Filetype (Normal/Main/Resource/Module)
-        wszText = ""
-        select case pDoc->ProjectFileType
-            case FILETYPE_HEADER:    wszText = L(175,"Header") 
-            case FILETYPE_NORMAL:    wszText = L(210,"Normal") 
-            case FILETYPE_MODULE:    wszText = L(211,"Module")
-            case FILETYPE_MAIN:      wszText = L(212,"Main")
-            case FILETYPE_RESOURCE:  wszText = L(213,"Resource")
-        end select 
-        gSBPanels(FILETYPE_PANEL).wszText = wszText
-        
         ' PANEL Spacing
         gSBPanels(SPACES_PANEL).wszText = "Spaces: " & gConfig.TabSize
         

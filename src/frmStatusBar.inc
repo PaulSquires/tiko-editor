@@ -84,19 +84,6 @@ function frmStatusBar_PositionWindows() as LRESULT
     gSBPanels(i).nID       = IDM_SPACES
     nRight = gSBPanels(i).rc.left - nSpacer
 
-    i = FILETYPE_PANEL  ' Main/Resource/Module/Normal
-    if gApp.IsProjectActive then
-        gSBPanels(i).rc.Left   = nRight - _
-            pWindow->ScaleX( getTextWidth(HWND_FRMMAIN_STATUSBAR, gSBPanels(i).wszText, GUIFONT_9) + nPadding )
-        gSBPanels(i).rc.top    = rc.top
-        gSBPanels(i).rc.right  = nRight
-        gSBPanels(i).rc.bottom = rc.bottom
-        gSBPanels(i).nID       = IDM_PROJECTFILETYPE
-        nRight = gSBPanels(i).rc.left - nSpacer
-    else
-        SetRectEmpty( @gSBPanels(i).rc )
-    end if
-    
     i = BUILD_POPUP_PANEL  ' Build Configuration
     gSBPanels(i).rc.Left   = nRight - _
         pWindow->ScaleX( getTextWidth(HWND_FRMMAIN_STATUSBAR, gSBPanels(i).wszText, GUIFONT_9) + nPadding )
