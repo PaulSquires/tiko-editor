@@ -92,8 +92,8 @@ function frmMain_EditTopMenuStates() as long
         EnableTopMenuItem( idMenu, false )
     next
 
-    ' if any documents exist in the editor then enable FindInFiles
-    if gApp.GetDocumentCount then EnableTopMenuItem( IDM_FINDINFILES, true )
+    ' if any documents exist in the editor then enable FindInProject
+    if gApp.GetDocumentCount then EnableTopMenuItem( IDM_FINDINPROJECT, true )
         
     ' Enable or disable specific edit menu items (based on the currently active document)
     dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()

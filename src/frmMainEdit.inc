@@ -254,9 +254,9 @@ function OnCommand_EditReplaceDialog() as LRESULT
 end function
 
 ' ========================================================================================
-' Edit action Find in Files
+' Edit action Find in Project
 ' ========================================================================================
-function OnCommand_EditFindInFiles( byval hEdit as HWND ) as LRESULT
+function OnCommand_EditFindInProject( byval hEdit as HWND ) as LRESULT
     if hEdit = 0 then hEdit = HWND_FRMMAIN   ' possible no files are open
     frmFindInFiles_Show( hEdit )
     function = 0

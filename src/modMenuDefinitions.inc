@@ -101,7 +101,7 @@ Function getMenuText( byval idMenu as long ) As DWSTRING
         case IDM_PASTE: wszText = L(19,"Paste")
         case IDM_DELETELINE: wszText = L(20,"Delete Line")
         case IDM_FIND: wszText = L(43,"Find") & "..."
-        case IDM_FINDINFILES: wszText = L(257,"Find In Files") & "..."
+        case IDM_FINDINPROJECT: wszText = L(256,"Find in Project") & "..."
         case IDM_REPLACE: wszText = L(46,"Replace") & "..."
         case IDM_COMMENTBLOCK: wszText = L(25,"Comment Block")
         case IDM_UNCOMMENTBLOCK: wszText = L(26,"UnComment Block")
@@ -310,7 +310,7 @@ function buildTopMenuDefinitions() as long
     setTopMenuItem( IDC_MENUBAR_EDIT, IDM_DELETELINE, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_EDIT, 0, 0, false, true )
     setTopMenuItem( IDC_MENUBAR_EDIT, IDM_FIND, 0, false, false )
-    setTopMenuItem( IDC_MENUBAR_EDIT, IDM_FINDINFILES, 0, false, false )
+    setTopMenuItem( IDC_MENUBAR_EDIT, IDM_FINDINPROJECT, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_EDIT, IDM_REPLACE, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_EDIT, 0, 0, false, true )
     setTopMenuItem( IDC_MENUBAR_EDIT, IDM_DUPLICATELINE, 0, false, false )

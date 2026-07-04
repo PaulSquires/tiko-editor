@@ -107,12 +107,12 @@ function frmPanelMenu_PositionWindows() as LRESULT
     gPanelMenu(5).rc = type(nLeft, nTop, nLeft + nButtonWidth, nTop + nButtonHeight)
     gPanelMenu(5).wszTooltip = frmPanelMenu_FormatTooltip(IDM_FILESAVEALL)
 
-    ' Find in Files
+    ' Find in Project
     nLeft -= nButtonWidth
     gPanelMenu(4).wszCaption = wszIconFind
-    gPanelMenu(4).id = IDM_FINDINFILES
+    gPanelMenu(4).id = IDM_FINDINPROJECT
     gPanelMenu(4).rc = type(nLeft, nTop, nLeft + nButtonWidth, nTop + nButtonHeight)
-    gPanelMenu(4).wszTooltip = frmPanelMenu_FormatTooltip(IDM_FINDINFILES)
+    gPanelMenu(4).wszTooltip = frmPanelMenu_FormatTooltip(IDM_FINDINPROJECT)
 
     function = 0
 end function

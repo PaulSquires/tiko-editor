@@ -41,7 +41,7 @@ declare function OnCommand_EditCopy( byval pDoc as clsDocument ptr, byval hEdit 
 declare function OnCommand_EditPaste( byval pDoc as clsDocument ptr, byval hEdit as HWND ) as LRESULT
 declare function OnCommand_EditFindDialog() as LRESULT
 declare function OnCommand_EditReplaceDialog() as LRESULT
-declare function OnCommand_EditFindInFiles( byval hEdit as HWND ) as LRESULT
+declare function OnCommand_EditFindInProject( byval hEdit as HWND ) as LRESULT
 declare function OnCommand_EditFindActions( byval id as long, byval pDoc as clsDocument ptr ) as LRESULT
 declare function OnCommand_EditReplaceActions( byval id as long, byval pDoc as clsDocument ptr ) as LRESULT
 declare function OnCommand_EditIndentBlock( byval pDoc as clsDocument ptr, byval hEdit as HWND ) as LRESULT

@@ -94,7 +94,7 @@ function frmMain_OnCommand( _
         case IDM_FILEOPEN, IDM_FILEOPENASTEMPLATE, IDM_FILESAVEAS, IDM_FILERENAME, _
             IDM_SAVESESSION, IDM_LOADSESSION,  _
             IDM_KEYBOARDSHORTCUTS, IDM_USERTOOLSDIALOG, IDM_OPTIONSDIALOG, IDM_BUILDCONFIG, _
-            IDM_FIND, IDM_FINDINFILES, IDM_PROJECTOPEN, IDM_PROJECTSAVEAS, _
+            IDM_FIND, IDM_FINDINPROJECT, IDM_PROJECTOPEN, IDM_PROJECTSAVEAS, _
             IDM_PROJECTOPTIONS, IDM_COMMANDLINE, IDM_DEBUG_STARTDEBUGGING, IDM_ABOUT
             killAllPopupMenus()
     end select
@@ -247,7 +247,7 @@ function frmMain_OnCommand( _
         case IDM_SELECTALL:          OnCommand_EditSelectAll( pDoc, hEdit )
         case IDM_FIND:               OnCommand_EditFindDialog()
         case IDM_REPLACE:            OnCommand_EditReplaceDialog()
-        case IDM_FINDINFILES:        OnCommand_EditFindInFiles( hEdit )
+        case IDM_FINDINPROJECT:      OnCommand_EditFindInProject( hEdit )
         case IDM_INDENTBLOCK:        OnCommand_EditIndentBlock( pDoc, hEdit )
         case IDM_UNINDENTBLOCK:      OnCommand_EditUnIndentBlock( pDoc, hEdit )
 

@@ -118,7 +118,7 @@ function frmKeyboard_CreateDefaultKeyBindings() as long
     frmKeyBoard_AddKeyBinding( "Edit", IDM_PASTE, "IDM_PASTE", "Paste clipboard contents", "Ctrl+V", "", false )
     frmKeyBoard_AddKeyBinding( "Edit", IDM_DELETELINE, "IDM_DELETELINE", "Delete the current editor line", "Ctrl+Y", "", false )
     frmKeyBoard_AddKeyBinding( "Edit", IDM_FIND, "IDM_FIND", "Find", "Ctrl+F", "", false )
-    frmKeyBoard_AddKeyBinding( "Edit", IDM_FINDINFILES, "IDM_FINDINFILES", "Find in files", "Ctrl+Shift+F", "", false )
+    frmKeyBoard_AddKeyBinding( "Edit", IDM_FINDINPROJECT, "IDM_FINDINPROJECT", "Find in Project", "Ctrl+Shift+F", "", false )
     frmKeyBoard_AddKeyBinding( "Edit", IDM_REPLACE, "IDM_REPLACE", "Replace", "Ctrl+H", "", false )
     frmKeyBoard_AddKeyBinding( "Edit", IDM_DUPLICATELINE, "IDM_DUPLICATELINE", "Duplicate line", "Ctrl+D", "", false )
     frmKeyBoard_AddKeyBinding( "Edit", IDM_MOVELINEUP, "IDM_MOVELINEUP", "Move line up", "Alt+Up", "", false )
