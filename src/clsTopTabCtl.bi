@@ -36,8 +36,7 @@ type clsTopTabCtl
         ClientRightEdge   as long        ' the right edge (client right - action Panel)
         CurSel            as long = -1
         FirstDisplayTab   as long = 0   
-        LastDisplayTab    as long = 0    ' for positionign any "New File" from clicking + button
-        rcAddFileButton   as RECT
+        LastDisplayTab    as long = 0    
         rcActionPanel     as RECT
         rcActionButton    as RECT
         rcPrevTabs        as RECT

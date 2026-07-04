@@ -50,6 +50,8 @@ function CanCompleteBlockStatement( _
         case BLOCK_STATEMENT_UNION:       sStartMatch = "UNION ":       sEndMatch = "END UNION"
         case BLOCK_STATEMENT_CONSTRUCTOR: sStartMatch = "CONSTRUCTOR ": sEndMatch = "END CONSTRUCTOR"
         case BLOCK_STATEMENT_DESTRUCTOR:  sStartMatch = "DESTRUCTOR ":  sEndMatch = "END DESTRUCTOR"
+        case BLOCK_STATEMENT_SCOPE:       sStartMatch = "SCOPE":        sEndMatch = "END SCOPE"
+        case BLOCK_STATEMENT_NAMESPACE:   sStartMatch = "NAMESPACE ":   sEndMatch = "END NAMESPACE"
     end select
     
 
@@ -139,17 +141,7 @@ function AttemptAutoInsert() as Long
     strPrevLine = pDoc->GetLine(nLine-1)
     if len(strPrevLine) = 0 then exit function
 
-    ' Get the styling of the current line to determine if we are in a 
-    ' multiline or single line comment block then abort the autoinsert.
-    select case SciExec(hEdit, SCI_GETSTYLEAT, curPos, 0)
-        case SCE_B_MULTILINECOMMENT
-            exit function
-        case SCE_B_COMMENT
-            ' Allow to continue for single line comments because we want the ENTER
-            ' key to position our cursor under the preceeding ' mark.
-    end select
-    
-    
+
     ' Save a non-uppercased version of the strPrevLine for For/next insert
     strPrevLineOrig = strPrevLine
     
@@ -179,6 +171,25 @@ function AttemptAutoInsert() as Long
         nSpaces = 0: IndentSize = 0
     end if
 
+    ' Get the styling of the current line to determine if we are in a 
+    ' multiline or single line comment block then abort the autoinsert.
+    select case SciExec(hEdit, SCI_GETSTYLEAT, curPos, 0)
+        case SCE_B_MULTILINECOMMENT
+            '''''''''''''
+            ' MULTILINE COMMENTS  /'  '/  
+             if (left(strPrevLine, 3) = "/' ") orelse (strPrevLine = "/'") then
+                 strFill = FillString(space(nSpaces)) & vbcrlf & FillString(space(nSpaces)) & "'/"
+                 SciExec(hEdit, SCI_INSERTTEXT, curPos, strptr(strFill))
+                 curPos += nSpaces
+                 SciExec(hEdit, SCI_SETSEL, curPos, curPos)
+                 exit function
+            end if
+            exit function
+        case SCE_B_COMMENT
+            ' Allow to continue for single line comments because we want the ENTER
+            ' key to position our cursor under the preceeding ' mark.
+    end select
+    
 
     ''''''''''
     ' IF/THEN
@@ -471,6 +482,33 @@ function AttemptAutoInsert() as Long
         exit function
     end if
 
+    '''''''''''''
+    ' SCOPE/END SCOPE
+    if (left(strPrevLine, 6) = "SCOPE ") or (strPrevLine = "SCOPE") then
+        strFill = FillString(space(nSpaces + IndentSize))
+        if CanCompleteBlockStatement(pDoc, BLOCK_STATEMENT_SCOPE) then
+            strFill = strFill & vbcrlf & FillString(space(nSpaces)) & "end scope" & vbcrlf
+        end if         
+        SciExec(hEdit, SCI_ADDTEXT, len(strFill), strptr(strFill))
+        curPos = curPos + NumTabsFromSpaces(nSpaces + IndentSize )
+        SciExec(hEdit, SCI_SETSEL, curPos, curPos)
+        exit function
+    end if
+     
+    '''''''''''''
+    ' NAMESPACE/END NAMESPACE
+    if (left(strPrevLine, 10) = "NAMESPACE ") or (strPrevLine = "NAMESPACE") then
+        strFill = FillString(space(nSpaces + IndentSize))
+        if CanCompleteBlockStatement(pDoc, BLOCK_STATEMENT_NAMESPACE) then
+            strFill = strFill & vbcrlf & FillString(space(nSpaces)) & "end namespace" & vbcrlf
+        end if         
+        SciExec(hEdit, SCI_ADDTEXT, len(strFill), strptr(strFill))
+        curPos = curPos + NumTabsFromSpaces(nSpaces + IndentSize )
+        SciExec(hEdit, SCI_SETSEL, curPos, curPos)
+        exit function
+    end if
+
+        
     '''''''''''''
     ' Add the same spaces on the left that the line above
     strFill = FillString(space(nSpaces))

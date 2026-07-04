@@ -66,8 +66,8 @@ function frmOutput_UpdateToDoListview() as long
         wszText = _
             "" & chr(9) & _
             ltrim(wstr(pData->nLineStart)) & chr(9) & _
-            ltrim(wstr(pData->fileName)) & chr(9) & _
-            ltrim(wstr(pData->ElementData))
+            ltrim(pData->fileName) & chr(9) & _
+            ltrim(pData->ElementData)
         frmListView_AddString( hLV, wszText )
     loop until pData = 0
 

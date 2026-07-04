@@ -662,7 +662,10 @@ end function
 '':::::
 function ctxParser.GetLine() as boolean
     this.ReadToEOL()
-    this.fullLine = mid( *this.text, this.s + 1, this.i - this.s)
+    
+    dim as string st = mid( *this.text, this.s + 1, this.i - this.s)
+    this.fullLine.utf8 = st
+    
     this.s = this.i
     return true
 end function

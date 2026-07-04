@@ -485,6 +485,17 @@ function frmTopTabs_WndProc( _
             end if
         end if
 
+
+    case WM_LBUTTONDBLCLK
+        ' If doubleclicking in the unused client area of the tab control then 
+        ' add a new file. We do not track the actual unused area, so we need to
+        ' test whether the double click occured over a Tab or over the Action Panel. 
+        if ( getHotTabHitTest(hwnd) = -1 ) andalso _
+           ( isMouseOverRect(hwnd, gTTabCtl.rcActionPanel) = false ) then
+           PostMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(IDM_FILENEW, 0), 0 )
+        end if
+        
+        
     case WM_PAINT
         dim as clsDoubleBuffer b
         
