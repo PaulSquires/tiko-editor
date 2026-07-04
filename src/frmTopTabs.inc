@@ -209,13 +209,14 @@ function frmTopTabs_PositionWindows() as LRESULT
         end if   
     
     end if
-    
+
+    ' Redraw first to ensure that the tab control paints
+    AfxRedrawWindow( HWND_FRMMAIN_TOPTABS )
+
     ' Update the companion frmTopTabsInfo pane.
     frmTopTabsInfo_PositionWindows()
-
-    AfxRedrawWindow( HWND_FRMMAIN_TOPTABS )
     AfxRedrawWindow( HWND_FRMMAIN_TOPTABSINFO )
-
+    
     function = 0
 end function
 
