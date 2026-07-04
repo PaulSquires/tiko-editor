@@ -110,6 +110,7 @@ toptabs.texthot.foreground: 51,51,51
 toptabs.texthot.background: %WHITE
 toptabs.divider.foreground: 243,243,243
 toptabs.closehot.background: 220,220,220
+toptabs.iconselected.background: 204,233,252    # blue
 
 menubar.panel.background: 221,221,221
 menubar.text.foreground: 51,51,51
@@ -130,19 +131,6 @@ statusbar.text.foreground: %WHITE
 statusbar.text.background: 0,122,204
 statusbar.texthot.foreground: %WHITE
 statusbar.texthot.background: 31,138,210
-
-findreplace.panel.background: 243,243,243
-findreplace.text.foreground: 97,97,97
-findreplace.text.background: 243,243,243
-findreplace.texthot.foreground: 97,97,97
-findreplace.texthot.background: 56,59,65
-findreplace.leftedge.foreground: 200,200,200
-findreplace.iconhot.background: 225,225,225
-findreplace.iconselected.background: 204,233,252    # blue
-findreplace.textnotfound.foreground: 244,135,113    # salmon
-findreplace.textbox.foreground: 97,97,97
-findreplace.textbox.background: %WHITE
-findreplace.cuebanner.foreground: 118,118,118
 
 output.panel.background: %WHITE
 output.text.foreground: 106,106,106

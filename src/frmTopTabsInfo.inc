@@ -286,7 +286,6 @@ Function frmTopTabsInfo_RichEdit_SubclassProc ( _
                     cueBannerText = L(173,"Replace") & "..."
                 end if
                 SelectObject( hdc, gFind.hCueBannerFont )
-'                SetTextColor( hdc, ghFindReplace.CueBannerForeColor )
                 SetTextColor( hdc, ghTopTabs.ForeColor )
                 SetBkMode(hdc, TRANSPARENT)
                 dim as long wsStyle = DT_TOP or DT_LEFT or DT_NOPREFIX or DT_NOCLIP or DT_SINGLELINE 
@@ -616,7 +615,7 @@ function frmTopTabsInfo_WndProc( _
             ' Match Case
             if gFind.nMatchCase then 
                 b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
-                b.SetBackColors( ghFindReplace.IconSelectedBackColor, ghFindReplace.IconSelectedBackColor )
+                b.SetBackColors( ghTopTabs.IconSelectedBackColor, ghTopTabs.IconSelectedBackColor )
             else
                 b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
                 b.SetBackColors( ghTopTabs.BackColorHot, ghTopTabs.BackColor )
@@ -626,7 +625,7 @@ function frmTopTabsInfo_WndProc( _
             ' Whole Word
             if gFind.nWholeWord then 
                 b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
-                b.SetBackColors( ghFindReplace.IconSelectedBackColor, ghFindReplace.IconSelectedBackColor )
+                b.SetBackColors( ghTopTabs.IconSelectedBackColor, ghTopTabs.IconSelectedBackColor )
             else
                 b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
                 b.SetBackColors( ghTopTabs.BackColorHot, ghTopTabs.BackColor )
@@ -643,7 +642,7 @@ function frmTopTabsInfo_WndProc( _
             
             if gFind.nSelection then 
                 b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
-                b.SetBackColors( ghFindReplace.IconSelectedBackColor, ghFindReplace.IconSelectedBackColor )
+                b.SetBackColors( ghTopTabs.IconSelectedBackColor, ghTopTabs.IconSelectedBackColor )
             else
                 b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
                 b.SetBackColors( ghTopTabs.BackColorHot, ghTopTabs.BackColor )
@@ -670,7 +669,7 @@ function frmTopTabsInfo_WndProc( _
             b.SetFont( GUIFONT_9 )
             if gFind.nPreserve then 
                 b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
-                b.SetBackColors( ghFindReplace.IconSelectedBackColor, ghFindReplace.IconSelectedBackColor )
+                b.SetBackColors( ghTopTabs.IconSelectedBackColor, ghTopTabs.IconSelectedBackColor )
             else
                 b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
                 b.SetBackColors( ghTopTabs.BackColorHot, ghTopTabs.BackColor )

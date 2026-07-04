@@ -41,6 +41,8 @@ function frmMain_OpenProjectSafely( _
         gConfig.SaveConfigFile
     end if
 
+    FindReplaceControls_Hide()
+
     ' if a project is open then close any files that may be open in the editor. No need to
     ' do this if a new project is being created/opened because that function has already
     ' performed this operation. Doing so again will cause the Recent Files/Projects panel

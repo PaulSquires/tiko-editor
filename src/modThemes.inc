@@ -157,6 +157,7 @@ type TOPTABS_HANDLES_TYPE
     ForeColorHot as COLORREF
     Divider as COLORREF
     CloseBackColorHot as COLORREF
+    IconSelectedBackColor as COLORREF
 end type
 dim shared ghTopTabs as TOPTABS_HANDLES_TYPE
 
@@ -167,21 +168,6 @@ type STATUSBAR_HANDLES_TYPE
     ForeColorHot as COLORREF
 end type
 dim shared ghStatusBar as STATUSBAR_HANDLES_TYPE
-
-type FINDREPLACE_HANDLES_TYPE
-    BackColor as COLORREF
-    BackColorHot as COLORREF
-    ForeColor as COLORREF
-    ForeColorHot as COLORREF
-    leftedge as COLORREF
-    IconBackColorHot as COLORREF
-    NotFoundForeColor as COLORREF
-    TextBoxForeColor as COLORREF
-    TextBoxBackColor as COLORREF
-    IconSelectedBackColor as COLORREF
-    CueBannerForeColor as COLORREF
-end type
-dim shared ghFindReplace as FINDREPLACE_HANDLES_TYPE
 
 type OUTPUT_HANDLES_TYPE
     BackColor as COLORREF
@@ -203,7 +189,7 @@ dim shared ghOutput as OUTPUT_HANDLES_TYPE
 ''
 function getThemePtr( byval lookupKey as string ) as THEME_TYPE ptr
     ' we do a simple linear search for the theme because there will be a small
-    ' number of theme elements. maybe in the future put this in a hash array for
+    ' number of theme elements. Maybe in the future put this in a hash array for
     ' faster lookups should we need the performance boost.
     ' in case search fails return pointer to this dummy type to avoid null ptr
     static dummy as THEME_TYPE    
@@ -506,6 +492,8 @@ function LoadThemeFile() as boolean
     ghTopTabs.Divider = pTheme->foreground
     pTheme = getThemePtr("toptabs.closehot")
     ghTopTabs.CloseBackColorHot = pTheme->background
+    pTheme = getThemePtr("toptabs.iconselected")
+    ghTopTabs.IconSelectedBackColor = pTheme->background
 
     pTheme = getThemePtr("statusbar.panel")
     pTheme = getThemePtr("statusbar.text")
@@ -514,27 +502,6 @@ function LoadThemeFile() as boolean
     pTheme = getThemePtr("statusbar.texthot")
     ghStatusBar.BackColorHot = pTheme->background
     ghStatusBar.ForeColorHot = pTheme->foreground
-
-    pTheme = getThemePtr("findreplace.panel")
-    pTheme = getThemePtr("findreplace.text")
-    ghFindReplace.BackColor = pTheme->background
-    ghFindReplace.ForeColor = pTheme->foreground
-    pTheme = getThemePtr("findreplace.texthot")
-    ghFindReplace.BackColorHot = pTheme->background
-    ghFindReplace.ForeColorHot = pTheme->foreground
-    pTheme = getThemePtr("findreplace.leftedge")
-    ghFindReplace.LeftEdge = pTheme->foreground
-    pTheme = getThemePtr("findreplace.iconhot")
-    ghFindReplace.IconBackColorHot = pTheme->background
-    pTheme = getThemePtr("findreplace.textnotfound")
-    ghFindReplace.NotFoundForeColor = pTheme->foreground
-    pTheme = getThemePtr("findreplace.textbox")
-    ghFindReplace.TextBoxBackColor = pTheme->background
-    ghFindReplace.TextBoxForeColor = pTheme->foreground
-    pTheme = getThemePtr("findreplace.iconselected")
-    ghFindReplace.IconSelectedBackColor = pTheme->background
-    pTheme = getThemePtr("findreplace.cuebanner")
-    ghFindReplace.CueBannerForeColor = pTheme->foreground
 
     pTheme = getThemePtr("output.panel")
     pTheme = getThemePtr("output.text")

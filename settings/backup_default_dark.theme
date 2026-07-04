@@ -1,4 +1,4 @@
-general.description: WinFBE Default (Dark) Theme
+general.description: Default (Dark) Theme
 general.version: 1.0.0
 
 # all colors are specified using RGB syntax (red,green,blue)
@@ -76,7 +76,8 @@ editor.strings.background: %LIGHT_BLACK
 editor.strings.bold: false
 editor.strings.italic: false
 editor.strings.underline: false
-editor.bracegood.foreground: 000,128,000       # green
+editor.bracegood.foreground: 255,255,000       # yellow
+#editor.bracegood.foreground: %LIGHT_GRAY
 editor.bracebad.foreground: 196,000,000        # red
 editor.occurrence.foreground: 53,70,107
 editor.scrollbar.foreground: 75,83,97
@@ -109,6 +110,7 @@ toptabs.texthot.foreground: %LIGHT_WHITE
 toptabs.texthot.background: %LIGHT_BLACK
 toptabs.divider.foreground: 24,26,31
 toptabs.closehot.background: 56,59,65
+toptabs.iconselected.background: 49,73,123      # blue
 
 menubar.panel.background: %EVENING_BLACK
 menubar.text.foreground: %GRAY
@@ -130,19 +132,6 @@ statusbar.text.background: %EVENING_BLACK
 statusbar.texthot.foreground: %GRAY
 statusbar.texthot.background: 44,49,58
 
-findreplace.panel.background: %EVENING_BLACK
-findreplace.text.foreground: %LIGHT_WHITE
-findreplace.text.background: %EVENING_BLACK
-findreplace.texthot.foreground: %LIGHT_WHITE
-findreplace.texthot.background: 56,59,65
-findreplace.leftedge.foreground: 58,63,75
-findreplace.iconhot.background: 56,59,65
-findreplace.iconselected.background: 49,73,123      # blue
-findreplace.textnotfound.foreground: 244,135,113    # salmon
-findreplace.textbox.foreground: %LIGHT_WHITE
-findreplace.textbox.background: 27,29,35
-findreplace.cuebanner.foreground: 115,116,119
-
 output.panel.background: %LIGHT_BLACK
 output.text.foreground: 124,127,133
 output.text.background: %LIGHT_BLACK
@@ -150,5 +139,7 @@ output.texthot.foreground: %LIGHT_WHITE
 output.texthot.background: %LIGHT_BLACK
 output.divider.foreground: 124,127,133
 output.closehot.background: 56,59,65
+output.scrollbar.foreground: 75,83,97
+output.scrollbar.background: %LIGHT_BLACK
+output.scrollbardivider.foreground: 64,67,73
 
-designer.panel.background: %LIGHT_BLACK
