@@ -300,12 +300,10 @@ function OnCommand_EditFindActions( _
         case IDM_FINDPREVACCEL
             FindReplace_HighlightSearches()
             if FindReplace_NextSelection(startPos, false, true) then pDoc->CenterCurrentLine
-            pDoc->RemoveSelectionAttributes()
 
         case IDM_FINDNEXTACCEL
             FindReplace_HighlightSearches()
             if FindReplace_NextSelection(startPos, true, true) then pDoc->CenterCurrentLine
-            pDoc->RemoveSelectionAttributes()
 
     end select
     

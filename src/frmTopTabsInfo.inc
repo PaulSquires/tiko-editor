@@ -286,7 +286,8 @@ Function frmTopTabsInfo_RichEdit_SubclassProc ( _
                     cueBannerText = L(173,"Replace") & "..."
                 end if
                 SelectObject( hdc, gFind.hCueBannerFont )
-                SetTextColor( hdc, ghFindReplace.CueBannerForeColor )
+'                SetTextColor( hdc, ghFindReplace.CueBannerForeColor )
+                SetTextColor( hdc, ghTopTabs.ForeColor )
                 SetBkMode(hdc, TRANSPARENT)
                 dim as long wsStyle = DT_TOP or DT_LEFT or DT_NOPREFIX or DT_NOCLIP or DT_SINGLELINE 
                 DrawText(hdc, cueBannerText, -1, @editRect, wsStyle)
@@ -456,9 +457,9 @@ function frmTopTabsInfo_WndProc( _
         elseif isMouseOverRECT( hwnd, gFind.rcWholeWord ) then
             wszTooltip = L(162,"Match Whole Words")
         elseif isMouseOverRECT(hwnd, gFind.rcUpArrow) then
-            wszTooltip = L(45, "Find Previous") & " (Shift+Enter)"
+            wszTooltip  = frmPanelMenu_FormatTooltip( IDM_FINDPREVACCEL )
         elseif isMouseOverRECT(hwnd, gFind.rcDownArrow) then
-            wszTooltip = L(44, "Find Next") & " (Enter)"
+            wszTooltip  = frmPanelMenu_FormatTooltip( IDM_FINDNEXTACCEL )
         elseif isMouseOverRECT( hwnd, gFind.rcSelection ) then
             wszTooltip = L(148,"Selection")
         elseif isMouseOverRECT( hwnd, gFind.rcPreserve ) then
@@ -722,7 +723,7 @@ function frmTopTabsInfo_Show( byval hwndParent as HWND ) as LRESULT
     dim cf as CHARFORMATW 
     cf.cbSize = sizeof(cf)
     cf.dwMask = CFM_FACE or CFM_SIZE or CFM_CHARSET or CFM_COLOR
-    cf.crTextColor = ghTopTabs.ForeColorHot  'ghFindReplace.TextBoxForeColor
+    cf.crTextColor = ghTopTabs.ForeColorHot
     cf.yHeight = 11 * 20      ' in twips (1/20 pt)
     cf.bCharSet = DEFAULT_CHARSET
     cf.bPitchAndFamily = DEFAULT_PITCH or FF_DONTCARE
@@ -745,7 +746,7 @@ function frmTopTabsInfo_Show( byval hwndParent as HWND ) as LRESULT
                 WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_RIGHTSCROLLBAR)
     pWindow->SetControlSubclass(hCtlReplace, @frmTopTabsInfo_RichEdit_SubclassProc, IDC_FRMTOPTABSINFO_TXTREPLACE, NULL)
     SendMessage( hCtlReplace, EM_SETCHARFORMAT, SCF_ALL, cast(LPARAM, @cf) ) 
-    SendMessage( hCtlReplace, EM_SETBKGNDCOLOR , 0, cast(LPARAM, ghFindReplace.TextBoxBackColor) )
+    SendMessage( hCtlReplace, EM_SETBKGNDCOLOR , 0, cast(LPARAM, ghTopTabs.BackColorHot) )
 
     function = 0
     

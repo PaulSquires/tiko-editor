@@ -1430,7 +1430,9 @@ function frmMain_WndProc( _
             if pDoc then
                 AfxRedrawWindow( pDoc->hWindow(0) )  ' makes the code window display quicker especially when loading Project.
                 AfxRedrawWindow( pDoc->hWindow(1) )  ' makes the code window display quicker especially when loading Project.
-            end if   
+            end if
+            ' We have moved to a new Tab. If Find is open then highlight any search phrase.   
+            FindReplace_HighlightSearches()
             ' Set the focus to the Scintilla window. This will call frmMain_SetStatusbar.
             frmMain_SetFocusToCurrentCodeWindow()
             exit function

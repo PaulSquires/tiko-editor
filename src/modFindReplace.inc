@@ -59,6 +59,12 @@ end function
 function FindReplaceControls_Hide() as long
     gTTabCtl.InfoPanelHeight = TOPTABS_INFO_HEIGHT
     gFind.bExpanded = false
+
+    ' Remove any Find Highlight selection indicators from open documents.
+    for i as long = lbound(gTTabCtl.tabs) to ubound(gTTabCtl.tabs)
+        gTTabCtl.tabs(i).pDoc->RemoveSelectionAttributes()
+    next
+
     frmMain_PositionWindows()
     frmMain_SetFocusToCurrentCodeWindow()
     return 0
@@ -188,6 +194,9 @@ function FindReplace_HighlightSearches() as long
     
     dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
     if pDoc = 0 then exit function
+    
+    ' If Find is not active then don't do any highlighting
+    if (gTTabCtl.InfoPanelHeight = TOPTABS_INFO_HEIGHT) then exit function
 
     dim as long r, startPos, endPos, findFlags, nLength
 
@@ -196,13 +205,12 @@ function FindReplace_HighlightSearches() as long
     SciExec( hEdit, SCI_INDICSETSTYLE, 8, INDIC_STRAIGHTBOX)
     SciExec( hEdit, SCI_SETINDICATORCURRENT, 8, 0)
     SciExec( hEdit, SCI_INDICSETFORE, 8, ghEditor.ForeColorOccurrence ) 
-    SciExec( hEdit, SCI_INDICSETALPHA, 8, 60 )   
+    SciExec( hEdit, SCI_INDICSETALPHA, 8, 90 )   
     
     dim txtFind as string = gFind.txtFind
 
     ' Remove all existing selection indicators
-    nLength = SendMessage( hEdit, SCI_GETTEXTLENGTH, 0, 0)
-    SciExec( hEdit, SCI_INDICATORCLEARRANGE, 0, nLength)
+    pDoc->RemoveSelectionAttributes()
         
     ' if Find or Replace is open then use their flags also.
     if gTTabCtl.InfoPanelHeight <> TOPTABS_INFO_HEIGHT then
@@ -221,6 +229,7 @@ function FindReplace_HighlightSearches() as long
     end if
 
     if len(txtFind) then
+        gFind.foundCount = 0
         do
             SciExec( hEdit, SCI_SETTARGETSTART, startPos, 0)
             SciExec( hEdit, SCI_SETTARGETEND, endPos, 0)
@@ -230,12 +239,17 @@ function FindReplace_HighlightSearches() as long
             
             SciExec( hEdit, SCI_SETINDICATORVALUE, 8, 0 )
             SciExec( hEdit, SCI_INDICATORFILLRANGE, r, len(txtFind))
+            
+            gFind.foundCount += 1
 
             ' Move start position after the text
             startPos = SendMessage(hEdit, SCI_GETTARGETEND, 0, 0)
         loop
-    end if
  
+        gFind.wszResults = "0/" & gFind.foundCount 
+        AfxRedrawWindow( HWND_FRMMAIN_TOPTABSINFO )
+    end if
+    
     function = 0
 
 end function

@@ -687,6 +687,7 @@ function clsDocument.RemoveSelectionAttributes() as long
     function = 0
 end function
 
+
 ''
 ''
 function clsDocument.SetMarkerHighlight() as long
