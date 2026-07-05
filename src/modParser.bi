@@ -72,8 +72,7 @@ type ctxParser
     
     declare function Parse( byval pDoc as clsDocument ptr ) as boolean
     declare function ResetFunctionValues() as boolean
-    declare function IsTokenTODO( byval token as DWSTRING ) as boolean
-    declare function IsTODOinComment() as boolean
+    declare function IsTokenTODO() as boolean
     declare function IsStandardDataType( byref sVarType as string ) as boolean
     declare function PeekChar( byval x as integer = 0 ) as integer
     declare function ReadChar() as integer

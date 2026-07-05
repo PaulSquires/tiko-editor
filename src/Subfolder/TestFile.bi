@@ -13,6 +13,15 @@
 
 #pragma once
 
+'TODO: This is sample text for "I need to do" in the last line 6
+'ToDo: (upper and lowercase)
+'    todo: (leading spaces)
+
+/'
+'     ToDo: (in multiline comment, upper/lower, leading spaces)
+'/
+
+
 type clsApp
     private: 
         
