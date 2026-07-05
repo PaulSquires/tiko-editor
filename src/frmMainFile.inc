@@ -338,60 +338,62 @@ function OnCommand_FileClose( _
         if bCloseIndex(i) = false then continue for
 
         pDoc = gTTabCtl.GetDocumentPtr(i)
-        if pDoc = 0 then return true
-
-        if IsWindow(pDoc->hWindow(0)) = 0 then continue for
-    
-        if cbool(SciExec( pDoc->hWindow(0), SCI_GETMODIFY, 0, 0)) orelse _
-            (pDoc->UserModified = true) then
-            
-            gTTabCtl.SetFocusTab(i)
-            r = MessageBox( hwnd, L(76,"Save current changes?") & wstr(" ") & wText, @wstr(APPNAME), _
-                            MB_YESNOCANCEL Or MB_ICONQUESTION)
-            if r = IDCANCEL then exit function
-            if r = IDYES then 
-                r = pDoc->SaveFile()
-                if r = true then exit function   ' save was cancelled
-                elseif r = IDNO then
+        if pDoc then 
+            if IsWindow(pDoc->hWindow(0)) = 0 then continue for
+        
+            if cbool(SciExec( pDoc->hWindow(0), SCI_GETMODIFY, 0, 0)) orelse _
+                (pDoc->UserModified = true) then
+                
+                gTTabCtl.SetFocusTab(i)
+                r = MessageBox( hwnd, L(76,"Save current changes?") & wstr(" ") & wText, @wstr(APPNAME), _
+                                MB_YESNOCANCEL Or MB_ICONQUESTION)
+                if r = IDCANCEL then exit function
+                if r = IDYES then 
+                    r = pDoc->SaveFile()
+                    if r = true then exit function   ' save was cancelled
+                    elseif r = IDNO then
+                end if
             end if
+            
+            ' Hide the Scintilla editing windows
+            for ii as long = lbound(pDoc->hWindow) to ubound(pDoc->hWindow)
+                ShowWindow( pDoc->hWindow(ii), SW_HIDE)
+            next
+            SetRectEmpty( @pDoc->rcSplitButton )
         end if
-        
-        ' Hide the Scintilla editing windows
-        for ii as long = lbound(pDoc->hWindow) to ubound(pDoc->hWindow)
-            ShowWindow( pDoc->hWindow(ii), SW_HIDE)
-        next
-        SetRectEmpty( @pDoc->rcSplitButton )
-        
+            
         ' remove tab from gTTabCtl.tabs() array
         gTTabCtl.RemoveElement(i)
             
         ' Only remove this document from the global collection if it is not
         ' part of any active Project or if it is new/unsaved file. Files that are part of a project are
         ' all closed (tabs/nodes) automatically in one shot rather than individually.
-        dim as boolean bRemoveFile 
-        if pDoc->IsNewFlag = true then 
-            bRemoveFile = true
-        else
-            bRemoveFile = iif( gApp.IsProjectActive, false, true )
-            ' If the file was added to the tab control via a right-click include open then it
-            ' is not technically part of the project. We need to remove it from the gApp doc
-            ' list because if we try to later do an "Add files to Project" then the load will
-            ' fail because the document is already in the gApp doc list.
-            if (gApp.IsProjectActive = true) andalso (pDoc->ProjectFileType = FILETYPE_UNDEFINED) then
+        if pDoc then 
+            dim as boolean bRemoveFile 
+            if pDoc->IsNewFlag = true then 
                 bRemoveFile = true
+            else
+                bRemoveFile = iif( gApp.IsProjectActive, false, true )
+                ' If the file was added to the tab control via a right-click include open then it
+                ' is not technically part of the project. We need to remove it from the gApp doc
+                ' list because if we try to later do an "Add files to Project" then the load will
+                ' fail because the document is already in the gApp doc list.
+                if (gApp.IsProjectActive = true) andalso (pDoc->ProjectFileType = FILETYPE_UNDEFINED) then
+                    bRemoveFile = true
+                end if
             end if
-        end if
 
-        if bRemoveFile then
-            ' Remove all references from the gdb2 database. Only remove the reference
-            ' if the file is not part of an active project, otherwise, we will lose
-            ' references to function names, etc.
-            gdb2.dbDelete( pDoc->DiskFilename )
-            ' Save positioning information to be saved to project file
-            pDoc->SetDocInfo()   
-            gApp.RemoveDocument( pDoc )
-            LoadExplorerFiles()
-        end if
+            if bRemoveFile then
+                ' Remove all references from the gdb2 database. Only remove the reference
+                ' if the file is not part of an active project, otherwise, we will lose
+                ' references to function names, etc.
+                gdb2.dbDelete( pDoc->DiskFilename )
+                ' Save positioning information to be saved to project file
+                pDoc->SetDocInfo()   
+                gApp.RemoveDocument( pDoc )
+                LoadExplorerFiles()
+            end if
+        end if    
     next
         
     ' Set the active tab to the closest tab to the one just removed if it was the 

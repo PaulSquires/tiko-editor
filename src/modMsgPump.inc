@@ -14,6 +14,8 @@
 
 ''  HANDLE RAW INCOMING MESSAGES IN THE MESSAGE PUMP
 
+#include once "modFindReplace.inc"
+
 
 function handleMouseShowScrollBar( byval uMsg as MSG ) as boolean
     if (gApp.IsProjectLoading) orelse (gApp.IsFileLoading) then return false
@@ -273,7 +275,7 @@ function handleEscKeyModeless( byval uMsg as MSG ) as boolean
     ' Close any open Find/Replace window with ESC key
     ' Close any open FindInFiles window with ESC key
     if (uMsg.message = WM_KEYDOWN) andAlso (uMsg.wParam = VK_ESCAPE) then
-        if (gTTabCtl.InfoPanelHeight <> TOPTABS_INFO_HEIGHT) then
+        if (gFind.bShowFindPanel = true) orelse (gFind.bShowReplacePanel = true) then
             FindReplaceControls_Hide()
             return true
         end if
@@ -295,8 +297,8 @@ function handleKeysFindReplace( byval uMsg as MSG ) as boolean
     if pDoc = 0 then return false
 
     dim as HWND hFocus   = GetFocus()
-    dim as HWND hFind    = GetDlgItem( HWND_FRMMAIN_TOPTABSINFO, IDC_FRMTOPTABSINFO_TXTFIND )
-    dim as HWND hReplace = GetDlgItem( HWND_FRMMAIN_TOPTABSINFO, IDC_FRMTOPTABSINFO_TXTREPLACE )
+    dim as HWND hFind    = GetDlgItem( HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND )
+    dim as HWND hReplace = GetDlgItem( HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE )
     dim as HWND hEdit    = pDoc->hWndActiveScintilla
 
     if (hFocus <> hFind) andalso (hFocus <> hReplace) then return false

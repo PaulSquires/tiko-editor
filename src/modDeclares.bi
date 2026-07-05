@@ -181,7 +181,8 @@ dim shared as HWND HWND_FRMBUILDCONFIG, HWND_FRMUSERTOOLS, HWND_FRMABOUT
 dim shared as HWND HWND_FRMKEYBOARD, HWND_FRMKEYBOARD_LISTVIEW, HWND_FRMKEYBOARDEDIT
 dim shared as HWND HWND_FRMDEBUG, HWND_FRMDEBUG_OUTPUT
 
-dim shared as HWND HWND_FRMMAIN_TOPTABS, HWND_FRMMAIN_TOPTABSINFO
+dim shared as HWND HWND_FRMMAIN_TOPTABS
+dim shared as HWND HWND_FRMMAIN_TOPTABSINFO, HWND_FRMMAIN_TOPTABSFIND, HWND_FRMMAIN_TOPTABSREPLACE
 dim shared as HWND HWND_FRMEXPLORER, HWND_FRMEXPLORER_LISTBOX
 dim shared as HWND HWND_FRMFUNCTIONS, HWND_FRMFUNCTIONS_LISTBOX
 dim shared as HWND HWND_FRMBOOKMARKS, HWND_FRMBOOKMARKS_LISTBOX
@@ -252,7 +253,10 @@ type FINDREPLACE_TYPE
     nSearchAllOpenDocs  as long
     nSearchProject      as long
     wszResults          as DWSTRING = "0/0"
-    bExpanded           as boolean
+    bExpanded           as boolean = false
+    bShowInfoPanel      as boolean = true
+    bShowFindPanel      as boolean = false
+    bShowReplacePanel   as boolean = false
     rcMatchCase         as RECT
     rcWholeWord         as RECT
     rcToggle            as RECT
@@ -294,9 +298,9 @@ const MENUBAR_HEIGHT = 30
 const OUTPUT_TABS_HEIGHT = 40
 
 const TOPTABS_HEIGHT = 36
-const TOPTABS_INFO_HEIGHT = 40    ' the area below the tab itself
-const TOPTABS_INFO_HEIGHT_FIND = 80    ' the area below the tab itself
-const TOPTABS_INFO_HEIGHT_REPLACE = 120    ' the area below the tab itself
+const TOPTABS_INFO_HEIGHT = 40   
+const TOPTABS_FIND_HEIGHT = 40   
+const TOPTABS_REPLACE_HEIGHT = 40
 
 const MENUITEM_HEIGHT_COMPACT = 20
 const EXPLORERITEM_HEIGHT_COMPACT = 19 

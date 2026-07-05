@@ -12,7 +12,20 @@
 '    GNU General Public License for more details.
 
 
+#Define IDC_FRMTOPTABSFIND_TXTFIND                  1000
+#Define IDC_FRMTOPTABSREPLACE_TXTREPLACE            1001
+
+'' frmTopTabs
 declare function frmTopTabs_PositionWindows() as LRESULT
+
+'' frmTopTabsInfo
+declare function TopTabsInfoPanel_Hide() as long
+declare function modFindReplace_HighlightSearches() as long
+declare function frmTopTabsInfo_PositionWindows() as LRESULT
+
+'' frmTopTabsFind
+
+'' frmTopTabsReplace
 
 
 

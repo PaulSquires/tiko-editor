@@ -11,7 +11,7 @@
 '    MERCHANTABILITY or FITNESS for A PARTICULAR PURPOSE.  See the
 '    GNU General Public License for more details.
 
-#include once "frmTopTabsInfo.bi"
+#include once "frmTopTabs.bi"
 
 
 ' ========================================================================================
@@ -467,6 +467,7 @@ function frmTopTabs_WndProc( _
             end if
 
         elseif isMouseOverRECT(hwnd, gTTabCtl.rcActionPanel) then
+                
         else
             ' Reset the mouse pointer
             SetCursor( LoadCursor( null, IDC_ARROW ))

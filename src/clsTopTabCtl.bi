@@ -25,14 +25,14 @@ end enum
 type clsDocument_ as clsDocument
 
 type TOPTABS_TYPE
-    pDoc    as clsDocument_ ptr
-    wszText as DWSTRING
-    rcTab   as RECT          ' client coordinates 
-    rcIcon  as RECT          ' client coordinates 
-    rcText  as RECT          ' client coordinates 
-    rcClose as RECT          ' client coordinates 
-    isHot   as boolean
-    docType as DocumentType = DocumentType.Normal
+    pDoc                  as clsDocument_ ptr
+    wszText               as DWSTRING
+    rcTab                 as RECT          ' client coordinates 
+    rcIcon                as RECT          ' client coordinates 
+    rcText                as RECT          ' client coordinates 
+    rcClose               as RECT          ' client coordinates 
+    isHot                 as boolean
+    docType               as DocumentType = DocumentType.Normal
 end type
 
 
@@ -56,8 +56,6 @@ type clsTopTabCtl
         rcFindTextRect    as RECT
         rcReplaceTextRect as RECT
         wszFileType       as DWSTRING
-        InfoPanelHeight   as long = TOPTABS_INFO_HEIGHT
-            ' TOPTABS_INFO_HEIGHT, TOPTABS_INFO_HEIGHT_FIND, TOPTABS_INFO_HEIGHT_REPLACE
 
         tabs(any)         as TOPTABS_TYPE
         

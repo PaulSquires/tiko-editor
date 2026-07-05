@@ -11,6 +11,8 @@
 '    MERCHANTABILITY or FITNESS for A PARTICULAR PURPOSE.  See the
 '    GNU General Public License for more details.
 
+#include once "frmTopTabs.bi"
+
 
 ' ========================================================================================
 ' Expand the frmTopTabsInfo area to allow for the Find controls.
@@ -32,9 +34,9 @@ function FindControls_Show() as long
         gFind.txtFind = sFindtext
     end if   
 
-    AfxSetWindowText( GetDlgItem( HWND_FRMMAIN_TOPTABSINFO, IDC_FRMTOPTABSINFO_TXTFIND ), sFindText )
+    AfxSetWindowText( GetDlgItem( HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND ), sFindText )
 
-    gTTabCtl.InfoPanelHeight = TOPTABS_INFO_HEIGHT_FIND
+    gFind.bShowFindPanel = true
     gFind.bExpanded = false
 
     return 0
@@ -46,8 +48,10 @@ end function
 ' ========================================================================================
 function ReplaceControls_Show() as long
     ' Display the Replace controls
-    AfxSetWindowText( GetDlgItem( HWND_FRMMAIN_TOPTABSINFO, IDC_FRMTOPTABSINFO_TXTREPLACE ), "" )
-    gTTabCtl.InfoPanelHeight = TOPTABS_INFO_HEIGHT_REPLACE
+    AfxSetWindowText( GetDlgItem( HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE ), "" )
+    gFind.bShowInfoPanel = true
+    gFind.bShowFindPanel = true
+    gFind.bShowReplacePanel = true
     gFind.bExpanded = true
     return 0
 end function
@@ -57,7 +61,9 @@ end function
 ' Hide the Find/Replace controls and collapse the frmTopTabsInfo area.
 ' ========================================================================================
 function FindReplaceControls_Hide() as long
-    gTTabCtl.InfoPanelHeight = TOPTABS_INFO_HEIGHT
+    gFind.bShowInfoPanel = true
+    gFind.bShowFindPanel = false
+    gFind.bShowReplacePanel = false
     gFind.bExpanded = false
 
     ' Remove any Find Highlight selection indicators from open documents.
@@ -77,15 +83,16 @@ end function
 ' Hide all parts of the frmTopTabsInfo panels.
 ' ========================================================================================
 function TopTabsInfoPanel_Hide() as long
-    gTTabCtl.InfoPanelHeight = 0
-
+    gFind.bShowInfoPanel = false
+    gFind.bShowFindPanel = false
+    gFind.bShowReplacePanel = false
+    gFind.bExpanded = false
     ' Remove any Find Highlight selection indicators from open documents.
     for i as long = lbound(gTTabCtl.tabs) to ubound(gTTabCtl.tabs)
         if gTTabCtl.tabs(i).pDoc <> 0 then
             gTTabCtl.tabs(i).pDoc->RemoveSelectionAttributes()
         end if    
     next
-
     return 0
 end function
 
@@ -214,9 +221,6 @@ function FindReplace_HighlightSearches() as long
     dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
     if pDoc = 0 then exit function
     
-    ' If Find is not active then don't do any highlighting
-    if (gTTabCtl.InfoPanelHeight = TOPTABS_INFO_HEIGHT) then exit function
-
     dim as long r, startPos, endPos, findFlags, nLength
 
     dim as HWND hEdit = pDoc->hWndActiveScintilla
@@ -232,7 +236,7 @@ function FindReplace_HighlightSearches() as long
     pDoc->RemoveSelectionAttributes()
         
     ' if Find or Replace is open then use their flags also.
-    if gTTabCtl.InfoPanelHeight <> TOPTABS_INFO_HEIGHT then
+    if (gFind.bShowFindPanel = true) orelse (gFind.bShowReplacePanel = true) then
         if gFind.nMatchCase then findFlags = (findFlags or SCFIND_MATCHCASE)
         if gFind.nWholeWord then findFlags = (findFlags or SCFIND_WHOLEWORD)
         SciExec( hEdit, SCI_SETSEARCHFLAGS, findFlags, 0)
@@ -285,8 +289,8 @@ function FindReplace_DoReplace( _
     dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
     if pDoc = 0 then exit function
 
-    dim as HWND   hWndFind    = GetDlgItem(HWND_FRMMAIN_TOPTABSINFO, IDC_FRMTOPTABSINFO_TXTFIND)
-    dim as HWND   hWndReplace = GetDlgItem(HWND_FRMMAIN_TOPTABSINFO, IDC_FRMTOPTABSINFO_TXTREPLACE)
+    dim as HWND   hWndFind    = GetDlgItem(HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND)
+    dim as HWND   hWndReplace = GetDlgItem(HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE)
     dim as string txtFind     = str(AfxGetWindowText(hWndFind))
     dim as string txtReplace  = str(AfxGetWindowText(hWndReplace))
     dim as long   lenFind     = len(txtFind)

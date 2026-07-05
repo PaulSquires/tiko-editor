@@ -17,7 +17,7 @@
 ''
 
 #include once "clsDocument.bi"
-#include once "frmTopTabsInfo.bi"
+#include once "frmTopTabs.bi"
 #include once "frmBuildConfig.bi"
 #include once "modMRU.bi"
 
