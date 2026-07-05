@@ -14,6 +14,7 @@
 #include once "modParser.bi"
 
 
+
 '':::::
 function ctxParser.IsTokenTODO( byval token as DWSTRING ) as boolean
     ' Test the token to see if it meets different variations of TODO.
@@ -24,6 +25,45 @@ function ctxParser.IsTokenTODO( byval token as DWSTRING ) as boolean
 end function
 
 
+'':::::
+function ctxParser.IsTODOinComment() as boolean
+    dim as integer c = this.PeekChar()
+    if( c <> asc("'") ) then return false
+
+    ' We are in a Comment but we need to check if the comment starts
+    ' with a TODO: statement. If yes, then we need to return that token
+    c = this.PeekChar()
+    if( c = asc("t") or c = asc("T") ) or asc(" ") then
+        c = this.ReadChar()
+        while( c )
+            c = this.PeekChar()
+            select case c
+                'case " ", "T", "t", "O", "o", "D", "d", ":"
+                case 32, 84, 116, 79, 111, 68, 100, 58    
+                    c = this.ReadChar()
+                case else
+                    exit while
+            end select
+        wend
+        this.token = mid( *this.text, this.s + 1, this.i - this.s)
+        this.ltoken = lcase(this.token)
+        this.s = this.i
+        
+        if this.IsTokenTODO(this.ltoken) then
+            return true
+        end if
+    end if
+            
+    ' Reach this point then this is just a normal comment line 
+    ' to continue to the end of the line.
+    this.ReadToEOL()
+    this.s = this.i
+
+    return false
+
+end function
+
+    
 '':::::
 function ctxParser.ParseTODO( byval action as PARSEACTION ) as boolean
 
@@ -718,9 +758,15 @@ function ctxParser.GetToken() as boolean
         end if   
     end if
 
+    '' Inside a multiline comment
     if( this.incomment ) then
-        this.ReadToEOL()
-        this.s = this.i
+        ' Check for any TODO statement within the comment block
+        if this.IsTODOinComment() then
+            this.ParseTODO( PARSINGACTION.PARSE_TODO )
+        else
+            this.ReadToEOL()
+            this.s = this.i
+        end if    
         continue while
     end if
 
@@ -741,42 +787,15 @@ function ctxParser.GetToken() as boolean
         continue while
     end if
 
+
     '' '
     c = this.PeekChar()
     if( c = asc("'") ) then
-        c = this.ReadChar()
-
-        ' We are in a Comment but we need to check if the comment starts
-        ' with a TODO: statement. If yes, then we need to return that token
-        c = this.PeekChar()
-        if( c = asc("t") or c = asc("T") ) or asc(" ") then
-            c = this.ReadChar()
-            while( c )
-                c = this.PeekChar()
-                select case c
-                    'case " ", "T", "t", "O", "o", "D", "d", ":"
-                    case 32, 84, 116, 79, 111, 68, 100, 58    
-                        c = this.ReadChar()
-                    case else
-                        exit while
-                end select
-            wend
-            this.token = mid( *this.text, this.s + 1, this.i - this.s)
-            this.ltoken = lcase(this.token)
-            this.s = this.i
-            
-            if this.IsTokenTODO(this.ltoken) then
-                return true
-            end if
-        end if
-            
-        ' Reach this point then this is just a normal comment line 
-        ' to continue to the end of the line.
-        this.ReadToEOL()
-        this.s = this.i
+        if this.IsTODOinComment() then return true
         continue while
     end if
 
+            
     '' #
     c = this.PeekChar()
     if( c = asc("#") and this.startofline ) then
