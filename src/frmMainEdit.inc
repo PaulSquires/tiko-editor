@@ -258,7 +258,8 @@ end function
 ' ========================================================================================
 function OnCommand_EditFindInProject( byval hEdit as HWND ) as LRESULT
     if hEdit = 0 then hEdit = HWND_FRMMAIN   ' possible no files are open
-    frmFindInFiles_Show( hEdit )
+    frmFindInProject_Show( hEdit )
+    'frmFindInFiles_Show( hEdit )   ' todo: Remove this frmFindInFiles_Show call when Project Search completed
     function = 0
 end function
         

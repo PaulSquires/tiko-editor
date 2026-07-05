@@ -108,6 +108,7 @@ end function
 ' ========================================================================================
 function frmFunctions_SelectItemData( byval pDoc as clsDocument ptr ) as boolean
     ' Select the Function List listbox item where the ItemData holds the pDoc handle.
+    if pDoc = 0 then return false
     for i as long = 0 to ListBox_GetCount( HWND_FRMFUNCTIONS_LISTBOX ) - 1 
         if ListBox_GetItemData(HWND_FRMFUNCTIONS_LISTBOX, i) = pDoc then
             ListBox_SetCurSel( HWND_FRMFUNCTIONS_LISTBOX, i )

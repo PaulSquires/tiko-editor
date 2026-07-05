@@ -746,7 +746,7 @@ function frmMain_PositionWindows() as LRESULT
                     nWidthPanel, _
                     rc.Bottom - nHeightStatusBar - nHeightMenuBar, _
                     SWP_NOZORDER or SWP_SHOWWINDOW ) 
-        frmPanel_PositionWindows
+        frmPanel_PositionWindows()
         nLeft = nWidthPanel
         if gConfig.ExplorerPositionRight then nLeft = rc.left
     Else
@@ -755,7 +755,7 @@ function frmMain_PositionWindows() as LRESULT
 
 
     ' if items exist in the top tabcontrol then show the tab control and account for its height
-    if gTTabCtl.GetItemCount = 0 then
+    if (gTTabCtl.GetItemCount = 0) then
         ShowWindow( HWND_FRMMAIN_TOPTABS, SW_HIDE )
         ShowWindow( HWND_FRMMAIN_TOPTABSINFO, SW_HIDE )
         nHeightTabControl = 0
@@ -771,7 +771,8 @@ function frmMain_PositionWindows() as LRESULT
                     nLeft, nTop + nHeightTabControl, _     
                     rc.Right - nWidthPanel, nHeightTabInfoControl, _  
                     SWP_SHOWWINDOW or SWP_NOZORDER )
-        frmTopTabs_PositionWindows()   ' also calls to frmTopTabsInfo_PositionWindows
+        frmTopTabs_PositionWindows()
+        frmTopTabsInfo_PositionWindows()    
     end if
     
 
@@ -1139,41 +1140,41 @@ function frmMain_OnMouseMove( _
             byval keyflags as UINT _
             ) as long
 
+    dim pWindow as CWindow ptr = AfxCWindowPtr( HWND_FRMMAIN )
+    if pWindow = 0 then exit function
+
     ' HITTEST (DOCUMENT SPLITTER)
     dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
-    if pDoc then 
-        dim pWindow as CWindow ptr = AfxCWindowPtr( HWND_FRMMAIN )
-        if pWindow = 0 then exit function
+    if pDoc = 0 then exit function
         
-        dim as Rect rc
-        dim as point pt = (x, y)
-        if pDoc->bSizing then
-            dim as long nSplitSize = pWindow->ScaleY(SPLITSIZE)
-            dim as long nScrollWidth = pWindow->ScaleX(SCROLLBAR_WIDTH_EDITOR)
-            dim as long maxLeft = pDoc->rcDocSplitArea.left + nScrollWidth
-            dim as long maxTop = pDoc->rcDocSplitArea.top 
-            dim as long maxRight = pDoc->rcDocSplitArea.right - nScrollWidth - nSplitSize
-            dim as long maxBottom = pDoc->rcDocSplitArea.bottom - nSplitSize
-            if (pDoc->EditorSplitMode = SplitTopBottom) andalso (pt.y <> pDoc->ptPrev.y) then
-                pDoc->SplitY = pDoc->SplitY + (pt.y - pDoc->ptPrev.y)
-                ' Don't let the split go past the top or bottom of the edit area
-                if pDoc->SplitY <= maxTop then pDoc->SplitY = maxTop
-                if pDoc->SplitY >= maxBottom then pDoc->SplitY = maxBottom
-            end if   
-            if (pDoc->EditorSplitMode = SplitLeftRight) andalso (pt.x <> pDoc->ptPrev.x) then
-                pDoc->SplitX = pDoc->SplitX + (pt.x - pDoc->ptPrev.x)
-                ' Don't let the split go past the left or right of the edit area
-                if pDoc->SplitX <= maxLeft then pDoc->SplitX = maxLeft
-                if pDoc->SplitX >= maxRight then pDoc->SplitX = maxRight
-            end if   
-            frmMain_PositionWindows
-            pDoc->ptPrev = pt
-        else
-            frmMain_CalcSplitRect(pDoc)
-            if PtInRect(@pDoc->rcSplitButton, pt) then 
-                SetCursor( iif(pDoc->EditorSplitMode = SplitTopBottom, ghCursorSizeNS, ghCursorSizeWE ))
-            end if   
-        end if
+    dim as RECT rc
+    dim as POINT pt = (x, y)
+    if pDoc->bSizing then
+        dim as long nSplitSize = pWindow->ScaleY(SPLITSIZE)
+        dim as long nScrollWidth = pWindow->ScaleX(SCROLLBAR_WIDTH_EDITOR)
+        dim as long maxLeft = pDoc->rcDocSplitArea.left + nScrollWidth
+        dim as long maxTop = pDoc->rcDocSplitArea.top 
+        dim as long maxRight = pDoc->rcDocSplitArea.right - nScrollWidth - nSplitSize
+        dim as long maxBottom = pDoc->rcDocSplitArea.bottom - nSplitSize
+        if (pDoc->EditorSplitMode = SplitTopBottom) andalso (pt.y <> pDoc->ptPrev.y) then
+            pDoc->SplitY = pDoc->SplitY + (pt.y - pDoc->ptPrev.y)
+            ' Don't let the split go past the top or bottom of the edit area
+            if pDoc->SplitY <= maxTop then pDoc->SplitY = maxTop
+            if pDoc->SplitY >= maxBottom then pDoc->SplitY = maxBottom
+        end if   
+        if (pDoc->EditorSplitMode = SplitLeftRight) andalso (pt.x <> pDoc->ptPrev.x) then
+            pDoc->SplitX = pDoc->SplitX + (pt.x - pDoc->ptPrev.x)
+            ' Don't let the split go past the left or right of the edit area
+            if pDoc->SplitX <= maxLeft then pDoc->SplitX = maxLeft
+            if pDoc->SplitX >= maxRight then pDoc->SplitX = maxRight
+        end if   
+        frmMain_PositionWindows
+        pDoc->ptPrev = pt
+    else
+        frmMain_CalcSplitRect(pDoc)
+        if PtInRect(@pDoc->rcSplitButton, pt) then 
+            SetCursor( iif(pDoc->EditorSplitMode = SplitTopBottom, ghCursorSizeNS, ghCursorSizeWE ))
+        end if   
     end if
             
     function = 0
@@ -1196,25 +1197,25 @@ function frmMain_OnLButtonDown( _
     
     ' HITTEST (DOCUMENT SPLITTER)
     dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
-    if pDoc then 
-        dim as point pt = (x, y)
-        if PtInRect(@pDoc->rcSplitButton, pt) then 
-            pDoc->bSizing = true
-            frmMain_HideHorizScrollBars()   ' hide to reduce flickering
-                     
-            if pDoc->EditorSplitMode = SplitTopBottom then
-                pDoc->SplitY = pDoc->rcSplitButton.top  
-                pDoc->ptPrev.y = pt.y
-                SetCursor(ghCursorSizeNS)
-            end if
-            if pDoc->EditorSplitMode = SplitLeftRight then
-                pDoc->SplitX = pDoc->rcSplitButton.left  
-                pDoc->ptPrev.x = pt.x
-                SetCursor(ghCursorSizeWE)
-            end if
-
-            SetCapture( HWND_FRMMAIN )
+    if pDoc = 0 then return 0
+    
+    dim as POINT pt = (x, y)
+    if PtInRect(@pDoc->rcSplitButton, pt) then 
+        pDoc->bSizing = true
+        frmMain_HideHorizScrollBars()   ' hide to reduce flickering
+                 
+        if pDoc->EditorSplitMode = SplitTopBottom then
+            pDoc->SplitY = pDoc->rcSplitButton.top  
+            pDoc->ptPrev.y = pt.y
+            SetCursor(ghCursorSizeNS)
         end if
+        if pDoc->EditorSplitMode = SplitLeftRight then
+            pDoc->SplitX = pDoc->rcSplitButton.left  
+            pDoc->ptPrev.x = pt.x
+            SetCursor(ghCursorSizeWE)
+        end if
+
+        SetCapture( HWND_FRMMAIN )
     end if
 
     function = 0
@@ -1224,12 +1225,10 @@ end function
 sub frmMain_HandleSingleClick(hwnd as HWND)
     ' HITTEST (DOCUMENT SPLITTER)
     dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
-    if pDoc then 
-        if pDoc->bSizing then
-            pDoc->bSizing = false
-            frmMain_PositionWindows
-            ReleaseCapture
-        end if
+    if (pDoc <> 0) andalso (pDoc->bSizing = true) then
+        pDoc->bSizing = false
+        frmMain_PositionWindows
+        ReleaseCapture
     end if   
     SetCursor( LoadCursor( null, IDC_ARROW ))
 end sub
@@ -1239,16 +1238,16 @@ sub frmMain_HandleDoubleClick(hwnd as HWND)
     ' HITTEST (DOCUMENT SPLITTER)
     ' Are we over a split edit area (toggle off the split)
     dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
-    if pDoc then 
-        dim as point pt = pDoc->ptClick 
-        if PtInRect(@pDoc->rcSplitButton, pt) then 
-            pDoc->bSizing = false
-            pDoc->SplitX = 0
-            pDoc->SplitY = 0
-            pDoc->EditorSplitMode = SplitNone
-            ReleaseCapture
-            frmMain_PositionWindows
-        end if
+    if pDoc = 0 then exit sub
+
+    dim as POINT pt = pDoc->ptClick 
+    if PtInRect(@pDoc->rcSplitButton, pt) then 
+        pDoc->bSizing = false
+        pDoc->SplitX = 0
+        pDoc->SplitY = 0
+        pDoc->EditorSplitMode = SplitNone
+        ReleaseCapture
+        frmMain_PositionWindows
     end if
 end sub
 
@@ -1259,10 +1258,9 @@ end sub
 sub frmMain_TimerProc(hwnd as HWND, uMsg as UINT, idEvent as UINT_PTR, dwTime as DWORD)
     KillTimer(hwnd, idEvent)
     dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
-    if pDoc then
-        if pDoc->doubleClickReceived = false then
-            frmMain_HandleSingleClick(hwnd)
-        end if
+    if pDoc = 0 then exit sub
+    if pDoc->doubleClickReceived = false then
+        frmMain_HandleSingleClick(hwnd)
     end if
 end sub
 
@@ -1278,15 +1276,15 @@ function frmMain_OnLButtonUp( _
             ) as long
 
     dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
-    if pDoc then
-        pDoc->ptClick.x = x
-        pDoc->ptClick.y = y
-        ' Start a timer to delay single-click action and distinguish between
-        ' the single click and doubleclick
-        pDoc->doubleClickReceived = false
-        SetTimer(hwnd, pDoc->idTimer, 100, @frmMain_TimerProc)
-        ReleaseCapture
-    end if
+    if pDoc = 0 then return 0
+
+    pDoc->ptClick.x = x
+    pDoc->ptClick.y = y
+    ' Start a timer to delay single-click action and distinguish between
+    ' the single click and doubleclick
+    pDoc->doubleClickReceived = false
+    SetTimer(hwnd, pDoc->idTimer, 100, @frmMain_TimerProc)
+    ReleaseCapture
             
     function = 0
 end function
@@ -1306,11 +1304,11 @@ function frmMain_OnLButtonDblClk( _
     if gApp.bDragActive then exit function
 
     dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
-    if pDoc then
-        KillTimer(hwnd, pDoc->idTimer)
-        pDoc->doubleClickReceived = true
-        frmMain_HandleDoubleClick(hwnd)
-    end if
+    if pDoc = 0 then return 0
+
+    KillTimer(hwnd, pDoc->idTimer)
+    pDoc->doubleClickReceived = true
+    frmMain_HandleDoubleClick(hwnd)
                 
     function = 0
 end function
@@ -1425,22 +1423,33 @@ function frmMain_WndProc( _
             
         case MSG_USER_TOPTABS_CHANGED
             ' Show the new tab
-            gTTabCtl.DisplayScintilla( gTTabCtl.CurSel, true )
-            frmMain_PositionWindows()
-            dim pDoc as clsDocument ptr = gTTabCtl.tabs(gTTabCtl.CurSel).pDoc
-            if pDoc then
-                AfxRedrawWindow( pDoc->hWindow(0) )  ' makes the code window display quicker especially when loading Project.
-                AfxRedrawWindow( pDoc->hWindow(1) )  ' makes the code window display quicker especially when loading Project.
-            end if
-            ' We have moved to a new Tab. If Find is open then highlight any search phrase.   
-            FindReplace_HighlightSearches()
-            ' Set the focus to the Scintilla window. This will call frmMain_SetStatusbar.
-            frmMain_SetFocusToCurrentCodeWindow()
+            ' Hide the companion frmTopTabsInfo pane if this is not a NORMAL document.
+            ' For example, if displaying "Find in Project" search.
+            if gTTabCtl.tabs(gTTabCtl.CurSel).docType = DocumentType.ProjectSearch then
+                TopTabsInfoPanel_Hide()
+                frmMain_PositionWindows()
+            else
+                gTTabCtl.DisplayScintilla( gTTabCtl.CurSel, true )
+                frmMain_PositionWindows()
+
+                dim pDoc as clsDocument ptr = gTTabCtl.tabs(gTTabCtl.CurSel).pDoc
+                if pDoc then
+                    AfxRedrawWindow( pDoc->hWindow(0) )  ' makes the code window display quicker especially when loading Project.
+                    AfxRedrawWindow( pDoc->hWindow(1) )  ' makes the code window display quicker especially when loading Project.
+                end if
+
+                ' We have moved to a new Tab. If Find is open then highlight any search phrase.   
+                FindReplace_HighlightSearches()
+
+                ' Set the focus to the Scintilla window. This will call frmMain_SetStatusbar.
+                frmMain_SetFocusToCurrentCodeWindow()
+            end if    
+
             exit function
 
 
         case WM_SETFOCUS
-            frmMain_SetFocusToCurrentCodeWindow
+            frmMain_SetFocusToCurrentCodeWindow()
 
         case MSG_USER_SETFOCUS
             ' Set focus to current Scintilla window and update the document
@@ -1611,7 +1620,7 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
         ' Close with ESC key: Find/Replace, FindInFiles, FunctionList window
         if handleEscKeyModeless(uMsg) then continue do
 
-        ' Handle ENTER key for active FindReplace dialog
+        ' Handle ENTER key for active FindReplace
         if handleKeysFindReplace(uMsg) then continue do
         
         ' Processes accelerator keys for menu commands

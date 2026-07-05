@@ -169,7 +169,6 @@ function clsTopTabCtl.SetFocusTab( byval idx as long ) as long
         SendMessage( HWND_FRMMAIN, MSG_USER_TOPTABS_CHANGING, 0, 0 )
         this.CurSel = idx
         SendMessage( HWND_FRMMAIN, MSG_USER_TOPTABS_CHANGED, 0, 0 )
-        
         ' Highlight the selected tab file in the Explorer listbox
         frmExplorer_SelectItemData( this.tabs(idx).pDoc )
         ' Highlight the selected tab file in the Function List listbox

@@ -62,11 +62,30 @@ function FindReplaceControls_Hide() as long
 
     ' Remove any Find Highlight selection indicators from open documents.
     for i as long = lbound(gTTabCtl.tabs) to ubound(gTTabCtl.tabs)
-        gTTabCtl.tabs(i).pDoc->RemoveSelectionAttributes()
+        if gTTabCtl.tabs(i).pDoc <> 0 then
+            gTTabCtl.tabs(i).pDoc->RemoveSelectionAttributes()
+        end if    
     next
 
     frmMain_PositionWindows()
     frmMain_SetFocusToCurrentCodeWindow()
+    return 0
+end function
+
+
+' ========================================================================================
+' Hide all parts of the frmTopTabsInfo panels.
+' ========================================================================================
+function TopTabsInfoPanel_Hide() as long
+    gTTabCtl.InfoPanelHeight = 0
+
+    ' Remove any Find Highlight selection indicators from open documents.
+    for i as long = lbound(gTTabCtl.tabs) to ubound(gTTabCtl.tabs)
+        if gTTabCtl.tabs(i).pDoc <> 0 then
+            gTTabCtl.tabs(i).pDoc->RemoveSelectionAttributes()
+        end if    
+    next
+
     return 0
 end function
 

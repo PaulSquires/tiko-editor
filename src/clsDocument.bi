@@ -37,6 +37,7 @@
 #define MARKER_OCCURRENCES         3
 #define MARKER_DEBUGGER_CURLINE    4
 
+
 ' Structure that holds all of the user embedded compiler directives
 ' in the source code. Currently, only the main source file is searched
 ' for the '#CONSOLE ON|OFF directive but others can be added as needed.

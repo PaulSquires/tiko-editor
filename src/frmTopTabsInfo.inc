@@ -89,6 +89,8 @@ function frmTopTabsInfo_PositionWindows() as LRESULT
     dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN_TOPTABSINFO)
     if pWindow = 0 then exit function
 
+    if gTTabCtl.InfoPanelHeight = 0 then return 0
+     
     frmTopTabsInfo_CalculatePositionWindows()
     
     dim as HWND hCtlFind = GetDlgItem(HWND_FRMMAIN_TOPTABSINFO, IDC_FRMTOPTABSINFO_TXTFIND)
@@ -105,7 +107,7 @@ function frmTopTabsInfo_PositionWindows() as LRESULT
     dim as long nTop
     dim as long nWidth 
     dim as long nHeight
-     
+    
     if (gTTabCtl.InfoPanelHeight = TOPTABS_INFO_HEIGHT) then
         ShowWindow( hCtlFind, SW_HIDE )
         ShowWindow( hCtlReplace, SW_HIDE )
@@ -366,7 +368,8 @@ function frmTopTabsInfo_OnCommand( _
     if pDoc = 0 then exit function
 
     dim as HWND hEdit = pDoc->hWndActiveScintilla
-
+    if hEdit = 0 then exit function
+    
     select case id
 
         case IDC_FRMTOPTABSINFO_TXTFIND
@@ -478,24 +481,12 @@ function frmTopTabsInfo_WndProc( _
         end if    
 
 
-    case WM_RBUTTONDOWN
-
-
-    case WM_LBUTTONDOWN
-        if isMouseOverRECT(hwnd, gTTabCtl.rcFindButton) then
-        end if
-
-
     case WM_LBUTTONUP
         if isMouseOverRECT(hwnd, gTTabCtl.rcFindButton) then
             PostMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(IDM_FIND, 0), 0 )
         elseif isMouseOverRECT(hwnd, gTTabCtl.rcFileTypeButton) then
             PostMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(IDM_PROJECTFILETYPE, 0), 0 )
         end if
-        
-        dim as HWND hEdit 
-        dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
-        if pDoc then hEdit = pDoc->hWndActiveScintilla
         
         if isMouseOverRECT( hwnd, gFind.rcToggle ) then
             PostMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(IDM_REPLACE, 0), 0 )
@@ -517,6 +508,7 @@ function frmTopTabsInfo_WndProc( _
             PostMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(IDM_FINDNEXT, 0), 0 )
 
         elseif isMouseOverRECT( hwnd, gFind.rcSelection ) then
+            dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
             if pDoc = 0 then exit function 
             dim as boolean isOriginalSelectionMultiline = _
                 (pDoc->CurrentSelection.endline - pDoc->CurrentSelection.startline) 
@@ -535,16 +527,13 @@ function frmTopTabsInfo_WndProc( _
             AfxRedrawWindow(hwnd)
 
         elseif isMouseOverRECT( hwnd, gFind.rcPreserve ) then
-            if pDoc = 0 then exit function   
             gFind.nPreserve = not gFind.nPreserve
             AfxRedrawWindow(hwnd)
 
         elseif isMouseOverRECT( hwnd, gFind.rcReplace ) then
-            if pDoc = 0 then exit function   
             PostMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(IDM_REPLACENEXT, 0), 0 )
 
         elseif isMouseOverRECT( hwnd, gFind.rcReplaceAll ) then
-            if pDoc = 0 then exit function   
             PostMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(IDM_REPLACEALL, 0), 0 )
 
         elseif isMouseOverRECT( hwnd, gFind.rcClose ) then

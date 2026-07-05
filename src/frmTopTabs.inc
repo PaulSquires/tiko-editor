@@ -101,42 +101,39 @@ function frmTopTabs_PositionWindows() as LRESULT
 
     for i as long = lbound(gTTabCtl.tabs) to ubound(gTTabCtl.tabs) 
         pDoc = gTTabCtl.tabs(i).pDoc
-        if pDoc then
-            ' Determine the length of the text
-            gTTabCtl.tabs(i).wszText = AfxStrPathname( "NAMEX", pDoc->DiskFilename )
-            nTextWidth = getTextWidth( HWND_FRMMAIN_TOPTABS, gTTabCtl.tabs(i).wszText, GUIFONT_10 )
-            if nTextWidth < 70 then nTextWidth = 70
+        if pDoc then gTTabCtl.tabs(i).wszText = AfxStrPathname( "NAMEX", pDoc->DiskFilename )
+            
+        ' Determine the length of the text
+        nTextWidth = getTextWidth( HWND_FRMMAIN_TOPTABS, gTTabCtl.tabs(i).wszText, GUIFONT_10 )
+        if nTextWidth < 70 then nTextWidth = 70
 
-            vmargin = (TabHeight - rcCloseWidth + 2) / 2
+        vmargin = (TabHeight - rcCloseWidth + 2) / 2
             
-            ' calculate the various tab dimensions
-            gTTabCtl.tabs(i).rcTab = rc
-            gTTabCtl.tabs(i).rcTab.left = nLeft
-            gTTabCtl.tabs(i).rcTab.right = _
-                nLeft + pWindow->ScaleX(rcIconWidth + hmargin + nTextWidth + rcCloseWidth + hmargin)
-            
-            gTTabCtl.tabs(i).rcIcon         = gTTabCtl.tabs(i).rcTab
-            gTTabCtl.tabs(i).rcIcon.top     = gTTabCtl.tabs(i).rcIcon.top + pWindow->ScaleY(vmargin)
-            gTTabCtl.tabs(i).rcIcon.bottom  = gTTabCtl.tabs(i).rcIcon.top + pWindow->ScaleY(rcCloseWidth)
-            gTTabCtl.tabs(i).rcIcon.left    = gTTabCtl.tabs(i).rcTab.left 
-            gTTabCtl.tabs(i).rcIcon.right   = gTTabCtl.tabs(i).rcIcon.left + pWindow->ScaleX(rcIconWidth)
-            
-            gTTabCtl.tabs(i).rcText         = gTTabCtl.tabs(i).rcTab
-            gTTabCtl.tabs(i).rcText.bottom  = gTTabCtl.tabs(i).rcText.top + pWindow->ScaleY(TOPTABS_HEIGHT)
-            gTTabCtl.tabs(i).rcText.left    = gTTabCtl.tabs(i).rcIcon.right + hmargin
-            gTTabCtl.tabs(i).rcText.right   = gTTabCtl.tabs(i).rcText.left + pWindow->ScaleX(nTextWidth)
-            
-            gTTabCtl.tabs(i).rcClose        = gTTabCtl.tabs(i).rcTab
-            gTTabCtl.tabs(i).rcClose.top    = gTTabCtl.tabs(i).rcClose.top + pWindow->ScaleY(vmargin)
-            gTTabCtl.tabs(i).rcClose.bottom = gTTabCtl.tabs(i).rcClose.top + pWindow->ScaleY(rcCloseWidth)
-            gTTabCtl.tabs(i).rcClose.left   = gTTabCtl.tabs(i).rcText.right
-            gTTabCtl.tabs(i).rcClose.right  = gTTabCtl.tabs(i).rcClose.left + pWindow->ScaleX(rcCloseWidth)
+        ' calculate the various tab dimensions
+        gTTabCtl.tabs(i).rcTab = rc
+        gTTabCtl.tabs(i).rcTab.left = nLeft
+        gTTabCtl.tabs(i).rcTab.right = _
+            nLeft + pWindow->ScaleX(rcIconWidth + hmargin + nTextWidth + rcCloseWidth + hmargin)
+        
+        gTTabCtl.tabs(i).rcIcon         = gTTabCtl.tabs(i).rcTab
+        gTTabCtl.tabs(i).rcIcon.top     = gTTabCtl.tabs(i).rcIcon.top + pWindow->ScaleY(vmargin)
+        gTTabCtl.tabs(i).rcIcon.bottom  = gTTabCtl.tabs(i).rcIcon.top + pWindow->ScaleY(rcCloseWidth)
+        gTTabCtl.tabs(i).rcIcon.left    = gTTabCtl.tabs(i).rcTab.left 
+        gTTabCtl.tabs(i).rcIcon.right   = gTTabCtl.tabs(i).rcIcon.left + pWindow->ScaleX(rcIconWidth)
+        
+        gTTabCtl.tabs(i).rcText         = gTTabCtl.tabs(i).rcTab
+        gTTabCtl.tabs(i).rcText.bottom  = gTTabCtl.tabs(i).rcText.top + pWindow->ScaleY(TOPTABS_HEIGHT)
+        gTTabCtl.tabs(i).rcText.left    = gTTabCtl.tabs(i).rcIcon.right + hmargin
+        gTTabCtl.tabs(i).rcText.right   = gTTabCtl.tabs(i).rcText.left + pWindow->ScaleX(nTextWidth)
+        
+        gTTabCtl.tabs(i).rcClose        = gTTabCtl.tabs(i).rcTab
+        gTTabCtl.tabs(i).rcClose.top    = gTTabCtl.tabs(i).rcClose.top + pWindow->ScaleY(vmargin)
+        gTTabCtl.tabs(i).rcClose.bottom = gTTabCtl.tabs(i).rcClose.top + pWindow->ScaleY(rcCloseWidth)
+        gTTabCtl.tabs(i).rcClose.left   = gTTabCtl.tabs(i).rcText.right
+        gTTabCtl.tabs(i).rcClose.right  = gTTabCtl.tabs(i).rcClose.left + pWindow->ScaleX(rcCloseWidth)
 
-            gTTabCtl.tabs(i).pDoc = pDoc
-            gTTabCtl.tabs(i).isHot = false
-            nLeft = gTTabCtl.tabs(i).rcTab.right
-            
-        end if
+        gTTabCtl.tabs(i).isHot = false
+        nLeft = gTTabCtl.tabs(i).rcTab.right
     next
 
     ' We now know the exact width and postions of all tabs so now we need to calculate
@@ -213,10 +210,6 @@ function frmTopTabs_PositionWindows() as LRESULT
     ' Redraw first to ensure that the tab control paints
     AfxRedrawWindow( HWND_FRMMAIN_TOPTABS )
 
-    ' Update the companion frmTopTabsInfo pane.
-    frmTopTabsInfo_PositionWindows()
-    AfxRedrawWindow( HWND_FRMMAIN_TOPTABSINFO )
-    
     function = 0
 end function
 
@@ -371,7 +364,10 @@ function frmTopTabs_WndProc( _
             ' do nothing. no tooltip.
         else
             if gTTabCtl.IsSafeIndex(curr_idxHot) = false then exit function
-            wszTooltip = gTTabCtl.tabs(curr_idxHot).pDoc->DiskFilename   
+            wszTooltip = ""
+            if gTTabCtl.tabs(curr_idxHot).pDoc <> 0 then
+                wszTooltip = gTTabCtl.tabs(curr_idxHot).pDoc->DiskFilename   
+            end if    
         end if
         
         ' Display the tooltip
@@ -534,8 +530,10 @@ function frmTopTabs_WndProc( _
             ' if this document is dirty then the dirty circle icon overrides the display of the close icon
             ' unless the tab isHot. The dirty icon displays always for active and inactive tabs.
             dim as boolean isDirty 
-            if cbool(SciExec( gTTabCtl.tabs(i).pDoc->hWindow(0), SCI_GETMODIFY, 0, 0 )) then isDirty = true
-            if gTTabCtl.tabs(i).pDoc->UserModified then isDirty = true
+            if gTTabCtl.tabs(i).pDoc then
+                if cbool(SciExec( gTTabCtl.tabs(i).pDoc->hWindow(0), SCI_GETMODIFY, 0, 0 )) then isDirty = true
+                if gTTabCtl.tabs(i).pDoc->UserModified then isDirty = true
+            end if    
             
             if isDirty then
                 ' if mouse is over the rcClose then draw the close icon, otherwise draw the dirty circle

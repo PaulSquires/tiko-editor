@@ -13,6 +13,13 @@
 
 #pragma once
 
+' document types (not to be confused with FileType)
+' Used to distinguish normal code editing documents from Project Search
+enum DocumentType
+    Normal
+    ProjectSearch
+end enum
+
 
 ' Forward reference
 type clsDocument_ as clsDocument
@@ -25,6 +32,7 @@ type TOPTABS_TYPE
     rcText  as RECT          ' client coordinates 
     rcClose as RECT          ' client coordinates 
     isHot   as boolean
+    docType as DocumentType = DocumentType.Normal
 end type
 
 

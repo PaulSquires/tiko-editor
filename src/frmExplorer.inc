@@ -109,6 +109,7 @@ end function
 function frmExplorer_SelectItemData( byval pDoc as clsDocument ptr ) as boolean
     ' Select the Explorer listbox item where the ItemData holds the pDoc handle.
     ' Reset any other single or multiple selections. Process entire listbox. 
+    if pDoc = 0 then return false
     dim as long idx = -1
     for i as long = 0 to ListBox_GetCount( HWND_FRMEXPLORER_LISTBOX ) - 1 
         ListBox_SetSel( HWND_FRMEXPLORER_LISTBOX, false, i )
@@ -132,7 +133,6 @@ end function
 ' Position all child windows. Called manually and/or by WM_SIZE
 ' ========================================================================================
 function frmExplorer_PositionWindows() as LRESULT
-
     ' Get the entire client area
     dim as Rect rc
     GetClientRect( HWND_FRMEXPLORER, @rc )
@@ -725,7 +725,7 @@ function LoadExplorerFiles() as long
     AfxRedrawWindow(hList)
 
     ' Determine if the VScroll bar has changed size or is now hidden/shown
-    frmPanel_PositionWindows
+    frmPanel_PositionWindows()
 
     function = 0
 end function
