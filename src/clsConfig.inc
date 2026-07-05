@@ -1062,6 +1062,8 @@ function clsConfig.SaveSessionFile( byref wszSessionFile as wstring ) as boolean
     for i as long = 0 To nCount - 1
         if gTTabCtl.IsSafeIndex(i) = false then continue for
         pDoc = gTTabCtl.tabs(i).pDoc
+        if pDoc = 0 then continue for
+        
         ' Only deal with files that are no longer "new"
         if pDoc->IsNewFlag = false then 
             wszText = ProcessToCurdriveApp(pDoc->DiskFilename)
@@ -1307,6 +1309,7 @@ function clsConfig.ProjectSaveToFile() as boolean
     for i = 0 To nCount - 1
         if gTTabCtl.IsSafeIndex(i) = false then continue for
         pDoc = gTTabCtl.tabs(i).pDoc
+        if pDoc = 0 then continue for
         
         ' Only deal with files that are no longer "new"
         if pDoc->IsNewFlag = false then 
