@@ -523,6 +523,12 @@ function frmTopTabs_WndProc( _
                 b.PaintRect( @gTTabCtl.tabs(i).rcTab )
             end if
             
+            ' display the "Find" icon if this in a special "Find in Project" tab.
+            if gTTabCtl.tabs(i).docType = DocumentType.ProjectSearch then
+                b.SetFont( SYMBOLFONT_9 )
+                b.PaintText( wszIconFind, @gTTabCtl.tabs(i).rcIcon, DT_CENTER )
+            end if
+            
             ' display the tab text
             b.SetFont( GUIFONT_10 )
             b.PaintText( gTTabCtl.tabs(i).wszText, @gTTabCtl.tabs(i).rcText, DT_CENTER )
