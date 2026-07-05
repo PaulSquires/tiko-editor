@@ -90,10 +90,9 @@ function frmMain_SetStatusbar() as long
     ' PANEL (2) Theme selection (dialog popup)
     ' PANEL (3) Build Configuration (dialog popup)
     ' PANEL (4) Build Configuration (quick select)
-    ' PANEL (5) Filetype (Normal/Main/Resource/Module)
-    ' PANEL (6) Spacing
-    ' PANEL (7) File Encoding (Ansi, UTF-8, etc)
-    ' PANEL (8) Line Endings
+    ' PANEL (5) Spacing
+    ' PANEL (6) File Encoding (Ansi, UTF-8, etc)
+    ' PANEL (7) Line Endings
 
     ' blank out the current statusbar values  
     for i as long = lbound(gSBPanels) to ubound(gSBPanels)

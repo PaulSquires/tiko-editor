@@ -13,6 +13,17 @@
 
 #include once "modParser.bi"
 
+
+'':::::
+function ctxParser.IsTokenTODO( byval token as DWSTRING ) as boolean
+    ' Test the token to see if it meets different variations of TODO.
+    ' Remove any embedded white space before testing.
+    token = AfxStrRemove( token, " " )
+    if token = "'todo:" then return true
+    return false
+end function
+
+
 '':::::
 function ctxParser.ParseTODO( byval action as PARSEACTION ) as boolean
 
@@ -45,9 +56,8 @@ function ctxParser.ParseDIM( _
     ' Get the tokens for this DIM statement up until the EOL
     do until this.GetToken() = false
         if this.EOL then exit do
+        if this.IsTokenTODO(this.ltoken) then this.ParseTODO( PARSINGACTION.PARSE_TODO )
         select case this.ltoken 
-            case "'todo:"
-            this.ParseTODO( PARSINGACTION.PARSE_TODO )
             case "shared"
             ' change the scope of this variable to global and do not add it to the statement  
             originFrom = DIMSCOPE.SCOPEGLOBAL
@@ -208,12 +218,11 @@ function ctxParser.ParseENUM( byval action as PARSEACTION ) as boolean
     ' Finally, look for the END ENUM that will complete the parsing
     do until this.GetToken() = false
         ' tokens from the body of the ENUM should be processed here
+        if this.IsTokenTODO(this.ltoken) then this.ParseTODO( PARSINGACTION.PARSE_TODO )
 
         select case this.ltoken 
             case "explicit", "="
                 this.ReadToEOL()
-            case "'todo:"
-                this.ParseTODO( PARSINGACTION.PARSE_TODO )
             case "end"   
             case else
             if len(this.token) then
@@ -288,14 +297,14 @@ function ctxParser.ParseTYPE( byval action as PARSEACTION ) as boolean
             bReadingExtends = false   
         end if
         
+        if this.IsTokenTODO(this.ltoken) then this.ParseTODO( PARSINGACTION.PARSE_TODO )
+
         select case this.ltoken 
             case "extends"
                 bReadingExtends = true
             case "as"
                 this.ReadToSOL()
                 this.ParseDim( action, DIMSCOPE.SCOPETYPE )
-            case "'todo:"
-                this.ParseTODO( PARSINGACTION.PARSE_TODO )
         end select
         
         if( this.ltoken = "end" ) then
@@ -449,10 +458,7 @@ function ctxParser.ParseFunction( byval action as PARSEACTION ) as boolean
             ' This should pickup any "byref" "as" RETURN_TYPE
             this.functionReturnType = this.functionReturnType & this.token & " "
 
-            select case this.ltoken 
-            case "'todo:"
-                this.ParseTODO( PARSINGACTION.PARSE_TODO )
-            end select       
+            if this.IsTokenTODO(this.ltoken) then this.ParseTODO( PARSINGACTION.PARSE_TODO )
         loop
     end if
 
@@ -466,12 +472,12 @@ function ctxParser.ParseFunction( byval action as PARSEACTION ) as boolean
     ' Finally, look for the End Sub/Function that will complete the parsing
     do until this.GetToken() = false
         ' tokens from the body of the sub/function should be processed here
+            
+        if this.IsTokenTODO(this.ltoken) then this.ParseTODO( PARSINGACTION.PARSE_TODO )
         
         select case this.ltoken 
             case "dim", "static"
                 this.ParseDim( action, DIMSCOPE.SCOPEFUNCTION )
-            case "'todo:"
-                this.ParseTODO( PARSINGACTION.PARSE_TODO )
             case "property", "return"
                 if action = PARSINGACTION.PARSE_PROPERTY then
                     ' A Property statement found at this point would be a return statement
@@ -743,13 +749,13 @@ function ctxParser.GetToken() as boolean
         ' We are in a Comment but we need to check if the comment starts
         ' with a TODO: statement. If yes, then we need to return that token
         c = this.PeekChar()
-        if( c = asc("t") or c = asc("T") ) then
+        if( c = asc("t") or c = asc("T") ) or asc(" ") then
             c = this.ReadChar()
             while( c )
                 c = this.PeekChar()
                 select case c
-                    'case "O", "o", "D", "d", ":"
-                    case 79, 111, 68, 100, 58    
+                    'case " ", "T", "t", "O", "o", "D", "d", ":"
+                    case 32, 84, 116, 79, 111, 68, 100, 58    
                         c = this.ReadChar()
                     case else
                         exit while
@@ -759,7 +765,7 @@ function ctxParser.GetToken() as boolean
             this.ltoken = lcase(this.token)
             this.s = this.i
             
-            if this.ltoken = "'todo:" then
+            if this.IsTokenTODO(this.ltoken) then
                 return true
             end if
         end if
@@ -976,13 +982,13 @@ function ctxParser.Parse( byval pDoc as clsDocument ptr ) as boolean
                 '? this.lineNum, "Error parsing ENUM statement. Unexpected token: "; this.token
             end if
 
-            case "'todo:"
+        end select
+        
+        if this.IsTokenTODO(this.ltoken) then
             if this.ParseTODO( PARSINGACTION.PARSE_TODO ) = false then
                 '? this.lineNum, "Error parsing TODO statement. Unexpected token: "; this.token
             end if
-
-        end select
-
+        end if
     loop
 
     this.text = 0
