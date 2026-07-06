@@ -34,8 +34,10 @@ function FindControls_Show() as long
         gFind.txtFind = sFindtext
     end if   
 
-    AfxSetWindowText( GetDlgItem( HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND ), sFindText )
-
+    if sFindText <> AfxGetWindowText( GetDlgItem(HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND) ) then
+        AfxSetWindowText( GetDlgItem( HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND ), sFindText )
+    end if    
+    
     gFind.bShowFindPanel = true
     gFind.bExpanded = false
 
@@ -67,6 +69,7 @@ function FindReplaceControls_Hide() as long
     gFind.bExpanded = false
     gFind.txtFind = ""
     gFind.txtReplace = ""
+    gFind.bInitialSetSel = false
 
     ' Remove any Find Highlight selection indicators from open documents.
     for i as long = lbound(gTTabCtl.tabs) to ubound(gTTabCtl.tabs)
@@ -210,7 +213,7 @@ function FindReplace_NextSelection( _
         gFind.wszResults = "0/0"
     end if
     
-    AfxRedrawWindow( HWND_FRMMAIN_TOPTABSINFO )
+    AfxRedrawWindow( HWND_FRMMAIN_TOPTABSFIND )
     
     return iif(mainIdx > 0, true, false)
     

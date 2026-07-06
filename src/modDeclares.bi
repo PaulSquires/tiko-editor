@@ -257,6 +257,7 @@ type FINDREPLACE_TYPE
     bShowInfoPanel      as boolean = true
     bShowFindPanel      as boolean = false
     bShowReplacePanel   as boolean = false
+    bInitialSetSel      as boolean = false   ' Set cursor at end of Find text when first displayed.
     rcMatchCase         as RECT
     rcWholeWord         as RECT
     rcToggle            as RECT
