@@ -229,24 +229,10 @@ end function
 ' Edit action Find
 ' ========================================================================================
 function OnCommand_EditFindDialog() as LRESULT
-    dim as HWND hCtl = GetDlgItem( HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND)
-    dim as long nCurSel = Edit_GetSel(hCtl)
-    
     FindControls_Show()
     frmMain_PositionWindows()
 
-    dim as long nStart
-    dim as long nEnd
-    
-    if gFind.bInitialSetSel = false then
-        dim as long nLen = len(AfxGetWindowText(hCtl))
-        nStart = nLen:  nEnd = nLen
-        gFind.bInitialSetSel = true
-    else    
-        nStart = loword(nCurSel):  nEnd = hiword(nCurSel)
-    end if
-        
-    Edit_SetSel( hCtl, nStart, nEnd )
+    dim as HWND hCtl = GetDlgItem( HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND)
     SetFocus( hCtl )
 
     function = 0
@@ -257,9 +243,6 @@ end function
 ' ========================================================================================
 function OnCommand_EditReplaceDialog() as LRESULT
     ' If Replace is already open then close it (toggle).
-    dim as HWND hCtl = GetDlgItem( HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND )
-    dim as long nCurSel = Edit_GetSel(hCtl)
-
     gFind.bExpanded = not gFind.bExpanded
     if gFind.bExpanded = false then
         gFind.bShowReplacePanel = false
@@ -269,7 +252,7 @@ function OnCommand_EditReplaceDialog() as LRESULT
     end if    
     frmMain_PositionWindows()
 
-    Edit_SetSel( hCtl, loword(nCurSel), hiword(nCurSel) )
+    dim as HWND hCtl = GetDlgItem( HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND )
     SetFocus( hCtl )
     
     function = 0

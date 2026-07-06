@@ -34,8 +34,11 @@ function FindControls_Show() as long
         gFind.txtFind = sFindtext
     end if   
 
-    if sFindText <> AfxGetWindowText( GetDlgItem(HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND) ) then
-        AfxSetWindowText( GetDlgItem( HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND ), sFindText )
+    dim as HWND hCtl = GetDlgItem( HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND)
+    if sFindText <> AfxGetWindowText(hCtl) then
+        AfxSetWindowText( hCtl, sFindText )
+        dim as long nLen = len(AfxGetWindowText(hCtl))
+        Edit_SetSel( hCtl, nLen, nLen )
     end if    
     
     gFind.bShowFindPanel = true
@@ -67,9 +70,6 @@ function FindReplaceControls_Hide() as long
     gFind.bShowFindPanel = false
     gFind.bShowReplacePanel = false
     gFind.bExpanded = false
-    gFind.txtFind = ""
-    gFind.txtReplace = ""
-    gFind.bInitialSetSel = false
 
     ' Remove any Find Highlight selection indicators from open documents.
     for i as long = lbound(gTTabCtl.tabs) to ubound(gTTabCtl.tabs)
@@ -92,8 +92,6 @@ function TopTabsInfoPanel_Hide() as long
     gFind.bShowFindPanel = false
     gFind.bShowReplacePanel = false
     gFind.bExpanded = false
-    gFind.txtFind = ""
-    gFind.txtReplace = ""
     ' Remove any Find Highlight selection indicators from open documents.
     for i as long = lbound(gTTabCtl.tabs) to ubound(gTTabCtl.tabs)
         if gTTabCtl.tabs(i).pDoc <> 0 then
