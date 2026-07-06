@@ -65,6 +65,8 @@ function FindReplaceControls_Hide() as long
     gFind.bShowFindPanel = false
     gFind.bShowReplacePanel = false
     gFind.bExpanded = false
+    gFind.txtFind = ""
+    gFind.txtReplace = ""
 
     ' Remove any Find Highlight selection indicators from open documents.
     for i as long = lbound(gTTabCtl.tabs) to ubound(gTTabCtl.tabs)
@@ -87,6 +89,8 @@ function TopTabsInfoPanel_Hide() as long
     gFind.bShowFindPanel = false
     gFind.bShowReplacePanel = false
     gFind.bExpanded = false
+    gFind.txtFind = ""
+    gFind.txtReplace = ""
     ' Remove any Find Highlight selection indicators from open documents.
     for i as long = lbound(gTTabCtl.tabs) to ubound(gTTabCtl.tabs)
         if gTTabCtl.tabs(i).pDoc <> 0 then
@@ -270,7 +274,7 @@ function FindReplace_HighlightSearches() as long
         loop
  
         gFind.wszResults = "0/" & gFind.foundCount 
-        AfxRedrawWindow( HWND_FRMMAIN_TOPTABSINFO )
+        AfxRedrawWindow( HWND_FRMMAIN_TOPTABSFIND )
     end if
     
     function = 0

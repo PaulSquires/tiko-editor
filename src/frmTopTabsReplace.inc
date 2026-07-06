@@ -39,7 +39,7 @@ function frmTopTabsReplace_PositionWindows() as LRESULT
     
     gTTabCtl.rcReplaceTextRect = rc
     gTTabCtl.rcReplaceTextRect.left   = gTTabCtl.rcFindTextRect.left
-    gTTabCtl.rcReplaceTextRect.top    = pWindow->ScaleY(TOPTABS_FIND_HEIGHT)
+    gTTabCtl.rcReplaceTextRect.top    = 0
     gTTabCtl.rcReplaceTextRect.right  = gTTabCtl.rcFindTextRect.right
     gTTabCtl.rcReplaceTextRect.bottom = pWindow->ScaleY(TOPTABS_REPLACE_HEIGHT) - pWindow->ScaleY(8)
 
@@ -79,7 +79,7 @@ function frmTopTabsReplace_PositionWindows() as LRESULT
     gFind.rcReplaceAll.right  = gFind.rcReplaceAll.Left + iconWidth
     gFind.rcReplaceAll.bottom = gFind.rcReplace.bottom
 
-    AfxRedrawWindow( HWND_FRMMAIN_TOPTABSINFO )
+    AfxRedrawWindow( HWND_FRMMAIN_TOPTABSREPLACE )
 
     function = 0
 end function
@@ -318,7 +318,7 @@ function frmTopTabsReplace_WndProc( _
         b.SetPenColor( ghEditor.Divider )
         b.PaintLine( 1, b.rcClient.left, b.rcClient.bottom, b.rcClient.right, b.rcClient.bottom )
 
-        ' If Find (or Replace) is active then draw the Find controls.
+        ' Draw the Replace controls.
         b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
         b.SetBackColors( ghTopTabs.BackColorHot, ghTopTabs.BackColorHot )
         b.SetPenColor( ghEditor.Divider )
@@ -362,7 +362,7 @@ function frmTopTabsReplace_Show( byval hwndParent as HWND ) as LRESULT
     '  Create the main window and child controls
     dim pWindow as CPanelWindow ptr = new CPanelWindow
 
-    HWND_FRMMAIN_TOPTABSREPLACE = pWindow->Create( hwndParent, @frmTopTabsInfo_WndProc, _
+    HWND_FRMMAIN_TOPTABSREPLACE = pWindow->Create( hwndParent, @frmTopTabsReplace_WndProc, _
         0, 0, 0, TOPTABS_REPLACE_HEIGHT, _
         WS_CHILD or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
         WS_EX_CONTROLPARENT or WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_RIGHTSCROLLBAR)

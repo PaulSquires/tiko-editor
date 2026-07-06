@@ -39,7 +39,7 @@ function frmTopTabsFind_PositionWindows() as LRESULT
     gTTabCtl.rcFindTextRect = rc
     gTTabCtl.rcFindTextRect.left      = pWindow->ScaleY(10)
     gTTabCtl.rcFindTextRect.top       = 0
-    gTTabCtl.rcFindTextRect.right     = rc.right - pWindow->ScaleX(150)
+    gTTabCtl.rcFindTextRect.right     = gTTabCtl.rcPrevTabs.left - pWindow->ScaleX(150)
     gTTabCtl.rcFindTextRect.bottom    = pWindow->ScaleY(TOPTABS_FIND_HEIGHT) - pWindow->ScaleY(8)
      
     rc      = gTTabCtl.rcFindTextRect
