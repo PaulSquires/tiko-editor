@@ -314,7 +314,7 @@ function frmTopTabsReplace_WndProc( _
         ' Clear the entire back client area
         b.PaintClientRect()
 
-        ' Paint the tab info area (bottom line)
+        ' Paint the bottom line that separates from the code editing window.
         b.SetPenColor( ghEditor.Divider )
         b.PaintLine( 1, b.rcClient.left, b.rcClient.bottom, b.rcClient.right, b.rcClient.bottom )
 

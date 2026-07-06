@@ -174,10 +174,8 @@ function frmTopTabsInfo_WndProc( _
         ' Clear the entire back client area
         b.PaintClientRect()
 
-        ' Paint the tab info area (top and bottom lines)
-        b.SetPenColor( ghEditor.Divider )
-        b.PaintLine( 1, b.rcClient.left, b.rcClient.top, b.rcClient.right, b.rcClient.top )
         ' Only paint bottom line if Find is not active.
+        b.SetPenColor( ghEditor.Divider )
         if gFind.bShowFindPanel = false then
             b.PaintLine( 1, b.rcClient.left, b.rcClient.bottom, b.rcClient.right, b.rcClient.bottom )
         end if

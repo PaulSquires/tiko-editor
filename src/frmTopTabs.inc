@@ -514,10 +514,6 @@ function frmTopTabs_WndProc( _
                 b.SetBackColors( ghTopTabs.BackColorHot, ghTopTabs.BackColorHot )
                 b.SetPenColor( ghEditor.Divider )
                 b.PaintBorderRect( @gTTabCtl.tabs(i).rcTab )
-                ' Clear the bottom border of the active tab
-                b.SetPenColor( ghTopTabs.BackColorHot )
-                b.PaintLine( 1, gTTabCtl.tabs(i).rcTab.left, gTTabCtl.tabs(i).rcTab.bottom, _
-                                    gTTabCtl.tabs(i).rcTab.right, gTTabCtl.tabs(i).rcTab.bottom )
             else
                 b.SetForeColors( ghTopTabs.ForeColor, ghTopTabs.ForeColor )
                 b.SetBackColors( ghTopTabs.BackColor, ghTopTabs.BackColor )
@@ -571,7 +567,7 @@ function frmTopTabs_WndProc( _
 
         next
 
-        ' Lastly, draw the TopTabs Action Area (basically, the little panel to the
+        ' Draw the TopTabs Action Area (basically, the little panel to the
         ' right of all of the top tabs that has the "..." icon.
         if gTTabCtl.GetItemCount then
             b.SetFont( SYMBOLFONT_10 )
@@ -594,6 +590,18 @@ function frmTopTabs_WndProc( _
             b.PaintIconButton( wszIconMoreActions, @gTTabCtl.rcActionButton )
         end if
     
+        ' Lastly, underline the entire tabcontrol.
+        b.SetPenColor( ghEditor.Divider )
+        b.PaintLine( 1, b.rcClient.left, b.rcClient.bottom, b.rcClient.right, b.rcClient.bottom )
+        
+        ' Clear the bottom border of the active tab
+        dim as long idx = gTTabCtl.CurSel
+        if gTTabCtl.IsSafeIndex(idx) then
+            b.SetPenColor( ghTopTabs.BackColorHot )
+            b.PaintLine( 1, gTTabCtl.tabs(idx).rcTab.left, b.rcClient.bottom, _
+                                gTTabCtl.tabs(idx).rcTab.right, b.rcClient.bottom )
+        end if
+        
         b.EndDoubleBuffer()
         
         return 0

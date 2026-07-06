@@ -109,9 +109,6 @@ function OnCommand_EditIndentBlock( _
         if gFind.bExpanded then SetFocus GetDlgItem(HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE)
     elseif GetFocus = GetDlgItem(HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE) then
         if gFind.bExpanded then SetFocus GetDlgItem(HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND)
-    elseif AfxGetFormHandle(GetFocus) = HWND_FRMFINDINFILES then
-        Dim As HWnd hCtrl = GetNextDlgTabItem( HWND_FRMFINDINFILES, GetFocus, false )
-        SetFocus(hCtrl)
     else
         gApp.SuppressNotify = true
         SetWindowRedraw( hEdit, false )
@@ -138,9 +135,6 @@ function OnCommand_EditUnIndentBlock( _
         if gFind.bExpanded then SetFocus GetDlgItem(HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE)
     elseif GetFocus = GetDlgItem(HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE) then
         if gFind.bExpanded then SetFocus GetDlgItem(HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND)
-    elseif AfxGetFormHandle(GetFocus) = HWND_FRMFINDINFILES then
-        Dim As HWND hCtrl = GetNextDlgTabItem( HWND_FRMFINDINFILES, GetFocus, true )
-        SetFocus(hCtrl)
     else
         gApp.SuppressNotify = true
         SetWindowRedraw( hEdit, false )

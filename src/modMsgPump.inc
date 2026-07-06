@@ -272,17 +272,19 @@ end function
 
 
 function handleEscKeyModeless( byval uMsg as MSG ) as boolean
-    ' Close any open Find/Replace window with ESC key
-    ' Close any open FindInFiles window with ESC key
+    ' Close any open Find/Replace window with ESC key unless it
+    ' is the Project Search tab which always displays the Find pane
+    ' but can toggle on/off the Replace with hot key or icon press.
     if (uMsg.message = WM_KEYDOWN) andAlso (uMsg.wParam = VK_ESCAPE) then
-        if (gFind.bShowFindPanel = true) orelse (gFind.bShowReplacePanel = true) then
-            FindReplaceControls_Hide()
-            return true
-        end if
-        if IsWindowVisible( HWND_FRMFINDINFILES ) then 
-            SendMessage( HWND_FRMFINDINFILES, WM_CLOSE, 0, 0 )
-            return true
-        end if
+        dim as long idx = gTTabCtl.CurSel
+        if gTTabCtl.IsSafeIndex(idx) then
+            if gTTabCtl.tabs(idx).docType <> DocumentType.ProjectSearch then
+                if (gFind.bShowFindPanel = true) orelse (gFind.bShowReplacePanel = true) then
+                    FindReplaceControls_Hide()
+                    return true
+                end if
+            end if    
+        end if    
     end if
     ' we want our message to continue so return FALSE
     return false
@@ -293,13 +295,15 @@ function handleKeysFindReplace( byval uMsg as MSG ) as boolean
     ' For Find textbox, an ENTER will move to the next selection. A SHIFT+ENTER
     ' will move to the previous. For Replace textbox, use the same logic but 
     ' also perform the replace action.
+    ' The pDoc can be null for Project Search tabs so allow the function to 
+    ' continue and do explicit pDoc null checks.
     dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
-    if pDoc = 0 then return false
 
     dim as HWND hFocus   = GetFocus()
     dim as HWND hFind    = GetDlgItem( HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND )
     dim as HWND hReplace = GetDlgItem( HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE )
-    dim as HWND hEdit    = pDoc->hWndActiveScintilla
+    dim as HWND hEdit    
+    if pDoc then hEdit = pDoc->hWndActiveScintilla
 
     if (hFocus <> hFind) andalso (hFocus <> hReplace) then return false
     

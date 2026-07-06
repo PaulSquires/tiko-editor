@@ -787,6 +787,11 @@ function frmMain_PositionWindows() as LRESULT
     end if
 
     if gFind.bShowFindPanel then
+        ' If Info panel is not open then move the Find panel down slightly
+        ' in order to give it a top margin.
+        if gFind.bShowInfoPanel = false then
+            nTop += pWindow->ScaleY(8)
+        end if
         nHeightTabFindPanel = pWindow->ScaleY(TOPTABS_FIND_HEIGHT)
         SetWindowPos( HWND_FRMMAIN_TOPTABSFIND, 0, _
                     nLeft, nTop + nHeightTabControl + nHeightTabInfoPanel, _     
@@ -1460,8 +1465,12 @@ function frmMain_WndProc( _
             ' For example, if displaying "Find in Project" search.
             if gTTabCtl.tabs(gTTabCtl.CurSel).docType = DocumentType.ProjectSearch then
                 TopTabsInfoPanel_Hide()
+                FindControls_Show()
                 frmMain_PositionWindows()
+                dim as HWND hCtl = GetDlgItem( HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND)
+                SetFocus( hCtl )
             else
+                TopTabsInfoPanel_Show()
                 gTTabCtl.DisplayScintilla( gTTabCtl.CurSel, true )
                 frmMain_PositionWindows()
 
@@ -1469,13 +1478,13 @@ function frmMain_WndProc( _
                 if pDoc then
                     AfxRedrawWindow( pDoc->hWindow(0) )  ' makes the code window display quicker especially when loading Project.
                     AfxRedrawWindow( pDoc->hWindow(1) )  ' makes the code window display quicker especially when loading Project.
+
+                    ' We have moved to a new Tab. If Find is open then highlight any search phrase.   
+                    FindReplace_HighlightSearches()
+
+                    ' Set the focus to the Scintilla window. This will call frmMain_SetStatusbar.
+                    frmMain_SetFocusToCurrentCodeWindow()
                 end if
-
-                ' We have moved to a new Tab. If Find is open then highlight any search phrase.   
-                FindReplace_HighlightSearches()
-
-                ' Set the focus to the Scintilla window. This will call frmMain_SetStatusbar.
-                frmMain_SetFocusToCurrentCodeWindow()
             end if    
 
             exit function
@@ -1655,7 +1664,7 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
         ' Close with ESC key: Find/Replace, FindInFiles, FunctionList window
         if handleEscKeyModeless(uMsg) then continue do
 
-        ' Handle ENTER key for active FindReplace
+        ' Handle ENTER, TAB keys for active Find/Replace
         if handleKeysFindReplace(uMsg) then continue do
         
         ' Processes accelerator keys for menu commands

@@ -32,7 +32,13 @@ function frmTopTabsFind_PositionWindows() as LRESULT
     dim as long nTop
     dim as long nWidth 
     dim as long nHeight
+    dim as boolean isProjectSearch = false
     
+    dim as long idx = gTTabCtl.CurSel
+    if gTTabCtl.IsSafeIndex(idx) then
+        if gTTabCtl.tabs(idx).docType = DocumentType.ProjectSearch then isProjectSearch = true
+    end if    
+
     dim as HWND hCtlFind = GetDlgItem(HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND)
 
     ' FIND CONTROLS
@@ -83,6 +89,8 @@ function frmTopTabsFind_PositionWindows() as LRESULT
     gFind.rcSelection.top    = gFind.rcToggle.top
     gFind.rcSelection.right  = gFind.rcSelection.left + iconWidth
     gFind.rcSelection.bottom = gFind.rcToggle.bottom
+    ' Project Search does not allow for Selection
+    if isProjectSearch then gFind.rcSelection.right = gFind.rcSelection.left
 
     ' Vertical Divider line
     gFind.rcDividerLine.left   = gFind.rcSelection.right
@@ -102,17 +110,20 @@ function frmTopTabsFind_PositionWindows() as LRESULT
     gFind.rcDownArrow.right    = gFind.rcDownArrow.left + iconWidth
     gFind.rcDownArrow.bottom   = gFind.rcUpArrow.bottom
 
-    ' Close RECT (calculate this one prior to the Results rect)
+    ' Close RECT (calculate this one prior to the Results rect). If this is a Project Search
+    ' document then we hide the Close button. We do need to set the rcClose left coordinate
+    ' because rcResults needs it.
     GetClientRect( HWND_FRMMAIN_TOPTABSFIND, @rc )
     gFind.rcClose.right       = rc.right - (pWindow->ScaleX(SCROLLBAR_WIDTH_EDITOR) / 2)
     gFind.rcClose.left        = gFind.rcClose.right - iconWidth
     gFind.rcClose.top         = gFind.rcDownArrow.top + pWindow->ScaleY(4)
     gFind.rcClose.bottom      = gFind.rcDownArrow.bottom
+    if isProjectSearch then SetRect( @gFind.rcClose, rc.right, 0, rc.right, 0 )
 
     ' Results from search eg. "1 of 10"
     gFind.rcResults.left       = gFind.rcDownArrow.right + pWindow->ScaleX(4)
     gFind.rcResults.top        = gFind.rcDownArrow.top
-    gFind.rcResults.right      = gFind.rcClose.Left
+    gFind.rcResults.right      = gFind.rcClose.left
     gFind.rcResults.bottom     = gFind.rcDownArrow.bottom
 
     AfxRedrawWindow( HWND_FRMMAIN_TOPTABSFIND )
@@ -398,17 +409,8 @@ function frmTopTabsFind_WndProc( _
         ' Clear the entire back client area
         b.PaintClientRect()
 
-        ' Paint the tab info area (top and bottom lines)
-        b.SetPenColor( ghEditor.Divider )
-        if gFind.bShowInfoPanel = false then
-            b.PaintLine( 1, b.rcClient.left, b.rcClient.top, b.rcClient.right, b.rcClient.top )
-            ' Clear the bottom border of the active tab
-            dim as long i = gTTabCtl.CurSel
-            b.SetPenColor( ghTopTabs.BackColorHot )
-            b.PaintLine( 1, gTTabCtl.tabs(i).rcTab.left, b.rcClient.top, _
-                                gTTabCtl.tabs(i).rcTab.right, b.rcClient.top )
-        end if                        
         ' Only paint the bottom line if Replace is not active.
+        b.SetPenColor( ghEditor.Divider )
         if gFind.bShowReplacePanel = false then
             b.PaintLine( 1, b.rcClient.left, b.rcClient.bottom, b.rcClient.right, b.rcClient.bottom )
         end if     

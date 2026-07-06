@@ -60,7 +60,7 @@ end function
 ' ========================================================================================
 function frmFindInProject_OnDestroy( byval hwnd as HWND ) As LRESULT 
     
-    HWND_FRMFINDINFILES = 0
+    HWND_FRMFINDINPROJECT = 0
 
  '   PostQuitMessage(0)
 
@@ -106,14 +106,22 @@ function frmFindInProject_Show( byval hWndParent as HWND ) as LRESULT
     ' Create a fake pDoc so that it can be added to the top tab control
     dim as clsDocument ptr pDoc = null
     
-    ' Add the new document to the top tabcontrol
-    dim as long iTab = gTTabCtl.AddTab( pDoc )  
-
-    gTTabCtl.tabs(iTab).docType = DocumentType.ProjectSearch
-    gTTabCtl.tabs(iTab).wszText = L(256,"Find in Project")
+    ' Search for an existing Project Search tab and reuse that, otherwise create new.
+    dim as long iTab = -1
+    for idx as long = lbound(gTTabCtl.tabs) to ubound(gTTabCtl.tabs)
+        if gTTabCtl.tabs(idx).docType = DocumentType.ProjectSearch then
+            iTab = idx: exit for
+        end if
+    next
+    
+    ' Add the new document to the top tabcontrol if not already found.
+    if iTab = -1 then 
+        iTab = gTTabCtl.AddTab( pDoc )  
+        gTTabCtl.tabs(iTab).docType = DocumentType.ProjectSearch
+        gTTabCtl.tabs(iTab).wszText = L(256,"Find in Project")
+    end if
 
     gTTabCtl.SetFocusTab(iTab)
-    frmMain_PositionWindows()
 
     function = 0
 end function

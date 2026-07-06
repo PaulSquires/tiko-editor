@@ -18,29 +18,30 @@
 ' Expand the frmTopTabsInfo area to allow for the Find controls.
 ' ========================================================================================
 function FindControls_Show() as long
+    ' pDoc can be null when the Find panel is being shown for Project Search.
     dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
-    if pDoc = 0 then exit function
+    if pDoc then 
+        dim as boolean isOriginalSelectionMultiline = _
+                        cbool(pDoc->CurrentSelection.endline - pDoc->CurrentSelection.startline)
+        if pDoc->CurrentSelection.isInitialized = false then isOriginalSelectionMultiline = false
+        
+        dim as string sFindText = pDoc->GetSelText
+        if isOriginalSelectionMultiline then
+            sFindText = ""
+            gFind.nSelection = true   
+            pDoc->SetMarkerHighlight
+        else
+            gFind.txtFind = sFindtext
+        end if   
 
-    dim as boolean isOriginalSelectionMultiline = _
-                    cbool(pDoc->CurrentSelection.endline - pDoc->CurrentSelection.startline)
-    if pDoc->CurrentSelection.isInitialized = false then isOriginalSelectionMultiline = false
-    
-    dim as string sFindText = pDoc->GetSelText
-    if isOriginalSelectionMultiline then
-        sFindText = ""
-        gFind.nSelection = true   
-        pDoc->SetMarkerHighlight
-    else
-        gFind.txtFind = sFindtext
-    end if   
-
-    dim as HWND hCtl = GetDlgItem( HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND)
-    if sFindText <> AfxGetWindowText(hCtl) then
-        AfxSetWindowText( hCtl, sFindText )
-        dim as long nLen = len(AfxGetWindowText(hCtl))
-        Edit_SetSel( hCtl, nLen, nLen )
-    end if    
-    
+        dim as HWND hCtl = GetDlgItem( HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND)
+        if sFindText <> AfxGetWindowText(hCtl) then
+            AfxSetWindowText( hCtl, sFindText )
+            dim as long nLen = len(AfxGetWindowText(hCtl))
+            Edit_SetSel( hCtl, nLen, nLen )
+        end if    
+    end if
+        
     gFind.bShowFindPanel = true
     gFind.bExpanded = false
 
@@ -85,19 +86,19 @@ end function
 
 
 ' ========================================================================================
-' Hide all parts of the frmTopTabsInfo panels.
+' Hide the frmTopTabsInfo panel.
 ' ========================================================================================
 function TopTabsInfoPanel_Hide() as long
     gFind.bShowInfoPanel = false
-    gFind.bShowFindPanel = false
-    gFind.bShowReplacePanel = false
-    gFind.bExpanded = false
-    ' Remove any Find Highlight selection indicators from open documents.
-    for i as long = lbound(gTTabCtl.tabs) to ubound(gTTabCtl.tabs)
-        if gTTabCtl.tabs(i).pDoc <> 0 then
-            gTTabCtl.tabs(i).pDoc->RemoveSelectionAttributes()
-        end if    
-    next
+    return 0
+end function
+
+
+' ========================================================================================
+' Show the frmTopTabsInfo panel.
+' ========================================================================================
+function TopTabsInfoPanel_Show() as long
+    gFind.bShowInfoPanel = true
     return 0
 end function
 
@@ -225,6 +226,8 @@ function FindReplace_HighlightSearches() as long
     
     dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
     if pDoc = 0 then exit function
+    
+    if gFind.bShowFindPanel = false then exit function
     
     dim as long r, startPos, endPos, findFlags, nLength
 
