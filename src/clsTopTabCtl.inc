@@ -230,12 +230,6 @@ end function
 ''
 function clsTopTabCtl.CloseTab( byval nTabIdx as long = -1) as long
     ' Invoked by clicking "X" on tab
-    this.TabFocusLost( nTabIdx )
-    if gTTabCtl.IsSafeIndex(nTabIdx) then
-        if gTTabCtl.tabs(nTabIdx).docType = DocumentType.ProjectSearch then
-            gFind.bProjectReplaceActive = false
-        end if
-    end if    
     OnCommand_FileClose( HWND_FRMMAIN, EFC_CLOSECURRENT, nTabIdx )
     function = 0
 end function

@@ -337,6 +337,13 @@ function OnCommand_FileClose( _
     for i as long = nCount - 1 to 0 step -1
         if bCloseIndex(i) = false then continue for
 
+        ' If this is the ProjectSearch tab then ensure to reset its flag that tracks
+        ' whether to display the Replace controls specifically for ProjectSearch tab.
+        if gTTabCtl.tabs(i).docType = DocumentType.ProjectSearch then
+            gTTabCtl.TabFocusLost(i)
+            gFind.bProjectReplaceActive = false
+        end if    
+
         pDoc = gTTabCtl.GetDocumentPtr(i)
         if pDoc then 
             if IsWindow(pDoc->hWindow(0)) = 0 then continue for
