@@ -257,6 +257,7 @@ type FINDREPLACE_TYPE
     bShowInfoPanel      as boolean = true
     bShowFindPanel      as boolean = false
     bShowReplacePanel   as boolean = false
+    bProjectReplaceActive as boolean = false
     rcMatchCase         as RECT
     rcWholeWord         as RECT
     rcToggle            as RECT

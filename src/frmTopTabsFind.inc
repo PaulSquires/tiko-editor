@@ -251,20 +251,17 @@ function frmTopTabsFind_OnCommand( _
             byval codeNotify as UINT _
             ) as LRESULT
 
-    dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
-    if pDoc = 0 then exit function
-
-    dim as HWND hEdit = pDoc->hWndActiveScintilla
-    if hEdit = 0 then exit function
-    
     select case id
-
         case IDC_FRMTOPTABSFIND_TXTFIND
             if (codeNotify = EN_CHANGE) then
                 gFind.txtFind = AfxGetWindowText(hwndCtl)
-                FindReplace_HighlightSearches()
-                dim as long startPos = SendMessage( hEdit, SCI_GETANCHOR, 0, 0) - 1
-                FindReplace_NextSelection(startPos, true, true)
+                dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
+                If pDoc Then 
+                    FindReplace_HighlightSearches()
+                    dim as hwnd hEdit = pDoc->hWndActiveScintilla
+                    dim as long startPos = SendMessage( hEdit, SCI_GETANCHOR, 0, 0) - 1
+                    FindReplace_NextSelection(startPos, true, true)
+                end if    
                 SetFocus( hwndCtl )
             elseif (codeNotify = EN_SETFOCUS) then
                 AfxRedrawWindow( hwnd )

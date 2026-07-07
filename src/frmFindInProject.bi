@@ -52,4 +52,4 @@
 'end type
 'dim shared gReplaceResults as REPLACE_RESULTS
     
-declare function frmFindInProject_Show( byval hWndParent as HWND ) as LRESULT
+declare function frmFindInProject_Show() as LRESULT

@@ -240,6 +240,7 @@ function OnCommand_EditReplaceDialog() as LRESULT
     gFind.bExpanded = not gFind.bExpanded
     if gFind.bExpanded = false then
         gFind.bShowReplacePanel = false
+        gFind.bProjectReplaceActive = false
     else
         FindControls_Show()
         ReplaceControls_Show()
@@ -255,10 +256,9 @@ end function
 ' ========================================================================================
 ' Edit action Find in Project
 ' ========================================================================================
-function OnCommand_EditFindInProject( byval hEdit as HWND ) as LRESULT
-    if hEdit = 0 then hEdit = HWND_FRMMAIN   ' possible no files are open
-    frmFindInProject_Show( hEdit )
-    'frmFindInFiles_Show( hEdit )   ' todo: Remove this frmFindInFiles_Show call when Project Search completed
+function OnCommand_EditFindInProject() as LRESULT
+    frmFindInProject_Show()
+    frmMain_PositionWindows()
     function = 0
 end function
         

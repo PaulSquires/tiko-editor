@@ -37,7 +37,7 @@ function FindControls_Show() as long
         dim as HWND hCtl = GetDlgItem( HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND)
         if sFindText <> AfxGetWindowText(hCtl) then
             AfxSetWindowText( hCtl, sFindText )
-            dim as long nLen = len(AfxGetWindowText(hCtl))
+            dim as long nLen = len(sFindText)
             Edit_SetSel( hCtl, nLen, nLen )
         end if    
     end if
@@ -55,7 +55,12 @@ end function
 function ReplaceControls_Show() as long
     ' Display the Replace controls
     AfxSetWindowText( GetDlgItem( HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE ), "" )
-    gFind.bShowInfoPanel = true
+    if gTTabCtl.tabs(gTTabCtl.CurSel).docType = DocumentType.ProjectSearch then
+        gFind.bProjectReplaceActive = true
+    else
+        ' All non-Project Search tabs will always show the Info panel.    
+        gFind.bShowInfoPanel = true
+    end if    
     gFind.bShowFindPanel = true
     gFind.bShowReplacePanel = true
     gFind.bExpanded = true

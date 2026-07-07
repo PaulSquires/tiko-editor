@@ -710,6 +710,7 @@ end function
 function frmMain_PositionWindows() as LRESULT
     dim as HWND hEdit
     dim as long nLeft, nTop
+    dim as boolean IsProjectSearchTab = false
     
     dim as RECT rc
 
@@ -756,7 +757,13 @@ function frmMain_PositionWindows() as LRESULT
         nWidthPanel = 0
     end if
 
-
+    dim as long nTabIdx = gTTabCtl.CurSel
+    if gTTabCtl.IsSafeIndex(nTabIdx) then
+        if gTTabCtl.tabs(nTabIdx).docType = DocumentType.ProjectSearch then
+            IsProjectSearchTab = true
+        end if
+    end if
+    
     ' if items exist in the top tabcontrol then show the tab control and account for its height
     if (gTTabCtl.GetItemCount = 0) then
         nHeightTabControl = 0
@@ -773,42 +780,45 @@ function frmMain_PositionWindows() as LRESULT
                     rc.Right - nWidthPanel, nHeightTabControl, _
                     SWP_SHOWWINDOW or SWP_NOZORDER )
         frmTopTabs_PositionWindows()
+        nTop += nHeightTabControl
     end if
         
     if gFind.bShowInfoPanel then
         nHeightTabInfoPanel = pWindow->ScaleY(TOPTABS_INFO_HEIGHT)
         SetWindowPos( HWND_FRMMAIN_TOPTABSINFO, 0, _
-                    nLeft, nTop + nHeightTabControl, _     
+                    nLeft, nTop, _     
                     rc.Right - nWidthPanel, nHeightTabInfoPanel, _  
                     SWP_SHOWWINDOW or SWP_NOZORDER )
         frmTopTabsInfo_PositionWindows()    
+        nTop += nHeightTabInfoPanel
     else    
         ShowWindow( HWND_FRMMAIN_TOPTABSINFO, SW_HIDE )
+        ' If Info panel is not open then move the Find panel down slightly
+        ' in order to give it a top margin.
+        nTop += pWindow->ScaleY(8)
     end if
 
     if gFind.bShowFindPanel then
-        ' If Info panel is not open then move the Find panel down slightly
-        ' in order to give it a top margin.
-        if gFind.bShowInfoPanel = false then
-            nTop += pWindow->ScaleY(8)
-        end if
         nHeightTabFindPanel = pWindow->ScaleY(TOPTABS_FIND_HEIGHT)
         SetWindowPos( HWND_FRMMAIN_TOPTABSFIND, 0, _
-                    nLeft, nTop + nHeightTabControl + nHeightTabInfoPanel, _     
+                    nLeft, nTop, _     
                     rc.Right - nWidthPanel, nHeightTabFindPanel, _  
                     SWP_SHOWWINDOW or SWP_NOZORDER )
         frmTopTabsFind_PositionWindows()    
+        nTop += nHeightTabFindPanel
     else    
         ShowWindow( HWND_FRMMAIN_TOPTABSFIND, SW_HIDE )
     end if
-
-    if gFind.bShowReplacePanel then
+    
+    if (gFind.bShowReplacePanel = true) orelse _
+        (IsProjectSearchTab = true andalso gFind.bProjectReplaceActive = true) then
         nHeightTabReplacePanel = pWindow->ScaleY(TOPTABS_REPLACE_HEIGHT)
         SetWindowPos( HWND_FRMMAIN_TOPTABSREPLACE, 0, _
-                    nLeft, nTop + nHeightTabControl + nHeightTabInfoPanel + nHeightTabFindPanel, _     
+                    nLeft, nTop, _     
                     rc.Right - nWidthPanel, nHeightTabReplacePanel, _  
                     SWP_SHOWWINDOW or SWP_NOZORDER )
         frmTopTabsReplace_PositionWindows()    
+        nTop += nHeightTabReplacePanel
     else    
         ShowWindow( HWND_FRMMAIN_TOPTABSREPLACE, SW_HIDE )
     end if
@@ -835,7 +845,7 @@ function frmMain_PositionWindows() as LRESULT
         
         ' Reduce the height of the client area by the size of the statusbar and menubar.
         rcDoc.left   = nLeft
-        rcDoc.top    = nTop + nHeightTabControl + nHeightTabInfoPanel + nHeightTabFindPanel + nHeightTabReplacePanel
+        rcDoc.top    = nTop 
         rcDoc.right  = rc.right
         rcDoc.bottom = rc.bottom - nHeightStatusBar - nHeightOutput
         if gConfig.ExplorerPositionRight then rcDoc.right = rc.right - nWidthPanel
@@ -1456,6 +1466,7 @@ function frmMain_WndProc( _
 
         case MSG_USER_TOPTABS_CHANGING
             ' Hide the current tab
+            gTTabCtl.TabFocusLost( gTTabCtl.CurSel )
             gTTabCtl.DisplayScintilla( gTTabCtl.CurSel, false )
             exit function
             
@@ -1466,6 +1477,9 @@ function frmMain_WndProc( _
             if gTTabCtl.tabs(gTTabCtl.CurSel).docType = DocumentType.ProjectSearch then
                 TopTabsInfoPanel_Hide()
                 FindControls_Show()
+                if gFind.bShowReplacePanel then
+                    ReplaceControls_Show()
+                end if
                 frmMain_PositionWindows()
                 dim as HWND hCtl = GetDlgItem( HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND)
                 SetFocus( hCtl )

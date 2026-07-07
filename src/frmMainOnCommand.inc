@@ -247,7 +247,7 @@ function frmMain_OnCommand( _
         case IDM_SELECTALL:          OnCommand_EditSelectAll( pDoc, hEdit )
         case IDM_FIND:               OnCommand_EditFindDialog()
         case IDM_REPLACE:            OnCommand_EditReplaceDialog()
-        case IDM_FINDINPROJECT:      OnCommand_EditFindInProject( hEdit )
+        case IDM_FINDINPROJECT:      OnCommand_EditFindInProject()
         case IDM_INDENTBLOCK:        OnCommand_EditIndentBlock( pDoc, hEdit )
         case IDM_UNINDENTBLOCK:      OnCommand_EditUnIndentBlock( pDoc, hEdit )
 

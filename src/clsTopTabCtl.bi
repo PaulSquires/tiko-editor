@@ -72,6 +72,7 @@ type clsTopTabCtl
         declare function GetDocumentPtr( byval idx as long ) as clsDocument ptr
         declare function DisplayScintilla( byval idx as long, byval bShow as boolean ) as long
         declare function SetTabText( byval idx as long ) as long
+        declare function TabFocusLost( byval nTabIdx as long = -1) as long
         declare function NextTab() as long
         declare function PrevTab() as long
         declare function CloseTab( byval idx as long = -1 ) as long

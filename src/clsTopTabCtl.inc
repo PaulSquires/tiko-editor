@@ -207,10 +207,35 @@ function clsTopTabCtl.PrevTab() as long
     function = this.SetFocusTab(idx)
 end function
 
+
+''
+''
+function clsTopTabCtl.TabFocusLost( byval nTabIdx as long = -1) as long
+    ' If changing away from the Project Search tab then close any open
+    ' Find and Replace panes so that they do not display when the new tab
+    ' is switched to and displayed.
+    if gTTabCtl.IsSafeIndex(nTabIdx) then
+        if gTTabCtl.tabs(nTabIdx).docType = DocumentType.ProjectSearch then
+            gFind.bShowInfoPanel = true
+            gFind.bShowFindPanel = false
+            gFind.bShowReplacePanel = false
+            gFind.bExpanded = false
+        end if
+    end if    
+    function = 0
+end function
+
+
 ''
 ''
 function clsTopTabCtl.CloseTab( byval nTabIdx as long = -1) as long
     ' Invoked by clicking "X" on tab
+    this.TabFocusLost( nTabIdx )
+    if gTTabCtl.IsSafeIndex(nTabIdx) then
+        if gTTabCtl.tabs(nTabIdx).docType = DocumentType.ProjectSearch then
+            gFind.bProjectReplaceActive = false
+        end if
+    end if    
     OnCommand_FileClose( HWND_FRMMAIN, EFC_CLOSECURRENT, nTabIdx )
     function = 0
 end function

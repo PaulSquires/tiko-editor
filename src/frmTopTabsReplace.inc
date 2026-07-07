@@ -205,9 +205,6 @@ function frmTopTabsReplace_OnCommand( _
             byval codeNotify as UINT _
             ) as LRESULT
 
-    dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
-    if pDoc = 0 then exit function
-
     select case id
         case IDC_FRMTOPTABSREPLACE_TXTREPLACE
             if (codeNotify = EN_SETFOCUS) then

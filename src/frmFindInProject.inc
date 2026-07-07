@@ -92,7 +92,7 @@ end function
 ' ========================================================================================
 ' frmFindInProject_Show
 ' ========================================================================================
-function frmFindInProject_Show( byval hWndParent as HWND ) as LRESULT
+function frmFindInProject_Show() as LRESULT
     '  Create the main window and child controls
 '    dim pWindow as CWindow ptr = new CWindow
 
