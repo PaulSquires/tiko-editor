@@ -39,17 +39,17 @@ declare function OnCommand_EditUndo( byval hEdit as HWND ) as LRESULT
 declare function OnCommand_EditCut( byval pDoc as clsDocument ptr, byval hEdit as HWND ) as LRESULT
 declare function OnCommand_EditCopy( byval pDoc as clsDocument ptr, byval hEdit as HWND ) as LRESULT
 declare function OnCommand_EditPaste( byval pDoc as clsDocument ptr, byval hEdit as HWND ) as LRESULT
-declare function OnCommand_EditFindDialog() as LRESULT
-declare function OnCommand_EditReplaceDialog() as LRESULT
-declare function OnCommand_EditFindInProject() as LRESULT
-declare function OnCommand_EditFindActions( byval id as long, byval pDoc as clsDocument ptr ) as LRESULT
-declare function OnCommand_EditReplaceActions( byval id as long, byval pDoc as clsDocument ptr ) as LRESULT
 declare function OnCommand_EditIndentBlock( byval pDoc as clsDocument ptr, byval hEdit as HWND ) as LRESULT
 declare function OnCommand_EditUnIndentBlock( byval pDoc as clsDocument ptr, byval hEdit as HWND ) as LRESULT
 declare function OnCommand_EditSelectAll( byval pDoc as clsDocument ptr, byval hEdit as HWND ) as LRESULT
 declare function OnCommand_EditEncoding( byval id as long, byval pDoc as clsDocument ptr ) as LRESULT
 declare function OnCommand_EditCommon( byval id as long, byval pDoc as clsDocument ptr ) as LRESULT
 
+declare function OnCommand_SearchFindDialog() as LRESULT
+declare function OnCommand_SearchReplaceDialog() as LRESULT
+declare function OnCommand_SearchFindInProject() as LRESULT
+declare function OnCommand_SearchFindActions( byval id as long, byval pDoc as clsDocument ptr ) as LRESULT
+declare function OnCommand_SearchReplaceActions( byval id as long, byval pDoc as clsDocument ptr ) as LRESULT
 declare function OnCommand_SearchGotoDefinition( byval pDoc as clsDocument ptr ) as LRESULT
 declare function OnCommand_SearchGotoLastPosition() as LRESULT
 declare function OnCommand_SearchGotoCompileError( byval bMoveNext as boolean ) as long

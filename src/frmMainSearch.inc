@@ -124,7 +124,6 @@ function OnCommand_SearchGotoDefinition( byval pDoc as clsDocument ptr ) as LRES
     function = 0
 end function
 
-
 ' ========================================================================================
 ' Return to most previous position (invoked when "Last Position" is selected)
 ' ========================================================================================
@@ -137,6 +136,129 @@ function OnCommand_SearchGotoLastPosition() as LRESULT
     OpenSelectedDocument( gLastPosition.pDoc->DiskFilename )
     SciExec( GetFocus, SCI_SETFIRSTVISIBLELINE, gLastPosition.nFirstLine, 0) 
     SciExec( GetFocus, SCI_GOTOPOS, gLastPosition.nPosition, 0) 
+    
+    function = 0
+end function
+
+' ========================================================================================
+' Search action Find
+' ========================================================================================
+function OnCommand_SearchFindDialog() as LRESULT
+    FindControls_Show()
+    frmMain_PositionWindows()
+
+    dim as HWND hCtl = GetDlgItem( HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND)
+    SetFocus( hCtl )
+
+    function = 0
+end function
+
+
+' ========================================================================================
+' Search action Replace
+' ========================================================================================
+function OnCommand_SearchReplaceDialog() as LRESULT
+    ' If Replace is already open then close it (toggle).
+    gFind.bExpanded = not gFind.bExpanded
+    if gFind.bExpanded = false then
+        gFind.bShowReplacePanel = false
+        gFind.bProjectReplaceActive = false
+    else
+        FindControls_Show()
+        ReplaceControls_Show()
+    end if    
+    frmMain_PositionWindows()
+
+    dim as HWND hCtl = GetDlgItem( HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND )
+    SetFocus( hCtl )
+    
+    function = 0
+end function
+
+' ========================================================================================
+' Search action Find in Project
+' ========================================================================================
+function OnCommand_SearchFindInProject() as LRESULT
+    frmFindInProject_Show()
+    frmMain_PositionWindows()
+    function = 0
+end function
+        
+' ========================================================================================
+' Search action Find actions
+' ========================================================================================
+function OnCommand_SearchFindActions( _
+            byval id as long, _
+            byval pDoc as clsDocument ptr _
+            ) as LRESULT
+
+    dim as HWND hEdit = pDoc->hWndActiveScintilla
+    dim as HWND hWndFind = GetDlgItem(HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND)
+    dim as HWND hFocus = GetFocus()
+
+    if hFocus = hWndFind then
+        gFind.txtFind = AfxGetWindowText(hWndFind)
+    elseif hFocus = hEdit then    
+        dim as string sFindText = pDoc->GetSelText
+        if len(sFindText) then 
+            gFind.foundCount = 0
+            gFind.txtFind = sFindText
+        end if
+    end if
+
+    dim as long startPos = SendMessage( hEdit, SCI_GETCURRENTPOS, 0, 0) 
+
+    select case id
+        case IDM_FINDPREV
+            FindReplace_HighlightSearches()
+            if FindReplace_NextSelection(startPos, false, true) then pDoc->CenterCurrentLine
+            AfxRedrawWindow( HWND_FRMMAIN_TOPTABSINFO )
+
+        case IDM_FINDNEXT
+            FindReplace_HighlightSearches()
+            if FindReplace_NextSelection(startPos, true, true) then pDoc->CenterCurrentLine
+            AfxRedrawWindow( HWND_FRMMAIN_TOPTABSINFO )
+
+        case IDM_FINDPREVACCEL
+            FindReplace_HighlightSearches()
+            if FindReplace_NextSelection(startPos, false, true) then pDoc->CenterCurrentLine
+
+        case IDM_FINDNEXTACCEL
+            FindReplace_HighlightSearches()
+            if FindReplace_NextSelection(startPos, true, true) then pDoc->CenterCurrentLine
+
+    end select
+    
+    SetFocus( hFocus )
+    
+    function = 0
+end function
+
+
+' ========================================================================================
+' Search action Replace actions
+' ========================================================================================
+function OnCommand_SearchReplaceActions( _
+            byval id as long, _
+            byval pDoc as clsDocument ptr _
+            ) as LRESULT
+            
+    dim as HWND hEdit = pDoc->hWndActiveScintilla
+
+    select case id
+        case IDM_REPLACENEXT, IDM_REPLACEPREV, IDM_REPLACEALL
+            if gFind.foundCount = 0 then exit function
+            if id = IDM_REPLACEPREV then 
+                FindReplace_DoReplace( false, false )
+            elseif id = IDM_REPLACENEXT then 
+                FindReplace_DoReplace( false, true )
+            elseif id = IDM_REPLACEALL then 
+                FindReplace_DoReplace( true, true )
+            end if   
+            FindReplace_HighlightSearches()
+            pDoc->CenterCurrentLine
+            AfxRedrawWindow( HWND_FRMMAIN_TOPTABSINFO )
+    end select
     
     function = 0
 end function
@@ -158,7 +280,7 @@ function OnCommand_SearchGotoFile( _
     dim as HWND hEdit = pDoc->hWndActiveScintilla
     
     select case id
-        case IDM_GOTO
+        case IDM_GOTOLINE
             frmGoto_Show( hEdit )
             exit function
         

@@ -48,7 +48,7 @@ function frmStatusBar_PositionWindows() as LRESULT
     gSBPanels(i).rc.right  = nLeft + _
         pWindow->ScaleX( getTextWidth(HWND_FRMMAIN_STATUSBAR, gSBPanels(i).wszText, GUIFONT_9) + nPadding )
     gSBPanels(i).rc.bottom = rc.bottom
-    gSBPanels(i).nID       = IDM_GOTO
+    gSBPanels(i).nID       = IDM_GOTOLINE
     nLeft = gSBPanels(i).rc.right + nSpacer
 
     '''' RIGHT ALIGNED STATUSBAR PANELS ''''

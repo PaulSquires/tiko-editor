@@ -92,9 +92,6 @@ function frmMain_EditTopMenuStates() as long
         EnableTopMenuItem( idMenu, false )
     next
 
-    ' if any documents exist in the editor then enable FindInProject
-    if gApp.GetDocumentCount then EnableTopMenuItem( IDM_FINDINPROJECT, true )
-        
     ' Enable or disable specific edit menu items (based on the currently active document)
     dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
     if pDoc = 0 then exit function
@@ -127,20 +124,18 @@ function frmMain_SearchTopMenuStates() as long
         EnableTopMenuItem( idMenu, false )
     next
 
+    ' if any documents exist in the editor then enable FindInProject
+    if gApp.GetDocumentCount then EnableTopMenuItem( IDM_FINDINPROJECT, true )
+        
     ' Enable or disable specific edit menu items (based on the currently active document)
     dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
     if pDoc = 0 then exit function
     
-    for idMenu as long = IDM_DEFINITION to IDM_GOTOPREVfunction
+    for idMenu as long = IDM_GOTOANYTHING to IDM_FIND
         EnableTopMenuItem( idMenu, true )
     next
 
-    if gApp.GetMainDocumentPtr then EnableTopMenuItem( IDM_GOTOMAINFILE, true )
-    if gApp.GetResourceDocumentPtr then EnableTopMenuItem( IDM_GOTORESOURCEFILE, true )
-    if gApp.GetHeaderDocumentPtr(pDoc) then EnableTopMenuItem( IDM_GOTOHEADERFILE, true )
-    if gApp.GetSourceDocumentPtr(pDoc) then EnableTopMenuItem( IDM_GOTOSOURCEFILE, true )
-
-    for idMenu as long = IDM_BOOKMARKTOGGLE to IDM_GOTO
+    for idMenu as long = IDM_REPLACE to IDM_GOTOLINE
         EnableTopMenuItem( idMenu, true )
     next
 

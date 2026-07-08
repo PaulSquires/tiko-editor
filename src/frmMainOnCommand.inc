@@ -245,18 +245,8 @@ function frmMain_OnCommand( _
         case IDM_COPY, WM_COPY:      OnCommand_EditCopy( pDoc, hEdit )
         case IDM_PASTE, WM_PASTE:    OnCommand_EditPaste( pDoc, hEdit )
         case IDM_SELECTALL:          OnCommand_EditSelectAll( pDoc, hEdit )
-        case IDM_FIND:               OnCommand_EditFindDialog()
-        case IDM_REPLACE:            OnCommand_EditReplaceDialog()
-        case IDM_FINDINPROJECT:      OnCommand_EditFindInProject()
         case IDM_INDENTBLOCK:        OnCommand_EditIndentBlock( pDoc, hEdit )
         case IDM_UNINDENTBLOCK:      OnCommand_EditUnIndentBlock( pDoc, hEdit )
-
-        case IDM_FINDNEXT, IDM_FINDPREV, _
-            IDM_FINDNEXTACCEL, IDM_FINDPREVACCEL   ' F3/Shift+F3
-            OnCommand_EditFindActions( id, pDoc )
-            
-        case IDM_REPLACENEXT, IDM_REPLACEPREV, IDM_REPLACEALL
-            OnCommand_EditReplaceActions( id, pDoc )
 
         case IDM_ANSI, IDM_UTF8, IDM_UTF8BOM, IDM_UTF16BOM
             OnCommand_EditEncoding( id, pDoc )
@@ -272,13 +262,23 @@ function frmMain_OnCommand( _
 
 
         ''  SEARCH MENU              
+        case IDM_FIND:               OnCommand_SearchFindDialog()
+        case IDM_REPLACE:            OnCommand_SearchReplaceDialog()
+        case IDM_FINDINPROJECT:      OnCommand_SearchFindInProject()
+        case IDM_FINDNEXT, IDM_FINDPREV, _
+            IDM_FINDNEXTACCEL, IDM_FINDPREVACCEL   ' F3/Shift+F3
+            OnCommand_SearchFindActions( id, pDoc )
+            
+        case IDM_REPLACENEXT, IDM_REPLACEPREV, IDM_REPLACEALL
+            OnCommand_SearchReplaceActions( id, pDoc )
+
         case IDM_DEFINITION:           OnCommand_SearchGotoDefinition( pDoc )
         case IDM_LASTPOSITION:         OnCommand_SearchGotoLastPosition()
         case IDM_GOTONEXTCOMPILEERROR: OnCommand_SearchGotoCompileError( true )
         case IDM_GOTOPREVCOMPILEERROR: OnCommand_SearchGotoCompileError( false )
 
-        case IDM_GOTOHEADERFILE,   IDM_GOTOSOURCEFILE, IDM_GOTOMAINFILE, _ 
-            IDM_GOTORESOURCEFILE, IDM_GOTO,           IDM_GOTONEXTFUNCTION, _
+        case IDM_GOTOHEADERFILE,  IDM_GOTOSOURCEFILE, IDM_GOTOMAINFILE, _ 
+            IDM_GOTORESOURCEFILE, IDM_GOTOLINE,       IDM_GOTONEXTFUNCTION, _
             IDM_GOTOPREVFUNCTION, IDM_GOTONEXTTAB,    IDM_GOTOPREVTAB, _
             IDM_CLOSETAB
             OnCommand_SearchGotoFile( id, pDoc )

@@ -100,9 +100,6 @@ Function getMenuText( byval idMenu as long ) As DWSTRING
         case IDM_COPY: wszText = L(18,"Copy")
         case IDM_PASTE: wszText = L(19,"Paste")
         case IDM_DELETELINE: wszText = L(20,"Delete Line")
-        case IDM_FIND: wszText = L(43,"Find") & "..."
-        case IDM_FINDINPROJECT: wszText = L(256,"Find in Project") & "..."
-        case IDM_REPLACE: wszText = L(46,"Replace") & "..."
         case IDM_COMMENTBLOCK: wszText = L(25,"Comment Block")
         case IDM_UNCOMMENTBLOCK: wszText = L(26,"UnComment Block")
         case IDM_DUPLICATELINE: wszText = L(28,"Duplicate Line")
@@ -119,6 +116,10 @@ Function getMenuText( byval idMenu as long ) As DWSTRING
         case IDM_FINDNEXTACCEL     
              wszText = L(44, "Find Next")
 
+        case IDM_GOTOANYTHING: wszText = L(39,"Goto Anything") & "..."
+        case IDM_FIND: wszText = L(43,"Find") & "..."
+        case IDM_FINDINPROJECT: wszText = L(256,"Find in Project") & "..."
+        case IDM_REPLACE: wszText = L(46,"Replace") & "..."
         case IDM_DEFINITION: wszText = L(47,"Sub/Function Definition")
         case IDM_LASTPOSITION: wszText = L(48,"Last Position")
         case IDM_GOTONEXTFUNCTION: wszText = L(84,"Next Function")
@@ -127,7 +128,7 @@ Function getMenuText( byval idMenu as long ) As DWSTRING
         case IDM_GOTOSOURCEFILE: wszText = L(232,"Goto Code File")
         case IDM_GOTOMAINFILE: wszText = L(233,"Goto Main File")
         case IDM_GOTORESOURCEFILE: wszText = L(234,"Goto Resource File")
-        case IDM_GOTO: wszText = L(49,"Goto Line") & "..."
+        case IDM_GOTOLINE: wszText = L(49,"Goto Line") & "..."
         case IDM_BOOKMARKTOGGLE: wszText = L(50,"Toggle Bookmark")
         case IDM_BOOKMARKNEXT: wszText = L(51,"Next Bookmark")
         case IDM_BOOKMARKPREV: wszText = L(52,"Previous Bookmark")
@@ -309,10 +310,6 @@ function buildTopMenuDefinitions() as long
     setTopMenuItem( IDC_MENUBAR_EDIT, IDM_PASTE, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_EDIT, IDM_DELETELINE, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_EDIT, 0, 0, false, true )
-    setTopMenuItem( IDC_MENUBAR_EDIT, IDM_FIND, 0, false, false )
-    setTopMenuItem( IDC_MENUBAR_EDIT, IDM_FINDINPROJECT, 0, false, false )
-    setTopMenuItem( IDC_MENUBAR_EDIT, IDM_REPLACE, 0, false, false )
-    setTopMenuItem( IDC_MENUBAR_EDIT, 0, 0, false, true )
     setTopMenuItem( IDC_MENUBAR_EDIT, IDM_DUPLICATELINE, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_EDIT, IDM_MOVELINEUP, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_EDIT, IDM_MOVELINEDOWN, 0, false, false )
@@ -323,23 +320,24 @@ function buildTopMenuDefinitions() as long
     setTopMenuItem( IDC_MENUBAR_EDIT, IDM_SELECTLINE, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_EDIT, IDM_SELECTALL, 0, false, false )
     
+    setTopMenuItem( IDC_MENUBAR_SEARCH, IDM_GOTOANYTHING, 0, false, false )
+    setTopMenuItem( IDC_MENUBAR_SEARCH, 0, 0, false, true )
+    setTopMenuItem( IDC_MENUBAR_SEARCH, IDM_FIND, 0, false, false )
+    setTopMenuItem( IDC_MENUBAR_SEARCH, IDM_FINDINPROJECT, 0, false, false )
+    setTopMenuItem( IDC_MENUBAR_SEARCH, IDM_REPLACE, 0, false, false )
+    setTopMenuItem( IDC_MENUBAR_SEARCH, 0, 0, false, true )
     setTopMenuItem( IDC_MENUBAR_SEARCH, IDM_DEFINITION, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_SEARCH, IDM_LASTPOSITION, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_SEARCH, 0, 0, false, true )
     setTopMenuItem( IDC_MENUBAR_SEARCH, IDM_GOTONEXTFUNCTION, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_SEARCH, IDM_GOTOPREVFUNCTION, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_SEARCH, 0, 0, false, true )
-    setTopMenuItem( IDC_MENUBAR_SEARCH, IDM_GOTOHEADERFILE, 0, false, false )
-    setTopMenuItem( IDC_MENUBAR_SEARCH, IDM_GOTOSOURCEFILE, 0, false, false )
-    setTopMenuItem( IDC_MENUBAR_SEARCH, IDM_GOTOMAINFILE, 0, false, false )
-    setTopMenuItem( IDC_MENUBAR_SEARCH, IDM_GOTORESOURCEFILE, 0, false, false )
-    setTopMenuItem( IDC_MENUBAR_SEARCH, 0, 0, false, true )
     setTopMenuItem( IDC_MENUBAR_SEARCH, IDM_BOOKMARKTOGGLE, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_SEARCH, IDM_BOOKMARKNEXT, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_SEARCH, IDM_BOOKMARKPREV, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_SEARCH, IDM_BOOKMARKCLEARALL, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_SEARCH, 0, 0, false, true )
-    setTopMenuItem( IDC_MENUBAR_SEARCH, IDM_GOTO, 0, false, false )
+    setTopMenuItem( IDC_MENUBAR_SEARCH, IDM_GOTOLINE, 0, false, false )
 
     setTopMenuItem( IDC_MENUBAR_VIEW, IDM_VIEWSIDEPANEL, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_VIEW, IDM_VIEWEXPLORER, 0, false, false )
