@@ -284,7 +284,10 @@ function handleEscKeyModeless( byval uMsg as MSG ) as boolean
                     return true
                 end if
             end if    
-        end if    
+            ' When ESC is pressed it should also ensure to unhighlight any search occurrences.
+            dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
+            if pDoc then pDoc->RemoveSelectionAttributes()
+        end if
     end if
     ' we want our message to continue so return FALSE
     return false

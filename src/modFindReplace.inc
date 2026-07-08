@@ -232,8 +232,6 @@ function FindReplace_HighlightSearches() as long
     dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
     if pDoc = 0 then exit function
     
-    if gFind.bShowFindPanel = false then exit function
-    
     dim as long r, startPos, endPos, findFlags, nLength
 
     dim as HWND hEdit = pDoc->hWndActiveScintilla
