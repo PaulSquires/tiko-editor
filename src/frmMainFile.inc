@@ -154,9 +154,9 @@ function OnCommand_FileOpen( _
     gApp.wszPanelText = ""   
 
     SetCursor( LoadCursor(0, IDC_ARROW) )
-    ResetScintillaCursors
-    frmMain_PositionWindows
-    frmMain_SetFocusToCurrentCodeWindow
+    ResetScintillaCursors()
+    frmMain_PositionWindows()
+    frmMain_SetFocusToCurrentCodeWindow()
     
     function = 0
 

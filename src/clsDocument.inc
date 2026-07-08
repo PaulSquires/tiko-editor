@@ -129,7 +129,8 @@ end function
 ' Set the Project Filetype for this document depending on file extension.
 ' ========================================================================================
 function clsDocument.SetProjectFileType() as long
-    ' Give this document a default project type depending on its file extension
+    ' Give this document a default project type depending on its file extension.
+    ' We also allow user to select MAIN or NORMAL for non-project files.
     if (this.IsNewFlag = false) andalso (this.ProjectFileType = FILETYPE_UNDEFINED) then
         if ( gApp.IsProjectActive = true ) orelse ( gApp.IsProjectLoading = true ) then
             gApp.ProjectSetFileType( @this, this.ProjectFileType )
