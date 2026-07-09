@@ -321,14 +321,16 @@ function AddProjectFileTypesToMenu( _
     msg = iif( fExplorerTreeview, IDM_SETFILEMAIN_EXPLORERTREEVIEW, IDM_SETFILEMAIN )
     msgfirst = msg
     AppendMenu hPopUpMenu, MF_ENABLED or MFT_RADIOCHECK, msg, L(206,"Main file") 
+    msg = iif( fExplorerTreeview, IDM_SETFILEHEADER_EXPLORERTREEVIEW, IDM_SETFILEHEADER )
+    AppendMenu hPopUpMenu, MF_ENABLED or MFT_RADIOCHECK, msg, L(181,"Header file") 
+
     if gApp.IsProjectActive then
-        msg = iif( fExplorerTreeview, IDM_SETFILERESOURCE_EXPLORERTREEVIEW, IDM_SETFILERESOURCE )
-        AppendMenu hPopUpMenu, MF_ENABLED or MFT_RADIOCHECK, msg, L(209,"Resource file") 
-        msg = iif( fExplorerTreeview, IDM_SETFILEHEADER_EXPLORERTREEVIEW, IDM_SETFILEHEADER )
-        AppendMenu hPopUpMenu, MF_ENABLED or MFT_RADIOCHECK, msg, L(181,"Header file") 
         msg = iif( fExplorerTreeview, IDM_SETFILEMODULE_EXPLORERTREEVIEW, IDM_SETFILEMODULE )
         AppendMenu hPopUpMenu, MF_ENABLED or MFT_RADIOCHECK, msg, L(205,"Module file") 
+        msg = iif( fExplorerTreeview, IDM_SETFILERESOURCE_EXPLORERTREEVIEW, IDM_SETFILERESOURCE )
+        AppendMenu hPopUpMenu, MF_ENABLED or MFT_RADIOCHECK, msg, L(209,"Resource file") 
     end if
+
     msg = iif( fExplorerTreeview, IDM_SETFILENORMAL_EXPLORERTREEVIEW, IDM_SETFILENORMAL )
     msglast = msg
     AppendMenu hPopUpMenu, MF_ENABLED or MFT_RADIOCHECK, msg, L(204,"Normal file") 

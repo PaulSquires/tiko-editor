@@ -52,7 +52,9 @@ type clsTopTabCtl
         rcSplitEditor     as RECT
         rcDiskFilename    as RECT
         rcFindButton      as RECT
-        rcFileTypeButton  as RECT        ' Main, Modulesm Normal, etc
+        rcGotoMain        as RECT
+        rcGotoHeader      as RECT        ' Can be either GotoHeader or GotoCode depending on underlying filetype.
+        rcFileTypeButton  as RECT        ' Main, Module, Normal, etc
         rcFindTextRect    as RECT
         rcReplaceTextRect as RECT
         wszFileType       as DWSTRING

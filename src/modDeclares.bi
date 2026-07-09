@@ -341,7 +341,7 @@ dim shared as wstring * 10 _
     wszIconSettings, wszIconCheckBoxEmpty, wszIconCheckBoxMarked, _
     wszIconContinue, wszIconStop, wszIconStepNext, wszIconStepOver, wszIconStepOut, wszIconRunToCursor, _
     wszIconSave, wszIconFind, wszIconToggleReplace, _
-    wszIconGotoMain, wszIconGotoHeader
+    wszIconGotoMain, wszIconGotoHeader, wszIconGotoSource
 
 
 ' Braille spinner patterns - large clockwise rotation
@@ -392,8 +392,11 @@ dim shared spinner(0 to 7) as wstring * 2 => { _
     wszIconSave              = !"\uE74E"      ' Save (diskette)
     wszIconFind              = !"\uE721"      ' Search (magnifying glass)
     wszIconToggleReplace     = !"\uE8B4"      ' Toggle Replace
-    wszIconGotoMain          = !"\uE655"
-    wszIconGotoHeader        = !"\uE66A"
+'    wszIconGotoMain          = !"\uE655"
+'    wszIconGotoHeader        = !"\uE66A"
+    wszIconGotoMain          = "M"
+    wszIconGotoHeader        = "H"
+    wszIconGotoSource        = "S"
 
     ' Debugger Icons
     'wszIconDebug             = !"\uE62A"     ' form with magnifier

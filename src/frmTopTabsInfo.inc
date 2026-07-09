@@ -44,11 +44,31 @@ function frmTopTabsInfo_PositionWindows() as LRESULT
         end select 
     end if    
 
-    ' Info area under the row of tabs 
+    ' Info area under the row of tabs (right to left)
+    gTTabCtl.rcFileTypeButton = rc
+    gTTabCtl.rcFileTypeButton.right = rc.right - pWindow->ScaleX(6)
+    gTTabCtl.rcFileTypeButton.left = gTTabCtl.rcFileTypeButton.right - _
+            pWindow->ScaleX( getTextWidth(HWND_FRMMAIN_TOPTABSINFO, gTTabCtl.wszFileType, GUIFONT_9) + (nPadding * 2))
+    gTTabCtl.rcFileTypeButton.left = MIN( gTTabCtl.rcPrevTabs.right, gTTabCtl.rcFileTypeButton.left ) 
+    gTTabCtl.rcFileTypeButton.top += vmargin
+    gTTabCtl.rcFileTypeButton.bottom = gTTabCtl.rcFileTypeButton.top + pWindow->ScaleY(TOPTABS_INFO_HEIGHT-1) - vmargin
+    
+    gTTabCtl.rcGotoHeader = rc
+    gTTabCtl.rcGotoHeader.right = gTTabCtl.rcFileTypeButton.left
+    gTTabCtl.rcGotoHeader.top += vmargin
+    gTTabCtl.rcGotoHeader.left = gTTabCtl.rcGotoHeader.right - pWindow->ScaleX( rcIconWidth )
+    gTTabCtl.rcGotoHeader.bottom = gTTabCtl.rcGotoHeader.top + pWindow->ScaleY(TOPTABS_INFO_HEIGHT-1) - vmargin
+
+    gTTabCtl.rcGotoMain = rc
+    gTTabCtl.rcGotoMain.right = gTTabCtl.rcGotoHeader.left 
+    gTTabCtl.rcGotoMain.top += vmargin
+    gTTabCtl.rcGotoMain.left = gTTabCtl.rcGotoMain.right - pWindow->ScaleX( rcIconWidth )
+    gTTabCtl.rcGotoMain.bottom = gTTabCtl.rcGotoMain.top + pWindow->ScaleY(TOPTABS_INFO_HEIGHT-1) - vmargin
+
     gTTabCtl.rcFindButton = rc
-    gTTabCtl.rcFindButton.left = gTTabCtl.rcPrevTabs.left 
+    gTTabCtl.rcFindButton.right = gTTabCtl.rcGotoMain.left
     gTTabCtl.rcFindButton.top += vmargin
-    gTTabCtl.rcFindButton.right = gTTabCtl.rcFindButton.left + pWindow->ScaleX( rcIconWidth )
+    gTTabCtl.rcFindButton.left = gTTabCtl.rcFindButton.right - pWindow->ScaleX( rcIconWidth )
     gTTabCtl.rcFindButton.bottom = gTTabCtl.rcFindButton.top + pWindow->ScaleY(TOPTABS_INFO_HEIGHT-1) - vmargin
     
     gTTabCtl.rcDiskFilename = rc
@@ -56,13 +76,6 @@ function frmTopTabsInfo_PositionWindows() as LRESULT
     gTTabCtl.rcDiskFilename.left += pWindow->ScaleX(15)
     gTTabCtl.rcDiskFilename.right = gTTabCtl.rcFindButton.left
     gTTabCtl.rcDiskFilename.bottom = gTTabCtl.rcDiskFilename.top + pWindow->ScaleY(TOPTABS_INFO_HEIGHT-1) - vmargin
-    
-    gTTabCtl.rcFileTypeButton = rc
-    gTTabCtl.rcFileTypeButton.left = gTTabCtl.rcFindButton.right + pWindow->ScaleX(6)
-    gTTabCtl.rcFileTypeButton.top += vmargin
-    gTTabCtl.rcFileTypeButton.right = gTTabCtl.rcFileTypeButton.left + _
-            pWindow->ScaleX( getTextWidth(HWND_FRMMAIN_TOPTABSINFO, gTTabCtl.wszFileType, GUIFONT_9) + (nPadding * 2))
-    gTTabCtl.rcFileTypeButton.bottom = gTTabCtl.rcFileTypeButton.top + pWindow->ScaleY(TOPTABS_INFO_HEIGHT-1) - vmargin
     
     AfxRedrawWindow( HWND_FRMMAIN_TOPTABSINFO )
 
@@ -143,6 +156,19 @@ function frmTopTabsInfo_WndProc( _
         dim as DWSTRING wszTooltip 
         if isMouseOverRECT(hwnd, gTTabCtl.rcFindButton) then
             wszTooltip  = frmPanelMenu_FormatTooltip( IDM_FIND )
+        elseif isMouseOverRECT(hwnd, gTTabCtl.rcGotoMain) then
+            wszTooltip  = frmPanelMenu_FormatTooltip( IDM_GOTOMAINFILE )
+        elseif isMouseOverRECT(hwnd, gTTabCtl.rcGotoHeader) then
+            dim as clsDocument ptr pDoc = gTTabCtl.GetActiveDocumentPtr()
+            if pDoc then 
+                if pDoc->ProjectFileType = FILETYPE_HEADER then
+                    wszTooltip  = frmPanelMenu_FormatTooltip( IDM_GOTOSOURCEFILE )
+                end if
+                if (pDoc->ProjectFileType = FILETYPE_NORMAL) orelse _
+                    (pDoc->ProjectFileType = FILETYPE_MAIN) then
+                    wszTooltip  = frmPanelMenu_FormatTooltip( IDM_GOTOHEADERFILE )
+                end if    
+            end if
         elseif isMouseOverRECT(hwnd, gTTabCtl.rcFileTypeButton) then
             wszTooltip = ""
         end if
@@ -157,6 +183,20 @@ function frmTopTabsInfo_WndProc( _
     case WM_LBUTTONUP
         if isMouseOverRECT(hwnd, gTTabCtl.rcFindButton) then
             PostMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(IDM_FIND, 0), 0 )
+        elseif isMouseOverRECT(hwnd, gTTabCtl.rcGotoMain) then
+            PostMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(IDM_GOTOMAINFILE, 0), 0 )
+        elseif isMouseOverRECT(hwnd, gTTabCtl.rcGotoHeader) then
+            dim as DWSTRING wszHeaderOrCode
+            dim as clsDocument ptr pDoc = gTTabCtl.GetActiveDocumentPtr()
+            if pDoc then 
+                if pDoc->ProjectFileType = FILETYPE_HEADER then
+                    PostMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(IDM_GOTOSOURCEFILE, 0), 0 )
+                end if
+                if (pDoc->ProjectFileType = FILETYPE_NORMAL) orelse _
+                    (pDoc->ProjectFileType = FILETYPE_MAIN) then
+                    PostMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(IDM_GOTOHEADERFILE, 0), 0 )
+                end if    
+            end if
         elseif isMouseOverRECT(hwnd, gTTabCtl.rcFileTypeButton) then
             PostMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(IDM_PROJECTFILETYPE, 0), 0 )
         end if
@@ -188,10 +228,11 @@ function frmTopTabsInfo_WndProc( _
             b.PaintLine( 1, gTTabCtl.tabs(i).rcTab.left, b.rcClient.top, _
                                 gTTabCtl.tabs(i).rcTab.right, b.rcClient.top )
 
+            dim pDoc as clsDocument ptr 
+
             ' Determine if it is in a subfolder and if it is, then display the relative file name.
             dim as DWSTRING wszFilename = gTTabCtl.tabs(i).wszText
             if gApp.IsProjectActive then
-                dim pDoc as clsDocument ptr 
                 pDoc = gApp.GetMainDocumentPtr()
                 if pDoc then
                     dim as DWSTRING wszMainFolder = AfxStrPathname("PATH", pDoc->DiskFilename)
@@ -205,8 +246,19 @@ function frmTopTabsInfo_WndProc( _
 
             b.SetFont( SYMBOLFONT_10 )
             b.PaintIconButton( wszIconFind, @gTTabCtl.rcFindButton )
-
+            
             b.SetFont( GUIFONT_10 )
+            b.PaintIconButton( wszIconGotoMain, @gTTabCtl.rcGotoMain )
+            
+            dim as DWSTRING wszHeaderOrCode
+            pDoc = gTTabCtl.GetActiveDocumentPtr()
+            if pDoc then 
+                if pDoc->ProjectFileType = FILETYPE_HEADER then wszHeaderOrCode = wszIconGotoSource
+                if pDoc->ProjectFileType = FILETYPE_NORMAL then wszHeaderOrCode = wszIconGotoHeader
+                if pDoc->ProjectFileType = FILETYPE_MAIN   then wszHeaderOrCode = wszIconGotoHeader
+            end if
+            b.PaintIconButton( wszHeaderOrCode, @gTTabCtl.rcGotoHeader )
+            
             b.PaintRoundRect( @gTTabCtl.rcFileTypeButton, true )
             b.PaintText( gTTabCtl.wszFileType, @gTTabCtl.rcFileTypeButton, DT_CENTER, true )
         end if
