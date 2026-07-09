@@ -138,6 +138,7 @@ function frmKeyboard_CreateDefaultKeyBindings() as long
     
     '' SEARCH MENU
     frmKeyBoard_AddKeyBinding( "Search", IDM_GOTOANYTHING, "IDM_GOTOANYTHING", "Goto Anything", "Ctrl+P", "", false )
+    frmKeyBoard_AddKeyBinding( "Search", IDM_GOTOSYMBOL, "IDM_GOTOSYMBOL", "Goto Symbol", "Ctrl+R", "", false )
     frmKeyBoard_AddKeyBinding( "Search", IDM_FIND, "IDM_FIND", "Find", "Ctrl+F", "", false )
     frmKeyBoard_AddKeyBinding( "Search", IDM_FINDINPROJECT, "IDM_FINDINPROJECT", "Find in Project", "Ctrl+Shift+F", "", false )
     frmKeyBoard_AddKeyBinding( "Search", IDM_REPLACE, "IDM_REPLACE", "Replace", "Ctrl+H", "", false )

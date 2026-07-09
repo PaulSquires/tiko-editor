@@ -76,7 +76,7 @@ enum
     
     '' SEARCH
     IDM_SEARCH_START
-    IDM_GOTOANYTHING
+    IDM_GOTOANYTHING, IDM_GOTOSYMBOL
     IDM_FIND, IDM_FINDNEXT, IDM_FINDPREV
     IDM_REPLACENEXT, IDM_REPLACEPREV, IDM_REPLACEALL
     IDM_FINDNEXTACCEL, IDM_FINDPREVACCEL 
@@ -340,8 +340,8 @@ dim shared as wstring * 10 _
     wszIconSplitEditor, wszIconSplitLeftRight, wszIconSplitTopBottom, wszIconThemes, _
     wszIconSettings, wszIconCheckBoxEmpty, wszIconCheckBoxMarked, _
     wszIconContinue, wszIconStop, wszIconStepNext, wszIconStepOver, wszIconStepOut, wszIconRunToCursor, _
-    wszIconSave, wszIconFind, _
-    wszIconToggleReplace 
+    wszIconSave, wszIconFind, wszIconToggleReplace, _
+    wszIconGotoMain, wszIconGotoHeader
 
 
 ' Braille spinner patterns - large clockwise rotation
@@ -392,6 +392,9 @@ dim shared spinner(0 to 7) as wstring * 2 => { _
     wszIconSave              = !"\uE74E"      ' Save (diskette)
     wszIconFind              = !"\uE721"      ' Search (magnifying glass)
     wszIconToggleReplace     = !"\uE8B4"      ' Toggle Replace
+    wszIconGotoMain          = !"\uE655"
+    wszIconGotoHeader        = !"\uE66A"
+
     ' Debugger Icons
     'wszIconDebug             = !"\uE62A"     ' form with magnifier
     'wszIconDebug             = !"\uE623"     ' next solid
