@@ -115,7 +115,8 @@ end function
 ' ========================================================================================
 ' Set Main file to be compiled. 
 ' Projects need to specifically set a Main file.
-' Non-Projects will attempt to compile the current active document.
+' Non-Projects will attempt to compile the current active document. The user can
+' also set a Main file for non-projects.
 ' ========================================================================================
 function code_SetMainFile( byval pCompile as COMPILE_TYPE ptr ) as boolean
     dim pDoc as clsDocument ptr 
@@ -126,7 +127,10 @@ function code_SetMainFile( byval pCompile as COMPILE_TYPE ptr ) as boolean
                             MB_OK Or MB_ICONINFORMATION Or MB_DEFBUTTON1 )
         end if
     else
-        pDoc = gTTabCtl.GetActiveDocumentPtr()
+        pDoc = gApp.GetMainDocumentPtr()
+        if pDoc = null then
+            pDoc = gTTabCtl.GetActiveDocumentPtr()
+        end if    
     end if
 
     if pDoc = null then return false

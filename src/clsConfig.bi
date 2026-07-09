@@ -47,7 +47,7 @@ type TYPE_TOOLS
 end type
 
 type TYPE_CATEGORIES
-    idFileType       as string    ' GUID or special node value (FILETYPE_*)
+    idFileType       as DWSTRING    ' GUID or special node value (FILETYPE_*)
     wszDescription   as DWSTRING
     bShow            as boolean = true
 end type

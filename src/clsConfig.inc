@@ -1133,7 +1133,7 @@ function clsConfig.LoadSessionFile( byref wszSessionFile as wstring ) as boolean
     frmOutput_ResetAllControls()
 
     dim pDoc as clsDocument ptr
-    dim as DWSTRING wst, wKey, wData, wszFilename, wszProjectName
+    dim as DWSTRING wst, wKey, wData, wszFilename
         
     dim as string sBookmarks
     dim as string sBreakPoints
@@ -1205,6 +1205,10 @@ function clsConfig.LoadSessionFile( byref wszSessionFile as wstring ) as boolean
                 pDoc = gApp.CreateEmptyDocument()
                 pDoc->LoadDiskFile( wszFilename )
                 pDoc->AssignTextBuffer()
+                pDoc->ProjectFileType = wszFileType
+                if pDoc->ProjectFileType = FILETYPE_UNDEFINED then
+                    pDoc->ProjectFileType = FILETYPE_NORMAL
+                end if    
                 iTab = gTTabCtl.AddTab( pDoc )  ' Add the new document to the top tabcontrol
                 
                 ' Set the saved positions
@@ -1533,7 +1537,7 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
         
         gApp.FileLoadingCount = gApp.FileLoadingCount + 1
         gApp.wszPanelText = docData(i).wszFilename
-        frmMain_SetStatusbar
+        frmMain_SetStatusbar()
 
         pDoc = gApp.CreateEmptyDocument()
         pDoc->LoadDiskFile( docData(i).wszFilename )
@@ -1580,17 +1584,17 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
         gApp.ProjectBuild = frmBuildConfig_GetSelectedBuildGUID()
     end if   
 
-    frmMain_SetStatusbar
+    frmMain_SetStatusbar()
     SetCursor( hCurSave )
 
     ' Show the correct notes and TODO data for this project
-    frmOutput_ShowNotes
-    frmOutput_UpdateToDoListview
+    frmOutput_ShowNotes()
+    frmOutput_UpdateToDoListview()
 
     this.wszLastActiveSession = gApp.ProjectFilename
 
-    frmMain_PositionWindows
-    frmMain_SetFocusToCurrentCodeWindow
+    frmMain_PositionWindows()
+    frmMain_SetFocusToCurrentCodeWindow()
 
     function = true   ' successful open
 end function

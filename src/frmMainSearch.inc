@@ -148,6 +148,14 @@ function OnCommand_SearchFindDialog() as LRESULT
     frmMain_PositionWindows()
 
     dim as HWND hCtl = GetDlgItem( HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND)
+    gFind.txtFind = AfxGetWindowText(hCtl)
+    dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
+    If pDoc Then 
+        FindReplace_HighlightSearches()
+        dim as hwnd hEdit = pDoc->hWndActiveScintilla
+        dim as long startPos = SendMessage( hEdit, SCI_GETANCHOR, 0, 0) - 1
+        FindReplace_NextSelection(startPos, true, true)
+    end if    
     SetFocus( hCtl )
 
     function = 0
@@ -212,20 +220,22 @@ function OnCommand_SearchFindActions( _
         case IDM_FINDPREV
             FindReplace_HighlightSearches()
             if FindReplace_NextSelection(startPos, false, true) then pDoc->CenterCurrentLine
-            AfxRedrawWindow( HWND_FRMMAIN_TOPTABSINFO )
+            if IsWindowVisible(HWND_FRMMAIN_TOPTABSFIND) then AfxRedrawWindow( HWND_FRMMAIN_TOPTABSFIND )
 
         case IDM_FINDNEXT
             FindReplace_HighlightSearches()
             if FindReplace_NextSelection(startPos, true, true) then pDoc->CenterCurrentLine
-            AfxRedrawWindow( HWND_FRMMAIN_TOPTABSINFO )
+            if IsWindowVisible(HWND_FRMMAIN_TOPTABSFIND) then AfxRedrawWindow( HWND_FRMMAIN_TOPTABSFIND )
 
         case IDM_FINDPREVACCEL
             FindReplace_HighlightSearches()
             if FindReplace_NextSelection(startPos, false, true) then pDoc->CenterCurrentLine
+            if IsWindowVisible(HWND_FRMMAIN_TOPTABSFIND) = 0 then pDoc->RemoveSelectionAttributes()
 
         case IDM_FINDNEXTACCEL
             FindReplace_HighlightSearches()
             if FindReplace_NextSelection(startPos, true, true) then pDoc->CenterCurrentLine
+            if IsWindowVisible(HWND_FRMMAIN_TOPTABSFIND) = 0 then pDoc->RemoveSelectionAttributes()
 
     end select
     

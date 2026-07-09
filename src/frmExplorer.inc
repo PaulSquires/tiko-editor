@@ -673,12 +673,16 @@ function LoadExplorerFiles() as long
         ' Iterate all pDoc in the project/files list. Create an array and then
         ' sort it alphabetically.
         dim as long ub
+        dim as DWSTRING wszFileType
         
         erase pDocs
         
         dim pDoc as clsDocument ptr = gApp.pDocList
         do until pDoc = 0
-            if pDoc->ProjectFiletype = gConfig.Cat(ii).idFileType then
+            wszFileType = pDoc->ProjectFiletype
+            ' If project not active then ensure file displays under the "File" header.
+            if gApp.IsProjectActive = false then wszFileType = CATINDEX_FILES
+            if wszFileType = gConfig.Cat(ii).idFileType then
                 ub = ubound(pDocs) + 1
                 redim preserve pDocs(ub)
                 pDocs(ub) = pDoc

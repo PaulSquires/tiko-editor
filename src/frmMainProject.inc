@@ -192,7 +192,7 @@ function OnCommand_ProjectSetFileType( _
         if (wszFileType = FILETYPE_MAIN) or (wszFileType = FILETYPE_RESOURCE) then
             dim pDoc2 as clsDocument ptr = iif(wszFileType = FILETYPE_MAIN, gApp.GetMainDocumentPtr, gApp.GetResourceDocumentPtr)
             if pDoc2 then
-            pDoc2->ProjectFileType = FILETYPE_NORMAL
+                pDoc2->ProjectFileType = FILETYPE_NORMAL
             end if   
         end if
         ' Set the new FileType for the currently selected document

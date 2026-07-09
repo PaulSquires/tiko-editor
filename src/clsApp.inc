@@ -329,8 +329,8 @@ function clsApp.ProjectSetFileType( _
 
     pDoc->ProjectFileType = wszFileType
 
-    ' Refresh the statusbar to ensure that the file's type is displayed properly
-    frmMain_SetStatusbar
+    ' Refresh the TopTabsInfo to ensure that the file's type is displayed properly
+    frmTopTabsInfo_PositionWindows()
 
     function = 0
 end function

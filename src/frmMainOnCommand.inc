@@ -47,7 +47,7 @@ function frmMain_OnCommand( _
 
             ' Remove any markers set in the document that highlights
             ' entire lines (used for Selected text searching).
-            pDoc->RemoveMarkerHighlight
+            pDoc->RemoveMarkerHighlight()
 
             ' Restore any original selection area that the Find/Replace dialog may have 
             ' changed due to its incremental search, but only if it is a multiline selection.
@@ -139,7 +139,7 @@ function frmMain_OnCommand( _
             return 0   
 
         case IDM_PROJECTFILETYPE
-            dim as HMENU hPopupMenu = CreateStatusBarFileTypeContextMenu()
+            dim as HMENU hPopupMenu = CreateTabsInfoFileTypeContextMenu()
             dim as point pt: GetCursorPos @pt
             TrackPopupMenu(hPopUpMenu, 0, pt.x, pt.y, 0, hwnd, byval null)
             DestroyMenu hPopUpMenu

@@ -173,6 +173,12 @@ function clsTopTabCtl.SetFocusTab( byval idx as long ) as long
         frmExplorer_SelectItemData( this.tabs(idx).pDoc )
         ' Highlight the selected tab file in the Function List listbox
         frmFunctions_SelectItemData( this.tabs(idx).pDoc )
+        ' If moving to a new Tab and the Find panel is closed then ensure that we 
+        ' remove any find occurrence highlights.
+        dim as clsDocument ptr pDoc = this.GetActiveDocumentPtr()
+        if pDoc then 
+            if IsWindowVisible(HWND_FRMMAIN_TOPTABSFIND) = 0 then pDoc->RemoveSelectionAttributes()
+        end if
     end if
 
     function = this.CurSel
@@ -221,7 +227,15 @@ function clsTopTabCtl.TabFocusLost( byval nTabIdx as long = -1) as long
             gFind.bShowReplacePanel = false
             gFind.bExpanded = false
         end if
-    end if    
+
+        ' If moving to a new Tab and the Find panel is closed then ensure that we 
+        ' remove any find occurrence highlights.
+        dim as clsDocument ptr pDoc = this.GetActiveDocumentPtr()
+        if pDoc then 
+            if IsWindowVisible(HWND_FRMMAIN_TOPTABSFIND) = 0 then pDoc->RemoveSelectionAttributes()
+        end if
+    end if
+        
     function = 0
 end function
 
