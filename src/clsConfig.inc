@@ -1138,13 +1138,14 @@ function clsConfig.LoadSessionFile( byref wszSessionFile as wstring ) as boolean
     dim as string sBookmarks
     dim as string sBreakPoints
     dim as string sFoldPoints
-    dim as long nData, i, iTab, nActiveTab, nFocusEdit
+    dim as long nData, i, iTab, nFocusEdit
     dim as long nFileIndex = -1
     dim as long nFirstLine, nPosition, nFirstLine1, nPosition1
     dim as long nSplitMode, nSplitPositionX, nSplitPositionY
 
     ' Info saved for each File and used to create the file once Fileend is found
     dim as long nTabIndex
+    dim as long nActiveTab = -1
     dim as DWSTRING wszFileType
     dim as boolean bLoadInTab
     
@@ -1230,6 +1231,13 @@ function clsConfig.LoadSessionFile( byref wszSessionFile as wstring ) as boolean
     loop                        
     pStream.Close
                         
+    ' Do a sanity check on the active tab to ensure that it is in bounds thereby
+    ' not throwing future array out of bounds gpf's.
+    if (gTTabCtl.IsSafeIndex(nActiveTab) = false) andalso (gTTabCtl.GetItemCount > 0) then
+        nActiveTab = 0
+    end if
+
+
     ' Load all of the filenames into the Explorer listbox. Configure the node
     ' array to allow all types of files to be shown in the listbox
     for i as long = lbound(gConfig.Cat) to ubound(gConfig.Cat)
@@ -1244,14 +1252,14 @@ function clsConfig.LoadSessionFile( byref wszSessionFile as wstring ) as boolean
     LoadFunctionsFiles()
 
     ' Display the active editing window
-    gTTabCtl.CurSel = nActiveTab
-    gTTabCtl.DisplayScintilla( nActiveTab, true )
-    frmTopTabs_PositionWindows()
-    
-    ' Highlight the selected tab file in the Explorer listbox
     if gTTabCtl.IsSafeIndex(nActiveTab) then
+        gTTabCtl.CurSel = nActiveTab
+        gTTabCtl.DisplayScintilla( nActiveTab, true )
+    
+        ' Highlight the selected tab file in the Explorer listbox
         frmExplorer_SelectItemData( gTTabCtl.tabs(nActiveTab).pDoc )
     end if
+    frmTopTabs_PositionWindows()
     
     frmMain_SetStatusbar
     SetCursor( hCurSave )
@@ -1402,13 +1410,15 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
     dim sBookmarks as string
     dim sBreakPoints as string
     dim sFoldPoints as string
-    dim as long nData, i, iTab, nActiveTab, nFocusEdit
+    dim as long nData, i, iTab, nFocusEdit
     dim as long nFileIndex = -1
     dim as long nFirstLine, nPosition, nFirstLine1, nPosition1, nSplitPosition
     dim as long nSplitMode, nSplitPositionX, nSplitPositionY
 
     ' Info saved for each File and used to create the file once Fileend is found
     dim as long nTabIndex
+    dim as long nActiveTab = -1
+    
     dim as DWSTRING wszFileType
     dim as boolean bLoadInTab
     dim as boolean bReadingNote
