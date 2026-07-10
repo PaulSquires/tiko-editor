@@ -504,12 +504,12 @@ function Scintilla_OnNotify( _
                 dim as long nPos = SciExec( hEdit, SCI_GETCURRENTPOS, 0, 0)
                 
                 ' Get the match word that existed when the listbox was displayed
-                dim as long nLenMatchWord = len(pDoc->sMatchWord)
+                dim as long nLenMatchWord = len(pDoc->wszMatchWord)
                 
                 ' Set the word that was selected in the listbox
                 dim as string sText = *cast(zstring ptr, pNSC->lpText)
                 
-                if ucase(sText) <> ucase(pDoc->sMatchWord) then
+                if ucase(sText) <> ucase(pDoc->wszMatchWord) then
                     SciExec( hEdit, SCI_SETSEL, nStartPos-nLenMatchWord, nPos)
                     SciExec( hEdit, SCI_REPLACESEL, 0, cast(LPARAM, strptr(sText)))
                     nPos = SciExec( hEdit, SCI_GETCURRENTPOS, 0, 0)

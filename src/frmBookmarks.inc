@@ -511,7 +511,7 @@ function LoadBookmarksFiles() as long
     ' Clear all content from the listbox
     ListBox_ResetContent(hList)
 
-    dim wszText as wstring * MAX_PATH
+    dim as DWSTRING wszText
 
     ' Iterate all pDoc in the project/files list
     dim pDoc as clsDocument ptr = gApp.pDocList
@@ -522,6 +522,12 @@ function LoadBookmarksFiles() as long
         ' false    ' collapsed node
         ' Bookmark node line format.
         ' 231%Select Case nCount     ' bookmark on line 231 of the specified file
+
+' 字符串/注释 原样输出
+
+
+' inString 保持 True，不翻转
+
 
         ' Test if the pDoc has active bookmarks
         dim as long idx, nLineNum, nCount
@@ -534,16 +540,17 @@ function LoadBookmarksFiles() as long
 
         if len(sBookmarks) then
             wszText = wstr(pDoc->bBookmarkExpanded)
-            idx = Listbox_AddString( hList, @wszText )
+            idx = Listbox_AddString( hList, wszText.vptr )
             ListBox_SetItemData( hList, idx, pDoc )
 
             if pDoc->bBookmarkExpanded then
                 nCount = AfxStrParseCount( sBookmarks, "," )
                 for i as long = 1 to nCount
                     nLineNum = val( AfxStrParse( sBookmarks, i, "," ) )
-                    wszText = wstr(nLineNum) & _
-                                "%" & ltrim(pDoc->GetLine(nLineNum))
-                    idx = Listbox_AddString( hList, @wszText )
+                    dim as string sDescription = ltrim(pDoc->GetLine(nLineNum))
+                    dim as DWSTRING wszDescription: wszDescription.utf8 = sDescription  ' convert ut8 to unicode  
+                    wszText = wstr(nLineNum) & "%" & wszDescription
+                    idx = Listbox_AddString( hList, wszText.vptr )
                     ListBox_SetItemData( hList, idx, pDoc )
                 next
             end if

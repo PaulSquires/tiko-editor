@@ -116,7 +116,7 @@ type clsDocument
     FileEncoding          as long = FILE_ENCODING_UTF8   ' new files always UTF8 encoded by default (no BOM)       
     bNeedsParsing         as boolean            ' Document requires to be parsed due to changes.
     DocumentBuild         as string             ' specific build configuration to use for this document
-    sMatchWord            as string             ' for the incremental autocomplete search
+    wszMatchWord          as DWSTRING           ' for the incremental autocomplete search
     AutoCompletetype      as long               ' AUTOC_DIMAS, AUTOC_TYPE
     AutoCStartPos         as long
     AutoCTriggerStartPos  as long

@@ -379,17 +379,17 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
     ' Get the current entered word. We get the text between the "." or ">" and the current
     ' editing position. We do this rather than pDoc->GetWord because text may already
     ' exist after the current editing position.
-    pDoc->sMatchWord = ""
+    pDoc->wszMatchWord = ""
     for i as long = len(sLine) to 1 step -1
         dim as string ch = mid(sLine, i, 1)
         select case ch
             case ".", ">", " "
             exit for
             case else
-            pDoc->sMatchWord = ucase(ch) & pDoc->sMatchWord   
+               pDoc->wszMatchWord = ucase(ch) & pDoc->wszMatchWord   
         end select
     next
-    nLenMatchWord = len(pDoc->sMatchWord )
+    nLenMatchWord = len(pDoc->wszMatchWord )
                 
     ' If an autocomplete is active but now there is no match word then
     ' a space or tab must have been pressed so autocomplete cancel and now exit.
@@ -425,7 +425,7 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
         sLine = MaskStringCharacters(sLine)
         sLine = RemoveComments(sLine)
         if (notification <> SCN_AUTOCCHARDELETED) then
-            pDoc->sMatchWord = ""
+            pDoc->wszMatchWord = ""
             nLenMatchWord = 0         
         end if
         sLine_ucase = ucase(sLine)
@@ -508,7 +508,7 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
                     if pData->id = DB2_STANDARDDATATYPE then
                         st = pData->VariableType
                         if nLenMatchWord then
-                            if left(ucase(st), nLenMatchWord) = pDoc->sMatchWord then
+                            if left(ucase(st), nLenMatchWord) = pDoc->wszMatchWord then
                                 if instr(sList, st & "|") = 0 then
                                     sList = sList & st & "|"
                                 end if   
@@ -538,7 +538,7 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
                     st = rtrim(pData->VariableType)
 
                     if nLenMatchWord then
-                        if left(ucase(st), nLenMatchWord) = pDoc->sMatchWord then
+                        if left(ucase(st), nLenMatchWord) = pDoc->wszMatchWord then
                             if ExistsInAutocompleteList(sList, st) = false then
                             sList = sList & st & "|" 
                             end if
@@ -582,7 +582,7 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
                             
                     if bAddToList then
                         if nLenMatchWord then
-                            if left(ucase(st), nLenMatchWord) = pDoc->sMatchWord then
+                            if left(ucase(st), nLenMatchWord) = pDoc->wszMatchWord then
                                 if ExistsInAutocompleteList(sList, st) = false then
                                     sList = sList & st & "|"
                                 end if
