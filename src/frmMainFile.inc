@@ -220,6 +220,7 @@ function OnCommand_FileSave( _
     
     LoadExplorerFiles()
     LoadFunctionsFiles()
+    LoadBookmarksFiles()
 
     frmMain_SetFocusToCurrentCodeWindow
 
