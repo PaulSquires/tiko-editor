@@ -523,12 +523,6 @@ function LoadBookmarksFiles() as long
         ' Bookmark node line format.
         ' 231%Select Case nCount     ' bookmark on line 231 of the specified file
 
-' 字符串/注释 原样输出
-
-
-' inString 保持 True，不翻转
-
-
         ' Test if the pDoc has active bookmarks
         dim as long idx, nLineNum, nCount
         dim as string sBookmarks
