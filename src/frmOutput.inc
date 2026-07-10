@@ -1129,7 +1129,7 @@ function frmOutput_Show( byval hwndParent as HWND ) as LRESULT
                     ES_READONLY or ES_MULTILINE or ES_LEFT or ES_AUTOVSCROLL, _
                     WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_RIGHTSCROLLBAR)
     pWindow->SetControlSubclass(hCtl, @frmOutput_RichEdit_SubclassProc, IDC_FRMOUTPUT_TXTLOGFILE, NULL)
-    AfxSetWindowFont( hCtl, ghFont(INFOFONT_10), TRUE )
+'    AfxSetWindowFont( hCtl, ghFont(INFOFONT_10), TRUE )
         SendMessage( hCtl, EM_SETEVENTMASK, 0, cast(LPARAM, ENM_SELCHANGE or ENM_CHANGE or ENM_UPDATE) )
         SendMessage( hCtl, EM_SHOWSCROLLBAR, SB_VERT, FALSE)
         SendMessage( hCtl, EM_SHOWSCROLLBAR, SB_HORZ, FALSE)
