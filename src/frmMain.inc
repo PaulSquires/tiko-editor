@@ -1580,6 +1580,7 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     
     ghFont(GUIFONT_9)     = pWindow->CreateFont(GUIFONT, 9, FW_NORMAL) 
     ghFont(GUIFONT_10)    = pWindow->CreateFont(GUIFONT, 10, FW_NORMAL)
+    ghFont(INFOFONT_10)   = pWindow->CreateFont(GUIFIXEDFONT, 10, FW_NORMAL)
     ghFont(INFOFONT_11)   = pWindow->CreateFont(GUIFIXEDFONT, 11, FW_NORMAL)
     ghFont(SYMBOLFONT_9)  = pWindow->CreateFont(SYMBOLFONT, 9, FW_NORMAL)
     ghFont(SYMBOLFONT_10) = pWindow->CreateFont(SYMBOLFONT, 10, FW_NORMAL)

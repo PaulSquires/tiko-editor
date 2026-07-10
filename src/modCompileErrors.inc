@@ -325,6 +325,11 @@ function ParseLogForError ( _
     dim as DWSTRING wDQ, wst1, wst2, wst3, wst, wst_ucase, wszOutputMsg, wszText        
     dim as boolean fGoodCompile
 
+    ' Force switching to "Compiler Log File" tab after a failed compile. We do this in situations
+    ' where no Filename/ErrorLine is populated in the "Compiler Results" listbox. This happens
+    ' in situations like failed Resource File compiling, failed linking.
+    dim as boolean fSwitchToLogFile   
+
     wDQ = wchr(34) ' unicode double quotes
 
     pCompile->EndTime = timer
@@ -337,6 +342,8 @@ function ParseLogForError ( _
     ' to compile using the FB 64 bit compiler on a 32-bit version of Windows. for this
     ' reason we will do a manual check here rather than relying on detecting the error
     ' through the log file string.
+    ' Updated 2025: Tiko is a pure 64-bit program so it won't run on 32-bit Windows, therefore
+    ' we should never get the following error anyway like used to happen on WinFBE.
     if pCompile->bCompile64 then   ' trying to compile a 64-bit program
         if AfxWindowsBitness() <> 64 then  ' Windows is not 64 bit
             wsLogSt = "This version of the FreeBASIC compiler is not compatible with the version "   & _
@@ -361,6 +368,7 @@ function ParseLogForError ( _
         ' from a 32-bit operating system.
         if left(wst_ucase, 16) = "THIS VERSION OF " then
             fGoodCompile = false
+            fSwitchToLogFile = true
             wszText = "" & chr(9) & "0" & chr(9) & "" & chr(9) & "compiling FAILED: Windows not 64-bit (refer to log file)"
             frmListView_AddString( hLV, wszText )
             wszOutputMsg = wsLogSt: exit For
@@ -394,20 +402,24 @@ function ParseLogForError ( _
             (left(wst_ucase, 34) = "VERY SORRY, BUT GORC HAD A PROBLEM") then
             wszText = "" & chr(9) & "0" & chr(9) & "" & chr(9) & "compiling resource FAILED: Error Code 1 (refer to log file)"
             frmListView_AddString( hLV, wszText )
+            fSwitchToLogFile = true
             NumErrors += 1
         elseif (left(wst_ucase, 5) = "ERROR") then
             wszText = "" & chr(9) & "0" & chr(9) & "" & chr(9) & "compiling FAILED: Error Code 1 (refer to log file)"
             frmListView_AddString( hLV, wszText )
+            fSwitchToLogFile = true
             NumErrors += 1
         elseif (left(wst_ucase, 19) = "COMPILING C FAILED:") then
             wszText = "" & chr(9) & "0" & chr(9) & "" & chr(9) & "compiling C FAILED: Error Code 1 (refer to log file)"
             frmListView_AddString( hLV, wszText )
+            fSwitchToLogFile = true
             NumErrors += 1
         end if
         
         if instr(wst_ucase, "LINKING FAILED:") then 
             wszText = "" & chr(9) & "0" & chr(9) & "" & chr(9) & wst & " (refer to log file)"
             frmListView_AddString( hLV, wszText )
+            fSwitchToLogFile = true
             NumErrors += 1
         end if
     
@@ -478,7 +490,8 @@ function ParseLogForError ( _
 
                     wszText = "" & chr(9) & wst2 & chr(9) & wst1 & chr(9) & wst3
                     frmListView_AddString( hLV, wszText )
-                    
+                    fSwitchToLogFile = false
+
                     if IsWarning then 
                         NumWarnings += 1
                     elseif IsError then
@@ -490,8 +503,8 @@ function ParseLogForError ( _
                 end if
 
             else
-                wszText = "" & chr(9) & "" & chr(9) & "" & chr(9) & wst
-                frmListView_AddString( hLV, wszText )
+'                wszText = "" & chr(9) & "" & chr(9) & "" & chr(9) & wst
+'                frmListView_AddString( hLV, wszText )
                 NumDirectives += 1
             end if
 
@@ -505,6 +518,11 @@ function ParseLogForError ( _
     ' to call the 64 bit compiler using a 32 bit operating system. Show the message to the user via
     ' the Output window (log file).
     if fGoodCompile = false then NumErrors += 1
+    
+    if (fSwitchToLogFile = false) andalso (NumDirectives > 0) then
+        fSwitchToLogFile = true
+    end if
+
 
     dim as DWSTRING wszIconCompileMsg
 
@@ -542,13 +560,9 @@ function ParseLogForError ( _
             frmOutput_PositionWindows()
         end if
       
-        ' if the Search Results, TODO, Notes tab is active then reposition to 
-        ' the first tab for error listview
-        select case gOutputTabsCurSel 
-            case 1, 2, 3, 4
-                gOutputTabsCurSel = 0
-                frmOutput_PositionWindows()
-        end select
+        ' Reposition to the correct tab
+        gOutputTabsCurSel = iif( fSwitchToLogFile, 1, 0 )
+        frmOutput_PositionWindows()
         
         ' Only retore the Output window if Errors exist. Warnings only will not trigger
         ' the Output window to open but the user can see how many warnings exist via the

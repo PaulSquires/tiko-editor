@@ -163,9 +163,7 @@ function frmTopTabsInfo_WndProc( _
             if pDoc then 
                 if pDoc->ProjectFileType = FILETYPE_HEADER then
                     wszTooltip  = frmPanelMenu_FormatTooltip( IDM_GOTOSOURCEFILE )
-                end if
-                if (pDoc->ProjectFileType = FILETYPE_NORMAL) orelse _
-                    (pDoc->ProjectFileType = FILETYPE_MAIN) then
+                else   ' main, normal, module
                     wszTooltip  = frmPanelMenu_FormatTooltip( IDM_GOTOHEADERFILE )
                 end if    
             end if
@@ -191,9 +189,7 @@ function frmTopTabsInfo_WndProc( _
             if pDoc then 
                 if pDoc->ProjectFileType = FILETYPE_HEADER then
                     PostMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(IDM_GOTOSOURCEFILE, 0), 0 )
-                end if
-                if (pDoc->ProjectFileType = FILETYPE_NORMAL) orelse _
-                    (pDoc->ProjectFileType = FILETYPE_MAIN) then
+                else   ' main, normal, module
                     PostMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(IDM_GOTOHEADERFILE, 0), 0 )
                 end if    
             end if
@@ -253,9 +249,11 @@ function frmTopTabsInfo_WndProc( _
             dim as DWSTRING wszHeaderOrCode
             pDoc = gTTabCtl.GetActiveDocumentPtr()
             if pDoc then 
-                if pDoc->ProjectFileType = FILETYPE_HEADER then wszHeaderOrCode = wszIconGotoSource
-                if pDoc->ProjectFileType = FILETYPE_NORMAL then wszHeaderOrCode = wszIconGotoHeader
-                if pDoc->ProjectFileType = FILETYPE_MAIN   then wszHeaderOrCode = wszIconGotoHeader
+                if pDoc->ProjectFileType = FILETYPE_HEADER then 
+                    wszHeaderOrCode = wszIconGotoSource
+                else   ' main, normal, module, resource
+                    wszHeaderOrCode = wszIconGotoHeader
+                end if
             end if
             b.PaintIconButton( wszHeaderOrCode, @gTTabCtl.rcGotoHeader )
             
