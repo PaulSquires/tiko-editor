@@ -459,7 +459,10 @@ function frmFunctionsListBox_SubclassProc ( _
                 dim as clsDocument ptr pDoc = cast(clsDocument ptr, ListBox_GetItemData( hWin, idx ))
                 dim as DWSTRING wszCaption = AfxGetListBoxText( hWin, idx )
                 if (left(wszCaption, 4) = "true") orelse (left(wszCaption, 5) = "false") then
-                    OpenSelectedDocument( pDoc->DiskFilename )
+                    ' Toggle the show/hide of functions under this node
+                    if pDoc then pDoc->bFunctionsExpanded = not pDoc->bFunctionsExpanded
+                    ' allow listbox click event to fully process before loading new functions
+                    PostMessage( hWin, MSG_USER_LOAD_FUNCTIONSFILES, 0, 0 )
                 else
                     ' Attempt to show the function name
                     dim as long nLineNum = getFunctionsLinenumber( wszCaption )
