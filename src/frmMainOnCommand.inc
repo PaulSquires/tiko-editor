@@ -262,7 +262,10 @@ function frmMain_OnCommand( _
             OnCommand_EditCommon( id, pDoc )
 
 
-        ''  SEARCH MENU              
+        ''  SEARCH MENU  
+        case IDM_GOTOANYTHING, _
+             IDM_GOTOSYMBOL
+             OnCommand_SearchGotoAnything( id )
         case IDM_FIND:               OnCommand_SearchFindDialog()
         case IDM_REPLACE:            OnCommand_SearchReplaceDialog()
         case IDM_FINDINPROJECT:      OnCommand_SearchFindInProject()

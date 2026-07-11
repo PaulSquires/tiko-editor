@@ -13,19 +13,5 @@
 
 #pragma once
 
-'enum SEARCH_MODE
-'    FindOnly   = 1
-'    ReplaceAll = 2
-'end enum
-
-'type REPLACE_RESULTS
-'    NumReplaced as integer
-'    FilesSearched as integer
-'    wszResults as DWSTRING
-'    wszFileText as DWSTRING
-'    pDoc as clsDocument ptr
-'    pSci as any ptr
-'end type
-'dim shared gReplaceResults as REPLACE_RESULTS
-    
-declare function frmFindInProject_Show() as LRESULT
+declare function ShowGotoAnything( byval idGotoMode as long ) as long
+declare function frmGotoAnything_Show( byval hWndParent as HWND  ) as LRESULT

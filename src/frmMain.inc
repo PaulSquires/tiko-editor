@@ -1614,6 +1614,9 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     frmTopTabsInfo_Show( HWND_FRMMAIN )
     frmTopTabsFind_Show( HWND_FRMMAIN )
     frmTopTabsReplace_Show( HWND_FRMMAIN )
+    
+    ' Create the GotoAnything fuzzy finder
+    frmGotoAnything_Show( HWND_FRMMAIN )
 
     ' Create the main application statusbar
     frmStatusBar_Show( HWND_FRMMAIN )

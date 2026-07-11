@@ -141,6 +141,14 @@ function OnCommand_SearchGotoLastPosition() as LRESULT
 end function
 
 ' ========================================================================================
+' GotoAnything popup dialog
+' ========================================================================================
+function OnCommand_SearchGotoAnything( byval idGotoMode as long ) as LRESULT
+    ShowGotoAnything( idGotoMode )
+    function = 0
+end function
+
+' ========================================================================================
 ' Search action Find
 ' ========================================================================================
 function OnCommand_SearchFindDialog() as LRESULT

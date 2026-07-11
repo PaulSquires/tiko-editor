@@ -45,6 +45,7 @@ declare function OnCommand_EditSelectAll( byval pDoc as clsDocument ptr, byval h
 declare function OnCommand_EditEncoding( byval id as long, byval pDoc as clsDocument ptr ) as LRESULT
 declare function OnCommand_EditCommon( byval id as long, byval pDoc as clsDocument ptr ) as LRESULT
 
+declare function OnCommand_SearchGotoAnything( byval idGotoMode as long ) as LRESULT
 declare function OnCommand_SearchFindDialog() as LRESULT
 declare function OnCommand_SearchReplaceDialog() as LRESULT
 declare function OnCommand_SearchFindInProject() as LRESULT
