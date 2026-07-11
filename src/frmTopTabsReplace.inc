@@ -58,7 +58,7 @@ function frmTopTabsReplace_PositionWindows() as LRESULT
 
     SetWindowPos( hCtlReplace, 0, nLeft, nTop, nWidth, nHeight, SWP_NOZORDER or SWP_SHOWWINDOW )
     SendMessage( hCtlReplace, EM_SETBKGNDCOLOR , 0, cast(LPARAM, ghTopTabs.BackColorHot) )
-    CenterSingleLineText( hCtlReplace )    
+    RichEditCenterSingleLineText( hCtlReplace )    
     SendMessage( hCtlReplace, EM_SETEVENTMASK, 0, cast(LPARAM, ENM_SELCHANGE or ENM_CHANGE) )
 
     ' Preserve Case RECT
@@ -369,9 +369,7 @@ function frmTopTabsReplace_Show( byval hwndParent as HWND ) as LRESULT
 
     ' we use RichEdit controls because regular Edit controls can not easily have
     ' their text vertically centered.
-    if gFind.hCueBannerFont = 0 then 
-        gFind.hCueBannerFont = ghFont(INFOFONT_11)
-    end if
+    gFind.hCueBannerFont = ghFont(INFOFONT_11)
 
     dim as RECT rc
     dim cf as CHARFORMATW 

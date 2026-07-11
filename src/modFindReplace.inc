@@ -401,29 +401,3 @@ function FindReplace_DoReplace( _
 end function
 
 
-' ========================================================================================
-' Center text vertically in the RichEdit Find/Replace controls.
-' ========================================================================================
-function CenterSingleLineText( byval hRichEdit as HWND ) as long
-    dim as RECT rc
-    GetClientRect(hRichEdit, @rc)
-
-    dim as HFONT hFont = ghFont(INFOFONT_11)  ' cast(HFONT, SendMessage(hRichEdit, WM_GETFONT, 0, 0))
-    dim as HDC hdc = GetDC(hRichEdit)
-    dim as HFONT hOldFont = SelectObject(hdc, hFont)
-
-    dim as TEXTMETRIC tm
-    GetTextMetrics(hdc, @tm)
-
-    SelectObject(hdc, hOldFont)
-    ReleaseDC(hRichEdit, hdc)
-
-    dim as long topMargin = ((rc.bottom - rc.top) - tm.tmHeight) / 2
-    if (topMargin < 0) then topMargin = 0
-
-    rc.top = topMargin
-    SendMessage( hRichEdit, EM_SETRECT, 0, cast(LPARAM, @rc) )
-    
-    return 0
-end function
-

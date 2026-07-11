@@ -63,7 +63,7 @@ function frmTopTabsFind_PositionWindows() as LRESULT
     
     ' DiskFilename text
     SetWindowPos( hCtlFind, 0, nLeft, nTop, nWidth, nHeight, SWP_NOZORDER or SWP_SHOWWINDOW )
-    CenterSingleLineText( hCtlFind )    
+    RichEditCenterSingleLineText( hCtlFind )    
     SendMessage( hCtlFind, EM_SETEVENTMASK, 0, cast(LPARAM, ENM_SELCHANGE or ENM_CHANGE) )
 
     ' Match Case RECT
@@ -500,9 +500,7 @@ function frmTopTabsFind_Show( byval hwndParent as HWND ) as LRESULT
 
     ' we use RichEdit controls because regular Edit controls can not easily have
     ' their text vertically centered.
-    if gFind.hCueBannerFont = 0 then 
-        gFind.hCueBannerFont = ghFont(INFOFONT_11)
-    end if
+    gFind.hCueBannerFont = ghFont(INFOFONT_11)
 
     dim as RECT rc
     dim cf as CHARFORMATW 

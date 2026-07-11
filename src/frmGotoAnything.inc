@@ -15,56 +15,6 @@
 
 
 ' ========================================================================================
-' Process WM_COMMAND message for window/dialog: frmGotoAnything
-' ========================================================================================
-function frmGotoAnything_OnCommand( _
-            byval hwnd as HWND, _
-            byval id as long, _
-            byval hwndCtl as HWND, _
-            byval codeNotify As UINT _
-            ) as LRESULT
-
-    select case id
-        case IDOK  ' Find 
-            if codeNotify = BN_CLICKED then
-'                EnableWindow(hwndCtl, false)
-'                frmFindInFiles_DoFindInFilesEx( FindOnly )
-'                EnableWindow(hwndCtl, true)
-'                exit function
-            end if  
-
-        case IDCANCEL  ' Close
-            if codeNotify = BN_CLICKED then
-'                SendMessage( HWnd, WM_CLOSE, 0, 0)
-'                exit function
-            end if
-
-    end select
-
-    function = 0
-end function
-
-
-' ========================================================================================
-' Process WM_CLOSE message for window/dialog: frmGotoAnything
-' ========================================================================================
-function frmGotoAnything_OnClose( byval hwnd as HWND ) as LRESULT
-    ' Enables parent window keeping parent's zorder
-    DestroyWindow hwnd
-    function = 0
-end function
-
-
-' ========================================================================================
-' Process WM_DESTROY message for window/dialog: frmGotoAnything
-' ========================================================================================
-function frmGotoAnything_OnDestroy( byval hwnd as HWND ) As LRESULT 
-    PostQuitMessage(0)
-    function = 0
-end function
-
-
-' ========================================================================================
 ' frmGotoAnything_RichEdit_SubclassProc Window procedure
 ' ========================================================================================
 Function frmGotoAnything_RichEdit_SubclassProc ( _
@@ -156,6 +106,37 @@ end function
 
 
 ' ========================================================================================
+' Process WM_COMMAND message for window/dialog: frmGotoAnything
+' ========================================================================================
+function frmGotoAnything_OnCommand( _
+            byval hwnd as HWND, _
+            byval id as long, _
+            byval hwndCtl as HWND, _
+            byval codeNotify As UINT _
+            ) as LRESULT
+
+    select case id
+        case IDOK  ' Find 
+            if codeNotify = BN_CLICKED then
+'                EnableWindow(hwndCtl, false)
+'                frmFindInFiles_DoFindInFilesEx( FindOnly )
+'                EnableWindow(hwndCtl, true)
+'                exit function
+            end if  
+
+        case IDCANCEL  ' Close
+            if codeNotify = BN_CLICKED then
+'                SendMessage( HWnd, WM_CLOSE, 0, 0)
+'                exit function
+            end if
+
+    end select
+
+    function = 0
+end function
+
+
+' ========================================================================================
 ' frmGotoAnything Window procedure
 ' ========================================================================================
 function frmGotoAnything_WndProc( _
@@ -166,32 +147,55 @@ function frmGotoAnything_WndProc( _
             ) as LRESULT
 
     select case uMsg
-        HANDLE_MSG (hwnd, WM_CLOSE,    frmGotoAnything_OnClose)
-        HANDLE_MSG (hwnd, WM_DESTROY,  frmGotoAnything_OnDestroy)
         HANDLE_MSG (hwnd, WM_COMMAND,  frmGotoAnything_OnCommand)
 
+    case WM_CLOSE
+        DestroyWindow hwnd
+        return 0
+        
+    case WM_DESTROY
+        PostQuitMessage(0)
+        return 0
+        
     case WM_NCDESTROY
         dim pWindow as CWindow ptr = AfxCWindowPtr(hwnd)
         if pWindow then delete(pWindow)
         HWND_FRMGOTOANYTHING = 0
         return 0
 
-    case WM_LBUTTONDOWN, _
-         WM_RBUTTONDOWN
-        dim as RECT rc: GetClientRect(hwnd, @rc)
-        if isMouseOverRECT( hwnd, rc ) = false then
-            ' Click was outside the child's own bounds
-            ReleaseCapture()
-            SendMessage( hwnd, WM_CLOSE, 0, 0 )
-            return 0
+    case WM_ACTIVATE:
+        if (loword(wParam) = WA_INACTIVE) then
+            dim as HWND hwndNewActive = cast( HWND, lParam)
+            ' If activation went to anything other than the owner itself,
+            ' the user clicked away — dismiss.
+            if (hwndNewActive <> hwnd) then
+                SendMessage( hwnd, WM_CLOSE, 0, 0 )
+            end if    
         end if
-        ' else: click was inside — handle normally, capture stays active
+        
+    case WM_ERASEBKGND
+        return true
 
-    case WM_CAPTURECHANGED
-        ' Capture was taken away by something else (e.g. another window called SetCapture,
-        ' or the user alt-tabbed) — treat as "dismiss" too
-        ShowWindow( hwnd, SW_HIDE )
-    
+    case WM_PAINT
+        dim as clsDoubleBuffer b
+        
+        b.BeginDoubleBuffer(hwnd)
+
+        ' Paint the tab info area 
+        b.SetForeColors( ghTopTabs.ForeColor, ghTopTabs.ForeColor )
+        b.SetBackColors( ghTopTabs.BackColor, ghTopTabs.BackColor )
+
+        ' Clear the entire back client area
+        b.PaintClientRect()
+
+'        ' Lastly, underline the entire tabcontrol.
+'        b.SetPenColor( ghEditor.Divider )
+'        b.PaintLine( 1, b.rcClient.left, b.rcClient.bottom, b.rcClient.right, b.rcClient.bottom )
+        
+        b.EndDoubleBuffer()
+        
+        return 0
+
     end select
 
     function = DefWindowProc(hwnd, uMsg, wParam, lParam)
@@ -206,25 +210,26 @@ function frmGotoAnything_Show( byval hwndParent as HWND, byval idGotoMode as lon
 
     dim pWindow as CWindow ptr = new CWindow
     
+    ' Prevent the main form's NC_ACTIVATE from painting it's caption bar as inactive.
+    gPrevent_WM_NCACTIVATE = true
+
     HWND_FRMGOTOANYTHING = _
     pWindow->Create( hwndParent, "", @frmGotoAnything_WndProc, 0, 0, 0, 0, _
-        WS_POPUP or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, WS_EX_NOACTIVATE or WS_EX_TOOLWINDOW )
+        WS_POPUP or WS_BORDER or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, WS_EX_TOOLWINDOW or WS_EX_TOPMOST )
 
     ' we use RichEdit controls because regular Edit controls can not easily have
     ' their text vertically centered.
-    if gFind.hCueBannerFont = 0 then 
-        gFind.hCueBannerFont = ghFont(INFOFONT_11)
-    end if
+    gFind.hCueBannerFont = ghFont(GUIFONT_10)
 
     dim as RECT rc
     dim cf as CHARFORMATW 
     cf.cbSize = sizeof(cf)
     cf.dwMask = CFM_FACE or CFM_SIZE or CFM_CHARSET or CFM_COLOR
     cf.crTextColor = ghTopTabs.ForeColorHot
-    cf.yHeight = 11 * 20      ' in twips (1/20 pt)
+    cf.yHeight = 10 * 20      ' in twips (1/20 pt)
     cf.bCharSet = DEFAULT_CHARSET
     cf.bPitchAndFamily = DEFAULT_PITCH or FF_DONTCARE
-    cf.szFaceName = GUIFIXEDFONT
+    cf.szFaceName = GUIFONT
     
     dim as HWND hCtlFind
     
@@ -232,37 +237,49 @@ function frmGotoAnything_Show( byval hwndParent as HWND, byval idGotoMode as lon
                 0, 0, 0, 0, _
                 WS_CHILD or WS_TABSTOP or ES_LEFT or ES_AUTOHSCROLL, _
                 WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_RIGHTSCROLLBAR)
-    pWindow->SetControlSubclass(hCtlFind, @frmGotoAnything_RichEdit_SubclassProc, IDC_FRMTOPTABSFIND_TXTFIND, NULL)
+    pWindow->SetControlSubclass(hCtlFind, @frmGotoAnything_RichEdit_SubclassProc, IDC_FRMGOTOANYTHING_TXTFIND, NULL)
     SendMessage( hCtlFind, EM_SETCHARFORMAT, SCF_ALL, cast(LPARAM, @cf) ) 
     SendMessage( hCtlFind, EM_SETBKGNDCOLOR , 0, cast(LPARAM, ghTopTabs.BackColorHot) )
+    SendMessage( hCtlFind, EM_SETEVENTMASK, 0, cast(LPARAM, ENM_SELCHANGE or ENM_CHANGE) )
 
-
-    ' If there is no active underlying document then exit out.
-    dim as clsDocument ptr pDoc = gTTabCtl.GetActiveDocumentPtr()
-    if pDoc = 0 then return 0
-    
-    dim as HWND hEdit = pDoc->hWndActiveScintilla
-   
     ' Get the client area of the main window and subtract width of any visible side panel. We
     ' use this width in order to center the popup fuzzy finder.
-    GetWindowRect( hEdit, @rc )
-    MapWindowpoints( HWND_DESKTOP, HWND_FRMMAIN, cast( point ptr, @rc), 2 )
+    GetWindowRect( HWND_FRMMAIN, @rc )
+    if IsWindowVisible(HWND_FRMPANEL) then
+        dim as long nWidthPanel = AfxGetWindowWidth(HWND_FRMPANEL)
+        if gConfig.ExplorerPositionRight then 
+            rc.right -= nWidthPanel
+        else
+            rc.left += nWidthPanel    
+        end if
+    end if  
+    
+    ' If the top tab control is active (meaning that tabcount exists) then reposition the
+    ' fuzzy picker to just under the tabs info panel.
+    if IsWindowVisible( HWND_FRMMAIN_TOPTABSINFO ) then
+        dim as RECT rcInfo: GetWindowRect(HWND_FRMMAIN_TOPTABSINFO, @rcInfo)
+        rc.top = rcInfo.bottom
+    end if
     
     ' Calculate the position for this popup fuzzy finder
-    dim as long nWidth   = pWindow->ScaleX( 400 )
-    dim as long nHeight  = pWindow->ScaleY( 600 )
+    dim as long nMargin
+    dim as long nWidth   = pWindow->ScaleX( 600 )
+    dim as long nHeight  = pWindow->ScaleY( 400 )
     dim as long nTop     = rc.top
     dim as long nLeft    = rc.left + ( (rc.right - rc.left - nWidth) / 2 )
     
+    ' Position the Fuzzy popup form into place
+    SetWindowPos( HWND_FRMGOTOANYTHING, HWND_TOPMOST, nLeft, nTop, nWidth, nHeight, SWP_SHOWWINDOW ) 
+
+    ' Reposition the find textbox (client coordinates relative to form)
+    nMargin = pWindow->ScaleY(6)
+    nHeight = pWindow->ScaleY( 30 )
+    SetWindowPos( hCtlFind, 0, nMargin, nMargin, _
+            nWidth - (nMargin * 2), nHeight, SWP_SHOWWINDOW or SWP_NOZORDER )
+    RichEditCenterSingleLineText( hCtlFind )
+    SendMessage( hCtlFind, EM_SETMARGINS, EC_LEFTMARGIN, MAKELPARAM(nMargin, 0))
     
-'    ' Reposition the find textbox
-'    dim as HWND hCtl = GetDlgItem( HWND_FRMGOTOANYTHING, IDC_FRMGOTOANYTHING_TXTFIND )
-'    nHeight = pWindow->ScaleY( 16 )
-
-
-    ShowWindow( HWND_FRMGOTOANYTHING, SW_SHOWNOACTIVATE )
-    SetWindowPos( HWND_FRMGOTOANYTHING, HWND_TOPMOST, nLeft, nTop, nWidth, nHeight, SWP_SHOWWINDOW or SWP_NOACTIVATE ) 
-    SetCapture( HWND_FRMGOTOANYTHING )
+    SetFocus( hCtlFind )    
 
     ' Message loop (modal)
     dim uMsg as MSG
@@ -270,13 +287,13 @@ function frmGotoAnything_Show( byval hwndParent as HWND, byval idGotoMode as lon
         if (uMsg.message = WM_KEYDOWN) andalso (uMsg.wParam = VK_ESCAPE) then
             SendMessage( HWND_FRMGOTOANYTHING, WM_CLOSE, 0, 0 )
         end if
-        if IsDialogMessage( HWND_FRMGOTOANYTHING, @uMsg ) = 0 THEN
+        if IsDialogMessage( HWND_FRMGOTOANYTHING, @uMsg ) = 0 then
             TranslateMessage( @uMsg )
             DispatchMessage( @uMsg )
         end if
-    WEND
+    wend
     
-    ReleaseCapture()
+    gPrevent_WM_NCACTIVATE = false
     
     function = uMsg.wParam
 end function

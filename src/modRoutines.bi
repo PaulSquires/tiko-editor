@@ -35,6 +35,7 @@ END TYPE
 
 dim shared as any ptr gpHelpLib
 
+declare function RichEditCenterSingleLineText( byval hRichEdit as HWND ) as long
 declare function CompleteIncludeFilename( byval pDoc as clsDocument ptr, byval wszFilename as string ) as string
 declare function getTextWidth( byval hwnd as HWND, byref wszText as wstring, byval FontIndex as long ) as long
 declare function SpawnPreviousInstance() as boolean
