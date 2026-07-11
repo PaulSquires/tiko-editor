@@ -288,12 +288,6 @@ function handleEscKeyModeless( byval uMsg as MSG ) as boolean
             dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
             if pDoc then pDoc->RemoveSelectionAttributes()
         end if
-        
-        ' If the frmGotoAnything fuzzy finder is active then hide it now and release capture.
-        if IsWindowVisible( HWND_FRMGOTOANYTHING ) then
-            ReleaseCapture()
-            ShowWindow( HWND_FRMGOTOANYTHING, SW_HIDE )
-        end if    
     end if
     
     ' we want our message to continue so return FALSE

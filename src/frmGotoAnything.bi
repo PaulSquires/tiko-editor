@@ -13,5 +13,6 @@
 
 #pragma once
 
-declare function ShowGotoAnything( byval idGotoMode as long ) as long
-declare function frmGotoAnything_Show( byval hWndParent as HWND  ) as LRESULT
+#define IDC_FRMGOTOANYTHING_TXTFIND       1000
+
+declare function frmGotoAnything_Show( byval hWndParent as HWND, byval idGotoMode as long ) as LRESULT
