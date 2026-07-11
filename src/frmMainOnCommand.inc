@@ -94,7 +94,7 @@ function frmMain_OnCommand( _
         case IDM_FILEOPEN, IDM_FILEOPENASTEMPLATE, IDM_FILESAVEAS, IDM_FILERENAME, _
             IDM_SAVESESSION, IDM_LOADSESSION,  _
             IDM_KEYBOARDSHORTCUTS, IDM_USERTOOLSDIALOG, IDM_OPTIONSDIALOG, IDM_BUILDCONFIG, _
-            IDM_FIND, IDM_FINDINPROJECT, IDM_GOTOANYTHING, IDM_GOTOSYMBOL, _
+            IDM_FIND, IDM_FINDINPROJECT, IDM_SEARCHSYMBOL, _
             IDM_PROJECTOPEN, IDM_PROJECTSAVEAS, _
             IDM_PROJECTOPTIONS, IDM_COMMANDLINE, IDM_DEBUG_STARTDEBUGGING, IDM_ABOUT
             killAllPopupMenus()
@@ -263,9 +263,7 @@ function frmMain_OnCommand( _
 
 
         ''  SEARCH MENU  
-        case IDM_GOTOANYTHING, _
-             IDM_GOTOSYMBOL
-             OnCommand_SearchGotoAnything( id )
+        case IDM_SEARCHSYMBOL:       OnCommand_SearchSymbol()
         case IDM_FIND:               OnCommand_SearchFindDialog()
         case IDM_REPLACE:            OnCommand_SearchReplaceDialog()
         case IDM_FINDINPROJECT:      OnCommand_SearchFindInProject()

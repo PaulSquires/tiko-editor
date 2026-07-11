@@ -131,7 +131,7 @@ function frmMain_SearchTopMenuStates() as long
     dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
     if pDoc = 0 then exit function
     
-    for idMenu as long = IDM_GOTOANYTHING to IDM_FINDPREVACCEL
+    for idMenu as long = IDM_SEARCHSYMBOL to IDM_FINDPREVACCEL
         EnableTopMenuItem( idMenu, true )
     next
 

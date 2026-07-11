@@ -11,13 +11,13 @@
 '    MERCHANTABILITY or FITNESS for A PARTICULAR PURPOSE.  See the
 '    GNU General Public License for more details.
 
-#include once "frmGotoAnything.bi"
+#include once "frmSearchSymbol.bi"
 
 
 ' ========================================================================================
-' frmGotoAnything_RichEdit_SubclassProc Window procedure
+' frmSearchSymbol_RichEdit_SubclassProc Window procedure
 ' ========================================================================================
-Function frmGotoAnything_RichEdit_SubclassProc ( _
+Function frmSearchSymbol_RichEdit_SubclassProc ( _
             byval hWin   as HWND, _                 ' // Control window handle
             byval uMsg   as UINT, _                 ' // Type of message
             byval _wParam as WPARAM, _               ' // First message parameter
@@ -96,7 +96,7 @@ Function frmGotoAnything_RichEdit_SubclassProc ( _
 
         case WM_DESTROY
             ' REQUIRED: Remove control subclassing
-            RemoveWindowSubclass( hWin, @frmGotoAnything_RichEdit_SubclassProc, uIdSubclass )
+            RemoveWindowSubclass( hWin, @frmSearchSymbol_RichEdit_SubclassProc, uIdSubclass )
     end select
     
     ' For messages that we don't deal with
@@ -106,9 +106,9 @@ end function
 
 
 ' ========================================================================================
-' Process WM_COMMAND message for window/dialog: frmGotoAnything
+' Process WM_COMMAND message for window/dialog: frmSearchSymbol
 ' ========================================================================================
-function frmGotoAnything_OnCommand( _
+function frmSearchSymbol_OnCommand( _
             byval hwnd as HWND, _
             byval id as long, _
             byval hwndCtl as HWND, _
@@ -137,9 +137,9 @@ end function
 
 
 ' ========================================================================================
-' frmGotoAnything Window procedure
+' frmSearchSymbol Window procedure
 ' ========================================================================================
-function frmGotoAnything_WndProc( _
+function frmSearchSymbol_WndProc( _
             byval hwnd   as HWND, _
             byval uMsg   as UINT, _
             byval wParam as WPARAM, _
@@ -147,7 +147,7 @@ function frmGotoAnything_WndProc( _
             ) as LRESULT
 
     select case uMsg
-        HANDLE_MSG (hwnd, WM_COMMAND,  frmGotoAnything_OnCommand)
+        HANDLE_MSG (hwnd, WM_COMMAND,  frmSearchSymbol_OnCommand)
 
     case WM_CLOSE
         DestroyWindow hwnd
@@ -160,7 +160,7 @@ function frmGotoAnything_WndProc( _
     case WM_NCDESTROY
         dim pWindow as CWindow ptr = AfxCWindowPtr(hwnd)
         if pWindow then delete(pWindow)
-        HWND_FRMGOTOANYTHING = 0
+        HWND_FRMSEARCHSYMBOL = 0
         return 0
 
     case WM_ACTIVATE:
@@ -204,17 +204,17 @@ end function
 
 
 ' ========================================================================================
-' frmGotoAnything_Show
+' frmSearchSymbol_Show
 ' ========================================================================================
-function frmGotoAnything_Show( byval hwndParent as HWND, byval idGotoMode as long ) as LRESULT
+function frmSearchSymbol_Show( byval hwndParent as HWND ) as LRESULT
 
     dim pWindow as CWindow ptr = new CWindow
     
     ' Prevent the main form's NC_ACTIVATE from painting it's caption bar as inactive.
     gPrevent_WM_NCACTIVATE = true
 
-    HWND_FRMGOTOANYTHING = _
-    pWindow->Create( hwndParent, "", @frmGotoAnything_WndProc, 0, 0, 0, 0, _
+    HWND_FRMSEARCHSYMBOL = _
+    pWindow->Create( hwndParent, "", @frmSearchSymbol_WndProc, 0, 0, 0, 0, _
         WS_POPUP or WS_BORDER or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, WS_EX_TOOLWINDOW or WS_EX_TOPMOST )
 
     ' we use RichEdit controls because regular Edit controls can not easily have
@@ -233,11 +233,11 @@ function frmGotoAnything_Show( byval hwndParent as HWND, byval idGotoMode as lon
     
     dim as HWND hCtlFind
     
-    hCtlFind = pWindow->AddControl("RICHEDIT", , IDC_FRMGOTOANYTHING_TXTFIND, "", _
+    hCtlFind = pWindow->AddControl("RICHEDIT", , IDC_FRMSEARCHSYMBOL_TXTFIND, "", _
                 0, 0, 0, 0, _
                 WS_CHILD or WS_TABSTOP or ES_LEFT or ES_AUTOHSCROLL, _
                 WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_RIGHTSCROLLBAR)
-    pWindow->SetControlSubclass(hCtlFind, @frmGotoAnything_RichEdit_SubclassProc, IDC_FRMGOTOANYTHING_TXTFIND, NULL)
+    pWindow->SetControlSubclass(hCtlFind, @frmSearchSymbol_RichEdit_SubclassProc, IDC_FRMSEARCHSYMBOL_TXTFIND, NULL)
     SendMessage( hCtlFind, EM_SETCHARFORMAT, SCF_ALL, cast(LPARAM, @cf) ) 
     SendMessage( hCtlFind, EM_SETBKGNDCOLOR , 0, cast(LPARAM, ghTopTabs.BackColorHot) )
     SendMessage( hCtlFind, EM_SETEVENTMASK, 0, cast(LPARAM, ENM_SELCHANGE or ENM_CHANGE) )
@@ -269,7 +269,7 @@ function frmGotoAnything_Show( byval hwndParent as HWND, byval idGotoMode as lon
     dim as long nLeft    = rc.left + ( (rc.right - rc.left - nWidth) / 2 )
     
     ' Position the Fuzzy popup form into place
-    SetWindowPos( HWND_FRMGOTOANYTHING, HWND_TOPMOST, nLeft, nTop, nWidth, nHeight, SWP_SHOWWINDOW ) 
+    SetWindowPos( HWND_FRMSEARCHSYMBOL, HWND_TOPMOST, nLeft, nTop, nWidth, nHeight, SWP_SHOWWINDOW ) 
 
     ' Reposition the find textbox (client coordinates relative to form)
     nMargin = pWindow->ScaleY(6)
@@ -285,9 +285,9 @@ function frmGotoAnything_Show( byval hwndParent as HWND, byval idGotoMode as lon
     dim uMsg as MSG
     while GetMessage( @uMsg, null, 0, 0 )
         if (uMsg.message = WM_KEYDOWN) andalso (uMsg.wParam = VK_ESCAPE) then
-            SendMessage( HWND_FRMGOTOANYTHING, WM_CLOSE, 0, 0 )
+            SendMessage( HWND_FRMSEARCHSYMBOL, WM_CLOSE, 0, 0 )
         end if
-        if IsDialogMessage( HWND_FRMGOTOANYTHING, @uMsg ) = 0 then
+        if IsDialogMessage( HWND_FRMSEARCHSYMBOL, @uMsg ) = 0 then
             TranslateMessage( @uMsg )
             DispatchMessage( @uMsg )
         end if

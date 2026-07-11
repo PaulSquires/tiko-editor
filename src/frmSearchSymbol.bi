@@ -13,6 +13,6 @@
 
 #pragma once
 
-#define IDC_FRMGOTOANYTHING_TXTFIND       1000
+#define IDC_FRMSEARCHSYMBOL_TXTFIND       1000
 
-declare function frmGotoAnything_Show( byval hWndParent as HWND, byval idGotoMode as long ) as LRESULT
+declare function frmSearchSymbol_Show( byval hWndParent as HWND ) as LRESULT

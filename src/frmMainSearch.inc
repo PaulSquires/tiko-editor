@@ -141,10 +141,10 @@ function OnCommand_SearchGotoLastPosition() as LRESULT
 end function
 
 ' ========================================================================================
-' GotoAnything popup dialog
+' Search Symbol popup dialog
 ' ========================================================================================
-function OnCommand_SearchGotoAnything( byval idGotoMode as long ) as LRESULT
-    frmGotoAnything_Show( HWND_FRMMAIN, idGotoMode )
+function OnCommand_SearchSymbol() as LRESULT
+    frmSearchSymbol_Show( HWND_FRMMAIN )
     function = 0
 end function
 
