@@ -108,6 +108,8 @@ panel.functionicon.foreground: 236,91,89
 panel.functionicon.background: 240,224,223
 panel.typeicon.foreground: 162,139,196     
 panel.typeicon.background: 237,233,236
+panel.textsearch.foreground: 97,97,97
+panel.textsearchhot.foreground: %LIGHT_BLACK    # highlighted individual letters in fuzzy text match
 
 toptabs.panel.background: 236,236,236
 toptabs.text.foreground: 106,106,106
