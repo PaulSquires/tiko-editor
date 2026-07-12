@@ -13,24 +13,6 @@
 
 #include once "frmSearchSymbol.bi"
 
-enum SearchSymbol explicit
-    file_symbol = 0
-    type_symbol
-    function_symbol
-end enum
-
-type SEARCHSYMBOL_TYPE
-    result         as score_t
-    id             as SearchSymbol
-    pDoc           as clsDocument ptr    ' used to get filename / diskfilename
-    pData          as DB2_DATA ptr       ' pointer into database for Types / Functions
-    positions(any) as uinteger
-end type
-
-#define MAX_SYMBOL_SEARCH  100
-dim shared gSymbols( MAX_SYMBOL_SEARCH ) as SEARCHSYMBOL_TYPE
-dim shared gSymbolsCount as integer = 0  ' actual # of populated entries (<= MAX_SYMBOL_SEARCH+1)
-
 
 ' ========================================================================================
 ' Fastest descending sort for this small, string-bearing udt array
@@ -78,10 +60,9 @@ function frmSearchSymbol_DoSearch( byval hwndCtl as HWND ) as long
             gSymbols(nextEl).id        = SearchSymbol.file_symbol
             gSymbols(nextEl).pDoc      = pDoc 
             gSymbols(nextEl).pData     = null
-             
-            redim (gSymbols(nextEl).positions)(lbound(positions) to ubound(positions))
+            gSymbols(nextEl).clrMask   = WSTRING( len(wszFilename), 48 )    ' "0" 
             for i as long = lbound(positions) to ubound(positions)
-                gSymbols(nextEl).positions(i) = positions(i)
+                gSymbols(nextEl).clrMask[ positions(i) ] = 49   '  "1" 
             next
                 
             nextEl += 1
@@ -119,10 +100,9 @@ function frmSearchSymbol_DoSearch( byval hwndCtl as HWND ) as long
                 end if    
                 gSymbols(nextEl).pDoc   = null 
                 gSymbols(nextEl).pData  = pData 
-
-                redim (gSymbols(nextEl).positions)(lbound(positions) to ubound(positions))
+                gSymbols(nextEl).clrMask   = WSTRING( len(pData->ElementName), 48 )  ' "0" 
                 for i as long = lbound(positions) to ubound(positions)
-                    gSymbols(nextEl).positions(i) = positions(i)
+                    gSymbols(nextEl).clrMask[ positions(i) ] = 49  ' "1" 
                 next
 
                 nextEl += 1
@@ -506,33 +486,30 @@ function frmSearchSymbol_OnDrawItem( _
             end select
 
 
-            ' Paint the text first (highlight each matching letter)
-            b.SetFont( GUIFONT_10 )
-'            b.PaintText( wszCaption, @rcText, DT_LEFT )
-            
             dim as DWSTRING wszChar
             dim as COLORREF clrChar
+            dim as long idFont
             dim as RECT rcChar = rcText
             
-            dim as long n = len(wszCaption)
+            dim as long nLen = len(wszCaption)
             
-            for i as long = 1 to n
-                ' Set the character color. By default it is foreclr which was set earlier.
-                clrChar = ghTopTabs.ForeColor 'foreClr
-                ' Now check the positions array to see if this color needs to be highlighted.
-                ' Remember that the positions array values are zero based.
-                for ii as long = lbound(gSymbols(lpdis->ItemID).positions) to ubound(gSymbols(lpdis->ItemID).positions)
-                    if gSymbols(lpdis->ItemID).positions(ii) + 1 = i then
-                        clrChar = ghTopTabs.ForeColorHot
-                        exit for
-                    end if
-                next    
+            for i as long = 0 to nLen - 1
+                ' Default to normal forecolor and font
+                clrChar = ghPanel.ForeColorTextSearch
+                idFont  = GUIFONT_10
                 
-                wszChar = mid(wszCaption, i, 1)
+                ' Test mask to see if "1" indicating highlight the letter.
+                if gSymbols(lpdis->ItemID).clrMask[i] = 49 then   ' "1"
+                    clrChar = ghPanel.ForeColorTextSearchHot
+                    idFont  = GUIFONTBOLD_10
+                end if
+
+                b.SetFont( idFont )
+                wszChar = wchr(wszCaption[i])
                 b.PaintChar( wszChar, @rcChar, clrChar )
 
                 ' measure this one character to know how far to advance
-                dim as HFONT hOldFont = SelectObject( lpdis->hDC, ghFont(GUIFONT_10) ) 
+                dim as HFONT hOldFont = SelectObject( lpdis->hDC, ghFont(idFont) ) 
                 dim as SIZE sz
                 GetTextExtentPoint32( lpdis->hDC, wszChar, 1, @sz )
                 rcChar.left += sz.cx

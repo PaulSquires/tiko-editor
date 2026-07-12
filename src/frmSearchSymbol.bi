@@ -13,8 +13,26 @@
 
 #pragma once
 
+enum SearchSymbol explicit
+    file_symbol = 0
+    type_symbol
+    function_symbol
+end enum
+
+type SEARCHSYMBOL_TYPE
+    result   as score_t
+    id       as SearchSymbol
+    pDoc     as clsDocument ptr    ' used to get filename / diskfilename
+    pData    as DB2_DATA ptr       ' pointer into database for Types / Functions
+    clrMask  as DWSTRING
+end type
+
 #define IDC_FRMSEARCHSYMBOL_TXTFIND       1000
 #define IDC_FRMSEARCHSYMBOL_LISTBOX       1001
+
+#define MAX_SYMBOL_SEARCH  100
+dim shared gSymbols( MAX_SYMBOL_SEARCH ) as SEARCHSYMBOL_TYPE
+dim shared gSymbolsCount as integer = 0  ' actual # of populated entries (<= MAX_SYMBOL_SEARCH+1)
 
 declare function frmSearchSymbol_DoSearch( byval hwndCtl as HWND ) as long
 declare function frmSearchSymbol_Show( byval hWndParent as HWND ) as LRESULT

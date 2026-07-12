@@ -134,6 +134,8 @@ type PANEL_HANDLES_TYPE
     ForeColorFunctionIcon as COLORREF
     BackColorTypeIcon as COLORREF
     ForeColorTypeIcon as COLORREF
+    ForeColorTextSearch as COLORREF
+    ForeColorTextSearchHot as COLORREF
 end type
 dim shared ghPanel as PANEL_HANDLES_TYPE
 
@@ -475,6 +477,10 @@ function LoadThemeFile() as boolean
     pTheme = getThemePtr("panel.typeicon")
     ghPanel.BackColorTypeIcon = pTheme->background
     ghPanel.ForeColorTypeIcon = pTheme->foreground
+    pTheme = getThemePtr("panel.textsearch")
+    ghPanel.ForeColorTextSearch = pTheme->foreground
+    pTheme = getThemePtr("panel.textsearchhot")
+    ghPanel.ForeColorTextSearchHot = pTheme->foreground
 
     pTheme = getThemePtr("topmenu.panel")
     ghPopup.PanelColor = pTheme->background
