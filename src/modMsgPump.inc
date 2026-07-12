@@ -354,5 +354,3 @@ function handleKeysFindReplace( byval uMsg as MSG ) as boolean
 end function
 
 
-
-        

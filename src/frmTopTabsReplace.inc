@@ -166,6 +166,11 @@ Function frmTopTabsReplace_RichEdit_SubclassProc ( _
             end select
             DestroyMenu hPopUpMenu
 
+
+        case WM_CHAR
+            ' extra safety net, prevents newline insertion
+            if _wParam = 13 then return 0
+
         case WM_DESTROY
             ' REQUIRED: Remove control subclassing
             RemoveWindowSubclass( hWin, @frmTopTabsReplace_RichEdit_SubclassProc, uIdSubclass )

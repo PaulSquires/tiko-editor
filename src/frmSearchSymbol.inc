@@ -28,7 +28,7 @@ end type
 
 #define MAX_SYMBOL_SEARCH  100
 dim shared gSymbols( MAX_SYMBOL_SEARCH ) as SEARCHSYMBOL_TYPE
-dim shared gSymbolsCount as integer = -1  ' actual # of populated entries (<= MAX_SYMBOL_SEARCH+1)
+dim shared gSymbolsCount as integer = 0  ' actual # of populated entries (<= MAX_SYMBOL_SEARCH+1)
 
 
 ' ========================================================================================
@@ -36,7 +36,7 @@ dim shared gSymbolsCount as integer = -1  ' actual # of populated entries (<= MA
 ' uses swap (bitwise exchange, no string realloc) instead of "="
 ' adaptive insertion sort: near-sorted input -> near O(n)
 ' ========================================================================================
-sub sortSymbolsDescending( byval nCount as integer )
+sub frmSearchSymbol_sortSymbolsDescending( byval nCount as integer )
     dim as integer j
     for i as integer = 1 to nCount - 1
         j = i
@@ -54,8 +54,9 @@ function frmSearchSymbol_DoSearch( byval hwndCtl as HWND ) as long
     dim as DWSTRING wszFilename
     dim as DWSTRING wszNeedle = AfxGetWindowText( hwndCtl )
 
-    gSymbolsCount = -1
-    
+    gSymbolsCount = 0
+    dim as long nextEl = 0
+        
     dim as score_t result
     dim as score_t min_score = 0
     dim as boolean bLoadAll 
@@ -71,10 +72,11 @@ function frmSearchSymbol_DoSearch( byval hwndCtl as HWND ) as long
         if (result > min_score) orelse (bLoadAll = true) then
             if gSymbolsCount + 1 > MAX_SYMBOL_SEARCH then exit do 
             gSymbolsCount += 1
-            gSymbols(gSymbolsCount).result = result
-            gSymbols(gSymbolsCount).id     = SearchSymbol.file_symbol
-            gSymbols(gSymbolsCount).pDoc   = pDoc 
-            gSymbols(gSymbolsCount).pData  = null 
+            gSymbols(nextEl).result = result
+            gSymbols(nextEl).id     = SearchSymbol.file_symbol
+            gSymbols(nextEl).pDoc   = pDoc 
+            gSymbols(nextEl).pData  = null 
+            nextEl += 1
         end if
         pDoc = pDoc->pDocNext
     loop
@@ -100,14 +102,15 @@ function frmSearchSymbol_DoSearch( byval hwndCtl as HWND ) as long
                 if gSymbolsCount + 1 > MAX_SYMBOL_SEARCH then exit do 
                 gSymbolsCount += 1
                 
-                gSymbols(gSymbolsCount).result = result
+                gSymbols(nextEl).result = result
                 if pData->id = DB2_FUNCTION then
-                    gSymbols(gSymbolsCount).id = SearchSymbol.function_symbol
+                    gSymbols(nextEl).id = SearchSymbol.function_symbol
                 elseif pData->id = DB2_TYPE then
-                    gSymbols(gSymbolsCount).id = SearchSymbol.type_symbol
+                    gSymbols(nextEl).id = SearchSymbol.type_symbol
                 end if    
-                gSymbols(gSymbolsCount).pDoc   = null 
-                gSymbols(gSymbolsCount).pData  = pData 
+                gSymbols(nextEl).pDoc   = null 
+                gSymbols(nextEl).pData  = pData 
+                nextEl += 1
             end if
             
         end if
@@ -116,53 +119,58 @@ function frmSearchSymbol_DoSearch( byval hwndCtl as HWND ) as long
 
 
     ' Sort the gSymbols array based on score_t descending
-    sortSymbolsDescending( gSymbolsCount )
+    frmSearchSymbol_sortSymbolsDescending( gSymbolsCount )
 
-'cls
-'print "gSymbolsCount: "; gSymbolsCount
-
-'for i as long = 0 to gSymbolsCount - 1
-'    pDoc = gSymbols(i).pDoc
-'    pData = gSymbols(i).pData
-    
-'    print "["; i; "] "; format( gSymbols(i).result, "0.000" ); " ";
-'    select case gSymbols(i).id
-'        case SearchSymbol.file_symbol
-'            print "FILE: ";
-'            if pDoc then print AfxStrPathName( "NAMEX", pDoc->DiskFilename );
-'        case SearchSymbol.function_symbol
-'            print "FUNCTION: ";
-'            if pData then 
-'                print pData->ElementName;
-'                if len(pData->GetSet) then
-'                    print " "; pData->GetSet;
-'                end if
-'            end if    
-'        case SearchSymbol.type_symbol
-'            if pData then
-'                if pData->isENUM then
-'                    print "ENUM: ";
-'                else
-'                    print "TYPE: ";
-'                end if    
-'                print pData->ElementName;
-'            end if
-'    end select
-'    print
-'next
     
     dim as HWND hList = GetDlgItem( HWND_FRMSEARCHSYMBOL, IDC_FRMSEARCHSYMBOL_LISTBOX )
 
-    ' Hide the listbox while it is loading so that we don't get the unpainted
-    ' white background from the empty listbox
-   ' ShowWindow( hList, SW_HIDE )
-
    ' tell the virtual listbox how many rows exist now
     SendMessage( hList, LB_SETCOUNT, gSymbolsCount, 0 )
-    AfxRedrawWindow( hList )
     
-   ' if gSymbolsCount > -1 then ShowWindow( hList, SW_SHOW )
+    ShowWindow( hList, iif(gSymbolsCount = 0, SW_HIDE, SW_SHOW) )
+    AfxRedrawWindow( HWND_FRMSEARCHSYMBOL )
+    
+    ' If we symbols in the list then select the first entry if the text is 
+    ' a perfect match.
+    if gSymbolsCount > 0 then
+        if gSymbols(0).result = SCORE_MAX then
+            ListBox_SetCurSel( hList, 0 )
+        end if
+        ' Always redraw regardless of whether an exact match
+        AfxRedrawWindow( hList )
+    end if    
 
+    return 0
+end function
+
+
+' ========================================================================================
+' Go to the Symbol as selected from the listbox and then close the picker
+' ========================================================================================
+function frmSearchSymbol_GotoSymbol( byval idx as long ) as long
+    
+    if (idx < 0) orelse (idx > gSymbolsCount) then return 0
+
+    dim as clsDocument ptr pDoc = gSymbols(idx).pDoc
+    dim as DB2_DATA ptr pData = gSymbols(idx).pData
+
+    select case gSymbols(idx).id
+        case SearchSymbol.file_symbol
+            if pDoc then 
+                OpenSelectedDocument( pDoc->DiskFilename )
+            end if
+
+        case SearchSymbol.function_symbol, SearchSymbol.type_symbol
+            if pData then
+                pDoc = pData->pDoc
+                if pDoc then
+                    OpenSelectedDocument( pDoc->DiskFilename, pData->ElementName, pData->nLineStart )
+                end if    
+            end if    
+
+    end select
+    
+    SendMessage( HWND_FRMSEARCHSYMBOL, WM_CLOSE, 0, 0 )
     return 0
 end function
 
@@ -210,7 +218,7 @@ Function frmSearchSymbol_RichEdit_SubclassProc ( _
                 dim cueBannerText as wstring * 250
                 cueBannerText = L(37,"Search Symbol") & "..."
                 SelectObject( hdc, gFind.hCueBannerFont )
-                SetTextColor( hdc, ghTopTabs.ForeColor )
+                SetTextColor( hdc, ghPanel.ForeColor )
                 SetBkMode(hdc, TRANSPARENT)
                 dim as long wsStyle = DT_TOP or DT_LEFT or DT_NOPREFIX or DT_NOCLIP or DT_SINGLELINE 
                 DrawText(hdc, cueBannerText, -1, @editRect, wsStyle)
@@ -247,6 +255,39 @@ Function frmSearchSymbol_RichEdit_SubclassProc ( _
             end select
             DestroyMenu hPopUpMenu
 
+
+        case WM_CHAR
+            ' extra safety net, prevents newline insertion
+            if _wParam = 13 then return 0
+    
+        ' Up/Down keypresses in the textbox will move the current selected line
+        ' in the picker listbox.
+        case WM_KEYDOWN
+            if _wParam = VK_TAB then
+                ' Simulate Up/Down arrow keys
+                if (GetAsyncKeyState(VK_SHIFT) and &H8000) then 
+                    _wParam = VK_UP
+                else    
+                    _wParam = VK_DOWN
+                end if
+            end if
+                    
+            dim as HWND hList = GetDlgItem( HWND_FRMSEARCHSYMBOL, IDC_FRMSEARCHSYMBOL_LISTBOX )        
+            select case _wParam
+                case VK_UP
+                    dim as long cur = SendMessage(hList, LB_GETCURSEL, 0, 0)
+                    if cur > 0 then SendMessage(hList, LB_SETCURSEL, cur - 1, 0)
+                    AfxRedrawWindow(hList)
+                    return 0
+
+                case VK_DOWN
+                    dim as long cur = SendMessage(hList, LB_GETCURSEL, 0, 0)
+                    if (cur < gSymbolsCount - 1) then SendMessage(hList, LB_SETCURSEL, cur + 1, 0)
+                    AfxRedrawWindow(hList)
+                    return 0
+            end select
+            
+            
         case WM_DESTROY
             ' REQUIRED: Remove control subclassing
             RemoveWindowSubclass( hWin, @frmSearchSymbol_RichEdit_SubclassProc, uIdSubclass )
@@ -273,10 +314,6 @@ function frmSearchSymbolListBox_SubclassProc ( _
     dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMSEARCHSYMBOL)
     static as long accumDelta
     
-    ' keep track of last index we were over so that we only issue a 
-    ' repaint if the cursor has moved off of the line
-    static as long nLastIdx = -1
-        
     select case uMsg
 
         Case WM_MOUSEWHEEL
@@ -315,18 +352,11 @@ function frmSearchSymbolListBox_SubclassProc ( _
             ' if the specified point is in the client area of the list box, or one if it is outside the 
             ' client area.
             if hiword(idx) <> 1 then
-                if idx <> nLastIdx then
-                    ListBox_GetItemRect( hWin, idx, @rc )
-                    InvalidateRect( hWin, @rc, true )
-                    ListBox_GetItemRect( hWin, nLastIdx, @rc )
-                    InvalidateRect( hWin, @rc, true )
-                    nLastIdx = idx
-                end if
+                AfxRedrawWindow(hWin)
             end if
                         
             
         case WM_MOUSELEAVE
-            nLastIdx = -1
             AfxRedrawWindow(hWin)
             
 
@@ -336,10 +366,9 @@ function frmSearchSymbolListBox_SubclassProc ( _
             ' The return value contains the index of the nearest item in the LOWORD. The HIWORD is zero 
             ' if the specified point is in the client area of the list box, or one if it is outside the 
             ' client area.
-'            if hiword(idx) <> 1 then
-'                dim as DWSTRING wszCaption = AfxGetListBoxText( hWin, idx )
-'                dim as clsDocument ptr pDoc = cast(clsDocument ptr, ListBox_GetItemData( hWin, idx ))
-'            end if
+            if hiword(idx) <> 1 then
+                frmSearchSymbol_GotoSymbol( idx )
+            end if
 
                 
         case WM_ERASEBKGND
@@ -350,7 +379,7 @@ function frmSearchSymbolListBox_SubclassProc ( _
             dim as RECT rc = GetListBoxEmptyClientArea( hWin )
             if rc.top < rc.bottom then
                 dim as HDC _hDC = cast(HDC, _wParam)
-                PaintRect( _hDC, @rc, ghTopTabs.BackColor )
+                PaintRect( _hDC, @rc, ghPanel.BackColor )
             end if
             return true
             
@@ -402,19 +431,15 @@ function frmSearchSymbol_OnDrawItem( _
 
         b.BeginDoubleBuffer(lpdis->hwndItem, lpdis->hDC, lpdis->rcItem)
 
+        ' We don't do Hot tracking in this listbox because it can be visually
+        ' confusing for the user. We only highlight the current selection.
         dim as boolean IsHot = false
-        dim as boolean isNodeHeader = false
-        dim as boolean isIconDown = false
-        
-        if isMouseOverRECT(lpdis->hwndItem, b.rcClient) then IsHot = true   
- '       if isMouseOverWindow( HWND_FRMSEARCHSYMBOL_VSCROLLBAR ) then IsHot = false
         if ListBox_GetSel(lpdis->hwndItem, lpdis->itemID) then IsHot = true
 
         dim as COLORREF backclr = iif( IsHot, ghPanel.BackColorHot,  ghPanel.BackColor)
         dim as COLORREF foreclr = iif( IsHot, ghPanel.ForeColorHot,  ghPanel.ForeColor)
         b.SetForeColors(foreclr, foreclr)
         b.SetBackColors(backclr, backclr)
-
 
         ' Create our rect that works with the entire line
         dim as RECT rc: SetRect( @rc, 0, 0, b.rcClientWidth, b.rcClientHeight )
@@ -428,6 +453,9 @@ function frmSearchSymbol_OnDrawItem( _
         ' Paint the entire background
         b.PaintRect( @rc )
 
+        dim as COLORREF icon_foreclr
+        dim as COLORREF icon_backclr 
+
         if lpdis->ItemID > -1 then
             dim as DWSTRING wszIcon
             dim as DWSTRING wszCaption
@@ -437,9 +465,14 @@ function frmSearchSymbol_OnDrawItem( _
 
             select case gSymbols(lpdis->ItemID).id
                 case SearchSymbol.file_symbol
+                    icon_foreclr = BGR(84, 171, 178)
+                    icon_backclr = iif( IsHot, ghPanel.BackColorHot, BGR(51, 63, 69))
                     wszIcon = wszSearchFile
                     if pDoc then wszCaption = AfxStrPathName( "NAMEX", pDoc->DiskFilename )
+
                 case SearchSymbol.function_symbol
+                    icon_foreclr = BGR(236, 91, 89)
+                    icon_backclr = iif( IsHot, ghPanel.BackColorHot, BGR(65, 54, 61))
                     wszIcon = wszSearchFunction
                     if pData then 
                         wszCaption = pData->ElementName
@@ -447,18 +480,27 @@ function frmSearchSymbol_OnDrawItem( _
                             wszCaption += " " & pData->GetSet
                         end if
                     end if    
+
                 case SearchSymbol.type_symbol
                     if pData then
+                        icon_foreclr = BGR(162, 139, 196)
+                        icon_backclr = iif( IsHot, ghPanel.BackColorHot, BGR(62, 60, 71))
                         wszIcon = iif( pData->isENUM, wszSearchEnum, wszSearchType )
                         wszCaption = pData->ElementName
                     end if
             end select
 
-            b.SetFont( ITALICFONT_10 )
-            b.PaintText( wszIcon, @rcIcon, DT_CENTER )
-            
+            ' Paint the text first because those colors have already been set.
             b.SetFont( GUIFONT_10 )
             b.PaintText( wszCaption, @rcText, DT_LEFT )
+
+            ' Now paint the symbol icon
+            b.SetForeColors(icon_foreclr, icon_foreclr)
+            b.SetBackColors(icon_backclr, icon_backclr)
+            b.SetFont( ITALICFONT_10 )
+            b.PaintRect( @rcIcon )
+            b.PaintText( wszIcon, @rcIcon, DT_CENTER )
+            
         end if
             
         b.EndDoubleBuffer()
@@ -544,8 +586,8 @@ function frmSearchSymbol_WndProc( _
         b.BeginDoubleBuffer(hwnd)
 
         ' Paint the tab info area 
-        b.SetForeColors( ghTopTabs.ForeColor, ghTopTabs.ForeColor )
-        b.SetBackColors( ghTopTabs.BackColor, ghTopTabs.BackColor )
+        b.SetForeColors( ghPanel.ForeColor, ghPanel.ForeColor )
+        b.SetBackColors( ghPanel.BackColor, ghPanel.BackColor )
 
         ' Clear the entire back client area
         b.PaintClientRect()
@@ -588,7 +630,7 @@ function frmSearchSymbol_Show( byval hwndParent as HWND ) as LRESULT
     dim cf as CHARFORMATW 
     cf.cbSize = sizeof(cf)
     cf.dwMask = CFM_FACE or CFM_SIZE or CFM_CHARSET or CFM_COLOR
-    cf.crTextColor = ghTopTabs.ForeColorHot
+    cf.crTextColor = ghPanel.ForeColorHot
     cf.yHeight = 10 * 20      ' in twips (1/20 pt)
     cf.bCharSet = DEFAULT_CHARSET
     cf.bPitchAndFamily = DEFAULT_PITCH or FF_DONTCARE
@@ -599,17 +641,17 @@ function frmSearchSymbol_Show( byval hwndParent as HWND ) as LRESULT
     hCtlFind = _
         pWindow->AddControl("RICHEDIT", , IDC_FRMSEARCHSYMBOL_TXTFIND, "", _
         0, 0, 0, 0, _
-        WS_CHILD or WS_TABSTOP or ES_LEFT or ES_AUTOHSCROLL, _
+        WS_CHILD or ES_LEFT or ES_AUTOHSCROLL, _
         WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_RIGHTSCROLLBAR)
     pWindow->SetControlSubclass(hCtlFind, @frmSearchSymbol_RichEdit_SubclassProc, IDC_FRMSEARCHSYMBOL_TXTFIND, NULL)
     SendMessage( hCtlFind, EM_SETCHARFORMAT, SCF_ALL, cast(LPARAM, @cf) ) 
-    SendMessage( hCtlFind, EM_SETBKGNDCOLOR , 0, cast(LPARAM, ghTopTabs.BackColorHot) )
+    SendMessage( hCtlFind, EM_SETBKGNDCOLOR , 0, cast(LPARAM, ghPanel.BackColorHot) )
     SendMessage( hCtlFind, EM_SETEVENTMASK, 0, cast(LPARAM, ENM_SELCHANGE or ENM_CHANGE) )
 
     dim as HWND hCtlList
     hCtlList = _ 
         pWindow->AddControl("LISTBOX", , IDC_FRMSEARCHSYMBOL_LISTBOX, "", 0, 0, 0, 0, _
-        WS_CHILD or WS_CLIPSIBLINGS or WS_CLIPCHILDREN or WS_TABSTOP or _
+        WS_CHILD or WS_CLIPSIBLINGS or WS_CLIPCHILDREN or _
         LBS_NOINTEGRALHEIGHT or LBS_OWNERDRAWFIXED or LBS_NOTIFY or LBS_NODATA, _
         WS_EX_LEFT or WS_EX_RIGHTSCROLLBAR)
         pWindow->SetControlSubclass(hCtlList, @frmSearchSymbolListBox_SubclassProc, IDC_FRMSEARCHSYMBOL_LISTBOX, @pWindow)
@@ -645,17 +687,20 @@ function frmSearchSymbol_Show( byval hwndParent as HWND ) as LRESULT
     ' Position the Fuzzy popup form into place
     SetWindowPos( HWND_FRMSEARCHSYMBOL, HWND_TOPMOST, nLeft, nTop, nWidth, nHeight, SWP_SHOWWINDOW ) 
 
+    GetClientRect( HWND_FRMSEARCHSYMBOL, @rc )
+    
     ' Reposition the find textbox
     nMargin = pWindow->ScaleY(6)
     nHeight = pWindow->ScaleY( 30 )
+    nWidth  = (rc.right - rc.left)
     SetWindowPos( hCtlFind, 0, nMargin, nMargin, _
             nWidth - (nMargin * 2), nHeight, SWP_SHOWWINDOW or SWP_NOZORDER )
     RichEditCenterSingleLineText( hCtlFind )
     SendMessage( hCtlFind, EM_SETMARGINS, EC_LEFTMARGIN, MAKELPARAM(nMargin, 0))
     
     ' Reposition the ownerdrawn results listbox 
-    nTop = (nMargin + nHeight)
-    nHeight = (rc.bottom - nMargin - nTop)
+    nTop = (nMargin + nHeight + nMargin)
+    nHeight = (rc.bottom - nMargin - nMargin - nTop)
     SetWindowPos( hCtlList, 0, nMargin, nTop, _
             nWidth - (nMargin * 2), nHeight, SWP_SHOWWINDOW or SWP_NOZORDER )
     
@@ -667,7 +712,18 @@ function frmSearchSymbol_Show( byval hwndParent as HWND ) as LRESULT
     while GetMessage( @uMsg, null, 0, 0 )
         if (uMsg.message = WM_KEYDOWN) andalso (uMsg.wParam = VK_ESCAPE) then
             SendMessage( HWND_FRMSEARCHSYMBOL, WM_CLOSE, 0, 0 )
+        
+        elseif (uMsg.message = WM_KEYDOWN) andalso (uMsg.wParam = VK_RETURN) then
+            dim as HWND hFocus   = GetFocus()
+            dim as HWND hFind    = GetDlgItem( HWND_FRMSEARCHSYMBOL, IDC_FRMSEARCHSYMBOL_TXTFIND )
+            if (hFocus = hFind) then 
+                dim as HWND hList = GetDlgItem( HWND_FRMSEARCHSYMBOL, IDC_FRMSEARCHSYMBOL_LISTBOX )        
+                dim as long cur = SendMessage( hList, LB_GETCURSEL, 0, 0 )
+                frmSearchSymbol_GotoSymbol( cur )   ' this will also call WM_CLOSE
+            end if
+
         end if
+
         if IsDialogMessage( HWND_FRMSEARCHSYMBOL, @uMsg ) = 0 then
             TranslateMessage( @uMsg )
             DispatchMessage( @uMsg )
@@ -675,6 +731,8 @@ function frmSearchSymbol_Show( byval hwndParent as HWND ) as LRESULT
     wend
     
     gPrevent_WM_NCACTIVATE = false
-    
+
+    frmMain_SetFocusToCurrentCodeWindow()
+
     function = uMsg.wParam
 end function
