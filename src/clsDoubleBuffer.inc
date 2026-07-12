@@ -63,6 +63,10 @@ function clsDoubleBuffer.rcClientHeight() as long
     return _rc.bottom - _rc.top
 end function
 
+function clsDoubleBuffer.getMemDC() as HDC
+    return _memDC
+end function
+
 function clsDoubleBuffer.SetFont( byval FontIndex as long ) as long
     if (FontIndex < lbound(ghFont)) orelse (FontIndex > ubound(ghFont)) then exit function
     dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN)
@@ -173,6 +177,25 @@ function clsDoubleBuffer.PaintText( _
     DrawText( _memDC, wszText, -1, cast(lpRect, rc), wsStyle )
 
     SetTextColor( _memDC, oldforecolor )
+    SelectObject(_memDC, hOldFont) 
+
+    function = 0
+end function
+
+function clsDoubleBuffer.PaintChar( _
+            byval wszChar as DWSTRING, _
+            byval rc as RECT ptr, _
+            byval forecolor as COLORREF _
+            ) as long
+    
+    dim as HFONT hOldFont = SelectObject( _memDC, ghFont(_FontIndex) ) 
+
+    SetBkMode(_memDC, TRANSPARENT)
+    SetTextColor(_memDC, forecolor)
+
+    dim as DWORD wsStyle = DT_SINGLELINE or DT_VCENTER or DT_LEFT or DT_NOCLIP
+    DrawText( _memDC, wszChar, -1, cast(lpRect, rc), wsStyle )
+
     SelectObject(_memDC, hOldFont) 
 
     function = 0

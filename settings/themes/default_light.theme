@@ -102,6 +102,12 @@ panel.button.foreground: 97,97,97
 panel.button.background: 236,236,236
 panel.buttonhot.foreground: 97,97,97
 panel.buttonhot.background: %WHITE
+panel.filenameicon.foreground: 84,171,178     
+panel.filenameicon.background: 232,238,237
+panel.functionicon.foreground: 236,91,89     
+panel.functionicon.background: 240,224,223
+panel.typeicon.foreground: 162,139,196     
+panel.typeicon.background: 237,233,236
 
 toptabs.panel.background: 236,236,236
 toptabs.text.foreground: 106,106,106

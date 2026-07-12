@@ -83,6 +83,11 @@ type clsDoubleBuffer
                 byval wsStyle as DWORD, _
                 byval bHitTest as boolean = false _
                 ) as long 
+    declare function PaintChar( _
+                byval wszChar as DWSTRING, _
+                byval rc as RECT ptr, _
+                byval forecolor as COLORREF _
+                ) as long
     declare function SetFont( byval FontIndex as long ) as long
     declare function SetForeColors( byval forecolor as COLORREF, byval forecolorhot as COLORREF ) as long
     declare function SetBackColors( byval backcolor as COLORREF, byval backcolorhot as COLORREF ) as long
@@ -90,6 +95,6 @@ type clsDoubleBuffer
     declare function rcClient() as RECT
     declare function rcClientWidth() as long
     declare function rcClientHeight() as long
-
+    declare function getMemDC() as HDC
 
 end type

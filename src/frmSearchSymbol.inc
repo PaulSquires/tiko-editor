@@ -465,14 +465,14 @@ function frmSearchSymbol_OnDrawItem( _
 
             select case gSymbols(lpdis->ItemID).id
                 case SearchSymbol.file_symbol
-                    icon_foreclr = BGR(84, 171, 178)
-                    icon_backclr = iif( IsHot, ghPanel.BackColorHot, BGR(51, 63, 69))
+                    icon_foreclr = ghPanel.ForeColorFilenameIcon
+                    icon_backclr = iif( IsHot, ghPanel.BackColorHot, ghPanel.BackColorFilenameIcon)
                     wszIcon = wszSearchFile
                     if pDoc then wszCaption = AfxStrPathName( "NAMEX", pDoc->DiskFilename )
 
                 case SearchSymbol.function_symbol
-                    icon_foreclr = BGR(236, 91, 89)
-                    icon_backclr = iif( IsHot, ghPanel.BackColorHot, BGR(65, 54, 61))
+                    icon_foreclr = ghPanel.ForeColorFunctionIcon
+                    icon_backclr = iif( IsHot, ghPanel.BackColorHot, ghPanel.BackColorFunctionIcon)
                     wszIcon = wszSearchFunction
                     if pData then 
                         wszCaption = pData->ElementName
@@ -483,16 +483,35 @@ function frmSearchSymbol_OnDrawItem( _
 
                 case SearchSymbol.type_symbol
                     if pData then
-                        icon_foreclr = BGR(162, 139, 196)
-                        icon_backclr = iif( IsHot, ghPanel.BackColorHot, BGR(62, 60, 71))
+                        icon_foreclr = ghPanel.ForeColorTypeIcon
+                        icon_backclr = iif( IsHot, ghPanel.BackColorHot, ghPanel.BackColorTypeIcon)
                         wszIcon = iif( pData->isENUM, wszSearchEnum, wszSearchType )
                         wszCaption = pData->ElementName
                     end if
             end select
 
-            ' Paint the text first because those colors have already been set.
+
+            ' Paint the text first (highlight each matching letter)
             b.SetFont( GUIFONT_10 )
-            b.PaintText( wszCaption, @rcText, DT_LEFT )
+'            b.PaintText( wszCaption, @rcText, DT_LEFT )
+            
+            dim as DWSTRING wszChar
+            dim as RECT rcChar = rcText
+            
+            dim as long n = len(wszCaption)
+            
+            for i as long = 1 to n
+                wszChar = mid(wszCaption, i, 1)
+                b.PaintChar( wszChar, @rcChar, foreclr )
+
+                ' measure this one character to know how far to advance
+                dim as HFONT hOldFont = SelectObject( lpdis->hDC, ghFont(GUIFONT_10) ) 
+                dim as SIZE sz
+                GetTextExtentPoint32( lpdis->hDC, wszChar, 1, @sz )
+                rcChar.left += sz.cx
+                rcChar.right += sz.cx
+                SelectObject(lpdis->hDC, hOldFont) 
+            next
 
             ' Now paint the symbol icon
             b.SetForeColors(icon_foreclr, icon_foreclr)

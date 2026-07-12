@@ -128,6 +128,12 @@ type PANEL_HANDLES_TYPE
     ForeColorButton as COLORREF
     BackColorButtonHot as COLORREF
     ForeColorButtonHot as COLORREF
+    BackColorFilenameIcon as COLORREF
+    ForeColorFilenameIcon as COLORREF
+    BackColorFunctionIcon as COLORREF
+    ForeColorFunctionIcon as COLORREF
+    BackColorTypeIcon as COLORREF
+    ForeColorTypeIcon as COLORREF
 end type
 dim shared ghPanel as PANEL_HANDLES_TYPE
 
@@ -460,6 +466,15 @@ function LoadThemeFile() as boolean
     pTheme = getThemePtr("panel.buttonhot")
     ghPanel.BackColorButtonHot = pTheme->background
     ghPanel.ForeColorButtonHot = pTheme->foreground
+    pTheme = getThemePtr("panel.filenameicon")
+    ghPanel.BackColorFilenameIcon = pTheme->background
+    ghPanel.ForeColorFilenameIcon = pTheme->foreground
+    pTheme = getThemePtr("panel.functionicon")
+    ghPanel.BackColorFunctionIcon = pTheme->background
+    ghPanel.ForeColorFunctionIcon = pTheme->foreground
+    pTheme = getThemePtr("panel.typeicon")
+    ghPanel.BackColorTypeIcon = pTheme->background
+    ghPanel.ForeColorTypeIcon = pTheme->foreground
 
     pTheme = getThemePtr("topmenu.panel")
     ghPopup.PanelColor = pTheme->background
