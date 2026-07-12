@@ -29,7 +29,7 @@ end type
 #define SCORE_MIN (-SCORE_MAX)
 
 declare function fuzzy_has_match( byval needle as DWSTRING, byval haystack as DWSTRING ) as boolean
-declare function fuzzy_match_postions( byval needle as DWSTRING, byval haystack as DWSTRING, positions() as uinteger ) as score_t
+declare function fuzzy_match_positions( byval needle as DWSTRING, byval haystack as DWSTRING, positions() as uinteger ) as score_t
 declare function fuzzy_match( byval needle as DWSTRING, byval haystack as DWSTRING ) as score_t
 
 '' ---------------------------------------------------------------------
@@ -217,7 +217,7 @@ function fuzzy_match( byval needle as DWSTRING, byval haystack as DWSTRING ) as 
 	return mm(n - 1, hlen - 1)
 end function
 
-function fuzzy_match_postions( byval needle as DWSTRING, byval haystack as DWSTRING, positions() as uinteger ) as score_t
+function fuzzy_match_positions( byval needle as DWSTRING, byval haystack as DWSTRING, positions() as uinteger ) as score_t
 	if len(needle) = 0 then return SCORE_MIN
 
     static bonus_initialized as boolean = false

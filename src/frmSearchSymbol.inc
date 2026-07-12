@@ -20,10 +20,11 @@ enum SearchSymbol explicit
 end enum
 
 type SEARCHSYMBOL_TYPE
-    result as score_t
-    id     as SearchSymbol
-    pDoc   as clsDocument ptr    ' used to get filename / diskfilename
-    pData  as DB2_DATA ptr       ' pointer into database for Types / Functions
+    result         as score_t
+    id             as SearchSymbol
+    pDoc           as clsDocument ptr    ' used to get filename / diskfilename
+    pData          as DB2_DATA ptr       ' pointer into database for Types / Functions
+    positions(any) as uinteger
 end type
 
 #define MAX_SYMBOL_SEARCH  100
@@ -67,15 +68,22 @@ function frmSearchSymbol_DoSearch( byval hwndCtl as HWND ) as long
     ' PROCESS ALL FILENAMES
     dim pDoc as clsDocument ptr = gApp.pDocList
     do until pDoc = 0
+        dim positions(any) as uinteger
         wszFilename = AfxStrPathName( "NAMEX", pDoc->DiskFilename )
-        result = fuzzy_match( wszNeedle, wszFilename )
+        result = fuzzy_match_positions( wszNeedle, wszFilename, positions() )
         if (result > min_score) orelse (bLoadAll = true) then
             if gSymbolsCount + 1 > MAX_SYMBOL_SEARCH then exit do 
             gSymbolsCount += 1
-            gSymbols(nextEl).result = result
-            gSymbols(nextEl).id     = SearchSymbol.file_symbol
-            gSymbols(nextEl).pDoc   = pDoc 
-            gSymbols(nextEl).pData  = null 
+            gSymbols(nextEl).result    = result
+            gSymbols(nextEl).id        = SearchSymbol.file_symbol
+            gSymbols(nextEl).pDoc      = pDoc 
+            gSymbols(nextEl).pData     = null
+             
+            redim (gSymbols(nextEl).positions)(lbound(positions) to ubound(positions))
+            for i as long = lbound(positions) to ubound(positions)
+                gSymbols(nextEl).positions(i) = positions(i)
+            next
+                
             nextEl += 1
         end if
         pDoc = pDoc->pDocNext
@@ -96,7 +104,8 @@ function frmSearchSymbol_DoSearch( byval hwndCtl as HWND ) as long
         if (pData->id = DB2_TYPE) orelse _
             (pData->id = DB2_FUNCTION) then
 
-            result = fuzzy_match( wszNeedle, pData->ElementName )
+            dim positions(any) as uinteger
+            result = fuzzy_match_positions( wszNeedle, pData->ElementName, positions() )
                 
             if (result > min_score) then
                 if gSymbolsCount + 1 > MAX_SYMBOL_SEARCH then exit do 
@@ -110,6 +119,12 @@ function frmSearchSymbol_DoSearch( byval hwndCtl as HWND ) as long
                 end if    
                 gSymbols(nextEl).pDoc   = null 
                 gSymbols(nextEl).pData  = pData 
+
+                redim (gSymbols(nextEl).positions)(lbound(positions) to ubound(positions))
+                for i as long = lbound(positions) to ubound(positions)
+                    gSymbols(nextEl).positions(i) = positions(i)
+                next
+
                 nextEl += 1
             end if
             
@@ -437,7 +452,7 @@ function frmSearchSymbol_OnDrawItem( _
         if ListBox_GetSel(lpdis->hwndItem, lpdis->itemID) then IsHot = true
 
         dim as COLORREF backclr = iif( IsHot, ghPanel.BackColorHot,  ghPanel.BackColor)
-        dim as COLORREF foreclr = iif( IsHot, ghPanel.ForeColorHot,  ghPanel.ForeColor)
+        dim as COLORREF foreclr = iif( IsHot, ghPanel.ForeColor,  ghPanel.ForeColor)
         b.SetForeColors(foreclr, foreclr)
         b.SetBackColors(backclr, backclr)
 
@@ -496,13 +511,25 @@ function frmSearchSymbol_OnDrawItem( _
 '            b.PaintText( wszCaption, @rcText, DT_LEFT )
             
             dim as DWSTRING wszChar
+            dim as COLORREF clrChar
             dim as RECT rcChar = rcText
             
             dim as long n = len(wszCaption)
             
             for i as long = 1 to n
+                ' Set the character color. By default it is foreclr which was set earlier.
+                clrChar = ghTopTabs.ForeColor 'foreClr
+                ' Now check the positions array to see if this color needs to be highlighted.
+                ' Remember that the positions array values are zero based.
+                for ii as long = lbound(gSymbols(lpdis->ItemID).positions) to ubound(gSymbols(lpdis->ItemID).positions)
+                    if gSymbols(lpdis->ItemID).positions(ii) + 1 = i then
+                        clrChar = ghTopTabs.ForeColorHot
+                        exit for
+                    end if
+                next    
+                
                 wszChar = mid(wszCaption, i, 1)
-                b.PaintChar( wszChar, @rcChar, foreclr )
+                b.PaintChar( wszChar, @rcChar, clrChar )
 
                 ' measure this one character to know how far to advance
                 dim as HFONT hOldFont = SelectObject( lpdis->hDC, ghFont(GUIFONT_10) ) 
