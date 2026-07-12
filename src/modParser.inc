@@ -285,6 +285,7 @@ function ctxParser.ParseENUM( byval action as PARSEACTION ) as boolean
                 if( this.ltoken = "enum" ) then
                     this.objectEndLine = this.lineNum
                     this.typeAlias = this.typeName
+                    this.isENUM = true
                     gdb2.dbAdd( @this, DB2_TYPE )
 
                     ' Also add a variable so that the enum can be accessed directly
@@ -358,6 +359,7 @@ function ctxParser.ParseTYPE( byval action as PARSEACTION ) as boolean
                     this.objectEndLine = this.lineNum
                     this.typeAlias = this.typeName
                     this.typeExtends = extendsTYPE
+                    this.isENUM = false
                     gdb2.dbAdd( @this, DB2_TYPE )
                     exit do
                 end if

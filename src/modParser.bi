@@ -64,6 +64,7 @@ type ctxParser
     as DWSTRING         typeName 
     as DWSTRING         typeAlias
     as DWSTRING         typeExtends
+    as boolean          isENUM
     
     ' VARIABLES
     as DWSTRING         varName 

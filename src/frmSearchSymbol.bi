@@ -14,5 +14,7 @@
 #pragma once
 
 #define IDC_FRMSEARCHSYMBOL_TXTFIND       1000
+#define IDC_FRMSEARCHSYMBOL_LISTBOX       1001
 
+declare function frmSearchSymbol_DoSearch( byval hwndCtl as HWND ) as long
 declare function frmSearchSymbol_Show( byval hWndParent as HWND ) as LRESULT

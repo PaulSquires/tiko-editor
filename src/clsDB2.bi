@@ -45,6 +45,7 @@ type DB2_DATA
     TypeExtends   as DWSTRING            ' The type is extended from this TYPE
     VariableScope as DIMSCOPE            ' Element is public in a type (default) 
     GetSet        as DWSTRING            ' (get) (set)
+    isENUM        as boolean             ' T/F: If the "TYPE" being stored is actually an ENUM
 end type
 
 type clsDB2

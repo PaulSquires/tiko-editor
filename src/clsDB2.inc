@@ -100,6 +100,7 @@ function clsDB2.dbAdd( _
                 .ElementName   = parser->typeName
                 .VariableType  = parser->typeAlias  ' same as typeName unless it was an ALIAS (always search using this name)
                 .TypeExtends   = parser->TypeExtends
+                .isENUM        = parser->isENUM
                 if .ElementName = "" then exit function
 
             case DB2_TODO

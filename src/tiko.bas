@@ -92,6 +92,7 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "modMenuDefinitions.inc"
 #include once "modMRU.inc"
 #include once "modFindReplace.inc"
+#include once "modFuzzy.inc"
 
 #include once "frmAbout.inc" 
 #include once "frmPopupMenu.inc"
