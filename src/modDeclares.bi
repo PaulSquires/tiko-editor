@@ -219,7 +219,7 @@ redim shared LL(any) as wstring * MAX_PATH
 
 #DEFINE GUIFONT_9      0
 #DEFINE GUIFONT_10     1
-#DEFINE INFOFONT_10    2
+#DEFINE ITALICFONT_10  2
 #DEFINE INFOFONT_11    3
 #DEFINE SYMBOLFONT_9   4
 #DEFINE SYMBOLFONT_10  5
@@ -342,7 +342,8 @@ dim shared as wstring * 10 _
     wszIconSettings, wszIconCheckBoxEmpty, wszIconCheckBoxMarked, _
     wszIconContinue, wszIconStop, wszIconStepNext, wszIconStepOver, wszIconStepOut, wszIconRunToCursor, _
     wszIconSave, wszIconFind, wszIconToggleReplace, _
-    wszIconGotoMain, wszIconGotoHeader, wszIconGotoSource
+    wszIconGotoMain, wszIconGotoHeader, wszIconGotoSource, _
+    wszSearchFile, wszSearchFunction, wszSearchType, wszSearchEnum
 
 
 ' Braille spinner patterns - large clockwise rotation
@@ -393,15 +394,17 @@ dim shared spinner(0 to 7) as wstring * 2 => { _
     wszIconSave              = !"\uE74E"      ' Save (diskette)
     wszIconFind              = !"\uE721"      ' Search (magnifying glass)
     wszIconToggleReplace     = !"\uE8B4"      ' Toggle Replace
-'    wszIconGotoMain          = !"\uE655"
-'    wszIconGotoHeader        = !"\uE66A"
     wszIconGotoMain          = "M"
     wszIconGotoHeader        = "H"
     wszIconGotoSource        = "S"
 
+    ' Use GUI Italiac font for these identifiers.
+    wszSearchFile            = "d"            ' "disk"
+    wszSearchFunction        = "f"
+    wszSearchType            = "T"
+    wszSearchEnum            = "e"
+
     ' Debugger Icons
-    'wszIconDebug             = !"\uE62A"     ' form with magnifier
-    'wszIconDebug             = !"\uE623"     ' next solid
     wszIconDebug             = !"\uE893"     ' next outline
     wszIconContinue          = !"\uF5B0"     ' play solid
     wszIconStop              = !"\uEE95"     ' stop solid

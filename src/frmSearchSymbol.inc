@@ -374,9 +374,8 @@ function frmSearchSymbol_OnMeasureItem( _
             byval lpmis as MEASUREITEMSTRUCT ptr _
             ) as long
     ' Set the height of the list box items. 
-    dim as long nHeight = iif(gConfig.CompactMenus, EXPLORERITEM_HEIGHT_COMPACT, EXPLORERITEM_HEIGHT)
     dim pWindow as CWindow ptr = AfxCWindowPtr(hwnd)
-    lpmis->itemHeight = pWindow->ScaleY(nHeight)
+    lpmis->itemHeight = pWindow->ScaleY(24)
         
     function = 0
 end function
@@ -419,42 +418,46 @@ function frmSearchSymbol_OnDrawItem( _
 
         ' Create our rect that works with the entire line
         dim as RECT rc: SetRect( @rc, 0, 0, b.rcClientWidth, b.rcClientHeight )
+        
+        dim as RECT rcIcon = rc 
+        rcIcon.right = rcIcon.left + pWindow->ScaleX(24)
+        
         dim as RECT rcText = rc 
-        dim as RECT rcBitmap = rc 
+        rcText.left = rcIcon.right + pWindow->ScaleX(4)
         
         ' Paint the entire background
         b.PaintRect( @rc )
 
         if lpdis->ItemID > -1 then
-            b.SetFont( GUIFONT_10 )
+            dim as DWSTRING wszIcon
             dim as DWSTRING wszCaption
-            'rcText.left = rcBitmap.right
+
             dim as clsDocument ptr pDoc = gSymbols(lpdis->ItemID).pDoc
             dim as DB2_DATA ptr pData = gSymbols(lpdis->ItemID).pData
 
             select case gSymbols(lpdis->ItemID).id
                 case SearchSymbol.file_symbol
-                    wszCaption = "FILE: "
-                    if pDoc then wszCaption += AfxStrPathName( "NAMEX", pDoc->DiskFilename )
+                    wszIcon = wszSearchFile
+                    if pDoc then wszCaption = AfxStrPathName( "NAMEX", pDoc->DiskFilename )
                 case SearchSymbol.function_symbol
-                    wszCaption = "FUNCTION: "
+                    wszIcon = wszSearchFunction
                     if pData then 
-                        wszCaption += pData->ElementName
+                        wszCaption = pData->ElementName
                         if len(pData->GetSet) then
                             wszCaption += " " & pData->GetSet
                         end if
                     end if    
                 case SearchSymbol.type_symbol
                     if pData then
-                        if pData->isENUM then
-                            wszCaption = "ENUM: "
-                        else
-                            wszCaption = "TYPE: "
-                        end if    
-                        wszCaption += pData->ElementName
+                        wszIcon = iif( pData->isENUM, wszSearchEnum, wszSearchType )
+                        wszCaption = pData->ElementName
                     end if
             end select
 
+            b.SetFont( ITALICFONT_10 )
+            b.PaintText( wszIcon, @rcIcon, DT_CENTER )
+            
+            b.SetFont( GUIFONT_10 )
             b.PaintText( wszCaption, @rcText, DT_LEFT )
         end if
             
