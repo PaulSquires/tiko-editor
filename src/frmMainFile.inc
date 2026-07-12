@@ -28,6 +28,7 @@ function OnCommand_FileNew( byval hwnd as HWND ) as clsDocument ptr
     ' Load Explorer names first SetFocusTab will highlight it.
     LoadExplorerFiles()
     LoadFunctionsFiles()
+    LoadBookmarksFiles()
 
     ' Add the new document to the top tabcontrol
     dim as long iTab = gTTabCtl.AddTab( pDoc )  
@@ -146,6 +147,7 @@ function OnCommand_FileOpen( _
     ' Load Explorer names first SetFocusTab will highlight it.
     LoadExplorerFiles()
     LoadFunctionsFiles()
+    LoadBookmarksFiles()
     if iTab > -1 then gTTabCtl.SetFocusTab(iTab)
 
     gApp.IsFileLoading = false
@@ -269,8 +271,110 @@ function OnCommand_FileRename( _
 
     LoadExplorerFiles()
     LoadFunctionsFiles()
+    LoadBookmarksFiles()
 
     frmMain_SetFocusToCurrentCodeWindow
+
+    function = 0
+end function
+
+
+' ========================================================================================
+' Duplicate the incoming pDoc file to disk
+' ========================================================================================
+function OnCommand_FileDuplicate( _
+            byval hwnd as HWND, _
+            byval pDoc as clsDocument ptr _
+            ) as LRESULT
+
+    dim as DWSTRING wszFilename
+    dim as long nextFileNum 
+
+    ' The new duplicated filename will have "-1" appended to the end of the filename.
+    ' The appended number will increment until a valid filename is available.
+    do
+        nextFileNum += 1
+        wszFilename = _
+            AfxStrPathName( "PATH", pDoc->DiskFilename ) & _
+            AfxStrPathName( "NAME", pDoc->DiskFilename ) & _
+             "-" & str(nextFileNum) & _
+            AfxStrPathName( "EXTN", pDoc->DiskFilename )
+        if AfxFileExists( wszFilename ) = false then exit do
+    loop    
+    
+    ' Save text buffer to disk by directly accessing buffer rather
+    ' saving it to an intermediary string variable first.
+    dim as zstring ptr psz = cast( zstring ptr, SciExec(pDoc->hWindow(0), SCI_GETCHARACTERPOINTER, 0, 0) )
+    dim as long sciCodePage = SciExec(pDoc->hWindow(0), SCI_GETCODEPAGE, 0, 0)   ' 0 or SC_CP_UTF8 
+    dim as DWSTRING wst
+
+    dim pStream as CFileStream
+    if pStream.Open(wszFilename, STGM_CREATE or STGM_WRITE) = S_OK then
+        dim as string st
+        select case pDoc->FileEncoding
+            case FILE_ENCODING_ANSI
+                if sciCodePage = 0 then    
+                   pStream.Write psz, len(*psz)     ' no conversion necessary
+                else
+                   ' need to convert
+                   st = Utf8ToAnsi(*psz)
+                   pStream.Write strptr(st), len(st) 
+                end if    
+                
+            case FILE_ENCODING_UTF8
+                if sciCodePage = SC_CP_UTF8 then    
+                   ' no conversion necessary
+                   pStream.Write psz, len(*psz)     ' no conversion necessary
+                else
+                   ' need to convert
+                   st = AnsiToUtf8(*psz)
+                   pStream.Write strptr(st), len(st)
+                end if    
+
+            case FILE_ENCODING_UTF8_BOM
+                ' Output the BOM first
+                st = chr(&HEF, &HBB, &HBF)
+                pStream.Write strptr(st), len(st)
+                if sciCodePage = SC_CP_UTF8 then    
+                   ' no conversion necessary
+                   pStream.Write psz, len(*psz)     ' no conversion necessary
+                else
+                   ' need to convert
+                   st = AnsiToUtf8(*psz)
+                   pStream.Write strptr(st), len(st)
+                end if    
+
+            case FILE_ENCODING_UTF16_BOM
+                ' Output the BOM first
+                st = chr(&HFF, &HFE)
+                pStream.Write strptr(st), len(st)
+                if sciCodePage = SC_CP_UTF8 then    
+                   ' convert utf8 to utf16
+                   wst.Utf8 = *psz  ' convert the utf *psz from Utf8
+                   pStream.Write wst.m_pBuffer, wst.m_BufferLen
+                else
+                    ' need to convert ansi to unicode
+                    dim as DWSTRING wst = Wstr(*psz)
+                    pStream.Write wst.m_pBuffer, wst.m_BufferLen
+                end if    
+                
+        end select
+    end if
+    pStream.Close
+
+    ' Load the duplicate file from disk. This will display it in the top tab control
+    ' and the Explorer.
+    pDoc = OpenSelectedDocument( wszFilename )
+    if pDoc then
+        ' Set type of file based on file extension (used to categorize project files)
+        pDoc->SetProjectFileType()
+        LoadExplorerFiles()
+        LoadFunctionsFiles()
+        LoadBookmarksFiles()
+    end if    
+
+    frmMain_PositionWindows()
+    frmMain_SetFocusToCurrentCodeWindow()
 
     function = 0
 end function
@@ -451,6 +555,9 @@ function OnCommand_FileExplorerMessage( _
 
     elseif id = IDM_FILERENAME_EXPLORERLISTBOX then
         OnCommand_FileRename( HWND_FRMMAIN, pDoc )
+
+    elseif id = IDM_FILEDUPLICATE_EXPLORERLISTBOX then
+        OnCommand_FileDuplicate( HWND_FRMMAIN, pDoc )
 
     elseif IDM_FILECLOSE_EXPLORERLISTBOX then
         dim as long nCurSel = gTTabCtl.GetTabIndexByDocumentPtr( pDoc )

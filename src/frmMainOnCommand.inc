@@ -138,7 +138,7 @@ function frmMain_OnCommand( _
                 next
             end if
             return 0   
-
+  
         case IDM_PROJECTFILETYPE
             dim as HMENU hPopupMenu = CreateTabsInfoFileTypeContextMenu()
             dim as point pt: GetCursorPos @pt
@@ -196,6 +196,7 @@ function frmMain_OnCommand( _
         case IDM_FILESAVE:           OnCommand_FileSave( hwnd, pDoc, pDoc->IsNewFlag, false )
         case IDM_FILESAVEAS:         OnCommand_FileSave( hwnd, pDoc, true, false )
         case IDM_FILERENAME:         OnCommand_FileRename( hwnd, pDoc )
+        case IDM_FILEDUPLICATE:      OnCommand_FileDuplicate( hwnd, pDoc )
         case IDM_FILECLOSE:          OnCommand_FileClose( hwnd, EFC_CLOSECURRENT )
         case IDM_FILESAVEALL:        OnCommand_FileSaveAll( hwnd ) 
         case IDM_LOADSESSION:        OnCommand_FileLoadSession( hwnd )   

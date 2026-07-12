@@ -103,6 +103,8 @@ function frmKeyboard_CreateDefaultKeyBindings() as long
     frmKeyBoard_AddKeyBinding( "File", IDM_FILESAVE, "IDM_FILESAVE", "Save file", "Ctrl+S", "", false )
     frmKeyBoard_AddKeyBinding( "File", IDM_FILESAVEAS, "IDM_FILESAVEAS", "Save file as a different name", "", "", false )
     frmKeyBoard_AddKeyBinding( "File", IDM_FILESAVEALL, "IDM_FILESAVEALL", "Save all files", "Ctrl+Shift+S", "", false )
+    frmKeyBoard_AddKeyBinding( "File", IDM_FILERENAME, "IDM_FILERENAME", "Rename file", "", "", false )
+    frmKeyBoard_AddKeyBinding( "File", IDM_FILEDUPLICATE, "IDM_FILEDUPLICATE", "Duplicate file", "", "", false )
     frmKeyBoard_AddKeyBinding( "File", IDM_LOADSESSION, "IDM_LOADSESSION", "Load session", "", "", false )
     frmKeyBoard_AddKeyBinding( "File", IDM_SAVESESSION, "IDM_SAVESESSION", "Save session", "", "", false )
     frmKeyBoard_AddKeyBinding( "File", IDM_KEYBOARDSHORTCUTS, "IDM_KEYBOARDSHORTCUTS", "Keyboard shortcuts", "Ctrl+K", "", false )

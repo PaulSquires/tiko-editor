@@ -1048,6 +1048,8 @@ function OpenSelectedDocument( _
         if iTab = -1 then iTab = gTTabCtl.AddTab( pDoc )  
         pDoc->AssignTextBuffer()
         LoadExplorerFiles()
+        LoadFunctionsFiles()
+        LoadBookmarksFiles()
         gTTabCtl.SetFocusTab(iTab)
 
         ' Set the top line to display in the editor. I chose to start 3 lines before the

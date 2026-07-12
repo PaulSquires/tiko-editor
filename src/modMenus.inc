@@ -475,6 +475,7 @@ function CreateTopTabCtlContextMenu( byval idx as long ) as HMENU
     AppendMenu hPopUpMenu, MF_ENABLED, IDM_FILESAVE,   L(7,"Save") 
     AppendMenu hPopUpMenu, MF_ENABLED, IDM_FILESAVEAS, L(8,"Save As") 
     AppendMenu hPopUpMenu, MF_ENABLED, IDM_FILERENAME, L(21,"Rename") 
+    AppendMenu hPopUpMenu, MF_ENABLED, IDM_FILEDUPLICATE, L(22,"Duplicate") 
     AppendMenu hPopUpMenu, MF_SEPARATOR, 0, ""
     AppendMenu hPopUpMenu, iif(MaxiTab > 0, MF_ENABLED,MF_DISABLED), IDM_FILECLOSEALL, L(6,"Close All")
     AppendMenu hPopUpMenu, iif(MaxiTab > 0, MF_ENABLED,MF_DISABLED), IDM_FILECLOSEALLOTHERS, L(354,"Close Others")
@@ -574,6 +575,7 @@ function CreateExplorerContextMenu(byval pDoc as clsDocument ptr ) as HMENU
                 AppendMenu hPopUpMenu, MF_ENABLED, IDM_FILESAVE_EXPLORERLISTBOX,   L(7,"Save") 
                 AppendMenu hPopUpMenu, MF_ENABLED, IDM_FILESAVEAS_EXPLORERLISTBOX, L(8,"Save As") 
                 AppendMenu hPopUpMenu, MF_ENABLED, IDM_FILERENAME_EXPLORERLISTBOX, L(21,"Rename") 
+                AppendMenu hPopUpMenu, MF_ENABLED, IDM_FILEDUPLICATE_EXPLORERLISTBOX, L(22,"Duplicate") 
                 AppendMenu hPopUpMenu, MF_SEPARATOR, 0, "" 
             end if
             wszText = L(190,"Remove from project") 
@@ -585,6 +587,7 @@ function CreateExplorerContextMenu(byval pDoc as clsDocument ptr ) as HMENU
                 AppendMenu hPopUpMenu, MF_ENABLED, IDM_FILESAVE_EXPLORERLISTBOX,   L(7,"Save") 
                 AppendMenu hPopUpMenu, MF_ENABLED, IDM_FILESAVEAS_EXPLORERLISTBOX, L(8,"Save As") 
                 AppendMenu hPopUpMenu, MF_ENABLED, IDM_FILERENAME_EXPLORERLISTBOX, L(21,"Rename") 
+                AppendMenu hPopUpMenu, MF_ENABLED, IDM_FILEDUPLICATE_EXPLORERLISTBOX, L(22,"Duplicate") 
             end if
         end if
         AddProjectFileTypesToMenu(hPopUpMenu, pDoc, true, true)

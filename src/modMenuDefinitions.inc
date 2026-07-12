@@ -71,6 +71,7 @@ Function getMenuText( byval idMenu as long ) As DWSTRING
         case IDM_FILESAVE: wszText = L(7,"Save")
         case IDM_FILESAVEAS: wszText = L(8,"Save As") & "..."
         case IDM_FILERENAME: wszText = L(21,"Rename") & "..."
+        case IDM_FILEDUPLICATE: wszText = L(22,"Duplicate")
         case IDM_FILESAVEALL: wszText = L(9,"Save All")
         case IDM_SAVESESSION: wszText = L(425,"Save Session") & "..."
         case IDM_LOADSESSION: wszText = L(426,"Load Session") & "..."
@@ -282,6 +283,7 @@ function buildTopMenuDefinitions() as long
     setTopMenuItem( IDC_MENUBAR_FILE, IDM_FILESAVEALL, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_FILE, IDM_FILESAVEAS, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_FILE, IDM_FILERENAME, 0, false, false )
+    setTopMenuItem( IDC_MENUBAR_FILE, IDM_FILEDUPLICATE, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_FILE, 0, 0, false, true )
     setTopMenuItem( IDC_MENUBAR_FILE, IDM_LOADSESSION, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_FILE, IDM_SAVESESSION, 0, false, false )

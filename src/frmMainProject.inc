@@ -19,7 +19,6 @@
 ' ========================================================================================
 function OnCommand_ProjectFilesAdd( byval hwnd As HWnd ) as LRESULT
     OnCommand_FileOpen( hwnd, false )
-    LoadExplorerFiles()
     function = 0
 end function
 
