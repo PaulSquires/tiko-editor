@@ -77,12 +77,14 @@ function OnCommand_EditPaste( _
     ' input focus. If they do then select that text rather than Scintilla.
     select case GetFocus()
         case GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTNOTES), _
-            GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTLOGFILE), _ 
-            GetDlgItem(HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND), _
-            GetDlgItem(HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE)
+             GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTLOGFILE), _ 
+             GetDlgItem(HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND), _
+             GetDlgItem(HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE)
             SendMessage( GetFocus, WM_PASTE, 0, 0 )
         case else     
             SciExec( GetFocus(), Iif(GetFocus()=hEdit, SCI_PASTE, WM_PASTE), 0, 0)
+            ' Codetip may be active when pasting after a ".' or ">" so test to update code complete list.
+            if gConfig.CodeTips then ShowAutocompleteList()
             frmMain_PositionWindows()    ' ensure custom scrollbars display
             SetFocus( hEdit )    ' ensure that the original edit window has not lost focus
     end select

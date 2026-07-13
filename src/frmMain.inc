@@ -1534,7 +1534,6 @@ function frmMain_WndProc( _
                 ' if we've waited more than 5 seconds then break out to avoid an infite loop.
                 if (timer - nStartTime) > 5 then exit do
             loop
-
             ' Only invoke any User Tools that have action for startup
             for y as long = lbound(gConfig.Tools) to ubound(gConfig.Tools)
                 if gConfig.Tools(y).Action = USERTOOL_ACTION_EDITORSTARTUP then

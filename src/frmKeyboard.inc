@@ -445,6 +445,10 @@ function frmKeyboard_BuildAcceleratorTable() as long
         end if   
     next
     
+    ' Add the SHIFT+INSERT paste accelerator so that the Paste menu operations
+    ' will fire correctly.
+    pWindow->AddAccelerator( FVIRTKEY or FSHIFT, VK_INSERT, IDM_PASTE )
+    
     pWindow->CreateAcceleratorTable()
 
     function = 0

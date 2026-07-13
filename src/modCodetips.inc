@@ -389,8 +389,8 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
                pDoc->wszMatchWord = ucase(ch) & pDoc->wszMatchWord   
         end select
     next
-    nLenMatchWord = len(pDoc->wszMatchWord )
-                
+    nLenMatchWord = len(pDoc->wszMatchWord)
+
     ' If an autocomplete is active but now there is no match word then
     ' a space or tab must have been pressed so autocomplete cancel and now exit.
     if SciExec(hEdit, SCI_AUTOCACTIVE, 0, 0) then
