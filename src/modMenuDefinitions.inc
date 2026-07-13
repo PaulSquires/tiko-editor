@@ -121,7 +121,7 @@ Function getMenuText( byval idMenu as long ) As DWSTRING
         case IDM_FIND: wszText = L(43,"Find") & "..."
         case IDM_FINDINPROJECT: wszText = L(256,"Find in Project") & "..."
         case IDM_REPLACE: wszText = L(46,"Replace") & "..."
-        case IDM_DEFINITION: wszText = L(47,"Sub/Function Definition")
+        case IDM_GOTODEFINITION: wszText = L(47,"Goto Definition")
         case IDM_LASTPOSITION: wszText = L(48,"Last Position")
         case IDM_GOTONEXTFUNCTION: wszText = L(84,"Next Function")
         case IDM_GOTOPREVFUNCTION: wszText = L(85,"Previous Function")
@@ -330,7 +330,7 @@ function buildTopMenuDefinitions() as long
     setTopMenuItem( IDC_MENUBAR_SEARCH, IDM_FINDINPROJECT, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_SEARCH, IDM_REPLACE, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_SEARCH, 0, 0, false, true )
-    setTopMenuItem( IDC_MENUBAR_SEARCH, IDM_DEFINITION, 0, false, false )
+    setTopMenuItem( IDC_MENUBAR_SEARCH, IDM_GOTODEFINITION, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_SEARCH, IDM_LASTPOSITION, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_SEARCH, 0, 0, false, true )
     setTopMenuItem( IDC_MENUBAR_SEARCH, IDM_GOTONEXTFUNCTION, 0, false, false )

@@ -143,7 +143,7 @@ function frmKeyboard_CreateDefaultKeyBindings() as long
     frmKeyBoard_AddKeyBinding( "Search", IDM_FIND, "IDM_FIND", "Find", "Ctrl+F", "", false )
     frmKeyBoard_AddKeyBinding( "Search", IDM_FINDINPROJECT, "IDM_FINDINPROJECT", "Find in Project", "Ctrl+Shift+F", "", false )
     frmKeyBoard_AddKeyBinding( "Search", IDM_REPLACE, "IDM_REPLACE", "Replace", "Ctrl+H", "", false )
-    frmKeyBoard_AddKeyBinding( "Search", IDM_DEFINITION, "IDM_DEFINITION", "Goto the sub/function definition", "F12", "", false )
+    frmKeyBoard_AddKeyBinding( "Search", IDM_GOTODEFINITION, "IDM_GOTODEFINITION", "Goto the symbol definition", "F12", "", false )
     frmKeyBoard_AddKeyBinding( "Search", IDM_LASTPOSITION, "IDM_LASTPOSITION", "Goto previous file position", "Shift+F12", "", false )
     frmKeyBoard_AddKeyBinding( "Search", IDM_GOTONEXTFUNCTION, "IDM_GOTONEXTFUNCTION", "Goto next sub/function", "Ctrl+PgDn", "", false )
     frmKeyBoard_AddKeyBinding( "Search", IDM_GOTOPREVFUNCTION, "IDM_GOTOPREVFUNCTION", "Goto previous sub/function", "Ctrl+PgUp", "", false )

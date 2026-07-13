@@ -54,6 +54,35 @@ function OnCommand_SearchSaveLastPosition( byval pDoc as clsDocument ptr ) as lo
     function = 0
 end function
 
+
+
+'function debug_goto( byval pData as DB2_DATA ptr, byval wszDescription as DWSTRING ) as long
+'    print "gdb2 search: "; wszDescription
+'    print "pData: "; pData
+'    if pData = 0 then return 0
+    
+'    with *pData
+'        print "deleted: "; .deleted
+'        print "pDoc: "; .pDoc
+'        print "nFiletype: "; .nFiletype
+'        print "fileName: "; .filename
+'        print "id: "; .id
+'        print "nLineStart: "; .nLineStart
+'        print "nLineEnd: "; .nLineEnd
+'        print "ParentName: "; .ParentName
+'        print "ElementName: "; .ElementName   
+'        print "ElementData: "; .ElementData
+'        print "Variabletype: "; .Variabletype
+'        print "TypeExtends: "; .TypeExtends
+'        print "VariableScope: "; .VariableScope
+'        print "GetSet: "; .GetSet
+'        print "isENUM: "; .isENUM
+'    end with
+    
+'    return 0
+'end function
+
+
 ' ========================================================================================
 ' Position editor to document/function/variable under the current caret position
 ' ========================================================================================
@@ -63,7 +92,7 @@ function OnCommand_SearchGotoDefinition( byval pDoc as clsDocument ptr ) as LRES
     
     dim pData as DB2_DATA ptr
     dim as DWSTRING wszFilename
-    dim as string sTypeName, sFunctionName, sLookFor, sTrigger
+    dim as string sTypeName, sSymbolName, sLookFor, sTrigger
     dim as long nLineNum = 0
     
     dim as hwnd hEdit = pDoc->hWndActiveScintilla
@@ -75,11 +104,11 @@ function OnCommand_SearchGotoDefinition( byval pDoc as clsDocument ptr ) as LRES
     else
 
         ' Determine the word at the current caret position if nothing is selected.
-        sFunctionName = trim(pDoc->GetSelText)
-        if len(sFunctionName) = 0 then sFunctionName = trim(pDoc->GetWord)
+        sSymbolName = trim(pDoc->GetSelText)
+        if len(sSymbolName) = 0 then sSymbolName = trim(pDoc->GetWord)
 
-        if len(sFunctionName) then
-            ' Determine if the function name is part of a class. This would be identified
+        if len(sSymbolName) then
+            ' Determine if the function name is part of a class/type. This would be identified
             ' by a preceeding "." or "->" symbol.  eg  pDoc->GetCurrentLineNumber
             dim as long curPos = SciExec( hEdit, SCI_GETCURRENTPOS, 0, 0)
             dim as long wordStartPos = SciExec( hEdit, SCI_WORDSTARTPOSITION, curPos, true)
@@ -90,36 +119,55 @@ function OnCommand_SearchGotoDefinition( byval pDoc as clsDocument ptr ) as LRES
                 pData = DereferenceLine( pDoc, sTrigger, wordStartPos - 1 )
                 if pData then
                     sTypeName = pData->VariableType
-                    sLookFor = sTypeName & "." & sFunctionName
+                    sLookFor = sTypeName & "." & sSymbolName
                     ' Set pData to null because it currently points at the TYPE definition and
-                    ' we the gdb2 searches below to actually find the sub/function.
+                    ' we use the gdb2 searches below to actually find the symbol definition.
                     pData = 0
                 end if
             end if   
 
+'cls
+'print "sSymbolName: "; sSymbolName, "sTypeName: "; sTypeName, "sLookFor: "; sLookFor
             ' Search the list of TYPE Function names
-            if pData = 0 then pData = gdb2.dbFindFunctionTYPE( sTypeName, sLookFor )
+            if pData = 0 then 
+                pData = gdb2.dbFindFunctionTYPE( sTypeName, sLookFor )
+'debug_goto( pData, "dbFindFunctionTYPE" )
+            end if
             ' Search the list of Function names
-            if pData = 0 then pData = gdb2.dbFindFunction( sFunctionName )
+            if pData = 0 then 
+                pData = gdb2.dbFindFunction( sSymbolName )
+'debug_goto( pData, "dbFindFunction" )
+            end if
             ' Search for variable definitions
-            if pData = 0 then pData = gdb2.dbFindVariable( "", sFunctionName )
+            if pData = 0 then 
+                pData = gdb2.dbFindVariable( "", sSymbolName )
+'debug_goto( pData, "dbFindVariable" )
+            end if
             ' Search for the TYPE definition
-            if pData = 0 then pData = gdb2.dbFindType( sTypeName )
+            if pData = 0 then 
+                pData = gdb2.dbFindType( sTypeName )
+'debug_goto( pData, "dbFindType #1" )
+            end if
+            ' Maybe just the name itself was clicked. eg. KEYBINDINGS_TYPE 
+            if pData = 0 then 
+                pData = gdb2.dbFindType( sSymbolName )
+'debug_goto( pData, "dbFindType #2" )
+            end if
         
         end if
         
         if pData = 0 then
-            MessageBox( HWND_FRMMAIN, L(224,"Sub/Function definition not found."), @wstr(APPNAME), MB_ICONWARNING)
+            MessageBox( HWND_FRMMAIN, L(224,"Symbol definition not found."), @wstr(APPNAME), MB_ICONWARNING)
             exit function
         end if
         wszFilename = pData->filename
         nLineNum = pData->nLineStart
-    
+
     end if
     
     ' Save our current position in case user invokes "Last Position" option,   
     OnCommand_SearchSaveLastPosition( pDoc )
-    OpenSelectedDocument( wszFilename, sFunctionName, nLineNum )
+    OpenSelectedDocument( wszFilename, sSymbolName, nLineNum )
 
     function = 0
 end function

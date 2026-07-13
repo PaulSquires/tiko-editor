@@ -34,7 +34,7 @@ type DB2_DATA
     pDoc          as clsDocument ptr     ' Code Document
     nFiletype     as integer             ' See list of DB2_FILETYPE above
     fileName      as DWSTRING            ' Filename of source file (needed for deleting).
-    id            as integer             ' See DB_* above for what type of record this is.
+    id            as integer             ' See DB2_* above for what type of record this is.
     nLineStart    as integer             ' Location in the file where starts
     nLineEnd      as integer             ' Location in the file where ends
     ParentName    as DWSTRING            ' Function name / TYPE Name  (blank if global)

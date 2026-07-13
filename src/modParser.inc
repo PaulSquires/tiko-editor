@@ -94,6 +94,7 @@ function ctxParser.ParseDIM( _
     dim as string text
     dim as boolean parenActive 
     dim as integer numStatements = 0   ' the number of "as" clauses
+    dim as integer nLinenum = this.lineNum  ' in case it changes before we can assign it to this.objectStartLine
 
     ' Get the tokens for this DIM statement up until the EOL
     do until this.GetToken() = false
@@ -136,6 +137,8 @@ function ctxParser.ParseDIM( _
     ' If we are parsing a DIM from global space then reset any sub/function data.
     if originFrom = DIMSCOPE.SCOPEGLOBAL then
         this.ResetFunctionValues()
+        this.objectStartLine = nLineNum
+        this.objectEndLine = nLineNum
     end if
 
     ' Dim Shared name1 As DataType, name2 As DataType

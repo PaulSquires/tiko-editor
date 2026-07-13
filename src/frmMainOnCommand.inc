@@ -275,7 +275,7 @@ function frmMain_OnCommand( _
         case IDM_REPLACENEXT, IDM_REPLACEPREV, IDM_REPLACEALL
             OnCommand_SearchReplaceActions( id, pDoc )
 
-        case IDM_DEFINITION:           OnCommand_SearchGotoDefinition( pDoc )
+        case IDM_GOTODEFINITION:       OnCommand_SearchGotoDefinition( pDoc )
         case IDM_LASTPOSITION:         OnCommand_SearchGotoLastPosition()
         case IDM_GOTONEXTCOMPILEERROR: OnCommand_SearchGotoCompileError( true )
         case IDM_GOTOPREVCOMPILEERROR: OnCommand_SearchGotoCompileError( false )

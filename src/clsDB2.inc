@@ -236,7 +236,7 @@ function clsDB2.dbSeek( _
         if pData->id = Action then
     
             if ( sLookFor = ucase(pData->ElementName) ) andalso _
-            ( sParentName = ucase(pData->ParentName) ) then
+               ( sParentName = ucase(pData->ParentName) ) then
 
             if len(sFilename) then
                 if ucase(pData->fileName) = ucase(sFilename) then 
