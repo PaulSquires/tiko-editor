@@ -932,7 +932,7 @@ end function
 ' within the file. This is needed by CodeTips (DereferenceLine) and for code navigation
 ' in the editor to set the functions ComboBox to the correct item.
 ' ========================================================================================
-function clsDocument.GetCurrentfunctionName( _
+function clsDocument.GetCurrentFunctionName( _
             byref sfunctionName as string, _
             byref nGetSet as ClassProperty _
             ) as long

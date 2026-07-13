@@ -15,6 +15,42 @@
 
 
 ' ========================================================================================
+' Calculate the RECT that holds the client coordinates of the scrollbar's vertical thumb
+' Returns True if RECT is not empty
+' ========================================================================================
+function frmSearchSymbolVScroll_calcVThumbRect() as boolean
+    dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMSEARCHSYMBOL)
+    if pWindow = 0 then exit function
+
+    ' calculate the vertical scrollbar in client coordinates
+    SetRectEmpty( @gSearchSymbolVScroll.rc )
+    
+    dim as long nTopIndex = SendMessage( gSearchSymbolVScroll.hListBox, LB_GETTOPINDEX, 0, 0 ) 
+
+    dim as RECT rc 
+    with gSearchSymbolVScroll
+        GetClientRect( gSearchSymbolVScroll.hListBox, @rc )
+        .listBoxHeight = rc.bottom - rc.top
+        .itemHeight = SendMessage( gSearchSymbolVScroll.hListBox, LB_GETITEMHEIGHT, 0, 0 )
+        .numItems = ListBox_GetCount( gSearchSymbolVScroll.hListBox ) 
+        .itemsPerPage = .listBoxHeight / .itemHeight
+        .thumbHeight = (.itemsPerPage / .numItems) * .listBoxHeight
+        GetClientRect( HWND_FRMSEARCHSYMBOL_VSCROLLBAR, @rc )
+        .rc.Left = rc.Left
+        .rc.top = rc.top + ((nTopIndex / .numItems) * .listBoxHeight)
+        .rc.Right = rc.right
+        .rc.bottom = .rc.top + .thumbHeight
+        if .numItems < .itemsPerPage then 
+            SetRectEmpty( @gSearchSymbolVScroll.rc )
+            return true
+        end if
+    end with
+
+    function = 0
+end function
+
+
+' ========================================================================================
 ' Fastest descending sort for this small, string-bearing udt array
 ' uses swap (bitwise exchange, no string realloc) instead of "="
 ' adaptive insertion sort: near-sorted input -> near O(n)
@@ -134,6 +170,8 @@ function frmSearchSymbol_DoSearch( byval hwndCtl as HWND ) as long
         ' Always redraw regardless of whether an exact match
         AfxRedrawWindow( hList )
     end if    
+    frmSearchSymbolVScroll_calcVThumbRect()
+    AfxRedrawWindow( HWND_FRMSEARCHSYMBOL_VSCROLLBAR )
 
     return 0
 end function
@@ -167,6 +205,108 @@ function frmSearchSymbol_GotoSymbol( byval idx as long ) as long
     
     SendMessage( HWND_FRMSEARCHSYMBOL, WM_CLOSE, 0, 0 )
     return 0
+end function
+
+
+' ========================================================================================
+' frmSearchSymbolVScroll Window procedure
+' ========================================================================================
+function frmSearchSymbolVScroll_WndProc( _
+            byval hwnd   as HWND, _
+            byval uMsg   as UINT, _
+            byval wParam as WPARAM, _
+            byval lParam as LPARAM _
+            ) as LRESULT
+
+    static as point prev_pt   ' screen pt.y cursor position
+
+    select case uMsg
+        case WM_NCDESTROY
+            ' delete the allocated memory for window
+            dim as CWindow ptr pWindow = AfxCWindowPtr(hwnd)
+            if pWindow then delete(pWindow)
+            HWND_FRMSEARCHSYMBOL_VSCROLLBAR = 0
+            return 0
+
+        case WM_LBUTTONDOWN
+            dim as point pt: GetCursorPos( @pt )
+            frmSearchSymbolVScroll_calcVThumbRect()   ' in client coordinates
+            dim as RECT rc = gSearchSymbolVScroll.rc ' covert copy to screen coordinates
+            MapWindowpoints( HWND_FRMSEARCHSYMBOL_VSCROLLBAR, HWND_DESKTOP, cast(point ptr, @rc), 2)
+            if PtInRect( @rc, pt ) then
+                prev_pt = pt
+                gApp.bDragActive = true
+                SetCapture( hwnd )
+            else
+                ' we have clicked on a PageUp or PageDn
+                dim as long nTopIndex = SendMessage( gSearchSymbolVScroll.hListBox, LB_GETTOPINDEX, 0, 0 ) 
+                if pt.y < rc.top then
+                    nTopIndex = max( nTopIndex - gSearchSymbolVScroll.itemsPerPage, 0 )
+                    SendMessage( gSearchSymbolVScroll.hListBox, LB_SETTOPINDEX, nTopIndex, 0 ) 
+                    frmSearchSymbolVScroll_calcVThumbRect()   ' in client coordinates
+                    AfxRedrawWindow( HWND_FRMSEARCHSYMBOL_VSCROLLBAR )
+                    AfxRedrawWindow( gSearchSymbolVScroll.hListBox )
+                elseif pt.y > rc.bottom then
+                    dim as long nMaxTopIndex = gSearchSymbolVScroll.numItems - gSearchSymbolVScroll.itemsPerPage
+                    nTopIndex = min( nTopIndex + gSearchSymbolVScroll.itemsPerPage, nMaxTopIndex )
+                    SendMessage( gSearchSymbolVScroll.hListBox, LB_SETTOPINDEX, nTopIndex, 0 ) 
+                    frmSearchSymbolVScroll_calcVThumbRect()   ' in client coordinates
+                    AfxRedrawWindow( HWND_FRMSEARCHSYMBOL_VSCROLLBAR )
+                    AfxRedrawWindow( gSearchSymbolVScroll.hListBox )
+                end if
+            end if
+            
+        case WM_MOUSEMOVE
+            if gApp.bDragActive then
+                dim as point pt: GetCursorPos( @pt )
+                if pt.y <> prev_pt.y then 
+                    dim as long delta = pt.y - prev_pt.y 
+                    dim as RECT rc: GetClientRect( HWND_FRMSEARCHSYMBOL_VSCROLLBAR, @rc )
+
+                    gSearchSymbolVScroll.rc.top = max(0, gSearchSymbolVScroll.rc.top + delta)
+                    gSearchSymbolVScroll.rc.top = min(gSearchSymbolVScroll.rc.top, rc.bottom-gSearchSymbolVScroll.thumbHeight)
+                    gSearchSymbolVScroll.rc.bottom = gSearchSymbolVScroll.rc.top + gSearchSymbolVScroll.thumbHeight
+
+                    prev_pt = pt
+                    
+                    dim as long nPrevTopIndex = SendMessage( gSearchSymbolVScroll.hListBox, LB_GETTOPINDEX, 0, 0 ) 
+                    dim as long nLastIndex = (gSearchSymbolVScroll.rc.bottom / rc.bottom) * gSearchSymbolVScroll.numItems
+                    dim as long nTopIndex = nLastIndex - gSearchSymbolVScroll.itemsPerPage
+                    if nTopIndex <> nPrevTopIndex then
+                        SendMessage( gSearchSymbolVScroll.hListBox, LB_SETTOPINDEX, nTopIndex, 0 ) 
+                        AfxRedrawWindow( gSearchSymbolVScroll.hListBox )
+                    end if   
+                    AfxRedrawWindow( HWND_FRMSEARCHSYMBOL_VSCROLLBAR )
+                end if
+            end if
+            
+        case WM_LBUTTONUP   
+            gApp.bDragActive = false
+            prev_pt.x = 0
+            prev_pt.y = 0
+            ReleaseCapture
+        
+        case WM_ERASEBKGND
+            return true
+            
+        case WM_PAINT
+            dim as clsDoubleBuffer b
+
+            b.BeginDoubleBuffer(hwnd)
+            b.SetBackColors( ghPanel.BackColorScrollBar, ghPanel.BackColorScrollBar )
+            b.PaintClientRect()
+            b.SetBackColors( ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
+            b.PaintRect( @gSearchSymbolVScroll.rc )
+
+            b.EndDoubleBuffer()
+
+            return 0
+
+    end select
+
+    ' for messages that we don't deal with
+    function = DefWindowProc( HWnd, uMsg, wParam, lParam )
+
 end function
 
 
@@ -645,6 +785,11 @@ function frmSearchSymbol_Show( byval hwndParent as HWND ) as LRESULT
     pWindow->Create( hwndParent, "", @frmSearchSymbol_WndProc, 0, 0, 0, 0, _
         WS_POPUP or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, WS_EX_TOOLWINDOW or WS_EX_TOPMOST )
 
+    dim pWindowPanel as CPanelWindow ptr = New CPanelWindow
+        HWND_FRMSEARCHSYMBOL_VSCROLLBAR = _
+            pWindowPanel->Create( HWND_FRMSEARCHSYMBOL, @frmSearchSymbolVScroll_WndProc, 0, 0, SCROLLBAR_WIDTH_PANEL, 0 )
+        pWindow->ClassStyle = CS_DBLCLKS
+
     ' we use RichEdit controls because regular Edit controls can not easily have
     ' their text vertically centered.
     gFind.hCueBannerFont = ghFont(GUIFONT_10)
@@ -722,10 +867,17 @@ function frmSearchSymbol_Show( byval hwndParent as HWND ) as LRESULT
     SendMessage( hCtlFind, EM_SETMARGINS, EC_LEFTMARGIN, MAKELPARAM(nMargin, 0))
     
     ' Reposition the ownerdrawn results listbox 
+    dim as long nVScrollWidth = pWindow->ScaleX(SCROLLBAR_WIDTH_PANEL)
     nTop = (nMargin + nHeight + nMargin)
     nHeight = (rc.bottom - nMargin - nMargin - nTop)
     SetWindowPos( hCtlList, 0, nMargin, nTop, _
-            nWidth - (nMargin * 2), nHeight, SWP_SHOWWINDOW or SWP_NOZORDER )
+            nWidth - nVScrollWidth - (nMargin * 2), nHeight, SWP_SHOWWINDOW or SWP_NOZORDER )
+    ' Reposition the vertical scrollbar
+    gSearchSymbolVScroll.hListBox = hCtlList
+    frmSearchSymbolVScroll_calcVThumbRect()
+    SetWindowPos( HWND_FRMSEARCHSYMBOL_VSCROLLBAR, 0, _
+        nMargin + AfxGetWindowWidth(gSearchSymbolVScroll.hListBox), nTop, _
+        nVScrollWidth, nHeight, SWP_NOZORDER or SWP_SHOWWINDOW )
     
     
     SetFocus( hCtlFind )    

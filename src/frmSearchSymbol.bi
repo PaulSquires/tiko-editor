@@ -27,6 +27,17 @@ type SEARCHSYMBOL_TYPE
     clrMask  as DWSTRING
 end type
 
+type SEARCHSYMBOL_VSCROLL_TYPE
+    hListBox      as HWND
+    listBoxHeight as long
+    numItems      as long 
+    itemHeight    as long
+    itemsPerPage  as long
+    thumbHeight   as long
+    rc            as RECT
+end type
+dim shared gSearchSymbolVScroll as SEARCHSYMBOL_VSCROLL_TYPE
+
 #define IDC_FRMSEARCHSYMBOL_TXTFIND       1000
 #define IDC_FRMSEARCHSYMBOL_LISTBOX       1001
 
