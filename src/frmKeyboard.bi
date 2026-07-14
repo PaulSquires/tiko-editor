@@ -31,7 +31,7 @@
 
 type KEYBINDINGS_TYPE
     idAction         as long         ' IDM_* message
-    wszMsgString     as DWSTRING        ' "IDM_SAVE", "IDM_SAVEAS", etc 
+    wszMsgString     as DWSTRING     ' "IDM_SAVE", "IDM_SAVEAS", etc 
     wszCategory      as DWSTRING
     wszDescription   as DWSTRING
     wszDefaultKeys   as DWSTRING
@@ -44,12 +44,15 @@ dim shared gKeysEdit as KEYBINDINGS_TYPE
 
 declare function frmKeyboard_Show( byval hWndParent as HWND ) as LRESULT
 declare function frmKeyboard_SaveKeyBindings( byval wszFilename as DWSTRING ) as long
-declare function frmKeyBoard_AddKeyBinding( _
+declare function frmKeyBoard_AddKeyBinding ( _
             byval wszCategory as DWSTRING, _
             byval idAction as long, _
             byval wszMsgString as DWSTRING, _
             byval wszDescription as DWSTRING, _
-            byval wszDefaultKeys as DWSTRING, _
+            byval wszDefaultKeys as DWSTRING _
+            ) as long
+declare function frmKeyBoard_AddKeyBinding_User ( _
+            byval wszMsgString as DWSTRING, _
             byval wszUserKeys as DWSTRING, _
             byval bDisabled as boolean _
             ) as long

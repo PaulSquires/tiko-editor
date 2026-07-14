@@ -311,6 +311,11 @@ function OnCommand_SearchFindActions( _
     elseif hFocus = hEdit then    
         dim as string sFindText = pDoc->GetSelText
         if len(sFindText) then 
+            ' Update the Find search term if the frmTopTabsFind pane is open.
+            if (sFindText <> gFind.txtFind) andalso IsWindowVisible(HWND_FRMMAIN_TOPTABSFIND) then
+                dim as HWND hCtl = GetDlgItem( HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND)
+                AfxSetWindowText( hCtl, sFindText )
+            end if
             gFind.foundCount = 0
             gFind.txtFind = sFindText
         end if
