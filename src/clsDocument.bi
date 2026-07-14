@@ -86,6 +86,13 @@ type SELECTION_INFO
     endpos          as long
 end type
 
+enum SPLIT_MODE
+    SplitNone       = 0
+    SplitLeftRight  = 1
+    SplitTopBottom  = 2
+end enum
+
+
 type clsDocument
     private:
     ' 2 Scintilla direct pointers to accommodate split editing

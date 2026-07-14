@@ -17,16 +17,6 @@
 #Define IDC_FRMMAIN_COMPILETIMER                    1001
 
 
-'' Last position in document. Used when "Last Position" menu option is selected.
-type LASTPOSITION_TYPE
-    pDoc       as clsDocument_ Ptr
-    nFirstLine as long     ' first visible line on screen
-    nPosition  as long     ' Position in Scintilla document where caret is positioned
-end type
-
-dim shared gLastPosition as LASTPOSITION_TYPE
-
-
 declare function frmMain_OpenProjectSafely( byval HWnd as HWnd, byref wszProjectFileName as const WString ) as Boolean
 declare function frmMain_CalcSplitRect( byval pDoc as clsDocument ptr ) as long
 declare function frmMain_GotoFile( byval pDoc as clsDocument ptr, byval nMenuId as long ) as long

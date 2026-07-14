@@ -1131,6 +1131,9 @@ function clsConfig.LoadSessionFile( byref wszSessionFile as wstring ) as boolean
     end if
     ' Clear any previous info from the Output windows
     frmOutput_ResetAllControls()
+    
+    ' Clear the gLastPosition() navigation array
+    erase gLastPosition
 
     dim pDoc as clsDocument ptr
     dim as DWSTRING wst, wKey, wData, wszFilename
@@ -1602,6 +1605,9 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
     frmOutput_UpdateToDoListview()
 
     this.wszLastActiveSession = gApp.ProjectFilename
+
+    ' Clear the gLastPosition() navigation array
+    erase gLastPosition
 
     frmMain_PositionWindows()
     frmMain_SetFocusToCurrentCodeWindow()

@@ -279,6 +279,15 @@ dim shared gFindInFiles as FINDREPLACE_TYPE
 dim shared ghFindTooltip as HWND
 
 
+'' Last position in document. Used when "Last Position" menu option is selected.
+type LASTPOSITION_TYPE
+    pDoc       as clsDocument Ptr
+    nFirstLine as long     ' first visible line on screen
+    nPosition  as long     ' Position in Scintilla document where caret is positioned
+end type
+dim shared gLastPosition(any) as LASTPOSITION_TYPE
+
+
 TYPE MENUBAR_ITEM
     wszText as DWSTRING
     rcItem  as RECT
@@ -317,11 +326,6 @@ const SCROLLBAR_HEIGHT = 12
 const SCROLLBAR_MINTHUMBSIZE = 30
 const SPLITSIZE = 4
 
-enum SPLIT_MODE
-    SplitNone       = 0
-    SplitLeftRight  = 1
-    SplitTopBottom  = 2
-end enum
 
 type TOPMENU_TYPE
     nParentID   as long

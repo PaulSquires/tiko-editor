@@ -59,9 +59,9 @@ dim shared as DWSTRING gwszDefaultToolchain = "FreeBASIC-1.10.1-winlibs-gcc-9.3.
 #include once "logging.bas"
 
 #include once "modScintilla.bi"
-#include once "modDeclares.bi"         
 
 #include once "clsDocument.bi"
+#include once "modDeclares.bi"         
 #include once "clsDoubleBuffer.bi"
 #include once "clsTopTabCtl.bi"
 #include once "clsDB2.bi"

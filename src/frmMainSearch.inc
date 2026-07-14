@@ -43,17 +43,64 @@ end function
 
 ' ========================================================================================
 ' Save the current editor position so we can return to it should the user invoke
-' the Last Position (Shift+F6) option. 
+' the Last Position option. 
 ' ========================================================================================
-function OnCommand_SearchSaveLastPosition( byval pDoc as clsDocument ptr ) as long
+function OnCommand_SearchPushLastPosition( byval pDoc as clsDocument ptr ) as long
+    ' Add this position to the end of the global gLastPosition() array. This will act
+    ' as a LIFO push/pop type of stack.
     if pDoc = 0 then exit function
-    dim as hwnd hEdit = pDoc->hWndActiveScintilla
-    gLastPosition.pDoc       = pDoc
-    gLastPosition.nFirstLine = SciExec( hEdit, SCI_GETFIRSTVISIBLELINE, 0, 0) 
-    gLastPosition.nPosition  = SciExec( hEdit, SCI_GETCURRENTPOS, 0, 0) 
+
+    dim as long ub = ubound(gLastPosition) + 1
+    redim preserve gLastPosition(ub)
+    
+    dim as HWND hEdit = pDoc->hWndActiveScintilla
+    gLastPosition(ub).pDoc       = pDoc
+    gLastPosition(ub).nFirstLine = SciExec( hEdit, SCI_GETFIRSTVISIBLELINE, 0, 0) 
+    gLastPosition(ub).nPosition  = SciExec( hEdit, SCI_GETCURRENTPOS, 0, 0) 
+    
     function = 0
 end function
 
+
+' ========================================================================================
+' Save the current editor position so we can return to it should the user invoke
+' the Last Position option. 
+' ========================================================================================
+function OnCommand_SearchPopLastPosition() as long
+     ' Attempt to retrieve the pDoc from the en dof the gLastPosition array which would
+     ' essentially be the LIFO entry. It is possible that pDoc no longer exists so we
+     ' need to test to ensure that is valid. If not valid, then we remove it from the array
+     ' and continue to test down the array until a good entry is found or until the
+     ' array is empty.
+     dim as long ub = ubound(gLastPosition)
+     if ub = -1 then return 0     ' no entries exist
+     
+     dim as clsDocument ptr pDoc = gLastPosition(ub).pDoc
+     
+    ' Test if the pDoc pointer is still valid. If it is not then recurse until
+    ' we find a good one.
+    if gApp.IsValidDocumentPointer( pDoc ) = false then
+        if ub = 0 then   
+            ' at the start of array so simply erase and exit testing
+            erase gLastPosition
+        else
+            ' remove this no longer valid array entry.
+            redim preserve gLastPosition( ub - 1 )   
+            OnCommand_SearchPopLastPosition()
+        end if    
+        return 0
+    end if
+
+    ' If we reach this point then the pDoc is valid so process it.
+    ' Position ourselves to the correct previous position.
+    OpenSelectedDocument( pDoc->DiskFilename )
+    SciExec( GetFocus, SCI_SETFIRSTVISIBLELINE, gLastPosition(ub).nFirstLine, 0) 
+    SciExec( GetFocus, SCI_GOTOPOS, gLastPosition(ub).nPosition, 0) 
+    ' Now pop it off the end of the array
+    redim preserve gLastPosition( ub - 1 )   
+    
+    function = 0
+end function
 
 
 'function debug_goto( byval pData as DB2_DATA ptr, byval wszDescription as DWSTRING ) as long
@@ -166,27 +213,24 @@ function OnCommand_SearchGotoDefinition( byval pDoc as clsDocument ptr ) as LRES
     end if
     
     ' Save our current position in case user invokes "Last Position" option,   
-    OnCommand_SearchSaveLastPosition( pDoc )
+    OnCommand_SearchPushLastPosition( pDoc )
     OpenSelectedDocument( wszFilename, sSymbolName, nLineNum )
 
     function = 0
 end function
+
 
 ' ========================================================================================
 ' Return to most previous position (invoked when "Last Position" is selected)
 ' ========================================================================================
 function OnCommand_SearchGotoLastPosition() as LRESULT
 
-    ' Is the pDoc pointer still valid
-    if gLastPosition.pDoc = 0 then exit function
+    ' Attempt to go back to previous position when "Last Position" option is chosen.   
+    OnCommand_SearchPopLastPosition()
 
-    ' Position ourselves to the correct previous position.
-    OpenSelectedDocument( gLastPosition.pDoc->DiskFilename )
-    SciExec( GetFocus, SCI_SETFIRSTVISIBLELINE, gLastPosition.nFirstLine, 0) 
-    SciExec( GetFocus, SCI_GOTOPOS, gLastPosition.nPosition, 0) 
-    
     function = 0
 end function
+
 
 ' ========================================================================================
 ' Search Symbol popup dialog
@@ -195,6 +239,7 @@ function OnCommand_SearchSymbol() as LRESULT
     frmSearchSymbol_Show( HWND_FRMMAIN )
     function = 0
 end function
+
 
 ' ========================================================================================
 ' Search action Find
@@ -238,6 +283,7 @@ function OnCommand_SearchReplaceDialog() as LRESULT
     
     function = 0
 end function
+
 
 ' ========================================================================================
 ' Search action Find in Project
@@ -392,9 +438,7 @@ function OnCommand_SearchGotoFile( _
     if pDocFile = pDoc then exit function
     
     ' Save our current position in case user invokes "Last Position" option,   
-    gLastPosition.pDoc       = pDoc
-    gLastPosition.nFirstLine = SciExec( hEdit, SCI_GETFIRSTVISIBLELINE, 0, 0) 
-    gLastPosition.nPosition  = SciExec( hEdit, SCI_GETCURRENTPOS, 0, 0) 
+    OnCommand_SearchPushLastPosition( pDoc )
 
     OpenSelectedDocument( wszFilename )
     
