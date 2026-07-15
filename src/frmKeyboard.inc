@@ -53,9 +53,9 @@ function frmKeyBoard_AddKeyBinding ( _
     redim preserve gKeys(ub) as KEYBINDINGS_TYPE
     
     with gKeys(ub)
+        .wszCategory = wszCategory
         .idAction = idAction
         .wszMsgString = wszMsgString
-        .wszCategory = wszCategory
         .wszDescription = wszDescription
         .wszDefaultKeys = wszDefaultKeys
     end with
@@ -82,7 +82,7 @@ function frmKeyBoard_AddKeyBinding_User ( _
             exit for
         end if
     next
-    
+
     if nFoundIdx <> -1 then
         with gKeys(nFoundIdx)
             ' Update the entry with any user defined keybinding or if the user has
@@ -99,7 +99,8 @@ end function
 ' ' Create the default keyboard bindings / shortcut mappings
 ' ========================================================================================
 function frmKeyboard_CreateDefaultKeyBindings() as long
-    redim gKeys(any) as KEYBINDINGS_TYPE
+    erase gKeys
+
     '' FILE MENU
     frmKeyBoard_AddKeyBinding( "File", IDM_FILENEW, "IDM_FILENEW", "New file", "Ctrl+N" )
     frmKeyBoard_AddKeyBinding( "File", IDM_FILEOPEN, "IDM_FILEOPEN", "Open file(s)", "Ctrl+O" )
@@ -251,6 +252,7 @@ function frmKeyboard_CreateDefaultKeyBindings() as long
             end if   
             
             dim as DWSTRING wszUserKeys = trim(AfxStrParse(wst, 2, ":"))
+
             frmKeyBoard_AddKeyBinding_User( wszMsgString, wszUserKeys, bDisabled )
         Loop
         pStream.Close
@@ -679,7 +681,7 @@ function frmKeyboard_WndProc( _
             ListView_SelectItem( HWND_FRMKEYBOARD_LISTVIEW, nCurSel )
             SetFocus( HWND_FRMKEYBOARD_LISTVIEW )
 
-    End Select
+    end select
     
     ' for messages that we don't deal with
     function = DefWindowProc( hwnd, uMsg, wParam, lParam )

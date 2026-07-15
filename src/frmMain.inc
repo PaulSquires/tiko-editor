@@ -1686,6 +1686,9 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
         ' Handle ENTER, TAB keys for active Find/Replace
         if handleKeysFindReplace(uMsg) then continue do
 
+'        ' Handle ENTER for Scintilla control (beautify current line)
+'        if handleScintillaENTER(uMsg) then continue do
+
         ' Processes accelerator keys for menu commands
         if (pWindow->AccelHandle = 0) orelse (TranslateAccelerator(pWindow->hWindow, pWindow->AccelHandle, @uMsg) = 0) then
          if (ghAccelUserTools = 0) orelse (TranslateAccelerator(pWindow->hWindow, ghAccelUserTools, @uMsg) = 0) then 

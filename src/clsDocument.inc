@@ -359,7 +359,7 @@ function clsDocument.FindReplace( _
 
     ' return Value: new position if successful; -1 if text not found.
     dim as any ptr pSci = this.GetActiveScintillaPtr()
-    dim as long findFlags = SCFIND_MATCHcase or SCFIND_WHOLEWORD
+    dim as long findFlags = SCFIND_MATCHCASE or SCFIND_WHOLEWORD
     dim as long startPos  = SciMsg( pSci, SCI_GETCURRENTPOS, 0, 0)
     dim as long endPos    = SciMsg( pSci, SCI_GETTEXTLENGTH, 0, 0)
     dim as long newPos
@@ -1025,7 +1025,7 @@ function clsDocument.GotoNextFunction() as long
     dim as long newLine  = curLine
     
     for i as long = curLine + 1 to maxLines
-        if this.IsfunctionLine( i ) > 0 then
+        if this.IsFunctionLine( i ) > 0 then
             newLine = i
             exit for
         end if

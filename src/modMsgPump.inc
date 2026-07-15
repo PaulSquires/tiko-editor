@@ -354,3 +354,38 @@ function handleKeysFindReplace( byval uMsg as MSG ) as boolean
 end function
 
 
+'function handleScintillaENTER( byval uMsg as MSG ) as boolean
+'    ' Catch any ENTER key destined for the Scintilla editor and beautify the
+'    ' current text line. We replace the line with our new code and then allow
+'    ' the ENTER key to continue to pass on to Scintilla where it will do the
+'    ' insertion of the ENTER character. Scintilla will then fire SCN_CHARADDED
+'    ' where we do additional things like AutoIndent.
+'    dim pDoc as clsDocument ptr = gApp.GetDocumentPtrByWindow( uMsg.HWnd )
+'    if pDoc = 0 then return false
+
+'    dim as HWND hEdit = pDoc->hWndActiveScintilla   
+
+'    if (uMsg.HWnd = hEdit) andalso (uMsg.message = WM_KEYDOWN) andalso (uMsg.wParam = VK_RETURN) then
+'        dim as long nCurLine = pDoc->GetCurrentLineNumber()
+'        dim as string strLine = pDoc->GetLine(nCurLine)  
+        
+        
+'        ' CALL YOUR FORMATTING ROUTINE HERE AND RETURN THE NEW LINE
+'        ' Beautify the current line 
+        
+'        'dim as string strNewLine ='AddSpacesAroundOperators( strLine )
+        
+        
+'        ' Replace the old line with our new line (don't use pDoc->SetLine)
+'        dim as long lineStart = SendMessage( hEdit, SCI_POSITIONFROMLINE, nCurLine, 0)
+'        dim as long lineEnd = SendMessage( hEdit, SCI_GETLINEENDPOSITION, nCurLine, 0)
+'        SendMessage( hEdit, SCI_SETSELECTIONSTART, lineStart, 0) 
+'        SendMessage( hEdit, SCI_SETSELECTIONEND, lineEnd, 0)
+'        SendMessage( hEdit, SCI_REPLACESEL, 0, cast(LPARAM, strptr(strNewLine)) )
+
+'    end if 
+    
+'     ' we want our message to continue so return FALSE
+'    return false
+'end function
+   

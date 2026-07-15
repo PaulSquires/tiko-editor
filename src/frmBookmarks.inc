@@ -443,8 +443,14 @@ function frmBookmarksListBox_SubclassProc ( _
                     dim as DWSTRING wszDiskFilename
                     if pDoc then wszDiskFilename = pDoc->DiskFilename
                     OpenSelectedDocument( wszDiskFilename, "", nLineNum )
+                    frmMain_SetFocusToCurrentCodeWindow()
                 end if
             end if
+
+
+        case WM_LBUTTONDBLCLK
+            return 0
+
 
         case WM_ERASEBKGND
             ' if the number of lines in the listbox maybe less than the number per page then

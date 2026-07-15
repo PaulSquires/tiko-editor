@@ -548,8 +548,14 @@ function frmExplorerListBox_SubclassProc ( _
                     dim as DWSTRING wszFilename
                     dim as clsDocument ptr pDoc = cast(clsDocument ptr, ListBox_GetItemData( hWin, idx ))
                     if pDoc then
-                        wszFilename = pDoc->DiskFilename
-                        OpenSelectedDocument( wszFilename )
+                        ' If the pDoc was already in an open tab then we would have already switched
+                        ' to it during the WM_LBUTTONUP message handler. Check here to see if we are 
+                        ' indeed on that that, otherwise we will open it now.
+                        if pDoc <> gTTabCtl.GetActiveDocumentPtr() then
+                            wszFilename = pDoc->DiskFilename
+                            OpenSelectedDocument( wszFilename )
+                        end if
+                        frmMain_SetFocusToCurrentCodeWindow()
                     end if   
                 end if
             end if

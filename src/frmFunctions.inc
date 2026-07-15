@@ -449,7 +449,11 @@ function frmFunctionsListBox_SubclassProc ( _
             AfxRedrawWindow(hWin)   
             
         case WM_LBUTTONUP
-            ' determine if we clicked on a function name or a node header
+            ' We must prevent double clicks on the FunctionList because it screws up the
+            ' navigation. The secondWM_LBUTTONUP message will load whatever new node displayed
+            ' after the initial first WM_LBUTTONUP message completed which would be different
+            ' because OpenSelectedDocument reloads the list.
+            ' Determine if we clicked on a function name or a node header
             dim as RECT rc
             dim as long idx = Listbox_ItemFromPoint( hWin, GET_X_LPARAM(_lParam), GET_Y_LPARAM(_lParam)) 
             ' The return value contains the index of the nearest item in the LOWORD. The HIWORD is zero 
@@ -470,10 +474,15 @@ function frmFunctionsListBox_SubclassProc ( _
                     dim as DWSTRING wszDiskFilename 
                     if pDoc then wszDiskFilename = pDoc->DiskFilename
                     OpenSelectedDocument( wszDiskFilename, wszFunctionName, nLineNum )
+                    frmMain_SetFocusToCurrentCodeWindow()
                 end if
             end if
 
                                     
+        case WM_LBUTTONDBLCLK
+            return 0
+
+
         case WM_ERASEBKGND
             ' if the number of lines in the listbox maybe less than the number per page then 
             ' calculate from last item to bottom of listbox, otherwise calculate based on
