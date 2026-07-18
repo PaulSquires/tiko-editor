@@ -16,6 +16,7 @@
 
 #define IDC_FRMEXPLORER_LISTBOX       1000
 
-declare function frmExplorer_Show( byval hWndParent as HWND ) as LRESULT
-declare function LoadExplorerFiles() as long
+declare function frmExplorer_UnSelectListBox() as long
 declare function frmExplorer_SelectItemData( byval pDoc as clsDocument ptr ) as boolean
+declare function LoadExplorerFiles() as long
+declare function frmExplorer_Show( byval hWndParent as HWND ) as LRESULT

@@ -20,6 +20,7 @@ type FUNCTION_NODE_TYPE
     wszFunctionName as DWSTRING
     wszPrototype    as DWSTRING      ' the sub/function parameters
     nLineNumber     as long
+    pDoc            as clsDocument ptr
 end type
 
 enum FunctionsDisplayState

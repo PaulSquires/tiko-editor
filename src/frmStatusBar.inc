@@ -15,319 +15,120 @@
 
 
 ' ========================================================================================
-' Position all child windows. Called manually and/or by WM_SIZE
+' frmStatusBar_PaintCallback
 ' ========================================================================================
-function frmStatusBar_PositionWindows() as LRESULT
+sub frmStatusBar_PaintCallback( byval p as CSTATUSBAR_PAINTINFO ptr )
 
-    dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN_STATUSBAR)
-    if pWindow = 0 then exit function
+    ' Panel state: hot > normal. (No selected state -- a statusbar has no selection.)
+    ' Set default fore and back colors
+    dim as COLORREF backclr = ghStatusBar.BackColor
+    dim as COLORREF foreclr = ghStatusBar.ForeColor
     
-    ' Get the entire client area
-    dim as Rect rc
-    GetClientRect(HWND_FRMMAIN_STATUSBAR, @rc)
-
-    dim as long i = 0
-    dim as long nLeft = rc.left
-    dim as long nSpacer = pWindow->ScaleX(4)
-    dim as long nPadding = 10   ' 5 left 5 right
-    
-    ' the text for each panel is set in frmMain_SetStatusbar which then calls this
-    ' function to determine proper sizing and placement.
-    for i as long = lbound(gSBPanels) to ubound(gSBPanels)
-        SetRectEmpty( @gSBPanels(i).rc )
-    next
-    if gTTabCtl.GetActiveDocumentPtr() = 0 then
-        AfxRedrawWindow( HWND_FRMMAIN_STATUSBAR )
-        exit function
+    if (p->isHot = true) andalso (p->itemID <> COMPILE_STATUS_PANEL) then
+        backclr = ghStatusBar.BackColorHot
+        foreclr = ghStatusBar.ForeColorHot
     end if
+    p->b->SetForeColors(foreclr, foreclr)
+    p->b->SetBackColors(backclr, backclr)
 
-    '''' LEFT ALIGNED STATUSBAR PANELS ''''
-    i = GOTO_PANEL  ' Ln 23, Col 20
-    gSBPanels(i).rc.Left   = nLeft
-    gSBPanels(i).rc.top    = rc.top
-    gSBPanels(i).rc.right  = nLeft + _
-        pWindow->ScaleX( getTextWidth(HWND_FRMMAIN_STATUSBAR, gSBPanels(i).wszText, GUIFONT_9) + nPadding )
-    gSBPanels(i).rc.bottom = rc.bottom
-    gSBPanels(i).nID       = IDM_GOTOLINE
-    nLeft = gSBPanels(i).rc.right + nSpacer
+    ' Paint the entire panel background
+    p->b->PaintRect( @p->rc )
 
-    '''' RIGHT ALIGNED STATUSBAR PANELS ''''
-    grcGripper = rc
-    grcGripper.top = (rc.bottom-rc.top) / 2
-    grcGripper.left = rc.right - (nSpacer * 4)
-    
-    i = CRLF_PANEL  ' CRLF 
-    dim as long nRight = grcGripper.left
-    gSBPanels(i).rc.Left   = nRight - _
-        pWindow->ScaleX( getTextWidth(HWND_FRMMAIN_STATUSBAR, gSBPanels(i).wszText, GUIFONT_9) + nPadding )
-    gSBPanels(i).rc.top    = rc.top
-    gSBPanels(i).rc.right  = nRight
-    gSBPanels(i).rc.bottom = rc.bottom
-    gSBPanels(i).nID       = IDM_LINEENDINGS
-    nRight = gSBPanels(i).rc.left - nSpacer
+    dim as RECT rcText = p->rc
 
-    i = UTF_PANEL  ' UTF-8
-    gSBPanels(i).rc.Left   = nRight - _
-        pWindow->ScaleX( getTextWidth(HWND_FRMMAIN_STATUSBAR, gSBPanels(i).wszText, GUIFONT_9) + nPadding )
-    gSBPanels(i).rc.top    = rc.top
-    gSBPanels(i).rc.right  = nRight 
-    gSBPanels(i).rc.bottom = rc.bottom
-    gSBPanels(i).nID       = IDM_FILEENCODING
-    nRight = gSBPanels(i).rc.left - nSpacer
+    ' Display the caption text
+    ' Default to using the GUI font. We use the Symbol font only for the icons
+    p->b->SetFont( ghFont(GUIFONT_9) )
+    if (p->itemID = BUILD_DIALOG_PANEL) orelse (p->itemID = THEMES_DIALOG_PANEL) then
+        p->b->SetFont( ghFont(SYMBOLFONT_9) )
+    end if
+    p->b->PaintText( p->wszCaption, @rcText, DT_CENTER )
 
-    i = SPACES_PANEL  ' Spaces
-    gSBPanels(i).rc.Left   = nRight - _
-        pWindow->ScaleX( getTextWidth(HWND_FRMMAIN_STATUSBAR, gSBPanels(i).wszText, GUIFONT_9) + nPadding )
-    gSBPanels(i).rc.top    = rc.top
-    gSBPanels(i).rc.right  = nRight
-    gSBPanels(i).rc.bottom = rc.bottom
-    gSBPanels(i).nID       = IDM_SPACES
-    nRight = gSBPanels(i).rc.left - nSpacer
 
-    i = BUILD_POPUP_PANEL  ' Build Configuration
-    gSBPanels(i).rc.Left   = nRight - _
-        pWindow->ScaleX( getTextWidth(HWND_FRMMAIN_STATUSBAR, gSBPanels(i).wszText, GUIFONT_9) + nPadding )
-    gSBPanels(i).rc.top    = rc.top
-    gSBPanels(i).rc.right  = nRight
-    gSBPanels(i).rc.bottom = rc.bottom
-    gSBPanels(i).nID       = IDM_BUILDCONFIG_POPUP
-    nRight = gSBPanels(i).rc.left - nSpacer
+    ' if this is the compile result panel then display the green/success or red/failure "icon"
+    ' or a Spinner if compiling is in progress. 
+    if p->itemID = COMPILE_STATUS_PANEL then
+        if (gApp.IsProjectLoading = false) andalso (gApp.IsFileLoading = false) then
+            dim as DWSTRING wszText 
+            
+            ' Calculate where the spinner or good/fail compile will display to the 
+            ' left of the panel text.
+            if p->wszCaption = "" then gApp.hIconPanel = 0
+            dim as COLORREF clr = ghStatusBar.BackColor
+            if gApp.hIconPanel = ghIconGood then clr = ghGeneral.iconsuccess
+            if gApp.hIconPanel = ghIconBad then clr = ghGeneral.iconfail
+            p->b->SetForeColors( clr, ghStatusBar.ForeColorHot )
+            p->b->SetBackColors( ghStatusBar.BackColor, ghStatusBar.BackColorHot )
 
-    i = BUILD_DIALOG_PANEL  ' Build Configuration dialog
-    gSBPanels(i).rc.Left   = nRight - _
-        pWindow->ScaleX( getTextWidth(HWND_FRMMAIN_STATUSBAR, gSBPanels(i).wszText, GUIFONT_9) + nPadding )
-    gSBPanels(i).rc.top    = rc.top
-    gSBPanels(i).rc.right  = nRight
-    gSBPanels(i).rc.bottom = rc.bottom
-    gSBPanels(i).nID       = IDM_BUILDCONFIG
-    nRight = gSBPanels(i).rc.left - nSpacer
+            dim as long txtWidth = getTextWidth( HWND_FRMMAIN_STATUSBAR, p->wszCaption, GUIFONT_9 ) 
+            dim as RECT rcIcon = p->rc
+            dim as long halfWidth = (rcIcon.right-rcIcon.left) / 2
+            rcIcon.right = rcIcon.left + halfWidth - AfxScaleX((txtWidth / 2))
+            rcIcon.left = rcIcon.right - AfxScaleX(16) 
+            wszText = wszIconCompileResult    ' circle
+            
+            ' If a Spinner is active then that will take precedence over the good/bad compile icon.
+            if (gApp.bShowSpinner = true) then
+                p->b->SetForeColors( ghStatusBar.ForeColor, ghStatusBar.ForeColorHot )
+                wszText = @spinner(gApp.SpinnerCurrentFrame)
+                p->b->SetBackColors( ghStatusBar.BackColor, ghStatusBar.BackColorHot )
+                ' Position the spinner a bit better
+                rcIcon.top -= AfxScaleY(4)
+                rcIcon.left -= AfxScaleY(2)
+            end if
 
-    i = THEMES_DIALOG_PANEL  ' Themes/Colors dialog
-    gSBPanels(i).rc.Left   = nRight - _
-        pWindow->ScaleX( getTextWidth(HWND_FRMMAIN_STATUSBAR, gSBPanels(i).wszText, GUIFONT_9) + nPadding )
-    gSBPanels(i).rc.top    = rc.top
-    gSBPanels(i).rc.right  = nRight
-    gSBPanels(i).rc.bottom = rc.bottom
-    gSBPanels(i).nID       = IDM_THEMES
-    nRight = gSBPanels(i).rc.left - nSpacer
+            p->b->SetFont( ghFont(SYMBOLFONT_9) )
+            p->b->PaintText( wszText, @rcIcon, DT_CENTER )
+        end if
 
-    '''' THE MESSAGES PANEL FILLS THE REMAINING AVAILABLE SPACE ''''
-    i = COMPILE_STATUS_PANEL  ' Compile status and error messages
-    gSBPanels(i).rc.Left   = gSBPanels(0).rc.right
-    gSBPanels(i).rc.top    = rc.top
-    gSBPanels(i).rc.right  = gSBPanels(2).rc.Left
-    gSBPanels(i).rc.bottom = rc.bottom
-    gSBPanels(i).nID       = IDM_VIEWOUTPUT
+    end if   
 
-    AfxRedrawWindow( HWND_FRMMAIN_STATUSBAR )
-    function = 0
+end sub
+
+
+' ========================================================================================
+' frmStatusBar_MessageCallback
+' ========================================================================================
+function frmStatusBar_MessageCallback( byval m as CSTATUSBAR_MESSAGEINFO ptr ) as boolean
+
+    select case m->uMsg
+
+        case WM_MOUSEHOVER
+            ' Tooltips are on-demand via the tooltip frmStatusBar_TooltipCallback; nothing to
+            ' do here for hover.
+            return true
+
+        case WM_LBUTTONUP
+            ' No capture is taken, so an up only arrives while the cursor is still over the
+            ' control: idx = -1 means "released over empty bar area". We simply need to 
+            ' retrieve the command message stored in itemData and post it to frmMain.
+            if m->idx <> -1 then
+                dim as integer idMessage = CStatusBar_GetItemData(m->hStatusBar, m->idx)
+                PostMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(idMessage, 0), 0 )
+            end if
+            return false
+
+    end select
+
+    ' Return false to allow to fall to the default windows handler
+    return false
 end function
 
 
 ' ========================================================================================
-' Process WM_SIZE message for window/dialog: frmStatusBar
+' frmStatusBar_TooltipCallback  -- per-panel tooltip text, resolved on demand
 ' ========================================================================================
-function frmStatusBar_OnSize( _
-            byval hwnd as HWND, _
-            byval state as UINT, _
-            byval cx as long, _
-            byval cy as long _
-            ) as LRESULT
-    if state <> SIZE_MINIMIZED then
-        frmStatusBar_PositionWindows()
-    end if
-    function = 0
-end function
-
-
-' ========================================================================================
-' frmStatusBar Window procedure
-' ========================================================================================
-function frmStatusBar_WndProc( _
-            byval hwnd   as HWND, _
-            byval uMsg   as UINT, _
-            byval wParam as WPARAM, _
-            byval lParam as LPARAM _
-            ) as LRESULT
-
-    static as long prev_idxHot = -1
-    static as long curr_idxHot = -1
-    static as boolean resizing
-    static as point prev_pt
-
-    static as HWND hTooltip
-    if (uMsg = WM_DESTROY) andalso (IsWindow(hToolTip)) then DestroyWindow(hToolTip)
+function frmStatusBar_TooltipCallback( byval hCtl as HWND, byval idx as integer ) as DWSTRING
+    dim as DWSTRING wszTooltip = ""
     
-    Select Case uMsg
-        HANDLE_MSG (hwnd, WM_SIZE, frmStatusBar_OnSize)
-    
-    case WM_NCDESTROY
-        dim pWindow as CWindow ptr = AfxCWindowPtr(hwnd)
-        if pWindow = 0 then delete(pWindow)
-        HWND_FRMMAIN_STATUSBAR = 0
-        
-    case WM_ERASEBKGND
-        return true
+    ' Only some of the panels actually have tooltips
+    select case idx 
+        case COMPILE_STATUS_PANEL:   wszTooltip = L(251,"View Output Window")
+        case THEMES_DIALOG_PANEL:    wszTooltip = L(111,"Themes and Fonts")
+        case BUILD_DIALOG_PANEL:     wszTooltip = L(277,"Build Configurations") & "..."
+    end select
 
-    case WM_LBUTTONDOWN
-        SetCapture( hwnd )
-        
-    case WM_MOUSEMOVE
-        dim tme as TrackMouseEvent
-        tme.cbSize = sizeof(TrackMouseEvent)
-        tme.dwFlags = TME_HOVER or TME_LEAVE
-        tme.hwndTrack = hwnd
-        tme.dwHoverTime = 20    ' HOVER_DEFAULT is 500
-        TrackMouseEvent(@tme) 
-
-        if IsWindow(hTooltip) = 0 then 
-            hTooltip = AfxAddTooltip( hwnd, "", false, false )
-        end if
-        
-        dim as point pt: GetCursorPos( @pt )
-        
-        ' Move the tooltip into place
-        dim as DWSTRING wszTooltip
-        if IsMouseOverRECT(hwnd,  gSBPanels(BUILD_DIALOG_PANEL).rc ) then 
-            wszTooltip = L(277,"Build Configurations") & "..."
-        end if
-        if IsMouseOverRECT(hwnd,  gSBPanels(THEMES_DIALOG_PANEL).rc ) then 
-            wszTooltip = L(111,"Themes and Fonts")
-        end if
-        if IsMouseOverRECT(hwnd,  gSBPanels(COMPILE_STATUS_PANEL).rc ) then 
-            wszTooltip = L(251,"View Output Window")
-        end if
-        if (wszTooltip = "") andalso (IsWindow(hToolTip)) then 
-            DestroyWindow(hToolTip)
-        else
-            dim as DWSTRING wszCurTooltip = AfxGetWindowText(hTooltip)
-            if wszTooltip <> wszCurTooltip then
-                AfxSetTooltipText( hTooltip, hwnd, wszTooltip )
-            end if    
-        end if
-        
-        SetWindowPos( hTooltip, 0, _
-                        pt.x + AfxScaleX(12), pt.y + AfxScaleY(16), _
-                        0, 0, SWP_NOZORDER or SWP_NOSIZE or SWP_NOACTIVATE )
-
-        ' Are we over one of the status bar panels
-        MapWindowPoints( HWND_DESKTOP, hwnd, cast( point ptr, @pt ), 1 )
-        curr_idxHot = -1
-        for i as long = lbound(gSBPanels) to ubound(gSBPanels)
-            if PtInRect( @gSBPanels(i).rc, pt ) then
-                ' Only make hot panels that have actual text
-                if len(gSBPanels(i).wszText) then
-                    curr_idxHot = i
-                    gSBPanels(i).isHot = true
-                end if   
-            else   
-                gSBPanels(i).isHot = false
-            end if
-        next
-        if curr_idxHot <> prev_idxHot then
-            AfxRedrawWindow( hwnd )
-            prev_idxHot = curr_idxHot 
-        end if
-
-            
-    case WM_MOUSELEAVE
-        for i as long = lbound(gSBPanels) to ubound(gSBPanels)
-            gSBPanels(i).isHot = false
-        next
-        prev_idxHot = -1
-        curr_idxHot = -1
-        AfxRedrawWindow( hwnd )
-
-
-    case WM_LBUTTONUP
-        dim as point pt: GetCursorPos( @pt )
-        MapWindowPoints( HWND_DESKTOP, hwnd, cast( point ptr, @pt ), 1 )
-        SetCursor( LoadCursor( null, IDC_ARROW ))
-        ReleaseCapture
-        resizing = false
-        ' Are we over one of the status bar panels
-        for i as long = lbound(gSBPanels) to ubound(gSBPanels)
-            if PtInRect( @gSBPanels(i).rc, pt ) then
-                PostMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(gSBPanels(i).nID, 0), 0 )
-                exit for
-            end if
-        next   
-
-
-    case WM_PAINT
-        dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN_STATUSBAR)
-        dim as clsDoubleBuffer b
-        
-        b.BeginDoubleBuffer(hwnd)
-
-        ' Set default fore and back colors
-        b.SetForeColors( ghStatusBar.ForeColor, ghStatusBar.ForeColorHot )
-        b.SetBackColors( ghStatusBar.BackColor, ghStatusBar.BackColorHot )
-
-        ' Clear the entire back client area
-        b.PaintClientRect()
-      
-        ' paint the panels
-        for i as long = lbound(gSBPanels) to ubound(gSBPanels)
-            if (i = BUILD_DIALOG_PANEL) orelse (i = THEMES_DIALOG_PANEL) then
-                b.SetFont( SYMBOLFONT_9 )
-            else
-                b.SetFont( GUIFONT_9 )
-            end if
-
-            b.SetForeColors( ghStatusBar.ForeColor, ghStatusBar.ForeColorHot )
-            b.SetBackColors( ghStatusBar.BackColor, ghStatusBar.BackColorHot )
-
-            dim as boolean bHitTest = iif( i = COMPILE_STATUS_PANEL, false, true )
-            b.PaintRect(@gSBPanels(i).rc, bHitTest)
-            b.PaintText( gSBPanels(i).wszText, @gSBPanels(i).rc, DT_CENTER, bHitTest )
-            
-            ' if this is the compile result panel then display the green/success or red/failure "icon"
-            ' also check if Spinner is active. 
-            if i = COMPILE_STATUS_PANEL then
-                if (gApp.IsProjectLoading = false) andalso (gApp.IsFileLoading = false) then
-                    if pWindow then
-                        if len(gSBPanels(i).wszText) = 0 then gApp.hIconPanel = 0
-                        dim as COLORREF clr = ghStatusBar.BackColor
-                        if gApp.hIconPanel = ghIconGood then clr = ghGeneral.iconsuccess
-                        if gApp.hIconPanel = ghIconBad then clr = ghGeneral.iconfail
-                        b.SetForeColors( clr, ghStatusBar.ForeColorHot )
-                        b.SetBackColors( ghStatusBar.BackColor, ghStatusBar.BackColorHot )
-                        dim as long txtWidth = getTextWidth( HWND_FRMMAIN_STATUSBAR, gSBPanels(i).wszText, GUIFONT_9 ) 
-                        dim as RECT rcBitmap = gSBPanels(i).rc
-                        dim as long halfWidth = (rcBitmap.right-rcBitmap.left) / 2
-                        rcBitmap.right = rcBitmap.left + halfWidth - pWindow->ScaleX((txtWidth / 2))
-                        rcBitmap.left = rcBitmap.right - pWindow->ScaleX(16)
-                        dim as DWSTRING wszText = wszIconCompileResult
-                        
-                        ' If a Spinner is active then that will take precedence over the good/bad compile icon.
-                        if gApp.bShowSpinner then
-                            b.SetForeColors( ghStatusBar.ForeColor, ghStatusBar.ForeColorHot )
-                            b.SetBackColors( ghStatusBar.BackColor, ghStatusBar.BackColorHot )
-                            wszText = @spinner(gApp.SpinnerCurrentFrame)
-                            rcBitmap.top = rcBitmap.top - pWindow->ScaleY(4)
-                            rcBitmap.left = rcBitmap.left - pWindow->ScaleY(2)
-                        end if
-                    
-                        b.SetFont( SYMBOLFONT_9 )
-                        b.PaintText( wszText, @rcBitmap, DT_CENTER )
-                    end if
-                end if
-            end if   
-        next
-                                
-        b.SetPenColor( ghEditor.Divider )
-        b.PaintLine( 1, b.rcClient.left, b.rcClient.top, b.rcClient.right, b.rcClient.top )
-
-        b.EndDoubleBuffer()
-
-        return 0
-        
-    end Select
-    
-    ' for messages that we don't deal with
-    function = DefWindowProc(hwnd, uMsg, wParam, lParam)
-
+    return wszTooltip
 end function
 
 
@@ -336,18 +137,36 @@ end function
 ' ========================================================================================
 function frmStatusBar_Show( byval hwndParent as HWND ) as LRESULT
 
-    '  Create the main window and child controls
-    dim pWindow as CPanelWindow ptr = New CPanelWindow
-
-    HWND_FRMMAIN_STATUSBAR = pWindow->Create( hwndParent, @frmStatusBar_WndProc, _
-        0, 0, 0, STATUSBAR_HEIGHT, _
-        WS_CHILD or WS_VISIBLE or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
-        WS_EX_CONTROLPARENT or WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_RIGHTSCROLLBAR)
-
-    ' Disable background erasing by only assigning the one style
-    pWindow->ClassStyle = CS_DBLCLKS
+    ' Create the StatusBar custom control
+    dim as HWND hCtrl = CStatusBar_Create( hwndParent, IDC_FRMMAIN_STATUSBAR )
+    SetWindowPos( hCtrl, 0, 0, 0, 0, AfxScaleY(STATUSBAR_HEIGHT), SWP_NOZORDER )
     
-    frmStatusBar_PositionWindows()
+    CStatusBar_SetPaintCallback( hCtrl, @frmStatusBar_PaintCallback )
+    CStatusBar_SetMessageCallback( hCtrl, @frmStatusBar_MessageCallback )
+    CStatusBar_SetTooltipCallback( hCtrl, @frmStatusBar_TooltipCallback )
+    CStatusBar_SetBackColor( hCtrl, ghStatusBar.BackColor )
+    CStatusBar_SetFont( hCtrl, ghFont(GUIFONT_9) )
+
+    CStatusBar_AddPanel( hCtrl, "", IDM_GOTOLINE )
+    CStatusBar_AddPanel( hCtrl, "", IDM_VIEWOUTPUT )            ' the spring
+    CStatusBar_AddPanel( hCtrl, "", IDM_THEMES )
+    CStatusBar_AddPanel( hCtrl, "", IDM_BUILDCONFIG )
+    CStatusBar_AddPanel( hCtrl, "", IDM_BUILDCONFIG_POPUP )
+    CStatusBar_AddPanel( hCtrl, "", IDM_SPACES )
+    CStatusBar_AddPanel( hCtrl, "", IDM_FILEENCODING )
+    CStatusBar_AddPanel( hCtrl, "", IDM_LINEENDINGS )
+
+    ' (panels are zero based)
+
+    ' The Ln/Col readout changes length constantly; floor it so it stops shoving its
+    ' neighbours around on every caret move.
+    CStatusBar_SetPanelMinWidth( hCtrl, 0, AfxScaleX(110) )
+
+    ' Panel 1 absorbs all unused width 
+    CStatusBar_SetExpandPanel( hCtrl, 1 )
+
+    HWND_FRMMAIN_STATUSBAR = hCtrl
+    
     function = 0
     
 end function

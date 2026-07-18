@@ -74,7 +74,6 @@ function OnCommand_FileOpen( _
 
     ' Prevent the constant updating of the app caption bar with filename
     gApp.IsFileLoading = true  
-    gApp.FileLoadingCount = 0
     
     for i = 0 To dwItemCount - 1
         pItems->lpVtbl->GetItemAt(pItems, i, @pItem)
@@ -151,9 +150,6 @@ function OnCommand_FileOpen( _
     if iTab > -1 then gTTabCtl.SetFocusTab(iTab)
 
     gApp.IsFileLoading = false
-    
-    ' reset filename loading text that displays in StatusBar panel
-    gApp.wszPanelText = ""   
 
     SetCursor( LoadCursor(0, IDC_ARROW) )
     ResetScintillaCursors()
@@ -176,6 +172,9 @@ function OnCommand_FileSave( _
             ) as boolean
 
     if gApp.GetDocumentCount = 0 then exit function
+    
+    dim as boolean bReloadExplorer = false
+    dim as boolean bReloadFunctions = false
     
     dim as long i, iStart, iEnd
     
@@ -203,9 +202,11 @@ function OnCommand_FileSave( _
             if pDoc->SaveFile(bSaveAs) = false then
                 pDoc->ApplyProperties
                 pDoc->ParseDocument()
+                bReloadFunctions = true
                 ' Apply document properties to this file because the file extension may have
                 ' changed. for example from Untitled to *.bas
                 if pDoc->DiskFilename <> wszFilename then
+                    bReloadExplorer = true
                     if gApp.IsProjectActive then
                         gApp.ProjectSetFileType( pDoc, pDoc->ProjectFileType )    
                     end if
@@ -220,15 +221,16 @@ function OnCommand_FileSave( _
         gTTabCtl.SetTabText(-1)
     next
     
-    LoadExplorerFiles()
-    LoadFunctionsFiles()
-    LoadBookmarksFiles()
+    if bReloadExplorer then LoadExplorerFiles()
+    if bReloadFunctions then LoadFunctionsFiles()
+    ' We neeed to reload Bookmarks when any of the filenames have changed.
+    if bReloadExplorer then LoadBookmarksFiles()
 
     frmMain_SetFocusToCurrentCodeWindow
 
     function = false
 end function
-
+ 
 
 ' ========================================================================================
 ' Rename the incoming pDoc file to disk
@@ -524,9 +526,7 @@ function OnCommand_FileClose( _
         if pDoc then gTTabCtl.CurSel = gTTabCtl.SetTabIndexByDocumentPtr(pDocActive)
     end if
 
-    frmMain_PositionWindows
-    frmExplorer_PositionWindows
-    frmTopTabs_PositionWindows
+    frmMain_PositionWindows()
     
     ' important to repaint the workspace to remove any separator bar and splitter
     ' rectangle should all documents be closed. Removes screen artifacts.

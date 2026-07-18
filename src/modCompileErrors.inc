@@ -19,6 +19,8 @@
 #include once "modCompile.bi"
 #include once "modCompileErrors.bi"
 #include once "frmListView.bi"
+#include once "frmStatusBar.bi"
+#include once "CStatusBar.bi"
 
 
 ''
@@ -30,7 +32,7 @@ function SetCompileStatusBarMessage( _
             ) as LRESULT
     dim as boolean bIsSpinner = iif( left(wszText, 1) = "#", true, false )
             
-    gApp.wszPanelText = wszText
+    dim as DWSTRING wszPanelText = wszText
     
     if bIsSpinner then
         ' Current message includes the Spinner so if a spinner is not
@@ -40,7 +42,7 @@ function SetCompileStatusBarMessage( _
             SetTimer(HWND_FRMMAIN, gApp.SpinnerTimerID, 80, null)   ' 80 ms
         end if
         gApp.bShowSpinner = true
-        gApp.wszPanelText = mid(wszText, 2)
+        wszPanelText = mid(wszText, 2)
         
     else
         ' Current message does not include the Spinner so if a spinner is
@@ -55,7 +57,8 @@ function SetCompileStatusBarMessage( _
     end if
 
     gApp.hIconPanel = hIconCompile
-    frmMain_SetStatusbar
+    
+    CStatusBar_SetText( HWND_FRMMAIN_STATUSBAR, COMPILE_STATUS_PANEL, wszPanelText )
 
     function = 0
 end function

@@ -152,7 +152,7 @@ function frmPanelMenu_OnPaint( byval hwnd as HWND ) as LRESULT
     ' Clear the entire back client area
     b.PaintClientRect()
     
-    b.SetFont( SYMBOLFONT_10 )
+    b.SetFont( ghFont(SYMBOLFONT_10) )
 
     for i as integer = lbound(gPanelMenu) to ubound(gPanelMenu)
         dim as DWSTRING wszCaption = gPanelMenu(i).wszCaption

@@ -237,13 +237,13 @@ function frmTopTabsInfo_WndProc( _
             end if
             b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
             b.SetBackColors( ghTopTabs.BackColorHot, ghTopTabs.BackColor )
-            b.SetFont( INFOFONT_11 )
+            b.SetFont( ghFont(INFOFONT_11) )
             b.PaintText( wszFilename, @gTTabCtl.rcDiskFilename, DT_LEFT )
 
-            b.SetFont( SYMBOLFONT_10 )
+            b.SetFont( ghFont(SYMBOLFONT_10) )
             b.PaintIconButton( wszIconFind, @gTTabCtl.rcFindButton )
             
-            b.SetFont( GUIFONT_10 )
+            b.SetFont( ghFont(GUIFONT_10) )
             b.PaintIconButton( wszIconGotoMain, @gTTabCtl.rcGotoMain )
             
             dim as DWSTRING wszHeaderOrCode

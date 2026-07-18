@@ -23,6 +23,7 @@ type PANEL_TYPE
 end type
 dim shared gPanel as PANEL_TYPE
 
+' TODO: Remove when Output window & Help Viewer scrollbars replaced with CVScrollBar
 type PANEL_VSCROLL_TYPE
     hListBox      as HWND
     listBoxHeight as long
@@ -33,6 +34,5 @@ type PANEL_VSCROLL_TYPE
     rc            as RECT
 end type
 dim shared gPanelVScroll as PANEL_VSCROLL_TYPE
-
 
 declare function frmPanel_Show( byval hWndParent as HWnd ) as LRESULT

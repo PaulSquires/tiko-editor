@@ -429,14 +429,14 @@ function frmBuildConfig_OnDrawItem( _
             if lpdis->CtlID = IDC_FRMBUILDCONFIG_LIST1 then
                 rcText.left += pWindow->ScaleX(10)
             elseif lpdis->CtlID = IDC_FRMBUILDCONFIG_LSTOPTIONS then
-                b.SetFont( SYMBOLFONT_9 )
+                b.SetFont( ghFont(SYMBOLFONT_9) )
                 rcBitmap.right = rcBitmap.left + pWindow->ScaleX(20)
                 dim as DWSTRING wszBitmap = iif(IsChecked, wszIconCheckBoxMarked, wszIconCheckBoxEmpty) 
                 b.PaintText( wszBitmap, @rcBitmap, DT_CENTER )
                 rcText.left = rcBitmap.right
             end if
             
-            b.SetFont( GUIFONT_9 )
+            b.SetFont( ghFont(GUIFONT_9) )
             b.PaintText( wszText, @rcText, DT_LEFT )
             
             b.EndDoubleBuffer()

@@ -53,7 +53,6 @@ end function
 ' Tear down, reset, and deallocate the compile process.
 ' ========================================================================================
 function code_Cleanup( byval pCompile as COMPILE_TYPE ptr ) as boolean
-    SetCompileStatusBarMessage( pCompile->wszStatusBarMessage, 0 )
     gApp.IsCompiling = false
     
     ' Restore the mouse cursors

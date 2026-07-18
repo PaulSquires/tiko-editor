@@ -522,12 +522,12 @@ function frmTopTabs_WndProc( _
             
             ' display the "Find" icon if this in a special "Find in Project" tab.
             if gTTabCtl.tabs(i).docType = DocumentType.ProjectSearch then
-                b.SetFont( SYMBOLFONT_9 )
+                b.SetFont( ghFont(SYMBOLFONT_9) )
                 b.PaintText( wszIconFind, @gTTabCtl.tabs(i).rcIcon, DT_CENTER )
             end if
             
             ' display the tab text
-            b.SetFont( GUIFONT_10 )
+            b.SetFont( ghFont(GUIFONT_10) )
             b.PaintText( gTTabCtl.tabs(i).wszText, @gTTabCtl.tabs(i).rcText, DT_CENTER )
 
             ' if this document is dirty then the dirty circle icon overrides the display of the close icon
@@ -540,14 +540,14 @@ function frmTopTabs_WndProc( _
             
             if isDirty then
                 ' if mouse is over the rcClose then draw the close icon, otherwise draw the dirty circle
-                b.SetFont( SYMBOLFONT_9 )
+                b.SetFont( ghFont(SYMBOLFONT_9) )
                 b.PaintText( wszIconCompileResult, @gTTabCtl.tabs(i).rcClose, DT_CENTER )
             end if
             
             if (gTTabCtl.tabs(i).isHot = true) then
                 ' if this is mouse hot then display the close icon only 
                 ' if the dirty icon is not already being displayed
-                b.SetFont( SYMBOLFONT_9 )
+                b.SetFont( ghFont(SYMBOLFONT_9) )
                 if isDirty = false then
                     b.PaintText( wszIconClose, @gTTabCtl.tabs(i).rcClose, DT_CENTER )
                 end if
@@ -570,7 +570,7 @@ function frmTopTabs_WndProc( _
         ' Draw the TopTabs Action Area (basically, the little panel to the
         ' right of all of the top tabs that has the "..." icon.
         if gTTabCtl.GetItemCount then
-            b.SetFont( SYMBOLFONT_10 )
+            b.SetFont( ghFont(SYMBOLFONT_10) )
             b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
             b.SetBackColors( ghTopTabs.BackColor, ghTopTabs.CloseBackColorHot )
 

@@ -77,7 +77,6 @@ function OnCommand_ProjectClose( byval hwnd As HWND ) As LRESULT
     gApp.ProjectCommandLine   = ""
     gApp.wszLastOpenFolder    = ""
     
-    gApp.wszPanelText = ""
     gApp.hIconPanel = 0
 
     ' Clear any previous info from the Output windows
@@ -125,12 +124,12 @@ function OnCommand_ProjectNew( byval hwnd As HWND ) As LRESULT
     gApp.IsNewProjectFlag = false
     gApp.IsProjectLoading = false
 
-    frmExplorer_PositionWindows
     frmMain_PositionWindows
     
     ' Refresh the Project Explorer file name list
     LoadExplorerFiles()
     LoadFunctionsFiles()
+    LoadBookmarksFiles()
 
     ' This will update the main window to show the project name in the window caption
     frmMain_SetFocusToCurrentCodeWindow

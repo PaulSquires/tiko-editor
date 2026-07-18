@@ -117,8 +117,6 @@ type clsDocument
     ProjectFiletype       as DWSTRING = FILETYPE_UNDEFINED
     DiskFilename          as wstring * MAX_PATH
     DateFileTime          as FILETIME  
-    bBookmarkExpanded     as boolean = true     ' Bookmarks list expand/collapse state
-    bFunctionsExpanded    as boolean = true     ' Functions list expand/collapse state
     bHasFunctions         as boolean = false    ' FunctionList to determine if click will display the File
     FileEncoding          as long = FILE_ENCODING_UTF8   ' new files always UTF8 encoded by default (no BOM)       
     bNeedsParsing         as boolean            ' Document requires to be parsed due to changes.

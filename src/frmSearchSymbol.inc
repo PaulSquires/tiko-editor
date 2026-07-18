@@ -644,7 +644,7 @@ function frmSearchSymbol_OnDrawItem( _
                     idFont  = GUIFONTBOLD_10
                 end if
 
-                b.SetFont( idFont )
+                b.SetFont( ghFont(idFont) )
                 wszChar = wchr(wszCaption[i])
                 b.PaintChar( wszChar, @rcChar, clrChar )
 
@@ -660,7 +660,7 @@ function frmSearchSymbol_OnDrawItem( _
             ' Now paint the symbol icon
             b.SetForeColors(icon_foreclr, icon_foreclr)
             b.SetBackColors(icon_backclr, icon_backclr)
-            b.SetFont( ITALICFONT_10 )
+            b.SetFont( ghFont(ITALICFONT_10) )
             b.PaintRect( @rcIcon )
             b.PaintText( wszIcon, @rcIcon, DT_CENTER )
             

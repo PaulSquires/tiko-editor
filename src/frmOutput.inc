@@ -886,13 +886,13 @@ function frmOutputTabs_SubclassProc ( _
                     b.SetForeColors( ghOutput.ForeColor, ghOutput.ForeColorHot )
                     b.SetBackColors( ghOutput.BackColor, ghOutput.BackColorHot )
                 end if
-                b.SetFont( GUIFONT_9 )
+                b.SetFont( ghFont(GUIFONT_9) )
                 b.PaintRect(@rc, true)
                 b.PaintText( gOutputTabs(i).wszText, @rc, DT_CENTER )
             next
 
             ' Draw the "X" close item
-            b.SetFont( SYMBOLFONT_10 )
+            b.SetFont( ghFont(SYMBOLFONT_10) )
             b.SetForeColors( ghOutput.ForeColorHot, ghOutput.ForeColorHot )
             b.SetBackColors( ghOutput.BackColor, ghOutput.CloseBackColorHot )
             b.PaintRoundRect( @gOutputCloseRect, true )

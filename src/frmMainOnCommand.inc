@@ -164,8 +164,8 @@ function frmMain_OnCommand( _
             DestroyMenu hPopUpMenu
             if (idMenu >= IDM_SPACES) andalso (idMenu <= IDM_SPACES + 8) then
                 gConfig.TabSize = idMenu - IDM_SPACES
-                gSBPanels(4).wszText = "Spaces: " & gConfig.TabSize
-                frmStatusBar_PositionWindows
+                dim as DWSTRING wszText = "Spaces: " & gConfig.TabSize
+                CStatusBar_SetText( HWND_FRMMAIN_STATUSBAR, SPACES_PANEL, wszText )
                 dim pDoc as clsDocument ptr = gApp.pDocList
                 do until pDoc = 0
                     pDoc->ApplyProperties
@@ -178,7 +178,12 @@ function frmMain_OnCommand( _
             ShowWindow( HWND_FRMPANEL, SW_HIDE )
             frmMain_PositionWindows()
             
-        case IDM_OPENINCLUDE:           OpenSelectedDocument( gApp.IncludeFilename )
+        case IDM_OPENINCLUDE
+            OpenSelectedDocument( gApp.IncludeFilename )
+            LoadExplorerFiles()
+            LoadFunctionsFiles()
+            LoadBookmarksFiles()
+            
         case IDM_EXPLORER_EXPANDALL:    frmExplorer_ExpandAll()   
         case IDM_EXPLORER_COLLAPSEALL:  frmExplorer_CollapseAll()   
         case IDM_FUNCTIONS_EXPANDALL:   frmFunctions_ExpandAll()   

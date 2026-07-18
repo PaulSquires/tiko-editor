@@ -126,7 +126,7 @@ function frmMenuBar_WndProc( _
         b.SetBackColors( ghMenuBar.BackColor, ghMenuBar.BackColor )
         b.PaintClientRect()
 
-        b.SetFont( GUIFONT_10 )
+        b.SetFont( ghFont(GUIFONT_10) )
         for i as integer = lbound(gMenuBar) to ubound(gMenuBar)
             if i = gActiveMenuBarIndex then
                 b.SetBackColors( ghMenuBar.BackColorHot, ghMenuBar.BackColorHot )

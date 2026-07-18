@@ -235,42 +235,6 @@ function handleKeysTopMenu( byval uMsg as MSG ) as boolean
 end function
 
 
-function handleKeysExplorerListBox( byval uMsg as MSG ) as boolean
-    ' Was ENTER key pressed while scrolling the Explorer listbox via keyboard
-    dim as HWND hList = GetDlgItem(HWND_FRMEXPLORER, IDC_FRMEXPLORER_LISTBOX)
-    if (uMsg.message = WM_KEYDOWN) andalso (uMsg.HWnd = hList) then
-        dim as long nSel = ListBox_GetCaretIndex( hList )
-        dim as DWSTRING wszCaption = AfxGetListBoxText( hList, nSel )
-        if uMsg.wParam = VK_RETURN then
-            if left(wszCaption, 1) = "%" then
-                ' expand/contract the header node
-                dim as long idxArray = getExplorerNodeHeaderIndex( wszCaption )
-                if idxArray <> -1 then
-                    gConfig.Cat(idxArray).bShow = not gConfig.Cat(idxArray).bShow
-                end if
-                LoadExplorerFiles()
-                SetFocus( hList )
-                return true
-            else   
-                ' open the selected document
-                dim as DWSTRING wszFilename
-                dim as long p = ListBox_GetItemData( hList, nSel )
-                dim pDoc as clsDocument ptr = cast( clsDocument ptr, cast(integer, p) )
-                if pDoc then
-                    wszFilename = pDoc->DiskFilename
-                    OpenSelectedDocument( wszFilename, "" )
-                end if
-                SetFocus( hList )
-                return true
-            end if
-        end if
-    end if
-
-    ' we want our message to continue so return FALSE
-    return false
-end function
-
-
 function handleEscKeyModeless( byval uMsg as MSG ) as boolean
     ' Close any open Find/Replace window with ESC key unless it
     ' is the Project Search tab which always displays the Find pane

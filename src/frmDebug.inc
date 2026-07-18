@@ -1099,14 +1099,14 @@ function frmDebug_WndProc( _
                 dim as long nImageWidth = pWindow->ScaleX(DEBUG_BUTTON_IMAGE_WIDTH)
                 dim as RECT rcIcon = gDbgBtns(i).rc
                 rcIcon.right = rcIcon.left + nImageWidth
-                b.SetFont( SYMBOLFONT_9 )
+                b.SetFont( ghFont(SYMBOLFONT_9) )
                 b.PaintText( gDbgBtns(i).wszIcon, @rcIcon, DT_CENTER )
                 
                 ' Paint the text
                 b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
                 dim as RECT rcText = gDbgBtns(i).rc
                 rcText.left = rcIcon.right
-                b.SetFont( GUIFONT_9 )
+                b.SetFont( ghFont(GUIFONT_9) )
                 b.PaintText( gDbgBtns(i).wszText, @rcText, DT_CENTER )
             next
                                     

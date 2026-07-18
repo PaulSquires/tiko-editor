@@ -30,9 +30,9 @@ type clsApp
         hWndPanel                  as HWND              ' the panel being split left/right or up/down
         IncludeFilename            as DWSTRING
         NonProjectNotes            as DWSTRING             ' Save/load from config file
-        wszPanelText               as DWSTRING             ' Current file loading or being compiled (for statusbar updating)
+'        wszPanelText               as DWSTRING             ' Current file loading or being compiled (for statusbar updating)
+ '       FileLoadingCount           as long              ' Track count of files loading for statusbar display
         hIconPanel                 as long              ' Success/failure of most previous compile (for Statusbar updating)
-        FileLoadingCount           as long              ' Track count of files loading for statusbar display
         IsNewProjectFlag           as boolean
         IsProjectLoading           as boolean           ' Project loading. Disable some screen updating.
         IsFileLoading              as boolean           ' File loading. Disable some screen updating.

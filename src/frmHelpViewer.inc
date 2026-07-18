@@ -500,14 +500,14 @@ function frmHelpViewer_OnDrawItem( _
         if left(ltrim(wszCaption), 1) = "-" then
             rcBitmap.left = rcText.left + pWindow->ScaleX(10)
             rcBitmap.right = rcBitmap.left + pWindow->ScaleX(10) 
-            b.SetFont( GUIFONT_10 )  ' use GUI rather than SYMBOL b/c of dot icon
+            b.SetFont( ghFont(GUIFONT_10) )  ' use GUI rather than SYMBOL b/c of dot icon
             b.PaintText( wszIconDocument, @rcBitmap, DT_CENTER )
             rcText.left = rcBitmap.right
         end if    
 
         wszCaption = ltrim(wszCaption, any " -")
         
-        b.SetFont( GUIFONT_10 )
+        b.SetFont( ghFont(GUIFONT_10) )
         b.PaintText( wszCaption, @rcText, DT_LEFT )
 
         b.EndDoubleBuffer()

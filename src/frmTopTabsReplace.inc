@@ -327,7 +327,7 @@ function frmTopTabsReplace_WndProc( _
         
         b.PaintRoundBorderRect( @gTTabCtl.rcReplaceTextRect )
 
-        b.SetFont( GUIFONT_9 )
+        b.SetFont( ghFont(GUIFONT_9) )
         if gFind.nPreserve then 
             b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
             b.SetBackColors( ghTopTabs.IconSelectedBackColor, ghTopTabs.IconSelectedBackColor )
@@ -340,7 +340,7 @@ function frmTopTabsReplace_WndProc( _
         b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
         b.SetBackColors( ghTopTabs.BackColorHot, ghTopTabs.BackColor )
 
-        b.SetFont( SYMBOLFONT_9 )
+        b.SetFont( ghFont(SYMBOLFONT_9) )
         b.PaintIconButton( wszIconReplace, @gFind.rcReplace )
         b.PaintIconButton( wszIconReplaceAll, @gFind.rcReplaceAll )
                 

@@ -210,15 +210,6 @@ function getThemePtr( byval lookupKey as string ) as THEME_TYPE ptr
 end function
 
 
-function PaintRect( byval hDC as HDC, byval rc as RECT ptr, byval clr as COLORREF ) as long 
-    dim as COLORREF oldclr = SetBkColor(hDC, clr) 
-    ExtTextOut( hDC, 0, 0, ETO_OPAQUE, rc, "", 0, 0)
-    SetBkColor( hDC, oldclr )
-    function = 0
-end function
-
-
-
 ''
 ''  LOAD THEME DISK FILE
 ''

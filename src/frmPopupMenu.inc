@@ -272,7 +272,7 @@ function frmPopupMenu_OnDrawItem( _
             
             ' checkmark
             if pMenu->isChecked then
-                b.SetFont( SYMBOLFONT_10 )
+                b.SetFont( ghFont(SYMBOLFONT_10) )
                 rcBitmap.right = rcBitmap.left + pWindow->ScaleX(30) 
                 b.PaintText( wszIconCheckmark, @rcBitmap, DT_CENTER )
             end if
@@ -281,7 +281,7 @@ function frmPopupMenu_OnDrawItem( _
             rcText.right = rcText.right - pWindow->ScaleX(30) 
 
             ' caption
-            b.SetFont( GUIFONT_10 )
+            b.SetFont( ghFont(GUIFONT_10) )
             b.PaintText( wszLeft, @rcText, DT_LEFT )
 
             ' keyboard accelerator 
@@ -289,7 +289,7 @@ function frmPopupMenu_OnDrawItem( _
 
             ' submenu arrow
             if pMenu->nChildID then
-                b.SetFont( SYMBOLFONT_10 )
+                b.SetFont( ghFont(SYMBOLFONT_10) )
                 rcBitmap = rcText
                 rcBitmap.Left = rcText.Right
                 rcBitmap.Right = rcBitmap.Left + pWindow->ScaleX(20) 

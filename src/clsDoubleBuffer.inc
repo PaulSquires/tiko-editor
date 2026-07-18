@@ -14,6 +14,30 @@
 
 #include once "clsDoubleBuffer.bi"
 
+' ========================================================================================
+' Determine if the mouse cursor is currently over client RECT area
+' ========================================================================================
+function isMouseOverRECT( byval hWin as HWND, byval rc as RECT ) as boolean
+    dim as point pt
+    GetCursorPos( @pt )
+    MapWindowpoints( hWin, HWND_DESKTOP, cast( point ptr, @rc), 2 )
+    if PtInRect( @rc, pt ) then return true
+end function
+
+function isMouseOverWindow( byval hChild as HWND ) as boolean
+    dim as point pt
+    GetCursorPos( @pt )
+    dim as HWND hWindow = WindowFromPoint(pt)
+    if hWindow = hChild then return true
+end function
+
+function PaintRect( byval hDC as HDC, byval rc as RECT ptr, byval clr as COLORREF ) as long 
+    dim as COLORREF oldclr = SetBkColor(hDC, clr) 
+    ExtTextOut( hDC, 0, 0, ETO_OPAQUE, rc, "", 0, 0)
+    SetBkColor( hDC, oldclr )
+    function = 0
+end function
+
     
 function clsDoubleBuffer.SetupBitmap() as long
     _memDC = CreateCompatibleDC( _hDC ) 
@@ -35,6 +59,7 @@ end function
 ' Overload that provides an hDC rather than use BeginPaint/EndPaint
 function clsDoubleBuffer.BeginDoubleBuffer( byval hwnd as HWND, byval hdc as HDC, byval rcItem as RECT ) as long
     _UsePaint = false
+    _owns = true
     _hwnd = hwnd
     _hDC = hdc
     _rc = rcItem
@@ -42,14 +67,44 @@ function clsDoubleBuffer.BeginDoubleBuffer( byval hwnd as HWND, byval hdc as HDC
     function = 0
 end function
 
+' Cached overload: draw into a caller-owned memDC (bitmap already selected and
+' large enough). Saves DC state so per-row object selections don't accumulate;
+' EndDoubleBuffer blits but does not delete the DC/bitmap (the caller owns them).
+function clsDoubleBuffer.BeginDoubleBuffer( byval hwnd as HWND, byval hdc as HDC, byval rcItem as RECT, byval cachedMemDC as HDC ) as long
+    _UsePaint = false
+    _owns = false
+    _hwnd = hwnd
+    _hDC = hdc
+    _rc = rcItem
+    _memDC = cachedMemDC
+    _hbit = 0
+    SaveDC( _memDC )
+    function = 0
+end function
+
 function clsDoubleBuffer.EndDoubleBuffer() as long
     BitBlt( _hDC, _rc.left, _rc.top, _rc.right - _rc.left, _rc.bottom - _rc.top, _memDC, 0, 0, SRCCOPY )
     RestoreDC( _memDC, -1 )
-    if _hbit  then DeleteObject( _hbit )
-    if _memDC then DeleteDC( _memDC )
-    if _UsePaint then EndPaint( _hwnd, @_ps )
+    if _owns then
+        if _hbit  then DeleteObject( _hbit ) : _hbit = 0
+        if _memDC then DeleteDC( _memDC )    : _memDC = 0
+    else
+        _memDC = 0    ' cached DC is owned by the caller; do not delete
+    end if
+    if _UsePaint then EndPaint( _hwnd, @_ps ) : _UsePaint = false
     function = 0
 end function
+
+' RAII safety net: release any GDI objects still held if EndDoubleBuffer was
+' not reached (e.g. an early return between Begin and End). Only frees objects
+' this instance owns; handles are nulled by End, so this never double-frees.
+destructor clsDoubleBuffer()
+    if _owns then
+        if _hbit  then DeleteObject( _hbit ) : _hbit = 0
+        if _memDC then DeleteDC( _memDC )    : _memDC = 0
+    end if
+    if _UsePaint andalso (_hwnd <> 0) then EndPaint( _hwnd, @_ps ) : _UsePaint = false
+end destructor
 
 function clsDoubleBuffer.rcClient() as RECT
     return _rc
@@ -67,12 +122,11 @@ function clsDoubleBuffer.getMemDC() as HDC
     return _memDC
 end function
 
-function clsDoubleBuffer.SetFont( byval FontIndex as long ) as long
-    if (FontIndex < lbound(ghFont)) orelse (FontIndex > ubound(ghFont)) then exit function
-    dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN)
-    if (pWindow = 0) orelse (ghFont(FontIndex) = 0) then exit function
-    _FontIndex = FontIndex
-    return 0
+' Store a caller-supplied font handle. The control/host owns the HFONT and is
+' responsible for destroying it; the double buffer only selects it while painting.
+function clsDoubleBuffer.SetFont( byval hFont as HFONT ) as long
+    if hFont then _hFont = hFont
+    function = 0
 end function
 
 function clsDoubleBuffer.SetForeColors( byval forecolor as COLORREF, byval forecolorhot as COLORREF ) as long
@@ -170,14 +224,15 @@ function clsDoubleBuffer.PaintText( _
 
     dim as COLORREF oldforecolor = SetTextColor( _memDC, forecolor )
     SetBkMode(_memDC, TRANSPARENT)
-    
-    dim as HFONT hOldFont = SelectObject( _memDC, ghFont(_FontIndex) ) 
+
+    dim as HFONT hOldFont
+    if _hFont then hOldFont = SelectObject( _memDC, _hFont )
 
     wsStyle = wsStyle or DT_NOPREFIX or DT_VCENTER or DT_SINGLELINE
     DrawText( _memDC, wszText, -1, cast(lpRect, rc), wsStyle )
 
     SetTextColor( _memDC, oldforecolor )
-    SelectObject(_memDC, hOldFont) 
+    if _hFont then SelectObject( _memDC, hOldFont )
 
     function = 0
 end function
@@ -188,7 +243,8 @@ function clsDoubleBuffer.PaintChar( _
             byval forecolor as COLORREF _
             ) as long
     
-    dim as HFONT hOldFont = SelectObject( _memDC, ghFont(_FontIndex) ) 
+    dim as HFONT hOldFont
+    if _hFont then hOldFont = SelectObject( _memDC, _hFont )
 
     SetBkMode(_memDC, TRANSPARENT)
     SetTextColor(_memDC, forecolor)
@@ -196,7 +252,7 @@ function clsDoubleBuffer.PaintChar( _
     dim as DWORD wsStyle = DT_SINGLELINE or DT_VCENTER or DT_LEFT or DT_NOCLIP
     DrawText( _memDC, wszChar, -1, cast(lpRect, rc), wsStyle )
 
-    SelectObject(_memDC, hOldFont) 
+    if _hFont then SelectObject( _memDC, hOldFont )
 
     function = 0
 end function

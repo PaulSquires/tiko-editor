@@ -94,21 +94,15 @@ function frmMain_SetStatusbar() as long
     ' PANEL (6) File Encoding (Ansi, UTF-8, etc)
     ' PANEL (7) Line Endings
 
-    ' blank out the current statusbar values  
-    for i as long = lbound(gSBPanels) to ubound(gSBPanels)
-        gSBPanels(i).wszText = ""
-    next
+'    ' blank out the current statusbar values  
+'    for i as long = lbound(gSBPanels) to ubound(gSBPanels)
+'        gSBPanels(i).wszText = ""
+'    next
 
-    ' PANEL Compiling Results -or- Filename being parsed
-    gSBPanels(COMPILE_STATUS_PANEL).wszText = gApp.wszPanelText
 
     if (gApp.IsProjectLoading) orelse (gApp.IsFileLoading) then
-        gSBPanels(COMPILE_STATUS_PANEL).wszText = L(66,"Parsing") & _
-                ": (" & gApp.FileLoadingCount & ")  " & gApp.wszPanelText
-        
     elseif pDoc <> 0 then
         dim as HWND hEdit = pDoc->hWndActiveScintilla
-        wszText = ""
         dim as long curPos, nLine, nCol
         dim as long startPos, endPos, startLine, endLine, nLines 
         ' Retrieve the information and show it in the status bar
@@ -122,29 +116,31 @@ function frmMain_SetStatusbar() as long
             wszText = wszText + " (" + str(endPos - startPos) + " selected)"
         end if 
 
+        ' PANEL Line/Col/Sel
+        CStatusBar_SetText( HWND_FRMMAIN_STATUSBAR, GOTO_PANEL, wszText )
+
         ' Update the vertical scrollbar
         frmEditorVScroll_calcVThumbRect(pDoc)
         AfxRedrawWindow( iif( hEdit = pDoc->hWindow(0), HWND_FRMEDITOR_VSCROLLBAR(0), HWND_FRMEDITOR_VSCROLLBAR(1)) )
-        
-        ' PANEL Line/Col/Sel
-        gSBPanels(GOTO_PANEL).wszText = wszText
 
         ' PANEL Themes dialog
-        gSBPanels(THEMES_DIALOG_PANEL).wszText = " " + wszIconThemes + " "
+        wszText = " " & wszIconThemes & " "
+        CStatusBar_SetText( HWND_FRMMAIN_STATUSBAR, THEMES_DIALOG_PANEL, wszText )
 
         ' PANEL Build Configuration dialog
-        gSBPanels(BUILD_DIALOG_PANEL).wszText = wszIconAddFileButton 
+        CStatusBar_SetText( HWND_FRMMAIN_STATUSBAR, BUILD_DIALOG_PANEL, wszIconAddFileButton )
 
         ' PANEL Build Configuration
         if gApp.GetDocumentCount then
-            gSBPanels(BUILD_POPUP_PANEL).wszText = frmBuildConfig_GetSelectedBuildDescription()
+            wszText = frmBuildConfig_GetSelectedBuildDescription()
+            CStatusBar_SetText( HWND_FRMMAIN_STATUSBAR, BUILD_POPUP_PANEL, wszText )
         end if
         
         ' PANEL Spacing
-        gSBPanels(SPACES_PANEL).wszText = "Spaces: " & gConfig.TabSize
+        wszText = "Spaces: " & gConfig.TabSize
+        CStatusBar_SetText( HWND_FRMMAIN_STATUSBAR, SPACES_PANEL, wszText )
         
         ' PANEL File Encoding (Ansi, UTF-8, UTF-16)
-        wszText = ""
         select case pDoc->FileEncoding
             case FILE_ENCODING_UTF8
                 wszText = "UTF-8"   
@@ -159,18 +155,20 @@ function frmMain_SetStatusbar() as long
                 wszText = "ANSI"  
                 SciExec( hEdit, SCI_SETCODEPAGE, 0, 0 )
         end select 
-        gSBPanels(UTF_PANEL).wszText = wszText
+        CStatusBar_SetText( HWND_FRMMAIN_STATUSBAR, UTF_PANEL, wszText )
 
         ' PANEL Line Endings
         select case SciExec( hEdit, SCI_GETEOLMODE, 0, 0 )
             case SC_EOL_CRLF: wszText = "CRLF"  '(0)
             case SC_EOL_CR:   wszText = "CR"    '(1)
             case SC_EOL_LF:   wszText = "LF"    '(2)
+            case else:        wszText = ""    
         end select 
-        gSBPanels(CRLF_PANEL).wszText = wszText
+        CStatusBar_SetText( HWND_FRMMAIN_STATUSBAR, CRLF_PANEL, wszText )
         
         if SciExec( hEdit, SCI_GETREADONLY, 0, 0 ) then
-            gSBPanels(COMPILE_STATUS_PANEL).wszText = L(222,"Read Only")
+            wszText = L(222,"Read Only")
+            CStatusBar_SetText( HWND_FRMMAIN_STATUSBAR, COMPILE_STATUS_PANEL, wszText )
         end if
         
     end if
@@ -197,9 +195,6 @@ function frmMain_SetStatusbar() as long
     gTTabCtl.SetTabText(-1)  ' this will only repaint if text has changed
     ' repaint the tab to ensure that the unsaved indicator changes
     AfxRedrawWindow( HWND_FRMMAIN_TOPTABS )
-
-    ' Call function to calculate the size/position of the panels and also paint the statusbar
-    frmStatusBar_PositionWindows()
 
     function = 0
 end Function
@@ -1506,7 +1501,7 @@ function frmMain_WndProc( _
             end if    
 
             exit function
-
+ 
 
         case WM_SETFOCUS
             frmMain_SetFocusToCurrentCodeWindow()
@@ -1713,9 +1708,6 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
             ' passing it off to the system to process.
             if handleKeysTopMenu(uMsg) then continue do
 
-            ' Was ENTER key pressed while scrolling the Explorer listbox via keyboard
-            if handleKeysExplorerListBox(uMsg) then continue do
-            
             ' Check if the settings.ini file was changed by an external program.
             ' Reload the config file in case a user has automated a change to it since
             ' the application started (for example, changing the compiler path).

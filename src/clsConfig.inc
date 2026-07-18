@@ -1443,8 +1443,6 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
     
     gApp.IsProjectLoading = true 
             
-    gApp.FileLoadingCount = 0
-    
     do until pStream.EOS
         wst = pStream.ReadLine
         
@@ -1548,10 +1546,6 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
     
         if AfxFileExists( docData(i).wszFilename ) = false then continue for
         
-        gApp.FileLoadingCount = gApp.FileLoadingCount + 1
-        gApp.wszPanelText = docData(i).wszFilename
-        frmMain_SetStatusbar()
-
         pDoc = gApp.CreateEmptyDocument()
         pDoc->LoadDiskFile( docData(i).wszFilename )
         pDoc->ProjectFiletype = docData(i).wszFileType
@@ -1565,7 +1559,6 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
 
     gApp.IsProjectLoading = false
     gApp.IsProjectActive = true
-    gApp.wszPanelText = ""   ' reset filename parsing text that displays in StatusBar panel
     gApp.hIconPanel = 0
     gApp.wszLastOpenFolder = ""
     

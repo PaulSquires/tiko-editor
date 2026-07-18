@@ -424,7 +424,7 @@ function frmTopTabsFind_WndProc( _
         
         b.PaintRoundBorderRect( @gTTabCtl.rcFindTextRect )
 
-        b.SetFont( GUIFONT_9 )
+        b.SetFont( ghFont(GUIFONT_9) )
         
         ' Match Case
         if gFind.nMatchCase then 
@@ -451,7 +451,7 @@ function frmTopTabsFind_WndProc( _
 
         b.PaintText( gFind.wszResults, @gFind.rcResults, DT_LEFT )
         
-        b.SetFont( SYMBOLFONT_9 )
+        b.SetFont( ghFont(SYMBOLFONT_9) )
         b.PaintIconButton( wszIconToggleReplace, @gFind.rcToggle )
         
         if gFind.nSelection then 

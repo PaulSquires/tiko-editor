@@ -467,13 +467,11 @@ function OnCommand_SearchBookmarks( _
         
         case IDM_BOOKMARKCLEARALL
             SciExec( hEdit, SCI_MARKERDELETEALL, -1, 0 )
-            LoadBookmarksFiles
-            AfxRedrawWindow( HWND_FRMBOOKMARKS )
+            ClearBookmarks()
 
         case IDM_BOOKMARKTOGGLE
             pDoc->ToggleBookmark( pDoc->GetCurrentLineNumber )
-            LoadBookmarksFiles
-            AfxRedrawWindow( HWND_FRMBOOKMARKS )
+            LoadBookmarksFiles()
 
         case IDM_BOOKMARKCLEARALLDOCS
             if MessageBox( HWND_FRMMAIN, L(316,"Do you want to delete all bookmarks?"), L(276,"Confirm"), _
@@ -486,8 +484,7 @@ function OnCommand_SearchBookmarks( _
                 SciExec( hEdit, SCI_MARKERDELETEALL, MARKER_BOOKMARK, 0 )
                 pDoc = pDoc->pDocNext
             loop
-            LoadBookmarksFiles
-            AfxRedrawWindow( HWND_FRMBOOKMARKS )
+            ClearBookmarks()
     end select
     
     function = 0

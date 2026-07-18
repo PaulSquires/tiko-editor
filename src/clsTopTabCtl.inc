@@ -165,6 +165,7 @@ function clsTopTabCtl.SetFocusTab( byval idx as long ) as long
     if idx < 0 then idx = nCount - 1
     if this.IsSafeIndex(idx) = false then exit function
     if this.CurSel <> idx then
+
         ' Send a user message to accomplish the same thing as TCN_SELCHANGING and TCN_SELCHANGE 
         SendMessage( HWND_FRMMAIN, MSG_USER_TOPTABS_CHANGING, 0, 0 )
         this.CurSel = idx

@@ -268,7 +268,7 @@ function frmListViewHeader_SubclassProc ( _
                 ' Clear the entire back client area
                 b.PaintClientRect()
               
-                b.SetFont( GUIFONT_9 )
+                b.SetFont( ghFont(GUIFONT_9) )
 
                 dim as RECT rc = b.rcClient
                 for i as long = lbound(pData->ColData) to ubound(pData->ColData)
@@ -443,7 +443,7 @@ function frmListView_OnDrawItem( _
             ' Paint the entire background
             b.PaintRect( @rc )
 
-            b.SetFont( GUIFONT_9 )
+            b.SetFont( ghFont(GUIFONT_9) )
 
             dim as DWSTRING wszCaption = pData->rowData(lpdis->ItemID)
 
