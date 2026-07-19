@@ -68,6 +68,7 @@ dim shared as DWSTRING gwszDefaultToolchain = "FreeBASIC-1.10.1-winlibs-gcc-9.3.
 #include once "clsDB2.bi"
 #include once "clsConfig.bi"
 #include once "clsApp.bi"
+#include once "clsSymbolDb.bi"
 #include once "clsScanMgr.bi"
 
 '  Global classes
@@ -85,6 +86,7 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "modParser.inc"
 #include once "clsDocument.inc"
 #include once "clsApp.inc"
+#include once "clsSymbolDb.inc"
 #include once "clsScanMgr.inc"
 #include once "clsTopTabCtl.inc"
 #include once "modAutoInsert.inc"
