@@ -49,7 +49,7 @@ function frmTopTabsInfo_PositionWindows() as LRESULT
     gTTabCtl.rcFileTypeButton.right = rc.right - pWindow->ScaleX(6)
     gTTabCtl.rcFileTypeButton.left = gTTabCtl.rcFileTypeButton.right - _
             pWindow->ScaleX( getTextWidth(HWND_FRMMAIN_TOPTABSINFO, gTTabCtl.wszFileType, GUIFONT_9) + (nPadding * 2))
-    gTTabCtl.rcFileTypeButton.left = MIN( gTTabCtl.rcPrevTabs.right, gTTabCtl.rcFileTypeButton.left ) 
+    gTTabCtl.rcFileTypeButton.left = gTTabCtl.rcFileTypeButton.left
     gTTabCtl.rcFileTypeButton.top += vmargin
     gTTabCtl.rcFileTypeButton.bottom = gTTabCtl.rcFileTypeButton.top + pWindow->ScaleY(TOPTABS_INFO_HEIGHT-1) - vmargin
     
@@ -217,22 +217,21 @@ function frmTopTabsInfo_WndProc( _
         end if
         
         if gTTabCtl.GetItemCount then
-            dim as long i = gTTabCtl.CurSel
+            dim as long i = gTTabCtl.GetCurSel()
             
-            ' Clear the bottom border of the active tab
-            b.SetPenColor( ghTopTabs.BackColorHot )
-            b.PaintLine( 1, gTTabCtl.tabs(i).rcTab.left, b.rcClient.top, _
-                                gTTabCtl.tabs(i).rcTab.right, b.rcClient.top )
-
             dim pDoc as clsDocument ptr 
 
             ' Determine if it is in a subfolder and if it is, then display the relative file name.
-            dim as DWSTRING wszFilename = gTTabCtl.tabs(i).wszText
+            dim as DWSTRING wszFilename = gTTabCtl.GetTabText(i)
             if gApp.IsProjectActive then
                 pDoc = gApp.GetMainDocumentPtr()
                 if pDoc then
-                    dim as DWSTRING wszMainFolder = AfxStrPathname("PATH", pDoc->DiskFilename)
-                    wszFilename = AfxStrRemove( gTTabCtl.tabs(i).pDoc->DiskFilename, wszMainFolder )
+                    ' GetpDoc returns null when no tab is selected (i = -1)
+                    dim as clsDocument ptr pDocTab = gTTabCtl.GetpDoc(i)
+                    if pDocTab then
+                        dim as DWSTRING wszMainFolder = AfxStrPathname("PATH", pDoc->DiskFilename)
+                        wszFilename = AfxStrRemove( pDocTab->DiskFilename, wszMainFolder )
+                    end if
                 end if
             end if
             b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )

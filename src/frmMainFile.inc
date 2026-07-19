@@ -181,7 +181,7 @@ function OnCommand_FileSave( _
     if bSaveAll then
         ' Save All
         iStart = 0
-        iEnd = gTTabCtl.GetItemCount - 1
+        iEnd = gTTabCtl.GetItemCount() - 1
     else
         ' Save
         iStart = gTTabCtl.GetTabIndexByDocumentPtr(pDoc)
@@ -190,10 +190,9 @@ function OnCommand_FileSave( _
 
     for i = iStart to iEnd
         ' Get the document pointer and then save file to disk
-        if gTTabCtl.IsSafeIndex(i) then
-            pDoc = gTTabCtl.tabs(i).pDoc
-            if pDoc = 0 then continue for
-        end if   
+        if gTTabCtl.IsValidTab(i) = false then continue for
+        pDoc = gTTabCtl.GetpDoc(i)
+        if pDoc = null then continue for
 
         If (cbool(SciExec( pDoc->hWindow(0), SCI_GETMODIFY, 0, 0 ) <> 0)) orelse _
            (pDoc->UserModified = true) orelse (bSaveAs = true) then   
@@ -226,7 +225,7 @@ function OnCommand_FileSave( _
     ' We neeed to reload Bookmarks when any of the filenames have changed.
     if bReloadExplorer then LoadBookmarksFiles()
 
-    frmMain_SetFocusToCurrentCodeWindow
+    frmMain_SetFocusToCurrentCodeWindow()
 
     function = false
 end function
@@ -387,7 +386,7 @@ end function
 ' ========================================================================================
 function OnCommand_FileSaveAll( byval hwnd as HWND ) as boolean
 
-    if gTTabCtl.GetItemCount = 0 then exit function
+    if gTTabCtl.GetItemCount() = 0 then exit function
                 
     return OnCommand_FileSave( hwnd, 0, false, true )
 end function
@@ -404,7 +403,7 @@ function OnCommand_FileClose( _
 
     dim wText as wstring * MAX_PATH  
     dim pDoc as clsDocument ptr
-    dim as long r
+    dim as long r 
     
     ' if a Project is not active then we need to save the current non-project notes
     ' when this file is closed. It is possible that this file is being closed and
@@ -417,9 +416,9 @@ function OnCommand_FileClose( _
     dim as long nCurSel 
     ' if the incoming nTabNum is -1 then we want to close the current
     ' active document, otherwise close the specified tab.
-    nCurSel = iif(nTabNum = -1, gTTabCtl.CurSel, nTabNum)
+    nCurSel = iif(nTabNum = -1, gTTabCtl.GetCurSel(), nTabNum)
 
-    dim as long nCount = gTTabCtl.GetItemCount
+    dim as long nCount = gTTabCtl.GetItemCount()
 
     if nCount = 0 then return true
     
@@ -437,7 +436,7 @@ function OnCommand_FileClose( _
     
     ' Save the pDoc of the current active document in case we need to us it after
     ' the deletes are done to restore the correct tab index.
-    dim as clsDocument ptr pDocActive = gTTabCtl.tabs(gTTabCtl.CurSel).pDoc
+    dim as clsDocument ptr pDocActive = gTTabCtl.GetpDoc(gTTabCtl.GetCurSel())
     
     ' Must do everything in reverse order because when Tabs are removed
     ' then the indexes would be out of sync if done in ascending order.
@@ -446,10 +445,10 @@ function OnCommand_FileClose( _
 
         ' If this is the ProjectSearch tab then ensure to reset its flag that tracks
         ' whether to display the Replace controls specifically for ProjectSearch tab.
-        if gTTabCtl.tabs(i).docType = DocumentType.ProjectSearch then
-            gTTabCtl.TabFocusLost(i)
-            gFind.bProjectReplaceActive = false
-        end if    
+'        if gTTabCtl.tabs(i).docType = DocumentType.ProjectSearch then
+'            gTTabCtl.TabFocusLost(i)
+'            gFind.bProjectReplaceActive = false
+'        end if    
 
         pDoc = gTTabCtl.GetDocumentPtr(i)
         if pDoc then 
@@ -475,8 +474,8 @@ function OnCommand_FileClose( _
             next
             SetRectEmpty( @pDoc->rcSplitButton )
         end if
-            
-        ' remove tab from gTTabCtl.tabs() array
+
+        ' remove tab from CTabBar
         gTTabCtl.RemoveElement(i)
             
         ' Only remove this document from the global collection if it is not
@@ -509,23 +508,23 @@ function OnCommand_FileClose( _
             end if
         end if    
     next
-        
-    ' Set the active tab to the closest tab to the one just removed if it was the 
-    ' current active tab that was removed.
-    if (veFileClose = EFC_CLOSECURRENT) andalso (nCurSel = gTTabCtl.CurSel) then
-        dim as long idx = gTTabCtl.CurSel - 1
-        gTTabCtl.CurSel = -1  ' it is no longer valid
-        if idx < lbound(gTTabCtl.tabs) then idx = lbound(gTTabCtl.tabs)
-        if gTTabCtl.IsSafeIndex( idx ) then
-            gTTabCtl.CurSel = gTTabCtl.SetFocusTab( idx )
+     
+    ' Set the active tab to the closest tab to the one just removed if it was the
+    ' current active tab that was removed. CTabBar deliberately deselects (-1) when
+    ' the current tab is deleted, so that is the signal that the active tab closed
+    ' (and that pDocActive may now point to a freed document).
+    if gTTabCtl.GetCurSel() = -1 then
+        dim as long idx = nCurSel - 1
+        if idx < 0 then idx = 0
+        if gTTabCtl.IsValidTab( idx ) then
+            gTTabCtl.SetFocusTab( idx )
         end if
     else
-        ' we need to set our gTTabCtl.CurSel to the correct array index because
-        ' the array has been resized and the cursel would no longer be valid.
-        gTTabCtl.CurSel = -1  ' it is no longer valid
-        if pDoc then gTTabCtl.CurSel = gTTabCtl.SetTabIndexByDocumentPtr(pDocActive)
+        ' The active tab survived the close; its index may have shifted, so refocus
+        ' it by document pointer (guaranteed alive on this branch).
+        gTTabCtl.SetTabIndexByDocumentPtr(pDocActive)
     end if
-
+        
     frmMain_PositionWindows()
     
     ' important to repaint the workspace to remove any separator bar and splitter
