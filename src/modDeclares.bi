@@ -39,6 +39,7 @@ enum
     MSG_USER_SHOW_KEYBOARDEDIT
     MSG_USER_RICHEDIT_SELECTALL
     MSG_USER_LISTVIEW_LBUTTONDBLCLK
+    MSG_USER_PARSE_COMPLETE        ' wParam = SCAN_TIER; posted by the fbcParser scan worker
     
     '' FILE
     IDM_FILE_START
@@ -308,6 +309,11 @@ const EXPLORERITEM_HEIGHT = 22
 const MENUBAR_HEIGHT = 30
 const OUTPUT_TABS_HEIGHT = 40
 const PANEL_ICON_HEIGHT = 24
+
+' Debounce timer on HWND_FRMMAIN: restarted on every editor modification;
+' when it fires, the active document is handed to the fbcParser scan worker.
+const IDT_PARSER_DEBOUNCE = 501
+const PARSER_DEBOUNCE_MS  = 500
 
 const TOPTABS_HEIGHT = 36
 const TOPTABS_INFO_HEIGHT = 40   

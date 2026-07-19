@@ -175,6 +175,11 @@ function clsTopTabCtl.SetFocusTab( byval idx as long ) as long
                     ' Highlight the selected tab file in the Function List listbox
                     frmFunctions_SelectItemData( this.GetpDoc(idx) )
 
+                    ' Refresh the background symbol scan for the newly active document
+                    if (gApp.IsProjectLoading = false) andalso (gApp.IsShutdown = false) then
+                        gScanMgr.RequestBufferScan( pDoc )
+                    end if
+
                     ' If moving to a new Tab and the Find panel is closed then ensure that we 
                     ' remove any find occurrence highlights.
                     if IsWindowVisible(HWND_FRMMAIN_TOPTABSFIND) = 0 then pDoc->RemoveSelectionAttributes()

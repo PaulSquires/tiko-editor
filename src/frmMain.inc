@@ -70,6 +70,9 @@ function frmMain_OpenProjectSafely( _
     frmPanel_PositionWindows
     frmMain_PositionWindows
 
+    ' The project's files are on disk and settled - refresh the project-tier scan
+    gScanMgr.RequestProjectScan()
+
     function = true
 end function
 
@@ -1134,8 +1137,12 @@ function frmMain_OnClose( byval hwnd as HWND ) as LRESULT
         if gConfig.SaveDefaultSessionFile() = 0 then return 0
     end if
     
-    ' Close any open files asking to save any that are dirty 
+    ' Close any open files asking to save any that are dirty
     if OnCommand_FileClose(HWnd, EFC_CLOSEALL) = 0 then return 0
+
+    ' Stop the background scan worker (bounded join) before the window and
+    ' its message pump go away - no MSG_USER_PARSE_COMPLETE may arrive after this.
+    gScanMgr.Shutdown()
 
     DestroyWindow(hwnd)
     
@@ -1395,10 +1402,15 @@ function frmMain_WndProc( _
         case WM_TIMER
             ' Handle any Spinner (used when compiling)
             if wParam = gApp.SpinnerTimerID then
-                ' Update Spinner display frame 
+                ' Update Spinner display frame
                 gApp.SpinnerCurrentFrame = (gApp.SpinnerCurrentFrame + 1) mod 8
                 frmMain_SetStatusbar()
                 AfxRedrawWindow( HWND_FRMMAIN_STATUSBAR )
+            end if
+            if wParam = IDT_PARSER_DEBOUNCE then
+                ' Typing has paused - hand the active document to the scan worker
+                KillTimer( hwnd, IDT_PARSER_DEBOUNCE )
+                gScanMgr.RequestBufferScan( gTTabCtl.GetActiveDocumentPtr() )
             end if
             
         case WM_NCACTIVATE
@@ -1509,6 +1521,24 @@ function frmMain_WndProc( _
 
         case MSG_USER_SHOWAUTOCOMPLETE
             return ShowAutocompleteList()
+
+        case MSG_USER_PARSE_COMPLETE
+            ' A background fbcParser scan finished. Phase 1: trace the summary
+            ' and retire the set immediately; Phase 2 swaps it into gSymDb.
+            dim as PARSERESULTSET ptr pRSet = gScanMgr.TakeCompleted( clng(wParam) )
+            if pRSet then
+                dim as string sTrace = "FBCP complete: tier=" & pRSet->tier & _
+                                       " rc=" & pRSet->scanRc & " ms=" & pRSet->scanMs
+                if pRSet->pResult then
+                    sTrace &= "  symbols=" & pRSet->pResult->symbolCount & _
+                              " files=" & pRSet->pResult->fileCount & _
+                              " diags=" & pRSet->pResult->diagCount
+                end if
+                dim as string sRoot = pRSet->wszRootFile
+                sTrace &= "  root=" & sRoot
+                print sTrace
+                gScanMgr.RetireResult( pRSet )
+            end if
 
         case MSG_USER_APPENDEQUALSSIGN
             ' The = key was used to terminate a popup autocomplete. Take that
