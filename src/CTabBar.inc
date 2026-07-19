@@ -54,6 +54,16 @@ end function
 
 
 ' ========================================================================================
+' Returns whether the specified tab index is valid.
+' ========================================================================================
+function CTabBar_IsValidTab( byval hTabBar as HWND, byval idx as integer ) as boolean
+    dim as CTABBAR ptr pTabBar = GetTabBarPointer(hTabBar)
+    if pTabBar = null then return false
+    return pTabBar->IsValidTab(idx)
+end function
+
+
+' ========================================================================================
 ' Insert a tab at the given index (existing tabs shift right). Returns the
 ' actual index used (clamped to [0, count]), or -1 on failure.
 ' ========================================================================================

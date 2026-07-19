@@ -32,8 +32,7 @@ function frmPanel_PositionWindows() as LRESULT
     if pWindow = 0 then exit function
     
     ' Get the entire client area
-    dim as Rect rc
-    GetClientRect( HWND_FRMPANEL, @rc )
+    dim as RECT rc: GetClientRect( HWND_FRMPANEL, @rc )
     
     dim as long nPanelMenuHeight = pWindow->ScaleY(TOPTABS_HEIGHT)
     dim as long nPanelHeaderHeight = pWindow->ScaleY(46)   ' EXPLORER, FUNCTIONS, BOOKMARKS
@@ -53,8 +52,10 @@ function frmPanel_PositionWindows() as LRESULT
     nHeight = rc.bottom - nTop
 
     ' Position the panel menu
-    SetWindowPos( HWND_FRMPANEL_MENU, 0, nLeft, 0, nWidth, nPanelMenuHeight, SWP_SHOWWINDOW or SWP_NOZORDER )
-    frmPanelMenu_PositionWindows()
+    ' Give it some left margin 
+    dim as long nMargin = pWindow->ScaleX(10)
+    SetWindowPos( HWND_FRMPANEL_MENU, 0, _
+            nLeft + nMargin, 0, nWidth - (nMargin * 2), nPanelMenuHeight, SWP_SHOWWINDOW or SWP_NOZORDER )
     
     SetWindowPos( HWND_FRMEXPLORER, 0, nLeft, nTop, nWidth, nHeight, SWP_NOZORDER )
     SetWindowPos( HWND_FRMBOOKMARKS, 0, nLeft, nTop, nWidth, nHeight, SWP_NOZORDER )

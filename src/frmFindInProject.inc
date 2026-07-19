@@ -93,35 +93,25 @@ end function
 ' frmFindInProject_Show
 ' ========================================================================================
 function frmFindInProject_Show() as LRESULT
-    '  Create the main window and child controls
-'    dim pWindow as CWindow ptr = new CWindow
-
-'    HWND_FRMFINDINPROJECT = _
-'    pWindow->Create(hwndParent, L(256,"Find In Files"), @frmFindInProject_WndProc, 0, 0, 0, 0, _
-'        WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
-'        WS_EX_DLGMODALFRAME or WS_EX_CONTROLPARENT or WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_RIGHTSCROLLBAR)
-'    pWindow->SetClientSize(515, 247)
-'    pWindow->Center
-    
     ' Create a fake pDoc so that it can be added to the top tab control
     dim as clsDocument ptr pDoc = null
     
-    ' Search for an existing Project Search tab and reuse that, otherwise create new.
-    dim as long iTab = -1
-    for idx as long = lbound(gTTabCtl.tabs) to ubound(gTTabCtl.tabs)
-        if gTTabCtl.tabs(idx).docType = DocumentType.ProjectSearch then
-            iTab = idx: exit for
-        end if
-    next
+'    ' Search for an existing Project Search tab and reuse that, otherwise create new.
+'    dim as long iTab = -1
+'    for idx as long = lbound(gTTabCtl.tabs) to ubound(gTTabCtl.tabs)
+'        if gTTabCtl.tabs(idx).docType = DocumentType.ProjectSearch then
+'            iTab = idx: exit for
+'        end if
+'    next
     
     ' Add the new document to the top tabcontrol if not already found.
-    if iTab = -1 then 
-        iTab = gTTabCtl.AddTab( pDoc )  
-        gTTabCtl.tabs(iTab).docType = DocumentType.ProjectSearch
-        gTTabCtl.tabs(iTab).wszText = L(256,"Find in Project")
-    end if
+'    if iTab = -1 then 
+'        iTab = gTTabCtl.AddTab( pDoc )  
+'        gTTabCtl.tabs(iTab).docType = DocumentType.ProjectSearch
+'        gTTabCtl.SetTabText(iTab).wszText = L(256,"Find in Project")
+'    end if
 
-    gTTabCtl.SetFocusTab(iTab)
+'    gTTabCtl.SetFocusTab(iTab)
 
     function = 0
 end function

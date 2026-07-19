@@ -12,110 +12,83 @@
 '    GNU General Public License for more details.
 
 #include once "clsTopTabCtl.bi"
+#include once "frmTopTabs.bi"
 
-''
-''
-function clsTopTabCtl.IsSafeIndex( byval idx as long ) as boolean
-    ' test to see if the incoming idx is valid based on the boundaries
-    ' of the global tab array
-    if (idx >= lbound(this.tabs)) andalso (idx <= ubound(this.tabs)) then
-        return true
-    else   
-        return false   
-    end if
-end function
 
 ''
 ''
 function clsTopTabCtl.GetItemCount() as long
-    ' get the number tabs in the global tab array
-    return ubound(this.tabs) - lbound(this.tabs) + 1
+    return CTabBar_GetCount( this.hWindow )
+end function
+
+''
+''
+function clsTopTabCtl.GetCurSel() as integer
+    return CTabBar_GetCurSel( this.hWindow )
+end function
+
+''
+''
+function clsTopTabCtl.SetCurSel( byval idx as integer ) as boolean
+    return CTabBar_SetCurSel( this.hWindow, idx )
+end function
+
+''
+''
+function clsTopTabCtl.IsValidTab( byval idx as integer ) as boolean
+    return CTabBar_IsValidTab( this.hWindow, idx )
+end function
+
+''
+''
+function clsTopTabCtl.GetpDoc( byval idx as integer ) as clsDocument ptr
+    if this.IsValidTab(idx) = false then return null
+    ' Cast the pDoc stored in the itemData integer.
+    dim as integer itemData = CTabBar_GetItemData(this.hWindow, idx)
+    return cast(clsDocument ptr, itemData)
 end function
 
 ''
 ''
 function clsTopTabCtl.AddTab( byval pDoc as clsDocument ptr ) as long
-    ' Return the index of the added tab. We attempt to add it immediately
-    ' after the current active tab.
-    dim idx as long
-    redim preserve this.tabs(ubound(this.tabs) + 1) as TOPTABS_TYPE
-    
-    if (this.CurSel = -1) orelse (this.CurSel = this.GetItemCount - 1) then
-        ' add the tab at the end of the array
-        idx = ubound(this.tabs)
-    else
-        ' insert the tab after the current tab
-        for i as long = ubound(this.tabs) to this.CurSel + 1 step -1
-            this.tabs(i) = this.tabs(i - 1)
-        next
-        idx = this.CurSel + 1
-    end if
-    
-    this.tabs(idx).pDoc = pDoc
+    dim as integer idx = CTabBar_AddTab( this.hWindow, "", cast(integer, pDoc) )
     this.SetTabText(idx)
-
     function = idx
 end function
 
 ''
 ''
 function clsTopTabCtl.InsertTab( byval pDoc as clsDocument ptr, byval insertIdx as long ) as long
-    ' Return the index of the inserted tab. We attempt to insert it at the
-    ' insertIdx tab.
-    dim idx as long
-    redim preserve this.tabs(ubound(this.tabs) + 1) as TOPTABS_TYPE
-    
-    if insertIdx = this.GetItemCount - 1 then
-        ' add the tab at the end of the array
-        idx = ubound(this.tabs)
-    else
-        ' move down elements in order to make room for the insert
-        for i as long = ubound(this.tabs) to insertIdx + 1 step -1
-            this.tabs(i) = this.tabs(i - 1)
-        next
-        idx = insertIdx + 1
-    end if
-
-    this.tabs(idx).pDoc = pDoc
+    dim as integer idx = CTabBar_InsertTab( this.hWindow, insertIdx, "", cast(integer, pDoc) )
     this.SetTabText(idx)
-
     function = idx
 end function
 
 ''
 ''
 function clsTopTabCtl.RemoveElement( byval idx as long ) as long
-    ' remove an element from the this.tabs array
-    if this.IsSafeIndex(idx) = false then exit function
-    ' if this is the last element being removed then we need
-    ' to erase the global array
-    if this.GetItemCount() = 1 then
-        erase this.tabs
-    else
-        for i as long = idx to ubound(this.tabs) - 1
-            this.tabs(i) = this.tabs(i+1)
-        next   
-        redim preserve this.tabs(ubound(this.tabs)-1)
-    end if
+    CTabBar_DeleteTab( this.hWindow, idx )
     function = 0
 end function
 
 
 ''
 ''
-function clsTopTabCtl.GetTabIndexFromFilename( byref wszName as wstring ) as long
+function clsTopTabCtl.GetTabIndexFromFilename( byval wszName as DWSTRING ) as long
     ' Get the index of tab that holds the incoming filename. This is used
     ' mostly for positioning the editor to the correct document when an
     ' error occurs during compiling. 
     ' Returns -1 if not found, otherwise zero based index of tab.
-    
     dim as long nCount = this.GetItemCount()
     if nCount = 0 then return -1 
     if len(wszName) = 0 then return -1
     
-    for i as long = 0 to nCount - 1
-        if this.tabs(i).pDoc then
-            if ucase(this.tabs(i).pDoc->DiskFilename) = ucase(wszName) then return i
+    dim as clsDocument ptr pDoc
+    
+    for i as integer = 0 to nCount - 1
+        pDoc = this.GetpDoc(i)
+        if pDoc then
+            if ucase(pDoc->DiskFilename) = ucase(wszName) then return i
         end if   
     next
 
@@ -126,15 +99,15 @@ end function
 ''
 ''
 function clsTopTabCtl.GetTabIndexByDocumentPtr( byval pDocIn as clsDocument ptr ) as long
-
     dim as long nCount = this.GetItemCount()
     if nCount = 0 then return -1 
     if pDocIn = 0 then return -1
 
-    for i as long = 0 To nCount - 1
-        if this.tabs(i).pDoc then
-            if this.tabs(i).pDoc = pDocIn then return i
-        end if   
+    dim as clsDocument ptr pDoc
+
+    for i as integer = 0 To nCount - 1
+        pDoc = this.GetpDoc(i)
+        if pDoc = pDocIn then return i
     next
 
     function = -1  ' if not found
@@ -147,10 +120,14 @@ function clsTopTabCtl.SetTabIndexByDocumentPtr( byval pDocIn as clsDocument ptr 
     dim as long nCount = this.GetItemCount()
     if nCount = 0 then return -1 
     if pDocIn = 0 then return -1
-    for i as long = 0 to nCount - 1
-        if this.tabs(i).pDoc = pDocIn then 
-            function = this.SetFocusTab(i)
-            exit function
+
+    dim as clsDocument ptr pDoc
+
+    for i as integer = 0 to nCount - 1
+        pDoc = this.GetpDoc(i)
+        if pDoc = pDocIn then 
+            gTTabCtl.TabFocusLost( gTTabCtl.GetCurSel() )
+            return this.SetFocusTab(i)
         end if   
     next
     function = -1  ' if not found
@@ -160,29 +137,51 @@ end function
 ''
 ''
 function clsTopTabCtl.SetFocusTab( byval idx as long ) as long
-    dim as long nCount = this.GetItemCount()
-    if nCount = 0 then return -1 
-    if idx < 0 then idx = nCount - 1
-    if this.IsSafeIndex(idx) = false then exit function
-    if this.CurSel <> idx then
+    if this.IsValidTab(idx) = false then exit function
 
-        ' Send a user message to accomplish the same thing as TCN_SELCHANGING and TCN_SELCHANGE 
-        SendMessage( HWND_FRMMAIN, MSG_USER_TOPTABS_CHANGING, 0, 0 )
-        this.CurSel = idx
-        SendMessage( HWND_FRMMAIN, MSG_USER_TOPTABS_CHANGED, 0, 0 )
-        ' Highlight the selected tab file in the Explorer listbox
-        frmExplorer_SelectItemData( this.tabs(idx).pDoc )
-        ' Highlight the selected tab file in the Function List listbox
-        frmFunctions_SelectItemData( this.tabs(idx).pDoc )
-        ' If moving to a new Tab and the Find panel is closed then ensure that we 
-        ' remove any find occurrence highlights.
-        dim as clsDocument ptr pDoc = this.GetActiveDocumentPtr()
-        if pDoc then 
-            if IsWindowVisible(HWND_FRMMAIN_TOPTABSFIND) = 0 then pDoc->RemoveSelectionAttributes()
-        end if
-    end if
+    ' TOPTABS_CHANGED:  Set the new current tab and display edit window, etc.
+    CTabBar_SetCurSel( this.hWindow, idx )
 
-    function = this.CurSel
+'            ' Hide the companion frmTopTabsInfo pane if this is not a NORMAL document.
+'            ' For example, if displaying "Find in Project" search.
+'            if gTTabCtl.tabs(gTTabCtl.CurSel).docType = DocumentType.ProjectSearch then
+'                TopTabsInfoPanel_Hide()
+'                FindControls_Show()
+'                if gFind.bShowReplacePanel then
+'                    ReplaceControls_Show()
+'                end if
+'                frmMain_PositionWindows()
+'                dim as HWND hCtl = GetDlgItem( HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND)
+'                SetFocus( hCtl )
+'            else
+                TopTabsInfoPanel_Show()
+                gTTabCtl.DisplayScintilla( idx, true )
+                frmMain_PositionWindows()
+
+                dim pDoc as clsDocument ptr = this.GetpDoc(idx)
+                if pDoc then
+                    AfxRedrawWindow( pDoc->hWindow(0) )  ' makes the code window display quicker especially when loading Project.
+                    AfxRedrawWindow( pDoc->hWindow(1) )  ' makes the code window display quicker especially when loading Project.
+
+                    ' We have moved to a new Tab. If Find is open then highlight any search phrase.   
+                    FindReplace_HighlightSearches()
+
+                    ' Set the focus to the Scintilla window. This will call frmMain_SetStatusbar.
+                    frmMain_SetFocusToCurrentCodeWindow()
+
+                    ' Highlight the selected tab file in the Explorer listbox
+                    frmExplorer_SelectItemData( this.GetpDoc(idx) )
+
+                    ' Highlight the selected tab file in the Function List listbox
+                    frmFunctions_SelectItemData( this.GetpDoc(idx) )
+
+                    ' If moving to a new Tab and the Find panel is closed then ensure that we 
+                    ' remove any find occurrence highlights.
+                    if IsWindowVisible(HWND_FRMMAIN_TOPTABSFIND) = 0 then pDoc->RemoveSelectionAttributes()
+                end if
+'            end if    
+
+    function = CTabBar_GetCurSel( this.hWindow )
 end function
 
 
@@ -190,28 +189,24 @@ end function
 ''
 function clsTopTabCtl.NextTab() as long
     ' Invoked by Ctl+TAB
-    ' Set the tab with focus (this sends the TCN_SELCHANGING and TCN_SELCHANGE 
-    ' notification codes to its parent window). 
-    dim as long nCount = this.GetItemCount
-    dim as long idx = this.CurSel
-    if nCount = 0 then exit function
-    idx += 1
-    if idx > nCount - 1 then idx = 0
-    function = this.SetFocusTab(idx)
+    if CTabBar_CanNavigate( this.hWindow, +1 ) then
+        gTTabCtl.TabFocusLost( gTTabCtl.GetCurSel() )
+        dim as long idx = CTabBar_Navigate( this.hWindow, +1 )
+        return this.SetFocusTab(idx)
+    end if
+    return -1    
 end function
 
 ''
 ''
 function clsTopTabCtl.PrevTab() as long
     ' Invoked by Ctl+Shift+TAB
-    ' Set the tab with focus (this sends the TCN_SELCHANGING and TCN_SELCHANGE 
-    ' notification codes to its parent window). 
-    dim as long nCount = this.GetItemCount 
-    dim as long idx = this.CurSel
-    if nCount = 0 then exit function
-    idx -= 1
-    if idx < 0 then idx = nCount - 1 
-    function = this.SetFocusTab(idx)
+    if CTabBar_CanNavigate( this.hWindow, -1 ) then
+        gTTabCtl.TabFocusLost( gTTabCtl.GetCurSel() )
+        dim as long idx = CTabBar_Navigate( this.hWindow, -1 )
+        return this.SetFocusTab(idx)
+    end if
+    return -1    
 end function
 
 
@@ -221,22 +216,25 @@ function clsTopTabCtl.TabFocusLost( byval nTabIdx as long = -1) as long
     ' If changing away from the Project Search tab then close any open
     ' Find and Replace panes so that they do not display when the new tab
     ' is switched to and displayed.
-    if gTTabCtl.IsSafeIndex(nTabIdx) then
-        if gTTabCtl.tabs(nTabIdx).docType = DocumentType.ProjectSearch then
-            gFind.bShowInfoPanel = true
-            gFind.bShowFindPanel = false
-            gFind.bShowReplacePanel = false
-            gFind.bExpanded = false
-        end if
+'    if gTTabCtl.IsValidTab(nTabIdx) then
+'        if gTTabCtl.tabs(nTabIdx).docType = DocumentType.ProjectSearch then
+'            gFind.bShowInfoPanel = true
+'            gFind.bShowFindPanel = false
+'            gFind.bShowReplacePanel = false
+'            gFind.bExpanded = false
+'        end if
 
-        ' If moving to a new Tab and the Find panel is closed then ensure that we 
-        ' remove any find occurrence highlights.
-        dim as clsDocument ptr pDoc = this.GetActiveDocumentPtr()
-        if pDoc then 
-            if IsWindowVisible(HWND_FRMMAIN_TOPTABSFIND) = 0 then pDoc->RemoveSelectionAttributes()
-        end if
-    end if
-        
+'        ' If moving to a new Tab and the Find panel is closed then ensure that we 
+'        ' remove any find occurrence highlights.
+'        dim as clsDocument ptr pDoc = this.GetActiveDocumentPtr()
+'        if pDoc then 
+'            if IsWindowVisible(HWND_FRMMAIN_TOPTABSFIND) = 0 then pDoc->RemoveSelectionAttributes()
+'        end if
+'    end if
+
+    ' Hide the editing window being moved away from
+    gTTabCtl.DisplayScintilla( nTabIdx, false )
+    
     function = 0
 end function
 
@@ -254,28 +252,25 @@ end function
 ''
 function clsTopTabCtl.GetActiveDocumentPtr() as clsDocument ptr
     ' Return pointer to clsDocument class for the current active tab
-    if this.GetItemCount() = 0 then return 0 
-    if this.IsSafeIndex(this.CurSel) = false then exit function
-    function = this.tabs(this.CurSel).pDoc   
+    if this.GetItemCount() = 0 then return null
+    return this.GetpDoc( this.GetCurSel() )
 end function
 
 ''
 ''
 function clsTopTabCtl.GetDocumentPtr( byval idx as long ) as clsDocument ptr
     ' Return pointer to clsDocument class for the current active tab
-    if this.IsSafeIndex(idx) = false then exit function
-    function = this.tabs(idx).pDoc
+    if this.IsValidTab(idx) = false then return null
+    return this.GetpDoc(idx)
 end function
 
 ''
 ''
 function clsTopTabCtl.DisplayScintilla( byval idx as long, byval bShow as boolean ) as long
     ' Show/Hide the Scintilla editing window for the incoming tab index
-    dim pDocShow as clsDocument ptr
-
-    if this.IsSafeIndex(idx) = false then exit function
-    pDocShow = this.tabs(idx).pDoc
-    if pDocShow = 0 then exit function
+    if this.IsValidTab(idx) = false then exit function
+    dim as clsDocument ptr pDocShow = this.GetpDoc(idx)
+    if pDocShow = null then return 0
 
     ' Hide all documents and their associated scrollbars
     dim pDoc as clsDocument ptr = gApp.pDocList
@@ -296,25 +291,29 @@ end function
     
 ''
 ''
+function clsTopTabCtl.GetTabText( byval idx as long ) as DWSTRING
+    if this.IsValidTab(idx) = false then return ""
+    return CTabBar_GetText( this.hWindow, idx)
+end function
+
+''
+''
 function clsTopTabCtl.SetTabText( byval idx as long ) as long
     ' Set the text for the incoming tab index. if the index
     ' is -1 then set the text of the current tab.
-    dim wszText as wstring * MAX_PATH  
-    dim wszTemp as wstring * MAX_PATH  
-    dim pDoc as clsDocument Ptr
+    if idx = -1 then idx = CTabBar_GetCurSel( this.hWindow )
+    if this.IsValidTab(idx) = false then return idx
 
-    if idx = -1 then idx = gTTabCtl.CurSel
-    if this.IsSafeIndex(idx) = false then exit function
+    dim as clsDocument ptr pDoc = this.GetpDoc(idx)
 
-    pDoc = this.tabs(idx).pDoc
     if pDoc then 
         ' Set the text that displays on the tab
-        wszText = AfxStrPathname( "NAMEX", pDoc->DiskFilename )
+        dim as DWSTRING wszOldText = this.GetTabText( idx )
+        dim as DWSTRING wszNewText = AfxStrPathname( "NAMEX", pDoc->DiskFilename )
             
         ' We only update the text if it has changed in order to prevent flicker.
-        if wszText <> this.tabs(idx).wszText then
-            this.tabs(idx).wszText = wszText
-            frmTopTabs_PositionWindows()
+        if wszNewText <> wszOldText then
+            CTabBar_SetText( this.hWindow, idx, wszNewText )
         end if
     end if
     

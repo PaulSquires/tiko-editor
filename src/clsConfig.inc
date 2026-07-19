@@ -1054,14 +1054,13 @@ function clsConfig.SaveSessionFile( byref wszSessionFile as wstring ) as boolean
     
     ' Save all of the loaded tabs
     pStream.WriteLine "BuildConfig=" & this.CompilerBuild
-    pStream.WriteLine "ActiveTab=" & gTTabCtl.CurSel
+    pStream.WriteLine "ActiveTab="   & gTTabCtl.GetCurSel()
     pStream.WriteLine "CommandLine=" & gApp.wszCommandLine
 
-    nCount = gTTabCtl.GetItemCount
+    nCount = gTTabCtl.GetItemCount()
 
     for i as long = 0 To nCount - 1
-        if gTTabCtl.IsSafeIndex(i) = false then continue for
-        pDoc = gTTabCtl.tabs(i).pDoc
+        pDoc = gTTabCtl.GetpDoc(i)
         if pDoc = 0 then continue for
         
         ' Only deal with files that are no longer "new"
@@ -1236,9 +1235,7 @@ function clsConfig.LoadSessionFile( byref wszSessionFile as wstring ) as boolean
                         
     ' Do a sanity check on the active tab to ensure that it is in bounds thereby
     ' not throwing future array out of bounds gpf's.
-    if (gTTabCtl.IsSafeIndex(nActiveTab) = false) andalso (gTTabCtl.GetItemCount > 0) then
-        nActiveTab = 0
-    end if
+    if gTTabCtl.IsValidTab(nActiveTab) = false then nActiveTab = 0
 
 
     ' Load all of the filenames into the Explorer listbox. Configure the node
@@ -1255,14 +1252,14 @@ function clsConfig.LoadSessionFile( byref wszSessionFile as wstring ) as boolean
     LoadFunctionsFiles()
 
     ' Display the active editing window
-    if gTTabCtl.IsSafeIndex(nActiveTab) then
-        gTTabCtl.CurSel = nActiveTab
+    if gTTabCtl.IsValidTab(nActiveTab) then
+        gTTabCtl.SetCurSel( nActiveTab )
         gTTabCtl.DisplayScintilla( nActiveTab, true )
     
         ' Highlight the selected tab file in the Explorer listbox
-        frmExplorer_SelectItemData( gTTabCtl.tabs(nActiveTab).pDoc )
+        dim as clsDocument ptr pDoc = gTTabCtl.GetpDoc(nActiveTab)
+        frmExplorer_SelectItemData( pDoc )
     end if
-    frmTopTabs_PositionWindows()
     
     frmMain_SetStatusbar
     SetCursor( hCurSave )
@@ -1317,13 +1314,13 @@ function clsConfig.ProjectSaveToFile() as boolean
     pStream.WriteLine "ProjectCommandLine=" & gApp.ProjectCommandLine
 
     ' Save all of the loaded tabs first
-    pStream.WriteLine "ActiveTab=" & gTTabCtl.CurSel
+    pStream.WriteLine "ActiveTab=" & gTTabCtl.GetCurSel()
 
     nCount = gTTabCtl.GetItemCount
 
     for i = 0 To nCount - 1
-        if gTTabCtl.IsSafeIndex(i) = false then continue for
-        pDoc = gTTabCtl.tabs(i).pDoc
+        if gTTabCtl.IsValidTab(i) = false then continue for
+        pDoc = gTTabCtl.GetpDoc(i)
         if pDoc = 0 then continue for
         
         ' Only deal with files that are no longer "new"
@@ -1554,7 +1551,6 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
             pDoc->AssignTextBuffer()
             iTab = gTTabCtl.AddTab( pDoc )  ' Add the new document to the top tabcontrol
         end if
-
     next
 
     gApp.IsProjectLoading = false
@@ -1577,7 +1573,7 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
     LoadFunctionsFiles()
 
     ' Display the active editing window
-    if gTTabCtl.IsSafeIndex(nActiveTab) = false then 
+    if gTTabCtl.IsValidTab(nActiveTab) = false then 
         ' active tab as stored in the config file is not valid. Could be that the
         ' filename no longer exists of trouble loading that particular project file.
         ' Try to use an alternate tab number

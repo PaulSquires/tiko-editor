@@ -15,17 +15,18 @@
 #Define IDC_FRMTOPTABSFIND_TXTFIND                  1000
 #Define IDC_FRMTOPTABSREPLACE_TXTREPLACE            1001
 
-'' frmTopTabs
-declare function frmTopTabs_PositionWindows() as LRESULT
 
 '' frmTopTabsInfo
 declare function TopTabsInfoPanel_Hide() as long
 declare function modFindReplace_HighlightSearches() as long
 declare function frmTopTabsInfo_PositionWindows() as LRESULT
+declare function frmTopTabsInfo_Show( byval hwndParent as HWND ) as LRESULT
 
 '' frmTopTabsFind
 
 '' frmTopTabsReplace
+declare function TopTabsInfoPanel_Show() as long
+declare function FindReplace_HighlightSearches() as long
 
 
 

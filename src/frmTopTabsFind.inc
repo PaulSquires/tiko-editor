@@ -34,10 +34,10 @@ function frmTopTabsFind_PositionWindows() as LRESULT
     dim as long nHeight
     dim as boolean isProjectSearch = false
     
-    dim as long idx = gTTabCtl.CurSel
-    if gTTabCtl.IsSafeIndex(idx) then
-        if gTTabCtl.tabs(idx).docType = DocumentType.ProjectSearch then isProjectSearch = true
-    end if    
+'    dim as long idx = gTTabCtl.GetCurSel()
+'    if gTTabCtl.IsValidTab(idx) then
+'        if gTTabCtl.tabs(idx).docType = DocumentType.ProjectSearch then isProjectSearch = true
+'    end if    
 
     dim as HWND hCtlFind = GetDlgItem(HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND)
 
@@ -45,7 +45,7 @@ function frmTopTabsFind_PositionWindows() as LRESULT
     gTTabCtl.rcFindTextRect = rc
     gTTabCtl.rcFindTextRect.left      = pWindow->ScaleY(10)
     gTTabCtl.rcFindTextRect.top       = 0
-    gTTabCtl.rcFindTextRect.right     = gTTabCtl.rcPrevTabs.left - pWindow->ScaleX(150)
+    gTTabCtl.rcFindTextRect.right     = rc.right - pWindow->ScaleX(300)
     gTTabCtl.rcFindTextRect.bottom    = pWindow->ScaleY(TOPTABS_FIND_HEIGHT) - pWindow->ScaleY(8)
      
     rc      = gTTabCtl.rcFindTextRect

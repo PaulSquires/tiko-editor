@@ -199,6 +199,7 @@ function OnCommand_ProjectSetFileType( _
         ' Highlight the selected tab file in the Explorer listbox
         frmExplorer_SelectItemData( pDoc )
         frmTopTabsInfo_PositionWindows()
+        frmMain_PositionWindows()
     end if
 
     function = 0
@@ -227,8 +228,8 @@ function OnCommand_ProjectRemove( _
         LoadExplorerFiles()
     end if
     
-    if gTTabCtl.IsSafeIndex(gTTabCtl.CurSel) then
-        frmExplorer_SelectItemData( gTTabCtl.tabs(gTTabCtl.CurSel).pDoc )
+    if gTTabCtl.IsValidTab( gTTabCtl.GetCurSel() ) then
+        frmExplorer_SelectItemData( gTTabCtl.GetpDoc(gTTabCtl.GetCurSel()) )
     end if
 
     function = 0

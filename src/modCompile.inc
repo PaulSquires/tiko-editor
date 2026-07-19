@@ -442,7 +442,6 @@ function code_Compile( byval wID as long ) as boolean
 
     dim as DWSTRING wDQ = wchr(34) ' unicode double quotes
 
-                                
     ' Initialize the compile structure and return a pointer to be
     ' used throughout the remainder of the compiling process.
     dim pCompile as COMPILE_TYPE ptr = code_Initialize()

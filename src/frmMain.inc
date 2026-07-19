@@ -752,15 +752,15 @@ function frmMain_PositionWindows() as LRESULT
         nWidthPanel = 0
     end if
 
-    dim as long nTabIdx = gTTabCtl.CurSel
-    if gTTabCtl.IsSafeIndex(nTabIdx) then
-        if gTTabCtl.tabs(nTabIdx).docType = DocumentType.ProjectSearch then
-            IsProjectSearchTab = true
-        end if
-    end if
+'    dim as long nTabIdx = gTTabCtl.GetCurSel()
+'    if gTTabCtl.IsValidTab(nTabIdx) then
+'        if gTTabCtl.tabs(nTabIdx).docType = DocumentType.ProjectSearch then
+'            IsProjectSearchTab = true
+'        end if
+'    end if
     
     ' if items exist in the top tabcontrol then show the tab control and account for its height
-    if (gTTabCtl.GetItemCount = 0) then
+    if (gTTabCtl.GetItemCount() = 0) then
         nHeightTabControl = 0
         nHeightTabInfoPanel = 0
         nHeightTabFindPanel = 0
@@ -768,13 +768,12 @@ function frmMain_PositionWindows() as LRESULT
         ShowWindow( HWND_FRMMAIN_TOPTABS, SW_HIDE )
     end if
 
-    if (gTTabCtl.GetItemCount > 0) then
+    if (gTTabCtl.GetItemCount() > 0) then
         nHeightTabControl = AfxGetWindowHeight(HWND_FRMMAIN_TOPTABS)
         SetWindowPos( HWND_FRMMAIN_TOPTABS, 0, _
                     nLeft, nTop, _
                     rc.Right - nWidthPanel, nHeightTabControl, _
                     SWP_SHOWWINDOW or SWP_NOZORDER )
-        frmTopTabs_PositionWindows()
         nTop += nHeightTabControl
     end if
         
@@ -1461,47 +1460,8 @@ function frmMain_WndProc( _
             end if
             
 
+
         ''  CUSTOM MESSAGES
-
-        case MSG_USER_TOPTABS_CHANGING
-            ' Hide the current tab
-            gTTabCtl.TabFocusLost( gTTabCtl.CurSel )
-            gTTabCtl.DisplayScintilla( gTTabCtl.CurSel, false )
-            exit function
-            
-        case MSG_USER_TOPTABS_CHANGED
-            ' Show the new tab
-            ' Hide the companion frmTopTabsInfo pane if this is not a NORMAL document.
-            ' For example, if displaying "Find in Project" search.
-            if gTTabCtl.tabs(gTTabCtl.CurSel).docType = DocumentType.ProjectSearch then
-                TopTabsInfoPanel_Hide()
-                FindControls_Show()
-                if gFind.bShowReplacePanel then
-                    ReplaceControls_Show()
-                end if
-                frmMain_PositionWindows()
-                dim as HWND hCtl = GetDlgItem( HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND)
-                SetFocus( hCtl )
-            else
-                TopTabsInfoPanel_Show()
-                gTTabCtl.DisplayScintilla( gTTabCtl.CurSel, true )
-                frmMain_PositionWindows()
-
-                dim pDoc as clsDocument ptr = gTTabCtl.tabs(gTTabCtl.CurSel).pDoc
-                if pDoc then
-                    AfxRedrawWindow( pDoc->hWindow(0) )  ' makes the code window display quicker especially when loading Project.
-                    AfxRedrawWindow( pDoc->hWindow(1) )  ' makes the code window display quicker especially when loading Project.
-
-                    ' We have moved to a new Tab. If Find is open then highlight any search phrase.   
-                    FindReplace_HighlightSearches()
-
-                    ' Set the focus to the Scintilla window. This will call frmMain_SetStatusbar.
-                    frmMain_SetFocusToCurrentCodeWindow()
-                end if
-            end if    
-
-            exit function
- 
 
         case WM_SETFOCUS
             frmMain_SetFocusToCurrentCodeWindow()
@@ -1511,7 +1471,11 @@ function frmMain_WndProc( _
             ' display such as Line#, Col#, Filename, etc.
             frmMain_SetStatusbar()
             dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
-            if pDoc then SetFocus( pDoc->hWndActiveScintilla )
+            if pDoc then 
+                ' Ensure that the correct Explorer listbox entry is selected
+                frmExplorer_SelectItemData( pDoc )
+                SetFocus( pDoc->hWndActiveScintilla )
+            end if
 
         case MSG_USER_PROCESS_COMMANDLINE 
             ' process any command line arguments that may have been passed to the program.

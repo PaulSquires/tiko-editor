@@ -55,12 +55,12 @@ end function
 function ReplaceControls_Show() as long
     ' Display the Replace controls
     AfxSetWindowText( GetDlgItem( HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE ), "" )
-    if gTTabCtl.tabs(gTTabCtl.CurSel).docType = DocumentType.ProjectSearch then
-        gFind.bProjectReplaceActive = true
-    else
+'    if gTTabCtl.tabs(gTTabCtl.CurSel).docType = DocumentType.ProjectSearch then
+'        gFind.bProjectReplaceActive = true
+'    else
         ' All non-Project Search tabs will always show the Info panel.    
         gFind.bShowInfoPanel = true
-    end if    
+'    end if    
     gFind.bShowFindPanel = true
     gFind.bShowReplacePanel = true
     gFind.bExpanded = true
@@ -78,10 +78,11 @@ function FindReplaceControls_Hide() as long
     gFind.bExpanded = false
 
     ' Remove any Find Highlight selection indicators from open documents.
-    for i as long = lbound(gTTabCtl.tabs) to ubound(gTTabCtl.tabs)
-        if gTTabCtl.tabs(i).pDoc <> 0 then
-            gTTabCtl.tabs(i).pDoc->RemoveSelectionAttributes()
-        end if    
+    dim as clsDocument ptr pDoc
+    for i as integer = 0 to gTTabCtl.GetItemCount() - 1
+        pDoc = gTTabCtl.GetpDoc(i)
+        if pDoc = null then continue for
+        pDoc->RemoveSelectionAttributes()
     next
 
     frmMain_PositionWindows()

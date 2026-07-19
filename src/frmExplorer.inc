@@ -192,8 +192,8 @@ function frmExplorer_MessageCallback( byval m as CLISTBOX_MESSAGEINFO ptr ) as b
                     if gTTabCtl.SetTabIndexByDocumentPtr( pDoc ) = -1 then
                         OpenSelectedDocument( pDoc->DiskFilename )
                     end if
-                    frmMain_SetFocusToCurrentCodeWindow()
                 end if
+                frmMain_SetFocusToCurrentCodeWindow()
             end if
 
             ' Header collapse/expand is handled inside the control on the mouse-down,
@@ -202,73 +202,65 @@ function frmExplorer_MessageCallback( byval m as CLISTBOX_MESSAGEINFO ptr ) as b
             ' on the button-down.
             return false
     
-' TODO: Right Click popup menu on Explorer row.            
-'        case WM_RBUTTONDOWN
-'            ' Create the popup menu
-'            dim as long idx = Listbox_ItemFromPoint( hWin, GET_X_LPARAM(_lParam), GET_Y_LPARAM(_lParam)) 
-'            ' The return value contains the index of the nearest item in the LOWORD. The HIWORD is zero 
-'            ' if the specified point is in the client area of the list box, or one if it is outside the 
-'            ' client area.
-'            if hiword(idx) <> 1 then
-'                dim as clsDocument ptr pDoc = cast(clsDocument ptr, ListBox_GetItemData( hWin, idx ))
-'                if pDoc then
-'                    ' If only 1 line has been previously selected then unselect that line
-'                    ' and select this current line, otherwise, the menu actions on all selected lines.
-'                    dim as long nSelCount = SendMessage( hWin, LB_GETSELCOUNT, 0, 0 )
-'                    if nSelCount = 1 then
-'                        for i as long = 0 to ListBox_GetCount( hWin ) - 1 
-'                            ListBox_SetSel( hWin, false, i )
-'                        next 
-'                    end if
-                    
-'                    ListBox_SetSel( hWin, true, idx )
-'                    dim as HMENU hPopupMenu = CreateExplorerContextMenu(pDoc)
-'                    dim as POINT pt: GetCursorPos( @pt )
-'                    dim as long id = TrackPopupMenu(hPopUpMenu, TPM_RETURNCMD, pt.x, pt.y, 0, HWND_FRMMAIN, byval null)
-'                    ' process the selected rows. Need to save the current state of selected
-'                    ' rows prior to processing because as the items are processed some of the
-'                    ' actions may reset the state of listbox. We save the pDoc's in an array
-'                    ' rather than index values because the listbox may get reloaded during
-'                    ' some actions invalidating some indexes. 
-'                    nSelCount = SendMessage( hWin, LB_GETSELCOUNT, 0, 0 )
-'                    dim pDocArray(nSelCount-1) as clsDocument ptr 
-'                    dim as long nextIdx = 0
-'                    for i as long = 0 to ListBox_GetCount( hWin ) - 1
-'                        if ListBox_GetSel( hWin, i ) then
-'                            dim as DWSTRING wszCaption = AfxGetListBoxText( hWin, i )
-'                            if left(wszCaption, 1) = "%" then 
-'                                pDocArray(nextIdx) = 0
-'                            else   
-'                                pDocArray(nextIdx) = cast(clsDocument ptr, ListBox_GetItemData( hWin, i ))
-'                            end if
-'                            nextIdx = nextIdx + 1
-'                        end if
-'                    next         
-'                    ' Process our array of selected pDoc's.
-'                    for i as long = lbound(pDocArray) to ubound(pDocArray)
-'                        if pDocArray(i) = 0 then continue for
-'                        select case id
-'                            case IDM_FILEOPEN_EXPLORERLISTBOX, IDM_FILECLOSE_EXPLORERLISTBOX, _
-'                                IDM_FILESAVE_EXPLORERLISTBOX, IDM_FILESAVEAS_EXPLORERLISTBOX, _
-'                                IDM_FILERENAME_EXPLORERLISTBOX, IDM_FILEDUPLICATE_EXPLORERLISTBOX
-'                                OnCommand_FileExplorerMessage( id, pDocArray(i) )
-'                            case IDM_REMOVEFILEFROMPROJECT_EXPLORERLISTBOX
-'                                OnCommand_ProjectRemove( id, pDocArray(i) )
-'                            case IDM_SETFILEMAIN_EXPLORERTREEVIEW, IDM_SETFILERESOURCE_EXPLORERTREEVIEW, _
-'                                IDM_SETFILEHEADER_EXPLORERTREEVIEW, IDM_SETFILEMODULE_EXPLORERTREEVIEW, _
-'                                IDM_SETFILENORMAL_EXPLORERTREEVIEW 
-'                                OnCommand_ProjectSetFileType( id, pDocArray(i) )
-'                            case is > IDM_SETCATEGORY     
-'                                OnCommand_ProjectSetFileType( id, pDocArray(i) )
-'                        end select
-'                    next
-'                    LoadExplorerFiles()
-'                    frmExplorer_UnSelectListBox() 
-'                    DestroyMenu( hPopUpMenu )
-'                    return true   ' prevent further processing that leads to WM_CONTEXTMENU
-'                end if
-'            end if
+        case WM_RBUTTONDOWN
+            ' Create the popup menu
+            dim as HWND hCtl = GetParent(m->hList)
+            if CListBox_IsHeader( hCtl, m->idx ) then return false
+
+            dim as clsDocument ptr pDoc = cast(clsDocument ptr, CListBox_GetItemData(hCtl, m->idx))
+            if pDoc = null then return false
             
+            ' If only 1 line has been previously selected then unselect that line
+            ' and select this current line, otherwise, the menu actions on all selected lines.
+            dim as long nSelCount = CListBox_GetSelCount(hCtl)
+            if nSelCount = 1 then CListBox_SelectAll(hCtl, false)
+            CListBox_SetSel(hCtl, m->idx, true)
+
+            dim as HMENU hPopupMenu = CreateExplorerContextMenu(pDoc)
+            dim as POINT pt: GetCursorPos( @pt )
+            dim as long id = TrackPopupMenu(hPopUpMenu, TPM_RETURNCMD, pt.x, pt.y, 0, HWND_FRMMAIN, byval null)
+
+            ' process the selected rows. Need to save the current state of selected
+            ' rows prior to processing because as the items are processed some of the
+            ' actions may reset the state of listbox. We save the pDoc's in an array
+            ' rather than index values because the listbox may get reloaded during
+            ' some actions invalidating some indexes. 
+            nSelCount = CListBox_GetSelCount(hCtl)
+            dim pDocArray(nSelCount-1) as clsDocument ptr 
+            dim as integer nextIdx = 0
+            for i as integer = 0 to CListBox_GetCount(hCtl) - 1
+                if CListBox_IsHeader(hCtl, i) then continue for
+                if CListBox_GetSel( hCtl, i ) = true then
+                    dim as integer nItemData = CListBox_GetItemData( hCtl, i )
+                    dim as clsDocument ptr pDoc = cast(clsDocument ptr, nItemData)
+                    pDocArray(nextIdx) = pDoc
+                    nextIdx = nextIdx + 1
+                end if
+            next         
+
+            ' Process our array of selected pDoc's.
+            for i as long = lbound(pDocArray) to ubound(pDocArray)
+                if pDocArray(i) = null then continue for
+                select case id
+                    case IDM_FILEOPEN_EXPLORERLISTBOX, IDM_FILECLOSE_EXPLORERLISTBOX, _
+                        IDM_FILESAVE_EXPLORERLISTBOX, IDM_FILESAVEAS_EXPLORERLISTBOX, _
+                        IDM_FILERENAME_EXPLORERLISTBOX, IDM_FILEDUPLICATE_EXPLORERLISTBOX
+                        OnCommand_FileExplorerMessage( id, pDocArray(i) )
+                    case IDM_REMOVEFILEFROMPROJECT_EXPLORERLISTBOX
+                        OnCommand_ProjectRemove( id, pDocArray(i) )
+                    case IDM_SETFILEMAIN_EXPLORERTREEVIEW, IDM_SETFILERESOURCE_EXPLORERTREEVIEW, _
+                        IDM_SETFILEHEADER_EXPLORERTREEVIEW, IDM_SETFILEMODULE_EXPLORERTREEVIEW, _
+                        IDM_SETFILENORMAL_EXPLORERTREEVIEW 
+                        OnCommand_ProjectSetFileType( id, pDocArray(i) )
+                    case is > IDM_SETCATEGORY     
+                        OnCommand_ProjectSetFileType( id, pDocArray(i) )
+                end select
+            next
+            LoadExplorerFiles()
+            frmExplorer_UnSelectListBox() 
+            frmMain_PositionWindows()
+            DestroyMenu( hPopUpMenu )
+            return true   ' prevent further processing that leads to WM_CONTEXTMENU
 
     end select
 

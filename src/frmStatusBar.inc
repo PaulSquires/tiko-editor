@@ -160,7 +160,7 @@ function frmStatusBar_Show( byval hwndParent as HWND ) as LRESULT
 
     ' The Ln/Col readout changes length constantly; floor it so it stops shoving its
     ' neighbours around on every caret move.
-    CStatusBar_SetPanelMinWidth( hCtrl, 0, AfxScaleX(110) )
+    CStatusBar_SetPanelMinWidth( hCtrl, 0, AfxScaleX(300) )
 
     ' Panel 1 absorbs all unused width 
     CStatusBar_SetExpandPanel( hCtrl, 1 )

@@ -95,10 +95,10 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "modFuzzy.inc"
 
 ' Custom controls
-'#include once "CTabBar.inc" 
 #include once "CVScrollBar.inc" 
 #include once "CListBox.inc" 
 #include once "CStatusBar.inc" 
+#include once "CTabBar.inc" 
 
 #include once "frmAbout.inc" 
 #include once "frmPopupMenu.inc"

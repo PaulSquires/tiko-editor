@@ -16,6 +16,7 @@
 #define IDC_FRMMAIN_TOPTABCONTROL                   1000
 #define IDC_FRMMAIN_COMPILETIMER                    1001
 #define IDC_FRMMAIN_STATUSBAR                       1002
+#define IDC_FRMMAIN_TABBAR                          1003
 
 declare function frmMain_OpenProjectSafely( byval HWnd as HWnd, byref wszProjectFileName as const WString ) as Boolean
 declare function frmMain_CalcSplitRect( byval pDoc as clsDocument ptr ) as long

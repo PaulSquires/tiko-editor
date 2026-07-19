@@ -71,8 +71,8 @@ function ResetScintillaCursors() as long
     dim as long nCount = gTTabCtl.GetItemCount 
 
     for i as long = 0 to nCount - 1
-        if gTTabCtl.IsSafeIndex(i) = false then continue for
-        dim as clsDocument ptr pDoc = gTTabCtl.tabs(i).pDoc
+        if gTTabCtl.IsValidTab(i) = false then continue for
+        dim as clsDocument ptr pDoc = gTTabCtl.GetpDoc(i)
         if pDoc then 
             SciExec( pDoc->hWindow(0), SCI_SETCURSOR, SC_CURSORNORMAL, 0 )
             SciExec( pDoc->hWindow(1), SCI_SETCURSOR, SC_CURSORNORMAL, 0 )

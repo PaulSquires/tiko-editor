@@ -183,11 +183,11 @@ function frmFunctions_MessageCallback( byval m as CLISTBOX_MESSAGEINFO ptr ) as 
                 dim as clsDocument ptr pDoc = cast(clsDocument ptr, nItemData)
                 if pDoc then 
                     ' if the file is already showing in the Top tabs then switch to that tab.
-                    if gTTabCtl.SetTabIndexByDocumentPtr( pDoc ) then
+                    if gTTabCtl.SetTabIndexByDocumentPtr( pDoc ) <> -1 then
                         dim as hwnd hEdit = pDoc->hwndActiveScintilla
                         SciExec( hEdit, SCI_SETFIRSTVISIBLELINE, max(nLineNum - 3, 0), 0) 
                         SciExec( hEdit, SCI_GOTOLINE, nLineNum, 0) 
-                        pDoc->CenterCurrentLine
+                        pDoc->CenterCurrentLine()
                     else
                         ' We don't need to parse the caption for the function name because
                         ' we already have the pDoc and line number stored.

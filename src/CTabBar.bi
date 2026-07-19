@@ -567,6 +567,7 @@ declare function CTabBar_Create( byval hWndParent as HWND, byval CtrlID as integ
 '   SetCurSel it is SILENT -- the reorder callback fires only for user drags.
 ' ----------------------------------------------------------------------------------------
 declare function CTabBar_AddTab( byval hTabBar as HWND, byval Text as DWSTRING, byval itemData as integer = 0 ) as integer
+declare function CTabBar_IsValidTab( byval hTabBar as HWND, byval idx as integer ) as boolean
 declare function CTabBar_InsertTab( byval hTabBar as HWND, byval idx as integer, byval Text as DWSTRING, byval itemData as integer = 0 ) as integer
 declare function CTabBar_DeleteTab( byval hTabBar as HWND, byval idx as integer ) as boolean
 declare function CTabBar_MoveTab( byval hTabBar as HWND, byval idxFrom as integer, byval idxTo as integer ) as boolean

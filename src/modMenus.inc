@@ -465,8 +465,8 @@ end function
 function CreateTopTabCtlContextMenu( byval idx as long ) as HMENU
     dim hPopUpMenu as HMENU
     dim hPopUpSubMenu as HMENU
-    dim wszText as wstring * MAX_PATH
-    dim as long CuriTab = gTTabCtl.CurSel
+    dim as DWSTRING wszText
+    dim as long CuriTab = gTTabCtl.GetCurSel()
     dim as long MaxiTab = gTTabCtl.GetItemCount - 1
 
     hPopUpMenu = CreatePopupMenu()
@@ -682,11 +682,11 @@ function CreateTopTabsActionButtonContextMenu() as HMENU
     ' menu is cancelled.
     hPopUpMenu = CreatePopupMenu()
     for idMenu as long = 0 to gTTabCtl.GetItemCount - 1
-        wszCaption = gTTabCtl.tabs(idMenu).wszText
+        wszCaption = gTTabCtl.GetTabText(idMenu)
         AppendMenu( hPopUpMenu, MF_ENABLED or MFT_RADIOCHECK, idMenu + 1, wszCaption )
     next
     ' Check the item that is the currently active tab (1 based)
-    CheckMenuRadioItem( hPopupMenu, 1, gTTabCtl.GetItemCount, gTTabCtl.CurSel+1, MF_BYCOMMAND )
+    CheckMenuRadioItem( hPopupMenu, 1, gTTabCtl.GetItemCount, gTTabCtl.GetCurSel() + 1, MF_BYCOMMAND )
 
     function = hPopupMenu
 end function
