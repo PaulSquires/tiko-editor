@@ -16,21 +16,9 @@
 ' parses a copy of the active document's live text (debounced while typing).
 ' ========================================================================================
 
-enum SCAN_TIER
-    ScanTierProject = 1
-    ScanTierBuffer  = 2
-end enum
-
-' One completed scan handed from the worker to the UI thread. Phase 2 adds
-' the index arrays (name hash, per-file chains, child chains) and the merge
-' logic in clsSymbolDb; until then this is the raw result plus metadata.
-type PARSERESULTSET
-    pResult       as FBCP_RESULT ptr    ' owned; freed only on the worker via the retire queue
-    tier          as long               ' SCAN_TIER
-    scanRc        as long               ' fbcparser_scan return code (FBCP_OK expected)
-    scanMs        as long               ' elapsed scan time
-    wszRootFile   as wstring * MAX_PATH ' root file as passed to the scan (absolute)
-end type
+' SCAN_TIER and PARSERESULTSET are defined in clsSymbolDb.bi (included first) -
+' they are symbol-database concepts; the scan manager only produces and shuttles
+' PARSERESULTSET instances.
 
 ' A pending scan request (mailbox slot). Allocated with NEW on the UI thread;
 ' DELETEd by the worker after the scan, or by the UI thread when a newer

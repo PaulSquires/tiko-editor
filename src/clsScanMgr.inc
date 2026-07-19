@@ -271,6 +271,9 @@ sub clsScanMgr.WorkerLoop()
             pRSet->wszRootFile = pReq->wszRootFile
             delete pReq
 
+            ' Build the query indexes here on the worker (off the UI thread).
+            pRSet->BuildIndexes()
+
             ' ---- under the lock: publish into the done slot ----
             EnterCriticalSection( @m_cs )
             if pRSet->tier = ScanTierBuffer then

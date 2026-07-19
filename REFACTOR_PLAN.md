@@ -280,6 +280,33 @@ known TYPEs (one with EXTENDS) and `BuildCalltip` vs old `CallTip` for ten procs
 **Verify:** diff summary recorded; known-difference classes (old-parser misses, casing,
 better line numbers) recorded, not "fixed". Harness removed before merge.
 
+*(done 2026-07-19 — `clsSymbolDb.bi/.inc` live: PARSERESULTSET (moved here from clsScanMgr.bi)
+with FNV-1a name hash + per-file + parent→child chains built on the worker right after each
+scan; `gSymDb.InstallSet` swaps atomically on the UI thread in the parse-complete handler and
+retires the displaced set to the worker. Full query API + `BuildCalltip` + `gFBIntrinsics()`
+(LoadCodetipsFB now additionally fills the sorted intrinsics table; gdb2 feed kept until
+Phase 3/6). Cross-check on the real project (env-gated, removed before merge): **773 gdb2
+USERCODE functions → 5 missing; 78 types → 0 missing**; member enumeration + EXTENDS walk +
+calltip synthesis all verified against old output. One merge-semantics bug found and fixed:
+a context-starved buffer scan of a lone .inc (117 symbols vs ~500) SHADOWED the project's
+complete copy of that file — name lookups now fall back to the suppressed project copy on a
+miss (verified: 9 private-proc misses → 0 with CTabBar.inc active). Known-difference classes,
+recorded not fixed: (1) old parser lines are 0-based, fbcParser 1-based — **Phase 3 must
+subtract 1 when driving Scintilla**; (2) multi-line proc headers: bodyLine = first body line,
+a few lines past the `function` keyword; (3) the 5 remaining misses are explicit
+constructors — fbc names them with `$` so the collector filter drops them; future fbcParser
+addition if ctor calltips are wanted; (4) files open in tabs but not #include'd by the main
+file (e.g. the in-progress frmTopTabsMenu.inc) are visible only while active — designed
+two-tier semantics; (5) calltip type-texts are semantically resolved (HWND → `HWND__ ptr`,
+`AFXNOVA.DWSTRING`) rather than source-verbatim — cosmetic, possible future fbcParser
+improvement; (6) dynamic member arrays emit twin FIELD records — deduped in EnumMembers.
+Also: fbc's `SWAP` keyword forbids a `Swap` method (renamed `InstallSet`), and
+object-returning functions can't mix `function =` with `return`. NOT verified: no consumer
+reads gSymDb yet (Phase 3); intrinsics lookup exercised only by unit call, not by a codetip.
+The author's parallel TopTabsMenu WIP (modDeclares.bi, frmMain positioning, new
+frmTopTabsMenu files, root tiko.exe deletion) was left uncommitted — the phase commit
+carries only fbcParser work.)*
+
 ### Phase 3 — Codetips, dotted dereference, autocomplete, F12
 Rewrite `DereferenceLine` (returns `SYMBOLREF`), `ShowCodetip`, `ShowAutocompleteList`
 internals; F12 cascade → new API; codetip-path `ParseDocument` calls removed.

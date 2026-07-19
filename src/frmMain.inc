@@ -1523,21 +1523,23 @@ function frmMain_WndProc( _
             return ShowAutocompleteList()
 
         case MSG_USER_PARSE_COMPLETE
-            ' A background fbcParser scan finished. Phase 1: trace the summary
-            ' and retire the set immediately; Phase 2 swaps it into gSymDb.
+            ' A background fbcParser scan finished: swap it into gSymDb (atomic,
+            ' on this UI thread) and hand the displaced set back to the worker
+            ' to be freed under the same-thread contract.
             dim as PARSERESULTSET ptr pRSet = gScanMgr.TakeCompleted( clng(wParam) )
             if pRSet then
-                dim as string sTrace = "FBCP complete: tier=" & pRSet->tier & _
+                dim as long nTier = pRSet->tier
+                dim as string sTrace = "FBCP complete: tier=" & nTier & _
                                        " rc=" & pRSet->scanRc & " ms=" & pRSet->scanMs
                 if pRSet->pResult then
                     sTrace &= "  symbols=" & pRSet->pResult->symbolCount & _
                               " files=" & pRSet->pResult->fileCount & _
                               " diags=" & pRSet->pResult->diagCount
                 end if
-                dim as string sRoot = pRSet->wszRootFile
-                sTrace &= "  root=" & sRoot
                 print sTrace
-                gScanMgr.RetireResult( pRSet )
+
+                dim as PARSERESULTSET ptr pOld = gSymDb.InstallSet( nTier, pRSet )
+                if pOld then gScanMgr.RetireResult( pOld )
             end if
 
         case MSG_USER_APPENDEQUALSSIGN

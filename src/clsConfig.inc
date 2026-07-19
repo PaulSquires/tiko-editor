@@ -112,22 +112,46 @@ function clsConfig.LoadCodetipsFB() as boolean
     
     parser.nFileType = DB2_FILETYPE_FB
     
+    ' Phase 2 (fbcParser): also populate gFBIntrinsics(), the separate sorted
+    ' lookup the new codetip path (Phase 3) consults for built-ins. This is
+    ' ADDITIVE for now - the gdb2 records above stay so the live editor keeps
+    ' working until Phase 3 switches consumers over.
+    erase gFBIntrinsics
+    dim as long nIntrinsic = 0
+
     dim pStream as CTextStream
     if pStream.Open(this.FBCodetipsFilename) <> S_OK then return true  ' error
-    
+
     do until pStream.EOS
         wst = pStream.ReadLine
         wst = trim(wst)
         if len(wst) = 0 then continue do
-        
+
         i = instr(wst, "=")
         if i then
             parser.functionName   = left(wst, i-1)
             parser.functionParams = mid(wst, i+1)
             gdb2.dbAdd( @parser, DB2_FUNCTION )
-        end if   
+
+            redim preserve gFBIntrinsics( 0 to nIntrinsic )
+            gFBIntrinsics(nIntrinsic).wszName    = left(wst, i-1)
+            gFBIntrinsics(nIntrinsic).wszNameUp  = ucase( left(wst, i-1) )
+            gFBIntrinsics(nIntrinsic).wszCalltip = mid(wst, i+1)
+            nIntrinsic += 1
+        end if
     loop
     pStream.Close
+
+    ' sort gFBIntrinsics ascending by wszNameUp for FindIntrinsicCalltip's binary search
+    for a as long = 1 to nIntrinsic - 1
+        dim as FBINTRINSIC_TIP tmp = gFBIntrinsics(a)
+        dim as long b = a - 1
+        do while (b >= 0) andalso (gFBIntrinsics(b).wszNameUp > tmp.wszNameUp)
+            gFBIntrinsics(b + 1) = gFBIntrinsics(b)
+            b -= 1
+        loop
+        gFBIntrinsics(b + 1) = tmp
+    next
 
     return false  ' no error
 end function
