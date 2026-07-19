@@ -68,6 +68,7 @@ dim shared as DWSTRING gwszDefaultToolchain = "FreeBASIC-1.10.1-winlibs-gcc-9.3.
 #include once "clsDB2.bi"
 #include once "clsConfig.bi"
 #include once "clsApp.bi"
+#include once "clsScanMgr.bi"
 
 '  Global classes
 dim shared gApp     as clsApp
@@ -84,6 +85,7 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "modParser.inc"
 #include once "clsDocument.inc"
 #include once "clsApp.inc"
+#include once "clsScanMgr.inc"
 #include once "clsTopTabCtl.inc"
 #include once "modAutoInsert.inc"
 #include once "modCompile.inc"
@@ -245,9 +247,11 @@ function WinMain( _
     ' Load the HTML help library for displaying FreeBASIC help *.chm file
     gpHelpLib = dylibload( "hhctrl.ocx" )
 
-    ' Load codetip files 
+    ' Load codetip files
     if gConfig.Codetips then gConfig.LoadCodetips
 
+    ' Start the background fbcParser scan worker (owns all fbcParser.dll calls)
+    gScanMgr.StartWorker()
 
     ' Show the main form
     function = frmMain_Show( 0 )

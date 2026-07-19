@@ -425,6 +425,10 @@ function Scintilla_OnNotify( _
 
 
                     pDoc->bNeedsParsing = true
+                    ' Restart the background-parse debounce timer (same id restarts it)
+                    if (gApp.IsProjectLoading = false) andalso (gApp.IsFileLoading = false) then
+                        SetTimer( HWND_FRMMAIN, IDT_PARSER_DEBOUNCE, PARSER_DEBOUNCE_MS, 0 )
+                    end if
                     if (pNSC->modificationType and SC_MOD_DELETETEXT) then
                         ' Do a check to see if we have backspaced to a point where there is a
                         ' period to try to popup an autocomplete or codetip.
@@ -550,6 +554,9 @@ function Scintilla_OnNotify( _
             hEdit = pDoc->hWndActiveScintilla
         
 			pDoc->bNeedsParsing = true
+
+            ' Restart the background-parse debounce timer (same id restarts it)
+            SetTimer( HWND_FRMMAIN, IDT_PARSER_DEBOUNCE, PARSER_DEBOUNCE_MS, 0 )
 
             ' Attempt to do a Character Autocompletion if that editor option is active.
             frmMain_InsertMatchedChars( pDoc, pNSC->ch )

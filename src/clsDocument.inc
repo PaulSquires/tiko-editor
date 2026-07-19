@@ -306,8 +306,14 @@ function clsDocument.LoadDiskFile( _
     this.bNeedsParsing = bForceParse
     this.ParseDocument()
 
+    ' Kick a background symbol scan for the freshly loaded text (skipped
+    ' during bulk project loading - the project-tier scan covers those files)
+    if (gApp.IsProjectLoading = false) andalso (bIsTemplate = false) then
+        gScanMgr.RequestBufferScan( @this )
+    end if
+
     function = 0
-end function    
+end function
     
 
 ''

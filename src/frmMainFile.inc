@@ -225,6 +225,9 @@ function OnCommand_FileSave( _
     ' We neeed to reload Bookmarks when any of the filenames have changed.
     if bReloadExplorer then LoadBookmarksFiles()
 
+    ' Files changed on disk - refresh the background project-tier scan
+    if bReloadFunctions then gScanMgr.RequestProjectScan()
+
     frmMain_SetFocusToCurrentCodeWindow()
 
     function = false

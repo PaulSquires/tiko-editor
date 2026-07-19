@@ -248,6 +248,29 @@ pending copy; buffer preferred over project; clean exit join; no `FBCP_E_BUSY` e
 loop + `GetProcessMemoryInfo` working-set delta recorded (expect ~2–30 KB/scan upstream
 residual); UTF-8 doc with non-ASCII comments scans with sane counts.
 
+*(done 2026-07-19 — full pipeline live: `clsScanMgr.bi/.inc` (worker thread via
+`ThreadCreate`, latest-wins mailbox with per-tier pending/done slots, retire queue, bounded
+shutdown join on a manual-reset exit event — fbc 1.10 has no `ThreadDetach` and the FB thread
+handle is not a Win32 HANDLE, so the join waits on the event, not the thread), triggers wired
+(debounce restart in SCN_MODIFIED/SCN_CHARADDED, tab switch, file open, save → project scan,
+project open → project scan), `MSG_USER_PARSE_COMPLETE` handler traces and retires. Verified
+headless by driving the real exe (console-subsystem dev build + WM_CHAR posted to the
+Scintilla child — the session foreground lock defeats SendKeys): project scan of tiko.tiko =
+191,941 symbols / 312 files / 0 diags / 3.0 s, byte-identical counts to the fbcparser_test
+harness; buffer scan served before a queued project scan; 8 single-keystroke bursts → exactly
+8 scans; 6 rapid chars in one debounce window → exactly 1 scan; done-slot supersede observed
+(12 scans → 11 deliveries, worker freed the unclaimed set); clean WM_CLOSE exit every run;
+rc always FBCP_OK; UTF-8 comments fine; ~12.5 KB/scan working-set growth on a small file
+(8-scan sample). **One real bug found and fixed:** `SaveConfigFile` converts the LIVE
+`gConfig` path values to `{CURDRIVE}` placeholder form as a side effect, so the include-path
+snapshot must run everything through `ProcessFromCurdriveApp` exactly like modCompile does —
+without it the toolchain inc dir silently drops and a project scan shrinks to 33 files/1 diag.
+Also: `pSet` is unusable as a variable name (fbc `PSET` keyword). NOT verified: the
+pending-request supersede branch (scans finish too fast to stack two requests; same logic as
+the verified done-slot supersede), save→project-scan trigger end-to-end (no project open in
+the typing runs; the call site is one line), interactive feel/latency while typing — the
+author's pass. The old gdb2 sync-parse path is untouched and still live.)*
+
 ### Phase 2 — clsSymbolDb: indexes, merge, query API, side-by-side check
 Indexes, merge masks, full query API, `BuildCalltip`, intrinsics load (`LoadCodetipsFB`
 rewritten to fill `gFBIntrinsics()`; WinAPI/WinFBX loading untouched for now); the handler
