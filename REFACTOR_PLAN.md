@@ -220,6 +220,22 @@ EXTENDS/typedef/local records; frees every result.
 **Verify:** plausible counts (~30k+ symbols, sub-second), EXTENDS base visible. Temporary
 block removed before merge.
 
+*(done 2026-07-19 — vendored `src\fbcParser.bi` + `src\libfbcParser.dll.a`, DLL to root and
+`src\` via new `_copy_fbcparser.bat`; `_compile.bat` gained `-p .`. Probe results (env-gated
+block, removed before merge): full `src\tiko.bas` scan = rc 0, **191,858 symbols / 310 files /
+0 diags** — ~6× the windows.bi benchmark, and it costs **~3.1 s cold AND warm** (no warm-up
+benefit; the engine re-inits per scan). So a full-project scan is a ~3 s worker-thread
+operation, not ~0.4 s: fine for save-triggered project scans and latest-wins-coalesced edits
+of tiko.bas itself, and irrelevant for buffer scans of individual .inc files (no includes →
+fast). Result memory at this scale ≈ 12 MB pool + 7.7 MB symbols per result. Text-entry-point
+probe: EXTENDS base visible through the DLL (`Dog : Animal`), TYPEDEF (`DogAlias : Dog`) and
+scope-aware local (`localDog`, flags LOCAL+UDTTYPE, parented to its sub) all correct.
+**parentIndex can point forward** (locals are harvested before the global walk) — Phase 2's
+index build must not assume parents precede children. Build clean, zero warnings, console
+subsystem confirmed for `_compile.bat` builds so `print`-tracing works. NOT verified: nothing
+interactive; root `tiko.exe` (author's `-s gui` build) not rebuilt; `src\fbcParser.dll` and
+`src\tiko.exe` left as untracked dev residue.)*
+
 ### Phase 1 — Scan manager, worker thread, messages
 New `clsScanMgr`; `MSG_USER_PARSE_COMPLETE` + `IDT_PARSER_DEBOUNCE` in modDeclares.bi;
 handler in frmMain.inc (~:1510 select block) traces a summary and retires the set; triggers
