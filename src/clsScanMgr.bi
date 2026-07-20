@@ -32,7 +32,9 @@ type SCANREQUEST
     tier          as long               ' SCAN_TIER
     pszText       as zstring ptr        ' buffer tier: heap copy of the document text
     cchText       as long
+    bTextUtf8     as boolean            ' buffer tier: pszText is UTF-8 (else ANSI)
     sIncludePaths as DWSTRING           ' semicolon list snapshotted on the UI thread
+    sIncPrefix    as DWSTRING           ' ucased toolchain inc folder (TODO sweep filter)
     wszRootFile   as wstring * MAX_PATH ' absolute path; buffer tier: the virtual name
     declare destructor()
 end type

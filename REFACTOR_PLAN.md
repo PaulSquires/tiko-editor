@@ -42,6 +42,13 @@ files) — that must be committed before Phase 0; every phase diffs against a cl
 7. **Diagnostics stored per scan + query API; no new UI this refactor.**
 8. **TODO comments**: fbcParser can't see comments → a small dedicated line scanner on the
    worker over the same text copy feeds the TODO panel.
+   *(Amended 2026-07-19, author requirement: TODO coverage must be **project-wide**, not
+   active-file-only. The project tier's worker pass re-reads every user file the scan
+   touched from disk and line-scans it; the buffer tier still scans the live text copy and
+   its rows take precedence for the active document. TODO text must survive **non-latin
+   encodings**: the byte→wide conversion goes through `DWSTRING.utf8` for UTF-8 content —
+   per-document via `FileEncoding` for buffer text, BOM + validity heuristic for disk
+   files; UTF-16 disk files are skipped, covered once opened/converted in-buffer.)*
 
 ## Prerequisite: fbcParser change (verified gap, settled by inspection)
 
@@ -426,6 +433,27 @@ never-activated files don't appear (old code parsed every open doc on load; proj
 TODO coverage would need a disk-side scan pass, deliberately not built — decision 8 scopes
 the scanner to the in-memory text copy). NOT verified (author's pass): listview
 click-through navigation and multi-file accumulation feel during a real session.)*
+
+*(5b, done 2026-07-19 — two author-reported gaps fixed same day. **(1) Non-latin TODO text
+garbled**: the scanner assigned captured bytes to DWSTRING as ANSI; UTF-8 content (the
+editor's default in-buffer encoding) mangled. Now the byte→wide conversion is
+encoding-aware: buffer scans carry `bTextUtf8` (from `pDoc->FileEncoding` — ANSI docs keep
+Scintilla codepage 0, everything else is UTF-8 in-buffer) and convert via `DWSTRING.utf8`.
+**(2) Project-wide scanning** (decision 8 amended): `ScanMgr_ScanProjectTodos` runs on the
+worker after each project scan, re-reading every user file from disk (toolchain inc
+excluded via a prefix snapshotted into the request), BOM-aware (UTF-8 BOM skipped, UTF-16
+files skipped entirely — covered once opened), UTF-8-vs-ANSI decided by a sequence-validity
+heuristic for BOM-less files. `clsSymbolDb.InstallProjectTodos` replaces each swept file's
+rows (zero-item files get cleared, so on-disk deletions propagate) while leaving the active
+document's fresher buffer rows alone; the panel now refreshes on both tiers. Verified
+headless: project sweep found tiko.bas:54 / frmOutput.inc / frmPanel.bi TODOs with **no**
+file ever activated; a UTF-8-BOM scratch with `' TODO: 这是一项待办事项` round-tripped
+byte-exactly through the store (8 wide chars, 24 utf8 bytes) AND through the listview
+(cell text read back equals the expected codepoints); gone-on-close still passes. Known
+cosmetics: project-sourced rows show the scan's UPPERCASED path until the file's first
+buffer scan replaces them with the original-case name; legacy ANSI files with high-bytes
+that happen to form valid UTF-8 would convert as UTF-8 (heuristic limit). NOT verified
+(author's pass): listview click-through, CJK rendering in the actual owner-draw font.)*
 
 ### Phase 6 — Deletion and de-configuration
 Delete `modParser.bi/.inc`, `clsDB2.bi/.inc`; remove `bNeedsParsing`/`ParseDocument`/
