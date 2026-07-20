@@ -199,7 +199,8 @@ end function
 
 
 ' ========================================================================================
-' Retrieve specified idx itemData from the custom statusbar control.
+' Retrieve the client-coordinate RECT of the specified idx panel. Returns an empty RECT
+' for an invalid index.
 ' ========================================================================================
 function CStatusBar_GetItemRect( byval hStatusBarControl as HWND, byval idx as integer ) as RECT
     dim as RECT rc
@@ -211,7 +212,7 @@ end function
 
 
 ' ========================================================================================
-' Retrieve the font used to measure panel text.
+' Retrieve the handle of the statusbar's tooltip control.
 ' ========================================================================================
 function CStatusBar_GetTooltipHandle( byval hStatusBarControl as HWND ) as HWND
     dim as CSTATUSBAR ptr pStatus = GetStatusBarPointer(hStatusBarControl)
