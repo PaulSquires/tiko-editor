@@ -321,6 +321,22 @@ sub CTABBAR.LayoutTabs()
         end if
     end if
 
+    ' Back-fill: when the whole tail [nFirstVisible..end] fits the client with enough
+    ' slack to also hold the previous tab, pull earlier tabs into view. Without this a
+    ' delete (or a widening resize) leaves dead space on the right while tabs sit
+    ' hidden to the left -- a listbox clamps its top index the same way. Runs after
+    ' ensure-visible: it only ever reduces nFirstVisible while keeping the full tail
+    ' (nCurSel included) visible, so the two never fight.
+    dim as integer tailW = 0
+    for i as integer = this.nFirstVisible to this.tabCount - 1
+        tailW += this.tabs(i).nWidth
+    next
+    while (this.nFirstVisible > 0) andalso _
+          (tailW + this.tabs(this.nFirstVisible - 1).nWidth <= clientW)
+        this.nFirstVisible -= 1
+        tailW += this.tabs(this.nFirstVisible).nWidth
+    wend
+
     ' Position left-to-right from nFirstVisible; every tab spans the full client height.
     dim as integer x = rcClient.left
     for i as integer = 0 to this.tabCount - 1
