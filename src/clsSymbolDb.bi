@@ -113,6 +113,7 @@ type clsSymbolDb
         m_bufContrib(any)  as boolean       ' buffer  file i's symbols are visible
 
         declare sub RecomputeMerge()
+        declare sub InstallProjectTodos( byval pNew as PARSERESULTSET ptr )
         declare function FileContributes( byval pRSet as PARSERESULTSET ptr, byval nFileIdx as long ) as boolean
         declare function FindByKindMask( byref wszName as const wstring, byval kindMask as long ) as SYMBOLREF
         declare function FindInSet( byval pRSet as PARSERESULTSET ptr, byref wszName as const wstring, byval kindMask as long, byval bIgnoreSuppression as boolean = false ) as SYMBOLREF

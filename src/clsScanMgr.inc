@@ -32,25 +32,58 @@ function ScanMgr_GetRootName( byval pDoc as clsDocument ptr ) as DWSTRING
 end function
 
 
-' Scan a buffer-scan text copy for 'TODO: comment lines and fill the result
-' set's todoItems()/todoCount. This is modParser's match rule, lifted before its
-' deletion: an apostrophe comment whose text - after optional spaces - begins
-' with "todo:" case-insensitively (no spaces inside the word). Only the FIRST
-' apostrophe outside a string literal counts, matching the old tokenizer which
-' only ever tested the start of a comment. Line numbers are 1-based. Runs on
-' the worker thread over the same heap copy the scan itself consumed.
-private sub ScanMgr_ScanTodos( _
+' Heuristic used for BOM-less disk files: no high bytes -> ANSI and UTF-8 agree
+' (returns false, the plain conversion is used); high bytes forming valid UTF-8
+' sequences -> true; malformed sequences -> false (a legacy ANSI file).
+private function ScanMgr_LooksUtf8( byval pB as ubyte ptr, byval cb as long ) as boolean
+    dim as boolean bHasHigh = false
+    dim as long i = 0
+    while i < cb
+        dim as long b = pB[i]
+        if b < &h80 then
+            i += 1
+        else
+            bHasHigh = true
+            dim as long nCont = 0
+            if (b and &hE0) = &hC0 then
+                nCont = 1
+            elseif (b and &hF0) = &hE0 then
+                nCont = 2
+            elseif (b and &hF8) = &hF0 then
+                nCont = 3
+            else
+                return false
+            end if
+            for j as long = 1 to nCont
+                if i + j >= cb then return false
+                if (pB[i + j] and &hC0) <> &h80 then return false
+            next
+            i += nCont + 1
+        end if
+    wend
+    return bHasHigh
+end function
+
+
+' Scan a byte buffer for 'TODO: comment lines and APPEND them to the result
+' set's todoItems()/todoCount, stamped with wszFile. This is modParser's match
+' rule, lifted before its deletion: an apostrophe comment whose text - after
+' optional spaces - begins with "todo:" case-insensitively (no spaces inside
+' the word). Only the FIRST apostrophe outside a string literal counts,
+' matching the old tokenizer which only ever tested the start of a comment.
+' Line numbers are 1-based. bUtf8 selects the byte->wide conversion of the
+' captured text (DWSTRING.utf8 vs plain ANSI assign). Worker thread.
+private sub ScanMgr_ScanTodoBytes( _
             byval pRSet as PARSERESULTSET ptr, _
-            byval pszText as zstring ptr, _
-            byval cchText as long _
+            byval pB as ubyte ptr, _
+            byval cb as long, _
+            byref wszFile as const wstring, _
+            byval bUtf8 as boolean _
             )
 
-    pRSet->todoCount = 0
-    if (pszText = 0) orelse (cchText <= 0) then exit sub
+    if (pB = 0) orelse (cb <= 0) then exit sub
 
-    ' index as raw bytes (indexing a zstring ptr yields characters, not values)
-    dim as ubyte ptr pB = cast( ubyte ptr, pszText )
-
+    dim as long cchText = cb
     dim as long i = 0
     dim as long nLineNum = 1
     dim as boolean bInString = false
@@ -100,13 +133,76 @@ private sub ScanMgr_ScanTodos( _
                 if pRSet->todoCount > ubound( pRSet->todoItems ) then
                     redim preserve pRSet->todoItems( 0 to pRSet->todoCount * 2 + 7 )
                 end if
-                pRSet->todoItems( pRSet->todoCount ).nLineNum = nLineNum
-                pRSet->todoItems( pRSet->todoCount ).wszText = sText
+                with pRSet->todoItems( pRSet->todoCount )
+                    .wszFile = wszFile
+                    .nLineNum = nLineNum
+                    ' byte->wide: UTF-8 documents/files must convert through
+                    ' the DWSTRING utf8 property or non-latin text garbles
+                    if bUtf8 then
+                        .wszText.utf8 = sText
+                    else
+                        .wszText = sText
+                    end if
+                end with
                 pRSet->todoCount += 1
             end if
         end if
         i += 1
     wend
+end sub
+
+
+' Project tier: fbcParser read everything from disk, so no text copy exists.
+' Re-read every USER file the scan touched (skipping the toolchain include
+' folder) and line-scan it, so the TODO panel is project-wide instead of
+' active-file-only (author requirement, 2026-07-19). UTF-16 files are skipped -
+' the editor converts those to UTF-8 in-buffer, so their TODOs appear once the
+' document is opened and buffer-scanned. Worker thread, ~230 small files per
+' project scan; the read cost is dwarfed by the 3 s symbol scan itself.
+private sub ScanMgr_ScanProjectTodos( _
+            byval pRSet as PARSERESULTSET ptr, _
+            byref wszIncPrefix as const wstring _
+            )
+
+    if pRSet->pResult = 0 then exit sub
+    dim as long fc = pRSet->pResult->fileCount
+
+    for i as long = 0 to fc - 1
+        dim as wstring ptr pFile = @pRSet->pResult->stringPool[ pRSet->pResult->fileOffsets[i] ]
+        if len( wszIncPrefix ) > 0 then
+            if ucase( left( *pFile, len( wszIncPrefix ) ) ) = wszIncPrefix then continue for
+        end if
+
+        dim as DWSTRING wszF = *pFile
+        dim as long f = freefile
+        if open( wszF for binary access read as #f ) <> 0 then continue for
+        dim as long cb = lof( f )
+        if cb <= 0 then
+            close #f
+            continue for
+        end if
+        dim as string sBytes = space( cb )
+        get #f, 1, sBytes
+        close #f
+
+        dim as ubyte ptr pB = cast( ubyte ptr, strptr( sBytes ) )
+        dim as long nStart = 0
+        dim as boolean bUtf8 = false
+        if cb >= 2 then
+            dim as boolean bUtf16 = ((pB[0] = &hFF) andalso (pB[1] = &hFE)) orelse _
+                                    ((pB[0] = &hFE) andalso (pB[1] = &hFF))
+            if bUtf16 then continue for
+        end if
+        if cb >= 3 then
+            if (pB[0] = &hEF) andalso (pB[1] = &hBB) andalso (pB[2] = &hBF) then
+                nStart = 3
+                bUtf8 = true
+            end if
+        end if
+        if bUtf8 = false then bUtf8 = ScanMgr_LooksUtf8( pB + nStart, cb - nStart )
+
+        ScanMgr_ScanTodoBytes( pRSet, pB + nStart, cb - nStart, *pFile, bUtf8 )
+    next
 end sub
 
 
@@ -170,6 +266,7 @@ private function clsScanMgr.BuildRequest( _
     dim as DWSTRING wszCompiler = ProcessFromCurdriveApp( gConfig.FBWINCompiler64 )
     if len( wszCompiler ) then
         wszPaths = wszPaths & ";" & AfxStrPathname( "PATH", wszCompiler ) & "inc"
+        pReq->sIncPrefix = ucase( AfxStrPathname( "PATH", wszCompiler ) & "inc" )
     end if
 
     pReq->sIncludePaths = wszPaths
@@ -227,6 +324,9 @@ sub clsScanMgr.RequestBufferScan( byval pDoc as clsDocument ptr )
 
     dim as DWSTRING wszRoot = ScanMgr_GetRootName( pDoc )
     dim as SCANREQUEST ptr pReq = this.BuildRequest( ScanTierBuffer, wszRoot )
+    ' ANSI documents keep codepage 0 in Scintilla; everything else is UTF-8
+    ' in-buffer - the TODO scanner needs to know which conversion to apply.
+    pReq->bTextUtf8 = ( pDoc->FileEncoding <> FILE_ENCODING_ANSI )
     pReq->cchText = len( sText )
     pReq->pszText = allocate( pReq->cchText + 1 )
     if pReq->pszText = 0 then
@@ -349,10 +449,15 @@ sub clsScanMgr.WorkerLoop()
             pRSet->scanMs = clng( (timer - t0) * 1000 )
             pRSet->wszRootFile = pReq->wszRootFile
 
-            ' TODO line-scan of the same text copy (buffer tier only - fbcParser
-            ' itself never sees comments, and a project scan's text is on disk).
+            ' TODO line-scan (fbcParser itself never sees comments): the buffer
+            ' tier scans the same text copy the symbol scan consumed; the
+            ' project tier re-reads its user files from disk (project-wide
+            ' TODO coverage - author requirement).
             if pReq->tier = ScanTierBuffer then
-                ScanMgr_ScanTodos( pRSet, pReq->pszText, pReq->cchText )
+                ScanMgr_ScanTodoBytes( pRSet, cast( ubyte ptr, pReq->pszText ), _
+                                       pReq->cchText, pReq->wszRootFile, pReq->bTextUtf8 )
+            else
+                ScanMgr_ScanProjectTodos( pRSet, pReq->sIncPrefix )
             end if
             delete pReq
 

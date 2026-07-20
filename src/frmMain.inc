@@ -1546,9 +1546,10 @@ function frmMain_WndProc( _
                 ' reload it anyway when it becomes visible later).
                 if IsWindowVisible( HWND_FRMFUNCTIONS ) then LoadFunctionsFiles()
 
-                ' A buffer scan re-line-scanned the active file's TODO comments
-                ' (installed into the store by InstallSet) - refresh the panel.
-                if nTier = ScanTierBuffer then frmOutput_UpdateToDoListview()
+                ' Both tiers update the TODO store now (buffer scans re-scan the
+                ' active file's text; project scans sweep every user file on
+                ' disk) - refresh the panel either way.
+                frmOutput_UpdateToDoListview()
             end if
 
         case MSG_USER_APPENDEQUALSSIGN

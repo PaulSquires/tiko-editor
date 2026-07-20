@@ -205,10 +205,44 @@ function clsSymbolDb.InstallSet( byval nTier as long, byval pNew as PARSERESULTS
     else
         pOld = m_pProject
         m_pProject = pNew
+        ' the project sweep re-line-scanned every user file from disk
+        if pNew then this.InstallProjectTodos( pNew )
     end if
     this.RecomputeMerge()
     function = pOld
 end function
+
+
+' Replace the stored TODO rows of every file a project scan visited. The active
+' document's rows are left alone - its buffer scans are fresher than the disk.
+' Files the sweep found no TODOs in get their stale rows cleared (ReplaceFile
+' with zero items removes), so deletions on disk propagate too.
+sub clsSymbolDb.InstallProjectTodos( byval pNew as PARSERESULTSET ptr )
+    if pNew->pResult = 0 then exit sub
+
+    dim as DWSTRING wszBufRoot
+    if m_pBuffer then wszBufRoot = m_pBuffer->wszRootFile
+
+    dim tmp(any) as TODOITEM
+    dim as long fc = pNew->pResult->fileCount
+    for i as long = 0 to fc - 1
+        dim as wstring ptr pFile = @pNew->pResult->stringPool[ pNew->pResult->fileOffsets[i] ]
+        if len( wszBufRoot ) > 0 then
+            if SymDb_FileNameEq( *pFile, wszBufRoot ) then continue for
+        end if
+
+        dim as long nSub = 0
+        redim tmp( 0 to 7 )
+        for t as long = 0 to pNew->todoCount - 1
+            if SymDb_FileNameEq( pNew->todoItems(t).wszFile, *pFile ) then
+                if nSub > ubound( tmp ) then redim preserve tmp( 0 to nSub * 2 + 7 )
+                tmp(nSub) = pNew->todoItems(t)
+                nSub += 1
+            end if
+        next
+        TodoStore_ReplaceFile( *pFile, tmp(), nSub )
+    next
+end sub
 
 sub clsSymbolDb.RecomputeMerge()
     dim as boolean bHaveProject = false
