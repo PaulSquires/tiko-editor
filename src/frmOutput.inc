@@ -150,16 +150,15 @@ function frmOutput_ShowHideOutputControls( byval hwnd as HWND ) as LRESULT
             hCtrl = hLV
 
         case 1    ' compiler log file
+            ' (The old EM_SETRECT 20px-indent hack is gone: the CTextBox carries a
+            ' permanent left margin instead, set at creation.)
             hTextBox = GetDlgItem(hwnd, IDC_FRMOUTPUT_TXTLOGFILE)
             hCtrl = hTextBox
             dim as DWSTRING wszText = ltrim(AfxGetWindowText(hTextBox))
             if wszText = "" then
                AfxSetWindowText(hTextBox, "No compiler log file exists.")
-            end if   
-            dim as RECT rc: GetClientRect( hTextBox, @rc )
-            rc.left = rc.left + pWindow->ScaleX(20)
-            SendMessage( hTextBox, EM_SETRECT, 0, cast(LPARAM, @rc) )
-            
+            end if
+
         case 2    ' search results
             hLV = HWND_FRMOUTPUT_LVSEARCH
             hCtrl = hLV
@@ -169,13 +168,12 @@ function frmOutput_ShowHideOutputControls( byval hwnd as HWND ) as LRESULT
             hCtrl = hLV
 
         case 4    ' Notes
+            ' (Left margin lives in the CTextBox now; focusing the container focuses
+            ' the RichEdit child.)
             hTextBox = GetDlgItem(hwnd, IDC_FRMOUTPUT_TXTNOTES)
             hCtrl = hTextBox
-            dim as RECT rc: GetClientRect( hTextBox, @rc )
-            rc.left = rc.left + pWindow->ScaleX(20)
-            SendMessage( hTextBox, EM_SETRECT, 0, cast(LPARAM, @rc) )
             SetFocus( hTextBox )
-    
+
     end select
     
     if hLV then 
@@ -299,28 +297,6 @@ end function
 
 
 ' ========================================================================================
-' GetVisibleLineCount number of lines per page in the RichEdit textbox
-' ========================================================================================
-function GetVisibleLineCount( byval hRichEdit as HWND ) as long
-    dim as RECT formatRect
-    SendMessage( hRichEdit, EM_GETRECT, 0, cast(LPARAM, @formatRect) )
-    
-    dim as HDC hdc = GetDC(hRichEdit)
-
-    dim as CHARFORMAT cf
-    cf.cbSize = sizeof(CHARFORMAT)
-    SendMessage( hRichEdit, EM_GETCHARFORMAT, 0, cast(LPARAM, @cf) )
-    dim as integer fontHeightPixels = MulDiv(cf.yHeight, GetDeviceCaps(hdc, LOGPIXELSY), 1440)
-
-    ReleaseDC( hRichEdit, hdc )
-    
-    dim as long formatHeight = formatRect.bottom - formatRect.top
-
-    return max(0, (formatHeight / fontHeightPixels) -4 )   'TODO: Hack with "4" 
-end function
-
-
-' ========================================================================================
 ' Calculate the RECT that holds the client coordinates of the scrollbar's vertical thumb
 ' Returns True if RECT is not empty
 ' ========================================================================================
@@ -330,16 +306,22 @@ function frmOutputVScroll_calcVThumbRect( byval hTextBox as HWND ) as boolean
 
     ' calculate the vertical scrollbar in client coordinates
     dim as RECT rc = AfxGetWindowRect(hTextBox)
-    MapWindowPoints( HWND_DESKTOP, HWND_FRMMAIN, cast(point ptr, @rc), 2 ) 
+    MapWindowPoints( HWND_DESKTOP, HWND_FRMMAIN, cast(point ptr, @rc), 2 )
     dim as long clientHeight = rc.bottom - rc.top
-    dim as long firstVisibleLine = SendMessage(hTextBox, EM_GETFIRSTVISIBLELINE, 0, 0)
-    dim as long iScrollbarWidth = AfxGetWindowWidth(HWND_FRMOUTPUT_VSCROLL) 
+    dim as long iScrollbarWidth = AfxGetWindowWidth(HWND_FRMOUTPUT_VSCROLL)
     dim as long minThumbHeight = pWindow->ScaleY(SCROLLBAR_MINTHUMBSIZE)
     SetRectEmpty( @gOutputVScroll.rc )
 
+    ' The three range numbers come from the control (CVScrollBar-shaped: total, page,
+    ' first). Lines-per-page is derived from the real formatting rect and font metrics
+    ' -- this replaced the old EM_GETCHARFORMAT computation with its "-4" fudge factor.
+    dim as integer nTotalLines, nLinesPerPage, nFirstVisible
+    CTextBox_GetVScrollInfo( hTextBox, nTotalLines, nLinesPerPage, nFirstVisible )
+    dim as long firstVisibleLine = nFirstVisible
+
     with gOutputVScroll
-        .linesPerPage = GetVisibleLineCount(hTextBox)
-        .numLines = SendMessage(hTextBox, EM_GETLINECOUNT, 0, 0) + 1
+        .linesPerPage = nLinesPerPage
+        .numLines = nTotalLines + 1    ' +1 headroom kept from the old thumb math
         dim as double ratio = .linesPerPage / .numLines
         .thumbHeight = int(ratio * clientHeight)
         if .thumbHeight < minThumbHeight then .thumbHeight = minThumbHeight
@@ -404,7 +386,11 @@ function frmOutputVScroll_WndProc( _
                 elseif pt.y > rc.bottom then
                     nDiff = gOutputVScroll.linesPerPage
                 end if
-                SendMessage( hTextBox, EM_LINESCROLL, 0, cast(LPARAM, nDiff) )
+                ' CVScrollBar-shaped: scroll to an absolute first line (the control
+                ' clamps overscroll), then re-derive the thumb.
+                dim as integer nTotalLines, nLinesPerPage, nFirstVisible
+                CTextBox_GetVScrollInfo( hTextBox, nTotalLines, nLinesPerPage, nFirstVisible )
+                CTextBox_ScrollToLine( hTextBox, nFirstVisible + nDiff )
                 frmOutputVScroll_calcVThumbRect(hTextBox)
                 AfxRedrawWindow( hwnd )
             end if
@@ -423,17 +409,14 @@ function frmOutputVScroll_WndProc( _
 
                     prev_pt = pt
                     
-                    dim as long nPrevTopLine = SendMessage( hTextBox, EM_GETFIRSTVISIBLELINE, 0, 0 ) 
                     rc = AfxGetWindowRect(hTextBox)
-                    MapWindowPoints( HWND_DESKTOP, HWND_FRMMAIN, cast(point ptr, @rc), 2 ) 
+                    MapWindowPoints( HWND_DESKTOP, HWND_FRMMAIN, cast(point ptr, @rc), 2 )
                     dim as long clientHeight = rc.bottom - rc.top
                     if clientHeight = 0 then exit function
                     dim as double scrollRatio = gOutputVScroll.rc.top / (clientHeight - gOutputVScroll.thumbHeight)
                     dim as long nTopLine = int(scrollRatio * (gOutputVScroll.numLines - gOutputVScroll.linesPerPage))
-                    if nTopLine <> nPrevTopLine then
-                        dim as long nDiff = nTopLine - nPrevTopLine
-                        SendMessage( hTextBox, EM_LINESCROLL, 0, cast(LPARAM, nDiff) )
-                    end if   
+                    ' ScrollToLine no-ops when already there (CVScrollBar-shaped door).
+                    CTextBox_ScrollToLine( hTextBox, nTopLine )
                     AfxRedrawWindow( hwnd )
 
                 end if
@@ -474,6 +457,32 @@ end function
 
 
 ' ========================================================================================
+' CTextBox callbacks for the Log/Notes controls.
+' ========================================================================================
+' Notes changed by USER interaction. Save them to the correct global variable so the
+' changes are not lost when documents or projects are switched. (Programmatic SetText
+' during those switches is silent, so this can never echo a switch back into the
+' wrong project's notes.)
+sub frmOutput_NotesChanged( byval hTextBox as HWND )
+    if gApp.IsProjectActive then
+        gApp.ProjectNotes = CTextBox_GetText( hTextBox )
+    else
+        gApp.NonProjectNotes = CTextBox_GetText( hTextBox )
+    end if
+end sub
+
+' Vertical scroll state changed (typing, programmatic SetText, wheel) -- recalc the
+' custom scrollbar's thumb. Skipped while the user is dragging that thumb: the drag
+' code owns the thumb rect for the duration (same guard the old EN_UPDATE handler had).
+sub frmOutput_TextBoxScrollChanged( byval hTextBox as HWND )
+    if gApp.bDragActive = false then
+        frmOutputVScroll_calcVThumbRect( hTextBox )
+        AfxRedrawWindow( HWND_FRMOUTPUT_VSCROLL )
+    end if
+end sub
+
+
+' ========================================================================================
 ' Process WM_SIZE message for window/dialog: frmOutput
 ' ========================================================================================
 function frmOutput_OnSize( _
@@ -500,43 +509,6 @@ function frmOutput_OnDestroy( byval hwnd as HWND ) as LRESULT
 end Function
 
 
-' ========================================================================================
-' Process WM_COMMAND message for window/dialog: frmOutput
-' ========================================================================================
-function frmOutput_OnCommand( _
-            byval hwnd as HWND, _
-            byval id as long, _
-            byval hwndCtl as HWND, _
-            byval codeNotify as UINT _
-            ) as LRESULT
-
-    select case codeNotify
-     
-        case EN_UPDATE
-            if gApp.bDragActive = false then
-                frmOutputVScroll_calcVThumbRect(hwndCtl)
-                AfxRedrawWindow( HWND_FRMOUTPUT_VSCROLL )
-            end if
-            
-        case EN_CHANGE
-            ' Notes have been modified. Save them to the correct global variable
-            ' to ensure that the changes are not lost when documents or projects
-            ' are switched.
-            if id = IDC_FRMOUTPUT_TXTNOTES then
-                if gApp.IsProjectActive then
-                    gApp.ProjectNotes = AfxGetWindowText(hwndCtl)
-                else
-                    gApp.NonProjectNotes = AfxGetWindowText(hwndCtl)
-                end if   
-                exit function
-            end if
-            
-    end select
-                        
-    function = 0
-end function
-        
-   
 ' ========================================================================================
 ' Process WM_MOUSEMOVE message for window/dialog: frmOutput
 ' ========================================================================================
@@ -926,59 +898,6 @@ end function
 
 
 ' ========================================================================================
-' frmOutput_RichEdit_SubclassProc Window procedure
-' ========================================================================================
-function frmOutput_RichEdit_SubclassProc ( _
-        byval hWin   as HWND, _                 ' // Control window handle
-        byval uMsg   as UINT, _                 ' // Type of message
-        byval _wParam as WPARAM, _               ' // First message parameter
-        byval _lParam as LPARAM, _               ' // Second message parameter
-        byval uIdSubclass as UINT_PTR, _        ' // The subclass ID
-        byval dwRefData as DWORD_PTR _          ' // pointer to reference data
-        ) as LRESULT
-
-    dim pWindow as CWindow ptr = AfxCWindowPtr(hWin)
-
-    select case uMsg
-        
-        case WM_CONTEXTMENU 
-            ' Create the right click popup menu
-            dim as DWSTRING wszText = RichEdit_GetSelText( hWin )
-            dim hPopUpMenu as HMENU = CreatePopupMenu()
-            if len(wszText) then 
-                AppendMenu( hPopUpMenu, MF_ENABLED, IDM_CUT, L(17,"Cut") )
-                AppendMenu( hPopUpMenu, MF_ENABLED, IDM_COPY, L(18,"Copy") )
-            end if
-            if RichEdit_CanPaste( hWin, 0 ) then
-                AppendMenu( hPopUpMenu, MF_ENABLED, IDM_PASTE, L(19,"Paste") )
-            end if   
-            AppendMenu( hPopUpMenu, MF_ENABLED, IDM_SELECTALL, L(40,"Select All") )
-
-            dim as long nResult
-            nResult = TrackPopupMenu( hPopUpMenu, TPM_RETURNCMD or TPM_NONOTIFY, _
-                            loword(_lParam), hiword(_lParam), 0, HWND_FRMOUTPUT, 0 ) 
-            SetFocus( hWin )
-            select case nResult
-                case IDM_CUT:       SendMessage( hWin, WM_CUT, 0, 0 )
-                case IDM_COPY:      SendMessage( hWin, WM_COPY, 0, 0 )
-                case IDM_PASTE:     SendMessage( hWin, WM_PASTE, 0, 0 )
-                case IDM_SELECTALL
-                    PostMessage( HWND_FRMOUTPUT, MSG_USER_RICHEDIT_SELECTALL, cast(WPARAM, hWin), 0 )
-            end select
-            DestroyMenu hPopUpMenu
-            
-
-        case WM_DESTROY
-            ' REQUIRED: Remove control subclassing
-            RemoveWindowSubclass( hWin, @frmOutput_RichEdit_SubclassProc, uIdSubclass )
-    end select
-    
-    ' For messages that we don't deal with
-    function = DefSubclassProc(hWin, uMsg, _wParam, _lParam)
-
-end function
-
-' ========================================================================================
 ' frmOutput Window procedure
 ' ========================================================================================
 function frmOutput_WndProc( _
@@ -989,7 +908,6 @@ function frmOutput_WndProc( _
             ) as LRESULT
 
     select case uMsg
-        HANDLE_MSG (hwnd, WM_COMMAND,       frmOutput_OnCommand)
         HANDLE_MSG (hwnd, WM_SIZE,          frmOutput_OnSize)
         HANDLE_MSG (hwnd, WM_LBUTTONUP,     frmOutput_OnLButtonUp)
         HANDLE_MSG (hwnd, WM_LBUTTONDOWN,   frmOutput_OnLButtonDown)
@@ -1019,11 +937,6 @@ function frmOutput_WndProc( _
                 SetDocumentErrorPosition( hLV )    
         end select
         
-    case MSG_USER_RICHEDIT_SELECTALL
-        dim as HWND hCtrl = cast(HWND, wParam) 
-        SetFocus( hCtrl )
-        Edit_SetSel( hCtrl, 0, -1 )
-
     case WM_ERASEBKGND
         return true
 
@@ -1047,19 +960,16 @@ end function
 ' user changes the theme (dark/light)
 ' ========================================================================================
 function frmOutput_SetControlColors() as long
-    dim cf as CHARFORMATW 
-    cf.cbSize = sizeof(cf)
-    cf.dwMask = CFM_COLOR
-    cf.crTextColor = ghOutput.forecolorhot
-
     dim as HWND hCtl
     hCtl = GetDlgItem( HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTLOGFILE )
-    SendMessage( hCtl, EM_SETCHARFORMAT, SCF_ALL, cast(LPARAM, @cf) ) 
-    SendMessage( hCtl, EM_SETBKGNDCOLOR , 0, cast(LPARAM, ghOutput.backcolor) )
-    
+    CTextBox_SetForeColor( hCtl, ghOutput.ForeColorHot )
+    CTextBox_SetBackColor( hCtl, ghOutput.BackColor )
+    CTextBox_SetOuterBackColor( hCtl, ghOutput.BackColor )
+
     hCtl = GetDlgItem( HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTNOTES )
-    SendMessage( hCtl, EM_SETCHARFORMAT, SCF_ALL, cast(LPARAM, @cf) ) 
-    SendMessage( hCtl, EM_SETBKGNDCOLOR , 0, cast(LPARAM, ghOutput.backcolor) )
+    CTextBox_SetForeColor( hCtl, ghOutput.ForeColorHot )
+    CTextBox_SetBackColor( hCtl, ghOutput.BackColor )
+    CTextBox_SetOuterBackColor( hCtl, ghOutput.BackColor )
 
     hCtl = HWND_FRMOUTPUT_LVRESULTS 
     frmListView_SetForeColors( hCtl, ghOutput.ForeColor, ghOutput.ForeColorHot )
@@ -1120,27 +1030,27 @@ function frmOutput_Show( byval hwndParent as HWND ) as LRESULT
         WS_EX_LEFT or WS_EX_LTRREADING)
     pWindow->SetControlSubclass(hCtl, @frmOutputTabs_SubclassProc, IDC_FRMOUTPUT_TABS, @pWindow)
 
-    hCtl = pWindow->AddControl("RICHEDIT", , IDC_FRMOUTPUT_TXTLOGFILE, "", _
-                    0, 0, 0, 0, _
-                    WS_CHILD or WS_TABSTOP or WS_VSCROLL or _
-                    ES_READONLY or ES_MULTILINE or ES_LEFT or ES_AUTOVSCROLL, _
-                    WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_RIGHTSCROLLBAR)
-    pWindow->SetControlSubclass(hCtl, @frmOutput_RichEdit_SubclassProc, IDC_FRMOUTPUT_TXTLOGFILE, NULL)
-        SendMessage( hCtl, EM_SETEVENTMASK, 0, cast(LPARAM, ENM_SELCHANGE or ENM_CHANGE or ENM_UPDATE) )
-        SendMessage( hCtl, EM_SHOWSCROLLBAR, SB_VERT, FALSE)
-        SendMessage( hCtl, EM_SHOWSCROLLBAR, SB_HORZ, FALSE)
+    ' Compiler Log File: multiline read-only CTextBox (borderless; the 20px indent the
+    ' old code hacked in with EM_SETRECT is now a plain left margin). Wheel scrolling
+    ' and the custom vscroll thumb both ride the control's scroll API.
+    hCtl = CTextBox_Create( HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTLOGFILE, true )
+        CTextBox_SetFont( hCtl, ghFont(GUIFONT_9) )
+        CTextBox_SetBorderWidth( hCtl, 0 )
+        CTextBox_SetMargins( hCtl, pWindow->ScaleX(20), 0 )
+        CTextBox_SetReadOnly( hCtl, true )
+        CTextBox_SetScrollChangedCallback( hCtl, @frmOutput_TextBoxScrollChanged )
+        CTextBox_SetMenuText( hCtl, L(17,"Cut"), L(18,"Copy"), L(19,"Paste"), L(40,"Select All") )
 
-    hCtl = pWindow->AddControl("RICHEDIT", , IDC_FRMOUTPUT_TXTNOTES, "", _
-                    0, 0, 0, 0, _
-                    WS_CHILD or WS_TABSTOP or WS_VSCROLL or _
-                    ES_MULTILINE or ES_LEFT or ES_AUTOVSCROLL or ES_WANTRETURN, _
-                    WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_RIGHTSCROLLBAR)
-    pWindow->SetControlSubclass(hCtl, @frmOutput_RichEdit_SubclassProc, IDC_FRMOUTPUT_TXTNOTES, NULL)
-        
-        SendMessage( hCtl, EM_SETEVENTMASK, 0, cast(LPARAM, ENM_SELCHANGE or ENM_CHANGE or ENM_UPDATE) )
-        SendMessage( hCtl, EM_SHOWSCROLLBAR, SB_VERT, FALSE)
-        SendMessage( hCtl, EM_SHOWSCROLLBAR, SB_HORZ, FALSE)
-        frmOutput_ShowNotes()   
+    ' Notes: multiline editable CTextBox. User edits are saved through the
+    ' ChangeCallback (programmatic SetText -- project switches -- stays silent).
+    hCtl = CTextBox_Create( HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTNOTES, true )
+        CTextBox_SetFont( hCtl, ghFont(GUIFONT_9) )
+        CTextBox_SetBorderWidth( hCtl, 0 )
+        CTextBox_SetMargins( hCtl, pWindow->ScaleX(20), 0 )
+        CTextBox_SetChangeCallback( hCtl, @frmOutput_NotesChanged )
+        CTextBox_SetScrollChangedCallback( hCtl, @frmOutput_TextBoxScrollChanged )
+        CTextBox_SetMenuText( hCtl, L(17,"Cut"), L(18,"Copy"), L(19,"Paste"), L(40,"Select All") )
+        frmOutput_ShowNotes()
 
     ' Compiler Results Listview
     hLV = frmListView_Show( HWND_FRMOUTPUT )
