@@ -1545,6 +1545,10 @@ function frmMain_WndProc( _
                 ' Functions panel when it is showing (the panel-show paths
                 ' reload it anyway when it becomes visible later).
                 if IsWindowVisible( HWND_FRMFUNCTIONS ) then LoadFunctionsFiles()
+
+                ' A buffer scan re-line-scanned the active file's TODO comments
+                ' (installed into the store by InstallSet) - refresh the panel.
+                if nTier = ScanTierBuffer then frmOutput_UpdateToDoListview()
             end if
 
         case MSG_USER_APPENDEQUALSSIGN

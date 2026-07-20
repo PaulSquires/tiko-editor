@@ -404,6 +404,29 @@ the listview.
 **Verify:** scripted N / N+1 / gone-on-close counts by trace.
 **NOT verified:** listview click-through navigation (path unchanged) — author's pass.
 
+*(done 2026-07-19 — `ScanMgr_ScanTodos` runs on the worker over each buffer-scan text copy
+right before the copy is freed; the lifted match rule: the FIRST apostrophe outside a string
+literal, optional spaces, then "todo:" case-insensitively — same effective rule as
+modParser's tokenizer (which only tested the start of a comment, so a second `'` on the line
+is never considered). Items ride the PARSERESULTSET (`todoItems()/todoCount`) to the UI;
+`clsSymbolDb.InstallSet` (buffer tier) replaces that file's rows in a **flat UI-thread store**
+(`gTodoItems()` in clsSymbolDb — flat rather than the planned nested per-file arrays, which
+would have needed redim-preserve of UDTs with var-len array members); `clsApp.RemoveDocument`
+/ `RemoveAllDocuments` drop a closed document's rows and refresh. `frmOutput_UpdateToDoListview`
+reads the store; line numbers are **1-based** now, which is what the click-through
+(`SetDocumentErrorPosition`'s `val(text)-1`) always expected — the old panel showed the
+0-based parser line, so old click-through was off by one; fix, not regression.
+`ScanMgr_GetRootName` promoted to a public declare (the store, DereferenceLine and F12 all
+use it as a document's DB identity). Verified headless (env-gated scripted harness, removed
+before merge): scratch file with 2 TODOs opened → store shows exactly 2 with correct 1-based
+lines and text; append a third + rescan → 3; undo + rescan → 2; close via the real
+`OnCommand_FileClose` path → 0 (gone-on-close). Population semantics recorded honestly:
+the store only fills as documents get buffer-scanned (open/tab-switch/typing) — TODOs in
+never-activated files don't appear (old code parsed every open doc on load; project-wide
+TODO coverage would need a disk-side scan pass, deliberately not built — decision 8 scopes
+the scanner to the in-memory text copy). NOT verified (author's pass): listview
+click-through navigation and multi-file accumulation feel during a real session.)*
+
 ### Phase 6 — Deletion and de-configuration
 Delete `modParser.bi/.inc`, `clsDB2.bi/.inc`; remove `bNeedsParsing`/`ParseDocument`/
 dirty-flag sets/sync-parse call sites; `clsConfig` loses WinAPI/WinFBX codetip loading +

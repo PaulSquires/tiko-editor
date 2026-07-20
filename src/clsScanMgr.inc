@@ -23,12 +23,91 @@ end sub
 ' Root filename a buffer scan attributes symbols to. Real files use their
 ' absolute path (also anchors same-directory #include resolution). Unsaved
 ' documents get a synthetic per-document name so Phase 2's merge can key on
-' it consistently for the life of the document.
-private function ScanMgr_GetRootName( byval pDoc as clsDocument ptr ) as DWSTRING
+' it consistently for the life of the document. (Public: declared in the .bi -
+' DereferenceLine, F12 and the TODO store use it as the document's DB identity.)
+function ScanMgr_GetRootName( byval pDoc as clsDocument ptr ) as DWSTRING
     dim as DWSTRING wszFile = pDoc->DiskFilename
     if instr( wszFile, "\" ) > 0 then return wszFile
     return AfxGetExePathName & "UNTITLED-" & hex( cast( ulong_ptr, pDoc ) ) & ".BAS"
 end function
+
+
+' Scan a buffer-scan text copy for 'TODO: comment lines and fill the result
+' set's todoItems()/todoCount. This is modParser's match rule, lifted before its
+' deletion: an apostrophe comment whose text - after optional spaces - begins
+' with "todo:" case-insensitively (no spaces inside the word). Only the FIRST
+' apostrophe outside a string literal counts, matching the old tokenizer which
+' only ever tested the start of a comment. Line numbers are 1-based. Runs on
+' the worker thread over the same heap copy the scan itself consumed.
+private sub ScanMgr_ScanTodos( _
+            byval pRSet as PARSERESULTSET ptr, _
+            byval pszText as zstring ptr, _
+            byval cchText as long _
+            )
+
+    pRSet->todoCount = 0
+    if (pszText = 0) orelse (cchText <= 0) then exit sub
+
+    ' index as raw bytes (indexing a zstring ptr yields characters, not values)
+    dim as ubyte ptr pB = cast( ubyte ptr, pszText )
+
+    dim as long i = 0
+    dim as long nLineNum = 1
+    dim as boolean bInString = false
+    dim as boolean bLineDone = false     ' a comment was already seen on this line
+
+    while i < cchText
+        dim as long ch = pB[i]
+
+        if ch = 10 then                  ' LF: next line (CRLF counts once)
+            nLineNum += 1
+            bInString = false
+            bLineDone = false
+        elseif bLineDone then
+            ' skip the rest of the line
+        elseif ch = 34 then              ' double quote toggles string mode
+            bInString = not bInString
+        elseif (ch = 39) andalso (bInString = false) then
+            bLineDone = true
+            ' skip spaces/tabs between the apostrophe and the marker
+            dim as long j = i + 1
+            while j < cchText
+                dim as long cs = pB[j]
+                if (cs <> 32) andalso (cs <> 9) then exit while
+                j += 1
+            wend
+            ' "todo:" ?
+            dim as boolean bMatch = false
+            if j + 4 < cchText then
+                dim as string sTag = lcase( chr( pB[j], pB[j+1], pB[j+2], pB[j+3], pB[j+4] ) )
+                if sTag = "todo:" then bMatch = true
+            end if
+            if bMatch then
+                ' capture the remainder of the line
+                dim as long k = j + 5
+                dim as long e = k
+                while e < cchText
+                    dim as long ce = pB[e]
+                    if (ce = 13) orelse (ce = 10) then exit while
+                    e += 1
+                wend
+                dim as string sText
+                for x as long = k to e - 1
+                    sText &= chr( pB[x] )
+                next
+                sText = trim( sText, any chr(32, 9) )
+
+                if pRSet->todoCount > ubound( pRSet->todoItems ) then
+                    redim preserve pRSet->todoItems( 0 to pRSet->todoCount * 2 + 7 )
+                end if
+                pRSet->todoItems( pRSet->todoCount ).nLineNum = nLineNum
+                pRSet->todoItems( pRSet->todoCount ).wszText = sText
+                pRSet->todoCount += 1
+            end if
+        end if
+        i += 1
+    wend
+end sub
 
 
 ' Only FB source files are worth a scan. Unsaved documents (no path yet) are
@@ -269,6 +348,12 @@ sub clsScanMgr.WorkerLoop()
             pRSet->scanRc = rcScan
             pRSet->scanMs = clng( (timer - t0) * 1000 )
             pRSet->wszRootFile = pReq->wszRootFile
+
+            ' TODO line-scan of the same text copy (buffer tier only - fbcParser
+            ' itself never sees comments, and a project scan's text is on disk).
+            if pReq->tier = ScanTierBuffer then
+                ScanMgr_ScanTodos( pRSet, pReq->pszText, pReq->cchText )
+            end if
             delete pReq
 
             ' Build the query indexes here on the worker (off the UI thread).
