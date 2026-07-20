@@ -424,7 +424,6 @@ function Scintilla_OnNotify( _
                     end if
 
 
-                    pDoc->bNeedsParsing = true
                     ' Restart the background-parse debounce timer (same id restarts it)
                     if (gApp.IsProjectLoading = false) andalso (gApp.IsFileLoading = false) then
                         SetTimer( HWND_FRMMAIN, IDT_PARSER_DEBOUNCE, PARSER_DEBOUNCE_MS, 0 )
@@ -553,8 +552,6 @@ function Scintilla_OnNotify( _
             if pDoc = 0 then exit function
             hEdit = pDoc->hWndActiveScintilla
         
-			pDoc->bNeedsParsing = true
-
             ' Restart the background-parse debounce timer (same id restarts it)
             SetTimer( HWND_FRMMAIN, IDT_PARSER_DEBOUNCE, PARSER_DEBOUNCE_MS, 0 )
 

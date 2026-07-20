@@ -45,34 +45,6 @@ property clsDocument.UserModified( byval nModified as boolean )
 end property
 
 
-' ========================================================================================
-' Parse the code for this document. Invokes the ctxParser which does all of
-' the actual parse work and database updating.
-' ========================================================================================
-function clsDocument.ParseDocument() as boolean
-    if this.bNeedsParsing = false then 
-        return false
-    end if
-
-    static as boolean bInParseDocument
-    
-    ' Prevent any potential recursive parsing 
-    if bInParseDocument then exit function
-    bInParseDocument = true
-
-    ' Delete any existing data related to this pDoc
-    gdb2.dbDeleteByDocumentPtr(@this)
-    
-    dim parser as ctxParser
-    parser.nFileType = DB2_FILETYPE_USERCODE
-    parser.parse(@this)
-    
-    frmOutput_UpdateToDoListview()
-    
-    bInParseDocument = false
-    return true
-end function
-
 
 ' ========================================================================================
 ' Determines if the IDC_SCINTILLA id being checked belongs to any of the 
@@ -303,9 +275,6 @@ function clsDocument.LoadDiskFile( _
         this.DiskFilename = wszFile
     end if
     
-    this.bNeedsParsing = bForceParse
-    this.ParseDocument()
-
     ' Kick a background symbol scan for the freshly loaded text (skipped
     ' during bulk project loading - the project-tier scan covers those files)
     if (gApp.IsProjectLoading = false) andalso (bIsTemplate = false) then
@@ -440,7 +409,6 @@ function clsDocument.SaveFile( byval bSaveAs as boolean = false ) as boolean
         if pwszName then
             wszFilename = *pwszName
             CoTaskMemFree(pwszName)
-            this.bNeedsParsing = true
         else
             return true  ' file save cancelled
         end if

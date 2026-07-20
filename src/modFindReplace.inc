@@ -394,9 +394,9 @@ function FindReplace_DoReplace( _
         FindReplace_NextSelection(startPos, fMoveNext, true)
     end if
         
-    ' Need to reparse because some of the function names may been replaced with new names.
-    pDoc->bNeedsParsing = true
-    pDoc->ParseDocument()
+    ' Need to rescan because some of the function names may have been replaced
+    ' with new names.
+    gScanMgr.RequestBufferScan( pDoc )
 
     function = 0
 end function

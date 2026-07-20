@@ -200,7 +200,6 @@ function OnCommand_FileSave( _
             dim wszFilename as DWSTRING = pDoc->DiskFilename
             if pDoc->SaveFile(bSaveAs) = false then
                 pDoc->ApplyProperties
-                pDoc->ParseDocument()
                 bReloadFunctions = true
                 ' Apply document properties to this file because the file extension may have
                 ' changed. for example from Untitled to *.bas
@@ -500,12 +499,8 @@ function OnCommand_FileClose( _
             end if
 
             if bRemoveFile then
-                ' Remove all references from the gdb2 database. Only remove the reference
-                ' if the file is not part of an active project, otherwise, we will lose
-                ' references to function names, etc.
-                gdb2.dbDelete( pDoc->DiskFilename )
                 ' Save positioning information to be saved to project file
-                pDoc->SetDocInfo()   
+                pDoc->SetDocInfo()
                 gApp.RemoveDocument( pDoc )
                 LoadExplorerFiles()
             end if

@@ -6,7 +6,9 @@ and a new in-memory symbol database indexes the DLL's flat results in place, pow
 codetips, autocomplete, the Functions panel, symbol search, F12 go-to-definition, and the
 TODO panel.
 
-> **Status: planning complete (2026-07-19), implementation not started.**
+> **Status: COMPLETE (2026-07-19) — all phases (P, 0–6, plus the 5b author-feedback
+> follow-up) implemented, verified and merged. `modParser` and `clsDB2` are gone;
+> fbcParser.dll and the two-tier clsSymbolDb are the only symbol machinery.**
 >
 > **What the plan got wrong, recorded honestly:**
 > - *(Phase 3)* The prerequisite audit missed a second fbcParser location gap: a proc
@@ -463,6 +465,29 @@ settings (grep frmOptions* for their UI); `LoadCodetips` reduced to the intrinsi
 run (open project, type, calltip, autocomplete, F12, panels, TODO, clean exit); the Phase 1
 leak loop repeated once more and the number recorded.
 **NOT verified:** long-session soak — the author's normal use is the soak test.
+
+*(done 2026-07-19 — `modParser.bi/.inc` and `clsDB2.bi/.inc` deleted (git rm), every call
+site removed: the `ParseDocument` method and `bNeedsParsing` field are gone from
+clsDocument; the SCN_CHARADDED/SCN_MODIFIED dirty-flag sets, the save-path and
+find-replace sync-parses (find-replace now issues a `RequestBufferScan`), and the
+gdb2 delete calls in clsApp/frmMainFile/frmMainProject are all removed.
+`OpenSelectedDocument`'s FunctionName lookup was rewritten onto `gSymDb.FindProc`
+(no live caller uses that path today, but the signature keeps working).
+`clsConfig`: `LoadCodetipsGeneric`/`LoadCodetipsWinFBX`/`LoadCodetipsWinAPI` deleted with
+their filename fields; `LoadCodetipsFB` is now purely the `gFBIntrinsics()` load;
+`LoadCodetips` reduced to it. No WinAPI/WinFBX settings UI existed beyond the master
+Codetips checkbox, which stays. Verified: `grep -E "gdb2|DB2_|ctxParser|bNeedsParsing|
+ParseDocument"` over src = **zero hits**; build clean, zero warnings; headless smoke run
+against the tiko project all-PASS (12 asserts): intrinsic calltip, FindProc+BuildCalltip,
+FindType clsApp + 57 members, EnumPrefix, 129 user files, Functions panel 1114 rows, TODO
+store populated, real posted-WM_CHAR typing produced a fresh buffer set through the
+debounce, F12 from an `OpenSelectedDocument(` call site landed in modRoutines.inc 4 lines
+into the multi-line header (bodyLine semantics), clean WM_CLOSE exit rc 0. Leak loop
+(50 buffer scans of a small starved file, working-set delta): three runs measured
+**−1.3, −2.0 and +39.9 KB/scan** — the sign flips between runs, so working-set noise
+dominates any per-scan residual at this scale; no linear growth, consistent with the
+accepted upstream residual. NOT verified: long-session soak (the author's normal use),
+and the interactive feel of everything the phase notes above already flagged.)*
 
 ---
 
