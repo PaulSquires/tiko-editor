@@ -104,7 +104,7 @@ type CTEXTBOX
     ' Multiline wheel scrolling is implemented by the control (the RichEdit's own
     ' handling proved unreliable). High-precision wheels send deltas below one notch
     ' (120); the remainder accumulates here between events.
-    nWheelAccum     as long = 0
+    nWheelAccum           as long = 0
     ChangeCallback        as TXT_ChangeCallbackSub
     FocusCallback         as TXT_FocusCallbackSub
     EnterPressedCallback  as TXT_EnterPressedCallbackSub

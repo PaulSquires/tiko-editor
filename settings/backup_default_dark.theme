@@ -117,7 +117,7 @@ toptabs.text.background: %EVENING_BLACK
 toptabs.texthot.foreground: %LIGHT_WHITE
 toptabs.texthot.background: %LIGHT_BLACK
 toptabs.divider.foreground: 24,26,31
-toptabs.closehot.background: 56,59,65
+toptabs.closehot.background: 64,67,73
 toptabs.iconselected.background: 49,73,123      # blue
 
 menubar.panel.background: %EVENING_BLACK

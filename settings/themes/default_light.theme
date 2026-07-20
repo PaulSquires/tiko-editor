@@ -117,7 +117,7 @@ toptabs.text.background: 236,236,236
 toptabs.texthot.foreground: 51,51,51
 toptabs.texthot.background: %WHITE
 toptabs.divider.foreground: 243,243,243
-toptabs.closehot.background: 220,220,220
+toptabs.closehot.background: 221,221,221
 toptabs.iconselected.background: 204,233,252    # blue
 
 menubar.panel.background: 221,221,221

@@ -67,14 +67,14 @@
 ' and the bottom line itself, AFTER this callback; our fill of p->rc (which runs to the
 ' client bottom on the active tab) is what shows through the line's break.
 ' ========================================================================================
-sub frmTopTabs_PaintCallback( byval p as CTabBar_PAINTINFO ptr )
+sub frmTopTabs_PaintCallback( byval p as CTABBAR_PAINTINFO ptr )
 
     ' State priority: dragging > selected > hot > normal. The dragged tab gets its own
     ' fill so the eye can follow it while its neighbours change places around it.
     dim as COLORREF backclr, foreclr
     if p->isDragging then
-        backclr = ghTopTabs.BackColor
-        foreclr = ghTopTabs.ForeColor
+        backclr = ghTopTabs.BackColorHot
+        foreclr = ghTopTabs.ForeColorHot
     elseif p->isSelected then
         backclr = ghTopTabs.BackColorHot
         foreclr = ghTopTabs.ForeColorHot
@@ -97,34 +97,41 @@ sub frmTopTabs_PaintCallback( byval p as CTabBar_PAINTINFO ptr )
     p->b->SetFont( ghFont(GUIFONT_10) )
     p->b->PaintText( p->wszCaption, @p->rcText, DT_CENTER )
 
-    ' The close "X" (Segoe Fluent Icons ChromeClose), only while the tab is hot;
-    ' brightened while the cursor is over the X itself.
-    if p->isHot orelse p->isHotClose then
-        if p->isHotClose then p->b->SetBackColor( ghTopTabs.CloseBackColorHot )
-        p->b->SetFont( ghFont(SYMBOLFONT_9) )
-        p->b->PaintText( wszIconClose, @p->rcClose, DT_CENTER )
-    end if
-
 '    ' display the "Find" icon if this in a special "Find in Project" tab.
 '    if gTTabCtl.tabs(i).docType = DocumentType.ProjectSearch then
 '        b.SetFont( ghFont(SYMBOLFONT_9) )
 '        b.PaintText( wszIconFind, @gTTabCtl.tabs(i).rcIcon, DT_CENTER )
 '    end if
+               
+    ' if this document is dirty then the dirty circle icon overrides the display of the close icon
+    ' unless the tab isHot. The dirty icon displays always for active and inactive tabs.
+    dim as boolean isDirty 
+    if gTTabCtl.IsValidTab( p->itemID ) then
+        dim as clsDocument ptr pDoc = gTTabCtl.GetpDoc(p->itemID)
+        if pDoc then
+            if cbool(SciExec( pDoc->hWindow(0), SCI_GETMODIFY, 0, 0 )) then isDirty = true
+            if pDoc->UserModified then isDirty = true
+        end if    
+    end if    
+
+    if (isDirty = true) andalso (p->isHot = false) andalso (p->isHotClose = false) then
+        ' if mouse is over the rcClose then draw the close icon, otherwise draw the dirty circle
+        p->b->SetFont( ghFont(SYMBOLFONT_9) )
+        p->b->PaintText( wszIconCompileResult, @p->rcClose, DT_CENTER )
+    end if
             
-'            ' if this document is dirty then the dirty circle icon overrides the display of the close icon
-'            ' unless the tab isHot. The dirty icon displays always for active and inactive tabs.
-'            dim as boolean isDirty 
-'            if gTTabCtl.tabs(i).pDoc then
-'                if cbool(SciExec( gTTabCtl.tabs(i).pDoc->hWindow(0), SCI_GETMODIFY, 0, 0 )) then isDirty = true
-'                if gTTabCtl.tabs(i).pDoc->UserModified then isDirty = true
-'            end if    
-            
-'            if isDirty then
-'                ' if mouse is over the rcClose then draw the close icon, otherwise draw the dirty circle
-'                b.SetFont( ghFont(SYMBOLFONT_9) )
-'                b.PaintText( wszIconCompileResult, @gTTabCtl.tabs(i).rcClose, DT_CENTER )
-'            end if
-            
+    ' The close "X" (Segoe Fluent Icons), only while the tab is hot;
+    ' brightened while the cursor is over the X itself. This painting takes precedence
+    ' over the file dirty circle, that is why we paint it last here.
+    if p->isHotClose then 
+        p->b->SetForeColor( ghTopTabs.ForeColorHot )
+        p->b->SetBackColor( ghTopTabs.CloseBackColorHot )
+    end if    
+    if p->isHot orelse p->isHotClose then
+        p->b->SetFont( ghFont(SYMBOLFONT_9) )
+        p->b->PaintRoundRect( @p->rcClose )
+        p->b->PaintText( wszIconClose, @p->rcClose, DT_CENTER )
+    end if
 
 end sub
 

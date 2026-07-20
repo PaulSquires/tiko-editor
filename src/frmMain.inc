@@ -1179,6 +1179,14 @@ function frmMain_OnDestroy( byval hwnd as HWND ) as LRESULT
     ' output the config settings to disk file
     gConfig.SaveConfigFile
 
+    ' Hide the main application window because we are about to attempt to shutdown
+    ' the background scanning thread. Sometimes a lag seems to happen from the time
+    ' request is made to when the main application gets destroyed which leaves a
+    ' kind of look of the application in various stages of repainting as various
+    ' child windows get destroyed. Do this AFTER the config is saved because it
+    ' affects positioning.
+    ShowWindow( hwnd, SW_HIDE )
+    
     ' delete any temporary quick run files should they exist
     ' filename set in compile process and could be different location than the
     ' default filename as tested for in wm_create.
