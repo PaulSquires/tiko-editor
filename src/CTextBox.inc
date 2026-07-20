@@ -2,11 +2,14 @@
 ''
 ''  CTextBox.inc
 ''
-''  Single-line textbox custom control built on a RichEdit50W child. RichEdit rather
+''  Textbox custom control built on a RichEdit50W child -- single-line by default,
+''  optionally multiline (word-wrapped, creation-time choice). RichEdit rather
 ''  than EDIT because it supports vertical centering of the text (EM_SETRECT) and
 ''  per-control colors (EM_SETCHARFORMAT / EM_SETBKGNDCOLOR) without owner-draw.
 ''  The container owns the chrome (border, rounded corners, outer fill) and the
-''  geometry; the RichEdit child does all the editing.
+''  geometry; the RichEdit child does all the editing. A multiline control shows no
+''  native scrollbar -- an external scrollbar (CVScrollBar) is driven through
+''  ScrollChangedCallback / GetVScrollInfo / ScrollToLine.
 ''
 
 #include once "CTextBox.bi"
@@ -63,9 +66,12 @@ end sub
 ' Center the (single) text line vertically by raising the formatting rect's top
 ' (EM_SETRECT). Works on a single-line RichEdit even though the classic EDIT would
 ' ignore it -- proven in tiko's search box, which this code is ported from.
+' Single-line only: a multiline control never calls EM_SETRECT, so its formatting rect
+' keeps tracking the client area automatically and text starts at the top.
 ' ========================================================================================
 private sub CTextBox_CenterSingleLineText( byval pTextBox as CTEXTBOX ptr )
     if pTextBox = null then exit sub
+    if pTextBox->bMultiline then exit sub
     dim as HWND hRichEdit = pTextBox->hRichEdit
     if hRichEdit = 0 then exit sub
 
@@ -177,6 +183,16 @@ function CTextBox_GetRichEditHandle( byval hTextBoxControl as HWND ) as HWND
     dim as CTEXTBOX ptr pTextBox = GetTextBoxPointer(hTextBoxControl)
     if pTextBox = null then return 0
     return pTextBox->hRichEdit
+end function
+
+
+' ========================================================================================
+' Is this a multiline control? (Fixed at creation.)
+' ========================================================================================
+function CTextBox_GetMultiline( byval hTextBoxControl as HWND ) as boolean
+    dim as CTEXTBOX ptr pTextBox = GetTextBoxPointer(hTextBoxControl)
+    if pTextBox = null then return false
+    return pTextBox->bMultiline
 end function
 
 
@@ -373,6 +389,7 @@ end function
 sub CTextBox_SetNumericMode( byval hTextBoxControl as HWND, byval bEnable as boolean )
     dim as CTEXTBOX ptr pTextBox = GetTextBoxPointer(hTextBoxControl)
     if pTextBox = null then exit sub
+    if pTextBox->bMultiline then exit sub    ' numeric mode is single-line only
     pTextBox->bNumericOnly = bEnable
 end sub
 
@@ -483,6 +500,62 @@ sub CTextBox_SetMargins( byval hTextBoxControl as HWND, byval nLeft as integer, 
     pTextBox->nMarginRight = nRight
     CTextBox_ApplyMargins( pTextBox )
     InvalidateRect( pTextBox->hRichEdit, null, true )
+end sub
+
+
+' ========================================================================================
+' Vertical scroll state, in LINES -- shaped 1:1 for CVScrollBar_SetRange(total, page, pos).
+' LinesPerPage derives from the formatting-rect height and the text font's line height
+' (TEXTMETRIC height + external leading, which is how the RichEdit spaces single-format
+' plain-text lines); a partial line at the bottom is not counted. No fudge factors --
+' the harness asserts these numbers against hand counts.
+' ========================================================================================
+sub CTextBox_GetVScrollInfo( byval hTextBoxControl as HWND, byref nTotalLines as integer, byref nLinesPerPage as integer, byref nFirstVisibleLine as integer )
+    nTotalLines = 0: nLinesPerPage = 0: nFirstVisibleLine = 0
+    dim as CTEXTBOX ptr pTextBox = GetTextBoxPointer(hTextBoxControl)
+    if pTextBox = null then exit sub
+    dim as HWND hRichEdit = pTextBox->hRichEdit
+    if hRichEdit = 0 then exit sub
+
+    nTotalLines = SendMessage( hRichEdit, EM_GETLINECOUNT, 0, 0 )
+    nFirstVisibleLine = SendMessage( hRichEdit, EM_GETFIRSTVISIBLELINE, 0, 0 )
+
+    dim as RECT rcFormat
+    SendMessage( hRichEdit, EM_GETRECT, 0, cast(LPARAM, @rcFormat) )
+    dim as integer rectHeight = rcFormat.bottom - rcFormat.top
+    if rectHeight <= 0 then exit sub
+
+    dim as HFONT hFontUse = pTextBox->hTextFont
+    if hFontUse = 0 then hFontUse = cast( HFONT, GetStockObject(DEFAULT_GUI_FONT) )
+    dim as HDC hdc = GetDC( hRichEdit )
+    if hdc = 0 then exit sub
+    dim as HFONT hOldFont = SelectObject( hdc, hFontUse )
+    dim as TEXTMETRIC tm
+    GetTextMetrics( hdc, @tm )
+    SelectObject( hdc, hOldFont )
+    ReleaseDC( hRichEdit, hdc )
+
+    dim as integer lineHeight = tm.tmHeight + tm.tmExternalLeading
+    if lineHeight <= 0 then exit sub         ' guard BEFORE dividing (see Learnings.md)
+    nLinesPerPage = rectHeight \ lineHeight
+end sub
+
+
+' ========================================================================================
+' Scroll so nLine (0-based) becomes the first visible line -- the receiving end of a
+' scrollbar's position callback (CVScrollBar's ScrollCallback newPos goes straight here).
+' EM_LINESCROLL takes a DELTA, so the current first line is subtracted; the RichEdit
+' clamps overscroll itself.
+' ========================================================================================
+sub CTextBox_ScrollToLine( byval hTextBoxControl as HWND, byval nLine as integer )
+    dim as CTEXTBOX ptr pTextBox = GetTextBoxPointer(hTextBoxControl)
+    if pTextBox = null then exit sub
+    if pTextBox->hRichEdit = 0 then exit sub
+    if nLine < 0 then nLine = 0
+    dim as integer nFirst = SendMessage( pTextBox->hRichEdit, EM_GETFIRSTVISIBLELINE, 0, 0 )
+    if nLine <> nFirst then
+        SendMessage( pTextBox->hRichEdit, EM_LINESCROLL, 0, cast(LPARAM, nLine - nFirst) )
+    end if
 end sub
 
 
@@ -662,14 +735,16 @@ end sub
 
 
 ' ========================================================================================
-' Localize the built-in context menu.
+' Localize the built-in context menu. An empty SelectAllText keeps the current Select All
+' label, so pre-existing 3-argument callers keep their default.
 ' ========================================================================================
-sub CTextBox_SetMenuText( byval hTextBoxControl as HWND, byval CutText as DWSTRING, byval CopyText as DWSTRING, byval PasteText as DWSTRING )
+sub CTextBox_SetMenuText( byval hTextBoxControl as HWND, byval CutText as DWSTRING, byval CopyText as DWSTRING, byval PasteText as DWSTRING, byval SelectAllText as DWSTRING = "" )
     dim as CTEXTBOX ptr pTextBox = GetTextBoxPointer(hTextBoxControl)
     if pTextBox = null then exit sub
     pTextBox->wszMenuCut = CutText
     pTextBox->wszMenuCopy = CopyText
     pTextBox->wszMenuPaste = PasteText
+    if len(SelectAllText) > 0 then pTextBox->wszMenuSelectAll = SelectAllText
 end sub
 
 
@@ -698,6 +773,12 @@ sub CTextBox_SetMessageCallback( byval hTextBoxControl as HWND, byval userfunc a
     dim as CTEXTBOX ptr pTextBox = GetTextBoxPointer(hTextBoxControl)
     if pTextBox = null then exit sub
     pTextBox->MessageCallback = userfunc
+end sub
+
+sub CTextBox_SetScrollChangedCallback( byval hTextBoxControl as HWND, byval usersub as TXT_ScrollChangedCallbackSub )
+    dim as CTEXTBOX ptr pTextBox = GetTextBoxPointer(hTextBoxControl)
+    if pTextBox = null then exit sub
+    pTextBox->ScrollChangedCallback = usersub
 end sub
 
 
@@ -771,7 +852,15 @@ function CTextBoxRichEdit_SubclassProc ( _
                 SelectObject( hdc, hFontUse )
                 SetTextColor( hdc, pTextBox->CueColor )
                 SetBkMode( hdc, TRANSPARENT )
-                dim as long wsStyle = DT_TOP or DT_LEFT or DT_NOPREFIX or DT_NOCLIP or DT_SINGLELINE
+                ' Single-line: one centered-by-rect line (the rect carries the centering,
+                ' NOCLIP because it may start above 0). Multiline: word-wrap at the top
+                ' left, clipped to the formatting rect.
+                dim as long wsStyle = DT_TOP or DT_LEFT or DT_NOPREFIX
+                if pTextBox->bMultiline then
+                    wsStyle or= DT_WORDBREAK
+                else
+                    wsStyle or= DT_NOCLIP or DT_SINGLELINE
+                end if
                 DrawText( hdc, pTextBox->CueText.vptr, -1, @editRect, wsStyle )
                 RestoreDC( hdc, -1 )
                 ReleaseDC( hWin, hdc )
@@ -780,11 +869,17 @@ function CTextBoxRichEdit_SubclassProc ( _
             end if
 
         case WM_CHAR
-            ' Single line: swallow ENTER so no newline is inserted and no beep sounds.
-            if _wParam = 13 then return 0
-            ' Tab is navigation (handled on WM_KEYDOWN below), never a character.
-            if _wParam = 9 then return 0
-            ' ESCAPE would beep; a host acts on it via the MessageCallback if at all.
+            ' Multiline lets ENTER (newline) and TAB (tab character) through to the
+            ' RichEdit; single line swallows both (no newline/beep; Tab is navigation,
+            ' handled on WM_KEYDOWN below).
+            dim as boolean bSingleLine = true
+            if pTextBox then bSingleLine = (pTextBox->bMultiline = false)
+            if bSingleLine then
+                if _wParam = 13 then return 0
+                if _wParam = 9 then return 0
+            end if
+            ' ESCAPE would beep (both modes); a host acts on it via the MessageCallback
+            ' if at all.
             if _wParam = 27 then return 0
 
             ' Numeric mode: filter printable characters (ported from tracks'
@@ -844,13 +939,18 @@ function CTextBoxRichEdit_SubclassProc ( _
             end if
 
         case WM_KEYDOWN
-            if _wParam = VK_RETURN then
+            ' Multiline: ENTER and TAB are ordinary editing keys -- fall through to the
+            ' RichEdit (the newline/tab char itself arrives via WM_CHAR above). The
+            ' EnterPressedCallback is a single-line contract and never fires here.
+            dim as boolean bSingleLine = true
+            if pTextBox then bSingleLine = (pTextBox->bMultiline = false)
+            if (_wParam = VK_RETURN) andalso (bSingleLine = true) then
                 if (pTextBox <> null) andalso (pTextBox->EnterPressedCallback <> null) then
                     pTextBox->EnterPressedCallback( hCtrl )
                 end if
                 return 0
             end if
-            if _wParam = VK_TAB then
+            if (_wParam = VK_TAB) andalso (bSingleLine = true) then
                 ' Tab leaves the control: focus the next (Shift+Tab: previous) tab stop
                 ' of the top-level window. Handled here so tabbing works even in hosts
                 ' whose message loop has no IsDialogMessage (see CTextBox.bi). Reached
@@ -861,6 +961,40 @@ function CTextBoxRichEdit_SubclassProc ( _
                     dim as boolean bPrev = ( GetKeyState(VK_SHIFT) < 0 )
                     dim as HWND hNext = GetNextDlgTabItem( hRoot, hWin, bPrev )
                     if (hNext <> null) andalso (hNext <> hWin) then SetFocus( hNext )
+                end if
+                return 0
+            end if
+
+        case WM_MOUSEWHEEL
+            ' Multiline: the control scrolls itself. The RichEdit's own WM_MOUSEWHEEL
+            ' handling proved unreliable (ignored even when shown, focused and styled
+            ' WS_VSCROLL), so the subclass converts the wheel delta to EM_LINESCROLL.
+            ' A user scroll notifies the ScrollChangedCallback -- the same
+            ' user-interaction-notifies split the other callbacks follow (the
+            ' programmatic ScrollToLine stays silent).
+            if (pTextBox <> null) andalso (pTextBox->bMultiline = true) then
+                ' The delta is a SIGNED word in the high word (see C:\dev\Learnings.md);
+                ' positive = wheel away = scroll up. Accumulate so high-precision
+                ' wheels (deltas below one 120 notch) still add up to full notches.
+                pTextBox->nWheelAccum += cast(short, hiword(_wParam))
+                dim as long nNotches = pTextBox->nWheelAccum \ 120
+                if nNotches <> 0 then
+                    pTextBox->nWheelAccum -= nNotches * 120
+                    dim as ulong scrollLines = 3
+                    SystemParametersInfo( SPI_GETWHEELSCROLLLINES, 0, @scrollLines, 0 )
+                    if scrollLines = cast(ulong, &hFFFFFFFF) then
+                        ' WHEEL_PAGESCROLL: a page per notch.
+                        dim as long sbCmd = iif( nNotches > 0, SB_PAGEUP, SB_PAGEDOWN )
+                        for i as long = 1 to abs(nNotches)
+                            SendMessage( hWin, EM_SCROLL, sbCmd, 0 )
+                        next
+                    else
+                        SendMessage( hWin, EM_LINESCROLL, 0, _
+                                     cast(LPARAM, -(nNotches * cast(long, scrollLines)) ) )
+                    end if
+                    if pTextBox->ScrollChangedCallback then
+                        pTextBox->ScrollChangedCallback( hCtrl )
+                    end if
                 end if
                 return 0
             end if
@@ -919,6 +1053,14 @@ function CTextBoxRichEdit_SubclassProc ( _
                 end if
                 AppendMenu( hPopupMenu, MF_ENABLED, 3, pTextBox->wszMenuPaste.vptr )
             end if
+            ' Select All: offered whenever the control holds any text (read-only
+            ' included -- selecting is always allowed).
+            if GetWindowTextLength(hWin) > 0 then
+                if GetMenuItemCount(hPopupMenu) > 0 then
+                    AppendMenu( hPopupMenu, MF_SEPARATOR, 0, "" )
+                end if
+                AppendMenu( hPopupMenu, MF_ENABLED, 4, pTextBox->wszMenuSelectAll.vptr )
+            end if
             if GetMenuItemCount(hPopupMenu) = 0 then
                 DestroyMenu( hPopupMenu )
                 return 0
@@ -932,6 +1074,7 @@ function CTextBoxRichEdit_SubclassProc ( _
                 case 1: SendMessage( hWin, WM_CUT, 0, 0 )
                 case 2: SendMessage( hWin, WM_COPY, 0, 0 )
                 case 3: SendMessage( hWin, WM_PASTE, 0, 0 )
+                case 4: SendMessage( hWin, EM_SETSEL, 0, -1 )
             end select
             DestroyMenu( hPopupMenu )
             return 0
@@ -1000,13 +1143,24 @@ function CTextBox_WndProc( _
 
         case WM_COMMAND
             if pTextBox then
-                if (cast(HWND, lParam) = pTextBox->hRichEdit) andalso (hiword(wParam) = EN_CHANGE) then
-                    ' Programmatic setters are silent: bInternalChange gates every
-                    ' change the control itself wrote to the buffer.
-                    if (pTextBox->bInternalChange = false) andalso (pTextBox->ChangeCallback <> null) then
-                        pTextBox->ChangeCallback( hwnd )
-                    end if
-                    return 0
+                if cast(HWND, lParam) = pTextBox->hRichEdit then
+                    select case hiword(wParam)
+                        case EN_CHANGE
+                            ' Programmatic setters are silent: bInternalChange gates every
+                            ' change the control itself wrote to the buffer.
+                            if (pTextBox->bInternalChange = false) andalso (pTextBox->ChangeCallback <> null) then
+                                pTextBox->ChangeCallback( hwnd )
+                            end if
+                            return 0
+                        case EN_UPDATE
+                            ' Multiline only (ENM_UPDATE is set only then). Deliberately
+                            ' NOT gated by bInternalChange: a programmatic SetText changes
+                            ' the line count and a scrollbar must hear about it.
+                            if pTextBox->ScrollChangedCallback then
+                                pTextBox->ScrollChangedCallback( hwnd )
+                            end if
+                            return 0
+                    end select
                 end if
             end if
 
@@ -1079,7 +1233,7 @@ end function
 ' Creates the CTextBox custom control. The returned HWND is the control: position it
 ' with SetWindowPos, find it with GetDlgItem(CtrlID).
 ' ========================================================================================
-function CTextBox_Create( byval hWndParent as HWND, byval CtrlID as integer ) as HWND
+function CTextBox_Create( byval hWndParent as HWND, byval CtrlID as integer, byval bMultiline as boolean = false ) as HWND
 
     dim pWindow as CWindow ptr = new CWindow
 
@@ -1098,18 +1252,33 @@ function CTextBox_Create( byval hWndParent as HWND, byval CtrlID as integer ) as
     dim as CTEXTBOX ptr pTextBox = new CTEXTBOX
     pTextBox->hWin = hForm
     pTextBox->idc_TextBox = CtrlID
+    pTextBox->bMultiline = bMultiline
     pTextBox->wszMenuCut = "Cut"
     pTextBox->wszMenuCopy = "Copy"
     pTextBox->wszMenuPaste = "Paste"
+    pTextBox->wszMenuSelectAll = "Select All"
 
     ' Store the new pointer into the user data area of the container window
     pWindow->UserData(0) = cast(LONG_PTR, pTextBox)
 
-    ' Single line (no ES_MULTILINE); ES_AUTOHSCROLL scrolls the text automatically when
-    ' it grows past the client width. The child is shown by the first WM_SIZE.
+    ' Single line: no ES_MULTILINE; ES_AUTOHSCROLL scrolls the text automatically when
+    ' it grows past the client width. Multiline: word wrap (so NO ES_AUTOHSCROLL) with
+    ' vertical auto-scrolling; ES_WANTRETURN only matters under IsDialogMessage but is
+    ' harmless -- the newline itself is guaranteed by the subclass letting VK_RETURN
+    ' through. No scrollbar styles: an external scrollbar is driven via the scroll API,
+    ' and the subclass implements wheel scrolling itself (the RichEdit's own
+    ' WM_MOUSEWHEEL handling proved unreliable -- it ignored the message even when
+    ' shown, focused and carrying WS_VSCROLL; proven by the harness assert).
+    ' The child is shown by the first WM_SIZE.
+    dim as long nEditStyle = WS_CHILD or WS_TABSTOP or ES_LEFT
+    if bMultiline then
+        nEditStyle or= (ES_MULTILINE or ES_AUTOVSCROLL or ES_WANTRETURN)
+    else
+        nEditStyle or= ES_AUTOHSCROLL
+    end if
     pTextBox->hRichEdit = _
         pWindow->AddControl( "RICHEDIT", , CtrlID, "", 0, 0, 0, 0, _
-        WS_CHILD or WS_TABSTOP or ES_LEFT or ES_AUTOHSCROLL, _
+        nEditStyle, _
         WS_EX_LEFT or WS_EX_LTRREADING )
     pWindow->SetControlSubclass( pTextBox->hRichEdit, @CTextBoxRichEdit_SubclassProc, CtrlID, NULL )
 
@@ -1117,8 +1286,11 @@ function CTextBox_Create( byval hWndParent as HWND, byval CtrlID as integer ) as
     ' colors individual characters) and pasted text sheds any rich formatting. Must be
     ' set while the control is still empty.
     SendMessage( pTextBox->hRichEdit, EM_SETTEXTMODE, TM_PLAINTEXT or TM_MULTILEVELUNDO or TM_MULTICODEPAGE, 0 )
-    ' EN_CHANGE delivery (arrives as WM_COMMAND at the container).
-    SendMessage( pTextBox->hRichEdit, EM_SETEVENTMASK, 0, ENM_CHANGE )
+    ' EN_CHANGE delivery (arrives as WM_COMMAND at the container); multiline adds
+    ' EN_UPDATE, which feeds the ScrollChangedCallback.
+    dim as long nEventMask = ENM_CHANGE
+    if bMultiline then nEventMask or= ENM_UPDATE
+    SendMessage( pTextBox->hRichEdit, EM_SETEVENTMASK, 0, nEventMask )
     SendMessage( pTextBox->hRichEdit, EM_SETBKGNDCOLOR, 0, cast(LPARAM, pTextBox->BackColor) )
     CTextBox_ApplyCharFormat( pTextBox )
 

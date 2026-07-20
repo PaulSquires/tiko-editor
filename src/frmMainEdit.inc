@@ -27,8 +27,8 @@ function OnCommand_EditCut( _
     ' Check if the Compiler log file or Notes windows or Snippets have
     ' input focus. If they do then select that text rather than Scintilla.
     select case GetFocus()
-        case GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTNOTES), _
-            GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTLOGFILE), _ 
+        case CTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTNOTES)), _
+            CTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTLOGFILE)), _
             CTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND)), _
             CTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE))
             SendMessage( GetFocus, WM_CUT, 0, 0 )
@@ -52,8 +52,8 @@ function OnCommand_EditCopy( _
     ' Check if the Compiler log file or Notes windows or Snippets have
     ' input focus. If they do then select that text rather than Scintilla.
     select case GetFocus()
-        case GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTNOTES), _
-            GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTLOGFILE), _ 
+        case CTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTNOTES)), _
+            CTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTLOGFILE)), _
             CTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND)), _
             CTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE))
             SendMessage( GetFocus, WM_COPY, 0, 0 )
@@ -76,8 +76,8 @@ function OnCommand_EditPaste( _
     ' Check if the Compiler log file or Notes windows or Snippets have
     ' input focus. If they do then select that text rather than Scintilla.
     select case GetFocus()
-        case GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTNOTES), _
-             GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTLOGFILE), _ 
+        case CTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTNOTES)), _
+             CTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTLOGFILE)), _
              CTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND)), _
              CTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE))
             SendMessage( GetFocus, WM_PASTE, 0, 0 )
@@ -162,8 +162,8 @@ function OnCommand_EditSelectAll( _
     ' Check if the Compiler log file or Notes windows or Snippets have
     ' input focus. If they do then select that text rather than Scintilla.
     select case GetFocus()
-        case GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTNOTES), _
-            GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTLOGFILE), _ 
+        case CTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTNOTES)), _
+            CTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTLOGFILE)), _
             CTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND)), _
             CTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE))
             Edit_SetSel( GetFocus(), 0, -1 )

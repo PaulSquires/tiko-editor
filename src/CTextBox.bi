@@ -28,8 +28,18 @@ type TXT_ChangeCallbackSub as sub( byval hTextBox as HWND )
 type TXT_FocusCallbackSub as sub( byval hTextBox as HWND, byval bGotFocus as boolean )
 
 ' Fired when the user presses ENTER in the textbox. The keypress itself is always
-' swallowed (the control is single-line; no newline, no beep).
+' swallowed (no newline, no beep). SINGLE-LINE ONLY: in a multiline control ENTER
+' inserts a newline and this callback never fires.
 type TXT_EnterPressedCallbackSub as sub( byval hTextBox as HWND )
+
+' Fired whenever the vertical scroll state MAY have changed (relayed from the RichEdit's
+' EN_UPDATE, which fires on any display update: typing, programmatic SetText, scrolling
+' by wheel/keys/caret). Multiline only; deliberately NOT gated like the ChangeCallback --
+' a programmatic SetText changes the line count and a scrollbar must hear about it.
+' Shaped for CVScrollBar: on each fire call CTextBox_GetVScrollInfo and push the three
+' numbers into CVScrollBar_SetRange( total, page, pos ); wire CVScrollBar's
+' ScrollCallback( newPos ) to CTextBox_ScrollToLine.
+type TXT_ScrollChangedCallbackSub as sub( byval hTextBox as HWND )
 
 ' Observe key, mouse, focus and context-menu messages before the control acts on them.
 ' Return TRUE if you handled the message and want the control's default handling (and
@@ -45,6 +55,11 @@ type CTEXTBOX
     hWin            as HWND
     hRichEdit       as HWND               ' the RichEdit50W child that does the editing
     idc_TextBox     as integer = 1000
+    ' Multiline mode. Fixed at creation (ES_MULTILINE cannot be toggled on a live
+    ' window): word-wrapped, ENTER inserts a newline, TAB inserts a tab character,
+    ' no vertical text centering, numeric mode unavailable. The control adds no
+    ' scrollbar styles -- pair it with an external scrollbar via the scroll API below.
+    bMultiline      as boolean = false
     ' --- Colors. One forecolor/backcolor for ALL text (the control never colors
     '     individual characters; the child runs in TM_PLAINTEXT mode to guarantee it). ---
     ForeColor       as COLORREF = BGR(0,0,0)
@@ -63,11 +78,12 @@ type CTEXTBOX
     hTextFont       as HFONT              ' 0 = stock DEFAULT_GUI_FONT
     hCueFont        as HFONT              ' 0 = use hTextFont
     CueText         as DWSTRING           ' drawn whenever the buffer is empty ("" = none)
-    ' Built-in context menu labels; defaulted to Cut/Copy/Paste at Create, replace via
-    ' CTextBox_SetMenuText to localize.
-    wszMenuCut      as DWSTRING
-    wszMenuCopy     as DWSTRING
-    wszMenuPaste    as DWSTRING
+    ' Built-in context menu labels; defaulted to Cut/Copy/Paste/Select All at Create,
+    ' replace via CTextBox_SetMenuText to localize.
+    wszMenuCut       as DWSTRING
+    wszMenuCopy      as DWSTRING
+    wszMenuPaste     as DWSTRING
+    wszMenuSelectAll as DWSTRING
     ' Select the whole text when the control gains keyboard focus (Tab or programmatic
     ' SetFocus). A mouse click still places the caret at the click point: the click's
     ' own caret placement runs after the focus change and wins, by design.
@@ -85,10 +101,15 @@ type CTEXTBOX
     ' TRUE while the control itself writes to the RichEdit; EN_CHANGE is dropped so
     ' programmatic changes never reach the ChangeCallback.
     bInternalChange as boolean = false
-    ChangeCallback       as TXT_ChangeCallbackSub
-    FocusCallback        as TXT_FocusCallbackSub
-    EnterPressedCallback as TXT_EnterPressedCallbackSub
-    MessageCallback      as TXT_MessageCallbackFunc
+    ' Multiline wheel scrolling is implemented by the control (the RichEdit's own
+    ' handling proved unreliable). High-precision wheels send deltas below one notch
+    ' (120); the remainder accumulates here between events.
+    nWheelAccum     as long = 0
+    ChangeCallback        as TXT_ChangeCallbackSub
+    FocusCallback         as TXT_FocusCallbackSub
+    EnterPressedCallback  as TXT_EnterPressedCallbackSub
+    MessageCallback       as TXT_MessageCallbackFunc
+    ScrollChangedCallback as TXT_ScrollChangedCallbackSub
 end type
 
 
@@ -112,8 +133,12 @@ end type
 ' SendMessage(hTextBox, EM_SETSEL, ...) works from a separate control or window. Same
 ' operation, two doors: message for a separate control, function for an in-process host.
 ' ----------------------------------------------------------------------------------------
-declare function CTextBox_Create( byval hWndParent as HWND, byval CtrlID as integer ) as HWND
+' bMultiline is fixed for the control's lifetime (see the TYPE field comment). Multiline
+' controls word-wrap (no ES_AUTOHSCROLL) and scroll vertically without showing a native
+' scrollbar; drive an external one through the scroll API below.
+declare function CTextBox_Create( byval hWndParent as HWND, byval CtrlID as integer, byval bMultiline as boolean = false ) as HWND
 declare function CTextBox_GetRichEditHandle( byval hTextBoxControl as HWND ) as HWND
+declare function CTextBox_GetMultiline( byval hTextBoxControl as HWND ) as boolean
 ' Does this textbox own the keyboard focus? Focus sits on the RichEdit child, so a
 ' plain GetFocus() = hTextBox comparison is ALWAYS false -- use this instead.
 declare function CTextBox_HasFocus( byval hTextBoxControl as HWND ) as boolean
@@ -151,7 +176,8 @@ declare function CTextBox_GetSelectOnFocus( byval hTextBoxControl as HWND ) as b
 declare sub      CTextBox_SetSelectOnFocus( byval hTextBoxControl as HWND, byval bSelect as boolean )
 ' Numeric input mode (see the TYPE field comment for the accepted grammar). DecimalPlaces
 ' 0 means integers only. GetValue/SetValue trade the text as a double; SetValue formats
-' to DecimalPlaces and, like every programmatic setter, is silent.
+' to DecimalPlaces and, like every programmatic setter, is silent. SINGLE-LINE ONLY:
+' SetNumericMode is a no-op on a multiline control.
 declare function CTextBox_GetNumericMode( byval hTextBoxControl as HWND ) as boolean
 declare sub      CTextBox_SetNumericMode( byval hTextBoxControl as HWND, byval bEnable as boolean )
 declare function CTextBox_GetDecimalPlaces( byval hTextBoxControl as HWND ) as integer
@@ -172,6 +198,17 @@ declare function CTextBox_CanUndo( byval hTextBoxControl as HWND ) as boolean
 ' Left/right margins between the border and the text, in pixels (EM_SETMARGINS).
 declare sub      CTextBox_GetMargins( byval hTextBoxControl as HWND, byref nLeft as integer, byref nRight as integer )
 declare sub      CTextBox_SetMargins( byval hTextBoxControl as HWND, byval nLeft as integer, byval nRight as integer )
+
+' ----------------------------------------------------------------------------------------
+' Vertical scroll state (multiline). Units are LINES, shaped 1:1 for CVScrollBar:
+' ScrollChangedCallback fires -> GetVScrollInfo -> CVScrollBar_SetRange( total, page, pos );
+' CVScrollBar's ScrollCallback( newPos ) -> ScrollToLine( newPos ). LinesPerPage derives
+' from the formatting-rect height and the text font's line height -- a partial line at the
+' bottom is not counted. Single-line controls report total=1, page=0/1, first=0.
+' ----------------------------------------------------------------------------------------
+declare sub      CTextBox_GetVScrollInfo( byval hTextBoxControl as HWND, byref nTotalLines as integer, byref nLinesPerPage as integer, byref nFirstVisibleLine as integer )
+' Scroll so nLine (0-based) becomes the first visible line. The RichEdit clamps overscroll.
+declare sub      CTextBox_ScrollToLine( byval hTextBoxControl as HWND, byval nLine as integer )
 
 ' ----------------------------------------------------------------------------------------
 ' Appearance. All fonts are caller-owned HFONTs; the control converts the text font to a
@@ -206,17 +243,20 @@ declare function CTextBox_GetCornerRadius( byval hTextBoxControl as HWND ) as in
 declare sub      CTextBox_SetCornerRadius( byval hTextBoxControl as HWND, byval nRadius as integer )
 declare function CTextBox_GetOuterBackColor( byval hTextBoxControl as HWND ) as COLORREF
 declare sub      CTextBox_SetOuterBackColor( byval hTextBoxControl as HWND, byval clr as COLORREF )
-' Localize the built-in right-click menu (Cut/Copy/Paste).
-declare sub      CTextBox_SetMenuText( byval hTextBoxControl as HWND, byval CutText as DWSTRING, byval CopyText as DWSTRING, byval PasteText as DWSTRING )
+' Localize the built-in right-click menu (Cut/Copy/Paste/Select All). An empty
+' SelectAllText keeps the current Select All label, so 3-argument callers are unaffected.
+declare sub      CTextBox_SetMenuText( byval hTextBoxControl as HWND, byval CutText as DWSTRING, byval CopyText as DWSTRING, byval PasteText as DWSTRING, byval SelectAllText as DWSTRING = "" )
 
 ' ----------------------------------------------------------------------------------------
 ' Callbacks. See the type declarations above for each signature and contract.
-'   ChangeCallback       - text changed by USER interaction (programmatic changes silent).
-'   FocusCallback        - RichEdit gained/lost keyboard focus.
-'   EnterPressedCallback - ENTER pressed (keypress always swallowed).
-'   MessageCallback      - observe key/mouse/focus/context-menu messages; TRUE suppresses.
+'   ChangeCallback        - text changed by USER interaction (programmatic changes silent).
+'   FocusCallback         - RichEdit gained/lost keyboard focus.
+'   EnterPressedCallback  - ENTER pressed (single-line only; keypress always swallowed).
+'   MessageCallback       - observe key/mouse/focus/context-menu messages; TRUE suppresses.
+'   ScrollChangedCallback - vertical scroll state may have changed (multiline only).
 ' ----------------------------------------------------------------------------------------
 declare sub      CTextBox_SetChangeCallback( byval hTextBoxControl as HWND, byval usersub as TXT_ChangeCallbackSub )
 declare sub      CTextBox_SetFocusCallback( byval hTextBoxControl as HWND, byval usersub as TXT_FocusCallbackSub )
 declare sub      CTextBox_SetEnterPressedCallback( byval hTextBoxControl as HWND, byval usersub as TXT_EnterPressedCallbackSub )
 declare sub      CTextBox_SetMessageCallback( byval hTextBoxControl as HWND, byval userfunc as TXT_MessageCallbackFunc )
+declare sub      CTextBox_SetScrollChangedCallback( byval hTextBoxControl as HWND, byval usersub as TXT_ScrollChangedCallbackSub )
