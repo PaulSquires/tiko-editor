@@ -11,13 +11,17 @@
 '    MERCHANTABILITY or FITNESS for A PARTICULAR PURPOSE.  See the
 '    GNU General Public License for more details.
 
+' The editor's two horizontal scrollbars (one per split view of the active document) are
+' CHScrollBar instances. The control knows nothing about Scintilla: the message pump
+' (handleMouseShowScrollBar) pushes the range in PIXEL units -- total = widest visible
+' line in document space, page = visible text width, pos = SCI_GETXOFFSET -- through
+' frmEditorHScroll_NeedScrollBar / _UpdateScrollBars, and the control reports user
+' scrolling back through a ScrollCallback that drives SCI_SETXOFFSET.
 
-type EDITOR_HSCROLL_TYPE
-    lineLength    as long
-    clientWidth   as long
-    ratio         as double
-    rc            as RECT
-end type
+' Control ids are cosmetic (the bars are reached through the HWND_FRMEDITOR_HSCROLLBAR
+' globals; nothing does GetDlgItem on HWND_FRMMAIN).
+#define IDC_FRMEDITOR_HSCROLLBAR0    6902
+#define IDC_FRMEDITOR_HSCROLLBAR1    6903
 
-dim shared gEditorHScroll(1) as EDITOR_HSCROLL_TYPE
-
+declare function frmEditorHScroll_UpdateScrollBars( byval pDoc as clsDocument ptr ) as boolean
+declare function frmEditorHScroll_DoNeedScrollBar( byval pDoc as clsDocument ptr ) as long

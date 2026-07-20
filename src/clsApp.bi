@@ -26,8 +26,7 @@ type clsApp
                                                         ' the caption as active
         bDragTabActive             as boolean           ' a tab in the top tabcontrol is being dragged
         ptDragTabPrev              as POINT             ' used for comparing delta movement of sursor during tab dragging
-        bDragActive                as boolean           ' splitter drag is currently active 
-        bHorizDragActive           as boolean           ' editor horizontal scrollbar is currently active 
+        bDragActive                as boolean           ' splitter drag is currently active
         idTimerOutputPanel         as long = 110        ' used for handling single/double click of Output window splitter bar
         doubleClickReceived        as boolean           ' used for handling single/double click of Output window splitter bar
         hWndPanel                  as HWND              ' the panel being split left/right or up/down
