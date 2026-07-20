@@ -15,142 +15,50 @@
 
 
 ' ========================================================================================
-' Calculate the RECT that holds the client coordinates of the scrollbar's vertical thumb
-' Returns True if RECT is not empty
+' Push the topics listbox scroll state into the CVScrollBar, in ITEM units (total
+' items, items per page, top index). SetRange re-derives the thumb and repaints; the
+' control shows an empty track when everything fits.
 ' ========================================================================================
-function frmHelpViewerVScroll_calcVThumbRect() as boolean
-    dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMHELPVIEWER)
-    if pWindow = 0 then exit function
-
-    ' calculate the vertical scrollbar in client coordinates
-    SetRectEmpty( @gPanelVScroll.rc )
-    
-    dim as long nTopIndex = SendMessage( HWND_FRMHELPVIEWER_LEFTPANEL, LB_GETTOPINDEX, 0, 0 ) 
-
-    dim as RECT rc 
-    with gPanelVScroll
-        GetClientRect( HWND_FRMHELPVIEWER_LEFTPANEL, @rc )
-        .listBoxHeight = rc.bottom - rc.top
-        .itemHeight = SendMessage( HWND_FRMHELPVIEWER_LEFTPANEL, LB_GETITEMHEIGHT, 0, 0 )
-        .numItems = ListBox_GetCount( HWND_FRMHELPVIEWER_LEFTPANEL ) 
-        .itemsPerPage = .listBoxHeight / .itemHeight
-        .thumbHeight = (.itemsPerPage / .numItems) * .listBoxHeight
-        GetClientRect( HWND_FRMHELPVIEWER_LEFTPANEL, @rc )
-        .rc.Left = rc.Left
-        .rc.top = rc.top + ((nTopIndex / .numItems) * .listBoxHeight)
-        .rc.Right = rc.right
-        .rc.bottom = .rc.top + .thumbHeight
-        if .numItems < .itemsPerPage then 
-            SetRectEmpty( @gPanelVScroll.rc )
-            return true
-        end if    
-    end with
-
+function frmHelpViewer_UpdateScrollBar() as boolean
+    if IsWindow( HWND_FRMHELPVIEWER_VSCROLLBAR ) = 0 then exit function
+    dim as RECT rc
+    GetClientRect( HWND_FRMHELPVIEWER_LEFTPANEL, @rc )
+    ' LB_GETITEMHEIGHT works with zero items on a fixed-height owner-draw listbox
+    ' (see C:\dev\Learnings.md); guard the divide anyway.
+    dim as long itemHeight = SendMessage( HWND_FRMHELPVIEWER_LEFTPANEL, LB_GETITEMHEIGHT, 0, 0 )
+    dim as long itemsPerPage = 0
+    if itemHeight > 0 then itemsPerPage = (rc.bottom - rc.top) \ itemHeight
+    CVScrollBar_SetRange( HWND_FRMHELPVIEWER_VSCROLLBAR, _
+                          ListBox_GetCount( HWND_FRMHELPVIEWER_LEFTPANEL ), _
+                          itemsPerPage, _
+                          SendMessage( HWND_FRMHELPVIEWER_LEFTPANEL, LB_GETTOPINDEX, 0, 0 ) )
     function = 0
 end function
 
-    
+
 ' ========================================================================================
-' frmHelpViewerVScroll Window procedure
+' The user scrolled the CVScrollBar (thumb drag or track paging): set the listbox top
+' index. Owner-drawn rows need the explicit redraw (same as the old code).
 ' ========================================================================================
-function frmHelpViewerVScroll_WndProc( _
-            byval hwnd   as HWND, _
-            byval uMsg   as UINT, _
-            byval wParam as WPARAM, _
-            byval lParam as LPARAM _
-            ) as LRESULT
+sub frmHelpViewer_VScrollCallback( byval hScrollBar as HWND, byval newPos as integer )
+    SendMessage( HWND_FRMHELPVIEWER_LEFTPANEL, LB_SETTOPINDEX, newPos, 0 )
+    AfxRedrawWindow( HWND_FRMHELPVIEWER_LEFTPANEL )
+end sub
 
-    static as point prev_pt   ' screen pt.y cursor position
 
-    select case uMsg
-        case WM_NCDESTROY
-            ' delete the allocated memory for window
-            dim as CWindow ptr pWindow = AfxCWindowPtr(hwnd)
-            if pWindow then delete(pWindow)
-            HWND_FRMHELPVIEWER_VSCROLLBAR = 0
-            return 0
-
-        case WM_LBUTTONDOWN
-            dim as point pt: GetCursorPos( @pt )
-            frmHelpViewerVScroll_calcVThumbRect()   ' in client coordinates
-            dim as RECT rc = gPanelVScroll.rc ' covert copy to screen coordinates
-            MapWindowpoints( HWND_FRMHELPVIEWER_VSCROLLBAR, HWND_DESKTOP, cast(point ptr, @rc), 2)
-            if PtInRect( @rc, pt ) then
-                prev_pt = pt
-                gApp.bDragActive = true
-                SetCapture( HWnd )
-            else
-                ' we have clicked on a PageUp or PageDn
-                dim as long nTopIndex = SendMessage( HWND_FRMHELPVIEWER_LEFTPANEL, LB_GETTOPINDEX, 0, 0 ) 
-                if pt.y < rc.top then
-                    nTopIndex = max( nTopIndex - gPanelVScroll.itemsPerPage, 0 )
-                    SendMessage( HWND_FRMHELPVIEWER_LEFTPANEL, LB_SETTOPINDEX, nTopIndex, 0 ) 
-                    frmHelpViewerVScroll_calcVThumbRect()   ' in client coordinates
-                    AfxRedrawWindow( HWND_FRMHELPVIEWER_VSCROLLBAR )
-                    AfxRedrawWindow( HWND_FRMHELPVIEWER_LEFTPANEL )
-                elseif pt.y > rc.bottom then
-                    dim as long nMaxTopIndex = gPanelVScroll.numItems - gPanelVScroll.itemsPerPage
-                    nTopIndex = min( nTopIndex + gPanelVScroll.itemsPerPage, nMaxTopIndex )
-                    SendMessage( HWND_FRMHELPVIEWER_LEFTPANEL, LB_SETTOPINDEX, nTopIndex, 0 ) 
-                    frmHelpViewerVScroll_calcVThumbRect()   ' in client coordinates
-                    AfxRedrawWindow( HWND_FRMHELPVIEWER_VSCROLLBAR )
-                    AfxRedrawWindow( HWND_FRMHELPVIEWER_LEFTPANEL )
-                end if
-            end if
-            
-        case WM_MOUSEMOVE
-            if gApp.bDragActive then
-                dim as point pt: GetCursorPos( @pt )
-                if pt.y <> prev_pt.y then 
-                    dim as long delta = pt.y - prev_pt.y 
-                    ' convert to client coordinates for ease of use
-                    dim as RECT rc: GetClientRect( HWND_FRMHELPVIEWER_VSCROLLBAR, @rc )
-
-                    gPanelVScroll.rc.top = max(0, gPanelVScroll.rc.top + delta)
-                    gPanelVScroll.rc.top = min(gPanelVScroll.rc.top, rc.bottom-gPanelVScroll.thumbHeight)
-                    gPanelVScroll.rc.bottom = gPanelVScroll.rc.top + gPanelVScroll.thumbHeight
-
-                    prev_pt = pt
-                    
-                    dim as long nPrevTopIndex = SendMessage( HWND_FRMHELPVIEWER_LEFTPANEL, LB_GETTOPINDEX, 0, 0 ) 
-                    dim as long nLastIndex = (gPanelVScroll.rc.bottom / rc.bottom) * gPanelVScroll.numItems
-                    dim as long nTopIndex = nLastIndex - gPanelVScroll.itemsPerPage
-                    if nTopIndex <> nPrevTopIndex then
-                        SendMessage( HWND_FRMHELPVIEWER_LEFTPANEL, LB_SETTOPINDEX, nTopIndex, 0 ) 
-                    end if   
-                    AfxRedrawWindow( HWND_FRMHELPVIEWER_LEFTPANEL )
-                    AfxRedrawWindow( HWND_FRMHELPVIEWER_VSCROLLBAR )
-                end if
-            end if
-            
-        case WM_LBUTTONUP   
-            gApp.bDragActive = false
-            prev_pt.x = 0
-            prev_pt.y = 0
-            ReleaseCapture
-        
-        case WM_ERASEBKGND
-            return true
-            
-        case WM_PAINT
-            dim as clsDoubleBuffer b
-
-            b.BeginDoubleBuffer(hwnd)
-            b.SetBackColor( ghPanel.BackColorScrollBar )
-            b.PaintClientRect()
-            b.SetBackColor( ghPanel.ForeColorScrollBar )
-            b.PaintRect( @gPanelVScroll.rc )
-
-            b.EndDoubleBuffer()
-
-            return 0
-
-    end select
-
-    ' for messages that we don't deal with
-    function = DefWindowProc( HWnd, uMsg, wParam, lParam )
-
-end function
+' ========================================================================================
+' Custom paint keeping the old visuals: flat track + flat thumb in the ghPanel colors,
+' no hover brightening. Colors are read live, so a theme switch only needs a repaint.
+' ========================================================================================
+sub frmHelpViewer_VScrollPaint( byval p as CVSCROLLBAR_PAINTINFO ptr )
+    dim as clsDoubleBuffer ptr b = p->b
+    b->SetBackColor( ghPanel.BackColorScrollBar )
+    b->PaintClientRect()
+    if IsRectEmpty( @p->rcThumb ) = 0 then
+        b->SetBackColor( ghPanel.ForeColorScrollBar )
+        b->PaintRect( @p->rcThumb )
+    end if
+end sub
 
 
 ' ========================================================================================
@@ -212,8 +120,7 @@ function frmHelpViewer_PositionWindows() as LRESULT
         nLeftPanelWidth = (nClientWidth - nSplitterWidth * 2)
 
     dim as long nVScrollWidth = pWindow->ScaleX(SCROLLBAR_WIDTH_PANEL)
-    frmHelpViewerVScroll_calcVThumbRect()
-        
+
     SetWindowPos( HWND_FRMHELPVIEWER_LEFTPANEL, 0, _
         0, 0, nLeftPanelWidth, nClientHeight, _
         SWP_NOZORDER or SWP_SHOWWINDOW )
@@ -221,13 +128,15 @@ function frmHelpViewer_PositionWindows() as LRESULT
     SetWindowPos( HWND_FRMHELPVIEWER_VSCROLLBAR, 0, _
         nLeftPanelWidth, 0, nVScrollWidth, nClientHeight, _
         SWP_NOZORDER or SWP_SHOWWINDOW )
-    
+
     SetWindowPos( HWND_FRMHELPVIEWER_RIGHTPANEL, 0, _
         nLeftPanelWidth + nVScrollWidth + nSplitterWidth, 0, _
         nClientWidth - nSplitterWidth - nVScrollWidth - nLeftPanelWidth, nClientHeight, _
         SWP_NOZORDER or SWP_SHOWWINDOW )
 
-    AfxRedrawWindow( HWND_FRMHELPVIEWER_VSCROLLBAR )
+    ' Push the range AFTER the resize so items-per-page reflects the new listbox height
+    ' (the old code computed it before repositioning, going stale by one layout pass).
+    frmHelpViewer_UpdateScrollBar()
     AfxRedrawWindow( HWND_FRMHELPVIEWER_LEFTPANEL )
     
     function = 0
@@ -548,6 +457,9 @@ function frmHelpViewer_WndProc( _
         dim as CWindow ptr pWindow = AfxCWindowPtr(hwnd)
         if pWindow then delete(pWindow)
         HWND_FRMHELPVIEWER = 0
+        ' The CVScrollBar child destroyed itself in its own WM_NCDESTROY; reset the
+        ' handle here (the Help window can be closed and reopened).
+        HWND_FRMHELPVIEWER_VSCROLLBAR = 0
         return 0
 
     end select
@@ -737,10 +649,12 @@ function frmHelpViewer_Show( byval hWndParent as HWND ) as LRESULT
         WS_EX_LEFT or WS_EX_RIGHTSCROLLBAR)
     pWindow->SetControlSubclass(HWND_FRMHELPVIEWER_LEFTPANEL, @frmHelpViewerListBox_SubclassProc, IDC_FRMHELPVIEWER_LEFTPANEL, @pWindow)
 
-    dim pWindowPanel as CPanelWindow ptr = New CPanelWindow
-    HWND_FRMHELPVIEWER_VSCROLLBAR = _
-        pWindowPanel->Create( HWND_FRMHELPVIEWER, @frmHelpViewerVScroll_WndProc, 0, 0, SCROLLBAR_WIDTH_PANEL, 0 )
-    pWindow->ClassStyle = CS_DBLCLKS
+    ' Topics-list scrollbar: the reusable CVScrollBar control, driven in ITEM units
+    ' (frmHelpViewer_UpdateScrollBar pushes the range; the ScrollCallback sets the
+    ' listbox top index). PositionWindows sizes it, so no initial size is needed here.
+    HWND_FRMHELPVIEWER_VSCROLLBAR = CVScrollBar_Create( HWND_FRMHELPVIEWER, IDC_FRMHELPVIEWER_VSCROLLBAR )
+    CVScrollBar_SetScrollCallback( HWND_FRMHELPVIEWER_VSCROLLBAR, @frmHelpViewer_VScrollCallback )
+    CVScrollBar_SetPaintCallback( HWND_FRMHELPVIEWER_VSCROLLBAR, @frmHelpViewer_VScrollPaint )
 
     HWND_FRMHELPVIEWER_RIGHTPANEL = _ 
         pWindow->AddControl("RICHEDIT", , IDC_FRMHELPVIEWER_RIGHTPANEL, "", 0, 0, 0, 0, _
