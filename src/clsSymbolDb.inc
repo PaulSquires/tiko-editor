@@ -240,7 +240,13 @@ sub clsSymbolDb.InstallProjectTodos( byval pNew as PARSERESULTSET ptr )
                 nSub += 1
             end if
         next
-        TodoStore_ReplaceFile( *pFile, tmp(), nSub )
+        if nSub > 0 then
+            ' store/display under the on-disk casing (scan names are UPPERCASED;
+            ' the store's keying is case-insensitive either way)
+            TodoStore_ReplaceFile( FilenameOriginalCase( *pFile ), tmp(), nSub )
+        else
+            TodoStore_ReplaceFile( *pFile, tmp(), nSub )
+        end if
     next
 end sub
 

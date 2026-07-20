@@ -457,8 +457,14 @@ headless: project sweep found tiko.bas:54 / frmOutput.inc / frmPanel.bi TODOs wi
 file ever activated; a UTF-8-BOM scratch with `' TODO: 这是一项待办事项` round-tripped
 byte-exactly through the store (8 wide chars, 24 utf8 bytes) AND through the listview
 (cell text read back equals the expected codepoints); gone-on-close still passes. Known
-cosmetics: project-sourced rows show the scan's UPPERCASED path until the file's first
-buffer scan replaces them with the original-case name; legacy ANSI files with high-bytes
+cosmetics: ~~project-sourced rows show the scan's UPPERCASED path~~ *(fixed same day:
+author-contributed `FilenameOriginalCase` — CreateFileW + GetFinalPathNameByHandleW,
+renamed from the forum post's Afx prefix, hardened to return the input on failure and to
+truncate the result buffer — is applied at every surface a scan-sourced name can reach:
+`OpenSelectedDocument` (tab captions, the choke point for all open-by-name paths), both
+Functions-panel loaders, both Symbol-Search row kinds, and `InstallProjectTodos`; verified
+headless — exact-casing round-trip, nonexistent-name passthrough, 129/129 panel files,
+TODO rows, and tab identity all in on-disk casing)*; legacy ANSI files with high-bytes
 that happen to form valid UTF-8 would convert as UTF-8 (heuristic limit). NOT verified
 (author's pass): listview click-through, CJK rendering in the actual owner-draw font.)*
 

@@ -340,9 +340,13 @@ function LoadFilesAndFunctions() as long
 
     ' All user files known to the symbol database (project + buffer scans; the
     ' toolchain include folder is excluded). This now includes include files
-    ' that have never been opened in the editor.
+    ' that have never been opened in the editor. Scan filenames are UPPERCASED -
+    ' normalize to on-disk casing for display and click-through.
     erase gFuncPanelFiles
     dim as long nFiles = gSymDb.EnumUserFiles( gFuncPanelFiles() )
+    for i as long = 0 to nFiles - 1
+        gFuncPanelFiles(i) = FilenameOriginalCase( gFuncPanelFiles(i) )
+    next
     if nFiles > 0 then QuickSortFilenames( gFuncPanelFiles(), 0, nFiles - 1 )
 
     ' Get the functions (and sort them) for each file
@@ -409,9 +413,13 @@ function LoadFunctionsOnly() as long
     dim as DWSTRING wszText
 
     ' All user files known to the symbol database, then every implementation
-    ' in each of them, flattened into one name-sorted list.
+    ' in each of them, flattened into one name-sorted list. Scan filenames are
+    ' UPPERCASED - normalize to on-disk casing for display and click-through.
     erase gFuncPanelFiles
     dim as long nFiles = gSymDb.EnumUserFiles( gFuncPanelFiles() )
+    for i as long = 0 to nFiles - 1
+        gFuncPanelFiles(i) = FilenameOriginalCase( gFuncPanelFiles(i) )
+    next
     if nFiles > 0 then QuickSortFilenames( gFuncPanelFiles(), 0, nFiles - 1 )
 
     redim arrFuncs(any) as FUNCTION_NODE_TYPE
