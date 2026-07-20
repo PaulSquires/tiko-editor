@@ -11,14 +11,16 @@
 '    MERCHANTABILITY or FITNESS for A PARTICULAR PURPOSE.  See the
 '    GNU General Public License for more details.
 
+' The editor's two vertical scrollbars (one per split view of the active document) are
+' CVScrollBar instances. The control knows nothing about Scintilla: the existing
+' Scintilla notification handlers (SCN_UPDATEUI via frmMain_SetStatusbar,
+' frmMain_PositionWindows, SCN_MODIFIED's auto-show) push the range in LINE units
+' through frmEditorVScroll_UpdateScrollBars, and the control reports user scrolling
+' back through a ScrollCallback that drives SCI_SETFIRSTVISIBLELINE.
 
-type EDITOR_VSCROLL_TYPE
-    numLines     as long 
-    linesPerPage as long
-    thumbHeight  as long
-    rc           as RECT
-end type
+' Control ids are cosmetic (the bars are reached through the HWND_FRMEDITOR_VSCROLLBAR
+' globals; nothing does GetDlgItem on HWND_FRMMAIN).
+#define IDC_FRMEDITOR_VSCROLLBAR0    6900
+#define IDC_FRMEDITOR_VSCROLLBAR1    6901
 
-dim shared gEditorVScroll(1) as EDITOR_VSCROLL_TYPE
-
-declare function frmEditorVScroll_calcVThumbRect( byval pDoc as clsDocument ptr ) as boolean
+declare function frmEditorVScroll_UpdateScrollBars( byval pDoc as clsDocument ptr ) as boolean

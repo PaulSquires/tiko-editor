@@ -122,9 +122,8 @@ function frmMain_SetStatusbar() as long
         ' PANEL Line/Col/Sel
         CStatusBar_SetText( HWND_FRMMAIN_STATUSBAR, GOTO_PANEL, wszText )
 
-        ' Update the vertical scrollbar
-        frmEditorVScroll_calcVThumbRect(pDoc)
-        AfxRedrawWindow( iif( hEdit = pDoc->hWindow(0), HWND_FRMEDITOR_VSCROLLBAR(0), HWND_FRMEDITOR_VSCROLLBAR(1)) )
+        ' Update the vertical scrollbars (SetRange inside re-derives and repaints)
+        frmEditorVScroll_UpdateScrollBars(pDoc)
 
         ' PANEL Themes dialog
         wszText = " " & wszIconThemes & " "
@@ -890,10 +889,8 @@ function frmMain_PositionWindows() as LRESULT
         end if
 
             
-        ' Update editor vertical scrollbars
-        frmEditorVScroll_calcVThumbRect( pDoc )
-        AfxRedrawWindow(HWND_FRMEDITOR_VSCROLLBAR(0))
-        AfxRedrawWindow(HWND_FRMEDITOR_VSCROLLBAR(1))
+        ' Update editor vertical scrollbars (SetRange inside re-derives and repaints)
+        frmEditorVScroll_UpdateScrollBars( pDoc )
         
         ' Esure that the splitter paints
         AfxRedrawWindow(HWND_FRMMAIN)
