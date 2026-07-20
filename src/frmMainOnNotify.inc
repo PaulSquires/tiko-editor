@@ -347,11 +347,10 @@ function Scintilla_OnNotify( _
                                     
                     ' Update the vertical scrollbars because mousewheel may have been
                     ' used to scroll a split window without keyboard focus.
+                    ' (SetRange inside re-derives and repaints.)
                     if pDoc->EditorSplitMode <> SplitNone then
-                        frmEditorVScroll_calcVThumbRect(pDoc)
-                        AfxRedrawWindow( HWND_FRMEDITOR_VSCROLLBAR(0) )
-                        AfxRedrawWindow( HWND_FRMEDITOR_VSCROLLBAR(1) )
-                    end if    
+                        frmEditorVScroll_UpdateScrollBars(pDoc)
+                    end if
 
                     ' Has the caret changed position
                     var caretPos = SciExec( pDoc->hWndActiveScintilla, SCI_GETCURRENTPOS, 0, 0)

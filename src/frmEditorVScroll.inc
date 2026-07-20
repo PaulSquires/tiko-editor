@@ -13,181 +13,70 @@
 
 ''
 ''  frmEditorVScroll.inc
-''   
+''
+''  The editor's vertical scrollbars as CVScrollBar instances. Replaces the old
+''  hand-rolled CPanelWindow scrollbar (WndProc + calcVThumbRect + gEditorVScroll
+''  state): the control owns the thumb geometry, dragging, track paging with
+''  auto-repeat, hover tracking and capture-loss cancellation; this file only
+''  translates between Scintilla's line numbers and the control's range model.
+''
 
 #include once "frmEditorVScroll.bi"
 
+
 ' ========================================================================================
-' Calculate the RECT that holds the client coordinates of the scrollbar's vertical thumb
-' Returns True if RECT is not empty
+' Push the current Scintilla scroll state of BOTH views into the scrollbars, in LINE
+' units (total, page, first) -- called from the Scintilla notification paths
+' (SCN_UPDATEUI via frmMain_SetStatusbar, the split branch of Scintilla_OnNotify) and
+' from frmMain_PositionWindows. SetRange re-derives the thumb and repaints; visibility
+' stays host-owned (frmMain's positioning and SCN_MODIFIED auto-show logic).
+' numLines keeps the old +1 headroom so the thumb proportions match the previous
+' implementation.
 ' ========================================================================================
-function frmEditorVScroll_calcVThumbRect( byval pDoc as clsDocument ptr ) as boolean
-    dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN)
-    if pWindow = 0 Then exit function
+function frmEditorVScroll_UpdateScrollBars( byval pDoc as clsDocument ptr ) as boolean
     if pDoc = 0 then exit function
-    dim as RECT rc
-
-    dim as integer minThumb = pWindow->ScaleY(SCROLLBAR_MINTHUMBSIZE)
-    
-    ' calculate the vertical scrollbars in client coordinates
+    dim as long numLines = pDoc->GetLineCount + 1
     for i as long = lbound(pDoc->hWindow) to ubound(pDoc->hWindow)
-        rc = AfxGetWindowRect(pDoc->hWindow(i))
-        MapWindowPoints( HWND_DESKTOP, HWND_FRMMAIN, cast(point ptr, @rc), 2 ) 
-        dim as long clientHeight = rc.bottom - rc.top
-        if clientHeight = 0 then continue for
         dim as long firstVisibleLine = SciExec( pDoc->hWindow(i), SCI_GETFIRSTVISIBLELINE, 0, 0 )
-        dim as long iScrollbarWidth = AfxGetWindowWidth(HWND_FRMEDITOR_VSCROLLBAR(i)) 
-        dim as long minThumbHeight = pWindow->ScaleY(SCROLLBAR_MINTHUMBSIZE)
-        SetRectEmpty( @gEditorVScroll(i).rc )
-
-        with gEditorVScroll(i)
-            .linesPerPage = pDoc->linesPerPage(i)
-            .numLines = pDoc->GetLineCount + 1
-
-            dim as double ratio = .linesPerPage / .numLines
-            .thumbHeight = int(ratio * clientHeight)
-            if .thumbHeight < minThumb then .thumbHeight = minThumb
-
-            .rc.left = 0
-            .rc.right = .rc.left + iScrollbarWidth
-            .rc.top = ((firstVisibleLine / .numLines) * clientHeight)
-            .rc.bottom = .rc.top + .thumbHeight
-        end with
+        CVScrollBar_SetRange( HWND_FRMEDITOR_VSCROLLBAR(i), _
+                              numLines, pDoc->LinesPerPage(i), firstVisibleLine )
     next
-
     function = 0
 end function
 
-    
+
 ' ========================================================================================
-' frmEditorVScroll Window procedure
+' The user scrolled a scrollbar (thumb drag or track paging): scroll the matching
+' Scintilla view. SuppressNotify brackets the reposition so the synchronous
+' SCN_UPDATEUI it raises is dropped (the old drag code suppressed for the same
+' reason); the scrollbar itself already sits at newPos, so no echo is needed.
 ' ========================================================================================
-function frmEditorVScroll_WndProc( _
-            byval hwnd   as HWND, _
-            byval uMsg   as UINT, _
-            byval wParam as WPARAM, _
-            byval lParam as LPARAM _
-            ) as LRESULT
+sub frmEditorVScroll_OnScroll( byval hScrollBar as HWND, byval newPos as integer )
+    dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
+    if pDoc = 0 then exit sub
+    dim as long idxWindow = iif( hScrollBar = HWND_FRMEDITOR_VSCROLLBAR(0), 0, 1 )
+    gApp.SuppressNotify = true
+    SendMessage( pDoc->hWindow(idxWindow), SCI_SETFIRSTVISIBLELINE, newPos, 0 )
+    gApp.SuppressNotify = false
+end sub
 
-    static as point prev_pt   ' screen pt.y cursor position
 
-    dim as long idxWindow = iif( hwnd = HWND_FRMEDITOR_VSCROLLBAR(0), 0, 1 )
-
-    select case uMsg
-        case WM_NCDESTROY
-            ' delete the allocated memory for window
-            dim as CWindow ptr pWindow = AfxCWindowPtr(hwnd)
-            if pWindow then delete(pWindow)
-            if hwnd = HWND_FRMEDITOR_VSCROLLBAR(0) then HWND_FRMEDITOR_VSCROLLBAR(0) = 0
-            if hwnd = HWND_FRMEDITOR_VSCROLLBAR(1) then HWND_FRMEDITOR_VSCROLLBAR(1) = 0
-            return 0
-                
-        case WM_LBUTTONDOWN
-            dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
-            if pDoc then
-                dim as point pt: GetCursorPos( @pt )
-                frmEditorVScroll_calcVThumbRect(pDoc)   ' in client coordinates
-                dim as RECT rc = gEditorVScroll(idxWindow).rc ' covert copy to screen coordinates
-                MapWindowPoints( HWND_FRMEDITOR_VSCROLLBAR(idxWindow), HWND_DESKTOP, cast(point ptr, @rc), 2)
-                if PtInRect( @rc, pt ) then
-                    ' Suppress only while the drag is active; cleared in WM_LBUTTONUP
-                    ' and WM_CAPTURECHANGED (capture can be stolen mid-drag).
-                    gApp.SuppressNotify = true   ' prevent SCN_UPDATEUI
-                    prev_pt = pt
-                    gApp.bDragActive = true
-                    SetCapture( hwnd )
-                else
-                    ' we have clicked on a PageUp or PageDn. No capture is taken here so
-                    ' WM_LBUTTONUP is not guaranteed to arrive - suppress only around the
-                    ' reposition itself, never across the click.
-                    gApp.SuppressNotify = true   ' prevent SCN_UPDATEUI
-                    dim as long nTopIndex = SendMessage( pDoc->hWindow(idxWindow), SCI_GETFIRSTVISIBLELINE, 0, 0 )
-                    if pt.y < rc.top then
-                        nTopIndex = max( nTopIndex - gEditorVScroll(idxWindow).linesPerPage, 0 )
-                        SendMessage( pDoc->hWindow(idxWindow), SCI_SETFIRSTVISIBLELINE, nTopIndex, 0 )
-                        frmEditorVScroll_calcVThumbRect(pDoc)   ' in client coordinates
-                        AfxRedrawWindow( HWND_FRMEDITOR_VSCROLLBAR(idxWindow) )
-                    elseif pt.y > rc.bottom then
-                        dim as long nMaxTopIndex = gEditorVScroll(idxWindow).numLines - gEditorVScroll(idxWindow).linesPerPage
-                        nTopIndex = min( nTopIndex + gEditorVScroll(idxWindow).linesPerPage, nMaxTopIndex )
-                        SendMessage( pDoc->hWindow(idxWindow), SCI_SETFIRSTVISIBLELINE, nTopIndex, 0 )
-                        frmEditorVScroll_calcVThumbRect(pDoc)   ' in client coordinates
-                        AfxRedrawWindow( HWND_FRMEDITOR_VSCROLLBAR(idxWindow) )
-                    end if
-                    gApp.SuppressNotify = false   ' allow SCN_UPDATEUI
-                end if
-            end if
-            
-        case WM_MOUSEMOVE
-            if gApp.bDragActive then
-                dim as point pt: GetCursorPos( @pt )
-                if pt.y <> prev_pt.y then 
-                    dim as long delta = pt.y - prev_pt.y 
-
-                    ' convert to client coordinates for ease of use
-                    dim as RECT rc: GetClientRect( HWND_FRMEDITOR_VSCROLLBAR(idxWindow), @rc )
-                    gEditorVScroll(idxWindow).rc.top = max(0, gEditorVScroll(idxWindow).rc.top + delta)
-                    gEditorVScroll(idxWindow).rc.top = min(gEditorVScroll(idxWindow).rc.top, rc.bottom - gEditorVScroll(idxWindow).thumbHeight)
-                    gEditorVScroll(idxWindow).rc.bottom = gEditorVScroll(idxWindow).rc.top + gEditorVScroll(idxWindow).thumbHeight
-
-                    prev_pt = pt
-                    
-                    dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
-                    if pDoc then
-                        dim as long nPrevTopLine = SendMessage( pDoc->hWindow(idxWindow), SCI_GETFIRSTVISIBLELINE, 0, 0 ) 
-                        dim as rect rc = AfxGetWindowRect(pDoc->hWindow(idxWindow))
-                        MapWindowPoints( HWND_DESKTOP, HWND_FRMMAIN, cast(point ptr, @rc), 2 ) 
-                        dim as long clientHeight = rc.bottom - rc.top
-                        if clientHeight = 0 then exit function
-                        dim as double scrollRatio = gEditorVScroll(idxWindow).rc.top / (clientHeight - gEditorVScroll(idxWindow).thumbHeight)
-                        dim as long nTopLine = int(scrollRatio * (gEditorVScroll(idxWindow).numLines - gEditorVScroll(idxWindow).linesPerPage))
-                        if nTopLine <> nPrevTopLine then
-                            SendMessage( pDoc->hWindow(idxWindow), SCI_SETFIRSTVISIBLELINE, nTopLine, 0 ) 
-                        end if   
-                    end if
-                    AfxRedrawWindow( HWND_FRMEDITOR_VSCROLLBAR(idxWindow) )
-
-                end if
-            end if
-            
-        case WM_LBUTTONUP
-            gApp.SuppressNotify = false   ' allow SCN_UPDATEUI
-            gApp.bDragActive = false
-            prev_pt.x = 0
-            prev_pt.y = 0
-            ReleaseCapture
-
-        case WM_CAPTURECHANGED
-            ' Capture was lost or stolen (Alt+Tab, another SetCapture) so WM_LBUTTONUP
-            ' may never arrive: cancel the drag here or SuppressNotify stays stuck true
-            ' and every SCN_ notification (autoinsert, autoindent, UI updates) goes dead.
-            ' Also fires from our own ReleaseCapture above; the reset is idempotent.
-            gApp.SuppressNotify = false   ' allow SCN_UPDATEUI
-            gApp.bDragActive = false
-
-        case WM_ERASEBKGND
-            return true
-
-        case WM_PAINT
-            dim as clsDoubleBuffer b
-
-            b.BeginDoubleBuffer(hwnd)
-            b.SetBackColor( ghEditor.BackColorScrollBar )
-            b.PaintClientRect()
-            b.SetPenColor( ghEditor.Divider )
-            b.PaintLine( 1, b.rcClient.left, b.rcClient.top, b.rcClient.left, b.rcClient.bottom )
-            b.SetBackColor( ghEditor.ForeColorScrollBar )
-            b.PaintRect( @gEditorVScroll(idxWindow).rc )
-
-            b.EndDoubleBuffer()
-            
-            return 0
-    end Select
-
-    ' for messages that we don't deal with
-    function = DefWindowProc( hwnd, uMsg, wParam, lParam )
-
-end function
+' ========================================================================================
+' Custom paint keeping the old editor scrollbar visuals: flat track, an always-drawn
+' divider line at the left edge, flat thumb with no hover brightening. Reads the
+' ghEditor theme colors live, so a theme switch only needs a repaint.
+' ========================================================================================
+sub frmEditorVScroll_PaintCallback( byval p as CVSCROLLBAR_PAINTINFO ptr )
+    dim as clsDoubleBuffer ptr b = p->b
+    b->SetBackColor( ghEditor.BackColorScrollBar )
+    b->PaintClientRect()
+    b->SetPenColor( ghEditor.Divider )
+    b->PaintLine( 1, p->rcClient.left, p->rcClient.top, p->rcClient.left, p->rcClient.bottom )
+    if IsRectEmpty( @p->rcThumb ) = 0 then
+        b->SetBackColor( ghEditor.ForeColorScrollBar )
+        b->PaintRect( @p->rcThumb )
+    end if
+end sub
 
 
 ' ========================================================================================
@@ -195,17 +84,24 @@ end function
 ' ========================================================================================
 function frmEditorVScroll_Show( byval hWndParent as HWND ) as LRESULT
 
-    '  Create the main window and child controls
-    dim pWindow as CPanelWindow ptr 
+    dim pWindow as CWindow ptr = AfxCWindowPtr( hWndParent )
 
     for i as long = 0 to 1
-        pWindow = new CPanelWindow
-        HWND_FRMEDITOR_VSCROLLBAR(i) = pWindow->Create( hWndParent, _
-            @frmEditorVScroll_WndProc, 0, 0, SCROLLBAR_WIDTH_EDITOR + 1, 0, _
-            WS_CHILD or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, WS_EX_NOACTIVATE )
+        HWND_FRMEDITOR_VSCROLLBAR(i) = CVScrollBar_Create( hWndParent, _
+                iif( i = 0, IDC_FRMEDITOR_VSCROLLBAR0, IDC_FRMEDITOR_VSCROLLBAR1 ) )
+        CVScrollBar_SetScrollCallback( HWND_FRMEDITOR_VSCROLLBAR(i), @frmEditorVScroll_OnScroll )
+        CVScrollBar_SetPaintCallback( HWND_FRMEDITOR_VSCROLLBAR(i), @frmEditorVScroll_PaintCallback )
+        ' CVScrollBar is created 0x0, but frmMain's layout code reads the bar width
+        ' back with AfxGetWindowWidth before the first positioning -- give each bar
+        ' its real width immediately (same 13px design width as the old CPanelWindow
+        ' scrollbar, which CPanelWindow.Create DPI-scaled the same way).
+        if pWindow then
+            SetWindowPos( HWND_FRMEDITOR_VSCROLLBAR(i), 0, 0, 0, _
+                          pWindow->ScaleX(SCROLLBAR_WIDTH_EDITOR + 1), 0, _
+                          SWP_NOMOVE or SWP_NOZORDER or SWP_NOACTIVATE )
+        end if
     next
 
     function = 0
-    
-end function
 
+end function
