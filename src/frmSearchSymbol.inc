@@ -84,9 +84,13 @@ function frmSearchSymbol_DoSearch( byval hwndCtl as HWND ) as long
     if wszNeedle = "" then bLoadAll = true
 
     ' PROCESS ALL FILENAMES (every user file the symbol database knows,
-    ' including include files never opened in the editor)
+    ' including include files never opened in the editor). Scan filenames are
+    ' UPPERCASED - normalize to on-disk casing for display and open-on-select.
     dim arrFiles(any) as DWSTRING
     dim as long nFiles = gSymDb.EnumUserFiles( arrFiles() )
+    for i as long = 0 to nFiles - 1
+        arrFiles(i) = FilenameOriginalCase( arrFiles(i) )
+    next
     if nFiles > 0 then QuickSortFilenames( arrFiles(), 0, nFiles - 1 )
     for f as long = 0 to nFiles - 1
         dim positions(any) as uinteger
@@ -135,7 +139,7 @@ function frmSearchSymbol_DoSearch( byval hwndCtl as HWND ) as long
                     gSymbols(nextEl).id = SearchSymbol.type_symbol
                 end if
                 gSymbols(nextEl).wszCaption  = wszName
-                gSymbols(nextEl).wszFilename = *pFile
+                gSymbols(nextEl).wszFilename = FilenameOriginalCase( *pFile )
                 dim as long nLineNum = gSymDb.SymBodyLine( rs(s) )
                 if nLineNum = 0 then nLineNum = gSymDb.SymLine( rs(s) )
                 gSymbols(nextEl).nLineNumber = iif( nLineNum > 0, nLineNum - 1, 0 )

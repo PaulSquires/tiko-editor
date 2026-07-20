@@ -1010,17 +1010,21 @@ function OpenSelectedDocument( _
         end if
     end if
 
+    ' Normalize scan-sourced UPPERCASED names to their on-disk casing before the
+    ' name can become a document's DiskFilename (and with it the tab caption).
+    dim as DWSTRING wszOpenName = FilenameOriginalCase( wszFilename )
+
     ' Not all documents exist on disk file. for example, a QuickRun file will exist in
     ' the editor but may never have a disk footprint. We need to search the project to
     ' determine if the filename has a pDoc already associated with it. If it does, then
     ' pass that pDoc rather than looking for a disk filename.
     dim pDoc as clsDocument ptr
-    pDoc = gApp.GetDocumentPtrByFilename( wszFilename )
+    pDoc = gApp.GetDocumentPtrByFilename( wszOpenName )
 
     if pDoc = 0 then
-        if AfxFileExists(wszFilename) = false then exit function
+        if AfxFileExists(wszOpenName) = false then exit function
         pDoc = gApp.CreateEmptyDocument()
-        pDoc->LoadDiskFile( wszFilename )
+        pDoc->LoadDiskFile( wszOpenName )
     end if
 
     if pDoc then
@@ -1052,6 +1056,36 @@ function OpenSelectedDocument( _
     end if 
     
     function = pDoc
+end function
+
+
+' ========================================================================================
+' Get the original case filename as stored by Windows. The fbcParser scans intern
+' filenames UPPERCASED, so any scan-sourced name that reaches the UI (panel
+' captions, tab captions, TODO rows, search results) is normalized through here.
+' Returns the input unchanged when the file cannot be opened (deleted files,
+' the scanner's synthetic UNTITLED names) or the path cannot be resolved.
+' ========================================================================================
+function FilenameOriginalCase( byval wszFilename as DWSTRING ) as DWSTRING
+    dim as long bufSize = 1024
+    dim as DWSTRING buffer = wspace(bufSize \ 2)
+
+    dim as HANDLE hFile = CreateFileW( wszFilename, GENERIC_READ, FILE_SHARE_READ, _
+                                       null, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, null )
+    if hFile = INVALID_HANDLE_VALUE then return wszFilename
+
+    dim as DWORD result = GetFinalPathNameByHandleW( hFile, buffer.vptr, bufSize, FILE_NAME_NORMALIZED )
+    CloseHandle( hFile )
+
+    if (result > 0) andalso (result < bufSize) then
+        buffer = left( buffer, result )      ' drop the unwritten buffer tail
+        ' Good data returned but still need to remove the mapping characters
+        if left( buffer, 4 ) = "\\?\" then buffer = mid( buffer, 5 )
+        return buffer
+    end if
+
+    ' error: could not retrieve the path - display the incoming name as-is
+    return wszFilename
 end function
 
 

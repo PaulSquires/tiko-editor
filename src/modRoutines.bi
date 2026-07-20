@@ -53,6 +53,7 @@ declare function ConvertTextBuffer( byval pDoc as clsDocument ptr, byval FileEnc
 declare function GetFileToString( byref wszFilename as const wstring, byref txtBuffer as string, byval pDoc as clsDocument ptr ) as boolean
 declare function IsCurrentLineIncludeFilename() as boolean
 declare function OpenSelectedDocument( byref wszFilename as wstring, byref wszFunctionName as wstring = "", byval nLineNumber as long = -1 ) as clsDocument ptr
+declare function FilenameOriginalCase( byval wszFilename as DWSTRING ) as DWSTRING
 declare function ProcessToCurdriveProject( byval wzFilename as DWSTRING ) as DWSTRING
 declare function ProcessFromCurdriveProject( byval wzFilename as DWSTRING ) as DWSTRING
 declare function ProcessToCurdriveApp( byval wzFilename as DWSTRING ) as DWSTRING
