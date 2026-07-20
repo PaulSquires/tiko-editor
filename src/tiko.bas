@@ -100,7 +100,8 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "CVScrollBar.inc" 
 #include once "CListBox.inc" 
 #include once "CStatusBar.inc" 
-#include once "CTabBar.inc" 
+#include once "CTabBar.inc"
+#include once "CTextBox.inc"
 
 #include once "frmAbout.inc" 
 #include once "frmPopupMenu.inc"

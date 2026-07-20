@@ -165,124 +165,40 @@ end function
 
 
 ' ========================================================================================
-' frmSearchSymbol_RichEdit_SubclassProc Window procedure
+' CTextBox callbacks for the find textbox. The control owns the cue banner, colors,
+' vertical centering, single-line enforcement and the Cut/Copy/Paste context menu that
+' the old RichEdit subclass hand-rolled here.
 ' ========================================================================================
-Function frmSearchSymbol_RichEdit_SubclassProc ( _
-            byval hWin   as HWND, _                 ' // Control window handle
-            byval uMsg   as UINT, _                 ' // Type of message
-            byval _wParam as WPARAM, _               ' // First message parameter
-            byval _lParam as LPARAM, _               ' // Second message parameter
-            byval uIdSubclass as UINT_PTR, _        ' // The subclass ID
-            byval dwRefData as DWORD_PTR _          ' // Pointer to reference data
-            ) as LRESULT
+sub frmSearchSymbol_TextBoxChange( byval hTextBox as HWND )
+    ' User edits only; the control never fires this for programmatic changes.
+    frmSearchSymbol_DoSearch( hTextBox )
+end sub
 
-    dim pWindow as CWindow ptr = AfxCWindowPtr(hWin)
+sub frmSearchSymbol_TextBoxFocus( byval hTextBox as HWND, byval bGotFocus as boolean )
+    ' Populate the results list when the picker opens (was the EN_SETFOCUS path).
+    if bGotFocus then frmSearchSymbol_DoSearch( hTextBox )
+end sub
 
-    select case uMsg
-                            
-        case WM_PRINTCLIENT, WM_PAINT
-            dim as long textLength = AfxGetWindowTextLength(hWin)
-            if (textLength = 0 ) then 
-                ' Get the needed DC with DCX_INTERSECTUPDATE before the EDIT
-                ' control's WM_PAINT handler calls BeginPaint/EndPaint, which
-                ' validates the update rect and would otherwise lead to drawing
-                ' nothing later because the region is empty. Also, grab it from
-                ' the cache so we don't mess with the EDIT's DC.
-                dim as HDC hdc = _
-                    iif(uMsg = WM_PRINTCLIENT, GetDC(hWin), _
-                        GetDCEx(hWin, 0, DCX_INTERSECTUPDATE or DCX_CACHE or DCX_CLIPCHILDREN or DCX_CLIPSIBLINGS) )
+function frmSearchSymbol_TextBoxMessage( byval m as CTEXTBOX_MESSAGEINFO ptr ) as boolean
+    ' Up/Down keypresses in the textbox move the current selected line in the picker
+    ' listbox. Veto (return true) so the RichEdit caret does not also react.
+    ' (VK_TAB does the same but is intercepted in the modal message loop below --
+    ' IsDialogMessage would consume it before it ever reached this callback.)
+    if m->uMsg = WM_KEYDOWN then
+        dim as HWND hList = GetDlgItem( HWND_FRMSEARCHSYMBOL, IDC_FRMSEARCHSYMBOL_LISTBOX )
+        select case m->wParam
+            case VK_UP
+                dim as integer cur = CListBox_GetCurSel(hList)
+                if cur > 0 then CListBox_SetCurSel( hList, cur - 1 )
+                return true
 
-                ' Call the EDIT control so that the caret is properly handled,
-                ' no caret litter left on the screen after tabbing away.
-                dim as LRESULT result = DefSubclassProc(hWin, uMsg, _wParam, _lParam)
-
-                SaveDC(hdc)
-                
-                ' Get the font and margin so the cue banner text has a
-                ' consistent appearance and placement with existing text.
-                dim as RECT editRect: SendMessage( hWin, EM_GETRECT, 0, cast(LPARAM, @editRect) )
-
-                ' Ideally we would call Edit_GetCueBannerText, but since that message
-                ' returns nothing when ES_MULTILINE, use a window property instead.
-                dim cueBannerText as wstring * 250
-                cueBannerText = L(37,"Search Symbol") & "..."
-                SelectObject( hdc, gFind.hCueBannerFont )
-                SetTextColor( hdc, ghPanel.ForeColor )
-                SetBkMode(hdc, TRANSPARENT)
-                dim as long wsStyle = DT_TOP or DT_LEFT or DT_NOPREFIX or DT_NOCLIP or DT_SINGLELINE 
-                DrawText(hdc, cueBannerText, -1, @editRect, wsStyle)
-                RestoreDC( hdc, -1 )
-                ReleaseDC( hWin, hdc )
-
-                ' Return the EDIT's result (could probably safely just return zero here,
-                ' but seems safer to relay whatever value came from the edit).
-                return result
-            end if
-        
-        case WM_CONTEXTMENU 
-            ' Create the right click popup menu
-            dim as DWSTRING wszText = RichEdit_GetSelText( hWin )
-            dim hPopUpMenu As HMENU = CreatePopupMenu()
-            if len(wszText) then 
-                AppendMenu( hPopUpMenu, MF_ENABLED, IDM_CUT, wstr("Cut") )
-                AppendMenu( hPopUpMenu, MF_ENABLED, IDM_COPY, wstr("Copy") )
-            end if
-            if RichEdit_CanPaste( hWin, 0 ) then
-                if len(wszText) then 
-                    AppendMenu( hPopUpMenu, MF_SEPARATOR, 0, "" )
-                end if   
-                AppendMenu( hPopUpMenu, MF_ENABLED, IDM_PASTE, wstr("Paste") )
-            end if   
-
-            dim as long nResult
-            nResult = TrackPopupMenu( hPopUpMenu, TPM_RETURNCMD or TPM_NONOTIFY, _
-                            loword(_lParam), hiword(_lParam), 0, HWND_FRMMAIN_TOPTABSFIND, 0 ) 
-            select case nResult
-                case IDM_CUT:   SendMessage( hWin, WM_CUT, 0, 0 )
-                case IDM_COPY:  SendMessage( hWin, WM_COPY, 0, 0 )
-                case IDM_PASTE: SendMessage( hWin, WM_PASTE, 0, 0 )
-            end select
-            DestroyMenu hPopUpMenu
-
-
-        case WM_CHAR
-            ' extra safety net, prevents newline insertion
-            if _wParam = 13 then return 0
-    
-        ' Up/Down keypresses in the textbox will move the current selected line
-        ' in the picker listbox.
-        case WM_KEYDOWN
-            if _wParam = VK_TAB then
-                ' Simulate Up/Down arrow keys
-                if (GetAsyncKeyState(VK_SHIFT) and &H8000) then 
-                    _wParam = VK_UP
-                else    
-                    _wParam = VK_DOWN
-                end if
-            end if
-                    
-            dim as HWND hList = GetDlgItem( HWND_FRMSEARCHSYMBOL, IDC_FRMSEARCHSYMBOL_LISTBOX )        
-            select case _wParam
-                case VK_UP
-                    dim as integer cur = CListBox_GetCurSel(hList)
-                    if cur > 0 then CListBox_SetCurSel( hList, cur - 1 )
-                    return 0
-
-                case VK_DOWN
-                    dim as integer cur = CListBox_GetCurSel(hList)
-                    if (cur < gSymbolsCount - 1) then CListBox_SetCurSel( hList, cur + 1 )
-                    return 0
-            end select
-            
-            
-        case WM_DESTROY
-            ' REQUIRED: Remove control subclassing
-            RemoveWindowSubclass( hWin, @frmSearchSymbol_RichEdit_SubclassProc, uIdSubclass )
-    end select
-    
-    ' For messages that we don't deal with
-    function = DefSubclassProc(hWin, uMsg, _wParam, _lParam)
-
+            case VK_DOWN
+                dim as integer cur = CListBox_GetCurSel(hList)
+                if (cur < gSymbolsCount - 1) then CListBox_SetCurSel( hList, cur + 1 )
+                return true
+        end select
+    end if
+    return false
 end function
 
 
@@ -296,18 +212,8 @@ function frmSearchSymbol_OnCommand( _
             byval codeNotify As UINT _
             ) as LRESULT
 
-    select case id
-
-        case IDC_FRMSEARCHSYMBOL_TXTFIND
-            if (codeNotify = EN_CHANGE) then
-                frmSearchSymbol_DoSearch( hwndCtl )
-
-            elseif (codeNotify = EN_SETFOCUS) then
-                frmSearchSymbol_DoSearch( hwndCtl )
-            end if
-
-    end select
-
+    ' The find textbox notifies through its CTextBox callbacks (change/focus), not
+    ' through WM_COMMAND EN_ codes anymore.
     function = 0
 end function
 
@@ -510,31 +416,19 @@ function frmSearchSymbol_Show( byval hwndParent as HWND ) as LRESULT
         WS_POPUP or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, WS_EX_TOOLWINDOW or WS_EX_TOPMOST )
 
 
-    ' we use RichEdit controls because regular Edit controls can not easily have
-    ' their text vertically centered.
-    gFind.hCueBannerFont = ghFont(GUIFONT_10)
-
+    ' The find textbox is the reusable CTextBox control (a RichEdit50W child inside --
+    ' regular Edit controls can not easily have their text vertically centered).
     dim as RECT rc
-    dim cf as CHARFORMATW 
-    cf.cbSize = sizeof(cf)
-    cf.dwMask = CFM_FACE or CFM_SIZE or CFM_CHARSET or CFM_COLOR
-    cf.crTextColor = ghPanel.ForeColorHot
-    cf.yHeight = 10 * 20      ' in twips (1/20 pt)
-    cf.bCharSet = DEFAULT_CHARSET
-    cf.bPitchAndFamily = DEFAULT_PITCH or FF_DONTCARE
-    cf.szFaceName = GUIFONT
-    
-    
-    dim as HWND hCtlFind
-    hCtlFind = _
-        pWindow->AddControl("RICHEDIT", , IDC_FRMSEARCHSYMBOL_TXTFIND, "", _
-        0, 0, 0, 0, _
-        WS_CHILD or ES_LEFT or ES_AUTOHSCROLL, _
-        WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_RIGHTSCROLLBAR)
-    pWindow->SetControlSubclass(hCtlFind, @frmSearchSymbol_RichEdit_SubclassProc, IDC_FRMSEARCHSYMBOL_TXTFIND, NULL)
-    SendMessage( hCtlFind, EM_SETCHARFORMAT, SCF_ALL, cast(LPARAM, @cf) ) 
-    SendMessage( hCtlFind, EM_SETBKGNDCOLOR , 0, cast(LPARAM, ghPanel.BackColorHot) )
-    SendMessage( hCtlFind, EM_SETEVENTMASK, 0, cast(LPARAM, ENM_SELCHANGE or ENM_CHANGE) )
+    dim as HWND hCtlFind = CTextBox_Create( HWND_FRMSEARCHSYMBOL, IDC_FRMSEARCHSYMBOL_TXTFIND )
+    CTextBox_SetFont( hCtlFind, ghFont(GUIFONT_10) )
+    CTextBox_SetForeColor( hCtlFind, ghPanel.ForeColorHot )
+    CTextBox_SetBackColor( hCtlFind, ghPanel.BackColorHot )
+    CTextBox_SetBorderWidth( hCtlFind, 0 )                       ' flat, as before
+    CTextBox_SetCueBannerText( hCtlFind, L(37,"Search Symbol") & "..." )
+    CTextBox_SetCueBannerColor( hCtlFind, ghPanel.ForeColor )
+    CTextBox_SetChangeCallback( hCtlFind, @frmSearchSymbol_TextBoxChange )
+    CTextBox_SetFocusCallback( hCtlFind, @frmSearchSymbol_TextBoxFocus )
+    CTextBox_SetMessageCallback( hCtlFind, @frmSearchSymbol_TextBoxMessage )
 
 
     dim as HWND hCtrlList = CListBox_Create( HWND_FRMSEARCHSYMBOL, IDC_FRMSEARCHSYMBOL_LISTBOX )
@@ -589,8 +483,9 @@ function frmSearchSymbol_Show( byval hwndParent as HWND ) as LRESULT
     nWidth  = (rc.right - rc.left)
     SetWindowPos( hCtlFind, 0, nMargin, nMargin, _
             nWidth - (nMargin * 2), nHeight, SWP_SHOWWINDOW or SWP_NOZORDER )
-    RichEditCenterSingleLineText( hCtlFind )
-    SendMessage( hCtlFind, EM_SETMARGINS, EC_LEFTMARGIN, MAKELPARAM(nMargin, 0))
+    ' Vertical centering is the control's job (it re-derives on every size/font
+    ' change); only the margins are ours to specify.
+    CTextBox_SetMargins( hCtlFind, nMargin, 0 )
 
     
     ' Reposition the ownerdrawn results listbox 
@@ -611,11 +506,26 @@ function frmSearchSymbol_Show( byval hwndParent as HWND ) as LRESULT
         elseif (uMsg.message = WM_KEYDOWN) andalso (uMsg.wParam = VK_RETURN) then
             dim as HWND hFocus   = GetFocus()
             dim as HWND hFind    = GetDlgItem( HWND_FRMSEARCHSYMBOL, IDC_FRMSEARCHSYMBOL_TXTFIND )
-            if (hFocus = hFind) then 
-                dim as HWND hList = GetDlgItem( HWND_FRMSEARCHSYMBOL, IDC_FRMSEARCHSYMBOL_LISTBOX )        
+            ' Keyboard focus sits on the CTextBox's RichEdit child, not the control.
+            if (hFocus = CTextBox_GetRichEditHandle(hFind)) then
+                dim as HWND hList = GetDlgItem( HWND_FRMSEARCHSYMBOL, IDC_FRMSEARCHSYMBOL_LISTBOX )
                 dim as integer cur = CListBox_GetCurSel( hList )
                 frmSearchSymbol_GotoSymbol( cur )   ' this will also call WM_CLOSE
             end if
+
+        elseif (uMsg.message = WM_KEYDOWN) andalso (uMsg.wParam = VK_TAB) then
+            ' Tab (Shift+Tab = up) moves the list selection, same as the arrow keys.
+            ' Intercepted HERE because IsDialogMessage below would otherwise consume
+            ' Tab for focus navigation -- the CTextBox's RichEdit child is a real
+            ' WS_TABSTOP, unlike the bare RichEdit this form used to own.
+            dim as HWND hList = GetDlgItem( HWND_FRMSEARCHSYMBOL, IDC_FRMSEARCHSYMBOL_LISTBOX )
+            dim as integer cur = CListBox_GetCurSel( hList )
+            if (GetAsyncKeyState(VK_SHIFT) and &H8000) then
+                if cur > 0 then CListBox_SetCurSel( hList, cur - 1 )
+            else
+                if cur < gSymbolsCount - 1 then CListBox_SetCurSel( hList, cur + 1 )
+            end if
+            continue while   ' fully handled; don't let IsDialogMessage move focus
 
         end if
 
