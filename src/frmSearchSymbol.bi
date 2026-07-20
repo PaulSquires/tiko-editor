@@ -19,12 +19,17 @@ enum SearchSymbol explicit
     function_symbol
 end enum
 
+' Plain data copies, never SYMBOLREFs: the picker runs a modal message loop, and a
+' background scan completing while it is open swaps/frees the result set a stored
+' ref would point into.
 type SEARCHSYMBOL_TYPE
-    result   as score_t
-    id       as SearchSymbol
-    pDoc     as clsDocument ptr    ' used to get filename / diskfilename
-    pData    as DB2_DATA ptr       ' pointer into database for Types / Functions
-    clrMask  as DWSTRING
+    result      as score_t
+    id          as SearchSymbol
+    wszCaption  as DWSTRING        ' display name (file name / qualified symbol name)
+    wszFilename as DWSTRING        ' absolute path to open on selection
+    nLineNumber as long            ' 0-based Scintilla line; -1 = open without repositioning
+    isEnum      as boolean         ' type_symbol only: draw the enum icon
+    clrMask     as DWSTRING
 end type
 
 type SEARCHSYMBOL_VSCROLL_TYPE

@@ -20,6 +20,31 @@
 
 
 ' ========================================================================================
+' Simple QuickSort of a clsDocument ptr array by filename (moved here from
+' frmFunctions.inc when the Functions panel switched to symbol-database files;
+' the Explorer is now the only consumer)
+' ========================================================================================
+function QuickSortpDocs( pDocs() as clsDocument ptr, lo as long, hi as long ) as long
+    dim as long i, j
+    dim as DWSTRING pivot
+
+    if lo < hi then
+        i = lo : j = hi
+        pivot = ucase( pDocs( (lo+hi)/2 )->DiskFilename )
+        do
+            while ucase(pDocs(i)->DiskFilename) < pivot and i < hi: i += 1: wend
+            while ucase(pDocs(j)->DiskFilename) > Pivot and j > lo: j -= 1: wend
+            if i <= j then swap pDocs(i), pDocs(j): i += 1: j -= 1
+        loop while i <= j
+        if lo < j then QuickSortpDocs( pDocs(), lo, j )
+        if hi > i then QuickSortpDocs( pDocs(), i, hi )
+    end if
+
+    function = 0
+end function
+
+
+' ========================================================================================
 ' Expand/Collapse all Explorer Nodes
 ' ========================================================================================
 function frmExplorer_ExpandAll() as long

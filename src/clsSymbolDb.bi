@@ -130,6 +130,9 @@ type clsSymbolDb
         ' -- calltip synthesis (replaces stored CallTip strings) --
         declare function BuildCalltip( byval refProc as SYMBOLREF ) as DWSTRING
 
+        ' -- display name: members prefixed with their owning TYPE ("clsDoc.GetLine") --
+        declare function QualifiedName( byval r as SYMBOLREF ) as DWSTRING
+
         ' -- misc --
         declare function ProjectSet() as PARSERESULTSET ptr
         declare function BufferSet() as PARSERESULTSET ptr

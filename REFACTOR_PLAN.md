@@ -370,6 +370,33 @@ recorded: panels now see never-opened include files (user = path not under toolc
 **Verify:** old-vs-new item count trace; navigation into a never-opened include lands on the
 right line (author confirms interactively).
 
+*(done 2026-07-19 — both panels rewired. **Item identity moved from pDoc pointers to
+filenames**: never-opened include files have no clsDocument, so the Functions listbox now
+stores an index into a shared `gFuncPanelFiles()` array (ItemData) + 0-based line
+(ItemDataExtra); the click handler resolves a pDoc by filename when one exists, else
+`OpenSelectedDocument` from disk; `frmFunctions_SelectItemData` matches by filename. Rows are
+**implementations only** (`SymBodyLine > 0` — declare-only prototypes never appeared in the
+old parsed-bodies panel either), captions are `gSymDb.QualifiedName` (new method:
+"clsType.Proc" like gdb2's ElementName), tooltips synthesize via `BuildCalltip`, files sort
+by display name. `frmFunctions_ReparseFiles`' sync sweep is now a `RequestBufferScan` of the
+active doc; parse-complete refreshes the panel when it is visible. frmSearchSymbol: gSymbols
+stores **plain data copies** (caption/file/line/isEnum), never SYMBOLREFs — the picker's
+modal loop lets a background scan swap+free a result set mid-search; file rows now come from
+`EnumUserFiles` too. `QuickSortpDocs` moved to frmExplorer.inc (its only remaining consumer);
+new `QuickSortFilenames` shared by both panels. Verified headless (env-gated harness opening
+tiko.tiko, removed before merge): 134 user files; per-open-file old-gdb2 vs new counts
+**identical for every file except five, each exactly one lower — the five explicit
+constructors** the collector's `$`-filter drops (same list Phase 2 recorded); tree = 134
+headers + 1063 rows, flat list = 1063 (consistent); SelectItemData(active doc) = true;
+search feed = 1285 qualified user symbols. Known differences, recorded not fixed: (1)
+property procs no longer carry a "(get)"/"(set)" suffix — FBCP has no property kind, a
+get/set pair lists as two same-named rows; (2) unsaved/untitled documents no longer appear
+in the panel (their synthetic scan name has no disk file); (3) **without a project open the
+panels only see the active document's buffer scan** — old code parsed every open document
+individually; designed two-tier consequence, flagged for the author's judgement. NOT
+verified (author's pass): click-through into a never-opened include landing on the right
+line, tooltip feel, panel refresh cadence while typing.)*
+
 ### Phase 5 — TODO scanner and panel
 Worker line-scanner (modParser's match rule lifted before deletion), per-file store keyed by
 ucased filename, frmOutput reads it, close-file removes entries, parse-complete refreshes

@@ -1540,6 +1540,11 @@ function frmMain_WndProc( _
 
                 dim as PARSERESULTSET ptr pOld = gSymDb.InstallSet( nTier, pRSet )
                 if pOld then gScanMgr.RetireResult( pOld )
+
+                ' A fresh scan can add/remove files and procs: refresh the
+                ' Functions panel when it is showing (the panel-show paths
+                ' reload it anyway when it becomes visible later).
+                if IsWindowVisible( HWND_FRMFUNCTIONS ) then LoadFunctionsFiles()
             end if
 
         case MSG_USER_APPENDEQUALSSIGN
