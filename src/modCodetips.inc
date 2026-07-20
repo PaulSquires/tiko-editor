@@ -102,23 +102,62 @@ end function
 
 
 ' ========================================================================================
+' Resolve a SYMBOLREF to the TYPE whose members can be enumerated: a TYPE/UNION/ENUM
+' ref is its own type; anything else (variable, param, field, member function)
+' resolves through its type text (e.g. "CLSDOCUMENT PTR" -> the CLSDOCUMENT record).
+' ========================================================================================
+function SymRefTypeOf( byval r as SYMBOLREF ) as SYMBOLREF
+    dim as SYMBOLREF refMiss
+    refMiss.idx = -1
+    if r.IsValid = false then return refMiss
+    select case gSymDb.SymKind( r )
+        case FBCP_KIND_TYPE, FBCP_KIND_UNION, FBCP_KIND_ENUM
+            return r
+    end select
+    dim as wstring ptr pTypeText = gSymDb.SymTypeText( r )
+    if pTypeText = 0 then return refMiss
+    return gSymDb.ResolveTypeText( *pTypeText )
+end function
+
+
+' ========================================================================================
+' The identifier (letters, digits, underscore) that ends sText, uppercased.
+' Returns "" if the text does not end in an identifier character.
+' ========================================================================================
+function GetTrailingIdentifier( byref sText as string ) as string
+    dim as long nStart = len(sText) + 1
+    for i as long = len(sText) to 1 step -1
+        dim as long ch = asc(mid(sText, i, 1))
+        dim as boolean bIdent = ((ch >= 65) andalso (ch <= 90)) orelse _
+                                ((ch >= 97) andalso (ch <= 122)) orelse _
+                                ((ch >= 48) andalso (ch <= 57)) orelse (ch = 95)
+        if bIdent = false then exit for
+        nStart = i
+    next
+    if nStart > len(sText) then return ""
+    function = ucase(mid(sText, nStart))
+end function
+
+
+' ========================================================================================
 ' Take the current line and determine what variable is being referenced.
 ' Dereferences expressions like:  g.MyFunction, g.ot.rc, g->MyFunction
 ' Used for determining what popup autocomplete list or codetip to display.
+' Returns the SYMBOLREF of the last element that resolved: each hop resolves the
+' current element's TYPE and looks the next part up as a member of it. A final
+' part that fails to resolve is treated as a partially typed word and the previous
+' element's ref is returned (the autocomplete rebuild path passes such lines in).
 ' ========================================================================================
 function DereferenceLine( _
             byval pDoc as clsDocument ptr, _
             byval sTrigger as string, _
             byval nPosition as long _
-            ) as DB2_DATA ptr
-    
-    if pDoc = 0 then exit function
-    
-    dim pData     as DB2_DATA ptr
-    dim pDataTYPE as DB2_DATA ptr
-    dim pLastData as DB2_DATA ptr
-    
-    dim as string sCurrentFunction, sTypeName
+            ) as SYMBOLREF
+
+    dim as SYMBOLREF refMiss
+    refMiss.idx = -1
+
+    if pDoc = 0 then return refMiss
 
     dim as HWND hEdit   = pDoc->hWndActiveScintilla
     dim as long curPos  = nPosition  
@@ -134,7 +173,7 @@ function DereferenceLine( _
     ' is good and we can proceed to dereference elements on the line.
     ' The identifer that triggers an autocomplete list for a TYPE variable
     ' is either a dot "." or a pointer dereference "->"
-    if right(sLine, len(sTrigger)) <> sTrigger then exit function
+    if right(sLine, len(sTrigger)) <> sTrigger then return refMiss
     sLine = rtrim(sLine, sTrigger)
 
 
@@ -178,78 +217,46 @@ function DereferenceLine( _
     ' Convert all "->" pointer references to "." dots to make parsing easier
     sLine = AfxStrReplace(sLine, "->", ".")
     
-    ' Determine what sub/function (if any) that we are in. This function will
-    ' retrieve the current standalone function, or the fully qualified name of 
-    ' a class/type function.
-    ' eg.   clsType.MyFunctionName      ' inside a class/type function
-    ' eg.   MyFunctionName              ' standalone function
-    pDoc->GetCurrentFunctionName( sCurrentFunction, 0 )
+    ' The active document's identity in the symbol database (same naming rule the
+    ' buffer scan uses), and the caret line in fbcParser's 1-based line space
+    ' (Scintilla lines are 0-based).
+    dim as DWSTRING wszDocFile = ScanMgr_GetRootName( pDoc )
+    dim as long nCaretLine = pDoc->GetCurrentLineNumber + 1
 
     dim as long numParts = AfxStrParseCount(sLine, ".")
-    dim parts(1 to numParts) as string
+    dim parts(1 to numParts) as DWSTRING
     for i as long = 1 to numParts
         parts(i) = AfxStrParse(sLine, i, ".")
     next
 
-    dim as string sParent = sCurrentFunction
-    dim as string sSearch
-    dim as string sLookFor 
-    dim as long curPart = 1
+    dim as SYMBOLREF refCur = refMiss
 
-    do until curPart > numParts
-        sLookFor = parts(curPart)
-        
-        if pLastData then
-            sParent = pLastData->VariableType
-        end if
+    for curPart as long = 1 to numParts
+        dim as SYMBOLREF refNext = refMiss
 
-        '' ATTEMPT TO MATCH LOCAL VARIABLE WITHIN CURRENT FUNCTION
-        pData = gdb2.dbFindVariable( sParent, sLookFor )
-        if pData then
-            pLastData = pData
-        else   
-            '' ATTEMPT TO MATCH GLOBAL VARIABLE   
-            pData = gdb2.dbFindVariable( "", sLookfor )
-            if pData then
-                pLastData = pData
+        if curPart = 1 then
+            ' Scope-aware variable first: locals/params of the enclosing proc
+            ' (including the implicit THIS), then module-level of this file, then
+            ' SHARED anywhere. Fall back to a proc name, then a TYPE name (for
+            ' static accesses like MYTYPE.member).
+            refNext = gSymDb.FindVariable( parts(1), wszDocFile, nCaretLine )
+            if refNext.IsValid = false then refNext = gSymDb.FindProc( parts(1) )
+            if refNext.IsValid = false then refNext = gSymDb.FindType( parts(1) )
+        else
+            dim as SYMBOLREF refType = SymRefTypeOf( refCur )
+            if refType.IsValid then
+                refNext = gSymDb.FindMemberOf( refType, parts(curPart) )
             end if
         end if
 
-        '' ATTEMPT TO MATCH FUNCTION NAME
-        if pData = 0 then
-            if len(sParent) then
-                sSearch = sParent & "." & sLookFor
-                pData = gdb2.dbFindFunctionTYPE( sParent, sSearch )
-                if pData = 0 then
-                    ' Determine if there is a TYPE Extends that needs to be checked
-                    pData = gdb2.dbFindTYPE( sParent )
-                    if pData then
-                        sParent = pData->TypeExtends
-                        sSearch = sParent & "." & sLookFor
-                        pData = gdb2.dbFindFunctionTYPE( sParent, sSearch )
-                    end if   
-                end if   
-            end if
-            if pData then
-                pLastData = pData
-            end if
+        if refNext.IsValid = false then
+            if curPart = numParts then return refCur
+            return refMiss
         end if
+        refCur = refNext
+    next
 
-        if pData = 0 then
-            pData = gdb2.dbFindFunction( sLookFor )
-            if pData then
-                pLastData = pData
-            end if
-        end if
-        
-        ' If we did not get anymore unresolved matches then return
-        ' the most recent match.
-        if pData = 0 then exit do
-
-        curPart = curPart + 1
-    loop
-
-    return pLastData
+    return refCur
 
 end function
 
@@ -263,11 +270,10 @@ function ShowCodetip( _
             ) as boolean
 
     if gConfig.CodeTips = false then exit function
-    
-    dim pData as DB2_DATA ptr
+
     dim as string codeTip
     dim as HWND hEdit  = pDoc->hWndActiveScintilla
-    dim as long curPos = SciExec(hEdit, SCI_GETCURRENTPOS, 0, 0) 
+    dim as long curPos = SciExec(hEdit, SCI_GETCURRENTPOS, 0, 0)
 
     if bCommaTrigger then
         ' It is possible that a codetip had been displayed but the user moved off of the
@@ -294,10 +300,22 @@ function ShowCodetip( _
         next
     end if
 
-    pData = DereferenceLine(pDoc, "(", curPos-1)
-    if pData then codeTip = pData->CallTip
+    dim as SYMBOLREF refProc = DereferenceLine(pDoc, "(", curPos-1)
+    if refProc.IsValid then
+        select case gSymDb.SymKind( refProc )
+            case FBCP_KIND_SUB, FBCP_KIND_FUNCTION
+                codeTip = gSymDb.BuildCalltip( refProc )
+        end select
+    end if
 
-    if len(codeTip) then 
+    if len(codeTip) = 0 then
+        ' FB intrinsic fallback (LEN, MID, ...): the identifier before the "("
+        dim as long nParenCol = SciExec(hEdit, SCI_GETCOLUMN, curPos-1, 0)
+        dim as string sName = GetTrailingIdentifier( left(pDoc->GetLine(pDoc->GetCurrentLineNumber), nParenCol) )
+        if len(sName) then codeTip = FindIntrinsicCalltip( sName )
+    end if
+
+    if len(codeTip) then
         codeTip = FormatCodetip(codeTip)
         SciExec( hEdit, SCI_CALLTIPSHOW, curPos, strptr(codeTip))
         return true
@@ -356,14 +374,13 @@ end function
 function ShowAutocompleteList( byval Notification as long = 0) as boolean
     
     if gConfig.AutoComplete = false then exit function
-    
-    dim as long curPos, nCol, nLenMatchWord, ub, iNextType
-    dim as string sWord, sList, st, sDot, sLookFor, sElement, sProp
-    dim as boolean bIsTHIS, bTypesOnly, bTypesNotPreloaded
-    
+
+    dim as long curPos, nCol, nLenMatchWord
+    dim as string sList, st, sDot
+    dim as boolean bTypesOnly, bTypesNotPreloaded
+
     dim pDoc as clsDocument ptr
-    dim pData as DB2_DATA ptr
-    
+
     pDoc = gTTabCtl.GetActiveDocumentPtr()
     If pDoc = 0 then exit function
     
@@ -470,141 +487,158 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
             bTypesNotPreloaded = true
             pDoc->AutoCompleteType = AUTOCOMPLETE_DIM_AS
 
-        elseif right(sLine_ucase, 9) = " EXTENDS " then 
+        elseif right(sLine_ucase, 9) = " EXTENDS " then
             ' okay
             bTypesOnly = true
             bTypesNotPreloaded = false  ' all types
             pDoc->AutoCompleteType = AUTOCOMPLETE_DIM_AS
+
+        elseif pDoc->AutoCompleteType = AUTOCOMPLETE_NONE then
+            ' Bare identifier: complete from symbols and locals in scope once at
+            ' least two characters have been typed. Skip when the word follows a
+            ' "." or "->" (that context belongs to the member autocomplete), and
+            ' never override a sticky mode on a backspace rebuild.
+            dim as string sWordPrefix = GetTrailingIdentifier( sLine )
+            if len(sWordPrefix) >= 2 then
+                dim as string sBefore = left(sLine, len(sLine) - len(sWordPrefix))
+                dim as boolean bMemberContext = (right(sBefore, 1) = ".") orelse (right(sBefore, 2) = "->")
+                dim as long chFirst = asc(left(sWordPrefix, 1))
+                dim as boolean bStartsWithDigit = (chFirst >= 48) andalso (chFirst <= 57)
+                dim as boolean bWordContext = (bMemberContext = false) andalso (bStartsWithDigit = false)
+                if bWordContext then
+                    pDoc->wszMatchWord = sWordPrefix
+                    nLenMatchWord = len(sWordPrefix)
+                    pDoc->AutoCompleteType = AUTOCOMPLETE_WORD
+                end if
+            end if
         end if
 
         ' Check if it is a "FOR i AS LONG" type of statement
-        if instr(sLine, "FOR ") then 
+        if instr(sLine, "FOR ") then
             SciExec( hEdit, SCI_AUTOCCANCEL, 0, 0)
             exit function
-        end if
-    
-        if pDoc->AutoCompleteType <> AUTOCOMPLETE_NONE then
-            ' If the file is dirty then reparse it before attempting the autocomplete
-            If cbool(SciExec(pDoc->hWindow(0), SCI_GETMODIFY, 0, 0 )) = true orelse _
-            (pDoc->UserModified = true) then
-            pDoc->ParseDocument()
-			end if   
         end if
     end if
     
     sList = "|"
-            
+
     select case pDoc->AutoCompleteType
-        
+
         case AUTOCOMPLETE_DIM_AS
-            ' Create the space separated data type list
-            ' Add all of the TYPE definitions that were found
-            gdb2.dbRewind()
-            do 
-                pData = gdb2.dbGetNext()
-                if pData = 0 then exit do
+            dim as long nItems
 
-                if bTypesOnly = false then
-                    if pData->id = DB2_STANDARDDATATYPE then
-                        st = pData->VariableType
-                        if nLenMatchWord then
-                            if left(ucase(st), nLenMatchWord) = pDoc->wszMatchWord then
-                                if instr(sList, st & "|") = 0 then
-                                    sList = sList & st & "|"
-                                end if   
-                            end if
-                        else
-                            if len(st) then      
-                                if instr(sList, st & "|") = 0 then
-                                    sList = sList & st & "|"
-                                end if   
-                            end if   
-                        end if
-                    end if   
-                end if
-        
-                if pData->id = DB2_TYPE then
-                    if bTypesOnly then
-                        if bTypesNotPreloaded then
-                            ' Only look at TYPES that are loaded into the editor. These would
-                            ' be entries that have a Filename attached to them. Preloaded TYPES
-                            ' from WinAPI or Afx do not have Filenames.
-                            if len(pData->fileName) = 0 then continue do
-                        end if
-                    end if
-        
-                    ' nLenMatchWord will allow partial matches to be added to the popup
-                    ' based on what the user has currently typed.
-                    st = rtrim(pData->VariableType)
-
-                    if nLenMatchWord then
-                        if left(ucase(st), nLenMatchWord) = pDoc->wszMatchWord then
-                            if ExistsInAutocompleteList(sList, st) = false then
-                            sList = sList & st & "|" 
-                            end if
-                        end if
-                    elseif len(st) then
+            if bTypesOnly = false then
+                ' The standard builtin data types
+                dim as string sStdTypes = _
+                    "boolean|byte|ubyte|short|ushort|integer|uinteger|long|ulong|longint|ulongint|single|" & _
+                    "double|string|wstring|zstring|true|false|DWSTRING"
+                dim as long nCount = AfxStrParseCount(sStdTypes, "|")
+                for i as long = 1 to nCount
+                    st = AfxStrParse(sStdTypes, i, "|")
+                    dim as boolean bMatch = true
+                    if nLenMatchWord then bMatch = ( left(ucase(st), nLenMatchWord) = pDoc->wszMatchWord )
+                    if bMatch then
                         if ExistsInAutocompleteList(sList, st) = false then
                             sList = sList & st & "|"
-                        end if    
+                        end if
                     end if
+                next
+            end if
+
+            ' All TYPE/UNION/ENUM/TYPEDEF names matching the typed prefix. For
+            ' CONSTRUCTOR/DESTRUCTOR completion (bTypesNotPreloaded) only offer
+            ' types defined outside the toolchain include folder.
+            dim rs() as SYMBOLREF
+            dim as long n = gSymDb.EnumPrefix( pDoc->wszMatchWord, SYMMASK_TYPE, rs() )
+            dim as DWSTRING wszIncPath
+            if bTypesNotPreloaded andalso (len(gConfig.FBWINCompiler64) > 0) then
+                wszIncPath = ucase( AfxStrPathname( "PATH", ProcessFromCurdriveApp( gConfig.FBWINCompiler64 ) ) & "inc" )
+            end if
+            for i as long = 0 to n - 1
+                if nItems >= AUTOCOMPLETE_MAX_ITEMS then exit for
+                if len(wszIncPath) then
+                    dim as wstring ptr pFile = gSymDb.SymFile( rs(i) )
+                    if pFile = 0 then continue for
+                    if ucase(left(*pFile, len(wszIncPath))) = wszIncPath then continue for
                 end if
-            loop
+                st = *gSymDb.SymName( rs(i) )
+                if ExistsInAutocompleteList(sList, st) = false then
+                    sList = sList & st & "|"
+                    nItems += 1
+                end if
+            next
 
 
         case AUTOCOMPLETE_TYPE
-            ' Attempt to popup a list of TYPE elements related the pData variableType (TYPE)
-            pData = DereferenceLine( pDoc, sDot, curPos - 1)
-            if pData = 0 then return false
-            sLookFor = pData->VariableType    ' This is the TYPE structure
-            if len(sLookFor) = 0 then return false
+            ' Resolve the expression before the "." / "->" and enumerate the
+            ' members of its TYPE (fields and member procs; the EXTENDS chain is
+            ' walked inside EnumMembers).
+            dim as SYMBOLREF refExpr = DereferenceLine( pDoc, sDot, curPos - 1 )
+            dim as SYMBOLREF refType = SymRefTypeOf( refExpr )
+            if refType.IsValid = false then return false
 
-            sLookFor = ucase(sLookFor)
-
-            do
-                gdb2.dbRewind()
-                do 
-                    pData = gdb2.dbGetnext()
-                    if pData = 0 then exit do
-                    if pData->deleted = true then continue do
-                    
-                    dim as boolean bAddToList = false
-                    
-                    if (pData->id = DB2_VARIABLE) andalso _
-                        (ucase(pData->ParentName) = sLookFor) then
-                        st = pData->ElementName
-                        bAddToList = true
-                    elseif (pData->id = DB2_FUNCTION) andalso _
-                        (ucase(pData->ParentName) = sLookFor) then   
-                        st = AfxStrParse(pData->ElementName, 2, ".")
-                        bAddToList = true
+            dim rs() as SYMBOLREF
+            dim as long n = gSymDb.EnumMembers( refType, rs() )
+            dim as long nItems
+            for i as long = 0 to n - 1
+                if nItems >= AUTOCOMPLETE_MAX_ITEMS then exit for
+                st = *gSymDb.SymName( rs(i) )
+                dim as boolean bMatch = true
+                if nLenMatchWord then bMatch = ( left(ucase(st), nLenMatchWord) = pDoc->wszMatchWord )
+                if bMatch then
+                    if ExistsInAutocompleteList(sList, st) = false then
+                        sList = sList & st & "|"
+                        nItems += 1
                     end if
-                            
-                    if bAddToList then
-                        if nLenMatchWord then
-                            if left(ucase(st), nLenMatchWord) = pDoc->wszMatchWord then
-                                if ExistsInAutocompleteList(sList, st) = false then
-                                    sList = sList & st & "|"
-                                end if
-                            end if
-                        else
-                            If ExistsInAutocompleteList(sList, st) = false then
-                                sList = sList & st & "|"
-                            end if
-                        end if         
-                    end if   
-                loop 
-                
-                dim pDataTYPE as DB2_DATA ptr
-                pDataTYPE = gdb2.dbFindTYPE( sLookFor )
-                if pDataTYPE then
-                    sLookFor = ucase(pDataType->TypeExtends)
-                else
-                    exit do   
                 end if
-                if len(sLookFor) = 0 then exit do
-            loop
-        
+            next
+
+
+        case AUTOCOMPLETE_WORD
+            ' Recompute the match word as a strict identifier: the shared scan at
+            ' the top of this function stops only at "." ">" and space, so on
+            ' rebuilds it can pick up "(" and other punctuation.
+            dim as string sWordPrefix = GetTrailingIdentifier( sLine )
+            if len(sWordPrefix) = 0 then
+                SciExec( hEdit, SCI_AUTOCCANCEL, 0, 0)
+                exit function
+            end if
+            pDoc->wszMatchWord = sWordPrefix
+            nLenMatchWord = len(sWordPrefix)
+
+            dim as DWSTRING wszDocFile = ScanMgr_GetRootName( pDoc )
+            dim as long nCaretLine = pDoc->GetCurrentLineNumber + 1
+            dim rs() as SYMBOLREF
+            dim as long nItems
+
+            ' Locals and params of the enclosing proc first
+            dim as long n = gSymDb.EnumLocalsInScope( wszDocFile, nCaretLine, rs() )
+            for i as long = 0 to n - 1
+                st = *gSymDb.SymName( rs(i) )
+                dim as boolean bMatch = ( left(ucase(st), nLenMatchWord) = pDoc->wszMatchWord )
+                if bMatch then
+                    if ExistsInAutocompleteList(sList, st) = false then
+                        sList = sList & st & "|"
+                        nItems += 1
+                    end if
+                end if
+            next
+
+            ' Then global procs, types, variables, constants and enum values.
+            ' Locals of OTHER procs also carry kind VAR/CONST - skip them via the
+            ' LOCAL flag (this scope's locals were already added above).
+            dim as long wordMask = SYMMASK_PROC or SYMMASK_TYPE or SYMMASK_VAR or (1 shl FBCP_KIND_ENUMVAL)
+            n = gSymDb.EnumPrefix( pDoc->wszMatchWord, wordMask, rs() )
+            for i as long = 0 to n - 1
+                if nItems >= AUTOCOMPLETE_MAX_ITEMS then exit for
+                if (gSymDb.SymFlags( rs(i) ) and FBCP_SYMBFLAG_LOCAL) <> 0 then continue for
+                st = *gSymDb.SymName( rs(i) )
+                if ExistsInAutocompleteList(sList, st) = false then
+                    sList = sList & st & "|"
+                    nItems += 1
+                end if
+            next
+
     end select
     
     sList = trim(sList, any "| ")
@@ -622,6 +656,4 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
     function = true
 
 end function
-
-
 

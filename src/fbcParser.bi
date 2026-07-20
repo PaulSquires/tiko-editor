@@ -12,8 +12,10 @@
 ''    declared via macro expansion (lineNum then points at the invocation
 ''    site), and for identifiers on an earlier line of a multi-line
 ''    (_-continued) declaration.
-''  - A proc's lineNum/colNum point at its DECLARE if one exists; bodyLine/
-''    bodyEndLine give the implementation's line range (0 if no body).
+''  - A proc WITH a body reports the implementation: fileIndex/lineNum point
+''    at the body (lineNum = first body line, colNum 0) and bodyLine/
+''    bodyEndLine give its line range. A declare-only proc points at its
+''    DECLARE and has bodyLine/bodyEndLine = 0.
 ''  - The root file's name is the path exactly as passed to the scan (pass
 ''    absolute paths); include files are always absolute.
 ''  - Symbol names (and UDT/enum names inside the type text) are returned in

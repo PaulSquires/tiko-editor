@@ -18,9 +18,14 @@
 ' character is entered.
 enum
     AUTOCOMPLETE_NONE   = 0
-    AUTOCOMPLETE_DIM_AS 
+    AUTOCOMPLETE_DIM_AS
     AUTOCOMPLETE_TYPE
-end enum   
-                    
+    AUTOCOMPLETE_WORD
+end enum
+
+' Autocomplete popup lists are capped - a list longer than this is useless to
+' scroll and the pipe-string dedupe cost grows quadratically with list length.
+const AUTOCOMPLETE_MAX_ITEMS = 1000
+
 declare function DereferenceLine( byval pDoc as clsDocument ptr, _
-            byval sTrigger as string, byval nPosition as long ) as DB2_DATA ptr
+            byval sTrigger as string, byval nPosition as long ) as SYMBOLREF

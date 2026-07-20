@@ -103,112 +103,73 @@ function OnCommand_SearchPopLastPosition() as long
 end function
 
 
-'function debug_goto( byval pData as DB2_DATA ptr, byval wszDescription as DWSTRING ) as long
-'    print "gdb2 search: "; wszDescription
-'    print "pData: "; pData
-'    if pData = 0 then return 0
-    
-'    with *pData
-'        print "deleted: "; .deleted
-'        print "pDoc: "; .pDoc
-'        print "nFiletype: "; .nFiletype
-'        print "fileName: "; .filename
-'        print "id: "; .id
-'        print "nLineStart: "; .nLineStart
-'        print "nLineEnd: "; .nLineEnd
-'        print "ParentName: "; .ParentName
-'        print "ElementName: "; .ElementName   
-'        print "ElementData: "; .ElementData
-'        print "Variabletype: "; .Variabletype
-'        print "TypeExtends: "; .TypeExtends
-'        print "VariableScope: "; .VariableScope
-'        print "GetSet: "; .GetSet
-'        print "isENUM: "; .isENUM
-'    end with
-    
-'    return 0
-'end function
-
-
 ' ========================================================================================
 ' Position editor to document/function/variable under the current caret position
 ' ========================================================================================
 function OnCommand_SearchGotoDefinition( byval pDoc as clsDocument ptr ) as LRESULT
 
     If pDoc = 0 Then Exit Function
-    
-    dim pData as DB2_DATA ptr
+
     dim as DWSTRING wszFilename
-    dim as string sTypeName, sSymbolName, sLookFor, sTrigger
+    dim as string sSymbolName, sTrigger
     dim as long nLineNum = 0
-    
+
     dim as hwnd hEdit = pDoc->hWndActiveScintilla
-    
+
     ' Version 1.8.8 added ability to open an underlying #Include file if such
     ' a file exists on the current editing line.
     if IsCurrentLineIncludeFilename() then
-        wszFilename = gApp.IncludeFilename 
+        wszFilename = gApp.IncludeFilename
     else
+        dim as SYMBOLREF refSym
+        refSym.idx = -1
 
         ' Determine the word at the current caret position if nothing is selected.
         sSymbolName = trim(pDoc->GetSelText)
         if len(sSymbolName) = 0 then sSymbolName = trim(pDoc->GetWord)
 
         if len(sSymbolName) then
-            ' Determine if the function name is part of a class/type. This would be identified
+            dim as DWSTRING wszSymbolName = sSymbolName
+
+            ' Determine if the symbol is part of a class/type. This would be identified
             ' by a preceeding "." or "->" symbol.  eg  pDoc->GetCurrentLineNumber
             dim as long curPos = SciExec( hEdit, SCI_GETCURRENTPOS, 0, 0)
             dim as long wordStartPos = SciExec( hEdit, SCI_WORDSTARTPOSITION, curPos, true)
             sTrigger = right( pDoc->GetWord( wordStartPos - 1 ), 1 )
             if sTrigger = ">" then sTrigger = "->"
             if ( sTrigger = "." ) orelse ( sTrigger = "->" ) then
-                ' In the DereferenceLine function any "->" are converted to "." for simplicity.
-                pData = DereferenceLine( pDoc, sTrigger, wordStartPos - 1 )
-                if pData then
-                    sTypeName = pData->VariableType
-                    sLookFor = sTypeName & "." & sSymbolName
-                    ' Set pData to null because it currently points at the TYPE definition and
-                    ' we use the gdb2 searches below to actually find the symbol definition.
-                    pData = 0
+                ' Resolve the expression before the trigger and look the clicked
+                ' word up as a member of its TYPE (EXTENDS chain walked inside).
+                dim as SYMBOLREF refExpr = DereferenceLine( pDoc, sTrigger, wordStartPos - 1 )
+                dim as SYMBOLREF refType = SymRefTypeOf( refExpr )
+                if refType.IsValid then
+                    refSym = gSymDb.FindMemberOf( refType, wszSymbolName )
                 end if
-            end if   
+            end if
 
-'cls
-'print "sSymbolName: "; sSymbolName, "sTypeName: "; sTypeName, "sLookFor: "; sLookFor
-            ' Search the list of TYPE Function names
-            if pData = 0 then 
-                pData = gdb2.dbFindFunctionTYPE( sTypeName, sLookFor )
-'debug_goto( pData, "dbFindFunctionTYPE" )
+            ' Fall back through proc names, scope-aware variables, then TYPE names.
+            if refSym.IsValid = false then refSym = gSymDb.FindProc( wszSymbolName )
+            if refSym.IsValid = false then
+                refSym = gSymDb.FindVariable( wszSymbolName, ScanMgr_GetRootName( pDoc ), _
+                                              pDoc->GetCurrentLineNumber + 1 )
             end if
-            ' Search the list of Function names
-            if pData = 0 then 
-                pData = gdb2.dbFindFunction( sSymbolName )
-'debug_goto( pData, "dbFindFunction" )
-            end if
-            ' Search for variable definitions
-            if pData = 0 then 
-                pData = gdb2.dbFindVariable( "", sSymbolName )
-'debug_goto( pData, "dbFindVariable" )
-            end if
-            ' Search for the TYPE definition
-            if pData = 0 then 
-                pData = gdb2.dbFindType( sTypeName )
-'debug_goto( pData, "dbFindType #1" )
-            end if
-            ' Maybe just the name itself was clicked. eg. KEYBINDINGS_TYPE 
-            if pData = 0 then 
-                pData = gdb2.dbFindType( sSymbolName )
-'debug_goto( pData, "dbFindType #2" )
-            end if
-        
+            if refSym.IsValid = false then refSym = gSymDb.FindType( wszSymbolName )
         end if
-        
-        if pData = 0 then
+
+        dim as wstring ptr pFile = 0
+        if refSym.IsValid then pFile = gSymDb.SymFile( refSym )
+        if pFile = 0 then
             MessageBox( HWND_FRMMAIN, L(224,"Symbol definition not found."), @wstr(APPNAME), MB_ICONWARNING)
             exit function
         end if
-        wszFilename = pData->filename
-        nLineNum = pData->nLineStart
+        wszFilename = *pFile
+
+        ' Jump to the implementation when there is one, else the declaration.
+        ' fbcParser lines are 1-based; Scintilla lines are 0-based.
+        nLineNum = gSymDb.SymBodyLine( refSym )
+        if nLineNum = 0 then nLineNum = gSymDb.SymLine( refSym )
+        nLineNum -= 1
+        if nLineNum < 0 then nLineNum = 0
 
     end if
     
