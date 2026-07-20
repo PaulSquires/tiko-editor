@@ -199,6 +199,9 @@ function clsSymbolDb.InstallSet( byval nTier as long, byval pNew as PARSERESULTS
     if nTier = ScanTierBuffer then
         pOld = m_pBuffer
         m_pBuffer = pNew
+        ' the buffer scan's TODO line-scan replaces this file's stored entries
+        ' (UI thread, per the store's threading rule)
+        if pNew then TodoStore_ReplaceFile( pNew->wszRootFile, pNew->todoItems(), pNew->todoCount )
     else
         pOld = m_pProject
         m_pProject = pNew
@@ -776,6 +779,40 @@ function clsSymbolDb.QualifiedName( byval r as SYMBOLREF ) as DWSTRING
     end if
     return wszName
 end function
+
+
+' ---- TODO store (flat, keyed by file; UI thread only) ----------------------------------
+
+sub TodoStore_RemoveFile( byref wszFile as const wstring )
+    dim as long nOut = 0
+    for i as long = 0 to gTodoCount - 1
+        if SymDb_FileNameEq( gTodoItems(i).wszFile, wszFile ) = false then
+            if nOut <> i then gTodoItems(nOut) = gTodoItems(i)
+            nOut += 1
+        end if
+    next
+    ' clear the dropped tail entries so their strings free now
+    for i as long = nOut to gTodoCount - 1
+        gTodoItems(i).wszFile = ""
+        gTodoItems(i).wszText = ""
+        gTodoItems(i).nLineNum = 0
+    next
+    gTodoCount = nOut
+end sub
+
+sub TodoStore_ReplaceFile( byref wszFile as const wstring, items() as TODOITEM, byval itemCount as long )
+    TodoStore_RemoveFile( wszFile )
+    if itemCount <= 0 then exit sub
+    if gTodoCount + itemCount - 1 > ubound( gTodoItems ) then
+        redim preserve gTodoItems( 0 to (gTodoCount + itemCount) * 2 + 7 )
+    end if
+    for i as long = 0 to itemCount - 1
+        gTodoItems( gTodoCount ).wszFile = wszFile
+        gTodoItems( gTodoCount ).nLineNum = items(i).nLineNum
+        gTodoItems( gTodoCount ).wszText = items(i).wszText
+        gTodoCount += 1
+    next
+end sub
 
 
 ' ---- FB intrinsics lookup --------------------------------------------------------------

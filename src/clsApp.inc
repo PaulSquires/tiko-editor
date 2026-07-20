@@ -88,6 +88,11 @@ function clsApp.RemoveDocument( byval pDoc as clsDocument ptr ) as long
         loop
     end if
 
+    ' Drop the closed document's TODO entries (keyed by the same name its
+    ' buffer scans used) and refresh the panel
+    TodoStore_RemoveFile( ScanMgr_GetRootName( pDoc ) )
+    frmOutput_UpdateToDoListview()
+
     ' Release memory associated with this pDoc
     if pDoc then delete(pDoc)
 
@@ -105,13 +110,15 @@ function clsApp.RemoveAllDocuments() as long
     do until pDoc = 0
         ' Remove any parsed data for this document from the in-memory database
         gdb2.dbDeleteByDocumentPtr(pDoc)
+        TodoStore_RemoveFile( ScanMgr_GetRootName( pDoc ) )
         pDocNext = pDoc->pDocNext
         ' Release memory associated with this pDoc
         delete pDoc
         pDoc = pDocNext
     loop
     this.pDocList = 0
-    
+    frmOutput_UpdateToDoListview()
+
     function = 0
 end function
 

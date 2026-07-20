@@ -20,6 +20,11 @@
 ' they are symbol-database concepts; the scan manager only produces and shuttles
 ' PARSERESULTSET instances.
 
+' The root filename a buffer scan attributes symbols to (real files: the absolute
+' path; unsaved documents: a synthetic per-document name). Also the key the TODO
+' store and DereferenceLine use to identify the active document in the database.
+declare function ScanMgr_GetRootName( byval pDoc as clsDocument ptr ) as DWSTRING
+
 ' A pending scan request (mailbox slot). Allocated with NEW on the UI thread;
 ' DELETEd by the worker after the scan, or by the UI thread when a newer
 ' request supersedes it in its slot. The destructor frees the text copy.

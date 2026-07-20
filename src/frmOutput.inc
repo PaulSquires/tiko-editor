@@ -48,28 +48,25 @@ end function
 ' ========================================================================================
 ' Update the TODO listview
 ' ========================================================================================
-function frmOutput_UpdateToDoListview() as long 
+function frmOutput_UpdateToDoListview() as long
     if gApp.IsProjectLoading then exit function
 
     dim as hwnd hLV = HWND_FRMOUTPUT_LVTODO
     frmListView_DeleteAllItems( hLV )
-    
+
     dim as DWSTRING wszText
 
-    dim pData as DB2_DATA ptr
-    
-    gdb2.dbRewind()
-    do 
-        pData = gdb2.dbGetNext
-        if pData = 0 then exit do
-        if pData->id <> DB2_TODO then continue do
+    ' The store is fed by the scan worker's line scan of each buffer-scanned
+    ' document (see clsSymbolDb.bi). Line numbers are 1-based, which is what
+    ' the click-through (SetDocumentErrorPosition) expects in this column.
+    for i as long = 0 to gTodoCount - 1
         wszText = _
             "" & chr(9) & _
-            ltrim(wstr(pData->nLineStart)) & chr(9) & _
-            ltrim(pData->fileName) & chr(9) & _
-            ltrim(pData->ElementData)
+            ltrim(wstr(gTodoItems(i).nLineNum)) & chr(9) & _
+            ltrim(gTodoItems(i).wszFile) & chr(9) & _
+            ltrim(gTodoItems(i).wszText)
         frmListView_AddString( hLV, wszText )
-    loop until pData = 0
+    next
 
     frmOutput_PositionWindows
 

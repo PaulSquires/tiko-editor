@@ -35,6 +35,23 @@ const SYMMASK_MEMBER = SYMMASK_FIELD or SYMMASK_PROC   ' members reachable via '
 ' a runaway number of declarations into it. Enumerations stop here.
 const SYMDB_MAX_ENUM = 8192
 
+' A single 'TODO: comment line. Produced by the scan worker's line scan of each
+' buffer-scan text copy (fbcParser itself never sees comments). The flat store
+' gTodoItems() below keys entries by file and is mutated only on the UI thread:
+' entries are replaced when a buffer scan installs (clsSymbolDb.InstallSet) and
+' removed when their document closes (clsApp.RemoveDocument).
+type TODOITEM
+    wszFile  as DWSTRING          ' owning file, as passed to the scan
+    nLineNum as long              ' 1-based source line
+    wszText  as DWSTRING          ' text after the TODO: marker
+end type
+
+dim shared gTodoItems(any) as TODOITEM
+dim shared gTodoCount as long = 0
+
+declare sub TodoStore_ReplaceFile( byref wszFile as const wstring, items() as TODOITEM, byval itemCount as long )
+declare sub TodoStore_RemoveFile( byref wszFile as const wstring )
+
 ' One scan's result plus its indexes. Built on the worker, immutable afterward.
 ' The FBCP_RESULT ptr is owned elsewhere (freed via fbcparser_free on the retire
 ' queue); the FB dynamic arrays free themselves when the set is deleted.
@@ -56,6 +73,11 @@ type PARSERESULTSET
     ' parent -> child chains (declaration order): symbol -> first child, child -> next sibling
     childHead(any) as long
     childNext(any) as long
+
+    ' 'TODO: lines found by the worker's line scan of the buffer-scan text copy
+    ' (buffer tier only; empty for project scans - their text is never in memory)
+    todoItems(any) as TODOITEM
+    todoCount      as long
 
     declare sub BuildIndexes()
 end type
