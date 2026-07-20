@@ -21,6 +21,9 @@ type clsApp
         pfnCreateLexerfn           as CreateLexerFn
         PreventConfigLoad          as boolean           ' temporarily suppress messagepump checking (set during Load/Save config)
         SuppressNotify             as boolean           ' temporarily suppress Scintilla notifications
+        KeepTitleBarActive         as boolean           ' a popup surface (menubar popup, Search Symbol) owns
+                                                        ' activation; frmMain's WM_NCACTIVATE keeps painting
+                                                        ' the caption as active
         bDragTabActive             as boolean           ' a tab in the top tabcontrol is being dragged
         ptDragTabPrev              as POINT             ' used for comparing delta movement of sursor during tab dragging
         bDragActive                as boolean           ' splitter drag is currently active 

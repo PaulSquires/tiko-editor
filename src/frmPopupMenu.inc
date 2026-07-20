@@ -85,7 +85,10 @@ function killAllPopupMenus() as boolean
     killPopupSubMenus()
     killPopupMenus()
     gMenuLastCurSel = -1
-    gPrevent_WM_NCACTIVATE = false
+    ' Every menu-dismissal path funnels through here, so this clear is also the
+    ' safety net for a press-and-release on the popup's padding (which sets the
+    ' flag in WM_MOUSEACTIVATE but never reaches the listbox's WM_LBUTTONUP).
+    gApp.KeepTitleBarActive = false
     AfxRedrawWindow(HWND_FRMMAIN_MENUBAR)
     return true
 end function
@@ -362,8 +365,8 @@ function frmPopupMenu_WndProc( _
         ' allowing us to reset the flag in WM_LBUTTUPUP
         case WM_MOUSEACTIVATE
             ' test that the form itself is being clicked on rather than a label
-            gPrevent_WM_NCACTIVATE = true
-            return MA_NOACTIVATE 
+            gApp.KeepTitleBarActive = true
+            return MA_NOACTIVATE
 
         case WM_ERASEBKGND
             return true
@@ -465,7 +468,7 @@ function frmPopupMenu_SubclassProc ( _
             return true
 
         case WM_LBUTTONUP
-            gPrevent_WM_NCACTIVATE = false
+            gApp.KeepTitleBarActive = false
             ' process a menu item that was clicked on
             dim as long nCurSel = ListBox_GetCurSel(hWin)
             dim as long idx = ListBox_GetItemData(hWin, nCurSel)
@@ -587,10 +590,9 @@ function frmPopupMenu_Show( _
         end if
     end if
     
-    ' Prevent main form from firing WM_ACTIVATE which would causes the titlebar
-    ' to be inactive. We always want our titlebar to be active when a popup
-    ' menu is active.
-    gPrevent_WM_NCACTIVATE = true
+    ' Keep the main form's titlebar painting as active while the popup windows are
+    ' created (their creation would otherwise deactivate it and flicker the caption).
+    gApp.KeepTitleBarActive = true
     
     '  Popup menus are non-modal (modeless) windows
     pWindow = New CPanelWindow
@@ -690,7 +692,7 @@ function frmPopupMenu_Show( _
     SetWindowPos( hPopupMenu, HWND_TOP, 0, 0, _
                     pWindow->ScaleX(nMenuWidth), pWindow->ScaleY(nMenuHeight), _
                     SWP_NOACTIVATE or SWP_NOMOVE or SWP_SHOWWINDOW)
-    gPrevent_WM_NCACTIVATE = false
+    gApp.KeepTitleBarActive = false
     
     HWND_MENU(nPopupType) = hPopupMenu
     HWND_SHADOW(nPopupType) = hPopupShadow
