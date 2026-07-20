@@ -299,7 +299,6 @@ dim shared gMenuBar(any) as MENUBAR_ITEM
 dim shared gMenuUpdateMessage as MENUBAR_ITEM
 dim shared gActiveMenuBarIndex as long = -1
 dim shared as long gMenuLastCurSel = -1
-dim shared as boolean gPrevent_WM_NCACTIVATE = false
 
 ' array that holds the names of all fonts on the target system
 dim shared gFontNames( any ) as DWSTRING

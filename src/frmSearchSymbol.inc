@@ -408,8 +408,8 @@ function frmSearchSymbol_Show( byval hwndParent as HWND ) as LRESULT
 
     dim pWindow as CWindow ptr = new CWindow
 
-    ' Prevent the main form's NC_ACTIVATE from painting it's caption bar as inactive.
-    gPrevent_WM_NCACTIVATE = true
+    ' Keep the main form's caption bar painting as active for the finder's lifetime.
+    gApp.KeepTitleBarActive = true
 
     HWND_FRMSEARCHSYMBOL = _
     pWindow->Create( hwndParent, "", @frmSearchSymbol_WndProc, 0, 0, 0, 0, _
@@ -534,8 +534,8 @@ function frmSearchSymbol_Show( byval hwndParent as HWND ) as LRESULT
             DispatchMessage( @uMsg )
         end if
     wend
-    
-    gPrevent_WM_NCACTIVATE = false
+
+    gApp.KeepTitleBarActive = false
 
     frmMain_SetFocusToCurrentCodeWindow()
 

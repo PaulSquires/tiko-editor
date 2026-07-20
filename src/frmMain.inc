@@ -1434,9 +1434,9 @@ function frmMain_WndProc( _
         case WM_NCACTIVATE
             ' if wParam is false then the system wants to draw an inactive title bar. we
             ' will prevent this action if a popup menu from the menubar is active, or if
-            ' frmGotoAnything fuzzy finder is active.
+            ' the frmSearchSymbol fuzzy finder is active.
             if wParam = false then
-                if gPrevent_WM_NCACTIVATE then 
+                if gApp.KeepTitleBarActive then
                     ' Lie to DefWindowProc and tell it to keep painting as active.
                     return DefWindowProc(hwnd, uMsg, TRUE, -1)  ' -1 avoids repainting glitches
                 end if
