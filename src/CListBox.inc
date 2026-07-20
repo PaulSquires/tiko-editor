@@ -771,6 +771,9 @@ sub CListBox_SyncListboxFromModel( byval pList as CLISTBOX ptr )
 
     if pList->visibleCount = 0 then
         pList->topRow = 0
+        ' ensure the now-empty client repaints (background via WM_CTLCOLORLISTBOX)
+        ' rather than lingering with the last rows' pixels
+        InvalidateRect( hList, 0, true )
         CListBox_SyncScrollBar( pList )
         return
     end if
@@ -985,11 +988,28 @@ function CListBox_WndProc( _
             CListBox_SyncListboxFromModel( pList )
         end if
 
+    case WM_CTLCOLORLISTBOX
+        ' The inner listbox fills its background with this brush during its own
+        ' WM_PAINT - all of the client when the list is EMPTY, painting OVER the
+        ' erase handler's themed fill. Unanswered, DefWindowProc supplies the
+        ' default white brush and an empty list renders as a white rectangle.
+        dim as CLISTBOX ptr pList = GetListBoxPointer(hwnd)
+        if pList then
+            if (pList->hBackBrush = 0) orelse (pList->backBrushColor <> pList->BackColor) then
+                if pList->hBackBrush then DeleteObject( pList->hBackBrush )
+                pList->hBackBrush = CreateSolidBrush( pList->BackColor )
+                pList->backBrushColor = pList->BackColor
+            end if
+            SetBkColor( cast(HDC, wParam), pList->BackColor )
+            return cast(LRESULT, pList->hBackBrush)
+        end if
+
     case WM_NCDESTROY
         ' Delete the stored listbox data pointer
         dim as CLISTBOX ptr pList = GetListBoxPointer(hwnd)
         if pList then
             if IsWindow(pList->hToolTip) then DestroyWindow(pList->hToolTip)
+            if pList->hBackBrush then DeleteObject( pList->hBackBrush )
             delete(pList)
         end if
 
