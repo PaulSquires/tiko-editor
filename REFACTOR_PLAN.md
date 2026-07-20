@@ -8,7 +8,14 @@ TODO panel.
 
 > **Status: planning complete (2026-07-19), implementation not started.**
 >
-> **What the plan got wrong, recorded honestly:** *(filled in as phases land.)*
+> **What the plan got wrong, recorded honestly:**
+> - *(Phase 3)* The prerequisite audit missed a second fbcParser location gap: a proc
+>   with a separate DECLARE reported the **declare's** file/line while `bodyLine`
+>   numbered lines in the **implementation** file — so F12 on any member proc landed in
+>   the `.bi`, and `FindVariable`'s enclosing-proc test could never match a caret inside
+>   a `.inc` member body (the proc record chained under the `.bi`'s file index). Found
+>   by the Phase 3 harness's cross-file F12 assert; fixed in the fbcParser repo
+>   mid-phase (see Phase 3 notes), same pattern as Phase P.
 
 **Git protocol:** feature branch per phase off `development`, `--no-ff` merge, branch deleted
 after; the author drives commits and pushes.
@@ -315,6 +322,45 @@ scripted expressions (`gApp.`, `pDoc->`, chained `a.b.c`, EXTENDS member, local 
 assert the chain, don't eyeball popups.
 **NOT verified (author's interactive pass):** popup feel, calltip positioning,
 `=`-termination path.
+
+*(done 2026-07-19 — all three consumers rewired to gSymDb. `DereferenceLine` keeps its
+line-parsing prologue, then resolves part 1 via `FindVariable` (locals/params incl. the
+implicit THIS — resolved naturally as the INSTANCE param, no special case) →
+`FindProc` → `FindType`, and each later part via `SymRefTypeOf` (new helper: TYPE-ish ref
+is its own type, else `ResolveTypeText` on the type text) → `FindMemberOf`; a final
+unresolved part returns the previous hop's ref (that leniency is what the autocomplete
+rebuild path feeds on — old code did the same implicitly). `ShowCodetip` =
+`BuildCalltip` on SUB/FUNCTION refs, miss → `FindIntrinsicCalltip` on the identifier
+before the paren. `ShowAutocompleteList`: DIM-AS = static builtin-type list +
+`EnumPrefix(types)` (CONSTRUCTOR/DESTRUCTOR filtered to files outside toolchain inc);
+member = `EnumMembers`; **plus the planned bare-word mode** (`AUTOCOMPLETE_WORD`, ≥2
+chars, never after `.`/`->`, never overriding a sticky mode on backspace rebuilds) =
+`EnumLocalsInScope` + `EnumPrefix` skipping LOCAL-flagged symbols; lists capped at
+`AUTOCOMPLETE_MAX_ITEMS` (1000 — full windows.bi type list would otherwise cost ~0.5 s
+of quadratic pipe-string dedupe). F12 cascade: member-of-dereferenced-type →
+`FindProc` → `FindVariable` → `FindType`, jump = bodyLine|line **minus 1** (fbcParser
+1-based → Scintilla 0-based). Codetip-path `ParseDocument` call removed; gdb2 is now
+unreferenced by codetips/autocomplete/F12 (still fed for Phase 4/5 consumers).
+**Mid-phase fbcParser fix (own repo, merged+pushed 820551a):** the harness's cross-file
+F12 assert exposed that proc records carried the DECLARE's file/line with the body's
+line range — see "what the plan got wrong". Collector now reports body file/line for
+procs with a body (`dbg.incfile`); probe `_testfile_procbody.bas/.bi` added; smoke test
+unchanged (41/0), REENTRANCY + TEXTMODE OK; DLL re-vendored via `_copy_fbcparser.bat`.
+**Verified headless** (env-gated harness + timer bootstrap, removed before merge; dev
+build run from repo root — `src\tiko.exe` can't start standalone, its settings/bin live
+at root; harness output written straight to a file because CRT full-buffers redirected
+stdout): 15/15 asserts — 8 dereference chains (local UDT var, 2-hop chain, EXTENDS walk,
+gApp from project set, `->` through `clsDocument ptr`, member-fn calltip synthesis
+`GetLine(nLine as long) as string`, THIS, THIS chain), 3 autocomplete list builds
+(member list = exactly own9+Meth9+inner9-via-EXTENDS, DIM-AS = 1019 capped, bare word =
+the local), 3 F12 jumps (member field line, TYPE line, cross-file member proc into
+clsDocument.inc:781 exactly), intrinsic LEN. NOT verified (author's pass): popup feel /
+calltip positioning / `=`-termination; bare-word popup ergonomics are **new UX** — the
+2-char threshold and Enter-selects-from-popup behavior may want tuning; DIM-AS list is
+larger than gdb2's (all scanned TYPEs, capped, arbitrary subset until a prefix is
+typed). Session side effect of the headless runs: tiko.bas + clsDocument.inc were
+opened/navigated (documents restored via undo+savepoint, never saved) and three default
+`settings\*.ini/.session` files were created at the repo root by app exit.)*
 
 ### Phase 4 — Panels: frmFunctions, frmSearchSymbol
 frmFunctions → `EnumUserFiles` + `EnumProcsInFile` (its `ParseDocument` sweep at :30 dies;
