@@ -190,12 +190,16 @@ function OnCommand_ViewExplorer() as LRESULT
 end function
 
 function OnCommand_ViewFunctionList() as LRESULT
-    ' If FunctionList is already active then toggle back to Explorer    
+    ' If FunctionList is already active then toggle back to Explorer
     if gPanel.hActiveChild = HWND_FRMFUNCTIONS then
         return OnCommand_ViewExplorer()
     end if
     ShowWindow( HWND_FRMPANEL, SW_SHOW )
     gPanel.hActiveChild = HWND_FRMFUNCTIONS
+    ' Rebuild from the symbol database. Scan completions only refresh this list
+    ' while it is visible, so switching to the panel can otherwise land on a
+    ' list that was built before the first scan finished (empty and unpainted).
+    LoadFunctionsFiles()
     frmPanel_PositionWindows
     frmMain_PositionWindows
     function = 0

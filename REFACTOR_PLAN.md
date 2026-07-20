@@ -397,7 +397,12 @@ tiko.tiko, removed before merge): 134 user files; per-open-file old-gdb2 vs new 
 **identical for every file except five, each exactly one lower — the five explicit
 constructors** the collector's `$`-filter drops (same list Phase 2 recorded); tree = 134
 headers + 1063 rows, flat list = 1063 (consistent); SelectItemData(active doc) = true;
-search feed = 1285 qualified user symbols. Known differences, recorded not fixed: (1)
+search feed = 1285 qualified user symbols. *Post-Phase-6 author-reported fix:* switching
+TO the panel (F4 / panel menu) showed a white, never-populated list at startup —
+`OnCommand_ViewFunctionList` only flipped `gPanel.hActiveChild` and never loaded, which
+gdb2's synchronous startup parse used to mask; it now calls `LoadFunctionsFiles()` on
+activation (verified headless: early-F4 before the project scan = visible + populated by
+the scan-completion refresh; F4 with data = 1,130 rows immediately). Known differences, recorded not fixed: (1)
 property procs no longer carry a "(get)"/"(set)" suffix — FBCP has no property kind, a
 get/set pair lists as two same-named rows; (2) unsaved/untitled documents no longer appear
 in the panel (their synthetic scan name has no disk file); (3) **without a project open the
