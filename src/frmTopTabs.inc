@@ -138,10 +138,6 @@ sub frmTopTabs_SelChangeCallback( byval hTabBar as HWND, byval idxOld as integer
     gTTabCtl.SetFocusTab( idxNew )
 end sub
 
-/'
-'TODO: 这是一项待办事项
-'/
-
 ' ========================================================================================
 ' frmTopTabs_CloseCallback  -- the user clicked a tab's "X" (or middle-clicked the tab).
 ' NOTIFY-ONLY: the control deleted nothing. The host decides -- tiko would prompt
