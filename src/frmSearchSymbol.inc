@@ -83,70 +83,72 @@ function frmSearchSymbol_DoSearch( byval hwndCtl as HWND ) as long
     ' By default, if empty search string then simply load all filenames
     if wszNeedle = "" then bLoadAll = true
 
-    ' PROCESS ALL FILENAMES
-    dim pDoc as clsDocument ptr = gApp.pDocList
-    do until pDoc = 0
+    ' PROCESS ALL FILENAMES (every user file the symbol database knows,
+    ' including include files never opened in the editor)
+    dim arrFiles(any) as DWSTRING
+    dim as long nFiles = gSymDb.EnumUserFiles( arrFiles() )
+    if nFiles > 0 then QuickSortFilenames( arrFiles(), 0, nFiles - 1 )
+    for f as long = 0 to nFiles - 1
         dim positions(any) as uinteger
-        wszFilename = AfxStrPathName( "NAMEX", pDoc->DiskFilename )
+        wszFilename = AfxStrPathName( "NAMEX", arrFiles(f) )
         result = fuzzy_match_positions( wszNeedle, wszFilename, positions() )
         if (result > min_score) orelse (bLoadAll = true) then
-            if gSymbolsCount + 1 > MAX_SYMBOL_SEARCH then exit do 
+            if gSymbolsCount + 1 > MAX_SYMBOL_SEARCH then exit for
             gSymbolsCount += 1
-            gSymbols(nextEl).result    = result
-            gSymbols(nextEl).id        = SearchSymbol.file_symbol
-            gSymbols(nextEl).pDoc      = pDoc 
-            gSymbols(nextEl).pData     = null
-            gSymbols(nextEl).clrMask   = WSTRING( len(wszFilename), 48 )    ' "0" 
+            gSymbols(nextEl).result      = result
+            gSymbols(nextEl).id          = SearchSymbol.file_symbol
+            gSymbols(nextEl).wszCaption  = wszFilename
+            gSymbols(nextEl).wszFilename = arrFiles(f)
+            gSymbols(nextEl).nLineNumber = -1
+            gSymbols(nextEl).isEnum      = false
+            gSymbols(nextEl).clrMask     = WSTRING( len(wszFilename), 48 )    ' "0"
             for i as long = lbound(positions) to ubound(positions)
-                gSymbols(nextEl).clrMask[ positions(i) ] = 49   '  "1" 
+                gSymbols(nextEl).clrMask[ positions(i) ] = 49   '  "1"
             next
-                
+
             nextEl += 1
         end if
-        pDoc = pDoc->pDocNext
-    loop
+    next
 
-    
+
     ' PROCESS ALL TYPES and FUNCTION NAMES
-    dim pData as DB2_DATA ptr
-    gdb2.dbRewind()
-    do 
-        pData = gdb2.dbGetnext
-        if pData = 0 then exit do
-        if pData->deleted then continue do
-        
-        if pData->nFileType <> DB2_FILETYPE_USERCODE then continue do
-        if len(pData->fileName) = 0 then continue do  ' bypass any predefined data
-        
-        if (pData->id = DB2_TYPE) orelse _
-            (pData->id = DB2_FUNCTION) then
+    if gSymbolsCount < MAX_SYMBOL_SEARCH then
+        dim rs() as SYMBOLREF
+        dim as long nSyms = gSymDb.EnumAllProcsTypes( rs(), true )
+        for s as long = 0 to nSyms - 1
+            dim as wstring ptr pFile = gSymDb.SymFile( rs(s) )
+            if pFile = 0 then continue for
 
             dim positions(any) as uinteger
-            result = fuzzy_match_positions( wszNeedle, pData->ElementName, positions() )
-                
+            dim as DWSTRING wszName = gSymDb.QualifiedName( rs(s) )
+            result = fuzzy_match_positions( wszNeedle, wszName, positions() )
+
             if (result > min_score) then
-                if gSymbolsCount + 1 > MAX_SYMBOL_SEARCH then exit do 
+                if gSymbolsCount + 1 > MAX_SYMBOL_SEARCH then exit for
                 gSymbolsCount += 1
-                
+
+                dim as long nKind = gSymDb.SymKind( rs(s) )
                 gSymbols(nextEl).result = result
-                if pData->id = DB2_FUNCTION then
+                if (nKind = FBCP_KIND_SUB) orelse (nKind = FBCP_KIND_FUNCTION) then
                     gSymbols(nextEl).id = SearchSymbol.function_symbol
-                elseif pData->id = DB2_TYPE then
+                else
                     gSymbols(nextEl).id = SearchSymbol.type_symbol
-                end if    
-                gSymbols(nextEl).pDoc   = null 
-                gSymbols(nextEl).pData  = pData 
-                gSymbols(nextEl).clrMask   = WSTRING( len(pData->ElementName), 48 )  ' "0" 
+                end if
+                gSymbols(nextEl).wszCaption  = wszName
+                gSymbols(nextEl).wszFilename = *pFile
+                dim as long nLineNum = gSymDb.SymBodyLine( rs(s) )
+                if nLineNum = 0 then nLineNum = gSymDb.SymLine( rs(s) )
+                gSymbols(nextEl).nLineNumber = iif( nLineNum > 0, nLineNum - 1, 0 )
+                gSymbols(nextEl).isEnum      = ( nKind = FBCP_KIND_ENUM )
+                gSymbols(nextEl).clrMask     = WSTRING( len(wszName), 48 )  ' "0"
                 for i as long = lbound(positions) to ubound(positions)
-                    gSymbols(nextEl).clrMask[ positions(i) ] = 49  ' "1" 
+                    gSymbols(nextEl).clrMask[ positions(i) ] = 49  ' "1"
                 next
 
                 nextEl += 1
             end if
-            
-        end if
-        
-    loop
+        next
+    end if
 
 
     ' Sort the gSymbols array based on score_t descending
@@ -184,24 +186,13 @@ function frmSearchSymbol_GotoSymbol( byval idx as long ) as long
     
     if (idx < 0) orelse (idx > gSymbolsCount) then return 0
 
-    dim as clsDocument ptr pDoc = gSymbols(idx).pDoc
-    dim as DB2_DATA ptr pData = gSymbols(idx).pData
-
-    select case gSymbols(idx).id
-        case SearchSymbol.file_symbol
-            if pDoc then 
-                OpenSelectedDocument( pDoc->DiskFilename )
-            end if
-
-        case SearchSymbol.function_symbol, SearchSymbol.type_symbol
-            if pData then
-                pDoc = pData->pDoc
-                if pDoc then
-                    OpenSelectedDocument( pDoc->DiskFilename, pData->ElementName, pData->nLineStart )
-                end if    
-            end if    
-
-    end select
+    if len( gSymbols(idx).wszFilename ) then
+        if gSymbols(idx).nLineNumber >= 0 then
+            OpenSelectedDocument( gSymbols(idx).wszFilename, "", gSymbols(idx).nLineNumber )
+        else
+            OpenSelectedDocument( gSymbols(idx).wszFilename )
+        end if
+    end if
     
     SendMessage( HWND_FRMSEARCHSYMBOL, WM_CLOSE, 0, 0 )
     return 0
@@ -593,36 +584,23 @@ function frmSearchSymbol_OnDrawItem( _
 
         if lpdis->ItemID > -1 then
             dim as DWSTRING wszIcon
-            dim as DWSTRING wszCaption
-
-            dim as clsDocument ptr pDoc = gSymbols(lpdis->ItemID).pDoc
-            dim as DB2_DATA ptr pData = gSymbols(lpdis->ItemID).pData
+            dim as DWSTRING wszCaption = gSymbols(lpdis->ItemID).wszCaption
 
             select case gSymbols(lpdis->ItemID).id
                 case SearchSymbol.file_symbol
                     icon_foreclr = ghPanel.ForeColorFilenameIcon
                     icon_backclr = iif( IsHot, ghPanel.BackColorHot, ghPanel.BackColorFilenameIcon)
                     wszIcon = wszSearchFile
-                    if pDoc then wszCaption = AfxStrPathName( "NAMEX", pDoc->DiskFilename )
 
                 case SearchSymbol.function_symbol
                     icon_foreclr = ghPanel.ForeColorFunctionIcon
                     icon_backclr = iif( IsHot, ghPanel.BackColorHot, ghPanel.BackColorFunctionIcon)
                     wszIcon = wszSearchFunction
-                    if pData then 
-                        wszCaption = pData->ElementName
-                        if len(pData->GetSet) then
-                            wszCaption += " " & pData->GetSet
-                        end if
-                    end if    
 
                 case SearchSymbol.type_symbol
-                    if pData then
-                        icon_foreclr = ghPanel.ForeColorTypeIcon
-                        icon_backclr = iif( IsHot, ghPanel.BackColorHot, ghPanel.BackColorTypeIcon)
-                        wszIcon = iif( pData->isENUM, wszSearchEnum, wszSearchType )
-                        wszCaption = pData->ElementName
-                    end if
+                    icon_foreclr = ghPanel.ForeColorTypeIcon
+                    icon_backclr = iif( IsHot, ghPanel.BackColorHot, ghPanel.BackColorTypeIcon)
+                    wszIcon = iif( gSymbols(lpdis->ItemID).isEnum, wszSearchEnum, wszSearchType )
             end select
 
 
@@ -911,3 +889,4 @@ function frmSearchSymbol_Show( byval hwndParent as HWND ) as LRESULT
 
     function = uMsg.wParam
 end function
+

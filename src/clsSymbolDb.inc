@@ -764,6 +764,20 @@ function clsSymbolDb.BuildCalltip( byval refProc as SYMBOLREF ) as DWSTRING
 end function
 
 
+function clsSymbolDb.QualifiedName( byval r as SYMBOLREF ) as DWSTRING
+    if r.IsValid = false then return ""
+    dim as DWSTRING wszName = *this.SymName( r )
+    dim as SYMBOLREF rp = this.SymParent( r )
+    if rp.IsValid then
+        select case this.SymKind( rp )
+            case FBCP_KIND_TYPE, FBCP_KIND_UNION
+                wszName = *this.SymName( rp ) & "." & wszName
+        end select
+    end if
+    return wszName
+end function
+
+
 ' ---- FB intrinsics lookup --------------------------------------------------------------
 
 function FindIntrinsicCalltip( byref wszName as const wstring ) as DWSTRING
