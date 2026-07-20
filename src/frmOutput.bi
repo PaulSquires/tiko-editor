@@ -20,16 +20,7 @@
 #define IDC_FRMOUTPUT_LVTODO                        1004
 #define IDC_FRMOUTPUT_TXTNOTES                      1005
 #define IDC_FRMOUTPUT_BTNCLOSE                      1006
-
-
-type OUTPUT_VSCROLL_TYPE
-    numLines     as long 
-    linesPerPage as long
-    thumbHeight  as long
-    rc           as RECT
-end type
-
-dim shared gOutputVScroll as OUTPUT_VSCROLL_TYPE
+#define IDC_FRMOUTPUT_VSCROLL                       1007
 
 
 type OUTPUT_TABS
@@ -43,8 +34,8 @@ dim shared gOutputTabs(4) as OUTPUT_TABS
 dim shared gOutputTabsCurSel as long = 0  ' default to first tab
 dim shared gOutputCloseRect as RECT
 
-declare function frmOutputVScroll_calcVThumbRect( byval hTextBox as HWND ) as boolean
-declare function frmOutput_ShowNotes() as long 
+declare sub      frmOutput_TextBoxScrollChanged( byval hTextBox as HWND )
+declare function frmOutput_ShowNotes() as long
 declare function frmOutput_UpdateToDoListview() as long 
 declare function frmOutput_UpdateSearchListview( byref wszResultFile as wstring ) as long 
 declare function frmOutput_ShowHideOutputControls( byval hwnd as HWND ) As LRESULT

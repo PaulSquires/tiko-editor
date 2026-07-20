@@ -186,9 +186,11 @@ function frmOutput_ShowHideOutputControls( byval hwnd as HWND ) as LRESULT
 
     if hTextBox then
         SetWindowPos( hCtrl, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE or SWP_NOSIZE or SWP_SHOWWINDOW )
-        frmOutputVScroll_calcVThumbRect( hTextBox )    
         ShowWindow( HWND_FRMOUTPUT_VSCROLL, SW_SHOW )
-    end if    
+        ' Push the fresh range now that the textbox is visible (a hidden textbox never
+        ' drives the shared scrollbar, so a tab switch must re-push).
+        frmOutput_TextBoxScrollChanged( hTextBox )
+    end if
             
     function = 0
 end function
@@ -212,8 +214,10 @@ function frmOutput_PositionWindows() as LRESULT
     nTabsHeight = AfxGetWindowHeight(hTabs)
     SetWindowPos( hTabs, 0, nLeft, nTop, rc.right - rc.left, nTabsHeight, SWP_NOZORDER )
 
-    ' Position the child controls
-    dim as long nVScrollWidth = AfxGetWindowWidth(HWND_FRMOUTPUT_VSCROLL)
+    ' Position the child controls. The CVScrollBar is created 0x0 (its width cannot be
+    ' read back before the first positioning), so the width is computed, not queried --
+    ' same 12px design width the old CPanelWindow scrollbar was created with.
+    dim as long nVScrollWidth = pWindow->ScaleX(SCROLLBAR_WIDTH_EDITOR)
     nTop = nTop + nTabsHeight + pWindow->ScaleY(8)
     
     SetWindowPos( HWND_FRMOUTPUT_LVRESULTS, 0, nLeft, nTop, rc.right, rc.bottom - nTop, SWP_NOZORDER )
@@ -297,166 +301,6 @@ end function
 
 
 ' ========================================================================================
-' Calculate the RECT that holds the client coordinates of the scrollbar's vertical thumb
-' Returns True if RECT is not empty
-' ========================================================================================
-function frmOutputVScroll_calcVThumbRect( byval hTextBox as HWND ) as boolean
-    dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN)
-    if pWindow = 0 Then exit function
-
-    ' calculate the vertical scrollbar in client coordinates
-    dim as RECT rc = AfxGetWindowRect(hTextBox)
-    MapWindowPoints( HWND_DESKTOP, HWND_FRMMAIN, cast(point ptr, @rc), 2 )
-    dim as long clientHeight = rc.bottom - rc.top
-    dim as long iScrollbarWidth = AfxGetWindowWidth(HWND_FRMOUTPUT_VSCROLL)
-    dim as long minThumbHeight = pWindow->ScaleY(SCROLLBAR_MINTHUMBSIZE)
-    SetRectEmpty( @gOutputVScroll.rc )
-
-    ' The three range numbers come from the control (CVScrollBar-shaped: total, page,
-    ' first). Lines-per-page is derived from the real formatting rect and font metrics
-    ' -- this replaced the old EM_GETCHARFORMAT computation with its "-4" fudge factor.
-    dim as integer nTotalLines, nLinesPerPage, nFirstVisible
-    CTextBox_GetVScrollInfo( hTextBox, nTotalLines, nLinesPerPage, nFirstVisible )
-    dim as long firstVisibleLine = nFirstVisible
-
-    with gOutputVScroll
-        .linesPerPage = nLinesPerPage
-        .numLines = nTotalLines + 1    ' +1 headroom kept from the old thumb math
-        dim as double ratio = .linesPerPage / .numLines
-        .thumbHeight = int(ratio * clientHeight)
-        if .thumbHeight < minThumbHeight then .thumbHeight = minThumbHeight
-
-        .rc.left = 0
-        .rc.right = .rc.left + iScrollbarWidth
-        .rc.top = ((firstVisibleLine / .numLines) * clientHeight)
-        .rc.bottom = .rc.top + .thumbHeight
-        if .numLines < .linesPerPage then 
-            SetRectEmpty( @gOutputVScroll.rc )
-            return true
-        end if
-
-    end with
-
-    function = 0
-end function
-
-
-' ========================================================================================
-' frmOutputVScroll Window procedure
-' ========================================================================================
-function frmOutputVScroll_WndProc( _
-            byval hwnd   as HWND, _
-            byval uMsg   as UINT, _
-            byval wParam as WPARAM, _
-            byval lParam as LPARAM _
-            ) as LRESULT
-
-    ' screen pt.y cursor position
-    static as point prev_pt   
-
-    dim as HWND hTextBox
-    if IsWindowVisible( GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTLOGFILE) ) then
-        hTextBox = GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTLOGFILE)
-    elseif IsWindowVisible( GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTNOTES) ) then
-        hTextBox = GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTNOTES)
-    end if
-    
-    select case uMsg
-        case WM_NCDESTROY
-            ' delete the allocated memory for window
-            dim as CWindow ptr pWindow = AfxCWindowPtr(hwnd)
-            if pWindow then delete(pWindow)
-            HWND_FRMOUTPUT_VSCROLL   = 0
-            return 0
-
-        case WM_LBUTTONDOWN
-            dim as point pt: GetCursorPos( @pt )
-            frmOutputVScroll_calcVThumbRect(hTextBox)   ' in client coordinates
-            dim as RECT rc = gOutputVScroll.rc       ' covert copy to screen coordinates
-            MapWindowpoints( hwnd, HWND_DESKTOP, cast(point ptr, @rc), 2)
-            if PtInRect( @rc, pt ) then
-                prev_pt = pt
-                gApp.bDragActive = true
-                SetCapture( hwnd )
-            else
-                ' we have clicked on a PageUp or PageDn
-                dim as long nDiff
-                if pt.y < rc.top then
-                    nDiff = -gOutputVScroll.linesPerPage
-                elseif pt.y > rc.bottom then
-                    nDiff = gOutputVScroll.linesPerPage
-                end if
-                ' CVScrollBar-shaped: scroll to an absolute first line (the control
-                ' clamps overscroll), then re-derive the thumb.
-                dim as integer nTotalLines, nLinesPerPage, nFirstVisible
-                CTextBox_GetVScrollInfo( hTextBox, nTotalLines, nLinesPerPage, nFirstVisible )
-                CTextBox_ScrollToLine( hTextBox, nFirstVisible + nDiff )
-                frmOutputVScroll_calcVThumbRect(hTextBox)
-                AfxRedrawWindow( hwnd )
-            end if
-            
-        case WM_MOUSEMOVE
-            if gApp.bDragActive then
-                dim as point pt: GetCursorPos( @pt )
-                if pt.y <> prev_pt.y then 
-                    dim as long delta = pt.y - prev_pt.y 
-
-                    ' convert to client coordinates for ease of use
-                    dim as RECT rc: GetClientRect( hwnd, @rc )
-                    gOutputVScroll.rc.top = max(0, gOutputVScroll.rc.top + delta)
-                    gOutputVScroll.rc.top = min(gOutputVScroll.rc.top, rc.bottom - gOutputVScroll.thumbHeight)
-                    gOutputVScroll.rc.bottom = gOutputVScroll.rc.top + gOutputVScroll.thumbHeight
-
-                    prev_pt = pt
-                    
-                    rc = AfxGetWindowRect(hTextBox)
-                    MapWindowPoints( HWND_DESKTOP, HWND_FRMMAIN, cast(point ptr, @rc), 2 )
-                    dim as long clientHeight = rc.bottom - rc.top
-                    if clientHeight = 0 then exit function
-                    dim as double scrollRatio = gOutputVScroll.rc.top / (clientHeight - gOutputVScroll.thumbHeight)
-                    dim as long nTopLine = int(scrollRatio * (gOutputVScroll.numLines - gOutputVScroll.linesPerPage))
-                    ' ScrollToLine no-ops when already there (CVScrollBar-shaped door).
-                    CTextBox_ScrollToLine( hTextBox, nTopLine )
-                    AfxRedrawWindow( hwnd )
-
-                end if
-            end if
-
-        case WM_LBUTTONUP   
-            gApp.bDragActive = false
-            prev_pt.x = 0
-            prev_pt.y = 0
-            ReleaseCapture
-        
-        case WM_ERASEBKGND
-            return true
-            
-        case WM_PAINT
-            dim as clsDoubleBuffer b
-
-            b.BeginDoubleBuffer(hwnd)
-            b.SetBackColor( ghOutput.BackColorScrollBar )
-            b.PaintClientRect()
-            if IsRectEmpty( @gOutputVScroll.rc ) = 0 then
-                b.SetPenColor( ghOutput.ScrollBarDivider )
-                b.PaintLine( 1, b.rcClient.left, b.rcClient.top, b.rcClient.left, b.rcClient.bottom )
-            end if    
-            b.SetBackColor( ghOutput.ForeColorScrollBar )
-            b.PaintRect( @gOutputVScroll.rc )
-
-            b.EndDoubleBuffer()
-
-            return 0
-
-    end select
-
-    ' for messages that we don't deal with
-    function = DefWindowProc( HWnd, uMsg, wParam, lParam )
-
-end function
-
-
-' ========================================================================================
 ' CTextBox callbacks for the Log/Notes controls.
 ' ========================================================================================
 ' Notes changed by USER interaction. Save them to the correct global variable so the
@@ -471,13 +315,43 @@ sub frmOutput_NotesChanged( byval hTextBox as HWND )
     end if
 end sub
 
-' Vertical scroll state changed (typing, programmatic SetText, wheel) -- recalc the
-' custom scrollbar's thumb. Skipped while the user is dragging that thumb: the drag
-' code owns the thumb rect for the duration (same guard the old EN_UPDATE handler had).
+' Vertical scroll state changed (typing, programmatic SetText, wheel) -- push the fresh
+' range straight into the CVScrollBar, which re-derives its own thumb. Only the visible
+' textbox drives the shared scrollbar (a hidden one is re-pushed on its tab switch).
+' During a thumb drag the ScrollCallback -> ScrollToLine round trip echoes the same
+' position back through here -- consistent by construction, no oscillation.
 sub frmOutput_TextBoxScrollChanged( byval hTextBox as HWND )
-    if gApp.bDragActive = false then
-        frmOutputVScroll_calcVThumbRect( hTextBox )
-        AfxRedrawWindow( HWND_FRMOUTPUT_VSCROLL )
+    if IsWindowVisible( hTextBox ) = 0 then exit sub
+    dim as integer nTotalLines, nLinesPerPage, nFirstVisible
+    CTextBox_GetVScrollInfo( hTextBox, nTotalLines, nLinesPerPage, nFirstVisible )
+    CVScrollBar_SetRange( HWND_FRMOUTPUT_VSCROLL, nTotalLines, nLinesPerPage, nFirstVisible )
+end sub
+
+' The user scrolled the CVScrollBar (thumb drag or track paging): scroll whichever
+' textbox is visible to that first line.
+sub frmOutput_VScrollCallback( byval hScrollBar as HWND, byval newPos as integer )
+    dim as HWND hTextBox
+    if IsWindowVisible( GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTLOGFILE) ) then
+        hTextBox = GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTLOGFILE)
+    elseif IsWindowVisible( GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTNOTES) ) then
+        hTextBox = GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTNOTES)
+    end if
+    if hTextBox then CTextBox_ScrollToLine( hTextBox, newPos )
+end sub
+
+' Custom paint keeping the exact visuals of the old hand-rolled scrollbar (and of the
+' listview scrollbars sharing the Output window): flat track, left divider line and a
+' flat thumb when there is something to scroll, no hover brightening. Reads the theme
+' colors live, so a theme switch only needs a repaint.
+sub frmOutput_VScrollPaint( byval p as CVSCROLLBAR_PAINTINFO ptr )
+    dim as clsDoubleBuffer ptr b = p->b
+    b->SetBackColor( ghOutput.BackColorScrollBar )
+    b->PaintClientRect()
+    if IsRectEmpty( @p->rcThumb ) = 0 then
+        b->SetPenColor( ghOutput.ScrollBarDivider )
+        b->PaintLine( 1, p->rcClient.left, p->rcClient.top, p->rcClient.left, p->rcClient.bottom )
+        b->SetBackColor( ghOutput.ForeColorScrollBar )
+        b->PaintRect( @p->rcThumb )
     end if
 end sub
 
@@ -920,11 +794,12 @@ function frmOutput_WndProc( _
         dim as CWindow ptr pWindow = AfxCWindowPtr(hwnd)
         if pWindow then delete(pWindow)
         HWND_FRMOUTPUT = 0
-        ' The child listviews have also been destroyed in their respective WM_NCDESTROY
-        ' so reset all of the listview window handles.
+        ' The child listviews (and the CVScrollBar) have also been destroyed in their
+        ' respective WM_NCDESTROY so reset all of their window handles.
         HWND_FRMOUTPUT_LVRESULTS = 0
         HWND_FRMOUTPUT_LVSEARCH  = 0
         HWND_FRMOUTPUT_LVTODO    = 0
+        HWND_FRMOUTPUT_VSCROLL   = 0
         return 0
 
 
@@ -970,6 +845,10 @@ function frmOutput_SetControlColors() as long
     CTextBox_SetForeColor( hCtl, ghOutput.ForeColorHot )
     CTextBox_SetBackColor( hCtl, ghOutput.BackColor )
     CTextBox_SetOuterBackColor( hCtl, ghOutput.BackColor )
+
+    ' The scrollbar's paint callback reads the ghOutput colors live -- a repaint is all
+    ' a theme switch needs.
+    InvalidateRect( HWND_FRMOUTPUT_VSCROLL, null, true )
 
     hCtl = HWND_FRMOUTPUT_LVRESULTS 
     frmListView_SetForeColors( hCtl, ghOutput.ForeColor, ghOutput.ForeColorHot )
@@ -1076,10 +955,13 @@ function frmOutput_Show( byval hwndParent as HWND ) as LRESULT
         frmListView_AddColumn( hLV, 3, L(255, "Description"), pWindow->ScaleX(1480) )
         HWND_FRMOUTPUT_LVTODO = hLV
 
-    dim pWindowPanel as CPanelWindow ptr = New CPanelWindow
-    HWND_FRMOUTPUT_VSCROLL = _
-        pWindowPanel->Create( HWND_FRMOUTPUT, @frmOutputVScroll_WndProc, 0, 0, SCROLLBAR_WIDTH_EDITOR, 0 )
-    pWindowPanel->ClassStyle = CS_DBLCLKS
+    ' Shared vertical scrollbar for the two textboxes: the reusable CVScrollBar control,
+    ' driven in LINE units (SetRange from the ScrollChangedCallback, ScrollCallback back
+    ' into ScrollToLine). It owns its drag/paging/auto-repeat interaction itself; the
+    ' paint callback keeps the old flat-track visuals.
+    HWND_FRMOUTPUT_VSCROLL = CVScrollBar_Create( HWND_FRMOUTPUT, IDC_FRMOUTPUT_VSCROLL )
+    CVScrollBar_SetScrollCallback( HWND_FRMOUTPUT_VSCROLL, @frmOutput_VScrollCallback )
+    CVScrollBar_SetPaintCallback( HWND_FRMOUTPUT_VSCROLL, @frmOutput_VScrollPaint )
 
     frmOutput_ResetAllControls
     frmOutput_SetControlColors
