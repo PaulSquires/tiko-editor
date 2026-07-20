@@ -5,7 +5,7 @@
 #include once "CVScrollBar.bi"
 
 
-function GetScrollBarPointer( byval hSB as HWND ) as CVSCROLLBAR ptr
+function GetVScrollBarPointer( byval hSB as HWND ) as CVSCROLLBAR ptr
     dim pWindow as CWindow ptr = AfxCWindowPtr(hSB)
     if pWindow = 0 then return 0
     return cast( CVSCROLLBAR ptr, pWindow->UserData(0) )
@@ -65,7 +65,7 @@ end sub
 ' can never go stale no matter who changed the position.
 ' ========================================================================================
 function CVScrollBar_OnPaint( byval hwnd as HWND ) as LRESULT
-    dim as CVSCROLLBAR ptr pSB = GetScrollBarPointer(hwnd)
+    dim as CVSCROLLBAR ptr pSB = GetVScrollBarPointer(hwnd)
     if pSB = 0 then return 0
     pSB->Recalc()
 
@@ -108,7 +108,7 @@ function CVScrollBar_WndProc( _
             byval lParam as LPARAM _
             ) as LRESULT
 
-    dim as CVSCROLLBAR ptr pSB = GetScrollBarPointer(hwnd)
+    dim as CVSCROLLBAR ptr pSB = GetVScrollBarPointer(hwnd)
 
     select case uMsg
         HANDLE_MSG (hwnd, WM_PAINT, CVScrollBar_OnPaint)
@@ -284,7 +284,7 @@ end function
 ' pos = index of the first visible unit. Clamped and repainted.
 ' ========================================================================================
 sub CVScrollBar_SetRange( byval hSB as HWND, byval nTotal as integer, byval nPage as integer, byval nPosition as integer )
-    dim as CVSCROLLBAR ptr pSB = GetScrollBarPointer(hSB)
+    dim as CVSCROLLBAR ptr pSB = GetVScrollBarPointer(hSB)
     if pSB = 0 then return
     if nTotal < 0 then nTotal = 0
     if nPage  < 0 then nPage  = 0
@@ -299,7 +299,7 @@ end sub
 
 
 function CVScrollBar_GetPos( byval hSB as HWND ) as integer
-    dim as CVSCROLLBAR ptr pSB = GetScrollBarPointer(hSB)
+    dim as CVSCROLLBAR ptr pSB = GetVScrollBarPointer(hSB)
     if pSB = 0 then return 0
     return pSB->nPos
 end function
@@ -308,7 +308,7 @@ end function
 ' Set the position without invoking the scroll callback (this is the owner telling us
 ' where it scrolled to, not the user scrolling).
 sub CVScrollBar_SetPos( byval hSB as HWND, byval nPosition as integer )
-    dim as CVSCROLLBAR ptr pSB = GetScrollBarPointer(hSB)
+    dim as CVSCROLLBAR ptr pSB = GetVScrollBarPointer(hSB)
     if pSB = 0 then return
     if nPosition < 0 then nPosition = 0
     if nPosition > pSB->MaxPos() then nPosition = pSB->MaxPos()
@@ -320,14 +320,14 @@ end sub
 
 
 function CVScrollBar_NeedsThumb( byval hSB as HWND ) as boolean
-    dim as CVSCROLLBAR ptr pSB = GetScrollBarPointer(hSB)
+    dim as CVSCROLLBAR ptr pSB = GetVScrollBarPointer(hSB)
     if pSB = 0 then return false
     return pSB->NeedsThumb()
 end function
 
 
 sub CVScrollBar_SetColors( byval hSB as HWND, byval backclr as COLORREF, byval foreclr as COLORREF, byval foreclrhot as COLORREF )
-    dim as CVSCROLLBAR ptr pSB = GetScrollBarPointer(hSB)
+    dim as CVSCROLLBAR ptr pSB = GetVScrollBarPointer(hSB)
     if pSB = 0 then return
     pSB->BackColor    = backclr
     pSB->ForeColor    = foreclr
@@ -337,7 +337,7 @@ end sub
 
 
 sub CVScrollBar_SetPaintCallback( byval hSB as HWND, byval usersub as VScrollPaintCallbackSub )
-    dim as CVSCROLLBAR ptr pSB = GetScrollBarPointer(hSB)
+    dim as CVSCROLLBAR ptr pSB = GetVScrollBarPointer(hSB)
     if pSB = 0 then return
     pSB->PaintCallback = usersub
     InvalidateRect( hSB, NULL, FALSE )
@@ -345,7 +345,7 @@ end sub
 
 
 sub CVScrollBar_SetScrollCallback( byval hSB as HWND, byval usersub as VScrollCallbackSub )
-    dim as CVSCROLLBAR ptr pSB = GetScrollBarPointer(hSB)
+    dim as CVSCROLLBAR ptr pSB = GetVScrollBarPointer(hSB)
     if pSB = 0 then return
     pSB->ScrollCallback = usersub
 end sub
