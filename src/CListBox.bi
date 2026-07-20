@@ -90,6 +90,8 @@ type CLISTBOX
     skipNextLBtnUp  as boolean = false    ' armed by a suppressed dblclk; consumed by the next
                                           ' WM_LBUTTONUP, disarmed by any fresh WM_LBUTTONDOWN
     BackColor       as COLORREF
+    hBackBrush      as HBRUSH             ' cached WM_CTLCOLORLISTBOX brush (control-owned;
+    backBrushColor  as COLORREF           '   recreated when BackColor changes, freed at destroy)
     hFont           as HFONT              ' caller-supplied font for row text (caller owns it)
     ' --- Owner-drawn vertical scrollbar, created and driven by this control. It is
     '     auto-hidden whenever the visible rows fit, and the listbox then reclaims the
