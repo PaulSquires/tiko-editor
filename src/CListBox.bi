@@ -212,10 +212,13 @@ function CLISTBOX.InsertRowAt( byval modelRow as integer ) as CLISTBOX_ROWINFO p
         this.rows(i) = this.rows(i - 1)
     next
 
-    ' reset the new slot (frees any DWSTRING left in a recycled capacity slot)
+    ' reset the new slot (frees any DWSTRING left in a recycled capacity slot;
+    ' .selected included, else a Clear+repopulate resurrects the old contents'
+    ' selection at whatever rows happen to land on the recycled indices)
     with this.rows(modelRow)
         .IsHeader      = false
         .bCollapsed    = false
+        .selected      = false
         .Text          = ""
         .itemData      = 0
         .itemDataExtra = 0
@@ -247,6 +250,10 @@ sub CLISTBOX.Clear()
         this.rows(i).Text = ""
     next
     this.rowCount = 0
+    ' the focus/anchor rows died with the contents; left stale, GetCurSel would
+    ' report a row of the OLD list against whatever is loaded next
+    this.focusRow  = -1
+    this.anchorRow = -1
     this.NotifyChange()
 end sub
 

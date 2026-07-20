@@ -156,20 +156,24 @@ function frmPanel_OnPaint( byval hwnd as HWND ) as LRESULT
     b.BeginDoubleBuffer(hwnd)
 
     ' Set default fore and back colors
-    b.SetForeColors( ghPanel.ForeColor, ghPanel.ForeColorHot )
-    b.SetBackColors( ghPanel.BackColor, ghPanel.BackColorHot )
+    b.SetColors( ghPanel.ForeColor, ghPanel.BackColor )
 
     ' Clear the entire back client area
     b.PaintClientRect()
-    
+
     ' Draw the panel Label
     b.SetFont( ghFont(GUIFONT_9) )
     b.PaintText( gPanel.wszHeader, @gPanel.rcHeader, DT_LEFT )
 
-    ' Draw the "..." menu item
+    ' Draw the "..." menu item (hot when the mouse is over it)
     b.SetFont( ghFont(SYMBOLFONT_10) )
-    b.PaintRoundRect( @gPanel.rcActionMenu, true )
-    b.PaintText( wszIconMoreActions, @gPanel.rcActionMenu, DT_CENTER, true )
+    if isMouseOverRECT( hwnd, gPanel.rcActionMenu ) then
+        b.SetColors( ghPanel.ForeColorHot, ghPanel.BackColorHot )
+    else
+        b.SetColors( ghPanel.ForeColor, ghPanel.BackColor )
+    end if
+    b.PaintRoundRect( @gPanel.rcActionMenu )
+    b.PaintText( wszIconMoreActions, @gPanel.rcActionMenu, DT_CENTER )
 
     ' Paint a separator line at the top of the window
     b.SetPenColor( ghPanel.BackColorHot )

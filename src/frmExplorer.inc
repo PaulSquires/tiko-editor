@@ -150,8 +150,8 @@ sub frmExplorer_PaintCallback( byval p as CLISTBOX_PAINTINFO ptr )
         backclr = ghPanel.BackColor
         foreclr = ghPanel.ForeColor
     end if
-    p->b->SetForeColors(foreclr, foreclr)
-    p->b->SetBackColors(backclr, backclr)
+    p->b->SetForeColor( foreclr )
+    p->b->SetBackColor( backclr )
 
     ' Paint the entire row background
     p->b->PaintRect( @p->rc )

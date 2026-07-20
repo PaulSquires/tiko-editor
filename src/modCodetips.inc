@@ -369,7 +369,43 @@ end function
 
 
 ' ========================================================================================
-' Show Autocomplete list    
+' Append the always-available FB keywords and data types to an autocomplete list.
+' These are the words loaded at startup from settings\keywords\freebasic_keywords.txt
+' and extra_keywords.txt (gConfig.FBKeywords / gConfig.ExtraKeywords). They are a
+' guaranteed baseline: the popup must never depend on these being discovered by the
+' parser in the sources or includes. Reads gConfig live, so edits made in the
+' Options keywords dialogs take effect on the next popup with no cache to invalidate.
+' ========================================================================================
+sub AppendKeywordsToList( _
+            byref sList as string, _
+            byref wszMatchWord as DWSTRING, _
+            byref nItems as long _
+            )
+    ' Both files are plain whitespace-separated word lists; normalize CR/LF/TAB
+    ' to spaces so a single space-parse walks every word.
+    dim as string sWords = AfxStrReplaceAny( _
+            gConfig.FBKeywords & " " & gConfig.ExtraKeywords, _
+            chr(13) & chr(10) & chr(9), " " )
+    dim as long nLenMatchWord = len(wszMatchWord)
+    dim as long nCount = AfxStrParseCount(sWords, " ")
+    for i as long = 1 to nCount
+        if nItems >= AUTOCOMPLETE_MAX_ITEMS then exit sub
+        dim as string st = AfxStrParse(sWords, i, " ")
+        if len(st) = 0 then continue for
+        dim as boolean bMatch = true
+        if nLenMatchWord then bMatch = ( left(ucase(st), nLenMatchWord) = wszMatchWord )
+        if bMatch then
+            if ExistsInAutocompleteList(sList, st) = false then
+                sList = sList & st & "|"
+                nItems += 1
+            end if
+        end if
+    next
+end sub
+
+
+' ========================================================================================
+' Show Autocomplete list
 ' ========================================================================================
 function ShowAutocompleteList( byval Notification as long = 0) as boolean
     
@@ -545,6 +581,13 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
                 next
             end if
 
+            if bTypesOnly = false then
+                ' Always offer every FB keyword and data type from the keyword
+                ' files - added BEFORE the parsed symbols so the guaranteed words
+                ' can never be crowded out by the item cap in a large project.
+                AppendKeywordsToList( sList, pDoc->wszMatchWord, nItems )
+            end if
+
             ' All TYPE/UNION/ENUM/TYPEDEF names matching the typed prefix. For
             ' CONSTRUCTOR/DESTRUCTOR completion (bTypesNotPreloaded) only offer
             ' types defined outside the toolchain include folder.
@@ -623,6 +666,11 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
                     end if
                 end if
             next
+
+            ' Always-available FB keywords/data types from the keyword files,
+            ' independent of anything the parser found. After locals (most
+            ' relevant first for the dedupe) but before the capped global enum.
+            AppendKeywordsToList( sList, pDoc->wszMatchWord, nItems )
 
             ' Then global procs, types, variables, constants and enum values.
             ' Locals of OTHER procs also carry kind VAR/CONST - skip them via the

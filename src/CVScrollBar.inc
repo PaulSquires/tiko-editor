@@ -83,12 +83,12 @@ function CVScrollBar_OnPaint( byval hwnd as HWND ) as LRESULT
         pSB->PaintCallback( @p )
     else
         ' Default paint: flat track + flat thumb, brighter while hot/dragging.
-        b.SetBackColors( pSB->BackColor, pSB->BackColor )
+        b.SetBackColor( pSB->BackColor )
         b.PaintClientRect()
         if IsRectEmpty( @pSB->rcThumb ) = 0 then
             dim as COLORREF clr = pSB->ForeColor
             if pSB->isHot orelse pSB->isDragging then clr = pSB->ForeColorHot
-            b.SetBackColors( clr, clr )
+            b.SetBackColor( clr )
             b.PaintRect( @pSB->rcThumb )
         end if
     end if

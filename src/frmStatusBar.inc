@@ -28,8 +28,8 @@ sub frmStatusBar_PaintCallback( byval p as CSTATUSBAR_PAINTINFO ptr )
         backclr = ghStatusBar.BackColorHot
         foreclr = ghStatusBar.ForeColorHot
     end if
-    p->b->SetForeColors(foreclr, foreclr)
-    p->b->SetBackColors(backclr, backclr)
+    p->b->SetForeColor( foreclr )
+    p->b->SetBackColor( backclr )
 
     ' Paint the entire panel background
     p->b->PaintRect( @p->rc )
@@ -57,8 +57,8 @@ sub frmStatusBar_PaintCallback( byval p as CSTATUSBAR_PAINTINFO ptr )
             dim as COLORREF clr = ghStatusBar.BackColor
             if gApp.hIconPanel = ghIconGood then clr = ghGeneral.iconsuccess
             if gApp.hIconPanel = ghIconBad then clr = ghGeneral.iconfail
-            p->b->SetForeColors( clr, ghStatusBar.ForeColorHot )
-            p->b->SetBackColors( ghStatusBar.BackColor, ghStatusBar.BackColorHot )
+            p->b->SetForeColor( clr )
+            p->b->SetBackColor( ghStatusBar.BackColor )
 
             dim as long txtWidth = getTextWidth( HWND_FRMMAIN_STATUSBAR, p->wszCaption, GUIFONT_9 ) 
             dim as RECT rcIcon = p->rc
@@ -69,9 +69,9 @@ sub frmStatusBar_PaintCallback( byval p as CSTATUSBAR_PAINTINFO ptr )
             
             ' If a Spinner is active then that will take precedence over the good/bad compile icon.
             if (gApp.bShowSpinner = true) then
-                p->b->SetForeColors( ghStatusBar.ForeColor, ghStatusBar.ForeColorHot )
+                p->b->SetForeColor( ghStatusBar.ForeColor )
                 wszText = @spinner(gApp.SpinnerCurrentFrame)
-                p->b->SetBackColors( ghStatusBar.BackColor, ghStatusBar.BackColorHot )
+                p->b->SetBackColor( ghStatusBar.BackColor )
                 ' Position the spinner a bit better
                 rcIcon.top -= AfxScaleY(4)
                 rcIcon.left -= AfxScaleY(2)

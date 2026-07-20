@@ -415,8 +415,8 @@ function frmBuildConfig_OnDrawItem( _
             
             dim as COLORREF backclr = iif( IsHot, GetSysColor(COLOR_HIGHLIGHT), GetSysColor(COLOR_WINDOW) )
             dim as COLORREF foreclr = iif( IsHot, GetSysColor(COLOR_HIGHLIGHTTEXT), GetSysColor(COLOR_WINDOWTEXT) )
-            b.SetForeColors(foreclr, foreclr)
-            b.SetBackColors(backclr, backclr)
+            b.SetForeColor( foreclr )
+            b.SetBackColor( backclr )
 
             ' Create our rect that works with the entire line
             SetRect( @rc, 0, 0, b.rcClientWidth, b.rcClientHeight )

@@ -24,9 +24,9 @@
 #include once "modMenus.bi"
 #include once "modCompile.bi"
 
-    
+
 ' ========================================================================================
-' Attempt to open specified project. 
+' Attempt to open specified project.
 ' ========================================================================================
 function frmMain_OpenProjectSafely( _
             byval hwnd as HWND, _
@@ -480,7 +480,7 @@ function frmMain_OnPaint( byval hwnd as HWND ) as LRESULT
     dim as clsDoubleBuffer b
 
     b.BeginDoubleBuffer(hwnd)
-    b.SetBackColors( ghMain.BackColor, ghMain.BackColor )
+    b.SetBackColor( ghMain.BackColor )
     b.PaintClientRect()
 
     ' Draw any splitter between the two edit windows
@@ -488,7 +488,7 @@ function frmMain_OnPaint( byval hwnd as HWND ) as LRESULT
     if pDoc then
         if pDoc->EditorSplitMode <> SplitNone then
             frmMain_CalcSplitRect(pDoc)
-            b.SetBackColors( ghEditor.Divider, ghEditor.Divider )
+            b.SetBackColor( ghEditor.Divider )
             b.PaintRect( @pDoc->rcSplitButton )
         end if    
     end if
@@ -720,10 +720,11 @@ function frmMain_PositionWindows() as LRESULT
     ' Get the entire client area
     GetClientRect( HWND_FRMMAIN, @rc )
     
-    dim as long nHeightMenuBar   = AfxGetWindowHeight( HWND_FRMMAIN_MENUBAR )
-    dim as long nHeightStatusBar = AfxGetWindowHeight( HWND_FRMMAIN_STATUSBAR )
-    dim as long nHeightOutput    = AfxGetWindowHeight( HWND_FRMOUTPUT )
-    dim as long nWidthPanel      = AfxGetWindowWidth( HWND_FRMPANEL )
+    dim as long nHeightMenuBar    = AfxGetWindowHeight( HWND_FRMMAIN_MENUBAR )
+    dim as long nHeightStatusBar  = AfxGetWindowHeight( HWND_FRMMAIN_STATUSBAR )
+    dim as long nHeightOutput     = AfxGetWindowHeight( HWND_FRMOUTPUT )
+    dim as long nWidthPanel       = AfxGetWindowWidth( HWND_FRMPANEL )
+    dim as long nWidthTopTabsMenu = AfxGetWindowWidth( HWND_FRMMAIN_TOPTABSMENU )
     
     dim as long nHeightTabControl, nHeightTabInfoPanel, nHeightTabFindPanel, nHeightTabReplacePanel
 
@@ -773,9 +774,13 @@ function frmMain_PositionWindows() as LRESULT
 
     if (gTTabCtl.GetItemCount() > 0) then
         nHeightTabControl = AfxGetWindowHeight(HWND_FRMMAIN_TOPTABS)
+        SetWindowPos( HWND_FRMMAIN_TOPTABSMENU, 0, _
+                    nLeft, nTop, _
+                    nWidthTopTabsMenu, nHeightTabControl, _
+                    SWP_SHOWWINDOW or SWP_NOZORDER )
         SetWindowPos( HWND_FRMMAIN_TOPTABS, 0, _
                     nLeft, nTop, _
-                    rc.Right - nWidthPanel, nHeightTabControl, _
+                    rc.Right - nWidthTopTabsMenu - nWidthPanel, nHeightTabControl, _
                     SWP_SHOWWINDOW or SWP_NOZORDER )
         nTop += nHeightTabControl
     end if
@@ -1536,20 +1541,49 @@ function frmMain_WndProc( _
                               " files=" & pRSet->pResult->fileCount & _
                               " diags=" & pRSet->pResult->diagCount
                 end if
+
+                ' Discard a result whose root no longer matches the app's current
+                ' state instead of installing it. Closing a project saves dirty
+                ' files, and a save REQUESTS a project scan - so the closed
+                ' project's scan can complete and arrive here after ProjectClose
+                ' already evicted its sets; installing it would resurrect the
+                ' stale Functions/Bookmarks panels. Same for a buffer scan of a
+                ' document that is no longer the active one.
+                dim as boolean bStale = false
+                if nTier = ScanTierProject then
+                    dim as clsDocument ptr pMainDoc = gApp.GetMainDocumentPtr()
+                    if pMainDoc = 0 then
+                        bStale = true
+                    else
+                        bStale = ( SymDb_FileNameEq( pRSet->wszRootFile, pMainDoc->DiskFilename ) = false )
+                    end if
+                else
+                    dim as clsDocument ptr pActiveDoc = gTTabCtl.GetActiveDocumentPtr()
+                    if pActiveDoc = 0 then
+                        bStale = true
+                    else
+                        bStale = ( SymDb_FileNameEq( pRSet->wszRootFile, ScanMgr_GetRootName(pActiveDoc) ) = false )
+                    end if
+                end if
+                if bStale then sTrace &= "  DISCARDED (stale root)"
                 print sTrace
 
-                dim as PARSERESULTSET ptr pOld = gSymDb.InstallSet( nTier, pRSet )
-                if pOld then gScanMgr.RetireResult( pOld )
+                if bStale then
+                    gScanMgr.RetireResult( pRSet )
+                else
+                    dim as PARSERESULTSET ptr pOld = gSymDb.InstallSet( nTier, pRSet )
+                    if pOld then gScanMgr.RetireResult( pOld )
 
-                ' A fresh scan can add/remove files and procs: refresh the
-                ' Functions panel when it is showing (the panel-show paths
-                ' reload it anyway when it becomes visible later).
-                if IsWindowVisible( HWND_FRMFUNCTIONS ) then LoadFunctionsFiles()
+                    ' A fresh scan can add/remove files and procs: refresh the
+                    ' Functions panel when it is showing (the panel-show paths
+                    ' reload it anyway when it becomes visible later).
+                    if IsWindowVisible( HWND_FRMFUNCTIONS ) then LoadFunctionsFiles()
 
-                ' Both tiers update the TODO store now (buffer scans re-scan the
-                ' active file's text; project scans sweep every user file on
-                ' disk) - refresh the panel either way.
-                frmOutput_UpdateToDoListview()
+                    ' Both tiers update the TODO store now (buffer scans re-scan the
+                    ' active file's text; project scans sweep every user file on
+                    ' disk) - refresh the panel either way.
+                    frmOutput_UpdateToDoListview()
+                end if
             end if
 
         case MSG_USER_APPENDEQUALSSIGN

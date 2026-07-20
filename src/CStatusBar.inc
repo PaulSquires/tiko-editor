@@ -398,7 +398,7 @@ function CStatusBar_OnPaint( byval hwnd as HWND ) as LRESULT
     dim as clsDoubleBuffer b
 
     b.BeginDoubleBuffer(hwnd)
-    b.SetBackColors( pStatus->BackColor, pStatus->BackColor )
+    b.SetBackColor( pStatus->BackColor )
 
     ' Fill the whole bar, which also covers any gap no panel owns (the control's own
     ' background is the only thing it paints; panels belong to the paint callback).

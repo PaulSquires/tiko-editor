@@ -118,8 +118,8 @@ sub frmFunctions_PaintCallback( byval p as CLISTBOX_PAINTINFO ptr )
         backclr = ghPanel.BackColor
         foreclr = ghPanel.ForeColor
     end if
-    p->b->SetForeColors(foreclr, foreclr)
-    p->b->SetBackColors(backclr, backclr)
+    p->b->SetForeColor( foreclr )
+    p->b->SetBackColor( backclr )
 
     ' Paint the entire row background
     p->b->PaintRect( @p->rc )
@@ -328,7 +328,8 @@ function LoadFilesAndFunctions() as long
     dim as HWND hCtrl = HWND_FRMFUNCTIONS
 
     ' Save the topindex because we will restore it after filling the new contents
-    dim as long nCurSel = CListBox_GetCurSel( hCtrl )
+    ' (selection is NOT saved by index - it is re-derived from the active
+    ' document after the rebuild)
     dim as long nTopIndex = CListBox_GetTopIndex( hCtrl )
 
     ' Clear all content from the listbox
@@ -384,10 +385,15 @@ function LoadFilesAndFunctions() as long
 
     CListBox_EndUpdate( hCtrl )
 
-    ' Restore the top index so the list displays like it did before being reset
+    ' Restore the scroll position, then re-select by IDENTITY rather than by the
+    ' saved index: the list was just rebuilt (background scans add/remove/move
+    ' rows), so the old index would land on an arbitrary row. Select the active
+    ' document's row; if there is none (or it isn't in the list) leave nothing
+    ' selected rather than something random.
     CListBox_SetTopIndex( hCtrl, nTopIndex )
-    nCurSel = MIN( nCurSel, CListBox_GetCount(hCtrl) - 1 )
-    CListBox_SetCurSel( hCtrl, nCurSel )
+    if frmFunctions_SelectItemData( gTTabCtl.GetActiveDocumentPtr() ) = false then
+        CListBox_SetCurSel( hCtrl, -1 )
+    end if
 
     function = 0
 end function
@@ -401,7 +407,8 @@ function LoadFunctionsOnly() as long
     dim as HWND hCtrl = HWND_FRMFUNCTIONS
 
     ' Save the topindex because we will restore it after filling the new contents
-    dim as long nCurSel = CListBox_GetCurSel( hCtrl )
+    ' (selection is NOT saved by index - it is re-derived from the active
+    ' document after the rebuild)
     dim as long nTopIndex = CListBox_GetTopIndex( hCtrl )
 
     ' Clear all content from the listbox
@@ -451,10 +458,12 @@ function LoadFunctionsOnly() as long
 
     CListBox_EndUpdate( hCtrl )
 
-    ' Restore the top index so the list displays like it did before being reset
+    ' Restore the scroll position, then re-select by IDENTITY rather than by the
+    ' saved index - same reasoning as LoadFilesAndFunctions above.
     CListBox_SetTopIndex( hCtrl, nTopIndex )
-    nCurSel = MIN( nCurSel, CListBox_GetCount(hCtrl) - 1 )
-    CListBox_SetCurSel( hCtrl, nCurSel )
+    if frmFunctions_SelectItemData( gTTabCtl.GetActiveDocumentPtr() ) = false then
+        CListBox_SetCurSel( hCtrl, -1 )
+    end if
 
     function = 0
 end function

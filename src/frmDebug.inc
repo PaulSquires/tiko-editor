@@ -1074,8 +1074,8 @@ function frmDebug_WndProc( _
             b.BeginDoubleBuffer(hwnd)
 
             ' Set default back and fore colors
-            b.SetForeColors( ghTopTabs.ForeColor, ghTopTabs.ForeColor )
-            b.SetBackColors( ghTopTabs.BackColor, ghTopTabs.BackColor )
+            b.SetForeColor( ghTopTabs.ForeColor )
+            b.SetBackColor( ghTopTabs.BackColor )
 
             ' Clear the entire back client area
             b.PaintClientRect()
@@ -1087,15 +1087,15 @@ function frmDebug_WndProc( _
                 if gDbgBtns(i).nID = IDM_DEBUG_STOPDEBUGGING then ForeColor = ghGeneral.iconfail
                 
                 if i = curr_idxHot then
-                    b.SetBackColors( ghTopTabs.BackColorHot, ghTopTabs.BackColorHot )
+                    b.SetBackColor( ghTopTabs.BackColorHot )
                 else
-                    b.SetBackColors( ghTopTabs.BackColor, ghTopTabs.BackColor )
+                    b.SetBackColor( ghTopTabs.BackColor )
                 end if
 
                 b.PaintRect( @gDbgBtns(i).rc )
                 
                 ' Paint the image
-                b.SetForeColors( ForeColor, ForeColor )
+                b.SetForeColor( ForeColor )
                 dim as long nImageWidth = pWindow->ScaleX(DEBUG_BUTTON_IMAGE_WIDTH)
                 dim as RECT rcIcon = gDbgBtns(i).rc
                 rcIcon.right = rcIcon.left + nImageWidth
@@ -1103,7 +1103,7 @@ function frmDebug_WndProc( _
                 b.PaintText( gDbgBtns(i).wszIcon, @rcIcon, DT_CENTER )
                 
                 ' Paint the text
-                b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
+                b.SetForeColor( ghTopTabs.ForeColorHot )
                 dim as RECT rcText = gDbgBtns(i).rc
                 rcText.left = rcIcon.right
                 b.SetFont( ghFont(GUIFONT_9) )

@@ -452,13 +452,13 @@ function frmOutputVScroll_WndProc( _
             dim as clsDoubleBuffer b
 
             b.BeginDoubleBuffer(hwnd)
-            b.SetBackColors( ghOutput.BackColorScrollBar, ghOutput.BackColorScrollBar )
+            b.SetBackColor( ghOutput.BackColorScrollBar )
             b.PaintClientRect()
             if IsRectEmpty( @gOutputVScroll.rc ) = 0 then
                 b.SetPenColor( ghOutput.ScrollBarDivider )
                 b.PaintLine( 1, b.rcClient.left, b.rcClient.top, b.rcClient.left, b.rcClient.bottom )
             end if    
-            b.SetBackColors( ghOutput.ForeColorScrollBar, ghOutput.ForeColorScrollBar )
+            b.SetBackColor( ghOutput.ForeColorScrollBar )
             b.PaintRect( @gOutputVScroll.rc )
 
             b.EndDoubleBuffer()
@@ -868,32 +868,32 @@ function frmOutputTabs_SubclassProc ( _
             b.BeginDoubleBuffer(hWin)
 
             ' Set default fore and back colors
-            b.SetForeColors( ghOutput.ForeColor, ghOutput.ForeColorHot )
-            b.SetBackColors( ghOutput.BackColor, ghOutput.BackColorHot )
+            b.SetColors( ghOutput.ForeColor, ghOutput.BackColor )
 
             ' Clear the entire back client area
             b.PaintClientRect()
-          
+
             for i as long = lbound(gOutputTabs) to ubound(gOutputTabs)
                 dim as RECT rc = gOutputTabs(i).rcTab
-                if (i = gOutputTabsCurSel) or (gOutputTabs(i).isHot = true) then
-                    b.SetForeColors( ghOutput.ForeColorHot, ghOutput.ForeColorHot )
-                    b.SetBackColors( ghOutput.BackColorHot, ghOutput.BackColorHot )
-                else
-                    b.SetForeColors( ghOutput.ForeColor, ghOutput.ForeColorHot )
-                    b.SetBackColors( ghOutput.BackColor, ghOutput.BackColorHot )
-                end if
+                ' the rect also goes hot on a live mouse-over (before the
+                ' tracked isHot flag catches up); the text follows only the
+                ' selected/tracked-hot state
+                dim as boolean isHotTab = (i = gOutputTabsCurSel) orelse (gOutputTabs(i).isHot = true)
+                dim as boolean isMouseOver = isMouseOverRECT( hWin, rc )
+                b.SetForeColor( iif(isHotTab, ghOutput.ForeColorHot, ghOutput.ForeColor) )
+                b.SetBackColor( iif(isHotTab orelse isMouseOver, ghOutput.BackColorHot, ghOutput.BackColor) )
                 b.SetFont( ghFont(GUIFONT_9) )
-                b.PaintRect(@rc, true)
+                b.PaintRect(@rc)
                 b.PaintText( gOutputTabs(i).wszText, @rc, DT_CENTER )
             next
 
-            ' Draw the "X" close item
+            ' Draw the "X" close item (background goes hot on mouse-over)
             b.SetFont( ghFont(SYMBOLFONT_10) )
-            b.SetForeColors( ghOutput.ForeColorHot, ghOutput.ForeColorHot )
-            b.SetBackColors( ghOutput.BackColor, ghOutput.CloseBackColorHot )
-            b.PaintRoundRect( @gOutputCloseRect, true )
-            b.PaintText( wszIconClose, @gOutputCloseRect, DT_CENTER, true )
+            b.SetForeColor( ghOutput.ForeColorHot )
+            b.SetBackColor( iif( isMouseOverRECT( hWin, gOutputCloseRect ), _
+                                 ghOutput.CloseBackColorHot, ghOutput.BackColor ) )
+            b.PaintRoundRect( @gOutputCloseRect )
+            b.PaintText( wszIconClose, @gOutputCloseRect, DT_CENTER )
             
             ' Paint a simple line under the currently active tab
             if gOutputTabsCurSel <> -1 then
@@ -1030,7 +1030,7 @@ function frmOutput_WndProc( _
     case WM_PAINT            
         dim as clsDoubleBuffer b
         b.BeginDoubleBuffer(hwnd)
-        b.SetBackColors( ghOutput.BackColor, ghOutput.BackColor )
+        b.SetBackColor( ghOutput.BackColor )
         b.PaintClientRect()
         b.EndDoubleBuffer()
         return 0

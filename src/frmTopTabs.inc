@@ -85,8 +85,8 @@ sub frmTopTabs_PaintCallback( byval p as CTabBar_PAINTINFO ptr )
         backclr = ghTopTabs.BackColor
         foreclr = ghTopTabs.ForeColor
     end if
-    p->b->SetForeColors(foreclr, foreclr)
-    p->b->SetBackColors(backclr, backclr)
+    p->b->SetForeColor( foreclr )
+    p->b->SetBackColor( backclr )
 
     ' Fill the (already deflated) paint area
     p->b->PaintRect( @p->rc )
@@ -100,7 +100,7 @@ sub frmTopTabs_PaintCallback( byval p as CTabBar_PAINTINFO ptr )
     ' The close "X" (Segoe Fluent Icons ChromeClose), only while the tab is hot;
     ' brightened while the cursor is over the X itself.
     if p->isHot orelse p->isHotClose then
-        if p->isHotClose then p->b->SetBackColors( ghTopTabs.CloseBackColorHot, ghTopTabs.CloseBackColorHot )
+        if p->isHotClose then p->b->SetBackColor( ghTopTabs.CloseBackColorHot )
         p->b->SetFont( ghFont(SYMBOLFONT_9) )
         p->b->PaintText( wszIconClose, @p->rcClose, DT_CENTER )
     end if
@@ -138,6 +138,9 @@ sub frmTopTabs_SelChangeCallback( byval hTabBar as HWND, byval idxOld as integer
     gTTabCtl.SetFocusTab( idxNew )
 end sub
 
+/'
+'TODO: 这是一项待办事项
+'/
 
 ' ========================================================================================
 ' frmTopTabs_CloseCallback  -- the user clicked a tab's "X" (or middle-clicked the tab).

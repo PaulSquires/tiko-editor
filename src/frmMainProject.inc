@@ -85,8 +85,25 @@ function OnCommand_ProjectClose( byval hwnd As HWND ) As LRESULT
     ' Reset the ProjectNotes text box with the generic non-project related notes
     AfxSetWindowText(GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTNOTES), gApp.NonProjectNotes)
 
+    ' Evict the closed project's scans from the symbol database BEFORE reloading
+    ' the panels below - they repopulate from gSymDb, so a still-installed set
+    ' would faithfully rebuild the old project's lists. Both tiers go: every
+    ' document was closed above, so the buffer set refers to a closed file. The
+    ' displaced sets are retired for same-thread freeing by the scan worker.
+    dim as PARSERESULTSET ptr pStale = gSymDb.InstallSet( ScanTierProject, 0 )
+    if pStale then gScanMgr.RetireResult( pStale )
+    pStale = gSymDb.InstallSet( ScanTierBuffer, 0 )
+    if pStale then gScanMgr.RetireResult( pStale )
+
+    ' The TODO store outlives the sets that populated it (project sweeps add
+    ' entries for files never opened as documents), so empty it explicitly.
+    erase gTodoItems
+    gTodoCount = 0
+    frmOutput_UpdateToDoListview()
+
     ' Clear content from functions and bookmarks listboxes
-    LoadFilesAndFunctions()
+    ' (LoadFunctionsFiles dispatches on the current tree/list view state)
+    LoadFunctionsFiles()
     LoadBookmarksFiles()
     
     ' Set Explorer as panel in view and then populate it.

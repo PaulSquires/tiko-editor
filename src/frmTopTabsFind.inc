@@ -404,9 +404,9 @@ function frmTopTabsFind_WndProc( _
         
         b.BeginDoubleBuffer(hwnd)
 
-        ' Set the default colors
-        b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
-        b.SetBackColors( ghTopTabs.BackColorHot, ghTopTabs.BackColorHot )
+        ' Set the default colors. The strip's field color is BackColorHot, so a
+        ' hovered (unselected) button inverts to the tab area's normal BackColor.
+        b.SetColors( ghTopTabs.ForeColorHot, ghTopTabs.BackColorHot )
 
         ' Clear the entire back client area
         b.PaintClientRect()
@@ -415,59 +415,57 @@ function frmTopTabsFind_WndProc( _
         b.SetPenColor( ghEditor.Divider )
         if gFind.bShowReplacePanel = false then
             b.PaintLine( 1, b.rcClient.left, b.rcClient.bottom, b.rcClient.right, b.rcClient.bottom )
-        end if     
-        
+        end if
+
         ' Draw the Find controls.
-        b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
-        b.SetBackColors( ghTopTabs.BackColorHot, ghTopTabs.BackColorHot )
         b.SetPenColor( ghEditor.Divider )
-        
+
         b.PaintRoundBorderRect( @gTTabCtl.rcFindTextRect )
 
         b.SetFont( ghFont(GUIFONT_9) )
-        
+
         ' Match Case
-        if gFind.nMatchCase then 
-            b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
-            b.SetBackColors( ghTopTabs.IconSelectedBackColor, ghTopTabs.IconSelectedBackColor )
+        if gFind.nMatchCase then
+            b.SetBackColor( ghTopTabs.IconSelectedBackColor )
         else
-            b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
-            b.SetBackColors( ghTopTabs.BackColorHot, ghTopTabs.BackColor )
+            b.SetBackColor( iif( isMouseOverRECT(hwnd, gFind.rcMatchCase), _
+                                 ghTopTabs.BackColor, ghTopTabs.BackColorHot ) )
         end if
         b.PaintIconButton( wszIconMatchCase, @gFind.rcMatchCase )
 
         ' Whole Word
-        if gFind.nWholeWord then 
-            b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
-            b.SetBackColors( ghTopTabs.IconSelectedBackColor, ghTopTabs.IconSelectedBackColor )
+        if gFind.nWholeWord then
+            b.SetBackColor( ghTopTabs.IconSelectedBackColor )
         else
-            b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
-            b.SetBackColors( ghTopTabs.BackColorHot, ghTopTabs.BackColor )
+            b.SetBackColor( iif( isMouseOverRECT(hwnd, gFind.rcWholeWord), _
+                                 ghTopTabs.BackColor, ghTopTabs.BackColorHot ) )
         end if
         b.PaintIconButton( wszIconWholeWord, @gFind.rcWholeWord )
 
-        b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
-        b.SetBackColors( ghTopTabs.BackColorHot, ghTopTabs.BackColor )
-
+        b.SetBackColor( ghTopTabs.BackColorHot )
         b.PaintText( gFind.wszResults, @gFind.rcResults, DT_LEFT )
-        
+
         b.SetFont( ghFont(SYMBOLFONT_9) )
+        b.SetBackColor( iif( isMouseOverRECT(hwnd, gFind.rcToggle), _
+                             ghTopTabs.BackColor, ghTopTabs.BackColorHot ) )
         b.PaintIconButton( wszIconToggleReplace, @gFind.rcToggle )
-        
-        if gFind.nSelection then 
-            b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
-            b.SetBackColors( ghTopTabs.IconSelectedBackColor, ghTopTabs.IconSelectedBackColor )
+
+        if gFind.nSelection then
+            b.SetBackColor( ghTopTabs.IconSelectedBackColor )
         else
-            b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
-            b.SetBackColors( ghTopTabs.BackColorHot, ghTopTabs.BackColor )
+            b.SetBackColor( iif( isMouseOverRECT(hwnd, gFind.rcSelection), _
+                                 ghTopTabs.BackColor, ghTopTabs.BackColorHot ) )
         end if
         b.PaintIconButton( wszIconSelection, @gFind.rcSelection )
-            
-        b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
-        b.SetBackColors( ghTopTabs.BackColorHot, ghTopTabs.BackColor )
 
+        b.SetBackColor( iif( isMouseOverRECT(hwnd, gFind.rcUpArrow), _
+                             ghTopTabs.BackColor, ghTopTabs.BackColorHot ) )
         b.PaintIconButton( wszIconChevronLeft, @gFind.rcUpArrow )
+        b.SetBackColor( iif( isMouseOverRECT(hwnd, gFind.rcDownArrow), _
+                             ghTopTabs.BackColor, ghTopTabs.BackColorHot ) )
         b.PaintIconButton( wszIconChevronRight, @gFind.rcDownArrow )
+        b.SetBackColor( iif( isMouseOverRECT(hwnd, gFind.rcClose), _
+                             ghTopTabs.BackColor, ghTopTabs.BackColorHot ) )
         b.PaintIconButton( wszIconClose, @gFind.rcClose )
         
         ' Vertical Divider Line

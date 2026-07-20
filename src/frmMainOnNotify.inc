@@ -586,7 +586,13 @@ function Scintilla_OnNotify( _
                     if ShowAutocompleteList() then exit function
 
                 case else   ' all other letters
-                    if ShowAutocompleteList() then exit function
+                    ' Only keep an ALREADY-OPEN popup in sync with continued typing.
+                    ' Ordinary typing never opens a new popup: completion triggers
+                    ' only on ".", "->" (member) and the keyword contexts handled on
+                    ' space (" as ", " new ", constructor/destructor/extends).
+                    if SciExec( hEdit, SCI_AUTOCACTIVE, 0, 0 ) then
+                        if ShowAutocompleteList() then exit function
+                    end if
 
             end select 
             

@@ -288,9 +288,9 @@ function frmSearchSymbolVScroll_WndProc( _
             dim as clsDoubleBuffer b
 
             b.BeginDoubleBuffer(hwnd)
-            b.SetBackColors( ghPanel.BackColorScrollBar, ghPanel.BackColorScrollBar )
+            b.SetBackColor( ghPanel.BackColorScrollBar )
             b.PaintClientRect()
-            b.SetBackColors( ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
+            b.SetBackColor( ghPanel.ForeColorScrollBar )
             b.PaintRect( @gSearchSymbolVScroll.rc )
 
             b.EndDoubleBuffer()
@@ -568,8 +568,8 @@ function frmSearchSymbol_OnDrawItem( _
 
         dim as COLORREF backclr = iif( IsHot, ghPanel.BackColorHot,  ghPanel.BackColor)
         dim as COLORREF foreclr = iif( IsHot, ghPanel.ForeColor,  ghPanel.ForeColor)
-        b.SetForeColors(foreclr, foreclr)
-        b.SetBackColors(backclr, backclr)
+        b.SetForeColor( foreclr )
+        b.SetBackColor( backclr )
 
         ' Create our rect that works with the entire line
         dim as RECT rc: SetRect( @rc, 0, 0, b.rcClientWidth, b.rcClientHeight )
@@ -640,8 +640,8 @@ function frmSearchSymbol_OnDrawItem( _
             next
 
             ' Now paint the symbol icon
-            b.SetForeColors(icon_foreclr, icon_foreclr)
-            b.SetBackColors(icon_backclr, icon_backclr)
+            b.SetForeColor( icon_foreclr )
+            b.SetBackColor( icon_backclr )
             b.SetFont( ghFont(ITALICFONT_10) )
             b.PaintRect( @rcIcon )
             b.PaintText( wszIcon, @rcIcon, DT_CENTER )
@@ -731,8 +731,8 @@ function frmSearchSymbol_WndProc( _
         b.BeginDoubleBuffer(hwnd)
 
         ' Paint the tab info area 
-        b.SetForeColors( ghPanel.ForeColor, ghPanel.ForeColor )
-        b.SetBackColors( ghPanel.BackColor, ghPanel.BackColor )
+        b.SetForeColor( ghPanel.ForeColor )
+        b.SetBackColor( ghPanel.BackColor )
 
         ' Clear the entire back client area
         b.PaintClientRect()

@@ -246,8 +246,8 @@ function frmPopupMenu_OnDrawItem( _
             foreclr = iif( IsHot, ghPopup.ForeColorHot, ghPopup.ForeColor)
         end if
 
-        b.SetForeColors(foreclr, foreclr)
-        b.SetBackColors(backclr, backclr)
+        b.SetForeColor( foreclr )
+        b.SetBackColor( backclr )
 
         ' Create our rect that works with the entire line
         dim as RECT rc
@@ -262,7 +262,7 @@ function frmPopupMenu_OnDrawItem( _
             rcText.left = rcText.left + pWindow->ScaleX(12) 
             rcText.right = rcText.right - pWindow->ScaleX(12)
             b.SetPenColor(ghPopup.ForeColorDisabled)
-            b.SetBackColors(backclr, backclr)
+            b.SetBackColor( backclr )
             b.PaintLine(1, rcText.left, (rcText.bottom-rcText.top) / 2, _
                             rcText.right, (rcText.bottom-rcText.top) / 2 )
         else
@@ -372,7 +372,7 @@ function frmPopupMenu_WndProc( _
             dim as clsDoubleBuffer b
 
             b.BeginDoubleBuffer(hwnd)
-            b.SetBackColors( ghPopup.PanelColor, ghPopup.PanelColor )
+            b.SetBackColor( ghPopup.PanelColor )
             b.PaintClientRect()
             b.EndDoubleBuffer()
             

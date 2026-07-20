@@ -841,7 +841,7 @@ function CListBox_OnPaint( byval hwnd as HWND ) as LRESULT
     dim as clsDoubleBuffer b
 
     b.BeginDoubleBuffer(hwnd)
-    b.SetBackColors( pList->BackColor, pList->BackColor )
+    b.SetBackColor( pList->BackColor )
     b.PaintClientRect()
     b.EndDoubleBuffer()
 

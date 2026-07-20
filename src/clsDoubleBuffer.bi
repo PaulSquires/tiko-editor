@@ -27,9 +27,7 @@ type clsDoubleBuffer
         _rc              as RECT
         _pencolor        as COLORREF
         _forecolor       as COLORREF
-        _forecolorhot    as COLORREF
         _backcolor       as COLORREF
-        _backcolorhot    as COLORREF
         _hFont           as HFONT         ' caller-supplied font; the control/host owns it
         _UsePaint        as boolean       ' use Begin/EndPaint. Used when WM_PAINT or WM_DRAWITEM
         _owns            as boolean = true ' does this object own _memDC/_hbit (delete on End)?
@@ -45,37 +43,32 @@ type clsDoubleBuffer
     declare function EndDoubleBuffer() as long
     declare function PaintClientRect() as long 
     declare function SetupBitmap() as long
+    ' Painting always uses the CURRENT fore/back colors - hot/hover styling is
+    ' the caller's responsibility: decide (e.g. via isMouseOverRECT or tracked
+    ' hover state) and set the colors BEFORE painting.
     declare function PaintRectFactory( _
                 byval rc as RECT ptr, _
                 byval iStyle as long, _
                 byval nPenWidth as long = 1, _
-                byval nCurvature as long, _
-                byval bHitTest as boolean = false _
-                ) as long 
-    declare function PaintRect( _
-                byval rc as RECT ptr, _
-                byval bHitTest as boolean = false _
+                byval nCurvature as long = 0 _
                 ) as long
+    declare function PaintRect( byval rc as RECT ptr ) as long
     declare function PaintBorderRect( _
                 byval rc as RECT ptr, _
-                byval bHitTest as boolean = false, _
                 byval nPenWidth as long = 1 _
                 ) as long
     declare function PaintRoundRect( _
                 byval rc as RECT ptr, _
-                byval bHitTest as boolean = false, _
                 byval nCurvature as long = 20 _
-                ) as long 
+                ) as long
     declare function PaintRoundBorderRect( _
                 byval rc as RECT ptr, _
-                byval bHitTest as boolean = false, _
                 byval nCurvature as long = 20, _
                 byval nPenWidth as long = 1 _
-                ) as long 
+                ) as long
     declare function PaintIconButton( _
             byval wszText as DWSTRING, _
             byval rc as RECT ptr, _
-            byval bHitTest as boolean = true, _
             byval nCurvature as long = 20 _
             ) as long
     declare function PaintLine( _
@@ -87,18 +80,18 @@ type clsDoubleBuffer
                 ) as long
     declare function PaintText( _
                 byval wszText as DWSTRING, _
-                byval rc as RECT ptr, _ 
-                byval wsStyle as DWORD, _
-                byval bHitTest as boolean = false _
-                ) as long 
+                byval rc as RECT ptr, _
+                byval wsStyle as DWORD _
+                ) as long
     declare function PaintChar( _
                 byval wszChar as DWSTRING, _
                 byval rc as RECT ptr, _
                 byval forecolor as COLORREF _
                 ) as long
     declare function SetFont( byval hFont as HFONT ) as long
-    declare function SetForeColors( byval forecolor as COLORREF, byval forecolorhot as COLORREF ) as long
-    declare function SetBackColors( byval backcolor as COLORREF, byval backcolorhot as COLORREF ) as long
+    declare function SetForeColor( byval forecolor as COLORREF ) as long
+    declare function SetBackColor( byval backcolor as COLORREF ) as long
+    declare function SetColors( byval forecolor as COLORREF, byval backcolor as COLORREF ) as long
     declare function SetPenColor( byval pencolor as COLORREF ) as long
     declare function rcClient() as RECT
     declare function rcClientWidth() as long

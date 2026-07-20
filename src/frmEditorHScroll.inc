@@ -106,7 +106,7 @@ function frmEditorHScroll_WndProc( _
             b.BeginDoubleBuffer(hwnd)
 
             ' Paint background
-            b.SetBackColors( ghEditor.BackColorScrollBar, ghEditor.BackColorScrollBar )
+            b.SetBackColor( ghEditor.BackColorScrollBar )
             b.PaintClientRect()
 
             dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
@@ -131,7 +131,7 @@ function frmEditorHScroll_WndProc( _
                 gEditorHScroll(idxWindow).rc.left = thumbLeft
                 gEditorHScroll(idxWindow).rc.right = thumbLeft + thumbWidth
 
-                b.SetBackColors( ghEditor.ForeColorScrollBar, ghEditor.ForeColorScrollBar )
+                b.SetBackColor( ghEditor.ForeColorScrollBar )
                 b.PaintRect( @gEditorHScroll(idxWindow).rc )
             end if
 

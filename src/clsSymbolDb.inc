@@ -260,7 +260,13 @@ sub clsSymbolDb.RecomputeMerge()
         if m_pBuffer->pResult then bHaveBuffer = true
     end if
 
-    ' project files: all contribute, except the copy of the buffer's root file
+    ' project files: all contribute, except the copy of the buffer's root file.
+    ' Suppress it ONLY when the buffer set actually contains its root
+    ' (rootFileIndex >= 0): a buffer scan of a lone .inc can abort on fbc's
+    ' max-error limit before its own body is ever reached, leaving the root out
+    ' of its file table - suppressing by name alone would then hide the
+    ' project's complete copy while the buffer offers nothing in its place,
+    ' and the active file vanishes from the Functions panel.
     if bHaveProject then
         dim as long fc = m_pProject->pResult->fileCount
         if fc > 0 then
@@ -268,7 +274,7 @@ sub clsSymbolDb.RecomputeMerge()
             for i as long = 0 to fc - 1
                 m_projContrib(i) = true
             next
-            if bHaveBuffer then
+            if bHaveBuffer andalso (m_pBuffer->rootFileIndex >= 0) then
                 for i as long = 0 to fc - 1
                     dim as wstring ptr pfn = @m_pProject->pResult->stringPool[ m_pProject->pResult->fileOffsets[i] ]
                     if SymDb_FileNameEq( *pfn, m_pBuffer->wszRootFile ) then m_projContrib(i) = false

@@ -204,8 +204,7 @@ function frmTopTabsInfo_WndProc( _
         b.BeginDoubleBuffer(hwnd)
 
         ' Set the default colors
-        b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
-        b.SetBackColors( ghTopTabs.BackColorHot, ghTopTabs.BackColorHot )
+        b.SetColors( ghTopTabs.ForeColorHot, ghTopTabs.BackColorHot )
 
         ' Clear the entire back client area
         b.PaintClientRect()
@@ -234,30 +233,39 @@ function frmTopTabsInfo_WndProc( _
                     end if
                 end if
             end if
-            b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
-            b.SetBackColors( ghTopTabs.BackColorHot, ghTopTabs.BackColor )
+            ' The strip's field color is BackColorHot, so a hovered button
+            ' inverts to the tab area's normal BackColor.
+            b.SetColors( ghTopTabs.ForeColorHot, ghTopTabs.BackColorHot )
             b.SetFont( ghFont(INFOFONT_11) )
             b.PaintText( wszFilename, @gTTabCtl.rcDiskFilename, DT_LEFT )
 
             b.SetFont( ghFont(SYMBOLFONT_10) )
+            b.SetBackColor( iif( isMouseOverRECT(hwnd, gTTabCtl.rcFindButton), _
+                                 ghTopTabs.BackColor, ghTopTabs.BackColorHot ) )
             b.PaintIconButton( wszIconFind, @gTTabCtl.rcFindButton )
-            
+
             b.SetFont( ghFont(GUIFONT_10) )
+            b.SetBackColor( iif( isMouseOverRECT(hwnd, gTTabCtl.rcGotoMain), _
+                                 ghTopTabs.BackColor, ghTopTabs.BackColorHot ) )
             b.PaintIconButton( wszIconGotoMain, @gTTabCtl.rcGotoMain )
-            
+
             dim as DWSTRING wszHeaderOrCode
             pDoc = gTTabCtl.GetActiveDocumentPtr()
-            if pDoc then 
-                if pDoc->ProjectFileType = FILETYPE_HEADER then 
+            if pDoc then
+                if pDoc->ProjectFileType = FILETYPE_HEADER then
                     wszHeaderOrCode = wszIconGotoSource
                 else   ' main, normal, module, resource
                     wszHeaderOrCode = wszIconGotoHeader
                 end if
             end if
+            b.SetBackColor( iif( isMouseOverRECT(hwnd, gTTabCtl.rcGotoHeader), _
+                                 ghTopTabs.BackColor, ghTopTabs.BackColorHot ) )
             b.PaintIconButton( wszHeaderOrCode, @gTTabCtl.rcGotoHeader )
-            
-            b.PaintRoundRect( @gTTabCtl.rcFileTypeButton, true )
-            b.PaintText( gTTabCtl.wszFileType, @gTTabCtl.rcFileTypeButton, DT_CENTER, true )
+
+            b.SetBackColor( iif( isMouseOverRECT(hwnd, gTTabCtl.rcFileTypeButton), _
+                                 ghTopTabs.BackColor, ghTopTabs.BackColorHot ) )
+            b.PaintRoundRect( @gTTabCtl.rcFileTypeButton )
+            b.PaintText( gTTabCtl.wszFileType, @gTTabCtl.rcFileTypeButton, DT_CENTER )
         end if
         
         b.EndDoubleBuffer()

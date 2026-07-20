@@ -617,7 +617,7 @@ function CTabBar_OnPaint( byval hwnd as HWND ) as LRESULT
     dim as clsDoubleBuffer b
 
     b.BeginDoubleBuffer(hwnd)
-    b.SetBackColors( pTabBar->BackColor, pTabBar->BackColor )
+    b.SetBackColor( pTabBar->BackColor )
 
     ' Fill the whole bar, which also covers any gap no tab owns (the control's own
     ' background is the only thing it paints; tabs belong to the paint callback).
@@ -662,7 +662,7 @@ function CTabBar_OnPaint( byval hwnd as HWND ) as LRESULT
     if pTabBar->nBorderWidth > 0 then
         dim as integer bw = pTabBar->nBorderWidth
         dim as RECT rcC : GetClientRect( hwnd, @rcC )
-        b.SetBackColors( pTabBar->BorderColor, pTabBar->BorderColor )
+        b.SetBackColor( pTabBar->BorderColor )
 
         ' The active tab's x-range, if there is an active tab and it is not scrolled off
         ' (an empty rect must not break the line at 0..0).

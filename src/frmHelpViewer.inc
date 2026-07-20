@@ -136,9 +136,9 @@ function frmHelpViewerVScroll_WndProc( _
             dim as clsDoubleBuffer b
 
             b.BeginDoubleBuffer(hwnd)
-            b.SetBackColors( ghPanel.BackColorScrollBar, ghPanel.BackColorScrollBar )
+            b.SetBackColor( ghPanel.BackColorScrollBar )
             b.PaintClientRect()
-            b.SetBackColors( ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
+            b.SetBackColor( ghPanel.ForeColorScrollBar )
             b.PaintRect( @gPanelVScroll.rc )
 
             b.EndDoubleBuffer()
@@ -396,12 +396,12 @@ function frmHelpViewer_OnPaint( byval hwnd as HWND ) as LRESULT
     dim as clsDoubleBuffer b
 
     b.BeginDoubleBuffer(hwnd)
-    b.SetBackColors( ghMain.BackColor, ghMain.BackColor )
+    b.SetBackColor( ghMain.BackColor )
     b.PaintClientRect()
 
     ' Draw any splitter between the two panels
     dim as RECT rcSplitter = frmHelpViewer_CalcSplitRect()
-    b.SetBackColors( ghPanel.BackColor, ghPanel.BackColorHot )
+    b.SetBackColor( ghPanel.BackColor )
     b.PaintRect( @rcSplitter )
     
     b.EndDoubleBuffer()
@@ -476,8 +476,8 @@ function frmHelpViewer_OnDrawItem( _
 
         dim as COLORREF backclr = iif( IsHot, ghPanel.BackColorHot,  ghPanel.BackColor)
         dim as COLORREF foreclr = iif( IsHot, ghPanel.ForeColorHot,  ghPanel.ForeColor)
-        b.SetForeColors(foreclr, foreclr)
-        b.SetBackColors(backclr, backclr)
+        b.SetForeColor( foreclr )
+        b.SetBackColor( backclr )
 
         dim as DWSTRING wszCaption
         if (lpdis->ItemID >= lbound(gHelpViewer.Filenames)) andalso _

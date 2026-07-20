@@ -310,8 +310,8 @@ function frmTopTabsReplace_WndProc( _
         b.BeginDoubleBuffer(hwnd)
 
         ' Set the default colors
-        b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
-        b.SetBackColors( ghTopTabs.BackColorHot, ghTopTabs.BackColorHot )
+        b.SetForeColor( ghTopTabs.ForeColorHot )
+        b.SetBackColor( ghTopTabs.BackColorHot )
 
         ' Clear the entire back client area
         b.PaintClientRect()
@@ -320,28 +320,28 @@ function frmTopTabsReplace_WndProc( _
         b.SetPenColor( ghEditor.Divider )
         b.PaintLine( 1, b.rcClient.left, b.rcClient.bottom, b.rcClient.right, b.rcClient.bottom )
 
-        ' Draw the Replace controls.
-        b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
-        b.SetBackColors( ghTopTabs.BackColorHot, ghTopTabs.BackColorHot )
+        ' Draw the Replace controls. The strip's field color is BackColorHot, so
+        ' a hovered (unselected) button inverts to the tab area's normal BackColor.
+        b.SetColors( ghTopTabs.ForeColorHot, ghTopTabs.BackColorHot )
         b.SetPenColor( ghEditor.Divider )
-        
+
         b.PaintRoundBorderRect( @gTTabCtl.rcReplaceTextRect )
 
         b.SetFont( ghFont(GUIFONT_9) )
-        if gFind.nPreserve then 
-            b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
-            b.SetBackColors( ghTopTabs.IconSelectedBackColor, ghTopTabs.IconSelectedBackColor )
+        if gFind.nPreserve then
+            b.SetBackColor( ghTopTabs.IconSelectedBackColor )
         else
-            b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
-            b.SetBackColors( ghTopTabs.BackColorHot, ghTopTabs.BackColor )
+            b.SetBackColor( iif( isMouseOverRECT(hwnd, gFind.rcPreserve), _
+                                 ghTopTabs.BackColor, ghTopTabs.BackColorHot ) )
         end if
         b.PaintIconButton( wszIconPreserveCase, @gFind.rcPreserve )
-       
-        b.SetForeColors( ghTopTabs.ForeColorHot, ghTopTabs.ForeColorHot )
-        b.SetBackColors( ghTopTabs.BackColorHot, ghTopTabs.BackColor )
 
         b.SetFont( ghFont(SYMBOLFONT_9) )
+        b.SetBackColor( iif( isMouseOverRECT(hwnd, gFind.rcReplace), _
+                             ghTopTabs.BackColor, ghTopTabs.BackColorHot ) )
         b.PaintIconButton( wszIconReplace, @gFind.rcReplace )
+        b.SetBackColor( iif( isMouseOverRECT(hwnd, gFind.rcReplaceAll), _
+                             ghTopTabs.BackColor, ghTopTabs.BackColorHot ) )
         b.PaintIconButton( wszIconReplaceAll, @gFind.rcReplaceAll )
                 
         b.EndDoubleBuffer()

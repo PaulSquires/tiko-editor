@@ -158,11 +158,11 @@ function frmEditorVScroll_WndProc( _
             dim as clsDoubleBuffer b
 
             b.BeginDoubleBuffer(hwnd)
-            b.SetBackColors( ghEditor.BackColorScrollBar, ghEditor.BackColorScrollBar )
+            b.SetBackColor( ghEditor.BackColorScrollBar )
             b.PaintClientRect()
             b.SetPenColor( ghEditor.Divider )
             b.PaintLine( 1, b.rcClient.left, b.rcClient.top, b.rcClient.left, b.rcClient.bottom )
-            b.SetBackColors( ghEditor.ForeColorScrollBar, ghEditor.ForeColorScrollBar )
+            b.SetBackColor( ghEditor.ForeColorScrollBar )
             b.PaintRect( @gEditorVScroll(idxWindow).rc )
 
             b.EndDoubleBuffer()

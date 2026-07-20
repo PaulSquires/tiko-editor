@@ -129,15 +129,19 @@ function clsDoubleBuffer.SetFont( byval hFont as HFONT ) as long
     function = 0
 end function
 
-function clsDoubleBuffer.SetForeColors( byval forecolor as COLORREF, byval forecolorhot as COLORREF ) as long
+function clsDoubleBuffer.SetForeColor( byval forecolor as COLORREF ) as long
     _forecolor = forecolor
-    _forecolorhot = forecolorhot
     function = 0
 end function
 
-function clsDoubleBuffer.SetBackColors( byval backcolor as COLORREF, byval backcolorhot as COLORREF ) as long
+function clsDoubleBuffer.SetBackColor( byval backcolor as COLORREF ) as long
     _backcolor = backcolor
-    _backcolorhot = backcolorhot
+    function = 0
+end function
+
+function clsDoubleBuffer.SetColors( byval forecolor as COLORREF, byval backcolor as COLORREF ) as long
+    _forecolor = forecolor
+    _backcolor = backcolor
     function = 0
 end function
 
@@ -150,14 +154,12 @@ function clsDoubleBuffer.PaintRectFactory( _
             byval rc as RECT ptr, _
             byval iStyle as long, _
             byval nPenWidth as long = 1, _
-            byval nCurvature as long, _
-            byval bHitTest as boolean = false _
-            ) as long 
-    dim as COLORREF backcolor = _backcolor  
-    if bHitTest then backcolor = iif( isMouseOverRECT(_hwnd, *rc), _backcolorhot, _backcolor )
-    
-    if nPenWidth = 0 then _pencolor = backcolor        
-    dim as HPEN hPenSolid = CreatePen( iStyle, nPenWidth, _pencolor )  
+            byval nCurvature as long = 0 _
+            ) as long
+    dim as COLORREF backcolor = _backcolor
+
+    if nPenWidth = 0 then _pencolor = backcolor
+    dim as HPEN hPenSolid = CreatePen( iStyle, nPenWidth, _pencolor )
     dim as HPEN hOldPen = SelectObject( _memDC, hPenSolid )
     
     dim as HBRUSH hBrushSolid = CreateSolidBrush( backcolor )
@@ -171,58 +173,46 @@ function clsDoubleBuffer.PaintRectFactory( _
     function = 0
 end function
 
-function clsDoubleBuffer.PaintRect( _
-            byval rc as RECT ptr, _
-            byval bHitTest as boolean = false _
-            ) as long
+function clsDoubleBuffer.PaintRect( byval rc as RECT ptr ) as long
     ' Non-Brush painting
-    dim as COLORREF backcolor = _backcolor  
-    if bHitTest then backcolor = iif( isMouseOverRECT(_hwnd, *rc), _backcolorhot, _backcolor )
-    dim as COLORREF oldclr = SetBkColor(_memDC, backcolor) 
+    dim as COLORREF oldclr = SetBkColor(_memDC, _backcolor)
     ExtTextOut( _memDC, 0, 0, ETO_OPAQUE, rc, "", 0, 0)
     SetBkColor( _memDC, oldclr )
     return 0
 end function
 
-function clsDoubleBuffer.PaintClientRect() as long 
-    return this.PaintRect( @_rc, false )
+function clsDoubleBuffer.PaintClientRect() as long
+    return this.PaintRect( @_rc )
 end function
 
 function clsDoubleBuffer.PaintBorderRect( _
             byval rc as RECT ptr, _
-            byval bHitTest as boolean = false, _
             byval nPenWidth as long = 1 _
             ) as long
-    return this.PaintRectFactory( rc, PS_SOLID, nPenWidth, 0, bHitTest )
+    return this.PaintRectFactory( rc, PS_SOLID, nPenWidth, 0 )
 end function
 
 function clsDoubleBuffer.PaintRoundRect( _
             byval rc as RECT ptr, _
-            byval bHitTest as boolean = false, _
             byval nCurvature as long = 20 _
-            ) as long 
-    return this.PaintRectFactory( rc, PS_NULL, 1, nCurvature, bHitTest )
+            ) as long
+    return this.PaintRectFactory( rc, PS_NULL, 1, nCurvature )
 end function
 
 function clsDoubleBuffer.PaintRoundBorderRect( _
             byval rc as RECT ptr, _
-            byval bHitTest as boolean = false, _
             byval nCurvature as long = 20, _
             byval nPenWidth as long = 1 _
-            ) as long 
-    return this.PaintRectFactory( rc, PS_SOLID, nPenWidth, nCurvature, bHitTest )
+            ) as long
+    return this.PaintRectFactory( rc, PS_SOLID, nPenWidth, nCurvature )
 end function
 
 function clsDoubleBuffer.PaintText( _
             byval wszText as DWSTRING, _
             byval rc as RECT ptr, _
-            byval wsStyle as DWORD, _
-            byval bHitTest as boolean = false _
+            byval wsStyle as DWORD _
             ) as long
-    dim as COLORREF forecolor = _forecolor
-    if bHitTest then forecolor = iif( isMouseOverRECT(_hwnd, *rc), _forecolorhot, _forecolor )
-
-    dim as COLORREF oldforecolor = SetTextColor( _memDC, forecolor )
+    dim as COLORREF oldforecolor = SetTextColor( _memDC, _forecolor )
     SetBkMode(_memDC, TRANSPARENT)
 
     dim as HFONT hOldFont
@@ -260,12 +250,11 @@ end function
 function clsDoubleBuffer.PaintIconButton( _
             byval wszText as DWSTRING, _
             byval rc as RECT ptr, _
-            byval bHitTest as boolean = true, _
             byval nCurvature as long = 20 _
             ) as long
-    this.PaintRoundRect( rc, bHitTest, nCurvature )
-    this.PaintText( wszText, rc, DT_CENTER, bHitTest )
-    
+    this.PaintRoundRect( rc, nCurvature )
+    this.PaintText( wszText, rc, DT_CENTER )
+
     function = 0
 end function
 

@@ -123,33 +123,32 @@ function frmMenuBar_WndProc( _
         dim as clsDoubleBuffer b
 
         b.BeginDoubleBuffer(hwnd)
-        b.SetBackColors( ghMenuBar.BackColor, ghMenuBar.BackColor )
+        b.SetBackColor( ghMenuBar.BackColor )
         b.PaintClientRect()
 
         b.SetFont( ghFont(GUIFONT_10) )
         for i as integer = lbound(gMenuBar) to ubound(gMenuBar)
             if i = gActiveMenuBarIndex then
-                b.SetBackColors( ghMenuBar.BackColorHot, ghMenuBar.BackColorHot )
-                b.SetForeColors( ghMenuBar.ForeColorHot, ghMenuBar.ForeColorHot )
+                b.SetColors( ghMenuBar.ForeColorHot, ghMenuBar.BackColorHot )
             else
-                b.SetBackColors( ghMenuBar.BackColor, ghMenuBar.BackColorHot )
-                b.SetForeColors( ghMenuBar.ForeColor, ghMenuBar.ForeColorHot )
+                ' back stays normal; only the TEXT goes hot on hover
+                dim as boolean isHot = isMouseOverRECT( hwnd, gMenuBar(i).rcItem )
+                b.SetColors( iif(isHot, ghMenuBar.ForeColorHot, ghMenuBar.ForeColor), _
+                             ghMenuBar.BackColor )
             end if
             b.PaintRect( @gMenuBar(i).rcItem )
-            b.PaintText( gMenuBar(i).wszText, @gMenuBar(i).rcItem, DT_CENTER, true )
+            b.PaintText( gMenuBar(i).wszText, @gMenuBar(i).rcItem, DT_CENTER )
         next
-        
+
         ' Paint the Update Available message
         if len(gMenuUpdateMessage.wszText) then
             if isMouseOverRECT( hwnd, gMenuUpdateMessage.rcItem ) then
-                b.SetBackColors( ghMenuBar.BackColorHot, ghMenuBar.BackColorHot )
-                b.SetForeColors( ghMenuBar.ForeColorHot, ghMenuBar.ForeColorHot )
+                b.SetColors( ghMenuBar.ForeColorHot, ghMenuBar.BackColorHot )
             else
-                b.SetBackColors( ghMenuBar.BackColor, ghMenuBar.BackColorHot )
-                b.SetForeColors( ghMenuBar.ForeColor, ghMenuBar.ForeColorHot )
+                b.SetColors( ghMenuBar.ForeColor, ghMenuBar.BackColor )
             end if
             b.PaintRect( @gMenuUpdateMessage.rcItem )
-            b.PaintText( gMenuUpdateMessage.wszText, @gMenuUpdateMessage.rcItem, DT_CENTER, true )
+            b.PaintText( gMenuUpdateMessage.wszText, @gMenuUpdateMessage.rcItem, DT_CENTER )
         end if
             
         b.EndDoubleBuffer()

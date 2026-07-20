@@ -190,13 +190,13 @@ function frmListViewVScroll_WndProc( _
             dim as clsDoubleBuffer b
 
             b.BeginDoubleBuffer(hwnd)
-            b.SetBackColors( pData->BackColorScrollBar, pData->BackColorScrollBar )
+            b.SetBackColor( pData->BackColorScrollBar )
             b.PaintClientRect()
             if IsRectEmpty( @pData->VScrollData.rc ) = 0 then
                 b.SetPenColor( pData->DividerColorScrollBar )
                 b.PaintLine( 1, b.rcClient.left, b.rcClient.top, b.rcClient.left, b.rcClient.bottom )
             end if    
-            b.SetBackColors( pData->ForeColorScrollBar, pData->ForeColorScrollBar )
+            b.SetBackColor( pData->ForeColorScrollBar )
             b.PaintRect( @pData->VScrollData.rc )
 
             b.EndDoubleBuffer()
@@ -262,8 +262,8 @@ function frmListViewHeader_SubclassProc ( _
             dim as LISTVIEW_DATA_TYPE ptr pData = frmListView_GetPointer( GetParent(hWin) )
             if pData then 
                 ' Set default fore and back colors
-                b.SetForeColors( pData->ForeColorHot, pData->ForeColorHot )
-                b.SetBackColors( pData->BackColor, pData->BackColorHot )
+                b.SetForeColor( pData->ForeColorHot )
+                b.SetBackColor( pData->BackColor )
 
                 ' Clear the entire back client area
                 b.PaintClientRect()
@@ -432,8 +432,8 @@ function frmListView_OnDrawItem( _
         if pData then 
             dim as COLORREF backclr = iif( IsHot, pData->BackColorHot, pData->BackColor)
             dim as COLORREF foreclr = iif( IsHot, pData->ForeColorHot, pData->ForeColorHot)
-            b.SetForeColors(foreclr, foreclr)
-            b.SetBackColors(backclr, backclr)
+            b.SetForeColor( foreclr )
+            b.SetBackColor( backclr )
 
             ' Create our rect that works with the entire line
             dim as RECT rc
@@ -527,8 +527,8 @@ function frmListView_OnPaint( byval hwnd as HWND ) as LRESULT
     b.BeginDoubleBuffer(hwnd)
 
     ' Set default fore and back colors
-    b.SetForeColors( ghOutput.ForeColor, ghOutput.ForeColor )
-    b.SetBackColors( ghOutput.BackColor, ghOutput.BackColor )
+    b.SetForeColor( ghOutput.ForeColor )
+    b.SetBackColor( ghOutput.BackColor )
 
     ' Clear the entire back client area
     b.PaintClientRect()
