@@ -12,6 +12,8 @@
 '    GNU General Public License for more details.
 
 #include once "modMenus.bi"
+#include once "CVScrollBar.bi"    ' required by CListBox.bi
+#include once "CListBox.bi"       ' CListBox_GetSelCount (CListBox.inc is included later)
 
 ' ========================================================================================
 ' EnableTopMenuItem: basically my internal version of the EnableMenuItem api
@@ -347,7 +349,7 @@ function AddProjectFileTypesToMenu( _
     ' Some of our available choices are affected by the fact that multiple selections
     ' in the explorer listbox may exist. In that case, we do a default FileType selection
     ' only when the selection count is 1
-    dim as long nSelCount = SendMessage( HWND_FRMEXPLORER_LISTBOX, LB_GETSELCOUNT, 0, 0 )
+    dim as long nSelCount = CListBox_GetSelCount( HWND_FRMEXPLORER )
     dim as long bAllowCheckMark = true
     if (fExplorerTreeview = true) and (nSelCount > 1) then bAllowCheckMark = false 
     if bAllowCheckMark then
@@ -560,7 +562,7 @@ function CreateExplorerContextMenu(byval pDoc as clsDocument ptr ) as HMENU
     ' Some of our available chocies are affected by the fact that multiple selections
     ' in the explorer listbox may exist. In that case, we allow options like "Close"
     ' and also don't set a selected FileType.
-    dim as long nSelCount = SendMessage( HWND_FRMEXPLORER_LISTBOX, LB_GETSELCOUNT, 0, 0 )
+    dim as long nSelCount = CListBox_GetSelCount( HWND_FRMEXPLORER )
 
     ' if pDoc is zero then most likely we have right clicked on a Project or FILES root node
     if pDoc then

@@ -91,13 +91,20 @@ function frmEditorHScroll_WndProc( _
             return 0
 
             
-        case WM_LBUTTONUP   
+        case WM_LBUTTONUP
             gApp.SuppressNotify = false   ' allow SCN_UPDATEUI
             gApp.bHorizDragActive = false
             prev_pt.x = 0
             prev_pt.y = 0
             ReleaseCapture
-            
+
+        case WM_CAPTURECHANGED
+            ' Capture was lost or stolen mid-drag so WM_LBUTTONUP may never arrive:
+            ' cancel the drag here or bHorizDragActive stays stuck true and a later
+            ' buttonless mouse move over the scrollbar drags the thumb.
+            gApp.SuppressNotify = false   ' allow SCN_UPDATEUI
+            gApp.bHorizDragActive = false
+
         case WM_ERASEBKGND
             return true
 

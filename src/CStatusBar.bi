@@ -313,6 +313,7 @@ declare function CStatusBar_GetText( byval hStatusBarControl as HWND, byval idx 
 declare function CStatusBar_SetText( byval hStatusBarControl as HWND, byval idx as integer, byval Text as DWSTRING ) as boolean
 declare function CStatusBar_GetItemData( byval hStatusBarControl as HWND, byval idx as integer ) as integer
 declare function CStatusBar_SetItemData( byval hStatusBarControl as HWND, byval idx as integer, byval itemData as integer ) as boolean
+declare function CStatusBar_GetItemRect( byval hStatusBarControl as HWND, byval idx as integer ) as RECT
 
 ' ----------------------------------------------------------------------------------------
 ' Layout.
@@ -352,6 +353,7 @@ declare function CStatusBar_GetBackColor( byval hStatusBarControl as HWND ) as C
 declare function CStatusBar_SetBackColor( byval hStatusBarControl as HWND, byval clr as COLORREF ) as COLORREF
 declare function CStatusBar_GetFont( byval hStatusBarControl as HWND ) as HFONT
 declare function CStatusBar_SetFont( byval hStatusBarControl as HWND, byval hFont as HFONT ) as boolean
+declare function CStatusBar_GetTooltipHandle( byval hStatusBarControl as HWND ) as HWND
 declare sub      CStatusBar_SetHoverTime( byval hStatusBarControl as HWND, byval milliseconds as integer )
 
 ' ----------------------------------------------------------------------------------------

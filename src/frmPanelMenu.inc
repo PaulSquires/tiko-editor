@@ -53,7 +53,7 @@ sub frmPanelMenu_PaintCallback( byval p as CSTATUSBAR_PAINTINFO ptr )
     end if
     p->b->SetColors(foreclr, backclr)
 
-    ' If this is the Spring panel thenwe don't want any highlighting because it is
+    ' If this is the Spring panel then we don't want any highlighting because it is
     ' just a placeholder that separates the left and right icons.
     if CStatusBar_GetItemData(p->hStatusBar, p->itemID) = 0 then
         p->b->SetColors(ghPanel.BackColor, ghPanel.BackColor)

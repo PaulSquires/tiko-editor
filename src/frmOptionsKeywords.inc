@@ -122,7 +122,7 @@ function frmOptionsKeywords_Show( byval hwndParent as HWND ) as LRESULT
         ES_MULTILINE or ES_AUTOVSCROLL or ES_WANTRETURN, _
         WS_EX_CLIENTEDGE or WS_EX_LEFT or WS_EX_LTRREADING)
     pWindow->SetControlSubclass(hTextBox, @frmOptionsKeywordsTextBox_SubclassProc, IDC_FRMOPTIONSKEYWORDS_TXTKEYWORDS, @pWindow)        
-        
+    
     SendMessage( hTextBox, EM_SETLIMITTEXT, (1024 * 100), 0 )    ' max 100K text   
     
     dim as HFONT hFont = pWindow->CreateFont("Courier New", 9)

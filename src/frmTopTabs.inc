@@ -178,28 +178,26 @@ function frmTopTabs_MessageCallback( byval m as CTabBar_MESSAGEINFO ptr ) as boo
             end if
             return false
 
-'    case WM_LBUTTONDBLCLK
-'        ' If doubleclicking in the unused client area of the tab control then 
-'        ' add a new file. We do not track the actual unused area, so we need to
-'        ' test whether the double click occured over a Tab or over the Action Panel. 
-'        if ( getHotTabHitTest(hwnd) = -1 ) andalso _
-'           ( isMouseOverRect(hwnd, gTTabCtl.rcActionPanel) = false ) then
-'           PostMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(IDM_FILENEW, 0), 0 )
-'        end if
+        case WM_LBUTTONDBLCLK
+            ' If doubleclicking in the unused client area of the tab control then 
+            ' add a new file. We do not track the actual unused area, so we need to
+            ' test whether the double click occured over a Tab or over the Action Panel. 
+'            if getHotTabHitTest(hwnd) = -1 then
+            if m->idx = -1 then
+               PostMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(IDM_FILENEW, 0), 0 )
+            end if
         
-'    case WM_RBUTTONDOWN
-'            ' Create the popup menu
-'            curr_idxHot = getHotTabHitTest( hwnd )
-'            if gTTabCtl.IsSafeIndex(curr_idxHot) = false then exit function
-'            gTTabCtl.SetFocusTab(curr_idxHot)
-'            dim as point pt
-'            dim as HMENU hPopupMenu = CreateTopTabCtlContextMenu(curr_idxHot)
-'            GetCursorPos @pt
-'            TrackPopupMenu(hPopUpMenu, 0, pt.x, pt.y, 0, HWND_FRMMAIN, byval Null)
-'            DestroyMenu hPopUpMenu
-'            Return True   ' prevent further processing that leads to WM_CONTEXTMENU
-'        end if
-
+        case WM_RBUTTONDOWN
+            if m->idx = -1 then return false
+            ' Create the popup menu
+            gTTabCtl.SetFocusTab(m->idx)
+            if gTTabCtl.IsValidTab(m->idx) = false then return false
+            dim as point pt
+            dim as HMENU hPopupMenu = CreateTopTabCtlContextMenu(m->idx)
+            GetCursorPos @pt
+            TrackPopupMenu( hPopUpMenu, 0, pt.x, pt.y, 0, HWND_FRMMAIN, byval Null )
+            DestroyMenu hPopUpMenu
+            return true   ' prevent further processing that leads to WM_CONTEXTMENU
         
     end select
 

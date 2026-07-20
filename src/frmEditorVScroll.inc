@@ -85,30 +85,36 @@ function frmEditorVScroll_WndProc( _
         case WM_LBUTTONDOWN
             dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
             if pDoc then
-                gApp.SuppressNotify = true   ' prevent SCN_UPDATEUI
                 dim as point pt: GetCursorPos( @pt )
                 frmEditorVScroll_calcVThumbRect(pDoc)   ' in client coordinates
                 dim as RECT rc = gEditorVScroll(idxWindow).rc ' covert copy to screen coordinates
                 MapWindowPoints( HWND_FRMEDITOR_VSCROLLBAR(idxWindow), HWND_DESKTOP, cast(point ptr, @rc), 2)
                 if PtInRect( @rc, pt ) then
+                    ' Suppress only while the drag is active; cleared in WM_LBUTTONUP
+                    ' and WM_CAPTURECHANGED (capture can be stolen mid-drag).
+                    gApp.SuppressNotify = true   ' prevent SCN_UPDATEUI
                     prev_pt = pt
                     gApp.bDragActive = true
                     SetCapture( hwnd )
                 else
-                    ' we have clicked on a PageUp or PageDn
-                    dim as long nTopIndex = SendMessage( pDoc->hWindow(idxWindow), SCI_GETFIRSTVISIBLELINE, 0, 0 ) 
+                    ' we have clicked on a PageUp or PageDn. No capture is taken here so
+                    ' WM_LBUTTONUP is not guaranteed to arrive - suppress only around the
+                    ' reposition itself, never across the click.
+                    gApp.SuppressNotify = true   ' prevent SCN_UPDATEUI
+                    dim as long nTopIndex = SendMessage( pDoc->hWindow(idxWindow), SCI_GETFIRSTVISIBLELINE, 0, 0 )
                     if pt.y < rc.top then
                         nTopIndex = max( nTopIndex - gEditorVScroll(idxWindow).linesPerPage, 0 )
-                        SendMessage( pDoc->hWindow(idxWindow), SCI_SETFIRSTVISIBLELINE, nTopIndex, 0 ) 
+                        SendMessage( pDoc->hWindow(idxWindow), SCI_SETFIRSTVISIBLELINE, nTopIndex, 0 )
                         frmEditorVScroll_calcVThumbRect(pDoc)   ' in client coordinates
                         AfxRedrawWindow( HWND_FRMEDITOR_VSCROLLBAR(idxWindow) )
                     elseif pt.y > rc.bottom then
                         dim as long nMaxTopIndex = gEditorVScroll(idxWindow).numLines - gEditorVScroll(idxWindow).linesPerPage
                         nTopIndex = min( nTopIndex + gEditorVScroll(idxWindow).linesPerPage, nMaxTopIndex )
-                        SendMessage( pDoc->hWindow(idxWindow), SCI_SETFIRSTVISIBLELINE, nTopIndex, 0 ) 
+                        SendMessage( pDoc->hWindow(idxWindow), SCI_SETFIRSTVISIBLELINE, nTopIndex, 0 )
                         frmEditorVScroll_calcVThumbRect(pDoc)   ' in client coordinates
                         AfxRedrawWindow( HWND_FRMEDITOR_VSCROLLBAR(idxWindow) )
                     end if
+                    gApp.SuppressNotify = false   ' allow SCN_UPDATEUI
                 end if
             end if
             
@@ -144,13 +150,21 @@ function frmEditorVScroll_WndProc( _
                 end if
             end if
             
-        case WM_LBUTTONUP   
+        case WM_LBUTTONUP
             gApp.SuppressNotify = false   ' allow SCN_UPDATEUI
             gApp.bDragActive = false
             prev_pt.x = 0
             prev_pt.y = 0
             ReleaseCapture
-            
+
+        case WM_CAPTURECHANGED
+            ' Capture was lost or stolen (Alt+Tab, another SetCapture) so WM_LBUTTONUP
+            ' may never arrive: cancel the drag here or SuppressNotify stays stuck true
+            ' and every SCN_ notification (autoinsert, autoindent, UI updates) goes dead.
+            ' Also fires from our own ReleaseCapture above; the reset is idempotent.
+            gApp.SuppressNotify = false   ' allow SCN_UPDATEUI
+            gApp.bDragActive = false
+
         case WM_ERASEBKGND
             return true
 

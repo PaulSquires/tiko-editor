@@ -126,7 +126,6 @@ function AttemptAutoInsert() as Long
     Dim as long nLine, nCurLine, curPos, LineLen, nFoldLevel, nSpaces, IndentSize, i
     Dim as string strFill, strTemp, strCurLine, strPrevLine, strPrevLineOrig, strRightText
         
-
     Dim pDoc As clsDocument Ptr 
 
     pDoc = gTTabCtl.GetActiveDocumentPtr()

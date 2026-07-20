@@ -199,6 +199,28 @@ end function
 
 
 ' ========================================================================================
+' Retrieve specified idx itemData from the custom statusbar control.
+' ========================================================================================
+function CStatusBar_GetItemRect( byval hStatusBarControl as HWND, byval idx as integer ) as RECT
+    dim as RECT rc
+    dim as CSTATUSBAR ptr pStatus = GetStatusBarPointer(hStatusBarControl)
+    if pStatus = null then return rc
+    if pStatus->IsValidPanel(idx) = false then return rc
+    return pStatus->GetPanel(idx)->rc
+end function
+
+
+' ========================================================================================
+' Retrieve the font used to measure panel text.
+' ========================================================================================
+function CStatusBar_GetTooltipHandle( byval hStatusBarControl as HWND ) as HWND
+    dim as CSTATUSBAR ptr pStatus = GetStatusBarPointer(hStatusBarControl)
+    if pStatus = null then return 0
+    return pStatus->hTooltip
+end function
+
+
+' ========================================================================================
 ' Retrieve the font used to measure panel text.
 ' ========================================================================================
 function CStatusBar_GetFont( byval hStatusBarControl as HWND ) as HFONT

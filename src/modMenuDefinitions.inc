@@ -117,6 +117,19 @@ Function getMenuText( byval idMenu as long ) As DWSTRING
         case IDM_FINDNEXT, IDM_FINDNEXTACCEL     
              wszText = L(44, "Find Next")
 
+        case IDM_GOTOPREVTAB: wszText = L(431, "Scroll Tabs Left")
+        case IDM_GOTONEXTTAB: wszText = L(432, "Scroll Tabs Right")
+        case IDM_TABSLIST: wszText = L(430, "Tab List")              
+        case IDM_EDITORSPLIT
+            ' If CTRL is pressed then use the top/bottom split, otherwise
+            ' use the left/right split icon.
+            if (wszIconSplitEditor = wszIconSplitTopBottom) then
+                wszText = L(070,"Toggle Split Editor Top/Bottom")
+            else    
+                wszText = L(069,"Toggle Split Editor Left/Right") & _
+                              chr(13,10) & "[Alt]: " & L(071,"Split Top/Bottom")
+            end if
+
         case IDM_SEARCHSYMBOL: wszText = L(37,"Search Symbol") & "..."
         case IDM_FIND: wszText = L(43,"Find") & "..."
         case IDM_FINDINPROJECT: wszText = L(256,"Find in Project") & "..."

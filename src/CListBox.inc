@@ -1556,6 +1556,9 @@ function CListBox_Create( byval hWndParent as HWND, byval CtrlID as integer ) as
             pWindow->Create( hWndParent, "", @CListBox_WndProc, _
             0, 0, 0, 0, WS_CHILD or WS_CLIPSIBLINGS or WS_CLIPCHILDREN _
             )
+    ' CtrlID becomes the control window's id (GWLP_ID) so hosts can locate the
+    ' control with GetDlgItem, same contract as CVScrollBar/CStatusBar/CTabBar.
+    SetWindowLongPtr( hForm, GWLP_ID, CtrlID )
     ' Enable double-click messages (WM_LBUTTONDBLCLK) on the container's window
     ' class, preserving the class's existing styles rather than replacing them.
     pWindow->ClassStyle = pWindow->ClassStyle or CS_DBLCLKS

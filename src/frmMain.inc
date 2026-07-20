@@ -480,7 +480,9 @@ function frmMain_OnPaint( byval hwnd as HWND ) as LRESULT
     dim as clsDoubleBuffer b
 
     b.BeginDoubleBuffer(hwnd)
+
     b.SetBackColor( ghMain.BackColor )
+
     b.PaintClientRect()
 
     ' Draw any splitter between the two edit windows
@@ -491,6 +493,19 @@ function frmMain_OnPaint( byval hwnd as HWND ) as LRESULT
             b.SetBackColor( ghEditor.Divider )
             b.PaintRect( @pDoc->rcSplitButton )
         end if    
+    end if
+
+    ' If the top tab control is visible then paint the area between the
+    ' right edge of the toptabs menu and the client right edge.
+    if IsWindowVisible( HWND_FRMMAIN_TOPTABSMENU ) then
+        dim as RECT rcMenu = AfxGetWindowRect( HWND_FRMMAIN_TOPTABSMENU )
+        MapWindowPoints( HWND_DESKTOP, HWND_FRMMAIN, cast(POINT ptr, @rcMenu), 2 )
+        rcMenu.left = rcMenu.right
+        rcMenu.right = b.rcClient.right
+        b.SetBackColor( ghTopTabs.BackColor )
+        b.PaintRect( @rcMenu )
+        b.SetPenColor( ghEditor.Divider )
+        b.PaintLine( 2, rcMenu.left, rcMenu.bottom, rcMenu.right, rcMenu.bottom )
     end if
     
     b.EndDoubleBuffer()
@@ -738,7 +753,7 @@ function frmMain_PositionWindows() as LRESULT
                     0, rc.bottom - nHeightStatusBar, rc.right - rc.left, nHeightStatusBar, _
                     SWP_NOZORDER or SWP_SHOWWINDOW ) 
     
-    nLeft = rc.Left 
+    nLeft = rc.left 
     nTop = rc.top + nHeightMenuBar
     
     ' Set the Panel pane into place if applicable
@@ -774,13 +789,14 @@ function frmMain_PositionWindows() as LRESULT
 
     if (gTTabCtl.GetItemCount() > 0) then
         nHeightTabControl = AfxGetWindowHeight(HWND_FRMMAIN_TOPTABS)
+        dim as integer nLeftMenu = rc.right - pWindow->ScaleX(SCROLLBAR_WIDTH_EDITOR) - nWidthTopTabsMenu
         SetWindowPos( HWND_FRMMAIN_TOPTABSMENU, 0, _
-                    nLeft, nTop, _
+                    nLeftMenu, nTop, _
                     nWidthTopTabsMenu, nHeightTabControl, _
                     SWP_SHOWWINDOW or SWP_NOZORDER )
         SetWindowPos( HWND_FRMMAIN_TOPTABS, 0, _
                     nLeft, nTop, _
-                    rc.Right - nWidthTopTabsMenu - nWidthPanel, nHeightTabControl, _
+                    nLeftMenu - nWidthPanel, nHeightTabControl, _
                     SWP_SHOWWINDOW or SWP_NOZORDER )
         nTop += nHeightTabControl
     end if
@@ -1650,6 +1666,7 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
 
     ' Create the main application top tabs control
     frmTopTabs_Show( HWND_FRMMAIN )
+    frmTopTabsMenu_Show( HWND_FRMMAIN ) 
     frmTopTabsInfo_Show( HWND_FRMMAIN )
     frmTopTabsFind_Show( HWND_FRMMAIN )
     frmTopTabsReplace_Show( HWND_FRMMAIN )

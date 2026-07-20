@@ -194,10 +194,11 @@ end function
 ''
 function clsTopTabCtl.NextTab() as long
     ' Invoked by Ctl+TAB
-    if CTabBar_CanNavigate( this.hWindow, +1 ) then
-        gTTabCtl.TabFocusLost( gTTabCtl.GetCurSel() )
-        dim as long idx = CTabBar_Navigate( this.hWindow, +1 )
-        return this.SetFocusTab(idx)
+    dim as integer nCurSel = gTTabCtl.GetCurSel()
+    dim as integer nNewSel = nCurSel + 1
+    if nNewSel <= gTTabCtl.GetItemCount - 1 then
+        this.TabFocusLost( nCurSel )
+        return this.SetFocusTab( nNewSel )
     end if
     return -1    
 end function
@@ -206,10 +207,11 @@ end function
 ''
 function clsTopTabCtl.PrevTab() as long
     ' Invoked by Ctl+Shift+TAB
-    if CTabBar_CanNavigate( this.hWindow, -1 ) then
-        gTTabCtl.TabFocusLost( gTTabCtl.GetCurSel() )
-        dim as long idx = CTabBar_Navigate( this.hWindow, -1 )
-        return this.SetFocusTab(idx)
+    dim as integer nCurSel = gTTabCtl.GetCurSel()
+    dim as integer nNewSel = nCurSel - 1
+    if nNewSel >= 0 then
+        this.TabFocusLost( nCurSel )
+        return this.SetFocusTab( nNewSel )
     end if
     return -1    
 end function

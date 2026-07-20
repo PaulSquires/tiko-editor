@@ -15,42 +15,6 @@
 
 
 ' ========================================================================================
-' Calculate the RECT that holds the client coordinates of the scrollbar's vertical thumb
-' Returns True if RECT is not empty
-' ========================================================================================
-function frmSearchSymbolVScroll_calcVThumbRect() as boolean
-    dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMSEARCHSYMBOL)
-    if pWindow = 0 then exit function
-
-    ' calculate the vertical scrollbar in client coordinates
-    SetRectEmpty( @gSearchSymbolVScroll.rc )
-    
-    dim as long nTopIndex = SendMessage( gSearchSymbolVScroll.hListBox, LB_GETTOPINDEX, 0, 0 ) 
-
-    dim as RECT rc 
-    with gSearchSymbolVScroll
-        GetClientRect( gSearchSymbolVScroll.hListBox, @rc )
-        .listBoxHeight = rc.bottom - rc.top
-        .itemHeight = SendMessage( gSearchSymbolVScroll.hListBox, LB_GETITEMHEIGHT, 0, 0 )
-        .numItems = ListBox_GetCount( gSearchSymbolVScroll.hListBox ) 
-        .itemsPerPage = .listBoxHeight / .itemHeight
-        .thumbHeight = (.itemsPerPage / .numItems) * .listBoxHeight
-        GetClientRect( HWND_FRMSEARCHSYMBOL_VSCROLLBAR, @rc )
-        .rc.Left = rc.Left
-        .rc.top = rc.top + ((nTopIndex / .numItems) * .listBoxHeight)
-        .rc.Right = rc.right
-        .rc.bottom = .rc.top + .thumbHeight
-        if .numItems < .itemsPerPage then 
-            SetRectEmpty( @gSearchSymbolVScroll.rc )
-            return true
-        end if
-    end with
-
-    function = 0
-end function
-
-
-' ========================================================================================
 ' Fastest descending sort for this small, string-bearing udt array
 ' uses swap (bitwise exchange, no string realloc) instead of "="
 ' adaptive insertion sort: near-sorted input -> near O(n)
@@ -91,6 +55,7 @@ function frmSearchSymbol_DoSearch( byval hwndCtl as HWND ) as long
     for i as long = 0 to nFiles - 1
         arrFiles(i) = FilenameOriginalCase( arrFiles(i) )
     next
+
     if nFiles > 0 then QuickSortFilenames( arrFiles(), 0, nFiles - 1 )
     for f as long = 0 to nFiles - 1
         dim positions(any) as uinteger
@@ -161,23 +126,19 @@ function frmSearchSymbol_DoSearch( byval hwndCtl as HWND ) as long
     
     dim as HWND hList = GetDlgItem( HWND_FRMSEARCHSYMBOL, IDC_FRMSEARCHSYMBOL_LISTBOX )
 
-   ' tell the virtual listbox how many rows exist now
-    SendMessage( hList, LB_SETCOUNT, gSymbolsCount, 0 )
+    ShowWindow( hList, SW_HIDE )
+    for i as integer = 0 to gSymbolsCount - 1
+        CListBox_AddString( hList, gSymbols(i).wszCaption, i )
+    next
+    ShowWindow( hList, SW_SHOW )
     
-    ShowWindow( hList, iif(gSymbolsCount = 0, SW_HIDE, SW_SHOW) )
-    AfxRedrawWindow( HWND_FRMSEARCHSYMBOL )
-    
-    ' If we symbols in the list then select the first entry if the text is 
+    ' If we have symbols in the list then select the first entry if the text is 
     ' a perfect match.
     if gSymbolsCount > 0 then
         if gSymbols(0).result = SCORE_MAX then
-            ListBox_SetCurSel( hList, 0 )
+            CListBox_SetCurSel( hList, 0 )
         end if
-        ' Always redraw regardless of whether an exact match
-        AfxRedrawWindow( hList )
     end if    
-    frmSearchSymbolVScroll_calcVThumbRect()
-    AfxRedrawWindow( HWND_FRMSEARCHSYMBOL_VSCROLLBAR )
 
     return 0
 end function
@@ -200,108 +161,6 @@ function frmSearchSymbol_GotoSymbol( byval idx as long ) as long
     
     SendMessage( HWND_FRMSEARCHSYMBOL, WM_CLOSE, 0, 0 )
     return 0
-end function
-
-
-' ========================================================================================
-' frmSearchSymbolVScroll Window procedure
-' ========================================================================================
-function frmSearchSymbolVScroll_WndProc( _
-            byval hwnd   as HWND, _
-            byval uMsg   as UINT, _
-            byval wParam as WPARAM, _
-            byval lParam as LPARAM _
-            ) as LRESULT
-
-    static as point prev_pt   ' screen pt.y cursor position
-
-    select case uMsg
-        case WM_NCDESTROY
-            ' delete the allocated memory for window
-            dim as CWindow ptr pWindow = AfxCWindowPtr(hwnd)
-            if pWindow then delete(pWindow)
-            HWND_FRMSEARCHSYMBOL_VSCROLLBAR = 0
-            return 0
-
-        case WM_LBUTTONDOWN
-            dim as point pt: GetCursorPos( @pt )
-            frmSearchSymbolVScroll_calcVThumbRect()   ' in client coordinates
-            dim as RECT rc = gSearchSymbolVScroll.rc ' covert copy to screen coordinates
-            MapWindowpoints( HWND_FRMSEARCHSYMBOL_VSCROLLBAR, HWND_DESKTOP, cast(point ptr, @rc), 2)
-            if PtInRect( @rc, pt ) then
-                prev_pt = pt
-                gApp.bDragActive = true
-                SetCapture( hwnd )
-            else
-                ' we have clicked on a PageUp or PageDn
-                dim as long nTopIndex = SendMessage( gSearchSymbolVScroll.hListBox, LB_GETTOPINDEX, 0, 0 ) 
-                if pt.y < rc.top then
-                    nTopIndex = max( nTopIndex - gSearchSymbolVScroll.itemsPerPage, 0 )
-                    SendMessage( gSearchSymbolVScroll.hListBox, LB_SETTOPINDEX, nTopIndex, 0 ) 
-                    frmSearchSymbolVScroll_calcVThumbRect()   ' in client coordinates
-                    AfxRedrawWindow( HWND_FRMSEARCHSYMBOL_VSCROLLBAR )
-                    AfxRedrawWindow( gSearchSymbolVScroll.hListBox )
-                elseif pt.y > rc.bottom then
-                    dim as long nMaxTopIndex = gSearchSymbolVScroll.numItems - gSearchSymbolVScroll.itemsPerPage
-                    nTopIndex = min( nTopIndex + gSearchSymbolVScroll.itemsPerPage, nMaxTopIndex )
-                    SendMessage( gSearchSymbolVScroll.hListBox, LB_SETTOPINDEX, nTopIndex, 0 ) 
-                    frmSearchSymbolVScroll_calcVThumbRect()   ' in client coordinates
-                    AfxRedrawWindow( HWND_FRMSEARCHSYMBOL_VSCROLLBAR )
-                    AfxRedrawWindow( gSearchSymbolVScroll.hListBox )
-                end if
-            end if
-            
-        case WM_MOUSEMOVE
-            if gApp.bDragActive then
-                dim as point pt: GetCursorPos( @pt )
-                if pt.y <> prev_pt.y then 
-                    dim as long delta = pt.y - prev_pt.y 
-                    dim as RECT rc: GetClientRect( HWND_FRMSEARCHSYMBOL_VSCROLLBAR, @rc )
-
-                    gSearchSymbolVScroll.rc.top = max(0, gSearchSymbolVScroll.rc.top + delta)
-                    gSearchSymbolVScroll.rc.top = min(gSearchSymbolVScroll.rc.top, rc.bottom-gSearchSymbolVScroll.thumbHeight)
-                    gSearchSymbolVScroll.rc.bottom = gSearchSymbolVScroll.rc.top + gSearchSymbolVScroll.thumbHeight
-
-                    prev_pt = pt
-                    
-                    dim as long nPrevTopIndex = SendMessage( gSearchSymbolVScroll.hListBox, LB_GETTOPINDEX, 0, 0 ) 
-                    dim as long nLastIndex = (gSearchSymbolVScroll.rc.bottom / rc.bottom) * gSearchSymbolVScroll.numItems
-                    dim as long nTopIndex = nLastIndex - gSearchSymbolVScroll.itemsPerPage
-                    if nTopIndex <> nPrevTopIndex then
-                        SendMessage( gSearchSymbolVScroll.hListBox, LB_SETTOPINDEX, nTopIndex, 0 ) 
-                        AfxRedrawWindow( gSearchSymbolVScroll.hListBox )
-                    end if   
-                    AfxRedrawWindow( HWND_FRMSEARCHSYMBOL_VSCROLLBAR )
-                end if
-            end if
-            
-        case WM_LBUTTONUP   
-            gApp.bDragActive = false
-            prev_pt.x = 0
-            prev_pt.y = 0
-            ReleaseCapture
-        
-        case WM_ERASEBKGND
-            return true
-            
-        case WM_PAINT
-            dim as clsDoubleBuffer b
-
-            b.BeginDoubleBuffer(hwnd)
-            b.SetBackColor( ghPanel.BackColorScrollBar )
-            b.PaintClientRect()
-            b.SetBackColor( ghPanel.ForeColorScrollBar )
-            b.PaintRect( @gSearchSymbolVScroll.rc )
-
-            b.EndDoubleBuffer()
-
-            return 0
-
-    end select
-
-    ' for messages that we don't deal with
-    function = DefWindowProc( HWnd, uMsg, wParam, lParam )
-
 end function
 
 
@@ -405,15 +264,13 @@ Function frmSearchSymbol_RichEdit_SubclassProc ( _
             dim as HWND hList = GetDlgItem( HWND_FRMSEARCHSYMBOL, IDC_FRMSEARCHSYMBOL_LISTBOX )        
             select case _wParam
                 case VK_UP
-                    dim as long cur = SendMessage(hList, LB_GETCURSEL, 0, 0)
-                    if cur > 0 then SendMessage(hList, LB_SETCURSEL, cur - 1, 0)
-                    AfxRedrawWindow(hList)
+                    dim as integer cur = CListBox_GetCurSel(hList)
+                    if cur > 0 then CListBox_SetCurSel( hList, cur - 1 )
                     return 0
 
                 case VK_DOWN
-                    dim as long cur = SendMessage(hList, LB_GETCURSEL, 0, 0)
-                    if (cur < gSymbolsCount - 1) then SendMessage(hList, LB_SETCURSEL, cur + 1, 0)
-                    AfxRedrawWindow(hList)
+                    dim as integer cur = CListBox_GetCurSel(hList)
+                    if (cur < gSymbolsCount - 1) then CListBox_SetCurSel( hList, cur + 1 )
                     return 0
             end select
             
@@ -426,234 +283,6 @@ Function frmSearchSymbol_RichEdit_SubclassProc ( _
     ' For messages that we don't deal with
     function = DefSubclassProc(hWin, uMsg, _wParam, _lParam)
 
-end function
-
-
-' ========================================================================================
-' frmShowSymbolListBox_SubclassProc
-' ========================================================================================
-function frmSearchSymbolListBox_SubclassProc ( _
-            byval hWin   as HWND, _                 ' // Control window handle
-            byval uMsg   as UINT, _                 ' // Type of message
-            byval _wParam as WPARAM, _               ' // First message parameter
-            byval _lParam as LPARAM, _               ' // Second message parameter
-            byval uIdSubclass as UINT_PTR, _        ' // The subclass ID
-            byval dwRefData as DWORD_PTR _          ' // Pointer to reference data
-            ) as LRESULT
-
-    dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMSEARCHSYMBOL)
-    static as long accumDelta
-    
-    select case uMsg
-
-        Case WM_MOUSEWHEEL
-            ' accumulate delta until scroll one line (up +120, down -120). 
-            ' 120 is the Microsoft default delta
-            dim as long zDelta = GET_WHEEL_DELTA_WPARAM( _wParam )
-            dim as long nTopIndex = SendMessage( hWin, LB_GETTOPINDEX, 0, 0 ) 
-            accumDelta = accumDelta + zDelta
-            if accumDelta >= 120 then       ' scroll up 3 lines
-                nTopIndex = nTopIndex - 3
-                nTopIndex = max( 0, nTopIndex )
-                SendMessage( hWin, LB_SETTOPINDEX, nTopIndex, 0 ) 
-                accumDelta = 0
-'                frmPanel_PositionWindows
-            elseif accumDelta <= -120 then  ' scroll down 3 lines
-                nTopIndex = nTopIndex + 3
-                SendMessage( hWin, LB_SETTOPINDEX, nTopIndex, 0 ) 
-                accumDelta = 0
-'                frmPanel_PositionWindows
-            end if
-
-        Case WM_MOUSEMOVE
-            ' Track that we are over the control in order to catch the 
-            ' WM_MOUSELEAVE events
-            dim tme as TrackMouseEvent
-            tme.cbSize = sizeof(TrackMouseEvent)
-            tme.dwFlags = TME_LEAVE
-            tme.hwndTrack = hWin
-            TrackMouseEvent(@tme) 
-            
-            ' get the item rect that the mouse is over and only invalidate
-            ' that instead of the entire listbox
-            dim as RECT rc
-            dim as long idx = Listbox_ItemFromPoint( hWin, GET_X_LPARAM(_lParam), GET_Y_LPARAM(_lParam)) 
-            ' The return value contains the index of the nearest item in the LOWORD. The HIWORD is zero 
-            ' if the specified point is in the client area of the list box, or one if it is outside the 
-            ' client area.
-            if hiword(idx) <> 1 then
-                AfxRedrawWindow(hWin)
-            end if
-                        
-            
-        case WM_MOUSELEAVE
-            AfxRedrawWindow(hWin)
-            
-
-        case WM_LBUTTONUP
-            dim as RECT rc
-            dim as long idx = Listbox_ItemFromPoint( hWin, GET_X_LPARAM(_lParam), GET_Y_LPARAM(_lParam)) 
-            ' The return value contains the index of the nearest item in the LOWORD. The HIWORD is zero 
-            ' if the specified point is in the client area of the list box, or one if it is outside the 
-            ' client area.
-            if hiword(idx) <> 1 then
-                frmSearchSymbol_GotoSymbol( idx )
-            end if
-
-                
-        case WM_ERASEBKGND
-            ' if the number of lines in the listbox maybe less than the number per page then 
-            ' calculate from last item to bottom of listbox, otherwise calculate based on
-            ' the mod of the lineheight to listbox height so we can color the partial line
-            ' that won't be displayed at the bottom of the list.
-            dim as RECT rc = GetListBoxEmptyClientArea( hWin )
-            if rc.top < rc.bottom then
-                dim as HDC _hDC = cast(HDC, _wParam)
-                PaintRect( _hDC, @rc, ghPanel.BackColor )
-            end if
-            return true
-            
-            
-        Case WM_DESTROY
-            ' REQUIRED: Remove control subclassing
-            RemoveWindowSubclass( hWin, @frmSearchSymbolListBox_SubclassProc, uIdSubclass )
-    end select
-    
-    ' For messages that we don't deal with
-    function = DefSubclassProc( hWin, uMsg, _wParam, _lParam )
-
-end function
-
-
-' ========================================================================================
-' Process WM_MEASUREITEM message for window/dialog: frmSearchSymbol
-' ========================================================================================
-function frmSearchSymbol_OnMeasureItem( _
-            byval hwnd as HWND, _
-            byval lpmis as MEASUREITEMSTRUCT ptr _
-            ) as long
-    ' Set the height of the list box items. 
-    dim pWindow as CWindow ptr = AfxCWindowPtr(hwnd)
-    lpmis->itemHeight = pWindow->ScaleY(24)
-        
-    function = 0
-end function
-
-
-' ========================================================================================
-' Process WM_DRAWITEM message for window/dialog: frmSearchSymbol
-' ========================================================================================
-function frmSearchSymbol_OnDrawItem( _
-            byval hwnd as HWND, _
-            byval lpdis as const DRAWITEMSTRUCT ptr _
-            ) as long
-
-    dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMSEARCHSYMBOL)
-    if pWindow = 0 then exit function
-
-    if lpdis = 0 then exit function
-    
-    if ( lpdis->itemAction = ODA_DRAWENTIRE ) orelse _
-        ( lpdis->itemAction = ODA_SELECT ) orelse _
-        ( lpdis->itemAction = ODA_FOCUS ) then
-
-        dim as clsDoubleBuffer b
-
-        b.BeginDoubleBuffer(lpdis->hwndItem, lpdis->hDC, lpdis->rcItem)
-
-        ' We don't do Hot tracking in this listbox because it can be visually
-        ' confusing for the user. We only highlight the current selection.
-        dim as boolean IsHot = false
-        if ListBox_GetSel(lpdis->hwndItem, lpdis->itemID) then IsHot = true
-
-        dim as COLORREF backclr = iif( IsHot, ghPanel.BackColorHot,  ghPanel.BackColor)
-        dim as COLORREF foreclr = iif( IsHot, ghPanel.ForeColor,  ghPanel.ForeColor)
-        b.SetForeColor( foreclr )
-        b.SetBackColor( backclr )
-
-        ' Create our rect that works with the entire line
-        dim as RECT rc: SetRect( @rc, 0, 0, b.rcClientWidth, b.rcClientHeight )
-        
-        dim as RECT rcIcon = rc 
-        rcIcon.right = rcIcon.left + pWindow->ScaleX(24)
-        
-        dim as RECT rcText = rc 
-        rcText.left = rcIcon.right + pWindow->ScaleX(4)
-        
-        ' Paint the entire background
-        b.PaintRect( @rc )
-
-        dim as COLORREF icon_foreclr
-        dim as COLORREF icon_backclr 
-
-        if lpdis->ItemID > -1 then
-            dim as DWSTRING wszIcon
-            dim as DWSTRING wszCaption = gSymbols(lpdis->ItemID).wszCaption
-
-            select case gSymbols(lpdis->ItemID).id
-                case SearchSymbol.file_symbol
-                    icon_foreclr = ghPanel.ForeColorFilenameIcon
-                    icon_backclr = iif( IsHot, ghPanel.BackColorHot, ghPanel.BackColorFilenameIcon)
-                    wszIcon = wszSearchFile
-
-                case SearchSymbol.function_symbol
-                    icon_foreclr = ghPanel.ForeColorFunctionIcon
-                    icon_backclr = iif( IsHot, ghPanel.BackColorHot, ghPanel.BackColorFunctionIcon)
-                    wszIcon = wszSearchFunction
-
-                case SearchSymbol.type_symbol
-                    icon_foreclr = ghPanel.ForeColorTypeIcon
-                    icon_backclr = iif( IsHot, ghPanel.BackColorHot, ghPanel.BackColorTypeIcon)
-                    wszIcon = iif( gSymbols(lpdis->ItemID).isEnum, wszSearchEnum, wszSearchType )
-            end select
-
-
-            dim as DWSTRING wszChar
-            dim as COLORREF clrChar
-            dim as long idFont
-            dim as RECT rcChar = rcText
-            
-            dim as long nLen = len(wszCaption)
-            
-            for i as long = 0 to nLen - 1
-                ' Default to normal forecolor and font
-                clrChar = ghPanel.ForeColorTextSearch
-                idFont  = GUIFONT_10
-                
-                ' Test mask to see if "1" indicating highlight the letter.
-                if gSymbols(lpdis->ItemID).clrMask[i] = 49 then   ' "1"
-                    clrChar = ghPanel.ForeColorTextSearchHot
-                    idFont  = GUIFONTBOLD_10
-                end if
-
-                b.SetFont( ghFont(idFont) )
-                wszChar = wchr(wszCaption[i])
-                b.PaintChar( wszChar, @rcChar, clrChar )
-
-                ' measure this one character to know how far to advance
-                dim as HFONT hOldFont = SelectObject( lpdis->hDC, ghFont(idFont) ) 
-                dim as SIZE sz
-                GetTextExtentPoint32( lpdis->hDC, wszChar, 1, @sz )
-                rcChar.left += sz.cx
-                rcChar.right += sz.cx
-                SelectObject(lpdis->hDC, hOldFont) 
-            next
-
-            ' Now paint the symbol icon
-            b.SetForeColor( icon_foreclr )
-            b.SetBackColor( icon_backclr )
-            b.SetFont( ghFont(ITALICFONT_10) )
-            b.PaintRect( @rcIcon )
-            b.PaintText( wszIcon, @rcIcon, DT_CENTER )
-            
-        end if
-            
-        b.EndDoubleBuffer()
-
-    end if   
-
-    function = true
-    
 end function
 
 
@@ -694,9 +323,7 @@ function frmSearchSymbol_WndProc( _
             ) as LRESULT
 
     select case uMsg
-        HANDLE_MSG (hwnd, WM_COMMAND,     frmSearchSymbol_OnCommand)
-        HANDLE_MSG (hwnd, WM_MEASUREITEM, frmSearchSymbol_OnMeasureItem)
-        HANDLE_MSG (hwnd, WM_DRAWITEM,    frmSearchSymbol_OnDrawItem)
+        HANDLE_MSG (hwnd, WM_COMMAND, frmSearchSymbol_OnCommand)
 
     case WM_CLOSE
         DestroyWindow hwnd
@@ -754,12 +381,127 @@ end function
 
 
 ' ========================================================================================
+' frmSearchSymbol_PaintCallback
+' ========================================================================================
+sub frmSearchSymbol_PaintCallback( byval p as CLISTBOX_PAINTINFO ptr )
+    dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN)
+    if pWindow = 0 then return 
+
+    ' We don't do Hot tracking in this listbox because it can be visually
+    ' confusing for the user. We only highlight the current selection.
+    dim as COLORREF backclr = iif( p->IsSelected, ghPanel.BackColorHot,  ghPanel.BackColor)
+    dim as COLORREF foreclr = iif( p->IsSelected, ghPanel.ForeColor,  ghPanel.ForeColor)
+    p->b->SetColors( foreclr, backclr )
+
+    ' Create our rect that works with the entire line
+    dim as RECT rc: SetRect( @rc, 0, 0, p->b->rcClientWidth, p->b->rcClientHeight )
+    
+    dim as RECT rcIcon = rc 
+    rcIcon.right = rcIcon.left + pWindow->ScaleX(24)
+    
+    dim as RECT rcText = rc 
+    rcText.left = rcIcon.right + pWindow->ScaleX(4)
+        
+    ' Paint the entire background
+    p->b->PaintRect( @rc )
+
+    dim as COLORREF icon_foreclr
+    dim as COLORREF icon_backclr 
+
+    if p->ItemID > -1 then
+        dim as DWSTRING wszIcon
+        dim as DWSTRING wszCaption = gSymbols(p->ItemID).wszCaption
+
+        select case gSymbols(p->ItemID).id
+            case SearchSymbol.file_symbol
+                icon_foreclr = ghPanel.ForeColorFilenameIcon
+                icon_backclr = iif( p->IsSelected, ghPanel.BackColorHot, ghPanel.BackColorFilenameIcon)
+                wszIcon = wszSearchFile
+
+            case SearchSymbol.function_symbol
+                icon_foreclr = ghPanel.ForeColorFunctionIcon
+                icon_backclr = iif( p->IsSelected, ghPanel.BackColorHot, ghPanel.BackColorFunctionIcon)
+                wszIcon = wszSearchFunction
+
+            case SearchSymbol.type_symbol
+                icon_foreclr = ghPanel.ForeColorTypeIcon
+                icon_backclr = iif( p->IsSelected, ghPanel.BackColorHot, ghPanel.BackColorTypeIcon)
+                wszIcon = iif( gSymbols(p->ItemID).isEnum, wszSearchEnum, wszSearchType )
+        end select
+
+
+        dim as DWSTRING wszChar
+        dim as COLORREF clrChar
+        dim as long idFont
+        dim as RECT rcChar = rcText
+        
+        dim as HWND hList = GetDlgItem( HWND_FRMSEARCHSYMBOL, IDC_FRMSEARCHSYMBOL_LISTBOX )        
+        dim as HDC hDC = GetDC(hList)
+
+        dim as long nLen = len(wszCaption)
+        
+        for i as integer = 0 to nLen - 1
+            ' Default to normal forecolor and font
+            clrChar = ghPanel.ForeColorTextSearch
+            idFont  = GUIFONT_10
+            
+            ' Test mask to see if "1" indicating highlight the letter.
+            if gSymbols(p->ItemID).clrMask[i] = 49 then   ' "1"
+                clrChar = ghPanel.ForeColorTextSearchHot
+                idFont  = GUIFONTBOLD_10
+            end if
+
+            p->b->SetFont( ghFont(idFont) )
+            wszChar = wchr(wszCaption[i])
+            p->b->PaintChar( wszChar, @rcChar, clrChar )
+
+            ' measure this one character to know how far to advance
+            dim as HFONT hOldFont = SelectObject( hDC, ghFont(idFont) ) 
+            dim as SIZE sz
+            GetTextExtentPoint32( hDC, wszChar, 1, @sz )
+            rcChar.left += sz.cx
+            rcChar.right += sz.cx
+            SelectObject(hDC, hOldFont) 
+        next
+
+        ReleaseDC( hList, hDC )
+
+        ' Now paint the symbol icon
+        p->b->SetForeColor( icon_foreclr )
+        p->b->SetBackColor( icon_backclr )
+        p->b->SetFont( ghFont(ITALICFONT_10) )
+        p->b->PaintRect( @rcIcon )
+        p->b->PaintText( wszIcon, @rcIcon, DT_CENTER )
+        
+    end if
+
+end sub
+
+
+' ========================================================================================
+' frmSearchSymbol_MessageCallback
+' ========================================================================================
+function frmSearchSymbol_MessageCallback( byval m as CLISTBOX_MESSAGEINFO ptr ) as boolean
+
+    select case m->uMsg
+             
+        case WM_LBUTTONUP
+            frmSearchSymbol_GotoSymbol( m->idx )
+    
+    end select
+
+    ' Return false to allow to fall to the default windows handler
+    return false
+end function    
+
+
+' ========================================================================================
 ' frmSearchSymbol_Show
 ' ========================================================================================
 function frmSearchSymbol_Show( byval hwndParent as HWND ) as LRESULT
 
     dim pWindow as CWindow ptr = new CWindow
-    
+
     ' Prevent the main form's NC_ACTIVATE from painting it's caption bar as inactive.
     gPrevent_WM_NCACTIVATE = true
 
@@ -767,10 +509,6 @@ function frmSearchSymbol_Show( byval hwndParent as HWND ) as LRESULT
     pWindow->Create( hwndParent, "", @frmSearchSymbol_WndProc, 0, 0, 0, 0, _
         WS_POPUP or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, WS_EX_TOOLWINDOW or WS_EX_TOPMOST )
 
-    dim pWindowPanel as CPanelWindow ptr = New CPanelWindow
-        HWND_FRMSEARCHSYMBOL_VSCROLLBAR = _
-            pWindowPanel->Create( HWND_FRMSEARCHSYMBOL, @frmSearchSymbolVScroll_WndProc, 0, 0, SCROLLBAR_WIDTH_PANEL, 0 )
-        pWindow->ClassStyle = CS_DBLCLKS
 
     ' we use RichEdit controls because regular Edit controls can not easily have
     ' their text vertically centered.
@@ -798,13 +536,18 @@ function frmSearchSymbol_Show( byval hwndParent as HWND ) as LRESULT
     SendMessage( hCtlFind, EM_SETBKGNDCOLOR , 0, cast(LPARAM, ghPanel.BackColorHot) )
     SendMessage( hCtlFind, EM_SETEVENTMASK, 0, cast(LPARAM, ENM_SELCHANGE or ENM_CHANGE) )
 
-    dim as HWND hCtlList
-    hCtlList = _ 
-        pWindow->AddControl("LISTBOX", , IDC_FRMSEARCHSYMBOL_LISTBOX, "", 0, 0, 0, 0, _
-        WS_CHILD or WS_CLIPSIBLINGS or WS_CLIPCHILDREN or _
-        LBS_NOINTEGRALHEIGHT or LBS_OWNERDRAWFIXED or LBS_NOTIFY or LBS_NODATA, _
-        WS_EX_LEFT or WS_EX_RIGHTSCROLLBAR)
-        pWindow->SetControlSubclass(hCtlList, @frmSearchSymbolListBox_SubclassProc, IDC_FRMSEARCHSYMBOL_LISTBOX, @pWindow)
+
+    dim as HWND hCtrlList = CListBox_Create( HWND_FRMSEARCHSYMBOL, IDC_FRMSEARCHSYMBOL_LISTBOX )
+    CListBox_SetPaintCallback( hCtrlList, @frmSearchSymbol_PaintCallback )
+    CListBox_SetMessageCallback( hCtrlList, @frmSearchSymbol_MessageCallback )
+    CListBox_PreventDoubleClick( hCtrlList )
+    CListBox_SetBackColor( hCtrlList, ghPanel.BackColor )
+    CListBox_SetRowHeight( hCtrlList, 24 )
+    CListBox_SetFont( hCtrlList, ghFont(GUIFONT_10) )
+    ' The scrollbar is created/positioned/auto-hidden by the control; we only theme it.
+    CListBox_SetScrollBarWidth( hCtrlList, SCROLLBAR_WIDTH_PANEL )
+    CListBox_SetScrollBarColors( hCtrlList, ghPanel.BackColorScrollBar, _
+                                 ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
 
 
     ' Get the client area of the main window and subtract width of any visible side panel. We
@@ -839,6 +582,7 @@ function frmSearchSymbol_Show( byval hwndParent as HWND ) as LRESULT
 
     GetClientRect( HWND_FRMSEARCHSYMBOL, @rc )
     
+
     ' Reposition the find textbox
     nMargin = pWindow->ScaleY(6)
     nHeight = pWindow->ScaleY( 30 )
@@ -847,20 +591,14 @@ function frmSearchSymbol_Show( byval hwndParent as HWND ) as LRESULT
             nWidth - (nMargin * 2), nHeight, SWP_SHOWWINDOW or SWP_NOZORDER )
     RichEditCenterSingleLineText( hCtlFind )
     SendMessage( hCtlFind, EM_SETMARGINS, EC_LEFTMARGIN, MAKELPARAM(nMargin, 0))
+
     
     ' Reposition the ownerdrawn results listbox 
-    dim as long nVScrollWidth = pWindow->ScaleX(SCROLLBAR_WIDTH_PANEL)
     nTop = (nMargin + nHeight + nMargin)
-    nHeight = (rc.bottom - nMargin - nMargin - nTop)
-    SetWindowPos( hCtlList, 0, nMargin, nTop, _
-            nWidth - nVScrollWidth - (nMargin * 2), nHeight, SWP_SHOWWINDOW or SWP_NOZORDER )
-    ' Reposition the vertical scrollbar
-    gSearchSymbolVScroll.hListBox = hCtlList
-    frmSearchSymbolVScroll_calcVThumbRect()
-    SetWindowPos( HWND_FRMSEARCHSYMBOL_VSCROLLBAR, 0, _
-        nMargin + AfxGetWindowWidth(gSearchSymbolVScroll.hListBox), nTop, _
-        nVScrollWidth, nHeight, SWP_NOZORDER or SWP_SHOWWINDOW )
-    
+    nHeight = (rc.bottom - nMargin - nTop)
+    SetWindowPos( hCtrlList, 0, nMargin, nTop, _
+            nWidth - (nMargin * 2), nHeight, SWP_SHOWWINDOW or SWP_NOZORDER )
+
     
     SetFocus( hCtlFind )    
 
@@ -875,7 +613,7 @@ function frmSearchSymbol_Show( byval hwndParent as HWND ) as LRESULT
             dim as HWND hFind    = GetDlgItem( HWND_FRMSEARCHSYMBOL, IDC_FRMSEARCHSYMBOL_TXTFIND )
             if (hFocus = hFind) then 
                 dim as HWND hList = GetDlgItem( HWND_FRMSEARCHSYMBOL, IDC_FRMSEARCHSYMBOL_LISTBOX )        
-                dim as long cur = SendMessage( hList, LB_GETCURSEL, 0, 0 )
+                dim as integer cur = CListBox_GetCurSel( hList )
                 frmSearchSymbol_GotoSymbol( cur )   ' this will also call WM_CLOSE
             end if
 

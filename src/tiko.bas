@@ -105,6 +105,7 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "frmAbout.inc" 
 #include once "frmPopupMenu.inc"
 #include once "frmTopTabs.inc"
+#include once "frmTopTabsMenu.inc"
 #include once "frmTopTabsInfo.inc"
 #include once "frmTopTabsFind.inc"
 #include once "frmTopTabsReplace.inc"

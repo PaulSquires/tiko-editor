@@ -544,7 +544,7 @@ function Scintilla_OnNotify( _
                 ' new contents of list because the underlying word being typed as changed.
                 ShowAutocompleteList(SCN_AUTOCCHARDELETED)
             end if
-                                    
+                              
         
         case SCN_CHARADDED
             if gApp.SuppressNotify then exit function
@@ -577,7 +577,14 @@ function Scintilla_OnNotify( _
                     pDoc->AutoCompleteType = AUTOCOMPLETE_NONE
                     if PostMessage(HWND_FRMMAIN, MSG_USER_SHOWAUTOCOMPLETE, pNSC->ch, 0) then exit function
 
-                case chr(13)  ' ENTER KEY PRESSED
+                case chr(13), chr(10)  ' ENTER KEY PRESSED
+                    ' Scintilla notifies one SCN_CHARADDED per EOL character, so a CRLF
+                    ' document reports chr(13) then chr(10), while an LF document (EOL
+                    ' mode is auto-detected from the file) reports only chr(10). Act on
+                    ' the chr(10) only in LF mode, otherwise CRLF would insert twice.
+                    if chr(pNSC->ch) = chr(10) then
+                        if SciExec( hEdit, SCI_GETEOLMODE, 0, 0 ) <> SC_EOL_LF then exit function
+                    end if
                     pDoc->AutoCompleteType = AUTOCOMPLETE_NONE
                     AttemptAutoInsert()
                     
