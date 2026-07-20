@@ -13,144 +13,114 @@
 
 ''
 ''  frmEditorHScroll.inc
-''   
+''
+''  The editor's horizontal scrollbars as CHScrollBar instances. Replaces the old
+''  hand-rolled CPanelWindow scrollbar (WndProc + gEditorHScroll ratio state +
+''  gApp.bHorizDragActive): the control owns the thumb geometry, dragging, track
+''  paging with auto-repeat, hover tracking and capture-loss cancellation; this file
+''  only translates between Scintilla's xOffset pixels and the control's range model.
+''
 
 #include once "frmEditorHScroll.bi"
 
-    
+
 ' ========================================================================================
-' frmEditorHScroll Window procedure
+' Measure one view's horizontal extent and push it into its scrollbar, in PIXEL units.
+' total = widest visible line in document space (POINTXFROMPOSITION is view-relative,
+' so xOffset is added back), page = visible text width, pos = xOffset. The total is
+' floored at page+xOffset so a scrolled-right view can always be dragged back to 0
+' even when its visible lines happen to fit (the old code's "xOffset <> 0" show test).
+' Returns the SW_ visibility the bar deserves; showing/hiding stays the CALLER's call.
 ' ========================================================================================
-function frmEditorHScroll_WndProc( _
-            byval hwnd   as HWND, _
-            byval uMsg   as UINT, _
-            byval wParam as WPARAM, _
-            byval lParam as LPARAM _
-            ) as LRESULT
+function frmEditorHScroll_NeedScrollBar( _
+            byval pDoc as clsDocument ptr, _
+            byval idxWindow as long _
+            ) as long
 
-    static as point prev_pt   ' screen pt.y cursor position
-    static as long prev_xOffset
-    dim as long idxWindow = iif( hwnd = HWND_FRMEDITOR_HSCROLLBAR(0), 0, 1 )
+    dim as RECT rc = AfxGetWindowRect( pDoc->hWindow(idxWindow) )
+    MapWindowPoints( HWND_DESKTOP, HWND_FRMMAIN, cast(point ptr, @rc), 2 )
+    dim as long ClientWidth = rc.right - rc.left
 
-    select case uMsg
-        case WM_NCDESTROY
-            ' delete the allocated memory for window
-            dim as CWindow ptr pWindow = AfxCWindowPtr(hwnd)
-            if pWindow then delete(pWindow)
-            if hwnd = HWND_FRMEDITOR_HSCROLLBAR(0) then HWND_FRMEDITOR_HSCROLLBAR(0) = 0
-            if hwnd = HWND_FRMEDITOR_HSCROLLBAR(1) then HWND_FRMEDITOR_HSCROLLBAR(1) = 0
-            return 0
-                
+    ' Visible TEXT area width (client minus the margin columns)
+    dim as long totalMarginWidth = 0
+    for i as long = 0 to SC_MAX_MARGIN - 1
+        totalMarginWidth += SciExec( pDoc->hWindow(idxWindow), SCI_GETMARGINWIDTHN, i, 0 )
+    next
+    dim as long visibleTextWidth = ClientWidth - totalMarginWidth
+    if visibleTextWidth < 0 then visibleTextWidth = 0
 
-        case WM_LBUTTONDOWN
-            dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
-            if pDoc = 0 then exit select
+    dim as long firstVisibleLine = SciExec( pDoc->hWindow(idxWindow), SCI_GETFIRSTVISIBLELINE, 0, 0 )
+    dim as long linesOnScreen    = SciExec( pDoc->hWindow(idxWindow), SCI_LINESONSCREEN, 0, 0 )
+    dim as long lineCount        = SciExec( pDoc->hWindow(idxWindow), SCI_GETLINECOUNT, 0, 0 )
+    dim as long xOffset          = SciExec( pDoc->hWindow(idxWindow), SCI_GETXOFFSET, 0, 0 )
 
-            dim as POINT pt
-            GetCursorPos( @pt )
+    dim as long maxWidth = 0
+    for i as long = 0 to linesOnScreen - 1
+        dim as long docLine = firstVisibleLine + i
+        if docLine >= lineCount then exit for
+        dim as long endPos = SciExec( pDoc->hWindow(idxWindow), SCI_GETLINEENDPOSITION, docLine, 0 )
+        dim as long x = xOffset + SciExec( pDoc->hWindow(idxWindow), SCI_POINTXFROMPOSITION, 0, endPos )
+        if x > maxWidth then maxWidth = x
+    next
 
-            dim as RECT rcClient
-            GetClientRect( hwnd, @rcClient )
+    dim as long nTotal = maxWidth
+    if visibleTextWidth + xOffset > nTotal then nTotal = visibleTextWidth + xOffset
 
-            MapWindowPoints( hwnd, HWND_DESKTOP, cast(point ptr, @rcClient), 2 )
+    CHScrollBar_SetRange( HWND_FRMEDITOR_HSCROLLBAR(idxWindow), _
+                          nTotal, visibleTextWidth, xOffset )
 
-            if PtInRect( @rcClient, pt ) then
-                prev_pt = pt
-                gApp.bHorizDragActive = true
-                SetCapture( hwnd )
-            end if
-
-            
-        case WM_MOUSEMOVE
-            if gApp.bHorizDragActive = false then exit select
-
-            dim as POINT pt
-            GetCursorPos( @pt )
-
-            dim as long delta = pt.x - prev_pt.x
-            if delta = 0 then exit select
-
-            prev_pt = pt
-
-            dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
-            if pDoc = 0 then exit select
-
-            dim as RECT rcClient
-            GetClientRect( hwnd, @rcClient )
-
-            if gEditorHScroll(idxWindow).rc.right + delta < rcClient.right then
-                if gEditorHScroll(idxWindow).ratio = 0 then gEditorHScroll(idxWindow).ratio = 1
-                dim as double docPerPixel = 1 / gEditorHScroll(idxWindow).ratio
-                dim as long xOffset = SciExec( pDoc->hWindow(idxWindow), SCI_GETXOFFSET, 0, 0 )
-                xOffset = xOffset + (delta * docPerPixel)
-                xOffset = max( 0, xOffset )
-                SendMessage( pDoc->hWindow(idxWindow), SCI_SETXOFFSET, xOffset, 0) 
-                AfxRedrawWindow( HWND_FRMEDITOR_HSCROLLBAR(idxWindow) )
-            end if
-
-            return 0
-
-            
-        case WM_LBUTTONUP
-            gApp.SuppressNotify = false   ' allow SCN_UPDATEUI
-            gApp.bHorizDragActive = false
-            prev_pt.x = 0
-            prev_pt.y = 0
-            ReleaseCapture
-
-        case WM_CAPTURECHANGED
-            ' Capture was lost or stolen mid-drag so WM_LBUTTONUP may never arrive:
-            ' cancel the drag here or bHorizDragActive stays stuck true and a later
-            ' buttonless mouse move over the scrollbar drags the thumb.
-            gApp.SuppressNotify = false   ' allow SCN_UPDATEUI
-            gApp.bHorizDragActive = false
-
-        case WM_ERASEBKGND
-            return true
-
-        case WM_PAINT
-            dim as clsDoubleBuffer b
-            b.BeginDoubleBuffer(hwnd)
-
-            ' Paint background
-            b.SetBackColor( ghEditor.BackColorScrollBar )
-            b.PaintClientRect()
-
-            dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
-            if pDoc then
-                dim as long clientWidth = gEditorHScroll(idxWindow).clientWidth
-                dim as long lineWidth   = gEditorHScroll(idxWindow).lineLength
-                dim as long thumbWidth  = 0
-                dim as long thumbLeft   = 0
-
-                if (lineWidth > clientWidth) then 
-                    ' Thumb size proportional to visible area
-                    gEditorHScroll(idxWindow).ratio = clientWidth / lineWidth
-                    thumbWidth = gEditorHScroll(idxWindow).ratio * clientWidth
-
-                    ' Thumb position proportional to xOffset
-                    'if gEditorHScroll(idxWindow).ratio = 0 then gEditorHScroll(idxWindow).ratio = 1
-                    dim as long xOffset = SciExec( pDoc->hWindow(idxWindow), SCI_GETXOFFSET, 0, 0 )
-                    thumbLeft = gEditorHScroll(idxWindow).ratio * xOffset
-                end if
-
-                gEditorHScroll(idxWindow).rc = b.rcClient
-                gEditorHScroll(idxWindow).rc.left = thumbLeft
-                gEditorHScroll(idxWindow).rc.right = thumbLeft + thumbWidth
-
-                b.SetBackColor( ghEditor.ForeColorScrollBar )
-                b.PaintRect( @gEditorHScroll(idxWindow).rc )
-            end if
-
-            b.EndDoubleBuffer()
-            return 0
-
-    end Select
-
-    ' for messages that we don't deal with
-    function = DefWindowProc( hwnd, uMsg, wParam, lParam )
-
+    dim as boolean needHSB = CHScrollBar_NeedsThumb( HWND_FRMEDITOR_HSCROLLBAR(idxWindow) )
+    function = iif( needHSB, SW_SHOWNOACTIVATE, SW_HIDE )
 end function
+
+
+' ========================================================================================
+' Push the current Scintilla horizontal state of BOTH views into the scrollbars --
+' called from the message pump when SCI_GETXOFFSET changes (typing/caret movement can
+' scroll the view sideways without any mouse interaction). SetRange re-derives the
+' thumb and repaints; visibility stays with frmEditorHScroll_DoNeedScrollBar.
+' ========================================================================================
+function frmEditorHScroll_UpdateScrollBars( byval pDoc as clsDocument ptr ) as boolean
+    if pDoc = 0 then exit function
+    for i as long = lbound(pDoc->hWindow) to ubound(pDoc->hWindow)
+        frmEditorHScroll_NeedScrollBar( pDoc, i )
+    next
+    function = 0
+end function
+
+
+' ========================================================================================
+' The user scrolled a scrollbar (thumb drag or track paging): scroll the matching
+' Scintilla view. SuppressNotify brackets the reposition so the synchronous
+' SCN_UPDATEUI it raises is dropped; the scrollbar itself already sits at newPos, so
+' no echo is needed. lastXOffsetPos is synced so the pump's change detector does not
+' immediately re-push the range the control just reported.
+' ========================================================================================
+sub frmEditorHScroll_OnScroll( byval hScrollBar as HWND, byval newPos as integer )
+    dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
+    if pDoc = 0 then exit sub
+    dim as long idxWindow = iif( hScrollBar = HWND_FRMEDITOR_HSCROLLBAR(0), 0, 1 )
+    gApp.SuppressNotify = true
+    SendMessage( pDoc->hWindow(idxWindow), SCI_SETXOFFSET, newPos, 0 )
+    gApp.SuppressNotify = false
+    pDoc->lastXOffsetPos = newPos
+end sub
+
+
+' ========================================================================================
+' Custom paint keeping the old editor scrollbar visuals: flat track, flat thumb, no
+' hover brightening. Reads the ghEditor theme colors live, so a theme switch only
+' needs a repaint.
+' ========================================================================================
+sub frmEditorHScroll_PaintCallback( byval p as CHSCROLLBAR_PAINTINFO ptr )
+    dim as clsDoubleBuffer ptr b = p->b
+    b->SetBackColor( ghEditor.BackColorScrollBar )
+    b->PaintClientRect()
+    if IsRectEmpty( @p->rcThumb ) = 0 then
+        b->SetBackColor( ghEditor.ForeColorScrollBar )
+        b->PaintRect( @p->rcThumb )
+    end if
+end sub
 
 
 ' ========================================================================================
@@ -158,103 +128,43 @@ end function
 ' ========================================================================================
 function frmEditorHScroll_Show( byval hWndParent as HWND ) as LRESULT
 
-    '  Create the main window and child controls
-    dim pWindow as CPanelWindow ptr
-
+    ' No pre-sizing needed (unlike the vertical bars): frmMain's positioning always
+    ' sets the horizontal bars' full rect from ScaleY(SCROLLBAR_HEIGHT) and nothing
+    ' reads the bar height back with AfxGetWindowHeight.
     for i as long = 0 to 1
-        pWindow = new CPanelWindow
-        HWND_FRMEDITOR_HSCROLLBAR(i) = pWindow->Create( hWndParent, _
-            @frmEditorHScroll_WndProc, 0, 0, 0, SCROLLBAR_HEIGHT, _
-            WS_CHILD or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, WS_EX_NOACTIVATE )
+        HWND_FRMEDITOR_HSCROLLBAR(i) = CHScrollBar_Create( hWndParent, _
+                iif( i = 0, IDC_FRMEDITOR_HSCROLLBAR0, IDC_FRMEDITOR_HSCROLLBAR1 ) )
+        CHScrollBar_SetScrollCallback( HWND_FRMEDITOR_HSCROLLBAR(i), @frmEditorHScroll_OnScroll )
+        CHScrollBar_SetPaintCallback( HWND_FRMEDITOR_HSCROLLBAR(i), @frmEditorHScroll_PaintCallback )
     next
-    
+
     function = 0
-    
+
 end function
 
 
 ' ========================================================================================
-' frmEditorHScroll_NeedScrollBar
-' Determine based on visible line lengths if a scrollbar should be displayed
+' Auto-show/auto-hide: the bars appear while the mouse is over an editor view (or the
+' bar itself) and something is scrollable, and disappear otherwise -- except that a
+' bar being actively worked (thumb drag / track auto-repeat, mouse captured) is never
+' hidden mid-gesture: with capture held the cursor legitimately roams outside the bar.
 ' ========================================================================================
-function frmEditorHScroll_NeedScrollBar( _
-            byval pDoc as clsDocument ptr, _
-            byval idxWindow as long _
-            ) as long
-
-    dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN)
-    if pWindow = 0 Then exit function
-
-    dim as RECT rc = AfxGetWindowRect( pDoc->hWindow(idxWindow) )
-    MapWindowPoints( HWND_DESKTOP, HWND_FRMMAIN, cast(point ptr, @rc), 2 )
-    
-    dim as long GetFirstVisibleLine, GetLinesOnScreen
-    dim as long ClientWidth = (rc.right - rc.left)
-    dim as long ClientHeight = (rc.bottom - rc.top)
-
-    dim as long GetXOffset, endPos
-    dim as boolean needHSB = false
-    
-    ' Calculate total margin width
-    dim as long totalMarginWidth = 0
-    for i as long = 0 to SC_MAX_MARGIN - 1
-        totalMarginWidth += SciExec( pDoc->hWindow(idxWindow), SCI_GETMARGINWIDTHN, i, 0 )
-    next
-
-    ' Visible TEXT area width (important) 
-    dim as long visibleTextWidth = clientWidth - totalMarginWidth
-    if visibleTextWidth < 0 then visibleTextWidth = 0
-
-    GetFirstVisibleLine = SciExec( pDoc->hWindow(idxWindow), SCI_GETFIRSTVISIBLELINE, 0, 0)
-    GetLinesOnScreen    = SciExec( pDoc->hWindow(idxWindow), SCI_LINESONSCREEN, 0, 0)
-    
-    dim as long maxWidth = 0
-
-    for i as long = 0 to GetLinesOnScreen - 1
-        dim as long docLine = GetFirstVisibleLine + i
-        
-        ' Safety check
-        if docLine >= SciExec( pDoc->hWindow(idxWindow), SCI_GETLINECOUNT, 0, 0) then exit for
-
-        ' Get end position of this line
-        dim as long endPos = SciExec( pDoc->hWindow(idxWindow), SCI_GETLINEENDPOSITION, docLine, 0)
-
-        ' Convert to X coordinate in pixels
-        dim as long xOffset = SciExec( pDoc->hWindow(idxWindow), SCI_GETXOFFSET, 0, 0 )
-        dim as long x = xOffset + SciExec( pDoc->hWindow(idxWindow), SCI_POINTXFROMPOSITION, 0, endPos)
-
-        if x > maxWidth then maxWidth = x
-
-    next
-
-    GetXOffset = SciExec( pDoc->hWindow(idxWindow), SCI_GETXOFFSET, 0, 0 )
-    if (maxWidth > visibleTextWidth) orelse (GetXOffset <> 0) then 
-        needHSB = true
-    end if
-
-    gEditorHScroll(idxWindow).lineLength = maxWidth
-    gEditorHScroll(idxWindow).clientWidth = visibleTextWidth
-
-    function = iif( needHSB, SW_SHOWNOACTIVATE, SW_HIDE )
-end function
-
-        
 function frmEditorHScroll_DoNeedScrollBar( byval pDoc as clsDocument ptr ) as long
     for i as long = lbound(pDoc->hWindow) to ubound(pDoc->hWindow)
         dim as boolean isVisible = IsWindowVisible( HWND_FRMEDITOR_HSCROLLBAR(i) )
         dim as long curState = iif(isVisible, SW_SHOWNOACTIVATE, SW_HIDE)
         dim as long newState = SW_HIDE
         if isMouseOverWindow( pDoc->hWindow(i) ) orelse _
-            isMouseOverWindow( HWND_FRMEDITOR_HSCROLLBAR(i) ) then 
+            isMouseOverWindow( HWND_FRMEDITOR_HSCROLLBAR(i) ) then
             newState = frmEditorHScroll_NeedScrollBar( pDoc, i )
         end if
-        if gApp.bHorizDragActive = true then newState = SW_SHOWNOACTIVATE
-        if newState <> curState then 
+        if CHScrollBar_IsDragging( HWND_FRMEDITOR_HSCROLLBAR(i) ) then
+            newState = SW_SHOWNOACTIVATE
+        end if
+        if newState <> curState then
             ShowWindow( HWND_FRMEDITOR_HSCROLLBAR(i), newState )
             frmMain_PositionWindows()
         end if
     next
     function = 0
 end function
-    
-    
