@@ -47,8 +47,39 @@ end sub
 
 
 ' ========================================================================================
+' Push the help-text CTextBox scroll state into its CVScrollBar, in LINE units --
+' the CVScrollBar-shaped scroll API the control was built with (GetVScrollInfo ->
+' SetRange). Called from the textbox's ScrollChangedCallback (typing can't happen --
+' read-only -- but wheel scrolling and programmatic SetText both fire it) and from
+' PositionWindows (a resize changes the lines-per-page).
+' ========================================================================================
+function frmHelpViewer_UpdateTextScrollBar() as boolean
+    if IsWindow( HWND_FRMHELPVIEWER_VSCROLLBAR2 ) = 0 then exit function
+    dim as integer nTotalLines, nLinesPerPage, nFirstVisible
+    CTextBox_GetVScrollInfo( HWND_FRMHELPVIEWER_RIGHTPANEL, nTotalLines, nLinesPerPage, nFirstVisible )
+    CVScrollBar_SetRange( HWND_FRMHELPVIEWER_VSCROLLBAR2, nTotalLines, nLinesPerPage, nFirstVisible )
+    function = 0
+end function
+
+
+' Vertical scroll state of the help text may have changed: push the fresh range.
+sub frmHelpViewer_TextScrollChanged( byval hTextBox as HWND )
+    frmHelpViewer_UpdateTextScrollBar()
+end sub
+
+
+' The user scrolled the text CVScrollBar (thumb drag or track paging): scroll the
+' help text to that first line. The ScrollToLine -> EN_UPDATE round trip echoes the
+' same position back through TextScrollChanged -- consistent by construction.
+sub frmHelpViewer_TextVScrollCallback( byval hScrollBar as HWND, byval newPos as integer )
+    CTextBox_ScrollToLine( HWND_FRMHELPVIEWER_RIGHTPANEL, newPos )
+end sub
+
+
+' ========================================================================================
 ' Custom paint keeping the old visuals: flat track + flat thumb in the ghPanel colors,
 ' no hover brightening. Colors are read live, so a theme switch only needs a repaint.
+' Shared by both bars (topics list and help text).
 ' ========================================================================================
 sub frmHelpViewer_VScrollPaint( byval p as CVSCROLLBAR_PAINTINFO ptr )
     dim as clsDoubleBuffer ptr b = p->b
@@ -80,17 +111,24 @@ end function
 
 
 ' ========================================================================================
-' Load a specific Help file richtext file
+' Load a specific Help file richtext file into the CTextBox.
+' The help files on disk are RTF; the CTextBox is plain text by design (one themed
+' fore/back color for all text). A hidden RichEdit does the RTF -> plain text
+' conversion: stream the file in, read the plain text back out, hand it to the
+' textbox. SetText is programmatic (silent for ChangeCallback) but still fires the
+' ScrollChangedCallback, so the scrollbar re-ranges automatically.
 ' ========================================================================================
 function frmHelpViewer_LoadHelpFile( byval nIndex as long ) as long
     if (nIndex >= lbound(gHelpViewer.Filenames)) andalso _
         (nIndex <= ubound(gHelpViewer.Filenames)) then
         dim as DWSTRING wszPath = AfxStrPathname("PATH", gConfig.HelpTableOfContents)
-        RichEdit_LoadRtfFromFile( HWND_FRMHELPVIEWER_RIGHTPANEL, wszPath & gHelpViewer.Filenames(nIndex) )
-        RichEdit_SetZoom( HWND_FRMHELPVIEWER_RIGHTPANEL, 100, 100 )
-        ' Ensure that the focus is set to the top of the file
-        RichEdit_SetSel( HWND_FRMHELPVIEWER_RIGHTPANEL, 0, 0 )
-        RichEdit_ScrollCaret( HWND_FRMHELPVIEWER_RIGHTPANEL )
+        dim as HWND hConvert = GetDlgItem( HWND_FRMHELPVIEWER, IDC_FRMHELPVIEWER_RTFCONVERT )
+        RichEdit_LoadRtfFromFile( hConvert, wszPath & gHelpViewer.Filenames(nIndex) )
+        CTextBox_SetText( HWND_FRMHELPVIEWER_RIGHTPANEL, AfxGetWindowText(hConvert) )
+        SetWindowText( hConvert, wstr("") )   ' don't hold the document twice
+        ' Ensure the view starts at the top of the file
+        CTextBox_SetSel( HWND_FRMHELPVIEWER_RIGHTPANEL, 0, 0 )
+        CTextBox_ScrollToLine( HWND_FRMHELPVIEWER_RIGHTPANEL, 0 )
     end if
     function = 0
 end function
@@ -129,14 +167,21 @@ function frmHelpViewer_PositionWindows() as LRESULT
         nLeftPanelWidth, 0, nVScrollWidth, nClientHeight, _
         SWP_NOZORDER or SWP_SHOWWINDOW )
 
+    ' Help text CTextBox, with its own CVScrollBar hugging the window's right edge
     SetWindowPos( HWND_FRMHELPVIEWER_RIGHTPANEL, 0, _
         nLeftPanelWidth + nVScrollWidth + nSplitterWidth, 0, _
-        nClientWidth - nSplitterWidth - nVScrollWidth - nLeftPanelWidth, nClientHeight, _
+        nClientWidth - nSplitterWidth - nVScrollWidth * 2 - nLeftPanelWidth, nClientHeight, _
         SWP_NOZORDER or SWP_SHOWWINDOW )
 
-    ' Push the range AFTER the resize so items-per-page reflects the new listbox height
-    ' (the old code computed it before repositioning, going stale by one layout pass).
+    SetWindowPos( HWND_FRMHELPVIEWER_VSCROLLBAR2, 0, _
+        nClientWidth - nVScrollWidth, 0, nVScrollWidth, nClientHeight, _
+        SWP_NOZORDER or SWP_SHOWWINDOW )
+
+    ' Push the ranges AFTER the resize so items/lines-per-page reflect the new heights
+    ' (the old code computed the listbox one before repositioning, going stale by one
+    ' layout pass).
     frmHelpViewer_UpdateScrollBar()
+    frmHelpViewer_UpdateTextScrollBar()
     AfxRedrawWindow( HWND_FRMHELPVIEWER_LEFTPANEL )
     
     function = 0
@@ -457,9 +502,12 @@ function frmHelpViewer_WndProc( _
         dim as CWindow ptr pWindow = AfxCWindowPtr(hwnd)
         if pWindow then delete(pWindow)
         HWND_FRMHELPVIEWER = 0
-        ' The CVScrollBar child destroyed itself in its own WM_NCDESTROY; reset the
-        ' handle here (the Help window can be closed and reopened).
+        ' The CVScrollBar/CTextBox children destroyed themselves in their own
+        ' WM_NCDESTROY; reset the handles here (the Help window can be closed and
+        ' reopened).
         HWND_FRMHELPVIEWER_VSCROLLBAR = 0
+        HWND_FRMHELPVIEWER_VSCROLLBAR2 = 0
+        HWND_FRMHELPVIEWER_RIGHTPANEL = 0
         return 0
 
     end select
@@ -656,34 +704,36 @@ function frmHelpViewer_Show( byval hWndParent as HWND ) as LRESULT
     CVScrollBar_SetScrollCallback( HWND_FRMHELPVIEWER_VSCROLLBAR, @frmHelpViewer_VScrollCallback )
     CVScrollBar_SetPaintCallback( HWND_FRMHELPVIEWER_VSCROLLBAR, @frmHelpViewer_VScrollPaint )
 
-    HWND_FRMHELPVIEWER_RIGHTPANEL = _ 
-        pWindow->AddControl("RICHEDIT", , IDC_FRMHELPVIEWER_RIGHTPANEL, "", 0, 0, 0, 0, _
-        WS_VISIBLE or WS_CHILD or WS_TABSTOP or WS_VSCROLL or ES_LEFT or _
-        ES_AUTOVSCROLL or ES_MULTILINE or ES_NOHIDESEL or ES_SAVESEL, _
-        WS_EX_LEFT or WS_EX_RIGHTSCROLLBAR)
+    ' Help text panel: a multiline CTextBox (word-wrapped, control-implemented wheel
+    ' scrolling, no native scrollbar -- an external CVScrollBar is wired through the
+    ' control's scroll API below). Themed with the editor text colors -- the thing the
+    ' old RichEdit never managed (its dead SetBkgndColor/EM_SETCHARFORMAT attempts sat
+    ' commented out here). The fixed-pitch font keeps the help files' column-aligned
+    ' shortcut tables lined up.
+    HWND_FRMHELPVIEWER_RIGHTPANEL = _
+        CTextBox_Create( HWND_FRMHELPVIEWER, IDC_FRMHELPVIEWER_RIGHTPANEL, true )
+    CTextBox_SetFont( HWND_FRMHELPVIEWER_RIGHTPANEL, ghFont(INFOFONT_11) )
+    CTextBox_SetBorderWidth( HWND_FRMHELPVIEWER_RIGHTPANEL, 0 )
+    CTextBox_SetMargins( HWND_FRMHELPVIEWER_RIGHTPANEL, pWindow->ScaleX(40), pWindow->ScaleX(40) )
+    CTextBox_SetReadOnly( HWND_FRMHELPVIEWER_RIGHTPANEL, true )
+    CTextBox_SetForeColor( HWND_FRMHELPVIEWER_RIGHTPANEL, ghEditor.ForeColorText )
+    CTextBox_SetBackColor( HWND_FRMHELPVIEWER_RIGHTPANEL, ghEditor.BackColorText )
+    CTextBox_SetOuterBackColor( HWND_FRMHELPVIEWER_RIGHTPANEL, ghEditor.BackColorText )
+    CTextBox_SetScrollChangedCallback( HWND_FRMHELPVIEWER_RIGHTPANEL, @frmHelpViewer_TextScrollChanged )
+    CTextBox_SetMenuText( HWND_FRMHELPVIEWER_RIGHTPANEL, L(17,"Cut"), L(18,"Copy"), L(19,"Paste"), L(40,"Select All") )
 
-    ' Turn on default word wrapping
-    '// wParam = (WPARAM) hdc (can be NULL)
-    '// lParam = (LONG) line width in twips (1/1440 inch)
-    SendMessage( HWND_FRMHELPVIEWER_RIGHTPANEL, EM_SETTARGETDEVICE, NULL, 0 )
-    
-    RichEdit_SetMargins( HWND_FRMHELPVIEWER_RIGHTPANEL, EC_LEFTMARGIN, MAKELONG(40, 0) )
-    RichEdit_SetMargins( HWND_FRMHELPVIEWER_RIGHTPANEL, EC_RIGHTMARGIN, MAKELONG(0, 40) )
-    RichEdit_SetTypographyOptions( HWND_FRMHELPVIEWER_RIGHTPANEL, _
-        TO_ADVANCEDTYPOGRAPHY or TO_SIMPLELINEBREAK, _
-        TO_ADVANCEDTYPOGRAPHY or TO_SIMPLELINEBREAK )
-'    gHelpViewer.pRichEdit->SetBkgndColor(0, ghEditor.BackColorText)
-    RichEdit_SetReadOnly( HWND_FRMHELPVIEWER_RIGHTPANEL, true )
-    
-    ' Set the text color for the entire document. The Afx CRichEdit function SetTextColor only
-    ' seems to work on selections rather than all text.
-'    Dim cf As CHARFORMAT
-'    cf.cbSize = sizeof(CHARFORMAT)
-'    cf.dwMask = CFM_COLOR
-'    cf.dwEffects = 0
-'    cf.crTextColor = ghEditor.ForeColorText
-'    SendMessage(HWND_FRMHELPVIEWER_RIGHTPANEL, EM_SETCHARFORMAT, SCF_ALL, cast(LPARAM, @cf))
-    
+    ' Help-text scrollbar, driven in LINE units through the CTextBox scroll API
+    ' (ScrollChangedCallback -> GetVScrollInfo -> SetRange; ScrollCallback -> ScrollToLine).
+    HWND_FRMHELPVIEWER_VSCROLLBAR2 = CVScrollBar_Create( HWND_FRMHELPVIEWER, IDC_FRMHELPVIEWER_VSCROLLBAR2 )
+    CVScrollBar_SetScrollCallback( HWND_FRMHELPVIEWER_VSCROLLBAR2, @frmHelpViewer_TextVScrollCallback )
+    CVScrollBar_SetPaintCallback( HWND_FRMHELPVIEWER_VSCROLLBAR2, @frmHelpViewer_VScrollPaint )
+
+    ' Hidden RichEdit used only to convert the RTF help files to plain text for the
+    ' CTextBox (see frmHelpViewer_LoadHelpFile). Never shown, never positioned.
+    pWindow->AddControl("RICHEDIT", , IDC_FRMHELPVIEWER_RTFCONVERT, "", 0, 0, 0, 0, _
+        WS_CHILD or ES_LEFT or ES_MULTILINE, _
+        WS_EX_LEFT)
+
     ' Load the Help table of contents
     dim pStream as CTextStream
     if pStream.Open(gConfig.HelpTableOfContents) = S_OK then
