@@ -129,7 +129,9 @@ function OnCommand_ViewToggleFocus( byval pDoc as clsDocument ptr ) as LRESULT
     if pDoc = 0 then exit function
     
     dim hCurrent as HWND = pDoc->hWndActiveScintilla
-    dim hFindCtl as HWND = GetDlgItem( HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND )
+    ' Focus lives on the CTextBox's RichEdit child; use that handle for the focus
+    ' comparisons and SetFocus below.
+    dim hFindCtl as HWND = CTextBox_GetRichEditHandle( GetDlgItem( HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND ) )
     if IsWindowVisible(HWND_FRMMAIN_TOPTABSINFO) = false then hFindCtl = 0
         
     dim idx as long

@@ -61,10 +61,8 @@ function frmTopTabsFind_PositionWindows() as LRESULT
     iconHeight = nHeight
     nWidth = nWidth - (iconWidth * 2) - pWindow->ScaleX(4)
     
-    ' DiskFilename text
+    ' DiskFilename text. Vertical centering re-derives inside the control on WM_SIZE.
     SetWindowPos( hCtlFind, 0, nLeft, nTop, nWidth, nHeight, SWP_NOZORDER or SWP_SHOWWINDOW )
-    RichEditCenterSingleLineText( hCtlFind )    
-    SendMessage( hCtlFind, EM_SETEVENTMASK, 0, cast(LPARAM, ENM_SELCHANGE or ENM_CHANGE) )
 
     ' Match Case RECT
     gFind.rcMatchCase.left   = nLeft + nWidth
@@ -133,99 +131,28 @@ end function
 
 
 ' ========================================================================================
-' frmTopTabsFind_RichEdit_SubclassProc Window procedure
+' CTextBox callbacks for the Find textbox. The control owns the cue banner, colors,
+' vertical centering, single-line enforcement and the Cut/Copy/Paste context menu that
+' the old RichEdit subclass hand-rolled here. ENTER/TAB handling stays in
+' handleKeysFindReplace (modMsgPump), which intercepts those keys before dispatch.
 ' ========================================================================================
-Function frmTopTabsFind_RichEdit_SubclassProc ( _
-            byval hWin   as HWND, _                 ' // Control window handle
-            byval uMsg   as UINT, _                 ' // Type of message
-            byval _wParam as WPARAM, _               ' // First message parameter
-            byval _lParam as LPARAM, _               ' // Second message parameter
-            byval uIdSubclass as UINT_PTR, _        ' // The subclass ID
-            byval dwRefData as DWORD_PTR _          ' // Pointer to reference data
-            ) as LRESULT
+sub frmTopTabsFind_TextBoxChange( byval hTextBox as HWND )
+    ' User edits only (was the EN_CHANGE path): re-run the incremental search.
+    gFind.txtFind = CTextBox_GetText( hTextBox )
+    dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
+    if pDoc then
+        FindReplace_HighlightSearches()
+        dim as hwnd hEdit = pDoc->hWndActiveScintilla
+        dim as long startPos = SendMessage( hEdit, SCI_GETANCHOR, 0, 0) - 1
+        FindReplace_NextSelection(startPos, true, true)
+    end if
+    SetFocus( hTextBox )   ' the search may have moved focus to Scintilla; take it back
+end sub
 
-    dim pWindow as CWindow ptr = AfxCWindowPtr(hWin)
-
-    select case uMsg
-                            
-        case WM_PRINTCLIENT, WM_PAINT
-            dim as long textLength = AfxGetWindowTextLength(hWin)
-            if (textLength = 0 ) then 
-                ' Get the needed DC with DCX_INTERSECTUPDATE before the EDIT
-                ' control's WM_PAINT handler calls BeginPaint/EndPaint, which
-                ' validates the update rect and would otherwise lead to drawing
-                ' nothing later because the region is empty. Also, grab it from
-                ' the cache so we don't mess with the EDIT's DC.
-                dim as HDC hdc = _
-                    iif(uMsg = WM_PRINTCLIENT, GetDC(hWin), _
-                        GetDCEx(hWin, 0, DCX_INTERSECTUPDATE or DCX_CACHE or DCX_CLIPCHILDREN or DCX_CLIPSIBLINGS) )
-
-                ' Call the EDIT control so that the caret is properly handled,
-                ' no caret litter left on the screen after tabbing away.
-                dim as LRESULT result = DefSubclassProc(hWin, uMsg, _wParam, _lParam)
-
-                SaveDC(hdc)
-                
-                ' Get the font and margin so the cue banner text has a
-                ' consistent appearance and placement with existing text.
-                dim as RECT editRect: SendMessage( hWin, EM_GETRECT, 0, cast(LPARAM, @editRect) )
-
-                ' Ideally we would call Edit_GetCueBannerText, but since that message
-                ' returns nothing when ES_MULTILINE, use a window property instead.
-                dim cueBannerText as wstring * 250
-                cueBannerText = L(158,"Find") & "..."
-                SelectObject( hdc, gFind.hCueBannerFont )
-                SetTextColor( hdc, ghTopTabs.ForeColor )
-                SetBkMode(hdc, TRANSPARENT)
-                dim as long wsStyle = DT_TOP or DT_LEFT or DT_NOPREFIX or DT_NOCLIP or DT_SINGLELINE 
-                DrawText(hdc, cueBannerText, -1, @editRect, wsStyle)
-                RestoreDC( hdc, -1 )
-                ReleaseDC( hWin, hdc )
-
-                ' Return the EDIT's result (could probably safely just return zero here,
-                ' but seems safer to relay whatever value came from the edit).
-                return result
-            end if
-        
-        case WM_CONTEXTMENU 
-            ' Create the right click popup menu
-            dim as DWSTRING wszText = RichEdit_GetSelText( hWin )
-            dim hPopUpMenu As HMENU = CreatePopupMenu()
-            if len(wszText) then 
-                AppendMenu( hPopUpMenu, MF_ENABLED, IDM_CUT, wstr("Cut") )
-                AppendMenu( hPopUpMenu, MF_ENABLED, IDM_COPY, wstr("Copy") )
-            end if
-            if RichEdit_CanPaste( hWin, 0 ) then
-                if len(wszText) then 
-                    AppendMenu( hPopUpMenu, MF_SEPARATOR, 0, "" )
-                end if   
-                AppendMenu( hPopUpMenu, MF_ENABLED, IDM_PASTE, wstr("Paste") )
-            end if   
-
-            dim as long nResult
-            nResult = TrackPopupMenu( hPopUpMenu, TPM_RETURNCMD or TPM_NONOTIFY, _
-                            loword(_lParam), hiword(_lParam), 0, HWND_FRMMAIN_TOPTABSFIND, 0 ) 
-            select case nResult
-                case IDM_CUT:   SendMessage( hWin, WM_CUT, 0, 0 )
-                case IDM_COPY:  SendMessage( hWin, WM_COPY, 0, 0 )
-                case IDM_PASTE: SendMessage( hWin, WM_PASTE, 0, 0 )
-            end select
-            DestroyMenu hPopUpMenu
-
-
-        case WM_CHAR
-            ' extra safety net, prevents newline insertion
-            if _wParam = 13 then return 0
-
-        case WM_DESTROY
-            ' REQUIRED: Remove control subclassing
-            RemoveWindowSubclass( hWin, @frmTopTabsFind_RichEdit_SubclassProc, uIdSubclass )
-    end select
-    
-    ' For messages that we don't deal with
-    function = DefSubclassProc(hWin, uMsg, _wParam, _lParam)
-
-end function
+sub frmTopTabsFind_TextBoxFocus( byval hTextBox as HWND, byval bGotFocus as boolean )
+    ' Was the EN_SETFOCUS path: repaint the panel chrome around the textbox.
+    if bGotFocus then AfxRedrawWindow( HWND_FRMMAIN_TOPTABSFIND )
+end sub
 
 
 ' ========================================================================================
@@ -256,24 +183,8 @@ function frmTopTabsFind_OnCommand( _
             byval codeNotify as UINT _
             ) as LRESULT
 
-    select case id
-        case IDC_FRMTOPTABSFIND_TXTFIND
-            if (codeNotify = EN_CHANGE) then
-                gFind.txtFind = AfxGetWindowText(hwndCtl)
-                dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
-                If pDoc Then 
-                    FindReplace_HighlightSearches()
-                    dim as hwnd hEdit = pDoc->hWndActiveScintilla
-                    dim as long startPos = SendMessage( hEdit, SCI_GETANCHOR, 0, 0) - 1
-                    FindReplace_NextSelection(startPos, true, true)
-                end if    
-                SetFocus( hwndCtl )
-            elseif (codeNotify = EN_SETFOCUS) then
-                AfxRedrawWindow( hwnd )
-            end if
-                
-    end select
-    
+    ' The Find textbox notifies through its CTextBox callbacks (change/focus), not
+    ' through WM_COMMAND EN_ codes anymore.
     function = 0
 end function
 
@@ -501,29 +412,17 @@ function frmTopTabsFind_Show( byval hwndParent as HWND ) as LRESULT
     ' Disable background erasing by only assigning the one style
     pWindow->ClassStyle = CS_DBLCLKS
 
-    ' we use RichEdit controls because regular Edit controls can not easily have
-    ' their text vertically centered.
-    gFind.hCueBannerFont = ghFont(INFOFONT_11)
-
-    dim as RECT rc
-    dim cf as CHARFORMATW 
-    cf.cbSize = sizeof(cf)
-    cf.dwMask = CFM_FACE or CFM_SIZE or CFM_CHARSET or CFM_COLOR
-    cf.crTextColor = ghTopTabs.ForeColorHot
-    cf.yHeight = 11 * 20      ' in twips (1/20 pt)
-    cf.bCharSet = DEFAULT_CHARSET
-    cf.bPitchAndFamily = DEFAULT_PITCH or FF_DONTCARE
-    cf.szFaceName = GUIFIXEDFONT
-    
-    dim as HWND hCtlFind
-    
-    hCtlFind = pWindow->AddControl("RICHEDIT", , IDC_FRMTOPTABSFIND_TXTFIND, "", _
-                0, 0, 0, 0, _
-                WS_CHILD or WS_TABSTOP or ES_LEFT or ES_AUTOHSCROLL, _
-                WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_RIGHTSCROLLBAR)
-    pWindow->SetControlSubclass(hCtlFind, @frmTopTabsFind_RichEdit_SubclassProc, IDC_FRMTOPTABSFIND_TXTFIND, NULL)
-    SendMessage( hCtlFind, EM_SETCHARFORMAT, SCF_ALL, cast(LPARAM, @cf) ) 
-    SendMessage( hCtlFind, EM_SETBKGNDCOLOR , 0, cast(LPARAM, ghTopTabs.BackColorHot) )
+    ' The Find textbox is the reusable CTextBox control (a RichEdit50W child inside --
+    ' regular Edit controls can not easily have their text vertically centered).
+    dim as HWND hCtlFind = CTextBox_Create( HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND )
+    CTextBox_SetFont( hCtlFind, ghFont(INFOFONT_11) )
+    CTextBox_SetForeColor( hCtlFind, ghTopTabs.ForeColorHot )
+    CTextBox_SetBackColor( hCtlFind, ghTopTabs.BackColorHot )
+    CTextBox_SetBorderWidth( hCtlFind, 0 )                       ' flat, as before
+    CTextBox_SetCueBannerText( hCtlFind, L(158,"Find") & "..." )
+    CTextBox_SetCueBannerColor( hCtlFind, ghTopTabs.ForeColor )
+    CTextBox_SetChangeCallback( hCtlFind, @frmTopTabsFind_TextBoxChange )
+    CTextBox_SetFocusCallback( hCtlFind, @frmTopTabsFind_TextBoxFocus )
     
     function = 0
     

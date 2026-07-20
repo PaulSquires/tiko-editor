@@ -114,6 +114,9 @@ end type
 ' ----------------------------------------------------------------------------------------
 declare function CTextBox_Create( byval hWndParent as HWND, byval CtrlID as integer ) as HWND
 declare function CTextBox_GetRichEditHandle( byval hTextBoxControl as HWND ) as HWND
+' Does this textbox own the keyboard focus? Focus sits on the RichEdit child, so a
+' plain GetFocus() = hTextBox comparison is ALWAYS false -- use this instead.
+declare function CTextBox_HasFocus( byval hTextBoxControl as HWND ) as boolean
 
 ' ----------------------------------------------------------------------------------------
 ' Text.

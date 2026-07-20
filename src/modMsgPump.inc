@@ -267,9 +267,11 @@ function handleKeysFindReplace( byval uMsg as MSG ) as boolean
     ' continue and do explicit pDoc null checks.
     dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
 
+    ' The find/replace textboxes are CTextBox controls: keyboard focus sits on their
+    ' RichEdit CHILD, so compare (and SetFocus) against that handle, not the control's.
     dim as HWND hFocus   = GetFocus()
-    dim as HWND hFind    = GetDlgItem( HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND )
-    dim as HWND hReplace = GetDlgItem( HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE )
+    dim as HWND hFind    = CTextBox_GetRichEditHandle( GetDlgItem( HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND ) )
+    dim as HWND hReplace = CTextBox_GetRichEditHandle( GetDlgItem( HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE ) )
     dim as HWND hEdit    
     if pDoc then hEdit = pDoc->hWndActiveScintilla
 

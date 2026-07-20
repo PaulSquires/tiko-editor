@@ -29,8 +29,8 @@ function OnCommand_EditCut( _
     select case GetFocus()
         case GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTNOTES), _
             GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTLOGFILE), _ 
-            GetDlgItem(HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND), _
-            GetDlgItem(HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE)
+            CTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND)), _
+            CTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE))
             SendMessage( GetFocus, WM_CUT, 0, 0 )
         case else     
             SciExec( GetFocus(), iif(GetFocus()=hEdit, SCI_CUT, WM_CUT), 0, 0)
@@ -54,8 +54,8 @@ function OnCommand_EditCopy( _
     select case GetFocus()
         case GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTNOTES), _
             GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTLOGFILE), _ 
-            GetDlgItem(HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND), _
-            GetDlgItem(HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE)
+            CTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND)), _
+            CTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE))
             SendMessage( GetFocus, WM_COPY, 0, 0 )
         case else     
             SciExec( GetFocus(), Iif(GetFocus()=hEdit, SCI_COPY, WM_COPY), 0, 0)
@@ -78,8 +78,8 @@ function OnCommand_EditPaste( _
     select case GetFocus()
         case GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTNOTES), _
              GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTLOGFILE), _ 
-             GetDlgItem(HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND), _
-             GetDlgItem(HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE)
+             CTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND)), _
+             CTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE))
             SendMessage( GetFocus, WM_PASTE, 0, 0 )
         case else     
             SciExec( GetFocus(), Iif(GetFocus()=hEdit, SCI_PASTE, WM_PASTE), 0, 0)
@@ -107,9 +107,9 @@ function OnCommand_EditIndentBlock( _
         SciExec(hEdit, SCI_AUTOCCOMPLETE, 0, 0)
         return 0 
     end if
-    if GetFocus = GetDlgItem(HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND) then
+    if CTextBox_HasFocus( GetDlgItem(HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND) ) then
         if gFind.bExpanded then SetFocus GetDlgItem(HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE)
-    elseif GetFocus = GetDlgItem(HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE) then
+    elseif CTextBox_HasFocus( GetDlgItem(HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE) ) then
         if gFind.bExpanded then SetFocus GetDlgItem(HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND)
     else
         gApp.SuppressNotify = true
@@ -133,9 +133,9 @@ function OnCommand_EditUnIndentBlock( _
             byval hEdit as HWND _
             ) as LRESULT
     
-    if GetFocus = GetDlgItem(HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND) then
+    if CTextBox_HasFocus( GetDlgItem(HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND) ) then
         if gFind.bExpanded then SetFocus GetDlgItem(HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE)
-    elseif GetFocus = GetDlgItem(HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE) then
+    elseif CTextBox_HasFocus( GetDlgItem(HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE) ) then
         if gFind.bExpanded then SetFocus GetDlgItem(HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND)
     else
         gApp.SuppressNotify = true
@@ -164,8 +164,8 @@ function OnCommand_EditSelectAll( _
     select case GetFocus()
         case GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTNOTES), _
             GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTLOGFILE), _ 
-            GetDlgItem(HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND), _
-            GetDlgItem(HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE)
+            CTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND)), _
+            CTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE))
             Edit_SetSel( GetFocus(), 0, -1 )
         case else     
             SciExec(hEdit, SCI_SELECTALL, 0, 0)

@@ -181,6 +181,16 @@ end function
 
 
 ' ========================================================================================
+' Does this textbox own the keyboard focus? (It does when its RichEdit child does.)
+' ========================================================================================
+function CTextBox_HasFocus( byval hTextBoxControl as HWND ) as boolean
+    dim as CTEXTBOX ptr pTextBox = GetTextBoxPointer(hTextBoxControl)
+    if pTextBox = null then return false
+    return ( GetFocus() = pTextBox->hRichEdit )
+end function
+
+
+' ========================================================================================
 ' Retrieve the control's text.
 ' ========================================================================================
 function CTextBox_GetText( byval hTextBoxControl as HWND ) as DWSTRING
