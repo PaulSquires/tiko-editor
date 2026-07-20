@@ -119,7 +119,6 @@ type clsDocument
     DateFileTime          as FILETIME  
     bHasFunctions         as boolean = false    ' FunctionList to determine if click will display the File
     FileEncoding          as long = FILE_ENCODING_UTF8   ' new files always UTF8 encoded by default (no BOM)       
-    bNeedsParsing         as boolean            ' Document requires to be parsed due to changes.
     DocumentBuild         as string             ' specific build configuration to use for this document
     wszMatchWord          as DWSTRING           ' for the incremental autocomplete search
     AutoCompletetype      as long               ' AUTOC_DIMAS, AUTOC_TYPE
@@ -154,7 +153,6 @@ type clsDocument
     declare function SetDocInfo() as long
     declare function SetProjectFileType() as long
     declare function SetDocumentBuild() as long
-    declare function ParseDocument() as boolean
     declare function IsValidScintillaID( byval idScintilla as long ) as boolean
     declare function GetActiveScintillaPtr() as any ptr
     declare function AssignTextBuffer() as long

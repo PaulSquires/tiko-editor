@@ -71,8 +71,6 @@ type clsConfig
         ExtraKeywordsFilename     as DWSTRING 
         FBKeywordsDefaultFilename as DWSTRING 
         FBCodetipsFilename        as DWSTRING
-        WinAPICodetipsFilename    as DWSTRING 
-        WinFBXCodetipsFilename    as DWSTRING
         DefaultSessionFilename    as DWSTRING 
         HelpTableOfContents       as DWSTRING
          
@@ -174,9 +172,6 @@ type clsConfig
         declare function ProjectSaveToFile() as boolean    
         declare function ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean    
         declare function LoadCodetipsFB() as boolean
-        declare function LoadCodetipsWinAPI() as boolean
-        declare function LoadCodetipsWinFBX() as boolean
-        declare function LoadCodetipsGeneric( byval wszFilename as DWSTRING, byval nFiletype as long) as boolean
         declare function LoadCodetips() as long
         declare function ReloadConfigFileTest() as boolean    
 end type

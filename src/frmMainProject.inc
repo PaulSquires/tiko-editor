@@ -223,7 +223,6 @@ function OnCommand_ProjectRemove( _
 
     ' If the pDoc is still valid the FileClose
     if gApp.IsValidDocumentPointer(pDoc) then
-        gdb2.dbDelete( pDoc->DiskFilename )
         gApp.RemoveDocument( pDoc )
         LoadExplorerFiles()
     end if

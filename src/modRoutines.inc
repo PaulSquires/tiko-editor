@@ -995,17 +995,21 @@ function OpenSelectedDocument( _
     '   5. When a compile error occurs and need to position to the error line.
     '   6. When right-click select #Include file to open. 
     
-    ' if incoming FunctionName then search for filename and line number.
-    dim pData as DB2_DATA ptr    
+    ' if incoming FunctionName then search for its filename and line number.
     if len( wszFunctionName ) andalso (nLineNumber = -1) then
-        ' Search for function, sub, or property (get/set)
-        pData = gdb2.dbFindFunction( wszFunctionName, wszFilename) 
-        if pData then
-            wszFilename = pData->fileName
-            nLineNumber = pData->nLineStart
+        dim as SYMBOLREF refProc = gSymDb.FindProc( wszFunctionName )
+        if refProc.IsValid then
+            dim as wstring ptr pFile = gSymDb.SymFile( refProc )
+            if pFile then
+                wszFilename = *pFile
+                nLineNumber = gSymDb.SymBodyLine( refProc )
+                if nLineNumber = 0 then nLineNumber = gSymDb.SymLine( refProc )
+                nLineNumber -= 1                ' Scintilla lines are 0-based
+                if nLineNumber < 0 then nLineNumber = 0
+            end if
         end if
     end if
-    
+
     ' Not all documents exist on disk file. for example, a QuickRun file will exist in
     ' the editor but may never have a disk footprint. We need to search the project to
     ' determine if the filename has a pDoc already associated with it. If it does, then

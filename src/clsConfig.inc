@@ -22,7 +22,6 @@
 #include once "frmOutput.bi"
 #include once "frmBuildConfig.bi"
 #include once "frmMain.bi"
-#include once "modParser.bi"
 #include once "modMRU.bi"
 #include once "frmTopTabs.bi"
 #include once "frmOutput.bi"
@@ -39,9 +38,7 @@ constructor clsConfig
     WinApiKeywordsFilename    = exe_path & "settings\keywords\winapi_keywords.txt" 
     ExtraKeywordsFilename     = exe_path & "settings\keywords\extra_keywords.txt" 
     FBKeywordsDefaultFilename = exe_path & "settings\keywords\freebasic_keywords_default.txt" 
-    FBCodetipsFilename        = exe_path & "settings\keywords\codetips.ini" 
-    WinAPICodetipsFilename    = exe_path & "settings\keywords\codetips_winapi.ini" 
-    WinFBXCodetipsFilename    = exe_path & "settings\keywords\codetips_winfbx.ini" 
+    FBCodetipsFilename        = exe_path & "settings\keywords\codetips.ini"
     DefaultSessionFilename    = exe_path & "settings\default.session" 
     HelpTableOfContents       = exe_path & "settings\help\_toc.txt" 
 end constructor
@@ -104,18 +101,10 @@ function clsConfig.LoadCodetipsFB() as boolean
 
     dim as DWSTRING wst
     dim as long i
-    
-    dim parser as ctxParser
 
-    ' First, delete all exisiting codetips of this type
-    gdb2.dbDeleteByFileType( DB2_FILETYPE_FB )
-    
-    parser.nFileType = DB2_FILETYPE_FB
-    
-    ' Phase 2 (fbcParser): also populate gFBIntrinsics(), the separate sorted
-    ' lookup the new codetip path (Phase 3) consults for built-ins. This is
-    ' ADDITIVE for now - the gdb2 records above stay so the live editor keeps
-    ' working until Phase 3 switches consumers over.
+    ' Populate gFBIntrinsics(), the sorted lookup FindIntrinsicCalltip binary
+    ' searches for built-in calltips (LEN, MID, ...). These names never appear
+    ' in any scanned include, so they live outside the symbol database.
     erase gFBIntrinsics
     dim as long nIntrinsic = 0
 
@@ -129,10 +118,6 @@ function clsConfig.LoadCodetipsFB() as boolean
 
         i = instr(wst, "=")
         if i then
-            parser.functionName   = left(wst, i-1)
-            parser.functionParams = mid(wst, i+1)
-            gdb2.dbAdd( @parser, DB2_FUNCTION )
-
             redim preserve gFBIntrinsics( 0 to nIntrinsic )
             gFBIntrinsics(nIntrinsic).wszName    = left(wst, i-1)
             gFBIntrinsics(nIntrinsic).wszNameUp  = ucase( left(wst, i-1) )
@@ -159,108 +144,10 @@ end function
 
 ''
 ''
-function clsConfig.LoadCodetipsGeneric( _
-            byval wszFilename as DWSTRING, _
-            byval nFileType as long _
-            ) as boolean
-                                        
-    dim as DWSTRING wst, wsID, wsTypeName, wsTypeElements, wsParts, wsPart, wsBaseType
-    dim as long i, nCount
-    
-    dim parser as ctxParser
-
-    parser.nFileType = nFileType
-
-    ''
-    ''  Codetips definition file for WinAPI/WinFBX
-    ''
-    ''  Format:
-    ''  1st character:  F=function, T=TYPE, S=STANDARD_DATATYPE
-    ''  2nd character:  colon.
-    ''  TYPE elements are separated by | pipe symbol. Each element name/datatype is separated by comma.
-    ''  STANDARD datatypes are separated by | pipe symobol (datatype followed by description of the datatype.
-    ''
-    
-    dim pStream as CTextStream
-    if pStream.Open(wszFilename) <> S_OK then return true   ' error
-
-    do until pStream.EOS
-        wst = pStream.ReadLine
-
-        wst = trim(wst)
-        if len(wst) = 0 then continue do
-        
-        i = instr(wst, ":")
-        if i = 0 then continue do
-        
-        wsID = left(wst, i - 1)
-        wst  = mid(wst, i + 1)
-                
-        select case wsID
-            case "S"    ' standard datatype
-            i = instr(wst, "|")
-            parser.functionName = left(wst, i-1)
-            'parser.Description = mid(wst, i+1)
-            gdb2.dbAdd( @parser, DB2_STANDARDDATATYPE )  
-            
-            case "F"    ' function
-            i = instr(wst, "(")
-            parser.functionName   = trim(left(wst, i-1))
-            parser.functionParams = wst
-            parser.typeName = ""
-            gdb2.dbAdd( @parser, DB2_FUNCTION )
-
-            case "T"     ' type
-            i = instr(wst, "|")
-            parser.typeName = left(wst, i-1)
-            parser.typeAlias = parser.typeName
-            wsParts = mid(wst, i + 1)
-            gdb2.dbAdd( @parser, DB2_TYPE )
-
-            ' Each element of the TYPE structure is added to the database. The
-            ' element is in the format elementname,elementtype
-            parser.functionName = ""
-            nCount = AfxStrParseCount(wsParts, "|")
-            for i = 1 to nCount
-                wsPart = AfxStrParse(wsParts, i, "|")
-                parser.functionName = parser.typeName
-                parser.varName = AfxStrParse(wsPart, 1, ",") 
-                parser.varType = AfxStrParse(wsPart, 2, ",") 
-                parser.varScope = DIMSCOPE.SCOPETYPE
-                gdb2.dbAdd( @parser, DB2_VARIABLE )
-            next
-
-        end select
-            
-    loop
-    pStream.Close
-    
-    return false  ' no error
-end function
-    
-
-''
-''
-function clsConfig.LoadCodetipsWinFBX() as boolean
-   gdb2.dbDeleteByFileType( DB2_FILETYPE_WINFBX )
-   function = this.LoadCodetipsGeneric(this.WinFBXCodetipsFilename, DB2_FILETYPE_WINFBX)
-end function
-
-
-''
-''
-function clsConfig.LoadCodetipsWinAPI() as boolean
-    gdb2.dbDeleteByFileType( DB2_FILETYPE_WINAPI )
-    function = this.LoadCodetipsGeneric(this.WinAPICodetipsFilename, DB2_FILETYPE_WINAPI)
-end function
-
-
-''
-''
 function clsConfig.LoadCodetips() as long
+    ' reduced to the FB intrinsics load - the WinAPI/WinFBX codetip tables died
+    ' with the old parser database (real WinAPI symbols now come from the scans)
     this.LoadCodetipsFB()
-    this.LoadCodetipsWinFBX()
-    this.LoadCodetipsWinAPI()
     function = 0
 end function
 
