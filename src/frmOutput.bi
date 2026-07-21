@@ -22,19 +22,27 @@
 #define IDC_FRMOUTPUT_BTNCLOSE                      1006
 #define IDC_FRMOUTPUT_VSCROLL                       1007
 
-
-type OUTPUT_TABS
-    wszText as DWSTRING
-    rcTab   as RECT
-    rcText  as RECT     ' diff rect b/c line drawn under Text for CurSel
-    isHot   as boolean
-end type
-
-dim shared gOutputTabs(4) as OUTPUT_TABS
-dim shared gOutputTabsCurSel as long = 0  ' default to first tab
-dim shared gOutputCloseRect as RECT
+' The tab strip is a CSelectBar plus a one-item CIconPanel for the "X", sized side by side
+' to cover the strip. There is no container behind them: each paints its own background, so
+' the old subclassed LABEL (and its ~150 lines of rect arithmetic, hit-testing, hover
+' tracking and painting) is gone rather than merely bypassed.
+'
+' The CURRENT TAB lives in the CSelectBar -- there is deliberately no gOutputTabsCurSel
+' global any more. Read it with CSelectBar_GetCurSel( HWND_FRMOUTPUT_SELECTBAR ) and set it
+' with CSelectBar_SetCurSel (silent: only user clicks fire the change callback, so calling
+' it from a handler cannot recurse). gConfig.ShowOutputPanelIndex is the persisted copy,
+' applied to the control once it exists.
+'
+' Panel indices, in the order they are added -- these ARE the values persisted in the
+' config file, so their numbering must not change.
+#define OUTPUT_TAB_RESULTS    0
+#define OUTPUT_TAB_LOGFILE    1
+#define OUTPUT_TAB_SEARCH     2
+#define OUTPUT_TAB_TODO       3
+#define OUTPUT_TAB_NOTES      4
 
 declare sub      frmOutput_TextBoxScrollChanged( byval hTextBox as HWND )
+declare sub      frmOutput_SetTabCaptions()
 declare function frmOutput_ShowNotes() as long
 declare function frmOutput_UpdateToDoListview() as long 
 declare function frmOutput_UpdateSearchListview( byref wszResultFile as wstring ) as long 

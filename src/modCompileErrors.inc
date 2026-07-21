@@ -20,6 +20,10 @@
 #include once "modCompileErrors.bi"
 #include once "frmStatusBar.bi"
 #include once "CStatusBar.bi"
+' This file is compiled BEFORE tiko.bas reaches the custom-control block, so the header for
+' any control it calls has to be hand-included here -- the same reason modMenus.inc and
+' modRoutines.inc hand-include theirs. Needed for the Output tab bar (CSelectBar_SetCurSel).
+#include once "CSelectBar.bi"
 
 
 ''
@@ -562,8 +566,10 @@ function ParseLogForError ( _
             frmOutput_PositionWindows()
         end if
       
-        ' Reposition to the correct tab
-        gOutputTabsCurSel = iif( fSwitchToLogFile, 1, 0 )
+        ' Reposition to the correct tab. SetCurSel is silent, so PositionWindows below
+        ' (which ends in ShowHideOutputControls) is what swaps the visible pane.
+        CSelectBar_SetCurSel( HWND_FRMOUTPUT_SELECTBAR, _
+                              iif( fSwitchToLogFile, OUTPUT_TAB_LOGFILE, OUTPUT_TAB_RESULTS ) )
         frmOutput_PositionWindows()
         
         ' Only retore the Output window if Errors exist. Warnings only will not trigger

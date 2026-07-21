@@ -1,4 +1,4 @@
-'    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
+﻿'    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
 '    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
@@ -159,9 +159,10 @@ function frmOutput_UpdateSearchListview( byref wszResultFile as wstring ) as lon
     
     AfxDeleteFile( wszResultFile )
     
-    ' Show the search results
-    gOutputTabsCurSel = 2
-    frmOutput_RestorePanel() 
+    ' Show the search results. SetCurSel is silent, so PositionWindows below (which ends in
+    ' ShowHideOutputControls) is what actually swaps the visible pane.
+    CSelectBar_SetCurSel( HWND_FRMOUTPUT_SELECTBAR, OUTPUT_TAB_SEARCH )
+    frmOutput_RestorePanel()
     frmOutput_PositionWindows
 
     function = 0
@@ -179,8 +180,9 @@ function frmOutput_ShowHideOutputControls( byval hwnd as HWND ) as LRESULT
     dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMOUTPUT)
     if pWindow = 0 then exit function
 
-    ShowWindow( GetDlgItem(hwnd, IDC_FRMOUTPUT_TABS), SW_SHOW )
-    AfxRedrawWindow( GetDlgItem(hwnd, IDC_FRMOUTPUT_TABS) )
+    ShowWindow( HWND_FRMOUTPUT_SELECTBAR, SW_SHOW )
+    ShowWindow( HWND_FRMOUTPUT_CLOSE, SW_SHOW )
+    AfxRedrawWindow( HWND_FRMOUTPUT_SELECTBAR )
     
     ' By default, hide all controls
     ShowWindow( HWND_FRMOUTPUT_LVRESULTS, SW_HIDE )
@@ -190,7 +192,7 @@ function frmOutput_ShowHideOutputControls( byval hwnd as HWND ) as LRESULT
     ShowWindow( GetDlgItem(hwnd, IDC_FRMOUTPUT_TXTNOTES), SW_HIDE )
     ShowWindow( HWND_FRMOUTPUT_VSCROLL, SW_HIDE )
     
-    select case gOutputTabsCurSel
+    select case CSelectBar_GetCurSel( HWND_FRMOUTPUT_SELECTBAR )
         case 0    ' compiler results
             hLV = HWND_FRMOUTPUT_LVRESULTS
             hCtrl = hLV
@@ -256,10 +258,23 @@ function frmOutput_PositionWindows() as LRESULT
     dim as long nTabsHeight
     dim as RECT rc: GetClientRect( HWND_FRMOUTPUT, @rc )
     
-    dim as HWND hTabs = GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TABS)
+    ' The tab strip: CSelectBar on the left, the one-item CIconPanel ("X") hard against the
+    ' right. They abut, and each paints its own background, so together they cover the strip
+    ' -- there is no container window behind them.
+    nTabsHeight = pWindow->ScaleY(OUTPUT_TABS_HEIGHT)
+    dim as long nCloseWidth = pWindow->ScaleX(OUTPUT_CLOSE_WIDTH)
+    dim as long nStripWidth = rc.right - rc.left
 
-    nTabsHeight = AfxGetWindowHeight(hTabs)
-    SetWindowPos( hTabs, 0, nLeft, nTop, rc.right - rc.left, nTabsHeight, SWP_NOZORDER )
+    SetWindowPos( HWND_FRMOUTPUT_SELECTBAR, 0, _
+                  nLeft, nTop, nStripWidth - nCloseWidth, nTabsHeight, SWP_NOZORDER )
+    SetWindowPos( HWND_FRMOUTPUT_CLOSE, 0, _
+                  nLeft + nStripWidth - nCloseWidth, nTop, nCloseWidth, nTabsHeight, SWP_NOZORDER )
+
+    ' Re-push the captions so a language change is picked up, exactly as the old code did by
+    ' rebuilding them here every time -- but only when one actually differs. SetText
+    ' re-measures and re-lays out the whole bar, so doing it unconditionally on every resize
+    ' would be pure churn.
+    frmOutput_SetTabCaptions()
 
     ' Position the child controls. The CVScrollBar is created 0x0 (its width cannot be
     ' read back before the first positioning), so the width is computed, not queried --
@@ -278,67 +293,9 @@ function frmOutput_PositionWindows() as LRESULT
     SetWindowPos( HWND_FRMOUTPUT_VSCROLL, 0, _
         rc.right - nVScrollWidth, nTop, nVScrollWidth, rc.bottom - nTop, SWP_NOZORDER )
 
-    ' Calculate the tabs rects
-    GetClientRect( hTabs, @rc )
-
-    dim wszText as wstring * 100
-    dim as long nTextLen 
-    dim as long hmargin = pWindow->ScaleX(10) 
-    rc.top = rc.top + pWindow->ScaleY(2)
-    rc.left = rc.left + pWindow->ScaleX(10)
-
-    wszText = ucase(L(191, "Compiler Results"))
-    nTextLen = pWindow->ScaleX(getTextWidth( HWND_FRMOUTPUT, wszText, GUIFONT_9))
-    gOutputTabs(0).wszText = wszText
-    gOutputTabs(0).rcTab = rc: gOutputTabs(0).rcText = rc
-    gOutputTabs(0).rcText.left = gOutputTabs(0).rcTab.left + hmargin 
-    gOutputTabs(0).rcText.right = gOutputTabs(0).rcText.left + nTextLen 
-    gOutputTabs(0).rcTab.right = gOutputTabs(0).rcText.right + hmargin
-
-    wszText = ucase(L(252, "Compiler Log File"))
-    nTextLen = pWindow->ScaleX(getTextWidth( HWND_FRMOUTPUT, wszText, GUIFONT_9))
-    gOutputTabs(1).wszText = wszText
-    gOutputTabs(1).rcTab = rc: gOutputTabs(1).rcText = rc
-    gOutputTabs(1).rcTab.left = gOutputTabs(0).rcTab.right
-    gOutputTabs(1).rcText.left = gOutputTabs(1).rcTab.left + hmargin 
-    gOutputTabs(1).rcText.right = gOutputTabs(1).rcText.left + nTextLen 
-    gOutputTabs(1).rcTab.right = gOutputTabs(1).rcText.right + hmargin
-
-    wszText = ucase(L(262, "Search Results"))
-    nTextLen = pWindow->ScaleX(getTextWidth( HWND_FRMOUTPUT, wszText, GUIFONT_9))
-    gOutputTabs(2).wszText = wszText
-    gOutputTabs(2).rcTab = rc: gOutputTabs(2).rcText = rc
-    gOutputTabs(2).rcTab.left = gOutputTabs(1).rcTab.right
-    gOutputTabs(2).rcText.left = gOutputTabs(2).rcTab.left + hmargin 
-    gOutputTabs(2).rcText.right = gOutputTabs(2).rcText.left + nTextLen 
-    gOutputTabs(2).rcTab.right = gOutputTabs(2).rcText.right + hmargin
-
-    wszText = ucase(L(263, "TODO"))
-    nTextLen = pWindow->ScaleX(getTextWidth( HWND_FRMOUTPUT, wszText, GUIFONT_9))
-    gOutputTabs(3).wszText = wszText
-    gOutputTabs(3).rcTab = rc: gOutputTabs(3).rcText = rc
-    gOutputTabs(3).rcTab.left = gOutputTabs(2).rcTab.right
-    gOutputTabs(3).rcText.left = gOutputTabs(3).rcTab.left + hmargin 
-    gOutputTabs(3).rcText.right = gOutputTabs(3).rcText.left + nTextLen 
-    gOutputTabs(3).rcTab.right = gOutputTabs(3).rcText.right + hmargin
-
-    wszText = ucase(L(264, "Notes"))
-    nTextLen = pWindow->ScaleX(getTextWidth( HWND_FRMOUTPUT, wszText, GUIFONT_9))
-    gOutputTabs(4).wszText = wszText
-    gOutputTabs(4).rcTab = rc: gOutputTabs(4).rcText = rc
-    gOutputTabs(4).rcTab.left = gOutputTabs(3).rcTab.right
-    gOutputTabs(4).rcText.left = gOutputTabs(4).rcTab.left + hmargin 
-    gOutputTabs(4).rcText.right = gOutputTabs(4).rcText.left + nTextLen 
-    gOutputTabs(4).rcTab.right = gOutputTabs(4).rcText.right + hmargin
-
-    dim as long rcCloseWidth = 20
-    dim as long rcCloseHeight = 20
-    dim as long vmargin = pWindow->ScaleY( (OUTPUT_TABS_HEIGHT - rcCloseHeight) / 2 )
-    GetClientRect( hTabs, @rc )
-    gOutputCloseRect.top = gOutputTabs(4).rcTab.top + vmargin
-    gOutputCloseRect.bottom = gOutputTabs(4).rcTab.bottom - vmargin
-    gOutputCloseRect.right = rc.right - hmargin 
-    gOutputCloseRect.left = gOutputCloseRect.right - pWindow->ScaleX(rcCloseWidth)
+    ' (The ~60 lines of per-tab rect arithmetic that used to sit here are gone: CSelectBar
+    ' measures its own captions and derives every rect. So is the close-button rect -- the
+    ' CIconPanel owns that.)
 
     ' Determine which child controls should be shown or hidden
     frmOutput_ShowHideOutputControls(HWND_FRMOUTPUT)
@@ -521,22 +478,27 @@ end function
 
 
 ' ========================================================================================
-' Do hit test to determine what tab is currently under the mouse cursor
+' Push the (localized, uppercased) captions into the tab bar, but only where one actually
+' differs. The old code rebuilt these on every layout pass, which is how a language change
+' got picked up; this preserves that without the churn, because CSelectBar_SetText
+' re-measures and re-lays out the whole bar on every call.
 ' ========================================================================================
-function frmOutputTabs_getHotTabHitTest( byval hWin as HWND ) as long
-    dim as point pt: GetCursorPos( @pt )
-    MapWindowpoints( HWND_DESKTOP, hWin, cast( point ptr, @pt ), 1 )
-    dim as long hotTab = -1
-    for i as long = lbound(gOutputTabs) to ubound(gOutputTabs)
-        if PtInRect( @gOutputTabs(i).rcTab, pt ) then
-            hotTab = i
-            gOutputTabs(i).isHot = true
-        else   
-            gOutputTabs(i).isHot = false
+sub frmOutput_SetTabCaptions()
+    if IsWindow(HWND_FRMOUTPUT_SELECTBAR) = 0 then exit sub
+
+    dim as DWSTRING wszCaption(0 to 4)
+    wszCaption(OUTPUT_TAB_RESULTS) = ucase(L(191, "Compiler Results"))
+    wszCaption(OUTPUT_TAB_LOGFILE) = ucase(L(252, "Compiler Log File"))
+    wszCaption(OUTPUT_TAB_SEARCH)  = ucase(L(262, "Search Results"))
+    wszCaption(OUTPUT_TAB_TODO)    = ucase(L(263, "TODO"))
+    wszCaption(OUTPUT_TAB_NOTES)   = ucase(L(264, "Notes"))
+
+    for i as long = 0 to 4
+        if CSelectBar_GetText( HWND_FRMOUTPUT_SELECTBAR, i ) <> wszCaption(i) then
+            CSelectBar_SetText( HWND_FRMOUTPUT_SELECTBAR, i, wszCaption(i) )
         end if
     next
-    function = hotTab
-end function
+end sub
 
 
 ' ========================================================================================
@@ -585,162 +547,110 @@ end function
 
 
 ' ========================================================================================
-' frmOutputTabs_SubclassProc 
+' Tab strip callbacks. The strip is a CSelectBar (five tabs) plus a one-item CIconPanel
+' (the "X"), sized side by side by frmOutput_PositionWindows. Between them they replaced
+' frmOutputTabs_SubclassProc: ~150 lines of rect arithmetic, hit-testing, hover tracking,
+' tooltip plumbing and painting.
 ' ========================================================================================
-function frmOutputTabs_SubclassProc ( _
-            byval hWin   as HWND, _                 ' // Control window handle
-            byval uMsg   as UINT, _                 ' // Type of message
-            byval _wParam as WPARAM, _               ' // First message parameter
-            byval _lParam as LPARAM, _               ' // Second message parameter
-            byval uIdSubclass as UINT_PTR, _        ' // The subclass ID
-            byval dwRefData as DWORD_PTR _          ' // pointer to reference data
-            ) as LRESULT
 
-    dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMOUTPUT)
-    static as long accumDelta
-    
-    ' keep track of last index we were over so that we only issue a 
-    ' repaint if the cursor has moved off of the tab
-    static as long nLastIdx = -1
-    static as boolean isLastClose = false
+' Consumes the WM_LBUTTONUP that PAIRS WITH a double-click. The message sequence for a
+' double-click is down, up, dblclk, up -- so without this, a double-click meant to MINIMIZE
+' the panel would be undone a moment later by its own trailing up restoring it (any click
+' on the strip restores, which is long-standing behaviour worth keeping). One boolean
+' consuming one message: deliberately NOT a click-timer dance, since nothing is timed.
+dim shared as boolean gOutputSuppressRestore = false
 
-    static hTooltip as HWND
-    if (uMsg = WM_DESTROY) andalso (IsWindow(hToolTip)) then DestroyWindow(hToolTip)
-        
-    select case uMsg
-            
-        case WM_MOUSEMOVE
-            ' Track that we are over the control in order to catch the 
-            ' eventual WM_MOUSELEAVE event
-            dim tme as TrackMouseEvent
-            tme.cbSize = sizeof(TrackMouseEvent)
-            tme.dwFlags = TME_HOVER or TME_LEAVE
-            tme.hwndTrack = hWin
-            tme.dwHoverTime = 20    ' HOVER_DEFAULT is 500
-            TrackMouseEvent(@tme) 
 
-            if IsWindow(hTooltip) = 0 then hTooltip = AfxAddTooltip( hWin, "", false, false )
+' ----------------------------------------------------------------------------------------
+' Paint one tab. Reads the ghOutput theme colors LIVE, so a theme switch needs only a
+' repaint and no color-pushing plumbing anywhere -- the same pattern
+' frmEditorHScroll_PaintCallback uses. The selected tab draws hot (fore AND back), which is
+' what the hand-drawn strip did.
+' ----------------------------------------------------------------------------------------
+sub frmOutput_SelectBarPaint( byval p as CSELECTBAR_PAINTINFO ptr )
+    dim as boolean isHotTab = p->isSelected orelse p->isHot orelse p->isPressed
 
-            dim as long idx = frmOutputTabs_getHotTabHitTest( hWin )
-            if idx <> nLastIdx then
-                nLastIdx = idx
-                AfxRedrawWindow(hWin)   
-            end if
-            
-            dim as boolean isClose = isMouseOverRECT( hWin, gOutputCloseRect )
-            if isClose <> isLastClose then
-                isLastClose = isClose
-                AfxRedrawWindow(hWin)   
-            end if
-                        
-        case WM_MOUSEHOVER
-            dim as DWSTRING wszTooltip
-            if isMouseOverRECT( hWin, gOutputCloseRect ) = true then
-                ' Display the tooltip
-                wszTooltip  = L(161, "Close")
-            end if
-            AfxSetTooltipText( hTooltip, hWin, wszTooltip )
+    p->b->SetForeColor( iif( isHotTab, ghOutput.ForeColorHot, ghOutput.ForeColor ) )
+    p->b->SetBackColor( iif( isHotTab, ghOutput.BackColorHot, ghOutput.BackColor ) )
+    p->b->PaintRect( @p->rc )
 
-        case WM_MOUSELEAVE
-            ' reset the hot tab index
-            frmOutputTabs_getHotTabHitTest( hWin )
-            nLastIdx = -1
-            AfxRedrawWindow(hWin)   
-       
-        case WM_LBUTTONUP
-            if isMouseOverRECT( hWin, gOutputCloseRect ) = true then
-                OnCommand_ViewOutput()   ' toggle the Output window off
-            end if
-            
-        case WM_LBUTTONDOWN
-            dim as long idx = frmOutputTabs_getHotTabHitTest( hWin )
-            if idx = -1 then exit function
-            frmOutput_RestorePanel()
-            gOutputTabsCurSel = idx
-            AfxRedrawWindow(hWin)   
-            frmOutput_ShowHideOutputControls( HWND_FRMOUTPUT )
+    p->b->SetFont( ghFont(GUIFONT_9) )
+    p->b->PaintText( p->wszCaption, @p->rcText, DT_CENTER )
 
+    ' The indicator under the current tab. rcIndicator already spans exactly the caption
+    ' text and sits the configured gap below it -- no arithmetic needed here.
+    if p->isSelected then
+        p->b->SetBackColor( ghOutput.ForeColorHot )
+        p->b->PaintRect( @p->rcIndicator )
+    end if
+end sub
+
+
+' ----------------------------------------------------------------------------------------
+' The USER switched tabs. Programmatic CSelectBar_SetCurSel is silent, so everything that
+' switches tabs internally (a build finishing, a search completing, the View menu) reaches
+' ShowHideOutputControls by its own path and never through here.
+' ----------------------------------------------------------------------------------------
+sub frmOutput_SelectBarSelChange( byval hCtl as HWND, byval idxOld as long, byval idxNew as long )
+    frmOutput_RestorePanel()
+    frmOutput_ShowHideOutputControls( HWND_FRMOUTPUT )
+end sub
+
+
+' ----------------------------------------------------------------------------------------
+' Mouse messages on the tab strip.
+'   double-click -> toggle the panel between minimized and the user's height
+'   plain click  -> restore the panel, even when the tab did not change (clicking the
+'                   already-current tab while minimized has always reopened the panel, and
+'                   SelChange cannot see that because nothing changed)
+' ----------------------------------------------------------------------------------------
+function frmOutput_SelectBarMessage( byval m as CSELECTBAR_MESSAGEINFO ptr ) as boolean
+    select case m->uMsg
         case WM_LBUTTONDBLCLK
-            ' One of the Output window tabs has been doubleclicked.
-            ' Toggle the Output window between "minimized" state and the height
-            ' that the user has manually resized the window to.
-            if isMouseOverRECT( hWin, gOutputCloseRect ) = false then
-                dim as long idx = frmOutputTabs_getHotTabHitTest( hWin )
-                if idx = -1 then exit function
+            if m->idx <> -1 then
                 if gConfig.ShowOutputPanelMinimized then
                     frmOutput_RestorePanel()
                 else
                     frmOutput_MinimizePanel()
                 end if
-                gOutputTabsCurSel = idx
-                AfxRedrawWindow(hWin)   
-                frmOutput_ShowHideOutputControls( HWND_FRMOUTPUT )
+                ' The trailing up is part of this gesture, not a new click.
+                gOutputSuppressRestore = true
             end if
-            
-        case WM_ERASEBKGND
-            return true
-        
-        case WM_PAINT
-            dim as clsDoubleBuffer b
-            
-            b.BeginDoubleBuffer(hWin)
 
-            ' Set default fore and back colors
-            b.SetColors( ghOutput.ForeColor, ghOutput.BackColor )
-
-            ' Clear the entire back client area
-            b.PaintClientRect()
-
-            for i as long = lbound(gOutputTabs) to ubound(gOutputTabs)
-                dim as RECT rc = gOutputTabs(i).rcTab
-                ' the rect also goes hot on a live mouse-over (before the
-                ' tracked isHot flag catches up); the text follows only the
-                ' selected/tracked-hot state
-                dim as boolean isHotTab = (i = gOutputTabsCurSel) orelse (gOutputTabs(i).isHot = true)
-                dim as boolean isMouseOver = isMouseOverRECT( hWin, rc )
-                b.SetForeColor( iif(isHotTab, ghOutput.ForeColorHot, ghOutput.ForeColor) )
-                b.SetBackColor( iif(isHotTab orelse isMouseOver, ghOutput.BackColorHot, ghOutput.BackColor) )
-                b.SetFont( ghFont(GUIFONT_9) )
-                b.PaintRect(@rc)
-                b.PaintText( gOutputTabs(i).wszText, @rc, DT_CENTER )
-            next
-
-            ' Draw the "X" close item (background goes hot on mouse-over)
-            b.SetFont( ghFont(SYMBOLFONT_10) )
-            b.SetForeColor( ghOutput.ForeColorHot )
-            b.SetBackColor( iif( isMouseOverRECT( hWin, gOutputCloseRect ), _
-                                 ghOutput.CloseBackColorHot, ghOutput.BackColor ) )
-            b.PaintRoundRect( @gOutputCloseRect )
-            b.PaintText( wszIconClose, @gOutputCloseRect, DT_CENTER )
-            
-            ' Paint a simple line under the currently active tab
-            if gOutputTabsCurSel <> -1 then
-                dim as RECT rc = gOutputTabs(gOutputTabsCurSel).rcText
-                b.SetPenColor( ghOutput.ForeColorHot )
-                b.PaintLine( 2, _
-                        rc.left, rc.bottom - pWindow->ScaleY(4), rc.right, rc.bottom - pWindow->ScaleY(4) )
+        case WM_LBUTTONUP
+            if gOutputSuppressRestore then
+                gOutputSuppressRestore = false
+            elseif m->idx <> -1 then
+                frmOutput_RestorePanel()
             end if
-            
-            ' Paint a simple line at the top of the window that will act as a 
-            ' visual separator between the Output window and the Scintilla window.
-            dim as RECT rc = b.rcClient
-            b.SetPenColor( ghOutput.Divider )
-            b.PaintLine( 1, rc.left, rc.top, rc.right, rc.top )
-                                    
-            b.EndDoubleBuffer()
-
-            return 0
-    
-        case WM_DESTROY
-            ' REQUIRED: Remove control subclassing
-            RemoveWindowSubclass( hWin, @frmOutputTabs_SubclassProc, uIdSubclass )
-            
     end select
-    
-    ' For messages that we don't deal with
-    function = DefSubclassProc( hWin, uMsg, _wParam, _lParam )
-
+    ' Never suppress: the control needs its own default handling (and the result is ignored
+    ' for WM_LBUTTONUP anyway -- it is what releases the mouse capture).
+    return false
 end function
+
+
+' ----------------------------------------------------------------------------------------
+' The close "X". Painted to match the old hand-drawn button exactly: a rounded rect that
+' fills only on hover, then the glyph.
+' ----------------------------------------------------------------------------------------
+sub frmOutput_ClosePaint( byval p as CICONPANEL_PAINTINFO ptr )
+    p->b->SetBackColor( ghOutput.BackColor )
+    p->b->PaintRect( @p->rc )
+
+    p->b->SetForeColor( ghOutput.ForeColorHot )
+    p->b->SetBackColor( iif( p->isHot orelse p->isPressed, _
+                             ghOutput.CloseBackColorHot, ghOutput.BackColor ) )
+    p->b->PaintRoundRect( @p->rcIcon )
+
+    p->b->SetFont( ghFont(SYMBOLFONT_10) )
+    p->b->PaintText( p->wszGlyph, @p->rcIcon, DT_CENTER )
+end sub
+
+
+sub frmOutput_CloseClick( byval hCtl as HWND, byval idx as long, byval id as long )
+    OnCommand_ViewOutput()      ' toggle the Output window off
+end sub
 
 
 ' ========================================================================================
@@ -864,12 +774,34 @@ function frmOutput_Show( byval hwndParent as HWND ) as LRESULT
     
     dim as HWND hCtl, hLV, hLB
     
-    ' custom tab control (we paint our Tabs on this control)
-    hCtl = _
-    pWindow->AddControl("LABEL", , IDC_FRMOUTPUT_TABS, , 0, 0, 0, OUTPUT_TABS_HEIGHT, _
-        WS_CHILD or WS_CLIPSIBLINGS or WS_CLIPCHILDREN or SS_NOTIFY or SS_LEFT, _
-        WS_EX_LEFT or WS_EX_LTRREADING)
-    pWindow->SetControlSubclass(hCtl, @frmOutputTabs_SubclassProc, IDC_FRMOUTPUT_TABS, @pWindow)
+    ' ------------------------------------------------------------------------------------
+    ' The tab strip: a CSelectBar for the five tabs, and a one-item CIconPanel for the "X".
+    ' Both paint their own backgrounds and abut, so no container window is needed.
+    ' ------------------------------------------------------------------------------------
+    HWND_FRMOUTPUT_SELECTBAR = CSelectBar_Create( HWND_FRMOUTPUT, IDC_FRMOUTPUT_TABS )
+        CSelectBar_SetFont( HWND_FRMOUTPUT_SELECTBAR, ghFont(GUIFONT_9) )
+        CSelectBar_SetPaintPanelCallback( HWND_FRMOUTPUT_SELECTBAR, @frmOutput_SelectBarPaint )
+        CSelectBar_SetSelChangeCallback( HWND_FRMOUTPUT_SELECTBAR, @frmOutput_SelectBarSelChange )
+        CSelectBar_SetMessageCallback( HWND_FRMOUTPUT_SELECTBAR, @frmOutput_SelectBarMessage )
+        ' Panels are added ONCE, in the order the config file's saved index refers to (the
+        ' OUTPUT_TAB_* constants). The captions are pushed by frmOutput_SetTabCaptions,
+        ' which also re-pushes them after a language change.
+        for i as long = 0 to 4
+            CSelectBar_AddPanel( HWND_FRMOUTPUT_SELECTBAR, "", i )
+        next
+        frmOutput_SetTabCaptions()
+        ' Config load happens long before this control exists, so the persisted index is
+        ' applied HERE. SetCurSel is silent, so this cannot fire the change callback.
+        CSelectBar_SetCurSel( HWND_FRMOUTPUT_SELECTBAR, gConfig.ShowOutputPanelIndex )
+
+    HWND_FRMOUTPUT_CLOSE = CIconPanel_Create( HWND_FRMOUTPUT, IDC_FRMOUTPUT_BTNCLOSE )
+        CIconPanel_SetFont( HWND_FRMOUTPUT_CLOSE, ghFont(SYMBOLFONT_10) )
+        CIconPanel_SetJustify( HWND_FRMOUTPUT_CLOSE, IP_JUSTIFY_CENTER )
+        CIconPanel_SetIconSize( HWND_FRMOUTPUT_CLOSE, pWindow->ScaleX(20), pWindow->ScaleY(20) )
+        CIconPanel_SetPaintItemCallback( HWND_FRMOUTPUT_CLOSE, @frmOutput_ClosePaint )
+        CIconPanel_SetClickCallback( HWND_FRMOUTPUT_CLOSE, @frmOutput_CloseClick )
+        CIconPanel_AddItem( HWND_FRMOUTPUT_CLOSE, IP_KIND_COMMAND, wszIconClose, IDC_FRMOUTPUT_BTNCLOSE )
+        CIconPanel_SetTooltipText( HWND_FRMOUTPUT_CLOSE, 0, L(161, "Close") )
 
     ' Compiler Log File: multiline read-only CTextBox (borderless; the 20px indent the
     ' old code hacked in with EM_SETRECT is now a plain left margin). Wheel scrolling

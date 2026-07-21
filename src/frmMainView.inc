@@ -262,35 +262,39 @@ end function
 function OnCommand_ViewToDo() as LRESULT
     ' toggle close the Output window if it is open and already at ToDo 
     if IsWindowVisible(HWND_FRMOUTPUT) then
-        if gOutputTabsCurSel = 3 then
+        if CSelectBar_GetCurSel( HWND_FRMOUTPUT_SELECTBAR ) = OUTPUT_TAB_TODO then
             ShowWindow( HWND_FRMOUTPUT, SW_HIDE )
             frmMain_PositionWindows
             exit function
         end if
-    else      
+    else
         ShowWindow( HWND_FRMOUTPUT, SW_SHOW )
     end if
     frmMain_PositionWindows
-    gOutputTabsCurSel = 3
+    ' Silent: only a user click on the bar fires its change callback, so this cannot
+    ' re-enter. frmOutput_PositionWindows ends in ShowHideOutputControls, which is what
+    ' actually swaps the visible pane.
+    CSelectBar_SetCurSel( HWND_FRMOUTPUT_SELECTBAR, OUTPUT_TAB_TODO )
     frmOutput_PositionWindows
-    AfxRedrawWindow( GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TABS) )
+    AfxRedrawWindow( HWND_FRMOUTPUT_SELECTBAR )
     function = 0
 end function
 
 function OnCommand_ViewNotes() as LRESULT
     ' toggle close the Output window if it is open and already at Notes
     if IsWindowVisible(HWND_FRMOUTPUT) then
-        if gOutputTabsCurSel = 4 then
+        if CSelectBar_GetCurSel( HWND_FRMOUTPUT_SELECTBAR ) = OUTPUT_TAB_NOTES then
             ShowWindow( HWND_FRMOUTPUT, SW_HIDE )
             frmMain_PositionWindows
             exit function
         end if
-    else      
+    else
         ShowWindow( HWND_FRMOUTPUT, SW_SHOW )
     end if
     frmMain_PositionWindows
-    gOutputTabsCurSel = 4
+    ' Silent -- see OnCommand_ViewToDo above.
+    CSelectBar_SetCurSel( HWND_FRMOUTPUT_SELECTBAR, OUTPUT_TAB_NOTES )
     frmOutput_PositionWindows
-    AfxRedrawWindow( GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TABS) )
+    AfxRedrawWindow( HWND_FRMOUTPUT_SELECTBAR )
     function = 0
 end function

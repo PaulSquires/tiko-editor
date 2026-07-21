@@ -1284,7 +1284,8 @@ function frmMain_OnClose( byval hwnd as HWND ) as LRESULT
     gConfig.ShowOutputPanel = IsWindowVisible(HWND_FRMOUTPUT)
     gConfig.ShowOutputPanelHeight = pWindow->UnScaleY(gConfig.ShowOutputPanelHeight)
     'gConfig.ShowOutputPanelMinimized this is set when double clicking an Output panel tab.
-    gConfig.ShowOutputPanelIndex = gOutputTabsCurSel
+    ' The tab bar owns the current tab; the config field is just its persisted copy.
+    gConfig.ShowOutputPanelIndex = CSelectBar_GetCurSel( HWND_FRMOUTPUT_SELECTBAR )
     
     ' if a project is already open then save/close it.
     if gApp.IsProjectActive then 

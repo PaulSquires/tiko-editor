@@ -334,7 +334,9 @@ function clsConfig.SaveConfigFile() as long
     pStream.WriteLine "ShowOutputPanel="          & this.ShowOutputPanel
     pStream.WriteLine "ShowOutputPanelHeight="    & this.ShowOutputPanelHeight
     pStream.WriteLine "ShowOutputPanelMinimized=" & this.ShowOutputPanelMinimized
-    pStream.WriteLine "ShowOutputPanelIndex="     & gOutputTabsCurSel
+    ' Written from this.ShowOutputPanelIndex, which frmMain refreshes from the tab bar
+    ' (CSelectBar_GetCurSel) just before the config is saved.
+    pStream.WriteLine "ShowOutputPanelIndex="     & this.ShowOutputPanelIndex
     pStream.WriteLine ""
 
     ' for each folder location determine if it resides on the same drive as
@@ -763,7 +765,10 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
                     case "ShowOutputPanel":          this.ShowOutputPanel       = nData
                     case "ShowOutputPanelHeight":    this.ShowOutputPanelHeight = nData
                     case "ShowOutputPanelMinimized": this.ShowOutputPanelMinimized = nData
-                    case "ShowOutputPanelIndex":     gOutputTabsCurSel          = nData
+                    ' Loaded long before the tab bar exists, so it lands in the config
+                    ' field only; frmOutput_Show applies it with CSelectBar_SetCurSel once
+                    ' the control has been created.
+                    case "ShowOutputPanelIndex":     this.ShowOutputPanelIndex  = nData
                 end select
             end if
             

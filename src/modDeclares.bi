@@ -170,6 +170,9 @@ end enum
 dim shared as HWND HWND_FRMMAIN, HWND_FRMRECENT, HWND_FRMMAIN_STATUSBAR
 dim shared as HWND HWND_FRMOUTPUT, HWND_FRMOUTPUT_LVRESULTS, HWND_FRMOUTPUT_LVSEARCH
 dim shared as HWND HWND_FRMOUTPUT_LVTODO, HWND_FRMOUTPUT_VSCROLL
+' The tab strip: a CSelectBar (the five tabs) and a one-item CIconPanel (the "X"), sized
+' side by side. HWND_FRMOUTPUT_SELECTBAR also HOLDS the current tab -- see frmOutput.bi.
+dim shared as HWND HWND_FRMOUTPUT_SELECTBAR, HWND_FRMOUTPUT_CLOSE
 dim shared as HWND HWND_FRMMAIN_MENUBAR
 ' Editor split bars: one per orientation, created once and shown one at a time to follow
 ' whichever split mode the ACTIVE document is in (CSplitter's orientation is fixed at
@@ -310,6 +313,10 @@ const MENUITEM_HEIGHT = 24
 const EXPLORERITEM_HEIGHT = 22
 const MENUBAR_HEIGHT = 30
 const OUTPUT_TABS_HEIGHT = 40
+' Width reserved at the right of the Output tab strip for the close "X" CIconPanel. The
+' glyph cell itself is smaller; the surplus is the breathing room the old hand-drawn rect
+' got from its 10px right margin.
+const OUTPUT_CLOSE_WIDTH = 40
 const PANEL_ICON_HEIGHT = 24
 
 ' Debounce timer on HWND_FRMMAIN: restarted on every editor modification;

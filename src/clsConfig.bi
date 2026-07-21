@@ -101,7 +101,10 @@ type clsConfig
         ShowOutputPanel           as long = true
         ShowOutputPanelHeight     as long = OUTPUT_TABS_HEIGHT * 5 ' user set height 
         ShowOutputPanelMinimized  as long = true          ' if window is at minimum height (toggled "minimized")
-        ShowOutputPanelIndex      as long = 0             ' gOutputTabsCurSel (default: Compiler Results)
+        ShowOutputPanelIndex      as long = 0             ' persisted copy of the Output tab bar's
+                                                          ' current panel (default: Compiler Results).
+                                                          ' The bar itself owns it at runtime --
+                                                          ' CSelectBar_Get/SetCurSel.
         SyntaxHighlighting        as long = true
         Codetips                  as long = true
         AutoComplete              as long = true
