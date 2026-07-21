@@ -69,6 +69,30 @@ function frmEditorHScroll_NeedScrollBar( _
     CHScrollBar_SetRange( HWND_FRMEDITOR_HSCROLLBAR(idxWindow), _
                           nTotal, visibleTextWidth, xOffset )
 
+    ' --- Wheel step: convert the system's CHARACTERS into our PIXELS ------------------
+    ' CHScrollBar is unit-agnostic, so its default wheel step follows
+    ' SPI_GETWHEELSCROLLCHARS -- which is a count of CHARACTERS (typically 3). Our range
+    ' is in pixels, so left at the default a trackpad swipe moves the view three PIXELS
+    ' per notch: roughly an eighth of a character, which reads as the gesture barely
+    ' working. (The vertical bars need no such conversion: they are already in LINE units,
+    ' which is exactly what SPI_GETWHEELSCROLLLINES counts.)
+    '
+    ' Set here rather than once at creation deliberately: Ctrl+wheel zoom changes the
+    ' character width, and this function already re-runs on every layout and content
+    ' change, so the step tracks the zoom for free.
+    dim as long charWidth = SciExec( pDoc->hWindow(idxWindow), SCI_TEXTWIDTH, 0, cast(LPARAM, @"n") )
+    if charWidth < 1 then charWidth = 1        ' Scintilla not ready / degenerate font
+    dim as ulong wheelChars = 3
+    SystemParametersInfo( SPI_GETWHEELSCROLLCHARS, 0, @wheelChars, 0 )
+    ' WHEEL_PAGESCROLL (= UINT_MAX) means "a page per notch": hand the control 0 so it
+    ' applies its own page-per-notch handling rather than a nonsense pixel count.
+    dim as long wheelStep = 0
+    if wheelChars <> cast(ulong, &hFFFFFFFF) then
+        wheelStep = cast(long, wheelChars) * charWidth
+        if wheelStep < 1 then wheelStep = 1
+    end if
+    CHScrollBar_SetWheelStep( HWND_FRMEDITOR_HSCROLLBAR(idxWindow), wheelStep )
+
     dim as boolean needHSB = CHScrollBar_NeedsThumb( HWND_FRMEDITOR_HSCROLLBAR(idxWindow) )
     function = iif( needHSB, SW_SHOWNOACTIVATE, SW_HIDE )
 end function

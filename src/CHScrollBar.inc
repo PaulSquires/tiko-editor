@@ -462,13 +462,22 @@ end sub
 
 ' ========================================================================================
 ' How many range units one 120-unit wheel notch scrolls. 0 = follow the system setting.
-' Changing it resets any part-accumulated delta: the remainder was measured against the
-' old step and would translate to the wrong distance under the new one.
+'
+' CHANGING it resets any part-accumulated delta: the remainder was measured against the old
+' step and would translate to the wrong distance under the new one.
+'
+' Setting it to the value it ALREADY HAS is a no-op that keeps the remainder -- and that
+' matters more than it looks. A host whose units are neither lines nor characters has to
+' convert (tiko turns "3 characters" into pixels), and the natural home for that is its
+' per-layout range-push, which re-runs constantly -- including while a slow trackpad swipe
+' is still accumulating. Resetting on every such call would discard every sub-notch
+' remainder and put the dead-then-jump behaviour straight back.
 ' ========================================================================================
 sub CHScrollBar_SetWheelStep( byval hSB as HWND, byval nUnitsPerNotch as integer )
     dim as CHSCROLLBAR ptr pSB = GetHScrollBarPointer(hSB)
     if pSB = 0 then return
     if nUnitsPerNotch < 0 then nUnitsPerNotch = 0
+    if pSB->nWheelStep = nUnitsPerNotch then return   ' no-op: keep the remainder
     pSB->nWheelStep  = nUnitsPerNotch
     pSB->nWheelAccum = 0
 end sub
