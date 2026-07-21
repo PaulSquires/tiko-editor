@@ -18,7 +18,6 @@
 
 #include once "modCompile.bi"
 #include once "modCompileErrors.bi"
-#include once "frmListView.bi"
 #include once "frmStatusBar.bi"
 #include once "CStatusBar.bi"
 
@@ -260,14 +259,14 @@ function SetDocumentErrorPosition ( byval hLV as HWND ) as long
     dim wszErrorLine as wstring * MAX_PATH
     dim wszErrorFile as wstring * MAX_PATH
     
-    dim as long nCurSel = frmListView_GetSelection(hLV)
+    dim as long nCurSel = CListBox_GetCurSel(hLV)
     if nCurSel < 0 then return 0 
     
     dim pDoc as clsDocument ptr 
 
     ' Get the line number and filename of the selected item
-    wszErrorLine = frmListView_GetItemText(hLV, nCurSel, 1)
-    wszErrorFile = frmListView_GetItemText(hLV, nCurSel, 2)
+    wszErrorLine = CListBox_GetCellText(hLV, nCurSel, 1)
+    wszErrorFile = CListBox_GetCellText(hLV, nCurSel, 2)
     dim as long nLineNum = val(wszErrorLine) - 1   ' because visually the editor is one based line numbers
 
     ' if we are doing a QuickRun then it must be on the currently loaded
@@ -338,7 +337,7 @@ function ParseLogForError ( _
     pCompile->EndTime = timer
 
     hLV = HWND_FRMOUTPUT_LVRESULTS
-    frmListView_DeleteAllItems( hLV )
+    CListBox_Clear( hLV )
     
     ' On some Windows systems with tight security policies, the CreateChildProcess used
     ' by the sub RedirConsoleToFile will fail. This seems to happen mostly when trying
@@ -373,7 +372,7 @@ function ParseLogForError ( _
             fGoodCompile = false
             fSwitchToLogFile = true
             wszText = "" & chr(9) & "0" & chr(9) & "" & chr(9) & "compiling FAILED: Windows not 64-bit (refer to log file)"
-            frmListView_AddString( hLV, wszText )
+            ListBox_AddTabbedRow( hLV, wszText )
             wszOutputMsg = wsLogSt: exit For
             exit for
         end if   
@@ -404,24 +403,24 @@ function ParseLogForError ( _
         if (left(wst_ucase, 6) = "ERROR!") or _
             (left(wst_ucase, 34) = "VERY SORRY, BUT GORC HAD A PROBLEM") then
             wszText = "" & chr(9) & "0" & chr(9) & "" & chr(9) & "compiling resource FAILED: Error Code 1 (refer to log file)"
-            frmListView_AddString( hLV, wszText )
+            ListBox_AddTabbedRow( hLV, wszText )
             fSwitchToLogFile = true
             NumErrors += 1
         elseif (left(wst_ucase, 5) = "ERROR") then
             wszText = "" & chr(9) & "0" & chr(9) & "" & chr(9) & "compiling FAILED: Error Code 1 (refer to log file)"
-            frmListView_AddString( hLV, wszText )
+            ListBox_AddTabbedRow( hLV, wszText )
             fSwitchToLogFile = true
             NumErrors += 1
         elseif (left(wst_ucase, 19) = "COMPILING C FAILED:") then
             wszText = "" & chr(9) & "0" & chr(9) & "" & chr(9) & "compiling C FAILED: Error Code 1 (refer to log file)"
-            frmListView_AddString( hLV, wszText )
+            ListBox_AddTabbedRow( hLV, wszText )
             fSwitchToLogFile = true
             NumErrors += 1
         end if
         
         if instr(wst_ucase, "LINKING FAILED:") then 
             wszText = "" & chr(9) & "0" & chr(9) & "" & chr(9) & wst & " (refer to log file)"
-            frmListView_AddString( hLV, wszText )
+            ListBox_AddTabbedRow( hLV, wszText )
             fSwitchToLogFile = true
             NumErrors += 1
         end if
@@ -492,7 +491,7 @@ function ParseLogForError ( _
                     wst3 = mid( wst, Error_Start + 1)  ' error message
 
                     wszText = "" & chr(9) & wst2 & chr(9) & wst1 & chr(9) & wst3
-                    frmListView_AddString( hLV, wszText )
+                    ListBox_AddTabbedRow( hLV, wszText )
                     fSwitchToLogFile = false
 
                     if IsWarning then 
@@ -507,7 +506,7 @@ function ParseLogForError ( _
 
             else
 '                wszText = "" & chr(9) & "" & chr(9) & "" & chr(9) & wst
-'                frmListView_AddString( hLV, wszText )
+'                ListBox_AddTabbedRow( hLV, wszText )
                 NumDirectives += 1
             end if
 
@@ -556,7 +555,7 @@ function ParseLogForError ( _
         if NumErrors > 0 then MessageBeep(MB_ICONWARNING)
         
         ' Position the Compiler Log to the first error/warning
-        frmListView_SelectItem( hLV, 0 )
+        CListBox_SetCurSel( hLV, 0 )
         
         ' if fGoodCompile is false then something unusual occurred so better show the log file by default
         if fGoodCompile = false then

@@ -13,7 +13,6 @@
 
 #pragma once
 
-#include once "frmListView.bi"
 
 
 ' Size = 32 bytes
@@ -69,25 +68,9 @@ declare function GetProcessImageName( byval pe32w as PROCESSENTRY32W ptr, byval 
 declare function IsProcessRunning( byval wszExeFileName as DWSTRING ) as boolean
 declare function GetRunExecutableFilename() as DWSTRING
 declare function GetListBoxEmptyClientArea( byval hListBox as HWND ) as RECT
-declare function frmListView_SelectItem( byval hLV as HWND, byval nLineNum as long ) as long
-declare function frmListView_GetCount( byval hLV as HWND ) as long
-declare function frmListView_SetCount( byval hLV as HWND, byval itemCount as long ) as long
-declare function frmListView_AddString( byval hLV as HWND, byval wszText as DWSTRING ) as long
-declare function frmListView_DeleteAllItems( byval hLV as HWND ) as long
-declare function frmListView_GetItemText( byval hLV as HWND, byval nLineNum as long, byval nColNum as long ) as DWSTRING
-declare function frmListView_SetItemText( byval hLV as HWND, byval nLineNum as long, byval nColNum as long, byval wszText as DWSTRING ) as long
-declare function frmListView_GetSelection( byval hLV as HWND ) as long
-declare function frmListView_AddColumn( _
-    byval hLV as HWND, byval nColNum as long, byval wszText as DWSTRING, byval nWidth as long ) as long
-declare function frmListView_SetColumnWidth( byval hLV as HWND, byval nColNum as long, byval nWidth as long ) as long
-declare function frmListView_SetForeColors( _
-    byval hLV as HWND, byval ForeColor as COLORREF, byval ForeColorHot as COLORREF ) as long
-declare function frmListView_SetBackColors( _
-    byval hLV as HWND, byval BackColor as COLORREF, byval BackColorHot as COLORREF ) as long
-declare function frmListView_SetScrollBarColors( _
-    byval hLV as HWND, byval ScrollBarBackColor as COLORREF, byval ScrollBarForeColor as COLORREF, _
-    byval ScrollBarDividerColor as COLORREF ) as long
-declare function frmListView_GetPointer( byval hLV as HWND ) as LISTVIEW_DATA_TYPE ptr
+
+' Add a chr(9)-delimited row to a multi-column CListBox (see modRoutines.inc).
+declare function ListBox_AddTabbedRow( byval hCtl as HWND, byval wszTabbed as DWSTRING ) as long
                                             
 
 
