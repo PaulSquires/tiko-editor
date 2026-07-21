@@ -1,0 +1,8 @@
+# Per-user runtime settings. tiko rewrites these as you use it, so tracking them means
+# every run shows up as a diff and every pull risks a conflict over someone else's window
+# positions and key bindings.
+#
+# Paths are anchored with a leading "/" on purpose: settings/keywords/*.ini ARE tracked
+# (codetips.ini and friends), so a bare *.ini rule would wrongly catch those too.
+/settings/keybindings.ini
+/settings/settings.ini
