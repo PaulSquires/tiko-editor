@@ -13,6 +13,7 @@
 
 #include once "modMenus.bi"
 #include once "CVScrollBar.bi"    ' required by CListBox.bi
+#include once "CColumnHeader.bi"  ' likewise: CListBox.bi names HDR_* callback typedefs
 #include once "CListBox.bi"       ' CListBox_GetSelCount (CListBox.inc is included later)
 #include once "CMenuBar.bi"       ' the topmenu lives on CMenuBar/CPopupMenu controls
                                   ' (implementations are included later in tiko.bas)
