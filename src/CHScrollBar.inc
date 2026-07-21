@@ -17,12 +17,15 @@ end function
 
 
 ' ========================================================================================
-' Move by one page in the given direction (-1 left / +1 right), notifying the owner.
+' Move by nUnits (signed, in range units), clamped to [0, MaxPos()], notifying the owner.
 ' Returns TRUE if the position actually changed.
+'
+' THE one place that clamps, recalculates, invalidates and notifies. Paging and the wheel
+' both route through it, so the two can never drift apart.
 ' ========================================================================================
-function CHScrollBar_PageStep( byval pSB as CHSCROLLBAR ptr, byval nDir as integer ) as boolean
+function CHScrollBar_StepBy( byval pSB as CHSCROLLBAR ptr, byval nUnits as integer ) as boolean
     if pSB = 0 then return false
-    dim as integer newPos = pSB->nPos + (nDir * pSB->nPage)
+    dim as integer newPos = pSB->nPos + nUnits
     if newPos < 0 then newPos = 0
     if newPos > pSB->MaxPos() then newPos = pSB->MaxPos()
     if newPos = pSB->nPos then return false
@@ -31,6 +34,78 @@ function CHScrollBar_PageStep( byval pSB as CHSCROLLBAR ptr, byval nDir as integ
     InvalidateRect( pSB->hWin, NULL, FALSE )
     if pSB->ScrollCallback then pSB->ScrollCallback( pSB->hWin, newPos )
     return true
+end function
+
+
+' ========================================================================================
+' Move by one page in the given direction (-1 left / +1 right), notifying the owner.
+' Returns TRUE if the position actually changed.
+' ========================================================================================
+function CHScrollBar_PageStep( byval pSB as CHSCROLLBAR ptr, byval nDir as integer ) as boolean
+    if pSB = 0 then return false
+    return CHScrollBar_StepBy( pSB, nDir * pSB->nPage )
+end function
+
+
+' ========================================================================================
+' Feed the scrollbar a horizontal mouse-wheel delta. THE single implementation of wheel
+' scrolling: the control's own WM_MOUSEHWHEEL handler is a thin wrapper around this, and a
+' host can call it directly to route a swipe made over the CONTENT into this bar.
+'
+' nDelta is the ALREADY-EXTRACTED signed delta, not the raw wParam:
+'
+'     CHScrollBar_HandleWheelDelta( hSB, cast(short, hiword(wParam)) )
+'
+' The cast matters -- loword/hiword yield UNSIGNED words, so a swipe-left delta read without
+' it becomes ~65416 and the direction silently inverts (see C:\dev\Learnings.md).
+'
+' SIGN -- THE TRAP IN THIS FILE: for WM_MOUSEHWHEEL a POSITIVE delta means "scroll RIGHT",
+' which INCREASES nPos. That is the OPPOSITE of CVScrollBar, where a positive WM_MOUSEWHEEL
+' delta means the wheel moved away from the user, scrolling UP, DECREASING nPos. The two
+' controls are otherwise exact mirrors and both readings look equally plausible in code, so
+' the sign is applied here, once, with this comment on it.
+'
+' High-resolution wheels and precision touchpads send deltas well under one 120 notch, so
+' the remainder is accumulated: a slow two-finger swipe moves the bar continuously instead
+' of sitting dead until a whole notch arrives.
+'
+' Returns TRUE if the position actually moved.
+' ========================================================================================
+function CHScrollBar_HandleWheelDelta( byval hSB as HWND, byval nDelta as integer ) as boolean
+    dim as CHSCROLLBAR ptr pSB = GetHScrollBarPointer(hSB)
+    if pSB = 0 then return false
+    if nDelta = 0 then return false
+
+    pSB->nWheelAccum += nDelta
+
+    ' Units moved per 120-unit notch: the caller's override, else the system setting. The
+    ' system value is re-read per message rather than cached at Create, so changing it in
+    ' Control Panel takes effect without restarting the app. Note this is the CHARS
+    ' setting, not LINES -- the horizontal analogue, and a separate user preference.
+    dim as integer nStep = pSB->nWheelStep
+    if nStep <= 0 then
+        dim as ulong sysval = 3
+        SystemParametersInfo( SPI_GETWHEELSCROLLCHARS, 0, @sysval, 0 )
+        ' WHEEL_PAGESCROLL (= UINT_MAX) means "one page per notch". FreeBASIC's winuser.bi
+        ' declares the SPI_* constants but NOT this one, so it is spelled out -- the same
+        ' workaround CTextBox.inc uses for the identical check.
+        if sysval = cast(ulong, &hFFFFFFFF) then
+            nStep = pSB->nPage
+        else
+            nStep = cast(integer, sysval)
+        end if
+    end if
+    if nStep <= 0 then nStep = 1        ' never divide by, or step, zero
+
+    dim as integer nUnits = (pSB->nWheelAccum * nStep) \ 120
+    if nUnits = 0 then return false     ' not enough delta yet; the remainder is kept
+
+    ' Consume exactly the delta those units represent, keeping the rest. FB's \ truncates
+    ' toward zero, which is what makes this symmetric for negative deltas and stops the
+    ' accumulator overshooting past the units actually applied.
+    pSB->nWheelAccum -= (nUnits * 120) \ nStep
+
+    return CHScrollBar_StepBy( pSB, nUnits )     ' SIGN: positive delta scrolls right
 end function
 
 
@@ -223,6 +298,23 @@ function CHScrollBar_WndProc( _
         CHScrollBar_ClearHot( pSB )
         return 0
 
+    case WM_MOUSEHWHEEL
+        ' A horizontal two-finger trackpad swipe (or a tilt wheel) with the cursor over the
+        ' bar. All the work -- and the inverted sign relative to CVScrollBar -- lives in
+        ' HandleWheelDelta, which a host can also call to route a swipe made over the
+        ' content. The signed-word cast is not optional: hiword is unsigned (Learnings.md).
+        '
+        ' Reaching us at all depends on "scroll inactive windows when I hover over them"
+        ' (on by default), since this control never takes focus -- see CHScrollBar.bi.
+        '
+        ' There is deliberately no WM_MOUSEWHEEL case here: a horizontal bar answers
+        ' horizontal gestures only.
+        if pSB then
+            CHScrollBar_HandleWheelDelta( hwnd, cast(short, hiword(wParam)) )
+            return 0                    ' we own this gesture, moved or not
+        end if
+        ' No instance: fall through to DefWindowProc so the message still bubbles up.
+
     case WM_TIMER
         if pSB = 0 then exit select
 
@@ -366,3 +458,24 @@ sub CHScrollBar_SetScrollCallback( byval hSB as HWND, byval usersub as HScrollCa
     if pSB = 0 then return
     pSB->ScrollCallback = usersub
 end sub
+
+
+' ========================================================================================
+' How many range units one 120-unit wheel notch scrolls. 0 = follow the system setting.
+' Changing it resets any part-accumulated delta: the remainder was measured against the
+' old step and would translate to the wrong distance under the new one.
+' ========================================================================================
+sub CHScrollBar_SetWheelStep( byval hSB as HWND, byval nUnitsPerNotch as integer )
+    dim as CHSCROLLBAR ptr pSB = GetHScrollBarPointer(hSB)
+    if pSB = 0 then return
+    if nUnitsPerNotch < 0 then nUnitsPerNotch = 0
+    pSB->nWheelStep  = nUnitsPerNotch
+    pSB->nWheelAccum = 0
+end sub
+
+
+function CHScrollBar_GetWheelStep( byval hSB as HWND ) as integer
+    dim as CHSCROLLBAR ptr pSB = GetHScrollBarPointer(hSB)
+    if pSB = 0 then return 0
+    return pSB->nWheelStep
+end function

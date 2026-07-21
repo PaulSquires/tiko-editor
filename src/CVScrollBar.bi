@@ -49,6 +49,12 @@ type CVSCROLLBAR
     hotTimerOn    as boolean = false
     repeatTimerOn as boolean = false
     repeatDir     as integer = 0      ' -1 = page up, +1 = page down
+    ' --- Mouse wheel / trackpad ---
+    '     nWheelAccum is what makes a precision touchpad usable: its deltas are routinely
+    '     well under one 120 notch, so the unconsumed remainder is carried between messages
+    '     and a slow two-finger swipe scrolls continuously instead of in jumps.
+    nWheelAccum   as integer = 0
+    nWheelStep    as integer = 0      ' units per notch; 0 = follow the system setting
     ' --- Appearance (used by the default paint; a PaintCallback overrides entirely) ---
     BackColor     as COLORREF = BGR(33,37,43)
     ForeColor     as COLORREF = BGR(53,59,69)
@@ -139,3 +145,39 @@ declare function CVScrollBar_NeedsThumb( byval hSB as HWND ) as boolean
 declare sub      CVScrollBar_SetColors( byval hSB as HWND, byval backclr as COLORREF, byval foreclr as COLORREF, byval foreclrhot as COLORREF )
 declare sub      CVScrollBar_SetPaintCallback( byval hSB as HWND, byval usersub as VScrollPaintCallbackSub )
 declare sub      CVScrollBar_SetScrollCallback( byval hSB as HWND, byval usersub as VScrollCallbackSub )
+
+' ----------------------------------------------------------------------------------------
+' MOUSE WHEEL / TRACKPAD
+'
+' The control handles WM_MOUSEWHEEL itself, so a wheel or a two-finger trackpad swipe with
+' the cursor over the bar scrolls it. Precision-touchpad deltas smaller than one 120 notch
+' are accumulated, so a slow swipe scrolls smoothly rather than in jumps.
+'
+' HandleWheelDelta is that same implementation, exposed. Call it to route a wheel gesture
+' the HOST received -- typically one made over the content the bar scrolls, which is a far
+' bigger target than the bar itself -- passing the ALREADY-EXTRACTED signed delta:
+'
+'     case WM_MOUSEWHEEL
+'         CVScrollBar_HandleWheelDelta( hSB, cast(short, hiword(wParam)) )
+'
+' The cast matters: loword/hiword yield UNSIGNED words, so a delta read without it turns
+' ~-120 into ~65416 and the direction silently inverts (see C:\dev\Learnings.md).
+' Returns TRUE if the position actually moved.
+'
+' ROUTING, worth knowing: Windows sends wheel messages to the FOCUSED window, and this
+' control never takes focus. What makes hovering work is Windows 10+'s "scroll inactive
+' windows when I hover over them" (Settings -> Mouse), which is on by default and routes
+' them to the window under the cursor instead. With it OFF the message goes to whatever has
+' focus and DefWindowProc bubbles it to that window's PARENT -- never sideways to this bar.
+' Hosting HandleWheelDelta yourself is the reliable path; the built-in handler is the
+' convenience.
+'
+' SetWheelStep sets how many range units one 120-unit notch scrolls. 0 (the default) means
+' follow the system setting -- SPI_GETWHEELSCROLLLINES, typically 3, re-read per message so
+' a Control Panel change takes effect immediately, and honouring WHEEL_PAGESCROLL ("a page
+' per notch"). Set it when your range units are neither lines nor characters and the system
+' number would be meaningless.
+' ----------------------------------------------------------------------------------------
+declare function CVScrollBar_HandleWheelDelta( byval hSB as HWND, byval nDelta as integer ) as boolean
+declare sub      CVScrollBar_SetWheelStep( byval hSB as HWND, byval nUnitsPerNotch as integer )
+declare function CVScrollBar_GetWheelStep( byval hSB as HWND ) as integer
