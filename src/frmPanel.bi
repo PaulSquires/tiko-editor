@@ -23,17 +23,5 @@ type PANEL_TYPE
 end type
 dim shared gPanel as PANEL_TYPE
 
-' TODO: Remove when the frmListView scrollbar is replaced with CVScrollBar (the Output
-' window, Help Viewer and editor scrollbars have already been converted; frmListView's
-' embedded VScrollData is the last consumer of this type).
-type PANEL_VSCROLL_TYPE
-    hListBox      as HWND
-    listBoxHeight as long
-    numItems      as long
-    itemHeight    as long
-    itemsPerPage  as long
-    thumbHeight   as long
-    rc            as RECT
-end type
 
 declare function frmPanel_Show( byval hWndParent as HWnd ) as LRESULT
