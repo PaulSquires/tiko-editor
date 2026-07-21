@@ -527,3 +527,46 @@ and the interactive feel of everything the phase notes above already flagged.)*
   unscanned edits; the next scan self-corrects. Accepted.
 - **Project scan reads disk:** unsaved edits in *non-active* files are invisible until
   saved — by design (decision 1).
+
+---
+
+# Menubar migration to CMenuBar/CPopupMenu (2026-07-21)
+
+The hand-rolled topmenu (frmMenuBar strip + frmPopupMenu WS_POPUP-wrapping-LISTBOX
+popups + pump handlers in modMsgPump) was replaced by the reusable CMenuBar/CPopupMenu
+controls, vendored from C:\dev\CMenuBar (canonical repo; see its README/REFACTOR_PLAN
+for the control design). What moved where:
+
+- `frmMenuBar.inc` is now the integration module: builds the bar + CPopupMenu trees
+  from the STATIC gTopMenu() definition table at startup; refreshes captions/accels
+  through getMenuText() in the bar's InitPopup (dynamic captions and localization stay
+  current); hosts the "Update Available" label as its own small sibling window.
+- Dynamic submenus (MRU files/sessions/projects, User Tools) rebuild in their popup's
+  InitPopup each open — the gTopMenu row-recycling machinery (updateMRU*Items,
+  updateUserToolsMenuItems, setTopMenuMRUItem, getTopMenuPtr, clearMRUFilesItems,
+  getNextFreeMRUindex) was deleted.
+- EnableTopMenuItem/CheckMarkTopMenuItem (modMenus.inc) keep their signatures but
+  drive the controls (by-id, recursive), so every frmMain_*TopMenuStates function is
+  untouched. frmMain_ChangeTopMenuStates now takes the bar id.
+- handleMouseTopMenu/handleKeysTopMenu (modMsgPump) deleted; ONE line in frmMain's
+  pump replaces them: `CMenuBar_FilterMessage( HWND_FRMMAIN_MENUBAR, @uMsg )`.
+  Behavior note: while a dropdown is open, ALL plain keys are consumed (menu
+  semantics), so Ctrl accelerators no longer fire with a menu open (they did before —
+  native-menu behavior now). WM_SYSKEY* passes through: Alt+letter accelerators and
+  the Scintilla Alt+column rule are unchanged.
+- Alt+letter entry (frmMainOnCommand IDC_MENUBAR_*) = `CMenuBar_OpenMenu(idx, true)`,
+  replacing the SendMessage(WM_LBUTTONDOWN, -1) hack.
+- frmPopupMenu.inc deleted, with it the layered shadow windows (CS_DROPSHADOW now),
+  the KeepTitleBarActive sets (popups are persistent + never activated; the
+  WM_NCACTIVATE lie in frmMain remains for frmSearchSymbol), and the old menu globals
+  (gMenuBar/gMenuUpdateMessage/gActiveMenuBarIndex/gMenuLastCurSel, MENUBAR_ITEM).
+- Compact-menus toggle now applies bar/item heights live via
+  frmMenuBar_PositionWindows (old bar height needed a restart).
+
+Verified: clean build (fbc64, zero warnings); headless run shows the full UI with the
+new bar, and WM_COMMAND(IDC_MENUBAR_FILE) opens the File dropdown with correct
+localized captions, accelerator column, disabled states from the state functions,
+separators, chevrons, first-row keyboard selection, and the system drop shadow.
+NOT verified (author's interactive pass): mouse hover/hover-switch feel, submenu
+hover timing, full keyboard walk, Esc unwind, outside-click dismissal, MRU/User
+Tools rebilds with real config data, update label, compact mode, theme switch, DPI.

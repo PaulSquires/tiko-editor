@@ -288,17 +288,8 @@ end type
 dim shared gLastPosition(any) as LASTPOSITION_TYPE
 
 
-TYPE MENUBAR_ITEM
-    wszText as DWSTRING
-    rcItem  as RECT
-    id      as long
-end type
-
-' shared variables that control the state of what menubar button is active.
-dim shared gMenuBar(any) as MENUBAR_ITEM
-dim shared gMenuUpdateMessage as MENUBAR_ITEM
-dim shared gActiveMenuBarIndex as long = -1
-dim shared as long gMenuLastCurSel = -1
+' (The menubar's own item/state globals are gone: the CMenuBar control owns its items,
+'  rects, hover and active state -- see frmMenuBar.inc.)
 
 ' array that holds the names of all fonts on the target system
 dim shared gFontNames( any ) as DWSTRING

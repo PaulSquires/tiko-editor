@@ -1734,7 +1734,14 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
         if uMsg.message = WM_QUIT then exit do
 
         if handleMouseShowScrollBar(uMsg) then continue do
-        if handleMouseTopMenu(uMsg) then continue do
+
+        ' The whole topmenu system (bar highlight, dropdowns, submenus): keyboard
+        ' navigation, and dismissal on outside clicks. Consumes every plain key while
+        ' a dropdown is open (menu semantics) but never WM_SYSKEY*, so the Alt+letter
+        ' accelerators below keep working. Replaces handleMouseTopMenu and
+        ' handleKeysTopMenu.
+        if CMenuBar_FilterMessage( HWND_FRMMAIN_MENUBAR, @uMsg ) then continue do
+
         if handleAltKeyMenuBar(uMsg) then continue do
 
         ' Close with ESC key: Find/Replace, FindInFiles, FunctionList window
@@ -1766,10 +1773,6 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
                 if pDoc then pdoc->LastCharTyped = uMsg.wParam
             end if
             
-            ' if topmenus or menubar are active then process all keyboard input for them rather than 
-            ' passing it off to the system to process.
-            if handleKeysTopMenu(uMsg) then continue do
-
             ' Check if the settings.ini file was changed by an external program.
             ' Reload the config file in case a user has automated a change to it since
             ' the application started (for example, changing the compiler path).

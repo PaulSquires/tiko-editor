@@ -11,232 +11,441 @@
 '    MERCHANTABILITY or FITNESS for A PARTICULAR PURPOSE.  See the
 '    GNU General Public License for more details.
 
+' ========================================================================================
+' The application menubar, hosted on the reusable CMenuBar + CPopupMenu controls
+' (vendored from the CMenuBar repo; canonical home C:\dev\CMenuBar). This module
+' replaces the hand-rolled frmMenuBar/frmPopupMenu owner-draw listbox system
+' (migrated 2026-07-21):
+'   - gTopMenu() (modMenuDefinitions) stays the STATIC menu definition table; this
+'     module builds the CPopupMenu trees from it at startup.
+'   - Dynamic sections (MRU files/sessions/projects, User Tools) are rebuilt in their
+'     popup's InitPopup callback each time that submenu opens.
+'   - Captions/accelerators are re-resolved through getMenuText() in the bar's
+'     InitPopup callback each time a dropdown opens (localization, Start/Continue
+'     Debugging, Explorer Left/Right stay current).
+'   - Enable/checked state stays with EnableTopMenuItem/CheckMarkTopMenuItem
+'     (modMenus.inc), which now drive the controls directly.
+'   - Keyboard navigation and outside-click dismissal live in CMenuBar_FilterMessage,
+'     called once from frmMain's message pump (replacing handleKeysTopMenu and
+'     handleMouseTopMenu).
+'   - The "Update Available" label is a small host-owned sibling window sitting over
+'     the right end of the menubar strip.
+' ========================================================================================
+
+declare sub frmMenuBar_DynamicInitPopup( byval hPopup as HWND )
+declare sub frmMenuBar_ApplyPopupTheme( byval hPopup as HWND )
+
+' The four dynamic submenus (rebuilt per open in frmMenuBar_DynamicInitPopup).
+dim shared as HWND ghMenuPopupMRU
+dim shared as HWND ghMenuPopupMRUSession
+dim shared as HWND ghMenuPopupMRUProject
+dim shared as HWND ghMenuPopupUserTools
+
+' Registry of every popup this module creates, so a theme change or a compact-menus
+' toggle can re-push colors/fonts/heights into all of them (the controls COPY colors
+' at Set time; they never read tiko's theme globals).
+dim shared gMenuPopupList(any) as HWND
+dim shared as long gMenuPopupCount = 0
+
+' The host-owned "Update Available" label window (sibling above the bar strip).
+dim shared as HWND HWND_FRMMAIN_MENUBARUPDATE
+
 
 ' ========================================================================================
-' Position all child windows. Called manually and/or by WM_SIZE
+' Compatibility wrapper: every legacy dismissal site funnels through this name.
 ' ========================================================================================
-function frmMenuBar_PositionWindows() as LRESULT
-    dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN)
-    If pWindow = 0 Then Exit function
-    
-    dim as long nLeft = pWindow->ScaleX(6)
-    dim as long nTop = 0
-    dim as long nWidth = 0
-    dim as long nHeight = AfxGetWindowHeight(HWND_FRMMAIN_MENUBAR)
-    dim as long nPadding = 12   ' 6 left 6 right
-    
-    dim id( 0 to ... ) as long = _
-        { _
-        IDC_MENUBAR_FILE, IDC_MENUBAR_EDIT, IDC_MENUBAR_SEARCH, IDC_MENUBAR_VIEW, _
-        IDC_MENUBAR_PROJECT, IDC_MENUBAR_COMPILE, IDC_MENUBAR_DEBUG, IDC_MENUBAR_HELP _
-        }
+function killAllPopupMenus() as boolean
+    CMenuBar_CloseMenu( HWND_FRMMAIN_MENUBAR )
+    return true
+end function
 
-    redim gMenuBar(ubound(id)) as MENUBAR_ITEM
-        
-    for i as integer = lbound(id) to ubound(id)
-        gMenuBar(i).id = id(i)
-        gMenuBar(i).wszText = getMenuText(gMenuBar(i).id)
-        dim as long nWidth = pWindow->ScaleX(getTextWidth( HWND_FRMMAIN, gMenuBar(i).wszText, GUIFONT_10) + nPadding)
-        gMenuBar(i).rcItem = type(nLeft, nTop, nLeft + nWidth, nTop + nHeight)
-        nLeft += nWidth
+
+' ========================================================================================
+' Split a getMenuText() result into caption and accelerator (packed caption chr(9) accel).
+' ========================================================================================
+private sub frmMenuBar_SplitCaption( byval nID as long, byref wszCaption as DWSTRING, byref wszAccel as DWSTRING )
+    dim as DWSTRING wszText = getMenuText( nID )
+    wszCaption = AfxStrParse( wszText, 1, wchr(9) )
+    wszAccel   = AfxStrParse( wszText, 2, wchr(9) )
+end sub
+
+
+' ========================================================================================
+' Push the current theme colors/fonts/glyphs/item height into one popup.
+' ========================================================================================
+private sub frmMenuBar_ApplyPopupTheme( byval hPopup as HWND )
+    dim c as CPOPUPMENU_COLORS
+    c.BackColor         = ghPopup.BackColor
+    c.ForeColor         = ghPopup.ForeColor
+    c.BackColorHot      = ghPopup.BackColorHot
+    c.ForeColorHot      = ghPopup.ForeColorHot
+    c.ForeColorDisabled = ghPopup.ForeColorDisabled
+    c.BorderColor       = ghPopup.PanelColor
+    CPopupMenu_SetColors( hPopup, @c )
+    CPopupMenu_SetFonts( hPopup, ghFont(GUIFONT_10), ghFont(SYMBOLFONT_10) )
+    CPopupMenu_SetGlyphs( hPopup, wszIconCheckmark, wszIconChevronRight )
+    dim pWindow as CWindow ptr = AfxCWindowPtr( HWND_FRMMAIN )
+    if pWindow then
+        dim as long nHeight = iif( gConfig.CompactMenus, MENUITEM_HEIGHT_COMPACT, MENUITEM_HEIGHT )
+        CPopupMenu_SetItemHeight( hPopup, pWindow->ScaleY(nHeight) )
+    end if
+end sub
+
+
+' ========================================================================================
+' Create one popup, register it for theme syncs, apply the current theme.
+' ========================================================================================
+private function frmMenuBar_CreatePopup() as HWND
+    dim as HWND hPopup = CPopupMenu_Create( HWND_FRMMAIN )
+    redim preserve gMenuPopupList( gMenuPopupCount )
+    gMenuPopupList(gMenuPopupCount) = hPopup
+    gMenuPopupCount += 1
+    frmMenuBar_ApplyPopupTheme( hPopup )
+    return hPopup
+end function
+
+
+' ========================================================================================
+' Re-push theme colors into the bar and every popup. Called at startup and whenever
+' the theme or the compact-menus setting may have changed (frmMenuBar_PositionWindows).
+' ========================================================================================
+sub frmMenuBar_SyncTheme()
+    if HWND_FRMMAIN_MENUBAR = 0 then exit sub
+    dim c as CMENUBAR_COLORS
+    c.BackColor    = ghMenuBar.BackColor
+    c.ForeColor    = ghMenuBar.ForeColor
+    c.BackColorHot = ghMenuBar.BackColorHot
+    c.ForeColorHot = ghMenuBar.ForeColorHot
+    CMenuBar_SetColors( HWND_FRMMAIN_MENUBAR, @c )
+    CMenuBar_SetFont( HWND_FRMMAIN_MENUBAR, ghFont(GUIFONT_10) )
+    for i as long = 0 to gMenuPopupCount - 1
+        if IsWindow( gMenuPopupList(i) ) then frmMenuBar_ApplyPopupTheme( gMenuPopupList(i) )
     next
-    
-    ' Position the Tiko Update Available message
-    gMenuUpdateMessage.id = IDC_MENUBAR_UPDATE
-    gMenuUpdateMessage.wszText = getMenuText(gMenuUpdateMessage.id)
-    nWidth = pWindow->ScaleX(getTextWidth( HWND_FRMMAIN, gMenuUpdateMessage.wszText, GUIFONT_10) + nPadding)
-    nLeft = AfxGetWindowClientWidth( HWND_FRMMAIN ) - nWidth - nPadding
-    gMenuUpdateMessage.rcItem = type<RECT>(nLeft, nTop, nLeft + nWidth, nTop + nHeight)
-    
-    AfxRedrawWindow( HWND_FRMMAIN_MENUBAR )
-
-    function = 0
-end function
+end sub
 
 
 ' ========================================================================================
-' Process WM_DESTROY message for window/dialog: frmMenuBar
+' Rebuild the dynamic submenus from current config state. Each runs in its popup's
+' InitPopup callback, so the list is always current when it opens (the old
+' updateMRU*FilesItems/updateUserToolsMenuItems gTopMenu machinery is gone).
 ' ========================================================================================
-function frmMenuBar_OnDestroy( byval hwnd as HWND ) as LRESULT
-    function = 0
-end Function
-
-
-' ========================================================================================
-' Process WM_SIZE message for window/dialog: frmMenuBar
-' ========================================================================================
-function frmMenuBar_OnSize( _
-            byval hwnd as HWND,_
-            byval state as UINT, _
-            byval cx as long, _
-            byval cy as long _
-            ) as LRESULT
-    If state <> SIZE_MINIMIZED Then
-        ' Position all of the child windows
-        frmMenuBar_PositionWindows
-    end If
-    function = 0
-end function
-
-
-' ========================================================================================
-' frmMenuBar Window procedure
-' ========================================================================================
-function frmMenuBar_GetHotIndex( byval hwnd as HWND ) as long
-    dim as integer idx = -1
-    for i as integer = lbound(gMenuBar) to ubound(gMenuBar)
-        if isMouseOverRECT( hwnd, gMenuBar(i).rcItem ) then
-            idx = i: exit for
+private sub frmMenuBar_RebuildMRUFiles( byval hPopup as HWND )
+    CPopupMenu_Clear( hPopup )
+    dim as boolean hasFiles = false
+    for i as long = 0 to 9
+        ' if the file no longer exists then remove it from the MRU list
+        gConfig.MRU(i) = ProcessFromCurdriveApp( gConfig.MRU(i) )
+        if AfxFileExists( gConfig.MRU(i) ) = 0 then
+            gConfig.MRU(i) = ""
+        else
+            hasFiles = true
+            CPopupMenu_AddItem( hPopup, IDM_MRUBASE + i, gConfig.MRU(i) )
         end if
     next
-    function = idx
+    if hasFiles = false then
+        CPopupMenu_AddItem( hPopup, IDM_MRUFILES, L(11,"(Empty)") )
+    else
+        CPopupMenu_AddSeparator( hPopup )
+        CPopupMenu_AddItem( hPopup, IDM_MRUCLEAR, L(225,"Clear this list") )
+    end if
+end sub
+
+private sub frmMenuBar_RebuildMRUSessions( byval hPopup as HWND )
+    CPopupMenu_Clear( hPopup )
+    dim as boolean hasFiles = false
+    for i as long = 0 to 9
+        gConfig.MRUSESSION(i) = ProcessFromCurdriveApp( gConfig.MRUSESSION(i) )
+        if AfxFileExists( gConfig.MRUSESSION(i) ) = 0 then
+            gConfig.MRUSESSION(i) = ""
+        else
+            hasFiles = true
+            CPopupMenu_AddItem( hPopup, IDM_MRUSESSIONBASE + i, gConfig.MRUSESSION(i) )
+        end if
+    next
+    if hasFiles = false then
+        CPopupMenu_AddItem( hPopup, IDM_MRUSESSIONFILES, L(11,"(Empty)") )
+    else
+        CPopupMenu_AddSeparator( hPopup )
+        CPopupMenu_AddItem( hPopup, IDM_MRUSESSIONCLEAR, L(225,"Clear this list") )
+    end if
+end sub
+
+private sub frmMenuBar_RebuildMRUProjects( byval hPopup as HWND )
+    CPopupMenu_Clear( hPopup )
+    dim as boolean hasFiles = false
+    for i as long = 0 to 9
+        gConfig.MRUPROJECT(i) = ProcessFromCurdriveApp( gConfig.MRUPROJECT(i) )
+        if AfxFileExists( gConfig.MRUPROJECT(i) ) = 0 then
+            gConfig.MRUPROJECT(i) = ""
+        else
+            hasFiles = true
+            CPopupMenu_AddItem( hPopup, IDM_MRUPROJECTBASE + i, gConfig.MRUPROJECT(i) )
+        end if
+    next
+    if hasFiles = false then
+        CPopupMenu_AddItem( hPopup, IDM_MRUPROJECTFILES, L(11,"(Empty)") )
+    else
+        CPopupMenu_AddSeparator( hPopup )
+        CPopupMenu_AddItem( hPopup, IDM_MRUPROJECTCLEAR, L(225,"Clear this list") )
+    end if
+end sub
+
+private sub frmMenuBar_RebuildUserTools( byval hPopup as HWND )
+    CPopupMenu_Clear( hPopup )
+    dim as DWSTRING wszCaption, wszAccel
+    frmMenuBar_SplitCaption( IDM_USERTOOLSDIALOG, wszCaption, wszAccel )
+    CPopupMenu_AddItem( hPopup, IDM_USERTOOLSDIALOG, wszCaption, wszAccel )
+    CPopupMenu_AddSeparator( hPopup )
+    dim as boolean hasTools = false
+    for i as long = lbound(gConfig.Tools) to ubound(gConfig.Tools)
+        if gConfig.Tools(i).IsDisplayMenu then
+            hasTools = true
+            CPopupMenu_AddItem( hPopup, IDM_USERTOOLSBASE + i, _
+                gConfig.Tools(i).wszDescription, createToolsMenuShortcut(i) )
+        end if
+    next
+    if hasTools = false then
+        CPopupMenu_AddItem( hPopup, IDM_USERTOOLSLIST, L(11,"(Empty)") )
+    end if
+end sub
+
+' One InitPopup callback serves all four dynamic submenus.
+private sub frmMenuBar_DynamicInitPopup( byval hPopup as HWND )
+    if hPopup = ghMenuPopupMRU then
+        frmMenuBar_RebuildMRUFiles( hPopup )
+    elseif hPopup = ghMenuPopupMRUSession then
+        frmMenuBar_RebuildMRUSessions( hPopup )
+    elseif hPopup = ghMenuPopupMRUProject then
+        frmMenuBar_RebuildMRUProjects( hPopup )
+    elseif hPopup = ghMenuPopupUserTools then
+        frmMenuBar_RebuildUserTools( hPopup )
+    end if
+end sub
+
+
+' ========================================================================================
+' Build one dropdown tree from the static gTopMenu definition rows (rows whose
+' nParentID = nParentID). A row with nChildID <> 0 owns a submenu: the dynamic ones
+' (MRU / User Tools) are created empty with the rebuild callback; static ones
+' (Preferences) recurse into gTopMenu keyed by the row's own nID.
+' ========================================================================================
+private function frmMenuBar_BuildDropDown( byval nParentID as long ) as HWND
+    dim as HWND hPopup = frmMenuBar_CreatePopup()
+    for i as long = lbound(gTopMenu) to ubound(gTopMenu)
+        if gTopMenu(i).nParentID <> nParentID then continue for
+        if gTopMenu(i).isSeparator then
+            CPopupMenu_AddSeparator( hPopup )
+            continue for
+        end if
+        dim as DWSTRING wszCaption, wszAccel
+        frmMenuBar_SplitCaption( gTopMenu(i).nID, wszCaption, wszAccel )
+        CPopupMenu_AddItem( hPopup, gTopMenu(i).nID, wszCaption, wszAccel, gTopMenu(i).isDisabled )
+        if gTopMenu(i).nChildID <> 0 then
+            dim as HWND hSub
+            select case gTopMenu(i).nID
+                case IDM_MRU
+                    hSub = frmMenuBar_CreatePopup()
+                    CPopupMenu_SetMinWidth( hSub, AfxCWindowPtr(HWND_FRMMAIN)->ScaleX(262) )
+                    CPopupMenu_SetInitPopupCallback( hSub, @frmMenuBar_DynamicInitPopup )
+                    ghMenuPopupMRU = hSub
+                case IDM_MRUSESSION
+                    hSub = frmMenuBar_CreatePopup()
+                    CPopupMenu_SetMinWidth( hSub, AfxCWindowPtr(HWND_FRMMAIN)->ScaleX(262) )
+                    CPopupMenu_SetInitPopupCallback( hSub, @frmMenuBar_DynamicInitPopup )
+                    ghMenuPopupMRUSession = hSub
+                case IDM_MRUPROJECT
+                    hSub = frmMenuBar_CreatePopup()
+                    CPopupMenu_SetMinWidth( hSub, AfxCWindowPtr(HWND_FRMMAIN)->ScaleX(262) )
+                    CPopupMenu_SetInitPopupCallback( hSub, @frmMenuBar_DynamicInitPopup )
+                    ghMenuPopupMRUProject = hSub
+                case IDM_USERTOOLS
+                    hSub = frmMenuBar_CreatePopup()
+                    CPopupMenu_SetInitPopupCallback( hSub, @frmMenuBar_DynamicInitPopup )
+                    ghMenuPopupUserTools = hSub
+                case else
+                    hSub = frmMenuBar_BuildDropDown( gTopMenu(i).nID )
+            end select
+            CPopupMenu_SetItemSubMenu( hPopup, gTopMenu(i).nID, hSub )
+        end if
+    next
+    return hPopup
 end function
 
 
 ' ========================================================================================
-' frmMenuBar Window procedure
+' Refresh captions/accelerators of a dropdown's STATIC rows from getMenuText, so
+' dynamic captions (Start/Continue Debugging, Move Explorer Left/Right), localization
+' changes and re-mapped accelerator keys are current every time the menu opens. The
+' dynamic submenus are skipped -- they fully rebuild in their own InitPopup.
 ' ========================================================================================
-function frmMenuBar_WndProc( _
-            byval hwnd   as HWND,_
+private sub frmMenuBar_RefreshCaptions( byval hDropDown as HWND, byval nParentID as long )
+    for i as long = lbound(gTopMenu) to ubound(gTopMenu)
+        if gTopMenu(i).nParentID <> nParentID then continue for
+        if gTopMenu(i).isSeparator then continue for
+        if gTopMenu(i).nID = 0 then continue for
+        dim as DWSTRING wszCaption, wszAccel
+        frmMenuBar_SplitCaption( gTopMenu(i).nID, wszCaption, wszAccel )
+        CPopupMenu_SetItemText( hDropDown, gTopMenu(i).nID, wszCaption, wszAccel )
+        if gTopMenu(i).nChildID <> 0 then
+            select case gTopMenu(i).nID
+                case IDM_MRU, IDM_MRUSESSION, IDM_MRUPROJECT, IDM_USERTOOLS
+                    ' dynamic: rebuilt when it opens
+                case else
+                    frmMenuBar_RefreshCaptions( hDropDown, gTopMenu(i).nID )
+            end select
+        end if
+    next
+end sub
+
+
+' ========================================================================================
+' CMenuBar callbacks
+' ========================================================================================
+
+' A dropdown is about to open: refresh its captions and recompute its enable/checked
+' states (frmMain_ChangeTopMenuStates dispatches to the per-menu state functions,
+' whose EnableTopMenuItem/CheckMarkTopMenuItem calls now drive the controls).
+private sub frmMenuBar_OnInitPopup( byval hMenuBar as HWND, byval idx as long, byval hPopup as HWND )
+    dim as long nBarID = IDC_MENUBAR_FILE + idx
+    frmMenuBar_RefreshCaptions( hPopup, nBarID )
+    frmMain_ChangeTopMenuStates( nBarID )
+end sub
+
+' A menu command was executed (mouse or Enter). The popup chain is already closed and
+' the bar highlight cleared; dispatch through the normal WM_COMMAND path.
+private sub frmMenuBar_OnMenuCommand( byval hMenuBar as HWND, byval id as long )
+    PostMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(id, 0), 0 )
+end sub
+
+
+' ========================================================================================
+' The "Update Available" label: a small host-owned window over the right end of the
+' menubar strip (the bar control knows nothing about it). Shown only while
+' gApp.IsUpdateAvailable resolves getMenuText(IDC_MENUBAR_UPDATE) to a caption.
+' ========================================================================================
+function frmMenuBarUpdate_WndProc( _
+            byval hwnd   as HWND, _
             byval uMsg   as UINT, _
             byval wParam as WPARAM, _
             byval lParam as LPARAM _
             ) as LRESULT
 
-    static as integer PrevHotIndex
-
     select case uMsg
-        HANDLE_MSG (hwnd, WM_SIZE,    frmMenuBar_OnSize)
-        HANDLE_MSG (hwnd, WM_DESTROY, frmMenuBar_OnDestroy)
+        case WM_ERASEBKGND
+            return true
 
-    case WM_NCDESTROY
-        ' delete the allocated memory for window
-        dim as CWindow ptr pWindow = AfxCWindowPtr(hwnd)
-        if pWindow then delete(pWindow)
-        HWND_FRMMAIN_MENUBAR = 0
-        return 0
-
-    case WM_ERASEBKGND
-        return true
-
-    case WM_PAINT
-        dim as clsDoubleBuffer b
-
-        b.BeginDoubleBuffer(hwnd)
-        b.SetBackColor( ghMenuBar.BackColor )
-        b.PaintClientRect()
-
-        b.SetFont( ghFont(GUIFONT_10) )
-        for i as integer = lbound(gMenuBar) to ubound(gMenuBar)
-            if i = gActiveMenuBarIndex then
-                b.SetColors( ghMenuBar.ForeColorHot, ghMenuBar.BackColorHot )
-            else
-                ' back stays normal; only the TEXT goes hot on hover
-                dim as boolean isHot = isMouseOverRECT( hwnd, gMenuBar(i).rcItem )
-                b.SetColors( iif(isHot, ghMenuBar.ForeColorHot, ghMenuBar.ForeColor), _
-                             ghMenuBar.BackColor )
-            end if
-            b.PaintRect( @gMenuBar(i).rcItem )
-            b.PaintText( gMenuBar(i).wszText, @gMenuBar(i).rcItem, DT_CENTER )
-        next
-
-        ' Paint the Update Available message
-        if len(gMenuUpdateMessage.wszText) then
-            if isMouseOverRECT( hwnd, gMenuUpdateMessage.rcItem ) then
+        case WM_PAINT
+            dim as clsDoubleBuffer b
+            b.BeginDoubleBuffer(hwnd)
+            dim as RECT rc
+            GetClientRect( hwnd, @rc )
+            dim as boolean isHot = isMouseOverWindow( hwnd )
+            if isHot then
                 b.SetColors( ghMenuBar.ForeColorHot, ghMenuBar.BackColorHot )
             else
                 b.SetColors( ghMenuBar.ForeColor, ghMenuBar.BackColor )
             end if
-            b.PaintRect( @gMenuUpdateMessage.rcItem )
-            b.PaintText( gMenuUpdateMessage.wszText, @gMenuUpdateMessage.rcItem, DT_CENTER )
-        end if
-            
-        b.EndDoubleBuffer()
+            b.PaintClientRect()
+            b.SetFont( ghFont(GUIFONT_10) )
+            b.PaintText( getMenuText(IDC_MENUBAR_UPDATE), @rc, DT_CENTER )
+            b.EndDoubleBuffer()
+            return 0
 
-        return 0
+        case WM_MOUSEMOVE
+            ' Arm leave tracking so the hot effect clears; repaint for the hot state.
+            dim tme as TrackMouseEvent
+            tme.cbSize = sizeof(TrackMouseEvent)
+            tme.dwFlags = TME_LEAVE
+            tme.hwndTrack = hwnd
+            TrackMouseEvent(@tme)
+            AfxRedrawWindow( hwnd )
 
+        case WM_MOUSELEAVE
+            AfxRedrawWindow( hwnd )
 
-    case WM_MOUSEMOVE
-        ' Get the button index of the current hot state button
-        dim as integer CurHotIndex = frmMenuBar_GetHotIndex(hwnd)
-        if CurHotIndex = -1 then PrevHotIndex = -1
-        
-        if CurHotIndex <> PrevHotIndex  then   
-            ' A new menubar button has been moused over. If a previous popup
-            ' menu exists then we will automatically continue to show a popup menu
-            ' for the newly selected menubar button.
-            gActiveMenuBarIndex = CurHotIndex 
-            PrevHotIndex = CurHotIndex
-            if isPopupMenuOpen() then
-                frmPopupMenu_Show( ID_POPUP, 0, hwnd, gMenuBar(gActiveMenuBarIndex).rcItem )
-            end if   
-        end if   
-
-        ' Track that we are over the control in order to catch the 
-        ' eventual WM_MOUSELEAVE event
-        dim tme as TrackMouseEvent
-        tme.cbSize = Sizeof(TrackMouseEvent)
-        tme.dwFlags = TME_HOVER or TME_LEAVE
-        tme.hwndTrack = hwnd
-        TrackMouseEvent(@tme)
-        AfxRedrawWindow( hwnd )
-        
-    case WM_MOUSELEAVE
-        if isPopupMenuOpen() = false then
-            gActiveMenuBarIndex = -1
-            PrevHotIndex = -1
-            AfxRedrawWindow(hwnd)
-        end if   
-        
-    case WM_LBUTTONDOWN
-        ' Check if the Tiko Update Available label has been pressed
-        if isMouseOverRECT( hwnd, gMenuUpdateMessage.rcItem ) then
+        case WM_LBUTTONDOWN
             ShellExecute( NULL, "open", "https://github.com/PaulSquires/tiko/releases", Null, Null, SW_SHOWNORMAL )
-        end if
+            return 0
 
-        ' Get the button index of the current hot state button or the wParam
-        ' if this button press was sent by an ENTER keypress originating from
-        ' handleKeysTopMenu() in modMsgPump.
-        if (cint(wParam) <> -1) then   ' ENTER will send wParam = -1
-            gActiveMenuBarIndex = frmMenuBar_GetHotIndex(hwnd)
-        end if    
-        
-        ' activate the popup menu or toggle an existing one off 
-        if isPopupMenuOpen() then
-            killAllPopupMenus()
-        else
-            if gActiveMenuBarIndex <> -1 then
-                frmPopupMenu_Show( ID_POPUP, 0, hwnd, gMenuBar(gActiveMenuBarIndex).rcItem )
-            end if    
-        end if
-        AfxRedrawWindow(hwnd)
-        
+        case WM_NCDESTROY
+            dim as CWindow ptr pWindow = AfxCWindowPtr(hwnd)
+            if pWindow then delete(pWindow)
+            HWND_FRMMAIN_MENUBARUPDATE = 0
+            return 0
     end select
-    
-    ' for messages that we don't deal with
-    function = DefWindowProc(hwnd, uMsg, wParam, lParam)
 
+    return DefWindowProc( hwnd, uMsg, wParam, lParam )
 end function
 
-        
+
 ' ========================================================================================
-' frmMenuBar_Show
+' Size/position the menubar strip pieces. Called after startup, when the update check
+' completes, and from frmOptions after settings save (theme / compact menus /
+' localization may all have changed, so this also re-syncs theme colors and captions).
+' ========================================================================================
+function frmMenuBar_PositionWindows() as LRESULT
+    dim pWindow as CWindow ptr = AfxCWindowPtr( HWND_FRMMAIN )
+    if pWindow = 0 then exit function
+    if HWND_FRMMAIN_MENUBAR = 0 then exit function
+
+    frmMenuBar_SyncTheme()
+
+    ' Bar captions may have changed (localization).
+    for i as long = 0 to CMenuBar_GetItemCount( HWND_FRMMAIN_MENUBAR ) - 1
+        CMenuBar_SetItemText( HWND_FRMMAIN_MENUBAR, i, getMenuText( IDC_MENUBAR_FILE + i ) )
+    next
+
+    ' The bar spans the full client width; its height follows the compact setting
+    ' (frmMain_PositionWindows reads the resulting height to lay out everything below).
+    dim as RECT rc
+    GetClientRect( HWND_FRMMAIN, @rc )
+    dim as long nHeight = pWindow->ScaleY( iif( gConfig.CompactMenus, MENUBAR_HEIGHT_COMPACT, MENUBAR_HEIGHT ) )
+    SetWindowPos( HWND_FRMMAIN_MENUBAR, 0, 0, 0, rc.right - rc.left, nHeight, SWP_NOZORDER )
+
+    ' The update label sits right-aligned over the bar strip, only while there is
+    ' something to say.
+    if IsWindow( HWND_FRMMAIN_MENUBARUPDATE ) then
+        dim as DWSTRING wszText = getMenuText( IDC_MENUBAR_UPDATE )
+        if len( wszText ) then
+            dim as long nPadding = 12
+            dim as long nWidth = pWindow->ScaleX( getTextWidth( HWND_FRMMAIN, wszText, GUIFONT_10 ) + nPadding )
+            dim as long nLeft = (rc.right - rc.left) - nWidth - pWindow->ScaleX( nPadding )
+            SetWindowPos( HWND_FRMMAIN_MENUBARUPDATE, HWND_TOP, nLeft, 0, nWidth, nHeight, SWP_SHOWWINDOW )
+        else
+            ShowWindow( HWND_FRMMAIN_MENUBARUPDATE, SW_HIDE )
+        end if
+    end if
+
+    AfxRedrawWindow( HWND_FRMMAIN_MENUBAR )
+    function = 0
+end function
+
+
+' ========================================================================================
+' frmMenuBar_Show: create the bar, build every dropdown tree from gTopMenu, and
+' create the update label.
 ' ========================================================================================
 function frmMenuBar_Show( byval hWndParent as HWND ) as LRESULT
 
-    '  Create the main window and child controls
-    dim pWindow as CPanelWindow ptr = new CPanelWindow
-
-    dim as long nHeight = iif(gConfig.CompactMenus, MENUBAR_HEIGHT_COMPACT, MENUBAR_HEIGHT)
-
-    HWND_FRMMAIN_MENUBAR = pWindow->Create( hWndParent, @frmMenuBar_WndProc, 0, 0, 0, nHeight )
-    ' Disable background erasing by only assigning the one style
-    pWindow->ClassStyle = CS_DBLCLKS
-    
-    frmMenuBar_PositionWindows()
     buildTopMenuDefinitions()
-    
-    function = 0
-    
-end function
 
+    HWND_FRMMAIN_MENUBAR = CMenuBar_Create( hWndParent, 0 )
+    CMenuBar_SetCommandCallback( HWND_FRMMAIN_MENUBAR, @frmMenuBar_OnMenuCommand )
+    CMenuBar_SetInitPopupCallback( HWND_FRMMAIN_MENUBAR, @frmMenuBar_OnInitPopup )
+
+    ' One bar item + dropdown tree per menubar id (the ids are contiguous, and the
+    ' bar item index = id - IDC_MENUBAR_FILE everywhere in the host).
+    for id as long = IDC_MENUBAR_FILE to IDC_MENUBAR_HELP
+        dim as long idx = CMenuBar_AddItem( HWND_FRMMAIN_MENUBAR, getMenuText(id), id )
+        CMenuBar_SetDropDown( HWND_FRMMAIN_MENUBAR, idx, frmMenuBar_BuildDropDown(id) )
+    next
+
+    ' The update label (hidden until the update check resolves a caption).
+    dim pWindow as CPanelWindow ptr = new CPanelWindow
+    HWND_FRMMAIN_MENUBARUPDATE = pWindow->Create( hWndParent, @frmMenuBarUpdate_WndProc, 0, 0, 0, 0 )
+    ShowWindow( HWND_FRMMAIN_MENUBARUPDATE, SW_HIDE )
+
+    frmMenuBar_PositionWindows()
+
+    function = 0
+end function

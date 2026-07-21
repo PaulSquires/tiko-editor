@@ -241,53 +241,16 @@ function setTopMenuItem( _
 
 end function
 
-' ========================================================================================
-' Set the values for one MRU element in the gTopMenu TYPE array
-' ========================================================================================
-function setTopMenuMRUItem( _
-            byval nIndex as long, _
-            byval nParentID as long, _
-            byval nID as long, _
-            byval nChildID as long, _
-            byval isDisabled as boolean, _
-            byval isSeparator as boolean _
-            ) as long
-    ' do sanity check to ensure that nIndex is within range
-    if (nIndex >= lbound(gTopMenu)) andalso (nIndex <= ubound(gTopMenu)) then
-        gTopMenu(nIndex).nParentID = nParentID
-        gTopMenu(nIndex).nID = nID
-        gTopMenu(nIndex).nChildID = nChildID
-        gTopMenu(nIndex).isDisabled = isDisabled
-        gTopMenu(nIndex).isSeparator = isSeparator
-    end if
-    
-    function = 0
-end function
-
-
-' ========================================================================================
-' Reurns a pointer to the gTopMenu TYPE array for the incoming nID
-' Used mostly during the painting of the line
-' ========================================================================================
-function getTopMenuPtr( byval nID as long ) as TOPMENU_TYPE ptr
-    static dummy as TOPMENU_TYPE    ' returned in case no match in order to avoid null pointer
-    for i as long = lbound(gTopMenu) to ubound(gTopMenu)
-        if gTopMenu(i).nID = nID then
-            return @gTopMenu(i)
-        end if
-    next
-    return @dummy
-end function
-
-
+' The gTopMenu array now holds only the STATIC menu structure; frmMenuBar.inc builds
+' the CPopupMenu trees from it at startup. The dynamic sections (MRU files/sessions/
+' projects, User Tools) are rebuilt straight into their popups each time that submenu
+' opens, so the old gTopMenu row-recycling machinery (setTopMenuMRUItem, getTopMenuPtr,
+' clearMRUFilesItems, getNextFreeMRUindex, updateMRU*Items) is gone.
 function buildTopMenuDefinitions() as long
     setTopMenuItem( IDC_MENUBAR_FILE, IDM_FILENEW, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_FILE, IDM_FILEOPEN, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_FILE, IDM_FILEOPENASTEMPLATE, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_FILE, IDM_MRU, IDM_MRUFILES, false, false )
-
-    updateMRUFilesItems()
-    
     setTopMenuItem( IDC_MENUBAR_FILE, 0, 0, false, true )
     setTopMenuItem( IDC_MENUBAR_FILE, IDM_FILECLOSE, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_FILE, IDM_FILECLOSEALL, 0, false, false )
@@ -302,14 +265,8 @@ function buildTopMenuDefinitions() as long
     setTopMenuItem( IDC_MENUBAR_FILE, IDM_SAVESESSION, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_FILE, IDM_CLOSESESSION, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_FILE, IDM_MRUSESSION, IDM_MRUSESSIONFILES, false, false )
-    
-    updateMRUSessionFilesItems()
-
     setTopMenuItem( IDC_MENUBAR_FILE, 0, 0, false, true )
     setTopMenuItem( IDC_MENUBAR_FILE, IDM_USERTOOLS, IDM_USERTOOLSLIST, false, false )
-
-    updateUserToolsMenuItems()
-
     setTopMenuItem( IDC_MENUBAR_FILE, IDM_OPTIONS, IDM_OPTIONSDIALOG, false, false )
     setTopMenuItem( IDM_OPTIONS, IDM_OPTIONSDIALOG, 0, false, false )
     setTopMenuItem( IDM_OPTIONS, IDM_BUILDCONFIG, 0, false, false )
@@ -380,9 +337,6 @@ function buildTopMenuDefinitions() as long
     setTopMenuItem( IDC_MENUBAR_PROJECT, IDM_PROJECTNEW, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_PROJECT, IDM_PROJECTOPEN, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_PROJECT, IDM_MRUPROJECT, IDM_MRUPROJECTFILES, false, false )
-    
-    updateMRUProjectFilesItems()
-
     setTopMenuItem( IDC_MENUBAR_PROJECT, 0, 0, false, true )
     setTopMenuItem( IDC_MENUBAR_PROJECT, IDM_PROJECTCLOSE, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_PROJECT, 0, 0, false, true )

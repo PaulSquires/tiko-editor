@@ -14,18 +14,21 @@
 #include once "modMenus.bi"
 #include once "CVScrollBar.bi"    ' required by CListBox.bi
 #include once "CListBox.bi"       ' CListBox_GetSelCount (CListBox.inc is included later)
+#include once "CMenuBar.bi"       ' the topmenu lives on CMenuBar/CPopupMenu controls
+                                  ' (implementations are included later in tiko.bas)
 
 ' ========================================================================================
-' EnableTopMenuItem: basically my internal version of the EnableMenuItem api
+' EnableTopMenuItem: basically my internal version of the EnableMenuItem api.
+' Drives the CMenuBar dropdown trees directly: the by-id setter searches a dropdown
+' and recurses into its submenus, so trying each bar dropdown covers every menu item.
 ' ========================================================================================
 function EnableTopMenuItem( byval nID as long, byval bEnabled as boolean ) as long
-    dim p as TOPMENU_TYPE ptr = getTopMenuPtr(nID)
-    if p = 0 then exit function
-    if bEnabled = false then 
-        p->isDisabled = true
-    else   
-        p->isDisabled = false
-    end if
+    for i as long = 0 to CMenuBar_GetItemCount( HWND_FRMMAIN_MENUBAR ) - 1
+        dim as HWND hDropDown = CMenuBar_GetDropDown( HWND_FRMMAIN_MENUBAR, i )
+        if hDropDown then
+            if CPopupMenu_SetItemEnabled( hDropDown, nID, bEnabled ) then exit for
+        end if
+    next
     function = 0
 end function
 
@@ -34,9 +37,12 @@ end function
 ' CheckMarkTopMenuItem: Show a checkmark to the left of the menu entry
 ' ========================================================================================
 function CheckMarkTopMenuItem( byval nID as long, byval bChecked as boolean ) as long
-    dim p as TOPMENU_TYPE ptr = getTopMenuPtr(nID)
-    if p = 0 then exit function
-    p->isChecked = bChecked
+    for i as long = 0 to CMenuBar_GetItemCount( HWND_FRMMAIN_MENUBAR ) - 1
+        dim as HWND hDropDown = CMenuBar_GetDropDown( HWND_FRMMAIN_MENUBAR, i )
+        if hDropDown then
+            if CPopupMenu_SetItemChecked( hDropDown, nID, bChecked ) then exit for
+        end if
+    next
     function = 0
 end function
 
@@ -289,9 +295,9 @@ end function
 ' ========================================================================================
 ' Enable/Disable top menu items depending on application state
 ' ========================================================================================
-function frmMain_ChangeTopMenuStates() as long
-    
-    select case gMenuBar(gActiveMenuBarIndex).id
+function frmMain_ChangeTopMenuStates( byval nBarID as long ) as long
+
+    select case nBarID
         case IDC_MENUBAR_FILE:     frmMain_FileTopMenuStates()
         case IDC_MENUBAR_EDIT:     frmMain_EditTopMenuStates()
         case IDC_MENUBAR_SEARCH:   frmMain_SearchTopMenuStates()

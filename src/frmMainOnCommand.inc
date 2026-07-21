@@ -31,10 +31,9 @@ function frmMain_OnCommand( _
             byval codeNotify as UINT _
             ) as LRESULT
             
-    ' Deselect any active menubar item        
-    if gActiveMenuBarIndex > -1 then
-        gActiveMenuBarIndex = -1
-        AfxRedrawWindow( HWND_FRMMAIN_MENUBAR )
+    ' Deselect any active menubar item
+    if CMenuBar_GetActiveIndex( HWND_FRMMAIN_MENUBAR ) <> -1 then
+        CMenuBar_SetActiveIndex( HWND_FRMMAIN_MENUBAR, -1 )
     end if
     
     dim as HWND hEdit 
@@ -101,13 +100,9 @@ function frmMain_OnCommand( _
     end select
     
     select case id
-        ' show any topmenu that were activated via keyboard Alt+ sequences     
+        ' show any topmenu that were activated via keyboard Alt+ sequences
         case IDC_MENUBAR_FILE to IDC_MENUBAR_HELP
-            killAllPopupMenus()
-            gActiveMenuBarIndex = (id - IDC_MENUBAR_FILE)
-            frmPopupMenu_Show( ID_POPUP, 0, HWND_FRMMAIN_MENUBAR, gMenuBar(gActiveMenuBarIndex).rcItem )
-            setNextMenuItemTabIndex(false)
-            AfxRedrawWindow( HWND_FRMMAIN_MENUBAR )
+            CMenuBar_OpenMenu( HWND_FRMMAIN_MENUBAR, id - IDC_MENUBAR_FILE, true )
          
         case IDM_THEMES
             OptionsDialogLastOpened = 3

@@ -15,154 +15,21 @@
 
 ''
 ''
-function clearMRUFilesItems( byval nParentID as long ) as long
-    ' clear out any existing items that match the nParentID so that they can be
-    ' reused when the MRU popup menu is created and shown. This function is used
-    ' for Files and Projects and UserTools MRU lists.
-    for i as long = lbound(gTopMenu) to ubound(gTopMenu)
-        if gTopMenu(i).nParentID = nParentID then
-            gTopMenu(i).nParentID = 0
-            gTopMenu(i).nID = 0
-            gTopMenu(i).nChildID = 0
-        end if
-    next
-    function = 0
-end function
 
 ''
 ''
-function getNextFreeMRUindex() as long
-    ' gets the first available free MRU index in the gTopMenu array. if there are
-    ' none free then the gTopMenu array is extended and that index is returned. This
-    ' function is used for both Files and Projects MRU lists.
-    dim as long nFoundAt = -1
-    for i as long = lbound(gTopMenu) to ubound(gTopMenu)
-        if gTopMenu(i).nParentID = 0 then return i
-    next
-    if nFoundAt = -1 then
-        nFoundAt = ubound(gTopMenu) + 1
-        redim preserve gTopMenu(nFoundAt) as TOPMENU_TYPE
-    end if
-    function = nFoundAt
-end function
 
 
 ''
 ''
-function updateMRUFilesItems() as long
-    ' clear MRU items already existing in the gTopMenu array. We overwrite and extend
-    ' the gTopMenu array rather than erase it because existing menus depend on the 
-    ' array index that aready exist. The function also returns the width to use for
-    ' the resulting popup menu (based on text width metrics of each filename).
-    clearMRUFilesItems( IDM_MRU )
-    
-    dim wszText as wstring * 256
-    dim as boolean hasMRUfiles = false
-    dim as long txtWidth = 0
-    dim as long nMenuWidth = 0
-    dim as long margin_width = 40
-
-    for i as long = 0 To 9
-        ' if the file no longer exists then remove it from the MRU list
-        gConfig.MRU(i) = ProcessFromCurdriveApp( gConfig.MRU(i) )
-        if AfxFileExists( gConfig.MRU(i) ) = 0 then
-            gConfig.MRU(i) = ""
-        else
-            hasMRUfiles = true
-            setTopMenuMRUItem( getnextFreeMRUindex(), IDM_MRU, IDM_MRUBASE + i, 0, false, false )
-            wszText = gConfig.MRU(i)
-            txtWidth = getTextWidth( HWND_FRMMAIN_MENUBAR, wszText, GUIFONT_10 )
-            if txtWidth > nMenuWidth then nMenuWidth = txtWidth
-        end if
-    next
-    
-    if hasMRUfiles = false then
-        setTopMenuMRUItem( getnextFreeMRUindex(), IDM_MRU, IDM_MRUFILES, 0, false, false )  ' (empty)
-    else
-        setTopMenuMRUItem( getnextFreeMRUindex(), IDM_MRU, IDM_MRUFILES, 0, false, true ) 
-        setTopMenuMRUItem( getnextFreeMRUindex(), IDM_MRU, IDM_MRUCLEAR, 0, false, false )
-    end if   
-    
-    function = nMenuWidth + (margin_width * 2)  ' unscaled value
-end function
 
 
 ''
 ''
-function updateMRUSessionFilesItems() as long
-    ' clear MRU items already existing in the gTopMenu array. We overwrite and extend
-    ' the gTopMenu array rather than erase it because existing menus depend on the 
-    ' array index that aready eist.
-    clearMRUFilesItems( IDM_MRUSESSION )
-    
-    dim wszText as wstring * 256
-    dim as boolean hasMRUfiles = false
-    dim as long txtWidth = 0
-    dim as long nMenuWidth = 0
-    dim as long margin_width = 40
-
-    for i as long = 0 To 9
-        ' if the file no longer exists then remove it from the MRU list
-        gConfig.MRUSESSION(i) = ProcessFromCurdriveApp( gConfig.MRUSESSION(i) )
-        if AfxFileExists( gConfig.MRUSESSION(i) ) = 0 then
-            gConfig.MRUSESSION(i) = ""
-        else
-            hasMRUfiles = true
-            setTopMenuMRUItem( getnextFreeMRUindex(), IDM_MRUSESSION, IDM_MRUSESSIONBASE + i, 0, false, false )
-            wszText = gConfig.MRUSESSION(i)
-            txtWidth = getTextWidth( HWND_FRMMAIN_MENUBAR, wszText, GUIFONT_10 )
-            if txtWidth > nMenuWidth then nMenuWidth = txtWidth
-        end if
-    next
-    
-    if hasMRUfiles = false then
-        setTopMenuMRUItem( getnextFreeMRUindex(), IDM_MRUSESSION, IDM_MRUSESSIONFILES, 0, false, false )  ' (empty)
-    else
-        setTopMenuMRUItem( getnextFreeMRUindex(), IDM_MRUSESSION, IDM_MRUSESSIONFILES, 0, false, true ) 
-        setTopMenuMRUItem( getnextFreeMRUindex(), IDM_MRUSESSION, IDM_MRUSESSIONCLEAR, 0, false, false )
-    end if   
-    
-    function = nMenuWidth + (margin_width * 2)  ' unscaled value
-end function
 
 
 ''
 ''
-function updateMRUProjectFilesItems() as long
-    ' clear MRU items already existing in the gTopMenu array. We overwrite and extend
-    ' the gTopMenu array rather than erase it because existing menus depend on the 
-    ' array index that aready eist.
-    clearMRUFilesItems( IDM_MRUPROJECT )
-    
-    dim wszText as wstring * 256
-    dim as boolean hasMRUfiles = false
-    dim as long txtWidth = 0
-    dim as long nMenuWidth = 0
-    dim as long margin_width = 40
-    
-    for i as long = 0 To 9
-        ' if the file no longer exists then remove it from the MRU list
-        gConfig.MRUPROJECT(i) = ProcessFromCurdriveApp( gConfig.MRUPROJECT(i) )
-        if AfxFileExists( gConfig.MRUPROJECT(i) ) = 0 then
-            gConfig.MRUPROJECT(i) = ""
-        else
-            hasMRUfiles = true
-            setTopMenuMRUItem( getnextFreeMRUindex(), IDM_MRUPROJECT, IDM_MRUPROJECTBASE + i, 0, false, false )
-            wszText = gConfig.MRUPROJECT(i)
-            txtWidth = getTextWidth( HWND_FRMMAIN_MENUBAR, wszText, GUIFONT_10 )
-            if txtWidth > nMenuWidth then nMenuWidth = txtWidth
-        end if
-    next
-    
-    if hasMRUfiles = false then
-        setTopMenuMRUItem( getnextFreeMRUindex(), IDM_MRUPROJECT, IDM_MRUPROJECTFILES, 0, false, false )  ' (empty)
-    else
-        setTopMenuMRUItem( getnextFreeMRUindex(), IDM_MRUPROJECT, IDM_MRUPROJECTFILES, 0, false, true ) 
-        setTopMenuMRUItem( getnextFreeMRUindex(), IDM_MRUPROJECT, IDM_MRUPROJECTCLEAR, 0, false, false )
-    end if   
-    
-    function = nMenuWidth + (margin_width * 2)   ' unscaled value
-end function
 
 
 ''
