@@ -603,9 +603,9 @@ function gdb_parseVariablesResponse( byref response as string ) as integer
     if gdb_session.is_new_variables = false then
         ' Simply update the value held in the ListView
         for i as long = lbound(gdb_session.variable_array) to ubound(gdb_session.variable_array) - 1
-            for j as long = 0 to frmListView_GetCount( hLV ) - 1
-                if frmListView_GetItemText(hLV, j, 1) = gdb_session.variable_array(i).VarName then
-                    frmListView_SetItemText(hLV, j, 3, gdb_session.variable_array(i).VarValue)
+            for j as long = 0 to CListBox_GetCount( hLV ) - 1
+                if CListBox_GetCellText(hLV, j, 1) = gdb_session.variable_array(i).VarName then
+                    CListBox_SetCellText(hLV, j, 3, gdb_session.variable_array(i).VarValue)
                     exit for
                 end if
             next
@@ -628,14 +628,14 @@ function gdb_parseVariablesResponse( byref response as string ) as integer
             next 
         next 
 
-        frmListView_DeleteAllItems( hLV )
+        CListBox_Clear( hLV )
 
         for i as long = lbound(gdb_session.variable_array) to ubound(gdb_session.variable_array)
             wszText = "" & chr(9) & _
                         gdb_session.variable_array(i).VarName & chr(9) & _
                         gdb_session.variable_array(i).VarNameDisplay & chr(9) & _
                         gdb_session.variable_array(i).VarValue
-            frmListView_AddString( hLV, wszText )
+            ListBox_AddTabbedRow( hLV, wszText )
         next
     end if
 
@@ -664,13 +664,14 @@ function gdb_parseVariablesResponse( byref response as string ) as integer
     nVarNameColWidth = nVarNameColWidth + 10
     nVarNameDisplayColWidth = nVarNameDisplayColWidth + 10
     nVarValueColWidth = nVarValueColWidth + 10
-    frmListView_SetColumnWidth( hLV, 1, AfxScaleX(nVarNameColWidth) )
-    frmListView_SetColumnWidth( hLV, 2, AfxScaleX(nVarNameDisplayColWidth) )
-    frmListView_SetColumnWidth( hLV, 3, AfxScaleX(nVarValueColWidth) )
+    CListBox_SetColumnWidth( hLV, 1, AfxScaleX(nVarNameColWidth) )
+    CListBox_SetColumnWidth( hLV, 2, AfxScaleX(nVarNameDisplayColWidth) )
+    CListBox_SetColumnWidth( hLV, 3, AfxScaleX(nVarValueColWidth) )
 
-    dim as long nShow = iif( frmListView_GetCount(hLV) = 0, SW_HIDE, SW_SHOW )
-    ShowWindow( hLV, nShow )
-    frmListView_Refresh( hLV )
+    ' The old control had to be hidden when empty (its WM_DRAWITEM never fired, leaving a
+    ' white area). CListBox paints its own empty background, so the pane just stays shown --
+    ' and it repaints itself on mutation, so there is no Refresh to call.
+    ShowWindow( hLV, SW_SHOW )
 
     return nItems
 end function
@@ -878,14 +879,24 @@ function frmDebug_PositionWindows() as LRESULT
     dim as HWND hCtl 
     
     if HWND_FRMDEBUG_OUTPUT = 0 then
-        hCtl = frmListView_Show( HWND_FRMDEBUG )
-            frmListView_AddColumn( hCtl, 0, "", pWindow->ScaleX(10) )
-            frmListView_AddColumn( hCtl, 1, L(437, "Variable"), pWindow->ScaleX(75) )
-            frmListView_AddColumn( hCtl, 2, "", pWindow->ScaleX(75) )
-            frmListView_AddColumn( hCtl, 3, L(438, "Value"), pWindow->ScaleX(250) )
-            frmListView_SetForeColors( hCtl, ghOutput.ForeColor, ghOutput.ForeColorHot )
-            frmListView_SetBackColors( hCtl, ghOutput.BackColor, ghOutput.ForeColorScrollBar )
-            frmListView_SetScrollBarColors( hCtl, ghOutput.BackColorScrollBar, ghOutput.ForeColorScrollBar, ghOutput.ScrollBarDivider )
+        ' Variables pane: a CListBox with a CColumnHeader band, sharing the Output panel's
+        ' row/header painters (same ghOutput colors, same layout). The Value column fills
+        ' the remaining width; the widths of the other two are recomputed from the data on
+        ' every refresh, further down in gdb_ParseVariables.
+        hCtl = CListBox_Create( HWND_FRMDEBUG, IDC_FRMDEBUG_LVVARS )
+            CListBox_AddColumn( hCtl, "",                 pWindow->ScaleX(10) )
+            CListBox_AddColumn( hCtl, L(437, "Variable"), pWindow->ScaleX(75) )
+            CListBox_AddColumn( hCtl, "",                 pWindow->ScaleX(75) )
+            CListBox_AddColumn( hCtl, L(438, "Value"),    pWindow->ScaleX(250) )
+            CListBox_SetFillColumn( hCtl, 3 )
+            CListBox_ShowHeader( hCtl, true )
+            CListBox_SetPaintCallback( hCtl, @ListBox_LVPaintRow )
+            CListBox_SetHeaderPaintCallback( hCtl, @ListBox_LVPaintHeader )
+            CListBox_SetColumnAutoSizeCallback( hCtl, @ListBox_LVAutoSizeColumn )
+            CListBox_SetFont( hCtl, ghFont(GUIFONT_9) )
+            CListBox_SetBackColor( hCtl, ghOutput.BackColor )
+            CListBox_SetScrollBarColors( hCtl, ghOutput.BackColorScrollBar, _
+                                         ghOutput.ForeColorScrollBar, ghOutput.ForeColorScrollBar )
 
         HWND_FRMDEBUG_OUTPUT = hCtl
     end if
