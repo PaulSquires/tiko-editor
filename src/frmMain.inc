@@ -427,12 +427,8 @@ end Function
 
 ' ========================================================================================
 ' Paint the editor split bar. The control's client rect is the GRAB area
-' (EDITORSPLIT_GRAB); the visible band is the narrower SPLITSIZE, centered in it, so the bar
-' looks the same as it always did while being easier to grab. ghEditor.Divider is the color
-' frmMain_OnPaint used to fill pDoc->rcSplitButton with.
-'
-' The hot color is new: the old bar was a rect painted by the form and had nowhere to keep a
-' hover flag.
+' (SPLITTER_GRAB); the visible band is the narrower SPLITSIZE, centered in it, so the bar
+' looks the same as it always did while being easier to grab. 
 ' ========================================================================================
 sub frmMain_SplitterPaint( byval p as CSPLITTER_PAINTINFO ptr )
     dim as clsDoubleBuffer ptr b = p->b
@@ -456,9 +452,7 @@ sub frmMain_SplitterPaint( byval p as CSPLITTER_PAINTINFO ptr )
         rc.top += nInset : rc.bottom -= nInset
     end if
 
-    dim as COLORREF clr = ghEditor.Divider
-    if p->isHot orelse p->isDragging then clr = ghPanel.BackColorHot
-    b->SetBackColor( clr )
+    b->SetBackColor( ghEditor.Divider )
     b->PaintRect( @rc )
 end sub
 
@@ -679,7 +673,7 @@ function frmMain_PositionMainDocRight( byval pDoc as clsDocument ptr, byval rcDo
     
     ' The bar is a fixed-size window now, so its width is a constant rather than something
     ' derived from where the split pane happened to land.
-    dim as long nSplitSize = pWindow->ScaleX(EDITORSPLIT_GRAB)
+    dim as long nSplitSize = pWindow->ScaleX(SPLITTER_GRAB)
     dim as long nLeft = Max( rcDoc.left, pDoc->SplitX + nSplitSize )
 
     dim as long iVScrollbarWidth = AfxGetWindowWidth(HWND_FRMEDITOR_VSCROLLBAR(0)) 
@@ -728,7 +722,7 @@ function frmMain_PositionMainDocBottom( byval pDoc as clsDocument ptr, byval rcD
     ' bar was drawn into the horizontal-scrollbar gap above it -- which worked only because
     ' the bar was a painted rect and not a window. Now that it is a real window, the bottom
     ' pane clears it, the same way the right pane already cleared the vertical bar.
-    dim as long nSplitSize = pWindow->ScaleY(EDITORSPLIT_GRAB)
+    dim as long nSplitSize = pWindow->ScaleY(SPLITTER_GRAB)
     dim as long nTop = Max( rcDoc.top, pDoc->SplitY + iif( pDoc->EditorSplitMode = SplitTopBottom, nSplitSize, 0 ) )
 
     dim as long iVScrollbarWidth = AfxGetWindowWidth(HWND_FRMEDITOR_VSCROLLBAR(0))
@@ -894,16 +888,42 @@ function frmMain_PositionWindows() as LRESULT
     end if
                 
 
-    ' Set the Output pane into place if applicable
+    ' Set the Output pane into place if applicable, with its splitter bar in the strip
+    ' directly above it. The strip is taken off the EDITOR area, so the panel keeps exactly
+    ' the height it had (and gConfig.ShowOutputPanelHeight round-trips unchanged).
+    '
+    ' nOutputReserve is what the editor area gives up: panel + bar, or nothing at all when
+    ' the panel is hidden.
+    dim as long nGrabOut = pWindow->ScaleY(SPLITTER_GRAB)
+    dim as long nOutputReserve = 0
     if IsWindowVisible(HWND_FRMOUTPUT) then
+        ' Limits are ours to compute: the panel floors at its tabs height (as before), and
+        ' the editor now floors too, so the panel can no longer be dragged up until the
+        ' edit area is a sliver.
+        CSplitter_SetRange( HWND_FRMMAIN_SPLITOUTPUT, _
+                            nTop + pWindow->ScaleY(OUTPUT_MIN_EDITOR), _
+                            rc.bottom - nHeightStatusbar - pWindow->ScaleY(OUTPUT_TABS_HEIGHT) - nGrabOut )
+        CSplitter_SetPos( HWND_FRMMAIN_SPLITOUTPUT, _
+                          rc.bottom - nHeightStatusbar - nHeightOutput - nGrabOut )
+        ' Take the clamp back and re-derive the panel height from it, so the bar and the
+        ' panel can never disagree about where the boundary is.
+        dim as long nBarPos = CSplitter_GetPos( HWND_FRMMAIN_SPLITOUTPUT )
+        nHeightOutput = rc.bottom - nHeightStatusbar - (nBarPos + nGrabOut)
+        if nHeightOutput < 0 then nHeightOutput = 0
+
+        SetWindowPos( HWND_FRMMAIN_SPLITOUTPUT, 0, _
+                    nLeft, nBarPos, rc.Right - nLeft, nGrabOut, _
+                    SWP_NOZORDER or SWP_SHOWWINDOW )
         SetWindowPos( HWND_FRMOUTPUT, 0, _
-                    nLeft, rc.Bottom - nHeightStatusbar - nHeightOutput, _
+                    nLeft, nBarPos + nGrabOut, _
                     rc.Right - nLeft, _
                     nHeightOutput, _
-                    SWP_NOZORDER or SWP_SHOWWINDOW ) 
+                    SWP_NOZORDER or SWP_SHOWWINDOW )
         frmOutput_PositionWindows()
+        nOutputReserve = nHeightOutput + nGrabOut
     else
         nHeightOutput = 0
+        ShowWindow( HWND_FRMMAIN_SPLITOUTPUT, SW_HIDE )
     end if
 
     if pDoc = 0 then
@@ -922,7 +942,7 @@ function frmMain_PositionWindows() as LRESULT
         rcDoc.left   = nLeft
         rcDoc.top    = nTop 
         rcDoc.right  = rc.right
-        rcDoc.bottom = rc.bottom - nHeightStatusBar - nHeightOutput
+        rcDoc.bottom = rc.bottom - nHeightStatusBar - nOutputReserve
         if gConfig.ExplorerPositionRight then rcDoc.right = rc.right - nWidthPanel
         pDoc->rcDocSplitArea = rcDoc
 
@@ -932,8 +952,8 @@ function frmMain_PositionWindows() as LRESULT
         ' document's split mode. The limits are ours to compute -- the control cannot know
         ' about the editor scrollbars flanking the panes -- and are the same bounds the old
         ' WM_MOUSEMOVE drag clamped to.
-        dim as long nGrabV = pWindow->ScaleX(EDITORSPLIT_GRAB)
-        dim as long nGrabH = pWindow->ScaleY(EDITORSPLIT_GRAB)
+        dim as long nGrabV = pWindow->ScaleX(SPLITTER_GRAB)
+        dim as long nGrabH = pWindow->ScaleY(SPLITTER_GRAB)
         dim as long nEditScrollW = pWindow->ScaleX(SCROLLBAR_WIDTH_EDITOR)
 
         if pDoc->EditorSplitMode = SplitNone then
@@ -1322,6 +1342,8 @@ end function
 
 
 
+
+
 ' ========================================================================================
 ' frmMain Window procedure
 ' ========================================================================================
@@ -1627,6 +1649,13 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
         CSplitter_SetMessageCallback( hBar, @frmMain_SplitterMessage )
     next
 
+    ' Output panel splitter: sits between the editor area and the Output panel. Also a
+    ' frmMain child, because frmMain owns that layout.
+    HWND_FRMMAIN_SPLITOUTPUT = CSplitter_Create( HWND_FRMMAIN, IDC_FRMMAIN_SPLITOUTPUT, CSPLITTER_HORIZONTAL )
+    CSplitter_SetPaintCallback( HWND_FRMMAIN_SPLITOUTPUT, @frmOutput_SplitterPaint )
+    CSplitter_SetPosChangedCallback( HWND_FRMMAIN_SPLITOUTPUT, @frmOutput_SplitterMoved )
+    CSplitter_SetMessageCallback( HWND_FRMMAIN_SPLITOUTPUT, @frmOutput_SplitterMessage )
+
     ' Create the UserTools accelerator table
     frmUserTools_CreateAcceleratorTable()            
 
@@ -1668,6 +1697,7 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ' Post a message to check for any Tiko updated version.
     PostMessage( pWindow->hWindow, MSG_USER_PROCESS_CHECKFORUPDATE, 0, 0 )
 
+    
     
     ' Process windows events
     dim uMsg as MSG

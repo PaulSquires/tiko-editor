@@ -384,168 +384,93 @@ end Function
 
 
 ' ========================================================================================
-' Process WM_MOUSEMOVE message for window/dialog: frmOutput
+' The Output panel's splitter bar. It is a CSplitter owned by frmMain (the bar sits BETWEEN
+' the editor area and this panel, and frmMain owns that layout), so what lives here are only
+' the three callbacks.
+'
+' Everything the panel used to carry for it is gone: the WM_MOUSEMOVE hit-test, the
+' WM_LBUTTONDOWN/UP drag with its gApp.bDragActive / gApp.hwndPanel globals, and the 100 ms
+' timer (gApp.idTimerOutputPanel, doubleClickReceived, frmOutput_TimerProc,
+' HandleSingleClick, HandleDoubleClick) that told a single click from a double click. The
+' control's class carries CS_DBLCLKS, so that disambiguation is free.
 ' ========================================================================================
-function frmOutput_OnMouseMove( _
-            byval hwnd as HWND, _
-            byval x as long, _
-            byval y as long, _
-            byval keyflags as UINT _
-            ) as long
 
-    dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN)
-    if pWindow = 0 then exit function
+' Paint: the form background with a SPLITSIZE band centered in the grab area, matching the
+' editor split bar (frmMain_SplitterPaint).
+sub frmOutput_SplitterPaint( byval p as CSPLITTER_PAINTINFO ptr )
+    dim as clsDoubleBuffer ptr b = p->b
 
-    ' HITTEST (PANELS SPLITTER)
-    dim as point pt 
-    dim as RECT rc
-    GetWindowRect( HWND_FRMOUTPUT, @rc )
-    rc.Bottom = rc.Top + pWindow->ScaleY(SPLITSIZE)
-    GetCursorPos(@pt)
-    if PtInRect( @rc, pt ) then
-        if WindowFromPoint(pt) = HWND_FRMOUTPUT then
-            SetCursor( ghCursorSizeNS )
-        end if
-    end if
-    
-    if gApp.bDragActive then
-        if gApp.hwndPanel = HWND_FRMOUTPUT then
+    b->SetBackColor( ghMain.BackColor )
+    b->PaintClientRect()
+
+    dim pWindow as CWindow ptr = AfxCWindowPtr( HWND_FRMMAIN )
+    dim as long nBand = SPLITSIZE
+    if pWindow then nBand = pWindow->ScaleY(SPLITSIZE)
+
+    dim as RECT rc = p->rcClient
+    dim as long nInset = ((rc.bottom - rc.top) - nBand) \ 2
+    if nInset < 0 then nInset = 0
+    rc.top += nInset
+    rc.bottom -= nInset
+
+    dim as COLORREF clr = ghEditor.Divider
+    if p->isHot orelse p->isDragging then clr = ghPanel.BackColorHot
+    b->SetBackColor( clr )
+    b->PaintRect( @rc )
+end sub
+
+
+' The user dragged the bar. The control has already moved itself; we convert its new top
+' edge back into the panel HEIGHT, which is what the rest of tiko (and the persisted
+' gConfig.ShowOutputPanelHeight) is expressed in.
+sub frmOutput_SplitterMoved( _
+            byval hSplitter as HWND, _
+            byval newPos    as integer, _
+            byval nPhase    as integer _
+            )
+
+    dim pWindow as CWindow ptr = AfxCWindowPtr( HWND_FRMMAIN )
+    if pWindow = 0 then exit sub
+    if IsWindow( HWND_FRMOUTPUT ) = 0 then exit sub
+
+    select case nPhase
+        case CSPLITTER_PHASE_MOVE
+            ' Dragging the bar un-minimizes the panel, exactly as the old drag did.
             gConfig.ShowOutputPanelMinimized = 0
-            GetCursorPos(@pt)
-            GetWindowRect( HWND_FRMOUTPUT, @rc )
-            dim as long nHeight 
-            dim as long nDiff = pt.y - rc.top
-            ' Adjust the height. The positioning will be taken care of in PositionMainWindows().
-            rc.top = rc.top + nDiff
-    
-            ' Don't move the Output pane if the top is less than the bottom of the TopTabs
-            dim as RECT rc2
-            dim as long nTopLimit 
-            GetWindowRect( HWND_FRMMAIN_MENUBAR, @rc2 )
-            nTopLimit = rc2.bottom
-            if gTTabCtl.GetItemCount then 
-                GetWindowRect( HWND_FRMMAIN_TOPTABS, @rc2 )
-                nTopLimit = rc2.bottom
-            end if
-            rc.top = max(rc.top, nTopLimit)
-            nHeight = (rc.bottom-rc.top) - pWindow->ScaleY(SPLITSIZE) ' allow room to grab the top
-            
-            ' The minimum height of the Output window when visible is the height of the tabs
-            nHeight = max( nHeight, pWindow->ScaleY(OUTPUT_TABS_HEIGHT) )
 
-            SetWindowPos( HWND_FRMOUTPUT, 0, 0, 0, rc.Right - rc.Left, nHeight, SWP_NOMOVE or SWP_NOZORDER )
-            frmMain_PositionWindows
-            exit function
-        end if
-    end if
+            dim as RECT rc : GetClientRect( HWND_FRMMAIN, @rc )
+            dim as long nGrab = pWindow->ScaleY(SPLITTER_GRAB)
+            dim as long nHeightStatusBar = 0
+            if IsWindowVisible(HWND_FRMMAIN_STATUSBAR) then _
+                nHeightStatusBar = AfxGetWindowHeight(HWND_FRMMAIN_STATUSBAR)
 
-    function = 0
-end function
+            dim as long nHeight = rc.bottom - nHeightStatusBar - newPos - nGrab
+            if nHeight < 0 then nHeight = 0
+            AfxSetWindowSize( HWND_FRMOUTPUT, AfxGetWindowWidth(HWND_FRMOUTPUT), nHeight )
+            frmMain_PositionWindows()
 
-
-' ========================================================================================
-' Process WM_LBUTTONDOWN message for window/dialog: frmOutput
-' ========================================================================================
-function frmOutput_OnLButtonDown( _
-            byval hwnd as HWND, _
-            byval fDoubleClick as Boolean, _
-            byval x as long, _
-            byval y as long, _
-            byval keyflags as UINT _
-            ) as long
-
-    dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN)
-    if pWindow = 0 then exit function
-
-    ' HITTEST (PANELS TOP/BOTTOM SPLITTER)
-    dim as Rect rc
-    dim as point pt 
-
-    gApp.bDragActive = False 
-    
-    GetWindowRect HWND_FRMOUTPUT, @rc
-    rc.Bottom = rc.Top + pWindow->ScaleY(SPLITSIZE)
-    GetCursorPos(@pt)
-    if PtInRect( @rc, pt ) then
-        if WindowFromPoint(pt) = HWND_FRMOUTPUT then
-            SetCursor( ghCursorSizeNS )
-            gApp.bDragActive = true 
-            gApp.hwndPanel   = HWND_FRMOUTPUT
-            SetCapture( HWND_FRMOUTPUT )
-        end if
-        exit function
-    end if
-
-    function = 0
-end function
-
-
-sub frmOutput_HandleSingleClick(hwnd as HWND)
-    if gApp.bDragActive then
-        gConfig.ShowOutputPanelHeight = AfxGetWindowHeight(hwnd)
-        gApp.bDragActive = False 
-        gApp.hwndPanel = 0
-    end if    
-    ReleaseCapture()
+        case CSPLITTER_PHASE_END
+            ' Persist the height the user settled on -- what HandleSingleClick did on the
+            ' mouse-up.
+            gConfig.ShowOutputPanelHeight = AfxGetWindowHeight(HWND_FRMOUTPUT)
+    end select
 end sub
 
 
-sub frmOutput_HandleDoubleClick(hwnd as HWND)
-    OnCommand_ViewOutput()   ' toggle the Output window off
-    ReleaseCapture()
-end sub
-
-
-' ========================================================================================
-' Timer callback function for differentiating between single/double click
-' ========================================================================================
-sub frmOutput_TimerProc(hwnd as HWND, uMsg as UINT, idEvent as UINT_PTR, dwTime as DWORD)
-    KillTimer(hwnd, idEvent)
-    if gApp.doubleClickReceived = false then
-        frmOutput_HandleSingleClick(hwnd)
+' Double-click toggles the panel between minimized and its user-set height -- the same
+' toggle the Output TABS already perform. (It used to hide the panel outright; the View
+' menu item still does that.) Claiming the message means no drag starts.
+function frmOutput_SplitterMessage( byval m as CSPLITTER_MESSAGEINFO ptr ) as boolean
+    if m->uMsg <> WM_LBUTTONDBLCLK then return false
+    if gConfig.ShowOutputPanelMinimized then
+        frmOutput_RestorePanel()
+    else
+        frmOutput_MinimizePanel()
     end if
-end sub
-
-
-' ========================================================================================
-' Process WM_LBUTTONUP message for window/dialog: frmOutput
-' ========================================================================================
-function frmOutput_OnLButtonUp( _
-            byval hwnd as HWND, _
-            byval x as long, _
-            byval y as long, _
-            byval keyflags as UINT _
-            ) as long
-
-    ' Start a timer to delay single-click action and distinguish between
-    ' the single click and doubleclick
-    gApp.doubleClickReceived = false
-    SetTimer(hwnd, gApp.idTimerOutputPanel, 100, @frmOutput_TimerProc)
-    ReleaseCapture
-    SetCursor( LoadCursor( null, IDC_ARROW ))
-
-    function = 0
+    return true
 end function
 
 
-' ========================================================================================
-' Process WM_LBUTTONDBLCLK message for window/dialog: frmOutput
-' ========================================================================================
-function frmOutput_OnLButtonDblClk( _
-            byval hwnd as HWND, _
-            byval fDoubleClick as boolean, _
-            byval x as long, _
-            byval y as long, _
-            byval keyflags as UINT _
-            ) as long
-
-    if gApp.bDragActive then gApp.bDragActive = false
-    KillTimer(hwnd, gApp.idTimerOutputPanel)
-    gApp.doubleClickReceived = true
-    frmOutput_HandleDoubleClick(hwnd)
-
-    function = 0
-end function
 
 
 ' ========================================================================================
@@ -783,10 +708,6 @@ function frmOutput_WndProc( _
 
     select case uMsg
         HANDLE_MSG (hwnd, WM_SIZE,          frmOutput_OnSize)
-        HANDLE_MSG (hwnd, WM_LBUTTONUP,     frmOutput_OnLButtonUp)
-        HANDLE_MSG (hwnd, WM_LBUTTONDOWN,   frmOutput_OnLButtonDown)
-        HANDLE_MSG (hwnd, WM_MOUSEMOVE,     frmOutput_OnMouseMove)
-        HANDLE_MSG (hwnd, WM_LBUTTONDBLCLK, frmOutput_OnLButtonDblClk)
         HANDLE_MSG (hwnd, WM_DESTROY,       frmOutput_OnDestroy)
 
     case WM_NCDESTROY
