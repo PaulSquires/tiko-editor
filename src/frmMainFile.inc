@@ -470,11 +470,14 @@ function OnCommand_FileClose( _
                 end if
             end if
             
-            ' Hide the Scintilla editing windows
+            ' Hide the Scintilla editing windows, and the split bar with them -- this used
+            ' to be SetRectEmpty on the document's gripper rect, but the bar is a real
+            ' window (owned by frmMain) now.
             for ii as long = lbound(pDoc->hWindow) to ubound(pDoc->hWindow)
                 ShowWindow( pDoc->hWindow(ii), SW_HIDE)
             next
-            SetRectEmpty( @pDoc->rcSplitButton )
+            ShowWindow( HWND_FRMMAIN_SPLITV, SW_HIDE )
+            ShowWindow( HWND_FRMMAIN_SPLITH, SW_HIDE )
         end if
 
         ' remove tab from CTabBar

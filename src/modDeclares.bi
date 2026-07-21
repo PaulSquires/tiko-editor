@@ -172,6 +172,10 @@ dim shared as HWND HWND_FRMMAIN, HWND_FRMRECENT, HWND_FRMMAIN_STATUSBAR
 dim shared as HWND HWND_FRMOUTPUT, HWND_FRMOUTPUT_LVRESULTS, HWND_FRMOUTPUT_LVSEARCH
 dim shared as HWND HWND_FRMOUTPUT_LVTODO, HWND_FRMOUTPUT_VSCROLL
 dim shared as HWND HWND_FRMMAIN_MENUBAR
+' Editor split bars: one per orientation, created once and shown one at a time to follow
+' whichever split mode the ACTIVE document is in (CSplitter's orientation is fixed at
+' creation, and only one document is active).
+dim shared as HWND HWND_FRMMAIN_SPLITV, HWND_FRMMAIN_SPLITH
 dim shared as HWND HWND_FRMHELPVIEWER, HWND_FRMHELPVIEWER_LEFTPANEL, HWND_FRMHELPVIEWER_RIGHTPANEL
 dim shared as HWND HWND_FRMHELPVIEWER_VSCROLLBAR2
 dim shared as HWND HWND_FRMHELPVIEWER_SPLITTER
