@@ -11,6 +11,15 @@
 #define IDT_CLISTBOX_HOTTRACK   &hCB01
 #define CLISTBOX_HOTTRACK_MS    100
 
+' One cell of a multi-column row, as handed to the paint callback. The rect is in the
+' row buffer's coordinate space (y spans 0..row height; x comes from the header's
+' column geometry, which maps 1:1 onto the row -- see CListBox_PositionWindows).
+type CLISTBOX_CELLINFO
+    iCol            as integer
+    rc              as RECT
+    wszText         as DWSTRING
+end type
+
 type CLISTBOX_PAINTINFO
     itemID          as integer                ' MODEL row index (not the visible/listbox index)
     b               as clsDoubleBuffer ptr    ' points to the caller's buffer (no copy)
@@ -21,6 +30,15 @@ type CLISTBOX_PAINTINFO
     isHeader        as boolean                ' this row is a group header
     isCollapsed     as boolean                ' header only: its child items are hidden
     wszCaption      as DWSTRING
+    ' --- Columns. 0/null whenever the row should paint as a single full-width cell:
+    '     no columns are defined, or this row is a group header (group headers span).
+    '     With columns: background-fill the FULL rc first (selection/hot spans the
+    '     whole row, listview-style), then draw each cells[i].wszText inside
+    '     cells[i].rc -- the control does not clip between cells (DT_END_ELLIPSIS is
+    '     your friend). The array is control-owned scratch, valid ONLY during the
+    '     callback -- copy anything you need to keep. ---
+    columnCount     as integer
+    cells           as CLISTBOX_CELLINFO ptr
 end type
 
 type CLISTBOX_MESSAGEINFO
@@ -38,10 +56,34 @@ type CLISTBOX_ROWINFO
     IsHeader        as boolean = false
     bCollapsed      as boolean = false
     selected        as boolean = false    ' selection is stored in the model, not the listbox
-    Text            as DWSTRING
+    Text            as DWSTRING           ' column 0's cell text (the pre-columns contract)
+    ' Columns 1..N: cells(c-1) holds column c's text. SPARSE storage, independent of
+    ' the column definitions -- grown lazily by SetCellText, and any cell past the
+    ' stored count reads back "" (so populate-then-define and define-then-populate
+    ' both work, and columns added late simply read empty until set).
+    cells(any)      as DWSTRING
     itemData        as integer
     itemDataExtra   as integer
+
+    declare sub EnsureCells( byval n as integer )
+    declare sub TrimCells( byval n as integer )
 end type
+
+' fbc cannot parse `redim rows(i).cells(...)` (a member array reached through an array
+' element); a member procedure redim'ing `this.cells` parses fine -- see Learnings.md.
+sub CLISTBOX_ROWINFO.EnsureCells( byval n as integer )
+    if n <= 0 then exit sub
+    if ubound(this.cells) < n - 1 then redim preserve this.cells( 0 to n - 1 )
+end sub
+
+' Shrink storage to exactly n cells; n <= 0 frees the array.
+sub CLISTBOX_ROWINFO.TrimCells( byval n as integer )
+    if n <= 0 then
+        erase this.cells
+    elseif ubound(this.cells) >= n then
+        redim preserve this.cells( 0 to n - 1 )
+    end if
+end sub
 
 ' Draw one row. Called for each visible row on every repaint; keep it cheap. Paint through
 ' p->b (a per-control buffer that is already clipped and offset to this row), using p->rc
@@ -58,6 +100,20 @@ type MessageCallbackFunc as function( byval m as CLISTBOX_MESSAGEINFO ptr ) as b
 ' Supply the tooltip text for a MODEL row, on demand (only when a tip is about to show).
 ' Return "" for no tooltip. If unset, the row's own Text is used.
 type TooltipCallbackFunc as function( byval hListControl as HWND, byval row as integer ) as DWSTRING
+
+' The USER changed the selection -- by clicking a row, or by moving the focus with the
+' keyboard (arrows, PageUp/Down, Home/End, Space in checklist mode). row is the MODEL index
+' of the newly focused row, or -1 if there is no focus row.
+'
+' Why this exists: the control handles keyboard navigation itself and WM_KEYDOWN never
+' reaches the message callback, so without this a host cannot tell that an arrow key moved
+' the selection. Mouse-only hosts can keep using WM_LBUTTONUP in the message callback.
+'
+' NOT fired for CListBox_SetCurSel / SetSel / SelectAll / Clear: programmatic setters are
+' silent (the family rule), so a host may call them from inside this callback without
+' re-entering itself. Nor is it fired when the user re-selects the row that is already
+' current -- only an actual change notifies.
+type SelChangeCallbackSub as sub( byval hListControl as HWND, byval row as integer )
 
 type CLISTBOX
     hWin            as HWND
@@ -80,6 +136,10 @@ type CLISTBOX
     nLastHotIdx     as integer = -1       ' last VISIBLE row the mouse was over (hover tracking)
     hotTimerOn      as boolean = false    ' is the hot-tracking safety-net timer running?
     focusRow        as integer = -1       ' MODEL row with the keyboard focus/caret (-1 = none)
+    ' Last row handed to SelChangeCallback -- the host's idea of "current". Programmatic
+    ' setters update it WITHOUT notifying, which is what keeps a later user click on that
+    ' same row correctly silent.
+    lastNotifiedRow as integer = -1
     anchorRow       as integer = -1       ' MODEL row anchoring a shift-range selection
     topRow          as integer = 0        ' MODEL row that should be first displayed; the scroll
                                           ' source of truth the Win32 listbox is re-derived from
@@ -99,9 +159,20 @@ type CLISTBOX
     hScrollBar      as HWND
     ScrollBarWidth  as integer = CVSCROLL_DEFAULT_WIDTH   ' DPI-scaled when laid out
     scrollBarShown  as boolean = false
+    ' --- Optional column header band (CColumnHeader), created hidden and owned by this
+    '     control. The embedded header instance is the SINGLE store for column
+    '     definitions and geometry -- CListBox keeps no column state; the CListBox_*
+    '     column wrappers delegate, and OnDrawItem reads cell x-coordinates from the
+    '     header's rects. The control owns the header's WidthChanged slot (an internal
+    '     chain hook); hosts use CListBox_SetColumnResizeCallback. ---
+    hHeader         as HWND
+    headerShown     as boolean = false
+    HeaderHeight    as integer = 24       ' unscaled units (like RowHeight); ScaleY at layout
+    ColumnResizeCallback as HDR_WidthChangedCallbackSub   ' host-facing re-broadcast
     PaintCallback   as PaintCallbackSub
     MessageCallback as MessageCallbackFunc
     TooltipCallback as TooltipCallbackFunc    ' optional; defaults to the row's Text
+    SelChangeCallback as SelChangeCallbackSub ' optional; user-driven selection changes only
     ' --- Reusable one-row back buffer, so WM_DRAWITEM doesn't create/destroy a
     '     compatible DC + bitmap for every row on every repaint. ---
     cacheDC         as HDC
@@ -109,10 +180,16 @@ type CLISTBOX
     cacheOldBmp     as HBITMAP
     cacheW          as integer = 0
     cacheH          as integer = 0
+    ' --- Persistent scratch for PAINTINFO.cells, re-dimensioned only when the column
+    '     count changes (WM_DRAWITEM is strictly sequential and single-threaded, so
+    '     one array serves every row; the pointer handed out is valid only for the
+    '     duration of each callback). ---
+    paintCells(any) as CLISTBOX_CELLINFO
 
     declare destructor()
     declare function EnsureCache( byval refDC as HDC, byval w as integer, byval h as integer ) as HDC
     declare sub      FreeCache()
+    declare sub      EnsurePaintCells( byval n as integer )
     declare function GetCount() as integer                                  ' model row count
     declare function GetVisibleCount() as integer
     declare function AddRow() as CLISTBOX_ROWINFO ptr                       ' append
@@ -178,6 +255,16 @@ sub CLISTBOX.FreeCache()
     this.cacheH = 0
 end sub
 
+' Size the PAINTINFO.cells scratch to exactly n entries (only re-dims when the column
+' count actually changed, so the per-row cost is a compare).
+sub CLISTBOX.EnsurePaintCells( byval n as integer )
+    if n <= 0 then
+        erase this.paintCells
+    elseif ubound(this.paintCells) + 1 <> n then
+        redim this.paintCells( 0 to n - 1 )
+    end if
+end sub
+
 function CLISTBOX.GetCount() as integer
     return this.rowCount
 end function
@@ -223,6 +310,7 @@ function CLISTBOX.InsertRowAt( byval modelRow as integer ) as CLISTBOX_ROWINFO p
         .itemData      = 0
         .itemDataExtra = 0
     end with
+    this.rows(modelRow).TrimCells( 0 )   ' recycled slot: stale cells must not resurrect
 
     this.rowCount += 1
     this.NotifyChange()
@@ -239,7 +327,8 @@ function CLISTBOX.DeleteRowAt( byval modelRow as integer ) as boolean
     for i as integer = modelRow to this.rowCount - 2
         this.rows(i) = this.rows(i + 1)
     next
-    this.rows(this.rowCount - 1).Text = ""   ' free the vacated last slot's string
+    this.rows(this.rowCount - 1).Text = ""       ' free the vacated last slot's strings
+    this.rows(this.rowCount - 1).TrimCells( 0 )
     this.rowCount -= 1
     this.NotifyChange()
     return true
@@ -248,12 +337,17 @@ end function
 sub CLISTBOX.Clear()
     for i as integer = 0 to this.rowCount - 1
         this.rows(i).Text = ""
+        this.rows(i).TrimCells( 0 )
     next
     this.rowCount = 0
     ' the focus/anchor rows died with the contents; left stale, GetCurSel would
     ' report a row of the OLD list against whatever is loaded next
     this.focusRow  = -1
     this.anchorRow = -1
+    ' Clearing is programmatic, so it does NOT notify -- but the host's idea of the
+    ' current row died with the contents too, and leaving it stale would swallow the
+    ' first user selection if it happened to land on the same index.
+    this.lastNotifiedRow = -1
     this.NotifyChange()
 end sub
 
@@ -372,9 +466,10 @@ end sub
 '
 ' THE CONTROL HANDLE
 '   Every CListBox_* function takes the handle returned by CListBox_Create(). That handle
-'   is the container window, which hosts two children: the owner-drawn LISTBOX and the
-'   vertical scrollbar. The functions resolve those children internally. Never pass the
-'   child listbox handle -- results are undefined.
+'   is the container window, which hosts three children: the owner-drawn LISTBOX, the
+'   vertical scrollbar, and the (optional, hidden by default) column header band. The
+'   functions resolve those children internally. Never pass the child listbox handle --
+'   results are undefined.
 '
 '   The handle is a real HWND on purpose (not an opaque type): callers legitimately need
 '   to treat the control as a window, e.g. SetWindowPos() to place and size it. An opaque
@@ -398,8 +493,9 @@ end sub
 '
 ' ----------------------------------------------------------------------------------------
 ' Creation
-'   CtrlID is the child listbox's control id (the scrollbar takes CtrlID + 1). The control
-'   is created zero-sized: position it with SetWindowPos().
+'   CtrlID is the child listbox's control id (the scrollbar takes CtrlID + 1 and the
+'   column header CtrlID + 2). The control is created zero-sized: position it with
+'   SetWindowPos().
 ' ----------------------------------------------------------------------------------------
 declare function CListBox_Create( byval hWndParent as HWND, byval CtrlID as integer ) as HWND
 
@@ -426,9 +522,16 @@ declare function CListBox_GetVisibleCount( byval hListControl as HWND ) as integ
 
 ' ----------------------------------------------------------------------------------------
 ' Row contents.  Set* return FALSE for an invalid row index.
+'   Cells: column 0 IS the row's Text (GetText/SetText and the cell APIs with col = 0
+'   are interchangeable). Higher columns are stored sparsely per row -- any cell never
+'   set reads back "", and cell text is independent of the column DEFINITIONS, so rows
+'   can be populated before or after columns are added. col < 0 fails; col beyond the
+'   defined columns is legal storage (it paints once a matching column exists).
 ' ----------------------------------------------------------------------------------------
 declare function CListBox_GetText( byval hListControl as HWND, byval row as integer ) as DWSTRING
 declare function CListBox_SetText( byval hListControl as HWND, byval row as integer, byval Text as DWSTRING ) as boolean
+declare function CListBox_GetCellText( byval hListControl as HWND, byval row as integer, byval col as integer ) as DWSTRING
+declare function CListBox_SetCellText( byval hListControl as HWND, byval row as integer, byval col as integer, byval Text as DWSTRING ) as boolean
 declare function CListBox_GetItemData( byval hListControl as HWND, byval row as integer ) as integer
 declare function CListBox_SetItemData( byval hListControl as HWND, byval row as integer, byval itemData as integer ) as boolean
 declare function CListBox_GetItemDataExtra( byval hListControl as HWND, byval row as integer ) as integer
@@ -493,12 +596,62 @@ declare sub      CListBox_SetScrollBarColors( byval hListControl as HWND, byval 
 declare sub      CListBox_SetScrollBarPaintCallback( byval hListControl as HWND, byval usersub as VScrollPaintCallbackSub )
 
 ' ----------------------------------------------------------------------------------------
+' Columns and the header band.  All optional: with no columns defined the control paints
+' exactly as before. Column state lives in the embedded CColumnHeader child (the single
+' source of truth); these wrappers delegate to it. Widths are PIXELS (see CColumnHeader.bi
+' for the width/min-width/fill rules); HeaderHeight is unscaled units like RowHeight.
+'
+'   Columns can be defined with the header band hidden (ShowHeader false, the default):
+'   rows still paint in columns, there is just no interactive header strip. The header
+'   spans the full container width -- listview-style, over the scrollbar strip -- so
+'   column geometry never shifts when the scrollbar auto-hides.
+'
+'   CALLBACK OWNERSHIP: on an embedded header the control owns the header's own
+'   WidthChanged slot (it must repaint rows on every live resize). Hosts subscribe with
+'   CListBox_SetColumnResizeCallback -- never CColumnHeader_SetWidthChangedCallback on
+'   the child returned by CListBox_GetHeader. The other header callbacks (paint, click,
+'   autosize, tooltip) pass straight through.
+'
+'   Programmatic setters are silent (family rule): SetColumnWidth repaints but fires no
+'   resize callback; only user drags/autosize notify.
+' ----------------------------------------------------------------------------------------
+declare function CListBox_AddColumn( byval hListControl as HWND, byval Text as DWSTRING, byval nWidth as integer = 100, byval nMinWidth as integer = 0, byval itemData as integer = 0 ) as integer
+declare function CListBox_InsertColumn( byval hListControl as HWND, byval idx as integer, byval Text as DWSTRING, byval nWidth as integer = 100, byval nMinWidth as integer = 0, byval itemData as integer = 0 ) as integer
+declare function CListBox_DeleteColumn( byval hListControl as HWND, byval idx as integer ) as boolean
+declare sub      CListBox_ClearColumns( byval hListControl as HWND )
+declare function CListBox_GetColumnCount( byval hListControl as HWND ) as integer
+declare function CListBox_GetColumnText( byval hListControl as HWND, byval idx as integer ) as DWSTRING
+declare function CListBox_SetColumnText( byval hListControl as HWND, byval idx as integer, byval Text as DWSTRING ) as boolean
+declare function CListBox_GetColumnWidth( byval hListControl as HWND, byval idx as integer ) as integer
+declare function CListBox_SetColumnWidth( byval hListControl as HWND, byval idx as integer, byval nWidth as integer ) as boolean
+declare function CListBox_GetColumnMinWidth( byval hListControl as HWND, byval idx as integer ) as integer
+declare function CListBox_SetColumnMinWidth( byval hListControl as HWND, byval idx as integer, byval nMinWidth as integer ) as boolean
+declare function CListBox_GetFillColumn( byval hListControl as HWND ) as integer
+declare function CListBox_SetFillColumn( byval hListControl as HWND, byval idx as integer ) as boolean
+declare function CListBox_ShowHeader( byval hListControl as HWND, byval bShow as boolean = true ) as boolean
+declare function CListBox_IsHeaderVisible( byval hListControl as HWND ) as boolean
+declare function CListBox_GetHeaderHeight( byval hListControl as HWND ) as integer
+declare function CListBox_SetHeaderHeight( byval hListControl as HWND, byval height as integer ) as integer
+declare function CListBox_GetHeader( byval hListControl as HWND ) as HWND
+declare sub      CListBox_SetColumnResizeCallback( byval hListControl as HWND, byval usersub as HDR_WidthChangedCallbackSub )
+declare sub      CListBox_SetColumnClickCallback( byval hListControl as HWND, byval usersub as HDR_ClickCallbackSub )
+declare sub      CListBox_SetColumnAutoSizeCallback( byval hListControl as HWND, byval userfunc as HDR_AutoSizeCallbackFunc )
+declare sub      CListBox_SetHeaderPaintCallback( byval hListControl as HWND, byval usersub as HDR_PaintCallbackSub )
+declare sub      CListBox_SetHeaderTooltipCallback( byval hListControl as HWND, byval userfunc as HDR_TooltipCallbackFunc )
+declare sub      CListBox_SetHeaderBackColor( byval hListControl as HWND, byval clr as COLORREF )
+declare sub      CListBox_SetHeaderFont( byval hListControl as HWND, byval hFont as HFONT )
+
+' ----------------------------------------------------------------------------------------
 ' Callbacks.  See the type declarations above for each signature and contract.
 '   PaintCallback   - draw one row. Required if you want to see anything.
 '   MessageCallback - observe mouse messages; return TRUE to suppress default handling.
 '                     NOTE: the result is ignored for WM_LBUTTONUP (see CListBox.inc).
 '   TooltipCallback - supply per-row tooltip text on demand; "" for none.
+'   SelChangeCallback - the USER selected a different row (mouse OR keyboard). Silent for
+'                     the programmatic setters. This is the only way to see keyboard
+'                     navigation: the control consumes WM_KEYDOWN itself.
 ' ----------------------------------------------------------------------------------------
 declare sub      CListBox_SetPaintCallback( byval hListControl as HWND, byval usersub as PaintCallbackSub )
 declare sub      CListBox_SetMessageCallback( byval hListControl as HWND, byval userfunc as MessageCallbackFunc )
 declare sub      CListBox_SetTooltipCallback( byval hListControl as HWND, byval userfunc as TooltipCallbackFunc )
+declare sub      CListBox_SetSelChangeCallback( byval hListControl as HWND, byval usersub as SelChangeCallbackSub )

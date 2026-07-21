@@ -99,7 +99,8 @@ dim shared gTTabCtl as clsTopTabCtl
 ' Custom controls
 #include once "CVScrollBar.inc"
 #include once "CHScrollBar.inc"
-#include once "CListBox.inc" 
+#include once "CColumnHeader.inc"
+#include once "CListBox.inc"
 #include once "CStatusBar.inc" 
 #include once "CTabBar.inc"
 #include once "CTextBox.inc"

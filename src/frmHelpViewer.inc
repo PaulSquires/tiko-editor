@@ -14,36 +14,10 @@
 #include once "frmHelpViewer.bi"
 
 
-' ========================================================================================
-' Push the topics listbox scroll state into the CVScrollBar, in ITEM units (total
-' items, items per page, top index). SetRange re-derives the thumb and repaints; the
-' control shows an empty track when everything fits.
-' ========================================================================================
-function frmHelpViewer_UpdateScrollBar() as boolean
-    if IsWindow( HWND_FRMHELPVIEWER_VSCROLLBAR ) = 0 then exit function
-    dim as RECT rc
-    GetClientRect( HWND_FRMHELPVIEWER_LEFTPANEL, @rc )
-    ' LB_GETITEMHEIGHT works with zero items on a fixed-height owner-draw listbox
-    ' (see C:\dev\Learnings.md); guard the divide anyway.
-    dim as long itemHeight = SendMessage( HWND_FRMHELPVIEWER_LEFTPANEL, LB_GETITEMHEIGHT, 0, 0 )
-    dim as long itemsPerPage = 0
-    if itemHeight > 0 then itemsPerPage = (rc.bottom - rc.top) \ itemHeight
-    CVScrollBar_SetRange( HWND_FRMHELPVIEWER_VSCROLLBAR, _
-                          ListBox_GetCount( HWND_FRMHELPVIEWER_LEFTPANEL ), _
-                          itemsPerPage, _
-                          SendMessage( HWND_FRMHELPVIEWER_LEFTPANEL, LB_GETTOPINDEX, 0, 0 ) )
-    function = 0
-end function
-
-
-' ========================================================================================
-' The user scrolled the CVScrollBar (thumb drag or track paging): set the listbox top
-' index. Owner-drawn rows need the explicit redraw (same as the old code).
-' ========================================================================================
-sub frmHelpViewer_VScrollCallback( byval hScrollBar as HWND, byval newPos as integer )
-    SendMessage( HWND_FRMHELPVIEWER_LEFTPANEL, LB_SETTOPINDEX, newPos, 0 )
-    AfxRedrawWindow( HWND_FRMHELPVIEWER_LEFTPANEL )
-end sub
+' The topics list is a CListBox, which owns and drives its OWN CVScrollBar internally
+' (created, ranged, positioned and auto-hidden by the control). The hand-written
+' frmHelpViewer_UpdateScrollBar / _VScrollCallback pair that used to push item counts into
+' a separate bar is gone with it; only the help TEXT still needs that wiring, below.
 
 
 ' ========================================================================================
@@ -90,6 +64,75 @@ sub frmHelpViewer_VScrollPaint( byval p as CVSCROLLBAR_PAINTINFO ptr )
         b->PaintRect( @p->rcThumb )
     end if
 end sub
+
+
+' ========================================================================================
+' Paint one topics row. A port of the old WM_DRAWITEM handler.
+'
+' The old code kept a single IsHot flag that it set for EITHER the hovered row OR the
+' current selection, and painted both the same -- so selected and hot share one style here
+' too, which reproduces the previous look exactly.
+' ========================================================================================
+sub frmHelpViewer_ListPaint( byval p as CLISTBOX_PAINTINFO ptr )
+    dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMHELPVIEWER)
+    if pWindow = 0 then exit sub
+
+    dim as COLORREF backclr = ghPanel.BackColor
+    dim as COLORREF foreclr = ghPanel.ForeColor
+    if p->isSelected orelse p->isHot then
+        backclr = ghPanel.BackColorHot
+        foreclr = ghPanel.ForeColorHot
+    end if
+    p->b->SetForeColor( foreclr )
+    p->b->SetBackColor( backclr )
+    p->b->PaintRect( @p->rc )
+
+    dim as DWSTRING wszCaption = p->wszCaption
+    dim as long nLeftMargin = pWindow->ScaleX(20)
+
+    dim as RECT rcText = p->rc
+    rcText.left = nLeftMargin
+
+    ' A leading "-" marks a sub-topic: it gets a document glyph and the text shifts right.
+    if left(ltrim(wszCaption), 1) = "-" then
+        dim as RECT rcBitmap = rcText
+        rcBitmap.left = rcText.left + pWindow->ScaleX(10)
+        rcBitmap.right = rcBitmap.left + pWindow->ScaleX(10)
+        p->b->SetFont( ghFont(GUIFONT_10) )   ' GUI rather than SYMBOL b/c of the dot icon
+        p->b->PaintText( wszIconDocument, @rcBitmap, DT_CENTER )
+        rcText.left = rcBitmap.right
+    end if
+
+    wszCaption = ltrim(wszCaption, any " -")
+    p->b->SetFont( ghFont(GUIFONT_10) )
+    p->b->PaintText( wszCaption, @rcText, DT_LEFT )
+end sub
+
+
+' ========================================================================================
+' The user selected a different topic -- by clicking it OR with the arrow keys. Load it.
+'
+' This replaces the old LBN_SELCHANGE handling in frmHelpViewer_OnCommand. CListBox
+' consumes WM_KEYDOWN itself, so its SelChange callback is the only way to see keyboard
+' navigation; the row is a MODEL index, and the topics list is flat (no group headers), so
+' it indexes gHelpViewer.Filenames directly as the listbox index used to.
+'
+' Silent for CListBox_SetCurSel, which is why seeding the initial selection at startup does
+' not load the file twice.
+' ========================================================================================
+sub frmHelpViewer_ListSelChange( byval hCtl as HWND, byval row as integer )
+    if row < 0 then exit sub
+    frmHelpViewer_LoadHelpFile( row )
+end sub
+
+
+' With no tooltip callback CListBox falls back to showing the row's own text, and the rows
+' now carry their captions -- so the topics list would sprout tooltips it never had. Return
+' "" to keep the previous behavior. Delete this (and the SetTooltipCallback call) to get
+' tooltips for topic names that are too long for the panel.
+function frmHelpViewer_ListTooltip( byval hCtl as HWND, byval row as integer ) as DWSTRING
+    return ""
+end function
 
 
 ' ========================================================================================
@@ -149,7 +192,7 @@ end sub
 ' ScrollChangedCallback, so the scrollbar re-ranges automatically.
 ' ========================================================================================
 function frmHelpViewer_LoadHelpFile( byval nIndex as long ) as long
-    if (nIndex >= lbound(gHelpViewer.Filenames)) andalso _
+        if (nIndex >= lbound(gHelpViewer.Filenames)) andalso _
         (nIndex <= ubound(gHelpViewer.Filenames)) then
         dim as DWSTRING wszPath = AfxStrPathname("PATH", gConfig.HelpTableOfContents)
         dim as HWND hConvert = GetDlgItem( HWND_FRMHELPVIEWER, IDC_FRMHELPVIEWER_RTFCONVERT )
@@ -182,20 +225,21 @@ function frmHelpViewer_PositionWindows() as LRESULT
 
     ' The splitter's position is its own LEFT EDGE in this window's client coordinates, and
     ' it is the single source of truth for the layout -- the left panel's width is derived
-    ' from it, not the other way round. The limits are ours to compute: the control cannot
-    ' know that a CVScrollBar sits between the left panel and the bar.
+    ' from it, not the other way round. The limits are ours to compute; the control never
+    ' guesses them.
+    '
+    ' The topics CListBox carries its own scrollbar INSIDE its client rect (auto-hidden when
+    ' the rows fit), so the left panel now runs edge-to-edge up to the bar -- there is no
+    ' separate scrollbar strip in this form's layout any more. Only the help TEXT still has
+    ' an external CVScrollBar, on the far right.
     CSplitter_SetRange( HWND_FRMHELPVIEWER_SPLITTER, _
-                        nMinPane + nVScrollWidth, _
+                        nMinPane, _
                         nClientWidth - nVScrollWidth - nGrabWidth - nMinPane )
     dim as long nSplitPos = CSplitter_GetPos( HWND_FRMHELPVIEWER_SPLITTER )
-    dim as long nLeftPanelWidth = nSplitPos - nVScrollWidth
+    dim as long nLeftPanelWidth = nSplitPos
 
     SetWindowPos( HWND_FRMHELPVIEWER_LEFTPANEL, 0, _
         0, 0, nLeftPanelWidth, nClientHeight, _
-        SWP_NOZORDER or SWP_SHOWWINDOW )
-
-    SetWindowPos( HWND_FRMHELPVIEWER_VSCROLLBAR, 0, _
-        nLeftPanelWidth, 0, nVScrollWidth, nClientHeight, _
         SWP_NOZORDER or SWP_SHOWWINDOW )
 
     SetWindowPos( HWND_FRMHELPVIEWER_SPLITTER, 0, _
@@ -217,10 +261,9 @@ function frmHelpViewer_PositionWindows() as LRESULT
         nClientWidth - nVScrollWidth, 0, nVScrollWidth, nClientHeight, _
         SWP_NOZORDER or SWP_SHOWWINDOW )
 
-    ' Push the ranges AFTER the resize so items/lines-per-page reflect the new heights
-    ' (the old code computed the listbox one before repositioning, going stale by one
-    ' layout pass).
-    frmHelpViewer_UpdateScrollBar()
+    ' Push the text range AFTER the resize so lines-per-page reflects the new height (the
+    ' old code computed it before repositioning, going stale by one layout pass). The
+    ' topics list re-ranges its own scrollbar from its own WM_SIZE.
     frmHelpViewer_UpdateTextScrollBar()
     AfxRedrawWindow( HWND_FRMHELPVIEWER_LEFTPANEL )
     
@@ -279,17 +322,10 @@ function frmHelpViewer_OnCommand( _
             byval codeNotify as UINT _
             ) as LRESULT
 
-    select case codeNotify
-        case LBN_SELCHANGE
-            ' update the highlighting of the current line
-            AfxRedrawWindow(hwndCtl)
-            ' Load the help document into the richedit control
-            dim as long nCurSel = Listbox_GetCurSel(hwndCtl)
-            frmHelpViewer_LoadHelpFile( nCurSel )
-            ' update the scrollbar position if necessary
-            frmHelpViewer_PositionWindows()
-    end select      
-        
+    ' LBN_SELCHANGE used to load the topic here. The topics list is a CListBox now: it
+    ' owns the selection and reports user-driven changes -- mouse AND keyboard -- through
+    ' frmHelpViewer_ListSelChange instead.
+
     select case id
         case IDCANCEL
             if codeNotify = BN_CLICKED then
@@ -356,94 +392,13 @@ function frmHelpViewer_OnDestroy( byval hwnd as HWND ) as LRESULT
     function = 0
 end function
 
-
-' ========================================================================================
-' Process WM_MEASUREITEM message for window/dialog: frmHelpViewer
-' ========================================================================================
-function frmHelpViewer_OnMeasureItem( _
-            byval hwnd as HWND, _
-            byval lpmis as MEASUREITEMSTRUCT ptr _
-            ) as long
-    ' Set the height of the list box items.
-    dim pWindow as CWindow ptr = AfxCWindowPtr(hwnd)
-    lpmis->itemHeight = pWindow->ScaleY(EXPLORERITEM_HEIGHT)
-
-    function = 0
-end function
+' The topics listbox's WM_MEASUREITEM / WM_DRAWITEM handlers and its subclass proc
+' (mouse-wheel scrolling, hover repaint, empty-area erase) all used to live here.
+' CListBox does every one of those itself: row height is CListBox_SetRowHeight, row
+' drawing is frmHelpViewer_ListPaint, and the wheel/hover/background handling is the
+' control's own.
 
 
-' ========================================================================================
-' Process WM_DRAWITEM message for window/dialog: frmHelpViewer
-' ========================================================================================
-function frmHelpViewer_OnDrawItem( _
-            byval hwnd as HWND, _
-            byval lpdis as const DRAWITEMSTRUCT ptr _
-            ) as long
-
-    dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN)
-    if pWindow = 0 then exit function
-
-    if lpdis = 0 then exit function
-
-    if ( lpdis->itemAction = ODA_DRAWENTIRE ) orelse _
-        ( lpdis->itemAction = ODA_SELECT ) orelse _
-        ( lpdis->itemAction = ODA_FOCUS ) then
-
-        dim as clsDoubleBuffer b
-
-        b.BeginDoubleBuffer(lpdis->hwndItem, lpdis->hDC, lpdis->rcItem)
-
-        dim as boolean IsHot = false
-        dim as boolean isNodeHeader = false
-        dim as boolean isIconDown = false
-
-        ' if mouse is over then reset hot
-        if isMouseOverRECT(lpdis->hwndItem, b.rcClient) then IsHot = true   
-        if ListBox_GetCurSel(lpdis->hwndItem) = lpdis->itemID then IsHot = true
-
-        dim as COLORREF backclr = iif( IsHot, ghPanel.BackColorHot,  ghPanel.BackColor)
-        dim as COLORREF foreclr = iif( IsHot, ghPanel.ForeColorHot,  ghPanel.ForeColor)
-        b.SetForeColor( foreclr )
-        b.SetBackColor( backclr )
-
-        dim as DWSTRING wszCaption
-        if (lpdis->ItemID >= lbound(gHelpViewer.Filenames)) andalso _
-            (lpdis->ItemID <= ubound(gHelpViewer.Filenames)) then
-            wszCaption = gHelpViewer.Topics(lpdis->ItemID)
-        end if
-
-        ' Create our rect that works with the entire line
-        dim as RECT rc
-        SetRect( @rc, 0, 0, b.rcClientWidth, b.rcClientHeight )
-        
-        ' Paint the entire background
-        b.PaintRect( @rc )
-
-        dim as long nLeftMargin = pWindow->ScaleX(20)
-        rc.left = nLeftMargin
-        dim as RECT rcText = rc 
-        dim as RECT rcBitmap = rc 
-
-        if left(ltrim(wszCaption), 1) = "-" then
-            rcBitmap.left = rcText.left + pWindow->ScaleX(10)
-            rcBitmap.right = rcBitmap.left + pWindow->ScaleX(10) 
-            b.SetFont( ghFont(GUIFONT_10) )  ' use GUI rather than SYMBOL b/c of dot icon
-            b.PaintText( wszIconDocument, @rcBitmap, DT_CENTER )
-            rcText.left = rcBitmap.right
-        end if    
-
-        wszCaption = ltrim(wszCaption, any " -")
-        
-        b.SetFont( ghFont(GUIFONT_10) )
-        b.PaintText( wszCaption, @rcText, DT_LEFT )
-
-        b.EndDoubleBuffer()
-            
-    end if
-
-    function = true
-
-end function
 
 
 ' ========================================================================================
@@ -464,18 +419,16 @@ function frmHelpViewer_WndProc( _
         HANDLE_MSG (hwnd, WM_DESTROY,        frmHelpViewer_OnDestroy)
         HANDLE_MSG (hwnd, WM_COMMAND,        frmHelpViewer_OnCommand)
         HANDLE_MSG (hwnd, WM_NOTIFY,         frmHelpViewer_OnNotify)
-        HANDLE_MSG (hwnd, WM_MEASUREITEM,    frmHelpViewer_OnMeasureItem)
-        HANDLE_MSG (hwnd, WM_DRAWITEM,       frmHelpViewer_OnDrawItem)
 
     case WM_NCDESTROY
         ' delete the allocated memory for window
         dim as CWindow ptr pWindow = AfxCWindowPtr(hwnd)
         if pWindow then delete(pWindow)
         HWND_FRMHELPVIEWER = 0
-        ' The CVScrollBar/CTextBox/CSplitter children destroyed themselves in their own
-        ' WM_NCDESTROY; reset the handles here (the Help window can be closed and
-        ' reopened).
-        HWND_FRMHELPVIEWER_VSCROLLBAR = 0
+        ' The CListBox/CVScrollBar/CTextBox/CSplitter children destroyed themselves in
+        ' their own WM_NCDESTROY; reset the handles here (the Help window can be closed
+        ' and reopened).
+        HWND_FRMHELPVIEWER_LEFTPANEL = 0
         HWND_FRMHELPVIEWER_VSCROLLBAR2 = 0
         HWND_FRMHELPVIEWER_RIGHTPANEL = 0
         HWND_FRMHELPVIEWER_SPLITTER = 0
@@ -486,128 +439,6 @@ function frmHelpViewer_WndProc( _
     function = DefWindowProc(hwnd, uMsg, wParam, lParam)
 
 end function
-
-
-' ========================================================================================
-' frmHelpViewerListBox_SubclassProc 
-' ========================================================================================
-function frmHelpViewerListBox_SubclassProc ( _
-            byval hWin   as HWND, _                 ' // Control window handle
-            byval uMsg   as UINT, _                 ' // Type of message
-            byval _wParam as WPARAM, _               ' // First message parameter
-            byval _lParam as LPARAM, _               ' // Second message parameter
-            byval uIdSubclass as UINT_PTR, _        ' // The subclass ID
-            byval dwRefData as DWORD_PTR _          ' // Pointer to reference data
-            ) as LRESULT
-
-    static as long accumDelta
-    
-    ' keep track of last index we were over so that we only issue a 
-    ' repaint if the cursor has moved off of the line
-    static as long nLastIdx = -1
-        
-    select case uMsg
-        case WM_MOUSEWHEEL
-            ' accumulate delta until scroll one line (up +120, down -120). 
-            ' 120 is the Microsoft default delta
-            dim as long zDelta = GET_WHEEL_DELTA_WPARAM( _wParam )
-            dim as long nTopIndex = SendMessage( hWin, LB_GETTOPINDEX, 0, 0 ) 
-            accumDelta = accumDelta + zDelta
-            if accumDelta >= 120 then       ' scroll up 3 lines
-                nTopIndex = nTopIndex - 3
-                nTopIndex = max( 0, nTopIndex )
-                SendMessage( hWin, LB_SETTOPINDEX, nTopIndex, 0 ) 
-                accumDelta = 0
-                frmHelpViewer_PositionWindows
-            elseif accumDelta <= -120 then  ' scroll down 3 lines
-                nTopIndex = nTopIndex + 3
-                SendMessage( hWin, LB_SETTOPINDEX, nTopIndex, 0 ) 
-                accumDelta = 0
-                frmHelpViewer_PositionWindows
-            end if
-
-        case WM_MOUSEMOVE
-            ' Track that we are over the control in order to catch the 
-            ' eventual WM_MOUSEHOVER and WM_MOUSELEAVE events
-            dim tme as TrackMouseEvent
-            tme.cbSize = sizeof(TrackMouseEvent)
-            tme.dwFlags = TME_HOVER or TME_LEAVE
-            tme.hwndTrack = hWin
-            tme.dwHoverTime = 1
-            TrackMouseEvent(@tme) 
-
-            ' get the item rect that the mouse is over and only invalidate
-            ' that instead of the entire listbox
-            dim as RECT rc
-            dim as long idx = Listbox_ItemFromPoint( hWin, GET_X_LPARAM(_lParam), GET_Y_LPARAM(_lParam)) 
-            ' The return value contains the index of the nearest item in the LOWORD. The HIWORD is zero 
-            ' if the specified point is in the client area of the list box, or one if it is outside the 
-            ' client area.
-            if hiword(idx) <> 1 then
-                if idx <> nLastIdx then
-                    nLastIdx = idx
-                    AfxRedrawWindow(hWin)   
-                end if
-            end if
-                            
-        case WM_MOUSELEAVE
-            nLastIdx = -1
-            AfxRedrawWindow(hWin)   
-            
-        case WM_LBUTTONDOWN
-            dim as RECT rc
-            dim as long idx = Listbox_ItemFromPoint( hWin, GET_X_LPARAM(_lParam), GET_Y_LPARAM(_lParam)) 
-            ' The return value contains the index of the nearest item in the LOWORD. The HIWORD is zero 
-            ' if the specified point is in the client area of the list box, or one if it is outside the 
-            ' client area.
-            if hiword(idx) <> 1 then
-                AfxRedrawWindow(hWin)   
-            end if
-
-                                    
-        case WM_ERASEBKGND
-            ' if the number of lines in the listbox maybe less than the number per page then 
-            ' calculate from last item to bottom of listbox, otherwise calculate based on
-            ' the mod of the lineheight to listbox height so we can color the partial line
-            ' that won't be displayed at the bottom of the list.
-            dim as RECT rc: GetClientRect( hWin, @rc )
-
-            dim as RECT rcItem  
-            SendMessage( hWin, LB_GETITEMRECT, 0, cast(LPARAM, @rcItem) )
-            dim as long itemHeight = rcItem.bottom - rcItem.top
-            dim as long NumItems = ListBox_GetCount(hWin)
-            dim as long nTopIndex = SendMessage( hWin, LB_GETTOPINDEX, 0, 0 ) 
-            dim as long visible_rows = 0
-            dim as long ItemsPerPage = 0
-            dim as long bottom_index = 0
-                        
-            if NumItems > 0 then
-                ItemsPerPage = (rc.bottom - rc.top) / itemHeight
-                bottom_index = (nTopIndex + ItemsPerPage) 
-                if bottom_index >= NumItems then bottom_index = NumItems - 1
-                visible_rows = (bottom_index - nTopIndex) + 1
-                rc.top = visible_rows * itemHeight 
-            end if
-
-            if rc.top < rc.bottom then
-                dim as HDC _hDC = cast(HDC, _wParam)
-                PaintRect( _hDC, @rc, ghPanel.BackColor )
-            end if
-
-            ValidateRect( hWin, @rc )
-            return true
-        
-        Case WM_DESTROY
-            ' REQUIRED: Remove control subclassing
-            RemoveWindowSubclass( hWin, @frmHelpViewerListBox_SubclassProc, uIdSubclass )
-    end select
-    
-    ' For messages that we don't deal with
-    function = DefSubclassProc( hWin, uMsg, _wParam, _lParam )
-
-end function
-
-
 ' ========================================================================================
 ' frmHelpViewer_Show
 ' ========================================================================================
@@ -659,32 +490,34 @@ function frmHelpViewer_Show( byval hWndParent as HWND ) as LRESULT
     end with
     SetWindowPlacement( pWindow->hWindow, @WinPla )
 
-    dim as long nWidth = pWindow->UnScaleX(gConfig.HelpLeftPanelWidth)
-
-    HWND_FRMHELPVIEWER_LEFTPANEL = _ 
-        pWindow->AddControl("LISTBOX", , IDC_FRMHELPVIEWER_LEFTPANEL, "", 0, 0, nWidth, 0, _
-        WS_CHILD or WS_VISIBLE or WS_CLIPSIBLINGS or WS_CLIPCHILDREN or WS_TABSTOP or _
-        LBS_NOINTEGRALHEIGHT or LBS_OWNERDRAWFIXED or LBS_NOTIFY, _
-        WS_EX_LEFT or WS_EX_RIGHTSCROLLBAR)
-    pWindow->SetControlSubclass(HWND_FRMHELPVIEWER_LEFTPANEL, @frmHelpViewerListBox_SubclassProc, IDC_FRMHELPVIEWER_LEFTPANEL, @pWindow)
-
-    ' Topics-list scrollbar: the reusable CVScrollBar control, driven in ITEM units
-    ' (frmHelpViewer_UpdateScrollBar pushes the range; the ScrollCallback sets the
-    ' listbox top index). PositionWindows sizes it, so no initial size is needed here.
-    HWND_FRMHELPVIEWER_VSCROLLBAR = CVScrollBar_Create( HWND_FRMHELPVIEWER, IDC_FRMHELPVIEWER_VSCROLLBAR )
-    CVScrollBar_SetScrollCallback( HWND_FRMHELPVIEWER_VSCROLLBAR, @frmHelpViewer_VScrollCallback )
-    CVScrollBar_SetPaintCallback( HWND_FRMHELPVIEWER_VSCROLLBAR, @frmHelpViewer_VScrollPaint )
+    ' Topics list: the reusable CListBox control. It wraps the Win32 listbox, owns and
+    ' auto-hides its own CVScrollBar INSIDE its client rect, tracks hover, and delegates row
+    ' drawing to frmHelpViewer_ListPaint -- which is why the form no longer carries a
+    ' WM_DRAWITEM/WM_MEASUREITEM pair, a listbox subclass, or a second scrollbar.
+    ' PositionWindows sizes it, so no initial size is needed here.
+    HWND_FRMHELPVIEWER_LEFTPANEL = _
+        CListBox_Create( HWND_FRMHELPVIEWER, IDC_FRMHELPVIEWER_LEFTPANEL )
+    CListBox_SetPaintCallback( HWND_FRMHELPVIEWER_LEFTPANEL, @frmHelpViewer_ListPaint )
+    ' SelChange replaces the old LBN_SELCHANGE: it reports mouse AND keyboard moves.
+    CListBox_SetSelChangeCallback( HWND_FRMHELPVIEWER_LEFTPANEL, @frmHelpViewer_ListSelChange )
+    CListBox_SetTooltipCallback( HWND_FRMHELPVIEWER_LEFTPANEL, @frmHelpViewer_ListTooltip )
+    CListBox_SetBackColor( HWND_FRMHELPVIEWER_LEFTPANEL, ghPanel.BackColor )
+    CListBox_SetFont( HWND_FRMHELPVIEWER_LEFTPANEL, ghFont(GUIFONT_10) )
+    CListBox_SetRowHeight( HWND_FRMHELPVIEWER_LEFTPANEL, EXPLORERITEM_HEIGHT )
+    ' The bar is created/positioned/auto-hidden by the control; we only theme it, reusing
+    ' the same painter as the help-text bar so both keep their existing look.
+    CListBox_SetScrollBarWidth( HWND_FRMHELPVIEWER_LEFTPANEL, SCROLLBAR_WIDTH_PANEL )
+    CListBox_SetScrollBarPaintCallback( HWND_FRMHELPVIEWER_LEFTPANEL, @frmHelpViewer_VScrollPaint )
 
     ' Splitter between the topics list and the help text: the reusable CSplitter control.
-    ' Its position is its own left edge in this window's client coords, which is why the
-    ' seed below adds the topics scrollbar's width to the persisted left-panel width.
+    ' Its position is its own left edge in this window's client coords -- which is now
+    ' exactly the left panel's width, since the topics scrollbar lives inside the CListBox.
     ' PositionWindows sizes it and pushes the limits, which clamp this seed.
     HWND_FRMHELPVIEWER_SPLITTER = CSplitter_Create( HWND_FRMHELPVIEWER, _
         IDC_FRMHELPVIEWER_SPLITTER, CSPLITTER_VERTICAL )
     CSplitter_SetPaintCallback( HWND_FRMHELPVIEWER_SPLITTER, @frmHelpViewer_SplitterPaint )
     CSplitter_SetPosChangedCallback( HWND_FRMHELPVIEWER_SPLITTER, @frmHelpViewer_SplitterMoved )
-    CSplitter_SetPos( HWND_FRMHELPVIEWER_SPLITTER, _
-        gConfig.HelpLeftPanelWidth + pWindow->ScaleX(SCROLLBAR_WIDTH_PANEL) )
+    CSplitter_SetPos( HWND_FRMHELPVIEWER_SPLITTER, gConfig.HelpLeftPanelWidth )
 
     ' Help text panel: a multiline CTextBox (word-wrapped, control-implemented wheel
     ' scrolling, no native scrollbar -- an external CVScrollBar is wired through the
@@ -727,10 +560,12 @@ function frmHelpViewer_Show( byval hWndParent as HWND ) as LRESULT
             if len(wst) = 0 then continue do
             
             if left(wst, 7) = "TOPIC: " then
-                idx = Listbox_AddString( HWND_FRMHELPVIEWER_LEFTPANEL, @wstr("") )
-                redim preserve gHelpViewer.Topics(idx)
+                ' The row now carries its own caption (the paint callback reads
+                ' p->wszCaption). The old code added an empty string and kept the text in a
+                ' parallel gHelpViewer.Topics array purely so WM_DRAWITEM could find it;
+                ' that array died with the handler.
+                idx = CListBox_AddString( HWND_FRMHELPVIEWER_LEFTPANEL, mid(wst, 8) )
                 redim preserve gHelpViewer.Filenames(idx)
-                gHelpViewer.Topics(idx) = mid(wst, 8)
                 continue do
             end if
 
@@ -745,14 +580,19 @@ function frmHelpViewer_Show( byval hWndParent as HWND ) as LRESULT
         pStream.Close
     end if
     
-    Listbox_SetCurSel( HWND_FRMHELPVIEWER_LEFTPANEL, 0 )
+    ' SetCurSel is silent (programmatic), so the first topic is loaded explicitly here --
+    ' exactly as before, and without the SelChange callback double-loading it.
+    CListBox_SetCurSel( HWND_FRMHELPVIEWER_LEFTPANEL, 0 )
     frmHelpViewer_LoadHelpFile(0)
 
     frmHelpViewer_PositionWindows()
-    
-    ShowWindow( HWND_FRMHELPVIEWER, SW_SHOW )
-    SetFocus(HWND_FRMHELPVIEWER_LEFTPANEL)
 
+    ShowWindow( HWND_FRMHELPVIEWER, SW_SHOW )
+    ' CListBox_Create gives the inner Win32 listbox the SAME control id as the container,
+    ' so this reaches the focusable child rather than the wrapper.
+    SetFocus( GetDlgItem( HWND_FRMHELPVIEWER_LEFTPANEL, IDC_FRMHELPVIEWER_LEFTPANEL ) )
+
+    
     return 0
 end function
 
