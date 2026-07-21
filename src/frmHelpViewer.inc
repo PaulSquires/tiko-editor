@@ -93,21 +93,51 @@ end sub
 
 
 ' ========================================================================================
-' Calculate RECT area of the splitter bar
+' Paint the splitter bar. The control's client rect is the GRAB area (HELPVIEWER_SPLITGRAB
+' wide); the visible band is the narrower SPLITSIZE, centered in it, so the bar looks the
+' same as it always did while being easier to grab. Colors are read live, so a theme switch
+' only needs a repaint (same approach as frmHelpViewer_VScrollPaint above).
+'
+' The hot color is new: the old splitter was a rect painted by the form's WM_PAINT and had
+' nowhere to keep a hover flag. The control tracks it, so the bar now lights up under the
+' mouse the same way a topics-list row does.
 ' ========================================================================================
-function frmHelpViewer_CalcSplitRect() as RECT
-    dim pWindow as CWindow ptr = AfxCWindowPtr( HWND_FRMMAIN )
-    if pWindow = 0 then exit function
+sub frmHelpViewer_SplitterPaint( byval p as CSPLITTER_PAINTINFO ptr )
+    dim as clsDoubleBuffer ptr b = p->b
 
-    dim as long nVScrollWidth = pWindow->ScaleX(SCROLLBAR_WIDTH_PANEL)
-    dim as long nSplitterWidth = pWindow->ScaleX(SPLITSIZE)
-    dim as RECT rc
-    GetClientRect( HWND_FRMHELPVIEWER, @rc )
-    rc.left = AfxGetWindowWidth(HWND_FRMHELPVIEWER_LEFTPANEL) + nVScrollWidth
-    rc.right = rc.left + nSplitterWidth
+    ' The gap either side of the band is the form's own background.
+    b->SetBackColor( ghMain.BackColor )
+    b->PaintClientRect()
 
-    function = rc
-end function
+    dim pWindow as CWindow ptr = AfxCWindowPtr( HWND_FRMHELPVIEWER )
+    dim as long nBandWidth = SPLITSIZE
+    if pWindow then nBandWidth = pWindow->ScaleX(SPLITSIZE)
+
+    dim as RECT rc = p->rcClient
+    dim as long nInset = ((rc.right - rc.left) - nBandWidth) \ 2
+    if nInset < 0 then nInset = 0
+    rc.left += nInset
+    rc.right -= nInset
+
+    dim as COLORREF clr = ghPanel.BackColor
+    if p->isHot orelse p->isDragging then clr = ghPanel.BackColorHot
+    b->SetBackColor( clr )
+    b->PaintRect( @rc )
+end sub
+
+
+' ========================================================================================
+' The user dragged the splitter. The control has already moved itself; all we do is lay out
+' the panels around it. Every phase does the same thing here -- unlike the editor split,
+' this window has no expensive chrome worth bracketing with BEGIN/END.
+' ========================================================================================
+sub frmHelpViewer_SplitterMoved( _
+            byval hSplitter as HWND, _
+            byval newPos    as integer, _
+            byval nPhase    as integer _
+            )
+    frmHelpViewer_PositionWindows()
+end sub
 
 
 ' ========================================================================================
@@ -134,7 +164,6 @@ function frmHelpViewer_LoadHelpFile( byval nIndex as long ) as long
 end function
 
 
-
 ' ========================================================================================
 ' Position all child windows. Called manually and/or by WM_SIZE
 ' ========================================================================================
@@ -143,21 +172,23 @@ function frmHelpViewer_PositionWindows() as LRESULT
     dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMHELPVIEWER)
     if pWindow = 0 then exit function
 
-    dim as long nSplitterWidth = pWindow->ScaleX(SPLITSIZE)
-
     dim as RECT rcClient: GetClientRect(HWND_FRMHELPVIEWER, @rcClient)
     dim as long nClientHeight = rcClient.bottom - rcClient.top
     dim as long nClientWidth = rcClient.right - rcClient.left
-    
-    dim as long xDelta = 0
-    if gApp.bDragActive = true then xDelta = gHelpViewer.xDeltaSplitter
-        
-    dim as long nLeftPanelWidth = AfxGetWindowWidth(HWND_FRMHELPVIEWER_LEFTPANEL) + xDelta
-    if nLeftPanelWidth < nSplitterWidth then nLeftPanelWidth = nSplitterWidth
-    if nLeftPanelWidth >= (nClientWidth - nSplitterWidth * 2) then _
-        nLeftPanelWidth = (nClientWidth - nSplitterWidth * 2)
 
+    dim as long nGrabWidth   = pWindow->ScaleX(HELPVIEWER_SPLITGRAB)
     dim as long nVScrollWidth = pWindow->ScaleX(SCROLLBAR_WIDTH_PANEL)
+    dim as long nMinPane     = pWindow->ScaleX(HELPVIEWER_MINPANE)
+
+    ' The splitter's position is its own LEFT EDGE in this window's client coordinates, and
+    ' it is the single source of truth for the layout -- the left panel's width is derived
+    ' from it, not the other way round. The limits are ours to compute: the control cannot
+    ' know that a CVScrollBar sits between the left panel and the bar.
+    CSplitter_SetRange( HWND_FRMHELPVIEWER_SPLITTER, _
+                        nMinPane + nVScrollWidth, _
+                        nClientWidth - nVScrollWidth - nGrabWidth - nMinPane )
+    dim as long nSplitPos = CSplitter_GetPos( HWND_FRMHELPVIEWER_SPLITTER )
+    dim as long nLeftPanelWidth = nSplitPos - nVScrollWidth
 
     SetWindowPos( HWND_FRMHELPVIEWER_LEFTPANEL, 0, _
         0, 0, nLeftPanelWidth, nClientHeight, _
@@ -167,10 +198,19 @@ function frmHelpViewer_PositionWindows() as LRESULT
         nLeftPanelWidth, 0, nVScrollWidth, nClientHeight, _
         SWP_NOZORDER or SWP_SHOWWINDOW )
 
-    ' Help text CTextBox, with its own CVScrollBar hugging the window's right edge
+    SetWindowPos( HWND_FRMHELPVIEWER_SPLITTER, 0, _
+        nSplitPos, 0, nGrabWidth, nClientHeight, _
+        SWP_NOZORDER or SWP_SHOWWINDOW )
+
+    ' Help text CTextBox, with its own CVScrollBar hugging the window's right edge.
+    ' The width is floored at zero: on a window too narrow to hold both minimums the
+    ' splitter pins at nMin (its range inverts) and this arithmetic would otherwise hand
+    ' SetWindowPos a negative width.
+    dim as long nRightPanelWidth = nClientWidth - nVScrollWidth - (nSplitPos + nGrabWidth)
+    if nRightPanelWidth < 0 then nRightPanelWidth = 0
     SetWindowPos( HWND_FRMHELPVIEWER_RIGHTPANEL, 0, _
-        nLeftPanelWidth + nVScrollWidth + nSplitterWidth, 0, _
-        nClientWidth - nSplitterWidth - nVScrollWidth * 2 - nLeftPanelWidth, nClientHeight, _
+        nSplitPos + nGrabWidth, 0, _
+        nRightPanelWidth, nClientHeight, _
         SWP_NOZORDER or SWP_SHOWWINDOW )
 
     SetWindowPos( HWND_FRMHELPVIEWER_VSCROLLBAR2, 0, _
@@ -188,77 +228,12 @@ function frmHelpViewer_PositionWindows() as LRESULT
 end function
 
 
-' ========================================================================================
-' Process WM_MOUSEMOVE message for window/dialog: frmHelpViewer
-' ========================================================================================
-function frmHelpViewer_OnMouseMove( _
-            byval hwnd as HWND, _
-            byval x as long, _
-            byval y as long, _
-            byval keyflags as UINT _
-            ) as long
-
-    ' HITTEST (SPLITTER)
-    dim as RECT rcSplitter = frmHelpViewer_CalcSplitRect()
-    if (isMouseOverRECT(hwnd, rcSplitter) = true) orelse (gApp.bDragActive = true) then
-        SetCursor( ghCursorSizeWE )
-    else    
-        SetCursor( LoadCursor( null, IDC_ARROW ))
-    end if
-
-    if (gApp.bDragActive = true) andalso (x <> gHelpViewer.ptSplitPrev.x) then
-        gHelpViewer.xDeltaSplitter = (x - gHelpViewer.ptSplitPrev.x)
-        frmHelpViewer_PositionWindows
-    end if
-
-    gHelpViewer.ptSplitPrev = type(x, y)
-            
-    function = 0
-end function
-
-
-' ========================================================================================
-' Process WM_LBUTTONDOWN message for window/dialog: frmHelpViewer
-' ========================================================================================
-function frmHelpViewer_OnLButtonDown( _
-            byval hwnd as HWND, _
-            byval fDoubleClick as boolean, _
-            byval x as long, _
-            byval y as long, _
-            byval keyflags as UINT _
-            ) as long
-                                        
-    dim as RECT rcSplitter = frmHelpViewer_CalcSplitRect()
-    if isMouseOverRECT( hwnd, rcSplitter ) then
-        gApp.bDragActive = true
-        gHelpViewer.ptSplitPrev = type(x, y)
-        SetCursor(ghCursorSizeWE)
-        SetCapture( HWND_FRMHELPVIEWER )
-    end if
-
-    function = 0
-end function
-
-
-' ========================================================================================
-' Process WM_LBUTTONUP message for window/dialog: frmHelpViewer
-' ========================================================================================
-function frmHelpViewer_OnLButtonUp( _
-            byval hwnd as HWND, _
-            byval x as long, _
-            byval y as long, _
-            byval keyflags as UINT _
-            ) as long
-
-    if gApp.bDragActive then
-       gApp.bDragActive = false
-       frmHelpViewer_PositionWindows
-       ReleaseCapture
-    end if   
-    SetCursor( LoadCursor( null, IDC_ARROW ))
-
-    function = 0
-end function
+' The splitter's WM_MOUSEMOVE / WM_LBUTTONDOWN / WM_LBUTTONUP handlers used to live here.
+' The CSplitter control owns all three now -- along with the mouse capture, the IDC_SIZEWE
+' cursor and the hover state -- so the form no longer handles mouse messages at all. Note
+' the form also no longer needs to reset the cursor to IDC_ARROW: that was only ever
+' compensating for a splitter with no window of its own, and CWindow already registers the
+' class with an arrow cursor.
 
 
 ' ========================================================================================
@@ -353,11 +328,9 @@ function frmHelpViewer_OnPaint( byval hwnd as HWND ) as LRESULT
     b.SetBackColor( ghMain.BackColor )
     b.PaintClientRect()
 
-    ' Draw any splitter between the two panels
-    dim as RECT rcSplitter = frmHelpViewer_CalcSplitRect()
-    b.SetBackColor( ghPanel.BackColor )
-    b.PaintRect( @rcSplitter )
-    
+    ' The splitter between the two panels is a real window now (CSplitter) and paints
+    ' itself -- see frmHelpViewer_SplitterPaint.
+
     b.EndDoubleBuffer()
     
     function = 0
@@ -491,9 +464,6 @@ function frmHelpViewer_WndProc( _
         HANDLE_MSG (hwnd, WM_DESTROY,        frmHelpViewer_OnDestroy)
         HANDLE_MSG (hwnd, WM_COMMAND,        frmHelpViewer_OnCommand)
         HANDLE_MSG (hwnd, WM_NOTIFY,         frmHelpViewer_OnNotify)
-        HANDLE_MSG (hwnd, WM_LBUTTONDOWN,    frmHelpViewer_OnLButtonDown)
-        HANDLE_MSG (hwnd, WM_LBUTTONUP,      frmHelpViewer_OnLButtonUp)
-        HANDLE_MSG (hwnd, WM_MOUSEMOVE,      frmHelpViewer_OnMouseMove)
         HANDLE_MSG (hwnd, WM_MEASUREITEM,    frmHelpViewer_OnMeasureItem)
         HANDLE_MSG (hwnd, WM_DRAWITEM,       frmHelpViewer_OnDrawItem)
 
@@ -502,12 +472,13 @@ function frmHelpViewer_WndProc( _
         dim as CWindow ptr pWindow = AfxCWindowPtr(hwnd)
         if pWindow then delete(pWindow)
         HWND_FRMHELPVIEWER = 0
-        ' The CVScrollBar/CTextBox children destroyed themselves in their own
+        ' The CVScrollBar/CTextBox/CSplitter children destroyed themselves in their own
         ' WM_NCDESTROY; reset the handles here (the Help window can be closed and
         ' reopened).
         HWND_FRMHELPVIEWER_VSCROLLBAR = 0
         HWND_FRMHELPVIEWER_VSCROLLBAR2 = 0
         HWND_FRMHELPVIEWER_RIGHTPANEL = 0
+        HWND_FRMHELPVIEWER_SPLITTER = 0
         return 0
 
     end select
@@ -704,6 +675,17 @@ function frmHelpViewer_Show( byval hWndParent as HWND ) as LRESULT
     CVScrollBar_SetScrollCallback( HWND_FRMHELPVIEWER_VSCROLLBAR, @frmHelpViewer_VScrollCallback )
     CVScrollBar_SetPaintCallback( HWND_FRMHELPVIEWER_VSCROLLBAR, @frmHelpViewer_VScrollPaint )
 
+    ' Splitter between the topics list and the help text: the reusable CSplitter control.
+    ' Its position is its own left edge in this window's client coords, which is why the
+    ' seed below adds the topics scrollbar's width to the persisted left-panel width.
+    ' PositionWindows sizes it and pushes the limits, which clamp this seed.
+    HWND_FRMHELPVIEWER_SPLITTER = CSplitter_Create( HWND_FRMHELPVIEWER, _
+        IDC_FRMHELPVIEWER_SPLITTER, CSPLITTER_VERTICAL )
+    CSplitter_SetPaintCallback( HWND_FRMHELPVIEWER_SPLITTER, @frmHelpViewer_SplitterPaint )
+    CSplitter_SetPosChangedCallback( HWND_FRMHELPVIEWER_SPLITTER, @frmHelpViewer_SplitterMoved )
+    CSplitter_SetPos( HWND_FRMHELPVIEWER_SPLITTER, _
+        gConfig.HelpLeftPanelWidth + pWindow->ScaleX(SCROLLBAR_WIDTH_PANEL) )
+
     ' Help text panel: a multiline CTextBox (word-wrapped, control-implemented wheel
     ' scrolling, no native scrollbar -- an external CVScrollBar is wired through the
     ' control's scroll API below). Themed with the editor text colors -- the thing the
@@ -770,7 +752,7 @@ function frmHelpViewer_Show( byval hWndParent as HWND ) as LRESULT
     
     ShowWindow( HWND_FRMHELPVIEWER, SW_SHOW )
     SetFocus(HWND_FRMHELPVIEWER_LEFTPANEL)
-        
+
     return 0
 end function
 

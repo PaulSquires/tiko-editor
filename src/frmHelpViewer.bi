@@ -20,15 +20,25 @@
 #define IDC_FRMHELPVIEWER_VSCROLLBAR       1002
 #define IDC_FRMHELPVIEWER_VSCROLLBAR2      1003
 #define IDC_FRMHELPVIEWER_RTFCONVERT       1004
+#define IDC_FRMHELPVIEWER_SPLITTER         1005
+
+' Width of the CSplitter control between the topics list and the help text. The control's
+' whole client rect is its grab area, so this is the GRAB width; the paint callback draws
+' the narrower SPLITSIZE band centered inside it, keeping the old visual weight.
+#define HELPVIEWER_SPLITGRAB               6
+
+' Smallest either panel may be dragged to. Replaces the old clamp, which let one side
+' shrink to SPLITSIZE (4 px) and the other to nothing.
+#define HELPVIEWER_MINPANE                 120
 
 type HELPVIEWER_TYPE
-    as POINT ptSplitPrev
-    as long  xDeltaSplitter
     as DWSTRING Filenames(any)
     as DWSTRING Topics(any)
 end type
 
 dim shared as HELPVIEWER_TYPE gHelpViewer
 
+' Forward declared: the splitter's position callback (defined above PositionWindows) calls it.
+declare function frmHelpViewer_PositionWindows() as LRESULT
 declare function frmHelpViewer_Show( byval hWndParent as HWND ) as LRESULT
 
