@@ -802,19 +802,55 @@ function frmMain_PositionWindows() as LRESULT
     nLeft = rc.left 
     nTop = rc.top + nHeightMenuBar
     
-    ' Set the Panel pane into place if applicable
+    ' Set the Panel pane into place if applicable, with its splitter bar on the panel's
+    ' INNER edge -- right of the panel when docked left, left of it when docked right.
+    ' The bar's strip is taken from the CONTENT area, so the panel keeps its width and
+    ' gConfig.ShowPanelWidth round-trips unchanged.
+    '
+    ' nWidthPanel keeps meaning the true panel width; nPanelReserve (panel + bar) is what
+    ' the content area gives up, and is what every downstream "where does the content start
+    ' or end" computation uses.
+    dim as long nGrabPanel = pWindow->ScaleX(SPLITTER_GRAB)
+    dim as long nPanelReserve = 0
     if IsWindowVisible(HWND_FRMPANEL) then
+        ' Limits mirror by dock side: the panel floors at PANEL_MIN_WIDTH and the content
+        ' at PANEL_MIN_CONTENT, which swap which end of the range they occupy.
+        dim as long nBarPos
+        if gConfig.ExplorerPositionRight then
+            CSplitter_SetRange( HWND_FRMMAIN_SPLITPANEL, _
+                                pWindow->ScaleX(PANEL_MIN_CONTENT), _
+                                rc.right - nGrabPanel - pWindow->ScaleX(PANEL_MIN_WIDTH) )
+            CSplitter_SetPos( HWND_FRMMAIN_SPLITPANEL, rc.right - nWidthPanel - nGrabPanel )
+            nBarPos = CSplitter_GetPos( HWND_FRMMAIN_SPLITPANEL )   ' take back the clamp
+            nWidthPanel = rc.right - nBarPos - nGrabPanel
+        else
+            CSplitter_SetRange( HWND_FRMMAIN_SPLITPANEL, _
+                                pWindow->ScaleX(PANEL_MIN_WIDTH), _
+                                rc.right - nGrabPanel - pWindow->ScaleX(PANEL_MIN_CONTENT) )
+            CSplitter_SetPos( HWND_FRMMAIN_SPLITPANEL, nWidthPanel )
+            nBarPos = CSplitter_GetPos( HWND_FRMMAIN_SPLITPANEL )   ' take back the clamp
+            nWidthPanel = nBarPos
+        end if
+        if nWidthPanel < 0 then nWidthPanel = 0
+
         if gConfig.ExplorerPositionRight then nLeft = rc.right - nWidthPanel
         SetWindowPos( HWND_FRMPANEL, 0, _
                     nLeft, nTop, _
                     nWidthPanel, _
                     rc.Bottom - nHeightStatusBar - nHeightMenuBar, _
-                    SWP_NOZORDER or SWP_SHOWWINDOW ) 
+                    SWP_NOZORDER or SWP_SHOWWINDOW )
         frmPanel_PositionWindows()
-        nLeft = nWidthPanel
+        SetWindowPos( HWND_FRMMAIN_SPLITPANEL, 0, _
+                    nBarPos, nTop, _
+                    nGrabPanel, _
+                    rc.Bottom - nHeightStatusBar - nHeightMenuBar, _
+                    SWP_NOZORDER or SWP_SHOWWINDOW )
+        nPanelReserve = nWidthPanel + nGrabPanel
+        nLeft = nPanelReserve
         if gConfig.ExplorerPositionRight then nLeft = rc.left
     Else
         nWidthPanel = 0
+        ShowWindow( HWND_FRMMAIN_SPLITPANEL, SW_HIDE )
     end if
 
 '    dim as long nTabIdx = gTTabCtl.GetCurSel()
@@ -842,7 +878,7 @@ function frmMain_PositionWindows() as LRESULT
                     SWP_SHOWWINDOW or SWP_NOZORDER )
         SetWindowPos( HWND_FRMMAIN_TOPTABS, 0, _
                     nLeft, nTop, _
-                    nLeftMenu - nWidthPanel, nHeightTabControl, _
+                    nLeftMenu - nPanelReserve, nHeightTabControl, _
                     SWP_SHOWWINDOW or SWP_NOZORDER )
         nTop += nHeightTabControl
     end if
@@ -851,7 +887,7 @@ function frmMain_PositionWindows() as LRESULT
         nHeightTabInfoPanel = pWindow->ScaleY(TOPTABS_INFO_HEIGHT)
         SetWindowPos( HWND_FRMMAIN_TOPTABSINFO, 0, _
                     nLeft, nTop, _     
-                    rc.Right - nWidthPanel, nHeightTabInfoPanel, _  
+                    rc.Right - nPanelReserve, nHeightTabInfoPanel, _  
                     SWP_SHOWWINDOW or SWP_NOZORDER )
         frmTopTabsInfo_PositionWindows()    
         nTop += nHeightTabInfoPanel
@@ -866,7 +902,7 @@ function frmMain_PositionWindows() as LRESULT
         nHeightTabFindPanel = pWindow->ScaleY(TOPTABS_FIND_HEIGHT)
         SetWindowPos( HWND_FRMMAIN_TOPTABSFIND, 0, _
                     nLeft, nTop, _     
-                    rc.Right - nWidthPanel, nHeightTabFindPanel, _  
+                    rc.Right - nPanelReserve, nHeightTabFindPanel, _  
                     SWP_SHOWWINDOW or SWP_NOZORDER )
         frmTopTabsFind_PositionWindows()    
         nTop += nHeightTabFindPanel
@@ -879,7 +915,7 @@ function frmMain_PositionWindows() as LRESULT
         nHeightTabReplacePanel = pWindow->ScaleY(TOPTABS_REPLACE_HEIGHT)
         SetWindowPos( HWND_FRMMAIN_TOPTABSREPLACE, 0, _
                     nLeft, nTop, _     
-                    rc.Right - nWidthPanel, nHeightTabReplacePanel, _  
+                    rc.Right - nPanelReserve, nHeightTabReplacePanel, _  
                     SWP_SHOWWINDOW or SWP_NOZORDER )
         frmTopTabsReplace_PositionWindows()    
         nTop += nHeightTabReplacePanel
@@ -943,7 +979,7 @@ function frmMain_PositionWindows() as LRESULT
         rcDoc.top    = nTop 
         rcDoc.right  = rc.right
         rcDoc.bottom = rc.bottom - nHeightStatusBar - nOutputReserve
-        if gConfig.ExplorerPositionRight then rcDoc.right = rc.right - nWidthPanel
+        if gConfig.ExplorerPositionRight then rcDoc.right = rc.right - nPanelReserve
         pDoc->rcDocSplitArea = rcDoc
 
         
@@ -1344,6 +1380,8 @@ end function
 
 
 
+
+
 ' ========================================================================================
 ' frmMain Window procedure
 ' ========================================================================================
@@ -1410,8 +1448,10 @@ function frmMain_WndProc( _
             
         case WM_SETCURSOR
             if gApp.bDragActive = true then
-                    ' Either the horiz or vert splitter bar is being resized. We handle
-                    ' setting the mouse cursor in the splitter_mousemove function.
+                    ' A hand-rolled drag owns the cursor. This used to mean a splitter --
+                    ' all four of those are CSplitter controls now, and each sets its own
+                    ' cursor from its own WM_SETCURSOR -- so today it means frmListView,
+                    ' the last site still using this global.
                     return true
                 
                 elseif gApp.bDragTabActive = true then 
@@ -1656,6 +1696,12 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     CSplitter_SetPosChangedCallback( HWND_FRMMAIN_SPLITOUTPUT, @frmOutput_SplitterMoved )
     CSplitter_SetMessageCallback( HWND_FRMMAIN_SPLITOUTPUT, @frmOutput_SplitterMessage )
 
+    ' Explorer panel splitter: sits on the panel's inner edge, whichever side it is docked.
+    ' No message callback -- this bar has no double-click gesture.
+    HWND_FRMMAIN_SPLITPANEL = CSplitter_Create( HWND_FRMMAIN, IDC_FRMMAIN_SPLITPANEL, CSPLITTER_VERTICAL )
+    CSplitter_SetPaintCallback( HWND_FRMMAIN_SPLITPANEL, @frmPanel_SplitterPaint )
+    CSplitter_SetPosChangedCallback( HWND_FRMMAIN_SPLITPANEL, @frmPanel_SplitterMoved )
+
     ' Create the UserTools accelerator table
     frmUserTools_CreateAcceleratorTable()            
 
@@ -1697,6 +1743,7 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ' Post a message to check for any Tiko updated version.
     PostMessage( pWindow->hWindow, MSG_USER_PROCESS_CHECKFORUPDATE, 0, 0 )
 
+    
     
     
     ' Process windows events
