@@ -67,11 +67,7 @@ end sub
 
 
 ' ========================================================================================
-' Paint one topics row. A port of the old WM_DRAWITEM handler.
-'
-' The old code kept a single IsHot flag that it set for EITHER the hovered row OR the
-' current selection, and painted both the same -- so selected and hot share one style here
-' too, which reproduces the previous look exactly.
+' Paint one topics row.
 ' ========================================================================================
 sub frmHelpViewer_ListPaint( byval p as CLISTBOX_PAINTINFO ptr )
     dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMHELPVIEWER)
@@ -111,12 +107,6 @@ end sub
 
 ' ========================================================================================
 ' The user selected a different topic -- by clicking it OR with the arrow keys. Load it.
-'
-' This replaces the old LBN_SELCHANGE handling in frmHelpViewer_OnCommand. CListBox
-' consumes WM_KEYDOWN itself, so its SelChange callback is the only way to see keyboard
-' navigation; the row is a MODEL index, and the topics list is flat (no group headers), so
-' it indexes gHelpViewer.Filenames directly as the listbox index used to.
-'
 ' Silent for CListBox_SetCurSel, which is why seeding the initial selection at startup does
 ' not load the file twice.
 ' ========================================================================================
@@ -140,10 +130,6 @@ end function
 ' wide); the visible band is the narrower SPLITSIZE, centered in it, so the bar looks the
 ' same as it always did while being easier to grab. Colors are read live, so a theme switch
 ' only needs a repaint (same approach as frmHelpViewer_VScrollPaint above).
-'
-' The hot color is new: the old splitter was a rect painted by the form's WM_PAINT and had
-' nowhere to keep a hover flag. The control tracks it, so the bar now lights up under the
-' mouse the same way a topics-list row does.
 ' ========================================================================================
 sub frmHelpViewer_SplitterPaint( byval p as CSPLITTER_PAINTINFO ptr )
     dim as clsDoubleBuffer ptr b = p->b
@@ -230,7 +216,7 @@ function frmHelpViewer_PositionWindows() as LRESULT
     '
     ' The topics CListBox carries its own scrollbar INSIDE its client rect (auto-hidden when
     ' the rows fit), so the left panel now runs edge-to-edge up to the bar -- there is no
-    ' separate scrollbar strip in this form's layout any more. Only the help TEXT still has
+    ' separate scrollbar strip in this form's layout. Only the help TEXT still has
     ' an external CVScrollBar, on the far right.
     CSplitter_SetRange( HWND_FRMHELPVIEWER_SPLITTER, _
                         nMinPane, _
@@ -265,18 +251,14 @@ function frmHelpViewer_PositionWindows() as LRESULT
     ' old code computed it before repositioning, going stale by one layout pass). The
     ' topics list re-ranges its own scrollbar from its own WM_SIZE.
     frmHelpViewer_UpdateTextScrollBar()
-    AfxRedrawWindow( HWND_FRMHELPVIEWER_LEFTPANEL )
+    
+    ' Redraw the form background and allow a breath for some paint messages in order
+    ' to reduce screen tearing on panel resizing.
+    AfxRedrawWindow( HWND_FRMHELPVIEWER )
+    AfxDoevents()   
     
     function = 0
 end function
-
-
-' The splitter's WM_MOUSEMOVE / WM_LBUTTONDOWN / WM_LBUTTONUP handlers used to live here.
-' The CSplitter control owns all three now -- along with the mouse capture, the IDC_SIZEWE
-' cursor and the hover state -- so the form no longer handles mouse messages at all. Note
-' the form also no longer needs to reset the cursor to IDC_ARROW: that was only ever
-' compensating for a splitter with no window of its own, and CWindow already registers the
-' class with an arrow cursor.
 
 
 ' ========================================================================================
@@ -290,26 +272,10 @@ function frmHelpViewer_OnSize( _
             ) as LRESULT
     if state <> SIZE_MINIMIZED then
         ' Position all of the child windows
-        frmHelpViewer_PositionWindows
+        frmHelpViewer_PositionWindows()
     end if
     function = 0
 end Function
-
-
-' ========================================================================================
-' Process WM_CREATE message for window/dialog: frmHelpViewer
-' ========================================================================================
-function frmHelpViewer_OnCreate( _
-            byval hwnd as HWND, _
-            byval lpCreateStructPtr as LPCREATESTRUCT _
-            ) as boolean
-
-    '  Message cracker macro expects a True to be returned for a successful
-    '  OnCreate handler even though returning -1 from a standard WM_CREATE
-    '  call would stop creating the window. This is just one of those Windows
-    '  inconsistencies.
-    return true
-end function
 
 
 ' ========================================================================================
@@ -321,10 +287,6 @@ function frmHelpViewer_OnCommand( _
             byval hwndCtl as HWND, _
             byval codeNotify as UINT _
             ) as LRESULT
-
-    ' LBN_SELCHANGE used to load the topic here. The topics list is a CListBox now: it
-    ' owns the selection and reports user-driven changes -- mouse AND keyboard -- through
-    ' frmHelpViewer_ListSelChange instead.
 
     select case id
         case IDCANCEL
@@ -340,21 +302,6 @@ end function
 
 
 ' ========================================================================================
-' Process WM_NOTIFY message for window/dialog: frmHelpViewer
-' ========================================================================================
-function frmHelpViewer_OnNotify( _
-            byval hwnd as HWND, _
-            byval id as long, _
-            byval pNMHDR as NMHDR ptr _
-            ) as LRESULT
-
-    dim pWindow as CWindow ptr = AfxCWindowPtr(hwnd)
-    
-    function = 0
-end function
-
-
-' ========================================================================================
 ' Process WM_PAINT message for window/dialog: frmHelpViewer
 ' ========================================================================================
 function frmHelpViewer_OnPaint( byval hwnd as HWND ) as LRESULT
@@ -363,10 +310,6 @@ function frmHelpViewer_OnPaint( byval hwnd as HWND ) as LRESULT
     b.BeginDoubleBuffer(hwnd)
     b.SetBackColor( ghMain.BackColor )
     b.PaintClientRect()
-
-    ' The splitter between the two panels is a real window now (CSplitter) and paints
-    ' itself -- see frmHelpViewer_SplitterPaint.
-
     b.EndDoubleBuffer()
     
     function = 0
@@ -392,14 +335,6 @@ function frmHelpViewer_OnDestroy( byval hwnd as HWND ) as LRESULT
     function = 0
 end function
 
-' The topics listbox's WM_MEASUREITEM / WM_DRAWITEM handlers and its subclass proc
-' (mouse-wheel scrolling, hover repaint, empty-area erase) all used to live here.
-' CListBox does every one of those itself: row height is CListBox_SetRowHeight, row
-' drawing is frmHelpViewer_ListPaint, and the wheel/hover/background handling is the
-' control's own.
-
-
-
 
 ' ========================================================================================
 ' frmOptions Window procedure
@@ -414,11 +349,9 @@ function frmHelpViewer_WndProc( _
     select case uMsg
         HANDLE_MSG (hwnd, WM_SIZE,           frmHelpViewer_OnSize)
         HANDLE_MSG (hwnd, WM_PAINT,          frmHelpViewer_OnPaint)
-        HANDLE_MSG (hwnd, WM_CREATE,         frmHelpViewer_OnCreate)
         HANDLE_MSG (hwnd, WM_CLOSE,          frmHelpViewer_OnClose)
         HANDLE_MSG (hwnd, WM_DESTROY,        frmHelpViewer_OnDestroy)
         HANDLE_MSG (hwnd, WM_COMMAND,        frmHelpViewer_OnCommand)
-        HANDLE_MSG (hwnd, WM_NOTIFY,         frmHelpViewer_OnNotify)
 
     case WM_NCDESTROY
         ' delete the allocated memory for window
@@ -433,6 +366,11 @@ function frmHelpViewer_WndProc( _
         HWND_FRMHELPVIEWER_RIGHTPANEL = 0
         HWND_FRMHELPVIEWER_SPLITTER = 0
         return 0
+
+        case WM_ERASEBKGND
+            ' Never erase: WM_PAINT fills the whole client through the double buffer, so a
+            ' background erase here would only add flicker.
+            return true
 
     end select
 
