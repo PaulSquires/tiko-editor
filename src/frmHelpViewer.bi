@@ -17,7 +17,7 @@
 
 #define IDC_FRMHELPVIEWER_LEFTPANEL        1000
 #define IDC_FRMHELPVIEWER_RIGHTPANEL       1001
-#define IDC_FRMHELPVIEWER_VSCROLLBAR       1002
+' 1002 was the topics-list scrollbar; the CListBox owns that bar internally now.
 #define IDC_FRMHELPVIEWER_VSCROLLBAR2      1003
 #define IDC_FRMHELPVIEWER_RTFCONVERT       1004
 #define IDC_FRMHELPVIEWER_SPLITTER         1005
@@ -32,13 +32,15 @@
 #define HELPVIEWER_MINPANE                 120
 
 type HELPVIEWER_TYPE
+    ' Topic captions live on the CListBox rows now; only the parallel filename lookup
+    ' (row index -> help file) is still needed here.
     as DWSTRING Filenames(any)
-    as DWSTRING Topics(any)
 end type
 
 dim shared as HELPVIEWER_TYPE gHelpViewer
 
-' Forward declared: the splitter's position callback (defined above PositionWindows) calls it.
+' Forward declared: the control callbacks are defined above the functions they call.
 declare function frmHelpViewer_PositionWindows() as LRESULT
+declare function frmHelpViewer_LoadHelpFile( byval nIndex as long ) as long
 declare function frmHelpViewer_Show( byval hWndParent as HWND ) as LRESULT
 
