@@ -19,11 +19,18 @@
 #define IDC_FRMMAIN_TABBAR                          1003
 #define IDC_FRMMAIN_SPLITV                          1004
 #define IDC_FRMMAIN_SPLITH                          1005
+#define IDC_FRMMAIN_SPLITOUTPUT                     1006
 
-' Width (or height) of the editor split CSplitter. The control's whole client rect is its
-' grab area, so this is the GRAB size; the paint callback draws the narrower SPLITSIZE band
-' centered inside it. Same treatment as the help viewer's bar.
-#define EDITORSPLIT_GRAB                            6
+' Width (or height) of frmMain's CSplitter bars -- the two editor split bars and the Output
+' panel bar. The control's whole client rect is its grab area, so this is the GRAB size; the
+' paint callbacks draw the narrower SPLITSIZE band centered inside it. Same treatment as the
+' help viewer's bar.
+#define SPLITTER_GRAB                               6
+
+' Smallest the editor area may be squeezed to by dragging the Output panel's bar upward.
+' New with the CSplitter migration: the old drag clamped only to the bottom of the menubar,
+' so the panel could be dragged up until the editor was a sliver.
+#define OUTPUT_MIN_EDITOR                           120
 
 declare function frmMain_OpenProjectSafely( byval HWnd as HWnd, byref wszProjectFileName as const WString ) as Boolean
 declare function frmMain_GotoFile( byval pDoc as clsDocument ptr, byval nMenuId as long ) as long

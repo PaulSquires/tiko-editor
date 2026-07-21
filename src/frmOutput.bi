@@ -43,4 +43,6 @@ declare function frmOutput_PositionWindows() as LRESULT
 declare function frmOutput_Show( byval hWndParent as HWND ) as LRESULT
 declare function frmOutput_ResetAllControls() as long 
 declare function frmOutput_RestorePanel() as long
+' Forward declared: the splitter's message callback is defined above them.
+declare function frmOutput_MinimizePanel() as long
 
