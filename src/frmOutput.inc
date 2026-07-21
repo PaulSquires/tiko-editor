@@ -15,14 +15,60 @@
 
 
 ' ========================================================================================
+' A double-click on any of the three listview panes jumps the editor to that row's
+' file/line. This replaces the MSG_USER_LISTVIEW_LBUTTONDBLCLK round trip the old control
+' used to post up to this form.
+' ========================================================================================
+function frmOutput_LVMessage( byval m as CLISTBOX_MESSAGEINFO ptr ) as boolean
+    if m->uMsg <> WM_LBUTTONDBLCLK then return false
+    ' m->hList is the inner listbox; the CListBox container is its parent, and that is what
+    ' SetDocumentErrorPosition queries.
+    SetDocumentErrorPosition( GetParent(m->hList) )
+    return false      ' let the listbox keep its own default handling
+end function
+
+
+' ========================================================================================
+' Build one of the three Output listview panes. They are identical apart from their
+' control id, so this is called once each rather than copied three times.
+' ========================================================================================
+function frmOutput_CreateListView( byval CtrlID as long ) as HWND
+    dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMOUTPUT)
+    if pWindow = 0 then return 0
+
+    dim as HWND hCtl = CListBox_Create( HWND_FRMOUTPUT, CtrlID )
+
+    ' Columns, in the order the chr(9)-delimited rows are built: spacer, Line, File,
+    ' Description. Description is the fill column.
+    CListBox_AddColumn( hCtl, "",                  pWindow->ScaleX(20) )
+    CListBox_AddColumn( hCtl, L(253, "Line"),      pWindow->ScaleX(75) )
+    CListBox_AddColumn( hCtl, L(254, "File"),      pWindow->ScaleX(250) )
+    CListBox_AddColumn( hCtl, L(255, "Description"), pWindow->ScaleX(250) )
+    CListBox_SetFillColumn( hCtl, 3 )
+    CListBox_ShowHeader( hCtl, true )
+
+    CListBox_SetPaintCallback( hCtl, @ListBox_LVPaintRow )
+    CListBox_SetHeaderPaintCallback( hCtl, @ListBox_LVPaintHeader )
+    CListBox_SetColumnAutoSizeCallback( hCtl, @ListBox_LVAutoSizeColumn )
+    CListBox_SetMessageCallback( hCtl, @frmOutput_LVMessage )
+    CListBox_SetFont( hCtl, ghFont(GUIFONT_9) )
+    CListBox_SetBackColor( hCtl, ghOutput.BackColor )
+    CListBox_SetScrollBarColors( hCtl, ghOutput.BackColorScrollBar, _
+                                 ghOutput.ForeColorScrollBar, ghOutput.ForeColorScrollBar )
+
+    return hCtl
+end function
+
+
+' ========================================================================================
 ' Clear data from all of the controls in the frmOutput windows. This is needed
 ' when Projects are loaded and closed.
 ' ========================================================================================
-function frmOutput_ResetAllControls() as long 
-    frmListView_DeleteAllItems( HWND_FRMOUTPUT_LVRESULTS )
+function frmOutput_ResetAllControls() as long
+    CListBox_Clear( HWND_FRMOUTPUT_LVRESULTS )
     AfxSetWindowText( GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTLOGFILE), "" )
-    frmListView_DeleteAllItems( HWND_FRMOUTPUT_LVSEARCH )
-    frmListView_DeleteAllItems( HWND_FRMOUTPUT_LVTODO )
+    CListBox_Clear( HWND_FRMOUTPUT_LVSEARCH )
+    CListBox_Clear( HWND_FRMOUTPUT_LVTODO )
     AfxSetWindowText( GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTNOTES), "" )
     function = 0
 end function
@@ -52,7 +98,7 @@ function frmOutput_UpdateToDoListview() as long
     if gApp.IsProjectLoading then exit function
 
     dim as hwnd hLV = HWND_FRMOUTPUT_LVTODO
-    frmListView_DeleteAllItems( hLV )
+    CListBox_Clear( hLV )
 
     dim as DWSTRING wszText
 
@@ -65,7 +111,7 @@ function frmOutput_UpdateToDoListview() as long
             ltrim(wstr(gTodoItems(i).nLineNum)) & chr(9) & _
             ltrim(gTodoItems(i).wszFile) & chr(9) & _
             ltrim(gTodoItems(i).wszText)
-        frmListView_AddString( hLV, wszText )
+        ListBox_AddTabbedRow( hLV, wszText )
     next
 
     frmOutput_PositionWindows
@@ -79,7 +125,7 @@ end function
 function frmOutput_UpdateSearchListview( byref wszResultFile as wstring ) as long 
     dim hLV as HWND = HWND_FRMOUTPUT_LVSEARCH
 
-    frmListView_DeleteAllItems( hLV )
+    CListBox_Clear( hLV )
 
     if AfxFileExists(wszResultFile) = 0 then exit function
     
@@ -107,7 +153,7 @@ function frmOutput_UpdateSearchListview( byref wszResultFile as wstring ) as lon
         if f2 then wszDescription = rtrim(mid(wst, f2 + 1))
 
         wszText = "" & chr(9) & wszLineNum & chr(9) & wszFilename & chr(9) & wszDescription
-        frmListView_AddString( hLV, wszText )
+        ListBox_AddTabbedRow( hLV, wszText )
     loop
     pStream.Close
     
@@ -176,12 +222,13 @@ function frmOutput_ShowHideOutputControls( byval hwnd as HWND ) as LRESULT
 
     end select
     
-    if hLV then 
-        ' Only display the owner drawn listview if it has items otherwise the wm_drawitem will
-        ' not fire and the whole area will display as white.
-        dim as long nShow = iif( frmListView_GetCount( hLV ) = 0, SW_HIDE, SW_SHOW )
-        ShowWindow( hLV, nShow )
-        frmListView_PositionWindows( hLV )
+    if hLV then
+        ' The old control had to be HIDDEN when empty, because with no items its
+        ' WM_DRAWITEM never fired and the area rendered white. CListBox answers
+        ' WM_CTLCOLORLISTBOX with its own background brush (see C:\dev\Learnings.md), so an
+        ' empty pane simply draws empty and the hack is gone. It also lays itself out, so
+        ' there is nothing to position here either.
+        ShowWindow( hLV, SW_SHOW )
     end if
 
     if hTextBox then
@@ -724,15 +771,10 @@ function frmOutput_WndProc( _
         return 0
 
 
-    case MSG_USER_LISTVIEW_LBUTTONDBLCLK
-        dim as HWND hLV = cast(HWND, wParam)
-        select case hLV
-            case HWND_FRMOUTPUT_LVRESULTS, _
-                 HWND_FRMOUTPUT_LVSEARCH, _
-                 HWND_FRMOUTPUT_LVTODO
-                SetDocumentErrorPosition( hLV )    
-        end select
-        
+    ' MSG_USER_LISTVIEW_LBUTTONDBLCLK used to arrive here from the old listview's inner
+    ' listbox subclass. The CListBox panes report the double-click through their own
+    ' message callback instead -- see frmOutput_LVMessage.
+
     case WM_ERASEBKGND
         return true
 
@@ -771,20 +813,19 @@ function frmOutput_SetControlColors() as long
     ' a theme switch needs.
     InvalidateRect( HWND_FRMOUTPUT_VSCROLL, null, true )
 
-    hCtl = HWND_FRMOUTPUT_LVRESULTS 
-    frmListView_SetForeColors( hCtl, ghOutput.ForeColor, ghOutput.ForeColorHot )
-    frmListView_SetBackColors( hCtl, ghOutput.BackColor, ghOutput.ForeColorScrollBar )
-    frmListView_SetScrollBarColors( hCtl, ghOutput.BackColorScrollBar, ghOutput.ForeColorScrollBar, ghOutput.ScrollBarDivider )
-
-    hCtl = HWND_FRMOUTPUT_LVSEARCH
-    frmListView_SetForeColors( hCtl, ghOutput.ForeColor, ghOutput.ForeColorHot )
-    frmListView_SetBackColors( hCtl, ghOutput.BackColor, ghOutput.ForeColorScrollBar )
-    frmListView_SetScrollBarColors( hCtl, ghOutput.BackColorScrollBar, ghOutput.ForeColorScrollBar, ghOutput.ScrollBarDivider )
-
-    hCtl = HWND_FRMOUTPUT_LVTODO 
-    frmListView_SetForeColors( hCtl, ghOutput.ForeColor, ghOutput.ForeColorHot )
-    frmListView_SetBackColors( hCtl, ghOutput.BackColor, ghOutput.ForeColorScrollBar )
-    frmListView_SetScrollBarColors( hCtl, ghOutput.BackColorScrollBar, ghOutput.ForeColorScrollBar, ghOutput.ScrollBarDivider )
+    ' The listview panes' row/header painters read the ghOutput colors live, so a theme
+    ' switch only needs the background and scrollbar colors re-pushed plus a repaint.
+    for i as long = 0 to 2
+        select case i
+            case 0 : hCtl = HWND_FRMOUTPUT_LVRESULTS
+            case 1 : hCtl = HWND_FRMOUTPUT_LVSEARCH
+            case 2 : hCtl = HWND_FRMOUTPUT_LVTODO
+        end select
+        CListBox_SetBackColor( hCtl, ghOutput.BackColor )
+        CListBox_SetScrollBarColors( hCtl, ghOutput.BackColorScrollBar, _
+                                     ghOutput.ForeColorScrollBar, ghOutput.ForeColorScrollBar )
+        AfxRedrawWindow( hCtl )
+    next
 
     function = 0
 end function
@@ -852,29 +893,13 @@ function frmOutput_Show( byval hwndParent as HWND ) as LRESULT
         CTextBox_SetMenuText( hCtl, L(17,"Cut"), L(18,"Copy"), L(19,"Paste"), L(40,"Select All") )
         frmOutput_ShowNotes()
 
-    ' Compiler Results Listview
-    hLV = frmListView_Show( HWND_FRMOUTPUT )
-        frmListView_AddColumn( hLV, 0, "", pWindow->ScaleX(20) )
-        frmListView_AddColumn( hLV, 1, L(253, "Line"), pWindow->ScaleX(75) )
-        frmListView_AddColumn( hLV, 2, L(254, "File"), pWindow->ScaleX(250) )
-        frmListView_AddColumn( hLV, 3, L(255, "Description"), pWindow->ScaleX(1480) )
-        HWND_FRMOUTPUT_LVRESULTS = hLV
-
-    ' Search Listview
-    hLV = frmListView_Show( HWND_FRMOUTPUT )
-        frmListView_AddColumn( hLV, 0, "", pWindow->ScaleX(20) )
-        frmListView_AddColumn( hLV, 1, L(253, "Line"), pWindow->ScaleX(75) )
-        frmListView_AddColumn( hLV, 2, L(254, "File"), pWindow->ScaleX(250) )
-        frmListView_AddColumn( hLV, 3, L(255, "Description"), pWindow->ScaleX(1480) )
-        HWND_FRMOUTPUT_LVSEARCH = hLV
-
-    ' TODO listview
-    hLV = frmListView_Show( HWND_FRMOUTPUT )
-        frmListView_AddColumn( hLV, 0, "", pWindow->ScaleX(20) )
-        frmListView_AddColumn( hLV, 1, L(253, "Line"), pWindow->ScaleX(75) )
-        frmListView_AddColumn( hLV, 2, L(254, "File"), pWindow->ScaleX(250) )
-        frmListView_AddColumn( hLV, 3, L(255, "Description"), pWindow->ScaleX(1480) )
-        HWND_FRMOUTPUT_LVTODO = hLV
+    ' The three listview panes: CListBox instances with a CColumnHeader band. All three
+    ' have identical columns, so frmOutput_CreateListView builds one and is called thrice.
+    ' The Description column is the FILL column -- it absorbs whatever width is left, which
+    ' is what the old hard-coded ScaleX(1480) was groping at.
+    HWND_FRMOUTPUT_LVRESULTS = frmOutput_CreateListView( IDC_FRMOUTPUT_LVRESULTS )
+    HWND_FRMOUTPUT_LVSEARCH  = frmOutput_CreateListView( IDC_FRMOUTPUT_LVSEARCH )
+    HWND_FRMOUTPUT_LVTODO    = frmOutput_CreateListView( IDC_FRMOUTPUT_LVTODO )
 
     ' Shared vertical scrollbar for the two textboxes: the reusable CVScrollBar control,
     ' driven in LINE units (SetRange from the ScrollChangedCallback, ScrollCallback back

@@ -18,7 +18,11 @@
 #include once "frmProjectOptions.bi"
 #include once "frmUserTools.bi"
 #include once "frmMain.bi"
-#include once "frmListView.bi"
+' This module is included before the control implementations, so the CListBox family's
+' headers are pulled in by hand -- the same prerequisite dance modMenus.inc does.
+#include once "CVScrollBar.bi"
+#include once "CColumnHeader.bi"
+#include once "CListBox.bi"
 
 
 ' ========================================================================================
@@ -48,230 +52,119 @@ function RichEditCenterSingleLineText( byval hRichEdit as HWND ) as long
 end function
 
 
-' ========================================================================================
-' Get the pData pointer stored in UserData(0) of the pWindow
-' ========================================================================================
-function frmListView_GetPointer( byval hLV as HWND ) as LISTVIEW_DATA_TYPE ptr
-    dim pWindow as CWindow ptr = AfxCWindowPtr(hLV)
-    if pWindow = 0 then return 0
-    
-    ' The ListView's data is stored in the pWindow CWindow UserData(0).
-    if pWindow->UserData(0) = 0 then return 0
-    
-    return cast(LISTVIEW_DATA_TYPE ptr, pWindow->UserData(0))
-end function
-
 
 ' ========================================================================================
-' frmListView_GetSelection
+' Add a row to a multi-column CListBox from a chr(9)-delimited string.
+'
+' Every caller that used to feed frmListView_AddString already builds its row in this shape
+' ("col0" & chr(9) & "col1" & ...), so this keeps those call sites a one-word change. Field
+' 0 becomes the row's own text (column 0's cell, per the CListBox contract) and fields 1..N
+' become cells 1..N.
+'
+' Returns the new row index, or -1 if the row could not be added.
 ' ========================================================================================
-function frmListView_GetSelection( byval hLV as HWND ) as long
-    dim as HWND hListBox = GetDlgItem( hLV, IDC_FRMLISTVIEW_LISTBOX )
-    return ListBox_GetCurSel( hListBox )
-end function
+function ListBox_AddTabbedRow( byval hCtl as HWND, byval wszTabbed as DWSTRING ) as long
+    dim as long nFields = AfxStrParseCount( wszTabbed, chr(9) )
+    if nFields < 1 then nFields = 1
 
+    ' AfxStrParse is 1-based, so field i+1 is column i -- the same mapping
+    ' frmListView_GetItemText used.
+    dim as long nRow = CListBox_AddString( hCtl, AfxStrParse( wszTabbed, 1, chr(9) ) )
+    if nRow < 0 then return -1
 
-' ========================================================================================
-' frmListView_GetItemText
-' ========================================================================================
-function frmListView_GetItemText( byval hLV as HWND, byval nLineNum as long, byval nColNum as long ) as DWSTRING
-    dim as LISTVIEW_DATA_TYPE ptr pData = frmListView_GetPointer(hLV)
-    if pData = 0 then return 1
-    
-    dim as DWSTRING wszText
-    if (nLineNum >= lbound(pData->rowData)) andalso _
-        (nLineNum <= ubound(pData->rowData)) then
-         wszText = pData->rowData(nLineNum)
-    end if
-    return AfxStrParse( wszText, nColNum + 1, chr(9) )
-end function
-
-
-' ========================================================================================
-' frmListView_SetItemText
-' ========================================================================================
-function frmListView_SetItemText( byval hLV as HWND, _
-        byval nLineNum as long, byval nColNum as long, byval wszText as DWSTRING ) as long
-    dim as LISTVIEW_DATA_TYPE ptr pData = frmListView_GetPointer(hLV)
-    if pData = 0 then return 1
-    
-    dim as DWSTRING wszExistingText = pData->rowData( nLineNum )
-    dim as DWSTRING wszNewText
-
-    dim as long nCount = AfxStrParseCount( wszExistingText, chr(9) )
-    for i as long = 0 to nCount - 1
-        if i = nColNum then
-            wszNewText = wszNewText & wszText & chr(9)
-        else    
-            wszNewText = wszNewText & AfxStrParse( wszExistingText, i + 1, chr(9) ) & chr(9)
-        end if
+    for i as long = 1 to nFields - 1
+        CListBox_SetCellText( hCtl, nRow, i, AfxStrParse( wszTabbed, i + 1, chr(9) ) )
     next
-    wszNewText = rtrim(wszNewText, chr(9))
 
-    pData->rowData(nLineNum) = wszNewText
-
-    return 0
+    return nRow
 end function
 
 
 ' ========================================================================================
-' frmListView_DeleteAllItems
+' Shared listview-style CListBox callbacks. All four of tiko's multi-column lists -- the
+' Output panel's compiler results, search results and TODO panes, and the debugger's
+' Variables pane -- use these; they all draw with the ghOutput colors and the same layout,
+' so there is one painter rather than four copies.
+'
+' Ported from the old frmListView_OnDrawItem. Two faithfulness notes:
+'   - That code computed foreclr as iif(IsHot, ForeColorHot, ForeColorHot) -- a degenerate
+'     ternary, so the non-hot ForeColor was never actually used and every row drew in
+'     ForeColorHot. Reproduced here deliberately, to keep the migration visually identical;
+'     switch the else branch to ghOutput.ForeColor if the original intent is wanted.
+'   - Column 2 (the filename) gets DT_PATH_ELLIPSIS, as before.
 ' ========================================================================================
-function frmListView_DeleteAllItems( byval hLV as HWND ) as long
-    dim as LISTVIEW_DATA_TYPE ptr pData = frmListView_GetPointer(hLV)
-    if pData = 0 then return 1
-    erase pData->rowData
-    frmListView_SetCount( hLV, 0 )
-    ' Hide the ownerdraw listboxes because the wm_drawitem will not fire if
-    ' no items exist thereby causing white space to show.
-    ShowWindow( pData->hListBox, SW_HIDE )
-    return 0
-end function
+sub ListBox_LVPaintRow( byval p as CLISTBOX_PAINTINFO ptr )
+    dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN)
+    if pWindow = 0 then exit sub
 
+    ' The old control highlighted the SELECTED row only; CListBox tracks hover separately,
+    ' so honor both.
+    dim as boolean bHot = (p->isSelected orelse p->isHot)
+    dim as COLORREF backclr = iif( bHot, ghOutput.ForeColorScrollBar, ghOutput.BackColor )
+    p->b->SetForeColor( ghOutput.ForeColorHot )
+    p->b->SetBackColor( backclr )
+    p->b->PaintRect( @p->rc )
 
-' ========================================================================================
-' frmListView_GetCount
-' ========================================================================================
-function frmListView_GetCount( byval hLV as HWND ) as long
-    dim as LISTVIEW_DATA_TYPE ptr pData = frmListView_GetPointer(hLV)
-    if pData = 0 then return 1
-    return ubound(pData->rowData) + 1
-end function
+    p->b->SetFont( ghFont(GUIFONT_9) )
 
-
-' ========================================================================================
-' frmListView_SetCount
-' ========================================================================================
-function frmListView_SetCount( byval hLV as HWND, byval itemCount as long ) as long
-    dim as LISTVIEW_DATA_TYPE ptr pData = frmListView_GetPointer(hLV)
-    if pData = 0 then return 1
-    SendMessage(pData->hListBox, LB_SETCOUNT, itemCount, 0)
-    return 0
-end function
-
-
-' ========================================================================================
-' frmListView_SelectItem
-' ========================================================================================
-function frmListView_SelectItem( byval hLV as HWND, byval nLineNum as long ) as long
-    dim as HWND hListBox = GetDlgItem( hLV, IDC_FRMLISTVIEW_LISTBOX )
-    return ListBox_SetCurSel( hListBox, nLineNum )
-end function
-
-
-' ========================================================================================
-' frmListView_AddString
-' ========================================================================================
-function frmListView_AddString( byval hLV as HWND, byval wszText as DWSTRING ) as long
-    dim as LISTVIEW_DATA_TYPE ptr pData = frmListView_GetPointer(hLV)
-    if pData = 0 then return 1
-    
-    dim as long ub = ubound(pData->rowData) + 1
-    redim preserve pData->rowData(ub)
-    pData->rowData(ub) = wszText
-
-    frmListView_SetCount( hLV, ub + 1 )
-    return 0
-end function
-
-
-' ========================================================================================
-' frmListView_AddColumn
-' ========================================================================================
-function frmListView_AddColumn( _
-            byval hLV as HWND, _
-            byval nColNum as long, _
-            byval wszText as DWSTRING, _
-            byval nWidth as long _
-            ) as long
-    dim as LISTVIEW_DATA_TYPE ptr pData = frmListView_GetPointer(hLV)
-    if pData = 0 then return 1
-    
-    dim as long ub = ubound(pData->ColData)
-    if nColNum > ub then
-        redim preserve pData->ColData(nColNum)
+    ' No columns defined -> single full-width cell (the classic CListBox contract).
+    if p->columnCount <= 0 then
+        dim as RECT rcText = p->rc
+        rcText.left += pWindow->ScaleX(4)
+        p->b->PaintText( p->wszCaption, @rcText, DT_LEFT )
+        exit sub
     end if
-    pData->ColData(nColNum).wszText = wszText
-    pData->ColData(nColNum).nWidth = nWidth
-    
-    return 0
-end function
+
+    for i as integer = 0 to p->columnCount - 1
+        dim as RECT rcText = p->cells[i].rc
+        rcText.left += pWindow->ScaleX(4)      ' the same slight left inset as before
+        dim as long flags = DT_LEFT
+        if i = 2 then flags = flags or DT_PATH_ELLIPSIS   ' for long filenames
+        p->b->PaintText( p->cells[i].wszText, @rcText, flags )
+    next
+end sub
 
 
+' Header band painter. Required -- without one the header does not render at all.
+sub ListBox_LVPaintHeader( byval p as CCOLUMNHEADER_PAINTINFO ptr )
+    dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN)
+    if pWindow = 0 then exit sub
 
-' ========================================================================================
-' frmListView_SetColumnWidth
-' ========================================================================================
-function frmListView_SetColumnWidth( _
-            byval hLV as HWND, _
-            byval nColNum as long, _
-            byval nWidth as long _
-            ) as long
-    dim as LISTVIEW_DATA_TYPE ptr pData = frmListView_GetPointer(hLV)
-    if pData = 0 then return 1
-    
-    if (nColNum >= lbound(pData->ColData)) andalso _
-        (nColNum <= ubound(pData->ColData)) then
-        pData->ColData(nColNum).nWidth = nWidth
-    end if
-        
-    return 0
-end function
+    dim as COLORREF backclr = ghOutput.BackColor
+    if p->isHot orelse p->isResizeHot then backclr = ghOutput.ForeColorScrollBar
+    p->b->SetForeColor( ghOutput.ForeColorHot )
+    p->b->SetBackColor( backclr )
+    p->b->PaintRect( @p->rc )
 
+    dim as RECT rcText = p->rc
+    rcText.left += pWindow->ScaleX(4)
+    p->b->SetFont( ghFont(GUIFONT_9) )
+    p->b->PaintText( p->wszCaption, @rcText, DT_LEFT )
 
-' ========================================================================================
-' frmListView_SetForeColors
-' ========================================================================================
-function frmListView_SetForeColors( _
-            byval hLV as HWND, _
-            byval ForeColor as COLORREF, _
-            byval ForeColorHot as COLORREF _
-            ) as long
-    dim as LISTVIEW_DATA_TYPE ptr pData = frmListView_GetPointer(hLV)
-    if pData = 0 then return 1
-    
-    pData->ForeColor = ForeColor
-    pData->ForeColorHot = ForeColorHot
-    
-    return 0
-end function
+    ' A one-pixel divider on the trailing edge, so columns read as separated.
+    dim as RECT rcDiv = p->rc
+    rcDiv.left = rcDiv.right - 1
+    p->b->SetBackColor( ghOutput.ScrollBarDivider )
+    p->b->PaintRect( @rcDiv )
+end sub
 
 
-' ========================================================================================
-' frmListView_SetBackColors
-' ========================================================================================
-function frmListView_SetBackColors( _
-            byval hLV as HWND, _
-            byval BackColor as COLORREF, _
-            byval BackColorHot as COLORREF _
-            ) as long
-    dim as LISTVIEW_DATA_TYPE ptr pData = frmListView_GetPointer(hLV)
-    if pData = 0 then return 1
-    
-    pData->BackColor = BackColor
-    pData->BackColorHot = BackColorHot
-    
-    return 0
-end function
+' Double-click on a column divider: best fit = the widest cell in that column, plus the
+' same padding the debugger's own measure loop uses. Return <= 0 to decline.
+function ListBox_LVAutoSizeColumn( byval hHeader as HWND, byval idx as integer ) as integer
+    dim as HWND hCtl = GetParent( hHeader )
+    if hCtl = 0 then return 0
 
+    dim as long nBest = getTextWidth( hCtl, CListBox_GetColumnText( hCtl, idx ), GUIFONT_9 )
+    for r as integer = 0 to CListBox_GetCount( hCtl ) - 1
+        dim as long w = getTextWidth( hCtl, CListBox_GetCellText( hCtl, r, idx ), GUIFONT_9 )
+        if w > nBest then nBest = w
+    next
 
-' ========================================================================================
-' frmListView_SetScrollBarColors
-' ========================================================================================
-function frmListView_SetScrollBarColors( _
-            byval hLV as HWND, _
-            byval ScrollBarBackColor as COLORREF, _
-            byval ScrollBarForeColor as COLORREF, _
-            byval ScrollBarDividerColor as COLORREF _
-            ) as long
-    dim as LISTVIEW_DATA_TYPE ptr pData = frmListView_GetPointer(hLV)
-    if pData = 0 then return 1
-    
-    pData->BackColorScrollBar = ScrollBarBackColor
-    pData->ForeColorScrollBar = ScrollBarForeColor
-    pData->DividerColorScrollBar = ScrollBarDividerColor
-    
-    return 0
+    dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN)
+    dim as long nPad = 10
+    if pWindow then return pWindow->ScaleX( nBest + nPad )
+    return nBest + nPad
 end function
 
 
