@@ -14,7 +14,7 @@
 #pragma once
 
 declare function frmMain_BuildAcceleratorTable( byval pWindow as CWindow ptr ) as long
-declare function frmMain_ChangeTopMenuStates() as long
+declare function frmMain_ChangeTopMenuStates( byval nBarID as long ) as long
 declare function CreateStatusBarBuildConfigContextMenu() as HMENU
 declare function CreateTabsInfoFileTypeContextMenu() as HMENU
 declare function CreateStatusBarFileEncodingContextMenu() as HMENU
@@ -23,5 +23,4 @@ declare function CreateExplorerContextMenu( byval pDoc as clsDocument ptr ) as H
 declare function CreateScintillaContextMenu() as HMENU
 declare function CreateStatusBarSpacesContextMenu() as HMENU
 declare function CreateStatusBarLineEndingsContextMenu() as HMENU
-declare function getTopMenuPtr( byval nID as long ) as TOPMENU_TYPE ptr
 

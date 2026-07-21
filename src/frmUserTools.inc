@@ -19,48 +19,6 @@
 ' ========================================================================================
 ' Update the UserTools items in the topmenu array
 ' ========================================================================================
-function updateUserToolsMenuItems() as long
-    ' clear MRU items already existing in the gTopMenu array. We overwrite and extend
-    ' the gTopMenu array rather than erase it because existing menus depend on the 
-    ' array index that aready exist. The function also returns the width to use for
-    ' the resulting popup menu (based on text width metrics of each filename).
-    clearMRUFilesItems( IDM_USERTOOLS )
-    
-    dim wszText as wstring * 256
-    dim as boolean hasTools = false
-    dim as long txtWidth 
-    dim as long nMenuWidth 
-    dim as long max_left_width
-    dim as long max_right_width
-    dim as long left_width
-    dim as long right_width
-    dim as long interior_width = 0
-    dim as long margin_width = 40
-
-    setTopMenuMRUItem( getNextFreeMRUindex(), IDM_USERTOOLS, IDM_USERTOOLSDIALOG, 0, false, false )
-    setTopMenuMRUItem( getNextFreeMRUindex(), IDM_USERTOOLS, 0, 0, false, true )
-    
-    for i as long = lbound(gConfig.Tools) to ubound(gConfig.Tools)
-        if gConfig.Tools(i).IsDisplayMenu then
-            hasTools = true
-            setTopMenuMRUItem( getNextFreeMRUindex(), IDM_USERTOOLS, IDM_USERTOOLSBASE + i, 0, false, false )
-            left_width = getTextWidth(HWND_FRMMAIN_MENUBAR, gConfig.Tools(i).wszDescription, GUIFONT_10)
-            if left_width > max_left_width then max_left_width = left_width
-            if gConfig.Tools(i).wszKey then
-                interior_width = getTextWidth(HWND_FRMMAIN_MENUBAR, wchr(9), GUIFONT_10)
-                right_width = getTextWidth(HWND_FRMMAIN_MENUBAR, gConfig.Tools(i).wszKey, GUIFONT_10)
-                if right_width > max_right_width then max_right_width = right_width
-            end if
-        end if   
-    next
-
-    if hasTools = false then
-        setTopMenuMRUItem( getNextFreeMRUindex(), IDM_USERTOOLS, IDM_USERTOOLSLIST, 0, false, false )  ' (empty)
-    end if   
-    
-    function = max_left_width + interior_width + max_right_width + (margin_width * 2) ' unscaled value
-
-end function
 
 
 ' ========================================================================================
@@ -593,9 +551,10 @@ function frmUserTools_OnCommand( _
                     gConfig.Tools(i) = gConfig.ToolsTemp(i)   
                 next
                 erase gConfig.ToolsTemp
-                frmUserTools_CreateAcceleratorTable            
+                frmUserTools_CreateAcceleratorTable
                 gConfig.SaveConfigFile
-                updateUserToolsMenuItems()
+                ' (no menu refresh needed: the User Tools submenu rebuilds itself
+                '  from gConfig.Tools every time it opens)
                 SendMessage( hwnd, WM_CLOSE, 0, 0 )
                 exit function
             end if
