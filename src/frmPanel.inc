@@ -193,6 +193,79 @@ end function
 
 
 ' ========================================================================================
+' The Explorer panel's splitter bar. It is a CSplitter owned by frmMain (the bar sits
+' BETWEEN the panel and the content area, and frmMain owns that layout), so only the two
+' callbacks live here.
+'
+' Gone with the migration: the 3px edge hit-test in WM_MOUSEMOVE, the whole WM_LBUTTONDOWN
+' handler, the WM_LBUTTONUP drag teardown, and the gApp.bDragActive / gApp.hwndPanel
+' globals they drove. The panel docks on either side (gConfig.ExplorerPositionRight) and
+' one vertical bar covers both -- the position is an absolute coordinate, so only the
+' conversion to and from the panel's width mirrors.
+' ========================================================================================
+
+' Paint: form background with a SPLITSIZE band centered in the grab area, matching the
+' editor split and Output panel bars.
+sub frmPanel_SplitterPaint( byval p as CSPLITTER_PAINTINFO ptr )
+    dim as clsDoubleBuffer ptr b = p->b
+
+    b->SetBackColor( ghMain.BackColor )
+    b->PaintClientRect()
+
+    dim pWindow as CWindow ptr = AfxCWindowPtr( HWND_FRMMAIN )
+    dim as long nBand = SPLITSIZE
+    if pWindow then nBand = pWindow->ScaleX(SPLITSIZE)
+
+    dim as RECT rc = p->rcClient
+    dim as long nInset = ((rc.right - rc.left) - nBand) \ 2
+    if nInset < 0 then nInset = 0
+    rc.left += nInset
+    rc.right -= nInset
+
+    dim as COLORREF clr = ghEditor.Divider
+    if p->isHot orelse p->isDragging then clr = ghPanel.BackColorHot
+    b->SetBackColor( clr )
+    b->PaintRect( @rc )
+end sub
+
+
+' The user dragged the bar. The control has already moved itself; we convert its new LEFT
+' EDGE back into the panel's width -- mirrored by dock side -- and re-lay out.
+sub frmPanel_SplitterMoved( _
+            byval hSplitter as HWND, _
+            byval newPos    as integer, _
+            byval nPhase    as integer _
+            )
+
+    dim pWindow as CWindow ptr = AfxCWindowPtr( HWND_FRMMAIN )
+    if pWindow = 0 then exit sub
+    if IsWindow( HWND_FRMPANEL ) = 0 then exit sub
+
+    select case nPhase
+        case CSPLITTER_PHASE_MOVE
+            dim as RECT rcMain : GetClientRect( HWND_FRMMAIN, @rcMain )
+            dim as long nGrab = pWindow->ScaleX(SPLITTER_GRAB)
+
+            ' Docked left the bar's left edge IS the panel width; docked right the panel
+            ' runs from the bar's right edge to the client edge.
+            dim as long nWidth = newPos
+            if gConfig.ExplorerPositionRight then nWidth = rcMain.right - newPos - nGrab
+            if nWidth < 0 then nWidth = 0
+
+            dim as RECT rc : GetClientRect( HWND_FRMPANEL, @rc )
+            SetWindowPos( HWND_FRMPANEL, 0, 0, 0, nWidth, rc.Bottom - rc.Top, _
+                          SWP_NOMOVE or SWP_NOZORDER )
+            RedrawWindow( HWND_FRMPANEL, null, null, _
+                          RDW_INVALIDATE or RDW_UPDATENOW or RDW_ALLCHILDREN )
+            frmMain_PositionWindows()
+
+        case CSPLITTER_PHASE_END
+            frmMain_PositionWindows()
+    end select
+end sub
+
+
+' ========================================================================================
 ' frmPanel Window procedure
 ' ========================================================================================
 function frmPanel_WndProc( _
@@ -245,73 +318,11 @@ function frmPanel_WndProc( _
             isPrevHotAction = isHotAction
         end if   
             
-        ' PANELS LEFT/RIGHT SPLITTER
-        dim as point pt
-        dim as Rect rc
-        GetWindowRect HWND_FRMPANEL, @rc
+        ' The left/right splitter hit-test and drag that used to follow are the CSplitter
+        ' control's job now (frmPanel_SplitterMoved), as is the WM_LBUTTONDOWN handler that
+        ' started the drag.
 
-        if gConfig.ExplorerPositionRight then
-            rc.right = rc.left + pWindow->ScaleX(3)
-        else
-            rc.left = rc.right - pWindow->ScaleX(3)
-        end if
-
-        GetCursorPos(@pt)
-        if PtInRect( @rc, pt ) then
-            if WindowFrompoint(pt) = HWND_FRMPANEL then
-                SetCursor( ghCursorSizeWE )
-            end if
-        end if
-
-        if (gApp.bDragActive = true) andalso (gApp.hwndPanel = HWND_FRMPANEL) then
-            ' Get the current rect of the panel and compare right side to the current cursor position
-            ' and then move the right side to equal the cursor position.
-            dim as long nDiff = pt.x - rc.right
-            if gConfig.ExplorerPositionRight then nDiff = rc.left - pt.x
-            GetClientRect HWND_FRMPANEL, @rc
-            dim as long nWidth = (rc.right - rc.left + nDiff)
-            ' make sure width does not go below a specific size otherwise the user will not
-            ' be able to grab the panel edge to resize and the panel menu will squish together
-            nWidth = max( nWidth, pWindow->ScaleX(236) ) 
-            SetWindowPos( HWND_FRMPANEL, 0, 0, 0, nWidth, rc.Bottom - rc.Top, SWP_NOMOVE or SWP_NOZORDER )
-            RedrawWindow( HWND_FRMPANEL, null, null, RDW_INVALIDATE or RDW_UPDATENOW or RDW_ALLCHILDREN)                
-            frmMain_PositionWindows()
-        end if
-        
-    case WM_LBUTTONDOWN
-        dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMPANEL)
-        if pWindow = 0 then exit function
-
-        ' PANELS LEFT/RIGHT SPLITTER
-        dim as Rect rc
-        dim as point pt 
-        gApp.bDragActive = false 
-        GetWindowRect HWND_FRMPANEL, @rc
-
-        if gConfig.ExplorerPositionRight then
-            rc.right = rc.left + pWindow->ScaleX(3)
-        else
-            rc.left = rc.right - pWindow->ScaleX(3)
-        end if
-
-        GetCursorPos(@pt)
-        if PtInRect( @rc, pt ) then
-            if WindowFrompoint(pt) = HWND_FRMPANEL then
-                SetCursor( ghCursorSizeWE )
-                gApp.bDragActive = true 
-                gApp.hwndPanel   = HWND_FRMPANEL
-                SetCapture( HWND_FRMPANEL )
-            end if
-        end if
-
-        
     case WM_LBUTTONUP
-        if gApp.bDragActive then
-            gApp.bDragActive = false 
-            gApp.hwndPanel = 0
-            ReleaseCapture()
-        end if
-        
         if isMouseOverRECT( hwnd, gPanel.rcActionMenu ) then
             dim as HMENU hPopupMenu 
             select case gPanel.hActiveChild

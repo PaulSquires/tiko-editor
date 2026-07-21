@@ -20,6 +20,7 @@
 #define IDC_FRMMAIN_SPLITV                          1004
 #define IDC_FRMMAIN_SPLITH                          1005
 #define IDC_FRMMAIN_SPLITOUTPUT                     1006
+#define IDC_FRMMAIN_SPLITPANEL                      1007
 
 ' Width (or height) of frmMain's CSplitter bars -- the two editor split bars and the Output
 ' panel bar. The control's whole client rect is its grab area, so this is the GRAB size; the
@@ -31,6 +32,14 @@
 ' New with the CSplitter migration: the old drag clamped only to the bottom of the menubar,
 ' so the panel could be dragged up until the editor was a sliver.
 #define OUTPUT_MIN_EDITOR                           120
+
+' Explorer panel drag limits. PANEL_MIN_WIDTH promotes what used to be an inline 236 in
+' frmPanel's drag: any narrower and the user cannot grab the panel edge to resize, and the
+' panel's action menu squishes together. PANEL_MIN_CONTENT is new with the CSplitter
+' migration -- the old drag floored only the panel, so it could be dragged out until the
+' editor beside it was a sliver.
+#define PANEL_MIN_WIDTH                             236
+#define PANEL_MIN_CONTENT                           240
 
 declare function frmMain_OpenProjectSafely( byval HWnd as HWnd, byref wszProjectFileName as const WString ) as Boolean
 declare function frmMain_GotoFile( byval pDoc as clsDocument ptr, byval nMenuId as long ) as long

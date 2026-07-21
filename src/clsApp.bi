@@ -26,13 +26,12 @@ type clsApp
                                                         ' the caption as active
         bDragTabActive             as boolean           ' a tab in the top tabcontrol is being dragged
         ptDragTabPrev              as POINT             ' used for comparing delta movement of sursor during tab dragging
-        ' Splitter drag state, shared by the splitter sites still hand-rolling their drag
-        ' (frmPanel, frmListView). The migrated ones -- help viewer, editor split, Output
-        ' panel -- use CSplitter and touch neither of these. The single/double-click timer
-        ' fields that used to sit here went with the Output panel's migration: CSplitter's
-        ' window class carries CS_DBLCLKS, so the disambiguation is free.
-        bDragActive                as boolean           ' splitter drag is currently active
-        hWndPanel                  as HWND              ' the panel being split left/right or up/down
+        ' Hand-rolled drag state. Every splitter has been migrated to CSplitter now, so the
+        ' only remaining user is frmListView. The companion hWndPanel field (which panel is
+        ' being dragged) went with frmPanel's migration -- with one drag site left there is
+        ' nothing to disambiguate -- as did the single/double-click timer fields, since
+        ' CSplitter's window class carries CS_DBLCLKS.
+        bDragActive                as boolean           ' a hand-rolled drag is in progress
         IncludeFilename            as DWSTRING
         NonProjectNotes            as DWSTRING             ' Save/load from config file
 '        wszPanelText               as DWSTRING             ' Current file loading or being compiled (for statusbar updating)

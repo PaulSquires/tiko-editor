@@ -179,6 +179,10 @@ dim shared as HWND HWND_FRMMAIN_SPLITV, HWND_FRMMAIN_SPLITH
 ' Output panel splitter. Also a child of frmMain, not of frmOutput: it sits BETWEEN the
 ' editor area and the panel, and frmMain owns that layout.
 dim shared as HWND HWND_FRMMAIN_SPLITOUTPUT
+' Explorer panel splitter. Sits on the panel's inner edge -- which side that is depends on
+' gConfig.ExplorerPositionRight, but it is a vertical bar either way, so one control serves
+' both dock sides.
+dim shared as HWND HWND_FRMMAIN_SPLITPANEL
 dim shared as HWND HWND_FRMHELPVIEWER, HWND_FRMHELPVIEWER_LEFTPANEL, HWND_FRMHELPVIEWER_RIGHTPANEL
 dim shared as HWND HWND_FRMHELPVIEWER_VSCROLLBAR2
 dim shared as HWND HWND_FRMHELPVIEWER_SPLITTER
