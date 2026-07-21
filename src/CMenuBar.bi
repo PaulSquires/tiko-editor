@@ -30,14 +30,15 @@ type CMENUBAR_ITEM
     rc        as RECT            ' full item rect, client coordinates (full bar height)
 end type
 
-' Colors for the built-in painter. Copied on Set. tiko's look: the ACTIVE item (its
-' dropdown open, or the keyboard highlight) gets the hot fill + hot text; a merely
-' hovered item keeps the normal fill and only its TEXT goes hot.
+' Colors for the built-in painter. Copied on Set. A hovered item and the ACTIVE item
+' (its dropdown open, or holding the keyboard highlight) render identically -- hot
+' fill + hot text -- because a click opens the dropdown at once, so the two are
+' frames of one gesture. Set a paint callback if you want them distinguished.
 type CMENUBAR_COLORS
-    BackColor    as COLORREF     ' bar background + non-active item fill
+    BackColor    as COLORREF     ' bar background + idle item fill
     ForeColor    as COLORREF
-    BackColorHot as COLORREF     ' active item fill
-    ForeColorHot as COLORREF     ' active item text AND hovered item text
+    BackColorHot as COLORREF     ' hovered / active item fill
+    ForeColorHot as COLORREF     ' hovered / active item text
 end type
 
 ' Handed to the per-item paint callback (which replaces the built-in painter for every

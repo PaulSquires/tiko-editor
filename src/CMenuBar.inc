@@ -203,14 +203,15 @@ private function CMenuBar_OnPaint( byval hwnd as HWND ) as LRESULT
         if pBar->PaintItemCallback then
             pBar->PaintItemCallback( @p )
         else
-            ' tiko's look: the active item gets the hot fill + hot text; a merely
-            ' hovered item keeps the normal fill and only its text goes hot.
+            ' Hover and active render the SAME: hot fill + hot text. The active item
+            ' is the one whose dropdown is open (or holds the keyboard highlight), and
+            ' since a click opens that dropdown immediately, hover and active are two
+            ' frames of one gesture -- styling them differently made the fill flicker
+            ' in under the cursor on press. Use the paint callback for a design that
+            ' wants them distinct.
             dim as COLORREF backclr, foreclr
-            if p.isActive then
+            if p.isActive orelse p.isHot then
                 backclr = pBar->colors.BackColorHot
-                foreclr = pBar->colors.ForeColorHot
-            elseif p.isHot then
-                backclr = pBar->colors.BackColor
                 foreclr = pBar->colors.ForeColorHot
             else
                 backclr = pBar->colors.BackColor
