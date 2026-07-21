@@ -130,17 +130,14 @@ type clsDocument
     wszEOL                as DWSTRING              ' used in replace in files when constructing each line of new file
     CurrentSelection      as SELECTION_INFO     ' set during scintilla wm_notfy and used in Find/Replace dialog
     
-    ' Following used for split edit views
-    rcSplitButton         as RECT               ' Split gripper vertical for Scintilla window (client coordinates)
+    ' Following used for split edit views. The bar itself is a CSplitter control owned by
+    ' frmMain (HWND_FRMMAIN_SPLITV/H), so the gripper rect, the drag's previous-point
+    ' tracking and the single-vs-double-click timer state all live in the control now.
     SplitY                as long               ' Y coordinate of top/bottom splitter
     SplitX                as long               ' X coordinate of left/right splitter
     EditorSplitMode       as SPLIT_MODE = SplitNone
-    bSizing               as boolean
-    ptPrev                as POINT
+    bSizing               as boolean            ' set/cleared by the splitter's BEGIN/END; read by modMsgPump
     rcDocSplitArea        as rect               ' entire rc client area for one or both edit windows + scrollbars
-    ptClick               as POINT              ' Used for differentiating between single/double clicks
-    idTimer               as long = 100         ' Used for differentiating between single/double clicks
-    doubleClickReceived   as boolean = false    ' Used for differentiating between single/double clicks
     
     static NextFileNum as long
     

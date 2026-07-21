@@ -426,49 +426,102 @@ end Function
 
 
 ' ========================================================================================
-' Calculate the height or width size of the document splitter (if applicable)
-' Also sets the pDoc-rcSplitButton RECT
-' This is used in WM_PAINT via pDoc-rcSplitButton
+' Paint the editor split bar. The control's client rect is the GRAB area
+' (EDITORSPLIT_GRAB); the visible band is the narrower SPLITSIZE, centered in it, so the bar
+' looks the same as it always did while being easier to grab. ghEditor.Divider is the color
+' frmMain_OnPaint used to fill pDoc->rcSplitButton with.
+'
+' The hot color is new: the old bar was a rect painted by the form and had nowhere to keep a
+' hover flag.
 ' ========================================================================================
-function frmMain_CalcSplitRect( byval pDoc as clsDocument ptr ) as long
+sub frmMain_SplitterPaint( byval p as CSPLITTER_PAINTINFO ptr )
+    dim as clsDoubleBuffer ptr b = p->b
+
+    ' The sliver either side of the band is the form's own background.
+    b->SetBackColor( ghMain.BackColor )
+    b->PaintClientRect()
+
     dim pWindow as CWindow ptr = AfxCWindowPtr( HWND_FRMMAIN )
-    if pWindow = 0 then exit function
+    dim as long nBand = SPLITSIZE
+    if pWindow then nBand = pWindow->ScaleX(SPLITSIZE)
 
-    dim as long nSplitSize
-    
-    if pDoc->EditorSplitMode = SplitLeftRight then
-        dim pWindow as CWindow ptr = AfxCWindowPtr( HWND_FRMMAIN )
-        ' Calculate the full RECT if the TOP or LEFT document window is displaying
-        if IsWindowVisible( pDoc->hWindow(1) ) then 
-            dim as RECT rc
-            GetWindowRect( pDoc->hWindow(1), @rc )
-            rc.left = rc.right
-            if IsWindowVisible( HWND_FRMEDITOR_VSCROLLBAR(1) ) then
-                rc.left = rc.left + AfxGetWindowWidth( HWND_FRMEDITOR_VSCROLLBAR(1) )
-            end if   
-            rc.right = rc.left + pWindow->ScaleX(SPLITSIZE)
-            rc.bottom = rc.bottom + pWindow->ScaleY(SCROLLBAR_HEIGHT)
-            MapWindowpoints( HWND_DESKTOP, HWND_FRMMAIN, cast( point ptr, @rc), 2 )
-            pDoc->rcSplitButton = rc   ' must convert to client coordinates
-            nSplitSize = rc.right - rc.left
-        end if
+    dim as RECT rc = p->rcClient
+    if p->nOrientation = CSPLITTER_VERTICAL then
+        dim as long nInset = ((rc.right - rc.left) - nBand) \ 2
+        if nInset < 0 then nInset = 0
+        rc.left += nInset : rc.right -= nInset
+    else
+        dim as long nInset = ((rc.bottom - rc.top) - nBand) \ 2
+        if nInset < 0 then nInset = 0
+        rc.top += nInset : rc.bottom -= nInset
     end if
 
-    if pDoc->EditorSplitMode = SplitTopBottom then
-        dim pWindow as CWindow ptr = AfxCWindowPtr( HWND_FRMMAIN )
-        ' Calculate the full RECT if the TOP or LEFT document window is displaying
-        if IsWindowVisible( pDoc->hWindow(1) ) then 
-            dim as RECT rc = AfxGetWindowRect(pDoc->hWindow(1))
-            rc.top = rc.bottom
-            rc.bottom = rc.top + pWindow->ScaleY(SPLITSIZE)
-            rc.right = rc.right + pWindow->ScaleX(SCROLLBAR_WIDTH_EDITOR)
-            MapWindowpoints( HWND_DESKTOP, HWND_FRMMAIN, cast( point ptr, @rc), 2 )
-            pDoc->rcSplitButton = rc   ' must convert to client coordinates
-            nSplitSize = rc.bottom - rc.top
-        end if
-    end if
+    dim as COLORREF clr = ghEditor.Divider
+    if p->isHot orelse p->isDragging then clr = ghPanel.BackColorHot
+    b->SetBackColor( clr )
+    b->PaintRect( @rc )
+end sub
 
-    function = nSplitSize
+
+' ========================================================================================
+' The user dragged the editor split bar. The control has already moved itself; we write the
+' new position back into the active document and re-lay out the panes around it.
+'
+' BEGIN/END bracket the drag: pDoc->bSizing is what modMsgPump reads to skip its
+' horizontal-scrollbar probing mid-resize, and the horizontal bars are hidden for the
+' duration to reduce flicker -- both exactly what the old WM_LBUTTONDOWN/UP pair did.
+' ========================================================================================
+sub frmMain_SplitterMoved( _
+            byval hSplitter as HWND, _
+            byval newPos    as integer, _
+            byval nPhase    as integer _
+            )
+
+    dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
+    if pDoc = 0 then exit sub
+
+    select case nPhase
+        case CSPLITTER_PHASE_BEGIN
+            pDoc->bSizing = true
+            frmMain_HideHorizScrollBars()   ' hide to reduce flickering
+
+        case CSPLITTER_PHASE_MOVE
+            if hSplitter = HWND_FRMMAIN_SPLITV then
+                pDoc->SplitX = newPos
+            else
+                pDoc->SplitY = newPos
+            end if
+            frmMain_PositionWindows()
+
+        case CSPLITTER_PHASE_END
+            pDoc->bSizing = false
+            frmMain_PositionWindows()
+    end select
+end sub
+
+
+' ========================================================================================
+' Double-click the split bar closes the split.
+'
+' This replaces the whole single-vs-double click timer dance (pDoc->idTimer,
+' doubleClickReceived, frmMain_TimerProc, HandleSingleClick, HandleDoubleClick): the
+' control's class carries CS_DBLCLKS, so the disambiguation is free. Claiming the message
+' means no drag starts; the control keeps the capture it already took and releases it on the
+' trailing WM_LBUTTONUP.
+' ========================================================================================
+function frmMain_SplitterMessage( byval m as CSPLITTER_MESSAGEINFO ptr ) as boolean
+    if m->uMsg <> WM_LBUTTONDBLCLK then return false
+
+    dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
+    if pDoc = 0 then return false
+
+    pDoc->bSizing = false
+    pDoc->SplitX = 0
+    pDoc->SplitY = 0
+    pDoc->EditorSplitMode = SplitNone
+    pDoc->hWndActiveScintilla = pDoc->hWindow(0)
+    frmMain_PositionWindows()
+    return true
 end function
 
 
@@ -484,15 +537,8 @@ function frmMain_OnPaint( byval hwnd as HWND ) as LRESULT
 
     b.PaintClientRect()
 
-    ' Draw any splitter between the two edit windows
-    dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr
-    if pDoc then
-        if pDoc->EditorSplitMode <> SplitNone then
-            frmMain_CalcSplitRect(pDoc)
-            b.SetBackColor( ghEditor.Divider )
-            b.PaintRect( @pDoc->rcSplitButton )
-        end if    
-    end if
+    ' The splitter between the two edit windows is a real window now (CSplitter) and paints
+    ' itself -- see frmMain_SplitterPaint.
 
     ' If the top tab control is visible then paint the area between the
     ' right edge of the toptabs menu and the client right edge.
@@ -631,7 +677,9 @@ function frmMain_PositionMainDocRight( byval pDoc as clsDocument ptr, byval rcDo
     dim pWindow as CWindow ptr = AfxCWindowPtr( HWND_FRMMAIN )
     if pWindow = 0 then exit function
     
-    dim as long nSplitSize = frmMain_CalcSplitRect(pDoc)
+    ' The bar is a fixed-size window now, so its width is a constant rather than something
+    ' derived from where the split pane happened to land.
+    dim as long nSplitSize = pWindow->ScaleX(EDITORSPLIT_GRAB)
     dim as long nLeft = Max( rcDoc.left, pDoc->SplitX + nSplitSize )
 
     dim as long iVScrollbarWidth = AfxGetWindowWidth(HWND_FRMEDITOR_VSCROLLBAR(0)) 
@@ -676,9 +724,14 @@ function frmMain_PositionMainDocBottom( byval pDoc as clsDocument ptr, byval rcD
     dim pWindow as CWindow ptr = AfxCWindowPtr( HWND_FRMMAIN )
     if pWindow = 0 then exit function
 
-    dim as long nTop = Max( rcDoc.top, pDoc->SplitY )
+    ' The bottom pane starts BELOW the bar. Previously it started exactly at SplitY and the
+    ' bar was drawn into the horizontal-scrollbar gap above it -- which worked only because
+    ' the bar was a painted rect and not a window. Now that it is a real window, the bottom
+    ' pane clears it, the same way the right pane already cleared the vertical bar.
+    dim as long nSplitSize = pWindow->ScaleY(EDITORSPLIT_GRAB)
+    dim as long nTop = Max( rcDoc.top, pDoc->SplitY + iif( pDoc->EditorSplitMode = SplitTopBottom, nSplitSize, 0 ) )
 
-    dim as long iVScrollbarWidth = AfxGetWindowWidth(HWND_FRMEDITOR_VSCROLLBAR(0)) 
+    dim as long iVScrollbarWidth = AfxGetWindowWidth(HWND_FRMEDITOR_VSCROLLBAR(0))
     dim as long iHScrollbarHeight = pWindow->ScaleY(SCROLLBAR_HEIGHT)
 
     ' Always reduce the height of the edit window by the height of the horizontal
@@ -853,7 +906,12 @@ function frmMain_PositionWindows() as LRESULT
         nHeightOutput = 0
     end if
 
-    if pDoc = 0 then frmMain_HideScrollBars() 
+    if pDoc = 0 then
+        frmMain_HideScrollBars()
+        ' No document -> no split chrome either.
+        ShowWindow( HWND_FRMMAIN_SPLITV, SW_HIDE )
+        ShowWindow( HWND_FRMMAIN_SPLITH, SW_HIDE )
+    end if
     
     if pDoc then 
         ' Position the Scintilla child edit windows
@@ -869,21 +927,50 @@ function frmMain_PositionWindows() as LRESULT
         pDoc->rcDocSplitArea = rcDoc
 
         
-        if pDoc->EditorSplitMode = SplitNone then 
+        ' Editor split bar. Two CSplitter instances exist (one per orientation, because
+        ' orientation is fixed at creation); at most ONE is shown, following the active
+        ' document's split mode. The limits are ours to compute -- the control cannot know
+        ' about the editor scrollbars flanking the panes -- and are the same bounds the old
+        ' WM_MOUSEMOVE drag clamped to.
+        dim as long nGrabV = pWindow->ScaleX(EDITORSPLIT_GRAB)
+        dim as long nGrabH = pWindow->ScaleY(EDITORSPLIT_GRAB)
+        dim as long nEditScrollW = pWindow->ScaleX(SCROLLBAR_WIDTH_EDITOR)
+
+        if pDoc->EditorSplitMode = SplitNone then
             ShowWindow( HWND_FRMEDITOR_VSCROLLBAR(0), SW_SHOW )
             ShowWindow( HWND_FRMEDITOR_VSCROLLBAR(1), SW_HIDE )
-            ShowWindow( pDoc->hWindow(1), SW_HIDE )      
+            ShowWindow( pDoc->hWindow(1), SW_HIDE )
+            ShowWindow( HWND_FRMMAIN_SPLITV, SW_HIDE )
+            ShowWindow( HWND_FRMMAIN_SPLITH, SW_HIDE )
             frmMain_PositionMainDocBottom(pDoc, rcDoc)
         end if
         if pDoc->EditorSplitMode = SplitLeftRight then
             ShowWindow( HWND_FRMEDITOR_VSCROLLBAR(0), SW_SHOW )
             ShowWindow( HWND_FRMEDITOR_VSCROLLBAR(1), SW_SHOW )
+            ShowWindow( HWND_FRMMAIN_SPLITH, SW_HIDE )
+            CSplitter_SetRange( HWND_FRMMAIN_SPLITV, _
+                                rcDoc.left + nEditScrollW, _
+                                rcDoc.right - nEditScrollW - nGrabV )
+            CSplitter_SetPos( HWND_FRMMAIN_SPLITV, pDoc->SplitX )
+            pDoc->SplitX = CSplitter_GetPos( HWND_FRMMAIN_SPLITV )   ' take back the clamp
+            SetWindowPos( HWND_FRMMAIN_SPLITV, 0, _
+                pDoc->SplitX, rcDoc.top, nGrabV, rcDoc.bottom - rcDoc.top, _
+                SWP_NOZORDER or SWP_SHOWWINDOW )
             frmMain_PositionSplitDocLeft(pDoc, rcDoc)
             frmMain_PositionMainDocRight(pDoc, rcDoc)
         end if
         if pDoc->EditorSplitMode = SplitTopBottom then
             ShowWindow( HWND_FRMEDITOR_VSCROLLBAR(0), SW_SHOW )
             ShowWindow( HWND_FRMEDITOR_VSCROLLBAR(1), SW_SHOW )
+            ShowWindow( HWND_FRMMAIN_SPLITV, SW_HIDE )
+            CSplitter_SetRange( HWND_FRMMAIN_SPLITH, _
+                                rcDoc.top, _
+                                rcDoc.bottom - nGrabH )
+            CSplitter_SetPos( HWND_FRMMAIN_SPLITH, pDoc->SplitY )
+            pDoc->SplitY = CSplitter_GetPos( HWND_FRMMAIN_SPLITH )   ' take back the clamp
+            SetWindowPos( HWND_FRMMAIN_SPLITH, 0, _
+                rcDoc.left, pDoc->SplitY, rcDoc.right - rcDoc.left, nGrabH, _
+                SWP_NOZORDER or SWP_SHOWWINDOW )
             frmMain_PositionSplitDocTop(pDoc, rcDoc)
             frmMain_PositionMainDocBottom(pDoc, rcDoc)
         end if
@@ -1205,55 +1292,12 @@ function frmMain_OnDestroy( byval hwnd as HWND ) as LRESULT
 end Function
 
 
-' ========================================================================================
-' Process WM_MOUSEMOVE message for window/dialog: frmMain
-' ========================================================================================
-function frmMain_OnMouseMove( _
-            byval hwnd as HWND, _
-            byval x as long, _
-            byval y as long, _
-            byval keyflags as UINT _
-            ) as long
-
-    dim pWindow as CWindow ptr = AfxCWindowPtr( HWND_FRMMAIN )
-    if pWindow = 0 then exit function
-
-    ' HITTEST (DOCUMENT SPLITTER)
-    dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
-    if pDoc = 0 then exit function
-        
-    dim as RECT rc
-    dim as POINT pt = (x, y)
-    if pDoc->bSizing then
-        dim as long nSplitSize = pWindow->ScaleY(SPLITSIZE)
-        dim as long nScrollWidth = pWindow->ScaleX(SCROLLBAR_WIDTH_EDITOR)
-        dim as long maxLeft = pDoc->rcDocSplitArea.left + nScrollWidth
-        dim as long maxTop = pDoc->rcDocSplitArea.top 
-        dim as long maxRight = pDoc->rcDocSplitArea.right - nScrollWidth - nSplitSize
-        dim as long maxBottom = pDoc->rcDocSplitArea.bottom - nSplitSize
-        if (pDoc->EditorSplitMode = SplitTopBottom) andalso (pt.y <> pDoc->ptPrev.y) then
-            pDoc->SplitY = pDoc->SplitY + (pt.y - pDoc->ptPrev.y)
-            ' Don't let the split go past the top or bottom of the edit area
-            if pDoc->SplitY <= maxTop then pDoc->SplitY = maxTop
-            if pDoc->SplitY >= maxBottom then pDoc->SplitY = maxBottom
-        end if   
-        if (pDoc->EditorSplitMode = SplitLeftRight) andalso (pt.x <> pDoc->ptPrev.x) then
-            pDoc->SplitX = pDoc->SplitX + (pt.x - pDoc->ptPrev.x)
-            ' Don't let the split go past the left or right of the edit area
-            if pDoc->SplitX <= maxLeft then pDoc->SplitX = maxLeft
-            if pDoc->SplitX >= maxRight then pDoc->SplitX = maxRight
-        end if   
-        frmMain_PositionWindows
-        pDoc->ptPrev = pt
-    else
-        frmMain_CalcSplitRect(pDoc)
-        if PtInRect(@pDoc->rcSplitButton, pt) then 
-            SetCursor( iif(pDoc->EditorSplitMode = SplitTopBottom, ghCursorSizeNS, ghCursorSizeWE ))
-        end if   
-    end if
-            
-    function = 0
-end function
+' The editor split bar's WM_MOUSEMOVE / WM_LBUTTONUP / WM_LBUTTONDBLCLK handlers used to
+' live here, along with the 100 ms timer that told a single click from a double click
+' (frmMain_TimerProc, HandleSingleClick, HandleDoubleClick). The CSplitter control owns all
+' of it now: the drag, the mouse capture, the IDC_SIZEWE/IDC_SIZENS cursor, the hover state,
+' and -- because its window class carries CS_DBLCLKS -- the click disambiguation, so the
+' double-click that closes the split arrives directly at frmMain_SplitterMessage.
 
 
 ' ========================================================================================
@@ -1269,124 +1313,13 @@ function frmMain_OnLButtonDown( _
                                         
     ' if main window area clicked then close any active top menus
     killAllPopupMenus()
-    
-    ' HITTEST (DOCUMENT SPLITTER)
-    dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
-    if pDoc = 0 then return 0
-    
-    dim as POINT pt = (x, y)
-    if PtInRect(@pDoc->rcSplitButton, pt) then 
-        pDoc->bSizing = true
-        frmMain_HideHorizScrollBars()   ' hide to reduce flickering
-                 
-        if pDoc->EditorSplitMode = SplitTopBottom then
-            pDoc->SplitY = pDoc->rcSplitButton.top  
-            pDoc->ptPrev.y = pt.y
-            SetCursor(ghCursorSizeNS)
-        end if
-        if pDoc->EditorSplitMode = SplitLeftRight then
-            pDoc->SplitX = pDoc->rcSplitButton.left  
-            pDoc->ptPrev.x = pt.x
-            SetCursor(ghCursorSizeWE)
-        end if
 
-        SetCapture( HWND_FRMMAIN )
-    end if
+    ' The splitter hit-test that used to follow lives in the CSplitter control now.
 
     function = 0
 end function
 
 
-sub frmMain_HandleSingleClick(hwnd as HWND)
-    ' HITTEST (DOCUMENT SPLITTER)
-    dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
-    if (pDoc <> 0) andalso (pDoc->bSizing = true) then
-        pDoc->bSizing = false
-        frmMain_PositionWindows
-        ReleaseCapture
-    end if   
-    SetCursor( LoadCursor( null, IDC_ARROW ))
-end sub
-
-
-sub frmMain_HandleDoubleClick(hwnd as HWND)
-    ' HITTEST (DOCUMENT SPLITTER)
-    ' Are we over a split edit area (toggle off the split)
-    dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
-    if pDoc = 0 then exit sub
-
-    dim as POINT pt = pDoc->ptClick 
-    if PtInRect(@pDoc->rcSplitButton, pt) then 
-        pDoc->bSizing = false
-        pDoc->SplitX = 0
-        pDoc->SplitY = 0
-        pDoc->EditorSplitMode = SplitNone
-        ReleaseCapture
-        frmMain_PositionWindows
-    end if
-end sub
-
-
-' ========================================================================================
-' Timer callback function for differentiating between single/double click
-' ========================================================================================
-sub frmMain_TimerProc(hwnd as HWND, uMsg as UINT, idEvent as UINT_PTR, dwTime as DWORD)
-    KillTimer(hwnd, idEvent)
-    dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
-    if pDoc = 0 then exit sub
-    if pDoc->doubleClickReceived = false then
-        frmMain_HandleSingleClick(hwnd)
-    end if
-end sub
-
-            
-' ========================================================================================
-' Process WM_LBUTTONUP message for window/dialog: frmMain
-' ========================================================================================
-function frmMain_OnLButtonUp( _
-            byval hwnd as HWND, _
-            byval x as long, _
-            byval y as long, _
-            byval keyflags as UINT _
-            ) as long
-
-    dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
-    if pDoc = 0 then return 0
-
-    pDoc->ptClick.x = x
-    pDoc->ptClick.y = y
-    ' Start a timer to delay single-click action and distinguish between
-    ' the single click and doubleclick
-    pDoc->doubleClickReceived = false
-    SetTimer(hwnd, pDoc->idTimer, 100, @frmMain_TimerProc)
-    ReleaseCapture
-            
-    function = 0
-end function
-
-
-' ========================================================================================
-' Process WM_LBUTTONDBLCLK message for window/dialog: frmMain
-' ========================================================================================
-function frmMain_OnLButtonDblClk( _
-            byval hwnd as HWND, _
-            byval fDoubleClick as boolean, _
-            byval x as long, _
-            byval y as long, _
-            byval keyflags as UINT _
-            ) as long
-
-    if gApp.bDragActive then exit function
-
-    dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
-    if pDoc = 0 then return 0
-
-    KillTimer(hwnd, pDoc->idTimer)
-    pDoc->doubleClickReceived = true
-    frmMain_HandleDoubleClick(hwnd)
-                
-    function = 0
-end function
 
 
 ' ========================================================================================
@@ -1411,9 +1344,6 @@ function frmMain_WndProc( _
         HANDLE_MSG (hwnd, WM_ACTIVATEAPP,   frmMain_OnActivateApp)
         HANDLE_MSG (hwnd, WM_DROPFILES,     frmMain_OnDropFiles)
         HANDLE_MSG (hwnd, WM_LBUTTONDOWN,   frmMain_OnLButtonDown)
-        HANDLE_MSG (hwnd, WM_LBUTTONUP,     frmMain_OnLButtonUp)
-        HANDLE_MSG (hwnd, WM_MOUSEMOVE,     frmMain_OnMouseMove)
-        HANDLE_MSG (hwnd, WM_LBUTTONDBLCLK, frmMain_OnLButtonDblClk)
 
     case WM_NCDESTROY
         ' delete the allocated memory for window
@@ -1685,6 +1615,18 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     frmEditorHScroll_Show( HWND_FRMMAIN )
     frmEditorVScroll_Show( HWND_FRMMAIN )
 
+    ' Editor split bars. One per orientation because CSplitter fixes its orientation at
+    ' creation; PositionWindows shows at most one, following the active document's split
+    ' mode. Both start hidden and zero-sized -- PositionWindows places them.
+    HWND_FRMMAIN_SPLITV = CSplitter_Create( HWND_FRMMAIN, IDC_FRMMAIN_SPLITV, CSPLITTER_VERTICAL )
+    HWND_FRMMAIN_SPLITH = CSplitter_Create( HWND_FRMMAIN, IDC_FRMMAIN_SPLITH, CSPLITTER_HORIZONTAL )
+    for i as long = 0 to 1
+        dim as HWND hBar = iif( i = 0, HWND_FRMMAIN_SPLITV, HWND_FRMMAIN_SPLITH )
+        CSplitter_SetPaintCallback( hBar, @frmMain_SplitterPaint )
+        CSplitter_SetPosChangedCallback( hBar, @frmMain_SplitterMoved )
+        CSplitter_SetMessageCallback( hBar, @frmMain_SplitterMessage )
+    next
+
     ' Create the UserTools accelerator table
     frmUserTools_CreateAcceleratorTable()            
 
@@ -1726,6 +1668,7 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ' Post a message to check for any Tiko updated version.
     PostMessage( pWindow->hWindow, MSG_USER_PROCESS_CHECKFORUPDATE, 0, 0 )
 
+    
     ' Process windows events
     dim uMsg as MSG
 
