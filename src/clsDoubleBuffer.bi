@@ -36,6 +36,15 @@
     ' Included HERE rather than left to the call site on purpose. CListBox.bi names
     ' typedefs it does not include and so only compiles where the host happens to have
     ' pre-loaded them (see CLAUDE.md); this file does not repeat that trap.
+    '
+    ' ONE THING THIS COSTS THE HOST, and it is worth knowing before you adopt it:
+    ' GDI+'s Status enum defines Ok = 0 in namespace AfxNova. Every host in this family
+    ' already says "using AfxNova", so including this header puts Ok into the host's
+    ' namespace and ANY identifier named "ok" -- a variable, a parameter -- becomes a
+    ' duplicated definition. Five of the sibling demos had a SelfTest_Check parameter
+    ' called exactly that and stopped compiling the moment they took this file. The fix
+    ' is to rename yours (bOK is what the family uses); it cannot be fixed from in here,
+    ' because the host's own "using AfxNova" is what exposes the name.
     #include once "AfxNova\CGdiPlus.inc"
     using AfxNova
 #endif
