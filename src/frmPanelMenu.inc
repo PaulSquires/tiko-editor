@@ -60,7 +60,7 @@ sub frmPanelMenu_PaintCallback( byval p as CSTATUSBAR_PAINTINFO ptr )
     end if
 
     ' Don't paint the background because we will reduce the size of the drawing
-    ' rect and we don't want th eoutside of that rect to be highlighted.
+    ' rect and we don't want the outside of that rect to be highlighted.
 '    p->b->PaintRect( @p->rc )
 
     p->b->SetFont( ghFont(SYMBOLFONT_10) )
@@ -88,7 +88,7 @@ sub frmPanelMenu_PaintCallback( byval p as CSTATUSBAR_PAINTINFO ptr )
         rc = p->rc
         rc.left += pWindow->ScaleX(2)
         rc.right -= pWindow->ScaleX(2)
-        rc.bottom -= pWindow->ScaleX(4)
+        rc.bottom -= pWindow->ScaleX(5)
         p->b->SetPenColor( ghOutput.ForeColor )
         p->b->PaintLine( 1, rc.left, rc.bottom, rc.right, rc.bottom )
     end if
