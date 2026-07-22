@@ -1637,6 +1637,10 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ghCursorSizeNS = LoadImage( Null, MAKEINTRESOURCEW(OCR_SIZENS), IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE or LR_SHARED )
     ghCursorSizeWE = LoadImage( Null, MAKEINTRESOURCEW(OCR_SIZEWE), IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE or LR_SHARED )
 
+    ' Rendering-backend geometry self-test. Runs here because it needs a CWindow-backed
+    ' HWND (PaintLine asks it for the DPI scale) but nothing else -- no theme, no config.
+    if environ("DBUF_SELFTEST") = "1" then clsDoubleBuffer_RunSelfTest( HWND_FRMMAIN )
+
     ' Build the keyboard accelerators
     frmKeyboard_BuildAcceleratorTable()
 
