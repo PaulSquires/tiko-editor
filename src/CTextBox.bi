@@ -242,9 +242,10 @@ declare sub      CTextBox_SetCueBannerColor( byval hTextBoxControl as HWND, byva
 declare function CTextBox_GetCueBannerFont( byval hTextBoxControl as HWND ) as HFONT
 declare sub      CTextBox_SetCueBannerFont( byval hTextBoxControl as HWND, byval hFont as HFONT )
 ' Border chrome. Width 0 = borderless; the border color switches to FocusBorderColor
-' while the RichEdit has focus. CornerRadius rounds the frame (plain GDI RoundRect;
-' keep the radius small). OuterBackColor fills the pixels outside the corner arcs --
-' pass the host's background color so rounded corners blend into it.
+' while the RichEdit has focus. CornerRadius rounds the frame -- the arcs are
+' antialiased now, so a larger radius no longer looks stepped the way it did under
+' GDI's RoundRect. OuterBackColor fills the pixels outside the corner arcs -- pass the
+' host's background color so rounded corners blend into it.
 declare function CTextBox_GetBorderColor( byval hTextBoxControl as HWND ) as COLORREF
 declare sub      CTextBox_SetBorderColor( byval hTextBoxControl as HWND, byval clr as COLORREF )
 declare function CTextBox_GetFocusBorderColor( byval hTextBoxControl as HWND ) as COLORREF

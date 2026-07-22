@@ -131,6 +131,19 @@ type clsDoubleBuffer
                 byval nCurvature as long = 20, _
                 byval nPenWidth as long = 1 _
                 ) as long
+    ' Stroke a rounded rect WITHOUT filling it. PaintRoundBorderRect always paints the
+    ' interior, which is wrong for anything drawn over existing pixels -- a focus ring
+    ' around an already-painted control being the case that needed it.
+    declare function PaintRoundOutline( _
+                byval rc as RECT ptr, _
+                byval nCurvature as long = 20, _
+                byval nPenWidth as long = 1 _
+                ) as long
+    ' Filled ellipse, optionally stroked. nPenWidth 0 = fill only.
+    declare function PaintEllipse( _
+                byval rc as RECT ptr, _
+                byval nPenWidth as long = 0 _
+                ) as long
     declare function PaintIconButton( _
             byval wszText as DWSTRING, _
             byval rc as RECT ptr, _

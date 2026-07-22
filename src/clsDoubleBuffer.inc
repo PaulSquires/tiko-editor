@@ -271,7 +271,16 @@ function clsDoubleBuffer.rcClientHeight() as long
     return _rc.bottom - _rc.top
 end function
 
+' The escape hatch to the raw surface. Asking for the HDC means the caller is about to do
+' something with GDI -- read pixels back, blit, draw directly -- so the GDI+ batch is
+' flushed first. Without this, anything drawn through the buffer's own methods may simply
+' not be on the surface yet, and a caller that reads it sees a half-painted picture. That
+' is not hypothetical: CToggle's self-test scans the knob's rim through this exact path,
+' BEFORE EndDoubleBuffer, and would otherwise be measuring blank background.
 function clsDoubleBuffer.getMemDC() as HDC
+    #ifdef DBUF_GDIPLUS
+        this.EnsureGdiReady()
+    #endif
     return _memDC
 end function
 
@@ -527,6 +536,120 @@ function clsDoubleBuffer.PaintChar( _
     if _hFont then SelectObject( _memDC, hOldFont )
 
     function = 0
+end function
+
+' ========================================================================================
+' Stroke a rounded rect, leaving the interior untouched. Same geometry contract as
+' PaintRectFactory -- see the fill/stroke path split there for why the stroke sits half a
+' pixel inside the fill boundary.
+' ========================================================================================
+function clsDoubleBuffer.PaintRoundOutline( _
+            byval rc as RECT ptr, _
+            byval nCurvature as long = 20, _
+            byval nPenWidth as long = 1 _
+            ) as long
+    if nPenWidth <= 0 then return 0
+
+#ifdef DBUF_GDIPLUS
+    dim as CGpGraphics ptr g = this.EnsureGraphics()
+    if g = 0 then return 0
+
+    dim as single w = csng( rc->right - rc->left - 1 )
+    dim as single h = csng( rc->bottom - rc->top - 1 )
+    if (w < 0.0) orelse (h < 0.0) then return 0
+
+    dim as single fpw   = csng( nPenWidth )
+    dim as single inset = (fpw - 1.0) / 2.0
+
+    dim as long oldSmooth = g->GetSmoothingMode()
+    if nCurvature > 0 then
+        g->SetSmoothingMode( SmoothingModeAntiAlias )
+    else
+        g->SetSmoothingMode( SmoothingModeNone )
+    end if
+
+    dim as CGpGraphicsPath strokePath
+    this.BuildRoundPath( @strokePath, _
+                         csng(rc->left) + inset + 0.5, csng(rc->top) + inset + 0.5, _
+                         w - (inset * 2.0), h - (inset * 2.0), _
+                         csng(nCurvature) / 2.0 )
+    g->DrawPath( this.PenFor( DBufToARGB( _pencolor, _penalpha ), fpw ), @strokePath )
+
+    g->SetSmoothingMode( oldSmooth )
+    _gpDirty = true
+    function = 0
+#else
+    dim as HPEN hPen = CreatePen( PS_SOLID, nPenWidth, _pencolor )
+    dim as HGDIOBJ hOldPen   = SelectObject( _memDC, hPen )
+    dim as HGDIOBJ hOldBrush = SelectObject( _memDC, GetStockObject( NULL_BRUSH ) )
+    RoundRect( _memDC, rc->left, rc->top, rc->right, rc->bottom, nCurvature, nCurvature )
+    SelectObject( _memDC, hOldBrush )
+    SelectObject( _memDC, hOldPen )
+    DeleteObject( hPen )
+    function = 0
+#endif
+end function
+
+' ========================================================================================
+' Filled ellipse; strokes the rim too when nPenWidth > 0. Under GDI+ the rim is
+' antialiased, which is the whole reason this exists as a primitive rather than being
+' left to each control to hand-roll.
+' ========================================================================================
+function clsDoubleBuffer.PaintEllipse( _
+            byval rc as RECT ptr, _
+            byval nPenWidth as long = 0 _
+            ) as long
+#ifdef DBUF_GDIPLUS
+    dim as CGpGraphics ptr g = this.EnsureGraphics()
+    if g = 0 then return 0
+
+    ' MEASURED, and it contradicts the obvious reading: GDI's Ellipse(10,5,30,25) does not
+    ' fill through x=29. It stops at 28, exactly as RoundRect stops a row short of its own
+    ' rect -- so the ellipse takes the same -1 the rounded rect does, NOT the full extent
+    ' that PaintRect uses. Asserting the "obvious" full extent here made GDI+ diverge from
+    ' GDI by a pixel, and only the GDI backend running the same assertions caught it.
+    dim as single w = csng( rc->right - rc->left - 1 )
+    dim as single h = csng( rc->bottom - rc->top - 1 )
+    if (w < 0.0) orelse (h < 0.0) then return 0
+
+    dim as long oldSmooth = g->GetSmoothingMode()
+    g->SetSmoothingMode( SmoothingModeAntiAlias )
+
+    g->FillEllipse( this.BrushFor( DBufToARGB( _backcolor, _backalpha ) ), _
+                    csng(rc->left), csng(rc->top), w, h )
+
+    if nPenWidth > 0 then
+        dim as single fpw   = csng( nPenWidth )
+        dim as single inset = (fpw - 1.0) / 2.0
+        g->DrawEllipse( this.PenFor( DBufToARGB( _pencolor, _penalpha ), fpw ), _
+                        csng(rc->left) + inset + 0.5, csng(rc->top) + inset + 0.5, _
+                        w - (inset * 2.0), h - (inset * 2.0) )
+    end if
+
+    g->SetSmoothingMode( oldSmooth )
+    _gpDirty = true
+    function = 0
+#else
+    ' Held as HGDIOBJ, not HPEN: the stock NULL_PEN comes back from GetStockObject as
+    ' HGDIOBJ and casting it to HPEN is a syntax error here.
+    dim as HGDIOBJ hPenObj
+    dim as boolean bOwnPen = false
+    if nPenWidth > 0 then
+        hPenObj = CreatePen( PS_SOLID, nPenWidth, _pencolor )
+        bOwnPen = true
+    else
+        hPenObj = GetStockObject( NULL_PEN )    ' stock: must NOT be deleted
+    end if
+    dim as HBRUSH hBrush = CreateSolidBrush( _backcolor )
+    dim as HGDIOBJ hOldPen   = SelectObject( _memDC, hPenObj )
+    dim as HGDIOBJ hOldBrush = SelectObject( _memDC, hBrush )
+    Ellipse( _memDC, rc->left, rc->top, rc->right, rc->bottom )
+    SelectObject( _memDC, hOldBrush )
+    SelectObject( _memDC, hOldPen )
+    DeleteObject( hBrush )
+    if bOwnPen then DeleteObject( hPenObj )
+    function = 0
+#endif
 end function
 
 function clsDoubleBuffer.PaintIconButton( _
@@ -848,6 +971,86 @@ sub clsDoubleBuffer_RunSelfTest( byval hwnd as HWND )
     RowSpan( 10, a, b2 )
     Chk( "GDI+/GDI interleave: fill survives a text call", (a = 10) andalso (b2 = 39), _
          "x " & a & ".." & b2 )
+
+    ' --- PaintEllipse: the knob primitive. Must be round, centred, and antialiased. -----
+    ClearSurf()
+    scope
+        dim bb as clsDoubleBuffer
+        bb.BeginDoubleBuffer( hwnd, gDC, rcAll )
+        bb.SetBackColor( CBACK ) : bb.PaintClientRect()
+        dim as RECT r = type( 10, 5, 30, 25 )        ' 20 x 20 circle
+        bb.SetBackColor( CFILL ) : bb.PaintEllipse( @r, 0 )
+        bb.EndDoubleBuffer()
+    end scope
+    ' 10..28 and 5..23, NOT 10..29 / 5..24: GDI's Ellipse stops one short of its own rect,
+    ' the same way RoundRect does. These numbers came off the GDI backend.
+    RowSpan( 15, a, b2 )         ' widest row, through the centre
+    Chk( "Ellipse: widest row matches GDI", (a = 10) andalso (b2 = 28), "x " & a & ".." & b2 )
+    ColSpan( 20, a, b2 )
+    Chk( "Ellipse: tallest column matches GDI", (a = 5) andalso (b2 = 23), "y " & a & ".." & b2 )
+    ' A circle must be narrower near its top than at its middle -- that it is an ellipse
+    ' at all, rather than the bounding box getting filled.
+    dim as long topFirst, topLast
+    RowSpan( 7, topFirst, topLast )
+    Chk( "Ellipse: is round, not a filled box", (topLast - topFirst) < 18, _
+         "row7 width = " & (topLast - topFirst + 1) & " vs mid 20" )
+    #ifdef DBUF_GDIPLUS
+    Chk( "Ellipse: rim is antialiased", (ToneCount( 8, 3, 32, 27 ) > 2), _
+         "distinct tones = " & ToneCount( 8, 3, 32, 27 ) )
+    #endif
+
+    ' --- PaintRoundOutline: strokes WITHOUT filling. The interior must survive. ---------
+    ClearSurf()
+    scope
+        dim bb as clsDoubleBuffer
+        bb.BeginDoubleBuffer( hwnd, gDC, rcAll )
+        bb.SetBackColor( CBACK ) : bb.PaintClientRect()
+        dim as RECT r = type( 10, 5, 50, 30 )
+        bb.SetBackColor( CFILL ) : bb.PaintRect( @r )      ' something underneath
+        bb.SetPenColor( CPEN )   : bb.PaintRoundOutline( @r, 10, 1 )
+        bb.EndDoubleBuffer()
+    end scope
+    Chk( "RoundOutline: interior NOT overpainted", (GetPixel( gDC, 30, 17 ) = CFILL), _
+         "centre want " & hex(CFILL,6) & " got " & hex(GetPixel(gDC,30,17),6) )
+    Chk( "RoundOutline: edge carries the pen colour", (GetPixel( gDC, 30, 5 ) = CPEN), _
+         "top edge want " & hex(CPEN,6) & " got " & hex(GetPixel(gDC,30,5),6) )
+
+    ' --- The CACHED overload: a caller-owned memDC, reused per row by CListBox. It is
+    '     the one Begin path that skips SetupBitmap, so it never gets the 32bpp DIB the
+    '     others do -- it draws onto whatever surface the host already made. Every list
+    '     in the app goes through here once per visible row, so it is asserted rather
+    '     than assumed to behave like its siblings. --------------------------------------
+    ClearSurf()
+    scope
+        dim as HDC hScr2 = GetDC( null )
+        dim as HDC cacheDC = CreateCompatibleDC( hScr2 )
+        dim as HBITMAP cacheBmp = CreateCompatibleBitmap( hScr2, SW, SH )
+        dim as HBITMAP oldBmp = SelectObject( cacheDC, cacheBmp )
+        ReleaseDC( null, hScr2 )
+
+        dim as RECT rRow = type( 0, 0, SW, 12 )
+        dim bb as clsDoubleBuffer
+        bb.BeginDoubleBuffer( hwnd, gDC, rRow, cacheDC )
+        bb.SetBackColor( CFILL )
+        bb.PaintRect( @rRow )
+        dim as RECT rIn = type( 4, 2, 30, 10 )
+        bb.SetBackColor( CPEN )
+        bb.PaintRoundRect( @rIn, 6 )
+        bb.EndDoubleBuffer()
+
+        SelectObject( cacheDC, oldBmp )
+        DeleteObject( cacheBmp )
+        DeleteDC( cacheDC )
+    end scope
+    RowSpan( 6, a, b2 )
+    Chk( "cached DC: row blits across full width", (a = 0) andalso (b2 = SW - 1), _
+         "x " & a & ".." & b2 )
+    Chk( "cached DC: inner shape reached the surface", (GetPixel( gDC, 15, 6 ) = CPEN), _
+         "want " & hex(CPEN,6) & " got " & hex(GetPixel(gDC,15,6),6) )
+    ' Nothing below the row rect may be touched: the blit is bounded by rcItem, not by
+    ' the (larger) cached bitmap behind it.
+    ColSpan( 15, a, b2 )
+    Chk( "cached DC: blit bounded by rcItem", (b2 <= 11), "last row touched = " & b2 )
 
     DeleteObject( gBmp )
     DeleteDC( gDC )
