@@ -82,16 +82,26 @@ sub CPOPUPMENU.LayoutItems()
     dim as long contentW = this.nCheckColWidth + maxCaptionW + accelBlock + this.nChevronColWidth
     if contentW < this.nMinWidth then contentW = this.nMinWidth
 
-    ' Rows are contiguous, fixed-height, inset by the border and the window padding.
+    ' Rows are contiguous and inset by the border and the window padding, but they are
+    ' NOT all the same height: a separator gets nSeparatorHeight, everything else
+    ' nItemHeight. Hence the running y -- the old "y + i * nItemHeight" stride assumed a
+    ' uniform row and is exactly what could not survive short separators. Nothing else in
+    ' the control needed changing for this: hit-testing, painting, invalidation and
+    ' submenu anchoring all read these rects rather than recomputing the stride, and
+    ' keyboard navigation skips separators by FLAG (NextSelectable), not by geometry.
     dim as long x = this.nBorderWidth + this.nHPadding
     dim as long y = this.nBorderWidth + this.nVPadding
     for i as long = 0 to this.itemCount - 1
-        SetRect( @this.items(i).rc, x, y + (i * this.nItemHeight), _
-                 x + contentW, y + ((i + 1) * this.nItemHeight) )
+        dim as long rowH = this.nItemHeight
+        if this.items(i).isSeparator then rowH = this.nSeparatorHeight
+        SetRect( @this.items(i).rc, x, y, x + contentW, y + rowH )
+        y += rowH
     next
 
     this.nIdealW = contentW + (this.nHPadding * 2) + (this.nBorderWidth * 2)
-    this.nIdealH = (this.itemCount * this.nItemHeight) + (this.nVPadding * 2) + (this.nBorderWidth * 2)
+    ' y has walked to the bottom of the last row, so it already carries the leading
+    ' border+padding and every row height; only the trailing pair is left to add.
+    this.nIdealH = y + this.nVPadding + this.nBorderWidth
 end sub
 
 ' Which row is the given CLIENT point over? -1 for none (window padding / border).
@@ -490,12 +500,15 @@ private sub PM_DefaultPaintItem( byval pThis as CPOPUPMENU ptr, byval p as CPOPU
     if p->isSeparator then
         b->SetBackColor( pThis->colors.BackColor )
         b->PaintRect( @p->rc )
-        ' Line inset scales with the row height (both are DPI-scaled inputs), landing
-        ' at tiko's 12px inset for the default 24px row.
+        ' HORIZONTAL inset of the rule, derived from the ITEM height (not the separator
+        ' height): it is a left/right margin that should track the menu's overall scale,
+        ' and it must not shrink just because the separator row got short. Lands at
+        ' tiko's 12px inset for the default 24px item.
         dim as long inset = pThis->nItemHeight \ 2
         dim as long yMid = (p->rc.top + p->rc.bottom) \ 2
-        b->SetPenColor( pThis->colors.ForeColorDisabled )
-        b->PaintLine( 1, p->rc.left + inset, yMid, p->rc.right - inset, yMid )
+        b->SetPenColor( pThis->colors.SeparatorColor )
+        b->PaintLine( pThis->nSeparatorThickness, p->rc.left + inset, yMid, _
+                      p->rc.right - inset, yMid )
         exit sub
     end if
 
@@ -805,6 +818,7 @@ function CPopupMenu_Create( byval hOwner as HWND, byval CtrlID as long = 0 ) as 
     pThis->idc_Popup = CtrlID
     pThis->hOwner = hOwner
     pThis->nItemHeight      = pWindow->ScaleY( CPOPUPMENU_DEFAULT_ITEMHEIGHT )
+    pThis->nSeparatorHeight = pWindow->ScaleY( CPOPUPMENU_DEFAULT_SEPHEIGHT )
     pThis->nCheckColWidth   = pWindow->ScaleX( CPOPUPMENU_DEFAULT_CHECKCOL )
     pThis->nChevronColWidth = pWindow->ScaleX( CPOPUPMENU_DEFAULT_CHEVRONCOL )
     pThis->nAccelGap        = pWindow->ScaleX( CPOPUPMENU_DEFAULT_ACCELGAP )
@@ -1004,6 +1018,16 @@ function CPopupMenu_GetItemRect( byval hPopup as HWND, byval idx as long, byref 
 end function
 
 
+' The inverse of GetItemRect. Forces a pending layout for the same reason the rect query
+' does -- a caller asking before the first paint must not get stale (or empty) geometry.
+function CPopupMenu_HitTest( byval hPopup as HWND, byval x as long, byval y as long ) as long
+    dim as CPOPUPMENU ptr pThis = GetPopupMenuPointer(hPopup)
+    if pThis = null then return -1
+    if pThis->bLayoutDirty then pThis->LayoutItems()
+    return pThis->HitTest( x, y )
+end function
+
+
 function CPopupMenu_GetIdealSize( byval hPopup as HWND, byref nWidth as long, byref nHeight as long ) as boolean
     dim as CPOPUPMENU ptr pThis = GetPopupMenuPointer(hPopup)
     nWidth = 0
@@ -1032,6 +1056,30 @@ sub CPopupMenu_SetItemHeight( byval hPopup as HWND, byval nItemHeight as long )
     if pThis = null then exit sub
     if nItemHeight < 1 then nItemHeight = 1
     pThis->nItemHeight = nItemHeight
+    pThis->Refresh()
+end sub
+
+
+' Separator rows only. Independent of the item height on purpose: a host running a
+' compact item height still wants the SAME thin rule, not a proportionally thinner one.
+' Set it equal to the item height for uniform rows (the pre-2026-07-21 look).
+sub CPopupMenu_SetSeparatorHeight( byval hPopup as HWND, byval nSeparatorHeight as long )
+    dim as CPOPUPMENU ptr pThis = GetPopupMenuPointer(hPopup)
+    if pThis = null then exit sub
+    if nSeparatorHeight < 1 then nSeparatorHeight = 1
+    pThis->nSeparatorHeight = nSeparatorHeight
+    pThis->Refresh()
+end sub
+
+
+' The rule's weight in pixels, independent of the row height it sits in. Refresh (not a
+' bare repaint) because a host may set this before the first show, when the layout is
+' still pending -- and it costs nothing when it is not.
+sub CPopupMenu_SetSeparatorThickness( byval hPopup as HWND, byval nThickness as long )
+    dim as CPOPUPMENU ptr pThis = GetPopupMenuPointer(hPopup)
+    if pThis = null then exit sub
+    if nThickness < 1 then nThickness = 1
+    pThis->nSeparatorThickness = nThickness
     pThis->Refresh()
 end sub
 

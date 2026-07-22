@@ -20,7 +20,16 @@
 #define CPOPUPMENU_HOVER_MS    250
 
 ' Default geometry, DPI-scaled once at Create; the setters take raw pixels thereafter.
-#define CPOPUPMENU_DEFAULT_ITEMHEIGHT   24   ' fixed row height (tiko compact mode = 20)
+#define CPOPUPMENU_DEFAULT_ITEMHEIGHT   24   ' command row height (tiko compact mode = 20)
+' Separator rows are SHORT -- a rule with a little air, not a full-height row. Rows are
+' therefore not all the same height, which is why LayoutItems walks a running y instead
+' of multiplying by an index. Everything downstream (hit-testing, painting, submenu
+' anchoring) reads the rects, so nothing else had to learn about the difference.
+#define CPOPUPMENU_DEFAULT_SEPHEIGHT     9   ' separator row height
+' Thickness of the rule drawn inside that row. NOT DPI-scaled at Create, unlike every
+' other geometry input here: a hairline divider should stay a hairline at 150% rather
+' than growing into a bar. A host that wants it scaled scales it itself.
+#define CPOPUPMENU_DEFAULT_SEPTHICKNESS  1
 #define CPOPUPMENU_DEFAULT_CHECKCOL     30   ' left gutter column for the check glyph
 #define CPOPUPMENU_DEFAULT_CHEVRONCOL   20   ' right column for the submenu chevron
 #define CPOPUPMENU_DEFAULT_ACCELGAP     24   ' minimum gap between caption and accel text
@@ -81,9 +90,16 @@ type CPOPUPMENU_COLORS
     ForeColor         as COLORREF
     BackColorHot      as COLORREF    ' the selected/hovered row
     ForeColorHot      as COLORREF
-    ForeColorDisabled as COLORREF    ' disabled text, accel text of disabled rows, and
-                                     ' the separator line color
+    ForeColorDisabled as COLORREF    ' disabled text and the accel text of disabled rows
     BorderColor       as COLORREF    ' 1px window border (the control's chrome)
+    ' The separator rule. Split out of ForeColorDisabled (which drew it until
+    ' 2026-07-21): a divider and greyed-out text are different things and a host
+    ' generally already owns a divider color it wants menus to match.
+    ' It carries a DEFAULT, unlike every field above, precisely so that a host written
+    ' against the older struct -- filling the fields it knows and leaving this one alone
+    ' -- gets a visible grey rule instead of the black one a zero-initialised field
+    ' would produce. Set it explicitly to get black.
+    SeparatorColor    as COLORREF = BGR(128,128,128)
 end type
 
 ' Handed to the per-item paint callback. Paint through p->b (the control's double
@@ -157,6 +173,8 @@ type CPOPUPMENU
     wszChevronGlyph   as DWSTRING         ' default chr(&h203A) "single right angle quote"
     ' --- Geometry inputs, all pixels, DPI-scaled once at Create. ---
     nItemHeight       as long = CPOPUPMENU_DEFAULT_ITEMHEIGHT
+    nSeparatorHeight  as long = CPOPUPMENU_DEFAULT_SEPHEIGHT   ' separator rows only
+    nSeparatorThickness as long = CPOPUPMENU_DEFAULT_SEPTHICKNESS  ' the rule's own weight
     nCheckColWidth    as long = CPOPUPMENU_DEFAULT_CHECKCOL
     nChevronColWidth  as long = CPOPUPMENU_DEFAULT_CHEVRONCOL
     nAccelGap         as long = CPOPUPMENU_DEFAULT_ACCELGAP
@@ -262,15 +280,28 @@ declare function CPopupMenu_SetItemText( byval hPopup as HWND, byval id as long,
 ' Geometry (derived; the queries force a pending layout so results are always current).
 '   width  = max( nMinWidth, checkCol + widest caption + accel block + chevronCol )
 '            where the accel block = accelGap + widest accel, only if any row has one
-'   height = rows * itemHeight + 2*vPadding, plus the border on both axes
+'   height = sum of the row heights + 2*vPadding, plus the border on both axes, where a
+'            row is itemHeight unless it is a SEPARATOR, which gets separatorHeight
 ' GetItemRect is by INDEX (client coords) -- geometry is per-row, ids are for state.
 ' SetMinWidth floors the CONTENT width in pixels (an MRU menu that must not shrink);
-' SetItemHeight takes raw pixels (the caller DPI-scales, e.g. for a compact mode).
+' SetItemHeight / SetSeparatorHeight take raw pixels (the caller DPI-scales, e.g. for a
+' compact mode). Set the separator height equal to the item height to get the old
+' uniform-row look back.
 ' ----------------------------------------------------------------------------------------
 declare function CPopupMenu_GetItemRect( byval hPopup as HWND, byval idx as long, byref rc as RECT ) as boolean
+' Which row is this CLIENT point over? -1 for none (padding, border, or outside). The
+' inverse of GetItemRect, and the same routine the mouse handlers use -- exposed so the
+' rect/hit-test agreement can be asserted rather than eyeballed now that rows differ in
+' height.
+declare function CPopupMenu_HitTest( byval hPopup as HWND, byval x as long, byval y as long ) as long
 declare function CPopupMenu_GetIdealSize( byval hPopup as HWND, byref nWidth as long, byref nHeight as long ) as boolean
 declare function CPopupMenu_SetMinWidth( byval hPopup as HWND, byval nMinWidth as long ) as boolean
 declare sub      CPopupMenu_SetItemHeight( byval hPopup as HWND, byval nItemHeight as long )
+' SetSeparatorHeight is the ROW's height (the air around the rule); SetSeparatorThickness
+' is the rule's own weight in pixels. They are independent: a thick rule in a short row
+' and a hairline in a tall row are both reasonable. Thickness is not DPI-scaled for you.
+declare sub      CPopupMenu_SetSeparatorHeight( byval hPopup as HWND, byval nSeparatorHeight as long )
+declare sub      CPopupMenu_SetSeparatorThickness( byval hPopup as HWND, byval nThickness as long )
 
 ' ----------------------------------------------------------------------------------------
 ' Appearance. Fonts are borrowed, never owned: keep them alive and destroy them
