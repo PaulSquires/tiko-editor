@@ -267,6 +267,12 @@ function WinMain( _
     ' Start the background fbcParser scan worker (owns all fbcParser.dll calls)
     gScanMgr.StartWorker()
 
+    ' Initialize GDI+ (clsDoubleBuffer's rendering backend -- see DBUF_GDIPLUS).
+    ' Deliberately placed AFTER every early "return 1" above, so no failure path can
+    ' skip the matching shutdown, and BEFORE the first window exists, because a
+    ' clsDoubleBuffer built during the very first WM_PAINT already needs GDI+ running.
+    dim as ULONG_PTR gdipToken = AfxGdipInit()
+
     ' Show the main form
     function = frmMain_Show( 0 )
 
@@ -278,7 +284,12 @@ function WinMain( _
     
     ' Unload the font file
     if len(wszFontFile) then RemoveFontResource(wszFontFile)
-    
+
+    ' Shut GDI+ down. frmMain_Show has returned, so every window is destroyed and every
+    ' clsDoubleBuffer that painted into one has run its destructor -- no CGp* object can
+    ' still be alive. This must also precede CoUninitialize, since GDI+ leans on COM.
+    AfxGdipShutdown( gdipToken )
+
     ' Uninitialize the COM library
     CoUninitialize
 
