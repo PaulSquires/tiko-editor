@@ -24,8 +24,15 @@ enum
 end enum
 
 ' Autocomplete popup lists are capped - a list longer than this is useless to
-' scroll and the pipe-string dedupe cost grows quadratically with list length.
+' scroll, and the dedupe cost grows quadratically with list length.
 const AUTOCOMPLETE_MAX_ITEMS = 1000
+
+' The reason ShowAutocompleteList was called. A rebuild triggered by a DELETION (the
+' user backspaced while the popup was up) must not reset the sticky AutoCompleteType or
+' clear the match word, and must not cancel the popup when the rebuild comes up empty.
+' This was Scintilla's SCN_AUTOCCHARDELETED before the popup became ours.
+const AUTOCOMPLETE_NOTIFY_NONE        = 0
+const AUTOCOMPLETE_NOTIFY_CHARDELETED = 1
 
 declare function DereferenceLine( byval pDoc as clsDocument ptr, _
             byval sTrigger as string, byval nPosition as long ) as SYMBOLREF

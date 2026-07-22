@@ -24,14 +24,11 @@ type clsApp
         KeepTitleBarActive         as boolean           ' a popup surface (menubar popup, Search Symbol) owns
                                                         ' activation; frmMain's WM_NCACTIVATE keeps painting
                                                         ' the caption as active
-        bDragTabActive             as boolean           ' a tab in the top tabcontrol is being dragged
-        ptDragTabPrev              as POINT             ' used for comparing delta movement of sursor during tab dragging
-        ' Hand-rolled drag state. Every splitter has been migrated to CSplitter now, so the
-        ' only remaining user is frmListView. The companion hWndPanel field (which panel is
-        ' being dragged) went with frmPanel's migration -- with one drag site left there is
-        ' nothing to disambiguate -- as did the single/double-click timer fields, since
-        ' CSplitter's window class carries CS_DBLCLKS.
-        bDragActive                as boolean           ' a hand-rolled drag is in progress
+        ' No hand-rolled drag state lives here any more. Every drag site is a reusable
+        ' control that owns its own capture and cursor -- the four splitters and the
+        ' Output/Explorer bars are CSplitter, the list panes are CListBox, the top tab
+        ' strip is CTabBar -- so bDragActive, bDragTabActive and ptDragTabPrev went, along
+        ' with hWndPanel and the single/double-click timer fields before them.
         IncludeFilename            as DWSTRING
         NonProjectNotes            as DWSTRING             ' Save/load from config file
 '        wszPanelText               as DWSTRING             ' Current file loading or being compiled (for statusbar updating)

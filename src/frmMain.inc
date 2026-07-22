@@ -1444,29 +1444,22 @@ function frmMain_WndProc( _
             end if
             
         case WM_SETCURSOR
-            if gApp.bDragActive = true then
-                    ' A hand-rolled drag owns the cursor. This used to mean a splitter --
-                    ' all four of those are CSplitter controls now, and each sets its own
-                    ' cursor from its own WM_SETCURSOR -- so today it means frmListView,
-                    ' the last site still using this global.
-                    return true
-                
-                elseif gApp.bDragTabActive = true then 
-                    ' We handle the cursor in the TabControl subclass. Don't allow the
-                    ' main window to change our cursor. return true.
-                    return true
-
-                elseif (gApp.IsCompiling = true) or _
-                    (gApp.IsProjectLoading = true) or _
-                    (gApp.IsFileLoading = true) then
-                    SetCursor( LoadCursor(0, IDC_WAIT) )
-                    return true
+            ' Only the busy cursor is frmMain's to set. The two drag arms that used to
+            ' head this chain (a hand-rolled splitter/listview drag, and a top-tab drag)
+            ' are gone with their globals: every drag site is a reusable control now --
+            ' CSplitter, CListBox, CTabBar -- and each sets its own cursor from its own
+            ' WM_SETCURSOR, so frmMain must not answer for them.
+            if (gApp.IsCompiling = true) or _
+               (gApp.IsProjectLoading = true) or _
+               (gApp.IsFileLoading = true) then
+                SetCursor( LoadCursor(0, IDC_WAIT) )
+                return true
             end if
-            
-        case WM_CAPTURECHANGED
-            gApp.bDragTabActive = false
-            
-            
+
+        ' (No WM_CAPTURECHANGED here any more: its whole body was clearing
+        '  gApp.bDragTabActive, which nothing set and nothing else read. Capture is now
+        '  owned and released by the controls that take it.)
+
         case WM_COPYDATA      ' used during processing of commandline
             dim pDataToGet as COPYDATASTRUCT ptr = cast(COPYDATASTRUCT ptr, lParam)
             if pDataToGet then
@@ -1535,7 +1528,8 @@ function frmMain_WndProc( _
             frmMenuBar_PositionWindows()
 
         case MSG_USER_SHOWAUTOCOMPLETE
-            return ShowAutocompleteList()
+            ' wParam carries the AUTOCOMPLETE_NOTIFY_* reason for the rebuild.
+            return ShowAutocompleteList( clng(wParam) )
 
         case MSG_USER_PARSE_COMPLETE
             ' A background fbcParser scan finished: swap it into gSymDb (atomic,
@@ -1596,21 +1590,12 @@ function frmMain_WndProc( _
                 end if
             end if
 
-        case MSG_USER_APPENDEQUALSSIGN
-            ' The = key was used to terminate a popup autocomplete. Take that
-            ' character and format it with a space before and a space after.
-            dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
-            if pDoc then
-                dim as hwnd hEdit = pDoc->hWndActiveScintilla
-                dim as long nPos = SciExec( hEdit, SCI_GETCURRENTPOS, 0, 0)
-                dim as string sWord = " = "
-                SciExec( hEdit, SCI_SETSEL, nPos-1, nPos)
-                SciExec( hEdit, SCI_REPLACESEL, 0, cast(LPARAM, strptr(sWord)))
-                nPos = SciExec( hEdit, SCI_GETCURRENTPOS, 0, 0)
-                SciExec( hEdit, SCI_SETSEL, nPos, nPos)
-            end if   
-                
-    end select 
+        ' (MSG_USER_APPENDEQUALSSIGN is gone. Its only sender was the SCN_AUTOCSELECTION
+        '  handler, which padded an "=" out to " = " when that fillup character had just
+        '  accepted a completion. "=" no longer commits anything, so there is nothing to
+        '  reformat.)
+
+    end select
 
     ' for messages that we don't deal with
     function = DefWindowProc(HWnd, uMsg, wParam, lParam)
@@ -1661,6 +1646,10 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ' Create every standalone context menu. After frmMenuBar_Show, which owns the popup
     ' theme registry these enrol themselves in.
     ContextMenus_Init()
+
+    ' Create the code-completion popup. Once, here: it is a singleton that outlives every
+    ' document, and it needs the theme (LoadThemeFile above) and ghFont() already built.
+    frmAutoComplete_Init()
 
     ' Create the main application top tabs control
     frmTopTabs_Show( HWND_FRMMAIN )
@@ -1773,6 +1762,14 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
         ' CPopupMenu too since the TrackPopupMenu migration. One call covers every
         ' textbox in the app.
         if CTextBox_FilterMessage( @uMsg ) then continue do
+
+        ' The code-completion popup. Unlike every filter above it, this one consumes ONLY
+        ' the navigation and commit keys -- ordinary typing MUST reach Scintilla, which is
+        ' what drives the incremental filtering. It sits here for two reasons: ahead of
+        ' handleEscKeyModeless, which would otherwise close the Find panel on the Escape
+        ' meant for the popup; and ahead of the TranslateAccelerator chain, so Tab commits
+        ' instead of firing IDM_INDENTBLOCK.
+        if frmAutoComplete_FilterMessage( @uMsg ) then continue do
 
         if handleAltKeyMenuBar(uMsg) then continue do
 

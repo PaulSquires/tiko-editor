@@ -327,45 +327,119 @@ function ShowCodetip( _
 end function
 
     
-' ========================================================================================
-' Display the actual Autocomplete popup list window
-' ========================================================================================
-function ShowAutoCompletePopup( _
-            byval hEdit as HWND, _
-            byref sList as string _
-            ) as Long
-    if len(sList) = 0 then exit function
-    dim as string sFillups = "(=."
-                                
-    SciExec(hEdit, SCI_AUTOCSETFILLUPS, 0, strptr(sFillups))  ' characters that also select and close the popup
-    SciExec(hEdit, SCI_AUTOCSETSEPARATOR, 124, 0)             ' Pipe symbol as separator
-    SciExec(hEdit, SCI_AUTOCSETORDER, 1, 0)                   ' List must be sorted alphabetically
-    SciExec(hEdit, SCI_AUTOCSETIGNORECASE, 1, 0)
-    SciExec(hEdit, SCI_AUTOCSETMAXHEIGHT, 9, 0)
-    SciExec(hEdit, SCI_AUTOCSHOW, 0, strptr(sList))
-    SciExec(hEdit, SCI_AUTOCSETOPTIONS, SC_AUTOCOMPLETE_FIXED_SIZE, 0)
+' The scratch buffer every candidate build fills. Module-level rather than a local
+' because it holds AUTOCOMPLETE_MAX_ITEMS records of three DWSTRINGs each: as a local it
+' would construct and destruct 3000 dynamic strings on every keystroke that opens a
+' popup. frmAutoComplete_Show takes its own copy, so reusing this between builds is safe.
+dim shared gAutoCBuild(0 to AUTOCOMPLETE_MAX_ITEMS - 1) as AUTOC_ITEM
 
-    ' Ensure that the edit window has focus because an Output window such as Compiler Output
-    ' or Notes may have had edit focus. When a popup code completion activates then that 
-    ' other edit window could possibly receive the keyboard input
-    SetFocus( hEdit )
-                            
-    function = 0
+
+' ========================================================================================
+' Append one candidate, deduped on its uppercased name.
+'
+' This replaces the old ExistsInAutocompleteList, which searched a growing pipe-delimited
+' string with instr - quadratic in BOTH the item count and the accumulated string length.
+' ========================================================================================
+sub AddAutocompleteItem( _
+            items() as AUTOC_ITEM, _
+            byref nItems as long, _
+            byref wszName as DWSTRING, _
+            byref wszDetail as DWSTRING, _
+            byval nKind as long, _
+            byval bHasParams as boolean = false _
+            )
+    if nItems >= AUTOCOMPLETE_MAX_ITEMS then exit sub
+    if len(rtrim(wszName)) = 0 then exit sub
+
+    dim as DWSTRING wszSort = ucase(wszName)
+    for i as long = 0 to nItems - 1
+        if items(i).wszSort = wszSort then exit sub
+    next
+
+    items(nItems).wszName     = wszName
+    items(nItems).wszSort     = wszSort
+    items(nItems).wszDetail   = wszDetail
+    items(nItems).nKind       = nKind
+    items(nItems).bHasParams  = bHasParams
+    nItems += 1
+end sub
+
+
+' ========================================================================================
+' Does a calltip signature carry any parameters? Everything between the first "(" and
+' the last ")"; blank means a no-argument call like "Foo()".
+'
+' Used for the FB intrinsics, whose parameter lists exist only as pre-formatted calltip
+' TEXT (gFBIntrinsics) -- parsed symbols answer the same question structurally through
+' gSymDb.ProcHasParams.
+' ========================================================================================
+function CalltipHasParams( byref wszCalltip as DWSTRING ) as boolean
+    dim as long p = instr( wszCalltip, "(" )
+    if p = 0 then return false
+    dim as long q = instrrev( wszCalltip, ")" )
+    if q <= p then return false
+    return ( len(trim(mid( wszCalltip, p + 1, q - p - 1 ))) > 0 )
 end function
 
 
 ' ========================================================================================
-' Don't add duplicates in the Autocomplete list    
+' Add a parsed symbol, snapshotting everything the popup will need to draw it.
+'
+' Nothing that reaches the popup may point back into the symbol database: a background
+' parse completing installs a new result set and frees the displaced one, so the
+' SYMBOLREF - and the wstring ptrs hanging off it - would dangle while the popup was
+' still open. Hence the copies here.
 ' ========================================================================================
-function ExistsInAutocompleteList( _
-            byref sList as string, _
-            byref sMatch as string _
-            ) as boolean
-    if rtrim(sMatch) = "" then return true
-    dim as string sLookFor = "|" & ucase(sMatch) & "|"
-    if instr( "|" & ucase(sList) & "|", sLookFor ) then return true
-    return false
-end function
+sub AddAutocompleteSymbol( _
+            items() as AUTOC_ITEM, _
+            byref nItems as long, _
+            byval r as SYMBOLREF _
+            )
+    dim as wstring ptr pName = gSymDb.SymName( r )
+    if pName = 0 then exit sub
+
+    ' The detail column: for a FUNCTION this is the return type, for a variable, field or
+    ' parameter its declared type. A SUB and a bare TYPE have none, and get an empty
+    ' column rather than a placeholder.
+    dim as DWSTRING wszDetail
+    dim as wstring ptr pType = gSymDb.SymTypeText( r )
+    if pType then wszDetail = *pType
+
+    ' Only a callable can be accepted by "(", so only a callable is asked.
+    dim as long nKind = gSymDb.SymKind( r )
+    dim as boolean bHasParams = false
+    select case nKind
+        case FBCP_KIND_SUB, FBCP_KIND_FUNCTION
+            bHasParams = gSymDb.ProcHasParams( r )
+    end select
+
+    AddAutocompleteItem( items(), nItems, *pName, wszDetail, nKind, bHasParams )
+end sub
+
+
+' ========================================================================================
+' Sort the built candidate set alphabetically, case-insensitively (wszSort is already
+' the uppercased name). Scintilla did this for us via SCI_AUTOCSETORDER.
+'
+' Note the BUILD order still matters even though the display order is alphabetical: it
+' decides who survives the AUTOCOMPLETE_MAX_ITEMS cap, which is why locals and the
+' guaranteed keyword list are added before the capped global enumeration.
+' ========================================================================================
+sub SortAutocompleteItems( items() as AUTOC_ITEM, byval lo as long, byval hi as long )
+    if lo >= hi then exit sub
+    dim as long i = lo, j = hi
+    dim as DWSTRING pivot = items( (lo + hi) \ 2 ).wszSort
+    do
+        while items(i).wszSort < pivot : i += 1 : wend
+        while items(j).wszSort > pivot : j -= 1 : wend
+        if i <= j then
+            swap items(i), items(j)
+            i += 1 : j -= 1
+        end if
+    loop while i <= j
+    if lo < j then SortAutocompleteItems( items(), lo, j )
+    if hi > i then SortAutocompleteItems( items(), i, hi )
+end sub
 
 
 ' ========================================================================================
@@ -377,9 +451,9 @@ end function
 ' Options keywords dialogs take effect on the next popup with no cache to invalidate.
 ' ========================================================================================
 sub AppendKeywordsToList( _
-            byref sList as string, _
-            byref wszMatchWord as DWSTRING, _
-            byref nItems as long _
+            items() as AUTOC_ITEM, _
+            byref nItems as long, _
+            byref wszMatchWord as DWSTRING _
             )
     ' Both files are plain whitespace-separated word lists; normalize CR/LF/TAB
     ' to spaces so a single space-parse walks every word.
@@ -395,10 +469,12 @@ sub AppendKeywordsToList( _
         dim as boolean bMatch = true
         if nLenMatchWord then bMatch = ( left(ucase(st), nLenMatchWord) = wszMatchWord )
         if bMatch then
-            if ExistsInAutocompleteList(sList, st) = false then
-                sList = sList & st & "|"
-                nItems += 1
-            end if
+            ' An FB intrinsic (LEN, MID, INSTR, ...) is a keyword that takes arguments,
+            ' so "(" should accept it just as it accepts a parsed proc. Ordinary
+            ' keywords (IF, DIM, ...) have no intrinsic calltip and answer false.
+            dim as DWSTRING wszTip = FindIntrinsicCalltip( st )
+            AddAutocompleteItem( items(), nItems, st, "", AUTOC_KIND_KEYWORD, _
+                                 CalltipHasParams( wszTip ) )
         end if
     next
 end sub
@@ -412,7 +488,7 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
     if gConfig.AutoComplete = false then exit function
 
     dim as long curPos, nCol, nLenMatchWord
-    dim as string sList, st, sDot
+    dim as string st, sDot
     dim as boolean bTypesOnly, bTypesNotPreloaded
 
     dim pDoc as clsDocument ptr
@@ -446,11 +522,11 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
 
     ' If an autocomplete is active but now there is no match word then
     ' a space or tab must have been pressed so autocomplete cancel and now exit.
-    if SciExec(hEdit, SCI_AUTOCACTIVE, 0, 0) then
-        if nLenMatchWord = 0 then 
-            SciExec( hEdit, SCI_AUTOCCANCEL, 0, 0)
+    if frmAutoComplete_IsOpen() then
+        if nLenMatchWord = 0 then
+            frmAutoComplete_Cancel()
             exit function
-        end if   
+        end if
     end if
 
 
@@ -464,20 +540,20 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
     ' If no active autocomplete then create the list based on the current underlying match word.
     ' also continue to display the popup if we have simply backspaced while a popup is open.
     dim as boolean bShowPopup = false
-    if (notification = SCN_AUTOCCHARDELETED) then
+    if (notification = AUTOCOMPLETE_NOTIFY_CHARDELETED) then
         bShowPopup = true
-    else   
-        if (SciExec(hEdit, SCI_AUTOCACTIVE, 0, 0) = 0) andalso _
-            (pDoc->AutoCompleteType = AUTOCOMPLETE_NONE) then
+    else
+        dim as boolean bNotOpen = (frmAutoComplete_IsOpen() = false)
+        if bNotOpen andalso (pDoc->AutoCompleteType = AUTOCOMPLETE_NONE) then
             bShowPopup = true
         end if
     end if
 
-    if bShowPopup = true then     
+    if bShowPopup = true then
         ' Comment out any comment line so the popup isn't activated when in a comment.
         sLine = MaskStringCharacters(sLine)
         sLine = RemoveComments(sLine)
-        if (notification <> SCN_AUTOCCHARDELETED) then
+        if (notification <> AUTOCOMPLETE_NOTIFY_CHARDELETED) then
             pDoc->wszMatchWord = ""
             nLenMatchWord = 0         
         end if
@@ -551,17 +627,19 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
 
         ' Check if it is a "FOR i AS LONG" type of statement
         if instr(sLine, "FOR ") then
-            SciExec( hEdit, SCI_AUTOCCANCEL, 0, 0)
+            frmAutoComplete_Cancel()
             exit function
         end if
     end if
-    
-    sList = "|"
+
+    ' The candidate set. gAutoCBuild is a shared scratch buffer; nItems is its logical
+    ' length. The ADD order below is deliberate - it decides who survives the
+    ' AUTOCOMPLETE_MAX_ITEMS cap - even though the popup ends up sorted alphabetically.
+    dim as long nItems
 
     select case pDoc->AutoCompleteType
 
         case AUTOCOMPLETE_DIM_AS
-            dim as long nItems
 
             if bTypesOnly = false then
                 ' The standard builtin data types
@@ -574,9 +652,7 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
                     dim as boolean bMatch = true
                     if nLenMatchWord then bMatch = ( left(ucase(st), nLenMatchWord) = pDoc->wszMatchWord )
                     if bMatch then
-                        if ExistsInAutocompleteList(sList, st) = false then
-                            sList = sList & st & "|"
-                        end if
+                        AddAutocompleteItem( gAutoCBuild(), nItems, st, "", AUTOC_KIND_STDTYPE )
                     end if
                 next
             end if
@@ -585,7 +661,7 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
                 ' Always offer every FB keyword and data type from the keyword
                 ' files - added BEFORE the parsed symbols so the guaranteed words
                 ' can never be crowded out by the item cap in a large project.
-                AppendKeywordsToList( sList, pDoc->wszMatchWord, nItems )
+                AppendKeywordsToList( gAutoCBuild(), nItems, pDoc->wszMatchWord )
             end if
 
             ' All TYPE/UNION/ENUM/TYPEDEF names matching the typed prefix. For
@@ -604,11 +680,7 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
                     if pFile = 0 then continue for
                     if ucase(left(*pFile, len(wszIncPath))) = wszIncPath then continue for
                 end if
-                st = *gSymDb.SymName( rs(i) )
-                if ExistsInAutocompleteList(sList, st) = false then
-                    sList = sList & st & "|"
-                    nItems += 1
-                end if
+                AddAutocompleteSymbol( gAutoCBuild(), nItems, rs(i) )
             next
 
 
@@ -622,17 +694,13 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
 
             dim rs() as SYMBOLREF
             dim as long n = gSymDb.EnumMembers( refType, rs() )
-            dim as long nItems
             for i as long = 0 to n - 1
                 if nItems >= AUTOCOMPLETE_MAX_ITEMS then exit for
                 st = *gSymDb.SymName( rs(i) )
                 dim as boolean bMatch = true
                 if nLenMatchWord then bMatch = ( left(ucase(st), nLenMatchWord) = pDoc->wszMatchWord )
                 if bMatch then
-                    if ExistsInAutocompleteList(sList, st) = false then
-                        sList = sList & st & "|"
-                        nItems += 1
-                    end if
+                    AddAutocompleteSymbol( gAutoCBuild(), nItems, rs(i) )
                 end if
             next
 
@@ -643,7 +711,7 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
             ' rebuilds it can pick up "(" and other punctuation.
             dim as string sWordPrefix = GetTrailingIdentifier( sLine )
             if len(sWordPrefix) = 0 then
-                SciExec( hEdit, SCI_AUTOCCANCEL, 0, 0)
+                frmAutoComplete_Cancel()
                 exit function
             end if
             pDoc->wszMatchWord = sWordPrefix
@@ -652,7 +720,6 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
             dim as DWSTRING wszDocFile = ScanMgr_GetRootName( pDoc )
             dim as long nCaretLine = pDoc->GetCurrentLineNumber + 1
             dim rs() as SYMBOLREF
-            dim as long nItems
 
             ' Locals and params of the enclosing proc first
             dim as long n = gSymDb.EnumLocalsInScope( wszDocFile, nCaretLine, rs() )
@@ -660,17 +727,14 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
                 st = *gSymDb.SymName( rs(i) )
                 dim as boolean bMatch = ( left(ucase(st), nLenMatchWord) = pDoc->wszMatchWord )
                 if bMatch then
-                    if ExistsInAutocompleteList(sList, st) = false then
-                        sList = sList & st & "|"
-                        nItems += 1
-                    end if
+                    AddAutocompleteSymbol( gAutoCBuild(), nItems, rs(i) )
                 end if
             next
 
             ' Always-available FB keywords/data types from the keyword files,
             ' independent of anything the parser found. After locals (most
             ' relevant first for the dedupe) but before the capped global enum.
-            AppendKeywordsToList( sList, pDoc->wszMatchWord, nItems )
+            AppendKeywordsToList( gAutoCBuild(), nItems, pDoc->wszMatchWord )
 
             ' Then global procs, types, variables, constants and enum values.
             ' Locals of OTHER procs also carry kind VAR/CONST - skip them via the
@@ -680,28 +744,114 @@ function ShowAutocompleteList( byval Notification as long = 0) as boolean
             for i as long = 0 to n - 1
                 if nItems >= AUTOCOMPLETE_MAX_ITEMS then exit for
                 if (gSymDb.SymFlags( rs(i) ) and FBCP_SYMBFLAG_LOCAL) <> 0 then continue for
-                st = *gSymDb.SymName( rs(i) )
-                if ExistsInAutocompleteList(sList, st) = false then
-                    sList = sList & st & "|"
-                    nItems += 1
-                end if
+                AddAutocompleteSymbol( gAutoCBuild(), nItems, rs(i) )
             next
 
     end select
-    
-    sList = trim(sList, any "| ")
-    if len(sList) then
-        ' Save the code editor starting position 
+
+    if nItems > 0 then
+        ' Alphabetical, case-insensitive - what SCI_AUTOCSETORDER used to do for us.
+        SortAutocompleteItems( gAutoCBuild(), 0, nItems - 1 )
+        ' Save the code editor starting position
         pDoc->AutoCStartPos = SciExec(hEdit, SCI_GETCURRENTPOS, 0, 0)
-        ShowAutoCompletePopup(hEdit, sList)
+        frmAutoComplete_Show( pDoc, gAutoCBuild(), nItems )
         return true
     else
-        if (notification <> SCN_AUTOCCHARDELETED) then
-            SciExec( hEdit, SCI_AUTOCCANCEL, 0, 0)
-        end if   
-    end if 
+        if (notification <> AUTOCOMPLETE_NOTIFY_CHARDELETED) then
+            frmAutoComplete_Cancel()
+        end if
+    end if
 
     function = true
 
+end function
+
+
+' ========================================================================================
+' Recompute pDoc->wszMatchWord - the prefix an OPEN popup filters on - from the caret.
+'
+' Two rules, matching the two the rebuild path uses: in AUTOCOMPLETE_WORD mode the word
+' is a strict identifier, everywhere else it is whatever runs back from the caret to a
+' "." ">" or space (so "g.Foo" yields "FOO", the member prefix).
+' ========================================================================================
+function RefreshAutocompleteMatchWord( byval pDoc as clsDocument ptr ) as long
+    if pDoc = 0 then return 0
+
+    dim as HWND hEdit   = pDoc->hWndActiveScintilla
+    dim as long curPos  = SciExec(hEdit, SCI_GETCURRENTPOS, 0, 0)
+    dim as long nCol    = SciExec(hEdit, SCI_GETCOLUMN, curPos, 0)
+    dim as string sLine = left( pDoc->GetLine(pDoc->GetCurrentLineNumber), nCol )
+
+    if pDoc->AutoCompleteType = AUTOCOMPLETE_WORD then
+        pDoc->wszMatchWord = GetTrailingIdentifier( sLine )
+    else
+        pDoc->wszMatchWord = ""
+        for i as long = len(sLine) to 1 step -1
+            dim as string ch = mid(sLine, i, 1)
+            select case ch
+                case ".", ">", " "
+                    exit for
+                case else
+                    pDoc->wszMatchWord = ucase(ch) & pDoc->wszMatchWord
+            end select
+        next
+    end if
+
+    ' The commit path derives the word's start as AutoCStartPos - len(wszMatchWord), so
+    ' the two must be updated together or the replacement range drifts left one character
+    ' per keystroke. The old rebuild-every-key path got this for free.
+    pDoc->AutoCStartPos = curPos
+
+    return len(pDoc->wszMatchWord)
+end function
+
+
+' ========================================================================================
+' Keep an OPEN popup in sync with continued typing or a backspace.
+'
+' This is the filter-in-place path: the candidate set was built once when the popup
+' opened, so a keystroke only re-runs the prefix test over it - no second trip through
+' gSymDb. Returns FALSE when the popup was closed (nothing left to show).
+' ========================================================================================
+function UpdateAutocompleteFilter() as boolean
+    if frmAutoComplete_IsOpen() = false then return false
+
+    dim as clsDocument ptr pDoc = gTTabCtl.GetActiveDocumentPtr()
+    if pDoc = 0 then
+        frmAutoComplete_Cancel()
+        return false
+    end if
+
+    ' Backspacing past the "." or "->" that opened a member list ends the completion
+    ' rather than widening it back out. Only the member modes carry a meaningful
+    ' AutoCTriggerStartPos - the word and "dim as" modes fall back to the empty-prefix
+    ' test below.
+    dim as boolean bMemberMode = (pDoc->AutoCompleteType = AUTOCOMPLETE_TYPE)
+    if bMemberMode then
+        dim as long curPos = SciExec( pDoc->hWndActiveScintilla, SCI_GETCURRENTPOS, 0, 0 )
+        if curPos <= pDoc->AutoCTriggerStartPos then
+            frmAutoComplete_Cancel()
+            pDoc->AutoCompleteType = AUTOCOMPLETE_NONE
+            return false
+        end if
+    end if
+
+    dim as long nLen = RefreshAutocompleteMatchWord( pDoc )
+
+    ' In word mode an empty prefix means the caret is no longer inside an identifier.
+    dim as boolean bWordMode = (pDoc->AutoCompleteType = AUTOCOMPLETE_WORD)
+    if bWordMode andalso (nLen = 0) then
+        frmAutoComplete_Cancel()
+        pDoc->AutoCompleteType = AUTOCOMPLETE_NONE
+        return false
+    end if
+
+    if frmAutoComplete_ReFilter( pDoc ) = false then
+        frmAutoComplete_Cancel()
+        pDoc->AutoCompleteType = AUTOCOMPLETE_NONE
+        return false
+    end if
+
+    return true
 end function
 

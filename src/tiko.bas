@@ -69,6 +69,9 @@ dim shared as DWSTRING gwszDefaultToolchain = "FreeBASIC-1.10.1-winlibs-gcc-9.3.
 #include once "clsApp.bi"
 #include once "clsSymbolDb.bi"
 #include once "clsScanMgr.bi"
+' Declared up here rather than beside its .inc because modCodetips.inc (which BUILDS the
+' AUTOC_ITEM array) is included well before the frm* block.
+#include once "frmAutoComplete.bi"
 
 '  Global classes
 dim shared gApp     as clsApp
@@ -124,7 +127,8 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "frmPanelMenu.inc" 
 #include once "frmExplorer.inc" 
 #include once "frmBookmarks.inc" 
-#include once "frmFunctions.inc" 
+#include once "frmFunctions.inc"
+#include once "frmAutoComplete.inc"
 #include once "frmKeyboardEdit.inc" 
 #include once "frmKeyboard.inc" 
 #include once "frmBuildConfig.inc" 

@@ -228,7 +228,11 @@ function frmFunctions_TooltipCallback( byval hCtl as HWND, byval row as integer 
         ' The caption contains two parts; the function name and its calltip
         ' separated by an % character.
         dim as DWSTRING wszCaption = CListBox_GetText(hCtl, row)
-        dim as DWSTRING wszTooltip = AfxStrParse(wszCaption, 2, "%")
+        ' NOT "dim as DWSTRING wszTooltip = ..." -- that redeclaration shadowed the
+        ' outer variable, so the formatted calltip died with the if-block and the empty
+        ' outer one was returned. CListBox reads an empty string as "no tip for this
+        ' row", so the panel showed no tooltips at all.
+        wszTooltip = AfxStrParse(wszCaption, 2, "%")
         wszTooltip = FormatCodetip( wszTooltip )
         SendMessage( pList->hToolTip, TTM_SETMAXTIPWIDTH, 0, 300 )   ' allows for multiline
     end if    

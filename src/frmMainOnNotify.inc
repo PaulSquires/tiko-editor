@@ -427,23 +427,31 @@ function Scintilla_OnNotify( _
                         SetTimer( HWND_FRMMAIN, IDT_PARSER_DEBOUNCE, PARSER_DEBOUNCE_MS, 0 )
                     end if
                     if (pNSC->modificationType and SC_MOD_DELETETEXT) then
-                        ' Do a check to see if we have backspaced to a point where there is a
-                        ' period to try to popup an autocomplete or codetip.
-                        dim as long nPos, nChar
                         hEdit = pDoc->hWndActiveScintilla
-                        nPos  = SciExec( hEdit, SCI_GETCURRENTPOS, 0, 0 ) - 1
-                        nChar = SciExec( hEdit, SCI_GETCHARAT, nPos, 0 )
-                        select case chr(nChar)
-                            case ".", ">"    '  Show autocomplete list for TYPE variables
-                                ' dot "." or ">"  part of a pointer
-                                ' Need to PostMessage in order to give time for notification to complete. The "."
-                                ' is also used as a character that selects and closes the popup list. If no
-                                ' PostMessage then the "." will automatically select the first entry in the list
-                                ' and close.
-                                pDoc->AutoCTriggerStartPos = nPos
-                                pDoc->AutoCompleteType = AUTOCOMPLETE_NONE
-                                PostMessage( HWND_FRMMAIN, MSG_USER_SHOWAUTOCOMPLETE, nChar, 0 )
-                        end select 
+                        if frmAutoComplete_IsOpen() then
+                            ' The popup is up and the user backspaced: narrow it against
+                            ' the shortened word, or close it if they backed out of the
+                            ' word entirely. This is what Scintilla's SCN_AUTOCCHARDELETED
+                            ' used to tell us. Safe to do inline -- SC_MOD_DELETETEXT
+                            ' fires AFTER the text is gone, and re-filtering only touches
+                            ' our own window.
+                            UpdateAutocompleteFilter()
+                        else
+                            ' Do a check to see if we have backspaced to a point where there is a
+                            ' period to try to popup an autocomplete or codetip.
+                            dim as long nPos, nChar
+                            nPos  = SciExec( hEdit, SCI_GETCURRENTPOS, 0, 0 ) - 1
+                            nChar = SciExec( hEdit, SCI_GETCHARAT, nPos, 0 )
+                            select case chr(nChar)
+                                case ".", ">"    '  Show autocomplete list for TYPE variables
+                                    ' dot "." or ">"  part of a pointer. Still posted rather
+                                    ' than called: showing a window from inside a Scintilla
+                                    ' notification is asking for re-entrancy.
+                                    pDoc->AutoCTriggerStartPos = nPos
+                                    pDoc->AutoCompleteType = AUTOCOMPLETE_NONE
+                                    PostMessage( HWND_FRMMAIN, MSG_USER_SHOWAUTOCOMPLETE, AUTOCOMPLETE_NOTIFY_NONE, 0 )
+                            end select
+                        end if
                     end if
                 end if
             end if
@@ -472,78 +480,13 @@ function Scintilla_OnNotify( _
             end if           
                         
 
-        case SCN_AUTOCCANCELLED
-            ' Destroy the popup information window
-            pDoc = gTTabCtl.GetActiveDocumentPtr()
-            if pDoc then 
-                ' If the last typed character was a BACKSPACE then do NOT reset the 
-                ' autocomplete type otherwise the autocomplete popup will not continue
-                ' to popup on subsequent characters being added.
-                if pDoc->LastCharTyped = VK_BACK then
-                    ' backspace pressed... do nothing, unless we are backspacing past where
-                    ' the popup trigger occurred.
-                    dim as long curPos = SciExec(pDoc->hWndActiveScintilla, SCI_GETCURRENTPOS, 0, 0) 
-                    if curPos <= pDoc->AutoCTriggerStartPos then
-                        pDoc->AutoCompleteType = AUTOCOMPLETE_NONE
-                    end if
-                else
-                    pDoc->AutoCompleteType = AUTOCOMPLETE_NONE
-                end if   
-            end if
+        ' (The SCN_AUTOCCANCELLED / SCN_AUTOCSELECTION / SCN_AUTOCCHARDELETED handlers are
+        '  gone with Scintilla's autocomplete listbox. Their work now lives in
+        '  frmAutoComplete: cancellation in frmAutoComplete_Cancel, the insertion in
+        '  frmAutoComplete_Commit, and the character-deleted rebuild in
+        '  UpdateAutocompleteFilter, driven from the SC_MOD_DELETETEXT branch above.)
 
-            
-        case SCN_AUTOCSELECTION
-            ' A selection occured from the AutoComplete listbox. We do the insertion
-            ' ourselves because the startpos of the word is not the same as the start position
-            ' used by the autocomplete listbox (because we are doing incremental searches).
-            pDoc = gTTabCtl.GetActiveDocumentPtr()
-            if pDoc then 
-                hEdit = pDoc->hWndActiveScintilla
-                
-                ' Get the position where the listbox was opened.
-                dim as long nStartPos = pDoc->AutoCStartPos 
-                dim as long nPos = SciExec( hEdit, SCI_GETCURRENTPOS, 0, 0)
-                
-                ' Get the match word that existed when the listbox was displayed
-                dim as long nLenMatchWord = len(pDoc->wszMatchWord)
-                
-                ' Set the word that was selected in the listbox
-                dim as string sText = *cast(zstring ptr, pNSC->lpText)
-                
-                if ucase(sText) <> ucase(pDoc->wszMatchWord) then
-                    SciExec( hEdit, SCI_SETSEL, nStartPos-nLenMatchWord, nPos)
-                    SciExec( hEdit, SCI_REPLACESEL, 0, cast(LPARAM, strptr(sText)))
-                    nPos = SciExec( hEdit, SCI_GETCURRENTPOS, 0, 0)
-                end if
-                SciExec( hEdit, SCI_SETSEL, nPos, nPos)
-                    
-                ' Now that we have inserted our own text, cancel the autoinsertion by
-                ' the autocomplete listbox.
-                SciExec( hEdit, SCI_AUTOCCANCEL, 0, 0)
-                pDoc->AutoCompleteType = AUTOCOMPLETE_NONE
-                                
-                if chr(pNSC->ch) = "=" then
-                    ' Add a space before and after Equals sign whenever the user presses
-                    ' the equals sign to terminate ab autocomplete popup list.
-                    PostMessage(hwnd, MSG_USER_APPENDEQUALSSIGN, 0, 0)
-                end if
-                
-                ' if a CodeTip was displayed prior to the autocomplete popup list then
-                ' redisplay that CodeTip now.
-                ShowCodetip( pDoc )
-                
-                return true   
-            end if
-    
 
-        case SCN_AUTOCCHARDELETED    
-            if gConfig.CodeTips then
-                ' User deleted a character while autocompletion list was active. Display
-                ' new contents of list because the underlying word being typed as changed.
-                ShowAutocompleteList(SCN_AUTOCCHARDELETED)
-            end if
-                              
-        
         case SCN_CHARADDED
             if gApp.SuppressNotify then exit function
             pDoc = gTTabCtl.GetActiveDocumentPtr()
@@ -558,22 +501,27 @@ function Scintilla_OnNotify( _
             
             select case chr(pNSC->ch)
                 case ".", ">"    '  Show autocomplete list for TYPE variables
-                    ' dot "." or ">"  part of a pointer
-                    ' Need to PostMessage in order to give time for notification to complete. The "."
-                    ' is also used as a character that selects and closes the popup list. if no
-                    ' PostMessage then the "." will automatically select the first entry in the list
-                    ' and close.
+                    ' dot "." or ">"  part of a pointer. Any popup already up belongs to
+                    ' the word BEFORE the dot, so close it and start the member list from
+                    ' scratch. Still posted rather than called: showing a window from
+                    ' inside a Scintilla notification is asking for re-entrancy.
+                    frmAutoComplete_Cancel()
                     pDoc->AutoCTriggerStartPos = SciExec(hEdit, SCI_GETCURRENTPOS, 0, 0)
                     pDoc->AutoCompleteType = AUTOCOMPLETE_NONE
-                    if PostMessage(HWND_FRMMAIN, MSG_USER_SHOWAUTOCOMPLETE, pNSC->ch, 0) then exit function
-            
-                case ")"      ' Close and active code tip 
+                    if PostMessage(HWND_FRMMAIN, MSG_USER_SHOWAUTOCOMPLETE, AUTOCOMPLETE_NOTIFY_NONE, 0) then exit function
+
+                case ")"      ' Close and active code tip
+                    frmAutoComplete_Cancel()
                     pDoc->AutoCompleteType = AUTOCOMPLETE_NONE
                     SciExec( hEdit, SCI_CALLTIPCANCEL, 0, 0 )
-                
-                case "(", ","      ' Show code tip 
+
+                case "(", ","      ' Show code tip
+                    ' "(" and "=" were Scintilla fillups: they used to ACCEPT the
+                    ' highlighted item. They no longer do -- they type through, the popup
+                    ' closes, and the codetip for the call takes its place.
+                    frmAutoComplete_Cancel()
                     pDoc->AutoCompleteType = AUTOCOMPLETE_NONE
-                    if PostMessage(HWND_FRMMAIN, MSG_USER_SHOWAUTOCOMPLETE, pNSC->ch, 0) then exit function
+                    if PostMessage(HWND_FRMMAIN, MSG_USER_SHOWAUTOCOMPLETE, AUTOCOMPLETE_NOTIFY_NONE, 0) then exit function
 
                 case chr(13), chr(10)  ' ENTER KEY PRESSED
                     ' Scintilla notifies one SCN_CHARADDED per EOL character, so a CRLF
@@ -595,8 +543,10 @@ function Scintilla_OnNotify( _
                     ' Ordinary typing never opens a new popup: completion triggers
                     ' only on ".", "->" (member) and the keyword contexts handled on
                     ' space (" as ", " new ", constructor/destructor/extends).
-                    if SciExec( hEdit, SCI_AUTOCACTIVE, 0, 0 ) then
-                        if ShowAutocompleteList() then exit function
+                    ' Narrowing filters the set already in the popup rather than going
+                    ' back to gSymDb for it.
+                    if frmAutoComplete_IsOpen() then
+                        if UpdateAutocompleteFilter() then exit function
                     end if
 
             end select 

@@ -152,6 +152,9 @@ type clsSymbolDb
 
         ' -- calltip synthesis (replaces stored CallTip strings) --
         declare function BuildCalltip( byval refProc as SYMBOLREF ) as DWSTRING
+        ' Does this proc take any caller-supplied parameter? Stops at the first one
+        ' instead of formatting them all, for callers that only need the yes/no.
+        declare function ProcHasParams( byval refProc as SYMBOLREF ) as boolean
 
         ' -- display name: members prefixed with their owning TYPE ("clsDoc.GetLine") --
         declare function QualifiedName( byval r as SYMBOLREF ) as DWSTRING

@@ -101,12 +101,11 @@ function OnCommand_EditIndentBlock( _
             byval hEdit as HWND _
             ) as LRESULT
 
-    ' If a TAB was pressed then manually terminate any active autocomplete
-    ' and eat the TAB character.
-    if SciExec(hEdit, SCI_AUTOCACTIVE, 0, 0) then
-        SciExec(hEdit, SCI_AUTOCCOMPLETE, 0, 0)
-        return 0 
-    end if
+    ' (The "Tab commits the open autocomplete" case used to be handled here, because a
+    '  Tab reached this command through the accelerator table before anything else saw
+    '  it. frmAutoComplete_FilterMessage now consumes Tab ahead of TranslateAccelerator,
+    '  so IDM_INDENTBLOCK cannot fire while the popup is up and there is nothing to
+    '  special-case.)
     if CTextBox_HasFocus( GetDlgItem(HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND) ) then
         if gFind.bExpanded then SetFocus GetDlgItem(HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE)
     elseif CTextBox_HasFocus( GetDlgItem(HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE) ) then

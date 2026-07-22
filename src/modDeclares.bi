@@ -30,8 +30,7 @@ enum
     MSG_USER_PROCESS_COMMANDLINE 
     MSG_USER_PROCESS_STARTUPUSERTOOLS
     MSG_USER_PROCESS_CHECKFORUPDATE
-    MSG_USER_SHOWAUTOCOMPLETE
-    MSG_USER_APPENDEQUALSSIGN
+    MSG_USER_SHOWAUTOCOMPLETE      ' wParam = AUTOCOMPLETE_NOTIFY_*
     MSG_USER_LOAD_EXPLORERFILES
     MSG_USER_LOAD_FUNCTIONLISTFILES
     MSG_USER_LOAD_BOOKMARKSFILES
@@ -202,6 +201,7 @@ dim shared as HWND HWND_FRMEXPLORER
 dim shared as HWND HWND_FRMFUNCTIONS
 dim shared as HWND HWND_FRMBOOKMARKS
 dim shared as HWND HWND_FRMPANEL, HWND_FRMPANEL_MENU, HWND_FRMPANEL_VSCROLLBAR
+dim shared as HWND HWND_FRMAUTOCOMPLETE
 dim shared as HWND HWND_FRMEDITOR_HSCROLLBAR(1)
 dim shared as HWND HWND_FRMEDITOR_VSCROLLBAR(1)
 
@@ -363,7 +363,8 @@ dim shared as wstring * 10 _
     wszIconContinue, wszIconStop, wszIconStepNext, wszIconStepOver, wszIconStepOut, wszIconRunToCursor, _
     wszIconSave, wszIconFind, wszIconToggleReplace, _
     wszIconGotoMain, wszIconGotoHeader, wszIconGotoSource, _
-    wszSearchFile, wszSearchFunction, wszSearchType, wszSearchEnum
+    wszSearchFile, wszSearchFunction, wszSearchType, wszSearchEnum, _
+    wszAutoCGlyphProc, wszAutoCGlyphType, wszAutoCGlyphEnum, wszAutoCGlyphVar, wszAutoCGlyphKeyword
 
 
 ' Braille spinner patterns - large clockwise rotation
@@ -416,7 +417,7 @@ dim shared spinner(0 to 7) as wstring * 2 => { _
     wszIconToggleReplace     = !"\uE8B4"      ' Toggle Replace
     wszIconGotoMain          = "M"
     wszIconGotoHeader        = "H"
-    wszIconGotoSource        = "S"
+    wszIconGotoSource        = "C"
 
     ' Use GUI Italiac font for these identifiers.
     wszSearchFile            = "d"            ' "disk"
@@ -432,6 +433,15 @@ dim shared spinner(0 to 7) as wstring * 2 => { _
     wszIconStepOver          = !"\uEE35"     ' reply mirrored
     wszIconStepOut           = wszIconUpArrow
     wszIconRunToCursor       = !"\uE623"     ' next solid
+
+    ' Autocomplete popup kind markers. Plain geometric characters drawn in the regular
+    ' GUI font, NOT Segoe Fluent Icons: the popup already switches colour per kind, and
+    ' a missing icon-font glyph would render as a tofu box on every row of the list.
+    wszAutoCGlyphProc        = !"\u0192"     ' small f with hook - sub/function
+    wszAutoCGlyphType        = !"\u25A0"     ' filled square - type/union/typedef
+    wszAutoCGlyphEnum        = !"\u25B2"     ' filled triangle - enum/enum value
+    wszAutoCGlyphVar         = !"\u25CF"     ' filled circle - var/const/param/field
+    wszAutoCGlyphKeyword     = !"\u25C6"     ' filled diamond - keyword/data type
     
     
     

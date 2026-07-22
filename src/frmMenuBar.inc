@@ -71,6 +71,9 @@ function killAllPopupMenus() as boolean
     CMenuBar_CloseMenu( HWND_FRMMAIN_MENUBAR )
     ContextMenu_CloseAll()
     CTextBox_CloseContextMenu()
+    ' The code-completion popup is a fourth family of floating window with the same
+    ' "must not survive this" contract.
+    frmAutoComplete_Cancel()
     return true
 end function
 
@@ -449,6 +452,10 @@ function frmMenuBar_PositionWindows() as LRESULT
     if HWND_FRMMAIN_MENUBAR = 0 then exit function
 
     frmMenuBar_SyncTheme()
+
+    ' The completion popup draws in the EDITOR theme, not the menu theme, but this is
+    ' the one place every settings-save path already funnels through.
+    frmAutoComplete_SyncTheme()
 
     ' Bar captions may have changed (localization).
     for i as long = 0 to CMenuBar_GetItemCount( HWND_FRMMAIN_MENUBAR ) - 1

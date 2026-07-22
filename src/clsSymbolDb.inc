@@ -813,6 +813,30 @@ function clsSymbolDb.BuildCalltip( byval refProc as SYMBOLREF ) as DWSTRING
 end function
 
 
+' ========================================================================================
+' Does this proc take a caller-supplied parameter?
+'
+' The same child walk BuildCalltip does, stopping at the first hit and formatting
+' nothing. The INSTANCE flag skips the implicit THIS of a member proc, which the caller
+' never supplies -- without that, every member function would look parameterised.
+' ========================================================================================
+function clsSymbolDb.ProcHasParams( byval refProc as SYMBOLREF ) as boolean
+    if refProc.IsValid = false then return false
+    dim as PARSERESULTSET ptr pRSet = refProc.pRSet
+
+    dim as long c = pRSet->childHead( refProc.idx )
+    do while c >= 0
+        dim as FBCP_SYMBOL ptr pSym = @pRSet->pResult->symbols[c]
+        if pSym->kind = FBCP_KIND_PARAM then
+            if (pSym->flags and FBCP_SYMBFLAG_INSTANCE) = 0 then return true
+        end if
+        c = pRSet->childNext(c)
+    loop
+
+    return false
+end function
+
+
 function clsSymbolDb.QualifiedName( byval r as SYMBOLREF ) as DWSTRING
     if r.IsValid = false then return ""
     dim as DWSTRING wszName = *this.SymName( r )
