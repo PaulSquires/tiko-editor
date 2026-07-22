@@ -3,6 +3,12 @@
 
 #include once "vbcompat.bi"                 ' format() -- numeric mode formatting
 #include once "clsDoubleBuffer.bi"
+' The built-in context menu is a CPopupMenu (canonical home C:\dev\CMenuBar; vendored
+' here). This is the control family's owner-drawn floating menu -- using it instead of
+' TrackPopupMenu is what makes the textbox's right-click menu themeable and consistent
+' with the rest of an app's menus. It brings a MESSAGE-PUMP OBLIGATION with it: see
+' CTextBox_FilterMessage below.
+#include once "CPopupMenu.bi"
 ' AfxNova's RichEdit wrapper: pulls in win/richedit.bi (CHARFORMATW, EM_CANPASTE, ...)
 ' and supplies the RichEdit_* helpers used by the implementation (GetText, GetSelText,
 ' CanPaste, ...). Prefer these over re-rolled SendMessage wrappers.
@@ -84,6 +90,12 @@ type CTEXTBOX
     wszMenuCopy      as DWSTRING
     wszMenuPaste     as DWSTRING
     wszMenuSelectAll as DWSTRING
+    ' The context menu itself: one CPopupMenu window per textbox, created at Create so a
+    ' host can theme it immediately (CTextBox_GetContextMenu), rebuilt from the current
+    ' selection/clipboard/read-only state each time it opens, and destroyed with the
+    ' control. Unlike the HMENU it replaces it is NOT modal -- the commands run from its
+    ' select callback after it closes, not inline in WM_CONTEXTMENU.
+    hContextMenu     as HWND
     ' Select the whole text when the control gains keyboard focus (Tab or programmatic
     ' SetFocus). A mouse click still places the caret at the click point: the click's
     ' own caret placement runs after the focus change and wins, by design.
@@ -246,6 +258,37 @@ declare sub      CTextBox_SetOuterBackColor( byval hTextBoxControl as HWND, byva
 ' Localize the built-in right-click menu (Cut/Copy/Paste/Select All). An empty
 ' SelectAllText keeps the current Select All label, so 3-argument callers are unaffected.
 declare sub      CTextBox_SetMenuText( byval hTextBoxControl as HWND, byval CutText as DWSTRING, byval CopyText as DWSTRING, byval PasteText as DWSTRING, byval SelectAllText as DWSTRING = "" )
+
+' ----------------------------------------------------------------------------------------
+' THE BUILT-IN CONTEXT MENU (Cut / Copy / Paste / Select All)
+'
+' It is a CPopupMenu window owned by the control, created at Create and destroyed with it.
+' Two consequences a host has to know about:
+'
+' 1. THE MESSAGE-PUMP OBLIGATION (not optional). A CPopupMenu is not modal: keyboard
+'    navigation and click-outside dismissal live in its message filter. A host that never
+'    calls CTextBox_FilterMessage gets a right-click menu that opens and paints but cannot
+'    be driven from the keyboard and never closes on an outside click:
+'        do while GetMessage(@uMsg, null, 0, 0)
+'            if CTextBox_FilterMessage( @uMsg ) then continue do
+'            ...TranslateMessage/DispatchMessage...
+'    One call serves every CTextBox in the application -- only one menu chain can be open
+'    at a time, and the filter finds it. (An app that also hosts CMenuBar calls that
+'    filter too; the two are independent and each stands down when the other's menu is up.)
+'
+' 2. STYLING IS YOURS. GetContextMenu hands back the popup so the usual CPopupMenu setters
+'    (SetColors / SetFonts / SetGlyphs / SetItemHeight) apply -- point them at the same
+'    values the rest of your menus use and the textbox menu matches them. Left alone it
+'    renders with CPopupMenu's own defaults. The handle is stable for the control's
+'    lifetime, so theming it once at startup is enough; the labels are rebuilt per open
+'    but colors and fonts are not.
+' ----------------------------------------------------------------------------------------
+' CloseContextMenu dismisses an open menu from any CTextBox. SILENT (no select callback),
+' matching the family's programmatic-setter rule. For hosts with a global "close every
+' menu" moment -- app deactivation, or a modal dialog about to open.
+declare function CTextBox_GetContextMenu( byval hTextBoxControl as HWND ) as HWND
+declare function CTextBox_FilterMessage( byval pMsg as MSG ptr ) as boolean
+declare sub      CTextBox_CloseContextMenu()
 
 ' ----------------------------------------------------------------------------------------
 ' Callbacks. See the type declarations above for each signature and contract.

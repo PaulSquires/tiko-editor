@@ -99,18 +99,13 @@ function frmTopTabsMenu_MessageCallback( byval m as CSTATUSBAR_MESSAGEINFO ptr )
                     end if
                                  
                  case IDM_TABSLIST
-                    dim as HMENU hPopupMenu = CreateTopTabsActionButtonContextMenu()
-                    ' Popup the menu to the bottom of the Action Button (right aligned)
+                    ' Popup the menu to the bottom of the Action Button (right aligned).
+                    ' The tab is switched in the popup's own select callback
+                    ' (TopTabsListContextMenu_OnSelect) -- its item ids are tab indexes,
+                    ' not commands, so they must never reach frmMain's WM_COMMAND.
                     dim as RECT rc = CStatusBar_GetItemRect(m->hStatusBar, m->idx)
                     MapWindowpoints( HWND_FRMMAIN_TOPTABSMENU, HWND_DESKTOP, cast(point ptr, @rc), 2 )
-                    dim as integer id = _
-                            TrackPopupMenu( hPopUpMenu, TPM_RIGHTALIGN or TPM_RETURNCMD, _
-                                            rc.right, rc.bottom, 0, HWND_FRMMAIN, byval null)
-                    ' Return value is 1 based because 0 indicates that menu was cancelled
-                    if (id > 0) andalso (id <= gTTabCtl.GetItemCount) then
-                        gTTabCtl.SetFocusTab(id-1)
-                    end if
-                    DestroyMenu( hPopUpMenu )
+                    ShowTopTabsListContextMenu( rc )
                     Return true   ' prevent further processing that leads to WM_CONTEXTMENU
 
             end select

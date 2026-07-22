@@ -33,7 +33,7 @@
 ' ========================================================================================
 
 declare sub frmMenuBar_DynamicInitPopup( byval hPopup as HWND )
-declare sub frmMenuBar_ApplyPopupTheme( byval hPopup as HWND )
+declare sub frmMenuBar_ApplyPopupTheme( byval hPopup as HWND, byval bForceCompact as boolean = false )
 
 ' The four dynamic submenus (rebuilt per open in frmMenuBar_DynamicInitPopup).
 dim shared as HWND ghMenuPopupMRU
@@ -44,7 +44,16 @@ dim shared as HWND ghMenuPopupUserTools
 ' Registry of every popup this module creates, so a theme change or a compact-menus
 ' toggle can re-push colors/fonts/heights into all of them (the controls COPY colors
 ' at Set time; they never read tiko's theme globals).
+'
+' The parallel flag array is the "always compact" opt-out of gConfig.CompactMenus. The
+' CONTEXT menus (modContextMenus.inc, and the CTextBox controls' own right-click menu)
+' set it: they are short, transient lists rather than a browsable dropdown tree, so they
+' use MENUITEM_HEIGHT_COMPACT whatever the user chose for the topmenu. It has to live in
+' the registry rather than being applied once at create time, because
+' frmMenuBar_SyncTheme re-pushes the height into every registered popup and would
+' otherwise hand them the config value back on the next theme change.
 dim shared gMenuPopupList(any) as HWND
+dim shared gMenuPopupCompact(any) as boolean
 dim shared as long gMenuPopupCount = 0
 
 ' The host-owned "Update Available" label window (sibling above the bar strip).
@@ -53,9 +62,15 @@ dim shared as HWND HWND_FRMMAIN_MENUBARUPDATE
 
 ' ========================================================================================
 ' Compatibility wrapper: every legacy dismissal site funnels through this name.
+' Closes the menubar's chain AND any standalone context-menu chain -- the callers
+' (WM_ACTIVATEAPP, a click on the main window, and every modal dialog about to open) mean
+' "no menu should survive this", and since the TrackPopupMenu migration a context menu is
+' a window that can outlive its caller just like a dropdown can.
 ' ========================================================================================
 function killAllPopupMenus() as boolean
     CMenuBar_CloseMenu( HWND_FRMMAIN_MENUBAR )
+    ContextMenu_CloseAll()
+    CTextBox_CloseContextMenu()
     return true
 end function
 
@@ -72,8 +87,10 @@ end sub
 
 ' ========================================================================================
 ' Push the current theme colors/fonts/glyphs/item height into one popup.
+' bForceCompact ignores gConfig.CompactMenus and always uses the compact row height --
+' see the registry comment above for which popups pass it and why.
 ' ========================================================================================
-private sub frmMenuBar_ApplyPopupTheme( byval hPopup as HWND )
+private sub frmMenuBar_ApplyPopupTheme( byval hPopup as HWND, byval bForceCompact as boolean = false )
     dim c as CPOPUPMENU_COLORS
     c.BackColor         = ghPopup.BackColor
     c.ForeColor         = ghPopup.ForeColor
@@ -86,21 +103,59 @@ private sub frmMenuBar_ApplyPopupTheme( byval hPopup as HWND )
     CPopupMenu_SetGlyphs( hPopup, wszIconCheckmark, wszIconChevronRight )
     dim pWindow as CWindow ptr = AfxCWindowPtr( HWND_FRMMAIN )
     if pWindow then
-        dim as long nHeight = iif( gConfig.CompactMenus, MENUITEM_HEIGHT_COMPACT, MENUITEM_HEIGHT )
+        ' Two statements, not an orelse: gConfig.CompactMenus is a LONG, and mixing it
+        ' with a boolean in a short-circuit operator is fbc warning 38.
+        dim as boolean bCompact = bForceCompact
+        if gConfig.CompactMenus then bCompact = true
+        dim as long nHeight = iif( bCompact, MENUITEM_HEIGHT_COMPACT, MENUITEM_HEIGHT )
         CPopupMenu_SetItemHeight( hPopup, pWindow->ScaleY(nHeight) )
     end if
 end sub
 
 
 ' ========================================================================================
-' Create one popup, register it for theme syncs, apply the current theme.
+' Enrol an already-created popup for theme syncs and apply the current theme now. Used
+' for popups this module does not own -- the CTextBox controls each create their own
+' right-click menu, and it has to track a theme change like every other menu.
+'
+' Dead slots are reused rather than appended to: the textbox popups die with their
+' dialogs (frmSearchSymbol, frmHelpViewer) and a host that opens one repeatedly would
+' otherwise grow this list without bound.
 ' ========================================================================================
-private function frmMenuBar_CreatePopup() as HWND
-    dim as HWND hPopup = CPopupMenu_Create( HWND_FRMMAIN )
+sub frmMenuBar_RegisterPopup( byval hPopup as HWND, byval bForceCompact as boolean = false )
+    if hPopup = 0 then exit sub
+    for i as long = 0 to gMenuPopupCount - 1
+        if gMenuPopupList(i) = hPopup then
+            gMenuPopupCompact(i) = bForceCompact
+            frmMenuBar_ApplyPopupTheme( hPopup, bForceCompact )
+            exit sub
+        end if
+    next
+    for i as long = 0 to gMenuPopupCount - 1
+        if IsWindow( gMenuPopupList(i) ) = 0 then
+            gMenuPopupList(i) = hPopup
+            gMenuPopupCompact(i) = bForceCompact
+            frmMenuBar_ApplyPopupTheme( hPopup, bForceCompact )
+            exit sub
+        end if
+    next
     redim preserve gMenuPopupList( gMenuPopupCount )
+    redim preserve gMenuPopupCompact( gMenuPopupCount )
     gMenuPopupList(gMenuPopupCount) = hPopup
+    gMenuPopupCompact(gMenuPopupCount) = bForceCompact
     gMenuPopupCount += 1
-    frmMenuBar_ApplyPopupTheme( hPopup )
+    frmMenuBar_ApplyPopupTheme( hPopup, bForceCompact )
+end sub
+
+
+' ========================================================================================
+' Create one popup, register it for theme syncs, apply the current theme.
+' bForceCompact is passed straight through -- the context menus create themselves this
+' way (frmMenuBar's own dropdowns never do; they follow gConfig.CompactMenus).
+' ========================================================================================
+private function frmMenuBar_CreatePopup( byval bForceCompact as boolean = false ) as HWND
+    dim as HWND hPopup = CPopupMenu_Create( HWND_FRMMAIN )
+    frmMenuBar_RegisterPopup( hPopup, bForceCompact )
     return hPopup
 end function
 
@@ -119,7 +174,8 @@ sub frmMenuBar_SyncTheme()
     CMenuBar_SetColors( HWND_FRMMAIN_MENUBAR, @c )
     CMenuBar_SetFont( HWND_FRMMAIN_MENUBAR, ghFont(GUIFONT_10) )
     for i as long = 0 to gMenuPopupCount - 1
-        if IsWindow( gMenuPopupList(i) ) then frmMenuBar_ApplyPopupTheme( gMenuPopupList(i) )
+        if IsWindow( gMenuPopupList(i) ) then _
+            frmMenuBar_ApplyPopupTheme( gMenuPopupList(i), gMenuPopupCompact(i) )
     next
 end sub
 

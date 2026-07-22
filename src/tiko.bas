@@ -157,6 +157,10 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "frmMainCompile.inc"
 #include once "frmMainDebug.inc"
 #include once "frmDebug.inc"
+' Late on purpose: the context menus' select callbacks call into the OnCommand_*
+' handlers, the panel loaders and frmMenuBar_CreatePopup, so every one of those must
+' already be declared. (Its declarations come in early via modContextMenus.bi.)
+#include once "modContextMenus.inc"
 #include once "frmMain.inc"
 
 

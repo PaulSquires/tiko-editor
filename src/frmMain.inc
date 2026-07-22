@@ -1195,20 +1195,16 @@ function frmMain_OnContextMenu( _
             byval xPos as long, _  
             byval yPos as long _
             ) as LRESULT
-    dim hPopupMenu as HMENU 
-    dim pt         as point 
-    
     dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
     if pDoc = 0 then return 0
 
     SetFocus hWndContext
-    pt.x = xPos
-    pt.y = yPos
-    ScreenToClient hWndContext, @pt
-    hPopupMenu = CreateScintillaContextMenu()
-    GetCursorPos @pt
-    TrackPopupMenu hPopupMenu, 0, pt.x, pt.y, 0, hwnd, 0
-    DestroyMenu hPopupMenu
+
+    ' The editor's right-click menu is a CPopupMenu (modContextMenus.inc). It positions
+    ' itself at the cursor and verifies that the cursor really is over the active
+    ' Scintilla window -- that guard used to live in CreateScintillaContextMenu, which
+    ' signalled "don't show" by returning a null HMENU.
+    ShowScintillaContextMenu()
 
     function = 0
 end Function
@@ -1662,6 +1658,10 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ' Create the main application topmenu menubar
     frmMenuBar_Show( HWND_FRMMAIN )
 
+    ' Create every standalone context menu. After frmMenuBar_Show, which owns the popup
+    ' theme registry these enrol themselves in.
+    ContextMenus_Init()
+
     ' Create the main application top tabs control
     frmTopTabs_Show( HWND_FRMMAIN )
     frmTopTabsMenu_Show( HWND_FRMMAIN ) 
@@ -1762,6 +1762,17 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
         ' accelerators below keep working. Replaces handleMouseTopMenu and
         ' handleKeysTopMenu.
         if CMenuBar_FilterMessage( HWND_FRMMAIN_MENUBAR, @uMsg ) then continue do
+
+        ' The same service for the standalone context menus. It is a SEPARATE call
+        ' because the bar's filter stands down unless the BAR has a dropdown open --
+        ' without this line a context menu would have no keyboard navigation and would
+        ' never dismiss on an outside click.
+        if ContextMenu_FilterMessage( @uMsg ) then continue do
+
+        ' And for the CTextBox controls' own built-in Cut/Copy/Paste menu, which is a
+        ' CPopupMenu too since the TrackPopupMenu migration. One call covers every
+        ' textbox in the app.
+        if CTextBox_FilterMessage( @uMsg ) then continue do
 
         if handleAltKeyMenuBar(uMsg) then continue do
 

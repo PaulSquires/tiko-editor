@@ -399,27 +399,23 @@ end Function
 ' control's class carries CS_DBLCLKS, so that disambiguation is free.
 ' ========================================================================================
 
-' Paint: the form background with a SPLITSIZE band centered in the grab area, matching the
-' editor split bar (frmMain_SplitterPaint).
+' Paint: the Output panel's background across the whole grab area, with a single 1 pixel
+' horizontal divider line centered in it. The line stays 1 physical pixel at every DPI --
+' it is a rule, not a band, so it is deliberately not scaled.
 sub frmOutput_SplitterPaint( byval p as CSPLITTER_PAINTINFO ptr )
     dim as clsDoubleBuffer ptr b = p->b
 
-    b->SetBackColor( ghMain.BackColor )
+    b->SetBackColor( ghOutput.BackColor )
     b->PaintClientRect()
 
-    dim pWindow as CWindow ptr = AfxCWindowPtr( HWND_FRMMAIN )
-    dim as long nBand = SPLITSIZE
-    if pWindow then nBand = pWindow->ScaleY(SPLITSIZE)
-
     dim as RECT rc = p->rcClient
-    dim as long nInset = ((rc.bottom - rc.top) - nBand) \ 2
-    if nInset < 0 then nInset = 0
-    rc.top += nInset
-    rc.bottom -= nInset
+    dim as long nMid = rc.top + ((rc.bottom - rc.top) \ 2)
+    rc.top = nMid
+    rc.bottom = nMid + AfxScaleY(1)
 
-    dim as COLORREF clr = ghEditor.Divider
-    if p->isHot orelse p->isDragging then clr = ghPanel.BackColorHot
-    b->SetBackColor( clr )
+    ' Constant color -- deliberately no isHot/isDragging highlight. The cursor change
+    ' from the control is the only hover feedback this bar gets.
+    b->SetBackColor( ghOutput.Divider )
     b->PaintRect( @rc )
 end sub
 
@@ -691,7 +687,7 @@ function frmOutput_WndProc( _
     case WM_PAINT            
         dim as clsDoubleBuffer b
         b.BeginDoubleBuffer(hwnd)
-        b.SetBackColor( ghOutput.BackColor )
+        b.SetBackColor( ghOutput.BackColorHot )
         b.PaintClientRect()
         b.EndDoubleBuffer()
         return 0
@@ -783,6 +779,13 @@ function frmOutput_Show( byval hwndParent as HWND ) as LRESULT
         CSelectBar_SetPaintPanelCallback( HWND_FRMOUTPUT_SELECTBAR, @frmOutput_SelectBarPaint )
         CSelectBar_SetSelChangeCallback( HWND_FRMOUTPUT_SELECTBAR, @frmOutput_SelectBarSelChange )
         CSelectBar_SetMessageCallback( HWND_FRMOUTPUT_SELECTBAR, @frmOutput_SelectBarMessage )
+        CSelectBar_SetIndicator( HWND_FRMOUTPUT_SELECTBAR, 1, 12 )
+        
+        dim as CSELECTBAR_COLORS SelectBarColors 
+        CSelectBar_GetColors( HWND_FRMOUTPUT_SELECTBAR, @SelectBarColors )
+        SelectBarColors.BackColor = ghOutput.BackColorHot 
+        CSelectBar_SetColors( HWND_FRMOUTPUT_SELECTBAR, @SelectBarColors )
+
         ' Panels are added ONCE, in the order the config file's saved index refers to (the
         ' OUTPUT_TAB_* constants). The captions are pushed by frmOutput_SetTabCaptions,
         ' which also re-pushes them after a language change.
@@ -803,6 +806,11 @@ function frmOutput_Show( byval hwndParent as HWND ) as LRESULT
         CIconPanel_AddItem( HWND_FRMOUTPUT_CLOSE, IP_KIND_COMMAND, wszIconClose, IDC_FRMOUTPUT_BTNCLOSE )
         CIconPanel_SetTooltipText( HWND_FRMOUTPUT_CLOSE, 0, L(161, "Close") )
 
+        dim as CICONPANEL_COLORS IconPanelColors 
+        CIconPanel_GetColors( HWND_FRMOUTPUT_CLOSE, @IconPanelColors )
+        IconPanelColors.BackColor = ghOutput.BackColorHot 
+        CIconPanel_SetColors( HWND_FRMOUTPUT_CLOSE, @IconPanelColors )
+
     ' Compiler Log File: multiline read-only CTextBox (borderless; the 20px indent the
     ' old code hacked in with EM_SETRECT is now a plain left margin). Wheel scrolling
     ' and the custom vscroll thumb both ride the control's scroll API.
@@ -813,6 +821,7 @@ function frmOutput_Show( byval hwndParent as HWND ) as LRESULT
         CTextBox_SetReadOnly( hCtl, true )
         CTextBox_SetScrollChangedCallback( hCtl, @frmOutput_TextBoxScrollChanged )
         CTextBox_SetMenuText( hCtl, L(17,"Cut"), L(18,"Copy"), L(19,"Paste"), L(40,"Select All") )
+        ThemeTextBoxContextMenu( hCtl )
 
     ' Notes: multiline editable CTextBox. User edits are saved through the
     ' ChangeCallback (programmatic SetText -- project switches -- stays silent).
@@ -823,6 +832,7 @@ function frmOutput_Show( byval hwndParent as HWND ) as LRESULT
         CTextBox_SetChangeCallback( hCtl, @frmOutput_NotesChanged )
         CTextBox_SetScrollChangedCallback( hCtl, @frmOutput_TextBoxScrollChanged )
         CTextBox_SetMenuText( hCtl, L(17,"Cut"), L(18,"Copy"), L(19,"Paste"), L(40,"Select All") )
+        ThemeTextBoxContextMenu( hCtl )
         frmOutput_ShowNotes()
 
     ' The three listview panes: CListBox instances with a CColumnHeader band. All three

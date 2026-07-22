@@ -15,12 +15,7 @@
 
 declare function frmMain_BuildAcceleratorTable( byval pWindow as CWindow ptr ) as long
 declare function frmMain_ChangeTopMenuStates( byval nBarID as long ) as long
-declare function CreateStatusBarBuildConfigContextMenu() as HMENU
-declare function CreateTabsInfoFileTypeContextMenu() as HMENU
-declare function CreateStatusBarFileEncodingContextMenu() as HMENU
-declare function CreateTopTabCtlContextMenu( byval idx as long ) as HMENU
-declare function CreateExplorerContextMenu( byval pDoc as clsDocument ptr ) as HMENU
-declare function CreateScintillaContextMenu() as HMENU
-declare function CreateStatusBarSpacesContextMenu() as HMENU
-declare function CreateStatusBarLineEndingsContextMenu() as HMENU
+
+' The Create*ContextMenu builders that used to be declared here are gone: the standalone
+' popup menus run on CPopupMenu now and are declared in modContextMenus.bi.
 

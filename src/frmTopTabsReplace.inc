@@ -291,6 +291,7 @@ function frmTopTabsReplace_Show( byval hwndParent as HWND ) as LRESULT
     CTextBox_SetCueBannerColor( hCtlReplace, ghTopTabs.ForeColor )
     CTextBox_SetFocusCallback( hCtlReplace, @frmTopTabsReplace_TextBoxFocus )
     CTextBox_SetText( hCtlReplace, gFind.txtReplace )            ' carried-over replace term
+    ThemeTextBoxContextMenu( hCtlReplace )
 
     function = 0
     

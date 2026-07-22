@@ -429,6 +429,7 @@ function frmSearchSymbol_Show( byval hwndParent as HWND ) as LRESULT
     CTextBox_SetChangeCallback( hCtlFind, @frmSearchSymbol_TextBoxChange )
     CTextBox_SetFocusCallback( hCtlFind, @frmSearchSymbol_TextBoxFocus )
     CTextBox_SetMessageCallback( hCtlFind, @frmSearchSymbol_TextBoxMessage )
+    ThemeTextBoxContextMenu( hCtlFind )
 
 
     dim as HWND hCtrlList = CListBox_Create( HWND_FRMSEARCHSYMBOL, IDC_FRMSEARCHSYMBOL_LISTBOX )

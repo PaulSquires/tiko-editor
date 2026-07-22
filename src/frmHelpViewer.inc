@@ -474,6 +474,7 @@ function frmHelpViewer_Show( byval hWndParent as HWND ) as LRESULT
     CTextBox_SetOuterBackColor( HWND_FRMHELPVIEWER_RIGHTPANEL, ghEditor.BackColorText )
     CTextBox_SetScrollChangedCallback( HWND_FRMHELPVIEWER_RIGHTPANEL, @frmHelpViewer_TextScrollChanged )
     CTextBox_SetMenuText( HWND_FRMHELPVIEWER_RIGHTPANEL, L(17,"Cut"), L(18,"Copy"), L(19,"Paste"), L(40,"Select All") )
+    ThemeTextBoxContextMenu( HWND_FRMHELPVIEWER_RIGHTPANEL )
 
     ' Help-text scrollbar, driven in LINE units through the CTextBox scroll API
     ' (ScrollChangedCallback -> GetVScrollInfo -> SetRange; ScrollCallback -> ScrollToLine).

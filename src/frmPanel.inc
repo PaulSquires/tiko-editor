@@ -35,27 +35,27 @@ function frmPanel_PositionWindows() as LRESULT
     dim as RECT rc: GetClientRect( HWND_FRMPANEL, @rc )
     
     dim as long nPanelMenuHeight = pWindow->ScaleY(TOPTABS_HEIGHT)
-    dim as long nPanelHeaderHeight = pWindow->ScaleY(46)   ' EXPLORER, FUNCTIONS, BOOKMARKS
+    dim as long nPanelHeaderHeight = pWindow->ScaleY(45)   ' EXPLORER, FUNCTIONS, BOOKMARKS
 
     ' show/hide of the child window is done separately in order to prevent blank client area from 
     ' painting before the lists are loaded. Allow a 3 pixel right border between listbox and
     ' form edge in order to allow for panel resizing. 
     dim as long nLeft = 0
-    if gConfig.ExplorerPositionRight then nLeft = pWindow->ScaleX(3)  ' allow for grab
     
     dim as long nTop = 0
     dim as long nWidth = rc.right - rc.Left
-    dim as long nHeight = nPanelMenuHeight
+    dim as long nHeight = nPanelMenuHeight 
 
     nTop = rc.top + nPanelMenuHeight + nPanelHeaderHeight
-    nWidth = nWidth - pWindow->ScaleX(3)   
+
     nHeight = rc.bottom - nTop
 
     ' Position the panel menu
     ' Give it some left margin 
     dim as long nMargin = pWindow->ScaleX(10)
     SetWindowPos( HWND_FRMPANEL_MENU, 0, _
-            nLeft + nMargin, 0, nWidth - (nMargin * 2), nPanelMenuHeight, SWP_SHOWWINDOW or SWP_NOZORDER )
+            nLeft + nMargin, 0, nWidth - (nMargin * 2), _
+            nPanelMenuHeight - pWindow->ScaleY(1), SWP_SHOWWINDOW or SWP_NOZORDER )
     
     SetWindowPos( HWND_FRMEXPLORER, 0, nLeft, nTop, nWidth, nHeight, SWP_NOZORDER )
     SetWindowPos( HWND_FRMBOOKMARKS, 0, nLeft, nTop, nWidth, nHeight, SWP_NOZORDER )
@@ -84,7 +84,6 @@ function frmPanel_PositionWindows() as LRESULT
             ShowWindow( HWND_FRMFUNCTIONS, SW_SHOW )
 
     end select
-
 
     ' Calculate the divider line
     nWidth = rc.right - rc.Left
@@ -176,14 +175,9 @@ function frmPanel_OnPaint( byval hwnd as HWND ) as LRESULT
     b.PaintText( wszIconMoreActions, @gPanel.rcActionMenu, DT_CENTER )
 
     ' Paint a separator line at the top of the window
-    b.SetPenColor( ghPanel.BackColorHot )
-    b.PaintLine( 2, gPanel.rcDividerLine.left, gPanel.rcDividerLine.top, _
-                    gPanel.rcDividerLine.right, gPanel.rcDividerLine.bottom )
-
-    ' Right side vertical border line
     b.SetPenColor( ghEditor.Divider )
-    b.PaintLine( 1, b.rcClient.right, b.rcClient.top, _
-                    b.rcClient.right, b.rcClient.bottom )
+    b.PaintLine( 1, gPanel.rcDividerLine.left, gPanel.rcDividerLine.top, _
+                    gPanel.rcDividerLine.right, gPanel.rcDividerLine.bottom )
 
     b.EndDoubleBuffer()
 
@@ -204,27 +198,24 @@ end function
 ' conversion to and from the panel's width mirrors.
 ' ========================================================================================
 
-' Paint: form background with a SPLITSIZE band centered in the grab area, matching the
-' editor split and Output panel bars.
+' Paint: the Explorer panel's background across the whole grab area, with a single 1 pixel
+' vertical divider line centered in it (the bar is vertical, so this is the transposed twin
+' of frmOutput_SplitterPaint). The line stays 1 physical pixel at every DPI -- it is a rule,
+' not a band, so it is deliberately not scaled.
 sub frmPanel_SplitterPaint( byval p as CSPLITTER_PAINTINFO ptr )
     dim as clsDoubleBuffer ptr b = p->b
 
-    b->SetBackColor( ghMain.BackColor )
+    b->SetBackColor( ghPanel.BackColor )
     b->PaintClientRect()
 
-    dim pWindow as CWindow ptr = AfxCWindowPtr( HWND_FRMMAIN )
-    dim as long nBand = SPLITSIZE
-    if pWindow then nBand = pWindow->ScaleX(SPLITSIZE)
-
     dim as RECT rc = p->rcClient
-    dim as long nInset = ((rc.right - rc.left) - nBand) \ 2
-    if nInset < 0 then nInset = 0
-    rc.left += nInset
-    rc.right -= nInset
+    dim as long nMid = rc.left + ((rc.right - rc.left) \ 2)
+    rc.left = nMid
+    rc.right = nMid + 1
 
-    dim as COLORREF clr = ghEditor.Divider
-    if p->isHot orelse p->isDragging then clr = ghPanel.BackColorHot
-    b->SetBackColor( clr )
+    ' Constant color -- deliberately no isHot/isDragging highlight. The cursor change
+    ' from the control is the only hover feedback this bar gets.
+    b->SetBackColor( ghEditor.Divider )
     b->PaintRect( @rc )
 end sub
 
@@ -324,21 +315,12 @@ function frmPanel_WndProc( _
 
     case WM_LBUTTONUP
         if isMouseOverRECT( hwnd, gPanel.rcActionMenu ) then
-            dim as HMENU hPopupMenu 
-            select case gPanel.hActiveChild
-            case HWND_FRMEXPLORER
-                hPopupMenu = CreateExplorerActionButtonContextMenu()
-            case HWND_FRMFUNCTIONS
-                hPopupMenu = CreateFunctionsActionButtonContextMenu()
-            case HWND_FRMBOOKMARKS
-                hPopupMenu = CreateBookmarksActionButtonContextMenu()
-            end select
-            ' Popup the menu to the bottom of the Action Button (right aligned)
+            ' Popup the menu to the bottom of the Action Button (right aligned). Which
+            ' of the three pane menus appears follows gPanel.hActiveChild, decided inside
+            ' ShowPanelActionContextMenu (modContextMenus.inc).
             dim as RECT rc = gPanel.rcActionMenu   ' work with a copy
             MapWindowpoints( HWND_FRMPANEL, HWND_DESKTOP, cast(point ptr, @rc), 2 )
-            TrackPopupMenu( hPopUpMenu, TPM_RIGHTALIGN, _
-                                rc.right, rc.bottom, 0, HWND_FRMMAIN, byval null)
-            DestroyMenu( hPopUpMenu )
+            ShowPanelActionContextMenu( rc )
             Return true   ' prevent further processing that leads to WM_CONTEXTMENU
         end if
         

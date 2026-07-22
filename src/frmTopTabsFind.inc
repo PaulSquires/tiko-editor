@@ -423,7 +423,8 @@ function frmTopTabsFind_Show( byval hwndParent as HWND ) as LRESULT
     CTextBox_SetCueBannerColor( hCtlFind, ghTopTabs.ForeColor )
     CTextBox_SetChangeCallback( hCtlFind, @frmTopTabsFind_TextBoxChange )
     CTextBox_SetFocusCallback( hCtlFind, @frmTopTabsFind_TextBoxFocus )
-    
+    ThemeTextBoxContextMenu( hCtlFind )
+
     function = 0
     
 end function

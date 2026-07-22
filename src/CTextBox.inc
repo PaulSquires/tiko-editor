@@ -24,6 +24,121 @@ end function
 
 
 ' ========================================================================================
+' THE BUILT-IN CONTEXT MENU
+'
+' Replaces the CreatePopupMenu/TrackPopupMenu block that used to sit inline in the
+' RichEdit subclass. The visible win is a themeable menu that matches the rest of the
+' family; the structural cost is that CPopupMenu is NOT modal. TrackPopupMenu returned
+' the chosen id, so cut/copy/paste ran in the same stack frame as WM_CONTEXTMENU; now
+' Show returns immediately and the command runs later, from the select callback.
+'
+' The callback signature carries no user data, so the target RichEdit is parked here at
+' show time. Safe because CPopupMenu enforces ONE open chain per application: a second
+' textbox's menu closes the first, and a closed menu never fires a select.
+' ========================================================================================
+dim shared as HWND gTB_ContextMenuTarget   ' RichEdit whose menu is currently open
+
+' Item ids. Local to this menu (they never leave the control), 1-based because 0 is
+' CPopupMenu's separator marker.
+#define CTEXTBOX_IDM_CUT         1
+#define CTEXTBOX_IDM_COPY        2
+#define CTEXTBOX_IDM_PASTE       3
+#define CTEXTBOX_IDM_SELECTALL   4
+
+private sub CTextBox_ContextMenuSelect( byval hPopup as HWND, byval id as long )
+    dim as HWND hWin = gTB_ContextMenuTarget
+    if hWin = 0 then exit sub
+    if IsWindow( hWin ) = 0 then exit sub
+    select case id
+        case CTEXTBOX_IDM_CUT:       SendMessage( hWin, WM_CUT, 0, 0 )
+        case CTEXTBOX_IDM_COPY:      SendMessage( hWin, WM_COPY, 0, 0 )
+        case CTEXTBOX_IDM_PASTE:     SendMessage( hWin, WM_PASTE, 0, 0 )
+        case CTEXTBOX_IDM_SELECTALL: SendMessage( hWin, EM_SETSEL, 0, -1 )
+    end select
+end sub
+
+' Rebuild from the current selection / clipboard / read-only state and show at the
+' cursor (which also covers the keyboard menu key well enough). An empty menu -- nothing
+' selected, nothing to paste, no text -- shows nothing at all, as before.
+private sub CTextBox_ShowContextMenu( byval pTextBox as CTEXTBOX ptr )
+    if pTextBox = null then exit sub
+    if pTextBox->hContextMenu = 0 then exit sub
+
+    dim as HWND hWin = pTextBox->hRichEdit
+    dim as HWND hPopup = pTextBox->hContextMenu
+    dim as boolean bReadOnly = ( (GetWindowLongPtr(hWin, GWL_STYLE) and ES_READONLY) <> 0 )
+    dim as DWSTRING wszSelText = RichEdit_GetSelText( hWin )
+    dim as boolean bHasSel = (len(wszSelText) > 0)
+
+    CPopupMenu_Clear( hPopup )
+
+    if bHasSel andalso (bReadOnly = false) then
+        CPopupMenu_AddItem( hPopup, CTEXTBOX_IDM_CUT, pTextBox->wszMenuCut )
+    end if
+    if bHasSel then
+        CPopupMenu_AddItem( hPopup, CTEXTBOX_IDM_COPY, pTextBox->wszMenuCopy )
+    end if
+    if (RichEdit_CanPaste(hWin, 0) <> 0) andalso (bReadOnly = false) then
+        if CPopupMenu_GetItemCount(hPopup) > 0 then CPopupMenu_AddSeparator( hPopup )
+        CPopupMenu_AddItem( hPopup, CTEXTBOX_IDM_PASTE, pTextBox->wszMenuPaste )
+    end if
+    ' Select All: offered whenever the control holds any text (read-only included --
+    ' selecting is always allowed).
+    if GetWindowTextLength(hWin) > 0 then
+        if CPopupMenu_GetItemCount(hPopup) > 0 then CPopupMenu_AddSeparator( hPopup )
+        CPopupMenu_AddItem( hPopup, CTEXTBOX_IDM_SELECTALL, pTextBox->wszMenuSelectAll )
+    end if
+
+    if CPopupMenu_GetItemCount(hPopup) = 0 then exit sub
+
+    dim as POINT pt
+    GetCursorPos( @pt )
+    gTB_ContextMenuTarget = hWin
+    CPopupMenu_Show( hPopup, pt.x, pt.y )
+end sub
+
+
+' ========================================================================================
+' The context menu's public surface. See the contract block in CTextBox.bi -- the filter
+' is an OBLIGATION on the host's message pump, not an optional extra.
+' ========================================================================================
+function CTextBox_GetContextMenu( byval hTextBoxControl as HWND ) as HWND
+    dim as CTEXTBOX ptr pTextBox = GetTextBoxPointer(hTextBoxControl)
+    if pTextBox = null then return 0
+    return pTextBox->hContextMenu
+end function
+
+' Resolve the popup of whichever textbox last opened its menu (0 if none). Both the
+' filter and the close path need it.
+private function CTextBox_OpenContextMenu() as HWND
+    if gTB_ContextMenuTarget = 0 then return 0
+    if IsWindow( gTB_ContextMenuTarget ) = 0 then
+        gTB_ContextMenuTarget = 0
+        return 0
+    end if
+    dim as CTEXTBOX ptr pTextBox = GetTextBoxPointer( GetParent(gTB_ContextMenuTarget) )
+    if pTextBox = null then return 0
+    return pTextBox->hContextMenu
+end function
+
+function CTextBox_FilterMessage( byval pMsg as MSG ptr ) as boolean
+    ' One call serves every CTextBox: only one chain can be open, and the last-shown
+    ' target identifies it. CPopupMenu_FilterMessage is self-guarding -- it stands down
+    ' unless the handle really is in the currently open chain -- so a stale handle here
+    ' costs one comparison and nothing else.
+    dim as HWND hPopup = CTextBox_OpenContextMenu()
+    if hPopup = 0 then return false
+    return CPopupMenu_FilterMessage( hPopup, pMsg )
+end function
+
+sub CTextBox_CloseContextMenu()
+    dim as HWND hPopup = CTextBox_OpenContextMenu()
+    if hPopup then CPopupMenu_CloseChain( hPopup )
+    gTB_ContextMenuTarget = 0
+end sub
+
+
+' ========================================================================================
 ' Convert the caller's HFONT (or the stock DEFAULT_GUI_FONT) plus ForeColor into a
 ' CHARFORMATW and apply it to the WHOLE buffer. This is the only place character
 ' formatting is produced; SCF_ALL plus TM_PLAINTEXT mode keeps the entire buffer in
@@ -1038,45 +1153,7 @@ function CTextBoxRichEdit_SubclassProc ( _
 
         case WM_CONTEXTMENU
             if pTextBox = null then exit select
-            dim as boolean bReadOnly = ( (GetWindowLongPtr(hWin, GWL_STYLE) and ES_READONLY) <> 0 )
-            dim as DWSTRING wszSelText = RichEdit_GetSelText( hWin )
-            dim as HMENU hPopupMenu = CreatePopupMenu()
-            if (len(wszSelText) > 0) andalso (bReadOnly = false) then
-                AppendMenu( hPopupMenu, MF_ENABLED, 1, pTextBox->wszMenuCut.vptr )
-            end if
-            if len(wszSelText) > 0 then
-                AppendMenu( hPopupMenu, MF_ENABLED, 2, pTextBox->wszMenuCopy.vptr )
-            end if
-            if (RichEdit_CanPaste(hWin, 0) <> 0) andalso (bReadOnly = false) then
-                if GetMenuItemCount(hPopupMenu) > 0 then
-                    AppendMenu( hPopupMenu, MF_SEPARATOR, 0, "" )
-                end if
-                AppendMenu( hPopupMenu, MF_ENABLED, 3, pTextBox->wszMenuPaste.vptr )
-            end if
-            ' Select All: offered whenever the control holds any text (read-only
-            ' included -- selecting is always allowed).
-            if GetWindowTextLength(hWin) > 0 then
-                if GetMenuItemCount(hPopupMenu) > 0 then
-                    AppendMenu( hPopupMenu, MF_SEPARATOR, 0, "" )
-                end if
-                AppendMenu( hPopupMenu, MF_ENABLED, 4, pTextBox->wszMenuSelectAll.vptr )
-            end if
-            if GetMenuItemCount(hPopupMenu) = 0 then
-                DestroyMenu( hPopupMenu )
-                return 0
-            end if
-            ' Track at the cursor (also covers the keyboard menu key well enough).
-            dim as POINT pt
-            GetCursorPos( @pt )
-            dim as long nResult = TrackPopupMenu( hPopupMenu, TPM_RETURNCMD or TPM_NONOTIFY, _
-                                                  pt.x, pt.y, 0, hWin, byval null )
-            select case nResult
-                case 1: SendMessage( hWin, WM_CUT, 0, 0 )
-                case 2: SendMessage( hWin, WM_COPY, 0, 0 )
-                case 3: SendMessage( hWin, WM_PASTE, 0, 0 )
-                case 4: SendMessage( hWin, EM_SETSEL, 0, -1 )
-            end select
-            DestroyMenu( hPopupMenu )
+            CTextBox_ShowContextMenu( pTextBox )
             return 0
 
         case WM_DESTROY
@@ -1214,6 +1291,17 @@ function CTextBox_WndProc( _
             if pTextBox then return SendMessage( pTextBox->hRichEdit, uMsg, wParam, lParam )
 
         case WM_NCDESTROY
+            if pTextBox then
+                ' The context menu is a WS_POPUP window, not a child, so it is not
+                ' destroyed with this control's window tree -- do it explicitly. If its
+                ' chain is open, clear the shared target first so a late filter call
+                ' cannot reach a dead window.
+                if pTextBox->hContextMenu then
+                    if gTB_ContextMenuTarget = pTextBox->hRichEdit then gTB_ContextMenuTarget = 0
+                    DestroyWindow( pTextBox->hContextMenu )
+                    pTextBox->hContextMenu = 0
+                end if
+            end if
             ' Delete the stored textbox data pointer
             if pTextBox then delete(pTextBox)
             ' delete the allocated memory for window
@@ -1257,6 +1345,13 @@ function CTextBox_Create( byval hWndParent as HWND, byval CtrlID as integer, byv
     pTextBox->wszMenuCopy = "Copy"
     pTextBox->wszMenuPaste = "Paste"
     pTextBox->wszMenuSelectAll = "Select All"
+
+    ' The right-click menu, created up front rather than on first use so a host can style
+    ' it (CTextBox_GetContextMenu) at any time after Create. Its owner is the top-level
+    ' window: CPopupMenu uses that for z-order and for its foreground watch, so passing
+    ' this child container instead would break dismissal on alt-tab.
+    pTextBox->hContextMenu = CPopupMenu_Create( GetAncestor( hForm, GA_ROOT ) )
+    CPopupMenu_SetSelectCallback( pTextBox->hContextMenu, @CTextBox_ContextMenuSelect )
 
     ' Store the new pointer into the user data area of the container window
     pWindow->UserData(0) = cast(LONG_PTR, pTextBox)

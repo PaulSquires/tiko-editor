@@ -199,11 +199,7 @@ function frmTopTabs_MessageCallback( byval m as CTabBar_MESSAGEINFO ptr ) as boo
             ' Create the popup menu
             gTTabCtl.SetFocusTab(m->idx)
             if gTTabCtl.IsValidTab(m->idx) = false then return false
-            dim as point pt
-            dim as HMENU hPopupMenu = CreateTopTabCtlContextMenu(m->idx)
-            GetCursorPos @pt
-            TrackPopupMenu( hPopUpMenu, 0, pt.x, pt.y, 0, HWND_FRMMAIN, byval Null )
-            DestroyMenu hPopUpMenu
+            ShowTopTabCtlContextMenu( m->idx )
             return true   ' prevent further processing that leads to WM_CONTEXTMENU
         
     end select

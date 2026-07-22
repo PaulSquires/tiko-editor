@@ -108,67 +108,30 @@ function frmMain_OnCommand( _
             OptionsDialogLastOpened = 3
             frmOptions_Show( hwnd )
             
+        ' The five statusbar / tab-info popups. Each Show* rebuilds its items from
+        ' current state and returns immediately -- the menus are CPopupMenu controls, not
+        ' TrackPopupMenu, so what used to be the "act on the result" tail of these cases
+        ' now lives in the popups' select callbacks (modContextMenus.inc). Two of them
+        ' HAD to move: IDM_BUILDCONFIG_POPUP and IDM_SPACES are both the command that
+        ' opens the menu AND the base of their own item ids, so routing those results
+        ' back through WM_COMMAND would re-open the menu.
         case IDM_BUILDCONFIG_POPUP
-            dim as HMENU hPopupMenu = CreateStatusBarBuildConfigContextMenu()
-            dim as point pt: GetCursorPos @pt
-            dim as long idMenu = TrackPopupMenu(hPopUpMenu, TPM_RETURNCMD, pt.x, pt.y, 0, hwnd, byval null)
-            DestroyMenu hPopUpMenu
-            if (idMenu >= IDM_BUILDCONFIG_POPUP) andalso _
-                (idMenu <= IDM_BUILDCONFIG_POPUP + ubound(gConfig.Builds)) then
-                ' Set the active project or the active document to the selected build
-                for i as long = lbound(gConfig.Builds) to ubound(gConfig.Builds)
-                    if gConfig.Builds(i).idMenu = idMenu then 
-                        If gApp.IsProjectActive then
-                            gApp.ProjectBuild = gConfig.Builds(i).Id
-                        else
-                            dim pDocMain as clsDocument Ptr 
-                            pDocMain = gTTabCtl.GetActiveDocumentPtr()
-                            if pDocMain then pDocMain->DocumentBuild = gConfig.Builds(i).Id
-                            gConfig.CompilerBuild = gConfig.Builds(i).Id
-                        end if
-                        frmMain_SetStatusbar
-                        gConfig.SaveConfigFile
-                        exit for
-                    end if
-                next
-            end if
-            return 0   
-  
+            ShowBuildConfigContextMenu()
+            return 0
+
         case IDM_PROJECTFILETYPE
-            dim as HMENU hPopupMenu = CreateTabsInfoFileTypeContextMenu()
-            dim as point pt: GetCursorPos @pt
-            TrackPopupMenu(hPopUpMenu, 0, pt.x, pt.y, 0, hwnd, byval null)
-            DestroyMenu hPopUpMenu
+            ShowTabsInfoFileTypeContextMenu()
 
         case IDM_FILEENCODING
-            dim as HMENU hPopupMenu = CreateStatusBarFileEncodingContextMenu()
-            dim as point pt: GetCursorPos @pt
-            TrackPopupMenu(hPopUpMenu, TPM_RIGHTALIGN, pt.x, pt.y, 0, hwnd, byval null)
-            DestroyMenu hPopUpMenu
-        
+            ShowFileEncodingContextMenu()
+
         case IDM_LINEENDINGS
-            dim as HMENU hPopupMenu = CreateStatusBarLineEndingsContextMenu()
-            dim as point pt: GetCursorPos @pt
-            TrackPopupMenu(hPopUpMenu, TPM_RIGHTALIGN, pt.x, pt.y, 0, hwnd, byval null)
-            DestroyMenu hPopUpMenu
+            ShowLineEndingsContextMenu()
 
         case IDM_SPACES
-            dim as HMENU hPopupMenu = CreateStatusBarSpacesContextMenu()
-            dim as point pt: GetCursorPos @pt
-            dim as long idMenu = TrackPopupMenu(hPopUpMenu, TPM_RETURNCMD, pt.x, pt.y, 0, hwnd, byval null)
-            DestroyMenu hPopUpMenu
-            if (idMenu >= IDM_SPACES) andalso (idMenu <= IDM_SPACES + 8) then
-                gConfig.TabSize = idMenu - IDM_SPACES
-                dim as DWSTRING wszText = "Spaces: " & gConfig.TabSize
-                CStatusBar_SetText( HWND_FRMMAIN_STATUSBAR, SPACES_PANEL, wszText )
-                dim pDoc as clsDocument ptr = gApp.pDocList
-                do until pDoc = 0
-                    pDoc->ApplyProperties
-                    pDoc = pDoc->pDocNext
-                loop
-                return 0   
-            end if
-    
+            ShowSpacesContextMenu()
+            return 0
+
         case IDM_CLOSEPANEL
             ShowWindow( HWND_FRMPANEL, SW_HIDE )
             frmMain_PositionWindows()
