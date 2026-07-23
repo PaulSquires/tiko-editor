@@ -838,6 +838,11 @@ sub clsDoubleBuffer_RunSelfTest( byval hwnd as HWND )
         print "=== 0 of 1 assertions passed ==="
         exit sub
     end if
+    ' The same CWindow PaintLine scales through, so the pen-thickness assertions can derive
+    ' their expected pixel spans exactly the way the code does -- ScaleY() stored in a LONG,
+    ' then the pen centred at pos - (penWidth \ 2) -- rather than hardcoding 96-DPI pixels
+    ' that fail on any DPI-aware process at a non-96 scale (see Learnings.md).
+    dim as CWindow ptr pWin = AfxCWindowPtr( hwnd )
 
     dim as HDC hScreen = GetDC( null )
     gDC  = CreateCompatibleDC( hScreen )
@@ -926,7 +931,12 @@ sub clsDoubleBuffer_RunSelfTest( byval hwnd as HWND )
     RowSpan( 8, a, b2 )
     Chk( "HLine w1: endpoint exclusive", (a = 10) andalso (b2 = 39), "x " & a & ".." & b2 )
     ColSpan( 20, a, b2 )
-    Chk( "HLine w1: exactly one row thick", (a = 8) andalso (b2 = 8), "y " & a & ".." & b2 )
+    scope
+        dim as long pw = pWin->ScaleY(1) : if pw < 1 then pw = 1
+        dim as long e1 = 8 - (pw \ 2) : dim as long e2 = e1 + pw - 1
+        Chk( "HLine w1: exactly the scaled pen thickness, no AA bleed", _
+             (a = e1) andalso (b2 = e2), "y " & a & ".." & b2 & "  expect " & e1 & ".." & e2 )
+    end scope
     Chk( "HLine w1: NOT antialiased", (ToneCount( 8, 6, 42, 10 ) = 2), _
          "distinct tones = " & ToneCount( 8, 6, 42, 10 ) )
 
@@ -939,7 +949,12 @@ sub clsDoubleBuffer_RunSelfTest( byval hwnd as HWND )
         bb.EndDoubleBuffer()
     end scope
     ColSpan( 20, a, b2 )
-    Chk( "HLine w2: pen centred like GDI", (a = 7) andalso (b2 = 8), "y " & a & ".." & b2 )
+    scope
+        dim as long pw = pWin->ScaleY(2) : if pw < 1 then pw = 1
+        dim as long e1 = 8 - (pw \ 2) : dim as long e2 = e1 + pw - 1
+        Chk( "HLine w2: pen centred like GDI", _
+             (a = e1) andalso (b2 = e2), "y " & a & ".." & b2 & "  expect " & e1 & ".." & e2 )
+    end scope
 
     ClearSurf()
     scope
@@ -952,7 +967,12 @@ sub clsDoubleBuffer_RunSelfTest( byval hwnd as HWND )
     ColSpan( 20, a, b2 )
     Chk( "VLine w1: endpoint exclusive", (a = 5) andalso (b2 = 29), "y " & a & ".." & b2 )
     RowSpan( 10, a, b2 )
-    Chk( "VLine w1: exactly one column thick", (a = 20) andalso (b2 = 20), "x " & a & ".." & b2 )
+    scope
+        dim as long pw = pWin->ScaleY(1) : if pw < 1 then pw = 1
+        dim as long e1 = 20 - (pw \ 2) : dim as long e2 = e1 + pw - 1
+        Chk( "VLine w1: exactly the scaled pen thickness, no AA bleed", _
+             (a = e1) andalso (b2 = e2), "x " & a & ".." & b2 & "  expect " & e1 & ".." & e2 )
+    end scope
 
     ' --- Interleave: GDI+ batches, GDI does not. A shape drawn through GDI+ must still
     '     be on the surface after a GDI text call follows it. Without the flush in

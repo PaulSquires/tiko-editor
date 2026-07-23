@@ -216,11 +216,13 @@ function frmOutput_ShowHideOutputControls( byval hwnd as HWND ) as LRESULT
             hCtrl = hLV
 
         case 4    ' Notes
-            ' (Left margin lives in the CTextBox now; focusing the container focuses
-            ' the RichEdit child.)
+            ' Do NOT SetFocus the notes textbox here. This routine is pure
+            ' show/hide/layout and is also reached from frmOutput_PositionWindows, which
+            ' runs on every background-scan refresh -- focusing here yanked the caret off
+            ' the editor each time typing paused (the debounce timer fires a scan). The
+            ' focus-on-switch now lives in the user-driven frmOutput_SelectBarSelChange.
             hTextBox = GetDlgItem(hwnd, IDC_FRMOUTPUT_TXTNOTES)
             hCtrl = hTextBox
-            SetFocus( hTextBox )
 
     end select
     
@@ -590,6 +592,13 @@ end sub
 sub frmOutput_SelectBarSelChange( byval hCtl as HWND, byval idxOld as long, byval idxNew as long )
     frmOutput_RestorePanel()
     frmOutput_ShowHideOutputControls( HWND_FRMOUTPUT )
+    ' Focus the notes textbox only on a genuine USER switch to the Notes tab. SelChange
+    ' fires on user action only (programmatic SetCurSel is silent), so this cannot be
+    ' triggered by a scan refresh -- which is exactly why the SetFocus was moved out of
+    ' frmOutput_ShowHideOutputControls and to here.
+    if idxNew = OUTPUT_TAB_NOTES then
+        SetFocus( GetDlgItem( HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTNOTES ) )
+    end if
 end sub
 
 
