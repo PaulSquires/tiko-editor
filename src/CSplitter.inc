@@ -108,7 +108,7 @@ function CSplitter_OnPaint( byval hwnd as HWND ) as LRESULT
     dim as CSPLITTER ptr pSpl = GetSplitterPointer(hwnd)
     if pSpl = 0 then return 0
 
-    dim as clsDoubleBuffer b
+    dim as CBufferPaint b
     b.BeginDoubleBuffer(hwnd)
 
     dim as CSPLITTER_PAINTINFO p

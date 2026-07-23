@@ -14,46 +14,51 @@
 #pragma once
 
 ' ========================================================================================
-' RENDERING BACKEND
+' RENDERING
 ' ----------------------------------------------------------------------------------------
-' Comment the following line out to fall back to the original all-GDI renderer. Both
-' backends implement the SAME public surface, so the identical source tree builds either
-' one -- that is what makes an A/B screenshot diff a one-variable experiment, and what
-' makes rolling back a one-line edit instead of a revert.
-'
-' What GDI+ is used for, and what it is NOT used for:
-'   GEOMETRY (fills, rounded rects, borders, lines)  -> GDI+, antialiased where it helps.
-'   TEXT (PaintText / PaintChar)                     -> still GDI DrawText. Deliberate.
+' GEOMETRY (fills, rounded rects, borders, ellipses, lines) -> GDI+, antialiased where it
+'                                                              helps.
+' TEXT     (PaintText / PaintChar)                          -> GDI DrawText. Deliberate.
 '
 ' Text stays on GDI because GDI+ measures and lays out text differently: every
 ' GetTextExtentPoint32W / GetTextMetricsW site in the control family's LayoutItems would
 ' have to convert to MeasureString in lockstep or text clips, and the icon glyphs
-' (Segoe Fluent Icons) would shift. That is a separate project on its own branch.
+' (Segoe Fluent Icons) would shift. That is a separate project of its own.
+'
+' Because the two APIs share one HDC and only one of them batches, every GDI call the class
+' makes is preceded by a flush -- see EnsureGdiReady. That is the whole cost of the split,
+' and it is paid in here so no control or host ever has to think about it.
+'
+' HISTORY, so the absence is not mistaken for an oversight: this class carried BOTH a GDI
+' and a GDI+ renderer behind a `#define DBUF_GDIPLUS`, as clsDoubleBuffer. The dual backend
+' existed to make the migration's A/B screenshot diff a one-variable experiment and to make
+' the self-test two-sided -- assertions passing on both backends are ground truth rather
+' than a snapshot. That migration shipped, so the reason expired and the GDI arms are gone.
+' The cost is real and worth stating: the self-test below can no longer prove its expected
+' numbers against an independent implementation. Those numbers were MEASURED off the GDI
+' backend while both existed; do not "correct" them by reasoning about what the docs imply.
 ' ========================================================================================
-#define DBUF_GDIPLUS
 
-#ifdef DBUF_GDIPLUS
-    ' Included HERE rather than left to the call site on purpose. CListBox.bi names
-    ' typedefs it does not include and so only compiles where the host happens to have
-    ' pre-loaded them (see CLAUDE.md); this file does not repeat that trap.
-    '
-    ' ONE THING THIS COSTS THE HOST, and it is worth knowing before you adopt it:
-    ' GDI+'s Status enum defines Ok = 0 in namespace AfxNova. Every host in this family
-    ' already says "using AfxNova", so including this header puts Ok into the host's
-    ' namespace and ANY identifier named "ok" -- a variable, a parameter -- becomes a
-    ' duplicated definition. Five of the sibling demos had a SelfTest_Check parameter
-    ' called exactly that and stopped compiling the moment they took this file. The fix
-    ' is to rename yours (bOK is what the family uses); it cannot be fixed from in here,
-    ' because the host's own "using AfxNova" is what exposes the name.
-    #include once "AfxNova\CGdiPlus.inc"
-    using AfxNova
-#endif
+' Included HERE rather than left to the call site on purpose. CListBox.bi names typedefs it
+' does not include and so only compiles where the host happens to have pre-loaded them (see
+' CLAUDE.md); this file does not repeat that trap.
+'
+' ONE THING THIS COSTS THE HOST, and it is worth knowing before you adopt it:
+' GDI+'s Status enum defines Ok = 0 in namespace AfxNova. Every host in this family already
+' says "using AfxNova", so including this header puts Ok into the host's namespace and ANY
+' identifier named "ok" -- a variable, a parameter -- becomes a duplicated definition. Five
+' of the sibling demos had a SelfTest_Check parameter called exactly that and stopped
+' compiling the moment they took this file. The fix is to rename yours (bOK is what the
+' family uses); it cannot be fixed from in here, because the host's own "using AfxNova" is
+' what exposes the name.
+#include once "AfxNova\CGdiPlus.inc"
+using AfxNova
 
 declare function isMouseOverRECT( byval hWin as HWND, byval rc as RECT ) as boolean
 declare function isMouseOverWindow( byval hChild as HWND ) as boolean
 declare function PaintRect( byval hDC as HDC, byval rc as RECT ptr, byval clr as COLORREF ) as long
 
-type clsDoubleBuffer
+type CBufferPaint
     private:
         _hwnd            as HWND
         _hDC             as HDC
@@ -74,7 +79,6 @@ type clsDoubleBuffer
         _UsePaint        as boolean       ' use Begin/EndPaint. Used when WM_PAINT or WM_DRAWITEM
         _owns            as boolean = true ' does this object own _memDC/_hbit (delete on End)?
 
-    #ifdef DBUF_GDIPLUS
         ' One Graphics per buffer, built on first use and torn down before the blit.
         _pGraphics       as CGpGraphics ptr
         ' Brush and pen are cached and reused across calls, keyed on what they were
@@ -104,7 +108,6 @@ type clsDoubleBuffer
                     byval h as single, _
                     byval radius as single _
                     )
-    #endif
 
     public:
 
@@ -180,9 +183,8 @@ type clsDoubleBuffer
     declare function SetBackColor( byval backcolor as COLORREF ) as long
     declare function SetColors( byval forecolor as COLORREF, byval backcolor as COLORREF ) as long
     declare function SetPenColor( byval pencolor as COLORREF ) as long
-    ' --- Alpha-bearing variants (GDI+ backend only; the GDI backend ignores the alpha
-    '     and behaves exactly like the plain setter). Additive: nothing existing calls
-    '     these, so no current pixel changes because they exist. ---
+    ' --- Alpha-bearing variants. Additive: no control in the family calls these, so
+    '     nothing changes appearance because they exist. ---
     declare function SetForeColorA( byval forecolor as COLORREF, byval nAlpha as ubyte ) as long
     declare function SetBackColorA( byval backcolor as COLORREF, byval nAlpha as ubyte ) as long
     declare function SetPenColorA( byval pencolor as COLORREF, byval nAlpha as ubyte ) as long

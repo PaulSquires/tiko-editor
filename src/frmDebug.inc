@@ -1080,7 +1080,7 @@ function frmDebug_WndProc( _
 
         case WM_PAINT
             dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMDEBUG)
-            dim as clsDoubleBuffer b
+            dim as CBufferPaint b
 
             b.BeginDoubleBuffer(hwnd)
 

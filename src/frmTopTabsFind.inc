@@ -311,7 +311,7 @@ function frmTopTabsFind_WndProc( _
             
 
     case WM_PAINT
-        dim as clsDoubleBuffer b
+        dim as CBufferPaint b
         
         b.BeginDoubleBuffer(hwnd)
 

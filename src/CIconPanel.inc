@@ -623,7 +623,7 @@ end function
 ' ========================================================================================
 private sub CIconPanel_PaintItemDefault( _
             byval pIcon as CICONPANEL ptr, _
-            byval b as clsDoubleBuffer ptr, _
+            byval b as CBufferPaint ptr, _
             byval idx as long, _
             byval isHot as boolean, _
             byval isPressed as boolean _
@@ -686,7 +686,7 @@ function CIconPanel_OnPaint( byval hwnd as HWND ) as LRESULT
     dim as RECT rcUpdate
     if GetUpdateRect( hwnd, @rcUpdate, FALSE ) = 0 then GetClientRect( hwnd, @rcUpdate )
 
-    dim as clsDoubleBuffer b
+    dim as CBufferPaint b
 
     b.BeginDoubleBuffer(hwnd)
     b.SetBackColor( pIcon->colors.BackColor )

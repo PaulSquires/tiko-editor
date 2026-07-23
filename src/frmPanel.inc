@@ -150,7 +150,7 @@ function frmPanel_OnPaint( byval hwnd as HWND ) as LRESULT
     dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMPANEL)
     if pWindow = 0 then exit function
 
-    dim as clsDoubleBuffer b
+    dim as CBufferPaint b
     
     b.BeginDoubleBuffer(hwnd)
 
@@ -203,7 +203,7 @@ end function
 ' of frmOutput_SplitterPaint). The line stays 1 physical pixel at every DPI -- it is a rule,
 ' not a band, so it is deliberately not scaled.
 sub frmPanel_SplitterPaint( byval p as CSPLITTER_PAINTINFO ptr )
-    dim as clsDoubleBuffer ptr b = p->b
+    dim as CBufferPaint ptr b = p->b
 
     b->SetBackColor( ghPanel.BackColor )
     b->PaintClientRect()

@@ -398,7 +398,7 @@ function frmMenuBarUpdate_WndProc( _
             return true
 
         case WM_PAINT
-            dim as clsDoubleBuffer b
+            dim as CBufferPaint b
             b.BeginDoubleBuffer(hwnd)
             dim as RECT rc
             GetClientRect( hwnd, @rc )

@@ -402,7 +402,7 @@ function frmBuildConfig_OnDrawItem( _
                 end if
             end if
             
-            dim as clsDoubleBuffer b
+            dim as CBufferPaint b
 
             b.BeginDoubleBuffer(lpdis->hwndItem, lpdis->hDC, lpdis->rcItem)
                 

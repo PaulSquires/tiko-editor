@@ -259,7 +259,7 @@ function frmSearchSymbol_WndProc( _
         return true
 
     case WM_PAINT
-        dim as clsDoubleBuffer b
+        dim as CBufferPaint b
         
         b.BeginDoubleBuffer(hwnd)
 

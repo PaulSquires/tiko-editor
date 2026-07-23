@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include once "clsDoubleBuffer.bi"
+#include once "CBufferPaint.bi"
 
 ' Polling timer that guarantees hot-tracking is cleared when the mouse leaves the
 ' control. WM_MOUSELEAVE (TME_LEAVE) is not reliably delivered on fast exits, so a
@@ -30,7 +30,7 @@ end type
 type CSTATUSBAR_PAINTINFO
     hStatusBar      as HWND                   ' the control, so the callback can query it
     itemID          as integer                ' panel index (model index)
-    b               as clsDoubleBuffer ptr    ' the control's buffer for this repaint (no copy)
+    b               as CBufferPaint ptr    ' the control's buffer for this repaint (no copy)
     rc              as RECT                   ' this panel's rect, in client coordinates
     isHot           as boolean                ' the mouse is over this panel
     wszCaption      as DWSTRING               ' the panel's Text

@@ -67,7 +67,7 @@ end sub
 ' ghEditor theme colors live, so a theme switch only needs a repaint.
 ' ========================================================================================
 sub frmEditorVScroll_PaintCallback( byval p as CVSCROLLBAR_PAINTINFO ptr )
-    dim as clsDoubleBuffer ptr b = p->b
+    dim as CBufferPaint ptr b = p->b
     b->SetBackColor( ghEditor.BackColorScrollBar )
     b->PaintClientRect()
     b->SetPenColor( ghEditor.Divider )

@@ -350,7 +350,7 @@ end sub
 ' flat thumb when there is something to scroll, no hover brightening. Reads the theme
 ' colors live, so a theme switch only needs a repaint.
 sub frmOutput_VScrollPaint( byval p as CVSCROLLBAR_PAINTINFO ptr )
-    dim as clsDoubleBuffer ptr b = p->b
+    dim as CBufferPaint ptr b = p->b
     b->SetBackColor( ghOutput.BackColorScrollBar )
     b->PaintClientRect()
     if IsRectEmpty( @p->rcThumb ) = 0 then
@@ -405,7 +405,7 @@ end Function
 ' horizontal divider line centered in it. The line stays 1 physical pixel at every DPI --
 ' it is a rule, not a band, so it is deliberately not scaled.
 sub frmOutput_SplitterPaint( byval p as CSPLITTER_PAINTINFO ptr )
-    dim as clsDoubleBuffer ptr b = p->b
+    dim as CBufferPaint ptr b = p->b
 
     b->SetBackColor( ghOutput.BackColor )
     b->PaintClientRect()
@@ -694,7 +694,7 @@ function frmOutput_WndProc( _
         return true
 
     case WM_PAINT            
-        dim as clsDoubleBuffer b
+        dim as CBufferPaint b
         b.BeginDoubleBuffer(hwnd)
         b.SetBackColor( ghOutput.BackColorHot )
         b.PaintClientRect()

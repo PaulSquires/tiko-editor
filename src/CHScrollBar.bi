@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include once "clsDoubleBuffer.bi"
+#include once "CBufferPaint.bi"
 
 ' Timer ids are per-window, so every instance can share these values.
 #define IDT_CHSCROLL_HOTTRACK   &hCB20
@@ -21,7 +21,7 @@
 #define CHSCROLL_DEFAULT_HEIGHT 12     ' default track height (DPI scaled at use)
 
 type CHSCROLLBAR_PAINTINFO
-    b            as clsDoubleBuffer ptr  ' points to the caller's buffer (no copy)
+    b            as CBufferPaint ptr  ' points to the caller's buffer (no copy)
     rcClient     as RECT                 ' the whole track
     rcThumb      as RECT                 ' empty when no thumb is needed
     isHot        as boolean              ' mouse is over the thumb

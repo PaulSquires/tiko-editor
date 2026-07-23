@@ -495,7 +495,7 @@ end sub
 ' colors struct and the borrowed fonts; a disabled row never lights up (ForeColorDisabled
 ' over the NORMAL background).
 private sub PM_DefaultPaintItem( byval pThis as CPOPUPMENU ptr, byval p as CPOPUPMENU_PAINTINFO ptr )
-    dim as clsDoubleBuffer ptr b = p->b
+    dim as CBufferPaint ptr b = p->b
 
     if p->isSeparator then
         b->SetBackColor( pThis->colors.BackColor )
@@ -555,7 +555,7 @@ private function CPopupMenu_OnPaint( byval hwnd as HWND ) as LRESULT
     ' Consume any pending layout before painting (the lazy-layout consume point).
     if pThis->bLayoutDirty then pThis->LayoutItems()
 
-    dim as clsDoubleBuffer b
+    dim as CBufferPaint b
     b.BeginDoubleBuffer(hwnd)
 
     ' Fill the whole window (rows + padding) with the panel background.

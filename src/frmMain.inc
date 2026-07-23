@@ -431,7 +431,7 @@ end Function
 ' looks the same as it always did while being easier to grab. 
 ' ========================================================================================
 sub frmMain_SplitterPaint( byval p as CSPLITTER_PAINTINFO ptr )
-    dim as clsDoubleBuffer ptr b = p->b
+    dim as CBufferPaint ptr b = p->b
 
     ' The sliver either side of the band is the form's own background.
     b->SetBackColor( ghMain.BackColor )
@@ -523,7 +523,7 @@ end function
 ' Process WM_PAINT message for window/dialog: frmMain
 ' ========================================================================================
 function frmMain_OnPaint( byval hwnd as HWND ) as LRESULT
-    dim as clsDoubleBuffer b
+    dim as CBufferPaint b
 
     b.BeginDoubleBuffer(hwnd)
 
@@ -1639,7 +1639,7 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
 
     ' Rendering-backend geometry self-test. Runs here because it needs a CWindow-backed
     ' HWND (PaintLine asks it for the DPI scale) but nothing else -- no theme, no config.
-    if environ("DBUF_SELFTEST") = "1" then clsDoubleBuffer_RunSelfTest( HWND_FRMMAIN )
+    if environ("CBUFFERPAINT_SELFTEST") = "1" then CBufferPaint_RunSelfTest( HWND_FRMMAIN )
 
     ' Build the keyboard accelerators
     frmKeyboard_BuildAcceleratorTable()

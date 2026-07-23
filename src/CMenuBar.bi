@@ -47,7 +47,7 @@ end type
 type CMENUBAR_PAINTINFO
     hMenuBar   as HWND
     itemID     as long                    ' bar item index
-    b          as clsDoubleBuffer ptr
+    b          as CBufferPaint ptr
     rc         as RECT                    ' the full item rect: fill THIS
     isHot      as boolean                 ' mouse is over this item
     isActive   as boolean                 ' this item's dropdown is open, or it holds
