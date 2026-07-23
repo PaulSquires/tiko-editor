@@ -178,6 +178,87 @@ end sub
 
 
 ' ========================================================================================
+' Apply the stored horizontal alignment to the buffer.
+'
+' The paragraph-format counterpart to CTextBox_ApplyCharFormat above, and the only place
+' alignment is produced. It is NOT called at Create: the RichEdit already starts left-aligned,
+' so a control whose host never asks for anything else never runs a line of this.
+'
+' ---------------------------------------------------------------------------------------
+' WHY IT LOOKS LIKE THIS. The obvious implementation -- send EM_SETPARAFORMAT and be done --
+' DOES NOT WORK IN THIS CONTROL, and it fails silently, which is the dangerous part.
+'
+' MEASURED, not reasoned about (the harness probe that found it is in this repo's history):
+'
+'   EM_SETPARAFORMAT under TM_PLAINTEXT returns 0 -- failure -- EVERY time. In both line
+'   modes. With a selection and without one. With the buffer empty and with content. The
+'   paragraph format simply stays PFA_LEFT and nothing anywhere reports a problem.
+'
+'   The same message sent while the control is in TM_RICHTEXT returns 1 and takes effect --
+'   AND the resulting format SURVIVES the switch back to TM_PLAINTEXT, and survives every
+'   subsequent WM_SETTEXT.
+'
+' TM_PLAINTEXT is not negotiable here: it is what keeps one character format across the whole
+' buffer and what makes pasted text shed its rich formatting. So the alignment is applied in
+' the only window where the control will accept it -- the buffer has to be empty to change
+' text mode at all, so: save, clear, flip to rich, apply, flip back, restore.
+'
+' THE COST, stated plainly: the undo history does not survive. Called at setup time -- which
+' is when a host sets alignment, and when the buffer is empty anyway -- it costs nothing at
+' all. Called on a control the user has been typing into, it costs them their undo stack.
+' That is why CTextBox_SetTextAlign says so in its own comment.
+'
+' Multiline with several paragraphs relies on inheritance: the restored text is typed into
+' the one formatted paragraph, and each new paragraph inherits the preceding one's format.
+' The harness asserts this on a real multiline control rather than trusting it.
+' ========================================================================================
+private sub CTextBox_ApplyParaFormat( byval pTextBox as CTEXTBOX ptr )
+    if pTextBox = null then exit sub
+    if pTextBox->hRichEdit = 0 then exit sub
+
+    dim pf as PARAFORMAT
+    pf.cbSize = sizeof(PARAFORMAT)
+    pf.dwMask = PFM_ALIGNMENT
+    select case pTextBox->nTextAlign
+    case TXT_ALIGN_CENTER : pf.wAlignment = PFA_CENTER
+    case TXT_ALIGN_RIGHT  : pf.wAlignment = PFA_RIGHT
+    case else             : pf.wAlignment = PFA_LEFT
+    end select
+
+    dim as DWSTRING wszSaved = RichEdit_GetText( pTextBox->hRichEdit )
+    dim as DWORD dwStart, dwEnd
+    SendMessage( pTextBox->hRichEdit, EM_GETSEL, cast(WPARAM, @dwStart), cast(LPARAM, @dwEnd) )
+
+    ' Every write below is ours, so the ChangeCallback must not hear about any of it.
+    pTextBox->bInternalChange = true
+
+    if len(wszSaved) > 0 then
+        SendMessage( pTextBox->hRichEdit, WM_SETTEXT, 0, cast(LPARAM, @wstr("")) )
+    end if
+
+    ' EM_SETTEXTMODE returns 0 on SUCCESS. If it refuses (it will not -- the buffer is empty
+    ' -- but a refusal here would strand the control in rich-text mode), skip the whole
+    ' thing rather than leaving the text mode changed.
+    if SendMessage( pTextBox->hRichEdit, EM_SETTEXTMODE, TM_RICHTEXT, 0 ) = 0 then
+        RichEdit_SetParaFormat( pTextBox->hRichEdit, @pf )
+        SendMessage( pTextBox->hRichEdit, EM_SETTEXTMODE, _
+                     TM_PLAINTEXT or TM_MULTILEVELUNDO or TM_MULTICODEPAGE, 0 )
+    end if
+
+    if len(wszSaved) > 0 then
+        SendMessage( pTextBox->hRichEdit, WM_SETTEXT, 0, cast(LPARAM, wszSaved.vptr) )
+        SendMessage( pTextBox->hRichEdit, EM_SETSEL, cast(WPARAM, dwStart), cast(LPARAM, dwEnd) )
+    end if
+
+    pTextBox->bInternalChange = false
+
+    ' The undo stack spans the text we just replaced under the user's feet; leaving it in
+    ' place would let Ctrl+Z "undo" our own bookkeeping into a half-state.
+    SendMessage( pTextBox->hRichEdit, EM_EMPTYUNDOBUFFER, 0, 0 )
+end sub
+
+
+' ========================================================================================
 ' Center the (single) text line vertically by raising the formatting rect's top
 ' (EM_SETRECT). Works on a single-line RichEdit even though the classic EDIT would
 ' ignore it -- proven in tiko's search box, which this code is ported from.
@@ -821,6 +902,37 @@ sub CTextBox_SetBorderWidth( byval hTextBoxControl as HWND, byval nWidth as inte
     InvalidateRect( pTextBox->hWin, null, true )
 end sub
 
+' ========================================================================================
+' Horizontal alignment of the text. LEFT is the default, so hosts written before this
+' existed are unaffected -- PFA_LEFT is what the RichEdit was already doing.
+'
+' SET IT BEFORE THE CONTROL HAS CONTENT. Applying it rewrites the buffer (see
+' CTextBox_ApplyParaFormat for why there is no other way), which discards the undo history.
+' On an empty control -- the normal case, since alignment is a setup-time decision -- there
+' is nothing to discard and nothing to notice.
+'
+' An unrecognized value falls back to LEFT rather than being rejected: the alternative is a
+' control whose alignment silently disagrees with what the host thinks it set.
+' ========================================================================================
+function CTextBox_GetTextAlign( byval hTextBoxControl as HWND ) as long
+    dim as CTEXTBOX ptr pTextBox = GetTextBoxPointer(hTextBoxControl)
+    if pTextBox = null then return TXT_ALIGN_LEFT
+    return pTextBox->nTextAlign
+end function
+
+sub CTextBox_SetTextAlign( byval hTextBoxControl as HWND, byval nAlign as long )
+    dim as CTEXTBOX ptr pTextBox = GetTextBoxPointer(hTextBoxControl)
+    if pTextBox = null then exit sub
+    select case nAlign
+    case TXT_ALIGN_LEFT, TXT_ALIGN_CENTER, TXT_ALIGN_RIGHT
+    case else
+        nAlign = TXT_ALIGN_LEFT
+    end select
+    pTextBox->nTextAlign = nAlign
+    CTextBox_ApplyParaFormat( pTextBox )
+end sub
+
+
 function CTextBox_GetCornerRadius( byval hTextBoxControl as HWND ) as integer
     dim as CTEXTBOX ptr pTextBox = GetTextBoxPointer(hTextBoxControl)
     if pTextBox = null then return 0
@@ -1151,6 +1263,13 @@ function CTextBoxRichEdit_SubclassProc ( _
             end if
             ' fall through to DefSubclassProc: the RichEdit manages the caret here
 
+        ' NOTE: there is deliberately no WM_SETTEXT case re-applying the paragraph format.
+        ' One was written, on the assumption that replacing the buffer discards the format
+        ' with the paragraph it belonged to. The harness proved otherwise -- a format applied
+        ' the way CTextBox_ApplyParaFormat applies it survives every subsequent SetText -- so
+        ' the handler was deleted rather than kept "just in case". It would also have
+        ' recursed, since ApplyParaFormat writes text itself.
+
         case WM_CONTEXTMENU
             if pTextBox = null then exit select
             CTextBox_ShowContextMenu( pTextBox )
@@ -1387,6 +1506,10 @@ function CTextBox_Create( byval hWndParent as HWND, byval CtrlID as integer, byv
     if bMultiline then nEventMask or= ENM_UPDATE
     SendMessage( pTextBox->hRichEdit, EM_SETEVENTMASK, 0, nEventMask )
     SendMessage( pTextBox->hRichEdit, EM_SETBKGNDCOLOR, 0, cast(LPARAM, pTextBox->BackColor) )
+    ' NOTE: no CTextBox_ApplyParaFormat here on purpose. The RichEdit already starts
+    ' left-aligned, which is this control's default, so a host that never calls
+    ' CTextBox_SetTextAlign never executes any of that machinery -- and adding the setter
+    ' therefore changed nothing whatsoever for the hosts that predate it.
     CTextBox_ApplyCharFormat( pTextBox )
 
     return hForm

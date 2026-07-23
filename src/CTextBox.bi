@@ -57,6 +57,21 @@ type TXT_ScrollChangedCallbackSub as sub( byval hTextBox as HWND )
 ' move focus to the next/previous tab stop -- e.g. veto it to drive a picker list).
 type TXT_MessageCallbackFunc as function( byval m as CTEXTBOX_MESSAGEINFO ptr ) as boolean
 
+
+' Horizontal text alignment. LEFT is the default and is what every host had before this
+' existed, so adding it changed nothing for any of them.
+'
+' These are the control's own constants rather than richedit.bi's PFA_* values, because the
+' mapping is an implementation detail: a host should not have to know that alignment is
+' delivered by EM_SETPARAFORMAT, any more than it has to know that the forecolor is
+' delivered by EM_SETCHARFORMAT.
+enum
+    TXT_ALIGN_LEFT = 0
+    TXT_ALIGN_CENTER
+    TXT_ALIGN_RIGHT
+end enum
+
+
 type CTEXTBOX
     hWin            as HWND
     hRichEdit       as HWND               ' the RichEdit50W child that does the editing
@@ -78,6 +93,12 @@ type CTEXTBOX
     nCornerRadius   as integer = 0        ' 0 = square corners
     nMarginLeft     as integer = 0        ' EM_SETMARGINS values, stored so they can be
     nMarginRight    as integer = 0        '   re-applied after font/geometry changes
+    ' Horizontal alignment (TXT_ALIGN_*). LEFT is the RichEdit's own starting state, so a
+    ' control whose host never calls CTextBox_SetTextAlign never touches any of the
+    ' machinery behind this field. Applying a non-default value is surprisingly expensive --
+    ' see CTextBox_ApplyParaFormat, which had to be built around TM_PLAINTEXT refusing
+    ' EM_SETPARAFORMAT outright.
+    nTextAlign      as long = TXT_ALIGN_LEFT
     ' Caller-supplied fonts (caller owns them; the control never deletes an HFONT).
     ' NOT named hFont: a member called hFont would shadow the HFONT type inside member
     ' procedures (FreeBASIC is case-insensitive -- see C:\dev\Learnings.md).
@@ -241,6 +262,23 @@ declare function CTextBox_GetCueBannerColor( byval hTextBoxControl as HWND ) as 
 declare sub      CTextBox_SetCueBannerColor( byval hTextBoxControl as HWND, byval clr as COLORREF )
 declare function CTextBox_GetCueBannerFont( byval hTextBoxControl as HWND ) as HFONT
 declare sub      CTextBox_SetCueBannerFont( byval hTextBoxControl as HWND, byval hFont as HFONT )
+' Horizontal alignment of the text (TXT_ALIGN_LEFT / CENTER / RIGHT; LEFT is the default,
+' so this changed nothing for hosts written before it existed). It applies to the whole
+' buffer, in both line modes, and it survives every subsequent SetText.
+'
+' SET IT AT SETUP TIME, BEFORE THE CONTROL HAS CONTENT. This is not a style preference:
+' TM_PLAINTEXT -- which this control relies on for uniform formatting and for making pasted
+' text shed its rich formatting -- REFUSES EM_SETPARAFORMAT outright, silently, returning
+' failure and leaving the alignment at LEFT. The only sequence the RichEdit accepts is to
+' empty the buffer, flip to rich-text mode, apply, and flip back, so the setter does exactly
+' that. On an empty control that costs nothing. On a control the user has been typing into
+' IT DISCARDS THE UNDO HISTORY, which is the whole reason to set it early.
+'
+' The margins set by CTextBox_SetMargins still apply -- centring happens between them, not
+' between the border edges, so a centred value in a control with lopsided margins sits
+' off-centre by design. Give it equal margins if you want it optically centred.
+declare function CTextBox_GetTextAlign( byval hTextBoxControl as HWND ) as long
+declare sub      CTextBox_SetTextAlign( byval hTextBoxControl as HWND, byval nAlign as long )
 ' Border chrome. Width 0 = borderless; the border color switches to FocusBorderColor
 ' while the RichEdit has focus. CornerRadius rounds the frame -- the arcs are
 ' antialiased now, so a larger radius no longer looks stepped the way it did under
