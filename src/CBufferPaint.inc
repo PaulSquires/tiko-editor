@@ -12,7 +12,7 @@
 '    GNU General Public License for more details.
 
 
-#include once "clsDoubleBuffer.bi"
+#include once "CBufferPaint.bi"
 
 ' ========================================================================================
 ' Determine if the mouse cursor is currently over client RECT area
@@ -39,57 +39,51 @@ function PaintRect( byval hDC as HDC, byval rc as RECT ptr, byval clr as COLORRE
 end function
 
 
-#ifdef DBUF_GDIPLUS
 ' ========================================================================================
 ' COLORREF is 0x00BBGGRR; GDI+ ARGB is 0xAARRGGBB. The byte order is REVERSED, not just
 ' shifted -- swapping R and B is the whole job, and getting it wrong yields a picture that
 ' still renders (so it looks like it works) with every colour subtly wrong.
 ' ========================================================================================
-private function DBufToARGB( byval clr as COLORREF, byval nAlpha as ubyte ) as ARGB
+private function CBufToARGB( byval clr as COLORREF, byval nAlpha as ubyte ) as ARGB
     dim as ulong r = (clr        ) and &hFF
     dim as ulong g = (clr shr  8 ) and &hFF
     dim as ulong b = (clr shr 16 ) and &hFF
     return cast( ARGB, (culng(nAlpha) shl 24) or (r shl 16) or (g shl 8) or b )
 end function
-#endif
 
 
-function clsDoubleBuffer.SetupBitmap() as long
+function CBufferPaint.SetupBitmap() as long
     _memDC = CreateCompatibleDC( _hDC )
     SaveDC( _memDC )
 
     dim as long w = _rc.right - _rc.left
     dim as long h = _rc.bottom - _rc.top
 
-    #ifdef DBUF_GDIPLUS
-        ' A 32bpp top-down DIB section rather than CreateCompatibleBitmap: GDI+ wants a
-        ' KNOWN pixel format for antialiasing and alpha blending, where a compatible
-        ' bitmap is whatever the device happens to be. On a 32bpp display this is still
-        ' the device format, so the final BitBlt stays a straight copy.
-        ' CreateDIBSection rejects a zero or negative extent, which BeginPaint can hand
-        ' us for a collapsed window; clamp rather than leak a DC on the early return.
-        if w < 1 then w = 1
-        if h < 1 then h = 1
-        dim as BITMAPINFO bmi
-        with bmi.bmiHeader
-            .biSize        = sizeof(BITMAPINFOHEADER)
-            .biWidth       = w
-            .biHeight      = -h          ' negative = top-down, matching GDI's y-axis
-            .biPlanes      = 1
-            .biBitCount    = 32
-            .biCompression = BI_RGB
-        end with
-        dim as any ptr pBits
-        _hbit = CreateDIBSection( _hDC, @bmi, DIB_RGB_COLORS, @pBits, null, 0 )
-    #else
-        _hbit = CreateCompatibleBitmap( _hDC, w, h )
-    #endif
+    ' A 32bpp top-down DIB section rather than CreateCompatibleBitmap: GDI+ wants a
+    ' KNOWN pixel format for antialiasing and alpha blending, where a compatible bitmap is
+    ' whatever the device happens to be. On a 32bpp display this is still the device
+    ' format, so the final BitBlt stays a straight copy.
+    ' CreateDIBSection rejects a zero or negative extent, which BeginPaint can hand us for
+    ' a collapsed window; clamp rather than leak a DC on the early return.
+    if w < 1 then w = 1
+    if h < 1 then h = 1
+    dim as BITMAPINFO bmi
+    with bmi.bmiHeader
+        .biSize        = sizeof(BITMAPINFOHEADER)
+        .biWidth       = w
+        .biHeight      = -h          ' negative = top-down, matching GDI's y-axis
+        .biPlanes      = 1
+        .biBitCount    = 32
+        .biCompression = BI_RGB
+    end with
+    dim as any ptr pBits
+    _hbit = CreateDIBSection( _hDC, @bmi, DIB_RGB_COLORS, @pBits, null, 0 )
 
     if _hbit then SelectObject( _memDC, _hbit )
     function = 0
 end function
 
-function clsDoubleBuffer.BeginDoubleBuffer( byval hwnd as HWND ) as long
+function CBufferPaint.BeginDoubleBuffer( byval hwnd as HWND ) as long
     _UsePaint = true
     _hwnd = hwnd
     _hDC = BeginPaint( _hwnd, @_ps )
@@ -99,7 +93,7 @@ function clsDoubleBuffer.BeginDoubleBuffer( byval hwnd as HWND ) as long
 end function
 
 ' Overload that provides an hDC rather than use BeginPaint/EndPaint
-function clsDoubleBuffer.BeginDoubleBuffer( byval hwnd as HWND, byval hdc as HDC, byval rcItem as RECT ) as long
+function CBufferPaint.BeginDoubleBuffer( byval hwnd as HWND, byval hdc as HDC, byval rcItem as RECT ) as long
     _UsePaint = false
     _owns = true
     _hwnd = hwnd
@@ -112,7 +106,7 @@ end function
 ' Cached overload: draw into a caller-owned memDC (bitmap already selected and
 ' large enough). Saves DC state so per-row object selections don't accumulate;
 ' EndDoubleBuffer blits but does not delete the DC/bitmap (the caller owns them).
-function clsDoubleBuffer.BeginDoubleBuffer( byval hwnd as HWND, byval hdc as HDC, byval rcItem as RECT, byval cachedMemDC as HDC ) as long
+function CBufferPaint.BeginDoubleBuffer( byval hwnd as HWND, byval hdc as HDC, byval rcItem as RECT, byval cachedMemDC as HDC ) as long
     _UsePaint = false
     _owns = false
     _hwnd = hwnd
@@ -124,12 +118,10 @@ function clsDoubleBuffer.BeginDoubleBuffer( byval hwnd as HWND, byval hdc as HDC
     function = 0
 end function
 
-function clsDoubleBuffer.EndDoubleBuffer() as long
-    #ifdef DBUF_GDIPLUS
-        ' Tear the GDI+ objects down BEFORE the blit. Deleting the Graphics flushes any
-        ' batched drawing; blitting first would copy a surface that is still missing it.
-        this.ReleaseGpObjects()
-    #endif
+function CBufferPaint.EndDoubleBuffer() as long
+    ' Tear the GDI+ objects down BEFORE the blit. Deleting the Graphics flushes any
+    ' batched drawing; blitting first would copy a surface that is still missing it.
+    this.ReleaseGpObjects()
     BitBlt( _hDC, _rc.left, _rc.top, _rc.right - _rc.left, _rc.bottom - _rc.top, _memDC, 0, 0, SRCCOPY )
     RestoreDC( _memDC, -1 )
     if _owns then
@@ -145,13 +137,11 @@ end function
 ' RAII safety net: release any GDI objects still held if EndDoubleBuffer was
 ' not reached (e.g. an early return between Begin and End). Only frees objects
 ' this instance owns; handles are nulled by End, so this never double-frees.
-destructor clsDoubleBuffer()
-    #ifdef DBUF_GDIPLUS
-        ' Same reasoning as the GDI handles below: End nulls these, so reaching them
-        ' here means Begin/End was not balanced. Must still happen before the process
-        ' calls GdiplusShutdown.
-        this.ReleaseGpObjects()
-    #endif
+destructor CBufferPaint()
+    ' Same reasoning as the GDI handles below: End nulls these, so reaching them here
+    ' means Begin/End was not balanced. Must still happen before the process calls
+    ' GdiplusShutdown.
+    this.ReleaseGpObjects()
     if _owns then
         if _hbit  then DeleteObject( _hbit ) : _hbit = 0
         if _memDC then DeleteDC( _memDC )    : _memDC = 0
@@ -160,12 +150,11 @@ destructor clsDoubleBuffer()
 end destructor
 
 
-#ifdef DBUF_GDIPLUS
 ' ========================================================================================
 ' GDI+ object lifetime. All three are lazy: a buffer that only ever paints text (several
 ' do) never constructs a Graphics at all.
 ' ========================================================================================
-private function clsDoubleBuffer.EnsureGraphics() as CGpGraphics ptr
+private function CBufferPaint.EnsureGraphics() as CGpGraphics ptr
     if _pGraphics = 0 then
         if _memDC = 0 then return 0
         _pGraphics = new CGpGraphics( _memDC )
@@ -177,7 +166,7 @@ private function clsDoubleBuffer.EnsureGraphics() as CGpGraphics ptr
     return _pGraphics
 end function
 
-private function clsDoubleBuffer.BrushFor( byval clr as ARGB ) as CGpBrush ptr
+private function CBufferPaint.BrushFor( byval clr as ARGB ) as CGpBrush ptr
     if _pBrush = 0 then
         _pBrush = new CGpSolidBrush( clr )
         _brushARGB = clr
@@ -188,7 +177,7 @@ private function clsDoubleBuffer.BrushFor( byval clr as ARGB ) as CGpBrush ptr
     return cast( CGpBrush ptr, _pBrush )
 end function
 
-private function clsDoubleBuffer.PenFor( byval clr as ARGB, byval nWidth as single ) as CGpPen ptr
+private function CBufferPaint.PenFor( byval clr as ARGB, byval nWidth as single ) as CGpPen ptr
     if _pPen = 0 then
         _pPen = new CGpPen( clr, nWidth )
         _penARGB = clr
@@ -206,14 +195,14 @@ private function clsDoubleBuffer.PenFor( byval clr as ARGB, byval nWidth as sing
     return _pPen
 end function
 
-private sub clsDoubleBuffer.EnsureGdiReady()
+private sub CBufferPaint.EnsureGdiReady()
     if _gpDirty andalso (_pGraphics <> 0) then
         _pGraphics->Flush( FlushIntentionSync )
         _gpDirty = false
     end if
 end sub
 
-private sub clsDoubleBuffer.ReleaseGpObjects()
+private sub CBufferPaint.ReleaseGpObjects()
     if _pPen      then delete _pPen      : _pPen = 0
     if _pBrush    then delete _pBrush    : _pBrush = 0
     if _pGraphics then delete _pGraphics : _pGraphics = 0
@@ -228,7 +217,7 @@ end sub
 ' number straight through here makes every corner twice as round, which still looks
 ' deliberate and is why PaintRectFactory does the halving in one clearly-marked place.
 ' ========================================================================================
-private sub clsDoubleBuffer.BuildRoundPath( _
+private sub CBufferPaint.BuildRoundPath( _
             byval pPath as CGpGraphicsPath ptr, _
             byval x as single, _
             byval y as single, _
@@ -256,18 +245,17 @@ private sub clsDoubleBuffer.BuildRoundPath( _
     pPath->AddArc( x,         y + h - d, d, d,  90.0, 90.0 )   ' bottom-left
     pPath->CloseFigure()
 end sub
-#endif
 
 
-function clsDoubleBuffer.rcClient() as RECT
+function CBufferPaint.rcClient() as RECT
     return _rc
 end function
 
-function clsDoubleBuffer.rcClientWidth() as long
+function CBufferPaint.rcClientWidth() as long
     return _rc.right - _rc.left
 end function
 
-function clsDoubleBuffer.rcClientHeight() as long
+function CBufferPaint.rcClientHeight() as long
     return _rc.bottom - _rc.top
 end function
 
@@ -277,33 +265,31 @@ end function
 ' not be on the surface yet, and a caller that reads it sees a half-painted picture. That
 ' is not hypothetical: CToggle's self-test scans the knob's rim through this exact path,
 ' BEFORE EndDoubleBuffer, and would otherwise be measuring blank background.
-function clsDoubleBuffer.getMemDC() as HDC
-    #ifdef DBUF_GDIPLUS
-        this.EnsureGdiReady()
-    #endif
+function CBufferPaint.getMemDC() as HDC
+    this.EnsureGdiReady()
     return _memDC
 end function
 
 ' Store a caller-supplied font handle. The control/host owns the HFONT and is
 ' responsible for destroying it; the double buffer only selects it while painting.
-function clsDoubleBuffer.SetFont( byval hFont as HFONT ) as long
+function CBufferPaint.SetFont( byval hFont as HFONT ) as long
     if hFont then _hFont = hFont
     function = 0
 end function
 
-function clsDoubleBuffer.SetForeColor( byval forecolor as COLORREF ) as long
+function CBufferPaint.SetForeColor( byval forecolor as COLORREF ) as long
     _forecolor = forecolor
     _forealpha = 255
     function = 0
 end function
 
-function clsDoubleBuffer.SetBackColor( byval backcolor as COLORREF ) as long
+function CBufferPaint.SetBackColor( byval backcolor as COLORREF ) as long
     _backcolor = backcolor
     _backalpha = 255
     function = 0
 end function
 
-function clsDoubleBuffer.SetColors( byval forecolor as COLORREF, byval backcolor as COLORREF ) as long
+function CBufferPaint.SetColors( byval forecolor as COLORREF, byval backcolor as COLORREF ) as long
     _forecolor = forecolor
     _backcolor = backcolor
     _forealpha = 255
@@ -311,27 +297,27 @@ function clsDoubleBuffer.SetColors( byval forecolor as COLORREF, byval backcolor
     function = 0
 end function
 
-function clsDoubleBuffer.SetPenColor( byval pencolor as COLORREF ) as long
+function CBufferPaint.SetPenColor( byval pencolor as COLORREF ) as long
     _pencolor = pencolor
     _penalpha = 255
     function = 0
 end function
 
-' --- Alpha-bearing variants. Under the GDI backend the alpha is accepted and ignored,
-'     so a host written against these still compiles and renders (opaque) either way. ---
-function clsDoubleBuffer.SetForeColorA( byval forecolor as COLORREF, byval nAlpha as ubyte ) as long
+' --- Alpha-bearing variants. The plain setters above are these with nAlpha = 255, which
+'     is why every existing call still means "opaque" without saying so. ---
+function CBufferPaint.SetForeColorA( byval forecolor as COLORREF, byval nAlpha as ubyte ) as long
     _forecolor = forecolor
     _forealpha = nAlpha
     function = 0
 end function
 
-function clsDoubleBuffer.SetBackColorA( byval backcolor as COLORREF, byval nAlpha as ubyte ) as long
+function CBufferPaint.SetBackColorA( byval backcolor as COLORREF, byval nAlpha as ubyte ) as long
     _backcolor = backcolor
     _backalpha = nAlpha
     function = 0
 end function
 
-function clsDoubleBuffer.SetPenColorA( byval pencolor as COLORREF, byval nAlpha as ubyte ) as long
+function CBufferPaint.SetPenColorA( byval pencolor as COLORREF, byval nAlpha as ubyte ) as long
     _pencolor = pencolor
     _penalpha = nAlpha
     function = 0
@@ -340,21 +326,23 @@ end function
 ' ========================================================================================
 ' The rounded/bordered rectangle workhorse.
 '
-' iStyle carries the legacy pen-style meaning: PS_SOLID strokes a border, PS_NULL means
-' fill only (that is how PaintRoundRect asks for a borderless shape). nPenWidth = 0 has
-' always meant the same thing by a different route -- the GDI path forced the pen colour
-' to the fill colour -- so both are folded into one "no stroke" decision here.
+' TWO PARAMETERS KEEP GDI'S VOCABULARY, on purpose -- every control in the family passes
+' GDI-flavoured numbers and changing the contract would be a migration, not a rename:
 '
-' nCurvature keeps GDI's meaning for API compatibility: it is the ellipse DIAMETER.
+'   iStyle      a pen style. PS_SOLID strokes a border, PS_NULL means fill only (that is
+'               how PaintRoundRect asks for a borderless shape). nPenWidth = 0 has always
+'               meant the same thing by a different route -- the old GDI implementation
+'               forced the pen colour to the fill colour -- so both fold into one "no
+'               stroke" decision here.
+'   nCurvature  the ellipse DIAMETER, as RoundRect took it. BuildRoundPath wants a radius,
+'               so the halving happens below, in one clearly-marked place.
 ' ========================================================================================
-function clsDoubleBuffer.PaintRectFactory( _
+function CBufferPaint.PaintRectFactory( _
             byval rc as RECT ptr, _
             byval iStyle as long, _
             byval nPenWidth as long = 1, _
             byval nCurvature as long = 0 _
             ) as long
-
-#ifdef DBUF_GDIPLUS
 
     dim as CGpGraphics ptr g = this.EnsureGraphics()
     if g = 0 then return 0
@@ -400,7 +388,7 @@ function clsDoubleBuffer.PaintRectFactory( _
     ' path to the pixel CENTRE puts the pen back over the intended column.
     dim as CGpGraphicsPath fillPath
     this.BuildRoundPath( @fillPath, csng(rc->left), csng(rc->top), w, h, radius )
-    g->FillPath( this.BrushFor( DBufToARGB( _backcolor, _backalpha ) ), @fillPath )
+    g->FillPath( this.BrushFor( CBufToARGB( _backcolor, _backalpha ) ), @fillPath )
 
     if bStroke then
         dim as CGpGraphicsPath strokePath
@@ -408,36 +396,16 @@ function clsDoubleBuffer.PaintRectFactory( _
                              csng(rc->left) + inset + 0.5, csng(rc->top) + inset + 0.5, _
                              w - (inset * 2.0), h - (inset * 2.0), _
                              radius )
-        g->DrawPath( this.PenFor( DBufToARGB( _pencolor, _penalpha ), fpw ), @strokePath )
+        g->DrawPath( this.PenFor( CBufToARGB( _pencolor, _penalpha ), fpw ), @strokePath )
     end if
 
     g->SetSmoothingMode( oldSmooth )
     _gpDirty = true
     function = 0
 
-#else
-
-    dim as COLORREF backcolor = _backcolor
-
-    if nPenWidth = 0 then _pencolor = backcolor
-    dim as HPEN hPenSolid = CreatePen( iStyle, nPenWidth, _pencolor )
-    dim as HPEN hOldPen = SelectObject( _memDC, hPenSolid )
-
-    dim as HBRUSH hBrushSolid = CreateSolidBrush( backcolor )
-    dim as HBRUSH hOldBrush = SelectObject( _memDC, hBrushSolid )
-
-    RoundRect( _memDC, rc->left, rc->top, rc->right, rc->bottom, nCurvature, nCurvature )
-
-    DeleteObject( SelectObject( _memDC, hOldPen ) )
-    DeleteObject( SelectObject( _memDC, hOldBrush ) )
-
-    function = 0
-
-#endif
 end function
 
-function clsDoubleBuffer.PaintRect( byval rc as RECT ptr ) as long
-#ifdef DBUF_GDIPLUS
+function CBufferPaint.PaintRect( byval rc as RECT ptr ) as long
     dim as CGpGraphics ptr g = this.EnsureGraphics()
     if g = 0 then return 0
 
@@ -450,39 +418,32 @@ function clsDoubleBuffer.PaintRect( byval rc as RECT ptr ) as long
 
     dim as long oldSmooth = g->GetSmoothingMode()
     g->SetSmoothingMode( SmoothingModeNone )
-    g->FillRectangle( this.BrushFor( DBufToARGB( _backcolor, _backalpha ) ), _
+    g->FillRectangle( this.BrushFor( CBufToARGB( _backcolor, _backalpha ) ), _
                       csng(rc->left), csng(rc->top), w, h )
     g->SetSmoothingMode( oldSmooth )
     _gpDirty = true
     return 0
-#else
-    ' Non-Brush painting
-    dim as COLORREF oldclr = SetBkColor(_memDC, _backcolor)
-    ExtTextOut( _memDC, 0, 0, ETO_OPAQUE, rc, "", 0, 0)
-    SetBkColor( _memDC, oldclr )
-    return 0
-#endif
 end function
 
-function clsDoubleBuffer.PaintClientRect() as long
+function CBufferPaint.PaintClientRect() as long
     return this.PaintRect( @_rc )
 end function
 
-function clsDoubleBuffer.PaintBorderRect( _
+function CBufferPaint.PaintBorderRect( _
             byval rc as RECT ptr, _
             byval nPenWidth as long = 1 _
             ) as long
     return this.PaintRectFactory( rc, PS_SOLID, nPenWidth, 0 )
 end function
 
-function clsDoubleBuffer.PaintRoundRect( _
+function CBufferPaint.PaintRoundRect( _
             byval rc as RECT ptr, _
             byval nCurvature as long = 20 _
             ) as long
     return this.PaintRectFactory( rc, PS_NULL, 1, nCurvature )
 end function
 
-function clsDoubleBuffer.PaintRoundBorderRect( _
+function CBufferPaint.PaintRoundBorderRect( _
             byval rc as RECT ptr, _
             byval nCurvature as long = 20, _
             byval nPenWidth as long = 1 _
@@ -490,14 +451,15 @@ function clsDoubleBuffer.PaintRoundBorderRect( _
     return this.PaintRectFactory( rc, PS_SOLID, nPenWidth, nCurvature )
 end function
 
-function clsDoubleBuffer.PaintText( _
+function CBufferPaint.PaintText( _
             byval wszText as DWSTRING, _
             byval rc as RECT ptr, _
             byval wsStyle as DWORD _
             ) as long
-    #ifdef DBUF_GDIPLUS
-        this.EnsureGdiReady()
-    #endif
+
+    ' Text is GDI, geometry is GDI+, and GDI+ batches. Flush or the shapes this text sits
+    ' on top of may not be on the surface yet.
+    this.EnsureGdiReady()
 
     dim as COLORREF oldforecolor = SetTextColor( _memDC, _forecolor )
     SetBkMode(_memDC, TRANSPARENT)
@@ -514,15 +476,13 @@ function clsDoubleBuffer.PaintText( _
     function = 0
 end function
 
-function clsDoubleBuffer.PaintChar( _
+function CBufferPaint.PaintChar( _
             byval wszChar as DWSTRING, _
             byval rc as RECT ptr, _
             byval forecolor as COLORREF _
             ) as long
 
-    #ifdef DBUF_GDIPLUS
-        this.EnsureGdiReady()
-    #endif
+    this.EnsureGdiReady()          ' see PaintText
 
     dim as HFONT hOldFont
     if _hFont then hOldFont = SelectObject( _memDC, _hFont )
@@ -543,14 +503,13 @@ end function
 ' PaintRectFactory -- see the fill/stroke path split there for why the stroke sits half a
 ' pixel inside the fill boundary.
 ' ========================================================================================
-function clsDoubleBuffer.PaintRoundOutline( _
+function CBufferPaint.PaintRoundOutline( _
             byval rc as RECT ptr, _
             byval nCurvature as long = 20, _
             byval nPenWidth as long = 1 _
             ) as long
     if nPenWidth <= 0 then return 0
 
-#ifdef DBUF_GDIPLUS
     dim as CGpGraphics ptr g = this.EnsureGraphics()
     if g = 0 then return 0
 
@@ -573,33 +532,22 @@ function clsDoubleBuffer.PaintRoundOutline( _
                          csng(rc->left) + inset + 0.5, csng(rc->top) + inset + 0.5, _
                          w - (inset * 2.0), h - (inset * 2.0), _
                          csng(nCurvature) / 2.0 )
-    g->DrawPath( this.PenFor( DBufToARGB( _pencolor, _penalpha ), fpw ), @strokePath )
+    g->DrawPath( this.PenFor( CBufToARGB( _pencolor, _penalpha ), fpw ), @strokePath )
 
     g->SetSmoothingMode( oldSmooth )
     _gpDirty = true
     function = 0
-#else
-    dim as HPEN hPen = CreatePen( PS_SOLID, nPenWidth, _pencolor )
-    dim as HGDIOBJ hOldPen   = SelectObject( _memDC, hPen )
-    dim as HGDIOBJ hOldBrush = SelectObject( _memDC, GetStockObject( NULL_BRUSH ) )
-    RoundRect( _memDC, rc->left, rc->top, rc->right, rc->bottom, nCurvature, nCurvature )
-    SelectObject( _memDC, hOldBrush )
-    SelectObject( _memDC, hOldPen )
-    DeleteObject( hPen )
-    function = 0
-#endif
 end function
 
 ' ========================================================================================
-' Filled ellipse; strokes the rim too when nPenWidth > 0. Under GDI+ the rim is
-' antialiased, which is the whole reason this exists as a primitive rather than being
-' left to each control to hand-roll.
+' Filled ellipse; strokes the rim too when nPenWidth > 0. The rim is antialiased, which is
+' the whole reason this exists as a primitive rather than being left to each control to
+' hand-roll -- CToggle spent a version doing exactly that, with a 4x supersampled tile.
 ' ========================================================================================
-function clsDoubleBuffer.PaintEllipse( _
+function CBufferPaint.PaintEllipse( _
             byval rc as RECT ptr, _
             byval nPenWidth as long = 0 _
             ) as long
-#ifdef DBUF_GDIPLUS
     dim as CGpGraphics ptr g = this.EnsureGraphics()
     if g = 0 then return 0
 
@@ -615,13 +563,13 @@ function clsDoubleBuffer.PaintEllipse( _
     dim as long oldSmooth = g->GetSmoothingMode()
     g->SetSmoothingMode( SmoothingModeAntiAlias )
 
-    g->FillEllipse( this.BrushFor( DBufToARGB( _backcolor, _backalpha ) ), _
+    g->FillEllipse( this.BrushFor( CBufToARGB( _backcolor, _backalpha ) ), _
                     csng(rc->left), csng(rc->top), w, h )
 
     if nPenWidth > 0 then
         dim as single fpw   = csng( nPenWidth )
         dim as single inset = (fpw - 1.0) / 2.0
-        g->DrawEllipse( this.PenFor( DBufToARGB( _pencolor, _penalpha ), fpw ), _
+        g->DrawEllipse( this.PenFor( CBufToARGB( _pencolor, _penalpha ), fpw ), _
                         csng(rc->left) + inset + 0.5, csng(rc->top) + inset + 0.5, _
                         w - (inset * 2.0), h - (inset * 2.0) )
     end if
@@ -629,30 +577,9 @@ function clsDoubleBuffer.PaintEllipse( _
     g->SetSmoothingMode( oldSmooth )
     _gpDirty = true
     function = 0
-#else
-    ' Held as HGDIOBJ, not HPEN: the stock NULL_PEN comes back from GetStockObject as
-    ' HGDIOBJ and casting it to HPEN is a syntax error here.
-    dim as HGDIOBJ hPenObj
-    dim as boolean bOwnPen = false
-    if nPenWidth > 0 then
-        hPenObj = CreatePen( PS_SOLID, nPenWidth, _pencolor )
-        bOwnPen = true
-    else
-        hPenObj = GetStockObject( NULL_PEN )    ' stock: must NOT be deleted
-    end if
-    dim as HBRUSH hBrush = CreateSolidBrush( _backcolor )
-    dim as HGDIOBJ hOldPen   = SelectObject( _memDC, hPenObj )
-    dim as HGDIOBJ hOldBrush = SelectObject( _memDC, hBrush )
-    Ellipse( _memDC, rc->left, rc->top, rc->right, rc->bottom )
-    SelectObject( _memDC, hOldBrush )
-    SelectObject( _memDC, hOldPen )
-    DeleteObject( hBrush )
-    if bOwnPen then DeleteObject( hPenObj )
-    function = 0
-#endif
 end function
 
-function clsDoubleBuffer.PaintIconButton( _
+function CBufferPaint.PaintIconButton( _
             byval wszText as DWSTRING, _
             byval rc as RECT ptr, _
             byval nCurvature as long = 20 _
@@ -666,27 +593,24 @@ end function
 ' ========================================================================================
 ' A straight line, nWidth units thick (DPI-scaled here, as it always has been).
 '
-' ONE DELIBERATE DIFFERENCE FROM THE GDI BACKEND, measured not guessed: with a pen
-' THICKER than 1px, GDI's LineTo over-runs its endpoint by a pixel (a 2px rule from
-' x=10 to x=40 painted 10..40 inclusive, where the 1px rule painted 10..39). That is a
-' thick-pen end-cap artifact, not intent, and it is not reproduced here -- a 2px rule
-' now ends where a 1px rule does. Two callers pass width 2, both full-width dividers
-' (frmMain's menu underline and frmTopTabsMenu's), so the visible change is one pixel at
-' the right end of each. Expect it in the A/B screenshot diff.
-'
-' Every caller in the family draws an axis-aligned rule -- a divider or a separator --
-' and those are painted as a FILLED RECTANGLE rather than a GDI+ line. Two reasons, both
-' learned the expensive way in this refactor:
+' AN AXIS-ALIGNED RULE IS PAINTED AS A FILLED RECTANGLE, NOT AS A LINE. Every caller in
+' the family draws one -- a divider or a separator -- and two reasons, both learned the
+' expensive way, say a rectangle is the right primitive:
 '   * A 1px horizontal rule drawn with DrawLine and antialiasing on comes out grey and
 '     soft, because the pen straddles two pixel rows.
-'   * GDI's LineTo EXCLUDES its endpoint while GDI+ DrawLine INCLUDES it, so a direct
-'     translation lengthens every divider by one pixel.
+'   * GDI's LineTo EXCLUDES its endpoint while GDI+ DrawLine INCLUDES it, so translating
+'     one to the other lengthens every divider by a pixel.
 ' A rectangle has neither problem: the extent is stated, not inferred.
 '
 ' The diagonal branch is currently unreached (no caller draws one) but is the case that
 ' actually wants antialiasing, so it is implemented rather than left to fail silently.
+'
+' One inherited quirk is deliberately NOT reproduced: with a pen thicker than 1px, GDI's
+' LineTo over-ran its endpoint (a 2px rule from x=10 to x=40 painted 10..40 inclusive,
+' where the 1px rule painted 10..39). That was a thick-pen end-cap artifact, not intent.
+' Here a 2px rule ends where a 1px rule does.
 ' ========================================================================================
-function clsDoubleBuffer.PaintLine( _
+function CBufferPaint.PaintLine( _
             byval nWidth as long, _
             byval nLeft as long, _
             byval nTop as long, _
@@ -698,8 +622,6 @@ function clsDoubleBuffer.PaintLine( _
     dim as long penWidth = pWindow->ScaleY(nWidth)
     if penWidth < 1 then penWidth = 1
 
-#ifdef DBUF_GDIPLUS
-
     dim as CGpGraphics ptr g = this.EnsureGraphics()
     if g = 0 then return 0
 
@@ -709,18 +631,18 @@ function clsDoubleBuffer.PaintLine( _
         ' Horizontal. GDI centres the pen on the path, so replicate that offset exactly.
         dim as long y0 = nTop - (penWidth \ 2)
         g->SetSmoothingMode( SmoothingModeNone )
-        g->FillRectangle( this.BrushFor( DBufToARGB( _pencolor, _penalpha ) ), _
+        g->FillRectangle( this.BrushFor( CBufToARGB( _pencolor, _penalpha ) ), _
                           csng(nLeft), csng(y0), csng(nRight - nLeft), csng(penWidth) )
     elseif nLeft = nRight then
         ' Vertical.
         dim as long x0 = nLeft - (penWidth \ 2)
         g->SetSmoothingMode( SmoothingModeNone )
-        g->FillRectangle( this.BrushFor( DBufToARGB( _pencolor, _penalpha ) ), _
+        g->FillRectangle( this.BrushFor( CBufToARGB( _pencolor, _penalpha ) ), _
                           csng(x0), csng(nTop), csng(penWidth), csng(nBottom - nTop) )
     else
         ' Diagonal: this is the one that genuinely benefits from antialiasing.
         g->SetSmoothingMode( SmoothingModeAntiAlias )
-        g->DrawLine( this.PenFor( DBufToARGB( _pencolor, _penalpha ), csng(penWidth) ), _
+        g->DrawLine( this.PenFor( CBufToARGB( _pencolor, _penalpha ), csng(penWidth) ), _
                      csng(nLeft), csng(nTop), csng(nRight), csng(nBottom) )
     end if
 
@@ -728,32 +650,29 @@ function clsDoubleBuffer.PaintLine( _
     _gpDirty = true
     function = 0
 
-#else
-
-    dim as HPEN hPenSolid = CreatePen( PS_SOLID, penWidth, _pencolor )
-    dim as HPEN hOldPen = SelectObject( _memDC, hPenSolid)
-    MoveToEx( _memDC, nLeft, nTop, null )
-    LineTo( _memDC, nRight, nBottom )
-    DeleteObject( SelectObject(_memDC, hOldPen) )
-    function = 0
-
-#endif
 end function
 
 
 ' ========================================================================================
-' Geometry self-test, run with DBUF_SELFTEST=1.
+' Geometry self-test, run with CBUFFERPAINT_SELFTEST=1.
 '
-' Every expected number below was MEASURED off the GDI backend, not derived from what the
-' documentation implies GDI does -- the two disagreed twice while this was being written
-' (a stroke landing one column left, and RoundRect's fill stopping a row short of its
-' own rect). Renders through the real public methods into an offscreen surface and reads
-' the pixels back, so it asserts the rendering rather than the arithmetic behind it.
+' Renders through the real public methods into an offscreen surface and reads the pixels
+' back, so it asserts the rendering rather than the arithmetic behind it.
+'
+' WHERE THE EXPECTED NUMBERS CAME FROM, and why you should not "simplify" them: every one
+' was MEASURED off the GDI implementation this class used to carry alongside the GDI+ one,
+' not derived from what the documentation implies GDI does. The two disagreed twice while
+' the GDI+ path was being written -- a stroke landing one column left, and RoundRect's
+' fill stopping a row short of its own rect -- and each time the measurement was right.
+'
+' That second implementation is gone now, so these assertions no longer have an
+' independent oracle behind them; they are a regression net, not a proof. A number here
+' that looks off by one is far more likely to be the API's real behaviour than a typo.
 '
 ' Reports assertions RUN as well as failed: a harness that only counts failures cannot
 ' tell "all passed" from "barely executed" (Learnings.md).
 ' ========================================================================================
-namespace DBufSelfTest
+namespace CBufferPaintSelfTest
     dim shared as long gRun, gFail
     dim shared as HDC     gDC
     dim shared as HBITMAP gBmp
@@ -820,15 +739,11 @@ namespace DBufSelfTest
     end function
 end namespace
 
-sub clsDoubleBuffer_RunSelfTest( byval hwnd as HWND )
-    using DBufSelfTest
+sub CBufferPaint_RunSelfTest( byval hwnd as HWND )
+    using CBufferPaintSelfTest
 
     print ""
-    #ifdef DBUF_GDIPLUS
-        print "=== clsDoubleBuffer geometry self-test  (backend: GDI+) ==="
-    #else
-        print "=== clsDoubleBuffer geometry self-test  (backend: GDI) ==="
-    #endif
+    print "=== CBufferPaint geometry self-test ==="
 
     gRun = 0 : gFail = 0
 
@@ -856,7 +771,7 @@ sub clsDoubleBuffer_RunSelfTest( byval hwnd as HWND )
     ' --- PaintRect: fills [left,right) x [top,bottom), same as ExtTextOut/ETO_OPAQUE ----
     ClearSurf()
     scope
-        dim bb as clsDoubleBuffer
+        dim bb as CBufferPaint
         bb.BeginDoubleBuffer( hwnd, gDC, rcAll )
         bb.SetBackColor( CBACK ) : bb.PaintClientRect()
         dim as RECT r = type( 10, 5, 40, 20 )
@@ -874,7 +789,7 @@ sub clsDoubleBuffer_RunSelfTest( byval hwnd as HWND )
     '     This is the one that was wrong first time round.
     ClearSurf()
     scope
-        dim bb as clsDoubleBuffer
+        dim bb as CBufferPaint
         bb.BeginDoubleBuffer( hwnd, gDC, rcAll )
         bb.SetBackColor( CBACK ) : bb.PaintClientRect()
         dim as RECT r = type( 10, 5, 40, 20 )
@@ -894,7 +809,7 @@ sub clsDoubleBuffer_RunSelfTest( byval hwnd as HWND )
     '     still looks deliberate -- so the corner is measured, not eyeballed. -----------
     ClearSurf()
     scope
-        dim bb as clsDoubleBuffer
+        dim bb as CBufferPaint
         bb.BeginDoubleBuffer( hwnd, gDC, rcAll )
         bb.SetBackColor( CBACK ) : bb.PaintClientRect()
         dim as RECT r = type( 10, 5, 50, 35 )      ' 40 x 30
@@ -913,16 +828,14 @@ sub clsDoubleBuffer_RunSelfTest( byval hwnd as HWND )
     RowSpan( 6, a, b2 )
     Chk( "RoundRect: corner radius ~10 not ~20", (a >= 11) andalso (a <= 17), "row6 starts x=" & a )
 
-    #ifdef DBUF_GDIPLUS
     Chk( "RoundRect: corner is antialiased", (ToneCount( 8, 3, 24, 19 ) > 2), _
          "distinct tones = " & ToneCount( 8, 3, 24, 19 ) )
-    #endif
 
     ' --- PaintLine: axis-aligned rules must stay hard-edged and keep GDI's exclusive
     '     endpoint. An antialiased 1px divider goes grey, which reads as a theme bug. --
     ClearSurf()
     scope
-        dim bb as clsDoubleBuffer
+        dim bb as CBufferPaint
         bb.BeginDoubleBuffer( hwnd, gDC, rcAll )
         bb.SetBackColor( CBACK ) : bb.PaintClientRect()
         bb.SetPenColor( CPEN ) : bb.PaintLine( 1, 10, 8, 40, 8 )
@@ -942,7 +855,7 @@ sub clsDoubleBuffer_RunSelfTest( byval hwnd as HWND )
 
     ClearSurf()
     scope
-        dim bb as clsDoubleBuffer
+        dim bb as CBufferPaint
         bb.BeginDoubleBuffer( hwnd, gDC, rcAll )
         bb.SetBackColor( CBACK ) : bb.PaintClientRect()
         bb.SetPenColor( CPEN ) : bb.PaintLine( 2, 10, 8, 40, 8 )
@@ -958,7 +871,7 @@ sub clsDoubleBuffer_RunSelfTest( byval hwnd as HWND )
 
     ClearSurf()
     scope
-        dim bb as clsDoubleBuffer
+        dim bb as CBufferPaint
         bb.BeginDoubleBuffer( hwnd, gDC, rcAll )
         bb.SetBackColor( CBACK ) : bb.PaintClientRect()
         bb.SetPenColor( CPEN ) : bb.PaintLine( 1, 20, 5, 20, 30 )
@@ -979,7 +892,7 @@ sub clsDoubleBuffer_RunSelfTest( byval hwnd as HWND )
     '     PaintText this is exactly what goes missing, intermittently. ----------------
     ClearSurf()
     scope
-        dim bb as clsDoubleBuffer
+        dim bb as CBufferPaint
         bb.BeginDoubleBuffer( hwnd, gDC, rcAll )
         bb.SetBackColor( CBACK ) : bb.PaintClientRect()
         dim as RECT r = type( 10, 5, 40, 20 )
@@ -995,7 +908,7 @@ sub clsDoubleBuffer_RunSelfTest( byval hwnd as HWND )
     ' --- PaintEllipse: the knob primitive. Must be round, centred, and antialiased. -----
     ClearSurf()
     scope
-        dim bb as clsDoubleBuffer
+        dim bb as CBufferPaint
         bb.BeginDoubleBuffer( hwnd, gDC, rcAll )
         bb.SetBackColor( CBACK ) : bb.PaintClientRect()
         dim as RECT r = type( 10, 5, 30, 25 )        ' 20 x 20 circle
@@ -1014,15 +927,13 @@ sub clsDoubleBuffer_RunSelfTest( byval hwnd as HWND )
     RowSpan( 7, topFirst, topLast )
     Chk( "Ellipse: is round, not a filled box", (topLast - topFirst) < 18, _
          "row7 width = " & (topLast - topFirst + 1) & " vs mid 20" )
-    #ifdef DBUF_GDIPLUS
     Chk( "Ellipse: rim is antialiased", (ToneCount( 8, 3, 32, 27 ) > 2), _
          "distinct tones = " & ToneCount( 8, 3, 32, 27 ) )
-    #endif
 
     ' --- PaintRoundOutline: strokes WITHOUT filling. The interior must survive. ---------
     ClearSurf()
     scope
-        dim bb as clsDoubleBuffer
+        dim bb as CBufferPaint
         bb.BeginDoubleBuffer( hwnd, gDC, rcAll )
         bb.SetBackColor( CBACK ) : bb.PaintClientRect()
         dim as RECT r = type( 10, 5, 50, 30 )
@@ -1049,7 +960,7 @@ sub clsDoubleBuffer_RunSelfTest( byval hwnd as HWND )
         ReleaseDC( null, hScr2 )
 
         dim as RECT rRow = type( 0, 0, SW, 12 )
-        dim bb as clsDoubleBuffer
+        dim bb as CBufferPaint
         bb.BeginDoubleBuffer( hwnd, gDC, rRow, cacheDC )
         bb.SetBackColor( CFILL )
         bb.PaintRect( @rRow )

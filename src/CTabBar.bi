@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include once "clsDoubleBuffer.bi"
+#include once "CBufferPaint.bi"
 
 ' Polling timer that guarantees hot-tracking is cleared when the mouse leaves the
 ' control. WM_MOUSELEAVE (TME_LEAVE) is not reliably delivered on fast exits, so a
@@ -53,7 +53,7 @@ end type
 type CTABBAR_PAINTINFO
     hTabBar         as HWND                   ' the control, so the callback can query it
     itemID          as integer                ' tab index (model index)
-    b               as clsDoubleBuffer ptr    ' the control's buffer for this repaint (no copy)
+    b               as CBufferPaint ptr    ' the control's buffer for this repaint (no copy)
     ' --- Geometry, all precomputed by LayoutTabs. Never re-derive insets from rc. ---
     rc              as RECT                   ' the border-DEFLATED paint area: fill THIS.
                                               '   On the active tab it runs to the client

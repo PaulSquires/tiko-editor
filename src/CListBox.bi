@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include once "clsDoubleBuffer.bi"
+#include once "CBufferPaint.bi"
 
 ' Polling timer that guarantees hot-tracking is cleared when the mouse leaves the
 ' control. WM_MOUSELEAVE (TME_LEAVE) is not reliably delivered on fast exits, so a
@@ -22,7 +22,7 @@ end type
 
 type CLISTBOX_PAINTINFO
     itemID          as integer                ' MODEL row index (not the visible/listbox index)
-    b               as clsDoubleBuffer ptr    ' points to the caller's buffer (no copy)
+    b               as CBufferPaint ptr    ' points to the caller's buffer (no copy)
     rc              as RECT
     isHot           as boolean                ' mouse is hovering this row
     isSelected      as boolean                ' row is part of the selection

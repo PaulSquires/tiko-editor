@@ -2,7 +2,7 @@
 #pragma once
 
 #include once "vbcompat.bi"                 ' format() -- numeric mode formatting
-#include once "clsDoubleBuffer.bi"
+#include once "CBufferPaint.bi"
 ' The built-in context menu is a CPopupMenu (canonical home C:\dev\CMenuBar; vendored
 ' here). This is the control family's owner-drawn floating menu -- using it instead of
 ' TrackPopupMenu is what makes the textbox's right-click menu themeable and consistent

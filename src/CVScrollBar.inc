@@ -142,7 +142,7 @@ function CVScrollBar_OnPaint( byval hwnd as HWND ) as LRESULT
     if pSB = 0 then return 0
     pSB->Recalc()
 
-    dim as clsDoubleBuffer b
+    dim as CBufferPaint b
     b.BeginDoubleBuffer(hwnd)
 
     dim as CVSCROLLBAR_PAINTINFO p

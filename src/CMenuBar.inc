@@ -186,7 +186,7 @@ private function CMenuBar_OnPaint( byval hwnd as HWND ) as LRESULT
 
     if pBar->bLayoutDirty then pBar->LayoutItems()
 
-    dim as clsDoubleBuffer b
+    dim as CBufferPaint b
     b.BeginDoubleBuffer(hwnd)
     b.SetBackColor( pBar->colors.BackColor )
     b.PaintClientRect()

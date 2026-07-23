@@ -1190,7 +1190,7 @@ function CTextBox_WndProc( _
 
         case WM_PAINT
             if pTextBox = null then exit select    ' DefWindowProc validates
-            dim b as clsDoubleBuffer
+            dim b as CBufferPaint
             b.BeginDoubleBuffer(hwnd)
             ' Outer fill first: with rounded corners the pixels outside the arcs show
             ' this color (pass the host's background color to blend in).

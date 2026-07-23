@@ -56,7 +56,7 @@ end sub
 ' Shared by both bars (topics list and help text).
 ' ========================================================================================
 sub frmHelpViewer_VScrollPaint( byval p as CVSCROLLBAR_PAINTINFO ptr )
-    dim as clsDoubleBuffer ptr b = p->b
+    dim as CBufferPaint ptr b = p->b
     b->SetBackColor( ghPanel.BackColorScrollBar )
     b->PaintClientRect()
     if IsRectEmpty( @p->rcThumb ) = 0 then
@@ -132,7 +132,7 @@ end function
 ' only needs a repaint (same approach as frmHelpViewer_VScrollPaint above).
 ' ========================================================================================
 sub frmHelpViewer_SplitterPaint( byval p as CSPLITTER_PAINTINFO ptr )
-    dim as clsDoubleBuffer ptr b = p->b
+    dim as CBufferPaint ptr b = p->b
 
     ' The gap either side of the band is the form's own background.
     b->SetBackColor( ghMain.BackColor )
@@ -305,7 +305,7 @@ end function
 ' Process WM_PAINT message for window/dialog: frmHelpViewer
 ' ========================================================================================
 function frmHelpViewer_OnPaint( byval hwnd as HWND ) as LRESULT
-    dim as clsDoubleBuffer b
+    dim as CBufferPaint b
 
     b.BeginDoubleBuffer(hwnd)
     b.SetBackColor( ghMain.BackColor )

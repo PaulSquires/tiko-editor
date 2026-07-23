@@ -308,7 +308,8 @@ collision risk and documents the full set.
 
 Worth recording so the refactor plan doesn't re-litigate them:
 
-- **GDI pairing** outside §2.3 is clean: `clsDoubleBuffer` correctly restores and deletes;
+- **GDI pairing** outside §2.3 is clean: `clsDoubleBuffer` (since renamed `CBufferPaint`)
+  correctly restores and deletes;
   `frmPopupMenu`, `frmBuildConfig`, `frmUserTools` all clean up; `ghFont(...)` global fonts
   are deleted in `frmMain`'s destroy path ([frmMain.inc:1730](src/frmMain.inc:1730)).
 - **`GetDC`/`ReleaseDC`**: 10 acquisitions, 10 releases, same files.

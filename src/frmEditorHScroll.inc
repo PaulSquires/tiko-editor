@@ -137,7 +137,7 @@ end sub
 ' needs a repaint.
 ' ========================================================================================
 sub frmEditorHScroll_PaintCallback( byval p as CHSCROLLBAR_PAINTINFO ptr )
-    dim as clsDoubleBuffer ptr b = p->b
+    dim as CBufferPaint ptr b = p->b
     b->SetBackColor( ghEditor.BackColorScrollBar )
     b->PaintClientRect()
     if IsRectEmpty( @p->rcThumb ) = 0 then

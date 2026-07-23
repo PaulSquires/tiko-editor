@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include once "clsDoubleBuffer.bi"
+#include once "CBufferPaint.bi"
 
 ' Polling timer that guarantees hot-tracking is cleared when the mouse leaves the control.
 ' WM_MOUSELEAVE (TME_LEAVE) is not reliably delivered on fast exits, so a periodic cursor
@@ -48,7 +48,7 @@ end enum
 
 type CSPLITTER_PAINTINFO
     hSplitter    as HWND                  ' the control, so the callback can query it
-    b            as clsDoubleBuffer ptr   ' the control's buffer for this repaint (no copy)
+    b            as CBufferPaint ptr   ' the control's buffer for this repaint (no copy)
     rcClient     as RECT                  ' the whole bar, in client coordinates
     nOrientation as integer               ' CSPLITTER_VERTICAL / CSPLITTER_HORIZONTAL
     isHot        as boolean               ' the mouse is over the bar

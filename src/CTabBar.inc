@@ -614,7 +614,7 @@ function CTabBar_OnPaint( byval hwnd as HWND ) as LRESULT
     dim as RECT rcUpdate
     if GetUpdateRect( hwnd, @rcUpdate, FALSE ) = 0 then GetClientRect( hwnd, @rcUpdate )
 
-    dim as clsDoubleBuffer b
+    dim as CBufferPaint b
 
     b.BeginDoubleBuffer(hwnd)
     b.SetBackColor( pTabBar->BackColor )

@@ -63,7 +63,7 @@ dim shared as DWSTRING gwszDefaultToolchain = "FreeBASIC-1.10.1-winlibs-gcc-9.3.
 #include once "fbcParser.bi"
 #include once "clsDocument.bi"
 #include once "modDeclares.bi"
-#include once "clsDoubleBuffer.bi"
+#include once "CBufferPaint.bi"
 #include once "clsTopTabCtl.bi"
 #include once "clsConfig.bi"
 #include once "clsApp.bi"
@@ -82,7 +82,7 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "modCWindow.inc"
 #include once "modThemes.inc"
 #include once "clsConfig.inc"
-#include once "clsDoubleBuffer.inc"
+#include once "CBufferPaint.inc"
 #include once "modRoutines.inc"
 #include once "clsDocument.inc"
 #include once "clsApp.inc"
@@ -267,10 +267,10 @@ function WinMain( _
     ' Start the background fbcParser scan worker (owns all fbcParser.dll calls)
     gScanMgr.StartWorker()
 
-    ' Initialize GDI+ (clsDoubleBuffer's rendering backend -- see DBUF_GDIPLUS).
+    ' Initialize GDI+ (CBufferPaint draws all geometry through it).
     ' Deliberately placed AFTER every early "return 1" above, so no failure path can
     ' skip the matching shutdown, and BEFORE the first window exists, because a
-    ' clsDoubleBuffer built during the very first WM_PAINT already needs GDI+ running.
+    ' CBufferPaint built during the very first WM_PAINT already needs GDI+ running.
     dim as ULONG_PTR gdipToken = AfxGdipInit()
 
     ' Show the main form
@@ -286,7 +286,7 @@ function WinMain( _
     if len(wszFontFile) then RemoveFontResource(wszFontFile)
 
     ' Shut GDI+ down. frmMain_Show has returned, so every window is destroyed and every
-    ' clsDoubleBuffer that painted into one has run its destructor -- no CGp* object can
+    ' CBufferPaint that painted into one has run its destructor -- no CGp* object can
     ' still be alive. This must also precede CoUninitialize, since GDI+ leans on COM.
     AfxGdipShutdown( gdipToken )
 

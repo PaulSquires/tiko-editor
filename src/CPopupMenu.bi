@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include once "clsDoubleBuffer.bi"
+#include once "CBufferPaint.bi"
 
 ' Safety-net poll timer, run on the ROOT of an open popup chain only. It does two jobs:
 '   1. Hover net: WM_MOUSELEAVE (TME_LEAVE) is not reliably delivered on fast exits, so
@@ -114,7 +114,7 @@ type CPOPUPMENU_PAINTINFO
     hPopup      as HWND                   ' the control, so the callback can query it
     itemID      as long                   ' row index within this popup
     id          as long                   ' the row's command id (0 for separators)
-    b           as clsDoubleBuffer ptr    ' the control's buffer for this repaint
+    b           as CBufferPaint ptr    ' the control's buffer for this repaint
     ' --- Geometry, precomputed. rcCheck/rcText/rcChevron partition rc left-to-right. ---
     rc          as RECT                   ' the full row: fill THIS
     rcCheck     as RECT                   ' left gutter (check glyph)
