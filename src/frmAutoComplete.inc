@@ -173,11 +173,12 @@ end function
 ' ========================================================================================
 ' frmAutoComplete_MessageCallback
 '
-' The click path. WM_LBUTTONDOWN is CONSUMED (return true) on purpose: CListBox
-' otherwise falls through to DefSubclassProc specifically so that its LISTBOX child takes
-' keyboard focus, which would pull focus off Scintilla and kill the caret. Swallowing the
-' down also means the listbox never captures the mouse, so there is no capture to leak --
-' the usual reason the family lets WM_LBUTTONUP through does not apply here.
+' The click path. The owner-drawn CListBox surface takes keyboard focus in its own
+' WM_LBUTTONDOWN -- SetFocus on its container, BEFORE this callback runs -- exactly as the
+' old system listbox did in its default handling. Either way that pulls focus off Scintilla,
+' which kills the caret and stops the pump filter from seeing keystrokes, so we put focus
+' straight back on the editor here and consume the message. The control takes no capture (it
+' implements no drag gesture), so there is none to strand by swallowing the up.
 '
 ' The model selection is still applied: CListBox_ApplyClickSelection runs BEFORE this
 ' callback is invoked. So the down selects, and the up commits.
@@ -187,7 +188,9 @@ private function frmAutoComplete_MessageCallback( byval m as CLISTBOX_MESSAGEINF
     select case m->uMsg
 
         case WM_LBUTTONDOWN
-            return true          ' select only; never let the listbox take focus
+            ' Undo the surface's focus grab: the editor must keep focus for the pump filter.
+            if ghAutoCEdit then SetFocus( ghAutoCEdit )
+            return true          ' select only; never let the list keep focus
 
         case WM_LBUTTONUP
             dim as clsDocument ptr pDoc = gTTabCtl.GetActiveDocumentPtr()

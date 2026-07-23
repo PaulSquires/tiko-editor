@@ -489,6 +489,37 @@ end function
 
 
 ' ========================================================================================
+' Empty client area of a plain owner-drawn system LISTBOX: the strip from below the last
+' visible row to the bottom edge. Used by the subclass WM_ERASEBKGND below to fill just that
+' gap (flicker reduction). This was an unprefixed helper in the old CListBox.inc, back when
+' that control wrapped a system listbox; the owner-drawn CListBox no longer does and dropped
+' it, so it lives here now -- its one remaining caller -- operating on frmBuildConfig's own
+' raw LISTBOX.
+' ========================================================================================
+function GetListBoxEmptyClientArea( byval hListBox as HWND ) as RECT
+    dim as RECT rc: GetClientRect( hListBox, @rc )
+    ' Row height from LB_GETITEMHEIGHT is valid even with zero items (fixed-height
+    ' owner-draw), unlike LB_GETITEMRECT(0) which fails when item 0 doesn't exist.
+    dim as long itemHeight = SendMessage( hListBox, LB_GETITEMHEIGHT, 0, 0 )
+    dim as long NumItems   = ListBox_GetCount(hListBox)
+    dim as long nTopIndex  = SendMessage( hListBox, LB_GETTOPINDEX, 0, 0 )
+    dim as long visible_rows = 0
+
+    if (NumItems > 0) andalso (itemHeight > 0) then
+        dim as long ItemsPerPage = (rc.bottom - rc.top) \ itemHeight
+        dim as long bottom_index = nTopIndex + ItemsPerPage
+        if bottom_index >= NumItems then bottom_index = NumItems - 1
+        visible_rows = (bottom_index - nTopIndex) + 1
+    end if
+
+    rc.top = visible_rows * itemHeight
+    if rc.top > rc.bottom then rc.top = rc.bottom
+
+    return rc
+end function
+
+
+' ========================================================================================
 ' Processes messages for the subclassed ListBox window.
 ' ========================================================================================
 function frmBuildConfig_ListBox_SubclassProc ( _

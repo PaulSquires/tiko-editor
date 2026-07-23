@@ -124,8 +124,7 @@ type CLISTBOX
     rows(any)       as CLISTBOX_ROWINFO
     rowCount        as integer = 0
     ' --- View: visibleMap(v) -> model row index, for v = 0..visibleCount-1.
-    '     Rebuilt on any change / collapse-expand. The listbox (LBS_NODATA) count
-    '     is always set to visibleCount. ---
+    '     Rebuilt on any change / collapse-expand. ---
     visibleMap(any) as integer
     visibleCount    as integer = 0
     updateDepth     as integer = 0        ' BeginUpdate/EndUpdate nesting (defers refresh)
@@ -142,7 +141,17 @@ type CLISTBOX
     lastNotifiedRow as integer = -1
     anchorRow       as integer = -1       ' MODEL row anchoring a shift-range selection
     topRow          as integer = 0        ' MODEL row that should be first displayed; the scroll
-                                          ' source of truth the Win32 listbox is re-derived from
+                                          ' source of truth the VIEW is re-derived from
+    ' --- Scroll and metrics, formerly held by the Win32 listbox child. ---
+    ' The first VISIBLE row on screen. topRow (model) stays the source of truth that
+    ' survives a rebuild -- a collapsed group can move a model row to a different visible
+    ' slot -- and this is what the paint loop and hit-testing actually walk. The two are
+    ' reconciled in CListBox_SyncViewFromModel, exactly where LB_SETTOPINDEX used to be.
+    nTopVis         as integer = 0
+    ' Row height in PIXELS, already DPI-scaled. RowHeight above is in unscaled units, the
+    ' way every host sets it; this is the scaled value the geometry uses, computed once at
+    ' creation and whenever the font or row height changes. It was LB_GETITEMHEIGHT.
+    nItemHeightPx   as integer = 0
     ExtendSel       as boolean = false
     MultipleSel     as boolean = false
     PreventDblClick as boolean = false    ' host opt-out of double-click: the dblclk becomes a
@@ -150,8 +159,6 @@ type CLISTBOX
     skipNextLBtnUp  as boolean = false    ' armed by a suppressed dblclk; consumed by the next
                                           ' WM_LBUTTONUP, disarmed by any fresh WM_LBUTTONDOWN
     BackColor       as COLORREF
-    hBackBrush      as HBRUSH             ' cached WM_CTLCOLORLISTBOX brush (control-owned;
-    backBrushColor  as COLORREF           '   recreated when BackColor changes, freed at destroy)
     hFont           as HFONT              ' caller-supplied font for row text (caller owns it)
     ' --- Owner-drawn vertical scrollbar, created and driven by this control. It is
     '     auto-hidden whenever the visible rows fit, and the listbox then reclaims the
@@ -173,22 +180,13 @@ type CLISTBOX
     MessageCallback as MessageCallbackFunc
     TooltipCallback as TooltipCallbackFunc    ' optional; defaults to the row's Text
     SelChangeCallback as SelChangeCallbackSub ' optional; user-driven selection changes only
-    ' --- Reusable one-row back buffer, so WM_DRAWITEM doesn't create/destroy a
-    '     compatible DC + bitmap for every row on every repaint. ---
-    cacheDC         as HDC
-    cacheBmp        as HBITMAP
-    cacheOldBmp     as HBITMAP
-    cacheW          as integer = 0
-    cacheH          as integer = 0
     ' --- Persistent scratch for PAINTINFO.cells, re-dimensioned only when the column
-    '     count changes (WM_DRAWITEM is strictly sequential and single-threaded, so
+    '     count changes (the paint loop is strictly sequential and single-threaded, so
     '     one array serves every row; the pointer handed out is valid only for the
     '     duration of each callback). ---
     paintCells(any) as CLISTBOX_CELLINFO
 
     declare destructor()
-    declare function EnsureCache( byval refDC as HDC, byval w as integer, byval h as integer ) as HDC
-    declare sub      FreeCache()
     declare sub      EnsurePaintCells( byval n as integer )
     declare function GetCount() as integer                                  ' model row count
     declare function GetVisibleCount() as integer
@@ -216,44 +214,18 @@ end type
 ' Defined in CListBox.inc, but CLISTBOX.Refresh (below) has to call it -- push the
 ' scrollbar's range/visibility to match the current model + scroll position.
 declare sub      CListBox_SyncScrollBar( byval pList as CLISTBOX ptr )
-declare sub      CListBox_SyncListboxFromModel( byval pList as CLISTBOX ptr )
+declare sub      CListBox_SyncViewFromModel( byval pList as CLISTBOX ptr )
 declare sub      CListBox_CaptureTopRow( byval pList as CLISTBOX ptr )
 declare function CListBox_ItemsPerPage( byval pList as CLISTBOX ptr ) as integer
 declare function CListBox_PositionWindows( byval hwnd as HWND ) as LRESULT
 
+' The one-row back buffer (EnsureCache / FreeCache and its five fields) is GONE. It existed
+' solely so WM_DRAWITEM would not create and destroy a compatible DC and bitmap for every
+' row on every repaint. With the whole surface painted in a single buffer there is no
+' per-row buffer to cache, and its disappearance is a good part of why the rewrite made
+' the GDI backends faster too, not just the Direct2D one.
 destructor CLISTBOX()
-    this.FreeCache()
 end destructor
-
-' Return a cached memDC whose selected bitmap is at least w x h, (re)creating it
-' only when the requested size changes. Bitmap is compatible with refDC.
-function CLISTBOX.EnsureCache( byval refDC as HDC, byval w as integer, byval h as integer ) as HDC
-    if (this.cacheDC <> 0) andalso (this.cacheW = w) andalso (this.cacheH = h) then
-        return this.cacheDC
-    end if
-    this.FreeCache()
-    this.cacheDC     = CreateCompatibleDC( refDC )
-    this.cacheBmp    = CreateCompatibleBitmap( refDC, w, h )
-    this.cacheOldBmp = SelectObject( this.cacheDC, this.cacheBmp )
-    this.cacheW      = w
-    this.cacheH      = h
-    return this.cacheDC
-end function
-
-sub CLISTBOX.FreeCache()
-    if this.cacheDC then
-        if this.cacheOldBmp then SelectObject( this.cacheDC, this.cacheOldBmp )
-        DeleteDC( this.cacheDC )
-        this.cacheDC = 0
-    end if
-    if this.cacheBmp then
-        DeleteObject( this.cacheBmp )
-        this.cacheBmp = 0
-    end if
-    this.cacheOldBmp = 0
-    this.cacheW = 0
-    this.cacheH = 0
-end sub
 
 ' Size the PAINTINFO.cells scratch to exactly n entries (only re-dims when the column
 ' count actually changed, so the per-row cost is a compare).
@@ -455,7 +427,7 @@ sub CLISTBOX.Refresh()
     ' Re-derive the Win32 listbox (count, caret, top row) and the scrollbar from
     ' the model, then repaint WITH background erase so the vacated region below the
     ' last row is cleared when the list shrinks (delete / collapse).
-    CListBox_SyncListboxFromModel( @this )
+    CListBox_SyncViewFromModel( @this )
     InvalidateRect( hList, NULL, TRUE )
 end sub
 

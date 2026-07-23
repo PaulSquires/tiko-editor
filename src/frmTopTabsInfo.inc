@@ -120,7 +120,7 @@ function frmTopTabsInfo_WndProc( _
             
     case WM_NCDESTROY
         dim pWindow as CWindow ptr = AfxCWindowPtr(hwnd)
-        if pWindow = 0 then delete(pWindow)
+        if pWindow then delete(pWindow)
         HWND_FRMMAIN_TOPTABSINFO = 0
         
     case WM_ERASEBKGND

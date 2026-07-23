@@ -16,31 +16,111 @@ end function
 
 
 ' ========================================================================================
-' Calculate the client area at the bottom of the listbox not covered by any row, so it
-' can be painted manually in WM_ERASEBKGND (avoids flicker). Only non-empty when the list
-' is shorter than the viewport; LBS_NOINTEGRALHEIGHT owner-draws any partial bottom row,
-' so there is no partial-line gap to special-case.
+' ROW GEOMETRY -- the arithmetic that replaced the Win32 listbox.
+'
+' The listbox child was, in the end, a holder for three integers (top index, item height,
+' item count) plus a WM_DRAWITEM dispatch loop. Everything it was actually asked for
+' reduces to the four functions below. They are pure functions of the model, which is why
+' the change removes far more code than it adds.
+'
+' All indices here are VISIBLE indices, the same space LB_GETTOPINDEX / LB_SETTOPINDEX and
+' Listbox_ItemFromPoint worked in. The model/visible translation is unchanged and still
+' happens at the control's public boundary.
 ' ========================================================================================
-function GetListBoxEmptyClientArea( byval hListBox as HWND ) as RECT
-    dim as RECT rc: GetClientRect( hListBox, @rc )
-    ' Row height from LB_GETITEMHEIGHT is valid even with zero items (fixed-height
-    ' owner-draw), unlike LB_GETITEMRECT(0) which fails when item 0 doesn't exist.
-    dim as long itemHeight = SendMessage( hListBox, LB_GETITEMHEIGHT, 0, 0 )
-    dim as long NumItems   = ListBox_GetCount(hListBox)
-    dim as long nTopIndex  = SendMessage( hListBox, LB_GETTOPINDEX, 0, 0 )
-    dim as long visible_rows = 0
 
-    if (NumItems > 0) andalso (itemHeight > 0) then
-        dim as long ItemsPerPage = (rc.bottom - rc.top) \ itemHeight
-        dim as long bottom_index = nTopIndex + ItemsPerPage
-        if bottom_index >= NumItems then bottom_index = NumItems - 1
-        visible_rows = (bottom_index - nTopIndex) + 1
+' Row height in pixels, DPI-scaled once. Was LB_GETITEMHEIGHT.
+private function CListBox_ItemHeightPx( byval pList as CLISTBOX ptr ) as integer
+    if pList = 0 then return 0
+    if pList->nItemHeightPx > 0 then return pList->nItemHeightPx
+    dim as integer h = pList->RowHeight
+    dim pWindow as CWindow ptr = AfxCWindowPtr( pList->hWin )
+    if pWindow then h = pWindow->ScaleY( pList->RowHeight )
+    if h < 1 then h = 1
+    pList->nItemHeightPx = h
+    return h
+end function
+
+' How many rows fit in the surface. Was a client-height / LB_GETITEMHEIGHT division.
+private function CListBox_VisPerPage( byval pList as CLISTBOX ptr ) as integer
+    if pList = 0 then return 0
+    dim as HWND hSurf = GetDlgItem( pList->hWin, pList->idc_ListBox )
+    if hSurf = 0 then return 0
+    dim as RECT rc : GetClientRect( hSurf, @rc )
+    dim as integer ih = CListBox_ItemHeightPx( pList )
+    if ih < 1 then return 0
+    return (rc.bottom - rc.top) \ ih
+end function
+
+' Clamp a visible top index the way LB_SETTOPINDEX did: never past the point where the
+' last row sits at the bottom of the viewport, and never negative.
+private function CListBox_ClampTopVis( byval pList as CLISTBOX ptr, byval vis as integer ) as integer
+    if pList = 0 then return 0
+    dim as integer maxTop = pList->visibleCount - CListBox_VisPerPage( pList )
+    if maxTop < 0 then maxTop = 0
+    if vis > maxTop then vis = maxTop
+    if vis < 0 then vis = 0
+    return vis
+end function
+
+' Scroll to a visible top index, clamping. Returns the value actually adopted, which is
+' what the old code read back out of the listbox with LB_GETTOPINDEX after setting it.
+' Repaints only when something moved.
+private function CListBox_SetTopVis( byval pList as CLISTBOX ptr, byval vis as integer ) as integer
+    if pList = 0 then return 0
+    dim as integer newTop = CListBox_ClampTopVis( pList, vis )
+    if newTop <> pList->nTopVis then
+        pList->nTopVis = newTop
+        dim as HWND hSurf = GetDlgItem( pList->hWin, pList->idc_ListBox )
+        ' Whole surface, not a scrolled band: under D2D the back buffer is undefined after
+        ' a present, so every paint redraws the client anyway (README F2/F7).
+        if hSurf then InvalidateRect( hSurf, NULL, FALSE )
     end if
+    return pList->nTopVis
+end function
 
-    rc.top = visible_rows * itemHeight
-    if rc.top > rc.bottom then rc.top = rc.bottom
+' The rect a visible row occupies in the surface's client area. Was ListBox_GetItemRect.
+' Returns FALSE for a row that is not on screen, which the caller must respect -- the old
+' API returned LB_ERR for the same case.
+private function CListBox_VisIndexRect( _
+            byval pList as CLISTBOX ptr, _
+            byval vis as integer, _
+            byref rc as RECT _
+            ) as boolean
+    SetRect( @rc, 0, 0, 0, 0 )
+    if pList = 0 then return false
+    if (vis < 0) orelse (vis >= pList->visibleCount) then return false
+    dim as HWND hSurf = GetDlgItem( pList->hWin, pList->idc_ListBox )
+    if hSurf = 0 then return false
+    dim as RECT rcClient : GetClientRect( hSurf, @rcClient )
+    dim as integer ih = CListBox_ItemHeightPx( pList )
+    dim as integer y  = (vis - pList->nTopVis) * ih
+    if y >= rcClient.bottom then return false
+    if (y + ih) <= 0 then return false
+    SetRect( @rc, rcClient.left, y, rcClient.right, y + ih )
+    return true
+end function
 
-    return rc
+' The visible row under a client point, or -1. Was Listbox_ItemFromPoint, whose HIWORD
+' flagged "outside the client area" -- callers tested `hiword(idx) <> 1`. Returning -1 for
+' the same cases makes that test a plain `>= 0`, which is why every call site reads more
+' simply now. A point below the last row is NOT a row: the old call reported the nearest
+' one, and every caller then had to discard it.
+private function CListBox_VisIndexFromPoint( _
+            byval pList as CLISTBOX ptr, _
+            byval x as integer, _
+            byval y as integer _
+            ) as integer
+    if pList = 0 then return -1
+    dim as HWND hSurf = GetDlgItem( pList->hWin, pList->idc_ListBox )
+    if hSurf = 0 then return -1
+    dim as RECT rcClient : GetClientRect( hSurf, @rcClient )
+    if (x < rcClient.left) orelse (x >= rcClient.right) then return -1
+    if (y < rcClient.top)  orelse (y >= rcClient.bottom) then return -1
+    dim as integer ih = CListBox_ItemHeightPx( pList )
+    if ih < 1 then return -1
+    dim as integer vis = pList->nTopVis + (y \ ih)
+    if (vis < 0) orelse (vis >= pList->visibleCount) then return -1
+    return vis
 end function
 
 
@@ -415,7 +495,7 @@ function CListBox_SetCurSel( byval hListControl as HWND, byval row as integer ) 
         ' or the next genuine user selection of this same row would be swallowed as a
         ' no-change. Same reasoning below.
         pList->lastNotifiedRow = -1
-        CListBox_SyncListboxFromModel( pList )
+        CListBox_SyncViewFromModel( pList )
         if hList then InvalidateRect( hList, NULL, FALSE )
         return -1
     end if
@@ -425,11 +505,11 @@ function CListBox_SetCurSel( byval hListControl as HWND, byval row as integer ) 
     pList->lastNotifiedRow = row
     ' Ensure-visible, decided in the MODEL: if the new caret is outside the current
     ' page, move topRow so the caret lands on-page (above -> caret at top; below ->
-    ' caret at bottom). The Win32 listbox is then re-derived, never asked to scroll
-    ' on its own. A row hidden under a collapsed header stays where it is.
+    ' caret at bottom). The view is then re-derived, never asked to scroll on its own.
+    ' A row hidden under a collapsed header stays where it is.
     dim as integer visRow = pList->ModelToVisible( row )
     if (hList <> 0) andalso (visRow >= 0) then
-        dim as integer visTop  = SendMessage( hList, LB_GETTOPINDEX, 0, 0 )
+        dim as integer visTop  = pList->nTopVis
         dim as integer perPage = CListBox_ItemsPerPage( pList )
         if perPage < 1 then perPage = 1
         if visRow < visTop then
@@ -438,7 +518,7 @@ function CListBox_SetCurSel( byval hListControl as HWND, byval row as integer ) 
             pList->topRow = pList->VisibleToModel( visRow - perPage + 1 )
         end if
     end if
-    CListBox_SyncListboxFromModel( pList )
+    CListBox_SyncViewFromModel( pList )
     if hList then InvalidateRect( hList, NULL, FALSE )
     return row
 end function
@@ -447,17 +527,14 @@ end function
 ' ========================================================================================
 ' Retrieve the top (first displayed) row as a MODEL index, or -1 if the list is empty
 ' or the control is invalid.
-' The Win32 listbox scrolls in VISIBLE index space, so the raw LB_GETTOPINDEX value is
-' translated back through the visible map before being returned.
+' Scrolling happens in VISIBLE index space, so nTopVis is translated back through the
+' visible map before being returned.
 ' ========================================================================================
 function CListBox_GetTopIndex( byval hListControl as HWND ) as integer
     dim as CLISTBOX ptr pList = GetListBoxPointer(hListControl)
     if pList = null then return -1
     if pList->visibleCount = 0 then return -1
-    dim as HWND hList = GetDlgItem( pList->hWin, pList->idc_ListBox )
-    if hList = 0 then return -1
-    dim as integer visTop = SendMessage( hList, LB_GETTOPINDEX, 0, 0 )
-    return pList->VisibleToModel( visTop )
+    return pList->VisibleToModel( pList->nTopVis )
 end function
 
 
@@ -474,7 +551,7 @@ function CListBox_SetTopIndex( byval hListControl as HWND, byval row as integer 
     if pList = null then return -1
     if pList->IsValidRow(row) = false then return -1
     pList->topRow = row
-    CListBox_SyncListboxFromModel( pList )
+    CListBox_SyncViewFromModel( pList )
     return pList->topRow
 end function
 
@@ -590,16 +667,13 @@ function CListBox_SetRowHeight( byval hListControl as HWND, byval height as inte
     dim as CLISTBOX ptr pList = GetListBoxPointer(hListControl)
     if pList = null then return -1
     pList->RowHeight = height
-    ' Apply immediately -- WM_MEASUREITEM only fires at creation, so a later change
-    ' would otherwise have no visible effect until the listbox is recreated.
+    ' Recompute the scaled pixel height and repaint. This used to be an LB_SETITEMHEIGHT
+    ' plus a note that WM_MEASUREITEM only fires at creation; owning the metric outright
+    ' makes that whole caveat disappear.
+    pList->nItemHeightPx = 0                 ' force CListBox_ItemHeightPx to re-derive
+    CListBox_ItemHeightPx( pList )
     dim as HWND hList = GetDlgItem( pList->hWin, pList->idc_ListBox )
-    if hList then
-        dim as long h = height
-        dim pWindow as CWindow ptr = AfxCWindowPtr( pList->hWin )
-        if pWindow then h = pWindow->ScaleY( height )
-        SendMessage( hList, LB_SETITEMHEIGHT, 0, cast( LPARAM, h ) )
-        AfxRedrawWindow( hList )
-    end if
+    if hList then AfxRedrawWindow( hList )
     ' Row height changes items-per-page, which changes the scrollbar range (and can
     ' flip whether it is needed at all).
     CListBox_SyncScrollBar( pList )
@@ -1040,12 +1114,10 @@ sub CListBox_OnScrollBarScroll( byval hSB as HWND, byval newPos as integer )
     ' the scrollbar is a child of the CListBox container window
     dim as CLISTBOX ptr pList = GetListBoxPointer( GetParent(hSB) )
     if pList = 0 then return
-    dim as HWND hList = GetDlgItem( pList->hWin, pList->idc_ListBox )
-    if hList = 0 then return
-    SendMessage( hList, LB_SETTOPINDEX, newPos, 0 )
-    ' The listbox clamps for itself; mirror whatever it actually did so the thumb can
-    ' never show a position the list isn't at. SetPos does not re-enter the callback.
-    dim as integer actual = SendMessage( hList, LB_GETTOPINDEX, 0, 0 )
+    ' The control clamps for itself now, where the listbox used to; mirror whatever it
+    ' actually did so the thumb can never show a position the list isn't at. SetPos does
+    ' not re-enter the callback.
+    dim as integer actual = CListBox_SetTopVis( pList, newPos )
     if actual <> newPos then CVScrollBar_SetPos( hSB, actual )
     ' Keep the model's scroll source-of-truth in step with the user's scroll, so a
     ' later rebuild or show re-derives to where the user actually left the list.
@@ -1062,13 +1134,11 @@ end sub
 sub CListBox_SyncScrollBar( byval pList as CLISTBOX ptr )
     if pList = 0 then return
     if pList->hScrollBar = 0 then return
-    dim as HWND hList = GetDlgItem( pList->hWin, pList->idc_ListBox )
-    if hList = 0 then return
 
     CVScrollBar_SetRange( pList->hScrollBar, _
                           pList->visibleCount, _
                           CListBox_ItemsPerPage( pList ), _
-                          SendMessage( hList, LB_GETTOPINDEX, 0, 0 ) )
+                          pList->nTopVis )
 
     ' Auto-hide. This only changes the listbox WIDTH, while items-per-page depends on
     ' HEIGHT, so the decision cannot feed back on itself and oscillate.
@@ -1090,44 +1160,33 @@ end sub
 sub CListBox_CaptureTopRow( byval pList as CLISTBOX ptr )
     if pList = 0 then return
     if pList->visibleCount = 0 then return
-    dim as HWND hList = GetDlgItem( pList->hWin, pList->idc_ListBox )
-    if hList = 0 then return
-    dim as integer modelRow = pList->VisibleToModel( SendMessage( hList, LB_GETTOPINDEX, 0, 0 ) )
+    dim as integer modelRow = pList->VisibleToModel( pList->nTopVis )
     if modelRow >= 0 then pList->topRow = modelRow
 end sub
 
 
 ' ========================================================================================
-' Re-derive the Win32 listbox (count, caret, top row) and the scrollbar from the MODEL.
-' The listbox is a view: it never holds state the model does not, so after any model
-' change -- and whenever the control is shown -- this one routine re-converges it.
-' LB_SETCOUNT resets the listbox's scroll and caret, which is exactly why both are
-' re-pushed afterwards, in this order: caret first (LB_SETCURSEL scrolls the caret
-' into view), then the top row, so topRow is the final authority on scroll position.
-' The listbox clamps the scroll for itself; the clamped result is mirrored back into
-' topRow so the model always reflects what is actually on screen.
+' Re-derive the VIEW (top row) and the scrollbar from the MODEL. After any model change --
+' and whenever the control is shown -- this one routine re-converges them.
+'
+' Formerly CListBox_SyncListboxFromModel, and it lost most of its body with the listbox
+' child. LB_SETCOUNT is gone because visibleCount was always the real count; the caret push
+' is gone because the caret was only ever a listbox artefact (selection is painted from the
+' model's own per-row flags, which is why LB_SETCURSEL was already restricted to
+' single-select styles). What remains is the part that was always this control's own work:
+' translate topRow (model) into a visible slot, clamp it, and tell the scrollbar.
 ' ========================================================================================
-sub CListBox_SyncListboxFromModel( byval pList as CLISTBOX ptr )
+sub CListBox_SyncViewFromModel( byval pList as CLISTBOX ptr )
     if pList = 0 then return
-    dim as HWND hList = GetDlgItem( pList->hWin, pList->idc_ListBox )
-    if hList = 0 then return
-
-    SendMessage( hList, LB_SETCOUNT, pList->visibleCount, 0 )
+    dim as HWND hSurf = GetDlgItem( pList->hWin, pList->idc_ListBox )
+    if hSurf = 0 then return
 
     if pList->visibleCount = 0 then
-        pList->topRow = 0
-        ' ensure the now-empty client repaints (background via WM_CTLCOLORLISTBOX)
-        ' rather than lingering with the last rows' pixels
-        InvalidateRect( hList, 0, true )
+        pList->topRow  = 0
+        pList->nTopVis = 0
+        InvalidateRect( hSurf, NULL, TRUE )
         CListBox_SyncScrollBar( pList )
         return
-    end if
-
-    ' Caret (single-select styles only: LB_SETCURSEL is LB_ERR on multi-select
-    ' listboxes, where selection is painted from the model's per-row flags anyway).
-    ' A focusRow of -1, or one hidden under a collapsed header, clears the caret.
-    if (pList->MultipleSel = false) andalso (pList->ExtendSel = false) then
-        ListBox_SetCurSel( hList, pList->ModelToVisible( pList->focusRow ) )
     end if
 
     ' Top row: largest visible slot whose model row is <= topRow (visibleMap is
@@ -1148,11 +1207,14 @@ sub CListBox_SyncListboxFromModel( byval pList as CLISTBOX ptr )
             hi = midRow - 1
         end if
     loop
-    SendMessage( hList, LB_SETTOPINDEX, visRow, 0 )
 
-    ' Mirror what the listbox actually did back into the model and the scrollbar.
-    dim as integer actualTop = pList->VisibleToModel( SendMessage( hList, LB_GETTOPINDEX, 0, 0 ) )
+    ' Clamped by the control now, where the listbox used to do it. Mirror the clamped
+    ' result back into topRow so the model always reflects what is actually on screen.
+    dim as integer actualVis = CListBox_SetTopVis( pList, visRow )
+    dim as integer actualTop = pList->VisibleToModel( actualVis )
     if actualTop >= 0 then pList->topRow = actualTop
+
+    InvalidateRect( hSurf, NULL, FALSE )
     CListBox_SyncScrollBar( pList )
 end sub
 
@@ -1195,133 +1257,130 @@ end function
 
 
 ' ========================================================================================
-' Process WM_MEASUREITEM message for window/dialog: CListBox
+' Paint the list surface: background, then every visible row, in ONE buffer.
+'
+' This replaces WM_MEASUREITEM + WM_DRAWITEM and is the point of the whole rewrite. The
+' system listbox turned one WM_PAINT into N WM_DRAWITEM messages, each with its own buffer
+' and its own blit; under Direct2D each of those was a full BindDC/BeginDraw/EndDraw cycle
+' at ~600 us apiece (README F8), so a 34-row repaint paid 34 cycles. Here the whole client
+' is one cycle.
+'
+' ONE CONTRACT CHANGE, and it is the only one hosts can see: p->rc and the cell rects are
+' now in the SURFACE's CLIENT coordinates rather than in a row-sized buffer starting at
+' y = 0. A callback that derives everything from p->rc -- which is what the family's row
+' painters do, since they must already honour the row's left edge and width -- needs no
+' change at all. One that hardcoded 0 for the top would.
+'
+' The plan called for a render-target transform per row to keep p->rc.top = 0 and avoid
+' even that. It was not used: transforms are a Direct2D feature, and the GDI and GDI+
+' backends have no equivalent, so it would have made the three builds diverge in exactly
+' the code the A/B comparison depends on being identical.
 ' ========================================================================================
-function CListBox_OnMeasureItem( _
-            byval hwnd as HWND, _
-            byval lpmis as MEASUREITEMSTRUCT ptr _
-            ) as long
+function CListBox_OnPaintSurface( byval hSurf as HWND ) as LRESULT
+    dim as CLISTBOX ptr pList = GetListBoxPointer( GetParent( hSurf ) )
+    if pList = null then return 0
 
-    dim pWindow as CWindow ptr = AfxCWindowPtr(hwnd)
-    if pWindow = 0 then exit function
+    dim as clsDoubleBuffer b
+    b.BeginDoubleBuffer( hSurf )
 
-    dim as CLISTBOX ptr pList = GetListBoxPointer(hwnd)
-    if pList then 
-        ' Set the height of the list box items. 
-        lpmis->itemHeight = pWindow->ScaleY( pList->RowHeight )
+    ' The control's own background, over the whole client. This also covers the empty
+    ' strip below the last row, which used to need a separate WM_ERASEBKGND fill through
+    ' GetListBoxEmptyClientArea.
+    b.SetBackColor( pList->BackColor )
+    b.PaintClientRect()
+
+    dim as RECT rcClient
+    GetClientRect( hSurf, @rcClient )
+    dim as integer ih = CListBox_ItemHeightPx( pList )
+
+    ' --- Column geometry, resolved ONCE for the repaint rather than once per row. The
+    ' old per-row loop asked the header for every column's rect on every row; columns
+    ' cannot move mid-paint, so that was pure repetition. Only the y values vary per row.
+    dim as integer nCols = CColumnHeader_GetCount( pList->hHeader )
+    if nCols > 0 then
+        pList->EnsurePaintCells( nCols )
+        dim as RECT rcCol
+        for c as integer = 0 to nCols - 1
+            CColumnHeader_GetColumnRect( pList->hHeader, c, rcCol )   ' forces layout if dirty
+            with pList->paintCells(c)
+                .iCol = c
+                .rc.left  = rcCol.left
+                .rc.right = rcCol.right
+            end with
+        next
     end if
-        
-    function = 0
-end function
 
+    if (ih > 0) andalso (pList->PaintCallback <> 0) then
+        for vis as integer = pList->nTopVis to pList->visibleCount - 1
+            dim as integer y = (vis - pList->nTopVis) * ih
+            if y >= rcClient.bottom then exit for
 
-' ========================================================================================
-' Process WM_DRAWITEM message for window/dialog: CListBox
-' ========================================================================================
-function CListBox_OnDrawItem( _
-            byval hwnd as HWND, _
-            byval lpdis as const DRAWITEMSTRUCT ptr _
-            ) as long
+            dim as RECT rc
+            SetRect( @rc, rcClient.left, y, rcClient.right, y + ih )
 
-    dim pWindow as CWindow ptr = AfxCWindowPtr(hwnd)
-    if pWindow = null then exit function
+            ' Hot = the single row the mouse is currently over. nLastHotIdx is a VISIBLE
+            ' index and is the ONE source of truth, so exactly one row is ever hot and it
+            ' clears deterministically on WM_MOUSELEAVE. Do NOT hit-test the cursor here
+            ' (paint-time race).
+            dim as boolean isHot = (vis = pList->nLastHotIdx)
 
-    if lpdis = null then exit function
-    
-    dim as CLISTBOX ptr pList = GetListBoxPointer(hwnd)
-    if pList = null then exit function
+            dim as integer modelRow = pList->VisibleToModel( vis )
+            dim as CLISTBOX_ROWINFO ptr pRow = pList->GetRow( modelRow )
 
-    if ( lpdis->itemAction = ODA_DRAWENTIRE ) orelse _
-        ( lpdis->itemAction = ODA_SELECT ) orelse _
-        ( lpdis->itemAction = ODA_FOCUS ) then
+            dim as CLISTBOX_PAINTINFO p
+            with p
+                .itemID      = modelRow
+                .b           = @b
+                .rc          = rc
+                .isHot       = isHot
+                .isSelected  = false
+                .isFocused   = (modelRow = pList->focusRow)
+                .isHeader    = false
+                .isCollapsed = false
+                .columnCount = 0
+                .cells       = 0
+                if pRow then
+                    .isSelected  = pRow->selected
+                    .isHeader    = pRow->IsHeader
+                    .isCollapsed = pRow->bCollapsed
+                    .wszCaption  = pRow->Text
+                end if
+            end with
 
-        dim as clsDoubleBuffer b
-
-        ' Reuse a per-control back buffer (one row) instead of creating/destroying
-        ' a compatible DC + bitmap for every row on every repaint.
-        dim as integer rowW = lpdis->rcItem.right  - lpdis->rcItem.left
-        dim as integer rowH = lpdis->rcItem.bottom - lpdis->rcItem.top
-        dim as HDC cachedDC = pList->EnsureCache( lpdis->hDC, rowW, rowH )
-        b.BeginDoubleBuffer(lpdis->hwndItem, lpdis->hDC, lpdis->rcItem, cachedDC)
-        b.SetFont( pList->hFont )    ' default row font; the paint callback may override
-
-        ' Hot = the single row the mouse is currently over. pList->nLastHotIdx is a
-        ' VISIBLE index (same space as lpdis->itemID) and is the ONE source of truth,
-        ' so exactly one row is ever hot and it clears deterministically on
-        ' WM_MOUSELEAVE. Do NOT hit-test the cursor here (paint-time race) and do NOT
-        ' fold selection into "hot" -- selection highlighting is a Phase 3 concern.
-        dim as boolean isHot = (lpdis->itemID = pList->nLastHotIdx)
-
-        ' Create our rect that works with the entire line
-        dim as RECT rc
-        SetRect( @rc, 0, 0, b.rcClientWidth, b.rcClientHeight )
-
-        ' lpdis->itemID is the VISIBLE (listbox) index; translate to the model row.
-        dim as integer modelRow = pList->VisibleToModel( lpdis->itemID )
-        dim as CLISTBOX_ROWINFO ptr pRow = pList->GetRow( modelRow )
-
-        dim as CLISTBOX_PAINTINFO p
-        with p
-            .itemID      = modelRow
-            .b           = @b
-            .rc          = rc
-            .isHot       = isHot
-            .isSelected  = false
-            .isFocused   = (modelRow = pList->focusRow)
-            .isHeader    = false
-            .isCollapsed = false
-            .columnCount = 0
-            .cells       = 0
-            if pRow then
-                .isSelected  = pRow->selected
-                .isHeader    = pRow->IsHeader
-                .isCollapsed = pRow->bCollapsed
-                .wszCaption  = pRow->Text
+            ' --- Columns: hand the host per-column cell rects + text. columnCount = 0
+            ' (no columns defined, or a group-header row -- those span) leaves the
+            ' contract exactly as it always was. Cell x came from the header above; only
+            ' y is per-row. The scratch array persists on the instance, so the paint loop
+            ' does no heap churn; the pointer is valid only during the callback.
+            dim as boolean wantCells = (pRow <> 0)
+            if wantCells then wantCells = (pRow->IsHeader = false)
+            if nCols <= 0 then wantCells = false
+            if wantCells then
+                for c as integer = 0 to nCols - 1
+                    with pList->paintCells(c)
+                        .rc.top    = y
+                        .rc.bottom = y + ih
+                        if c = 0 then
+                            .wszText = pRow->Text
+                        elseif c - 1 <= ubound(pRow->cells) then
+                            .wszText = pRow->cells(c - 1)
+                        else
+                            .wszText = ""
+                        end if
+                    end with
+                next
+                p.columnCount = nCols
+                p.cells = @pList->paintCells(0)
             end if
-        end with
 
-        ' --- Columns: hand the host per-column cell rects + text. columnCount = 0 (no
-        ' columns defined, or a group-header row -- those span) leaves the contract
-        ' exactly as it always was. Cell x-coordinates come straight from the header's
-        ' derived rects (header and listbox share the container's x origin, see
-        ' CListBox_PositionWindows); y spans this row's buffer. A fill column running
-        ' under the scrollbar clips physically at the buffer blit -- the row buffer is
-        ' the listbox's width. The scratch array persists on the instance so
-        ' WM_DRAWITEM does no per-row heap churn (strictly sequential; the pointer is
-        ' valid only during the callback, documented on the typedef).
-        dim as boolean wantCells = (pRow <> 0)
-        if wantCells then wantCells = (pRow->IsHeader = false)
-        dim as integer nCols = CColumnHeader_GetCount( pList->hHeader )
-        if nCols <= 0 then wantCells = false
-        if wantCells then
-            pList->EnsurePaintCells( nCols )
-            dim as RECT rcCol
-            for c as integer = 0 to nCols - 1
-                CColumnHeader_GetColumnRect( pList->hHeader, c, rcCol )  ' forces layout if dirty
-                with pList->paintCells(c)
-                    .iCol = c
-                    SetRect( @.rc, rcCol.left, 0, rcCol.right, b.rcClientHeight )
-                    if c = 0 then
-                        .wszText = pRow->Text
-                    elseif c - 1 <= ubound(pRow->cells) then
-                        .wszText = pRow->cells(c - 1)
-                    else
-                        .wszText = ""
-                    end if
-                end with
-            next
-            p.columnCount = nCols
-            p.cells = @pList->paintCells(0)
-        end if
+            b.SetFont( pList->hFont )   ' default row font; the callback may override
+            pList->PaintCallback( @p )
+        next
+    end if
 
-        if pList->PaintCallback then pList->PaintCallback( @p )
+    b.EndDoubleBuffer()
 
-        b.EndDoubleBuffer()
-
-    end if   
-
-    function = true
-    
+    function = 0
 end function
 
 
@@ -1338,9 +1397,11 @@ function CListBox_WndProc( _
     select case uMsg
         HANDLE_MSG (hwnd, WM_SIZE,        CListBox_OnSize)
         HANDLE_MSG (hwnd, WM_PAINT,       CListBox_OnPaint)
-        HANDLE_MSG (hwnd, WM_MEASUREITEM, CListBox_OnMeasureItem)
-        HANDLE_MSG (hwnd, WM_DRAWITEM,    CListBox_OnDrawItem)
-    
+        ' WM_MEASUREITEM and WM_DRAWITEM are gone with the listbox child. The container
+        ' never painted rows itself -- it forwarded them -- and the surface now paints
+        ' every visible row in one pass in CListBox_OnPaintSurface.
+
+
     case WM_NOTIFY
         ' The tooltip asks for its text on demand; supply the current hot row's.
         dim as NMHDR ptr pnmh = cast(NMHDR ptr, lParam)
@@ -1366,31 +1427,20 @@ function CListBox_WndProc( _
         if wParam then
             dim as CLISTBOX ptr pList = GetListBoxPointer(hwnd)
             CListBox_CaptureTopRow( pList )
-            CListBox_SyncListboxFromModel( pList )
+            CListBox_SyncViewFromModel( pList )
         end if
 
-    case WM_CTLCOLORLISTBOX
-        ' The inner listbox fills its background with this brush during its own
-        ' WM_PAINT - all of the client when the list is EMPTY, painting OVER the
-        ' erase handler's themed fill. Unanswered, DefWindowProc supplies the
-        ' default white brush and an empty list renders as a white rectangle.
-        dim as CLISTBOX ptr pList = GetListBoxPointer(hwnd)
-        if pList then
-            if (pList->hBackBrush = 0) orelse (pList->backBrushColor <> pList->BackColor) then
-                if pList->hBackBrush then DeleteObject( pList->hBackBrush )
-                pList->hBackBrush = CreateSolidBrush( pList->BackColor )
-                pList->backBrushColor = pList->BackColor
-            end if
-            SetBkColor( cast(HDC, wParam), pList->BackColor )
-            return cast(LRESULT, pList->hBackBrush)
-        end if
+    ' WM_CTLCOLORLISTBOX is gone with the listbox child. Only a system listbox sends it,
+    ' and it existed here to stop an EMPTY list rendering as a white rectangle -- the
+    ' listbox filled its own client with DefWindowProc's white brush during its WM_PAINT,
+    ' painting over the themed erase. The surface fills its whole client with BackColor
+    ' now, empty or not, so the problem cannot arise. pList->hBackBrush went with it.
 
     case WM_NCDESTROY
         ' Delete the stored listbox data pointer
         dim as CLISTBOX ptr pList = GetListBoxPointer(hwnd)
         if pList then
             if IsWindow(pList->hToolTip) then DestroyWindow(pList->hToolTip)
-            if pList->hBackBrush then DeleteObject( pList->hBackBrush )
             delete(pList)
         end if
 
@@ -1487,12 +1537,7 @@ end sub
 ' currently VISIBLE rows).
 ' ========================================================================================
 function CListBox_ItemsPerPage( byval pList as CLISTBOX ptr ) as integer
-    dim as HWND hList = GetDlgItem( pList->hWin, pList->idc_ListBox )
-    if hList = 0 then return 1
-    dim as long ih = SendMessage( hList, LB_GETITEMHEIGHT, 0, 0 )
-    if ih <= 0 then return 1
-    dim as RECT rc : GetClientRect( hList, @rc )
-    dim as integer n = (rc.bottom - rc.top) \ ih
+    dim as integer n = CListBox_VisPerPage( pList )
     if n < 1 then n = 1
     return n
 end function
@@ -1500,15 +1545,13 @@ end function
 sub CListBox_EnsureVisible( byval pList as CLISTBOX ptr, byval modelRow as integer )
     dim as integer vis = pList->ModelToVisible( modelRow )
     if vis < 0 then return
-    dim as HWND hList = GetDlgItem( pList->hWin, pList->idc_ListBox )
-    if hList = 0 then return
-    dim as long top = SendMessage( hList, LB_GETTOPINDEX, 0, 0 )
+    dim as integer top = pList->nTopVis
     dim as integer perPage = CListBox_ItemsPerPage( pList )
     if vis < top then
-        SendMessage( hList, LB_SETTOPINDEX, vis, 0 )
+        CListBox_SetTopVis( pList, vis )
         CListBox_SyncScrollBar( pList )
     elseif vis >= top + perPage then
-        SendMessage( hList, LB_SETTOPINDEX, vis - perPage + 1, 0 )
+        CListBox_SetTopVis( pList, vis - perPage + 1 )
         CListBox_SyncScrollBar( pList )
     end if
 end sub
@@ -1614,18 +1657,23 @@ end sub
 
 
 ' ========================================================================================
-' CListBoxListBox_SubclassProc
+' CListBoxSurface_WndProc -- the window procedure for the row surface.
+'
+' Was CListBoxListBox_SubclassProc, a subclass hung off a system LISTBOX. The body is
+' largely unchanged, because almost none of it ever depended on the listbox: selection,
+' focus, keyboard navigation, hot tracking, group collapse and the wheel accumulator were
+' already this control's own code. What changed is the frame around it -- every
+' DefSubclassProc tail is now DefWindowProcW, the two things the listbox used to do for
+' free (taking focus on a click, claiming the arrow keys) are done explicitly, and
+' WM_PAINT is handled here rather than fanned out into WM_DRAWITEM.
 ' ========================================================================================
-function CListBoxListBox_SubclassProc ( _
+function CListBoxSurface_WndProc ( _
             byval hWin   as HWND, _                 ' // Control window handle
             byval uMsg   as UINT, _                 ' // Type of message
             byval _wParam as WPARAM, _               ' // First message parameter
-            byval _lParam as LPARAM, _               ' // Second message parameter
-            byval uIdSubclass as UINT_PTR, _        ' // The subclass ID
-            byval dwRefData as DWORD_PTR _          ' // Pointer to reference data
+            byval _lParam as LPARAM _               ' // Second message parameter
             ) as LRESULT
 
-    dim pWindow as CWindow ptr = AfxCWindowPtr(hWin)
     dim as CLISTBOX ptr pList = GetListBoxPointer( GetParent(hWin) )
 
     ' Per-message scratch info passed to the user MessageCallback. A plain local
@@ -1649,6 +1697,31 @@ function CListBoxListBox_SubclassProc ( _
     end select
    
     select case uMsg
+        case WM_PAINT
+            ' ONE repaint of the visible rows, in a single pass over the whole client.
+            ' This used to hand off to DefSubclassProc, which fanned out into one
+            ' WM_DRAWITEM per row -- and collapsing those N paint cycles into one is the
+            ' whole of the speed win this rewrite bought. It is backend-independent: it
+            ' made GDI 25% faster and GDI+ 38% faster as well as Direct2D 35x.
+            return CListBox_OnPaintSurface( hWin )
+
+        case WM_ERASEBKGND
+            ' The paint fills the entire client, including the strip below the last row,
+            ' so there is nothing to erase and erasing would only flicker.
+            return true
+
+        case WM_GETDLGCODE
+            ' Claim the navigation keys. As a system listbox these arrived automatically;
+            ' a plain child window has to ask, or IsDialogMessage in the host's pump eats
+            ' the arrows for tab-navigation before WM_KEYDOWN is ever sent.
+            return DLGC_WANTARROWS or DLGC_WANTCHARS
+
+        case WM_SETFOCUS, WM_KILLFOCUS
+            ' The focus row is painted with an accent bar, so the surface has to redraw
+            ' when focus arrives or leaves. The listbox did this for itself.
+            InvalidateRect( hWin, NULL, FALSE )
+            return 0
+
         case WM_TIMER
             if pList andalso (_wParam = IDT_CLISTBOX_HOTTRACK) then
                 ' The cursor may have left without us getting a WM_MOUSELEAVE. If it
@@ -1705,7 +1778,7 @@ function CListBoxListBox_SubclassProc ( _
                 if linesPerNotch < 1 then linesPerNotch = 1
 
                 pList->accumDelta += GET_WHEEL_DELTA_WPARAM( _wParam )
-                dim as long nTopIndex = SendMessage( hWin, LB_GETTOPINDEX, 0, 0 )
+                dim as long nTopIndex = pList->nTopVis
                 dim as boolean moved = false
                 while pList->accumDelta >= WHEEL_DELTA          ' wheel forward -> scroll up
                     nTopIndex -= linesPerNotch
@@ -1718,8 +1791,13 @@ function CListBoxListBox_SubclassProc ( _
                     moved = true
                 wend
                 if moved then
-                    if nTopIndex < 0 then nTopIndex = 0
-                    SendMessage( hWin, LB_SETTOPINDEX, nTopIndex, 0 )
+                    ' Clamped by CListBox_SetTopVis, which is where the listbox's own
+                    ' clamping went. It repaints only if the position actually changed,
+                    ' so wheeling against the end of the list costs nothing.
+                    CListBox_SetTopVis( pList, nTopIndex )
+                    ' The model's scroll source of truth follows the user's wheel, so a
+                    ' later rebuild re-derives to where they left it.
+                    CListBox_CaptureTopRow( pList )
                     CListBox_SyncScrollBar( pList )   ' keep the thumb with the wheel
                     if (pList->MessageCallback <> 0) andalso pList->MessageCallback( @m ) then return 0
                 end if
@@ -1745,22 +1823,20 @@ function CListBoxListBox_SubclassProc ( _
                 pList->hotTimerOn = true
             end if
 
-            ' get the item rect that the mouse is over and only invalidate
-            ' that instead of the entire listbox
+            ' Invalidate only the rows whose hot state actually changed. Note this is a
+            ' hint, not an optimisation, under D2D: with PRESENT_OPTIONS the back buffer
+            ' is undefined after a present, so the paint redraws the whole client anyway
+            ' (README F7). It still spares the GDI backends a full repaint per mouse move.
             dim as RECT rc
-            dim as long idx = Listbox_ItemFromPoint( hWin, GET_X_LPARAM(_lParam), GET_Y_LPARAM(_lParam)) 
-            ' The return value contains the index of the nearest item in the LOWORD. The HIWORD is zero 
-            ' if the specified point is in the client area of the list box, or one if it is outside the 
-            ' client area.
-            if pList andalso hiword(idx) <> 1 then
+            dim as long idx = CListBox_VisIndexFromPoint( pList, GET_X_LPARAM(_lParam), GET_Y_LPARAM(_lParam) )
+            if (pList <> 0) andalso (idx >= 0) then
                 if idx <> pList->nLastHotIdx then
                     ' Repaint the newly-hot row and the previously-hot row. FALSE =
                     ' no background erase; the double buffer fully paints each row.
-                    ListBox_GetItemRect( hWin, idx, @rc )
-                    InvalidateRect( hWin, @rc, FALSE )
+                    if CListBox_VisIndexRect( pList, idx, rc ) then InvalidateRect( hWin, @rc, FALSE )
                     if pList->nLastHotIdx <> -1 then
-                        ListBox_GetItemRect( hWin, pList->nLastHotIdx, @rc )
-                        InvalidateRect( hWin, @rc, FALSE )
+                        if CListBox_VisIndexRect( pList, pList->nLastHotIdx, rc ) then _
+                            InvalidateRect( hWin, @rc, FALSE )
                     end if
                     pList->nLastHotIdx = idx
                     ' Row changed: pop the current tip so it re-queries
@@ -1771,14 +1847,11 @@ function CListBoxListBox_SubclassProc ( _
             if pList andalso pList->MessageCallback then
                 if pList->MessageCallback( @m ) then return 0
             end if
-                        
+
 
         case WM_MOUSEHOVER
-            dim as long idx = Listbox_ItemFromPoint( hWin, GET_X_LPARAM(_lParam), GET_Y_LPARAM(_lParam)) 
-            ' The return value contains the index of the nearest item in the LOWORD. The HIWORD is zero 
-            ' if the specified point is in the client area of the list box, or one if it is outside the 
-            ' client area.
-            if hiword(idx) <> 1 then
+            dim as long idx = CListBox_VisIndexFromPoint( pList, GET_X_LPARAM(_lParam), GET_Y_LPARAM(_lParam) )
+            if idx >= 0 then
                 ' idx is a VISIBLE index; the callback sees MODEL indices.
                 if pList then m.idx = pList->VisibleToModel( idx )
                 if pList andalso pList->MessageCallback then
@@ -1802,8 +1875,12 @@ function CListBoxListBox_SubclassProc ( _
             ' partner (capture change, focus loss) -- disarm it so it cannot eat
             ' this press's own release.
             if pList then pList->skipNextLBtnUp = false
-            dim as long idx = Listbox_ItemFromPoint( hWin, GET_X_LPARAM(_lParam), GET_Y_LPARAM(_lParam))
-            if pList andalso hiword(idx) <> 1 then
+            ' Keyboard focus. The system listbox took it in its own default handling; a
+            ' plain child window has to ask, or the arrow keys keep going to whatever had
+            ' focus before the click.
+            SetFocus( hWin )
+            dim as long idx = CListBox_VisIndexFromPoint( pList, GET_X_LPARAM(_lParam), GET_Y_LPARAM(_lParam) )
+            if (pList <> 0) andalso (idx >= 0) then
                 dim as integer modelRow = pList->VisibleToModel( idx )
                 m.idx = modelRow
                 dim as CLISTBOX_ROWINFO ptr pRow = pList->GetRow( modelRow )
@@ -1820,41 +1897,39 @@ function CListBoxListBox_SubclassProc ( _
                     if pList->MessageCallback( @m ) then return 0
                 end if
             end if
-            ' fall through to DefSubclassProc so the listbox takes keyboard focus
+            return 0
 
 
         case WM_LBUTTONUP
             ' If a suppressed double-click armed the skip, this up is that press's
             ' release: consume the flag and do not surface it to the host callback.
             ' (Consume regardless of where the release lands, or a later legitimate
-            ' up would be eaten instead.) Default handling still runs below.
+            ' up would be eaten instead.)
             dim as boolean skipNotify = false
             if (pList <> 0) andalso (pList->skipNextLBtnUp = true) then
                 pList->skipNextLBtnUp = false
                 skipNotify = true
             end if
-            dim as long idx = Listbox_ItemFromPoint( hWin, GET_X_LPARAM(_lParam), GET_Y_LPARAM(_lParam))
-            if (hiword(idx) <> 1) andalso (skipNotify = false) then
+            dim as long idx = CListBox_VisIndexFromPoint( pList, GET_X_LPARAM(_lParam), GET_Y_LPARAM(_lParam) )
+            if (idx >= 0) andalso (skipNotify = false) then
                 ' idx is a VISIBLE index; the callback sees MODEL indices.
                 if pList then m.idx = pList->VisibleToModel( idx )
                 if pList andalso pList->MessageCallback then
-                    ' Notify, but deliberately IGNORE the "handled" result here: we must
-                    ' always fall through to DefSubclassProc. The listbox captures the
-                    ' mouse in its default WM_LBUTTONDOWN handling and only releases it
-                    ' in its default WM_LBUTTONUP handling. Swallowing this message leaks
-                    ' the capture, so every later click is routed to the listbox instead
-                    ' of its siblings -- e.g. the scrollbar would need a throwaway first
-                    ' click before a drag would start.
-                    pList->MessageCallback( @m )
+                    ' THE INHERITED COMMENT HERE WAS NOW FALSE AND HAS BEEN DELETED. It
+                    ' said the "handled" result must be ignored because swallowing this
+                    ' message would strand the mouse capture the listbox took in its own
+                    ' WM_LBUTTONDOWN. There is no listbox and no capture: this control
+                    ' implements no drag gesture, so per the family's capture rule it
+                    ' takes none and pays none of the price. The result is therefore
+                    ' honoured here like any other message.
+                    if pList->MessageCallback( @m ) then return 0
                 end if
             end if
+            return 0
 
         case WM_RBUTTONDOWN, _
              WM_LBUTTONDBLCLK
-            dim as long idx = Listbox_ItemFromPoint( hWin, GET_X_LPARAM(_lParam), GET_Y_LPARAM(_lParam))
-            ' The return value contains the index of the nearest item in the LOWORD. The HIWORD is zero
-            ' if the specified point is in the client area of the list box, or one if it is outside the
-            ' client area.
+            dim as long idx = CListBox_VisIndexFromPoint( pList, GET_X_LPARAM(_lParam), GET_Y_LPARAM(_lParam) )
             dim as boolean suppressDblClk = false
             if (uMsg = WM_LBUTTONDBLCLK) andalso (pList <> 0) then
                 suppressDblClk = pList->PreventDblClick
@@ -1866,10 +1941,9 @@ function CListBoxListBox_SubclassProc ( _
                 ' arm the skip so the trailing second WM_LBUTTONUP is not forwarded
                 ' either -- the host sees exactly one down/up pair per double-click.
                 ' Armed even for an outside-items press: the second up arrives
-                ' regardless of where the press landed. Default handling still runs
-                ' below (the listbox takes capture on the dblclk like a down).
+                ' regardless of where the press landed.
                 pList->skipNextLBtnUp = true
-                if hiword(idx) <> 1 then
+                if idx >= 0 then
                     dim as integer modelRow = pList->VisibleToModel( idx )
                     dim as CLISTBOX_ROWINFO ptr pRow = pList->GetRow( modelRow )
                     if pRow <> 0 then
@@ -1881,40 +1955,28 @@ function CListBoxListBox_SubclassProc ( _
                         end if
                     end if
                 end if
-            elseif hiword(idx) <> 1 then
+            elseif idx >= 0 then
                 ' idx is a VISIBLE index; the callback sees MODEL indices.
                 if pList then m.idx = pList->VisibleToModel( idx )
                 if pList andalso pList->MessageCallback then
                     if pList->MessageCallback( @m ) then return 0
                 end if
             end if
+            return 0
 
 
-        case WM_ERASEBKGND
-            ' Paint only the empty area below the last row with the control's back
-            ' color (the rows themselves are drawn via WM_DRAWITEM). Prevents the
-            ' default full-client erase, which would flicker.
-            if pList then
-                dim as RECT rc = GetListBoxEmptyClientArea( hWin )
-                if rc.top < rc.bottom then
-                    dim as HDC _hDC = cast(HDC, _wParam)
-                    PaintRect( _hDC, @rc, pList->BackColor )
-                end if
-                return true
-            end if    
-            
         Case WM_DESTROY
             ' Don't let the hot-tracking timer outlive the window
             if (pList <> 0) andalso pList->hotTimerOn then
                 KillTimer( hWin, IDT_CLISTBOX_HOTTRACK )
                 pList->hotTimerOn = false
             end if
-            ' REQUIRED: Remove control subclassing
-            RemoveWindowSubclass( hWin, @CListBoxListBox_SubclassProc, uIdSubclass )
+            ' No RemoveWindowSubclass: this is the window's own procedure now, not a
+            ' subclass hung off a system listbox.
     end select
-    
+
     ' For messages that we don't deal with
-    function = DefSubclassProc( hWin, uMsg, _wParam, _lParam )
+    function = DefWindowProcW( hWin, uMsg, _wParam, _lParam )
 
 end function
 
@@ -1978,16 +2040,49 @@ function CListBox_Create( byval hWndParent as HWND, byval CtrlID as integer ) as
     pWindow->UserData(0) = cast(LONG_PTR, pList)
     
 
-    dim as long ExtendSel = iif( pList->ExtendSel, LBS_EXTENDEDSEL, 0 )
-    dim as long MultipleSel = iif( pList->MultipleSel, LBS_MULTIPLESEL, 0 )
-    
-    dim as HWND hList = _ 
-        pWindow->AddControl( "LISTBOX", , pList->idc_ListBox, "", 0, 0, 0, 0, _
-        WS_CHILD or WS_CLIPSIBLINGS or WS_CLIPCHILDREN or WS_TABSTOP or _
-        LBS_NOINTEGRALHEIGHT or ExtendSel or MultipleSel or _
-        LBS_OWNERDRAWFIXED or LBS_NODATA or LBS_NOTIFY, _
-        WS_EX_LEFT or WS_EX_RIGHTSCROLLBAR)
-        pWindow->SetControlSubclass( hList, @CListBoxListBox_SubclassProc, pList->idc_ListBox, @pWindow )
+    ' ------------------------------------------------------------------------------------
+    ' The row surface. Was a system LISTBOX with LBS_OWNERDRAWFIXED / LBS_NODATA plus a
+    ' subclass; it is now a plain registered window class with its own procedure.
+    '
+    ' The listbox styles are gone rather than translated, because none of them meant
+    ' anything to this control any more:
+    '   LBS_OWNERDRAWFIXED / LBS_NODATA  the whole point was to get WM_DRAWITEM; the
+    '                                    surface paints itself now.
+    '   LBS_EXTENDEDSEL / LBS_MULTIPLESEL  selection has always lived in the model's own
+    '                                    per-row flags, never in the listbox's selection
+    '                                    bits (that is what let it survive a collapse).
+    '                                    pList->ExtendSel / MultipleSel still drive it.
+    '   LBS_NOTIFY / LBS_NOINTEGRALHEIGHT  notifications were never consumed, and partial
+    '                                    bottom rows are simply painted.
+    '
+    ' CS_DBLCLKS is on the class: the control forwards WM_LBUTTONDBLCLK to the host and
+    ' implements the PreventDblClick opt-out around it.
+    ' ------------------------------------------------------------------------------------
+    ' A WSTRING, not a bare literal: fbc string literals are ASCII, so @"..." yields a
+    ' zstring ptr where lpszClassName wants an LPCWSTR -- which compiles with only a
+    ' "suspicious pointer assignment" warning and then registers a garbage class name.
+    static as wstring * 32 wszSurfClass = "CListBoxSurface_Class"
+
+    static as boolean bClassRegistered = false
+    if bClassRegistered = false then
+        dim as WNDCLASSEXW wc
+        wc.cbSize        = sizeof(WNDCLASSEXW)
+        wc.style         = CS_DBLCLKS
+        wc.lpfnWndProc   = @CListBoxSurface_WndProc
+        wc.hInstance     = GetModuleHandleW( NULL )
+        wc.hCursor       = LoadCursorW( NULL, cast(LPCWSTR, IDC_ARROW) )
+        ' No background brush: the surface paints its entire client in WM_PAINT, and a
+        ' class brush would only produce a flash of the wrong colour before it.
+        wc.hbrBackground = cast( HBRUSH, NULL )
+        wc.lpszClassName = @wszSurfClass
+        RegisterClassExW( @wc )
+        bClassRegistered = true
+    end if
+
+    dim as HWND hList = CreateWindowExW( 0, @wszSurfClass, "", _
+            WS_CHILD or WS_VISIBLE or WS_CLIPSIBLINGS or WS_TABSTOP, _
+            0, 0, 0, 0, hForm, cast(HMENU, cast(LONG_PTR, pList->idc_ListBox)), _
+            GetModuleHandleW( NULL ), NULL )
     pList->hTooltip = CListBox_AddTooltip( hList )
 
     ' Owner-drawn vertical scrollbar, owned and driven by this control. It starts
