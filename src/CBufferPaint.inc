@@ -476,6 +476,44 @@ function CBufferPaint.PaintText( _
     function = 0
 end function
 
+' Same as PaintText, EXCEPT that the caller owns the layout flags. PaintText forces
+' DT_VCENTER or DT_SINGLELINE, which makes it structurally unable to draw wrapped text --
+' DT_WORDBREAK and DT_SINGLELINE cannot both hold. This variant adds ONLY DT_NOPREFIX, so
+' the family's no-mnemonics rule stays enforced by the renderer (a caption is never allowed
+' to eat an ampersand) while DT_WORDBREAK, DT_TOP and DT_CALCRECT become reachable.
+'
+' ADDITIVE: PaintText is untouched and no existing call site changes behaviour. Added for
+' CMessageBox, whose message body is multi-line by definition; anything drawing a single
+' centred line should keep using PaintText, which cannot get those two flags wrong.
+'
+' MEASURE WITH THE SAME FLAGS YOU DRAW WITH. A caller that sizes a box with
+' DT_CALCRECT or DT_WORDBREAK and then draws without DT_WORDBREAK gets one long clipped
+' line inside a tall box, and nothing about that failure points back here.
+function CBufferPaint.PaintTextEx( _
+            byval wszText as DWSTRING, _
+            byval rc as RECT ptr, _
+            byval wsStyle as DWORD _
+            ) as long
+
+    ' Text is GDI, geometry is GDI+, and GDI+ batches. Flush or the shapes this text sits
+    ' on top of may not be on the surface yet.
+    this.EnsureGdiReady()
+
+    dim as COLORREF oldforecolor = SetTextColor( _memDC, _forecolor )
+    SetBkMode(_memDC, TRANSPARENT)
+
+    dim as HFONT hOldFont
+    if _hFont then hOldFont = SelectObject( _memDC, _hFont )
+
+    wsStyle = wsStyle or DT_NOPREFIX
+    DrawText( _memDC, wszText, -1, cast(lpRect, rc), wsStyle )
+
+    SetTextColor( _memDC, oldforecolor )
+    if _hFont then SelectObject( _memDC, hOldFont )
+
+    function = 0
+end function
+
 function CBufferPaint.PaintChar( _
             byval wszChar as DWSTRING, _
             byval rc as RECT ptr, _

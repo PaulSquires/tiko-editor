@@ -173,6 +173,15 @@ type CBufferPaint
                 byval rc as RECT ptr, _
                 byval wsStyle as DWORD _
                 ) as long
+    ' PaintText with the LAYOUT FLAGS LEFT TO THE CALLER -- only DT_NOPREFIX is forced.
+    ' PaintText above forces DT_VCENTER or DT_SINGLELINE, so it structurally cannot draw
+    ' wrapped text; this is the way in for DT_WORDBREAK / DT_TOP / DT_CALCRECT. Additive,
+    ' added for CMessageBox: nothing that used PaintText changed.
+    declare function PaintTextEx( _
+                byval wszText as DWSTRING, _
+                byval rc as RECT ptr, _
+                byval wsStyle as DWORD _
+                ) as long
     declare function PaintChar( _
                 byval wszChar as DWSTRING, _
                 byval rc as RECT ptr, _
