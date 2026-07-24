@@ -13,14 +13,14 @@
 
 '  frmOptionsColors.bi  --  the "Themes and Fonts" page.
 '
-'  Panel-hosted. The themes list and the font-name list are both CListBoxes (the font names
-'  are drawn each in their own font, which a scrollable list can do and a CComboBox dropdown
-'  -- which cannot scroll -- could not). Font size and character set are CComboBoxes; the
-'  extra line spacing is a CNumericUpDown. Everything reads/writes gOptWork.
+'  Panel-hosted. The themes list and the font-name list are both PsListBoxes (the font names
+'  are drawn each in their own font, which a scrollable list can do and a PsComboBox dropdown
+'  -- which cannot scroll -- could not). Font size and character set are PsComboBoxes; the
+'  extra line spacing is a PsNumericUpDown. Everything reads/writes gOptWork.
 
 #pragma once
 
-#include once "CScrollPanel.bi"        ' SCP_PAINTINFO, pulled in early
+#include once "PsScrollPanel.bi"        ' SCP_PAINTINFO, pulled in early
 
 #Define IDC_FRMOPTIONSCOLORS_LSTTHEMES    9400
 #Define IDC_FRMOPTIONSCOLORS_LSTFONTS     9401

@@ -43,10 +43,10 @@
 '    1. The boolean settings are `as long` in clsConfig ON PURPOSE -- see the comment on
 '       AskExit in clsConfig.bi: the config file writer emits the field verbatim, so a real
 '       boolean would put "true"/"false" into the settings file instead of 0/1 and silently
-'       change its format. CToggle_GetChecked returns a BOOLEAN, so every store through
+'       change its format. PsToggle_GetChecked returns a BOOLEAN, so every store through
 '       this table goes through iif(..., 1, 0).
 '    2. TabSize / RightEdgePosition are DWSTRING in clsConfig but numbers here, because
-'       CNumericUpDown deals in doubles. OptionsWork_Load/Commit convert at the boundary
+'       PsNumericUpDown deals in doubles. OptionsWork_Load/Commit convert at the boundary
 '       and nowhere else.
 '    Both are asserted by the self-test.
 
@@ -66,7 +66,7 @@
 
 
 ' ----------------------------------------------------------------------------------------
-' Page identifiers. Stored as the itemData of the navigation CListBox's item rows and as
+' Page identifiers. Stored as the itemData of the navigation PsListBox's item rows and as
 ' the nPage field of every row descriptor. Session-only (OptionsDialogLastOpened is not
 ' persisted to disk), so these renumber freely.
 '
@@ -87,9 +87,9 @@
 
 ' ----------------------------------------------------------------------------------------
 ' What kind of control a row carries.
-'   OPT_TOGGLE   CToggle,         staging field is a long 0/1
-'   OPT_NUMERIC  CNumericUpDown,  staging field is a long (see type trap 2)
-'   OPT_COMBO    CComboBox,       staging field is a long, the selected index
+'   OPT_TOGGLE   PsToggle,         staging field is a long 0/1
+'   OPT_NUMERIC  PsNumericUpDown,  staging field is a long (see type trap 2)
+'   OPT_COMBO    PsComboBox,       staging field is a long, the selected index
 ' ----------------------------------------------------------------------------------------
 enum OPT_KIND
     OPT_TOGGLE = 0
@@ -177,8 +177,8 @@ end type
 dim shared gOptWork as OPTIONS_WORK
 dim shared gOptRows(any) as OPTIONS_ROW
 
-' Every live CComboBox in the dialog. The pump must offer each one the message, because
-' CComboBox_FilterMessage takes a control handle rather than working off a global -- see
+' Every live PsComboBox in the dialog. The pump must offer each one the message, because
+' PsComboBox_FilterMessage takes a control handle rather than working off a global -- see
 ' the pump in frmOptions_Show. Safe to hold stale handles; the filter tolerates them.
 dim shared gOptCombos(any) as HWND
 
@@ -204,13 +204,13 @@ declare function OptionsFont_Base() as HFONT
 declare function OptionsFont_PointSize() as long
 
 ' Shared theme builders, so the hand-written pages (frmOptionsCompiler, and the Localization
-' and Keywords pages to follow) dress their CToggle / CButton / CTextBox exactly like the
+' and Keywords pages to follow) dress their PsToggle / PsButton / PsTextBox exactly like the
 ' table-driven rows do, from one place. The controls COPY colors at Set time, so these are
 ' re-applied after every build and on a theme change.
-declare sub      OptionsTheme_FillToggle( byval tc as CTOGGLE_COLORS ptr )
-declare sub      OptionsTheme_FillButton( byval bc as CBUTTON_COLORS ptr )
-declare sub      OptionsTheme_FillNumeric( byval nc as CNUMERICUPDOWN_COLORS ptr )
-declare sub      OptionsTheme_FillCombo( byval cc as CCOMBOBOX_COLORS ptr, byval pc as CPOPUPMENU_COLORS ptr )
+declare sub      OptionsTheme_FillToggle( byval tc as PSTOGGLE_COLORS ptr )
+declare sub      OptionsTheme_FillButton( byval bc as PSBUTTON_COLORS ptr )
+declare sub      OptionsTheme_FillNumeric( byval nc as PSNUMERICUPDOWN_COLORS ptr )
+declare sub      OptionsTheme_FillCombo( byval cc as PSCOMBOBOX_COLORS ptr, byval pc as PSPOPUPMENU_COLORS ptr )
 declare sub      OptionsTheme_ApplyTextBox( byval hTextBox as HWND )
 
 declare sub      OptionsRows_Init()

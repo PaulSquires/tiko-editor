@@ -14,7 +14,7 @@
 ''
 ''  frmEditorHScroll.inc
 ''
-''  The editor's horizontal scrollbars as CHScrollBar instances. Replaces the old
+''  The editor's horizontal scrollbars as PsHScrollBar instances. Replaces the old
 ''  hand-rolled CPanelWindow scrollbar (WndProc + gEditorHScroll ratio state +
 ''  gApp.bHorizDragActive): the control owns the thumb geometry, dragging, track
 ''  paging with auto-repeat, hover tracking and capture-loss cancellation; this file
@@ -66,11 +66,11 @@ function frmEditorHScroll_NeedScrollBar( _
     dim as long nTotal = maxWidth
     if visibleTextWidth + xOffset > nTotal then nTotal = visibleTextWidth + xOffset
 
-    CHScrollBar_SetRange( HWND_FRMEDITOR_HSCROLLBAR(idxWindow), _
+    PsHScrollBar_SetRange( HWND_FRMEDITOR_HSCROLLBAR(idxWindow), _
                           nTotal, visibleTextWidth, xOffset )
 
     ' --- Wheel step: convert the system's CHARACTERS into our PIXELS ------------------
-    ' CHScrollBar is unit-agnostic, so its default wheel step follows
+    ' PsHScrollBar is unit-agnostic, so its default wheel step follows
     ' SPI_GETWHEELSCROLLCHARS -- which is a count of CHARACTERS (typically 3). Our range
     ' is in pixels, so left at the default a trackpad swipe moves the view three PIXELS
     ' per notch: roughly an eighth of a character, which reads as the gesture barely
@@ -91,9 +91,9 @@ function frmEditorHScroll_NeedScrollBar( _
         wheelStep = cast(long, wheelChars) * charWidth
         if wheelStep < 1 then wheelStep = 1
     end if
-    CHScrollBar_SetWheelStep( HWND_FRMEDITOR_HSCROLLBAR(idxWindow), wheelStep )
+    PsHScrollBar_SetWheelStep( HWND_FRMEDITOR_HSCROLLBAR(idxWindow), wheelStep )
 
-    dim as boolean needHSB = CHScrollBar_NeedsThumb( HWND_FRMEDITOR_HSCROLLBAR(idxWindow) )
+    dim as boolean needHSB = PsHScrollBar_NeedsThumb( HWND_FRMEDITOR_HSCROLLBAR(idxWindow) )
     function = iif( needHSB, SW_SHOWNOACTIVATE, SW_HIDE )
 end function
 
@@ -136,8 +136,8 @@ end sub
 ' hover brightening. Reads the ghEditor theme colors live, so a theme switch only
 ' needs a repaint.
 ' ========================================================================================
-sub frmEditorHScroll_PaintCallback( byval p as CHSCROLLBAR_PAINTINFO ptr )
-    dim as CBufferPaint ptr b = p->b
+sub frmEditorHScroll_PaintCallback( byval p as PSHSCROLLBAR_PAINTINFO ptr )
+    dim as PsBufferPaint ptr b = p->b
     b->SetBackColor( ghEditor.BackColorScrollBar )
     b->PaintClientRect()
     if IsRectEmpty( @p->rcThumb ) = 0 then
@@ -156,10 +156,10 @@ function frmEditorHScroll_Show( byval hWndParent as HWND ) as LRESULT
     ' sets the horizontal bars' full rect from ScaleY(SCROLLBAR_HEIGHT) and nothing
     ' reads the bar height back with AfxGetWindowHeight.
     for i as long = 0 to 1
-        HWND_FRMEDITOR_HSCROLLBAR(i) = CHScrollBar_Create( hWndParent, _
+        HWND_FRMEDITOR_HSCROLLBAR(i) = PsHScrollBar_Create( hWndParent, _
                 iif( i = 0, IDC_FRMEDITOR_HSCROLLBAR0, IDC_FRMEDITOR_HSCROLLBAR1 ) )
-        CHScrollBar_SetScrollCallback( HWND_FRMEDITOR_HSCROLLBAR(i), @frmEditorHScroll_OnScroll )
-        CHScrollBar_SetPaintCallback( HWND_FRMEDITOR_HSCROLLBAR(i), @frmEditorHScroll_PaintCallback )
+        PsHScrollBar_SetScrollCallback( HWND_FRMEDITOR_HSCROLLBAR(i), @frmEditorHScroll_OnScroll )
+        PsHScrollBar_SetPaintCallback( HWND_FRMEDITOR_HSCROLLBAR(i), @frmEditorHScroll_PaintCallback )
     next
 
     function = 0
@@ -182,7 +182,7 @@ function frmEditorHScroll_DoNeedScrollBar( byval pDoc as clsDocument ptr ) as lo
             isMouseOverWindow( HWND_FRMEDITOR_HSCROLLBAR(i) ) then
             newState = frmEditorHScroll_NeedScrollBar( pDoc, i )
         end if
-        if CHScrollBar_IsDragging( HWND_FRMEDITOR_HSCROLLBAR(i) ) then
+        if PsHScrollBar_IsDragging( HWND_FRMEDITOR_HSCROLLBAR(i) ) then
             newState = SW_SHOWNOACTIVATE
         end if
         if newState <> curState then

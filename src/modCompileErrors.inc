@@ -19,11 +19,11 @@
 #include once "modCompile.bi"
 #include once "modCompileErrors.bi"
 #include once "frmStatusBar.bi"
-#include once "CStatusBar.bi"
+#include once "PsStatusBar.bi"
 ' This file is compiled BEFORE tiko.bas reaches the custom-control block, so the header for
 ' any control it calls has to be hand-included here -- the same reason modMenus.inc and
-' modRoutines.inc hand-include theirs. Needed for the Output tab bar (CSelectBar_SetCurSel).
-#include once "CSelectBar.bi"
+' modRoutines.inc hand-include theirs. Needed for the Output tab bar (PsSelectBar_SetCurSel).
+#include once "PsSelectBar.bi"
 
 
 ''
@@ -61,7 +61,7 @@ function SetCompileStatusBarMessage( _
 
     gApp.hIconPanel = hIconCompile
     
-    CStatusBar_SetText( HWND_FRMMAIN_STATUSBAR, COMPILE_STATUS_PANEL, wszPanelText )
+    PsStatusBar_SetText( HWND_FRMMAIN_STATUSBAR, COMPILE_STATUS_PANEL, wszPanelText )
 
     function = 0
 end function
@@ -263,14 +263,14 @@ function SetDocumentErrorPosition ( byval hLV as HWND ) as long
     dim wszErrorLine as wstring * MAX_PATH
     dim wszErrorFile as wstring * MAX_PATH
     
-    dim as long nCurSel = CListBox_GetCurSel(hLV)
+    dim as long nCurSel = PsListBox_GetCurSel(hLV)
     if nCurSel < 0 then return 0 
     
     dim pDoc as clsDocument ptr 
 
     ' Get the line number and filename of the selected item
-    wszErrorLine = CListBox_GetCellText(hLV, nCurSel, 1)
-    wszErrorFile = CListBox_GetCellText(hLV, nCurSel, 2)
+    wszErrorLine = PsListBox_GetCellText(hLV, nCurSel, 1)
+    wszErrorFile = PsListBox_GetCellText(hLV, nCurSel, 2)
     dim as long nLineNum = val(wszErrorLine) - 1   ' because visually the editor is one based line numbers
 
     ' if we are doing a QuickRun then it must be on the currently loaded
@@ -341,7 +341,7 @@ function ParseLogForError ( _
     pCompile->EndTime = timer
 
     hLV = HWND_FRMOUTPUT_LVRESULTS
-    CListBox_Clear( hLV )
+    PsListBox_Clear( hLV )
     
     ' On some Windows systems with tight security policies, the CreateChildProcess used
     ' by the sub RedirConsoleToFile will fail. This seems to happen mostly when trying
@@ -559,7 +559,7 @@ function ParseLogForError ( _
         if NumErrors > 0 then MessageBeep(MB_ICONWARNING)
         
         ' Position the Compiler Log to the first error/warning
-        CListBox_SetCurSel( hLV, 0 )
+        PsListBox_SetCurSel( hLV, 0 )
         
         ' if fGoodCompile is false then something unusual occurred so better show the log file by default
         if fGoodCompile = false then
@@ -568,7 +568,7 @@ function ParseLogForError ( _
       
         ' Reposition to the correct tab. SetCurSel is silent, so PositionWindows below
         ' (which ends in ShowHideOutputControls) is what swaps the visible pane.
-        CSelectBar_SetCurSel( HWND_FRMOUTPUT_SELECTBAR, _
+        PsSelectBar_SetCurSel( HWND_FRMOUTPUT_SELECTBAR, _
                               iif( fSwitchToLogFile, OUTPUT_TAB_LOGFILE, OUTPUT_TAB_RESULTS ) )
         frmOutput_PositionWindows()
         

@@ -603,9 +603,9 @@ function gdb_parseVariablesResponse( byref response as string ) as integer
     if gdb_session.is_new_variables = false then
         ' Simply update the value held in the ListView
         for i as long = lbound(gdb_session.variable_array) to ubound(gdb_session.variable_array) - 1
-            for j as long = 0 to CListBox_GetCount( hLV ) - 1
-                if CListBox_GetCellText(hLV, j, 1) = gdb_session.variable_array(i).VarName then
-                    CListBox_SetCellText(hLV, j, 3, gdb_session.variable_array(i).VarValue)
+            for j as long = 0 to PsListBox_GetCount( hLV ) - 1
+                if PsListBox_GetCellText(hLV, j, 1) = gdb_session.variable_array(i).VarName then
+                    PsListBox_SetCellText(hLV, j, 3, gdb_session.variable_array(i).VarValue)
                     exit for
                 end if
             next
@@ -628,7 +628,7 @@ function gdb_parseVariablesResponse( byref response as string ) as integer
             next 
         next 
 
-        CListBox_Clear( hLV )
+        PsListBox_Clear( hLV )
 
         for i as long = lbound(gdb_session.variable_array) to ubound(gdb_session.variable_array)
             wszText = "" & chr(9) & _
@@ -664,12 +664,12 @@ function gdb_parseVariablesResponse( byref response as string ) as integer
     nVarNameColWidth = nVarNameColWidth + 10
     nVarNameDisplayColWidth = nVarNameDisplayColWidth + 10
     nVarValueColWidth = nVarValueColWidth + 10
-    CListBox_SetColumnWidth( hLV, 1, AfxScaleX(nVarNameColWidth) )
-    CListBox_SetColumnWidth( hLV, 2, AfxScaleX(nVarNameDisplayColWidth) )
-    CListBox_SetColumnWidth( hLV, 3, AfxScaleX(nVarValueColWidth) )
+    PsListBox_SetColumnWidth( hLV, 1, AfxScaleX(nVarNameColWidth) )
+    PsListBox_SetColumnWidth( hLV, 2, AfxScaleX(nVarNameDisplayColWidth) )
+    PsListBox_SetColumnWidth( hLV, 3, AfxScaleX(nVarValueColWidth) )
 
     ' The old control had to be hidden when empty (its WM_DRAWITEM never fired, leaving a
-    ' white area). CListBox paints its own empty background, so the pane just stays shown --
+    ' white area). PsListBox paints its own empty background, so the pane just stays shown --
     ' and it repaints itself on mutation, so there is no Refresh to call.
     ShowWindow( hLV, SW_SHOW )
 
@@ -879,23 +879,23 @@ function frmDebug_PositionWindows() as LRESULT
     dim as HWND hCtl 
     
     if HWND_FRMDEBUG_OUTPUT = 0 then
-        ' Variables pane: a CListBox with a CColumnHeader band, sharing the Output panel's
+        ' Variables pane: a PsListBox with a PsColumnHeader band, sharing the Output panel's
         ' row/header painters (same ghOutput colors, same layout). The Value column fills
         ' the remaining width; the widths of the other two are recomputed from the data on
         ' every refresh, further down in gdb_ParseVariables.
-        hCtl = CListBox_Create( HWND_FRMDEBUG, IDC_FRMDEBUG_LVVARS )
-            CListBox_AddColumn( hCtl, "",                 pWindow->ScaleX(10) )
-            CListBox_AddColumn( hCtl, L(437, "Variable"), pWindow->ScaleX(75) )
-            CListBox_AddColumn( hCtl, "",                 pWindow->ScaleX(75) )
-            CListBox_AddColumn( hCtl, L(438, "Value"),    pWindow->ScaleX(250) )
-            CListBox_SetFillColumn( hCtl, 3 )
-            CListBox_ShowHeader( hCtl, true )
-            CListBox_SetPaintCallback( hCtl, @ListBox_LVPaintRow )
-            CListBox_SetHeaderPaintCallback( hCtl, @ListBox_LVPaintHeader )
-            CListBox_SetColumnAutoSizeCallback( hCtl, @ListBox_LVAutoSizeColumn )
-            CListBox_SetFont( hCtl, ghFont(GUIFONT_9) )
-            CListBox_SetBackColor( hCtl, ghOutput.BackColor )
-            CListBox_SetScrollBarColors( hCtl, ghOutput.BackColorScrollBar, _
+        hCtl = PsListBox_Create( HWND_FRMDEBUG, IDC_FRMDEBUG_LVVARS )
+            PsListBox_AddColumn( hCtl, "",                 pWindow->ScaleX(10) )
+            PsListBox_AddColumn( hCtl, L(437, "Variable"), pWindow->ScaleX(75) )
+            PsListBox_AddColumn( hCtl, "",                 pWindow->ScaleX(75) )
+            PsListBox_AddColumn( hCtl, L(438, "Value"),    pWindow->ScaleX(250) )
+            PsListBox_SetFillColumn( hCtl, 3 )
+            PsListBox_ShowHeader( hCtl, true )
+            PsListBox_SetPaintCallback( hCtl, @ListBox_LVPaintRow )
+            PsListBox_SetHeaderPaintCallback( hCtl, @ListBox_LVPaintHeader )
+            PsListBox_SetColumnAutoSizeCallback( hCtl, @ListBox_LVAutoSizeColumn )
+            PsListBox_SetFont( hCtl, ghFont(GUIFONT_9) )
+            PsListBox_SetBackColor( hCtl, ghOutput.BackColor )
+            PsListBox_SetScrollBarColors( hCtl, ghOutput.BackColorScrollBar, _
                                          ghOutput.ForeColorScrollBar, ghOutput.ForeColorScrollBar )
 
         HWND_FRMDEBUG_OUTPUT = hCtl
@@ -1080,7 +1080,7 @@ function frmDebug_WndProc( _
 
         case WM_PAINT
             dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMDEBUG)
-            dim as CBufferPaint b
+            dim as PsBufferPaint b
 
             b.BeginDoubleBuffer(hwnd)
 

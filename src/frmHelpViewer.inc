@@ -14,15 +14,15 @@
 #include once "frmHelpViewer.bi"
 
 
-' The topics list is a CListBox, which owns and drives its OWN CVScrollBar internally
+' The topics list is a PsListBox, which owns and drives its OWN PsVScrollBar internally
 ' (created, ranged, positioned and auto-hidden by the control). The hand-written
 ' frmHelpViewer_UpdateScrollBar / _VScrollCallback pair that used to push item counts into
 ' a separate bar is gone with it; only the help TEXT still needs that wiring, below.
 
 
 ' ========================================================================================
-' Push the help-text CTextBox scroll state into its CVScrollBar, in LINE units --
-' the CVScrollBar-shaped scroll API the control was built with (GetVScrollInfo ->
+' Push the help-text PsTextBox scroll state into its PsVScrollBar, in LINE units --
+' the PsVScrollBar-shaped scroll API the control was built with (GetVScrollInfo ->
 ' SetRange). Called from the textbox's ScrollChangedCallback (typing can't happen --
 ' read-only -- but wheel scrolling and programmatic SetText both fire it) and from
 ' PositionWindows (a resize changes the lines-per-page).
@@ -30,8 +30,8 @@
 function frmHelpViewer_UpdateTextScrollBar() as boolean
     if IsWindow( HWND_FRMHELPVIEWER_VSCROLLBAR2 ) = 0 then exit function
     dim as integer nTotalLines, nLinesPerPage, nFirstVisible
-    CTextBox_GetVScrollInfo( HWND_FRMHELPVIEWER_RIGHTPANEL, nTotalLines, nLinesPerPage, nFirstVisible )
-    CVScrollBar_SetRange( HWND_FRMHELPVIEWER_VSCROLLBAR2, nTotalLines, nLinesPerPage, nFirstVisible )
+    PsTextBox_GetVScrollInfo( HWND_FRMHELPVIEWER_RIGHTPANEL, nTotalLines, nLinesPerPage, nFirstVisible )
+    PsVScrollBar_SetRange( HWND_FRMHELPVIEWER_VSCROLLBAR2, nTotalLines, nLinesPerPage, nFirstVisible )
     function = 0
 end function
 
@@ -42,11 +42,11 @@ sub frmHelpViewer_TextScrollChanged( byval hTextBox as HWND )
 end sub
 
 
-' The user scrolled the text CVScrollBar (thumb drag or track paging): scroll the
+' The user scrolled the text PsVScrollBar (thumb drag or track paging): scroll the
 ' help text to that first line. The ScrollToLine -> EN_UPDATE round trip echoes the
 ' same position back through TextScrollChanged -- consistent by construction.
 sub frmHelpViewer_TextVScrollCallback( byval hScrollBar as HWND, byval newPos as integer )
-    CTextBox_ScrollToLine( HWND_FRMHELPVIEWER_RIGHTPANEL, newPos )
+    PsTextBox_ScrollToLine( HWND_FRMHELPVIEWER_RIGHTPANEL, newPos )
 end sub
 
 
@@ -55,8 +55,8 @@ end sub
 ' no hover brightening. Colors are read live, so a theme switch only needs a repaint.
 ' Shared by both bars (topics list and help text).
 ' ========================================================================================
-sub frmHelpViewer_VScrollPaint( byval p as CVSCROLLBAR_PAINTINFO ptr )
-    dim as CBufferPaint ptr b = p->b
+sub frmHelpViewer_VScrollPaint( byval p as PSVSCROLLBAR_PAINTINFO ptr )
+    dim as PsBufferPaint ptr b = p->b
     b->SetBackColor( ghPanel.BackColorScrollBar )
     b->PaintClientRect()
     if IsRectEmpty( @p->rcThumb ) = 0 then
@@ -69,7 +69,7 @@ end sub
 ' ========================================================================================
 ' Paint one topics row.
 ' ========================================================================================
-sub frmHelpViewer_ListPaint( byval p as CLISTBOX_PAINTINFO ptr )
+sub frmHelpViewer_ListPaint( byval p as PSLISTBOX_PAINTINFO ptr )
     dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMHELPVIEWER)
     if pWindow = 0 then exit sub
 
@@ -107,7 +107,7 @@ end sub
 
 ' ========================================================================================
 ' The user selected a different topic -- by clicking it OR with the arrow keys. Load it.
-' Silent for CListBox_SetCurSel, which is why seeding the initial selection at startup does
+' Silent for PsListBox_SetCurSel, which is why seeding the initial selection at startup does
 ' not load the file twice.
 ' ========================================================================================
 sub frmHelpViewer_ListSelChange( byval hCtl as HWND, byval row as integer )
@@ -116,7 +116,7 @@ sub frmHelpViewer_ListSelChange( byval hCtl as HWND, byval row as integer )
 end sub
 
 
-' With no tooltip callback CListBox falls back to showing the row's own text, and the rows
+' With no tooltip callback PsListBox falls back to showing the row's own text, and the rows
 ' now carry their captions -- so the topics list would sprout tooltips it never had. Return
 ' "" to keep the previous behavior. Delete this (and the SetTooltipCallback call) to get
 ' tooltips for topic names that are too long for the panel.
@@ -131,8 +131,8 @@ end function
 ' same as it always did while being easier to grab. Colors are read live, so a theme switch
 ' only needs a repaint (same approach as frmHelpViewer_VScrollPaint above).
 ' ========================================================================================
-sub frmHelpViewer_SplitterPaint( byval p as CSPLITTER_PAINTINFO ptr )
-    dim as CBufferPaint ptr b = p->b
+sub frmHelpViewer_SplitterPaint( byval p as PSSPLITTER_PAINTINFO ptr )
+    dim as PsBufferPaint ptr b = p->b
 
     ' The gap either side of the band is the form's own background.
     b->SetBackColor( ghMain.BackColor )
@@ -170,8 +170,8 @@ end sub
 
 
 ' ========================================================================================
-' Load a specific Help file richtext file into the CTextBox.
-' The help files on disk are RTF; the CTextBox is plain text by design (one themed
+' Load a specific Help file richtext file into the PsTextBox.
+' The help files on disk are RTF; the PsTextBox is plain text by design (one themed
 ' fore/back color for all text). A hidden RichEdit does the RTF -> plain text
 ' conversion: stream the file in, read the plain text back out, hand it to the
 ' textbox. SetText is programmatic (silent for ChangeCallback) but still fires the
@@ -183,11 +183,11 @@ function frmHelpViewer_LoadHelpFile( byval nIndex as long ) as long
         dim as DWSTRING wszPath = AfxStrPathname("PATH", gConfig.HelpTableOfContents)
         dim as HWND hConvert = GetDlgItem( HWND_FRMHELPVIEWER, IDC_FRMHELPVIEWER_RTFCONVERT )
         RichEdit_LoadRtfFromFile( hConvert, wszPath & gHelpViewer.Filenames(nIndex) )
-        CTextBox_SetText( HWND_FRMHELPVIEWER_RIGHTPANEL, AfxGetWindowText(hConvert) )
+        PsTextBox_SetText( HWND_FRMHELPVIEWER_RIGHTPANEL, AfxGetWindowText(hConvert) )
         SetWindowText( hConvert, wstr("") )   ' don't hold the document twice
         ' Ensure the view starts at the top of the file
-        CTextBox_SetSel( HWND_FRMHELPVIEWER_RIGHTPANEL, 0, 0 )
-        CTextBox_ScrollToLine( HWND_FRMHELPVIEWER_RIGHTPANEL, 0 )
+        PsTextBox_SetSel( HWND_FRMHELPVIEWER_RIGHTPANEL, 0, 0 )
+        PsTextBox_ScrollToLine( HWND_FRMHELPVIEWER_RIGHTPANEL, 0 )
     end if
     function = 0
 end function
@@ -214,14 +214,14 @@ function frmHelpViewer_PositionWindows() as LRESULT
     ' from it, not the other way round. The limits are ours to compute; the control never
     ' guesses them.
     '
-    ' The topics CListBox carries its own scrollbar INSIDE its client rect (auto-hidden when
+    ' The topics PsListBox carries its own scrollbar INSIDE its client rect (auto-hidden when
     ' the rows fit), so the left panel now runs edge-to-edge up to the bar -- there is no
     ' separate scrollbar strip in this form's layout. Only the help TEXT still has
-    ' an external CVScrollBar, on the far right.
-    CSplitter_SetRange( HWND_FRMHELPVIEWER_SPLITTER, _
+    ' an external PsVScrollBar, on the far right.
+    PsSplitter_SetRange( HWND_FRMHELPVIEWER_SPLITTER, _
                         nMinPane, _
                         nClientWidth - nVScrollWidth - nGrabWidth - nMinPane )
-    dim as long nSplitPos = CSplitter_GetPos( HWND_FRMHELPVIEWER_SPLITTER )
+    dim as long nSplitPos = PsSplitter_GetPos( HWND_FRMHELPVIEWER_SPLITTER )
     dim as long nLeftPanelWidth = nSplitPos
 
     SetWindowPos( HWND_FRMHELPVIEWER_LEFTPANEL, 0, _
@@ -232,7 +232,7 @@ function frmHelpViewer_PositionWindows() as LRESULT
         nSplitPos, 0, nGrabWidth, nClientHeight, _
         SWP_NOZORDER or SWP_SHOWWINDOW )
 
-    ' Help text CTextBox, with its own CVScrollBar hugging the window's right edge.
+    ' Help text PsTextBox, with its own PsVScrollBar hugging the window's right edge.
     ' The width is floored at zero: on a window too narrow to hold both minimums the
     ' splitter pins at nMin (its range inverts) and this arithmetic would otherwise hand
     ' SetWindowPos a negative width.
@@ -305,7 +305,7 @@ end function
 ' Process WM_PAINT message for window/dialog: frmHelpViewer
 ' ========================================================================================
 function frmHelpViewer_OnPaint( byval hwnd as HWND ) as LRESULT
-    dim as CBufferPaint b
+    dim as PsBufferPaint b
 
     b.BeginDoubleBuffer(hwnd)
     b.SetBackColor( ghMain.BackColor )
@@ -358,7 +358,7 @@ function frmHelpViewer_WndProc( _
         dim as CWindow ptr pWindow = AfxCWindowPtr(hwnd)
         if pWindow then delete(pWindow)
         HWND_FRMHELPVIEWER = 0
-        ' The CListBox/CVScrollBar/CTextBox/CSplitter children destroyed themselves in
+        ' The PsListBox/PsVScrollBar/PsTextBox/PsSplitter children destroyed themselves in
         ' their own WM_NCDESTROY; reset the handles here (the Help window can be closed
         ' and reopened).
         HWND_FRMHELPVIEWER_LEFTPANEL = 0
@@ -428,62 +428,62 @@ function frmHelpViewer_Show( byval hWndParent as HWND ) as LRESULT
     end with
     SetWindowPlacement( pWindow->hWindow, @WinPla )
 
-    ' Topics list: the reusable CListBox control. It wraps the Win32 listbox, owns and
-    ' auto-hides its own CVScrollBar INSIDE its client rect, tracks hover, and delegates row
+    ' Topics list: the reusable PsListBox control. It wraps the Win32 listbox, owns and
+    ' auto-hides its own PsVScrollBar INSIDE its client rect, tracks hover, and delegates row
     ' drawing to frmHelpViewer_ListPaint -- which is why the form no longer carries a
     ' WM_DRAWITEM/WM_MEASUREITEM pair, a listbox subclass, or a second scrollbar.
     ' PositionWindows sizes it, so no initial size is needed here.
     HWND_FRMHELPVIEWER_LEFTPANEL = _
-        CListBox_Create( HWND_FRMHELPVIEWER, IDC_FRMHELPVIEWER_LEFTPANEL )
-    CListBox_SetPaintCallback( HWND_FRMHELPVIEWER_LEFTPANEL, @frmHelpViewer_ListPaint )
+        PsListBox_Create( HWND_FRMHELPVIEWER, IDC_FRMHELPVIEWER_LEFTPANEL )
+    PsListBox_SetPaintCallback( HWND_FRMHELPVIEWER_LEFTPANEL, @frmHelpViewer_ListPaint )
     ' SelChange replaces the old LBN_SELCHANGE: it reports mouse AND keyboard moves.
-    CListBox_SetSelChangeCallback( HWND_FRMHELPVIEWER_LEFTPANEL, @frmHelpViewer_ListSelChange )
-    CListBox_SetTooltipCallback( HWND_FRMHELPVIEWER_LEFTPANEL, @frmHelpViewer_ListTooltip )
-    CListBox_SetBackColor( HWND_FRMHELPVIEWER_LEFTPANEL, ghPanel.BackColor )
-    CListBox_SetFont( HWND_FRMHELPVIEWER_LEFTPANEL, ghFont(GUIFONT_10) )
-    CListBox_SetRowHeight( HWND_FRMHELPVIEWER_LEFTPANEL, EXPLORERITEM_HEIGHT )
+    PsListBox_SetSelChangeCallback( HWND_FRMHELPVIEWER_LEFTPANEL, @frmHelpViewer_ListSelChange )
+    PsListBox_SetTooltipCallback( HWND_FRMHELPVIEWER_LEFTPANEL, @frmHelpViewer_ListTooltip )
+    PsListBox_SetBackColor( HWND_FRMHELPVIEWER_LEFTPANEL, ghPanel.BackColor )
+    PsListBox_SetFont( HWND_FRMHELPVIEWER_LEFTPANEL, ghFont(GUIFONT_10) )
+    PsListBox_SetRowHeight( HWND_FRMHELPVIEWER_LEFTPANEL, EXPLORERITEM_HEIGHT )
     ' The bar is created/positioned/auto-hidden by the control; we only theme it, reusing
     ' the same painter as the help-text bar so both keep their existing look.
-    CListBox_SetScrollBarWidth( HWND_FRMHELPVIEWER_LEFTPANEL, SCROLLBAR_WIDTH_PANEL )
-    CListBox_SetScrollBarPaintCallback( HWND_FRMHELPVIEWER_LEFTPANEL, @frmHelpViewer_VScrollPaint )
+    PsListBox_SetScrollBarWidth( HWND_FRMHELPVIEWER_LEFTPANEL, SCROLLBAR_WIDTH_PANEL )
+    PsListBox_SetScrollBarPaintCallback( HWND_FRMHELPVIEWER_LEFTPANEL, @frmHelpViewer_VScrollPaint )
 
-    ' Splitter between the topics list and the help text: the reusable CSplitter control.
+    ' Splitter between the topics list and the help text: the reusable PsSplitter control.
     ' Its position is its own left edge in this window's client coords -- which is now
-    ' exactly the left panel's width, since the topics scrollbar lives inside the CListBox.
+    ' exactly the left panel's width, since the topics scrollbar lives inside the PsListBox.
     ' PositionWindows sizes it and pushes the limits, which clamp this seed.
-    HWND_FRMHELPVIEWER_SPLITTER = CSplitter_Create( HWND_FRMHELPVIEWER, _
-        IDC_FRMHELPVIEWER_SPLITTER, CSPLITTER_VERTICAL )
-    CSplitter_SetPaintCallback( HWND_FRMHELPVIEWER_SPLITTER, @frmHelpViewer_SplitterPaint )
-    CSplitter_SetPosChangedCallback( HWND_FRMHELPVIEWER_SPLITTER, @frmHelpViewer_SplitterMoved )
-    CSplitter_SetPos( HWND_FRMHELPVIEWER_SPLITTER, gConfig.HelpLeftPanelWidth )
+    HWND_FRMHELPVIEWER_SPLITTER = PsSplitter_Create( HWND_FRMHELPVIEWER, _
+        IDC_FRMHELPVIEWER_SPLITTER, PSSPLITTER_VERTICAL )
+    PsSplitter_SetPaintCallback( HWND_FRMHELPVIEWER_SPLITTER, @frmHelpViewer_SplitterPaint )
+    PsSplitter_SetPosChangedCallback( HWND_FRMHELPVIEWER_SPLITTER, @frmHelpViewer_SplitterMoved )
+    PsSplitter_SetPos( HWND_FRMHELPVIEWER_SPLITTER, gConfig.HelpLeftPanelWidth )
 
-    ' Help text panel: a multiline CTextBox (word-wrapped, control-implemented wheel
-    ' scrolling, no native scrollbar -- an external CVScrollBar is wired through the
+    ' Help text panel: a multiline PsTextBox (word-wrapped, control-implemented wheel
+    ' scrolling, no native scrollbar -- an external PsVScrollBar is wired through the
     ' control's scroll API below). Themed with the editor text colors -- the thing the
     ' old RichEdit never managed (its dead SetBkgndColor/EM_SETCHARFORMAT attempts sat
     ' commented out here). The fixed-pitch font keeps the help files' column-aligned
     ' shortcut tables lined up.
     HWND_FRMHELPVIEWER_RIGHTPANEL = _
-        CTextBox_Create( HWND_FRMHELPVIEWER, IDC_FRMHELPVIEWER_RIGHTPANEL, true )
-    CTextBox_SetFont( HWND_FRMHELPVIEWER_RIGHTPANEL, ghFont(INFOFONT_11) )
-    CTextBox_SetBorderWidth( HWND_FRMHELPVIEWER_RIGHTPANEL, 0 )
-    CTextBox_SetMargins( HWND_FRMHELPVIEWER_RIGHTPANEL, pWindow->ScaleX(40), pWindow->ScaleX(40) )
-    CTextBox_SetReadOnly( HWND_FRMHELPVIEWER_RIGHTPANEL, true )
-    CTextBox_SetForeColor( HWND_FRMHELPVIEWER_RIGHTPANEL, ghEditor.ForeColorText )
-    CTextBox_SetBackColor( HWND_FRMHELPVIEWER_RIGHTPANEL, ghEditor.BackColorText )
-    CTextBox_SetOuterBackColor( HWND_FRMHELPVIEWER_RIGHTPANEL, ghEditor.BackColorText )
-    CTextBox_SetScrollChangedCallback( HWND_FRMHELPVIEWER_RIGHTPANEL, @frmHelpViewer_TextScrollChanged )
-    CTextBox_SetMenuText( HWND_FRMHELPVIEWER_RIGHTPANEL, L(17,"Cut"), L(18,"Copy"), L(19,"Paste"), L(40,"Select All") )
+        PsTextBox_Create( HWND_FRMHELPVIEWER, IDC_FRMHELPVIEWER_RIGHTPANEL, true )
+    PsTextBox_SetFont( HWND_FRMHELPVIEWER_RIGHTPANEL, ghFont(INFOFONT_11) )
+    PsTextBox_SetBorderWidth( HWND_FRMHELPVIEWER_RIGHTPANEL, 0 )
+    PsTextBox_SetMargins( HWND_FRMHELPVIEWER_RIGHTPANEL, pWindow->ScaleX(40), pWindow->ScaleX(40) )
+    PsTextBox_SetReadOnly( HWND_FRMHELPVIEWER_RIGHTPANEL, true )
+    PsTextBox_SetForeColor( HWND_FRMHELPVIEWER_RIGHTPANEL, ghEditor.ForeColorText )
+    PsTextBox_SetBackColor( HWND_FRMHELPVIEWER_RIGHTPANEL, ghEditor.BackColorText )
+    PsTextBox_SetOuterBackColor( HWND_FRMHELPVIEWER_RIGHTPANEL, ghEditor.BackColorText )
+    PsTextBox_SetScrollChangedCallback( HWND_FRMHELPVIEWER_RIGHTPANEL, @frmHelpViewer_TextScrollChanged )
+    PsTextBox_SetMenuText( HWND_FRMHELPVIEWER_RIGHTPANEL, L(17,"Cut"), L(18,"Copy"), L(19,"Paste"), L(40,"Select All") )
     ThemeTextBoxContextMenu( HWND_FRMHELPVIEWER_RIGHTPANEL )
 
-    ' Help-text scrollbar, driven in LINE units through the CTextBox scroll API
+    ' Help-text scrollbar, driven in LINE units through the PsTextBox scroll API
     ' (ScrollChangedCallback -> GetVScrollInfo -> SetRange; ScrollCallback -> ScrollToLine).
-    HWND_FRMHELPVIEWER_VSCROLLBAR2 = CVScrollBar_Create( HWND_FRMHELPVIEWER, IDC_FRMHELPVIEWER_VSCROLLBAR2 )
-    CVScrollBar_SetScrollCallback( HWND_FRMHELPVIEWER_VSCROLLBAR2, @frmHelpViewer_TextVScrollCallback )
-    CVScrollBar_SetPaintCallback( HWND_FRMHELPVIEWER_VSCROLLBAR2, @frmHelpViewer_VScrollPaint )
+    HWND_FRMHELPVIEWER_VSCROLLBAR2 = PsVScrollBar_Create( HWND_FRMHELPVIEWER, IDC_FRMHELPVIEWER_VSCROLLBAR2 )
+    PsVScrollBar_SetScrollCallback( HWND_FRMHELPVIEWER_VSCROLLBAR2, @frmHelpViewer_TextVScrollCallback )
+    PsVScrollBar_SetPaintCallback( HWND_FRMHELPVIEWER_VSCROLLBAR2, @frmHelpViewer_VScrollPaint )
 
     ' Hidden RichEdit used only to convert the RTF help files to plain text for the
-    ' CTextBox (see frmHelpViewer_LoadHelpFile). Never shown, never positioned.
+    ' PsTextBox (see frmHelpViewer_LoadHelpFile). Never shown, never positioned.
     pWindow->AddControl("RICHEDIT", , IDC_FRMHELPVIEWER_RTFCONVERT, "", 0, 0, 0, 0, _
         WS_CHILD or ES_LEFT or ES_MULTILINE, _
         WS_EX_LEFT)
@@ -503,7 +503,7 @@ function frmHelpViewer_Show( byval hWndParent as HWND ) as LRESULT
                 ' p->wszCaption). The old code added an empty string and kept the text in a
                 ' parallel gHelpViewer.Topics array purely so WM_DRAWITEM could find it;
                 ' that array died with the handler.
-                idx = CListBox_AddString( HWND_FRMHELPVIEWER_LEFTPANEL, mid(wst, 8) )
+                idx = PsListBox_AddString( HWND_FRMHELPVIEWER_LEFTPANEL, mid(wst, 8) )
                 redim preserve gHelpViewer.Filenames(idx)
                 continue do
             end if
@@ -521,13 +521,13 @@ function frmHelpViewer_Show( byval hWndParent as HWND ) as LRESULT
     
     ' SetCurSel is silent (programmatic), so the first topic is loaded explicitly here --
     ' exactly as before, and without the SelChange callback double-loading it.
-    CListBox_SetCurSel( HWND_FRMHELPVIEWER_LEFTPANEL, 0 )
+    PsListBox_SetCurSel( HWND_FRMHELPVIEWER_LEFTPANEL, 0 )
     frmHelpViewer_LoadHelpFile(0)
 
     frmHelpViewer_PositionWindows()
 
     ShowWindow( HWND_FRMHELPVIEWER, SW_SHOW )
-    ' CListBox_Create gives the inner Win32 listbox the SAME control id as the container,
+    ' PsListBox_Create gives the inner Win32 listbox the SAME control id as the container,
     ' so this reaches the focusable child rather than the wrapper.
     SetFocus( GetDlgItem( HWND_FRMHELPVIEWER_LEFTPANEL, IDC_FRMHELPVIEWER_LEFTPANEL ) )
 

@@ -47,12 +47,12 @@ end function
 ' Expand/Collapse all Explorer Nodes
 ' ========================================================================================
 function frmExplorer_ExpandAll() as long
-    CListBox_ExpandAll( HWND_FRMEXPLORER )
+    PsListBox_ExpandAll( HWND_FRMEXPLORER )
     function = 0
 end function
 
 function frmExplorer_CollapseAll() as long
-    CListBox_CollapseAll( HWND_FRMEXPLORER )
+    PsListBox_CollapseAll( HWND_FRMEXPLORER )
     function = 0
 end function
 
@@ -70,8 +70,8 @@ function frmExplorer_SelectItemData( byval pDoc as clsDocument ptr ) as boolean
     dim as HWND hCtrl = HWND_FRMEXPLORER
 
     ' If pDoc is already selected in the listbox then simply exit
-    dim as integer nCurSel = CListBox_GetCurSel(hCtrl)
-    dim as integer nItemData = CListBox_GetItemData( hCtrl, nCurSel )
+    dim as integer nCurSel = PsListBox_GetCurSel(hCtrl)
+    dim as integer nItemData = PsListBox_GetItemData( hCtrl, nCurSel )
     dim as clsDocument ptr pDocSel = cast( clsDocument ptr, nItemData )
     if pDocSel = pDoc then return true
 
@@ -79,28 +79,28 @@ function frmExplorer_SelectItemData( byval pDoc as clsDocument ptr ) as boolean
     frmExplorer_UnSelectListBox()
 
 
-    dim as long nCount = CListBox_GetCount(hCtrl)
+    dim as long nCount = PsListBox_GetCount(hCtrl)
     for i as long = 0 to nCount - 1
-        if CListBox_GetItemData(hCtrl, i) = cast(integer, pDoc) then 
+        if PsListBox_GetItemData(hCtrl, i) = cast(integer, pDoc) then 
             ' Only attempt to reposition if the row is not currently collapsed
-            if CListBox_IsCollapsed(hCtrl, i) then return false
+            if PsListBox_IsCollapsed(hCtrl, i) then return false
 
             ' If the pDoc is currently within the visible range of the Listbox then
             ' simply move to that row, otherwise we set the topindex and position
             ' the selection a few rows from it.
-            dim as CLISTBOX ptr pList = GetListBoxPointer(hCtrl)
+            dim as PSLISTBOX ptr pList = GetListBoxPointer(hCtrl)
             if pList = null then return false
 
-            dim as integer nFirstRow = CListBox_GetTopIndex(hCtrl)
-            dim as integer nLastRow = nFirstRow + CListBox_ItemsPerPage(pList)
+            dim as integer nFirstRow = PsListBox_GetTopIndex(hCtrl)
+            dim as integer nLastRow = nFirstRow + PsListBox_ItemsPerPage(pList)
             if (i >= nFirstRow) andalso (i <= nLastRow) then
-                CListBox_SetCurSel( hCtrl, i )
+                PsListBox_SetCurSel( hCtrl, i )
             else    
                 ' Attempt to set the topindex so that the current selection appears
                 ' a little more down the list rather than pinned to the top of the
                 ' listbox window.
-                CListBox_SetTopIndex( hCtrl, MAX(0, i - 8) )
-                CListBox_SetCurSel( hCtrl, i )
+                PsListBox_SetTopIndex( hCtrl, MAX(0, i - 8) )
+                PsListBox_SetCurSel( hCtrl, i )
             end if
             return true
         end if
@@ -116,9 +116,9 @@ end function
 ' ========================================================================================
 function frmExplorer_UnSelectListBox() as long
     dim as HWND hCtrl = HWND_FRMEXPLORER
-    dim as long nCount = CListBox_GetCount(hCtrl)
+    dim as long nCount = PsListBox_GetCount(hCtrl)
     for i as long = 0 to nCount - 1
-        CListBox_SetSel( hCtrl, i, false )
+        PsListBox_SetSel( hCtrl, i, false )
     next
 
 '    ' force a listbox selection for the currently active tab                   
@@ -132,7 +132,7 @@ end function
 ' ========================================================================================
 ' frmExplorer_PaintCallback
 ' ========================================================================================
-sub frmExplorer_PaintCallback( byval p as CLISTBOX_PAINTINFO ptr )
+sub frmExplorer_PaintCallback( byval p as PSLISTBOX_PAINTINFO ptr )
     dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN)
     if pWindow = 0 then return 
 
@@ -192,7 +192,7 @@ end sub
 ' ========================================================================================
 ' frmExplorer_MessageCallback
 ' ========================================================================================
-function frmExplorer_MessageCallback( byval m as CLISTBOX_MESSAGEINFO ptr ) as boolean
+function frmExplorer_MessageCallback( byval m as PSLISTBOX_MESSAGEINFO ptr ) as boolean
 
     select case m->uMsg
              
@@ -208,8 +208,8 @@ function frmExplorer_MessageCallback( byval m as CLISTBOX_MESSAGEINFO ptr ) as b
         case WM_LBUTTONUP
             ' Attempt to show the file
             dim as HWND hCtl = GetParent(m->hList)
-            if CListBox_IsHeader( hCtl, m->idx ) = false then
-                dim as integer nItemData = CListBox_GetItemData( hCtl, m->idx )
+            if PsListBox_IsHeader( hCtl, m->idx ) = false then
+                dim as integer nItemData = PsListBox_GetItemData( hCtl, m->idx )
                 dim as clsDocument ptr pDoc = cast(clsDocument ptr, nItemData)
                 if pDoc then 
                     ' if the file is already showing in the Top tabs then switch to that tab.
@@ -229,18 +229,18 @@ function frmExplorer_MessageCallback( byval m as CLISTBOX_MESSAGEINFO ptr ) as b
         case WM_RBUTTONDOWN
             ' Create the popup menu
             dim as HWND hCtl = GetParent(m->hList)
-            if CListBox_IsHeader( hCtl, m->idx ) then return false
+            if PsListBox_IsHeader( hCtl, m->idx ) then return false
 
-            dim as clsDocument ptr pDoc = cast(clsDocument ptr, CListBox_GetItemData(hCtl, m->idx))
+            dim as clsDocument ptr pDoc = cast(clsDocument ptr, PsListBox_GetItemData(hCtl, m->idx))
             if pDoc = null then return false
             
             ' If only 1 line has been previously selected then unselect that line
             ' and select this current line, otherwise, the menu actions on all selected lines.
-            dim as long nSelCount = CListBox_GetSelCount(hCtl)
-            if nSelCount = 1 then CListBox_SelectAll(hCtl, false)
-            CListBox_SetSel(hCtl, m->idx, true)
+            dim as long nSelCount = PsListBox_GetSelCount(hCtl)
+            if nSelCount = 1 then PsListBox_SelectAll(hCtl, false)
+            PsListBox_SetSel(hCtl, m->idx, true)
 
-            ' Show the menu and return. It is a CPopupMenu, so this does NOT block the
+            ' Show the menu and return. It is a PsPopupMenu, so this does NOT block the
             ' way TrackPopupMenu did: the whole "process the selected rows" tail that
             ' used to follow this call is ExplorerContextMenu_OnSelect in
             ' modContextMenus.inc, which the control fires once the menu has closed.
@@ -262,7 +262,7 @@ end function
 ' ========================================================================================
 function frmExplorer_TooltipCallback( byval hCtl as HWND, byval row as integer ) as DWSTRING
     dim as DWSTRING wszTooltip
-    dim as integer nItemData = CListBox_GetItemData(hCtl, row)
+    dim as integer nItemData = PsListBox_GetItemData(hCtl, row)
     dim as clsDocument ptr pDoc = cast(clsDocument ptr, nItemData)
     if pDoc then wszTooltip = pDoc->DiskFilename
     return wszTooltip
@@ -274,23 +274,23 @@ end function
 ' ========================================================================================
 function frmExplorer_Show( byval hWndParent as HWND ) as LRESULT
 
-    dim as HWND hCtrl = CListBox_Create( hWndParent, IDC_FRMEXPLORER_LISTBOX )
+    dim as HWND hCtrl = PsListBox_Create( hWndParent, IDC_FRMEXPLORER_LISTBOX )
 
-    CListBox_SetPaintCallback( hCtrl, @frmExplorer_PaintCallback )
-    CListBox_SetMessageCallback( hCtrl, @frmExplorer_MessageCallback )
-    CListBox_SetTooltipCallback( hCtrl, @frmExplorer_TooltipCallback )
+    PsListBox_SetPaintCallback( hCtrl, @frmExplorer_PaintCallback )
+    PsListBox_SetMessageCallback( hCtrl, @frmExplorer_MessageCallback )
+    PsListBox_SetTooltipCallback( hCtrl, @frmExplorer_TooltipCallback )
     ' The WM_LBUTTONUP callback opens the clicked function; a double-click would
     ' deliver a second up and open it twice, so suppress double-click delivery.
-    CListBox_PreventDoubleClick( hCtrl )
-    CListBox_SetBackColor( hCtrl, ghPanel.BackColor )
-    CListBox_SetFont( hCtrl, ghFont(GUIFONT_10) )
-    CListBox_SetExtendedSelect( hCtrl, true )   ' Shift/Ctrl range selection
+    PsListBox_PreventDoubleClick( hCtrl )
+    PsListBox_SetBackColor( hCtrl, ghPanel.BackColor )
+    PsListBox_SetFont( hCtrl, ghFont(GUIFONT_10) )
+    PsListBox_SetExtendedSelect( hCtrl, true )   ' Shift/Ctrl range selection
     ' The scrollbar is created/positioned/auto-hidden by the control; we only theme it.
-    ' (CListBox_SetScrollBarPaintCallback is available for full custom drawing.)
-    CListBox_SetScrollBarWidth( hCtrl, SCROLLBAR_WIDTH_PANEL )
-    CListBox_SetScrollBarColors( hCtrl, ghPanel.BackColorScrollBar, _
+    ' (PsListBox_SetScrollBarPaintCallback is available for full custom drawing.)
+    PsListBox_SetScrollBarWidth( hCtrl, SCROLLBAR_WIDTH_PANEL )
+    PsListBox_SetScrollBarColors( hCtrl, ghPanel.BackColorScrollBar, _
                                  ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
-'    CListBox_SetScrollBarColors( hCtrl, ghEditor.BackColorScrollBar, _
+'    PsListBox_SetScrollBarColors( hCtrl, ghEditor.BackColorScrollBar, _
 '                                 ghEditor.ForeColorScrollBar, ghEditor.ForeColorScrollBarHot )
 
     HWND_FRMEXPLORER = hCtrl
@@ -314,13 +314,13 @@ function LoadExplorerFiles() as long
     ShowWindow( hCtrl, SW_HIDE )
 
     ' Save the topindex because we will restore it after filling the new contents
-    dim as long nCurSel = CListBox_GetCurSel( hCtrl )
-    dim as long nTopIndex = CListBox_GetTopIndex( hCtrl )
+    dim as long nCurSel = PsListBox_GetCurSel( hCtrl )
+    dim as long nTopIndex = PsListBox_GetTopIndex( hCtrl )
 
     ' Clear all content from the listbox
-    CListBox_Clear( hCtrl )
+    PsListBox_Clear( hCtrl )
 
-    CListBox_BeginUpdate( hCtrl )
+    PsListBox_BeginUpdate( hCtrl )
 
 
     ' Add the list of filenames 
@@ -341,7 +341,7 @@ function LoadExplorerFiles() as long
 
     for ii as long = nStart to nEnd
         wszText = gConfig.Cat(ii).wszDescription
-        CListBox_AddHeader( hCtrl, wszText )
+        PsListBox_AddHeader( hCtrl, wszText )
 
         ' Iterate all pDoc in the project/files list. Create an array and then
         ' sort it alphabetically.
@@ -364,17 +364,17 @@ function LoadExplorerFiles() as long
     
         for i as long = lbound(pDocs) to ubound(pDocs)
             dim as DWSTRING wszText = AfxStrPathName( "NAMEX", pDocs(i)->DiskFilename )
-            CListBox_AddString( hCtrl, wszText, cast(integer, pDocs(i)), 0 )
+            PsListBox_AddString( hCtrl, wszText, cast(integer, pDocs(i)), 0 )
         next   
         
     next
 
-    CListBox_EndUpdate( hCtrl )
+    PsListBox_EndUpdate( hCtrl )
 
     ' Restore the top index so the list displays like it did before being reset
-    CListBox_SetTopIndex( hCtrl, nTopIndex )
-    nCurSel = MIN( nCurSel, CListBox_GetCount(hCtrl) - 1 )
-    CListBox_SetCurSel( hCtrl, nCurSel )
+    PsListBox_SetTopIndex( hCtrl, nTopIndex )
+    nCurSel = MIN( nCurSel, PsListBox_GetCount(hCtrl) - 1 )
+    PsListBox_SetCurSel( hCtrl, nCurSel )
 
     function = 0
 end function

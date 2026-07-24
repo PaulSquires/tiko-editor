@@ -130,7 +130,7 @@ type clsDocument
     wszEOL                as DWSTRING              ' used in replace in files when constructing each line of new file
     CurrentSelection      as SELECTION_INFO     ' set during scintilla wm_notfy and used in Find/Replace dialog
     
-    ' Following used for split edit views. The bar itself is a CSplitter control owned by
+    ' Following used for split edit views. The bar itself is a PsSplitter control owned by
     ' frmMain (HWND_FRMMAIN_SPLITV/H), so the gripper rect, the drag's previous-point
     ' tracking and the single-vs-double-click timer state all live in the control now.
     SplitY                as long               ' Y coordinate of top/bottom splitter

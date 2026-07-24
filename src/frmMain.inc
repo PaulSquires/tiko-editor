@@ -120,27 +120,27 @@ function frmMain_SetStatusbar() as long
         end if 
 
         ' PANEL Line/Col/Sel
-        CStatusBar_SetText( HWND_FRMMAIN_STATUSBAR, GOTO_PANEL, wszText )
+        PsStatusBar_SetText( HWND_FRMMAIN_STATUSBAR, GOTO_PANEL, wszText )
 
         ' Update the vertical scrollbars (SetRange inside re-derives and repaints)
         frmEditorVScroll_UpdateScrollBars(pDoc)
 
         ' PANEL Themes dialog
         wszText = " " & wszIconThemes & " "
-        CStatusBar_SetText( HWND_FRMMAIN_STATUSBAR, THEMES_DIALOG_PANEL, wszText )
+        PsStatusBar_SetText( HWND_FRMMAIN_STATUSBAR, THEMES_DIALOG_PANEL, wszText )
 
         ' PANEL Build Configuration dialog
-        CStatusBar_SetText( HWND_FRMMAIN_STATUSBAR, BUILD_DIALOG_PANEL, wszIconAddFileButton )
+        PsStatusBar_SetText( HWND_FRMMAIN_STATUSBAR, BUILD_DIALOG_PANEL, wszIconAddFileButton )
 
         ' PANEL Build Configuration
         if gApp.GetDocumentCount then
             wszText = frmBuildConfig_GetSelectedBuildDescription()
-            CStatusBar_SetText( HWND_FRMMAIN_STATUSBAR, BUILD_POPUP_PANEL, wszText )
+            PsStatusBar_SetText( HWND_FRMMAIN_STATUSBAR, BUILD_POPUP_PANEL, wszText )
         end if
         
         ' PANEL Spacing
         wszText = "Spaces: " & gConfig.TabSize
-        CStatusBar_SetText( HWND_FRMMAIN_STATUSBAR, SPACES_PANEL, wszText )
+        PsStatusBar_SetText( HWND_FRMMAIN_STATUSBAR, SPACES_PANEL, wszText )
         
         ' PANEL File Encoding (Ansi, UTF-8, UTF-16)
         select case pDoc->FileEncoding
@@ -157,7 +157,7 @@ function frmMain_SetStatusbar() as long
                 wszText = "ANSI"  
                 SciExec( hEdit, SCI_SETCODEPAGE, 0, 0 )
         end select 
-        CStatusBar_SetText( HWND_FRMMAIN_STATUSBAR, UTF_PANEL, wszText )
+        PsStatusBar_SetText( HWND_FRMMAIN_STATUSBAR, UTF_PANEL, wszText )
 
         ' PANEL Line Endings
         select case SciExec( hEdit, SCI_GETEOLMODE, 0, 0 )
@@ -166,11 +166,11 @@ function frmMain_SetStatusbar() as long
             case SC_EOL_LF:   wszText = "LF"    '(2)
             case else:        wszText = ""    
         end select 
-        CStatusBar_SetText( HWND_FRMMAIN_STATUSBAR, CRLF_PANEL, wszText )
+        PsStatusBar_SetText( HWND_FRMMAIN_STATUSBAR, CRLF_PANEL, wszText )
         
         if SciExec( hEdit, SCI_GETREADONLY, 0, 0 ) then
             wszText = L(222,"Read Only")
-            CStatusBar_SetText( HWND_FRMMAIN_STATUSBAR, COMPILE_STATUS_PANEL, wszText )
+            PsStatusBar_SetText( HWND_FRMMAIN_STATUSBAR, COMPILE_STATUS_PANEL, wszText )
         end if
         
     end if
@@ -430,8 +430,8 @@ end Function
 ' (SPLITTER_GRAB); the visible band is the narrower SPLITSIZE, centered in it, so the bar
 ' looks the same as it always did while being easier to grab. 
 ' ========================================================================================
-sub frmMain_SplitterPaint( byval p as CSPLITTER_PAINTINFO ptr )
-    dim as CBufferPaint ptr b = p->b
+sub frmMain_SplitterPaint( byval p as PSSPLITTER_PAINTINFO ptr )
+    dim as PsBufferPaint ptr b = p->b
 
     ' The sliver either side of the band is the form's own background.
     b->SetBackColor( ghMain.BackColor )
@@ -442,7 +442,7 @@ sub frmMain_SplitterPaint( byval p as CSPLITTER_PAINTINFO ptr )
     if pWindow then nBand = pWindow->ScaleX(SPLITSIZE)
 
     dim as RECT rc = p->rcClient
-    if p->nOrientation = CSPLITTER_VERTICAL then
+    if p->nOrientation = PSSPLITTER_VERTICAL then
         dim as long nInset = ((rc.right - rc.left) - nBand) \ 2
         if nInset < 0 then nInset = 0
         rc.left += nInset : rc.right -= nInset
@@ -475,11 +475,11 @@ sub frmMain_SplitterMoved( _
     if pDoc = 0 then exit sub
 
     select case nPhase
-        case CSPLITTER_PHASE_BEGIN
+        case PSSPLITTER_PHASE_BEGIN
             pDoc->bSizing = true
             frmMain_HideHorizScrollBars()   ' hide to reduce flickering
 
-        case CSPLITTER_PHASE_MOVE
+        case PSSPLITTER_PHASE_MOVE
             if hSplitter = HWND_FRMMAIN_SPLITV then
                 pDoc->SplitX = newPos
             else
@@ -487,7 +487,7 @@ sub frmMain_SplitterMoved( _
             end if
             frmMain_PositionWindows()
 
-        case CSPLITTER_PHASE_END
+        case PSSPLITTER_PHASE_END
             pDoc->bSizing = false
             frmMain_PositionWindows()
     end select
@@ -503,7 +503,7 @@ end sub
 ' means no drag starts; the control keeps the capture it already took and releases it on the
 ' trailing WM_LBUTTONUP.
 ' ========================================================================================
-function frmMain_SplitterMessage( byval m as CSPLITTER_MESSAGEINFO ptr ) as boolean
+function frmMain_SplitterMessage( byval m as PSSPLITTER_MESSAGEINFO ptr ) as boolean
     if m->uMsg <> WM_LBUTTONDBLCLK then return false
 
     dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
@@ -523,7 +523,7 @@ end function
 ' Process WM_PAINT message for window/dialog: frmMain
 ' ========================================================================================
 function frmMain_OnPaint( byval hwnd as HWND ) as LRESULT
-    dim as CBufferPaint b
+    dim as PsBufferPaint b
 
     b.BeginDoubleBuffer(hwnd)
 
@@ -531,7 +531,7 @@ function frmMain_OnPaint( byval hwnd as HWND ) as LRESULT
 
     b.PaintClientRect()
 
-    ' The splitter between the two edit windows is a real window now (CSplitter) and paints
+    ' The splitter between the two edit windows is a real window now (PsSplitter) and paints
     ' itself -- see frmMain_SplitterPaint.
 
     ' If the top tab control is visible then paint the area between the
@@ -817,18 +817,18 @@ function frmMain_PositionWindows() as LRESULT
         ' at PANEL_MIN_CONTENT, which swap which end of the range they occupy.
         dim as long nBarPos
         if gConfig.ExplorerPositionRight then
-            CSplitter_SetRange( HWND_FRMMAIN_SPLITPANEL, _
+            PsSplitter_SetRange( HWND_FRMMAIN_SPLITPANEL, _
                                 pWindow->ScaleX(PANEL_MIN_CONTENT), _
                                 rc.right - nGrabPanel - pWindow->ScaleX(PANEL_MIN_WIDTH) )
-            CSplitter_SetPos( HWND_FRMMAIN_SPLITPANEL, rc.right - nWidthPanel - nGrabPanel )
-            nBarPos = CSplitter_GetPos( HWND_FRMMAIN_SPLITPANEL )   ' take back the clamp
+            PsSplitter_SetPos( HWND_FRMMAIN_SPLITPANEL, rc.right - nWidthPanel - nGrabPanel )
+            nBarPos = PsSplitter_GetPos( HWND_FRMMAIN_SPLITPANEL )   ' take back the clamp
             nWidthPanel = rc.right - nBarPos - nGrabPanel
         else
-            CSplitter_SetRange( HWND_FRMMAIN_SPLITPANEL, _
+            PsSplitter_SetRange( HWND_FRMMAIN_SPLITPANEL, _
                                 pWindow->ScaleX(PANEL_MIN_WIDTH), _
                                 rc.right - nGrabPanel - pWindow->ScaleX(PANEL_MIN_CONTENT) )
-            CSplitter_SetPos( HWND_FRMMAIN_SPLITPANEL, nWidthPanel )
-            nBarPos = CSplitter_GetPos( HWND_FRMMAIN_SPLITPANEL )   ' take back the clamp
+            PsSplitter_SetPos( HWND_FRMMAIN_SPLITPANEL, nWidthPanel )
+            nBarPos = PsSplitter_GetPos( HWND_FRMMAIN_SPLITPANEL )   ' take back the clamp
             nWidthPanel = nBarPos
         end if
         if nWidthPanel < 0 then nWidthPanel = 0
@@ -936,14 +936,14 @@ function frmMain_PositionWindows() as LRESULT
         ' Limits are ours to compute: the panel floors at its tabs height (as before), and
         ' the editor now floors too, so the panel can no longer be dragged up until the
         ' edit area is a sliver.
-        CSplitter_SetRange( HWND_FRMMAIN_SPLITOUTPUT, _
+        PsSplitter_SetRange( HWND_FRMMAIN_SPLITOUTPUT, _
                             nTop + pWindow->ScaleY(OUTPUT_MIN_EDITOR), _
                             rc.bottom - nHeightStatusbar - pWindow->ScaleY(OUTPUT_TABS_HEIGHT) - nGrabOut )
-        CSplitter_SetPos( HWND_FRMMAIN_SPLITOUTPUT, _
+        PsSplitter_SetPos( HWND_FRMMAIN_SPLITOUTPUT, _
                           rc.bottom - nHeightStatusbar - nHeightOutput - nGrabOut )
         ' Take the clamp back and re-derive the panel height from it, so the bar and the
         ' panel can never disagree about where the boundary is.
-        dim as long nBarPos = CSplitter_GetPos( HWND_FRMMAIN_SPLITOUTPUT )
+        dim as long nBarPos = PsSplitter_GetPos( HWND_FRMMAIN_SPLITOUTPUT )
         nHeightOutput = rc.bottom - nHeightStatusbar - (nBarPos + nGrabOut)
         if nHeightOutput < 0 then nHeightOutput = 0
 
@@ -983,7 +983,7 @@ function frmMain_PositionWindows() as LRESULT
         pDoc->rcDocSplitArea = rcDoc
 
         
-        ' Editor split bar. Two CSplitter instances exist (one per orientation, because
+        ' Editor split bar. Two PsSplitter instances exist (one per orientation, because
         ' orientation is fixed at creation); at most ONE is shown, following the active
         ' document's split mode. The limits are ours to compute -- the control cannot know
         ' about the editor scrollbars flanking the panes -- and are the same bounds the old
@@ -1004,11 +1004,11 @@ function frmMain_PositionWindows() as LRESULT
             ShowWindow( HWND_FRMEDITOR_VSCROLLBAR(0), SW_SHOW )
             ShowWindow( HWND_FRMEDITOR_VSCROLLBAR(1), SW_SHOW )
             ShowWindow( HWND_FRMMAIN_SPLITH, SW_HIDE )
-            CSplitter_SetRange( HWND_FRMMAIN_SPLITV, _
+            PsSplitter_SetRange( HWND_FRMMAIN_SPLITV, _
                                 rcDoc.left + nEditScrollW, _
                                 rcDoc.right - nEditScrollW - nGrabV )
-            CSplitter_SetPos( HWND_FRMMAIN_SPLITV, pDoc->SplitX )
-            pDoc->SplitX = CSplitter_GetPos( HWND_FRMMAIN_SPLITV )   ' take back the clamp
+            PsSplitter_SetPos( HWND_FRMMAIN_SPLITV, pDoc->SplitX )
+            pDoc->SplitX = PsSplitter_GetPos( HWND_FRMMAIN_SPLITV )   ' take back the clamp
             SetWindowPos( HWND_FRMMAIN_SPLITV, 0, _
                 pDoc->SplitX, rcDoc.top, nGrabV, rcDoc.bottom - rcDoc.top, _
                 SWP_NOZORDER or SWP_SHOWWINDOW )
@@ -1019,11 +1019,11 @@ function frmMain_PositionWindows() as LRESULT
             ShowWindow( HWND_FRMEDITOR_VSCROLLBAR(0), SW_SHOW )
             ShowWindow( HWND_FRMEDITOR_VSCROLLBAR(1), SW_SHOW )
             ShowWindow( HWND_FRMMAIN_SPLITV, SW_HIDE )
-            CSplitter_SetRange( HWND_FRMMAIN_SPLITH, _
+            PsSplitter_SetRange( HWND_FRMMAIN_SPLITH, _
                                 rcDoc.top, _
                                 rcDoc.bottom - nGrabH )
-            CSplitter_SetPos( HWND_FRMMAIN_SPLITH, pDoc->SplitY )
-            pDoc->SplitY = CSplitter_GetPos( HWND_FRMMAIN_SPLITH )   ' take back the clamp
+            PsSplitter_SetPos( HWND_FRMMAIN_SPLITH, pDoc->SplitY )
+            pDoc->SplitY = PsSplitter_GetPos( HWND_FRMMAIN_SPLITH )   ' take back the clamp
             SetWindowPos( HWND_FRMMAIN_SPLITH, 0, _
                 rcDoc.left, pDoc->SplitY, rcDoc.right - rcDoc.left, nGrabH, _
                 SWP_NOZORDER or SWP_SHOWWINDOW )
@@ -1200,7 +1200,7 @@ function frmMain_OnContextMenu( _
 
     SetFocus hWndContext
 
-    ' The editor's right-click menu is a CPopupMenu (modContextMenus.inc). It positions
+    ' The editor's right-click menu is a PsPopupMenu (modContextMenus.inc). It positions
     ' itself at the cursor and verifies that the cursor really is over the active
     ' Scintilla window -- that guard used to live in CreateScintillaContextMenu, which
     ' signalled "don't show" by returning a null HMENU.
@@ -1281,7 +1281,7 @@ function frmMain_OnClose( byval hwnd as HWND ) as LRESULT
     gConfig.ShowOutputPanelHeight = pWindow->UnScaleY(gConfig.ShowOutputPanelHeight)
     'gConfig.ShowOutputPanelMinimized this is set when double clicking an Output panel tab.
     ' The tab bar owns the current tab; the config field is just its persisted copy.
-    gConfig.ShowOutputPanelIndex = CSelectBar_GetCurSel( HWND_FRMOUTPUT_SELECTBAR )
+    gConfig.ShowOutputPanelIndex = PsSelectBar_GetCurSel( HWND_FRMOUTPUT_SELECTBAR )
     
     ' if a project is already open then save/close it.
     if gApp.IsProjectActive then 
@@ -1347,7 +1347,7 @@ end Function
 
 ' The editor split bar's WM_MOUSEMOVE / WM_LBUTTONUP / WM_LBUTTONDBLCLK handlers used to
 ' live here, along with the 100 ms timer that told a single click from a double click
-' (frmMain_TimerProc, HandleSingleClick, HandleDoubleClick). The CSplitter control owns all
+' (frmMain_TimerProc, HandleSingleClick, HandleDoubleClick). The PsSplitter control owns all
 ' of it now: the drag, the mouse capture, the IDC_SIZEWE/IDC_SIZENS cursor, the hover state,
 ' and -- because its window class carries CS_DBLCLKS -- the click disambiguation, so the
 ' double-click that closes the split arrives directly at frmMain_SplitterMessage.
@@ -1367,7 +1367,7 @@ function frmMain_OnLButtonDown( _
     ' if main window area clicked then close any active top menus
     killAllPopupMenus()
 
-    ' The splitter hit-test that used to follow lives in the CSplitter control now.
+    ' The splitter hit-test that used to follow lives in the PsSplitter control now.
 
     function = 0
 end function
@@ -1447,7 +1447,7 @@ function frmMain_WndProc( _
             ' Only the busy cursor is frmMain's to set. The two drag arms that used to
             ' head this chain (a hand-rolled splitter/listview drag, and a top-tab drag)
             ' are gone with their globals: every drag site is a reusable control now --
-            ' CSplitter, CListBox, CTabBar -- and each sets its own cursor from its own
+            ' PsSplitter, PsListBox, PsTabBar -- and each sets its own cursor from its own
             ' WM_SETCURSOR, so frmMain must not answer for them.
             if (gApp.IsCompiling = true) or _
                (gApp.IsProjectLoading = true) or _
@@ -1642,7 +1642,7 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
 
     ' Rendering-backend geometry self-test. Runs here because it needs a CWindow-backed
     ' HWND (PaintLine asks it for the DPI scale) but nothing else -- no theme, no config.
-    if environ("CBUFFERPAINT_SELFTEST") = "1" then CBufferPaint_RunSelfTest( HWND_FRMMAIN )
+    if environ("PSBUFFERPAINT_SELFTEST") = "1" then PsBufferPaint_RunSelfTest( HWND_FRMMAIN )
 
     ' Build the keyboard accelerators
     frmKeyboard_BuildAcceleratorTable()
@@ -1674,30 +1674,30 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     frmEditorHScroll_Show( HWND_FRMMAIN )
     frmEditorVScroll_Show( HWND_FRMMAIN )
 
-    ' Editor split bars. One per orientation because CSplitter fixes its orientation at
+    ' Editor split bars. One per orientation because PsSplitter fixes its orientation at
     ' creation; PositionWindows shows at most one, following the active document's split
     ' mode. Both start hidden and zero-sized -- PositionWindows places them.
-    HWND_FRMMAIN_SPLITV = CSplitter_Create( HWND_FRMMAIN, IDC_FRMMAIN_SPLITV, CSPLITTER_VERTICAL )
-    HWND_FRMMAIN_SPLITH = CSplitter_Create( HWND_FRMMAIN, IDC_FRMMAIN_SPLITH, CSPLITTER_HORIZONTAL )
+    HWND_FRMMAIN_SPLITV = PsSplitter_Create( HWND_FRMMAIN, IDC_FRMMAIN_SPLITV, PSSPLITTER_VERTICAL )
+    HWND_FRMMAIN_SPLITH = PsSplitter_Create( HWND_FRMMAIN, IDC_FRMMAIN_SPLITH, PSSPLITTER_HORIZONTAL )
     for i as long = 0 to 1
         dim as HWND hBar = iif( i = 0, HWND_FRMMAIN_SPLITV, HWND_FRMMAIN_SPLITH )
-        CSplitter_SetPaintCallback( hBar, @frmMain_SplitterPaint )
-        CSplitter_SetPosChangedCallback( hBar, @frmMain_SplitterMoved )
-        CSplitter_SetMessageCallback( hBar, @frmMain_SplitterMessage )
+        PsSplitter_SetPaintCallback( hBar, @frmMain_SplitterPaint )
+        PsSplitter_SetPosChangedCallback( hBar, @frmMain_SplitterMoved )
+        PsSplitter_SetMessageCallback( hBar, @frmMain_SplitterMessage )
     next
 
     ' Output panel splitter: sits between the editor area and the Output panel. Also a
     ' frmMain child, because frmMain owns that layout.
-    HWND_FRMMAIN_SPLITOUTPUT = CSplitter_Create( HWND_FRMMAIN, IDC_FRMMAIN_SPLITOUTPUT, CSPLITTER_HORIZONTAL )
-    CSplitter_SetPaintCallback( HWND_FRMMAIN_SPLITOUTPUT, @frmOutput_SplitterPaint )
-    CSplitter_SetPosChangedCallback( HWND_FRMMAIN_SPLITOUTPUT, @frmOutput_SplitterMoved )
-    CSplitter_SetMessageCallback( HWND_FRMMAIN_SPLITOUTPUT, @frmOutput_SplitterMessage )
+    HWND_FRMMAIN_SPLITOUTPUT = PsSplitter_Create( HWND_FRMMAIN, IDC_FRMMAIN_SPLITOUTPUT, PSSPLITTER_HORIZONTAL )
+    PsSplitter_SetPaintCallback( HWND_FRMMAIN_SPLITOUTPUT, @frmOutput_SplitterPaint )
+    PsSplitter_SetPosChangedCallback( HWND_FRMMAIN_SPLITOUTPUT, @frmOutput_SplitterMoved )
+    PsSplitter_SetMessageCallback( HWND_FRMMAIN_SPLITOUTPUT, @frmOutput_SplitterMessage )
 
     ' Explorer panel splitter: sits on the panel's inner edge, whichever side it is docked.
     ' No message callback -- this bar has no double-click gesture.
-    HWND_FRMMAIN_SPLITPANEL = CSplitter_Create( HWND_FRMMAIN, IDC_FRMMAIN_SPLITPANEL, CSPLITTER_VERTICAL )
-    CSplitter_SetPaintCallback( HWND_FRMMAIN_SPLITPANEL, @frmPanel_SplitterPaint )
-    CSplitter_SetPosChangedCallback( HWND_FRMMAIN_SPLITPANEL, @frmPanel_SplitterMoved )
+    HWND_FRMMAIN_SPLITPANEL = PsSplitter_Create( HWND_FRMMAIN, IDC_FRMMAIN_SPLITPANEL, PSSPLITTER_VERTICAL )
+    PsSplitter_SetPaintCallback( HWND_FRMMAIN_SPLITPANEL, @frmPanel_SplitterPaint )
+    PsSplitter_SetPosChangedCallback( HWND_FRMMAIN_SPLITPANEL, @frmPanel_SplitterMoved )
 
     ' Create the UserTools accelerator table
     frmUserTools_CreateAcceleratorTable()            
@@ -1757,7 +1757,7 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
         ' a dropdown is open (menu semantics) but never WM_SYSKEY*, so the Alt+letter
         ' accelerators below keep working. Replaces handleMouseTopMenu and
         ' handleKeysTopMenu.
-        if CMenuBar_FilterMessage( HWND_FRMMAIN_MENUBAR, @uMsg ) then continue do
+        if PsMenuBar_FilterMessage( HWND_FRMMAIN_MENUBAR, @uMsg ) then continue do
 
         ' The same service for the standalone context menus. It is a SEPARATE call
         ' because the bar's filter stands down unless the BAR has a dropdown open --
@@ -1765,10 +1765,10 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
         ' never dismiss on an outside click.
         if ContextMenu_FilterMessage( @uMsg ) then continue do
 
-        ' And for the CTextBox controls' own built-in Cut/Copy/Paste menu, which is a
-        ' CPopupMenu too since the TrackPopupMenu migration. One call covers every
+        ' And for the PsTextBox controls' own built-in Cut/Copy/Paste menu, which is a
+        ' PsPopupMenu too since the TrackPopupMenu migration. One call covers every
         ' textbox in the app.
-        if CTextBox_FilterMessage( @uMsg ) then continue do
+        if PsTextBox_FilterMessage( @uMsg ) then continue do
 
         ' The code-completion popup. Unlike every filter above it, this one consumes ONLY
         ' the navigation and commit keys -- ordinary typing MUST reach Scintilla, which is

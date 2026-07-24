@@ -103,14 +103,14 @@ private sub frmOptionsKeywords_TextScrollChanged( byval hTextBox as HWND )
     if IsWindowVisible( hTextBox ) = 0 then exit sub
     if ghKwScroll = 0 then exit sub
     dim as integer nTotal, nPerPage, nFirst
-    CTextBox_GetVScrollInfo( hTextBox, nTotal, nPerPage, nFirst )
-    CVScrollBar_SetRange( ghKwScroll, nTotal, nPerPage, nFirst )
+    PsTextBox_GetVScrollInfo( hTextBox, nTotal, nPerPage, nFirst )
+    PsVScrollBar_SetRange( ghKwScroll, nTotal, nPerPage, nFirst )
 end sub
 
 ' The user dragged the shared scrollbar: scroll whichever editor is visible.
 private sub frmOptionsKeywords_ScrollCallback( byval hScrollBar as HWND, byval newPos as integer )
     dim as HWND hTb = frmOptionsKeywords_VisibleText()
-    if hTb then CTextBox_ScrollToLine( hTb, newPos )
+    if hTb then PsTextBox_ScrollToLine( hTb, newPos )
 end sub
 
 
@@ -120,11 +120,11 @@ end sub
 ' ========================================================================================
 private sub frmOptionsKeywords_ThemeText( byval hTb as HWND )
     if hTb = 0 then exit sub
-    CTextBox_SetFont( hTb, ghFont(INFOFONT_11) )      ' Consolas 11 (fixed pitch)
-    CTextBox_SetForeColor( hTb, ghEditor.ForeColorText )
-    CTextBox_SetBackColor( hTb, ghEditor.BackColorText )
-    CTextBox_SetBorderColor( hTb, ghEditor.Divider )
-    CTextBox_SetFocusBorderColor( hTb, ghPanel.ForeColorHot )
+    PsTextBox_SetFont( hTb, ghFont(INFOFONT_11) )      ' Consolas 11 (fixed pitch)
+    PsTextBox_SetForeColor( hTb, ghEditor.ForeColorText )
+    PsTextBox_SetBackColor( hTb, ghEditor.BackColorText )
+    PsTextBox_SetBorderColor( hTb, ghEditor.Divider )
+    PsTextBox_SetFocusBorderColor( hTb, ghPanel.ForeColorHot )
     ThemeTextBoxContextMenu( hTb )
 end sub
 
@@ -139,17 +139,17 @@ sub frmOptionsKeywords_Build( byval nPage as long, byval hPage as HWND )
 
     ' The shared scrollbar, created the first time any keyword page is visited.
     if ghKwScroll = 0 then
-        ghKwScroll = CVScrollBar_Create( hPage, IDC_FRMOPTIONSKEYWORDS_VSCROLL )
-        CVScrollBar_SetScrollCallback( ghKwScroll, @frmOptionsKeywords_ScrollCallback )
+        ghKwScroll = PsVScrollBar_Create( hPage, IDC_FRMOPTIONSKEYWORDS_VSCROLL )
+        PsVScrollBar_SetScrollCallback( ghKwScroll, @frmOptionsKeywords_ScrollCallback )
     end if
 
     if ghKwText(idx) = 0 then
-        dim as HWND hTb = CTextBox_Create( hPage, IDC_FRMOPTIONSKEYWORDS_TXTBASE + idx, true )   ' multiline
-        CTextBox_SetLimitText( hTb, KW_MAXTEXT )
-        CTextBox_SetChangeCallback( hTb, @frmOptionsKeywords_TextChanged )
-        CTextBox_SetScrollChangedCallback( hTb, @frmOptionsKeywords_TextScrollChanged )
+        dim as HWND hTb = PsTextBox_Create( hPage, IDC_FRMOPTIONSKEYWORDS_TXTBASE + idx, true )   ' multiline
+        PsTextBox_SetLimitText( hTb, KW_MAXTEXT )
+        PsTextBox_SetChangeCallback( hTb, @frmOptionsKeywords_TextChanged )
+        PsTextBox_SetScrollChangedCallback( hTb, @frmOptionsKeywords_TextScrollChanged )
         ' Seed from gConfig (silent; the change callback does not fire for SetText).
-        CTextBox_SetText( hTb, wstr( frmOptionsKeywords_ConfigText( idx ) ) )
+        PsTextBox_SetText( hTb, wstr( frmOptionsKeywords_ConfigText( idx ) ) )
         ghKwText(idx) = hTb
         frmOptionsKeywords_ThemeText( hTb )
     end if
@@ -168,7 +168,7 @@ sub frmOptionsKeywords_ApplyTheme()
         frmOptionsKeywords_ThemeText( ghKwText(i) )
     next
     if ghKwScroll then
-        CVScrollBar_SetColors( ghKwScroll, ghPanel.BackColorScrollBar, _
+        PsVScrollBar_SetColors( ghKwScroll, ghPanel.BackColorScrollBar, _
                                ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
     end if
 end sub
@@ -191,7 +191,7 @@ end sub
 ' ========================================================================================
 ' Lay the visible page's editor out to fill the viewport, with the shared scrollbar in a
 ' strip on its right. Returns the viewport height, so the page exactly fills the pane and
-' the outer CScrollPanel never scrolls -- the editor scrolls its own text instead.
+' the outer PsScrollPanel never scrolls -- the editor scrolls its own text instead.
 ' ========================================================================================
 function frmOptionsKeywords_Layout( byval nPage as long, byval hPage as HWND, byval cxPanel as long ) as long
 
@@ -206,7 +206,7 @@ function frmOptionsKeywords_Layout( byval nPage as long, byval hPage as HWND, by
     dim as long sbW       = AfxScaleX(SCROLLBAR_WIDTH_PANEL)
     dim as long gap       = AfxScaleX(4)
 
-    dim as long viewH = CScrollPanel_GetViewportHeight( HWND_FRMOPTIONS_SCROLL )
+    dim as long viewH = PsScrollPanel_GetViewportHeight( HWND_FRMOPTIONS_SCROLL )
     if viewH <= 0 then viewH = AfxScaleY(FRMOPTIONS_CLIENT_H - FRMOPTIONS_TITLE_H - FRMOPTIONS_FOOTER_H)
 
     dim as long tbX = padLeft
@@ -242,7 +242,7 @@ end sub
 sub frmOptionsKeywords_Harvest()
     ' Guard on IsWindow as well as the handle: harvesting a destroyed editor would read ""
     ' and blank a good keyword file. A live editor always reads back its real text.
-    if (ghKwText(0) <> 0) andalso (IsWindow(ghKwText(0)) <> 0) then gConfig.FBKeywords     = CTextBox_GetText( ghKwText(0) )
-    if (ghKwText(1) <> 0) andalso (IsWindow(ghKwText(1)) <> 0) then gConfig.WinApiKeywords = CTextBox_GetText( ghKwText(1) )
-    if (ghKwText(2) <> 0) andalso (IsWindow(ghKwText(2)) <> 0) then gConfig.ExtraKeywords  = CTextBox_GetText( ghKwText(2) )
+    if (ghKwText(0) <> 0) andalso (IsWindow(ghKwText(0)) <> 0) then gConfig.FBKeywords     = PsTextBox_GetText( ghKwText(0) )
+    if (ghKwText(1) <> 0) andalso (IsWindow(ghKwText(1)) <> 0) then gConfig.WinApiKeywords = PsTextBox_GetText( ghKwText(1) )
+    if (ghKwText(2) <> 0) andalso (IsWindow(ghKwText(2)) <> 0) then gConfig.ExtraKeywords  = PsTextBox_GetText( ghKwText(2) )
 end sub

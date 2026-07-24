@@ -17,7 +17,7 @@
 ' ========================================================================================
 ' frmStatusBar_PaintCallback
 ' ========================================================================================
-sub frmStatusBar_PaintCallback( byval p as CSTATUSBAR_PAINTINFO ptr )
+sub frmStatusBar_PaintCallback( byval p as PSSTATUSBAR_PAINTINFO ptr )
 
     ' Panel state: hot > normal. (No selected state -- a statusbar has no selection.)
     ' Set default fore and back colors
@@ -89,7 +89,7 @@ end sub
 ' ========================================================================================
 ' frmStatusBar_MessageCallback
 ' ========================================================================================
-function frmStatusBar_MessageCallback( byval m as CSTATUSBAR_MESSAGEINFO ptr ) as boolean
+function frmStatusBar_MessageCallback( byval m as PSSTATUSBAR_MESSAGEINFO ptr ) as boolean
 
     select case m->uMsg
 
@@ -103,7 +103,7 @@ function frmStatusBar_MessageCallback( byval m as CSTATUSBAR_MESSAGEINFO ptr ) a
             ' control: idx = -1 means "released over empty bar area". We simply need to 
             ' retrieve the command message stored in itemData and post it to frmMain.
             if m->idx <> -1 then
-                dim as integer idMessage = CStatusBar_GetItemData(m->hStatusBar, m->idx)
+                dim as integer idMessage = PsStatusBar_GetItemData(m->hStatusBar, m->idx)
                 PostMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(idMessage, 0), 0 )
             end if
             return false
@@ -138,32 +138,32 @@ end function
 function frmStatusBar_Show( byval hwndParent as HWND ) as LRESULT
 
     ' Create the StatusBar custom control
-    dim as HWND hCtrl = CStatusBar_Create( hwndParent, IDC_FRMMAIN_STATUSBAR )
+    dim as HWND hCtrl = PsStatusBar_Create( hwndParent, IDC_FRMMAIN_STATUSBAR )
     SetWindowPos( hCtrl, 0, 0, 0, 0, AfxScaleY(STATUSBAR_HEIGHT), SWP_NOZORDER )
     
-    CStatusBar_SetPaintCallback( hCtrl, @frmStatusBar_PaintCallback )
-    CStatusBar_SetMessageCallback( hCtrl, @frmStatusBar_MessageCallback )
-    CStatusBar_SetTooltipCallback( hCtrl, @frmStatusBar_TooltipCallback )
-    CStatusBar_SetBackColor( hCtrl, ghStatusBar.BackColor )
-    CStatusBar_SetFont( hCtrl, ghFont(GUIFONT_9) )
+    PsStatusBar_SetPaintCallback( hCtrl, @frmStatusBar_PaintCallback )
+    PsStatusBar_SetMessageCallback( hCtrl, @frmStatusBar_MessageCallback )
+    PsStatusBar_SetTooltipCallback( hCtrl, @frmStatusBar_TooltipCallback )
+    PsStatusBar_SetBackColor( hCtrl, ghStatusBar.BackColor )
+    PsStatusBar_SetFont( hCtrl, ghFont(GUIFONT_9) )
 
-    CStatusBar_AddPanel( hCtrl, "", IDM_GOTOLINE )
-    CStatusBar_AddPanel( hCtrl, "", IDM_VIEWOUTPUT )            ' the spring
-    CStatusBar_AddPanel( hCtrl, "", IDM_THEMES )
-    CStatusBar_AddPanel( hCtrl, "", IDM_BUILDCONFIG )
-    CStatusBar_AddPanel( hCtrl, "", IDM_BUILDCONFIG_POPUP )
-    CStatusBar_AddPanel( hCtrl, "", IDM_SPACES )
-    CStatusBar_AddPanel( hCtrl, "", IDM_FILEENCODING )
-    CStatusBar_AddPanel( hCtrl, "", IDM_LINEENDINGS )
+    PsStatusBar_AddPanel( hCtrl, "", IDM_GOTOLINE )
+    PsStatusBar_AddPanel( hCtrl, "", IDM_VIEWOUTPUT )            ' the spring
+    PsStatusBar_AddPanel( hCtrl, "", IDM_THEMES )
+    PsStatusBar_AddPanel( hCtrl, "", IDM_BUILDCONFIG )
+    PsStatusBar_AddPanel( hCtrl, "", IDM_BUILDCONFIG_POPUP )
+    PsStatusBar_AddPanel( hCtrl, "", IDM_SPACES )
+    PsStatusBar_AddPanel( hCtrl, "", IDM_FILEENCODING )
+    PsStatusBar_AddPanel( hCtrl, "", IDM_LINEENDINGS )
 
     ' (panels are zero based)
 
     ' The Ln/Col readout changes length constantly; floor it so it stops shoving its
     ' neighbours around on every caret move.
-    CStatusBar_SetPanelMinWidth( hCtrl, 0, AfxScaleX(100) )
+    PsStatusBar_SetPanelMinWidth( hCtrl, 0, AfxScaleX(100) )
 
     ' Panel 1 absorbs all unused width 
-    CStatusBar_SetExpandPanel( hCtrl, 1 )
+    PsStatusBar_SetExpandPanel( hCtrl, 1 )
 
     HWND_FRMMAIN_STATUSBAR = hCtrl
     

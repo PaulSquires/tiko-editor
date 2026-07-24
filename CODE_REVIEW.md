@@ -18,7 +18,7 @@ The `frmXxx.bi` / `frmXxx.inc` split is applied uniformly; forms follow the same
 WndProc + `HANDLE_MSG` + `_Show` shape everywhere; comments overwhelmingly explain *why*
 (with dates and forum links) rather than restating the code; there is no `goto` spaghetti;
 `GetDC`/`ReleaseDC` pairs balance exactly (10/10); the newer owner-drawn controls
-(`CListBox`, `CVScrollBar`, `CStatusBar`) carry their per-instance-state discipline into the
+(`PsListBox`, `PsVScrollBar`, `PsStatusBar`) carry their per-instance-state discipline into the
 tree cleanly. There is also essentially **no over-engineering** — the code errs toward plain
 procedural clarity, which is the right side to err on.
 
@@ -180,13 +180,13 @@ What remains in `modRoutines` (localization, `OpenSelectedDocument`, curdrive pa
 is then small enough to reason about.
 
 ### 3.3 Two owner-drawn scrollbar implementations coexist
-The tree contains the imported `CVScrollBar` (used by `CListBox`/panels) **and** the older
+The tree contains the imported `PsVScrollBar` (used by `PsListBox`/panels) **and** the older
 hand-rolled `frmEditorVScroll` / `frmEditorHScroll` pair that proxies Scintilla scrolling.
 The editor pair has a genuine extra job (mirroring `SCI_GETFIRSTVISIBLELINE` etc.), so this
 is not automatically dead duplication — but two implementations of thumb math, drag capture,
 and auto-hide is two places for the same class of bug (your Learnings.md documents exactly
 these traps). The refactor plan should take a position: either port the editor scrollbars onto
-`CVScrollBar` with a Scintilla-backed data source, or document why they stay separate.
+`PsVScrollBar` with a Scintilla-backed data source, or document why they stay separate.
 
 ### 3.4 The single-translation-unit include chain is load-bearing
 [tiko.bas](src/tiko.bas) includes all 130 files in one fixed order, with dependencies implied
@@ -265,7 +265,7 @@ you prefer) applied to new code stops the bleeding without a big-bang rename.
 Notable accumulations: the 18-line commented Alt-key block in
 [modMsgPump.inc:95–112](src/modMsgPump.inc:95), commented-out fields in
 [clsApp.bi:33–34](src/clsApp.bi:33), debug `print` lines in
-[modRoutines.inc:1877](src/modRoutines.inc:1877), the commented `CTabBar.inc` include in
+[modRoutines.inc:1877](src/modRoutines.inc:1877), the commented `PsTabBar.inc` include in
 [tiko.bas:98](src/tiko.bas:98), and `Subfolder/TestFile*.bi` (two identical test files that
 appear to be scratch data living inside `src`). Right now, deleting them destroys the only
 copy — which is precisely the argument for §7.
@@ -308,7 +308,7 @@ collision risk and documents the full set.
 
 Worth recording so the refactor plan doesn't re-litigate them:
 
-- **GDI pairing** outside §2.3 is clean: `clsDoubleBuffer` (since renamed `CBufferPaint`)
+- **GDI pairing** outside §2.3 is clean: `clsDoubleBuffer` (since renamed `PsBufferPaint`)
   correctly restores and deletes;
   `frmPopupMenu`, `frmBuildConfig`, `frmUserTools` all clean up; `ghFont(...)` global fonts
   are deleted in `frmMain`'s destroy path ([frmMain.inc:1730](src/frmMain.inc:1730)).
@@ -330,8 +330,8 @@ Worth recording so the refactor plan doesn't re-litigate them:
 You said no git for now — noted, and none of §2's fixes need it. But the moment the refactor
 plan includes renames (§5.1), dead-code deletion (§5.3), or file splits (§3.2), version
 control stops being optional: those changes are only safe when they're one `git diff` away
-from review and one `git revert` away from undo. The sibling projects (`CListbox`,
-`CStatusBar`, `CTabBar`, `fbcParser`) all went through their refactor plans under git for
+from review and one `git revert` away from undo. The sibling projects (`PsListBox`,
+`PsStatusBar`, `PsTabBar`, `fbcParser`) all went through their refactor plans under git for
 exactly this reason. Suggested sequencing: **fix §2 now → `git init` → then the structural
 work.**
 
@@ -346,7 +346,7 @@ work.**
 | 2 — duplication | keywords triplet (§4.1), MRU + placement helpers (§4.3), Find/Replace shared helpers (§4.2) | Medium — mechanical but wide |
 | 3 — module reorg | split `modRoutines` (§3.2), split `modDeclares.bi` (§3.1), timer-ID enum (§5.6) | Medium — include-order care needed |
 | 4 — structure | `clsApp` sub-types (§3.1), config table (§4.3 option 2), `PositionWindows` extraction (§5.4) | Higher — touch-everything changes |
-| 5 — decide | editor scrollbars vs `CVScrollBar` (§3.3) | Design decision first |
+| 5 — decide | editor scrollbars vs `PsVScrollBar` (§3.3) | Design decision first |
 
 ---
 

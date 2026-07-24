@@ -12,7 +12,7 @@
 '    GNU General Public License for more details.
 
 ' The editor's two vertical scrollbars (one per split view of the active document) are
-' CVScrollBar instances. The control knows nothing about Scintilla: the existing
+' PsVScrollBar instances. The control knows nothing about Scintilla: the existing
 ' Scintilla notification handlers (SCN_UPDATEUI via frmMain_SetStatusbar,
 ' frmMain_PositionWindows, SCN_MODIFIED's auto-show) push the range in LINE units
 ' through frmEditorVScroll_UpdateScrollBars, and the control reports user scrolling

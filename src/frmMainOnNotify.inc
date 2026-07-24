@@ -370,8 +370,8 @@ function Scintilla_OnNotify( _
                         
                         ' We are typing in the editor so ensure that no active index
                         ' or focus remains on the menubar
-                        if CMenuBar_GetActiveIndex( HWND_FRMMAIN_MENUBAR ) <> -1 then
-                            CMenuBar_SetActiveIndex( HWND_FRMMAIN_MENUBAR, -1 )
+                        if PsMenuBar_GetActiveIndex( HWND_FRMMAIN_MENUBAR ) <> -1 then
+                            PsMenuBar_SetActiveIndex( HWND_FRMMAIN_MENUBAR, -1 )
                         end if
 
                         ' Update any brace highlighting

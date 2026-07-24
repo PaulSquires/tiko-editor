@@ -31,7 +31,7 @@ end function
 ' ========================================================================================
 ' frmTopTabsMenu_PaintCallback
 ' ========================================================================================
-sub frmTopTabsMenu_PaintCallback( byval p as CSTATUSBAR_PAINTINFO ptr )
+sub frmTopTabsMenu_PaintCallback( byval p as PSSTATUSBAR_PAINTINFO ptr )
     dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN)
     if pWindow = 0 then return 
     if p = null then return
@@ -45,7 +45,7 @@ sub frmTopTabsMenu_PaintCallback( byval p as CSTATUSBAR_PAINTINFO ptr )
 
     ' If this is the Spring panel then we don't want any highlighting because it is
     ' just a placeholder that forces the icons right justified.
-    if CStatusBar_GetItemData(p->hStatusBar, p->itemID) = 0 then
+    if PsStatusBar_GetItemData(p->hStatusBar, p->itemID) = 0 then
         p->b->SetColors(ghPanel.BackColor, ghPanel.BackColor)
     end if
 
@@ -55,7 +55,7 @@ sub frmTopTabsMenu_PaintCallback( byval p as CSTATUSBAR_PAINTINFO ptr )
 
     p->b->SetFont( ghFont(SYMBOLFONT_10) )
 
-    dim as integer itemData = CStatusBar_GetItemData( p->hStatusBar, p->itemID )
+    dim as integer itemData = PsStatusBar_GetItemData( p->hStatusBar, p->itemID )
     
     ' Draw the icon
     dim as RECT rc = p->rc
@@ -76,14 +76,14 @@ end sub
 ' ========================================================================================
 ' frmTopTabsMenu_MessageCallback
 ' ========================================================================================
-function frmTopTabsMenu_MessageCallback( byval m as CSTATUSBAR_MESSAGEINFO ptr ) as boolean
+function frmTopTabsMenu_MessageCallback( byval m as PSSTATUSBAR_MESSAGEINFO ptr ) as boolean
 
     select case m->uMsg
              
         case WM_LBUTTONUP
             if m->idx = -1 then return false
         
-            dim as integer idMessage = CStatusBar_GetItemData( m->hStatusBar, m->idx )
+            dim as integer idMessage = PsStatusBar_GetItemData( m->hStatusBar, m->idx )
 
             select case idMessage
                  case IDM_GOTONEXTTAB, IDM_GOTOPREVTAB
@@ -103,7 +103,7 @@ function frmTopTabsMenu_MessageCallback( byval m as CSTATUSBAR_MESSAGEINFO ptr )
                     ' The tab is switched in the popup's own select callback
                     ' (TopTabsListContextMenu_OnSelect) -- its item ids are tab indexes,
                     ' not commands, so they must never reach frmMain's WM_COMMAND.
-                    dim as RECT rc = CStatusBar_GetItemRect(m->hStatusBar, m->idx)
+                    dim as RECT rc = PsStatusBar_GetItemRect(m->hStatusBar, m->idx)
                     MapWindowpoints( HWND_FRMMAIN_TOPTABSMENU, HWND_DESKTOP, cast(point ptr, @rc), 2 )
                     ShowTopTabsListContextMenu( rc )
                     Return true   ' prevent further processing that leads to WM_CONTEXTMENU
@@ -122,7 +122,7 @@ end function
 ' frmTopTabsMenu_TooltipCallback  -- per-row tooltip text, resolved on demand
 ' ========================================================================================
 function frmTopTabsMenu_TooltipCallback( byval hCtl as HWND, byval row as integer ) as DWSTRING
-    dim as integer itemData = CStatusBar_GetItemData( hCtl, row )
+    dim as integer itemData = PsStatusBar_GetItemData( hCtl, row )
     if itemData = 0 then return ""
     return frmTopTabsMenu_FormatTooltip(itemData)
 end function
@@ -134,28 +134,28 @@ end function
 function frmTopTabsMenu_Show( byval hwndParent as HWND ) as LRESULT
 
     ' Create the statusBar to be used as the icon menu buttons.
-    dim as HWND hCtrl = CStatusBar_Create( hwndParent, IDC_FRMTOPTABSMENU_ICONBAR )
+    dim as HWND hCtrl = PsStatusBar_Create( hwndParent, IDC_FRMTOPTABSMENU_ICONBAR )
     
     dim as integer nWidth = AfxScaleX( (PANEL_ICON_HEIGHT * 4) + 10 )
     SetWindowPos( hCtrl, 0, 0, 0, nWidth, 0, SWP_NOZORDER )
     
-    CStatusBar_SetPaintCallback( hCtrl, @frmTopTabsMenu_PaintCallback )
-    CStatusBar_SetMessageCallback( hCtrl, @frmTopTabsMenu_MessageCallback )
-    CStatusBar_SetTooltipCallback( hCtrl, @frmTopTabsMenu_TooltipCallback )
-    CStatusBar_SetBackColor( hCtrl, ghTopTabs.BackColor )
-    CStatusBar_SetPadding( hCtrl, 7 )
-    CStatusBar_SetFont( hCtrl, ghFont(SYMBOLFONT_10) )
+    PsStatusBar_SetPaintCallback( hCtrl, @frmTopTabsMenu_PaintCallback )
+    PsStatusBar_SetMessageCallback( hCtrl, @frmTopTabsMenu_MessageCallback )
+    PsStatusBar_SetTooltipCallback( hCtrl, @frmTopTabsMenu_TooltipCallback )
+    PsStatusBar_SetBackColor( hCtrl, ghTopTabs.BackColor )
+    PsStatusBar_SetPadding( hCtrl, 7 )
+    PsStatusBar_SetFont( hCtrl, ghFont(SYMBOLFONT_10) )
 
-    CStatusBar_AddPanel( hCtrl, "", 0 )
-    CStatusBar_AddPanel( hCtrl, wszIconChevronLeft, IDM_GOTOPREVTAB )
-    CStatusBar_AddPanel( hCtrl, wszIconChevronRight, IDM_GOTONEXTTAB )
-    CStatusBar_AddPanel( hCtrl, wszIconSplitEditor, IDM_EDITORSPLIT )
-    CStatusBar_AddPanel( hCtrl, wszIconMoreActions, IDM_TABSLIST )
+    PsStatusBar_AddPanel( hCtrl, "", 0 )
+    PsStatusBar_AddPanel( hCtrl, wszIconChevronLeft, IDM_GOTOPREVTAB )
+    PsStatusBar_AddPanel( hCtrl, wszIconChevronRight, IDM_GOTONEXTTAB )
+    PsStatusBar_AddPanel( hCtrl, wszIconSplitEditor, IDM_EDITORSPLIT )
+    PsStatusBar_AddPanel( hCtrl, wszIconMoreActions, IDM_TABSLIST )
     
     ' Panel 0 spring ensures that the icon panel becomes flushed right
-    CStatusBar_SetExpandPanel( hCtrl, 0 )
+    PsStatusBar_SetExpandPanel( hCtrl, 0 )
 
-    dim as HWND hTooltip = CStatusBar_GetTooltipHandle(hCtrl)
+    dim as HWND hTooltip = PsStatusBar_GetTooltipHandle(hCtrl)
     if hTooltip then 
         ' Set the tooltip max width in order to handle the multiline
         ' text needed for the split editor button.

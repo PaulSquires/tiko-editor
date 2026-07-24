@@ -480,7 +480,7 @@ function OnCommand_FileClose( _
             ShowWindow( HWND_FRMMAIN_SPLITH, SW_HIDE )
         end if
 
-        ' remove tab from CTabBar
+        ' remove tab from PsTabBar
         gTTabCtl.RemoveElement(i)
             
         ' Only remove this document from the global collection if it is not
@@ -511,7 +511,7 @@ function OnCommand_FileClose( _
     next
      
     ' Set the active tab to the closest tab to the one just removed if it was the
-    ' current active tab that was removed. CTabBar deliberately deselects (-1) when
+    ' current active tab that was removed. PsTabBar deliberately deselects (-1) when
     ' the current tab is deleted, so that is the signal that the active tab closed
     ' (and that pDocActive may now point to a freed document).
     if gTTabCtl.GetCurSel() = -1 then

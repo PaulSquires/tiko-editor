@@ -14,7 +14,7 @@
 ''
 ''  frmEditorVScroll.inc
 ''
-''  The editor's vertical scrollbars as CVScrollBar instances. Replaces the old
+''  The editor's vertical scrollbars as PsVScrollBar instances. Replaces the old
 ''  hand-rolled CPanelWindow scrollbar (WndProc + calcVThumbRect + gEditorVScroll
 ''  state): the control owns the thumb geometry, dragging, track paging with
 ''  auto-repeat, hover tracking and capture-loss cancellation; this file only
@@ -38,7 +38,7 @@ function frmEditorVScroll_UpdateScrollBars( byval pDoc as clsDocument ptr ) as b
     dim as long numLines = pDoc->GetLineCount + 1
     for i as long = lbound(pDoc->hWindow) to ubound(pDoc->hWindow)
         dim as long firstVisibleLine = SciExec( pDoc->hWindow(i), SCI_GETFIRSTVISIBLELINE, 0, 0 )
-        CVScrollBar_SetRange( HWND_FRMEDITOR_VSCROLLBAR(i), _
+        PsVScrollBar_SetRange( HWND_FRMEDITOR_VSCROLLBAR(i), _
                               numLines, pDoc->LinesPerPage(i), firstVisibleLine )
     next
     function = 0
@@ -66,8 +66,8 @@ end sub
 ' divider line at the left edge, flat thumb with no hover brightening. Reads the
 ' ghEditor theme colors live, so a theme switch only needs a repaint.
 ' ========================================================================================
-sub frmEditorVScroll_PaintCallback( byval p as CVSCROLLBAR_PAINTINFO ptr )
-    dim as CBufferPaint ptr b = p->b
+sub frmEditorVScroll_PaintCallback( byval p as PSVSCROLLBAR_PAINTINFO ptr )
+    dim as PsBufferPaint ptr b = p->b
     b->SetBackColor( ghEditor.BackColorScrollBar )
     b->PaintClientRect()
     b->SetPenColor( ghEditor.Divider )
@@ -87,11 +87,11 @@ function frmEditorVScroll_Show( byval hWndParent as HWND ) as LRESULT
     dim pWindow as CWindow ptr = AfxCWindowPtr( hWndParent )
 
     for i as long = 0 to 1
-        HWND_FRMEDITOR_VSCROLLBAR(i) = CVScrollBar_Create( hWndParent, _
+        HWND_FRMEDITOR_VSCROLLBAR(i) = PsVScrollBar_Create( hWndParent, _
                 iif( i = 0, IDC_FRMEDITOR_VSCROLLBAR0, IDC_FRMEDITOR_VSCROLLBAR1 ) )
-        CVScrollBar_SetScrollCallback( HWND_FRMEDITOR_VSCROLLBAR(i), @frmEditorVScroll_OnScroll )
-        CVScrollBar_SetPaintCallback( HWND_FRMEDITOR_VSCROLLBAR(i), @frmEditorVScroll_PaintCallback )
-        ' CVScrollBar is created 0x0, but frmMain's layout code reads the bar width
+        PsVScrollBar_SetScrollCallback( HWND_FRMEDITOR_VSCROLLBAR(i), @frmEditorVScroll_OnScroll )
+        PsVScrollBar_SetPaintCallback( HWND_FRMEDITOR_VSCROLLBAR(i), @frmEditorVScroll_PaintCallback )
+        ' PsVScrollBar is created 0x0, but frmMain's layout code reads the bar width
         ' back with AfxGetWindowWidth before the first positioning -- give each bar
         ' its real width immediately (same 13px design width as the old CPanelWindow
         ' scrollbar, which CPanelWindow.Create DPI-scaled the same way).

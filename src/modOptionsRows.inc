@@ -20,7 +20,7 @@
 ' There is no divider: rows are separated by whitespace alone (see modOptionsRows.bi). The
 ' padding constants (OPTROW_PADLEFT etc.) are shared and live in modOptionsRows.bi.
 #define OPTROW_HEIGHT        40
-#define OPTROW_NUMWIDTH      96      ' CNumericUpDown has no natural width; give it one
+#define OPTROW_NUMWIDTH      96      ' PsNumericUpDown has no natural width; give it one
 
 
 ' ========================================================================================
@@ -97,9 +97,9 @@ private sub OptionsRows_SyncEnabled( byval nPage as long )
         if gOptRows(i).hCtrl = 0 then continue for
         dim as boolean bEnable = OptionsRows_IsRowEnabled(i)
         select case gOptRows(i).nKind
-            case OPT_TOGGLE:   CToggle_SetEnabled( gOptRows(i).hCtrl, bEnable )
-            case OPT_NUMERIC:  CNumericUpDown_SetEnabled( gOptRows(i).hCtrl, bEnable )
-            case OPT_COMBO:    CComboBox_SetEnabled( gOptRows(i).hCtrl, bEnable )
+            case OPT_TOGGLE:   PsToggle_SetEnabled( gOptRows(i).hCtrl, bEnable )
+            case OPT_NUMERIC:  PsNumericUpDown_SetEnabled( gOptRows(i).hCtrl, bEnable )
+            case OPT_COMBO:    PsComboBox_SetEnabled( gOptRows(i).hCtrl, bEnable )
         end select
     next
 end sub
@@ -370,7 +370,7 @@ end function
 
 
 ' ========================================================================================
-' Register / forget the dialog's CComboBox controls, for the message pump.
+' Register / forget the dialog's PsComboBox controls, for the message pump.
 ' ========================================================================================
 sub OptionsRows_RegisterCombo( byval hCombo as HWND )
     if hCombo = 0 then exit sub
@@ -387,7 +387,7 @@ end sub
 ' ========================================================================================
 ' Shared theme builders. See modOptionsRows.bi.
 ' ========================================================================================
-sub OptionsTheme_FillToggle( byval tc as CTOGGLE_COLORS ptr )
+sub OptionsTheme_FillToggle( byval tc as PSTOGGLE_COLORS ptr )
     if tc = 0 then exit sub
     ' The pill's own background must match the page it sits on, or its corners show a halo.
     tc->BackColor                   = ghPanel.BackColor
@@ -414,7 +414,7 @@ sub OptionsTheme_FillToggle( byval tc as CTOGGLE_COLORS ptr )
     tc->KnobColorOffDisabled        = ghEditor.Divider
 end sub
 
-sub OptionsTheme_FillButton( byval bc as CBUTTON_COLORS ptr )
+sub OptionsTheme_FillButton( byval bc as PSBUTTON_COLORS ptr )
     if bc = 0 then exit sub
     bc->BackColor           = ghPanel.BackColorButton
     bc->ForeColor           = ghPanel.ForeColorButton
@@ -436,17 +436,17 @@ end sub
 
 sub OptionsTheme_ApplyTextBox( byval hTextBox as HWND )
     if hTextBox = 0 then exit sub
-    CTextBox_SetFont( hTextBox, OptionsFont_Base() )
-    CTextBox_SetForeColor( hTextBox, ghEditor.ForeColorText )
-    CTextBox_SetBackColor( hTextBox, ghEditor.BackColorText )
-    CTextBox_SetBorderColor( hTextBox, ghEditor.Divider )
-    CTextBox_SetFocusBorderColor( hTextBox, ghPanel.ForeColorHot )
+    PsTextBox_SetFont( hTextBox, OptionsFont_Base() )
+    PsTextBox_SetForeColor( hTextBox, ghEditor.ForeColorText )
+    PsTextBox_SetBackColor( hTextBox, ghEditor.BackColorText )
+    PsTextBox_SetBorderColor( hTextBox, ghEditor.Divider )
+    PsTextBox_SetFocusBorderColor( hTextBox, ghPanel.ForeColorHot )
     ' The control's own Cut/Copy/Paste popup follows tiko's theme through the same registry
     ' the topmenu dropdowns use.
     ThemeTextBoxContextMenu( hTextBox )
 end sub
 
-sub OptionsTheme_FillNumeric( byval nc as CNUMERICUPDOWN_COLORS ptr )
+sub OptionsTheme_FillNumeric( byval nc as PSNUMERICUPDOWN_COLORS ptr )
     if nc = 0 then exit sub
     nc->BackColor               = ghPanel.BackColor
     nc->BorderColor             = ghEditor.Divider
@@ -468,7 +468,7 @@ sub OptionsTheme_FillNumeric( byval nc as CNUMERICUPDOWN_COLORS ptr )
     nc->GlyphColorDisabled      = ghEditor.Divider
 end sub
 
-sub OptionsTheme_FillCombo( byval cc as CCOMBOBOX_COLORS ptr, byval pc as CPOPUPMENU_COLORS ptr )
+sub OptionsTheme_FillCombo( byval cc as PSCOMBOBOX_COLORS ptr, byval pc as PSPOPUPMENU_COLORS ptr )
     if cc <> 0 then
         cc->BackColor            = ghPanel.BackColorButton
         cc->ForeColor            = ghPanel.ForeColorButton
@@ -507,25 +507,25 @@ end sub
 ' ========================================================================================
 sub OptionsRows_ApplyTheme()
 
-    dim as CTOGGLE_COLORS tc      : OptionsTheme_FillToggle( @tc )
-    dim as CNUMERICUPDOWN_COLORS nc : OptionsTheme_FillNumeric( @nc )
-    dim as CCOMBOBOX_COLORS cc
-    dim as CPOPUPMENU_COLORS pc
+    dim as PSTOGGLE_COLORS tc      : OptionsTheme_FillToggle( @tc )
+    dim as PSNUMERICUPDOWN_COLORS nc : OptionsTheme_FillNumeric( @nc )
+    dim as PSCOMBOBOX_COLORS cc
+    dim as PSPOPUPMENU_COLORS pc
     OptionsTheme_FillCombo( @cc, @pc )
 
     for i as long = lbound(gOptRows) to ubound(gOptRows)
         if gOptRows(i).hCtrl = 0 then continue for
         select case gOptRows(i).nKind
             case OPT_TOGGLE
-                CToggle_SetColors( gOptRows(i).hCtrl, @tc )
-                CToggle_Refresh( gOptRows(i).hCtrl )
+                PsToggle_SetColors( gOptRows(i).hCtrl, @tc )
+                PsToggle_Refresh( gOptRows(i).hCtrl )
             case OPT_NUMERIC
-                CNumericUpDown_SetColors( gOptRows(i).hCtrl, @nc )
-                CNumericUpDown_Refresh( gOptRows(i).hCtrl )
+                PsNumericUpDown_SetColors( gOptRows(i).hCtrl, @nc )
+                PsNumericUpDown_Refresh( gOptRows(i).hCtrl )
             case OPT_COMBO
-                CComboBox_SetColors( gOptRows(i).hCtrl, @cc )
-                CComboBox_SetListColors( gOptRows(i).hCtrl, @pc )
-                CComboBox_Refresh( gOptRows(i).hCtrl )
+                PsComboBox_SetColors( gOptRows(i).hCtrl, @cc )
+                PsComboBox_SetListColors( gOptRows(i).hCtrl, @pc )
+                PsComboBox_Refresh( gOptRows(i).hCtrl )
         end select
     next
 end sub
@@ -536,7 +536,7 @@ end sub
 ' is what makes lazy page creation safe to call on every visit.
 '
 ' Controls are parented to the SCROLL PANEL'S PAGE WINDOW, never to the container -- see
-' the CScrollPanel contract.
+' the PsScrollPanel contract.
 ' ========================================================================================
 function OptionsRows_BuildPage( byval nPage as long, byval hPanel as HWND ) as long
 
@@ -551,40 +551,40 @@ function OptionsRows_BuildPage( byval nPage as long, byval hPanel as HWND ) as l
         select case gOptRows(i).nKind
 
             case OPT_TOGGLE
-                dim as HWND hCtrl = CToggle_Create( hPanel, IDC_FRMOPTIONS_FIRSTROW + i )
-                CToggle_SetCheckChangedCallback( hCtrl, @OptionsRows_ToggleChanged )
+                dim as HWND hCtrl = PsToggle_Create( hPanel, IDC_FRMOPTIONS_FIRSTROW + i )
+                PsToggle_SetCheckChangedCallback( hCtrl, @OptionsRows_ToggleChanged )
                 ' Seed from the staging copy. SetChecked is silent, so this cannot
                 ' re-enter the change handler.
-                CToggle_SetChecked( hCtrl, iif( nSeed <> 0, true, false ) )
+                PsToggle_SetChecked( hCtrl, iif( nSeed <> 0, true, false ) )
                 gOptRows(i).hCtrl = hCtrl
                 nBuilt += 1
 
             case OPT_NUMERIC
-                dim as HWND hCtrl = CNumericUpDown_Create( hPanel, IDC_FRMOPTIONS_FIRSTROW + i )
-                CNumericUpDown_SetFont( hCtrl, OptionsFont_Base() )
-                CNumericUpDown_SetDecimalPlaces( hCtrl, 0 )
-                CNumericUpDown_SetRange( hCtrl, gOptRows(i).nMin, gOptRows(i).nMax )
-                CNumericUpDown_SetValue( hCtrl, nSeed )
-                CNumericUpDown_SetValueChangedCallback( hCtrl, @OptionsRows_NumericChanged )
+                dim as HWND hCtrl = PsNumericUpDown_Create( hPanel, IDC_FRMOPTIONS_FIRSTROW + i )
+                PsNumericUpDown_SetFont( hCtrl, OptionsFont_Base() )
+                PsNumericUpDown_SetDecimalPlaces( hCtrl, 0 )
+                PsNumericUpDown_SetRange( hCtrl, gOptRows(i).nMin, gOptRows(i).nMax )
+                PsNumericUpDown_SetValue( hCtrl, nSeed )
+                PsNumericUpDown_SetValueChangedCallback( hCtrl, @OptionsRows_NumericChanged )
                 ' SetRange clamps, and the clamp is silent -- so read the value BACK and
                 ' store it, or a stored setting outside the range would survive in
                 ' gOptWork while the control shows something else.
-                *cast(long ptr, gOptRows(i).pField) = clng( CNumericUpDown_GetValue(hCtrl) )
+                *cast(long ptr, gOptRows(i).pField) = clng( PsNumericUpDown_GetValue(hCtrl) )
                 gOptRows(i).hCtrl = hCtrl
                 nBuilt += 1
 
             case OPT_COMBO
-                dim as HWND hCtrl = CComboBox_Create( hPanel, IDC_FRMOPTIONS_FIRSTROW + i )
-                CComboBox_SetFont( hCtrl, OptionsFont_Base() )
+                dim as HWND hCtrl = PsComboBox_Create( hPanel, IDC_FRMOPTIONS_FIRSTROW + i )
+                PsComboBox_SetFont( hCtrl, OptionsFont_Base() )
                 dim as long nItems = AfxStrParseCount( gOptRows(i).wszItems, chr(9) )
                 for j as long = 1 to nItems
-                    CComboBox_AddItem( hCtrl, AfxStrParse( gOptRows(i).wszItems, j, chr(9) ) )
+                    PsComboBox_AddItem( hCtrl, AfxStrParse( gOptRows(i).wszItems, j, chr(9) ) )
                 next
-                CComboBox_SetCurSel( hCtrl, nSeed )
-                CComboBox_SetSelChangeCallback( hCtrl, @OptionsRows_ComboChanged )
+                PsComboBox_SetCurSel( hCtrl, nSeed )
+                PsComboBox_SetSelChangeCallback( hCtrl, @OptionsRows_ComboChanged )
                 ' Same reasoning as the numeric clamp above: SetCurSel rejects an index
                 ' outside the list, silently, so take back what the control actually holds.
-                *cast(long ptr, gOptRows(i).pField) = CComboBox_GetCurSel( hCtrl )
+                *cast(long ptr, gOptRows(i).pField) = PsComboBox_GetCurSel( hCtrl )
                 ' The pump has to offer every live combo its messages.
                 OptionsRows_RegisterCombo( hCtrl )
                 gOptRows(i).hCtrl = hCtrl
@@ -618,7 +618,7 @@ end sub
 ' ========================================================================================
 ' Lay a page out for a given page width and return its content height in pixels.
 '
-' cxPanel is HANDED to us by CScrollPanel's layout callback; do not read it back off the
+' cxPanel is HANDED to us by PsScrollPanel's layout callback; do not read it back off the
 ' window, which may be one call stale.
 '
 ' Geometry (all rects derived here and stored on the row, never set from outside):
@@ -647,15 +647,15 @@ function OptionsRows_LayoutPage( byval nPage as long, byval hPanel as HWND, byva
         dim as long ctrlW, ctrlH
         select case gOptRows(i).nKind
             case OPT_TOGGLE
-                CToggle_GetIdealSize( gOptRows(i).hCtrl, ctrlW, ctrlH )
+                PsToggle_GetIdealSize( gOptRows(i).hCtrl, ctrlW, ctrlH )
             case OPT_NUMERIC
                 ' The spinner has no natural width -- its ideal size is only a minimum --
                 ' so the column width is declared here and only the height is taken.
-                CNumericUpDown_GetIdealSize( gOptRows(i).hCtrl, ctrlW, ctrlH )
+                PsNumericUpDown_GetIdealSize( gOptRows(i).hCtrl, ctrlW, ctrlH )
                 if ctrlW < AfxScaleX(OPTROW_NUMWIDTH) then ctrlW = AfxScaleX(OPTROW_NUMWIDTH)
             case OPT_COMBO
                 ' The combo sizes itself to its WIDEST item, so picking never resizes it.
-                CComboBox_GetIdealSize( gOptRows(i).hCtrl, ctrlW, ctrlH )
+                PsComboBox_GetIdealSize( gOptRows(i).hCtrl, ctrlW, ctrlH )
             case else
                 ctrlW = 0: ctrlH = 0
         end select
@@ -695,7 +695,7 @@ end function
 ' Paint one page: the row titles, and nothing else. The page BACKGROUND is filled by the
 ' caller before this runs, and there are deliberately no rules between rows.
 '
-' Paint through p->b only -- never the screen DC (the CScrollPanel contract).
+' Paint through p->b only -- never the screen DC (the PsScrollPanel contract).
 ' ========================================================================================
 sub OptionsRows_PaintPage( byval nPage as long, byval p as SCP_PAINTINFO ptr )
     if p = 0 then exit sub
@@ -770,7 +770,7 @@ sub OptionsRows_RunSelfTest( byval hPanel as HWND )
     next
 
     ' ---- per-page geometry ------------------------------------------------------------
-    dim as long cxPanel = CScrollPanel_GetPanelWidth( HWND_FRMOPTIONS_SCROLL )
+    dim as long cxPanel = PsScrollPanel_GetPanelWidth( HWND_FRMOPTIONS_SCROLL )
     OPTASSERT( cxPanel > 0, "page width is not positive" )
 
     for nPage as long = 0 to OPTPAGE_COUNT - 1
@@ -828,7 +828,7 @@ sub OptionsRows_RunSelfTest( byval hPanel as HWND )
 
             case OPT_TOGGLE
                 ' The control agrees with the field it was seeded from.
-                OPTASSERT( CToggle_GetChecked(gOptRows(i).hCtrl) = iif(nSaved <> 0, true, false), _
+                OPTASSERT( PsToggle_GetChecked(gOptRows(i).hCtrl) = iif(nSaved <> 0, true, false), _
                            "row " & str(i) & " toggle does not match its staging field" )
                 ' Drive the change handler exactly as the control would, then assert the
                 ' field is a plain 0/1 long. A boolean stored here writes "true"/"false"
@@ -839,7 +839,7 @@ sub OptionsRows_RunSelfTest( byval hPanel as HWND )
                 OPTASSERT( *pFld = 0, "row " & str(i) & " did not store 0 for unchecked (got " & str(*pFld) & ")" )
 
             case OPT_NUMERIC
-                OPTASSERT( clng(CNumericUpDown_GetValue(gOptRows(i).hCtrl)) = nSaved, _
+                OPTASSERT( clng(PsNumericUpDown_GetValue(gOptRows(i).hCtrl)) = nSaved, _
                            "row " & str(i) & " numeric does not match its staging field" )
                 ' The control must be holding a value inside its own declared range.
                 OPTASSERT( nSaved >= gOptRows(i).nMin, "row " & str(i) & " numeric below its minimum" )
@@ -848,9 +848,9 @@ sub OptionsRows_RunSelfTest( byval hPanel as HWND )
                 OPTASSERT( *pFld = gOptRows(i).nMax, "row " & str(i) & " did not store the numeric value" )
 
             case OPT_COMBO
-                OPTASSERT( CComboBox_GetCurSel(gOptRows(i).hCtrl) = nSaved, _
+                OPTASSERT( PsComboBox_GetCurSel(gOptRows(i).hCtrl) = nSaved, _
                            "row " & str(i) & " combo does not match its staging field" )
-                OPTASSERT( CComboBox_GetCount(gOptRows(i).hCtrl) = AfxStrParseCount(gOptRows(i).wszItems, chr(9)), _
+                OPTASSERT( PsComboBox_GetCount(gOptRows(i).hCtrl) = AfxStrParseCount(gOptRows(i).wszItems, chr(9)), _
                            "row " & str(i) & " combo item count does not match its declared choices" )
                 OptionsRows_ComboChanged( gOptRows(i).hCtrl, nSaved, 0 )
                 OPTASSERT( *pFld = 0, "row " & str(i) & " did not store the combo index" )
@@ -860,9 +860,9 @@ sub OptionsRows_RunSelfTest( byval hPanel as HWND )
         ' Restore both the field and the control.
         *pFld = nSaved
         select case gOptRows(i).nKind
-            case OPT_TOGGLE:   CToggle_SetChecked( gOptRows(i).hCtrl, iif(nSaved <> 0, true, false) )
-            case OPT_NUMERIC:  CNumericUpDown_SetValue( gOptRows(i).hCtrl, nSaved )
-            case OPT_COMBO:    CComboBox_SetCurSel( gOptRows(i).hCtrl, nSaved )
+            case OPT_TOGGLE:   PsToggle_SetChecked( gOptRows(i).hCtrl, iif(nSaved <> 0, true, false) )
+            case OPT_NUMERIC:  PsNumericUpDown_SetValue( gOptRows(i).hCtrl, nSaved )
+            case OPT_COMBO:    PsComboBox_SetCurSel( gOptRows(i).hCtrl, nSaved )
         end select
     next
 
@@ -907,7 +907,7 @@ sub OptionsRows_RunSelfTest( byval hPanel as HWND )
     ' were created with -- so the "row" column is the height the LAYOUT would choose from
     ' the text alone. That is the term the font actually moves; the control term is shown
     ' beside it so it is obvious which one is binding.
-    dim as long nViewport = CScrollPanel_GetViewportHeight( HWND_FRMOPTIONS_SCROLL )
+    dim as long nViewport = PsScrollPanel_GetViewportHeight( HWND_FRMOPTIONS_SCROLL )
     dim as long nCtrlMax = 0
     dim as long nRowsLongest = 0
     for i as long = lbound(gOptRows) to ubound(gOptRows)
@@ -916,9 +916,9 @@ sub OptionsRows_RunSelfTest( byval hPanel as HWND )
         nRowsLongest += 1
         dim as long cw, ch
         select case gOptRows(i).nKind
-            case OPT_TOGGLE:   CToggle_GetIdealSize( gOptRows(i).hCtrl, cw, ch )
-            case OPT_NUMERIC:  CNumericUpDown_GetIdealSize( gOptRows(i).hCtrl, cw, ch )
-            case OPT_COMBO:    CComboBox_GetIdealSize( gOptRows(i).hCtrl, cw, ch )
+            case OPT_TOGGLE:   PsToggle_GetIdealSize( gOptRows(i).hCtrl, cw, ch )
+            case OPT_NUMERIC:  PsNumericUpDown_GetIdealSize( gOptRows(i).hCtrl, cw, ch )
+            case OPT_COMBO:    PsComboBox_GetIdealSize( gOptRows(i).hCtrl, cw, ch )
         end select
         if ch > nCtrlMax then nCtrlMax = ch
     next

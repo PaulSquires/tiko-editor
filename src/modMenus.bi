@@ -17,5 +17,5 @@ declare function frmMain_BuildAcceleratorTable( byval pWindow as CWindow ptr ) a
 declare function frmMain_ChangeTopMenuStates( byval nBarID as long ) as long
 
 ' The Create*ContextMenu builders that used to be declared here are gone: the standalone
-' popup menus run on CPopupMenu now and are declared in modContextMenus.bi.
+' popup menus run on PsPopupMenu now and are declared in modContextMenus.bi.
 

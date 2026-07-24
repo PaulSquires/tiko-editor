@@ -15,7 +15,7 @@
 '
 '  The three Keywords pages (FreeBASIC / Windows API / Extra), consolidated into one
 '  panel-hosted module -- they only ever differed in which gConfig field they edited. Each
-'  page is a single large multiline CTextBox that fills the pane, with one shared CVScrollBar
+'  page is a single large multiline PsTextBox that fills the pane, with one shared PsVScrollBar
 '  driven by whichever page is visible (the same arrangement frmOutput uses for its two
 '  textboxes). The three old frmOptionsKeywords / ...WinApi / ...Extra child forms are gone.
 '
@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include once "CScrollPanel.bi"        ' SCP_PAINTINFO, pulled in early
+#include once "PsScrollPanel.bi"        ' SCP_PAINTINFO, pulled in early
 
 #Define IDC_FRMOPTIONSKEYWORDS_TXTBASE   9500     ' + page index (0..2)
 #Define IDC_FRMOPTIONSKEYWORDS_VSCROLL   9510

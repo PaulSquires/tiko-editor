@@ -22,14 +22,14 @@
 #define IDC_FRMOUTPUT_BTNCLOSE                      1006
 #define IDC_FRMOUTPUT_VSCROLL                       1007
 
-' The tab strip is a CSelectBar plus a one-item CIconPanel for the "X", sized side by side
+' The tab strip is a PsSelectBar plus a one-item PsIconPanel for the "X", sized side by side
 ' to cover the strip. There is no container behind them: each paints its own background, so
 ' the old subclassed LABEL (and its ~150 lines of rect arithmetic, hit-testing, hover
 ' tracking and painting) is gone rather than merely bypassed.
 '
-' The CURRENT TAB lives in the CSelectBar -- there is deliberately no gOutputTabsCurSel
-' global any more. Read it with CSelectBar_GetCurSel( HWND_FRMOUTPUT_SELECTBAR ) and set it
-' with CSelectBar_SetCurSel (silent: only user clicks fire the change callback, so calling
+' The CURRENT TAB lives in the PsSelectBar -- there is deliberately no gOutputTabsCurSel
+' global any more. Read it with PsSelectBar_GetCurSel( HWND_FRMOUTPUT_SELECTBAR ) and set it
+' with PsSelectBar_SetCurSel (silent: only user clicks fire the change callback, so calling
 ' it from a handler cannot recurse). gConfig.ShowOutputPanelIndex is the persisted copy,
 ' applied to the control once it exists.
 '

@@ -199,7 +199,7 @@ function frmTopTabsInfo_WndProc( _
         
 
     case WM_PAINT
-        dim as CBufferPaint b
+        dim as PsBufferPaint b
         
         b.BeginDoubleBuffer(hwnd)
 

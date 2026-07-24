@@ -12,7 +12,7 @@
 '    GNU General Public License for more details.
 
 #include once "frmTopTabs.bi"
-#include once "CTabBar.bi"
+#include once "PsTabBar.bi"
 
 
 '        if IsWindow(hTooltip) = 0 then 
@@ -67,7 +67,7 @@
 ' and the bottom line itself, AFTER this callback; our fill of p->rc (which runs to the
 ' client bottom on the active tab) is what shows through the line's break.
 ' ========================================================================================
-sub frmTopTabs_PaintCallback( byval p as CTABBAR_PAINTINFO ptr )
+sub frmTopTabs_PaintCallback( byval p as PSTABBAR_PAINTINFO ptr )
 
     ' State priority: dragging > selected > hot > normal. The dragged tab gets its own
     ' fill so the eye can follow it while its neighbours change places around it.
@@ -167,7 +167,7 @@ end sub
 ' ========================================================================================
 ' frmTopTabs_MessageCallback
 ' ========================================================================================
-function frmTopTabs_MessageCallback( byval m as CTabBar_MESSAGEINFO ptr ) as boolean
+function frmTopTabs_MessageCallback( byval m as PsTabBar_MESSAGEINFO ptr ) as boolean
 
     select case m->uMsg
 
@@ -225,21 +225,21 @@ end function
 ' ========================================================================================
 function frmTopTabs_Show( byval hwndParent as HWND ) as LRESULT
 
-    dim as HWND hCtrl = CTabBar_Create( HWND_FRMMAIN, IDC_FRMMAIN_TABBAR )
+    dim as HWND hCtrl = PsTabBar_Create( HWND_FRMMAIN, IDC_FRMMAIN_TABBAR )
     SetWindowPos( hCtrl, 0, 0, 0, 0, AfxScaleY(TOPTABS_HEIGHT), SWP_NOZORDER )
 
-    CTabBar_SetPaintCallback( hCtrl, @frmTopTabs_PaintCallback )
-    CTabBar_SetMessageCallback( hCtrl, @frmTopTabs_MessageCallback )
-    CTabBar_SetTooltipCallback( hCtrl, @frmTopTabs_TooltipCallback )
-    CTabBar_SetSelChangeCallback( hCtrl, @frmTopTabs_SelChangeCallback )
-    CTabBar_SetCloseCallback( hCtrl, @frmTopTabs_CloseCallback )
-    CTabBar_SetReorderCallback( hCtrl, @frmTopTabs_ReorderCallback )
-    CTabBar_SetPadding( hCtrl, 0 )
-    CTabBar_SetBackColor( hCtrl, ghTopTabs.BackColor )
-    CTabBar_SetFont( hCtrl, ghFont(GUIFONT_10) )
+    PsTabBar_SetPaintCallback( hCtrl, @frmTopTabs_PaintCallback )
+    PsTabBar_SetMessageCallback( hCtrl, @frmTopTabs_MessageCallback )
+    PsTabBar_SetTooltipCallback( hCtrl, @frmTopTabs_TooltipCallback )
+    PsTabBar_SetSelChangeCallback( hCtrl, @frmTopTabs_SelChangeCallback )
+    PsTabBar_SetCloseCallback( hCtrl, @frmTopTabs_CloseCallback )
+    PsTabBar_SetReorderCallback( hCtrl, @frmTopTabs_ReorderCallback )
+    PsTabBar_SetPadding( hCtrl, 0 )
+    PsTabBar_SetBackColor( hCtrl, ghTopTabs.BackColor )
+    PsTabBar_SetFont( hCtrl, ghFont(GUIFONT_10) )
 
     ' The (bottom line + active tab border) is the CONTROL's one color.
-    CTabBar_SetBorderColor( hCtrl, ghEditor.Divider )
+    PsTabBar_SetBorderColor( hCtrl, ghEditor.Divider )
 
     HWND_FRMMAIN_TOPTABS = hCtrl
     gTTabCtl.hWindow = hCtrl

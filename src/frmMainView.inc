@@ -129,9 +129,9 @@ function OnCommand_ViewToggleFocus( byval pDoc as clsDocument ptr ) as LRESULT
     if pDoc = 0 then exit function
     
     dim hCurrent as HWND = pDoc->hWndActiveScintilla
-    ' Focus lives on the CTextBox's RichEdit child; use that handle for the focus
+    ' Focus lives on the PsTextBox's RichEdit child; use that handle for the focus
     ' comparisons and SetFocus below.
-    dim hFindCtl as HWND = CTextBox_GetRichEditHandle( GetDlgItem( HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND ) )
+    dim hFindCtl as HWND = PsTextBox_GetRichEditHandle( GetDlgItem( HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND ) )
     if IsWindowVisible(HWND_FRMMAIN_TOPTABSINFO) = false then hFindCtl = 0
         
     dim idx as long
@@ -262,7 +262,7 @@ end function
 function OnCommand_ViewToDo() as LRESULT
     ' toggle close the Output window if it is open and already at ToDo 
     if IsWindowVisible(HWND_FRMOUTPUT) then
-        if CSelectBar_GetCurSel( HWND_FRMOUTPUT_SELECTBAR ) = OUTPUT_TAB_TODO then
+        if PsSelectBar_GetCurSel( HWND_FRMOUTPUT_SELECTBAR ) = OUTPUT_TAB_TODO then
             ShowWindow( HWND_FRMOUTPUT, SW_HIDE )
             frmMain_PositionWindows
             exit function
@@ -274,7 +274,7 @@ function OnCommand_ViewToDo() as LRESULT
     ' Silent: only a user click on the bar fires its change callback, so this cannot
     ' re-enter. frmOutput_PositionWindows ends in ShowHideOutputControls, which is what
     ' actually swaps the visible pane.
-    CSelectBar_SetCurSel( HWND_FRMOUTPUT_SELECTBAR, OUTPUT_TAB_TODO )
+    PsSelectBar_SetCurSel( HWND_FRMOUTPUT_SELECTBAR, OUTPUT_TAB_TODO )
     frmOutput_PositionWindows
     AfxRedrawWindow( HWND_FRMOUTPUT_SELECTBAR )
     function = 0
@@ -283,7 +283,7 @@ end function
 function OnCommand_ViewNotes() as LRESULT
     ' toggle close the Output window if it is open and already at Notes
     if IsWindowVisible(HWND_FRMOUTPUT) then
-        if CSelectBar_GetCurSel( HWND_FRMOUTPUT_SELECTBAR ) = OUTPUT_TAB_NOTES then
+        if PsSelectBar_GetCurSel( HWND_FRMOUTPUT_SELECTBAR ) = OUTPUT_TAB_NOTES then
             ShowWindow( HWND_FRMOUTPUT, SW_HIDE )
             frmMain_PositionWindows
             exit function
@@ -293,7 +293,7 @@ function OnCommand_ViewNotes() as LRESULT
     end if
     frmMain_PositionWindows
     ' Silent -- see OnCommand_ViewToDo above.
-    CSelectBar_SetCurSel( HWND_FRMOUTPUT_SELECTBAR, OUTPUT_TAB_NOTES )
+    PsSelectBar_SetCurSel( HWND_FRMOUTPUT_SELECTBAR, OUTPUT_TAB_NOTES )
     frmOutput_PositionWindows
     AfxRedrawWindow( HWND_FRMOUTPUT_SELECTBAR )
     function = 0

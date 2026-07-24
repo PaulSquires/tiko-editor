@@ -12,7 +12,7 @@
 '    GNU General Public License for more details.
 
 ' The editor's two horizontal scrollbars (one per split view of the active document) are
-' CHScrollBar instances. The control knows nothing about Scintilla: the message pump
+' PsHScrollBar instances. The control knows nothing about Scintilla: the message pump
 ' (handleMouseShowScrollBar) pushes the range in PIXEL units -- total = widest visible
 ' line in document space, page = visible text width, pos = SCI_GETXOFFSET -- through
 ' frmEditorHScroll_NeedScrollBar / _UpdateScrollBars, and the control reports user
