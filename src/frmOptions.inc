@@ -15,13 +15,13 @@
 '
 '  SHAPE
 '      +---------------------+----------------------------------------+
-'      |  CListBox (nav)     |  page title band  (fixed, not scrolled) |
+'      |  PsListBox (nav)     |  page title band  (fixed, not scrolled) |
 '      |  grouped, fixed     +----------------------------------------+
-'      |  width, NO splitter |  CScrollPanel                          |
+'      |  width, NO splitter |  PsScrollPanel                          |
 '      |                     |    GetPanel() is the parent of every    |
 '      |                     |    page's controls                      |
 '      +---------------------+----------------------------------------+
-'      |                                 [ CButton OK ] [ CButton .. ] |
+'      |                                 [ PsButton OK ] [ PsButton .. ] |
 '      +--------------------------------------------------------------+
 '
 '  THIS DIALOG RUNS ITS OWN MESSAGE LOOP and cannot use CWindow.DoEvents, because that
@@ -183,7 +183,7 @@ End function
 ' ========================================================================================
 ' Paint one row of the navigation list.
 ' ========================================================================================
-private sub frmOptions_NavPaintCallback( byval p as CLISTBOX_PAINTINFO ptr )
+private sub frmOptions_NavPaintCallback( byval p as PSLISTBOX_PAINTINFO ptr )
     if p = 0 then exit sub
 
     dim as COLORREF backclr, foreclr
@@ -215,7 +215,7 @@ end sub
 ' ========================================================================================
 private sub frmOptions_NavSelChangeCallback( byval hList as HWND, byval row as integer )
     if row < 0 then exit sub
-    frmOptions_ShowPage( CListBox_GetItemData( hList, row ) )
+    frmOptions_ShowPage( PsListBox_GetItemData( hList, row ) )
 end sub
 
 
@@ -264,7 +264,7 @@ sub frmOptions_ShowPage( byval nPage as long )
     if nPage >= OPTPAGE_COUNT then exit sub
     if nPage = gOptCurrentPage then exit sub
 
-    dim as HWND hPanel = CScrollPanel_GetPanel( HWND_FRMOPTIONS_SCROLL )
+    dim as HWND hPanel = PsScrollPanel_GetPanel( HWND_FRMOPTIONS_SCROLL )
     if hPanel = 0 then exit sub
 
     ' Hide the outgoing page.
@@ -295,8 +295,8 @@ sub frmOptions_ShowPage( byval nPage as long )
     end if
 
     ' Re-flow for the current width and go back to the top of the page.
-    CScrollPanel_SetPos( HWND_FRMOPTIONS_SCROLL, 0 )
-    CScrollPanel_Recalc( HWND_FRMOPTIONS_SCROLL )
+    PsScrollPanel_SetPos( HWND_FRMOPTIONS_SCROLL, 0 )
+    PsScrollPanel_Recalc( HWND_FRMOPTIONS_SCROLL )
     AfxRedrawWindow( hPanel )
     AfxRedrawWindow( HWND_FRMOPTIONS )
 
@@ -355,7 +355,7 @@ private function frmOptions_OnPaint( byval hwnd as HWND ) as LRESULT
     dim as RECT rc
     GetClientRect( hwnd, @rc )
 
-    dim buffer as CBufferPaint
+    dim buffer as PsBufferPaint
     buffer.BeginDoubleBuffer( hwnd, hdc, rc )
 
     buffer.SetBackColor( ghPanel.BackColor )
@@ -391,7 +391,7 @@ end function
 
 
 ' ========================================================================================
-' OK / Cancel. CButton does not post WM_COMMAND to its parent, so the buttons route
+' OK / Cancel. PsButton does not post WM_COMMAND to its parent, so the buttons route
 ' through their click callback; IDCANCEL still arrives as a WM_COMMAND because
 ' IsDialogMessage synthesises one for the Escape key.
 ' ========================================================================================
@@ -489,7 +489,7 @@ function frmOptions_WndProc( _
             return 0
 
         case WM_ERASEBKGND
-            ' Everything is painted in WM_PAINT through a CBufferPaint.
+            ' Everything is painted in WM_PAINT through a PsBufferPaint.
             return true
 
         case WM_PAINT
@@ -526,7 +526,7 @@ end function
 ' ========================================================================================
 ' A theme-matched message box owned by the dialog. See frmOptions.bi.
 '
-' This runs a nested modal loop (CMessageBox_DoModal) inside the dialog's own message loop
+' This runs a nested modal loop (PsMessageBox_DoModal) inside the dialog's own message loop
 ' -- a loop within a loop within frmMain's. The owner is HWND_FRMOPTIONS.
 ' ========================================================================================
 function frmOptions_ThemedMsgBox( byval wszText as DWSTRING, _
@@ -534,18 +534,18 @@ function frmOptions_ThemedMsgBox( byval wszText as DWSTRING, _
                                   byval nIconKind as long, _
                                   byval nPreset as long ) as long
 
-    dim as HWND h = CMessageBox_Create( HWND_FRMOPTIONS )
-    CMessageBox_SetCaption( h, wszCaption )
-    CMessageBox_SetText( h, wszText )
-    CMessageBox_SetIconKind( h, nIconKind )
-    CMessageBox_SetFont( h, OptionsFont_Base() )
-    CMessageBox_SetCloseGlyphFont( h, ghFont(SYMBOLFONT_10) )
+    dim as HWND h = PsMessageBox_Create( HWND_FRMOPTIONS )
+    PsMessageBox_SetCaption( h, wszCaption )
+    PsMessageBox_SetText( h, wszText )
+    PsMessageBox_SetIconKind( h, nIconKind )
+    PsMessageBox_SetFont( h, OptionsFont_Base() )
+    PsMessageBox_SetCloseGlyphFont( h, ghFont(SYMBOLFONT_10) )
 
     ' A larger icon glyph than any cached ghFont, made for this box and freed after DoModal.
     dim as HFONT hGlyph = 0
     dim pWin as CWindow ptr = AfxCWindowPtr( HWND_FRMOPTIONS )
     if pWin then hGlyph = pWin->CreateFont( SYMBOLFONT, 22 )
-    if hGlyph then CMessageBox_SetGlyphFont( h, hGlyph )
+    if hGlyph then PsMessageBox_SetGlyphFont( h, hGlyph )
 
     ' Colours from the theme. Border/divider are the editor divider; the bands are the
     ' panel; the close-hot red and the icon accents keep their semantic defaults.
@@ -559,22 +559,22 @@ function frmOptions_ThemedMsgBox( byval wszText as DWSTRING, _
     mc.ForeColor        = ghPanel.ForeColor
     mc.FooterBackColor  = ghPanel.BackColor
     mc.DividerColor     = ghEditor.Divider
-    CMessageBox_SetColors( h, @mc )
+    PsMessageBox_SetColors( h, @mc )
 
-    dim as CBUTTON_COLORS bc
+    dim as PSBUTTON_COLORS bc
     OptionsTheme_FillButton( @bc )
-    CMessageBox_SetButtonColors( h, @bc )
+    PsMessageBox_SetButtonColors( h, @bc )
 
     if nPreset = MBX_BTN_OKCANCEL then
-        CMessageBox_AddButton( h, L(0,"OK"), IDOK )
-        CMessageBox_AddButton( h, L(1,"Cancel"), IDCANCEL )
+        PsMessageBox_AddButton( h, L(0,"OK"), IDOK )
+        PsMessageBox_AddButton( h, L(1,"Cancel"), IDCANCEL )
         ' Default to Cancel: this box only ever guards a destructive action.
-        CMessageBox_SetDefaultButton( h, 1 )
+        PsMessageBox_SetDefaultButton( h, 1 )
     else
-        CMessageBox_AddButton( h, L(0,"OK"), IDOK )
+        PsMessageBox_AddButton( h, L(0,"OK"), IDOK )
     end if
 
-    dim as long nResult = CMessageBox_DoModal( h )
+    dim as long nResult = PsMessageBox_DoModal( h )
     if hGlyph then DeleteObject( hGlyph )
     function = nResult
 end function
@@ -585,23 +585,23 @@ end function
 ' ========================================================================================
 private sub frmOptions_ApplyTheme( byval hwnd as HWND )
 
-    CListBox_SetBackColor( HWND_FRMOPTIONS_NAV, ghPanel.BackColor )
-    CListBox_SetScrollBarColors( HWND_FRMOPTIONS_NAV, ghPanel.BackColorScrollBar, _
+    PsListBox_SetBackColor( HWND_FRMOPTIONS_NAV, ghPanel.BackColor )
+    PsListBox_SetScrollBarColors( HWND_FRMOPTIONS_NAV, ghPanel.BackColorScrollBar, _
                                  ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
 
-    CScrollPanel_SetColors( HWND_FRMOPTIONS_SCROLL, ghPanel.BackColor, ghPanel.ForeColor )
-    CScrollPanel_SetScrollBarColors( HWND_FRMOPTIONS_SCROLL, ghPanel.BackColorScrollBar, _
+    PsScrollPanel_SetColors( HWND_FRMOPTIONS_SCROLL, ghPanel.BackColor, ghPanel.ForeColor )
+    PsScrollPanel_SetScrollBarColors( HWND_FRMOPTIONS_SCROLL, ghPanel.BackColorScrollBar, _
                                      ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
 
-    dim as CBUTTON_COLORS bc
+    dim as PSBUTTON_COLORS bc
     OptionsTheme_FillButton( @bc )
 
     dim as HWND hOK     = GetDlgItem( hwnd, IDC_FRMOPTIONS_CMDOK )
     dim as HWND hCancel = GetDlgItem( hwnd, IDC_FRMOPTIONS_CMDCANCEL )
-    CButton_SetColors( hOK, @bc )
-    CButton_SetColors( hCancel, @bc )
-    CButton_Refresh( hOK )
-    CButton_Refresh( hCancel )
+    PsButton_SetColors( hOK, @bc )
+    PsButton_SetColors( hCancel, @bc )
+    PsButton_Refresh( hOK )
+    PsButton_Refresh( hCancel )
 
     OptionsRows_ApplyTheme()
     frmOptionsCompiler_ApplyTheme()   ' no-op until the page has been built
@@ -621,22 +621,22 @@ end sub
 ' ========================================================================================
 private sub frmOptions_BuildNavList( byval hList as HWND )
 
-    CListBox_BeginUpdate( hList )
-    CListBox_Clear( hList )
+    PsListBox_BeginUpdate( hList )
+    PsListBox_Clear( hList )
 
-    ' FLAT -- no CListBox_AddHeader calls anywhere. Eight pages read fine as one list, and
+    ' FLAT -- no PsListBox_AddHeader calls anywhere. Eight pages read fine as one list, and
     ' merging Advanced Code Editor into Code Editor had left three of the five groups
     ' holding a single item each.
-    CListBox_AddString( hList, L(226,"General Options"),      OPTPAGE_GENERAL )
-    CListBox_AddString( hList, L(110,"Code Editor"),          OPTPAGE_EDITOR )
-    CListBox_AddString( hList, L(111,"Themes and Fonts"),     OPTPAGE_COLORS )
-    CListBox_AddString( hList, L(112,"Compiler Setup"),       OPTPAGE_COMPILER )
-    CListBox_AddString( hList, L(129,"Localization"),         OPTPAGE_LOCAL )
-    CListBox_AddString( hList, L(177,"FreeBASIC Keywords"),   OPTPAGE_KEYWORDS )
-    CListBox_AddString( hList, L(435,"Windows Api Keywords"), OPTPAGE_KEYWORDSWINAPI )
-    CListBox_AddString( hList, L(439,"Extra Keywords"),       OPTPAGE_KEYWORDSEXTRA )
+    PsListBox_AddString( hList, L(226,"General Options"),      OPTPAGE_GENERAL )
+    PsListBox_AddString( hList, L(110,"Code Editor"),          OPTPAGE_EDITOR )
+    PsListBox_AddString( hList, L(111,"Themes and Fonts"),     OPTPAGE_COLORS )
+    PsListBox_AddString( hList, L(112,"Compiler Setup"),       OPTPAGE_COMPILER )
+    PsListBox_AddString( hList, L(129,"Localization"),         OPTPAGE_LOCAL )
+    PsListBox_AddString( hList, L(177,"FreeBASIC Keywords"),   OPTPAGE_KEYWORDS )
+    PsListBox_AddString( hList, L(435,"Windows Api Keywords"), OPTPAGE_KEYWORDSWINAPI )
+    PsListBox_AddString( hList, L(439,"Extra Keywords"),       OPTPAGE_KEYWORDSEXTRA )
 
-    CListBox_EndUpdate( hList )
+    PsListBox_EndUpdate( hList )
 
 end sub
 
@@ -645,8 +645,8 @@ end sub
 ' Find the navigation row that carries a page id, or -1.
 ' ========================================================================================
 private function frmOptions_NavRowForPage( byval hList as HWND, byval nPage as long ) as long
-    for i as long = 0 to CListBox_GetCount(hList) - 1
-        if CListBox_GetItemData( hList, i ) = nPage then return i
+    for i as long = 0 to PsListBox_GetCount(hList) - 1
+        if PsListBox_GetItemData( hList, i ) = nPage then return i
     next
     function = -1
 end function
@@ -689,41 +689,41 @@ function frmOptions_Show( byval hWndParent as HWND ) as LRESULT
     pWindow->Center( pWindow->hWindow, hWndParent )
 
     ' ---- navigation list -------------------------------------------------------------
-    HWND_FRMOPTIONS_NAV = CListBox_Create( HWND_FRMOPTIONS, IDC_FRMOPTIONS_NAVLIST )
-    CListBox_SetPaintCallback( HWND_FRMOPTIONS_NAV, @frmOptions_NavPaintCallback )
-    CListBox_SetSelChangeCallback( HWND_FRMOPTIONS_NAV, @frmOptions_NavSelChangeCallback )
-    CListBox_SetFont( HWND_FRMOPTIONS_NAV, OptionsFont_Base() )
-    ' Row height is in UNSCALED units (CListBox scales what it is handed) and has to grow
+    HWND_FRMOPTIONS_NAV = PsListBox_Create( HWND_FRMOPTIONS, IDC_FRMOPTIONS_NAVLIST )
+    PsListBox_SetPaintCallback( HWND_FRMOPTIONS_NAV, @frmOptions_NavPaintCallback )
+    PsListBox_SetSelChangeCallback( HWND_FRMOPTIONS_NAV, @frmOptions_NavSelChangeCallback )
+    PsListBox_SetFont( HWND_FRMOPTIONS_NAV, OptionsFont_Base() )
+    ' Row height is in UNSCALED units (PsListBox scales what it is handed) and has to grow
     ' with the base font, or a 12pt list clips its own rows.
-    CListBox_SetRowHeight( HWND_FRMOPTIONS_NAV, 26 + ((OptionsFont_PointSize() - 10) * 2) )
+    PsListBox_SetRowHeight( HWND_FRMOPTIONS_NAV, 26 + ((OptionsFont_PointSize() - 10) * 2) )
     frmOptions_BuildNavList( HWND_FRMOPTIONS_NAV )
 
     ' ---- scrolling page area ---------------------------------------------------------
-    HWND_FRMOPTIONS_SCROLL = CScrollPanel_Create( HWND_FRMOPTIONS, IDC_FRMOPTIONS_SCROLLPANEL )
-    CScrollPanel_SetPaintCallback( HWND_FRMOPTIONS_SCROLL, @frmOptions_PagePaintCallback )
-    CScrollPanel_SetLayoutCallback( HWND_FRMOPTIONS_SCROLL, @frmOptions_PageLayoutCallback )
-    CScrollPanel_SetScrollBarWidth( HWND_FRMOPTIONS_SCROLL, SCROLLBAR_WIDTH_PANEL )
+    HWND_FRMOPTIONS_SCROLL = PsScrollPanel_Create( HWND_FRMOPTIONS, IDC_FRMOPTIONS_SCROLLPANEL )
+    PsScrollPanel_SetPaintCallback( HWND_FRMOPTIONS_SCROLL, @frmOptions_PagePaintCallback )
+    PsScrollPanel_SetLayoutCallback( HWND_FRMOPTIONS_SCROLL, @frmOptions_PageLayoutCallback )
+    PsScrollPanel_SetScrollBarWidth( HWND_FRMOPTIONS_SCROLL, SCROLLBAR_WIDTH_PANEL )
     ' Auto-scroll-to-focus is OFF, deliberately. It fires on the reveal timer when a control
-    ' takes focus -- including a CComboBox taking focus on its button-DOWN. For a combo whose
+    ' takes focus -- including a PsComboBox taking focus on its button-DOWN. For a combo whose
     ' body sits partly below the fold, that scroll slides the button up and out from under the
     ' still-held cursor onto the just-opened dropdown, and the release then selects a row and
     ' closes the list. The cost of turning it off is that Tab-ing to a control below the fold
     ' no longer auto-reveals it; on a dialog this size that is a fair trade for usable combos.
-    CScrollPanel_SetAutoScrollToFocus( HWND_FRMOPTIONS_SCROLL, false )
+    PsScrollPanel_SetAutoScrollToFocus( HWND_FRMOPTIONS_SCROLL, false )
 
-    dim as HWND hPage = CScrollPanel_GetPanel( HWND_FRMOPTIONS_SCROLL )
+    dim as HWND hPage = PsScrollPanel_GetPanel( HWND_FRMOPTIONS_SCROLL )
 
     ' ---- footer buttons --------------------------------------------------------------
-    dim as HWND hOK = CButton_Create( HWND_FRMOPTIONS, IDC_FRMOPTIONS_CMDOK )
-    CButton_SetText( hOK, L(0,"OK") )
-    CButton_SetFont( hOK, OptionsFont_Base() )
-    CButton_SetDefault( hOK, true )
-    CButton_SetClickCallback( hOK, @frmOptions_ButtonClickCallback )
+    dim as HWND hOK = PsButton_Create( HWND_FRMOPTIONS, IDC_FRMOPTIONS_CMDOK )
+    PsButton_SetText( hOK, L(0,"OK") )
+    PsButton_SetFont( hOK, OptionsFont_Base() )
+    PsButton_SetDefault( hOK, true )
+    PsButton_SetClickCallback( hOK, @frmOptions_ButtonClickCallback )
 
-    dim as HWND hCancel = CButton_Create( HWND_FRMOPTIONS, IDC_FRMOPTIONS_CMDCANCEL )
-    CButton_SetText( hCancel, L(1,"Cancel") )
-    CButton_SetFont( hCancel, OptionsFont_Base() )
-    CButton_SetClickCallback( hCancel, @frmOptions_ButtonClickCallback )
+    dim as HWND hCancel = PsButton_Create( HWND_FRMOPTIONS, IDC_FRMOPTIONS_CMDCANCEL )
+    PsButton_SetText( hCancel, L(1,"Cancel") )
+    PsButton_SetFont( hCancel, OptionsFont_Base() )
+    PsButton_SetClickCallback( hCancel, @frmOptions_ButtonClickCallback )
 
     ShowWindow( hOK, SW_SHOW )
     ShowWindow( hCancel, SW_SHOW )
@@ -742,7 +742,7 @@ function frmOptions_Show( byval hWndParent as HWND ) as LRESULT
     frmOptions_ShowPage( nStartPage )
 
     dim as long nNavRow = frmOptions_NavRowForPage( HWND_FRMOPTIONS_NAV, nStartPage )
-    if nNavRow >= 0 then CListBox_SetCurSel( HWND_FRMOPTIONS_NAV, nNavRow )
+    if nNavRow >= 0 then PsListBox_SetCurSel( HWND_FRMOPTIONS_NAV, nNavRow )
 
     OptionsRows_RunSelfTest( hPage )
 
@@ -760,23 +760,23 @@ function frmOptions_Show( byval hWndParent as HWND ) as LRESULT
     dim uMsg as MSG
     while GetMessage( @uMsg, null, 0, 0 )
 
-        ' Each live CComboBox is offered the message: the filter takes a control handle
+        ' Each live PsComboBox is offered the message: the filter takes a control handle
         ' rather than working off a global, and is safe on a closed list or a stale
         ' handle. It also carries the close-then-reopen guard for a click on its own
         ' button, so skipping it breaks the dropdown.
         dim as boolean bEaten = false
         for i as long = lbound(gOptCombos) to ubound(gOptCombos)
-            if CComboBox_FilterMessage( gOptCombos(i), @uMsg ) then bEaten = true: exit for
+            if PsComboBox_FilterMessage( gOptCombos(i), @uMsg ) then bEaten = true: exit for
         next
         if bEaten then continue while
 
-        ' The CTextBox right-click menu; also covers any embedded CNumericUpDown, whose
+        ' The PsTextBox right-click menu; also covers any embedded PsNumericUpDown, whose
         ' own filter just forwards here.
-        if CTextBox_FilterMessage( @uMsg ) then continue while
+        if PsTextBox_FilterMessage( @uMsg ) then continue while
 
         ' ESCAPE cancels the dialog -- but only after the popup filters above, so an open
         ' combobox list or context menu closes on Escape first. This is handled explicitly
-        ' rather than left to IsDialogMessage's IDCANCEL, because a MULTILINE CTextBox (the
+        ' rather than left to IsDialogMessage's IDCANCEL, because a MULTILINE PsTextBox (the
         ' keyword editors) claims every key via DLGC_WANTALLKEYS, so IsDialogMessage hands
         ' Escape to the RichEdit instead of treating it as cancel. The old keyword pages
         ' subclassed the edit to catch Escape for exactly this reason.

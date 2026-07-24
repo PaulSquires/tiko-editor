@@ -19,7 +19,7 @@
 #Define IDC_FRMOPTIONS_CMDCANCEL                    1001
 
 ' Control ids for the table-driven rows. Each row takes ONE id, its own table index added
-' to this base. Kept well clear of the ids above; CScrollPanel additionally consumes
+' to this base. Kept well clear of the ids above; PsScrollPanel additionally consumes
 ' IDC_FRMOPTIONS_SCROLLPANEL + 1 (its page) and + 2 (its scrollbar).
 #Define IDC_FRMOPTIONS_FIRSTROW                     2000
 
@@ -43,7 +43,7 @@ dim shared HWND_FRMOPTIONS_SCROLL as HWND
 declare function frmOptions_Show( byval hWndParent as HWND ) as LRESULT
 declare sub      frmOptions_ShowPage( byval nPage as long )
 
-' A theme-matched CMessageBox owned by the dialog. nPreset is MBX_BTN_OK or
+' A theme-matched PsMessageBox owned by the dialog. nPreset is MBX_BTN_OK or
 ' MBX_BTN_OKCANCEL; returns the dismissing id (IDOK / IDCANCEL). Runs its own nested modal
 ' loop, so it is safe to call from inside the dialog's message loop.
 declare function frmOptions_ThemedMsgBox( byval wszText as DWSTRING, _

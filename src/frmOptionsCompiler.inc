@@ -24,7 +24,7 @@
 
 ' Fixed heights, UNSCALED (run through AfxScaleY at use).
 #define COMP_LISTHEIGHT     150
-#define COMP_FIELDPAD        11      ' vertical padding inside a single-line CTextBox
+#define COMP_FIELDPAD        11      ' vertical padding inside a single-line PsTextBox
 #define COMP_LABELGAP         4      ' between a field label and the field under it
 #define COMP_SECTIONGAP      14      ' between one field block and the next
 #define COMP_BROWSEWIDTH     40
@@ -38,15 +38,15 @@ type COMP_LABEL
 end type
 
 
-dim shared ghCompToolchains as HWND      ' CListBox
-dim shared ghCompSwitches   as HWND      ' CTextBox
-dim shared ghCompIncludes   as HWND      ' CTextBox
-dim shared ghCompHelpfile   as HWND      ' CTextBox
-dim shared ghCompBrowse     as HWND      ' CButton
-dim shared ghCompRunCmd     as HWND      ' CToggle
-dim shared ghCompBeep       as HWND      ' CToggle
+dim shared ghCompToolchains as HWND      ' PsListBox
+dim shared ghCompSwitches   as HWND      ' PsTextBox
+dim shared ghCompIncludes   as HWND      ' PsTextBox
+dim shared ghCompHelpfile   as HWND      ' PsTextBox
+dim shared ghCompBrowse     as HWND      ' PsButton
+dim shared ghCompRunCmd     as HWND      ' PsToggle
+dim shared ghCompBeep       as HWND      ' PsToggle
 
-' Clean toolchain folder names, parallel to the CListBox rows. The row's display TEXT may
+' Clean toolchain folder names, parallel to the PsListBox rows. The row's display TEXT may
 ' carry a "path contains spaces" warning suffix, so the folder name is kept separately
 ' rather than parsed back out of the list.
 dim shared gCompToolchainNames(any) as DWSTRING
@@ -95,7 +95,7 @@ end sub
 ' ========================================================================================
 ' Paint one toolchain row.
 ' ========================================================================================
-private sub frmOptionsCompiler_ToolchainPaint( byval p as CLISTBOX_PAINTINFO ptr )
+private sub frmOptionsCompiler_ToolchainPaint( byval p as PSLISTBOX_PAINTINFO ptr )
     if p = 0 then exit sub
     dim as COLORREF backclr, foreclr
     if p->isSelected orelse p->isHot then
@@ -116,21 +116,21 @@ end sub
 
 
 ' ========================================================================================
-' A CTextBox changed through user typing (SetText is silent). Route to the right field.
+' A PsTextBox changed through user typing (SetText is silent). Route to the right field.
 ' ========================================================================================
 private sub frmOptionsCompiler_TextChanged( byval hTextBox as HWND )
     if hTextBox = ghCompSwitches then
-        gOptWork.CompilerSwitches = CTextBox_GetText( hTextBox )
+        gOptWork.CompilerSwitches = PsTextBox_GetText( hTextBox )
     elseif hTextBox = ghCompIncludes then
-        gOptWork.CompilerIncludes = CTextBox_GetText( hTextBox )
+        gOptWork.CompilerIncludes = PsTextBox_GetText( hTextBox )
     elseif hTextBox = ghCompHelpfile then
-        gOptWork.CompilerHelpfile = CTextBox_GetText( hTextBox )
+        gOptWork.CompilerHelpfile = PsTextBox_GetText( hTextBox )
     end if
 end sub
 
 
 ' ========================================================================================
-' A CToggle changed through user action. THE TYPE TRAP: store a long 0/1, not a boolean.
+' A PsToggle changed through user action. THE TYPE TRAP: store a long 0/1, not a boolean.
 ' ========================================================================================
 private sub frmOptionsCompiler_ToggleChanged( byval hToggle as HWND, byval isChecked as boolean )
     if hToggle = ghCompRunCmd then
@@ -148,7 +148,7 @@ end sub
 private sub frmOptionsCompiler_BrowseClick( byval hButton as HWND, byval id as long )
     dim pwszName as wstring ptr = AfxIFileOpenDialogW( HWND_FRMOPTIONS, IDC_FRMOPTIONSCOMPILER_CMDFBHELPFILE )
     if pwszName then
-        CTextBox_SetText( ghCompHelpfile, *pwszName )
+        PsTextBox_SetText( ghCompHelpfile, *pwszName )
         gOptWork.CompilerHelpfile = *pwszName
         CoTaskMemFree( pwszName )
     end if
@@ -161,8 +161,8 @@ end sub
 ' ========================================================================================
 private function frmOptionsCompiler_LoadToolchains() as long
 
-    CListBox_BeginUpdate( ghCompToolchains )
-    CListBox_Clear( ghCompToolchains )
+    PsListBox_BeginUpdate( ghCompToolchains )
+    PsListBox_Clear( ghCompToolchains )
     erase gCompToolchainNames
 
     dim as long idxMatch = -1
@@ -187,7 +187,7 @@ private function frmOptionsCompiler_LoadToolchains() as long
                         wszDisplay = wszDisplay & "   (Warning: File path contains spaces)"
                     end if
 
-                    idx = CListBox_AddString( ghCompToolchains, wszDisplay )
+                    idx = PsListBox_AddString( ghCompToolchains, wszDisplay )
                     redim preserve gCompToolchainNames(idx) as DWSTRING
                     gCompToolchainNames(idx) = wszFolder
                     if ucase(wszFolder) = wszWanted then idxMatch = idx
@@ -197,7 +197,7 @@ private function frmOptionsCompiler_LoadToolchains() as long
         FindClose( hSearch )
     end if
 
-    CListBox_EndUpdate( ghCompToolchains )
+    PsListBox_EndUpdate( ghCompToolchains )
     function = idxMatch
 end function
 
@@ -210,47 +210,47 @@ sub frmOptionsCompiler_Build( byval hPage as HWND )
     if gCompBuilt then exit sub
 
     ' ---- toolchain list --------------------------------------------------------------
-    ghCompToolchains = CListBox_Create( hPage, IDC_FRMOPTIONSCOMPILER_LSTTOOLCHAINS )
-    CListBox_SetPaintCallback( ghCompToolchains, @frmOptionsCompiler_ToolchainPaint )
-    CListBox_SetSelChangeCallback( ghCompToolchains, @frmOptionsCompiler_ToolchainSelChange )
-    CListBox_SetFont( ghCompToolchains, OptionsFont_Base() )
-    CListBox_SetScrollBarWidth( ghCompToolchains, SCROLLBAR_WIDTH_PANEL )
+    ghCompToolchains = PsListBox_Create( hPage, IDC_FRMOPTIONSCOMPILER_LSTTOOLCHAINS )
+    PsListBox_SetPaintCallback( ghCompToolchains, @frmOptionsCompiler_ToolchainPaint )
+    PsListBox_SetSelChangeCallback( ghCompToolchains, @frmOptionsCompiler_ToolchainSelChange )
+    PsListBox_SetFont( ghCompToolchains, OptionsFont_Base() )
+    PsListBox_SetScrollBarWidth( ghCompToolchains, SCROLLBAR_WIDTH_PANEL )
 
     dim as long idxMatch = frmOptionsCompiler_LoadToolchains()
     if idxMatch >= 0 then
-        CListBox_SetCurSel( ghCompToolchains, idxMatch )       ' silent; does not fire the callback
+        PsListBox_SetCurSel( ghCompToolchains, idxMatch )       ' silent; does not fire the callback
     else
         ' No on-disk folder matched the stored path. Leave staging as Load seeded it, so
         ' Commit writes the same path back rather than blanking it.
     end if
 
     ' ---- single-line text fields -----------------------------------------------------
-    ghCompSwitches = CTextBox_Create( hPage, IDC_FRMOPTIONSCOMPILER_TXTFBSWITCHES )
-    CTextBox_SetText( ghCompSwitches, gOptWork.CompilerSwitches )   ' silent
-    CTextBox_SetChangeCallback( ghCompSwitches, @frmOptionsCompiler_TextChanged )
+    ghCompSwitches = PsTextBox_Create( hPage, IDC_FRMOPTIONSCOMPILER_TXTFBSWITCHES )
+    PsTextBox_SetText( ghCompSwitches, gOptWork.CompilerSwitches )   ' silent
+    PsTextBox_SetChangeCallback( ghCompSwitches, @frmOptionsCompiler_TextChanged )
 
-    ghCompIncludes = CTextBox_Create( hPage, IDC_FRMOPTIONSCOMPILER_TXTINCLUDES )
-    CTextBox_SetText( ghCompIncludes, gOptWork.CompilerIncludes )
-    CTextBox_SetChangeCallback( ghCompIncludes, @frmOptionsCompiler_TextChanged )
+    ghCompIncludes = PsTextBox_Create( hPage, IDC_FRMOPTIONSCOMPILER_TXTINCLUDES )
+    PsTextBox_SetText( ghCompIncludes, gOptWork.CompilerIncludes )
+    PsTextBox_SetChangeCallback( ghCompIncludes, @frmOptionsCompiler_TextChanged )
 
-    ghCompHelpfile = CTextBox_Create( hPage, IDC_FRMOPTIONSCOMPILER_TXTFBHELPFILE )
-    CTextBox_SetText( ghCompHelpfile, gOptWork.CompilerHelpfile )
-    CTextBox_SetChangeCallback( ghCompHelpfile, @frmOptionsCompiler_TextChanged )
+    ghCompHelpfile = PsTextBox_Create( hPage, IDC_FRMOPTIONSCOMPILER_TXTFBHELPFILE )
+    PsTextBox_SetText( ghCompHelpfile, gOptWork.CompilerHelpfile )
+    PsTextBox_SetChangeCallback( ghCompHelpfile, @frmOptionsCompiler_TextChanged )
 
     ' ---- browse button ---------------------------------------------------------------
-    ghCompBrowse = CButton_Create( hPage, IDC_FRMOPTIONSCOMPILER_CMDFBHELPFILE )
-    CButton_SetText( ghCompBrowse, "..." )
-    CButton_SetFont( ghCompBrowse, OptionsFont_Base() )
-    CButton_SetClickCallback( ghCompBrowse, @frmOptionsCompiler_BrowseClick )
+    ghCompBrowse = PsButton_Create( hPage, IDC_FRMOPTIONSCOMPILER_CMDFBHELPFILE )
+    PsButton_SetText( ghCompBrowse, "..." )
+    PsButton_SetFont( ghCompBrowse, OptionsFont_Base() )
+    PsButton_SetClickCallback( ghCompBrowse, @frmOptionsCompiler_BrowseClick )
 
     ' ---- toggles ---------------------------------------------------------------------
-    ghCompRunCmd = CToggle_Create( hPage, IDC_FRMOPTIONSCOMPILER_CHKRUNVIACOMMANDWINDOW )
-    CToggle_SetChecked( ghCompRunCmd, iif( gOptWork.RunViaCommandWindow <> 0, true, false ) )   ' silent
-    CToggle_SetCheckChangedCallback( ghCompRunCmd, @frmOptionsCompiler_ToggleChanged )
+    ghCompRunCmd = PsToggle_Create( hPage, IDC_FRMOPTIONSCOMPILER_CHKRUNVIACOMMANDWINDOW )
+    PsToggle_SetChecked( ghCompRunCmd, iif( gOptWork.RunViaCommandWindow <> 0, true, false ) )   ' silent
+    PsToggle_SetCheckChangedCallback( ghCompRunCmd, @frmOptionsCompiler_ToggleChanged )
 
-    ghCompBeep = CToggle_Create( hPage, IDC_FRMOPTIONSCOMPILER_CHKDISABLECOMPILEBEEP )
-    CToggle_SetChecked( ghCompBeep, iif( gOptWork.DisableCompileBeep <> 0, true, false ) )
-    CToggle_SetCheckChangedCallback( ghCompBeep, @frmOptionsCompiler_ToggleChanged )
+    ghCompBeep = PsToggle_Create( hPage, IDC_FRMOPTIONSCOMPILER_CHKDISABLECOMPILEBEEP )
+    PsToggle_SetChecked( ghCompBeep, iif( gOptWork.DisableCompileBeep <> 0, true, false ) )
+    PsToggle_SetCheckChangedCallback( ghCompBeep, @frmOptionsCompiler_ToggleChanged )
 
     gCompBuilt = true
     frmOptionsCompiler_ApplyTheme()
@@ -263,23 +263,23 @@ end sub
 sub frmOptionsCompiler_ApplyTheme()
     if gCompBuilt = false then exit sub
 
-    CListBox_SetBackColor( ghCompToolchains, ghPanel.BackColor )
-    CListBox_SetScrollBarColors( ghCompToolchains, ghPanel.BackColorScrollBar, _
+    PsListBox_SetBackColor( ghCompToolchains, ghPanel.BackColor )
+    PsListBox_SetScrollBarColors( ghCompToolchains, ghPanel.BackColorScrollBar, _
                                  ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
 
     OptionsTheme_ApplyTextBox( ghCompSwitches )
     OptionsTheme_ApplyTextBox( ghCompIncludes )
     OptionsTheme_ApplyTextBox( ghCompHelpfile )
 
-    dim as CBUTTON_COLORS bc
+    dim as PSBUTTON_COLORS bc
     OptionsTheme_FillButton( @bc )
-    CButton_SetColors( ghCompBrowse, @bc )
-    CButton_Refresh( ghCompBrowse )
+    PsButton_SetColors( ghCompBrowse, @bc )
+    PsButton_Refresh( ghCompBrowse )
 
-    dim as CTOGGLE_COLORS tc
+    dim as PSTOGGLE_COLORS tc
     OptionsTheme_FillToggle( @tc )
-    CToggle_SetColors( ghCompRunCmd, @tc ) : CToggle_Refresh( ghCompRunCmd )
-    CToggle_SetColors( ghCompBeep, @tc )   : CToggle_Refresh( ghCompBeep )
+    PsToggle_SetColors( ghCompRunCmd, @tc ) : PsToggle_Refresh( ghCompRunCmd )
+    PsToggle_SetColors( ghCompBeep, @tc )   : PsToggle_Refresh( ghCompBeep )
 end sub
 
 
@@ -371,7 +371,7 @@ function frmOptionsCompiler_Layout( byval hPage as HWND, byval cxPanel as long )
     #macro TOGGLEROW( hToggle, cap )
         scope
             dim as long tw, th
-            CToggle_GetIdealSize( (hToggle), tw, th )
+            PsToggle_GetIdealSize( (hToggle), tw, th )
             dim as long rowH = AfxScaleY(OPTROW_HEIGHT)
             if th + AfxScaleY(8) > rowH then rowH = th + AfxScaleY(8)
             if textH + AfxScaleY(8) > rowH then rowH = textH + AfxScaleY(8)

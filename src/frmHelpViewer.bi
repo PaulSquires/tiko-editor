@@ -17,12 +17,12 @@
 
 #define IDC_FRMHELPVIEWER_LEFTPANEL        1000
 #define IDC_FRMHELPVIEWER_RIGHTPANEL       1001
-' 1002 was the topics-list scrollbar; the CListBox owns that bar internally now.
+' 1002 was the topics-list scrollbar; the PsListBox owns that bar internally now.
 #define IDC_FRMHELPVIEWER_VSCROLLBAR2      1003
 #define IDC_FRMHELPVIEWER_RTFCONVERT       1004
 #define IDC_FRMHELPVIEWER_SPLITTER         1005
 
-' Width of the CSplitter control between the topics list and the help text. The control's
+' Width of the PsSplitter control between the topics list and the help text. The control's
 ' whole client rect is its grab area, so this is the GRAB width; the paint callback draws
 ' the narrower SPLITSIZE band centered inside it, keeping the old visual weight.
 #define HELPVIEWER_SPLITGRAB               6
@@ -32,7 +32,7 @@
 #define HELPVIEWER_MINPANE                 120
 
 type HELPVIEWER_TYPE
-    ' Topic captions live on the CListBox rows now; only the parallel filename lookup
+    ' Topic captions live on the PsListBox rows now; only the parallel filename lookup
     ' (row index -> help file) is still needed here.
     as DWSTRING Filenames(any)
 end type

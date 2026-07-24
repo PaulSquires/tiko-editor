@@ -22,20 +22,20 @@
 #define IDC_FRMMAIN_SPLITOUTPUT                     1006
 #define IDC_FRMMAIN_SPLITPANEL                      1007
 
-' Width (or height) of frmMain's CSplitter bars -- the two editor split bars and the Output
+' Width (or height) of frmMain's PsSplitter bars -- the two editor split bars and the Output
 ' panel bar. The control's whole client rect is its grab area, so this is the GRAB size; the
 ' paint callbacks draw the narrower SPLITSIZE band centered inside it. Same treatment as the
 ' help viewer's bar.
 #define SPLITTER_GRAB                               6
 
 ' Smallest the editor area may be squeezed to by dragging the Output panel's bar upward.
-' New with the CSplitter migration: the old drag clamped only to the bottom of the menubar,
+' New with the PsSplitter migration: the old drag clamped only to the bottom of the menubar,
 ' so the panel could be dragged up until the editor was a sliver.
 #define OUTPUT_MIN_EDITOR                           120
 
 ' Explorer panel drag limits. PANEL_MIN_WIDTH promotes what used to be an inline 236 in
 ' frmPanel's drag: any narrower and the user cannot grab the panel edge to resize, and the
-' panel's action menu squishes together. PANEL_MIN_CONTENT is new with the CSplitter
+' panel's action menu squishes together. PANEL_MIN_CONTENT is new with the PsSplitter
 ' migration -- the old drag floored only the panel, so it could be dragged out until the
 ' editor beside it was a sliver.
 #define PANEL_MIN_WIDTH                             236

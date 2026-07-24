@@ -18,11 +18,11 @@
 #include once "frmProjectOptions.bi"
 #include once "frmUserTools.bi"
 #include once "frmMain.bi"
-' This module is included before the control implementations, so the CListBox family's
+' This module is included before the control implementations, so the PsListBox family's
 ' headers are pulled in by hand -- the same prerequisite dance modMenus.inc does.
-#include once "CVScrollBar.bi"
-#include once "CColumnHeader.bi"
-#include once "CListBox.bi"
+#include once "PsVScrollBar.bi"
+#include once "PsColumnHeader.bi"
+#include once "PsListBox.bi"
 
 
 ' ========================================================================================
@@ -54,11 +54,11 @@ end function
 
 
 ' ========================================================================================
-' Add a row to a multi-column CListBox from a chr(9)-delimited string.
+' Add a row to a multi-column PsListBox from a chr(9)-delimited string.
 '
 ' Every caller that used to feed frmListView_AddString already builds its row in this shape
 ' ("col0" & chr(9) & "col1" & ...), so this keeps those call sites a one-word change. Field
-' 0 becomes the row's own text (column 0's cell, per the CListBox contract) and fields 1..N
+' 0 becomes the row's own text (column 0's cell, per the PsListBox contract) and fields 1..N
 ' become cells 1..N.
 '
 ' Returns the new row index, or -1 if the row could not be added.
@@ -69,11 +69,11 @@ function ListBox_AddTabbedRow( byval hCtl as HWND, byval wszTabbed as DWSTRING )
 
     ' AfxStrParse is 1-based, so field i+1 is column i -- the same mapping
     ' frmListView_GetItemText used.
-    dim as long nRow = CListBox_AddString( hCtl, AfxStrParse( wszTabbed, 1, chr(9) ) )
+    dim as long nRow = PsListBox_AddString( hCtl, AfxStrParse( wszTabbed, 1, chr(9) ) )
     if nRow < 0 then return -1
 
     for i as long = 1 to nFields - 1
-        CListBox_SetCellText( hCtl, nRow, i, AfxStrParse( wszTabbed, i + 1, chr(9) ) )
+        PsListBox_SetCellText( hCtl, nRow, i, AfxStrParse( wszTabbed, i + 1, chr(9) ) )
     next
 
     return nRow
@@ -81,7 +81,7 @@ end function
 
 
 ' ========================================================================================
-' Shared listview-style CListBox callbacks. All four of tiko's multi-column lists -- the
+' Shared listview-style PsListBox callbacks. All four of tiko's multi-column lists -- the
 ' Output panel's compiler results, search results and TODO panes, and the debugger's
 ' Variables pane -- use these; they all draw with the ghOutput colors and the same layout,
 ' so there is one painter rather than four copies.
@@ -93,11 +93,11 @@ end function
 '     switch the else branch to ghOutput.ForeColor if the original intent is wanted.
 '   - Column 2 (the filename) gets DT_PATH_ELLIPSIS, as before.
 ' ========================================================================================
-sub ListBox_LVPaintRow( byval p as CLISTBOX_PAINTINFO ptr )
+sub ListBox_LVPaintRow( byval p as PSLISTBOX_PAINTINFO ptr )
     dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN)
     if pWindow = 0 then exit sub
 
-    ' The old control highlighted the SELECTED row only; CListBox tracks hover separately,
+    ' The old control highlighted the SELECTED row only; PsListBox tracks hover separately,
     ' so honor both.
     dim as boolean bHot = (p->isSelected orelse p->isHot)
     dim as COLORREF backclr = iif( bHot, ghOutput.ForeColorScrollBar, ghOutput.BackColor )
@@ -107,7 +107,7 @@ sub ListBox_LVPaintRow( byval p as CLISTBOX_PAINTINFO ptr )
 
     p->b->SetFont( ghFont(GUIFONT_9) )
 
-    ' No columns defined -> single full-width cell (the classic CListBox contract).
+    ' No columns defined -> single full-width cell (the classic PsListBox contract).
     if p->columnCount <= 0 then
         dim as RECT rcText = p->rc
         rcText.left += pWindow->ScaleX(4)
@@ -126,7 +126,7 @@ end sub
 
 
 ' Header band painter. Required -- without one the header does not render at all.
-sub ListBox_LVPaintHeader( byval p as CCOLUMNHEADER_PAINTINFO ptr )
+sub ListBox_LVPaintHeader( byval p as PSCOLUMNHEADER_PAINTINFO ptr )
     dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN)
     if pWindow = 0 then exit sub
 
@@ -155,9 +155,9 @@ function ListBox_LVAutoSizeColumn( byval hHeader as HWND, byval idx as integer )
     dim as HWND hCtl = GetParent( hHeader )
     if hCtl = 0 then return 0
 
-    dim as long nBest = getTextWidth( hCtl, CListBox_GetColumnText( hCtl, idx ), GUIFONT_9 )
-    for r as integer = 0 to CListBox_GetCount( hCtl ) - 1
-        dim as long w = getTextWidth( hCtl, CListBox_GetCellText( hCtl, r, idx ), GUIFONT_9 )
+    dim as long nBest = getTextWidth( hCtl, PsListBox_GetColumnText( hCtl, idx ), GUIFONT_9 )
+    for r as integer = 0 to PsListBox_GetCount( hCtl ) - 1
+        dim as long w = getTextWidth( hCtl, PsListBox_GetCellText( hCtl, r, idx ), GUIFONT_9 )
         if w > nBest then nBest = w
     next
 

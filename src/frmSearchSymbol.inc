@@ -128,7 +128,7 @@ function frmSearchSymbol_DoSearch( byval hwndCtl as HWND ) as long
 
     ShowWindow( hList, SW_HIDE )
     for i as integer = 0 to gSymbolsCount - 1
-        CListBox_AddString( hList, gSymbols(i).wszCaption, i )
+        PsListBox_AddString( hList, gSymbols(i).wszCaption, i )
     next
     ShowWindow( hList, SW_SHOW )
     
@@ -136,7 +136,7 @@ function frmSearchSymbol_DoSearch( byval hwndCtl as HWND ) as long
     ' a perfect match.
     if gSymbolsCount > 0 then
         if gSymbols(0).result = SCORE_MAX then
-            CListBox_SetCurSel( hList, 0 )
+            PsListBox_SetCurSel( hList, 0 )
         end if
     end if    
 
@@ -165,7 +165,7 @@ end function
 
 
 ' ========================================================================================
-' CTextBox callbacks for the find textbox. The control owns the cue banner, colors,
+' PsTextBox callbacks for the find textbox. The control owns the cue banner, colors,
 ' vertical centering, single-line enforcement and the Cut/Copy/Paste context menu that
 ' the old RichEdit subclass hand-rolled here.
 ' ========================================================================================
@@ -179,7 +179,7 @@ sub frmSearchSymbol_TextBoxFocus( byval hTextBox as HWND, byval bGotFocus as boo
     if bGotFocus then frmSearchSymbol_DoSearch( hTextBox )
 end sub
 
-function frmSearchSymbol_TextBoxMessage( byval m as CTEXTBOX_MESSAGEINFO ptr ) as boolean
+function frmSearchSymbol_TextBoxMessage( byval m as PSTEXTBOX_MESSAGEINFO ptr ) as boolean
     ' Up/Down keypresses in the textbox move the current selected line in the picker
     ' listbox. Veto (return true) so the RichEdit caret does not also react.
     ' (VK_TAB does the same but is intercepted in the modal message loop below --
@@ -188,13 +188,13 @@ function frmSearchSymbol_TextBoxMessage( byval m as CTEXTBOX_MESSAGEINFO ptr ) a
         dim as HWND hList = GetDlgItem( HWND_FRMSEARCHSYMBOL, IDC_FRMSEARCHSYMBOL_LISTBOX )
         select case m->wParam
             case VK_UP
-                dim as integer cur = CListBox_GetCurSel(hList)
-                if cur > 0 then CListBox_SetCurSel( hList, cur - 1 )
+                dim as integer cur = PsListBox_GetCurSel(hList)
+                if cur > 0 then PsListBox_SetCurSel( hList, cur - 1 )
                 return true
 
             case VK_DOWN
-                dim as integer cur = CListBox_GetCurSel(hList)
-                if (cur < gSymbolsCount - 1) then CListBox_SetCurSel( hList, cur + 1 )
+                dim as integer cur = PsListBox_GetCurSel(hList)
+                if (cur < gSymbolsCount - 1) then PsListBox_SetCurSel( hList, cur + 1 )
                 return true
         end select
     end if
@@ -212,7 +212,7 @@ function frmSearchSymbol_OnCommand( _
             byval codeNotify As UINT _
             ) as LRESULT
 
-    ' The find textbox notifies through its CTextBox callbacks (change/focus), not
+    ' The find textbox notifies through its PsTextBox callbacks (change/focus), not
     ' through WM_COMMAND EN_ codes anymore.
     function = 0
 end function
@@ -259,7 +259,7 @@ function frmSearchSymbol_WndProc( _
         return true
 
     case WM_PAINT
-        dim as CBufferPaint b
+        dim as PsBufferPaint b
         
         b.BeginDoubleBuffer(hwnd)
 
@@ -289,7 +289,7 @@ end function
 ' ========================================================================================
 ' frmSearchSymbol_PaintCallback
 ' ========================================================================================
-sub frmSearchSymbol_PaintCallback( byval p as CLISTBOX_PAINTINFO ptr )
+sub frmSearchSymbol_PaintCallback( byval p as PSLISTBOX_PAINTINFO ptr )
     dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN)
     if pWindow = 0 then return 
 
@@ -387,7 +387,7 @@ end sub
 ' ========================================================================================
 ' frmSearchSymbol_MessageCallback
 ' ========================================================================================
-function frmSearchSymbol_MessageCallback( byval m as CLISTBOX_MESSAGEINFO ptr ) as boolean
+function frmSearchSymbol_MessageCallback( byval m as PSLISTBOX_MESSAGEINFO ptr ) as boolean
 
     select case m->uMsg
              
@@ -416,32 +416,32 @@ function frmSearchSymbol_Show( byval hwndParent as HWND ) as LRESULT
         WS_POPUP or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, WS_EX_TOOLWINDOW or WS_EX_TOPMOST )
 
 
-    ' The find textbox is the reusable CTextBox control (a RichEdit50W child inside --
+    ' The find textbox is the reusable PsTextBox control (a RichEdit50W child inside --
     ' regular Edit controls can not easily have their text vertically centered).
     dim as RECT rc
-    dim as HWND hCtlFind = CTextBox_Create( HWND_FRMSEARCHSYMBOL, IDC_FRMSEARCHSYMBOL_TXTFIND )
-    CTextBox_SetFont( hCtlFind, ghFont(GUIFONT_10) )
-    CTextBox_SetForeColor( hCtlFind, ghPanel.ForeColorHot )
-    CTextBox_SetBackColor( hCtlFind, ghPanel.BackColorHot )
-    CTextBox_SetBorderWidth( hCtlFind, 0 )                       ' flat, as before
-    CTextBox_SetCueBannerText( hCtlFind, L(37,"Search Symbol") & "..." )
-    CTextBox_SetCueBannerColor( hCtlFind, ghPanel.ForeColor )
-    CTextBox_SetChangeCallback( hCtlFind, @frmSearchSymbol_TextBoxChange )
-    CTextBox_SetFocusCallback( hCtlFind, @frmSearchSymbol_TextBoxFocus )
-    CTextBox_SetMessageCallback( hCtlFind, @frmSearchSymbol_TextBoxMessage )
+    dim as HWND hCtlFind = PsTextBox_Create( HWND_FRMSEARCHSYMBOL, IDC_FRMSEARCHSYMBOL_TXTFIND )
+    PsTextBox_SetFont( hCtlFind, ghFont(GUIFONT_10) )
+    PsTextBox_SetForeColor( hCtlFind, ghPanel.ForeColorHot )
+    PsTextBox_SetBackColor( hCtlFind, ghPanel.BackColorHot )
+    PsTextBox_SetBorderWidth( hCtlFind, 0 )                       ' flat, as before
+    PsTextBox_SetCueBannerText( hCtlFind, L(37,"Search Symbol") & "..." )
+    PsTextBox_SetCueBannerColor( hCtlFind, ghPanel.ForeColor )
+    PsTextBox_SetChangeCallback( hCtlFind, @frmSearchSymbol_TextBoxChange )
+    PsTextBox_SetFocusCallback( hCtlFind, @frmSearchSymbol_TextBoxFocus )
+    PsTextBox_SetMessageCallback( hCtlFind, @frmSearchSymbol_TextBoxMessage )
     ThemeTextBoxContextMenu( hCtlFind )
 
 
-    dim as HWND hCtrlList = CListBox_Create( HWND_FRMSEARCHSYMBOL, IDC_FRMSEARCHSYMBOL_LISTBOX )
-    CListBox_SetPaintCallback( hCtrlList, @frmSearchSymbol_PaintCallback )
-    CListBox_SetMessageCallback( hCtrlList, @frmSearchSymbol_MessageCallback )
-    CListBox_PreventDoubleClick( hCtrlList )
-    CListBox_SetBackColor( hCtrlList, ghPanel.BackColor )
-    CListBox_SetRowHeight( hCtrlList, 24 )
-    CListBox_SetFont( hCtrlList, ghFont(GUIFONT_10) )
+    dim as HWND hCtrlList = PsListBox_Create( HWND_FRMSEARCHSYMBOL, IDC_FRMSEARCHSYMBOL_LISTBOX )
+    PsListBox_SetPaintCallback( hCtrlList, @frmSearchSymbol_PaintCallback )
+    PsListBox_SetMessageCallback( hCtrlList, @frmSearchSymbol_MessageCallback )
+    PsListBox_PreventDoubleClick( hCtrlList )
+    PsListBox_SetBackColor( hCtrlList, ghPanel.BackColor )
+    PsListBox_SetRowHeight( hCtrlList, 24 )
+    PsListBox_SetFont( hCtrlList, ghFont(GUIFONT_10) )
     ' The scrollbar is created/positioned/auto-hidden by the control; we only theme it.
-    CListBox_SetScrollBarWidth( hCtrlList, SCROLLBAR_WIDTH_PANEL )
-    CListBox_SetScrollBarColors( hCtrlList, ghPanel.BackColorScrollBar, _
+    PsListBox_SetScrollBarWidth( hCtrlList, SCROLLBAR_WIDTH_PANEL )
+    PsListBox_SetScrollBarColors( hCtrlList, ghPanel.BackColorScrollBar, _
                                  ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
 
 
@@ -486,7 +486,7 @@ function frmSearchSymbol_Show( byval hwndParent as HWND ) as LRESULT
             nWidth - (nMargin * 2), nHeight, SWP_SHOWWINDOW or SWP_NOZORDER )
     ' Vertical centering is the control's job (it re-derives on every size/font
     ' change); only the margins are ours to specify.
-    CTextBox_SetMargins( hCtlFind, nMargin, 0 )
+    PsTextBox_SetMargins( hCtlFind, nMargin, 0 )
 
     
     ' Reposition the ownerdrawn results listbox 
@@ -507,24 +507,24 @@ function frmSearchSymbol_Show( byval hwndParent as HWND ) as LRESULT
         elseif (uMsg.message = WM_KEYDOWN) andalso (uMsg.wParam = VK_RETURN) then
             dim as HWND hFocus   = GetFocus()
             dim as HWND hFind    = GetDlgItem( HWND_FRMSEARCHSYMBOL, IDC_FRMSEARCHSYMBOL_TXTFIND )
-            ' Keyboard focus sits on the CTextBox's RichEdit child, not the control.
-            if (hFocus = CTextBox_GetRichEditHandle(hFind)) then
+            ' Keyboard focus sits on the PsTextBox's RichEdit child, not the control.
+            if (hFocus = PsTextBox_GetRichEditHandle(hFind)) then
                 dim as HWND hList = GetDlgItem( HWND_FRMSEARCHSYMBOL, IDC_FRMSEARCHSYMBOL_LISTBOX )
-                dim as integer cur = CListBox_GetCurSel( hList )
+                dim as integer cur = PsListBox_GetCurSel( hList )
                 frmSearchSymbol_GotoSymbol( cur )   ' this will also call WM_CLOSE
             end if
 
         elseif (uMsg.message = WM_KEYDOWN) andalso (uMsg.wParam = VK_TAB) then
             ' Tab (Shift+Tab = up) moves the list selection, same as the arrow keys.
             ' Intercepted HERE because IsDialogMessage below would otherwise consume
-            ' Tab for focus navigation -- the CTextBox's RichEdit child is a real
+            ' Tab for focus navigation -- the PsTextBox's RichEdit child is a real
             ' WS_TABSTOP, unlike the bare RichEdit this form used to own.
             dim as HWND hList = GetDlgItem( HWND_FRMSEARCHSYMBOL, IDC_FRMSEARCHSYMBOL_LISTBOX )
-            dim as integer cur = CListBox_GetCurSel( hList )
+            dim as integer cur = PsListBox_GetCurSel( hList )
             if (GetAsyncKeyState(VK_SHIFT) and &H8000) then
-                if cur > 0 then CListBox_SetCurSel( hList, cur - 1 )
+                if cur > 0 then PsListBox_SetCurSel( hList, cur - 1 )
             else
-                if cur < gSymbolsCount - 1 then CListBox_SetCurSel( hList, cur + 1 )
+                if cur < gSymbolsCount - 1 then PsListBox_SetCurSel( hList, cur + 1 )
             end if
             continue while   ' fully handled; don't let IsDialogMessage move focus
 

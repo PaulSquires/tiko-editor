@@ -37,7 +37,7 @@ end function
 ' ========================================================================================
 ' frmPanelMenu_PaintCallback
 ' ========================================================================================
-sub frmPanelMenu_PaintCallback( byval p as CSTATUSBAR_PAINTINFO ptr )
+sub frmPanelMenu_PaintCallback( byval p as PSSTATUSBAR_PAINTINFO ptr )
     dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN)
     if pWindow = 0 then return 
     if p = null then return
@@ -55,7 +55,7 @@ sub frmPanelMenu_PaintCallback( byval p as CSTATUSBAR_PAINTINFO ptr )
 
     ' If this is the Spring panel then we don't want any highlighting because it is
     ' just a placeholder that separates the left and right icons.
-    if CStatusBar_GetItemData(p->hStatusBar, p->itemID) = 0 then
+    if PsStatusBar_GetItemData(p->hStatusBar, p->itemID) = 0 then
         p->b->SetColors(ghPanel.BackColor, ghPanel.BackColor)
     end if
 
@@ -65,7 +65,7 @@ sub frmPanelMenu_PaintCallback( byval p as CSTATUSBAR_PAINTINFO ptr )
 
     p->b->SetFont( ghFont(SYMBOLFONT_10) )
 
-    dim as integer itemData = CStatusBar_GetItemData( p->hStatusBar, p->itemID )
+    dim as integer itemData = PsStatusBar_GetItemData( p->hStatusBar, p->itemID )
     
     ' Draw the icon
     dim as RECT rc = p->rc
@@ -99,7 +99,7 @@ end sub
 ' ========================================================================================
 ' frmPanelMenu_MessageCallback
 ' ========================================================================================
-function frmPanelMenu_MessageCallback( byval m as CSTATUSBAR_MESSAGEINFO ptr ) as boolean
+function frmPanelMenu_MessageCallback( byval m as PSSTATUSBAR_MESSAGEINFO ptr ) as boolean
 
     select case m->uMsg
              
@@ -110,7 +110,7 @@ function frmPanelMenu_MessageCallback( byval m as CSTATUSBAR_MESSAGEINFO ptr ) a
             
         case WM_LBUTTONUP
             if m->idx <> -1 then
-                dim as integer idMessage = CStatusBar_GetItemData( m->hStatusBar, m->idx )
+                dim as integer idMessage = PsStatusBar_GetItemData( m->hStatusBar, m->idx )
                 PostMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(idMessage, 0), 0 )
             end if
             return false
@@ -126,7 +126,7 @@ end function
 ' frmPanelMenu_TooltipCallback  -- per-row tooltip text, resolved on demand
 ' ========================================================================================
 function frmPanelMenu_TooltipCallback( byval hCtl as HWND, byval row as integer ) as DWSTRING
-    dim as integer itemData = CStatusBar_GetItemData( hCtl, row )
+    dim as integer itemData = PsStatusBar_GetItemData( hCtl, row )
     if itemData = 0 then return ""
     return frmPanelMenu_FormatTooltip(itemData)
 end function
@@ -138,31 +138,31 @@ end function
 function frmPanelMenu_Show( byval hwndParent as hwnd ) as LRESULT
 
     ' Create the statusBar to be used as the icon menu buttons.
-    dim as HWND hCtrl = CStatusBar_Create( hwndParent, IDC_FRMPANELMENU_ICONBAR )
+    dim as HWND hCtrl = PsStatusBar_Create( hwndParent, IDC_FRMPANELMENU_ICONBAR )
     
-    CStatusBar_SetPaintCallback( hCtrl, @frmPanelMenu_PaintCallback )
-    CStatusBar_SetMessageCallback( hCtrl, @frmPanelMenu_MessageCallback )
-    CStatusBar_SetTooltipCallback( hCtrl, @frmPanelMenu_TooltipCallback )
-    CStatusBar_SetBackColor( hCtrl, ghPanel.BackColor )
-    CStatusBar_SetPadding( hCtrl, 7 )
-    CStatusBar_SetFont( hCtrl, ghFont(SYMBOLFONT_10) )
+    PsStatusBar_SetPaintCallback( hCtrl, @frmPanelMenu_PaintCallback )
+    PsStatusBar_SetMessageCallback( hCtrl, @frmPanelMenu_MessageCallback )
+    PsStatusBar_SetTooltipCallback( hCtrl, @frmPanelMenu_TooltipCallback )
+    PsStatusBar_SetBackColor( hCtrl, ghPanel.BackColor )
+    PsStatusBar_SetPadding( hCtrl, 7 )
+    PsStatusBar_SetFont( hCtrl, ghFont(SYMBOLFONT_10) )
 
-    CStatusBar_AddPanel( hCtrl, wszIconExplorer, IDM_VIEWEXPLORER )
-    CStatusBar_AddPanel( hCtrl, wszIconFunctions, IDM_FUNCTIONLIST )
-    CStatusBar_AddPanel( hCtrl, wszIconBookmarks, IDM_BOOKMARKSLIST )
-    CStatusBar_AddPanel( hCtrl, wszIconSettings, IDM_OPTIONSDIALOG )    ' Settings (Environment Options)
+    PsStatusBar_AddPanel( hCtrl, wszIconExplorer, IDM_VIEWEXPLORER )
+    PsStatusBar_AddPanel( hCtrl, wszIconFunctions, IDM_FUNCTIONLIST )
+    PsStatusBar_AddPanel( hCtrl, wszIconBookmarks, IDM_BOOKMARKSLIST )
+    PsStatusBar_AddPanel( hCtrl, wszIconSettings, IDM_OPTIONSDIALOG )    ' Settings (Environment Options)
     
     '(Expandable spring between Right to left orientation)
-    CStatusBar_AddPanel( hCtrl, "", 0 )
+    PsStatusBar_AddPanel( hCtrl, "", 0 )
 
-    CStatusBar_AddPanel( hCtrl, wszIconFind, IDM_FINDINPROJECT )
-    CStatusBar_AddPanel( hCtrl, wszIconSave, IDM_FILESAVEALL )
-    CStatusBar_AddPanel( hCtrl, wszIconDebug, IDM_DEBUG_STARTDEBUGGING )
-    CStatusBar_AddPanel( hCtrl, wszIconCompile, IDM_COMPILE )
-    CStatusBar_AddPanel( hCtrl, wszIconBuildExecute, IDM_BUILDEXECUTE )
+    PsStatusBar_AddPanel( hCtrl, wszIconFind, IDM_FINDINPROJECT )
+    PsStatusBar_AddPanel( hCtrl, wszIconSave, IDM_FILESAVEALL )
+    PsStatusBar_AddPanel( hCtrl, wszIconDebug, IDM_DEBUG_STARTDEBUGGING )
+    PsStatusBar_AddPanel( hCtrl, wszIconCompile, IDM_COMPILE )
+    PsStatusBar_AddPanel( hCtrl, wszIconBuildExecute, IDM_BUILDEXECUTE )
 
     ' Panel 4 absorbs all unused width 
-    CStatusBar_SetExpandPanel( hCtrl, 4 )
+    PsStatusBar_SetExpandPanel( hCtrl, 4 )
 
     HWND_FRMPANEL_MENU = hCtrl
 

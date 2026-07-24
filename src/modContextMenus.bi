@@ -20,7 +20,7 @@
 '
 ' These replace the TrackPopupMenu/CreatePopupMenu/AppendMenu builders that used to live
 ' in modMenus.inc. The behavioural difference that drove the shape of this API: a
-' CPopupMenu is NOT modal. Show returns immediately, so anything that used to run after
+' PsPopupMenu is NOT modal. Show returns immediately, so anything that used to run after
 ' TrackPopupMenu returned now lives in that popup's select callback.
 ' ========================================================================================
 
@@ -28,7 +28,7 @@
 ' registry these popups are enrolled in).
 declare sub ContextMenus_Init()
 
-' Message-pump hook. Standalone chains are NOT covered by CMenuBar_FilterMessage (that
+' Message-pump hook. Standalone chains are NOT covered by PsMenuBar_FilterMessage (that
 ' one stands down unless the BAR has a dropdown open), so without this call a context
 ' menu has no keyboard navigation and never dismisses on an outside click.
 declare function ContextMenu_FilterMessage( byval pMsg as MSG ptr ) as boolean
@@ -37,8 +37,8 @@ declare function ContextMenu_FilterMessage( byval pMsg as MSG ptr ) as boolean
 ' programmatic-setter rule. killAllPopupMenus() funnels through here.
 declare sub ContextMenu_CloseAll()
 
-' Give a CTextBox's own built-in right-click menu the topmenu's colors and enrol it in
-' the theme registry. Call once per CTextBox_Create -- the control creates its popup
+' Give a PsTextBox's own built-in right-click menu the topmenu's colors and enrol it in
+' the theme registry. Call once per PsTextBox_Create -- the control creates its popup
 ' itself, but styling it is the host's job.
 declare sub ThemeTextBoxContextMenu( byval hTextBox as HWND )
 

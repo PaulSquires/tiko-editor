@@ -242,7 +242,7 @@ function setTopMenuItem( _
 end function
 
 ' The gTopMenu array now holds only the STATIC menu structure; frmMenuBar.inc builds
-' the CPopupMenu trees from it at startup. The dynamic sections (MRU files/sessions/
+' the PsPopupMenu trees from it at startup. The dynamic sections (MRU files/sessions/
 ' projects, User Tools) are rebuilt straight into their popups each time that submenu
 ' opens, so the old gTopMenu row-recycling machinery (setTopMenuMRUItem, getTopMenuPtr,
 ' clearMRUFilesItems, getNextFreeMRUindex, updateMRU*Items) is gone.

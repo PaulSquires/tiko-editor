@@ -20,7 +20,7 @@
 function handleMouseShowScrollBar( byval uMsg as MSG ) as boolean
     if (gApp.IsProjectLoading) orelse (gApp.IsFileLoading) then return false
 
-    ' (The menubar's hover/highlight housekeeping moved into the CMenuBar control.)
+    ' (The menubar's hover/highlight housekeeping moved into the PsMenuBar control.)
 
     ' Should we show an Editor HScrollbar
     dim as clsDocument ptr pDoc = gTTabCtl.GetActiveDocumentPtr()
@@ -41,7 +41,7 @@ end function
 
 
 ' (handleMouseTopMenu is gone: outside-click dismissal of the topmenu now lives in
-'  CMenuBar_FilterMessage, called from frmMain's message pump.)
+'  PsMenuBar_FilterMessage, called from frmMain's message pump.)
 
 
 function handleAltKeyMenuBar( byval uMsg as MSG ) as boolean
@@ -123,11 +123,11 @@ function handleKeysFindReplace( byval uMsg as MSG ) as boolean
     ' continue and do explicit pDoc null checks.
     dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
 
-    ' The find/replace textboxes are CTextBox controls: keyboard focus sits on their
+    ' The find/replace textboxes are PsTextBox controls: keyboard focus sits on their
     ' RichEdit CHILD, so compare (and SetFocus) against that handle, not the control's.
     dim as HWND hFocus   = GetFocus()
-    dim as HWND hFind    = CTextBox_GetRichEditHandle( GetDlgItem( HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND ) )
-    dim as HWND hReplace = CTextBox_GetRichEditHandle( GetDlgItem( HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE ) )
+    dim as HWND hFind    = PsTextBox_GetRichEditHandle( GetDlgItem( HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND ) )
+    dim as HWND hReplace = PsTextBox_GetRichEditHandle( GetDlgItem( HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE ) )
     dim as HWND hEdit    
     if pDoc then hEdit = pDoc->hWndActiveScintilla
 

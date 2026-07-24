@@ -18,25 +18,25 @@
 ''
 ''
 function clsTopTabCtl.GetItemCount() as long
-    return CTabBar_GetCount( this.hWindow )
+    return PsTabBar_GetCount( this.hWindow )
 end function
 
 ''
 ''
 function clsTopTabCtl.GetCurSel() as integer
-    return CTabBar_GetCurSel( this.hWindow )
+    return PsTabBar_GetCurSel( this.hWindow )
 end function
 
 ''
 ''
 function clsTopTabCtl.SetCurSel( byval idx as integer ) as boolean
-    return CTabBar_SetCurSel( this.hWindow, idx )
+    return PsTabBar_SetCurSel( this.hWindow, idx )
 end function
 
 ''
 ''
 function clsTopTabCtl.IsValidTab( byval idx as integer ) as boolean
-    return CTabBar_IsValidTab( this.hWindow, idx )
+    return PsTabBar_IsValidTab( this.hWindow, idx )
 end function
 
 ''
@@ -44,14 +44,14 @@ end function
 function clsTopTabCtl.GetpDoc( byval idx as integer ) as clsDocument ptr
     if this.IsValidTab(idx) = false then return null
     ' Cast the pDoc stored in the itemData integer.
-    dim as integer itemData = CTabBar_GetItemData(this.hWindow, idx)
+    dim as integer itemData = PsTabBar_GetItemData(this.hWindow, idx)
     return cast(clsDocument ptr, itemData)
 end function
 
 ''
 ''
 function clsTopTabCtl.AddTab( byval pDoc as clsDocument ptr ) as long
-    dim as integer idx = CTabBar_AddTab( this.hWindow, "", cast(integer, pDoc) )
+    dim as integer idx = PsTabBar_AddTab( this.hWindow, "", cast(integer, pDoc) )
     this.SetTabText(idx)
     function = idx
 end function
@@ -59,7 +59,7 @@ end function
 ''
 ''
 function clsTopTabCtl.InsertTab( byval pDoc as clsDocument ptr, byval insertIdx as long ) as long
-    dim as integer idx = CTabBar_InsertTab( this.hWindow, insertIdx, "", cast(integer, pDoc) )
+    dim as integer idx = PsTabBar_InsertTab( this.hWindow, insertIdx, "", cast(integer, pDoc) )
     this.SetTabText(idx)
     function = idx
 end function
@@ -67,7 +67,7 @@ end function
 ''
 ''
 function clsTopTabCtl.RemoveElement( byval idx as long ) as long
-    CTabBar_DeleteTab( this.hWindow, idx )
+    PsTabBar_DeleteTab( this.hWindow, idx )
     function = 0
 end function
 
@@ -140,7 +140,7 @@ function clsTopTabCtl.SetFocusTab( byval idx as long ) as long
     if this.IsValidTab(idx) = false then exit function
 
     ' TOPTABS_CHANGED:  Set the new current tab and display edit window, etc.
-    CTabBar_SetCurSel( this.hWindow, idx )
+    PsTabBar_SetCurSel( this.hWindow, idx )
 
 '            ' Hide the companion frmTopTabsInfo pane if this is not a NORMAL document.
 '            ' For example, if displaying "Find in Project" search.
@@ -186,7 +186,7 @@ function clsTopTabCtl.SetFocusTab( byval idx as long ) as long
                 end if
 '            end if    
 
-    function = CTabBar_GetCurSel( this.hWindow )
+    function = PsTabBar_GetCurSel( this.hWindow )
 end function
 
 
@@ -300,7 +300,7 @@ end function
 ''
 function clsTopTabCtl.GetTabText( byval idx as long ) as DWSTRING
     if this.IsValidTab(idx) = false then return ""
-    return CTabBar_GetText( this.hWindow, idx)
+    return PsTabBar_GetText( this.hWindow, idx)
 end function
 
 ''
@@ -308,7 +308,7 @@ end function
 function clsTopTabCtl.SetTabText( byval idx as long ) as long
     ' Set the text for the incoming tab index. if the index
     ' is -1 then set the text of the current tab.
-    if idx = -1 then idx = CTabBar_GetCurSel( this.hWindow )
+    if idx = -1 then idx = PsTabBar_GetCurSel( this.hWindow )
     if this.IsValidTab(idx) = false then return idx
 
     dim as clsDocument ptr pDoc = this.GetpDoc(idx)
@@ -320,7 +320,7 @@ function clsTopTabCtl.SetTabText( byval idx as long ) as long
             
         ' We only update the text if it has changed in order to prevent flicker.
         if wszNewText <> wszOldText then
-            CTabBar_SetText( this.hWindow, idx, wszNewText )
+            PsTabBar_SetText( this.hWindow, idx, wszNewText )
         end if
     end if
     

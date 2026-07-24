@@ -169,12 +169,12 @@ end enum
 dim shared as HWND HWND_FRMMAIN, HWND_FRMRECENT, HWND_FRMMAIN_STATUSBAR
 dim shared as HWND HWND_FRMOUTPUT, HWND_FRMOUTPUT_LVRESULTS, HWND_FRMOUTPUT_LVSEARCH
 dim shared as HWND HWND_FRMOUTPUT_LVTODO, HWND_FRMOUTPUT_VSCROLL
-' The tab strip: a CSelectBar (the five tabs) and a one-item CIconPanel (the "X"), sized
+' The tab strip: a PsSelectBar (the five tabs) and a one-item PsIconPanel (the "X"), sized
 ' side by side. HWND_FRMOUTPUT_SELECTBAR also HOLDS the current tab -- see frmOutput.bi.
 dim shared as HWND HWND_FRMOUTPUT_SELECTBAR, HWND_FRMOUTPUT_CLOSE
 dim shared as HWND HWND_FRMMAIN_MENUBAR
 ' Editor split bars: one per orientation, created once and shown one at a time to follow
-' whichever split mode the ACTIVE document is in (CSplitter's orientation is fixed at
+' whichever split mode the ACTIVE document is in (PsSplitter's orientation is fixed at
 ' creation, and only one document is active).
 dim shared as HWND HWND_FRMMAIN_SPLITV, HWND_FRMMAIN_SPLITH
 ' Output panel splitter. Also a child of frmMain, not of frmOutput: it sits BETWEEN the
@@ -313,7 +313,7 @@ end type
 dim shared gLastPosition(any) as LASTPOSITION_TYPE
 
 
-' (The menubar's own item/state globals are gone: the CMenuBar control owns its items,
+' (The menubar's own item/state globals are gone: the PsMenuBar control owns its items,
 '  rects, hover and active state -- see frmMenuBar.inc.)
 
 ' array that holds the names of all fonts on the target system
@@ -324,7 +324,7 @@ const MENUITEM_HEIGHT = 24
 const EXPLORERITEM_HEIGHT = 22
 const MENUBAR_HEIGHT = 30
 const OUTPUT_TABS_HEIGHT = 40
-' Width reserved at the right of the Output tab strip for the close "X" CIconPanel. The
+' Width reserved at the right of the Output tab strip for the close "X" PsIconPanel. The
 ' glyph cell itself is smaller; the surplus is the breathing room the old hand-drawn rect
 ' got from its 10px right margin.
 const OUTPUT_CLOSE_WIDTH = 40

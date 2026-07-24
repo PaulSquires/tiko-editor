@@ -23,12 +23,12 @@
 ' Expand/Collapse all Bookmark Nodes
 ' ========================================================================================
 function frmBookmarks_ExpandAll() as long
-    CListBox_ExpandAll( HWND_FRMBOOKMARKS )
+    PsListBox_ExpandAll( HWND_FRMBOOKMARKS )
     function = 0
 end function
 
 function frmBookmarks_CollapseAll() as long
-    CListBox_CollapseAll( HWND_FRMBOOKMARKS )
+    PsListBox_CollapseAll( HWND_FRMBOOKMARKS )
     function = 0
 end function
 
@@ -36,7 +36,7 @@ end function
 ' ========================================================================================
 ' frmBookmarks_PaintCallback
 ' ========================================================================================
-sub frmBookmarks_PaintCallback( byval p as CLISTBOX_PAINTINFO ptr )
+sub frmBookmarks_PaintCallback( byval p as PSLISTBOX_PAINTINFO ptr )
     dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN)
     if pWindow = 0 then return 
 
@@ -96,7 +96,7 @@ end sub
 ' ========================================================================================
 ' frmBookmarks_MessageCallback
 ' ========================================================================================
-function frmBookmarks_MessageCallback( byval m as CLISTBOX_MESSAGEINFO ptr ) as boolean
+function frmBookmarks_MessageCallback( byval m as PSLISTBOX_MESSAGEINFO ptr ) as boolean
 
     select case m->uMsg
              
@@ -112,9 +112,9 @@ function frmBookmarks_MessageCallback( byval m as CLISTBOX_MESSAGEINFO ptr ) as 
         case WM_LBUTTONUP
             ' Attempt to show the bookmark
             dim as HWND hCtl = GetParent(m->hList)
-            if CListBox_IsHeader( hCtl, m->idx ) = false then
-                dim as integer nItemData = CListBox_GetItemData( hCtl, m->idx )
-                dim as integer nLineNum = CListBox_GetItemDataExtra( hCtl, m->idx )
+            if PsListBox_IsHeader( hCtl, m->idx ) = false then
+                dim as integer nItemData = PsListBox_GetItemData( hCtl, m->idx )
+                dim as integer nLineNum = PsListBox_GetItemDataExtra( hCtl, m->idx )
                 dim as clsDocument ptr pDoc = cast(clsDocument ptr, nItemData)
                 if pDoc then 
                     OpenSelectedDocument( pDoc->DiskFilename, "", nLineNum )
@@ -140,7 +140,7 @@ end function
 ' ========================================================================================
 function frmBookmarks_TooltipCallback( byval hCtl as HWND, byval row as integer ) as DWSTRING
     dim as DWSTRING wszTooltip
-    dim as integer nItemData = CListBox_GetItemData(hCtl, row)
+    dim as integer nItemData = PsListBox_GetItemData(hCtl, row)
     dim as clsDocument ptr pDoc = cast(clsDocument ptr, nItemData)
     if pDoc then wszTooltip = pDoc->DiskFilename
     return wszTooltip
@@ -152,23 +152,23 @@ end function
 ' ========================================================================================
 function frmBookmarks_Show( byval hWndParent as HWND ) as LRESULT
 
-    dim as HWND hCtrl = CListBox_Create( hWndParent, IDC_FRMBOOKMARKS_LISTBOX )
+    dim as HWND hCtrl = PsListBox_Create( hWndParent, IDC_FRMBOOKMARKS_LISTBOX )
 
-    CListBox_SetPaintCallback( hCtrl, @frmBookmarks_PaintCallback )
-    CListBox_SetMessageCallback( hCtrl, @frmBookmarks_MessageCallback )
-    CListBox_SetTooltipCallback( hCtrl, @frmBookmarks_TooltipCallback )
+    PsListBox_SetPaintCallback( hCtrl, @frmBookmarks_PaintCallback )
+    PsListBox_SetMessageCallback( hCtrl, @frmBookmarks_MessageCallback )
+    PsListBox_SetTooltipCallback( hCtrl, @frmBookmarks_TooltipCallback )
     ' The WM_LBUTTONUP callback opens the clicked function; a double-click would
     ' deliver a second up and open it twice, so suppress double-click delivery.
-    CListBox_PreventDoubleClick( hCtrl )
-    CListBox_SetBackColor( hCtrl, ghPanel.BackColor )
-    CListBox_SetFont( hCtrl, ghFont(GUIFONT_10) )
-    'CListBox_SetExtendedSelect( hCtrl, true )   ' Shift/Ctrl range selection
+    PsListBox_PreventDoubleClick( hCtrl )
+    PsListBox_SetBackColor( hCtrl, ghPanel.BackColor )
+    PsListBox_SetFont( hCtrl, ghFont(GUIFONT_10) )
+    'PsListBox_SetExtendedSelect( hCtrl, true )   ' Shift/Ctrl range selection
     ' The scrollbar is created/positioned/auto-hidden by the control; we only theme it.
-    ' (CListBox_SetScrollBarPaintCallback is available for full custom drawing.)
-    CListBox_SetScrollBarWidth( hCtrl, SCROLLBAR_WIDTH_PANEL )
-    CListBox_SetScrollBarColors( hCtrl, ghPanel.BackColorScrollBar, _
+    ' (PsListBox_SetScrollBarPaintCallback is available for full custom drawing.)
+    PsListBox_SetScrollBarWidth( hCtrl, SCROLLBAR_WIDTH_PANEL )
+    PsListBox_SetScrollBarColors( hCtrl, ghPanel.BackColorScrollBar, _
                                  ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
-'    CListBox_SetScrollBarColors( hCtrl, ghEditor.BackColorScrollBar, _
+'    PsListBox_SetScrollBarColors( hCtrl, ghEditor.BackColorScrollBar, _
 '                                 ghEditor.ForeColorScrollBar, ghEditor.ForeColorScrollBarHot )
 
     HWND_FRMBOOKMARKS = hCtrl
@@ -183,7 +183,7 @@ end function
 ' ========================================================================================
 function ClearBookmarks() as long
     dim as HWND hCtrl = HWND_FRMBOOKMARKS
-    CListBox_Clear( hCtrl )
+    PsListBox_Clear( hCtrl )
     function = 0
 end function
 
@@ -198,13 +198,13 @@ function LoadBookmarksFiles() as long
     ShowWindow( HWND_FRMBOOKMARKS, SW_HIDE )
 
     ' Save the topindex because we will restore it after filling the new contents
-    dim as long nCurSel = CListBox_GetCurSel( hCtrl )
-    dim as long nTopIndex = CListBox_GetTopIndex( hCtrl )
+    dim as long nCurSel = PsListBox_GetCurSel( hCtrl )
+    dim as long nTopIndex = PsListBox_GetTopIndex( hCtrl )
 
     ' Clear all content from the listbox
-    CListBox_Clear( hCtrl )
+    PsListBox_Clear( hCtrl )
 
-    CListBox_BeginUpdate( hCtrl )
+    PsListBox_BeginUpdate( hCtrl )
 
     ' Iterate all pDoc in the project/files list
     dim pDoc as clsDocument ptr = gApp.pDocList
@@ -219,26 +219,26 @@ function LoadBookmarksFiles() as long
 
         if len(sBookmarks) then
             dim as DWSTRING wszText = AfxStrPathName( "NAMEX", pDoc->DiskFilename )
-            CListBox_AddHeader( hCtrl, wszText, cast(integer, pDoc), 0 )
+            PsListBox_AddHeader( hCtrl, wszText, cast(integer, pDoc), 0 )
 
             dim as integer nCount = AfxStrParseCount( sBookmarks, "," )
             for i as integer = 1 to nCount
                 dim as integer nLineNum = val( AfxStrParse( sBookmarks, i, "," ) )
                 dim as string sDescription = ltrim(pDoc->GetLine(nLineNum))
                 wszText.utf8 = sDescription  ' convert ut8 to unicode  
-                CListBox_AddString( hCtrl, wszText, cast(integer, pDoc), nLineNum )
+                PsListBox_AddString( hCtrl, wszText, cast(integer, pDoc), nLineNum )
             next
         end if
 
         pDoc = pDoc->pDocNext
     loop
 
-    CListBox_EndUpdate( hCtrl )
+    PsListBox_EndUpdate( hCtrl )
 
     ' Restore the top index so the list displays like it did before being reset
-    CLIstBox_SetTopIndex( hCtrl, nTopIndex )
-    nCurSel = MIN( nCurSel, CListBox_GetCount(hCtrl) - 1 )
-    CListBox_SetCurSel( hCtrl, nCurSel )
+    PsListBox_SetTopIndex( hCtrl, nTopIndex )
+    nCurSel = MIN( nCurSel, PsListBox_GetCount(hCtrl) - 1 )
+    PsListBox_SetCurSel( hCtrl, nCurSel )
 
     ' Ensure to show/hide this panel if it is active or not
     frmPanel_PositionWindows()

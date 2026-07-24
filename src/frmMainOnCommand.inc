@@ -32,8 +32,8 @@ function frmMain_OnCommand( _
             ) as LRESULT
             
     ' Deselect any active menubar item
-    if CMenuBar_GetActiveIndex( HWND_FRMMAIN_MENUBAR ) <> -1 then
-        CMenuBar_SetActiveIndex( HWND_FRMMAIN_MENUBAR, -1 )
+    if PsMenuBar_GetActiveIndex( HWND_FRMMAIN_MENUBAR ) <> -1 then
+        PsMenuBar_SetActiveIndex( HWND_FRMMAIN_MENUBAR, -1 )
     end if
     
     dim as HWND hEdit 
@@ -102,14 +102,14 @@ function frmMain_OnCommand( _
     select case id
         ' show any topmenu that were activated via keyboard Alt+ sequences
         case IDC_MENUBAR_FILE to IDC_MENUBAR_HELP
-            CMenuBar_OpenMenu( HWND_FRMMAIN_MENUBAR, id - IDC_MENUBAR_FILE, true )
+            PsMenuBar_OpenMenu( HWND_FRMMAIN_MENUBAR, id - IDC_MENUBAR_FILE, true )
          
         case IDM_THEMES
             OptionsDialogLastOpened = 3
             frmOptions_Show( hwnd )
             
         ' The five statusbar / tab-info popups. Each Show* rebuilds its items from
-        ' current state and returns immediately -- the menus are CPopupMenu controls, not
+        ' current state and returns immediately -- the menus are PsPopupMenu controls, not
         ' TrackPopupMenu, so what used to be the "act on the result" tail of these cases
         ' now lives in the popups' select callbacks (modContextMenus.inc). Two of them
         ' HAD to move: IDM_BUILDCONFIG_POPUP and IDM_SPACES are both the command that

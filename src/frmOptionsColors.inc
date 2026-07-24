@@ -34,11 +34,11 @@ type COLORS_LABEL
 end type
 
 
-dim shared ghColorThemes   as HWND      ' CListBox
-dim shared ghColorFonts    as HWND      ' CListBox (per-font preview)
-dim shared ghColorSize     as HWND      ' CComboBox
-dim shared ghColorCharset  as HWND      ' CComboBox
-dim shared ghColorSpacing  as HWND      ' CNumericUpDown
+dim shared ghColorThemes   as HWND      ' PsListBox
+dim shared ghColorFonts    as HWND      ' PsListBox (per-font preview)
+dim shared ghColorSize     as HWND      ' PsComboBox
+dim shared ghColorCharset  as HWND      ' PsComboBox
+dim shared ghColorSpacing  as HWND      ' PsNumericUpDown
 
 dim shared gColorFontNames(any) as DWSTRING     ' collected by the EnumFontFamilies callback
 dim shared gColorLabels(any)    as COLORS_LABEL
@@ -95,20 +95,20 @@ end function
 
 
 ' ========================================================================================
-' Fill the size CComboBox for a given font. (Same size sets as the old page.)
+' Fill the size PsComboBox for a given font. (Same size sets as the old page.)
 ' ========================================================================================
 private sub frmOptionsColors_FillSizes( byval hCombo as HWND, byval wszFont as DWSTRING )
-    CComboBox_Clear( hCombo )
+    PsComboBox_Clear( hCombo )
     select case ucase(wszFont)
         case "FIXEDSYS"
-            CComboBox_AddItem( hCombo, "9" )
+            PsComboBox_AddItem( hCombo, "9" )
         case "TERMINAL"
-            CComboBox_AddItem( hCombo, "5" ) : CComboBox_AddItem( hCombo, "6" )
-            CComboBox_AddItem( hCombo, "12" ): CComboBox_AddItem( hCombo, "14" )
+            PsComboBox_AddItem( hCombo, "5" ) : PsComboBox_AddItem( hCombo, "6" )
+            PsComboBox_AddItem( hCombo, "12" ): PsComboBox_AddItem( hCombo, "14" )
         case else
             dim as string sizes = "8 9 10 11 12 14 16 18 20 22 24 26 28 32 36"
             for i as long = 1 to AfxStrParseCount( sizes, " " )
-                CComboBox_AddItem( hCombo, AfxStrParse( sizes, i, " " ) )
+                PsComboBox_AddItem( hCombo, AfxStrParse( sizes, i, " " ) )
             next
     end select
 end sub
@@ -118,7 +118,7 @@ private sub frmOptionsColors_FillCharsets( byval hCombo as HWND )
     dim as string cs = "Default,Ansi,Arabic,Baltic,Chinese Big 5,East Europe,GB 2312,Greek," & _
                        "Hangul,Hebrew,Johab,Mac,OEM,Russian,Shiftjis,Symbol,Thai,Turkish,Vietnamese"
     for i as long = 1 to AfxStrParseCount( cs, "," )
-        CComboBox_AddItem( hCombo, AfxStrParse( cs, i, "," ) )
+        PsComboBox_AddItem( hCombo, AfxStrParse( cs, i, "," ) )
     next
 end sub
 
@@ -153,17 +153,17 @@ end sub
 
 private sub frmOptionsColors_FontSelChange( byval hList as HWND, byval row as integer )
     if row < 0 then exit sub
-    gOptWork.EditorFontname = CListBox_GetText( hList, row )
+    gOptWork.EditorFontname = PsListBox_GetText( hList, row )
 end sub
 
 private sub frmOptionsColors_SizeSelChange( byval hCombo as HWND, byval idxOld as long, byval idxNew as long )
     if idxNew < 0 then exit sub
-    gOptWork.EditorFontSize = CComboBox_GetItemText( hCombo, idxNew )
+    gOptWork.EditorFontSize = PsComboBox_GetItemText( hCombo, idxNew )
 end sub
 
 private sub frmOptionsColors_CharsetSelChange( byval hCombo as HWND, byval idxOld as long, byval idxNew as long )
     if idxNew < 0 then exit sub
-    gOptWork.EditorFontCharSet = CComboBox_GetItemText( hCombo, idxNew )
+    gOptWork.EditorFontCharSet = PsComboBox_GetItemText( hCombo, idxNew )
 end sub
 
 private sub frmOptionsColors_SpacingChanged( byval hCtrl as HWND, byval nValue as double )
@@ -174,7 +174,7 @@ end sub
 ' ========================================================================================
 ' Paint one theme row (plain text in the base font).
 ' ========================================================================================
-private sub frmOptionsColors_ThemePaint( byval p as CLISTBOX_PAINTINFO ptr )
+private sub frmOptionsColors_ThemePaint( byval p as PSLISTBOX_PAINTINFO ptr )
     if p = 0 then exit sub
     dim as COLORREF backclr, foreclr
     if p->isSelected orelse p->isHot then
@@ -197,7 +197,7 @@ end sub
 ' repaint (only visible rows paint) and freed after being deselected, exactly as the old
 ' owner-drawn combo did.
 ' ========================================================================================
-private sub frmOptionsColors_FontPaint( byval p as CLISTBOX_PAINTINFO ptr )
+private sub frmOptionsColors_FontPaint( byval p as PSLISTBOX_PAINTINFO ptr )
     if p = 0 then exit sub
     dim as COLORREF backclr, foreclr
     if p->isSelected orelse p->isHot then
@@ -233,8 +233,8 @@ end sub
 ' Returns the row matching the stored theme, or -1.
 ' ========================================================================================
 private function frmOptionsColors_LoadThemes() as long
-    CListBox_BeginUpdate( ghColorThemes )
-    CListBox_Clear( ghColorThemes )
+    PsListBox_BeginUpdate( ghColorThemes )
+    PsListBox_Clear( ghColorThemes )
     erase gThemeFilenames
 
     dim as long idxMatch = -1
@@ -249,7 +249,7 @@ private function frmOptionsColors_LoadThemes() as long
             if (WFD.cFileName <> ".") andalso (WFD.cFileName <> "..") then
                 dim as DWSTRING wszFull = wszPath & WFD.cFileName
                 dim as DWSTRING wszDisplay = GetThemeDescription( wszFull )
-                idx = CListBox_AddString( ghColorThemes, wszDisplay )
+                idx = PsListBox_AddString( ghColorThemes, wszDisplay )
                 redim preserve gThemeFilenames(idx) as DWSTRING
                 gThemeFilenames(idx) = WFD.cFileName
                 if ucase(gOptWork.ThemeShortFilename) = ucase(WFD.cFileName) then idxMatch = idx
@@ -258,7 +258,7 @@ private function frmOptionsColors_LoadThemes() as long
         FindClose( hSearch )
     end if
 
-    CListBox_EndUpdate( ghColorThemes )
+    PsListBox_EndUpdate( ghColorThemes )
     function = idxMatch
 end function
 
@@ -290,15 +290,15 @@ private function frmOptionsColors_LoadFonts() as long
     dim as DWSTRING wszWanted = ucase( gOptWork.EditorFontname )
     dim as DWSTRING wszPrev = ""
 
-    CListBox_BeginUpdate( ghColorFonts )
-    CListBox_Clear( ghColorFonts )
+    PsListBox_BeginUpdate( ghColorFonts )
+    PsListBox_Clear( ghColorFonts )
     for i as long = lbound(gColorFontNames) to ubound(gColorFontNames)
         if ucase(gColorFontNames(i)) = ucase(wszPrev) then continue for   ' drop duplicate
-        dim as long r = CListBox_AddString( ghColorFonts, gColorFontNames(i) )
+        dim as long r = PsListBox_AddString( ghColorFonts, gColorFontNames(i) )
         if ucase(gColorFontNames(i)) = wszWanted then idxMatch = r
         wszPrev = gColorFontNames(i)
     next
-    CListBox_EndUpdate( ghColorFonts )
+    PsListBox_EndUpdate( ghColorFonts )
 
     function = idxMatch
 end function
@@ -312,61 +312,61 @@ sub frmOptionsColors_Build( byval hPage as HWND )
     if gColorBuilt then exit sub
 
     ' Themes list.
-    ghColorThemes = CListBox_Create( hPage, IDC_FRMOPTIONSCOLORS_LSTTHEMES )
-    CListBox_SetPaintCallback( ghColorThemes, @frmOptionsColors_ThemePaint )
-    CListBox_SetSelChangeCallback( ghColorThemes, @frmOptionsColors_ThemeSelChange )
-    CListBox_SetFont( ghColorThemes, OptionsFont_Base() )
-    CListBox_SetScrollBarWidth( ghColorThemes, SCROLLBAR_WIDTH_PANEL )
+    ghColorThemes = PsListBox_Create( hPage, IDC_FRMOPTIONSCOLORS_LSTTHEMES )
+    PsListBox_SetPaintCallback( ghColorThemes, @frmOptionsColors_ThemePaint )
+    PsListBox_SetSelChangeCallback( ghColorThemes, @frmOptionsColors_ThemeSelChange )
+    PsListBox_SetFont( ghColorThemes, OptionsFont_Base() )
+    PsListBox_SetScrollBarWidth( ghColorThemes, SCROLLBAR_WIDTH_PANEL )
 
     ' Fonts list (per-font preview).
-    ghColorFonts = CListBox_Create( hPage, IDC_FRMOPTIONSCOLORS_LSTFONTS )
-    CListBox_SetPaintCallback( ghColorFonts, @frmOptionsColors_FontPaint )
-    CListBox_SetSelChangeCallback( ghColorFonts, @frmOptionsColors_FontSelChange )
-    CListBox_SetFont( ghColorFonts, OptionsFont_Base() )
-    CListBox_SetScrollBarWidth( ghColorFonts, SCROLLBAR_WIDTH_PANEL )
+    ghColorFonts = PsListBox_Create( hPage, IDC_FRMOPTIONSCOLORS_LSTFONTS )
+    PsListBox_SetPaintCallback( ghColorFonts, @frmOptionsColors_FontPaint )
+    PsListBox_SetSelChangeCallback( ghColorFonts, @frmOptionsColors_FontSelChange )
+    PsListBox_SetFont( ghColorFonts, OptionsFont_Base() )
+    PsListBox_SetScrollBarWidth( ghColorFonts, SCROLLBAR_WIDTH_PANEL )
 
     ' Size and character-set combos.
-    ghColorSize = CComboBox_Create( hPage, IDC_FRMOPTIONSCOLORS_COMBOSIZE )
-    CComboBox_SetFont( ghColorSize, OptionsFont_Base() )
-    CComboBox_SetSelChangeCallback( ghColorSize, @frmOptionsColors_SizeSelChange )
+    ghColorSize = PsComboBox_Create( hPage, IDC_FRMOPTIONSCOLORS_COMBOSIZE )
+    PsComboBox_SetFont( ghColorSize, OptionsFont_Base() )
+    PsComboBox_SetSelChangeCallback( ghColorSize, @frmOptionsColors_SizeSelChange )
     OptionsRows_RegisterCombo( ghColorSize )
 
-    ghColorCharset = CComboBox_Create( hPage, IDC_FRMOPTIONSCOLORS_COMBOCHARSET )
-    CComboBox_SetFont( ghColorCharset, OptionsFont_Base() )
-    CComboBox_SetSelChangeCallback( ghColorCharset, @frmOptionsColors_CharsetSelChange )
+    ghColorCharset = PsComboBox_Create( hPage, IDC_FRMOPTIONSCOLORS_COMBOCHARSET )
+    PsComboBox_SetFont( ghColorCharset, OptionsFont_Base() )
+    PsComboBox_SetSelChangeCallback( ghColorCharset, @frmOptionsColors_CharsetSelChange )
     OptionsRows_RegisterCombo( ghColorCharset )
 
     ' Extra line spacing.
-    ghColorSpacing = CNumericUpDown_Create( hPage, IDC_FRMOPTIONSCOLORS_NUMSPACING )
-    CNumericUpDown_SetFont( ghColorSpacing, OptionsFont_Base() )
-    CNumericUpDown_SetDecimalPlaces( ghColorSpacing, 0 )
-    CNumericUpDown_SetRange( ghColorSpacing, 0, 20 )
-    CNumericUpDown_SetValue( ghColorSpacing, gOptWork.FontExtraSpace )
-    CNumericUpDown_SetValueChangedCallback( ghColorSpacing, @frmOptionsColors_SpacingChanged )
-    gOptWork.FontExtraSpace = clng( CNumericUpDown_GetValue( ghColorSpacing ) )   ' take the clamp back
+    ghColorSpacing = PsNumericUpDown_Create( hPage, IDC_FRMOPTIONSCOLORS_NUMSPACING )
+    PsNumericUpDown_SetFont( ghColorSpacing, OptionsFont_Base() )
+    PsNumericUpDown_SetDecimalPlaces( ghColorSpacing, 0 )
+    PsNumericUpDown_SetRange( ghColorSpacing, 0, 20 )
+    PsNumericUpDown_SetValue( ghColorSpacing, gOptWork.FontExtraSpace )
+    PsNumericUpDown_SetValueChangedCallback( ghColorSpacing, @frmOptionsColors_SpacingChanged )
+    gOptWork.FontExtraSpace = clng( PsNumericUpDown_GetValue( ghColorSpacing ) )   ' take the clamp back
 
     ' ---- populate lists and seed selections ------------------------------------------
     dim as long idxTheme = frmOptionsColors_LoadThemes()
     if idxTheme >= 0 then
-        CListBox_SetCurSel( ghColorThemes, idxTheme )
-        CListBox_SetTopIndex( ghColorThemes, idxTheme )
+        PsListBox_SetCurSel( ghColorThemes, idxTheme )
+        PsListBox_SetTopIndex( ghColorThemes, idxTheme )
     end if
 
     dim as long idxFont = frmOptionsColors_LoadFonts()
     if idxFont >= 0 then
-        CListBox_SetCurSel( ghColorFonts, idxFont )
-        CListBox_SetTopIndex( ghColorFonts, idxFont )
+        PsListBox_SetCurSel( ghColorFonts, idxFont )
+        PsListBox_SetTopIndex( ghColorFonts, idxFont )
     end if
 
     ' Size list depends on the font; filled once (matching the old page, which did not
     ' refresh it when the font changed).
     frmOptionsColors_FillSizes( ghColorSize, gOptWork.EditorFontname )
-    dim as long idxSize = CComboBox_FindItemByText( ghColorSize, gOptWork.EditorFontSize )
-    if idxSize >= 0 then CComboBox_SetCurSel( ghColorSize, idxSize )
+    dim as long idxSize = PsComboBox_FindItemByText( ghColorSize, gOptWork.EditorFontSize )
+    if idxSize >= 0 then PsComboBox_SetCurSel( ghColorSize, idxSize )
 
     frmOptionsColors_FillCharsets( ghColorCharset )
-    dim as long idxCs = CComboBox_FindItemByText( ghColorCharset, gOptWork.EditorFontCharSet )
-    if idxCs >= 0 then CComboBox_SetCurSel( ghColorCharset, idxCs )
+    dim as long idxCs = PsComboBox_FindItemByText( ghColorCharset, gOptWork.EditorFontCharSet )
+    if idxCs >= 0 then PsComboBox_SetCurSel( ghColorCharset, idxCs )
 
     gColorBuilt = true
     frmOptionsColors_ApplyTheme()
@@ -381,25 +381,25 @@ sub frmOptionsColors_ApplyTheme()
 
     for i as long = 0 to 1
         dim as HWND h = iif( i = 0, ghColorThemes, ghColorFonts )
-        CListBox_SetBackColor( h, ghPanel.BackColor )
-        CListBox_SetScrollBarColors( h, ghPanel.BackColorScrollBar, _
+        PsListBox_SetBackColor( h, ghPanel.BackColor )
+        PsListBox_SetScrollBarColors( h, ghPanel.BackColorScrollBar, _
                                      ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
     next
 
-    dim as CCOMBOBOX_COLORS cc
-    dim as CPOPUPMENU_COLORS pc
+    dim as PSCOMBOBOX_COLORS cc
+    dim as PSPOPUPMENU_COLORS pc
     OptionsTheme_FillCombo( @cc, @pc )
     for i as long = 0 to 1
         dim as HWND h = iif( i = 0, ghColorSize, ghColorCharset )
-        CComboBox_SetColors( h, @cc )
-        CComboBox_SetListColors( h, @pc )
-        CComboBox_Refresh( h )
+        PsComboBox_SetColors( h, @cc )
+        PsComboBox_SetListColors( h, @pc )
+        PsComboBox_Refresh( h )
     next
 
-    dim as CNUMERICUPDOWN_COLORS nc
+    dim as PSNUMERICUPDOWN_COLORS nc
     OptionsTheme_FillNumeric( @nc )
-    CNumericUpDown_SetColors( ghColorSpacing, @nc )
-    CNumericUpDown_Refresh( ghColorSpacing )
+    PsNumericUpDown_SetColors( ghColorSpacing, @nc )
+    PsNumericUpDown_Refresh( ghColorSpacing )
 end sub
 
 
@@ -489,15 +489,15 @@ function frmOptionsColors_Layout( byval hPage as HWND, byval cxPanel as long ) a
     #endmacro
 
     dim as long cw, ch
-    CComboBox_GetIdealSize( ghColorSize, cw, ch )
+    PsComboBox_GetIdealSize( ghColorSize, cw, ch )
     if cw < AfxScaleX(COLORS_COMBOWIDTH) then cw = AfxScaleX(COLORS_COMBOWIDTH)
     CTLROW( ghColorSize, L(450,"Size"), cw, ch )
 
-    CComboBox_GetIdealSize( ghColorCharset, cw, ch )
+    PsComboBox_GetIdealSize( ghColorCharset, cw, ch )
     if cw < AfxScaleX(COLORS_COMBOWIDTH) then cw = AfxScaleX(COLORS_COMBOWIDTH)
     CTLROW( ghColorCharset, L(451,"Character Set"), cw, ch )
 
-    CNumericUpDown_GetIdealSize( ghColorSpacing, cw, ch )
+    PsNumericUpDown_GetIdealSize( ghColorSpacing, cw, ch )
     if cw < AfxScaleX(COLORS_NUMWIDTH) then cw = AfxScaleX(COLORS_NUMWIDTH)
     CTLROW( ghColorSpacing, L(421,"Extra line spacing"), cw, ch )
 

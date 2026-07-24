@@ -14,22 +14,22 @@
 #include once "modMenus.bi"
 #include once "modContextMenus.bi" ' the standalone popup menus (implementation is
                                    ' included late in tiko.bas -- see that file)
-#include once "CVScrollBar.bi"    ' required by CListBox.bi
-#include once "CColumnHeader.bi"  ' likewise: CListBox.bi names HDR_* callback typedefs
-#include once "CListBox.bi"       ' CListBox_GetSelCount (CListBox.inc is included later)
-#include once "CMenuBar.bi"       ' the topmenu lives on CMenuBar/CPopupMenu controls
+#include once "PsVScrollBar.bi"    ' required by PsListBox.bi
+#include once "PsColumnHeader.bi"  ' likewise: PsListBox.bi names HDR_* callback typedefs
+#include once "PsListBox.bi"       ' PsListBox_GetSelCount (PsListBox.inc is included later)
+#include once "PsMenuBar.bi"       ' the topmenu lives on PsMenuBar/PsPopupMenu controls
                                   ' (implementations are included later in tiko.bas)
 
 ' ========================================================================================
 ' EnableTopMenuItem: basically my internal version of the EnableMenuItem api.
-' Drives the CMenuBar dropdown trees directly: the by-id setter searches a dropdown
+' Drives the PsMenuBar dropdown trees directly: the by-id setter searches a dropdown
 ' and recurses into its submenus, so trying each bar dropdown covers every menu item.
 ' ========================================================================================
 function EnableTopMenuItem( byval nID as long, byval bEnabled as boolean ) as long
-    for i as long = 0 to CMenuBar_GetItemCount( HWND_FRMMAIN_MENUBAR ) - 1
-        dim as HWND hDropDown = CMenuBar_GetDropDown( HWND_FRMMAIN_MENUBAR, i )
+    for i as long = 0 to PsMenuBar_GetItemCount( HWND_FRMMAIN_MENUBAR ) - 1
+        dim as HWND hDropDown = PsMenuBar_GetDropDown( HWND_FRMMAIN_MENUBAR, i )
         if hDropDown then
-            if CPopupMenu_SetItemEnabled( hDropDown, nID, bEnabled ) then exit for
+            if PsPopupMenu_SetItemEnabled( hDropDown, nID, bEnabled ) then exit for
         end if
     next
     function = 0
@@ -40,10 +40,10 @@ end function
 ' CheckMarkTopMenuItem: Show a checkmark to the left of the menu entry
 ' ========================================================================================
 function CheckMarkTopMenuItem( byval nID as long, byval bChecked as boolean ) as long
-    for i as long = 0 to CMenuBar_GetItemCount( HWND_FRMMAIN_MENUBAR ) - 1
-        dim as HWND hDropDown = CMenuBar_GetDropDown( HWND_FRMMAIN_MENUBAR, i )
+    for i as long = 0 to PsMenuBar_GetItemCount( HWND_FRMMAIN_MENUBAR ) - 1
+        dim as HWND hDropDown = PsMenuBar_GetDropDown( HWND_FRMMAIN_MENUBAR, i )
         if hDropDown then
-            if CPopupMenu_SetItemChecked( hDropDown, nID, bChecked ) then exit for
+            if PsPopupMenu_SetItemChecked( hDropDown, nID, bChecked ) then exit for
         end if
     next
     function = 0
@@ -317,13 +317,13 @@ end function
 
 ' ========================================================================================
 ' The standalone popup menus that used to be built here as HMENUs (and shown with
-' TrackPopupMenu) live in modContextMenus.inc now, on the CPopupMenu control. Gone with
+' TrackPopupMenu) live in modContextMenus.inc now, on the PsPopupMenu control. Gone with
 ' them: AddProjectFileTypesToMenu and the eleven Create*ContextMenu builders, plus two
 ' that had no callers at all (CreateBookmarksHeaderNodeContextMenu and
 ' CreateBookmarksBookmarkNodeContextMenu).
 '
 ' What stays in this file is the TOPMENU state machinery -- EnableTopMenuItem /
 ' CheckMarkTopMenuItem and the per-menu frmMain_*TopMenuStates functions -- which already
-' drives CMenuBar/CPopupMenu directly.
+' drives PsMenuBar/PsPopupMenu directly.
 ' ========================================================================================
 

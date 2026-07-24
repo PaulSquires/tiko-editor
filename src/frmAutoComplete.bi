@@ -21,14 +21,14 @@
 ''  symbol kinds, be drawn in the editor's theme, and obey a keyboard contract this
 ''  app decides rather than inherits.
 ''
-''  SHAPE: a persistent WS_POPUP + WS_EX_NOACTIVATE shell (the CPopupMenu window
-''  contract) hosting a CListBox child. The popup NEVER takes focus -- Scintilla keeps
+''  SHAPE: a persistent WS_POPUP + WS_EX_NOACTIVATE shell (the PsPopupMenu window
+''  contract) hosting a PsListBox child. The popup NEVER takes focus -- Scintilla keeps
 ''  it, keeps its caret, and keeps receiving every typed character. Navigation keys
 ''  reach us through frmAutoComplete_FilterMessage, called from frmMain's message pump.
 ''
 ''  Two rules that are easy to break and hard to notice:
 ''
-''  1. The filter consumes ONLY navigation/commit keys. Its CMenuBar/CPopupMenu
+''  1. The filter consumes ONLY navigation/commit keys. Its PsMenuBar/PsPopupMenu
 ''     siblings consume every keydown (menu semantics); doing that here would stop
 ''     the user from typing.
 ''
@@ -53,9 +53,9 @@
 #define AUTOCOMPLETE_MIN_WIDTH      220
 #define AUTOCOMPLETE_MAX_WIDTH      560
 
-' Row height, in UNSCALED units -- the same contract as CListBox_SetRowHeight, which
+' Row height, in UNSCALED units -- the same contract as PsListBox_SetRowHeight, which
 ' DPI-scales what it is given. A completion list wants tighter rows than a panel list
-' (CListBox's own default is 22): it is a transient overlay you scan, not a tree you
+' (PsListBox's own default is 22): it is a transient overlay you scan, not a tree you
 ' browse. Override at runtime with frmAutoComplete_SetRowHeight.
 #define AUTOCOMPLETE_DEFAULT_ROW_HEIGHT   20
 

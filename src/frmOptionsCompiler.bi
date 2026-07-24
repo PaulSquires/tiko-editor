@@ -19,14 +19,14 @@
 '  theme). It reads and writes gOptWork, never gConfig, so Cancel is a no-op and the page
 '  can be built lazily on first visit.
 '
-'  The controls are the reusable family: CListBox (toolchains), CTextBox x3 (switches,
-'  include paths, help file), CToggle x2 (run-via-cmd, disable-beep) and CButton (browse).
+'  The controls are the reusable family: PsListBox (toolchains), PsTextBox x3 (switches,
+'  include paths, help file), PsToggle x2 (run-via-cmd, disable-beep) and PsButton (browse).
 
 #pragma once
 
 ' SCP_PAINTINFO is named in the declares below, and this header is pulled in early (by
-' modRoutines.inc) before CScrollPanel.bi would otherwise be seen.
-#include once "CScrollPanel.bi"
+' modRoutines.inc) before PsScrollPanel.bi would otherwise be seen.
+#include once "PsScrollPanel.bi"
 
 ' The browse button keeps its old id so AfxIFileOpenDialogW still shows the *.chm filter
 ' and "Find Help File" title (it switches on this id -- see modRoutines.inc).

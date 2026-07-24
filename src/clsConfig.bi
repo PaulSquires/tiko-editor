@@ -104,7 +104,7 @@ type clsConfig
         ShowOutputPanelIndex      as long = 0             ' persisted copy of the Output tab bar's
                                                           ' current panel (default: Compiler Results).
                                                           ' The bar itself owns it at runtime --
-                                                          ' CSelectBar_Get/SetCurSel.
+                                                          ' PsSelectBar_Get/SetCurSel.
         SyntaxHighlighting        as long = true
         Codetips                  as long = true
         AutoComplete              as long = true

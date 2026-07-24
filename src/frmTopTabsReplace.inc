@@ -56,7 +56,7 @@ function frmTopTabsReplace_PositionWindows() as LRESULT
     iconHeight = nHeight
     nWidth = nWidth - iconWidth - pWindow->ScaleX(4)
 
-    ' Vertical centering and colors are the CTextBox control's job.
+    ' Vertical centering and colors are the PsTextBox control's job.
     SetWindowPos( hCtlReplace, 0, nLeft, nTop, nWidth, nHeight, SWP_NOZORDER or SWP_SHOWWINDOW )
 
     ' Preserve Case RECT
@@ -84,7 +84,7 @@ end function
 
 
 ' ========================================================================================
-' CTextBox callback for the Replace textbox. The control owns the cue banner, colors,
+' PsTextBox callback for the Replace textbox. The control owns the cue banner, colors,
 ' vertical centering, single-line enforcement and the Cut/Copy/Paste context menu that
 ' the old RichEdit subclass hand-rolled here. ENTER/TAB handling stays in
 ' handleKeysFindReplace (modMsgPump). No change callback: the replace text is read on
@@ -124,7 +124,7 @@ function frmTopTabsReplace_OnCommand( _
             byval codeNotify as UINT _
             ) as LRESULT
 
-    ' The Replace textbox notifies through its CTextBox focus callback, not through
+    ' The Replace textbox notifies through its PsTextBox focus callback, not through
     ' WM_COMMAND EN_ codes anymore.
     function = 0
 end function
@@ -213,7 +213,7 @@ function frmTopTabsReplace_WndProc( _
             
 
     case WM_PAINT
-        dim as CBufferPaint b
+        dim as PsBufferPaint b
         
         b.BeginDoubleBuffer(hwnd)
 
@@ -280,17 +280,17 @@ function frmTopTabsReplace_Show( byval hwndParent as HWND ) as LRESULT
     ' Disable background erasing by only assigning the one style
     pWindow->ClassStyle = CS_DBLCLKS
 
-    ' The Replace textbox is the reusable CTextBox control (a RichEdit50W child inside --
+    ' The Replace textbox is the reusable PsTextBox control (a RichEdit50W child inside --
     ' regular Edit controls can not easily have their text vertically centered).
-    dim as HWND hCtlReplace = CTextBox_Create( HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE )
-    CTextBox_SetFont( hCtlReplace, ghFont(INFOFONT_11) )
-    CTextBox_SetForeColor( hCtlReplace, ghTopTabs.ForeColorHot )
-    CTextBox_SetBackColor( hCtlReplace, ghTopTabs.BackColorHot )
-    CTextBox_SetBorderWidth( hCtlReplace, 0 )                    ' flat, as before
-    CTextBox_SetCueBannerText( hCtlReplace, L(173,"Replace") & "..." )
-    CTextBox_SetCueBannerColor( hCtlReplace, ghTopTabs.ForeColor )
-    CTextBox_SetFocusCallback( hCtlReplace, @frmTopTabsReplace_TextBoxFocus )
-    CTextBox_SetText( hCtlReplace, gFind.txtReplace )            ' carried-over replace term
+    dim as HWND hCtlReplace = PsTextBox_Create( HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE )
+    PsTextBox_SetFont( hCtlReplace, ghFont(INFOFONT_11) )
+    PsTextBox_SetForeColor( hCtlReplace, ghTopTabs.ForeColorHot )
+    PsTextBox_SetBackColor( hCtlReplace, ghTopTabs.BackColorHot )
+    PsTextBox_SetBorderWidth( hCtlReplace, 0 )                    ' flat, as before
+    PsTextBox_SetCueBannerText( hCtlReplace, L(173,"Replace") & "..." )
+    PsTextBox_SetCueBannerColor( hCtlReplace, ghTopTabs.ForeColor )
+    PsTextBox_SetFocusCallback( hCtlReplace, @frmTopTabsReplace_TextBoxFocus )
+    PsTextBox_SetText( hCtlReplace, gFind.txtReplace )            ' carried-over replace term
     ThemeTextBoxContextMenu( hCtlReplace )
 
     function = 0

@@ -150,7 +150,7 @@ function frmPanel_OnPaint( byval hwnd as HWND ) as LRESULT
     dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMPANEL)
     if pWindow = 0 then exit function
 
-    dim as CBufferPaint b
+    dim as PsBufferPaint b
     
     b.BeginDoubleBuffer(hwnd)
 
@@ -187,7 +187,7 @@ end function
 
 
 ' ========================================================================================
-' The Explorer panel's splitter bar. It is a CSplitter owned by frmMain (the bar sits
+' The Explorer panel's splitter bar. It is a PsSplitter owned by frmMain (the bar sits
 ' BETWEEN the panel and the content area, and frmMain owns that layout), so only the two
 ' callbacks live here.
 '
@@ -202,8 +202,8 @@ end function
 ' vertical divider line centered in it (the bar is vertical, so this is the transposed twin
 ' of frmOutput_SplitterPaint). The line stays 1 physical pixel at every DPI -- it is a rule,
 ' not a band, so it is deliberately not scaled.
-sub frmPanel_SplitterPaint( byval p as CSPLITTER_PAINTINFO ptr )
-    dim as CBufferPaint ptr b = p->b
+sub frmPanel_SplitterPaint( byval p as PSSPLITTER_PAINTINFO ptr )
+    dim as PsBufferPaint ptr b = p->b
 
     b->SetBackColor( ghPanel.BackColor )
     b->PaintClientRect()
@@ -233,7 +233,7 @@ sub frmPanel_SplitterMoved( _
     if IsWindow( HWND_FRMPANEL ) = 0 then exit sub
 
     select case nPhase
-        case CSPLITTER_PHASE_MOVE
+        case PSSPLITTER_PHASE_MOVE
             dim as RECT rcMain : GetClientRect( HWND_FRMMAIN, @rcMain )
             dim as long nGrab = pWindow->ScaleX(SPLITTER_GRAB)
 
@@ -250,7 +250,7 @@ sub frmPanel_SplitterMoved( _
                           RDW_INVALIDATE or RDW_UPDATENOW or RDW_ALLCHILDREN )
             frmMain_PositionWindows()
 
-        case CSPLITTER_PHASE_END
+        case PSSPLITTER_PHASE_END
             frmMain_PositionWindows()
     end select
 end sub
@@ -309,7 +309,7 @@ function frmPanel_WndProc( _
             isPrevHotAction = isHotAction
         end if   
             
-        ' The left/right splitter hit-test and drag that used to follow are the CSplitter
+        ' The left/right splitter hit-test and drag that used to follow are the PsSplitter
         ' control's job now (frmPanel_SplitterMoved), as is the WM_LBUTTONDOWN handler that
         ' started the drag.
 

@@ -131,14 +131,14 @@ end function
 
 
 ' ========================================================================================
-' CTextBox callbacks for the Find textbox. The control owns the cue banner, colors,
+' PsTextBox callbacks for the Find textbox. The control owns the cue banner, colors,
 ' vertical centering, single-line enforcement and the Cut/Copy/Paste context menu that
 ' the old RichEdit subclass hand-rolled here. ENTER/TAB handling stays in
 ' handleKeysFindReplace (modMsgPump), which intercepts those keys before dispatch.
 ' ========================================================================================
 sub frmTopTabsFind_TextBoxChange( byval hTextBox as HWND )
     ' User edits only (was the EN_CHANGE path): re-run the incremental search.
-    gFind.txtFind = CTextBox_GetText( hTextBox )
+    gFind.txtFind = PsTextBox_GetText( hTextBox )
     dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
     if pDoc then
         FindReplace_HighlightSearches()
@@ -183,7 +183,7 @@ function frmTopTabsFind_OnCommand( _
             byval codeNotify as UINT _
             ) as LRESULT
 
-    ' The Find textbox notifies through its CTextBox callbacks (change/focus), not
+    ' The Find textbox notifies through its PsTextBox callbacks (change/focus), not
     ' through WM_COMMAND EN_ codes anymore.
     function = 0
 end function
@@ -311,7 +311,7 @@ function frmTopTabsFind_WndProc( _
             
 
     case WM_PAINT
-        dim as CBufferPaint b
+        dim as PsBufferPaint b
         
         b.BeginDoubleBuffer(hwnd)
 
@@ -412,17 +412,17 @@ function frmTopTabsFind_Show( byval hwndParent as HWND ) as LRESULT
     ' Disable background erasing by only assigning the one style
     pWindow->ClassStyle = CS_DBLCLKS
 
-    ' The Find textbox is the reusable CTextBox control (a RichEdit50W child inside --
+    ' The Find textbox is the reusable PsTextBox control (a RichEdit50W child inside --
     ' regular Edit controls can not easily have their text vertically centered).
-    dim as HWND hCtlFind = CTextBox_Create( HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND )
-    CTextBox_SetFont( hCtlFind, ghFont(INFOFONT_11) )
-    CTextBox_SetForeColor( hCtlFind, ghTopTabs.ForeColorHot )
-    CTextBox_SetBackColor( hCtlFind, ghTopTabs.BackColorHot )
-    CTextBox_SetBorderWidth( hCtlFind, 0 )                       ' flat, as before
-    CTextBox_SetCueBannerText( hCtlFind, L(158,"Find") & "..." )
-    CTextBox_SetCueBannerColor( hCtlFind, ghTopTabs.ForeColor )
-    CTextBox_SetChangeCallback( hCtlFind, @frmTopTabsFind_TextBoxChange )
-    CTextBox_SetFocusCallback( hCtlFind, @frmTopTabsFind_TextBoxFocus )
+    dim as HWND hCtlFind = PsTextBox_Create( HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND )
+    PsTextBox_SetFont( hCtlFind, ghFont(INFOFONT_11) )
+    PsTextBox_SetForeColor( hCtlFind, ghTopTabs.ForeColorHot )
+    PsTextBox_SetBackColor( hCtlFind, ghTopTabs.BackColorHot )
+    PsTextBox_SetBorderWidth( hCtlFind, 0 )                       ' flat, as before
+    PsTextBox_SetCueBannerText( hCtlFind, L(158,"Find") & "..." )
+    PsTextBox_SetCueBannerColor( hCtlFind, ghTopTabs.ForeColor )
+    PsTextBox_SetChangeCallback( hCtlFind, @frmTopTabsFind_TextBoxChange )
+    PsTextBox_SetFocusCallback( hCtlFind, @frmTopTabsFind_TextBoxFocus )
     ThemeTextBoxContextMenu( hCtlFind )
 
     function = 0

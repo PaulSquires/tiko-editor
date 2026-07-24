@@ -267,7 +267,7 @@ function OnCommand_SearchFindActions( _
     dim as HWND hWndFind = GetDlgItem(HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND)
     dim as HWND hFocus = GetFocus()
 
-    if CTextBox_HasFocus( hWndFind ) then
+    if PsTextBox_HasFocus( hWndFind ) then
         gFind.txtFind = AfxGetWindowText(hWndFind)
     elseif hFocus = hEdit then    
         dim as string sFindText = pDoc->GetSelText

@@ -63,7 +63,7 @@ dim shared as DWSTRING gwszDefaultToolchain = "FreeBASIC-1.10.1-winlibs-gcc-9.3.
 #include once "fbcParser.bi"
 #include once "clsDocument.bi"
 #include once "modDeclares.bi"
-#include once "CBufferPaint.bi"
+#include once "PsBufferPaint.bi"
 #include once "clsTopTabCtl.bi"
 #include once "clsConfig.bi"
 #include once "clsApp.bi"
@@ -82,7 +82,7 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "modCWindow.inc"
 #include once "modThemes.inc"
 #include once "clsConfig.inc"
-#include once "CBufferPaint.inc"
+#include once "PsBufferPaint.inc"
 #include once "modRoutines.inc"
 #include once "clsDocument.inc"
 #include once "clsApp.inc"
@@ -100,27 +100,27 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "modFuzzy.inc"
 
 ' Custom controls
-#include once "CVScrollBar.inc"
-#include once "CHScrollBar.inc"
-#include once "CColumnHeader.inc"
-#include once "CListBox.inc"
-#include once "CStatusBar.inc" 
-#include once "CTabBar.inc"
-#include once "CTextBox.inc"
-#include once "CPopupMenu.inc"
-#include once "CMenuBar.inc"
-#include once "CSplitter.inc"
-#include once "CIconPanel.inc"
-#include once "CSelectBar.inc"
-' Dependencies first: CScrollPanel needs CVScrollBar, CComboBox needs CPopupMenu,
-' CNumericUpDown needs CTextBox (+ CPopupMenu), CMessageBox needs CButton. All four
+#include once "PsVScrollBar.inc"
+#include once "PsHScrollBar.inc"
+#include once "PsColumnHeader.inc"
+#include once "PsListBox.inc"
+#include once "PsStatusBar.inc" 
+#include once "PsTabBar.inc"
+#include once "PsTextBox.inc"
+#include once "PsPopupMenu.inc"
+#include once "PsMenuBar.inc"
+#include once "PsSplitter.inc"
+#include once "PsIconPanel.inc"
+#include once "PsSelectBar.inc"
+' Dependencies first: PsScrollPanel needs PsVScrollBar, PsComboBox needs PsPopupMenu,
+' PsNumericUpDown needs PsTextBox (+ PsPopupMenu), PsMessageBox needs PsButton. All four
 ' of those are already included above, so only the ordering below matters.
-#include once "CToggle.inc"
-#include once "CButton.inc"
-#include once "CComboBox.inc"
-#include once "CScrollPanel.inc"
-#include once "CNumericUpDown.inc"
-#include once "CMessageBox.inc"
+#include once "PsToggle.inc"
+#include once "PsButton.inc"
+#include once "PsComboBox.inc"
+#include once "PsScrollPanel.inc"
+#include once "PsNumericUpDown.inc"
+#include once "PsMessageBox.inc"
 
 #include once "frmAbout.inc"
 #include once "frmTopTabs.inc"
@@ -272,10 +272,10 @@ function WinMain( _
     ' Start the background fbcParser scan worker (owns all fbcParser.dll calls)
     gScanMgr.StartWorker()
 
-    ' Initialize GDI+ (CBufferPaint draws all geometry through it).
+    ' Initialize GDI+ (PsBufferPaint draws all geometry through it).
     ' Deliberately placed AFTER every early "return 1" above, so no failure path can
     ' skip the matching shutdown, and BEFORE the first window exists, because a
-    ' CBufferPaint built during the very first WM_PAINT already needs GDI+ running.
+    ' PsBufferPaint built during the very first WM_PAINT already needs GDI+ running.
     dim as ULONG_PTR gdipToken = AfxGdipInit()
 
     ' Show the main form
@@ -291,7 +291,7 @@ function WinMain( _
     if len(wszFontFile) then RemoveFontResource(wszFontFile)
 
     ' Shut GDI+ down. frmMain_Show has returned, so every window is destroyed and every
-    ' CBufferPaint that painted into one has run its destructor -- no CGp* object can
+    ' PsBufferPaint that painted into one has run its destructor -- no CGp* object can
     ' still be alive. This must also precede CoUninitialize, since GDI+ leans on COM.
     AfxGdipShutdown( gdipToken )
 

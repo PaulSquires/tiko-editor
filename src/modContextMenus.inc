@@ -12,19 +12,19 @@
 '    GNU General Public License for more details.
 
 ' ========================================================================================
-' EVERY STANDALONE POPUP MENU IN TIKO, ON THE CPopupMenu CONTROL
+' EVERY STANDALONE POPUP MENU IN TIKO, ON THE PsPopupMenu CONTROL
 ' (migrated off TrackPopupMenu 2026-07-21; the CreatePopupMenu/AppendMenu builders that
 '  used to live in modMenus.inc are gone, as is every DestroyMenu that paired with them.)
 '
-' THE ONE THING TO UNDERSTAND HERE: TrackPopupMenu WAS MODAL, CPopupMenu IS NOT.
+' THE ONE THING TO UNDERSTAND HERE: TrackPopupMenu WAS MODAL, PsPopupMenu IS NOT.
 '   TrackPopupMenu ran its own message loop and did not return until the user picked or
 '   cancelled, so a caller could write "show the menu, then act on the answer" in one
-'   stack frame. CPopupMenu_Show returns the instant the window is up. Everything that
+'   stack frame. PsPopupMenu_Show returns the instant the window is up. Everything that
 '   used to follow the TrackPopupMenu call now lives in that popup's select callback,
 '   which the control fires AFTER the chain has closed.
 '
 ' LIFETIME
-'   The old builders created an HMENU per open and destroyed it after. A CPopupMenu is a
+'   The old builders created an HMENU per open and destroyed it after. A PsPopupMenu is a
 '   real window that must outlive the show (its callback fires later), so instead each
 '   popup is created ONCE in ContextMenus_Init and its items are rebuilt per open with
 '   Clear + AddItem -- the same pattern the menubar's MRU submenus use. Never destroy a
@@ -44,7 +44,7 @@
 '   the registry, not applied once, so a later theme sync cannot undo it.
 '
 ' CHECKMARKS, NOT RADIO DOTS
-'   CheckMenuRadioItem/MFT_RADIOCHECK has no CPopupMenu equivalent: the control draws one
+'   CheckMenuRadioItem/MFT_RADIOCHECK has no PsPopupMenu equivalent: the control draws one
 '   check glyph (ghPopup's, via wszIconCheckmark). The five menus that used radio items
 '   (build config, encoding, tab size, file type, tabs list) now show that checkmark, and
 '   the mutual exclusion is done here by only ever passing bChecked=true for one row.
@@ -65,8 +65,8 @@ dim shared as HWND ghPopupTopTabCtl
 dim shared as HWND ghPopupTopTabsList
 
 ' The context chain currently (or last) shown. The pump filter needs a handle in the open
-' chain, and CPopupMenu exposes no "which chain is open" query -- so the host tracks it.
-' Never stale-dangerous: CPopupMenu_FilterMessage no-ops unless this really is the open
+' chain, and PsPopupMenu exposes no "which chain is open" query -- so the host tracks it.
+' Never stale-dangerous: PsPopupMenu_FilterMessage no-ops unless this really is the open
 ' chain, so it is only cleared for tidiness.
 dim shared as HWND ghContextMenuOpen
 
@@ -74,7 +74,7 @@ dim shared as HWND ghContextMenuOpen
 ' ========================================================================================
 ' Show a context popup at a screen point.
 '
-' bRightAlign is the TPM_RIGHTALIGN replacement: CPopupMenu_Show puts the popup's LEFT
+' bRightAlign is the TPM_RIGHTALIGN replacement: PsPopupMenu_Show puts the popup's LEFT
 ' edge at x, and the control has no right-align mode, so the width is resolved here.
 ' GetIdealSize forces any pending layout, which is why it is valid to ask before showing.
 ' ========================================================================================
@@ -88,17 +88,17 @@ private function ContextMenu_ShowAt( _
     if hPopup = 0 then return false
     ' An empty menu is a no-op rather than a 0-row window: several of these are built
     ' from state (no open document, no build configs) that can legitimately yield none.
-    if CPopupMenu_GetItemCount( hPopup ) = 0 then return false
+    if PsPopupMenu_GetItemCount( hPopup ) = 0 then return false
 
     if bRightAlign then
         dim as long nWidth, nHeight
-        CPopupMenu_GetIdealSize( hPopup, nWidth, nHeight )
+        PsPopupMenu_GetIdealSize( hPopup, nWidth, nHeight )
         x -= nWidth
         if x < 0 then x = 0
     end if
 
     ghContextMenuOpen = hPopup
-    return CPopupMenu_Show( hPopup, x, y )
+    return PsPopupMenu_Show( hPopup, x, y )
 end function
 
 
@@ -137,13 +137,13 @@ private sub AddProjectFileTypesToPopup( _
             )
 
     if pDoc = 0 then exit sub
-    if fSeparator then CPopupMenu_AddSeparator( hPopup )
+    if fSeparator then PsPopupMenu_AddSeparator( hPopup )
 
     ' Which row carries the checkmark. Multiple explorer rows selected means there is no
     ' single current file type, so nothing is checked (the old code suppressed
     ' CheckMenuRadioItem for exactly this case).
     dim as long nFileType = -1
-    dim as long nSelCount = CListBox_GetSelCount( HWND_FRMEXPLORER )
+    dim as long nSelCount = PsListBox_GetSelCount( HWND_FRMEXPLORER )
     dim as boolean bAllowCheckMark = true
     if fExplorerTreeview andalso (nSelCount > 1) then bAllowCheckMark = false
 
@@ -160,20 +160,20 @@ private sub AddProjectFileTypesToPopup( _
     dim as long msg
 
     msg = iif( fExplorerTreeview, IDM_SETFILEMAIN_EXPLORERTREEVIEW, IDM_SETFILEMAIN )
-    CPopupMenu_AddItem( hPopup, msg, L(206,"Main file"), "", false, (msg = nFileType) )
+    PsPopupMenu_AddItem( hPopup, msg, L(206,"Main file"), "", false, (msg = nFileType) )
 
     msg = iif( fExplorerTreeview, IDM_SETFILEHEADER_EXPLORERTREEVIEW, IDM_SETFILEHEADER )
-    CPopupMenu_AddItem( hPopup, msg, L(181,"Header file"), "", false, (msg = nFileType) )
+    PsPopupMenu_AddItem( hPopup, msg, L(181,"Header file"), "", false, (msg = nFileType) )
 
     if gApp.IsProjectActive then
         msg = iif( fExplorerTreeview, IDM_SETFILEMODULE_EXPLORERTREEVIEW, IDM_SETFILEMODULE )
-        CPopupMenu_AddItem( hPopup, msg, L(205,"Module file"), "", false, (msg = nFileType) )
+        PsPopupMenu_AddItem( hPopup, msg, L(205,"Module file"), "", false, (msg = nFileType) )
         msg = iif( fExplorerTreeview, IDM_SETFILERESOURCE_EXPLORERTREEVIEW, IDM_SETFILERESOURCE )
-        CPopupMenu_AddItem( hPopup, msg, L(209,"Resource file"), "", false, (msg = nFileType) )
+        PsPopupMenu_AddItem( hPopup, msg, L(209,"Resource file"), "", false, (msg = nFileType) )
     end if
 
     msg = iif( fExplorerTreeview, IDM_SETFILENORMAL_EXPLORERTREEVIEW, IDM_SETFILENORMAL )
-    CPopupMenu_AddItem( hPopup, msg, L(204,"Normal file"), "", false, (msg = nFileType) )
+    PsPopupMenu_AddItem( hPopup, msg, L(204,"Normal file"), "", false, (msg = nFileType) )
 end sub
 
 
@@ -187,7 +187,7 @@ end sub
 ' showed up before.
 ' ========================================================================================
 private sub BuildConfigContextMenu_Rebuild()
-    CPopupMenu_Clear( ghPopupBuildConfig )
+    PsPopupMenu_Clear( ghPopupBuildConfig )
 
     dim as DWSTRING wszCurrentBuild = frmBuildConfig_GetSelectedBuildDescription()
 
@@ -196,7 +196,7 @@ private sub BuildConfigContextMenu_Rebuild()
         dim as long idMenu = IDM_BUILDCONFIG_POPUP + i
         dim as DWSTRING wszCaption = gConfig.Builds(i).wszDescription
         gConfig.Builds(i).idMenu = idMenu
-        CPopupMenu_AddItem( ghPopupBuildConfig, idMenu, wszCaption, "", false, _
+        PsPopupMenu_AddItem( ghPopupBuildConfig, idMenu, wszCaption, "", false, _
                             (wszCaption = wszCurrentBuild) )
     next
 end sub
@@ -230,7 +230,7 @@ end sub
 sub ShowTabsInfoFileTypeContextMenu()
     dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
     if pDoc = 0 then exit sub
-    CPopupMenu_Clear( ghPopupTabsInfoFileType )
+    PsPopupMenu_Clear( ghPopupTabsInfoFileType )
     AddProjectFileTypesToPopup( ghPopupTabsInfoFileType, pDoc, false, false )
     ContextMenu_ShowAtCursor( ghPopupTabsInfoFileType )
 end sub
@@ -251,11 +251,11 @@ sub ShowFileEncodingContextMenu()
         case FILE_ENCODING_UTF16_BOM: nEncoding = IDM_UTF16BOM
     end select
 
-    CPopupMenu_Clear( ghPopupFileEncoding )
-    CPopupMenu_AddItem( ghPopupFileEncoding, IDM_ANSI,     "ANSI",         "", false, (nEncoding = IDM_ANSI) )
-    CPopupMenu_AddItem( ghPopupFileEncoding, IDM_UTF8,     "UTF-8",        "", false, (nEncoding = IDM_UTF8) )
-    CPopupMenu_AddItem( ghPopupFileEncoding, IDM_UTF8BOM,  "UTF-8 (BOM)",  "", false, (nEncoding = IDM_UTF8BOM) )
-    CPopupMenu_AddItem( ghPopupFileEncoding, IDM_UTF16BOM, "UTF-16 (BOM)", "", false, (nEncoding = IDM_UTF16BOM) )
+    PsPopupMenu_Clear( ghPopupFileEncoding )
+    PsPopupMenu_AddItem( ghPopupFileEncoding, IDM_ANSI,     "ANSI",         "", false, (nEncoding = IDM_ANSI) )
+    PsPopupMenu_AddItem( ghPopupFileEncoding, IDM_UTF8,     "UTF-8",        "", false, (nEncoding = IDM_UTF8) )
+    PsPopupMenu_AddItem( ghPopupFileEncoding, IDM_UTF8BOM,  "UTF-8 (BOM)",  "", false, (nEncoding = IDM_UTF8BOM) )
+    PsPopupMenu_AddItem( ghPopupFileEncoding, IDM_UTF16BOM, "UTF-16 (BOM)", "", false, (nEncoding = IDM_UTF16BOM) )
 
     dim as POINT pt: GetCursorPos( @pt )
     ContextMenu_ShowAt( ghPopupFileEncoding, pt.x, pt.y, true )
@@ -269,9 +269,9 @@ sub ShowLineEndingsContextMenu()
     dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
     if pDoc = 0 then exit sub
 
-    CPopupMenu_Clear( ghPopupLineEndings )
-    CPopupMenu_AddItem( ghPopupLineEndings, IDM_EOLTOCRLF, L(36,"Convert to CRLF") )
-    CPopupMenu_AddItem( ghPopupLineEndings, IDM_EOLTOLF,   L(38,"Convert to LF") )
+    PsPopupMenu_Clear( ghPopupLineEndings )
+    PsPopupMenu_AddItem( ghPopupLineEndings, IDM_EOLTOCRLF, L(36,"Convert to CRLF") )
+    PsPopupMenu_AddItem( ghPopupLineEndings, IDM_EOLTOLF,   L(38,"Convert to LF") )
 
     dim as POINT pt: GetCursorPos( @pt )
     ContextMenu_ShowAt( ghPopupLineEndings, pt.x, pt.y, true )
@@ -290,7 +290,7 @@ private sub SpacesContextMenu_OnSelect( byval hPopup as HWND, byval idMenu as lo
 
     gConfig.TabSize = idMenu - IDM_SPACES
     dim as DWSTRING wszText = "Spaces: " & gConfig.TabSize
-    CStatusBar_SetText( HWND_FRMMAIN_STATUSBAR, SPACES_PANEL, wszText )
+    PsStatusBar_SetText( HWND_FRMMAIN_STATUSBAR, SPACES_PANEL, wszText )
 
     dim pDoc as clsDocument ptr = gApp.pDocList
     do until pDoc = 0
@@ -303,11 +303,11 @@ sub ShowSpacesContextMenu()
     dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
     if pDoc = 0 then exit sub
 
-    CPopupMenu_Clear( ghPopupSpaces )
+    PsPopupMenu_Clear( ghPopupSpaces )
     for i as long = 0 to 8
         dim as DWSTRING wszCaption = str(i)
         if i = val(gConfig.TabSize) then wszCaption = wszCaption & "  (Current Tab Size)"
-        CPopupMenu_AddItem( ghPopupSpaces, IDM_SPACES + i, wszCaption, "", false, _
+        PsPopupMenu_AddItem( ghPopupSpaces, IDM_SPACES + i, wszCaption, "", false, _
                             (i = gConfig.TabSize) )
     next
 
@@ -331,35 +331,35 @@ sub ShowScintillaContextMenu()
     ScreenToClient( HWND_FRMMAIN, @ptClient )
     if RealChildWindowFromPoint( HWND_FRMMAIN, ptClient ) <> hEdit then exit sub
 
-    CPopupMenu_Clear( ghPopupScintilla )
+    PsPopupMenu_Clear( ghPopupScintilla )
 
     ' Determine if the text under the cursor is an #Include file. if yes, then add a
     ' menu option to allow to open it.
     if IsCurrentLineIncludeFilename() then
-        CPopupMenu_AddItem( ghPopupScintilla, IDM_OPENINCLUDE, _
+        PsPopupMenu_AddItem( ghPopupScintilla, IDM_OPENINCLUDE, _
                 L(75,"Open") + chr(32, 34) + gApp.IncludeFilename + chr(34) )
-        CPopupMenu_AddSeparator( ghPopupScintilla )
+        PsPopupMenu_AddSeparator( ghPopupScintilla )
     end if
 
-    CPopupMenu_AddItem( ghPopupScintilla, IDM_UNDO, L(15,"Undo") )
-    CPopupMenu_AddItem( ghPopupScintilla, IDM_REDO, L(16,"Redo") )
-    CPopupMenu_AddSeparator( ghPopupScintilla )
-    CPopupMenu_AddItem( ghPopupScintilla, IDM_CUT,   L(17,"Cut") )
-    CPopupMenu_AddItem( ghPopupScintilla, IDM_COPY,  L(18,"Copy") )
-    CPopupMenu_AddItem( ghPopupScintilla, IDM_PASTE, L(19,"Paste") )
-    CPopupMenu_AddSeparator( ghPopupScintilla )
-    CPopupMenu_AddItem( ghPopupScintilla, IDM_DEBUG_TOGGLEBREAKPOINT, L(313,"Toggle Breakpoint") )
+    PsPopupMenu_AddItem( ghPopupScintilla, IDM_UNDO, L(15,"Undo") )
+    PsPopupMenu_AddItem( ghPopupScintilla, IDM_REDO, L(16,"Redo") )
+    PsPopupMenu_AddSeparator( ghPopupScintilla )
+    PsPopupMenu_AddItem( ghPopupScintilla, IDM_CUT,   L(17,"Cut") )
+    PsPopupMenu_AddItem( ghPopupScintilla, IDM_COPY,  L(18,"Copy") )
+    PsPopupMenu_AddItem( ghPopupScintilla, IDM_PASTE, L(19,"Paste") )
+    PsPopupMenu_AddSeparator( ghPopupScintilla )
+    PsPopupMenu_AddItem( ghPopupScintilla, IDM_DEBUG_TOGGLEBREAKPOINT, L(313,"Toggle Breakpoint") )
     if gApp.IsDebuggerActive then
-        CPopupMenu_AddItem( ghPopupScintilla, IDM_DEBUG_RUNTOCURSOR, L(320,"Run to Cursor") )
+        PsPopupMenu_AddItem( ghPopupScintilla, IDM_DEBUG_RUNTOCURSOR, L(320,"Run to Cursor") )
     end if
-    CPopupMenu_AddSeparator( ghPopupScintilla )
-    CPopupMenu_AddItem( ghPopupScintilla, IDM_INDENTBLOCK,   L(23,"Block Indent") )
-    CPopupMenu_AddItem( ghPopupScintilla, IDM_UNINDENTBLOCK, L(24,"Block Unindent") )
-    CPopupMenu_AddSeparator( ghPopupScintilla )
-    CPopupMenu_AddItem( ghPopupScintilla, IDM_COMMENTBLOCK,   L(25,"Block Comment") )
-    CPopupMenu_AddItem( ghPopupScintilla, IDM_UNCOMMENTBLOCK, L(26,"Block Uncomment") )
-    CPopupMenu_AddSeparator( ghPopupScintilla )
-    CPopupMenu_AddItem( ghPopupScintilla, IDM_SELECTALL, L(40,"Select All") )
+    PsPopupMenu_AddSeparator( ghPopupScintilla )
+    PsPopupMenu_AddItem( ghPopupScintilla, IDM_INDENTBLOCK,   L(23,"Block Indent") )
+    PsPopupMenu_AddItem( ghPopupScintilla, IDM_UNINDENTBLOCK, L(24,"Block Unindent") )
+    PsPopupMenu_AddSeparator( ghPopupScintilla )
+    PsPopupMenu_AddItem( ghPopupScintilla, IDM_COMMENTBLOCK,   L(25,"Block Comment") )
+    PsPopupMenu_AddItem( ghPopupScintilla, IDM_UNCOMMENTBLOCK, L(26,"Block Uncomment") )
+    PsPopupMenu_AddSeparator( ghPopupScintilla )
+    PsPopupMenu_AddItem( ghPopupScintilla, IDM_SELECTALL, L(40,"Select All") )
 
     ContextMenu_ShowAt( ghPopupScintilla, pt.x, pt.y )
 end sub
@@ -386,16 +386,16 @@ private sub ExplorerContextMenu_OnSelect( byval hPopup as HWND, byval id as long
     ' are processed some of the actions may reset the state of the listbox. We save the
     ' pDoc's in an array rather than index values because the listbox may get reloaded
     ' during some actions invalidating some indexes.
-    dim as long nSelCount = CListBox_GetSelCount( hCtl )
+    dim as long nSelCount = PsListBox_GetSelCount( hCtl )
     if nSelCount < 1 then exit sub
 
     dim pDocArray(nSelCount-1) as clsDocument ptr
     dim as integer nextIdx = 0
-    for i as integer = 0 to CListBox_GetCount(hCtl) - 1
-        if CListBox_IsHeader(hCtl, i) then continue for
-        if CListBox_GetSel( hCtl, i ) = true then
+    for i as integer = 0 to PsListBox_GetCount(hCtl) - 1
+        if PsListBox_IsHeader(hCtl, i) then continue for
+        if PsListBox_GetSel( hCtl, i ) = true then
             if nextIdx > ubound(pDocArray) then exit for
-            dim as integer nItemData = CListBox_GetItemData( hCtl, i )
+            dim as integer nItemData = PsListBox_GetItemData( hCtl, i )
             pDocArray(nextIdx) = cast(clsDocument ptr, nItemData)
             nextIdx = nextIdx + 1
         end if
@@ -432,34 +432,34 @@ sub ShowExplorerContextMenu( byval pDoc as clsDocument ptr )
     ' Some of our available choices are affected by the fact that multiple selections
     ' in the explorer listbox may exist. In that case, we allow options like "Close"
     ' and also don't set a selected FileType.
-    dim as long nSelCount = CListBox_GetSelCount( HWND_FRMEXPLORER )
+    dim as long nSelCount = PsListBox_GetSelCount( HWND_FRMEXPLORER )
 
-    CPopupMenu_Clear( ghPopupExplorer )
+    PsPopupMenu_Clear( ghPopupExplorer )
 
     if gApp.IsProjectActive then
-        CPopupMenu_AddItem( ghPopupExplorer, IDM_FILEOPEN_EXPLORERLISTBOX, L(75,"Open") )
-        CPopupMenu_AddSeparator( ghPopupExplorer )
+        PsPopupMenu_AddItem( ghPopupExplorer, IDM_FILEOPEN_EXPLORERLISTBOX, L(75,"Open") )
+        PsPopupMenu_AddSeparator( ghPopupExplorer )
         if (gTTabCtl.GetTabIndexByDocumentPtr( pDoc ) <> -1) orelse (nSelCount > 1) then
-            CPopupMenu_AddItem( ghPopupExplorer, IDM_FILECLOSE_EXPLORERLISTBOX, L(5,"Close") )
-            CPopupMenu_AddSeparator( ghPopupExplorer )
+            PsPopupMenu_AddItem( ghPopupExplorer, IDM_FILECLOSE_EXPLORERLISTBOX, L(5,"Close") )
+            PsPopupMenu_AddSeparator( ghPopupExplorer )
         end if
         if nSelCount = 1 then
-            CPopupMenu_AddItem( ghPopupExplorer, IDM_FILESAVE_EXPLORERLISTBOX,      L(7,"Save") )
-            CPopupMenu_AddItem( ghPopupExplorer, IDM_FILESAVEAS_EXPLORERLISTBOX,    L(8,"Save As") )
-            CPopupMenu_AddItem( ghPopupExplorer, IDM_FILERENAME_EXPLORERLISTBOX,    L(21,"Rename") )
-            CPopupMenu_AddItem( ghPopupExplorer, IDM_FILEDUPLICATE_EXPLORERLISTBOX, L(22,"Duplicate") )
-            CPopupMenu_AddSeparator( ghPopupExplorer )
+            PsPopupMenu_AddItem( ghPopupExplorer, IDM_FILESAVE_EXPLORERLISTBOX,      L(7,"Save") )
+            PsPopupMenu_AddItem( ghPopupExplorer, IDM_FILESAVEAS_EXPLORERLISTBOX,    L(8,"Save As") )
+            PsPopupMenu_AddItem( ghPopupExplorer, IDM_FILERENAME_EXPLORERLISTBOX,    L(21,"Rename") )
+            PsPopupMenu_AddItem( ghPopupExplorer, IDM_FILEDUPLICATE_EXPLORERLISTBOX, L(22,"Duplicate") )
+            PsPopupMenu_AddSeparator( ghPopupExplorer )
         end if
-        CPopupMenu_AddItem( ghPopupExplorer, IDM_REMOVEFILEFROMPROJECT_EXPLORERLISTBOX, _
+        PsPopupMenu_AddItem( ghPopupExplorer, IDM_REMOVEFILEFROMPROJECT_EXPLORERLISTBOX, _
                             L(190,"Remove from project") )
     else
-        CPopupMenu_AddItem( ghPopupExplorer, IDM_FILECLOSE_EXPLORERLISTBOX, L(5,"Close") )
+        PsPopupMenu_AddItem( ghPopupExplorer, IDM_FILECLOSE_EXPLORERLISTBOX, L(5,"Close") )
         if nSelCount = 1 then
-            CPopupMenu_AddSeparator( ghPopupExplorer )
-            CPopupMenu_AddItem( ghPopupExplorer, IDM_FILESAVE_EXPLORERLISTBOX,      L(7,"Save") )
-            CPopupMenu_AddItem( ghPopupExplorer, IDM_FILESAVEAS_EXPLORERLISTBOX,    L(8,"Save As") )
-            CPopupMenu_AddItem( ghPopupExplorer, IDM_FILERENAME_EXPLORERLISTBOX,    L(21,"Rename") )
-            CPopupMenu_AddItem( ghPopupExplorer, IDM_FILEDUPLICATE_EXPLORERLISTBOX, L(22,"Duplicate") )
+            PsPopupMenu_AddSeparator( ghPopupExplorer )
+            PsPopupMenu_AddItem( ghPopupExplorer, IDM_FILESAVE_EXPLORERLISTBOX,      L(7,"Save") )
+            PsPopupMenu_AddItem( ghPopupExplorer, IDM_FILESAVEAS_EXPLORERLISTBOX,    L(8,"Save As") )
+            PsPopupMenu_AddItem( ghPopupExplorer, IDM_FILERENAME_EXPLORERLISTBOX,    L(21,"Rename") )
+            PsPopupMenu_AddItem( ghPopupExplorer, IDM_FILEDUPLICATE_EXPLORERLISTBOX, L(22,"Duplicate") )
         end if
     end if
 
@@ -479,32 +479,32 @@ sub ShowPanelActionContextMenu( byval rcButton as RECT )
     select case gPanel.hActiveChild
         case HWND_FRMEXPLORER
             hPopup = ghPopupExplorerAction
-            CPopupMenu_Clear( hPopup )
-            CPopupMenu_AddItem( hPopup, IDM_EXPLORER_EXPANDALL,   L(441,"Expand All") )
-            CPopupMenu_AddItem( hPopup, IDM_EXPLORER_COLLAPSEALL, L(442,"Collapse All") )
-            CPopupMenu_AddSeparator( hPopup )
-            CPopupMenu_AddItem( hPopup, IDM_CLOSEPANEL, L(161,"Close") )
+            PsPopupMenu_Clear( hPopup )
+            PsPopupMenu_AddItem( hPopup, IDM_EXPLORER_EXPANDALL,   L(441,"Expand All") )
+            PsPopupMenu_AddItem( hPopup, IDM_EXPLORER_COLLAPSEALL, L(442,"Collapse All") )
+            PsPopupMenu_AddSeparator( hPopup )
+            PsPopupMenu_AddItem( hPopup, IDM_CLOSEPANEL, L(161,"Close") )
 
         case HWND_FRMFUNCTIONS
             hPopup = ghPopupFunctionsAction
-            CPopupMenu_Clear( hPopup )
-            CPopupMenu_AddItem( hPopup, IDM_FUNCTIONS_EXPANDALL,   L(441,"Expand All") )
-            CPopupMenu_AddItem( hPopup, IDM_FUNCTIONS_COLLAPSEALL, L(442,"Collapse All") )
-            CPopupMenu_AddSeparator( hPopup )
-            CPopupMenu_AddItem( hPopup, IDM_FUNCTIONS_VIEWASTREE, L(445,"View as Tree") )
-            CPopupMenu_AddItem( hPopup, IDM_FUNCTIONS_VIEWASLIST, L(446,"View as List") )
-            CPopupMenu_AddSeparator( hPopup )
-            CPopupMenu_AddItem( hPopup, IDM_CLOSEPANEL, L(161,"Close") )
+            PsPopupMenu_Clear( hPopup )
+            PsPopupMenu_AddItem( hPopup, IDM_FUNCTIONS_EXPANDALL,   L(441,"Expand All") )
+            PsPopupMenu_AddItem( hPopup, IDM_FUNCTIONS_COLLAPSEALL, L(442,"Collapse All") )
+            PsPopupMenu_AddSeparator( hPopup )
+            PsPopupMenu_AddItem( hPopup, IDM_FUNCTIONS_VIEWASTREE, L(445,"View as Tree") )
+            PsPopupMenu_AddItem( hPopup, IDM_FUNCTIONS_VIEWASLIST, L(446,"View as List") )
+            PsPopupMenu_AddSeparator( hPopup )
+            PsPopupMenu_AddItem( hPopup, IDM_CLOSEPANEL, L(161,"Close") )
 
         case HWND_FRMBOOKMARKS
             hPopup = ghPopupBookmarksAction
-            CPopupMenu_Clear( hPopup )
-            CPopupMenu_AddItem( hPopup, IDM_BOOKMARKS_EXPANDALL,   L(441,"Expand All") )
-            CPopupMenu_AddItem( hPopup, IDM_BOOKMARKS_COLLAPSEALL, L(442,"Collapse All") )
-            CPopupMenu_AddSeparator( hPopup )
-            CPopupMenu_AddItem( hPopup, IDM_BOOKMARKCLEARALLDOCS, L(53,"Clear Bookmarks") )
-            CPopupMenu_AddSeparator( hPopup )
-            CPopupMenu_AddItem( hPopup, IDM_CLOSEPANEL, L(161,"Close") )
+            PsPopupMenu_Clear( hPopup )
+            PsPopupMenu_AddItem( hPopup, IDM_BOOKMARKS_EXPANDALL,   L(441,"Expand All") )
+            PsPopupMenu_AddItem( hPopup, IDM_BOOKMARKS_COLLAPSEALL, L(442,"Collapse All") )
+            PsPopupMenu_AddSeparator( hPopup )
+            PsPopupMenu_AddItem( hPopup, IDM_BOOKMARKCLEARALLDOCS, L(53,"Clear Bookmarks") )
+            PsPopupMenu_AddSeparator( hPopup )
+            PsPopupMenu_AddItem( hPopup, IDM_CLOSEPANEL, L(161,"Close") )
 
         case else
             exit sub
@@ -521,24 +521,24 @@ sub ShowTopTabCtlContextMenu( byval idx as long )
     dim as long CuriTab = gTTabCtl.GetCurSel()
     dim as long MaxiTab = gTTabCtl.GetItemCount - 1
 
-    CPopupMenu_Clear( ghPopupTopTabCtl )
-    CPopupMenu_AddItem( ghPopupTopTabCtl, IDM_FILECLOSE,     L(5,"Close") )
-    CPopupMenu_AddSeparator( ghPopupTopTabCtl )
-    CPopupMenu_AddItem( ghPopupTopTabCtl, IDM_FILESAVE,      L(7,"Save") )
-    CPopupMenu_AddItem( ghPopupTopTabCtl, IDM_FILESAVEAS,    L(8,"Save As") )
-    CPopupMenu_AddItem( ghPopupTopTabCtl, IDM_FILERENAME,    L(21,"Rename") )
-    CPopupMenu_AddItem( ghPopupTopTabCtl, IDM_FILEDUPLICATE, L(22,"Duplicate") )
-    CPopupMenu_AddSeparator( ghPopupTopTabCtl )
-    CPopupMenu_AddItem( ghPopupTopTabCtl, IDM_FILECLOSEALL,       L(6,"Close All"),               "", (MaxiTab <= 0) )
-    CPopupMenu_AddItem( ghPopupTopTabCtl, IDM_FILECLOSEALLOTHERS, L(354,"Close Others"),          "", (MaxiTab <= 0) )
-    CPopupMenu_AddItem( ghPopupTopTabCtl, IDM_CLOSEALLBACKWARD,   L(355,"Close Tabs on the Left"), "", (CuriTab <= 0) )
-    CPopupMenu_AddItem( ghPopupTopTabCtl, IDM_CLOSEALLFORWARD,    L(356,"Close Tabs on the Right"), "", (MaxiTab <= CuriTab) )
+    PsPopupMenu_Clear( ghPopupTopTabCtl )
+    PsPopupMenu_AddItem( ghPopupTopTabCtl, IDM_FILECLOSE,     L(5,"Close") )
+    PsPopupMenu_AddSeparator( ghPopupTopTabCtl )
+    PsPopupMenu_AddItem( ghPopupTopTabCtl, IDM_FILESAVE,      L(7,"Save") )
+    PsPopupMenu_AddItem( ghPopupTopTabCtl, IDM_FILESAVEAS,    L(8,"Save As") )
+    PsPopupMenu_AddItem( ghPopupTopTabCtl, IDM_FILERENAME,    L(21,"Rename") )
+    PsPopupMenu_AddItem( ghPopupTopTabCtl, IDM_FILEDUPLICATE, L(22,"Duplicate") )
+    PsPopupMenu_AddSeparator( ghPopupTopTabCtl )
+    PsPopupMenu_AddItem( ghPopupTopTabCtl, IDM_FILECLOSEALL,       L(6,"Close All"),               "", (MaxiTab <= 0) )
+    PsPopupMenu_AddItem( ghPopupTopTabCtl, IDM_FILECLOSEALLOTHERS, L(354,"Close Others"),          "", (MaxiTab <= 0) )
+    PsPopupMenu_AddItem( ghPopupTopTabCtl, IDM_CLOSEALLBACKWARD,   L(355,"Close Tabs on the Left"), "", (CuriTab <= 0) )
+    PsPopupMenu_AddItem( ghPopupTopTabCtl, IDM_CLOSEALLFORWARD,    L(356,"Close Tabs on the Right"), "", (MaxiTab <= CuriTab) )
 
     dim pDoc as clsDocument ptr = gTTabCtl.GetDocumentPtr(idx)
     if pDoc then
         if gApp.IsProjectActive then
-            CPopupMenu_AddSeparator( ghPopupTopTabCtl )
-            CPopupMenu_AddItem( ghPopupTopTabCtl, IDM_REMOVEFILEFROMPROJECT, L(190,"Remove from project") )
+            PsPopupMenu_AddSeparator( ghPopupTopTabCtl )
+            PsPopupMenu_AddItem( ghPopupTopTabCtl, IDM_REMOVEFILEFROMPROJECT, L(190,"Remove from project") )
         end if
         AddProjectFileTypesToPopup( ghPopupTopTabCtl, pDoc, true, false )
     end if
@@ -551,7 +551,7 @@ end sub
 ' The open-tabs list (top tabs "list" button)
 '
 ' Own callback: the item ids are tab INDEXES, not commands, so they must never reach
-' frmMain's WM_COMMAND dispatcher. They stay 1-based -- id 0 is CPopupMenu's separator
+' frmMain's WM_COMMAND dispatcher. They stay 1-based -- id 0 is PsPopupMenu's separator
 ' marker, so a zeroth tab could not be addressed by id.
 ' ========================================================================================
 private sub TopTabsListContextMenu_OnSelect( byval hPopup as HWND, byval id as long )
@@ -559,10 +559,10 @@ private sub TopTabsListContextMenu_OnSelect( byval hPopup as HWND, byval id as l
 end sub
 
 sub ShowTopTabsListContextMenu( byval rcButton as RECT )
-    CPopupMenu_Clear( ghPopupTopTabsList )
+    PsPopupMenu_Clear( ghPopupTopTabsList )
     dim as long nCurSel = gTTabCtl.GetCurSel()
     for idMenu as long = 0 to gTTabCtl.GetItemCount - 1
-        CPopupMenu_AddItem( ghPopupTopTabsList, idMenu + 1, gTTabCtl.GetTabText(idMenu), _
+        PsPopupMenu_AddItem( ghPopupTopTabsList, idMenu + 1, gTTabCtl.GetTabText(idMenu), _
                             "", false, (idMenu = nCurSel) )
     next
     ContextMenu_ShowAt( ghPopupTopTabsList, rcButton.right, rcButton.bottom, true )
@@ -573,11 +573,11 @@ end sub
 ' Plumbing
 ' ========================================================================================
 
-' Each CTextBox creates its own Cut/Copy/Paste/Select All popup. The control does not
+' Each PsTextBox creates its own Cut/Copy/Paste/Select All popup. The control does not
 ' know tiko's theme, so hand its popup to the same registry the topmenu dropdowns use --
 ' after which a theme switch repaints it along with everything else.
 sub ThemeTextBoxContextMenu( byval hTextBox as HWND )
-    frmMenuBar_RegisterPopup( CTextBox_GetContextMenu( hTextBox ), true )
+    frmMenuBar_RegisterPopup( PsTextBox_GetContextMenu( hTextBox ), true )
 end sub
 
 
@@ -589,13 +589,13 @@ function ContextMenu_FilterMessage( byval pMsg as MSG ptr ) as boolean
     end if
     ' The control's filter is self-guarding: it stands down unless this handle really is
     ' in the currently open chain, so a stale handle here costs one comparison.
-    return CPopupMenu_FilterMessage( ghContextMenuOpen, pMsg )
+    return PsPopupMenu_FilterMessage( ghContextMenuOpen, pMsg )
 end function
 
 
 sub ContextMenu_CloseAll()
     if ghContextMenuOpen = 0 then exit sub
-    if IsWindow( ghContextMenuOpen ) then CPopupMenu_CloseChain( ghContextMenuOpen )
+    if IsWindow( ghContextMenuOpen ) then PsPopupMenu_CloseChain( ghContextMenuOpen )
     ghContextMenuOpen = 0
 end sub
 
@@ -621,19 +621,19 @@ sub ContextMenus_Init()
     ghPopupTopTabsList      = frmMenuBar_CreatePopup( true )
 
     ' Menus whose ids are real command ids: straight through the WM_COMMAND dispatcher.
-    CPopupMenu_SetSelectCallback( ghPopupTabsInfoFileType, @ContextMenu_PostCommand )
-    CPopupMenu_SetSelectCallback( ghPopupFileEncoding,     @ContextMenu_PostCommand )
-    CPopupMenu_SetSelectCallback( ghPopupLineEndings,      @ContextMenu_PostCommand )
-    CPopupMenu_SetSelectCallback( ghPopupScintilla,        @ContextMenu_PostCommand )
-    CPopupMenu_SetSelectCallback( ghPopupExplorerAction,   @ContextMenu_PostCommand )
-    CPopupMenu_SetSelectCallback( ghPopupFunctionsAction,  @ContextMenu_PostCommand )
-    CPopupMenu_SetSelectCallback( ghPopupBookmarksAction,  @ContextMenu_PostCommand )
-    CPopupMenu_SetSelectCallback( ghPopupTopTabCtl,        @ContextMenu_PostCommand )
+    PsPopupMenu_SetSelectCallback( ghPopupTabsInfoFileType, @ContextMenu_PostCommand )
+    PsPopupMenu_SetSelectCallback( ghPopupFileEncoding,     @ContextMenu_PostCommand )
+    PsPopupMenu_SetSelectCallback( ghPopupLineEndings,      @ContextMenu_PostCommand )
+    PsPopupMenu_SetSelectCallback( ghPopupScintilla,        @ContextMenu_PostCommand )
+    PsPopupMenu_SetSelectCallback( ghPopupExplorerAction,   @ContextMenu_PostCommand )
+    PsPopupMenu_SetSelectCallback( ghPopupFunctionsAction,  @ContextMenu_PostCommand )
+    PsPopupMenu_SetSelectCallback( ghPopupBookmarksAction,  @ContextMenu_PostCommand )
+    PsPopupMenu_SetSelectCallback( ghPopupTopTabCtl,        @ContextMenu_PostCommand )
 
     ' Menus whose ids are NOT safe as commands (see each callback's comment).
-    CPopupMenu_SetSelectCallback( ghPopupBuildConfig,  @BuildConfigContextMenu_OnSelect )
-    CPopupMenu_SetSelectCallback( ghPopupSpaces,       @SpacesContextMenu_OnSelect )
-    CPopupMenu_SetSelectCallback( ghPopupTopTabsList,  @TopTabsListContextMenu_OnSelect )
-    CPopupMenu_SetSelectCallback( ghPopupExplorer,     @ExplorerContextMenu_OnSelect )
+    PsPopupMenu_SetSelectCallback( ghPopupBuildConfig,  @BuildConfigContextMenu_OnSelect )
+    PsPopupMenu_SetSelectCallback( ghPopupSpaces,       @SpacesContextMenu_OnSelect )
+    PsPopupMenu_SetSelectCallback( ghPopupTopTabsList,  @TopTabsListContextMenu_OnSelect )
+    PsPopupMenu_SetSelectCallback( ghPopupExplorer,     @ExplorerContextMenu_OnSelect )
 
 end sub

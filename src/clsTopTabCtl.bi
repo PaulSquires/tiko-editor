@@ -13,7 +13,7 @@
 
 #pragma once
 
-#include once "CTabBar.bi"
+#include once "PsTabBar.bi"
 
 ' document types (not to be confused with FileType)
 ' Used to distinguish normal code editing documents from Project Search

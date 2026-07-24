@@ -335,7 +335,7 @@ function clsConfig.SaveConfigFile() as long
     pStream.WriteLine "ShowOutputPanelHeight="    & this.ShowOutputPanelHeight
     pStream.WriteLine "ShowOutputPanelMinimized=" & this.ShowOutputPanelMinimized
     ' Written from this.ShowOutputPanelIndex, which frmMain refreshes from the tab bar
-    ' (CSelectBar_GetCurSel) just before the config is saved.
+    ' (PsSelectBar_GetCurSel) just before the config is saved.
     pStream.WriteLine "ShowOutputPanelIndex="     & this.ShowOutputPanelIndex
     pStream.WriteLine ""
 
@@ -766,7 +766,7 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
                     case "ShowOutputPanelHeight":    this.ShowOutputPanelHeight = nData
                     case "ShowOutputPanelMinimized": this.ShowOutputPanelMinimized = nData
                     ' Loaded long before the tab bar exists, so it lands in the config
-                    ' field only; frmOutput_Show applies it with CSelectBar_SetCurSel once
+                    ' field only; frmOutput_Show applies it with PsSelectBar_SetCurSel once
                     ' the control has been created.
                     case "ShowOutputPanelIndex":     this.ShowOutputPanelIndex  = nData
                 end select

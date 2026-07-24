@@ -12,12 +12,12 @@
 '    GNU General Public License for more details.
 
 ' ========================================================================================
-' The application menubar, hosted on the reusable CMenuBar + CPopupMenu controls
-' (vendored from the CMenuBar repo; canonical home C:\dev\CMenuBar). This module
+' The application menubar, hosted on the reusable PsMenuBar + PsPopupMenu controls
+' (vendored from the PsMenuBar repo; canonical home C:\dev\PsMenuBar). This module
 ' replaces the hand-rolled frmMenuBar/frmPopupMenu owner-draw listbox system
 ' (migrated 2026-07-21):
 '   - gTopMenu() (modMenuDefinitions) stays the STATIC menu definition table; this
-'     module builds the CPopupMenu trees from it at startup.
+'     module builds the PsPopupMenu trees from it at startup.
 '   - Dynamic sections (MRU files/sessions/projects, User Tools) are rebuilt in their
 '     popup's InitPopup callback each time that submenu opens.
 '   - Captions/accelerators are re-resolved through getMenuText() in the bar's
@@ -25,7 +25,7 @@
 '     Debugging, Explorer Left/Right stay current).
 '   - Enable/checked state stays with EnableTopMenuItem/CheckMarkTopMenuItem
 '     (modMenus.inc), which now drive the controls directly.
-'   - Keyboard navigation and outside-click dismissal live in CMenuBar_FilterMessage,
+'   - Keyboard navigation and outside-click dismissal live in PsMenuBar_FilterMessage,
 '     called once from frmMain's message pump (replacing handleKeysTopMenu and
 '     handleMouseTopMenu).
 '   - The "Update Available" label is a small host-owned sibling window sitting over
@@ -46,7 +46,7 @@ dim shared as HWND ghMenuPopupUserTools
 ' at Set time; they never read tiko's theme globals).
 '
 ' The parallel flag array is the "always compact" opt-out of gConfig.CompactMenus. The
-' CONTEXT menus (modContextMenus.inc, and the CTextBox controls' own right-click menu)
+' CONTEXT menus (modContextMenus.inc, and the PsTextBox controls' own right-click menu)
 ' set it: they are short, transient lists rather than a browsable dropdown tree, so they
 ' use MENUITEM_HEIGHT_COMPACT whatever the user chose for the topmenu. It has to live in
 ' the registry rather than being applied once at create time, because
@@ -68,9 +68,9 @@ dim shared as HWND HWND_FRMMAIN_MENUBARUPDATE
 ' a window that can outlive its caller just like a dropdown can.
 ' ========================================================================================
 function killAllPopupMenus() as boolean
-    CMenuBar_CloseMenu( HWND_FRMMAIN_MENUBAR )
+    PsMenuBar_CloseMenu( HWND_FRMMAIN_MENUBAR )
     ContextMenu_CloseAll()
-    CTextBox_CloseContextMenu()
+    PsTextBox_CloseContextMenu()
     ' The code-completion popup is a fourth family of floating window with the same
     ' "must not survive this" contract.
     frmAutoComplete_Cancel()
@@ -94,7 +94,7 @@ end sub
 ' see the registry comment above for which popups pass it and why.
 ' ========================================================================================
 private sub frmMenuBar_ApplyPopupTheme( byval hPopup as HWND, byval bForceCompact as boolean = false )
-    dim c as CPOPUPMENU_COLORS
+    dim c as PSPOPUPMENU_COLORS
     c.BackColor         = ghPopup.BackColor
     c.ForeColor         = ghPopup.ForeColor
     c.BackColorHot      = ghPopup.BackColorHot
@@ -105,9 +105,9 @@ private sub frmMenuBar_ApplyPopupTheme( byval hPopup as HWND, byval bForceCompac
     ' drew them in before it grew this field -- it is the same rule tiko draws between
     ' every other pane, so menus now match the splitters and the panel dividers.
     c.SeparatorColor    = ghEditor.Divider
-    CPopupMenu_SetColors( hPopup, @c )
-    CPopupMenu_SetFonts( hPopup, ghFont(GUIFONT_10), ghFont(SYMBOLFONT_10) )
-    CPopupMenu_SetGlyphs( hPopup, wszIconCheckmark, wszIconChevronRight )
+    PsPopupMenu_SetColors( hPopup, @c )
+    PsPopupMenu_SetFonts( hPopup, ghFont(GUIFONT_10), ghFont(SYMBOLFONT_10) )
+    PsPopupMenu_SetGlyphs( hPopup, wszIconCheckmark, wszIconChevronRight )
     dim pWindow as CWindow ptr = AfxCWindowPtr( HWND_FRMMAIN )
     if pWindow then
         ' Two statements, not an orelse: gConfig.CompactMenus is a LONG, and mixing it
@@ -115,14 +115,14 @@ private sub frmMenuBar_ApplyPopupTheme( byval hPopup as HWND, byval bForceCompac
         dim as boolean bCompact = bForceCompact
         if gConfig.CompactMenus then bCompact = true
         dim as long nHeight = iif( bCompact, MENUITEM_HEIGHT_COMPACT, MENUITEM_HEIGHT )
-        CPopupMenu_SetItemHeight( hPopup, pWindow->ScaleY(nHeight) )
+        PsPopupMenu_SetItemHeight( hPopup, pWindow->ScaleY(nHeight) )
     end if
 end sub
 
 
 ' ========================================================================================
 ' Enrol an already-created popup for theme syncs and apply the current theme now. Used
-' for popups this module does not own -- the CTextBox controls each create their own
+' for popups this module does not own -- the PsTextBox controls each create their own
 ' right-click menu, and it has to track a theme change like every other menu.
 '
 ' Dead slots are reused rather than appended to: the textbox popups die with their
@@ -161,7 +161,7 @@ end sub
 ' way (frmMenuBar's own dropdowns never do; they follow gConfig.CompactMenus).
 ' ========================================================================================
 private function frmMenuBar_CreatePopup( byval bForceCompact as boolean = false ) as HWND
-    dim as HWND hPopup = CPopupMenu_Create( HWND_FRMMAIN )
+    dim as HWND hPopup = PsPopupMenu_Create( HWND_FRMMAIN )
     frmMenuBar_RegisterPopup( hPopup, bForceCompact )
     return hPopup
 end function
@@ -173,13 +173,13 @@ end function
 ' ========================================================================================
 sub frmMenuBar_SyncTheme()
     if HWND_FRMMAIN_MENUBAR = 0 then exit sub
-    dim c as CMENUBAR_COLORS
+    dim c as PSMENUBAR_COLORS
     c.BackColor    = ghMenuBar.BackColor
     c.ForeColor    = ghMenuBar.ForeColor
     c.BackColorHot = ghMenuBar.BackColorHot
     c.ForeColorHot = ghMenuBar.ForeColorHot
-    CMenuBar_SetColors( HWND_FRMMAIN_MENUBAR, @c )
-    CMenuBar_SetFont( HWND_FRMMAIN_MENUBAR, ghFont(GUIFONT_10) )
+    PsMenuBar_SetColors( HWND_FRMMAIN_MENUBAR, @c )
+    PsMenuBar_SetFont( HWND_FRMMAIN_MENUBAR, ghFont(GUIFONT_10) )
     for i as long = 0 to gMenuPopupCount - 1
         if IsWindow( gMenuPopupList(i) ) then _
             frmMenuBar_ApplyPopupTheme( gMenuPopupList(i), gMenuPopupCompact(i) )
@@ -193,7 +193,7 @@ end sub
 ' updateMRU*FilesItems/updateUserToolsMenuItems gTopMenu machinery is gone).
 ' ========================================================================================
 private sub frmMenuBar_RebuildMRUFiles( byval hPopup as HWND )
-    CPopupMenu_Clear( hPopup )
+    PsPopupMenu_Clear( hPopup )
     dim as boolean hasFiles = false
     for i as long = 0 to 9
         ' if the file no longer exists then remove it from the MRU list
@@ -202,19 +202,19 @@ private sub frmMenuBar_RebuildMRUFiles( byval hPopup as HWND )
             gConfig.MRU(i) = ""
         else
             hasFiles = true
-            CPopupMenu_AddItem( hPopup, IDM_MRUBASE + i, gConfig.MRU(i) )
+            PsPopupMenu_AddItem( hPopup, IDM_MRUBASE + i, gConfig.MRU(i) )
         end if
     next
     if hasFiles = false then
-        CPopupMenu_AddItem( hPopup, IDM_MRUFILES, L(11,"(Empty)") )
+        PsPopupMenu_AddItem( hPopup, IDM_MRUFILES, L(11,"(Empty)") )
     else
-        CPopupMenu_AddSeparator( hPopup )
-        CPopupMenu_AddItem( hPopup, IDM_MRUCLEAR, L(225,"Clear this list") )
+        PsPopupMenu_AddSeparator( hPopup )
+        PsPopupMenu_AddItem( hPopup, IDM_MRUCLEAR, L(225,"Clear this list") )
     end if
 end sub
 
 private sub frmMenuBar_RebuildMRUSessions( byval hPopup as HWND )
-    CPopupMenu_Clear( hPopup )
+    PsPopupMenu_Clear( hPopup )
     dim as boolean hasFiles = false
     for i as long = 0 to 9
         gConfig.MRUSESSION(i) = ProcessFromCurdriveApp( gConfig.MRUSESSION(i) )
@@ -222,19 +222,19 @@ private sub frmMenuBar_RebuildMRUSessions( byval hPopup as HWND )
             gConfig.MRUSESSION(i) = ""
         else
             hasFiles = true
-            CPopupMenu_AddItem( hPopup, IDM_MRUSESSIONBASE + i, gConfig.MRUSESSION(i) )
+            PsPopupMenu_AddItem( hPopup, IDM_MRUSESSIONBASE + i, gConfig.MRUSESSION(i) )
         end if
     next
     if hasFiles = false then
-        CPopupMenu_AddItem( hPopup, IDM_MRUSESSIONFILES, L(11,"(Empty)") )
+        PsPopupMenu_AddItem( hPopup, IDM_MRUSESSIONFILES, L(11,"(Empty)") )
     else
-        CPopupMenu_AddSeparator( hPopup )
-        CPopupMenu_AddItem( hPopup, IDM_MRUSESSIONCLEAR, L(225,"Clear this list") )
+        PsPopupMenu_AddSeparator( hPopup )
+        PsPopupMenu_AddItem( hPopup, IDM_MRUSESSIONCLEAR, L(225,"Clear this list") )
     end if
 end sub
 
 private sub frmMenuBar_RebuildMRUProjects( byval hPopup as HWND )
-    CPopupMenu_Clear( hPopup )
+    PsPopupMenu_Clear( hPopup )
     dim as boolean hasFiles = false
     for i as long = 0 to 9
         gConfig.MRUPROJECT(i) = ProcessFromCurdriveApp( gConfig.MRUPROJECT(i) )
@@ -242,33 +242,33 @@ private sub frmMenuBar_RebuildMRUProjects( byval hPopup as HWND )
             gConfig.MRUPROJECT(i) = ""
         else
             hasFiles = true
-            CPopupMenu_AddItem( hPopup, IDM_MRUPROJECTBASE + i, gConfig.MRUPROJECT(i) )
+            PsPopupMenu_AddItem( hPopup, IDM_MRUPROJECTBASE + i, gConfig.MRUPROJECT(i) )
         end if
     next
     if hasFiles = false then
-        CPopupMenu_AddItem( hPopup, IDM_MRUPROJECTFILES, L(11,"(Empty)") )
+        PsPopupMenu_AddItem( hPopup, IDM_MRUPROJECTFILES, L(11,"(Empty)") )
     else
-        CPopupMenu_AddSeparator( hPopup )
-        CPopupMenu_AddItem( hPopup, IDM_MRUPROJECTCLEAR, L(225,"Clear this list") )
+        PsPopupMenu_AddSeparator( hPopup )
+        PsPopupMenu_AddItem( hPopup, IDM_MRUPROJECTCLEAR, L(225,"Clear this list") )
     end if
 end sub
 
 private sub frmMenuBar_RebuildUserTools( byval hPopup as HWND )
-    CPopupMenu_Clear( hPopup )
+    PsPopupMenu_Clear( hPopup )
     dim as DWSTRING wszCaption, wszAccel
     frmMenuBar_SplitCaption( IDM_USERTOOLSDIALOG, wszCaption, wszAccel )
-    CPopupMenu_AddItem( hPopup, IDM_USERTOOLSDIALOG, wszCaption, wszAccel )
-    CPopupMenu_AddSeparator( hPopup )
+    PsPopupMenu_AddItem( hPopup, IDM_USERTOOLSDIALOG, wszCaption, wszAccel )
+    PsPopupMenu_AddSeparator( hPopup )
     dim as boolean hasTools = false
     for i as long = lbound(gConfig.Tools) to ubound(gConfig.Tools)
         if gConfig.Tools(i).IsDisplayMenu then
             hasTools = true
-            CPopupMenu_AddItem( hPopup, IDM_USERTOOLSBASE + i, _
+            PsPopupMenu_AddItem( hPopup, IDM_USERTOOLSBASE + i, _
                 gConfig.Tools(i).wszDescription, createToolsMenuShortcut(i) )
         end if
     next
     if hasTools = false then
-        CPopupMenu_AddItem( hPopup, IDM_USERTOOLSLIST, L(11,"(Empty)") )
+        PsPopupMenu_AddItem( hPopup, IDM_USERTOOLSLIST, L(11,"(Empty)") )
     end if
 end sub
 
@@ -297,38 +297,38 @@ private function frmMenuBar_BuildDropDown( byval nParentID as long ) as HWND
     for i as long = lbound(gTopMenu) to ubound(gTopMenu)
         if gTopMenu(i).nParentID <> nParentID then continue for
         if gTopMenu(i).isSeparator then
-            CPopupMenu_AddSeparator( hPopup )
+            PsPopupMenu_AddSeparator( hPopup )
             continue for
         end if
         dim as DWSTRING wszCaption, wszAccel
         frmMenuBar_SplitCaption( gTopMenu(i).nID, wszCaption, wszAccel )
-        CPopupMenu_AddItem( hPopup, gTopMenu(i).nID, wszCaption, wszAccel, gTopMenu(i).isDisabled )
+        PsPopupMenu_AddItem( hPopup, gTopMenu(i).nID, wszCaption, wszAccel, gTopMenu(i).isDisabled )
         if gTopMenu(i).nChildID <> 0 then
             dim as HWND hSub
             select case gTopMenu(i).nID
                 case IDM_MRU
                     hSub = frmMenuBar_CreatePopup()
-                    CPopupMenu_SetMinWidth( hSub, AfxCWindowPtr(HWND_FRMMAIN)->ScaleX(262) )
-                    CPopupMenu_SetInitPopupCallback( hSub, @frmMenuBar_DynamicInitPopup )
+                    PsPopupMenu_SetMinWidth( hSub, AfxCWindowPtr(HWND_FRMMAIN)->ScaleX(262) )
+                    PsPopupMenu_SetInitPopupCallback( hSub, @frmMenuBar_DynamicInitPopup )
                     ghMenuPopupMRU = hSub
                 case IDM_MRUSESSION
                     hSub = frmMenuBar_CreatePopup()
-                    CPopupMenu_SetMinWidth( hSub, AfxCWindowPtr(HWND_FRMMAIN)->ScaleX(262) )
-                    CPopupMenu_SetInitPopupCallback( hSub, @frmMenuBar_DynamicInitPopup )
+                    PsPopupMenu_SetMinWidth( hSub, AfxCWindowPtr(HWND_FRMMAIN)->ScaleX(262) )
+                    PsPopupMenu_SetInitPopupCallback( hSub, @frmMenuBar_DynamicInitPopup )
                     ghMenuPopupMRUSession = hSub
                 case IDM_MRUPROJECT
                     hSub = frmMenuBar_CreatePopup()
-                    CPopupMenu_SetMinWidth( hSub, AfxCWindowPtr(HWND_FRMMAIN)->ScaleX(262) )
-                    CPopupMenu_SetInitPopupCallback( hSub, @frmMenuBar_DynamicInitPopup )
+                    PsPopupMenu_SetMinWidth( hSub, AfxCWindowPtr(HWND_FRMMAIN)->ScaleX(262) )
+                    PsPopupMenu_SetInitPopupCallback( hSub, @frmMenuBar_DynamicInitPopup )
                     ghMenuPopupMRUProject = hSub
                 case IDM_USERTOOLS
                     hSub = frmMenuBar_CreatePopup()
-                    CPopupMenu_SetInitPopupCallback( hSub, @frmMenuBar_DynamicInitPopup )
+                    PsPopupMenu_SetInitPopupCallback( hSub, @frmMenuBar_DynamicInitPopup )
                     ghMenuPopupUserTools = hSub
                 case else
                     hSub = frmMenuBar_BuildDropDown( gTopMenu(i).nID )
             end select
-            CPopupMenu_SetItemSubMenu( hPopup, gTopMenu(i).nID, hSub )
+            PsPopupMenu_SetItemSubMenu( hPopup, gTopMenu(i).nID, hSub )
         end if
     next
     return hPopup
@@ -348,7 +348,7 @@ private sub frmMenuBar_RefreshCaptions( byval hDropDown as HWND, byval nParentID
         if gTopMenu(i).nID = 0 then continue for
         dim as DWSTRING wszCaption, wszAccel
         frmMenuBar_SplitCaption( gTopMenu(i).nID, wszCaption, wszAccel )
-        CPopupMenu_SetItemText( hDropDown, gTopMenu(i).nID, wszCaption, wszAccel )
+        PsPopupMenu_SetItemText( hDropDown, gTopMenu(i).nID, wszCaption, wszAccel )
         if gTopMenu(i).nChildID <> 0 then
             select case gTopMenu(i).nID
                 case IDM_MRU, IDM_MRUSESSION, IDM_MRUPROJECT, IDM_USERTOOLS
@@ -362,7 +362,7 @@ end sub
 
 
 ' ========================================================================================
-' CMenuBar callbacks
+' PsMenuBar callbacks
 ' ========================================================================================
 
 ' A dropdown is about to open: refresh its captions and recompute its enable/checked
@@ -398,7 +398,7 @@ function frmMenuBarUpdate_WndProc( _
             return true
 
         case WM_PAINT
-            dim as CBufferPaint b
+            dim as PsBufferPaint b
             b.BeginDoubleBuffer(hwnd)
             dim as RECT rc
             GetClientRect( hwnd, @rc )
@@ -458,8 +458,8 @@ function frmMenuBar_PositionWindows() as LRESULT
     frmAutoComplete_SyncTheme()
 
     ' Bar captions may have changed (localization).
-    for i as long = 0 to CMenuBar_GetItemCount( HWND_FRMMAIN_MENUBAR ) - 1
-        CMenuBar_SetItemText( HWND_FRMMAIN_MENUBAR, i, getMenuText( IDC_MENUBAR_FILE + i ) )
+    for i as long = 0 to PsMenuBar_GetItemCount( HWND_FRMMAIN_MENUBAR ) - 1
+        PsMenuBar_SetItemText( HWND_FRMMAIN_MENUBAR, i, getMenuText( IDC_MENUBAR_FILE + i ) )
     next
 
     ' The bar spans the full client width; its height follows the compact setting
@@ -496,15 +496,15 @@ function frmMenuBar_Show( byval hWndParent as HWND ) as LRESULT
 
     buildTopMenuDefinitions()
 
-    HWND_FRMMAIN_MENUBAR = CMenuBar_Create( hWndParent, 0 )
-    CMenuBar_SetCommandCallback( HWND_FRMMAIN_MENUBAR, @frmMenuBar_OnMenuCommand )
-    CMenuBar_SetInitPopupCallback( HWND_FRMMAIN_MENUBAR, @frmMenuBar_OnInitPopup )
+    HWND_FRMMAIN_MENUBAR = PsMenuBar_Create( hWndParent, 0 )
+    PsMenuBar_SetCommandCallback( HWND_FRMMAIN_MENUBAR, @frmMenuBar_OnMenuCommand )
+    PsMenuBar_SetInitPopupCallback( HWND_FRMMAIN_MENUBAR, @frmMenuBar_OnInitPopup )
 
     ' One bar item + dropdown tree per menubar id (the ids are contiguous, and the
     ' bar item index = id - IDC_MENUBAR_FILE everywhere in the host).
     for id as long = IDC_MENUBAR_FILE to IDC_MENUBAR_HELP
-        dim as long idx = CMenuBar_AddItem( HWND_FRMMAIN_MENUBAR, getMenuText(id), id )
-        CMenuBar_SetDropDown( HWND_FRMMAIN_MENUBAR, idx, frmMenuBar_BuildDropDown(id) )
+        dim as long idx = PsMenuBar_AddItem( HWND_FRMMAIN_MENUBAR, getMenuText(id), id )
+        PsMenuBar_SetDropDown( HWND_FRMMAIN_MENUBAR, idx, frmMenuBar_BuildDropDown(id) )
     next
 
     ' The update label (hidden until the update check resolves a caption).
