@@ -71,8 +71,7 @@ private function PsListBox_SetTopVis( byval pList as PSLISTBOX ptr, byval vis as
     if newTop <> pList->nTopVis then
         pList->nTopVis = newTop
         dim as HWND hSurf = GetDlgItem( pList->hWin, pList->idc_ListBox )
-        ' Whole surface, not a scrolled band: under D2D the back buffer is undefined after
-        ' a present, so every paint redraws the client anyway (README F2/F7).
+        ' Whole surface, not a scrolled band: the buffer redraws the whole client each paint.
         if hSurf then InvalidateRect( hSurf, NULL, FALSE )
     end if
     return pList->nTopVis
@@ -122,6 +121,80 @@ private function PsListBox_VisIndexFromPoint( _
     if (vis < 0) orelse (vis >= pList->visibleCount) then return -1
     return vis
 end function
+
+
+' Resolve a drag cursor point to a drop target. Fills:
+'   insertBefore -- the MODEL index the dragged block would land before (0..rowCount)
+'   onHeader     -- TRUE when the point is over a header row (drop as its first children)
+'   targetRow    -- MODEL index of the row under the point, or -1 past the last row
+' Rules: over a header -> insert as its first child (header+1); over an item -> its top half
+' inserts before it, its bottom half before the next visible row; below the last row -> end.
+private sub PsListBox_DropTargetFromPoint( _
+            byval pList as PSLISTBOX ptr, _
+            byval x as integer, _
+            byval y as integer, _
+            byref insertBefore as integer, _
+            byref onHeader as boolean, _
+            byref targetRow as integer )
+    insertBefore = 0
+    onHeader     = false
+    targetRow    = -1
+    if pList = 0 then exit sub
+    if pList->rowCount <= 0 then exit sub
+
+    dim as HWND hSurf = GetDlgItem( pList->hWin, pList->idc_ListBox )
+    if hSurf = 0 then exit sub
+    dim as RECT rcClient : GetClientRect( hSurf, @rcClient )
+    dim as integer ih = PsListBox_ItemHeightPx( pList )
+    if ih < 1 then exit sub
+
+    ' Which visible row does y fall in? Clamp above the top to the first visible row; below
+    ' the last populated row means "end of list".
+    if pList->visibleCount <= 0 then
+        insertBefore = pList->rowCount        ' no visible rows (all collapsed away) -> append
+        exit sub
+    end if
+
+    dim as integer relRow = y \ ih
+    if y < 0 then relRow = 0
+    dim as integer vis = pList->nTopVis + relRow
+
+    if vis >= pList->visibleCount then
+        ' Past the last visible row: drop at the very end of the model.
+        insertBefore = pList->rowCount
+        targetRow    = -1
+        exit sub
+    end if
+    if vis < pList->nTopVis then vis = pList->nTopVis
+
+    dim as integer modelRow = pList->VisibleToModel( vis )
+    if modelRow < 0 then
+        insertBefore = pList->rowCount
+        exit sub
+    end if
+    targetRow = modelRow
+
+    if pList->rows(modelRow).IsHeader then
+        ' On a header: the block becomes its first children, regardless of cursor half.
+        onHeader     = true
+        insertBefore = modelRow + 1
+        exit sub
+    end if
+
+    ' On an item: top half inserts before it, bottom half before the next VISIBLE row.
+    dim as integer rowTopY = (vis - pList->nTopVis) * ih
+    dim as boolean lowerHalf = (y - rowTopY) >= (ih \ 2)
+    if lowerHalf = false then
+        insertBefore = modelRow
+    else
+        dim as integer nextVis = vis + 1
+        if nextVis >= pList->visibleCount then
+            insertBefore = pList->rowCount            ' after the last visible row
+        else
+            insertBefore = pList->VisibleToModel( nextVis )
+        end if
+    end if
+end sub
 
 
 ' ========================================================================================
@@ -364,6 +437,129 @@ end function
 
 
 ' ========================================================================================
+' Row column-span. A spanned row is an ordinary, selectable row that paints as ONE cell
+' across the whole column band (its text stays in column 0). See the PAINTINFO contract in
+' the .bi. Programmatic (silent); the change repaints so a visible row reflows immediately.
+' ========================================================================================
+function PsListBox_SetRowSpanColumns( byval hListControl as HWND, byval row as integer, byval bSpan as boolean = true ) as boolean
+    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+    if pList = null then return false
+    if pList->IsValidRow(row) = false then return false
+    if pList->rows(row).bSpanColumns = bSpan then return true   ' no change, no repaint
+    pList->rows(row).bSpanColumns = bSpan
+    ' Repaint (no erase: the row callback fills every pixel). No-op inside a BeginUpdate
+    ' batch, whose EndUpdate covers it. Inlined rather than calling the private
+    ' PsListBox_InvalidateRowsForColumns, which is defined further down this file.
+    if pList->updateDepth = 0 then
+        dim as HWND hList = GetDlgItem( pList->hWin, pList->idc_ListBox )
+        if hList then InvalidateRect( hList, NULL, FALSE )
+    end if
+    return true
+end function
+
+function PsListBox_GetRowSpanColumns( byval hListControl as HWND, byval row as integer ) as boolean
+    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+    if pList = null then return false
+    if pList->IsValidRow(row) = false then return false
+    return pList->rows(row).bSpanColumns
+end function
+
+
+' ========================================================================================
+' Row selectability. A non-selectable row cannot be selected or focused by ANY path (the
+' invariant is enforced in SetRowSelected / SelectOnly / SelectRange and the four public
+' setters) and keyboard navigation skips it. See the .bi contract.
+' ========================================================================================
+function PsListBox_SetRowSelectable( byval hListControl as HWND, byval row as integer, byval bSelectable as boolean = true ) as boolean
+    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+    if pList = null then return false
+    if pList->IsValidRow(row) = false then return false
+    if pList->rows(row).bSelectable = bSelectable then return true   ' no change, no repaint
+    pList->rows(row).bSelectable = bSelectable
+    if bSelectable = false then
+        ' Enforce the invariant now: a row that can no longer be selected must not stay
+        ' selected or keep the caret/anchor. Silent (programmatic), but it repaints below.
+        pList->rows(row).selected = false
+        if pList->focusRow = row then
+            pList->focusRow        = -1
+            pList->lastNotifiedRow = -1
+        end if
+        if pList->anchorRow = row then pList->anchorRow = -1
+    end if
+    dim as HWND hList = GetDlgItem( pList->hWin, pList->idc_ListBox )
+    if hList then InvalidateRect( hList, NULL, FALSE )
+    return true
+end function
+
+function PsListBox_GetRowSelectable( byval hListControl as HWND, byval row as integer ) as boolean
+    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+    if pList = null then return false
+    if pList->IsValidRow(row) = false then return false
+    return pList->rows(row).bSelectable
+end function
+
+
+' ========================================================================================
+' Drag-and-drop row reordering -- public surface. The gesture lives in the surface WndProc;
+' these are the opt-in switch, the two callbacks, the colour, and the programmatic reorder.
+' ========================================================================================
+function PsListBox_SetDragReorder( byval hListControl as HWND, byval enable as boolean = true ) as boolean
+    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+    if pList = null then return false
+    pList->bDragReorder = enable
+    if enable = false then
+        ' Turning it off mid-life must not strand an armed/active gesture or its capture.
+        pList->bDragArmed  = false
+        pList->bDragActive = false
+        pList->dragPendCollapse = -1
+    end if
+    return true
+end function
+
+function PsListBox_GetDragReorder( byval hListControl as HWND ) as boolean
+    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+    if pList = null then return false
+    return pList->bDragReorder
+end function
+
+sub PsListBox_SetCanDropCallback( byval hListControl as HWND, byval usersub as CanDropCallbackFunc )
+    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+    if pList = null then return
+    pList->CanDropCallback = usersub
+end sub
+
+sub PsListBox_SetDragDropCallback( byval hListControl as HWND, byval usersub as DragDropCallbackSub )
+    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+    if pList = null then return
+    pList->DragDropCallback = usersub
+end sub
+
+' Programmatic reorder: move srcRows() so they land contiguously before insertBefore (a MODEL
+' index; GetCount = append). Silent (the family rule -- no DragDrop callback). Repaints.
+' Returns the block's new first MODEL index, or -1 if nothing valid moved.
+function PsListBox_MoveRows( byval hListControl as HWND, srcRows() as integer, byval insertBefore as integer ) as integer
+    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+    if pList = null then return -1
+    ' The model method calls NotifyChange (-> Refresh) itself, like every other mutator.
+    return pList->MoveRows( srcRows(), insertBefore )
+end function
+
+function PsListBox_SetDragIndicatorColor( byval hListControl as HWND, byval clr as COLORREF ) as COLORREF
+    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+    if pList = null then return 0
+    dim as COLORREF prev = pList->dragIndicatorColor
+    pList->dragIndicatorColor = clr
+    return prev
+end function
+
+function PsListBox_GetDragIndicatorColor( byval hListControl as HWND ) as COLORREF
+    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+    if pList = null then return 0
+    return pList->dragIndicatorColor
+end function
+
+
+' ========================================================================================
 ' Set the user defined row painting callback for the custom listbox control.
 ' ========================================================================================
 sub PsListBox_SetPaintCallback( byval hListControl as HWND, byval usersub as PaintCallbackSub )
@@ -499,6 +695,9 @@ function PsListBox_SetCurSel( byval hListControl as HWND, byval row as integer )
         if hList then InvalidateRect( hList, NULL, FALSE )
         return -1
     end if
+    ' A non-selectable row cannot become the current row -- leave the selection untouched
+    ' and report failure (the host asked for something the invariant forbids).
+    if pList->IsRowSelectable(row) = false then return -1
     pList->SelectOnly( row )
     pList->focusRow  = row
     pList->anchorRow = row
@@ -570,6 +769,8 @@ function PsListBox_SetSel( byval hListControl as HWND, byval row as integer, byv
     dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
     if pList = null then return false
     if pList->IsValidRow(row) = false then return false
+    ' Selecting a non-selectable row is refused; clearing it (state = false) is fine.
+    if state andalso (pList->IsRowSelectable(row) = false) then return false
     pList->SetRowSelected( row, state )
     dim as HWND hList = GetDlgItem( pList->hWin, pList->idc_ListBox )
     if hList then InvalidateRect( hList, NULL, FALSE )
@@ -607,7 +808,12 @@ sub PsListBox_SelectAll( byval hListControl as HWND, byval state as boolean )
     dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
     if pList = null then return
     for i as integer = 0 to pList->rowCount - 1
-        pList->rows(i).selected = state
+        ' Select-all covers every SELECTABLE row; a non-selectable row is always left clear.
+        if state andalso (pList->rows(i).bSelectable = false) then
+            pList->rows(i).selected = false
+        else
+            pList->rows(i).selected = state
+        end if
     next
     dim as HWND hList = GetDlgItem( pList->hWin, pList->idc_ListBox )
     if hList then InvalidateRect( hList, NULL, FALSE )
@@ -753,6 +959,10 @@ private sub PsListBox_ShiftCellColumns( byval pList as PSLISTBOX ptr, byval idx 
     if pList = null then exit sub
     if idx < 0 then exit sub
     for r as integer = 0 to pList->rowCount - 1
+        ' Spanned rows keep their text in column 0 regardless of column mutations -- their
+        ' caption must not be pushed into cells(0) (insert-at-0) or clobbered (delete-at-0),
+        ' which would silently blank the row. Its higher cells are unused while spanned.
+        if pList->rows(r).bSpanColumns then continue for
         dim as integer nCells = ubound(pList->rows(r).cells) + 1   ' stored cells = columns 1..nCells
         if nDir > 0 then
             if idx = 0 then
@@ -1261,9 +1471,8 @@ end function
 '
 ' This replaces WM_MEASUREITEM + WM_DRAWITEM and is the point of the whole rewrite. The
 ' system listbox turned one WM_PAINT into N WM_DRAWITEM messages, each with its own buffer
-' and its own blit; under Direct2D each of those was a full BindDC/BeginDraw/EndDraw cycle
-' at ~600 us apiece (README F8), so a 34-row repaint paid 34 cycles. Here the whole client
-' is one cycle.
+' and its own blit, so a 34-row repaint paid 34 buffer create/blit cycles. Here the whole
+' client is one cycle.
 '
 ' ONE CONTRACT CHANGE, and it is the only one hosts can see: p->rc and the cell rects are
 ' now in the SURFACE's CLIENT coordinates rather than in a row-sized buffer starting at
@@ -1271,10 +1480,8 @@ end function
 ' painters do, since they must already honour the row's left edge and width -- needs no
 ' change at all. One that hardcoded 0 for the top would.
 '
-' The plan called for a render-target transform per row to keep p->rc.top = 0 and avoid
-' even that. It was not used: transforms are a Direct2D feature, and the GDI and GDI+
-' backends have no equivalent, so it would have made the three builds diverge in exactly
-' the code the A/B comparison depends on being identical.
+' Keeping p->rc.top = 0 with a per-row coordinate transform was considered and rejected: a
+' plain client-relative rect is simpler and needs no transform machinery.
 ' ========================================================================================
 function PsListBox_OnPaintSurface( byval hSurf as HWND ) as LRESULT
     dim as PSLISTBOX ptr pList = GetListBoxPointer( GetParent( hSurf ) )
@@ -1297,6 +1504,11 @@ function PsListBox_OnPaintSurface( byval hSurf as HWND ) as LRESULT
     ' old per-row loop asked the header for every column's rect on every row; columns
     ' cannot move mid-paint, so that was pure repetition. Only the y values vary per row.
     dim as integer nCols = PsColumnHeader_GetCount( pList->hHeader )
+    ' Column band bounds, resolved once for the repaint: a spanned row's single merged cell
+    ' runs from column 0's own left to the last column's right (same left a normal column-0
+    ' cell gets). The per-column loop below never rewrites .rc.left/.rc.right, so these stay
+    ' valid for every row.
+    dim as integer bandLeft = 0, bandRight = 0
     if nCols > 0 then
         pList->EnsurePaintCells( nCols )
         dim as RECT rcCol
@@ -1308,6 +1520,8 @@ function PsListBox_OnPaintSurface( byval hSurf as HWND ) as LRESULT
                 .rc.right = rcCol.right
             end with
         next
+        bandLeft  = pList->paintCells(0).rc.left
+        bandRight = pList->paintCells(nCols - 1).rc.right
     end if
 
     if (ih > 0) andalso (pList->PaintCallback <> 0) then
@@ -1337,12 +1551,16 @@ function PsListBox_OnPaintSurface( byval hSurf as HWND ) as LRESULT
                 .isFocused   = (modelRow = pList->focusRow)
                 .isHeader    = false
                 .isCollapsed = false
+                .isSpanned   = false
+                .isSelectable = true
                 .columnCount = 0
                 .cells       = 0
                 if pRow then
                     .isSelected  = pRow->selected
                     .isHeader    = pRow->IsHeader
                     .isCollapsed = pRow->bCollapsed
+                    .isSpanned   = pRow->bSpanColumns
+                    .isSelectable = pRow->bSelectable
                     .wszCaption  = pRow->Text
                 end if
             end with
@@ -1356,26 +1574,74 @@ function PsListBox_OnPaintSurface( byval hSurf as HWND ) as LRESULT
             if wantCells then wantCells = (pRow->IsHeader = false)
             if nCols <= 0 then wantCells = false
             if wantCells then
-                for c as integer = 0 to nCols - 1
-                    with pList->paintCells(c)
+                if pRow->bSpanColumns then
+                    ' Spanned row: one merged cell over the whole band. Uses its own scratch
+                    ' (spanCell) so the shared paintCells x-geometry is left intact for the
+                    ' normal rows that follow in this same repaint.
+                    with pList->spanCell
+                        .iCol      = 0
+                        .rc.left   = bandLeft
+                        .rc.right  = bandRight
                         .rc.top    = y
                         .rc.bottom = y + ih
-                        if c = 0 then
-                            .wszText = pRow->Text
-                        elseif c - 1 <= ubound(pRow->cells) then
-                            .wszText = pRow->cells(c - 1)
-                        else
-                            .wszText = ""
-                        end if
+                        .wszText   = pRow->Text
                     end with
-                next
-                p.columnCount = nCols
-                p.cells = @pList->paintCells(0)
+                    p.columnCount = 1
+                    p.cells = @pList->spanCell
+                else
+                    for c as integer = 0 to nCols - 1
+                        with pList->paintCells(c)
+                            .rc.top    = y
+                            .rc.bottom = y + ih
+                            if c = 0 then
+                                .wszText = pRow->Text
+                            elseif c - 1 <= ubound(pRow->cells) then
+                                .wszText = pRow->cells(c - 1)
+                            else
+                                .wszText = ""
+                            end if
+                        end with
+                    next
+                    p.columnCount = nCols
+                    p.cells = @pList->paintCells(0)
+                end if
             end if
 
             b.SetFont( pList->hFont )   ' default row font; the callback may override
             pList->PaintCallback( @p )
         next
+    end if
+
+    ' --- Drag-reorder drop indicator, drawn ON TOP of the rows. Either a frame around the
+    ' target header (drop-as-first-child) or a horizontal insertion line at the target gap. ---
+    if (pList->bDragActive = true) andalso (ih > 0) then
+        b.SetBackColor( pList->dragIndicatorColor )
+        if (pList->dropOnHeader = true) andalso (pList->dropTargetRow >= 0) then
+            dim as RECT rh
+            if PsListBox_VisIndexRect( pList, pList->ModelToVisible( pList->dropTargetRow ), rh ) then
+                dim as RECT seg
+                seg = rh : seg.bottom = seg.top + 2               : b.PaintRect( @seg )   ' top edge
+                seg = rh : seg.top    = seg.bottom - 2            : b.PaintRect( @seg )   ' bottom edge
+                seg = rh : seg.right  = seg.left + 2              : b.PaintRect( @seg )   ' left edge
+                seg = rh : seg.left   = seg.right - 2             : b.PaintRect( @seg )   ' right edge
+            end if
+        else
+            ' The gap's y: top of the row dropInsertBefore maps to, or just past the last
+            ' visible row when the drop is at the end of the list.
+            dim as integer lineY
+            if pList->dropInsertBefore >= pList->rowCount then
+                lineY = (pList->visibleCount - pList->nTopVis) * ih
+                if lineY > rcClient.bottom - 3 then lineY = rcClient.bottom - 3
+            else
+                dim as integer gv = pList->ModelToVisible( pList->dropInsertBefore )
+                if gv < 0 then gv = pList->visibleCount
+                lineY = (gv - pList->nTopVis) * ih
+            end if
+            if lineY < 0 then lineY = 0
+            dim as RECT rl
+            SetRect( @rl, rcClient.left, lineY, rcClient.right, lineY + 3 )
+            b.PaintRect( @rl )
+        end if
     end if
 
     b.EndDoubleBuffer()
@@ -1484,6 +1750,10 @@ end sub
 ' ========================================================================================
 sub PsListBox_ApplyClickSelection( byval pList as PSLISTBOX ptr, byval modelRow as integer, byval isCtrl as boolean, byval isShift as boolean )
     if (pList = null) orelse (pList->IsValidRow(modelRow) = false) then return
+    ' A non-selectable row swallows the click for selection purposes: no focus move, no
+    ' selection change, no anchor update. The host still sees the raw click through the
+    ' message callback (surfaced by the WndProc, not here).
+    if pList->IsRowSelectable(modelRow) = false then return
 
     if pList->MultipleSel then
         ' checklist style: every click toggles that one row
@@ -1564,12 +1834,34 @@ function PsListBox_ParentHeader( byval pList as PSLISTBOX ptr, byval modelRow as
     return -1
 end function
 
-' Move the focus to a VISIBLE position (clamped) and apply selection per the
-' control's mode and the Shift/Ctrl modifiers, then ensure-visible and repaint.
-sub PsListBox_MoveFocusVis( byval pList as PSLISTBOX ptr, byval newVis as integer, byval isShift as boolean, byval isCtrl as boolean )
+' First VISIBLE index whose MODEL row is selectable, scanning from startVis INCLUSIVE in
+' step dir (+1 down / -1 up). -1 if the scan runs off the end without finding one.
+function PsListBox_FindSelectableVis( byval pList as PSLISTBOX ptr, byval startVis as integer, byval nDir as integer ) as integer
+    dim as integer v = startVis
+    while (v >= 0) andalso (v < pList->visibleCount)
+        dim as integer mr = pList->VisibleToModel( v )
+        if (mr >= 0) andalso pList->IsRowSelectable( mr ) then return v
+        v += nDir
+    wend
+    return -1
+end function
+
+' Move the focus to a VISIBLE position (clamped) and apply selection per the control's mode
+' and the Shift/Ctrl modifiers, then ensure-visible and repaint. Non-selectable rows are
+' skipped: the caret lands on the first selectable row from the target travelling in `dir`.
+' bAllowReverse lets the paging/extreme keys search back the other way when nothing lies
+' ahead, so they always land somewhere; the single-step arrows pass FALSE, so a step that
+' would only reach non-selectable rows simply leaves the caret where it is.
+sub PsListBox_MoveFocusVis( byval pList as PSLISTBOX ptr, byval newVis as integer, byval isShift as boolean, byval isCtrl as boolean, byval nDir as integer = 1, byval bAllowReverse as boolean = false )
     if pList->visibleCount <= 0 then return
     if newVis < 0 then newVis = 0
     if newVis > pList->visibleCount - 1 then newVis = pList->visibleCount - 1
+
+    dim as integer resolved = PsListBox_FindSelectableVis( pList, newVis, nDir )
+    if (resolved < 0) andalso bAllowReverse then resolved = PsListBox_FindSelectableVis( pList, newVis, -nDir )
+    if resolved < 0 then return          ' no selectable row reachable -> leave focus put
+    newVis = resolved
+
     dim as integer newModel = pList->VisibleToModel( newVis )
     if newModel < 0 then return
 
@@ -1613,7 +1905,7 @@ sub PsListBox_KeyLeft( byval pList as PSLISTBOX ptr )
         end if
     else
         dim as integer h = PsListBox_ParentHeader( pList, f )
-        if h >= 0 then
+        if (h >= 0) andalso pList->IsRowSelectable( h ) then
             pList->focusRow  = h
             pList->SelectOnly( h )
             pList->anchorRow = h
@@ -1636,7 +1928,7 @@ sub PsListBox_KeyRight( byval pList as PSLISTBOX ptr )
         PsListBox_EnsureVisible( pList, f )
     else
         dim as integer curVis = pList->ModelToVisible( f )
-        PsListBox_MoveFocusVis( pList, curVis + 1, false, false )
+        PsListBox_MoveFocusVis( pList, curVis + 1, false, false, +1, false )
     end if
 end sub
 
@@ -1653,6 +1945,99 @@ sub PsListBox_KeySpace( byval pList as PSLISTBOX ptr, byval isCtrl as boolean )
     dim as HWND hList = GetDlgItem( pList->hWin, pList->idc_ListBox )
     if hList then InvalidateRect( hList, NULL, FALSE )
     PsListBox_NotifySelChange( pList )
+end sub
+
+
+' ========================================================================================
+' Drag-and-drop reordering helpers (used by the surface WndProc below).
+' ========================================================================================
+
+' The rows a drag will move: if the pressed row is part of a multi-selection, every selected
+' item row; otherwise just the pressed row (headers/invalid excluded). Redims srcRows() and
+' returns the count.
+private function PsListBox_BuildDragSource( byval pList as PSLISTBOX ptr, byval pressedRow as integer, srcRows() as integer ) as integer
+    dim as integer n = 0
+    dim as boolean pressedSelected = pList->IsRowSelected( pressedRow )
+    if pressedSelected andalso (pList->GetSelCount() > 1) then
+        redim srcRows( 0 to pList->rowCount - 1 )
+        for i as integer = 0 to pList->rowCount - 1
+            if pList->rows(i).selected andalso (pList->rows(i).IsHeader = false) then
+                srcRows(n) = i : n += 1
+            end if
+        next
+        if n > 0 then redim preserve srcRows( 0 to n - 1 )
+    end if
+    if n = 0 then
+        if pList->IsValidRow(pressedRow) andalso (pList->rows(pressedRow).IsHeader = false) then
+            redim srcRows( 0 to 0 )
+            srcRows(0) = pressedRow
+            n = 1
+        end if
+    end if
+    return n
+end function
+
+' Recompute the current drop target from a client point and repaint the indicator if it moved.
+private sub PsListBox_UpdateDragTarget( byval pList as PSLISTBOX ptr, byval hWin as HWND, byval x as integer, byval y as integer )
+    dim as integer ib, tr
+    dim as boolean oh
+    PsListBox_DropTargetFromPoint( pList, x, y, ib, oh, tr )
+    if (ib <> pList->dropInsertBefore) orelse (oh <> pList->dropOnHeader) orelse (tr <> pList->dropTargetRow) then
+        pList->dropInsertBefore = ib
+        pList->dropOnHeader     = oh
+        pList->dropTargetRow    = tr
+        InvalidateRect( hWin, NULL, FALSE )
+    end if
+end sub
+
+' Tear a drag down: clear state, kill the auto-scroll timer, release capture, and clear the
+' indicator if one was showing. Safe to call whether armed, active, or neither.
+private sub PsListBox_CancelDrag( byval pList as PSLISTBOX ptr, byval hWin as HWND )
+    dim as boolean wasActive = pList->bDragActive
+    pList->bDragArmed       = false
+    pList->bDragActive      = false
+    pList->dragPendCollapse = -1
+    pList->dragAnchorRow    = -1
+    pList->dropInsertBefore = -1
+    pList->dropOnHeader     = false
+    pList->dropTargetRow    = -1
+    if pList->dragTimerOn then
+        KillTimer( hWin, IDT_CLISTBOX_DRAGSCROLL )
+        pList->dragTimerOn = false
+    end if
+    if GetCapture() = hWin then ReleaseCapture()
+    if wasActive then InvalidateRect( hWin, NULL, FALSE )
+end sub
+
+' Commit the current drop: build the source set, run the CanDrop veto, move the rows, and
+' fire DragDrop. Reads the target tracked in drop* (recompute from the up point first).
+private sub PsListBox_CommitDrop( byval pList as PSLISTBOX ptr, byval hWin as HWND )
+    dim srcRows() as integer
+    dim as integer n = PsListBox_BuildDragSource( pList, pList->dragAnchorRow, srcRows() )
+    if n <= 0 then return
+    dim as integer insertBefore = pList->dropInsertBefore
+    if insertBefore < 0 then return
+
+    ' Pre-drop veto. The host gets the source set and the drop-target ROWINFO (read-only).
+    if pList->CanDropCallback then
+        dim info as PSLISTBOX_DROPINFO
+        info.hList        = pList->hWin
+        info.srcRows      = @srcRows(0)
+        info.srcCount     = n
+        info.insertBefore = insertBefore
+        info.onHeader     = pList->dropOnHeader
+        info.targetRow    = pList->dropTargetRow
+        if pList->IsValidRow( pList->dropTargetRow ) then info.targetInfo = pList->GetRow( pList->dropTargetRow )
+        if pList->CanDropCallback( @info ) = false then return   ' rejected: leave the model alone
+    end if
+
+    ' Dropping onto a collapsed header expands it, so the moved rows are actually visible.
+    if pList->dropOnHeader andalso pList->IsValidRow(pList->dropTargetRow) then
+        if pList->rows(pList->dropTargetRow).bCollapsed then pList->rows(pList->dropTargetRow).bCollapsed = false
+    end if
+
+    dim as integer newFirst = pList->MoveRows( srcRows(), insertBefore )   ' NotifyChange->Refresh
+    if (newFirst >= 0) andalso pList->DragDropCallback then pList->DragDropCallback( pList->hWin, newFirst, n )
 end sub
 
 
@@ -1702,7 +2087,7 @@ function PsListBoxSurface_WndProc ( _
             ' This used to hand off to DefSubclassProc, which fanned out into one
             ' WM_DRAWITEM per row -- and collapsing those N paint cycles into one is the
             ' whole of the speed win this rewrite bought. It is backend-independent: it
-            ' made GDI 25% faster and GDI+ 38% faster as well as Direct2D 35x.
+            ' made GDI 25% faster and GDI+ 38% faster.
             return PsListBox_OnPaintSurface( hWin )
 
         case WM_ERASEBKGND
@@ -1732,9 +2117,36 @@ function PsListBoxSurface_WndProc ( _
                 end if
                 return 0
             end if
+            if pList andalso (_wParam = IDT_CLISTBOX_DRAGSCROLL) then
+                ' Auto-scroll while dragging near an edge. Read the cursor live (capture
+                ' means moves may stop arriving once it is held still against the edge).
+                if pList->bDragActive then
+                    dim as POINT pt : GetCursorPos( @pt ) : ScreenToClient( hWin, @pt )
+                    dim as RECT rcC : GetClientRect( hWin, @rcC )
+                    dim as integer newTop = pList->nTopVis
+                    if pt.y < (rcC.top + PSLISTBOX_DRAGSCROLL_ZONE) then
+                        newTop -= 1
+                    elseif pt.y > (rcC.bottom - PSLISTBOX_DRAGSCROLL_ZONE) then
+                        newTop += 1
+                    end if
+                    if newTop <> pList->nTopVis then
+                        PsListBox_SetTopVis( pList, newTop )
+                        PsListBox_CaptureTopRow( pList )
+                        PsListBox_SyncScrollBar( pList )
+                        PsListBox_UpdateDragTarget( pList, hWin, pt.x, pt.y )
+                        InvalidateRect( hWin, NULL, FALSE )
+                    end if
+                end if
+                return 0
+            end if
             ' any other timer id falls through to the default listbox handler
 
         case WM_KEYDOWN
+            ' Esc during an active drag cancels it with no move (capture-loss's sibling).
+            if (pList <> 0) andalso (pList->bDragActive = true) andalso (_wParam = VK_ESCAPE) then
+                PsListBox_CancelDrag( pList, hWin )
+                return 0
+            end if
             if pList then
                 dim as boolean isShift = (GetAsyncKeyState(VK_SHIFT) and &H8000)
                 dim as boolean isCtrl  = (GetAsyncKeyState(VK_CONTROL) and &H8000)
@@ -1744,18 +2156,18 @@ function PsListBoxSurface_WndProc ( _
                 if perPage < 1 then perPage = 1
 
                 select case _wParam
-                    case VK_UP
-                        PsListBox_MoveFocusVis( pList, curVis - 1, isShift, isCtrl ) : return 0
-                    case VK_DOWN
-                        PsListBox_MoveFocusVis( pList, curVis + 1, isShift, isCtrl ) : return 0
-                    case VK_PRIOR    ' PageUp
-                        PsListBox_MoveFocusVis( pList, curVis - perPage, isShift, isCtrl ) : return 0
-                    case VK_NEXT     ' PageDown
-                        PsListBox_MoveFocusVis( pList, curVis + perPage, isShift, isCtrl ) : return 0
-                    case VK_HOME
-                        PsListBox_MoveFocusVis( pList, 0, isShift, isCtrl ) : return 0
-                    case VK_END
-                        PsListBox_MoveFocusVis( pList, pList->visibleCount - 1, isShift, isCtrl ) : return 0
+                    case VK_UP        ' step up; a blocked step leaves the caret put
+                        PsListBox_MoveFocusVis( pList, curVis - 1, isShift, isCtrl, -1, false ) : return 0
+                    case VK_DOWN      ' step down; likewise
+                        PsListBox_MoveFocusVis( pList, curVis + 1, isShift, isCtrl, +1, false ) : return 0
+                    case VK_PRIOR    ' PageUp: search up from the target, else back down toward here
+                        PsListBox_MoveFocusVis( pList, curVis - perPage, isShift, isCtrl, -1, true ) : return 0
+                    case VK_NEXT     ' PageDown: search down from the target, else back up
+                        PsListBox_MoveFocusVis( pList, curVis + perPage, isShift, isCtrl, +1, true ) : return 0
+                    case VK_HOME     ' first selectable row from the top
+                        PsListBox_MoveFocusVis( pList, 0, isShift, isCtrl, +1, true ) : return 0
+                    case VK_END      ' last selectable row from the bottom
+                        PsListBox_MoveFocusVis( pList, pList->visibleCount - 1, isShift, isCtrl, -1, true ) : return 0
                     case VK_LEFT
                         PsListBox_KeyLeft( pList ) : return 0
                     case VK_RIGHT
@@ -1805,7 +2217,31 @@ function PsListBoxSurface_WndProc ( _
 
 
         Case WM_MOUSEMOVE
-            ' Track that we are over the control in order to catch the 
+            ' --- Drag-reorder gesture. While a drag is active, this owns the message: the
+            ' indicator follows the cursor and hover/selection are suppressed. While merely
+            ' armed, wait for the system drag threshold before taking capture. ---
+            if (pList <> 0) andalso (pList->bDragReorder = true) then
+                dim as integer mx = GET_X_LPARAM(_lParam)
+                dim as integer my = GET_Y_LPARAM(_lParam)
+                if pList->bDragActive then
+                    PsListBox_UpdateDragTarget( pList, hWin, mx, my )
+                    return 0
+                elseif (pList->bDragArmed = true) andalso ((_wParam and MK_LBUTTON) <> 0) then
+                    dim as integer dx = abs( mx - pList->ptDragStart.x )
+                    dim as integer dy = abs( my - pList->ptDragStart.y )
+                    if (dx >= GetSystemMetrics(SM_CXDRAG)) orelse (dy >= GetSystemMetrics(SM_CYDRAG)) then
+                        pList->bDragActive = true
+                        SetCapture( hWin )
+                        PsListBox_ClearHotTracking( pList, hWin )          ' no hot row during a drag
+                        SetTimer( hWin, IDT_CLISTBOX_DRAGSCROLL, PSLISTBOX_DRAGSCROLL_MS, NULL )
+                        pList->dragTimerOn = true
+                        PsListBox_UpdateDragTarget( pList, hWin, mx, my )
+                        return 0
+                    end if
+                end if
+            end if
+
+            ' Track that we are over the control in order to catch the
             ' eventual WM_MOUSEHOVER and WM_MOUSELEAVE events
             dim tme as TrackMouseEvent
             tme.cbSize = sizeof(TrackMouseEvent)
@@ -1823,10 +2259,8 @@ function PsListBoxSurface_WndProc ( _
                 pList->hotTimerOn = true
             end if
 
-            ' Invalidate only the rows whose hot state actually changed. Note this is a
-            ' hint, not an optimisation, under D2D: with PRESENT_OPTIONS the back buffer
-            ' is undefined after a present, so the paint redraws the whole client anyway
-            ' (README F7). It still spares the GDI backends a full repaint per mouse move.
+            ' Invalidate only the rows whose hot state actually changed, sparing the buffer
+            ' a full-client repaint per mouse move.
             dim as RECT rc
             dim as long idx = PsListBox_VisIndexFromPoint( pList, GET_X_LPARAM(_lParam), GET_Y_LPARAM(_lParam) )
             if (pList <> 0) andalso (idx >= 0) then
@@ -1875,6 +2309,10 @@ function PsListBoxSurface_WndProc ( _
             ' partner (capture change, focus loss) -- disarm it so it cannot eat
             ' this press's own release.
             if pList then pList->skipNextLBtnUp = false
+            if pList then
+                pList->bDragArmed       = false     ' a fresh press re-arms from scratch
+                pList->dragPendCollapse = -1
+            end if
             ' Keyboard focus. The system listbox took it in its own default handling; a
             ' plain child window has to ask, or the arrow keys keep going to whatever had
             ' focus before the click.
@@ -1890,8 +2328,32 @@ function PsListBoxSurface_WndProc ( _
                     pRow->bCollapsed = not pRow->bCollapsed
                     pList->NotifyChange()
                 else
-                    ' Item: apply the mouse selection to the model.
-                    PsListBox_ApplyClickSelection( pList, modelRow, m.isCtrl, m.isShift )
+                    ' Item selection. If drag-reorder is on and this press lands on a row
+                    ' that is ALREADY part of a multi-selection, DEFER the collapse-to-one:
+                    ' the user may be starting to drag the whole selection, and collapsing it
+                    ' now would drag a single row. A plain click (no drag) applies the
+                    ' collapse on the up instead.
+                    ' A draggable row is a selectable, non-header item while the feature is on
+                    ' (hoisted to one boolean -- the 3-way andalso chain trips fbc warning 38).
+                    dim as boolean canDrag = false
+                    if pRow <> 0 then canDrag = (pList->bDragReorder = true) andalso (pRow->bSelectable = true)
+                    dim as boolean deferSel = false
+                    if canDrag then
+                        if pList->IsRowSelected(modelRow) andalso (pList->GetSelCount() > 1) then deferSel = true
+                    end if
+                    if deferSel then
+                        pList->dragPendCollapse = modelRow
+                    else
+                        PsListBox_ApplyClickSelection( pList, modelRow, m.isCtrl, m.isShift )
+                    end if
+                    ' Arm a potential drag from a draggable (selectable, non-header) item.
+                    if canDrag then
+                        pList->bDragArmed    = true
+                        pList->bDragActive   = false
+                        pList->dragAnchorRow = modelRow
+                        pList->ptDragStart.x = GET_X_LPARAM(_lParam)
+                        pList->ptDragStart.y = GET_Y_LPARAM(_lParam)
+                    end if
                 end if
                 if pList->MessageCallback then
                     if pList->MessageCallback( @m ) then return 0
@@ -1901,6 +2363,27 @@ function PsListBoxSurface_WndProc ( _
 
 
         case WM_LBUTTONUP
+            ' --- Drag-reorder: an active drag ends here. Recompute the target from the up
+            ' point, commit the move (with the CanDrop veto), then tear down capture/timer.
+            ' The host's up callback is intentionally NOT fired for a completed drag. ---
+            if (pList <> 0) andalso (pList->bDragActive = true) then
+                PsListBox_UpdateDragTarget( pList, hWin, GET_X_LPARAM(_lParam), GET_Y_LPARAM(_lParam) )
+                PsListBox_CommitDrop( pList, hWin )
+                PsListBox_CancelDrag( pList, hWin )
+                return 0
+            end if
+            ' Armed but never dragged: this was a plain click. Honor the deferred selection
+            ' collapse now (pressing a selected row in a multi-selection selects just it),
+            ' then fall through to the normal up handling so the host still sees the click.
+            if (pList <> 0) andalso (pList->bDragArmed = true) then
+                pList->bDragArmed = false
+                if pList->dragPendCollapse >= 0 then
+                    PsListBox_ApplyClickSelection( pList, pList->dragPendCollapse, false, false )
+                    pList->dragPendCollapse = -1
+                end if
+                pList->dragAnchorRow = -1
+            end if
+
             ' If a suppressed double-click armed the skip, this up is that press's
             ' release: consume the flag and do not surface it to the host callback.
             ' (Consume regardless of where the release lands, or a later legitimate
@@ -1965,12 +2448,28 @@ function PsListBoxSurface_WndProc ( _
             return 0
 
 
+        case WM_CAPTURECHANGED
+            ' Capture yanked away mid-drag (Alt+Tab, a menu, another window's SetCapture):
+            ' cancel the drag with NO move. New obligation for this control -- it is the
+            ' only gesture here that ever takes capture. CancelDrag won't re-enter us: it
+            ' only calls ReleaseCapture when we still hold capture, which we no longer do.
+            if (pList <> 0) andalso ((pList->bDragActive = true) orelse (pList->bDragArmed = true)) then
+                PsListBox_CancelDrag( pList, hWin )
+            end if
+            return 0
+
         Case WM_DESTROY
             ' Don't let the hot-tracking timer outlive the window
             if (pList <> 0) andalso pList->hotTimerOn then
                 KillTimer( hWin, IDT_CLISTBOX_HOTTRACK )
                 pList->hotTimerOn = false
             end if
+            ' Same for the drag auto-scroll timer, and release capture if a drag held it.
+            if (pList <> 0) andalso pList->dragTimerOn then
+                KillTimer( hWin, IDT_CLISTBOX_DRAGSCROLL )
+                pList->dragTimerOn = false
+            end if
+            if GetCapture() = hWin then ReleaseCapture()
             ' No RemoveWindowSubclass: this is the window's own procedure now, not a
             ' subclass hung off a system listbox.
     end select

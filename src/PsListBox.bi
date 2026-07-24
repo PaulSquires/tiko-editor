@@ -11,6 +11,14 @@
 #define IDT_CLISTBOX_HOTTRACK   &hCB01
 #define PSLISTBOX_HOTTRACK_MS    100
 
+' Auto-scroll timer used ONLY while a drag-reorder is in progress: when the cursor is held
+' near the top/bottom edge the list scrolls a row at a time so off-screen drop targets are
+' reachable. Separate id from the hot-track timer so the two never step on each other.
+#define IDT_CLISTBOX_DRAGSCROLL &hCB02
+#define PSLISTBOX_DRAGSCROLL_MS   60
+' How close to the top/bottom edge (in pixels) the cursor must be to trigger auto-scroll.
+#define PSLISTBOX_DRAGSCROLL_ZONE 18
+
 ' One cell of a multi-column row, as handed to the paint callback. The rect is in the
 ' row buffer's coordinate space (y spans 0..row height; x comes from the header's
 ' column geometry, which maps 1:1 onto the row -- see PsListBox_PositionWindows).
@@ -29,6 +37,10 @@ type PSLISTBOX_PAINTINFO
     isFocused       as boolean                ' row has the keyboard focus (caret)
     isHeader        as boolean                ' this row is a group header
     isCollapsed     as boolean                ' header only: its child items are hidden
+    isSpanned       as boolean                ' this row spans all columns (see below)
+    isSelectable    as boolean                ' FALSE = host made the row non-selectable; the
+                                              ' control blocks selection/focus, the painter may
+                                              ' grey it (cosmetic only -- not the enforcement)
     wszCaption      as DWSTRING
     ' --- Columns. 0/null whenever the row should paint as a single full-width cell:
     '     no columns are defined, or this row is a group header (group headers span).
@@ -37,6 +49,17 @@ type PSLISTBOX_PAINTINFO
     '     cells[i].rc -- the control does not clip between cells (DT_END_ELLIPSIS is
     '     your friend). The array is control-owned scratch, valid ONLY during the
     '     callback -- copy anything you need to keep. ---
+    '
+    '     SPANNED rows (isSpanned = true, an ordinary selectable row flagged with
+    '     PsListBox_SetRowSpanColumns) collapse to columnCount = 1 whenever columns are
+    '     defined: cells[0].wszText is column 0's text and cells[0].rc runs the whole
+    '     column band -- column 0's own left (the same left a normal column-0 cell gets,
+    '     so the spanned text lines up under column 0) to the last column's right -- so
+    '     the callback's existing `for c = 0 to columnCount-1` loop draws it as one wide
+    '     cell with no new branch. Selection/hot still fill the full rc. When no
+    '     columns are defined the row is already full-width (columnCount = 0) and the
+    '     flag only advertises the intent. Group headers are NOT spanned rows -- they
+    '     have their own isHeader path and carry isSpanned = false.
     columnCount     as integer
     cells           as PSLISTBOX_CELLINFO ptr
 end type
@@ -55,6 +78,11 @@ end type
 type PSLISTBOX_ROWINFO
     IsHeader        as boolean = false
     bCollapsed      as boolean = false
+    bSpanColumns    as boolean = false    ' paint this (ordinary, selectable) row as one cell
+                                          ' spanning every column; text stays in column 0
+    bSelectable     as boolean = true     ' false = the row cannot be selected or focused and
+                                          ' keyboard navigation skips over it (enforced on every
+                                          ' path, programmatic setters included)
     selected        as boolean = false    ' selection is stored in the model, not the listbox
     Text            as DWSTRING           ' column 0's cell text (the pre-columns contract)
     ' Columns 1..N: cells(c-1) holds column c's text. SPARSE storage, independent of
@@ -115,6 +143,35 @@ type TooltipCallbackFunc as function( byval hListControl as HWND, byval row as i
 ' current -- only an actual change notifies.
 type SelChangeCallbackSub as sub( byval hListControl as HWND, byval row as integer )
 
+' ----------------------------------------------------------------------------------------
+' Drag-and-drop row reordering (opt-in via PsListBox_SetDragReorder). The user drags a row,
+' or the whole current selection, to a new position; dropping ON a header inserts the block
+' as that header's first children. The control moves its OWN rows() model and notifies.
+' ----------------------------------------------------------------------------------------
+
+' Handed to the CanDrop veto just before a drop commits. Everything here is a SNAPSHOT for
+' the duration of the callback -- srcRows points at control-owned scratch and targetInfo at
+' a live ROWINFO; copy anything you need to keep, and do not mutate the model from inside.
+type PSLISTBOX_DROPINFO
+    hList        as HWND
+    srcRows      as integer ptr           ' the MODEL indices being dragged (srcCount of them)
+    srcCount     as integer
+    insertBefore as integer               ' MODEL index the block will land before (0..rowCount)
+    onHeader     as boolean               ' TRUE = dropped on a header (block becomes its first children)
+    targetRow    as integer               ' MODEL index of the drop-target row, or -1 at the list end
+    targetInfo   as PSLISTBOX_ROWINFO ptr ' the target row's ROWINFO (read-only), or NULL at the end
+end type
+
+' Fired just BEFORE the move commits. Return FALSE to reject the drop (the model is left
+' untouched). Unset = every drop is allowed.
+type CanDropCallbackFunc as function( byval p as PSLISTBOX_DROPINFO ptr ) as boolean
+
+' Fired just AFTER a user drag-drop moves rows. newFirstRow is the MODEL index the moved
+' block now starts at; count is how many rows moved. Lets a host resync any parallel data
+' (walk newFirstRow..newFirstRow+count-1 with the public getters / itemData). NOT fired for
+' the programmatic PsListBox_MoveRows -- setters are silent (the family rule).
+type DragDropCallbackSub as sub( byval hList as HWND, byval newFirstRow as integer, byval count as integer )
+
 type PSLISTBOX
     hWin            as HWND
     hToolTip        as HWND
@@ -158,6 +215,20 @@ type PSLISTBOX
                                           ' plain click and its trailing second up is not forwarded
     skipNextLBtnUp  as boolean = false    ' armed by a suppressed dblclk; consumed by the next
                                           ' WM_LBUTTONUP, disarmed by any fresh WM_LBUTTONDOWN
+    ' --- Drag-and-drop reordering (opt-in). The gesture is the ONLY thing in this control
+    '     that takes mouse capture, and it does so only while a drag is actually active. ---
+    bDragReorder    as boolean = false    ' host opt-in; nothing below runs when false
+    bDragArmed      as boolean = false    ' a press landed on a draggable row, awaiting the threshold
+    bDragActive     as boolean = false    ' past the threshold: capture held, indicator painting
+    ptDragStart     as POINT              ' client-coord press point (drag threshold origin)
+    dragAnchorRow   as integer = -1       ' MODEL row under the initial press (source of the drag)
+    dragPendCollapse as integer = -1      ' MODEL row whose single-select collapse was deferred to
+                                          ' the up (so pressing a selected row can start a group drag)
+    dropInsertBefore as integer = -1      ' current target: MODEL index the block would land before
+    dropOnHeader    as boolean = false    ' current target is a header (insert as its first children)
+    dropTargetRow   as integer = -1       ' current target: MODEL index of the drop-on row (-1 = end)
+    dragTimerOn     as boolean = false    ' is the auto-scroll timer running?
+    dragIndicatorColor as COLORREF = &h00D77800  ' insertion line / header highlight (accent blue; SetDragIndicatorColor overrides)
     BackColor       as COLORREF
     hFont           as HFONT              ' caller-supplied font for row text (caller owns it)
     ' --- Owner-drawn vertical scrollbar, created and driven by this control. It is
@@ -180,11 +251,17 @@ type PSLISTBOX
     MessageCallback as MessageCallbackFunc
     TooltipCallback as TooltipCallbackFunc    ' optional; defaults to the row's Text
     SelChangeCallback as SelChangeCallbackSub ' optional; user-driven selection changes only
+    CanDropCallback   as CanDropCallbackFunc  ' optional; pre-drop veto (drag reorder)
+    DragDropCallback  as DragDropCallbackSub  ' optional; post-drop notify (drag reorder)
     ' --- Persistent scratch for PAINTINFO.cells, re-dimensioned only when the column
     '     count changes (the paint loop is strictly sequential and single-threaded, so
     '     one array serves every row; the pointer handed out is valid only for the
     '     duration of each callback). ---
     paintCells(any) as PSLISTBOX_CELLINFO
+    ' Single-cell scratch for a spanned row (isSpanned). Kept separate from paintCells so
+    ' a spanned row never overwrites the shared column x-geometry that later normal rows
+    ' in the same repaint still read. Valid only for the duration of one callback.
+    spanCell        as PSLISTBOX_CELLINFO
 
     declare destructor()
     declare sub      EnsurePaintCells( byval n as integer )
@@ -199,11 +276,13 @@ type PSLISTBOX
     declare function ModelToVisible( byval modelRow as integer ) as integer ' -1 if hidden/invalid
     declare function VisibleToModel( byval visRow as integer ) as integer   ' -1 if invalid
     declare function IsRowSelected( byval modelRow as integer ) as boolean
+    declare function IsRowSelectable( byval modelRow as integer ) as boolean
     declare sub      SetRowSelected( byval modelRow as integer, byval state as boolean )
     declare sub      ClearSelection()
     declare sub      SelectOnly( byval modelRow as integer )
     declare sub      SelectRange( byval a as integer, byval b as integer )
     declare function GetSelCount() as integer
+    declare function MoveRows( srcRows() as integer, byval insertBefore as integer ) as integer
     declare sub      RebuildVisibleMap()
     declare sub      BeginUpdate()
     declare sub      EndUpdate()
@@ -223,7 +302,7 @@ declare function PsListBox_PositionWindows( byval hwnd as HWND ) as LRESULT
 ' solely so WM_DRAWITEM would not create and destroy a compatible DC and bitmap for every
 ' row on every repaint. With the whole surface painted in a single buffer there is no
 ' per-row buffer to cache, and its disappearance is a good part of why the rewrite made
-' the GDI backends faster too, not just the Direct2D one.
+' the GDI and GDI+ backends faster too.
 destructor PSLISTBOX()
 end destructor
 
@@ -277,6 +356,8 @@ function PSLISTBOX.InsertRowAt( byval modelRow as integer ) as PSLISTBOX_ROWINFO
     with this.rows(modelRow)
         .IsHeader      = false
         .bCollapsed    = false
+        .bSpanColumns  = false
+        .bSelectable   = true
         .selected      = false
         .Text          = ""
         .itemData      = 0
@@ -366,8 +447,20 @@ function PSLISTBOX.IsRowSelected( byval modelRow as integer ) as boolean
     return this.rows(modelRow).selected
 end function
 
+' A row the host has NOT marked non-selectable. Invalid rows read false (they cannot be
+' selected anyway). This is the single predicate every selection/focus path consults, so
+' the "non-selectable = never selected, never focused" invariant lives in one place.
+function PSLISTBOX.IsRowSelectable( byval modelRow as integer ) as boolean
+    if this.IsValidRow(modelRow) = false then return false
+    return this.rows(modelRow).bSelectable
+end function
+
+' Setting selected = true is refused for a non-selectable row (the model-level guard, so
+' every caller inherits it); clearing is always allowed.
 sub PSLISTBOX.SetRowSelected( byval modelRow as integer, byval state as boolean )
-    if this.IsValidRow(modelRow) then this.rows(modelRow).selected = state
+    if this.IsValidRow(modelRow) = false then exit sub
+    if state andalso (this.rows(modelRow).bSelectable = false) then exit sub
+    this.rows(modelRow).selected = state
 end sub
 
 sub PSLISTBOX.ClearSelection()
@@ -378,15 +471,16 @@ end sub
 
 sub PSLISTBOX.SelectOnly( byval modelRow as integer )
     this.ClearSelection()
-    if this.IsValidRow(modelRow) then this.rows(modelRow).selected = true
+    if this.IsValidRow(modelRow) andalso this.rows(modelRow).bSelectable then this.rows(modelRow).selected = true
 end sub
 
 sub PSLISTBOX.SelectRange( byval a as integer, byval b as integer )
     if a > b then swap a, b
     if a < 0 then a = 0
     if b > this.rowCount - 1 then b = this.rowCount - 1
+    ' A Shift-range selects every SELECTABLE row it spans and skips the rest.
     for i as integer = a to b
-        this.rows(i).selected = true
+        if this.rows(i).bSelectable then this.rows(i).selected = true
     next
 end sub
 
@@ -396,6 +490,82 @@ function PSLISTBOX.GetSelCount() as integer
         if this.rows(i).selected then n += 1
     next
     return n
+end function
+
+' Reorder rows() so the source rows land contiguously just before `insertBefore` (a MODEL
+' index; rowCount = append at the end). Source indices may be non-contiguous and in any
+' order; they are de-duplicated and kept in their original relative order. HEADERS in the
+' source are ignored (they are structural, never dragged). Each row's whole ROWINFO --
+' Text, cells(), itemData and .selected -- travels on the struct copy, so selection follows
+' for free. The moved block becomes the new focus/anchor. Returns the block's new first
+' MODEL index, or -1 if nothing valid was moved. Caller repaints; this does not notify.
+function PSLISTBOX.MoveRows( srcRows() as integer, byval insertBefore as integer ) as integer
+    dim as integer n = this.rowCount
+    if n <= 0 then return -1
+
+    ' Mark the movable source rows (valid, non-header, de-duplicated).
+    dim as byte moving(0 to n - 1)
+    dim as integer srcN = 0
+    for k as integer = lbound(srcRows) to ubound(srcRows)
+        dim as integer r = srcRows(k)
+        if (r >= 0) andalso (r < n) then
+            if (this.rows(r).IsHeader = false) andalso (moving(r) = 0) then
+                moving(r) = 1
+                srcN += 1
+            end if
+        end if
+    next
+    if srcN = 0 then return -1
+
+    ' Clamp the insertion anchor to [0, n].
+    dim as integer anchor = insertBefore
+    if anchor < 0 then anchor = 0
+    if anchor > n then anchor = n
+
+    ' Permutation of 0..n-1: non-moving rows in original order, with the whole moving block
+    ' (also in original order) spliced in just before the anchor row. A block dropped just
+    ' before/after itself collapses to a no-op, which falls out of this naturally.
+    dim as integer newOrder(0 to n - 1)
+    dim as integer w = 0
+    dim as boolean emitted = false
+    for i as integer = 0 to n - 1
+        if i = anchor then
+            for j as integer = 0 to n - 1
+                if moving(j) then newOrder(w) = j : w += 1
+            next
+            emitted = true
+        end if
+        if moving(i) = 0 then newOrder(w) = i : w += 1
+    next
+    if emitted = false then                      ' anchor = n: block goes to the very end
+        for j as integer = 0 to n - 1
+            if moving(j) then newOrder(w) = j : w += 1
+        next
+    end if
+
+    ' Where does the moving block start in the new order?
+    dim as integer newFirst = -1
+    for p as integer = 0 to n - 1
+        if moving( newOrder(p) ) then newFirst = p : exit for
+    next
+
+    ' Apply the permutation through a temp copy (deep-copies Text/cells/itemData/.selected).
+    dim tmp(0 to n - 1) as PSLISTBOX_ROWINFO
+    for p as integer = 0 to n - 1
+        tmp(p) = this.rows( newOrder(p) )
+    next
+    for p as integer = 0 to n - 1
+        this.rows(p) = tmp(p)
+    next
+
+    ' The moved block is now the current selection's anchor/caret. lastNotifiedRow tracks it
+    ' too, so a later user re-select of the block's first row stays correctly silent.
+    this.focusRow        = newFirst
+    this.anchorRow       = newFirst
+    this.lastNotifiedRow = newFirst
+
+    this.NotifyChange()
+    return newFirst
 end function
 
 sub PSLISTBOX.BeginUpdate()
@@ -509,6 +679,22 @@ declare function PsListBox_SetItemData( byval hListControl as HWND, byval row as
 declare function PsListBox_GetItemDataExtra( byval hListControl as HWND, byval row as integer ) as integer
 declare function PsListBox_SetItemDataExtra( byval hListControl as HWND, byval row as integer, byval itemDataExtra as integer ) as boolean
 
+' Make an ordinary (selectable) row paint as a single cell spanning every column instead
+' of one cell per column. The row's text stays in column 0 (GetText / GetCellText(row,0));
+' the paint callback receives columnCount = 1 with cells[0].rc covering the whole column
+' band and p->isSpanned = true. Silent (programmatic setter); repaints. Get returns the
+' flag; both return FALSE for an invalid row.
+declare function PsListBox_SetRowSpanColumns( byval hListControl as HWND, byval row as integer, byval bSpan as boolean = true ) as boolean
+declare function PsListBox_GetRowSpanColumns( byval hListControl as HWND, byval row as integer ) as boolean
+
+' Make a row non-selectable (bSelectable = false): it cannot be selected or focused by any
+' path -- mouse, keyboard and the programmatic setters alike -- and keyboard navigation
+' skips over it. Turning a currently selected/focused row non-selectable clears its
+' selection and drops the caret. Silent (programmatic setter); repaints. Get returns the
+' flag (default TRUE); both return FALSE for an invalid row.
+declare function PsListBox_SetRowSelectable( byval hListControl as HWND, byval row as integer, byval bSelectable as boolean = true ) as boolean
+declare function PsListBox_GetRowSelectable( byval hListControl as HWND, byval row as integer ) as boolean
+
 ' ----------------------------------------------------------------------------------------
 ' Groups / collapsing.  Collapse/Expand/Toggle act only on header rows and return FALSE
 ' for items or invalid rows. A mouse click on a header toggles it without disturbing the
@@ -543,6 +729,22 @@ declare function PsListBox_SetExtendedSelect( byval hListControl as HWND, byval 
 declare function PsListBox_PreventDoubleClick( byval hListControl as HWND, byval enable as boolean = true ) as boolean
 declare function PsListBox_GetTopIndex( byval hListControl as HWND ) as integer
 declare function PsListBox_SetTopIndex( byval hListControl as HWND, byval row as integer ) as integer
+
+' ----------------------------------------------------------------------------------------
+' Drag-and-drop row reordering.  Opt-in (default OFF). When on, the user drags a row -- or,
+' if the pressed row is part of the selection, the whole selection -- to a new position;
+' dropping ON a header inserts the block as that header's first children. Non-selectable
+' rows and headers are not draggable. The control reorders its OWN model, firing CanDrop
+' (veto) before and DragDrop (notify) after. MoveRows is the same reorder as a silent,
+' programmatic call; SetDragIndicatorColor tunes the insertion line / header highlight.
+' ----------------------------------------------------------------------------------------
+declare function PsListBox_SetDragReorder( byval hListControl as HWND, byval enable as boolean = true ) as boolean
+declare function PsListBox_GetDragReorder( byval hListControl as HWND ) as boolean
+declare sub      PsListBox_SetCanDropCallback( byval hListControl as HWND, byval usersub as CanDropCallbackFunc )
+declare sub      PsListBox_SetDragDropCallback( byval hListControl as HWND, byval usersub as DragDropCallbackSub )
+declare function PsListBox_MoveRows( byval hListControl as HWND, srcRows() as integer, byval insertBefore as integer ) as integer
+declare function PsListBox_SetDragIndicatorColor( byval hListControl as HWND, byval clr as COLORREF ) as COLORREF
+declare function PsListBox_GetDragIndicatorColor( byval hListControl as HWND ) as COLORREF
 
 ' ----------------------------------------------------------------------------------------
 ' Appearance.  Row height is in unscaled units and is DPI-scaled internally. The font is
