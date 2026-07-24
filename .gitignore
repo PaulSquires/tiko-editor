@@ -6,3 +6,7 @@
 # (codetips.ini and friends), so a bare *.ini rule would wrongly catch those too.
 /settings/keybindings.ini
 /settings/settings.ini
+
+# Internal design / planning notes. NEVER published: this repo is public on GitHub
+# and clients can browse it.
+REFACTOR_PLAN*.md
