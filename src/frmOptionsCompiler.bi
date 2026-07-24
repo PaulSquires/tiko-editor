@@ -11,18 +11,37 @@
 '    MERCHANTABILITY or FITNESS for A PARTICULAR PURPOSE.  See the
 '    GNU General Public License for more details.
 
+'  frmOptionsCompiler.bi
+'
+'  The Compiler Setup page. Unlike the old version this is NOT a child CWindow: its
+'  controls are built directly onto the Environment Options scroll panel's page window and
+'  driven by the same hooks the table-driven pages use (build / layout / paint / show /
+'  theme). It reads and writes gOptWork, never gConfig, so Cancel is a no-op and the page
+'  can be built lazily on first visit.
+'
+'  The controls are the reusable family: CListBox (toolchains), CTextBox x3 (switches,
+'  include paths, help file), CToggle x2 (run-via-cmd, disable-beep) and CButton (browse).
+
 #pragma once
 
-#Define IDC_FRMOPTIONSCOMPILER_LBLSWITCHES            1001
-#Define IDC_FRMOPTIONSCOMPILER_TXTFBSWITCHES          1002
-#Define IDC_FRMOPTIONSCOMPILER_LBLFBHELP              1003
-#Define IDC_FRMOPTIONSCOMPILER_TXTFBHELPFILE          1004
-#Define IDC_FRMOPTIONSCOMPILER_CMDFBHELPFILE          1005
-#Define IDC_FRMOPTIONSCOMPILER_CHKRUNVIACOMMANDWINDOW 1006
-#Define IDC_FRMOPTIONSCOMPILER_CHKDISABLECOMPILEBEEP  1007
-#Define IDC_FRMOPTIONSCOMPILER_LBLTOOLCHAINS          1008
-#Define IDC_FRMOPTIONSCOMPILER_LSTTOOLCHAINS          1009
-#Define IDC_FRMOPTIONSCOMPILER_LBLINCLUDES            1010
-#Define IDC_FRMOPTIONSCOMPILER_TXTINCLUDES            1011
+' SCP_PAINTINFO is named in the declares below, and this header is pulled in early (by
+' modRoutines.inc) before CScrollPanel.bi would otherwise be seen.
+#include once "CScrollPanel.bi"
 
-declare function frmOptionsCompiler_Show( byval hWndParent as HWND ) as LRESULT
+' The browse button keeps its old id so AfxIFileOpenDialogW still shows the *.chm filter
+' and "Find Help File" title (it switches on this id -- see modRoutines.inc).
+#Define IDC_FRMOPTIONSCOMPILER_LSTTOOLCHAINS          9210
+#Define IDC_FRMOPTIONSCOMPILER_TXTFBSWITCHES          9211
+#Define IDC_FRMOPTIONSCOMPILER_TXTINCLUDES            9212
+#Define IDC_FRMOPTIONSCOMPILER_TXTFBHELPFILE          9213
+#Define IDC_FRMOPTIONSCOMPILER_CMDFBHELPFILE          9214
+#Define IDC_FRMOPTIONSCOMPILER_CHKRUNVIACOMMANDWINDOW 9215
+#Define IDC_FRMOPTIONSCOMPILER_CHKDISABLECOMPILEBEEP  9216
+
+declare function frmOptionsCompiler_OwnsPage( byval nPage as long ) as boolean
+declare sub      frmOptionsCompiler_Reset()
+declare sub      frmOptionsCompiler_Build( byval hPage as HWND )
+declare function frmOptionsCompiler_Layout( byval hPage as HWND, byval cxPanel as long ) as long
+declare sub      frmOptionsCompiler_Paint( byval p as SCP_PAINTINFO ptr )
+declare sub      frmOptionsCompiler_Show( byval bShow as boolean )
+declare sub      frmOptionsCompiler_ApplyTheme()

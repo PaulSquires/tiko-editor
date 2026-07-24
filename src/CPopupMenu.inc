@@ -431,7 +431,19 @@ private function PM_ShowCore( byval hPopup as HWND, byval nAlign as long, byval 
             end if
         end if
         if x < mi.rcWork.left then x = mi.rcWork.left
-        if y + h > mi.rcWork.bottom then y = mi.rcWork.bottom - h
+        if y + h > mi.rcWork.bottom then
+            if nAlign = PM_ALIGN_BELOW then
+                ' No room below the anchor: FLIP ABOVE it rather than clamp the popup up
+                ' over it. A PM_ALIGN_BELOW popup (a combobox dropdown, a menubar menu)
+                ' that opened covering its own anchor button would have the OPENING click's
+                ' release land on a row and immediately self-dismiss. Placing the popup
+                ' entirely above the button keeps the release on the button.
+                dim as long yAbove = rcAnchor.top - h
+                if yAbove >= mi.rcWork.top then y = yAbove else y = mi.rcWork.top
+            else
+                y = mi.rcWork.bottom - h
+            end if
+        end if
         if y < mi.rcWork.top then y = mi.rcWork.top
     end if
 

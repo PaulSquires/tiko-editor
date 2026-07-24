@@ -11,29 +11,114 @@
 '    MERCHANTABILITY or FITNESS for A PARTICULAR PURPOSE.  See the
 '    GNU General Public License for more details.
 
+'  frmOptionsLocal.inc  --  the Localization page (see frmOptionsLocal.bi).
+'
+'  Panel-hosted, like Compiler Setup. The phrase list is a CListBox with a column header
+'  band; the four commands are CButtons; the English and translation fields are CTextBoxes.
+'  The file I/O and the gLocalPhrases / gLocalPhrasesEdit business logic are carried over
+'  from the old child form unchanged.
+
 #include once "frmOptionsLocal.bi"
-#include once "modRoutines.bi"
+#include once "frmOptions.bi"          ' HWND_FRMOPTIONS, frmOptions_ThemedMsgBox
+#include once "modOptionsRows.bi"      ' gOptWork, shared padding + theme helpers
+#include once "modRoutines.bi"         ' AfxIFileOpenDialogW / SaveDialog, ListBox_AddTabbedRow
+#include once "clsConfig.bi"
+
+
+' Fixed heights, UNSCALED.
+#define LOCAL_LISTHEIGHT    190
+#define LOCAL_FIELDPAD       11
+#define LOCAL_LABELGAP        4
+#define LOCAL_SECTIONGAP     14
+#define LOCAL_BTNWIDTH       84
+#define LOCAL_BTNHEIGHT      30
+#define LOCAL_BTNGAP          8
+
+
+type LOCAL_LABEL
+    rc      as RECT
+    caption as DWSTRING
+end type
+
+
+dim shared gLocalCurrentFile as DWSTRING     ' the .lang filename the page points at
+dim shared gLocalTransLabel   as DWSTRING     ' language name shown above the translate box
+dim shared gLocalShowEdit      as boolean      ' the phrase-editing area is visible
+dim shared gLocalBuilt         as boolean
+
+dim shared ghLocalSelect   as HWND
+dim shared ghLocalNew      as HWND
+dim shared ghLocalEdit     as HWND
+dim shared ghLocalDelete   as HWND
+dim shared ghLocalList     as HWND
+dim shared ghLocalEnglish  as HWND
+dim shared ghLocalTranslate as HWND
+
+dim shared gLocalLabels(any) as LOCAL_LABEL
+
+
+' Forward declarations for the internal helpers used before their definition.
+declare sub frmOptionsLocal_DisableEnglish()
+declare sub frmOptionsLocal_UpdateTextBoxes()
+declare function frmOptionsLocal_LoadLocalizationFile( byref wszFilename as wstring ) as long
+declare sub frmOptionsLocal_ClearGlobalArray()
 
 
 ' ========================================================================================
-' If a localization file has been edited then save it.
+' This module owns exactly the Localization page.
 ' ========================================================================================
-function frmOptionsLocal_LocalEditCheck() as Long
+function frmOptionsLocal_OwnsPage( byval nPage as long ) as boolean
+    function = iif( nPage = OPTPAGE_LOCAL, true, false )
+end function
+
+
+' ========================================================================================
+' Seed the page state from gConfig when the dialog opens (before anything is built).
+' ========================================================================================
+sub frmOptionsLocal_SeedFromConfig()
+    gLocalCurrentFile = gConfig.LocalizationFile
+    gLocalTransLabel  = AfxStrPathName( "NAME", gConfig.LocalizationFile )
+    gLocalPhrasesEdit = false
+    gLocalShowEdit    = false
+end sub
+
+
+' ========================================================================================
+' Forget all state. Controls live on the scroll panel page and die with it, so their
+' handles are stale on the next open -- Build must not short-circuit on a stale gLocalBuilt.
+' ========================================================================================
+sub frmOptionsLocal_Reset()
+    gLocalBuilt      = false
+    ghLocalSelect    = 0
+    ghLocalNew       = 0
+    ghLocalEdit      = 0
+    ghLocalDelete    = 0
+    ghLocalList      = 0
+    ghLocalEnglish   = 0
+    ghLocalTranslate = 0
+    erase gLocalLabels
+end sub
+
+
+' ========================================================================================
+' If a localization file is currently being edited then save it. (Unchanged logic; the
+' current filename now comes from gLocalCurrentFile and the phrase rows from the CListBox.)
+' ========================================================================================
+function frmOptionsLocal_LocalEditCheck() as long
     if gLocalPhrasesEdit = false then exit function
-                
-    dim as DWSTRING wszLocalName = AfxGetWindowText( GetDlgItem(HWND_FRMOPTIONSLOCAL, IDC_FRMOPTIONSLOCAL_FRAMELOCALIZATION) )
+
+    dim as DWSTRING wszLocalName = gLocalCurrentFile
     dim as DWSTRING wszFileName = AfxGetExePathName + wstr("settings\languages\" + wszLocalName)
     dim as DWSTRING wszTemp, wszPhrase
-    
-    ' If the english file is selected then we do not want to allow any modifications to that file.
-    if ucase(trim(AfxStrPathname( "NAMEX", wszFilename ))) = "ENGLISH.LANG" then exit function
 
-    dim as HWND hLV = GetDlgItem(HWND_FRMOPTIONSLOCAL, IDC_FRMOPTIONSLOCAL_LVWPHRASES)
-    dim as long nCount = ListView_GetItemCount(hLV)
-    dim wszIndex as wstring * MAX_PATH
-    
+    ' Never write over the English reference file.
+    if ucase(trim(AfxStrPathname( "NAMEX", wszFilename ))) = "ENGLISH.LANG" then exit function
+    if ghLocalList = 0 then exit function
+
+    dim as long nCount = CListBox_GetCount( ghLocalList )
+
     AfxDeleteFile(wszFileName)
-    
+
     dim pStream as CTextStream
     if pStream.OpenForOutputW(wszFilename, true) = S_OK then
 
@@ -41,419 +126,519 @@ function frmOptionsLocal_LocalEditCheck() as Long
         "' Localization file for " & ucase(AfxStrPathName("NAME", wszLocalName)) & " language" & vbcrlf & _
         "'" & vbcrlf & _
         "' The first element to exist must be called MAXIMUM and needs to be set to" & vbcrlf & _
-        "' the value of the last key in this file." & vbcrlf & _ 
+        "' the value of the last key in this file." & vbcrlf & _
         "'" & vbcrlf & _
         "' This file should be created and saved using UTF-16 encoding (unicode)." & vbcrlf & _
-        "'" & vbcrlf & _  
+        "'" & vbcrlf & _
         "' Each line represents a key/value pair describing the position to store the" & vbcrlf & _
         "' localized word/phrase into the localization array used by the editor. Simple." & vbcrlf & vbcrlf & _
         "MAXIMUM:" & wstr(nCount) & vbcrlf & vbcrlf
-        pStream.WriteLine(wszTemp) 
+        pStream.WriteLine(wszTemp)
 
         for i as long = 0 to nCount - 1
-            LV_GetItemText(hLV, i, 0, @wszIndex, MAX_PATH )
+            dim as DWSTRING wszIndex = CListBox_GetCellText( ghLocalList, i, 0 )
+            dim as long idx = val(wszIndex)
             wszTemp = wspace(1024)
-            wszPhrase = AfxStrRSet(wszIndex, 5, "0") + wstr(":") + gLocalPhrases(val(wszIndex))
+            wszPhrase = AfxStrRSet(wszIndex, 5, "0") + wstr(":") + gLocalPhrases(idx)
             ' Use ** version of DWSTRING on MID statements per the documentation.
             mid(**wszTemp, 1) = wszPhrase
-            if len(gLangEnglish(val(wszIndex))) then
+            if len(gLangEnglish(idx)) then
                 ' Always attempt to insert the ENGLISH comment at position 60. If the local
                 ' phrase is too long then simply put the ENGLISH comment after it.
                 dim as long nPos = iif( len(wszPhrase) < 60, 60, len(wszPhrase) + 5)
-                mid(**wszTemp, nPos) = "; " & gLangEnglish(val(wszIndex))
-            end if   
+                mid(**wszTemp, nPos) = "; " & gLangEnglish(idx)
+            end if
             pStream.WriteLine rtrim(wszTemp)
         next
     end if
     pStream.Close
-    
-    function = 0
-end function
-
-
-' ========================================================================================
-' Do not allow the English language file to be edited or deleted
-' ========================================================================================
-function frmOptionsLocal_DisableEnglish() as long
-    dim as boolean bEnable, bEnglish
-    dim as DWSTRING wszFilename = ucase(AfxGetWindowText(GetDlgItem(HWND_FRMOPTIONSLOCAL, IDC_FRMOPTIONSLOCAL_FRAMELOCALIZATION)))
-    
-    ' If the english file is selected then we do not want to allow any editing so disable the controls.
-    bEnglish = iif( AfxStrPathname( "NAMEX", wszFilename ) = "ENGLISH.LANG", true, false)
-
-    ' Set the default case for english localization
-    if bEnglish then 
-        EnableWindow( GetDlgItem(HWND_FRMOPTIONSLOCAL, IDC_FRMOPTIONSLOCAL_CMDLOCALIZATION), true )
-        EnableWindow( GetDlgItem(HWND_FRMOPTIONSLOCAL, IDC_FRMOPTIONSLOCAL_CMDNEW), true )
-        EnableWindow( GetDlgItem(HWND_FRMOPTIONSLOCAL, IDC_FRMOPTIONSLOCAL_CMDEDIT), false )
-        EnableWindow( GetDlgItem(HWND_FRMOPTIONSLOCAL, IDC_FRMOPTIONSLOCAL_CMDDELETE), false )
-        ShowWindow( GetDlgItem(HWND_FRMOPTIONSLOCAL, IDC_FRMOPTIONSLOCAL_LVWPHRASES), SW_HIDE )
-        ShowWindow( GetDlgItem(HWND_FRMOPTIONSLOCAL, IDC_FRMOPTIONSLOCAL_LBLENGLISH), SW_HIDE )
-        ShowWindow( GetDlgItem(HWND_FRMOPTIONSLOCAL, IDC_FRMOPTIONSLOCAL_TXTENGLISH), SW_HIDE )
-        ShowWindow( GetDlgItem(HWND_FRMOPTIONSLOCAL, IDC_FRMOPTIONSLOCAL_LBLTRANSLATE), SW_HIDE )
-        ShowWindow( GetDlgItem(HWND_FRMOPTIONSLOCAL, IDC_FRMOPTIONSLOCAL_TXTTRANSLATE), SW_HIDE )
-        ShowWindow( GetDlgItem(HWND_FRMOPTIONSLOCAL, IDC_FRMOPTIONSLOCAL_FRAMEEDITAREA), SW_HIDE )
-        exit function
-    end if
-    
-    ' If a non-english file is being edited then enable the fields.   
-    dim as long nShow = iif(gLocalPhrasesEdit, SW_SHOW, SW_HIDE)
-    ShowWindow( GetDlgItem(HWND_FRMOPTIONSLOCAL, IDC_FRMOPTIONSLOCAL_LVWPHRASES), nShow )
-    ShowWindow( GetDlgItem(HWND_FRMOPTIONSLOCAL, IDC_FRMOPTIONSLOCAL_LBLENGLISH), nShow )
-    ShowWindow( GetDlgItem(HWND_FRMOPTIONSLOCAL, IDC_FRMOPTIONSLOCAL_TXTENGLISH), nShow )
-    ShowWindow( GetDlgItem(HWND_FRMOPTIONSLOCAL, IDC_FRMOPTIONSLOCAL_LBLTRANSLATE), nShow )
-    ShowWindow( GetDlgItem(HWND_FRMOPTIONSLOCAL, IDC_FRMOPTIONSLOCAL_TXTTRANSLATE), nShow )
-    ShowWindow( GetDlgItem(HWND_FRMOPTIONSLOCAL, IDC_FRMOPTIONSLOCAL_FRAMEEDITAREA), nShow )
-
-    EnableWindow( GetDlgItem(HWND_FRMOPTIONSLOCAL, IDC_FRMOPTIONSLOCAL_CMDLOCALIZATION), true )
-    EnableWindow( GetDlgItem(HWND_FRMOPTIONSLOCAL, IDC_FRMOPTIONSLOCAL_CMDNEW), true )
-    EnableWindow( GetDlgItem(HWND_FRMOPTIONSLOCAL, IDC_FRMOPTIONSLOCAL_CMDDELETE), true )
-    bEnable = iif(gLocalPhrasesEdit, false, true)
-    EnableWindow( GetDlgItem(HWND_FRMOPTIONSLOCAL, IDC_FRMOPTIONSLOCAL_CMDEDIT), bEnable )
 
     function = 0
 end function
 
 
 ' ========================================================================================
-' Clear the global localization phrase array.
+' Clear the global localization phrase array. (Unchanged.)
 ' ========================================================================================
-function frmOptionsLocal_ClearGlobalArray() as Long
-    ' Clear the global array contents
-    for i as long = lbound(gLocalPhrases) to ubound(gLocalPhrases) 
+sub frmOptionsLocal_ClearGlobalArray()
+    for i as long = lbound(gLocalPhrases) to ubound(gLocalPhrases)
         gLocalPhrases(i) = ""
     next
-    function = 0
-end function
+end sub
 
 
 ' ========================================================================================
-' Load the selected localization file into the global array
+' Load the selected localization file into the global array. (Unchanged from the old page.)
 ' ========================================================================================
 function frmOptionsLocal_LoadLocalizationFile( byref wszFilename as wstring ) as long
 
     if AfxFileExists( wszFileName ) = 0 then exit function
 
     dim as BSTRING wst, wKey, wData
-    dim as long nKey, nData, i, nRow, maxKey
-    
+    dim as long nKey, nData, i, maxKey
+
     dim pStream as CTextStream
     if pStream.OpenUnicode( wszFileName ) <> S_OK then exit function
-    
+
     frmOptionsLocal_ClearGlobalArray()
 
     do until pStream.EOS
         wst = pStream.ReadLine
-        
 
         if len(wst) = 0 then continue do
         if left(wst, 1) = "'" then continue do
-        
+
         i = instr(wst, ":")
         if i = 0 then continue do
-        
+
         wKey = "": wData = "": nData = 0
 
         wKey  = left(wst, i-1)
         wData = mid(**wst, i+1)    ' MID causes problems with Chinese data so ** is used.
-        
+
         nKey  = val(wKey)
         nData = val(wData)
 
-        ' MAXMIUM for a non-English does not redimension the gLocalPhrases array because
-        ' that array is always sized according to the main ENGLISH array.
+        ' MAXIMUM for a non-English file does not redimension gLocalPhrases -- that array is
+        ' always sized to the main ENGLISH array.
         if ucase(wKey) <> "MAXIMUM" then
             if (nKey >= lbound(gLocalPhrases)) andalso (nKey <= ubound(gLocalPhrases)) then
-                ' Use ** to ensure that cyrillic langauge gets converted correctly. FB intrinsic
-                ' functions (RTRIM) automatically convert those incorrectly when using CBSTR or DWSTRING.
+                ' Use ** so cyrillic gets converted correctly; FB intrinsics (RTRIM) convert
+                ' those incorrectly through CBSTR / DWSTRING.
                 gLocalPhrases(nKey) = rtrim(**AfxStrParse(wData, 1, ";"), any chr(9,32))
-                ' If the English phrase is blank then blank the translation phrase
                 if gLangEnglish(nKey) = "" then gLocalPhrases(nKey) = ""
-                ' If the Translated phrase is blank then replace it with the English version
                 if gLocalPhrases(nKey) = "" then gLocalPhrases(nKey) = gLangEnglish(nKey)
                 if nKey > maxKey then maxKey = nKey
             end if
-        End If   
-            
-    Loop
+        end if
+    loop
     pStream.Close
-    
-    ' It is possible that the number of keys in the local file is less than the number
-    ' of keys in the full english file. In that case we need process the remaining 
-    ' missing keys by copying the english version over to the local array.
-    for i as long = maxKey + 1 to ubound(gLangEnglish)
+
+    ' The local file may hold fewer keys than the English file; copy the English versions
+    ' over for the remaining keys.
+    for i = maxKey + 1 to ubound(gLangEnglish)
         gLocalPhrases(i) = gLangEnglish(i)
     next
-    
+
     function = 0
 end function
 
 
 ' ========================================================================================
-' Update the translation textboxes
+' Show or hide the phrase-editing area's real controls, per gLocalShowEdit. (The English /
+' translate LABELS are drawn and are gated in Paint by the same flag.)
 ' ========================================================================================
-function frmOptionsLocal_UpdateTextBoxes( byval hwnd as HWND ) as LRESULT
-    dim wszIndex     as wstring * MAX_PATH
-    dim wszEnglish   as wstring * MAX_PATH
-    dim wszTranslate as wstring * MAX_PATH
-    dim as long idx
-    
-    dim as HWND hLV = GetDlgItem(hwnd, IDC_FRMOPTIONSLOCAL_LVWPHRASES)
-    Dim as Long nCurSel = ListView_GetSelection(hLV)
-    If nCurSel < 0 then exit function
-    LV_GetItemText(hLV, nCurSel, 0, @wszIndex, MAX_PATH )
-    LV_GetItemText(hLV, nCurSel, 1, @wszEnglish, MAX_PATH )
-    idx = val(wszIndex)
-    if (idx >= lbound(gLocalPhrases)) andalso (idx <= ubound(gLocalPhrases)) then
-        wszTranslate = gLocalPhrases(idx)
-        AfxSetWindowText( GetDlgItem(hwnd, IDC_FRMOPTIONSLOCAL_TXTENGLISH), wszEnglish)
-        AfxSetWindowText( GetDlgItem(hwnd, IDC_FRMOPTIONSLOCAL_TXTTRANSLATE), wszTranslate)
+private sub frmOptionsLocal_ApplyEditVisibility()
+    dim as long nCmd = iif( gLocalShowEdit, SW_SHOW, SW_HIDE )
+    if ghLocalList then ShowWindow( ghLocalList, nCmd )
+    if ghLocalEnglish then ShowWindow( ghLocalEnglish, nCmd )
+    if ghLocalTranslate then ShowWindow( ghLocalTranslate, nCmd )
+end sub
+
+
+' ========================================================================================
+' Enable/disable the commands and decide whether the edit area is visible, from whether the
+' English reference file is selected and whether a file is being edited. (Ported from the
+' old frmOptionsLocal_DisableEnglish; the groupbox-caption read is now gLocalCurrentFile.)
+' ========================================================================================
+sub frmOptionsLocal_DisableEnglish()
+    if gLocalBuilt = false then exit sub
+
+    dim as DWSTRING wszFilename = ucase( gLocalCurrentFile )
+    dim as boolean bEnglish = iif( AfxStrPathname( "NAMEX", wszFilename ) = "ENGLISH.LANG", true, false )
+
+    ' Select and New are always available.
+    CButton_SetEnabled( ghLocalSelect, true )
+    CButton_SetEnabled( ghLocalNew, true )
+
+    if bEnglish then
+        ' The English reference file cannot be edited or deleted.
+        CButton_SetEnabled( ghLocalEdit, false )
+        CButton_SetEnabled( ghLocalDelete, false )
+        gLocalShowEdit = false
+    else
+        CButton_SetEnabled( ghLocalDelete, true )
+        ' Edit is available only when not already editing.
+        CButton_SetEnabled( ghLocalEdit, iif( gLocalPhrasesEdit, false, true ) )
+        gLocalShowEdit = gLocalPhrasesEdit
     end if
-    function = 0
-end function
+
+    frmOptionsLocal_ApplyEditVisibility()
+
+    ' The page's content height changed with the edit area's visibility.
+    CScrollPanel_Recalc( HWND_FRMOPTIONS_SCROLL )
+    AfxRedrawWindow( CScrollPanel_GetPanel( HWND_FRMOPTIONS_SCROLL ) )
+end sub
 
 
 ' ========================================================================================
-' Process WM_COMMAND message for window/dialog: frmOptionsLocal
+' Reflect the selected phrase row into the English / translation textboxes. (Ported; the
+' listview reads become CListBox cell reads.)
 ' ========================================================================================
-function frmOptionsLocal_OnCommand( _
-            byval hwnd as HWND, _
-            byval id as Long, _
-            byval hwndCtl as HWND, _
-            byval codeNotify as UINT _
-            ) as LRESULT
+sub frmOptionsLocal_UpdateTextBoxes()
+    if ghLocalList = 0 then exit sub
+    dim as long nCurSel = CListBox_GetCurSel( ghLocalList )
+    if nCurSel < 0 then exit sub
 
-    select case id
-
-    case IDC_FRMOPTIONSLOCAL_CMDLOCALIZATION
-        ' select localization file
-        if codeNotify = BN_CLICKED then
-            ' If a localization file is currently being edited then save it now.
-            frmOptionsLocal_LocalEditCheck
-
-            ' Display the Open File Dialog
-            dim pwszName as wstring ptr = AfxIFileOpenDialogW(hwnd, id)
-            if pwszName then
-                frmOptionsLocal_LoadLocalizationFile(*pwszName)
-                gLocalPhrasesEdit = false
-                ' Clear any previous listview selected line
-                dim as HWND hLV = GetDlgItem(HWND_FRMOPTIONSLOCAL, IDC_FRMOPTIONSLOCAL_LVWPHRASES)
-                ListView_UnselectAllItems(hLV)
-                AfxSetWindowText( GetDlgItem(hwnd, IDC_FRMOPTIONSLOCAL_TXTENGLISH), "")
-                AfxSetWindowText( GetDlgItem(hwnd, IDC_FRMOPTIONSLOCAL_TXTTRANSLATE), "")
-                AfxSetWindowText( GetDlgItem(hwnd, IDC_FRMOPTIONSLOCAL_FRAMELOCALIZATION), AfxStrPathname("NAMEX", *pwszName) )
-                AfxSetWindowText( GetDlgItem(hwnd, IDC_FRMOPTIONSLOCAL_LBLTRANSLATE), AfxStrPathName("NAME", *pwszName) )
-                frmOptionsLocal_DisableEnglish()
-                CoTaskMemFree pwszName
-            end if
-            exit function
-        end if
-
-    case IDC_FRMOPTIONSLOCAL_CMDNEW
-        ' New localization file
-        if codeNotify = BN_CLICKED then
-            ' If a localization file is currently being edited then save it now.
-            frmOptionsLocal_LocalEditCheck
-            
-            ' Display the Save File Dialog
-            dim wzFilename as wstring * MAX_PATH 
-            dim pwszName as wstring ptr = AfxIFileSaveDialog(hwnd, @wzFilename, @wstr("lang"), id)
-            if pwszName then
-                wzFilename = *pwszName
-                frmOptionsLocal_ClearGlobalArray()
-                AfxSetWindowText( GetDlgItem(hwnd, IDC_FRMOPTIONSLOCAL_FRAMELOCALIZATION), AfxStrPathname("NAMEX", *pwszName) )
-                AfxSetWindowText( GetDlgItem(hwnd, IDC_FRMOPTIONSLOCAL_LBLTRANSLATE), AfxStrPathName("NAME", *pwszName) )
-                gLocalPhrasesEdit = true
-                frmOptionsLocal_DisableEnglish()
-                dim as HWND hLV = GetDlgItem(HWND_FRMOPTIONSLOCAL, IDC_FRMOPTIONSLOCAL_LVWPHRASES)
-                ListView_SelectItem(hLV, 0)
-                frmOptionsLocal_UpdateTextBoxes(hwnd)
-                SetFocus( GetDlgItem(hwnd, IDC_FRMOPTIONSLOCAL_TXTTRANSLATE) )
-                CoTaskMemFree(pwszName)
-            end if
-            exit function
-        end if
-
-    case IDC_FRMOPTIONSLOCAL_CMDEDIT
-        ' Edit the loaded localization file
-        if codeNotify = BN_CLICKED then
-            dim as DWSTRING wszLanguage = _
-                AfxGetExePathName & wstr("settings\languages\") & AfxGetWindowText( GetDlgItem(hwnd, IDC_FRMOPTIONSLOCAL_FRAMELOCALIZATION) )
-            frmOptionsLocal_LoadLocalizationFile(wszLanguage)
-            AfxSetWindowText( GetDlgItem(hwnd, IDC_FRMOPTIONSLOCAL_LBLTRANSLATE), AfxStrPathName("NAME", wszLanguage) )
-            gLocalPhrasesEdit = true
-            frmOptionsLocal_DisableEnglish()
-            dim as HWND hLV = GetDlgItem(HWND_FRMOPTIONSLOCAL, IDC_FRMOPTIONSLOCAL_LVWPHRASES)
-            ListView_SelectItem(hLV, 0)
-            frmOptionsLocal_UpdateTextBoxes(hwnd)
-            SetFocus( GetDlgItem(hwnd, IDC_FRMOPTIONSLOCAL_TXTTRANSLATE) )
-        end if
-
-    case IDC_FRMOPTIONSLOCAL_CMDDELETE
-        ' Delete localization file
-        if codeNotify = BN_CLICKED then
-            if MessageBox( hwnd, L(366,"Are you sure you want to delete?"), L(276,"Confirm"), _
-                    MB_YESNOCANCEL or MB_ICONQUESTION or MB_DEFBUTTON1 ) <> IDYES then
-                exit function
-            end if
-            dim as DWSTRING wszFileName = AfxGetExePathName + wstr("settings\languages\") + _
-                                        AfxGetWindowText( GetDlgItem(hwnd, IDC_FRMOPTIONSLOCAL_FRAMELOCALIZATION) )
-            frmOptionsLocal_ClearGlobalArray()
-            AfxDeleteFile(wszFileName)
-            ' Clear any previous listview selected line
-            dim as HWND hLV = GetDlgItem(HWND_FRMOPTIONSLOCAL, IDC_FRMOPTIONSLOCAL_LVWPHRASES)
-            ListView_UnselectAllItems(hLV)
-            AfxSetWindowText( GetDlgItem(hwnd, IDC_FRMOPTIONSLOCAL_TXTENGLISH), "")
-            AfxSetWindowText( GetDlgItem(hwnd, IDC_FRMOPTIONSLOCAL_TXTTRANSLATE), "")
-            AfxSetWindowText( GetDlgItem(hwnd, IDC_FRMOPTIONSLOCAL_FRAMELOCALIZATION), wstr("english.lang"))
-            AfxSetWindowText( GetDlgItem(hwnd, IDC_FRMOPTIONSLOCAL_LBLTRANSLATE), wstr("english") )
-            frmOptionsLocal_DisableEnglish()
-        end if
-        
-    case IDC_FRMOPTIONSLOCAL_TXTTRANSLATE
-        if codeNotify = EN_CHANGE then
-            dim wszIndex     as wstring * MAX_PATH
-            dim wszTranslate as wstring * MAX_PATH
-            dim as HWND hLV = GetDlgItem(hwnd, IDC_FRMOPTIONSLOCAL_LVWPHRASES)
-            dim as long nCurSel = ListView_GetSelection(hLV)
-            if nCurSel >= 0 then 
-                LV_GetItemText(hLV, nCurSel, 0, @wszIndex, MAX_PATH )
-                dim as long idx = val(wszIndex)
-                if (idx >= lbound(gLocalPhrases)) andalso (idx <= ubound(gLocalPhrases)) then
-                    gLocalPhrases(idx) = AfxGetWindowText( GetDlgItem(hwnd, IDC_FRMOPTIONSLOCAL_TXTTRANSLATE) )
-                end if
-            end if
-        end if
-        exit function
-
-    end select
-
-    function = 0
-end function
+    dim as DWSTRING wszIndex   = CListBox_GetCellText( ghLocalList, nCurSel, 0 )
+    dim as DWSTRING wszEnglish = CListBox_GetCellText( ghLocalList, nCurSel, 1 )
+    dim as long idx = val(wszIndex)
+    if (idx >= lbound(gLocalPhrases)) andalso (idx <= ubound(gLocalPhrases)) then
+        CTextBox_SetText( ghLocalEnglish, wszEnglish )               ' silent
+        CTextBox_SetText( ghLocalTranslate, gLocalPhrases(idx) )     ' silent
+    end if
+end sub
 
 
 ' ========================================================================================
-' Process WM_NOTIFY message for window/dialog: frmOptionsLocal
+' The phrase list selection changed (mouse or keyboard).
 ' ========================================================================================
-function frmOptionsLocal_OnNotify( _
-            byval hwnd as HWND, _
-            byval id as long, _
-            byval pNMHDR as NMHDR ptr _
-            ) as LRESULT
-
-    select case id
-        case IDC_FRMOPTIONSLOCAL_LVWPHRASES
-            select case pNMHDR->code
-            case LVN_ITEMCHANGED 
-                frmOptionsLocal_UpdateTextBoxes(hwnd)
-            end select
-    end select
-
-    function = 0
-end function
+private sub frmOptionsLocal_ListSelChange( byval hList as HWND, byval row as integer )
+    frmOptionsLocal_UpdateTextBoxes()
+end sub
 
 
 ' ========================================================================================
-' frmOptionsLocal Window procedure
+' The translation textbox changed (user typing only -- SetText is silent). Store into the
+' phrase array against the selected row's index. (Ported from the EN_CHANGE handler.)
 ' ========================================================================================
-function frmOptionsLocal_WndProc( _
-            byval hwnd   as HWND, _
-            byval uMsg   as UINT, _
-            byval wParam as WPARAM, _
-            byval lParam as LPARAM _
-            ) as LRESULT
-
-    select case uMsg
-        HANDLE_MSG (hwnd, WM_COMMAND, frmOptionsLocal_OnCommand)
-        HANDLE_MSG (hwnd, WM_NOTIFY,  frmOptionsLocal_OnNotify)
-    End Select
-
-    function = DefWindowProcW(hwnd, uMsg, wParam, lParam)
-
-end function
+private sub frmOptionsLocal_TranslateChanged( byval hTextBox as HWND )
+    if ghLocalList = 0 then exit sub
+    dim as long nCurSel = CListBox_GetCurSel( ghLocalList )
+    if nCurSel < 0 then exit sub
+    dim as DWSTRING wszIndex = CListBox_GetCellText( ghLocalList, nCurSel, 0 )
+    dim as long idx = val(wszIndex)
+    if (idx >= lbound(gLocalPhrases)) andalso (idx <= ubound(gLocalPhrases)) then
+        gLocalPhrases(idx) = CTextBox_GetText( ghLocalTranslate )
+    end if
+end sub
 
 
 ' ========================================================================================
-' frmOptionsLocal_Show
+' Command buttons. Ported from frmOptionsLocal_OnCommand; control reads/writes swapped and
+' the file-open/save owner is now HWND_FRMOPTIONS.
 ' ========================================================================================
-function frmOptionsLocal_Show( byval hWndParent as HWND ) as LRESULT
+private sub frmOptionsLocal_SelectClick( byval hButton as HWND, byval id as long )
+    ' Save any in-progress edit first.
+    frmOptionsLocal_LocalEditCheck
 
-    '  Create the main window and child controls
-    dim pWindow as CWindow ptr = new CWindow
+    dim pwszName as wstring ptr = AfxIFileOpenDialogW( HWND_FRMOPTIONS, IDC_FRMOPTIONSLOCAL_CMDLOCALIZATION )
+    if pwszName then
+        frmOptionsLocal_LoadLocalizationFile( *pwszName )
+        gLocalPhrasesEdit = false
+        CListBox_SetCurSel( ghLocalList, -1 )
+        CTextBox_SetText( ghLocalEnglish, "" )
+        CTextBox_SetText( ghLocalTranslate, "" )
+        gLocalCurrentFile = AfxStrPathname( "NAMEX", *pwszName )
+        gLocalTransLabel  = AfxStrPathName( "NAME", *pwszName )
+        frmOptionsLocal_DisableEnglish()
+        CoTaskMemFree( pwszName )
+    end if
+end sub
 
-    gLocalPhrasesEdit = false
+private sub frmOptionsLocal_NewClick( byval hButton as HWND, byval id as long )
+    frmOptionsLocal_LocalEditCheck
 
-    HWND_FRMOPTIONSLOCAL = pWindow->Create( hWndParent, "", @frmOptionsLocal_WndProc, 0, 0, 0, 0, _
-        WS_CHILD or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
-        WS_EX_CONTROLPARENT or WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_RIGHTSCROLLBAR)
-    ' Height and width of this child form is set in frmOptions_OnNotify when the treeview option is selected.
-    
-    pWindow->AddControl("BUTTON", , IDC_FRMOPTIONSLOCAL_CMDLOCALIZATION, L(126,"Select"), 40, 22, 75, 26, _
-        WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_TEXT or BS_PUSHBUTTON or BS_NOTIFY or BS_CENTER or BS_VCENTER, _
-        WS_EX_LEFT or WS_EX_LTRREADING)
-    pWindow->AddControl("BUTTON", , IDC_FRMOPTIONSLOCAL_CMDNEW, L(3,"New"), 117, 22, 75, 26, _
-        WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_TEXT or BS_PUSHBUTTON or BS_NOTIFY or BS_CENTER or BS_VCENTER, _
-        WS_EX_LEFT or WS_EX_LTRREADING)
-    pWindow->AddControl("BUTTON", , IDC_FRMOPTIONSLOCAL_CMDEDIT, L(14,"Edit"), 194, 22, 75, 26, _
-        WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_TEXT or BS_PUSHBUTTON or BS_NOTIFY or BS_CENTER or BS_VCENTER, _
-        WS_EX_LEFT or WS_EX_LTRREADING)
-    pWindow->AddControl("BUTTON", , IDC_FRMOPTIONSLOCAL_CMDDELETE, L(282,"Delete"), 271, 22, 75, 26, _
-        WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_TEXT or BS_PUSHBUTTON or BS_NOTIFY or BS_CENTER or BS_VCENTER, _
-        WS_EX_LEFT or WS_EX_LTRREADING)
-    pWindow->AddControl("GROUPBOX", , IDC_FRMOPTIONSLOCAL_FRAMELOCALIZATION, "english.lang", 0, 0, 385, 58, _
-        WS_CHILD or WS_VISIBLE or BS_TEXT or BS_LEFT or BS_NOTIFY or BS_GROUPBOX, _
-        WS_EX_TRANSPARENT or WS_EX_LEFT or WS_EX_LTRREADING)
+    dim wzFilename as wstring * MAX_PATH
+    dim pwszName as wstring ptr = AfxIFileSaveDialog( HWND_FRMOPTIONS, @wzFilename, @wstr("lang"), IDC_FRMOPTIONSLOCAL_CMDNEW )
+    if pwszName then
+        frmOptionsLocal_ClearGlobalArray()
+        gLocalCurrentFile = AfxStrPathname( "NAMEX", *pwszName )
+        gLocalTransLabel  = AfxStrPathName( "NAME", *pwszName )
+        gLocalPhrasesEdit = true
+        frmOptionsLocal_DisableEnglish()
+        CListBox_SetCurSel( ghLocalList, 0 )
+        frmOptionsLocal_UpdateTextBoxes()
+        SetFocus( CTextBox_GetRichEditHandle( ghLocalTranslate ) )
+        CoTaskMemFree( pwszName )
+    end if
+end sub
 
-
-    dim as HWND hwndLV = _
-    pWindow->AddControl("LISTVIEW", , IDC_FRMOPTIONSLOCAL_LVWPHRASES, "", 8, 78, 368, 160, _
-        WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN or WS_TABSTOP or LVS_REPORT or LVS_SHOWSELALWAYS, _
-        WS_EX_CLIENTEDGE)
-    ListView_MakeHeaderFlat(hwndLV)
-    ' Add some extended styles
-    dim as long dwExStyle = ListView_GetExtendedListViewStyle(hwndLV)
-    dwExStyle = dwExStyle or LVS_EX_FULLROWSELECT or LVS_EX_GRIDLINES or LVS_EX_DOUBLEBUFFER or LVS_EX_FLATSB
-    ListView_SetExtendedListViewStyle(hwndLV, dwExStyle)
-
-    pWindow->AddControl("LABEL", , IDC_FRMOPTIONSLOCAL_LBLENGLISH, "English", 8, 246, 150, 16, _
-        WS_CHILD or WS_VISIBLE or SS_LEFT or SS_NOTIFY, _
-        WS_EX_LEFT or WS_EX_LTRREADING)
-    pWindow->AddControl("TEXTBOX", , IDC_FRMOPTIONSLOCAL_TXTENGLISH, "", 8, 264, 368, 20, _
-        WS_CHILD or WS_VISIBLE or WS_TABSTOP or ES_LEFT or ES_AUTOHSCROLL or ES_READONLY, _
-        WS_EX_CLIENTEDGE or WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_RIGHTSCROLLBAR)
-
-    pWindow->AddControl("LABEL", , IDC_FRMOPTIONSLOCAL_LBLTRANSLATE, "English", 8, 292, 150, 16, _
-        WS_CHILD or WS_VISIBLE or SS_LEFT or SS_NOTIFY, _
-        WS_EX_LEFT or WS_EX_LTRREADING)
-    pWindow->AddControl("TEXTBOX", , IDC_FRMOPTIONSLOCAL_TXTTRANSLATE, "", 8, 310, 368, 20, _
-        WS_CHILD or WS_VISIBLE or WS_TABSTOP or ES_LEFT or ES_AUTOHSCROLL, _
-        WS_EX_CLIENTEDGE or WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_RIGHTSCROLLBAR)
-
-    pWindow->AddControl("GROUPBOX", , IDC_FRMOPTIONSLOCAL_FRAMEEDITAREA, "Phrases", 0, 58, 385, 288, _
-        WS_CHILD or WS_VISIBLE or BS_TEXT or BS_LEFT or BS_NOTIFY or BS_GROUPBOX, _
-        WS_EX_TRANSPARENT or WS_EX_LEFT or WS_EX_LTRREADING)
-
-    AfxSetWindowText(GetDlgItem( HWND_FRMOPTIONSLOCAL, IDC_FRMOPTIONSLOCAL_FRAMELOCALIZATION), gConfig.LocalizationFile)
+private sub frmOptionsLocal_EditClick( byval hButton as HWND, byval id as long )
+    dim as DWSTRING wszLanguage = _
+        AfxGetExePathName & wstr("settings\languages\") & gLocalCurrentFile
+    frmOptionsLocal_LoadLocalizationFile( wszLanguage )
+    gLocalTransLabel = AfxStrPathName( "NAME", wszLanguage )
+    gLocalPhrasesEdit = true
     frmOptionsLocal_DisableEnglish()
+    CListBox_SetCurSel( ghLocalList, 0 )
+    frmOptionsLocal_UpdateTextBoxes()
+    SetFocus( CTextBox_GetRichEditHandle( ghLocalTranslate ) )
+end sub
 
-    ' Display the columns in the Listview and load the English phrases
-    ListView_AddColumn( hwndLV, 0, @wstr("Index"), pWindow->ScaleX(50) )
-    ListView_AddColumn( hwndLV, 1, @wstr("English Phrase"), pWindow->ScaleX(280))
+private sub frmOptionsLocal_DeleteClick( byval hButton as HWND, byval id as long )
+    ' Was MB_YESNOCANCEL; OK/Cancel is behaviourally identical here (No and Cancel both
+    ' abort) and, unlike CMessageBox's English-only Yes/No preset, stays localized.
+    if frmOptions_ThemedMsgBox( L(366,"Are you sure you want to delete?"), _
+                                L(276,"Confirm"), MBX_ICON_QUESTION, MBX_BTN_OKCANCEL ) <> IDOK then
+        exit sub
+    end if
 
-    ' Always size the local phrase array to be the same size as the ENGLISH array.
-    redim gLocalPhrases(ubound(gLangEnglish)) 
-    frmOptionsLocal_LoadLocalizationFile(gConfig.LocalizationFile)
-    
-    dim as long nRow = 0
-    for i as long = lbound(gLangEnglish) to ubound(gLangEnglish)
-        ' Add to the English phrase Listview
-        dim as DWSTRING wKey = AfxStrRset(str(i), 5, "0")
-        LV_InsertItem(hwndLV, nRow, 0, wKey, 0 )
-        LV_InsertItem(hwndLV, nRow, 1, gLangEnglish(i), 0 )
-        nRow = nRow + 1
+    dim as DWSTRING wszFileName = AfxGetExePathName + wstr("settings\languages\") + gLocalCurrentFile
+    frmOptionsLocal_ClearGlobalArray()
+    AfxDeleteFile( wszFileName )
+    CListBox_SetCurSel( ghLocalList, -1 )
+    CTextBox_SetText( ghLocalEnglish, "" )
+    CTextBox_SetText( ghLocalTranslate, "" )
+    gLocalCurrentFile = wstr("english.lang")
+    gLocalTransLabel  = wstr("english")
+    gLocalPhrasesEdit = false
+    frmOptionsLocal_DisableEnglish()
+end sub
+
+
+' ========================================================================================
+' Paint one phrase row (two columns: index, English phrase).
+' ========================================================================================
+private sub frmOptionsLocal_ListPaint( byval p as CLISTBOX_PAINTINFO ptr )
+    if p = 0 then exit sub
+    dim as COLORREF backclr, foreclr
+    if p->isSelected orelse p->isHot then
+        backclr = ghPanel.BackColorHot
+        foreclr = ghPanel.ForeColorHot
+    else
+        backclr = ghPanel.BackColor
+        foreclr = ghPanel.ForeColor
+    end if
+    p->b->SetBackColor( backclr )
+    p->b->SetForeColor( foreclr )
+    p->b->PaintRect( @p->rc )
+    p->b->SetFont( OptionsFont_Base() )
+
+    if p->columnCount <= 0 then
+        dim as RECT rcText = p->rc
+        rcText.left += AfxScaleX(6)
+        p->b->PaintText( p->wszCaption, @rcText, DT_LEFT or DT_END_ELLIPSIS )
+        exit sub
+    end if
+
+    for i as integer = 0 to p->columnCount - 1
+        dim as RECT rcText = p->cells[i].rc
+        rcText.left += AfxScaleX(6)
+        p->b->PaintText( p->cells[i].wszText, @rcText, DT_LEFT or DT_END_ELLIPSIS )
     next
-    
-    function = 0
-    
+end sub
+
+
+' ========================================================================================
+' Paint the column header band.
+' ========================================================================================
+private sub frmOptionsLocal_HeaderPaint( byval p as CCOLUMNHEADER_PAINTINFO ptr )
+    if p = 0 then exit sub
+    dim as COLORREF backclr = ghPanel.BackColor
+    if p->isHot orelse p->isResizeHot then backclr = ghPanel.BackColorHot
+    p->b->SetBackColor( backclr )
+    p->b->SetForeColor( ghPanel.ForeColorHot )
+    p->b->PaintRect( @p->rc )
+    p->b->SetFont( OptionsFont_Base() )
+    dim as RECT rcText = p->rc
+    rcText.left += AfxScaleX(6)
+    p->b->PaintText( p->wszCaption, @rcText, DT_LEFT or DT_END_ELLIPSIS )
+
+    dim as RECT rcDiv = p->rc
+    rcDiv.left = rcDiv.right - 1
+    p->b->SetBackColor( ghEditor.Divider )
+    p->b->PaintRect( @rcDiv )
+end sub
+
+
+' ========================================================================================
+' Build the controls onto hPage. Idempotent.
+' ========================================================================================
+sub frmOptionsLocal_Build( byval hPage as HWND )
+
+    if gLocalBuilt then exit sub
+
+    ' ---- command buttons -------------------------------------------------------------
+    ghLocalSelect = CButton_Create( hPage, IDC_FRMOPTIONSLOCAL_CMDLOCALIZATION )
+    CButton_SetText( ghLocalSelect, L(126,"Select") )
+    CButton_SetFont( ghLocalSelect, OptionsFont_Base() )
+    CButton_SetClickCallback( ghLocalSelect, @frmOptionsLocal_SelectClick )
+
+    ghLocalNew = CButton_Create( hPage, IDC_FRMOPTIONSLOCAL_CMDNEW )
+    CButton_SetText( ghLocalNew, L(3,"New") )
+    CButton_SetFont( ghLocalNew, OptionsFont_Base() )
+    CButton_SetClickCallback( ghLocalNew, @frmOptionsLocal_NewClick )
+
+    ghLocalEdit = CButton_Create( hPage, IDC_FRMOPTIONSLOCAL_CMDEDIT )
+    CButton_SetText( ghLocalEdit, L(14,"Edit") )
+    CButton_SetFont( ghLocalEdit, OptionsFont_Base() )
+    CButton_SetClickCallback( ghLocalEdit, @frmOptionsLocal_EditClick )
+
+    ghLocalDelete = CButton_Create( hPage, IDC_FRMOPTIONSLOCAL_CMDDELETE )
+    CButton_SetText( ghLocalDelete, L(282,"Delete") )
+    CButton_SetFont( ghLocalDelete, OptionsFont_Base() )
+    CButton_SetClickCallback( ghLocalDelete, @frmOptionsLocal_DeleteClick )
+
+    ' ---- phrase list -----------------------------------------------------------------
+    ghLocalList = CListBox_Create( hPage, IDC_FRMOPTIONSLOCAL_LSTPHRASES )
+    CListBox_AddColumn( ghLocalList, "Index", AfxScaleX(60) )
+    CListBox_AddColumn( ghLocalList, "English Phrase", AfxScaleX(280) )
+    CListBox_SetFillColumn( ghLocalList, 1 )
+    CListBox_ShowHeader( ghLocalList, true )
+    CListBox_SetPaintCallback( ghLocalList, @frmOptionsLocal_ListPaint )
+    CListBox_SetHeaderPaintCallback( ghLocalList, @frmOptionsLocal_HeaderPaint )
+    CListBox_SetSelChangeCallback( ghLocalList, @frmOptionsLocal_ListSelChange )
+    CListBox_SetFont( ghLocalList, OptionsFont_Base() )
+
+    ' ---- English (readonly) and translation text fields ------------------------------
+    ghLocalEnglish = CTextBox_Create( hPage, IDC_FRMOPTIONSLOCAL_TXTENGLISH )
+    CTextBox_SetReadOnly( ghLocalEnglish, true )
+
+    ghLocalTranslate = CTextBox_Create( hPage, IDC_FRMOPTIONSLOCAL_TXTTRANSLATE )
+    CTextBox_SetChangeCallback( ghLocalTranslate, @frmOptionsLocal_TranslateChanged )
+
+    ' ---- populate the phrase list from the English reference (once) -------------------
+    redim gLocalPhrases( ubound(gLangEnglish) )
+    frmOptionsLocal_LoadLocalizationFile( gLocalCurrentFile )
+    CListBox_BeginUpdate( ghLocalList )
+    for i as long = lbound(gLangEnglish) to ubound(gLangEnglish)
+        dim as DWSTRING wKey = AfxStrRset( str(i), 5, "0" )
+        ListBox_AddTabbedRow( ghLocalList, wKey & chr(9) & gLangEnglish(i) )
+    next
+    CListBox_EndUpdate( ghLocalList )
+
+    gLocalBuilt = true
+    frmOptionsLocal_ApplyTheme()
+    frmOptionsLocal_DisableEnglish()
+end sub
+
+
+' ========================================================================================
+' Theme the controls.
+' ========================================================================================
+sub frmOptionsLocal_ApplyTheme()
+    if gLocalBuilt = false then exit sub
+
+    dim as CBUTTON_COLORS bc
+    OptionsTheme_FillButton( @bc )
+    CButton_SetColors( ghLocalSelect, @bc ) : CButton_Refresh( ghLocalSelect )
+    CButton_SetColors( ghLocalNew, @bc )    : CButton_Refresh( ghLocalNew )
+    CButton_SetColors( ghLocalEdit, @bc )   : CButton_Refresh( ghLocalEdit )
+    CButton_SetColors( ghLocalDelete, @bc ) : CButton_Refresh( ghLocalDelete )
+
+    CListBox_SetBackColor( ghLocalList, ghPanel.BackColor )
+    CListBox_SetScrollBarColors( ghLocalList, ghPanel.BackColorScrollBar, _
+                                 ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
+
+    OptionsTheme_ApplyTextBox( ghLocalEnglish )
+    OptionsTheme_ApplyTextBox( ghLocalTranslate )
+end sub
+
+
+' ========================================================================================
+' Show or hide the page. Buttons + filename label always; the edit area per gLocalShowEdit.
+' ========================================================================================
+sub frmOptionsLocal_Show( byval bShow as boolean )
+    if gLocalBuilt = false then exit sub
+    dim as long nCmd = iif( bShow, SW_SHOW, SW_HIDE )
+    ShowWindow( ghLocalSelect, nCmd )
+    ShowWindow( ghLocalNew, nCmd )
+    ShowWindow( ghLocalEdit, nCmd )
+    ShowWindow( ghLocalDelete, nCmd )
+    if bShow then
+        frmOptionsLocal_ApplyEditVisibility()
+    else
+        ShowWindow( ghLocalList, SW_HIDE )
+        ShowWindow( ghLocalEnglish, SW_HIDE )
+        ShowWindow( ghLocalTranslate, SW_HIDE )
+    end if
+end sub
+
+
+' ========================================================================================
+' Record one drawn label.
+' ========================================================================================
+private sub frmOptionsLocal_AddLabel( byval wszCaption as DWSTRING, _
+                                      byval nLeft as long, byval nTop as long, _
+                                      byval nRight as long, byval nBottom as long )
+    dim as long idx = ubound(gLocalLabels) + 1
+    redim preserve gLocalLabels(idx) as LOCAL_LABEL
+    gLocalLabels(idx).rc = type<RECT>( nLeft, nTop, nRight, nBottom )
+    gLocalLabels(idx).caption = wszCaption
+end sub
+
+
+' ========================================================================================
+' Lay out for a given width; return content height. Only the visible portion is laid out
+' and measured, so the scroll region shrinks when the edit area is hidden.
+' ========================================================================================
+function frmOptionsLocal_Layout( byval hPage as HWND, byval cxPanel as long ) as long
+
+    if gLocalBuilt = false then return 0
+
+    dim as long padLeft  = AfxScaleX(OPTROW_PADLEFT)
+    dim as long padRight = AfxScaleX(OPTROW_PADRIGHT)
+    dim as long contentR = cxPanel - padRight
+    dim as long fullW    = contentR - padLeft
+    if fullW < 0 then fullW = 0
+
+    ' Base-font line height, for the labels and the field heights.
+    dim as long textH = 0
+    dim as HDC hDC = GetDC( hPage )
+    if hDC then
+        dim as HFONT hOld = SelectObject( hDC, OptionsFont_Base() )
+        dim as TEXTMETRICW tm : GetTextMetricsW( hDC, @tm )
+        SelectObject( hDC, hOld )
+        ReleaseDC( hPage, hDC )
+        textH = tm.tmHeight
+    end if
+
+    dim as long fieldH    = textH + AfxScaleY(LOCAL_FIELDPAD) * 2
+    dim as long labelGapY = AfxScaleY(LOCAL_LABELGAP)
+    dim as long sectionGap = AfxScaleY(LOCAL_SECTIONGAP)
+    dim as long y = AfxScaleY(OPTROW_PADTOP)
+
+    erase gLocalLabels
+
+    ' ---- command button row ----------------------------------------------------------
+    dim as long btnW = AfxScaleX(LOCAL_BTNWIDTH)
+    dim as long btnH = AfxScaleY(LOCAL_BTNHEIGHT)
+    dim as long btnGap = AfxScaleX(LOCAL_BTNGAP)
+    dim as long bx = padLeft
+    SetWindowPos( ghLocalSelect, 0, bx, y, btnW, btnH, SWP_NOZORDER or SWP_NOACTIVATE ) : bx += btnW + btnGap
+    SetWindowPos( ghLocalNew,    0, bx, y, btnW, btnH, SWP_NOZORDER or SWP_NOACTIVATE ) : bx += btnW + btnGap
+    SetWindowPos( ghLocalEdit,   0, bx, y, btnW, btnH, SWP_NOZORDER or SWP_NOACTIVATE ) : bx += btnW + btnGap
+    SetWindowPos( ghLocalDelete, 0, bx, y, btnW, btnH, SWP_NOZORDER or SWP_NOACTIVATE )
+    y += btnH + sectionGap
+
+    ' ---- current localization file ---------------------------------------------------
+    frmOptionsLocal_AddLabel( L(129,"Localization") & ": " & gLocalCurrentFile, _
+                              padLeft, y, contentR, y + textH )
+    y += textH + sectionGap
+
+    ' ---- edit area (only when a non-English file is being edited) ---------------------
+    if gLocalShowEdit then
+        dim as long listH = AfxScaleY(LOCAL_LISTHEIGHT)
+        SetWindowPos( ghLocalList, 0, padLeft, y, fullW, listH, SWP_NOZORDER or SWP_NOACTIVATE )
+        y += listH + sectionGap
+
+        frmOptionsLocal_AddLabel( "English", padLeft, y, contentR, y + textH )
+        y += textH + labelGapY
+        SetWindowPos( ghLocalEnglish, 0, padLeft, y, fullW, fieldH, SWP_NOZORDER or SWP_NOACTIVATE )
+        y += fieldH + sectionGap
+
+        frmOptionsLocal_AddLabel( gLocalTransLabel, padLeft, y, contentR, y + textH )
+        y += textH + labelGapY
+        SetWindowPos( ghLocalTranslate, 0, padLeft, y, fullW, fieldH, SWP_NOZORDER or SWP_NOACTIVATE )
+        y += fieldH
+    end if
+
+    function = y + AfxScaleY(OPTROW_PADBOTTOM)
 end function
 
+
+' ========================================================================================
+' Paint the drawn labels. Background is filled by the caller first.
+' ========================================================================================
+sub frmOptionsLocal_Paint( byval p as SCP_PAINTINFO ptr )
+    if p = 0 then exit sub
+    if gLocalBuilt = false then exit sub
+    p->b->SetFont( OptionsFont_Base() )
+    p->b->SetBackColor( ghPanel.BackColor )
+    p->b->SetForeColor( ghPanel.ForeColor )
+    for i as long = lbound(gLocalLabels) to ubound(gLocalLabels)
+        dim as RECT rc = gLocalLabels(i).rc
+        p->b->PaintText( gLocalLabels(i).caption, @rc, DT_LEFT or DT_END_ELLIPSIS )
+    next
+end sub

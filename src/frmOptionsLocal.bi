@@ -11,22 +11,42 @@
 '    MERCHANTABILITY or FITNESS for A PARTICULAR PURPOSE.  See the
 '    GNU General Public License for more details.
 
+'  frmOptionsLocal.bi
+'
+'  The Localization page. Like Compiler Setup, this is a panel-hosted page (controls on the
+'  scroll panel's page window, driven by build/layout/paint/show hooks) rather than a child
+'  form. The file-editing business logic is unchanged from the old page -- only the controls
+'  were swapped for the reusable family and the "current file" store moved from a groupbox
+'  caption to a module variable.
+
 #pragma once
 
-#Define IDC_FRMOPTIONSLOCAL_FRAMELOCALIZATION       1001
+' SCP_PAINTINFO is named in the declares below; this header is pulled in early.
+#include once "CScrollPanel.bi"
+
+' CMDNEW / CMDLOCALIZATION keep their values: AfxIFileSaveDialog / AfxIFileOpenDialogW
+' switch on them (by name -- see modRoutines.inc) to pick the *.lang filter and title.
 #Define IDC_FRMOPTIONSLOCAL_CMDNEW                  1002
 #Define IDC_FRMOPTIONSLOCAL_CMDEDIT                 1003
-#Define IDC_FRMOPTIONSLOCAL_CMDDELETE               1004
-#Define IDC_FRMOPTIONSLOCAL_FRAMEEDITAREA           1005
+#Define IDC_FRMOPTIONSLOCAL_CMDDELETE              1004
 #Define IDC_FRMOPTIONSLOCAL_CMDLOCALIZATION         1006
-#Define IDC_FRMOPTIONSLOCAL_LBLPHRASES              1007
-#Define IDC_FRMOPTIONSLOCAL_LVWPHRASES              1008
-#Define IDC_FRMOPTIONSLOCAL_LBLENGLISH              1009
+#Define IDC_FRMOPTIONSLOCAL_LSTPHRASES              1008
 #Define IDC_FRMOPTIONSLOCAL_TXTENGLISH              1010
-#Define IDC_FRMOPTIONSLOCAL_LBLTRANSLATE            1011
 #Define IDC_FRMOPTIONSLOCAL_TXTTRANSLATE            1012
 
+' Called from frmOptions_SaveEditorOptions on OK, and internally before switching files.
 declare function frmOptionsLocal_LocalEditCheck() as long
-declare Function frmOptionsLocal_Show( byval hWndParent as HWND ) as LRESULT
 
+' The current localization filename the page is pointed at (e.g. "english.lang"). Replaces
+' the old FRAMELOCALIZATION groupbox caption; read by SaveEditorOptions to update
+' gConfig.LocalizationFile. Seeded when the dialog opens.
+extern gLocalCurrentFile as DWSTRING
 
+declare sub      frmOptionsLocal_SeedFromConfig()
+declare function frmOptionsLocal_OwnsPage( byval nPage as long ) as boolean
+declare sub      frmOptionsLocal_Reset()
+declare sub      frmOptionsLocal_Build( byval hPage as HWND )
+declare function frmOptionsLocal_Layout( byval hPage as HWND, byval cxPanel as long ) as long
+declare sub      frmOptionsLocal_Paint( byval p as SCP_PAINTINFO ptr )
+declare sub      frmOptionsLocal_Show( byval bShow as boolean )
+declare sub      frmOptionsLocal_ApplyTheme()

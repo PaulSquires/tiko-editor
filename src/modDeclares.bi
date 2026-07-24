@@ -187,9 +187,14 @@ dim shared as HWND HWND_FRMMAIN_SPLITPANEL
 dim shared as HWND HWND_FRMHELPVIEWER, HWND_FRMHELPVIEWER_LEFTPANEL, HWND_FRMHELPVIEWER_RIGHTPANEL
 dim shared as HWND HWND_FRMHELPVIEWER_VSCROLLBAR2
 dim shared as HWND HWND_FRMHELPVIEWER_SPLITTER
-dim shared as HWND HWND_FRMOPTIONS, HWND_FRMOPTIONSGENERAL, HWND_FRMOPTIONSEDITOR, HWND_FRMOPTIONSEDITOR2
-dim shared as HWND HWND_FRMOPTIONSCOLORS, HWND_FRMOPTIONSCOMPILER, HWND_FRMOPTIONSLOCAL
-dim shared as HWND HWND_FRMOPTIONSKEYWORDS, HWND_FRMOPTIONSKEYWORDSWINAPI, HWND_FRMOPTIONSKEYWORDSEXTRA
+' The General Options and Code Editor pages are table-driven now (modOptionsRows.inc) and
+' have no child forms of their own, so HWND_FRMOPTIONSGENERAL / ...EDITOR / ...EDITOR2 are
+' gone. "Advanced Code Editor" is no longer a separate page at all: its settings sit at the
+' bottom of the one scrolling Code Editor page.
+dim shared as HWND HWND_FRMOPTIONS
+' The entire Environment Options dialog is panel-hosted / table-driven now: every page's
+' controls live on the scroll panel, so none of the old HWND_FRMOPTIONS* child-form globals
+' remain.
 dim shared as HWND HWND_FRMFINDINPROJECT, HWND_FRMSEARCHSYMBOL
 dim shared as HWND HWND_FRMBUILDCONFIG, HWND_FRMUSERTOOLS, HWND_FRMABOUT
 dim shared as HWND HWND_FRMKEYBOARD, HWND_FRMKEYBOARD_LISTVIEW, HWND_FRMKEYBOARDEDIT
@@ -240,7 +245,13 @@ redim shared LL(any) as wstring * MAX_PATH
 #DEFINE SYMBOLFONT_9     5
 #DEFINE SYMBOLFONT_10    6
 #DEFINE SYMBOLFONT_12    7
-#DEFINE MAXFONTS         8
+' Larger GUI faces, added for the Environment Options dialog (whose base font is 11pt).
+' MAXFONTS is both the array bound and the bound of the DeleteObject loop in frmMain, so a
+' new entry here is freed without touching the cleanup.
+#DEFINE GUIFONT_11       8
+#DEFINE GUIFONT_12       9
+#DEFINE GUIFONTBOLD_11   10
+#DEFINE MAXFONTS         11
 
 dim shared ghFont(MAXFONTS) as HFONT
 
