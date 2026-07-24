@@ -11,9 +11,31 @@
 '    MERCHANTABILITY or FITNESS for A PARTICULAR PURPOSE.  See the
 '    GNU General Public License for more details.
 
+'  frmOptionsKeywords.bi
+'
+'  The three Keywords pages (FreeBASIC / Windows API / Extra), consolidated into one
+'  panel-hosted module -- they only ever differed in which gConfig field they edited. Each
+'  page is a single large multiline CTextBox that fills the pane, with one shared CVScrollBar
+'  driven by whichever page is visible (the same arrangement frmOutput uses for its two
+'  textboxes). The three old frmOptionsKeywords / ...WinApi / ...Extra child forms are gone.
+'
+'  There is no staging copy here: the keyword blobs are large, so instead of mirroring them
+'  the module harvests the (built) textboxes straight into gConfig on OK, gated on the
+'  gConfig.bKeywordsDirty flag exactly as the old dialog was. An unvisited page has no
+'  textbox and is simply not harvested, so its gConfig value is left untouched.
+
 #pragma once
 
-#Define IDC_FRMOPTIONSKEYWORDS_TXTKEYWORDS          1000
+#include once "CScrollPanel.bi"        ' SCP_PAINTINFO, pulled in early
 
-declare function frmOptionsKeywords_Show( byval hWndParent as HWND ) as LRESULT
+#Define IDC_FRMOPTIONSKEYWORDS_TXTBASE   9500     ' + page index (0..2)
+#Define IDC_FRMOPTIONSKEYWORDS_VSCROLL   9510
 
+declare function frmOptionsKeywords_OwnsPage( byval nPage as long ) as boolean
+declare sub      frmOptionsKeywords_Reset()
+declare sub      frmOptionsKeywords_Build( byval nPage as long, byval hPage as HWND )
+declare function frmOptionsKeywords_Layout( byval nPage as long, byval hPage as HWND, byval cxPanel as long ) as long
+declare sub      frmOptionsKeywords_Paint( byval nPage as long, byval p as SCP_PAINTINFO ptr )
+declare sub      frmOptionsKeywords_Show( byval nPage as long, byval bShow as boolean )
+declare sub      frmOptionsKeywords_ApplyTheme()
+declare sub      frmOptionsKeywords_Harvest()

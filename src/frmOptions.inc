@@ -11,174 +11,429 @@
 '    MERCHANTABILITY or FITNESS for A PARTICULAR PURPOSE.  See the
 '    GNU General Public License for more details.
 
+'  frmOptions.inc  --  the Environment Options dialog shell.
+'
+'  SHAPE
+'      +---------------------+----------------------------------------+
+'      |  CListBox (nav)     |  page title band  (fixed, not scrolled) |
+'      |  grouped, fixed     +----------------------------------------+
+'      |  width, NO splitter |  CScrollPanel                          |
+'      |                     |    GetPanel() is the parent of every    |
+'      |                     |    page's controls                      |
+'      +---------------------+----------------------------------------+
+'      |                                 [ CButton OK ] [ CButton .. ] |
+'      +--------------------------------------------------------------+
+'
+'  THIS DIALOG RUNS ITS OWN MESSAGE LOOP and cannot use CWindow.DoEvents, because that
+'  loop has no *_FilterMessage hooks and this dialog hosts controls that require them.
+'  The loop lives at the bottom of frmOptions_Show.
+'
+'  EVERY PAGE IS LAZY NOW
+'      Two page mechanisms remain: table-driven rows (modOptionsRows.inc, reading/writing
+'      gOptWork) and panel-hosted modules (frmOptionsCompiler / ...Local / ...Colors /
+'      ...Keywords). Both build their controls on the scroll panel's page window on first
+'      visit. There are no eager child forms left; frmOptions_SaveEditorOptions commits the
+'      staging copy and asks each panel-hosted module for anything it owns outside it (the
+'      localization file, the keyword blobs).
+
 #include once "frmOptions.bi"
-#include once "frmOptionsGeneral.bi"
-#include once "frmOptionsEditor.bi"
-#include once "frmOptionsEditor2.bi"
+#include once "modOptionsRows.bi"
 #include once "frmOptionsCompiler.bi"
 #include once "frmOptionsColors.bi"
 #include once "frmOptionsLocal.bi"
 #include once "frmOptionsKeywords.bi"
-#include once "frmOptionsKeywordsWinApi.bi"
-#include once "frmOptionsKeywordsExtra.bi"
 #include once "frmMain.bi"
 
 #include once "clsConfig.bi"
 
 
+' The page currently on show, and whether each table-driven page has been built yet.
+dim shared gOptCurrentPage as long = OPTPAGE_NONE
+dim shared gOptPageBuilt(OPTPAGE_COUNT - 1) as boolean
+
+
 ' ========================================================================================
-' Save all options to the gConfig class
+' Kinds of page, in order of preference:
+'   1. table-driven      OptionsRows_HasPage(nPage)     -- General, Code Editor
+'   2. panel-hosted      frmOptions_PanelHostedOwns()   -- Compiler, Localization, Themes+Fonts, Keywords
+' Every page is now one of these two; there are no eager legacy child forms left. The
+' dispatch functions below (ShowPage / layout / paint callbacks) branch table-first.
+'
+' A page is panel-hosted if any module claims it. Keep this in step with the branches below.
 ' ========================================================================================
-function frmOptions_SaveEditorOptions() as long   
-    
-    dim hwnd as HWND 
-    dim wText as wstring * MAX_PATH  
+private function frmOptions_PanelHostedOwns( byval nPage as long ) as boolean
+    if frmOptionsCompiler_OwnsPage( nPage ) then return true
+    if frmOptionsLocal_OwnsPage( nPage ) then return true
+    if frmOptionsColors_OwnsPage( nPage ) then return true
+    if frmOptionsKeywords_OwnsPage( nPage ) then return true
+    function = false
+end function
+
+
+' ========================================================================================
+' Dispatch the build / show / hide / layout / paint of a panel-hosted page to whichever
+' module owns it. Keep in step with frmOptions_PanelHostedOwns above.
+' ========================================================================================
+private sub frmOptions_PanelBuild( byval nPage as long, byval hPage as HWND )
+    if frmOptionsCompiler_OwnsPage( nPage ) then frmOptionsCompiler_Build( hPage )
+    if frmOptionsLocal_OwnsPage( nPage ) then frmOptionsLocal_Build( hPage )
+    if frmOptionsColors_OwnsPage( nPage ) then frmOptionsColors_Build( hPage )
+    if frmOptionsKeywords_OwnsPage( nPage ) then frmOptionsKeywords_Build( nPage, hPage )
+end sub
+
+private sub frmOptions_PanelShow( byval nPage as long, byval bShow as boolean )
+    if frmOptionsCompiler_OwnsPage( nPage ) then frmOptionsCompiler_Show( bShow )
+    if frmOptionsLocal_OwnsPage( nPage ) then frmOptionsLocal_Show( bShow )
+    if frmOptionsColors_OwnsPage( nPage ) then frmOptionsColors_Show( bShow )
+    if frmOptionsKeywords_OwnsPage( nPage ) then frmOptionsKeywords_Show( nPage, bShow )
+end sub
+
+private function frmOptions_PanelLayout( byval nPage as long, byval hPage as HWND, byval cxPanel as long ) as long
+    if frmOptionsCompiler_OwnsPage( nPage ) then return frmOptionsCompiler_Layout( hPage, cxPanel )
+    if frmOptionsLocal_OwnsPage( nPage ) then return frmOptionsLocal_Layout( hPage, cxPanel )
+    if frmOptionsColors_OwnsPage( nPage ) then return frmOptionsColors_Layout( hPage, cxPanel )
+    if frmOptionsKeywords_OwnsPage( nPage ) then return frmOptionsKeywords_Layout( nPage, hPage, cxPanel )
+    function = 0
+end function
+
+private sub frmOptions_PanelPaint( byval nPage as long, byval p as SCP_PAINTINFO ptr )
+    if frmOptionsCompiler_OwnsPage( nPage ) then frmOptionsCompiler_Paint( p )
+    if frmOptionsLocal_OwnsPage( nPage ) then frmOptionsLocal_Paint( p )
+    if frmOptionsColors_OwnsPage( nPage ) then frmOptionsColors_Paint( p )
+    if frmOptionsKeywords_OwnsPage( nPage ) then frmOptionsKeywords_Paint( nPage, p )
+end sub
+
+
+' ========================================================================================
+' The localized title shown in the page's header band.
+' ========================================================================================
+private function frmOptions_PageTitle( byval nPage as long ) as DWSTRING
+    select case nPage
+        case OPTPAGE_GENERAL:         return L(226,"General Options")
+        case OPTPAGE_EDITOR:          return L(110,"Code Editor")
+        case OPTPAGE_COLORS:          return L(111,"Themes and Fonts")
+        case OPTPAGE_COMPILER:        return L(112,"Compiler Setup")
+        case OPTPAGE_LOCAL:           return L(129,"Localization")
+        case OPTPAGE_KEYWORDS:        return L(177,"FreeBASIC Keywords")
+        case OPTPAGE_KEYWORDSWINAPI:  return L(435,"Windows Api Keywords")
+        case OPTPAGE_KEYWORDSEXTRA:   return L(439,"Extra Keywords")
+    end select
+    ' RETURN throughout, never `function =`: fbc rejects mixing the two styles in a
+    ' procedure returning an object with a constructor, and DWSTRING is one.
+    return ""
+end function
+
+
+' ========================================================================================
+' Save all options to the gConfig class.
+'
+' Everything except the three Keywords pages is committed from the staging copy now; the
+' Keywords widget harvest is the last remnant of the old per-page GetDlgItem harvest.
+' ========================================================================================
+function frmOptions_SaveEditorOptions() as long
+
     dim bChangesNextRun as boolean
-    
-    ' GENERAL OPTIONS   
-    hwnd = HWND_FRMOPTIONSGENERAL
-    gConfig.MultipleInstances    = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSGENERAL_CHKMULTIPLEINSTANCES) )
-    gConfig.CompileAutosave      = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSGENERAL_CHKCOMPILEAUTOSAVE) )
-    gConfig.AskExit              = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSGENERAL_CHKASKEXIT) )
-    gConfig.RestoreSession       = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSGENERAL_CHKRESTORESESSION) )
-    gConfig.CheckUpdates         = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSGENERAL_CHKUPDATES) )
-    
-    dim as long CompactMenus     = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSGENERAL_CHKCOMPACTMENUS) )
-    gConfig.CompactMenus = CompactMenus
 
-
-    ' EDITOR OPTIONS   
-    hwnd = HWND_FRMOPTIONSEDITOR
-    gConfig.SyntaxHighlighting    = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKSYNTAXHIGHLIGHTING) )
-    gConfig.LeftMargin            = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKSHOWLEFTMARGIN) )
-    gConfig.FoldMargin            = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKSHOWFOLDMARGIN) )
-    gConfig.ConfineCaret          = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKCONFINECARET) )
-    gConfig.LineNumbering         = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKLINENUMBERING) )
-    gConfig.HighlightCurrentLine  = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKCURRENTLINE) )
-    gConfig.TabIndentSpaces       = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKTABTOSPACES) )
-    gConfig.IndentGuides          = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKINDENTGUIDES ) )
-    gConfig.RightEdge             = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKSHOWRIGHTEDGE) )
-    gConfig.PositionMiddle        = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKPOSITIONMIDDLE) )
-    gConfig.ClickToggleBreakpoint = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_CHKTOGGLEBREAKPOINT) )
-
-    gConfig.RightEdgePosition = AfxGetWindowText( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_TXTRIGHTEDGE) )
-    gConfig.TabSize = AfxGetWindowText( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR_TXTTABSIZE) )
-    gConfig.KeywordCase = ComboBox_GetCurSel( GetDlgItem( HWnd, IDC_FRMOPTIONSEDITOR_COMBOCASE))
-    
-    ' EDITOR OPTIONS2   
-    hwnd = HWND_FRMOPTIONSEDITOR2
-    gConfig.Codetips              = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR2_CHKCODETIPS) )
-    gConfig.AutoComplete          = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR2_CHKAUTOCOMPLETE) )
-    gConfig.CharacterAutoComplete = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR2_CHKCHARAUTOCOMPLETE) )
-    gConfig.AutoIndentation       = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR2_CHKAUTOINDENTATION) )
-    gConfig.ForNextVariable       = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR2_CHKFORNEXTVARIABLE) )
-    gConfig.BraceHighlight        = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR2_CHKBRACEHIGHLIGHT) )
-    gConfig.OccurrenceHighlight   = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSEDITOR2_CHKOCCURRENCEHIGHLIGHT) )
-
+    ' Pages owned by the staging copy: General Options, Code Editor (the old Code Editor
+    ' and Advanced Code Editor pages merged), and Compiler Setup. All committed at once;
+    ' Cancel simply never calls this.
+    OptionsWork_Commit()
 
     ' If a localization file is currently being edited then save it now.
     frmOptionsLocal_LocalEditCheck
 
-    ' If the localization has changed then display a message indicating that the changes
-    ' will not be seen until the application is restarted.
-    hwnd = HWND_FRMOPTIONSLOCAL
-    wText = AfxGetWindowText( GetDlgItem(hwnd, IDC_FRMOPTIONSLOCAL_FRAMELOCALIZATION) )
-    if (ucase(wText) <> ucase(gConfig.LocalizationFile)) orelse (gLocalPhrasesEdit = true) then
+    ' If the localization has changed then note that a restart is needed. The current file
+    ' now lives in gLocalCurrentFile (was the FRAMELOCALIZATION groupbox caption).
+    if (ucase(gLocalCurrentFile) <> ucase(gConfig.LocalizationFile)) orelse (gLocalPhrasesEdit = true) then
         bChangesNextRun = true
     end if
-    gConfig.LocalizationFile = wText
-    
-    
-    ' THEME COLOR/FONT OPTIONS
-    hwnd = HWND_FRMOPTIONSCOLORS
+    gConfig.LocalizationFile = gLocalCurrentFile
 
-    dim idx as Long 
-    idx = ListBox_GetCurSel( GetDlgItem(hwnd, IDC_FRMOPTIONSCOLORS_LSTTHEMES) )
-    if idx >= lbound(gThemeFilenames) andalso idx <= ubound(gThemeFilenames) then
-        gConfig.ThemeShortFilename = gThemeFilenames(idx)
-    end if   
-    idx = ComboBox_GetCurSel( GetDlgItem(hwnd, IDC_FRMOPTIONSCOLORS_COMBOFONTNAME) )
-    gConfig.EditorFontname = AfxGetComboBoxText( GetDlgItem(hwnd, IDC_FRMOPTIONSCOLORS_COMBOFONTNAME), idx )
-    idx = ComboBox_GetCurSel( GetDlgItem(hwnd, IDC_FRMOPTIONSCOLORS_COMBOFONTSIZE) )
-    gConfig.EditorFontSize = AfxGetComboBoxText( GetDlgItem(hwnd, IDC_FRMOPTIONSCOLORS_COMBOFONTSIZE), idx )  
-    idx = ComboBox_GetCurSel( GetDlgItem(hwnd, IDC_FRMOPTIONSCOLORS_COMBOFONTCHARSET) )
-    gConfig.EditorFontCharSet = AfxGetComboBoxText( GetDlgItem(hwnd, IDC_FRMOPTIONSCOLORS_COMBOFONTCHARSET), idx )
-    gConfig.FontExtraSpace = AfxGetWindowText( GetDlgItem( HWnd, IDC_FRMOPTIONSCOLORS_TXTEXTRASPACE))
-    
-    
-    ' COMPILER OPTIONS
-    hwnd = HWND_FRMOPTIONSCOMPILER
-    
-    ' Get the selected toolchain and then build the paths to the compilers
-    dim as DWSTRING wszPath
-    idx = ListBox_GetCurSel( GetDlgItem(hwnd, IDC_FRMOPTIONSCOMPILER_LSTTOOLCHAINS) )
-    if idx <> -1 then
-        wszPath = AfxGetExePathName + "Toolchains\" + AfxGetListBoxText( GetDlgItem(hwnd, IDC_FRMOPTIONSCOMPILER_LSTTOOLCHAINS), idx )
-        gConfig.FBWINCompiler32 = wszPath + "\fbc32.exe"
-        gConfig.FBWINCompiler64 = wszPath + "\fbc64.exe"
-    end if
-    gConfig.CompilerSwitches = AfxGetWindowText( GetDlgItem(hwnd, IDC_FRMOPTIONSCOMPILER_TXTFBSWITCHES) )
-    gConfig.CompilerIncludes = AfxGetWindowText( GetDlgItem(hwnd, IDC_FRMOPTIONSCOMPILER_TXTINCLUDES) )
-    gConfig.CompilerHelpfile = AfxGetWindowText( GetDlgItem(hwnd, IDC_FRMOPTIONSCOMPILER_TXTFBHELPFILE) )
-    gConfig.RunViaCommandWindow = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSCOMPILER_CHKRUNVIACOMMANDWINDOW) )
-    gConfig.DisableCompileBeep = Button_GetCheck( GetDlgItem(hwnd, IDC_FRMOPTIONSCOMPILER_CHKDISABLECOMPILEBEEP) )
-    
-    
-    ' KEYWORDS
+    ' Themes and Fonts, and Compiler Setup, are committed by OptionsWork_Commit above
+    ' (staging copy).
+
+
+    ' KEYWORDS. Harvest the (built) editors into gConfig and persist -- gated on the dirty
+    ' flag exactly as before. An unvisited keyword page has no editor and keeps its value.
     if gConfig.bKeywordsDirty then
-        dim as HWND hTextBox = GetDlgItem(HWND_FRMOPTIONSKEYWORDS, IDC_FRMOPTIONSKEYWORDS_TXTKEYWORDS)
-        gConfig.FBKeywords = AfxGetWindowText(hTextBox)
-        hTextBox = GetDlgItem(HWND_FRMOPTIONSKEYWORDSWINAPI, IDC_FRMOPTIONSKEYWORDSWINAPI_TXTKEYWORDS)
-        gConfig.WinApiKeywords = AfxGetWindowText(hTextBox)
-        hTextBox = GetDlgItem(HWND_FRMOPTIONSKEYWORDSEXTRA, IDC_FRMOPTIONSKEYWORDSEXTRA_TXTKEYWORDS)
-        gConfig.ExtraKeywords = AfxGetWindowText(hTextBox)
+        frmOptionsKeywords_Harvest()
         gConfig.SaveKeywords
     end if
-    
+
     ' Output the config settings to disk file
     gConfig.SaveConfigFile
-    
+
     ' If Occurrences Highlighting is false then ensure that any highlights on the screen will be removed.
     dim pDoc as clsDocument ptr
     pDoc = gTTabCtl.GetActiveDocumentPtr()
     if pDoc then
         frmMain_HighlightWord( pDoc, "" )
     end if
-    
+
     if bChangesNextRun then
-        MessageBox( HWND_FRMMAIN, _
+        frmOptions_ThemedMsgBox( _
                 L(108,"Changes will be applied the next time the application is run."), _
-                L(109,"Warning"), _
-                MB_OK or MB_ICONINFORMATION or MB_DEFBUTTON1 or MB_APPLMODAL )
+                L(109,"Warning"), MBX_ICON_INFO, MBX_BTN_OK )
     end if
-    
+
     function = 0
 End function
 
 
 ' ========================================================================================
-' Process WM_CREATE message for window/dialog: frmOptions
+' Paint one row of the navigation list.
 ' ========================================================================================
-function frmOptions_OnCreate( _
-            byval hwnd as HWND, _
-            byval lpCreateStructPtr as LPCREATESTRUCT _
-            ) as boolean
+private sub frmOptions_NavPaintCallback( byval p as CLISTBOX_PAINTINFO ptr )
+    if p = 0 then exit sub
 
-    ' This is a modal popup window so disable the parent window
-    DisableAllModeless()
+    dim as COLORREF backclr, foreclr
+    if p->isSelected then
+        backclr = ghPanel.BackColorHot
+        foreclr = ghPanel.ForeColorHot
+    elseif p->isHot then
+        backclr = ghPanel.BackColorHot
+        foreclr = ghPanel.ForeColorHot
+    else
+        backclr = ghPanel.BackColor
+        foreclr = ghPanel.ForeColor
+    end if
 
-    '  Message cracker macro expects a True to be returned for a successful
-    '  OnCreate handler even though returning -1 from a standard WM_CREATE
-    '  call would stop creating the window. This is just one of those Windows
-    '  inconsistencies.
-    return true
+    p->b->SetForeColor( foreclr )
+    p->b->SetBackColor( backclr )
+    p->b->PaintRect( @p->rc )
+
+    ' The list is flat, so there is no header branch here -- every row is a page.
+    dim as RECT rcText = p->rc
+    rcText.left += AfxScaleX(16)
+    p->b->SetFont( OptionsFont_Base() )
+    p->b->PaintText( p->wszCaption, @rcText, DT_LEFT or DT_END_ELLIPSIS )
+end sub
+
+
+' ========================================================================================
+' The user picked a different navigation row (mouse or keyboard).
+' ========================================================================================
+private sub frmOptions_NavSelChangeCallback( byval hList as HWND, byval row as integer )
+    if row < 0 then exit sub
+    frmOptions_ShowPage( CListBox_GetItemData( hList, row ) )
+end sub
+
+
+' ========================================================================================
+' Paint the scroll panel's page: background, then whatever owns the current page.
+' ========================================================================================
+private sub frmOptions_PagePaintCallback( byval p as SCP_PAINTINFO ptr )
+    if p = 0 then exit sub
+    p->b->SetBackColor( ghPanel.BackColor )
+    p->b->PaintRect( @p->rcClient )
+    if OptionsRows_HasPage( gOptCurrentPage ) then
+        OptionsRows_PaintPage( gOptCurrentPage, p )
+    elseif frmOptions_PanelHostedOwns( gOptCurrentPage ) then
+        frmOptions_PanelPaint( gOptCurrentPage, p )
+    end if
+end sub
+
+
+' ========================================================================================
+' The scroll panel's viewport changed width: re-flow the current page and report how tall
+' it now is. cxPanel is handed to us -- do not read the width back off the window.
+' ========================================================================================
+private function frmOptions_PageLayoutCallback( byval hPanel as HWND, byval cxPanel as integer ) as integer
+
+    if gOptCurrentPage = OPTPAGE_NONE then return 0
+
+    if OptionsRows_HasPage( gOptCurrentPage ) then
+        return OptionsRows_LayoutPage( gOptCurrentPage, hPanel, cxPanel )
+    end if
+
+    if frmOptions_PanelHostedOwns( gOptCurrentPage ) then
+        return frmOptions_PanelLayout( gOptCurrentPage, hPanel, cxPanel )
+    end if
+
+    function = 0
 end function
 
 
 ' ========================================================================================
-' Process WM_COMMAND message for window/dialog: frmOptions
+' Switch the visible page. Every page is built on first visit (table-driven or
+' panel-hosted) -- there are no eager legacy child forms left.
 ' ========================================================================================
-function frmOptions_OnCommand( _
+sub frmOptions_ShowPage( byval nPage as long )
+
+    if nPage < 0 then exit sub
+    if nPage >= OPTPAGE_COUNT then exit sub
+    if nPage = gOptCurrentPage then exit sub
+
+    dim as HWND hPanel = CScrollPanel_GetPanel( HWND_FRMOPTIONS_SCROLL )
+    if hPanel = 0 then exit sub
+
+    ' Hide the outgoing page.
+    if gOptCurrentPage <> OPTPAGE_NONE then
+        if OptionsRows_HasPage( gOptCurrentPage ) then
+            OptionsRows_ShowPage( gOptCurrentPage, false )
+        elseif frmOptions_PanelHostedOwns( gOptCurrentPage ) then
+            frmOptions_PanelShow( gOptCurrentPage, false )
+        end if
+    end if
+
+    gOptCurrentPage = nPage
+    OptionsDialogLastOpened = nPage
+
+    ' Build the incoming page on first visit (every page is lazy now).
+    if OptionsRows_HasPage( nPage ) then
+        if gOptPageBuilt(nPage) = false then
+            OptionsRows_BuildPage( nPage, hPanel )
+            gOptPageBuilt(nPage) = true
+        end if
+        OptionsRows_ShowPage( nPage, true )
+    elseif frmOptions_PanelHostedOwns( nPage ) then
+        if gOptPageBuilt(nPage) = false then
+            frmOptions_PanelBuild( nPage, hPanel )
+            gOptPageBuilt(nPage) = true
+        end if
+        frmOptions_PanelShow( nPage, true )
+    end if
+
+    ' Re-flow for the current width and go back to the top of the page.
+    CScrollPanel_SetPos( HWND_FRMOPTIONS_SCROLL, 0 )
+    CScrollPanel_Recalc( HWND_FRMOPTIONS_SCROLL )
+    AfxRedrawWindow( hPanel )
+    AfxRedrawWindow( HWND_FRMOPTIONS )
+
+end sub
+
+
+' ========================================================================================
+' Position the shell's own children. Called from WM_SIZE and once after creation.
+' ========================================================================================
+private sub frmOptions_PositionWindows( byval hwnd as HWND )
+
+    dim as RECT rc
+    GetClientRect( hwnd, @rc )
+    if (rc.right <= 0) orelse (rc.bottom <= 0) then exit sub
+
+    dim as long navW    = AfxScaleX(FRMOPTIONS_NAV_W)
+    dim as long titleH  = AfxScaleY(FRMOPTIONS_TITLE_H)
+    dim as long footerH = AfxScaleY(FRMOPTIONS_FOOTER_H)
+    dim as long margin  = AfxScaleX(FRMOPTIONS_MARGIN)
+    dim as long btnW    = AfxScaleX(FRMOPTIONS_BTN_W)
+    dim as long btnH    = AfxScaleY(FRMOPTIONS_BTN_H)
+
+    dim as long bodyH   = rc.bottom - footerH
+    if bodyH < 0 then bodyH = 0
+
+    SetWindowPos( HWND_FRMOPTIONS_NAV, 0, 0, 0, navW, bodyH, SWP_NOZORDER or SWP_NOACTIVATE )
+
+    dim as long scrollX = navW
+    dim as long scrollY = titleH
+    dim as long scrollW = rc.right - navW
+    dim as long scrollH = bodyH - titleH
+    if scrollW < 0 then scrollW = 0
+    if scrollH < 0 then scrollH = 0
+    SetWindowPos( HWND_FRMOPTIONS_SCROLL, 0, scrollX, scrollY, scrollW, scrollH, _
+                  SWP_NOZORDER or SWP_NOACTIVATE )
+
+    dim as long btnY = rc.bottom - footerH + (footerH - btnH) \ 2
+    SetWindowPos( GetDlgItem(hwnd, IDC_FRMOPTIONS_CMDCANCEL), 0, _
+                  rc.right - margin - btnW, btnY, btnW, btnH, SWP_NOZORDER or SWP_NOACTIVATE )
+    SetWindowPos( GetDlgItem(hwnd, IDC_FRMOPTIONS_CMDOK), 0, _
+                  rc.right - margin - (btnW * 2) - AfxScaleX(8), btnY, btnW, btnH, _
+                  SWP_NOZORDER or SWP_NOACTIVATE )
+
+end sub
+
+
+' ========================================================================================
+' Paint the shell's own chrome: the background, the page title band, and the rule above
+' the footer. Everything else on screen belongs to a child control.
+' ========================================================================================
+private function frmOptions_OnPaint( byval hwnd as HWND ) as LRESULT
+
+    dim as PAINTSTRUCT ps
+    dim as HDC hdc = BeginPaint( hwnd, @ps )
+
+    dim as RECT rc
+    GetClientRect( hwnd, @rc )
+
+    dim buffer as CBufferPaint
+    buffer.BeginDoubleBuffer( hwnd, hdc, rc )
+
+    buffer.SetBackColor( ghPanel.BackColor )
+    buffer.PaintRect( @rc )
+
+    dim as long navW    = AfxScaleX(FRMOPTIONS_NAV_W)
+    dim as long titleH  = AfxScaleY(FRMOPTIONS_TITLE_H)
+    dim as long footerH = AfxScaleY(FRMOPTIONS_FOOTER_H)
+
+    ' Page title band.
+    dim as RECT rcTitle
+    rcTitle.left   = navW + AfxScaleX(OPTROW_PADLEFT)
+    rcTitle.top    = 0
+    rcTitle.right  = rc.right - AfxScaleX(OPTROW_PADRIGHT)
+    rcTitle.bottom = titleH
+    buffer.SetForeColor( ghPanel.ForeColorHot )
+    ' Pinned bold match for the 11pt base font (see modOptionsRows.bi); does not follow the
+    ' TIKO_OPTIONS_FONT override.
+    buffer.SetFont( ghFont(GUIFONTBOLD_11) )
+    buffer.PaintText( frmOptions_PageTitle(gOptCurrentPage), @rcTitle, DT_LEFT or DT_END_ELLIPSIS )
+
+    ' The one rule left in the dialog: the vertical split between the navigation list and
+    ' the page. A hairline -- width 1, deliberately not DPI-scaled. There is deliberately
+    ' NO rule above the footer buttons and none between settings rows.
+    buffer.SetForeColor( ghEditor.Divider )
+    buffer.PaintLine( 1, navW, 0, navW, rc.bottom - footerH )
+
+    buffer.EndDoubleBuffer()
+    EndPaint( hwnd, @ps )
+
+    function = 0
+end function
+
+
+' ========================================================================================
+' OK / Cancel. CButton does not post WM_COMMAND to its parent, so the buttons route
+' through their click callback; IDCANCEL still arrives as a WM_COMMAND because
+' IsDialogMessage synthesises one for the Escape key.
+' ========================================================================================
+private sub frmOptions_ApplyAndClose( byval hwnd as HWND )
+
+    frmOptions_SaveEditorOptions()
+
+    ' Reload the theme file in case it has changed
+    LoadThemeFile()
+    ' Refresh main background in case theme changed and no file open
+    AfxRedrawWindow( HWND_FRMMAIN )
+    ' Refresh the frmOutput controls (listviews and RichEdits)
+    AfxRedrawWindow( HWND_FRMOUTPUT )
+    frmOutput_SetControlColors()
+    frmOutput_PositionWindows()
+    ' Refresh the menubar. The rest of the GUI will refresh via frmMain_PositionWindows
+    AfxRedrawWindow( HWND_FRMMAIN_MENUBAR )
+    frmMenuBar_PositionWindows()
+
+    ' Reposition main windows in case hide toolbar/statusbar selected
+    frmMain_PositionWindows
+
+    ' Apply the newly saved options to all open Scintilla windows
+    dim pDoc as clsDocument Ptr = gApp.pDocList
+    do until pDoc = 0
+        pDoc->ApplyProperties
+        pDoc = pDoc->pDocNext
+    loop
+
+    SendMessage( hwnd, WM_CLOSE, 0, 0 )
+end sub
+
+
+private sub frmOptions_ButtonClickCallback( byval hButton as HWND, byval id as long )
+    select case id
+        case IDC_FRMOPTIONS_CMDOK:      frmOptions_ApplyAndClose( HWND_FRMOPTIONS )
+        case IDC_FRMOPTIONS_CMDCANCEL:  SendMessage( HWND_FRMOPTIONS, WM_CLOSE, 0, 0 )
+    end select
+end sub
+
+
+private function frmOptions_OnCommand( _
             byval hwnd as HWND, _
             byval id as long, _
             byval hwndCtl as HWND, _
@@ -186,42 +441,12 @@ function frmOptions_OnCommand( _
             ) as LRESULT
 
     select case id
-        
+        case IDCANCEL, IDC_FRMOPTIONS_CMDCANCEL
+            SendMessage( hwnd, WM_CLOSE, 0, 0 )
+            exit function
         case IDC_FRMOPTIONS_CMDOK
-            if codeNotify = BN_CLICKED then
-                frmOptions_SaveEditorOptions()
-                ' Reload the theme file in case it has changed
-                LoadThemeFile()
-                ' Refresh main background in case theme changed and no file open
-                AfxRedrawWindow( HWND_FRMMAIN )
-                ' Refresh the frmOutput controls (listviews and RichEdits)
-                AfxRedrawWindow( HWND_FRMOUTPUT )
-                frmOutput_SetControlColors()
-                frmOutput_PositionWindows()
-                ' Refresh the menubar. The rest of the GUI will refresh via frmMain_PositionWindows
-                AfxRedrawWindow( HWND_FRMMAIN_MENUBAR )
-                frmMenuBar_PositionWindows()
-                
-                ' Reposition main windows in case hide toolbar/statusbar selected
-                frmMain_PositionWindows
-                
-                ' Apply the newly saved options to all open Scintilla windows
-                dim pFrame as CWindow ptr
-                dim pDoc as clsDocument Ptr = gApp.pDocList
-                do until pDoc = 0
-                    pDoc->ApplyProperties
-                    pDoc = pDoc->pDocNext
-                loop   
-                SendMessage( hwnd, WM_CLOSE, 0, 0 )
-                exit function
-            end if
-        
-        case IDCANCEL
-            if codeNotify = BN_CLICKED then
-                SendMessage( hwnd, WM_CLOSE, 0, 0 )
-                exit function
-            end if
-    
+            frmOptions_ApplyAndClose( hwnd )
+            exit function
     end select
 
     function = 0
@@ -229,126 +454,19 @@ end function
 
 
 ' ========================================================================================
-' Process WM_NOTIFY message for window/dialog: frmOptions
+' Keep the dialog usable when dragged small.
 ' ========================================================================================
-function frmOptions_OnNotify( _
-            byval hwnd as HWND, _
-            byval id as long, _
-            byval pNMHDR as NMHDR ptr _
-            ) as LRESULT
-
-    dim pWindow as CWindow ptr = AfxCWindowPtr(hwnd)
-    
-    select case id
-    
-        case IDC_FRMOPTIONS_TVWCATEGORIES
-            if pNMHDR->code = TVN_SELCHANGED then
-                dim as long nLeft, nTop
-                dim as HWND hForm, hLabel
-
-                static hCurrent as HWND   ' hwnd of currently display child Form
-                    
-                if hCurrent then ShowWindow hCurrent, SW_HIDE
-                    
-                dim lpNMTV as NM_TREEVIEW ptr = cast(NM_TREEVIEW ptr, pNMHDR)
-                hLabel = GetDlgItem(hwnd, IDC_FRMOPTIONS_LBLCATEGORY)
-                    
-                ' Display the correct Category name and Child dialog. The child identifier is held in the lParam
-                dim as long nBranchNum = TreeView_GetlParam( pNMHDR->hWndFrom, lpNMTV->itemNew.hItem)
-                select case nBranchNum
-                    case 0
-                        AfxSetWindowText( hLabel, " " & L(226,"General Options")) 
-                        hForm = HWND_FRMOPTIONSGENERAL
-                    case 1
-                        AfxSetWindowText( hLabel, " " & L(110,"Code Editor")) 
-                        hForm = HWND_FRMOPTIONSEDITOR
-                    case 2
-                        AfxSetWindowText( hLabel, " " & L(107,"Advanced Code Editor")) 
-                        hForm = HWND_FRMOPTIONSEDITOR2
-                    case 3
-                        AfxSetWindowText( hLabel, " " & L(111,"Themes and Fonts") )
-                        hForm = HWND_FRMOPTIONSCOLORS
-                    case 4
-                        AfxSetWindowText( hLabel, " " & L(112,"Compiler Setup") )
-                        hForm = HWND_FRMOPTIONSCOMPILER
-                    case 5
-                        AfxSetWindowText( hLabel, " " & L(129,"Localization") )
-                        hForm = HWND_FRMOPTIONSLOCAL
-                    case 6
-                        AfxSetWindowText( hLabel, " " & L(177,"FreeBASIC Keywords") )
-                        hForm = HWND_FRMOPTIONSKEYWORDS
-                    case 7
-                        AfxSetWindowText( hLabel, " " & L(435,"Windows Api Keywords") )
-                        hForm = HWND_FRMOPTIONSKEYWORDSWINAPI
-                    case 8
-                        AfxSetWindowText( hLabel, " " & L(439,"Extra Keywords") )
-                        hForm = HWND_FRMOPTIONSKEYWORDSEXTRA
-                end select
-                    
-                ' Save the most recently opened tree branch 
-                OptionsDialogLastOpened = nBranchNum
-
-                
-                ' Move the child Form into place. The child form will be displayed under the header label.
-                dim rc as Rect
-                GetWindowRect( hLabel, @rc )
-                MapWindowPoints( null, hwnd, cast(LPPOINT, @rc), 2 )
-                SetWindowPos hForm, HWND_TOP, _
-                                rc.Left + pWindow->ScaleX(5), pWindow->ScaleY(50), _
-                                pWindow->ScaleX(420), pWindow->ScaleY(350), _
-                                SWP_SHOWWINDOW
-                    
-                InvalidateRect hwnd, byval null, true
-                UpdateWindow hwnd
-                    
-                hCurrent = hForm
-            end if
-
-    end select
-
-    function = 0
-end function
-
-
-' ========================================================================================
-' Process WM_CTLCOLORSTATIC message for window/dialog: frmOptions
-' ========================================================================================
-function frmOptions_OnCtlColorStatic( _
-            byval hwnd as HWND, _
-            byval hdc as HDC, _
-            byval hWndChild as HWND, _
-            byval nType as long _
-            ) as HBRUSH
-
-    if hWndChild = GetDlgItem( hwnd, IDC_FRMOPTIONS_LBLCATEGORY ) then
-        ' Set the category label to blue text 
-        SetTextColor hdc, 8388608
-        SetBkColor   hdc, GetSysColor( COLOR_BTNFACE )
-        return GetSysColorBrush( COLOR_BTNFACE )
-    end if
-    
-    function = 0      
-end function
-
-
-' ========================================================================================
-' Process WM_CLOSE message for window/dialog: frmOptions
-' ========================================================================================
-function frmOptions_OnClose( byval hwnd as HWND ) as LRESULT
-    ' Enables parent window keeping parent's zorder
-    EnableAllModeless()
-    DestroyWindow hwnd
-    function = 0
-end function
-
-
-' ========================================================================================
-' Process WM_DESTROY message for window/dialog: frmOptions
-' ========================================================================================
-function frmOptions_OnDestroy( byval hwnd as HWND ) as LRESULT
-    dim as HFONT hFont = AfxGetWindowFont(GetDlgItem(hwnd, IDC_FRMOPTIONS_LBLCATEGORY))
-    DeleteFont(hFont)
-    PostQuitMessage(0)
+private function frmOptions_OnGetMinMaxInfo( byval hwnd as HWND, byval pmmi as MINMAXINFO ptr ) as LRESULT
+    if pmmi = 0 then return 0
+    ' The stored minimum is a CLIENT size; grow it by the frame so the constraint applies
+    ' to the window rect Windows actually checks.
+    dim as RECT rc
+    rc.left = 0: rc.top = 0
+    rc.right  = AfxScaleX(FRMOPTIONS_MIN_W)
+    rc.bottom = AfxScaleY(FRMOPTIONS_MIN_H)
+    AdjustWindowRectEx( @rc, GetWindowLongPtr(hwnd, GWL_STYLE), false, GetWindowLongPtr(hwnd, GWL_EXSTYLE) )
+    pmmi->ptMinTrackSize.x = rc.right - rc.left
+    pmmi->ptMinTrackSize.y = rc.bottom - rc.top
     function = 0
 end function
 
@@ -364,12 +482,40 @@ function frmOptions_WndProc( _
             ) as LRESULT
 
     select case uMsg
-        HANDLE_MSG (hwnd, WM_CREATE,   frmOptions_OnCreate)
-        HANDLE_MSG (hwnd, WM_CLOSE,    frmOptions_OnClose)
-        HANDLE_MSG (hwnd, WM_DESTROY,  frmOptions_OnDestroy)
-        HANDLE_MSG (hwnd, WM_COMMAND,  frmOptions_OnCommand)
-        HANDLE_MSG (hwnd, WM_NOTIFY,   frmOptions_OnNotify)
-        HANDLE_MSG (hwnd, WM_CTLCOLORSTATIC, frmOptions_OnCtlColorStatic)
+
+        case WM_CREATE
+            ' This is a modal popup window so disable the parent window
+            DisableAllModeless()
+            return 0
+
+        case WM_ERASEBKGND
+            ' Everything is painted in WM_PAINT through a CBufferPaint.
+            return true
+
+        case WM_PAINT
+            return frmOptions_OnPaint( hwnd )
+
+        case WM_SIZE
+            frmOptions_PositionWindows( hwnd )
+            AfxRedrawWindow( hwnd )
+            return 0
+
+        case WM_GETMINMAXINFO
+            return frmOptions_OnGetMinMaxInfo( hwnd, cast(MINMAXINFO ptr, lParam) )
+
+        case WM_COMMAND
+            return frmOptions_OnCommand( hwnd, loword(wParam), cast(HWND, lParam), hiword(wParam) )
+
+        case WM_CLOSE
+            ' Enables parent window keeping parent's zorder
+            EnableAllModeless()
+            DestroyWindow hwnd
+            return 0
+
+        case WM_DESTROY
+            PostQuitMessage(0)
+            return 0
+
     end select
 
     function = DefWindowProc(hwnd, uMsg, wParam, lParam)
@@ -378,96 +524,283 @@ end function
 
 
 ' ========================================================================================
+' A theme-matched message box owned by the dialog. See frmOptions.bi.
+'
+' This runs a nested modal loop (CMessageBox_DoModal) inside the dialog's own message loop
+' -- a loop within a loop within frmMain's. The owner is HWND_FRMOPTIONS.
+' ========================================================================================
+function frmOptions_ThemedMsgBox( byval wszText as DWSTRING, _
+                                  byval wszCaption as DWSTRING, _
+                                  byval nIconKind as long, _
+                                  byval nPreset as long ) as long
+
+    dim as HWND h = CMessageBox_Create( HWND_FRMOPTIONS )
+    CMessageBox_SetCaption( h, wszCaption )
+    CMessageBox_SetText( h, wszText )
+    CMessageBox_SetIconKind( h, nIconKind )
+    CMessageBox_SetFont( h, OptionsFont_Base() )
+    CMessageBox_SetCloseGlyphFont( h, ghFont(SYMBOLFONT_10) )
+
+    ' A larger icon glyph than any cached ghFont, made for this box and freed after DoModal.
+    dim as HFONT hGlyph = 0
+    dim pWin as CWindow ptr = AfxCWindowPtr( HWND_FRMOPTIONS )
+    if pWin then hGlyph = pWin->CreateFont( SYMBOLFONT, 22 )
+    if hGlyph then CMessageBox_SetGlyphFont( h, hGlyph )
+
+    ' Colours from the theme. Border/divider are the editor divider; the bands are the
+    ' panel; the close-hot red and the icon accents keep their semantic defaults.
+    dim as MBX_COLORS mc
+    mc.BorderColor      = ghEditor.Divider
+    mc.CaptionBackColor = ghPanel.BackColor
+    mc.CaptionForeColor = ghPanel.ForeColorHot
+    mc.CloseBackColor   = ghPanel.BackColor
+    mc.CloseForeColor   = ghPanel.ForeColor
+    mc.BackColor        = ghPanel.BackColor
+    mc.ForeColor        = ghPanel.ForeColor
+    mc.FooterBackColor  = ghPanel.BackColor
+    mc.DividerColor     = ghEditor.Divider
+    CMessageBox_SetColors( h, @mc )
+
+    dim as CBUTTON_COLORS bc
+    OptionsTheme_FillButton( @bc )
+    CMessageBox_SetButtonColors( h, @bc )
+
+    if nPreset = MBX_BTN_OKCANCEL then
+        CMessageBox_AddButton( h, L(0,"OK"), IDOK )
+        CMessageBox_AddButton( h, L(1,"Cancel"), IDCANCEL )
+        ' Default to Cancel: this box only ever guards a destructive action.
+        CMessageBox_SetDefaultButton( h, 1 )
+    else
+        CMessageBox_AddButton( h, L(0,"OK"), IDOK )
+    end if
+
+    dim as long nResult = CMessageBox_DoModal( h )
+    if hGlyph then DeleteObject( hGlyph )
+    function = nResult
+end function
+
+
+' ========================================================================================
+' Theme the shell's own controls.
+' ========================================================================================
+private sub frmOptions_ApplyTheme( byval hwnd as HWND )
+
+    CListBox_SetBackColor( HWND_FRMOPTIONS_NAV, ghPanel.BackColor )
+    CListBox_SetScrollBarColors( HWND_FRMOPTIONS_NAV, ghPanel.BackColorScrollBar, _
+                                 ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
+
+    CScrollPanel_SetColors( HWND_FRMOPTIONS_SCROLL, ghPanel.BackColor, ghPanel.ForeColor )
+    CScrollPanel_SetScrollBarColors( HWND_FRMOPTIONS_SCROLL, ghPanel.BackColorScrollBar, _
+                                     ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
+
+    dim as CBUTTON_COLORS bc
+    OptionsTheme_FillButton( @bc )
+
+    dim as HWND hOK     = GetDlgItem( hwnd, IDC_FRMOPTIONS_CMDOK )
+    dim as HWND hCancel = GetDlgItem( hwnd, IDC_FRMOPTIONS_CMDCANCEL )
+    CButton_SetColors( hOK, @bc )
+    CButton_SetColors( hCancel, @bc )
+    CButton_Refresh( hOK )
+    CButton_Refresh( hCancel )
+
+    OptionsRows_ApplyTheme()
+    frmOptionsCompiler_ApplyTheme()   ' no-op until the page has been built
+    frmOptionsLocal_ApplyTheme()      ' no-op until the page has been built
+    frmOptionsColors_ApplyTheme()     ' no-op until the page has been built
+    frmOptionsKeywords_ApplyTheme()   ' no-op until the page has been built
+
+    ' Match the caption to the theme, the same test LoadThemeFile() uses for frmMain.
+    dim as long nDark = iif( instr(gConfig.ThemeShortFilename, "_dark") > 0, true, false )
+    DwmSetWindowAttribute( hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, @nDark, sizeof(nDark) )
+
+end sub
+
+
+' ========================================================================================
+' Populate the grouped navigation list. Item rows carry their page id as itemData.
+' ========================================================================================
+private sub frmOptions_BuildNavList( byval hList as HWND )
+
+    CListBox_BeginUpdate( hList )
+    CListBox_Clear( hList )
+
+    ' FLAT -- no CListBox_AddHeader calls anywhere. Eight pages read fine as one list, and
+    ' merging Advanced Code Editor into Code Editor had left three of the five groups
+    ' holding a single item each.
+    CListBox_AddString( hList, L(226,"General Options"),      OPTPAGE_GENERAL )
+    CListBox_AddString( hList, L(110,"Code Editor"),          OPTPAGE_EDITOR )
+    CListBox_AddString( hList, L(111,"Themes and Fonts"),     OPTPAGE_COLORS )
+    CListBox_AddString( hList, L(112,"Compiler Setup"),       OPTPAGE_COMPILER )
+    CListBox_AddString( hList, L(129,"Localization"),         OPTPAGE_LOCAL )
+    CListBox_AddString( hList, L(177,"FreeBASIC Keywords"),   OPTPAGE_KEYWORDS )
+    CListBox_AddString( hList, L(435,"Windows Api Keywords"), OPTPAGE_KEYWORDSWINAPI )
+    CListBox_AddString( hList, L(439,"Extra Keywords"),       OPTPAGE_KEYWORDSEXTRA )
+
+    CListBox_EndUpdate( hList )
+
+end sub
+
+
+' ========================================================================================
+' Find the navigation row that carries a page id, or -1.
+' ========================================================================================
+private function frmOptions_NavRowForPage( byval hList as HWND, byval nPage as long ) as long
+    for i as long = 0 to CListBox_GetCount(hList) - 1
+        if CListBox_GetItemData( hList, i ) = nPage then return i
+    next
+    function = -1
+end function
+
+
+' ========================================================================================
 ' frmOptions_Show
 ' ========================================================================================
 function frmOptions_Show( byval hWndParent as HWND ) as LRESULT
-
-    '  Create the main window and child controls
-    dim pWindow as CWindow ptr = new CWindow
-
-    HWND_FRMOPTIONS = pWindow->Create( hWndParent, L(113,"Environment Options"), @frmOptions_WndProc, 0, 0, 0, 0, _
-        WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
-        WS_EX_DLGMODALFRAME or WS_EX_CONTROLPARENT or WS_EX_LEFT )
-    pWindow->SetClientSize(625, 460)
-    pWindow->Center(pWindow->hWindow, hWndParent)
-        
-    dim as HWND hLabel = _
-        pWindow->AddControl("LABEL", , IDC_FRMOPTIONS_LBLCATEGORY, "Category", 216, 10, 400, 30, _
-            WS_CHILD or WS_VISIBLE or SS_LEFT or SS_CENTERIMAGE or SS_NOTIFY or SS_SUNKEN, _
-            WS_EX_LEFT or WS_EX_LTRREADING)
-    dim as HFONT hFont = pWindow->CreateFont("", 12, FW_BOLD)
-    AfxSetWindowFont hLabel, hFont, true
-
-    dim as HWND hWndTreeview = _
-        pWindow->AddControl("TREEVIEW", , IDC_FRMOPTIONS_TVWCATEGORIES, "", 10, 10, 200, 385, _
-        WS_CHILD or WS_VISIBLE or WS_TABSTOP or TVS_HASBUTTONS or TVS_HASLINES or TVS_LINESATROOT or TVS_SHOWSELALWAYS, _
-        WS_EX_CLIENTEDGE or WS_EX_LEFT or WS_EX_RIGHTSCROLLBAR)
-    
-    pWindow->AddControl("LABEL", , IDC_FRMOPTIONS_LABEL1, "", 8, 405, 600, 2, _
-        WS_CHILD or WS_VISIBLE or SS_LEFT or SS_NOTIFY or SS_SUNKEN, _
-        WS_EX_LEFT or WS_EX_LTRREADING)
-
-    pWindow->AddControl("BUTTON", , IDC_FRMOPTIONS_CMDOK, L(0,"&OK"), 450, 417, 74, 28, _
-        WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_TEXT or BS_DEFPUSHBUTTON or BS_NOTIFY or BS_CENTER or BS_VCENTER, _
-        WS_EX_LEFT or WS_EX_LTRREADING)
-    
-    pWindow->AddControl("BUTTON", , IDCANCEL, L(1,"&Cancel"), 535, 417, 74, 28, _
-        WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_TEXT or BS_PUSHBUTTON or BS_NOTIFY or BS_CENTER or BS_VCENTER, _
-        WS_EX_LEFT or WS_EX_LTRREADING)
-
 
     ' Reload the config file in case a user has automated a change to it since
     ' the application started (for example, changing the compiler path).
     gConfig.LoadConfigFile()
 
-    ' Configure the TreeView
-    dim hItems(8) as HTREEITEM 
-    hItems(0) = TreeView_AppendItem (hwndTreeview, TVI_ROOT, L(226,"General Options"),      0)
-    hItems(1) = TreeView_AppendItem (hwndTreeview, TVI_ROOT, L(110,"Code Editor"),          1)
-    hItems(2) = TreeView_AppendItem (hwndTreeview, TVI_ROOT, L(107,"Advanced Code Editor"), 2)
-    hItems(3) = TreeView_AppendItem (hwndTreeview, TVI_ROOT, L(111,"Colors and Fonts"),     3)
-    hItems(4) = TreeView_AppendItem (hwndTreeview, TVI_ROOT, L(112,"Compiler Setup"),       4)
-    hItems(5) = TreeView_AppendItem (hwndTreeview, TVI_ROOT, L(129,"Localization"),         5)
-    hItems(6) = TreeView_AppendItem (hwndTreeview, TVI_ROOT, L(177,"FreeBASIC Keywords"),   6)
-    hItems(7) = TreeView_AppendItem (hwndTreeview, TVI_ROOT, L(435,"Windows API Keywords"), 7)
-    hItems(8) = TreeView_AppendItem (hwndTreeview, TVI_ROOT, L(439,"Extra Keywords"),       8)
+    ' Seed the staging copy BEFORE any control is created: every table-driven control is
+    ' built from gOptWork, not from gConfig.
+    OptionsFont_InitFromEnv()
+    OptionsRows_Init()
+    OptionsWork_Load()
+    OptionsRows_ResetCombos()
+    frmOptionsCompiler_Reset()
+    frmOptionsLocal_Reset()
+    frmOptionsLocal_SeedFromConfig()
+    frmOptionsColors_Reset()
+    frmOptionsKeywords_Reset()
+    ' The keyword editors start clean each open; the dirty flag is raised only by a user
+    ' edit and gates the harvest-and-save on OK.
+    gConfig.bKeywordsDirty = false
+    gOptCurrentPage = OPTPAGE_NONE
+    for i as long = 0 to OPTPAGE_COUNT - 1
+        gOptPageBuilt(i) = false
+    next
 
-    ' Load all of the child dialogs
-    frmOptionsGeneral_Show( pWindow->hWindow )
-    frmOptionsEditor_Show( pWindow->hWindow )
-    frmOptionsEditor2_Show( pWindow->hWindow )
-    frmOptionsColors_Show( pWindow->hWindow )
-    frmOptionsCompiler_Show( pWindow->hWindow )
-    frmOptionsLocal_Show( pWindow->hWindow )
-    frmOptionsKeywords_Show( pWindow->hWindow )
-    frmOptionsKeywordsWinApi_Show( pWindow->hWindow )
-    frmOptionsKeywordsExtra_Show( pWindow->hWindow )
+    dim pWindow as CWindow ptr = new CWindow
 
-    ' Select the most previously open tree branch or first item "Code Editor" by default.
-    TreeView_SelectItem( hWndTreeview, hItems(OptionsDialogLastOpened) )
+    HWND_FRMOPTIONS = pWindow->Create( hWndParent, L(113,"Environment Options"), @frmOptions_WndProc, 0, 0, 0, 0, _
+        WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_THICKFRAME or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
+        WS_EX_DLGMODALFRAME or WS_EX_CONTROLPARENT or WS_EX_LEFT )
+    pWindow->SetClientSize( FRMOPTIONS_CLIENT_W, FRMOPTIONS_CLIENT_H )
+    pWindow->Center( pWindow->hWindow, hWndParent )
 
-    SetFocus hWndTreeview
-    
-    ' Process Windows messages
-    function = pWindow->DoEvents(SW_SHOW)
-    
-    ' delete the frmOptions CWindow class manually allocated memory 
+    ' ---- navigation list -------------------------------------------------------------
+    HWND_FRMOPTIONS_NAV = CListBox_Create( HWND_FRMOPTIONS, IDC_FRMOPTIONS_NAVLIST )
+    CListBox_SetPaintCallback( HWND_FRMOPTIONS_NAV, @frmOptions_NavPaintCallback )
+    CListBox_SetSelChangeCallback( HWND_FRMOPTIONS_NAV, @frmOptions_NavSelChangeCallback )
+    CListBox_SetFont( HWND_FRMOPTIONS_NAV, OptionsFont_Base() )
+    ' Row height is in UNSCALED units (CListBox scales what it is handed) and has to grow
+    ' with the base font, or a 12pt list clips its own rows.
+    CListBox_SetRowHeight( HWND_FRMOPTIONS_NAV, 26 + ((OptionsFont_PointSize() - 10) * 2) )
+    frmOptions_BuildNavList( HWND_FRMOPTIONS_NAV )
+
+    ' ---- scrolling page area ---------------------------------------------------------
+    HWND_FRMOPTIONS_SCROLL = CScrollPanel_Create( HWND_FRMOPTIONS, IDC_FRMOPTIONS_SCROLLPANEL )
+    CScrollPanel_SetPaintCallback( HWND_FRMOPTIONS_SCROLL, @frmOptions_PagePaintCallback )
+    CScrollPanel_SetLayoutCallback( HWND_FRMOPTIONS_SCROLL, @frmOptions_PageLayoutCallback )
+    CScrollPanel_SetScrollBarWidth( HWND_FRMOPTIONS_SCROLL, SCROLLBAR_WIDTH_PANEL )
+    ' Auto-scroll-to-focus is OFF, deliberately. It fires on the reveal timer when a control
+    ' takes focus -- including a CComboBox taking focus on its button-DOWN. For a combo whose
+    ' body sits partly below the fold, that scroll slides the button up and out from under the
+    ' still-held cursor onto the just-opened dropdown, and the release then selects a row and
+    ' closes the list. The cost of turning it off is that Tab-ing to a control below the fold
+    ' no longer auto-reveals it; on a dialog this size that is a fair trade for usable combos.
+    CScrollPanel_SetAutoScrollToFocus( HWND_FRMOPTIONS_SCROLL, false )
+
+    dim as HWND hPage = CScrollPanel_GetPanel( HWND_FRMOPTIONS_SCROLL )
+
+    ' ---- footer buttons --------------------------------------------------------------
+    dim as HWND hOK = CButton_Create( HWND_FRMOPTIONS, IDC_FRMOPTIONS_CMDOK )
+    CButton_SetText( hOK, L(0,"OK") )
+    CButton_SetFont( hOK, OptionsFont_Base() )
+    CButton_SetDefault( hOK, true )
+    CButton_SetClickCallback( hOK, @frmOptions_ButtonClickCallback )
+
+    dim as HWND hCancel = CButton_Create( HWND_FRMOPTIONS, IDC_FRMOPTIONS_CMDCANCEL )
+    CButton_SetText( hCancel, L(1,"Cancel") )
+    CButton_SetFont( hCancel, OptionsFont_Base() )
+    CButton_SetClickCallback( hCancel, @frmOptions_ButtonClickCallback )
+
+    ShowWindow( hOK, SW_SHOW )
+    ShowWindow( hCancel, SW_SHOW )
+    ShowWindow( HWND_FRMOPTIONS_NAV, SW_SHOW )
+    ShowWindow( HWND_FRMOPTIONS_SCROLL, SW_SHOW )
+
+    ' No pages are created here any more -- every page (table-driven and panel-hosted) is
+    ' built lazily on its first visit.
+
+    frmOptions_ApplyTheme( HWND_FRMOPTIONS )
+    frmOptions_PositionWindows( HWND_FRMOPTIONS )
+
+    ' Restore the most recently viewed page, defaulting to the first.
+    dim as long nStartPage = OptionsDialogLastOpened
+    if (nStartPage < 0) orelse (nStartPage >= OPTPAGE_COUNT) then nStartPage = OPTPAGE_GENERAL
+    frmOptions_ShowPage( nStartPage )
+
+    dim as long nNavRow = frmOptions_NavRowForPage( HWND_FRMOPTIONS_NAV, nStartPage )
+    if nNavRow >= 0 then CListBox_SetCurSel( HWND_FRMOPTIONS_NAV, nNavRow )
+
+    OptionsRows_RunSelfTest( hPage )
+
+    ShowWindow( HWND_FRMOPTIONS, SW_SHOW )
+    UpdateWindow( HWND_FRMOPTIONS )
+
+    ' IsDialogMessage ignores Tab until a child already holds the focus, so the first
+    ' control has to be focused explicitly -- an ordinary CWindow gets no dialog manager
+    ' to do it. See the WS_EX_CONTROLPARENT section of Learnings.md.
+    SetFocus( HWND_FRMOPTIONS_NAV )
+
+    ' ---- message loop ----------------------------------------------------------------
+    ' CWindow.DoEvents cannot be used: it has no *_FilterMessage hooks and this dialog
+    ' hosts controls that require them.
+    dim uMsg as MSG
+    while GetMessage( @uMsg, null, 0, 0 )
+
+        ' Each live CComboBox is offered the message: the filter takes a control handle
+        ' rather than working off a global, and is safe on a closed list or a stale
+        ' handle. It also carries the close-then-reopen guard for a click on its own
+        ' button, so skipping it breaks the dropdown.
+        dim as boolean bEaten = false
+        for i as long = lbound(gOptCombos) to ubound(gOptCombos)
+            if CComboBox_FilterMessage( gOptCombos(i), @uMsg ) then bEaten = true: exit for
+        next
+        if bEaten then continue while
+
+        ' The CTextBox right-click menu; also covers any embedded CNumericUpDown, whose
+        ' own filter just forwards here.
+        if CTextBox_FilterMessage( @uMsg ) then continue while
+
+        ' ESCAPE cancels the dialog -- but only after the popup filters above, so an open
+        ' combobox list or context menu closes on Escape first. This is handled explicitly
+        ' rather than left to IsDialogMessage's IDCANCEL, because a MULTILINE CTextBox (the
+        ' keyword editors) claims every key via DLGC_WANTALLKEYS, so IsDialogMessage hands
+        ' Escape to the RichEdit instead of treating it as cancel. The old keyword pages
+        ' subclassed the edit to catch Escape for exactly this reason.
+        if (uMsg.message = WM_KEYDOWN) andalso (uMsg.wParam = VK_ESCAPE) then
+            SendMessage( HWND_FRMOPTIONS, WM_CLOSE, 0, 0 )
+            continue while
+        end if
+
+        if IsDialogMessage( HWND_FRMOPTIONS, @uMsg ) = 0 then
+            TranslateMessage @uMsg
+            DispatchMessage @uMsg
+        end if
+    wend
+
+    ' delete the frmOptions CWindow class manually allocated memory
     if pWindow then delete(pWindow)
 
-    ' delete the child windows releasing their manually allocated memory 
-    pWindow = AfxCWindowPtr(HWND_FRMOPTIONSGENERAL):   if pWindow then delete(pWindow)
-    pWindow = AfxCWindowPtr(HWND_FRMOPTIONSEDITOR):    if pWindow then delete(pWindow)
-    pWindow = AfxCWindowPtr(HWND_FRMOPTIONSEDITOR2):   if pWindow then delete(pWindow)
-    pWindow = AfxCWindowPtr(HWND_FRMOPTIONSCOLORS):    if pWindow then delete(pWindow)
-    pWindow = AfxCWindowPtr(HWND_FRMOPTIONSCOMPILER):  if pWindow then delete(pWindow)
-    pWindow = AfxCWindowPtr(HWND_FRMOPTIONSLOCAL):     if pWindow then delete(pWindow)
-    pWindow = AfxCWindowPtr(HWND_FRMOPTIONSKEYWORDS):  if pWindow then delete(pWindow)
-    pWindow = AfxCWindowPtr(HWND_FRMOPTIONSKEYWORDSWINAPI):  if pWindow then delete(pWindow)
-    pWindow = AfxCWindowPtr(HWND_FRMOPTIONSKEYWORDSEXTRA):   if pWindow then delete(pWindow)
+    ' No child forms to delete: every page is panel-hosted or table-driven, and all of
+    ' those controls sit on the scroll panel's page and self-free when it is destroyed.
 
+    HWND_FRMOPTIONS_NAV    = 0
+    HWND_FRMOPTIONS_SCROLL = 0
+    OptionsRows_ResetCombos()
+    erase gOptRows
+
+    function = 0
 end function
-
-
-
-
-

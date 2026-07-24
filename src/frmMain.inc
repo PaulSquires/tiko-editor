@@ -1619,6 +1619,9 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ghFont(SYMBOLFONT_9)   = pWindow->CreateFont(SYMBOLFONT, 9, FW_NORMAL)
     ghFont(SYMBOLFONT_10)  = pWindow->CreateFont(SYMBOLFONT, 10, FW_NORMAL)
     ghFont(SYMBOLFONT_12)  = pWindow->CreateFont(SYMBOLFONT, 12, FW_NORMAL)
+    ghFont(GUIFONT_11)     = pWindow->CreateFont(GUIFONT, 11, FW_NORMAL)
+    ghFont(GUIFONT_12)     = pWindow->CreateFont(GUIFONT, 12, FW_NORMAL)
+    ghFont(GUIFONTBOLD_11) = pWindow->CreateFont(GUIFONT, 11, FW_HEAVY)
 
     HWND_FRMMAIN = pWindow->Create( null, APPNAME, @frmMain_WndProc )
     

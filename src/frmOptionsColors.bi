@@ -11,16 +11,27 @@
 '    MERCHANTABILITY or FITNESS for A PARTICULAR PURPOSE.  See the
 '    GNU General Public License for more details.
 
+'  frmOptionsColors.bi  --  the "Themes and Fonts" page.
+'
+'  Panel-hosted. The themes list and the font-name list are both CListBoxes (the font names
+'  are drawn each in their own font, which a scrollable list can do and a CComboBox dropdown
+'  -- which cannot scroll -- could not). Font size and character set are CComboBoxes; the
+'  extra line spacing is a CNumericUpDown. Everything reads/writes gOptWork.
+
 #pragma once
 
-#Define IDC_FRMOPTIONSCOLORS_FRMCOLORS              1001
-#Define IDC_FRMOPTIONSCOLORS_LSTTHEMES              1002
-#Define IDC_FRMOPTIONSCOLORS_LBLTHEMES              1003
-#Define IDC_FRMOPTIONSCOLORS_FRMFONT                1004
-#Define IDC_FRMOPTIONSCOLORS_COMBOFONTNAME          1007
-#Define IDC_FRMOPTIONSCOLORS_COMBOFONTCHARSET       1008
-#Define IDC_FRMOPTIONSCOLORS_COMBOFONTSIZE          1009
-#Define IDC_FRMOPTIONSCOLORS_LBLEXTRASPACE          1015
-#Define IDC_FRMOPTIONSCOLORS_TXTEXTRASPACE          1016
+#include once "CScrollPanel.bi"        ' SCP_PAINTINFO, pulled in early
 
-declare function frmOptionsColors_Show( byval hWndParent as HWND ) as LRESULT
+#Define IDC_FRMOPTIONSCOLORS_LSTTHEMES    9400
+#Define IDC_FRMOPTIONSCOLORS_LSTFONTS     9401
+#Define IDC_FRMOPTIONSCOLORS_COMBOSIZE    9402
+#Define IDC_FRMOPTIONSCOLORS_COMBOCHARSET 9403
+#Define IDC_FRMOPTIONSCOLORS_NUMSPACING   9404
+
+declare function frmOptionsColors_OwnsPage( byval nPage as long ) as boolean
+declare sub      frmOptionsColors_Reset()
+declare sub      frmOptionsColors_Build( byval hPage as HWND )
+declare function frmOptionsColors_Layout( byval hPage as HWND, byval cxPanel as long ) as long
+declare sub      frmOptionsColors_Paint( byval p as SCP_PAINTINFO ptr )
+declare sub      frmOptionsColors_Show( byval bShow as boolean )
+declare sub      frmOptionsColors_ApplyTheme()

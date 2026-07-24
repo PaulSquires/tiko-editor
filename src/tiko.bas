@@ -112,6 +112,15 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "CSplitter.inc"
 #include once "CIconPanel.inc"
 #include once "CSelectBar.inc"
+' Dependencies first: CScrollPanel needs CVScrollBar, CComboBox needs CPopupMenu,
+' CNumericUpDown needs CTextBox (+ CPopupMenu), CMessageBox needs CButton. All four
+' of those are already included above, so only the ordering below matters.
+#include once "CToggle.inc"
+#include once "CButton.inc"
+#include once "CComboBox.inc"
+#include once "CScrollPanel.inc"
+#include once "CNumericUpDown.inc"
+#include once "CMessageBox.inc"
 
 #include once "frmAbout.inc"
 #include once "frmTopTabs.inc"
@@ -133,15 +142,11 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "frmKeyboard.inc" 
 #include once "frmBuildConfig.inc" 
 #include once "frmOutput.inc" 
-#include once "frmOptionsGeneral.inc"
-#include once "frmOptionsEditor.inc"
-#include once "frmOptionsEditor2.inc"
+#include once "modOptionsRows.inc"
 #include once "frmOptionsColors.inc"
 #include once "frmOptionsCompiler.inc"
 #include once "frmOptionsLocal.inc"
 #include once "frmOptionsKeywords.inc"
-#include once "frmOptionsKeywordsWinApi.inc"
-#include once "frmOptionsKeywordsExtra.inc"
 #include once "frmOptions.inc"
 #include once "frmGoto.inc"
 #include once "frmHelpViewer.inc"
