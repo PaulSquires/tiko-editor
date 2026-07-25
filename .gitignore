@@ -10,3 +10,8 @@
 # Internal design / planning notes. NEVER published: this repo is public on GitHub
 # and clients can browse it.
 REFACTOR_PLAN*.md
+
+# Env-gated theme diagnostics (TIKO_THEME_TRACE=1), and the self-test's scratch file.
+/theme_dump.txt
+/theme_trace.log
+/_theme_selftest.tmp

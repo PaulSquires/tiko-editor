@@ -81,6 +81,9 @@ dim shared gTTabCtl as clsTopTabCtl
 
 #include once "modCWindow.inc"
 #include once "modThemes.inc"
+' Declarations only. The implementation is included near the very end, once every
+' frmXxx_ApplyTheme it dispatches to exists -- see the header of modThemeApply.bi.
+#include once "modThemeApply.bi"
 #include once "clsConfig.inc"
 #include once "PsBufferPaint.inc"
 #include once "modRoutines.inc"
@@ -170,6 +173,9 @@ dim shared gTTabCtl as clsTopTabCtl
 ' handlers, the panel loaders and frmMenuBar_CreatePopup, so every one of those must
 ' already be declared. (Its declarations come in early via modContextMenus.bi.)
 #include once "modContextMenus.inc"
+' Must come after every frmXxx_ApplyTheme / _SyncTheme it routes to, and before frmMain.inc,
+' which calls Theme_OnCoalesceTimer from WM_TIMER.
+#include once "modThemeApply.inc"
 #include once "frmMain.inc"
 
 

@@ -395,31 +395,34 @@ end function
 ' through their click callback; IDCANCEL still arrives as a WM_COMMAND because
 ' IsDialogMessage synthesises one for the Escape key.
 ' ========================================================================================
+' Did the user press OK? Cancel is no longer free: the dialog previews the theme LIVE, so
+' dismissing it has to put gTheme() back. Both exit routes end in WM_CLOSE, so this is what
+' tells them apart after the pump has returned.
+dim shared gOptThemeCommitted as boolean
+
 private sub frmOptions_ApplyAndClose( byval hwnd as HWND )
 
     frmOptions_SaveEditorOptions()
 
-    ' Reload the theme file in case it has changed
+    ' The dialog has been previewing live, so gTheme() already holds the user's pick. Reload
+    ' from disk anyway, now that SaveEditorOptions has written gConfig: it makes what ships
+    ' exactly what a fresh start would load, rather than assuming the two agree.
     LoadThemeFile()
-    ' Refresh main background in case theme changed and no file open
-    AfxRedrawWindow( HWND_FRMMAIN )
-    ' Refresh the frmOutput controls (listviews and RichEdits)
-    AfxRedrawWindow( HWND_FRMOUTPUT )
-    frmOutput_SetControlColors()
+
+    Theme_DiscardSnapshot()
+    gOptThemeCommitted = true
+
+    ' One call replaces the old hand-written fan-out (four AfxRedrawWindow calls, the two
+    ' SyncThemes and the per-document ApplyProperties walk) -- all of that now lives in
+    ' Theme_ApplySubsystems, which the live preview drives too, so there is one path instead
+    ' of two that could disagree.
+    Theme_ApplyAll()
+
+    ' Still required, and NOT made redundant by the above: these are LAYOUT, not colour.
+    ' Hiding the toolbar or the statusbar changes geometry no repaint can fix.
     frmOutput_PositionWindows()
-    ' Refresh the menubar. The rest of the GUI will refresh via frmMain_PositionWindows
-    AfxRedrawWindow( HWND_FRMMAIN_MENUBAR )
     frmMenuBar_PositionWindows()
-
-    ' Reposition main windows in case hide toolbar/statusbar selected
     frmMain_PositionWindows
-
-    ' Apply the newly saved options to all open Scintilla windows
-    dim pDoc as clsDocument Ptr = gApp.pDocList
-    do until pDoc = 0
-        pDoc->ApplyProperties
-        pDoc = pDoc->pDocNext
-    loop
 
     SendMessage( hwnd, WM_CLOSE, 0, 0 )
 end sub
@@ -609,9 +612,10 @@ private sub frmOptions_ApplyTheme( byval hwnd as HWND )
     frmOptionsColors_ApplyTheme()     ' no-op until the page has been built
     frmOptionsKeywords_ApplyTheme()   ' no-op until the page has been built
 
-    ' Match the caption to the theme, the same test LoadThemeFile() uses for frmMain.
-    dim as long nDark = iif( instr(gConfig.ThemeShortFilename, "_dark") > 0, true, false )
-    DwmSetWindowAttribute( hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, @nDark, sizeof(nDark) )
+    ' Match the caption to the theme currently IN MEMORY. Must not read gConfig: while this
+    ' dialog is open the user's pick is staged in gOptWork and gConfig still names the old
+    ' theme, so the caption would lag the live preview all the way to OK.
+    Theme_ApplyDarkCaption( hwnd )
 
 end sub
 
@@ -757,6 +761,12 @@ function frmOptions_Show( byval hWndParent as HWND ) as LRESULT
     ' ---- message loop ----------------------------------------------------------------
     ' CWindow.DoEvents cannot be used: it has no *_FilterMessage hooks and this dialog
     ' hosts controls that require them.
+    ' Capture the theme as it stands so Cancel can undo whatever the live preview did. Only
+    ' gTheme() is captured -- the nine gh* globals are a pure function of it, so restoring
+    ' them separately would be a second path that could drift from Theme_FillGlobals.
+    gOptThemeCommitted = false
+    Theme_Snapshot()
+
     dim uMsg as MSG
     while GetMessage( @uMsg, null, 0, 0 )
 
@@ -790,6 +800,15 @@ function frmOptions_Show( byval hWndParent as HWND ) as LRESULT
             DispatchMessage @uMsg
         end if
     wend
+
+    ' Cancelled (or closed by Escape / the X): undo the live preview. Done AFTER the pump so
+    ' the repaint lands on the desktop the dialog has just vacated rather than on controls
+    ' that are about to be destroyed.
+    if gOptThemeCommitted = false then
+        Theme_Restore()
+        Theme_ApplyAll()
+    end if
+    Theme_DiscardSnapshot()
 
     ' delete the frmOptions CWindow class manually allocated memory
     if pWindow then delete(pWindow)

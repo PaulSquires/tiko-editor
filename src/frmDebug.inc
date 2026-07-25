@@ -1274,10 +1274,9 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as string, by
     pWindow->BigIcon   = LoadImage( pWindow->InstanceHandle, "IMAGE_AAA_MAINICON", IMAGE_ICON, 32, 32, LR_SHARED)
     pWindow->SmallIcon = LoadImage( pWindow->InstanceHandle, "IMAGE_AAA_MAINICON", IMAGE_ICON, 16, 16, LR_SHARED)
 
-    dim as long nvalue = false
-    if instr(gConfig.ThemeShortFilename, "_dark") then nvalue = true
     ' Attempt to apply the standard Windows dark theme to the non-client areas of the form.
-    DwmSetWindowAttribute(HWND_FRMDEBUG, DWMWA_USE_IMMERSIVE_DARK_MODE, @nvalue, sizeof(nvalue))
+    ' Reads the theme currently IN MEMORY, not gConfig -- see Theme_IsDark.
+    Theme_ApplyDarkCaption( HWND_FRMDEBUG )
     
     gApp.IsDebuggerActive = true
     

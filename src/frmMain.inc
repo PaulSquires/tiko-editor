@@ -1425,6 +1425,14 @@ function frmMain_WndProc( _
                 KillTimer( hwnd, IDT_PARSER_DEBOUNCE )
                 gScanMgr.RequestBufferScan( gTTabCtl.GetActiveDocumentPtr() )
             end if
+            if wParam = IDT_THEME_COALESCE then
+                ' A live theme edit has settled. This timer lives here rather than on the
+                ' Options dialog because the dialog's own pump is an all-window GetMessage,
+                ' so a frmMain timer still arrives while it is up -- and unlike the dialog,
+                ' frmMain is always alive.
+                KillTimer( hwnd, IDT_THEME_COALESCE )
+                Theme_OnCoalesceTimer()
+            end if
             
         case WM_NCACTIVATE
             ' if wParam is false then the system wants to draw an inactive title bar. we
@@ -1627,6 +1635,9 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     
     ' Load the currently selected theme (this needs a valid pWindow HWND_FRMMAIN to exists)
     LoadThemeFile()
+    ' Env-gated; returns immediately unless TIKO_THEME_SELFTEST=1. Runs here because it needs
+    ' a fully parsed theme, and it snapshots/restores gTheme around its destructive cases.
+    Theme_RunSelfTest()
     
     ' Set the small and large icon for the main window (must be set after main window is created)
     pWindow->BigIcon   = LoadImage( pWindow->InstanceHandle, "IMAGE_AAA_MAINICON", IMAGE_ICON, 32, 32, LR_SHARED)

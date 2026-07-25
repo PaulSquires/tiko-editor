@@ -148,6 +148,11 @@ end sub
 private sub frmOptionsColors_ThemeSelChange( byval hList as HWND, byval row as integer )
     if (row >= lbound(gThemeFilenames)) andalso (row <= ubound(gThemeFilenames)) then
         gOptWork.ThemeShortFilename = gThemeFilenames(row)
+        ' Preview it for real: load into memory and schedule a full apply, so arrowing
+        ' through this list recolours the whole editor behind the dialog. gConfig is not
+        ' touched -- the pick stays staged in gOptWork, and Cancel restores the snapshot
+        ' taken in frmOptions_Show.
+        Theme_PreviewFile( gThemeFilenames(row) )
     end if
 end sub
 
