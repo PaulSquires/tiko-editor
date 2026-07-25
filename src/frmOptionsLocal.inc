@@ -436,7 +436,7 @@ private sub frmOptionsLocal_HeaderPaint( byval p as PSCOLUMNHEADER_PAINTINFO ptr
     p->b->PaintText( p->wszCaption, @rcText, DT_LEFT or DT_END_ELLIPSIS )
 
     dim as RECT rcDiv = p->rc
-    rcDiv.left = rcDiv.right - 1
+    rcDiv.left = rcDiv.right - AfxScaleX(1)
     p->b->SetBackColor( ghEditor.Divider )
     p->b->PaintRect( @rcDiv )
 end sub

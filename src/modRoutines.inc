@@ -143,7 +143,7 @@ sub ListBox_LVPaintHeader( byval p as PSCOLUMNHEADER_PAINTINFO ptr )
 
     ' A one-pixel divider on the trailing edge, so columns read as separated.
     dim as RECT rcDiv = p->rc
-    rcDiv.left = rcDiv.right - 1
+    rcDiv.left = rcDiv.right - AfxScaleX(1)
     p->b->SetBackColor( ghOutput.ScrollBarDivider )
     p->b->PaintRect( @rcDiv )
 end sub
