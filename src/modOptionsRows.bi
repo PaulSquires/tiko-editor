@@ -82,7 +82,9 @@
 #define OPTPAGE_KEYWORDS         5
 #define OPTPAGE_KEYWORDSWINAPI   6
 #define OPTPAGE_KEYWORDSEXTRA    7
-#define OPTPAGE_COUNT            8
+#define OPTPAGE_SYNTAX           8
+#define OPTPAGE_INTERFACE        9
+#define OPTPAGE_COUNT           10
 
 
 ' ----------------------------------------------------------------------------------------

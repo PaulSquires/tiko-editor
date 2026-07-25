@@ -262,6 +262,12 @@ sub Theme_ApplySubsystems( byval nMask as ulong )
         Theme_ApplyDarkCaption( HWND_FRMDEBUG )
     end if
 
+    ' The main window's non-client area. Cheap, and it has to happen on the preview path too,
+    ' not just at load, or the title bar lags a theme change all the way to OK.
+    if (nMask and THSUB_FRAME) <> 0 then
+        Theme_ApplyDarkCaption( HWND_FRMMAIN )
+    end if
+
     ' ---- push: Scintilla ----------------------------------------------------------------
     ' N documents x 2 split views; ApplyProperties already loops the views itself.
     if (nMask and THSUB_SCINTILLA) <> 0 then
@@ -297,6 +303,9 @@ function Theme_PreviewFile( byval wszShortFilename as DWSTRING ) as boolean
 
     gThemeCurrentShortFilename = wszShortFilename
     Theme_ResolveFallbacks()
+
+    ' Reset is relative to the theme now being edited, not the one the dialog opened with.
+    Theme_CaptureBaseline()
 
     Theme_RequestApply( THSUB_ALL )
 
@@ -514,6 +523,115 @@ sub Theme_RunSelfTest()
         Theme_Restore()
         Theme_DiscardSnapshot()
         kill( wszTmp )
+    end if
+
+    ' -- 11. The two colour pages PARTITION the bind table. ------------------------------
+    '    Every colour key on exactly one page, nothing listed twice, nothing orphaned. The
+    '    pages are generated from this same predicate, so a key added to the engine cannot
+    '    quietly fail to appear in the UI.
+    dim as long nSyntax, nInterface, nNeither
+    for i as long = lbound(gThemeBind) to ubound(gThemeBind)
+        select case frmOptionsTheme_PageForKey( gThemeBind(i).keyValue )
+            case OPTPAGE_SYNTAX:    nSyntax += 1
+            case OPTPAGE_INTERFACE: nInterface += 1
+            case else:              nNeither += 1
+        end select
+    next
+    THASSERT( nSyntax + nInterface + nNeither = (ubound(gThemeBind) - lbound(gThemeBind) + 1), _
+              "page partition lost a key" )
+    THASSERT( nSyntax > 0, "syntax page is empty" )
+    THASSERT( nInterface > 0, "interface page is empty" )
+    '    general.description / general.version have no bind row at all, so nothing should land
+    '    in "neither" -- if it does, a colour key is invisible in both pages.
+    THASSERT( nNeither = 0, "a bound colour key belongs to no page" )
+    THASSERT( frmOptionsTheme_PageForKey( "editor.keyword" ) = OPTPAGE_SYNTAX, "editor.* -> syntax" )
+    THASSERT( frmOptionsTheme_PageForKey( "panel.text" ) = OPTPAGE_INTERFACE, "panel.* -> interface" )
+    THASSERT( frmOptionsTheme_PageForKey( "ui.divider" ) = OPTPAGE_INTERFACE, "ui.* -> interface" )
+
+    ' -- 12. Built-in themes are recognised as protected. --------------------------------
+    THASSERT( frmOptionsTheme_IsProtectedTheme( "default_dark.theme" ), "default_dark is protected" )
+    THASSERT( frmOptionsTheme_IsProtectedTheme( "default_light.theme" ), "default_light is protected" )
+    THASSERT( frmOptionsTheme_IsProtectedTheme( "DEFAULT_Dark.theme" ), "protection is case-insensitive" )
+    THASSERT( frmOptionsTheme_IsProtectedTheme( "mytheme.theme" ) = false, "a user theme is not protected" )
+    THASSERT( frmOptionsTheme_IsProtectedTheme( "my_default_x.theme" ) = false, _
+              "protection must match a PREFIX, not a substring" )
+
+    ' -- 13. A fork name is new, and never collides with what is already on disk. ---------
+    dim as DWSTRING wszFork = frmOptionsTheme_MakeForkName( "default_dark.theme" )
+    THASSERT( wszFork <> "default_dark.theme", "fork name must differ from its source" )
+    THASSERT( instr( wszFork, "_custom" ) > 0, "fork name should be recognisable" )
+    THASSERT( AfxFileExists( AfxGetExePathName & "settings\themes\" & wszFork ) = 0, _
+              "MakeForkName returned a filename that already exists" )
+    THASSERT( frmOptionsTheme_IsProtectedTheme( wszFork ) = false, _
+              "a fork of a built-in must NOT itself be protected, or it could never be saved" )
+
+    ' -- 14. general.appearance survives a write and drives Theme_IsDark. ----------------
+    '    The shipped dark theme must still read as dark once round-tripped through the
+    '    writer, which derives the key from the editor background's luminance rather than
+    '    from the filename.
+    dim as DWSTRING wszTmp2 = AfxGetExePathName & "_theme_selftest2.tmp"
+    Theme_Snapshot()
+    if Theme_WriteFile( wszTmp2, "Appearance Probe" ) = false then
+        if Theme_ParseFile( wszTmp2 ) = false then
+            dim as long na = Theme_FindEntry( "general.appearance" )
+            THASSERT( na >= 0, "writer did not emit general.appearance" )
+            if na >= 0 then
+                dim as string sApp = lcase(trim(gTheme(na).keyData))
+                THASSERT( (sApp = "dark") orelse (sApp = "light"), _
+                          "general.appearance must be dark or light, got: " & sApp )
+                ' Force the filename sniff to disagree, so this proves the KEY is what is
+                ' being read rather than the name it happens to sit beside.
+                dim as DWSTRING wszSaveName = gThemeCurrentShortFilename
+                gThemeCurrentShortFilename = "no_hint_here.theme"
+                THASSERT( Theme_IsDark() = (sApp = "dark"), _
+                          "Theme_IsDark ignored general.appearance" )
+                gThemeCurrentShortFilename = wszSaveName
+            end if
+        else
+            THASSERT( false, "could not re-parse the appearance probe" )
+        end if
+    else
+        THASSERT( false, "could not write the appearance probe" )
+    end if
+    Theme_Restore()
+    Theme_DiscardSnapshot()
+    kill( wszTmp2 )
+
+    ' -- 15. Every key is classified into a real category. -------------------------------
+    '    The interface side derives its category from the namespace and cannot drift, but the
+    '    syntax side is a written list, so this is the guard on it: an unclassified key falls
+    '    into "Other" rather than vanishing, and this names it. Adding an editor.* key to the
+    '    engine without listing it in CategoryForKey fails here.
+    '    Compares category IDS, never their localized titles: this runs before the
+    '    localization table is loaded, so every L() would answer alike and the check would
+    '    pass (or fail) for reasons that have nothing to do with categories.
+    for i as long = lbound(gThemeBind) to ubound(gThemeBind)
+        if frmOptionsTheme_PageForKey( gThemeBind(i).keyValue ) = OPTPAGE_NONE then continue for
+        THASSERT( frmOptionsTheme_CategoryIdForKey( gThemeBind(i).keyValue ) <> THEMECAT_OTHER, _
+                  "key has no category: " & gThemeBind(i).keyValue )
+    next
+
+    ' -- 16. Reset puts a channel back, and reports honestly whether it needs to. ---------
+    dim as long nrk = Theme_FindEntry( "editor.keyword" )
+    if nrk >= 0 then
+        Theme_CaptureBaseline()
+        dim as COLORREF clrWas = gTheme(nrk).foreground
+
+        THASSERT( Theme_IsChannelModified( "editor.keyword", THEMECH_FORE ) = false, _
+                  "nothing changed yet, so nothing should report as modified" )
+
+        Theme_SetColor( "editor.keyword", THEMECH_FORE, BGR(7, 8, 9) )
+        THASSERT( Theme_IsChannelModified( "editor.keyword", THEMECH_FORE ), _
+                  "a changed channel must report as modified" )
+        '    The OTHER channel must not be dragged along -- Reset is per-channel.
+        THASSERT( Theme_IsChannelModified( "editor.keyword", THEMECH_BACK ) = false, _
+                  "changing the foreground must not mark the background modified" )
+
+        dim as ulong nrm = Theme_ResetChannel( "editor.keyword", THEMECH_FORE )
+        THASSERT( nrm <> THSUB_NONE, "reset should report the subsystems it touched" )
+        THASSERT( gTheme(nrk).foreground = clrWas, "reset did not restore the colour" )
+        THASSERT( Theme_IsChannelModified( "editor.keyword", THEMECH_FORE ) = false, _
+                  "after a reset the channel must report unmodified again" )
     end if
 
     sLine = "--- theme self-test: " & str(nPass) & " passed, " & str(nFail) & " failed ---"

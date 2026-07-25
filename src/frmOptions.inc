@@ -66,6 +66,7 @@ private function frmOptions_PanelHostedOwns( byval nPage as long ) as boolean
     if frmOptionsLocal_OwnsPage( nPage ) then return true
     if frmOptionsColors_OwnsPage( nPage ) then return true
     if frmOptionsKeywords_OwnsPage( nPage ) then return true
+    if frmOptionsTheme_OwnsPage( nPage ) then return true
     function = false
 end function
 
@@ -79,6 +80,7 @@ private sub frmOptions_PanelBuild( byval nPage as long, byval hPage as HWND )
     if frmOptionsLocal_OwnsPage( nPage ) then frmOptionsLocal_Build( hPage )
     if frmOptionsColors_OwnsPage( nPage ) then frmOptionsColors_Build( hPage )
     if frmOptionsKeywords_OwnsPage( nPage ) then frmOptionsKeywords_Build( nPage, hPage )
+    if frmOptionsTheme_OwnsPage( nPage ) then frmOptionsTheme_Build( nPage, hPage )
 end sub
 
 private sub frmOptions_PanelShow( byval nPage as long, byval bShow as boolean )
@@ -86,6 +88,7 @@ private sub frmOptions_PanelShow( byval nPage as long, byval bShow as boolean )
     if frmOptionsLocal_OwnsPage( nPage ) then frmOptionsLocal_Show( bShow )
     if frmOptionsColors_OwnsPage( nPage ) then frmOptionsColors_Show( bShow )
     if frmOptionsKeywords_OwnsPage( nPage ) then frmOptionsKeywords_Show( nPage, bShow )
+    if frmOptionsTheme_OwnsPage( nPage ) then frmOptionsTheme_Show( nPage, bShow )
 end sub
 
 private function frmOptions_PanelLayout( byval nPage as long, byval hPage as HWND, byval cxPanel as long ) as long
@@ -93,6 +96,7 @@ private function frmOptions_PanelLayout( byval nPage as long, byval hPage as HWN
     if frmOptionsLocal_OwnsPage( nPage ) then return frmOptionsLocal_Layout( hPage, cxPanel )
     if frmOptionsColors_OwnsPage( nPage ) then return frmOptionsColors_Layout( hPage, cxPanel )
     if frmOptionsKeywords_OwnsPage( nPage ) then return frmOptionsKeywords_Layout( nPage, hPage, cxPanel )
+    if frmOptionsTheme_OwnsPage( nPage ) then return frmOptionsTheme_Layout( nPage, hPage, cxPanel )
     function = 0
 end function
 
@@ -101,6 +105,7 @@ private sub frmOptions_PanelPaint( byval nPage as long, byval p as SCP_PAINTINFO
     if frmOptionsLocal_OwnsPage( nPage ) then frmOptionsLocal_Paint( p )
     if frmOptionsColors_OwnsPage( nPage ) then frmOptionsColors_Paint( p )
     if frmOptionsKeywords_OwnsPage( nPage ) then frmOptionsKeywords_Paint( nPage, p )
+    if frmOptionsTheme_OwnsPage( nPage ) then frmOptionsTheme_Paint( nPage, p )
 end sub
 
 
@@ -117,6 +122,8 @@ private function frmOptions_PageTitle( byval nPage as long ) as DWSTRING
         case OPTPAGE_KEYWORDS:        return L(177,"FreeBASIC Keywords")
         case OPTPAGE_KEYWORDSWINAPI:  return L(435,"Windows Api Keywords")
         case OPTPAGE_KEYWORDSEXTRA:   return L(439,"Extra Keywords")
+        case OPTPAGE_SYNTAX:          return L(463,"Syntax Colors")
+        case OPTPAGE_INTERFACE:       return L(464,"Interface Colors")
     end select
     ' RETURN throughout, never `function =`: fbc rejects mixing the two styles in a
     ' procedure returning an object with a constructor, and DWSTRING is one.
@@ -404,9 +411,24 @@ private sub frmOptions_ApplyAndClose( byval hwnd as HWND )
 
     frmOptions_SaveEditorOptions()
 
+    ' Persist any colour edits BEFORE the reload below, or that reload would read the file
+    ' back over the top of them and silently discard the whole session's work. A protected
+    ' built-in can never reach here: the first edit forks it (frmOptionsTheme_EnsureForked)
+    ' and repoints gOptWork at the copy.
+    if frmOptionsTheme_WasEdited() then
+        if frmOptionsTheme_IsProtectedTheme( gConfig.ThemeShortFilename ) = false then
+            dim as DWSTRING wszPath = AfxGetExePathName & "settings\themes\" & gConfig.ThemeShortFilename
+            if Theme_WriteFile( wszPath, ghGeneral.description ) then
+                frmOptions_ThemedMsgBox( L(454,"The new theme file could not be written."), _
+                                         L(111,"Themes and Fonts"), MBX_ICON_ERROR, MBX_BTN_OK )
+            end if
+        end if
+    end if
+
     ' The dialog has been previewing live, so gTheme() already holds the user's pick. Reload
     ' from disk anyway, now that SaveEditorOptions has written gConfig: it makes what ships
-    ' exactly what a fresh start would load, rather than assuming the two agree.
+    ' exactly what a fresh start would load, rather than assuming the two agree -- and after
+    ' a colour edit it is a genuine round-trip check of what we just wrote.
     LoadThemeFile()
 
     Theme_DiscardSnapshot()
@@ -611,6 +633,7 @@ private sub frmOptions_ApplyTheme( byval hwnd as HWND )
     frmOptionsLocal_ApplyTheme()      ' no-op until the page has been built
     frmOptionsColors_ApplyTheme()     ' no-op until the page has been built
     frmOptionsKeywords_ApplyTheme()   ' no-op until the page has been built
+    frmOptionsTheme_ApplyTheme()      ' no-op until the page has been built
 
     ' Match the caption to the theme currently IN MEMORY. Must not read gConfig: while this
     ' dialog is open the user's pick is staged in gOptWork and gConfig still names the old
@@ -634,6 +657,8 @@ private sub frmOptions_BuildNavList( byval hList as HWND )
     PsListBox_AddString( hList, L(226,"General Options"),      OPTPAGE_GENERAL )
     PsListBox_AddString( hList, L(110,"Code Editor"),          OPTPAGE_EDITOR )
     PsListBox_AddString( hList, L(111,"Themes and Fonts"),     OPTPAGE_COLORS )
+    PsListBox_AddString( hList, L(463,"Syntax Colors"),        OPTPAGE_SYNTAX )
+    PsListBox_AddString( hList, L(464,"Interface Colors"),     OPTPAGE_INTERFACE )
     PsListBox_AddString( hList, L(112,"Compiler Setup"),       OPTPAGE_COMPILER )
     PsListBox_AddString( hList, L(129,"Localization"),         OPTPAGE_LOCAL )
     PsListBox_AddString( hList, L(177,"FreeBASIC Keywords"),   OPTPAGE_KEYWORDS )
@@ -676,6 +701,7 @@ function frmOptions_Show( byval hWndParent as HWND ) as LRESULT
     frmOptionsLocal_SeedFromConfig()
     frmOptionsColors_Reset()
     frmOptionsKeywords_Reset()
+    frmOptionsTheme_Reset()
     ' The keyword editors start clean each open; the dirty flag is raised only by a user
     ' edit and gates the harvest-and-save on OK.
     gConfig.bKeywordsDirty = false

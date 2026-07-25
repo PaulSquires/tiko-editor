@@ -35,3 +35,7 @@ declare function frmOptionsColors_Layout( byval hPage as HWND, byval cxPanel as 
 declare sub      frmOptionsColors_Paint( byval p as SCP_PAINTINFO ptr )
 declare sub      frmOptionsColors_Show( byval bShow as boolean )
 declare sub      frmOptionsColors_ApplyTheme()
+
+' Re-read settings\themes\ and rebuild the list. Called when the colour pages fork a built-in
+' theme, which puts a new file in that folder while this page is already built.
+declare sub      frmOptionsColors_RefreshThemeList()

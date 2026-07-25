@@ -898,6 +898,14 @@ end function
 ''  Still a filename test. A proper general.appearance key is Phase 2's job.
 ''
 function Theme_IsDark() as boolean
+    ' Prefer an explicit declaration by the theme itself.
+    dim as long n = Theme_FindEntry( "general.appearance" )
+    if n >= 0 then
+        dim as string s = lcase(trim(gTheme(n).keyData))
+        if s = "light" then return false
+        if s = "dark" then return true
+    end if
+    ' Fall back to the historical filename sniff, which is all the shipped themes carry.
     return (instr(gThemeCurrentShortFilename, "_dark") > 0)
 end function
 
@@ -984,6 +992,89 @@ sub Theme_DiscardSnapshot()
     erase gThemeSnapEntries
     gThemeSnapValid = false
 end sub
+
+
+''
+''  BASELINE -- "the value this key had when this theme was loaded"
+''
+''  Distinct from the snapshot above, and the difference matters. The SNAPSHOT is the state
+''  when the Options dialog opened, and exists so Cancel can undo everything. The BASELINE is
+''  the state when the current theme was loaded, and exists so a per-key Reset button can undo
+''  one experiment without touching the rest.
+''
+''  They diverge the moment the user switches theme inside the dialog: the snapshot still
+''  holds the theme they arrived with, while the baseline follows the one they are now
+''  editing. Resetting a key against the snapshot after a theme switch would hand back a
+''  colour from a completely different theme, which is why this is a second array and not a
+''  reuse of the first.
+''
+dim shared gThemeBaseEntries(any) as THEME_TYPE
+
+sub Theme_CaptureBaseline()
+    erase gThemeBaseEntries
+    if ubound(gTheme) < lbound(gTheme) then exit sub
+    redim gThemeBaseEntries( lbound(gTheme) to ubound(gTheme) ) as THEME_TYPE
+    ' Element-wise, for the DWSTRING deep-copy reason spelled out above Theme_Snapshot.
+    for i as long = lbound(gTheme) to ubound(gTheme)
+        gThemeBaseEntries(i) = gTheme(i)
+    next
+end sub
+
+
+''
+''  IS THIS CHANNEL DIFFERENT FROM WHAT THE THEME LOADED WITH?
+''
+''  Lets the UI grey out a Reset that would do nothing.
+''
+function Theme_IsChannelModified( byval lookupKey as string, byval nChannel as long ) as boolean
+
+    dim as long n = Theme_FindEntry( lookupKey )
+    if n < 0 then return false
+
+    for i as long = lbound(gThemeBaseEntries) to ubound(gThemeBaseEntries)
+        if gThemeBaseEntries(i).keyValue <> lookupKey then continue for
+        if nChannel = THEMECH_FORE then
+            if gTheme(n).foreground <> gThemeBaseEntries(i).foreground then return true
+            if gTheme(n).foregroundAlpha <> gThemeBaseEntries(i).foregroundAlpha then return true
+        else
+            if gTheme(n).background <> gThemeBaseEntries(i).background then return true
+            if gTheme(n).backgroundAlpha <> gThemeBaseEntries(i).backgroundAlpha then return true
+        end if
+        return false
+    next
+
+    return false
+
+end function
+
+
+''
+''  PUT ONE CHANNEL BACK TO ITS BASELINE
+''
+''  Returns the subsystem mask to re-apply, or THSUB_NONE when there was nothing to undo.
+''
+function Theme_ResetChannel( byval lookupKey as string, byval nChannel as long ) as ulong
+
+    dim as long n = Theme_FindEntry( lookupKey )
+    if n < 0 then return THSUB_NONE
+
+    for i as long = lbound(gThemeBaseEntries) to ubound(gThemeBaseEntries)
+        if gThemeBaseEntries(i).keyValue <> lookupKey then continue for
+        if nChannel = THEMECH_FORE then
+            gTheme(n).foreground      = gThemeBaseEntries(i).foreground
+            gTheme(n).foregroundAlpha = gThemeBaseEntries(i).foregroundAlpha
+            gTheme(n).hasForeAlpha    = gThemeBaseEntries(i).hasForeAlpha
+        else
+            gTheme(n).background      = gThemeBaseEntries(i).background
+            gTheme(n).backgroundAlpha = gThemeBaseEntries(i).backgroundAlpha
+            gTheme(n).hasBackAlpha    = gThemeBaseEntries(i).hasBackAlpha
+        end if
+        return Theme_SubsystemsForKey( lookupKey )
+    next
+
+    return THSUB_NONE
+
+end function
 
 
 ''
@@ -1125,6 +1216,22 @@ function Theme_WriteFile( byval wszFullPath as DWSTRING, _
         if len(gTheme(nVer).keyData) > 0 then sVer = Theme_SanitizeText( gTheme(nVer).keyData )
     end if
     sLine = "general.version: " & sVer
+    print #f, sLine
+
+    ' Declared explicitly rather than left to the "_dark" filename sniff, which cannot survive
+    ' the user renaming a theme and gets a fork of default_dark wrong the moment they give it
+    ' a light background. Derived from the editor background's luminance so it self-corrects
+    ' as the theme is edited, rather than freezing whatever the sniff happened to say.
+    dim as long nBg = Theme_FindEntry( "editor.text" )
+    dim as string sAppearance = "dark"
+    if nBg >= 0 then
+        dim as COLORREF c = gTheme(nBg).background
+        dim as long lum = ( 299 * ((c) and &hFF) _
+                          + 587 * ((c shr  8) and &hFF) _
+                          + 114 * ((c shr 16) and &hFF) ) \ 1000
+        if lum >= 128 then sAppearance = "light"
+    end if
+    sLine = "general.appearance: " & sAppearance
     print #f, sLine
     print #f, ""
 
@@ -1374,16 +1481,20 @@ function LoadThemeFile() as boolean
     dim as DWSTRING wszPath = Theme_ResolvePath( gConfig.ThemeShortFilename )
     if len(wszPath) = 0 then return true
 
-    ' Set BEFORE the caption call: Theme_IsDark reads it. Note this reads gConfig after
-    ' Theme_ResolvePath, which may have rewritten ThemeShortFilename when it fell back to the
-    ' backup copy.
+    ' Reads gConfig after Theme_ResolvePath, which may have rewritten ThemeShortFilename when
+    ' it fell back to the backup copy.
     gThemeCurrentShortFilename = gConfig.ThemeShortFilename
-    Theme_ApplyDarkCaption( HWND_FRMMAIN )
 
     if Theme_ParseFile( wszPath ) then return true
 
     Theme_ResolveFallbacks()
     Theme_FillGlobals()
+    Theme_CaptureBaseline()
+
+    ' AFTER the parse, not before it as this used to be: Theme_IsDark now consults the
+    ' theme's own general.appearance key, which does not exist until the file is read. A
+    ' failed parse therefore leaves the caption alone, which is correct -- nothing loaded.
+    Theme_ApplyDarkCaption( HWND_FRMMAIN )
 
     if environ("TIKO_THEME_TRACE") = "1" then
         Theme_DumpGlobals( AfxGetExePathName & "theme_dump.txt" )

@@ -234,6 +234,24 @@ end sub
 
 
 ' ========================================================================================
+' Re-read the themes folder and reselect whatever gOptWork now names. Called by the colour
+' pages after they fork a built-in theme, which drops a new file into that folder while this
+' page may already be built. Harmless before the page exists.
+' ========================================================================================
+declare function frmOptionsColors_LoadThemes() as long
+
+sub frmOptionsColors_RefreshThemeList()
+    if ghColorThemes = 0 then exit sub
+    dim as long idx = frmOptionsColors_LoadThemes()
+    if idx >= 0 then
+        PsListBox_SetCurSel( ghColorThemes, idx )
+        PsListBox_SetTopIndex( ghColorThemes, idx )
+    end if
+    AfxRedrawWindow( ghColorThemes )
+end sub
+
+
+' ========================================================================================
 ' Load the themes list (description text; gThemeFilenames holds the parallel filenames).
 ' Returns the row matching the stored theme, or -1.
 ' ========================================================================================
