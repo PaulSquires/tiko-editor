@@ -348,6 +348,15 @@ function PsBufferPaint.PaintRectFactory( _
     if g = 0 then return 0
 
     dim as boolean bNullPen  = (iStyle = PS_NULL)
+    ' DPI-scale the pen, exactly as PaintLine already does. Without this the buffer was
+    ' internally inconsistent: a rule drawn with PaintLine thickened with the display while
+    ' a border or focus ring drawn here stayed at one physical pixel, so at 175% the two no
+    ' longer matched. A no-op at 100%, where ScaleY(1) is 1.
+    scope
+        dim pWin as CWindow ptr = AfxCWindowPtr(_hwnd)
+        if (pWin <> 0) andalso (nPenWidth > 0) then nPenWidth = pWin->ScaleY(nPenWidth)
+        if nPenWidth < 1 then nPenWidth = 1
+    end scope
     dim as boolean bZeroWide = (nPenWidth <= 0)
     dim as boolean bStroke   = (bNullPen = false) andalso (bZeroWide = false)
 
@@ -547,6 +556,15 @@ function PsBufferPaint.PaintRoundOutline( _
             byval nPenWidth as long = 1 _
             ) as long
     if nPenWidth <= 0 then return 0
+    ' DPI-scale the pen, exactly as PaintLine already does. Without this the buffer was
+    ' internally inconsistent: a rule drawn with PaintLine thickened with the display while
+    ' a border or focus ring drawn here stayed at one physical pixel, so at 175% the two no
+    ' longer matched. A no-op at 100%, where ScaleY(1) is 1.
+    scope
+        dim pWin as CWindow ptr = AfxCWindowPtr(_hwnd)
+        if (pWin <> 0) andalso (nPenWidth > 0) then nPenWidth = pWin->ScaleY(nPenWidth)
+        if nPenWidth < 1 then nPenWidth = 1
+    end scope
 
     dim as CGpGraphics ptr g = this.EnsureGraphics()
     if g = 0 then return 0
@@ -571,6 +589,84 @@ function PsBufferPaint.PaintRoundOutline( _
                          w - (inset * 2.0), h - (inset * 2.0), _
                          csng(nCurvature) / 2.0 )
     g->DrawPath( this.PenFor( CBufToARGB( _pencolor, _penalpha ), fpw ), @strokePath )
+
+    g->SetSmoothingMode( oldSmooth )
+    _gpDirty = true
+    function = 0
+end function
+
+' ========================================================================================
+' Fill a rect -- square or rounded -- with a two-stop linear gradient. FILL ONLY.
+'
+' Geometry follows PaintRectFactory EXACTLY (the -1 on both extents, radius = nCurvature/2,
+' AA iff there is a curve), so a gradient bar and a PaintRoundRect track drawn on the same
+' RECT cover the same pixels. Do NOT be tempted to use PaintRect's full-extent convention
+' here: the two differ by one pixel and mixing them is the obvious thing to get wrong.
+'
+' Added for PsProgressBar. Purely additive -- no existing method was touched -- which is
+' what makes the vendored copies safe to re-sync mechanically (PaintTextEx's precedent).
+' ========================================================================================
+function PsBufferPaint.PaintGradientRect( _
+            byval rc as RECT ptr, _
+            byval clr1 as COLORREF, _
+            byval clr2 as COLORREF, _
+            byval nMode as long = LinearGradientModeVertical, _
+            byval nCurvature as long = 0, _
+            byval rcBrush as RECT ptr = 0 _
+            ) as long
+
+    dim as CGpGraphics ptr g = this.EnsureGraphics()
+    if g = 0 then return 0
+
+    dim as single w = csng( rc->right - rc->left - 1 )
+    dim as single h = csng( rc->bottom - rc->top - 1 )
+    if (w < 0.0) orelse (h < 0.0) then return 0
+
+    ' The ramp is measured across rcBrush when one is supplied, so a caller can fill a
+    ' fragment (one block of a segmented bar) with the slice of a gradient that spans the
+    ' whole run. Degenerate or absent -> measure across rc itself.
+    dim as RECT rcRamp = *rc
+    if rcBrush <> 0 then
+        if (rcBrush->right > rcBrush->left) andalso (rcBrush->bottom > rcBrush->top) then
+            rcRamp = *rcBrush
+        end if
+    end if
+
+    ' GDI+ wraps a linear gradient at its brush rect, and a brush sized EXACTLY to the fill
+    ' shows a hard seam on the last row/column where the wrap lands. One pixel of slack on
+    ' every side moves the wrap off the visible area. WrapModeTileFlipXY rather than plain
+    ' tile, so even that slack blends instead of snapping back to clr1.
+    dim as GpRectF rcf
+    rcf.x = csng(rcRamp.left) - 1.0
+    rcf.y = csng(rcRamp.top) - 1.0
+    rcf.Width  = csng(rcRamp.right  - rcRamp.left) + 2.0
+    rcf.Height = csng(rcRamp.bottom - rcRamp.top ) + 2.0
+    if (rcf.Width <= 0.0) orelse (rcf.Height <= 0.0) then return 0
+
+    dim as long oldSmooth = g->GetSmoothingMode()
+    if nCurvature > 0 then
+        g->SetSmoothingMode( SmoothingModeAntiAlias )
+    else
+        g->SetSmoothingMode( SmoothingModeNone )
+    end if
+
+    scope
+        ' Built per call and dropped at end scope. It cannot join the _pBrush cache: that is
+        ' typed CGpSolidBrush ptr and keyed on one ARGB, while this is keyed on a rect, two
+        ' colours and a direction.
+        dim as CGpLinearGradientBrush br = CGpLinearGradientBrush( @rcf, _
+                                                CBufToARGB( clr1, _backalpha ), _
+                                                CBufToARGB( clr2, _backalpha ), _
+                                                cast( LinearGradientMode, nMode ) )
+        br.SetWrapMode( WrapModeTileFlipXY )
+
+        dim as CGpGraphicsPath fillPath
+        this.BuildRoundPath( @fillPath, csng(rc->left), csng(rc->top), w, h, _
+                             csng(nCurvature) / 2.0 )
+        ' FillPath takes the BASE CGpBrush ptr and CGpLinearGradientBrush extends it, so this
+        ' is the same call site every other fill in this file uses.
+        g->FillPath( cast( CGpBrush ptr, @br ), @fillPath )
+    end scope
 
     g->SetSmoothingMode( oldSmooth )
     _gpDirty = true
@@ -983,6 +1079,79 @@ sub PsBufferPaint_RunSelfTest( byval hwnd as HWND )
          "centre want " & hex(CFILL,6) & " got " & hex(GetPixel(gDC,30,17),6) )
     Chk( "RoundOutline: edge carries the pen colour", (GetPixel( gDC, 30, 5 ) = CPEN), _
          "top edge want " & hex(CPEN,6) & " got " & hex(GetPixel(gDC,30,5),6) )
+
+    ' --- PaintGradientRect: fills, never strokes, and the ramp must actually ramp. The
+    '     endpoint colours are deliberately NOT asserted exactly: the brush rect is inflated
+    '     by a pixel on every side (to move GDI+'s wrap seam off the visible area), so the
+    '     first painted column sits a fraction of the way along the ramp rather than at 0.
+    '     What is asserted is what the primitive is FOR -- the two ends differ, and the
+    '     transition between them is smooth rather than a hard step. ----------------------
+    ClearSurf()
+    scope
+        dim bb as PsBufferPaint
+        bb.BeginDoubleBuffer( hwnd, gDC, rcAll )
+        bb.SetBackColor( CBACK ) : bb.PaintClientRect()
+        dim as RECT r = type( 10, 5, 50, 30 )
+        bb.PaintGradientRect( @r, CFILL, CPEN, LinearGradientModeHorizontal, 0 )
+        bb.EndDoubleBuffer()
+    end scope
+    scope
+        dim as ulong pL = GetPixel( gDC, 12, 17 )
+        dim as ulong pR = GetPixel( gDC, 47, 17 )
+        Chk( "Gradient: the two ends differ", (pL <> pR), _
+             "left " & hex(pL,6) & " right " & hex(pR,6) )
+        Chk( "Gradient: fill reached the surface", (pL <> CBACK) andalso (pR <> CBACK), _
+             "left " & hex(pL,6) & " right " & hex(pR,6) & " back " & hex(CBACK,6) )
+        ' A hard two-colour step would score 2. A real ramp scores many more.
+        Chk( "Gradient: ramp is smooth, not a step", (ToneCount( 11, 17, 48, 17 ) > 8), _
+             "distinct tones across the row = " & ToneCount( 11, 17, 48, 17 ) )
+    end scope
+    ' Square corners take PaintRectFactory's -1 extent, NOT PaintRect's full extent. Mixing
+    ' the two conventions is the obvious mistake here, so it is measured rather than trusted.
+    scope
+        dim as long a, b2
+        RowSpan( 17, a, b2 )
+        ' 10..48, MEASURED -- and identical to what "RoundRect: mid-row spans full width"
+        ' scores on the very same RECT above. That agreement is the assertion; the absolute
+        ' number is GDI+'s, not ours (w = right-left-1 = 39, filled from x=10, so [10,49)).
+        Chk( "Gradient: square extent matches PaintRectFactory (-1)", (a = 10) andalso (b2 = 48), _
+             "row span " & a & ".." & b2 & " want 10..48" )
+    end scope
+
+    ' --- rcBrush: measure the ramp across a DIFFERENT rect than the one being filled. This
+    '     is what lets a segmented bar's blocks read as slices of one gradient instead of N
+    '     identical chips, so it is the parameter a caller is most likely to depend on. ----
+    scope
+        dim as RECT rBlock = type( 40, 5, 50, 30 )    ' a block near the right end
+        dim as RECT rTrack = type( 10, 5, 50, 30 )    ' the run it belongs to
+        dim as ulong pOwn, pSliced
+
+        ClearSurf()
+        scope
+            dim bb as PsBufferPaint
+            bb.BeginDoubleBuffer( hwnd, gDC, rcAll )
+            bb.SetBackColor( CBACK ) : bb.PaintClientRect()
+            bb.PaintGradientRect( @rBlock, CFILL, CPEN, LinearGradientModeHorizontal, 0 )
+            bb.EndDoubleBuffer()
+        end scope
+        pOwn = GetPixel( gDC, 42, 17 )
+
+        ClearSurf()
+        scope
+            dim bb as PsBufferPaint
+            bb.BeginDoubleBuffer( hwnd, gDC, rcAll )
+            bb.SetBackColor( CBACK ) : bb.PaintClientRect()
+            bb.PaintGradientRect( @rBlock, CFILL, CPEN, LinearGradientModeHorizontal, 0, @rTrack )
+            bb.EndDoubleBuffer()
+        end scope
+        pSliced = GetPixel( gDC, 42, 17 )
+
+        Chk( "Gradient: rcBrush moves the ramp off the fill rect", (pOwn <> pSliced), _
+             "own-ramp " & hex(pOwn,6) & " sliced " & hex(pSliced,6) )
+        Chk( "Gradient: rcBrush still fills the SAME rect", _
+             (GetPixel( gDC, 39, 17 ) = CBACK) andalso (pSliced <> CBACK), _
+             "x=39 (outside) " & hex(GetPixel(gDC,39,17),6) & " x=42 (inside) " & hex(pSliced,6) )
+    end scope
 
     ' --- The CACHED overload: a caller-owned memDC, reused per row by PsListBox. It is
     '     the one Begin path that skips SetupBitmap, so it never gets the 32bpp DIB the

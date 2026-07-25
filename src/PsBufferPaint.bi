@@ -151,6 +151,34 @@ type PsBufferPaint
                 byval nCurvature as long = 20, _
                 byval nPenWidth as long = 1 _
                 ) as long
+    ' Fill a rect -- square or rounded -- with a two-stop LINEAR GRADIENT.
+    '
+    ' FILL ONLY, never strokes. If you want a frame over it, stroke one afterwards with
+    ' PaintRoundOutline; PaintBorderRect would fill it back over (that mistake has been made
+    ' four separate times in this family).
+    '
+    '   clr1/clr2   the two stops, in the direction nMode names.
+    '   nMode       LinearGradientModeHorizontal(0) / Vertical(1) / ForwardDiagonal(2) /
+    '               BackwardDiagonal(3). Vertical is the default because a vertical blend
+    '               across a horizontal bar is the "glossy" look this was added for.
+    '   nCurvature  the ellipse DIAMETER, as RoundRect took it -- the same vocabulary every
+    '               other method here uses. 0 = square corners, through the identical path.
+    '   rcBrush     OPTIONAL. The rect the gradient RAMP is measured across, when that is not
+    '               the rect being filled. Pass the whole track and fill one block of it, and
+    '               the blocks read as slices of one bar instead of N identical chips. NULL
+    '               (the default) means "measure across rc itself".
+    '
+    ' The brush cannot join the _pBrush cache -- that is typed CGpSolidBrush ptr and keyed on
+    ' a single ARGB -- so one is built per call and dies with the scope. Fine for the one or
+    ' two fills a progress bar issues per repaint; do NOT put this on a per-row path.
+    declare function PaintGradientRect( _
+                byval rc as RECT ptr, _
+                byval clr1 as COLORREF, _
+                byval clr2 as COLORREF, _
+                byval nMode as long = LinearGradientModeVertical, _
+                byval nCurvature as long = 0, _
+                byval rcBrush as RECT ptr = 0 _
+                ) as long
     ' Filled ellipse, optionally stroked. nPenWidth 0 = fill only.
     declare function PaintEllipse( _
                 byval rc as RECT ptr, _
