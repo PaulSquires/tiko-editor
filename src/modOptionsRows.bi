@@ -227,3 +227,4 @@ declare function OptionsRows_HasPage( byval nPage as long ) as boolean
 declare sub      OptionsRows_RegisterCombo( byval hCombo as HWND )
 declare sub      OptionsRows_ResetCombos()
 declare sub      OptionsRows_RunSelfTest( byval hPanel as HWND )
+declare sub      OptionsRows_RunBindTest()

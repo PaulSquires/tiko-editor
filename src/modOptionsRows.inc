@@ -392,16 +392,29 @@ sub OptionsTheme_FillToggle( byval tc as PSTOGGLE_COLORS ptr )
     ' The pill's own background must match the page it sits on, or its corners show a halo.
     tc->BackColor                   = ghPanel.BackColor
     tc->FocusRingColor              = ghPanel.ForeColorHot
-    ' ON: filled, borderless (border = fill, the control's own default relationship).
-    tc->TrackColorOn                = ghPanel.BackColorButtonHot
-    tc->TrackColorOnHot             = ghPanel.ForeColorButtonHot
+    ' ON: filled with the theme ACCENT, borderless (border = fill).
+    '
+    ' This used to be ghPanel.BackColorButtonHot -- a grey barely distinct from the page. The
+    ' knob mapping below (page-dark when ON, bright when OFF) is Windows 11's, and it works
+    ' there only because an ON track is unmistakably accent-coloured. With a grey track the
+    ' one strong signal left was the knob, so an OFF switch read as BRIGHTER than an ON one
+    ' and the whole control inverted at a glance. Reported 2026-07-25 after it caused a
+    ' settings value to be misread as its opposite.
+    tc->TrackColorOn                = ghUI.AccentColor
+    tc->TrackColorOnHot             = ghUI.AccentColor
     tc->TrackColorOnDisabled        = ghPanel.BackColorButton
     tc->TrackBorderColorOn          = tc->TrackColorOn
     tc->TrackBorderColorOnHot       = tc->TrackColorOnHot
     tc->TrackBorderColorOnDisabled  = tc->TrackColorOnDisabled
-    tc->KnobColorOn                 = ghPanel.BackColor
-    tc->KnobColorOnHot              = ghPanel.BackColor
-    tc->KnobColorOnDisabled         = ghPanel.BackColor
+    ' BRIGHT knob when ON. Windows 11 puts a dark knob on its accent track, and that reads
+    ' correctly there only because its accent is far brighter than this theme's: measured,
+    ' tiko's accent sits at luminance 71 against a page of 36, while the OFF knob below was
+    ' 217. Keeping Windows' mapping left OFF the loudest thing on the row no matter what the
+    ' track did. iOS/Material's accent-track-plus-white-knob is unambiguous at any accent
+    ' brightness, so the family follows that instead.
+    tc->KnobColorOn                 = ghPanel.ForeColor
+    tc->KnobColorOnHot              = ghPanel.ForeColorHot
+    tc->KnobColorOnDisabled         = ghPanel.ForeColorScrollBar
     ' OFF: outlined, the track barely distinct from the page.
     tc->TrackColorOff               = ghPanel.BackColor
     tc->TrackColorOffHot            = ghPanel.BackColorHot
@@ -409,8 +422,10 @@ sub OptionsTheme_FillToggle( byval tc as PSTOGGLE_COLORS ptr )
     tc->TrackBorderColorOff         = ghEditor.Divider
     tc->TrackBorderColorOffHot      = ghPanel.ForeColorHot
     tc->TrackBorderColorOffDisabled = ghEditor.Divider
-    tc->KnobColorOff                = ghPanel.ForeColor
-    tc->KnobColorOffHot             = ghPanel.ForeColorHot
+    ' ...and a SUBDUED knob when OFF. This was ghPanel.ForeColor -- the brightest colour on
+    ' the page -- which is what made an OFF switch shout louder than an ON one.
+    tc->KnobColorOff                = ghPanel.ForeColorScrollBar
+    tc->KnobColorOffHot             = ghPanel.ForeColor
     tc->KnobColorOffDisabled        = ghEditor.Divider
 end sub
 
@@ -724,6 +739,71 @@ end sub
 ' Nothing here is eyeballed: every assertion reads the numbers the layout actually
 ' produced, or reads a value back out of a real control.
 ' ========================================================================================
+' ========================================================================================
+' HEADLESS binding check.                              (TIKO_OPTIONS_SELFTEST=1)
+'
+' Does row N's pField actually point at the gConfig field row N's LABEL claims? Nothing else
+' verifies that: the row table, OptionsWork_Load/Commit and the seeding all read correctly in
+' isolation, and a shift between them would show up only as toggles displaying their
+' neighbour's value.
+'
+' The label id -> field pairing below is written INDEPENDENTLY of OptionsRows_Init rather than
+' derived from it, which is the whole point -- an oracle copied from the thing it checks
+' proves nothing. Needs no window, so it runs at startup rather than when the dialog opens.
+' ========================================================================================
+sub OptionsRows_RunBindTest()
+
+    if environ("TIKO_OPTIONS_SELFTEST") <> "1" then exit sub
+
+    dim as long nPass, nFail
+    dim as string sLine
+
+    OptionsRows_Init()
+    OptionsWork_Load()
+
+    #macro BINDCHK( labelid, cfgfield, nm )
+        scope
+            dim as long nFound = -1
+            for i as long = lbound(gOptRows) to ubound(gOptRows)
+                if gOptRows(i).nLabelID = labelid then nFound = i: exit for
+            next
+            if nFound < 0 then
+                nFail += 1
+                sLine = "  FAIL: no row carries label id " & str(labelid) & " (" & nm & ")"
+                ? sLine
+            elseif gOptRows(nFound).pField = 0 then
+                nFail += 1
+                sLine = "  FAIL: row for " & nm & " has a null field pointer"
+                ? sLine
+            elseif *cast(long ptr, gOptRows(nFound).pField) <> cfgfield then
+                nFail += 1
+                sLine = "  FAIL: " & nm & " row shows " & _
+                        str(*cast(long ptr, gOptRows(nFound).pField)) & _
+                        " but gConfig holds " & str(cfgfield) & " -- ROW/FIELD MISMATCH"
+                ? sLine
+            else
+                nPass += 1
+            end if
+        end scope
+    #endmacro
+
+    ? "--- TIKO_OPTIONS_SELFTEST (row/field binding) ---"
+
+    BINDCHK( 119, gConfig.MultipleInstances,    "Allow multiple instances" )
+    BINDCHK( 121, gConfig.CompileAutosave,      "Autosave before compiling" )
+    BINDCHK( 274, gConfig.AskExit,              "Ask before exiting" )
+    BINDCHK( 423, gConfig.RestoreSession,       "Restore previous session" )
+    BINDCHK( 133, gConfig.CompactMenus,         "Use Compact Menu Interface" )
+    BINDCHK(  91, gConfig.CheckUpdates,         "Check for Updates" )
+    BINDCHK( 114, gConfig.SyntaxHighlighting,   "Syntax highlighting" )
+    BINDCHK( 124, gConfig.LineNumbering,        "Show line numbers" )
+
+    sLine = "--- options bind test: " & str(nPass) & " passed, " & str(nFail) & " failed ---"
+    ? sLine
+
+end sub
+
+
 sub OptionsRows_RunSelfTest( byval hPanel as HWND )
 
     if environ("TIKO_OPTIONS_SELFTEST") <> "1" then exit sub
@@ -742,6 +822,36 @@ sub OptionsRows_RunSelfTest( byval hPanel as HWND )
     #endmacro
 
     print "--- Options rows self-test ---"
+
+    ' ---- LABEL / CONTROL PAIRING -------------------------------------------------------
+    ' Does the title drawn on a row sit beside THAT row's control? Every data-side check
+    ' passes (see OptionsRows_RunBindTest), so if a toggle appears to show its neighbour's
+    ' value, a shift between the label rect and the control rect is what is left. Reported
+    ' with the actual coordinates rather than a bare pass/fail, because the interesting case
+    ' is "off by exactly one row height".
+    for i as long = lbound(gOptRows) to ubound(gOptRows)
+        if gOptRows(i).hCtrl = 0 then continue for
+        if IsWindow(gOptRows(i).hCtrl) = 0 then continue for
+
+        dim as RECT rcCtrl
+        GetWindowRect( gOptRows(i).hCtrl, @rcCtrl )
+        MapWindowPoints( HWND_DESKTOP, GetParent(gOptRows(i).hCtrl), cast(POINT ptr, @rcCtrl), 2 )
+
+        dim as long ctrlMidY  = (rcCtrl.top + rcCtrl.bottom) \ 2
+        dim as boolean bInRow = (ctrlMidY >= gOptRows(i).rc.top) andalso _
+                                (ctrlMidY <= gOptRows(i).rc.bottom)
+        OPTASSERT( bInRow, "row " & str(i) & " (label id " & str(gOptRows(i).nLabelID) & _
+                   ") control centre y=" & str(ctrlMidY) & " is OUTSIDE its own row band " & _
+                   str(gOptRows(i).rc.top) & ".." & str(gOptRows(i).rc.bottom) & _
+                   " -- label and control are paired with DIFFERENT rows" )
+
+        ' And the title has to be on the same band as the control it labels.
+        dim as long lblMidY = (gOptRows(i).rcLabel.top + gOptRows(i).rcLabel.bottom) \ 2
+        OPTASSERT( abs(lblMidY - ctrlMidY) <= AfxScaleY(20), _
+                   "row " & str(i) & " (label id " & str(gOptRows(i).nLabelID) & _
+                   ") label centre y=" & str(lblMidY) & " but its control is at y=" & _
+                   str(ctrlMidY) & " -- drawn against the wrong control" )
+    next
 
     ' ---- the table itself -------------------------------------------------------------
     OPTASSERT( ubound(gOptRows) >= 0, "row table is empty" )
@@ -814,7 +924,15 @@ sub OptionsRows_RunSelfTest( byval hPanel as HWND )
                        "page " & str(nPage) & " row " & str(i) & " label not at the left padding" )
         next
 
-        OPTASSERT( nSeen > 0, "page " & str(nPage) & " claims rows but built none" )
+        ' NOT an assertion. Pages are built lazily -- on first visit -- so a page the user has
+        ' not opened yet legitimately has no controls, and this fired as a failure every time
+        ' the dialog was opened without touring every page. There is nothing detectable here:
+        ' "declared but never built" and "not visited yet" are the same state from inside this
+        ' function. Reported so the count of examined pages is still visible.
+        if nSeen = 0 then
+            sMsg = "  (page " & str(nPage) & " not built yet -- lazy, skipped)"
+            print sMsg
+        end if
     next
 
     ' ---- staging round trip, and the long-not-boolean rule ----------------------------

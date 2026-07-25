@@ -602,9 +602,9 @@ sub Theme_RunSelfTest()
     '    syntax side is a written list, so this is the guard on it: an unclassified key falls
     '    into "Other" rather than vanishing, and this names it. Adding an editor.* key to the
     '    engine without listing it in CategoryForKey fails here.
-    '    Compares category IDS, never their localized titles: this runs before the
-    '    localization table is loaded, so every L() would answer alike and the check would
-    '    pass (or fail) for reasons that have nothing to do with categories.
+    '    Compares category IDS, never their localized titles -- two categories that happen to
+    '    translate alike are still two categories, and a missing string id would make every
+    '    title compare equal (which is exactly how this went wrong the first time).
     for i as long = lbound(gThemeBind) to ubound(gThemeBind)
         if frmOptionsTheme_PageForKey( gThemeBind(i).keyValue ) = OPTPAGE_NONE then continue for
         THASSERT( frmOptionsTheme_CategoryIdForKey( gThemeBind(i).keyValue ) <> THEMECAT_OTHER, _
@@ -633,6 +633,56 @@ sub Theme_RunSelfTest()
         THASSERT( Theme_IsChannelModified( "editor.keyword", THEMECH_FORE ) = false, _
                   "after a reset the channel must report unmodified again" )
     end if
+
+    ' -- 17. Every string id these pages use actually EXISTS in the language file. --------
+    '    L(e,s) is `#Define L(e,s) LL(e)` -- the second argument is DOCUMENTATION and is
+    '    DISCARDED. An id with no entry in english.lang renders as an empty string, so a
+    '    caption, a heading or a whole message box silently comes up blank with nothing in the
+    '    build or the assertions to say so. That is exactly how the group headers shipped
+    '    captionless. english.lang is the fallback for every other language, so checking it
+    '    covers them all.
+    for nId as long = 452 to 480
+        dim as boolean bHasText = false
+        if (nId >= lbound(LL)) andalso (nId <= ubound(LL)) then bHasText = (len(LL(nId)) > 0)
+        THASSERT( bHasText, "localized string " & str(nId) & " is missing from english.lang" )
+    next
+
+    ' -- 18. An ON toggle must read BRIGHTER than an OFF one. ----------------------------
+    '    The failure this guards against is not a wrong value -- it is a control that shows
+    '    the right value in a way people read backwards. tiko's toggle put a page-dark knob
+    '    on a near-page-grey track for ON, and a bright knob on ON's darker sibling for OFF,
+    '    so the OFF state was the visually louder one and a setting got read as its opposite.
+    '    Compared by LUMINANCE rather than by naming a colour, so a light theme passes too.
+    scope
+        dim as PSTOGGLE_COLORS tc
+        OptionsTheme_FillToggle( @tc )
+
+        #macro LUMA( c )
+            (( 299 * ((c) and &hFF) + 587 * (((c) shr 8) and &hFF) + 114 * (((c) shr 16) and &hFF) ) \ 1000)
+        #endmacro
+
+        ' Compare the BRIGHTEST element of each state, track or knob. Comparing tracks alone
+        ' is what this assertion did first, and it PASSED against the very colours that were
+        ' being misread -- the track was never the loud part, the knob was. An assertion that
+        ' cannot fail on the reported bug is not an assertion.
+        dim as long lumOnTrack  = LUMA( tc.TrackColorOn )
+        dim as long lumOnKnob   = LUMA( tc.KnobColorOn )
+        dim as long lumOffTrack = LUMA( tc.TrackColorOff )
+        dim as long lumOffKnob  = LUMA( tc.KnobColorOff )
+
+        dim as long lumOn  = iif( lumOnTrack  > lumOnKnob,  lumOnTrack,  lumOnKnob )
+        dim as long lumOff = iif( lumOffTrack > lumOffKnob, lumOffTrack, lumOffKnob )
+
+        THASSERT( lumOn > lumOff, _
+                  "an OFF switch reads BRIGHTER than an ON one (on=" & str(lumOn) & _
+                  " off=" & str(lumOff) & ") -- the control inverts at a glance" )
+        THASSERT( tc.TrackColorOn = ghUI.AccentColor, _
+                  "the ON track is not the theme accent" )
+    end scope
+
+    ' -- 19. The accent key exists and actually carries a colour. -------------------------
+    THASSERT( Theme_FindEntry( "ui.accent" ) >= 0, "ui.accent was not materialised by the fallback" )
+    THASSERT( ghUI.AccentColor <> ghPanel.BackColor, "the accent is the same as the page background" )
 
     sLine = "--- theme self-test: " & str(nPass) & " passed, " & str(nFail) & " failed ---"
     ? sLine

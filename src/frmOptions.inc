@@ -390,6 +390,11 @@ private function frmOptions_OnPaint( byval hwnd as HWND ) as LRESULT
     buffer.SetForeColor( ghEditor.Divider )
     buffer.PaintLine( 1, navW, 0, navW, rc.bottom - footerH )
 
+    ' ...and a hairline under the page title, closing the band off from the page content.
+    ' Same width-1, deliberately-unscaled rule as the vertical split: a hairline stays a
+    ' hairline. Starts at the nav edge so the two rules meet rather than leaving a nick.
+    buffer.PaintLine( 1, navW, titleH, rc.right, titleH )
+
     buffer.EndDoubleBuffer()
     EndPaint( hwnd, @ps )
 

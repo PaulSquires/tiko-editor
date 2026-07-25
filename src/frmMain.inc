@@ -1638,6 +1638,7 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ' Env-gated; returns immediately unless TIKO_THEME_SELFTEST=1. Runs here because it needs
     ' a fully parsed theme, and it snapshots/restores gTheme around its destructive cases.
     Theme_RunSelfTest()
+    OptionsRows_RunBindTest()
     
     ' Set the small and large icon for the main window (must be set after main window is created)
     pWindow->BigIcon   = LoadImage( pWindow->InstanceHandle, "IMAGE_AAA_MAINICON", IMAGE_ICON, 32, 32, LR_SHARED)

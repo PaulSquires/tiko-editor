@@ -58,7 +58,7 @@ dim shared gThemeLabels(any) as THEMELABEL_TYPE
 
 ' Unscaled geometry.
 const THEME_LISTHEIGHT   = 380
-const THEME_EDITCOLW     = 200      ' the edit column down the right-hand side
+const THEME_EDITCOLW     = 215      ' the edit column down the right-hand side
 const THEME_SWATCHW      = 30
 const THEME_SWATCHH      = 14
 const THEME_ROWHEIGHT    = 22
@@ -144,11 +144,12 @@ end function
 ' "Other" instead of vanishing, and the self-test asserts that bucket stays EMPTY. Add a key
 ' to the engine without classifying it here and the assertion says so by name.
 ' ========================================================================================
-' Returns a STABLE ID, never display text. The two were originally one function returning a
-' localized string, and the self-test caught why that is wrong: it runs before the
-' localization table is loaded, so every L() answered alike, every category compared equal,
-' and the grouping collapsed to a single band. Structure must not depend on what language the
-' UI happens to be in.
+' Returns a STABLE ID, never display text. This was originally one function returning a
+' localized string, and grouping compared those strings -- which collapsed every category into
+' one band because the string ids did not yet exist in english.lang and L() therefore answered
+' "" for all of them. Adding the ids fixed the symptom; splitting id from title fixes the
+' cause. Two categories that happen to translate alike must still be two categories, so
+' structure cannot be keyed on display text in any language.
 function frmOptionsTheme_CategoryIdForKey( byval sKey as string ) as long
 
     dim as string ns = AfxStrParse( sKey, 1, "." )
@@ -658,12 +659,16 @@ sub frmOptionsTheme_Build( byval nPage as long, byval hPage as HWND )
     PsButton_SetText( ghThemeBack, L(456, "Background") & "..." )
     PsButton_SetClickCallback( ghThemeBack, @frmOptionsTheme_BackClick )
 
+    ' Undo glyph (Segoe Fluent Icons E7A7) plus the caption. The glyph font is a SEPARATE
+    ' paint-time input from the text font -- see PsButton_SetGlyphFont.
     ghThemeResetF = PsButton_Create( hPage, IDC_FRMOPTIONSTHEME_CMDRESETF )
-    PsButton_SetText( ghThemeResetF, L(480, "Reset") )
+    PsButton_SetGlyphLeft( ghThemeResetF, wchr(&hE7A7) )
+    PsButton_SetTooltipText( ghThemeResetF, L(480, "Reset") )
     PsButton_SetClickCallback( ghThemeResetF, @frmOptionsTheme_ResetForeClick )
 
     ghThemeResetB = PsButton_Create( hPage, IDC_FRMOPTIONSTHEME_CMDRESETB )
-    PsButton_SetText( ghThemeResetB, L(480, "Reset") )
+    PsButton_SetTooltipText( ghThemeResetB, L(480, "Reset") )
+    PsButton_SetGlyphLeft( ghThemeResetB, wchr(&hE7A7) )
     PsButton_SetClickCallback( ghThemeResetB, @frmOptionsTheme_ResetBackClick )
 
     ghThemeBold = PsToggle_Create( hPage, IDC_FRMOPTIONSTHEME_TOGBOLD )
@@ -703,6 +708,8 @@ sub frmOptionsTheme_ApplyTheme()
     PsButton_SetFont( ghThemeBack, OptionsFont_Base() )
     PsButton_SetFont( ghThemeResetF, OptionsFont_Base() )
     PsButton_SetFont( ghThemeResetB, OptionsFont_Base() )
+    PsButton_SetGlyphFont( ghThemeResetF, ghFont(SYMBOLFONT_10) )
+    PsButton_SetGlyphFont( ghThemeResetB, ghFont(SYMBOLFONT_10) )
 
     dim as PSTOGGLE_COLORS tc : OptionsTheme_FillToggle( @tc )
     PsToggle_SetColors( ghThemeBold, @tc )   : PsToggle_Refresh( ghThemeBold )
@@ -778,7 +785,10 @@ function frmOptionsTheme_Layout( byval nPage as long, byval hPage as HWND, byval
     dim as long yEdit = yTop
 
     ' Each colour button gets a Reset beside it, sharing the column width.
-    dim as long resetW = AfxScaleX(62)
+    ' Square-ish: glyph only, no caption. Everything it gives up goes to the colour
+    ' buttons beside it, which were ellipsising their labels at 175% -- and would fare
+    ' worse in a language where "Foreground" is longer than it is in English.
+    dim as long resetW = AfxScaleX(34)
     dim as long pickW  = editW - resetW - AfxScaleX(6)
     SetWindowPos( ghThemeFore, 0, xEdit, yEdit, pickW, ctlH, SWP_NOZORDER or SWP_NOACTIVATE )
     SetWindowPos( ghThemeResetF, 0, xEdit + pickW + AfxScaleX(6), yEdit, resetW, ctlH, _

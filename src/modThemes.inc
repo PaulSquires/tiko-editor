@@ -289,6 +289,10 @@ type UI_HANDLES_TYPE
     BackColorField as COLORREF
     ForeColorScrollBar as COLORREF
     BackColorScrollBar as COLORREF
+    ' The theme's ACCENT -- the one colour that means "this is on / selected / active".
+    ' Every control that needs it was reaching into some unrelated group for it (the toggle
+    ' used a panel button grey, which is why an ON switch read as dimmer than an OFF one).
+    AccentColor as COLORREF
 end type
 dim shared ghUI as UI_HANDLES_TYPE
 
@@ -366,12 +370,13 @@ type THEMEFALLBACK_TYPE
     nChan  as long
 end type
 
-dim shared as THEMEFALLBACK_TYPE gThemeFallback(0 to 4) = { _
+dim shared as THEMEFALLBACK_TYPE gThemeFallback(0 to 5) = { _
     ( "ui.divider",   "editor.divider",   THEMECH_FORE ), _
     ( "ui.field",     "editor.text",      THEMECH_FORE ), _
     ( "ui.field",     "editor.text",      THEMECH_BACK ), _
     ( "ui.scrollbar", "editor.scrollbar", THEMECH_FORE ), _
-    ( "ui.scrollbar", "editor.scrollbar", THEMECH_BACK ) }
+    ( "ui.scrollbar", "editor.scrollbar", THEMECH_BACK ), _
+    ( "ui.accent",    "toptabs.iconselected", THEMECH_BACK ) }
 
 
 ''
@@ -751,6 +756,7 @@ private sub Theme_BuildBindTable()
     ThemeBind_Add( "ui.divider",   @ghUI.Divider,            0,                  0, 0, 0, THSUB_ALL )
     ThemeBind_Add( "ui.field",     @ghUI.ForeColorField,     @ghUI.BackColorField,     0, 0, 0, THSUB_ALL )
     ThemeBind_Add( "ui.scrollbar", @ghUI.ForeColorScrollBar, @ghUI.BackColorScrollBar, 0, 0, 0, THSUB_ALL )
+    ThemeBind_Add( "ui.accent",    0, @ghUI.AccentColor, 0, 0, 0, THSUB_ALL )
 
     ' ---- panel ------------------------------------------------------------------------
     ThemeBind_Add( "panel.text",           @ghPanel.ForeColor, @ghPanel.BackColor )
@@ -1453,6 +1459,7 @@ sub Theme_DumpGlobals( byval wszOutPath as DWSTRING )
     DUMPCLR( "ui.BackColorField",             ghUI.BackColorField )
     DUMPCLR( "ui.ForeColorScrollBar",         ghUI.ForeColorScrollBar )
     DUMPCLR( "ui.BackColorScrollBar",         ghUI.BackColorScrollBar )
+    DUMPCLR( "ui.AccentColor",                ghUI.AccentColor )
 
     ' The two alpha sentinels. -1 means the theme asked for no alpha and the consumer keeps
     ' whatever constant it uses today.
