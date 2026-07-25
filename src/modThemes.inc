@@ -40,7 +40,30 @@ type THEME_TYPE
     hasFlags as boolean          ' any one of bold/italic/underline was seen
     hasForeAlpha as boolean      ' an explicit 4th component was supplied
     hasBackAlpha as boolean
+    ' WHICH MACRO a channel's value came from, "%NAME", or "" for a literal.
+    '
+    ' The parser used to expand %MACRO and throw the name away, so the writer had nothing to
+    ' write back and the first save of a hand-authored theme silently flattened every macro
+    ' into literal r,g,b. Keeping the name is what makes the format round-trip.
+    '
+    ' Editing a channel CLEARS its name (see Theme_SetColor): the edited key detaches to a
+    ' literal and the macro -- and every other key still using it -- is left alone. That is
+    ' the deliberate rule; the inverse action, re-attaching a key to a macro, is a separate
+    ' explicit command rather than something an edit does by accident.
+    foreMacro as DWSTRING
+    backMacro as DWSTRING
 end type
+
+
+' ----------------------------------------------------------------------------------------
+' The theme's %MACRO definitions, in the order the file declared them. This is the palette:
+' a handful of named colours the keys refer to. Rebuilt on every parse.
+' ----------------------------------------------------------------------------------------
+type THEMEMACRO_TYPE
+    name  as DWSTRING        ' including the leading '%'
+    value as DWSTRING        ' the raw right-hand side, e.g. "40,44,52"
+end type
+dim shared gThemeMacros(any) as THEMEMACRO_TYPE
 dim shared gTheme(any) as THEME_TYPE
 dim shared gThemeFilenames(any) as DWSTRING
 
@@ -402,6 +425,7 @@ sub Theme_ResolveFallbacks()
                 gTheme(nDst).foreground      = gTheme(nSrc).foreground
                 gTheme(nDst).foregroundAlpha = gTheme(nSrc).foregroundAlpha
                 gTheme(nDst).hasForeAlpha    = gTheme(nSrc).hasForeAlpha
+                gTheme(nDst).foreMacro       = gTheme(nSrc).foreMacro
                 gTheme(nDst).hasFore         = true
             end if
         else
@@ -409,6 +433,7 @@ sub Theme_ResolveFallbacks()
                 gTheme(nDst).background      = gTheme(nSrc).background
                 gTheme(nDst).backgroundAlpha = gTheme(nSrc).backgroundAlpha
                 gTheme(nDst).hasBackAlpha    = gTheme(nSrc).hasBackAlpha
+                gTheme(nDst).backMacro       = gTheme(nSrc).backMacro
                 gTheme(nDst).hasBack         = true
             end if
         end if
@@ -464,10 +489,8 @@ function Theme_ParseFile( byval wszFullPath as DWSTRING ) as boolean
     ' Ensure to delete any existing gTheme data
     erase gTheme
     erase gThemeParseWarnings
+    erase gThemeMacros
 
-    dim param(100) as DWSTRING
-    dim param_value(100) as DWSTRING
-    dim as long nextParam = 0
     
     dim as DWSTRING wst, keyValue, keyData
         
@@ -482,28 +505,33 @@ function Theme_ParseFile( byval wszFullPath as DWSTRING ) as boolean
         
         ' is this a replaceable parameter
         if left(wst, 1) = "%" then
-            ' param()/param_value() are fixed size (see the dim above). Writing past the
-            ' end would corrupt the stack, and a hand-edited theme is free to declare as
-            ' many macros as it likes -- so drop the excess and say so.
-            if nextParam > ubound(param) then
-                redim preserve gThemeParseWarnings(ubound(gThemeParseWarnings) + 1)
-                gThemeParseWarnings(ubound(gThemeParseWarnings)) = "macro table full, ignored: " & keyValue
-            else
-                param(nextParam) = keyValue
-                param_value(nextParam) = keyData
-                nextParam += 1
-            end if
+            ' Kept in a dynamic table now rather than a fixed dim(100), so there is no bound
+            ' to overrun -- and, more to the point, so the definitions survive the parse and
+            ' the writer can put them back.
+            dim as long nm = ubound(gThemeMacros) + 1
+            redim preserve gThemeMacros(nm) as THEMEMACRO_TYPE
+            gThemeMacros(nm).name  = keyValue
+            gThemeMacros(nm).value = keyData
             continue do
         end if
 
-        ' if keyData is a replaceable parameter then substitute it now
+        ' if keyData is a replaceable parameter then substitute it now, REMEMBERING which
+        ' macro it was so the value can be written back as %NAME rather than flattened.
+        dim as DWSTRING wszMacroUsed
         if left(keyData, 1) = "%" then
-            for i as long = lbound(param) to ubound(param)
-            if param(i) = keyData then
-                keyData = param_value(i)
-                exit for
-            end if   
+            for i as long = lbound(gThemeMacros) to ubound(gThemeMacros)
+                if gThemeMacros(i).name = keyData then
+                    wszMacroUsed = keyData
+                    keyData = gThemeMacros(i).value
+                    exit for
+                end if
             next
+            ' An unresolved %NAME is a typo or a forward reference (macros must be declared
+            ' before use). Say so rather than letting val() quietly read it as 0,0,0 black.
+            if len(wszMacroUsed) = 0 then
+                redim preserve gThemeParseWarnings(ubound(gThemeParseWarnings) + 1)
+                gThemeParseWarnings(ubound(gThemeParseWarnings)) = "undefined macro: " & keyData
+            end if
         end if
         
         ' is the KeyData a true or false value
@@ -564,11 +592,13 @@ function Theme_ParseFile( byval wszFullPath as DWSTRING ) as boolean
                 gTheme(nFound).hasFore = true
                 gTheme(nFound).foregroundAlpha = cubyte(nAlpha)
                 gTheme(nFound).hasForeAlpha = bHasAlpha
+                gTheme(nFound).foreMacro = wszMacroUsed
             case "background"
                 gTheme(nFound).background = clr
                 gTheme(nFound).hasBack = true
                 gTheme(nFound).backgroundAlpha = cubyte(nAlpha)
                 gTheme(nFound).hasBackAlpha = bHasAlpha
+                gTheme(nFound).backMacro = wszMacroUsed
             case "bold":       gTheme(nFound).bold = val(keyData)        : gTheme(nFound).hasFlags = true
             case "italic":     gTheme(nFound).italic = val(keyData)      : gTheme(nFound).hasFlags = true
             case "underline":  gTheme(nFound).underline = val(keyData)   : gTheme(nFound).hasFlags = true
@@ -849,6 +879,10 @@ function Theme_SetColor( byval lookupKey as string, _
         case THEMECH_FORE
             gTheme(n).foreground = clr
             gTheme(n).hasFore = true
+            ' DETACH. This key stops referring to the macro; the macro itself and every
+            ' other key using it are untouched. Re-attaching is a separate explicit action,
+            ' never a side effect of picking a colour.
+            gTheme(n).foreMacro = ""
             if nAlpha >= 0 then
                 gTheme(n).foregroundAlpha = cubyte(iif(nAlpha > 255, 255, nAlpha))
                 gTheme(n).hasForeAlpha = true
@@ -856,6 +890,7 @@ function Theme_SetColor( byval lookupKey as string, _
         case THEMECH_BACK
             gTheme(n).background = clr
             gTheme(n).hasBack = true
+            gTheme(n).backMacro = ""                ' detach -- see THEMECH_FORE above
             if nAlpha >= 0 then
                 gTheme(n).backgroundAlpha = cubyte(iif(nAlpha > 255, 255, nAlpha))
                 gTheme(n).hasBackAlpha = true
@@ -943,6 +978,9 @@ end sub
 declare sub Theme_FillGlobals()
 
 dim shared gThemeSnapEntries(any) as THEME_TYPE
+' The palette is snapshotted too: previewing another theme REPLACES it, so without this a
+' Cancel after a theme switch would restore the keys and leave the wrong macros beside them.
+dim shared gThemeSnapMacros(any) as THEMEMACRO_TYPE
 dim shared gThemeSnapFilename as DWSTRING
 dim shared gThemeSnapValid as boolean
 
@@ -954,6 +992,14 @@ sub Theme_Snapshot()
         redim gThemeSnapEntries( lbound(gTheme) to ubound(gTheme) ) as THEME_TYPE
         for i as long = lbound(gTheme) to ubound(gTheme)
             gThemeSnapEntries(i) = gTheme(i)
+        next
+    end if
+
+    erase gThemeSnapMacros
+    if ubound(gThemeMacros) >= lbound(gThemeMacros) then
+        redim gThemeSnapMacros( lbound(gThemeMacros) to ubound(gThemeMacros) ) as THEMEMACRO_TYPE
+        for i as long = lbound(gThemeMacros) to ubound(gThemeMacros)
+            gThemeSnapMacros(i) = gThemeMacros(i)
         next
     end if
 
@@ -983,6 +1029,14 @@ sub Theme_Restore()
         next
     end if
 
+    erase gThemeMacros
+    if ubound(gThemeSnapMacros) >= lbound(gThemeSnapMacros) then
+        redim gThemeMacros( lbound(gThemeSnapMacros) to ubound(gThemeSnapMacros) ) as THEMEMACRO_TYPE
+        for i as long = lbound(gThemeSnapMacros) to ubound(gThemeSnapMacros)
+            gThemeMacros(i) = gThemeSnapMacros(i)
+        next
+    end if
+
     gThemeCurrentShortFilename = gThemeSnapFilename
 
     Theme_ResolveFallbacks()
@@ -996,6 +1050,7 @@ end sub
 ''
 sub Theme_DiscardSnapshot()
     erase gThemeSnapEntries
+    erase gThemeSnapMacros
     gThemeSnapValid = false
 end sub
 
@@ -1160,6 +1215,25 @@ end function
 
 
 ''
+''  HOW ONE CHANNEL SHOULD BE WRITTEN
+''
+''  "%NAME" while the key is still attached to a macro, otherwise literal r,g,b[,a]. The
+''  attachment is dropped by Theme_SetColor the moment the channel is edited, so a key the
+''  user has retuned writes as a literal while its former stablemates keep the macro.
+''
+''  A macro reference deliberately carries NO alpha: the format has one value per macro, and
+''  "%NAME,200" is not something the parser accepts. A channel that gains an explicit alpha
+''  is therefore written out in full.
+''
+private function Theme_ChannelText( byval wszMacro as DWSTRING, _
+                                    byval clr as COLORREF, _
+                                    byval nAlpha as long ) as DWSTRING
+    if (len(wszMacro) > 0) andalso (nAlpha < 0) then return wszMacro
+    return Theme_FormatColor( clr, nAlpha )
+end function
+
+
+''
 ''  STRIP WHAT THE PARSER CANNOT READ BACK
 ''
 ''  A ':' would truncate the value (key/data split on the FIRST colon) and a '#' would start
@@ -1214,6 +1288,19 @@ function Theme_WriteFile( byval wszFullPath as DWSTRING, _
     print #f, sLine
     print #f, ""
 
+    ' The palette. Written back verbatim, in declaration order, and BEFORE any key that
+    ' refers to it -- the parser resolves macros in one forward pass, so a definition that
+    ' appeared after its use would silently read as black.
+    if ubound(gThemeMacros) >= lbound(gThemeMacros) then
+        sLine = "# Named colors. Edit one of these to move every key that refers to it."
+        print #f, sLine
+        for i as long = lbound(gThemeMacros) to ubound(gThemeMacros)
+            sLine = gThemeMacros(i).name & ": " & gThemeMacros(i).value
+            print #f, sLine
+        next
+        print #f, ""
+    end if
+
     sLine = "general.description: " & Theme_SanitizeText( wszDescription )
     print #f, sLine
     dim as long nVer = Theme_FindEntry( "general.version" )
@@ -1257,14 +1344,16 @@ function Theme_WriteFile( byval wszFullPath as DWSTRING, _
         if (gThemeBind(i).pFore <> 0) andalso gTheme(n).hasFore then
             dim as long nA = -1
             if gTheme(n).hasForeAlpha then nA = clng(gTheme(n).foregroundAlpha)
-            sLine = sKey & ".foreground: " & Theme_FormatColor( gTheme(n).foreground, nA )
+            sLine = sKey & ".foreground: " & _
+                    Theme_ChannelText( gTheme(n).foreMacro, gTheme(n).foreground, nA )
             print #f, sLine
         end if
 
         if (gThemeBind(i).pBack <> 0) andalso gTheme(n).hasBack then
             dim as long nA = -1
             if gTheme(n).hasBackAlpha then nA = clng(gTheme(n).backgroundAlpha)
-            sLine = sKey & ".background: " & Theme_FormatColor( gTheme(n).background, nA )
+            sLine = sKey & ".background: " & _
+                    Theme_ChannelText( gTheme(n).backMacro, gTheme(n).background, nA )
             print #f, sLine
         end if
 

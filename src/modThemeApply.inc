@@ -684,6 +684,63 @@ sub Theme_RunSelfTest()
     THASSERT( Theme_FindEntry( "ui.accent" ) >= 0, "ui.accent was not materialised by the fallback" )
     THASSERT( ghUI.AccentColor <> ghPanel.BackColor, "the accent is the same as the page background" )
 
+    ' -- 20. %MACRO survives a write/read round trip. ------------------------------------
+    '    The writer used to expand every macro to literal r,g,b, so the first save of a
+    '    hand-authored theme silently flattened its palette. The shipped themes define six,
+    '    which is what makes this testable against real data rather than a fixture.
+    THASSERT( ubound(gThemeMacros) >= lbound(gThemeMacros), _
+              "the shipped theme defines macros but none were retained" )
+
+    scope
+        dim as long nMacrosBefore = ubound(gThemeMacros) - lbound(gThemeMacros) + 1
+        dim as long nk = Theme_FindEntry( "editor.text" )
+        dim as DWSTRING wszMacroBefore
+        if nk >= 0 then wszMacroBefore = gTheme(nk).backMacro
+
+        dim as DWSTRING wszTmp3 = AfxGetExePathName & "_theme_selftest3.tmp"
+        Theme_Snapshot()
+        if Theme_WriteFile( wszTmp3, "Macro Probe" ) = false then
+            if Theme_ParseFile( wszTmp3 ) = false then
+                THASSERT( (ubound(gThemeMacros) - lbound(gThemeMacros) + 1) = nMacrosBefore, _
+                          "macro count changed across a write/read round trip" )
+                dim as long nk2 = Theme_FindEntry( "editor.text" )
+                THASSERT( (nk2 >= 0) andalso (gTheme(nk2).backMacro = wszMacroBefore), _
+                          "editor.text lost its macro binding across a round trip" )
+            else
+                THASSERT( false, "could not re-parse the macro probe" )
+            end if
+        else
+            THASSERT( false, "could not write the macro probe" )
+        end if
+        Theme_Restore()
+        Theme_DiscardSnapshot()
+        kill( wszTmp3 )
+    end scope
+
+    ' -- 21. Editing a key DETACHES only that key. ---------------------------------------
+    '    The decided rule: no action at a distance. Editing one key that shares a macro with
+    '    six others must not move the other six, and must not alter the macro itself.
+    scope
+        dim as long na = Theme_FindEntry( "editor.text" )
+        dim as long nb2 = Theme_FindEntry( "editor.comments" )
+        if (na >= 0) andalso (nb2 >= 0) then
+            Theme_Snapshot()
+            dim as DWSTRING wszOtherMacro = gTheme(nb2).backMacro
+            dim as long nMacros = ubound(gThemeMacros) - lbound(gThemeMacros) + 1
+
+            Theme_SetColor( "editor.text", THEMECH_BACK, BGR(3, 3, 3) )
+
+            THASSERT( len(gTheme(na).backMacro) = 0, _
+                      "the edited key is still attached to its macro" )
+            THASSERT( gTheme(nb2).backMacro = wszOtherMacro, _
+                      "editing one key detached a DIFFERENT key from its macro" )
+            THASSERT( (ubound(gThemeMacros) - lbound(gThemeMacros) + 1) = nMacros, _
+                      "editing a key changed the macro table" )
+            Theme_Restore()
+            Theme_DiscardSnapshot()
+        end if
+    end scope
+
     sLine = "--- theme self-test: " & str(nPass) & " passed, " & str(nFail) & " failed ---"
     ? sLine
 
