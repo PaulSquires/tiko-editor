@@ -19,11 +19,15 @@
 #include once "clsConfig.bi"
 
 
-#define COLORS_LISTHEIGHT_THEMES  130
+' MEASURED AGAINST THE FIXED VIEWPORT. The page needed 928px of the 892 available at 175%, so
+' 21 unscaled px had to go. It comes out of the THEMES list rather than the fonts list, which is
+' the whole of the judgement here: a handful of .theme files ship and the folder is rarely long,
+' while the font list is every family on the machine and is the one people actually scroll.
+#define COLORS_LISTHEIGHT_THEMES  104
 #define COLORS_LISTHEIGHT_FONTS   160
 #define COLORS_NUMWIDTH            96
 #define COLORS_COMBOWIDTH         180
-#define COLORS_SECTIONGAP          14
+#define COLORS_SECTIONGAP          11      ' x2 on this page
 #define COLORS_LABELGAP             4
 #define COLORS_ROWHEIGHT           40
 

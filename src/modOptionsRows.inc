@@ -885,11 +885,31 @@ sub OptionsRows_RunSelfTest( byval hPanel as HWND )
     next
 
     ' ---- per-page geometry ------------------------------------------------------------
-    dim as long cxPanel = PsScrollPanel_GetPanelWidth( HWND_FRMOPTIONS_SCROLL )
-    OPTASSERT( cxPanel > 0, "page width is not positive" )
-
+    ' THE RULER COMES FROM THE ROW'S OWN PARENT, not from a container passed in. Only
+    ' OPTPAGE_EDITOR lives on the PsScrollPanel now; every other page is on the plain
+    ' container, which is WIDER because it reserves no scrollbar strip. Measuring all of them
+    ' against the scroll panel's page width reported six perfectly good General rows as "not
+    ' full width" and "overruns the right padding" -- the rows were right and the ruler was
+    ' wrong, which is the failure mode an assertion is least likely to be doubted over.
+    '
+    ' Asking each control who its parent is removes the assumption rather than correcting it,
+    ' so moving a page between containers cannot break this again.
     for nPage as long = 0 to OPTPAGE_COUNT - 1
         if OptionsRows_HasPage(nPage) = false then continue for
+
+        dim as HWND hOwner = 0
+        for i as long = lbound(gOptRows) to ubound(gOptRows)
+            if gOptRows(i).nPage <> nPage then continue for
+            if gOptRows(i).hCtrl = 0 then continue for
+            hOwner = GetParent( gOptRows(i).hCtrl )
+            exit for
+        next
+        if hOwner = 0 then continue for
+
+        dim as RECT rcOwner
+        GetClientRect( hOwner, @rcOwner )
+        dim as long cxPanel = rcOwner.right - rcOwner.left
+        OPTASSERT( cxPanel > 0, "page " & str(nPage) & " width is not positive" )
 
         dim as long nPrevBottom = -1
         dim as long nSeen = 0
@@ -916,7 +936,7 @@ sub OptionsRows_RunSelfTest( byval hPanel as HWND )
             ' The control sits inside the row, right-aligned, clear of the label.
             dim as RECT rcCtrl
             GetWindowRect( gOptRows(i).hCtrl, @rcCtrl )
-            MapWindowPoints( HWND_DESKTOP, hPanel, cast(LPPOINT, @rcCtrl), 2 )
+            MapWindowPoints( HWND_DESKTOP, hOwner, cast(LPPOINT, @rcCtrl), 2 )
 
             OPTASSERT( rcCtrl.right <= cxPanel - AfxScaleX(OPTROW_PADRIGHT) + 1, _
                        "page " & str(nPage) & " row " & str(i) & " control overruns the right padding" )

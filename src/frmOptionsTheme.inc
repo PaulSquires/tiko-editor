@@ -86,8 +86,16 @@ dim shared gThemeLabels(any) as THEMELABEL_TYPE
 ' columns plus their gaps have to come out of one fixed width, so the floor is the number that
 ' decides whether they overlap rather than merely look cramped.
 const THEME_LISTHEIGHT   = 380
-const THEME_LISTMINW     = 170      ' below this the key names stop being readable
-const THEME_CTLCOLW      = 156      ' buttons, toggles and Opacity -- the narrow third column
+' MEASURED, NOT CHOSEN. At 175% the panel offers 1106px and the first attempt (floor 170,
+' controls 156) needed 1114 -- the remainder fell BELOW the floor, the floor raised the list,
+' and the total ran 8px past the edge. That is exactly what the floor is for: it converts an
+' overflow into a reported overlap instead of a silently clipped list.
+'
+' The controls column gives up those 8px and the floor drops 5, so the remainder now clears it
+' with room to spare -- and while the floor does not bind, the three columns tile the width
+' EXACTLY by construction, because the list is computed as what is left.
+const THEME_LISTMINW     = 165      ' below this the key names stop being readable
+const THEME_CTLCOLW      = 148      ' buttons, toggles and Opacity -- the narrow third column
 const THEME_SWATCHW      = 30
 const THEME_SWATCHH      = 14
 const THEME_ROWHEIGHT    = 22

@@ -1038,8 +1038,12 @@ function frmOptions_Show( byval hWndParent as HWND ) as LRESULT
     dim as long nNavRow = frmOptions_NavRowForPage( HWND_FRMOPTIONS_NAV, nStartPage )
     if nNavRow >= 0 then PsListTree_SetCurSel( HWND_FRMOPTIONS_NAV, nNavRow )
 
-    OptionsRows_RunSelfTest( hPage )
+    ' FIT FIRST, and the order is load-bearing rather than tidy: frmOptions_RunFitSelfTest
+    ' visits every page through ShowPage, which is what BUILDS them. Run the row and font
+    ' tests before it and they silently skip whichever pages the user has not opened yet --
+    ' which is how the base-font comparison came to report a zero-row page.
     frmOptions_RunFitSelfTest()
+    OptionsRows_RunSelfTest( hPage )
 
     ShowWindow( HWND_FRMOPTIONS, SW_SHOW )
     UpdateWindow( HWND_FRMOPTIONS )

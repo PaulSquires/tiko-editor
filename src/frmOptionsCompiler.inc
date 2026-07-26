@@ -23,10 +23,15 @@
 
 
 ' Fixed heights, UNSCALED (run through AfxScaleY at use).
-#define COMP_LISTHEIGHT     150
+' MEASURED AGAINST THE FIXED VIEWPORT. The page needed 948px of the 892 available at 175%, so
+' 32 unscaled px had to come out of it; 30 of them come from here and the rest from the section
+' gap below. The toolchain list loses about one visible row, which is the cheapest thing on this
+' page to give up -- the two long single-line fields under it cannot shrink and the toggles are
+' already at row height.
+#define COMP_LISTHEIGHT     120
 #define COMP_FIELDPAD        11      ' vertical padding inside a single-line PsTextBox
 #define COMP_LABELGAP         4      ' between a field label and the field under it
-#define COMP_SECTIONGAP      14      ' between one field block and the next
+#define COMP_SECTIONGAP      11      ' between one field block and the next (x4 on this page)
 #define COMP_BROWSEWIDTH     40
 
 
