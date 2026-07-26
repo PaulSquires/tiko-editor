@@ -75,8 +75,19 @@ end type
 dim shared gThemeLabels(any) as THEMELABEL_TYPE
 
 ' Unscaled geometry.
+' THREE COLUMNS: key list | colour picker | the controls column.
+'
+' The page does not scroll any more (only OPTPAGE_EDITOR does), so it has to fit a viewport of
+' 680 x 510 unscaled -- and it is the WIDTH that is tight, not the height. Stacking the picker
+' under the buttons and toggles, as this page did when the picker first went in, needed ~738px of
+' height. Beside them it needs about 450.
+'
+' THE LIST GETS WHATEVER IS LEFT, and its floor is what the fit assertion watches: the three
+' columns plus their gaps have to come out of one fixed width, so the floor is the number that
+' decides whether they overlap rather than merely look cramped.
 const THEME_LISTHEIGHT   = 380
-const THEME_EDITCOLW     = 215      ' the edit column down the right-hand side
+const THEME_LISTMINW     = 170      ' below this the key names stop being readable
+const THEME_CTLCOLW      = 156      ' buttons, toggles and Opacity -- the narrow third column
 const THEME_SWATCHW      = 30
 const THEME_SWATCHH      = 14
 const THEME_ROWHEIGHT    = 22
@@ -862,6 +873,18 @@ sub frmOptionsTheme_Build( byval nPage as long, byval hPage as HWND )
     ' PsColorPicker_FilterMessage, unlike the PsComboBox and PsTextBox calls already in there.
     ' That absence is the reason it is a panel rather than a dropdown.
     ghThemePicker = PsColorPicker_Create( hPage, IDC_FRMOPTIONSTHEME_PICKER )
+
+    ' NARROWER MATRIX CELLS THAN THE PICKER'S DEFAULT, and this is a width budget rather than a
+    ' preference. Three columns have to come out of one fixed 680px viewport: the list needs its
+    ' 170px floor, the controls column 156, and two 16px gaps -- which leaves the picker 290. At
+    ' the default 18px cell the matrix alone is 288 and the control asks for 304, so the columns
+    ' would overlap by 14px. At 16 the matrix stops being what sizes it (the entry-field row does,
+    ' at 262) and the picker settles at 278, leaving 12px of slack for DPI rounding.
+    '
+    ' The cell HEIGHT is left alone: it is what makes the matrix exactly as tall as the picker's
+    ' own lists, which is what keeps the Custom tab free of a dead band.
+    PsColorPicker_SetCellSize( ghThemePicker, AfxScaleX(16), AfxScaleY(22) )
+
     PsColorPicker_SetColorChangedCallback( ghThemePicker, @frmOptionsTheme_PickerChanged )
     PsColorPicker_SetPaletteCallbacks( ghThemePicker, @frmOptionsTheme_PaletteCount, _
                                        @frmOptionsTheme_PaletteEntry, @frmOptionsTheme_PaletteAssign )
@@ -981,22 +1004,28 @@ function frmOptionsTheme_Layout( byval nPage as long, byval hPage as HWND, byval
     dim as long contentR = cxPanel - padRight
     dim as long gapX     = AfxScaleX(16)
 
-    ' THE EDIT COLUMN IS AS WIDE AS THE PICKER SAYS IT NEEDS TO BE. GetIdealSize is valid before
-    ' the control has ever been sized, so the layout asks the control rather than carrying a
-    ' second copy of its dimensions -- which is what would rot the first time the matrix or the
-    ' cell size changed. THEME_EDITCOLW survives as a FLOOR for the buttons and toggles above it.
+    ' THE PICKER'S WIDTH COMES FROM THE PICKER. GetIdealSize is valid before the control has ever
+    ' been sized, so the layout asks it rather than carrying a second copy of its dimensions --
+    ' which is what would rot the first time the matrix or the cell size changed.
     dim as long nPickerW, nPickerH
     PsColorPicker_GetIdealSize( ghThemePicker, nPickerW, nPickerH )
 
-    dim as long editW = AfxScaleX(THEME_EDITCOLW)
-    if nPickerW > editW then editW = nPickerW
+    dim as long ctlW  = AfxScaleX(THEME_CTLCOLW)
+    ' The list takes what the other two columns leave. Floored, because a key list narrower than
+    ' this stops showing enough of "editor.selection" to tell the rows apart -- and the floor is
+    ' exactly where the three columns start to overlap, which is why the self-test measures it.
+    dim as long listW = contentR - padLeft - nPickerW - ctlW - (2 * gapX)
+    if listW < AfxScaleX(THEME_LISTMINW) then listW = AfxScaleX(THEME_LISTMINW)
 
-    dim as long listW    = contentR - padLeft - editW - gapX
-    if listW < AfxScaleX(180) then listW = AfxScaleX(180)     ' narrow panel: keep it usable
-    dim as long listH    = AfxScaleY(THEME_LISTHEIGHT)
     dim as long textH    = AfxScaleY(18)
     dim as long rowGap   = AfxScaleY(10)
     dim as long ctlH     = AfxScaleY(28)
+
+    ' THE LIST IS AS TALL AS THE PICKER, not a constant. They stand side by side now, so a list
+    ' of some other height would leave one column ending in mid-air -- and the picker's height is
+    ' the one that moves, because it follows its own list-row count.
+    dim as long listH = AfxScaleY(THEME_LISTHEIGHT)
+    if nPickerH > listH then listH = nPickerH
 
     frmOptionsTheme_AddLabel( iif( gThemeCurPage = OPTPAGE_SYNTAX, _
                                    L(457, "Editor syntax and margin colors"), _
@@ -1006,8 +1035,14 @@ function frmOptionsTheme_Layout( byval nPage as long, byval hPage as HWND, byval
 
     SetWindowPos( ghThemeKeys, 0, padLeft, yTop, listW, listH, SWP_NOZORDER or SWP_NOACTIVATE )
 
-    ' Edit column.
-    dim as long xEdit = padLeft + listW + gapX
+    ' Column 2: the picker, at its own ideal size and never stretched -- its body is a fixed grid
+    ' of cells, so an arbitrary width would just clip the right-hand column of swatches.
+    dim as long xPicker = padLeft + listW + gapX
+    SetWindowPos( ghThemePicker, 0, xPicker, yTop, nPickerW, nPickerH, SWP_NOZORDER or SWP_NOACTIVATE )
+
+    ' Column 3: the controls.
+    dim as long xEdit = xPicker + nPickerW + gapX
+    dim as long editW = ctlW
     dim as long yEdit = yTop
 
     ' Each colour button gets a Reset beside it, sharing the column width.
@@ -1043,15 +1078,9 @@ function frmOptionsTheme_Layout( byval nPage as long, byval hPage as HWND, byval
     frmOptionsTheme_AddLabel( L(462, "Opacity"), xEdit, yEdit, xEdit + editW, yEdit + textH )
     yEdit += textH + AfxScaleY(4)
     SetWindowPos( ghThemeAlpha, 0, xEdit, yEdit, AfxScaleX(110), ctlH, SWP_NOZORDER or SWP_NOACTIVATE )
-    yEdit += ctlH + rowGap * 2
+    yEdit += ctlH
 
-    ' THE PICKER, at its own ideal size and NOT stretched to the column. It is the one control
-    ' on this page whose contents are a fixed grid of cells rather than a stretchable box, so
-    ' handing it an arbitrary width would clip its right-hand column of swatches -- honestly,
-    ' since the hit test clips with the painter, but pointlessly.
-    SetWindowPos( ghThemePicker, 0, xEdit, yEdit, nPickerW, nPickerH, SWP_NOZORDER or SWP_NOACTIVATE )
-    yEdit += nPickerH
-
+    ' The page is as tall as its tallest column.
     dim as long yBottom = yTop + listH
     if yEdit > yBottom then yBottom = yEdit
 
@@ -1064,20 +1093,28 @@ function frmOptionsTheme_Layout( byval nPage as long, byval hPage as HWND, byval
     ' rather than obviously wrong: the page does not scroll horizontally.
     if environ("TIKO_OPTIONS_SELFTEST") = "1" then
         dim as string sP
-        dim as long nRight = xEdit + nPickerW
-        if nRight <= contentR then sP = "PASS  " else sP = "FAIL  "
-        ? sP & "theme page: the colour picker fits inside the panel   [picker right=" & _
-            str(nRight) & " content right=" & str(contentR) & " pickerW=" & str(nPickerW) & "]"
 
-        if listW >= AfxScaleX(180) then sP = "PASS  " else sP = "FAIL  "
+        ' THE THREE COLUMNS MUST TILE THE WIDTH WITHOUT OVERLAPPING. This is the assertion that
+        ' matters on this page: the height stopped being the problem the moment the picker moved
+        ' out of the controls column, and the width became the problem in the same move. The
+        ' floor on listW is what makes an overflow show up HERE as an overlap rather than as a
+        ' silently clipped list.
+        if (xEdit + ctlW) <= contentR then sP = "PASS  " else sP = "FAIL  "
+        ? sP & "theme page: the three columns fit the panel width   [right edge=" & _
+            str(xEdit + ctlW) & " content right=" & str(contentR) & _
+            "  list=" & str(listW) & " picker=" & str(nPickerW) & " ctl=" & str(ctlW) & "]"
+
+        if listW >= AfxScaleX(THEME_LISTMINW) then sP = "PASS  " else sP = "FAIL  "
         ? sP & "theme page: the key list keeps its minimum width   [listW=" & str(listW) & _
-            " floor=" & str(AfxScaleX(180)) & "]"
+            " floor=" & str(AfxScaleX(THEME_LISTMINW)) & "]"
 
-        ' The picker must not run into the key list either -- the list is the taller of the two
-        ' columns, so an overlap here would be a column-width bug, not a vertical one.
-        if xEdit >= (padLeft + listW) then sP = "PASS  " else sP = "FAIL  "
-        ? sP & "theme page: the edit column starts clear of the key list   [xEdit=" & _
-            str(xEdit) & " list right=" & str(padLeft + listW) & "]"
+        if xPicker >= (padLeft + listW) then sP = "PASS  " else sP = "FAIL  "
+        ? sP & "theme page: the picker starts clear of the key list   [xPicker=" & _
+            str(xPicker) & " list right=" & str(padLeft + listW) & "]"
+
+        if xEdit >= (xPicker + nPickerW) then sP = "PASS  " else sP = "FAIL  "
+        ? sP & "theme page: the controls column starts clear of the picker   [xEdit=" & _
+            str(xEdit) & " picker right=" & str(xPicker + nPickerW) & "]"
     end if
 
     return yBottom + AfxScaleY(OPTROW_PADBOTTOM)
