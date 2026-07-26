@@ -116,6 +116,7 @@ private function frmOptions_PageTitle( byval nPage as long ) as DWSTRING
     select case nPage
         case OPTPAGE_GENERAL:         return L(226,"General Options")
         case OPTPAGE_EDITOR:          return L(110,"Code Editor")
+        case OPTPAGE_EDITOR2:         return L(107,"Advanced Code Editor")
         case OPTPAGE_COLORS:          return L(111,"Themes and Fonts")
         case OPTPAGE_COMPILER:        return L(112,"Compiler Setup")
         case OPTPAGE_LOCAL:           return L(129,"Localization")
@@ -894,11 +895,16 @@ private sub frmOptions_BuildNavList( byval hList as HWND )
     PsListTree_BeginUpdate( hList )
     PsListTree_Clear( hList )
 
-    ' FLAT -- no PsListTree_AddHeader calls anywhere. Eight pages read fine as one list, and
-    ' merging Advanced Code Editor into Code Editor had left three of the five groups
-    ' holding a single item each.
+    ' FLAT -- no PsListTree_AddHeader calls anywhere. The original dialog's five groups had
+    ' three holding a single item each, which is what made a flat list read better; splitting
+    ' Advanced Code Editor back out does not change that.
+    '
+    ' THE ORDER HERE IS THE ORDER THE USER SEES, and it is deliberately not the enum's order:
+    ' OPTPAGE_EDITOR2 is id 10 (appended, so stored page ids stay valid) but belongs directly
+    ' under Code Editor.
     PsListTree_AddString( hList, L(226,"General Options"),      OPTPAGE_GENERAL )
     PsListTree_AddString( hList, L(110,"Code Editor"),          OPTPAGE_EDITOR )
+    PsListTree_AddString( hList, L(107,"Advanced Code Editor"), OPTPAGE_EDITOR2 )
     PsListTree_AddString( hList, L(111,"Themes and Fonts"),     OPTPAGE_COLORS )
     PsListTree_AddString( hList, L(463,"Syntax Colors"),        OPTPAGE_SYNTAX )
     PsListTree_AddString( hList, L(464,"Interface Colors"),     OPTPAGE_INTERFACE )

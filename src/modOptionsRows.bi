@@ -84,7 +84,12 @@
 #define OPTPAGE_KEYWORDSEXTRA    7
 #define OPTPAGE_SYNTAX           8
 #define OPTPAGE_INTERFACE        9
-#define OPTPAGE_COUNT           10
+' ADVANCED CODE EDITOR -- restored. Appended rather than slotted in beside OPTPAGE_EDITOR
+' because these ids are persisted in OptionsDialogLastOpened and handed to PsListTree as item
+' data; renumbering would reopen the dialog on a different page than the user left it on. The
+' order the user SEES is the nav list's business (frmOptions_BuildNavList), not the enum's.
+#define OPTPAGE_EDITOR2         10
+#define OPTPAGE_COUNT           11
 
 
 ' ----------------------------------------------------------------------------------------

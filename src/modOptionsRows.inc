@@ -184,7 +184,7 @@ sub OptionsRows_Init()
     OptionsRows_Add( OPTPAGE_GENERAL, OPT_TOGGLE,  91, @gOptWork.CheckUpdates )      ' "Check for Updates"
 
     ' ---- Code Editor -----------------------------------------------------------------
-    ' Everything the old Code Editor page carried, in its original order...
+    ' Everything the old Code Editor page carried, in its original order.
     OptionsRows_Add( OPTPAGE_EDITOR, OPT_TOGGLE, 114, @gOptWork.SyntaxHighlighting )    ' "Syntax highlighting"
     OptionsRows_Add( OPTPAGE_EDITOR, OPT_TOGGLE, 116, @gOptWork.ConfineCaret )          ' "Confine caret to text"
     OptionsRows_Add( OPTPAGE_EDITOR, OPT_TOGGLE, 117, @gOptWork.HighlightCurrentLine )  ' "Highlight current line"
@@ -208,17 +208,22 @@ sub OptionsRows_Init()
                      L(272,"Mixed Case")  & chr(9) & _
                      L(132,"Original Case") )                                           ' "Case"
 
-    ' ...then everything the old Advanced Code Editor page carried, also in its original
-    ' order. The two pages are one scrolling list now, with no heading between them.
-    OptionsRows_Add( OPTPAGE_EDITOR, OPT_TOGGLE, 115, @gOptWork.Codetips )              ' "Enable CodeTips"
-    OptionsRows_Add( OPTPAGE_EDITOR, OPT_TOGGLE,  95, @gOptWork.AutoComplete )          ' "Enable Autocomplete"
-    OptionsRows_Add( OPTPAGE_EDITOR, OPT_TOGGLE, 417, @gOptWork.CharacterAutoComplete ) ' "Enable Character Autocompletion"
-    OptionsRows_Add( OPTPAGE_EDITOR, OPT_TOGGLE, 120, @gOptWork.AutoIndentation )       ' "Enable Auto Indentation"
+    ' ---- Advanced Code Editor --------------------------------------------------------
+    ' A SEPARATE PAGE AGAIN, holding exactly what the old frmOptionsEditor2 held, in its
+    ' original order. It was merged into Code Editor when the dialog was rebuilt, on the
+    ' grounds that one scrolling list read better than two pages; a fixed-size dialog that
+    ' scrolls only the Editor page turns that trade the other way, because twenty rows do not
+    ' fit and thirteen do. The boundary is not a new judgement -- it is the one the original
+    ' dialog drew, recovered from the deleted form rather than re-invented.
+    OptionsRows_Add( OPTPAGE_EDITOR2, OPT_TOGGLE, 115, @gOptWork.Codetips )              ' "Enable CodeTips"
+    OptionsRows_Add( OPTPAGE_EDITOR2, OPT_TOGGLE,  95, @gOptWork.AutoComplete )          ' "Enable Autocomplete"
+    OptionsRows_Add( OPTPAGE_EDITOR2, OPT_TOGGLE, 417, @gOptWork.CharacterAutoComplete ) ' "Enable Character Autocompletion"
+    OptionsRows_Add( OPTPAGE_EDITOR2, OPT_TOGGLE, 120, @gOptWork.AutoIndentation )       ' "Enable Auto Indentation"
     ' Gated, exactly as the old page gated it with EnableWindow.
-    OptionsRows_Add( OPTPAGE_EDITOR, OPT_TOGGLE, 416, @gOptWork.ForNextVariable, _
-                     @gOptWork.AutoIndentation )                                        ' "Append loop variable to For/Next statement"
-    OptionsRows_Add( OPTPAGE_EDITOR, OPT_TOGGLE, 412, @gOptWork.BraceHighlight )        ' "Enable Brace Highlighting"
-    OptionsRows_Add( OPTPAGE_EDITOR, OPT_TOGGLE, 419, @gOptWork.OccurrenceHighlight )   ' "Enable Occurrences Highlighting"
+    OptionsRows_Add( OPTPAGE_EDITOR2, OPT_TOGGLE, 416, @gOptWork.ForNextVariable, _
+                     @gOptWork.AutoIndentation )                                         ' "Append loop variable to For/Next statement"
+    OptionsRows_Add( OPTPAGE_EDITOR2, OPT_TOGGLE, 412, @gOptWork.BraceHighlight )        ' "Enable Brace Highlighting"
+    OptionsRows_Add( OPTPAGE_EDITOR2, OPT_TOGGLE, 419, @gOptWork.OccurrenceHighlight )   ' "Enable Occurrences Highlighting"
 
 end sub
 
@@ -1030,7 +1035,12 @@ sub OptionsRows_RunSelfTest( byval hPanel as HWND )
     dim as long nRowsLongest = 0
     for i as long = lbound(gOptRows) to ubound(gOptRows)
         if gOptRows(i).hCtrl = 0 then continue for
-        if gOptRows(i).nPage <> OPTPAGE_EDITOR then continue for
+        ' BOTH halves of the old Code Editor page. It was the longest page when it carried all
+        ' twenty rows; since the split it is thirteen, and measuring only that half would
+        ' quietly stop reporting on the widest control in the dialog.
+        dim as boolean bEditorPage = ((gOptRows(i).nPage = OPTPAGE_EDITOR) orelse _
+                                      (gOptRows(i).nPage = OPTPAGE_EDITOR2))
+        if bEditorPage = false then continue for
         nRowsLongest += 1
         dim as long cw, ch
         select case gOptRows(i).nKind
