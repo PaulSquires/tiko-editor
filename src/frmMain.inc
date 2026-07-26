@@ -142,21 +142,18 @@ function frmMain_SetStatusbar() as long
         wszText = "Spaces: " & gConfig.TabSize
         PsStatusBar_SetText( HWND_FRMMAIN_STATUSBAR, SPACES_PANEL, wszText )
         
-        ' PANEL File Encoding (Ansi, UTF-8, UTF-16)
+        ' PANEL File Encoding (Ansi, UTF-8, UTF-16) -- DISPLAY ONLY.
+        ' This must NOT call SCI_SETCODEPAGE. The status bar refreshes on every caret move,
+        ' and issuing a codepage change here reinterprets the document's existing bytes under
+        ' a new layout without converting them -- which corrupted the buffer the instant
+        ' FileEncoding was relabelled (INVARIANT E1). The codepage is owned by ApplyProperties
+        ' (on load) and ConvertTextBuffer (on an explicit user switch), nowhere else.
         select case pDoc->FileEncoding
-            case FILE_ENCODING_UTF8
-                wszText = "UTF-8"   
-                SciExec( hEdit, SCI_SETCODEPAGE, SC_CP_UTF8, 0 )
-            case FILE_ENCODING_UTF8_BOM
-                wszText = "UTF-8 (BOM)"   
-                SciExec( hEdit, SCI_SETCODEPAGE, SC_CP_UTF8, 0 )
-            case FILE_ENCODING_UTF16_BOM
-                wszText = "UTF-16 (BOM)"   
-                SciExec( hEdit, SCI_SETCODEPAGE, SC_CP_UTF8, 0 )
-            case else
-                wszText = "ANSI"  
-                SciExec( hEdit, SCI_SETCODEPAGE, 0, 0 )
-        end select 
+            case FILE_ENCODING_UTF8      : wszText = "UTF-8"
+            case FILE_ENCODING_UTF8_BOM  : wszText = "UTF-8 (BOM)"
+            case FILE_ENCODING_UTF16_BOM : wszText = "UTF-16 (BOM)"
+            case else                    : wszText = "ANSI"
+        end select
         PsStatusBar_SetText( HWND_FRMMAIN_STATUSBAR, UTF_PANEL, wszText )
 
         ' PANEL Line Endings
@@ -1639,6 +1636,9 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ' a fully parsed theme, and it snapshots/restores gTheme around its destructive cases.
     Theme_RunSelfTest()
     OptionsRows_RunBindTest()
+    ' Env-gated (TIKO_ENCODING_SELFTEST=1). Pure byte-exact + disk round-trip; needs no
+    ' document window, so it is safe to run here at startup.
+    Encoding_RunSelfTest()
     
     ' Set the small and large icon for the main window (must be set after main window is created)
     pWindow->BigIcon   = LoadImage( pWindow->InstanceHandle, "IMAGE_AAA_MAINICON", IMAGE_ICON, 32, 32, LR_SHARED)

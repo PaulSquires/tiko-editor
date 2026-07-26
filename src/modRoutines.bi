@@ -44,11 +44,10 @@ declare function DisableAllModeless() as long
 declare function EnableAllModeless() as long
 declare function GetTemporaryFilename( byref wszFolder as wstring, byref wszExtension as wstring) as string
 declare function GetFontCharSetID(byref wzCharsetName as DWSTRING ) as long
-declare function UnicodeToUtf8( byref wzUnicode as DWSTRING ) as string
-declare function Utf8ToAnsi(byref strUtf8 as string) as string
-declare function AnsiToUtf8( byref sAnsi as string ) as string
 declare function isUTF8encoded(byref s as string) as boolean
-declare function ConvertTextBuffer( byval pDoc as clsDocument ptr, byval FileEncoding as long ) as Long
+declare function Scintilla_GetTextBytes( byval hEdit as hwnd ) as string
+declare function Doc_EncodeForDisk( byref sBuffer as string, byval bSourceIsUtf8 as boolean, byval nTargetEnc as long, byref bLossy as boolean ) as string
+declare function ConvertTextBuffer( byval pDoc as clsDocument ptr, byval nNewEncoding as long ) as boolean
 declare function GetFileToString( byref wszFilename as const wstring, byref txtBuffer as string, byval pDoc as clsDocument ptr ) as boolean
 declare function IsCurrentLineIncludeFilename() as boolean
 declare function OpenSelectedDocument( byref wszFilename as wstring, byref wszFunctionName as wstring = "", byval nLineNumber as long = -1 ) as clsDocument ptr
