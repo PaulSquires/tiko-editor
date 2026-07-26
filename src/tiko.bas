@@ -124,6 +124,9 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "PsScrollPanel.inc"
 #include once "PsNumericUpDown.inc"
 #include once "PsMessageBox.inc"
+' PsColorPicker depends on nothing but PsBufferPaint (it owns no child window and no popup --
+' that is the whole design), so its position here is only for tidiness beside its siblings.
+#include once "PsColorPicker.inc"
 
 #include once "frmAbout.inc"
 #include once "frmTopTabs.inc"

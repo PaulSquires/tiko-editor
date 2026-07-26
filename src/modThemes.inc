@@ -1215,6 +1215,149 @@ end function
 
 
 ''
+''  TURN A THEME FILE'S COLOUR TEXT BACK INTO A COLORREF.  "r,g,b" or "r,g,b,a".
+''
+''  The inverse of Theme_FormatColor, and deliberately a SEPARATE function rather than a
+''  refactor of the parser's inline version: the parser is doing four other things on the same
+''  values and pulling that apart would be a rewrite of the hot path to serve one caller.
+''  Written to the same rules -- the component COUNT is what distinguishes "opaque" from an
+''  explicit alpha, because val("") is 0, i.e. fully TRANSPARENT, the exact opposite of what
+''  "r,g,b" means.
+''
+''  nAlpha comes back as -1 for "no alpha was supplied", which is the sentinel Theme_SetColor
+''  already takes.
+''
+private function Theme_ColorFromText( byval wszText as DWSTRING, _
+                                      byref clr as COLORREF, _
+                                      byref nAlpha as long _
+                                      ) as boolean
+
+    clr = 0
+    nAlpha = -1
+
+    dim as string s = trim( wszText )
+    if len(s) = 0 then return false
+    if AfxStrParseCount( s, "," ) < 3 then return false
+
+    dim as long r = val( AfxStrParse( s, 1, "," ) )
+    dim as long g = val( AfxStrParse( s, 2, "," ) )
+    dim as long b = val( AfxStrParse( s, 3, "," ) )
+    if r < 0 then r = 0
+    if r > 255 then r = 255
+    if g < 0 then g = 0
+    if g > 255 then g = 255
+    if b < 0 then b = 0
+    if b > 255 then b = 255
+    clr = BGR( r, g, b )
+
+    if AfxStrParseCount( s, "," ) >= 4 then
+        nAlpha = val( AfxStrParse( s, 4, "," ) )
+        if nAlpha < 0 then nAlpha = 0
+        if nAlpha > 255 then nAlpha = 255
+    end if
+
+    return true
+
+end function
+
+
+''
+''  ATTACH ONE CHANNEL TO A NAMED %MACRO.  The deliberate counterpart to detach-on-edit.
+''
+''  Theme_SetColor CLEARS a channel's macro name, so every edit erodes the palette and nothing
+''  rebuilds it -- a theme would drift toward all-literals and the macro list would become a
+''  museum. This is what makes the palette something a user can restore rather than only spend.
+''
+''  It routes the VALUE through Theme_SetColor and then re-attaches the name, rather than writing
+''  both itself. That is not a detour: Theme_SetColor is the one place a channel's value, its
+''  has* flags and its subsystem mask are decided, and a second writer would be a second set of
+''  rules to keep in step. The detach it performs on the way through is simply undone here.
+''
+''  A macro carries NO alpha -- the format has one value per macro and "%NAME,200" is not
+''  something the parser accepts -- so a macro whose own text happens to have four components
+''  still assigns its alpha to the key, and the WRITER will then emit that key as a literal
+''  rather than as %NAME. That is the honest outcome and it is documented on Theme_ChannelText.
+''
+''  Returns the subsystem mask, or THSUB_NONE when the macro or the key is unknown. Fills no
+''  globals and repaints nothing -- the caller decides when, exactly as Theme_SetColor does.
+''
+function Theme_AssignMacro( byval lookupKey as string, _
+                            byval nChannel as long, _
+                            byval wszMacro as DWSTRING _
+                            ) as ulong
+
+    dim as long nm = -1
+    for i as long = lbound(gThemeMacros) to ubound(gThemeMacros)
+        if gThemeMacros(i).name = wszMacro then nm = i : exit for
+    next
+    if nm < 0 then return THSUB_NONE
+
+    dim as COLORREF clr
+    dim as long nAlpha
+    if Theme_ColorFromText( gThemeMacros(nm).value, clr, nAlpha ) = false then return THSUB_NONE
+
+    dim as ulong nMask = Theme_SetColor( lookupKey, nChannel, clr, nAlpha )
+    if nMask = THSUB_NONE then return THSUB_NONE
+
+    ' Re-attach. Theme_SetColor cleared the name on the way past; this is the whole point of the
+    ' function.
+    dim as long n = Theme_FindEntry( lookupKey )
+    if n >= 0 then
+        if nChannel = THEMECH_FORE then
+            gTheme(n).foreMacro = wszMacro
+        elseif nChannel = THEMECH_BACK then
+            gTheme(n).backMacro = wszMacro
+        end if
+    end if
+
+    return nMask
+
+end function
+
+
+''
+''  How many named colours the current theme defines, and what one of them is. Thin accessors so
+''  a UI does not have to reach into gThemeMacros and re-implement the text parse.
+''
+function Theme_MacroCount() as long
+    if ubound(gThemeMacros) < lbound(gThemeMacros) then return 0
+    return ubound(gThemeMacros) - lbound(gThemeMacros) + 1
+end function
+
+function Theme_MacroAt( byval idx as long, _
+                        byref wszName as DWSTRING, _
+                        byref clr as COLORREF _
+                        ) as boolean
+
+    wszName = ""
+    clr = 0
+    if (idx < 0) orelse (idx > (ubound(gThemeMacros) - lbound(gThemeMacros))) then return false
+    dim as long i = lbound(gThemeMacros) + idx
+    dim as long nAlpha
+    if Theme_ColorFromText( gThemeMacros(i).value, clr, nAlpha ) = false then return false
+    wszName = gThemeMacros(i).name
+    return true
+end function
+
+
+''
+''  Which %MACRO is this channel currently attached to, or "" for a literal. Read by the UI so it
+''  can show the user what a key refers to before they change it.
+''
+function Theme_ChannelMacro( byval lookupKey as string, byval nChannel as long ) as DWSTRING
+    dim as DWSTRING wszOut
+    dim as long n = Theme_FindEntry( lookupKey )
+    if n < 0 then return wszOut
+    if nChannel = THEMECH_FORE then
+        wszOut = gTheme(n).foreMacro
+    elseif nChannel = THEMECH_BACK then
+        wszOut = gTheme(n).backMacro
+    end if
+    return wszOut
+end function
+
+
+''
 ''  HOW ONE CHANNEL SHOULD BE WRITTEN
 ''
 ''  "%NAME" while the key is still attached to a macro, otherwise literal r,g,b[,a]. The

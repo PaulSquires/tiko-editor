@@ -33,6 +33,7 @@ dim shared ghThemeUnder     as HWND      ' PsToggle
 dim shared ghThemeAlpha     as HWND      ' PsNumericUpDown
 dim shared ghThemeResetF    as HWND      ' PsButton -- undo this key's foreground
 dim shared ghThemeResetB    as HWND      ' PsButton -- undo this key's background
+dim shared ghThemePicker    as HWND      ' PsColorPicker -- embedded, replaces the modal dialog
 
 dim shared gThemeBuilt      as boolean
 dim shared gThemeCurPage    as long = OPTPAGE_NONE
@@ -45,9 +46,26 @@ dim shared gThemeRowBind(any) as long
 ' write the theme file at all.
 dim shared gThemeEdited     as boolean
 
-' ChooseColor's 16 custom slots. Kept across invocations so a colour mixed for one key is
-' still one click away for the next -- which matters a lot when building a coherent theme.
-dim shared gThemeCustom(0 to 15) as COLORREF
+' WHICH CHANNEL THE EMBEDDED PICKER IS EDITING -- THEMECH_FORE or THEMECH_BACK.
+'
+' The Foreground / Background buttons used to OPEN a modal colour dialog. They now SELECT, and
+' the picker below them retargets. That is the whole shape of the Phase-3 swap: a modal that
+' returns a colour becomes a panel that is always on screen, so "pick a colour" stops being a
+' round trip and becomes direct manipulation with the editor recolouring underneath it.
+dim shared gThemeChannel    as long = THEMECH_FORE
+
+' A drag is BEGIN, many MOVEs, then END. The fork prompt is a MESSAGE BOX, so it must fire at
+' most once per gesture and never during one -- this records that BEGIN has already asked.
+' It is also what lets a declined fork abandon the whole drag rather than re-asking on every
+' pixel of it.
+dim shared gThemeForkAsked  as boolean
+dim shared gThemeForkOK     as boolean
+
+' What the picker is currently pointed at, so a re-sync can tell "the user selected a different
+' key" from "the value under the same key just changed". Only the first re-establishes the
+' picker's Initial baseline -- see the bKeepInitial block in frmOptionsTheme_SyncEditControls.
+dim shared gThemePickerBind    as long = -1
+dim shared gThemePickerChannel as long = -1
 
 ' Drawn labels, same trick frmOptionsColors uses: captions are painted, not controls.
 type THEMELABEL_TYPE
@@ -351,6 +369,59 @@ private sub frmOptionsTheme_SyncEditControls()
         EnableWindow( ghThemeAlpha, bHasAlpha )
     end if
 
+    ' ---- retarget the embedded picker ----------------------------------------------------
+    if ghThemePicker then
+
+        ' A channel the key does not have cannot be edited, so fall back to the one it does.
+        ' Silently: the user picked a ROW, not a channel, and being told "this key has no
+        ' background" would be noise on a list where half the keys are foreground-only.
+        ' Hoisted to boolean locals rather than chained inline: mixing a comparison result with a
+        ' boolean field in one andalso chain trips fbc's warning 38, which is a real rule and not
+        ' noise (C:\dev\Learnings.md).
+        dim as boolean bOnFore = (gThemeChannel = THEMECH_FORE)
+        dim as boolean bOnBack = (gThemeChannel = THEMECH_BACK)
+        if bOnFore andalso (bHasFore = false) andalso bHasBack then
+            gThemeChannel = THEMECH_BACK
+        elseif bOnBack andalso (bHasBack = false) andalso bHasFore then
+            gThemeChannel = THEMECH_FORE
+        end if
+
+        ' The DEFAULT border marks the active channel. It is appearance-only and survives all
+        ' four moods, so it says "this is the one you are editing" without a second colour or a
+        ' toggle control -- and without claiming Enter from anywhere else in the dialog.
+        if ghThemeFore then PsButton_SetDefault( ghThemeFore, (gThemeChannel = THEMECH_FORE) )
+        if ghThemeBack then PsButton_SetDefault( ghThemeBack, (gThemeChannel = THEMECH_BACK) )
+
+        dim as COLORREF clrEdit = 0
+        dim as boolean bCanEdit = false
+        if nb >= 0 then
+            dim as long n2 = Theme_FindEntry( gThemeBind(nb).keyValue )
+            if n2 >= 0 then
+                if gThemeChannel = THEMECH_FORE then
+                    clrEdit  = gTheme(n2).foreground
+                    bCanEdit = bHasFore
+                else
+                    clrEdit  = gTheme(n2).background
+                    bCanEdit = bHasBack
+                end if
+            end if
+        end if
+
+        ' bKeepInitial IS THE POINT OF THIS BLOCK. "Initial" must mean "before you started
+        ' editing THIS key on THIS channel", so the baseline is re-established only when the key
+        ' or the channel actually moves -- not on every END, which would make the Initial swatch
+        ' chase the Current one and show nothing.
+        dim as boolean bSameTarget = ((nb = gThemePickerBind) andalso (gThemeChannel = gThemePickerChannel))
+        PsColorPicker_SetColor( ghThemePicker, clrEdit, 255, bSameTarget )
+        gThemePickerBind    = nb
+        gThemePickerChannel = gThemeChannel
+
+        ' The palette tab appears only when this theme actually defines named colours. A tab that
+        ' is always there and usually empty teaches the user to ignore it.
+        PsColorPicker_ShowPaletteTab( ghThemePicker, (Theme_MacroCount() > 0) )
+        EnableWindow( ghThemePicker, bCanEdit )
+    end if
+
     ' The swatches live in the list rows, so a change has to redraw the list too.
     AfxRedrawWindow( ghThemeKeys )
 
@@ -404,45 +475,149 @@ end function
 
 
 ' ========================================================================================
-' Colour edit. THE ONE PLACE a colour is chosen -- Phase 3 swaps PsColorPicker in here and
-' nothing else moves.
+' CHANNEL SELECTION.  The Foreground / Background buttons no longer open anything -- they say
+' which channel the embedded picker is pointed at, and the picker retargets.
+'
+' The active one is marked with PsButton's DEFAULT border, which is appearance-only and
+' survives all four moods, so it reads as "this is the one you are editing" without needing a
+' second colour or a toggle control.
 ' ========================================================================================
-private sub frmOptionsTheme_EditColor( byval nChannel as long )
+private sub frmOptionsTheme_SetChannel( byval nChannel as long )
+    if gThemeChannel = nChannel then exit sub
+    gThemeChannel = nChannel
+    frmOptionsTheme_SyncEditControls()
+end sub
+
+private sub frmOptionsTheme_ForeClick( byval hButton as HWND, byval id as long )
+    frmOptionsTheme_SetChannel( THEMECH_FORE )
+end sub
+
+private sub frmOptionsTheme_BackClick( byval hButton as HWND, byval id as long )
+    frmOptionsTheme_SetChannel( THEMECH_BACK )
+end sub
+
+
+' ========================================================================================
+' THE PICKER MOVED.  This is what the modal AfxChooseColorDialog call became.
+'
+' THE PHASE IS THE WHOLE REASON THIS WORKS. A drag emits BEGIN, many MOVEs and one END, and the
+' three are treated differently for one concrete reason: THE FORK PROMPT IS A MESSAGE BOX. Ask
+' on every MOVE and dragging across a built-in theme's matrix would stack a hundred modal
+' dialogs; ask only on END and the user would have watched the whole application recolour before
+' being told the change cannot be saved there.
+'
+' So the prompt goes on BEGIN -- before a single pixel has moved -- and its answer is remembered
+' for the rest of the gesture. A declined fork abandons the drag silently: nothing is written and
+' nothing repaints, which is the honest reading of "no, do not modify the built-in theme".
+'
+' A swatch click, a typed value and an arrow key all emit a bare END with no BEGIN before it, so
+' END has to be able to ask as well. gThemeForkAsked is what stops it asking twice.
+'
+' MOVE deliberately does NOT call frmOptionsTheme_SyncEditControls: that redraws the key list to
+' refresh its swatches, and doing it sixty times a second while dragging is exactly the kind of
+' work that makes a live preview feel worse than a modal.
+' ========================================================================================
+private sub frmOptionsTheme_PickerChanged( byval hCtrl as HWND, _
+                                           byval clr as COLORREF, _
+                                           byval nAlpha as ubyte, _
+                                           byval nPhase as long )
 
     dim as long nb = frmOptionsTheme_SelectedBind()
     if nb < 0 then exit sub
 
     dim as string sKey = gThemeBind(nb).keyValue
-    dim as long n = Theme_FindEntry( sKey )
-    if n < 0 then exit sub
 
-    dim as COLORREF clrCurrent = iif( nChannel = THEMECH_FORE, _
-                                      gTheme(n).foreground, gTheme(n).background )
+    ' The channel must exist on this key. The picker is disabled when it does not, but a stale
+    ' notification arriving as the selection moves would otherwise write to a null binding.
+    if gThemeChannel = THEMECH_FORE then
+        if gThemeBind(nb).pFore = 0 then exit sub
+    else
+        if gThemeBind(nb).pBack = 0 then exit sub
+    end if
 
-    dim as long lResult = AfxChooseColorDialog( HWND_FRMOPTIONS, clrCurrent, @gThemeCustom(0) )
-    if lResult = -1 then exit sub                       ' cancelled
+    if nPhase = CLR_PHASE_BEGIN then
+        gThemeForkAsked = true
+        gThemeForkOK    = frmOptionsTheme_EnsureForked()
+        if gThemeForkOK = false then exit sub
+    end if
 
-    dim as COLORREF clrNew = cast(COLORREF, lResult)
-    if clrNew = clrCurrent then exit sub                ' no change, so no fork prompt
+    if gThemeForkAsked = false then
+        gThemeForkAsked = true
+        gThemeForkOK    = frmOptionsTheme_EnsureForked()
+    end if
+    if gThemeForkOK = false then
+        ' Still inside a declined gesture. Reset the latch on the END so the NEXT gesture gets a
+        ' fresh chance to ask -- the user may well fork on the second attempt.
+        if nPhase = CLR_PHASE_END then gThemeForkAsked = false
+        exit sub
+    end if
+
+    ' Alpha rides ALONGSIDE the COLORREF, never folded into its high byte -- the house rule
+    ' stated in PsBufferPaint.bi, and unsafe to break because GDI reads 0x01/0x02 in that byte as
+    ' palette-relative. It is only passed on for a key that has somewhere to put it; everything
+    ' else gets -1, which is Theme_SetColor's "leave the alpha alone" sentinel.
+    dim as long nA = -1
+    if gThemeBind(nb).bAlphaCapable then nA = clng( nAlpha )
+
+    dim as ulong nMask = Theme_SetColor( sKey, gThemeChannel, clr, nA )
+    gThemeEdited = true
+
+    ' Live: the whole application recolours on the next coalescing tick. During a drag that
+    ' means it follows the cursor at ~30ms, which is the intended feel.
+    Theme_RequestApply( nMask )
+
+    if nPhase = CLR_PHASE_END then
+        gThemeForkAsked = false
+        frmOptionsTheme_SyncEditControls()
+    end if
+
+end sub
+
+
+' ========================================================================================
+' THE PALETTE TAB.  The theme's %MACRO definitions, offered as named colours.
+'
+' This is the format's own variables finally becoming a feature: a .theme file has been able to
+' declare "%accent: 97,175,239" and refer to it from a dozen keys since long before there was
+' any UI for it. The picker lists them and the host owns them entirely.
+' ========================================================================================
+private function frmOptionsTheme_PaletteCount( byval hCtrl as HWND ) as long
+    return Theme_MacroCount()
+end function
+
+private function frmOptionsTheme_PaletteEntry( byval hCtrl as HWND, _
+                                               byval idx as long, _
+                                               byref wszName as DWSTRING, _
+                                               byref clr as COLORREF _
+                                               ) as boolean
+    return Theme_MacroAt( idx, wszName, clr )
+end function
+
+
+' ASSIGN -- the counterpart to detach-on-edit, and the reason the palette can be rebuilt rather
+' than only spent. Editing a key that shares a macro detaches THAT key to a literal and leaves
+' the macro and its other users alone; without an explicit re-attach every edit would erode the
+' palette and a theme would drift toward all-literals.
+'
+' It forks like any other modification, because it changes what gets written to the file.
+private sub frmOptionsTheme_PaletteAssign( byval hCtrl as HWND, byval idx as long )
+
+    dim as long nb = frmOptionsTheme_SelectedBind()
+    if nb < 0 then exit sub
+
+    dim as DWSTRING wszName
+    dim as COLORREF clr
+    if Theme_MacroAt( idx, wszName, clr ) = false then exit sub
 
     if frmOptionsTheme_EnsureForked() = false then exit sub
 
-    dim as ulong nMask = Theme_SetColor( sKey, nChannel, clrNew )
-    gThemeEdited = true
+    dim as ulong nMask = Theme_AssignMacro( gThemeBind(nb).keyValue, gThemeChannel, wszName )
+    if nMask = THSUB_NONE then exit sub
 
-    ' Live: the editor behind the dialog recolours on the next coalescing tick.
+    gThemeEdited = true
     Theme_RequestApply( nMask )
     frmOptionsTheme_SyncEditControls()
 
-end sub
-
-
-private sub frmOptionsTheme_ForeClick( byval hButton as HWND, byval id as long )
-    frmOptionsTheme_EditColor( THEMECH_FORE )
-end sub
-
-private sub frmOptionsTheme_BackClick( byval hButton as HWND, byval id as long )
-    frmOptionsTheme_EditColor( THEMECH_BACK )
 end sub
 
 
@@ -683,6 +858,23 @@ sub frmOptionsTheme_Build( byval nPage as long, byval hPage as HWND )
     PsNumericUpDown_SetDecimalPlaces( ghThemeAlpha, 0 )
     PsNumericUpDown_SetValueChangedCallback( ghThemeAlpha, @frmOptionsTheme_AlphaChanged )
 
+    ' THE EMBEDDED PICKER. It adds NOTHING to frmOptions' message pump -- there is no
+    ' PsColorPicker_FilterMessage, unlike the PsComboBox and PsTextBox calls already in there.
+    ' That absence is the reason it is a panel rather than a dropdown.
+    ghThemePicker = PsColorPicker_Create( hPage, IDC_FRMOPTIONSTHEME_PICKER )
+    PsColorPicker_SetColorChangedCallback( ghThemePicker, @frmOptionsTheme_PickerChanged )
+    PsColorPicker_SetPaletteCallbacks( ghThemePicker, @frmOptionsTheme_PaletteCount, _
+                                       @frmOptionsTheme_PaletteEntry, @frmOptionsTheme_PaletteAssign )
+    ' Every word the user reads is supplied by the host: the control does no localization.
+    PsColorPicker_SetAssignText( ghThemePicker, L(481, "Use named color") )
+    PsColorPicker_SetPreviewText( ghThemePicker, L(482, "Initial"), L(483, "Current") )
+
+    ' THE PICKER'S OWN ALPHA FIELD STAYS HIDDEN, deliberately, even on an alpha-capable key.
+    ' This page already has a PsNumericUpDown bound to alpha, which knows which CHANNEL the
+    ' alpha belongs to (background for a selection highlight, foreground for an indicator) --
+    ' a distinction the picker has no way to make. Two editors for one value is how sync bugs
+    ' start, so there is one, and it is the one that is already right.
+
     frmOptionsTheme_ApplyTheme()
     frmOptionsTheme_PopulateList()
     frmOptionsTheme_SyncEditControls()
@@ -721,6 +913,29 @@ sub frmOptionsTheme_ApplyTheme()
     PsNumericUpDown_SetFont( ghThemeAlpha, OptionsFont_Base() )
     PsNumericUpDown_Refresh( ghThemeAlpha )
 
+    ' The picker's CHROME follows the dialog's theme. The colours it is EDITING are content and
+    ' are never themed -- which is worth saying out loud on this page of all places, because
+    ' here the content IS the theme and the two would otherwise be easy to conflate.
+    dim as PSCOLORPICKER_COLORS pc
+    pc.BackColor           = ghPanel.BackColor
+    pc.ForeColor           = ghPanel.ForeColor
+    pc.BorderColor         = ghEditor.Divider
+    pc.TabBackColor        = ghPanel.BackColor
+    pc.TabBackColorSel     = ghPanel.BackColorHot
+    pc.TabForeColor        = ghPanel.ForeColor
+    pc.TabForeColorSel     = ghPanel.ForeColorHot
+    pc.FieldBackColor      = ghEditor.BackColorText
+    pc.FieldForeColor      = ghEditor.ForeColorText
+    pc.FieldBorderColor    = ghEditor.Divider
+    pc.FieldBorderColorSel = ghUI.AccentColor
+    pc.SelRingColor        = ghUI.AccentColor
+    pc.FocusRingColor      = ghUI.AccentColor
+    ' HotRingColor is deliberately left at its white default: it is drawn ON a swatch of an
+    ' arbitrary colour, so it has to contrast with the CONTENT rather than agree with the chrome.
+    PsColorPicker_SetColors( ghThemePicker, @pc )
+    PsColorPicker_SetFont( ghThemePicker, OptionsFont_Base() )
+    PsColorPicker_Refresh( ghThemePicker )
+
 end sub
 
 
@@ -744,6 +959,7 @@ sub frmOptionsTheme_Show( byval nPage as long, byval bShow as boolean )
     ShowWindow( ghThemeItalic, nCmd )
     ShowWindow( ghThemeUnder, nCmd )
     ShowWindow( ghThemeAlpha, nCmd )
+    ShowWindow( ghThemePicker, nCmd )
 
 end sub
 
@@ -763,8 +979,18 @@ function frmOptionsTheme_Layout( byval nPage as long, byval hPage as HWND, byval
     dim as long padRight = AfxScaleX(OPTROW_PADRIGHT)
     dim as long y        = AfxScaleY(OPTROW_PADTOP)
     dim as long contentR = cxPanel - padRight
-    dim as long editW    = AfxScaleX(THEME_EDITCOLW)
     dim as long gapX     = AfxScaleX(16)
+
+    ' THE EDIT COLUMN IS AS WIDE AS THE PICKER SAYS IT NEEDS TO BE. GetIdealSize is valid before
+    ' the control has ever been sized, so the layout asks the control rather than carrying a
+    ' second copy of its dimensions -- which is what would rot the first time the matrix or the
+    ' cell size changed. THEME_EDITCOLW survives as a FLOOR for the buttons and toggles above it.
+    dim as long nPickerW, nPickerH
+    PsColorPicker_GetIdealSize( ghThemePicker, nPickerW, nPickerH )
+
+    dim as long editW = AfxScaleX(THEME_EDITCOLW)
+    if nPickerW > editW then editW = nPickerW
+
     dim as long listW    = contentR - padLeft - editW - gapX
     if listW < AfxScaleX(180) then listW = AfxScaleX(180)     ' narrow panel: keep it usable
     dim as long listH    = AfxScaleY(THEME_LISTHEIGHT)
@@ -817,10 +1043,42 @@ function frmOptionsTheme_Layout( byval nPage as long, byval hPage as HWND, byval
     frmOptionsTheme_AddLabel( L(462, "Opacity"), xEdit, yEdit, xEdit + editW, yEdit + textH )
     yEdit += textH + AfxScaleY(4)
     SetWindowPos( ghThemeAlpha, 0, xEdit, yEdit, AfxScaleX(110), ctlH, SWP_NOZORDER or SWP_NOACTIVATE )
-    yEdit += ctlH
+    yEdit += ctlH + rowGap * 2
+
+    ' THE PICKER, at its own ideal size and NOT stretched to the column. It is the one control
+    ' on this page whose contents are a fixed grid of cells rather than a stretchable box, so
+    ' handing it an arbitrary width would clip its right-hand column of swatches -- honestly,
+    ' since the hit test clips with the painter, but pointlessly.
+    SetWindowPos( ghThemePicker, 0, xEdit, yEdit, nPickerW, nPickerH, SWP_NOZORDER or SWP_NOACTIVATE )
+    yEdit += nPickerH
 
     dim as long yBottom = yTop + listH
     if yEdit > yBottom then yBottom = yEdit
+
+    ' ---- geometry assertions, gated on the Options self-test -------------------------------
+    ' THE ONLY AUTOMATED EVIDENCE THIS LAYOUT HAS. The theme self-test runs at startup, where
+    ' frmOptions does not exist, so it cannot see any of this; and the picker is the first
+    ' control on the page with an intrinsic size it will not give up, so "does it fit" stopped
+    ' being obvious the moment it went in. Asserted here rather than eyeballed, because the
+    ' failure mode -- the right-hand column of the matrix falling off the page -- is invisible
+    ' rather than obviously wrong: the page does not scroll horizontally.
+    if environ("TIKO_OPTIONS_SELFTEST") = "1" then
+        dim as string sP
+        dim as long nRight = xEdit + nPickerW
+        if nRight <= contentR then sP = "PASS  " else sP = "FAIL  "
+        ? sP & "theme page: the colour picker fits inside the panel   [picker right=" & _
+            str(nRight) & " content right=" & str(contentR) & " pickerW=" & str(nPickerW) & "]"
+
+        if listW >= AfxScaleX(180) then sP = "PASS  " else sP = "FAIL  "
+        ? sP & "theme page: the key list keeps its minimum width   [listW=" & str(listW) & _
+            " floor=" & str(AfxScaleX(180)) & "]"
+
+        ' The picker must not run into the key list either -- the list is the taller of the two
+        ' columns, so an overlap here would be a column-width bug, not a vertical one.
+        if xEdit >= (padLeft + listW) then sP = "PASS  " else sP = "FAIL  "
+        ? sP & "theme page: the edit column starts clear of the key list   [xEdit=" & _
+            str(xEdit) & " list right=" & str(padLeft + listW) & "]"
+    end if
 
     return yBottom + AfxScaleY(OPTROW_PADBOTTOM)
 

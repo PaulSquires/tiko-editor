@@ -40,6 +40,7 @@
 #Define IDC_FRMOPTIONSTHEME_NUMALPHA    9506
 #Define IDC_FRMOPTIONSTHEME_CMDRESETF   9507
 #Define IDC_FRMOPTIONSTHEME_CMDRESETB   9508
+#Define IDC_FRMOPTIONSTHEME_PICKER      9509
 
 declare function frmOptionsTheme_OwnsPage( byval nPage as long ) as boolean
 declare sub      frmOptionsTheme_Reset()
