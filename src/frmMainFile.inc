@@ -305,63 +305,15 @@ function OnCommand_FileDuplicate( _
         if AfxFileExists( wszFilename ) = false then exit do
     loop    
     
-    ' Save text buffer to disk by directly accessing buffer rather
-    ' saving it to an intermediary string variable first.
-    dim as zstring ptr psz = cast( zstring ptr, SciExec(pDoc->hWindow(0), SCI_GETCHARACTERPOINTER, 0, 0) )
-    dim as long sciCodePage = SciExec(pDoc->hWindow(0), SCI_GETCODEPAGE, 0, 0)   ' 0 or SC_CP_UTF8 
-    dim as DWSTRING wst
+    ' Encode the full Scintilla buffer through the single shared writer (same path as SaveFile).
+    dim as long sciCodePage = SciExec(pDoc->hWindow(0), SCI_GETCODEPAGE, 0, 0)   ' 0 or SC_CP_UTF8
 
     dim pStream as CFileStream
     if pStream.Open(wszFilename, STGM_CREATE or STGM_WRITE) = S_OK then
-        dim as string st
-        select case pDoc->FileEncoding
-            case FILE_ENCODING_ANSI
-                if sciCodePage = 0 then    
-                   pStream.Write psz, len(*psz)     ' no conversion necessary
-                else
-                   ' need to convert
-                   st = Utf8ToAnsi(*psz)
-                   pStream.Write strptr(st), len(st) 
-                end if    
-                
-            case FILE_ENCODING_UTF8
-                if sciCodePage = SC_CP_UTF8 then    
-                   ' no conversion necessary
-                   pStream.Write psz, len(*psz)     ' no conversion necessary
-                else
-                   ' need to convert
-                   st = AnsiToUtf8(*psz)
-                   pStream.Write strptr(st), len(st)
-                end if    
-
-            case FILE_ENCODING_UTF8_BOM
-                ' Output the BOM first
-                st = chr(&HEF, &HBB, &HBF)
-                pStream.Write strptr(st), len(st)
-                if sciCodePage = SC_CP_UTF8 then    
-                   ' no conversion necessary
-                   pStream.Write psz, len(*psz)     ' no conversion necessary
-                else
-                   ' need to convert
-                   st = AnsiToUtf8(*psz)
-                   pStream.Write strptr(st), len(st)
-                end if    
-
-            case FILE_ENCODING_UTF16_BOM
-                ' Output the BOM first
-                st = chr(&HFF, &HFE)
-                pStream.Write strptr(st), len(st)
-                if sciCodePage = SC_CP_UTF8 then    
-                   ' convert utf8 to utf16
-                   wst.Utf8 = *psz  ' convert the utf *psz from Utf8
-                   pStream.Write wst.m_pBuffer, wst.m_BufferLen
-                else
-                    ' need to convert ansi to unicode
-                    dim as DWSTRING wst = Wstr(*psz)
-                    pStream.Write wst.m_pBuffer, wst.m_BufferLen
-                end if    
-                
-        end select
+        dim as boolean bLossy
+        dim as string sOut = Doc_EncodeForDisk( Scintilla_GetTextBytes(pDoc->hWindow(0)), _
+                                                (sciCodePage = SC_CP_UTF8), pDoc->FileEncoding, bLossy )
+        pStream.Write strptr(sOut), len(sOut)
     end if
     pStream.Close
 

@@ -227,6 +227,13 @@ function clsDocument.AssignTextBuffer() as long
         end if
     end if
     if IsWindow(this.hWindow(0)) then
+        ' Establish the codepage on the still-EMPTY buffer before inserting text, so the
+        ' bytes are never interpreted under the wrong layout (INVARIANT E1). ApplyProperties
+        ' below sets the same value again idempotently; doing it here removes the reliance on
+        ' SetText happening to be byte-transparent. Codepage is per-view, so set both splits.
+        dim as long nInitCP = iif( this.FileEncoding = FILE_ENCODING_ANSI, 0, SC_CP_UTF8 )
+        SciMsg( pSci(0), SCI_SETCODEPAGE, nInitCP, 0 )
+        SciMsg( pSci(1), SCI_SETCODEPAGE, nInitCP, 0 )
         this.SetText(this.TextBuffer)
         this.TextBuffer = ""
         ' Set the previously saved positions
@@ -395,9 +402,8 @@ function clsDocument.SaveFile( byval bSaveAs as boolean = false ) as boolean
     dim sText        as string
     dim wszFilename  as wstring * MAX_PATH
     dim wszExtension as wstring * MAX_PATH
-    dim wszText      as wstring * MAX_PATH  
-    dim wst          as DWSTRING
-    
+    dim wszText      as wstring * MAX_PATH
+
     ' if this is a new Untitled document then set flag to display SaveAs dialog.
     if this.IsNewFlag then bSaveAs = true
         
@@ -420,10 +426,10 @@ function clsDocument.SaveFile( byval bSaveAs as boolean = false ) as boolean
     ' displayed in order to create a Scintilla window. Simply need to exit.
     if pSci = 0 then return true
     
-    ' Save text buffer to disk by directly accessing buffer rather
-    ' saving it to an intermediary string variable first.
-    dim as zstring ptr psz = cast( zstring ptr, SciExec(this.hWindow(0), SCI_GETCHARACTERPOINTER, 0, 0) )
-    dim as long sciCodePage = SciMsg(pSci, SCI_GETCODEPAGE, 0, 0)   ' 0 or SC_CP_UTF8 
+    ' Encode the full Scintilla buffer to the document's target disk encoding (BOM included)
+    ' through the single shared writer, then write it in one call. See Doc_EncodeForDisk for
+    ' why the buffer is read by SCI_GETLENGTH and why UTF-16 no longer routes through DWSTRING.
+    dim as long sciCodePage = SciMsg(pSci, SCI_GETCODEPAGE, 0, 0)   ' 0 or SC_CP_UTF8
 
     dim as DWSTRING wszSaveFilename
     if AfxFileExists(wszFilename) then AfxDeleteFile(wszFilename)
@@ -431,58 +437,13 @@ function clsDocument.SaveFile( byval bSaveAs as boolean = false ) as boolean
 
     dim pStream as CFileStream
     if pStream.Open(wszSaveFilename, STGM_CREATE or STGM_WRITE) = S_OK then
-        dim as string st
-        select case this.FileEncoding
-            case FILE_ENCODING_ANSI
-                if sciCodePage = 0 then    
-                   pStream.Write psz, len(*psz)     ' no conversion necessary
-                else
-                   ' need to convert
-                   st = Utf8ToAnsi(*psz)
-                   pStream.Write strptr(st), len(st) 
-                end if    
-                
-            case FILE_ENCODING_UTF8
-                if sciCodePage = SC_CP_UTF8 then    
-                   ' no conversion necessary
-                   pStream.Write psz, len(*psz)     ' no conversion necessary
-                else
-                   ' need to convert
-                   st = AnsiToUtf8(*psz)
-                   pStream.Write strptr(st), len(st)
-                end if    
-
-            case FILE_ENCODING_UTF8_BOM
-                ' Output the BOM first
-                st = chr(&HEF, &HBB, &HBF)
-                pStream.Write strptr(st), len(st)
-                if sciCodePage = SC_CP_UTF8 then    
-                   ' no conversion necessary
-                   pStream.Write psz, len(*psz)     ' no conversion necessary
-                else
-                   ' need to convert
-                   st = AnsiToUtf8(*psz)
-                   pStream.Write strptr(st), len(st)
-                end if    
-
-            case FILE_ENCODING_UTF16_BOM
-                ' Output the BOM first
-                st = chr(&HFF, &HFE)
-                pStream.Write strptr(st), len(st)
-                if sciCodePage = SC_CP_UTF8 then    
-                   ' convert utf8 to utf16
-                   wst.Utf8 = *psz  ' convert the utf *psz from Utf8
-                   pStream.Write wst.m_pBuffer, wst.m_BufferLen
-                else
-                    ' need to convert ansi to unicode
-                    dim as DWSTRING wst = Wstr(*psz)
-                    pStream.Write wst.m_pBuffer, wst.m_BufferLen
-                end if    
-                
-        end select
+        dim as boolean bLossy
+        dim as string sOut = Doc_EncodeForDisk( Scintilla_GetTextBytes(this.hWindow(0)), _
+                                                (sciCodePage = SC_CP_UTF8), this.FileEncoding, bLossy )
+        pStream.Write strptr(sOut), len(sOut)
     end if
     pStream.Close
-    
+
     this.DiskFilename = wszFilename
     this.DateFileTime = AfxGetFileLastWriteTime( wszFilename )
     
@@ -512,10 +473,8 @@ function clsDocument.SaveTempFile( byval wszFilename as DWSTRING ) as boolean
     ' displayed in order to create a Scintilla window. Simply need to exit.
     if pSci = 0 then return true
     
-    ' Save text buffer to disk by directly accessing buffer rather
-    ' saving it to an intermediary string variable first.
-    dim as zstring ptr psz = cast( zstring ptr, SciExec(this.hWindow(0), SCI_GETCHARACTERPOINTER, 0, 0) )
-    dim as long sciCodePage = SciMsg(pSci, SCI_GETCODEPAGE, 0, 0)   ' 0 or SC_CP_UTF8 
+    ' Encode the full Scintilla buffer through the single shared writer (same path as SaveFile).
+    dim as long sciCodePage = SciMsg(pSci, SCI_GETCODEPAGE, 0, 0)   ' 0 or SC_CP_UTF8
 
     dim as DWSTRING wszSaveFilename
     if AfxFileExists(wszFilename) then AfxDeleteFile(wszFilename)
@@ -523,59 +482,13 @@ function clsDocument.SaveTempFile( byval wszFilename as DWSTRING ) as boolean
 
     dim pStream as CFileStream
     if pStream.Open(wszSaveFilename, STGM_CREATE or STGM_WRITE) = S_OK then
-        dim as DWSTRING wst          
-        dim as string st
-        select case this.FileEncoding
-            case FILE_ENCODING_ANSI
-                if sciCodePage = 0 then    
-                   pStream.Write psz, len(*psz)     ' no conversion necessary
-                else
-                   ' need to convert
-                   st = Utf8ToAnsi(*psz)
-                   pStream.Write strptr(st), len(st) 
-                end if    
-                
-            case FILE_ENCODING_UTF8
-                if sciCodePage = SC_CP_UTF8 then    
-                   ' no conversion necessary
-                   pStream.Write psz, len(*psz)     ' no conversion necessary
-                else
-                   ' need to convert
-                   st = AnsiToUtf8(*psz)
-                   pStream.Write strptr(st), len(st)
-                end if    
-
-            case FILE_ENCODING_UTF8_BOM
-                ' Output the BOM first
-                st = chr(&HEF, &HBB, &HBF)
-                pStream.Write strptr(st), len(st)
-                if sciCodePage = SC_CP_UTF8 then    
-                   ' no conversion necessary
-                   pStream.Write psz, len(*psz)     ' no conversion necessary
-                else
-                   ' need to convert
-                   st = AnsiToUtf8(*psz)
-                   pStream.Write strptr(st), len(st)
-                end if    
-
-            case FILE_ENCODING_UTF16_BOM
-                ' Output the BOM first
-                st = chr(&HFF, &HFE)
-                pStream.Write strptr(st), len(st)
-                if sciCodePage = SC_CP_UTF8 then    
-                   ' convert utf8 to utf16
-                   wst.Utf8 = *psz  ' convert the utf *psz from Utf8
-                   pStream.Write wst.m_pBuffer, wst.m_BufferLen
-                else
-                    ' need to convert ansi to unicode
-                    dim as DWSTRING wst = Wstr(*psz)
-                    pStream.Write wst.m_pBuffer, wst.m_BufferLen
-                end if    
-                
-        end select
+        dim as boolean bLossy
+        dim as string sOut = Doc_EncodeForDisk( Scintilla_GetTextBytes(this.hWindow(0)), _
+                                                (sciCodePage = SC_CP_UTF8), this.FileEncoding, bLossy )
+        pStream.Write strptr(sOut), len(sOut)
     end if
     pStream.Close
-    
+
     function = false
 end function
 

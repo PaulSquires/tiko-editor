@@ -88,6 +88,10 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "PsBufferPaint.inc"
 #include once "modRoutines.inc"
 #include once "clsDocument.inc"
+' Encoding conversion self-test. After modRoutines.inc (Doc_EncodeForDisk/GetFileToString)
+' and clsDocument.inc (the clsDocument type it instantiates for the disk round-trip).
+#include once "modEncodingSelfTest.bi"
+#include once "modEncodingSelfTest.inc"
 #include once "clsApp.inc"
 #include once "clsSymbolDb.inc"
 #include once "clsScanMgr.inc"

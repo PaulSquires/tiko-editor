@@ -183,37 +183,22 @@ function OnCommand_EditEncoding( _
             ) as LRESULT
 
 
-    select case id      
-        case IDM_ANSI
-            if pDoc->FileEncoding <> FILE_ENCODING_ANSI THEN 
-                ' Convert buffer to ANSI and redisplay the text in the editor
-                ConvertTextBuffer(pDoc, FILE_ENCODING_ANSI)
-                pDoc->UserModified = true
-            end if   
-            pDoc->FileEncoding = FILE_ENCODING_ANSI 
-      
-        case IDM_UTF8
-            if pDoc->FileEncoding <> FILE_ENCODING_UTF8 THEN 
-                ConvertTextBuffer(pDoc, FILE_ENCODING_UTF8)
-                pDoc->UserModified = true
-            end if   
-            pDoc->FileEncoding = FILE_ENCODING_UTF8
- 
-        case IDM_UTF8BOM
-            if pDoc->FileEncoding <> FILE_ENCODING_UTF8_BOM THEN 
-                ConvertTextBuffer(pDoc, FILE_ENCODING_UTF8_BOM)
-                pDoc->UserModified = true
-            end if   
-            pDoc->FileEncoding = FILE_ENCODING_UTF8_BOM 
-      
-        case IDM_UTF16BOM
-            if pDoc->FileEncoding <> FILE_ENCODING_UTF16_BOM THEN 
-                ConvertTextBuffer(pDoc, FILE_ENCODING_UTF16_BOM)
-                pDoc->UserModified = true
-            end if   
-            pDoc->FileEncoding = FILE_ENCODING_UTF16_BOM 
+    ' Map the menu command to a target encoding. ConvertTextBuffer owns BOTH the byte
+    ' conversion and the FileEncoding relabel (INVARIANT E1); the caller must not assign
+    ' FileEncoding itself, nor override the function's decision -- a lossy conversion the
+    ' user cancels must leave the document untouched.
+    dim as long nEnc = -1
+    select case id
+        case IDM_ANSI     : nEnc = FILE_ENCODING_ANSI
+        case IDM_UTF8     : nEnc = FILE_ENCODING_UTF8
+        case IDM_UTF8BOM  : nEnc = FILE_ENCODING_UTF8_BOM
+        case IDM_UTF16BOM : nEnc = FILE_ENCODING_UTF16_BOM
     end select
-   
+
+    if nEnc <> -1 andalso nEnc <> pDoc->FileEncoding then
+        if ConvertTextBuffer( pDoc, nEnc ) then pDoc->UserModified = true
+    end if
+
     frmMain_SetStatusbar
 
     function = 0
