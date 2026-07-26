@@ -58,6 +58,19 @@ declare function isMouseOverRECT( byval hWin as HWND, byval rc as RECT ) as bool
 declare function isMouseOverWindow( byval hChild as HWND ) as boolean
 declare function PaintRect( byval hDC as HDC, byval rc as RECT ptr, byval clr as COLORREF ) as long
 
+' How PaintImage places a bitmap in the destination rect.
+'   ASPECT  - scale to FIT inside the rect, aspect preserved, then centre (letterbox).
+'             The default: an icon dropped into a cell of a different shape should keep its
+'             proportions, not stretch. Never upscales past the rect, but WILL upscale a small
+'             image up to the rect (the cell states the size the host wants).
+'   STRETCH - fill the rect exactly, aspect ignored.
+'   CENTER  - draw at natural pixel size, centred, clipped by the rect if larger. No scaling.
+enum PS_IMGFIT
+    PS_IMGFIT_ASPECT = 0
+    PS_IMGFIT_STRETCH
+    PS_IMGFIT_CENTER
+end enum
+
 type PsBufferPaint
     private:
         _hwnd            as HWND
@@ -207,6 +220,25 @@ type PsBufferPaint
                 byval pts as POINT ptr, _
                 byval nCount as long, _
                 byval nPenWidth as long = 0 _
+                ) as long
+    ' Draw a GDI+ image (a CGpImage/CGpBitmap ptr, e.g. from PsImage.Image()) into rc.
+    '
+    ' This is where a control shows a real .ico/.png/.bmp instead of a Segoe Fluent Icons
+    ' glyph. The load/own/measure half lives in PsImage; the DRAW is here because it must go
+    ' through the buffer's OWN _pGraphics -- a control building a second CGpGraphics on this
+    ' same HDC would put two independently-batching GDI+ objects on one surface with nothing
+    ' coordinating their flushes (the reason PaintGradientRect had to live here too).
+    '
+    ' Takes a CGpImage ptr, NOT a PsImage ptr, so this class gains no dependency on PsImage:
+    ' the two are decoupled and either can be adopted alone.
+    '
+    ' nFit chooses placement (see the PS_IMGFIT enum). Scaling is HighQualityBicubic so a cell
+    ' a few pixels off the image's native size stays clean. Purely additive -- no existing
+    ' method touched, so the vendored copies re-sync mechanically (PaintPolygon's precedent).
+    declare function PaintImage( _
+                byval pImage as CGpImage ptr, _
+                byval rc as RECT ptr, _
+                byval nFit as long = PS_IMGFIT_ASPECT _
                 ) as long
     declare function PaintIconButton( _
             byval wszText as DWSTRING, _

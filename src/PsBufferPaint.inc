@@ -785,6 +785,68 @@ function PsBufferPaint.PaintPolygon( _
     function = 0
 end function
 
+' ========================================================================================
+' Draw a GDI+ image into rc, fitting it per nFit. See the .bi header for why the draw lives
+' here rather than in the control that owns the image.
+'
+' The image's alpha is honoured (a .png/.ico with transparency composites over whatever the
+' control already painted), so callers fill the icon cell's background first if they need one.
+' HighQualityBicubic is set for the duration and restored, because a control that paints many
+' cells does not want the surface's interpolation mode left changed under it.
+' ========================================================================================
+function PsBufferPaint.PaintImage( _
+            byval pImage as CGpImage ptr, _
+            byval rc as RECT ptr, _
+            byval nFit as long = PS_IMGFIT_ASPECT _
+            ) as long
+    if (pImage = 0) orelse (rc = 0) then return 0
+
+    dim as long iw = pImage->GetWidth()
+    dim as long ih = pImage->GetHeight()
+    if (iw <= 0) orelse (ih <= 0) then return 0
+
+    dim as long cw = rc->right - rc->left
+    dim as long ch = rc->bottom - rc->top
+    if (cw <= 0) orelse (ch <= 0) then return 0
+
+    dim as CGpGraphics ptr g = this.EnsureGraphics()
+    if g = 0 then return 0
+
+    dim as long dx, dy, dw, dh
+    select case nFit
+    case PS_IMGFIT_STRETCH
+        dx = rc->left : dy = rc->top : dw = cw : dh = ch
+    case PS_IMGFIT_CENTER
+        dw = iw : dh = ih
+        dx = rc->left + (cw - dw) \ 2
+        dy = rc->top  + (ch - dh) \ 2
+    case else                                   ' PS_IMGFIT_ASPECT
+        ' Scale by the tighter of the two ratios so the whole image fits, then centre the
+        ' scaled box in the cell.
+        dim as single sx = csng(cw) / csng(iw)
+        dim as single sy = csng(ch) / csng(ih)
+        dim as single s  = iif( sx < sy, sx, sy )
+        dw = clng( iw * s + 0.5 )
+        dh = clng( ih * s + 0.5 )
+        if dw < 1 then dw = 1
+        if dh < 1 then dh = 1
+        dx = rc->left + (cw - dw) \ 2
+        dy = rc->top  + (ch - dh) \ 2
+    end select
+
+    dim as long oldInterp = g->GetInterpolationMode()
+    dim as long oldSmooth = g->GetSmoothingMode()
+    g->SetInterpolationMode( InterpolationModeHighQualityBicubic )
+    g->SetSmoothingMode( SmoothingModeAntiAlias )
+
+    g->DrawImage( pImage, csng(dx), csng(dy), csng(dw), csng(dh) )
+
+    g->SetInterpolationMode( oldInterp )
+    g->SetSmoothingMode( oldSmooth )
+    _gpDirty = true
+    function = 0
+end function
+
 function PsBufferPaint.PaintIconButton( _
             byval wszText as DWSTRING, _
             byval rc as RECT ptr, _
@@ -1383,6 +1445,73 @@ sub PsBufferPaint_RunSelfTest( byval hwnd as HWND )
     ' the (larger) cached bitmap behind it.
     ColSpan( 15, a, b2 )
     Chk( "cached DC: blit bounded by rcItem", (b2 <= 11), "last row touched = " & b2 )
+
+    ' --- PaintImage: scale a bitmap into a cell. A WIDE 20x10 source into a SQUARE 30x30 cell
+    '     must letterbox under ASPECT (full width, centred band, top/bottom rows background),
+    '     fill the whole cell under STRETCH, and a null image must paint nothing. The source is
+    '     an opaque DIB built here -- alpha FF matters: a zero-alpha 32bpp DIB drawn through
+    '     GDI+ SourceOver composites to NOTHING, which would make a "drew something" assertion
+    '     pass for the wrong reason. This constructs its own CGpBitmap so the self-test needs
+    '     no PsImage. -------------------------------------------------------------------------
+    scope
+        dim as BITMAPINFO bi
+        bi.bmiHeader.biSize        = sizeof( BITMAPINFOHEADER )
+        bi.bmiHeader.biWidth       = 20
+        bi.bmiHeader.biHeight      = -10               ' top-down
+        bi.bmiHeader.biPlanes      = 1
+        bi.bmiHeader.biBitCount    = 32
+        bi.bmiHeader.biCompression = BI_RGB
+        dim as ulong ptr pB
+        dim as HBITMAP hsrc = CreateDIBSection( null, @bi, DIB_RGB_COLORS, cast(any ptr ptr, @pB), null, 0 )
+        if hsrc andalso pB then
+            for i as long = 0 to (20 * 10) - 1 : pB[i] = &hFFC86432 : next   ' opaque; R=C8 G=64 B=32
+        end if
+        dim as CGpBitmap srcbmp = CGpBitmap( hsrc )
+        if hsrc then DeleteObject( hsrc )              ' GDI+ took a copy
+        dim as CGpImage ptr pSrc = cast( CGpImage ptr, @srcbmp )
+        dim as RECT cell = type( 10, 5, 40, 35 )       ' 30 x 30
+
+        ' ASPECT: scale = min(30/20, 30/10) = 1.5 -> 30x15 band, dy = 5 + (30-15)\2 = 12.
+        ClearSurf()
+        scope
+            dim bb as PsBufferPaint
+            bb.BeginDoubleBuffer( hwnd, gDC, rcAll )
+            bb.SetBackColor( CBACK ) : bb.PaintClientRect()
+            bb.PaintImage( pSrc, @cell, PS_IMGFIT_ASPECT )
+            bb.EndDoubleBuffer()
+        end scope
+        RowSpan( 20, a, b2 )        ' band centre-line
+        Chk( "PaintImage: aspect fit spans the cell width", _
+             (a >= 9) andalso (a <= 11) andalso (b2 >= 38) andalso (b2 <= 40), "x " & a & ".." & b2 )
+        RowSpan( 6, a, b2 )         ' well above the band
+        Chk( "PaintImage: aspect fit letterboxes the top", (a = -1), "top-row first-x = " & a )
+        RowSpan( 33, a, b2 )        ' well below the band
+        Chk( "PaintImage: aspect fit letterboxes the bottom", (a = -1), "bottom-row first-x = " & a )
+
+        ' STRETCH: the band fills the whole cell, so the top row now carries fill.
+        ClearSurf()
+        scope
+            dim bb as PsBufferPaint
+            bb.BeginDoubleBuffer( hwnd, gDC, rcAll )
+            bb.SetBackColor( CBACK ) : bb.PaintClientRect()
+            bb.PaintImage( pSrc, @cell, PS_IMGFIT_STRETCH )
+            bb.EndDoubleBuffer()
+        end scope
+        RowSpan( 7, a, b2 )
+        Chk( "PaintImage: stretch fills the whole cell height", (a <> -1), "top-of-cell first-x = " & a )
+
+        ' A null image is a silent no-op.
+        ClearSurf()
+        scope
+            dim bb as PsBufferPaint
+            bb.BeginDoubleBuffer( hwnd, gDC, rcAll )
+            bb.SetBackColor( CBACK ) : bb.PaintClientRect()
+            bb.PaintImage( 0, @cell, PS_IMGFIT_ASPECT )
+            bb.EndDoubleBuffer()
+        end scope
+        Chk( "PaintImage: null image paints nothing", (ToneCount( 0, 0, SW - 1, SH - 1 ) = 1), _
+             "distinct tones on the whole surface = " & ToneCount( 0, 0, SW - 1, SH - 1 ) )
+    end scope
 
     DeleteObject( gBmp )
     DeleteDC( gDC )
