@@ -184,6 +184,30 @@ type PsBufferPaint
                 byval rc as RECT ptr, _
                 byval nPenWidth as long = 0 _
                 ) as long
+    ' Filled polygon from nCount vertices, optionally stroked. nPenWidth 0 = fill only.
+    '
+    ' THE VERTICES ARE USED EXACTLY AS GIVEN. Every other closed shape here carries GDI's
+    ' -1 on both extents, because each mirrors a GDI call (RoundRect, Ellipse) whose fill
+    ' stops a row short of its own rect. A polygon has no rect and no GDI original to
+    ' match -- the caller states the corners -- so there is nothing to subtract. Do not
+    ' "harmonise" this with its neighbours.
+    '
+    ' Always antialiased: a polygon exists for its diagonals, which is exactly what the
+    ' square-shape methods turn smoothing OFF for.
+    '
+    ' The stroke is CENTRED on the path, not inset inside the fill the way
+    ' PaintRoundOutline's is -- a general polygon cannot be offset inward without real
+    ' geometry work. It does take the same +0.5 and the same DPI scaling, so a 1px polygon
+    ' edge lines up with a 1px PaintRoundOutline frame it joins.
+    '
+    ' Added for PsTooltip's balloon stem. Purely additive -- no existing method was touched
+    ' -- which is what makes the vendored copies safe to re-sync mechanically
+    ' (PaintTextEx's and PaintGradientRect's precedent).
+    declare function PaintPolygon( _
+                byval pts as POINT ptr, _
+                byval nCount as long, _
+                byval nPenWidth as long = 0 _
+                ) as long
     declare function PaintIconButton( _
             byval wszText as DWSTRING, _
             byval rc as RECT ptr, _
