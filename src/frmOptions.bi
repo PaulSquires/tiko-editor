@@ -24,10 +24,20 @@
 #Define IDC_FRMOPTIONS_FIRSTROW                     2000
 
 ' Shell metrics, UNSCALED -- run through AfxScaleX/AfxScaleY at use.
+' THE CLIENT SIZE IS FIXED -- the dialog carries no WS_THICKFRAME. There is deliberately no
+' minimum size any more: there is only one size.
+'
+' Everything a page is allowed to occupy falls out of these four numbers, and it is worth writing
+' the sum down because every page layout is measured against it:
+'
+'     page viewport = (CLIENT_W - NAV_W) x (CLIENT_H - TITLE_H - FOOTER_H)
+'                   =  (900 - 220)       x  (620 - 52 - 58)
+'                   =   680              x   510          , unscaled
+'
+' A page that needs more than that no longer scrolls -- only OPTPAGE_EDITOR does -- so it would
+' CLIP. frmOptions_SelfTest asserts the fit for every page rather than leaving it to be noticed.
 #Define FRMOPTIONS_CLIENT_W                          900
 #Define FRMOPTIONS_CLIENT_H                          620
-#Define FRMOPTIONS_MIN_W                             700
-#Define FRMOPTIONS_MIN_H                             480
 #Define FRMOPTIONS_NAV_W                             220
 #Define FRMOPTIONS_TITLE_H                            52
 #Define FRMOPTIONS_FOOTER_H                           58

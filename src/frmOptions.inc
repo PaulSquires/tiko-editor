@@ -242,8 +242,140 @@ end sub
 
 
 ' ========================================================================================
+' THE PLAIN PAGE CONTAINER -- the parent of every page EXCEPT the Code Editor one.
+'
+' ONLY OPTPAGE_EDITOR SCROLLS. It is the one page with genuinely open-ended content (27 rows of
+' settings and growing), and it keeps the PsScrollPanel. Every other page is now parented to this
+' window instead, which is a plain child that never scrolls: whatever a page lays out is what the
+' user can see, so a page that does not fit CLIPS rather than quietly growing a scrollbar.
+'
+' That is the point rather than a limitation. A page that must fit is a page whose height can be
+' ASSERTED -- see frmOptions_RunFitSelfTest -- and a fixed-size dialog means there is exactly one
+' number to assert against instead of "whatever the user dragged the window to".
+'
+' IT IS NOT A Ps* CONTROL and should not become one. It exists to provide the four services the
+' scroll panel's page window was providing to those nine pages, and nothing else:
+'
+'   1. a themed background, painted through the same SCP_PAINTINFO the pages' _Paint callbacks
+'      already take -- so not one page's signature changed when they moved off the scroll panel
+'   2. WM_CTLCOLOR*, so a plain EDIT or STATIC on a page is themed rather than system-white
+'   3. forwarding unclaimed WM_COMMAND / WM_NOTIFY to the dialog, which is where the handlers are
+'   4. WS_EX_CONTROLPARENT, without which IsDialogMessage cannot Tab into the page at all
+'
+' Point 4 is the one worth stating twice: this window IS a container, so it needs the flag that
+' PsButton and its focus-taking siblings must NOT have. Same rule, opposite answer -- the test is
+' "does this window have children the dialog manager should find?", and here it does.
+' ========================================================================================
+dim shared HWND_FRMOPTIONS_PAGE as HWND
+dim shared ghOptPageBrush       as HBRUSH
+
+
+' Which window is this page's controls' parent? A pure function of the page id, and it has to be:
+' a page is BUILT onto a parent once and lives there, so the answer must never change for a given
+' page between one call and the next.
+private function frmOptions_PageParent( byval nPage as long ) as HWND
+    if nPage = OPTPAGE_EDITOR then return PsScrollPanel_GetPanel( HWND_FRMOPTIONS_SCROLL )
+    return HWND_FRMOPTIONS_PAGE
+end function
+
+
+private function frmOptions_PageWndProc( _
+            byval hwnd   as HWND, _
+            byval uMsg   as UINT, _
+            byval wParam as WPARAM, _
+            byval lParam as LPARAM _
+            ) as LRESULT
+
+    select case uMsg
+
+    case WM_ERASEBKGND
+        ' Never erase: WM_PAINT fills the whole client through the double buffer.
+        return true
+
+    case WM_PAINT
+        dim as PsBufferPaint b
+        b.BeginDoubleBuffer( hwnd )
+
+        ' The SAME payload the scroll panel hands its callback, filled by hand. That is what
+        ' let all nine pages move here without touching their _Paint functions.
+        dim p as SCP_PAINTINFO
+        p.hScrollPanel = hwnd
+        p.hPanel       = hwnd
+        p.b            = @b
+        GetClientRect( hwnd, @p.rcClient )
+        p.nPos         = 0
+
+        b.SetBackColor( ghPanel.BackColor )
+        b.PaintRect( @p.rcClient )
+
+        if OptionsRows_HasPage( gOptCurrentPage ) then
+            OptionsRows_PaintPage( gOptCurrentPage, @p )
+        elseif frmOptions_PanelHostedOwns( gOptCurrentPage ) then
+            frmOptions_PanelPaint( gOptCurrentPage, @p )
+        end if
+
+        b.EndDoubleBuffer()
+        return 0
+
+    case WM_CTLCOLORSTATIC, WM_CTLCOLORBTN, WM_CTLCOLOREDIT, WM_CTLCOLORLISTBOX
+        ' Without this a plain EDIT or STATIC on a page comes up system-white on a dark panel.
+        ' The brush is cached and rebuilt by frmOptions_ApplyTheme, because returning a brush
+        ' created here would leak one per repaint.
+        SetBkColor( cast(HDC, wParam), ghPanel.BackColor )
+        SetTextColor( cast(HDC, wParam), ghPanel.ForeColor )
+        if ghOptPageBrush = 0 then ghOptPageBrush = CreateSolidBrush( ghPanel.BackColor )
+        return cast( LRESULT, ghOptPageBrush )
+
+    case WM_COMMAND, WM_NOTIFY, WM_HSCROLL, WM_VSCROLL
+        ' The handlers live on the dialog, not here. Forwarded rather than handled so a page's
+        ' controls behave identically whichever container they happen to be parented to.
+        return SendMessageW( GetParent(hwnd), uMsg, wParam, lParam )
+
+    case WM_NCDESTROY
+        dim as CWindow ptr pWindow = AfxCWindowPtr(hwnd)
+        if pWindow then delete(pWindow)
+        return 0
+
+    end select
+
+    function = DefWindowProc( hwnd, uMsg, wParam, lParam )
+end function
+
+
+' Lay out the current page on the plain container. The scroll panel drives its own page through a
+' callback; this one has nobody to do that, so the dialog does it -- on every show and every time
+' the container is sized.
+'
+' THE RETURNED HEIGHT IS DELIBERATELY IGNORED HERE. On a scrolling page it sets the scroll range;
+' on a fixed one there is nothing to do with it, and pretending otherwise would invite a
+' "shrink to fit" that quietly made controls the wrong size. Overflow is a defect to be asserted,
+' not absorbed.
+private sub frmOptions_LayoutPlainPage()
+    if HWND_FRMOPTIONS_PAGE = 0 then exit sub
+    if gOptCurrentPage = OPTPAGE_NONE then exit sub
+    if gOptCurrentPage = OPTPAGE_EDITOR then exit sub
+
+    dim as RECT rc
+    GetClientRect( HWND_FRMOPTIONS_PAGE, @rc )
+    dim as long cx = rc.right - rc.left
+    if cx <= 0 then exit sub
+
+    if OptionsRows_HasPage( gOptCurrentPage ) then
+        OptionsRows_LayoutPage( gOptCurrentPage, HWND_FRMOPTIONS_PAGE, cx )
+    elseif frmOptions_PanelHostedOwns( gOptCurrentPage ) then
+        frmOptions_PanelLayout( gOptCurrentPage, HWND_FRMOPTIONS_PAGE, cx )
+    end if
+end sub
+
+
+' ========================================================================================
 ' The scroll panel's viewport changed width: re-flow the current page and report how tall
 ' it now is. cxPanel is handed to us -- do not read the width back off the window.
+'
+' ONLY OPTPAGE_EDITOR REACHES THIS NOW. The other nine pages are on the plain container and are
+' laid out by frmOptions_LayoutPlainPage. The dispatch below is left general rather than being
+' narrowed to the editor page, so that moving a page back onto the scroll panel is a one-line
+' change to frmOptions_PageParent and nothing else.
 ' ========================================================================================
 private function frmOptions_PageLayoutCallback( byval hPanel as HWND, byval cxPanel as integer ) as integer
 
@@ -271,7 +403,7 @@ sub frmOptions_ShowPage( byval nPage as long )
     if nPage >= OPTPAGE_COUNT then exit sub
     if nPage = gOptCurrentPage then exit sub
 
-    dim as HWND hPanel = PsScrollPanel_GetPanel( HWND_FRMOPTIONS_SCROLL )
+    dim as HWND hPanel = frmOptions_PageParent( nPage )
     if hPanel = 0 then exit sub
 
     ' Hide the outgoing page.
@@ -301,9 +433,24 @@ sub frmOptions_ShowPage( byval nPage as long )
         frmOptions_PanelShow( nPage, true )
     end if
 
-    ' Re-flow for the current width and go back to the top of the page.
-    PsScrollPanel_SetPos( HWND_FRMOPTIONS_SCROLL, 0 )
-    PsScrollPanel_Recalc( HWND_FRMOPTIONS_SCROLL )
+    ' Swap the containers. Exactly one is visible at a time and they occupy the same rect, so
+    ' the outgoing one is hidden BEFORE the incoming one is shown -- the other order flashes the
+    ' new page's controls over the old page for one frame.
+    dim as boolean bScrolls = (nPage = OPTPAGE_EDITOR)
+    if bScrolls then
+        ShowWindow( HWND_FRMOPTIONS_PAGE, SW_HIDE )
+        ' NEITHER container is shown here -- frmOptions_ShowPage picks one below, and showing both
+    ' would flash the scroll panel over a page that does not live on it.
+        ' Re-flow for the current width and go back to the top of the page.
+        PsScrollPanel_SetPos( HWND_FRMOPTIONS_SCROLL, 0 )
+        PsScrollPanel_Recalc( HWND_FRMOPTIONS_SCROLL )
+    else
+        ShowWindow( HWND_FRMOPTIONS_SCROLL, SW_HIDE )
+        ShowWindow( HWND_FRMOPTIONS_PAGE, SW_SHOW )
+        ' Nothing drives a plain container's layout for it, so the dialog does.
+        frmOptions_LayoutPlainPage()
+    end if
+
     AfxRedrawWindow( hPanel )
     AfxRedrawWindow( HWND_FRMOPTIONS )
 
@@ -337,8 +484,13 @@ private sub frmOptions_PositionWindows( byval hwnd as HWND )
     dim as long scrollH = bodyH - titleH
     if scrollW < 0 then scrollW = 0
     if scrollH < 0 then scrollH = 0
+    ' BOTH containers get the identical rect. They are alternatives, not neighbours -- which is
+    ' what lets frmOptions_PageParent decide between them without the layout knowing.
     SetWindowPos( HWND_FRMOPTIONS_SCROLL, 0, scrollX, scrollY, scrollW, scrollH, _
                   SWP_NOZORDER or SWP_NOACTIVATE )
+    SetWindowPos( HWND_FRMOPTIONS_PAGE, 0, scrollX, scrollY, scrollW, scrollH, _
+                  SWP_NOZORDER or SWP_NOACTIVATE )
+    frmOptions_LayoutPlainPage()
 
     dim as long btnY = rc.bottom - footerH + (footerH - btnH) \ 2
     SetWindowPos( GetDlgItem(hwnd, IDC_FRMOPTIONS_CMDCANCEL), 0, _
@@ -483,22 +635,104 @@ private function frmOptions_OnCommand( _
 end function
 
 
+' THE DIALOG IS NOT RESIZABLE, so there is no WM_GETMINMAXINFO handler and no minimum size.
+'
+' It used to be: WS_THICKFRAME plus a minimum of 700x480, with every page re-flowing to whatever
+' width it was dragged to. That is gone deliberately. A FIXED client turns "does this page fit?"
+' from a question with no stable answer -- it depended on how the user had dragged the window --
+' into one number that can be asserted, which is what frmOptions_SelfTest below does.
+'
+' The layouts still TAKE a width and still compute from it. That is not dead code: they are called
+' with the fixed width, and at 175% DPI it is a different number than at 100%. Nothing assumes a
+' constant.
+
+
 ' ========================================================================================
-' Keep the dialog usable when dragged small.
+' DOES EVERY PAGE FIT?                                  (TIKO_OPTIONS_SELFTEST=1)
+'
+' The dialog is fixed-size and only OPTPAGE_EDITOR scrolls, so every other page has to fit its
+' viewport or it CLIPS -- silently, with no scrollbar to hint that anything is missing.
+'
+' THIS CANNOT BE COMPUTED STATICALLY, which is why it is a runtime assertion rather than a
+' comment. Each page's Layout accumulates a running `y` over controls whose heights come from
+' GetIdealSize, the current font and the DPI; the answer at 100% is not the answer at 175%. So
+' the suite builds every page, lays it out at the real width, and compares what it asks for
+' against what it gets.
+'
+' IT VISITS THE PAGES THROUGH frmOptions_ShowPage, not by calling the layouts directly. A page
+' has to be BUILT before it can be laid out, and building is what ShowPage owns -- reaching past
+' it would measure a page whose controls do not exist yet and cheerfully report that nothing
+' overflows.
 ' ========================================================================================
-private function frmOptions_OnGetMinMaxInfo( byval hwnd as HWND, byval pmmi as MINMAXINFO ptr ) as LRESULT
-    if pmmi = 0 then return 0
-    ' The stored minimum is a CLIENT size; grow it by the frame so the constraint applies
-    ' to the window rect Windows actually checks.
-    dim as RECT rc
-    rc.left = 0: rc.top = 0
-    rc.right  = AfxScaleX(FRMOPTIONS_MIN_W)
-    rc.bottom = AfxScaleY(FRMOPTIONS_MIN_H)
-    AdjustWindowRectEx( @rc, GetWindowLongPtr(hwnd, GWL_STYLE), false, GetWindowLongPtr(hwnd, GWL_EXSTYLE) )
-    pmmi->ptMinTrackSize.x = rc.right - rc.left
-    pmmi->ptMinTrackSize.y = rc.bottom - rc.top
-    function = 0
-end function
+sub frmOptions_RunFitSelfTest()
+
+    if environ("TIKO_OPTIONS_SELFTEST") <> "1" then exit sub
+
+    dim as long nSaved = gOptCurrentPage
+
+    dim as RECT rcClient
+    GetClientRect( HWND_FRMOPTIONS, @rcClient )
+    dim as long nViewH = rcClient.bottom - AfxScaleY(FRMOPTIONS_TITLE_H) - AfxScaleY(FRMOPTIONS_FOOTER_H)
+    dim as long nViewW = rcClient.right - AfxScaleX(FRMOPTIONS_NAV_W)
+
+    ? ""
+    ? "--- TIKO_OPTIONS_SELFTEST (page fit) ---"
+    dim as string sHdr = "viewport " & str(nViewW) & " x " & str(nViewH) & " px at this DPI"
+    ? sHdr
+
+    dim as long nOver = 0
+
+    for nPage as long = 0 to OPTPAGE_COUNT - 1
+
+        frmOptions_ShowPage( nPage )
+
+        dim as HWND hPageWnd = frmOptions_PageParent( nPage )
+        if hPageWnd = 0 then continue for
+
+        dim as RECT rcPage
+        GetClientRect( hPageWnd, @rcPage )
+        dim as long cxPage = rcPage.right - rcPage.left
+        if cxPage <= 0 then cxPage = nViewW
+
+        dim as long nNeed = 0
+        if OptionsRows_HasPage( nPage ) then
+            nNeed = OptionsRows_LayoutPage( nPage, hPageWnd, cxPage )
+        elseif frmOptions_PanelHostedOwns( nPage ) then
+            nNeed = frmOptions_PanelLayout( nPage, hPageWnd, cxPage )
+        end if
+
+        ' OPTPAGE_EDITOR is the one page allowed to overflow -- it is the only one on a
+        ' PsScrollPanel, which is the whole point of the split. It is still MEASURED and
+        ' reported, because "the editor page needs 900px" is worth knowing even though it is
+        ' not a failure.
+        dim as boolean bMayScroll = (nPage = OPTPAGE_EDITOR)
+        dim as boolean bFits = (nNeed <= nViewH)
+
+        dim as string sVerdict
+        if bFits then
+            sVerdict = "PASS  "
+        elseif bMayScroll then
+            sVerdict = "scrolls"
+        else
+            sVerdict = "FAIL  "
+            nOver += 1
+        end if
+
+        dim as string sLine = sVerdict & " page " & str(nPage) & " " & _
+                              str( frmOptions_PageTitle( nPage ) ) & _
+                              "   needs " & str(nNeed) & " of " & str(nViewH)
+        ? sLine
+    next
+
+    dim as string sSum = "--- page fit: " & str(nOver) & " page(s) overflow a viewport they cannot scroll ---"
+    ? sSum
+    ? ""
+
+    ' Put the user back where they were. Leaving the dialog on whatever page the loop finished
+    ' with would be a self-test with a side effect, which is its own kind of bug.
+    if nSaved <> OPTPAGE_NONE then frmOptions_ShowPage( nSaved )
+
+end sub
 
 
 ' ========================================================================================
@@ -529,9 +763,6 @@ function frmOptions_WndProc( _
             frmOptions_PositionWindows( hwnd )
             AfxRedrawWindow( hwnd )
             return 0
-
-        case WM_GETMINMAXINFO
-            return frmOptions_OnGetMinMaxInfo( hwnd, cast(MINMAXINFO ptr, lParam) )
 
         case WM_COMMAND
             return frmOptions_OnCommand( hwnd, loword(wParam), cast(HWND, lParam), hiword(wParam) )
@@ -618,6 +849,13 @@ private sub frmOptions_ApplyTheme( byval hwnd as HWND )
     PsListBox_SetBackColor( HWND_FRMOPTIONS_NAV, ghPanel.BackColor )
     PsListBox_SetScrollBarColors( HWND_FRMOPTIONS_NAV, ghPanel.BackColorScrollBar, _
                                  ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
+
+    ' The plain container's WM_CTLCOLOR brush is derived from the back colour, so it is rebuilt
+    ' here rather than at first use -- otherwise a theme change would keep handing out a brush of
+    ' the PREVIOUS background for the rest of the session.
+    if ghOptPageBrush then DeleteObject( ghOptPageBrush )
+    ghOptPageBrush = CreateSolidBrush( ghPanel.BackColor )
+    if HWND_FRMOPTIONS_PAGE then AfxRedrawWindow( HWND_FRMOPTIONS_PAGE )
 
     PsScrollPanel_SetColors( HWND_FRMOPTIONS_SCROLL, ghPanel.BackColor, ghPanel.ForeColor )
     PsScrollPanel_SetScrollBarColors( HWND_FRMOPTIONS_SCROLL, ghPanel.BackColorScrollBar, _
@@ -718,7 +956,7 @@ function frmOptions_Show( byval hWndParent as HWND ) as LRESULT
     dim pWindow as CWindow ptr = new CWindow
 
     HWND_FRMOPTIONS = pWindow->Create( hWndParent, L(113,"Environment Options"), @frmOptions_WndProc, 0, 0, 0, 0, _
-        WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_THICKFRAME or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
+        WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
         WS_EX_DLGMODALFRAME or WS_EX_CONTROLPARENT or WS_EX_LEFT )
     pWindow->SetClientSize( FRMOPTIONS_CLIENT_W, FRMOPTIONS_CLIENT_H )
     pWindow->Center( pWindow->hWindow, hWndParent )
@@ -734,6 +972,20 @@ function frmOptions_Show( byval hWndParent as HWND ) as LRESULT
     frmOptions_BuildNavList( HWND_FRMOPTIONS_NAV )
 
     ' ---- scrolling page area ---------------------------------------------------------
+    ' The plain page container, created BEFORE the scroll panel so it sits under it in the
+    ' z-order; they overlap exactly and only one is ever visible.
+    '
+    ' WS_EX_CONTROLPARENT IS LOAD-BEARING: this window really is a container, so IsDialogMessage
+    ' has to be told to descend into it. Without it Tab stops at the nav list and never reaches
+    ' any control on nine of the ten pages (C:\dev\Learnings.md).
+    scope
+        dim pPage as CWindow ptr = new CWindow
+        HWND_FRMOPTIONS_PAGE = pPage->Create( HWND_FRMOPTIONS, "", @frmOptions_PageWndProc, _
+                                              0, 0, 0, 0, _
+                                              WS_CHILD or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
+                                              WS_EX_CONTROLPARENT )
+    end scope
+
     HWND_FRMOPTIONS_SCROLL = PsScrollPanel_Create( HWND_FRMOPTIONS, IDC_FRMOPTIONS_SCROLLPANEL )
     PsScrollPanel_SetPaintCallback( HWND_FRMOPTIONS_SCROLL, @frmOptions_PagePaintCallback )
     PsScrollPanel_SetLayoutCallback( HWND_FRMOPTIONS_SCROLL, @frmOptions_PageLayoutCallback )
@@ -763,7 +1015,8 @@ function frmOptions_Show( byval hWndParent as HWND ) as LRESULT
     ShowWindow( hOK, SW_SHOW )
     ShowWindow( hCancel, SW_SHOW )
     ShowWindow( HWND_FRMOPTIONS_NAV, SW_SHOW )
-    ShowWindow( HWND_FRMOPTIONS_SCROLL, SW_SHOW )
+    ' NEITHER container is shown here -- frmOptions_ShowPage picks one below, and showing both
+    ' would flash the scroll panel over a page that does not live on it.
 
     ' No pages are created here any more -- every page (table-driven and panel-hosted) is
     ' built lazily on its first visit.
@@ -780,6 +1033,7 @@ function frmOptions_Show( byval hWndParent as HWND ) as LRESULT
     if nNavRow >= 0 then PsListBox_SetCurSel( HWND_FRMOPTIONS_NAV, nNavRow )
 
     OptionsRows_RunSelfTest( hPage )
+    frmOptions_RunFitSelfTest()
 
     ShowWindow( HWND_FRMOPTIONS, SW_SHOW )
     UpdateWindow( HWND_FRMOPTIONS )
