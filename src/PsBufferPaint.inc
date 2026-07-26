@@ -713,6 +713,78 @@ function PsBufferPaint.PaintEllipse( _
     function = 0
 end function
 
+' ========================================================================================
+' Filled polygon; strokes the outline too when nPenWidth > 0.
+'
+' THE VERTICES ARE USED EXACTLY AS GIVEN -- no -1, unlike every closed shape above. Those
+' each mirror a GDI original (RoundRect, Ellipse) whose fill measurably stops a row short of
+' its own rect, so they subtract one to match. A polygon has no rect and no GDI original:
+' the caller states the corners. Subtracting anything here would silently shrink a shape
+' whose whole point is that its geometry was computed by the caller.
+'
+' Always antialiased. PaintRectFactory and friends turn smoothing OFF for a square shape
+' because AA on an axis-aligned edge only makes it grey and soft -- but a polygon exists
+' for its DIAGONALS, and an unsmoothed diagonal is the jagged staircase this primitive was
+' added to avoid (PsToggle spent a version hand-rolling a 4x supersampler for exactly that
+' problem before the buffer moved to GDI+).
+'
+' The stroke is CENTRED on the path rather than inset inside the fill the way
+' PaintRoundOutline's is. Insetting a general polygon means offsetting each edge along its
+' own normal and re-intersecting -- real geometry work for no gain in the case this exists
+' for. It does take the same +0.5 half-pixel and the same DPI pen scaling, so a 1px polygon
+' edge lands on the same pixels as a 1px PaintRoundOutline frame it joins.
+'
+' Added for PsTooltip's balloon stem. Purely additive.
+' ========================================================================================
+function PsBufferPaint.PaintPolygon( _
+            byval pts as POINT ptr, _
+            byval nCount as long, _
+            byval nPenWidth as long = 0 _
+            ) as long
+    if pts = 0 then return 0
+    if nCount < 3 then return 0
+
+    ' Scale the pen here, as PaintLine and PaintRoundOutline both do. PaintEllipse does NOT,
+    ' and that is the odd one out rather than the precedent: the stem this was written for
+    ' is stroked alongside a PaintRoundOutline frame, and two edges of the same nominal
+    ' thickness must stay the same thickness at 175%.
+    if nPenWidth > 0 then
+        dim pWin as CWindow ptr = AfxCWindowPtr(_hwnd)
+        if pWin <> 0 then nPenWidth = pWin->ScaleY(nPenWidth)
+        if nPenWidth < 1 then nPenWidth = 1
+    end if
+
+    dim as CGpGraphics ptr g = this.EnsureGraphics()
+    if g = 0 then return 0
+
+    dim as long oldSmooth = g->GetSmoothingMode()
+    g->SetSmoothingMode( SmoothingModeAntiAlias )
+
+    redim as GpPointF ptsFill( 0 to nCount - 1 )
+    for i as long = 0 to nCount - 1
+        ptsFill(i).x = csng( pts[i].x )
+        ptsFill(i).y = csng( pts[i].y )
+    next
+    g->FillPolygon( this.BrushFor( CBufToARGB( _backcolor, _backalpha ) ), _
+                    @ptsFill(0), nCount )
+
+    if nPenWidth > 0 then
+        ' Half-pixel offset so an odd-width pen centres ON the pixel rather than straddling
+        ' two, matching what PaintRoundOutline does with the same +0.5.
+        redim as GpPointF ptsStroke( 0 to nCount - 1 )
+        for i as long = 0 to nCount - 1
+            ptsStroke(i).x = csng( pts[i].x ) + 0.5
+            ptsStroke(i).y = csng( pts[i].y ) + 0.5
+        next
+        g->DrawPolygon( this.PenFor( CBufToARGB( _pencolor, _penalpha ), csng(nPenWidth) ), _
+                        @ptsStroke(0), nCount )
+    end if
+
+    g->SetSmoothingMode( oldSmooth )
+    _gpDirty = true
+    function = 0
+end function
+
 function PsBufferPaint.PaintIconButton( _
             byval wszText as DWSTRING, _
             byval rc as RECT ptr, _
@@ -1152,6 +1224,128 @@ sub PsBufferPaint_RunSelfTest( byval hwnd as HWND )
              (GetPixel( gDC, 39, 17 ) = CBACK) andalso (pSliced <> CBACK), _
              "x=39 (outside) " & hex(GetPixel(gDC,39,17),6) & " x=42 (inside) " & hex(pSliced,6) )
     end scope
+
+    ' --- PaintPolygon: the stem primitive. Three things matter and each is measured. ------
+    '
+    ' (1) THE EXTENT CONVENTION. Every other closed shape here carries GDI's -1; this one
+    '     does not, and that is the single thing a later "let's make these consistent" edit
+    '     would break. It is asserted as an EQUALITY AGAINST PaintRect on the very same
+    '     corners rather than against a hardcoded span, so the assertion carries no magic
+    '     number of its own and stays true if GDI+'s rasteriser is ever the thing that moves.
+    scope
+        dim as RECT r = type( 10, 5, 50, 30 )
+        dim as long rectFirst, rectLast, polyFirst, polyLast
+
+        ClearSurf()
+        scope
+            dim bb as PsBufferPaint
+            bb.BeginDoubleBuffer( hwnd, gDC, rcAll )
+            bb.SetBackColor( CBACK ) : bb.PaintClientRect()
+            bb.SetBackColor( CFILL ) : bb.PaintRect( @r )
+            bb.EndDoubleBuffer()
+        end scope
+        RowSpan( 17, rectFirst, rectLast )
+
+        ClearSurf()
+        scope
+            dim bb as PsBufferPaint
+            bb.BeginDoubleBuffer( hwnd, gDC, rcAll )
+            bb.SetBackColor( CBACK ) : bb.PaintClientRect()
+            dim as POINT box(0 to 3) = { type<POINT>( r.left,  r.top    ), _
+                                         type<POINT>( r.right, r.top    ), _
+                                         type<POINT>( r.right, r.bottom ), _
+                                         type<POINT>( r.left,  r.bottom ) }
+            bb.SetBackColor( CFILL ) : bb.PaintPolygon( @box(0), 4, 0 )
+            bb.EndDoubleBuffer()
+        end scope
+        RowSpan( 17, polyFirst, polyLast )
+
+        Chk( "Polygon: vertices used as given (matches PaintRect, NOT the -1 shapes)", _
+             (polyFirst = rectFirst) andalso (polyLast = rectLast), _
+             "poly " & polyFirst & ".." & polyLast & "  PaintRect " & rectFirst & ".." & rectLast )
+    end scope
+
+    ' (2) IT IS A POLYGON, NOT ITS BOUNDING BOX. The flood bug this family has now shipped
+    '     five times is a shape primitive that fills more than it was asked to, so a
+    '     triangle is checked for actually narrowing towards its apex.
+    ClearSurf()
+    scope
+        dim bb as PsBufferPaint
+        bb.BeginDoubleBuffer( hwnd, gDC, rcAll )
+        bb.SetBackColor( CBACK ) : bb.PaintClientRect()
+        ' Apex pointing DOWN -- a stem's shape, wide at the base it joins.
+        dim as POINT tri(0 to 2) = { type<POINT>( 10, 5 ), type<POINT>( 50, 5 ), type<POINT>( 30, 30 ) }
+        bb.SetBackColor( CFILL ) : bb.PaintPolygon( @tri(0), 3, 0 )
+        bb.EndDoubleBuffer()
+    end scope
+    scope
+        dim as long topFirst, topLast, botFirst, botLast
+        RowSpan( 7,  topFirst, topLast )
+        RowSpan( 27, botFirst, botLast )
+        Chk( "Polygon: narrows toward the apex (not a filled box)", _
+             (topLast - topFirst) > ((botLast - botFirst) + 10), _
+             "row7 width " & (topLast - topFirst + 1) & "  row27 width " & (botLast - botFirst + 1) )
+        ' The two sloped sides are the reason this primitive exists. Smoothing OFF would
+        ' score exactly 2 over this band; a blended diagonal scores many more.
+        Chk( "Polygon: diagonal edge is antialiased", (ToneCount( 10, 20, 50, 24 ) > 2), _
+             "distinct tones across the sloped band = " & ToneCount( 10, 20, 50, 24 ) )
+    end scope
+
+    ' (3) FILL AND STROKE ARE SEPARATE. nPenWidth 0 must leave no pen colour anywhere --
+    '     PaintBorderRect's fill-then-stroke behaviour is exactly what this must not do --
+    '     and a stroked polygon must keep its interior.
+    ClearSurf()
+    scope
+        dim bb as PsBufferPaint
+        bb.BeginDoubleBuffer( hwnd, gDC, rcAll )
+        bb.SetBackColor( CBACK ) : bb.PaintClientRect()
+        dim as POINT tri(0 to 2) = { type<POINT>( 10, 5 ), type<POINT>( 50, 5 ), type<POINT>( 30, 30 ) }
+        bb.SetBackColor( CFILL ) : bb.SetPenColor( CPEN )
+        bb.PaintPolygon( @tri(0), 3, 0 )              ' fill only: pen colour must not appear
+        bb.EndDoubleBuffer()
+    end scope
+    scope
+        dim as boolean bFoundPen = false
+        for y as long = 0 to SH - 1
+            for x as long = 0 to SW - 1
+                if GetPixel( gDC, x, y ) = CPEN then bFoundPen = true : exit for
+            next
+            if bFoundPen then exit for
+        next
+        Chk( "Polygon: nPenWidth 0 strokes nothing", (bFoundPen = false), _
+             "pen colour " & hex(CPEN,6) & " present = " & bFoundPen )
+    end scope
+
+    ClearSurf()
+    scope
+        dim bb as PsBufferPaint
+        bb.BeginDoubleBuffer( hwnd, gDC, rcAll )
+        bb.SetBackColor( CBACK ) : bb.PaintClientRect()
+        dim as POINT tri(0 to 2) = { type<POINT>( 10, 5 ), type<POINT>( 50, 5 ), type<POINT>( 30, 30 ) }
+        bb.SetBackColor( CFILL ) : bb.SetPenColor( CPEN )
+        bb.PaintPolygon( @tri(0), 3, 1 )
+        bb.EndDoubleBuffer()
+    end scope
+    Chk( "Polygon: stroked outline reaches the top edge", (GetPixel( gDC, 30, 5 ) = CPEN), _
+         "top edge want " & hex(CPEN,6) & " got " & hex(GetPixel(gDC,30,5),6) )
+    Chk( "Polygon: stroke does not overpaint the interior", (GetPixel( gDC, 30, 12 ) = CFILL), _
+         "interior want " & hex(CFILL,6) & " got " & hex(GetPixel(gDC,30,12),6) )
+
+    ' (4) A degenerate vertex list is a silent no-op, not a crash and not a stray line.
+    ClearSurf()
+    scope
+        dim bb as PsBufferPaint
+        bb.BeginDoubleBuffer( hwnd, gDC, rcAll )
+        bb.SetBackColor( CBACK ) : bb.PaintClientRect()
+        dim as POINT two(0 to 1) = { type<POINT>( 10, 5 ), type<POINT>( 50, 30 ) }
+        bb.SetBackColor( CFILL ) : bb.SetPenColor( CPEN )
+        bb.PaintPolygon( @two(0), 2, 1 )
+        bb.PaintPolygon( 0, 3, 1 )
+        bb.EndDoubleBuffer()
+    end scope
+    Chk( "Polygon: fewer than 3 vertices (and a null list) paint nothing", _
+         (ToneCount( 0, 0, SW - 1, SH - 1 ) = 1), _
+         "distinct tones on the whole surface = " & ToneCount( 0, 0, SW - 1, SH - 1 ) )
 
     ' --- The CACHED overload: a caller-owned memDC, reused per row by PsListBox. It is
     '     the one Begin path that skips SetupBitmap, so it never gets the 32bpp DIB the
