@@ -539,9 +539,11 @@ end function
 ' Convert the current in-editor text buffer to the byte layout the specified encoding
 ' needs (ANSI codepage 0, or UTF-8 codepage 65001), and relabel the document.
 '
-' Returns TRUE only when the buffer bytes were actually converted (so the caller can mark
-' the document modified); FALSE when the change was a pure relabel with no byte change, or
-' when a lossy ANSI conversion was cancelled by the user.
+' Returns TRUE whenever the document's encoding actually changed -- INCLUDING a pure relabel
+' (e.g. UTF-8 -> UTF-8 BOM), because a relabel still changes what is written to disk (a BOM
+' added/removed, UTF-8 vs UTF-16), so the caller must mark the document dirty and let it be
+' saved. Returns FALSE only when nothing changed: the document is already that encoding, or a
+' lossy ANSI conversion was cancelled by the user.
 '
 ' Scintilla holds exactly two layouts, ANSI or UTF-8; UTF-16 is a DISK format only and its
 ' in-memory representation is UTF-8. So UTF8 / UTF8_BOM / UTF16_BOM all share one in-editor
@@ -564,10 +566,12 @@ function ConvertTextBuffer( _
     dim as boolean bWantUtf8 = ( nNewEncoding <> FILE_ENCODING_ANSI )
 
     ' Pure relabel: the in-memory layout already matches the target (e.g. UTF-8 -> UTF-8 BOM,
-    ' or UTF-8 BOM -> UTF-16 BOM). No byte conversion, only the disk format changes.
+    ' or UTF-8 BOM -> UTF-16 BOM). No byte conversion, only the disk format changes -- but
+    ' that IS a change (the BOM must reach disk), so report it as one when the label moved.
     if bHaveUtf8 = bWantUtf8 then
+        dim as boolean bChanged = ( pDoc->FileEncoding <> nNewEncoding )
         pDoc->FileEncoding = nNewEncoding
-        return false
+        return bChanged
     end if
 
     ' Save caret and first-visible line as LINE + COLUMN. Byte offsets shift when the
