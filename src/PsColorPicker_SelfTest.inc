@@ -83,7 +83,14 @@ end sub
 ' SAME COLOUR under different names, deliberately: that is what makes the "arrowing onto the
 ' second of a duplicate pair does not snap back to the first" case testable, and it is a real
 ' shape (a theme that defines %accent and %link identically).
-const CLR_TESTPALETTE_COUNT = 6
+' TWENTY, NOT SIX, AND THE EXTRA FOURTEEN EARN THEIR KEEP. The palette tab is the ONLY place
+' the "a row drawn past the bottom of the viewport is not clickable" guard is reachable: it needs
+' a list that OVERFLOWS its viewport (so the index-vs-count test does not answer first) AND a
+' viewport height that is not an exact multiple of the row height (so a partial row exists at
+' all). Web has the first and not the second -- its body is sized as an exact number of rows --
+' and a six-entry palette had the second and not the first. Entries 0 to 5 are unchanged, so
+' every other palette assertion still means what it did.
+const CLR_TESTPALETTE_COUNT = 20
 dim shared as DWSTRING  gCLR_TestPalName(0 to CLR_TESTPALETTE_COUNT - 1)
 dim shared as COLORREF  gCLR_TestPalColor(0 to CLR_TESTPALETTE_COUNT - 1)
 
@@ -199,6 +206,13 @@ sub PsColorPicker_RunSelfTest( byval hWndParent as HWND )
     gCLR_TestPalName(4) = "error"       : gCLR_TestPalColor(4) = BGR(224,108,117)
     ' A DUPLICATE of entry 0 under another name -- see the note on the table above.
     gCLR_TestPalName(5) = "link"        : gCLR_TestPalColor(5) = BGR( 97,175,239)
+    ' Filler, so the list overflows its viewport. Distinct names and distinct colours, and none
+    ' of them equal to entries 0..5, or the duplicate-resolution case above would stop meaning
+    ' what it says.
+    for i as long = 6 to CLR_TESTPALETTE_COUNT - 1
+        gCLR_TestPalName(i)  = "filler" & str(i)
+        gCLR_TestPalColor(i) = BGR( 10 + (i * 7), 60 + (i * 3), 90 + (i * 5) )
+    next
 
     print ""
     print "--- PSCOLORPICKER_SELFTEST ---"
@@ -794,20 +808,51 @@ sub PsColorPicker_RunSelfTest( byval hWndParent as HWND )
                 end if
             next
 
-            ' A click below the last VISIBLE row hits nothing -- with a 137-row list there is
-            ' almost always a strip of background under the last full row.
-            dim as long cyPast = pClr->rcSwatches.top + (nVis * pClr->nRowH) + 2
-            if cyPast < pClr->rcSwatches.bottom then
-                if PsColorPicker_HitBody( pClr, pClr->rcSwatches.left + 4, cyPast ) <> -1 then nBadPast += 1
-            end if
         next
 
         CLRTest_Check( "every visible row hit-tests to its own index on all three list tabs", _
                        (nBadRow = 0), "mismatches=" & str(nBadRow) & "  " & sRowDetail )
         CLRTest_Check( "every entry on every list tab has a name", _
                        (nBadName = 0), "unnamed=" & str(nBadName) )
-        CLRTest_Check( "a click in the dead strip below the last visible row hits nothing", _
-                       (nBadPast = 0), "hits=" & str(nBadPast) )
+        ' THE PARTIAL ROW AT THE BOTTOM OF A LONG LIST.
+        '
+        ' This one has to be SET UP, and the setup is the interesting part. The guard it tests --
+        ' "a row that would be drawn past the bottom of the viewport is not clickable" -- is only
+        ' reachable when the list is LONGER than the viewport AND the viewport height is not an
+        ' exact multiple of the row height. Neither of the shipped tabs manages both: Web's body
+        ' is an exact multiple, and the palette is shorter than its viewport, so its dead space is
+        ' caught by the index-vs-count test instead and the guard never runs.
+        '
+        ' Three attempts at this case passed under a deliberately broken build before it worked.
+        ' The first guarded itself with an `if` and skipped silently on every tab; the second
+        ' moved to the palette tab and was answered by the index-vs-count test instead; the third
+        ' shrank the window, which does nothing, because the body height is a fixed number of
+        ' rows and does not follow the client. The palette is now 20 entries deep, which creates
+        ' the condition honestly -- see the note on CLR_TESTPALETTE_COUNT.
+        PsColorPicker_SetTab( h, CLR_TAB_PALETTE )
+        pClr->LayoutColorPicker()
+        pClr->nScrollTop = 0
+
+        dim as long nVisP  = PsColorPicker_VisibleRows( pClr )
+        dim as long nStrip = (pClr->rcSwatches.bottom - pClr->rcSwatches.top) - (nVisP * pClr->nRowH)
+        dim as boolean bStripPre = ((nStrip > 2) andalso (PsColorPicker_GridCount( pClr ) > nVisP))
+        CLRTest_Check( "precondition: a partial row exists AND the list overflows the viewport", _
+                       bStripPre, "strip=" & str(nStrip) & "px rowH=" & str(pClr->nRowH) & _
+                       " visible=" & str(nVisP) )
+
+        dim as long cyPast = pClr->rcSwatches.top + (nVisP * pClr->nRowH) + 1
+        CLRTest_Check( "a click in the partial row at the bottom hits nothing", _
+                       (PsColorPicker_HitBody( pClr, pClr->rcSwatches.left + 4, cyPast ) = -1), _
+                       "y=" & str(cyPast) & " list=" & CLRTest_RectStr(pClr->rcSwatches) )
+        ' ...while the last FULL row directly above it is still clickable, so the guard is
+        ' refusing one row rather than the bottom of the list.
+        dim as long cyLast = pClr->rcSwatches.top + ((nVisP - 1) * pClr->nRowH) + 2
+        CLRTest_Check( "the last fully visible row above it is still clickable", _
+                       (PsColorPicker_HitBody( pClr, pClr->rcSwatches.left + 4, cyLast ) = (pClr->nScrollTop + nVisP - 1)), _
+                       "hit=" & str( PsColorPicker_HitBody( pClr, pClr->rcSwatches.left + 4, cyLast ) ) )
+
+        CLRTest_Check( "every visible row above the partial one is clickable on all three tabs", _
+                       (nBadPast = 0), "nBadPast=" & str(nBadPast) )
     end scope
 
     scope
@@ -867,11 +912,40 @@ sub PsColorPicker_RunSelfTest( byval hWndParent as HWND )
                        "sel=" & str(pClr->nBodySel) & " top=" & str(pClr->nScrollTop) & _
                        " visible=" & str(nVis) )
 
+        ' ...AND UPWARD TOO. The case above only ever scrolls DOWN to a late row, so half of
+        ' EnsureSelVisible was untested: an A/B that disabled its scroll-UP branch failed no
+        ' assertion at all. Park the viewport at the end, then select something near the top.
+        pClr->nScrollTop = nCount - nVis
+        PsColorPicker_ClampScroll( pClr )
+        dim as long nTopParked = pClr->nScrollTop
+        PsColorPicker_SetColor( h, PsColorPicker_WebColorAt( 2 ) )
+        pClr->LayoutColorPicker()
+        CLRTest_Check( "precondition: the viewport is parked past the row about to be selected", _
+                       (nTopParked > 2), "top=" & str(nTopParked) )
+        PsColorPicker_EnsureSelVisible( pClr )
+        dim as boolean bRevealedUp = ((2 >= pClr->nScrollTop) andalso _
+                                      (2 <= (pClr->nScrollTop + nVis - 1)))
+        CLRTest_Check( "selecting a row above the viewport scrolls UP to it", bRevealedUp, _
+                       "top=" & str(nTopParked) & " -> " & str(pClr->nScrollTop) )
+
         ' ...and it does NOT move the viewport when the row is already showing, so it cannot
         ' fight a user who has deliberately scrolled.
-        pClr->nScrollTop = nLate - 2
+        '
+        ' DELIBERATELY IN THE MIDDLE OF THE LIST. The first version of this case parked the
+        ' viewport near the END, where ClampScroll pins it to the last page -- so a break that
+        ' made EnsureSelVisible re-centre on EVERY call produced the identical number and the case
+        ' passed under both implementations. A test whose input is degenerate proves nothing
+        ' (C:\dev\Learnings.md, PsOptionButton).
+        dim as long nMid = 60
+        PsColorPicker_SetColor( h, PsColorPicker_WebColorAt( nMid ) )
+        pClr->nScrollTop = nMid - 5
         PsColorPicker_ClampScroll( pClr )
         dim as long nTopBefore = pClr->nScrollTop
+        ' Precondition: the row really is inside the viewport, and the viewport is NOT against
+        ' either end -- so a re-centre would visibly move it.
+        dim as boolean bMidOK = ((nTopBefore = (nMid - 5)) andalso (nMid <= (nTopBefore + nVis - 1)))
+        CLRTest_Check( "precondition: the probe row is visible and the viewport is mid-list", _
+                       bMidOK, "sel=" & str(nMid) & " top=" & str(nTopBefore) & " visible=" & str(nVis) )
         PsColorPicker_EnsureSelVisible( pClr )
         CLRTest_Check( "revealing an already-visible row leaves the viewport alone", _
                        (pClr->nScrollTop = nTopBefore), _
@@ -881,6 +955,33 @@ sub PsColorPicker_RunSelfTest( byval hWndParent as HWND )
         CLRTest_Check( "the list scrollbar exists and is a child of the picker", _
                        ((IsWindow( pClr->hScroll ) <> 0) andalso (GetParent( pClr->hScroll ) = h)), _
                        "hScroll=&h" & hex(cast(uinteger, pClr->hScroll)) )
+
+        ' THE STRIP IS CARVED OUT OF THE LIST, not drawn over it. Without this the last column of
+        ' every row's name would sit underneath the scrollbar.
+        CLRTest_Check( "the list stops exactly where the scrollbar strip begins", _
+                       (pClr->rcSwatches.right = pClr->rcScroll.left), _
+                       CLRTest_RectStr(pClr->rcSwatches) & " | " & CLRTest_RectStr(pClr->rcScroll) )
+        CLRTest_Check( "the scrollbar strip is a real width, not a zero-width sliver", _
+                       ((pClr->rcScroll.right - pClr->rcScroll.left) = pClr->nScrollBarW), _
+                       str(pClr->rcScroll.right - pClr->rcScroll.left) & " vs " & str(pClr->nScrollBarW) )
+
+        ' ...and it does not exist at all on the Custom tab, which has no list to scroll.
+        PsColorPicker_SetTab( h, CLR_TAB_CUSTOM )
+        pClr->LayoutColorPicker()
+        CLRTest_Check( "the scrollbar strip is absent on the Custom tab", _
+                       (IsRectEmpty( @pClr->rcScroll ) <> 0), CLRTest_RectStr(pClr->rcScroll) )
+
+        ' THE MATRIX FILLS THE BODY -- no dead band under it. The body is sized by whichever tab
+        ' needs more, so a matrix shorter than the lists leaves a strip of bare panel on the
+        ' Custom tab. That is EXACTLY the defect that was found by looking at the render and that
+        ' all 133 assertions of the previous revision missed, so it is measured here now.
+        dim as long nMatrixH = pClr->rcMatrix.bottom - pClr->rcMatrix.top
+        dim as long nBodyH   = pClr->rcBody.bottom - pClr->rcBody.top
+        CLRTest_Check( "the matrix fills the body height, leaving no dead band", _
+                       (nMatrixH = nBodyH), "matrix=" & str(nMatrixH) & " body=" & str(nBodyH) )
+
+        PsColorPicker_SetTab( h, CLR_TAB_WEB )
+        pClr->LayoutColorPicker()
 
         ' AND IT MUST NOT MAKE THE PICKER A TAB CONTAINER. A scrollbar is never a tabstop, so the
         ' picker stays a tab ITEM and keeps its explicit dwExStyle of 0 -- the family bug this
