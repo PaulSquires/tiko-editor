@@ -26,7 +26,7 @@ type clsApp
                                                         ' the caption as active
         ' No hand-rolled drag state lives here any more. Every drag site is a reusable
         ' control that owns its own capture and cursor -- the four splitters and the
-        ' Output/Explorer bars are PsSplitter, the list panes are PsListBox, the top tab
+        ' Output/Explorer bars are PsSplitter, the list panes are PsListTree, the top tab
         ' strip is PsTabBar -- so bDragActive, bDragTabActive and ptDragTabPrev went, along
         ' with hWndPanel and the single/double-click timer fields before them.
         IncludeFilename            as DWSTRING

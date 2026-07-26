@@ -13,7 +13,7 @@
 
 '  frmOptionsColors.bi  --  the "Themes and Fonts" page.
 '
-'  Panel-hosted. The themes list and the font-name list are both PsListBoxes (the font names
+'  Panel-hosted. The themes list and the font-name list are both PsListTreees (the font names
 '  are drawn each in their own font, which a scrollable list can do and a PsComboBox dropdown
 '  -- which cannot scroll -- could not). Font size and character set are PsComboBoxes; the
 '  extra line spacing is a PsNumericUpDown. Everything reads/writes gOptWork.

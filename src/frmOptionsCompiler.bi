@@ -19,7 +19,7 @@
 '  theme). It reads and writes gOptWork, never gConfig, so Cancel is a no-op and the page
 '  can be built lazily on first visit.
 '
-'  The controls are the reusable family: PsListBox (toolchains), PsTextBox x3 (switches,
+'  The controls are the reusable family: PsListTree (toolchains), PsTextBox x3 (switches,
 '  include paths, help file), PsToggle x2 (run-via-cmd, disable-beep) and PsButton (browse).
 
 #pragma once

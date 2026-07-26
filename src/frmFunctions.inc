@@ -32,12 +32,12 @@ end function
 ' Expand/Collapse all Functions Nodes
 ' ========================================================================================
 function frmFunctions_ExpandAll() as long
-    PsListBox_ExpandAll( HWND_FRMFUNCTIONS )
+    PsListTree_ExpandAll( HWND_FRMFUNCTIONS )
     function = 0
 end function
 
 function frmFunctions_CollapseAll() as long
-    PsListBox_CollapseAll( HWND_FRMFUNCTIONS )
+    PsListTree_CollapseAll( HWND_FRMFUNCTIONS )
     function = 0
 end function
 
@@ -56,17 +56,17 @@ function frmFunctions_SelectItemData( byval pDoc as clsDocument ptr ) as boolean
     if len( wszFile ) = 0 then return false
 
     ' If the currently selected item already belongs to this file then simply exit
-    dim as integer nCurSel = PsListBox_GetCurSel(hCtrl)
+    dim as integer nCurSel = PsListTree_GetCurSel(hCtrl)
     if nCurSel >= 0 then
-        dim as integer nFileIdx = PsListBox_GetItemData( hCtrl, nCurSel )
+        dim as integer nFileIdx = PsListTree_GetItemData( hCtrl, nCurSel )
         if (nFileIdx >= 0) andalso (nFileIdx <= ubound(gFuncPanelFiles)) then
             if SymDb_FileNameEq( gFuncPanelFiles(nFileIdx), wszFile ) then return true
         end if
     end if
 
-    dim as long nCount = PsListBox_GetCount(hCtrl)
+    dim as long nCount = PsListTree_GetCount(hCtrl)
     for i as long = 0 to nCount - 1
-        dim as integer nFileIdx = PsListBox_GetItemData( hCtrl, i )
+        dim as integer nFileIdx = PsListTree_GetItemData( hCtrl, i )
         dim as boolean bMatch = false
         if (nFileIdx >= 0) andalso (nFileIdx <= ubound(gFuncPanelFiles)) then
             bMatch = SymDb_FileNameEq( gFuncPanelFiles(nFileIdx), wszFile )
@@ -75,19 +75,19 @@ function frmFunctions_SelectItemData( byval pDoc as clsDocument ptr ) as boolean
             ' If the pDoc is currently within the visible range of the Listbox then
             ' simply move to that row, otherwise we set the topindex and position
             ' the selection a few rows from it.
-            dim as PSLISTBOX ptr pList = GetListBoxPointer(hCtrl)
+            dim as PSLISTTREE ptr pList = GetListTreePointer(hCtrl)
             if pList = null then return false
 
-            dim as integer nFirstRow = PsListBox_GetTopIndex(hCtrl)
-            dim as integer nLastRow = nFirstRow + PsListBox_ItemsPerPage(pList)
+            dim as integer nFirstRow = PsListTree_GetTopIndex(hCtrl)
+            dim as integer nLastRow = nFirstRow + PsListTree_ItemsPerPage(pList)
             if (i >= nFirstRow) andalso (i <= nLastRow) then
-                PsListBox_SetCurSel( hCtrl, i )
+                PsListTree_SetCurSel( hCtrl, i )
             else    
                 ' Attempt to set the topindex so that the current selection appears
                 ' a little more down the list rather than pinned to the top of the
                 ' listbox window.
-                PsListBox_SetTopIndex( hCtrl, MAX(0, i - 8) )
-                PsListBox_SetCurSel( hCtrl, i )
+                PsListTree_SetTopIndex( hCtrl, MAX(0, i - 8) )
+                PsListTree_SetCurSel( hCtrl, i )
             end if
             
             return true
@@ -100,7 +100,7 @@ end function
 ' ========================================================================================
 ' frmFunctions_PaintCallback
 ' ========================================================================================
-sub frmFunctions_PaintCallback( byval p as PSLISTBOX_PAINTINFO ptr )
+sub frmFunctions_PaintCallback( byval p as PSLISTTREE_PAINTINFO ptr )
     dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN)
     if pWindow = 0 then return 
 
@@ -163,7 +163,7 @@ end sub
 ' ========================================================================================
 ' frmFunctions_MessageCallback
 ' ========================================================================================
-function frmFunctions_MessageCallback( byval m as PSLISTBOX_MESSAGEINFO ptr ) as boolean
+function frmFunctions_MessageCallback( byval m as PSLISTTREE_MESSAGEINFO ptr ) as boolean
 
     select case m->uMsg
              
@@ -180,9 +180,9 @@ function frmFunctions_MessageCallback( byval m as PSLISTBOX_MESSAGEINFO ptr ) as
             ' Attempt to show the bookmark
             dim as HWND hCtl = GetParent( m->hList )
 
-            if PsListBox_IsHeader( hCtl, m->idx ) = false then
-                dim as integer nFileIdx = PsListBox_GetItemData( hCtl, m->idx )
-                dim as integer nLineNum = PsListBox_GetItemDataExtra( hCtl, m->idx )
+            if PsListTree_IsHeader( hCtl, m->idx ) = false then
+                dim as integer nFileIdx = PsListTree_GetItemData( hCtl, m->idx )
+                dim as integer nLineNum = PsListTree_GetItemDataExtra( hCtl, m->idx )
                 if (nFileIdx >= 0) andalso (nFileIdx <= ubound(gFuncPanelFiles)) then
                     ' if the file is already open in the Top tabs then switch to that
                     ' tab; otherwise open it from disk (never-opened include files
@@ -223,14 +223,14 @@ end function
 ' ========================================================================================
 function frmFunctions_TooltipCallback( byval hCtl as HWND, byval row as integer ) as DWSTRING
     dim as DWSTRING wszTooltip
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hCtl)
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hCtl)
     if pList then
         ' The caption contains two parts; the function name and its calltip
         ' separated by an % character.
-        dim as DWSTRING wszCaption = PsListBox_GetText(hCtl, row)
+        dim as DWSTRING wszCaption = PsListTree_GetText(hCtl, row)
         ' NOT "dim as DWSTRING wszTooltip = ..." -- that redeclaration shadowed the
         ' outer variable, so the formatted calltip died with the if-block and the empty
-        ' outer one was returned. PsListBox reads an empty string as "no tip for this
+        ' outer one was returned. PsListTree reads an empty string as "no tip for this
         ' row", so the panel showed no tooltips at all.
         wszTooltip = AfxStrParse(wszCaption, 2, "%")
         wszTooltip = FormatCodetip( wszTooltip )
@@ -245,23 +245,23 @@ end function
 ' ========================================================================================
 function frmFunctions_Show( byval hWndParent as HWND ) as LRESULT
 
-    dim as HWND hCtrl = PsListBox_Create( hWndParent, IDC_FRMFUNCTIONS_LISTBOX )
+    dim as HWND hCtrl = PsListTree_Create( hWndParent, IDC_FRMFUNCTIONS_LISTBOX )
 
-    PsListBox_SetPaintCallback( hCtrl, @frmFunctions_PaintCallback )
-    PsListBox_SetMessageCallback( hCtrl, @frmFunctions_MessageCallback )
-    PsListBox_SetTooltipCallback( hCtrl, @frmFunctions_TooltipCallback )
+    PsListTree_SetPaintCallback( hCtrl, @frmFunctions_PaintCallback )
+    PsListTree_SetMessageCallback( hCtrl, @frmFunctions_MessageCallback )
+    PsListTree_SetTooltipCallback( hCtrl, @frmFunctions_TooltipCallback )
     ' The WM_LBUTTONUP callback opens the clicked function; a double-click would
     ' deliver a second up and open it twice, so suppress double-click delivery.
-    PsListBox_PreventDoubleClick( hCtrl )
-    PsListBox_SetBackColor( hCtrl, ghPanel.BackColor )
-    PsListBox_SetFont( hCtrl, ghFont(GUIFONT_10) )
-    'PsListBox_SetExtendedSelect( hCtrl, true )   ' Shift/Ctrl range selection
+    PsListTree_PreventDoubleClick( hCtrl )
+    PsListTree_SetBackColor( hCtrl, ghPanel.BackColor )
+    PsListTree_SetFont( hCtrl, ghFont(GUIFONT_10) )
+    'PsListTree_SetExtendedSelect( hCtrl, true )   ' Shift/Ctrl range selection
     ' The scrollbar is created/positioned/auto-hidden by the control; we only theme it.
-    ' (PsListBox_SetScrollBarPaintCallback is available for full custom drawing.)
-    PsListBox_SetScrollBarWidth( hCtrl, SCROLLBAR_WIDTH_PANEL )
-    PsListBox_SetScrollBarColors( hCtrl, ghPanel.BackColorScrollBar, _
+    ' (PsListTree_SetScrollBarPaintCallback is available for full custom drawing.)
+    PsListTree_SetScrollBarWidth( hCtrl, SCROLLBAR_WIDTH_PANEL )
+    PsListTree_SetScrollBarColors( hCtrl, ghPanel.BackColorScrollBar, _
                                  ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
-'    PsListBox_SetScrollBarColors( hCtrl, ghEditor.BackColorScrollBar, _
+'    PsListTree_SetScrollBarColors( hCtrl, ghEditor.BackColorScrollBar, _
 '                                 ghEditor.ForeColorScrollBar, ghEditor.ForeColorScrollBarHot )
 
     HWND_FRMFUNCTIONS = hCtrl
@@ -321,7 +321,7 @@ end function
 ' ========================================================================================
 function ClearFunctions() as long
     dim as HWND hCtrl = HWND_FRMFUNCTIONS
-    PsListBox_Clear( hCtrl )
+    PsListTree_Clear( hCtrl )
     function = 0
 end function
 
@@ -334,12 +334,12 @@ function LoadFilesAndFunctions() as long
     ' Save the topindex because we will restore it after filling the new contents
     ' (selection is NOT saved by index - it is re-derived from the active
     ' document after the rebuild)
-    dim as long nTopIndex = PsListBox_GetTopIndex( hCtrl )
+    dim as long nTopIndex = PsListTree_GetTopIndex( hCtrl )
 
     ' Clear all content from the listbox
-    PsListBox_Clear( hCtrl )
+    PsListTree_Clear( hCtrl )
 
-    PsListBox_BeginUpdate( hCtrl )
+    PsListTree_BeginUpdate( hCtrl )
 
     dim as DWSTRING wszText
 
@@ -360,7 +360,7 @@ function LoadFilesAndFunctions() as long
 
     for i as long = 0 to nFiles - 1
         wszText = AfxStrPathName( "NAMEX", gFuncPanelFiles(i) )
-        PsListBox_AddHeader( hCtrl, wszText, i, 0 )
+        PsListTree_AddHeader( hCtrl, wszText, i, 0 )
 
         dim as long nProcs = gSymDb.EnumProcsInFile( gFuncPanelFiles(i), rs() )
         for p as long = 0 to nProcs - 1
@@ -381,22 +381,22 @@ function LoadFilesAndFunctions() as long
         for ii as long = lbound(arrFuncs) to ubound(arrFuncs)
             wszText = ltrim(arrFuncs(ii).wszFunctionName) & _
                       "%" & trim(arrFuncs(ii).wszPrototype)
-            PsListBox_AddString( hCtrl, wszText, i, arrFuncs(ii).nLineNumber )
+            PsListTree_AddString( hCtrl, wszText, i, arrFuncs(ii).nLineNumber )
         next
         erase arrFuncs
 
     next
 
-    PsListBox_EndUpdate( hCtrl )
+    PsListTree_EndUpdate( hCtrl )
 
     ' Restore the scroll position, then re-select by IDENTITY rather than by the
     ' saved index: the list was just rebuilt (background scans add/remove/move
     ' rows), so the old index would land on an arbitrary row. Select the active
     ' document's row; if there is none (or it isn't in the list) leave nothing
     ' selected rather than something random.
-    PsListBox_SetTopIndex( hCtrl, nTopIndex )
+    PsListTree_SetTopIndex( hCtrl, nTopIndex )
     if frmFunctions_SelectItemData( gTTabCtl.GetActiveDocumentPtr() ) = false then
-        PsListBox_SetCurSel( hCtrl, -1 )
+        PsListTree_SetCurSel( hCtrl, -1 )
     end if
 
     function = 0
@@ -413,12 +413,12 @@ function LoadFunctionsOnly() as long
     ' Save the topindex because we will restore it after filling the new contents
     ' (selection is NOT saved by index - it is re-derived from the active
     ' document after the rebuild)
-    dim as long nTopIndex = PsListBox_GetTopIndex( hCtrl )
+    dim as long nTopIndex = PsListTree_GetTopIndex( hCtrl )
 
     ' Clear all content from the listbox
-    PsListBox_Clear( hCtrl )
+    PsListTree_Clear( hCtrl )
 
-    PsListBox_BeginUpdate( hCtrl )
+    PsListTree_BeginUpdate( hCtrl )
 
 
     dim as DWSTRING wszText
@@ -455,18 +455,18 @@ function LoadFunctionsOnly() as long
     for ii as long = lbound(arrFuncs) to ubound(arrFuncs)
         wszText = ltrim(arrFuncs(ii).wszFunctionName) & _
                   "%" & trim(arrFuncs(ii).wszPrototype)
-        PsListBox_AddString( hCtrl, wszText, arrFuncs(ii).nFileIdx, arrFuncs(ii).nLineNumber )
+        PsListTree_AddString( hCtrl, wszText, arrFuncs(ii).nFileIdx, arrFuncs(ii).nLineNumber )
     next
     erase arrFuncs
 
 
-    PsListBox_EndUpdate( hCtrl )
+    PsListTree_EndUpdate( hCtrl )
 
     ' Restore the scroll position, then re-select by IDENTITY rather than by the
     ' saved index - same reasoning as LoadFilesAndFunctions above.
-    PsListBox_SetTopIndex( hCtrl, nTopIndex )
+    PsListTree_SetTopIndex( hCtrl, nTopIndex )
     if frmFunctions_SelectItemData( gTTabCtl.GetActiveDocumentPtr() ) = false then
-        PsListBox_SetCurSel( hCtrl, -1 )
+        PsListTree_SetCurSel( hCtrl, -1 )
     end if
 
     function = 0

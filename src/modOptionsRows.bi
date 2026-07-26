@@ -66,7 +66,7 @@
 
 
 ' ----------------------------------------------------------------------------------------
-' Page identifiers. Stored as the itemData of the navigation PsListBox's item rows and as
+' Page identifiers. Stored as the itemData of the navigation PsListTree's item rows and as
 ' the nPage field of every row descriptor. Session-only (OptionsDialogLastOpened is not
 ' persisted to disk), so these renumber freely.
 '

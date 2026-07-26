@@ -47,12 +47,12 @@ end function
 ' Expand/Collapse all Explorer Nodes
 ' ========================================================================================
 function frmExplorer_ExpandAll() as long
-    PsListBox_ExpandAll( HWND_FRMEXPLORER )
+    PsListTree_ExpandAll( HWND_FRMEXPLORER )
     function = 0
 end function
 
 function frmExplorer_CollapseAll() as long
-    PsListBox_CollapseAll( HWND_FRMEXPLORER )
+    PsListTree_CollapseAll( HWND_FRMEXPLORER )
     function = 0
 end function
 
@@ -70,8 +70,8 @@ function frmExplorer_SelectItemData( byval pDoc as clsDocument ptr ) as boolean
     dim as HWND hCtrl = HWND_FRMEXPLORER
 
     ' If pDoc is already selected in the listbox then simply exit
-    dim as integer nCurSel = PsListBox_GetCurSel(hCtrl)
-    dim as integer nItemData = PsListBox_GetItemData( hCtrl, nCurSel )
+    dim as integer nCurSel = PsListTree_GetCurSel(hCtrl)
+    dim as integer nItemData = PsListTree_GetItemData( hCtrl, nCurSel )
     dim as clsDocument ptr pDocSel = cast( clsDocument ptr, nItemData )
     if pDocSel = pDoc then return true
 
@@ -79,28 +79,28 @@ function frmExplorer_SelectItemData( byval pDoc as clsDocument ptr ) as boolean
     frmExplorer_UnSelectListBox()
 
 
-    dim as long nCount = PsListBox_GetCount(hCtrl)
+    dim as long nCount = PsListTree_GetCount(hCtrl)
     for i as long = 0 to nCount - 1
-        if PsListBox_GetItemData(hCtrl, i) = cast(integer, pDoc) then 
+        if PsListTree_GetItemData(hCtrl, i) = cast(integer, pDoc) then 
             ' Only attempt to reposition if the row is not currently collapsed
-            if PsListBox_IsCollapsed(hCtrl, i) then return false
+            if PsListTree_IsCollapsed(hCtrl, i) then return false
 
             ' If the pDoc is currently within the visible range of the Listbox then
             ' simply move to that row, otherwise we set the topindex and position
             ' the selection a few rows from it.
-            dim as PSLISTBOX ptr pList = GetListBoxPointer(hCtrl)
+            dim as PSLISTTREE ptr pList = GetListTreePointer(hCtrl)
             if pList = null then return false
 
-            dim as integer nFirstRow = PsListBox_GetTopIndex(hCtrl)
-            dim as integer nLastRow = nFirstRow + PsListBox_ItemsPerPage(pList)
+            dim as integer nFirstRow = PsListTree_GetTopIndex(hCtrl)
+            dim as integer nLastRow = nFirstRow + PsListTree_ItemsPerPage(pList)
             if (i >= nFirstRow) andalso (i <= nLastRow) then
-                PsListBox_SetCurSel( hCtrl, i )
+                PsListTree_SetCurSel( hCtrl, i )
             else    
                 ' Attempt to set the topindex so that the current selection appears
                 ' a little more down the list rather than pinned to the top of the
                 ' listbox window.
-                PsListBox_SetTopIndex( hCtrl, MAX(0, i - 8) )
-                PsListBox_SetCurSel( hCtrl, i )
+                PsListTree_SetTopIndex( hCtrl, MAX(0, i - 8) )
+                PsListTree_SetCurSel( hCtrl, i )
             end if
             return true
         end if
@@ -116,9 +116,9 @@ end function
 ' ========================================================================================
 function frmExplorer_UnSelectListBox() as long
     dim as HWND hCtrl = HWND_FRMEXPLORER
-    dim as long nCount = PsListBox_GetCount(hCtrl)
+    dim as long nCount = PsListTree_GetCount(hCtrl)
     for i as long = 0 to nCount - 1
-        PsListBox_SetSel( hCtrl, i, false )
+        PsListTree_SetSel( hCtrl, i, false )
     next
 
 '    ' force a listbox selection for the currently active tab                   
@@ -132,7 +132,7 @@ end function
 ' ========================================================================================
 ' frmExplorer_PaintCallback
 ' ========================================================================================
-sub frmExplorer_PaintCallback( byval p as PSLISTBOX_PAINTINFO ptr )
+sub frmExplorer_PaintCallback( byval p as PSLISTTREE_PAINTINFO ptr )
     dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN)
     if pWindow = 0 then return 
 
@@ -192,7 +192,7 @@ end sub
 ' ========================================================================================
 ' frmExplorer_MessageCallback
 ' ========================================================================================
-function frmExplorer_MessageCallback( byval m as PSLISTBOX_MESSAGEINFO ptr ) as boolean
+function frmExplorer_MessageCallback( byval m as PSLISTTREE_MESSAGEINFO ptr ) as boolean
 
     select case m->uMsg
              
@@ -208,8 +208,8 @@ function frmExplorer_MessageCallback( byval m as PSLISTBOX_MESSAGEINFO ptr ) as 
         case WM_LBUTTONUP
             ' Attempt to show the file
             dim as HWND hCtl = GetParent(m->hList)
-            if PsListBox_IsHeader( hCtl, m->idx ) = false then
-                dim as integer nItemData = PsListBox_GetItemData( hCtl, m->idx )
+            if PsListTree_IsHeader( hCtl, m->idx ) = false then
+                dim as integer nItemData = PsListTree_GetItemData( hCtl, m->idx )
                 dim as clsDocument ptr pDoc = cast(clsDocument ptr, nItemData)
                 if pDoc then 
                     ' if the file is already showing in the Top tabs then switch to that tab.
@@ -229,16 +229,16 @@ function frmExplorer_MessageCallback( byval m as PSLISTBOX_MESSAGEINFO ptr ) as 
         case WM_RBUTTONDOWN
             ' Create the popup menu
             dim as HWND hCtl = GetParent(m->hList)
-            if PsListBox_IsHeader( hCtl, m->idx ) then return false
+            if PsListTree_IsHeader( hCtl, m->idx ) then return false
 
-            dim as clsDocument ptr pDoc = cast(clsDocument ptr, PsListBox_GetItemData(hCtl, m->idx))
+            dim as clsDocument ptr pDoc = cast(clsDocument ptr, PsListTree_GetItemData(hCtl, m->idx))
             if pDoc = null then return false
             
             ' If only 1 line has been previously selected then unselect that line
             ' and select this current line, otherwise, the menu actions on all selected lines.
-            dim as long nSelCount = PsListBox_GetSelCount(hCtl)
-            if nSelCount = 1 then PsListBox_SelectAll(hCtl, false)
-            PsListBox_SetSel(hCtl, m->idx, true)
+            dim as long nSelCount = PsListTree_GetSelCount(hCtl)
+            if nSelCount = 1 then PsListTree_SelectAll(hCtl, false)
+            PsListTree_SetSel(hCtl, m->idx, true)
 
             ' Show the menu and return. It is a PsPopupMenu, so this does NOT block the
             ' way TrackPopupMenu did: the whole "process the selected rows" tail that
@@ -262,7 +262,7 @@ end function
 ' ========================================================================================
 function frmExplorer_TooltipCallback( byval hCtl as HWND, byval row as integer ) as DWSTRING
     dim as DWSTRING wszTooltip
-    dim as integer nItemData = PsListBox_GetItemData(hCtl, row)
+    dim as integer nItemData = PsListTree_GetItemData(hCtl, row)
     dim as clsDocument ptr pDoc = cast(clsDocument ptr, nItemData)
     if pDoc then wszTooltip = pDoc->DiskFilename
     return wszTooltip
@@ -274,23 +274,23 @@ end function
 ' ========================================================================================
 function frmExplorer_Show( byval hWndParent as HWND ) as LRESULT
 
-    dim as HWND hCtrl = PsListBox_Create( hWndParent, IDC_FRMEXPLORER_LISTBOX )
+    dim as HWND hCtrl = PsListTree_Create( hWndParent, IDC_FRMEXPLORER_LISTBOX )
 
-    PsListBox_SetPaintCallback( hCtrl, @frmExplorer_PaintCallback )
-    PsListBox_SetMessageCallback( hCtrl, @frmExplorer_MessageCallback )
-    PsListBox_SetTooltipCallback( hCtrl, @frmExplorer_TooltipCallback )
+    PsListTree_SetPaintCallback( hCtrl, @frmExplorer_PaintCallback )
+    PsListTree_SetMessageCallback( hCtrl, @frmExplorer_MessageCallback )
+    PsListTree_SetTooltipCallback( hCtrl, @frmExplorer_TooltipCallback )
     ' The WM_LBUTTONUP callback opens the clicked function; a double-click would
     ' deliver a second up and open it twice, so suppress double-click delivery.
-    PsListBox_PreventDoubleClick( hCtrl )
-    PsListBox_SetBackColor( hCtrl, ghPanel.BackColor )
-    PsListBox_SetFont( hCtrl, ghFont(GUIFONT_10) )
-    PsListBox_SetExtendedSelect( hCtrl, true )   ' Shift/Ctrl range selection
+    PsListTree_PreventDoubleClick( hCtrl )
+    PsListTree_SetBackColor( hCtrl, ghPanel.BackColor )
+    PsListTree_SetFont( hCtrl, ghFont(GUIFONT_10) )
+    PsListTree_SetExtendedSelect( hCtrl, true )   ' Shift/Ctrl range selection
     ' The scrollbar is created/positioned/auto-hidden by the control; we only theme it.
-    ' (PsListBox_SetScrollBarPaintCallback is available for full custom drawing.)
-    PsListBox_SetScrollBarWidth( hCtrl, SCROLLBAR_WIDTH_PANEL )
-    PsListBox_SetScrollBarColors( hCtrl, ghPanel.BackColorScrollBar, _
+    ' (PsListTree_SetScrollBarPaintCallback is available for full custom drawing.)
+    PsListTree_SetScrollBarWidth( hCtrl, SCROLLBAR_WIDTH_PANEL )
+    PsListTree_SetScrollBarColors( hCtrl, ghPanel.BackColorScrollBar, _
                                  ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
-'    PsListBox_SetScrollBarColors( hCtrl, ghEditor.BackColorScrollBar, _
+'    PsListTree_SetScrollBarColors( hCtrl, ghEditor.BackColorScrollBar, _
 '                                 ghEditor.ForeColorScrollBar, ghEditor.ForeColorScrollBarHot )
 
     HWND_FRMEXPLORER = hCtrl
@@ -314,13 +314,13 @@ function LoadExplorerFiles() as long
     ShowWindow( hCtrl, SW_HIDE )
 
     ' Save the topindex because we will restore it after filling the new contents
-    dim as long nCurSel = PsListBox_GetCurSel( hCtrl )
-    dim as long nTopIndex = PsListBox_GetTopIndex( hCtrl )
+    dim as long nCurSel = PsListTree_GetCurSel( hCtrl )
+    dim as long nTopIndex = PsListTree_GetTopIndex( hCtrl )
 
     ' Clear all content from the listbox
-    PsListBox_Clear( hCtrl )
+    PsListTree_Clear( hCtrl )
 
-    PsListBox_BeginUpdate( hCtrl )
+    PsListTree_BeginUpdate( hCtrl )
 
 
     ' Add the list of filenames 
@@ -341,7 +341,7 @@ function LoadExplorerFiles() as long
 
     for ii as long = nStart to nEnd
         wszText = gConfig.Cat(ii).wszDescription
-        PsListBox_AddHeader( hCtrl, wszText )
+        PsListTree_AddHeader( hCtrl, wszText )
 
         ' Iterate all pDoc in the project/files list. Create an array and then
         ' sort it alphabetically.
@@ -364,17 +364,17 @@ function LoadExplorerFiles() as long
     
         for i as long = lbound(pDocs) to ubound(pDocs)
             dim as DWSTRING wszText = AfxStrPathName( "NAMEX", pDocs(i)->DiskFilename )
-            PsListBox_AddString( hCtrl, wszText, cast(integer, pDocs(i)), 0 )
+            PsListTree_AddString( hCtrl, wszText, cast(integer, pDocs(i)), 0 )
         next   
         
     next
 
-    PsListBox_EndUpdate( hCtrl )
+    PsListTree_EndUpdate( hCtrl )
 
     ' Restore the top index so the list displays like it did before being reset
-    PsListBox_SetTopIndex( hCtrl, nTopIndex )
-    nCurSel = MIN( nCurSel, PsListBox_GetCount(hCtrl) - 1 )
-    PsListBox_SetCurSel( hCtrl, nCurSel )
+    PsListTree_SetTopIndex( hCtrl, nTopIndex )
+    nCurSel = MIN( nCurSel, PsListTree_GetCount(hCtrl) - 1 )
+    PsListTree_SetCurSel( hCtrl, nCurSel )
 
     function = 0
 end function

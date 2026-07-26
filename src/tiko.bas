@@ -110,11 +110,14 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "PsVScrollBar.inc"
 #include once "PsHScrollBar.inc"
 #include once "PsColumnHeader.inc"
-#include once "PsListBox.inc"
-#include once "PsStatusBar.inc" 
-#include once "PsTabBar.inc"
-#include once "PsTextBox.inc"
+' PsPopupMenu + PsTextBox must precede PsListTree: its in-place label editor is a PsTextBox
+' child (and PsTextBox uses PsPopupMenu for its context menu), so PsListTree.inc's calls need
+' those declarations already in scope. (Moved up from below for the treeview sync.)
 #include once "PsPopupMenu.inc"
+#include once "PsTextBox.inc"
+#include once "PsListTree.inc"
+#include once "PsStatusBar.inc"
+#include once "PsTabBar.inc"
 #include once "PsMenuBar.inc"
 #include once "PsSplitter.inc"
 #include once "PsIconPanel.inc"

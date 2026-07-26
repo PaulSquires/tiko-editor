@@ -48,7 +48,7 @@ end sub
 ''  handle would go stale.
 ''
 ''  Deliberately NOT EnumWindows. That would descend into the Ps* controls' own internals
-''  (every PsListBox owns an inner listbox plus a PsVScrollBar, every PsNumericUpDown owns a
+''  (every PsListTree owns an inner listbox plus a PsVScrollBar, every PsNumericUpDown owns a
 ''  PsTextBox), visit subsystems the caller deliberately did not route to, and -- the real
 ''  objection -- it cannot tell "needs a colour push" from "needs an invalidate", which is the
 ''  only distinction that matters here.
@@ -140,32 +140,32 @@ end sub
 
 
 ''
-''  RE-PUSH THE PANEL COLOURS INTO ONE PsListBox
+''  RE-PUSH THE PANEL COLOURS INTO ONE PsListTree
 ''
 ''  frmExplorer / frmFunctions / frmBookmarks / the help viewer's topic list all carried the
 ''  identical three lines inside their _Show, which is exactly why a theme change never
 ''  reached them. Written once rather than four times so the four cannot drift.
 ''
 ''  No invalidate here on purpose: Theme_ApplySubsystems repaints afterwards, and the design
-''  rule is push-then-invalidate in that order. (PsListBox_SetBackColor is one of the family's
+''  rule is push-then-invalidate in that order. (PsListTree_SetBackColor is one of the family's
 ''  silent setters -- it stores without repainting -- so the invalidate is not optional, it is
 ''  just somebody else's job.)
 ''
 private sub Theme_PushPanelList( byval hList as HWND )
     if IsWindow(hList) = 0 then exit sub
-    PsListBox_SetBackColor( hList, ghPanel.BackColor )
-    PsListBox_SetScrollBarColors( hList, ghPanel.BackColorScrollBar, _
+    PsListTree_SetBackColor( hList, ghPanel.BackColor )
+    PsListTree_SetScrollBarColors( hList, ghPanel.BackColorScrollBar, _
                                   ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
 end sub
 
 
 ''
-''  RE-PUSH THE OUTPUT COLOURS INTO ONE PsListBox
+''  RE-PUSH THE OUTPUT COLOURS INTO ONE PsListTree
 ''
 private sub Theme_PushOutputList( byval hList as HWND )
     if IsWindow(hList) = 0 then exit sub
-    PsListBox_SetBackColor( hList, ghOutput.BackColor )
-    PsListBox_SetScrollBarColors( hList, ghOutput.BackColorScrollBar, _
+    PsListTree_SetBackColor( hList, ghOutput.BackColor )
+    PsListTree_SetScrollBarColors( hList, ghOutput.BackColorScrollBar, _
                                   ghOutput.ForeColorScrollBar, ghOutput.ForeColorScrollBar )
 end sub
 

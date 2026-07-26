@@ -491,8 +491,8 @@ end function
 ' ========================================================================================
 ' Empty client area of a plain owner-drawn system LISTBOX: the strip from below the last
 ' visible row to the bottom edge. Used by the subclass WM_ERASEBKGND below to fill just that
-' gap (flicker reduction). This was an unprefixed helper in the old PsListBox.inc, back when
-' that control wrapped a system listbox; the owner-drawn PsListBox no longer does and dropped
+' gap (flicker reduction). This was an unprefixed helper in the old PsListTree.inc, back when
+' that control wrapped a system listbox; the owner-drawn PsListTree no longer does and dropped
 ' it, so it lives here now -- its one remaining caller -- operating on frmBuildConfig's own
 ' raw LISTBOX.
 ' ========================================================================================

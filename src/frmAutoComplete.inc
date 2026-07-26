@@ -28,14 +28,14 @@ redim shared gAutoCVisible(any) as long
 dim shared gAutoCCount    as long          ' logical length of gAutoCItems (array may be larger)
 dim shared gAutoCVisCount as long          ' logical length of gAutoCVisible
 dim shared gAutoCOpen     as boolean
-' Row height in UNSCALED units. PsListBox_SetRowHeight DPI-scales what it is handed
+' Row height in UNSCALED units. PsListTree_SetRowHeight DPI-scales what it is handed
 ' (and WM_MEASUREITEM scales it again), so a pre-scaled value here would be scaled
 ' TWICE -- rows too tall, and a popup window shorter than its own contents because the
 ' window height was computed from the unscaled figure. Keep this unscaled and scale
 ' only where the window size is derived.
 dim shared gAutoCRowHeight as long = AUTOCOMPLETE_DEFAULT_ROW_HEIGHT
 dim shared gAutoCDetailWidth as long       ' measured width of the detail column, set by AutoC_Layout
-dim shared ghAutoCList    as HWND          ' the PsListBox child
+dim shared ghAutoCList    as HWND          ' the PsListTree child
 dim shared ghAutoCEdit    as HWND          ' the Scintilla window the open popup belongs to
 
 ' Per-popup geometry trace, on with TIKO_AUTOC_TRACE=1. Read once at Init: this prints
@@ -83,11 +83,11 @@ end function
 ' frmAutoComplete_PaintCallback
 '
 ' Three columns: a kind glyph in a fixed left gutter, the name, and a dimmed
-' right-aligned detail. The columns are laid out here rather than through PsListBox's
+' right-aligned detail. The columns are laid out here rather than through PsListTree's
 ' PsColumnHeader support because there is no header band and the widths are decided once
 ' per popup by AutoC_Layout.
 ' ========================================================================================
-private sub frmAutoComplete_PaintCallback( byval p as PSLISTBOX_PAINTINFO ptr )
+private sub frmAutoComplete_PaintCallback( byval p as PSLISTTREE_PAINTINFO ptr )
     dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMAUTOCOMPLETE)
     if pWindow = 0 then exit sub
 
@@ -159,8 +159,8 @@ end sub
 ' ========================================================================================
 ' frmAutoComplete_TooltipCallback
 '
-' Suppresses tooltips outright. PsListBox creates a tooltip for every instance and, with
-' NO callback set, falls back to the row's own text (PsListBox_ResolveTooltipText) -- so
+' Suppresses tooltips outright. PsListTree creates a tooltip for every instance and, with
+' NO callback set, falls back to the row's own text (PsListTree_ResolveTooltipText) -- so
 ' every row would pop a tip repeating the name already under the cursor. Returning an
 ' empty string is how a host says "no tip for this row"; the completion list wants that
 ' for all of them, since the row IS the text and the detail column carries the rest.
@@ -173,17 +173,17 @@ end function
 ' ========================================================================================
 ' frmAutoComplete_MessageCallback
 '
-' The click path. The owner-drawn PsListBox surface takes keyboard focus in its own
+' The click path. The owner-drawn PsListTree surface takes keyboard focus in its own
 ' WM_LBUTTONDOWN -- SetFocus on its container, BEFORE this callback runs -- exactly as the
 ' old system listbox did in its default handling. Either way that pulls focus off Scintilla,
 ' which kills the caret and stops the pump filter from seeing keystrokes, so we put focus
 ' straight back on the editor here and consume the message. The control takes no capture (it
 ' implements no drag gesture), so there is none to strand by swallowing the up.
 '
-' The model selection is still applied: PsListBox_ApplyClickSelection runs BEFORE this
+' The model selection is still applied: PsListTree_ApplyClickSelection runs BEFORE this
 ' callback is invoked. So the down selects, and the up commits.
 ' ========================================================================================
-private function frmAutoComplete_MessageCallback( byval m as PSLISTBOX_MESSAGEINFO ptr ) as boolean
+private function frmAutoComplete_MessageCallback( byval m as PSLISTTREE_MESSAGEINFO ptr ) as boolean
 
     select case m->uMsg
 
@@ -301,7 +301,7 @@ private function AutoC_Layout( byval pDoc as clsDocument ptr ) as boolean
     dim as long nRows = gAutoCVisCount
     if nRows > AUTOCOMPLETE_VISIBLE_ROWS then nRows = AUTOCOMPLETE_VISIBLE_ROWS
 
-    ' The scrollbar is only budgeted for when the list actually overflows -- PsListBox
+    ' The scrollbar is only budgeted for when the list actually overflows -- PsListTree
     ' auto-hides it, and reserving the strip unconditionally would leave a dead gutter on
     ' every short list.
     dim as long nScrollW = 0
@@ -366,7 +366,7 @@ private function AutoC_Layout( byval pDoc as clsDocument ptr ) as boolean
         print sTrace
     end if
 
-    PsListBox_SetRowHeight( ghAutoCList, gAutoCRowHeight )
+    PsListTree_SetRowHeight( ghAutoCList, gAutoCRowHeight )
     SetWindowPos( HWND_FRMAUTOCOMPLETE, HWND_TOP, x, y, winW, winH, SWP_NOACTIVATE )
     SetWindowPos( ghAutoCList, 0, nBorder, nBorder, winW - (nBorder * 2), winH - (nBorder * 2), _
                   SWP_NOACTIVATE or SWP_NOZORDER )
@@ -379,13 +379,13 @@ end function
 ' Push the currently filtered set into the listbox.
 ' ========================================================================================
 private sub AutoC_PopulateListBox()
-    PsListBox_BeginUpdate( ghAutoCList )
-    PsListBox_Clear( ghAutoCList )
+    PsListTree_BeginUpdate( ghAutoCList )
+    PsListTree_Clear( ghAutoCList )
     for i as long = 0 to gAutoCVisCount - 1
-        PsListBox_AddString( ghAutoCList, gAutoCItems( gAutoCVisible(i) ).wszName )
+        PsListTree_AddString( ghAutoCList, gAutoCItems( gAutoCVisible(i) ).wszName )
     next
-    PsListBox_EndUpdate( ghAutoCList )
-    if gAutoCVisCount > 0 then PsListBox_SetCurSel( ghAutoCList, 0 )
+    PsListTree_EndUpdate( ghAutoCList )
+    if gAutoCVisCount > 0 then PsListTree_SetCurSel( ghAutoCList, 0 )
 end sub
 
 
@@ -496,7 +496,7 @@ function frmAutoComplete_Commit( byval pDoc as clsDocument ptr ) as boolean
     if pDoc = 0 then return false
     if gAutoCOpen = false then return false
 
-    dim as long nRow = PsListBox_GetCurSel( ghAutoCList )
+    dim as long nRow = PsListTree_GetCurSel( ghAutoCList )
     dim as boolean bValidRow = (nRow >= 0) andalso (nRow < gAutoCVisCount)
     if bValidRow = false then
         frmAutoComplete_Cancel()
@@ -573,7 +573,7 @@ function frmAutoComplete_FilterMessage( byval pMsg as MSG ptr ) as boolean
     ' anything, and "(" only does so when there is a parameter list to help fill in.
     case WM_CHAR
         if pMsg->wParam = asc("(") then
-            dim as long nRow = PsListBox_GetCurSel( ghAutoCList )
+            dim as long nRow = PsListTree_GetCurSel( ghAutoCList )
             dim as boolean bValidRow = (nRow >= 0) andalso (nRow < gAutoCVisCount)
             dim as boolean bAccept = false
             if bValidRow then bAccept = gAutoCItems( gAutoCVisible(nRow) ).bHasParams
@@ -594,38 +594,38 @@ function frmAutoComplete_FilterMessage( byval pMsg as MSG ptr ) as boolean
         return false
 
     case WM_KEYDOWN
-        dim as long nRow   = PsListBox_GetCurSel( ghAutoCList )
+        dim as long nRow   = PsListTree_GetCurSel( ghAutoCList )
         dim as long nPage  = AUTOCOMPLETE_VISIBLE_ROWS - 1
         if nPage < 1 then nPage = 1
 
         select case pMsg->wParam
 
         case VK_DOWN
-            if nRow < gAutoCVisCount - 1 then PsListBox_SetCurSel( ghAutoCList, nRow + 1 )
+            if nRow < gAutoCVisCount - 1 then PsListTree_SetCurSel( ghAutoCList, nRow + 1 )
             return true
 
         case VK_UP
-            if nRow > 0 then PsListBox_SetCurSel( ghAutoCList, nRow - 1 )
+            if nRow > 0 then PsListTree_SetCurSel( ghAutoCList, nRow - 1 )
             return true
 
         case VK_NEXT
             dim as long n = nRow + nPage
             if n > gAutoCVisCount - 1 then n = gAutoCVisCount - 1
-            PsListBox_SetCurSel( ghAutoCList, n )
+            PsListTree_SetCurSel( ghAutoCList, n )
             return true
 
         case VK_PRIOR
             dim as long n = nRow - nPage
             if n < 0 then n = 0
-            PsListBox_SetCurSel( ghAutoCList, n )
+            PsListTree_SetCurSel( ghAutoCList, n )
             return true
 
         case VK_HOME
-            PsListBox_SetCurSel( ghAutoCList, 0 )
+            PsListTree_SetCurSel( ghAutoCList, 0 )
             return true
 
         case VK_END
-            PsListBox_SetCurSel( ghAutoCList, gAutoCVisCount - 1 )
+            PsListTree_SetCurSel( ghAutoCList, gAutoCVisCount - 1 )
             return true
 
         case VK_RETURN, VK_TAB
@@ -666,7 +666,7 @@ end function
 
 
 ' ========================================================================================
-' Row height, in UNSCALED units -- PsListBox_SetRowHeight DPI-scales it downstream, so do
+' Row height, in UNSCALED units -- PsListTree_SetRowHeight DPI-scales it downstream, so do
 ' NOT pre-scale what you pass in. Takes effect on the next popup (AutoC_Layout is where
 ' the whole window is sized, and it runs per show/re-filter).
 ' ========================================================================================
@@ -685,8 +685,8 @@ end function
 ' ========================================================================================
 sub frmAutoComplete_SyncTheme()
     if ghAutoCList = 0 then exit sub
-    PsListBox_SetBackColor( ghAutoCList, ghEditor.BackColorText )
-    PsListBox_SetScrollBarColors( ghAutoCList, ghEditor.BackColorScrollBar, _
+    PsListTree_SetBackColor( ghAutoCList, ghEditor.BackColorText )
+    PsListTree_SetScrollBarColors( ghAutoCList, ghEditor.BackColorScrollBar, _
                                  ghEditor.ForeColorScrollBar, ghEditor.ForeColorScrollBar )
     AfxRedrawWindow( HWND_FRMAUTOCOMPLETE )
 end sub
@@ -713,7 +713,7 @@ private function frmAutoComplete_WndProc( _
         return true
 
     case WM_PAINT
-        ' The PsListBox child covers everything but a one-pixel ring, so this paints only
+        ' The PsListTree child covers everything but a one-pixel ring, so this paints only
         ' the border. Deliberately NOT DPI-scaled: a hairline should stay a hairline.
         dim ps as PAINTSTRUCT
         dim as HDC hDC = BeginPaint( hwnd, @ps )
@@ -846,18 +846,18 @@ sub frmAutoComplete_Init()
     ' here commits on the FIRST up anyway.
     pWindow->ClassStyle = CS_DROPSHADOW
 
-    ghAutoCList = PsListBox_Create( HWND_FRMAUTOCOMPLETE, IDC_FRMAUTOCOMPLETE_LISTBOX )
-    PsListBox_SetPaintCallback( ghAutoCList, @frmAutoComplete_PaintCallback )
-    PsListBox_SetMessageCallback( ghAutoCList, @frmAutoComplete_MessageCallback )
-    PsListBox_SetTooltipCallback( ghAutoCList, @frmAutoComplete_TooltipCallback )
-    PsListBox_PreventDoubleClick( ghAutoCList )
-    PsListBox_SetFont( ghAutoCList, ghFont(GUIFONT_10) )
-    PsListBox_SetScrollBarWidth( ghAutoCList, SCROLLBAR_WIDTH_PANEL )
+    ghAutoCList = PsListTree_Create( HWND_FRMAUTOCOMPLETE, IDC_FRMAUTOCOMPLETE_LISTBOX )
+    PsListTree_SetPaintCallback( ghAutoCList, @frmAutoComplete_PaintCallback )
+    PsListTree_SetMessageCallback( ghAutoCList, @frmAutoComplete_MessageCallback )
+    PsListTree_SetTooltipCallback( ghAutoCList, @frmAutoComplete_TooltipCallback )
+    PsListTree_PreventDoubleClick( ghAutoCList )
+    PsListTree_SetFont( ghAutoCList, ghFont(GUIFONT_10) )
+    PsListTree_SetScrollBarWidth( ghAutoCList, SCROLLBAR_WIDTH_PANEL )
     frmAutoComplete_SyncTheme()
 
     ' Show the CONTAINER. Its inner LISTBOX is created without WS_VISIBLE and shows
     ' itself on the first populate (verified: the style gains WS_VISIBLE during
-    ' PsListBox_EndUpdate), which is why frmAutoComplete_Show populates before it shows
+    ' PsListTree_EndUpdate), which is why frmAutoComplete_Show populates before it shows
     ' the popup.
     ShowWindow( ghAutoCList, SW_SHOW )
 

@@ -34,8 +34,8 @@ type COLORS_LABEL
 end type
 
 
-dim shared ghColorThemes   as HWND      ' PsListBox
-dim shared ghColorFonts    as HWND      ' PsListBox (per-font preview)
+dim shared ghColorThemes   as HWND      ' PsListTree
+dim shared ghColorFonts    as HWND      ' PsListTree (per-font preview)
 dim shared ghColorSize     as HWND      ' PsComboBox
 dim shared ghColorCharset  as HWND      ' PsComboBox
 dim shared ghColorSpacing  as HWND      ' PsNumericUpDown
@@ -158,7 +158,7 @@ end sub
 
 private sub frmOptionsColors_FontSelChange( byval hList as HWND, byval row as integer )
     if row < 0 then exit sub
-    gOptWork.EditorFontname = PsListBox_GetText( hList, row )
+    gOptWork.EditorFontname = PsListTree_GetText( hList, row )
 end sub
 
 private sub frmOptionsColors_SizeSelChange( byval hCombo as HWND, byval idxOld as long, byval idxNew as long )
@@ -179,7 +179,7 @@ end sub
 ' ========================================================================================
 ' Paint one theme row (plain text in the base font).
 ' ========================================================================================
-private sub frmOptionsColors_ThemePaint( byval p as PSLISTBOX_PAINTINFO ptr )
+private sub frmOptionsColors_ThemePaint( byval p as PSLISTTREE_PAINTINFO ptr )
     if p = 0 then exit sub
     dim as COLORREF backclr, foreclr
     if p->isSelected orelse p->isHot then
@@ -202,7 +202,7 @@ end sub
 ' repaint (only visible rows paint) and freed after being deselected, exactly as the old
 ' owner-drawn combo did.
 ' ========================================================================================
-private sub frmOptionsColors_FontPaint( byval p as PSLISTBOX_PAINTINFO ptr )
+private sub frmOptionsColors_FontPaint( byval p as PSLISTTREE_PAINTINFO ptr )
     if p = 0 then exit sub
     dim as COLORREF backclr, foreclr
     if p->isSelected orelse p->isHot then
@@ -244,8 +244,8 @@ sub frmOptionsColors_RefreshThemeList()
     if ghColorThemes = 0 then exit sub
     dim as long idx = frmOptionsColors_LoadThemes()
     if idx >= 0 then
-        PsListBox_SetCurSel( ghColorThemes, idx )
-        PsListBox_SetTopIndex( ghColorThemes, idx )
+        PsListTree_SetCurSel( ghColorThemes, idx )
+        PsListTree_SetTopIndex( ghColorThemes, idx )
     end if
     AfxRedrawWindow( ghColorThemes )
 end sub
@@ -256,8 +256,8 @@ end sub
 ' Returns the row matching the stored theme, or -1.
 ' ========================================================================================
 private function frmOptionsColors_LoadThemes() as long
-    PsListBox_BeginUpdate( ghColorThemes )
-    PsListBox_Clear( ghColorThemes )
+    PsListTree_BeginUpdate( ghColorThemes )
+    PsListTree_Clear( ghColorThemes )
     erase gThemeFilenames
 
     dim as long idxMatch = -1
@@ -272,7 +272,7 @@ private function frmOptionsColors_LoadThemes() as long
             if (WFD.cFileName <> ".") andalso (WFD.cFileName <> "..") then
                 dim as DWSTRING wszFull = wszPath & WFD.cFileName
                 dim as DWSTRING wszDisplay = GetThemeDescription( wszFull )
-                idx = PsListBox_AddString( ghColorThemes, wszDisplay )
+                idx = PsListTree_AddString( ghColorThemes, wszDisplay )
                 redim preserve gThemeFilenames(idx) as DWSTRING
                 gThemeFilenames(idx) = WFD.cFileName
                 if ucase(gOptWork.ThemeShortFilename) = ucase(WFD.cFileName) then idxMatch = idx
@@ -281,7 +281,7 @@ private function frmOptionsColors_LoadThemes() as long
         FindClose( hSearch )
     end if
 
-    PsListBox_EndUpdate( ghColorThemes )
+    PsListTree_EndUpdate( ghColorThemes )
     function = idxMatch
 end function
 
@@ -313,15 +313,15 @@ private function frmOptionsColors_LoadFonts() as long
     dim as DWSTRING wszWanted = ucase( gOptWork.EditorFontname )
     dim as DWSTRING wszPrev = ""
 
-    PsListBox_BeginUpdate( ghColorFonts )
-    PsListBox_Clear( ghColorFonts )
+    PsListTree_BeginUpdate( ghColorFonts )
+    PsListTree_Clear( ghColorFonts )
     for i as long = lbound(gColorFontNames) to ubound(gColorFontNames)
         if ucase(gColorFontNames(i)) = ucase(wszPrev) then continue for   ' drop duplicate
-        dim as long r = PsListBox_AddString( ghColorFonts, gColorFontNames(i) )
+        dim as long r = PsListTree_AddString( ghColorFonts, gColorFontNames(i) )
         if ucase(gColorFontNames(i)) = wszWanted then idxMatch = r
         wszPrev = gColorFontNames(i)
     next
-    PsListBox_EndUpdate( ghColorFonts )
+    PsListTree_EndUpdate( ghColorFonts )
 
     function = idxMatch
 end function
@@ -335,18 +335,18 @@ sub frmOptionsColors_Build( byval hPage as HWND )
     if gColorBuilt then exit sub
 
     ' Themes list.
-    ghColorThemes = PsListBox_Create( hPage, IDC_FRMOPTIONSCOLORS_LSTTHEMES )
-    PsListBox_SetPaintCallback( ghColorThemes, @frmOptionsColors_ThemePaint )
-    PsListBox_SetSelChangeCallback( ghColorThemes, @frmOptionsColors_ThemeSelChange )
-    PsListBox_SetFont( ghColorThemes, OptionsFont_Base() )
-    PsListBox_SetScrollBarWidth( ghColorThemes, SCROLLBAR_WIDTH_PANEL )
+    ghColorThemes = PsListTree_Create( hPage, IDC_FRMOPTIONSCOLORS_LSTTHEMES )
+    PsListTree_SetPaintCallback( ghColorThemes, @frmOptionsColors_ThemePaint )
+    PsListTree_SetSelChangeCallback( ghColorThemes, @frmOptionsColors_ThemeSelChange )
+    PsListTree_SetFont( ghColorThemes, OptionsFont_Base() )
+    PsListTree_SetScrollBarWidth( ghColorThemes, SCROLLBAR_WIDTH_PANEL )
 
     ' Fonts list (per-font preview).
-    ghColorFonts = PsListBox_Create( hPage, IDC_FRMOPTIONSCOLORS_LSTFONTS )
-    PsListBox_SetPaintCallback( ghColorFonts, @frmOptionsColors_FontPaint )
-    PsListBox_SetSelChangeCallback( ghColorFonts, @frmOptionsColors_FontSelChange )
-    PsListBox_SetFont( ghColorFonts, OptionsFont_Base() )
-    PsListBox_SetScrollBarWidth( ghColorFonts, SCROLLBAR_WIDTH_PANEL )
+    ghColorFonts = PsListTree_Create( hPage, IDC_FRMOPTIONSCOLORS_LSTFONTS )
+    PsListTree_SetPaintCallback( ghColorFonts, @frmOptionsColors_FontPaint )
+    PsListTree_SetSelChangeCallback( ghColorFonts, @frmOptionsColors_FontSelChange )
+    PsListTree_SetFont( ghColorFonts, OptionsFont_Base() )
+    PsListTree_SetScrollBarWidth( ghColorFonts, SCROLLBAR_WIDTH_PANEL )
 
     ' Size and character-set combos.
     ghColorSize = PsComboBox_Create( hPage, IDC_FRMOPTIONSCOLORS_COMBOSIZE )
@@ -371,14 +371,14 @@ sub frmOptionsColors_Build( byval hPage as HWND )
     ' ---- populate lists and seed selections ------------------------------------------
     dim as long idxTheme = frmOptionsColors_LoadThemes()
     if idxTheme >= 0 then
-        PsListBox_SetCurSel( ghColorThemes, idxTheme )
-        PsListBox_SetTopIndex( ghColorThemes, idxTheme )
+        PsListTree_SetCurSel( ghColorThemes, idxTheme )
+        PsListTree_SetTopIndex( ghColorThemes, idxTheme )
     end if
 
     dim as long idxFont = frmOptionsColors_LoadFonts()
     if idxFont >= 0 then
-        PsListBox_SetCurSel( ghColorFonts, idxFont )
-        PsListBox_SetTopIndex( ghColorFonts, idxFont )
+        PsListTree_SetCurSel( ghColorFonts, idxFont )
+        PsListTree_SetTopIndex( ghColorFonts, idxFont )
     end if
 
     ' Size list depends on the font; filled once (matching the old page, which did not
@@ -404,8 +404,8 @@ sub frmOptionsColors_ApplyTheme()
 
     for i as long = 0 to 1
         dim as HWND h = iif( i = 0, ghColorThemes, ghColorFonts )
-        PsListBox_SetBackColor( h, ghPanel.BackColor )
-        PsListBox_SetScrollBarColors( h, ghPanel.BackColorScrollBar, _
+        PsListTree_SetBackColor( h, ghPanel.BackColor )
+        PsListTree_SetScrollBarColors( h, ghPanel.BackColorScrollBar, _
                                      ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
     next
 

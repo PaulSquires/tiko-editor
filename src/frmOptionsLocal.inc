@@ -13,7 +13,7 @@
 
 '  frmOptionsLocal.inc  --  the Localization page (see frmOptionsLocal.bi).
 '
-'  Panel-hosted, like Compiler Setup. The phrase list is a PsListBox with a column header
+'  Panel-hosted, like Compiler Setup. The phrase list is a PsListTree with a column header
 '  band; the four commands are PsButtons; the English and translation fields are PsTextBoxes.
 '  The file I/O and the gLocalPhrases / gLocalPhrasesEdit business logic are carried over
 '  from the old child form unchanged.
@@ -102,7 +102,7 @@ end sub
 
 ' ========================================================================================
 ' If a localization file is currently being edited then save it. (Unchanged logic; the
-' current filename now comes from gLocalCurrentFile and the phrase rows from the PsListBox.)
+' current filename now comes from gLocalCurrentFile and the phrase rows from the PsListTree.)
 ' ========================================================================================
 function frmOptionsLocal_LocalEditCheck() as long
     if gLocalPhrasesEdit = false then exit function
@@ -115,7 +115,7 @@ function frmOptionsLocal_LocalEditCheck() as long
     if ucase(trim(AfxStrPathname( "NAMEX", wszFilename ))) = "ENGLISH.LANG" then exit function
     if ghLocalList = 0 then exit function
 
-    dim as long nCount = PsListBox_GetCount( ghLocalList )
+    dim as long nCount = PsListTree_GetCount( ghLocalList )
 
     AfxDeleteFile(wszFileName)
 
@@ -136,7 +136,7 @@ function frmOptionsLocal_LocalEditCheck() as long
         pStream.WriteLine(wszTemp)
 
         for i as long = 0 to nCount - 1
-            dim as DWSTRING wszIndex = PsListBox_GetCellText( ghLocalList, i, 0 )
+            dim as DWSTRING wszIndex = PsListTree_GetCellText( ghLocalList, i, 0 )
             dim as long idx = val(wszIndex)
             wszTemp = wspace(1024)
             wszPhrase = AfxStrRSet(wszIndex, 5, "0") + wstr(":") + gLocalPhrases(idx)
@@ -273,15 +273,15 @@ end sub
 
 ' ========================================================================================
 ' Reflect the selected phrase row into the English / translation textboxes. (Ported; the
-' listview reads become PsListBox cell reads.)
+' listview reads become PsListTree cell reads.)
 ' ========================================================================================
 sub frmOptionsLocal_UpdateTextBoxes()
     if ghLocalList = 0 then exit sub
-    dim as long nCurSel = PsListBox_GetCurSel( ghLocalList )
+    dim as long nCurSel = PsListTree_GetCurSel( ghLocalList )
     if nCurSel < 0 then exit sub
 
-    dim as DWSTRING wszIndex   = PsListBox_GetCellText( ghLocalList, nCurSel, 0 )
-    dim as DWSTRING wszEnglish = PsListBox_GetCellText( ghLocalList, nCurSel, 1 )
+    dim as DWSTRING wszIndex   = PsListTree_GetCellText( ghLocalList, nCurSel, 0 )
+    dim as DWSTRING wszEnglish = PsListTree_GetCellText( ghLocalList, nCurSel, 1 )
     dim as long idx = val(wszIndex)
     if (idx >= lbound(gLocalPhrases)) andalso (idx <= ubound(gLocalPhrases)) then
         PsTextBox_SetText( ghLocalEnglish, wszEnglish )               ' silent
@@ -304,9 +304,9 @@ end sub
 ' ========================================================================================
 private sub frmOptionsLocal_TranslateChanged( byval hTextBox as HWND )
     if ghLocalList = 0 then exit sub
-    dim as long nCurSel = PsListBox_GetCurSel( ghLocalList )
+    dim as long nCurSel = PsListTree_GetCurSel( ghLocalList )
     if nCurSel < 0 then exit sub
-    dim as DWSTRING wszIndex = PsListBox_GetCellText( ghLocalList, nCurSel, 0 )
+    dim as DWSTRING wszIndex = PsListTree_GetCellText( ghLocalList, nCurSel, 0 )
     dim as long idx = val(wszIndex)
     if (idx >= lbound(gLocalPhrases)) andalso (idx <= ubound(gLocalPhrases)) then
         gLocalPhrases(idx) = PsTextBox_GetText( ghLocalTranslate )
@@ -326,7 +326,7 @@ private sub frmOptionsLocal_SelectClick( byval hButton as HWND, byval id as long
     if pwszName then
         frmOptionsLocal_LoadLocalizationFile( *pwszName )
         gLocalPhrasesEdit = false
-        PsListBox_SetCurSel( ghLocalList, -1 )
+        PsListTree_SetCurSel( ghLocalList, -1 )
         PsTextBox_SetText( ghLocalEnglish, "" )
         PsTextBox_SetText( ghLocalTranslate, "" )
         gLocalCurrentFile = AfxStrPathname( "NAMEX", *pwszName )
@@ -347,7 +347,7 @@ private sub frmOptionsLocal_NewClick( byval hButton as HWND, byval id as long )
         gLocalTransLabel  = AfxStrPathName( "NAME", *pwszName )
         gLocalPhrasesEdit = true
         frmOptionsLocal_DisableEnglish()
-        PsListBox_SetCurSel( ghLocalList, 0 )
+        PsListTree_SetCurSel( ghLocalList, 0 )
         frmOptionsLocal_UpdateTextBoxes()
         SetFocus( PsTextBox_GetRichEditHandle( ghLocalTranslate ) )
         CoTaskMemFree( pwszName )
@@ -361,7 +361,7 @@ private sub frmOptionsLocal_EditClick( byval hButton as HWND, byval id as long )
     gLocalTransLabel = AfxStrPathName( "NAME", wszLanguage )
     gLocalPhrasesEdit = true
     frmOptionsLocal_DisableEnglish()
-    PsListBox_SetCurSel( ghLocalList, 0 )
+    PsListTree_SetCurSel( ghLocalList, 0 )
     frmOptionsLocal_UpdateTextBoxes()
     SetFocus( PsTextBox_GetRichEditHandle( ghLocalTranslate ) )
 end sub
@@ -377,7 +377,7 @@ private sub frmOptionsLocal_DeleteClick( byval hButton as HWND, byval id as long
     dim as DWSTRING wszFileName = AfxGetExePathName + wstr("settings\languages\") + gLocalCurrentFile
     frmOptionsLocal_ClearGlobalArray()
     AfxDeleteFile( wszFileName )
-    PsListBox_SetCurSel( ghLocalList, -1 )
+    PsListTree_SetCurSel( ghLocalList, -1 )
     PsTextBox_SetText( ghLocalEnglish, "" )
     PsTextBox_SetText( ghLocalTranslate, "" )
     gLocalCurrentFile = wstr("english.lang")
@@ -390,7 +390,7 @@ end sub
 ' ========================================================================================
 ' Paint one phrase row (two columns: index, English phrase).
 ' ========================================================================================
-private sub frmOptionsLocal_ListPaint( byval p as PSLISTBOX_PAINTINFO ptr )
+private sub frmOptionsLocal_ListPaint( byval p as PSLISTTREE_PAINTINFO ptr )
     if p = 0 then exit sub
     dim as COLORREF backclr, foreclr
     if p->isSelected orelse p->isHot then
@@ -471,15 +471,15 @@ sub frmOptionsLocal_Build( byval hPage as HWND )
     PsButton_SetClickCallback( ghLocalDelete, @frmOptionsLocal_DeleteClick )
 
     ' ---- phrase list -----------------------------------------------------------------
-    ghLocalList = PsListBox_Create( hPage, IDC_FRMOPTIONSLOCAL_LSTPHRASES )
-    PsListBox_AddColumn( ghLocalList, "Index", AfxScaleX(60) )
-    PsListBox_AddColumn( ghLocalList, "English Phrase", AfxScaleX(280) )
-    PsListBox_SetFillColumn( ghLocalList, 1 )
-    PsListBox_ShowHeader( ghLocalList, true )
-    PsListBox_SetPaintCallback( ghLocalList, @frmOptionsLocal_ListPaint )
-    PsListBox_SetHeaderPaintCallback( ghLocalList, @frmOptionsLocal_HeaderPaint )
-    PsListBox_SetSelChangeCallback( ghLocalList, @frmOptionsLocal_ListSelChange )
-    PsListBox_SetFont( ghLocalList, OptionsFont_Base() )
+    ghLocalList = PsListTree_Create( hPage, IDC_FRMOPTIONSLOCAL_LSTPHRASES )
+    PsListTree_AddColumn( ghLocalList, "Index", AfxScaleX(60) )
+    PsListTree_AddColumn( ghLocalList, "English Phrase", AfxScaleX(280) )
+    PsListTree_SetFillColumn( ghLocalList, 1 )
+    PsListTree_ShowHeader( ghLocalList, true )
+    PsListTree_SetPaintCallback( ghLocalList, @frmOptionsLocal_ListPaint )
+    PsListTree_SetHeaderPaintCallback( ghLocalList, @frmOptionsLocal_HeaderPaint )
+    PsListTree_SetSelChangeCallback( ghLocalList, @frmOptionsLocal_ListSelChange )
+    PsListTree_SetFont( ghLocalList, OptionsFont_Base() )
 
     ' ---- English (readonly) and translation text fields ------------------------------
     ghLocalEnglish = PsTextBox_Create( hPage, IDC_FRMOPTIONSLOCAL_TXTENGLISH )
@@ -491,12 +491,12 @@ sub frmOptionsLocal_Build( byval hPage as HWND )
     ' ---- populate the phrase list from the English reference (once) -------------------
     redim gLocalPhrases( ubound(gLangEnglish) )
     frmOptionsLocal_LoadLocalizationFile( gLocalCurrentFile )
-    PsListBox_BeginUpdate( ghLocalList )
+    PsListTree_BeginUpdate( ghLocalList )
     for i as long = lbound(gLangEnglish) to ubound(gLangEnglish)
         dim as DWSTRING wKey = AfxStrRset( str(i), 5, "0" )
         ListBox_AddTabbedRow( ghLocalList, wKey & chr(9) & gLangEnglish(i) )
     next
-    PsListBox_EndUpdate( ghLocalList )
+    PsListTree_EndUpdate( ghLocalList )
 
     gLocalBuilt = true
     frmOptionsLocal_ApplyTheme()
@@ -517,8 +517,8 @@ sub frmOptionsLocal_ApplyTheme()
     PsButton_SetColors( ghLocalEdit, @bc )   : PsButton_Refresh( ghLocalEdit )
     PsButton_SetColors( ghLocalDelete, @bc ) : PsButton_Refresh( ghLocalDelete )
 
-    PsListBox_SetBackColor( ghLocalList, ghPanel.BackColor )
-    PsListBox_SetScrollBarColors( ghLocalList, ghPanel.BackColorScrollBar, _
+    PsListTree_SetBackColor( ghLocalList, ghPanel.BackColor )
+    PsListTree_SetScrollBarColors( ghLocalList, ghPanel.BackColorScrollBar, _
                                  ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
 
     OptionsTheme_ApplyTextBox( ghLocalEnglish )

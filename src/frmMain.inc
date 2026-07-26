@@ -1452,7 +1452,7 @@ function frmMain_WndProc( _
             ' Only the busy cursor is frmMain's to set. The two drag arms that used to
             ' head this chain (a hand-rolled splitter/listview drag, and a top-tab drag)
             ' are gone with their globals: every drag site is a reusable control now --
-            ' PsSplitter, PsListBox, PsTabBar -- and each sets its own cursor from its own
+            ' PsSplitter, PsListTree, PsTabBar -- and each sets its own cursor from its own
             ' WM_SETCURSOR, so frmMain must not answer for them.
             if (gApp.IsCompiling = true) or _
                (gApp.IsProjectLoading = true) or _

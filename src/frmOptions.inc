@@ -15,7 +15,7 @@
 '
 '  SHAPE
 '      +---------------------+----------------------------------------+
-'      |  PsListBox (nav)     |  page title band  (fixed, not scrolled) |
+'      |  PsListTree (nav)     |  page title band  (fixed, not scrolled) |
 '      |  grouped, fixed     +----------------------------------------+
 '      |  width, NO splitter |  PsScrollPanel                          |
 '      |                     |    GetPanel() is the parent of every    |
@@ -190,7 +190,7 @@ End function
 ' ========================================================================================
 ' Paint one row of the navigation list.
 ' ========================================================================================
-private sub frmOptions_NavPaintCallback( byval p as PSLISTBOX_PAINTINFO ptr )
+private sub frmOptions_NavPaintCallback( byval p as PSLISTTREE_PAINTINFO ptr )
     if p = 0 then exit sub
 
     dim as COLORREF backclr, foreclr
@@ -222,7 +222,7 @@ end sub
 ' ========================================================================================
 private sub frmOptions_NavSelChangeCallback( byval hList as HWND, byval row as integer )
     if row < 0 then exit sub
-    frmOptions_ShowPage( PsListBox_GetItemData( hList, row ) )
+    frmOptions_ShowPage( PsListTree_GetItemData( hList, row ) )
 end sub
 
 
@@ -846,8 +846,8 @@ end function
 ' ========================================================================================
 private sub frmOptions_ApplyTheme( byval hwnd as HWND )
 
-    PsListBox_SetBackColor( HWND_FRMOPTIONS_NAV, ghPanel.BackColor )
-    PsListBox_SetScrollBarColors( HWND_FRMOPTIONS_NAV, ghPanel.BackColorScrollBar, _
+    PsListTree_SetBackColor( HWND_FRMOPTIONS_NAV, ghPanel.BackColor )
+    PsListTree_SetScrollBarColors( HWND_FRMOPTIONS_NAV, ghPanel.BackColorScrollBar, _
                                  ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
 
     ' The plain container's WM_CTLCOLOR brush is derived from the back colour, so it is rebuilt
@@ -891,24 +891,24 @@ end sub
 ' ========================================================================================
 private sub frmOptions_BuildNavList( byval hList as HWND )
 
-    PsListBox_BeginUpdate( hList )
-    PsListBox_Clear( hList )
+    PsListTree_BeginUpdate( hList )
+    PsListTree_Clear( hList )
 
-    ' FLAT -- no PsListBox_AddHeader calls anywhere. Eight pages read fine as one list, and
+    ' FLAT -- no PsListTree_AddHeader calls anywhere. Eight pages read fine as one list, and
     ' merging Advanced Code Editor into Code Editor had left three of the five groups
     ' holding a single item each.
-    PsListBox_AddString( hList, L(226,"General Options"),      OPTPAGE_GENERAL )
-    PsListBox_AddString( hList, L(110,"Code Editor"),          OPTPAGE_EDITOR )
-    PsListBox_AddString( hList, L(111,"Themes and Fonts"),     OPTPAGE_COLORS )
-    PsListBox_AddString( hList, L(463,"Syntax Colors"),        OPTPAGE_SYNTAX )
-    PsListBox_AddString( hList, L(464,"Interface Colors"),     OPTPAGE_INTERFACE )
-    PsListBox_AddString( hList, L(112,"Compiler Setup"),       OPTPAGE_COMPILER )
-    PsListBox_AddString( hList, L(129,"Localization"),         OPTPAGE_LOCAL )
-    PsListBox_AddString( hList, L(177,"FreeBASIC Keywords"),   OPTPAGE_KEYWORDS )
-    PsListBox_AddString( hList, L(435,"Windows Api Keywords"), OPTPAGE_KEYWORDSWINAPI )
-    PsListBox_AddString( hList, L(439,"Extra Keywords"),       OPTPAGE_KEYWORDSEXTRA )
+    PsListTree_AddString( hList, L(226,"General Options"),      OPTPAGE_GENERAL )
+    PsListTree_AddString( hList, L(110,"Code Editor"),          OPTPAGE_EDITOR )
+    PsListTree_AddString( hList, L(111,"Themes and Fonts"),     OPTPAGE_COLORS )
+    PsListTree_AddString( hList, L(463,"Syntax Colors"),        OPTPAGE_SYNTAX )
+    PsListTree_AddString( hList, L(464,"Interface Colors"),     OPTPAGE_INTERFACE )
+    PsListTree_AddString( hList, L(112,"Compiler Setup"),       OPTPAGE_COMPILER )
+    PsListTree_AddString( hList, L(129,"Localization"),         OPTPAGE_LOCAL )
+    PsListTree_AddString( hList, L(177,"FreeBASIC Keywords"),   OPTPAGE_KEYWORDS )
+    PsListTree_AddString( hList, L(435,"Windows Api Keywords"), OPTPAGE_KEYWORDSWINAPI )
+    PsListTree_AddString( hList, L(439,"Extra Keywords"),       OPTPAGE_KEYWORDSEXTRA )
 
-    PsListBox_EndUpdate( hList )
+    PsListTree_EndUpdate( hList )
 
 end sub
 
@@ -917,8 +917,8 @@ end sub
 ' Find the navigation row that carries a page id, or -1.
 ' ========================================================================================
 private function frmOptions_NavRowForPage( byval hList as HWND, byval nPage as long ) as long
-    for i as long = 0 to PsListBox_GetCount(hList) - 1
-        if PsListBox_GetItemData( hList, i ) = nPage then return i
+    for i as long = 0 to PsListTree_GetCount(hList) - 1
+        if PsListTree_GetItemData( hList, i ) = nPage then return i
     next
     function = -1
 end function
@@ -962,13 +962,13 @@ function frmOptions_Show( byval hWndParent as HWND ) as LRESULT
     pWindow->Center( pWindow->hWindow, hWndParent )
 
     ' ---- navigation list -------------------------------------------------------------
-    HWND_FRMOPTIONS_NAV = PsListBox_Create( HWND_FRMOPTIONS, IDC_FRMOPTIONS_NAVLIST )
-    PsListBox_SetPaintCallback( HWND_FRMOPTIONS_NAV, @frmOptions_NavPaintCallback )
-    PsListBox_SetSelChangeCallback( HWND_FRMOPTIONS_NAV, @frmOptions_NavSelChangeCallback )
-    PsListBox_SetFont( HWND_FRMOPTIONS_NAV, OptionsFont_Base() )
-    ' Row height is in UNSCALED units (PsListBox scales what it is handed) and has to grow
+    HWND_FRMOPTIONS_NAV = PsListTree_Create( HWND_FRMOPTIONS, IDC_FRMOPTIONS_NAVLIST )
+    PsListTree_SetPaintCallback( HWND_FRMOPTIONS_NAV, @frmOptions_NavPaintCallback )
+    PsListTree_SetSelChangeCallback( HWND_FRMOPTIONS_NAV, @frmOptions_NavSelChangeCallback )
+    PsListTree_SetFont( HWND_FRMOPTIONS_NAV, OptionsFont_Base() )
+    ' Row height is in UNSCALED units (PsListTree scales what it is handed) and has to grow
     ' with the base font, or a 12pt list clips its own rows.
-    PsListBox_SetRowHeight( HWND_FRMOPTIONS_NAV, 26 + ((OptionsFont_PointSize() - 10) * 2) )
+    PsListTree_SetRowHeight( HWND_FRMOPTIONS_NAV, 26 + ((OptionsFont_PointSize() - 10) * 2) )
     frmOptions_BuildNavList( HWND_FRMOPTIONS_NAV )
 
     ' ---- scrolling page area ---------------------------------------------------------
@@ -1030,7 +1030,7 @@ function frmOptions_Show( byval hWndParent as HWND ) as LRESULT
     frmOptions_ShowPage( nStartPage )
 
     dim as long nNavRow = frmOptions_NavRowForPage( HWND_FRMOPTIONS_NAV, nStartPage )
-    if nNavRow >= 0 then PsListBox_SetCurSel( HWND_FRMOPTIONS_NAV, nNavRow )
+    if nNavRow >= 0 then PsListTree_SetCurSel( HWND_FRMOPTIONS_NAV, nNavRow )
 
     OptionsRows_RunSelfTest( hPage )
     frmOptions_RunFitSelfTest()

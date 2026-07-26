@@ -263,14 +263,14 @@ function SetDocumentErrorPosition ( byval hLV as HWND ) as long
     dim wszErrorLine as wstring * MAX_PATH
     dim wszErrorFile as wstring * MAX_PATH
     
-    dim as long nCurSel = PsListBox_GetCurSel(hLV)
+    dim as long nCurSel = PsListTree_GetCurSel(hLV)
     if nCurSel < 0 then return 0 
     
     dim pDoc as clsDocument ptr 
 
     ' Get the line number and filename of the selected item
-    wszErrorLine = PsListBox_GetCellText(hLV, nCurSel, 1)
-    wszErrorFile = PsListBox_GetCellText(hLV, nCurSel, 2)
+    wszErrorLine = PsListTree_GetCellText(hLV, nCurSel, 1)
+    wszErrorFile = PsListTree_GetCellText(hLV, nCurSel, 2)
     dim as long nLineNum = val(wszErrorLine) - 1   ' because visually the editor is one based line numbers
 
     ' if we are doing a QuickRun then it must be on the currently loaded
@@ -341,7 +341,7 @@ function ParseLogForError ( _
     pCompile->EndTime = timer
 
     hLV = HWND_FRMOUTPUT_LVRESULTS
-    PsListBox_Clear( hLV )
+    PsListTree_Clear( hLV )
     
     ' On some Windows systems with tight security policies, the CreateChildProcess used
     ' by the sub RedirConsoleToFile will fail. This seems to happen mostly when trying
@@ -559,7 +559,7 @@ function ParseLogForError ( _
         if NumErrors > 0 then MessageBeep(MB_ICONWARNING)
         
         ' Position the Compiler Log to the first error/warning
-        PsListBox_SetCurSel( hLV, 0 )
+        PsListTree_SetCurSel( hLV, 0 )
         
         ' if fGoodCompile is false then something unusual occurred so better show the log file by default
         if fGoodCompile = false then

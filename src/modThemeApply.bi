@@ -16,7 +16,7 @@
 '  WHY THIS IS A SEPARATE FILE FROM modThemes.inc
 '    modThemes.inc is included at tiko.bas:83, before every Ps* control and every frm*
 '    module, because clsConfig / modRoutines / clsDocument all read the gh* globals. It
-'    therefore cannot call frmExplorer_ApplyTheme, PsListBox_Refresh or anything else -- none
+'    therefore cannot call frmExplorer_ApplyTheme, PsListTree_Refresh or anything else -- none
 '    of them exist yet. So the theme subsystem is split by include POSITION, not by taste:
 '
 '      modThemes.inc      (83)   pure data: parse, bind, fill, mutate, snapshot

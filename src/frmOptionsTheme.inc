@@ -24,7 +24,7 @@
 ' PsScrollPanel page window and switched with Show/Hide, so a second set would be dead
 ' weight. gThemeCurPage decides which keys the list holds.
 ' ----------------------------------------------------------------------------------------
-dim shared ghThemeKeys      as HWND      ' PsListBox
+dim shared ghThemeKeys      as HWND      ' PsListTree
 dim shared ghThemeFore      as HWND      ' PsButton
 dim shared ghThemeBack      as HWND      ' PsButton
 dim shared ghThemeBold      as HWND      ' PsToggle
@@ -277,7 +277,7 @@ private sub frmOptionsTheme_PopulateList()
 
     Theme_BuildBindTable()
 
-    PsListBox_Clear( ghThemeKeys )
+    PsListTree_Clear( ghThemeKeys )
     erase gThemeRowBind
 
     ' Rows are appended in bind-table order, and a group header is emitted whenever the
@@ -299,18 +299,18 @@ private sub frmOptionsTheme_PopulateList()
             nRow += 1
             redim preserve gThemeRowBind(nRow) as long
             gThemeRowBind(nRow) = -1                 ' -1 marks a header row
-            PsListBox_AddHeader( ghThemeKeys, frmOptionsTheme_CategoryTitle( nCat ) )
+            PsListTree_AddHeader( ghThemeKeys, frmOptionsTheme_CategoryTitle( nCat ) )
         end if
 
         nRow += 1
         redim preserve gThemeRowBind(nRow) as long
         gThemeRowBind(nRow) = i
-        PsListBox_AddString( ghThemeKeys, sKey, i )
+        PsListTree_AddString( ghThemeKeys, sKey, i )
         if nFirstSelectable < 0 then nFirstSelectable = nRow
 
     next
 
-    if nFirstSelectable >= 0 then PsListBox_SetCurSel( ghThemeKeys, nFirstSelectable )
+    if nFirstSelectable >= 0 then PsListTree_SetCurSel( ghThemeKeys, nFirstSelectable )
 
 end sub
 
@@ -320,7 +320,7 @@ end sub
 ' ========================================================================================
 private function frmOptionsTheme_SelectedBind() as long
     if ghThemeKeys = 0 then return -1
-    dim as long row = PsListBox_GetCurSel( ghThemeKeys )
+    dim as long row = PsListTree_GetCurSel( ghThemeKeys )
     if (row < lbound(gThemeRowBind)) orelse (row > ubound(gThemeRowBind)) then return -1
     return gThemeRowBind(row)
 end function
@@ -724,7 +724,7 @@ end sub
 ' Row painting: the key name, then its foreground and background swatches, then B/I/U.
 ' Right-aligned so the swatches line up in a column no matter how long the key is.
 ' ========================================================================================
-private sub frmOptionsTheme_ListPaint( byval p as PSLISTBOX_PAINTINFO ptr )
+private sub frmOptionsTheme_ListPaint( byval p as PSLISTTREE_PAINTINFO ptr )
 
     if p = 0 then exit sub
 
@@ -830,12 +830,12 @@ sub frmOptionsTheme_Build( byval nPage as long, byval hPage as HWND )
     end if
     gThemeBuilt = true
 
-    ghThemeKeys = PsListBox_Create( hPage, IDC_FRMOPTIONSTHEME_LSTKEYS )
-    PsListBox_SetPaintCallback( ghThemeKeys, @frmOptionsTheme_ListPaint )
-    PsListBox_SetSelChangeCallback( ghThemeKeys, @frmOptionsTheme_ListSelChange )
-    PsListBox_SetTooltipCallback( ghThemeKeys, @frmOptionsTheme_ListTooltip )
-    PsListBox_SetRowHeight( ghThemeKeys, THEME_ROWHEIGHT )
-    PsListBox_SetScrollBarWidth( ghThemeKeys, SCROLLBAR_WIDTH_PANEL )
+    ghThemeKeys = PsListTree_Create( hPage, IDC_FRMOPTIONSTHEME_LSTKEYS )
+    PsListTree_SetPaintCallback( ghThemeKeys, @frmOptionsTheme_ListPaint )
+    PsListTree_SetSelChangeCallback( ghThemeKeys, @frmOptionsTheme_ListSelChange )
+    PsListTree_SetTooltipCallback( ghThemeKeys, @frmOptionsTheme_ListTooltip )
+    PsListTree_SetRowHeight( ghThemeKeys, THEME_ROWHEIGHT )
+    PsListTree_SetScrollBarWidth( ghThemeKeys, SCROLLBAR_WIDTH_PANEL )
 
     ghThemeFore = PsButton_Create( hPage, IDC_FRMOPTIONSTHEME_CMDFORE )
     PsButton_SetText( ghThemeFore, L(455, "Foreground") & "..." )
@@ -909,10 +909,10 @@ sub frmOptionsTheme_ApplyTheme()
 
     if gThemeBuilt = false then exit sub
 
-    PsListBox_SetBackColor( ghThemeKeys, ghPanel.BackColor )
-    PsListBox_SetScrollBarColors( ghThemeKeys, ghPanel.BackColorScrollBar, _
+    PsListTree_SetBackColor( ghThemeKeys, ghPanel.BackColor )
+    PsListTree_SetScrollBarColors( ghThemeKeys, ghPanel.BackColorScrollBar, _
                                   ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
-    PsListBox_SetFont( ghThemeKeys, OptionsFont_Base() )
+    PsListTree_SetFont( ghThemeKeys, OptionsFont_Base() )
 
     dim as PSBUTTON_COLORS bc : OptionsTheme_FillButton( @bc )
     PsButton_SetColors( ghThemeFore, @bc )   : PsButton_Refresh( ghThemeFore )

@@ -68,7 +68,7 @@ declare function IsProcessRunning( byval wszExeFileName as DWSTRING ) as boolean
 declare function GetRunExecutableFilename() as DWSTRING
 declare function GetListBoxEmptyClientArea( byval hListBox as HWND ) as RECT
 
-' Add a chr(9)-delimited row to a multi-column PsListBox (see modRoutines.inc).
+' Add a chr(9)-delimited row to a multi-column PsListTree (see modRoutines.inc).
 declare function ListBox_AddTabbedRow( byval hCtl as HWND, byval wszTabbed as DWSTRING ) as long
                                             
 

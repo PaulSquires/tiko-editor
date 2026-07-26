@@ -19,9 +19,9 @@
 ' file/line. This replaces the MSG_USER_LISTVIEW_LBUTTONDBLCLK round trip the old control
 ' used to post up to this form.
 ' ========================================================================================
-function frmOutput_LVMessage( byval m as PSLISTBOX_MESSAGEINFO ptr ) as boolean
+function frmOutput_LVMessage( byval m as PSLISTTREE_MESSAGEINFO ptr ) as boolean
     if m->uMsg <> WM_LBUTTONDBLCLK then return false
-    ' m->hList is the inner listbox; the PsListBox container is its parent, and that is what
+    ' m->hList is the inner listbox; the PsListTree container is its parent, and that is what
     ' SetDocumentErrorPosition queries.
     SetDocumentErrorPosition( GetParent(m->hList) )
     return false      ' let the listbox keep its own default handling
@@ -36,24 +36,24 @@ function frmOutput_CreateListView( byval CtrlID as long ) as HWND
     dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMOUTPUT)
     if pWindow = 0 then return 0
 
-    dim as HWND hCtl = PsListBox_Create( HWND_FRMOUTPUT, CtrlID )
+    dim as HWND hCtl = PsListTree_Create( HWND_FRMOUTPUT, CtrlID )
 
     ' Columns, in the order the chr(9)-delimited rows are built: spacer, Line, File,
     ' Description. Description is the fill column.
-    PsListBox_AddColumn( hCtl, "",                  pWindow->ScaleX(20) )
-    PsListBox_AddColumn( hCtl, L(253, "Line"),      pWindow->ScaleX(75) )
-    PsListBox_AddColumn( hCtl, L(254, "File"),      pWindow->ScaleX(250) )
-    PsListBox_AddColumn( hCtl, L(255, "Description"), pWindow->ScaleX(250) )
-    PsListBox_SetFillColumn( hCtl, 3 )
-    PsListBox_ShowHeader( hCtl, true )
+    PsListTree_AddColumn( hCtl, "",                  pWindow->ScaleX(20) )
+    PsListTree_AddColumn( hCtl, L(253, "Line"),      pWindow->ScaleX(75) )
+    PsListTree_AddColumn( hCtl, L(254, "File"),      pWindow->ScaleX(250) )
+    PsListTree_AddColumn( hCtl, L(255, "Description"), pWindow->ScaleX(250) )
+    PsListTree_SetFillColumn( hCtl, 3 )
+    PsListTree_ShowHeader( hCtl, true )
 
-    PsListBox_SetPaintCallback( hCtl, @ListBox_LVPaintRow )
-    PsListBox_SetHeaderPaintCallback( hCtl, @ListBox_LVPaintHeader )
-    PsListBox_SetColumnAutoSizeCallback( hCtl, @ListBox_LVAutoSizeColumn )
-    PsListBox_SetMessageCallback( hCtl, @frmOutput_LVMessage )
-    PsListBox_SetFont( hCtl, ghFont(GUIFONT_9) )
-    PsListBox_SetBackColor( hCtl, ghOutput.BackColor )
-    PsListBox_SetScrollBarColors( hCtl, ghOutput.BackColorScrollBar, _
+    PsListTree_SetPaintCallback( hCtl, @ListBox_LVPaintRow )
+    PsListTree_SetHeaderPaintCallback( hCtl, @ListBox_LVPaintHeader )
+    PsListTree_SetColumnAutoSizeCallback( hCtl, @ListBox_LVAutoSizeColumn )
+    PsListTree_SetMessageCallback( hCtl, @frmOutput_LVMessage )
+    PsListTree_SetFont( hCtl, ghFont(GUIFONT_9) )
+    PsListTree_SetBackColor( hCtl, ghOutput.BackColor )
+    PsListTree_SetScrollBarColors( hCtl, ghOutput.BackColorScrollBar, _
                                  ghOutput.ForeColorScrollBar, ghOutput.ForeColorScrollBar )
 
     return hCtl
@@ -65,10 +65,10 @@ end function
 ' when Projects are loaded and closed.
 ' ========================================================================================
 function frmOutput_ResetAllControls() as long
-    PsListBox_Clear( HWND_FRMOUTPUT_LVRESULTS )
+    PsListTree_Clear( HWND_FRMOUTPUT_LVRESULTS )
     AfxSetWindowText( GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTLOGFILE), "" )
-    PsListBox_Clear( HWND_FRMOUTPUT_LVSEARCH )
-    PsListBox_Clear( HWND_FRMOUTPUT_LVTODO )
+    PsListTree_Clear( HWND_FRMOUTPUT_LVSEARCH )
+    PsListTree_Clear( HWND_FRMOUTPUT_LVTODO )
     AfxSetWindowText( GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTNOTES), "" )
     function = 0
 end function
@@ -98,7 +98,7 @@ function frmOutput_UpdateToDoListview() as long
     if gApp.IsProjectLoading then exit function
 
     dim as hwnd hLV = HWND_FRMOUTPUT_LVTODO
-    PsListBox_Clear( hLV )
+    PsListTree_Clear( hLV )
 
     dim as DWSTRING wszText
 
@@ -125,7 +125,7 @@ end function
 function frmOutput_UpdateSearchListview( byref wszResultFile as wstring ) as long 
     dim hLV as HWND = HWND_FRMOUTPUT_LVSEARCH
 
-    PsListBox_Clear( hLV )
+    PsListTree_Clear( hLV )
 
     if AfxFileExists(wszResultFile) = 0 then exit function
     
@@ -228,7 +228,7 @@ function frmOutput_ShowHideOutputControls( byval hwnd as HWND ) as LRESULT
     
     if hLV then
         ' The old control had to be HIDDEN when empty, because with no items its
-        ' WM_DRAWITEM never fired and the area rendered white. PsListBox answers
+        ' WM_DRAWITEM never fired and the area rendered white. PsListTree answers
         ' WM_CTLCOLORLISTBOX with its own background brush (see C:\dev\Learnings.md), so an
         ' empty pane simply draws empty and the hack is gone. It also lays itself out, so
         ' there is nothing to position here either.
@@ -687,7 +687,7 @@ function frmOutput_WndProc( _
 
 
     ' MSG_USER_LISTVIEW_LBUTTONDBLCLK used to arrive here from the old listview's inner
-    ' listbox subclass. The PsListBox panes report the double-click through their own
+    ' listbox subclass. The PsListTree panes report the double-click through their own
     ' message callback instead -- see frmOutput_LVMessage.
 
     case WM_ERASEBKGND
@@ -736,8 +736,8 @@ function frmOutput_SetControlColors() as long
             case 1 : hCtl = HWND_FRMOUTPUT_LVSEARCH
             case 2 : hCtl = HWND_FRMOUTPUT_LVTODO
         end select
-        PsListBox_SetBackColor( hCtl, ghOutput.BackColor )
-        PsListBox_SetScrollBarColors( hCtl, ghOutput.BackColorScrollBar, _
+        PsListTree_SetBackColor( hCtl, ghOutput.BackColor )
+        PsListTree_SetScrollBarColors( hCtl, ghOutput.BackColorScrollBar, _
                                      ghOutput.ForeColorScrollBar, ghOutput.ForeColorScrollBar )
         AfxRedrawWindow( hCtl )
     next
@@ -844,7 +844,7 @@ function frmOutput_Show( byval hwndParent as HWND ) as LRESULT
         ThemeTextBoxContextMenu( hCtl )
         frmOutput_ShowNotes()
 
-    ' The three listview panes: PsListBox instances with a PsColumnHeader band. All three
+    ' The three listview panes: PsListTree instances with a PsColumnHeader band. All three
     ' have identical columns, so frmOutput_CreateListView builds one and is called thrice.
     ' The Description column is the FILL column -- it absorbs whatever width is left, which
     ' is what the old hard-coded ScaleX(1480) was groping at.
