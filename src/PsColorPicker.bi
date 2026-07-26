@@ -34,10 +34,18 @@
 '    a PsTextBox next to the picker, not inside it.
 '
 '  TABS
-'    Web / System / Custom, after the reference design. Web and System are fixed swatch
-'    grids; Custom carries the tint/shade matrix, the entry fields and the Initial/Current
-'    pair. A fourth tab, PALETTE, lists the host's named colours -- see the callbacks below;
-'    it is empty and hidden unless the host supplies them.
+'    Web / System / Custom, after the reference design, plus a fourth PALETTE tab listing the
+'    host's own named colours -- see the callbacks below; it is hidden unless the host supplies
+'    them.
+'
+'    THREE OF THE FOUR ARE LISTS. Web, System and Palette are scrolling lists of NAMED rows --
+'    a swatch, then the name -- and they share one renderer and one hit test. Only Custom is a
+'    grid, and its cells are unnamed because it is a LAW rather than a table.
+'
+'    An earlier version drew Web and System as 6x8 grids of anonymous swatches. That fitted the
+'    panel neatly and told the user nothing: a named colour without its name is just a swatch,
+'    and the names are most of what those two tabs are for. The lists need a scrollbar (137 web
+'    entries), which is why this control has exactly one child window.
 '
 '    ONE DEPARTURE FROM THE REFERENCE, AND IT IS DELIBERATE. The entry fields and the
 '    Initial/Current pair are drawn on EVERY tab, not only on Custom. Two reasons, and the
@@ -66,6 +74,15 @@
 ' AfxNova, and every host in this family says "using AfxNova" -- so ANY identifier named "ok"
 ' becomes a duplicate definition. The family convention is bOK.
 #include once "PsBufferPaint.bi"
+' THE PICKER'S ONE CHILD WINDOW, and the only one it will ever have. The Web, System and Palette
+' tabs are scrolling LISTS, and hand-rolling a scrollbar to avoid a child would have produced a
+' worse one that did not match the scrollbars beside it in a host.
+'
+' IT DOES NOT COST THE NO-PUMP-OBLIGATION PROPERTY, which is the thing actually worth protecting:
+' PsVScrollBar has no *_FilterMessage of its own. Nor does it make this control a tab CONTAINER --
+' a scrollbar is never a tabstop and never takes focus, so the picker stays a tab ITEM and keeps
+' its explicit dwExStyle of 0. Both facts are asserted in the self-test rather than remembered.
+#include once "PsVScrollBar.bi"
 
 
 ' ----------------------------------------------------------------------------------------
@@ -99,15 +116,24 @@
 
 ' The tint/shade matrix. The grid is an EXACT multiple of the cell size, which is what makes
 ' the point->cell arithmetic a plain division with no rounding case to get wrong.
+' 14 ROWS OF 22, WHICH IS EXACTLY nListRows * nRowH -- and that is not a coincidence, it is the
+' point. The body is sized by whichever tab needs more (see LayoutColorPicker), so a matrix that
+' was shorter than the lists would leave a band of dead panel under it on the Custom tab. Making
+' the two agree costs nothing here: the matrix is a LAW rather than a table, so 14 rows is simply
+' a finer lightness ramp than 12 was.
 #define PSCOLORPICKER_DEFAULT_MATRIXCOLS   16
-#define PSCOLORPICKER_DEFAULT_MATRIXROWS   12
+#define PSCOLORPICKER_DEFAULT_MATRIXROWS   14
 #define PSCOLORPICKER_DEFAULT_CELLW        18
-#define PSCOLORPICKER_DEFAULT_CELLH        14
+#define PSCOLORPICKER_DEFAULT_CELLH        22
 
-' The Web / System / Palette grids share one cell size and one column count.
-#define PSCOLORPICKER_DEFAULT_SWATCHCOLS    8
+' The Web / System / Palette LISTS. One row per entry: a swatch of nSwatchW, then the name.
+'
+' nListRows is how many rows are VISIBLE, and it is what sizes the body -- 137 named web colours
+' will never fit, so this is the number that decides whether the list is comfortable to scan or a
+' letterbox. It is also the page size handed to the scrollbar.
 #define PSCOLORPICKER_DEFAULT_SWATCHW      34
-#define PSCOLORPICKER_DEFAULT_SWATCHH      26
+#define PSCOLORPICKER_DEFAULT_LISTROWS     14
+#define PSCOLORPICKER_DEFAULT_SCROLLW      14
 
 #define PSCOLORPICKER_DEFAULT_PREVIEWW     58
 #define PSCOLORPICKER_DEFAULT_PREVIEWH     26
@@ -346,6 +372,18 @@ type PSCOLORPICKER
     ' the honest answer rather than a stale ring left over from another tab.
     nBodySel         as long = -1
 
+    ' --- The list scrollbar. Created once, moved and re-ranged per tab, and HIDDEN on Custom
+    '     (the matrix always fits by construction). nScrollTop is the index of the first VISIBLE
+    '     row -- rows, not pixels, because the list scrolls a whole row at a time and a pixel
+    '     offset would let a half-row sit at the top of the viewport. ---
+    hScroll          as HWND
+    nScrollTop       as long = 0
+    ' "Bring the selected row into view at the next paint." A FLAG rather than a direct call,
+    ' because the scroll-into-view arithmetic needs the viewport height, and at the moment the
+    ' colour or the tab changes the layout is dirty and rcSwatches is still describing the
+    ' PREVIOUS tab. Deferring it to the paint is what makes it read the right rect.
+    bScrollToSel     as boolean = true
+
     ' --- State ---
     isEnabled        as boolean = true
     isFocused        as boolean = false
@@ -395,9 +433,9 @@ type PSCOLORPICKER
     nMatrixRows      as long = PSCOLORPICKER_DEFAULT_MATRIXROWS
     nCellW           as long = PSCOLORPICKER_DEFAULT_CELLW
     nCellH           as long = PSCOLORPICKER_DEFAULT_CELLH
-    nSwatchCols      as long = PSCOLORPICKER_DEFAULT_SWATCHCOLS
     nSwatchW         as long = PSCOLORPICKER_DEFAULT_SWATCHW
-    nSwatchH         as long = PSCOLORPICKER_DEFAULT_SWATCHH
+    nListRows        as long = PSCOLORPICKER_DEFAULT_LISTROWS
+    nScrollBarW      as long = PSCOLORPICKER_DEFAULT_SCROLLW
     nPreviewW        as long = PSCOLORPICKER_DEFAULT_PREVIEWW
     nPreviewH        as long = PSCOLORPICKER_DEFAULT_PREVIEWH
     nFieldW          as long = PSCOLORPICKER_DEFAULT_FIELDW
@@ -418,7 +456,8 @@ type PSCOLORPICKER
     rcTabs           as RECT
     rcBody           as RECT
     rcMatrix         as RECT
-    rcSwatches       as RECT
+    rcSwatches       as RECT        ' the LIST area on Web / System / Palette, scrollbar excluded
+    rcScroll         as RECT        ' where the PsVScrollBar child sits; empty on Custom
     rcAssign         as RECT
     rcInitial        as RECT
     rcCurrent        as RECT
@@ -815,11 +854,16 @@ sub PSCOLORPICKER.LayoutColorPicker()
     if this.hWin = 0 then exit sub
 
     ' ---- the ideal size, which does not depend on the client area ------------------------
+    ' THE BODY IS SIZED BY WHICHEVER TAB NEEDS MORE, and then that size is used by ALL of them.
+    ' Formerly it was simply the matrix's height; the lists made that too short to scan, so the
+    ' rule is now an explicit max(). The property that matters is unchanged and is the reason
+    ' there is a rule at all: the body must not RESIZE between tabs, because this is an EMBEDDED
+    ' control and a body that grew would move the host's layout underneath it.
     dim as long bodyW = this.nMatrixCols * this.nCellW
     dim as long bodyH = this.nMatrixRows * this.nCellH
 
-    dim as long swatchGridW = this.nSwatchCols * this.nSwatchW
-    if swatchGridW > bodyW then bodyW = swatchGridW
+    dim as long listH = this.nListRows * this.nRowH
+    if listH > bodyH then bodyH = listH
 
     ' Row 1 is three label+box groups; row 2 is, optionally, the alpha group and then the hex
     ' group. That order matches CLR_FIELD_* -- see the note on that enum.
@@ -880,6 +924,7 @@ sub PSCOLORPICKER.LayoutColorPicker()
 
     SetRectEmpty( @this.rcMatrix )
     SetRectEmpty( @this.rcSwatches )
+    SetRectEmpty( @this.rcScroll )
     SetRectEmpty( @this.rcAssign )
 
     if this.nTab = CLR_TAB_CUSTOM then
@@ -890,6 +935,7 @@ sub PSCOLORPICKER.LayoutColorPicker()
                                  this.rcBody.top + (this.nMatrixRows * this.nCellH) )
     else
         this.rcSwatches = this.rcBody
+
         if this.nTab = CLR_TAB_PALETTE then
             ' The palette list gives up its bottom strip to the Assign button. Reserved
             ' unconditionally so the list's row count does not change when the host's palette
@@ -900,6 +946,17 @@ sub PSCOLORPICKER.LayoutColorPicker()
             if this.rcSwatches.bottom < this.rcSwatches.top then
                 this.rcSwatches.bottom = this.rcSwatches.top
             end if
+        end if
+
+        ' THE SCROLLBAR STRIP IS RESERVED WHETHER OR NOT A THUMB IS NEEDED, and that is
+        ' PsScrollPanel's rule rather than PsListBox's: reclaiming the width when a short list
+        ' fits would re-flow every row's name the moment the user switched from Web (137 rows) to
+        ' a five-entry palette. A list whose text jumps sideways as you browse reads as a glitch.
+        SetRect( @this.rcScroll, this.rcSwatches.right - this.nScrollBarW, this.rcSwatches.top, _
+                                 this.rcSwatches.right, this.rcSwatches.bottom )
+        this.rcSwatches.right = this.rcScroll.left
+        if this.rcSwatches.right < this.rcSwatches.left then
+            this.rcSwatches.right = this.rcSwatches.left
         end if
     end if
 

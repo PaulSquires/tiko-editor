@@ -754,120 +754,185 @@ sub PsColorPicker_RunSelfTest( byval hWndParent as HWND )
     end scope
 
     scope
-        ' THE WEB GRID'S SHORT LAST ROW. 48 colours in 8 columns divides exactly, so the table is
-        ' padded out here instead: the assertion is that an index PAST the count is refused even
-        ' though its cell is inside the grid rect. That is the case a naive
-        ' row*cols+col would get wrong, and the palette tab (6 entries, one per row) is where it
-        ' would show first.
+        ' ---- THE THREE LIST TABS ---------------------------------------------------------
+        ' Web, System and Palette are LISTS of named rows, not swatch grids, and all three go
+        ' through one renderer and one hit test. These cases therefore run the SAME assertions
+        ' over each of them rather than testing the palette and hoping the other two match --
+        ' which is what the single-renderer decision is worth.
         PsColorPicker_ShowPaletteTab( h, true )
         PsColorPicker_SetPaletteCallbacks( h, @CLRTest_PaletteCount, @CLRTest_PaletteEntry, @CLRTest_PaletteAssign )
-        PsColorPicker_SetTab( h, CLR_TAB_PALETTE )
-        pClr->LayoutColorPicker()
 
-        dim as boolean bRows = true
-        for i as long = 0 to CLR_TESTPALETTE_COUNT - 1
-            dim as long cy = pClr->rcSwatches.top + (i * pClr->nRowH) + (pClr->nRowH \ 2)
-            dim as long cx = pClr->rcSwatches.left + 4
-            if PsColorPicker_HitBody( pClr, cx, cy ) <> i then bRows = false
+        dim as long nTabsToCheck(0 to 2) = { CLR_TAB_WEB, CLR_TAB_SYSTEM, CLR_TAB_PALETTE }
+        dim as long nBadRow = 0, nBadName = 0, nBadPast = 0
+        dim as string sRowDetail
+
+        for k as long = 0 to 2
+            PsColorPicker_SetTab( h, nTabsToCheck(k) )
+            pClr->LayoutColorPicker()
+            pClr->nScrollTop = 0
+
+            dim as long nCount = PsColorPicker_GridCount( pClr )
+            dim as long nVis   = PsColorPicker_VisibleRows( pClr )
+            if k = 0 then sRowDetail = "web=" & str(nCount) & " visible=" & str(nVis)
+
+            ' Every VISIBLE row's centre hit-tests to its own index...
+            for v as long = 0 to nVis - 1
+                if v >= nCount then exit for
+                dim as long cy = pClr->rcSwatches.top + (v * pClr->nRowH) + (pClr->nRowH \ 2)
+                dim as long cx = pClr->rcSwatches.left + 4
+                if PsColorPicker_HitBody( pClr, cx, cy ) <> v then nBadRow += 1
+            next
+
+            ' ...and every entry has a NAME. An unnamed row is the defect the grid layout had:
+            ' it renders as an anonymous swatch and tells the user nothing.
+            for i as long = 0 to nCount - 1
+                dim as DWSTRING wszName
+                if PsColorPicker_GridNameAt( pClr, i, wszName ) = false then
+                    nBadName += 1
+                elseif len( wszName ) = 0 then
+                    nBadName += 1
+                end if
+            next
+
+            ' A click below the last VISIBLE row hits nothing -- with a 137-row list there is
+            ' almost always a strip of background under the last full row.
+            dim as long cyPast = pClr->rcSwatches.top + (nVis * pClr->nRowH) + 2
+            if cyPast < pClr->rcSwatches.bottom then
+                if PsColorPicker_HitBody( pClr, pClr->rcSwatches.left + 4, cyPast ) <> -1 then nBadPast += 1
+            end if
         next
-        CLRTest_Check( "every palette row hit-tests to its own index", bRows, _
-                       "rows=" & str(CLR_TESTPALETTE_COUNT) & " rowH=" & str(pClr->nRowH) )
 
-        dim as long cyPast = pClr->rcSwatches.top + (CLR_TESTPALETTE_COUNT * pClr->nRowH) + 2
-        CLRTest_Check( "a click below the last palette row hits nothing", _
-                       (PsColorPicker_HitBody( pClr, pClr->rcSwatches.left + 4, cyPast ) = -1), _
-                       "y=" & str(cyPast) & " list=" & CLRTest_RectStr(pClr->rcSwatches) )
-
-        PsColorPicker_SetTab( h, CLR_TAB_WEB )
-        pClr->LayoutColorPicker()
-        dim as long nWeb = PsColorPicker_WebColorCount()
-        dim as boolean bWeb = true
-        for i as long = 0 to nWeb - 1
-            dim as long c = i mod pClr->nSwatchCols
-            dim as long r = i \ pClr->nSwatchCols
-            dim as long cx = pClr->rcSwatches.left + (c * pClr->nSwatchW) + (pClr->nSwatchW \ 2)
-            dim as long cy = pClr->rcSwatches.top + (r * pClr->nSwatchH) + (pClr->nSwatchH \ 2)
-            if PsColorPicker_HitBody( pClr, cx, cy ) <> i then bWeb = false
-        next
-        CLRTest_Check( "every web swatch hit-tests to its own index", bWeb, "count=" & str(nWeb) )
-
-        ' The web table must FIT the body it is drawn in -- six rows of swatches inside the
-        ' matrix's height. A table that outgrew the panel would be clipped silently, so the
-        ' constraint is asserted rather than remembered.
-        dim as long nWebRows = (nWeb + pClr->nSwatchCols - 1) \ pClr->nSwatchCols
-        CLRTest_Check( "the web table fits inside the fixed body height", _
-                       ((nWebRows * pClr->nSwatchH) <= (pClr->rcBody.bottom - pClr->rcBody.top)), _
-                       "rows=" & str(nWebRows) & " needs=" & str(nWebRows * pClr->nSwatchH) & _
-                       " has=" & str(pClr->rcBody.bottom - pClr->rcBody.top) )
-
-        PsColorPicker_SetTab( h, CLR_TAB_SYSTEM )
-        pClr->LayoutColorPicker()
-        dim as long nSys = PsColorPicker_SystemColorCount()
-        dim as long nSysRows = (nSys + pClr->nSwatchCols - 1) \ pClr->nSwatchCols
-        CLRTest_Check( "the system table fits inside the fixed body height", _
-                       ((nSysRows * pClr->nSwatchH) <= (pClr->rcBody.bottom - pClr->rcBody.top)), _
-                       "count=" & str(nSys) & " rows=" & str(nSysRows) )
-
-        ' The tail of a short last row. 31 system colours in 8 columns leaves one cell empty in
-        ' row 3, and that cell is INSIDE the grid rect -- so only the index-vs-count test refuses
-        ' it. This is the assertion the palette case above cannot make.
-        dim as long cTail = nSys mod pClr->nSwatchCols
-        dim as long rTail = nSys \ pClr->nSwatchCols
-        dim as long txc = pClr->rcSwatches.left + (cTail * pClr->nSwatchW) + (pClr->nSwatchW \ 2)
-        dim as long tyc = pClr->rcSwatches.top + (rTail * pClr->nSwatchH) + (pClr->nSwatchH \ 2)
-        dim as boolean bTailPrecond = (cTail <> 0)
-        CLRTest_Check( "precondition: the system grid really does have a short last row", _
-                       bTailPrecond, "count=" & str(nSys) & " cols=" & str(pClr->nSwatchCols) )
-        CLRTest_Check( "an empty cell past the end of a short last row hits nothing", _
-                       (PsColorPicker_HitBody( pClr, txc, tyc ) = -1), _
-                       "cell " & str(cTail) & "," & str(rTail) )
+        CLRTest_Check( "every visible row hit-tests to its own index on all three list tabs", _
+                       (nBadRow = 0), "mismatches=" & str(nBadRow) & "  " & sRowDetail )
+        CLRTest_Check( "every entry on every list tab has a name", _
+                       (nBadName = 0), "unnamed=" & str(nBadName) )
+        CLRTest_Check( "a click in the dead strip below the last visible row hits nothing", _
+                       (nBadPast = 0), "hits=" & str(nBadPast) )
     end scope
 
     scope
-        ' OVERFLOW: THE PAINTER CLIPS, SO THE HIT TEST MUST CLIP IDENTICALLY.
-        '
-        ' This case exists because an A/B found the guard that used to stand here was protecting
-        ' nothing: it was a PtIn bound on the grid rect, and removing it failed NO assertion,
-        ' because CellFromPoint's own index bounds already covered every point the suite tested.
-        ' What it did not cover -- and what nobody screenshots -- is a control sized NARROWER
-        ' than ideal, where the right-hand column of swatches is clipped out of the render and a
-        ' click on the blank strip they used to occupy still picked them.
-        '
-        ' The control is deliberately sized so the sixth column is PARTIALLY visible: its centre
-        ' is inside the grid rect (so a PtIn test passes) while its right edge is outside (so the
-        ' painter skips it). That is the one point that tells the two guards apart.
-        dim as long nSaveW, nSaveH
-        PsColorPicker_GetIdealSize( h, nSaveW, nSaveH )
-
+        ' ---- SCROLLING -------------------------------------------------------------------
+        ' The web list is far longer than the viewport, so this is the tab that exercises it.
         PsColorPicker_SetTab( h, CLR_TAB_WEB )
-        dim as long nNarrow = (2 * pClr->nPad) + (5 * pClr->nSwatchW) + ((3 * pClr->nSwatchW) \ 4)
-        SetWindowPos( h, 0, 0, 0, nNarrow, nSaveH, SWP_NOZORDER or SWP_NOMOVE or SWP_NOACTIVATE )
         pClr->LayoutColorPicker()
+        pClr->nScrollTop = 0
 
-        dim as long cxCut = pClr->rcSwatches.left + (5 * pClr->nSwatchW) + (pClr->nSwatchW \ 2)
-        dim as long cyCut = pClr->rcSwatches.top + (pClr->nSwatchH \ 2)
+        dim as long nCount = PsColorPicker_WebColorCount()
+        dim as long nVis   = PsColorPicker_VisibleRows( pClr )
 
-        ' Precondition, asserted rather than assumed: the probe point really is inside the grid
-        ' rect and really does belong to a cell the painter drops. A point that failed the plain
-        ' bounds test would make this case pass for the wrong reason.
-        dim as boolean bPre = (PsColorPicker_PtIn( pClr->rcSwatches, cxCut, cyCut ) andalso _
-                               ((pClr->rcSwatches.left + (6 * pClr->nSwatchW)) > pClr->rcSwatches.right))
-        CLRTest_Check( "precondition: the probe point is inside the grid but on a CLIPPED cell", _
-                       bPre, "x=" & str(cxCut) & " grid=" & CLRTest_RectStr(pClr->rcSwatches) )
+        ' Precondition, asserted rather than assumed: the list must actually overflow, or every
+        ' scrolling assertion below would pass by doing nothing.
+        CLRTest_Check( "precondition: the web list is longer than its viewport", _
+                       (nCount > nVis), "count=" & str(nCount) & " visible=" & str(nVis) )
 
-        CLRTest_Check( "a partially-clipped swatch is not clickable (the painter skips it too)", _
-                       (PsColorPicker_HitBody( pClr, cxCut, cyCut ) = -1), _
-                       "hit=" & str( PsColorPicker_HitBody( pClr, cxCut, cyCut ) ) )
+        ' THE HIT TEST FOLLOWS THE SCROLL. This is the assertion that catches a renderer and a
+        ' hit test that disagree by exactly nScrollTop -- which looks fine until you scroll, and
+        ' then every click is off by the same amount in a way that is easy to misread as "the
+        ' list is selecting the wrong colour".
+        pClr->nScrollTop = 20
+        dim as long cyTop = pClr->rcSwatches.top + (pClr->nRowH \ 2)
+        dim as long cxTop = pClr->rcSwatches.left + 4
+        CLRTest_Check( "the first visible row is nScrollTop, not row 0", _
+                       (PsColorPicker_HitBody( pClr, cxTop, cyTop ) = 20), _
+                       "hit=" & str( PsColorPicker_HitBody( pClr, cxTop, cyTop ) ) )
 
-        ' ...and the cells that DO fit are still clickable, so the clip is not simply refusing
-        ' everything.
-        dim as long cxOK = pClr->rcSwatches.left + (4 * pClr->nSwatchW) + (pClr->nSwatchW \ 2)
-        CLRTest_Check( "a fully visible swatch beside it is still clickable", _
-                       (PsColorPicker_HitBody( pClr, cxOK, cyCut ) = 4), _
-                       "hit=" & str( PsColorPicker_HitBody( pClr, cxOK, cyCut ) ) )
+        dim as long cyThird = pClr->rcSwatches.top + (2 * pClr->nRowH) + (pClr->nRowH \ 2)
+        CLRTest_Check( "the third visible row is nScrollTop + 2", _
+                       (PsColorPicker_HitBody( pClr, cxTop, cyThird ) = 22), _
+                       "hit=" & str( PsColorPicker_HitBody( pClr, cxTop, cyThird ) ) )
 
-        SetWindowPos( h, 0, 0, 0, nSaveW, nSaveH, SWP_NOZORDER or SWP_NOMOVE or SWP_NOACTIVATE )
+        ' The last page cannot be scrolled past, or the list would show empty space below its
+        ' last row.
+        pClr->nScrollTop = 9999
+        PsColorPicker_ClampScroll( pClr )
+        CLRTest_Check( "the scroll position clamps at the last full page", _
+                       (pClr->nScrollTop = (nCount - nVis)), _
+                       "top=" & str(pClr->nScrollTop) & " expected=" & str(nCount - nVis) )
+
+        pClr->nScrollTop = -5
+        PsColorPicker_ClampScroll( pClr )
+        CLRTest_Check( "the scroll position clamps at zero", (pClr->nScrollTop = 0), str(pClr->nScrollTop) )
+
+        ' SETTING A COLOUR NEAR THE END OF THE LIST MUST REVEAL IT. A host that sets the picker
+        ' to MidnightBlue and gets row 106 selected-but-not-shown has been told nothing, and this
+        ' is the whole reason bScrollToSel exists.
+        pClr->nScrollTop = 0
+        dim as long nLate = nCount - 3
+        PsColorPicker_SetColor( h, PsColorPicker_WebColorAt( nLate ) )
         pClr->LayoutColorPicker()
+        PsColorPicker_EnsureSelVisible( pClr )
+        dim as boolean bRevealed = ((nLate >= pClr->nScrollTop) andalso _
+                                    (nLate <= (pClr->nScrollTop + nVis - 1)))
+        CLRTest_Check( "setting a colour late in the list scrolls it into view", bRevealed, _
+                       "sel=" & str(pClr->nBodySel) & " top=" & str(pClr->nScrollTop) & _
+                       " visible=" & str(nVis) )
+
+        ' ...and it does NOT move the viewport when the row is already showing, so it cannot
+        ' fight a user who has deliberately scrolled.
+        pClr->nScrollTop = nLate - 2
+        PsColorPicker_ClampScroll( pClr )
+        dim as long nTopBefore = pClr->nScrollTop
+        PsColorPicker_EnsureSelVisible( pClr )
+        CLRTest_Check( "revealing an already-visible row leaves the viewport alone", _
+                       (pClr->nScrollTop = nTopBefore), _
+                       str(nTopBefore) & " -> " & str(pClr->nScrollTop) )
+
+        ' The scrollbar is a real child window, and it must exist and be OUR child.
+        CLRTest_Check( "the list scrollbar exists and is a child of the picker", _
+                       ((IsWindow( pClr->hScroll ) <> 0) andalso (GetParent( pClr->hScroll ) = h)), _
+                       "hScroll=&h" & hex(cast(uinteger, pClr->hScroll)) )
+
+        ' AND IT MUST NOT MAKE THE PICKER A TAB CONTAINER. A scrollbar is never a tabstop, so the
+        ' picker stays a tab ITEM and keeps its explicit dwExStyle of 0 -- the family bug this
+        ' control was built to avoid. Asserted here because gaining a child is exactly the change
+        ' that would tempt someone to "fix" the extended style.
+        dim as LONG_PTR nSbStyle = GetWindowLongPtr( pClr->hScroll, GWL_STYLE )
+        CLRTest_Check( "the scrollbar child is not a tabstop", _
+                       ((nSbStyle and WS_TABSTOP) = 0), "style=&h" & hex(nSbStyle) )
+    end scope
+
+    scope
+        ' ---- THE NAMED TABLES ------------------------------------------------------------
+        ' The web table's ORDER is deliberate (greys, reds, yellows, greens, cyans, blues,
+        ' purples, pinks) rather than alphabetical, and its two duplicate names were dropped.
+        ' Both are claims worth holding onto, because "tidy this up alphabetically" is an
+        ' obvious-looking edit that would quietly make the list unscannable.
+        dim as long nWeb = PsColorPicker_WebColorCount()
+        CLRTest_Check( "the web table is the full named set", (nWeb = 137), str(nWeb) )
+
+        dim as long nDupName = 0, nDupColor = 0
+        for i as long = 0 to nWeb - 1
+            for j as long = i + 1 to nWeb - 1
+                if PsColorPicker_WebColorName(i) = PsColorPicker_WebColorName(j) then nDupName += 1
+                if PsColorPicker_WebColorAt(i) = PsColorPicker_WebColorAt(j) then nDupColor += 1
+            next
+        next
+        CLRTest_Check( "no two web entries share a name", (nDupName = 0), "dups=" & str(nDupName) )
+        ' The colour check is what catches Aqua/Cyan and Fuchsia/Magenta creeping back in: two
+        ' rows of identical colour under different names make the selection ring look broken,
+        ' because SyncBodySel resolves a colour to the FIRST row that holds it.
+        CLRTest_Check( "no two web entries share a colour", (nDupColor = 0), "dups=" & str(nDupColor) )
+
+        ' A spot check that the table is not merely well-formed but CORRECT. Navy is the entry in
+        ' the reference screenshot, and a transposed byte order would give 128,0,0 instead.
+        dim as long nNavy = -1
+        for i as long = 0 to nWeb - 1
+            if PsColorPicker_WebColorName(i) = "Navy" then nNavy = i : exit for
+        next
+        dim as boolean bNavy = ((nNavy >= 0) andalso (PsColorPicker_WebColorAt(nNavy) = BGR(0,0,128)))
+        CLRTest_Check( "Navy is 0,0,128 and not a byte-swapped 128,0,0", bNavy, _
+                       "idx=" & str(nNavy) & " " & CLRTest_ClrStr( PsColorPicker_WebColorAt( iif(nNavy < 0, 0, nNavy) ) ) )
+
+        dim as long nSys = PsColorPicker_SystemColorCount()
+        CLRTest_Check( "the system table covers the COLOR_* series", (nSys = 30), str(nSys) )
+
+        ' Index 25 is unused in the COLOR_* series and is deliberately skipped, so a naive
+        ' 0..30 loop would have shipped a row that means nothing.
+        dim as boolean b25 = true
+        for i as long = 0 to nSys - 1
+            if gClrSysIndex(i) = 25 then b25 = false
+        next
+        CLRTest_Check( "the unused system colour index 25 is skipped", b25, "" )
     end scope
 
     print "=== state and notification ==="
@@ -1029,19 +1094,20 @@ sub PsColorPicker_RunSelfTest( byval hWndParent as HWND )
     end scope
 
     scope
-        ' A SWATCH CLICK is a settled choice: one END, no BEGIN. The contrast with the drag above
-        ' is the whole reason CLR_PHASE_* exists.
+        ' A LIST-ROW CLICK is a settled choice: one END, no BEGIN. The contrast with the drag
+        ' above is the whole reason CLR_PHASE_* exists.
         PsColorPicker_SetTab( h, CLR_TAB_WEB )
         pClr->LayoutColorPicker()
+        pClr->nScrollTop = 0
         CLRTest_ResetNotify()
-        dim as long cx = pClr->rcSwatches.left + (pClr->nSwatchW \ 2) + (3 * pClr->nSwatchW)
-        dim as long cy = pClr->rcSwatches.top + (pClr->nSwatchH \ 2)
+        dim as long cx = pClr->rcSwatches.left + 4
+        dim as long cy = pClr->rcSwatches.top + (3 * pClr->nRowH) + (pClr->nRowH \ 2)
         CLRTest_ClickAt( h, cx, cy )
 
         dim as boolean bOne = ((gCLR_NotifyCount = 1) andalso (gCLR_NotifyPhase(0) = CLR_PHASE_END))
-        CLRTest_Check( "a swatch click emits exactly one END and no BEGIN", bOne, _
+        CLRTest_Check( "a list-row click emits exactly one END and no BEGIN", bOne, _
                        "n=" & str(gCLR_NotifyCount) & " phase=" & str(gCLR_NotifyPhase(0)) )
-        CLRTest_Check( "the swatch click adopted that swatch's colour", _
+        CLRTest_Check( "the click adopted that row's colour", _
                        (PsColorPicker_GetColor(h) = PsColorPicker_WebColorAt(3)), _
                        CLRTest_ClrStr(PsColorPicker_GetColor(h)) )
 

@@ -3,6 +3,12 @@
 ''
 
 #include once "PsColorPicker.bi"
+' The scrollbar's IMPLEMENTATION, pulled in here rather than left to the host. `#include once`
+' makes it a no-op in a host that already includes it for its own use (tiko does), and including
+' it here means adopting this control is still just "add the files and include the .inc" -- a
+' host that forgot it would get four undefined references at LINK time, which is the least
+' helpful moment to find out.
+#include once "PsVScrollBar.inc"
 
 
 ' Forward declarations: the mutators re-derive the body selection, and the WndProc uses the
@@ -15,51 +21,148 @@ declare function PsColorPicker_GridCount( byval pClr as PSCOLORPICKER ptr ) as l
 ' ========================================================================================
 ' THE TWO FIXED TABLES.
 '
-' 48 web colours in six rows of eight -- greys, reds, yellows, greens, blues, and a last row of
-' purples and browns. SIX ROWS, NOT EIGHT, and that is a layout constraint rather than a taste:
-' the body's height is fixed by the matrix (12 * 14 = 168px unscaled) and a 26px swatch row
-' means six rows fit and eight do not. A table that overflowed would be clipped silently, so
-' the table is sized to the panel rather than the panel to the table.
+' NAMED colours, not anonymous swatches, and they are drawn as a LIST rather than a grid -- a
+' named colour without its name is just a swatch, and the name is most of what these two tabs
+' are for. (An earlier version of this control had them as 6x8 swatch grids. That was the wrong
+' call: it fitted the panel neatly and told the user nothing.)
 '
-' Written as literal r,g,b rather than through colour-name constants so the file depends on
-' nothing but BGR(), and so the values are readable at the point of use.
+' The web table is the standard 137-entry named set in the ORDER the platform colour editors use
+' -- greys, then reds through yellows, greens, cyans, blues, purples, pinks -- rather than
+' alphabetically. Alphabetical order puts Azure next to Beige and makes the list impossible to
+' scan for "something like this but darker", which is the actual task. The two duplicate names
+' (Aqua = Cyan, Fuchsia = Magenta) are dropped: two rows of identical colour under different
+' names make the selection ring look broken.
+'
+' System colours are read through GetSysColor at CALL time rather than cached, so a shell theme
+' change is picked up on the next repaint without this control listening for WM_SYSCOLORCHANGE.
+' Index 25 is skipped -- it is unused in the COLOR_* series.
+'
+' Written as PARALLEL ARRAYS of scalars rather than one array of a UDT: fbc's array initialisers
+' are reliable for flat scalar lists and fussy about aggregates, and this file is vendored into
+' hosts where a build failure is expensive to diagnose.
 ' ========================================================================================
-dim shared as COLORREF gClrWebTable(0 to 47) = { _
-    BGR(  0,  0,  0), BGR(105,105,105), BGR(128,128,128), BGR(169,169,169), _
-    BGR(192,192,192), BGR(211,211,211), BGR(245,245,245), BGR(255,255,255), _
-    BGR(128,  0,  0), BGR(139,  0,  0), BGR(178, 34, 34), BGR(255,  0,  0), _
-    BGR(255, 69,  0), BGR(255, 99, 71), BGR(250,128,114), BGR(255,160,122), _
-    BGR(128,128,  0), BGR(184,134, 11), BGR(218,165, 32), BGR(255,165,  0), _
-    BGR(255,215,  0), BGR(255,255,  0), BGR(240,230,140), BGR(255,255,224), _
-    BGR(  0,100,  0), BGR(  0,128,  0), BGR( 34,139, 34), BGR( 46,139, 87), _
-    BGR( 50,205, 50), BGR(  0,255,  0), BGR(154,205, 50), BGR(152,251,152), _
-    BGR(  0,128,128), BGR(  0,139,139), BGR( 32,178,170), BGR( 64,224,208), _
-    BGR(  0,255,255), BGR(  0,  0,128), BGR(  0,  0,205), BGR(  0,  0,255), _
-    BGR( 65,105,225), BGR( 30,144,255), BGR( 75,  0,130), BGR(128,  0,128), _
-    BGR(255,  0,255), BGR(218,112,214), BGR(139, 69, 19), BGR(210,180,140) }
+dim shared as zstring * 21 gClrWebName(0 to 136) = { _
+    "Black"               , "DimGray"             , "Gray"                , "DarkGray", _
+    "Silver"              , "LightGray"           , "Gainsboro"           , "WhiteSmoke", _
+    "White"               , "RosyBrown"           , "IndianRed"           , "Brown", _
+    "Firebrick"           , "LightCoral"          , "Maroon"              , "DarkRed", _
+    "Red"                 , "Snow"                , "MistyRose"           , "Salmon", _
+    "Tomato"              , "DarkSalmon"          , "Coral"               , "OrangeRed", _
+    "LightSalmon"         , "Sienna"              , "SeaShell"            , "Chocolate", _
+    "SaddleBrown"         , "SandyBrown"          , "PeachPuff"           , "Peru", _
+    "Linen"               , "Bisque"              , "DarkOrange"          , "BurlyWood", _
+    "Tan"                 , "AntiqueWhite"        , "NavajoWhite"         , "BlanchedAlmond", _
+    "PapayaWhip"          , "Moccasin"            , "Orange"              , "Wheat", _
+    "OldLace"             , "FloralWhite"         , "DarkGoldenrod"       , "Cornsilk", _
+    "Goldenrod"           , "PaleGoldenrod"       , "Khaki"               , "LemonChiffon", _
+    "DarkKhaki"           , "Beige"               , "LightGoldenrodYellow", "Olive", _
+    "Yellow"              , "LightYellow"         , "Ivory"               , "OliveDrab", _
+    "YellowGreen"         , "DarkOliveGreen"      , "GreenYellow"         , "Chartreuse", _
+    "LawnGreen"           , "DarkSeaGreen"        , "ForestGreen"         , "LimeGreen", _
+    "LightGreen"          , "PaleGreen"           , "DarkGreen"           , "Green", _
+    "Lime"                , "Honeydew"            , "SeaGreen"            , "MediumSeaGreen", _
+    "SpringGreen"         , "MintCream"           , "MediumSpringGreen"   , "MediumAquamarine", _
+    "Aquamarine"          , "Turquoise"           , "LightSeaGreen"       , "MediumTurquoise", _
+    "DarkSlateGray"       , "PaleTurquoise"       , "Teal"                , "DarkCyan", _
+    "Cyan"                , "LightCyan"           , "Azure"               , "DarkTurquoise", _
+    "CadetBlue"           , "PowderBlue"          , "LightBlue"           , "DeepSkyBlue", _
+    "SkyBlue"             , "LightSkyBlue"        , "SteelBlue"           , "AliceBlue", _
+    "DodgerBlue"          , "SlateGray"           , "LightSlateGray"      , "LightSteelBlue", _
+    "CornflowerBlue"      , "RoyalBlue"           , "MidnightBlue"        , "Lavender", _
+    "Navy"                , "DarkBlue"            , "MediumBlue"          , "Blue", _
+    "GhostWhite"          , "SlateBlue"           , "DarkSlateBlue"       , "MediumSlateBlue", _
+    "MediumPurple"        , "BlueViolet"          , "Indigo"              , "DarkOrchid", _
+    "DarkViolet"          , "MediumOrchid"        , "Thistle"             , "Plum", _
+    "Violet"              , "Purple"              , "DarkMagenta"         , "Magenta", _
+    "Orchid"              , "MediumVioletRed"     , "DeepPink"            , "HotPink", _
+    "LavenderBlush"       , "PaleVioletRed"       , "Crimson"             , "Pink", _
+    "LightPink" }
 
-' COLOR_SCROLLBAR (0) through COLOR_MENUBAR (30). Read through GetSysColor at call time rather
-' than cached, so a theme change in the shell is picked up on the next repaint without this
-' control having to listen for WM_SYSCOLORCHANGE.
-#define PSCOLORPICKER_SYSCOLOR_COUNT  31
+dim shared as COLORREF gClrWebColor(0 to 136) = { _
+    BGR(  0,  0,  0)  , BGR(105,105,105)  , BGR(128,128,128)  , BGR(169,169,169), _
+    BGR(192,192,192)  , BGR(211,211,211)  , BGR(220,220,220)  , BGR(245,245,245), _
+    BGR(255,255,255)  , BGR(188,143,143)  , BGR(205, 92, 92)  , BGR(165, 42, 42), _
+    BGR(178, 34, 34)  , BGR(240,128,128)  , BGR(128,  0,  0)  , BGR(139,  0,  0), _
+    BGR(255,  0,  0)  , BGR(255,250,250)  , BGR(255,228,225)  , BGR(250,128,114), _
+    BGR(255, 99, 71)  , BGR(233,150,122)  , BGR(255,127, 80)  , BGR(255, 69,  0), _
+    BGR(255,160,122)  , BGR(160, 82, 45)  , BGR(255,245,238)  , BGR(210,105, 30), _
+    BGR(139, 69, 19)  , BGR(244,164, 96)  , BGR(255,218,185)  , BGR(205,133, 63), _
+    BGR(250,240,230)  , BGR(255,228,196)  , BGR(255,140,  0)  , BGR(222,184,135), _
+    BGR(210,180,140)  , BGR(250,235,215)  , BGR(255,222,173)  , BGR(255,235,205), _
+    BGR(255,239,213)  , BGR(255,228,181)  , BGR(255,165,  0)  , BGR(245,222,179), _
+    BGR(253,245,230)  , BGR(255,250,240)  , BGR(184,134, 11)  , BGR(255,248,220), _
+    BGR(218,165, 32)  , BGR(238,232,170)  , BGR(240,230,140)  , BGR(255,250,205), _
+    BGR(189,183,107)  , BGR(245,245,220)  , BGR(250,250,210)  , BGR(128,128,  0), _
+    BGR(255,255,  0)  , BGR(255,255,224)  , BGR(255,255,240)  , BGR(107,142, 35), _
+    BGR(154,205, 50)  , BGR( 85,107, 47)  , BGR(173,255, 47)  , BGR(127,255,  0), _
+    BGR(124,252,  0)  , BGR(143,188,143)  , BGR( 34,139, 34)  , BGR( 50,205, 50), _
+    BGR(144,238,144)  , BGR(152,251,152)  , BGR(  0,100,  0)  , BGR(  0,128,  0), _
+    BGR(  0,255,  0)  , BGR(240,255,240)  , BGR( 46,139, 87)  , BGR( 60,179,113), _
+    BGR(  0,255,127)  , BGR(245,255,250)  , BGR(  0,250,154)  , BGR(102,205,170), _
+    BGR(127,255,212)  , BGR( 64,224,208)  , BGR( 32,178,170)  , BGR( 72,209,204), _
+    BGR( 47, 79, 79)  , BGR(175,238,238)  , BGR(  0,128,128)  , BGR(  0,139,139), _
+    BGR(  0,255,255)  , BGR(224,255,255)  , BGR(240,255,255)  , BGR(  0,206,209), _
+    BGR( 95,158,160)  , BGR(176,224,230)  , BGR(173,216,230)  , BGR(  0,191,255), _
+    BGR(135,206,235)  , BGR(135,206,250)  , BGR( 70,130,180)  , BGR(240,248,255), _
+    BGR( 30,144,255)  , BGR(112,128,144)  , BGR(119,136,153)  , BGR(176,196,222), _
+    BGR(100,149,237)  , BGR( 65,105,225)  , BGR( 25, 25,112)  , BGR(230,230,250), _
+    BGR(  0,  0,128)  , BGR(  0,  0,139)  , BGR(  0,  0,205)  , BGR(  0,  0,255), _
+    BGR(248,248,255)  , BGR(106, 90,205)  , BGR( 72, 61,139)  , BGR(123,104,238), _
+    BGR(147,112,219)  , BGR(138, 43,226)  , BGR( 75,  0,130)  , BGR(153, 50,204), _
+    BGR(148,  0,211)  , BGR(186, 85,211)  , BGR(216,191,216)  , BGR(221,160,221), _
+    BGR(238,130,238)  , BGR(128,  0,128)  , BGR(139,  0,139)  , BGR(255,  0,255), _
+    BGR(218,112,214)  , BGR(199, 21,133)  , BGR(255, 20,147)  , BGR(255,105,180), _
+    BGR(255,240,245)  , BGR(219,112,147)  , BGR(220, 20, 60)  , BGR(255,192,203), _
+    BGR(255,182,193) }
+
+dim shared as long gClrSysIndex(0 to 29) = { _
+    0   , 1   , 2   , 3   , 4   , 5   , 6   , 7   , 8   , 9, _
+    10  , 11  , 12  , 13  , 14  , 15  , 16  , 17  , 18  , 19, _
+    20  , 21  , 22  , 23  , 24  , 26  , 27  , 28  , 29  , 30 }
+
+dim shared as zstring * 26 gClrSysName(0 to 29) = { _
+    "Scroll Bar"                , "Desktop"                   , "Active Caption", _
+    "Inactive Caption"          , "Menu"                      , "Window", _
+    "Window Frame"              , "Menu Text"                 , "Window Text", _
+    "Caption Text"              , "Active Border"             , "Inactive Border", _
+    "App Workspace"             , "Highlight"                 , "Highlight Text", _
+    "Button Face"               , "Button Shadow"             , "Gray Text", _
+    "Button Text"               , "Inactive Caption Text"     , "Button Highlight", _
+    "3D Dark Shadow"            , "3D Light"                  , "Tooltip Text", _
+    "Tooltip Background"        , "Hot Tracking"              , "Gradient Active Caption", _
+    "Gradient Inactive Caption" , "Menu Highlight"            , "Menu Bar" }
 
 
 function PsColorPicker_WebColorCount() as long
-    return 48
+    return ubound(gClrWebColor) - lbound(gClrWebColor) + 1
 end function
 
 function PsColorPicker_WebColorAt( byval idx as long ) as COLORREF
-    if (idx < 0) orelse (idx > 47) then return 0
-    return gClrWebTable(idx)
+    if (idx < 0) orelse (idx > ubound(gClrWebColor)) then return 0
+    return gClrWebColor(idx)
+end function
+
+function PsColorPicker_WebColorName( byval idx as long ) as DWSTRING
+    dim as DWSTRING wszOut
+    if (idx < 0) orelse (idx > ubound(gClrWebName)) then return wszOut
+    wszOut = gClrWebName(idx)
+    return wszOut
 end function
 
 function PsColorPicker_SystemColorCount() as long
-    return PSCOLORPICKER_SYSCOLOR_COUNT
+    return ubound(gClrSysIndex) - lbound(gClrSysIndex) + 1
 end function
 
 function PsColorPicker_SystemColorAt( byval idx as long ) as COLORREF
-    if (idx < 0) orelse (idx >= PSCOLORPICKER_SYSCOLOR_COUNT) then return 0
-    return GetSysColor( idx )
+    if (idx < 0) orelse (idx > ubound(gClrSysIndex)) then return 0
+    return GetSysColor( gClrSysIndex(idx) )
+end function
+
+function PsColorPicker_SystemColorName( byval idx as long ) as DWSTRING
+    dim as DWSTRING wszOut
+    if (idx < 0) orelse (idx > ubound(gClrSysName)) then return wszOut
+    wszOut = gClrSysName(idx)
+    return wszOut
 end function
 
 
@@ -177,6 +280,136 @@ private function PsColorPicker_GridColorAt( _
 end function
 
 
+' The NAME of body entry idx on the current tab, or "" when the tab has no names (the matrix is
+' a law, not a list -- its cells are unnamed by construction).
+private function PsColorPicker_GridNameAt( _
+            byval pClr as PSCOLORPICKER ptr, _
+            byval idx  as long, _
+            byref wszName as DWSTRING _
+            ) as boolean
+
+    wszName = ""
+    if pClr = 0 then return false
+    if idx < 0 then return false
+    if idx >= PsColorPicker_GridCount( pClr ) then return false
+
+    select case pClr->nTab
+    case CLR_TAB_WEB
+        wszName = PsColorPicker_WebColorName( idx )
+        return true
+    case CLR_TAB_SYSTEM
+        wszName = PsColorPicker_SystemColorName( idx )
+        return true
+    case CLR_TAB_PALETTE
+        if pClr->PaletteEntryCallback = 0 then return false
+        dim as COLORREF clr
+        return pClr->PaletteEntryCallback( pClr->hWin, idx, wszName, clr )
+    end select
+    return false
+end function
+
+
+' Is this tab's body a scrolling LIST of named rows, or the matrix? One test, because the
+' renderer, the hit test and the scrollbar all have to agree about it.
+private function PsColorPicker_IsListTab( byval pClr as PSCOLORPICKER ptr ) as boolean
+    if pClr = 0 then return false
+    return (pClr->nTab <> CLR_TAB_CUSTOM)
+end function
+
+
+' How many rows fit in the list viewport RIGHT NOW. Derived from the rect rather than from
+' nListRows, because the palette tab gives up part of its height to the Assign button and the
+' host may have sized the control shorter than ideal.
+private function PsColorPicker_VisibleRows( byval pClr as PSCOLORPICKER ptr ) as long
+    if pClr = 0 then return 0
+    if pClr->nRowH <= 0 then return 0
+    dim as long h = pClr->rcSwatches.bottom - pClr->rcSwatches.top
+    if h <= 0 then return 0
+    return h \ pClr->nRowH
+end function
+
+
+' Clamp the scroll position so the last page cannot be scrolled past. Called from every writer of
+' nScrollTop, so "the list cannot show empty space below its last row" is one rule rather than
+' four copies of it.
+private sub PsColorPicker_ClampScroll( byval pClr as PSCOLORPICKER ptr )
+    if pClr = 0 then exit sub
+    dim as long nCount = PsColorPicker_GridCount( pClr )
+    dim as long nVis = PsColorPicker_VisibleRows( pClr )
+    dim as long nMax = nCount - nVis
+    if nMax < 0 then nMax = 0
+    if pClr->nScrollTop > nMax then pClr->nScrollTop = nMax
+    if pClr->nScrollTop < 0 then pClr->nScrollTop = 0
+end sub
+
+
+' Push the current list state into the scrollbar child, and show or hide it.
+'
+' The STRIP stays reserved either way (see LayoutColorPicker); only the scrollbar WINDOW comes
+' and goes, so a short list leaves a gap of panel background rather than re-flowing every row.
+private sub PsColorPicker_SyncScrollBar( byval pClr as PSCOLORPICKER ptr )
+    if pClr = 0 then exit sub
+    if IsWindow( pClr->hScroll ) = 0 then exit sub
+
+    if PsColorPicker_IsListTab( pClr ) = false then
+        ShowWindow( pClr->hScroll, SW_HIDE )
+        exit sub
+    end if
+
+    PsColorPicker_ClampScroll( pClr )
+
+    dim as long nCount = PsColorPicker_GridCount( pClr )
+    dim as long nVis   = PsColorPicker_VisibleRows( pClr )
+
+    SetWindowPos( pClr->hScroll, 0, pClr->rcScroll.left, pClr->rcScroll.top, _
+                  pClr->rcScroll.right - pClr->rcScroll.left, _
+                  pClr->rcScroll.bottom - pClr->rcScroll.top, _
+                  SWP_NOZORDER or SWP_NOACTIVATE )
+    PsVScrollBar_SetRange( pClr->hScroll, nCount, nVis, pClr->nScrollTop )
+    ShowWindow( pClr->hScroll, iif( PsVScrollBar_NeedsThumb( pClr->hScroll ), SW_SHOW, SW_HIDE ) )
+end sub
+
+
+' Scroll the selected row into view. THIS IS WHAT MAKES SetColor USEFUL ON A 137-ROW LIST: a host
+' that sets the picker to "MidnightBlue" and gets row 106 selected but not shown has been told
+' nothing. Only moves the viewport when the row is actually outside it, so it never fights a user
+' who has deliberately scrolled away from the selection.
+private sub PsColorPicker_EnsureSelVisible( byval pClr as PSCOLORPICKER ptr )
+    if pClr = 0 then exit sub
+    if PsColorPicker_IsListTab( pClr ) = false then exit sub
+    if pClr->nBodySel < 0 then exit sub
+
+    dim as long nVis = PsColorPicker_VisibleRows( pClr )
+    if nVis <= 0 then exit sub
+
+    if pClr->nBodySel < pClr->nScrollTop then
+        pClr->nScrollTop = pClr->nBodySel
+    elseif pClr->nBodySel > (pClr->nScrollTop + nVis - 1) then
+        pClr->nScrollTop = pClr->nBodySel - nVis + 1
+    end if
+    PsColorPicker_ClampScroll( pClr )
+    PsColorPicker_SyncScrollBar( pClr )
+end sub
+
+
+' ========================================================================================
+' The list scrollbar moved. Resolved back to the owning picker through GetParent -- the
+' scrollbar is our own child and nobody else's, so the parent is always us.
+'
+' It only moves the VIEWPORT. It never touches nBodySel, the colour or the caret: scrolling is
+' looking, not choosing, and a list that selected whatever it scrolled past would be unusable
+' with the wheel.
+' ========================================================================================
+private sub PsColorPicker_OnScroll( byval hScrollBar as HWND, byval newPos as integer )
+    dim as PSCOLORPICKER ptr pClr = GetColorPickerPointer( GetParent( hScrollBar ) )
+    if pClr = 0 then exit sub
+    if pClr->nScrollTop = clng(newPos) then exit sub
+    pClr->nScrollTop = clng(newPos)
+    PsColorPicker_ClampScroll( pClr )
+    if pClr->hWin then InvalidateRect( pClr->hWin, NULL, FALSE )
+end sub
+
+
 ' ========================================================================================
 ' RE-DERIVE nBodySel FROM THE COLOUR.
 '
@@ -245,6 +478,7 @@ private sub PsColorPicker_ApplyColor( _
     pClr->clrCurrent    = clr
     pClr->nAlphaCurrent = nAlpha
     PsColorPicker_SyncBodySel( pClr )
+    pClr->bScrollToSel = true
 
     ' The edit buffer is re-seeded so a field that is being typed into cannot go on showing the
     ' previous value after a swatch click. If the caret was past the new end it is pulled back.
@@ -549,29 +783,20 @@ private sub PsColorPicker_RenderTabs( _
 end sub
 
 
-' The matrix, the Web grid and the System grid all render through here: a run of cells laid out
-' left to right and wrapped, each filled with its colour, with the hot and selected cells ringed.
-' One loop rather than three, so the three tabs cannot disagree about where a cell is -- and, more
-' to the point, so they cannot disagree with the HIT TEST, which does the same arithmetic through
-' the same PsColorPicker_CellFromPoint.
-private sub PsColorPicker_RenderGrid( _
+' Only the MATRIX renders through here now -- the Web, System and Palette tabs are lists and go
+' through PsColorPicker_RenderList. It does the same arithmetic PsColorPicker_CellFromPoint does,
+' which is what stops the painter and the hit test disagreeing about where a cell is: a
+' disagreement there produces "clicking one swatch rings its neighbour", which looks fine in a
+' screenshot because both halves are individually right.
+private sub PsColorPicker_RenderMatrix( _
             byval pClr as PSCOLORPICKER ptr, _
             byval b    as PsBufferPaint ptr _
             )
 
-    dim as RECT rcGrid
-    dim as long nCellW, nCellH, nCols
-    if pClr->nTab = CLR_TAB_CUSTOM then
-        rcGrid = pClr->rcMatrix
-        nCellW = pClr->nCellW
-        nCellH = pClr->nCellH
-        nCols  = pClr->nMatrixCols
-    else
-        rcGrid = pClr->rcSwatches
-        nCellW = pClr->nSwatchW
-        nCellH = pClr->nSwatchH
-        nCols  = pClr->nSwatchCols
-    end if
+    dim as RECT rcGrid = pClr->rcMatrix
+    dim as long nCellW = pClr->nCellW
+    dim as long nCellH = pClr->nCellH
+    dim as long nCols  = pClr->nMatrixCols
     if (nCols <= 0) orelse (nCellW <= 0) orelse (nCellH <= 0) then exit sub
     if (rcGrid.right <= rcGrid.left) orelse (rcGrid.bottom <= rcGrid.top) then exit sub
 
@@ -584,7 +809,8 @@ private sub PsColorPicker_RenderGrid( _
         SetRect( @rc, rcGrid.left + (c * nCellW), rcGrid.top + (r * nCellH), _
                       rcGrid.left + ((c + 1) * nCellW), rcGrid.top + ((r + 1) * nCellH) )
         ' CLIP RATHER THAN SCALE. A control sized smaller than ideal drops the cells that do not
-        ' fit; it does not shrink them, because a half-width swatch is not a smaller swatch.
+        ' fit; it does not shrink them, because a half-width swatch is not a smaller swatch. The
+        ' hit test applies the identical test -- see PsColorPicker_HitBody.
         if rc.bottom > rcGrid.bottom then exit for
         if rc.right > rcGrid.right then continue for
 
@@ -609,63 +835,96 @@ private sub PsColorPicker_RenderGrid( _
 end sub
 
 
-' The palette list: one row per host entry, swatch on the left and the host's name beside it.
-' A LIST RATHER THAN A GRID, because a named colour without its name is just a swatch, and the
-' names are the entire reason this tab exists.
-private sub PsColorPicker_RenderPalette( _
+' ========================================================================================
+' THE LIST.  Web, System and Palette all render through here: one row per entry, a swatch on the
+' left and the entry's NAME beside it, scrolled by whole rows.
+'
+' ONE RENDERER FOR THREE TABS, and that is the point rather than an economy. They differ only in
+' where the rows come from -- PsColorPicker_GridColorAt and _GridNameAt already answer that -- so
+' three renderers would be three chances for the Web tab to drift from the Palette tab in row
+' height, swatch inset or highlight colour, and no assertion would notice, because each would be
+' internally consistent.
+'
+' A NAMED COLOUR WITHOUT ITS NAME IS JUST A SWATCH. The first version of this control drew Web and
+' System as 6x8 grids of anonymous squares: it fitted the panel neatly and told the user nothing,
+' which is why the list format replaced it.
+'
+' SCROLLING IS BY WHOLE ROWS (nScrollTop is an index, not a pixel offset), so a half-row can never
+' sit at the top of the viewport -- and the hit test stays a plain division.
+' ========================================================================================
+private sub PsColorPicker_RenderList( _
             byval pClr as PSCOLORPICKER ptr, _
             byval b    as PsBufferPaint ptr _
             )
 
     dim as RECT rcList = pClr->rcSwatches
-    if (rcList.bottom <= rcList.top) then exit sub
+    if (rcList.bottom <= rcList.top) orelse (rcList.right <= rcList.left) then exit sub
+    if pClr->nRowH <= 0 then exit sub
 
     dim as HFONT hFontUse = pClr->hTextFont
     if hFontUse = 0 then hFontUse = cast( HFONT, GetStockObject( DEFAULT_GUI_FONT ) )
     b->SetFont( hFontUse )
 
     dim as long nCount = PsColorPicker_GridCount( pClr )
-    for i as long = 0 to nCount - 1
+    dim as long nVis   = PsColorPicker_VisibleRows( pClr )
+
+    for v as long = 0 to nVis - 1
+        dim as long i = pClr->nScrollTop + v
+        if i >= nCount then exit for
+
         dim as RECT rcRow
-        SetRect( @rcRow, rcList.left, rcList.top + (i * pClr->nRowH), _
-                         rcList.right, rcList.top + ((i + 1) * pClr->nRowH) )
+        SetRect( @rcRow, rcList.left, rcList.top + (v * pClr->nRowH), _
+                         rcList.right, rcList.top + ((v + 1) * pClr->nRowH) )
         if rcRow.bottom > rcList.bottom then exit for
 
-        dim as DWSTRING wszName
         dim as COLORREF clrEntry
-        if pClr->PaletteEntryCallback = 0 then exit for
-        if pClr->PaletteEntryCallback( pClr->hWin, i, wszName, clrEntry ) = false then continue for
+        if PsColorPicker_GridColorAt( pClr, i, clrEntry ) = false then continue for
+        dim as DWSTRING wszName
+        PsColorPicker_GridNameAt( pClr, i, wszName )
 
         dim as boolean bSel = (i = pClr->nBodySel)
         dim as boolean bHot = (i = pClr->nHotSwatch)
+
+        ' The SELECTED row is a filled highlight with its own text colour -- the listbox look --
+        ' while a merely hot row gets the softer hover fill. Selection wins, as it does in the
+        ' matrix. The highlight's text colour is DERIVED from the highlight rather than being a
+        ' fifteenth colour field: a host that themes SelRingColor to something pale would
+        ' otherwise get white-on-pale and no warning.
         dim as COLORREF clrRowBack = pClr->colors.BackColor
+        dim as COLORREF clrRowFore = pClr->colors.ForeColor
         if bSel then
-            clrRowBack = pClr->colors.TabBackColorSel
+            clrRowBack = pClr->colors.SelRingColor
+            clrRowFore = PsColorPicker_ContrastColor( pClr->colors.SelRingColor )
         elseif bHot then
             clrRowBack = pClr->colors.TabBackColorSel
+            clrRowFore = pClr->colors.TabForeColorSel
         end if
         b->SetBackColor( clrRowBack )
         b->PaintRect( @rcRow )
 
         dim as RECT rcSw
-        SetRect( @rcSw, rcRow.left + 2, rcRow.top + 2, rcRow.left + pClr->nSwatchW, rcRow.bottom - 2 )
-        b->SetBackColor( clrEntry )
-        b->PaintRect( @rcSw )
-        PsColorPicker_Frame( b, rcSw, pClr->colors.BorderColor, pClr->nBorderThick, 0 )
+        SetRect( @rcSw, rcRow.left + 3, rcRow.top + 3, rcRow.left + pClr->nSwatchW, rcRow.bottom - 3 )
+        if rcSw.right > rcRow.right then rcSw.right = rcRow.right
+        if rcSw.right > rcSw.left then
+            b->SetBackColor( clrEntry )
+            b->PaintRect( @rcSw )
+            ' A framed swatch, because an entry whose colour matches the panel behind it would
+            ' otherwise be an invisible row with a name floating beside nothing. White and Black
+            ' are both in the web table, so this is the normal case rather than a corner one.
+            PsColorPicker_Frame( b, rcSw, pClr->colors.BorderColor, pClr->nBorderThick, 0 )
+        end if
 
         dim as RECT rcName = rcRow
         rcName.left = rcSw.right + pClr->nGap
-        b->SetColors( pClr->colors.ForeColor, clrRowBack )
-        b->PaintText( wszName, @rcName, DT_LEFT or DT_END_ELLIPSIS )
-
-        if bSel then
-            PsColorPicker_Frame( b, rcRow, pClr->colors.SelRingColor, pClr->nBorderThick, 0 )
+        if rcName.left < rcName.right then
+            b->SetColors( clrRowFore, clrRowBack )
+            b->PaintText( wszName, @rcName, DT_LEFT or DT_END_ELLIPSIS )
         end if
     next
 
-    ' The Assign button. Reserved unconditionally by the layout, and drawn disabled-looking when
-    ' there is nothing selected to assign -- rather than hidden, because a button that appears
-    ' and disappears as you click around the list reads as a glitch.
+    ' The Assign button -- palette tab only. Reserved unconditionally by the layout, and drawn
+    ' looking disabled when there is nothing selected to assign rather than hidden, because a
+    ' button that appears and disappears as you click around the list reads as a glitch.
     if IsRectEmpty( @pClr->rcAssign ) = 0 then
         dim as boolean bArmed = (pClr->nBodySel >= 0)
         dim as COLORREF clrBack = pClr->colors.FieldBackColor
@@ -777,10 +1036,10 @@ sub PsColorPicker_RenderDefault( _
 
     PsColorPicker_RenderTabs( pClr, b )
 
-    if pClr->nTab = CLR_TAB_PALETTE then
-        PsColorPicker_RenderPalette( pClr, b )
+    if PsColorPicker_IsListTab( pClr ) then
+        PsColorPicker_RenderList( pClr, b )
     else
-        PsColorPicker_RenderGrid( pClr, b )
+        PsColorPicker_RenderMatrix( pClr, b )
     end if
 
     PsColorPicker_RenderPreviews( pClr, b )
@@ -841,6 +1100,14 @@ private function PsColorPicker_OnPaint( byval hwnd as HWND ) as LRESULT
     if pClr = null then return 0
 
     if pClr->bLayoutDirty then pClr->LayoutColorPicker()
+    ' Both of these depend on the tab's row count and on the viewport height, which the layout
+    ' has only just settled -- so they run here rather than inside LayoutColorPicker, which lives
+    ' in the .bi and cannot see PsColorPicker_GridCount.
+    if pClr->bScrollToSel then
+        pClr->bScrollToSel = false
+        PsColorPicker_EnsureSelVisible( pClr )
+    end if
+    PsColorPicker_SyncScrollBar( pClr )
 
     dim as PsBufferPaint b
     b.BeginDoubleBuffer( hwnd )
@@ -893,39 +1160,35 @@ private function PsColorPicker_HitBody( byval pClr as PSCOLORPICKER ptr, byval x
     dim as long nCount = PsColorPicker_GridCount( pClr )
     if nCount <= 0 then return -1
 
-    if pClr->nTab = CLR_TAB_PALETTE then
+    ' ---- the three LIST tabs: a row lookup, offset by the scroll position -----------------
+    if PsColorPicker_IsListTab( pClr ) then
         if PsColorPicker_PtIn( pClr->rcSwatches, x, y ) = false then return -1
         if pClr->nRowH <= 0 then return -1
-        dim as long r = (y - pClr->rcSwatches.top) \ pClr->nRowH
+
+        dim as long v = (y - pClr->rcSwatches.top) \ pClr->nRowH
+        if v < 0 then return -1
+        ' A row that would be drawn past the bottom of the viewport is not clickable either.
+        ' Without this the last, half-visible row answers to a click on a strip of background
+        ' that shows nothing -- and with a 137-row list there is almost always such a strip.
+        if (pClr->rcSwatches.top + ((v + 1) * pClr->nRowH)) > pClr->rcSwatches.bottom then return -1
+
+        ' nScrollTop is an INDEX, not a pixel offset, which is what keeps this a plain division.
+        dim as long r = pClr->nScrollTop + v
         if (r < 0) orelse (r >= nCount) then return -1
-        ' A row that would be drawn past the bottom of the list is not clickable either. Without
-        ' this the last, half-visible row of an overlong palette answers to a click on a strip of
-        ' background that shows nothing.
-        if (pClr->rcSwatches.top + ((r + 1) * pClr->nRowH)) > pClr->rcSwatches.bottom then return -1
         return r
     end if
 
-    dim as RECT rcGrid
-    dim as long nCellW, nCellH, nCols, nRows
-    if pClr->nTab = CLR_TAB_CUSTOM then
-        rcGrid = pClr->rcMatrix
-        nCellW = pClr->nCellW
-        nCellH = pClr->nCellH
-        nCols  = pClr->nMatrixCols
-        nRows  = pClr->nMatrixRows
-    else
-        rcGrid = pClr->rcSwatches
-        nCellW = pClr->nSwatchW
-        nCellH = pClr->nSwatchH
-        nCols  = pClr->nSwatchCols
-        if nCols <= 0 then return -1
-        nRows  = (nCount + nCols - 1) \ nCols
-    end if
+    ' ---- the matrix ------------------------------------------------------------------------
+    dim as RECT rcGrid = pClr->rcMatrix
+    dim as long nCellW = pClr->nCellW
+    dim as long nCellH = pClr->nCellH
+    dim as long nCols  = pClr->nMatrixCols
+    dim as long nRows  = pClr->nMatrixRows
 
     dim as long c, r
     if PsColorPicker_CellFromPoint( rcGrid, nCellW, nCellH, nCols, nRows, x, y, c, r ) = false then return -1
 
-    ' A CELL THAT DOES NOT FIT ENTIRELY IS NOT CLICKABLE, because PsColorPicker_RenderGrid does
+    ' A CELL THAT DOES NOT FIT ENTIRELY IS NOT CLICKABLE, because PsColorPicker_RenderMatrix does
     ' not draw it -- it clips a cell whose right or bottom edge falls outside the grid rather
     ' than drawing a partial one. The two tests are deliberately identical.
     '
@@ -1012,6 +1275,15 @@ private sub PsColorPicker_NavigateBody( byval pClr as PSCOLORPICKER ptr, byval n
     pClr->nBodySel = idx
     if pClr->hWin then InvalidateRect( pClr->hWin, NULL, FALSE )
 end sub
+
+
+' How far Up/Down moves: a whole row of matrix cells, or a single list row.
+private function PsColorPicker_NavRowStep( byval pClr as PSCOLORPICKER ptr ) as long
+    if pClr = 0 then return 1
+    if PsColorPicker_IsListTab( pClr ) then return 1
+    if pClr->nMatrixCols < 1 then return 1
+    return pClr->nMatrixCols
+end function
 
 
 ' ========================================================================================
@@ -1144,6 +1416,21 @@ function PsColorPicker_WndProc( _
 
         if PsColorPicker_CallMessage( pClr, hwnd, uMsg, wParam, lParam ) then return 0
 
+    case WM_MOUSEWHEEL
+        ' Routed into the list's scrollbar by hand. Wheel messages go to the FOCUSED window, and
+        ' PsVScrollBar never takes focus -- so without this the wheel would do nothing over a
+        ' 137-row list. PsVScrollBar_HandleWheelDelta is public for exactly this purpose, and it
+        ' owns the sub-notch accumulation that makes a precision touchpad scroll smoothly.
+        if pClr = 0 then exit select
+        if pClr->isEnabled = false then return 0
+        if PsColorPicker_CallMessage( pClr, hwnd, uMsg, wParam, lParam ) then return 0
+        dim as boolean bHaveBar = (IsWindow( pClr->hScroll ) <> 0)
+        if PsColorPicker_IsListTab( pClr ) andalso bHaveBar then
+            if PsVScrollBar_HandleWheelDelta( pClr->hScroll, cast( short, hiword(wParam) ) ) then
+                return 0
+            end if
+        end if
+
     case WM_MOUSELEAVE
         if pClr then
             if pClr->isDragging = false then PsColorPicker_ClearHot( pClr, hwnd )
@@ -1194,6 +1481,10 @@ function PsColorPicker_WndProc( _
         if nTab >= 0 then
             if nTab <> pClr->nTab then
                 pClr->nTab = nTab
+                ' A new tab starts at the top, then reveals its selection if it has one. Carrying
+                ' the old tab's scroll position across would land a 5-row palette on row 106.
+                pClr->nScrollTop = 0
+                pClr->bScrollToSel = true
                 PsColorPicker_SyncBodySel( pClr )
                 pClr->Refresh()
                 if pClr->TabChangedCallback then pClr->TabChangedCallback( hwnd, nTab )
@@ -1428,22 +1719,14 @@ function PsColorPicker_WndProc( _
             PsColorPicker_NavigateBody( pClr, 1 )
             return 0
         case VK_UP
-            if pClr->nTab = CLR_TAB_PALETTE then
-                PsColorPicker_NavigateBody( pClr, -1 )
-            else
-                dim as long nCols = pClr->nMatrixCols
-                if pClr->nTab <> CLR_TAB_CUSTOM then nCols = pClr->nSwatchCols
-                PsColorPicker_NavigateBody( pClr, -nCols )
-            end if
+            ' A LIST moves one row; the MATRIX moves one whole row of cells. Left/Right above
+            ' move by one entry on both, which on the matrix is the next cell along and on a list
+            ' is the same thing Up/Down does -- harmless, and it means all four arrows work
+            ' wherever the user happens to be.
+            PsColorPicker_NavigateBody( pClr, -PsColorPicker_NavRowStep( pClr ) )
             return 0
         case VK_DOWN
-            if pClr->nTab = CLR_TAB_PALETTE then
-                PsColorPicker_NavigateBody( pClr, 1 )
-            else
-                dim as long nCols = pClr->nMatrixCols
-                if pClr->nTab <> CLR_TAB_CUSTOM then nCols = pClr->nSwatchCols
-                PsColorPicker_NavigateBody( pClr, nCols )
-            end if
+            PsColorPicker_NavigateBody( pClr, PsColorPicker_NavRowStep( pClr ) )
             return 0
         end select
 
@@ -1579,7 +1862,7 @@ function PsColorPicker_Create( byval hParent as HWND, byval id as long = 0 ) as 
     pClr->nCellW      = pWindow->ScaleX( PSCOLORPICKER_DEFAULT_CELLW )
     pClr->nCellH      = pWindow->ScaleY( PSCOLORPICKER_DEFAULT_CELLH )
     pClr->nSwatchW    = pWindow->ScaleX( PSCOLORPICKER_DEFAULT_SWATCHW )
-    pClr->nSwatchH    = pWindow->ScaleY( PSCOLORPICKER_DEFAULT_SWATCHH )
+    pClr->nScrollBarW = pWindow->ScaleX( PSCOLORPICKER_DEFAULT_SCROLLW )
     pClr->nPreviewW   = pWindow->ScaleX( PSCOLORPICKER_DEFAULT_PREVIEWW )
     pClr->nPreviewH   = pWindow->ScaleY( PSCOLORPICKER_DEFAULT_PREVIEWH )
     pClr->nFieldW     = pWindow->ScaleX( PSCOLORPICKER_DEFAULT_FIELDW )
@@ -1597,6 +1880,14 @@ function PsColorPicker_Create( byval hParent as HWND, byval id as long = 0 ) as 
 
     SetWindowLongPtr( hCtrl, GWLP_ID, id )
     pWindow->UserData(0) = cast(LONG_PTR, pClr)
+
+    ' THE LIST SCROLLBAR -- the control's ONE child window. Created here and hidden; the layout
+    ' positions it and PsColorPicker_SyncScrollBar decides per tab whether it is needed. Created
+    ' AFTER UserData is set, because PsVScrollBar_Create can dispatch messages and our own
+    ' WndProc must already be able to resolve its state block.
+    pClr->hScroll = PsVScrollBar_Create( hCtrl, id + 1 )
+    PsVScrollBar_SetScrollCallback( pClr->hScroll, @PsColorPicker_OnScroll )
+    ShowWindow( pClr->hScroll, SW_HIDE )
 
     PsColorPicker_SyncBodySel( pClr )
 
@@ -1692,6 +1983,8 @@ sub PsColorPicker_SetTab( byval hCtrl as HWND, byval nTab as long )
     if (nTab = CLR_TAB_PALETTE) andalso (pClr->bShowPalette = false) then exit sub
     if pClr->nTab = nTab then exit sub
     pClr->nTab = nTab
+    pClr->nScrollTop = 0
+    pClr->bScrollToSel = true
     PsColorPicker_SyncBodySel( pClr )
     pClr->Refresh()
     ' SILENT: TabChangedCallback reports USER action, exactly as the colour callback does.
@@ -1713,6 +2006,8 @@ sub PsColorPicker_ShowPaletteTab( byval hCtrl as HWND, byval bShow as boolean )
     ' palette off at runtime.
     if (bShow = false) andalso (pClr->nTab = CLR_TAB_PALETTE) then
         pClr->nTab = CLR_TAB_CUSTOM
+        pClr->nScrollTop = 0
+        pClr->bScrollToSel = true
         PsColorPicker_SyncBodySel( pClr )
     end if
     pClr->Refresh()
