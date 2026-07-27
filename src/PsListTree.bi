@@ -166,6 +166,11 @@ type TooltipCallbackFunc as function( byval hListControl as HWND, byval row as i
 ' re-entering itself. Nor is it fired when the user re-selects the row that is already
 ' current -- only an actual change notifies.
 type SelChangeCallbackSub as sub( byval hListControl as HWND, byval row as integer )
+' The row's DEFAULT ACTION -- double-click, or ENTER on the focused row. One callback for both
+' because they are one concept (ListView's LVN_ITEMACTIVATE, PsCalendar's DateActivated); a host
+' that wired them separately would have to keep two handlers in step. User gestures only, never
+' a programmatic selection change.
+type ActivateCallbackSub as sub( byval hListControl as HWND, byval row as integer )
 
 ' ----------------------------------------------------------------------------------------
 ' Drag-and-drop row reordering (opt-in via PsListTree_SetDragReorder). The user drags a row,
@@ -312,7 +317,12 @@ type PSLISTTREE
     bClickToEdit    as boolean = false    ' single click on the already-current row starts an edit (default OFF)
     hEdit           as HWND               ' the PsTextBox editor child (0 = not editing)
     editRow         as integer = -1       ' MODEL row being edited (-1 = none)
-    editCol         as integer = 0        ' column being edited (0 = caption; >0 reserved for later)
+    editCol         as integer = 0        ' column being edited (0 = the row's caption)
+    ' Which column the GESTURES open -- F2, Enter and click-to-edit. Default 0, so a host that
+    ' never calls SetEditColumn keeps the original caption-renaming behaviour exactly. It does
+    ' NOT constrain PsListTree_BeginEdit, which always takes its column explicitly.
+    editGestureCol  as integer = 0
+    bEnterEdits     as boolean = false    ' ENTER starts an edit (see SetEnterEdits; default OFF)
     bEditTearingDown as boolean = false   ' guards the re-entrant commit that DestroyWindow's focus loss triggers
     BeginLabelEditCallback as BeginLabelEditCallbackFunc  ' optional pre-edit veto
     EndLabelEditCallback   as EndLabelEditCallbackFunc    ' optional commit accept/reject
@@ -337,6 +347,7 @@ type PSLISTTREE
     MessageCallback as MessageCallbackFunc
     TooltipCallback as TooltipCallbackFunc    ' optional; defaults to the row's Text
     SelChangeCallback as SelChangeCallbackSub ' optional; user-driven selection changes only
+    ActivateCallback  as ActivateCallbackSub  ' optional; double-click / ENTER on a row
     CanDropCallback   as CanDropCallbackFunc  ' optional; pre-drop veto (drag reorder)
     DragDropCallback  as DragDropCallbackSub  ' optional; post-drop notify (drag reorder)
     ' --- Persistent scratch for PAINTINFO.cells, re-dimensioned only when the column
@@ -989,15 +1000,33 @@ declare sub      PsListTree_SetTwistyGlyphs( byval hListControl as HWND, byval w
 ' focused row), on the programmatic BeginEdit, or -- when SetClickToEdit is on -- on a
 ' single click of the already-current row (explorer rename). It commits on Enter or focus
 ' loss and cancels on Esc. BeginLabelEdit can veto; EndLabelEdit can reject the new text.
-' Only column 0 (the caption) is editable for now. All programmatic; EndEdit is silent.
+' ANY column is editable, but only column 0 has a gesture of its own: F2 and click-to-edit both
+' open column 0. Editing column N > 0 is programmatic -- the host resolves the clicked column
+' (PsListTree_GetColumnRect) and calls BeginEdit with it. The editor is placed over whichever
+' column is being edited; column 0 alone is inset past the tree indent and the twisty band.
+' All programmatic; EndEdit is silent.
 ' ----------------------------------------------------------------------------------------
 declare function PsListTree_EnableLabelEdit( byval hListControl as HWND, byval enable as boolean = true ) as boolean
 declare function PsListTree_IsLabelEditEnabled( byval hListControl as HWND ) as boolean
 declare function PsListTree_SetClickToEdit( byval hListControl as HWND, byval enable as boolean = true ) as boolean
+' The column F2 / ENTER / click-to-edit open. Default 0 (the caption). BeginEdit is unaffected --
+' it always names its own column.
+declare function PsListTree_SetEditColumn( byval hListControl as HWND, byval col as integer ) as boolean
+declare function PsListTree_GetEditColumn( byval hListControl as HWND ) as integer
+' ENTER starts an edit on the focused row, default OFF. It is opt-in and separate from
+' EnableLabelEdit because claiming ENTER is not free: the control has to answer WM_GETDLGCODE
+' with DLGC_WANTALLKEYS for that one message (or IsDialogMessage hands it to the host's default
+' button first) and then swallow the WM_CHAR TranslateMessage manufactures, or the system beeps
+' on every press. A host whose ENTER means something else must leave this off.
+declare function PsListTree_SetEnterEdits( byval hListControl as HWND, byval enable as boolean = true ) as boolean
+' Probe: is a WM_CHAR swallow armed? The beep an unswallowed char causes has no return value, so
+' this is the only way to assert the suppression rather than listen for it.
+declare function PsListTree_IsCharSwallowArmed( byval hListControl as HWND ) as boolean
 declare function PsListTree_BeginEdit( byval hListControl as HWND, byval row as integer, byval col as integer = 0 ) as boolean
 declare function PsListTree_EndEdit( byval hListControl as HWND, byval bCommit as boolean = true ) as boolean
 declare function PsListTree_IsEditing( byval hListControl as HWND ) as boolean
 declare function PsListTree_GetEditRow( byval hListControl as HWND ) as integer
+declare function PsListTree_GetEditCol( byval hListControl as HWND ) as integer
 ' Call from the host message pump when label editing is enabled (see above). Returns TRUE
 ' if the message was consumed by the editor's context menu. Safe to call always.
 declare function PsListTree_FilterMessage( byval pMsg as MSG ptr ) as boolean
@@ -1041,6 +1070,12 @@ declare function PsListTree_GetColumnCount( byval hListControl as HWND ) as inte
 declare function PsListTree_GetColumnText( byval hListControl as HWND, byval idx as integer ) as DWSTRING
 declare function PsListTree_SetColumnText( byval hListControl as HWND, byval idx as integer, byval Text as DWSTRING ) as boolean
 declare function PsListTree_GetColumnWidth( byval hListControl as HWND, byval idx as integer ) as integer
+' The column's laid-out rect in SURFACE CLIENT coordinates -- the same x space a mouse message
+' delivered to the message callback carries, so a host can resolve which column was clicked.
+' A convenience, not the only route: PsColumnHeader_GetColumnRect( PsListTree_GetHeader(h), .. )
+' reaches the same rect. It exists for the reason GetColumnWidth below does -- a host asking about
+' this control's columns should not have to know a second control is involved.
+declare function PsListTree_GetColumnRect( byval hListControl as HWND, byval idx as integer, byref rc as RECT ) as boolean
 declare function PsListTree_SetColumnWidth( byval hListControl as HWND, byval idx as integer, byval nWidth as integer ) as boolean
 declare function PsListTree_GetColumnMinWidth( byval hListControl as HWND, byval idx as integer ) as integer
 declare function PsListTree_SetColumnMinWidth( byval hListControl as HWND, byval idx as integer, byval nMinWidth as integer ) as boolean
@@ -1073,6 +1108,11 @@ declare sub      PsListTree_SetPaintCallback( byval hListControl as HWND, byval 
 declare sub      PsListTree_SetMessageCallback( byval hListControl as HWND, byval userfunc as MessageCallbackFunc )
 declare sub      PsListTree_SetTooltipCallback( byval hListControl as HWND, byval userfunc as TooltipCallbackFunc )
 declare sub      PsListTree_SetSelChangeCallback( byval hListControl as HWND, byval usersub as SelChangeCallbackSub )
+' The row's default action: double-click, or ENTER on the focused row. Setting it is what makes
+' the control claim ENTER (per-message DLGC_WANTALLKEYS, plus the WM_CHAR swallow) -- with no
+' callback set, ENTER is left alone and reaches the host's default button as before.
+' SetEnterEdits WINS over this: a list whose ENTER opens an editor does not also activate.
+declare sub      PsListTree_SetActivateCallback( byval hListControl as HWND, byval usersub as ActivateCallbackSub )
 ' Tree callbacks. BeginLabelEdit/EndLabelEdit gate in-place editing; ExpandCollapse reports
 ' a USER expand/collapse (silent for the programmatic collapse/expand setters).
 declare sub      PsListTree_SetBeginLabelEditCallback( byval hListControl as HWND, byval userfunc as BeginLabelEditCallbackFunc )

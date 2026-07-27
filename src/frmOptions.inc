@@ -1182,6 +1182,14 @@ function frmOptions_Show( byval hWndParent as HWND ) as LRESULT
         ' own filter just forwards here.
         if PsTextBox_FilterMessage( @uMsg ) then continue while
 
+        ' The Localization page's phrase list edits its translation column in place, and that is
+        ' what makes this call mandatory. Its position is load-bearing in BOTH directions: ahead
+        ' of the Escape block below, or Escape during an edit closes the whole dialog instead of
+        ' cancelling the edit; and ahead of IsDialogMessage, or Enter fires the OK button instead
+        ' of committing. It is safe when nothing is editing, and safe to leave in place if that
+        ' page ever stops editing.
+        if PsListTree_FilterMessage( @uMsg ) then continue while
+
         ' ESCAPE cancels the dialog -- but only after the popup filters above, so an open
         ' combobox list or context menu closes on Escape first. This is handled explicitly
         ' rather than left to IsDialogMessage's IDCANCEL, because a MULTILINE PsTextBox (the

@@ -819,6 +819,22 @@ sub PsListTree_SetSelChangeCallback( byval hListControl as HWND, byval usersub a
     pList->SelChangeCallback = usersub
 end sub
 
+sub PsListTree_SetActivateCallback( byval hListControl as HWND, byval usersub as ActivateCallbackSub )
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return
+    pList->ActivateCallback = usersub
+end sub
+
+' Fire the row's default action. Refuses a non-selectable row for the same reason every
+' selection path does -- a row the user cannot land on cannot be the one they activated.
+private sub PsListTree_FireActivate( byval pList as PSLISTTREE ptr, byval modelRow as integer )
+    if pList = 0 then exit sub
+    if pList->ActivateCallback = 0 then exit sub
+    if pList->IsValidRow(modelRow) = false then exit sub
+    if pList->IsRowSelectable(modelRow) = false then exit sub
+    pList->ActivateCallback( pList->hWin, modelRow )
+end sub
+
 
 ' Resolve the tooltip text for a model row: host callback if set, else row Text.
 function PsListTree_ResolveTooltipText( byval pList as PSLISTTREE ptr, byval modelRow as integer ) as DWSTRING
@@ -1380,6 +1396,17 @@ function PsListTree_GetColumnWidth( byval hListControl as HWND, byval idx as int
     dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return 0
     return PsColumnHeader_GetColumnWidth( pList->hHeader, idx )
+end function
+
+' The header lays the columns out; the surface paints its cells at the same x. Handing the rect
+' out lets a host answer "which column did that click land in" without re-deriving the layout
+' from the widths (which would have to reproduce the fill column's stretch). Same forwarding
+' rationale as GetColumnWidth above -- PsListTree_GetHeader would also get a caller there.
+function PsListTree_GetColumnRect( byval hListControl as HWND, byval idx as integer, byref rc as RECT ) as boolean
+    SetRectEmpty( @rc )
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return false
+    return PsColumnHeader_GetColumnRect( pList->hHeader, idx, rc )
 end function
 
 function PsListTree_SetColumnWidth( byval hListControl as HWND, byval idx as integer, byval nWidth as integer ) as boolean
@@ -2158,6 +2185,18 @@ function PsListTree_WndProc( _
         ' every visible row in one pass in PsListTree_OnPaintSurface.
 
 
+    case WM_SETFOCUS
+        ' Hand focus straight down to the surface. The container has no keyboard behaviour of
+        ' its own -- every key is handled in PsListTreeSurface_WndProc -- so focus parked here
+        ' is focus nowhere: the arrows, F2 and ENTER all go missing and the focus bar never
+        ' appears. A host calling SetFocus on the handle Create returned (the obvious thing,
+        ' and the only handle it has) landed exactly there.
+        dim as PSLISTTREE ptr pListF = GetListTreePointer(hwnd)
+        if pListF then
+            dim as HWND hSurf = GetDlgItem( hwnd, pListF->idc_ListTree )
+            if hSurf then SetFocus( hSurf ) : return 0
+        end if
+
     case WM_NOTIFY
         ' The tooltip asks for its text on demand; supply the current hot row's.
         dim as NMHDR ptr pnmh = cast(NMHDR ptr, lParam)
@@ -2634,20 +2673,31 @@ function PsListTree_BeginEditInternal( byval pList as PSLISTTREE ptr, byval row 
     pList->editRow = row
     pList->editCol = col
 
-    ' Place over the caption: row rect (surface client coords), left past the tree indent and
-    ' the twisty band, right to column 0's edge (columns mode) or the client right.
+    ' Place over the cell being edited. The row rect is in surface client coords and the header's
+    ' column rects share that x origin, so a column rect can be used directly.
     dim as RECT rcRow
     if PsListTree_VisIndexRect( pList, vis, rcRow ) = false then
         PsListTree_EndEditInternal( pList, false )
         return false
     end if
-    dim as integer xLeft = rcRow.left + PsListTree_RowLevelIndentPx( pList, row )
-    if pList->bShowTwisty then xLeft += PsListTree_TwistyPx( pList )
-    dim as integer xRight = rcRow.right
     dim as integer nCols = PsColumnHeader_GetCount( pList->hHeader )
-    if nCols > 0 then
-        dim as RECT rcCol0 : PsColumnHeader_GetColumnRect( pList->hHeader, 0, rcCol0 )
-        xRight = rcCol0.right
+    dim as integer xLeft, xRight
+    if (col > 0) andalso (col < nCols) then
+        ' A cell in column N. No indent or twisty inset -- those belong to the caption column
+        ' only, which is where the tree structure is drawn.
+        dim as RECT rcCol : PsColumnHeader_GetColumnRect( pList->hHeader, col, rcCol )
+        xLeft  = rcCol.left
+        xRight = rcCol.right
+    else
+        ' The caption: left past the tree indent and the twisty band, right to column 0's edge
+        ' (columns mode) or the client right.
+        xLeft = rcRow.left + PsListTree_RowLevelIndentPx( pList, row )
+        if pList->bShowTwisty then xLeft += PsListTree_TwistyPx( pList )
+        xRight = rcRow.right
+        if nCols > 0 then
+            dim as RECT rcCol0 : PsColumnHeader_GetColumnRect( pList->hHeader, 0, rcCol0 )
+            xRight = rcCol0.right
+        end if
     end if
     if xRight < xLeft + 8 then xRight = xLeft + 8
     SetWindowPos( pList->hEdit, HWND_TOP, xLeft, rcRow.top, xRight - xLeft, rcRow.bottom - rcRow.top, SWP_SHOWWINDOW )
@@ -2738,6 +2788,38 @@ function PsListTree_SetClickToEdit( byval hListControl as HWND, byval enable as 
     return true
 end function
 
+function PsListTree_SetEditColumn( byval hListControl as HWND, byval col as integer ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return false
+    if col < 0 then col = 0
+    pList->editGestureCol = col
+    return true
+end function
+
+function PsListTree_GetEditColumn( byval hListControl as HWND ) as integer
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return 0
+    return pList->editGestureCol
+end function
+
+function PsListTree_SetEnterEdits( byval hListControl as HWND, byval enable as boolean = true ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return false
+    pList->bEnterEdits = enable
+    return true
+end function
+
+' PROBE, public on purpose (PsButton_CountRenderedTones' precedent). A key claimed in WM_KEYDOWN
+' has a WM_CHAR manufactured for it, and an unswallowed one reaches DefWindowProc and BEEPS. The
+' beep has no return value -- DefWindowProc answers WM_CHAR with 0 exactly as the swallow does --
+' so nothing about it is observable from outside except this flag. Without it the only detector
+' is a human listening, which is how the same defect shipped in five sibling controls.
+function PsListTree_IsCharSwallowArmed( byval hListControl as HWND ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return false
+    return pList->bSwallowNextChar
+end function
+
 function PsListTree_BeginEdit( byval hListControl as HWND, byval row as integer, byval col as integer = 0 ) as boolean
     dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return false
@@ -2760,6 +2842,20 @@ function PsListTree_GetEditRow( byval hListControl as HWND ) as integer
     dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return -1
     return pList->editRow
+end function
+
+' Which column the edit is on. The EndLabelEdit callback is not handed the column, so a host that
+' wants only ONE column editable reads it here and returns FALSE for the others -- F2 always opens
+' column 0, whatever column the host's own gesture opened last.
+'
+' Unlike GetEditRow this does NOT reset to -1 when the edit ends, and that is deliberate:
+' EndEditInternal tears the editor down BEFORE it calls EndLabelEdit, so a value cleared on
+' teardown would be unreadable at the one moment it is wanted. Outside an edit it reports the
+' column of the last one.
+function PsListTree_GetEditCol( byval hListControl as HWND ) as integer
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return -1
+    return pList->editCol
 end function
 
 ' Host pump obligation when label editing is enabled: forwards to the editor's PsTextBox so
@@ -2871,6 +2967,27 @@ function PsListTreeSurface_WndProc ( _
             ' Claim the navigation keys. As a system listbox these arrived automatically;
             ' a plain child window has to ask, or IsDialogMessage in the host's pump eats
             ' the arrows for tab-navigation before WM_KEYDOWN is ever sent.
+            '
+            ' ENTER is claimed PER MESSAGE and only when SetEnterEdits is on -- PsToggle's rule.
+            ' Claiming DLGC_WANTALLKEYS unconditionally would swallow Tab and break the host's
+            ' navigation; claiming nothing lets IsDialogMessage route ENTER to the dialog's
+            ' default button before WM_KEYDOWN can ever arrive here.
+            ' Hoisted to one boolean: a 3-way andalso mixing a pointer relational with two
+            ' boolean fields trips fbc warning 38. Two independent reasons to want ENTER --
+            ' it opens an editor, or it fires the row's default action.
+            dim as boolean bWantEnter = false
+            if pList <> 0 then
+                bWantEnter = (pList->bEnterEdits = true) andalso (pList->bLabelEdit = true)
+                if pList->ActivateCallback <> 0 then bWantEnter = true
+            end if
+            if bWantEnter then
+                dim as MSG ptr pMsg = cast(MSG ptr, _lParam)
+                if pMsg then
+                    if (pMsg->message = WM_KEYDOWN) andalso (pMsg->wParam = VK_RETURN) then
+                        return DLGC_WANTARROWS or DLGC_WANTCHARS or DLGC_WANTALLKEYS
+                    end if
+                end if
+            end if
             return DLGC_WANTARROWS or DLGC_WANTCHARS
 
         case WM_SETFOCUS, WM_KILLFOCUS
@@ -2950,8 +3067,28 @@ function PsListTreeSurface_WndProc ( _
                         PsListTree_KeySpace( pList, isCtrl ) : return 0
                     case VK_F2
                         ' Start an in-place edit of the focused row (no-op unless editing is on).
-                        if pList->bLabelEdit then PsListTree_BeginEditInternal( pList, pList->focusRow, 0 )
+                        if pList->bLabelEdit then _
+                            PsListTree_BeginEditInternal( pList, pList->focusRow, pList->editGestureCol )
                         return 0
+                    case VK_RETURN
+                        ' Two possible meanings, EDIT first: a list whose ENTER opens an editor
+                        ' does not also fire the row's default action. Either way ENTER produces
+                        ' a WM_CHAR, so arm the swallow or the system beeps on every press --
+                        ' the family-wide trap. Armed here rather than by re-reading state,
+                        ' because the state this key changes has already changed by the time its
+                        ' character arrives.
+                        dim as boolean bEnterEdit = (pList->bEnterEdits = true) andalso (pList->bLabelEdit = true)
+                        if bEnterEdit then
+                            pList->bSwallowNextChar = true
+                            PsListTree_BeginEditInternal( pList, pList->focusRow, pList->editGestureCol )
+                            return 0
+                        end if
+                        if pList->ActivateCallback <> 0 then
+                            pList->bSwallowNextChar = true
+                            PsListTree_FireActivate( pList, pList->focusRow )
+                            return 0
+                        end if
+                        ' Not ours: fall through so the host's default button still works.
                 end select
             end if
             ' unhandled keys fall through to the default listbox handler
@@ -3165,7 +3302,7 @@ function PsListTreeSurface_WndProc ( _
                     if pList->bClickToEdit andalso pList->bLabelEdit andalso bWasCurrent then
                         if (deferSel = false) andalso pList->IsRowSelectable(modelRow) then bWantEdit = true
                     end if
-                    if bWantEdit then PsListTree_BeginEditInternal( pList, modelRow, 0 )
+                    if bWantEdit then PsListTree_BeginEditInternal( pList, modelRow, pList->editGestureCol )
                 end if
                 if pList->MessageCallback then
                     if pList->MessageCallback( @m ) then return 0
@@ -3255,6 +3392,11 @@ function PsListTreeSurface_WndProc ( _
                 if pList then m.idx = pList->VisibleToModel( idx )
                 if pList andalso pList->MessageCallback then
                     if pList->MessageCallback( @m ) then return 0
+                end if
+                ' A double-click is the row's default action. Fired AFTER the message callback,
+                ' so a host that claims the message keeps its old behaviour and never gets both.
+                if (uMsg = WM_LBUTTONDBLCLK) andalso (pList <> 0) then
+                    PsListTree_FireActivate( pList, m.idx )
                 end if
             end if
             return 0
