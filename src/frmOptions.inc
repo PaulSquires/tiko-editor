@@ -461,14 +461,18 @@ private sub frmOptions_PositionWindows( byval hwnd as HWND )
     ' The search box sits in the nav column's slice of the title band (the corner that was
     ' blank), so it lines up with the page title on the right. The nav list stays below it,
     ' where it already aligned with the first control of the page.
+    ' The FRAME spans [mx .. navW-mx] and is drawn by the dialog. The box lives INSIDE it: past
+    ' the glyph gutter on the left, and inset by the border on the other three sides so it never
+    ' paints over the frame.
     dim as long mx      = AfxScaleX(FRMOPTIONS_MARGIN) \ 2
     dim as long searchH = AfxScaleY(FRMOPTIONS_SEARCH_H)
     dim as long searchY = (titleH - searchH) \ 2
     dim as long glyphW  = AfxScaleX(FRMOPTIONS_SEARCH_GLYPHW)
-    dim as long searchX = mx + glyphW
-    dim as long searchW = navW - searchX - mx
-    if searchW < 0 then searchW = 0
-    SetWindowPos( HWND_FRMOPTIONS_SEARCH, 0, searchX, searchY, searchW, searchH, _
+    dim as long inset   = AfxScaleX(2)
+    dim as long boxX = mx + glyphW
+    dim as long boxW = (navW - mx - inset) - boxX
+    if boxW < 0 then boxW = 0
+    SetWindowPos( HWND_FRMOPTIONS_SEARCH, 0, boxX, searchY + inset, boxW, searchH - (2 * inset), _
                   SWP_NOZORDER or SWP_NOACTIVATE )
 
     dim as long navTop = titleH + AfxScaleY(OPTROW_PADTOP)
@@ -530,20 +534,37 @@ private function frmOptions_OnPaint( byval hwnd as HWND ) as LRESULT
     buffer.SetFont( ghFont(GUIFONTBOLD_11) )
     buffer.PaintText( frmOptions_PageTitle(gOptCurrentPage), @rcTitle, DT_LEFT or DT_END_ELLIPSIS )
 
-    ' The magnifying glass, in the gutter to the left of the search box. Segoe Fluent Icons
-    ' E721 (Search), drawn in the panel background the dialog owns -- a child window would cover
-    ' anything painted under it, so the box is inset past this gutter rather than over it.
+    ' THE SEARCH FRAME. One rounded rect around the glyph AND the box, filled in the field
+    ' colour so the borderless box (same colour) sits inside it invisibly, then the magnifying
+    ' glass on top of the fill, then the border last so it stays crisp. The box is a child and
+    ' paints over its own sub-region afterwards -- which is fine, it is the same colour and it is
+    ' inset inside this border.
     dim as long mxG      = AfxScaleX(FRMOPTIONS_MARGIN) \ 2
     dim as long searchHG = AfxScaleY(FRMOPTIONS_SEARCH_H)
     dim as long searchYG = (titleH - searchHG) \ 2
+    dim as long curveG   = AfxScaleY(6)
+
+    dim as RECT rcFrame
+    rcFrame.left   = mxG
+    rcFrame.top    = searchYG
+    rcFrame.right  = navW - mxG
+    rcFrame.bottom = searchYG + searchHG
+
+    buffer.SetBackColor( ghEditor.BackColorText )
+    buffer.PaintRoundRect( @rcFrame, curveG )
+
     dim as RECT rcGlyph
     rcGlyph.left   = mxG
     rcGlyph.top    = searchYG
     rcGlyph.right  = mxG + AfxScaleX(FRMOPTIONS_SEARCH_GLYPHW)
     rcGlyph.bottom = searchYG + searchHG
     buffer.SetForeColor( ghPanel.ForeColor )
+    buffer.SetBackColor( ghEditor.BackColorText )
     buffer.SetFont( ghFont(SYMBOLFONT_10) )
     buffer.PaintText( wchr(&hE721), @rcGlyph, DT_CENTER or DT_VCENTER or DT_SINGLELINE )
+
+    buffer.SetPenColor( ghEditor.Divider )
+    buffer.PaintRoundOutline( @rcFrame, curveG, 1 )
 
     ' The one rule left in the dialog: the vertical split between the navigation list and
     ' the page. A hairline -- width 1, deliberately not DPI-scaled. There is deliberately
@@ -854,12 +875,12 @@ private sub frmOptions_ApplyTheme( byval hwnd as HWND )
 
     if HWND_FRMOPTIONS_SEARCH then
         ' A field-coloured box: editor background, dimmed cue, divider border, accent on focus.
+        ' Its background matches the frame the dialog fills behind it, so the two read as one
+        ' surface. The frame (fill + border) is drawn in frmOptions_OnPaint.
         PsTextBox_SetBackColor( HWND_FRMOPTIONS_SEARCH, ghEditor.BackColorText )
-        PsTextBox_SetOuterBackColor( HWND_FRMOPTIONS_SEARCH, ghPanel.BackColor )
+        PsTextBox_SetOuterBackColor( HWND_FRMOPTIONS_SEARCH, ghEditor.BackColorText )
         PsTextBox_SetForeColor( HWND_FRMOPTIONS_SEARCH, ghEditor.ForeColorText )
         PsTextBox_SetCueBannerColor( HWND_FRMOPTIONS_SEARCH, ghPanel.ForeColor )
-        PsTextBox_SetBorderColor( HWND_FRMOPTIONS_SEARCH, ghEditor.Divider )
-        PsTextBox_SetFocusBorderColor( HWND_FRMOPTIONS_SEARCH, ghUI.AccentColor )
     end if
 
         ' The plain container's WM_CTLCOLOR brush is derived from the back colour, so it is rebuilt
@@ -926,7 +947,12 @@ private sub frmOptions_SearchChanged( byval hTextBox as HWND )
     ' cannot be drawn over, so the box is inset past the gutter rather than straddling it.
     HWND_FRMOPTIONS_SEARCH = PsTextBox_Create( HWND_FRMOPTIONS, IDC_FRMOPTIONS_SEARCH )
     PsTextBox_SetFont( HWND_FRMOPTIONS_SEARCH, OptionsFont_Base() )
-    PsTextBox_SetCornerRadius( HWND_FRMOPTIONS_SEARCH, AfxScaleY(6) )
+    ' NO BORDER of its own. The dialog draws one frame around the glyph AND the box together, so
+    ' the magnifying glass reads as being INSIDE the field rather than in a gutter beside it --
+    ' which a child window cannot achieve, because it paints over anything drawn under it. The
+    ' box is square for the same reason: the rounding lives on the drawn frame.
+    PsTextBox_SetBorderWidth( HWND_FRMOPTIONS_SEARCH, 0 )
+    PsTextBox_SetCornerRadius( HWND_FRMOPTIONS_SEARCH, 0 )
     PsTextBox_SetCueBannerText( HWND_FRMOPTIONS_SEARCH, L(488,"Search settings...") )
     PsTextBox_SetChangeCallback( HWND_FRMOPTIONS_SEARCH, @frmOptions_SearchChanged )
     frmOptions_NavReselect()
@@ -1036,7 +1062,12 @@ function frmOptions_Show( byval hWndParent as HWND ) as LRESULT
     ' cannot be drawn over, so the box is inset past the gutter rather than straddling it.
     HWND_FRMOPTIONS_SEARCH = PsTextBox_Create( HWND_FRMOPTIONS, IDC_FRMOPTIONS_SEARCH )
     PsTextBox_SetFont( HWND_FRMOPTIONS_SEARCH, OptionsFont_Base() )
-    PsTextBox_SetCornerRadius( HWND_FRMOPTIONS_SEARCH, AfxScaleY(6) )
+    ' NO BORDER of its own. The dialog draws one frame around the glyph AND the box together, so
+    ' the magnifying glass reads as being INSIDE the field rather than in a gutter beside it --
+    ' which a child window cannot achieve, because it paints over anything drawn under it. The
+    ' box is square for the same reason: the rounding lives on the drawn frame.
+    PsTextBox_SetBorderWidth( HWND_FRMOPTIONS_SEARCH, 0 )
+    PsTextBox_SetCornerRadius( HWND_FRMOPTIONS_SEARCH, 0 )
     PsTextBox_SetCueBannerText( HWND_FRMOPTIONS_SEARCH, L(488,"Search settings...") )
     PsTextBox_SetChangeCallback( HWND_FRMOPTIONS_SEARCH, @frmOptions_SearchChanged )
 
