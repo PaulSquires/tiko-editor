@@ -864,6 +864,7 @@ function frmMain_PositionWindows() as LRESULT
         nHeightTabFindPanel = 0
         nHeightTabReplacePanel = 0
         ShowWindow( HWND_FRMMAIN_TOPTABS, SW_HIDE )
+        ShowWindow( HWND_FRMMAIN_TOPTABSMENU, SW_HIDE )
     end if
 
     if (gTTabCtl.GetItemCount() > 0) then

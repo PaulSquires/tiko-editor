@@ -85,10 +85,6 @@ function frmPanel_PositionWindows() as LRESULT
 
     end select
 
-    ' Calculate the divider line
-    nWidth = rc.right - rc.Left
-    gPanel.rcDividerLine = type( 0, nPanelMenuHeight, nWidth, nPanelMenuHeight )
-    
     ' calculate the rect for the panel label (EXPLORER, FUNCTION LIST, BOOKMARKS)
     with gPanel.rcHeader 
         .left = pWindow->ScaleX( 10 )
@@ -173,11 +169,6 @@ function frmPanel_OnPaint( byval hwnd as HWND ) as LRESULT
     end if
     b.PaintRoundRect( @gPanel.rcActionMenu )
     b.PaintText( wszIconMoreActions, @gPanel.rcActionMenu, DT_CENTER )
-
-    ' Paint a separator line at the top of the window
-    b.SetPenColor( ghEditor.Divider )
-    b.PaintLine( 1, gPanel.rcDividerLine.left, gPanel.rcDividerLine.top, _
-                    gPanel.rcDividerLine.right, gPanel.rcDividerLine.bottom )
 
     b.EndDoubleBuffer()
 

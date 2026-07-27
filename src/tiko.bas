@@ -305,6 +305,7 @@ function WinMain( _
     dylibfree(pLibLexilla)
     dylibfree(pLibScintilla)
     dylibfree(gpHelpLib)
+
     
     ' Unload the font file
     if len(wszFontFile) then RemoveFontResource(wszFontFile)
