@@ -160,8 +160,10 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "frmOptionsCompiler.inc"
 #include once "frmOptionsLocal.inc"
 #include once "frmOptionsKeywords.inc"
-#include once "frmOptionsTheme.inc"
 #include once "frmOptions.inc"
+' After frmOptions: frmThemes' colour page uses OptionsFont_Base and OptionsTheme_Fill*
+' from the options modules, and nothing in frmOptions refers back to frmThemes.
+#include once "frmThemes.inc"
 #include once "frmGoto.inc"
 #include once "frmHelpViewer.inc"
 #include once "frmCommandLine.inc"

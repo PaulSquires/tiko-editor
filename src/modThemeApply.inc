@@ -531,9 +531,9 @@ sub Theme_RunSelfTest()
     '    quietly fail to appear in the UI.
     dim as long nSyntax, nInterface, nNeither
     for i as long = lbound(gThemeBind) to ubound(gThemeBind)
-        select case frmOptionsTheme_PageForKey( gThemeBind(i).keyValue )
-            case OPTPAGE_SYNTAX:    nSyntax += 1
-            case OPTPAGE_INTERFACE: nInterface += 1
+        select case frmThemes_PageForKey( gThemeBind(i).keyValue )
+            case THEMEPAGE_SYNTAX:    nSyntax += 1
+            case THEMEPAGE_INTERFACE: nInterface += 1
             case else:              nNeither += 1
         end select
     next
@@ -544,25 +544,25 @@ sub Theme_RunSelfTest()
     '    general.description / general.version have no bind row at all, so nothing should land
     '    in "neither" -- if it does, a colour key is invisible in both pages.
     THASSERT( nNeither = 0, "a bound colour key belongs to no page" )
-    THASSERT( frmOptionsTheme_PageForKey( "editor.keyword" ) = OPTPAGE_SYNTAX, "editor.* -> syntax" )
-    THASSERT( frmOptionsTheme_PageForKey( "panel.text" ) = OPTPAGE_INTERFACE, "panel.* -> interface" )
-    THASSERT( frmOptionsTheme_PageForKey( "ui.divider" ) = OPTPAGE_INTERFACE, "ui.* -> interface" )
+    THASSERT( frmThemes_PageForKey( "editor.keyword" ) = THEMEPAGE_SYNTAX, "editor.* -> syntax" )
+    THASSERT( frmThemes_PageForKey( "panel.text" ) = THEMEPAGE_INTERFACE, "panel.* -> interface" )
+    THASSERT( frmThemes_PageForKey( "ui.divider" ) = THEMEPAGE_INTERFACE, "ui.* -> interface" )
 
     ' -- 12. Built-in themes are recognised as protected. --------------------------------
-    THASSERT( frmOptionsTheme_IsProtectedTheme( "default_dark.theme" ), "default_dark is protected" )
-    THASSERT( frmOptionsTheme_IsProtectedTheme( "default_light.theme" ), "default_light is protected" )
-    THASSERT( frmOptionsTheme_IsProtectedTheme( "DEFAULT_Dark.theme" ), "protection is case-insensitive" )
-    THASSERT( frmOptionsTheme_IsProtectedTheme( "mytheme.theme" ) = false, "a user theme is not protected" )
-    THASSERT( frmOptionsTheme_IsProtectedTheme( "my_default_x.theme" ) = false, _
+    THASSERT( frmThemes_IsProtectedTheme( "default_dark.theme" ), "default_dark is protected" )
+    THASSERT( frmThemes_IsProtectedTheme( "default_light.theme" ), "default_light is protected" )
+    THASSERT( frmThemes_IsProtectedTheme( "DEFAULT_Dark.theme" ), "protection is case-insensitive" )
+    THASSERT( frmThemes_IsProtectedTheme( "mytheme.theme" ) = false, "a user theme is not protected" )
+    THASSERT( frmThemes_IsProtectedTheme( "my_default_x.theme" ) = false, _
               "protection must match a PREFIX, not a substring" )
 
     ' -- 13. A fork name is new, and never collides with what is already on disk. ---------
-    dim as DWSTRING wszFork = frmOptionsTheme_MakeForkName( "default_dark.theme" )
+    dim as DWSTRING wszFork = frmThemes_MakeForkName( "default_dark.theme" )
     THASSERT( wszFork <> "default_dark.theme", "fork name must differ from its source" )
     THASSERT( instr( wszFork, "_custom" ) > 0, "fork name should be recognisable" )
     THASSERT( AfxFileExists( AfxGetExePathName & "settings\themes\" & wszFork ) = 0, _
               "MakeForkName returned a filename that already exists" )
-    THASSERT( frmOptionsTheme_IsProtectedTheme( wszFork ) = false, _
+    THASSERT( frmThemes_IsProtectedTheme( wszFork ) = false, _
               "a fork of a built-in must NOT itself be protected, or it could never be saved" )
 
     ' -- 14. general.appearance survives a write and drives Theme_IsDark. ----------------
@@ -606,8 +606,8 @@ sub Theme_RunSelfTest()
     '    translate alike are still two categories, and a missing string id would make every
     '    title compare equal (which is exactly how this went wrong the first time).
     for i as long = lbound(gThemeBind) to ubound(gThemeBind)
-        if frmOptionsTheme_PageForKey( gThemeBind(i).keyValue ) = OPTPAGE_NONE then continue for
-        THASSERT( frmOptionsTheme_CategoryIdForKey( gThemeBind(i).keyValue ) <> THEMECAT_OTHER, _
+        if frmThemes_PageForKey( gThemeBind(i).keyValue ) = OPTPAGE_NONE then continue for
+        THASSERT( frmThemes_CategoryIdForKey( gThemeBind(i).keyValue ) <> THEMECAT_OTHER, _
                   "key has no category: " & gThemeBind(i).keyValue )
     next
 

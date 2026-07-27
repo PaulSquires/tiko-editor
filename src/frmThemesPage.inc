@@ -11,11 +11,11 @@
 '    MERCHANTABILITY or FITNESS for A PARTICULAR PURPOSE.  See the
 '    GNU General Public License for more details.
 
-'  frmOptionsTheme.inc  --  see frmOptionsTheme.bi for the design.
+'  frmThemesPage.inc  --  see frmThemes.bi for the design.
 
-#include once "frmOptionsTheme.bi"
+#include once "frmThemes.bi"
 
-' frmOptions_ThemedMsgBox is defined in frmOptions.inc, which is included AFTER this file
+' frmThemes_ThemedMsgBox is defined in frmOptions.inc, which is included AFTER this file
 ' (it dispatches to us, so it must come later). Its declaration already arrives early via
 ' frmOptions.bi, so nothing more is needed here.
 
@@ -36,7 +36,7 @@ dim shared ghThemeResetB    as HWND      ' PsButton -- undo this key's backgroun
 dim shared ghThemePicker    as HWND      ' PsColorPicker -- embedded, replaces the modal dialog
 
 dim shared gThemeBuilt      as boolean
-dim shared gThemeCurPage    as long = OPTPAGE_NONE
+dim shared gThemeCurPage    as long = THEMEPAGE_NONE
 
 ' Bind-table indices for the rows currently in the list, in list order. Rebuilt whenever the
 ' page changes; row N of the listbox is gThemeRowBind(N).
@@ -63,7 +63,7 @@ dim shared gThemeForkOK     as boolean
 
 ' What the picker is currently pointed at, so a re-sync can tell "the user selected a different
 ' key" from "the value under the same key just changed". Only the first re-establishes the
-' picker's Initial baseline -- see the bKeepInitial block in frmOptionsTheme_SyncEditControls.
+' picker's Initial baseline -- see the bKeepInitial block in frmThemes_SyncEditControls.
 dim shared gThemePickerBind    as long = -1
 dim shared gThemePickerChannel as long = -1
 
@@ -101,12 +101,9 @@ const THEME_SWATCHH      = 14
 const THEME_ROWHEIGHT    = 22
 
 
-function frmOptionsTheme_OwnsPage( byval nPage as long ) as boolean
-    return (nPage = OPTPAGE_SYNTAX) orelse (nPage = OPTPAGE_INTERFACE)
-end function
 
 
-function frmOptionsTheme_WasEdited() as boolean
+function frmThemes_WasEdited() as boolean
     return gThemeEdited
 end function
 
@@ -116,7 +113,7 @@ end function
 ' falls back to when their own experiment goes wrong, and "reset" is only meaningful while
 ' the originals are pristine.
 ' ========================================================================================
-function frmOptionsTheme_IsProtectedTheme( byval wszShortFilename as DWSTRING ) as boolean
+function frmThemes_IsProtectedTheme( byval wszShortFilename as DWSTRING ) as boolean
     return (lcase(left(wszShortFilename, 8)) = "default_")
 end function
 
@@ -126,7 +123,7 @@ end function
 ' _custom2, _custom3... so repeatedly forking the same built-in never silently overwrites an
 ' earlier attempt.
 ' ========================================================================================
-function frmOptionsTheme_MakeForkName( byval wszShortFilename as DWSTRING ) as DWSTRING
+function frmThemes_MakeForkName( byval wszShortFilename as DWSTRING ) as DWSTRING
 
     dim as string sBase = wszShortFilename
     if lcase(right(sBase, 6)) = ".theme" then sBase = left(sBase, len(sBase) - 6)
@@ -162,12 +159,12 @@ end function
 ' table -- every colour key on exactly one page, nothing listed twice, nothing orphaned. The
 ' list builder below calls this too, so the assertion checks the real rule rather than a copy
 ' of it that could drift.
-function frmOptionsTheme_PageForKey( byval sKey as string ) as long
+function frmThemes_PageForKey( byval sKey as string ) as long
     dim as string sNamespace = AfxStrParse( sKey, 1, "." )
     ' general.* is description and version text, not colour: on neither page.
-    if sNamespace = "general" then return OPTPAGE_NONE
-    if sNamespace = "editor" then return OPTPAGE_SYNTAX
-    return OPTPAGE_INTERFACE
+    if sNamespace = "general" then return THEMEPAGE_NONE
+    if sNamespace = "editor" then return THEMEPAGE_SYNTAX
+    return THEMEPAGE_INTERFACE
 end function
 
 
@@ -187,7 +184,7 @@ end function
 ' "" for all of them. Adding the ids fixed the symptom; splitting id from title fixes the
 ' cause. Two categories that happen to translate alike must still be two categories, so
 ' structure cannot be keyed on display text in any language.
-function frmOptionsTheme_CategoryIdForKey( byval sKey as string ) as long
+function frmThemes_CategoryIdForKey( byval sKey as string ) as long
 
     dim as string ns = AfxStrParse( sKey, 1, "." )
 
@@ -226,7 +223,7 @@ end function
 
 
 ' The localized heading for a category id. Display only -- nothing branches on this.
-function frmOptionsTheme_CategoryTitle( byval nCat as long ) as DWSTRING
+function frmThemes_CategoryTitle( byval nCat as long ) as DWSTRING
     select case nCat
         case THEMECAT_MAIN:      return L(465, "Main Window")
         case THEMECAT_PANEL:     return L(466, "Side Panels")
@@ -252,7 +249,7 @@ end function
 ' so both channels are reported at once rather than asking the user to hover a 30px square
 ' precisely -- which is easier to read anyway when comparing a pair.
 ' ========================================================================================
-private function frmOptionsTheme_ListTooltip( byval hList as HWND, byval row as integer ) as DWSTRING
+private function frmThemes_ListTooltip( byval hList as HWND, byval row as integer ) as DWSTRING
 
     if (row < lbound(gThemeRowBind)) orelse (row > ubound(gThemeRowBind)) then return ""
     dim as long nb = gThemeRowBind(row)
@@ -279,7 +276,7 @@ private function frmOptionsTheme_ListTooltip( byval hList as HWND, byval row as 
 end function
 
 
-private sub frmOptionsTheme_PopulateList()
+private sub frmThemes_PopulateList()
 
     if ghThemeKeys = 0 then exit sub
 
@@ -299,15 +296,15 @@ private sub frmOptionsTheme_PopulateList()
     for i as long = lbound(gThemeBind) to ubound(gThemeBind)
 
         dim as string sKey = gThemeBind(i).keyValue
-        if frmOptionsTheme_PageForKey( sKey ) <> gThemeCurPage then continue for
+        if frmThemes_PageForKey( sKey ) <> gThemeCurPage then continue for
 
-        dim as long nCat = frmOptionsTheme_CategoryIdForKey( sKey )
+        dim as long nCat = frmThemes_CategoryIdForKey( sKey )
         if nCat <> nLastCat then
             nLastCat = nCat
             nRow += 1
             redim preserve gThemeRowBind(nRow) as long
             gThemeRowBind(nRow) = -1                 ' -1 marks a header row
-            PsListTree_AddHeader( ghThemeKeys, frmOptionsTheme_CategoryTitle( nCat ) )
+            PsListTree_AddHeader( ghThemeKeys, frmThemes_CategoryTitle( nCat ) )
         end if
 
         nRow += 1
@@ -326,7 +323,7 @@ end sub
 ' ========================================================================================
 ' The bind row behind the currently selected list row, or -1.
 ' ========================================================================================
-private function frmOptionsTheme_SelectedBind() as long
+private function frmThemes_SelectedBind() as long
     if ghThemeKeys = 0 then return -1
     dim as long row = PsListTree_GetCurSel( ghThemeKeys )
     if (row < lbound(gThemeRowBind)) orelse (row > ubound(gThemeRowBind)) then return -1
@@ -339,9 +336,9 @@ end function
 ' background channel gets a disabled Background button rather than a hidden one, so the
 ' column does not reflow every time the selection moves.
 ' ========================================================================================
-private sub frmOptionsTheme_SyncEditControls()
+private sub frmThemes_SyncEditControls()
 
-    dim as long nb = frmOptionsTheme_SelectedBind()
+    dim as long nb = frmThemes_SelectedBind()
 
     dim as boolean bHasFore, bHasBack, bHasFlags, bHasAlpha
     dim as long nAlpha = 255
@@ -456,25 +453,25 @@ end sub
 ' leaves the copy on disk -- deliberate: the user asked for it to exist, and the alternative
 ' is a theme that vanishes when they change their mind about one colour.
 ' ========================================================================================
-private function frmOptionsTheme_EnsureForked() as boolean
+private function frmThemes_EnsureForked() as boolean
 
-    if frmOptionsTheme_IsProtectedTheme( gThemeCurrentShortFilename ) = false then return true
+    if frmThemes_IsProtectedTheme( gThemeCurrentShortFilename ) = false then return true
 
-    dim as DWSTRING wszFork = frmOptionsTheme_MakeForkName( gThemeCurrentShortFilename )
+    dim as DWSTRING wszFork = frmThemes_MakeForkName( gThemeCurrentShortFilename )
 
     dim as DWSTRING wszMsg = L(452, "This is a built-in theme and cannot be modified.") & _
                              chr(13) & chr(13) & _
                              L(453, "Your changes will be saved as a new theme:") & _
                              chr(13) & wszFork
 
-    if frmOptions_ThemedMsgBox( wszMsg, L(111, "Themes and Fonts"), _
+    if frmThemes_ThemedMsgBox( wszMsg, L(111, "Themes and Fonts"), _
                                 MBX_ICON_QUESTION, MBX_BTN_OKCANCEL ) <> IDOK then return false
 
     dim as DWSTRING wszPath = AfxGetExePathName & "settings\themes\" & wszFork
     dim as DWSTRING wszDesc = ghGeneral.description & " (custom)"
 
     if Theme_WriteFile( wszPath, wszDesc ) then
-        frmOptions_ThemedMsgBox( L(454, "The new theme file could not be written."), _
+        frmThemes_ThemedMsgBox( L(454, "The new theme file could not be written."), _
                                  L(111, "Themes and Fonts"), MBX_ICON_ERROR, MBX_BTN_OK )
         return false
     end if
@@ -482,11 +479,11 @@ private function frmOptionsTheme_EnsureForked() as boolean
     ' Everything now points at the fork: the engine (so Theme_IsDark and any later save use
     ' it) and the staging copy (so OK persists it to gConfig).
     gThemeCurrentShortFilename = wszFork
-    gOptWork.ThemeShortFilename = wszFork
+    gThemesWorkFile = wszFork
     ghGeneral.description = wszDesc
 
     ' The Themes and Fonts page has a stale folder listing now.
-    frmOptionsColors_RefreshThemeList()
+    frmThemes_RefreshThemeList()
 
     return true
 
@@ -501,18 +498,18 @@ end function
 ' survives all four moods, so it reads as "this is the one you are editing" without needing a
 ' second colour or a toggle control.
 ' ========================================================================================
-private sub frmOptionsTheme_SetChannel( byval nChannel as long )
+private sub frmThemes_SetChannel( byval nChannel as long )
     if gThemeChannel = nChannel then exit sub
     gThemeChannel = nChannel
-    frmOptionsTheme_SyncEditControls()
+    frmThemes_SyncEditControls()
 end sub
 
-private sub frmOptionsTheme_ForeClick( byval hButton as HWND, byval id as long )
-    frmOptionsTheme_SetChannel( THEMECH_FORE )
+private sub frmThemes_ForeClick( byval hButton as HWND, byval id as long )
+    frmThemes_SetChannel( THEMECH_FORE )
 end sub
 
-private sub frmOptionsTheme_BackClick( byval hButton as HWND, byval id as long )
-    frmOptionsTheme_SetChannel( THEMECH_BACK )
+private sub frmThemes_BackClick( byval hButton as HWND, byval id as long )
+    frmThemes_SetChannel( THEMECH_BACK )
 end sub
 
 
@@ -532,16 +529,16 @@ end sub
 ' A swatch click, a typed value and an arrow key all emit a bare END with no BEGIN before it, so
 ' END has to be able to ask as well. gThemeForkAsked is what stops it asking twice.
 '
-' MOVE deliberately does NOT call frmOptionsTheme_SyncEditControls: that redraws the key list to
+' MOVE deliberately does NOT call frmThemes_SyncEditControls: that redraws the key list to
 ' refresh its swatches, and doing it sixty times a second while dragging is exactly the kind of
 ' work that makes a live preview feel worse than a modal.
 ' ========================================================================================
-private sub frmOptionsTheme_PickerChanged( byval hCtrl as HWND, _
+private sub frmThemes_PickerChanged( byval hCtrl as HWND, _
                                            byval clr as COLORREF, _
                                            byval nAlpha as ubyte, _
                                            byval nPhase as long )
 
-    dim as long nb = frmOptionsTheme_SelectedBind()
+    dim as long nb = frmThemes_SelectedBind()
     if nb < 0 then exit sub
 
     dim as string sKey = gThemeBind(nb).keyValue
@@ -556,13 +553,13 @@ private sub frmOptionsTheme_PickerChanged( byval hCtrl as HWND, _
 
     if nPhase = CLR_PHASE_BEGIN then
         gThemeForkAsked = true
-        gThemeForkOK    = frmOptionsTheme_EnsureForked()
+        gThemeForkOK    = frmThemes_EnsureForked()
         if gThemeForkOK = false then exit sub
     end if
 
     if gThemeForkAsked = false then
         gThemeForkAsked = true
-        gThemeForkOK    = frmOptionsTheme_EnsureForked()
+        gThemeForkOK    = frmThemes_EnsureForked()
     end if
     if gThemeForkOK = false then
         ' Still inside a declined gesture. Reset the latch on the END so the NEXT gesture gets a
@@ -587,7 +584,7 @@ private sub frmOptionsTheme_PickerChanged( byval hCtrl as HWND, _
 
     if nPhase = CLR_PHASE_END then
         gThemeForkAsked = false
-        frmOptionsTheme_SyncEditControls()
+        frmThemes_SyncEditControls()
     end if
 
 end sub
@@ -600,11 +597,11 @@ end sub
 ' declare "%accent: 97,175,239" and refer to it from a dozen keys since long before there was
 ' any UI for it. The picker lists them and the host owns them entirely.
 ' ========================================================================================
-private function frmOptionsTheme_PaletteCount( byval hCtrl as HWND ) as long
+private function frmThemes_PaletteCount( byval hCtrl as HWND ) as long
     return Theme_MacroCount()
 end function
 
-private function frmOptionsTheme_PaletteEntry( byval hCtrl as HWND, _
+private function frmThemes_PaletteEntry( byval hCtrl as HWND, _
                                                byval idx as long, _
                                                byref wszName as DWSTRING, _
                                                byref clr as COLORREF _
@@ -619,23 +616,23 @@ end function
 ' palette and a theme would drift toward all-literals.
 '
 ' It forks like any other modification, because it changes what gets written to the file.
-private sub frmOptionsTheme_PaletteAssign( byval hCtrl as HWND, byval idx as long )
+private sub frmThemes_PaletteAssign( byval hCtrl as HWND, byval idx as long )
 
-    dim as long nb = frmOptionsTheme_SelectedBind()
+    dim as long nb = frmThemes_SelectedBind()
     if nb < 0 then exit sub
 
     dim as DWSTRING wszName
     dim as COLORREF clr
     if Theme_MacroAt( idx, wszName, clr ) = false then exit sub
 
-    if frmOptionsTheme_EnsureForked() = false then exit sub
+    if frmThemes_EnsureForked() = false then exit sub
 
     dim as ulong nMask = Theme_AssignMacro( gThemeBind(nb).keyValue, gThemeChannel, wszName )
     if nMask = THSUB_NONE then exit sub
 
     gThemeEdited = true
     Theme_RequestApply( nMask )
-    frmOptionsTheme_SyncEditControls()
+    frmThemes_SyncEditControls()
 
 end sub
 
@@ -649,25 +646,25 @@ end sub
 ' to reset). Nor does it set gThemeEdited -- if every experiment is reset, OK has nothing to
 ' write, which is the honest outcome.
 ' ========================================================================================
-private sub frmOptionsTheme_ResetChannel( byval nChannel as long )
+private sub frmThemes_ResetChannel( byval nChannel as long )
 
-    dim as long nb = frmOptionsTheme_SelectedBind()
+    dim as long nb = frmThemes_SelectedBind()
     if nb < 0 then exit sub
 
     dim as ulong nMask = Theme_ResetChannel( gThemeBind(nb).keyValue, nChannel )
     if nMask = THSUB_NONE then exit sub
 
     Theme_RequestApply( nMask )
-    frmOptionsTheme_SyncEditControls()
+    frmThemes_SyncEditControls()
 
 end sub
 
-private sub frmOptionsTheme_ResetForeClick( byval hButton as HWND, byval id as long )
-    frmOptionsTheme_ResetChannel( THEMECH_FORE )
+private sub frmThemes_ResetForeClick( byval hButton as HWND, byval id as long )
+    frmThemes_ResetChannel( THEMECH_FORE )
 end sub
 
-private sub frmOptionsTheme_ResetBackClick( byval hButton as HWND, byval id as long )
-    frmOptionsTheme_ResetChannel( THEMECH_BACK )
+private sub frmThemes_ResetBackClick( byval hButton as HWND, byval id as long )
+    frmThemes_ResetChannel( THEMECH_BACK )
 end sub
 
 
@@ -675,16 +672,16 @@ end sub
 ' Bold / italic / underline. PsToggle fires this only for user action, never for
 ' SetChecked, so reloading the controls in _SyncEditControls cannot recurse back in here.
 ' ========================================================================================
-private sub frmOptionsTheme_FlagChanged( byval hToggle as HWND, byval bChecked as boolean )
+private sub frmThemes_FlagChanged( byval hToggle as HWND, byval bChecked as boolean )
 
-    dim as long nb = frmOptionsTheme_SelectedBind()
+    dim as long nb = frmThemes_SelectedBind()
     if nb < 0 then exit sub
 
     dim as long nChannel = THEMECH_BOLD
     if hToggle = ghThemeItalic then nChannel = THEMECH_ITALIC
     if hToggle = ghThemeUnder  then nChannel = THEMECH_UNDER
 
-    if frmOptionsTheme_EnsureForked() = false then
+    if frmThemes_EnsureForked() = false then
         ' Put the switch back: the model did not change.
         PsToggle_SetChecked( hToggle, (bChecked = false) )
         exit sub
@@ -700,9 +697,9 @@ end sub
 ' ========================================================================================
 ' Alpha. Only ever enabled for a key whose alpha reaches a pixel -- see Theme_IsAlphaCapable.
 ' ========================================================================================
-private sub frmOptionsTheme_AlphaChanged( byval hCtrl as HWND, byval dblValue as double )
+private sub frmThemes_AlphaChanged( byval hCtrl as HWND, byval dblValue as double )
 
-    dim as long nb = frmOptionsTheme_SelectedBind()
+    dim as long nb = frmThemes_SelectedBind()
     if nb < 0 then exit sub
     if gThemeBind(nb).bAlphaCapable = false then exit sub
 
@@ -710,7 +707,7 @@ private sub frmOptionsTheme_AlphaChanged( byval hCtrl as HWND, byval dblValue as
     dim as long n = Theme_FindEntry( sKey )
     if n < 0 then exit sub
 
-    if frmOptionsTheme_EnsureForked() = false then exit sub
+    if frmThemes_EnsureForked() = false then exit sub
 
     ' Apply the alpha to whichever channel this key actually carries it on.
     dim as long nChannel = iif( gThemeBind(nb).pBack <> 0, THEMECH_BACK, THEMECH_FORE )
@@ -723,8 +720,8 @@ private sub frmOptionsTheme_AlphaChanged( byval hCtrl as HWND, byval dblValue as
 end sub
 
 
-private sub frmOptionsTheme_ListSelChange( byval hList as HWND, byval row as integer )
-    frmOptionsTheme_SyncEditControls()
+private sub frmThemes_ListSelChange( byval hList as HWND, byval row as integer )
+    frmThemes_SyncEditControls()
 end sub
 
 
@@ -732,7 +729,7 @@ end sub
 ' Row painting: the key name, then its foreground and background swatches, then B/I/U.
 ' Right-aligned so the swatches line up in a column no matter how long the key is.
 ' ========================================================================================
-private sub frmOptionsTheme_ListPaint( byval p as PSLISTTREE_PAINTINFO ptr )
+private sub frmThemes_ListPaint( byval p as PSLISTTREE_PAINTINFO ptr )
 
     if p = 0 then exit sub
 
@@ -813,7 +810,7 @@ private sub frmOptionsTheme_ListPaint( byval p as PSLISTTREE_PAINTINFO ptr )
 end sub
 
 
-private sub frmOptionsTheme_AddLabel( byval wszCaption as DWSTRING, _
+private sub frmThemes_AddLabel( byval wszCaption as DWSTRING, _
                                       byval x1 as long, byval y1 as long, _
                                       byval x2 as long, byval y2 as long )
     dim as long n = ubound(gThemeLabels) + 1
@@ -827,60 +824,60 @@ end sub
 ' Build. Guarded: both pages share one set of controls, and whichever is visited first
 ' creates them.
 ' ========================================================================================
-sub frmOptionsTheme_Build( byval nPage as long, byval hPage as HWND )
+sub frmThemes_Build( byval nPage as long, byval hPage as HWND )
 
     gThemeCurPage = nPage
 
     if gThemeBuilt then
-        frmOptionsTheme_PopulateList()
-        frmOptionsTheme_SyncEditControls()
+        frmThemes_PopulateList()
+        frmThemes_SyncEditControls()
         exit sub
     end if
     gThemeBuilt = true
 
-    ghThemeKeys = PsListTree_Create( hPage, IDC_FRMOPTIONSTHEME_LSTKEYS )
-    PsListTree_SetPaintCallback( ghThemeKeys, @frmOptionsTheme_ListPaint )
-    PsListTree_SetSelChangeCallback( ghThemeKeys, @frmOptionsTheme_ListSelChange )
-    PsListTree_SetTooltipCallback( ghThemeKeys, @frmOptionsTheme_ListTooltip )
+    ghThemeKeys = PsListTree_Create( hPage, IDC_FRMTHEMES_LSTKEYS )
+    PsListTree_SetPaintCallback( ghThemeKeys, @frmThemes_ListPaint )
+    PsListTree_SetSelChangeCallback( ghThemeKeys, @frmThemes_ListSelChange )
+    PsListTree_SetTooltipCallback( ghThemeKeys, @frmThemes_ListTooltip )
     PsListTree_SetRowHeight( ghThemeKeys, THEME_ROWHEIGHT )
     PsListTree_SetScrollBarWidth( ghThemeKeys, SCROLLBAR_WIDTH_PANEL )
 
-    ghThemeFore = PsButton_Create( hPage, IDC_FRMOPTIONSTHEME_CMDFORE )
+    ghThemeFore = PsButton_Create( hPage, IDC_FRMTHEMES_CMDFORE )
     PsButton_SetText( ghThemeFore, L(455, "Foreground") & "..." )
-    PsButton_SetClickCallback( ghThemeFore, @frmOptionsTheme_ForeClick )
+    PsButton_SetClickCallback( ghThemeFore, @frmThemes_ForeClick )
 
-    ghThemeBack = PsButton_Create( hPage, IDC_FRMOPTIONSTHEME_CMDBACK )
+    ghThemeBack = PsButton_Create( hPage, IDC_FRMTHEMES_CMDBACK )
     PsButton_SetText( ghThemeBack, L(456, "Background") & "..." )
-    PsButton_SetClickCallback( ghThemeBack, @frmOptionsTheme_BackClick )
+    PsButton_SetClickCallback( ghThemeBack, @frmThemes_BackClick )
 
     ' Undo glyph (Segoe Fluent Icons E7A7) plus the caption. The glyph font is a SEPARATE
     ' paint-time input from the text font -- see PsButton_SetGlyphFont.
-    ghThemeResetF = PsButton_Create( hPage, IDC_FRMOPTIONSTHEME_CMDRESETF )
+    ghThemeResetF = PsButton_Create( hPage, IDC_FRMTHEMES_CMDRESETF )
     PsButton_SetGlyphLeft( ghThemeResetF, wchr(&hE7A7) )
     PsButton_SetTooltipText( ghThemeResetF, L(480, "Reset") )
-    PsButton_SetClickCallback( ghThemeResetF, @frmOptionsTheme_ResetForeClick )
+    PsButton_SetClickCallback( ghThemeResetF, @frmThemes_ResetForeClick )
 
-    ghThemeResetB = PsButton_Create( hPage, IDC_FRMOPTIONSTHEME_CMDRESETB )
+    ghThemeResetB = PsButton_Create( hPage, IDC_FRMTHEMES_CMDRESETB )
     PsButton_SetTooltipText( ghThemeResetB, L(480, "Reset") )
     PsButton_SetGlyphLeft( ghThemeResetB, wchr(&hE7A7) )
-    PsButton_SetClickCallback( ghThemeResetB, @frmOptionsTheme_ResetBackClick )
+    PsButton_SetClickCallback( ghThemeResetB, @frmThemes_ResetBackClick )
 
-    ghThemeBold = PsToggle_Create( hPage, IDC_FRMOPTIONSTHEME_TOGBOLD )
-    PsToggle_SetCheckChangedCallback( ghThemeBold, @frmOptionsTheme_FlagChanged )
-    ghThemeItalic = PsToggle_Create( hPage, IDC_FRMOPTIONSTHEME_TOGITALIC )
-    PsToggle_SetCheckChangedCallback( ghThemeItalic, @frmOptionsTheme_FlagChanged )
-    ghThemeUnder = PsToggle_Create( hPage, IDC_FRMOPTIONSTHEME_TOGUNDER )
-    PsToggle_SetCheckChangedCallback( ghThemeUnder, @frmOptionsTheme_FlagChanged )
+    ghThemeBold = PsToggle_Create( hPage, IDC_FRMTHEMES_TOGBOLD )
+    PsToggle_SetCheckChangedCallback( ghThemeBold, @frmThemes_FlagChanged )
+    ghThemeItalic = PsToggle_Create( hPage, IDC_FRMTHEMES_TOGITALIC )
+    PsToggle_SetCheckChangedCallback( ghThemeItalic, @frmThemes_FlagChanged )
+    ghThemeUnder = PsToggle_Create( hPage, IDC_FRMTHEMES_TOGUNDER )
+    PsToggle_SetCheckChangedCallback( ghThemeUnder, @frmThemes_FlagChanged )
 
-    ghThemeAlpha = PsNumericUpDown_Create( hPage, IDC_FRMOPTIONSTHEME_NUMALPHA )
+    ghThemeAlpha = PsNumericUpDown_Create( hPage, IDC_FRMTHEMES_NUMALPHA )
     PsNumericUpDown_SetRange( ghThemeAlpha, 0, 255 )
     PsNumericUpDown_SetDecimalPlaces( ghThemeAlpha, 0 )
-    PsNumericUpDown_SetValueChangedCallback( ghThemeAlpha, @frmOptionsTheme_AlphaChanged )
+    PsNumericUpDown_SetValueChangedCallback( ghThemeAlpha, @frmThemes_AlphaChanged )
 
     ' THE EMBEDDED PICKER. It adds NOTHING to frmOptions' message pump -- there is no
     ' PsColorPicker_FilterMessage, unlike the PsComboBox and PsTextBox calls already in there.
     ' That absence is the reason it is a panel rather than a dropdown.
-    ghThemePicker = PsColorPicker_Create( hPage, IDC_FRMOPTIONSTHEME_PICKER )
+    ghThemePicker = PsColorPicker_Create( hPage, IDC_FRMTHEMES_PICKER )
 
     ' NARROWER MATRIX CELLS THAN THE PICKER'S DEFAULT, and this is a width budget rather than a
     ' preference. Three columns have to come out of one fixed 680px viewport: the list needs its
@@ -893,9 +890,9 @@ sub frmOptionsTheme_Build( byval nPage as long, byval hPage as HWND )
     ' own lists, which is what keeps the Custom tab free of a dead band.
     PsColorPicker_SetCellSize( ghThemePicker, AfxScaleX(16), AfxScaleY(22) )
 
-    PsColorPicker_SetColorChangedCallback( ghThemePicker, @frmOptionsTheme_PickerChanged )
-    PsColorPicker_SetPaletteCallbacks( ghThemePicker, @frmOptionsTheme_PaletteCount, _
-                                       @frmOptionsTheme_PaletteEntry, @frmOptionsTheme_PaletteAssign )
+    PsColorPicker_SetColorChangedCallback( ghThemePicker, @frmThemes_PickerChanged )
+    PsColorPicker_SetPaletteCallbacks( ghThemePicker, @frmThemes_PaletteCount, _
+                                       @frmThemes_PaletteEntry, @frmThemes_PaletteAssign )
     ' Every word the user reads is supplied by the host: the control does no localization.
     PsColorPicker_SetAssignText( ghThemePicker, L(481, "Use named color") )
     PsColorPicker_SetPreviewText( ghThemePicker, L(482, "Initial"), L(483, "Current") )
@@ -906,14 +903,14 @@ sub frmOptionsTheme_Build( byval nPage as long, byval hPage as HWND )
     ' a distinction the picker has no way to make. Two editors for one value is how sync bugs
     ' start, so there is one, and it is the one that is already right.
 
-    frmOptionsTheme_ApplyTheme()
-    frmOptionsTheme_PopulateList()
-    frmOptionsTheme_SyncEditControls()
+    frmThemes_ApplyTheme()
+    frmThemes_PopulateList()
+    frmThemes_SyncEditControls()
 
 end sub
 
 
-sub frmOptionsTheme_ApplyTheme()
+sub frmThemes_ApplyTheme()
 
     if gThemeBuilt = false then exit sub
 
@@ -970,14 +967,14 @@ sub frmOptionsTheme_ApplyTheme()
 end sub
 
 
-sub frmOptionsTheme_Show( byval nPage as long, byval bShow as boolean )
+sub frmThemes_ShowPage( byval nPage as long, byval bShow as boolean )
 
     if gThemeBuilt = false then exit sub
 
     if bShow andalso (nPage <> gThemeCurPage) then
         gThemeCurPage = nPage
-        frmOptionsTheme_PopulateList()
-        frmOptionsTheme_SyncEditControls()
+        frmThemes_PopulateList()
+        frmThemes_SyncEditControls()
     end if
 
     dim as long nCmd = iif( bShow, SW_SHOW, SW_HIDE )
@@ -1000,7 +997,7 @@ end sub
 ' Phase 3's embedded PsColorPicker goes, replacing the two buttons.
 ' Returns the content height, as the PsScrollPanel contract requires.
 ' ========================================================================================
-function frmOptionsTheme_Layout( byval nPage as long, byval hPage as HWND, byval cxPanel as long ) as long
+function frmThemes_Layout( byval nPage as long, byval hPage as HWND, byval cxPanel as long ) as long
 
     if gThemeBuilt = false then return 0
 
@@ -1035,7 +1032,7 @@ function frmOptionsTheme_Layout( byval nPage as long, byval hPage as HWND, byval
     dim as long listH = AfxScaleY(THEME_LISTHEIGHT)
     if nPickerH > listH then listH = nPickerH
 
-    frmOptionsTheme_AddLabel( iif( gThemeCurPage = OPTPAGE_SYNTAX, _
+    frmThemes_AddLabel( iif( gThemeCurPage = THEMEPAGE_SYNTAX, _
                                    L(457, "Editor syntax and margin colors"), _
                                    L(458, "Window, panel and menu colors") ), _
                               padLeft, y, contentR, y + textH )
@@ -1070,20 +1067,20 @@ function frmOptionsTheme_Layout( byval nPage as long, byval hPage as HWND, byval
 
     dim as long togW = AfxScaleX(46)
     dim as long togH = AfxScaleY(22)
-    frmOptionsTheme_AddLabel( L(459, "Bold"), xEdit + togW + AfxScaleX(10), yEdit + AfxScaleY(2), _
+    frmThemes_AddLabel( L(459, "Bold"), xEdit + togW + AfxScaleX(10), yEdit + AfxScaleY(2), _
                               xEdit + editW, yEdit + togH )
     SetWindowPos( ghThemeBold, 0, xEdit, yEdit, togW, togH, SWP_NOZORDER or SWP_NOACTIVATE )
     yEdit += togH + rowGap
-    frmOptionsTheme_AddLabel( L(460, "Italic"), xEdit + togW + AfxScaleX(10), yEdit + AfxScaleY(2), _
+    frmThemes_AddLabel( L(460, "Italic"), xEdit + togW + AfxScaleX(10), yEdit + AfxScaleY(2), _
                               xEdit + editW, yEdit + togH )
     SetWindowPos( ghThemeItalic, 0, xEdit, yEdit, togW, togH, SWP_NOZORDER or SWP_NOACTIVATE )
     yEdit += togH + rowGap
-    frmOptionsTheme_AddLabel( L(461, "Underline"), xEdit + togW + AfxScaleX(10), yEdit + AfxScaleY(2), _
+    frmThemes_AddLabel( L(461, "Underline"), xEdit + togW + AfxScaleX(10), yEdit + AfxScaleY(2), _
                               xEdit + editW, yEdit + togH )
     SetWindowPos( ghThemeUnder, 0, xEdit, yEdit, togW, togH, SWP_NOZORDER or SWP_NOACTIVATE )
     yEdit += togH + rowGap * 2
 
-    frmOptionsTheme_AddLabel( L(462, "Opacity"), xEdit, yEdit, xEdit + editW, yEdit + textH )
+    frmThemes_AddLabel( L(462, "Opacity"), xEdit, yEdit, xEdit + editW, yEdit + textH )
     yEdit += textH + AfxScaleY(4)
     SetWindowPos( ghThemeAlpha, 0, xEdit, yEdit, AfxScaleX(110), ctlH, SWP_NOZORDER or SWP_NOACTIVATE )
     yEdit += ctlH
@@ -1130,7 +1127,7 @@ function frmOptionsTheme_Layout( byval nPage as long, byval hPage as HWND, byval
 end function
 
 
-sub frmOptionsTheme_Paint( byval nPage as long, byval p as SCP_PAINTINFO ptr )
+sub frmThemes_Paint( byval nPage as long, byval p as SCP_PAINTINFO ptr )
     if p = 0 then exit sub
     p->b->SetFont( OptionsFont_Base() )
     p->b->SetBackColor( ghPanel.BackColor )
@@ -1146,7 +1143,7 @@ end sub
 ' Called every time the dialog opens. The controls themselves are destroyed with the scroll
 ' panel, so everything here is state that must not survive one visit to the next.
 ' ========================================================================================
-sub frmOptionsTheme_Reset()
+sub frmThemes_Reset()
     ghThemeKeys   = 0
     ghThemeFore   = 0
     ghThemeBack   = 0
@@ -1158,7 +1155,7 @@ sub frmOptionsTheme_Reset()
     ghThemeResetB = 0
     gThemeBuilt   = false
     gThemeEdited  = false
-    gThemeCurPage = OPTPAGE_NONE
+    gThemeCurPage = THEMEPAGE_NONE
     erase gThemeRowBind
     erase gThemeLabels
 end sub

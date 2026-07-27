@@ -105,8 +105,11 @@ function frmMain_OnCommand( _
             PsMenuBar_OpenMenu( HWND_FRMMAIN_MENUBAR, id - IDC_MENUBAR_FILE, true )
          
         case IDM_THEMES
-            OptionsDialogLastOpened = 3
-            frmOptions_Show( hwnd )
+            ' WAS: OptionsDialogLastOpened = 3 then frmOptions_Show. Page 3 had drifted to
+            ' Compiler Setup as the page enum changed under it, so the statusbar's Themes
+            ' panel opened the wrong page entirely -- a hardcoded index nobody re-checked.
+            ' It opens the dialog that actually owns themes now.
+            frmThemes_Show( hwnd )
             
         ' The five statusbar / tab-info popups. Each Show* rebuilds its items from
         ' current state and returns immediately -- the menus are PsPopupMenu controls, not

@@ -38,7 +38,6 @@ type COLORS_LABEL
 end type
 
 
-dim shared ghColorThemes   as HWND      ' PsListTree
 dim shared ghColorFonts    as HWND      ' PsListTree (per-font preview)
 dim shared ghColorSize     as HWND      ' PsComboBox
 dim shared ghColorCharset  as HWND      ' PsComboBox
@@ -136,7 +135,6 @@ end function
 
 sub frmOptionsColors_Reset()
     gColorBuilt    = false
-    ghColorThemes  = 0
     ghColorFonts   = 0
     ghColorSize    = 0
     ghColorCharset = 0
@@ -149,16 +147,6 @@ end sub
 ' ========================================================================================
 ' Selection callbacks (user action only). Themes/fonts store into gOptWork.
 ' ========================================================================================
-private sub frmOptionsColors_ThemeSelChange( byval hList as HWND, byval row as integer )
-    if (row >= lbound(gThemeFilenames)) andalso (row <= ubound(gThemeFilenames)) then
-        gOptWork.ThemeShortFilename = gThemeFilenames(row)
-        ' Preview it for real: load into memory and schedule a full apply, so arrowing
-        ' through this list recolours the whole editor behind the dialog. gConfig is not
-        ' touched -- the pick stays staged in gOptWork, and Cancel restores the snapshot
-        ' taken in frmOptions_Show.
-        Theme_PreviewFile( gThemeFilenames(row) )
-    end if
-end sub
 
 private sub frmOptionsColors_FontSelChange( byval hList as HWND, byval row as integer )
     if row < 0 then exit sub
@@ -183,22 +171,6 @@ end sub
 ' ========================================================================================
 ' Paint one theme row (plain text in the base font).
 ' ========================================================================================
-private sub frmOptionsColors_ThemePaint( byval p as PSLISTTREE_PAINTINFO ptr )
-    if p = 0 then exit sub
-    dim as COLORREF backclr, foreclr
-    if p->isSelected orelse p->isHot then
-        backclr = ghPanel.BackColorHot : foreclr = ghPanel.ForeColorHot
-    else
-        backclr = ghPanel.BackColor : foreclr = ghPanel.ForeColor
-    end if
-    p->b->SetBackColor( backclr )
-    p->b->SetForeColor( foreclr )
-    p->b->PaintRect( @p->rc )
-    p->b->SetFont( OptionsFont_Base() )
-    dim as RECT rcText = p->rc
-    rcText.left += AfxScaleX(8)
-    p->b->PaintText( p->wszCaption, @rcText, DT_LEFT or DT_END_ELLIPSIS )
-end sub
 
 
 ' ========================================================================================
@@ -242,52 +214,13 @@ end sub
 ' pages after they fork a built-in theme, which drops a new file into that folder while this
 ' page may already be built. Harmless before the page exists.
 ' ========================================================================================
-declare function frmOptionsColors_LoadThemes() as long
 
-sub frmOptionsColors_RefreshThemeList()
-    if ghColorThemes = 0 then exit sub
-    dim as long idx = frmOptionsColors_LoadThemes()
-    if idx >= 0 then
-        PsListTree_SetCurSel( ghColorThemes, idx )
-        PsListTree_SetTopIndex( ghColorThemes, idx )
-    end if
-    AfxRedrawWindow( ghColorThemes )
-end sub
 
 
 ' ========================================================================================
 ' Load the themes list (description text; gThemeFilenames holds the parallel filenames).
 ' Returns the row matching the stored theme, or -1.
 ' ========================================================================================
-private function frmOptionsColors_LoadThemes() as long
-    PsListTree_BeginUpdate( ghColorThemes )
-    PsListTree_Clear( ghColorThemes )
-    erase gThemeFilenames
-
-    dim as long idxMatch = -1
-    dim as long idx = 0
-    dim hSearch as HANDLE
-    dim WFD as WIN32_FIND_DATAW
-    dim as DWSTRING wszPath = AfxGetExePathName + "settings\themes\"
-
-    hSearch = FindFirstFile( wszPath + "*", @WFD )
-    if hSearch <> INVALID_HANDLE_VALUE then
-        do
-            if (WFD.cFileName <> ".") andalso (WFD.cFileName <> "..") then
-                dim as DWSTRING wszFull = wszPath & WFD.cFileName
-                dim as DWSTRING wszDisplay = GetThemeDescription( wszFull )
-                idx = PsListTree_AddString( ghColorThemes, wszDisplay )
-                redim preserve gThemeFilenames(idx) as DWSTRING
-                gThemeFilenames(idx) = WFD.cFileName
-                if ucase(gOptWork.ThemeShortFilename) = ucase(WFD.cFileName) then idxMatch = idx
-            end if
-        loop while FindNextFile( hSearch, @WFD )
-        FindClose( hSearch )
-    end if
-
-    PsListTree_EndUpdate( ghColorThemes )
-    function = idxMatch
-end function
 
 
 ' ========================================================================================
@@ -339,11 +272,6 @@ sub frmOptionsColors_Build( byval hPage as HWND )
     if gColorBuilt then exit sub
 
     ' Themes list.
-    ghColorThemes = PsListTree_Create( hPage, IDC_FRMOPTIONSCOLORS_LSTTHEMES )
-    PsListTree_SetPaintCallback( ghColorThemes, @frmOptionsColors_ThemePaint )
-    PsListTree_SetSelChangeCallback( ghColorThemes, @frmOptionsColors_ThemeSelChange )
-    PsListTree_SetFont( ghColorThemes, OptionsFont_Base() )
-    PsListTree_SetScrollBarWidth( ghColorThemes, SCROLLBAR_WIDTH_PANEL )
 
     ' Fonts list (per-font preview).
     ghColorFonts = PsListTree_Create( hPage, IDC_FRMOPTIONSCOLORS_LSTFONTS )
@@ -373,12 +301,8 @@ sub frmOptionsColors_Build( byval hPage as HWND )
     gOptWork.FontExtraSpace = clng( PsNumericUpDown_GetValue( ghColorSpacing ) )   ' take the clamp back
 
     ' ---- populate lists and seed selections ------------------------------------------
-    dim as long idxTheme = frmOptionsColors_LoadThemes()
-    if idxTheme >= 0 then
-        PsListTree_SetCurSel( ghColorThemes, idxTheme )
-        PsListTree_SetTopIndex( ghColorThemes, idxTheme )
-    end if
-
+    ' NO THEMES LIST ANY MORE. It moved to frmThemes, which owns everything about colour;
+    ' this page is fonts.
     dim as long idxFont = frmOptionsColors_LoadFonts()
     if idxFont >= 0 then
         PsListTree_SetCurSel( ghColorFonts, idxFont )
@@ -406,12 +330,9 @@ end sub
 sub frmOptionsColors_ApplyTheme()
     if gColorBuilt = false then exit sub
 
-    for i as long = 0 to 1
-        dim as HWND h = iif( i = 0, ghColorThemes, ghColorFonts )
-        PsListTree_SetBackColor( h, ghPanel.BackColor )
-        PsListTree_SetScrollBarColors( h, ghPanel.BackColorScrollBar, _
-                                     ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
-    next
+    PsListTree_SetBackColor( ghColorFonts, ghPanel.BackColor )
+    PsListTree_SetScrollBarColors( ghColorFonts, ghPanel.BackColorScrollBar, _
+                                   ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
 
     dim as PSCOMBOBOX_COLORS cc
     dim as PSPOPUPMENU_COLORS pc
@@ -436,7 +357,6 @@ end sub
 sub frmOptionsColors_Show( byval bShow as boolean )
     if gColorBuilt = false then exit sub
     dim as long nCmd = iif( bShow, SW_SHOW, SW_HIDE )
-    ShowWindow( ghColorThemes, nCmd )
     ShowWindow( ghColorFonts, nCmd )
     ShowWindow( ghColorSize, nCmd )
     ShowWindow( ghColorCharset, nCmd )
@@ -490,7 +410,6 @@ function frmOptionsColors_Layout( byval hPage as HWND, byval cxPanel as long ) a
     ' Themes.
     frmOptionsColors_AddLabel( L(422,"Themes") & ":", padLeft, y, contentR, y + textH )
     y += textH + labelGapY
-    SetWindowPos( ghColorThemes, 0, padLeft, y, fullW, AfxScaleY(COLORS_LISTHEIGHT_THEMES), SWP_NOZORDER or SWP_NOACTIVATE )
     y += AfxScaleY(COLORS_LISTHEIGHT_THEMES) + sectionGap
 
     ' Fonts.
