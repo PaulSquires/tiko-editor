@@ -783,6 +783,156 @@ sub frmOptions_RunFitSelfTest()
 end sub
 
 
+' Defined further down, next to the nav list it rebuilds; the focus self-test below calls it
+' directly to prove that a change notification does not replace the search box.
+declare sub frmOptions_SearchChanged( byval hTextBox as HWND )
+
+
+' ========================================================================================
+' Is hCandidate hContainer, or anything nested inside it?
+'
+' Needed because both windows this dialog asks about are CONTAINERS whose real tab stop is an
+' inner child -- a PsTextBox is a shell around a RichEdit, a PsListTree a shell around the
+' surface it paints -- and both carry WS_EX_CONTROLPARENT, so the dialog manager descends into
+' them and hands back the inner child. GetFocus and GetNextDlgTabItem will never return the
+' handle this file holds, so a direct handle comparison is wrong against a dialog that is
+' behaving perfectly. (Same trap as frmKeyboard_IsWithin, and as PsNumericUpDown_HasFocus.)
+' ========================================================================================
+private function frmOptions_IsWithin( byval hCandidate as HWND, byval hContainer as HWND ) as boolean
+    if (hCandidate = 0) orelse (hContainer = 0) then return false
+    dim as HWND h = hCandidate
+    do while h <> 0
+        if h = hContainer then return true
+        h = GetParent( h )
+    loop
+    return false
+end function
+
+
+' ========================================================================================
+' Should this message move the focus from the search box down onto the nav list?
+'
+' A PURE FUNCTION of (message, key, who has focus), and that is the point: the pump it serves
+' cannot be reached from a self-test -- the suite runs before the message loop starts and never
+' pumps a message -- so the rule would otherwise be a comment with nothing checking it. Split
+' out, its whole truth table is assertable.
+'
+' hFocus is passed in rather than read here for the same reason.
+' ========================================================================================
+private function frmOptions_IsSearchDownArrow( byval nMessage as UINT, _
+                                               byval nKey as WPARAM, _
+                                               byval hFocus as HWND ) as boolean
+    ' Early returns rather than one andalso chain: the two comparisons yield non-booleans and
+    ' frmOptions_IsWithin yields a boolean, and andalso-ing the kinds together is fbc warning 38.
+    if nMessage <> WM_KEYDOWN then return false
+    if nKey <> VK_DOWN then return false
+    ' Only while the focus is IN the search box. Once the list has it, Down is the list's own
+    ' row navigation and must not be stolen.
+    return frmOptions_IsWithin( hFocus, HWND_FRMOPTIONS_SEARCH )
+end function
+
+
+' ========================================================================================
+' WHERE DOES THE FOCUS START, AND WHERE DOES TAB GO?    (TIKO_OPTIONS_SELFTEST=1)
+'
+' Runs from frmOptions_Show AFTER the dialog is shown and the initial SetFocus has happened:
+' half of these assertions read GetFocus, which before that point is not the dialog's at all.
+'
+' It exists because tab order here is not written down anywhere -- it is a side effect of the
+' order the controls are created in, several hundred lines above, with nothing at the creation
+' site to say so. Moving one Create call past another silently reorders the dialog, and the
+' only symptom is that the box you expected to type into is not the one holding the caret.
+'
+' Every comparison is by CONTAINMENT rather than by handle: see frmOptions_IsWithin.
+' ========================================================================================
+private sub frmOptions_RunFocusSelfTest()
+
+    if environ("TIKO_OPTIONS_SELFTEST") <> "1" then exit sub
+
+    dim as long nPass = 0, nFail = 0
+    dim as string sLine
+
+    #macro FOCASSERT( _cond_, _desc_ )
+        if (_cond_) then
+            nPass += 1
+        else
+            nFail += 1
+            sLine = "  FAIL: " & _desc_
+            ? sLine
+        end if
+    #endmacro
+
+    ? ""
+    ? "--- TIKO_OPTIONS_SELFTEST (focus + tab order) ---"
+
+    dim as HWND hFirst  = GetNextDlgTabItem( HWND_FRMOPTIONS, 0, false )
+    dim as HWND hSecond = GetNextDlgTabItem( HWND_FRMOPTIONS, hFirst, false )
+
+    FOCASSERT( frmOptions_IsWithin( hFirst,  HWND_FRMOPTIONS_SEARCH ), _
+               "the first tab stop is not the search box" )
+    FOCASSERT( frmOptions_IsWithin( hSecond, HWND_FRMOPTIONS_NAV ), _
+               "the second tab stop is not the nav list" )
+    FOCASSERT( hFirst <> hSecond, "the first two tab stops are the same window" )
+
+    ' The dialog OPENS on the search box.
+    FOCASSERT( frmOptions_IsWithin( GetFocus(), HWND_FRMOPTIONS_SEARCH ), _
+               "the dialog did not open with focus in the search box" )
+
+    ' AND TYPING DOES NOT REPLACE THE BOX. The change callback used to re-create the control on
+    ' every keystroke, so from the first character on HWND_FRMOPTIONS_SEARCH named a zero-sized
+    ' window that was never shown -- at which point the Down-arrow containment test in the pump
+    ' silently stops matching, and the theme and layout passes address the wrong window.
+    '
+    ' IT HAS TO DRIVE THE CALLBACK ITSELF to test that. The four assertions above all sample the
+    ' dialog at open, before anyone has typed, and would stay green against the bug; so would a
+    ' sized/visible check written here, for the same reason. PsTextBox's programmatic setters are
+    ' silent by contract, so SetText cannot raise the callback either -- calling it directly is
+    ' the only route, and it is exactly the path a keystroke takes. Harmless: with the filter
+    ' empty it rebuilds the same nav list and restores the same selection.
+    scope
+        dim as HWND hBefore = HWND_FRMOPTIONS_SEARCH
+        frmOptions_SearchChanged( HWND_FRMOPTIONS_SEARCH )
+        FOCASSERT( HWND_FRMOPTIONS_SEARCH = hBefore, _
+                   "the search box was replaced by its own change callback" )
+
+        dim as RECT rc
+        GetWindowRect( HWND_FRMOPTIONS_SEARCH, @rc )
+        dim as boolean bSized   = ((rc.right - rc.left) > 0) andalso ((rc.bottom - rc.top) > 0)
+        dim as boolean bVisible = (IsWindowVisible( HWND_FRMOPTIONS_SEARCH ) <> 0)
+        FOCASSERT( bSized, "after a change notification the search box is zero-sized" )
+        FOCASSERT( bVisible, "after a change notification the search box is not visible" )
+    end scope
+
+    ' ---- THE DOWN-ARROW RULE, over its whole truth table. ----
+    ' Three of the four are NEGATIVES, and they are what stop this being a test that would pass
+    ' against "always move the focus". The nav case is the one that matters most in use: with the
+    ' focus already on the list, Down is the list's own row navigation.
+    scope
+        dim as HWND hInSearch = GetFocus()                                   ' the RichEdit, mid-open
+        dim as HWND hInNav    = GetNextDlgTabItem( HWND_FRMOPTIONS, hFirst, false )
+
+        FOCASSERT( frmOptions_IsWithin( hInSearch, HWND_FRMOPTIONS_SEARCH ), _
+                   "the Down-arrow probe is vacuous -- its search handle is not in the search box" )
+        FOCASSERT( frmOptions_IsWithin( hInNav, HWND_FRMOPTIONS_NAV ), _
+                   "the Down-arrow probe is vacuous -- its nav handle is not in the nav list" )
+
+        FOCASSERT( frmOptions_IsSearchDownArrow( WM_KEYDOWN, VK_DOWN, hInSearch ), _
+                   "Down in the search box does not move to the nav list" )
+        FOCASSERT( frmOptions_IsSearchDownArrow( WM_KEYDOWN, VK_DOWN, hInNav ) = false, _
+                   "Down is stolen from the nav list's own row navigation" )
+        FOCASSERT( frmOptions_IsSearchDownArrow( WM_KEYDOWN, VK_UP, hInSearch ) = false, _
+                   "Up in the search box moves the focus, and should not" )
+        FOCASSERT( frmOptions_IsSearchDownArrow( WM_KEYUP, VK_DOWN, hInSearch ) = false, _
+                   "the release of the Down key moves the focus a second time" )
+    end scope
+
+    dim as string sSum = "--- focus + tab order: " & str(nPass) & " passed, " & str(nFail) & " failed ---"
+    ? sSum
+    ? ""
+
+end sub
+
+
 ' ========================================================================================
 ' frmOptions Window procedure
 ' ========================================================================================
@@ -964,25 +1114,16 @@ end sub
 ' shown -- typing narrows the list, clicking a result switches. If the only match is a single
 ' page a user would expect to land on it, but auto-switching while they are still typing would
 ' yank the page out from under them, so it is left to a click.
+' IT DOES NOT RE-CREATE THE SEARCH BOX, and it used to. A copy of the whole creation block
+' below sat here from the day the box was added, so every keystroke built ANOTHER PsTextBox --
+' zero-sized, never shown, never positioned -- and pointed HWND_FRMOPTIONS_SEARCH at it. The
+' visible box kept the caret and kept working, which is why nothing looked wrong; but from the
+' first character on, that global named an invisible orphan, so anything reaching for the box
+' by handle (the theme pass, the layout, the Down-arrow focus test in the pump) was addressing
+' the wrong window. It also leaked one control per keystroke.
 private sub frmOptions_SearchChanged( byval hTextBox as HWND )
     gOptNavFilter = PsTextBox_GetText( hTextBox )
     frmOptions_BuildNavList( HWND_FRMOPTIONS_NAV )
-
-    ' The search box, in the blank top-left corner (the nav column's slice of the title band).
-    ' Single line; its pump obligation (PsTextBox_FilterMessage) is already met by the loop
-    ' below. The magnifying glyph is drawn by the dialog in the gutter to its left -- a child
-    ' cannot be drawn over, so the box is inset past the gutter rather than straddling it.
-    HWND_FRMOPTIONS_SEARCH = PsTextBox_Create( HWND_FRMOPTIONS, IDC_FRMOPTIONS_SEARCH )
-    PsTextBox_SetFont( HWND_FRMOPTIONS_SEARCH, OptionsFont_Base() )
-    ' NO BORDER of its own. The dialog draws one frame around the glyph AND the box together, so
-    ' the magnifying glass reads as being INSIDE the field rather than in a gutter beside it --
-    ' which a child window cannot achieve, because it paints over anything drawn under it. The
-    ' box is square for the same reason: the rounding lives on the drawn frame.
-    PsTextBox_SetBorderWidth( HWND_FRMOPTIONS_SEARCH, 0 )
-    PsTextBox_SetCornerRadius( HWND_FRMOPTIONS_SEARCH, 0 )
-    PsTextBox_SetMargins( HWND_FRMOPTIONS_SEARCH, AfxScaleX(4), AfxScaleX(4) )
-    PsTextBox_SetCueBannerText( HWND_FRMOPTIONS_SEARCH, L(488,"Search settings...") )
-    PsTextBox_SetChangeCallback( HWND_FRMOPTIONS_SEARCH, @frmOptions_SearchChanged )
     frmOptions_NavReselect()
     AfxRedrawWindow( HWND_FRMOPTIONS_NAV )
 end sub
@@ -1074,17 +1215,13 @@ function frmOptions_Show( byval hWndParent as HWND ) as LRESULT
     pWindow->SetClientSize( FRMOPTIONS_CLIENT_W, FRMOPTIONS_CLIENT_H )
     pWindow->Center( pWindow->hWindow, hWndParent )
 
-    ' ---- navigation list -------------------------------------------------------------
-    HWND_FRMOPTIONS_NAV = PsListTree_Create( HWND_FRMOPTIONS, IDC_FRMOPTIONS_NAVLIST )
-    PsListTree_SetPaintCallback( HWND_FRMOPTIONS_NAV, @frmOptions_NavPaintCallback )
-    PsListTree_SetSelChangeCallback( HWND_FRMOPTIONS_NAV, @frmOptions_NavSelChangeCallback )
-    PsListTree_SetFont( HWND_FRMOPTIONS_NAV, OptionsFont_Base() )
-    ' Row height is in UNSCALED units (PsListTree scales what it is handed) and has to grow
-    ' with the base font, or a 12pt list clips its own rows.
-    PsListTree_SetRowHeight( HWND_FRMOPTIONS_NAV, 26 + ((OptionsFont_PointSize() - 10) * 2) )
-    frmOptions_BuildNavList( HWND_FRMOPTIONS_NAV )
-
-    ' The search box, in the blank top-left corner (the nav column's slice of the title band).
+    ' ---- the search box ---------------------------------------------------------------
+    ' CREATED BEFORE THE NAV LIST, and the order is the point rather than tidiness: creation
+    ' order IS tab order, so this makes the search box the first tab stop and the nav list the
+    ' second. That is what lets the dialog open on the box and one Tab land on the list -- the
+    ' shape frmKeyboard has, which asserts both facts for the same reason this file now does.
+    '
+    ' It sits in the blank top-left corner (the nav column's slice of the title band).
     ' Single line; its pump obligation (PsTextBox_FilterMessage) is already met by the loop
     ' below. The magnifying glyph is drawn by the dialog in the gutter to its left -- a child
     ' cannot be drawn over, so the box is inset past the gutter rather than straddling it.
@@ -1096,8 +1233,19 @@ function frmOptions_Show( byval hWndParent as HWND ) as LRESULT
     ' box is square for the same reason: the rounding lives on the drawn frame.
     PsTextBox_SetBorderWidth( HWND_FRMOPTIONS_SEARCH, 0 )
     PsTextBox_SetCornerRadius( HWND_FRMOPTIONS_SEARCH, 0 )
+    PsTextBox_SetMargins( HWND_FRMOPTIONS_SEARCH, AfxScaleX(4), AfxScaleX(4) )
     PsTextBox_SetCueBannerText( HWND_FRMOPTIONS_SEARCH, L(488,"Search settings...") )
     PsTextBox_SetChangeCallback( HWND_FRMOPTIONS_SEARCH, @frmOptions_SearchChanged )
+
+    ' ---- navigation list -------------------------------------------------------------
+    HWND_FRMOPTIONS_NAV = PsListTree_Create( HWND_FRMOPTIONS, IDC_FRMOPTIONS_NAVLIST )
+    PsListTree_SetPaintCallback( HWND_FRMOPTIONS_NAV, @frmOptions_NavPaintCallback )
+    PsListTree_SetSelChangeCallback( HWND_FRMOPTIONS_NAV, @frmOptions_NavSelChangeCallback )
+    PsListTree_SetFont( HWND_FRMOPTIONS_NAV, OptionsFont_Base() )
+    ' Row height is in UNSCALED units (PsListTree scales what it is handed) and has to grow
+    ' with the base font, or a 12pt list clips its own rows.
+    PsListTree_SetRowHeight( HWND_FRMOPTIONS_NAV, 26 + ((OptionsFont_PointSize() - 10) * 2) )
+    frmOptions_BuildNavList( HWND_FRMOPTIONS_NAV )
 
     ' ---- scrolling page area ---------------------------------------------------------
     ' The plain page container, created BEFORE the scroll panel so it sits under it in the
@@ -1162,10 +1310,19 @@ function frmOptions_Show( byval hWndParent as HWND ) as LRESULT
     ShowWindow( HWND_FRMOPTIONS, SW_SHOW )
     UpdateWindow( HWND_FRMOPTIONS )
 
-    ' IsDialogMessage ignores Tab until a child already holds the focus, so the first
-    ' control has to be focused explicitly -- an ordinary CWindow gets no dialog manager
-    ' to do it. See the WS_EX_CONTROLPARENT section of Learnings.md.
-    SetFocus( HWND_FRMOPTIONS_NAV )
+    ' FOCUS STARTS IN THE SEARCH BOX, so the dialog opens ready to be typed at -- the usual
+    ' reason for opening it is to find one setting among a hundred. Down from here moves to the
+    ' nav list (see the pump below), so the keyboard route to the pages costs one keystroke.
+    '
+    ' It also has to be set explicitly for a second, unrelated reason: IsDialogMessage ignores
+    ' Tab until a child already holds the focus, and an ordinary CWindow gets no dialog manager
+    ' to arrange that. See the WS_EX_CONTROLPARENT section of Learnings.md.
+    SetFocus( HWND_FRMOPTIONS_SEARCH )
+
+    ' AFTER the SetFocus above, deliberately: one of its assertions samples GetFocus, and running
+    ' it any earlier would read the instant before anything had been focused at all -- a test
+    ' that reports a failure the user would never see.
+    frmOptions_RunFocusSelfTest()
 
     ' ---- message loop ----------------------------------------------------------------
     ' CWindow.DoEvents cannot be used: it has no *_FilterMessage hooks and this dialog
@@ -1195,6 +1352,21 @@ function frmOptions_Show( byval hWndParent as HWND ) as LRESULT
         ' of committing. It is safe when nothing is editing, and safe to leave in place if that
         ' page ever stops editing.
         if PsListTree_FilterMessage( @uMsg ) then continue while
+
+        ' DOWN ARROW IN THE SEARCH BOX MOVES TO THE NAV LIST, the way Tab does. Type a few
+        ' letters, press Down, and you are on the results -- without lifting a hand to the mouse
+        ' or hunting for Tab. Same gesture as the Keyboard Shortcuts dialog.
+        '
+        ' The rule itself lives in frmOptions_IsSearchDownArrow, where the self-test can reach it.
+        '
+        ' Safe to claim: the box is single-line, so Down does nothing there anyway. Its POSITION
+        ' is load-bearing in both directions -- after the two filters above, so an open right-click
+        ' menu or an in-place edit gets its own Down first; before the Escape block, so neither
+        ' interferes with the other.
+        if frmOptions_IsSearchDownArrow( uMsg.message, uMsg.wParam, GetFocus() ) then
+            SetFocus( HWND_FRMOPTIONS_NAV )
+            continue while
+        end if
 
         ' ESCAPE cancels the dialog -- but only after the popup filters above, so an open
         ' combobox list or context menu closes on Escape first. This is handled explicitly

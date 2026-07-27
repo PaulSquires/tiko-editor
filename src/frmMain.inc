@@ -1754,6 +1754,17 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     
     UpdateWindow( pWindow->hWindow )
 
+    ' Open the Environment Options dialog immediately, so its page-fit and focus/tab-order
+    ' self-tests can be run without a human driving the menu. Companion to TIKO_KEYBOARD_AUTOOPEN,
+    ' and here for the same reason: TIKO_OPTIONS_SELFTEST only runs when the dialog is OPENED, and
+    ' the focus half of it cannot be reached any other way. The dialog is MODAL, so startup stops
+    ' here until it is closed -- which is why it is not on by default.
+    '
+    ' It sits AHEAD of the three PostMessage calls below, deliberately: the dialog runs its own
+    ' pump, which would otherwise pick those up and start processing the command line and the
+    ' update check underneath an open modal dialog.
+    if environ("TIKO_OPTIONS_AUTOOPEN") = "1" then frmOptions_Show( HWND_FRMMAIN )
+
     ' Post a message to process the application's command line as applicable.
     PostMessage( pWindow->hWindow, MSG_USER_PROCESS_COMMANDLINE, 0, 0 )
 
