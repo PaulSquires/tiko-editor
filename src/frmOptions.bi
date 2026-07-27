@@ -15,6 +15,7 @@
 
 #Define IDC_FRMOPTIONS_NAVLIST                      1000
 #Define IDC_FRMOPTIONS_SCROLLPANEL                  1010
+#Define IDC_FRMOPTIONS_SEARCH                       1011
 #Define IDC_FRMOPTIONS_CMDOK                        1003
 #Define IDC_FRMOPTIONS_CMDCANCEL                    1001
 
@@ -39,6 +40,8 @@
 #Define FRMOPTIONS_CLIENT_W                          900
 #Define FRMOPTIONS_CLIENT_H                          620
 #Define FRMOPTIONS_NAV_W                             220
+#Define FRMOPTIONS_SEARCH_H                          28    ' the search box in the nav column
+#Define FRMOPTIONS_SEARCH_GLYPHW                     22    ' the magnifying-glass gutter left of it
 #Define FRMOPTIONS_TITLE_H                            52
 #Define FRMOPTIONS_FOOTER_H                           58
 #Define FRMOPTIONS_BTN_W                              92
@@ -48,6 +51,7 @@
 dim shared OptionsDialogLastOpened as long
 
 dim shared HWND_FRMOPTIONS_NAV    as HWND
+dim shared HWND_FRMOPTIONS_SEARCH as HWND    ' PsTextBox -- filters the nav list by page title
 dim shared HWND_FRMOPTIONS_PAGE   as HWND    ' the single, non-scrolling page container
 
 declare function frmOptions_Show( byval hWndParent as HWND ) as LRESULT

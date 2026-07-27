@@ -49,6 +49,9 @@
 
 ' The page currently on show, and whether each table-driven page has been built yet.
 dim shared gOptCurrentPage as long = OPTPAGE_NONE
+' The search box's live text. BuildNavList shows only pages whose title contains it (empty =
+' all). It filters PAGE TITLES only for now -- per-setting search is a larger, separate feature.
+dim shared gOptNavFilter as DWSTRING
 dim shared gOptPageBuilt(OPTPAGE_COUNT - 1) as boolean
 
 
@@ -455,6 +458,19 @@ private sub frmOptions_PositionWindows( byval hwnd as HWND )
     ' same top makes "General Options" sit on the same line as the first control of whatever page
     ' is showing. The strip left above it is the dialog's own panel background -- seamless,
     ' because the nav rows paint that same colour.
+    ' The search box sits in the nav column's slice of the title band (the corner that was
+    ' blank), so it lines up with the page title on the right. The nav list stays below it,
+    ' where it already aligned with the first control of the page.
+    dim as long mx      = AfxScaleX(FRMOPTIONS_MARGIN) \ 2
+    dim as long searchH = AfxScaleY(FRMOPTIONS_SEARCH_H)
+    dim as long searchY = (titleH - searchH) \ 2
+    dim as long glyphW  = AfxScaleX(FRMOPTIONS_SEARCH_GLYPHW)
+    dim as long searchX = mx + glyphW
+    dim as long searchW = navW - searchX - mx
+    if searchW < 0 then searchW = 0
+    SetWindowPos( HWND_FRMOPTIONS_SEARCH, 0, searchX, searchY, searchW, searchH, _
+                  SWP_NOZORDER or SWP_NOACTIVATE )
+
     dim as long navTop = titleH + AfxScaleY(OPTROW_PADTOP)
     dim as long navH   = bodyH - navTop
     if navH < 0 then navH = 0
@@ -513,6 +529,21 @@ private function frmOptions_OnPaint( byval hwnd as HWND ) as LRESULT
     ' TIKO_OPTIONS_FONT override.
     buffer.SetFont( ghFont(GUIFONTBOLD_11) )
     buffer.PaintText( frmOptions_PageTitle(gOptCurrentPage), @rcTitle, DT_LEFT or DT_END_ELLIPSIS )
+
+    ' The magnifying glass, in the gutter to the left of the search box. Segoe Fluent Icons
+    ' E721 (Search), drawn in the panel background the dialog owns -- a child window would cover
+    ' anything painted under it, so the box is inset past this gutter rather than over it.
+    dim as long mxG      = AfxScaleX(FRMOPTIONS_MARGIN) \ 2
+    dim as long searchHG = AfxScaleY(FRMOPTIONS_SEARCH_H)
+    dim as long searchYG = (titleH - searchHG) \ 2
+    dim as RECT rcGlyph
+    rcGlyph.left   = mxG
+    rcGlyph.top    = searchYG
+    rcGlyph.right  = mxG + AfxScaleX(FRMOPTIONS_SEARCH_GLYPHW)
+    rcGlyph.bottom = searchYG + searchHG
+    buffer.SetForeColor( ghPanel.ForeColor )
+    buffer.SetFont( ghFont(SYMBOLFONT_10) )
+    buffer.PaintText( wchr(&hE721), @rcGlyph, DT_CENTER or DT_VCENTER or DT_SINGLELINE )
 
     ' The one rule left in the dialog: the vertical split between the navigation list and
     ' the page. A hairline -- width 1, deliberately not DPI-scaled. There is deliberately
@@ -821,7 +852,17 @@ private sub frmOptions_ApplyTheme( byval hwnd as HWND )
     PsListTree_SetScrollBarColors( HWND_FRMOPTIONS_NAV, ghPanel.BackColorScrollBar, _
                                  ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
 
-    ' The plain container's WM_CTLCOLOR brush is derived from the back colour, so it is rebuilt
+    if HWND_FRMOPTIONS_SEARCH then
+        ' A field-coloured box: editor background, dimmed cue, divider border, accent on focus.
+        PsTextBox_SetBackColor( HWND_FRMOPTIONS_SEARCH, ghEditor.BackColorText )
+        PsTextBox_SetOuterBackColor( HWND_FRMOPTIONS_SEARCH, ghPanel.BackColor )
+        PsTextBox_SetForeColor( HWND_FRMOPTIONS_SEARCH, ghEditor.ForeColorText )
+        PsTextBox_SetCueBannerColor( HWND_FRMOPTIONS_SEARCH, ghPanel.ForeColor )
+        PsTextBox_SetBorderColor( HWND_FRMOPTIONS_SEARCH, ghEditor.Divider )
+        PsTextBox_SetFocusBorderColor( HWND_FRMOPTIONS_SEARCH, ghUI.AccentColor )
+    end if
+
+        ' The plain container's WM_CTLCOLOR brush is derived from the back colour, so it is rebuilt
     ' here rather than at first use -- otherwise a theme change would keep handing out a brush of
     ' the PREVIOUS background for the rest of the session.
     if ghOptPageBrush then DeleteObject( ghOptPageBrush )
@@ -855,6 +896,44 @@ end sub
 ' ========================================================================================
 ' Populate the grouped navigation list. Item rows carry their page id as itemData.
 ' ========================================================================================
+declare sub frmOptions_BuildNavList( byval hList as HWND )
+
+' Re-select the row that maps to the current page, if the filter still shows it. Silent -- it
+' does not switch pages, only restores the highlight after a rebuild.
+private sub frmOptions_NavReselect()
+    if HWND_FRMOPTIONS_NAV = 0 then exit sub
+    dim as long n = PsListTree_GetCount( HWND_FRMOPTIONS_NAV )
+    for i as long = 0 to n - 1
+        if PsListTree_GetItemData( HWND_FRMOPTIONS_NAV, i ) = gOptCurrentPage then
+            PsListTree_SetCurSel( HWND_FRMOPTIONS_NAV, i )
+            exit sub
+        end if
+    next
+end sub
+
+
+' The search text changed: re-flow the nav to the matching pages. Does NOT change which page is
+' shown -- typing narrows the list, clicking a result switches. If the only match is a single
+' page a user would expect to land on it, but auto-switching while they are still typing would
+' yank the page out from under them, so it is left to a click.
+private sub frmOptions_SearchChanged( byval hTextBox as HWND )
+    gOptNavFilter = PsTextBox_GetText( hTextBox )
+    frmOptions_BuildNavList( HWND_FRMOPTIONS_NAV )
+
+    ' The search box, in the blank top-left corner (the nav column's slice of the title band).
+    ' Single line; its pump obligation (PsTextBox_FilterMessage) is already met by the loop
+    ' below. The magnifying glyph is drawn by the dialog in the gutter to its left -- a child
+    ' cannot be drawn over, so the box is inset past the gutter rather than straddling it.
+    HWND_FRMOPTIONS_SEARCH = PsTextBox_Create( HWND_FRMOPTIONS, IDC_FRMOPTIONS_SEARCH )
+    PsTextBox_SetFont( HWND_FRMOPTIONS_SEARCH, OptionsFont_Base() )
+    PsTextBox_SetCornerRadius( HWND_FRMOPTIONS_SEARCH, AfxScaleY(6) )
+    PsTextBox_SetCueBannerText( HWND_FRMOPTIONS_SEARCH, L(488,"Search settings...") )
+    PsTextBox_SetChangeCallback( HWND_FRMOPTIONS_SEARCH, @frmOptions_SearchChanged )
+    frmOptions_NavReselect()
+    AfxRedrawWindow( HWND_FRMOPTIONS_NAV )
+end sub
+
+
 private sub frmOptions_BuildNavList( byval hList as HWND )
 
     PsListTree_BeginUpdate( hList )
@@ -867,15 +946,27 @@ private sub frmOptions_BuildNavList( byval hList as HWND )
     ' THE ORDER HERE IS THE ORDER THE USER SEES, and it is deliberately not the enum's order:
     ' OPTPAGE_EDITOR2 is id 10 (appended, so stored page ids stay valid) but belongs directly
     ' under Code Editor.
-    PsListTree_AddString( hList, L(226,"General Options"),      OPTPAGE_GENERAL )
-    PsListTree_AddString( hList, L(110,"Code Editor"),          OPTPAGE_EDITOR )
-    PsListTree_AddString( hList, L(107,"Advanced Code Editor"), OPTPAGE_EDITOR2 )
-    PsListTree_AddString( hList, L(487,"Editor Font"),          OPTPAGE_COLORS )
-    PsListTree_AddString( hList, L(112,"Compiler Setup"),       OPTPAGE_COMPILER )
-    PsListTree_AddString( hList, L(129,"Localization"),         OPTPAGE_LOCAL )
-    PsListTree_AddString( hList, L(177,"FreeBASIC Keywords"),   OPTPAGE_KEYWORDS )
-    PsListTree_AddString( hList, L(435,"Windows Api Keywords"), OPTPAGE_KEYWORDSWINAPI )
-    PsListTree_AddString( hList, L(439,"Extra Keywords"),       OPTPAGE_KEYWORDSEXTRA )
+    ' One helper per row so the filter test lives in exactly one place. A page whose title does
+    ' not contain the (lower-cased) filter is simply not added -- the list shrinks to the matches.
+    dim as string sFilter = lcase( trim( gOptNavFilter ) )
+    #macro NAVITEM( wszTitle, nPage )
+        scope
+            dim as DWSTRING wszT = (wszTitle)
+            if (len(sFilter) = 0) orelse (instr( lcase(wszT), sFilter ) > 0) then
+                PsListTree_AddString( hList, wszT, (nPage) )
+            end if
+        end scope
+    #endmacro
+
+    NAVITEM( L(226,"General Options"),      OPTPAGE_GENERAL )
+    NAVITEM( L(110,"Code Editor"),          OPTPAGE_EDITOR )
+    NAVITEM( L(107,"Advanced Code Editor"), OPTPAGE_EDITOR2 )
+    NAVITEM( L(487,"Editor Font"),          OPTPAGE_COLORS )
+    NAVITEM( L(112,"Compiler Setup"),       OPTPAGE_COMPILER )
+    NAVITEM( L(129,"Localization"),         OPTPAGE_LOCAL )
+    NAVITEM( L(177,"FreeBASIC Keywords"),   OPTPAGE_KEYWORDS )
+    NAVITEM( L(435,"Windows Api Keywords"), OPTPAGE_KEYWORDSWINAPI )
+    NAVITEM( L(439,"Extra Keywords"),       OPTPAGE_KEYWORDSEXTRA )
 
     PsListTree_EndUpdate( hList )
 
@@ -939,6 +1030,16 @@ function frmOptions_Show( byval hWndParent as HWND ) as LRESULT
     PsListTree_SetRowHeight( HWND_FRMOPTIONS_NAV, 26 + ((OptionsFont_PointSize() - 10) * 2) )
     frmOptions_BuildNavList( HWND_FRMOPTIONS_NAV )
 
+    ' The search box, in the blank top-left corner (the nav column's slice of the title band).
+    ' Single line; its pump obligation (PsTextBox_FilterMessage) is already met by the loop
+    ' below. The magnifying glyph is drawn by the dialog in the gutter to its left -- a child
+    ' cannot be drawn over, so the box is inset past the gutter rather than straddling it.
+    HWND_FRMOPTIONS_SEARCH = PsTextBox_Create( HWND_FRMOPTIONS, IDC_FRMOPTIONS_SEARCH )
+    PsTextBox_SetFont( HWND_FRMOPTIONS_SEARCH, OptionsFont_Base() )
+    PsTextBox_SetCornerRadius( HWND_FRMOPTIONS_SEARCH, AfxScaleY(6) )
+    PsTextBox_SetCueBannerText( HWND_FRMOPTIONS_SEARCH, L(488,"Search settings...") )
+    PsTextBox_SetChangeCallback( HWND_FRMOPTIONS_SEARCH, @frmOptions_SearchChanged )
+
     ' ---- scrolling page area ---------------------------------------------------------
     ' The plain page container, created BEFORE the scroll panel so it sits under it in the
     ' z-order; they overlap exactly and only one is ever visible.
@@ -974,6 +1075,7 @@ function frmOptions_Show( byval hWndParent as HWND ) as LRESULT
     ShowWindow( hOK, SW_SHOW )
     ShowWindow( hCancel, SW_SHOW )
     ShowWindow( HWND_FRMOPTIONS_NAV, SW_SHOW )
+    ShowWindow( HWND_FRMOPTIONS_SEARCH, SW_SHOW )
     ' NEITHER container is shown here -- frmOptions_ShowPage picks one below, and showing both
     ' would flash the scroll panel over a page that does not live on it.
 
@@ -1055,6 +1157,7 @@ function frmOptions_Show( byval hWndParent as HWND ) as LRESULT
     ' those controls sit on the scroll panel's page and self-free when it is destroyed.
 
     HWND_FRMOPTIONS_NAV    = 0
+    HWND_FRMOPTIONS_SEARCH = 0
     HWND_FRMOPTIONS_PAGE   = 0
     OptionsRows_ResetCombos()
     erase gOptRows
