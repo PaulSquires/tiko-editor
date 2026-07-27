@@ -402,6 +402,8 @@ sub frmOptionsColors_Show( byval bShow as boolean )
     ShowWindow( ghColorSize, nCmd )
     ShowWindow( ghColorCharset, nCmd )
     ShowWindow( ghColorSpacing, nCmd )
+    ShowWindow( ghColorTabSize, nCmd )
+    ShowWindow( ghColorCase, nCmd )
 end sub
 
 

@@ -72,6 +72,7 @@ function frmMain_FileTopMenuStates() as long
     EnableTopMenuItem( IDM_USERTOOLSDIALOG, true )
     EnableTopMenuItem( IDM_OPTIONS, true )
     EnableTopMenuItem( IDM_OPTIONSDIALOG, true )
+    EnableTopMenuItem( IDM_THEMES, true )
     EnableTopMenuItem( IDM_BUILDCONFIG, true )
     EnableTopMenuItem( IDM_EXIT, true )
 
