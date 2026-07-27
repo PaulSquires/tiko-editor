@@ -546,7 +546,8 @@ private function frmOptions_OnPaint( byval hwnd as HWND ) as LRESULT
 
     dim as RECT rcFrame
     rcFrame.left   = mxG
-    rcFrame.top    = searchYG
+    ' Top edge nudged down 2px -- the frame read a touch high against the box inside it.
+    rcFrame.top    = searchYG + AfxScaleY(2)
     rcFrame.right  = navW - mxG
     rcFrame.bottom = searchYG + searchHG
 
