@@ -48,10 +48,13 @@
 dim shared OptionsDialogLastOpened as long
 
 dim shared HWND_FRMOPTIONS_NAV    as HWND
-dim shared HWND_FRMOPTIONS_SCROLL as HWND
+dim shared HWND_FRMOPTIONS_PAGE   as HWND    ' the single, non-scrolling page container
 
 declare function frmOptions_Show( byval hWndParent as HWND ) as LRESULT
 declare sub      frmOptions_ShowPage( byval nPage as long )
+' Re-flow the current page after its own content height changed (e.g. a panel page
+' showing/hiding part of itself). Was PsScrollPanel_Recalc; there is no scroll panel now.
+declare sub      frmOptions_RelayoutCurrentPage()
 
 ' A theme-matched PsMessageBox owned by the dialog. nPreset is MBX_BTN_OK or
 ' MBX_BTN_OKCANCEL; returns the dismissing id (IDOK / IDCANCEL). Runs its own nested modal

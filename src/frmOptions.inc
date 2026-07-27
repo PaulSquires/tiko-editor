@@ -221,27 +221,12 @@ end sub
 
 
 ' ========================================================================================
-' Paint the scroll panel's page: background, then whatever owns the current page.
-' ========================================================================================
-private sub frmOptions_PagePaintCallback( byval p as SCP_PAINTINFO ptr )
-    if p = 0 then exit sub
-    p->b->SetBackColor( ghPanel.BackColor )
-    p->b->PaintRect( @p->rcClient )
-    if OptionsRows_HasPage( gOptCurrentPage ) then
-        OptionsRows_PaintPage( gOptCurrentPage, p )
-    elseif frmOptions_PanelHostedOwns( gOptCurrentPage ) then
-        frmOptions_PanelPaint( gOptCurrentPage, p )
-    end if
-end sub
-
-
-' ========================================================================================
-' THE PLAIN PAGE CONTAINER -- the parent of every page EXCEPT the Code Editor one.
+' THE PLAIN PAGE CONTAINER -- the parent of EVERY page.
 '
-' ONLY OPTPAGE_EDITOR SCROLLS. It is the one page with genuinely open-ended content (27 rows of
-' settings and growing), and it keeps the PsScrollPanel. Every other page is now parented to this
-' window instead, which is a plain child that never scrolls: whatever a page lays out is what the
-' user can see, so a page that does not fit CLIPS rather than quietly growing a scrollbar.
+' NOTHING SCROLLS. There used to be a PsScrollPanel for the Code Editor page, the one page long
+' enough to need it; it was converted to a plain page like the rest once Tab Size and Case moved
+' off it, so this window is now the sole container. Whatever a page lays out is what the user
+' sees: a page that does not fit CLIPS rather than quietly growing a scrollbar.
 '
 ' That is the point rather than a limitation. A page that must fit is a page whose height can be
 ' ASSERTED -- see frmOptions_RunFitSelfTest -- and a fixed-size dialog means there is exactly one
@@ -260,7 +245,6 @@ end sub
 ' PsButton and its focus-taking siblings must NOT have. Same rule, opposite answer -- the test is
 ' "does this window have children the dialog manager should find?", and here it does.
 ' ========================================================================================
-dim shared HWND_FRMOPTIONS_PAGE as HWND
 dim shared ghOptPageBrush       as HBRUSH
 
 
@@ -268,7 +252,9 @@ dim shared ghOptPageBrush       as HBRUSH
 ' a page is BUILT onto a parent once and lives there, so the answer must never change for a given
 ' page between one call and the next.
 private function frmOptions_PageParent( byval nPage as long ) as HWND
-    if nPage = OPTPAGE_EDITOR then return PsScrollPanel_GetPanel( HWND_FRMOPTIONS_SCROLL )
+    ' ONE CONTAINER, no exceptions. The Code Editor page used to be the sole tenant of a
+    ' PsScrollPanel; it is a plain non-scrolling page like every other now, so nothing scrolls
+    ' and there is nothing to choose between.
     return HWND_FRMOPTIONS_PAGE
 end function
 
@@ -347,7 +333,6 @@ end function
 private sub frmOptions_LayoutPlainPage()
     if HWND_FRMOPTIONS_PAGE = 0 then exit sub
     if gOptCurrentPage = OPTPAGE_NONE then exit sub
-    if gOptCurrentPage = OPTPAGE_EDITOR then exit sub
 
     dim as RECT rc
     GetClientRect( HWND_FRMOPTIONS_PAGE, @rc )
@@ -359,6 +344,14 @@ private sub frmOptions_LayoutPlainPage()
     elseif frmOptions_PanelHostedOwns( gOptCurrentPage ) then
         frmOptions_PanelLayout( gOptCurrentPage, HWND_FRMOPTIONS_PAGE, cx )
     end if
+end sub
+
+
+' See frmOptions.bi. The private layout above cannot be called from the panel modules (they are
+' included before this file); this is the public door.
+sub frmOptions_RelayoutCurrentPage()
+    frmOptions_LayoutPlainPage()
+    if HWND_FRMOPTIONS_PAGE then AfxRedrawWindow( HWND_FRMOPTIONS_PAGE )
 end sub
 
 
@@ -427,22 +420,9 @@ sub frmOptions_ShowPage( byval nPage as long )
         frmOptions_PanelShow( nPage, true )
     end if
 
-    ' Swap the containers. Exactly one is visible at a time and they occupy the same rect, so
-    ' the outgoing one is hidden BEFORE the incoming one is shown -- the other order flashes the
-    ' new page's controls over the old page for one frame.
-    dim as boolean bScrolls = (nPage = OPTPAGE_EDITOR)
-    if bScrolls then
-        ShowWindow( HWND_FRMOPTIONS_PAGE, SW_HIDE )
-        ShowWindow( HWND_FRMOPTIONS_SCROLL, SW_SHOW )
-        ' Re-flow for the current width and go back to the top of the page.
-        PsScrollPanel_SetPos( HWND_FRMOPTIONS_SCROLL, 0 )
-        PsScrollPanel_Recalc( HWND_FRMOPTIONS_SCROLL )
-    else
-        ShowWindow( HWND_FRMOPTIONS_SCROLL, SW_HIDE )
-        ShowWindow( HWND_FRMOPTIONS_PAGE, SW_SHOW )
-        ' Nothing drives a plain container's layout for it, so the dialog does.
-        frmOptions_LayoutPlainPage()
-    end if
+    ' The page container is shown once at creation and never hidden -- there is only one now.
+    ' Nothing drives its layout for it, so the dialog does.
+    frmOptions_LayoutPlainPage()
 
     AfxRedrawWindow( hPanel )
     AfxRedrawWindow( HWND_FRMOPTIONS )
@@ -486,10 +466,6 @@ private sub frmOptions_PositionWindows( byval hwnd as HWND )
     dim as long scrollH = bodyH - titleH
     if scrollW < 0 then scrollW = 0
     if scrollH < 0 then scrollH = 0
-    ' BOTH containers get the identical rect. They are alternatives, not neighbours -- which is
-    ' what lets frmOptions_PageParent decide between them without the layout knowing.
-    SetWindowPos( HWND_FRMOPTIONS_SCROLL, 0, scrollX, scrollY, scrollW, scrollH, _
-                  SWP_NOZORDER or SWP_NOACTIVATE )
     SetWindowPos( HWND_FRMOPTIONS_PAGE, 0, scrollX, scrollY, scrollW, scrollH, _
                   SWP_NOZORDER or SWP_NOACTIVATE )
     frmOptions_LayoutPlainPage()
@@ -698,11 +674,8 @@ sub frmOptions_RunFitSelfTest()
             nNeed = frmOptions_PanelLayout( nPage, hPageWnd, cxPage )
         end if
 
-        ' OPTPAGE_EDITOR is the one page allowed to overflow -- it is the only one on a
-        ' PsScrollPanel, which is the whole point of the split. It is still MEASURED and
-        ' reported, because "the editor page needs 900px" is worth knowing even though it is
-        ' not a failure.
-        dim as boolean bMayScroll = (nPage = OPTPAGE_EDITOR)
+        ' NOTHING SCROLLS ANY MORE. Every page, Code Editor included, must fit the viewport.
+        dim as boolean bMayScroll = false
         dim as boolean bFits = (nNeed <= nViewH)
 
         dim as string sVerdict
@@ -855,10 +828,6 @@ private sub frmOptions_ApplyTheme( byval hwnd as HWND )
     ghOptPageBrush = CreateSolidBrush( ghPanel.BackColor )
     if HWND_FRMOPTIONS_PAGE then AfxRedrawWindow( HWND_FRMOPTIONS_PAGE )
 
-    PsScrollPanel_SetColors( HWND_FRMOPTIONS_SCROLL, ghPanel.BackColor, ghPanel.ForeColor )
-    PsScrollPanel_SetScrollBarColors( HWND_FRMOPTIONS_SCROLL, ghPanel.BackColorScrollBar, _
-                                     ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
-
     dim as PSBUTTON_COLORS bc
     OptionsTheme_FillButton( @bc )
 
@@ -985,19 +954,10 @@ function frmOptions_Show( byval hWndParent as HWND ) as LRESULT
                                               WS_EX_CONTROLPARENT )
     end scope
 
-    HWND_FRMOPTIONS_SCROLL = PsScrollPanel_Create( HWND_FRMOPTIONS, IDC_FRMOPTIONS_SCROLLPANEL )
-    PsScrollPanel_SetPaintCallback( HWND_FRMOPTIONS_SCROLL, @frmOptions_PagePaintCallback )
-    PsScrollPanel_SetLayoutCallback( HWND_FRMOPTIONS_SCROLL, @frmOptions_PageLayoutCallback )
-    PsScrollPanel_SetScrollBarWidth( HWND_FRMOPTIONS_SCROLL, SCROLLBAR_WIDTH_PANEL )
-    ' Auto-scroll-to-focus is OFF, deliberately. It fires on the reveal timer when a control
-    ' takes focus -- including a PsComboBox taking focus on its button-DOWN. For a combo whose
-    ' body sits partly below the fold, that scroll slides the button up and out from under the
-    ' still-held cursor onto the just-opened dropdown, and the release then selects a row and
-    ' closes the list. The cost of turning it off is that Tab-ing to a control below the fold
-    ' no longer auto-reveals it; on a dialog this size that is a fair trade for usable combos.
-    PsScrollPanel_SetAutoScrollToFocus( HWND_FRMOPTIONS_SCROLL, false )
-
-    dim as HWND hPage = PsScrollPanel_GetPanel( HWND_FRMOPTIONS_SCROLL )
+    ' The page container is shown once, here, and never hidden -- it is the only container now.
+    ' (The Code Editor page's PsScrollPanel is gone: every page is plain and non-scrolling.)
+    ShowWindow( HWND_FRMOPTIONS_PAGE, SW_SHOW )
+    dim as HWND hPage = HWND_FRMOPTIONS_PAGE
 
     ' ---- footer buttons --------------------------------------------------------------
     dim as HWND hOK = PsButton_Create( HWND_FRMOPTIONS, IDC_FRMOPTIONS_CMDOK )
@@ -1095,7 +1055,7 @@ function frmOptions_Show( byval hWndParent as HWND ) as LRESULT
     ' those controls sit on the scroll panel's page and self-free when it is destroyed.
 
     HWND_FRMOPTIONS_NAV    = 0
-    HWND_FRMOPTIONS_SCROLL = 0
+    HWND_FRMOPTIONS_PAGE   = 0
     OptionsRows_ResetCombos()
     erase gOptRows
 

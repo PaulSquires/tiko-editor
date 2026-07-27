@@ -12,7 +12,7 @@
 '    GNU General Public License for more details.
 
 #include once "modOptionsRows.bi"
-#include once "frmOptions.bi"     ' IDC_FRMOPTIONS_FIRSTROW, HWND_FRMOPTIONS_SCROLL
+#include once "frmOptions.bi"     ' IDC_FRMOPTIONS_FIRSTROW, HWND_FRMOPTIONS_PAGE
 #include once "clsConfig.bi"
 
 
@@ -1048,7 +1048,8 @@ sub OptionsRows_RunSelfTest( byval hPanel as HWND )
     ' were created with -- so the "row" column is the height the LAYOUT would choose from
     ' the text alone. That is the term the font actually moves; the control term is shown
     ' beside it so it is obvious which one is binding.
-    dim as long nViewport = PsScrollPanel_GetViewportHeight( HWND_FRMOPTIONS_SCROLL )
+    dim as RECT rcVP : GetClientRect( HWND_FRMOPTIONS_PAGE, @rcVP )
+    dim as long nViewport = rcVP.bottom - rcVP.top
     dim as long nCtrlMax = 0
     dim as long nRowsLongest = 0
     for i as long = lbound(gOptRows) to ubound(gOptRows)

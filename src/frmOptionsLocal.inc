@@ -265,9 +265,8 @@ sub frmOptionsLocal_DisableEnglish()
 
     frmOptionsLocal_ApplyEditVisibility()
 
-    ' The page's content height changed with the edit area's visibility.
-    PsScrollPanel_Recalc( HWND_FRMOPTIONS_SCROLL )
-    AfxRedrawWindow( PsScrollPanel_GetPanel( HWND_FRMOPTIONS_SCROLL ) )
+    ' The page's content height changed with the edit area's visibility, so re-flow it.
+    frmOptions_RelayoutCurrentPage()
 end sub
 
 
