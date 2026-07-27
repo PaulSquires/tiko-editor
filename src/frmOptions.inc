@@ -433,8 +433,7 @@ sub frmOptions_ShowPage( byval nPage as long )
     dim as boolean bScrolls = (nPage = OPTPAGE_EDITOR)
     if bScrolls then
         ShowWindow( HWND_FRMOPTIONS_PAGE, SW_HIDE )
-        ' NEITHER container is shown here -- frmOptions_ShowPage picks one below, and showing both
-    ' would flash the scroll panel over a page that does not live on it.
+        ShowWindow( HWND_FRMOPTIONS_SCROLL, SW_SHOW )
         ' Re-flow for the current width and go back to the top of the page.
         PsScrollPanel_SetPos( HWND_FRMOPTIONS_SCROLL, 0 )
         PsScrollPanel_Recalc( HWND_FRMOPTIONS_SCROLL )
@@ -659,6 +658,7 @@ sub frmOptions_RunFitSelfTest()
     ? sHdr
 
     dim as long nOver = 0
+    dim as long nBlank = 0
 
     for nPage as long = 0 to OPTPAGE_COUNT - 1
 
@@ -666,6 +666,16 @@ sub frmOptions_RunFitSelfTest()
 
         dim as HWND hPageWnd = frmOptions_PageParent( nPage )
         if hPageWnd = 0 then continue for
+
+        ' THE PAGE'S CONTAINER IS ACTUALLY VISIBLE. This is the assertion that would have caught
+        ' the Code Editor page coming up blank: ShowPage had stopped calling ShowWindow(..SHOW)
+        ' on the scroll panel, so the one scrolling page showed its title band and nothing else.
+        ' The fit test builds and lays out a page whether or not it is shown, so height alone
+        ' said everything was fine -- visibility is a separate fact and has to be its own check.
+        dim as boolean bVisible = (IsWindowVisible( hPageWnd ) <> 0)
+        dim as string sVis = iif( bVisible, "PASS  ", "FAIL  " )
+        if bVisible = false then nBlank += 1
+        ? sVis & "page " & str(nPage) & " " & str( frmOptions_PageTitle( nPage ) ) & " container is visible"
 
         dim as RECT rcPage
         GetClientRect( hPageWnd, @rcPage )
@@ -702,7 +712,8 @@ sub frmOptions_RunFitSelfTest()
         ? sLine
     next
 
-    dim as string sSum = "--- page fit: " & str(nOver) & " page(s) overflow a viewport they cannot scroll ---"
+    dim as string sSum = "--- page fit: " & str(nOver) & " overflow a viewport they cannot scroll, " & _
+                         str(nBlank) & " came up with no visible container ---"
     ? sSum
     ? ""
 
