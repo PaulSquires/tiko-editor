@@ -36,6 +36,10 @@ enum
     MSG_USER_LOAD_BOOKMARKSFILES
     MSG_USER_LOAD_FUNCTIONSFILES
     MSG_USER_SHOW_KEYBOARDEDIT
+    ' Companion to MSG_USER_SHOW_KEYBOARDEDIT, for the User Tools dialog's Assign Shortcut
+    ' editor. Both exist so the sub-dialog can be opened from a posted message rather than
+    ' only from a button click -- see TIKO_USERTOOLS_AUTOASSIGN.
+    MSG_USER_SHOW_TOOLKEY
     MSG_USER_RICHEDIT_SELECTALL
     MSG_USER_PARSE_COMPLETE        ' wParam = SCAN_TIER; posted by the fbcParser scan worker
     
@@ -197,6 +201,7 @@ dim shared as HWND HWND_FRMOPTIONS
 ' remain.
 dim shared as HWND HWND_FRMFINDINPROJECT, HWND_FRMSEARCHSYMBOL
 dim shared as HWND HWND_FRMBUILDCONFIG, HWND_FRMUSERTOOLS, HWND_FRMABOUT
+dim shared as HWND HWND_FRMABOUT_TABS, HWND_FRMABOUT_CREDITS, HWND_FRMABOUT_LICENSE
 dim shared as HWND HWND_FRMKEYBOARD, HWND_FRMKEYBOARDEDIT
 dim shared as HWND HWND_FRMDEBUG, HWND_FRMDEBUG_OUTPUT
 
@@ -251,7 +256,10 @@ redim shared LL(any) as wstring * MAX_PATH
 #DEFINE GUIFONT_11       8
 #DEFINE GUIFONT_12       9
 #DEFINE GUIFONTBOLD_11   10
-#DEFINE MAXFONTS         11
+' The About box's application name, and the only face in this table above 12pt. Nothing else
+' in tiko needs it; it exists so that one line can carry the dialog.
+#DEFINE GUIFONT_26       11
+#DEFINE MAXFONTS         12
 
 dim shared ghFont(MAXFONTS) as HFONT
 

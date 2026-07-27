@@ -539,6 +539,35 @@ end function
 ' name this function cannot find in the vocabulary yields 0 and no accelerator is registered,
 ' which is the honest outcome for a name the pick-list does not offer.
 ' ========================================================================================
+' ========================================================================================
+' Which live editor command owns this keystroke? See the declaration for the contract.
+' ========================================================================================
+function KeyBindings_FindCommandForKeys( byval wszKeys as DWSTRING ) as DWSTRING
+
+    if len(wszKeys) = 0 then return ""
+
+    for i as long = lbound(gKeys) to ubound(gKeys)
+
+        ' The EFFECTIVE binding: the user's override if there is one, otherwise the shipped
+        ' default -- and nothing at all when that default has been suppressed. Written out
+        ' here rather than shared with frmKeyboard_EffectiveKeys, which is private to the
+        ' dialog and reads gKeysWork().
+        dim as DWSTRING wszEff
+        if len(gKeys(i).wszUserKeys) then
+            wszEff = gKeys(i).wszUserKeys
+        elseif gKeys(i).bDefaultDisabled = false then
+            wszEff = gKeys(i).wszDefaultKeys
+        end if
+
+        if len(wszEff) = 0 then continue for
+        if ucase(wszEff) = ucase(wszKeys) then return gKeys(i).wszDescription
+
+    next
+
+    return ""
+end function
+
+
 function KeyBindings_PickListKeyToValue( byval wszString as DWSTRING ) as long
     dim as DWSTRING wszName = trim(wszString)
     if len(wszName) = 0 then return 0

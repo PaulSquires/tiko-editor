@@ -140,6 +140,12 @@ dim shared gTTabCtl as clsTopTabCtl
 ' PsColorPicker depends on nothing but PsBufferPaint (it owns no child window and no popup --
 ' that is the whole design), so its position here is only for tidiness beside its siblings.
 #include once "PsColorPicker.inc"
+' PsTooltip depends on nothing but PsBufferPaint. It does NOT subclass the control it serves
+' and adds NO pump obligation, which is why it can be dropped in beside the comctl32 tooltips
+' the other controls still use rather than replacing them all at once. First tiko user: the
+' User Tools dialog's Parameters field, which needs a WRAPPED, multi-line tip -- something the
+' comctl32 path only reaches by hand-sending TTM_SETMAXTIPWIDTH.
+#include once "PsTooltip.inc"
 
 #include once "frmAbout.inc"
 #include once "frmTopTabs.inc"
@@ -179,6 +185,12 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "frmProjectOptions.inc"
 #include once "frmMainOnCommand.inc"
 #include once "frmMainOnNotify.inc"
+' The User Tools shortcut editor, then the dialog that opens it. Both must follow
+' modOptionsRows.inc (they dress their controls through OptionsTheme_Fill*) and
+' frmKeyboardEdit.inc (frmUserToolKey shares its capture rules), and frmUserToolKey must
+' precede frmUserTools, which calls frmUserToolKey_Show.
+#include once "frmUserToolKey.bi"
+#include once "frmUserToolKey.inc"
 #include once "frmUserTools.inc"
 #include once "modMsgPump.inc"
 #include once "frmMainFile.inc"

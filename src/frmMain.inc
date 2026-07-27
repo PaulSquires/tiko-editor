@@ -1628,6 +1628,9 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ghFont(GUIFONT_11)     = pWindow->CreateFont(GUIFONT, 11, FW_NORMAL)
     ghFont(GUIFONT_12)     = pWindow->CreateFont(GUIFONT, 12, FW_NORMAL)
     ghFont(GUIFONTBOLD_11) = pWindow->CreateFont(GUIFONT, 11, FW_HEAVY)
+    ' FW_SEMIBOLD, not FW_HEAVY: at 26pt heavy reads as shouting, and Segoe UI's semibold is
+    ' the weight Windows itself uses for large display text.
+    ghFont(GUIFONT_26)     = pWindow->CreateFont(GUIFONT, 26, FW_SEMIBOLD)
 
     HWND_FRMMAIN = pWindow->Create( null, APPNAME, @frmMain_WndProc )
     
@@ -1669,6 +1672,11 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ' run without a human driving the menu. The dialog is MODAL, so startup stops here until
     ' it is closed -- that is what this flag is for, and it is why it is not on by default.
     if environ("TIKO_KEYBOARD_AUTOOPEN") = "1" then frmKeyboard_Show( HWND_FRMMAIN )
+
+    ' Same arrangement for the User Tools dialog: its self-test measures real windows, so it
+    ' only runs when the dialog is opened, and this is how it gets opened without a human
+    ' driving the menu. Also modal -- startup stops here until it is closed.
+    if environ("TIKO_USERTOOLS_AUTOOPEN") = "1" then frmUserTools_Show( HWND_FRMMAIN )
 
     ' Create the main application topmenu menubar
     frmMenuBar_Show( HWND_FRMMAIN )

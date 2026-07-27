@@ -102,6 +102,24 @@ declare function KeyBindings_VKToName( byval vk as long ) as DWSTRING
 ' Fill a pick-list from the vocabulary. Used by frmKeyboardEdit, frmBuildConfig and
 ' frmUserTools (the last two on raw Win32 comboboxes -- do not change this signature).
 declare function AddShortcutsToComboBox( byval hCombo as HWND ) as long
+' ========================================================================================
+' WHICH LIVE EDITOR COMMAND OWNS THIS KEYSTROKE?
+'
+' Returns the description of the first command in gKeys() whose EFFECTIVE binding equals
+' wszKeys, or "" when the keystroke is free. wszKeys must be in the canonical form
+' frmKeyboardEdit_BuildKeyString produces -- Ctrl, then Alt, then Shift -- because the
+' comparison is verbatim against what the bindings file stores.
+'
+' DELIBERATELY OVER gKeys(), NOT gKeysWork(). frmKeyboard_CheckForKeyConflict is the staging
+' equivalent and exists only while the Keyboard Shortcuts dialog is open; this one answers for
+' the bindings the editor is ACTUALLY running on, which is what a caller outside that dialog
+' (frmUserToolKey) needs. The two are not interchangeable and neither should be "unified" into
+' the other.
+'
+' A disabled default is not a binding: it fires nothing, so it clashes with nothing.
+' ========================================================================================
+declare function KeyBindings_FindCommandForKeys( byval wszKeys as DWSTRING ) as DWSTRING
+
 ' A BARE key name straight out of that pick-list -> its virtual key, or 0 for "no key".
 ' This is what frmBuildConfig and frmUserTools resolve their stored key with; they keep the
 ' modifiers in booleans and never build a "Ctrl+X" string, so AccelKeyToValue is the WRONG
