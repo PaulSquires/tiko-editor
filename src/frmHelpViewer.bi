@@ -17,7 +17,7 @@
 
 #define IDC_FRMHELPVIEWER_LEFTPANEL        1000
 #define IDC_FRMHELPVIEWER_RIGHTPANEL       1001
-' 1002 was the topics-list scrollbar; the PsListBox owns that bar internally now.
+' 1002 was the topics-list scrollbar; the PsListTree owns that bar internally now.
 #define IDC_FRMHELPVIEWER_VSCROLLBAR2      1003
 #define IDC_FRMHELPVIEWER_RTFCONVERT       1004
 #define IDC_FRMHELPVIEWER_SPLITTER         1005
@@ -32,7 +32,7 @@
 #define HELPVIEWER_MINPANE                 120
 
 type HELPVIEWER_TYPE
-    ' Topic captions live on the PsListBox rows now; only the parallel filename lookup
+    ' Topic captions live on the PsListTree rows now; only the parallel filename lookup
     ' (row index -> help file) is still needed here.
     as DWSTRING Filenames(any)
 end type

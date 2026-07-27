@@ -16,632 +16,936 @@
 #include once "modRoutines.bi"
 
 ' ========================================================================================
-' Save the gKeys() keybinding array to disk file
+' Seed the staging copy from the live bindings.
+'
+' Called once from frmKeyboard_Show BEFORE any control is created: every control is built
+' from gKeysWork(), never from gKeys().
 ' ========================================================================================
-function frmKeyboard_SaveKeyBindings( byval wszFilename as DWSTRING ) as long
-    dim pStream as CTextStream
-    if pStream.Create( wszFilename ) = S_OK then 
-        dim as DWSTRING wszLine
-        for i as long = lbound(gKeys) to ubound(gKeys)
-            wszLine = gKeys(i).wszMsgString 
-            
-            if gKeys(i).bDefaultDisabled then
-                wszLine = wszLine & "(DISABLED)"
-            end if
-            
-            wszLine = wszLine & ":" & gKeys(i).wszUserKeys 
-            pStream.WriteLine wszLine
-        next
-        pStream.Close
-    end if
-    function = 0
-end function
+sub frmKeyboard_LoadWork()
+    erase gKeysWork
+    if ubound(gKeys) < lbound(gKeys) then exit sub
 
-
-' ========================================================================================
-' Load a default keybinding into the global array
-' ========================================================================================
-function frmKeyBoard_AddKeyBinding ( _
-            byval wszCategory as DWSTRING, _
-            byval idAction as long, _
-            byval wszMsgString as DWSTRING, _
-            byval wszDescription as DWSTRING, _
-            byval wszDefaultKeys as DWSTRING _
-            ) as long
-            
-    dim as long ub = ubound(gKeys) + 1
-    redim preserve gKeys(ub) as KEYBINDINGS_TYPE
-    
-    with gKeys(ub)
-        .wszCategory = wszCategory
-        .idAction = idAction
-        .wszMsgString = wszMsgString
-        .wszDescription = wszDescription
-        .wszDefaultKeys = wszDefaultKeys
-    end with
-    
-    function = 0
-end function
-
-
-' ========================================================================================
-' Load a user defined keybinding ini file to override existing global key.
-' ========================================================================================
-function frmKeyBoard_AddKeyBinding_User ( _
-            byval wszMsgString as DWSTRING, _
-            byval wszUserKeys as DWSTRING, _
-            byval bDisabled as boolean _
-            ) as long
-           
-    ' Search the array to see if the id exists. Update it for found.
-    dim as long nFoundIdx = -1
-    
+    redim gKeysWork( ubound(gKeys) ) as KEYBINDINGS_TYPE
     for i as long = lbound(gKeys) to ubound(gKeys)
-        if gKeys(i).wszMsgString = wszMsgString then
-            nFoundIdx = i
+        gKeysWork(i) = gKeys(i)
+    next
+end sub
+
+
+' ========================================================================================
+' Commit the staging copy. ONLY the OK path calls this.
+'
+' THE ORDER OF THE LAST TWO STEPS IS LOAD-BEARING, and it is not obvious from their names.
+' frmKeyboard_BuildAcceleratorTable calls frmKeyboard_CreateDefaultKeyBindings, which
+' ERASES gKeys() and rebuilds it from the defaults table plus a fresh read of
+' keybindings.ini. Rebuild before writing and it reinstates the file as it was before the
+' edit -- the user's changes vanish with no error anywhere.
+'
+' The copy into gKeys() is therefore not redundant even though the rebuild overwrites it:
+' frmKeyboard_SaveKeyBindings serialises gKeys(), so that is how the staging copy reaches
+' the disk. And because the accelerator table is then rebuilt from what was actually
+' written, the commit doubles as a real round-trip check of the file just saved -- anything
+' the format cannot represent is visibly lost now rather than at the next startup.
+' ========================================================================================
+sub frmKeyboard_CommitWork()
+
+    if ubound(gKeysWork) >= lbound(gKeysWork) then
+        redim gKeys( ubound(gKeysWork) ) as KEYBINDINGS_TYPE
+        for i as long = lbound(gKeysWork) to ubound(gKeysWork)
+            gKeys(i) = gKeysWork(i)
+        next
+    end if
+
+    ' 1. DISK FIRST.
+    frmKeyboard_SaveKeyBindings( AfxGetExePathName & "settings\keybindings.ini" )
+
+    ' 2. Then rebuild, which re-reads what step 1 just wrote.
+    frmKeyboard_BuildAcceleratorTable()
+
+end sub
+
+
+' ========================================================================================
+' THE STAGING / PERSISTENCE SELF-TEST                        (TIKO_KEYBOARD_SELFTEST=1)
+'
+' Runs at startup, beside KeyBindings_RunSelfTest, and deliberately touches NOTHING the
+' user owns: it never calls frmKeyboard_CommitWork (which would rewrite the real
+' keybindings.ini and rebuild the live accelerator table) and it serialises to a temp file.
+'
+' WHAT IT IS FOR. "Cancel reverts" is a claim about something NOT happening, which is the
+' hardest kind to notice going wrong -- a staging copy that quietly aliases the live array
+' looks completely normal until the day a user cancels and finds their bindings changed
+' anyway. Asserting it costs four lines; discovering it by hand costs a support report.
+' ========================================================================================
+sub frmKeyboard_RunSelfTest()
+
+    if environ("TIKO_KEYBOARD_SELFTEST") <> "1" then exit sub
+
+    dim as long nPass = 0, nFail = 0
+    dim as string sLine
+
+    #macro FKASSERT( _cond_, _desc_ )
+        if (_cond_) then
+            nPass += 1
+        else
+            nFail += 1
+            sLine = "  FAIL: " & _desc_
+            ? sLine
+        end if
+    #endmacro
+
+    ? ""
+    ? "--- TIKO_KEYBOARD_SELFTEST (staging + persistence) ---"
+
+    ' ---- TEST A: the staging copy is a COPY. ----
+    frmKeyboard_LoadWork()
+
+    FKASSERT( ubound(gKeysWork) = ubound(gKeys), "staging copy has a different length to gKeys" )
+
+    dim as boolean bSame = true
+    for i as long = lbound(gKeys) to ubound(gKeys)
+        ' Each comparison is hoisted into its own boolean first. A DWSTRING <> DWSTRING
+        ' yields a non-boolean while bDefaultDisabled <> bDefaultDisabled yields a boolean,
+        ' and orelse-ing the two kinds together is fbc warning 38.
+        dim as boolean bMsg  = (gKeysWork(i).wszMsgString    <> gKeys(i).wszMsgString)
+        dim as boolean bUser = (gKeysWork(i).wszUserKeys     <> gKeys(i).wszUserKeys)
+        dim as boolean bDef  = (gKeysWork(i).wszDefaultKeys  <> gKeys(i).wszDefaultKeys)
+        dim as boolean bDis  = (gKeysWork(i).bDefaultDisabled <> gKeys(i).bDefaultDisabled)
+        if bMsg orelse bUser orelse bDef orelse bDis then
+            bSame = false
             exit for
         end if
     next
+    FKASSERT( bSame, "staging copy does not match gKeys after LoadWork" )
 
-    if nFoundIdx <> -1 then
-        with gKeys(nFoundIdx)
-            ' Update the entry with any user defined keybinding or if the user has
-            ' disabled the Default keyboard shortcut.
-            .wszUserKeys = wszUserKeys
-            .bDefaultDisabled = bDisabled
-        end with
-    end if
-        
-    function = 0
-end function
+    ' ---- TEST B: THE CANCEL GUARANTEE. Editing the staging copy must not reach gKeys. ----
+    ' If gKeysWork ever became an alias rather than a copy, this is the assertion that says
+    ' so -- and it is the only one that can, because every other symptom of that mistake
+    ' looks exactly like the dialog working.
+    if ubound(gKeys) >= lbound(gKeys) then
+        dim as DWSTRING wszKeepUser = gKeys(0).wszUserKeys
+        dim as boolean   bKeepFlag   = gKeys(0).bDefaultDisabled
 
-' ========================================================================================
-' ' Create the default keyboard bindings / shortcut mappings
-' ========================================================================================
-function frmKeyboard_CreateDefaultKeyBindings() as long
-    erase gKeys
+        gKeysWork(0).wszUserKeys     = "Ctrl+Shift+Alt+F12"
+        gKeysWork(0).bDefaultDisabled = not bKeepFlag
 
-    '' FILE MENU
-    frmKeyBoard_AddKeyBinding( "File", IDM_FILENEW, "IDM_FILENEW", "New file", "Ctrl+N" )
-    frmKeyBoard_AddKeyBinding( "File", IDM_FILEOPEN, "IDM_FILEOPEN", "Open file(s)", "Ctrl+O" )
-    frmKeyBoard_AddKeyBinding( "File", IDM_FILEOPENASTEMPLATE, "IDM_FILEOPENASTEMPLATE", "Open file(s) as template", "" )
-    frmKeyBoard_AddKeyBinding( "File", IDM_FILECLOSE, "IDM_FILECLOSE", "Close file", "Ctrl+W" )
-    frmKeyBoard_AddKeyBinding( "File", IDM_FILECLOSEALL, "IDM_FILECLOSEALL", "Close all files", "Ctrl+Shift+W" )
-    frmKeyBoard_AddKeyBinding( "File", IDM_FILESAVE, "IDM_FILESAVE", "Save file", "Ctrl+S" )
-    frmKeyBoard_AddKeyBinding( "File", IDM_FILESAVEAS, "IDM_FILESAVEAS", "Save file as a different name", "" )
-    frmKeyBoard_AddKeyBinding( "File", IDM_FILESAVEALL, "IDM_FILESAVEALL", "Save all files", "Ctrl+Shift+S" )
-    frmKeyBoard_AddKeyBinding( "File", IDM_FILERENAME, "IDM_FILERENAME", "Rename file", "" )
-    frmKeyBoard_AddKeyBinding( "File", IDM_FILEDUPLICATE, "IDM_FILEDUPLICATE", "Duplicate file", "" )
-    frmKeyBoard_AddKeyBinding( "File", IDM_LOADSESSION, "IDM_LOADSESSION", "Load session", "" )
-    frmKeyBoard_AddKeyBinding( "File", IDM_SAVESESSION, "IDM_SAVESESSION", "Save session", "" )
-    frmKeyBoard_AddKeyBinding( "File", IDM_KEYBOARDSHORTCUTS, "IDM_KEYBOARDSHORTCUTS", "Keyboard shortcuts", "Ctrl+K" )
-    frmKeyBoard_AddKeyBinding( "File", IDM_OPTIONSDIALOG, "IDM_OPTIONSDIALOG", "Environment options", "Shift+F7" )
-    frmKeyBoard_AddKeyBinding( "File", IDM_BUILDCONFIG, "IDM_BUILDCONFIG", "Build configurations", "F7" )
-    frmKeyBoard_AddKeyBinding( "File", IDM_EXIT, "IDM_EXIT", "Exit application", "Alt+F4" )
+        FKASSERT( gKeys(0).wszUserKeys = wszKeepUser, _
+                  "editing gKeysWork changed gKeys().wszUserKeys -- Cancel would not revert" )
+        FKASSERT( gKeys(0).bDefaultDisabled = bKeepFlag, _
+                  "editing gKeysWork changed gKeys().bDefaultDisabled -- Cancel would not revert" )
 
-    '' EDIT MENU
-    frmKeyBoard_AddKeyBinding( "Edit", IDM_UNDO, "IDM_UNDO", "Undo", "Ctrl+Z" )
-    frmKeyBoard_AddKeyBinding( "Edit", IDM_REDO, "IDM_REDO", "Redo", "Ctrl+Shift+Z" )
-    frmKeyBoard_AddKeyBinding( "Edit", IDM_CUT, "IDM_CUT", "Cut selection to the clipboard", "Ctrl+X" )
-    frmKeyBoard_AddKeyBinding( "Edit", IDM_COPY, "IDM_COPY", "Copy selection to the clipboard", "Ctrl+C" )
-    frmKeyBoard_AddKeyBinding( "Edit", IDM_PASTE, "IDM_PASTE", "Paste clipboard contents", "Ctrl+V" )
-    frmKeyBoard_AddKeyBinding( "Edit", IDM_DELETELINE, "IDM_DELETELINE", "Delete the current editor line", "Ctrl+Y" )
-    frmKeyBoard_AddKeyBinding( "Edit", IDM_DUPLICATELINE, "IDM_DUPLICATELINE", "Duplicate line", "Ctrl+D" )
-    frmKeyBoard_AddKeyBinding( "Edit", IDM_MOVELINEUP, "IDM_MOVELINEUP", "Move line up", "Alt+Up" )
-    frmKeyBoard_AddKeyBinding( "Edit", IDM_MOVELINEDOWN, "IDM_MOVELINEDOWN", "Move line down", "Alt+Down" )
-    frmKeyBoard_AddKeyBinding( "Edit", IDM_COMMENTBLOCK, "IDM_COMMENTBLOCK", "Comment block", "Ctrl+/" )   'VK_OEM_2
-    frmKeyBoard_AddKeyBinding( "Edit", IDM_UNCOMMENTBLOCK, "IDM_UNCOMMENTBLOCK", "UnComment block", "Ctrl+Shift+/" )  ' VK_OEM_2
-    frmKeyBoard_AddKeyBinding( "Edit", IDM_SELECTLINE, "IDM_SELECTLINE", "Select line", "Ctrl+L" )
-    frmKeyBoard_AddKeyBinding( "Edit", IDM_SELECTALL, "IDM_SELECTALL", "Select all", "Ctrl+A" )
-    ' The following are non-visual (no topmenu item)
-    frmKeyBoard_AddKeyBinding( "Edit", IDM_FINDNEXTACCEL, "IDM_FINDNEXTACCEL", "Find next", "F3" )
-    frmKeyBoard_AddKeyBinding( "Edit", IDM_FINDPREVACCEL, "IDM_FINDPREVACCEL", "Find previous", "Shift+F3" )
-    frmKeyBoard_AddKeyBinding( "Edit", IDM_INDENTBLOCK, "IDM_INDENTBLOCK", "Indent block", "TAB" )
-    frmKeyBoard_AddKeyBinding( "Edit", IDM_UNINDENTBLOCK, "IDM_UNINDENTBLOCK", "UnIndent block", "Shift+TAB" )
-    frmKeyBoard_AddKeyBinding( "Edit", IDM_INSERTFILE, "IDM_INSERTFILE", "Insert file", "Ctrl+I" )
-    frmKeyBoard_AddKeyBinding( "Edit", IDM_TOUPPERCASE, "IDM_TOUPPERCASE", "Change selection to uppercase", "Ctrl+Alt+U" )
-    frmKeyBoard_AddKeyBinding( "Edit", IDM_TOLOWERCASE, "IDM_TOLOWERCASE", "Change selection to lowercase", "Ctrl+Alt+L" )
-    frmKeyBoard_AddKeyBinding( "Edit", IDM_TOMIXEDCASE, "IDM_TOMIXEDCASE", "Change selection to mixedcase", "Ctrl+Alt+X" )
-    frmKeyBoard_AddKeyBinding( "Edit", IDM_NEWLINEBELOWCURRENT, "IDM_NEWLINEBELOWCURRENT", "Insert new line below current line", "Ctrl+Enter" ) 
-    frmKeyBoard_AddKeyBinding( "Edit", IDM_SETFOCUSEDITOR, "IDM_SETFOCUSEDITOR", "Set keyboard focus to the editing window", "Ctrl+Tilde" ) ' VK_OEM_3
-    
-    '' SEARCH MENU
-    frmKeyBoard_AddKeyBinding( "Search", IDM_SEARCHSYMBOL, "IDM_SEARCHSYMBOL", "Search Symbol", "Ctrl+P" )
-    frmKeyBoard_AddKeyBinding( "Search", IDM_FIND, "IDM_FIND", "Find", "Ctrl+F" )
-    frmKeyBoard_AddKeyBinding( "Search", IDM_FINDINPROJECT, "IDM_FINDINPROJECT", "Find in Project", "Ctrl+Shift+F" )
-    frmKeyBoard_AddKeyBinding( "Search", IDM_REPLACE, "IDM_REPLACE", "Replace", "Ctrl+H" )
-    frmKeyBoard_AddKeyBinding( "Search", IDM_GOTODEFINITION, "IDM_GOTODEFINITION", "Goto the symbol definition", "F12" )
-    frmKeyBoard_AddKeyBinding( "Search", IDM_LASTPOSITION, "IDM_LASTPOSITION", "Goto previous file position", "Shift+F12" )
-    frmKeyBoard_AddKeyBinding( "Search", IDM_GOTONEXTFUNCTION, "IDM_GOTONEXTFUNCTION", "Goto next sub/function", "Ctrl+PgDn" )
-    frmKeyBoard_AddKeyBinding( "Search", IDM_GOTOPREVFUNCTION, "IDM_GOTOPREVFUNCTION", "Goto previous sub/function", "Ctrl+PgUp" )
-    frmKeyBoard_AddKeyBinding( "Search", IDM_BOOKMARKTOGGLE, "IDM_BOOKMARKTOGGLE", "Toggle bookmark", "Ctrl+F2" )
-    frmKeyBoard_AddKeyBinding( "Search", IDM_BOOKMARKNEXT, "IDM_BOOKMARKNEXT", "Goto the next bookmark", "F2" )
-    frmKeyBoard_AddKeyBinding( "Search", IDM_BOOKMARKPREV, "IDM_BOOKMARKPREV", "Goto the previous bookmark", "Shift+F2" )
-    frmKeyBoard_AddKeyBinding( "Search", IDM_BOOKMARKCLEARALL, "IDM_BOOKMARKCLEARALL", "Clear bookmarks", "Ctrl+Shift+F2" )
-    frmKeyBoard_AddKeyBinding( "Search", IDM_GOTOLINE, "IDM_GOTOLINE", "Goto line", "Ctrl+G" )
-    ' The following are non-visual (no topmenu item)
-    frmKeyBoard_AddKeyBinding( "Search", IDM_GOTOHEADERFILE, "IDM_GOTOHEADERFILE", "Goto header file", "Ctrl+Shift+H" )
-    frmKeyBoard_AddKeyBinding( "Search", IDM_GOTOSOURCEFILE, "IDM_GOTOSOURCEFILE", "Goto code file", "Ctrl+Shift+C" )
-    frmKeyBoard_AddKeyBinding( "Search", IDM_GOTOMAINFILE, "IDM_GOTOMAINFILE", "Goto main file", "Ctrl+Shift+M" )
-    frmKeyBoard_AddKeyBinding( "Search", IDM_GOTORESOURCEFILE, "IDM_GOTORESOURCEFILE", "Goto resource file", "Ctrl+Shift+R" )
-    frmKeyBoard_AddKeyBinding( "Search", IDM_GOTONEXTTAB, "IDM_GOTONEXTTAB", "Goto next open editor tab", "Ctrl+Tab" )
-    frmKeyBoard_AddKeyBinding( "Search", IDM_GOTOPREVTAB, "IDM_GOTOPREVTAB", "Goto previous open editor tab", "Ctrl+Shift+Tab" )
-
-    '' VIEW MENU
-    frmKeyBoard_AddKeyBinding( "View", IDM_VIEWSIDEPANEL, "IDM_VIEWSIDEPANEL", "View Side Panel", "Ctrl+B" )
-    frmKeyBoard_AddKeyBinding( "View", IDM_VIEWEXPLORER, "IDM_VIEWEXPLORER", "View Explorer window", "Ctrl+F4" )
-    frmKeyBoard_AddKeyBinding( "View", IDM_VIEWOUTPUT, "IDM_VIEWOUTPUT", "View Output window", "Ctrl+F9" )
-    frmKeyBoard_AddKeyBinding( "View", IDM_FUNCTIONLIST, "IDM_FUNCTIONLIST", "View function List", "F4" )
-    frmKeyBoard_AddKeyBinding( "View", IDM_BOOKMARKSLIST, "IDM_BOOKMARKSLIST", "View Bookmarks List", "Shift+F4" )
-    frmKeyBoard_AddKeyBinding( "View", IDM_ZOOMIN, "IDM_ZOOMIN", "Zoom In", "Ctrl+Plus" )     ' VK_OEM_PLUS
-    frmKeyBoard_AddKeyBinding( "View", IDM_ZOOMOUT, "IDM_ZOOMOUT", "Zoom Out", "Ctrl+Minus" )   ' VK_OEM_MINUS
-    frmKeyBoard_AddKeyBinding( "View", IDM_ZOOMRESET, "IDM_ZOOMRESET", "Zoom Reset", "Ctrl+0" )   ' Ctrl+ZERO
-    frmKeyBoard_AddKeyBinding( "View", IDM_SPLITLEFTRIGHT, "IDM_SPLITLEFTRIGHT", "Toggle Split Editor Left/Right", "Ctrl+\" )
-    frmKeyBoard_AddKeyBinding( "View", IDM_SPLITTOPBOTTOM, "IDM_SPLITTOPBOTTOM", "Toggle Split Editor Top/Bottom", "Ctrl+Shift+\" )
-    frmKeyBoard_AddKeyBinding( "View", IDM_FOLDTOGGLE, "IDM_FOLDTOGGLE", "Toggle current fold point", "F8" )
-    frmKeyBoard_AddKeyBinding( "View", IDM_FOLDBELOW, "IDM_FOLDBELOW", "Fold current line and all below", "Ctrl+F8" )
-    frmKeyBoard_AddKeyBinding( "View", IDM_FOLDALL, "IDM_FOLDALL", "Fold all lines", "Shift+F8" )
-    frmKeyBoard_AddKeyBinding( "View", IDM_UNFOLDALL, "IDM_UNFOLDALL", "Unfold all lines", "Ctrl+Shift+F8" )
-    ' The following are non-visual (no topmenu item)
-    frmKeyBoard_AddKeyBinding( "View", IDM_VIEWNOTES, "IDM_VIEWNOTES", "Notes for this file or project", "" )
-    frmKeyBoard_AddKeyBinding( "View", IDM_VIEWTODO, "IDM_VIEWTODO", "List of TODO's for this file or project", "" )
-    frmKeyBoard_AddKeyBinding( "View", IDM_EXPLORER_EXPANDALL, "IDM_EXPLORER_EXPANDALL", "Expand all nodes in the Explorer window", "" )
-    frmKeyBoard_AddKeyBinding( "View", IDM_EXPLORER_COLLAPSEALL, "IDM_EXPLORER_COLLAPSEALL", "Collapse all nodes in the Explorer window", "" )
-    frmKeyBoard_AddKeyBinding( "View", IDM_FUNCTIONS_EXPANDALL, "IDM_FUNCTIONS_EXPANDALL", "Expand all nodes in the function List window", "" )
-    frmKeyBoard_AddKeyBinding( "View", IDM_FUNCTIONS_COLLAPSEALL, "IDM_FUNCTIONS_COLLAPSEALL", "Collapse all nodes in the function List window", "" )
-    frmKeyBoard_AddKeyBinding( "View", IDM_BOOKMARKS_EXPANDALL, "IDM_BOOKMARKS_EXPANDALL", "Expand all nodes in the Bookmarks window", "" )
-    frmKeyBoard_AddKeyBinding( "View", IDM_BOOKMARKS_COLLAPSEALL, "IDM_BOOKMARKS_COLLAPSEALL", "Collapse all nodes in the Bookmarks window", "" )
-    frmKeyBoard_AddKeyBinding( "View", IDM_CLOSEPANEL, "IDM_CLOSEPANEL", "Close left side panel", "" )
-
-    '' PROJECT MENU
-    frmKeyBoard_AddKeyBinding( "Project", IDM_PROJECTNEW, "IDM_PROJECTNEW", "New project", "" )
-    frmKeyBoard_AddKeyBinding( "Project", IDM_PROJECTSAVE, "IDM_PROJECTSAVE", "Save project", "" )
-    frmKeyBoard_AddKeyBinding( "Project", IDM_PROJECTSAVEAS, "IDM_PROJECTSAVEAS", "Save project as a different name ", "" )
-    frmKeyBoard_AddKeyBinding( "Project", IDM_PROJECTOPEN, "IDM_PROJECTOPEN", "Open project", "" )
-    frmKeyBoard_AddKeyBinding( "Project", IDM_PROJECTFILESADD, "IDM_PROJECTFILESADD", "Add files to project", "Ctrl+F11" )
-    frmKeyBoard_AddKeyBinding( "Project", IDM_PROJECTCLOSE, "IDM_PROJECTCLOSE", "Close project", "" )
-    frmKeyBoard_AddKeyBinding( "Project", IDM_PROJECTOPTIONS, "IDM_PROJECTOPTIONS", "Project options", "" )
-
-    '' COMPILE MENU
-    frmKeyBoard_AddKeyBinding( "Compile", IDM_BUILDEXECUTE, "IDM_BUILDEXECUTE", "Build and Execute", "F5" )
-    frmKeyBoard_AddKeyBinding( "Compile", IDM_COMPILE, "IDM_COMPILE", "Compile the project or the current active file", "Ctrl+F5" )
-    frmKeyBoard_AddKeyBinding( "Compile", IDM_REBUILDALL, "IDM_REBUILDALL", "Rebuild all", "Ctrl+Alt+F5" )
-    frmKeyBoard_AddKeyBinding( "Compile", IDM_COMPILEMODULE, "IDM_COMPILEMODULE", "Compile Module", "Ctrl+F7" )
-    frmKeyBoard_AddKeyBinding( "Compile", IDM_QUICKRUN, "IDM_QUICKRUN", "Quick Run current active file", "Ctrl+Shift+F5" )
-    frmKeyBoard_AddKeyBinding( "Compile", IDM_RUNEXE, "IDM_RUNEXE", "Run executable", "Shift+F5" )
-    frmKeyBoard_AddKeyBinding( "Compile", IDM_COMMANDLINE, "IDM_COMMANDLINE", "Command line", "" )
-    
-    '' DEBUG MENU
-    frmKeyBoard_AddKeyBinding( "Debug", IDM_DEBUG_STARTDEBUGGING, "IDM_DEBUG_STARTDEBUGGING", "Start Debugging", "F6" )
-    frmKeyBoard_AddKeyBinding( "Debug", IDM_DEBUG_STOPDEBUGGING, "IDM_DEBUG_STOPDEBUGGING", "Stop Debugging", "Shift+F6" )
-    frmKeyBoard_AddKeyBinding( "Debug", IDM_DEBUG_STEPINTO, "IDM_DEBUG_STEPINTO", "Step Into", "F11" )
-    frmKeyBoard_AddKeyBinding( "Debug", IDM_DEBUG_STEPOVER, "IDM_DEBUG_STEPOVER", "Step Over", "F10" )
-    frmKeyBoard_AddKeyBinding( "Debug", IDM_DEBUG_STEPOUT, "IDM_DEBUG_STEPOUT", "Step Out", "Shift+F11" )
-    frmKeyBoard_AddKeyBinding( "Debug", IDM_DEBUG_RUNTOCURSOR, "IDM_DEBUG_RUNTOCURSOR", "Run to Cursor", "Ctrl+F10" )
-    frmKeyBoard_AddKeyBinding( "Debug", IDM_DEBUG_TOGGLEBREAKPOINT, "IDM_DEBUG_TOGGLEBREAKPOINT", "Toggle Breakpoint", "F9" )
-    frmKeyBoard_AddKeyBinding( "Debug", IDM_DEBUG_DELETEALLBREAKPOINTS, "IDM_DEBUG_DELETEALLBREAKPOINTS", "Delete All Breakpoints", "Ctrl+Shift+F9" )
-
-    '' HELP MENU
-    frmKeyBoard_AddKeyBinding( "Help", IDM_HELP_FB, "IDM_HELP_FB", "FreeBasic Help (context sensitive help)", "F1" )
-    
-    ' Load the keybindings settings file. This will update the gKeys array with any
-    ' user defined key mappings.
-    dim as DWSTRING wszFilename = AfxGetExePathName & "settings\keybindings.ini" 
-    
-    dim pStream as CTextStream
-    
-    if pStream.Open( wszFilename ) = S_OK then 
-        do until pStream.EOS
-            dim as DWSTRING wst = pStream.ReadLine
-            wst = trim(wst)
-            if len(wst) = 0 then continue Do
-            
-            ' Each keybinding entry has fields separated by a colon 
-            if instr( wst, ":" ) = 0 then continue do
-            
-            dim as DWSTRING wszMsgString = AfxStrParse(wst, 1, ":")  
-            
-            ' The MsgString could have an embedded (DISABLED) flag indicating that the
-            ' default key combination should be disabled.
-            dim as boolean bDisabled = false
-            dim as long i
-            i = instr(wszMsgString, "(DISABLED)")
-            if i then
-                bDisabled = true
-                wszMsgString = left(wszMsgString, i-1 )
-            end if   
-            
-            dim as DWSTRING wszUserKeys = trim(AfxStrParse(wst, 2, ":"))
-
-            frmKeyBoard_AddKeyBinding_User( wszMsgString, wszUserKeys, bDisabled )
-        Loop
-        pStream.Close
+        ' Put the staging copy back so nothing downstream sees the probe's edit.
+        frmKeyboard_LoadWork()
+        FKASSERT( gKeysWork(0).wszUserKeys = wszKeepUser, "LoadWork did not restore the probed row" )
     end if
 
-    ' Lastly, save the keybindings settings file (we do this in case the file never existed
-    ' in the first place so now we will have a default keybindings file).
-    frmKeyboard_SaveKeyBindings( wszFilename )
-    
-    function = 0   
-end function
-
-' ========================================================================================
-' Convert a virtual key string (Ctrl, Alt, Shift) to virtual key value
-' ========================================================================================
-function frmKeyboard_VirtKeyToValue( byval wszString as DWSTRING ) as long
-    select case ucase(wszString)
-        case "CTRL":  return FCONTROL
-        case "ALT":   return FALT
-        case "SHIFT": return FSHIFT
-    end select
-    function = 0
-end function
-
-
-' ========================================================================================
-' Converts a VK_OEM key to propery virtual key because of different keyboard layouts
-' ========================================================================================
-function frmKeyboard_OEMtoVirtKey( byval ch as ubyte ) as long
-    ' declare function VkKeyScanExW(byval ch as WCHAR, byval dwhkl as HKL) as SHORT
-    dim as HKL layout = GetKeyboardLayout(0)  '// Current layout
-    dim as short result = VkKeyScanEx(ch, layout)
-    dim as ubyte vkCode = lobyte(result)   
-    dim as ubyte shiftState = hibyte(result)
-    return vkCode
-end function
-
-
-' ========================================================================================
-' Convert an accelerator key string (F1, TAB, "A", etc..) to virtual key value
-' ========================================================================================
-function frmKeyboard_AccelKeyToValue( byval wszString as DWSTRING ) as long
-    select case ucase(wszString)
-        case "BACKSPACE": return VK_BACK
-        case "TAB": return VK_TAB
-        case "ENTER": return VK_RETURN
-        case "ESCAPE": return VK_ESCAPE
-        case "SPACEBAR": return VK_SPACE
-        case "PGUP": return VK_PRIOR
-        case "PGDN": return VK_NEXT
-        case "END": return VK_END
-        case "HOME": return VK_HOME
-        case "LEFT": return VK_LEFT
-        case "UP": return VK_UP
-        case "RIGHT": return VK_RIGHT
-        case "DOWN": return VK_DOWN
-        case "INS": return VK_INSERT
-        case "DEL": return VK_DELETE
-        case "NUMPAD0": return VK_NUMPAD0
-        case "NUMPAD1": return VK_NUMPAD1
-        case "NUMPAD2": return VK_NUMPAD2
-        case "NUMPAD3": return VK_NUMPAD3
-        case "NUMPAD4": return VK_NUMPAD4
-        case "NUMPAD5": return VK_NUMPAD5
-        case "NUMPAD6": return VK_NUMPAD6
-        case "NUMPAD7": return VK_NUMPAD7
-        case "NUMPAD8": return VK_NUMPAD8
-        case "NUMPAD9": return VK_NUMPAD9
-        case "NUMPAD*": return VK_MULTIPLY
-        case "NUMPAD+": return VK_ADD
-        case "NUMPAD-": return VK_SUBTRACT
-        case "NUMPAD.": return VK_DECIMAL
-        case "NUMPAD/": return VK_DIVIDE
-        case "F1": return VK_F1
-        case "F2": return VK_F2
-        case "F3": return VK_F3
-        case "F4": return VK_F4
-        case "F5": return VK_F5
-        case "F6": return VK_F6
-        case "F7": return VK_F7
-        case "F8": return VK_F8
-        case "F9": return VK_F9
-        case "F10": return VK_F10
-        case "F11": return VK_F11
-        case "F12": return VK_F12
-        case "+", "PLUS": return VK_OEM_PLUS           
-        case ",", "COMMA": return VK_OEM_COMMA           
-        case "-", "MINUS": return VK_OEM_MINUS          
-        case ".", "PERIOD": return VK_OEM_PERIOD
-        case ";", "SEMICOLON"       ' VK_OEM_1
-            return frmKeyboard_OEMtoVirtKey(asc(";"))
-        case ":", "COLON"           ' VK_OEM_1
-            return frmKeyboard_OEMtoVirtKey(asc(":"))
-        case "/", "FORWARDSLASH"    ' VK_OEM_2
-            return frmKeyboard_OEMtoVirtKey(asc("/"))
-        case "?", "QUESTIONMARK"    ' VK_OEM_2
-            return frmKeyboard_OEMtoVirtKey(asc("?"))
-        case "`", "BACKTICK"        ' VK_OEM_3
-            return frmKeyboard_OEMtoVirtKey(asc("`"))
-        case "~", "TILDE"           ' VK_OEM_3
-            return frmKeyboard_OEMtoVirtKey(asc("~"))
-        case "[", "OPENSQUAREBRACKET" ' VK_OEM_4
-            return frmKeyboard_OEMtoVirtKey(asc("["))
-        case "{", "OPENCURLYBRACE"    ' VK_OEM_4
-            return frmKeyboard_OEMtoVirtKey(asc("{"))
-        case "\", "BACKSLASH"         ' VK_OEM_5
-            return frmKeyboard_OEMtoVirtKey(asc("\"))
-        case "|", "PIPE"              ' VK_OEM_5
-            return frmKeyboard_OEMtoVirtKey(asc("|"))
-        case "]", "CLOSESQUAREBRACKET"  ' VK_OEM_6
-            return frmKeyboard_OEMtoVirtKey(asc("]"))
-        case "}", "CLOSECURLYBRACE"     ' VK_OEM_6
-            return frmKeyboard_OEMtoVirtKey(asc("}"))
-        case "'", "SINGLEQUOTE"         ' VK_OEM_7
-            return frmKeyboard_OEMtoVirtKey(asc("'"))
-        case chr(34), "DOUBLEQUOTE"     ' VK_OEM_7
-            return frmKeyboard_OEMtoVirtKey(34)
-        case "0" to "9": return asc(wszString)   
-        case "A" to "Z": return asc(wszString)
-    end select
-    function = 0
-end function
-
-
-' ========================================================================================
-' Build the main keyboard accelerator table
-' ========================================================================================
-function frmKeyboard_BuildAcceleratorTable() as long
-    dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN)
-    if pWindow = 0 then exit function
-
-    ' Create mapping array that equates the string representation of the
-    ' IDM_* messages to their values. We use that array we saving and 
-    ' restoring the keybindings from file. We can not use the literal IDM
-    ' value because if we modify any of the IDM source code values then the
-    ' mappings stored in the keybindings file will instantly be incorrect.
-    
-    ' Create the default keyboard bindings / shortcut mappings
-    frmKeyboard_CreateDefaultKeyBindings()
-    
-    ' Destroy any existing accelerator table
-    pWindow->DestroyAcceleratorTable
-    
-    ' The following ALWAYS get created and can not be altered because they are shortcuts
-    ' to activate each of the top menus.
-    pWindow->AddAccelerator( FVIRTKEY or FALT,     VK_F,   IDC_MENUBAR_FILE )
-    pWindow->AddAccelerator( FVIRTKEY or FALT,     VK_E,   IDC_MENUBAR_EDIT )
-    pWindow->AddAccelerator( FVIRTKEY or FALT,     VK_S,   IDC_MENUBAR_SEARCH )
-    pWindow->AddAccelerator( FVIRTKEY or FALT,     VK_V,   IDC_MENUBAR_VIEW )
-    pWindow->AddAccelerator( FVIRTKEY or FALT,     VK_P,   IDC_MENUBAR_PROJECT )
-    pWindow->AddAccelerator( FVIRTKEY or FALT,     VK_C,   IDC_MENUBAR_COMPILE )
-    pWindow->AddAccelerator( FVIRTKEY or FALT,     VK_H,   IDC_MENUBAR_HELP )
-
-    ' Create the accelerator table based on the data in the gKeys() array
-    for i as long = lbound(gKeys) to ubound(gKeys)
-        
-        dim as DWSTRING wszKeys = gKeys(i).wszDefaultKeys
-
-        ' wszUserKeys will override the wszDefaultKeys entry
-        if len(gKeys(i).wszUserKeys) then 
-            wszKeys = gKeys(i).wszUserKeys
-        else
-            ' Only create the default keyboard short if it has not been disabled
-            if gKeys(i).bDefaultDisabled then
-                wszKeys = ""
-            end if
-        end if
-        
-        ' No need to proceed further if no User defined shortcut and Default keys disabled
-        if len(wszKeys) = 0 then continue for
-        
-        ' convert the key combination into something that AddAcelerator can understand
-        ' F5
-        ' TAB
-        ' Alt+F4
-        ' Shift+F5
-        ' Ctrl+F5
-        ' Ctrl+Shift+F5
-        ' etc...
-        
-        ' Parse for + signs
-        dim as long nCount = AfxStrParseCount( wszKeys, "+" )
-        dim as long nVirtValue = FVIRTKEY
-        dim as long nAccelValue = 0
-        
-        for ii as long = nCount to 1 step -1
-            ' The accelerator key will always be the last parse regardless of 
-            ' number of items in the string
-            dim as DWSTRING wszString = AfxStrParse( wszKeys, ii, "+" )
-            if ii = nCount then
-                nAccelValue = frmKeyboard_AccelKeyToValue( wszString )
-            else
-                nVirtValue = nVirtValue or frmKeyboard_VirtKeyToValue( wszString )
+    ' ---- TEST D: every localized string this dialog uses actually EXISTS. ----
+    '
+    ' L(id, "default") DISCARDS the default -- it is #Define L(e,s) LL(e), so the second
+    ' argument is documentation and nothing more. An id with no entry in english.lang renders
+    ' as an EMPTY STRING: a blank column header, a blank button, a blank cue banner, with
+    ' nothing in the build, the warnings or any other assertion to say so.
+    '
+    ' This is not hypothetical here. The first render of this dialog came up with three of
+    ' its four column headers blank, the Reset button blank and the filter's cue banner
+    ' blank, because ids 493-507 had not been added yet. Everything compiled and every other
+    ' assertion passed.
+    scope
+        dim as long nBlank = 0
+        for id as long = 493 to 507
+            if id = 500 then continue for   ' deliberately unused
+            if len(LL(id)) = 0 then
+                nBlank += 1
+                sLine = "  FAIL: localized string " & str(id) & " is empty -- it will render blank"
+                ? sLine
             end if
         next
-        if nAccelValue <> 0 then   ' value can be zero if no default or user key defined
-            pWindow->AddAccelerator( nVirtValue, nAccelValue, gKeys(i).idAction )
-        end if   
-    next
-    
-    ' Add the SHIFT+INSERT paste accelerator so that the Paste menu operations
-    ' will fire correctly.
-    pWindow->AddAccelerator( FVIRTKEY or FSHIFT, VK_INSERT, IDM_PASTE )
-    
-    pWindow->CreateAcceleratorTable()
+        nFail += nBlank
+        nPass += (14 - nBlank)
 
-    function = 0
+        ' The ids borrowed from elsewhere in the file. If one of these ever moves, this
+        ' dialog goes partly blank and nothing else would notice.
+        FKASSERT( len(LL(0))   > 0, "localized string 0 (OK) is empty" )
+        FKASSERT( len(LL(1))   > 0, "localized string 1 (Cancel) is empty" )
+        FKASSERT( len(LL(220)) > 0, "localized string 220 (Keyboard Shortcuts) is empty" )
+        FKASSERT( len(LL(255)) > 0, "localized string 255 (Description) is empty" )
+        FKASSERT( len(LL(433)) > 0, "localized string 433 (Modify) is empty" )
+    end scope
+
+    ' ---- TEST C: the on-disk format round-trips, INCLUDING the disabled flag. ----
+    ' Serialises the live bindings to a temp file and reads them back with the same parse
+    ' the loader uses. (DISABLED) is the field to watch: it is smuggled into the message
+    ' string rather than given a column of its own, so it is the one a naive writer drops.
+    scope
+        dim as DWSTRING wszTmp = environ("TEMP") & "\tiko_keybind_selftest.tmp"
+        frmKeyboard_SaveKeyBindings( wszTmp )
+
+        dim as long nRead = 0, nMatched = 0
+        dim pStream as CTextStream
+        if pStream.Open( wszTmp ) = S_OK then
+            do until pStream.EOS
+                dim as DWSTRING wst = trim(pStream.ReadLine)
+                if len(wst) = 0 then continue do
+                if instr( wst, ":" ) = 0 then continue do
+                nRead += 1
+
+                dim as DWSTRING wszMsg = AfxStrParse(wst, 1, ":")
+                dim as boolean bDisabled = false
+                dim as long p = instr(wszMsg, "(DISABLED)")
+                if p then
+                    bDisabled = true
+                    wszMsg = left(wszMsg, p - 1)
+                end if
+                dim as DWSTRING wszUser = trim(AfxStrParse(wst, 2, ":"))
+
+                for i as long = lbound(gKeys) to ubound(gKeys)
+                    if gKeys(i).wszMsgString = wszMsg then
+                        if (gKeys(i).wszUserKeys = wszUser) andalso _
+                           (gKeys(i).bDefaultDisabled = bDisabled) then nMatched += 1
+                        exit for
+                    end if
+                next
+            loop
+            pStream.Close
+        end if
+        kill wszTmp
+
+        dim as long nExpected = ubound(gKeys) - lbound(gKeys) + 1
+        FKASSERT( nRead = nExpected, _
+                  "saved file has " & str(nRead) & " entries, expected " & str(nExpected) )
+        FKASSERT( nMatched = nExpected, _
+                  "only " & str(nMatched) & " of " & str(nExpected) & " entries survived the file round trip" )
+    end scope
+
+    erase gKeysWork
+
+    sLine = "--- TIKO_KEYBOARD_SELFTEST (staging): " & str(nPass) & " passed, " & str(nFail) & " failed ---"
+    ? sLine
+    ? ""
+
+end sub
+
+
+' ========================================================================================
+' THE EFFECTIVE BINDING of a staged command: what would actually reach the accelerator
+' table. User keys win; otherwise the default, unless the default has been suppressed.
+' Empty means this command has no shortcut at all.
+' ========================================================================================
+private function frmKeyboard_EffectiveKeys( byval idx as long ) as DWSTRING
+    if (idx < lbound(gKeysWork)) orelse (idx > ubound(gKeysWork)) then return ""
+    if len(gKeysWork(idx).wszUserKeys) then return gKeysWork(idx).wszUserKeys
+    if gKeysWork(idx).bDefaultDisabled then return ""
+    return gKeysWork(idx).wszDefaultKeys
 end function
 
 
 ' ========================================================================================
-' Check for keybinding conflict with other keys and display warning label message
+' Describe the first command that already owns wszKeys, skipping nSkipIndex. "" = no clash.
 ' ========================================================================================
 function frmKeyboard_CheckForKeyConflict ( _
             byval wszKeys as DWSTRING, _
             byval nSkipIndex as long _
-            ) as long
-            
-    dim as DWSTRING wszMessage
-    dim as DWSTRING wszCheck
-    
-    for i as long = lbound(gKeys) to ubound(gKeys)
+            ) as DWSTRING
+
+    if len(wszKeys) = 0 then return ""
+
+    for i as long = lbound(gKeysWork) to ubound(gKeysWork)
         if i = nSkipIndex then continue for
-        ' if user binding exists then check that b/c it would override the default binding
-        wszCheck = iif( len(gKeys(i).wszUserKeys), gKeys(i).wszUserKeys, gKeys(i).wszDefaultKeys )
-        if len(wszCheck) = 0 then continue for
-        if wszKeys = wszCheck then
-            wszMessage = "Conflict: " & gKeys(i).wszDescription & " (" & wszKeys & ")"
-            exit for
-        end if   
+        if wszKeys = frmKeyboard_EffectiveKeys(i) then
+            return L(503,"Conflict") & ": " & gKeysWork(i).wszDescription & " (" & wszKeys & ")"
+        end if
     next
 
-    dim as HWND hCtrl = GetDlgItem( HWND_FRMKEYBOARD, IDC_FRMKEYBOARD_LBLCONFLICT )
-    AfxSetWindowText( hCtrl, wszMessage )
-
-    function = 0
+    return ""
 end function
 
 
 ' ========================================================================================
-' Process WM_CREATE message for window/dialog: frmKeyboard
+' Recompute the whole conflict map. Called after every edit, and once at build.
+'
+' O(n^2) over ~104 commands is about 5000 string compares, on a user action. Not worth an
+' index; a map keyed by binding string would have to be invalidated on every edit anyway.
 ' ========================================================================================
-function frmKeyboard_OnCreate( _
-            byval hwnd as HWND, _
-            byval lpCreateStructPtr as LPCREATESTRUCT _
-            ) as boolean
+sub frmKeyboard_RescanConflicts()
 
-    ' This is a modal popup window so disable the parent window
-    DisableAllModeless()
+    erase gKeysConflict
+    if ubound(gKeysWork) < lbound(gKeysWork) then exit sub
+    redim gKeysConflict( ubound(gKeysWork) ) as boolean
 
-    '  Message cracker macro expects a True to be returned for a successful
-    '  OnCreate handler even though returning -1 from a standard WM_CREATE
-    '  call would stop creating the window. This is just one of those Windows
-    '  inconsistencies.
-    return true
+    for i as long = lbound(gKeysWork) to ubound(gKeysWork)
+        dim as DWSTRING wszI = frmKeyboard_EffectiveKeys(i)
+        if len(wszI) = 0 then continue for
+        for j as long = i + 1 to ubound(gKeysWork)
+            if wszI = frmKeyboard_EffectiveKeys(j) then
+                gKeysConflict(i) = true
+                gKeysConflict(j) = true
+            end if
+        next
+    next
+
+end sub
+
+
+' ========================================================================================
+' What the Default Keys cell SHOWS. Composed from the model at every use rather than stored
+' in the cell, so the painter and the filter cannot end up describing the row differently.
+' ========================================================================================
+function frmKeyboard_DefaultKeysDisplay( byval idx as long ) as DWSTRING
+    if (idx < lbound(gKeysWork)) orelse (idx > ubound(gKeysWork)) then return ""
+    dim as DWSTRING wsz = gKeysWork(idx).wszDefaultKeys
+    if gKeysWork(idx).bDefaultDisabled then
+        if len(wsz) = 0 then
+            wsz = L(496,"(disabled)")
+        else
+            wsz = wsz & " " & L(496,"(disabled)")
+        end if
+    end if
+    return wsz
 end function
 
 
 ' ========================================================================================
-' Process WM_NOTIFY message for window/dialog: frmMain
+' Does this row survive the filter? Matches across ALL FOUR columns, case-insensitively, so
+' "ctrl+f" answers "what is that bound to?" and "bookmark" finds the whole family.
 ' ========================================================================================
-function frmKeyboard_OnNotify( _
-            byval hwnd as HWnd, _
-            byval id as long, _
-            byval pNMHDR as NMHDR ptr _
-            ) as LRESULT
+private function frmKeyboard_RowMatchesFilter( byval idx as long ) as boolean
+    if len(gKeysFilter) = 0 then return true
 
-    select case pNMHDR->code 
+    dim as DWSTRING wszNeedle = ucase(gKeysFilter)
+    if instr( ucase(gKeysWork(idx).wszCategory), wszNeedle ) then return true
+    if instr( ucase(gKeysWork(idx).wszDescription), wszNeedle ) then return true
+    if instr( ucase(frmKeyboard_DefaultKeysDisplay(idx)), wszNeedle ) then return true
+    if instr( ucase(gKeysWork(idx).wszUserKeys), wszNeedle ) then return true
 
-        case LVN_ITEMCHANGED 
-            if id = IDC_FRMKEYBOARD_LIST1 then
-                dim as long nCurSel = ListView_GetSelection( HWND_FRMKEYBOARD_LISTVIEW )
-                if nCurSel < 0 then exit function
-                dim as DWSTRING wszKeys = iif( len(gKeys(nCurSel).wszUserKeys), _
-                                                gKeys(nCurSel).wszUserKeys, gKeys(nCurSel).wszDefaultKeys )
-                frmKeyboard_CheckForKeyConflict( wszKeys, nCurSel )
-            end if   
-
-    end select
-    
-    function = 0
-
+    return false
 end function
 
-' ========================================================================================
-' Process WM_COMMAND message for window/dialog: frmKeyboard
-' ========================================================================================
-function frmKeyboard_OnCommand( _
-            byval hwnd as HWND, _
-            byval id as long, _
-            byval hwndCtl as HWND, _
-            byval codeNotify as UINT _
-            ) as LRESULT
 
+' ========================================================================================
+' The gKeysWork() index behind the highlighted row, or -1.
+'
+' ALWAYS VIA itemData, NEVER via the row index. The filter rebuilds the list, so visible row
+' 3 is not gKeysWork(3) -- that equivalence held only in the old dialog, which never filtered
+' and stashed the index in a hidden text column to recover it.
+' ========================================================================================
+private function frmKeyboard_SelectedWorkIndex() as long
+    if HWND_FRMKEYBOARD_LIST = 0 then return -1
+    dim as long nRow = PsListTree_GetCurSel( HWND_FRMKEYBOARD_LIST )
+    if nRow < 0 then return -1
+    dim as long idx = PsListTree_GetItemData( HWND_FRMKEYBOARD_LIST, nRow )
+    if (idx < lbound(gKeysWork)) orelse (idx > ubound(gKeysWork)) then return -1
+    return idx
+end function
+
+
+' ========================================================================================
+' Row painter.
+'
+' NOT the shared ListBox_LVPaintRow in modRoutines.inc: that one draws in the ghOutput
+' palette for the Output panel's three lists, and this dialog is dressed like frmOptions.
+' It also needs two states the shared painter has no concept of -- a dimmed disabled default
+' and a conflict-marked user binding.
+' ========================================================================================
+private sub frmKeyboard_ListPaintRow( byval p as PSLISTTREE_PAINTINFO ptr )
+    if p = 0 then exit sub
+
+    dim as boolean bActive = (p->isSelected orelse p->isHot)
+    dim as COLORREF backclr = iif( bActive, ghPanel.BackColorHot, ghPanel.BackColor )
+    dim as COLORREF foreclr = iif( bActive, ghPanel.ForeColorHot, ghPanel.ForeColor )
+
+    p->b->SetBackColor( backclr )
+    p->b->PaintRect( @p->rc )
+    p->b->SetFont( ghFont(GUIFONT_11) )
+
+    dim as long idx = PsListTree_GetItemData( HWND_FRMKEYBOARD_LIST, p->itemID )
+    if (idx < lbound(gKeysWork)) orelse (idx > ubound(gKeysWork)) then exit sub
+    if p->columnCount <= 0 then exit sub
+
+    dim as boolean bConflict = false
+    if (idx >= lbound(gKeysConflict)) andalso (idx <= ubound(gKeysConflict)) then
+        bConflict = gKeysConflict(idx)
+    end if
+    ' Hoisted into a boolean of its own: len() yields a long, and andalso-ing that with a
+    ' boolean is fbc warning 38.
+    dim as boolean bHasUserKeys = (len(gKeysWork(idx).wszUserKeys) > 0)
+
+    for i as integer = 0 to p->columnCount - 1
+        dim as RECT rcText = p->cells[i].rc
+        rcText.left += AfxScaleX(6)
+
+        dim as DWSTRING wszCell = p->cells[i].wszText
+        dim as COLORREF clr = foreclr
+
+        select case i
+            case 2
+                ' Default Keys. The "(disabled)" suffix is added HERE, and the whole cell
+                ' goes dim -- state readable both as text and as weight, so it survives a
+                ' greyscale screenshot and a colour-blind reader alike.
+                wszCell = frmKeyboard_DefaultKeysDisplay( idx )
+                if gKeysWork(idx).bDefaultDisabled then clr = ghPopup.ForeColorDisabled
+                ' A row whose clash comes from its DEFAULT has no user cell to mark, so the
+                ' marker goes here instead. Checked before the disabled dimming above would
+                ' otherwise win, because a disabled default cannot conflict with anything.
+                if bConflict andalso (bHasUserKeys = false) then clr = ghGeneral.iconfail
+
+            case 3
+                ' User Keys. A conflict is marked on the cell the user actually edits.
+                if bConflict andalso bHasUserKeys then clr = ghGeneral.iconfail
+        end select
+
+        p->b->SetForeColor( clr )
+        p->b->PaintText( wszCell, @rcText, DT_LEFT or DT_END_ELLIPSIS )
+    next
+
+end sub
+
+
+' ========================================================================================
+' Header band painter. REQUIRED -- without one the header does not render at all.
+' ========================================================================================
+private sub frmKeyboard_ListPaintHeader( byval p as PSCOLUMNHEADER_PAINTINFO ptr )
+    if p = 0 then exit sub
+
+    dim as COLORREF backclr = ghPanel.BackColor
+    if p->isHot orelse p->isResizeHot then backclr = ghPanel.BackColorHot
+
+    p->b->SetBackColor( backclr )
+    p->b->PaintRect( @p->rc )
+
+    dim as RECT rcText = p->rc
+    rcText.left += AfxScaleX(6)
+    p->b->SetForeColor( ghPanel.ForeColorHot )
+    p->b->SetFont( ghFont(GUIFONT_11) )
+    p->b->PaintText( p->wszCaption, @rcText, DT_LEFT or DT_END_ELLIPSIS )
+
+    ' Hairline on the trailing edge so columns read as separated.
+    dim as RECT rcDiv = p->rc
+    rcDiv.left = rcDiv.right - AfxScaleX(1)
+    p->b->SetBackColor( ghEditor.Divider )
+    p->b->PaintRect( @rcDiv )
+end sub
+
+
+' ========================================================================================
+' (Re)fill the list from the staging copy, honouring the filter.
+'
+' Selection is preserved BY gKeysWork() INDEX, not by row: a filter keystroke can move a row
+' from position 40 to position 0, and restoring "row 40" would land on something unrelated.
+' ========================================================================================
+private sub frmKeyboard_BuildList()
+
+    if HWND_FRMKEYBOARD_LIST = 0 then exit sub
+
+    dim as long nKeepIdx = frmKeyboard_SelectedWorkIndex()
+
+    PsListTree_Clear( HWND_FRMKEYBOARD_LIST )
+
+    dim as long nSelectRow = -1
+    for i as long = lbound(gKeysWork) to ubound(gKeysWork)
+        if frmKeyboard_RowMatchesFilter(i) = false then continue for
+
+        ' Column 0 is the row's own text; the itemData carries the model index.
+        dim as long nRow = PsListTree_AddString( HWND_FRMKEYBOARD_LIST, gKeysWork(i).wszCategory, i )
+        if nRow < 0 then continue for
+
+        PsListTree_SetCellText( HWND_FRMKEYBOARD_LIST, nRow, 1, gKeysWork(i).wszDescription )
+        ' Cell 2 holds the RAW keys; the painter adds the "(disabled)" suffix. Storing the
+        ' decorated string here would leak a display concern into the model's mirror.
+        PsListTree_SetCellText( HWND_FRMKEYBOARD_LIST, nRow, 2, gKeysWork(i).wszDefaultKeys )
+        PsListTree_SetCellText( HWND_FRMKEYBOARD_LIST, nRow, 3, gKeysWork(i).wszUserKeys )
+
+        if i = nKeepIdx then nSelectRow = nRow
+    next
+
+    if (nSelectRow < 0) andalso (PsListTree_GetCount( HWND_FRMKEYBOARD_LIST ) > 0) then nSelectRow = 0
+    if nSelectRow >= 0 then PsListTree_SetCurSel( HWND_FRMKEYBOARD_LIST, nSelectRow )
+
+    ' ONLY the list. The dialog's own chrome used to be redrawn here too, because the title
+    ' band showed a match count that every rebuild changed. With the count gone the band holds
+    ' nothing a filter keystroke can affect, so repainting the whole dialog on each one would
+    ' be work with no result to show for it.
+    AfxRedrawWindow( HWND_FRMKEYBOARD_LIST )
+
+end sub
+
+
+' ========================================================================================
+' Refresh one row's cells after an edit, without rebuilding the whole list.
+' ========================================================================================
+private sub frmKeyboard_RefreshRow( byval nRow as long )
+    if (HWND_FRMKEYBOARD_LIST = 0) orelse (nRow < 0) then exit sub
+    dim as long idx = PsListTree_GetItemData( HWND_FRMKEYBOARD_LIST, nRow )
+    if (idx < lbound(gKeysWork)) orelse (idx > ubound(gKeysWork)) then exit sub
+
+    PsListTree_SetCellText( HWND_FRMKEYBOARD_LIST, nRow, 2, gKeysWork(idx).wszDefaultKeys )
+    PsListTree_SetCellText( HWND_FRMKEYBOARD_LIST, nRow, 3, gKeysWork(idx).wszUserKeys )
+
+    frmKeyboard_RescanConflicts()
+    AfxRedrawWindow( HWND_FRMKEYBOARD_LIST )
+end sub
+
+
+' ========================================================================================
+' Open the Modify dialog on the highlighted row.
+' ========================================================================================
+private sub frmKeyboard_DoModify()
+
+    dim as long nRow = PsListTree_GetCurSel( HWND_FRMKEYBOARD_LIST )
+    dim as long idx  = frmKeyboard_SelectedWorkIndex()
+    if idx < 0 then exit sub
+
+    gKeysEdit = gKeysWork(idx)
+    frmKeyboardEdit_Show( HWND_FRMKEYBOARD )
+    gKeysWork(idx) = gKeysEdit
+
+    frmKeyboard_RefreshRow( nRow )
+    SetFocus( HWND_FRMKEYBOARD_LIST )
+
+end sub
+
+
+' ========================================================================================
+' Reset the highlighted row to its shipped default.
+'
+' Clears the user keys AND re-enables the default. Clearing only the keys would leave a row
+' whose default is still suppressed -- no shortcut at all, and a Default Keys cell still
+' reading "(disabled)", which looks exactly like the button having failed.
+' ========================================================================================
+private sub frmKeyboard_DoReset()
+
+    dim as long nRow = PsListTree_GetCurSel( HWND_FRMKEYBOARD_LIST )
+    dim as long idx  = frmKeyboard_SelectedWorkIndex()
+    if idx < 0 then exit sub
+
+    gKeysWork(idx).wszUserKeys      = ""
+    gKeysWork(idx).bDefaultDisabled = false
+
+    frmKeyboard_RefreshRow( nRow )
+    SetFocus( HWND_FRMKEYBOARD_LIST )
+
+end sub
+
+
+' ========================================================================================
+' Control callbacks
+' ========================================================================================
+
+' PsButton does not post WM_COMMAND to its parent, so all four buttons arrive here.
+private sub frmKeyboard_ButtonClickCallback( byval hButton as HWND, byval id as long )
     select case id
-
-        case IDC_FRMKEYBOARD_CMDMODIFY
-            if codeNotify = BN_CLICKED then
-                PostMessage( hwnd, MSG_USER_SHOW_KEYBOARDEDIT, 0, 0 )
-            end if
-
-        case IDC_FRMKEYBOARD_CMDCLEAR
-            if codeNotify = BN_CLICKED then
-                dim as long nCurSel = ListView_GetSelection( HWND_FRMKEYBOARD_LISTVIEW )
-                if nCurSel < 0 then exit function
-                gKeys(nCurSel).wszUserKeys = ""
-                dim wszText as wstring * MAX_PATH = gKeys(nCurSel).wszUserKeys
-                LV_SetItemText( HWND_FRMKEYBOARD_LISTVIEW, nCurSel, 5, wszText, MAX_PATH ) 
-                frmKeyboard_CheckForKeyConflict( "", nCurSel )
-                ListView_SelectItem( HWND_FRMKEYBOARD_LISTVIEW, nCurSel )
-                SetFocus( HWND_FRMKEYBOARD_LISTVIEW )
-            end if
-
-        case IDCANCEL
-            if codeNotify = BN_CLICKED then
-                SendMessage( hwnd, WM_CLOSE, 0, 0 )
-                exit function
-            end if
+        case IDC_FRMKEYBOARD_CMDMODIFY:  frmKeyboard_DoModify()
+        case IDC_FRMKEYBOARD_CMDCLEAR:   frmKeyboard_DoReset()
+        case IDC_FRMKEYBOARD_CMDOK
+            frmKeyboard_CommitWork()
+            SendMessage( HWND_FRMKEYBOARD, WM_CLOSE, 0, 0 )
+        case IDC_FRMKEYBOARD_CMDCANCEL
+            SendMessage( HWND_FRMKEYBOARD, WM_CLOSE, 0, 0 )
     end select
+end sub
+
+' Double-click, or ENTER on the focused row -- PsListTree treats them as one gesture, and
+' setting this callback is ALSO what makes the control claim ENTER (per-message
+' DLGC_WANTALLKEYS plus the WM_CHAR swallow that stops the system beeping on every press).
+' Without it, Enter would reach IsDialogMessage and fire the default OK button instead.
+private sub frmKeyboard_ListActivateCallback( byval hList as HWND, byval row as integer )
+    frmKeyboard_DoModify()
+end sub
+
+' NO TOOLTIPS ON THE LIST.
+'
+' This has to be said explicitly: with NO tooltip callback set, PsListTree falls back to
+' showing the row's OWN TEXT. Every row here is fully visible in its column already, so the
+' fallback would pop a tip repeating what the cursor is sitting on. Returning "" is the
+' documented way to suppress them (the same thing tiko's autocomplete popup does).
+private function frmKeyboard_ListTooltip( byval hList as HWND, byval row as integer ) as DWSTRING
+    return ""
+end function
+
+' ...and the same for the COLUMN HEADER, which has its own callback and its own identical
+' fallback: unset, PsColumnHeader shows the column's own Text, so hovering "User Keys" pops a
+' tip reading "User Keys". Suppressing the rows does nothing for the header band -- these are
+' two separate opt-outs and it is easy to fix one and leave the other.
+private function frmKeyboard_HeaderTooltip( byval hHeader as HWND, byval idx as integer ) as DWSTRING
+    return ""
+end function
+
+private sub frmKeyboard_FilterChanged( byval hTextBox as HWND )
+    gKeysFilter = PsTextBox_GetText( hTextBox )
+    frmKeyboard_BuildList()
+end sub
+
+
+' ========================================================================================
+' Paint the dialog's own chrome: background, title text, and the filter box's frame.
+' Everything else on screen belongs to a child control.
+' ========================================================================================
+private function frmKeyboard_OnPaint( byval hwnd as HWND ) as LRESULT
+
+    dim as PAINTSTRUCT ps
+    dim as HDC hdc = BeginPaint( hwnd, @ps )
+
+    dim as RECT rc
+    GetClientRect( hwnd, @rc )
+
+    dim buffer as PsBufferPaint
+    buffer.BeginDoubleBuffer( hwnd, hdc, rc )
+
+    buffer.SetBackColor( ghPanel.BackColor )
+    buffer.PaintRect( @rc )
+
+    dim as long titleH = AfxScaleY(FRMKEYBOARD_TITLE_H)
+    dim as long mx     = AfxScaleX(FRMKEYBOARD_MARGIN)
+
+    ' THE FILTER FRAME. One rounded rect around the glyph AND the box, filled in the field
+    ' colour so the borderless PsTextBox (same colour) sits inside it invisibly, then the
+    ' magnifying glass on the fill, then the border last so it stays crisp. Copied from the
+    ' Options dialog deliberately -- the two dialogs should not differ here by accident.
+    dim as long filterH = AfxScaleY(FRMKEYBOARD_FILTER_H)
+    dim as long filterY = (titleH - filterH) \ 2
+    dim as long curve   = AfxScaleY(8)
+
+    dim as RECT rcFrame
+    rcFrame.left   = mx
+    rcFrame.top    = filterY + AfxScaleY(2)
+    rcFrame.right  = mx + AfxScaleX(FRMKEYBOARD_FILTER_W)
+    rcFrame.bottom = filterY + filterH
+
+    buffer.SetBackColor( ghEditor.BackColorText )
+    buffer.PaintRoundRect( @rcFrame, curve )
+
+    dim as RECT rcGlyph
+    rcGlyph.left   = mx
+    rcGlyph.top    = filterY
+    rcGlyph.right  = mx + AfxScaleX(FRMKEYBOARD_FILTER_GLYPHW)
+    rcGlyph.bottom = filterY + filterH
+    buffer.SetForeColor( ghPanel.ForeColor )
+    buffer.SetBackColor( ghEditor.BackColorText )
+    buffer.SetFont( ghFont(SYMBOLFONT_10) )
+    buffer.PaintText( wchr(&hE721), @rcGlyph, DT_CENTER or DT_VCENTER or DT_SINGLELINE )
+
+    buffer.SetPenColor( ghEditor.Divider )
+    buffer.PaintRoundOutline( @rcFrame, curve, 1 )
+
+    ' NOTHING ELSE IS DRAWN IN THIS BAND. It briefly carried the page title, which was just
+    ' the window caption repeated an inch below itself, and then a match count -- both removed
+    ' on request. The Options dialog puts a page title here because there the caption and the
+    ' band genuinely say different things; this dialog has one page and needs neither.
+    '
+    ' (The count also had a "15 / 104" form while filtering. That went with it. Restoring only
+    ' that variant would be a few lines here, gated on len(gKeysFilter).)
+
+    buffer.EndDoubleBuffer()
+    EndPaint( hwnd, @ps )
 
     function = 0
 end function
 
 
 ' ========================================================================================
-' Process WM_CLOSE message for window/dialog: frmKeyboard
+' Position the shell's children. The dialog is fixed-size, so this runs once after creation.
 ' ========================================================================================
-function frmKeyboard_OnClose( byval hwnd as HWND ) as LRESULT
-    dim as DWSTRING wszFilename = AfxGetExePathName & "settings\keybindings.ini" 
-    frmKeyboard_SaveKeyBindings( wszFilename )
-    frmKeyboard_BuildAcceleratorTable()
+private sub frmKeyboard_PositionWindows( byval hwnd as HWND )
 
-    ' Enables parent window keeping parent's zorder
-    EnableAllModeless()
-    DestroyWindow( hwnd )
-    function = 0
+    dim as RECT rc
+    GetClientRect( hwnd, @rc )
+    if (rc.right <= 0) orelse (rc.bottom <= 0) then exit sub
+
+    dim as long titleH  = AfxScaleY(FRMKEYBOARD_TITLE_H)
+    dim as long footerH = AfxScaleY(FRMKEYBOARD_FOOTER_H)
+    dim as long mx      = AfxScaleX(FRMKEYBOARD_MARGIN)
+    dim as long btnW    = AfxScaleX(FRMKEYBOARD_BTN_W)
+    dim as long btnH    = AfxScaleY(FRMKEYBOARD_BTN_H)
+    dim as long gap     = AfxScaleX(8)
+
+    ' Filter box: inside the frame the dialog paints, past the glyph gutter on the left and
+    ' inset by the border on the other three sides so it never paints over the frame.
+    dim as long filterH = AfxScaleY(FRMKEYBOARD_FILTER_H)
+    dim as long filterY = (titleH - filterH) \ 2
+    dim as long inset   = AfxScaleX(2)
+    dim as long boxX    = mx + AfxScaleX(FRMKEYBOARD_FILTER_GLYPHW)
+    dim as long boxW    = (mx + AfxScaleX(FRMKEYBOARD_FILTER_W) - inset) - boxX
+    if boxW < 0 then boxW = 0
+    SetWindowPos( HWND_FRMKEYBOARD_FILTER, 0, boxX, filterY + inset + AfxScaleY(2), _
+                  boxW, filterH - (2 * inset) - AfxScaleY(2), SWP_NOZORDER or SWP_NOACTIVATE )
+
+    dim as long listY = titleH
+    dim as long listH = rc.bottom - footerH - titleH
+    if listH < 0 then listH = 0
+    SetWindowPos( HWND_FRMKEYBOARD_LIST, 0, mx, listY, rc.right - (mx * 2), listH, _
+                  SWP_NOZORDER or SWP_NOACTIVATE )
+
+    dim as long btnY = rc.bottom - footerH + (footerH - btnH) \ 2
+
+    ' Modify / Reset on the left, OK / Cancel on the right.
+    SetWindowPos( GetDlgItem(hwnd, IDC_FRMKEYBOARD_CMDMODIFY), 0, _
+                  mx, btnY, btnW, btnH, SWP_NOZORDER or SWP_NOACTIVATE )
+    SetWindowPos( GetDlgItem(hwnd, IDC_FRMKEYBOARD_CMDCLEAR), 0, _
+                  mx + btnW + gap, btnY, btnW, btnH, SWP_NOZORDER or SWP_NOACTIVATE )
+    SetWindowPos( GetDlgItem(hwnd, IDC_FRMKEYBOARD_CMDCANCEL), 0, _
+                  rc.right - mx - btnW, btnY, btnW, btnH, SWP_NOZORDER or SWP_NOACTIVATE )
+    SetWindowPos( GetDlgItem(hwnd, IDC_FRMKEYBOARD_CMDOK), 0, _
+                  rc.right - mx - (btnW * 2) - gap, btnY, btnW, btnH, SWP_NOZORDER or SWP_NOACTIVATE )
+
+end sub
+
+
+' ========================================================================================
+' Push the current theme into every child that carries its own colours.
+' ========================================================================================
+private sub frmKeyboard_ApplyTheme( byval hwnd as HWND )
+
+    PsListTree_SetBackColor( HWND_FRMKEYBOARD_LIST, ghPanel.BackColor )
+    PsListTree_SetScrollBarColors( HWND_FRMKEYBOARD_LIST, ghPanel.BackColorScrollBar, _
+                                   ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
+    ' The frame's colour lives here, not beside SetBorderWidth at creation, so it follows a
+    ' theme change. Same key the search box's drawn frame uses.
+    PsListTree_SetBorderColor( HWND_FRMKEYBOARD_LIST, ghEditor.Divider )
+
+    if HWND_FRMKEYBOARD_FILTER then
+        PsTextBox_SetBackColor( HWND_FRMKEYBOARD_FILTER, ghEditor.BackColorText )
+        PsTextBox_SetOuterBackColor( HWND_FRMKEYBOARD_FILTER, ghEditor.BackColorText )
+        PsTextBox_SetForeColor( HWND_FRMKEYBOARD_FILTER, ghEditor.ForeColorText )
+        PsTextBox_SetCueBannerColor( HWND_FRMKEYBOARD_FILTER, ghPanel.ForeColor )
+    end if
+
+    ' Same recipe as the Options dialog's OptionsTheme_FillButton, spelled out here rather
+    ' than called: that helper lives in modOptionsRows.inc, which the unity build includes
+    ' AFTER this file. Keep the two in step by eye -- a shared helper would have to move to
+    ' a module both can see, and that is a bigger change than this dialog should make.
+    dim as PSBUTTON_COLORS bc
+    bc.BackColor           = ghPanel.BackColorButton
+    bc.ForeColor           = ghPanel.ForeColorButton
+    bc.BorderColor         = ghEditor.Divider
+    bc.IconColor           = ghPanel.ForeColorButton
+    bc.BackColorHot        = ghPanel.BackColorButtonHot
+    bc.ForeColorHot        = ghPanel.ForeColorButtonHot
+    bc.BorderColorHot      = ghPanel.BackColorButtonHot
+    bc.IconColorHot        = ghPanel.ForeColorButtonHot
+    bc.BackColorPressed    = ghPanel.BackColorButtonHot
+    bc.ForeColorPressed    = ghPanel.ForeColorButtonHot
+    bc.BorderColorPressed  = ghPanel.BackColorButtonHot
+    bc.IconColorPressed    = ghPanel.ForeColorButtonHot
+    bc.BackColorDisabled   = ghPanel.BackColor
+    bc.ForeColorDisabled   = ghEditor.Divider
+    bc.BorderColorDisabled = ghEditor.Divider
+    bc.IconColorDisabled   = ghEditor.Divider
+
+    dim as HWND hBtn(3) = { GetDlgItem(hwnd, IDC_FRMKEYBOARD_CMDMODIFY), _
+                            GetDlgItem(hwnd, IDC_FRMKEYBOARD_CMDCLEAR), _
+                            GetDlgItem(hwnd, IDC_FRMKEYBOARD_CMDOK), _
+                            GetDlgItem(hwnd, IDC_FRMKEYBOARD_CMDCANCEL) }
+    for i as long = 0 to 3
+        if hBtn(i) = 0 then continue for
+        PsButton_SetColors( hBtn(i), @bc )
+        PsButton_Refresh( hBtn(i) )
+    next
+
+    Theme_ApplyDarkCaption( hwnd )
+    AfxRedrawWindow( hwnd )
+
+end sub
+
+
+' ========================================================================================
+' Is hCandidate hContainer, or anything nested inside it?
+'
+' Needed because every focusable thing on this dialog is a CONTAINER whose real tab stop is
+' an inner child -- see the tab-order assertions below.
+' ========================================================================================
+private function frmKeyboard_IsWithin( byval hCandidate as HWND, byval hContainer as HWND ) as boolean
+    if (hCandidate = 0) orelse (hContainer = 0) then return false
+    dim as HWND h = hCandidate
+    do while h <> 0
+        if h = hContainer then return true
+        h = GetParent( h )
+    loop
+    return false
 end function
 
 
 ' ========================================================================================
-' Process WM_DESTROY message for window/dialog: frmKeyboard
+' DOES THE LIST FIT, AND DOES THE FILTER WORK?              (TIKO_KEYBOARD_SELFTEST=1)
+'
+' Runs from frmKeyboard_Show once the controls exist and the list has been filled, so it
+' measures the real windows at the real DPI rather than the unscaled constants.
+'
+' The fit half exists for the same reason the Options dialog's does: this dialog is FIXED
+' SIZE, so a column set wider than the viewport does not grow a horizontal scrollbar -- the
+' User Keys column simply falls off the right edge, silently, and only above 100% DPI where
+' nobody is looking.
 ' ========================================================================================
-function frmKeyboard_OnDestroy( byval hwnd as HWND) as LRESULT
-    HWND_FRMKEYBOARD = 0
-    PostQuitMessage(0)
-    function = 0
-end function
+private sub frmKeyboard_RunLayoutSelfTest()
+
+    if environ("TIKO_KEYBOARD_SELFTEST") <> "1" then exit sub
+
+    dim as long nPass = 0, nFail = 0
+    dim as string sLine
+
+    #macro LAYASSERT( _cond_, _desc_ )
+        if (_cond_) then
+            nPass += 1
+        else
+            nFail += 1
+            sLine = "  FAIL: " & _desc_
+            ? sLine
+        end if
+    #endmacro
+
+    ? ""
+    ? "--- TIKO_KEYBOARD_SELFTEST (layout + filter) ---"
+
+    dim as RECT rcList
+    GetClientRect( HWND_FRMKEYBOARD_LIST, @rcList )
+
+    dim as long nCols = AfxScaleX(FRMKEYBOARD_COL_CATEGORY) + _
+                        AfxScaleX(FRMKEYBOARD_COL_DESCRIPTION) + _
+                        AfxScaleX(FRMKEYBOARD_COL_DEFAULTKEYS) + _
+                        AfxScaleX(FRMKEYBOARD_COL_USERKEYS)
+
+    sLine = "  list viewport " & str(rcList.right) & " x " & str(rcList.bottom) & _
+            " px, columns want " & str(nCols) & " px at this DPI"
+    ? sLine
+
+    LAYASSERT( rcList.right > 0 andalso rcList.bottom > 0, "the list has no client area" )
+    ' Slack for the vertical scrollbar, which this list always needs at ~104 rows.
+    LAYASSERT( nCols <= rcList.right - AfxScaleX(20), _
+               "the four columns are wider than the list viewport -- User Keys will clip" )
+
+    ' The footer must not eat the list: four buttons plus their gaps and margins.
+    dim as RECT rcClient
+    GetClientRect( HWND_FRMKEYBOARD, @rcClient )
+    dim as long nBtnRun = (AfxScaleX(FRMKEYBOARD_BTN_W) * 4) + (AfxScaleX(8) * 2) + _
+                          (AfxScaleX(FRMKEYBOARD_MARGIN) * 2)
+    LAYASSERT( nBtnRun <= rcClient.right, _
+               "the four footer buttons are wider than the dialog -- they would overlap" )
+
+    ' The filter frame must not run into the title.
+    LAYASSERT( AfxScaleX(FRMKEYBOARD_MARGIN) + AfxScaleX(FRMKEYBOARD_FILTER_W) < rcClient.right \ 2, _
+               "the filter box takes more than half the title band" )
+
+    ' ---- TAB ORDER: search box first, then the list. ----
+    '
+    ' MEASURED THROUGH THE DIALOG MANAGER, not inferred from the creation order that produces
+    ' it. These controls sit on an ordinary CWindow, so the tab order IS the child Z-order and
+    ' the only thing setting it is which control was created first -- a property with no
+    ' syntax of its own, invisible at the point where someone would break it by moving a
+    ' block. GetNextDlgTabItem is what the Tab key itself consults, so asking it is the only
+    ' check that cannot disagree with the real behaviour.
+    '
+    ' COMPARE BY CONTAINMENT, NEVER BY HANDLE EQUALITY. Both the search box and the list are
+    ' CONTAINERS -- a PsTextBox is a shell around a RichEdit, a PsListTree a shell around the
+    ' surface it paints -- and both carry WS_EX_CONTROLPARENT, so the dialog manager descends
+    ' into them and hands back the INNER child. Neither GetNextDlgTabItem nor GetFocus will
+    ' ever return the handle this file holds. The first version of these three assertions
+    ' compared handles directly and failed against a dialog that was behaving perfectly.
+    ' (Same trap as PsNumericUpDown, which ships PsNumericUpDown_HasFocus for exactly this.)
+    scope
+        dim as HWND hFirst  = GetNextDlgTabItem( HWND_FRMKEYBOARD, 0, false )
+        dim as HWND hSecond = GetNextDlgTabItem( HWND_FRMKEYBOARD, hFirst, false )
+
+        LAYASSERT( frmKeyboard_IsWithin( hFirst,  HWND_FRMKEYBOARD_FILTER ), _
+                   "the first tab stop is not the search box" )
+        LAYASSERT( frmKeyboard_IsWithin( hSecond, HWND_FRMKEYBOARD_LIST ), _
+                   "the second tab stop is not the list" )
+        LAYASSERT( hFirst <> hSecond, "the first two tab stops are the same window" )
+
+        ' And the dialog OPENS on the search box. Focus is set explicitly because
+        ' IsDialogMessage will not Tab anywhere until some child already holds it.
+        LAYASSERT( frmKeyboard_IsWithin( GetFocus(), HWND_FRMKEYBOARD_FILTER ), _
+                   "the dialog did not open with focus in the search box" )
+    end scope
+
+    ' ---- THE FILTER. Counts, against a needle each column can be asked about. ----
+    ' Not vacuous: each case names a column the match could ONLY have come from, so a filter
+    ' that quietly searched just the description would fail three of the four.
+    dim as long nAll = PsListTree_GetCount( HWND_FRMKEYBOARD_LIST )
+    LAYASSERT( nAll = (ubound(gKeysWork) - lbound(gKeysWork) + 1), _
+               "an empty filter does not show every row" )
+
+    #macro FILTERCOUNT( _needle_, _out_ )
+        gKeysFilter = _needle_
+        frmKeyboard_BuildList()
+        _out_ = PsListTree_GetCount( HWND_FRMKEYBOARD_LIST )
+    #endmacro
+
+    ' Ground truth for ONE column, computed straight from the model. Comparing the filter's
+    ' answer against this is what makes the per-column cases mean anything.
+    '
+    ' THE FIRST VERSION OF THESE ASSERTED ONLY "0 < hits < all" AND WAS WRONG. An A/B that
+    ' cut frmKeyboard_RowMatchesFilter down to the description column alone left the CATEGORY
+    ' case GREEN -- because every one of tiko's eight category names also appears in some
+    ' command's description ("Debug" is the Debug category, and it is also in "Start
+    ' Debugging"). The assertion was named for the category column and was in fact satisfied
+    ' by the description column. There is no needle that avoids this for any category, so the
+    ' fix is to compare COUNTS: all-columns "Debug" matches the 8 Debug commands, while
+    ' description-only matches 2.
+    #macro COUNTIN( _field_, _needle_, _out_ )
+        _out_ = 0
+        for i as long = lbound(gKeysWork) to ubound(gKeysWork)
+            if instr( ucase(_field_), ucase(_needle_) ) then _out_ += 1
+        next
+    #endmacro
+
+    dim as long nHits = 0, nWant = 0
+
+    ' CATEGORY.
+    COUNTIN( gKeysWork(i).wszCategory, "Debug", nWant )
+    FILTERCOUNT( "Debug", nHits )
+    LAYASSERT( nWant > 0, "the CATEGORY probe needle matches nothing -- the test is vacuous" )
+    LAYASSERT( nHits = nWant, _
+               "filtering on a CATEGORY matched " & str(nHits) & " rows, expected " & str(nWant) )
+
+    ' DESCRIPTION.
+    COUNTIN( gKeysWork(i).wszDescription, "bookmark", nWant )
+    FILTERCOUNT( "bookmark", nHits )
+    LAYASSERT( nWant > 0, "the DESCRIPTION probe needle matches nothing -- the test is vacuous" )
+    LAYASSERT( nHits = nWant, _
+               "filtering on a DESCRIPTION matched " & str(nHits) & " rows, expected " & str(nWant) )
+
+    ' DEFAULT KEYS.
+    COUNTIN( gKeysWork(i).wszDefaultKeys, "Ctrl+Shift+F", nWant )
+    FILTERCOUNT( "Ctrl+Shift+F", nHits )
+    LAYASSERT( nWant > 0, "the DEFAULT KEYS probe needle matches nothing -- the test is vacuous" )
+    LAYASSERT( nHits = nWant, _
+               "filtering on DEFAULT KEYS matched " & str(nHits) & " rows, expected " & str(nWant) )
+
+    ' USER KEYS. Nothing has a user binding by default, so one is seeded, filtered on, and
+    ' removed again -- otherwise the fourth column is the one the suite never exercises.
+    scope
+        dim as DWSTRING wszKeep = gKeysWork(0).wszUserKeys
+        gKeysWork(0).wszUserKeys = "Ctrl+Alt+Shift+F11"
+        FILTERCOUNT( "Alt+Shift+F11", nHits )
+        LAYASSERT( nHits = 1, "filtering on USER KEYS matched " & str(nHits) & " rows, expected 1" )
+        gKeysWork(0).wszUserKeys = wszKeep
+    end scope
+
+    ' Case-insensitive, and the same needle in the other case must give the same count.
+    dim as long nUpper = 0, nLower = 0
+    FILTERCOUNT( "BOOKMARK", nUpper )
+    FILTERCOUNT( "bookmark", nLower )
+    LAYASSERT( nUpper = nLower, "the filter is case sensitive" )
+
+    ' A needle nothing can match empties the list rather than falling back to everything.
+    FILTERCOUNT( "zzzznotakeybinding", nHits )
+    LAYASSERT( nHits = 0, "an unmatchable filter left " & str(nHits) & " rows showing" )
+
+    ' Restore.
+    gKeysFilter = ""
+    frmKeyboard_BuildList()
+    LAYASSERT( PsListTree_GetCount( HWND_FRMKEYBOARD_LIST ) = nAll, _
+               "clearing the filter did not restore every row" )
+
+    sLine = "--- TIKO_KEYBOARD_SELFTEST (layout): " & str(nPass) & " passed, " & str(nFail) & " failed ---"
+    ? sLine
+    ? ""
+
+end sub
 
 
 ' ========================================================================================
-' Processes messages for the subclassed ListBox window.
+' Window procedure
 ' ========================================================================================
-function frmKeyboard_ListView_SubclassProc ( _
-            byval hwnd   as HWND, _                 ' // Control window handle
-            byval uMsg   as UINT, _                 ' // Type of message
-            byval wParam as WPARAM, _               ' // First message parameter
-            byval lParam as LPARAM, _               ' // Second message parameter
-            byval uIdSubclass as UINT_PTR, _        ' // The subclass ID
-            byval dwRefData as DWORD_PTR _          ' // Pointer to reference data
-            ) as LRESULT
-    
-
-    ' Convert our ENTER key presses into LBUTTONDBLCLK to process them similarly
-    if (uMsg = WM_KEYUP) and (loword(wParam) = VK_RETURN) then uMsg = WM_LBUTTONDBLCLK
-    
-    select case uMsg
-
-        case WM_LBUTTONDBLCLK
-            PostMessage( GetParent(hwnd), MSG_USER_SHOW_KEYBOARDEDIT, 0, 0 )
-            exit function
-            
-        case WM_CHAR   ' prevent the annoying beep
-            if wParam = VK_RETURN then return 0
-
-        case WM_DESTROY
-            ' REQUIRED: Remove control subclassing
-            RemoveWindowSubclass( hwnd, @frmKeyboard_ListView_SubclassProc, uIdSubclass )
-
-    end select
-
-    ' Default processing of Windows messages
-    function = DefSubclassProc( hwnd, uMsg, wParam, lParam )
-
-end function
-
-' ========================================================================================
-' frmKeyboard Window procedure
-' ========================================================================================
-function frmKeyboard_WndProc( _
+private function frmKeyboard_WndProc( _
             byval hwnd   as HWND, _
             byval uMsg   as UINT, _
             byval wParam as WPARAM, _
@@ -649,41 +953,55 @@ function frmKeyboard_WndProc( _
             ) as LRESULT
 
     select case uMsg
-        HANDLE_MSG (hwnd, WM_CREATE,      frmKeyboard_OnCreate)
-        HANDLE_MSG (hwnd, WM_CLOSE,       frmKeyboard_OnClose)
-        HANDLE_MSG (hwnd, WM_DESTROY,     frmKeyboard_OnDestroy)
-        HANDLE_MSG (hwnd, WM_COMMAND,     frmKeyboard_OnCommand)
-        HANDLE_MSG (hwnd, WM_NOTIFY,      frmKeyboard_OnNotify)
 
-        case MSG_USER_SHOW_KEYBOARDEDIT   
-            dim as long nCurSel = ListView_GetSelection( HWND_FRMKEYBOARD_LISTVIEW )
-            if nCurSel < 0 then return 0 
-            dim wszText as wstring * MAX_PATH
-            LV_GetItemText( HWND_FRMKEYBOARD_LISTVIEW, nCurSel, 0, @wszText, MAX_PATH) 
-            dim as long idx = val( wszText )
-            if (idx >= lbound(gKeys)) and (idx <= ubound(gKeys)) then
-                gKeysEdit = gKeys(idx)
-                frmKeyboardEdit_Show( hwnd )
-                gKeys(idx) = gKeysEdit
+        case WM_CREATE
+            ' Modal: keep the rest of the app out while this is up.
+            DisableAllModeless()
+            return 0
 
-                ' Update the Default keys column because it could have changed (DISABLED)
-                wszText = gKeysEdit.wszDefaultKeys
-                if gKeys(idx).bDefaultDisabled then
-                    wszText = wszText & " (DISABLED)"
-                end if   
-                LV_SetItemText( HWND_FRMKEYBOARD_LISTVIEW, nCurSel, 4, wszText, MAX_PATH ) 
-                
-                ' Update the UserKeys column because it could have changed
-                wszText = gKeysEdit.wszUserKeys
-                LV_SetItemText( HWND_FRMKEYBOARD_LISTVIEW, nCurSel, 5, wszText, MAX_PATH ) 
-                frmKeyboard_CheckForKeyConflict( wszText, nCurSel )
-            end if
-            ListView_SelectItem( HWND_FRMKEYBOARD_LISTVIEW, nCurSel )
-            SetFocus( HWND_FRMKEYBOARD_LISTVIEW )
+        case WM_ERASEBKGND
+            ' The whole client is painted in WM_PAINT through one buffer, so letting the
+            ' system erase first would only flicker.
+            return 1
+
+        case WM_PAINT
+            return frmKeyboard_OnPaint( hwnd )
+
+        case WM_SIZE
+            frmKeyboard_PositionWindows( hwnd )
+            return 0
+
+        case WM_COMMAND
+            ' PsButton routes through its click callback, not WM_COMMAND. What still arrives
+            ' here is IDCANCEL, which IsDialogMessage synthesises for the Escape key.
+            select case loword(wParam)
+                case IDCANCEL
+                    SendMessage( hwnd, WM_CLOSE, 0, 0 )
+                    return 0
+            end select
+
+        case MSG_USER_SHOW_KEYBOARDEDIT
+            frmKeyboard_DoModify()
+            return 0
+
+        case WM_CLOSE
+            ' NOTHING IS SAVED HERE. Closing used to mean saving, which is why the dialog had
+            ' no way to abandon an edit; the commit is on the OK path only. Reaching this by
+            ' any route discards gKeysWork() and leaves gKeys(), keybindings.ini and the
+            ' accelerator table exactly as they were found.
+            EnableAllModeless()
+            DestroyWindow( hwnd )
+            return 0
+
+        case WM_DESTROY
+            HWND_FRMKEYBOARD        = 0
+            HWND_FRMKEYBOARD_LIST   = 0
+            HWND_FRMKEYBOARD_FILTER = 0
+            PostQuitMessage(0)
+            return 0
 
     end select
-    
-    ' for messages that we don't deal with
+
     function = DefWindowProc( hwnd, uMsg, wParam, lParam )
 
 end function
@@ -694,92 +1012,185 @@ end function
 ' ========================================================================================
 function frmKeyboard_Show( byval hWndParent as HWND ) as LRESULT
 
-    dim hCtrl as HWND
+    ' Seed the staging copy BEFORE any control exists -- everything below is built from
+    ' gKeysWork(), and gKeys() is not touched again unless OK commits.
+    frmKeyboard_LoadWork()
+    frmKeyboard_RescanConflicts()
+    gKeysFilter = ""
 
-    '  Create the main window and child controls
+
     dim pWindow as CWindow ptr = new CWindow
 
-    HWND_FRMKEYBOARD = _
-    pWindow->Create(hWndParent, L(220,"Keyboard Shortcuts"), _
+    HWND_FRMKEYBOARD = pWindow->Create( hWndParent, L(220,"Keyboard Shortcuts"), _
         @frmKeyboard_WndProc, 0, 0, 0, 0, _
         WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
         WS_EX_DLGMODALFRAME or WS_EX_CONTROLPARENT or WS_EX_LEFT )
-    pWindow->SetClientSize(622, 436)
-    pWindow->Center(pWindow->hWindow, hWndParent)
+    pWindow->SetClientSize( FRMKEYBOARD_CLIENT_W, FRMKEYBOARD_CLIENT_H )
+    pWindow->Center( pWindow->hWindow, hWndParent )
 
-    HWND_FRMKEYBOARD_LISTVIEW = _
-        pWindow->AddControl("LISTVIEW", , IDC_FRMKEYBOARD_LIST1, "", 0, 0, 622, 364, _
-        WS_CHILD or WS_VISIBLE or WS_TABSTOP or LVS_REPORT or LVS_SHOWSELALWAYS or LVS_SINGLESEL, _
-        WS_EX_LEFT or WS_EX_RIGHTSCROLLBAR)
-    pWindow->SetControlSubclass(HWND_FRMKEYBOARD_LISTVIEW, @frmKeyboard_ListView_SubclassProc, IDC_FRMKEYBOARD_LIST1, @pWindow)
-                                        
-    ' Make the listview header flat
-    ListView_MakeHeaderFlat( HWND_FRMKEYBOARD_LISTVIEW )
-            
-    ' Add some extended styles
-    dim dwExStyle as DWORD
-    dwExStyle = ListView_GetExtendedListViewStyle( HWND_FRMKEYBOARD_LISTVIEW )
-    dwExStyle = dwExStyle or LVS_EX_FULLROWSELECT or LVS_EX_GRIDLINES or LVS_EX_DOUBLEBUFFER or LVS_EX_FLATSB
-    ListView_SetExtendedListViewStyle( HWND_FRMKEYBOARD_LISTVIEW, dwExStyle )
+    ' ---- the filter box, CREATED FIRST ------------------------------------------------
+    '
+    ' CREATION ORDER IS THE TAB ORDER. These controls live on an ordinary CWindow, not a
+    ' dialog template, so there is no ordinal to set: GetNextDlgTabItem walks the child
+    ' Z-ORDER, and Z-order is creation order. The filter box is therefore built before the
+    ' list so that Tab goes search -> list -> Modify -> Reset -> OK -> Cancel. Moving either
+    ' block past the other silently reorders the dialog.
+    '
+    ' NO BORDER and NO CORNER RADIUS of its own: the dialog paints one rounded frame around
+    ' the magnifying glyph AND this box together, so the glyph reads as being inside the
+    ' field. A child window paints over anything drawn under it, so the box is inset within
+    ' that frame rather than straddling it.
+    HWND_FRMKEYBOARD_FILTER = PsTextBox_Create( HWND_FRMKEYBOARD, IDC_FRMKEYBOARD_FILTER )
+    PsTextBox_SetFont( HWND_FRMKEYBOARD_FILTER, ghFont(GUIFONT_11) )
+    PsTextBox_SetBorderWidth( HWND_FRMKEYBOARD_FILTER, 0 )
+    PsTextBox_SetCornerRadius( HWND_FRMKEYBOARD_FILTER, 0 )
+    PsTextBox_SetCueBannerText( HWND_FRMKEYBOARD_FILTER, L(497,"Filter shortcuts...") )
+    PsTextBox_SetChangeCallback( HWND_FRMKEYBOARD_FILTER, @frmKeyboard_FilterChanged )
 
-    ' Configure the ListView
-    dim as HWND hLV = HWND_FRMKEYBOARD_LISTVIEW
-    ListView_AddColumn( hLV, 0, "idMenu", 0 )  ' hidden
-    ListView_AddColumn( hLV, 1, "", pWindow->ScaleX(10) )  ' left padding
-    ListView_AddColumn( hLV, 2, "Category", pWindow->ScaleX(90) )
-    ListView_AddColumn( hLV, 3, "Description", pWindow->ScaleX(250) )
-    ListView_AddColumn( hLV, 4, "Default Keys", pWindow->ScaleX(125) )
-    ListView_AddColumn( hLV, 5, "User Keys", pWindow->ScaleX(125) )
-    
-    pWindow->AddControl("BUTTON", , IDC_FRMKEYBOARD_CMDMODIFY, L(433, "Modify"), 8, 388, 74, 28, _
-        WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_TEXT or BS_PUSHBUTTON or BS_NOTIFY or BS_CENTER or BS_VCENTER, _
-        WS_EX_LEFT or WS_EX_LTRREADING)
-    pWindow->AddControl("BUTTON", , IDC_FRMKEYBOARD_CMDCLEAR, L(434, "Clear"), 90, 388, 74, 28, _
-        WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_TEXT or BS_PUSHBUTTON or BS_NOTIFY or BS_CENTER or BS_VCENTER, _
-        WS_EX_LEFT or WS_EX_LTRREADING)
-    pWindow->AddControl("BUTTON", , IDCANCEL, L(161,"Close"), 536, 388, 74, 28, _
-        WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_TEXT or BS_PUSHBUTTON or BS_NOTIFY or BS_CENTER or BS_VCENTER, _
-        WS_EX_LEFT or WS_EX_LTRREADING)
+    ' ---- the list ---------------------------------------------------------------------
+    HWND_FRMKEYBOARD_LIST = PsListTree_Create( HWND_FRMKEYBOARD, IDC_FRMKEYBOARD_LIST1 )
 
-    hCtrl = pWindow->AddControl("LABEL", , IDC_FRMKEYBOARD_LBLCONFLICT, "", 168, 394, 350, 20, _
-        WS_CHILD or WS_VISIBLE or WS_CLIPSIBLINGS or WS_CLIPCHILDREN or SS_CENTER or SS_NOTIFY, _
-        WS_EX_LEFT or WS_EX_LTRREADING)
+    PsListTree_AddColumn( HWND_FRMKEYBOARD_LIST, L(493,"Category"),     pWindow->ScaleX(FRMKEYBOARD_COL_CATEGORY) )
+    PsListTree_AddColumn( HWND_FRMKEYBOARD_LIST, L(255,"Description"),  pWindow->ScaleX(FRMKEYBOARD_COL_DESCRIPTION) )
+    PsListTree_AddColumn( HWND_FRMKEYBOARD_LIST, L(494,"Default Keys"), pWindow->ScaleX(FRMKEYBOARD_COL_DEFAULTKEYS) )
+    PsListTree_AddColumn( HWND_FRMKEYBOARD_LIST, L(495,"User Keys"),    pWindow->ScaleX(FRMKEYBOARD_COL_USERKEYS) )
+    PsListTree_SetFillColumn( HWND_FRMKEYBOARD_LIST, 1 )      ' Description absorbs the slack
+    PsListTree_ShowHeader( HWND_FRMKEYBOARD_LIST, true )
 
-    ' Load the listview with these temp keys
-    for i as long = lbound(gKeys) to ubound(gKeys)
-        LV_InsertItem( hLV, i, 0, str(i) )  ' array index (hidden column)
-        LV_InsertItem( hLV, i, 1, "" ) 
-        LV_InsertItem( hLV, i, 2, gKeys(i).wszCategory ) 
-        LV_InsertItem( hLV, i, 3, gKeys(i).wszDescription ) 
-        dim as DWSTRING wszTemp = gKeys(i).wszDefaultKeys
-        if gKeys(i).bDefaultDisabled then
-            wszTemp = wszTemp & " (DISABLED)"
-        end if
-        LV_InsertItem( hLV, i, 4, wszTemp ) 
-        LV_InsertItem( hLV, i, 5, gKeys(i).wszUserKeys ) 
-    next
+    PsListTree_SetPaintCallback( HWND_FRMKEYBOARD_LIST, @frmKeyboard_ListPaintRow )
+    PsListTree_SetHeaderPaintCallback( HWND_FRMKEYBOARD_LIST, @frmKeyboard_ListPaintHeader )
+    ' Double-click AND Enter, as one gesture. Setting this is also what makes the control
+    ' claim Enter -- see the callback.
+    PsListTree_SetActivateCallback( HWND_FRMKEYBOARD_LIST, @frmKeyboard_ListActivateCallback )
+    PsListTree_SetTooltipCallback( HWND_FRMKEYBOARD_LIST, @frmKeyboard_ListTooltip )
+    PsListTree_SetHeaderTooltipCallback( HWND_FRMKEYBOARD_LIST, @frmKeyboard_HeaderTooltip )
+    PsListTree_SetFont( HWND_FRMKEYBOARD_LIST, ghFont(GUIFONT_11) )
+    ' UNSCALED: PsListTree scales what it is handed, so a pre-scaled value is scaled twice.
+    PsListTree_SetRowHeight( HWND_FRMKEYBOARD_LIST, FRMKEYBOARD_ROW_H )
+    ' The border is RAW PIXELS and deliberately NOT DPI-scaled -- a chrome hairline should
+    ' stay a hairline. PsListTree is the odd one out in its own API here: RowHeight above IS
+    ' scaled internally, this is not. Same width and colour as the search box's frame, so the
+    ' two read as one family. The colour is pushed in frmKeyboard_ApplyTheme.
+    PsListTree_SetBorderWidth( HWND_FRMKEYBOARD_LIST, 1 )
 
-    ListView_SelectItem( hLV, 0 )
-    SetFocus( hLV )    
-    
+    ' ---- the four buttons -------------------------------------------------------------
+    dim as HWND hModify = PsButton_Create( HWND_FRMKEYBOARD, IDC_FRMKEYBOARD_CMDMODIFY )
+    PsButton_SetText( hModify, L(433,"Modify") )
+    PsButton_SetFont( hModify, ghFont(GUIFONT_11) )
+    PsButton_SetClickCallback( hModify, @frmKeyboard_ButtonClickCallback )
+
+    ' "Reset", not "Clear": it restores the row to its shipped default rather than emptying
+    ' it -- it re-enables a suppressed default as well as dropping the user keys.
+    dim as HWND hReset = PsButton_Create( HWND_FRMKEYBOARD, IDC_FRMKEYBOARD_CMDCLEAR )
+    PsButton_SetText( hReset, L(498,"Reset") )
+    PsButton_SetFont( hReset, ghFont(GUIFONT_11) )
+    PsButton_SetClickCallback( hReset, @frmKeyboard_ButtonClickCallback )
+
+    dim as HWND hOK = PsButton_Create( HWND_FRMKEYBOARD, IDC_FRMKEYBOARD_CMDOK )
+    PsButton_SetText( hOK, L(0,"OK") )
+    PsButton_SetFont( hOK, ghFont(GUIFONT_11) )
+    PsButton_SetDefault( hOK, true )
+    PsButton_SetClickCallback( hOK, @frmKeyboard_ButtonClickCallback )
+
+    dim as HWND hCancel = PsButton_Create( HWND_FRMKEYBOARD, IDC_FRMKEYBOARD_CMDCANCEL )
+    PsButton_SetText( hCancel, L(1,"Cancel") )
+    PsButton_SetFont( hCancel, ghFont(GUIFONT_11) )
+    PsButton_SetClickCallback( hCancel, @frmKeyboard_ButtonClickCallback )
+
+    ShowWindow( HWND_FRMKEYBOARD_LIST, SW_SHOW )
+    ShowWindow( HWND_FRMKEYBOARD_FILTER, SW_SHOW )
+    ShowWindow( hModify, SW_SHOW )
+    ShowWindow( hReset, SW_SHOW )
+    ShowWindow( hOK, SW_SHOW )
+    ShowWindow( hCancel, SW_SHOW )
+
+    frmKeyboard_ApplyTheme( HWND_FRMKEYBOARD )
+    frmKeyboard_PositionWindows( HWND_FRMKEYBOARD )
+    frmKeyboard_BuildList()
+
     ShowWindow( HWND_FRMKEYBOARD, SW_SHOW )
-    UpdateWindow HWND_FRMKEYBOARD
+    UpdateWindow( HWND_FRMKEYBOARD )
 
-    ' Message loop (modal)
+    ' FOCUS STARTS IN THE SEARCH BOX, so the dialog opens ready to be typed at -- the usual
+    ' reason for opening it is to find one command among a hundred.
+    '
+    ' It also has to be set explicitly for a second, unrelated reason: IsDialogMessage
+    ' ignores Tab until a child already holds the focus, and an ordinary CWindow has no
+    ' dialog manager to arrange that. (See the WS_EX_CONTROLPARENT section of
+    ' C:\dev\Learnings.md.)
+    SetFocus( HWND_FRMKEYBOARD_FILTER )
+
+    ' AFTER the SetFocus above, deliberately: one of its assertions is that the dialog opens
+    ' with the focus in the search box, and running it any earlier would sample GetFocus
+    ' before anything had been focused at all -- a test that reads the wrong instant and
+    ' reports a failure the user would never see.
+    frmKeyboard_RunLayoutSelfTest()
+
+    ' Open the Assign Shortcut dialog straight away on the first row, so it can be driven
+    ' without a human clicking Modify. Companion to TIKO_KEYBOARD_AUTOOPEN.
+    if environ("TIKO_KEYBOARD_AUTOEDIT") = "1" then
+        PostMessage( HWND_FRMKEYBOARD, MSG_USER_SHOW_KEYBOARDEDIT, 0, 0 )
+    end if
+
+    ' ---- message loop -----------------------------------------------------------------
+    ' Its own loop, not CWindow.DoEvents: that has no *_FilterMessage hooks, and the filter
+    ' box needs one.
     dim uMsg as MSG
     while GetMessage( @uMsg, null, 0, 0 )
+
+        ' MANDATORY. The filter box's right-click menu is a PsPopupMenu; without this it has
+        ' no keyboard navigation and never closes on an outside click.
+        if PsTextBox_FilterMessage( @uMsg ) then continue while
+
+        ' ESCAPE cancels -- handled explicitly, and AFTER the popup filter above so an open
+        ' context menu closes on Escape first rather than the whole dialog going with it.
         if (uMsg.message = WM_KEYDOWN) andalso (uMsg.wParam = VK_ESCAPE) then
             SendMessage( HWND_FRMKEYBOARD, WM_CLOSE, 0, 0 )
+            continue while
         end if
-        if IsDialogMessage( HWND_FRMKEYBOARD, @uMsg ) = 0 THEN
+
+        ' DOWN ARROW IN THE SEARCH BOX MOVES TO THE LIST, the way Tab does. Type a few
+        ' letters, press Down, and you are on the results -- without lifting a hand to the
+        ' mouse or hunting for Tab.
+        '
+        ' Gated on the focus actually being IN the search box: once the list has it, Down is
+        ' the list's own row navigation and must not be stolen. Tested by CONTAINMENT because
+        ' the search box is a PsTextBox, a shell around a RichEdit -- GetFocus returns the
+        ' inner child and never the handle this file holds. (Same trap as the tab-order
+        ' assertions; see frmKeyboard_IsWithin.)
+        '
+        ' Safe to claim: the box is single-line, so Down does nothing there anyway. It sits
+        ' after PsTextBox_FilterMessage so that an open right-click menu gets its own Down for
+        ' menu navigation first.
+        ' Each test hoisted into its own boolean: the two message comparisons yield
+        ' non-booleans while IsWithin yields a boolean, and andalso-ing the kinds together is
+        ' fbc warning 38.
+        scope
+            dim as boolean bDownKey = ((uMsg.message = WM_KEYDOWN) andalso (uMsg.wParam = VK_DOWN))
+            dim as boolean bInFilter = frmKeyboard_IsWithin( GetFocus(), HWND_FRMKEYBOARD_FILTER )
+            if bDownKey andalso bInFilter then
+                SetFocus( HWND_FRMKEYBOARD_LIST )
+                continue while
+            end if
+        end scope
+
+        ' ENTER IS NOT INTERCEPTED HERE, deliberately. The list claims it itself (that is
+        ' what PsListTree_SetActivateCallback turns on, along with the WM_CHAR swallow that
+        ' stops the system beeping), so it opens the editor when the list has focus and
+        ' falls through to the default OK button when anything else does. Catching it in the
+        ' pump would break the second half of that.
+        if IsDialogMessage( HWND_FRMKEYBOARD, @uMsg ) = 0 then
             TranslateMessage( @uMsg )
             DispatchMessage( @uMsg )
         end if
-    WEND
-    function = uMsg.wParam
-    
-    ' Delete the CWindow class manually allocated memory 
+    wend
+
     if pWindow then delete(pWindow)
 
-end function
+    erase gKeysWork
+    erase gKeysConflict
+    gKeysFilter = ""
 
+    function = 0
+
+end function

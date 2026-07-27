@@ -14,7 +14,7 @@
 '  frmOptionsKeywords.inc  --  the three Keywords pages (see frmOptionsKeywords.bi).
 
 #include once "frmOptionsKeywords.bi"
-#include once "frmOptions.bi"          ' HWND_FRMOPTIONS_SCROLL, OPTPAGE_KEYWORDS*
+#include once "frmOptions.bi"          ' HWND_FRMOPTIONS_PAGE, OPTPAGE_KEYWORDS*
 #include once "modOptionsRows.bi"      ' shared padding + theme helpers
 #include once "clsConfig.bi"
 
@@ -206,7 +206,8 @@ function frmOptionsKeywords_Layout( byval nPage as long, byval hPage as HWND, by
     dim as long sbW       = AfxScaleX(SCROLLBAR_WIDTH_PANEL)
     dim as long gap       = AfxScaleX(4)
 
-    dim as long viewH = PsScrollPanel_GetViewportHeight( HWND_FRMOPTIONS_SCROLL )
+    dim as RECT rcVP : GetClientRect( HWND_FRMOPTIONS_PAGE, @rcVP )
+    dim as long viewH = rcVP.bottom - rcVP.top
     if viewH <= 0 then viewH = AfxScaleY(FRMOPTIONS_CLIENT_H - FRMOPTIONS_TITLE_H - FRMOPTIONS_FOOTER_H)
 
     dim as long tbX = padLeft

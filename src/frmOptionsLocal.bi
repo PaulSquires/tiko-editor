@@ -14,10 +14,15 @@
 '  frmOptionsLocal.bi
 '
 '  The Localization page. Like Compiler Setup, this is a panel-hosted page (controls on the
-'  scroll panel's page window, driven by build/layout/paint/show hooks) rather than a child
-'  form. The file-editing business logic is unchanged from the old page -- only the controls
-'  were swapped for the reusable family and the "current file" store moved from a groupbox
-'  caption to a module variable.
+'  dialog's page container, driven by build/layout/paint/show hooks) rather than a child form.
+'  The file-editing business logic is unchanged from the old page -- only the controls were
+'  swapped for the reusable family and the "current file" store moved from a groupbox caption
+'  to a module variable.
+'
+'  THE PAGE IS A LIST OF INSTALLED LANGUAGES plus a command stack beside it, and -- while a
+'  language is being edited -- a phrase list whose THIRD column is edited in place. There is no
+'  file-open dialog on the Select path any more (the languages list is the picker) and there are
+'  no English / translation textboxes (the third column replaced them).
 
 #pragma once
 
@@ -31,8 +36,8 @@
 #Define IDC_FRMOPTIONSLOCAL_CMDDELETE              1004
 #Define IDC_FRMOPTIONSLOCAL_CMDLOCALIZATION         1006
 #Define IDC_FRMOPTIONSLOCAL_LSTPHRASES              1008
-#Define IDC_FRMOPTIONSLOCAL_TXTENGLISH              1010
-#Define IDC_FRMOPTIONSLOCAL_TXTTRANSLATE            1012
+#Define IDC_FRMOPTIONSLOCAL_LSTLANGUAGES            1014
+#Define IDC_FRMOPTIONSLOCAL_CMDCLOSE                1016
 
 ' Called from frmOptions_SaveEditorOptions on OK, and internally before switching files.
 declare function frmOptionsLocal_LocalEditCheck() as long
@@ -41,6 +46,11 @@ declare function frmOptionsLocal_LocalEditCheck() as long
 ' the old FRAMELOCALIZATION groupbox caption; read by SaveEditorOptions to update
 ' gConfig.LocalizationFile. Seeded when the dialog opens.
 extern gLocalCurrentFile as DWSTRING
+
+' TRUE once the SELECTED language's own file has been rewritten during this dialog session --
+' the only editing that the running application would notice, and so the only editing that
+' warrants the "changes apply next run" notice. Read by frmOptions_SaveEditorOptions.
+extern gLocalSelectedEdited as boolean
 
 declare sub      frmOptionsLocal_SeedFromConfig()
 declare function frmOptionsLocal_OwnsPage( byval nPage as long ) as boolean

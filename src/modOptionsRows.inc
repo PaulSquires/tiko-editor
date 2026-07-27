@@ -12,7 +12,7 @@
 '    GNU General Public License for more details.
 
 #include once "modOptionsRows.bi"
-#include once "frmOptions.bi"     ' IDC_FRMOPTIONS_FIRSTROW, HWND_FRMOPTIONS_SCROLL
+#include once "frmOptions.bi"     ' IDC_FRMOPTIONS_FIRSTROW, HWND_FRMOPTIONS_PAGE
 #include once "clsConfig.bi"
 
 
@@ -101,6 +101,18 @@ private sub OptionsRows_SyncEnabled( byval nPage as long )
             case OPT_NUMERIC:  PsNumericUpDown_SetEnabled( gOptRows(i).hCtrl, bEnable )
             case OPT_COMBO:    PsComboBox_SetEnabled( gOptRows(i).hCtrl, bEnable )
         end select
+        ' The control repaints itself, but the row's TITLE is painted by the PAGE
+        ' (OptionsRows_PaintPage picks its colour from OptionsRows_IsRowEnabled), so the page
+        ' has to be told the label is stale. Without this the gated control greys and ungreys
+        ' while its label keeps whatever colour it had when the page was last painted.
+        ' Parent is taken off the control rather than from a page lookup so this stays correct
+        ' whether the page sits on the PsScrollPanel or on the plain container -- rcLabel is in
+        ' that window's client coordinates either way.
+        dim as HWND hPageWnd = GetParent( gOptRows(i).hCtrl )
+        if hPageWnd then
+            dim as RECT rcLabel = gOptRows(i).rcLabel
+            InvalidateRect( hPageWnd, @rcLabel, true )
+        end if
     next
 end sub
 
@@ -184,7 +196,7 @@ sub OptionsRows_Init()
     OptionsRows_Add( OPTPAGE_GENERAL, OPT_TOGGLE,  91, @gOptWork.CheckUpdates )      ' "Check for Updates"
 
     ' ---- Code Editor -----------------------------------------------------------------
-    ' Everything the old Code Editor page carried, in its original order...
+    ' Everything the old Code Editor page carried, in its original order.
     OptionsRows_Add( OPTPAGE_EDITOR, OPT_TOGGLE, 114, @gOptWork.SyntaxHighlighting )    ' "Syntax highlighting"
     OptionsRows_Add( OPTPAGE_EDITOR, OPT_TOGGLE, 116, @gOptWork.ConfineCaret )          ' "Confine caret to text"
     OptionsRows_Add( OPTPAGE_EDITOR, OPT_TOGGLE, 117, @gOptWork.HighlightCurrentLine )  ' "Highlight current line"
@@ -198,27 +210,30 @@ sub OptionsRows_Init()
     ' is gated on the toggle above it -- the same relationship the old page expressed by
     ' putting the field directly underneath its checkbox.
     OptionsRows_Add( OPTPAGE_EDITOR, OPT_NUMERIC, 307, @gOptWork.RightEdgePosition, _
-                     @gOptWork.RightEdge, 1, 500 )                                      ' "Position"
+                     @gOptWork.RightEdge, 1, 500 )                                      ' "Edge margin position"
     OptionsRows_Add( OPTPAGE_EDITOR, OPT_TOGGLE, 407, @gOptWork.PositionMiddle )        ' "Position searches to middle of screen"
     OptionsRows_Add( OPTPAGE_EDITOR, OPT_TOGGLE, 414, @gOptWork.ClickToggleBreakpoint ) ' "Margin click toggles Breakpoint rather than Bookmark"
-    OptionsRows_Add( OPTPAGE_EDITOR, OPT_NUMERIC, 127, @gOptWork.TabSize, 0, 1, 64 )    ' "Tab Size"
-    OptionsRows_Add( OPTPAGE_EDITOR, OPT_COMBO,   128, @gOptWork.KeywordCase, 0, 0, 0, _
-                     L(130,"Lower Case")  & chr(9) & _
-                     L(131,"Upper Case")  & chr(9) & _
-                     L(272,"Mixed Case")  & chr(9) & _
-                     L(132,"Original Case") )                                           ' "Case"
+    ' TAB SIZE and CASE were here. They are font-shaped settings, not editing behaviour, so
+    ' they moved to the bottom of the Editor Font page (frmOptionsColors) as native controls.
+    ' OptionsWork_Load/Commit still marshal gOptWork.TabSize / .KeywordCase either way -- those
+    ' fields are independent of which page edits them.
 
-    ' ...then everything the old Advanced Code Editor page carried, also in its original
-    ' order. The two pages are one scrolling list now, with no heading between them.
-    OptionsRows_Add( OPTPAGE_EDITOR, OPT_TOGGLE, 115, @gOptWork.Codetips )              ' "Enable CodeTips"
-    OptionsRows_Add( OPTPAGE_EDITOR, OPT_TOGGLE,  95, @gOptWork.AutoComplete )          ' "Enable Autocomplete"
-    OptionsRows_Add( OPTPAGE_EDITOR, OPT_TOGGLE, 417, @gOptWork.CharacterAutoComplete ) ' "Enable Character Autocompletion"
-    OptionsRows_Add( OPTPAGE_EDITOR, OPT_TOGGLE, 120, @gOptWork.AutoIndentation )       ' "Enable Auto Indentation"
+    ' ---- Advanced Code Editor --------------------------------------------------------
+    ' A SEPARATE PAGE AGAIN, holding exactly what the old frmOptionsEditor2 held, in its
+    ' original order. It was merged into Code Editor when the dialog was rebuilt, on the
+    ' grounds that one scrolling list read better than two pages; a fixed-size dialog that
+    ' scrolls only the Editor page turns that trade the other way, because twenty rows do not
+    ' fit and thirteen do. The boundary is not a new judgement -- it is the one the original
+    ' dialog drew, recovered from the deleted form rather than re-invented.
+    OptionsRows_Add( OPTPAGE_EDITOR2, OPT_TOGGLE, 115, @gOptWork.Codetips )              ' "Enable CodeTips"
+    OptionsRows_Add( OPTPAGE_EDITOR2, OPT_TOGGLE,  95, @gOptWork.AutoComplete )          ' "Enable Autocomplete"
+    OptionsRows_Add( OPTPAGE_EDITOR2, OPT_TOGGLE, 417, @gOptWork.CharacterAutoComplete ) ' "Enable Character Autocompletion"
+    OptionsRows_Add( OPTPAGE_EDITOR2, OPT_TOGGLE, 120, @gOptWork.AutoIndentation )       ' "Enable Auto Indentation"
     ' Gated, exactly as the old page gated it with EnableWindow.
-    OptionsRows_Add( OPTPAGE_EDITOR, OPT_TOGGLE, 416, @gOptWork.ForNextVariable, _
-                     @gOptWork.AutoIndentation )                                        ' "Append loop variable to For/Next statement"
-    OptionsRows_Add( OPTPAGE_EDITOR, OPT_TOGGLE, 412, @gOptWork.BraceHighlight )        ' "Enable Brace Highlighting"
-    OptionsRows_Add( OPTPAGE_EDITOR, OPT_TOGGLE, 419, @gOptWork.OccurrenceHighlight )   ' "Enable Occurrences Highlighting"
+    OptionsRows_Add( OPTPAGE_EDITOR2, OPT_TOGGLE, 416, @gOptWork.ForNextVariable, _
+                     @gOptWork.AutoIndentation )                                         ' "Append loop variable to For/Next statement"
+    OptionsRows_Add( OPTPAGE_EDITOR2, OPT_TOGGLE, 412, @gOptWork.BraceHighlight )        ' "Enable Brace Highlighting"
+    OptionsRows_Add( OPTPAGE_EDITOR2, OPT_TOGGLE, 419, @gOptWork.OccurrenceHighlight )   ' "Enable Occurrences Highlighting"
 
 end sub
 
@@ -392,16 +407,29 @@ sub OptionsTheme_FillToggle( byval tc as PSTOGGLE_COLORS ptr )
     ' The pill's own background must match the page it sits on, or its corners show a halo.
     tc->BackColor                   = ghPanel.BackColor
     tc->FocusRingColor              = ghPanel.ForeColorHot
-    ' ON: filled, borderless (border = fill, the control's own default relationship).
-    tc->TrackColorOn                = ghPanel.BackColorButtonHot
-    tc->TrackColorOnHot             = ghPanel.ForeColorButtonHot
+    ' ON: filled with the theme ACCENT, borderless (border = fill).
+    '
+    ' This used to be ghPanel.BackColorButtonHot -- a grey barely distinct from the page. The
+    ' knob mapping below (page-dark when ON, bright when OFF) is Windows 11's, and it works
+    ' there only because an ON track is unmistakably accent-coloured. With a grey track the
+    ' one strong signal left was the knob, so an OFF switch read as BRIGHTER than an ON one
+    ' and the whole control inverted at a glance. Reported 2026-07-25 after it caused a
+    ' settings value to be misread as its opposite.
+    tc->TrackColorOn                = ghUI.AccentColor
+    tc->TrackColorOnHot             = ghUI.AccentColor
     tc->TrackColorOnDisabled        = ghPanel.BackColorButton
     tc->TrackBorderColorOn          = tc->TrackColorOn
     tc->TrackBorderColorOnHot       = tc->TrackColorOnHot
     tc->TrackBorderColorOnDisabled  = tc->TrackColorOnDisabled
-    tc->KnobColorOn                 = ghPanel.BackColor
-    tc->KnobColorOnHot              = ghPanel.BackColor
-    tc->KnobColorOnDisabled         = ghPanel.BackColor
+    ' BRIGHT knob when ON. Windows 11 puts a dark knob on its accent track, and that reads
+    ' correctly there only because its accent is far brighter than this theme's: measured,
+    ' tiko's accent sits at luminance 71 against a page of 36, while the OFF knob below was
+    ' 217. Keeping Windows' mapping left OFF the loudest thing on the row no matter what the
+    ' track did. iOS/Material's accent-track-plus-white-knob is unambiguous at any accent
+    ' brightness, so the family follows that instead.
+    tc->KnobColorOn                 = ghPanel.ForeColor
+    tc->KnobColorOnHot              = ghPanel.ForeColorHot
+    tc->KnobColorOnDisabled         = ghPanel.ForeColorScrollBar
     ' OFF: outlined, the track barely distinct from the page.
     tc->TrackColorOff               = ghPanel.BackColor
     tc->TrackColorOffHot            = ghPanel.BackColorHot
@@ -409,8 +437,10 @@ sub OptionsTheme_FillToggle( byval tc as PSTOGGLE_COLORS ptr )
     tc->TrackBorderColorOff         = ghEditor.Divider
     tc->TrackBorderColorOffHot      = ghPanel.ForeColorHot
     tc->TrackBorderColorOffDisabled = ghEditor.Divider
-    tc->KnobColorOff                = ghPanel.ForeColor
-    tc->KnobColorOffHot             = ghPanel.ForeColorHot
+    ' ...and a SUBDUED knob when OFF. This was ghPanel.ForeColor -- the brightest colour on
+    ' the page -- which is what made an OFF switch shout louder than an ON one.
+    tc->KnobColorOff                = ghPanel.ForeColorScrollBar
+    tc->KnobColorOffHot             = ghPanel.ForeColor
     tc->KnobColorOffDisabled        = ghEditor.Divider
 end sub
 
@@ -444,6 +474,16 @@ sub OptionsTheme_ApplyTextBox( byval hTextBox as HWND )
     ' The control's own Cut/Copy/Paste popup follows tiko's theme through the same registry
     ' the topmenu dropdowns use.
     ThemeTextBoxContextMenu( hTextBox )
+end sub
+
+' The list counterpart of the border ApplyTextBox sets: same width, same color, same square
+' corners, so a PsListTree and a PsTextBox on one page carry identical chrome. There is no
+' focus-border equivalent -- PsTextBox switches to FocusBorderColor when its editor has the
+' caret, and a list has no caret to signal.
+sub OptionsTheme_ApplyListBorder( byval hList as HWND )
+    if hList = 0 then exit sub
+    PsListTree_SetBorderColor( hList, ghEditor.Divider )
+    PsListTree_SetBorderWidth( hList, 1 )
 end sub
 
 sub OptionsTheme_FillNumeric( byval nc as PSNUMERICUPDOWN_COLORS ptr )
@@ -724,6 +764,71 @@ end sub
 ' Nothing here is eyeballed: every assertion reads the numbers the layout actually
 ' produced, or reads a value back out of a real control.
 ' ========================================================================================
+' ========================================================================================
+' HEADLESS binding check.                              (TIKO_OPTIONS_SELFTEST=1)
+'
+' Does row N's pField actually point at the gConfig field row N's LABEL claims? Nothing else
+' verifies that: the row table, OptionsWork_Load/Commit and the seeding all read correctly in
+' isolation, and a shift between them would show up only as toggles displaying their
+' neighbour's value.
+'
+' The label id -> field pairing below is written INDEPENDENTLY of OptionsRows_Init rather than
+' derived from it, which is the whole point -- an oracle copied from the thing it checks
+' proves nothing. Needs no window, so it runs at startup rather than when the dialog opens.
+' ========================================================================================
+sub OptionsRows_RunBindTest()
+
+    if environ("TIKO_OPTIONS_SELFTEST") <> "1" then exit sub
+
+    dim as long nPass, nFail
+    dim as string sLine
+
+    OptionsRows_Init()
+    OptionsWork_Load()
+
+    #macro BINDCHK( labelid, cfgfield, nm )
+        scope
+            dim as long nFound = -1
+            for i as long = lbound(gOptRows) to ubound(gOptRows)
+                if gOptRows(i).nLabelID = labelid then nFound = i: exit for
+            next
+            if nFound < 0 then
+                nFail += 1
+                sLine = "  FAIL: no row carries label id " & str(labelid) & " (" & nm & ")"
+                ? sLine
+            elseif gOptRows(nFound).pField = 0 then
+                nFail += 1
+                sLine = "  FAIL: row for " & nm & " has a null field pointer"
+                ? sLine
+            elseif *cast(long ptr, gOptRows(nFound).pField) <> cfgfield then
+                nFail += 1
+                sLine = "  FAIL: " & nm & " row shows " & _
+                        str(*cast(long ptr, gOptRows(nFound).pField)) & _
+                        " but gConfig holds " & str(cfgfield) & " -- ROW/FIELD MISMATCH"
+                ? sLine
+            else
+                nPass += 1
+            end if
+        end scope
+    #endmacro
+
+    ? "--- TIKO_OPTIONS_SELFTEST (row/field binding) ---"
+
+    BINDCHK( 119, gConfig.MultipleInstances,    "Allow multiple instances" )
+    BINDCHK( 121, gConfig.CompileAutosave,      "Autosave before compiling" )
+    BINDCHK( 274, gConfig.AskExit,              "Ask before exiting" )
+    BINDCHK( 423, gConfig.RestoreSession,       "Restore previous session" )
+    BINDCHK( 133, gConfig.CompactMenus,         "Use Compact Menu Interface" )
+    BINDCHK(  91, gConfig.CheckUpdates,         "Check for Updates" )
+    BINDCHK( 114, gConfig.SyntaxHighlighting,   "Syntax highlighting" )
+    BINDCHK( 124, gConfig.LineNumbering,        "Show line numbers" )
+
+    sLine = "--- options bind test: " & str(nPass) & " passed, " & str(nFail) & " failed ---"
+    ? sLine
+
+end sub
+
+
 sub OptionsRows_RunSelfTest( byval hPanel as HWND )
 
     if environ("TIKO_OPTIONS_SELFTEST") <> "1" then exit sub
@@ -742,6 +847,36 @@ sub OptionsRows_RunSelfTest( byval hPanel as HWND )
     #endmacro
 
     print "--- Options rows self-test ---"
+
+    ' ---- LABEL / CONTROL PAIRING -------------------------------------------------------
+    ' Does the title drawn on a row sit beside THAT row's control? Every data-side check
+    ' passes (see OptionsRows_RunBindTest), so if a toggle appears to show its neighbour's
+    ' value, a shift between the label rect and the control rect is what is left. Reported
+    ' with the actual coordinates rather than a bare pass/fail, because the interesting case
+    ' is "off by exactly one row height".
+    for i as long = lbound(gOptRows) to ubound(gOptRows)
+        if gOptRows(i).hCtrl = 0 then continue for
+        if IsWindow(gOptRows(i).hCtrl) = 0 then continue for
+
+        dim as RECT rcCtrl
+        GetWindowRect( gOptRows(i).hCtrl, @rcCtrl )
+        MapWindowPoints( HWND_DESKTOP, GetParent(gOptRows(i).hCtrl), cast(POINT ptr, @rcCtrl), 2 )
+
+        dim as long ctrlMidY  = (rcCtrl.top + rcCtrl.bottom) \ 2
+        dim as boolean bInRow = (ctrlMidY >= gOptRows(i).rc.top) andalso _
+                                (ctrlMidY <= gOptRows(i).rc.bottom)
+        OPTASSERT( bInRow, "row " & str(i) & " (label id " & str(gOptRows(i).nLabelID) & _
+                   ") control centre y=" & str(ctrlMidY) & " is OUTSIDE its own row band " & _
+                   str(gOptRows(i).rc.top) & ".." & str(gOptRows(i).rc.bottom) & _
+                   " -- label and control are paired with DIFFERENT rows" )
+
+        ' And the title has to be on the same band as the control it labels.
+        dim as long lblMidY = (gOptRows(i).rcLabel.top + gOptRows(i).rcLabel.bottom) \ 2
+        OPTASSERT( abs(lblMidY - ctrlMidY) <= AfxScaleY(20), _
+                   "row " & str(i) & " (label id " & str(gOptRows(i).nLabelID) & _
+                   ") label centre y=" & str(lblMidY) & " but its control is at y=" & _
+                   str(ctrlMidY) & " -- drawn against the wrong control" )
+    next
 
     ' ---- the table itself -------------------------------------------------------------
     OPTASSERT( ubound(gOptRows) >= 0, "row table is empty" )
@@ -770,11 +905,31 @@ sub OptionsRows_RunSelfTest( byval hPanel as HWND )
     next
 
     ' ---- per-page geometry ------------------------------------------------------------
-    dim as long cxPanel = PsScrollPanel_GetPanelWidth( HWND_FRMOPTIONS_SCROLL )
-    OPTASSERT( cxPanel > 0, "page width is not positive" )
-
+    ' THE RULER COMES FROM THE ROW'S OWN PARENT, not from a container passed in. Only
+    ' OPTPAGE_EDITOR lives on the PsScrollPanel now; every other page is on the plain
+    ' container, which is WIDER because it reserves no scrollbar strip. Measuring all of them
+    ' against the scroll panel's page width reported six perfectly good General rows as "not
+    ' full width" and "overruns the right padding" -- the rows were right and the ruler was
+    ' wrong, which is the failure mode an assertion is least likely to be doubted over.
+    '
+    ' Asking each control who its parent is removes the assumption rather than correcting it,
+    ' so moving a page between containers cannot break this again.
     for nPage as long = 0 to OPTPAGE_COUNT - 1
         if OptionsRows_HasPage(nPage) = false then continue for
+
+        dim as HWND hOwner = 0
+        for i as long = lbound(gOptRows) to ubound(gOptRows)
+            if gOptRows(i).nPage <> nPage then continue for
+            if gOptRows(i).hCtrl = 0 then continue for
+            hOwner = GetParent( gOptRows(i).hCtrl )
+            exit for
+        next
+        if hOwner = 0 then continue for
+
+        dim as RECT rcOwner
+        GetClientRect( hOwner, @rcOwner )
+        dim as long cxPanel = rcOwner.right - rcOwner.left
+        OPTASSERT( cxPanel > 0, "page " & str(nPage) & " width is not positive" )
 
         dim as long nPrevBottom = -1
         dim as long nSeen = 0
@@ -801,7 +956,7 @@ sub OptionsRows_RunSelfTest( byval hPanel as HWND )
             ' The control sits inside the row, right-aligned, clear of the label.
             dim as RECT rcCtrl
             GetWindowRect( gOptRows(i).hCtrl, @rcCtrl )
-            MapWindowPoints( HWND_DESKTOP, hPanel, cast(LPPOINT, @rcCtrl), 2 )
+            MapWindowPoints( HWND_DESKTOP, hOwner, cast(LPPOINT, @rcCtrl), 2 )
 
             OPTASSERT( rcCtrl.right <= cxPanel - AfxScaleX(OPTROW_PADRIGHT) + 1, _
                        "page " & str(nPage) & " row " & str(i) & " control overruns the right padding" )
@@ -814,7 +969,15 @@ sub OptionsRows_RunSelfTest( byval hPanel as HWND )
                        "page " & str(nPage) & " row " & str(i) & " label not at the left padding" )
         next
 
-        OPTASSERT( nSeen > 0, "page " & str(nPage) & " claims rows but built none" )
+        ' NOT an assertion. Pages are built lazily -- on first visit -- so a page the user has
+        ' not opened yet legitimately has no controls, and this fired as a failure every time
+        ' the dialog was opened without touring every page. There is nothing detectable here:
+        ' "declared but never built" and "not visited yet" are the same state from inside this
+        ' function. Reported so the count of examined pages is still visible.
+        if nSeen = 0 then
+            sMsg = "  (page " & str(nPage) & " not built yet -- lazy, skipped)"
+            print sMsg
+        end if
     next
 
     ' ---- staging round trip, and the long-not-boolean rule ----------------------------
@@ -907,12 +1070,18 @@ sub OptionsRows_RunSelfTest( byval hPanel as HWND )
     ' were created with -- so the "row" column is the height the LAYOUT would choose from
     ' the text alone. That is the term the font actually moves; the control term is shown
     ' beside it so it is obvious which one is binding.
-    dim as long nViewport = PsScrollPanel_GetViewportHeight( HWND_FRMOPTIONS_SCROLL )
+    dim as RECT rcVP : GetClientRect( HWND_FRMOPTIONS_PAGE, @rcVP )
+    dim as long nViewport = rcVP.bottom - rcVP.top
     dim as long nCtrlMax = 0
     dim as long nRowsLongest = 0
     for i as long = lbound(gOptRows) to ubound(gOptRows)
         if gOptRows(i).hCtrl = 0 then continue for
-        if gOptRows(i).nPage <> OPTPAGE_EDITOR then continue for
+        ' BOTH halves of the old Code Editor page. It was the longest page when it carried all
+        ' twenty rows; since the split it is thirteen, and measuring only that half would
+        ' quietly stop reporting on the widest control in the dialog.
+        dim as boolean bEditorPage = ((gOptRows(i).nPage = OPTPAGE_EDITOR) orelse _
+                                      (gOptRows(i).nPage = OPTPAGE_EDITOR2))
+        if bEditorPage = false then continue for
         nRowsLongest += 1
         dim as long cw, ch
         select case gOptRows(i).nKind

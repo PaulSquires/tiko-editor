@@ -70,7 +70,7 @@ sub frmStatusBar_PaintCallback( byval p as PSSTATUSBAR_PAINTINFO ptr )
             ' If a Spinner is active then that will take precedence over the good/bad compile icon.
             if (gApp.bShowSpinner = true) then
                 p->b->SetForeColor( ghStatusBar.ForeColor )
-                wszText = @spinner(gApp.SpinnerCurrentFrame)
+                wszText = spinner(gApp.SpinnerCurrentFrame)
                 p->b->SetBackColor( ghStatusBar.BackColor )
                 ' Position the spinner a bit better
                 rcIcon.top -= AfxScaleY(4)
@@ -124,7 +124,7 @@ function frmStatusBar_TooltipCallback( byval hCtl as HWND, byval idx as integer 
     ' Only some of the panels actually have tooltips
     select case idx 
         case COMPILE_STATUS_PANEL:   wszTooltip = L(251,"View Output Window")
-        case THEMES_DIALOG_PANEL:    wszTooltip = L(111,"Themes and Fonts")
+        case THEMES_DIALOG_PANEL:    wszTooltip = L(486,"Themes")
         case BUILD_DIALOG_PANEL:     wszTooltip = L(277,"Build Configurations") & "..."
     end select
 

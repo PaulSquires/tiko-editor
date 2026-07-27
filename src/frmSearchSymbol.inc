@@ -128,7 +128,7 @@ function frmSearchSymbol_DoSearch( byval hwndCtl as HWND ) as long
 
     ShowWindow( hList, SW_HIDE )
     for i as integer = 0 to gSymbolsCount - 1
-        PsListBox_AddString( hList, gSymbols(i).wszCaption, i )
+        PsListTree_AddString( hList, gSymbols(i).wszCaption, i )
     next
     ShowWindow( hList, SW_SHOW )
     
@@ -136,7 +136,7 @@ function frmSearchSymbol_DoSearch( byval hwndCtl as HWND ) as long
     ' a perfect match.
     if gSymbolsCount > 0 then
         if gSymbols(0).result = SCORE_MAX then
-            PsListBox_SetCurSel( hList, 0 )
+            PsListTree_SetCurSel( hList, 0 )
         end if
     end if    
 
@@ -188,13 +188,13 @@ function frmSearchSymbol_TextBoxMessage( byval m as PSTEXTBOX_MESSAGEINFO ptr ) 
         dim as HWND hList = GetDlgItem( HWND_FRMSEARCHSYMBOL, IDC_FRMSEARCHSYMBOL_LISTBOX )
         select case m->wParam
             case VK_UP
-                dim as integer cur = PsListBox_GetCurSel(hList)
-                if cur > 0 then PsListBox_SetCurSel( hList, cur - 1 )
+                dim as integer cur = PsListTree_GetCurSel(hList)
+                if cur > 0 then PsListTree_SetCurSel( hList, cur - 1 )
                 return true
 
             case VK_DOWN
-                dim as integer cur = PsListBox_GetCurSel(hList)
-                if (cur < gSymbolsCount - 1) then PsListBox_SetCurSel( hList, cur + 1 )
+                dim as integer cur = PsListTree_GetCurSel(hList)
+                if (cur < gSymbolsCount - 1) then PsListTree_SetCurSel( hList, cur + 1 )
                 return true
         end select
     end if
@@ -289,7 +289,7 @@ end function
 ' ========================================================================================
 ' frmSearchSymbol_PaintCallback
 ' ========================================================================================
-sub frmSearchSymbol_PaintCallback( byval p as PSLISTBOX_PAINTINFO ptr )
+sub frmSearchSymbol_PaintCallback( byval p as PSLISTTREE_PAINTINFO ptr )
     dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN)
     if pWindow = 0 then return 
 
@@ -387,7 +387,7 @@ end sub
 ' ========================================================================================
 ' frmSearchSymbol_MessageCallback
 ' ========================================================================================
-function frmSearchSymbol_MessageCallback( byval m as PSLISTBOX_MESSAGEINFO ptr ) as boolean
+function frmSearchSymbol_MessageCallback( byval m as PSLISTTREE_MESSAGEINFO ptr ) as boolean
 
     select case m->uMsg
              
@@ -432,16 +432,16 @@ function frmSearchSymbol_Show( byval hwndParent as HWND ) as LRESULT
     ThemeTextBoxContextMenu( hCtlFind )
 
 
-    dim as HWND hCtrlList = PsListBox_Create( HWND_FRMSEARCHSYMBOL, IDC_FRMSEARCHSYMBOL_LISTBOX )
-    PsListBox_SetPaintCallback( hCtrlList, @frmSearchSymbol_PaintCallback )
-    PsListBox_SetMessageCallback( hCtrlList, @frmSearchSymbol_MessageCallback )
-    PsListBox_PreventDoubleClick( hCtrlList )
-    PsListBox_SetBackColor( hCtrlList, ghPanel.BackColor )
-    PsListBox_SetRowHeight( hCtrlList, 24 )
-    PsListBox_SetFont( hCtrlList, ghFont(GUIFONT_10) )
+    dim as HWND hCtrlList = PsListTree_Create( HWND_FRMSEARCHSYMBOL, IDC_FRMSEARCHSYMBOL_LISTBOX )
+    PsListTree_SetPaintCallback( hCtrlList, @frmSearchSymbol_PaintCallback )
+    PsListTree_SetMessageCallback( hCtrlList, @frmSearchSymbol_MessageCallback )
+    PsListTree_PreventDoubleClick( hCtrlList )
+    PsListTree_SetBackColor( hCtrlList, ghPanel.BackColor )
+    PsListTree_SetRowHeight( hCtrlList, 24 )
+    PsListTree_SetFont( hCtrlList, ghFont(GUIFONT_10) )
     ' The scrollbar is created/positioned/auto-hidden by the control; we only theme it.
-    PsListBox_SetScrollBarWidth( hCtrlList, SCROLLBAR_WIDTH_PANEL )
-    PsListBox_SetScrollBarColors( hCtrlList, ghPanel.BackColorScrollBar, _
+    PsListTree_SetScrollBarWidth( hCtrlList, SCROLLBAR_WIDTH_PANEL )
+    PsListTree_SetScrollBarColors( hCtrlList, ghPanel.BackColorScrollBar, _
                                  ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
 
 
@@ -510,7 +510,7 @@ function frmSearchSymbol_Show( byval hwndParent as HWND ) as LRESULT
             ' Keyboard focus sits on the PsTextBox's RichEdit child, not the control.
             if (hFocus = PsTextBox_GetRichEditHandle(hFind)) then
                 dim as HWND hList = GetDlgItem( HWND_FRMSEARCHSYMBOL, IDC_FRMSEARCHSYMBOL_LISTBOX )
-                dim as integer cur = PsListBox_GetCurSel( hList )
+                dim as integer cur = PsListTree_GetCurSel( hList )
                 frmSearchSymbol_GotoSymbol( cur )   ' this will also call WM_CLOSE
             end if
 
@@ -520,11 +520,11 @@ function frmSearchSymbol_Show( byval hwndParent as HWND ) as LRESULT
             ' Tab for focus navigation -- the PsTextBox's RichEdit child is a real
             ' WS_TABSTOP, unlike the bare RichEdit this form used to own.
             dim as HWND hList = GetDlgItem( HWND_FRMSEARCHSYMBOL, IDC_FRMSEARCHSYMBOL_LISTBOX )
-            dim as integer cur = PsListBox_GetCurSel( hList )
+            dim as integer cur = PsListTree_GetCurSel( hList )
             if (GetAsyncKeyState(VK_SHIFT) and &H8000) then
-                if cur > 0 then PsListBox_SetCurSel( hList, cur - 1 )
+                if cur > 0 then PsListTree_SetCurSel( hList, cur - 1 )
             else
-                if cur < gSymbolsCount - 1 then PsListBox_SetCurSel( hList, cur + 1 )
+                if cur < gSymbolsCount - 1 then PsListTree_SetCurSel( hList, cur + 1 )
             end if
             continue while   ' fully handled; don't let IsDialogMessage move focus
 

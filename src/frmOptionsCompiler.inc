@@ -23,10 +23,15 @@
 
 
 ' Fixed heights, UNSCALED (run through AfxScaleY at use).
-#define COMP_LISTHEIGHT     150
+' MEASURED AGAINST THE FIXED VIEWPORT. The page needed 948px of the 892 available at 175%, so
+' 32 unscaled px had to come out of it; 30 of them come from here and the rest from the section
+' gap below. The toolchain list loses about one visible row, which is the cheapest thing on this
+' page to give up -- the two long single-line fields under it cannot shrink and the toggles are
+' already at row height.
+#define COMP_LISTHEIGHT     120
 #define COMP_FIELDPAD        11      ' vertical padding inside a single-line PsTextBox
 #define COMP_LABELGAP         4      ' between a field label and the field under it
-#define COMP_SECTIONGAP      14      ' between one field block and the next
+#define COMP_SECTIONGAP      11      ' between one field block and the next (x4 on this page)
 #define COMP_BROWSEWIDTH     40
 
 
@@ -38,7 +43,7 @@ type COMP_LABEL
 end type
 
 
-dim shared ghCompToolchains as HWND      ' PsListBox
+dim shared ghCompToolchains as HWND      ' PsListTree
 dim shared ghCompSwitches   as HWND      ' PsTextBox
 dim shared ghCompIncludes   as HWND      ' PsTextBox
 dim shared ghCompHelpfile   as HWND      ' PsTextBox
@@ -46,7 +51,7 @@ dim shared ghCompBrowse     as HWND      ' PsButton
 dim shared ghCompRunCmd     as HWND      ' PsToggle
 dim shared ghCompBeep       as HWND      ' PsToggle
 
-' Clean toolchain folder names, parallel to the PsListBox rows. The row's display TEXT may
+' Clean toolchain folder names, parallel to the PsListTree rows. The row's display TEXT may
 ' carry a "path contains spaces" warning suffix, so the folder name is kept separately
 ' rather than parsed back out of the list.
 dim shared gCompToolchainNames(any) as DWSTRING
@@ -95,14 +100,15 @@ end sub
 ' ========================================================================================
 ' Paint one toolchain row.
 ' ========================================================================================
-private sub frmOptionsCompiler_ToolchainPaint( byval p as PSLISTBOX_PAINTINFO ptr )
+private sub frmOptionsCompiler_ToolchainPaint( byval p as PSLISTTREE_PAINTINFO ptr )
     if p = 0 then exit sub
     dim as COLORREF backclr, foreclr
     if p->isSelected orelse p->isHot then
         backclr = ghPanel.BackColorHot
         foreclr = ghPanel.ForeColorHot
     else
-        backclr = ghPanel.BackColor
+        ' Idle rows match the nav panel's lighter shade (see frmOptions nav list).
+        backclr = ghTopTabs.BackColorHot
         foreclr = ghPanel.ForeColor
     end if
     p->b->SetBackColor( backclr )
@@ -161,8 +167,8 @@ end sub
 ' ========================================================================================
 private function frmOptionsCompiler_LoadToolchains() as long
 
-    PsListBox_BeginUpdate( ghCompToolchains )
-    PsListBox_Clear( ghCompToolchains )
+    PsListTree_BeginUpdate( ghCompToolchains )
+    PsListTree_Clear( ghCompToolchains )
     erase gCompToolchainNames
 
     dim as long idxMatch = -1
@@ -187,7 +193,7 @@ private function frmOptionsCompiler_LoadToolchains() as long
                         wszDisplay = wszDisplay & "   (Warning: File path contains spaces)"
                     end if
 
-                    idx = PsListBox_AddString( ghCompToolchains, wszDisplay )
+                    idx = PsListTree_AddString( ghCompToolchains, wszDisplay )
                     redim preserve gCompToolchainNames(idx) as DWSTRING
                     gCompToolchainNames(idx) = wszFolder
                     if ucase(wszFolder) = wszWanted then idxMatch = idx
@@ -197,7 +203,7 @@ private function frmOptionsCompiler_LoadToolchains() as long
         FindClose( hSearch )
     end if
 
-    PsListBox_EndUpdate( ghCompToolchains )
+    PsListTree_EndUpdate( ghCompToolchains )
     function = idxMatch
 end function
 
@@ -210,15 +216,15 @@ sub frmOptionsCompiler_Build( byval hPage as HWND )
     if gCompBuilt then exit sub
 
     ' ---- toolchain list --------------------------------------------------------------
-    ghCompToolchains = PsListBox_Create( hPage, IDC_FRMOPTIONSCOMPILER_LSTTOOLCHAINS )
-    PsListBox_SetPaintCallback( ghCompToolchains, @frmOptionsCompiler_ToolchainPaint )
-    PsListBox_SetSelChangeCallback( ghCompToolchains, @frmOptionsCompiler_ToolchainSelChange )
-    PsListBox_SetFont( ghCompToolchains, OptionsFont_Base() )
-    PsListBox_SetScrollBarWidth( ghCompToolchains, SCROLLBAR_WIDTH_PANEL )
+    ghCompToolchains = PsListTree_Create( hPage, IDC_FRMOPTIONSCOMPILER_LSTTOOLCHAINS )
+    PsListTree_SetPaintCallback( ghCompToolchains, @frmOptionsCompiler_ToolchainPaint )
+    PsListTree_SetSelChangeCallback( ghCompToolchains, @frmOptionsCompiler_ToolchainSelChange )
+    PsListTree_SetFont( ghCompToolchains, OptionsFont_Base() )
+    PsListTree_SetScrollBarWidth( ghCompToolchains, SCROLLBAR_WIDTH_PANEL )
 
     dim as long idxMatch = frmOptionsCompiler_LoadToolchains()
     if idxMatch >= 0 then
-        PsListBox_SetCurSel( ghCompToolchains, idxMatch )       ' silent; does not fire the callback
+        PsListTree_SetCurSel( ghCompToolchains, idxMatch )       ' silent; does not fire the callback
     else
         ' No on-disk folder matched the stored path. Leave staging as Load seeded it, so
         ' Commit writes the same path back rather than blanking it.
@@ -263,8 +269,9 @@ end sub
 sub frmOptionsCompiler_ApplyTheme()
     if gCompBuilt = false then exit sub
 
-    PsListBox_SetBackColor( ghCompToolchains, ghPanel.BackColor )
-    PsListBox_SetScrollBarColors( ghCompToolchains, ghPanel.BackColorScrollBar, _
+    PsListTree_SetBackColor( ghCompToolchains, ghTopTabs.BackColorHot )
+    OptionsTheme_ApplyListBorder( ghCompToolchains )
+    PsListTree_SetScrollBarColors( ghCompToolchains, ghPanel.BackColorScrollBar, _
                                  ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
 
     OptionsTheme_ApplyTextBox( ghCompSwitches )

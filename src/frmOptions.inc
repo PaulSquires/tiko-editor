@@ -15,7 +15,7 @@
 '
 '  SHAPE
 '      +---------------------+----------------------------------------+
-'      |  PsListBox (nav)     |  page title band  (fixed, not scrolled) |
+'      |  PsListTree (nav)     |  page title band  (fixed, not scrolled) |
 '      |  grouped, fixed     +----------------------------------------+
 '      |  width, NO splitter |  PsScrollPanel                          |
 '      |                     |    GetPanel() is the parent of every    |
@@ -49,13 +49,16 @@
 
 ' The page currently on show, and whether each table-driven page has been built yet.
 dim shared gOptCurrentPage as long = OPTPAGE_NONE
+' The search box's live text. BuildNavList shows only pages whose title contains it (empty =
+' all). It filters PAGE TITLES only for now -- per-setting search is a larger, separate feature.
+dim shared gOptNavFilter as DWSTRING
 dim shared gOptPageBuilt(OPTPAGE_COUNT - 1) as boolean
 
 
 ' ========================================================================================
 ' Kinds of page, in order of preference:
 '   1. table-driven      OptionsRows_HasPage(nPage)     -- General, Code Editor
-'   2. panel-hosted      frmOptions_PanelHostedOwns()   -- Compiler, Localization, Themes+Fonts, Keywords
+'   2. panel-hosted      frmOptions_PanelHostedOwns()   -- Compiler, Localization, Editor Font, Keywords
 ' Every page is now one of these two; there are no eager legacy child forms left. The
 ' dispatch functions below (ShowPage / layout / paint callbacks) branch table-first.
 '
@@ -111,7 +114,8 @@ private function frmOptions_PageTitle( byval nPage as long ) as DWSTRING
     select case nPage
         case OPTPAGE_GENERAL:         return L(226,"General Options")
         case OPTPAGE_EDITOR:          return L(110,"Code Editor")
-        case OPTPAGE_COLORS:          return L(111,"Themes and Fonts")
+        case OPTPAGE_EDITOR2:         return L(107,"Advanced Code Editor")
+        case OPTPAGE_COLORS:          return L(487,"Editor Font")
         case OPTPAGE_COMPILER:        return L(112,"Compiler Setup")
         case OPTPAGE_LOCAL:           return L(129,"Localization")
         case OPTPAGE_KEYWORDS:        return L(177,"FreeBASIC Keywords")
@@ -142,9 +146,15 @@ function frmOptions_SaveEditorOptions() as long
     ' If a localization file is currently being edited then save it now.
     frmOptionsLocal_LocalEditCheck
 
-    ' If the localization has changed then note that a restart is needed. The current file
-    ' now lives in gLocalCurrentFile (was the FRAMELOCALIZATION groupbox caption).
-    if (ucase(gLocalCurrentFile) <> ucase(gConfig.LocalizationFile)) orelse (gLocalPhrasesEdit = true) then
+    ' If the localization has changed then note that a restart is needed -- meaning either a
+    ' different language was SELECTED, or the selected language's own file was rewritten.
+    '
+    ' It used to ask `gLocalPhrasesEdit = true` instead of the second test, which was a proxy
+    ' for "the strings this session is using have changed" and stopped being one when editing
+    ' and selecting became separate actions. Creating a new language, or fixing a typo in one
+    ' the editor is not running in, changes nothing about this session and must not claim it does.
+    dim as boolean bLangSwitched = (ucase(gLocalCurrentFile) <> ucase(gConfig.LocalizationFile))
+    if bLangSwitched orelse (gLocalSelectedEdited = true) then
         bChangesNextRun = true
     end if
     gConfig.LocalizationFile = gLocalCurrentFile
@@ -183,7 +193,7 @@ End function
 ' ========================================================================================
 ' Paint one row of the navigation list.
 ' ========================================================================================
-private sub frmOptions_NavPaintCallback( byval p as PSLISTBOX_PAINTINFO ptr )
+private sub frmOptions_NavPaintCallback( byval p as PSLISTTREE_PAINTINFO ptr )
     if p = 0 then exit sub
 
     dim as COLORREF backclr, foreclr
@@ -194,7 +204,8 @@ private sub frmOptions_NavPaintCallback( byval p as PSLISTBOX_PAINTINFO ptr )
         backclr = ghPanel.BackColorHot
         foreclr = ghPanel.ForeColorHot
     else
-        backclr = ghPanel.BackColor
+        ' Idle rows read in the nav panel's own shade -- the separator between nav and page now.
+        backclr = ghTopTabs.BackColorHot
         foreclr = ghPanel.ForeColor
     end if
 
@@ -215,28 +226,153 @@ end sub
 ' ========================================================================================
 private sub frmOptions_NavSelChangeCallback( byval hList as HWND, byval row as integer )
     if row < 0 then exit sub
-    frmOptions_ShowPage( PsListBox_GetItemData( hList, row ) )
+    frmOptions_ShowPage( PsListTree_GetItemData( hList, row ) )
 end sub
 
 
 ' ========================================================================================
-' Paint the scroll panel's page: background, then whatever owns the current page.
+' THE PLAIN PAGE CONTAINER -- the parent of EVERY page.
+'
+' NOTHING SCROLLS. There used to be a PsScrollPanel for the Code Editor page, the one page long
+' enough to need it; it was converted to a plain page like the rest once Tab Size and Case moved
+' off it, so this window is now the sole container. Whatever a page lays out is what the user
+' sees: a page that does not fit CLIPS rather than quietly growing a scrollbar.
+'
+' That is the point rather than a limitation. A page that must fit is a page whose height can be
+' ASSERTED -- see frmOptions_RunFitSelfTest -- and a fixed-size dialog means there is exactly one
+' number to assert against instead of "whatever the user dragged the window to".
+'
+' IT IS NOT A Ps* CONTROL and should not become one. It exists to provide the four services the
+' scroll panel's page window was providing to those nine pages, and nothing else:
+'
+'   1. a themed background, painted through the same SCP_PAINTINFO the pages' _Paint callbacks
+'      already take -- so not one page's signature changed when they moved off the scroll panel
+'   2. WM_CTLCOLOR*, so a plain EDIT or STATIC on a page is themed rather than system-white
+'   3. forwarding unclaimed WM_COMMAND / WM_NOTIFY to the dialog, which is where the handlers are
+'   4. WS_EX_CONTROLPARENT, without which IsDialogMessage cannot Tab into the page at all
+'
+' Point 4 is the one worth stating twice: this window IS a container, so it needs the flag that
+' PsButton and its focus-taking siblings must NOT have. Same rule, opposite answer -- the test is
+' "does this window have children the dialog manager should find?", and here it does.
 ' ========================================================================================
-private sub frmOptions_PagePaintCallback( byval p as SCP_PAINTINFO ptr )
-    if p = 0 then exit sub
-    p->b->SetBackColor( ghPanel.BackColor )
-    p->b->PaintRect( @p->rcClient )
+dim shared ghOptPageBrush       as HBRUSH
+
+
+' Which window is this page's controls' parent? A pure function of the page id, and it has to be:
+' a page is BUILT onto a parent once and lives there, so the answer must never change for a given
+' page between one call and the next.
+private function frmOptions_PageParent( byval nPage as long ) as HWND
+    ' ONE CONTAINER, no exceptions. The Code Editor page used to be the sole tenant of a
+    ' PsScrollPanel; it is a plain non-scrolling page like every other now, so nothing scrolls
+    ' and there is nothing to choose between.
+    return HWND_FRMOPTIONS_PAGE
+end function
+
+
+private function frmOptions_PageWndProc( _
+            byval hwnd   as HWND, _
+            byval uMsg   as UINT, _
+            byval wParam as WPARAM, _
+            byval lParam as LPARAM _
+            ) as LRESULT
+
+    select case uMsg
+
+    case WM_ERASEBKGND
+        ' Never erase: WM_PAINT fills the whole client through the double buffer.
+        return true
+
+    case WM_PAINT
+        dim as PsBufferPaint b
+        b.BeginDoubleBuffer( hwnd )
+
+        ' The SAME payload the scroll panel hands its callback, filled by hand. That is what
+        ' let all nine pages move here without touching their _Paint functions.
+        dim p as SCP_PAINTINFO
+        p.hScrollPanel = hwnd
+        p.hPanel       = hwnd
+        p.b            = @b
+        GetClientRect( hwnd, @p.rcClient )
+        p.nPos         = 0
+
+        b.SetBackColor( ghPanel.BackColor )
+        b.PaintRect( @p.rcClient )
+
+        if OptionsRows_HasPage( gOptCurrentPage ) then
+            OptionsRows_PaintPage( gOptCurrentPage, @p )
+        elseif frmOptions_PanelHostedOwns( gOptCurrentPage ) then
+            frmOptions_PanelPaint( gOptCurrentPage, @p )
+        end if
+
+        b.EndDoubleBuffer()
+        return 0
+
+    case WM_CTLCOLORSTATIC, WM_CTLCOLORBTN, WM_CTLCOLOREDIT, WM_CTLCOLORLISTBOX
+        ' Without this a plain EDIT or STATIC on a page comes up system-white on a dark panel.
+        ' The brush is cached and rebuilt by frmOptions_ApplyTheme, because returning a brush
+        ' created here would leak one per repaint.
+        SetBkColor( cast(HDC, wParam), ghPanel.BackColor )
+        SetTextColor( cast(HDC, wParam), ghPanel.ForeColor )
+        if ghOptPageBrush = 0 then ghOptPageBrush = CreateSolidBrush( ghPanel.BackColor )
+        return cast( LRESULT, ghOptPageBrush )
+
+    case WM_COMMAND, WM_NOTIFY, WM_HSCROLL, WM_VSCROLL
+        ' The handlers live on the dialog, not here. Forwarded rather than handled so a page's
+        ' controls behave identically whichever container they happen to be parented to.
+        return SendMessageW( GetParent(hwnd), uMsg, wParam, lParam )
+
+    case WM_NCDESTROY
+        dim as CWindow ptr pWindow = AfxCWindowPtr(hwnd)
+        if pWindow then delete(pWindow)
+        return 0
+
+    end select
+
+    function = DefWindowProc( hwnd, uMsg, wParam, lParam )
+end function
+
+
+' Lay out the current page on the plain container. The scroll panel drives its own page through a
+' callback; this one has nobody to do that, so the dialog does it -- on every show and every time
+' the container is sized.
+'
+' THE RETURNED HEIGHT IS DELIBERATELY IGNORED HERE. On a scrolling page it sets the scroll range;
+' on a fixed one there is nothing to do with it, and pretending otherwise would invite a
+' "shrink to fit" that quietly made controls the wrong size. Overflow is a defect to be asserted,
+' not absorbed.
+private sub frmOptions_LayoutPlainPage()
+    if HWND_FRMOPTIONS_PAGE = 0 then exit sub
+    if gOptCurrentPage = OPTPAGE_NONE then exit sub
+
+    dim as RECT rc
+    GetClientRect( HWND_FRMOPTIONS_PAGE, @rc )
+    dim as long cx = rc.right - rc.left
+    if cx <= 0 then exit sub
+
     if OptionsRows_HasPage( gOptCurrentPage ) then
-        OptionsRows_PaintPage( gOptCurrentPage, p )
+        OptionsRows_LayoutPage( gOptCurrentPage, HWND_FRMOPTIONS_PAGE, cx )
     elseif frmOptions_PanelHostedOwns( gOptCurrentPage ) then
-        frmOptions_PanelPaint( gOptCurrentPage, p )
+        frmOptions_PanelLayout( gOptCurrentPage, HWND_FRMOPTIONS_PAGE, cx )
     end if
+end sub
+
+
+' See frmOptions.bi. The private layout above cannot be called from the panel modules (they are
+' included before this file); this is the public door.
+sub frmOptions_RelayoutCurrentPage()
+    frmOptions_LayoutPlainPage()
+    if HWND_FRMOPTIONS_PAGE then AfxRedrawWindow( HWND_FRMOPTIONS_PAGE )
 end sub
 
 
 ' ========================================================================================
 ' The scroll panel's viewport changed width: re-flow the current page and report how tall
 ' it now is. cxPanel is handed to us -- do not read the width back off the window.
+'
+' ONLY OPTPAGE_EDITOR REACHES THIS NOW. The other nine pages are on the plain container and are
+' laid out by frmOptions_LayoutPlainPage. The dispatch below is left general rather than being
+' narrowed to the editor page, so that moving a page back onto the scroll panel is a one-line
+' change to frmOptions_PageParent and nothing else.
 ' ========================================================================================
 private function frmOptions_PageLayoutCallback( byval hPanel as HWND, byval cxPanel as integer ) as integer
 
@@ -264,7 +400,7 @@ sub frmOptions_ShowPage( byval nPage as long )
     if nPage >= OPTPAGE_COUNT then exit sub
     if nPage = gOptCurrentPage then exit sub
 
-    dim as HWND hPanel = PsScrollPanel_GetPanel( HWND_FRMOPTIONS_SCROLL )
+    dim as HWND hPanel = frmOptions_PageParent( nPage )
     if hPanel = 0 then exit sub
 
     ' Hide the outgoing page.
@@ -294,9 +430,10 @@ sub frmOptions_ShowPage( byval nPage as long )
         frmOptions_PanelShow( nPage, true )
     end if
 
-    ' Re-flow for the current width and go back to the top of the page.
-    PsScrollPanel_SetPos( HWND_FRMOPTIONS_SCROLL, 0 )
-    PsScrollPanel_Recalc( HWND_FRMOPTIONS_SCROLL )
+    ' The page container is shown once at creation and never hidden -- there is only one now.
+    ' Nothing drives its layout for it, so the dialog does.
+    frmOptions_LayoutPlainPage()
+
     AfxRedrawWindow( hPanel )
     AfxRedrawWindow( HWND_FRMOPTIONS )
 
@@ -322,7 +459,42 @@ private sub frmOptions_PositionWindows( byval hwnd as HWND )
     dim as long bodyH   = rc.bottom - footerH
     if bodyH < 0 then bodyH = 0
 
-    SetWindowPos( HWND_FRMOPTIONS_NAV, 0, 0, 0, navW, bodyH, SWP_NOZORDER or SWP_NOACTIVATE )
+    ' The nav list starts LOWER than the window's top edge, aligned with the first control on
+    ' the page beside it. A page's content begins at titleH (below the title band) plus the row
+    ' padding; PsListTree draws its first row flush at its own client top, so giving the nav that
+    ' same top makes "General Options" sit on the same line as the first control of whatever page
+    ' is showing. The strip left above it is the dialog's own panel background -- seamless,
+    ' because the nav rows paint that same colour.
+    ' The search box sits in the nav column's slice of the title band (the corner that was
+    ' blank), so it lines up with the page title on the right. The nav list stays below it,
+    ' where it already aligned with the first control of the page.
+    ' The FRAME spans [mx .. navW-mx] and is drawn by the dialog. The box lives INSIDE it: past
+    ' the glyph gutter on the left, and inset by the border on the other three sides so it never
+    ' paints over the frame.
+    dim as long mx      = AfxScaleX(FRMOPTIONS_MARGIN)
+    dim as long searchH = AfxScaleY(FRMOPTIONS_SEARCH_H)
+    dim as long searchY = (titleH - searchH) \ 2
+    dim as long glyphW  = AfxScaleX(FRMOPTIONS_SEARCH_GLYPHW)
+    dim as long inset   = AfxScaleX(2)
+    dim as long boxX = mx + glyphW
+    dim as long boxW = (navW - mx - inset) - boxX
+    if boxW < 0 then boxW = 0
+    ' Shrunk from the top by 2px to follow the frame, whose top edge is nudged down the same
+    ' amount in frmOptions_OnPaint -- the box top-inset now matches its bottom.
+    dim as long searchShrink = AfxScaleY(2)
+    SetWindowPos( HWND_FRMOPTIONS_SEARCH, 0, boxX, searchY + inset + searchShrink, _
+                  boxW, searchH - (2 * inset) - searchShrink, _
+                  SWP_NOZORDER or SWP_NOACTIVATE )
+
+    dim as long navTop = titleH + AfxScaleY(OPTROW_PADTOP)
+    dim as long navH   = bodyH - navTop
+    if navH < 0 then navH = 0
+    ' Inset the nav listbox by AfxScaleX(2) on BOTH sides within the nav column: pushed off the
+    ' client left edge, and pulled the same amount off the divider on the right.
+    dim as long navInset = AfxScaleX(2)
+    dim as long navListW = navW - (navInset * 2)
+    if navListW < 0 then navListW = 0
+    SetWindowPos( HWND_FRMOPTIONS_NAV, 0, navInset, navTop, navListW, navH, SWP_NOZORDER or SWP_NOACTIVATE )
 
     dim as long scrollX = navW
     dim as long scrollY = titleH
@@ -330,8 +502,9 @@ private sub frmOptions_PositionWindows( byval hwnd as HWND )
     dim as long scrollH = bodyH - titleH
     if scrollW < 0 then scrollW = 0
     if scrollH < 0 then scrollH = 0
-    SetWindowPos( HWND_FRMOPTIONS_SCROLL, 0, scrollX, scrollY, scrollW, scrollH, _
+    SetWindowPos( HWND_FRMOPTIONS_PAGE, 0, scrollX, scrollY, scrollW, scrollH, _
                   SWP_NOZORDER or SWP_NOACTIVATE )
+    frmOptions_LayoutPlainPage()
 
     dim as long btnY = rc.bottom - footerH + (footerH - btnH) \ 2
     SetWindowPos( GetDlgItem(hwnd, IDC_FRMOPTIONS_CMDCANCEL), 0, _
@@ -365,6 +538,18 @@ private function frmOptions_OnPaint( byval hwnd as HWND ) as LRESULT
     dim as long titleH  = AfxScaleY(FRMOPTIONS_TITLE_H)
     dim as long footerH = AfxScaleY(FRMOPTIONS_FOOTER_H)
 
+    ' Fill the WHOLE left panel column in its own lighter shade, so the nav list's inset strips,
+    ' the search-box band above it, and the empty area below the last row all read the same --
+    ' the nav listbox only paints its own (inset) client, which left dark gaps around it. This is
+    ' the separator between the nav column and the page now that the vertical rule is gone.
+    dim as RECT rcNavPanel
+    rcNavPanel.left   = 0
+    rcNavPanel.top    = 0
+    rcNavPanel.right  = navW
+    rcNavPanel.bottom = rc.bottom
+    buffer.SetBackColor( ghTopTabs.BackColorHot )
+    buffer.PaintRect( @rcNavPanel )
+
     ' Page title band.
     dim as RECT rcTitle
     rcTitle.left   = navW + AfxScaleX(OPTROW_PADLEFT)
@@ -377,11 +562,45 @@ private function frmOptions_OnPaint( byval hwnd as HWND ) as LRESULT
     buffer.SetFont( ghFont(GUIFONTBOLD_11) )
     buffer.PaintText( frmOptions_PageTitle(gOptCurrentPage), @rcTitle, DT_LEFT or DT_END_ELLIPSIS )
 
-    ' The one rule left in the dialog: the vertical split between the navigation list and
-    ' the page. A hairline -- width 1, deliberately not DPI-scaled. There is deliberately
-    ' NO rule above the footer buttons and none between settings rows.
-    buffer.SetForeColor( ghEditor.Divider )
-    buffer.PaintLine( 1, navW, 0, navW, rc.bottom - footerH )
+    ' THE SEARCH FRAME. One rounded rect around the glyph AND the box, filled in the field
+    ' colour so the borderless box (same colour) sits inside it invisibly, then the magnifying
+    ' glass on top of the fill, then the border last so it stays crisp. The box is a child and
+    ' paints over its own sub-region afterwards -- which is fine, it is the same colour and it is
+    ' inset inside this border.
+    dim as long mxG      = AfxScaleX(FRMOPTIONS_MARGIN)
+    dim as long searchHG = AfxScaleY(FRMOPTIONS_SEARCH_H)
+    dim as long searchYG = (titleH - searchHG) \ 2
+    dim as long curveG   = AfxScaleY(8)
+
+    dim as RECT rcFrame
+    rcFrame.left   = mxG
+    ' Top edge nudged down 2px -- the frame read a touch high against the box inside it.
+    rcFrame.top    = searchYG + AfxScaleY(2)
+    rcFrame.right  = navW - mxG
+    rcFrame.bottom = searchYG + searchHG
+
+    buffer.SetBackColor( ghEditor.BackColorText )
+    buffer.PaintRoundRect( @rcFrame, curveG )
+
+    dim as RECT rcGlyph
+    rcGlyph.left   = mxG
+    rcGlyph.top    = searchYG
+    rcGlyph.right  = mxG + AfxScaleX(FRMOPTIONS_SEARCH_GLYPHW)
+    rcGlyph.bottom = searchYG + searchHG
+    buffer.SetForeColor( ghPanel.ForeColor )
+    buffer.SetBackColor( ghEditor.BackColorText )
+    buffer.SetFont( ghFont(SYMBOLFONT_10) )
+    buffer.PaintText( wchr(&hE721), @rcGlyph, DT_CENTER or DT_VCENTER or DT_SINGLELINE )
+
+    buffer.SetPenColor( ghEditor.Divider )
+    buffer.PaintRoundOutline( @rcFrame, curveG, 1 )
+
+    ' There is NO vertical rule between the nav list and the page any more -- the nav panel's
+    ' own distinct background (ghTopTabs.BackColorHot) separates the two columns instead.
+    ' There is also deliberately NO rule above the footer buttons and none between settings rows.
+
+    ' No rule under the page title -- the dialog has no divider lines at all now; the nav
+    ' column's own background separates it from the page.
 
     buffer.EndDoubleBuffer()
     EndPaint( hwnd, @ps )
@@ -395,31 +614,33 @@ end function
 ' through their click callback; IDCANCEL still arrives as a WM_COMMAND because
 ' IsDialogMessage synthesises one for the Escape key.
 ' ========================================================================================
+
 private sub frmOptions_ApplyAndClose( byval hwnd as HWND )
 
     frmOptions_SaveEditorOptions()
 
-    ' Reload the theme file in case it has changed
+    ' NO COLOUR EDITS ARE PERSISTED HERE ANY MORE. frmThemes owns the theme's whole
+    ' save/cancel lifecycle -- snapshot, live preview, file write and restore -- so this
+    ' dialog no longer knows the theme engine exists beyond loading what gConfig names.
+
+    ' The dialog has been previewing live, so gTheme() already holds the user's pick. Reload
+    ' from disk anyway, now that SaveEditorOptions has written gConfig: it makes what ships
+    ' exactly what a fresh start would load, rather than assuming the two agree -- and after
+    ' a colour edit it is a genuine round-trip check of what we just wrote.
     LoadThemeFile()
-    ' Refresh main background in case theme changed and no file open
-    AfxRedrawWindow( HWND_FRMMAIN )
-    ' Refresh the frmOutput controls (listviews and RichEdits)
-    AfxRedrawWindow( HWND_FRMOUTPUT )
-    frmOutput_SetControlColors()
+
+
+    ' One call replaces the old hand-written fan-out (four AfxRedrawWindow calls, the two
+    ' SyncThemes and the per-document ApplyProperties walk) -- all of that now lives in
+    ' Theme_ApplySubsystems, which the live preview drives too, so there is one path instead
+    ' of two that could disagree.
+    Theme_ApplyAll()
+
+    ' Still required, and NOT made redundant by the above: these are LAYOUT, not colour.
+    ' Hiding the toolbar or the statusbar changes geometry no repaint can fix.
     frmOutput_PositionWindows()
-    ' Refresh the menubar. The rest of the GUI will refresh via frmMain_PositionWindows
-    AfxRedrawWindow( HWND_FRMMAIN_MENUBAR )
     frmMenuBar_PositionWindows()
-
-    ' Reposition main windows in case hide toolbar/statusbar selected
     frmMain_PositionWindows
-
-    ' Apply the newly saved options to all open Scintilla windows
-    dim pDoc as clsDocument Ptr = gApp.pDocList
-    do until pDoc = 0
-        pDoc->ApplyProperties
-        pDoc = pDoc->pDocNext
-    loop
 
     SendMessage( hwnd, WM_CLOSE, 0, 0 )
 end sub
@@ -453,22 +674,113 @@ private function frmOptions_OnCommand( _
 end function
 
 
+' THE DIALOG IS NOT RESIZABLE, so there is no WM_GETMINMAXINFO handler and no minimum size.
+'
+' It used to be: WS_THICKFRAME plus a minimum of 700x480, with every page re-flowing to whatever
+' width it was dragged to. That is gone deliberately. A FIXED client turns "does this page fit?"
+' from a question with no stable answer -- it depended on how the user had dragged the window --
+' into one number that can be asserted, which is what frmOptions_SelfTest below does.
+'
+' The layouts still TAKE a width and still compute from it. That is not dead code: they are called
+' with the fixed width, and at 175% DPI it is a different number than at 100%. Nothing assumes a
+' constant.
+
+
 ' ========================================================================================
-' Keep the dialog usable when dragged small.
+' DOES EVERY PAGE FIT?                                  (TIKO_OPTIONS_SELFTEST=1)
+'
+' The dialog is fixed-size and only OPTPAGE_EDITOR scrolls, so every other page has to fit its
+' viewport or it CLIPS -- silently, with no scrollbar to hint that anything is missing.
+'
+' THIS CANNOT BE COMPUTED STATICALLY, which is why it is a runtime assertion rather than a
+' comment. Each page's Layout accumulates a running `y` over controls whose heights come from
+' GetIdealSize, the current font and the DPI; the answer at 100% is not the answer at 175%. So
+' the suite builds every page, lays it out at the real width, and compares what it asks for
+' against what it gets.
+'
+' IT VISITS THE PAGES THROUGH frmOptions_ShowPage, not by calling the layouts directly. A page
+' has to be BUILT before it can be laid out, and building is what ShowPage owns -- reaching past
+' it would measure a page whose controls do not exist yet and cheerfully report that nothing
+' overflows.
 ' ========================================================================================
-private function frmOptions_OnGetMinMaxInfo( byval hwnd as HWND, byval pmmi as MINMAXINFO ptr ) as LRESULT
-    if pmmi = 0 then return 0
-    ' The stored minimum is a CLIENT size; grow it by the frame so the constraint applies
-    ' to the window rect Windows actually checks.
-    dim as RECT rc
-    rc.left = 0: rc.top = 0
-    rc.right  = AfxScaleX(FRMOPTIONS_MIN_W)
-    rc.bottom = AfxScaleY(FRMOPTIONS_MIN_H)
-    AdjustWindowRectEx( @rc, GetWindowLongPtr(hwnd, GWL_STYLE), false, GetWindowLongPtr(hwnd, GWL_EXSTYLE) )
-    pmmi->ptMinTrackSize.x = rc.right - rc.left
-    pmmi->ptMinTrackSize.y = rc.bottom - rc.top
-    function = 0
-end function
+sub frmOptions_RunFitSelfTest()
+
+    if environ("TIKO_OPTIONS_SELFTEST") <> "1" then exit sub
+
+    dim as long nSaved = gOptCurrentPage
+
+    dim as RECT rcClient
+    GetClientRect( HWND_FRMOPTIONS, @rcClient )
+    dim as long nViewH = rcClient.bottom - AfxScaleY(FRMOPTIONS_TITLE_H) - AfxScaleY(FRMOPTIONS_FOOTER_H)
+    dim as long nViewW = rcClient.right - AfxScaleX(FRMOPTIONS_NAV_W)
+
+    ? ""
+    ? "--- TIKO_OPTIONS_SELFTEST (page fit) ---"
+    dim as string sHdr = "viewport " & str(nViewW) & " x " & str(nViewH) & " px at this DPI"
+    ? sHdr
+
+    dim as long nOver = 0
+    dim as long nBlank = 0
+
+    for nPage as long = 0 to OPTPAGE_COUNT - 1
+
+        frmOptions_ShowPage( nPage )
+
+        dim as HWND hPageWnd = frmOptions_PageParent( nPage )
+        if hPageWnd = 0 then continue for
+
+        ' THE PAGE'S CONTAINER IS ACTUALLY VISIBLE. This is the assertion that would have caught
+        ' the Code Editor page coming up blank: ShowPage had stopped calling ShowWindow(..SHOW)
+        ' on the scroll panel, so the one scrolling page showed its title band and nothing else.
+        ' The fit test builds and lays out a page whether or not it is shown, so height alone
+        ' said everything was fine -- visibility is a separate fact and has to be its own check.
+        dim as boolean bVisible = (IsWindowVisible( hPageWnd ) <> 0)
+        dim as string sVis = iif( bVisible, "PASS  ", "FAIL  " )
+        if bVisible = false then nBlank += 1
+        ? sVis & "page " & str(nPage) & " " & str( frmOptions_PageTitle( nPage ) ) & " container is visible"
+
+        dim as RECT rcPage
+        GetClientRect( hPageWnd, @rcPage )
+        dim as long cxPage = rcPage.right - rcPage.left
+        if cxPage <= 0 then cxPage = nViewW
+
+        dim as long nNeed = 0
+        if OptionsRows_HasPage( nPage ) then
+            nNeed = OptionsRows_LayoutPage( nPage, hPageWnd, cxPage )
+        elseif frmOptions_PanelHostedOwns( nPage ) then
+            nNeed = frmOptions_PanelLayout( nPage, hPageWnd, cxPage )
+        end if
+
+        ' NOTHING SCROLLS ANY MORE. Every page, Code Editor included, must fit the viewport.
+        dim as boolean bMayScroll = false
+        dim as boolean bFits = (nNeed <= nViewH)
+
+        dim as string sVerdict
+        if bFits then
+            sVerdict = "PASS  "
+        elseif bMayScroll then
+            sVerdict = "scrolls"
+        else
+            sVerdict = "FAIL  "
+            nOver += 1
+        end if
+
+        dim as string sLine = sVerdict & " page " & str(nPage) & " " & _
+                              str( frmOptions_PageTitle( nPage ) ) & _
+                              "   needs " & str(nNeed) & " of " & str(nViewH)
+        ? sLine
+    next
+
+    dim as string sSum = "--- page fit: " & str(nOver) & " overflow a viewport they cannot scroll, " & _
+                         str(nBlank) & " came up with no visible container ---"
+    ? sSum
+    ? ""
+
+    ' Put the user back where they were. Leaving the dialog on whatever page the loop finished
+    ' with would be a self-test with a side effect, which is its own kind of bug.
+    if nSaved <> OPTPAGE_NONE then frmOptions_ShowPage( nSaved )
+
+end sub
 
 
 ' ========================================================================================
@@ -499,9 +811,6 @@ function frmOptions_WndProc( _
             frmOptions_PositionWindows( hwnd )
             AfxRedrawWindow( hwnd )
             return 0
-
-        case WM_GETMINMAXINFO
-            return frmOptions_OnGetMinMaxInfo( hwnd, cast(MINMAXINFO ptr, lParam) )
 
         case WM_COMMAND
             return frmOptions_OnCommand( hwnd, loword(wParam), cast(HWND, lParam), hiword(wParam) )
@@ -585,13 +894,28 @@ end function
 ' ========================================================================================
 private sub frmOptions_ApplyTheme( byval hwnd as HWND )
 
-    PsListBox_SetBackColor( HWND_FRMOPTIONS_NAV, ghPanel.BackColor )
-    PsListBox_SetScrollBarColors( HWND_FRMOPTIONS_NAV, ghPanel.BackColorScrollBar, _
+    ' The nav panel reads in its own distinct shade -- this is what separates it from the page
+    ' now that the vertical divider is gone.
+    PsListTree_SetBackColor( HWND_FRMOPTIONS_NAV, ghTopTabs.BackColorHot )
+    PsListTree_SetScrollBarColors( HWND_FRMOPTIONS_NAV, ghPanel.BackColorScrollBar, _
                                  ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
 
-    PsScrollPanel_SetColors( HWND_FRMOPTIONS_SCROLL, ghPanel.BackColor, ghPanel.ForeColor )
-    PsScrollPanel_SetScrollBarColors( HWND_FRMOPTIONS_SCROLL, ghPanel.BackColorScrollBar, _
-                                     ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
+    if HWND_FRMOPTIONS_SEARCH then
+        ' A field-coloured box: editor background, dimmed cue, divider border, accent on focus.
+        ' Its background matches the frame the dialog fills behind it, so the two read as one
+        ' surface. The frame (fill + border) is drawn in frmOptions_OnPaint.
+        PsTextBox_SetBackColor( HWND_FRMOPTIONS_SEARCH, ghEditor.BackColorText )
+        PsTextBox_SetOuterBackColor( HWND_FRMOPTIONS_SEARCH, ghEditor.BackColorText )
+        PsTextBox_SetForeColor( HWND_FRMOPTIONS_SEARCH, ghEditor.ForeColorText )
+        PsTextBox_SetCueBannerColor( HWND_FRMOPTIONS_SEARCH, ghPanel.ForeColor )
+    end if
+
+        ' The plain container's WM_CTLCOLOR brush is derived from the back colour, so it is rebuilt
+    ' here rather than at first use -- otherwise a theme change would keep handing out a brush of
+    ' the PREVIOUS background for the rest of the session.
+    if ghOptPageBrush then DeleteObject( ghOptPageBrush )
+    ghOptPageBrush = CreateSolidBrush( ghPanel.BackColor )
+    if HWND_FRMOPTIONS_PAGE then AfxRedrawWindow( HWND_FRMOPTIONS_PAGE )
 
     dim as PSBUTTON_COLORS bc
     OptionsTheme_FillButton( @bc )
@@ -609,9 +933,10 @@ private sub frmOptions_ApplyTheme( byval hwnd as HWND )
     frmOptionsColors_ApplyTheme()     ' no-op until the page has been built
     frmOptionsKeywords_ApplyTheme()   ' no-op until the page has been built
 
-    ' Match the caption to the theme, the same test LoadThemeFile() uses for frmMain.
-    dim as long nDark = iif( instr(gConfig.ThemeShortFilename, "_dark") > 0, true, false )
-    DwmSetWindowAttribute( hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, @nDark, sizeof(nDark) )
+    ' Match the caption to the theme currently IN MEMORY. Must not read gConfig: while this
+    ' dialog is open the user's pick is staged in gOptWork and gConfig still names the old
+    ' theme, so the caption would lag the live preview all the way to OK.
+    Theme_ApplyDarkCaption( hwnd )
 
 end sub
 
@@ -619,24 +944,85 @@ end sub
 ' ========================================================================================
 ' Populate the grouped navigation list. Item rows carry their page id as itemData.
 ' ========================================================================================
+declare sub frmOptions_BuildNavList( byval hList as HWND )
+
+' Re-select the row that maps to the current page, if the filter still shows it. Silent -- it
+' does not switch pages, only restores the highlight after a rebuild.
+private sub frmOptions_NavReselect()
+    if HWND_FRMOPTIONS_NAV = 0 then exit sub
+    dim as long n = PsListTree_GetCount( HWND_FRMOPTIONS_NAV )
+    for i as long = 0 to n - 1
+        if PsListTree_GetItemData( HWND_FRMOPTIONS_NAV, i ) = gOptCurrentPage then
+            PsListTree_SetCurSel( HWND_FRMOPTIONS_NAV, i )
+            exit sub
+        end if
+    next
+end sub
+
+
+' The search text changed: re-flow the nav to the matching pages. Does NOT change which page is
+' shown -- typing narrows the list, clicking a result switches. If the only match is a single
+' page a user would expect to land on it, but auto-switching while they are still typing would
+' yank the page out from under them, so it is left to a click.
+private sub frmOptions_SearchChanged( byval hTextBox as HWND )
+    gOptNavFilter = PsTextBox_GetText( hTextBox )
+    frmOptions_BuildNavList( HWND_FRMOPTIONS_NAV )
+
+    ' The search box, in the blank top-left corner (the nav column's slice of the title band).
+    ' Single line; its pump obligation (PsTextBox_FilterMessage) is already met by the loop
+    ' below. The magnifying glyph is drawn by the dialog in the gutter to its left -- a child
+    ' cannot be drawn over, so the box is inset past the gutter rather than straddling it.
+    HWND_FRMOPTIONS_SEARCH = PsTextBox_Create( HWND_FRMOPTIONS, IDC_FRMOPTIONS_SEARCH )
+    PsTextBox_SetFont( HWND_FRMOPTIONS_SEARCH, OptionsFont_Base() )
+    ' NO BORDER of its own. The dialog draws one frame around the glyph AND the box together, so
+    ' the magnifying glass reads as being INSIDE the field rather than in a gutter beside it --
+    ' which a child window cannot achieve, because it paints over anything drawn under it. The
+    ' box is square for the same reason: the rounding lives on the drawn frame.
+    PsTextBox_SetBorderWidth( HWND_FRMOPTIONS_SEARCH, 0 )
+    PsTextBox_SetCornerRadius( HWND_FRMOPTIONS_SEARCH, 0 )
+    PsTextBox_SetMargins( HWND_FRMOPTIONS_SEARCH, AfxScaleX(4), AfxScaleX(4) )
+    PsTextBox_SetCueBannerText( HWND_FRMOPTIONS_SEARCH, L(488,"Search settings...") )
+    PsTextBox_SetChangeCallback( HWND_FRMOPTIONS_SEARCH, @frmOptions_SearchChanged )
+    frmOptions_NavReselect()
+    AfxRedrawWindow( HWND_FRMOPTIONS_NAV )
+end sub
+
+
 private sub frmOptions_BuildNavList( byval hList as HWND )
 
-    PsListBox_BeginUpdate( hList )
-    PsListBox_Clear( hList )
+    PsListTree_BeginUpdate( hList )
+    PsListTree_Clear( hList )
 
-    ' FLAT -- no PsListBox_AddHeader calls anywhere. Eight pages read fine as one list, and
-    ' merging Advanced Code Editor into Code Editor had left three of the five groups
-    ' holding a single item each.
-    PsListBox_AddString( hList, L(226,"General Options"),      OPTPAGE_GENERAL )
-    PsListBox_AddString( hList, L(110,"Code Editor"),          OPTPAGE_EDITOR )
-    PsListBox_AddString( hList, L(111,"Themes and Fonts"),     OPTPAGE_COLORS )
-    PsListBox_AddString( hList, L(112,"Compiler Setup"),       OPTPAGE_COMPILER )
-    PsListBox_AddString( hList, L(129,"Localization"),         OPTPAGE_LOCAL )
-    PsListBox_AddString( hList, L(177,"FreeBASIC Keywords"),   OPTPAGE_KEYWORDS )
-    PsListBox_AddString( hList, L(435,"Windows Api Keywords"), OPTPAGE_KEYWORDSWINAPI )
-    PsListBox_AddString( hList, L(439,"Extra Keywords"),       OPTPAGE_KEYWORDSEXTRA )
+    ' FLAT -- no PsListTree_AddHeader calls anywhere. The original dialog's five groups had
+    ' three holding a single item each, which is what made a flat list read better; splitting
+    ' Advanced Code Editor back out does not change that.
+    '
+    ' THE ORDER HERE IS THE ORDER THE USER SEES, and it is deliberately not the enum's order:
+    ' OPTPAGE_EDITOR2 is id 10 (appended, so stored page ids stay valid) but belongs directly
+    ' under Code Editor.
+    ' One helper per row so the filter test lives in exactly one place. A page whose title does
+    ' not contain the (lower-cased) filter is simply not added -- the list shrinks to the matches.
+    dim as string sFilter = lcase( trim( gOptNavFilter ) )
+    #macro NAVITEM( wszTitle, nPage )
+        scope
+            dim as DWSTRING wszT = (wszTitle)
+            if (len(sFilter) = 0) orelse (instr( lcase(wszT), sFilter ) > 0) then
+                PsListTree_AddString( hList, wszT, (nPage) )
+            end if
+        end scope
+    #endmacro
 
-    PsListBox_EndUpdate( hList )
+    NAVITEM( L(226,"General Options"),      OPTPAGE_GENERAL )
+    NAVITEM( L(110,"Code Editor"),          OPTPAGE_EDITOR )
+    NAVITEM( L(107,"Advanced Code Editor"), OPTPAGE_EDITOR2 )
+    NAVITEM( L(487,"Editor Font"),          OPTPAGE_COLORS )
+    NAVITEM( L(112,"Compiler Setup"),       OPTPAGE_COMPILER )
+    NAVITEM( L(129,"Localization"),         OPTPAGE_LOCAL )
+    NAVITEM( L(177,"FreeBASIC Keywords"),   OPTPAGE_KEYWORDS )
+    NAVITEM( L(435,"Windows Api Keywords"), OPTPAGE_KEYWORDSWINAPI )
+    NAVITEM( L(439,"Extra Keywords"),       OPTPAGE_KEYWORDSEXTRA )
+
+    PsListTree_EndUpdate( hList )
 
 end sub
 
@@ -645,8 +1031,8 @@ end sub
 ' Find the navigation row that carries a page id, or -1.
 ' ========================================================================================
 private function frmOptions_NavRowForPage( byval hList as HWND, byval nPage as long ) as long
-    for i as long = 0 to PsListBox_GetCount(hList) - 1
-        if PsListBox_GetItemData( hList, i ) = nPage then return i
+    for i as long = 0 to PsListTree_GetCount(hList) - 1
+        if PsListTree_GetItemData( hList, i ) = nPage then return i
     next
     function = -1
 end function
@@ -683,35 +1069,55 @@ function frmOptions_Show( byval hWndParent as HWND ) as LRESULT
     dim pWindow as CWindow ptr = new CWindow
 
     HWND_FRMOPTIONS = pWindow->Create( hWndParent, L(113,"Environment Options"), @frmOptions_WndProc, 0, 0, 0, 0, _
-        WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_THICKFRAME or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
+        WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
         WS_EX_DLGMODALFRAME or WS_EX_CONTROLPARENT or WS_EX_LEFT )
     pWindow->SetClientSize( FRMOPTIONS_CLIENT_W, FRMOPTIONS_CLIENT_H )
     pWindow->Center( pWindow->hWindow, hWndParent )
 
     ' ---- navigation list -------------------------------------------------------------
-    HWND_FRMOPTIONS_NAV = PsListBox_Create( HWND_FRMOPTIONS, IDC_FRMOPTIONS_NAVLIST )
-    PsListBox_SetPaintCallback( HWND_FRMOPTIONS_NAV, @frmOptions_NavPaintCallback )
-    PsListBox_SetSelChangeCallback( HWND_FRMOPTIONS_NAV, @frmOptions_NavSelChangeCallback )
-    PsListBox_SetFont( HWND_FRMOPTIONS_NAV, OptionsFont_Base() )
-    ' Row height is in UNSCALED units (PsListBox scales what it is handed) and has to grow
+    HWND_FRMOPTIONS_NAV = PsListTree_Create( HWND_FRMOPTIONS, IDC_FRMOPTIONS_NAVLIST )
+    PsListTree_SetPaintCallback( HWND_FRMOPTIONS_NAV, @frmOptions_NavPaintCallback )
+    PsListTree_SetSelChangeCallback( HWND_FRMOPTIONS_NAV, @frmOptions_NavSelChangeCallback )
+    PsListTree_SetFont( HWND_FRMOPTIONS_NAV, OptionsFont_Base() )
+    ' Row height is in UNSCALED units (PsListTree scales what it is handed) and has to grow
     ' with the base font, or a 12pt list clips its own rows.
-    PsListBox_SetRowHeight( HWND_FRMOPTIONS_NAV, 26 + ((OptionsFont_PointSize() - 10) * 2) )
+    PsListTree_SetRowHeight( HWND_FRMOPTIONS_NAV, 26 + ((OptionsFont_PointSize() - 10) * 2) )
     frmOptions_BuildNavList( HWND_FRMOPTIONS_NAV )
 
-    ' ---- scrolling page area ---------------------------------------------------------
-    HWND_FRMOPTIONS_SCROLL = PsScrollPanel_Create( HWND_FRMOPTIONS, IDC_FRMOPTIONS_SCROLLPANEL )
-    PsScrollPanel_SetPaintCallback( HWND_FRMOPTIONS_SCROLL, @frmOptions_PagePaintCallback )
-    PsScrollPanel_SetLayoutCallback( HWND_FRMOPTIONS_SCROLL, @frmOptions_PageLayoutCallback )
-    PsScrollPanel_SetScrollBarWidth( HWND_FRMOPTIONS_SCROLL, SCROLLBAR_WIDTH_PANEL )
-    ' Auto-scroll-to-focus is OFF, deliberately. It fires on the reveal timer when a control
-    ' takes focus -- including a PsComboBox taking focus on its button-DOWN. For a combo whose
-    ' body sits partly below the fold, that scroll slides the button up and out from under the
-    ' still-held cursor onto the just-opened dropdown, and the release then selects a row and
-    ' closes the list. The cost of turning it off is that Tab-ing to a control below the fold
-    ' no longer auto-reveals it; on a dialog this size that is a fair trade for usable combos.
-    PsScrollPanel_SetAutoScrollToFocus( HWND_FRMOPTIONS_SCROLL, false )
+    ' The search box, in the blank top-left corner (the nav column's slice of the title band).
+    ' Single line; its pump obligation (PsTextBox_FilterMessage) is already met by the loop
+    ' below. The magnifying glyph is drawn by the dialog in the gutter to its left -- a child
+    ' cannot be drawn over, so the box is inset past the gutter rather than straddling it.
+    HWND_FRMOPTIONS_SEARCH = PsTextBox_Create( HWND_FRMOPTIONS, IDC_FRMOPTIONS_SEARCH )
+    PsTextBox_SetFont( HWND_FRMOPTIONS_SEARCH, OptionsFont_Base() )
+    ' NO BORDER of its own. The dialog draws one frame around the glyph AND the box together, so
+    ' the magnifying glass reads as being INSIDE the field rather than in a gutter beside it --
+    ' which a child window cannot achieve, because it paints over anything drawn under it. The
+    ' box is square for the same reason: the rounding lives on the drawn frame.
+    PsTextBox_SetBorderWidth( HWND_FRMOPTIONS_SEARCH, 0 )
+    PsTextBox_SetCornerRadius( HWND_FRMOPTIONS_SEARCH, 0 )
+    PsTextBox_SetCueBannerText( HWND_FRMOPTIONS_SEARCH, L(488,"Search settings...") )
+    PsTextBox_SetChangeCallback( HWND_FRMOPTIONS_SEARCH, @frmOptions_SearchChanged )
 
-    dim as HWND hPage = PsScrollPanel_GetPanel( HWND_FRMOPTIONS_SCROLL )
+    ' ---- scrolling page area ---------------------------------------------------------
+    ' The plain page container, created BEFORE the scroll panel so it sits under it in the
+    ' z-order; they overlap exactly and only one is ever visible.
+    '
+    ' WS_EX_CONTROLPARENT IS LOAD-BEARING: this window really is a container, so IsDialogMessage
+    ' has to be told to descend into it. Without it Tab stops at the nav list and never reaches
+    ' any control on nine of the ten pages (C:\dev\Learnings.md).
+    scope
+        dim pPage as CWindow ptr = new CWindow
+        HWND_FRMOPTIONS_PAGE = pPage->Create( HWND_FRMOPTIONS, "", @frmOptions_PageWndProc, _
+                                              0, 0, 0, 0, _
+                                              WS_CHILD or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
+                                              WS_EX_CONTROLPARENT )
+    end scope
+
+    ' The page container is shown once, here, and never hidden -- it is the only container now.
+    ' (The Code Editor page's PsScrollPanel is gone: every page is plain and non-scrolling.)
+    ShowWindow( HWND_FRMOPTIONS_PAGE, SW_SHOW )
+    dim as HWND hPage = HWND_FRMOPTIONS_PAGE
 
     ' ---- footer buttons --------------------------------------------------------------
     dim as HWND hOK = PsButton_Create( HWND_FRMOPTIONS, IDC_FRMOPTIONS_CMDOK )
@@ -728,7 +1134,9 @@ function frmOptions_Show( byval hWndParent as HWND ) as LRESULT
     ShowWindow( hOK, SW_SHOW )
     ShowWindow( hCancel, SW_SHOW )
     ShowWindow( HWND_FRMOPTIONS_NAV, SW_SHOW )
-    ShowWindow( HWND_FRMOPTIONS_SCROLL, SW_SHOW )
+    ShowWindow( HWND_FRMOPTIONS_SEARCH, SW_SHOW )
+    ' NEITHER container is shown here -- frmOptions_ShowPage picks one below, and showing both
+    ' would flash the scroll panel over a page that does not live on it.
 
     ' No pages are created here any more -- every page (table-driven and panel-hosted) is
     ' built lazily on its first visit.
@@ -742,8 +1150,13 @@ function frmOptions_Show( byval hWndParent as HWND ) as LRESULT
     frmOptions_ShowPage( nStartPage )
 
     dim as long nNavRow = frmOptions_NavRowForPage( HWND_FRMOPTIONS_NAV, nStartPage )
-    if nNavRow >= 0 then PsListBox_SetCurSel( HWND_FRMOPTIONS_NAV, nNavRow )
+    if nNavRow >= 0 then PsListTree_SetCurSel( HWND_FRMOPTIONS_NAV, nNavRow )
 
+    ' FIT FIRST, and the order is load-bearing rather than tidy: frmOptions_RunFitSelfTest
+    ' visits every page through ShowPage, which is what BUILDS them. Run the row and font
+    ' tests before it and they silently skip whichever pages the user has not opened yet --
+    ' which is how the base-font comparison came to report a zero-row page.
+    frmOptions_RunFitSelfTest()
     OptionsRows_RunSelfTest( hPage )
 
     ShowWindow( HWND_FRMOPTIONS, SW_SHOW )
@@ -757,6 +1170,7 @@ function frmOptions_Show( byval hWndParent as HWND ) as LRESULT
     ' ---- message loop ----------------------------------------------------------------
     ' CWindow.DoEvents cannot be used: it has no *_FilterMessage hooks and this dialog
     ' hosts controls that require them.
+
     dim uMsg as MSG
     while GetMessage( @uMsg, null, 0, 0 )
 
@@ -773,6 +1187,14 @@ function frmOptions_Show( byval hWndParent as HWND ) as LRESULT
         ' The PsTextBox right-click menu; also covers any embedded PsNumericUpDown, whose
         ' own filter just forwards here.
         if PsTextBox_FilterMessage( @uMsg ) then continue while
+
+        ' The Localization page's phrase list edits its translation column in place, and that is
+        ' what makes this call mandatory. Its position is load-bearing in BOTH directions: ahead
+        ' of the Escape block below, or Escape during an edit closes the whole dialog instead of
+        ' cancelling the edit; and ahead of IsDialogMessage, or Enter fires the OK button instead
+        ' of committing. It is safe when nothing is editing, and safe to leave in place if that
+        ' page ever stops editing.
+        if PsListTree_FilterMessage( @uMsg ) then continue while
 
         ' ESCAPE cancels the dialog -- but only after the popup filters above, so an open
         ' combobox list or context menu closes on Escape first. This is handled explicitly
@@ -791,6 +1213,10 @@ function frmOptions_Show( byval hWndParent as HWND ) as LRESULT
         end if
     wend
 
+    ' Cancelled (or closed by Escape / the X): undo the live preview. Done AFTER the pump so
+    ' the repaint lands on the desktop the dialog has just vacated rather than on controls
+    ' that are about to be destroyed.
+
     ' delete the frmOptions CWindow class manually allocated memory
     if pWindow then delete(pWindow)
 
@@ -798,7 +1224,8 @@ function frmOptions_Show( byval hWndParent as HWND ) as LRESULT
     ' those controls sit on the scroll panel's page and self-free when it is destroyed.
 
     HWND_FRMOPTIONS_NAV    = 0
-    HWND_FRMOPTIONS_SCROLL = 0
+    HWND_FRMOPTIONS_SEARCH = 0
+    HWND_FRMOPTIONS_PAGE   = 0
     OptionsRows_ResetCombos()
     erase gOptRows
 

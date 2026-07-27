@@ -143,7 +143,7 @@ private sub AddProjectFileTypesToPopup( _
     ' single current file type, so nothing is checked (the old code suppressed
     ' CheckMenuRadioItem for exactly this case).
     dim as long nFileType = -1
-    dim as long nSelCount = PsListBox_GetSelCount( HWND_FRMEXPLORER )
+    dim as long nSelCount = PsListTree_GetSelCount( HWND_FRMEXPLORER )
     dim as boolean bAllowCheckMark = true
     if fExplorerTreeview andalso (nSelCount > 1) then bAllowCheckMark = false
 
@@ -386,16 +386,16 @@ private sub ExplorerContextMenu_OnSelect( byval hPopup as HWND, byval id as long
     ' are processed some of the actions may reset the state of the listbox. We save the
     ' pDoc's in an array rather than index values because the listbox may get reloaded
     ' during some actions invalidating some indexes.
-    dim as long nSelCount = PsListBox_GetSelCount( hCtl )
+    dim as long nSelCount = PsListTree_GetSelCount( hCtl )
     if nSelCount < 1 then exit sub
 
     dim pDocArray(nSelCount-1) as clsDocument ptr
     dim as integer nextIdx = 0
-    for i as integer = 0 to PsListBox_GetCount(hCtl) - 1
-        if PsListBox_IsHeader(hCtl, i) then continue for
-        if PsListBox_GetSel( hCtl, i ) = true then
+    for i as integer = 0 to PsListTree_GetCount(hCtl) - 1
+        if PsListTree_IsHeader(hCtl, i) then continue for
+        if PsListTree_GetSel( hCtl, i ) = true then
             if nextIdx > ubound(pDocArray) then exit for
-            dim as integer nItemData = PsListBox_GetItemData( hCtl, i )
+            dim as integer nItemData = PsListTree_GetItemData( hCtl, i )
             pDocArray(nextIdx) = cast(clsDocument ptr, nItemData)
             nextIdx = nextIdx + 1
         end if
@@ -432,7 +432,7 @@ sub ShowExplorerContextMenu( byval pDoc as clsDocument ptr )
     ' Some of our available choices are affected by the fact that multiple selections
     ' in the explorer listbox may exist. In that case, we allow options like "Close"
     ' and also don't set a selected FileType.
-    dim as long nSelCount = PsListBox_GetSelCount( HWND_FRMEXPLORER )
+    dim as long nSelCount = PsListTree_GetSelCount( HWND_FRMEXPLORER )
 
     PsPopupMenu_Clear( ghPopupExplorer )
 

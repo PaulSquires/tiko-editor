@@ -717,6 +717,18 @@ end sub
 
 
 ' ========================================================================================
+' Hand the cursor back to the window class after a drag ends. Needed because the drop can
+' happen without any further mouse movement: WM_SETCURSOR only arrives with motion, so
+' without this the four-headed arrow would stay on screen until the user moved the mouse.
+' ========================================================================================
+private sub PsTabBar_RestoreCursor( byval hTabBar as HWND )
+    dim as HCURSOR hCur = cast( HCURSOR, GetClassLongPtr( hTabBar, GCLP_HCURSOR ) )
+    if hCur = 0 then hCur = LoadCursor( null, IDC_ARROW )
+    SetCursor( hCur )
+end sub
+
+
+' ========================================================================================
 ' PsTabBar Window procedure
 '
 ' This control has no child windows, so there is nothing to subclass: every message is
@@ -774,6 +786,20 @@ function PsTabBar_WndProc( _
                 PsTabBar_ClearHotTracking( pTabBar, hwnd )
             end if
             return 0
+        end if
+
+    case WM_SETCURSOR
+        ' A drag-reorder is in progress: show the four-headed move cursor for the whole
+        ' gesture. Under capture the hit-test code in loword(lParam) can be anything (the
+        ' cursor legitimately roams off the control mid-drag), so it is deliberately not
+        ' tested here -- while bDragging we own the cursor unconditionally, and while we
+        ' are not dragging we claim nothing and DefWindowProc sets the class cursor.
+        ' Not offered to MessageCallback: the host's message list is unchanged by this.
+        if pTabBar then
+            if pTabBar->bDragging andalso (pTabBar->hDragCursor <> 0) then
+                SetCursor( pTabBar->hDragCursor )
+                return true
+            end if
         end if
 
     case WM_MOUSEMOVE
@@ -849,6 +875,11 @@ function PsTabBar_WndProc( _
                         pTabBar->bLastHotClose = false
                         pTabBar->nLastDragX = ptX   ' seed the direction-of-travel gate
                         PsTabBar_InvalidateTab( pTabBar, pTabBar->nPressedIdx )   ' isDragging visual on
+                        ' Set the move cursor here rather than waiting for WM_SETCURSOR:
+                        ' that message is sent BEFORE the WM_MOUSEMOVE that starts the
+                        ' drag, so leaving it to the handler above would cost one move of
+                        ' visible lag on every gesture.
+                        if pTabBar->hDragCursor then SetCursor( pTabBar->hDragCursor )
                     end if
                 end if
                 if pTabBar->bDragging andalso (idx <> -1) andalso (idx <> pTabBar->nPressedIdx) then
@@ -957,6 +988,7 @@ function PsTabBar_WndProc( _
                 ' reordering), so ending the drag is just turning the visual off.
                 pTabBar->bDragging = false
                 PsTabBar_InvalidateTab( pTabBar, pressedIdx )
+                PsTabBar_RestoreCursor( hwnd )
             end if
         end if
         if GetCapture() = hwnd then ReleaseCapture()
@@ -1037,6 +1069,7 @@ function PsTabBar_WndProc( _
             pTabBar->nPressedMidIdx = -1
             pTabBar->bDragging      = false
             PsTabBar_InvalidateTab( pTabBar, wasDragIdx )   ' no-op for -1
+            if wasDragIdx <> -1 then PsTabBar_RestoreCursor( hwnd )
         end if
 
     case WM_NOTIFY
@@ -1143,6 +1176,9 @@ function PsTabBar_Create( byval hWndParent as HWND, byval CtrlID as integer ) as
     pTabBar->nIconWidth  = pWindow->ScaleX( PSTABBAR_DEFAULT_ICONWIDTH )
     pTabBar->nBorderWidth = pWindow->ScaleX( 1 )
     if pTabBar->nBorderWidth < 1 then pTabBar->nBorderWidth = 1
+    ' Shared system cursor: loaded once, never destroyed (DestroyCursor is only for
+    ' cursors the caller created).
+    pTabBar->hDragCursor = LoadCursor( null, IDC_SIZEALL )
     SetWindowLongPtr( hCtrl, GWLP_ID, CtrlID )
 
     ' Store the new pointer into the user data area of the tab window

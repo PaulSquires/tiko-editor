@@ -14,7 +14,7 @@
 #include once "frmHelpViewer.bi"
 
 
-' The topics list is a PsListBox, which owns and drives its OWN PsVScrollBar internally
+' The topics list is a PsListTree, which owns and drives its OWN PsVScrollBar internally
 ' (created, ranged, positioned and auto-hidden by the control). The hand-written
 ' frmHelpViewer_UpdateScrollBar / _VScrollCallback pair that used to push item counts into
 ' a separate bar is gone with it; only the help TEXT still needs that wiring, below.
@@ -69,7 +69,7 @@ end sub
 ' ========================================================================================
 ' Paint one topics row.
 ' ========================================================================================
-sub frmHelpViewer_ListPaint( byval p as PSLISTBOX_PAINTINFO ptr )
+sub frmHelpViewer_ListPaint( byval p as PSLISTTREE_PAINTINFO ptr )
     dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMHELPVIEWER)
     if pWindow = 0 then exit sub
 
@@ -107,7 +107,7 @@ end sub
 
 ' ========================================================================================
 ' The user selected a different topic -- by clicking it OR with the arrow keys. Load it.
-' Silent for PsListBox_SetCurSel, which is why seeding the initial selection at startup does
+' Silent for PsListTree_SetCurSel, which is why seeding the initial selection at startup does
 ' not load the file twice.
 ' ========================================================================================
 sub frmHelpViewer_ListSelChange( byval hCtl as HWND, byval row as integer )
@@ -116,7 +116,7 @@ sub frmHelpViewer_ListSelChange( byval hCtl as HWND, byval row as integer )
 end sub
 
 
-' With no tooltip callback PsListBox falls back to showing the row's own text, and the rows
+' With no tooltip callback PsListTree falls back to showing the row's own text, and the rows
 ' now carry their captions -- so the topics list would sprout tooltips it never had. Return
 ' "" to keep the previous behavior. Delete this (and the SetTooltipCallback call) to get
 ' tooltips for topic names that are too long for the panel.
@@ -214,7 +214,7 @@ function frmHelpViewer_PositionWindows() as LRESULT
     ' from it, not the other way round. The limits are ours to compute; the control never
     ' guesses them.
     '
-    ' The topics PsListBox carries its own scrollbar INSIDE its client rect (auto-hidden when
+    ' The topics PsListTree carries its own scrollbar INSIDE its client rect (auto-hidden when
     ' the rows fit), so the left panel now runs edge-to-edge up to the bar -- there is no
     ' separate scrollbar strip in this form's layout. Only the help TEXT still has
     ' an external PsVScrollBar, on the far right.
@@ -358,7 +358,7 @@ function frmHelpViewer_WndProc( _
         dim as CWindow ptr pWindow = AfxCWindowPtr(hwnd)
         if pWindow then delete(pWindow)
         HWND_FRMHELPVIEWER = 0
-        ' The PsListBox/PsVScrollBar/PsTextBox/PsSplitter children destroyed themselves in
+        ' The PsListTree/PsVScrollBar/PsTextBox/PsSplitter children destroyed themselves in
         ' their own WM_NCDESTROY; reset the handles here (the Help window can be closed
         ' and reopened).
         HWND_FRMHELPVIEWER_LEFTPANEL = 0
@@ -406,10 +406,9 @@ function frmHelpViewer_Show( byval hWndParent as HWND ) as LRESULT
     pWindow->BigIcon   = LoadImage( pWindow->InstanceHandle, "IMAGE_AAA_MAINICON", IMAGE_ICON, 32, 32, LR_SHARED)
     pWindow->SmallIcon = LoadImage( pWindow->InstanceHandle, "IMAGE_AAA_MAINICON", IMAGE_ICON, 16, 16, LR_SHARED)
 
-    dim as long nvalue = false
-    if instr(gConfig.ThemeShortFilename, "_dark") then nvalue = true
     ' Attempt to apply the standard Windows dark theme to the non-client areas of the main form.
-    DwmSetWindowAttribute(HWND_FRMHELPVIEWER, DWMWA_USE_IMMERSIVE_DARK_MODE, @nvalue, sizeof(nvalue))
+    ' Reads the theme currently IN MEMORY, not gConfig -- see Theme_IsDark.
+    Theme_ApplyDarkCaption( HWND_FRMHELPVIEWER )
 
     if (gConfig.HelpStartupRight = 0) orelse (gConfig.HelpStartupBottom = 0) then
         gConfig.HelpStartupRight  = pWindow->ScaleX(800)
@@ -428,28 +427,28 @@ function frmHelpViewer_Show( byval hWndParent as HWND ) as LRESULT
     end with
     SetWindowPlacement( pWindow->hWindow, @WinPla )
 
-    ' Topics list: the reusable PsListBox control. It wraps the Win32 listbox, owns and
+    ' Topics list: the reusable PsListTree control. It wraps the Win32 listbox, owns and
     ' auto-hides its own PsVScrollBar INSIDE its client rect, tracks hover, and delegates row
     ' drawing to frmHelpViewer_ListPaint -- which is why the form no longer carries a
     ' WM_DRAWITEM/WM_MEASUREITEM pair, a listbox subclass, or a second scrollbar.
     ' PositionWindows sizes it, so no initial size is needed here.
     HWND_FRMHELPVIEWER_LEFTPANEL = _
-        PsListBox_Create( HWND_FRMHELPVIEWER, IDC_FRMHELPVIEWER_LEFTPANEL )
-    PsListBox_SetPaintCallback( HWND_FRMHELPVIEWER_LEFTPANEL, @frmHelpViewer_ListPaint )
+        PsListTree_Create( HWND_FRMHELPVIEWER, IDC_FRMHELPVIEWER_LEFTPANEL )
+    PsListTree_SetPaintCallback( HWND_FRMHELPVIEWER_LEFTPANEL, @frmHelpViewer_ListPaint )
     ' SelChange replaces the old LBN_SELCHANGE: it reports mouse AND keyboard moves.
-    PsListBox_SetSelChangeCallback( HWND_FRMHELPVIEWER_LEFTPANEL, @frmHelpViewer_ListSelChange )
-    PsListBox_SetTooltipCallback( HWND_FRMHELPVIEWER_LEFTPANEL, @frmHelpViewer_ListTooltip )
-    PsListBox_SetBackColor( HWND_FRMHELPVIEWER_LEFTPANEL, ghPanel.BackColor )
-    PsListBox_SetFont( HWND_FRMHELPVIEWER_LEFTPANEL, ghFont(GUIFONT_10) )
-    PsListBox_SetRowHeight( HWND_FRMHELPVIEWER_LEFTPANEL, EXPLORERITEM_HEIGHT )
+    PsListTree_SetSelChangeCallback( HWND_FRMHELPVIEWER_LEFTPANEL, @frmHelpViewer_ListSelChange )
+    PsListTree_SetTooltipCallback( HWND_FRMHELPVIEWER_LEFTPANEL, @frmHelpViewer_ListTooltip )
+    PsListTree_SetBackColor( HWND_FRMHELPVIEWER_LEFTPANEL, ghPanel.BackColor )
+    PsListTree_SetFont( HWND_FRMHELPVIEWER_LEFTPANEL, ghFont(GUIFONT_10) )
+    PsListTree_SetRowHeight( HWND_FRMHELPVIEWER_LEFTPANEL, EXPLORERITEM_HEIGHT )
     ' The bar is created/positioned/auto-hidden by the control; we only theme it, reusing
     ' the same painter as the help-text bar so both keep their existing look.
-    PsListBox_SetScrollBarWidth( HWND_FRMHELPVIEWER_LEFTPANEL, SCROLLBAR_WIDTH_PANEL )
-    PsListBox_SetScrollBarPaintCallback( HWND_FRMHELPVIEWER_LEFTPANEL, @frmHelpViewer_VScrollPaint )
+    PsListTree_SetScrollBarWidth( HWND_FRMHELPVIEWER_LEFTPANEL, SCROLLBAR_WIDTH_PANEL )
+    PsListTree_SetScrollBarPaintCallback( HWND_FRMHELPVIEWER_LEFTPANEL, @frmHelpViewer_VScrollPaint )
 
     ' Splitter between the topics list and the help text: the reusable PsSplitter control.
     ' Its position is its own left edge in this window's client coords -- which is now
-    ' exactly the left panel's width, since the topics scrollbar lives inside the PsListBox.
+    ' exactly the left panel's width, since the topics scrollbar lives inside the PsListTree.
     ' PositionWindows sizes it and pushes the limits, which clamp this seed.
     HWND_FRMHELPVIEWER_SPLITTER = PsSplitter_Create( HWND_FRMHELPVIEWER, _
         IDC_FRMHELPVIEWER_SPLITTER, PSSPLITTER_VERTICAL )
@@ -503,7 +502,7 @@ function frmHelpViewer_Show( byval hWndParent as HWND ) as LRESULT
                 ' p->wszCaption). The old code added an empty string and kept the text in a
                 ' parallel gHelpViewer.Topics array purely so WM_DRAWITEM could find it;
                 ' that array died with the handler.
-                idx = PsListBox_AddString( HWND_FRMHELPVIEWER_LEFTPANEL, mid(wst, 8) )
+                idx = PsListTree_AddString( HWND_FRMHELPVIEWER_LEFTPANEL, mid(wst, 8) )
                 redim preserve gHelpViewer.Filenames(idx)
                 continue do
             end if
@@ -521,13 +520,13 @@ function frmHelpViewer_Show( byval hWndParent as HWND ) as LRESULT
     
     ' SetCurSel is silent (programmatic), so the first topic is loaded explicitly here --
     ' exactly as before, and without the SelChange callback double-loading it.
-    PsListBox_SetCurSel( HWND_FRMHELPVIEWER_LEFTPANEL, 0 )
+    PsListTree_SetCurSel( HWND_FRMHELPVIEWER_LEFTPANEL, 0 )
     frmHelpViewer_LoadHelpFile(0)
 
     frmHelpViewer_PositionWindows()
 
     ShowWindow( HWND_FRMHELPVIEWER, SW_SHOW )
-    ' PsListBox_Create gives the inner Win32 listbox the SAME control id as the container,
+    ' PsListTree_Create gives the inner Win32 listbox the SAME control id as the container,
     ' so this reaches the focusable child rather than the wrapper.
     SetFocus( GetDlgItem( HWND_FRMHELPVIEWER_LEFTPANEL, IDC_FRMHELPVIEWER_LEFTPANEL ) )
 

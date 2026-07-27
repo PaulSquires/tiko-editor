@@ -142,21 +142,18 @@ function frmMain_SetStatusbar() as long
         wszText = "Spaces: " & gConfig.TabSize
         PsStatusBar_SetText( HWND_FRMMAIN_STATUSBAR, SPACES_PANEL, wszText )
         
-        ' PANEL File Encoding (Ansi, UTF-8, UTF-16)
+        ' PANEL File Encoding (Ansi, UTF-8, UTF-16) -- DISPLAY ONLY.
+        ' This must NOT call SCI_SETCODEPAGE. The status bar refreshes on every caret move,
+        ' and issuing a codepage change here reinterprets the document's existing bytes under
+        ' a new layout without converting them -- which corrupted the buffer the instant
+        ' FileEncoding was relabelled (INVARIANT E1). The codepage is owned by ApplyProperties
+        ' (on load) and ConvertTextBuffer (on an explicit user switch), nowhere else.
         select case pDoc->FileEncoding
-            case FILE_ENCODING_UTF8
-                wszText = "UTF-8"   
-                SciExec( hEdit, SCI_SETCODEPAGE, SC_CP_UTF8, 0 )
-            case FILE_ENCODING_UTF8_BOM
-                wszText = "UTF-8 (BOM)"   
-                SciExec( hEdit, SCI_SETCODEPAGE, SC_CP_UTF8, 0 )
-            case FILE_ENCODING_UTF16_BOM
-                wszText = "UTF-16 (BOM)"   
-                SciExec( hEdit, SCI_SETCODEPAGE, SC_CP_UTF8, 0 )
-            case else
-                wszText = "ANSI"  
-                SciExec( hEdit, SCI_SETCODEPAGE, 0, 0 )
-        end select 
+            case FILE_ENCODING_UTF8      : wszText = "UTF-8"
+            case FILE_ENCODING_UTF8_BOM  : wszText = "UTF-8 (BOM)"
+            case FILE_ENCODING_UTF16_BOM : wszText = "UTF-16 (BOM)"
+            case else                    : wszText = "ANSI"
+        end select
         PsStatusBar_SetText( HWND_FRMMAIN_STATUSBAR, UTF_PANEL, wszText )
 
         ' PANEL Line Endings
@@ -867,6 +864,7 @@ function frmMain_PositionWindows() as LRESULT
         nHeightTabFindPanel = 0
         nHeightTabReplacePanel = 0
         ShowWindow( HWND_FRMMAIN_TOPTABS, SW_HIDE )
+        ShowWindow( HWND_FRMMAIN_TOPTABSMENU, SW_HIDE )
     end if
 
     if (gTTabCtl.GetItemCount() > 0) then
@@ -1425,6 +1423,14 @@ function frmMain_WndProc( _
                 KillTimer( hwnd, IDT_PARSER_DEBOUNCE )
                 gScanMgr.RequestBufferScan( gTTabCtl.GetActiveDocumentPtr() )
             end if
+            if wParam = IDT_THEME_COALESCE then
+                ' A live theme edit has settled. This timer lives here rather than on the
+                ' Options dialog because the dialog's own pump is an all-window GetMessage,
+                ' so a frmMain timer still arrives while it is up -- and unlike the dialog,
+                ' frmMain is always alive.
+                KillTimer( hwnd, IDT_THEME_COALESCE )
+                Theme_OnCoalesceTimer()
+            end if
             
         case WM_NCACTIVATE
             ' if wParam is false then the system wants to draw an inactive title bar. we
@@ -1447,7 +1453,7 @@ function frmMain_WndProc( _
             ' Only the busy cursor is frmMain's to set. The two drag arms that used to
             ' head this chain (a hand-rolled splitter/listview drag, and a top-tab drag)
             ' are gone with their globals: every drag site is a reusable control now --
-            ' PsSplitter, PsListBox, PsTabBar -- and each sets its own cursor from its own
+            ' PsSplitter, PsListTree, PsTabBar -- and each sets its own cursor from its own
             ' WM_SETCURSOR, so frmMain must not answer for them.
             if (gApp.IsCompiling = true) or _
                (gApp.IsProjectLoading = true) or _
@@ -1627,6 +1633,13 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     
     ' Load the currently selected theme (this needs a valid pWindow HWND_FRMMAIN to exists)
     LoadThemeFile()
+    ' Env-gated; returns immediately unless TIKO_THEME_SELFTEST=1. Runs here because it needs
+    ' a fully parsed theme, and it snapshots/restores gTheme around its destructive cases.
+    Theme_RunSelfTest()
+    OptionsRows_RunBindTest()
+    ' Env-gated (TIKO_ENCODING_SELFTEST=1). Pure byte-exact + disk round-trip; needs no
+    ' document window, so it is safe to run here at startup.
+    Encoding_RunSelfTest()
     
     ' Set the small and large icon for the main window (must be set after main window is created)
     pWindow->BigIcon   = LoadImage( pWindow->InstanceHandle, "IMAGE_AAA_MAINICON", IMAGE_ICON, 32, 32, LR_SHARED)
@@ -1646,6 +1659,16 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
 
     ' Build the keyboard accelerators
     frmKeyboard_BuildAcceleratorTable()
+
+    ' Key vocabulary self-test. AFTER the build, because that is what populates gKeys() --
+    ' run before it and the defaults-table assertions would walk an empty array and pass.
+    KeyBindings_RunSelfTest()
+    frmKeyboard_RunSelfTest()
+    frmKeyboardEdit_RunSelfTest()
+    ' Open the Keyboard Shortcuts dialog immediately, so its layout/filter self-test can be
+    ' run without a human driving the menu. The dialog is MODAL, so startup stops here until
+    ' it is closed -- that is what this flag is for, and it is why it is not on by default.
+    if environ("TIKO_KEYBOARD_AUTOOPEN") = "1" then frmKeyboard_Show( HWND_FRMMAIN )
 
     ' Create the main application topmenu menubar
     frmMenuBar_Show( HWND_FRMMAIN )

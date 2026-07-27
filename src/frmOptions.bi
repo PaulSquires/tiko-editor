@@ -15,6 +15,7 @@
 
 #Define IDC_FRMOPTIONS_NAVLIST                      1000
 #Define IDC_FRMOPTIONS_SCROLLPANEL                  1010
+#Define IDC_FRMOPTIONS_SEARCH                       1011
 #Define IDC_FRMOPTIONS_CMDOK                        1003
 #Define IDC_FRMOPTIONS_CMDCANCEL                    1001
 
@@ -24,11 +25,23 @@
 #Define IDC_FRMOPTIONS_FIRSTROW                     2000
 
 ' Shell metrics, UNSCALED -- run through AfxScaleX/AfxScaleY at use.
+' THE CLIENT SIZE IS FIXED -- the dialog carries no WS_THICKFRAME. There is deliberately no
+' minimum size any more: there is only one size.
+'
+' Everything a page is allowed to occupy falls out of these four numbers, and it is worth writing
+' the sum down because every page layout is measured against it:
+'
+'     page viewport = (CLIENT_W - NAV_W) x (CLIENT_H - TITLE_H - FOOTER_H)
+'                   =  (900 - 220)       x  (620 - 52 - 58)
+'                   =   680              x   510          , unscaled
+'
+' A page that needs more than that no longer scrolls -- only OPTPAGE_EDITOR does -- so it would
+' CLIP. frmOptions_SelfTest asserts the fit for every page rather than leaving it to be noticed.
 #Define FRMOPTIONS_CLIENT_W                          900
 #Define FRMOPTIONS_CLIENT_H                          620
-#Define FRMOPTIONS_MIN_W                             700
-#Define FRMOPTIONS_MIN_H                             480
 #Define FRMOPTIONS_NAV_W                             220
+#Define FRMOPTIONS_SEARCH_H                          40    ' the search box in the nav column
+#Define FRMOPTIONS_SEARCH_GLYPHW                     34    ' the magnifying-glass gutter left of it
 #Define FRMOPTIONS_TITLE_H                            52
 #Define FRMOPTIONS_FOOTER_H                           58
 #Define FRMOPTIONS_BTN_W                              92
@@ -38,10 +51,14 @@
 dim shared OptionsDialogLastOpened as long
 
 dim shared HWND_FRMOPTIONS_NAV    as HWND
-dim shared HWND_FRMOPTIONS_SCROLL as HWND
+dim shared HWND_FRMOPTIONS_SEARCH as HWND    ' PsTextBox -- filters the nav list by page title
+dim shared HWND_FRMOPTIONS_PAGE   as HWND    ' the single, non-scrolling page container
 
 declare function frmOptions_Show( byval hWndParent as HWND ) as LRESULT
 declare sub      frmOptions_ShowPage( byval nPage as long )
+' Re-flow the current page after its own content height changed (e.g. a panel page
+' showing/hiding part of itself). Was PsScrollPanel_Recalc; there is no scroll panel now.
+declare sub      frmOptions_RelayoutCurrentPage()
 
 ' A theme-matched PsMessageBox owned by the dialog. nPreset is MBX_BTN_OK or
 ' MBX_BTN_OKCANCEL; returns the dismissing id (IDOK / IDCANCEL). Runs its own nested modal

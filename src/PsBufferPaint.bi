@@ -58,6 +58,19 @@ declare function isMouseOverRECT( byval hWin as HWND, byval rc as RECT ) as bool
 declare function isMouseOverWindow( byval hChild as HWND ) as boolean
 declare function PaintRect( byval hDC as HDC, byval rc as RECT ptr, byval clr as COLORREF ) as long
 
+' How PaintImage places a bitmap in the destination rect.
+'   ASPECT  - scale to FIT inside the rect, aspect preserved, then centre (letterbox).
+'             The default: an icon dropped into a cell of a different shape should keep its
+'             proportions, not stretch. Never upscales past the rect, but WILL upscale a small
+'             image up to the rect (the cell states the size the host wants).
+'   STRETCH - fill the rect exactly, aspect ignored.
+'   CENTER  - draw at natural pixel size, centred, clipped by the rect if larger. No scaling.
+enum PS_IMGFIT
+    PS_IMGFIT_ASPECT = 0
+    PS_IMGFIT_STRETCH
+    PS_IMGFIT_CENTER
+end enum
+
 type PsBufferPaint
     private:
         _hwnd            as HWND
@@ -151,10 +164,81 @@ type PsBufferPaint
                 byval nCurvature as long = 20, _
                 byval nPenWidth as long = 1 _
                 ) as long
+    ' Fill a rect -- square or rounded -- with a two-stop LINEAR GRADIENT.
+    '
+    ' FILL ONLY, never strokes. If you want a frame over it, stroke one afterwards with
+    ' PaintRoundOutline; PaintBorderRect would fill it back over (that mistake has been made
+    ' four separate times in this family).
+    '
+    '   clr1/clr2   the two stops, in the direction nMode names.
+    '   nMode       LinearGradientModeHorizontal(0) / Vertical(1) / ForwardDiagonal(2) /
+    '               BackwardDiagonal(3). Vertical is the default because a vertical blend
+    '               across a horizontal bar is the "glossy" look this was added for.
+    '   nCurvature  the ellipse DIAMETER, as RoundRect took it -- the same vocabulary every
+    '               other method here uses. 0 = square corners, through the identical path.
+    '   rcBrush     OPTIONAL. The rect the gradient RAMP is measured across, when that is not
+    '               the rect being filled. Pass the whole track and fill one block of it, and
+    '               the blocks read as slices of one bar instead of N identical chips. NULL
+    '               (the default) means "measure across rc itself".
+    '
+    ' The brush cannot join the _pBrush cache -- that is typed CGpSolidBrush ptr and keyed on
+    ' a single ARGB -- so one is built per call and dies with the scope. Fine for the one or
+    ' two fills a progress bar issues per repaint; do NOT put this on a per-row path.
+    declare function PaintGradientRect( _
+                byval rc as RECT ptr, _
+                byval clr1 as COLORREF, _
+                byval clr2 as COLORREF, _
+                byval nMode as long = LinearGradientModeVertical, _
+                byval nCurvature as long = 0, _
+                byval rcBrush as RECT ptr = 0 _
+                ) as long
     ' Filled ellipse, optionally stroked. nPenWidth 0 = fill only.
     declare function PaintEllipse( _
                 byval rc as RECT ptr, _
                 byval nPenWidth as long = 0 _
+                ) as long
+    ' Filled polygon from nCount vertices, optionally stroked. nPenWidth 0 = fill only.
+    '
+    ' THE VERTICES ARE USED EXACTLY AS GIVEN. Every other closed shape here carries GDI's
+    ' -1 on both extents, because each mirrors a GDI call (RoundRect, Ellipse) whose fill
+    ' stops a row short of its own rect. A polygon has no rect and no GDI original to
+    ' match -- the caller states the corners -- so there is nothing to subtract. Do not
+    ' "harmonise" this with its neighbours.
+    '
+    ' Always antialiased: a polygon exists for its diagonals, which is exactly what the
+    ' square-shape methods turn smoothing OFF for.
+    '
+    ' The stroke is CENTRED on the path, not inset inside the fill the way
+    ' PaintRoundOutline's is -- a general polygon cannot be offset inward without real
+    ' geometry work. It does take the same +0.5 and the same DPI scaling, so a 1px polygon
+    ' edge lines up with a 1px PaintRoundOutline frame it joins.
+    '
+    ' Added for PsTooltip's balloon stem. Purely additive -- no existing method was touched
+    ' -- which is what makes the vendored copies safe to re-sync mechanically
+    ' (PaintTextEx's and PaintGradientRect's precedent).
+    declare function PaintPolygon( _
+                byval pts as POINT ptr, _
+                byval nCount as long, _
+                byval nPenWidth as long = 0 _
+                ) as long
+    ' Draw a GDI+ image (a CGpImage/CGpBitmap ptr, e.g. from PsImage.Image()) into rc.
+    '
+    ' This is where a control shows a real .ico/.png/.bmp instead of a Segoe Fluent Icons
+    ' glyph. The load/own/measure half lives in PsImage; the DRAW is here because it must go
+    ' through the buffer's OWN _pGraphics -- a control building a second CGpGraphics on this
+    ' same HDC would put two independently-batching GDI+ objects on one surface with nothing
+    ' coordinating their flushes (the reason PaintGradientRect had to live here too).
+    '
+    ' Takes a CGpImage ptr, NOT a PsImage ptr, so this class gains no dependency on PsImage:
+    ' the two are decoupled and either can be adopted alone.
+    '
+    ' nFit chooses placement (see the PS_IMGFIT enum). Scaling is HighQualityBicubic so a cell
+    ' a few pixels off the image's native size stays clean. Purely additive -- no existing
+    ' method touched, so the vendored copies re-sync mechanically (PaintPolygon's precedent).
+    declare function PaintImage( _
+                byval pImage as CGpImage ptr, _
+                byval rc as RECT ptr, _
+                byval nFit as long = PS_IMGFIT_ASPECT _
                 ) as long
     declare function PaintIconButton( _
             byval wszText as DWSTRING, _

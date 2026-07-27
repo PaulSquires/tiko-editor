@@ -1,18 +1,25 @@
 
 ''
-''  PsListBox.inc
+''  PsListTree.inc
 ''   
 
-#include once "PsListBox.bi"
+#include once "PsListTree.bi"
 
 
-function GetListBoxPointer( byval hListControl as HWND ) as PSLISTBOX ptr
+function GetListTreePointer( byval hListControl as HWND ) as PSLISTTREE ptr
     ' hListBox is actually the overall parent form (ListBox is the child)
     dim pWindow as CWindow ptr = AfxCWindowPtr(hListControl)
-    dim as PSLISTBOX ptr pList = null
-    if pWindow then pList = cast( PSLISTBOX ptr, pWindow->UserData(0) )
+    dim as PSLISTTREE ptr pList = null
+    if pWindow then pList = cast( PSLISTTREE ptr, pWindow->UserData(0) )
     return pList
 end function
+
+' Forward declarations for the in-place label editor. Its bodies live lower down (just before
+' the surface WndProc), but the early scroll/size helpers must be able to commit an active
+' edit before they move the view, so they need these visible up here.
+declare function PsListTree_EndEditInternal( byval pList as PSLISTTREE ptr, byval bCommit as boolean ) as boolean
+declare sub      PsListTree_CommitEditIfActive( byval pList as PSLISTTREE ptr )
+declare function PsListTree_BeginEditInternal( byval pList as PSLISTTREE ptr, byval row as integer, byval col as integer ) as boolean
 
 
 ' ========================================================================================
@@ -29,7 +36,7 @@ end function
 ' ========================================================================================
 
 ' Row height in pixels, DPI-scaled once. Was LB_GETITEMHEIGHT.
-private function PsListBox_ItemHeightPx( byval pList as PSLISTBOX ptr ) as integer
+private function PsListTree_ItemHeightPx( byval pList as PSLISTTREE ptr ) as integer
     if pList = 0 then return 0
     if pList->nItemHeightPx > 0 then return pList->nItemHeightPx
     dim as integer h = pList->RowHeight
@@ -40,22 +47,71 @@ private function PsListBox_ItemHeightPx( byval pList as PSLISTBOX ptr ) as integ
     return h
 end function
 
-' How many rows fit in the surface. Was a client-height / LB_GETITEMHEIGHT division.
-private function PsListBox_VisPerPage( byval pList as PSLISTBOX ptr ) as integer
+' Per-level tree indent in pixels, DPI-scaled once (ScaleX, since it is a horizontal metric --
+' scaling by Y would be wrong on a non-uniform-DPI display). Cached like the row height and
+' zeroed by the width/font setters so it re-derives.
+private function PsListTree_IndentPx( byval pList as PSLISTTREE ptr ) as integer
     if pList = 0 then return 0
-    dim as HWND hSurf = GetDlgItem( pList->hWin, pList->idc_ListBox )
+    if pList->nIndentPx > 0 then return pList->nIndentPx
+    dim as integer w = pList->IndentWidth
+    dim pWindow as CWindow ptr = AfxCWindowPtr( pList->hWin )
+    if pWindow then w = pWindow->ScaleX( pList->IndentWidth )
+    if w < 1 then w = 1
+    pList->nIndentPx = w
+    return w
+end function
+
+' Reserved twisty-band width in pixels, DPI-scaled once (ScaleX). The glyph is drawn inside
+' this band at the node's own indent offset.
+private function PsListTree_TwistyPx( byval pList as PSLISTTREE ptr ) as integer
+    if pList = 0 then return 0
+    if pList->nTwistyPx > 0 then return pList->nTwistyPx
+    dim as integer w = pList->TwistyWidth
+    dim pWindow as CWindow ptr = AfxCWindowPtr( pList->hWin )
+    if pWindow then w = pWindow->ScaleX( pList->TwistyWidth )
+    if w < 1 then w = 1
+    pList->nTwistyPx = w
+    return w
+end function
+
+' The per-level indent (in px) applied to a row's column-0 content and to the LEFT edge of
+' its twisty -- the tree-indent contribution only, NOT the reserved twisty band. Returns 0
+' when tree indent is off. This is the ONE place the level->x mapping lives, so the paint
+' loop and the twisty hit-test cannot disagree about where the twisty sits.
+private function PsListTree_RowLevelIndentPx( byval pList as PSLISTTREE ptr, byval modelRow as integer ) as integer
+    if pList = 0 then return 0
+    if pList->bTreeIndent = false then return 0
+    dim as PSLISTTREE_ROWINFO ptr pRow = pList->GetRow( modelRow )
+    if pRow = 0 then return 0
+    return pRow->level * PsListTree_IndentPx( pList )
+end function
+
+' TRUE when client-x lies within modelRow's twisty band. Only a row with children and only
+' while ShowTwisty is on has a twisty; the y is already known (the caller resolved the row).
+private function PsListTree_PointOverTwisty( byval pList as PSLISTTREE ptr, byval x as integer, byval modelRow as integer ) as boolean
+    if pList = 0 then return false
+    if pList->bShowTwisty = false then return false
+    if pList->HasChildrenAt( modelRow ) = false then return false
+    dim as integer tx = PsListTree_RowLevelIndentPx( pList, modelRow )   ' rc.left is 0 (client coords)
+    return (x >= tx) andalso (x < tx + PsListTree_TwistyPx( pList ))
+end function
+
+' How many rows fit in the surface. Was a client-height / LB_GETITEMHEIGHT division.
+private function PsListTree_VisPerPage( byval pList as PSLISTTREE ptr ) as integer
+    if pList = 0 then return 0
+    dim as HWND hSurf = GetDlgItem( pList->hWin, pList->idc_ListTree )
     if hSurf = 0 then return 0
     dim as RECT rc : GetClientRect( hSurf, @rc )
-    dim as integer ih = PsListBox_ItemHeightPx( pList )
+    dim as integer ih = PsListTree_ItemHeightPx( pList )
     if ih < 1 then return 0
     return (rc.bottom - rc.top) \ ih
 end function
 
 ' Clamp a visible top index the way LB_SETTOPINDEX did: never past the point where the
 ' last row sits at the bottom of the viewport, and never negative.
-private function PsListBox_ClampTopVis( byval pList as PSLISTBOX ptr, byval vis as integer ) as integer
+private function PsListTree_ClampTopVis( byval pList as PSLISTTREE ptr, byval vis as integer ) as integer
     if pList = 0 then return 0
-    dim as integer maxTop = pList->visibleCount - PsListBox_VisPerPage( pList )
+    dim as integer maxTop = pList->visibleCount - PsListTree_VisPerPage( pList )
     if maxTop < 0 then maxTop = 0
     if vis > maxTop then vis = maxTop
     if vis < 0 then vis = 0
@@ -65,12 +121,15 @@ end function
 ' Scroll to a visible top index, clamping. Returns the value actually adopted, which is
 ' what the old code read back out of the listbox with LB_GETTOPINDEX after setting it.
 ' Repaints only when something moved.
-private function PsListBox_SetTopVis( byval pList as PSLISTBOX ptr, byval vis as integer ) as integer
+private function PsListTree_SetTopVis( byval pList as PSLISTTREE ptr, byval vis as integer ) as integer
     if pList = 0 then return 0
-    dim as integer newTop = PsListBox_ClampTopVis( pList, vis )
+    dim as integer newTop = PsListTree_ClampTopVis( pList, vis )
     if newTop <> pList->nTopVis then
+        ' An in-place edit is anchored to a row's on-screen rect; scrolling would strand the
+        ' editor over the wrong row, so commit it before the view moves (commit-then-teardown).
+        PsListTree_CommitEditIfActive( pList )
         pList->nTopVis = newTop
-        dim as HWND hSurf = GetDlgItem( pList->hWin, pList->idc_ListBox )
+        dim as HWND hSurf = GetDlgItem( pList->hWin, pList->idc_ListTree )
         ' Whole surface, not a scrolled band: the buffer redraws the whole client each paint.
         if hSurf then InvalidateRect( hSurf, NULL, FALSE )
     end if
@@ -80,18 +139,18 @@ end function
 ' The rect a visible row occupies in the surface's client area. Was ListBox_GetItemRect.
 ' Returns FALSE for a row that is not on screen, which the caller must respect -- the old
 ' API returned LB_ERR for the same case.
-private function PsListBox_VisIndexRect( _
-            byval pList as PSLISTBOX ptr, _
+private function PsListTree_VisIndexRect( _
+            byval pList as PSLISTTREE ptr, _
             byval vis as integer, _
             byref rc as RECT _
             ) as boolean
     SetRect( @rc, 0, 0, 0, 0 )
     if pList = 0 then return false
     if (vis < 0) orelse (vis >= pList->visibleCount) then return false
-    dim as HWND hSurf = GetDlgItem( pList->hWin, pList->idc_ListBox )
+    dim as HWND hSurf = GetDlgItem( pList->hWin, pList->idc_ListTree )
     if hSurf = 0 then return false
     dim as RECT rcClient : GetClientRect( hSurf, @rcClient )
-    dim as integer ih = PsListBox_ItemHeightPx( pList )
+    dim as integer ih = PsListTree_ItemHeightPx( pList )
     dim as integer y  = (vis - pList->nTopVis) * ih
     if y >= rcClient.bottom then return false
     if (y + ih) <= 0 then return false
@@ -104,18 +163,18 @@ end function
 ' the same cases makes that test a plain `>= 0`, which is why every call site reads more
 ' simply now. A point below the last row is NOT a row: the old call reported the nearest
 ' one, and every caller then had to discard it.
-private function PsListBox_VisIndexFromPoint( _
-            byval pList as PSLISTBOX ptr, _
+private function PsListTree_VisIndexFromPoint( _
+            byval pList as PSLISTTREE ptr, _
             byval x as integer, _
             byval y as integer _
             ) as integer
     if pList = 0 then return -1
-    dim as HWND hSurf = GetDlgItem( pList->hWin, pList->idc_ListBox )
+    dim as HWND hSurf = GetDlgItem( pList->hWin, pList->idc_ListTree )
     if hSurf = 0 then return -1
     dim as RECT rcClient : GetClientRect( hSurf, @rcClient )
     if (x < rcClient.left) orelse (x >= rcClient.right) then return -1
     if (y < rcClient.top)  orelse (y >= rcClient.bottom) then return -1
-    dim as integer ih = PsListBox_ItemHeightPx( pList )
+    dim as integer ih = PsListTree_ItemHeightPx( pList )
     if ih < 1 then return -1
     dim as integer vis = pList->nTopVis + (y \ ih)
     if (vis < 0) orelse (vis >= pList->visibleCount) then return -1
@@ -129,8 +188,8 @@ end function
 '   targetRow    -- MODEL index of the row under the point, or -1 past the last row
 ' Rules: over a header -> insert as its first child (header+1); over an item -> its top half
 ' inserts before it, its bottom half before the next visible row; below the last row -> end.
-private sub PsListBox_DropTargetFromPoint( _
-            byval pList as PSLISTBOX ptr, _
+private sub PsListTree_DropTargetFromPoint( _
+            byval pList as PSLISTTREE ptr, _
             byval x as integer, _
             byval y as integer, _
             byref insertBefore as integer, _
@@ -142,10 +201,10 @@ private sub PsListBox_DropTargetFromPoint( _
     if pList = 0 then exit sub
     if pList->rowCount <= 0 then exit sub
 
-    dim as HWND hSurf = GetDlgItem( pList->hWin, pList->idc_ListBox )
+    dim as HWND hSurf = GetDlgItem( pList->hWin, pList->idc_ListTree )
     if hSurf = 0 then exit sub
     dim as RECT rcClient : GetClientRect( hSurf, @rcClient )
-    dim as integer ih = PsListBox_ItemHeightPx( pList )
+    dim as integer ih = PsListTree_ItemHeightPx( pList )
     if ih < 1 then exit sub
 
     ' Which visible row does y fall in? Clamp above the top to the first visible row; below
@@ -200,15 +259,31 @@ end sub
 ' ========================================================================================
 ' Add a string (and optional itemData) to the end of the custom listbox control.
 ' ========================================================================================
-function PsListBox_AddString( byval hListControl as HWND, byval Text as DWSTRING, byval itemData as integer = 0, byval itemDataExtra as integer = 0 ) as integer
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_AddString( byval hListControl as HWND, byval Text as DWSTRING, byval itemData as integer = 0, byval itemDataExtra as integer = 0 ) as integer
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return -1
-    dim as PSLISTBOX_ROWINFO ptr pRow = pList->AddRow()
+    dim as PSLISTTREE_ROWINFO ptr pRow = pList->AddRow()
     if pRow = null then return -1
     pRow->Text = Text
     pRow->itemData = itemData
     pRow->itemDataExtra = itemDataExtra
-    return pList->GetCount() - 1  ' model index of the appended row
+    ' Legacy grouping as a depth-1 tree: an item added after a header (or after another
+    ' item already in that group) is a level-1 child; otherwise it is top-level. Reading
+    ' only the immediately preceding row keeps this O(1), so a big flat AddString load stays
+    ' O(n) -- and the level is what now makes a collapsed header hide these items.
+    dim as integer newIdx = pList->GetCount() - 1
+    if newIdx > 0 then
+        dim as PSLISTTREE_ROWINFO ptr pPrev = pList->GetRow( newIdx - 1 )
+        if pPrev andalso (pPrev->IsHeader orelse (pPrev->level = 1)) then
+            pRow->level = 1
+            ' AddRow already rebuilt the map with level 0 (visible); rebuild with the real
+            ' level so an item appended into a COLLAPSED group is correctly hidden. Only the
+            ' grouped path pays this -- a flat AddString load never enters here, so it stays
+            ' O(n) (and single grouped adds are normally inside BeginUpdate/EndUpdate anyway).
+            pList->NotifyChange()
+        end if
+    end if
+    return newIdx  ' model index of the appended row
 end function
 
 
@@ -216,10 +291,10 @@ end function
 ' Append a header (group) row. Child items added after it belong to this group
 ' until the next header. Returns the header's model index.
 ' ========================================================================================
-function PsListBox_AddHeader( byval hListControl as HWND, byval Text as DWSTRING, byval itemData as integer = 0, byval itemDataExtra as integer = 0 ) as integer
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_AddHeader( byval hListControl as HWND, byval Text as DWSTRING, byval itemData as integer = 0, byval itemDataExtra as integer = 0 ) as integer
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return -1
-    dim as PSLISTBOX_ROWINFO ptr pRow = pList->AddRow()
+    dim as PSLISTTREE_ROWINFO ptr pRow = pList->AddRow()
     if pRow = null then return -1
     pRow->IsHeader = true
     pRow->Text = Text
@@ -233,17 +308,105 @@ end function
 ' Insert a row at the given MODEL index (existing rows shift down). Returns the
 ' actual index used (clamped to [0, count]), or -1 on failure.
 ' ========================================================================================
-function PsListBox_InsertString( byval hListControl as HWND, byval row as integer, byval Text as DWSTRING, byval itemData as integer = 0, byval itemDataExtra as integer = 0 ) as integer
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_InsertString( byval hListControl as HWND, byval row as integer, byval Text as DWSTRING, byval itemData as integer = 0, byval itemDataExtra as integer = 0 ) as integer
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return -1
     dim as integer at = row
     if at < 0 then at = 0
     if at > pList->GetCount() then at = pList->GetCount()
-    dim as PSLISTBOX_ROWINFO ptr pRow = pList->InsertRowAt( at )
+    dim as PSLISTTREE_ROWINFO ptr pRow = pList->InsertRowAt( at )
     if pRow = null then return -1
     pRow->Text = Text
     pRow->itemData = itemData
     pRow->itemDataExtra = itemDataExtra
+    ' Same legacy depth-1 rule as AddString, keyed on the row now before the inserted one
+    ' (unchanged by the insert's upward shift).
+    if at > 0 then
+        dim as PSLISTTREE_ROWINFO ptr pPrev = pList->GetRow( at - 1 )
+        if pPrev andalso (pPrev->IsHeader orelse (pPrev->level = 1)) then
+            pRow->level = 1
+            pList->NotifyChange()      ' InsertRowAt built the map with level 0; rebuild with the real level
+        end if
+    end if
+    return at
+end function
+
+
+' ========================================================================================
+' Append a child node under parentRow (parentRow = -1 -> a new top-level node). The child
+' is inserted right after parentRow's entire existing subtree, at level parent.level + 1, so
+' it becomes the parent's LAST child. Returns the new row's MODEL index, or -1.
+' ========================================================================================
+function PsListTree_AddNode( byval hListControl as HWND, byval parentRow as integer, byval Text as DWSTRING, byval itemData as integer = 0, byval itemDataExtra as integer = 0 ) as integer
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return -1
+
+    dim as integer at, lvl
+    if parentRow < 0 then
+        at  = pList->rowCount           ' top-level append
+        lvl = 0
+    else
+        if pList->IsValidRow(parentRow) = false then return -1
+        at  = pList->LastDescendantOf( parentRow ) + 1   ' just past the parent's whole subtree
+        lvl = pList->rows(parentRow).level + 1
+    end if
+
+    dim as PSLISTTREE_ROWINFO ptr pRow = pList->InsertRowAt( at )
+    if pRow = null then return -1
+    pRow->Text          = Text
+    pRow->level         = lvl
+    pRow->itemData      = itemData
+    pRow->itemDataExtra = itemDataExtra
+    pList->NotifyChange()               ' InsertRowAt already notified once; harmless, keeps the pattern
+    return at
+end function
+
+
+' ========================================================================================
+' Insert a child among parentRow's DIRECT children at childIndex (clamped; childIndex >= the
+' current child count appends as the last child). parentRow = -1 inserts a top-level node at
+' top-level position childIndex. Returns the new row's MODEL index, or -1. The inserted node
+' is a leaf (its own subtree is empty); build deeper structure with further AddNode calls.
+' ========================================================================================
+function PsListTree_InsertNode( byval hListControl as HWND, byval parentRow as integer, byval childIndex as integer, byval Text as DWSTRING, byval itemData as integer = 0, byval itemDataExtra as integer = 0 ) as integer
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return -1
+    if childIndex < 0 then childIndex = 0
+
+    ' Resolve the parent's level and the model index its direct children occupy.
+    dim as integer lvl, scanStart, scanEnd
+    if parentRow < 0 then
+        lvl       = 0
+        scanStart = 0
+        scanEnd   = pList->rowCount - 1
+    else
+        if pList->IsValidRow(parentRow) = false then return -1
+        lvl       = pList->rows(parentRow).level + 1
+        scanStart = parentRow + 1
+        scanEnd   = pList->LastDescendantOf( parentRow )   ' end of the parent's subtree
+    end if
+
+    ' Walk the parent's subtree (or the whole model for top-level), counting DIRECT children
+    ' of level lvl; the insertion point is right before the childIndex-th one, else after the
+    ' whole subtree/list (append as last child).
+    dim as integer at = scanEnd + 1
+    dim as integer seen = 0
+    for i as integer = scanStart to scanEnd
+        if pList->rows(i).level < lvl then exit for        ' (top-level scan) left this branch
+        if pList->rows(i).level = lvl then
+            if seen = childIndex then at = i : exit for
+            seen += 1
+        end if
+    next
+    if parentRow < 0 andalso at > pList->rowCount then at = pList->rowCount
+
+    dim as PSLISTTREE_ROWINFO ptr pRow = pList->InsertRowAt( at )
+    if pRow = null then return -1
+    pRow->Text          = Text
+    pRow->level         = lvl
+    pRow->itemData      = itemData
+    pRow->itemDataExtra = itemDataExtra
+    pList->NotifyChange()
     return at
 end function
 
@@ -251,8 +414,8 @@ end function
 ' ========================================================================================
 ' Delete the row at the given MODEL index. Returns TRUE on success.
 ' ========================================================================================
-function PsListBox_DeleteString( byval hListControl as HWND, byval row as integer ) as boolean
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_DeleteString( byval hListControl as HWND, byval row as integer ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return false
     return pList->DeleteRowAt( row )
 end function
@@ -261,8 +424,8 @@ end function
 ' ========================================================================================
 ' Remove all rows from the control.
 ' ========================================================================================
-sub PsListBox_Clear( byval hListControl as HWND )
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+sub PsListTree_Clear( byval hListControl as HWND )
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return
     pList->Clear()
 end sub
@@ -272,27 +435,37 @@ end sub
 ' Row type / collapse queries and operations. Collapse/Expand/Toggle only act on
 ' header rows (return FALSE for non-headers or invalid rows).
 ' ========================================================================================
-function PsListBox_IsHeader( byval hListControl as HWND, byval row as integer ) as boolean
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_IsHeader( byval hListControl as HWND, byval row as integer ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return false
-    dim as PSLISTBOX_ROWINFO ptr pRow = pList->GetRow( row )
+    dim as PSLISTTREE_ROWINFO ptr pRow = pList->GetRow( row )
     if pRow = null then return false
     return pRow->IsHeader
 end function
 
-function PsListBox_IsCollapsed( byval hListControl as HWND, byval row as integer ) as boolean
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_IsCollapsed( byval hListControl as HWND, byval row as integer ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return false
-    dim as PSLISTBOX_ROWINFO ptr pRow = pList->GetRow( row )
+    dim as PSLISTTREE_ROWINFO ptr pRow = pList->GetRow( row )
     if pRow = null then return false
     return pRow->bCollapsed
 end function
 
-function PsListBox_CollapseRow( byval hListControl as HWND, byval row as integer ) as boolean
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+' A row that CAN collapse: a legacy header, or any tree node with children. A leaf item
+' cannot (there is nothing to hide). This is the single guard the collapse/expand API shares,
+' widening the old "headers only" rule while keeping empty legacy headers toggleable.
+private function PsListTree_CanCollapse( byval pList as PSLISTTREE ptr, byval row as integer ) as boolean
+    dim as PSLISTTREE_ROWINFO ptr pRow = pList->GetRow( row )
+    if pRow = null then return false
+    if pRow->IsHeader then return true
+    return pList->HasChildrenAt( row )
+end function
+
+function PsListTree_CollapseRow( byval hListControl as HWND, byval row as integer ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return false
-    dim as PSLISTBOX_ROWINFO ptr pRow = pList->GetRow( row )
-    if (pRow = null) orelse (pRow->IsHeader = false) then return false
+    if PsListTree_CanCollapse( pList, row ) = false then return false
+    dim as PSLISTTREE_ROWINFO ptr pRow = pList->GetRow( row )
     if pRow->bCollapsed = false then
         pRow->bCollapsed = true
         pList->NotifyChange()
@@ -300,11 +473,11 @@ function PsListBox_CollapseRow( byval hListControl as HWND, byval row as integer
     return true
 end function
 
-function PsListBox_ExpandRow( byval hListControl as HWND, byval row as integer ) as boolean
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_ExpandRow( byval hListControl as HWND, byval row as integer ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return false
-    dim as PSLISTBOX_ROWINFO ptr pRow = pList->GetRow( row )
-    if (pRow = null) orelse (pRow->IsHeader = false) then return false
+    if PsListTree_CanCollapse( pList, row ) = false then return false
+    dim as PSLISTTREE_ROWINFO ptr pRow = pList->GetRow( row )
     if pRow->bCollapsed then
         pRow->bCollapsed = false
         pList->NotifyChange()
@@ -312,26 +485,40 @@ function PsListBox_ExpandRow( byval hListControl as HWND, byval row as integer )
     return true
 end function
 
-function PsListBox_ExpandAll( byval hListControl as HWND ) as boolean
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+' Set the collapsed state directly (silent programmatic setter). Returns FALSE for a leaf
+' or invalid row.
+function PsListTree_SetNodeCollapsed( byval hListControl as HWND, byval row as integer, byval bCollapsed as boolean ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return false
-    dim as PSLISTBOX_ROWINFO ptr pRow
+    if PsListTree_CanCollapse( pList, row ) = false then return false
+    dim as PSLISTTREE_ROWINFO ptr pRow = pList->GetRow( row )
+    if pRow->bCollapsed <> bCollapsed then
+        pRow->bCollapsed = bCollapsed
+        pList->NotifyChange()
+    end if
+    return true
+end function
+
+function PsListTree_ExpandAll( byval hListControl as HWND ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return false
+    dim as PSLISTTREE_ROWINFO ptr pRow
     for i as integer = 0 to pList->rowCount - 1
+        if PsListTree_CanCollapse( pList, i ) = false then continue for
         pRow = pList->GetRow(i)
-        if (pRow = null) orelse (pRow->IsHeader = false) then continue for
         if pRow->bCollapsed then pRow->bCollapsed = false
     next
     pList->NotifyChange()
     return true
 end function
 
-function PsListBox_CollapseAll( byval hListControl as HWND ) as boolean
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_CollapseAll( byval hListControl as HWND ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return false
-    dim as PSLISTBOX_ROWINFO ptr pRow
+    dim as PSLISTTREE_ROWINFO ptr pRow
     for i as integer = 0 to pList->rowCount - 1
+        if PsListTree_CanCollapse( pList, i ) = false then continue for
         pRow = pList->GetRow(i)
-        if (pRow = null) orelse (pRow->IsHeader = false) then continue for
         if pRow->bCollapsed = false then pRow->bCollapsed = true
     next
     pList->NotifyChange()
@@ -339,11 +526,11 @@ function PsListBox_CollapseAll( byval hListControl as HWND ) as boolean
 end function
 
 
-function PsListBox_ToggleRow( byval hListControl as HWND, byval row as integer ) as boolean
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_ToggleRow( byval hListControl as HWND, byval row as integer ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return false
-    dim as PSLISTBOX_ROWINFO ptr pRow = pList->GetRow( row )
-    if (pRow = null) orelse (pRow->IsHeader = false) then return false
+    if PsListTree_CanCollapse( pList, row ) = false then return false
+    dim as PSLISTTREE_ROWINFO ptr pRow = pList->GetRow( row )
     pRow->bCollapsed = not pRow->bCollapsed
     pList->NotifyChange()
     return true
@@ -351,16 +538,45 @@ end function
 
 
 ' ========================================================================================
+' Tree structure queries (MODEL indices). All read the derived structure, so they work the
+' same whether the tree was built with AddNode or with the legacy AddHeader/AddString.
+' ========================================================================================
+function PsListTree_GetLevel( byval hListControl as HWND, byval row as integer ) as integer
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return -1
+    return pList->GetNodeLevel( row )
+end function
+
+function PsListTree_GetParent( byval hListControl as HWND, byval row as integer ) as integer
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return -1
+    return pList->ParentOf( row )
+end function
+
+function PsListTree_GetChildCount( byval hListControl as HWND, byval row as integer ) as integer
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return 0
+    return pList->ChildCountAt( row )
+end function
+
+function PsListTree_HasChildren( byval hListControl as HWND, byval row as integer ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return false
+    return pList->HasChildrenAt( row )
+end function
+
+
+' ========================================================================================
 ' Batch multiple model changes into a single visible-map rebuild + repaint. Wrap
 ' bulk inserts in BeginUpdate/EndUpdate to keep loading O(n) instead of O(n^2).
 ' ========================================================================================
-sub PsListBox_BeginUpdate( byval hListControl as HWND )
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+sub PsListTree_BeginUpdate( byval hListControl as HWND )
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList then pList->BeginUpdate()
 end sub
 
-sub PsListBox_EndUpdate( byval hListControl as HWND )
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+sub PsListTree_EndUpdate( byval hListControl as HWND )
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList then pList->EndUpdate()
 end sub
 
@@ -368,8 +584,8 @@ end sub
 ' ========================================================================================
 ' Number of currently visible rows (headers + non-collapsed items).
 ' ========================================================================================
-function PsListBox_GetVisibleCount( byval hListControl as HWND ) as integer
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_GetVisibleCount( byval hListControl as HWND ) as integer
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return 0
     return pList->GetVisibleCount()
 end function
@@ -379,11 +595,12 @@ end function
 ' Set specified row text in the custom listbox control. Returns TRUE on success,
 ' FALSE if the row index is invalid.
 ' ========================================================================================
-function PsListBox_SetText( byval hListControl as HWND, byval row as integer, byval Text as DWSTRING ) as boolean
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_SetText( byval hListControl as HWND, byval row as integer, byval Text as DWSTRING ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return false
     if pList->IsValidRow(row) then
         pList->GetRow(row)->Text = Text
+        pList->NotifyChange()       ' see the note on SetCellText below
         return true     ' success
     end if
     return false  ' invalid row
@@ -393,11 +610,11 @@ end function
 ' ========================================================================================
 ' Retrieve specified row text from the custom listbox control.
 ' ========================================================================================
-function PsListBox_GetText( byval hListControl as HWND, byval row as integer ) as DWSTRING
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_GetText( byval hListControl as HWND, byval row as integer ) as DWSTRING
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return ""
     if pList->IsValidRow(row) = false then return ""
-    dim as PSLISTBOX_ROWINFO ptr pRow = pList->GetRow(row)
+    dim as PSLISTTREE_ROWINFO ptr pRow = pList->GetRow(row)
     dim as DWSTRING wszText = pRow->Text
     return wszText
 end function
@@ -408,8 +625,8 @@ end function
 ' live in the row's sparse cells() storage -- see the .bi contract. Storage is grown by
 ' the ROWINFO member sub because fbc cannot parse `redim rows(i).cells(...)`.
 ' ========================================================================================
-function PsListBox_SetCellText( byval hListControl as HWND, byval row as integer, byval col as integer, byval Text as DWSTRING ) as boolean
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_SetCellText( byval hListControl as HWND, byval row as integer, byval col as integer, byval Text as DWSTRING ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return false
     if pList->IsValidRow(row) = false then return false
     if col < 0 then return false
@@ -419,17 +636,27 @@ function PsListBox_SetCellText( byval hListControl as HWND, byval row as integer
         pList->rows(row).EnsureCells( col )
         pList->rows(row).cells(col - 1) = Text
     end if
+    ' EVERY model mutator notifies. These two were the exceptions, and the result was a setter
+    ' that changed what the row says and left the old text on screen until an unrelated repaint
+    ' came along -- a host reasonably assumed writing a cell showed it, and reaching for
+    ' AfxRedrawWindow on the control handle does not help either, because the rows are painted
+    ' by the surface CHILD.
+    '
+    ' It costs a bulk loop nothing: NotifyChange is coalesced by updateDepth, so anything already
+    ' wrapped in BeginUpdate/EndUpdate -- which is what this control's own docs tell a caller to
+    ' do for bulk loads -- collapses to the single Refresh it always did.
+    pList->NotifyChange()
     return true
 end function
 
 
-function PsListBox_GetCellText( byval hListControl as HWND, byval row as integer, byval col as integer ) as DWSTRING
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_GetCellText( byval hListControl as HWND, byval row as integer, byval col as integer ) as DWSTRING
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return ""
     if pList->IsValidRow(row) = false then return ""
     if col < 0 then return ""
-    if col = 0 then return PsListBox_GetText( hListControl, row )
-    dim as PSLISTBOX_ROWINFO ptr pRow = pList->GetRow(row)
+    if col = 0 then return PsListTree_GetText( hListControl, row )
+    dim as PSLISTTREE_ROWINFO ptr pRow = pList->GetRow(row)
     if col - 1 > ubound(pRow->cells) then return ""   ' sparse: never-set cells read ""
     dim as DWSTRING wszText = pRow->cells(col - 1)
     return wszText
@@ -441,24 +668,24 @@ end function
 ' across the whole column band (its text stays in column 0). See the PAINTINFO contract in
 ' the .bi. Programmatic (silent); the change repaints so a visible row reflows immediately.
 ' ========================================================================================
-function PsListBox_SetRowSpanColumns( byval hListControl as HWND, byval row as integer, byval bSpan as boolean = true ) as boolean
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_SetRowSpanColumns( byval hListControl as HWND, byval row as integer, byval bSpan as boolean = true ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return false
     if pList->IsValidRow(row) = false then return false
     if pList->rows(row).bSpanColumns = bSpan then return true   ' no change, no repaint
     pList->rows(row).bSpanColumns = bSpan
     ' Repaint (no erase: the row callback fills every pixel). No-op inside a BeginUpdate
     ' batch, whose EndUpdate covers it. Inlined rather than calling the private
-    ' PsListBox_InvalidateRowsForColumns, which is defined further down this file.
+    ' PsListTree_InvalidateRowsForColumns, which is defined further down this file.
     if pList->updateDepth = 0 then
-        dim as HWND hList = GetDlgItem( pList->hWin, pList->idc_ListBox )
+        dim as HWND hList = GetDlgItem( pList->hWin, pList->idc_ListTree )
         if hList then InvalidateRect( hList, NULL, FALSE )
     end if
     return true
 end function
 
-function PsListBox_GetRowSpanColumns( byval hListControl as HWND, byval row as integer ) as boolean
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_GetRowSpanColumns( byval hListControl as HWND, byval row as integer ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return false
     if pList->IsValidRow(row) = false then return false
     return pList->rows(row).bSpanColumns
@@ -470,8 +697,8 @@ end function
 ' invariant is enforced in SetRowSelected / SelectOnly / SelectRange and the four public
 ' setters) and keyboard navigation skips it. See the .bi contract.
 ' ========================================================================================
-function PsListBox_SetRowSelectable( byval hListControl as HWND, byval row as integer, byval bSelectable as boolean = true ) as boolean
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_SetRowSelectable( byval hListControl as HWND, byval row as integer, byval bSelectable as boolean = true ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return false
     if pList->IsValidRow(row) = false then return false
     if pList->rows(row).bSelectable = bSelectable then return true   ' no change, no repaint
@@ -486,13 +713,13 @@ function PsListBox_SetRowSelectable( byval hListControl as HWND, byval row as in
         end if
         if pList->anchorRow = row then pList->anchorRow = -1
     end if
-    dim as HWND hList = GetDlgItem( pList->hWin, pList->idc_ListBox )
+    dim as HWND hList = GetDlgItem( pList->hWin, pList->idc_ListTree )
     if hList then InvalidateRect( hList, NULL, FALSE )
     return true
 end function
 
-function PsListBox_GetRowSelectable( byval hListControl as HWND, byval row as integer ) as boolean
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_GetRowSelectable( byval hListControl as HWND, byval row as integer ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return false
     if pList->IsValidRow(row) = false then return false
     return pList->rows(row).bSelectable
@@ -503,8 +730,8 @@ end function
 ' Drag-and-drop row reordering -- public surface. The gesture lives in the surface WndProc;
 ' these are the opt-in switch, the two callbacks, the colour, and the programmatic reorder.
 ' ========================================================================================
-function PsListBox_SetDragReorder( byval hListControl as HWND, byval enable as boolean = true ) as boolean
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_SetDragReorder( byval hListControl as HWND, byval enable as boolean = true ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return false
     pList->bDragReorder = enable
     if enable = false then
@@ -516,20 +743,20 @@ function PsListBox_SetDragReorder( byval hListControl as HWND, byval enable as b
     return true
 end function
 
-function PsListBox_GetDragReorder( byval hListControl as HWND ) as boolean
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_GetDragReorder( byval hListControl as HWND ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return false
     return pList->bDragReorder
 end function
 
-sub PsListBox_SetCanDropCallback( byval hListControl as HWND, byval usersub as CanDropCallbackFunc )
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+sub PsListTree_SetCanDropCallback( byval hListControl as HWND, byval usersub as CanDropCallbackFunc )
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return
     pList->CanDropCallback = usersub
 end sub
 
-sub PsListBox_SetDragDropCallback( byval hListControl as HWND, byval usersub as DragDropCallbackSub )
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+sub PsListTree_SetDragDropCallback( byval hListControl as HWND, byval usersub as DragDropCallbackSub )
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return
     pList->DragDropCallback = usersub
 end sub
@@ -537,23 +764,23 @@ end sub
 ' Programmatic reorder: move srcRows() so they land contiguously before insertBefore (a MODEL
 ' index; GetCount = append). Silent (the family rule -- no DragDrop callback). Repaints.
 ' Returns the block's new first MODEL index, or -1 if nothing valid moved.
-function PsListBox_MoveRows( byval hListControl as HWND, srcRows() as integer, byval insertBefore as integer ) as integer
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_MoveRows( byval hListControl as HWND, srcRows() as integer, byval insertBefore as integer ) as integer
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return -1
     ' The model method calls NotifyChange (-> Refresh) itself, like every other mutator.
     return pList->MoveRows( srcRows(), insertBefore )
 end function
 
-function PsListBox_SetDragIndicatorColor( byval hListControl as HWND, byval clr as COLORREF ) as COLORREF
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_SetDragIndicatorColor( byval hListControl as HWND, byval clr as COLORREF ) as COLORREF
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return 0
     dim as COLORREF prev = pList->dragIndicatorColor
     pList->dragIndicatorColor = clr
     return prev
 end function
 
-function PsListBox_GetDragIndicatorColor( byval hListControl as HWND ) as COLORREF
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_GetDragIndicatorColor( byval hListControl as HWND ) as COLORREF
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return 0
     return pList->dragIndicatorColor
 end function
@@ -562,8 +789,8 @@ end function
 ' ========================================================================================
 ' Set the user defined row painting callback for the custom listbox control.
 ' ========================================================================================
-sub PsListBox_SetPaintCallback( byval hListControl as HWND, byval usersub as PaintCallbackSub )
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+sub PsListTree_SetPaintCallback( byval hListControl as HWND, byval usersub as PaintCallbackSub )
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return 
     pList->PaintCallback = usersub
 end sub
@@ -572,8 +799,8 @@ end sub
 ' ========================================================================================
 ' Set the user defined message callback for the custom listbox control.
 ' ========================================================================================
-sub PsListBox_SetMessageCallback( byval hListControl as HWND, byval userfunc as MessageCallbackFunc )
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+sub PsListTree_SetMessageCallback( byval hListControl as HWND, byval userfunc as MessageCallbackFunc )
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return
     pList->MessageCallback = userfunc
 end sub
@@ -583,8 +810,8 @@ end sub
 ' Set the on-demand tooltip text callback. If none is set, the tooltip shows the
 ' hovered row's Text. Return "" from the callback to suppress the tooltip.
 ' ========================================================================================
-sub PsListBox_SetTooltipCallback( byval hListControl as HWND, byval userfunc as TooltipCallbackFunc )
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+sub PsListTree_SetTooltipCallback( byval hListControl as HWND, byval userfunc as TooltipCallbackFunc )
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return
     pList->TooltipCallback = userfunc
 end sub
@@ -592,20 +819,36 @@ end sub
 
 ' ========================================================================================
 ' Set the selection-changed callback. Fired only when the USER moves the selection -- with
-' the mouse or the keyboard -- never by PsListBox_SetCurSel/SetSel/SelectAll/Clear.
+' the mouse or the keyboard -- never by PsListTree_SetCurSel/SetSel/SelectAll/Clear.
 '
 ' This is the only way to observe keyboard navigation: the control consumes WM_KEYDOWN
 ' itself, so arrow/Page/Home/End moves never reach the message callback.
 ' ========================================================================================
-sub PsListBox_SetSelChangeCallback( byval hListControl as HWND, byval usersub as SelChangeCallbackSub )
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+sub PsListTree_SetSelChangeCallback( byval hListControl as HWND, byval usersub as SelChangeCallbackSub )
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return
     pList->SelChangeCallback = usersub
 end sub
 
+sub PsListTree_SetActivateCallback( byval hListControl as HWND, byval usersub as ActivateCallbackSub )
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return
+    pList->ActivateCallback = usersub
+end sub
+
+' Fire the row's default action. Refuses a non-selectable row for the same reason every
+' selection path does -- a row the user cannot land on cannot be the one they activated.
+private sub PsListTree_FireActivate( byval pList as PSLISTTREE ptr, byval modelRow as integer )
+    if pList = 0 then exit sub
+    if pList->ActivateCallback = 0 then exit sub
+    if pList->IsValidRow(modelRow) = false then exit sub
+    if pList->IsRowSelectable(modelRow) = false then exit sub
+    pList->ActivateCallback( pList->hWin, modelRow )
+end sub
+
 
 ' Resolve the tooltip text for a model row: host callback if set, else row Text.
-function PsListBox_ResolveTooltipText( byval pList as PSLISTBOX ptr, byval modelRow as integer ) as DWSTRING
+function PsListTree_ResolveTooltipText( byval pList as PSLISTTREE ptr, byval modelRow as integer ) as DWSTRING
     if (pList = null) orelse (pList->IsValidRow(modelRow) = false) then return ""
     if pList->TooltipCallback then return pList->TooltipCallback( pList->hWin, modelRow )
     return pList->rows(modelRow).Text
@@ -615,8 +858,8 @@ end function
 ' ========================================================================================
 ' Set the tooltip hovertime for the custom listbox control.
 ' ========================================================================================
-sub PsListBox_SetHoverTime( byval hListControl as HWND, byval milliseconds as integer )
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+sub PsListTree_SetHoverTime( byval hListControl as HWND, byval milliseconds as integer )
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return 
     pList->HoverTime = milliseconds
 end sub
@@ -626,8 +869,8 @@ end sub
 ' Set specified row itemData for the custom listbox control.
 ' Returns TRUE on success, FALSE if the row index is invalid.
 ' ========================================================================================
-function PsListBox_SetItemData( byval hListControl as HWND, byval row as integer, byval itemData as integer ) as boolean
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_SetItemData( byval hListControl as HWND, byval row as integer, byval itemData as integer ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return false
     if pList->IsValidRow(row) then
         pList->GetRow(row)->itemData = itemData
@@ -636,8 +879,8 @@ function PsListBox_SetItemData( byval hListControl as HWND, byval row as integer
     return false  ' invalid row
 end function
 
-function PsListBox_SetItemDataExtra( byval hListControl as HWND, byval row as integer, byval itemDataExtra as integer ) as boolean
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_SetItemDataExtra( byval hListControl as HWND, byval row as integer, byval itemDataExtra as integer ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return false
     if pList->IsValidRow(row) then
         pList->GetRow(row)->itemDataExtra = itemDataExtra
@@ -650,15 +893,15 @@ end function
 ' ========================================================================================
 ' Retrieve specified row itemData from the custom listbox control.
 ' ========================================================================================
-function PsListBox_GetItemData( byval hListControl as HWND, byval row as integer ) as integer
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_GetItemData( byval hListControl as HWND, byval row as integer ) as integer
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return 0
     if pList->IsValidRow(row) = false then return 0
     return pList->GetRow(row)->itemData
 end function
 
-function PsListBox_GetItemDataExtra( byval hListControl as HWND, byval row as integer ) as integer
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_GetItemDataExtra( byval hListControl as HWND, byval row as integer ) as integer
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return 0
     if pList->IsValidRow(row) = false then return 0
     return pList->GetRow(row)->itemDataExtra
@@ -668,8 +911,8 @@ end function
 ' ========================================================================================
 ' Retrieve the focused/current row (MODEL index), or -1 if none.
 ' ========================================================================================
-function PsListBox_GetCurSel( byval hListControl as HWND ) as integer
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_GetCurSel( byval hListControl as HWND ) as integer
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return -1
     return pList->focusRow
 end function
@@ -679,10 +922,10 @@ end function
 ' Focus and select a single row by MODEL index (clears any other selection).
 ' Returns the row, or -1 if the index is invalid.
 ' ========================================================================================
-function PsListBox_SetCurSel( byval hListControl as HWND, byval row as integer ) as integer
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_SetCurSel( byval hListControl as HWND, byval row as integer ) as integer
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return -1
-    dim as HWND hList = GetDlgItem( pList->hWin, pList->idc_ListBox )
+    dim as HWND hList = GetDlgItem( pList->hWin, pList->idc_ListTree )
     if pList->IsValidRow(row) = false then
         pList->ClearSelection()
         pList->focusRow  = -1
@@ -691,7 +934,7 @@ function PsListBox_SetCurSel( byval hListControl as HWND, byval row as integer )
         ' or the next genuine user selection of this same row would be swallowed as a
         ' no-change. Same reasoning below.
         pList->lastNotifiedRow = -1
-        PsListBox_SyncViewFromModel( pList )
+        PsListTree_SyncViewFromModel( pList )
         if hList then InvalidateRect( hList, NULL, FALSE )
         return -1
     end if
@@ -709,7 +952,7 @@ function PsListBox_SetCurSel( byval hListControl as HWND, byval row as integer )
     dim as integer visRow = pList->ModelToVisible( row )
     if (hList <> 0) andalso (visRow >= 0) then
         dim as integer visTop  = pList->nTopVis
-        dim as integer perPage = PsListBox_ItemsPerPage( pList )
+        dim as integer perPage = PsListTree_ItemsPerPage( pList )
         if perPage < 1 then perPage = 1
         if visRow < visTop then
             pList->topRow = row
@@ -717,7 +960,7 @@ function PsListBox_SetCurSel( byval hListControl as HWND, byval row as integer )
             pList->topRow = pList->VisibleToModel( visRow - perPage + 1 )
         end if
     end if
-    PsListBox_SyncViewFromModel( pList )
+    PsListTree_SyncViewFromModel( pList )
     if hList then InvalidateRect( hList, NULL, FALSE )
     return row
 end function
@@ -729,8 +972,8 @@ end function
 ' Scrolling happens in VISIBLE index space, so nTopVis is translated back through the
 ' visible map before being returned.
 ' ========================================================================================
-function PsListBox_GetTopIndex( byval hListControl as HWND ) as integer
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_GetTopIndex( byval hListControl as HWND ) as integer
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return -1
     if pList->visibleCount = 0 then return -1
     return pList->VisibleToModel( pList->nTopVis )
@@ -745,12 +988,12 @@ end function
 ' and the clamp is mirrored back, so the returned value is the MODEL row actually at
 ' the top. Returns -1 if the row or control is invalid.
 ' ========================================================================================
-function PsListBox_SetTopIndex( byval hListControl as HWND, byval row as integer ) as integer
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_SetTopIndex( byval hListControl as HWND, byval row as integer ) as integer
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return -1
     if pList->IsValidRow(row) = false then return -1
     pList->topRow = row
-    PsListBox_SyncViewFromModel( pList )
+    PsListTree_SyncViewFromModel( pList )
     return pList->topRow
 end function
 
@@ -759,34 +1002,34 @@ end function
 ' Model-based selection API. Selection lives on the rows (per-row flag), so it
 ' survives collapse/expand and can include headers and hidden rows.
 ' ========================================================================================
-function PsListBox_GetSel( byval hListControl as HWND, byval row as integer ) as boolean
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_GetSel( byval hListControl as HWND, byval row as integer ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return false
     return pList->IsRowSelected( row )
 end function
 
-function PsListBox_SetSel( byval hListControl as HWND, byval row as integer, byval state as boolean ) as boolean
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_SetSel( byval hListControl as HWND, byval row as integer, byval state as boolean ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return false
     if pList->IsValidRow(row) = false then return false
     ' Selecting a non-selectable row is refused; clearing it (state = false) is fine.
     if state andalso (pList->IsRowSelectable(row) = false) then return false
     pList->SetRowSelected( row, state )
-    dim as HWND hList = GetDlgItem( pList->hWin, pList->idc_ListBox )
+    dim as HWND hList = GetDlgItem( pList->hWin, pList->idc_ListTree )
     if hList then InvalidateRect( hList, NULL, FALSE )
     return true
 end function
 
-function PsListBox_GetSelCount( byval hListControl as HWND ) as integer
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_GetSelCount( byval hListControl as HWND ) as integer
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return 0
     return pList->GetSelCount()
 end function
 
 ' Fill selItems() with the MODEL indices of every selected row (including hidden
 ' rows under a collapsed header). Returns the count.
-function PsListBox_GetSelItems( byval hListControl as HWND, selItems() as integer ) as integer
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_GetSelItems( byval hListControl as HWND, selItems() as integer ) as integer
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return 0
     dim as integer n = pList->GetSelCount()
     if n = 0 then
@@ -804,8 +1047,8 @@ function PsListBox_GetSelItems( byval hListControl as HWND, selItems() as intege
     return n
 end function
 
-sub PsListBox_SelectAll( byval hListControl as HWND, byval state as boolean )
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+sub PsListTree_SelectAll( byval hListControl as HWND, byval state as boolean )
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return
     for i as integer = 0 to pList->rowCount - 1
         ' Select-all covers every SELECTABLE row; a non-selectable row is always left clear.
@@ -815,22 +1058,22 @@ sub PsListBox_SelectAll( byval hListControl as HWND, byval state as boolean )
             pList->rows(i).selected = state
         end if
     next
-    dim as HWND hList = GetDlgItem( pList->hWin, pList->idc_ListBox )
+    dim as HWND hList = GetDlgItem( pList->hWin, pList->idc_ListTree )
     if hList then InvalidateRect( hList, NULL, FALSE )
 end sub
 
 ' Selection modes are mutually exclusive: extended (Shift/Ctrl ranges) vs.
 ' multiple (each click toggles). Off = single-select.
-function PsListBox_SetMultiSelect( byval hListControl as HWND, byval enable as boolean ) as boolean
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_SetMultiSelect( byval hListControl as HWND, byval enable as boolean ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return false
     pList->MultipleSel = enable
     if enable then pList->ExtendSel = false
     return true
 end function
 
-function PsListBox_SetExtendedSelect( byval hListControl as HWND, byval enable as boolean ) as boolean
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_SetExtendedSelect( byval hListControl as HWND, byval enable as boolean ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return false
     pList->ExtendSel = enable
     if enable then pList->MultipleSel = false
@@ -847,8 +1090,8 @@ end function
 ' The default listbox handling still runs for every message (it owns the mouse
 ' capture), so the down->up capture pairing is untouched.
 ' ========================================================================================
-function PsListBox_PreventDoubleClick( byval hListControl as HWND, byval enable as boolean = true ) as boolean
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_PreventDoubleClick( byval hListControl as HWND, byval enable as boolean = true ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return false
     pList->PreventDblClick = enable
     if enable = false then pList->skipNextLBtnUp = false
@@ -859,8 +1102,8 @@ end function
 ' ========================================================================================
 ' Retrieve the row height from the custom listbox control.
 ' ========================================================================================
-function PsListBox_GetRowHeight( byval hListControl as HWND ) as integer
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_GetRowHeight( byval hListControl as HWND ) as integer
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return 0
     return pList->RowHeight    
 end function
@@ -869,20 +1112,20 @@ end function
 ' ========================================================================================
 ' Set the row height for the custom listbox control.
 ' ========================================================================================
-function PsListBox_SetRowHeight( byval hListControl as HWND, byval height as integer ) as integer
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_SetRowHeight( byval hListControl as HWND, byval height as integer ) as integer
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return -1
     pList->RowHeight = height
     ' Recompute the scaled pixel height and repaint. This used to be an LB_SETITEMHEIGHT
     ' plus a note that WM_MEASUREITEM only fires at creation; owning the metric outright
     ' makes that whole caveat disappear.
-    pList->nItemHeightPx = 0                 ' force PsListBox_ItemHeightPx to re-derive
-    PsListBox_ItemHeightPx( pList )
-    dim as HWND hList = GetDlgItem( pList->hWin, pList->idc_ListBox )
+    pList->nItemHeightPx = 0                 ' force PsListTree_ItemHeightPx to re-derive
+    PsListTree_ItemHeightPx( pList )
+    dim as HWND hList = GetDlgItem( pList->hWin, pList->idc_ListTree )
     if hList then AfxRedrawWindow( hList )
     ' Row height changes items-per-page, which changes the scrollbar range (and can
     ' flip whether it is needed at all).
-    PsListBox_SyncScrollBar( pList )
+    PsListTree_SyncScrollBar( pList )
     return height
 end function
 
@@ -890,10 +1133,10 @@ end function
 ' ========================================================================================
 ' Retrieve the font used to paint row text.
 ' ========================================================================================
-function PsListBox_GetFont( byval hListControl as HWND ) as HFONT
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_GetFont( byval hListControl as HWND ) as HFONT
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return 0
-    return pList->hFont
+    return pList->hRowFont
 end function
 
 
@@ -901,43 +1144,129 @@ end function
 ' Set the font used to paint row text. The caller owns the HFONT and is responsible for
 ' destroying it; the control only stores the handle.
 ' ========================================================================================
-function PsListBox_SetFont( byval hListControl as HWND, byval hFont as HFONT ) as boolean
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_SetFont( byval hListControl as HWND, byval hFont as HFONT ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return false
-    pList->hFont = hFont
-    dim as HWND hList = GetDlgItem( pList->hWin, pList->idc_ListBox )
+    pList->hRowFont = hFont
+    dim as HWND hList = GetDlgItem( pList->hWin, pList->idc_ListTree )
     if hList then AfxRedrawWindow( hList )
     return true
 end function
 
 
 ' ========================================================================================
+' Tree appearance. All silent programmatic setters that repaint; none disturbs the model.
+' The width setters zero the cached DPI-scaled value so it re-derives on the next paint.
+' ========================================================================================
+private sub PsListTree_RepaintSurface( byval pList as PSLISTTREE ptr )
+    if pList = 0 then return
+    dim as HWND hList = GetDlgItem( pList->hWin, pList->idc_ListTree )
+    if hList then InvalidateRect( hList, NULL, FALSE )
+end sub
+
+function PsListTree_SetTreeIndent( byval hListControl as HWND, byval enable as boolean = true ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return false
+    pList->bTreeIndent = enable
+    PsListTree_RepaintSurface( pList )
+    return true
+end function
+
+function PsListTree_GetTreeIndent( byval hListControl as HWND ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return false
+    return pList->bTreeIndent
+end function
+
+function PsListTree_SetIndentWidth( byval hListControl as HWND, byval nWidth as integer ) as integer
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return 0
+    if nWidth < 0 then nWidth = 0
+    pList->IndentWidth = nWidth
+    pList->nIndentPx   = 0                ' force re-derive (DPI scale) on next paint
+    PsListTree_RepaintSurface( pList )
+    return pList->IndentWidth
+end function
+
+function PsListTree_GetIndentWidth( byval hListControl as HWND ) as integer
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return 0
+    return pList->IndentWidth
+end function
+
+function PsListTree_ShowTwisty( byval hListControl as HWND, byval enable as boolean = true ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return false
+    pList->bShowTwisty = enable
+    PsListTree_RepaintSurface( pList )
+    return true
+end function
+
+function PsListTree_IsTwistyShown( byval hListControl as HWND ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return false
+    return pList->bShowTwisty
+end function
+
+sub PsListTree_SetTwistyWidth( byval hListControl as HWND, byval nWidth as integer )
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return
+    if nWidth < 1 then nWidth = 1
+    pList->TwistyWidth = nWidth
+    pList->nTwistyPx   = 0
+    PsListTree_RepaintSurface( pList )
+end sub
+
+sub PsListTree_SetTwistyColor( byval hListControl as HWND, byval clr as COLORREF )
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return
+    pList->TwistyColor = clr
+    PsListTree_RepaintSurface( pList )
+end sub
+
+sub PsListTree_SetTwistyFont( byval hListControl as HWND, byval hFont as HFONT )
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return
+    pList->hTwistyFont = hFont
+    PsListTree_RepaintSurface( pList )
+end sub
+
+sub PsListTree_SetTwistyGlyphs( byval hListControl as HWND, byval wszExpanded as DWSTRING, byval wszCollapsed as DWSTRING )
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return
+    pList->wszGlyphExpanded  = wszExpanded
+    pList->wszGlyphCollapsed = wszCollapsed
+    PsListTree_RepaintSurface( pList )
+end sub
+
+
+' ========================================================================================
 ' Owner-drawn vertical scrollbar. The control creates, positions, auto-hides and drives
 ' it; these just expose it for appearance tweaks.
 ' ========================================================================================
-function PsListBox_GetScrollBar( byval hListControl as HWND ) as HWND
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_GetScrollBar( byval hListControl as HWND ) as HWND
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return 0
     return pList->hScrollBar
 end function
 
 ' Width in unscaled units; it is DPI-scaled when the control is laid out.
-sub PsListBox_SetScrollBarWidth( byval hListControl as HWND, byval nWidth as integer )
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+sub PsListTree_SetScrollBarWidth( byval hListControl as HWND, byval nWidth as integer )
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return
     if nWidth < 1 then nWidth = 1
     pList->ScrollBarWidth = nWidth
-    PsListBox_PositionWindows( pList->hWin )
+    PsListTree_PositionWindows( pList->hWin )
 end sub
 
-sub PsListBox_SetScrollBarColors( byval hListControl as HWND, byval backclr as COLORREF, byval foreclr as COLORREF, byval foreclrhot as COLORREF )
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+sub PsListTree_SetScrollBarColors( byval hListControl as HWND, byval backclr as COLORREF, byval foreclr as COLORREF, byval foreclrhot as COLORREF )
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return
     if pList->hScrollBar then PsVScrollBar_SetColors( pList->hScrollBar, backclr, foreclr, foreclrhot )
 end sub
 
-sub PsListBox_SetScrollBarPaintCallback( byval hListControl as HWND, byval usersub as VScrollPaintCallbackSub )
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+sub PsListTree_SetScrollBarPaintCallback( byval hListControl as HWND, byval usersub as VScrollPaintCallbackSub )
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return
     if pList->hScrollBar then PsVScrollBar_SetPaintCallback( pList->hScrollBar, usersub )
 end sub
@@ -955,7 +1284,7 @@ end sub
 ' 0 lives in ROWINFO.Text, columns 1..N in cells(0..N-1). Storage is sparse, so a row
 ' storing fewer cells than the mutation point needs no shift (its later columns were
 ' already ""). O(rows x cols); the caller wraps it in a single repaint.
-private sub PsListBox_ShiftCellColumns( byval pList as PSLISTBOX ptr, byval idx as integer, byval nDir as integer )
+private sub PsListTree_ShiftCellColumns( byval pList as PSLISTTREE ptr, byval idx as integer, byval nDir as integer )
     if pList = null then exit sub
     if idx < 0 then exit sub
     for r as integer = 0 to pList->rowCount - 1
@@ -1010,197 +1339,208 @@ end sub
 
 ' Repaint the child listbox after a column-geometry change (no background erase: the row
 ' paint callback fills every pixel). No-op inside a BeginUpdate batch.
-private sub PsListBox_InvalidateRowsForColumns( byval pList as PSLISTBOX ptr )
+private sub PsListTree_InvalidateRowsForColumns( byval pList as PSLISTTREE ptr )
     if pList = null then exit sub
     if pList->updateDepth > 0 then exit sub
-    dim as HWND hList = GetDlgItem( pList->hWin, pList->idc_ListBox )
+    dim as HWND hList = GetDlgItem( pList->hWin, pList->idc_ListTree )
     if hList then InvalidateRect( hList, NULL, FALSE )
 end sub
 
-function PsListBox_AddColumn( byval hListControl as HWND, byval Text as DWSTRING, byval nWidth as integer = 100, byval nMinWidth as integer = 0, byval itemData as integer = 0 ) as integer
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_AddColumn( byval hListControl as HWND, byval Text as DWSTRING, byval nWidth as integer = 100, byval nMinWidth as integer = 0, byval itemData as integer = 0 ) as integer
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return -1
     dim as integer idx = PsColumnHeader_AddColumn( pList->hHeader, Text, nWidth, nMinWidth, itemData )
-    if idx <> -1 then PsListBox_InvalidateRowsForColumns( pList )
+    if idx <> -1 then PsListTree_InvalidateRowsForColumns( pList )
     return idx
 end function
 
-function PsListBox_InsertColumn( byval hListControl as HWND, byval idx as integer, byval Text as DWSTRING, byval nWidth as integer = 100, byval nMinWidth as integer = 0, byval itemData as integer = 0 ) as integer
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_InsertColumn( byval hListControl as HWND, byval idx as integer, byval Text as DWSTRING, byval nWidth as integer = 100, byval nMinWidth as integer = 0, byval itemData as integer = 0 ) as integer
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return -1
     dim as integer at = PsColumnHeader_InsertColumn( pList->hHeader, idx, Text, nWidth, nMinWidth, itemData )
     if at <> -1 then
         ' Keep every row's cell storage aligned with the shifted column indices.
-        PsListBox_ShiftCellColumns( pList, at, 1 )
-        PsListBox_InvalidateRowsForColumns( pList )
+        PsListTree_ShiftCellColumns( pList, at, 1 )
+        PsListTree_InvalidateRowsForColumns( pList )
     end if
     return at
 end function
 
-function PsListBox_DeleteColumn( byval hListControl as HWND, byval idx as integer ) as boolean
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_DeleteColumn( byval hListControl as HWND, byval idx as integer ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return false
     if PsColumnHeader_DeleteColumn( pList->hHeader, idx ) = false then return false
-    PsListBox_ShiftCellColumns( pList, idx, -1 )
-    PsListBox_InvalidateRowsForColumns( pList )
+    PsListTree_ShiftCellColumns( pList, idx, -1 )
+    PsListTree_InvalidateRowsForColumns( pList )
     return true
 end function
 
-sub PsListBox_ClearColumns( byval hListControl as HWND )
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+sub PsListTree_ClearColumns( byval hListControl as HWND )
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return
     PsColumnHeader_Clear( pList->hHeader )
     ' Cell TEXT is row data, not column geometry: it survives a column-definition
     ' clear the same way it predates a late column definition (sparse storage).
-    PsListBox_InvalidateRowsForColumns( pList )
+    PsListTree_InvalidateRowsForColumns( pList )
 end sub
 
-function PsListBox_GetColumnCount( byval hListControl as HWND ) as integer
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_GetColumnCount( byval hListControl as HWND ) as integer
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return 0
     return PsColumnHeader_GetCount( pList->hHeader )
 end function
 
-function PsListBox_GetColumnText( byval hListControl as HWND, byval idx as integer ) as DWSTRING
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_GetColumnText( byval hListControl as HWND, byval idx as integer ) as DWSTRING
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return ""
     return PsColumnHeader_GetColumnText( pList->hHeader, idx )
 end function
 
-function PsListBox_SetColumnText( byval hListControl as HWND, byval idx as integer, byval Text as DWSTRING ) as boolean
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_SetColumnText( byval hListControl as HWND, byval idx as integer, byval Text as DWSTRING ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return false
     ' Header caption only; row cells are untouched, so no listbox repaint needed.
     return PsColumnHeader_SetColumnText( pList->hHeader, idx, Text )
 end function
 
-function PsListBox_GetColumnWidth( byval hListControl as HWND, byval idx as integer ) as integer
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_GetColumnWidth( byval hListControl as HWND, byval idx as integer ) as integer
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return 0
     return PsColumnHeader_GetColumnWidth( pList->hHeader, idx )
 end function
 
-function PsListBox_SetColumnWidth( byval hListControl as HWND, byval idx as integer, byval nWidth as integer ) as boolean
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+' The header lays the columns out; the surface paints its cells at the same x. Handing the rect
+' out lets a host answer "which column did that click land in" without re-deriving the layout
+' from the widths (which would have to reproduce the fill column's stretch). Same forwarding
+' rationale as GetColumnWidth above -- PsListTree_GetHeader would also get a caller there.
+function PsListTree_GetColumnRect( byval hListControl as HWND, byval idx as integer, byref rc as RECT ) as boolean
+    SetRectEmpty( @rc )
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return false
+    return PsColumnHeader_GetColumnRect( pList->hHeader, idx, rc )
+end function
+
+function PsListTree_SetColumnWidth( byval hListControl as HWND, byval idx as integer, byval nWidth as integer ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return false
     if PsColumnHeader_SetColumnWidth( pList->hHeader, idx, nWidth ) = false then return false
-    PsListBox_InvalidateRowsForColumns( pList )
+    PsListTree_InvalidateRowsForColumns( pList )
     return true
 end function
 
-function PsListBox_GetColumnMinWidth( byval hListControl as HWND, byval idx as integer ) as integer
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_GetColumnMinWidth( byval hListControl as HWND, byval idx as integer ) as integer
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return 0
     return PsColumnHeader_GetColumnMinWidth( pList->hHeader, idx )
 end function
 
-function PsListBox_SetColumnMinWidth( byval hListControl as HWND, byval idx as integer, byval nMinWidth as integer ) as boolean
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_SetColumnMinWidth( byval hListControl as HWND, byval idx as integer, byval nMinWidth as integer ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return false
     if PsColumnHeader_SetColumnMinWidth( pList->hHeader, idx, nMinWidth ) = false then return false
-    PsListBox_InvalidateRowsForColumns( pList )
+    PsListTree_InvalidateRowsForColumns( pList )
     return true
 end function
 
-function PsListBox_GetFillColumn( byval hListControl as HWND ) as integer
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_GetFillColumn( byval hListControl as HWND ) as integer
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return -1
     return PsColumnHeader_GetFillColumn( pList->hHeader )
 end function
 
-function PsListBox_SetFillColumn( byval hListControl as HWND, byval idx as integer ) as boolean
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_SetFillColumn( byval hListControl as HWND, byval idx as integer ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return false
     if PsColumnHeader_SetFillColumn( pList->hHeader, idx ) = false then return false
-    PsListBox_InvalidateRowsForColumns( pList )
+    PsListTree_InvalidateRowsForColumns( pList )
     return true
 end function
 
 ' Show or hide the header band. Changes the listbox's height (items-per-page), so it
 ' re-lays out AND re-syncs the scrollbar -- the same pairing as SetRowHeight.
-function PsListBox_ShowHeader( byval hListControl as HWND, byval bShow as boolean = true ) as boolean
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_ShowHeader( byval hListControl as HWND, byval bShow as boolean = true ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return false
     if pList->hHeader = 0 then return false
     if bShow <> pList->headerShown then
         pList->headerShown = bShow
         ShowWindow( pList->hHeader, iif( bShow, SW_SHOW, SW_HIDE ) )
-        PsListBox_PositionWindows( pList->hWin )
-        PsListBox_SyncScrollBar( pList )
+        PsListTree_PositionWindows( pList->hWin )
+        PsListTree_SyncScrollBar( pList )
     end if
     return true
 end function
 
-function PsListBox_IsHeaderVisible( byval hListControl as HWND ) as boolean
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_IsHeaderVisible( byval hListControl as HWND ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return false
     return pList->headerShown
 end function
 
-function PsListBox_GetHeaderHeight( byval hListControl as HWND ) as integer
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_GetHeaderHeight( byval hListControl as HWND ) as integer
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return 0
     return pList->HeaderHeight
 end function
 
 ' Height in unscaled units (like RowHeight); DPI-scaled when the control is laid out.
-function PsListBox_SetHeaderHeight( byval hListControl as HWND, byval height as integer ) as integer
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_SetHeaderHeight( byval hListControl as HWND, byval height as integer ) as integer
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return -1
     if height < 1 then height = 1
     pList->HeaderHeight = height
-    PsListBox_PositionWindows( pList->hWin )
-    PsListBox_SyncScrollBar( pList )
+    PsListTree_PositionWindows( pList->hWin )
+    PsListTree_SyncScrollBar( pList )
     return height
 end function
 
 ' Escape hatch for direct PsColumnHeader_* calls (theming, padding, hit-tests). Do NOT
 ' set the WidthChanged callback on it -- that slot is this control's chain hook; use
-' PsListBox_SetColumnResizeCallback.
-function PsListBox_GetHeader( byval hListControl as HWND ) as HWND
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+' PsListTree_SetColumnResizeCallback.
+function PsListTree_GetHeader( byval hListControl as HWND ) as HWND
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return 0
     return pList->hHeader
 end function
 
-sub PsListBox_SetColumnResizeCallback( byval hListControl as HWND, byval usersub as HDR_WidthChangedCallbackSub )
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+sub PsListTree_SetColumnResizeCallback( byval hListControl as HWND, byval usersub as HDR_WidthChangedCallbackSub )
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return
     pList->ColumnResizeCallback = usersub
 end sub
 
-sub PsListBox_SetColumnClickCallback( byval hListControl as HWND, byval usersub as HDR_ClickCallbackSub )
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+sub PsListTree_SetColumnClickCallback( byval hListControl as HWND, byval usersub as HDR_ClickCallbackSub )
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return
     if pList->hHeader then PsColumnHeader_SetClickCallback( pList->hHeader, usersub )
 end sub
 
-sub PsListBox_SetColumnAutoSizeCallback( byval hListControl as HWND, byval userfunc as HDR_AutoSizeCallbackFunc )
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+sub PsListTree_SetColumnAutoSizeCallback( byval hListControl as HWND, byval userfunc as HDR_AutoSizeCallbackFunc )
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return
     if pList->hHeader then PsColumnHeader_SetAutoSizeCallback( pList->hHeader, userfunc )
 end sub
 
-sub PsListBox_SetHeaderPaintCallback( byval hListControl as HWND, byval usersub as HDR_PaintCallbackSub )
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+sub PsListTree_SetHeaderPaintCallback( byval hListControl as HWND, byval usersub as HDR_PaintCallbackSub )
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return
     if pList->hHeader then PsColumnHeader_SetPaintCallback( pList->hHeader, usersub )
 end sub
 
-sub PsListBox_SetHeaderTooltipCallback( byval hListControl as HWND, byval userfunc as HDR_TooltipCallbackFunc )
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+sub PsListTree_SetHeaderTooltipCallback( byval hListControl as HWND, byval userfunc as HDR_TooltipCallbackFunc )
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return
     if pList->hHeader then PsColumnHeader_SetTooltipCallback( pList->hHeader, userfunc )
 end sub
 
-sub PsListBox_SetHeaderBackColor( byval hListControl as HWND, byval clr as COLORREF )
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+sub PsListTree_SetHeaderBackColor( byval hListControl as HWND, byval clr as COLORREF )
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return
     if pList->hHeader then PsColumnHeader_SetBackColor( pList->hHeader, clr )
 end sub
 
-sub PsListBox_SetHeaderFont( byval hListControl as HWND, byval hFont as HFONT )
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+sub PsListTree_SetHeaderFont( byval hListControl as HWND, byval hFont as HFONT )
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return
     if pList->hHeader then PsColumnHeader_SetFont( pList->hHeader, hFont )
 end sub
@@ -1210,13 +1550,13 @@ end sub
 ' The embedded header reports a USER column resize: every visible row's cells moved, so
 ' repaint the listbox rows, then re-broadcast to the host's ColumnResizeCallback. This
 ' chain hook OWNS the header's WidthChanged slot on an embedded header (same rule as the
-' scrollbar's scroll callback) -- hosts subscribe via PsListBox_SetColumnResizeCallback.
+' scrollbar's scroll callback) -- hosts subscribe via PsListTree_SetColumnResizeCallback.
 ' ========================================================================================
-sub PsListBox_OnHeaderWidthChanged( byval hHeader as HWND, byval idx as integer, byval nWidth as integer, byval bLive as boolean )
-    ' the header is a child of the PsListBox container window
-    dim as PSLISTBOX ptr pList = GetListBoxPointer( GetParent(hHeader) )
+sub PsListTree_OnHeaderWidthChanged( byval hHeader as HWND, byval idx as integer, byval nWidth as integer, byval bLive as boolean )
+    ' the header is a child of the PsListTree container window
+    dim as PSLISTTREE ptr pList = GetListTreePointer( GetParent(hHeader) )
     if pList = 0 then return
-    dim as HWND hList = GetDlgItem( pList->hWin, pList->idc_ListBox )
+    dim as HWND hList = GetDlgItem( pList->hWin, pList->idc_ListTree )
     if hList then InvalidateRect( hList, NULL, FALSE )
     if pList->ColumnResizeCallback then pList->ColumnResizeCallback( hHeader, idx, nWidth, bLive )
 end sub
@@ -1225,8 +1565,8 @@ end sub
 ' ========================================================================================
 ' Retrieve the background color from the custom listbox control.
 ' ========================================================================================
-function PsListBox_GetBackColor( byval hListControl as HWND ) as COLORREF
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_GetBackColor( byval hListControl as HWND ) as COLORREF
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return 0
     return pList->BackColor
 end function
@@ -1235,8 +1575,8 @@ end function
 ' ========================================================================================
 ' Set the background color for the custom listbox control.
 ' ========================================================================================
-function PsListBox_SetBackColor( byval hListControl as HWND, byval clr as COLORREF ) as COLORREF 
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_SetBackColor( byval hListControl as HWND, byval clr as COLORREF ) as COLORREF 
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return 0
     dim as COLORREF oldClr = pList->BackColor
     pList->BackColor = clr
@@ -1245,10 +1585,49 @@ end function
 
 
 ' ========================================================================================
+' Border chrome. Colour only repaints; the WIDTH also re-lays-out, because the surface,
+' scrollbar and header are inset by it.
+' ========================================================================================
+function PsListTree_GetBorderColor( byval hListControl as HWND ) as COLORREF
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return 0
+    return pList->BorderColor
+end function
+
+sub PsListTree_SetBorderColor( byval hListControl as HWND, byval clr as COLORREF )
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then exit sub
+    if pList->BorderColor = clr then exit sub
+    pList->BorderColor = clr
+    InvalidateRect( hListControl, NULL, TRUE )
+end sub
+
+function PsListTree_GetBorderWidth( byval hListControl as HWND ) as integer
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return 0
+    return pList->nBorderWidth
+end function
+
+sub PsListTree_SetBorderWidth( byval hListControl as HWND, byval nWidth as integer )
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then exit sub
+    if nWidth < 0 then nWidth = 0
+    if pList->nBorderWidth = nWidth then exit sub
+    pList->nBorderWidth = nWidth
+    ' The children's rects are derived from this, so re-derive them rather than only
+    ' repainting -- and the surface's height changing means rows-per-page changed too,
+    ' which is what PositionWindows' caller normally reconciles on WM_SIZE.
+    PsListTree_PositionWindows( hListControl )
+    PsListTree_SyncScrollBar( pList )
+    InvalidateRect( hListControl, NULL, TRUE )
+end sub
+
+
+' ========================================================================================
 ' Retrieve the current row count in the custom listbox control.
 ' ========================================================================================
-function PsListBox_GetCount( byval hListControl as HWND ) as integer
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+function PsListTree_GetCount( byval hListControl as HWND ) as integer
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList = null then return 0
     return pList->GetCount()
 end function
@@ -1257,8 +1636,8 @@ end function
 ' ========================================================================================
 ' Refresh the custom listbox control.
 ' ========================================================================================
-sub PsListBox_Refresh( byval hListControl as HWND ) 
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hListControl)
+sub PsListTree_Refresh( byval hListControl as HWND ) 
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
     if pList then pList->Refresh()
 end sub
 
@@ -1267,14 +1646,23 @@ end sub
 ' ========================================================================================
 ' Position all child windows. Called manually and/or by WM_SIZE
 ' ========================================================================================
-function PsListBox_PositionWindows( byval hwnd as HWND ) as LRESULT
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hwnd)
+function PsListTree_PositionWindows( byval hwnd as HWND ) as LRESULT
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hwnd)
     if pList = null then return 0
 
     ' Get the entire client area
     dim as Rect rc
     GetClientRect( hwnd, @rc )
     dim pWindow as CWindow ptr = AfxCWindowPtr( hwnd )
+
+    ' Inset by the border, so the frame the container paints is not covered by a child.
+    ' Raw pixels, NOT DPI-scaled -- see the SetBorderWidth contract. Zero by default, which
+    ' leaves this whole function byte-for-byte the geometry it always produced.
+    if pList->nBorderWidth > 0 then
+        InflateRect( @rc, -pList->nBorderWidth, -pList->nBorderWidth )
+        if rc.right  < rc.left then rc.right  = rc.left
+        if rc.bottom < rc.top  then rc.bottom = rc.top
+    end if
 
     ' Reserve a strip on the right edge for the scrollbar, but only while it is shown
     ' (auto-hide gives the width back to the listbox).
@@ -1302,7 +1690,7 @@ function PsListBox_PositionWindows( byval hwnd as HWND ) as LRESULT
         if pList->headerShown then hdrH = hdrWinH
     end if
 
-    dim as HWND hListbox = GetDlgItem( hwnd, pList->idc_ListBox )
+    dim as HWND hListbox = GetDlgItem( hwnd, pList->idc_ListTree )
     SetWindowPos( hListbox, 0, _
                     rc.left, rc.top + hdrH, (rc.right - rc.left) - sbW, (rc.bottom - rc.top) - hdrH, _
                     SWP_NOZORDER )
@@ -1320,14 +1708,14 @@ end function
 ' ========================================================================================
 ' The scrollbar reports that the user scrolled: move the listbox to that top row.
 ' ========================================================================================
-sub PsListBox_OnScrollBarScroll( byval hSB as HWND, byval newPos as integer )
-    ' the scrollbar is a child of the PsListBox container window
-    dim as PSLISTBOX ptr pList = GetListBoxPointer( GetParent(hSB) )
+sub PsListTree_OnScrollBarScroll( byval hSB as HWND, byval newPos as integer )
+    ' the scrollbar is a child of the PsListTree container window
+    dim as PSLISTTREE ptr pList = GetListTreePointer( GetParent(hSB) )
     if pList = 0 then return
     ' The control clamps for itself now, where the listbox used to; mirror whatever it
     ' actually did so the thumb can never show a position the list isn't at. SetPos does
     ' not re-enter the callback.
-    dim as integer actual = PsListBox_SetTopVis( pList, newPos )
+    dim as integer actual = PsListTree_SetTopVis( pList, newPos )
     if actual <> newPos then PsVScrollBar_SetPos( hSB, actual )
     ' Keep the model's scroll source-of-truth in step with the user's scroll, so a
     ' later rebuild or show re-derives to where the user actually left the list.
@@ -1341,13 +1729,13 @@ end sub
 ' decision. Called from every path that can change the row count or the top row, which
 ' is what stops the thumb ever going stale.
 ' ========================================================================================
-sub PsListBox_SyncScrollBar( byval pList as PSLISTBOX ptr )
+sub PsListTree_SyncScrollBar( byval pList as PSLISTTREE ptr )
     if pList = 0 then return
     if pList->hScrollBar = 0 then return
 
     PsVScrollBar_SetRange( pList->hScrollBar, _
                           pList->visibleCount, _
-                          PsListBox_ItemsPerPage( pList ), _
+                          PsListTree_ItemsPerPage( pList ), _
                           pList->nTopVis )
 
     ' Auto-hide. This only changes the listbox WIDTH, while items-per-page depends on
@@ -1356,7 +1744,7 @@ sub PsListBox_SyncScrollBar( byval pList as PSLISTBOX ptr )
     if needed <> pList->scrollBarShown then
         pList->scrollBarShown = needed
         ShowWindow( pList->hScrollBar, iif( needed, SW_SHOW, SW_HIDE ) )
-        PsListBox_PositionWindows( pList->hWin )   ' listbox reclaims / gives up the strip
+        PsListTree_PositionWindows( pList->hWin )   ' listbox reclaims / gives up the strip
     end if
 end sub
 
@@ -1367,7 +1755,7 @@ end sub
 ' at the top of Refresh (so user scrolls survive rebuilds) and when the control is
 ' shown (so scrolls made through paths that bypass the model are absorbed).
 ' ========================================================================================
-sub PsListBox_CaptureTopRow( byval pList as PSLISTBOX ptr )
+sub PsListTree_CaptureTopRow( byval pList as PSLISTTREE ptr )
     if pList = 0 then return
     if pList->visibleCount = 0 then return
     dim as integer modelRow = pList->VisibleToModel( pList->nTopVis )
@@ -1379,23 +1767,23 @@ end sub
 ' Re-derive the VIEW (top row) and the scrollbar from the MODEL. After any model change --
 ' and whenever the control is shown -- this one routine re-converges them.
 '
-' Formerly PsListBox_SyncListboxFromModel, and it lost most of its body with the listbox
+' Formerly PsListTree_SyncListboxFromModel, and it lost most of its body with the listbox
 ' child. LB_SETCOUNT is gone because visibleCount was always the real count; the caret push
 ' is gone because the caret was only ever a listbox artefact (selection is painted from the
 ' model's own per-row flags, which is why LB_SETCURSEL was already restricted to
 ' single-select styles). What remains is the part that was always this control's own work:
 ' translate topRow (model) into a visible slot, clamp it, and tell the scrollbar.
 ' ========================================================================================
-sub PsListBox_SyncViewFromModel( byval pList as PSLISTBOX ptr )
+sub PsListTree_SyncViewFromModel( byval pList as PSLISTTREE ptr )
     if pList = 0 then return
-    dim as HWND hSurf = GetDlgItem( pList->hWin, pList->idc_ListBox )
+    dim as HWND hSurf = GetDlgItem( pList->hWin, pList->idc_ListTree )
     if hSurf = 0 then return
 
     if pList->visibleCount = 0 then
         pList->topRow  = 0
         pList->nTopVis = 0
         InvalidateRect( hSurf, NULL, TRUE )
-        PsListBox_SyncScrollBar( pList )
+        PsListTree_SyncScrollBar( pList )
         return
     end if
 
@@ -1420,49 +1808,152 @@ sub PsListBox_SyncViewFromModel( byval pList as PSLISTBOX ptr )
 
     ' Clamped by the control now, where the listbox used to do it. Mirror the clamped
     ' result back into topRow so the model always reflects what is actually on screen.
-    dim as integer actualVis = PsListBox_SetTopVis( pList, visRow )
+    dim as integer actualVis = PsListTree_SetTopVis( pList, visRow )
     dim as integer actualTop = pList->VisibleToModel( actualVis )
     if actualTop >= 0 then pList->topRow = actualTop
 
     InvalidateRect( hSurf, NULL, FALSE )
-    PsListBox_SyncScrollBar( pList )
+    PsListTree_SyncScrollBar( pList )
 end sub
 
 
 ' ========================================================================================
-' Process WM_SIZE message for window/dialog: PsListBox
+' Process WM_SIZE message for window/dialog: PsListTree
 ' ========================================================================================
-function PsListBox_OnSize( _
+function PsListTree_OnSize( _
             byval hwnd as HWND, _
             byval state as UINT, _
             byval cx as long, _
             byval cy as long _
             ) as LRESULT
     if state <> SIZE_MINIMIZED then
+        ' A resize moves rows under any open editor; commit it before re-laying out.
+        PsListTree_CommitEditIfActive( GetListTreePointer(hwnd) )
         ' Position all of the child windows
-        PsListBox_PositionWindows( hwnd )
+        PsListTree_PositionWindows( hwnd )
         ' Height changed -> items-per-page changed -> scrollbar range changed
-        PsListBox_SyncScrollBar( GetListBoxPointer(hwnd) )
+        PsListTree_SyncScrollBar( GetListTreePointer(hwnd) )
     end if
     function = 0
 end function
  
         
 ' ========================================================================================
-' Process WM_PAINT message for window/dialog: PsListBox
+' Process WM_PAINT message for window/dialog: PsListTree
+'
+' The container's client is almost entirely covered by its children (surface, scrollbar,
+' header), so the only pixels this paint owns are the background beneath them and -- when
+' the host has opted in -- the border frame around the edge. PositionWindows insets the
+' children by the same nBorderWidth, so the frame is never painted over.
+'
+' Square corners, matching PsTextBox at its default nCornerRadius of 0: PaintRoundBorderRect
+' with curvature 0 goes through the same path a plain bordered rect would, and gives a
+' bordered PsListTree and a bordered PsTextBox identical chrome.
 ' ========================================================================================
-function PsListBox_OnPaint( byval hwnd as HWND ) as LRESULT
-    dim as PSLISTBOX ptr pList = GetListBoxPointer(hwnd)
+' The container's whole render, factored out of WM_PAINT so a probe can drive the EXACT path
+' the screen gets rather than a re-derivation of it (PsDatePicker's DTP_CalRender split -- a
+' probe that renders through its own copy of the drawing code proves nothing about the real
+' one). Takes an already-begun buffer; the caller owns Begin/End.
+private sub PsListTree_RenderFrame( byval pList as PSLISTTREE ptr, byval b as PsBufferPaint ptr )
+    if (pList = 0) orelse (b = 0) then exit sub
+    b->SetBackColor( pList->BackColor )
+    if pList->nBorderWidth > 0 then
+        dim as RECT rc = b->rcClient()
+        b->SetPenColor( pList->BorderColor )
+        b->PaintRoundBorderRect( @rc, 0, pList->nBorderWidth )
+    else
+        b->PaintClientRect()
+    end if
+end sub
+
+
+function PsListTree_OnPaint( byval hwnd as HWND ) as LRESULT
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hwnd)
     if pList = null then return 0
 
     dim as PsBufferPaint b
 
     b.BeginDoubleBuffer(hwnd)
-    b.SetBackColor( pList->BackColor )
-    b.PaintClientRect()
+    PsListTree_RenderFrame( pList, @b )
     b.EndDoubleBuffer()
 
     function = 0
+end function
+
+
+' ========================================================================================
+' Render the container offscreen through PsListTree_RenderFrame -- the same call WM_PAINT
+' makes -- and return the colour at one client point as a COLORREF, or -1 if the point is
+' outside the client or the offscreen surface could not be built.
+'
+' Public for the reason PsButton_CountRenderedTones is: a host that themes the border should
+' be able to assert its colour actually reached the pixels, rather than that a setter stored
+' it. Reading a point INSIDE the frame band and one just inside it distinguishes all three
+' ways this can go wrong at once -- no border, wrong colour, and a fill that floods the
+' interior (the mistake this family has made four times with PaintBorderRect).
+' ========================================================================================
+function PsListTree_ProbeRenderedPixel( byval hListControl as HWND, byval x as integer, byval y as integer ) as long
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return -1
+
+    dim as RECT rcClient
+    GetClientRect( hListControl, @rcClient )
+    dim as long cw = rcClient.right - rcClient.left
+    dim as long ch = rcClient.bottom - rcClient.top
+    if (cw <= 0) orelse (ch <= 0) then return -1
+    if (x < 0) orelse (y < 0) orelse (x >= cw) orelse (y >= ch) then return -1
+
+    dim as HDC hRef = GetDC( hListControl )
+    if hRef = 0 then return -1
+    dim as HDC hMem = CreateCompatibleDC( hRef )
+    if hMem = 0 then
+        ReleaseDC( hListControl, hRef )
+        return -1
+    end if
+
+    ' 32bpp top-down, matching what PsBufferPaint.SetupBitmap builds, so the pixels read back
+    ' are laid out the way the renderer wrote them.
+    dim as BITMAPINFO bmi
+    with bmi.bmiHeader
+        .biSize        = sizeof(BITMAPINFOHEADER)
+        .biWidth       = cw
+        .biHeight      = -ch
+        .biPlanes      = 1
+        .biBitCount    = 32
+        .biCompression = BI_RGB
+    end with
+    dim as any ptr pBits
+    dim as HBITMAP hbm = CreateDIBSection( hRef, @bmi, DIB_RGB_COLORS, @pBits, null, 0 )
+    ReleaseDC( hListControl, hRef )
+    if (hbm = 0) orelse (pBits = 0) then
+        if hbm then DeleteObject( hbm )
+        DeleteDC( hMem )
+        return -1
+    end if
+    dim as HGDIOBJ hOldBmp = SelectObject( hMem, hbm )
+
+    scope
+        dim as PsBufferPaint b
+        ' Four-arg form: hMem is BOTH the blit target and the cached back buffer, so the final
+        ' BitBlt is a self-copy and the bitmap survives EndDoubleBuffer for us to read.
+        b.BeginDoubleBuffer( hListControl, hMem, rcClient, hMem )
+        PsListTree_RenderFrame( pList, @b )
+        b.EndDoubleBuffer()
+    end scope
+
+    ' The DIB holds B,G,R,A per pixel; as a little-endian ulong that is A<<24|R<<16|G<<8|B.
+    ' A COLORREF is 0x00BBGGRR, so the red and blue bytes swap on the way out -- returning a
+    ' raw RGB here would silently mismatch every COLORREF a caller compares it against.
+    dim as ulong ptr px = cast( ulong ptr, pBits )
+    dim as ulong c = px[(y * cw) + x]
+    dim as long result = cast( long, ((c and &h000000FF) shl 16) or _
+                                     ( c and &h0000FF00 )        or _
+                                     ((c and &h00FF0000) shr 16) )
+
+    SelectObject( hMem, hOldBmp )
+    DeleteObject( hbm )
+    DeleteDC( hMem )
+    return result
 end function
 
 
@@ -1483,8 +1974,8 @@ end function
 ' Keeping p->rc.top = 0 with a per-row coordinate transform was considered and rejected: a
 ' plain client-relative rect is simpler and needs no transform machinery.
 ' ========================================================================================
-function PsListBox_OnPaintSurface( byval hSurf as HWND ) as LRESULT
-    dim as PSLISTBOX ptr pList = GetListBoxPointer( GetParent( hSurf ) )
+function PsListTree_OnPaintSurface( byval hSurf as HWND ) as LRESULT
+    dim as PSLISTTREE ptr pList = GetListTreePointer( GetParent( hSurf ) )
     if pList = null then return 0
 
     dim as PsBufferPaint b
@@ -1498,7 +1989,7 @@ function PsListBox_OnPaintSurface( byval hSurf as HWND ) as LRESULT
 
     dim as RECT rcClient
     GetClientRect( hSurf, @rcClient )
-    dim as integer ih = PsListBox_ItemHeightPx( pList )
+    dim as integer ih = PsListTree_ItemHeightPx( pList )
 
     ' --- Column geometry, resolved ONCE for the repaint rather than once per row. The
     ' old per-row loop asked the header for every column's rect on every row; columns
@@ -1539,9 +2030,9 @@ function PsListBox_OnPaintSurface( byval hSurf as HWND ) as LRESULT
             dim as boolean isHot = (vis = pList->nLastHotIdx)
 
             dim as integer modelRow = pList->VisibleToModel( vis )
-            dim as PSLISTBOX_ROWINFO ptr pRow = pList->GetRow( modelRow )
+            dim as PSLISTTREE_ROWINFO ptr pRow = pList->GetRow( modelRow )
 
-            dim as PSLISTBOX_PAINTINFO p
+            dim as PSLISTTREE_PAINTINFO p
             with p
                 .itemID      = modelRow
                 .b           = @b
@@ -1562,8 +2053,29 @@ function PsListBox_OnPaintSurface( byval hSurf as HWND ) as LRESULT
                     .isSpanned   = pRow->bSpanColumns
                     .isSelectable = pRow->bSelectable
                     .wszCaption  = pRow->Text
+                    .level       = pRow->level
+                    .hasChildren = pList->HasChildrenAt( modelRow )
+                    .isExpanded  = (pRow->bCollapsed = false)
                 end if
             end with
+
+            ' --- Tree indent + twisty geometry. indentPx is the column-0 content offset the
+            ' host applies (or the control applies to cells(0) below): the per-level indent,
+            ' plus the reserved twisty band when the twisty is shown. Both are zero unless a
+            ' host opted in, so a flat/legacy list gets indent 0 and an empty rcTwisty. ---
+            dim as integer indentPx = 0
+            if pRow then
+                dim as integer lvlIndent = PsListTree_RowLevelIndentPx( pList, modelRow )
+                indentPx = lvlIndent
+                if pList->bShowTwisty then indentPx += PsListTree_TwistyPx( pList )
+                p.indent = indentPx
+                ' The twisty sits at the node's own indent, before the reserved band, and only
+                ' exists for a row that actually has children. Same surface-client coords as rc.
+                if pList->bShowTwisty andalso p.hasChildren then
+                    dim as integer tx = rc.left + lvlIndent
+                    SetRect( @p.rcTwisty, tx, y, tx + PsListTree_TwistyPx( pList ), y + ih )
+                end if
+            end if
 
             ' --- Columns: hand the host per-column cell rects + text. columnCount = 0
             ' (no columns defined, or a group-header row -- those span) leaves the
@@ -1580,7 +2092,7 @@ function PsListBox_OnPaintSurface( byval hSurf as HWND ) as LRESULT
                     ' normal rows that follow in this same repaint.
                     with pList->spanCell
                         .iCol      = 0
-                        .rc.left   = bandLeft
+                        .rc.left   = bandLeft + indentPx   ' tree indent shifts column-0 text only
                         .rc.right  = bandRight
                         .rc.top    = y
                         .rc.bottom = y + ih
@@ -1594,6 +2106,11 @@ function PsListBox_OnPaintSurface( byval hSurf as HWND ) as LRESULT
                             .rc.top    = y
                             .rc.bottom = y + ih
                             if c = 0 then
+                                ' Column 0 (and only column 0) is inset by the tree indent.
+                                ' Recomputed from the immutable bandLeft each row, so the shared
+                                ' scratch never accumulates indent across rows. Other columns'
+                                ' .rc.left is left exactly as the pre-repaint geometry set it.
+                                .rc.left = bandLeft + indentPx
                                 .wszText = pRow->Text
                             elseif c - 1 <= ubound(pRow->cells) then
                                 .wszText = pRow->cells(c - 1)
@@ -1607,8 +2124,19 @@ function PsListBox_OnPaintSurface( byval hSurf as HWND ) as LRESULT
                 end if
             end if
 
-            b.SetFont( pList->hFont )   ' default row font; the callback may override
+            b.SetFont( pList->hRowFont )   ' default row font; the callback may override
             pList->PaintCallback( @p )
+
+            ' --- Control-drawn twisty, OVERLAID after the host paints the row so it always
+            ' shows (a host that ignores rcTwisty cannot hide it). Only when ShowTwisty is on
+            ' and this row got a non-empty twisty rect (i.e. it has children). A host that
+            ' wants to draw its own glyph sets ShowTwisty false and reads p.rcTwisty. ---
+            if pList->bShowTwisty andalso (p.rcTwisty.right > p.rcTwisty.left) then
+                b.SetFont( pList->hTwistyFont )
+                dim as DWSTRING wszGlyph = pList->wszGlyphCollapsed
+                if p.isExpanded then wszGlyph = pList->wszGlyphExpanded
+                b.PaintChar( wszGlyph, @p.rcTwisty, pList->TwistyColor )
+            end if
         next
     end if
 
@@ -1618,7 +2146,7 @@ function PsListBox_OnPaintSurface( byval hSurf as HWND ) as LRESULT
         b.SetBackColor( pList->dragIndicatorColor )
         if (pList->dropOnHeader = true) andalso (pList->dropTargetRow >= 0) then
             dim as RECT rh
-            if PsListBox_VisIndexRect( pList, pList->ModelToVisible( pList->dropTargetRow ), rh ) then
+            if PsListTree_VisIndexRect( pList, pList->ModelToVisible( pList->dropTargetRow ), rh ) then
                 dim as RECT seg
                 seg = rh : seg.bottom = seg.top + 2               : b.PaintRect( @seg )   ' top edge
                 seg = rh : seg.top    = seg.bottom - 2            : b.PaintRect( @seg )   ' bottom edge
@@ -1651,9 +2179,9 @@ end function
 
 
 ' ========================================================================================
-' PsListBox Window procedure
+' PsListTree Window procedure
 ' ========================================================================================
-function PsListBox_WndProc( _
+function PsListTree_WndProc( _
             byval hwnd   as HWND, _
             byval uMsg   as UINT, _
             byval wParam as WPARAM, _
@@ -1661,23 +2189,35 @@ function PsListBox_WndProc( _
             ) as LRESULT
 
     select case uMsg
-        HANDLE_MSG (hwnd, WM_SIZE,        PsListBox_OnSize)
-        HANDLE_MSG (hwnd, WM_PAINT,       PsListBox_OnPaint)
+        HANDLE_MSG (hwnd, WM_SIZE,        PsListTree_OnSize)
+        HANDLE_MSG (hwnd, WM_PAINT,       PsListTree_OnPaint)
         ' WM_MEASUREITEM and WM_DRAWITEM are gone with the listbox child. The container
         ' never painted rows itself -- it forwarded them -- and the surface now paints
-        ' every visible row in one pass in PsListBox_OnPaintSurface.
+        ' every visible row in one pass in PsListTree_OnPaintSurface.
 
+
+    case WM_SETFOCUS
+        ' Hand focus straight down to the surface. The container has no keyboard behaviour of
+        ' its own -- every key is handled in PsListTreeSurface_WndProc -- so focus parked here
+        ' is focus nowhere: the arrows, F2 and ENTER all go missing and the focus bar never
+        ' appears. A host calling SetFocus on the handle Create returned (the obvious thing,
+        ' and the only handle it has) landed exactly there.
+        dim as PSLISTTREE ptr pListF = GetListTreePointer(hwnd)
+        if pListF then
+            dim as HWND hSurf = GetDlgItem( hwnd, pListF->idc_ListTree )
+            if hSurf then SetFocus( hSurf ) : return 0
+        end if
 
     case WM_NOTIFY
         ' The tooltip asks for its text on demand; supply the current hot row's.
         dim as NMHDR ptr pnmh = cast(NMHDR ptr, lParam)
         if pnmh andalso (pnmh->code = TTN_GETDISPINFOW) then
-            dim as PSLISTBOX ptr pList = GetListBoxPointer(hwnd)
+            dim as PSLISTTREE ptr pList = GetListTreePointer(hwnd)
             if pList then
                 dim as NMTTDISPINFOW ptr pdi = cast(NMTTDISPINFOW ptr, lParam)
                 dim as integer modelRow = pList->VisibleToModel( pList->nLastHotIdx )
                 ' store in an instance-lifetime buffer and point lpszText at it
-                pList->wszTooltip = PsListBox_ResolveTooltipText( pList, modelRow )
+                pList->wszTooltip = PsListTree_ResolveTooltipText( pList, modelRow )
                 pdi->lpszText = cast( LPWSTR, pList->wszTooltip.vptr )
                 pdi->hinst    = NULL
             end if
@@ -1691,9 +2231,9 @@ function PsListBox_WndProc( _
         ' keyboard) lives only in the listbox -- capture it first so the sync
         ' converges on it instead of snapping back to a stale topRow.
         if wParam then
-            dim as PSLISTBOX ptr pList = GetListBoxPointer(hwnd)
-            PsListBox_CaptureTopRow( pList )
-            PsListBox_SyncViewFromModel( pList )
+            dim as PSLISTTREE ptr pList = GetListTreePointer(hwnd)
+            PsListTree_CaptureTopRow( pList )
+            PsListTree_SyncViewFromModel( pList )
         end if
 
     ' WM_CTLCOLORLISTBOX is gone with the listbox child. Only a system listbox sends it,
@@ -1704,7 +2244,7 @@ function PsListBox_WndProc( _
 
     case WM_NCDESTROY
         ' Delete the stored listbox data pointer
-        dim as PSLISTBOX ptr pList = GetListBoxPointer(hwnd)
+        dim as PSLISTTREE ptr pList = GetListTreePointer(hwnd)
         if pList then
             if IsWindow(pList->hToolTip) then DestroyWindow(pList->hToolTip)
             delete(pList)
@@ -1734,7 +2274,7 @@ end function
 ' current is silent, and so is every programmatic setter -- those update lastNotifiedRow
 ' without calling the callback.
 ' ========================================================================================
-sub PsListBox_NotifySelChange( byval pList as PSLISTBOX ptr )
+sub PsListTree_NotifySelChange( byval pList as PSLISTTREE ptr )
     if pList = null then return
     if pList->focusRow = pList->lastNotifiedRow then return
     pList->lastNotifiedRow = pList->focusRow
@@ -1745,10 +2285,23 @@ end sub
 
 
 ' ========================================================================================
+' Report a USER expand/collapse (twisty click, Left/Right, legacy header click). Silent for
+' every programmatic collapse/expand setter -- those never call this, mirroring the
+' SelChange "silent setters" rule so a host can drive them from inside the callback.
+' ========================================================================================
+sub PsListTree_NotifyExpandCollapse( byval pList as PSLISTTREE ptr, byval modelRow as integer, byval bExpanded as boolean )
+    if pList = null then return
+    if pList->ExpandCollapseCallback then
+        pList->ExpandCollapseCallback( pList->hWin, modelRow, bExpanded )
+    end if
+end sub
+
+
+' ========================================================================================
 ' Apply a mouse-click selection to the model, honoring the selection mode and the
 ' Ctrl/Shift modifiers, then repaint. modelRow must be a valid model row.
 ' ========================================================================================
-sub PsListBox_ApplyClickSelection( byval pList as PSLISTBOX ptr, byval modelRow as integer, byval isCtrl as boolean, byval isShift as boolean )
+sub PsListTree_ApplyClickSelection( byval pList as PSLISTTREE ptr, byval modelRow as integer, byval isCtrl as boolean, byval isShift as boolean )
     if (pList = null) orelse (pList->IsValidRow(modelRow) = false) then return
     ' A non-selectable row swallows the click for selection purposes: no focus move, no
     ' selection change, no anchor update. The host still sees the raw click through the
@@ -1779,9 +2332,9 @@ sub PsListBox_ApplyClickSelection( byval pList as PSLISTBOX ptr, byval modelRow 
     end if
 
     pList->focusRow = modelRow
-    dim as HWND hList = GetDlgItem( pList->hWin, pList->idc_ListBox )
+    dim as HWND hList = GetDlgItem( pList->hWin, pList->idc_ListTree )
     if hList then InvalidateRect( hList, NULL, FALSE )
-    PsListBox_NotifySelChange( pList )
+    PsListTree_NotifySelChange( pList )
 end sub
 
 
@@ -1789,10 +2342,10 @@ end sub
 ' Clear any hot-tracked row and stop the safety-net timer. Repaints only if a row was
 ' actually hot, so this is cheap to call repeatedly.
 ' ========================================================================================
-sub PsListBox_ClearHotTracking( byval pList as PSLISTBOX ptr, byval hList as HWND )
+sub PsListTree_ClearHotTracking( byval pList as PSLISTTREE ptr, byval hList as HWND )
     if pList = null then return
     if pList->hotTimerOn then
-        KillTimer( hList, IDT_CLISTBOX_HOTTRACK )
+        KillTimer( hList, IDT_CLISTTREE_HOTTRACK )
         pList->hotTimerOn = false
     end if
     if pList->nLastHotIdx <> -1 then
@@ -1806,28 +2359,28 @@ end sub
 ' Keyboard-navigation helpers (all operate in MODEL space; movement is over the
 ' currently VISIBLE rows).
 ' ========================================================================================
-function PsListBox_ItemsPerPage( byval pList as PSLISTBOX ptr ) as integer
-    dim as integer n = PsListBox_VisPerPage( pList )
+function PsListTree_ItemsPerPage( byval pList as PSLISTTREE ptr ) as integer
+    dim as integer n = PsListTree_VisPerPage( pList )
     if n < 1 then n = 1
     return n
 end function
 
-sub PsListBox_EnsureVisible( byval pList as PSLISTBOX ptr, byval modelRow as integer )
+sub PsListTree_EnsureVisible( byval pList as PSLISTTREE ptr, byval modelRow as integer )
     dim as integer vis = pList->ModelToVisible( modelRow )
     if vis < 0 then return
     dim as integer top = pList->nTopVis
-    dim as integer perPage = PsListBox_ItemsPerPage( pList )
+    dim as integer perPage = PsListTree_ItemsPerPage( pList )
     if vis < top then
-        PsListBox_SetTopVis( pList, vis )
-        PsListBox_SyncScrollBar( pList )
+        PsListTree_SetTopVis( pList, vis )
+        PsListTree_SyncScrollBar( pList )
     elseif vis >= top + perPage then
-        PsListBox_SetTopVis( pList, vis - perPage + 1 )
-        PsListBox_SyncScrollBar( pList )
+        PsListTree_SetTopVis( pList, vis - perPage + 1 )
+        PsListTree_SyncScrollBar( pList )
     end if
 end sub
 
 ' Nearest header at or before modelRow (the group a row belongs to), or -1.
-function PsListBox_ParentHeader( byval pList as PSLISTBOX ptr, byval modelRow as integer ) as integer
+function PsListTree_ParentHeader( byval pList as PSLISTTREE ptr, byval modelRow as integer ) as integer
     for i as integer = modelRow to 0 step -1
         if pList->rows(i).IsHeader then return i
     next
@@ -1836,7 +2389,7 @@ end function
 
 ' First VISIBLE index whose MODEL row is selectable, scanning from startVis INCLUSIVE in
 ' step dir (+1 down / -1 up). -1 if the scan runs off the end without finding one.
-function PsListBox_FindSelectableVis( byval pList as PSLISTBOX ptr, byval startVis as integer, byval nDir as integer ) as integer
+function PsListTree_FindSelectableVis( byval pList as PSLISTTREE ptr, byval startVis as integer, byval nDir as integer ) as integer
     dim as integer v = startVis
     while (v >= 0) andalso (v < pList->visibleCount)
         dim as integer mr = pList->VisibleToModel( v )
@@ -1852,13 +2405,13 @@ end function
 ' bAllowReverse lets the paging/extreme keys search back the other way when nothing lies
 ' ahead, so they always land somewhere; the single-step arrows pass FALSE, so a step that
 ' would only reach non-selectable rows simply leaves the caret where it is.
-sub PsListBox_MoveFocusVis( byval pList as PSLISTBOX ptr, byval newVis as integer, byval isShift as boolean, byval isCtrl as boolean, byval nDir as integer = 1, byval bAllowReverse as boolean = false )
+sub PsListTree_MoveFocusVis( byval pList as PSLISTTREE ptr, byval newVis as integer, byval isShift as boolean, byval isCtrl as boolean, byval nDir as integer = 1, byval bAllowReverse as boolean = false )
     if pList->visibleCount <= 0 then return
     if newVis < 0 then newVis = 0
     if newVis > pList->visibleCount - 1 then newVis = pList->visibleCount - 1
 
-    dim as integer resolved = PsListBox_FindSelectableVis( pList, newVis, nDir )
-    if (resolved < 0) andalso bAllowReverse then resolved = PsListBox_FindSelectableVis( pList, newVis, -nDir )
+    dim as integer resolved = PsListTree_FindSelectableVis( pList, newVis, nDir )
+    if (resolved < 0) andalso bAllowReverse then resolved = PsListTree_FindSelectableVis( pList, newVis, -nDir )
     if resolved < 0 then return          ' no selectable row reachable -> leave focus put
     newVis = resolved
 
@@ -1885,55 +2438,70 @@ sub PsListBox_MoveFocusVis( byval pList as PSLISTBOX ptr, byval newVis as intege
         pList->anchorRow = newModel
     end if
 
-    PsListBox_EnsureVisible( pList, newModel )
-    dim as HWND hList = GetDlgItem( pList->hWin, pList->idc_ListBox )
+    PsListTree_EnsureVisible( pList, newModel )
+    dim as HWND hList = GetDlgItem( pList->hWin, pList->idc_ListTree )
     if hList then InvalidateRect( hList, NULL, FALSE )
     ' Keyboard navigation is the ONLY way a host can see this: WM_KEYDOWN is consumed
     ' here and never reaches the message callback.
-    PsListBox_NotifySelChange( pList )
+    PsListTree_NotifySelChange( pList )
 end sub
 
-' Left arrow: collapse an expanded header, or (from an item) jump to its header.
-sub PsListBox_KeyLeft( byval pList as PSLISTBOX ptr )
+' Whether the focus row can fold: a legacy header or any node with children (leaf items and
+' empty non-header nodes cannot). Hoisted so the Left/Right handlers read cleanly.
+private function PsListTree_FocusCanCollapse( byval pList as PSLISTTREE ptr, byval f as integer ) as boolean
+    if pList->IsValidRow(f) = false then return false
+    if pList->rows(f).IsHeader then return true
+    return pList->HasChildrenAt( f )
+end function
+
+' Left arrow (standard treeview semantics, at any depth): collapse an EXPANDED node; from a
+' collapsed node or a leaf, jump to the parent. A top-level legacy header has no parent, so
+' collapsed-Left is a no-op there -- exactly the old behaviour.
+sub PsListTree_KeyLeft( byval pList as PSLISTTREE ptr )
     dim as integer f = pList->focusRow
     if pList->IsValidRow(f) = false then return
-    if pList->rows(f).IsHeader then
-        if pList->rows(f).bCollapsed = false then
-            pList->rows(f).bCollapsed = true
-            pList->NotifyChange()
-            PsListBox_EnsureVisible( pList, f )
-        end if
+    dim as boolean canFold = PsListTree_FocusCanCollapse( pList, f )
+    if canFold andalso (pList->rows(f).bCollapsed = false) then
+        pList->rows(f).bCollapsed = true
+        pList->NotifyChange()
+        PsListTree_EnsureVisible( pList, f )
+        PsListTree_NotifyExpandCollapse( pList, f, false )
     else
-        dim as integer h = PsListBox_ParentHeader( pList, f )
+        ' Jump to the parent (nearest shallower row). For a legacy level-1 item this is its
+        ' header; for a deep node its immediate parent; for a top-level node there is none.
+        dim as integer h = pList->ParentOf( f )
         if (h >= 0) andalso pList->IsRowSelectable( h ) then
             pList->focusRow  = h
             pList->SelectOnly( h )
             pList->anchorRow = h
-            PsListBox_EnsureVisible( pList, h )
-            dim as HWND hList = GetDlgItem( pList->hWin, pList->idc_ListBox )
+            PsListTree_EnsureVisible( pList, h )
+            dim as HWND hList = GetDlgItem( pList->hWin, pList->idc_ListTree )
             if hList then InvalidateRect( hList, NULL, FALSE )
-            PsListBox_NotifySelChange( pList )
+            PsListTree_NotifySelChange( pList )
         end if
     end if
 end sub
 
-' Right arrow: expand a collapsed header, or (from an expanded header) step in.
-sub PsListBox_KeyRight( byval pList as PSLISTBOX ptr )
+' Right arrow (any depth): expand a COLLAPSED node; from an already-expanded node step onto
+' its first child; a leaf does nothing.
+sub PsListTree_KeyRight( byval pList as PSLISTTREE ptr )
     dim as integer f = pList->focusRow
     if pList->IsValidRow(f) = false then return
-    if pList->rows(f).IsHeader = false then return
+    if PsListTree_FocusCanCollapse( pList, f ) = false then return   ' leaf: nothing to do
     if pList->rows(f).bCollapsed then
         pList->rows(f).bCollapsed = false
         pList->NotifyChange()
-        PsListBox_EnsureVisible( pList, f )
+        PsListTree_EnsureVisible( pList, f )
+        PsListTree_NotifyExpandCollapse( pList, f, true )
     else
+        ' Expanded: the first child is the next visible row (pre-order order).
         dim as integer curVis = pList->ModelToVisible( f )
-        PsListBox_MoveFocusVis( pList, curVis + 1, false, false, +1, false )
+        PsListTree_MoveFocusVis( pList, curVis + 1, false, false, +1, false )
     end if
 end sub
 
 ' Space: toggle the focus row's selection (multi/extended) or select it (single).
-sub PsListBox_KeySpace( byval pList as PSLISTBOX ptr, byval isCtrl as boolean )
+sub PsListTree_KeySpace( byval pList as PSLISTTREE ptr, byval isCtrl as boolean )
     dim as integer f = pList->focusRow
     if pList->IsValidRow(f) = false then return
     if pList->MultipleSel orelse pList->ExtendSel then
@@ -1942,9 +2510,9 @@ sub PsListBox_KeySpace( byval pList as PSLISTBOX ptr, byval isCtrl as boolean )
         pList->SelectOnly( f )
     end if
     pList->anchorRow = f
-    dim as HWND hList = GetDlgItem( pList->hWin, pList->idc_ListBox )
+    dim as HWND hList = GetDlgItem( pList->hWin, pList->idc_ListTree )
     if hList then InvalidateRect( hList, NULL, FALSE )
-    PsListBox_NotifySelChange( pList )
+    PsListTree_NotifySelChange( pList )
 end sub
 
 
@@ -1955,7 +2523,7 @@ end sub
 ' The rows a drag will move: if the pressed row is part of a multi-selection, every selected
 ' item row; otherwise just the pressed row (headers/invalid excluded). Redims srcRows() and
 ' returns the count.
-private function PsListBox_BuildDragSource( byval pList as PSLISTBOX ptr, byval pressedRow as integer, srcRows() as integer ) as integer
+private function PsListTree_BuildDragSource( byval pList as PSLISTTREE ptr, byval pressedRow as integer, srcRows() as integer ) as integer
     dim as integer n = 0
     dim as boolean pressedSelected = pList->IsRowSelected( pressedRow )
     if pressedSelected andalso (pList->GetSelCount() > 1) then
@@ -1978,10 +2546,10 @@ private function PsListBox_BuildDragSource( byval pList as PSLISTBOX ptr, byval 
 end function
 
 ' Recompute the current drop target from a client point and repaint the indicator if it moved.
-private sub PsListBox_UpdateDragTarget( byval pList as PSLISTBOX ptr, byval hWin as HWND, byval x as integer, byval y as integer )
+private sub PsListTree_UpdateDragTarget( byval pList as PSLISTTREE ptr, byval hWin as HWND, byval x as integer, byval y as integer )
     dim as integer ib, tr
     dim as boolean oh
-    PsListBox_DropTargetFromPoint( pList, x, y, ib, oh, tr )
+    PsListTree_DropTargetFromPoint( pList, x, y, ib, oh, tr )
     if (ib <> pList->dropInsertBefore) orelse (oh <> pList->dropOnHeader) orelse (tr <> pList->dropTargetRow) then
         pList->dropInsertBefore = ib
         pList->dropOnHeader     = oh
@@ -1992,7 +2560,7 @@ end sub
 
 ' Tear a drag down: clear state, kill the auto-scroll timer, release capture, and clear the
 ' indicator if one was showing. Safe to call whether armed, active, or neither.
-private sub PsListBox_CancelDrag( byval pList as PSLISTBOX ptr, byval hWin as HWND )
+private sub PsListTree_CancelDrag( byval pList as PSLISTTREE ptr, byval hWin as HWND )
     dim as boolean wasActive = pList->bDragActive
     pList->bDragArmed       = false
     pList->bDragActive      = false
@@ -2002,7 +2570,7 @@ private sub PsListBox_CancelDrag( byval pList as PSLISTBOX ptr, byval hWin as HW
     pList->dropOnHeader     = false
     pList->dropTargetRow    = -1
     if pList->dragTimerOn then
-        KillTimer( hWin, IDT_CLISTBOX_DRAGSCROLL )
+        KillTimer( hWin, IDT_CLISTTREE_DRAGSCROLL )
         pList->dragTimerOn = false
     end if
     if GetCapture() = hWin then ReleaseCapture()
@@ -2011,16 +2579,16 @@ end sub
 
 ' Commit the current drop: build the source set, run the CanDrop veto, move the rows, and
 ' fire DragDrop. Reads the target tracked in drop* (recompute from the up point first).
-private sub PsListBox_CommitDrop( byval pList as PSLISTBOX ptr, byval hWin as HWND )
+private sub PsListTree_CommitDrop( byval pList as PSLISTTREE ptr, byval hWin as HWND )
     dim srcRows() as integer
-    dim as integer n = PsListBox_BuildDragSource( pList, pList->dragAnchorRow, srcRows() )
+    dim as integer n = PsListTree_BuildDragSource( pList, pList->dragAnchorRow, srcRows() )
     if n <= 0 then return
     dim as integer insertBefore = pList->dropInsertBefore
     if insertBefore < 0 then return
 
     ' Pre-drop veto. The host gets the source set and the drop-target ROWINFO (read-only).
     if pList->CanDropCallback then
-        dim info as PSLISTBOX_DROPINFO
+        dim info as PSLISTTREE_DROPINFO
         info.hList        = pList->hWin
         info.srcRows      = @srcRows(0)
         info.srcCount     = n
@@ -2042,9 +2610,392 @@ end sub
 
 
 ' ========================================================================================
-' PsListBoxSurface_WndProc -- the window procedure for the row surface.
+' In-place label editor. A single-line PsTextBox is created lazily over the edited row's
+' caption and destroyed on commit/cancel. Commit = Enter or focus loss; cancel = Esc. The
+' editor is a CHILD OF THE SURFACE, so its rect is in the same coords as VisIndexRect, and
+' the owning PSLISTTREE is resolved as editor -> surface -> container.
+' ========================================================================================
+
+' Resolve the owning control from the editor's PsTextBox handle: editor -> surface -> container.
+private function PsListTree_FromEditChild( byval hTextBox as HWND ) as PSLISTTREE ptr
+    if hTextBox = 0 then return null
+    dim as HWND hSurf = GetParent( hTextBox )
+    if hSurf = 0 then return null
+    return GetListTreePointer( GetParent( hSurf ) )
+end function
+
+' Enter commits.
+sub PsListTree_EditEnterPressed( byval hTextBox as HWND )
+    dim as PSLISTTREE ptr pList = PsListTree_FromEditChild( hTextBox )
+    if pList then PsListTree_EndEditInternal( pList, true )
+end sub
+
+' Focus LOSS commits (focus gain is ignored). Clicking another row, or tabbing away, lands here.
+sub PsListTree_EditFocusChanged( byval hTextBox as HWND, byval bGotFocus as boolean )
+    if bGotFocus then return
+    dim as PSLISTTREE ptr pList = PsListTree_FromEditChild( hTextBox )
+    if pList then PsListTree_EndEditInternal( pList, true )
+end sub
+
+' Esc cancels (no commit). Observed on WM_KEYDOWN before PsTextBox acts, and consumed.
+function PsListTree_EditMessage( byval m as PSTEXTBOX_MESSAGEINFO ptr ) as boolean
+    if m = 0 then return false
+    if (m->uMsg = WM_KEYDOWN) andalso (m->wParam = VK_ESCAPE) then
+        dim as PSLISTTREE ptr pList = PsListTree_FromEditChild( m->hTextBox )
+        if pList then PsListTree_EndEditInternal( pList, false )
+        return true                              ' consume Esc so it does not bubble
+    end if
+    return false
+end function
+
+' Begin editing row/col. Returns FALSE if editing is off, the row is invalid / non-selectable /
+' hidden, or the BeginLabelEdit callback vetoes. An edit already in progress is committed first.
+function PsListTree_BeginEditInternal( byval pList as PSLISTTREE ptr, byval row as integer, byval col as integer ) as boolean
+    if pList = 0 then return false
+    if pList->bLabelEdit = false then return false
+    if pList->IsValidRow(row) = false then return false
+    if pList->IsRowSelectable(row) = false then return false     ' non-selectable rows are not editable
+    if col < 0 then col = 0
+
+    if pList->hEdit <> 0 then PsListTree_EndEditInternal( pList, true )   ' commit any prior edit
+
+    dim as integer vis = pList->ModelToVisible( row )
+    if vis < 0 then return false                                 ' hidden inside a collapsed subtree
+
+    ' Optional pre-edit veto.
+    if pList->BeginLabelEditCallback then
+        if pList->BeginLabelEditCallback( pList->hWin, row ) = false then return false
+    end if
+
+    dim as HWND hSurf = GetDlgItem( pList->hWin, pList->idc_ListTree )
+    if hSurf = 0 then return false
+
+    ' Lazily create the editor as a child of the surface, wired once.
+    if pList->hEdit = 0 then
+        pList->hEdit = PsTextBox_Create( hSurf, pList->idc_ListTree + 3, false )   ' single-line
+        if pList->hEdit = 0 then return false
+        PsTextBox_SetEnterPressedCallback( pList->hEdit, @PsListTree_EditEnterPressed )
+        PsTextBox_SetFocusCallback( pList->hEdit, @PsListTree_EditFocusChanged )
+        PsTextBox_SetMessageCallback( pList->hEdit, @PsListTree_EditMessage )
+        PsTextBox_SetBorderWidth( pList->hEdit, 1 )
+        ' Applied on CREATE, which is the only moment a host cannot reach: SetEditColors stores
+        ' them precisely because the editor does not exist until here.
+        if pList->bEditColorsSet then
+            PsTextBox_SetBackColor( pList->hEdit, pList->clrEditBack )
+            PsTextBox_SetForeColor( pList->hEdit, pList->clrEditFore )
+            PsTextBox_SetBorderColor( pList->hEdit, pList->clrEditBorder )
+            PsTextBox_SetFocusBorderColor( pList->hEdit, pList->clrEditFocusBdr )
+            ' The strip around the bordered box, so the editor sits on the row rather than on a
+            ' pale rectangle the size of the cell.
+            PsTextBox_SetOuterBackColor( pList->hEdit, pList->clrEditBack )
+        end if
+    end if
+    if pList->hRowFont then PsTextBox_SetFont( pList->hEdit, pList->hRowFont )
+
+    pList->editRow = row
+    pList->editCol = col
+
+    ' Place over the cell being edited. The row rect is in surface client coords and the header's
+    ' column rects share that x origin, so a column rect can be used directly.
+    dim as RECT rcRow
+    if PsListTree_VisIndexRect( pList, vis, rcRow ) = false then
+        PsListTree_EndEditInternal( pList, false )
+        return false
+    end if
+    dim as integer nCols = PsColumnHeader_GetCount( pList->hHeader )
+    dim as integer xLeft, xRight
+    if (col > 0) andalso (col < nCols) then
+        ' A cell in column N. No indent or twisty inset -- those belong to the caption column
+        ' only, which is where the tree structure is drawn.
+        dim as RECT rcCol : PsColumnHeader_GetColumnRect( pList->hHeader, col, rcCol )
+        xLeft  = rcCol.left
+        xRight = rcCol.right
+    else
+        ' The caption: left past the tree indent and the twisty band, right to column 0's edge
+        ' (columns mode) or the client right.
+        xLeft = rcRow.left + PsListTree_RowLevelIndentPx( pList, row )
+        if pList->bShowTwisty then xLeft += PsListTree_TwistyPx( pList )
+        xRight = rcRow.right
+        if nCols > 0 then
+            dim as RECT rcCol0 : PsColumnHeader_GetColumnRect( pList->hHeader, 0, rcCol0 )
+            xRight = rcCol0.right
+        end if
+    end if
+    ' Line the editor's TEXT up with the cell text the host painted. The box itself covers the
+    ' whole cell -- that part is right -- but PsTextBox puts its RichEdit `borderWidth` inside
+    ' the box and then applies its margins on top of that, so the text starts at
+    ' borderWidth + marginLeft. The host's inset is measured from the CELL edge, so the margin
+    ' has to be the difference. Without this the text starts at borderWidth and no longer lines
+    ' up with the rows above and below.
+    '
+    ' SET BEFORE THE SIZE AND BEFORE THE TEXT, and the order is the whole point. PsTextBox
+    ' re-applies its stored margins from PositionRichEdit on every WM_SIZE (EM_SETRECT and the
+    ' margins interact, so it has to), which means a margin set AFTER the SetWindowPos below
+    ' reaches the control only once the text has already been laid out: the text redrew at the
+    ' new offset on the next unrelated repaint while the CARET stayed at the old one, so the
+    ' caret sat a character-width away from the end of the text it was supposedly at.
+    if pList->nEditTextInset >= 0 then
+        dim as integer bw = PsTextBox_GetBorderWidth( pList->hEdit )
+        dim as integer nMargin = pList->nEditTextInset - bw
+        if nMargin < 0 then nMargin = 0
+        PsTextBox_SetMargins( pList->hEdit, nMargin, 0 )
+    end if
+
+    if xRight < xLeft + 8 then xRight = xLeft + 8
+    SetWindowPos( pList->hEdit, HWND_TOP, xLeft, rcRow.top, xRight - xLeft, rcRow.bottom - rcRow.top, SWP_SHOWWINDOW )
+
+    ' Seed with the cell's current text.
+    dim as PSLISTTREE_ROWINFO ptr pRow = pList->GetRow( row )
+    dim as DWSTRING wszCur = ""
+    if pRow then
+        if col = 0 then wszCur = pRow->Text else wszCur = PsListTree_GetCellText( pList->hWin, row, col )
+    end if
+    PsTextBox_SetText( pList->hEdit, wszCur )
+
+    ' Focus FIRST, then place the selection -- the caret belongs to the focused window, and a
+    ' selection set before focus arrives is not what the user sees afterwards.
+    SetFocus( PsTextBox_GetRichEditHandle( pList->hEdit ) )
+    if pList->bEditSelectAll then
+        PsTextBox_SelectAll( pList->hEdit )          ' ready to overtype (explorer rename)
+    else
+        dim as integer nLen = len( wszCur )
+        PsTextBox_SetSel( pList->hEdit, nLen, nLen ) ' caret at the end, nothing selected
+    end if
+    return true
+end function
+
+' End the current edit. bCommit writes the text back (via the EndLabelEdit veto) and returns
+' TRUE if the model was actually written. Tears the editor down first so the focus-loss it
+' triggers is swallowed by the re-entrancy guard.
+function PsListTree_EndEditInternal( byval pList as PSLISTTREE ptr, byval bCommit as boolean ) as boolean
+    if pList = 0 then return false
+    if pList->hEdit = 0 then return false
+    if pList->bEditTearingDown then return false          ' re-entrant (focus loss during destroy)
+    pList->bEditTearingDown = true
+
+    dim as integer row = pList->editRow
+    dim as integer col = pList->editCol
+    dim as DWSTRING wszNew = PsTextBox_GetText( pList->hEdit )
+
+    ' Destroy the editor BEFORE writing/repaint: DestroyWindow returns focus to the surface,
+    ' whose PsTextBox WM_KILLFOCUS would re-enter this function -- the guard above absorbs it.
+    dim as HWND hEditWin = pList->hEdit
+    pList->hEdit   = 0
+    pList->editRow = -1
+    DestroyWindow( hEditWin )
+    dim as HWND hSurf = GetDlgItem( pList->hWin, pList->idc_ListTree )
+    if hSurf then SetFocus( hSurf )
+
+    dim as boolean bWrote = false
+    if bCommit andalso pList->IsValidRow(row) then
+        dim as boolean bAccept = true
+        if pList->EndLabelEditCallback then bAccept = pList->EndLabelEditCallback( pList->hWin, row, wszNew )
+        if bAccept then
+            if col = 0 then
+                pList->rows(row).Text = wszNew
+            else
+                PsListTree_SetCellText( pList->hWin, row, col, wszNew )
+            end if
+            bWrote = true
+        end if
+    end if
+
+    pList->bEditTearingDown = false
+    if hSurf then InvalidateRect( hSurf, NULL, FALSE )
+    return bWrote
+end function
+
+' Commit an active edit before a scroll/resize moves rows under it (no-op when not editing).
+sub PsListTree_CommitEditIfActive( byval pList as PSLISTTREE ptr )
+    if pList = 0 then return
+    if pList->hEdit = 0 then return
+    if pList->bEditTearingDown then return
+    PsListTree_EndEditInternal( pList, true )
+end sub
+
+
+' ========================================================================================
+' In-place editing -- public API.
+' ========================================================================================
+function PsListTree_EnableLabelEdit( byval hListControl as HWND, byval enable as boolean = true ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return false
+    pList->bLabelEdit = enable
+    if (enable = false) andalso (pList->hEdit <> 0) then PsListTree_EndEditInternal( pList, false )
+    return true
+end function
+
+function PsListTree_IsLabelEditEnabled( byval hListControl as HWND ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return false
+    return pList->bLabelEdit
+end function
+
+function PsListTree_SetClickToEdit( byval hListControl as HWND, byval enable as boolean = true ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return false
+    pList->bClickToEdit = enable
+    return true
+end function
+
+function PsListTree_SetEditColumn( byval hListControl as HWND, byval col as integer ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return false
+    if col < 0 then col = 0
+    pList->editGestureCol = col
+    return true
+end function
+
+function PsListTree_GetEditColumn( byval hListControl as HWND ) as integer
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return 0
+    return pList->editGestureCol
+end function
+
+function PsListTree_SetEnterEdits( byval hListControl as HWND, byval enable as boolean = true ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return false
+    pList->bEnterEdits = enable
+    return true
+end function
+
+sub PsListTree_SetEditColors( byval hListControl as HWND, byval clrBack as COLORREF, _
+                              byval clrFore as COLORREF, byval clrBorder as COLORREF, _
+                              byval clrFocusBorder as COLORREF )
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return
+    pList->clrEditBack     = clrBack
+    pList->clrEditFore     = clrFore
+    pList->clrEditBorder   = clrBorder
+    pList->clrEditFocusBdr = clrFocusBorder
+    pList->bEditColorsSet  = true
+    ' An editor already created (this control keeps it for the instance's life) is re-coloured
+    ' now, so a theme change part-way through a session is not one edit behind.
+    if pList->hEdit then
+        PsTextBox_SetBackColor( pList->hEdit, clrBack )
+        PsTextBox_SetForeColor( pList->hEdit, clrFore )
+        PsTextBox_SetBorderColor( pList->hEdit, clrBorder )
+        PsTextBox_SetFocusBorderColor( pList->hEdit, clrFocusBorder )
+        PsTextBox_SetOuterBackColor( pList->hEdit, clrBack )
+    end if
+end sub
+
+sub PsListTree_SetEditSelectAll( byval hListControl as HWND, byval enable as boolean )
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return
+    pList->bEditSelectAll = enable
+end sub
+
+sub PsListTree_SetEditTextInset( byval hListControl as HWND, byval nPx as integer )
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return
+    pList->nEditTextInset = nPx
+end sub
+
+' PROBE, public on purpose (PsButton_CountRenderedTones' precedent). A key claimed in WM_KEYDOWN
+' has a WM_CHAR manufactured for it, and an unswallowed one reaches DefWindowProc and BEEPS. The
+' beep has no return value -- DefWindowProc answers WM_CHAR with 0 exactly as the swallow does --
+' so nothing about it is observable from outside except this flag. Without it the only detector
+' is a human listening, which is how the same defect shipped in five sibling controls.
+function PsListTree_IsCharSwallowArmed( byval hListControl as HWND ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return false
+    return pList->bSwallowNextChar
+end function
+
+function PsListTree_BeginEdit( byval hListControl as HWND, byval row as integer, byval col as integer = 0 ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return false
+    return PsListTree_BeginEditInternal( pList, row, col )
+end function
+
+function PsListTree_EndEdit( byval hListControl as HWND, byval bCommit as boolean = true ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return false
+    return PsListTree_EndEditInternal( pList, bCommit )
+end function
+
+function PsListTree_IsEditing( byval hListControl as HWND ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return false
+    return (pList->hEdit <> 0)
+end function
+
+function PsListTree_GetEditRow( byval hListControl as HWND ) as integer
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return -1
+    return pList->editRow
+end function
+
+' Which column the edit is on. The EndLabelEdit callback is not handed the column, so a host that
+' wants only ONE column editable reads it here and returns FALSE for the others -- F2 always opens
+' column 0, whatever column the host's own gesture opened last.
 '
-' Was PsListBoxListBox_SubclassProc, a subclass hung off a system LISTBOX. The body is
+' Unlike GetEditRow this does NOT reset to -1 when the edit ends, and that is deliberate:
+' EndEditInternal tears the editor down BEFORE it calls EndLabelEdit, so a value cleared on
+' teardown would be unreadable at the one moment it is wanted. Outside an edit it reports the
+' column of the last one.
+function PsListTree_GetEditCol( byval hListControl as HWND ) as integer
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return -1
+    return pList->editCol
+end function
+
+' Host pump obligation when label editing is enabled: forwards to the editor's PsTextBox so
+' its right-click context menu gets keyboard nav / outside-click dismissal. A no-op (FALSE)
+' when no menu is open, so it is safe to call unconditionally.
+function PsListTree_FilterMessage( byval pMsg as MSG ptr ) as boolean
+    if pMsg = 0 then return false
+    ' Let the editor's context menu (a PsPopupMenu) claim the message first.
+    if PsTextBox_FilterMessage( pMsg ) then return true
+
+    ' While an in-place edit is active, claim ENTER (commit) and ESC (cancel) HERE -- before
+    ' the host's IsDialogMessage runs, which would otherwise swallow Enter as "press the default
+    ' button" and Esc as "IDCANCEL", so neither would ever reach the editor's RichEdit. This is
+    ' why this filter MUST be called ahead of IsDialogMessage in the pump. The owning control is
+    ' resolved from the focused window (the RichEdit): RichEdit -> PsTextBox -> and FromEditChild
+    ' walks the rest; the hEdit match confirms this really is our editor before we act.
+    if pMsg->message = WM_KEYDOWN then
+        if (pMsg->wParam = VK_RETURN) orelse (pMsg->wParam = VK_ESCAPE) then
+            dim as HWND hEditContainer = GetParent( pMsg->hwnd )      ' RichEdit -> PsTextBox container
+            dim as PSLISTTREE ptr pList = PsListTree_FromEditChild( hEditContainer )
+            if (pList <> 0) andalso (pList->hEdit <> 0) andalso (pList->hEdit = hEditContainer) then
+                if pMsg->wParam = VK_RETURN then
+                    PsListTree_EndEditInternal( pList, true )          ' commit
+                else
+                    PsListTree_EndEditInternal( pList, false )         ' cancel
+                end if
+                return true                                          ' consumed: IsDialogMessage never sees it
+            end if
+        end if
+    end if
+    return false
+end function
+
+
+' ========================================================================================
+' Tree callback registration.
+' ========================================================================================
+sub PsListTree_SetBeginLabelEditCallback( byval hListControl as HWND, byval userfunc as BeginLabelEditCallbackFunc )
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList then pList->BeginLabelEditCallback = userfunc
+end sub
+
+sub PsListTree_SetEndLabelEditCallback( byval hListControl as HWND, byval userfunc as EndLabelEditCallbackFunc )
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList then pList->EndLabelEditCallback = userfunc
+end sub
+
+sub PsListTree_SetExpandCollapseCallback( byval hListControl as HWND, byval usersub as ExpandCollapseCallbackSub )
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList then pList->ExpandCollapseCallback = usersub
+end sub
+
+
+' ========================================================================================
+' PsListTreeSurface_WndProc -- the window procedure for the row surface.
+'
+' Was PsListTreeListBox_SubclassProc, a subclass hung off a system LISTBOX. The body is
 ' largely unchanged, because almost none of it ever depended on the listbox: selection,
 ' focus, keyboard navigation, hot tracking, group collapse and the wheel accumulator were
 ' already this control's own code. What changed is the frame around it -- every
@@ -2052,19 +3003,19 @@ end sub
 ' free (taking focus on a click, claiming the arrow keys) are done explicitly, and
 ' WM_PAINT is handled here rather than fanned out into WM_DRAWITEM.
 ' ========================================================================================
-function PsListBoxSurface_WndProc ( _
+function PsListTreeSurface_WndProc ( _
             byval hWin   as HWND, _                 ' // Control window handle
             byval uMsg   as UINT, _                 ' // Type of message
             byval _wParam as WPARAM, _               ' // First message parameter
             byval _lParam as LPARAM _               ' // Second message parameter
             ) as LRESULT
 
-    dim as PSLISTBOX ptr pList = GetListBoxPointer( GetParent(hWin) )
+    dim as PSLISTTREE ptr pList = GetListTreePointer( GetParent(hWin) )
 
     ' Per-message scratch info passed to the user MessageCallback. A plain local
     ' (NOT static) so that multiple control instances never share it. The hover
     ' tracking index likewise lives per-instance in pList->nLastHotIdx.
-    dim m as PSLISTBOX_MESSAGEINFO
+    dim m as PSLISTTREE_MESSAGEINFO
 
     select case uMsg
         ' Prepare the Callback MessageInfo structure for only the messages that we handle
@@ -2088,7 +3039,7 @@ function PsListBoxSurface_WndProc ( _
             ' WM_DRAWITEM per row -- and collapsing those N paint cycles into one is the
             ' whole of the speed win this rewrite bought. It is backend-independent: it
             ' made GDI 25% faster and GDI+ 38% faster.
-            return PsListBox_OnPaintSurface( hWin )
+            return PsListTree_OnPaintSurface( hWin )
 
         case WM_ERASEBKGND
             ' The paint fills the entire client, including the strip below the last row,
@@ -2099,6 +3050,27 @@ function PsListBoxSurface_WndProc ( _
             ' Claim the navigation keys. As a system listbox these arrived automatically;
             ' a plain child window has to ask, or IsDialogMessage in the host's pump eats
             ' the arrows for tab-navigation before WM_KEYDOWN is ever sent.
+            '
+            ' ENTER is claimed PER MESSAGE and only when SetEnterEdits is on -- PsToggle's rule.
+            ' Claiming DLGC_WANTALLKEYS unconditionally would swallow Tab and break the host's
+            ' navigation; claiming nothing lets IsDialogMessage route ENTER to the dialog's
+            ' default button before WM_KEYDOWN can ever arrive here.
+            ' Hoisted to one boolean: a 3-way andalso mixing a pointer relational with two
+            ' boolean fields trips fbc warning 38. Two independent reasons to want ENTER --
+            ' it opens an editor, or it fires the row's default action.
+            dim as boolean bWantEnter = false
+            if pList <> 0 then
+                bWantEnter = (pList->bEnterEdits = true) andalso (pList->bLabelEdit = true)
+                if pList->ActivateCallback <> 0 then bWantEnter = true
+            end if
+            if bWantEnter then
+                dim as MSG ptr pMsg = cast(MSG ptr, _lParam)
+                if pMsg then
+                    if (pMsg->message = WM_KEYDOWN) andalso (pMsg->wParam = VK_RETURN) then
+                        return DLGC_WANTARROWS or DLGC_WANTCHARS or DLGC_WANTALLKEYS
+                    end if
+                end if
+            end if
             return DLGC_WANTARROWS or DLGC_WANTCHARS
 
         case WM_SETFOCUS, WM_KILLFOCUS
@@ -2108,32 +3080,32 @@ function PsListBoxSurface_WndProc ( _
             return 0
 
         case WM_TIMER
-            if pList andalso (_wParam = IDT_CLISTBOX_HOTTRACK) then
+            if pList andalso (_wParam = IDT_CLISTTREE_HOTTRACK) then
                 ' The cursor may have left without us getting a WM_MOUSELEAVE. If it
                 ' is no longer over our client area, clear the hot row ourselves.
                 dim as RECT rcClient : GetClientRect( hWin, @rcClient )
                 if isMouseOverRECT( hWin, rcClient ) = false then
-                    PsListBox_ClearHotTracking( pList, hWin )
+                    PsListTree_ClearHotTracking( pList, hWin )
                 end if
                 return 0
             end if
-            if pList andalso (_wParam = IDT_CLISTBOX_DRAGSCROLL) then
+            if pList andalso (_wParam = IDT_CLISTTREE_DRAGSCROLL) then
                 ' Auto-scroll while dragging near an edge. Read the cursor live (capture
                 ' means moves may stop arriving once it is held still against the edge).
                 if pList->bDragActive then
                     dim as POINT pt : GetCursorPos( @pt ) : ScreenToClient( hWin, @pt )
                     dim as RECT rcC : GetClientRect( hWin, @rcC )
                     dim as integer newTop = pList->nTopVis
-                    if pt.y < (rcC.top + PSLISTBOX_DRAGSCROLL_ZONE) then
+                    if pt.y < (rcC.top + PSLISTTREE_DRAGSCROLL_ZONE) then
                         newTop -= 1
-                    elseif pt.y > (rcC.bottom - PSLISTBOX_DRAGSCROLL_ZONE) then
+                    elseif pt.y > (rcC.bottom - PSLISTTREE_DRAGSCROLL_ZONE) then
                         newTop += 1
                     end if
                     if newTop <> pList->nTopVis then
-                        PsListBox_SetTopVis( pList, newTop )
-                        PsListBox_CaptureTopRow( pList )
-                        PsListBox_SyncScrollBar( pList )
-                        PsListBox_UpdateDragTarget( pList, hWin, pt.x, pt.y )
+                        PsListTree_SetTopVis( pList, newTop )
+                        PsListTree_CaptureTopRow( pList )
+                        PsListTree_SyncScrollBar( pList )
+                        PsListTree_UpdateDragTarget( pList, hWin, pt.x, pt.y )
                         InvalidateRect( hWin, NULL, FALSE )
                     end if
                 end if
@@ -2144,7 +3116,7 @@ function PsListBoxSurface_WndProc ( _
         case WM_KEYDOWN
             ' Esc during an active drag cancels it with no move (capture-loss's sibling).
             if (pList <> 0) andalso (pList->bDragActive = true) andalso (_wParam = VK_ESCAPE) then
-                PsListBox_CancelDrag( pList, hWin )
+                PsListTree_CancelDrag( pList, hWin )
                 return 0
             end if
             if pList then
@@ -2152,31 +3124,69 @@ function PsListBoxSurface_WndProc ( _
                 dim as boolean isCtrl  = (GetAsyncKeyState(VK_CONTROL) and &H8000)
                 dim as integer curVis  = pList->ModelToVisible( pList->focusRow )
                 if curVis < 0 then curVis = 0        ' no/hidden focus -> start at top
-                dim as integer perPage = PsListBox_ItemsPerPage( pList )
+                dim as integer perPage = PsListTree_ItemsPerPage( pList )
                 if perPage < 1 then perPage = 1
 
                 select case _wParam
                     case VK_UP        ' step up; a blocked step leaves the caret put
-                        PsListBox_MoveFocusVis( pList, curVis - 1, isShift, isCtrl, -1, false ) : return 0
+                        PsListTree_MoveFocusVis( pList, curVis - 1, isShift, isCtrl, -1, false ) : return 0
                     case VK_DOWN      ' step down; likewise
-                        PsListBox_MoveFocusVis( pList, curVis + 1, isShift, isCtrl, +1, false ) : return 0
+                        PsListTree_MoveFocusVis( pList, curVis + 1, isShift, isCtrl, +1, false ) : return 0
                     case VK_PRIOR    ' PageUp: search up from the target, else back down toward here
-                        PsListBox_MoveFocusVis( pList, curVis - perPage, isShift, isCtrl, -1, true ) : return 0
+                        PsListTree_MoveFocusVis( pList, curVis - perPage, isShift, isCtrl, -1, true ) : return 0
                     case VK_NEXT     ' PageDown: search down from the target, else back up
-                        PsListBox_MoveFocusVis( pList, curVis + perPage, isShift, isCtrl, +1, true ) : return 0
+                        PsListTree_MoveFocusVis( pList, curVis + perPage, isShift, isCtrl, +1, true ) : return 0
                     case VK_HOME     ' first selectable row from the top
-                        PsListBox_MoveFocusVis( pList, 0, isShift, isCtrl, +1, true ) : return 0
+                        PsListTree_MoveFocusVis( pList, 0, isShift, isCtrl, +1, true ) : return 0
                     case VK_END      ' last selectable row from the bottom
-                        PsListBox_MoveFocusVis( pList, pList->visibleCount - 1, isShift, isCtrl, -1, true ) : return 0
+                        PsListTree_MoveFocusVis( pList, pList->visibleCount - 1, isShift, isCtrl, -1, true ) : return 0
                     case VK_LEFT
-                        PsListBox_KeyLeft( pList ) : return 0
+                        PsListTree_KeyLeft( pList ) : return 0
                     case VK_RIGHT
-                        PsListBox_KeyRight( pList ) : return 0
+                        PsListTree_KeyRight( pList ) : return 0
                     case VK_SPACE
-                        PsListBox_KeySpace( pList, isCtrl ) : return 0
+                        ' Space produces a WM_CHAR; arm the swallow so it does not beep.
+                        pList->bSwallowNextChar = true
+                        PsListTree_KeySpace( pList, isCtrl ) : return 0
+                    case VK_F2
+                        ' Start an in-place edit of the focused row (no-op unless editing is on).
+                        if pList->bLabelEdit then _
+                            PsListTree_BeginEditInternal( pList, pList->focusRow, pList->editGestureCol )
+                        return 0
+                    case VK_RETURN
+                        ' Two possible meanings, EDIT first: a list whose ENTER opens an editor
+                        ' does not also fire the row's default action. Either way ENTER produces
+                        ' a WM_CHAR, so arm the swallow or the system beeps on every press --
+                        ' the family-wide trap. Armed here rather than by re-reading state,
+                        ' because the state this key changes has already changed by the time its
+                        ' character arrives.
+                        dim as boolean bEnterEdit = (pList->bEnterEdits = true) andalso (pList->bLabelEdit = true)
+                        if bEnterEdit then
+                            pList->bSwallowNextChar = true
+                            PsListTree_BeginEditInternal( pList, pList->focusRow, pList->editGestureCol )
+                            return 0
+                        end if
+                        if pList->ActivateCallback <> 0 then
+                            pList->bSwallowNextChar = true
+                            PsListTree_FireActivate( pList, pList->focusRow )
+                            return 0
+                        end if
+                        ' Not ours: fall through so the host's default button still works.
                 end select
             end if
             ' unhandled keys fall through to the default listbox handler
+
+        case WM_CHAR
+            ' Swallow the WM_CHAR that TranslateMessage manufactures for a key the control
+            ' claimed in WM_KEYDOWN (Space) -- otherwise it reaches DefWindowProc and the
+            ' system beeps. Armed per keystroke, never by re-reading state (the state a key
+            ' changed has already changed by the time its character arrives). Other chars fall
+            ' through untouched (the control has no text input of its own). WM_SYSCHAR (Alt-
+            ' combos, host mnemonics) is deliberately not touched.
+            if (pList <> 0) andalso pList->bSwallowNextChar then
+                pList->bSwallowNextChar = false
+                return 0
+            end if
 
         Case WM_MOUSEWHEEL
             if pList then
@@ -2185,7 +3195,7 @@ function PsListBoxSurface_WndProc ( _
                 ' kept so slow/precision wheels still scroll smoothly.
                 dim as long linesPerNotch = 3
                 SystemParametersInfo( SPI_GETWHEELSCROLLLINES, 0, @linesPerNotch, 0 )
-                dim as long page = PsListBox_ItemsPerPage( pList )
+                dim as long page = PsListTree_ItemsPerPage( pList )
                 if (linesPerNotch < 1) orelse (linesPerNotch > page) then linesPerNotch = page  ' WHEEL_PAGESCROLL / bogus
                 if linesPerNotch < 1 then linesPerNotch = 1
 
@@ -2203,14 +3213,14 @@ function PsListBoxSurface_WndProc ( _
                     moved = true
                 wend
                 if moved then
-                    ' Clamped by PsListBox_SetTopVis, which is where the listbox's own
+                    ' Clamped by PsListTree_SetTopVis, which is where the listbox's own
                     ' clamping went. It repaints only if the position actually changed,
                     ' so wheeling against the end of the list costs nothing.
-                    PsListBox_SetTopVis( pList, nTopIndex )
+                    PsListTree_SetTopVis( pList, nTopIndex )
                     ' The model's scroll source of truth follows the user's wheel, so a
                     ' later rebuild re-derives to where they left it.
-                    PsListBox_CaptureTopRow( pList )
-                    PsListBox_SyncScrollBar( pList )   ' keep the thumb with the wheel
+                    PsListTree_CaptureTopRow( pList )
+                    PsListTree_SyncScrollBar( pList )   ' keep the thumb with the wheel
                     if (pList->MessageCallback <> 0) andalso pList->MessageCallback( @m ) then return 0
                 end if
             end if
@@ -2224,7 +3234,7 @@ function PsListBoxSurface_WndProc ( _
                 dim as integer mx = GET_X_LPARAM(_lParam)
                 dim as integer my = GET_Y_LPARAM(_lParam)
                 if pList->bDragActive then
-                    PsListBox_UpdateDragTarget( pList, hWin, mx, my )
+                    PsListTree_UpdateDragTarget( pList, hWin, mx, my )
                     return 0
                 elseif (pList->bDragArmed = true) andalso ((_wParam and MK_LBUTTON) <> 0) then
                     dim as integer dx = abs( mx - pList->ptDragStart.x )
@@ -2232,10 +3242,10 @@ function PsListBoxSurface_WndProc ( _
                     if (dx >= GetSystemMetrics(SM_CXDRAG)) orelse (dy >= GetSystemMetrics(SM_CYDRAG)) then
                         pList->bDragActive = true
                         SetCapture( hWin )
-                        PsListBox_ClearHotTracking( pList, hWin )          ' no hot row during a drag
-                        SetTimer( hWin, IDT_CLISTBOX_DRAGSCROLL, PSLISTBOX_DRAGSCROLL_MS, NULL )
+                        PsListTree_ClearHotTracking( pList, hWin )          ' no hot row during a drag
+                        SetTimer( hWin, IDT_CLISTTREE_DRAGSCROLL, PSLISTTREE_DRAGSCROLL_MS, NULL )
                         pList->dragTimerOn = true
-                        PsListBox_UpdateDragTarget( pList, hWin, mx, my )
+                        PsListTree_UpdateDragTarget( pList, hWin, mx, my )
                         return 0
                     end if
                 end if
@@ -2255,21 +3265,21 @@ function PsListBoxSurface_WndProc ( _
             ' exits quickly (or onto another control), which would strand the hot row
             ' painted. Poll the cursor while we are over the control.
             if (pList <> 0) andalso (pList->hotTimerOn = false) then
-                SetTimer( hWin, IDT_CLISTBOX_HOTTRACK, PSLISTBOX_HOTTRACK_MS, NULL )
+                SetTimer( hWin, IDT_CLISTTREE_HOTTRACK, PSLISTTREE_HOTTRACK_MS, NULL )
                 pList->hotTimerOn = true
             end if
 
             ' Invalidate only the rows whose hot state actually changed, sparing the buffer
             ' a full-client repaint per mouse move.
             dim as RECT rc
-            dim as long idx = PsListBox_VisIndexFromPoint( pList, GET_X_LPARAM(_lParam), GET_Y_LPARAM(_lParam) )
+            dim as long idx = PsListTree_VisIndexFromPoint( pList, GET_X_LPARAM(_lParam), GET_Y_LPARAM(_lParam) )
             if (pList <> 0) andalso (idx >= 0) then
                 if idx <> pList->nLastHotIdx then
                     ' Repaint the newly-hot row and the previously-hot row. FALSE =
                     ' no background erase; the double buffer fully paints each row.
-                    if PsListBox_VisIndexRect( pList, idx, rc ) then InvalidateRect( hWin, @rc, FALSE )
+                    if PsListTree_VisIndexRect( pList, idx, rc ) then InvalidateRect( hWin, @rc, FALSE )
                     if pList->nLastHotIdx <> -1 then
-                        if PsListBox_VisIndexRect( pList, pList->nLastHotIdx, rc ) then _
+                        if PsListTree_VisIndexRect( pList, pList->nLastHotIdx, rc ) then _
                             InvalidateRect( hWin, @rc, FALSE )
                     end if
                     pList->nLastHotIdx = idx
@@ -2284,7 +3294,7 @@ function PsListBoxSurface_WndProc ( _
 
 
         case WM_MOUSEHOVER
-            dim as long idx = PsListBox_VisIndexFromPoint( pList, GET_X_LPARAM(_lParam), GET_Y_LPARAM(_lParam) )
+            dim as long idx = PsListTree_VisIndexFromPoint( pList, GET_X_LPARAM(_lParam), GET_Y_LPARAM(_lParam) )
             if idx >= 0 then
                 ' idx is a VISIBLE index; the callback sees MODEL indices.
                 if pList then m.idx = pList->VisibleToModel( idx )
@@ -2299,7 +3309,7 @@ function PsListBoxSurface_WndProc ( _
                 ' Fast path for clearing the hot row (the WM_TIMER poll is the
                 ' fallback for when this message never arrives). The tooltip hides
                 ' itself when the mouse leaves the tool, so nothing to push.
-                PsListBox_ClearHotTracking( pList, hWin )
+                PsListTree_ClearHotTracking( pList, hWin )
                 if (pList->MessageCallback <> 0) andalso pList->MessageCallback( @m ) then return 0
             end if
             
@@ -2317,22 +3327,36 @@ function PsListBoxSurface_WndProc ( _
             ' plain child window has to ask, or the arrow keys keep going to whatever had
             ' focus before the click.
             SetFocus( hWin )
-            dim as long idx = PsListBox_VisIndexFromPoint( pList, GET_X_LPARAM(_lParam), GET_Y_LPARAM(_lParam) )
+            dim as long idx = PsListTree_VisIndexFromPoint( pList, GET_X_LPARAM(_lParam), GET_Y_LPARAM(_lParam) )
             if (pList <> 0) andalso (idx >= 0) then
                 dim as integer modelRow = pList->VisibleToModel( idx )
                 m.idx = modelRow
-                dim as PSLISTBOX_ROWINFO ptr pRow = pList->GetRow( modelRow )
+                dim as PSLISTTREE_ROWINFO ptr pRow = pList->GetRow( modelRow )
+                dim as boolean bTwistyHit = false
+                if pRow <> 0 then bTwistyHit = PsListTree_PointOverTwisty( pList, GET_X_LPARAM(_lParam), modelRow )
                 if (pRow <> 0) andalso pRow->IsHeader then
-                    ' Header: clicking toggles the group collapse and deliberately
-                    ' leaves the selection untouched (a fold gesture, not a select).
+                    ' Legacy header: clicking ANYWHERE on the row toggles the group and
+                    ' deliberately leaves the selection untouched (a fold gesture, not a
+                    ' select). Unchanged, so the existing header/flat hosts behave as before.
                     pRow->bCollapsed = not pRow->bCollapsed
                     pList->NotifyChange()
+                    PsListTree_NotifyExpandCollapse( pList, modelRow, (pRow->bCollapsed = false) )
+                elseif bTwistyHit then
+                    ' Plain tree parent (AddNode, not a header): ONLY the twisty toggles, and
+                    ' it does NOT touch the selection -- the label is what selects. This is how
+                    ' the new twisty-toggle coexists with the legacy whole-row header toggle.
+                    pRow->bCollapsed = not pRow->bCollapsed
+                    pList->NotifyChange()
+                    PsListTree_NotifyExpandCollapse( pList, modelRow, (pRow->bCollapsed = false) )
                 else
-                    ' Item selection. If drag-reorder is on and this press lands on a row
+                    ' Item/label selection. If drag-reorder is on and this press lands on a row
                     ' that is ALREADY part of a multi-selection, DEFER the collapse-to-one:
                     ' the user may be starting to drag the whole selection, and collapsing it
                     ' now would drag a single row. A plain click (no drag) applies the
                     ' collapse on the up instead.
+                    ' Whether the row was ALREADY current, captured before selection moves it
+                    ' -- click-to-edit (explorer rename) fires only for a click of the current row.
+                    dim as boolean bWasCurrent = (pList->focusRow = modelRow)
                     ' A draggable row is a selectable, non-header item while the feature is on
                     ' (hoisted to one boolean -- the 3-way andalso chain trips fbc warning 38).
                     dim as boolean canDrag = false
@@ -2344,7 +3368,7 @@ function PsListBoxSurface_WndProc ( _
                     if deferSel then
                         pList->dragPendCollapse = modelRow
                     else
-                        PsListBox_ApplyClickSelection( pList, modelRow, m.isCtrl, m.isShift )
+                        PsListTree_ApplyClickSelection( pList, modelRow, m.isCtrl, m.isShift )
                     end if
                     ' Arm a potential drag from a draggable (selectable, non-header) item.
                     if canDrag then
@@ -2354,6 +3378,14 @@ function PsListBoxSurface_WndProc ( _
                         pList->ptDragStart.x = GET_X_LPARAM(_lParam)
                         pList->ptDragStart.y = GET_Y_LPARAM(_lParam)
                     end if
+                    ' Click-to-edit (opt-in, OFF by default): a single click on the row that was
+                    ' already current starts an in-place rename. Skipped while a drag is being
+                    ' deferred, so it never fights a whole-selection drag.
+                    dim as boolean bWantEdit = false
+                    if pList->bClickToEdit andalso pList->bLabelEdit andalso bWasCurrent then
+                        if (deferSel = false) andalso pList->IsRowSelectable(modelRow) then bWantEdit = true
+                    end if
+                    if bWantEdit then PsListTree_BeginEditInternal( pList, modelRow, pList->editGestureCol )
                 end if
                 if pList->MessageCallback then
                     if pList->MessageCallback( @m ) then return 0
@@ -2367,9 +3399,9 @@ function PsListBoxSurface_WndProc ( _
             ' point, commit the move (with the CanDrop veto), then tear down capture/timer.
             ' The host's up callback is intentionally NOT fired for a completed drag. ---
             if (pList <> 0) andalso (pList->bDragActive = true) then
-                PsListBox_UpdateDragTarget( pList, hWin, GET_X_LPARAM(_lParam), GET_Y_LPARAM(_lParam) )
-                PsListBox_CommitDrop( pList, hWin )
-                PsListBox_CancelDrag( pList, hWin )
+                PsListTree_UpdateDragTarget( pList, hWin, GET_X_LPARAM(_lParam), GET_Y_LPARAM(_lParam) )
+                PsListTree_CommitDrop( pList, hWin )
+                PsListTree_CancelDrag( pList, hWin )
                 return 0
             end if
             ' Armed but never dragged: this was a plain click. Honor the deferred selection
@@ -2378,7 +3410,7 @@ function PsListBoxSurface_WndProc ( _
             if (pList <> 0) andalso (pList->bDragArmed = true) then
                 pList->bDragArmed = false
                 if pList->dragPendCollapse >= 0 then
-                    PsListBox_ApplyClickSelection( pList, pList->dragPendCollapse, false, false )
+                    PsListTree_ApplyClickSelection( pList, pList->dragPendCollapse, false, false )
                     pList->dragPendCollapse = -1
                 end if
                 pList->dragAnchorRow = -1
@@ -2393,7 +3425,7 @@ function PsListBoxSurface_WndProc ( _
                 pList->skipNextLBtnUp = false
                 skipNotify = true
             end if
-            dim as long idx = PsListBox_VisIndexFromPoint( pList, GET_X_LPARAM(_lParam), GET_Y_LPARAM(_lParam) )
+            dim as long idx = PsListTree_VisIndexFromPoint( pList, GET_X_LPARAM(_lParam), GET_Y_LPARAM(_lParam) )
             if (idx >= 0) andalso (skipNotify = false) then
                 ' idx is a VISIBLE index; the callback sees MODEL indices.
                 if pList then m.idx = pList->VisibleToModel( idx )
@@ -2412,7 +3444,7 @@ function PsListBoxSurface_WndProc ( _
 
         case WM_RBUTTONDOWN, _
              WM_LBUTTONDBLCLK
-            dim as long idx = PsListBox_VisIndexFromPoint( pList, GET_X_LPARAM(_lParam), GET_Y_LPARAM(_lParam) )
+            dim as long idx = PsListTree_VisIndexFromPoint( pList, GET_X_LPARAM(_lParam), GET_Y_LPARAM(_lParam) )
             dim as boolean suppressDblClk = false
             if (uMsg = WM_LBUTTONDBLCLK) andalso (pList <> 0) then
                 suppressDblClk = pList->PreventDblClick
@@ -2428,13 +3460,13 @@ function PsListBoxSurface_WndProc ( _
                 pList->skipNextLBtnUp = true
                 if idx >= 0 then
                     dim as integer modelRow = pList->VisibleToModel( idx )
-                    dim as PSLISTBOX_ROWINFO ptr pRow = pList->GetRow( modelRow )
+                    dim as PSLISTTREE_ROWINFO ptr pRow = pList->GetRow( modelRow )
                     if pRow <> 0 then
                         if pRow->IsHeader then
                             pRow->bCollapsed = not pRow->bCollapsed
                             pList->NotifyChange()
                         else
-                            PsListBox_ApplyClickSelection( pList, modelRow, m.isCtrl, m.isShift )
+                            PsListTree_ApplyClickSelection( pList, modelRow, m.isCtrl, m.isShift )
                         end if
                     end if
                 end if
@@ -2443,6 +3475,11 @@ function PsListBoxSurface_WndProc ( _
                 if pList then m.idx = pList->VisibleToModel( idx )
                 if pList andalso pList->MessageCallback then
                     if pList->MessageCallback( @m ) then return 0
+                end if
+                ' A double-click is the row's default action. Fired AFTER the message callback,
+                ' so a host that claims the message keeps its old behaviour and never gets both.
+                if (uMsg = WM_LBUTTONDBLCLK) andalso (pList <> 0) then
+                    PsListTree_FireActivate( pList, m.idx )
                 end if
             end if
             return 0
@@ -2454,19 +3491,19 @@ function PsListBoxSurface_WndProc ( _
             ' only gesture here that ever takes capture. CancelDrag won't re-enter us: it
             ' only calls ReleaseCapture when we still hold capture, which we no longer do.
             if (pList <> 0) andalso ((pList->bDragActive = true) orelse (pList->bDragArmed = true)) then
-                PsListBox_CancelDrag( pList, hWin )
+                PsListTree_CancelDrag( pList, hWin )
             end if
             return 0
 
         Case WM_DESTROY
             ' Don't let the hot-tracking timer outlive the window
             if (pList <> 0) andalso pList->hotTimerOn then
-                KillTimer( hWin, IDT_CLISTBOX_HOTTRACK )
+                KillTimer( hWin, IDT_CLISTTREE_HOTTRACK )
                 pList->hotTimerOn = false
             end if
             ' Same for the drag auto-scroll timer, and release capture if a drag held it.
             if (pList <> 0) andalso pList->dragTimerOn then
-                KillTimer( hWin, IDT_CLISTBOX_DRAGSCROLL )
+                KillTimer( hWin, IDT_CLISTTREE_DRAGSCROLL )
                 pList->dragTimerOn = false
             end if
             if GetCapture() = hWin then ReleaseCapture()
@@ -2483,9 +3520,9 @@ end function
 ' ========================================================================================
 ' Create a tooltip that pulls its text on demand (LPSTR_TEXTCALLBACK) for the whole
 ' listbox. Notifications (TTN_GETDISPINFOW) go to the tool's owner = the parent form,
-' which answers them in PsListBox_WndProc using the current hot row.
+' which answers them in PsListTree_WndProc using the current hot row.
 ' ========================================================================================
-function PsListBox_AddTooltip( byval hCtrl as HWND ) as HWND
+function PsListTree_AddTooltip( byval hCtrl as HWND ) as HWND
     if IsWindow(hCtrl) = 0 then return 0
     dim as HWND hTooltip = CreateWindowExW( 0, "tooltips_class32", "", _
                                             WS_POPUP or TTS_ALWAYSTIP, _
@@ -2513,14 +3550,14 @@ end function
 
 
 ' ========================================================================================
-' PsListBox_Create
+' PsListTree_Create
 ' ========================================================================================
-function PsListBox_Create( byval hWndParent as HWND, byval CtrlID as integer ) as HWND
+function PsListTree_Create( byval hWndParent as HWND, byval CtrlID as integer ) as HWND
 
     dim pWindow as CWindow ptr = New CWindow
 
     dim as HWND hForm = _
-            pWindow->Create( hWndParent, "", @PsListBox_WndProc, _
+            pWindow->Create( hWndParent, "", @PsListTree_WndProc, _
             0, 0, 0, 0, WS_CHILD or WS_CLIPSIBLINGS or WS_CLIPCHILDREN _
             )
     ' CtrlID becomes the control window's id (GWLP_ID) so hosts can locate the
@@ -2531,10 +3568,15 @@ function PsListBox_Create( byval hWndParent as HWND, byval CtrlID as integer ) a
     pWindow->ClassStyle = pWindow->ClassStyle or CS_DBLCLKS
 
     ' Define the TYPE that holds all the information about this custom listbox.
-    dim as PSLISTBOX ptr pList = new PSLISTBOX
+    dim as PSLISTTREE ptr pList = new PSLISTTREE
     pList->hWin = hForm
-    pList->idc_ListBox = CtrlID
-    
+    pList->idc_ListTree = CtrlID
+    ' Default twisty glyphs: Segoe Fluent Icons ChevronDown (expanded) / ChevronRight
+    ' (collapsed). Only drawn when ShowTwisty is on and a symbol font is set (SetTwistyFont);
+    ' a host can swap them with SetTwistyGlyphs. wchr(), not an escaped literal (Learnings.md).
+    pList->wszGlyphExpanded  = wchr( &hE70D )
+    pList->wszGlyphCollapsed = wchr( &hE76C )
+
     ' Store the new pointer into the user data area of the listbox window
     pWindow->UserData(0) = cast(LONG_PTR, pList)
     
@@ -2560,14 +3602,14 @@ function PsListBox_Create( byval hWndParent as HWND, byval CtrlID as integer ) a
     ' A WSTRING, not a bare literal: fbc string literals are ASCII, so @"..." yields a
     ' zstring ptr where lpszClassName wants an LPCWSTR -- which compiles with only a
     ' "suspicious pointer assignment" warning and then registers a garbage class name.
-    static as wstring * 32 wszSurfClass = "PsListBoxSurface_Class"
+    static as wstring * 32 wszSurfClass = "PsListTreeSurface_Class"
 
     static as boolean bClassRegistered = false
     if bClassRegistered = false then
         dim as WNDCLASSEXW wc
         wc.cbSize        = sizeof(WNDCLASSEXW)
         wc.style         = CS_DBLCLKS
-        wc.lpfnWndProc   = @PsListBoxSurface_WndProc
+        wc.lpfnWndProc   = @PsListTreeSurface_WndProc
         wc.hInstance     = GetModuleHandleW( NULL )
         wc.hCursor       = LoadCursorW( NULL, cast(LPCWSTR, IDC_ARROW) )
         ' No background brush: the surface paints its entire client in WM_PAINT, and a
@@ -2578,24 +3620,29 @@ function PsListBox_Create( byval hWndParent as HWND, byval CtrlID as integer ) a
         bClassRegistered = true
     end if
 
+    ' WS_CLIPCHILDREN is load-bearing, not decoration. The surface paints every visible row in
+    ' ONE pass over its whole client, and the in-place editor is a CHILD of it -- without this
+    ' the row painting goes straight over the editor, blanking the text being typed until some
+    ' later repaint of the editor brought it back. Z-order does not help: a parent painting
+    ' without WS_CLIPCHILDREN covers its children whatever the order.
     dim as HWND hList = CreateWindowExW( 0, @wszSurfClass, "", _
-            WS_CHILD or WS_VISIBLE or WS_CLIPSIBLINGS or WS_TABSTOP, _
-            0, 0, 0, 0, hForm, cast(HMENU, cast(LONG_PTR, pList->idc_ListBox)), _
+            WS_CHILD or WS_VISIBLE or WS_CLIPSIBLINGS or WS_CLIPCHILDREN or WS_TABSTOP, _
+            0, 0, 0, 0, hForm, cast(HMENU, cast(LONG_PTR, pList->idc_ListTree)), _
             GetModuleHandleW( NULL ), NULL )
-    pList->hTooltip = PsListBox_AddTooltip( hList )
+    pList->hTooltip = PsListTree_AddTooltip( hList )
 
     ' Owner-drawn vertical scrollbar, owned and driven by this control. It starts
     ' hidden; the first Refresh/Sync decides whether there is anything to scroll.
     pList->hScrollBar = PsVScrollBar_Create( hForm, CtrlID + 1 )
-    PsVScrollBar_SetScrollCallback( pList->hScrollBar, @PsListBox_OnScrollBarScroll )
+    PsVScrollBar_SetScrollCallback( pList->hScrollBar, @PsListTree_OnScrollBarScroll )
 
     ' Optional column header band, owned by this control. Starts hidden
-    ' (PsListBox_ShowHeader turns it on); columns can be defined regardless --
+    ' (PsListTree_ShowHeader turns it on); columns can be defined regardless --
     ' PositionWindows keeps the window sized even while hidden so its column layout
     ' is always derivable. The WidthChanged slot is this control's chain hook; hosts
-    ' subscribe through PsListBox_SetColumnResizeCallback.
+    ' subscribe through PsListTree_SetColumnResizeCallback.
     pList->hHeader = PsColumnHeader_Create( hForm, CtrlID + 2 )
-    PsColumnHeader_SetWidthChangedCallback( pList->hHeader, @PsListBox_OnHeaderWidthChanged )
+    PsColumnHeader_SetWidthChangedCallback( pList->hHeader, @PsListTree_OnHeaderWidthChanged )
 
     function = hForm
 

@@ -81,10 +81,17 @@ dim shared gTTabCtl as clsTopTabCtl
 
 #include once "modCWindow.inc"
 #include once "modThemes.inc"
+' Declarations only. The implementation is included near the very end, once every
+' frmXxx_ApplyTheme it dispatches to exists -- see the header of modThemeApply.bi.
+#include once "modThemeApply.bi"
 #include once "clsConfig.inc"
 #include once "PsBufferPaint.inc"
 #include once "modRoutines.inc"
 #include once "clsDocument.inc"
+' Encoding conversion self-test. After modRoutines.inc (Doc_EncodeForDisk/GetFileToString)
+' and clsDocument.inc (the clsDocument type it instantiates for the disk round-trip).
+#include once "modEncodingSelfTest.bi"
+#include once "modEncodingSelfTest.inc"
 #include once "clsApp.inc"
 #include once "clsSymbolDb.inc"
 #include once "clsScanMgr.inc"
@@ -98,16 +105,25 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "modMRU.inc"
 #include once "modFindReplace.inc"
 #include once "modFuzzy.inc"
+' The keyboard shortcut MODEL (gKeys, the defaults table, keybindings.ini, the accelerator
+' build, the key vocabulary). No UI and no control dependencies -- it needs only modDeclares
+' (IDM_* / IDC_MENUBAR_*), CWindow and CTextStream, all of which are already in scope. It
+' must precede frmKeyboardEdit / frmBuildConfig / frmUserTools, which call
+' AddShortcutsToComboBox, and frmMain, which builds the table at startup.
+#include once "modKeyBindings.inc"
 
 ' Custom controls
 #include once "PsVScrollBar.inc"
 #include once "PsHScrollBar.inc"
 #include once "PsColumnHeader.inc"
-#include once "PsListBox.inc"
-#include once "PsStatusBar.inc" 
-#include once "PsTabBar.inc"
-#include once "PsTextBox.inc"
+' PsPopupMenu + PsTextBox must precede PsListTree: its in-place label editor is a PsTextBox
+' child (and PsTextBox uses PsPopupMenu for its context menu), so PsListTree.inc's calls need
+' those declarations already in scope. (Moved up from below for the treeview sync.)
 #include once "PsPopupMenu.inc"
+#include once "PsTextBox.inc"
+#include once "PsListTree.inc"
+#include once "PsStatusBar.inc"
+#include once "PsTabBar.inc"
 #include once "PsMenuBar.inc"
 #include once "PsSplitter.inc"
 #include once "PsIconPanel.inc"
@@ -121,6 +137,9 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "PsScrollPanel.inc"
 #include once "PsNumericUpDown.inc"
 #include once "PsMessageBox.inc"
+' PsColorPicker depends on nothing but PsBufferPaint (it owns no child window and no popup --
+' that is the whole design), so its position here is only for tidiness beside its siblings.
+#include once "PsColorPicker.inc"
 
 #include once "frmAbout.inc"
 #include once "frmTopTabs.inc"
@@ -138,7 +157,8 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "frmBookmarks.inc" 
 #include once "frmFunctions.inc"
 #include once "frmAutoComplete.inc"
-#include once "frmKeyboardEdit.inc" 
+#include once "frmKeyboardEdit.bi"
+#include once "frmKeyboardEdit.inc"
 #include once "frmKeyboard.inc" 
 #include once "frmBuildConfig.inc" 
 #include once "frmOutput.inc" 
@@ -148,6 +168,9 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "frmOptionsLocal.inc"
 #include once "frmOptionsKeywords.inc"
 #include once "frmOptions.inc"
+' After frmOptions: frmThemes' colour page uses OptionsFont_Base and OptionsTheme_Fill*
+' from the options modules, and nothing in frmOptions refers back to frmThemes.
+#include once "frmThemes.inc"
 #include once "frmGoto.inc"
 #include once "frmHelpViewer.inc"
 #include once "frmCommandLine.inc"
@@ -170,6 +193,9 @@ dim shared gTTabCtl as clsTopTabCtl
 ' handlers, the panel loaders and frmMenuBar_CreatePopup, so every one of those must
 ' already be declared. (Its declarations come in early via modContextMenus.bi.)
 #include once "modContextMenus.inc"
+' Must come after every frmXxx_ApplyTheme / _SyncTheme it routes to, and before frmMain.inc,
+' which calls Theme_OnCoalesceTimer from WM_TIMER.
+#include once "modThemeApply.inc"
 #include once "frmMain.inc"
 
 
@@ -286,6 +312,7 @@ function WinMain( _
     dylibfree(pLibLexilla)
     dylibfree(pLibScintilla)
     dylibfree(gpHelpLib)
+
     
     ' Unload the font file
     if len(wszFontFile) then RemoveFontResource(wszFontFile)

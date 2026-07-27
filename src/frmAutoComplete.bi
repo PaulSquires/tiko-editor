@@ -22,7 +22,7 @@
 ''  app decides rather than inherits.
 ''
 ''  SHAPE: a persistent WS_POPUP + WS_EX_NOACTIVATE shell (the PsPopupMenu window
-''  contract) hosting a PsListBox child. The popup NEVER takes focus -- Scintilla keeps
+''  contract) hosting a PsListTree child. The popup NEVER takes focus -- Scintilla keeps
 ''  it, keeps its caret, and keeps receiving every typed character. Navigation keys
 ''  reach us through frmAutoComplete_FilterMessage, called from frmMain's message pump.
 ''
@@ -53,9 +53,9 @@
 #define AUTOCOMPLETE_MIN_WIDTH      220
 #define AUTOCOMPLETE_MAX_WIDTH      560
 
-' Row height, in UNSCALED units -- the same contract as PsListBox_SetRowHeight, which
+' Row height, in UNSCALED units -- the same contract as PsListTree_SetRowHeight, which
 ' DPI-scales what it is given. A completion list wants tighter rows than a panel list
-' (PsListBox's own default is 22): it is a transient overlay you scan, not a tree you
+' (PsListTree's own default is 22): it is a transient overlay you scan, not a tree you
 ' browse. Override at runtime with frmAutoComplete_SetRowHeight.
 #define AUTOCOMPLETE_DEFAULT_ROW_HEIGHT   20
 

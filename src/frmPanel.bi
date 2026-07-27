@@ -17,7 +17,6 @@
 type PANEL_TYPE
     hActiveChild    as HWND
     wszHeader       as DWSTRING
-    rcDividerLine   as RECT
     rcHeader        as RECT     ' EXPLORER, FUNCTION LIST, BOOKMARKS
     rcActionMenu    as RECT
 end type

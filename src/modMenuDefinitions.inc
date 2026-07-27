@@ -92,6 +92,7 @@ Function getMenuText( byval idMenu as long ) As DWSTRING
         case IDM_USERTOOLSLIST: return L(11,"(Empty)")
         case IDM_OPTIONS: return L(288,"Preferences")
         case IDM_OPTIONSDIALOG: wszText = L(62,"Environment Options") & "..."
+        case IDM_THEMES: wszText = L(486,"Themes") & "..."
         case IDM_BUILDCONFIG: wszText = L(277,"Build Configurations") & "..."
         case IDM_EXIT: wszText = L(13,"Exit") 
 
@@ -269,6 +270,7 @@ function buildTopMenuDefinitions() as long
     setTopMenuItem( IDC_MENUBAR_FILE, IDM_USERTOOLS, IDM_USERTOOLSLIST, false, false )
     setTopMenuItem( IDC_MENUBAR_FILE, IDM_OPTIONS, IDM_OPTIONSDIALOG, false, false )
     setTopMenuItem( IDM_OPTIONS, IDM_OPTIONSDIALOG, 0, false, false )
+    setTopMenuItem( IDM_OPTIONS, IDM_THEMES, 0, false, false )
     setTopMenuItem( IDM_OPTIONS, IDM_BUILDCONFIG, 0, false, false )
     setTopMenuItem( IDM_OPTIONS, IDM_KEYBOARDSHORTCUTS, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_FILE, 0, 0, false, true )

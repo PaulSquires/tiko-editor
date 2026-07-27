@@ -18,11 +18,11 @@
 #include once "frmProjectOptions.bi"
 #include once "frmUserTools.bi"
 #include once "frmMain.bi"
-' This module is included before the control implementations, so the PsListBox family's
+' This module is included before the control implementations, so the PsListTree family's
 ' headers are pulled in by hand -- the same prerequisite dance modMenus.inc does.
 #include once "PsVScrollBar.bi"
 #include once "PsColumnHeader.bi"
-#include once "PsListBox.bi"
+#include once "PsListTree.bi"
 
 
 ' ========================================================================================
@@ -54,11 +54,11 @@ end function
 
 
 ' ========================================================================================
-' Add a row to a multi-column PsListBox from a chr(9)-delimited string.
+' Add a row to a multi-column PsListTree from a chr(9)-delimited string.
 '
 ' Every caller that used to feed frmListView_AddString already builds its row in this shape
 ' ("col0" & chr(9) & "col1" & ...), so this keeps those call sites a one-word change. Field
-' 0 becomes the row's own text (column 0's cell, per the PsListBox contract) and fields 1..N
+' 0 becomes the row's own text (column 0's cell, per the PsListTree contract) and fields 1..N
 ' become cells 1..N.
 '
 ' Returns the new row index, or -1 if the row could not be added.
@@ -69,11 +69,11 @@ function ListBox_AddTabbedRow( byval hCtl as HWND, byval wszTabbed as DWSTRING )
 
     ' AfxStrParse is 1-based, so field i+1 is column i -- the same mapping
     ' frmListView_GetItemText used.
-    dim as long nRow = PsListBox_AddString( hCtl, AfxStrParse( wszTabbed, 1, chr(9) ) )
+    dim as long nRow = PsListTree_AddString( hCtl, AfxStrParse( wszTabbed, 1, chr(9) ) )
     if nRow < 0 then return -1
 
     for i as long = 1 to nFields - 1
-        PsListBox_SetCellText( hCtl, nRow, i, AfxStrParse( wszTabbed, i + 1, chr(9) ) )
+        PsListTree_SetCellText( hCtl, nRow, i, AfxStrParse( wszTabbed, i + 1, chr(9) ) )
     next
 
     return nRow
@@ -81,7 +81,7 @@ end function
 
 
 ' ========================================================================================
-' Shared listview-style PsListBox callbacks. All four of tiko's multi-column lists -- the
+' Shared listview-style PsListTree callbacks. All four of tiko's multi-column lists -- the
 ' Output panel's compiler results, search results and TODO panes, and the debugger's
 ' Variables pane -- use these; they all draw with the ghOutput colors and the same layout,
 ' so there is one painter rather than four copies.
@@ -93,11 +93,11 @@ end function
 '     switch the else branch to ghOutput.ForeColor if the original intent is wanted.
 '   - Column 2 (the filename) gets DT_PATH_ELLIPSIS, as before.
 ' ========================================================================================
-sub ListBox_LVPaintRow( byval p as PSLISTBOX_PAINTINFO ptr )
+sub ListBox_LVPaintRow( byval p as PSLISTTREE_PAINTINFO ptr )
     dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN)
     if pWindow = 0 then exit sub
 
-    ' The old control highlighted the SELECTED row only; PsListBox tracks hover separately,
+    ' The old control highlighted the SELECTED row only; PsListTree tracks hover separately,
     ' so honor both.
     dim as boolean bHot = (p->isSelected orelse p->isHot)
     dim as COLORREF backclr = iif( bHot, ghOutput.ForeColorScrollBar, ghOutput.BackColor )
@@ -107,7 +107,7 @@ sub ListBox_LVPaintRow( byval p as PSLISTBOX_PAINTINFO ptr )
 
     p->b->SetFont( ghFont(GUIFONT_9) )
 
-    ' No columns defined -> single full-width cell (the classic PsListBox contract).
+    ' No columns defined -> single full-width cell (the classic PsListTree contract).
     if p->columnCount <= 0 then
         dim as RECT rcText = p->rc
         rcText.left += pWindow->ScaleX(4)
@@ -143,7 +143,7 @@ sub ListBox_LVPaintHeader( byval p as PSCOLUMNHEADER_PAINTINFO ptr )
 
     ' A one-pixel divider on the trailing edge, so columns read as separated.
     dim as RECT rcDiv = p->rc
-    rcDiv.left = rcDiv.right - 1
+    rcDiv.left = rcDiv.right - AfxScaleX(1)
     p->b->SetBackColor( ghOutput.ScrollBarDivider )
     p->b->PaintRect( @rcDiv )
 end sub
@@ -155,9 +155,9 @@ function ListBox_LVAutoSizeColumn( byval hHeader as HWND, byval idx as integer )
     dim as HWND hCtl = GetParent( hHeader )
     if hCtl = 0 then return 0
 
-    dim as long nBest = getTextWidth( hCtl, PsListBox_GetColumnText( hCtl, idx ), GUIFONT_9 )
-    for r as integer = 0 to PsListBox_GetCount( hCtl ) - 1
-        dim as long w = getTextWidth( hCtl, PsListBox_GetCellText( hCtl, r, idx ), GUIFONT_9 )
+    dim as long nBest = getTextWidth( hCtl, PsListTree_GetColumnText( hCtl, idx ), GUIFONT_9 )
+    for r as integer = 0 to PsListTree_GetCount( hCtl ) - 1
+        dim as long w = getTextWidth( hCtl, PsListTree_GetCellText( hCtl, r, idx ), GUIFONT_9 )
         if w > nBest then nBest = w
     next
 
@@ -420,206 +420,230 @@ end function
 
 
 ' ========================================================================================
-' Convert the current text buffer to the specified encoding and redisplay the text.
+' Snapshot the FULL byte extent of a Scintilla buffer.
+'
+' SCI_GETCHARACTERPOINTER hands back a pointer whose valid length is SCI_GETLENGTH, NOT
+' strlen: the buffer can legitimately contain embedded NUL bytes, and reading it with *psz
+' (as every save path used to) truncates silently at the first one. Always copy exactly
+' SCI_GETLENGTH bytes.
+' ========================================================================================
+function Scintilla_GetTextBytes( byval hEdit as hwnd ) as string
+    dim as long nLen = SciExec( hEdit, SCI_GETLENGTH, 0, 0 )
+    if nLen <= 0 then return ""
+    dim as any ptr psz = cast( any ptr, SciExec( hEdit, SCI_GETCHARACTERPOINTER, 0, 0 ) )
+    if psz = 0 then return ""
+    dim as string s = string( nLen, 0 )
+    memcpy( strptr(s), psz, nLen )
+    return s
+end function
+
+
+' ========================================================================================
+' Length-explicit codepage conversions. These are the ONLY conversion primitives the
+' encoding code should use: every call passes an explicit byte/char count (never -1), so
+' an embedded NUL is preserved rather than acting as a terminator, and the destination
+' byte count is computed by the API rather than guessed. AfxNova's DWSTRING conversion
+' properties all pass -1 and stop at the first NUL, which is why they are avoided here.
+' ========================================================================================
+
+' Decode an ANSI or UTF-8 byte buffer into a UTF-16LE buffer held in a FreeBASIC string
+' (2 bytes per code unit). nWideChars receives the number of UTF-16 code units.
+private function BytesToWide( byref sBuffer as string, byval nCodePage as long, byref nWideChars as long ) as string
+    nWideChars = 0
+    if len(sBuffer) = 0 then return ""
+    dim as long wlen = MultiByteToWideChar( nCodePage, 0, strptr(sBuffer), len(sBuffer), NULL, 0 )
+    if wlen <= 0 then return ""
+    dim as string sWide = string( wlen * 2, 0 )
+    MultiByteToWideChar( nCodePage, 0, strptr(sBuffer), len(sBuffer), cast(LPWSTR, strptr(sWide)), wlen )
+    nWideChars = wlen
+    return sWide
+end function
+
+' Encode a UTF-16LE buffer (nWideChars code units) to ANSI bytes. bLossy is set true when
+' any character had no representation in the active ANSI codepage (WC_NO_BEST_FIT_CHARS
+' disables approximate substitution so the flag is meaningful).
+private function WideToAnsi( byref sWide as string, byval nWideChars as long, byref bLossy as boolean ) as string
+    bLossy = false
+    if nWideChars = 0 then return ""
+    dim as long alen = WideCharToMultiByte( CP_ACP, WC_NO_BEST_FIT_CHARS, cast(LPCWSTR, strptr(sWide)), nWideChars, NULL, 0, NULL, NULL )
+    if alen <= 0 then return ""
+    dim as string sAnsi = string( alen, 0 )
+    dim as long usedDefault = 0
+    WideCharToMultiByte( CP_ACP, WC_NO_BEST_FIT_CHARS, cast(LPCWSTR, strptr(sWide)), nWideChars, strptr(sAnsi), alen, NULL, @usedDefault )
+    bLossy = (usedDefault <> 0)
+    return sAnsi
+end function
+
+' Encode a UTF-16LE buffer (nWideChars code units) to UTF-8 bytes.
+private function WideToUtf8( byref sWide as string, byval nWideChars as long ) as string
+    if nWideChars = 0 then return ""
+    dim as long u8len = WideCharToMultiByte( CP_UTF8, 0, cast(LPCWSTR, strptr(sWide)), nWideChars, NULL, 0, NULL, NULL )
+    if u8len <= 0 then return ""
+    dim as string sUtf8 = string( u8len, 0 )
+    WideCharToMultiByte( CP_UTF8, 0, cast(LPCWSTR, strptr(sWide)), nWideChars, strptr(sUtf8), u8len, NULL, NULL )
+    return sUtf8
+end function
+
+
+' ========================================================================================
+' Produce the exact bytes to write to disk for a document, BOM included.
+'
+'   sBuffer       - the raw Scintilla bytes (from Scintilla_GetTextBytes)
+'   bSourceIsUtf8 - the CURRENT in-editor layout, read from SCI_GETCODEPAGE (NOT from
+'                   FileEncoding, which may already have been changed to the target)
+'   nTargetEnc    - one of FILE_ENCODING_*
+'   bLossy        - out: true if the target could not represent every character (ANSI only)
+'
+' Pure: string in, string out, no window and no globals. This is the single writer that
+' clsDocument.SaveFile / SaveTempFile and frmMainFile's duplicate-file path all share; it
+' is also what the Tier-A self-test drives directly.
+'
+' Note UTF-16 does NOT go through DWSTRING: the wide buffer BytesToWide produced already IS
+' the UTF-16LE payload, and its byte length is code-units * 2. The old code handed
+' DWSTRING.m_BufferLen (a COUNT OF UTF-16 CHARACTERS) to CFileStream.Write's BYTE-count
+' parameter, writing exactly half the file and truncating every UTF-16 save mid-character.
+' ========================================================================================
+function Doc_EncodeForDisk( _
+            byref sBuffer as string, _
+            byval bSourceIsUtf8 as boolean, _
+            byval nTargetEnc as long, _
+            byref bLossy as boolean _
+            ) as string
+
+    bLossy = false
+    dim as long nWide
+    dim as string sWide = BytesToWide( sBuffer, iif(bSourceIsUtf8, CP_UTF8, CP_ACP), nWide )
+
+    select case nTargetEnc
+        case FILE_ENCODING_ANSI
+            return WideToAnsi( sWide, nWide, bLossy )
+
+        case FILE_ENCODING_UTF8
+            return WideToUtf8( sWide, nWide )
+
+        case FILE_ENCODING_UTF8_BOM
+            return chr(&HEF, &HBB, &HBF) & WideToUtf8( sWide, nWide )
+
+        case FILE_ENCODING_UTF16_BOM
+            ' FF FE (little-endian BOM) + the wide payload, byte length = code-units * 2.
+            return chr(&HFF, &HFE) & left( sWide, nWide * 2 )
+
+        case else
+            return WideToUtf8( sWide, nWide )
+    end select
+
+end function
+
+
+' ========================================================================================
+' Convert the current in-editor text buffer to the byte layout the specified encoding
+' needs (ANSI codepage 0, or UTF-8 codepage 65001), and relabel the document.
+'
+' Returns TRUE whenever the document's encoding actually changed -- INCLUDING a pure relabel
+' (e.g. UTF-8 -> UTF-8 BOM), because a relabel still changes what is written to disk (a BOM
+' added/removed, UTF-8 vs UTF-16), so the caller must mark the document dirty and let it be
+' saved. Returns FALSE only when nothing changed: the document is already that encoding, or a
+' lossy ANSI conversion was cancelled by the user.
+'
+' Scintilla holds exactly two layouts, ANSI or UTF-8; UTF-16 is a DISK format only and its
+' in-memory representation is UTF-8. So UTF8 / UTF8_BOM / UTF16_BOM all share one in-editor
+' layout, and switching between them is a relabel, not a conversion.
+'
+' INVARIANT E1: on return, SCI_GETCODEPAGE = iif(FileEncoding = ANSI, 0, SC_CP_UTF8), and
+' this function is the ONLY code permitted to move either side of that on a populated
+' document (ApplyProperties establishes it on load; nothing else may touch the codepage).
 ' ========================================================================================
 function ConvertTextBuffer( _
             byval pDoc as clsDocument ptr, _
-            byval FileEncoding as long _
-            ) as long
-                            
-    if pDoc = 0 then exit function
+            byval nNewEncoding as long _
+            ) as boolean
 
+    if pDoc = 0 then return false
     dim as hwnd hEdit = pDoc->hWndActiveScintilla
-   
-    ' Save the current file position and first visible line
-    dim nFirstLine as long = SciExec( hEdit, SCI_GETFIRSTVISIBLELINE, 0, 0) 
-    dim nPos as long = SciExec(hEdit, SCI_GETCURRENTPOS, 0, 0)
+    if hEdit = 0 then return false
 
-    pDoc->FileEncoding = FileEncoding
-    dim as zstring ptr psz = cast( zstring ptr, SciExec(hEdit, SCI_GETCHARACTERPOINTER, 0, 0) )
-    dim as long sciCodePage = SciExec(hEdit, SCI_GETCODEPAGE, 0, 0)   ' 0 or SC_CP_UTF8 
-    dim as string txtBuffer 
-   
-    ' Convert buffer to specified file encoding
-    select case FileEncoding
-        case FILE_ENCODING_ANSI
-            if sciCodePage = 0 then  ' already in ANSI format  
-                exit function
-            else   
-                ' need to convert from UTF8 to ANSI
-                txtBuffer = Utf8ToAnsi(*psz)
-                SciExec(hEdit, SCI_SETCODEPAGE, 0, 0 )
-            end if    
+    dim as boolean bHaveUtf8 = ( SciExec( hEdit, SCI_GETCODEPAGE, 0, 0 ) = SC_CP_UTF8 )
+    dim as boolean bWantUtf8 = ( nNewEncoding <> FILE_ENCODING_ANSI )
 
-        case FILE_ENCODING_UTF8_BOM, FILE_ENCODING_UTF16_BOM
-            if sciCodePage = SC_CP_UTF8 then  ' already in unicode format
-                exit function
-            else
-                ' need to convert from ANSI to UTF8
-                txtBuffer = AnsiToUtf8(*psz)
-                SciExec(hEdit, SCI_SETCODEPAGE, SC_CP_UTF8, 0 )
-            end if    
+    ' Pure relabel: the in-memory layout already matches the target (e.g. UTF-8 -> UTF-8 BOM,
+    ' or UTF-8 BOM -> UTF-16 BOM). No byte conversion, only the disk format changes -- but
+    ' that IS a change (the BOM must reach disk), so report it as one when the label moved.
+    if bHaveUtf8 = bWantUtf8 then
+        dim as boolean bChanged = ( pDoc->FileEncoding <> nNewEncoding )
+        pDoc->FileEncoding = nNewEncoding
+        return bChanged
+    end if
 
-    end select
-   
-    ' Set the new buffer
-    pDoc->SetText(txtBuffer)
-    
-    SciExec(hEdit, SCI_SETFIRSTVISIBLELINE, nFirstLine, 0) 
-    SciExec(hEdit, SCI_GOTOPOS, nPos, 0)
-   
-    function = 0
-end function   
+    ' Save caret and first-visible line as LINE + COLUMN. Byte offsets shift when the
+    ' encoding changes (ANSI grows to UTF-8), so a saved byte position would land in the
+    ' wrong place, possibly mid-character.
+    dim as long nPos       = SciExec( hEdit, SCI_GETCURRENTPOS, 0, 0 )
+    dim as long nCaretLine = SciExec( hEdit, SCI_LINEFROMPOSITION, nPos, 0 )
+    dim as long nCaretCol  = SciExec( hEdit, SCI_GETCOLUMN, nPos, 0 )
+    dim as long nFirstLine = SciExec( hEdit, SCI_GETFIRSTVISIBLELINE, 0, 0 )
 
+    ' Decode the current buffer to UTF-16, then re-encode to the wanted layout.
+    dim as string sBuffer = Scintilla_GetTextBytes( hEdit )
+    dim as long nWide
+    dim as string sWide = BytesToWide( sBuffer, iif(bHaveUtf8, CP_UTF8, CP_ACP), nWide )
 
-' ========================================================================================
-' Maps UTF-8 string to Ansi string.
-' ========================================================================================
-function Utf8ToAnsi( byref sUtf8 as string ) as string
-    dim dws as DWSTRING = DWSTRING(sUtf8, CP_UTF8)
-    dim ansiStr as string = dws
-    return ansiStr
+    dim as string sNew
+    dim as long nNewCodePage
+    if bWantUtf8 then
+        sNew = WideToUtf8( sWide, nWide )
+        nNewCodePage = SC_CP_UTF8
+    else
+        dim as boolean bLossy
+        sNew = WideToAnsi( sWide, nWide, bLossy )
+        if bLossy then
+            ' Converting to ANSI will destroy characters outside the system ANSI codepage,
+            ' and SetText empties the undo buffer, so there is no going back. Confirm first.
+            dim as long nAnswer = MessageBoxW( HWND_FRMMAIN, _
+                    L(484,"This document contains characters that cannot be represented in ANSI. " & _
+                          "Converting will replace them and cannot be undone. Convert anyway?"), _
+                    L(485,"Convert to ANSI"), _
+                    MB_OKCANCEL or MB_ICONEXCLAMATION or MB_DEFBUTTON2 )
+            if nAnswer <> IDOK then return false
+        end if
+        nNewCodePage = 0
+    end if
 
-'    dim as long wlen, alen
-'    dim as string sUnicode, sAnsi
+    ' Apply in the safe order: clear, THEN set the codepage on the empty buffer, THEN insert
+    ' the already-converted bytes. Setting the codepage first over the old bytes would make
+    ' Scintilla re-validate UTF-8 and fix up positions over the wrong layout.
+    SciExec( hEdit, SCI_CLEARALL, 0, 0 )
+    SciExec( hEdit, SCI_SETCODEPAGE, nNewCodePage, 0 )
+    pDoc->SetText( sNew )
 
-'    if len(sUtf8) = 0 then return ""
+    ' Assign the label LAST, only after the bytes are in place, so a cancel above leaves the
+    ' document wholly untouched (INVARIANT E1 preserved on every exit path).
+    pDoc->FileEncoding = nNewEncoding
 
-'    '-----------------------------------------
-'    ' Step 1: UTF-8 ? UTF-16 (size query)
-'    '-----------------------------------------
-'    wlen = MultiByteToWideChar( _
-'                CP_UTF8, _
-'                0, _
-'                strptr(sUtf8), _
-'                len(sUtf8), _
-'                NULL, _
-'                0)
+    ' Restore caret and scroll by line + column.
+    dim as long nRestore = SciExec( hEdit, SCI_FINDCOLUMN, nCaretLine, nCaretCol )
+    SciExec( hEdit, SCI_SETSEL, nRestore, nRestore )
+    SciExec( hEdit, SCI_SETFIRSTVISIBLELINE, nFirstLine, 0 )
 
-'    if wlen = 0 then return ""
-
-'    sUnicode = string(wlen * 2, 0)
-
-'    MultiByteToWideChar( _
-'        CP_UTF8, _
-'        0, _
-'        strptr(sUtf8), _
-'        len(sUtf8), _
-'        cast(LPWSTR, strptr(sUnicode)), _
-'        wlen)
-
-'    '-----------------------------------------
-'    ' Step 2: UTF-16 ? ANSI (size query)
-'    '-----------------------------------------
-'    alen = WideCharToMultiByte( _
-'                CP_ACP, _
-'                0, _
-'                cast(LPDWSTRING, strptr(sUnicode)), _
-'                wlen, _
-'                NULL, _
-'                0, _
-'                NULL, _
-'                NULL)
-
-'    if alen = 0 then return ""
-
-'    sAnsi = string(alen, 0)
-
-'    WideCharToMultiByte( _
-'        CP_ACP, _
-'        0, _
-'        cast(LPDWSTRING, strptr(sUnicode)), _
-'        wlen, _
-'        strptr(sAnsi), _
-'        alen, _
-'        NULL, _
-'        NULL)
-
-'    return sAnsi
+    return true
 end function
 
 
+
 ' ========================================================================================
-' Maps Unicode character string to a UTF-8 string.
+' NOTE: Utf8ToAnsi / AnsiToUtf8 / UnicodeToUtf8 were REMOVED here. They converted through
+' AfxNova DWSTRING, whose conversion properties pass -1 to Win32 and therefore stop at the
+' first embedded NUL, silently truncating. All encoding conversion now goes through the
+' length-explicit Doc_EncodeForDisk / BytesToWide / WideToAnsi / WideToUtf8 above.
 ' ========================================================================================
-function UnicodeToUtf8( byref wzUnicode as DWSTRING ) as string
-    dim strUtf8 as string = wzUnicode.utf8
-    return strUtf8 
-    
-'    dim as long u8len
-'    dim as string sUtf8
-
-'    ' Step 1: get required UTF-8 size (including null terminator)
-'    u8len = WideCharToMultiByte( _
-'                CP_UTF8, _
-'                0, _
-'                cast(LPDWSTRING, *wzUnicode), _
-'                -1, _
-'                NULL, _
-'                0, _
-'                NULL, _
-'                NULL)
-
-'    if u8len = 0 then return ""
-
-'    ' Step 2: allocate buffer
-'    sUtf8 = string(u8len, 0)
-
-'    ' Step 3: convert
-'    WideCharToMultiByte( _
-'        CP_UTF8, _
-'        0, _
-'        cast(LPDWSTRING, *wzUnicode), _
-'        -1, _
-'        strptr(sUtf8), _
-'        u8len, _
-'        NULL, _
-'        NULL)
-
-'    ' Remove null terminator
-'    return left(sUtf8, u8len - 1)
-end function
 
 
 ' ========================================================================================
-' Maps Ansi character string to a UTF-8 string.
-' ========================================================================================
-function AnsiToUtf8( byref sAnsi as string ) as string
-    dim dws as DWSTRING = sAnsi
-    dim strUtf8 as string = dws.utf8
-    return strUtf8
-
-'    dim as integer wlen, u8len
-'    dim as string sUnicode, sUtf8
-
-'    if len(sAnsi) = 0 then return ""
-
-'    ' Step 1: ANSI ? UTF-16 (size query)
-'    wlen = MultiByteToWideChar(CP_ACP, 0, strptr(sAnsi), len(sAnsi), NULL, 0)
-'    if wlen = 0 then return ""
-
-'    sUnicode = string(wlen * 2, 0)
-
-'    if MultiByteToWideChar(CP_ACP, 0, strptr(sAnsi), len(sAnsi), cast(LPWSTR, strptr(sUnicode)), wlen) = 0 then
-'        return ""
-'    end if
-
-'    ' Step 2: UTF-16 ? UTF-8 (size query)
-'    u8len = WideCharToMultiByte(CP_UTF8, 0, cast(LPDWSTRING, strptr(sUnicode)), wlen, NULL, 0, NULL, NULL)
-'    if u8len = 0 then return ""
-
-'    sUtf8 = string(u8len, 0)
-
-'    if WideCharToMultiByte(CP_UTF8, 0, cast(LPDWSTRING, strptr(sUnicode)), wlen, strptr(sUtf8), u8len, NULL, NULL) = 0 then
-'        return ""
-'    end if
-
-'    return sUtf8
-end function
-
-
-' ========================================================================================
-' Determine if a string is likely UTF-8 encoded
+' Determine if a string is likely UTF-8 encoded.
+'
+' NOTE: pure ASCII passes UTF-8 validation, so an ASCII file is labelled FILE_ENCODING_UTF8
+' here, never ANSI. This is harmless (ASCII is byte-identical in both, and Doc_EncodeForDisk
+' writes the same bytes either way) and is deliberately left as-is: making ASCII report ANSI
+' would change the on-disk save format of every existing plain-text file in every project.
 ' ========================================================================================
 function isUTF8encoded( byref s as string ) as boolean
     if len(s) = 0 then return false
@@ -714,14 +738,22 @@ function GetFileToString( _
 
     pDoc->FileEncoding = FILE_ENCODING_ANSI
 
-    ' Check for BOM signatures
+    ' Check for BOM signatures. left() clamps on a string shorter than the count, so a 1- or
+    ' 2-byte file cannot match a longer BOM -- no truncated-BOM guard is needed.
+    dim as boolean bUtf16BE = false
     if left(txtBuffer, 3) = chr(&HEF, &HBB, &HBF) then
-        ' UTF8 BOM encoded 
+        ' UTF-8 with BOM
         pDoc->FileEncoding = FILE_ENCODING_UTF8_BOM
         txtBuffer = mid(txtBuffer, 4)   ' bypass the BOM
     elseif left(txtBuffer, 2) = chr(&HFF, &HFE) then
-        ' UTF16 BOM (little endian) encoded
-        pDoc->FileEncoding = FILE_ENCODING_UTF16_BOM 
+        ' UTF-16 little-endian BOM
+        pDoc->FileEncoding = FILE_ENCODING_UTF16_BOM
+        txtBuffer = mid(txtBuffer, 3)   ' bypass the BOM
+    elseif left(txtBuffer, 2) = chr(&HFE, &HFF) then
+        ' UTF-16 big-endian BOM. Same on-disk encoding class; byte-swap to LE below so the
+        ' one UTF-16 decode path handles both. (Was previously read as ANSI -> interleaved NULs.)
+        pDoc->FileEncoding = FILE_ENCODING_UTF16_BOM
+        bUtf16BE = true
         txtBuffer = mid(txtBuffer, 3)   ' bypass the BOM
     else
         if isUTF8encoded(txtBuffer) then
@@ -730,24 +762,33 @@ function GetFileToString( _
     end if
 
    select case pDoc->FileEncoding
-      case FILE_ENCODING_ANSI 
+      case FILE_ENCODING_ANSI
          ' No conversion needed. clsDocument ApplyProperties will *not*
          ' set the editor to UTF8 code.
-      
-      case FILE_ENCODING_UTF8, FILE_ENCODING_UTF8_BOM   
+
+      case FILE_ENCODING_UTF8, FILE_ENCODING_UTF8_BOM
          ' No conversion needed. clsDocument ApplyProperties will set
          ' the editor to UTF8 code.
-         
-      case FILE_ENCODING_UTF16_BOM
-         ' Convert the whole buffer to UTF-16 unicode string
-         dim as DWSTRING wszText = string(len(txtBuffer),0)
-         MemCpy( CAST(any PTR, wszText.m_pBuffer), strptr(txtBuffer), len(txtBuffer))
 
-         ' Convert to UTF8 so it can display in the editor
-         txtBuffer = UnicodeToUtf8(wszText)
+      case FILE_ENCODING_UTF16_BOM
+         ' Guard an odd byte count (a corrupt or truncated UTF-16 file): drop the stray
+         ' trailing byte rather than reading one past the end of the last code unit.
+         if (len(txtBuffer) and 1) then txtBuffer = left(txtBuffer, len(txtBuffer) - 1)
+
+         ' Big-endian: swap each 2-byte code unit in place to little-endian.
+         if bUtf16BE then
+            dim as ubyte ptr pb = cast(ubyte ptr, strptr(txtBuffer))
+            for i as long = 0 to len(txtBuffer) - 2 step 2
+               dim as ubyte t = pb[i] : pb[i] = pb[i+1] : pb[i+1] = t
+            next
+         end if
+
+         ' The buffer now holds a UTF-16LE payload; decode it to UTF-8 for the editor with an
+         ' explicit code-unit count (len \ 2), so an embedded NUL does not terminate it early.
+         txtBuffer = WideToUtf8( txtBuffer, len(txtBuffer) \ 2 )
 
     end select
-        
+
     function = false
 end function
 

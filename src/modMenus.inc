@@ -14,9 +14,9 @@
 #include once "modMenus.bi"
 #include once "modContextMenus.bi" ' the standalone popup menus (implementation is
                                    ' included late in tiko.bas -- see that file)
-#include once "PsVScrollBar.bi"    ' required by PsListBox.bi
-#include once "PsColumnHeader.bi"  ' likewise: PsListBox.bi names HDR_* callback typedefs
-#include once "PsListBox.bi"       ' PsListBox_GetSelCount (PsListBox.inc is included later)
+#include once "PsVScrollBar.bi"    ' required by PsListTree.bi
+#include once "PsColumnHeader.bi"  ' likewise: PsListTree.bi names HDR_* callback typedefs
+#include once "PsListTree.bi"       ' PsListTree_GetSelCount (PsListTree.inc is included later)
 #include once "PsMenuBar.bi"       ' the topmenu lives on PsMenuBar/PsPopupMenu controls
                                   ' (implementations are included later in tiko.bas)
 
@@ -72,6 +72,7 @@ function frmMain_FileTopMenuStates() as long
     EnableTopMenuItem( IDM_USERTOOLSDIALOG, true )
     EnableTopMenuItem( IDM_OPTIONS, true )
     EnableTopMenuItem( IDM_OPTIONSDIALOG, true )
+    EnableTopMenuItem( IDM_THEMES, true )
     EnableTopMenuItem( IDM_BUILDCONFIG, true )
     EnableTopMenuItem( IDM_EXIT, true )
 

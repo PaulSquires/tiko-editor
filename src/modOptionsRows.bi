@@ -66,7 +66,7 @@
 
 
 ' ----------------------------------------------------------------------------------------
-' Page identifiers. Stored as the itemData of the navigation PsListBox's item rows and as
+' Page identifiers. Stored as the itemData of the navigation PsListTree's item rows and as
 ' the nPage field of every row descriptor. Session-only (OptionsDialogLastOpened is not
 ' persisted to disk), so these renumber freely.
 '
@@ -82,7 +82,14 @@
 #define OPTPAGE_KEYWORDS         5
 #define OPTPAGE_KEYWORDSWINAPI   6
 #define OPTPAGE_KEYWORDSEXTRA    7
-#define OPTPAGE_COUNT            8
+' Syntax and Interface colours are NOT options pages any more -- they moved to frmThemes,
+' which owns everything about colour. See frmThemes.bi.
+' ADVANCED CODE EDITOR -- restored. Appended rather than slotted in beside OPTPAGE_EDITOR
+' because these ids are persisted in OptionsDialogLastOpened and handed to PsListTree as item
+' data; renumbering would reopen the dialog on a different page than the user left it on. The
+' order the user SEES is the nav list's business (frmOptions_BuildNavList), not the enum's.
+#define OPTPAGE_EDITOR2          8
+#define OPTPAGE_COUNT            9
 
 
 ' ----------------------------------------------------------------------------------------
@@ -212,6 +219,10 @@ declare sub      OptionsTheme_FillButton( byval bc as PSBUTTON_COLORS ptr )
 declare sub      OptionsTheme_FillNumeric( byval nc as PSNUMERICUPDOWN_COLORS ptr )
 declare sub      OptionsTheme_FillCombo( byval cc as PSCOMBOBOX_COLORS ptr, byval pc as PSPOPUPMENU_COLORS ptr )
 declare sub      OptionsTheme_ApplyTextBox( byval hTextBox as HWND )
+' Give a PsListTree the same 1px frame OptionsTheme_ApplyTextBox gives a PsTextBox, so a
+' list and a text field stacked on the same page read as the same kind of control. One
+' helper rather than two call sites, so the two borders cannot drift apart.
+declare sub      OptionsTheme_ApplyListBorder( byval hList as HWND )
 
 declare sub      OptionsRows_Init()
 declare sub      OptionsWork_Load()
@@ -225,3 +236,4 @@ declare function OptionsRows_HasPage( byval nPage as long ) as boolean
 declare sub      OptionsRows_RegisterCombo( byval hCombo as HWND )
 declare sub      OptionsRows_ResetCombos()
 declare sub      OptionsRows_RunSelfTest( byval hPanel as HWND )
+declare sub      OptionsRows_RunBindTest()

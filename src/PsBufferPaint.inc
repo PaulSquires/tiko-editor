@@ -348,6 +348,15 @@ function PsBufferPaint.PaintRectFactory( _
     if g = 0 then return 0
 
     dim as boolean bNullPen  = (iStyle = PS_NULL)
+    ' DPI-scale the pen, exactly as PaintLine already does. Without this the buffer was
+    ' internally inconsistent: a rule drawn with PaintLine thickened with the display while
+    ' a border or focus ring drawn here stayed at one physical pixel, so at 175% the two no
+    ' longer matched. A no-op at 100%, where ScaleY(1) is 1.
+    scope
+        dim pWin as CWindow ptr = AfxCWindowPtr(_hwnd)
+        if (pWin <> 0) andalso (nPenWidth > 0) then nPenWidth = pWin->ScaleY(nPenWidth)
+        if nPenWidth < 1 then nPenWidth = 1
+    end scope
     dim as boolean bZeroWide = (nPenWidth <= 0)
     dim as boolean bStroke   = (bNullPen = false) andalso (bZeroWide = false)
 
@@ -547,6 +556,15 @@ function PsBufferPaint.PaintRoundOutline( _
             byval nPenWidth as long = 1 _
             ) as long
     if nPenWidth <= 0 then return 0
+    ' DPI-scale the pen, exactly as PaintLine already does. Without this the buffer was
+    ' internally inconsistent: a rule drawn with PaintLine thickened with the display while
+    ' a border or focus ring drawn here stayed at one physical pixel, so at 175% the two no
+    ' longer matched. A no-op at 100%, where ScaleY(1) is 1.
+    scope
+        dim pWin as CWindow ptr = AfxCWindowPtr(_hwnd)
+        if (pWin <> 0) andalso (nPenWidth > 0) then nPenWidth = pWin->ScaleY(nPenWidth)
+        if nPenWidth < 1 then nPenWidth = 1
+    end scope
 
     dim as CGpGraphics ptr g = this.EnsureGraphics()
     if g = 0 then return 0
@@ -571,6 +589,84 @@ function PsBufferPaint.PaintRoundOutline( _
                          w - (inset * 2.0), h - (inset * 2.0), _
                          csng(nCurvature) / 2.0 )
     g->DrawPath( this.PenFor( CBufToARGB( _pencolor, _penalpha ), fpw ), @strokePath )
+
+    g->SetSmoothingMode( oldSmooth )
+    _gpDirty = true
+    function = 0
+end function
+
+' ========================================================================================
+' Fill a rect -- square or rounded -- with a two-stop linear gradient. FILL ONLY.
+'
+' Geometry follows PaintRectFactory EXACTLY (the -1 on both extents, radius = nCurvature/2,
+' AA iff there is a curve), so a gradient bar and a PaintRoundRect track drawn on the same
+' RECT cover the same pixels. Do NOT be tempted to use PaintRect's full-extent convention
+' here: the two differ by one pixel and mixing them is the obvious thing to get wrong.
+'
+' Added for PsProgressBar. Purely additive -- no existing method was touched -- which is
+' what makes the vendored copies safe to re-sync mechanically (PaintTextEx's precedent).
+' ========================================================================================
+function PsBufferPaint.PaintGradientRect( _
+            byval rc as RECT ptr, _
+            byval clr1 as COLORREF, _
+            byval clr2 as COLORREF, _
+            byval nMode as long = LinearGradientModeVertical, _
+            byval nCurvature as long = 0, _
+            byval rcBrush as RECT ptr = 0 _
+            ) as long
+
+    dim as CGpGraphics ptr g = this.EnsureGraphics()
+    if g = 0 then return 0
+
+    dim as single w = csng( rc->right - rc->left - 1 )
+    dim as single h = csng( rc->bottom - rc->top - 1 )
+    if (w < 0.0) orelse (h < 0.0) then return 0
+
+    ' The ramp is measured across rcBrush when one is supplied, so a caller can fill a
+    ' fragment (one block of a segmented bar) with the slice of a gradient that spans the
+    ' whole run. Degenerate or absent -> measure across rc itself.
+    dim as RECT rcRamp = *rc
+    if rcBrush <> 0 then
+        if (rcBrush->right > rcBrush->left) andalso (rcBrush->bottom > rcBrush->top) then
+            rcRamp = *rcBrush
+        end if
+    end if
+
+    ' GDI+ wraps a linear gradient at its brush rect, and a brush sized EXACTLY to the fill
+    ' shows a hard seam on the last row/column where the wrap lands. One pixel of slack on
+    ' every side moves the wrap off the visible area. WrapModeTileFlipXY rather than plain
+    ' tile, so even that slack blends instead of snapping back to clr1.
+    dim as GpRectF rcf
+    rcf.x = csng(rcRamp.left) - 1.0
+    rcf.y = csng(rcRamp.top) - 1.0
+    rcf.Width  = csng(rcRamp.right  - rcRamp.left) + 2.0
+    rcf.Height = csng(rcRamp.bottom - rcRamp.top ) + 2.0
+    if (rcf.Width <= 0.0) orelse (rcf.Height <= 0.0) then return 0
+
+    dim as long oldSmooth = g->GetSmoothingMode()
+    if nCurvature > 0 then
+        g->SetSmoothingMode( SmoothingModeAntiAlias )
+    else
+        g->SetSmoothingMode( SmoothingModeNone )
+    end if
+
+    scope
+        ' Built per call and dropped at end scope. It cannot join the _pBrush cache: that is
+        ' typed CGpSolidBrush ptr and keyed on one ARGB, while this is keyed on a rect, two
+        ' colours and a direction.
+        dim as CGpLinearGradientBrush br = CGpLinearGradientBrush( @rcf, _
+                                                CBufToARGB( clr1, _backalpha ), _
+                                                CBufToARGB( clr2, _backalpha ), _
+                                                cast( LinearGradientMode, nMode ) )
+        br.SetWrapMode( WrapModeTileFlipXY )
+
+        dim as CGpGraphicsPath fillPath
+        this.BuildRoundPath( @fillPath, csng(rc->left), csng(rc->top), w, h, _
+                             csng(nCurvature) / 2.0 )
+        ' FillPath takes the BASE CGpBrush ptr and CGpLinearGradientBrush extends it, so this
+        ' is the same call site every other fill in this file uses.
+        g->FillPath( cast( CGpBrush ptr, @br ), @fillPath )
+    end scope
 
     g->SetSmoothingMode( oldSmooth )
     _gpDirty = true
@@ -612,6 +708,140 @@ function PsBufferPaint.PaintEllipse( _
                         w - (inset * 2.0), h - (inset * 2.0) )
     end if
 
+    g->SetSmoothingMode( oldSmooth )
+    _gpDirty = true
+    function = 0
+end function
+
+' ========================================================================================
+' Filled polygon; strokes the outline too when nPenWidth > 0.
+'
+' THE VERTICES ARE USED EXACTLY AS GIVEN -- no -1, unlike every closed shape above. Those
+' each mirror a GDI original (RoundRect, Ellipse) whose fill measurably stops a row short of
+' its own rect, so they subtract one to match. A polygon has no rect and no GDI original:
+' the caller states the corners. Subtracting anything here would silently shrink a shape
+' whose whole point is that its geometry was computed by the caller.
+'
+' Always antialiased. PaintRectFactory and friends turn smoothing OFF for a square shape
+' because AA on an axis-aligned edge only makes it grey and soft -- but a polygon exists
+' for its DIAGONALS, and an unsmoothed diagonal is the jagged staircase this primitive was
+' added to avoid (PsToggle spent a version hand-rolling a 4x supersampler for exactly that
+' problem before the buffer moved to GDI+).
+'
+' The stroke is CENTRED on the path rather than inset inside the fill the way
+' PaintRoundOutline's is. Insetting a general polygon means offsetting each edge along its
+' own normal and re-intersecting -- real geometry work for no gain in the case this exists
+' for. It does take the same +0.5 half-pixel and the same DPI pen scaling, so a 1px polygon
+' edge lands on the same pixels as a 1px PaintRoundOutline frame it joins.
+'
+' Added for PsTooltip's balloon stem. Purely additive.
+' ========================================================================================
+function PsBufferPaint.PaintPolygon( _
+            byval pts as POINT ptr, _
+            byval nCount as long, _
+            byval nPenWidth as long = 0 _
+            ) as long
+    if pts = 0 then return 0
+    if nCount < 3 then return 0
+
+    ' Scale the pen here, as PaintLine and PaintRoundOutline both do. PaintEllipse does NOT,
+    ' and that is the odd one out rather than the precedent: the stem this was written for
+    ' is stroked alongside a PaintRoundOutline frame, and two edges of the same nominal
+    ' thickness must stay the same thickness at 175%.
+    if nPenWidth > 0 then
+        dim pWin as CWindow ptr = AfxCWindowPtr(_hwnd)
+        if pWin <> 0 then nPenWidth = pWin->ScaleY(nPenWidth)
+        if nPenWidth < 1 then nPenWidth = 1
+    end if
+
+    dim as CGpGraphics ptr g = this.EnsureGraphics()
+    if g = 0 then return 0
+
+    dim as long oldSmooth = g->GetSmoothingMode()
+    g->SetSmoothingMode( SmoothingModeAntiAlias )
+
+    redim as GpPointF ptsFill( 0 to nCount - 1 )
+    for i as long = 0 to nCount - 1
+        ptsFill(i).x = csng( pts[i].x )
+        ptsFill(i).y = csng( pts[i].y )
+    next
+    g->FillPolygon( this.BrushFor( CBufToARGB( _backcolor, _backalpha ) ), _
+                    @ptsFill(0), nCount )
+
+    if nPenWidth > 0 then
+        ' Half-pixel offset so an odd-width pen centres ON the pixel rather than straddling
+        ' two, matching what PaintRoundOutline does with the same +0.5.
+        redim as GpPointF ptsStroke( 0 to nCount - 1 )
+        for i as long = 0 to nCount - 1
+            ptsStroke(i).x = csng( pts[i].x ) + 0.5
+            ptsStroke(i).y = csng( pts[i].y ) + 0.5
+        next
+        g->DrawPolygon( this.PenFor( CBufToARGB( _pencolor, _penalpha ), csng(nPenWidth) ), _
+                        @ptsStroke(0), nCount )
+    end if
+
+    g->SetSmoothingMode( oldSmooth )
+    _gpDirty = true
+    function = 0
+end function
+
+' ========================================================================================
+' Draw a GDI+ image into rc, fitting it per nFit. See the .bi header for why the draw lives
+' here rather than in the control that owns the image.
+'
+' The image's alpha is honoured (a .png/.ico with transparency composites over whatever the
+' control already painted), so callers fill the icon cell's background first if they need one.
+' HighQualityBicubic is set for the duration and restored, because a control that paints many
+' cells does not want the surface's interpolation mode left changed under it.
+' ========================================================================================
+function PsBufferPaint.PaintImage( _
+            byval pImage as CGpImage ptr, _
+            byval rc as RECT ptr, _
+            byval nFit as long = PS_IMGFIT_ASPECT _
+            ) as long
+    if (pImage = 0) orelse (rc = 0) then return 0
+
+    dim as long iw = pImage->GetWidth()
+    dim as long ih = pImage->GetHeight()
+    if (iw <= 0) orelse (ih <= 0) then return 0
+
+    dim as long cw = rc->right - rc->left
+    dim as long ch = rc->bottom - rc->top
+    if (cw <= 0) orelse (ch <= 0) then return 0
+
+    dim as CGpGraphics ptr g = this.EnsureGraphics()
+    if g = 0 then return 0
+
+    dim as long dx, dy, dw, dh
+    select case nFit
+    case PS_IMGFIT_STRETCH
+        dx = rc->left : dy = rc->top : dw = cw : dh = ch
+    case PS_IMGFIT_CENTER
+        dw = iw : dh = ih
+        dx = rc->left + (cw - dw) \ 2
+        dy = rc->top  + (ch - dh) \ 2
+    case else                                   ' PS_IMGFIT_ASPECT
+        ' Scale by the tighter of the two ratios so the whole image fits, then centre the
+        ' scaled box in the cell.
+        dim as single sx = csng(cw) / csng(iw)
+        dim as single sy = csng(ch) / csng(ih)
+        dim as single s  = iif( sx < sy, sx, sy )
+        dw = clng( iw * s + 0.5 )
+        dh = clng( ih * s + 0.5 )
+        if dw < 1 then dw = 1
+        if dh < 1 then dh = 1
+        dx = rc->left + (cw - dw) \ 2
+        dy = rc->top  + (ch - dh) \ 2
+    end select
+
+    dim as long oldInterp = g->GetInterpolationMode()
+    dim as long oldSmooth = g->GetSmoothingMode()
+    g->SetInterpolationMode( InterpolationModeHighQualityBicubic )
+    g->SetSmoothingMode( SmoothingModeAntiAlias )
+
+    g->DrawImage( pImage, csng(dx), csng(dy), csng(dw), csng(dh) )
+
+    g->SetInterpolationMode( oldInterp )
     g->SetSmoothingMode( oldSmooth )
     _gpDirty = true
     function = 0
@@ -984,6 +1214,201 @@ sub PsBufferPaint_RunSelfTest( byval hwnd as HWND )
     Chk( "RoundOutline: edge carries the pen colour", (GetPixel( gDC, 30, 5 ) = CPEN), _
          "top edge want " & hex(CPEN,6) & " got " & hex(GetPixel(gDC,30,5),6) )
 
+    ' --- PaintGradientRect: fills, never strokes, and the ramp must actually ramp. The
+    '     endpoint colours are deliberately NOT asserted exactly: the brush rect is inflated
+    '     by a pixel on every side (to move GDI+'s wrap seam off the visible area), so the
+    '     first painted column sits a fraction of the way along the ramp rather than at 0.
+    '     What is asserted is what the primitive is FOR -- the two ends differ, and the
+    '     transition between them is smooth rather than a hard step. ----------------------
+    ClearSurf()
+    scope
+        dim bb as PsBufferPaint
+        bb.BeginDoubleBuffer( hwnd, gDC, rcAll )
+        bb.SetBackColor( CBACK ) : bb.PaintClientRect()
+        dim as RECT r = type( 10, 5, 50, 30 )
+        bb.PaintGradientRect( @r, CFILL, CPEN, LinearGradientModeHorizontal, 0 )
+        bb.EndDoubleBuffer()
+    end scope
+    scope
+        dim as ulong pL = GetPixel( gDC, 12, 17 )
+        dim as ulong pR = GetPixel( gDC, 47, 17 )
+        Chk( "Gradient: the two ends differ", (pL <> pR), _
+             "left " & hex(pL,6) & " right " & hex(pR,6) )
+        Chk( "Gradient: fill reached the surface", (pL <> CBACK) andalso (pR <> CBACK), _
+             "left " & hex(pL,6) & " right " & hex(pR,6) & " back " & hex(CBACK,6) )
+        ' A hard two-colour step would score 2. A real ramp scores many more.
+        Chk( "Gradient: ramp is smooth, not a step", (ToneCount( 11, 17, 48, 17 ) > 8), _
+             "distinct tones across the row = " & ToneCount( 11, 17, 48, 17 ) )
+    end scope
+    ' Square corners take PaintRectFactory's -1 extent, NOT PaintRect's full extent. Mixing
+    ' the two conventions is the obvious mistake here, so it is measured rather than trusted.
+    scope
+        dim as long a, b2
+        RowSpan( 17, a, b2 )
+        ' 10..48, MEASURED -- and identical to what "RoundRect: mid-row spans full width"
+        ' scores on the very same RECT above. That agreement is the assertion; the absolute
+        ' number is GDI+'s, not ours (w = right-left-1 = 39, filled from x=10, so [10,49)).
+        Chk( "Gradient: square extent matches PaintRectFactory (-1)", (a = 10) andalso (b2 = 48), _
+             "row span " & a & ".." & b2 & " want 10..48" )
+    end scope
+
+    ' --- rcBrush: measure the ramp across a DIFFERENT rect than the one being filled. This
+    '     is what lets a segmented bar's blocks read as slices of one gradient instead of N
+    '     identical chips, so it is the parameter a caller is most likely to depend on. ----
+    scope
+        dim as RECT rBlock = type( 40, 5, 50, 30 )    ' a block near the right end
+        dim as RECT rTrack = type( 10, 5, 50, 30 )    ' the run it belongs to
+        dim as ulong pOwn, pSliced
+
+        ClearSurf()
+        scope
+            dim bb as PsBufferPaint
+            bb.BeginDoubleBuffer( hwnd, gDC, rcAll )
+            bb.SetBackColor( CBACK ) : bb.PaintClientRect()
+            bb.PaintGradientRect( @rBlock, CFILL, CPEN, LinearGradientModeHorizontal, 0 )
+            bb.EndDoubleBuffer()
+        end scope
+        pOwn = GetPixel( gDC, 42, 17 )
+
+        ClearSurf()
+        scope
+            dim bb as PsBufferPaint
+            bb.BeginDoubleBuffer( hwnd, gDC, rcAll )
+            bb.SetBackColor( CBACK ) : bb.PaintClientRect()
+            bb.PaintGradientRect( @rBlock, CFILL, CPEN, LinearGradientModeHorizontal, 0, @rTrack )
+            bb.EndDoubleBuffer()
+        end scope
+        pSliced = GetPixel( gDC, 42, 17 )
+
+        Chk( "Gradient: rcBrush moves the ramp off the fill rect", (pOwn <> pSliced), _
+             "own-ramp " & hex(pOwn,6) & " sliced " & hex(pSliced,6) )
+        Chk( "Gradient: rcBrush still fills the SAME rect", _
+             (GetPixel( gDC, 39, 17 ) = CBACK) andalso (pSliced <> CBACK), _
+             "x=39 (outside) " & hex(GetPixel(gDC,39,17),6) & " x=42 (inside) " & hex(pSliced,6) )
+    end scope
+
+    ' --- PaintPolygon: the stem primitive. Three things matter and each is measured. ------
+    '
+    ' (1) THE EXTENT CONVENTION. Every other closed shape here carries GDI's -1; this one
+    '     does not, and that is the single thing a later "let's make these consistent" edit
+    '     would break. It is asserted as an EQUALITY AGAINST PaintRect on the very same
+    '     corners rather than against a hardcoded span, so the assertion carries no magic
+    '     number of its own and stays true if GDI+'s rasteriser is ever the thing that moves.
+    scope
+        dim as RECT r = type( 10, 5, 50, 30 )
+        dim as long rectFirst, rectLast, polyFirst, polyLast
+
+        ClearSurf()
+        scope
+            dim bb as PsBufferPaint
+            bb.BeginDoubleBuffer( hwnd, gDC, rcAll )
+            bb.SetBackColor( CBACK ) : bb.PaintClientRect()
+            bb.SetBackColor( CFILL ) : bb.PaintRect( @r )
+            bb.EndDoubleBuffer()
+        end scope
+        RowSpan( 17, rectFirst, rectLast )
+
+        ClearSurf()
+        scope
+            dim bb as PsBufferPaint
+            bb.BeginDoubleBuffer( hwnd, gDC, rcAll )
+            bb.SetBackColor( CBACK ) : bb.PaintClientRect()
+            dim as POINT box(0 to 3) = { type<POINT>( r.left,  r.top    ), _
+                                         type<POINT>( r.right, r.top    ), _
+                                         type<POINT>( r.right, r.bottom ), _
+                                         type<POINT>( r.left,  r.bottom ) }
+            bb.SetBackColor( CFILL ) : bb.PaintPolygon( @box(0), 4, 0 )
+            bb.EndDoubleBuffer()
+        end scope
+        RowSpan( 17, polyFirst, polyLast )
+
+        Chk( "Polygon: vertices used as given (matches PaintRect, NOT the -1 shapes)", _
+             (polyFirst = rectFirst) andalso (polyLast = rectLast), _
+             "poly " & polyFirst & ".." & polyLast & "  PaintRect " & rectFirst & ".." & rectLast )
+    end scope
+
+    ' (2) IT IS A POLYGON, NOT ITS BOUNDING BOX. The flood bug this family has now shipped
+    '     five times is a shape primitive that fills more than it was asked to, so a
+    '     triangle is checked for actually narrowing towards its apex.
+    ClearSurf()
+    scope
+        dim bb as PsBufferPaint
+        bb.BeginDoubleBuffer( hwnd, gDC, rcAll )
+        bb.SetBackColor( CBACK ) : bb.PaintClientRect()
+        ' Apex pointing DOWN -- a stem's shape, wide at the base it joins.
+        dim as POINT tri(0 to 2) = { type<POINT>( 10, 5 ), type<POINT>( 50, 5 ), type<POINT>( 30, 30 ) }
+        bb.SetBackColor( CFILL ) : bb.PaintPolygon( @tri(0), 3, 0 )
+        bb.EndDoubleBuffer()
+    end scope
+    scope
+        dim as long topFirst, topLast, botFirst, botLast
+        RowSpan( 7,  topFirst, topLast )
+        RowSpan( 27, botFirst, botLast )
+        Chk( "Polygon: narrows toward the apex (not a filled box)", _
+             (topLast - topFirst) > ((botLast - botFirst) + 10), _
+             "row7 width " & (topLast - topFirst + 1) & "  row27 width " & (botLast - botFirst + 1) )
+        ' The two sloped sides are the reason this primitive exists. Smoothing OFF would
+        ' score exactly 2 over this band; a blended diagonal scores many more.
+        Chk( "Polygon: diagonal edge is antialiased", (ToneCount( 10, 20, 50, 24 ) > 2), _
+             "distinct tones across the sloped band = " & ToneCount( 10, 20, 50, 24 ) )
+    end scope
+
+    ' (3) FILL AND STROKE ARE SEPARATE. nPenWidth 0 must leave no pen colour anywhere --
+    '     PaintBorderRect's fill-then-stroke behaviour is exactly what this must not do --
+    '     and a stroked polygon must keep its interior.
+    ClearSurf()
+    scope
+        dim bb as PsBufferPaint
+        bb.BeginDoubleBuffer( hwnd, gDC, rcAll )
+        bb.SetBackColor( CBACK ) : bb.PaintClientRect()
+        dim as POINT tri(0 to 2) = { type<POINT>( 10, 5 ), type<POINT>( 50, 5 ), type<POINT>( 30, 30 ) }
+        bb.SetBackColor( CFILL ) : bb.SetPenColor( CPEN )
+        bb.PaintPolygon( @tri(0), 3, 0 )              ' fill only: pen colour must not appear
+        bb.EndDoubleBuffer()
+    end scope
+    scope
+        dim as boolean bFoundPen = false
+        for y as long = 0 to SH - 1
+            for x as long = 0 to SW - 1
+                if GetPixel( gDC, x, y ) = CPEN then bFoundPen = true : exit for
+            next
+            if bFoundPen then exit for
+        next
+        Chk( "Polygon: nPenWidth 0 strokes nothing", (bFoundPen = false), _
+             "pen colour " & hex(CPEN,6) & " present = " & bFoundPen )
+    end scope
+
+    ClearSurf()
+    scope
+        dim bb as PsBufferPaint
+        bb.BeginDoubleBuffer( hwnd, gDC, rcAll )
+        bb.SetBackColor( CBACK ) : bb.PaintClientRect()
+        dim as POINT tri(0 to 2) = { type<POINT>( 10, 5 ), type<POINT>( 50, 5 ), type<POINT>( 30, 30 ) }
+        bb.SetBackColor( CFILL ) : bb.SetPenColor( CPEN )
+        bb.PaintPolygon( @tri(0), 3, 1 )
+        bb.EndDoubleBuffer()
+    end scope
+    Chk( "Polygon: stroked outline reaches the top edge", (GetPixel( gDC, 30, 5 ) = CPEN), _
+         "top edge want " & hex(CPEN,6) & " got " & hex(GetPixel(gDC,30,5),6) )
+    Chk( "Polygon: stroke does not overpaint the interior", (GetPixel( gDC, 30, 12 ) = CFILL), _
+         "interior want " & hex(CFILL,6) & " got " & hex(GetPixel(gDC,30,12),6) )
+
+    ' (4) A degenerate vertex list is a silent no-op, not a crash and not a stray line.
+    ClearSurf()
+    scope
+        dim bb as PsBufferPaint
+        bb.BeginDoubleBuffer( hwnd, gDC, rcAll )
+        bb.SetBackColor( CBACK ) : bb.PaintClientRect()
+        dim as POINT two(0 to 1) = { type<POINT>( 10, 5 ), type<POINT>( 50, 30 ) }
+        bb.SetBackColor( CFILL ) : bb.SetPenColor( CPEN )
+        bb.PaintPolygon( @two(0), 2, 1 )
+        bb.PaintPolygon( 0, 3, 1 )
+        bb.EndDoubleBuffer()
+    end scope
+    Chk( "Polygon: fewer than 3 vertices (and a null list) paint nothing", _
+         (ToneCount( 0, 0, SW - 1, SH - 1 ) = 1), _
+         "distinct tones on the whole surface = " & ToneCount( 0, 0, SW - 1, SH - 1 ) )
+
     ' --- The CACHED overload: a caller-owned memDC, reused per row by PsListBox. It is
     '     the one Begin path that skips SetupBitmap, so it never gets the 32bpp DIB the
     '     others do -- it draws onto whatever surface the host already made. Every list
@@ -1020,6 +1445,73 @@ sub PsBufferPaint_RunSelfTest( byval hwnd as HWND )
     ' the (larger) cached bitmap behind it.
     ColSpan( 15, a, b2 )
     Chk( "cached DC: blit bounded by rcItem", (b2 <= 11), "last row touched = " & b2 )
+
+    ' --- PaintImage: scale a bitmap into a cell. A WIDE 20x10 source into a SQUARE 30x30 cell
+    '     must letterbox under ASPECT (full width, centred band, top/bottom rows background),
+    '     fill the whole cell under STRETCH, and a null image must paint nothing. The source is
+    '     an opaque DIB built here -- alpha FF matters: a zero-alpha 32bpp DIB drawn through
+    '     GDI+ SourceOver composites to NOTHING, which would make a "drew something" assertion
+    '     pass for the wrong reason. This constructs its own CGpBitmap so the self-test needs
+    '     no PsImage. -------------------------------------------------------------------------
+    scope
+        dim as BITMAPINFO bi
+        bi.bmiHeader.biSize        = sizeof( BITMAPINFOHEADER )
+        bi.bmiHeader.biWidth       = 20
+        bi.bmiHeader.biHeight      = -10               ' top-down
+        bi.bmiHeader.biPlanes      = 1
+        bi.bmiHeader.biBitCount    = 32
+        bi.bmiHeader.biCompression = BI_RGB
+        dim as ulong ptr pB
+        dim as HBITMAP hsrc = CreateDIBSection( null, @bi, DIB_RGB_COLORS, cast(any ptr ptr, @pB), null, 0 )
+        if hsrc andalso pB then
+            for i as long = 0 to (20 * 10) - 1 : pB[i] = &hFFC86432 : next   ' opaque; R=C8 G=64 B=32
+        end if
+        dim as CGpBitmap srcbmp = CGpBitmap( hsrc )
+        if hsrc then DeleteObject( hsrc )              ' GDI+ took a copy
+        dim as CGpImage ptr pSrc = cast( CGpImage ptr, @srcbmp )
+        dim as RECT cell = type( 10, 5, 40, 35 )       ' 30 x 30
+
+        ' ASPECT: scale = min(30/20, 30/10) = 1.5 -> 30x15 band, dy = 5 + (30-15)\2 = 12.
+        ClearSurf()
+        scope
+            dim bb as PsBufferPaint
+            bb.BeginDoubleBuffer( hwnd, gDC, rcAll )
+            bb.SetBackColor( CBACK ) : bb.PaintClientRect()
+            bb.PaintImage( pSrc, @cell, PS_IMGFIT_ASPECT )
+            bb.EndDoubleBuffer()
+        end scope
+        RowSpan( 20, a, b2 )        ' band centre-line
+        Chk( "PaintImage: aspect fit spans the cell width", _
+             (a >= 9) andalso (a <= 11) andalso (b2 >= 38) andalso (b2 <= 40), "x " & a & ".." & b2 )
+        RowSpan( 6, a, b2 )         ' well above the band
+        Chk( "PaintImage: aspect fit letterboxes the top", (a = -1), "top-row first-x = " & a )
+        RowSpan( 33, a, b2 )        ' well below the band
+        Chk( "PaintImage: aspect fit letterboxes the bottom", (a = -1), "bottom-row first-x = " & a )
+
+        ' STRETCH: the band fills the whole cell, so the top row now carries fill.
+        ClearSurf()
+        scope
+            dim bb as PsBufferPaint
+            bb.BeginDoubleBuffer( hwnd, gDC, rcAll )
+            bb.SetBackColor( CBACK ) : bb.PaintClientRect()
+            bb.PaintImage( pSrc, @cell, PS_IMGFIT_STRETCH )
+            bb.EndDoubleBuffer()
+        end scope
+        RowSpan( 7, a, b2 )
+        Chk( "PaintImage: stretch fills the whole cell height", (a <> -1), "top-of-cell first-x = " & a )
+
+        ' A null image is a silent no-op.
+        ClearSurf()
+        scope
+            dim bb as PsBufferPaint
+            bb.BeginDoubleBuffer( hwnd, gDC, rcAll )
+            bb.SetBackColor( CBACK ) : bb.PaintClientRect()
+            bb.PaintImage( 0, @cell, PS_IMGFIT_ASPECT )
+            bb.EndDoubleBuffer()
+        end scope
+        Chk( "PaintImage: null image paints nothing", (ToneCount( 0, 0, SW - 1, SH - 1 ) = 1), _
+             "distinct tones on the whole surface = " & ToneCount( 0, 0, SW - 1, SH - 1 ) )
+    end scope
 
     DeleteObject( gBmp )
     DeleteDC( gDC )

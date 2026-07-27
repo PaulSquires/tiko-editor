@@ -180,6 +180,10 @@ type PSTABBAR
     bDragging       as boolean = false    ' the live press became a drag
     ptPress         as POINT              ' client coords of the press (threshold test)
     nLastDragX      as integer = 0        ' previous drag x: the direction-of-travel gate
+    ' The cursor shown for the whole gesture (IDC_SIZEALL, loaded at Create -- a shared
+    ' system cursor, so it is never destroyed). PsSplitter's hBarCursor shape: a field
+    ' rather than a LoadCursor per message. Zero means "leave the cursor alone".
+    hDragCursor     as HCURSOR
     BackColor       as COLORREF
     ' Caller-supplied font (caller owns it). NOT named hFont: FreeBASIC is case-insensitive,
     ' so a member called hFont would shadow the TYPE name HFONT inside every member
