@@ -27,6 +27,8 @@
 #Define IDC_FRMOPTIONSCOLORS_COMBOSIZE    9402
 #Define IDC_FRMOPTIONSCOLORS_COMBOCHARSET 9403
 #Define IDC_FRMOPTIONSCOLORS_NUMSPACING   9404
+#Define IDC_FRMOPTIONSCOLORS_NUMTABSIZE  9405
+#Define IDC_FRMOPTIONSCOLORS_COMBOCASE   9406
 
 declare function frmOptionsColors_OwnsPage( byval nPage as long ) as boolean
 declare sub      frmOptionsColors_Reset()

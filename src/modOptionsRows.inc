@@ -201,12 +201,10 @@ sub OptionsRows_Init()
                      @gOptWork.RightEdge, 1, 500 )                                      ' "Position"
     OptionsRows_Add( OPTPAGE_EDITOR, OPT_TOGGLE, 407, @gOptWork.PositionMiddle )        ' "Position searches to middle of screen"
     OptionsRows_Add( OPTPAGE_EDITOR, OPT_TOGGLE, 414, @gOptWork.ClickToggleBreakpoint ) ' "Margin click toggles Breakpoint rather than Bookmark"
-    OptionsRows_Add( OPTPAGE_EDITOR, OPT_NUMERIC, 127, @gOptWork.TabSize, 0, 1, 64 )    ' "Tab Size"
-    OptionsRows_Add( OPTPAGE_EDITOR, OPT_COMBO,   128, @gOptWork.KeywordCase, 0, 0, 0, _
-                     L(130,"Lower Case")  & chr(9) & _
-                     L(131,"Upper Case")  & chr(9) & _
-                     L(272,"Mixed Case")  & chr(9) & _
-                     L(132,"Original Case") )                                           ' "Case"
+    ' TAB SIZE and CASE were here. They are font-shaped settings, not editing behaviour, so
+    ' they moved to the bottom of the Editor Font page (frmOptionsColors) as native controls.
+    ' OptionsWork_Load/Commit still marshal gOptWork.TabSize / .KeywordCase either way -- those
+    ' fields are independent of which page edits them.
 
     ' ---- Advanced Code Editor --------------------------------------------------------
     ' A SEPARATE PAGE AGAIN, holding exactly what the old frmOptionsEditor2 held, in its

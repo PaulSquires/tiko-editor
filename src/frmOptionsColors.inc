@@ -42,6 +42,8 @@ dim shared ghColorFonts    as HWND      ' PsListTree (per-font preview)
 dim shared ghColorSize     as HWND      ' PsComboBox
 dim shared ghColorCharset  as HWND      ' PsComboBox
 dim shared ghColorSpacing  as HWND      ' PsNumericUpDown
+dim shared ghColorTabSize  as HWND      ' PsNumericUpDown -- moved here from the Code Editor page
+dim shared ghColorCase     as HWND      ' PsComboBox      -- moved here from the Code Editor page
 
 dim shared gColorFontNames(any) as DWSTRING     ' collected by the EnumFontFamilies callback
 dim shared gColorLabels(any)    as COLORS_LABEL
@@ -139,6 +141,8 @@ sub frmOptionsColors_Reset()
     ghColorSize    = 0
     ghColorCharset = 0
     ghColorSpacing = 0
+    ghColorTabSize = 0
+    ghColorCase    = 0
     erase gColorFontNames
     erase gColorLabels
 end sub
@@ -161,6 +165,20 @@ end sub
 private sub frmOptionsColors_CharsetSelChange( byval hCombo as HWND, byval idxOld as long, byval idxNew as long )
     if idxNew < 0 then exit sub
     gOptWork.EditorFontCharSet = PsComboBox_GetItemText( hCombo, idxNew )
+end sub
+
+' Tab Size and Case were table-driven rows on the Code Editor page; here they are native
+' controls, so their callbacks write the staging fields by hand -- the same longs the row
+' machinery wrote, so OptionsWork_Commit is unchanged.
+private sub frmOptionsColors_TabSizeChanged( byval hCtrl as HWND, byval nValue as double )
+    gOptWork.TabSize = clng( nValue )
+end sub
+
+private sub frmOptionsColors_CaseSelChange( byval hCombo as HWND, byval idxOld as long, byval idxNew as long )
+    if idxNew < 0 then exit sub
+    ' The COMBO stores the INDEX (0 Lower / 1 Upper / 2 Mixed / 3 Original), not the text --
+    ' KeywordCase is a long, unlike the Size/Charset combos which store their text.
+    gOptWork.KeywordCase = idxNew
 end sub
 
 private sub frmOptionsColors_SpacingChanged( byval hCtrl as HWND, byval nValue as double )
@@ -300,6 +318,27 @@ sub frmOptionsColors_Build( byval hPage as HWND )
     PsNumericUpDown_SetValueChangedCallback( ghColorSpacing, @frmOptionsColors_SpacingChanged )
     gOptWork.FontExtraSpace = clng( PsNumericUpDown_GetValue( ghColorSpacing ) )   ' take the clamp back
 
+    ' Tab Size -- range and decimal places match the old OPT_NUMERIC row (1..64, integer).
+    ghColorTabSize = PsNumericUpDown_Create( hPage, IDC_FRMOPTIONSCOLORS_NUMTABSIZE )
+    PsNumericUpDown_SetFont( ghColorTabSize, OptionsFont_Base() )
+    PsNumericUpDown_SetDecimalPlaces( ghColorTabSize, 0 )
+    PsNumericUpDown_SetRange( ghColorTabSize, 1, 64 )
+    PsNumericUpDown_SetValue( ghColorTabSize, gOptWork.TabSize )
+    PsNumericUpDown_SetValueChangedCallback( ghColorTabSize, @frmOptionsColors_TabSizeChanged )
+    gOptWork.TabSize = clng( PsNumericUpDown_GetValue( ghColorTabSize ) )   ' take the clamp back
+
+    ' Case -- the four keyword-case choices, in the order the old row listed them so the stored
+    ' index still means the same thing.
+    ghColorCase = PsComboBox_Create( hPage, IDC_FRMOPTIONSCOLORS_COMBOCASE )
+    PsComboBox_SetFont( ghColorCase, OptionsFont_Base() )
+    PsComboBox_AddItem( ghColorCase, L(130,"Lower Case") )
+    PsComboBox_AddItem( ghColorCase, L(131,"Upper Case") )
+    PsComboBox_AddItem( ghColorCase, L(272,"Mixed Case") )
+    PsComboBox_AddItem( ghColorCase, L(132,"Original Case") )
+    PsComboBox_SetCurSel( ghColorCase, gOptWork.KeywordCase )
+    PsComboBox_SetSelChangeCallback( ghColorCase, @frmOptionsColors_CaseSelChange )
+    OptionsRows_RegisterCombo( ghColorCase )
+
     ' ---- populate lists and seed selections ------------------------------------------
     ' NO THEMES LIST ANY MORE. It moved to frmThemes, which owns everything about colour;
     ' this page is fonts.
@@ -337,17 +376,19 @@ sub frmOptionsColors_ApplyTheme()
     dim as PSCOMBOBOX_COLORS cc
     dim as PSPOPUPMENU_COLORS pc
     OptionsTheme_FillCombo( @cc, @pc )
-    for i as long = 0 to 1
-        dim as HWND h = iif( i = 0, ghColorSize, ghColorCharset )
-        PsComboBox_SetColors( h, @cc )
-        PsComboBox_SetListColors( h, @pc )
-        PsComboBox_Refresh( h )
+    dim as HWND hCombos(0 to 2) = { ghColorSize, ghColorCharset, ghColorCase }
+    for i as long = 0 to 2
+        PsComboBox_SetColors( hCombos(i), @cc )
+        PsComboBox_SetListColors( hCombos(i), @pc )
+        PsComboBox_Refresh( hCombos(i) )
     next
 
     dim as PSNUMERICUPDOWN_COLORS nc
     OptionsTheme_FillNumeric( @nc )
     PsNumericUpDown_SetColors( ghColorSpacing, @nc )
     PsNumericUpDown_Refresh( ghColorSpacing )
+    PsNumericUpDown_SetColors( ghColorTabSize, @nc )
+    PsNumericUpDown_Refresh( ghColorTabSize )
 end sub
 
 
@@ -444,6 +485,15 @@ function frmOptionsColors_Layout( byval hPage as HWND, byval cxPanel as long ) a
     PsNumericUpDown_GetIdealSize( ghColorSpacing, cw, ch )
     if cw < AfxScaleX(COLORS_NUMWIDTH) then cw = AfxScaleX(COLORS_NUMWIDTH)
     CTLROW( ghColorSpacing, L(421,"Extra line spacing"), cw, ch )
+
+    ' Tab Size and Case, at the bottom of the page (moved from Code Editor).
+    PsNumericUpDown_GetIdealSize( ghColorTabSize, cw, ch )
+    if cw < AfxScaleX(COLORS_NUMWIDTH) then cw = AfxScaleX(COLORS_NUMWIDTH)
+    CTLROW( ghColorTabSize, L(127,"Tab Size"), cw, ch )
+
+    PsComboBox_GetIdealSize( ghColorCase, cw, ch )
+    if cw < AfxScaleX(COLORS_COMBOWIDTH) then cw = AfxScaleX(COLORS_COMBOWIDTH)
+    CTLROW( ghColorCase, L(128,"Case"), cw, ch )
 
     function = y + AfxScaleY(OPTROW_PADBOTTOM)
 end function
