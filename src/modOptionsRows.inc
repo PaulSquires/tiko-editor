@@ -101,6 +101,18 @@ private sub OptionsRows_SyncEnabled( byval nPage as long )
             case OPT_NUMERIC:  PsNumericUpDown_SetEnabled( gOptRows(i).hCtrl, bEnable )
             case OPT_COMBO:    PsComboBox_SetEnabled( gOptRows(i).hCtrl, bEnable )
         end select
+        ' The control repaints itself, but the row's TITLE is painted by the PAGE
+        ' (OptionsRows_PaintPage picks its colour from OptionsRows_IsRowEnabled), so the page
+        ' has to be told the label is stale. Without this the gated control greys and ungreys
+        ' while its label keeps whatever colour it had when the page was last painted.
+        ' Parent is taken off the control rather than from a page lookup so this stays correct
+        ' whether the page sits on the PsScrollPanel or on the plain container -- rcLabel is in
+        ' that window's client coordinates either way.
+        dim as HWND hPageWnd = GetParent( gOptRows(i).hCtrl )
+        if hPageWnd then
+            dim as RECT rcLabel = gOptRows(i).rcLabel
+            InvalidateRect( hPageWnd, @rcLabel, true )
+        end if
     next
 end sub
 
@@ -198,7 +210,7 @@ sub OptionsRows_Init()
     ' is gated on the toggle above it -- the same relationship the old page expressed by
     ' putting the field directly underneath its checkbox.
     OptionsRows_Add( OPTPAGE_EDITOR, OPT_NUMERIC, 307, @gOptWork.RightEdgePosition, _
-                     @gOptWork.RightEdge, 1, 500 )                                      ' "Position"
+                     @gOptWork.RightEdge, 1, 500 )                                      ' "Edge margin position"
     OptionsRows_Add( OPTPAGE_EDITOR, OPT_TOGGLE, 407, @gOptWork.PositionMiddle )        ' "Position searches to middle of screen"
     OptionsRows_Add( OPTPAGE_EDITOR, OPT_TOGGLE, 414, @gOptWork.ClickToggleBreakpoint ) ' "Margin click toggles Breakpoint rather than Bookmark"
     ' TAB SIZE and CASE were here. They are font-shaped settings, not editing behaviour, so
