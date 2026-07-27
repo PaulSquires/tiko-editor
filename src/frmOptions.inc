@@ -55,7 +55,7 @@ dim shared gOptPageBuilt(OPTPAGE_COUNT - 1) as boolean
 ' ========================================================================================
 ' Kinds of page, in order of preference:
 '   1. table-driven      OptionsRows_HasPage(nPage)     -- General, Code Editor
-'   2. panel-hosted      frmOptions_PanelHostedOwns()   -- Compiler, Localization, Themes+Fonts, Keywords
+'   2. panel-hosted      frmOptions_PanelHostedOwns()   -- Compiler, Localization, Editor Font, Keywords
 ' Every page is now one of these two; there are no eager legacy child forms left. The
 ' dispatch functions below (ShowPage / layout / paint callbacks) branch table-first.
 '
@@ -112,7 +112,7 @@ private function frmOptions_PageTitle( byval nPage as long ) as DWSTRING
         case OPTPAGE_GENERAL:         return L(226,"General Options")
         case OPTPAGE_EDITOR:          return L(110,"Code Editor")
         case OPTPAGE_EDITOR2:         return L(107,"Advanced Code Editor")
-        case OPTPAGE_COLORS:          return L(111,"Themes and Fonts")
+        case OPTPAGE_COLORS:          return L(487,"Editor Font")
         case OPTPAGE_COMPILER:        return L(112,"Compiler Setup")
         case OPTPAGE_LOCAL:           return L(129,"Localization")
         case OPTPAGE_KEYWORDS:        return L(177,"FreeBASIC Keywords")
@@ -469,7 +469,16 @@ private sub frmOptions_PositionWindows( byval hwnd as HWND )
     dim as long bodyH   = rc.bottom - footerH
     if bodyH < 0 then bodyH = 0
 
-    SetWindowPos( HWND_FRMOPTIONS_NAV, 0, 0, 0, navW, bodyH, SWP_NOZORDER or SWP_NOACTIVATE )
+    ' The nav list starts LOWER than the window's top edge, aligned with the first control on
+    ' the page beside it. A page's content begins at titleH (below the title band) plus the row
+    ' padding; PsListTree draws its first row flush at its own client top, so giving the nav that
+    ' same top makes "General Options" sit on the same line as the first control of whatever page
+    ' is showing. The strip left above it is the dialog's own panel background -- seamless,
+    ' because the nav rows paint that same colour.
+    dim as long navTop = titleH + AfxScaleY(OPTROW_PADTOP)
+    dim as long navH   = bodyH - navTop
+    if navH < 0 then navH = 0
+    SetWindowPos( HWND_FRMOPTIONS_NAV, 0, 0, navTop, navW, navH, SWP_NOZORDER or SWP_NOACTIVATE )
 
     dim as long scrollX = navW
     dim as long scrollY = titleH
@@ -892,7 +901,7 @@ private sub frmOptions_BuildNavList( byval hList as HWND )
     PsListTree_AddString( hList, L(226,"General Options"),      OPTPAGE_GENERAL )
     PsListTree_AddString( hList, L(110,"Code Editor"),          OPTPAGE_EDITOR )
     PsListTree_AddString( hList, L(107,"Advanced Code Editor"), OPTPAGE_EDITOR2 )
-    PsListTree_AddString( hList, L(111,"Themes and Fonts"),     OPTPAGE_COLORS )
+    PsListTree_AddString( hList, L(487,"Editor Font"),          OPTPAGE_COLORS )
     PsListTree_AddString( hList, L(112,"Compiler Setup"),       OPTPAGE_COMPILER )
     PsListTree_AddString( hList, L(129,"Localization"),         OPTPAGE_LOCAL )
     PsListTree_AddString( hList, L(177,"FreeBASIC Keywords"),   OPTPAGE_KEYWORDS )

@@ -11,7 +11,7 @@
 '    MERCHANTABILITY or FITNESS for A PARTICULAR PURPOSE.  See the
 '    GNU General Public License for more details.
 
-'  frmOptionsColors.inc  --  the "Themes and Fonts" page (see frmOptionsColors.bi).
+'  frmOptionsColors.inc  --  the "Editor Font" page (see frmOptionsColors.bi).
 
 #include once "frmOptionsColors.bi"
 #include once "frmOptions.bi"          ' HWND_FRMOPTIONS
@@ -407,11 +407,9 @@ function frmOptionsColors_Layout( byval hPage as HWND, byval cxPanel as long ) a
 
     erase gColorLabels
 
-    ' Themes.
-    frmOptionsColors_AddLabel( L(422,"Themes") & ":", padLeft, y, contentR, y + textH )
-    y += textH + labelGapY
-    y += AfxScaleY(COLORS_LISTHEIGHT_THEMES) + sectionGap
-
+    ' THE THEMES LIST IS GONE (it moved to frmThemes). The label and the space it reserved went
+    ' with it, so the Font section is now the first thing on the page -- which is why the page
+    ' was renamed "Editor Font".
     ' Fonts.
     frmOptionsColors_AddLabel( L(136,"Font (applies to all styles)"), padLeft, y, contentR, y + textH )
     y += textH + labelGapY

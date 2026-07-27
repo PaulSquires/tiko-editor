@@ -464,7 +464,7 @@ private function frmThemes_EnsureForked() as boolean
                              L(453, "Your changes will be saved as a new theme:") & _
                              chr(13) & wszFork
 
-    if frmThemes_ThemedMsgBox( wszMsg, L(111, "Themes and Fonts"), _
+    if frmThemes_ThemedMsgBox( wszMsg, L(486, "Themes"), _
                                 MBX_ICON_QUESTION, MBX_BTN_OKCANCEL ) <> IDOK then return false
 
     dim as DWSTRING wszPath = AfxGetExePathName & "settings\themes\" & wszFork
@@ -472,7 +472,7 @@ private function frmThemes_EnsureForked() as boolean
 
     if Theme_WriteFile( wszPath, wszDesc ) then
         frmThemes_ThemedMsgBox( L(454, "The new theme file could not be written."), _
-                                 L(111, "Themes and Fonts"), MBX_ICON_ERROR, MBX_BTN_OK )
+                                 L(486, "Themes"), MBX_ICON_ERROR, MBX_BTN_OK )
         return false
     end if
 

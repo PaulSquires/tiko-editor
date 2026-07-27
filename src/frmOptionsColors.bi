@@ -11,7 +11,7 @@
 '    MERCHANTABILITY or FITNESS for A PARTICULAR PURPOSE.  See the
 '    GNU General Public License for more details.
 
-'  frmOptionsColors.bi  --  the "Themes and Fonts" page.
+'  frmOptionsColors.bi  --  the "Editor Font" page (was "Themes and Fonts" until the themes half moved to frmThemes).
 '
 '  Panel-hosted. The themes list and the font-name list are both PsListTreees (the font names
 '  are drawn each in their own font, which a scrollable list can do and a PsComboBox dropdown
