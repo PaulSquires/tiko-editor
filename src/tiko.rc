@@ -1,6 +1,5 @@
 
 IMAGE_AAA_MAINICON   ICON     "IMAGES\\APP.ICO"
-IMAGE_MAINICON       RCDATA   "IMAGES\\APP.PNG"
 
 1 24 "tiko_manifest.xml"
 

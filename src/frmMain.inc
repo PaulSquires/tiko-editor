@@ -1631,6 +1631,7 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ' FW_SEMIBOLD, not FW_HEAVY: at 26pt heavy reads as shouting, and Segoe UI's semibold is
     ' the weight Windows itself uses for large display text.
     ghFont(GUIFONT_26)     = pWindow->CreateFont(GUIFONT, 26, FW_SEMIBOLD)
+    ghFont(FIXEDFONT_26)   = pWindow->CreateFont(GUIFIXEDFONT, 26, FW_BOLD)
 
     HWND_FRMMAIN = pWindow->Create( null, APPNAME, @frmMain_WndProc )
     
@@ -1677,6 +1678,17 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ' only runs when the dialog is opened, and this is how it gets opened without a human
     ' driving the menu. Also modal -- startup stops here until it is closed.
     if environ("TIKO_USERTOOLS_AUTOOPEN") = "1" then frmUserTools_Show( HWND_FRMMAIN )
+
+    ' And the same for the About box, whose layout self-test asks the one question a
+    ' fixed-size dialog can be asked -- does every page fit -- and therefore needs its real
+    ' windows. Also modal: startup stops here until it is closed.
+    if environ("TIKO_ABOUT_AUTOOPEN") = "1" then
+        frmAbout_Show( HWND_FRMMAIN )
+        ' With TIKO_ABOUT_AUTOCLOSE the dialog closes itself, so shut the whole editor down
+        ' too and let the run terminate on its own. Posted rather than sent: the main message
+        ' loop has not started yet, so this is picked up the moment it does.
+        if environ("TIKO_ABOUT_AUTOCLOSE") = "1" then PostMessage( HWND_FRMMAIN, WM_CLOSE, 0, 0 )
+    end if
 
     ' Create the main application topmenu menubar
     frmMenuBar_Show( HWND_FRMMAIN )

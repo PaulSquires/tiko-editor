@@ -13,11 +13,59 @@
 
 #pragma once
 
-#define IDC_FRMABOUT_LBLAPPNAME                     1000
-#define IDC_FRMABOUT_LBLAPPVERSION                  1001
-#define IDC_FRMABOUT_LBLAPPCOPYRIGHT                1002
-#define IDC_FRMABOUT_IMAGE1                         1003
-#define IDC_FRMABOUT_LBLJOSE                        1004
-#define IDC_FRMABOUT_LBLOTHERS                      1005
+' ========================================================================================
+' frmAbout -- the About box.
+'
+' Four bands stacked in a FIXED 720x480 client: a painted hero, a PsSelectBar tab strip, a
+' body that swaps between three pages, and a footer of three PsButtons. Nothing resizes and
+' nothing scrolls, which is what makes the fit assertable (see frmAbout_RunLayoutSelfTest).
+'
+' The dialog paints its OWN hero, tab-strip background, About page and footer divider in one
+' PsBufferPaint pass; the only child windows are the select bar, the Credits list, the
+' License field and the three buttons.
+' ========================================================================================
+
+#define IDC_FRMABOUT_TABS           1000
+#define IDC_FRMABOUT_CREDITS        1001
+#define IDC_FRMABOUT_LICENSE        1002
+#define IDC_FRMABOUT_CMDWEBSITE     1003
+#define IDC_FRMABOUT_CMDGITHUB      1004
+#define IDC_FRMABOUT_CMDCLOSE       1005
+
+' The three pages, in tab order. Also the PsSelectBar panel indices, which is why they start
+' at 0 and are contiguous -- frmAbout_ShowPage indexes with them directly.
+enum ABOUTPAGE_ENUM
+    ABOUTPAGE_ABOUT = 0
+    ABOUTPAGE_CREDITS
+    ABOUTPAGE_LICENSE
+end enum
+
+' ---- geometry, ALL UNSCALED ------------------------------------------------------------
+' Every one of these is passed through AfxScaleX/Y at the point of use. None is ever stored
+' pre-scaled, so nothing here can be scaled twice.
+#define FRMABOUT_CLIENT_W      720
+#define FRMABOUT_CLIENT_H      480
+#define FRMABOUT_HERO_H        168
+#define FRMABOUT_TABS_H         40
+#define FRMABOUT_FOOTER_H       60
+#define FRMABOUT_MARGIN         32
+#define FRMABOUT_PLATE          96     ' the rounded plate the "tk" wordmark sits on
+#define FRMABOUT_PLATE_CURVE    28     ' ELLIPSE DIAMETER, not a radius (GDI vocabulary)
+#define FRMABOUT_HERO_GAP       28     ' plate -> text column
+#define FRMABOUT_PILL_H         24
+#define FRMABOUT_PILL_PADX      12
+#define FRMABOUT_PILL_GAP        8
+#define FRMABOUT_BTN_W          96
+#define FRMABOUT_BTN_H          30
+#define FRMABOUT_BTN_GAP         8
+#define FRMABOUT_BODY_PAD       16     ' body band -> the control or text inside it
+#define FRMABOUT_ROW_H          24     ' Credits list row
+#define FRMABOUT_KV_KEYW       148     ' About page: width of the key column
+#define FRMABOUT_KV_ROWH        21
+#define FRMABOUT_COL_WHO       210     ' Credits: "Contributor" column
+
+' The two links the footer buttons open. Not localized: they are URLs, not prose.
+#define FRMABOUT_URL_WEBSITE   wstr("http://www.planetsquires.com")
+#define FRMABOUT_URL_GITHUB    wstr("https://github.com/PaulSquires/tiko")
 
 declare function frmAbout_Show( byval hWndParent as hwnd ) as LRESULT

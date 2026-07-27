@@ -259,7 +259,11 @@ redim shared LL(any) as wstring * MAX_PATH
 ' The About box's application name, and the only face in this table above 12pt. Nothing else
 ' in tiko needs it; it exists so that one line can carry the dialog.
 #DEFINE GUIFONT_26       11
-#DEFINE MAXFONTS         12
+' The "tk" wordmark on the About box's icon plate. A FIXED face, deliberately: the mark is
+' two lowercase letters standing in for an app icon, and Consolas gives them the even weight
+' and the flat terminals that read as a logotype. Segoe UI at the same size reads as a word.
+#DEFINE FIXEDFONT_26     12
+#DEFINE MAXFONTS         13
 
 dim shared ghFont(MAXFONTS) as HFONT
 
