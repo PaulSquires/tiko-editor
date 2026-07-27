@@ -14,72 +14,787 @@
 #include once "frmAbout.bi"
 
 ' ========================================================================================
-' Process WM_CREATE message for window/dialog: frmAbout
+' Which page is showing. Owned here rather than read back from the select bar, because the
+' hero and the About page are PAINTED and WM_PAINT must be able to answer the question
+' without touching a control.
 ' ========================================================================================
-function frmAbout_OnCreate( _
-            byval hwnd as HWND, _
-            byval lpCreateStructPtr as LPCREATESTRUCT _
-            ) as boolean
+dim shared as long gAboutPage
 
-    ' This is a modal popup window so disable the parent window
-    DisableAllModeless()
+' The wordmark on the icon plate. Two lowercase letters, NOT the application icon: the .ico
+' is a detailed raster that reads as clutter at 72px on a plate this size, and it is already
+' on the taskbar and the caption bar of every tiko window. Drawn as text in the editor's
+' keyword colour, so it costs no image decode, no GDI+ object and no resource lookup, and it
+' recolours with the theme for free.
+#define FRMABOUT_WORDMARK   wstr("tk")
 
-    '  Message cracker macro expects a True to be returned for a successful
-    '  OnCreate handler even though returning -1 from a standard WM_CREATE
-    '  call would stop creating the window. This is just one of those Windows
-    '  inconsistencies.
-    return true
+
+' ========================================================================================
+' THE LICENSE NOTICE
+'
+' DELIBERATELY NOT LOCALIZED, for two independent reasons.
+'
+' The first is legal: this is the GPL's own notice text, and the FSF asks that it be
+' reproduced verbatim -- a community translation of it is not the same notice.
+'
+' The second is mechanical and is worth knowing before putting ANY prose in a .lang file:
+' LoadLocalizationFile runs every value through AfxStrParse(wData, 1, ";"), which treats a
+' semicolon as the start of a trailing comment and DISCARDS the rest of the line. The second
+' paragraph below contains one ("WITHOUT ANY WARRANTY; without even..."), so stored as a
+' localized string it would silently lose two thirds of itself, with nothing in the build,
+' the warnings or the assertions to say so.
+' ========================================================================================
+private function frmAbout_LicenseText() as DWSTRING
+
+    dim as DWSTRING nl = chr(13) & chr(10)
+
+    function = APPNAME & " -- " & APPCOPYRIGHT & nl & nl & _
+        "This program is free software: you can redistribute it and/or modify it under " & _
+        "the terms of the GNU General Public License as published by the Free Software " & _
+        "Foundation, either version 3 of the License, or (at your option) any later version." & nl & nl & _
+        "This program is distributed in the hope that it will be useful, but WITHOUT ANY " & _
+        "WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A " & _
+        "PARTICULAR PURPOSE.  See the GNU General Public License for more details." & nl & nl & _
+        "You should have received a copy of the GNU General Public License along with this " & _
+        "program.  If not, see https://www.gnu.org/licenses/."
+
 end function
 
 
 ' ========================================================================================
-' Process WM_CLOSE message for window/dialog: frmAbout
+' THE CREDITS ROLL
+'
+' A table rather than six hand-placed labels, which is precisely what the dialog this
+' replaces got wrong: each contributor there was a LABEL at a literal Y, so adding one meant
+' editing coordinates. Here a new line is a new row.
+'
+' The "for" text is localized and the name is not -- a person's name does not translate.
 ' ========================================================================================
-function frmAbout_OnClose( byval hwnd as HWND) as LRESULT
-    ' Enables parent window keeping parent's zorder
-    EnableAllModeless()
-    DestroyWindow hwnd
+private sub frmAbout_BuildCredits()
+
+    if HWND_FRMABOUT_CREDITS = 0 then exit sub
+
+    PsListTree_Clear( HWND_FRMABOUT_CREDITS )
+
+    dim as long nRow
+
+    nRow = PsListTree_AddString( HWND_FRMABOUT_CREDITS, "Jos" & wchr(233) & " Roca", 0 )
+    PsListTree_SetCellText( HWND_FRMABOUT_CREDITS, nRow, 1, L(541,"AfxNova framework") )
+
+    nRow = PsListTree_AddString( HWND_FRMABOUT_CREDITS, "Paul Doe", 1 )
+    PsListTree_SetCellText( HWND_FRMABOUT_CREDITS, nRow, 1, L(542,"Ideas and testing") )
+
+    nRow = PsListTree_AddString( HWND_FRMABOUT_CREDITS, "ImortisInglorian", 2 )
+    PsListTree_SetCellText( HWND_FRMABOUT_CREDITS, nRow, 1, L(542,"Ideas and testing") )
+
+    nRow = PsListTree_AddString( HWND_FRMABOUT_CREDITS, "Neil Hodgson", 3 )
+    PsListTree_SetCellText( HWND_FRMABOUT_CREDITS, nRow, 1, L(543,"Scintilla editing component") )
+
+    nRow = PsListTree_AddString( HWND_FRMABOUT_CREDITS, "FreeBASIC Development Team", 4 )
+    PsListTree_SetCellText( HWND_FRMABOUT_CREDITS, nRow, 1, L(544,"The compiler tiko is built on and for") )
+
+    nRow = PsListTree_AddString( HWND_FRMABOUT_CREDITS, "Emma", 5 )
+    PsListTree_SetCellText( HWND_FRMABOUT_CREDITS, nRow, 1, L(545,"AI agent assistant") )
+
+    ' EVERY ROW IS NON-SELECTABLE. This is a roll of names, not a picker: there is nothing to
+    ' do with a selected contributor, so a highlight that follows the mouse is an affordance
+    ' that promises an action the dialog does not have.
+    '
+    ' bSelectable = false blocks the mouse, the keyboard AND the programmatic setters, so it
+    ' is the whole answer for selection. It does NOT stop hot tracking -- the control still
+    ' reports isHot on the row under the cursor -- which is why the row painter ignores both
+    ' flags rather than relying on this alone. The two have to be turned off in two places.
+    for i as long = 0 to PsListTree_GetCount( HWND_FRMABOUT_CREDITS ) - 1
+        PsListTree_SetRowSelectable( HWND_FRMABOUT_CREDITS, i, false )
+    next
+
+end sub
+
+
+' ========================================================================================
+' Row painter for the Credits list.
+'
+' The left column is drawn in the EDITOR'S KEYWORD colour, which is the one small thing that
+' makes this box read as belonging to a code editor. It is also why the painter is written
+' out here rather than reusing ListBox_LVPaintRow from modRoutines.inc: that one paints the
+' Output panel's palette and has no concept of a keyword-coloured column.
+' ========================================================================================
+private sub frmAbout_CreditsPaintRow( byval p as PSLISTTREE_PAINTINFO ptr )
+    if p = 0 then exit sub
+
+    ' p->isSelected AND p->isHot ARE DELIBERATELY IGNORED. Every row is painted the same way,
+    ' so the roll reads as a table of credits rather than as a list you are meant to pick from.
+    ' Marking the rows non-selectable (frmAbout_BuildCredits) stops selection; it does NOT
+    ' stop the control reporting isHot for the row under the cursor, so the highlight has to
+    ' be refused here as well. Reading either flag is what would put it back.
+    p->b->SetBackColor( ghPanel.BackColor )
+    p->b->PaintRect( @p->rc )
+    p->b->SetFont( ghFont(GUIFONT_11) )
+
+    if p->columnCount <= 0 then exit sub
+
+    for i as integer = 0 to p->columnCount - 1
+        dim as RECT rcText = p->cells[i].rc
+        rcText.left += AfxScaleX(10)
+
+        ' Column 0 -- the contributor -- takes the editor's keyword colour. That one detail is
+        ' what makes the box read as belonging to a code editor.
+        dim as COLORREF clr = iif( i = 0, ghEditor.ForeColorKeyword, ghEditor.ForeColorText )
+
+        p->b->SetForeColor( clr )
+        p->b->PaintText( p->cells[i].wszText, @rcText, DT_LEFT or DT_END_ELLIPSIS )
+    next
+
+end sub
+
+
+' ========================================================================================
+' Header band painter. REQUIRED -- without one the header does not render at all.
+' ========================================================================================
+private sub frmAbout_CreditsPaintHeader( byval p as PSCOLUMNHEADER_PAINTINFO ptr )
+    if p = 0 then exit sub
+
+    p->b->SetBackColor( ghPanel.BackColor )
+    p->b->PaintRect( @p->rc )
+
+    dim as RECT rcText = p->rc
+    rcText.left += AfxScaleX(10)
+    p->b->SetForeColor( ghPanel.ForeColor )
+    p->b->SetFont( ghFont(GUIFONT_11) )
+    p->b->PaintText( p->wszCaption, @rcText, DT_LEFT or DT_END_ELLIPSIS )
+
+    dim as RECT rcDiv = p->rc
+    rcDiv.left = rcDiv.right - AfxScaleX(1)
+    p->b->SetBackColor( ghUI.Divider )
+    p->b->PaintRect( @rcDiv )
+end sub
+
+
+' ========================================================================================
+' Both tooltip callbacks return "" to SUPPRESS tips.
+'
+' With no callback set, PsListTree shows the row's own text back at the cursor and
+' PsColumnHeader shows the column's own caption. Every cell here is fully visible, so the
+' fallback would pop a tip repeating what is already under the pointer. These are TWO
+' SEPARATE opt-outs -- suppressing the rows does nothing for the header band.
+' ========================================================================================
+private function frmAbout_CreditsTooltip( byval hList as HWND, byval row as integer ) as DWSTRING
+    return ""
+end function
+
+private function frmAbout_CreditsHeaderTooltip( byval hHeader as HWND, byval idx as integer ) as DWSTRING
+    return ""
+end function
+
+
+' ========================================================================================
+' The four band rectangles, derived from the client rect. Every consumer -- the painter, the
+' positioner and the self-test -- goes through this, so there is one description of the
+' layout rather than three that can drift.
+' ========================================================================================
+private sub frmAbout_GetBands( _
+            byval hwnd as HWND, _
+            byref rcHero as RECT, _
+            byref rcTabs as RECT, _
+            byref rcBody as RECT, _
+            byref rcFoot as RECT _
+            )
+
+    dim as RECT rc
+    GetClientRect( hwnd, @rc )
+
+    dim as long heroH = AfxScaleY(FRMABOUT_HERO_H)
+    dim as long tabsH = AfxScaleY(FRMABOUT_TABS_H)
+    dim as long footH = AfxScaleY(FRMABOUT_FOOTER_H)
+
+    rcHero = type<RECT>( 0, 0, rc.right, heroH )
+    rcTabs = type<RECT>( 0, heroH, rc.right, heroH + tabsH )
+    rcBody = type<RECT>( 0, heroH + tabsH, rc.right, rc.bottom - footH )
+    rcFoot = type<RECT>( 0, rc.bottom - footH, rc.right, rc.bottom )
+
+end sub
+
+
+' ========================================================================================
+' The icon plate's rect, in client coords. Shared by the painter and the self-test so there
+' is one description of where the plate is rather than two that can drift.
+' ========================================================================================
+private sub frmAbout_GetPlateRect( byval rcHero as RECT ptr, byref rcPlate as RECT )
+
+    dim as long plateW = AfxScaleX(FRMABOUT_PLATE)
+    dim as long plateH = AfxScaleY(FRMABOUT_PLATE)
+
+    rcPlate.left   = AfxScaleX(FRMABOUT_MARGIN)
+    rcPlate.top    = rcHero->top + (((rcHero->bottom - rcHero->top) - plateH) \ 2)
+    rcPlate.right  = rcPlate.left + plateW
+    rcPlate.bottom = rcPlate.top + plateH
+
+end sub
+
+
+' ========================================================================================
+' Measure a pill: its text width plus the padding on both sides.
+'
+' DT_CALCRECT through PaintTextEx, because PaintText forces DT_VCENTER or DT_SINGLELINE and
+' would fight the flag. PaintTextEx passes the caller's flags through untouched, which is
+' exactly what this needs -- and it measures in the font the buffer currently holds, so the
+' caller must SetFont first.
+' ========================================================================================
+private function frmAbout_MeasurePill( _
+            byval pb as PsBufferPaint ptr, _
+            byval wszText as DWSTRING _
+            ) as long
+
+    dim as RECT rc
+    rc.right = 4000
+    pb->PaintTextEx( wszText, @rc, DT_LEFT or DT_SINGLELINE or DT_CALCRECT )
+    function = (rc.right - rc.left) + (AfxScaleX(FRMABOUT_PILL_PADX) * 2)
+
+end function
+
+
+' ========================================================================================
+' Draw one pill. Filled = the accent; ghost = a divider outline over whatever is behind it.
+'
+' The curvature is the pill's own HEIGHT, i.e. an ellipse diameter equal to the height, which
+' is what makes the ends true semicircles. PaintRoundOutline strokes WITHOUT filling --
+' PaintRoundBorderRect would fill the gradient back over first, which is the mistake this
+' family has made five times.
+' ========================================================================================
+private sub frmAbout_PaintPill( _
+            byval pb as PsBufferPaint ptr, _
+            byval rc as RECT ptr, _
+            byval wszText as DWSTRING, _
+            byval bFilled as boolean _
+            )
+
+    dim as long curve = rc->bottom - rc->top
+
+    if bFilled then
+        pb->SetBackColor( ghUI.AccentColor )
+        pb->PaintRoundRect( rc, curve )
+    else
+        pb->SetPenColor( ghUI.Divider )
+        pb->PaintRoundOutline( rc, curve, 1 )
+    end if
+
+    pb->SetForeColor( ghPanel.ForeColor )
+    pb->PaintText( wszText, rc, DT_CENTER or DT_VCENTER or DT_SINGLELINE )
+
+end sub
+
+
+' ========================================================================================
+' The hero band: gradient, icon plate, application name, tagline, two pills.
+' ========================================================================================
+private sub frmAbout_PaintHero( byval pb as PsBufferPaint ptr, byval rcHero as RECT ptr )
+
+    ' A HORIZONTAL wash from the accent into the page colour, so the band ends flush with the
+    ' tab strip below it and the two read as one surface. Running the ramp to the full width
+    ' keeps it a TINT of the page rather than a block of colour -- which is what makes it
+    ' survive an accent that is nearly white (default_light) as well as one that is nearly
+    ' black (default_dark).
+    pb->PaintGradientRect( rcHero, ghUI.AccentColor, ghPanel.BackColor, LinearGradientModeHorizontal )
+
+    dim as long mx = AfxScaleX(FRMABOUT_MARGIN)
+
+    ' ---- the icon plate --------------------------------------------------------------
+    dim as RECT rcPlate
+    frmAbout_GetPlateRect( rcHero, rcPlate )
+
+    pb->SetBackColor( ghEditor.BackColorText )
+    pb->PaintRoundRect( @rcPlate, AfxScaleX(FRMABOUT_PLATE_CURVE) )
+    ' The ring is a DIVIDER, not the accent: an accent hairline is invisible against the pale
+    ' accent of the light theme.
+    pb->SetPenColor( ghUI.Divider )
+    pb->PaintRoundOutline( @rcPlate, AfxScaleX(FRMABOUT_PLATE_CURVE), 1 )
+
+    ' The wordmark, centred on the PLATE rather than on an inset rect: DT_CENTER/DT_VCENTER
+    ' already centre the ink, and insetting first would only shrink the box the same two
+    ' letters get centred in.
+    pb->SetFont( ghFont(FIXEDFONT_26) )
+    pb->SetForeColor( ghEditor.ForeColorKeyword )
+    pb->PaintText( FRMABOUT_WORDMARK, @rcPlate, DT_CENTER or DT_VCENTER or DT_SINGLELINE )
+
+    ' ---- the text column -------------------------------------------------------------
+    dim as long tx = rcPlate.right + AfxScaleX(FRMABOUT_HERO_GAP)
+
+    ' The name is measured, not guessed, so the tagline and the pills sit under whatever
+    ' height 26pt actually comes out at on this machine's DPI.
+    pb->SetFont( ghFont(GUIFONT_26) )
+    dim as RECT rcName
+    rcName.right = 4000
+    pb->PaintTextEx( APPNAME, @rcName, DT_LEFT or DT_SINGLELINE or DT_CALCRECT )
+    dim as long nameH = rcName.bottom - rcName.top
+
+    pb->SetFont( ghFont(GUIFONT_11) )
+    dim as RECT rcTag
+    rcTag.right = 4000
+    pb->PaintTextEx( "Xy", @rcTag, DT_LEFT or DT_SINGLELINE or DT_CALCRECT )
+    dim as long lineH = rcTag.bottom - rcTag.top
+
+    dim as long pillH = AfxScaleY(FRMABOUT_PILL_H)
+    dim as long gap1  = AfxScaleY(6)
+    dim as long gap2  = AfxScaleY(14)
+
+    dim as long blockH = nameH + gap1 + lineH + gap2 + pillH
+    dim as long y      = ((rcHero->bottom - rcHero->top) - blockH) \ 2
+
+    dim as RECT r
+    r.left = tx : r.right = rcHero->right - mx
+
+    r.top = y : r.bottom = y + nameH
+    pb->SetFont( ghFont(GUIFONT_26) )
+    pb->SetForeColor( ghEditor.ForeColorText )
+    pb->PaintText( APPNAME, @r, DT_LEFT or DT_VCENTER or DT_SINGLELINE )
+
+    y += nameH + gap1
+    r.top = y : r.bottom = y + lineH
+    pb->SetFont( ghFont(GUIFONT_11) )
+    pb->SetForeColor( ghPanel.ForeColor )
+    pb->PaintText( L(530,"Programmer's code editor for the FreeBASIC compiler"), _
+                   @r, DT_LEFT or DT_VCENTER or DT_SINGLELINE )
+
+    ' ---- the two pills ---------------------------------------------------------------
+    y += lineH + gap2
+
+    dim as DWSTRING wszVersion = APPVERSION & "  " & wchr(183) & "  " & trim(APPBITS, any " ()")
+    dim as DWSTRING wszLicense = "GPL v3"
+
+    dim as long w1 = frmAbout_MeasurePill( pb, wszVersion )
+    dim as long w2 = frmAbout_MeasurePill( pb, wszLicense )
+
+    dim as RECT rcPill
+    rcPill.left   = tx
+    rcPill.top    = y
+    rcPill.right  = tx + w1
+    rcPill.bottom = y + pillH
+    frmAbout_PaintPill( pb, @rcPill, wszVersion, true )
+
+    rcPill.left   = rcPill.right + AfxScaleX(FRMABOUT_PILL_GAP)
+    rcPill.right  = rcPill.left + w2
+    frmAbout_PaintPill( pb, @rcPill, wszLicense, false )
+
+end sub
+
+
+' ========================================================================================
+' The About page. Painted, not built from controls -- it is a paragraph and three rows, and
+' three PsTextBoxes would be three tab stops the user has no reason to visit.
+' ========================================================================================
+private sub frmAbout_PaintAboutPage( byval pb as PsBufferPaint ptr, byval rcBody as RECT ptr )
+
+    dim as long mx  = AfxScaleX(FRMABOUT_MARGIN)
+    dim as long pad = AfxScaleY(FRMABOUT_BODY_PAD)
+
+    pb->SetFont( ghFont(GUIFONT_11) )
+
+    ' ---- the description paragraph ---------------------------------------------------
+    ' DT_WORDBREAK needs PaintTextEx: PaintText forces DT_SINGLELINE and structurally cannot
+    ' wrap. Measured first with DT_CALCRECT so the rows below start under however many lines
+    ' the translated text actually took.
+    dim as DWSTRING wszDesc = L(531,"A fast, native Win32 editor for FreeBASIC -- project management, symbol browsing, integrated build and debug -- in one executable with no runtime to install.")
+
+    dim as RECT rcText
+    rcText.left   = mx
+    rcText.top    = rcBody->top + pad + AfxScaleY(4)
+    rcText.right  = rcBody->right - mx
+    rcText.bottom = rcBody->bottom
+
+    dim as RECT rcCalc = rcText
+    pb->PaintTextEx( wszDesc, @rcCalc, DT_LEFT or DT_WORDBREAK or DT_CALCRECT )
+    dim as long descH = rcCalc.bottom - rcCalc.top
+
+    rcText.bottom = rcText.top + descH
+    pb->SetForeColor( ghPanel.ForeColor )
+    pb->PaintTextEx( wszDesc, @rcText, DT_LEFT or DT_WORDBREAK )
+
+    ' ---- the key / value rows --------------------------------------------------------
+    dim as long y     = rcText.bottom + AfxScaleY(18)
+    dim as long rowH  = AfxScaleY(FRMABOUT_KV_ROWH)
+    dim as long keyW  = AfxScaleX(FRMABOUT_KV_KEYW)
+
+    dim as DWSTRING wszKey(2), wszVal(2)
+    wszKey(0) = L(536,"Build date")      : wszVal(0) = __DATE_ISO__
+    wszKey(1) = L(537,"Copyright")       : wszVal(1) = APPCOPYRIGHT
+    wszKey(2) = L(538,"Settings folder") : wszVal(2) = AfxGetExePathName & "settings"
+
+    for i as long = 0 to 2
+        dim as RECT rcRow
+        rcRow.left   = mx
+        rcRow.top    = y
+        rcRow.right  = mx + keyW
+        rcRow.bottom = y + rowH
+
+        pb->SetForeColor( ghEditor.ForeColorKeyword )
+        pb->PaintText( wszKey(i), @rcRow, DT_LEFT or DT_VCENTER or DT_SINGLELINE )
+
+        rcRow.left  = mx + keyW
+        rcRow.right = rcBody->right - mx
+        pb->SetForeColor( ghEditor.ForeColorText )
+        pb->PaintText( wszVal(i), @rcRow, DT_LEFT or DT_VCENTER or DT_SINGLELINE or DT_END_ELLIPSIS )
+
+        y += rowH
+    next
+
+end sub
+
+
+' ========================================================================================
+' The dialog's own chrome. Everything else on screen belongs to a child control.
+' ========================================================================================
+private function frmAbout_OnPaint( byval hwnd as HWND ) as LRESULT
+
+    dim as PAINTSTRUCT ps
+    dim as HDC hdc = BeginPaint( hwnd, @ps )
+
+    dim as RECT rc
+    GetClientRect( hwnd, @rc )
+
+    dim buffer as PsBufferPaint
+    buffer.BeginDoubleBuffer( hwnd, hdc, rc )
+
+    ' The whole client in the page colour first. The hero paints over its own band.
+    buffer.SetBackColor( ghPanel.BackColor )
+    buffer.PaintRect( @rc )
+
+    dim as RECT rcHero, rcTabs, rcBody, rcFoot
+    frmAbout_GetBands( hwnd, rcHero, rcTabs, rcBody, rcFoot )
+
+    frmAbout_PaintHero( @buffer, @rcHero )
+
+    if gAboutPage = ABOUTPAGE_ABOUT then
+        frmAbout_PaintAboutPage( @buffer, @rcBody )
+    end if
+
+    ' The footer hairline. A DIVIDER, for the same reason the plate's ring is one.
+    dim as RECT rcDiv = rcFoot
+    rcDiv.bottom = rcDiv.top + AfxScaleY(1)
+    buffer.SetBackColor( ghUI.Divider )
+    buffer.PaintRect( @rcDiv )
+
+    buffer.EndDoubleBuffer()
+    EndPaint( hwnd, @ps )
+
     function = 0
 end function
 
 
 ' ========================================================================================
-' Process WM_DESTROY message for window/dialog: frmAbout
+' Swap the body page.
+'
+' The two body controls are SHOWN AND HIDDEN, never created and destroyed: they are built
+' once so the Credits list keeps its selection and the License field its scroll position
+' across a round trip through the tabs.
 ' ========================================================================================
-function frmAbout_OnDestroy( byval hwnd as HWND) as LRESULT
-    Dim As HFONT hFont = AfxGetWindowFont(GetDlgItem(hwnd, IDC_FRMABOUT_LBLAPPNAME))
-    HWND_FRMABOUT = 0
-    PostQuitMessage(0)
-    function = 0
-end function
+private sub frmAbout_ShowPage( byval hwnd as HWND, byval nPage as long )
+
+    if (nPage < ABOUTPAGE_ABOUT) orelse (nPage > ABOUTPAGE_LICENSE) then exit sub
+
+    gAboutPage = nPage
+
+    ShowWindow( HWND_FRMABOUT_CREDITS, iif( nPage = ABOUTPAGE_CREDITS, SW_SHOW, SW_HIDE ) )
+    ShowWindow( HWND_FRMABOUT_LICENSE, iif( nPage = ABOUTPAGE_LICENSE, SW_SHOW, SW_HIDE ) )
+
+    ' The About page is PAINTED, so leaving a page has to invalidate the body band -- hiding a
+    ' child window does not repaint what was under it.
+    dim as RECT rcHero, rcTabs, rcBody, rcFoot
+    frmAbout_GetBands( hwnd, rcHero, rcTabs, rcBody, rcFoot )
+    InvalidateRect( hwnd, @rcBody, true )
+
+end sub
 
 
 ' ========================================================================================
-' Process WM_COMMAND message for window/dialog: frmAbout
+' Tab strip. USER-DRIVEN CHANGES ONLY -- PsSelectBar does not fire this for SetCurSel, which
+' is what lets frmAbout_Show seed the current tab without this running.
 ' ========================================================================================
-function frmAbout_OnCommand( _
-            byval hwnd as HWND, _
-            byval id as long, _
-            byval hwndCtl as HWND, _
-            byval codeNotify As UINT _
-            ) as LRESULT
+private sub frmAbout_TabChanged( byval hSelectBar as HWND, byval idxOld as long, byval idxNew as long )
+    frmAbout_ShowPage( GetParent(hSelectBar), idxNew )
+end sub
+
+
+' ========================================================================================
+' The three footer buttons.
+' ========================================================================================
+private sub frmAbout_ButtonClickCallback( byval hButton as HWND, byval id as long )
+
+    dim as HWND hwnd = GetParent(hButton)
 
     select case id
-        case IDCANCEL  ' Close
-            if codeNotify = BN_CLICKED then
-                SendMessage( HWnd, WM_CLOSE, 0, 0)
-                exit function
-            end if
+        case IDC_FRMABOUT_CMDWEBSITE
+            ShellExecute( NULL, "open", FRMABOUT_URL_WEBSITE, NULL, NULL, SW_SHOWNORMAL )
+
+        case IDC_FRMABOUT_CMDGITHUB
+            ShellExecute( NULL, "open", FRMABOUT_URL_GITHUB, NULL, NULL, SW_SHOWNORMAL )
+
+        case IDC_FRMABOUT_CMDCLOSE
+            SendMessage( hwnd, WM_CLOSE, 0, 0 )
     end select
-    
-    function = 0
-end function
+
+end sub
 
 
 ' ========================================================================================
-' frmAbout Window procedure
+' Push the current theme into every child that carries its own colours.
 ' ========================================================================================
-function frmAbout_WndProc( _
+private sub frmAbout_ApplyTheme( byval hwnd as HWND )
+
+    ' ---- the tab strip ----------------------------------------------------------------
+    ' BackColorHot and BackColorSelect are left EQUAL to BackColor deliberately: this bar is
+    ' meant to read flat, with the accent line under the word as the only mark of the current
+    ' tab. That is PsSelectBar's own default shape, restated here because the theme's values
+    ' would otherwise not be flat.
+    dim as PSSELECTBAR_COLORS sc
+    sc.BackColor         = ghPanel.BackColor
+    sc.ForeColor         = ghPanel.ForeColor
+    sc.BackColorHot      = ghPanel.BackColor
+    sc.ForeColorHot      = ghPanel.ForeColorHot
+    sc.BackColorSelect   = ghPanel.BackColor
+    sc.ForeColorSelect   = ghEditor.ForeColorText
+    sc.ForeColorDisabled = ghPopup.ForeColorDisabled
+    sc.IndicatorColor    = ghUI.AccentColor
+    PsSelectBar_SetColors( HWND_FRMABOUT_TABS, @sc )
+
+    ' ---- the Credits list -------------------------------------------------------------
+    PsListTree_SetBackColor( HWND_FRMABOUT_CREDITS, ghPanel.BackColor )
+    PsListTree_SetScrollBarColors( HWND_FRMABOUT_CREDITS, ghPanel.BackColorScrollBar, _
+                                   ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
+    PsListTree_SetBorderColor( HWND_FRMABOUT_CREDITS, ghUI.Divider )
+
+    ' ---- the License field ------------------------------------------------------------
+    PsTextBox_SetBackColor( HWND_FRMABOUT_LICENSE, ghEditor.BackColorText )
+    PsTextBox_SetOuterBackColor( HWND_FRMABOUT_LICENSE, ghPanel.BackColor )
+    PsTextBox_SetForeColor( HWND_FRMABOUT_LICENSE, ghEditor.ForeColorText )
+    PsTextBox_SetBorderColor( HWND_FRMABOUT_LICENSE, ghUI.Divider )
+    ' EQUAL to the plain border on purpose. A read-only field that brightens its frame when
+    ' focused is advertising an edit that cannot happen.
+    PsTextBox_SetFocusBorderColor( HWND_FRMABOUT_LICENSE, ghUI.Divider )
+
+    ' ---- the three buttons ------------------------------------------------------------
+    ' Same recipe as frmKeyboard_ApplyTheme and OptionsTheme_FillButton, spelled out again
+    ' rather than shared: those live in files the unity build includes in an order that does
+    ' not reach here. Keep the three in step by eye.
+    dim as PSBUTTON_COLORS bc
+    bc.BackColor           = ghPanel.BackColorButton
+    bc.ForeColor           = ghPanel.ForeColorButton
+    bc.BorderColor         = ghUI.Divider
+    bc.IconColor           = ghPanel.ForeColorButton
+    bc.BackColorHot        = ghPanel.BackColorButtonHot
+    bc.ForeColorHot        = ghPanel.ForeColorButtonHot
+    bc.BorderColorHot      = ghPanel.BackColorButtonHot
+    bc.IconColorHot        = ghPanel.ForeColorButtonHot
+    bc.BackColorPressed    = ghPanel.BackColorButtonHot
+    bc.ForeColorPressed    = ghPanel.ForeColorButtonHot
+    bc.BorderColorPressed  = ghPanel.BackColorButtonHot
+    bc.IconColorPressed    = ghPanel.ForeColorButtonHot
+    bc.BackColorDisabled   = ghPanel.BackColor
+    bc.ForeColorDisabled   = ghUI.Divider
+    bc.BorderColorDisabled = ghUI.Divider
+    ' The default button's accent border. PsButton applies this LAST and with no mood test, so
+    ' it survives hover and press for free.
+    bc.DefaultBorderColor  = ghUI.AccentColor
+
+    dim as HWND hBtn(2) = { GetDlgItem(hwnd, IDC_FRMABOUT_CMDWEBSITE), _
+                            GetDlgItem(hwnd, IDC_FRMABOUT_CMDGITHUB), _
+                            GetDlgItem(hwnd, IDC_FRMABOUT_CMDCLOSE) }
+    for i as long = 0 to 2
+        if hBtn(i) = 0 then continue for
+        PsButton_SetColors( hBtn(i), @bc )
+        PsButton_Refresh( hBtn(i) )
+    next
+
+    Theme_ApplyDarkCaption( hwnd )
+    AfxRedrawWindow( hwnd )
+
+end sub
+
+
+' ========================================================================================
+' Position the children. The dialog is fixed-size, so this runs once after creation.
+' ========================================================================================
+private sub frmAbout_PositionWindows( byval hwnd as HWND )
+
+    dim as RECT rcHero, rcTabs, rcBody, rcFoot
+    frmAbout_GetBands( hwnd, rcHero, rcTabs, rcBody, rcFoot )
+    if (rcBody.right <= 0) orelse (rcBody.bottom <= rcBody.top) then exit sub
+
+    dim as long mx  = AfxScaleX(FRMABOUT_MARGIN)
+    dim as long pad = AfxScaleY(FRMABOUT_BODY_PAD)
+
+    ' ---- the tab strip ----------------------------------------------------------------
+    ' Full width so its own background covers the band; the panels' left padding is what
+    ' lines the first word up with the margin.
+    SetWindowPos( HWND_FRMABOUT_TABS, 0, 0, rcTabs.top, _
+                  rcTabs.right, rcTabs.bottom - rcTabs.top, SWP_NOZORDER or SWP_NOACTIVATE )
+
+    ' ---- the two body controls, sharing one rect --------------------------------------
+    dim as long bx = mx
+    dim as long by = rcBody.top + pad
+    dim as long bw = rcBody.right - (mx * 2)
+    dim as long bh = (rcBody.bottom - pad) - by
+    if bh < 0 then bh = 0
+
+    SetWindowPos( HWND_FRMABOUT_CREDITS, 0, bx, by, bw, bh, SWP_NOZORDER or SWP_NOACTIVATE )
+    SetWindowPos( HWND_FRMABOUT_LICENSE, 0, bx, by, bw, bh, SWP_NOZORDER or SWP_NOACTIVATE )
+
+    ' ---- the footer buttons, laid out right to left -----------------------------------
+    dim as long btnW = AfxScaleX(FRMABOUT_BTN_W)
+    dim as long btnH = AfxScaleY(FRMABOUT_BTN_H)
+    dim as long bgap = AfxScaleX(FRMABOUT_BTN_GAP)
+    dim as long btnY = rcFoot.top + (((rcFoot.bottom - rcFoot.top) - btnH) \ 2)
+    dim as long x    = rcFoot.right - AfxScaleX(24) - btnW
+
+    dim as HWND hOrder(2) = { GetDlgItem(hwnd, IDC_FRMABOUT_CMDCLOSE), _
+                              GetDlgItem(hwnd, IDC_FRMABOUT_CMDGITHUB), _
+                              GetDlgItem(hwnd, IDC_FRMABOUT_CMDWEBSITE) }
+    for i as long = 0 to 2
+        if hOrder(i) = 0 then continue for
+        SetWindowPos( hOrder(i), 0, x, btnY, btnW, btnH, SWP_NOZORDER or SWP_NOACTIVATE )
+        x -= (btnW + bgap)
+    next
+
+end sub
+
+
+' ========================================================================================
+' LAYOUT SELF-TEST                                          TIKO_ABOUT_SELFTEST=1
+'
+' The dialog is fixed-size and nothing scrolls, so "does the content fit" is a real question
+' with a checkable answer -- which is the whole reason the size was fixed. Runs only when the
+' dialog is open, because every assertion needs live windows.
+'
+' Trace text goes through a `dim as string` first: PRINT on a DWSTRING, or on a
+' `string & wstring` concat, interleaves nulls.
+' ========================================================================================
+dim shared as long gAboutAssertPass, gAboutAssertFail
+
+#macro ABOUTASSERT( cond, msg )
+    if (cond) then
+        gAboutAssertPass += 1
+    else
+        gAboutAssertFail += 1
+        scope
+            dim as string s = "  FAIL: " & msg
+            ? s
+        end scope
+    end if
+#endmacro
+
+private sub frmAbout_RunLayoutSelfTest( byval hwnd as HWND )
+
+    if environ("TIKO_ABOUT_SELFTEST") <> "1" then exit sub
+
+    gAboutAssertPass = 0
+    gAboutAssertFail = 0
+    ? ""
+    ? "=== frmAbout layout self-test ==="
+
+    dim as RECT rc
+    GetClientRect( hwnd, @rc )
+
+    dim as RECT rcHero, rcTabs, rcBody, rcFoot
+    frmAbout_GetBands( hwnd, rcHero, rcTabs, rcBody, rcFoot )
+
+    ' ---- the bands tile the client exactly, with no gap and no overlap ----------------
+    ABOUTASSERT( rcHero.top = 0, "the hero does not start at the top of the client" )
+    ABOUTASSERT( rcHero.bottom = rcTabs.top, "a gap between the hero and the tab strip" )
+    ABOUTASSERT( rcTabs.bottom = rcBody.top, "a gap between the tab strip and the body" )
+    ABOUTASSERT( rcBody.bottom = rcFoot.top, "a gap between the body and the footer" )
+    ABOUTASSERT( rcFoot.bottom = rc.bottom, "the footer does not reach the bottom of the client" )
+
+    ' ---- the tab strip has exactly the three pages, in enum order --------------------
+    ABOUTASSERT( PsSelectBar_GetCount( HWND_FRMABOUT_TABS ) = 3, _
+                 "the tab strip does not have exactly three panels" )
+    ABOUTASSERT( PsSelectBar_GetIdealWidth( HWND_FRMABOUT_TABS ) <= rcTabs.right, _
+                 "the three tab captions are wider than the dialog" )
+
+    ' ---- the credits roll -------------------------------------------------------------
+    ABOUTASSERT( PsListTree_GetCount( HWND_FRMABOUT_CREDITS ) = 6, _
+                 "the credits roll is not six rows" )
+    ' Six rows at FRMABOUT_ROW_H plus the header must fit the body WITHOUT a scrollbar. This
+    ' is the assertion that fails first if a contributor is added and nobody re-measures.
+    scope
+        dim as long needH = AfxScaleY(FRMABOUT_ROW_H) * (6 + 1)
+        dim as RECT rcList
+        GetWindowRect( HWND_FRMABOUT_CREDITS, @rcList )
+        dim as long haveH = rcList.bottom - rcList.top
+        ABOUTASSERT( needH <= haveH, _
+                     "the credits roll needs " & str(needH) & "px and has " & str(haveH) )
+    end scope
+
+    ' ---- both body controls occupy the SAME rect --------------------------------------
+    ' They are shown one at a time, so a divergence here is invisible until someone switches
+    ' tabs and the panel jumps.
+    scope
+        dim as RECT r1, r2
+        GetWindowRect( HWND_FRMABOUT_CREDITS, @r1 )
+        GetWindowRect( HWND_FRMABOUT_LICENSE, @r2 )
+        dim as boolean bSame = (r1.left = r2.left) andalso (r1.top = r2.top) andalso _
+                               (r1.right = r2.right) andalso (r1.bottom = r2.bottom)
+        ABOUTASSERT( bSame, "the Credits and License pages do not share one rect" )
+    end scope
+
+    ' ---- the footer buttons are inside the footer and in the right order --------------
+    scope
+        dim as HWND hW = GetDlgItem(hwnd, IDC_FRMABOUT_CMDWEBSITE)
+        dim as HWND hG = GetDlgItem(hwnd, IDC_FRMABOUT_CMDGITHUB)
+        dim as HWND hC = GetDlgItem(hwnd, IDC_FRMABOUT_CMDCLOSE)
+        ABOUTASSERT( (hW <> 0) andalso (hG <> 0) andalso (hC <> 0), "a footer button is missing" )
+
+        dim as RECT rW, rG, rC
+        GetWindowRect( hW, @rW ) : GetWindowRect( hG, @rG ) : GetWindowRect( hC, @rC )
+        ABOUTASSERT( rW.right <= rG.left, "Website is not left of GitHub" )
+        ABOUTASSERT( rG.right <= rC.left, "GitHub is not left of Close" )
+
+        dim as RECT rClient = rC
+        MapWindowPoints( HWND_DESKTOP, hwnd, cast(LPPOINT, @rClient), 2 )
+        ABOUTASSERT( rClient.top >= rcFoot.top, "a footer button sits above the footer band" )
+        ABOUTASSERT( rClient.bottom <= rcFoot.bottom, "a footer button overflows the footer band" )
+    end scope
+
+    ' ---- the icon plate ----------------------------------------------------------------
+    ' Square, and fully inside the hero band. Square matters because the plate is stroked as
+    ' a ROUNDED RECT with one curvature: on a non-square cell the two corner radii stop
+    ' matching and it reads as a lozenge. The plate is 96 unscaled in both axes, but AfxScaleX
+    ' and AfxScaleY are separate functions, so squareness is a property to check rather than
+    ' one to assume.
+    scope
+        dim as RECT rcPlate
+        frmAbout_GetPlateRect( @rcHero, rcPlate )
+        ABOUTASSERT( (rcPlate.right - rcPlate.left) = (rcPlate.bottom - rcPlate.top), _
+                     "the icon plate is not square" )
+        ABOUTASSERT( (rcPlate.top >= rcHero.top) andalso (rcPlate.bottom <= rcHero.bottom), _
+                     "the icon plate overflows the hero band" )
+    end scope
+
+    ' ---- every localized id this dialog owns actually resolves --------------------------
+    ' L(id,"default") DISCARDS the default -- an id with no entry in english.lang renders as
+    ' an EMPTY STRING, so a missing caption is a blank tab, not a build error.
+    scope
+        dim as long nBlank = 0
+        for i as long = 530 to 545
+            if len(LL(i)) = 0 then
+                nBlank += 1
+                dim as string s = "  (blank localization id " & str(i) & ")"
+                ? s
+            end if
+        next
+        ABOUTASSERT( nBlank = 0, "one or more of ids 530-545 is missing from english.lang" )
+    end scope
+
+    scope
+        dim as string s = "frmAbout: " & str(gAboutAssertPass) & " passed, " & str(gAboutAssertFail) & " failed"
+        ? s
+    end scope
+    ? ""
+
+end sub
+
+
+' ========================================================================================
+' Window procedure
+' ========================================================================================
+private function frmAbout_WndProc( _
             byval hwnd   as HWND, _
             byval uMsg   as UINT, _
             byval wParam as WPARAM, _
@@ -87,14 +802,50 @@ function frmAbout_WndProc( _
             ) as LRESULT
 
     select case uMsg
-        HANDLE_MSG (hwnd, WM_CREATE,  frmAbout_OnCreate)
-        HANDLE_MSG (hwnd, WM_CLOSE,   frmAbout_OnClose)
-        HANDLE_MSG (hwnd, WM_DESTROY, frmAbout_OnDestroy)
-        HANDLE_MSG (hwnd, WM_COMMAND, frmAbout_OnCommand)
+
+        case WM_CREATE
+            ' Modal: keep the rest of the app out while this is up.
+            DisableAllModeless()
+            return 0
+
+        case WM_ERASEBKGND
+            ' The whole client is painted in WM_PAINT through one buffer, so letting the
+            ' system erase first would only flicker.
+            return 1
+
+        case WM_PAINT
+            return frmAbout_OnPaint( hwnd )
+
+        case WM_SIZE
+            frmAbout_PositionWindows( hwnd )
+            return 0
+
+        case WM_COMMAND
+            ' PsButton routes through its click callback, not WM_COMMAND. What still arrives
+            ' here is IDCANCEL, which IsDialogMessage synthesises for the Escape key.
+            select case loword(wParam)
+                case IDCANCEL
+                    SendMessage( hwnd, WM_CLOSE, 0, 0 )
+                    return 0
+            end select
+
+        case WM_CLOSE
+            EnableAllModeless()
+            DestroyWindow( hwnd )
+            return 0
+
+        case WM_DESTROY
+            HWND_FRMABOUT         = 0
+            HWND_FRMABOUT_TABS    = 0
+            HWND_FRMABOUT_CREDITS = 0
+            HWND_FRMABOUT_LICENSE = 0
+            PostQuitMessage(0)
+            return 0
+
     end select
 
-    ' for messages that we don't deal with
-    function = DefWindowProc(hwnd, uMsg, wParam, lParam)
+    function = DefWindowProc( hwnd, uMsg, wParam, lParam )
+
 end function
 
 
@@ -103,43 +854,139 @@ end function
 ' ========================================================================================
 function frmAbout_Show( byval hWndParent as HWND ) as LRESULT
 
-    '  Create the main window and child controls
+    gAboutPage = ABOUTPAGE_ABOUT
+
     dim pWindow as CWindow ptr = new CWindow
 
-    HWND_FRMABOUT = pWindow->Create( hWndParent, L(74,"About"), @frmAbout_WndProc, 0, 0, 0, 0, _
+    HWND_FRMABOUT = pWindow->Create( hWndParent, L(74,"About") & " " & APPNAME, _
+        @frmAbout_WndProc, 0, 0, 0, 0, _
         WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
         WS_EX_DLGMODALFRAME or WS_EX_CONTROLPARENT or WS_EX_LEFT )
-    pWindow->SetClientSize(580, 280)
-    pWindow->Center(pWindow->hWindow, hWndParent)
-        
-    ' Add an image control                                                         
-    dim pImageCtx as CImageCtx = CImageCtx(pWindow, IDC_FRMABOUT_IMAGE1, , 60, 50, 100, 100)
-    pImageCtx.LoadImageFromResource( pWindow->InstanceHandle, "IMAGE_MAINICON" )
+    pWindow->SetClientSize( FRMABOUT_CLIENT_W, FRMABOUT_CLIENT_H )
+    pWindow->Center( pWindow->hWindow, hWndParent )
 
-    dim as HWND hLabel = _
-        pWindow->AddControl("LABEL", , IDC_FRMABOUT_LBLAPPNAME, APPNAME, 200, 40, 400, 30, _
-            WS_CHILD or WS_VISIBLE or SS_LEFT or SS_CENTERIMAGE or SS_NOTIFY, WS_EX_LEFT or WS_EX_LTRREADING)
-    Dim As HFONT hFont = pWindow->CreateFont("", 12, FW_BOLD)
-    AfxSetWindowFont hLabel, hFont, True
+    ' ---- the tab strip, CREATED FIRST --------------------------------------------------
+    '
+    ' CREATION ORDER IS THE TAB ORDER. These controls live on an ordinary CWindow, not a
+    ' dialog template, so there is no ordinal to set: GetNextDlgTabItem walks the child
+    ' Z-ORDER, and Z-order is creation order.
+    '
+    ' PsSelectBar itself takes no focus (it is mouse-only), so what this really fixes is the
+    ' order of everything after it.
+    HWND_FRMABOUT_TABS = PsSelectBar_Create( HWND_FRMABOUT, IDC_FRMABOUT_TABS )
+    PsSelectBar_SetFont( HWND_FRMABOUT_TABS, ghFont(GUIFONT_11) )
+    ' The first panel's left padding is what puts "About" on the dialog's margin, since the
+    ' bar spans the full client width.
+    PsSelectBar_SetPadding( HWND_FRMABOUT_TABS, AfxScaleX(14), AfxScaleX(14) )
+    PsSelectBar_AddPanel( HWND_FRMABOUT_TABS, L(74,"About") )
+    PsSelectBar_AddPanel( HWND_FRMABOUT_TABS, L(532,"Credits") )
+    PsSelectBar_AddPanel( HWND_FRMABOUT_TABS, L(533,"License") )
+    PsSelectBar_SetPanelPadding( HWND_FRMABOUT_TABS, 0, _
+                                 AfxScaleX(FRMABOUT_MARGIN), AfxScaleX(14) )
+    PsSelectBar_SetIndicator( HWND_FRMABOUT_TABS, AfxScaleY(2), AfxScaleY(6) )
+    PsSelectBar_SetSelChangeCallback( HWND_FRMABOUT_TABS, @frmAbout_TabChanged )
 
-    pWindow->AddControl("LABEL", , IDC_FRMABOUT_LBLAPPVERSION, "Version " & APPVERSION & APPBITS, 200, 71, 200, 20, _
-        WS_CHILD or WS_VISIBLE or SS_LEFT or SS_NOTIFY, WS_EX_LEFT or WS_EX_LTRREADING)
+    ' ---- the Credits list --------------------------------------------------------------
+    HWND_FRMABOUT_CREDITS = PsListTree_Create( HWND_FRMABOUT, IDC_FRMABOUT_CREDITS )
+    PsListTree_AddColumn( HWND_FRMABOUT_CREDITS, L(539,"Contributor"), pWindow->ScaleX(FRMABOUT_COL_WHO) )
+    PsListTree_AddColumn( HWND_FRMABOUT_CREDITS, L(540,"For"), pWindow->ScaleX(200) )
+    PsListTree_SetFillColumn( HWND_FRMABOUT_CREDITS, 1 )
+    PsListTree_ShowHeader( HWND_FRMABOUT_CREDITS, true )
+    PsListTree_SetPaintCallback( HWND_FRMABOUT_CREDITS, @frmAbout_CreditsPaintRow )
+    PsListTree_SetHeaderPaintCallback( HWND_FRMABOUT_CREDITS, @frmAbout_CreditsPaintHeader )
+    PsListTree_SetTooltipCallback( HWND_FRMABOUT_CREDITS, @frmAbout_CreditsTooltip )
+    PsListTree_SetHeaderTooltipCallback( HWND_FRMABOUT_CREDITS, @frmAbout_CreditsHeaderTooltip )
+    PsListTree_SetFont( HWND_FRMABOUT_CREDITS, ghFont(GUIFONT_11) )
+    ' UNSCALED: PsListTree scales what it is handed, so a pre-scaled value is scaled twice.
+    PsListTree_SetRowHeight( HWND_FRMABOUT_CREDITS, FRMABOUT_ROW_H )
+    ' RAW PIXELS and deliberately not DPI-scaled -- a chrome hairline should stay a hairline.
+    ' PsListTree is the odd one out in its own API here: RowHeight above IS scaled internally.
+    PsListTree_SetBorderWidth( HWND_FRMABOUT_CREDITS, 1 )
 
-    pWindow->AddControl("LABEL", , IDC_FRMABOUT_LBLAPPCOPYRIGHT, APPCOPYRIGHT, 200, 115, 370, 20, _
-        WS_CHILD or WS_VISIBLE or SS_LEFT or SS_NOTIFY, WS_EX_LEFT or WS_EX_LTRREADING)
+    ' ---- the License field -------------------------------------------------------------
+    ' Multiline (creation-time, not a setter) and read-only. This is the one control that
+    ' makes PsTextBox_FilterMessage mandatory in the pump below.
+    HWND_FRMABOUT_LICENSE = PsTextBox_Create( HWND_FRMABOUT, IDC_FRMABOUT_LICENSE, true )
+    PsTextBox_SetFont( HWND_FRMABOUT_LICENSE, ghFont(GUIFONT_11) )
+    PsTextBox_SetBorderWidth( HWND_FRMABOUT_LICENSE, 1 )
+    PsTextBox_SetCornerRadius( HWND_FRMABOUT_LICENSE, 0 )
+    PsTextBox_SetMargins( HWND_FRMABOUT_LICENSE, AfxScaleX(10), AfxScaleX(10) )
+    PsTextBox_SetText( HWND_FRMABOUT_LICENSE, frmAbout_LicenseText() )
+    PsTextBox_SetReadOnly( HWND_FRMABOUT_LICENSE, true )
 
-    pWindow->AddControl("LABEL", , IDC_FRMABOUT_LBLJOSE, "Special thanks to: José Roca (AfxNova Framework)", _
-        200, 143, 300, 18, WS_CHILD or WS_VISIBLE or SS_LEFT or SS_NOTIFY, WS_EX_LEFT or WS_EX_LTRREADING)
+    ' ---- the three footer buttons ------------------------------------------------------
+    dim as HWND hWebsite = PsButton_Create( HWND_FRMABOUT, IDC_FRMABOUT_CMDWEBSITE )
+    PsButton_SetText( hWebsite, L(534,"Website") )
+    PsButton_SetFont( hWebsite, ghFont(GUIFONT_11) )
+    PsButton_SetClickCallback( hWebsite, @frmAbout_ButtonClickCallback )
 
-    pWindow->AddControl("LABEL", , IDC_FRMABOUT_LBLOTHERS, "Paul Doe and ImortisInglorian for ideas and testing", _
-        200, 159, 350, 18, WS_CHILD or WS_VISIBLE or SS_LEFT or SS_NOTIFY, WS_EX_LEFT or WS_EX_LTRREADING)
+    dim as HWND hGitHub = PsButton_Create( HWND_FRMABOUT, IDC_FRMABOUT_CMDGITHUB )
+    PsButton_SetText( hGitHub, L(535,"GitHub") )
+    PsButton_SetFont( hGitHub, ghFont(GUIFONT_11) )
+    PsButton_SetClickCallback( hGitHub, @frmAbout_ButtonClickCallback )
 
-    ' Process Windows messages
-    function = pWindow->DoEvents(SW_SHOW)
-    
-    ' Delete the frmAbout CWindow class manually allocated memory 
+    dim as HWND hClose = PsButton_Create( HWND_FRMABOUT, IDC_FRMABOUT_CMDCLOSE )
+    PsButton_SetText( hClose, L(161,"Close") )
+    PsButton_SetFont( hClose, ghFont(GUIFONT_11) )
+    PsButton_SetDefault( hClose, true )
+    PsButton_SetClickCallback( hClose, @frmAbout_ButtonClickCallback )
+
+    ShowWindow( HWND_FRMABOUT_TABS, SW_SHOW )
+    ShowWindow( hWebsite, SW_SHOW )
+    ShowWindow( hGitHub, SW_SHOW )
+    ShowWindow( hClose, SW_SHOW )
+
+    frmAbout_BuildCredits()
+    frmAbout_ApplyTheme( HWND_FRMABOUT )
+    frmAbout_PositionWindows( HWND_FRMABOUT )
+    ' Seeds the page WITHOUT going through the select bar, whose SelChange fires for user
+    ' action only. This is also what hides both body controls, which are created visible.
+    frmAbout_ShowPage( HWND_FRMABOUT, ABOUTPAGE_ABOUT )
+
+    ShowWindow( HWND_FRMABOUT, SW_SHOW )
+    UpdateWindow( HWND_FRMABOUT )
+
+    ' IsDialogMessage ignores Tab until a child already holds the focus, and an ordinary
+    ' CWindow has no dialog manager to arrange that. (See the WS_EX_CONTROLPARENT section of
+    ' C:\dev\Learnings.md.) Focus starts on Close: it is the default button and the only
+    ' thing most people open this box to press.
+    SetFocus( hClose )
+
+    frmAbout_RunLayoutSelfTest( HWND_FRMABOUT )
+
+    ' Close the dialog immediately, so a headless run reaches the end of the process and the
+    ' console output actually flushes. Without this the modal loop below blocks forever
+    ' waiting for a human, and a run that is killed rather than exited loses every buffered
+    ' line -- including the self-test's own report.
+    if environ("TIKO_ABOUT_AUTOCLOSE") = "1" then
+        PostMessage( HWND_FRMABOUT, WM_CLOSE, 0, 0 )
+    end if
+
+    ' ---- message loop -------------------------------------------------------------------
+    ' Its own loop, not CWindow.DoEvents: that has no *_FilterMessage hooks, and the License
+    ' field's right-click menu is a PsPopupMenu that needs one.
+    dim uMsg as MSG
+    while GetMessage( @uMsg, null, 0, 0 )
+
+        ' MANDATORY. Without it that menu has no keyboard navigation and never closes on an
+        ' outside click.
+        if PsTextBox_FilterMessage( @uMsg ) then continue while
+
+        ' ESCAPE closes -- handled explicitly, and AFTER the popup filter above so an open
+        ' context menu closes on Escape first rather than the whole dialog going with it.
+        if (uMsg.message = WM_KEYDOWN) andalso (uMsg.wParam = VK_ESCAPE) then
+            SendMessage( HWND_FRMABOUT, WM_CLOSE, 0, 0 )
+            continue while
+        end if
+
+        if IsDialogMessage( HWND_FRMABOUT, @uMsg ) = 0 then
+            TranslateMessage( @uMsg )
+            DispatchMessage( @uMsg )
+        end if
+    wend
+
     if pWindow then delete(pWindow)
 
-end function
+    function = 0
 
-
+end function
