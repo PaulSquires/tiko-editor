@@ -1547,6 +1547,45 @@ end function
 
 
 ' ========================================================================================
+' Border chrome. Colour only repaints; the WIDTH also re-lays-out, because the surface,
+' scrollbar and header are inset by it.
+' ========================================================================================
+function PsListTree_GetBorderColor( byval hListControl as HWND ) as COLORREF
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return 0
+    return pList->BorderColor
+end function
+
+sub PsListTree_SetBorderColor( byval hListControl as HWND, byval clr as COLORREF )
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then exit sub
+    if pList->BorderColor = clr then exit sub
+    pList->BorderColor = clr
+    InvalidateRect( hListControl, NULL, TRUE )
+end sub
+
+function PsListTree_GetBorderWidth( byval hListControl as HWND ) as integer
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return 0
+    return pList->nBorderWidth
+end function
+
+sub PsListTree_SetBorderWidth( byval hListControl as HWND, byval nWidth as integer )
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then exit sub
+    if nWidth < 0 then nWidth = 0
+    if pList->nBorderWidth = nWidth then exit sub
+    pList->nBorderWidth = nWidth
+    ' The children's rects are derived from this, so re-derive them rather than only
+    ' repainting -- and the surface's height changing means rows-per-page changed too,
+    ' which is what PositionWindows' caller normally reconciles on WM_SIZE.
+    PsListTree_PositionWindows( hListControl )
+    PsListTree_SyncScrollBar( pList )
+    InvalidateRect( hListControl, NULL, TRUE )
+end sub
+
+
+' ========================================================================================
 ' Retrieve the current row count in the custom listbox control.
 ' ========================================================================================
 function PsListTree_GetCount( byval hListControl as HWND ) as integer
@@ -1577,6 +1616,15 @@ function PsListTree_PositionWindows( byval hwnd as HWND ) as LRESULT
     dim as Rect rc
     GetClientRect( hwnd, @rc )
     dim pWindow as CWindow ptr = AfxCWindowPtr( hwnd )
+
+    ' Inset by the border, so the frame the container paints is not covered by a child.
+    ' Raw pixels, NOT DPI-scaled -- see the SetBorderWidth contract. Zero by default, which
+    ' leaves this whole function byte-for-byte the geometry it always produced.
+    if pList->nBorderWidth > 0 then
+        InflateRect( @rc, -pList->nBorderWidth, -pList->nBorderWidth )
+        if rc.right  < rc.left then rc.right  = rc.left
+        if rc.bottom < rc.top  then rc.bottom = rc.top
+    end if
 
     ' Reserve a strip on the right edge for the scrollbar, but only while it is shown
     ' (auto-hide gives the width back to the listbox).
@@ -1754,7 +1802,33 @@ end function
         
 ' ========================================================================================
 ' Process WM_PAINT message for window/dialog: PsListTree
+'
+' The container's client is almost entirely covered by its children (surface, scrollbar,
+' header), so the only pixels this paint owns are the background beneath them and -- when
+' the host has opted in -- the border frame around the edge. PositionWindows insets the
+' children by the same nBorderWidth, so the frame is never painted over.
+'
+' Square corners, matching PsTextBox at its default nCornerRadius of 0: PaintRoundBorderRect
+' with curvature 0 goes through the same path a plain bordered rect would, and gives a
+' bordered PsListTree and a bordered PsTextBox identical chrome.
 ' ========================================================================================
+' The container's whole render, factored out of WM_PAINT so a probe can drive the EXACT path
+' the screen gets rather than a re-derivation of it (PsDatePicker's DTP_CalRender split -- a
+' probe that renders through its own copy of the drawing code proves nothing about the real
+' one). Takes an already-begun buffer; the caller owns Begin/End.
+private sub PsListTree_RenderFrame( byval pList as PSLISTTREE ptr, byval b as PsBufferPaint ptr )
+    if (pList = 0) orelse (b = 0) then exit sub
+    b->SetBackColor( pList->BackColor )
+    if pList->nBorderWidth > 0 then
+        dim as RECT rc = b->rcClient()
+        b->SetPenColor( pList->BorderColor )
+        b->PaintRoundBorderRect( @rc, 0, pList->nBorderWidth )
+    else
+        b->PaintClientRect()
+    end if
+end sub
+
+
 function PsListTree_OnPaint( byval hwnd as HWND ) as LRESULT
     dim as PSLISTTREE ptr pList = GetListTreePointer(hwnd)
     if pList = null then return 0
@@ -1762,11 +1836,86 @@ function PsListTree_OnPaint( byval hwnd as HWND ) as LRESULT
     dim as PsBufferPaint b
 
     b.BeginDoubleBuffer(hwnd)
-    b.SetBackColor( pList->BackColor )
-    b.PaintClientRect()
+    PsListTree_RenderFrame( pList, @b )
     b.EndDoubleBuffer()
 
     function = 0
+end function
+
+
+' ========================================================================================
+' Render the container offscreen through PsListTree_RenderFrame -- the same call WM_PAINT
+' makes -- and return the colour at one client point as a COLORREF, or -1 if the point is
+' outside the client or the offscreen surface could not be built.
+'
+' Public for the reason PsButton_CountRenderedTones is: a host that themes the border should
+' be able to assert its colour actually reached the pixels, rather than that a setter stored
+' it. Reading a point INSIDE the frame band and one just inside it distinguishes all three
+' ways this can go wrong at once -- no border, wrong colour, and a fill that floods the
+' interior (the mistake this family has made four times with PaintBorderRect).
+' ========================================================================================
+function PsListTree_ProbeRenderedPixel( byval hListControl as HWND, byval x as integer, byval y as integer ) as long
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return -1
+
+    dim as RECT rcClient
+    GetClientRect( hListControl, @rcClient )
+    dim as long cw = rcClient.right - rcClient.left
+    dim as long ch = rcClient.bottom - rcClient.top
+    if (cw <= 0) orelse (ch <= 0) then return -1
+    if (x < 0) orelse (y < 0) orelse (x >= cw) orelse (y >= ch) then return -1
+
+    dim as HDC hRef = GetDC( hListControl )
+    if hRef = 0 then return -1
+    dim as HDC hMem = CreateCompatibleDC( hRef )
+    if hMem = 0 then
+        ReleaseDC( hListControl, hRef )
+        return -1
+    end if
+
+    ' 32bpp top-down, matching what PsBufferPaint.SetupBitmap builds, so the pixels read back
+    ' are laid out the way the renderer wrote them.
+    dim as BITMAPINFO bmi
+    with bmi.bmiHeader
+        .biSize        = sizeof(BITMAPINFOHEADER)
+        .biWidth       = cw
+        .biHeight      = -ch
+        .biPlanes      = 1
+        .biBitCount    = 32
+        .biCompression = BI_RGB
+    end with
+    dim as any ptr pBits
+    dim as HBITMAP hbm = CreateDIBSection( hRef, @bmi, DIB_RGB_COLORS, @pBits, null, 0 )
+    ReleaseDC( hListControl, hRef )
+    if (hbm = 0) orelse (pBits = 0) then
+        if hbm then DeleteObject( hbm )
+        DeleteDC( hMem )
+        return -1
+    end if
+    dim as HGDIOBJ hOldBmp = SelectObject( hMem, hbm )
+
+    scope
+        dim as PsBufferPaint b
+        ' Four-arg form: hMem is BOTH the blit target and the cached back buffer, so the final
+        ' BitBlt is a self-copy and the bitmap survives EndDoubleBuffer for us to read.
+        b.BeginDoubleBuffer( hListControl, hMem, rcClient, hMem )
+        PsListTree_RenderFrame( pList, @b )
+        b.EndDoubleBuffer()
+    end scope
+
+    ' The DIB holds B,G,R,A per pixel; as a little-endian ulong that is A<<24|R<<16|G<<8|B.
+    ' A COLORREF is 0x00BBGGRR, so the red and blue bytes swap on the way out -- returning a
+    ' raw RGB here would silently mismatch every COLORREF a caller compares it against.
+    dim as ulong ptr px = cast( ulong ptr, pBits )
+    dim as ulong c = px[(y * cw) + x]
+    dim as long result = cast( long, ((c and &h000000FF) shl 16) or _
+                                     ( c and &h0000FF00 )        or _
+                                     ((c and &h00FF0000) shr 16) )
+
+    SelectObject( hMem, hOldBmp )
+    DeleteObject( hbm )
+    DeleteDC( hMem )
+    return result
 end function
 
 

@@ -464,6 +464,16 @@ sub OptionsTheme_ApplyTextBox( byval hTextBox as HWND )
     ThemeTextBoxContextMenu( hTextBox )
 end sub
 
+' The list counterpart of the border ApplyTextBox sets: same width, same color, same square
+' corners, so a PsListTree and a PsTextBox on one page carry identical chrome. There is no
+' focus-border equivalent -- PsTextBox switches to FocusBorderColor when its editor has the
+' caret, and a list has no caret to signal.
+sub OptionsTheme_ApplyListBorder( byval hList as HWND )
+    if hList = 0 then exit sub
+    PsListTree_SetBorderColor( hList, ghEditor.Divider )
+    PsListTree_SetBorderWidth( hList, 1 )
+end sub
+
 sub OptionsTheme_FillNumeric( byval nc as PSNUMERICUPDOWN_COLORS ptr )
     if nc = 0 then exit sub
     nc->BackColor               = ghPanel.BackColor

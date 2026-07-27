@@ -219,6 +219,10 @@ declare sub      OptionsTheme_FillButton( byval bc as PSBUTTON_COLORS ptr )
 declare sub      OptionsTheme_FillNumeric( byval nc as PSNUMERICUPDOWN_COLORS ptr )
 declare sub      OptionsTheme_FillCombo( byval cc as PSCOMBOBOX_COLORS ptr, byval pc as PSPOPUPMENU_COLORS ptr )
 declare sub      OptionsTheme_ApplyTextBox( byval hTextBox as HWND )
+' Give a PsListTree the same 1px frame OptionsTheme_ApplyTextBox gives a PsTextBox, so a
+' list and a text field stacked on the same page read as the same kind of control. One
+' helper rather than two call sites, so the two borders cannot drift apart.
+declare sub      OptionsTheme_ApplyListBorder( byval hList as HWND )
 
 declare sub      OptionsRows_Init()
 declare sub      OptionsWork_Load()

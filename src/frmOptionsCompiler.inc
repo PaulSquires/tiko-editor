@@ -107,7 +107,8 @@ private sub frmOptionsCompiler_ToolchainPaint( byval p as PSLISTTREE_PAINTINFO p
         backclr = ghPanel.BackColorHot
         foreclr = ghPanel.ForeColorHot
     else
-        backclr = ghPanel.BackColor
+        ' Idle rows match the nav panel's lighter shade (see frmOptions nav list).
+        backclr = ghTopTabs.BackColorHot
         foreclr = ghPanel.ForeColor
     end if
     p->b->SetBackColor( backclr )
@@ -268,7 +269,8 @@ end sub
 sub frmOptionsCompiler_ApplyTheme()
     if gCompBuilt = false then exit sub
 
-    PsListTree_SetBackColor( ghCompToolchains, ghPanel.BackColor )
+    PsListTree_SetBackColor( ghCompToolchains, ghTopTabs.BackColorHot )
+    OptionsTheme_ApplyListBorder( ghCompToolchains )
     PsListTree_SetScrollBarColors( ghCompToolchains, ghPanel.BackColorScrollBar, _
                                  ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
 

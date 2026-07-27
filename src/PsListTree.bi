@@ -278,6 +278,15 @@ type PSLISTTREE
     dragTimerOn     as boolean = false    ' is the auto-scroll timer running?
     dragIndicatorColor as COLORREF = &h00D77800  ' insertion line / header highlight (accent blue; SetDragIndicatorColor overrides)
     BackColor       as COLORREF
+    ' --- Optional 1px-style chrome border around the whole control, drawn by the CONTAINER
+    '     in its WM_PAINT; the surface / scrollbar / header are inset by nBorderWidth so the
+    '     frame is never painted over. Defaults to OFF (width 0), which is what keeps every
+    '     existing host pixel-identical. The width is in RAW PIXELS and is deliberately NOT
+    '     DPI-scaled -- same rule as PsTextBox's own border and PsMenuBar's separator: a
+    '     hairline should stay a hairline. Set it to 1 with BorderColor equal to a sibling
+    '     PsTextBox's BorderColor and the two controls' frames match exactly.
+    BorderColor     as COLORREF = &h007A7A7A   ' BGR(122,122,122) -- PsTextBox's default
+    nBorderWidth    as integer = 0        ' 0 = no border drawn
     ' Named hRowFont, NOT hFont: a field named hFont case-insensitively shadows the HFONT
     ' type within this TYPE body, so a SECOND `... as HFONT` field (hTwistyFont below) would
     ' fail to compile. Renaming the row-font field frees the type name (Learnings.md,
@@ -927,6 +936,28 @@ declare function PsListTree_SetRowHeight( byval hListControl as HWND, byval heig
 declare function PsListTree_GetFont( byval hListControl as HWND ) as HFONT
 declare function PsListTree_SetFont( byval hListControl as HWND, byval hFont as HFONT ) as boolean
 declare sub      PsListTree_SetHoverTime( byval hListControl as HWND, byval milliseconds as integer )
+
+' ----------------------------------------------------------------------------------------
+' Border chrome (OFF by default).  Width 0 draws no border and reserves no space, which is
+' the behaviour every host had before this existed.  A non-zero width draws a square frame
+' around the whole control and insets the row surface, the scrollbar strip and the column
+' header band by that many pixels, so nothing is painted over the frame.
+'
+' The width is in RAW PIXELS and is deliberately NOT DPI-scaled -- a chrome hairline should
+' stay a hairline (PsTextBox's border and PsMenuBar's separator follow the same rule).  Give
+' this the same width and colour as a neighbouring PsTextBox and the two frames match.
+' ----------------------------------------------------------------------------------------
+declare function PsListTree_GetBorderColor( byval hListControl as HWND ) as COLORREF
+declare sub      PsListTree_SetBorderColor( byval hListControl as HWND, byval clr as COLORREF )
+declare function PsListTree_GetBorderWidth( byval hListControl as HWND ) as integer
+declare sub      PsListTree_SetBorderWidth( byval hListControl as HWND, byval nWidth as integer )
+
+' Render the CONTAINER offscreen through the same code its WM_PAINT runs, and return the
+' colour at one client point as a COLORREF (-1 = point outside the client, or the offscreen
+' surface could not be built).  Exposed so a host that themes the border can assert the
+' colour reached the pixels rather than merely that the setter stored it.  Note this renders
+' the container only -- the rows live on a child surface and are not in this image.
+declare function PsListTree_ProbeRenderedPixel( byval hListControl as HWND, byval x as integer, byval y as integer ) as long
 
 ' ----------------------------------------------------------------------------------------
 ' Tree appearance.  All OFF / zero-effect by default, so a control that only builds flat

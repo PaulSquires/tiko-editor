@@ -198,7 +198,8 @@ private sub frmOptions_NavPaintCallback( byval p as PSLISTTREE_PAINTINFO ptr )
         backclr = ghPanel.BackColorHot
         foreclr = ghPanel.ForeColorHot
     else
-        backclr = ghPanel.BackColor
+        ' Idle rows read in the nav panel's own shade -- the separator between nav and page now.
+        backclr = ghTopTabs.BackColorHot
         foreclr = ghPanel.ForeColor
     end if
 
@@ -472,13 +473,22 @@ private sub frmOptions_PositionWindows( byval hwnd as HWND )
     dim as long boxX = mx + glyphW
     dim as long boxW = (navW - mx - inset) - boxX
     if boxW < 0 then boxW = 0
-    SetWindowPos( HWND_FRMOPTIONS_SEARCH, 0, boxX, searchY + inset, boxW, searchH - (2 * inset), _
+    ' Shrunk from the top by 2px to follow the frame, whose top edge is nudged down the same
+    ' amount in frmOptions_OnPaint -- the box top-inset now matches its bottom.
+    dim as long searchShrink = AfxScaleY(2)
+    SetWindowPos( HWND_FRMOPTIONS_SEARCH, 0, boxX, searchY + inset + searchShrink, _
+                  boxW, searchH - (2 * inset) - searchShrink, _
                   SWP_NOZORDER or SWP_NOACTIVATE )
 
     dim as long navTop = titleH + AfxScaleY(OPTROW_PADTOP)
     dim as long navH   = bodyH - navTop
     if navH < 0 then navH = 0
-    SetWindowPos( HWND_FRMOPTIONS_NAV, 0, 0, navTop, navW, navH, SWP_NOZORDER or SWP_NOACTIVATE )
+    ' Inset the nav listbox by AfxScaleX(2) on BOTH sides within the nav column: pushed off the
+    ' client left edge, and pulled the same amount off the divider on the right.
+    dim as long navInset = AfxScaleX(2)
+    dim as long navListW = navW - (navInset * 2)
+    if navListW < 0 then navListW = 0
+    SetWindowPos( HWND_FRMOPTIONS_NAV, 0, navInset, navTop, navListW, navH, SWP_NOZORDER or SWP_NOACTIVATE )
 
     dim as long scrollX = navW
     dim as long scrollY = titleH
@@ -521,6 +531,18 @@ private function frmOptions_OnPaint( byval hwnd as HWND ) as LRESULT
     dim as long navW    = AfxScaleX(FRMOPTIONS_NAV_W)
     dim as long titleH  = AfxScaleY(FRMOPTIONS_TITLE_H)
     dim as long footerH = AfxScaleY(FRMOPTIONS_FOOTER_H)
+
+    ' Fill the WHOLE left panel column in its own lighter shade, so the nav list's inset strips,
+    ' the search-box band above it, and the empty area below the last row all read the same --
+    ' the nav listbox only paints its own (inset) client, which left dark gaps around it. This is
+    ' the separator between the nav column and the page now that the vertical rule is gone.
+    dim as RECT rcNavPanel
+    rcNavPanel.left   = 0
+    rcNavPanel.top    = 0
+    rcNavPanel.right  = navW
+    rcNavPanel.bottom = rc.bottom
+    buffer.SetBackColor( ghTopTabs.BackColorHot )
+    buffer.PaintRect( @rcNavPanel )
 
     ' Page title band.
     dim as RECT rcTitle
@@ -567,16 +589,12 @@ private function frmOptions_OnPaint( byval hwnd as HWND ) as LRESULT
     buffer.SetPenColor( ghEditor.Divider )
     buffer.PaintRoundOutline( @rcFrame, curveG, 1 )
 
-    ' The one rule left in the dialog: the vertical split between the navigation list and
-    ' the page. A hairline -- width 1, deliberately not DPI-scaled. There is deliberately
-    ' NO rule above the footer buttons and none between settings rows.
-    buffer.SetForeColor( ghEditor.Divider )
-    buffer.PaintLine( 1, navW, 0, navW, rc.bottom - footerH )
+    ' There is NO vertical rule between the nav list and the page any more -- the nav panel's
+    ' own distinct background (ghTopTabs.BackColorHot) separates the two columns instead.
+    ' There is also deliberately NO rule above the footer buttons and none between settings rows.
 
-    ' ...and a hairline under the page title, closing the band off from the page content.
-    ' Same width-1, deliberately-unscaled rule as the vertical split: a hairline stays a
-    ' hairline. Starts at the nav edge so the two rules meet rather than leaving a nick.
-    buffer.PaintLine( 1, navW, titleH, rc.right, titleH )
+    ' No rule under the page title -- the dialog has no divider lines at all now; the nav
+    ' column's own background separates it from the page.
 
     buffer.EndDoubleBuffer()
     EndPaint( hwnd, @ps )
@@ -870,7 +888,9 @@ end function
 ' ========================================================================================
 private sub frmOptions_ApplyTheme( byval hwnd as HWND )
 
-    PsListTree_SetBackColor( HWND_FRMOPTIONS_NAV, ghPanel.BackColor )
+    ' The nav panel reads in its own distinct shade -- this is what separates it from the page
+    ' now that the vertical divider is gone.
+    PsListTree_SetBackColor( HWND_FRMOPTIONS_NAV, ghTopTabs.BackColorHot )
     PsListTree_SetScrollBarColors( HWND_FRMOPTIONS_NAV, ghPanel.BackColorScrollBar, _
                                  ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
 
