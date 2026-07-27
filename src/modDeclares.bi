@@ -379,7 +379,13 @@ dim shared as wstring * 10 _
 
 
 ' Braille spinner patterns - large clockwise rotation
-dim shared spinner(0 to 7) as wstring * 2 => { _
+' DWSTRING, not "wstring * 2": the -gen gas64 backend CORRUPTS static wstring array
+' initializers (measured 2026-07-27 -- it wrote 0:0 for six of these eight frames, and
+' widening the field to "wstring * 3" silenced the warning while leaving the data wrong).
+' DWSTRING is a UDT with constructors, so the array is built at runtime instead of being
+' emitted as static data, which sidesteps the backend bug entirely. gcc and gas64 now
+' produce identical code points. Consumers take the element itself, not its address.
+dim shared spinner(0 to 7) as DWSTRING => { _
     wstr(!"\u28F4"), _ ' ⠾
     wstr(!"\u28F2"), _ ' ⠽
     wstr(!"\u28B6"), _ ' ⠻

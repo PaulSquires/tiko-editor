@@ -70,7 +70,7 @@ sub frmStatusBar_PaintCallback( byval p as PSSTATUSBAR_PAINTINFO ptr )
             ' If a Spinner is active then that will take precedence over the good/bad compile icon.
             if (gApp.bShowSpinner = true) then
                 p->b->SetForeColor( ghStatusBar.ForeColor )
-                wszText = @spinner(gApp.SpinnerCurrentFrame)
+                wszText = spinner(gApp.SpinnerCurrentFrame)
                 p->b->SetBackColor( ghStatusBar.BackColor )
                 ' Position the spinner a bit better
                 rcIcon.top -= AfxScaleY(4)
