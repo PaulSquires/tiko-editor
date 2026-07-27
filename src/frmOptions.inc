@@ -146,9 +146,15 @@ function frmOptions_SaveEditorOptions() as long
     ' If a localization file is currently being edited then save it now.
     frmOptionsLocal_LocalEditCheck
 
-    ' If the localization has changed then note that a restart is needed. The current file
-    ' now lives in gLocalCurrentFile (was the FRAMELOCALIZATION groupbox caption).
-    if (ucase(gLocalCurrentFile) <> ucase(gConfig.LocalizationFile)) orelse (gLocalPhrasesEdit = true) then
+    ' If the localization has changed then note that a restart is needed -- meaning either a
+    ' different language was SELECTED, or the selected language's own file was rewritten.
+    '
+    ' It used to ask `gLocalPhrasesEdit = true` instead of the second test, which was a proxy
+    ' for "the strings this session is using have changed" and stopped being one when editing
+    ' and selecting became separate actions. Creating a new language, or fixing a typo in one
+    ' the editor is not running in, changes nothing about this session and must not claim it does.
+    dim as boolean bLangSwitched = (ucase(gLocalCurrentFile) <> ucase(gConfig.LocalizationFile))
+    if bLangSwitched orelse (gLocalSelectedEdited = true) then
         bChangesNextRun = true
     end if
     gConfig.LocalizationFile = gLocalCurrentFile

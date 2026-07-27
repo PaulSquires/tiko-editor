@@ -47,6 +47,11 @@ declare function frmOptionsLocal_LocalEditCheck() as long
 ' gConfig.LocalizationFile. Seeded when the dialog opens.
 extern gLocalCurrentFile as DWSTRING
 
+' TRUE once the SELECTED language's own file has been rewritten during this dialog session --
+' the only editing that the running application would notice, and so the only editing that
+' warrants the "changes apply next run" notice. Read by frmOptions_SaveEditorOptions.
+extern gLocalSelectedEdited as boolean
+
 declare sub      frmOptionsLocal_SeedFromConfig()
 declare function frmOptionsLocal_OwnsPage( byval nPage as long ) as boolean
 declare sub      frmOptionsLocal_Reset()

@@ -13,10 +13,18 @@
 
 '  frmOptionsLocal.inc  --  the Localization page (see frmOptionsLocal.bi).
 '
-'  THE SHAPE. A drawn heading naming the current language; a LANGUAGES list of everything in
-'  settings\languages with the four commands stacked vertically beside it; and --
-'  only while a language is being edited -- a PHRASE list underneath whose third column is edited
-'  in place.
+'  THE SHAPE IS TWO MUTUALLY EXCLUSIVE VIEWS of one page, under a drawn heading naming the
+'  current language:
+'
+'    PICKING  a LANGUAGES list of everything in settings\languages, full page height, with
+'             Select / New / Edit / Delete stacked at the top of the strip beside it.
+'    EDITING  a Back button, and a PHRASE list IN THEIR PLACE whose third column is edited in
+'             place -- double-click, ENTER or F2.
+'
+'  Nothing is shared between the two, which is what lets each list take the whole page instead
+'  of sharing it. They are two states of one page rather than two windows: a child dialog would
+'  need its own creation, theming, layout and pump handling and would still be showing and
+'  hiding the same controls at the end of it.
 '
 '  TWO THINGS THAT USED TO BE HERE AND ARE NOT.
 '    1. Select no longer opens a shell file dialog. The languages list IS the picker, so Select /
@@ -29,9 +37,9 @@
 '
 '  THE HEIGHT BUDGET IS THE CONSTRAINT. The page container is a fixed 680 x 510 unscaled and does
 '  not scroll; frmOptions_LayoutPlainPage DISCARDS the height this returns, so an overflow is
-'  silent and only TIKO_OPTIONS_SELFTEST's fit test reports it. Everything above the phrase list is
-'  a fixed stack, and the phrase list is therefore given the EXACT REMAINDER rather than a
-'  constant -- it cannot overflow by construction, and it is as tall as the page can make it.
+'  silent and only TIKO_OPTIONS_SELFTEST's fit test reports it. BOTH views therefore size their
+'  list as the EXACT REMAINDER of the container rather than to a row count -- overflow is
+'  unreachable by construction, and each list is as tall as its view allows.
 '
 '  The file I/O and the gLocalPhrases / gLocalPhrasesEdit business logic are carried over from the
 '  old page unchanged.
@@ -44,10 +52,6 @@
 
 
 ' Fixed metrics, UNSCALED.
-' Visible rows in the languages list. It is a FIXED height and the phrase list is the remainder,
-' so this number is the only knob that trades one list against the other: every row taken off
-' here is a row the phrase list gains (less whatever the hint label between them costs).
-#define LOCAL_LANGROWS        7
 #define LOCAL_ROWHEIGHT      22        ' PsListTree's own default; named so the budget can use it
 #define LOCAL_HEADERHEIGHT   24        ' PsListTree's own default, likewise
 #define LOCAL_SECTIONGAP     14
@@ -56,8 +60,13 @@
 #define LOCAL_BTNHEIGHT      30
 #define LOCAL_BTNGAP          8        ' between stacked buttons AND between list and stack
 #define LOCAL_LANGNAMEW     180        ' languages list, column 0 ("Language")
+#define LOCAL_ACTIVEW       90        ' languages list, column 2 (the "Active" marker)
 #define LOCAL_PHRASEIDXW     60        ' phrase list, column 0 ("Index")
 #define LOCAL_PHRASEENGW    230        ' phrase list, column 1 ("English Phrase")
+' Left inset of a cell's TEXT inside its column, UNSCALED. Used by both painters AND handed to
+' PsListTree_SetEditTextInset, so the in-place editor's text lands on the same x as the text it
+' replaces. Two literals that had to agree was how they came to disagree.
+#define LOCAL_CELLINSET       6
 
 ' Phrase-list columns. Named because the third one is the only editable cell in the dialog and
 ' three separate places have to agree on which it is.
@@ -72,7 +81,17 @@ type LOCAL_LABEL
 end type
 
 
-dim shared gLocalCurrentFile as DWSTRING     ' the .lang filename the page points at
+' THE SELECTED LANGUAGE -- the one the editor will run in, written to gConfig.LocalizationFile
+' on OK. ONLY the Select button changes it (and Delete, when it removes the selected file).
+dim shared gLocalCurrentFile as DWSTRING
+' The language currently OPEN FOR EDITING, which is a different question -- editing French to
+' fix a typo must not switch the application into French. This is what LocalEditCheck writes
+' back to disk. "" when nothing is being edited.
+dim shared gLocalEditFile    as DWSTRING
+' Has the SELECTED language's own file been rewritten during this dialog session? That -- not
+' "was anything edited" -- is what decides whether the running application needs restarting:
+' editing French while the editor runs in English changes nothing this session.
+dim shared gLocalSelectedEdited as boolean
 dim shared gLocalTransLabel  as DWSTRING     ' language name, used for the third column's caption
 dim shared gLocalShowEdit    as boolean      ' the phrase list is visible
 dim shared gLocalBuilt       as boolean
@@ -98,6 +117,7 @@ declare function frmOptionsLocal_LoadLocalizationFile( byref wszFilename as wstr
 declare sub frmOptionsLocal_ClearGlobalArray()
 declare function frmOptionsLocal_LoadLanguages() as long
 declare sub frmOptionsLocal_FillTranslationColumn()
+declare sub frmOptionsLocal_MarkActiveRow()
 
 
 ' ========================================================================================
@@ -113,6 +133,8 @@ end function
 ' ========================================================================================
 sub frmOptionsLocal_SeedFromConfig()
     gLocalCurrentFile = gConfig.LocalizationFile
+    gLocalEditFile    = ""
+    gLocalSelectedEdited = false
     gLocalTransLabel  = AfxStrPathName( "NAME", gConfig.LocalizationFile )
     gLocalPhrasesEdit = false
     gLocalShowEdit    = false
@@ -130,6 +152,7 @@ sub frmOptionsLocal_Reset()
     ghLocalEdit       = 0
     ghLocalDelete     = 0
     ghLocalClose      = 0
+    gLocalEditFile    = ""
     ghLocalLanguages  = 0
     ghLocalList       = 0
     erase gLocalLabels
@@ -144,12 +167,15 @@ end sub
 function frmOptionsLocal_LocalEditCheck() as long
     if gLocalPhrasesEdit = false then exit function
 
-    dim as DWSTRING wszLocalName = gLocalCurrentFile
+    dim as DWSTRING wszLocalName = gLocalEditFile
     dim as DWSTRING wszFileName = AfxGetExePathName + wstr("settings\languages\" + wszLocalName)
     dim as DWSTRING wszTemp, wszPhrase
 
     ' Never write over the English reference file.
     if ucase(trim(AfxStrPathname( "NAMEX", wszFilename ))) = "ENGLISH.LANG" then exit function
+    ' No edit target, no write. Defensive: an empty name would leave wszFileName pointing at
+    ' the languages FOLDER, and the first thing below it does is AfxDeleteFile.
+    if len(wszLocalName) = 0 then exit function
     if ghLocalList = 0 then exit function
 
     dim as long nCount = PsListTree_GetCount( ghLocalList )
@@ -190,6 +216,11 @@ function frmOptionsLocal_LocalEditCheck() as long
     end if
     pStream.Close
 
+    ' The file that was just written IS the one the editor runs in, so its new contents
+    ' will not be seen until the next start. Recorded here, at the one place a write
+    ' actually happens, rather than inferred later from "an edit was open".
+    if ucase(gLocalEditFile) = ucase(gLocalCurrentFile) then gLocalSelectedEdited = true
+
     function = 0
 end function
 
@@ -212,7 +243,7 @@ function frmOptionsLocal_LoadLocalizationFile( byref wszFilename as wstring ) as
     if AfxFileExists( wszFileName ) = 0 then exit function
 
     dim as BSTRING wst, wKey, wData
-    dim as long nKey, nData, i, maxKey
+    dim as long nKey, nData, i
 
     dim pStream as CTextStream
     if pStream.OpenUnicode( wszFileName ) <> S_OK then exit function
@@ -243,19 +274,27 @@ function frmOptionsLocal_LoadLocalizationFile( byref wszFilename as wstring ) as
                 ' Use ** so cyrillic gets converted correctly; FB intrinsics (RTRIM) convert
                 ' those incorrectly through CBSTR / DWSTRING.
                 gLocalPhrases(nKey) = rtrim(**AfxStrParse(wData, 1, ";"), any chr(9,32))
+                ' ENGLISH IS THE CANONICAL REFERENCE. An id the English file has no string for
+                ' is an unused slot, so every other language is blank there too -- a translation
+                ' sitting in one is stale data, not content, and is dropped on load. Deliberate;
+                ' don't "fix" it into keeping the text.
                 if gLangEnglish(nKey) = "" then gLocalPhrases(nKey) = ""
-                if gLocalPhrases(nKey) = "" then gLocalPhrases(nKey) = gLangEnglish(nKey)
-                if nKey > maxKey then maxKey = nKey
+                ' NO ENGLISH FALLBACK HERE. gLocalPhrases holds the TRANSLATIONS and nothing
+                ' else, so blank means "not translated yet" -- which is what the third column
+                ' should show and what LocalEditCheck should write. Filling blanks with the
+                ' English text made every saved file a copy of english.lang with a few words
+                ' changed, and made "New" behave like a clone. The fallback belongs at RUNTIME:
+                ' LoadLocalizationFile in modRoutines.inc already substitutes English for any
+                ' key whose local string is empty, which is the only place it is needed.
             end if
         end if
     loop
     pStream.Close
 
-    ' The local file may hold fewer keys than the English file; copy the English versions over
-    ' for the remaining keys.
-    for i = maxKey + 1 to ubound(gLangEnglish)
-        gLocalPhrases(i) = gLangEnglish(i)
-    next
+    ' Keys past the end of the local file are left EMPTY -- untranslated, which is the truth.
+    ' They used to be filled from English, so a file that stopped at key 200 came back with
+    ' 300 English phrases appended and saved them all to disk on the way out.
+    ' ClearGlobalArray above already blanked them, so there is nothing to do.
 
     function = 0
 end function
@@ -326,7 +365,16 @@ private function frmOptionsLocal_LoadLanguages() as long
 
     PsListTree_EndUpdate( ghLocalLanguages )
 
-    if idxMatch >= 0 then PsListTree_SetCurSel( ghLocalLanguages, idxMatch )    ' silent
+    frmOptionsLocal_MarkActiveRow()
+
+    if idxMatch >= 0 then
+        PsListTree_SetCurSel( ghLocalLanguages, idxMatch )    ' silent
+        ' ...but do NOT let it scroll. SetCurSel brings the row into view, so a configured
+        ' language part-way down the alphabet opened the list already scrolled -- with the
+        ' languages above it off the top of a list that had room for all of them. The list is
+        ' read from the first row, so it starts there whatever happens to be selected.
+        PsListTree_SetTopIndex( ghLocalLanguages, 0 )
+    end if
     return idxMatch
 end function
 
@@ -334,6 +382,42 @@ end function
 ' ========================================================================================
 ' The filename behind the highlighted languages row, or "" if nothing is highlighted.
 ' ========================================================================================
+' The languages-list row carrying a given filename, or -1. Used after a reload to put the
+' highlight back on a file the row indices have moved under.
+private function frmOptionsLocal_RowForFile( byval wszFile as DWSTRING ) as long
+    if len(wszFile) = 0 then return -1
+    for i as long = lbound(gLocalLangFiles) to ubound(gLocalLangFiles)
+        if ucase(gLocalLangFiles(i)) = ucase(wszFile) then return i
+    next
+    return -1
+end function
+
+
+' Put the "Active" marker on the row holding the SELECTED language and nowhere else.
+'
+' Called from every place the selection can move, not just the list reload: Select changes
+' gLocalCurrentFile without rebuilding the list, so a marker written only at load time would
+' still be sitting on the previous language.
+private sub frmOptionsLocal_MarkActiveRow()
+    if ghLocalLanguages = 0 then exit sub
+    ' BeginUpdate/EndUpdate, NOT AfxRedrawWindow. PsListTree_SetCellText writes the model and
+    ' does not repaint -- unlike most of the control's mutators it never calls NotifyChange --
+    ' and AfxRedrawWindow on this handle redraws the CONTAINER, while the rows are painted by
+    ' its surface child. So the marker moved in the model and nothing on screen changed until
+    ' some later repaint happened to come along. EndUpdate calls Refresh, which is what actually
+    ' rebuilds and repaints the surface.
+    PsListTree_BeginUpdate( ghLocalLanguages )
+    for i as long = lbound(gLocalLangFiles) to ubound(gLocalLangFiles)
+        dim as boolean bActive = (ucase(gLocalLangFiles(i)) = ucase(gLocalCurrentFile))
+        ' if/else, not iif: iif cannot return a UDT, and DWSTRING is one.
+        dim as DWSTRING wszMark = ""
+        if bActive then wszMark = L(492,"Active")
+        PsListTree_SetCellText( ghLocalLanguages, i, 2, wszMark )
+    next
+    PsListTree_EndUpdate( ghLocalLanguages )
+end sub
+
+
 private function frmOptionsLocal_SelectedFile() as DWSTRING
     ' RETURN throughout, never 'function =' -- fbc refuses the two styles mixed in a function
     ' returning a type with constructors, and DWSTRING is one.
@@ -472,6 +556,22 @@ end sub
 
 
 ' ========================================================================================
+' Refuse to edit a row the English file has no string for.
+'
+' English is the canonical reference: an id it leaves blank is an unused slot, and the loader
+' drops any translation found in one. Without this veto the row still ACCEPTED typing and the
+' text still reached the file -- it was simply gone again on the next run, with nothing said.
+' The veto is the control's own BeginLabelEdit hook, so it covers every route into the editor
+' (double-click, ENTER and F2) rather than just the one the host wires up.
+' ========================================================================================
+private function frmOptionsLocal_PhraseBeginEdit( byval hList as HWND, byval row as integer ) as boolean
+    dim as long idx = val( PsListTree_GetCellText( hList, row, LOCALCOL_INDEX ) )
+    if (idx < lbound(gLangEnglish)) orelse (idx > ubound(gLangEnglish)) then return false
+    return iif( len(gLangEnglish(idx)) > 0, true, false )
+end function
+
+
+' ========================================================================================
 ' An in-place edit committed (ENTER, or focus loss). Store into the phrase array against the
 ' row's own index. This is what the translation textbox's EN_CHANGE handler used to do.
 '
@@ -504,8 +604,9 @@ private sub frmOptionsLocal_SelectClick( byval hButton as HWND, byval id as long
     dim as DWSTRING wszFull = AfxGetExePathName & wstr("settings\languages\") & wszFile
     frmOptionsLocal_LoadLocalizationFile( wszFull )
     gLocalPhrasesEdit = false
-    gLocalCurrentFile = wszFile
+    gLocalCurrentFile = wszFile          ' THE one place a user choice becomes the selection
     gLocalTransLabel  = AfxStrPathName( "NAME", wszFile )
+    frmOptionsLocal_MarkActiveRow()      ' the marker follows it
     PsListTree_SetCurSel( ghLocalList, -1 )
     frmOptionsLocal_DisableEnglish()
 end sub
@@ -520,10 +621,15 @@ private sub frmOptionsLocal_NewClick( byval hButton as HWND, byval id as long )
     dim pwszName as wstring ptr = AfxIFileSaveDialog( HWND_FRMOPTIONS, @wzFilename, @wstr("lang"), IDC_FRMOPTIONSLOCAL_CMDNEW )
     if pwszName then
         frmOptionsLocal_ClearGlobalArray()
-        gLocalCurrentFile = AfxStrPathname( "NAMEX", *pwszName )
+        ' Opens the new file for EDITING. It does not become the selected language -- same
+        ' rule as Edit: a brand-new, empty translation is the last thing to switch the
+        ' application into. Select it afterwards if that is what you want.
+        gLocalEditFile    = AfxStrPathname( "NAMEX", *pwszName )
         gLocalTransLabel  = AfxStrPathName( "NAME", *pwszName )
         gLocalPhrasesEdit = true
-        frmOptionsLocal_LoadLanguages()          ' the new file has to appear in the list
+        ' NO list reload here. The Save-As dialog picked a NAME; nothing has been written yet,
+        ' so a reload at this point finds the same files as before and the new one appears to
+        ' vanish. The list is refreshed by Back, after LocalEditCheck has created the file.
         frmOptionsLocal_FillTranslationColumn()
         frmOptionsLocal_DisableEnglish()
         PsListTree_SetCurSel( ghLocalList, 0 )
@@ -537,7 +643,10 @@ private sub frmOptionsLocal_EditClick( byval hButton as HWND, byval id as long )
 
     dim as DWSTRING wszLanguage = AfxGetExePathName & wstr("settings\languages\") & wszFile
     frmOptionsLocal_LoadLocalizationFile( wszLanguage )
-    gLocalCurrentFile = wszFile
+    ' EDITING ONLY. This deliberately does NOT touch gLocalCurrentFile: opening French to fix
+    ' a typo used to switch the whole application into French on OK, because one variable was
+    ' doing both jobs. Double-click and ENTER route through this same handler.
+    gLocalEditFile    = wszFile
     gLocalTransLabel  = AfxStrPathName( "NAME", wszLanguage )
     gLocalPhrasesEdit = true
     frmOptionsLocal_FillTranslationColumn()
@@ -553,8 +662,23 @@ end sub
 ' LocalEditCheck is the same writer OK uses, so closing and pressing OK produce the same file
 ' rather than two different ideas of "committed".
 private sub frmOptionsLocal_CloseClick( byval hButton as HWND, byval id as long )
-    frmOptionsLocal_LocalEditCheck
+    ' Remembered across the save, because the reload below needs it and the clear loses it.
+    dim as DWSTRING wszWasEditing = gLocalEditFile
+
+    frmOptionsLocal_LocalEditCheck            ' this is what actually CREATES a New file
     gLocalPhrasesEdit = false
+    gLocalEditFile    = ""        ' nothing is open now; the SELECTION is untouched
+
+    ' RELOAD THE LANGUAGES LIST. A file created by New does not exist on disk until the write
+    ' above -- AfxIFileSaveDialog only picks a NAME -- so New cannot put it in the list itself,
+    ' and it was missing until the dialog was closed and reopened.
+    frmOptionsLocal_LoadLanguages()
+    ' Leave the highlight on the file just edited, so a new language can be Selected without
+    ' hunting for it. LoadLanguages highlights the SELECTED language, which is not the same
+    ' thing and, for a file just created, is never it.
+    dim as long idxWas = frmOptionsLocal_RowForFile( wszWasEditing )
+    if idxWas >= 0 then PsListTree_SetCurSel( ghLocalLanguages, idxWas )    ' silent
+
     frmOptionsLocal_DisableEnglish()          ' hides the phrase list and re-flows the page
     SetFocus( ghLocalLanguages )
 end sub
@@ -575,12 +699,32 @@ private sub frmOptionsLocal_DeleteClick( byval hButton as HWND, byval id as long
     frmOptionsLocal_ClearGlobalArray()
     AfxDeleteFile( wszFileName )
     PsListTree_SetCurSel( ghLocalList, -1 )
-    gLocalCurrentFile = wstr("english.lang")
+    ' Falls back to English only when the file just deleted WAS the selection -- deleting some
+    ' other language has no business changing which one the editor runs in.
+    if ucase(gLocalCurrentFile) = ucase(wszFile) then gLocalCurrentFile = wstr("english.lang")
+    gLocalEditFile    = ""
     gLocalTransLabel  = wstr("english")
     gLocalPhrasesEdit = false
     frmOptionsLocal_LoadLanguages()              ' the deleted file has to leave the list
     frmOptionsLocal_DisableEnglish()
 end sub
+
+
+' ========================================================================================
+' No tooltips on either list, rows or headers.
+'
+' With NO callback the control falls back to the row's -- or the column's -- own text, so every
+' row would sprout a tip repeating what is already on screen under the cursor. Returning "" is
+' how a host says "none"; there is no separate disable switch. Both signatures are needed
+' because the header is a different control with its own callback type.
+' ========================================================================================
+private function frmOptionsLocal_NoTooltip( byval hList as HWND, byval row as integer ) as DWSTRING
+    return ""
+end function
+
+private function frmOptionsLocal_NoHeaderTooltip( byval hHeader as HWND, byval idx as integer ) as DWSTRING
+    return ""
+end function
 
 
 ' ========================================================================================
@@ -603,14 +747,14 @@ private sub frmOptionsLocal_ListPaint( byval p as PSLISTTREE_PAINTINFO ptr )
 
     if p->columnCount <= 0 then
         dim as RECT rcText = p->rc
-        rcText.left += AfxScaleX(6)
+        rcText.left += AfxScaleX(LOCAL_CELLINSET)
         p->b->PaintText( p->wszCaption, @rcText, DT_LEFT or DT_END_ELLIPSIS )
         exit sub
     end if
 
     for i as integer = 0 to p->columnCount - 1
         dim as RECT rcText = p->cells[i].rc
-        rcText.left += AfxScaleX(6)
+        rcText.left += AfxScaleX(LOCAL_CELLINSET)
         p->b->PaintText( p->cells[i].wszText, @rcText, DT_LEFT or DT_END_ELLIPSIS )
     next
 end sub
@@ -628,7 +772,7 @@ private sub frmOptionsLocal_HeaderPaint( byval p as PSCOLUMNHEADER_PAINTINFO ptr
     p->b->PaintRect( @p->rc )
     p->b->SetFont( OptionsFont_Base() )
     dim as RECT rcText = p->rc
-    rcText.left += AfxScaleX(6)
+    rcText.left += AfxScaleX(LOCAL_CELLINSET)
     p->b->PaintText( p->wszCaption, @rcText, DT_LEFT or DT_END_ELLIPSIS )
 
     dim as RECT rcDiv = p->rc
@@ -649,11 +793,18 @@ sub frmOptionsLocal_Build( byval hPage as HWND )
     ghLocalLanguages = PsListTree_Create( hPage, IDC_FRMOPTIONSLOCAL_LSTLANGUAGES )
     PsListTree_AddColumn( ghLocalLanguages, "Language", AfxScaleX(LOCAL_LANGNAMEW) )
     PsListTree_AddColumn( ghLocalLanguages, "File", AfxScaleX(160) )
+    ' Status column, DELIBERATELY UNCAPTIONED: it holds a marker, not a field, and a heading
+    ' over one word of text on one row reads as a column that is mostly empty rather than as
+    ' a note about the row it is on. File stays the fill column, so this sits at the right
+    ' edge and the layout above it is unchanged.
+    PsListTree_AddColumn( ghLocalLanguages, "", AfxScaleX(LOCAL_ACTIVEW) )
     PsListTree_SetFillColumn( ghLocalLanguages, 1 )
     PsListTree_ShowHeader( ghLocalLanguages, true )
     PsListTree_SetPaintCallback( ghLocalLanguages, @frmOptionsLocal_ListPaint )
     PsListTree_SetHeaderPaintCallback( ghLocalLanguages, @frmOptionsLocal_HeaderPaint )
     PsListTree_SetSelChangeCallback( ghLocalLanguages, @frmOptionsLocal_LangSelChange )
+    PsListTree_SetTooltipCallback( ghLocalLanguages, @frmOptionsLocal_NoTooltip )
+    PsListTree_SetHeaderTooltipCallback( ghLocalLanguages, @frmOptionsLocal_NoHeaderTooltip )
     ' Double-click or ENTER on a language row = Edit. Setting this is also what makes the
     ' control claim ENTER for this list at all.
     PsListTree_SetActivateCallback( ghLocalLanguages, @frmOptionsLocal_LangActivate )
@@ -701,6 +852,8 @@ sub frmOptionsLocal_Build( byval hPage as HWND )
     PsListTree_ShowHeader( ghLocalList, true )
     PsListTree_SetPaintCallback( ghLocalList, @frmOptionsLocal_ListPaint )
     PsListTree_SetHeaderPaintCallback( ghLocalList, @frmOptionsLocal_HeaderPaint )
+    PsListTree_SetTooltipCallback( ghLocalList, @frmOptionsLocal_NoTooltip )
+    PsListTree_SetHeaderTooltipCallback( ghLocalList, @frmOptionsLocal_NoHeaderTooltip )
     PsListTree_SetFont( ghLocalList, OptionsFont_Base() )
     ' In-place editing of the third column. THIS IS THE PUMP OBLIGATION -- frmOptions_Show calls
     ' PsListTree_FilterMessage for it, ahead of its own Escape handler and IsDialogMessage.
@@ -714,6 +867,13 @@ sub frmOptionsLocal_Build( byval hPage as HWND )
     ' read-only index.
     PsListTree_SetEditColumn( ghLocalList, LOCALCOL_TRANSLATE )
     PsListTree_SetEndLabelEditCallback( ghLocalList, @frmOptionsLocal_ListEndEdit )
+    PsListTree_SetBeginLabelEditCallback( ghLocalList, @frmOptionsLocal_PhraseBeginEdit )
+    ' The caret goes to the END of the existing translation rather than selecting it: these
+    ' edits are amendments to a phrase that is already there, not the explorer-style rename the
+    ' control defaults to, where the first keystroke is meant to replace everything.
+    PsListTree_SetEditSelectAll( ghLocalList, false )
+    ' Same inset the painters use, so the text does not shift sideways when an edit opens.
+    PsListTree_SetEditTextInset( ghLocalList, AfxScaleX(LOCAL_CELLINSET) )
 
     ' ---- populate the phrase list from the English reference (once) -------------------
     redim gLocalPhrases( ubound(gLangEnglish) )
@@ -756,6 +916,12 @@ sub frmOptionsLocal_ApplyTheme()
     PsListTree_SetScrollBarColors( ghLocalList, ghPanel.BackColorScrollBar, _
                                  ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
     OptionsTheme_ApplyListBorder( ghLocalList )
+    ' The in-place editor lives inside the control and is created lazily, so it is themed
+    ' through the list rather than directly -- same four colours OptionsTheme_ApplyTextBox
+    ' gives every other text field on the page, so the editor matches them. Applied here in
+    ' ApplyTheme, not at build, so a theme change reaches it too.
+    PsListTree_SetEditColors( ghLocalList, ghEditor.BackColorText, ghEditor.ForeColorText, _
+                              ghEditor.Divider, ghPanel.ForeColorHot )
 end sub
 
 
@@ -800,7 +966,8 @@ end sub
 ' page container does not scroll and frmOptions_LayoutPlainPage discards this return value, so a
 ' fixed height that happened to overflow would simply be clipped with nothing to report it.
 ' Sizing off the container's own client height makes overflow unreachable and makes the list as
-' tall as the page allows -- which is whatever LOCAL_LANGROWS and the hint leave it.
+' tall as the page allows. BOTH views size their list that way now -- neither has anything
+' underneath it, so neither has a reason to stop short.
 ' ========================================================================================
 function frmOptionsLocal_Layout( byval hPage as HWND, byval cxPanel as long ) as long
 
@@ -842,12 +1009,20 @@ function frmOptionsLocal_Layout( byval hPage as HWND, byval cxPanel as long ) as
 
     if gLocalShowEdit = false then
         ' ---- PICKING VIEW: languages list with the command stack to its right ------------
-        dim as long langH = AfxScaleY(LOCAL_HEADERHEIGHT) + AfxScaleY(LOCAL_ROWHEIGHT) * LOCAL_LANGROWS
+        ' The list takes the whole page below the heading, exactly as the phrase list does in
+        ' the other view. There is nothing underneath it any more -- the phrase list moved out
+        ' of this view entirely -- so a fixed row count would leave the bottom half of the page
+        ' empty and cap the languages on show for no reason.
         dim as long langW = fullW - btnW - AfxScaleX(LOCAL_BTNGAP)
         if langW < 0 then langW = 0
+        dim as long langH = pageH - y - padBottom
+        dim as long minLangH = AfxScaleY(LOCAL_HEADERHEIGHT) + AfxScaleY(LOCAL_ROWHEIGHT)
+        if langH < minLangH then langH = minLangH
 
         SetWindowPos( ghLocalLanguages, 0, padLeft, y, langW, langH, SWP_NOZORDER or SWP_NOACTIVATE )
 
+        ' The stack stays at the TOP of that band rather than spreading down it: these are
+        ' commands acting on the list, not a column of its own.
         dim as long bx = contentR - btnW
         dim as long by = y
         SetWindowPos( ghLocalSelect, 0, bx, by, btnW, btnH, SWP_NOZORDER or SWP_NOACTIVATE ) : by += btnH + btnGap
@@ -855,7 +1030,9 @@ function frmOptionsLocal_Layout( byval hPage as HWND, byval cxPanel as long ) as
         SetWindowPos( ghLocalEdit,   0, bx, by, btnW, btnH, SWP_NOZORDER or SWP_NOACTIVATE ) : by += btnH + btnGap
         SetWindowPos( ghLocalDelete, 0, bx, by, btnW, btnH, SWP_NOZORDER or SWP_NOACTIVATE ) : by += btnH
 
-        ' As tall as the TALLER of the two -- the stack is free to outgrow a short list.
+        ' The list is full height, so it is always the taller of the two now -- but take the max
+        ' anyway rather than assume it, because the stack grows if a command is ever added and
+        ' the assumption would fail silently.
         dim as long bandH = langH
         if (by - y) > bandH then bandH = by - y
         y += bandH

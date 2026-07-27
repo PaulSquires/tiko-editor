@@ -600,6 +600,7 @@ function PsListTree_SetText( byval hListControl as HWND, byval row as integer, b
     if pList = null then return false
     if pList->IsValidRow(row) then
         pList->GetRow(row)->Text = Text
+        pList->NotifyChange()       ' see the note on SetCellText below
         return true     ' success
     end if
     return false  ' invalid row
@@ -635,6 +636,16 @@ function PsListTree_SetCellText( byval hListControl as HWND, byval row as intege
         pList->rows(row).EnsureCells( col )
         pList->rows(row).cells(col - 1) = Text
     end if
+    ' EVERY model mutator notifies. These two were the exceptions, and the result was a setter
+    ' that changed what the row says and left the old text on screen until an unrelated repaint
+    ' came along -- a host reasonably assumed writing a cell showed it, and reaching for
+    ' AfxRedrawWindow on the control handle does not help either, because the rows are painted
+    ' by the surface CHILD.
+    '
+    ' It costs a bulk loop nothing: NotifyChange is coalesced by updateDepth, so anything already
+    ' wrapped in BeginUpdate/EndUpdate -- which is what this control's own docs tell a caller to
+    ' do for bulk loads -- collapses to the single Refresh it always did.
+    pList->NotifyChange()
     return true
 end function
 
@@ -2667,6 +2678,17 @@ function PsListTree_BeginEditInternal( byval pList as PSLISTTREE ptr, byval row 
         PsTextBox_SetFocusCallback( pList->hEdit, @PsListTree_EditFocusChanged )
         PsTextBox_SetMessageCallback( pList->hEdit, @PsListTree_EditMessage )
         PsTextBox_SetBorderWidth( pList->hEdit, 1 )
+        ' Applied on CREATE, which is the only moment a host cannot reach: SetEditColors stores
+        ' them precisely because the editor does not exist until here.
+        if pList->bEditColorsSet then
+            PsTextBox_SetBackColor( pList->hEdit, pList->clrEditBack )
+            PsTextBox_SetForeColor( pList->hEdit, pList->clrEditFore )
+            PsTextBox_SetBorderColor( pList->hEdit, pList->clrEditBorder )
+            PsTextBox_SetFocusBorderColor( pList->hEdit, pList->clrEditFocusBdr )
+            ' The strip around the bordered box, so the editor sits on the row rather than on a
+            ' pale rectangle the size of the cell.
+            PsTextBox_SetOuterBackColor( pList->hEdit, pList->clrEditBack )
+        end if
     end if
     if pList->hRowFont then PsTextBox_SetFont( pList->hEdit, pList->hRowFont )
 
@@ -2699,18 +2721,46 @@ function PsListTree_BeginEditInternal( byval pList as PSLISTTREE ptr, byval row 
             xRight = rcCol0.right
         end if
     end if
+    ' Line the editor's TEXT up with the cell text the host painted. The box itself covers the
+    ' whole cell -- that part is right -- but PsTextBox puts its RichEdit `borderWidth` inside
+    ' the box and then applies its margins on top of that, so the text starts at
+    ' borderWidth + marginLeft. The host's inset is measured from the CELL edge, so the margin
+    ' has to be the difference. Without this the text starts at borderWidth and no longer lines
+    ' up with the rows above and below.
+    '
+    ' SET BEFORE THE SIZE AND BEFORE THE TEXT, and the order is the whole point. PsTextBox
+    ' re-applies its stored margins from PositionRichEdit on every WM_SIZE (EM_SETRECT and the
+    ' margins interact, so it has to), which means a margin set AFTER the SetWindowPos below
+    ' reaches the control only once the text has already been laid out: the text redrew at the
+    ' new offset on the next unrelated repaint while the CARET stayed at the old one, so the
+    ' caret sat a character-width away from the end of the text it was supposedly at.
+    if pList->nEditTextInset >= 0 then
+        dim as integer bw = PsTextBox_GetBorderWidth( pList->hEdit )
+        dim as integer nMargin = pList->nEditTextInset - bw
+        if nMargin < 0 then nMargin = 0
+        PsTextBox_SetMargins( pList->hEdit, nMargin, 0 )
+    end if
+
     if xRight < xLeft + 8 then xRight = xLeft + 8
     SetWindowPos( pList->hEdit, HWND_TOP, xLeft, rcRow.top, xRight - xLeft, rcRow.bottom - rcRow.top, SWP_SHOWWINDOW )
 
-    ' Seed with the current caption and select all, ready to overtype.
+    ' Seed with the cell's current text.
     dim as PSLISTTREE_ROWINFO ptr pRow = pList->GetRow( row )
     dim as DWSTRING wszCur = ""
     if pRow then
         if col = 0 then wszCur = pRow->Text else wszCur = PsListTree_GetCellText( pList->hWin, row, col )
     end if
     PsTextBox_SetText( pList->hEdit, wszCur )
+
+    ' Focus FIRST, then place the selection -- the caret belongs to the focused window, and a
+    ' selection set before focus arrives is not what the user sees afterwards.
     SetFocus( PsTextBox_GetRichEditHandle( pList->hEdit ) )
-    PsTextBox_SelectAll( pList->hEdit )
+    if pList->bEditSelectAll then
+        PsTextBox_SelectAll( pList->hEdit )          ' ready to overtype (explorer rename)
+    else
+        dim as integer nLen = len( wszCur )
+        PsTextBox_SetSel( pList->hEdit, nLen, nLen ) ' caret at the end, nothing selected
+    end if
     return true
 end function
 
@@ -2808,6 +2858,39 @@ function PsListTree_SetEnterEdits( byval hListControl as HWND, byval enable as b
     pList->bEnterEdits = enable
     return true
 end function
+
+sub PsListTree_SetEditColors( byval hListControl as HWND, byval clrBack as COLORREF, _
+                              byval clrFore as COLORREF, byval clrBorder as COLORREF, _
+                              byval clrFocusBorder as COLORREF )
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return
+    pList->clrEditBack     = clrBack
+    pList->clrEditFore     = clrFore
+    pList->clrEditBorder   = clrBorder
+    pList->clrEditFocusBdr = clrFocusBorder
+    pList->bEditColorsSet  = true
+    ' An editor already created (this control keeps it for the instance's life) is re-coloured
+    ' now, so a theme change part-way through a session is not one edit behind.
+    if pList->hEdit then
+        PsTextBox_SetBackColor( pList->hEdit, clrBack )
+        PsTextBox_SetForeColor( pList->hEdit, clrFore )
+        PsTextBox_SetBorderColor( pList->hEdit, clrBorder )
+        PsTextBox_SetFocusBorderColor( pList->hEdit, clrFocusBorder )
+        PsTextBox_SetOuterBackColor( pList->hEdit, clrBack )
+    end if
+end sub
+
+sub PsListTree_SetEditSelectAll( byval hListControl as HWND, byval enable as boolean )
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return
+    pList->bEditSelectAll = enable
+end sub
+
+sub PsListTree_SetEditTextInset( byval hListControl as HWND, byval nPx as integer )
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = null then return
+    pList->nEditTextInset = nPx
+end sub
 
 ' PROBE, public on purpose (PsButton_CountRenderedTones' precedent). A key claimed in WM_KEYDOWN
 ' has a WM_CHAR manufactured for it, and an unswallowed one reaches DefWindowProc and BEEPS. The
@@ -3537,8 +3620,13 @@ function PsListTree_Create( byval hWndParent as HWND, byval CtrlID as integer ) 
         bClassRegistered = true
     end if
 
+    ' WS_CLIPCHILDREN is load-bearing, not decoration. The surface paints every visible row in
+    ' ONE pass over its whole client, and the in-place editor is a CHILD of it -- without this
+    ' the row painting goes straight over the editor, blanking the text being typed until some
+    ' later repaint of the editor brought it back. Z-order does not help: a parent painting
+    ' without WS_CLIPCHILDREN covers its children whatever the order.
     dim as HWND hList = CreateWindowExW( 0, @wszSurfClass, "", _
-            WS_CHILD or WS_VISIBLE or WS_CLIPSIBLINGS or WS_TABSTOP, _
+            WS_CHILD or WS_VISIBLE or WS_CLIPSIBLINGS or WS_CLIPCHILDREN or WS_TABSTOP, _
             0, 0, 0, 0, hForm, cast(HMENU, cast(LONG_PTR, pList->idc_ListTree)), _
             GetModuleHandleW( NULL ), NULL )
     pList->hTooltip = PsListTree_AddTooltip( hList )
