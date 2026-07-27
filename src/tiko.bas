@@ -105,6 +105,12 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "modMRU.inc"
 #include once "modFindReplace.inc"
 #include once "modFuzzy.inc"
+' The keyboard shortcut MODEL (gKeys, the defaults table, keybindings.ini, the accelerator
+' build, the key vocabulary). No UI and no control dependencies -- it needs only modDeclares
+' (IDM_* / IDC_MENUBAR_*), CWindow and CTextStream, all of which are already in scope. It
+' must precede frmKeyboardEdit / frmBuildConfig / frmUserTools, which call
+' AddShortcutsToComboBox, and frmMain, which builds the table at startup.
+#include once "modKeyBindings.inc"
 
 ' Custom controls
 #include once "PsVScrollBar.inc"
@@ -151,7 +157,8 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "frmBookmarks.inc" 
 #include once "frmFunctions.inc"
 #include once "frmAutoComplete.inc"
-#include once "frmKeyboardEdit.inc" 
+#include once "frmKeyboardEdit.bi"
+#include once "frmKeyboardEdit.inc"
 #include once "frmKeyboard.inc" 
 #include once "frmBuildConfig.inc" 
 #include once "frmOutput.inc" 

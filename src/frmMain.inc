@@ -1660,6 +1660,16 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ' Build the keyboard accelerators
     frmKeyboard_BuildAcceleratorTable()
 
+    ' Key vocabulary self-test. AFTER the build, because that is what populates gKeys() --
+    ' run before it and the defaults-table assertions would walk an empty array and pass.
+    KeyBindings_RunSelfTest()
+    frmKeyboard_RunSelfTest()
+    frmKeyboardEdit_RunSelfTest()
+    ' Open the Keyboard Shortcuts dialog immediately, so its layout/filter self-test can be
+    ' run without a human driving the menu. The dialog is MODAL, so startup stops here until
+    ' it is closed -- that is what this flag is for, and it is why it is not on by default.
+    if environ("TIKO_KEYBOARD_AUTOOPEN") = "1" then frmKeyboard_Show( HWND_FRMMAIN )
+
     ' Create the main application topmenu menubar
     frmMenuBar_Show( HWND_FRMMAIN )
 

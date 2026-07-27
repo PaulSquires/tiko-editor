@@ -280,58 +280,19 @@ function frmBuildConfig_CreateAcceleratorTable() as long
         if gConfig.Builds(y).IsShift then fVirt = fVirt or FSHIFT
         if gConfig.Builds(y).IsAlt then fVirt = fVirt or FALT
             
-        nKey = 0   ' important to reset
-        select case ucase(trim(gConfig.Builds(y).wszKey))
-            case "F1":  nKey = VK_F1
-            case "F2":  nKey = VK_F2
-            case "F3":  nKey = VK_F3
-            case "F4":  nKey = VK_F4
-            case "F5":  nKey = VK_F5
-            case "F6":  nKey = VK_F6
-            case "F7":  nKey = VK_F7
-            case "F8":  nKey = VK_F8
-            case "F9":  nKey = VK_F9
-            case "F10": nKey = VK_F10
-            case "F11": nKey = VK_F11
-            case "F12": nKey = VK_F12
-            case "0":   nKey = VK_0
-            case "1":   nKey = VK_1
-            case "2":   nKey = VK_2
-            case "3":   nKey = VK_3
-            case "4":   nKey = VK_4
-            case "5":   nKey = VK_5
-            case "6":   nKey = VK_6
-            case "7":   nKey = VK_7
-            case "8":   nKey = VK_8
-            case "9":   nKey = VK_9
-            case "A":   nKey = VK_A
-            case "B":   nKey = VK_B
-            case "C":   nKey = VK_C
-            case "D":   nKey = VK_D
-            case "E":   nKey = VK_E
-            case "F":   nKey = VK_F
-            case "G":   nKey = VK_G
-            case "H":   nKey = VK_H
-            case "I":   nKey = VK_I
-            case "J":   nKey = VK_J
-            case "K":   nKey = VK_K
-            case "L":   nKey = VK_L
-            case "M":   nKey = VK_M
-            case "N":   nKey = VK_N
-            case "O":   nKey = VK_O
-            case "P":   nKey = VK_P  
-            case "Q":   nKey = VK_Q  
-            case "R":   nKey = VK_R  
-            case "S":   nKey = VK_S  
-            case "T":   nKey = VK_T  
-            case "U":   nKey = VK_U  
-            case "V":   nKey = VK_V  
-            case "W":   nKey = VK_W
-            case "X":   nKey = VK_X
-            case "Y":   nKey = VK_Y
-            case "Z":   nKey = VK_Z  
-        end select
-            
+        ' The build's key is a BARE NAME picked from AddShortcutsToComboBox, so it is
+        ' resolved by the same vocabulary that filled that combobox (modKeyBindings.inc).
+        '
+        ' This used to be a private 48-arm select case right here -- F1-F12, 0-9 and A-Z --
+        ' against a pick-list that offers 89 names. Choosing any of the other 41 (Tab, Enter,
+        ' PgUp, PgDn, Home, End, the arrows, the Numpad keys, the punctuation keys) left
+        ' nKey = 0, this loop skipped the ACCEL entry, and the shortcut then saved, displayed
+        ' and reloaded perfectly while never once firing. No warning, no visible symptom.
+        '
+        ' Do NOT "simplify" this to frmKeyboard_AccelKeyToValue: that one resolves the stored
+        ' "None" affordance to plain N, and any stale name to its own first letter.
+        nKey = KeyBindings_PickListKeyToValue( gConfig.Builds(y).wszKey )
+
         if nKey > 0 then
             NumKeys = NumKeys + 1
             redim preserve a(1 To NumKeys) as ACCEL
