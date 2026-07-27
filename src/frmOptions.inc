@@ -464,7 +464,7 @@ private sub frmOptions_PositionWindows( byval hwnd as HWND )
     ' The FRAME spans [mx .. navW-mx] and is drawn by the dialog. The box lives INSIDE it: past
     ' the glyph gutter on the left, and inset by the border on the other three sides so it never
     ' paints over the frame.
-    dim as long mx      = AfxScaleX(FRMOPTIONS_MARGIN) \ 2
+    dim as long mx      = AfxScaleX(FRMOPTIONS_MARGIN)
     dim as long searchH = AfxScaleY(FRMOPTIONS_SEARCH_H)
     dim as long searchY = (titleH - searchH) \ 2
     dim as long glyphW  = AfxScaleX(FRMOPTIONS_SEARCH_GLYPHW)
@@ -539,10 +539,10 @@ private function frmOptions_OnPaint( byval hwnd as HWND ) as LRESULT
     ' glass on top of the fill, then the border last so it stays crisp. The box is a child and
     ' paints over its own sub-region afterwards -- which is fine, it is the same colour and it is
     ' inset inside this border.
-    dim as long mxG      = AfxScaleX(FRMOPTIONS_MARGIN) \ 2
+    dim as long mxG      = AfxScaleX(FRMOPTIONS_MARGIN)
     dim as long searchHG = AfxScaleY(FRMOPTIONS_SEARCH_H)
     dim as long searchYG = (titleH - searchHG) \ 2
-    dim as long curveG   = AfxScaleY(6)
+    dim as long curveG   = AfxScaleY(8)
 
     dim as RECT rcFrame
     rcFrame.left   = mxG
@@ -953,6 +953,7 @@ private sub frmOptions_SearchChanged( byval hTextBox as HWND )
     ' box is square for the same reason: the rounding lives on the drawn frame.
     PsTextBox_SetBorderWidth( HWND_FRMOPTIONS_SEARCH, 0 )
     PsTextBox_SetCornerRadius( HWND_FRMOPTIONS_SEARCH, 0 )
+    PsTextBox_SetMargins( HWND_FRMOPTIONS_SEARCH, AfxScaleX(4), AfxScaleX(4) )
     PsTextBox_SetCueBannerText( HWND_FRMOPTIONS_SEARCH, L(488,"Search settings...") )
     PsTextBox_SetChangeCallback( HWND_FRMOPTIONS_SEARCH, @frmOptions_SearchChanged )
     frmOptions_NavReselect()

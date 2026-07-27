@@ -40,8 +40,8 @@
 #Define FRMOPTIONS_CLIENT_W                          900
 #Define FRMOPTIONS_CLIENT_H                          620
 #Define FRMOPTIONS_NAV_W                             220
-#Define FRMOPTIONS_SEARCH_H                          28    ' the search box in the nav column
-#Define FRMOPTIONS_SEARCH_GLYPHW                     22    ' the magnifying-glass gutter left of it
+#Define FRMOPTIONS_SEARCH_H                          40    ' the search box in the nav column
+#Define FRMOPTIONS_SEARCH_GLYPHW                     34    ' the magnifying-glass gutter left of it
 #Define FRMOPTIONS_TITLE_H                            52
 #Define FRMOPTIONS_FOOTER_H                           58
 #Define FRMOPTIONS_BTN_W                              92
