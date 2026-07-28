@@ -1625,6 +1625,7 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ghFont(SYMBOLFONT_9)   = pWindow->CreateFont(SYMBOLFONT, 9, FW_NORMAL)
     ghFont(SYMBOLFONT_10)  = pWindow->CreateFont(SYMBOLFONT, 10, FW_NORMAL)
     ghFont(SYMBOLFONT_12)  = pWindow->CreateFont(SYMBOLFONT, 12, FW_NORMAL)
+    ghFont(SYMBOLFONT_20)  = pWindow->CreateFont(SYMBOLFONT, 20, FW_NORMAL)
     ghFont(GUIFONT_11)     = pWindow->CreateFont(GUIFONT, 11, FW_NORMAL)
     ghFont(GUIFONT_12)     = pWindow->CreateFont(GUIFONT, 12, FW_NORMAL)
     ghFont(GUIFONTBOLD_11) = pWindow->CreateFont(GUIFONT, 11, FW_HEAVY)
@@ -1669,6 +1670,9 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     KeyBindings_RunSelfTest()
     frmKeyboard_RunSelfTest()
     frmKeyboardEdit_RunSelfTest()
+    ' Command Line dialog geometry. Pure -- no window, no theme, no config -- so unlike the
+    ' Options/User Tools suites it needs no AUTOOPEN companion to reach it.
+    frmCommandLine_RunSelfTest()
     ' Open the Keyboard Shortcuts dialog immediately, so its layout/filter self-test can be
     ' run without a human driving the menu. The dialog is MODAL, so startup stops here until
     ' it is closed -- that is what this flag is for, and it is why it is not on by default.
