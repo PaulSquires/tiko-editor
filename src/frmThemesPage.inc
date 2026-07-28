@@ -1361,7 +1361,7 @@ function frmThemes_Layout( byval nPage as long, byval hPage as HWND, byval cxPan
     ' fill the freed width.
     dim as long textH    = AfxScaleY(18)
     dim as long rowGap   = AfxScaleY(10)
-    dim as long ctlH     = AfxScaleY(28)
+    dim as long ctlH     = AfxScaleY(32)
     dim as long listH    = AfxScaleY(THEME_LISTHEIGHT)
 
     ' A key list on the left (the names are short) and the controls beside it.
@@ -1429,7 +1429,9 @@ function frmThemes_Layout( byval nPage as long, byval hPage as HWND, byval cxPan
         yEdit += togH + rowGap + rowGap
 
         frmThemes_AddLabel( L(462, "Opacity"), xEdit, yEdit, xEdit + editW, yEdit + textH )
-        yEdit += textH + AfxScaleY(4)
+        yEdit += textH + AfxScaleY(8)
+        ' Same height as the plain fields now that PsNumericUpDown insets its value cell by
+        ' border + nVertPadding -- the inner PsTextBox clears the frame instead of clipping.
         SetWindowPos( ghThemeAlpha, 0, xEdit, yEdit, AfxScaleX(110), ctlH, SWP_NOZORDER or SWP_NOACTIVATE )
         yEdit += ctlH
     end if

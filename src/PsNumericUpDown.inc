@@ -1227,7 +1227,10 @@ sub PsNumericUpDown_GetValuePadding( byval hCtrl as HWND, byref nLeft as long, b
 end sub
 
 ' nLeft/nRight are real text margins inside the value cell (EM_SETMARGINS on the RichEdit);
-' nVert is used ONLY by GetIdealSize, to decide the height around one line of text.
+' nVert is the vertical clearance inside the value cell: it insets rcValue top and bottom (so
+' the borderless RichEdit's line clears the frame) AND is reserved by GetIdealSize when sizing
+' the height around one line of text -- the two agree, so an ideal-height control has a value
+' cell exactly one text-line tall.
 sub PsNumericUpDown_SetValuePadding( byval hCtrl as HWND, byval nLeft as long, byval nRight as long, byval nVert as long )
     dim as PSNUMERICUPDOWN ptr pNud = GetNumericUpDownPointer(hCtrl)
     if pNud = 0 then exit sub

@@ -292,11 +292,18 @@ end function
 ' whenever a hovered button's color differs from it. So the cells span the full client and
 ' the border is stroked over their outer edges, last.
 '
-' rcValue IS inset vertically, by exactly nBorderThick, and only rcValue. The PsTextBox child
-' covers every pixel of that rect and paints its own background there -- so a full-height
-' value cell would put the child on top of the frame's top and bottom rows and the border
-' would be interrupted across the middle of the control. Nothing else needs the inset,
-' because nothing else is covered by a child window.
+' rcValue IS inset vertically, and only rcValue. The PsTextBox child covers every pixel of
+' that rect and paints its own background there -- so a full-height value cell would put the
+' child on top of the frame's top and bottom rows and the border would be interrupted across
+' the middle of the control. Nothing else needs the inset, because nothing else is covered by
+' a child window.
+'
+' The inset is nBorderThick PLUS nVertPadding. nBorderThick alone keeps the child off the
+' frame's rows; the nVertPadding term (DPI-scaled) is what gives the borderless RichEdit's
+' full-height line and selection highlight clearance from the frame. Without it the child sat
+' one UNSCALED pixel inside the border and the text clipped top and bottom at scaled DPI. This
+' also makes the cell match what GetIdealSize already reserves (2*nVertPadding + 2*nBorderThick):
+' at ideal height the value cell is exactly tmHeight tall, centred in the frame.
 '
 '   the glyph bars are centred in their own cell:
 '     rcMinusBar = nGlyphLength x nGlyphThick,  centred in rcMinus
@@ -348,14 +355,24 @@ sub PSNUMERICUPDOWN.LayoutControl()
     SetRect( @this.rcDiv2, this.rcPlus.left - this.nDividerThick, T, this.rcPlus.left, B )
 
     ' The value cell alone is inset vertically -- see the note above: it is the only rect a
-    ' child window covers, and a child over the top and bottom rows would break the frame.
+    ' child window covers. The inset is nBorderThick (keeps the child off the frame's rows)
+    ' plus nVertPadding (DPI-scaled clearance so the borderless RichEdit's full-height line
+    ' does not clip against the frame). vpad collapses gracefully on a control shorter than
+    ' ideal via the valueB < valueT guard below.
     dim as long bt = this.nBorderThick
+    dim as long vpad = this.nVertPadding
     dim as long valueL = this.rcDiv1.right
     dim as long valueR = this.rcDiv2.left
     if valueR < valueL then valueR = valueL
-    dim as long valueT = T + bt
-    dim as long valueB = B - bt
-    if valueB < valueT then valueB = valueT
+    dim as long valueT = T + bt + vpad
+    dim as long valueB = B - bt - vpad
+    if valueB < valueT then
+        ' Not enough height for the full padding: fall back to a centred cell of whatever
+        ' height remains inside the border, so a too-short control still shows its value.
+        valueT = T + bt
+        valueB = B - bt
+        if valueB < valueT then valueB = valueT
+    end if
     SetRect( @this.rcValue, valueL, valueT, valueR, valueB )
 
     ' --- the glyphs ---------------------------------------------------------------------
