@@ -456,16 +456,16 @@ private function frmProjectOptions_OnPaint( byval hwnd as HWND ) as LRESULT
         buffer.SetFont( ghFont(GUIFONTBOLD_11) )
         buffer.SetForeColor( ghPanel.ForeColor )
         buffer.PaintText( _text_, @rcT, DT_LEFT or DT_VCENTER or DT_SINGLELINE or DT_END_ELLIPSIS )
-        rcT.top    = rcT.bottom
+        rcT.top    = rcT.bottom + AfxScaleY(2)
         rcT.bottom = rcT.top + AfxScaleY(1)
         buffer.SetBackColor( ghEditor.Divider )
         buffer.PaintRect( @rcT )
         buffer.SetBackColor( ghPanel.BackColor )
     #endmacro
 
-    SECTIONHDR( PO_HDR_PROJECT,  L(400,"Project") )
-    SECTIONHDR( PO_HDR_COMPILER, L(401,"Compiler options") )
-    SECTIONHDR( PO_HDR_OUTPUT,   L(403,"Build output") )
+    SECTIONHDR( PO_HDR_PROJECT,  L(27,"Project") )
+    SECTIONHDR( PO_HDR_COMPILER, L(31,"Compiler options") )
+    SECTIONHDR( PO_HDR_OUTPUT,   L(32,"Build output") )
 
     ' ---- the hint ----------------------------------------------------------------------
     rcT.left   = gPOLayout.xLabel
@@ -474,7 +474,7 @@ private function frmProjectOptions_OnPaint( byval hwnd as HWND ) as LRESULT
     rcT.bottom = rcT.top + AfxScaleY(FRMPROJECTOPTIONS_HINT_H)
     buffer.SetFont( ghFont(GUIFONT_11) )
     buffer.SetForeColor( ghPanel.ForeColorHot )
-    buffer.PaintText( L(415,"Added to the switches from the selected build configuration."), _
+    buffer.PaintText( L(39,"Added to the switches from the selected build configuration."), _
                       @rcT, DT_LEFT or DT_VCENTER or DT_SINGLELINE or DT_END_ELLIPSIS )
 
     ' ---- the row labels ----------------------------------------------------------------
@@ -494,9 +494,9 @@ private function frmProjectOptions_OnPaint( byval hwnd as HWND ) as LRESULT
     dim as long xLabelRight = gPOLayout.xField - AfxScaleX(FRMPROJECTOPTIONS_GAP)
 
     ROWLABEL( PO_ROW_PATH,        xLabelRight, L(240,"Project path") )
-    ROWLABEL( PO_ROW_COMMANDLINE, xLabelRight, L(406,"Command line") )
-    ROWLABEL( PO_ROW_OTHER32,     xLabelRight, L(404,"32-bit compiler") )
-    ROWLABEL( PO_ROW_OTHER64,     xLabelRight, L(405,"64-bit compiler") )
+    ROWLABEL( PO_ROW_COMMANDLINE, xLabelRight, L(35,"Command line") )
+    ROWLABEL( PO_ROW_OTHER32,     xLabelRight, L(33,"32-bit compiler") )
+    ROWLABEL( PO_ROW_OTHER64,     xLabelRight, L(34,"64-bit compiler") )
 
     scope
         dim as long tw = 0, th = 0
@@ -603,11 +603,27 @@ sub frmProjectOptions_RunSelfTest( byval bLayoutHalf as boolean )
         ' L(id,"default") DISCARDS the default: an id with no entry in english.lang renders as
         ' an EMPTY STRING, so a caption or a whole section header comes up blank with nothing
         ' in the build or the warnings to say so.
-        dim as long ids(0 to 10) = { 400, 401, 403, 404, 405, 406, 415, 418, 240, 308, 217 }
+        dim as long ids(0 to 10) = { 27, 31, 32, 33, 34, 35, 39, 82, 240, 308, 217 }
         for i as long = 0 to 10
             dim as string sName = "lang id " & str(ids(i)) & " is not blank"
             CHECK( len(LL(ids(i))) > 0, sName )
         next
+
+        ' AND WHAT THEY RESOLVED TO, printed rather than asserted -- the value is
+        ' language-dependent, so there is nothing to compare it against.
+        '
+        ' THIS IS NOT DECORATION. "id is not blank" passes under EVERY language file even when
+        ' that language has the slot empty, because LoadLocalizationFile fills a blank key with
+        ' the English text. So the assertion above cannot tell a translated phrase from an
+        ' untranslated one, and running the suite under french.lang and seeing it green proves
+        ' only that the ids exist. Reading these four lines is what distinguishes the two.
+        scope
+            dim as string sL = "  resolved: " & str(27) & "=" & LL(27) & " | " & _
+                               str(31) & "=" & LL(31) & " | " & str(35) & "=" & LL(35)
+            print sL
+            dim as string sL2 = "  resolved: " & str(82) & "=" & LL(82)
+            print sL2
+        end scope
 
         ' ---- the staging round trip ------------------------------------------------------
         ' Save the caller's project state, drive the staging copy, restore. This runs from
@@ -950,7 +966,7 @@ function frmProjectOptions_Show( _
     PsButton_SetClickCallback( ghPOSelect, @frmProjectOptions_ButtonClick )
 
     MAKEFIELD( ghPOCommandLine, IDC_FRMPROJECTOPTIONS_TXTCOMMANDLINE )
-    PsTextBox_SetCueBannerText( ghPOCommandLine, L(418,"arguments passed when the project is run") )
+    PsTextBox_SetCueBannerText( ghPOCommandLine, L(82,"arguments passed when the project is run") )
 
     MAKEFIELD( ghPOOther32, IDC_FRMPROJECTOPTIONS_TXTOPTIONS32 )
     MAKEFIELD( ghPOOther64, IDC_FRMPROJECTOPTIONS_TXTOPTIONS64 )
