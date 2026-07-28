@@ -1677,6 +1677,10 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ' theme -- so unlike the layout half (which runs from frmBuildConfig_Show) this needs no
     ' AUTOOPEN companion to reach it.
     frmBuildConfig_RunSelfTest()
+    ' The Project Options staging copy and its localized ids. Headless half only -- the layout
+    ' half measures real windows and so runs from frmProjectOptions_Show, reached by
+    ' TIKO_PROJECTOPTIONS_AUTOOPEN below.
+    frmProjectOptions_RunSelfTest( false )
     ' Open the Keyboard Shortcuts dialog immediately, so its layout/filter self-test can be
     ' run without a human driving the menu. The dialog is MODAL, so startup stops here until
     ' it is closed -- that is what this flag is for, and it is why it is not on by default.
@@ -1691,6 +1695,11 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ' stops here until it is closed. Kept deliberately, as frmKeyboard's and frmUserTools'
     ' are: it is what makes the dialog reachable in one command for a hand pass.
     if environ("TIKO_BUILDCONFIG_AUTOOPEN") = "1" then frmBuildConfig_Show( HWND_FRMMAIN )
+
+    ' And the Project Options dialog. FALSE, i.e. the EDIT path rather than the new-project
+    ' one: passing true would set IsNewProjectFlag and close every open document on OK, which
+    ' is not something a self-test run should do to the user's session.
+    if environ("TIKO_PROJECTOPTIONS_AUTOOPEN") = "1" then frmProjectOptions_Show( HWND_FRMMAIN, false )
 
     ' And the same for the About box, whose layout self-test asks the one question a
     ' fixed-size dialog can be asked -- does every page fit -- and therefore needs its real
