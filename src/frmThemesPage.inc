@@ -261,29 +261,8 @@ end function
 ' precisely -- which is easier to read anyway when comparing a pair.
 ' ========================================================================================
 private function frmThemes_ListTooltip( byval hList as HWND, byval row as integer ) as DWSTRING
-
-    if (row < lbound(gThemeRowBind)) orelse (row > ubound(gThemeRowBind)) then return ""
-    dim as long nb = gThemeRowBind(row)
-    if nb < 0 then return ""                      ' a group header
-
-    dim as long n = Theme_FindEntry( gThemeBind(nb).keyValue )
-    if n < 0 then return ""
-
-    dim as DWSTRING wszText = gThemeBind(nb).keyValue
-
-    if gThemeBind(nb).pFore <> 0 then
-        dim as long nA = -1
-        if gTheme(n).hasForeAlpha then nA = clng(gTheme(n).foregroundAlpha)
-        wszText &= chr(13) & L(455,"Foreground") & ": " & Theme_FormatColor( gTheme(n).foreground, nA )
-    end if
-    if gThemeBind(nb).pBack <> 0 then
-        dim as long nA = -1
-        if gTheme(n).hasBackAlpha then nA = clng(gTheme(n).backgroundAlpha)
-        wszText &= chr(13) & L(456,"Background") & ": " & Theme_FormatColor( gTheme(n).background, nA )
-    end if
-
-    return wszText
-
+    ' Disable tooltips on the this listtree
+    return ""
 end function
 
 
