@@ -232,6 +232,9 @@ sub Theme_ApplySubsystems( byval nMask as ulong )
 
     if (nMask and THSUB_AUTOCOMPLETE) <> 0 then
         frmAutoComplete_SyncTheme()
+        ' The code tip rides the same submask: it is the other half of the completion UI,
+        ' appears in the same place, and reads the same editor palette.
+        Codetip_SyncTheme()
     end if
 
     if (nMask and THSUB_OUTPUT) <> 0 then

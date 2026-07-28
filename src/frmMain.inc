@@ -1336,7 +1336,11 @@ function frmMain_OnDestroy( byval hwnd as HWND ) as LRESULT
 
     ' Disable drag and drop files
     DragAcceptFiles hwnd, false
-    
+
+    ' The code tip is a top-level WS_POPUP owned by nothing, so it does not go with this
+    ' window. Destroying it also releases PsTooltip's shared clock if it was the last tip.
+    Codetip_Destroy()
+
     PostQuitMessage(0)
     
     function = 0
@@ -1723,6 +1727,15 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ' document, and it needs the theme (LoadThemeFile above) and ghFont() already built.
     frmAutoComplete_Init()
 
+    ' Create the code tip. Same reasoning as the popup above: a singleton that outlives
+    ' every document, needing the theme and ghFont() already built.
+    Codetip_Init()
+
+    ' AFTER Codetip_Init, not up with the other suites: three of its assertions read the
+    ' tip's actual configuration, above all that it is DETACHED from PsTooltip's dwell
+    ' clock. The rest are pure functions and would run anywhere.
+    Codetip_RunSelfTest()
+
     ' Create the main application top tabs control
     frmTopTabs_Show( HWND_FRMMAIN )
     frmTopTabsMenu_Show( HWND_FRMMAIN ) 
@@ -1853,6 +1866,12 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
         ' meant for the popup; and ahead of the TranslateAccelerator chain, so Tab commits
         ' instead of firing IDM_INDENTBLOCK.
         if frmAutoComplete_FilterMessage( @uMsg ) then continue do
+
+        ' The code tip, for Escape only. NOT a PsTooltip pump obligation -- that control
+        ' has no FilterMessage. It sits here for the second of the two reasons above:
+        ' ahead of handleEscKeyModeless, which would otherwise close the Find panel on an
+        ' Escape meant to dismiss the tip.
+        if Codetip_FilterMessage( @uMsg ) then continue do
 
         if handleAltKeyMenuBar(uMsg) then continue do
 

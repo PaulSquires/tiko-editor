@@ -74,6 +74,9 @@ function killAllPopupMenus() as boolean
     ' The code-completion popup is a fourth family of floating window with the same
     ' "must not survive this" contract.
     frmAutoComplete_Cancel()
+    ' And the code tip -- a fifth. This one line covers the menu-opened, app-deactivated
+    ' and modal-dialog-opening paths that all funnel through here.
+    Codetip_Hide()
     return true
 end function
 
@@ -456,6 +459,7 @@ function frmMenuBar_PositionWindows() as LRESULT
     ' The completion popup draws in the EDITOR theme, not the menu theme, but this is
     ' the one place every settings-save path already funnels through.
     frmAutoComplete_SyncTheme()
+    Codetip_SyncTheme()
 
     ' Bar captions may have changed (localization).
     for i as long = 0 to PsMenuBar_GetItemCount( HWND_FRMMAIN_MENUBAR ) - 1
