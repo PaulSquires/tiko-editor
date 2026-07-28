@@ -1562,6 +1562,119 @@ sub PsColorPicker_RunSelfTest( byval hWndParent as HWND )
                        " field " & str(nFieldBefore) & "->" & str(pClr->nFocusField) )
     end scope
 
+    print "=== selection-only mode ==="
+
+    scope
+        ' SELECTION-ONLY drops the previews and the entry fields and keeps the tabs and the body.
+        ' The claim worth asserting is not "it got smaller" -- it is that the SELECTION HALF IS
+        ' UNTOUCHED while the bottom half is gone. So both are measured against the same control
+        ' before and after, rather than against constants.
+        PsColorPicker_SetTab( h, CLR_TAB_CUSTOM )
+        PsColorPicker_SetSelectionOnly( h, false )
+        pClr->LayoutColorPicker()
+
+        dim as long nFullW, nFullH
+        PsColorPicker_GetIdealSize( h, nFullW, nFullH )
+        dim as RECT rcTabsBefore = pClr->rcTabs
+        dim as RECT rcBodyBefore = pClr->rcBody
+        dim as RECT rcMatrixBefore = pClr->rcMatrix
+        ' PRECONDITION: in normal mode the things we are about to hide are actually there. Without
+        ' this the "they are empty afterwards" assertions could pass on a control where they were
+        ' never placed to begin with.
+        CLRTest_Check( "precondition: normal mode places previews and fields", _
+                       (IsRectEmpty( @pClr->rcInitial ) = 0) andalso _
+                       (IsRectEmpty( @pClr->rcFields ) = 0), "" )
+
+        PsColorPicker_SetSelectionOnly( h, true )
+        ' The mode changes the IDEAL size, so re-apply it before reading placed rects -- the
+        ' control is still sized for the taller layout otherwise.
+        dim as long nSelW, nSelH
+        PsColorPicker_GetIdealSize( h, nSelW, nSelH )
+        SetWindowPos( h, 0, 0, 0, nSelW, nSelH, SWP_NOZORDER or SWP_NOMOVE or SWP_NOACTIVATE )
+        pClr->LayoutColorPicker()
+
+        CLRTest_Check( "the mode round-trips through its getter", _
+                       PsColorPicker_IsSelectionOnly( h ), "" )
+
+        ' The ideal height drops by exactly the bottom block: one gap, plus the taller of the
+        ' two-row field stack and the two previews. Asserted as the ARITHMETIC, not as "smaller",
+        ' so a change that merely clipped the block would fail here.
+        dim as long nBottomH = (2 * pClr->nFieldH) + pClr->nGap
+        if (2 * pClr->nPreviewH) > nBottomH then nBottomH = 2 * pClr->nPreviewH
+        CLRTest_Check( "the ideal height drops by exactly the bottom block (gap + previews/fields)", _
+                       (nSelH = nFullH - pClr->nGap - nBottomH), _
+                       "full=" & str(nFullH) & " sel=" & str(nSelH) & " drop=" & str(nFullH - nSelH) & _
+                       " expected=" & str(pClr->nGap + nBottomH) )
+        CLRTest_Check( "the ideal width never GROWS in selection-only mode", _
+                       (nSelW <= nFullW), "full=" & str(nFullW) & " sel=" & str(nSelW) )
+
+        ' THE POINT OF THE MODE: the part a user picks with is bit-for-bit where it was.
+        CLRTest_Check( "the tab strip is unchanged by the mode", _
+                       (pClr->rcTabs.left = rcTabsBefore.left) andalso _
+                       (pClr->rcTabs.top = rcTabsBefore.top) andalso _
+                       (pClr->rcTabs.bottom = rcTabsBefore.bottom), "" )
+        CLRTest_Check( "the body keeps its position and its full height", _
+                       (pClr->rcBody.top = rcBodyBefore.top) andalso _
+                       ((pClr->rcBody.bottom - pClr->rcBody.top) = (rcBodyBefore.bottom - rcBodyBefore.top)), _
+                       "before h=" & str(rcBodyBefore.bottom - rcBodyBefore.top) & _
+                       " after h=" & str(pClr->rcBody.bottom - pClr->rcBody.top) )
+        CLRTest_Check( "the matrix keeps its full extent, so no cell is lost", _
+                       ((pClr->rcMatrix.right - pClr->rcMatrix.left) = (rcMatrixBefore.right - rcMatrixBefore.left)) andalso _
+                       ((pClr->rcMatrix.bottom - pClr->rcMatrix.top) = (rcMatrixBefore.bottom - rcMatrixBefore.top)), "" )
+
+        ' Everything the mode hides is gone from the GEOMETRY, not merely unpainted.
+        CLRTest_Check( "the previews are not placed", _
+                       (IsRectEmpty( @pClr->rcInitial ) <> 0) andalso _
+                       (IsRectEmpty( @pClr->rcCurrent ) <> 0), "" )
+        CLRTest_Check( "the entry block is not placed", _
+                       (IsRectEmpty( @pClr->rcFields ) <> 0) andalso _
+                       (IsRectEmpty( @pClr->rcAlpha ) <> 0), "" )
+        dim as boolean bAllBoxesEmpty = true
+        for i as long = 0 to CLR_FIELD_COUNT - 1
+            if IsRectEmpty( @pClr->rcFieldBox(i) ) = 0 then bAllBoxesEmpty = false
+        next
+        CLRTest_Check( "no field box survives, so none can be hit-tested", bAllBoxesEmpty, "" )
+
+        ' The part probes must agree with the layout rather than reporting a stale rect.
+        dim as RECT rcProbe
+        CLRTest_Check( "the CLR_PART_FIELDS probe reports the block as absent", _
+                       (PsColorPicker_GetPartRect( h, CLR_PART_FIELDS, rcProbe ) = false) orelse _
+                       (IsRectEmpty( @rcProbe ) <> 0), "" )
+
+        ' ALPHA IS ABOUT THE FIELD, NOT THE COLOUR: turning it on must not bring a field back.
+        PsColorPicker_ShowAlpha( h, true )
+        pClr->LayoutColorPicker()
+        CLRTest_Check( "ShowAlpha cannot resurrect a field while selection-only is on", _
+                       (pClr->IsFieldVisible( CLR_FIELD_A ) = false) andalso _
+                       (IsRectEmpty( @pClr->rcFieldBox(CLR_FIELD_A) ) <> 0), "" )
+        PsColorPicker_ShowAlpha( h, false )
+
+        ' NO FIELD IS REACHABLE BY KEYBOARD EITHER. A field the layout did not place but the
+        ' focus walker still visits would be a caret in an invisible box.
+        dim as boolean bNoneVisible = true
+        for i as long = 0 to CLR_FIELD_COUNT - 1
+            if pClr->IsFieldVisible( i ) then bNoneVisible = false
+        next
+        CLRTest_Check( "no field is visible, so the focus walker cannot land on one", bNoneVisible, "" )
+
+        ' AND IT STILL PICKS COLOURS -- the mode is a smaller picker, not a broken one.
+        gCLR_NotifyCount = 0
+        dim as COLORREF clrPick = PsColorPicker_MatrixColorAt( 3, 2, pClr->nMatrixCols, pClr->nMatrixRows )
+        PsColorPicker_SetColor( h, clrPick )
+        CLRTest_Check( "the body still selects a colour in selection-only mode", _
+                       (PsColorPicker_GetColor( h ) = clrPick), "&h" & hex(PsColorPicker_GetColor( h )) )
+
+        ' Restore for anything after this scope, and prove the mode is reversible.
+        PsColorPicker_SetSelectionOnly( h, false )
+        PsColorPicker_GetIdealSize( h, nSelW, nSelH )
+        SetWindowPos( h, 0, 0, 0, nSelW, nSelH, SWP_NOZORDER or SWP_NOMOVE or SWP_NOACTIVATE )
+        pClr->LayoutColorPicker()
+        CLRTest_Check( "turning the mode off restores the previews and the fields", _
+                       (IsRectEmpty( @pClr->rcInitial ) = 0) andalso _
+                       (IsRectEmpty( @pClr->rcFields ) = 0) andalso (nSelH = nFullH), _
+                       "h back to " & str(nSelH) & " (was " & str(nFullH) & ")" )
+    end scope
+
     DestroyWindow( h )
 
     dim as string sLine = "--- PsColorPicker self-test: " & str(gCLR_TestCount - gCLR_FailCount) & _

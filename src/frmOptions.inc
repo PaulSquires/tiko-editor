@@ -947,7 +947,7 @@ function frmOptions_WndProc( _
 
         case WM_CREATE
             ' This is a modal popup window so disable the parent window
-            DisableAllModeless()
+            EnableWindow(GetParent(hwnd), false)
             return 0
 
         case WM_ERASEBKGND
@@ -967,7 +967,7 @@ function frmOptions_WndProc( _
 
         case WM_CLOSE
             ' Enables parent window keeping parent's zorder
-            EnableAllModeless()
+            EnableWindow(GetParent(hwnd), true)
             DestroyWindow hwnd
             return 0
 

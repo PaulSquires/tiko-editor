@@ -40,8 +40,6 @@ declare function getTextWidth( byval hwnd as HWND, byref wszText as wstring, byv
 declare function SpawnPreviousInstance() as boolean
 declare function ReloadDocument( byref wszFilename as wstring ) as long
 declare function ShowContextHelp( byval id as long ) as long
-declare function DisableAllModeless() as long
-declare function EnableAllModeless() as long
 declare function GetTemporaryFilename( byref wszFolder as wstring, byref wszExtension as wstring) as string
 declare function GetFontCharSetID(byref wzCharsetName as DWSTRING ) as long
 declare function isUTF8encoded(byref s as string) as boolean

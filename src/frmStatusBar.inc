@@ -20,13 +20,17 @@
 sub frmStatusBar_PaintCallback( byval p as PSSTATUSBAR_PAINTINFO ptr )
 
     ' Panel state: hot > normal. (No selected state -- a statusbar has no selection.)
+    ' The Ln/Col also has no selection
     ' Set default fore and back colors
     dim as COLORREF backclr = ghStatusBar.BackColor
     dim as COLORREF foreclr = ghStatusBar.ForeColor
     
-    if (p->isHot = true) andalso (p->itemID <> COMPILE_STATUS_PANEL) then
-        backclr = ghStatusBar.BackColorHot
-        foreclr = ghStatusBar.ForeColorHot
+    if (p->itemID <> COMPILE_STATUS_PANEL) andalso _
+         (p->itemID <> GOTO_PANEL) then
+        if (p->isHot = true) then
+            backclr = ghStatusBar.BackColorHot
+            foreclr = ghStatusBar.ForeColorHot
+        end if    
     end if
     p->b->SetForeColor( foreclr )
     p->b->SetBackColor( backclr )

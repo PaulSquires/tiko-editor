@@ -62,8 +62,8 @@
 ' Shell metrics, UNSCALED -- run through AfxScaleX/AfxScaleY at use. FIXED SIZE, like
 ' frmOptions: the colour page's three columns have to fit one known width, and a resizable
 ' dialog would make "does it fit" a question with no stable answer.
-#Define FRMTHEMES_CLIENT_W        1000
-#Define FRMTHEMES_CLIENT_H         640
+#Define FRMTHEMES_CLIENT_W         900
+#Define FRMTHEMES_CLIENT_H         620
 #Define FRMTHEMES_LIST_W           240
 #Define FRMTHEMES_BAR_H             34
 #Define FRMTHEMES_FOOTER_H          58
@@ -71,11 +71,38 @@
 #Define FRMTHEMES_BTN_H             32
 #Define FRMTHEMES_MARGIN            16
 
+' EDIT-view header band (UNSCALED): a left-aligned stack of the "Edit theme" title, the
+' description text + its edit button, and the Back button, above the Syntax/Interface bar.
+#Define FRMTHEMES_EDITHDR_H        122
+
+' Selection-view metrics (UNSCALED). The action buttons stack down the right; the list takes
+' the remainder. HEADER_H is the drawn band at the top holding the "active theme" heading and
+' the one-line instruction, mirroring the localization page's drawn heading.
+#Define FRMTHEMES_SELBTN_W         128
+#Define FRMTHEMES_SELBTN_H          51
+#Define FRMTHEMES_SELBTN_GAP        10
+#Define FRMTHEMES_HEADER_H          84
+
+' The two views share one window. THEMEVIEW_SELECT is the theme picker (list + Edit/Clone/
+' Delete/Set-active + Close); THEMEVIEW_EDIT is the colour editor (Syntax/Interface bar + page
+' + Back). gThemesShowEdit selects between them, exactly the frmOptionsLocal gLocalShowEdit split.
+#Define THEMECOL_NAME              0
+#Define THEMECOL_DESC              1
+#Define THEMECOL_ACTIVE           2
+
 #Define IDC_FRMTHEMES_LSTTHEMES   9600
 #Define IDC_FRMTHEMES_SELECTBAR   9601
 #Define IDC_FRMTHEMES_PAGE        9602
-#Define IDC_FRMTHEMES_CMDOK       9603
-#Define IDC_FRMTHEMES_CMDCANCEL   9604
+#Define IDC_FRMTHEMES_CMDEDIT     9603
+#Define IDC_FRMTHEMES_CMDCLONE    9604
+#Define IDC_FRMTHEMES_CMDDELETE   9605
+#Define IDC_FRMTHEMES_CMDSETACTIVE 9606
+#Define IDC_FRMTHEMES_CMDCLOSE    9607
+#Define IDC_FRMTHEMES_CMDGOBACK   9608
+#Define IDC_FRMTHEMES_CMDSAVE     9609
+#Define IDC_FRMTHEMES_CMDREVERT   9610
+#Define IDC_FRMTHEMES_TXTDESC     9611
+#Define IDC_FRMTHEMES_CMDDESCEDIT 9612
 
 ' Control ids for the colour page itself. Unchanged from when it lived in frmOptions -- the
 ' page module moved wholesale and its ids came with it.
@@ -89,6 +116,10 @@
 #Define IDC_FRMTHEMES_CMDRESETF   9507
 #Define IDC_FRMTHEMES_CMDRESETB   9508
 #Define IDC_FRMTHEMES_PICKER      9509
+#Define IDC_FRMTHEMES_PICKER2     9510   ' the selection-only picker inside the colour popup
+#Define IDC_FRMTHEMES_TXTR        9511
+#Define IDC_FRMTHEMES_TXTG        9512
+#Define IDC_FRMTHEMES_TXTB        9513
 
 ' Group-header categories for the key list. Stable ids, deliberately NOT localized strings --
 ' grouping is structure, and must not change meaning with the UI language. THEMECAT_OTHER is
@@ -119,6 +150,11 @@ dim shared HWND_FRMTHEMES_PAGE  as HWND
 ' Committed to gConfig only by OK.
 dim shared gThemesWorkFile as DWSTRING
 
+' TRUE once the user has typed in the Description field this editing session. It decides whether
+' a fork of a built-in keeps the auto "(custom)" suffix (user did not rename) or the user's own
+' text (they did). Set in frmThemes.inc; read in frmThemesPage.inc's SaveThemeFile.
+dim shared gThemesDescEdited as boolean
+
 declare function frmThemes_Show( byval hWndParent as HWND ) as LRESULT
 declare sub      frmThemes_RefreshThemeList()
 declare function frmThemes_ThemedMsgBox( byval wszText as DWSTRING, _
@@ -136,6 +172,19 @@ declare sub      frmThemes_ApplyTheme()
 declare function frmThemes_IsProtectedTheme( byval wszShortFilename as DWSTRING ) as boolean
 declare function frmThemes_MakeForkName( byval wszShortFilename as DWSTRING ) as DWSTRING
 declare function frmThemes_WasEdited() as boolean
+' Editor-lifecycle hooks. Defined in frmThemesPage.inc (where gThemeEdited / ghGeneral /
+' EnsureForked live); forward-declared here because frmThemes.inc's handlers, compiled first,
+' call them.
+declare sub      frmThemes_MarkEdited()
+declare sub      frmThemes_ClearEdited()
+declare function frmThemes_SaveThemeFile() as boolean
 declare function frmThemes_PageForKey( byval sKey as string ) as long
 declare function frmThemes_CategoryIdForKey( byval sKey as string ) as long
 declare function frmThemes_CategoryTitle( byval nCat as long ) as DWSTRING
+' The colour popup's host-pump filter (Escape / outside-click dismissal). Defined in
+' frmThemesPage.inc; the pump in frmThemes.inc, compiled first, calls it.
+declare function frmThemes_ColorPopupFilterMessage( byval pMsg as MSG ptr ) as boolean
+declare sub      frmThemes_DestroyColorPopup()
+' A click on the page: opens the colour popup if it hit a Fore/Back swatch. Called from the
+' page WndProc (frmThemes.inc), defined in frmThemesPage.inc.
+declare function frmThemes_SwatchClick( byval x as long, byval y as long ) as boolean

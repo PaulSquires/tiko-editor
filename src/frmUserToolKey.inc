@@ -744,7 +744,6 @@ private function frmUserToolKey_WndProc( _
     select case uMsg
 
         case WM_CREATE
-            DisableAllModeless()
             EnableWindow( GetParent(hwnd), false )
             return 0
 
@@ -770,7 +769,6 @@ private function frmUserToolKey_WndProc( _
         case WM_CLOSE
             ' NOTHING IS WRITTEN HERE. The commit is on the OK path only, so reaching this by
             ' any route leaves gToolKey* exactly as the caller set them.
-            EnableAllModeless()
             EnableWindow( GetParent(hwnd), true )
             DestroyWindow( hwnd )
             return 0

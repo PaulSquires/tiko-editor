@@ -159,7 +159,16 @@ function OnCommand_SearchGotoDefinition( byval pDoc as clsDocument ptr ) as LRES
         dim as wstring ptr pFile = 0
         if refSym.IsValid then pFile = gSymDb.SymFile( refSym )
         if pFile = 0 then
-            MessageBox( HWND_FRMMAIN, L(224,"Symbol definition not found."), @wstr(APPNAME), MB_ICONWARNING)
+            dim as HWND hBox = PsMessageBox_Create( HWND_FRMMAIN )
+            PsMessageBox_SetFont( hBox, ghFont(GUIFONT_10) )
+            PsMessageBox_SetCaptionFont( hBox, ghFont(GUIFONT_11) )
+            PsMessageBox_SetGlyphFont( hBox, ghFont(SYMBOLFONT_20) )        ' the ~32px message icon
+            PsMessageBox_SetCloseGlyphFont( hBox, ghFont(SYMBOLFONT_10) )   ' the ~10px close X
+            PsMessageBox_SetCaption( hBox, APPNAME )
+            PsMessageBox_SetText( hBox, L(224,"Symbol definition not found.") )
+            PsMessageBox_SetIconKind( hBox, MBX_ICON_WARNING )
+            PsMessageBox_AddPreset( hBox, MBX_BTN_OK )
+            PsMessageBox_DoModal( hBox )
             exit function
         end if
         wszFilename = *pFile
@@ -358,10 +367,6 @@ function OnCommand_SearchGotoFile( _
     dim as HWND hEdit = pDoc->hWndActiveScintilla
     
     select case id
-        case IDM_GOTOLINE
-            frmGoto_Show( hEdit )
-            exit function
-        
         case IDM_GOTONEXTFUNCTION
             pDoc->GotoNextFunction
             exit function

@@ -167,6 +167,10 @@ end enum
 #define IDM_MRUPROJECTBASE   6000  ' Windows id of MRUPROJECT items 1 to 10 (located under Project menu)
 #define IDM_MRUSESSIONBASE   7000  ' Windows id of MRUSESSION items 1 to 10 (located under File menu)
 #define IDM_BUILDCONFIGBASE  8000
+' The AfxIFileSaveDialog selector for cloning a theme -- picks the *.theme filter and the
+' settings\themes\ folder in modRoutines. Defined HERE (loaded before modRoutines.inc) rather
+' than in frmThemes.bi (loaded after it), which the save dialog cannot see.
+#define IDC_THEMES_SAVEAS    9650
 
 
 '  Global window handles
@@ -250,20 +254,21 @@ redim shared LL(any) as wstring * MAX_PATH
 #DEFINE SYMBOLFONT_9     5
 #DEFINE SYMBOLFONT_10    6
 #DEFINE SYMBOLFONT_12    7
+#DEFINE SYMBOLFONT_20    8
 ' Larger GUI faces, added for the Environment Options dialog (whose base font is 11pt).
 ' MAXFONTS is both the array bound and the bound of the DeleteObject loop in frmMain, so a
 ' new entry here is freed without touching the cleanup.
-#DEFINE GUIFONT_11       8
-#DEFINE GUIFONT_12       9
-#DEFINE GUIFONTBOLD_11   10
+#DEFINE GUIFONT_11       9
+#DEFINE GUIFONT_12       10
+#DEFINE GUIFONTBOLD_11   11
 ' The About box's application name, and the only face in this table above 12pt. Nothing else
 ' in tiko needs it; it exists so that one line can carry the dialog.
-#DEFINE GUIFONT_26       11
+#DEFINE GUIFONT_26       12
 ' The "tk" wordmark on the About box's icon plate. A FIXED face, deliberately: the mark is
 ' two lowercase letters standing in for an app icon, and Consolas gives them the even weight
 ' and the flat terminals that read as a logotype. Segoe UI at the same size reads as a word.
-#DEFINE FIXEDFONT_26     12
-#DEFINE MAXFONTS         13
+#DEFINE FIXEDFONT_26     13
+#DEFINE MAXFONTS         14
 
 dim shared ghFont(MAXFONTS) as HFONT
 

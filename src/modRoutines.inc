@@ -347,26 +347,6 @@ end function
 
 
 ' ========================================================================================
-' Disable all modeless windows belonging to frmMain so that the popup modal is truly modal.
-' ========================================================================================
-function DisableAllModeless() as long
-    ' No need to enable/disable the modeless Help form.
-    EnableWindow(HWND_FRMMAIN, false)
-    function = 0
-end function
-
-
-' ========================================================================================
-' Enable all modeless windows belonging to frmMain.
-' ========================================================================================
-function EnableAllModeless() as long
-    ' No need to enable/disable the modeless Help form.
-    EnableWindow(HWND_FRMMAIN, true)
-    function = 0
-end function
-
-
-' ========================================================================================
 ' return temporary file name
 ' ========================================================================================
 function GetTemporaryFilename( _
@@ -1407,6 +1387,24 @@ function AfxIFileSaveDialog( _
                 end if      
             end if
 
+        case IDC_THEMES_SAVEAS
+            rgFileTypes(1).pszName = @L(486,"Themes")
+            rgFileTypes(1).pszSpec = @wstr("*.theme")
+            rgFileTypes(2).pszName = @L(79,"All files")
+            rgFileTypes(2).pszSpec = @wstr("*.*")
+            psfd->lpVtbl->SetFileTypes(psfd, 2, @rgFileTypes(1))
+            psfd->lpVtbl->SetTitle(psfd, L(8,"Save As..."))
+
+            dim as DWSTRING wszDefaultFolder = AfxGetExePathName & wstr("settings\themes\")
+            dim pFolder as IShellItem ptr
+            SHCreateItemFromParsingName (wszDefaultFolder, null, @IID_IShellItem, @pFolder)
+            if pFolder then
+                hr = psfd->lpVtbl->SetFolder(psfd, pFolder)
+                if SUCCEEDED(hr) then
+                    pFolder->lpVtbl->Release(pFolder)
+                end if
+            end if
+
         case else
             rgFileTypes(1).pszName = @L(106,"Source files")
             rgFileTypes(2).pszName = @L(77,"Code files")
@@ -1433,7 +1431,7 @@ function AfxIFileSaveDialog( _
     hr = psfd->lpVtbl->SetDefaultExtension(psfd, pwszDefExt)
 
     ' // Set the default folder to display in the save dialog
-    if id <> IDC_FRMOPTIONSLOCAL_CMDNEW then
+    if (id <> IDC_FRMOPTIONSLOCAL_CMDNEW) andalso (id <> IDC_THEMES_SAVEAS) then
         if len(wszFilePath ) then
             dim pFolder as IShellItem ptr
             SHCreateItemFromParsingName (wszFilePath, null, @IID_IShellItem, @pFolder)

@@ -320,9 +320,7 @@ function frmMain_OnCommand( _
             frmHelpViewer_Show( HWND_DESKTOP )
 
         case IDM_ABOUT
-            DisableAllModeless()
             frmAbout_Show( hwnd )
-            EnableAllModeless()
             frmMain_SetFocusToCurrentCodeWindow()
         
     end select

@@ -1519,7 +1519,7 @@ private function frmUserTools_WndProc( _
 
         case WM_CREATE
             ' Modal: keep the rest of the app out while this is up.
-            DisableAllModeless()
+            EnableWindow( GetParent(hwnd), false )
             return 0
 
         case WM_ERASEBKGND
@@ -1552,7 +1552,8 @@ private function frmUserTools_WndProc( _
             ' any route discards gToolsWork() and leaves gConfig.Tools, settings.ini and the
             ' accelerator table exactly as they were found. The dialog this replaces had no
             ' Cancel at all -- its only button saved.
-            EnableAllModeless()
+            ' Enables parent window keeping parent's zorder
+            EnableWindow(GetParent(hwnd), true)
             DestroyWindow( hwnd )
             return 0
 

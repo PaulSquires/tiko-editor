@@ -30,13 +30,23 @@ dim shared ghThemeBack      as HWND      ' PsButton
 dim shared ghThemeBold      as HWND      ' PsToggle
 dim shared ghThemeItalic    as HWND      ' PsToggle
 dim shared ghThemeUnder     as HWND      ' PsToggle
-dim shared ghThemeAlpha     as HWND      ' PsNumericUpDown
+dim shared ghThemeAlpha     as HWND      ' PsNumericUpDown -- the alpha/opacity (channel-correct)
 dim shared ghThemeResetF    as HWND      ' PsButton -- undo this key's foreground
 dim shared ghThemeResetB    as HWND      ' PsButton -- undo this key's background
-dim shared ghThemePicker    as HWND      ' PsColorPicker -- embedded, replaces the modal dialog
+' R/G/B numeric entry for the CURRENT channel's colour. The large colour chooser now lives in a
+' popup (frmThemes_OpenColorPopup); these stay on the dialog. ghThemePicker is kept but HIDDEN --
+' it is the current-colour model the popup seeds from and these fields read.
+dim shared ghThemeR         as HWND      ' PsTextBox
+dim shared ghThemeG         as HWND      ' PsTextBox
+dim shared ghThemeB         as HWND      ' PsTextBox
+dim shared ghThemePicker    as HWND      ' PsColorPicker -- hidden colour model (popup does the UI)
 
 dim shared gThemeBuilt      as boolean
 dim shared gThemeCurPage    as long = THEMEPAGE_NONE
+
+' The current-colour swatches drawn beside the Foreground/Background buttons: 0 = fore, 1 = back.
+' Rects are set by Layout; Paint fills them from the selected key's colours.
+dim shared gThemeSwatchRc(0 to 1) as RECT
 
 ' Bind-table indices for the rows currently in the list, in list order. Rebuilt whenever the
 ' page changes; row N of the listbox is gThemeRowBind(N).
@@ -85,7 +95,7 @@ dim shared gThemeLabels(any) as THEMELABEL_TYPE
 ' THE LIST GETS WHATEVER IS LEFT, and its floor is what the fit assertion watches: the three
 ' columns plus their gaps have to come out of one fixed width, so the floor is the number that
 ' decides whether they overlap rather than merely look cramped.
-const THEME_LISTHEIGHT   = 380
+const THEME_LISTHEIGHT   = 372
 ' MEASURED, NOT CHOSEN. At 175% the panel offers 1106px and the first attempt (floor 170,
 ' controls 156) needed 1114 -- the remainder fell BELOW the floor, the floor raised the list,
 ' and the total ran 8px past the edge. That is exactly what the floor is for: it converts an
@@ -95,6 +105,7 @@ const THEME_LISTHEIGHT   = 380
 ' with room to spare -- and while the floor does not bind, the three columns tile the width
 ' EXACTLY by construction, because the list is computed as what is left.
 const THEME_LISTMINW     = 165      ' below this the key names stop being readable
+const THEME_LISTW        = 440      ' the key list width (2-column layout)
 const THEME_CTLCOLW      = 148      ' buttons, toggles and Opacity -- the narrow third column
 const THEME_SWATCHW      = 30
 const THEME_SWATCHH      = 14
@@ -285,11 +296,9 @@ private sub frmThemes_PopulateList()
     PsListTree_Clear( ghThemeKeys )
     erase gThemeRowBind
 
-    ' Rows are appended in bind-table order, and a group header is emitted whenever the
-    ' category changes. That relies on the bind table already grouping its keys by namespace,
-    ' which it does -- so no sort is needed and the list order stays the order the engine
-    ' declares, which is also the order the theme file is written in.
-    dim as long nLastCat = -1
+    ' A FLAT list, no group headers -- rows are appended in bind-table order, which the engine
+    ' already groups by namespace, so related keys still sit together without a divider row
+    ' between them.
     dim as long nRow = -1
     dim as long nFirstSelectable = -1
 
@@ -297,15 +306,6 @@ private sub frmThemes_PopulateList()
 
         dim as string sKey = gThemeBind(i).keyValue
         if frmThemes_PageForKey( sKey ) <> gThemeCurPage then continue for
-
-        dim as long nCat = frmThemes_CategoryIdForKey( sKey )
-        if nCat <> nLastCat then
-            nLastCat = nCat
-            nRow += 1
-            redim preserve gThemeRowBind(nRow) as long
-            gThemeRowBind(nRow) = -1                 ' -1 marks a header row
-            PsListTree_AddHeader( ghThemeKeys, frmThemes_CategoryTitle( nCat ) )
-        end if
 
         nRow += 1
         redim preserve gThemeRowBind(nRow) as long
@@ -436,10 +436,20 @@ private sub frmThemes_SyncEditControls()
         ' is always there and usually empty teaches the user to ignore it.
         PsColorPicker_ShowPaletteTab( ghThemePicker, (Theme_MacroCount() > 0) )
         EnableWindow( ghThemePicker, bCanEdit )
+
+        ' Mirror the current colour into the R/G/B fields. SetText is silent, so no recursion.
+        if ghThemeR then PsTextBox_SetText( ghThemeR, str(GetRValue(clrEdit)) )
+        if ghThemeG then PsTextBox_SetText( ghThemeG, str(GetGValue(clrEdit)) )
+        if ghThemeB then PsTextBox_SetText( ghThemeB, str(GetBValue(clrEdit)) )
+        if ghThemeR then EnableWindow( ghThemeR, bCanEdit )
+        if ghThemeG then EnableWindow( ghThemeG, bCanEdit )
+        if ghThemeB then EnableWindow( ghThemeB, bCanEdit )
     end if
 
-    ' The swatches live in the list rows, so a change has to redraw the list too.
+    ' Swatches live in the list rows AND beside the Fore/Back buttons (painted on the page), so a
+    ' selection change has to repaint both.
     AfxRedrawWindow( ghThemeKeys )
+    if HWND_FRMTHEMES_PAGE then AfxRedrawWindow( HWND_FRMTHEMES_PAGE )
 
 end sub
 
@@ -491,6 +501,43 @@ end function
 
 
 ' ========================================================================================
+' Editor-lifecycle hooks called by the shell (frmThemes.inc). Defined here because gThemeEdited,
+' ghGeneral and EnsureForked are all in this file.
+' ========================================================================================
+sub frmThemes_MarkEdited()
+    gThemeEdited = true
+end sub
+
+sub frmThemes_ClearEdited()
+    gThemeEdited = false
+end sub
+
+' Write the theme being edited to its .theme file. Forks first if it is a built-in. The user's
+' typed description wins over the fork's auto "(custom)" one, but ONLY if they actually typed --
+' otherwise a fork of an untouched built-in keeps the distinguishing suffix. Returns TRUE on
+' success; clears the dirty flag and refreshes the shell's theme list.
+function frmThemes_SaveThemeFile() as boolean
+    dim as DWSTRING wszUserDesc = ghGeneral.description
+    dim as boolean  bUserDesc   = gThemesDescEdited
+
+    if frmThemes_EnsureForked() = false then return false   ' declined the fork -> do not save
+    if bUserDesc then ghGeneral.description = wszUserDesc
+
+    dim as DWSTRING wszPath = AfxGetExePathName & "settings\themes\" & gThemesWorkFile
+    if Theme_WriteFile( wszPath, ghGeneral.description ) then
+        frmThemes_ThemedMsgBox( L(454,"The new theme file could not be written."), _
+                                L(486,"Themes"), MBX_ICON_ERROR, MBX_BTN_OK )
+        return false
+    end if
+
+    gThemeEdited     = false
+    gThemesDescEdited = false
+    frmThemes_RefreshThemeList()
+    return true
+end function
+
+
+' ========================================================================================
 ' CHANNEL SELECTION.  The Foreground / Background buttons no longer open anything -- they say
 ' which channel the embedded picker is pointed at, and the picker retargets.
 '
@@ -504,12 +551,249 @@ private sub frmThemes_SetChannel( byval nChannel as long )
     frmThemes_SyncEditControls()
 end sub
 
+' ========================================================================================
+' THE COLOUR POPUP.  A WS_POPUP hosting a SELECTION-ONLY PsColorPicker (tabs + body, no fields
+' or previews), opened by the Foreground / Background buttons. The numeric fields stay on the
+' dialog, so the popup is the colour-CHOOSING surface only.
+'
+' IT COMMITS AND CLOSES ON THE PICKER'S END PHASE, and that one rule is both behaviours the
+' brief asked for: a list-tab swatch click emits a bare END (close on the click), and a matrix
+' drag emits END on release (close on release). No special-casing of the tab.
+'
+' NOTE FOR PHASE C: the embedded picker (ghThemePicker) is still created and shown on the page;
+' this popup is additive for now. It reads the CURRENT colour and tab from the embedded picker
+' to seed itself. Phase C removes the embedded picker and adds the R/G/B/A fields.
+' ========================================================================================
+dim shared ghThemeColorPopup  as HWND      ' the WS_POPUP window
+dim shared ghThemePopupPicker as HWND      ' the selection-only picker inside it
+dim shared gThemePopupOpener  as HWND      ' the button that opened it (reopen-guard target)
+dim shared gThemePopupGuard   as boolean   ' one-shot: swallow the reopen click on the opener
+
+' Forward -- these are all defined LATER in this file, but the popup functions above them here
+' call them (FB is single-pass).
+declare sub      frmThemes_PickerChanged( byval hCtrl as HWND, byval clr as COLORREF, _
+                                          byval nAlpha as ubyte, byval nPhase as long )
+declare function frmThemes_PaletteCount( byval hCtrl as HWND ) as long
+declare function frmThemes_PaletteEntry( byval hCtrl as HWND, byval idx as long, _
+                                         byref wszName as DWSTRING, byref clr as COLORREF ) as boolean
+declare sub      frmThemes_PaletteAssign( byval hCtrl as HWND, byval idx as long )
+declare sub      frmThemes_CloseColorPopup()
+declare sub      frmThemes_OpenColorPopup( byval nChannel as long, byval hOpener as HWND )
+
+
+' Build a PSCOLORPICKER_COLORS from the current dialog theme. Shared by the embedded picker and
+' the popup picker so their chrome cannot drift.
+private sub frmThemes_FillPickerColors( byval pc as PSCOLORPICKER_COLORS ptr )
+    if pc = 0 then exit sub
+    pc->BackColor           = ghPanel.BackColor
+    pc->ForeColor           = ghPanel.ForeColor
+    pc->BorderColor         = ghEditor.Divider
+    pc->TabBackColor        = ghPanel.BackColor
+    pc->TabBackColorSel     = ghPanel.BackColorHot
+    pc->TabForeColor        = ghPanel.ForeColor
+    pc->TabForeColorSel     = ghPanel.ForeColorHot
+    pc->FieldBackColor      = ghEditor.BackColorText
+    pc->FieldForeColor      = ghEditor.ForeColorText
+    pc->FieldBorderColor    = ghEditor.Divider
+    pc->FieldBorderColorSel = ghUI.AccentColor
+    pc->SelRingColor        = ghUI.AccentColor
+    pc->FocusRingColor      = ghUI.AccentColor
+    ' HotRingColor stays at its white default: it is drawn ON a swatch of an arbitrary colour.
+end sub
+
+
+' The popup picker's colour changed. Route through the SAME PickerChanged that the embedded
+' picker uses (fork, apply, sync -- one path), then close on the committing END.
+private sub frmThemes_PopupPickerChanged( byval hCtrl as HWND, byval clr as COLORREF, _
+                                          byval nAlpha as ubyte, byval nPhase as long )
+    frmThemes_PickerChanged( hCtrl, clr, nAlpha, nPhase )
+    if nPhase = CLR_PHASE_END then frmThemes_CloseColorPopup()
+end sub
+
+
+private function frmThemes_ColorPopupWndProc( byval hwnd as HWND, byval uMsg as UINT, _
+                                              byval wParam as WPARAM, byval lParam as LPARAM ) as LRESULT
+    select case uMsg
+    case WM_MOUSEACTIVATE
+        ' Never take activation -- the dialog keeps focus, the family's popup contract.
+        return MA_NOACTIVATE
+    case WM_ERASEBKGND
+        return true
+    case WM_PAINT
+        ' The client is one pixel larger than the picker on every side; filling it in the divider
+        ' colour is what draws the 1px frame around the inset picker.
+        dim as PsBufferPaint b
+        b.BeginDoubleBuffer( hwnd )
+        dim as RECT rc : GetClientRect( hwnd, @rc )
+        b.SetBackColor( ghEditor.Divider )
+        b.PaintRect( @rc )
+        b.EndDoubleBuffer()
+        return 0
+    case WM_NCDESTROY
+        dim as CWindow ptr pW = AfxCWindowPtr( hwnd )
+        if pW then delete(pW)
+        return 0
+    end select
+    function = DefWindowProc( hwnd, uMsg, wParam, lParam )
+end function
+
+
+private sub frmThemes_EnsureColorPopup()
+    if ghThemeColorPopup then exit sub
+
+    dim pW as CWindow ptr = new CWindow
+    pW->DPI = AfxCWindowOwnerPtr( HWND_FRMTHEMES )->DPI
+    ghThemeColorPopup = pW->Create( HWND_FRMTHEMES, "", @frmThemes_ColorPopupWndProc, 0, 0, 0, 0, _
+        WS_POPUP or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
+        WS_EX_TOOLWINDOW or WS_EX_NOACTIVATE )
+    pW->ClassStyle = CS_DROPSHADOW
+
+    ghThemePopupPicker = PsColorPicker_Create( ghThemeColorPopup, IDC_FRMTHEMES_PICKER2 )
+    PsColorPicker_SetSelectionOnly( ghThemePopupPicker, true )
+    PsColorPicker_SetColorChangedCallback( ghThemePopupPicker, @frmThemes_PopupPickerChanged )
+    PsColorPicker_SetPaletteCallbacks( ghThemePopupPicker, @frmThemes_PaletteCount, _
+                                       @frmThemes_PaletteEntry, @frmThemes_PaletteAssign )
+    PsColorPicker_SetAssignText( ghThemePopupPicker, L(481, "Use named color") )
+
+    dim as PSCOLORPICKER_COLORS pc
+    frmThemes_FillPickerColors( @pc )
+    PsColorPicker_SetColors( ghThemePopupPicker, @pc )
+    PsColorPicker_SetFont( ghThemePopupPicker, OptionsFont_Base() )
+
+    ' PsColorPicker_Create does NOT set WS_VISIBLE (the embedded one is shown by ShowPage). Show
+    ' it once here; as a child it then follows the popup window's own show/hide.
+    ShowWindow( ghThemePopupPicker, SW_SHOW )
+end sub
+
+
+' Destroys the popup and its picker. Called from frmThemes_Reset (dialog close), because a
+' WS_POPUP is a top-level window and is NOT destroyed with the page.
+sub frmThemes_DestroyColorPopup()
+    if ghThemeColorPopup then DestroyWindow( ghThemeColorPopup )
+    ghThemeColorPopup  = 0
+    ghThemePopupPicker = 0
+    gThemePopupOpener  = 0
+    gThemePopupGuard   = false
+end sub
+
+
+sub frmThemes_CloseColorPopup()
+    if ghThemeColorPopup = 0 then exit sub
+    if IsWindowVisible( ghThemeColorPopup ) = 0 then exit sub
+    ShowWindow( ghThemeColorPopup, SW_HIDE )
+end sub
+
+
+private sub frmThemes_OpenColorPopup( byval nChannel as long, byval hOpener as HWND )
+    frmThemes_EnsureColorPopup()
+    if ghThemePopupPicker = 0 then exit sub
+
+    ' Point the dialog at this channel. That seeds the embedded picker, which we then read to
+    ' seed the popup -- one source of "the current colour" rather than two.
+    frmThemes_SetChannel( nChannel )
+
+    dim as PSCOLORPICKER_COLORS pc
+    frmThemes_FillPickerColors( @pc )
+    PsColorPicker_SetColors( ghThemePopupPicker, @pc )
+    PsColorPicker_ShowPaletteTab( ghThemePopupPicker, (Theme_MacroCount() > 0) )
+    PsColorPicker_SetTab( ghThemePopupPicker, PsColorPicker_GetTab( ghThemePicker ) )
+    PsColorPicker_SetColor( ghThemePopupPicker, PsColorPicker_GetColor( ghThemePicker ), 255, false )
+
+    ' Size the popup to the picker's ideal size plus a 1px frame on every side.
+    dim as long pw, ph
+    PsColorPicker_GetIdealSize( ghThemePopupPicker, pw, ph )
+    dim as long bd = 1
+    SetWindowPos( ghThemePopupPicker, 0, bd, bd, pw, ph, SWP_NOZORDER or SWP_NOACTIVATE )
+    dim as long popW = pw + (2 * bd)
+    dim as long popH = ph + (2 * bd)
+
+    ' Below the opener, clamped to the monitor work area; flipped above if it will not fit below.
+    dim as RECT rcBtn : GetWindowRect( hOpener, @rcBtn )
+    dim as long px = rcBtn.left
+    dim as long py = rcBtn.bottom + AfxScaleY(2)
+    dim as MONITORINFO mi : mi.cbSize = sizeof(MONITORINFO)
+    if GetMonitorInfo( MonitorFromWindow( HWND_FRMTHEMES, MONITOR_DEFAULTTONEAREST ), @mi ) then
+        if px + popW > mi.rcWork.right then px = mi.rcWork.right - popW
+        if px < mi.rcWork.left then px = mi.rcWork.left
+        if py + popH > mi.rcWork.bottom then py = rcBtn.top - popH - AfxScaleY(2)
+        if py < mi.rcWork.top then py = mi.rcWork.top
+    end if
+
+    SetWindowPos( ghThemeColorPopup, HWND_TOP, px, py, popW, popH, SWP_NOACTIVATE )
+    ShowWindow( ghThemeColorPopup, SW_SHOWNOACTIVATE )
+    PsColorPicker_Refresh( ghThemePopupPicker )
+    gThemePopupOpener = hOpener
+end sub
+
+
+' Escape and outside-click dismissal. Runs from frmThemes' pump, ahead of its own Escape
+' handling, so Escape closes the popup rather than backing out of the editor.
+function frmThemes_ColorPopupFilterMessage( byval pMsg as MSG ptr ) as boolean
+    if pMsg = 0 then return false
+    if ghThemeColorPopup = 0 then return false
+    if IsWindowVisible( ghThemeColorPopup ) = 0 then return false
+
+    select case pMsg->message
+    case WM_KEYDOWN
+        if pMsg->wParam = VK_ESCAPE then
+            frmThemes_CloseColorPopup()
+            return true      ' consume, so the dialog does not ALSO act on Escape
+        end if
+    case WM_LBUTTONDOWN, WM_RBUTTONDOWN, WM_NCLBUTTONDOWN, WM_MBUTTONDOWN
+        dim as boolean bInPopup = (pMsg->hwnd = ghThemeColorPopup) orelse _
+                                  (IsChild( ghThemeColorPopup, pMsg->hwnd ) <> 0)
+        if bInPopup = false then
+            ' A click on the OPENER button -- or on the PAGE, where the clickable swatches are
+            ' painted -- would close-then-reopen (PsComboBox's trap); the guard lets that click's
+            ' handler swallow this one.
+            dim as boolean bOnOpener = (gThemePopupOpener <> 0) andalso _
+                ((pMsg->hwnd = gThemePopupOpener) orelse (IsChild( gThemePopupOpener, pMsg->hwnd ) <> 0))
+            dim as boolean bOnPage = (pMsg->hwnd = HWND_FRMTHEMES_PAGE)
+            frmThemes_CloseColorPopup()
+            if bOnOpener orelse bOnPage then gThemePopupGuard = true
+        end if
+        return false         ' let the click still reach whatever it landed on
+    end select
+
+    return false
+end function
+
+
+' A click on the page (page client coords). If it hit a Foreground/Background colour swatch,
+' open the popup for that channel -- anchored to the matching button so it lands in the same
+' place a button click would. Returns TRUE if it was a swatch.
+function frmThemes_SwatchClick( byval x as long, byval y as long ) as boolean
+    dim as boolean bGuarded = gThemePopupGuard
+    gThemePopupGuard = false
+
+    dim as long nb = frmThemes_SelectedBind()
+    if nb < 0 then return false
+
+    dim as POINT pt : pt.x = x : pt.y = y
+    dim as long  nChan   = -1
+    dim as HWND  hAnchor = 0
+    if (gThemeBind(nb).pFore <> 0) andalso (PtInRect( @gThemeSwatchRc(0), pt ) <> 0) then
+        nChan = THEMECH_FORE : hAnchor = ghThemeFore
+    elseif (gThemeBind(nb).pBack <> 0) andalso (PtInRect( @gThemeSwatchRc(1), pt ) <> 0) then
+        nChan = THEMECH_BACK : hAnchor = ghThemeBack
+    end if
+    if nChan < 0 then return false
+
+    ' The popup was just closed by this same click (the pump filter ran first) -- don't reopen.
+    if bGuarded then return true
+    frmThemes_OpenColorPopup( nChan, hAnchor )
+    return true
+end function
+
+
 private sub frmThemes_ForeClick( byval hButton as HWND, byval id as long )
-    frmThemes_SetChannel( THEMECH_FORE )
+    if gThemePopupGuard then gThemePopupGuard = false : exit sub   ' this click just closed the popup
+    frmThemes_OpenColorPopup( THEMECH_FORE, hButton )
 end sub
 
 private sub frmThemes_BackClick( byval hButton as HWND, byval id as long )
-    frmThemes_SetChannel( THEMECH_BACK )
+    if gThemePopupGuard then gThemePopupGuard = false : exit sub
+    frmThemes_OpenColorPopup( THEMECH_BACK, hButton )
 end sub
 
 
@@ -720,6 +1004,42 @@ private sub frmThemes_AlphaChanged( byval hCtrl as HWND, byval dblValue as doubl
 end sub
 
 
+private function frmThemes_ClampByte( byval n as long ) as long
+    if n < 0 then return 0
+    if n > 255 then return 255
+    return n
+end function
+
+
+' Any of the R/G/B fields changed. Compose the colour for the CURRENT channel and apply it live.
+' PsTextBox fires per keystroke, so -- like a picker drag -- this applies but must NOT re-set the
+' fields (SetText would move the caret out from under the typist).
+private sub frmThemes_RGBChanged( byval hTextBox as HWND )
+    dim as long nb = frmThemes_SelectedBind()
+    if nb < 0 then exit sub
+
+    dim as boolean bHasChan = iif( gThemeChannel = THEMECH_FORE, _
+                                   (gThemeBind(nb).pFore <> 0), (gThemeBind(nb).pBack <> 0) )
+    if bHasChan = false then exit sub
+
+    dim as long r = frmThemes_ClampByte( val( PsTextBox_GetText( ghThemeR ) ) )
+    dim as long g = frmThemes_ClampByte( val( PsTextBox_GetText( ghThemeG ) ) )
+    dim as long b = frmThemes_ClampByte( val( PsTextBox_GetText( ghThemeB ) ) )
+    dim as COLORREF clr = RGB( r, g, b )
+
+    if frmThemes_EnsureForked() = false then exit sub     ' defaults are blocked from Edit -> a no-op
+
+    dim as ulong nMask = Theme_SetColor( gThemeBind(nb).keyValue, gThemeChannel, clr, -1 )
+    gThemeEdited = true
+    Theme_RequestApply( nMask )
+
+    ' Keep the hidden colour model (the popup's seed) and the row swatches in step -- NOT the fields.
+    if ghThemePicker then PsColorPicker_SetColor( ghThemePicker, clr, 255, true )
+    AfxRedrawWindow( ghThemeKeys )
+    if HWND_FRMTHEMES_PAGE then AfxRedrawWindow( HWND_FRMTHEMES_PAGE )
+end sub
+
+
 private sub frmThemes_ListSelChange( byval hList as HWND, byval row as integer )
     frmThemes_SyncEditControls()
 end sub
@@ -795,18 +1115,6 @@ private sub frmThemes_ListPaint( byval p as PSLISTTREE_PAINTINFO ptr )
         p->b->SetPenColor( ghUI.Divider )
         p->b->PaintRoundOutline( @rcB, 0, 1 )
     end if
-
-    ' B / I / U, shown only for the keys that carry them, and dimmed when off.
-    if gThemeBind(nb).pBold <> 0 then
-        dim as string sBiu = ""
-        sBiu &= iif( gTheme(n).bold      <> 0, "B", "-" )
-        sBiu &= iif( gTheme(n).italic    <> 0, "I", "-" )
-        sBiu &= iif( gTheme(n).underline <> 0, "U", "-" )
-        p->b->SetBackColor( backclr )
-        p->b->SetForeColor( foreclr )
-        p->b->PaintText( sBiu, @rcBiu, DT_RIGHT )
-    end if
-
 end sub
 
 
@@ -874,6 +1182,14 @@ sub frmThemes_Build( byval nPage as long, byval hPage as HWND )
     PsNumericUpDown_SetDecimalPlaces( ghThemeAlpha, 0 )
     PsNumericUpDown_SetValueChangedCallback( ghThemeAlpha, @frmThemes_AlphaChanged )
 
+    ' R/G/B entry fields for the current channel's colour (the big chooser is in the popup now).
+    ghThemeR = PsTextBox_Create( hPage, IDC_FRMTHEMES_TXTR )
+    PsTextBox_SetChangeCallback( ghThemeR, @frmThemes_RGBChanged )
+    ghThemeG = PsTextBox_Create( hPage, IDC_FRMTHEMES_TXTG )
+    PsTextBox_SetChangeCallback( ghThemeG, @frmThemes_RGBChanged )
+    ghThemeB = PsTextBox_Create( hPage, IDC_FRMTHEMES_TXTB )
+    PsTextBox_SetChangeCallback( ghThemeB, @frmThemes_RGBChanged )
+
     ' THE EMBEDDED PICKER. It adds NOTHING to frmOptions' message pump -- there is no
     ' PsColorPicker_FilterMessage, unlike the PsComboBox and PsTextBox calls already in there.
     ' That absence is the reason it is a panel rather than a dropdown.
@@ -903,6 +1219,21 @@ sub frmThemes_Build( byval nPage as long, byval hPage as HWND )
     ' a distinction the picker has no way to make. Two editors for one value is how sync bugs
     ' start, so there is one, and it is the one that is already right.
 
+    ' TAB ORDER = Z-ORDER. The controls were created grouped by kind, which does not match how
+    ' they read down the page, so re-thread the z-order to the visual sequence: key list, then
+    ' Foreground/Reset, Background/Reset, R/G/B, Bold/Italic/Underline, Opacity. Each control is
+    ' placed immediately AFTER the previous one, so GetNextDlgTabItem walks them in this order.
+    ' (The hidden picker is skipped by the tab walker, so it does not need a slot here.)
+    dim tabOrder(0 to 11) as HWND = { ghThemeKeys, ghThemeFore, ghThemeResetF, _
+                                      ghThemeBack, ghThemeResetB, ghThemeR, ghThemeG, ghThemeB, _
+                                      ghThemeBold, ghThemeItalic, ghThemeUnder, ghThemeAlpha }
+    for i as long = 1 to ubound(tabOrder)
+        if tabOrder(i) andalso tabOrder(i-1) then
+            SetWindowPos( tabOrder(i), tabOrder(i-1), 0, 0, 0, 0, _
+                          SWP_NOMOVE or SWP_NOSIZE or SWP_NOACTIVATE )
+        end if
+    next
+
     frmThemes_ApplyTheme()
     frmThemes_PopulateList()
     frmThemes_SyncEditControls()
@@ -918,6 +1249,8 @@ sub frmThemes_ApplyTheme()
     PsListTree_SetScrollBarColors( ghThemeKeys, ghPanel.BackColorScrollBar, _
                                   ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
     PsListTree_SetFont( ghThemeKeys, OptionsFont_Base() )
+    PsListTree_SetBorderWidth( ghThemeKeys, 1 )
+    PsListTree_SetBorderColor( ghThemeKeys, ghEditor.Divider )
 
     dim as PSBUTTON_COLORS bc : OptionsTheme_FillButton( @bc )
     PsButton_SetColors( ghThemeFore, @bc )   : PsButton_Refresh( ghThemeFore )
@@ -941,28 +1274,36 @@ sub frmThemes_ApplyTheme()
     PsNumericUpDown_SetFont( ghThemeAlpha, OptionsFont_Base() )
     PsNumericUpDown_Refresh( ghThemeAlpha )
 
+    ' The R/G/B fields as editor-coloured text boxes.
+    dim hRGB(0 to 2) as HWND = { ghThemeR, ghThemeG, ghThemeB }
+    for i as long = 0 to 2
+        if hRGB(i) then
+            PsTextBox_SetFont( hRGB(i), OptionsFont_Base() )
+            PsTextBox_SetForeColor( hRGB(i), ghEditor.ForeColorText )
+            PsTextBox_SetBackColor( hRGB(i), ghEditor.BackColorText )
+            PsTextBox_SetOuterBackColor( hRGB(i), ghPanel.BackColor )
+            PsTextBox_SetBorderColor( hRGB(i), ghEditor.Divider )
+            PsTextBox_SetTextAlign( hRGB(i), TXT_ALIGN_CENTER )
+        end if
+    next
+
     ' The picker's CHROME follows the dialog's theme. The colours it is EDITING are content and
     ' are never themed -- which is worth saying out loud on this page of all places, because
     ' here the content IS the theme and the two would otherwise be easy to conflate.
+    ' The picker's CHROME follows the dialog's theme (its CONTENT -- the colours it edits -- is
+    ' never themed). Built by the shared helper so the embedded picker and the popup picker agree.
     dim as PSCOLORPICKER_COLORS pc
-    pc.BackColor           = ghPanel.BackColor
-    pc.ForeColor           = ghPanel.ForeColor
-    pc.BorderColor         = ghEditor.Divider
-    pc.TabBackColor        = ghPanel.BackColor
-    pc.TabBackColorSel     = ghPanel.BackColorHot
-    pc.TabForeColor        = ghPanel.ForeColor
-    pc.TabForeColorSel     = ghPanel.ForeColorHot
-    pc.FieldBackColor      = ghEditor.BackColorText
-    pc.FieldForeColor      = ghEditor.ForeColorText
-    pc.FieldBorderColor    = ghEditor.Divider
-    pc.FieldBorderColorSel = ghUI.AccentColor
-    pc.SelRingColor        = ghUI.AccentColor
-    pc.FocusRingColor      = ghUI.AccentColor
-    ' HotRingColor is deliberately left at its white default: it is drawn ON a swatch of an
-    ' arbitrary colour, so it has to contrast with the CONTENT rather than agree with the chrome.
+    frmThemes_FillPickerColors( @pc )
     PsColorPicker_SetColors( ghThemePicker, @pc )
     PsColorPicker_SetFont( ghThemePicker, OptionsFont_Base() )
     PsColorPicker_Refresh( ghThemePicker )
+
+    ' Keep the popup picker's chrome in step with a live theme change too.
+    if ghThemePopupPicker then
+        PsColorPicker_SetColors( ghThemePopupPicker, @pc )
+        PsColorPicker_SetFont( ghThemePopupPicker, OptionsFont_Base() )
+        PsColorPicker_Refresh( ghThemePopupPicker )
+    end if
 
 end sub
 
@@ -978,16 +1319,22 @@ sub frmThemes_ShowPage( byval nPage as long, byval bShow as boolean )
     end if
 
     dim as long nCmd = iif( bShow, SW_SHOW, SW_HIDE )
+    ' The style controls exist only for syntax colours -- hidden on the interface page.
+    dim as long nStyle = iif( bShow andalso (nPage = THEMEPAGE_SYNTAX), SW_SHOW, SW_HIDE )
     ShowWindow( ghThemeKeys, nCmd )
     ShowWindow( ghThemeFore, nCmd )
     ShowWindow( ghThemeBack, nCmd )
     ShowWindow( ghThemeResetF, nCmd )
     ShowWindow( ghThemeResetB, nCmd )
-    ShowWindow( ghThemeBold, nCmd )
-    ShowWindow( ghThemeItalic, nCmd )
-    ShowWindow( ghThemeUnder, nCmd )
-    ShowWindow( ghThemeAlpha, nCmd )
-    ShowWindow( ghThemePicker, nCmd )
+    ShowWindow( ghThemeBold, nStyle )
+    ShowWindow( ghThemeItalic, nStyle )
+    ShowWindow( ghThemeUnder, nStyle )
+    ShowWindow( ghThemeAlpha, nStyle )
+    ShowWindow( ghThemeR, nCmd )
+    ShowWindow( ghThemeG, nCmd )
+    ShowWindow( ghThemeB, nCmd )
+    ' The embedded picker is the HIDDEN colour model now -- the popup does the choosing.
+    ShowWindow( ghThemePicker, SW_HIDE )
 
 end sub
 
@@ -1007,119 +1354,99 @@ function frmThemes_Layout( byval nPage as long, byval hPage as HWND, byval cxPan
     dim as long padRight = AfxScaleX(OPTROW_PADRIGHT)
     dim as long y        = AfxScaleY(OPTROW_PADTOP)
     dim as long contentR = cxPanel - padRight
-    dim as long gapX     = AfxScaleX(16)
+    dim as long gapX     = AfxScaleX(32)
 
-    ' THE PICKER'S WIDTH COMES FROM THE PICKER. GetIdealSize is valid before the control has ever
-    ' been sized, so the layout asks it rather than carrying a second copy of its dimensions --
-    ' which is what would rot the first time the matrix or the cell size changed.
-    dim as long nPickerW, nPickerH
-    PsColorPicker_GetIdealSize( ghThemePicker, nPickerW, nPickerH )
-
-    dim as long ctlW  = AfxScaleX(THEME_CTLCOLW)
-    ' The list takes what the other two columns leave. Floored, because a key list narrower than
-    ' this stops showing enough of "editor.selection" to tell the rows apart -- and the floor is
-    ' exactly where the three columns start to overlap, which is why the self-test measures it.
-    dim as long listW = contentR - padLeft - nPickerW - ctlW - (2 * gapX)
-    if listW < AfxScaleX(THEME_LISTMINW) then listW = AfxScaleX(THEME_LISTMINW)
-
+    ' TWO COLUMNS NOW: the key list, and the controls. The big colour chooser moved to a popup,
+    ' so its column is gone and the controls (Foreground/Background, R/G/B, style, opacity, reset)
+    ' fill the freed width.
     dim as long textH    = AfxScaleY(18)
     dim as long rowGap   = AfxScaleY(10)
     dim as long ctlH     = AfxScaleY(28)
+    dim as long listH    = AfxScaleY(THEME_LISTHEIGHT)
 
-    ' THE LIST IS AS TALL AS THE PICKER, not a constant. They stand side by side now, so a list
-    ' of some other height would leave one column ending in mid-air -- and the picker's height is
-    ' the one that moves, because it follows its own list-row count.
-    dim as long listH = AfxScaleY(THEME_LISTHEIGHT)
-    if nPickerH > listH then listH = nPickerH
+    ' A key list on the left (the names are short) and the controls beside it.
+    dim as long editW = AfxScaleX(300)
+    dim as long listW = AfxScaleX(THEME_LISTW)
+    if listW < AfxScaleX(THEME_LISTMINW) then listW = AfxScaleX(THEME_LISTMINW)
 
-    frmThemes_AddLabel( iif( gThemeCurPage = THEMEPAGE_SYNTAX, _
-                                   L(457, "Editor syntax and margin colors"), _
-                                   L(458, "Window, panel and menu colors") ), _
-                              padLeft, y, contentR, y + textH )
-    dim as long yTop = y + textH + AfxScaleY(6)
-
+    dim as long yTop = y
     SetWindowPos( ghThemeKeys, 0, padLeft, yTop, listW, listH, SWP_NOZORDER or SWP_NOACTIVATE )
 
-    ' Column 2: the picker, at its own ideal size and never stretched -- its body is a fixed grid
-    ' of cells, so an arbitrary width would just clip the right-hand column of swatches.
-    dim as long xPicker = padLeft + listW + gapX
-    SetWindowPos( ghThemePicker, 0, xPicker, yTop, nPickerW, nPickerH, SWP_NOZORDER or SWP_NOACTIVATE )
-
-    ' Column 3: the controls.
-    dim as long xEdit = xPicker + nPickerW + gapX
-    dim as long editW = ctlW
+    dim as long xEdit = padLeft + listW + gapX
     dim as long yEdit = yTop
 
-    ' Each colour button gets a Reset beside it, sharing the column width.
-    ' Square-ish: glyph only, no caption. Everything it gives up goes to the colour
-    ' buttons beside it, which were ellipsising their labels at 175% -- and would fare
-    ' worse in a language where "Foreground" is longer than it is in English.
-    dim as long resetW = AfxScaleX(34)
-    dim as long pickW  = editW - resetW - AfxScaleX(6)
-    SetWindowPos( ghThemeFore, 0, xEdit, yEdit, pickW, ctlH, SWP_NOZORDER or SWP_NOACTIVATE )
-    SetWindowPos( ghThemeResetF, 0, xEdit + pickW + AfxScaleX(6), yEdit, resetW, ctlH, _
+    ' Foreground / Background, each with a Reset glyph button beside it. Clicking Fore/Back opens
+    ' the colour popup for that channel; the swatch of the current colour is drawn in Paint.
+    ' The colour swatch is the SAME HEIGHT as the buttons (it reads as part of the row).
+    dim as long resetW  = AfxScaleX(34)
+    dim as long swatchW = AfxScaleX(THEME_SWATCHW)
+    dim as long chanW   = editW - resetW - swatchW - (2 * AfxScaleX(6))
+    dim as long swatchX = xEdit + chanW + AfxScaleX(6)
+    SetWindowPos( ghThemeFore, 0, xEdit, yEdit, chanW, ctlH, SWP_NOZORDER or SWP_NOACTIVATE )
+    SetRect( @gThemeSwatchRc(0), swatchX, yEdit, swatchX + swatchW, yEdit + ctlH )
+    SetWindowPos( ghThemeResetF, 0, xEdit + editW - resetW, yEdit, resetW, ctlH, _
                   SWP_NOZORDER or SWP_NOACTIVATE )
     yEdit += ctlH + rowGap
-    SetWindowPos( ghThemeBack, 0, xEdit, yEdit, pickW, ctlH, SWP_NOZORDER or SWP_NOACTIVATE )
-    SetWindowPos( ghThemeResetB, 0, xEdit + pickW + AfxScaleX(6), yEdit, resetW, ctlH, _
+    SetWindowPos( ghThemeBack, 0, xEdit, yEdit, chanW, ctlH, SWP_NOZORDER or SWP_NOACTIVATE )
+    SetRect( @gThemeSwatchRc(1), swatchX, yEdit, swatchX + swatchW, yEdit + ctlH )
+    SetWindowPos( ghThemeResetB, 0, xEdit + editW - resetW, yEdit, resetW, ctlH, _
                   SWP_NOZORDER or SWP_NOACTIVATE )
-    yEdit += ctlH + rowGap * 2
+    yEdit += ctlH + rowGap + rowGap
 
-    dim as long togW = AfxScaleX(46)
-    dim as long togH = AfxScaleY(22)
-    frmThemes_AddLabel( L(459, "Bold"), xEdit + togW + AfxScaleX(10), yEdit + AfxScaleY(2), _
-                              xEdit + editW, yEdit + togH )
-    SetWindowPos( ghThemeBold, 0, xEdit, yEdit, togW, togH, SWP_NOZORDER or SWP_NOACTIVATE )
-    yEdit += togH + rowGap
-    frmThemes_AddLabel( L(460, "Italic"), xEdit + togW + AfxScaleX(10), yEdit + AfxScaleY(2), _
-                              xEdit + editW, yEdit + togH )
-    SetWindowPos( ghThemeItalic, 0, xEdit, yEdit, togW, togH, SWP_NOZORDER or SWP_NOACTIVATE )
-    yEdit += togH + rowGap
-    frmThemes_AddLabel( L(461, "Underline"), xEdit + togW + AfxScaleX(10), yEdit + AfxScaleY(2), _
-                              xEdit + editW, yEdit + togH )
-    SetWindowPos( ghThemeUnder, 0, xEdit, yEdit, togW, togH, SWP_NOZORDER or SWP_NOACTIVATE )
-    yEdit += togH + rowGap * 2
+    ' R / G / B fields in one row, each a labelled box.
+    dim as long fldH  = ctlH
+    dim as long labW  = AfxScaleX(16)
+    dim as long cellW = (editW - (2 * AfxScaleX(10))) \ 3      ' three equal cells with two gaps
+    dim as long boxW  = cellW - labW
+    dim as long xc    = xEdit
+    dim rgbBoxes(0 to 2) as HWND = { ghThemeR, ghThemeG, ghThemeB }
+    dim rgbLabels(0 to 2) as string = { "R", "G", "B" }
+    for i as long = 0 to 2
+        frmThemes_AddLabel( rgbLabels(i), xc, yEdit + AfxScaleY(5), xc + labW, yEdit + fldH )
+        SetWindowPos( rgbBoxes(i), 0, xc + labW, yEdit, boxW, fldH, SWP_NOZORDER or SWP_NOACTIVATE )
+        xc += cellW + AfxScaleX(10)
+    next
+    yEdit += fldH + rowGap + rowGap
 
-    frmThemes_AddLabel( L(462, "Opacity"), xEdit, yEdit, xEdit + editW, yEdit + textH )
-    yEdit += textH + AfxScaleY(4)
-    SetWindowPos( ghThemeAlpha, 0, xEdit, yEdit, AfxScaleX(110), ctlH, SWP_NOZORDER or SWP_NOACTIVATE )
-    yEdit += ctlH
+    ' STYLE SECTION -- syntax page only. Bold/Italic/Underline/Opacity are meaningless for
+    ' interface colours (fore/back only), so ShowPage keeps the controls hidden and the layout
+    ' skips them here.
+    if gThemeCurPage = THEMEPAGE_SYNTAX then
+        ' SIZE THE TOGGLE TO ITS IDEAL SIZE, which INCLUDES the focus-ring band -- a fixed size
+        ' clips the ring when the control gets keyboard focus.
+        dim as long togW, togH
+        PsToggle_GetIdealSize( ghThemeBold, togW, togH )
+        dim as long lblX = xEdit + togW + AfxScaleX(10)
+        dim as long lblDY = (togH - textH) \ 2                ' vertically centre the label with the pill
+        frmThemes_AddLabel( L(459, "Bold"), lblX, yEdit + lblDY, xEdit + editW, yEdit + togH )
+        SetWindowPos( ghThemeBold, 0, xEdit, yEdit, togW, togH, SWP_NOZORDER or SWP_NOACTIVATE )
+        yEdit += togH + rowGap
+        frmThemes_AddLabel( L(460, "Italic"), lblX, yEdit + lblDY, xEdit + editW, yEdit + togH )
+        SetWindowPos( ghThemeItalic, 0, xEdit, yEdit, togW, togH, SWP_NOZORDER or SWP_NOACTIVATE )
+        yEdit += togH + rowGap
+        frmThemes_AddLabel( L(461, "Underline"), lblX, yEdit + lblDY, xEdit + editW, yEdit + togH )
+        SetWindowPos( ghThemeUnder, 0, xEdit, yEdit, togW, togH, SWP_NOZORDER or SWP_NOACTIVATE )
+        yEdit += togH + rowGap + rowGap
+
+        frmThemes_AddLabel( L(462, "Opacity"), xEdit, yEdit, xEdit + editW, yEdit + textH )
+        yEdit += textH + AfxScaleY(4)
+        SetWindowPos( ghThemeAlpha, 0, xEdit, yEdit, AfxScaleX(110), ctlH, SWP_NOZORDER or SWP_NOACTIVATE )
+        yEdit += ctlH
+    end if
 
     ' The page is as tall as its tallest column.
     dim as long yBottom = yTop + listH
     if yEdit > yBottom then yBottom = yEdit
 
-    ' ---- geometry assertions, gated on the Options self-test -------------------------------
-    ' THE ONLY AUTOMATED EVIDENCE THIS LAYOUT HAS. The theme self-test runs at startup, where
-    ' frmOptions does not exist, so it cannot see any of this; and the picker is the first
-    ' control on the page with an intrinsic size it will not give up, so "does it fit" stopped
-    ' being obvious the moment it went in. Asserted here rather than eyeballed, because the
-    ' failure mode -- the right-hand column of the matrix falling off the page -- is invisible
-    ' rather than obviously wrong: the page does not scroll horizontally.
     if environ("TIKO_OPTIONS_SELFTEST") = "1" then
         dim as string sP
-
-        ' THE THREE COLUMNS MUST TILE THE WIDTH WITHOUT OVERLAPPING. This is the assertion that
-        ' matters on this page: the height stopped being the problem the moment the picker moved
-        ' out of the controls column, and the width became the problem in the same move. The
-        ' floor on listW is what makes an overflow show up HERE as an overlap rather than as a
-        ' silently clipped list.
-        if (xEdit + ctlW) <= contentR then sP = "PASS  " else sP = "FAIL  "
-        ? sP & "theme page: the three columns fit the panel width   [right edge=" & _
-            str(xEdit + ctlW) & " content right=" & str(contentR) & _
-            "  list=" & str(listW) & " picker=" & str(nPickerW) & " ctl=" & str(ctlW) & "]"
-
+        if (xEdit + editW) <= contentR then sP = "PASS  " else sP = "FAIL  "
+        ? sP & "theme page: the two columns fit the panel width   [right edge=" & _
+            str(xEdit + editW) & " content right=" & str(contentR) & _
+            "  list=" & str(listW) & " ctl=" & str(editW) & "]"
         if listW >= AfxScaleX(THEME_LISTMINW) then sP = "PASS  " else sP = "FAIL  "
         ? sP & "theme page: the key list keeps its minimum width   [listW=" & str(listW) & _
             " floor=" & str(AfxScaleX(THEME_LISTMINW)) & "]"
-
-        if xPicker >= (padLeft + listW) then sP = "PASS  " else sP = "FAIL  "
-        ? sP & "theme page: the picker starts clear of the key list   [xPicker=" & _
-            str(xPicker) & " list right=" & str(padLeft + listW) & "]"
-
-        if xEdit >= (xPicker + nPickerW) then sP = "PASS  " else sP = "FAIL  "
-        ? sP & "theme page: the controls column starts clear of the picker   [xEdit=" & _
-            str(xEdit) & " picker right=" & str(xPicker + nPickerW) & "]"
     end if
 
     return yBottom + AfxScaleY(OPTROW_PADBOTTOM)
@@ -1136,6 +1463,26 @@ sub frmThemes_Paint( byval nPage as long, byval p as SCP_PAINTINFO ptr )
         dim as RECT rc = gThemeLabels(i).rc
         p->b->PaintText( gThemeLabels(i).caption, @rc, DT_LEFT or DT_END_ELLIPSIS )
     next
+
+    ' The Foreground / Background current-colour swatches beside their buttons.
+    dim as long nb = frmThemes_SelectedBind()
+    if nb >= 0 then
+        dim as long n = Theme_FindEntry( gThemeBind(nb).keyValue )
+        if n >= 0 then
+            if (gThemeBind(nb).pFore <> 0) andalso (IsRectEmpty( @gThemeSwatchRc(0) ) = 0) then
+                p->b->SetBackColor( gTheme(n).foreground )
+                p->b->PaintRect( @gThemeSwatchRc(0) )
+                p->b->SetPenColor( ghEditor.Divider )
+                p->b->PaintRoundOutline( @gThemeSwatchRc(0), 0, 1 )
+            end if
+            if (gThemeBind(nb).pBack <> 0) andalso (IsRectEmpty( @gThemeSwatchRc(1) ) = 0) then
+                p->b->SetBackColor( gTheme(n).background )
+                p->b->PaintRect( @gThemeSwatchRc(1) )
+                p->b->SetPenColor( ghEditor.Divider )
+                p->b->PaintRoundOutline( @gThemeSwatchRc(1), 0, 1 )
+            end if
+        end if
+    end if
 end sub
 
 
@@ -1144,6 +1491,7 @@ end sub
 ' panel, so everything here is state that must not survive one visit to the next.
 ' ========================================================================================
 sub frmThemes_Reset()
+    frmThemes_DestroyColorPopup()   ' a WS_POPUP top-level; not destroyed with the page window
     ghThemeKeys   = 0
     ghThemeFore   = 0
     ghThemeBack   = 0
@@ -1153,6 +1501,9 @@ sub frmThemes_Reset()
     ghThemeAlpha  = 0
     ghThemeResetF = 0
     ghThemeResetB = 0
+    ghThemeR      = 0
+    ghThemeG      = 0
+    ghThemeB      = 0
     gThemeBuilt   = false
     gThemeEdited  = false
     gThemeCurPage = THEMEPAGE_NONE

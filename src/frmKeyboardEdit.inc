@@ -934,7 +934,6 @@ private function frmKeyboardEdit_WndProc( _
     select case uMsg
 
         case WM_CREATE
-            DisableAllModeless()
             EnableWindow( GetParent(hwnd), false )
             return 0
 
@@ -956,7 +955,6 @@ private function frmKeyboardEdit_WndProc( _
             end select
 
         case WM_CLOSE
-            EnableAllModeless()
             EnableWindow( GetParent(hwnd), true )
             DestroyWindow( hwnd )
             return 0

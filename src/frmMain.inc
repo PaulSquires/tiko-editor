@@ -1296,6 +1296,20 @@ function frmMain_OnClose( byval hwnd as HWND ) as LRESULT
     ' Close any open files asking to save any that are dirty
     if OnCommand_FileClose(HWnd, EFC_CLOSEALL) = 0 then return 0
 
+    ' no more config changed checks while shutting down
+    gApp.PreventConfigLoad = true   
+
+    ' output the config settings to disk file
+    gConfig.SaveConfigFile
+
+    ' Hide the main application window because we are about to attempt to shutdown
+    ' the background scanning thread. Sometimes a lag seems to happen from the time
+    ' request is made to when the main application gets destroyed which leaves a
+    ' kind of look of the application in various stages of repainting as various
+    ' child windows get destroyed. Do this AFTER the config is saved because it
+    ' affects positioning.
+    ShowWindow( hwnd, SW_HIDE )
+    
     ' Stop the background scan worker (bounded join) before the window and
     ' its message pump go away - no MSG_USER_PARSE_COMPLETE may arrive after this.
     gScanMgr.Shutdown()
@@ -1311,20 +1325,6 @@ end Function
 ' ========================================================================================
 function frmMain_OnDestroy( byval hwnd as HWND ) as LRESULT
 
-    ' no more config changed checks while shutting down
-    gApp.PreventConfigLoad = true   
-
-    ' output the config settings to disk file
-    gConfig.SaveConfigFile
-
-    ' Hide the main application window because we are about to attempt to shutdown
-    ' the background scanning thread. Sometimes a lag seems to happen from the time
-    ' request is made to when the main application gets destroyed which leaves a
-    ' kind of look of the application in various stages of repainting as various
-    ' child windows get destroyed. Do this AFTER the config is saved because it
-    ' affects positioning.
-    ShowWindow( hwnd, SW_HIDE )
-    
     ' delete any temporary quick run files should they exist
     ' filename set in compile process and could be different location than the
     ' default filename as tested for in wm_create.
@@ -1670,9 +1670,9 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     KeyBindings_RunSelfTest()
     frmKeyboard_RunSelfTest()
     frmKeyboardEdit_RunSelfTest()
-    ' Command Line dialog geometry. Pure -- no window, no theme, no config -- so unlike the
+    ' Input-box dialog geometry. Pure -- no window, no theme, no config -- so unlike the
     ' Options/User Tools suites it needs no AUTOOPEN companion to reach it.
-    frmCommandLine_RunSelfTest()
+    frmInputBox_RunSelfTest()
     ' Open the Keyboard Shortcuts dialog immediately, so its layout/filter self-test can be
     ' run without a human driving the menu. The dialog is MODAL, so startup stops here until
     ' it is closed -- that is what this flag is for, and it is why it is not on by default.

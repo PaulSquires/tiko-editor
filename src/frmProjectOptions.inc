@@ -171,7 +171,7 @@ function frmProjectOptions_OnCreate( _
             ) as boolean
 
     ' This is a modal popup window so disable the parent window
-    DisableAllModeless()
+    EnableWindow(GetParent(hwnd), false)
 
     '  Message cracker macro expects a True to be returned for a successful
     '  OnCreate handler even though returning -1 from a standard WM_CREATE
@@ -186,7 +186,7 @@ end function
 ' ========================================================================================
 function frmProjectOptions_OnClose( byval hwnd as HWND ) as LRESULT
     ' Enables parent window keeping parent's zorder
-    EnableAllModeless()
+    EnableWindow(GetParent(hwnd), true)
     DestroyWindow hwnd
     function = 0
 end function

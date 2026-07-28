@@ -364,6 +364,15 @@ type PSCOLORPICKER
     nTab             as long = CLR_TAB_CUSTOM
     bShowPalette     as boolean = false
     bShowAlpha       as boolean = false
+
+    ' SELECTION-ONLY MODE: the tab strip and the body, and nothing else -- no Initial/Current
+    ' previews and no R/G/B/(A)/hex entry fields. It exists for a host that puts this control in
+    ' a POPUP and keeps the numeric fields on its own dialog, so the two would otherwise be
+    ' duplicated. Everything it hides is hidden through the SAME gates the normal mode already
+    ' uses (IsFieldVisible for the fields, an empty rect for the previews), so no hit test,
+    ' focus walk or painter needed a second condition -- which is why the flag cannot leave a
+    ' field reachable by keyboard that is not on screen.
+    bSelectionOnly   as boolean = false
     ' WHICH CELL OF THE CURRENT TAB'S BODY IS SELECTED, or -1. ONE field, not one per tab, and
     ' that is deliberate: a per-tab selection would be four places for "what is picked" to
     ' disagree with clrCurrent. It is RE-DERIVED from the colour by PsColorPicker_SyncBodySel
@@ -800,6 +809,10 @@ end function
 ' inline `nField <> CLR_FIELD_A orelse bShowAlpha` at each site because the layout, the painter,
 ' the Tab walker and the hit test must all agree, and four copies is four chances to diverge.
 function PSCOLORPICKER.IsFieldVisible( byval nField as long ) as boolean
+    ' Selection-only hides EVERY field. This one test is what keeps the mode honest: the field
+    ' painter, the field hit test, the focus walker and SetFieldValue all consult this function,
+    ' so none of them can reach a field the layout did not place.
+    if this.bSelectionOnly then return false
     if nField = CLR_FIELD_A then return this.bShowAlpha
     if (nField < 0) orelse (nField >= CLR_FIELD_COUNT) then return false
     return true
@@ -875,15 +888,24 @@ sub PSCOLORPICKER.LayoutColorPicker()
     dim as long fieldsW = row1W
     if row2W > fieldsW then fieldsW = row2W
 
-    dim as long bottomW = this.nPreviewW + this.nGap + fieldsW
-    dim as long bottomH = (2 * this.nFieldH) + this.nGap
-    if (2 * this.nPreviewH) > bottomH then bottomH = 2 * this.nPreviewH
+    ' The bottom block -- previews on the left, entry fields to their right. In SELECTION-ONLY
+    ' mode there is no bottom block at all: it contributes nothing to the ideal size, and neither
+    ' the previews nor the fields are placed below.
+    dim as long bottomW = 0
+    dim as long bottomH = 0
+    if this.bSelectionOnly = false then
+        bottomW = this.nPreviewW + this.nGap + fieldsW
+        bottomH = (2 * this.nFieldH) + this.nGap
+        if (2 * this.nPreviewH) > bottomH then bottomH = 2 * this.nPreviewH
+    end if
 
     dim as long innerW = bodyW
     if bottomW > innerW then innerW = bottomW
 
     this.nIdealW = (2 * this.nPad) + innerW
-    this.nIdealH = (2 * this.nPad) + this.nTabHeight + this.nGap + bodyH + this.nGap + bottomH
+    this.nIdealH = (2 * this.nPad) + this.nTabHeight + this.nGap + bodyH
+    ' The gap only exists to separate the body FROM the bottom block, so it goes with it.
+    if this.bSelectionOnly = false then this.nIdealH += this.nGap + bottomH
 
     ' ---- placement, which does -----------------------------------------------------------
     dim as RECT rcClient
@@ -961,6 +983,21 @@ sub PSCOLORPICKER.LayoutColorPicker()
     end if
 
     ' ---- the previews ---------------------------------------------------------------------
+    ' SELECTION-ONLY: every rect below stays EMPTY and the sub returns here. The painter and the
+    ' part probes read these rects, so empty is what makes them draw and report nothing -- there
+    ' is no second "is it visible" flag for them to disagree with.
+    if this.bSelectionOnly then
+        SetRectEmpty( @this.rcInitial )
+        SetRectEmpty( @this.rcCurrent )
+        SetRectEmpty( @this.rcFields )
+        SetRectEmpty( @this.rcAlpha )
+        for i as long = 0 to CLR_FIELD_COUNT - 1
+            SetRectEmpty( @this.rcFieldBox(i) )
+            SetRectEmpty( @this.rcFieldLabel(i) )
+        next
+        exit sub
+    end if
+
     dim as long botTop = this.rcBody.bottom + this.nGap
     SetRect( @this.rcInitial, this.rcContent.left, botTop, _
                               this.rcContent.left + this.nPreviewW, botTop + this.nPreviewH )
@@ -1063,6 +1100,20 @@ declare sub      PsColorPicker_RevertToInitial( byval hCtrl as HWND )
 ' an inert slider reads as a broken one. tiko drives this from its per-key bAlphaCapable flag.
 declare sub      PsColorPicker_ShowAlpha( byval hCtrl as HWND, byval bShow as boolean )
 declare function PsColorPicker_IsAlphaShown( byval hCtrl as HWND ) as boolean
+
+' SELECTION-ONLY MODE: the tab strip and the body, with NO previews and NO entry fields.
+'
+' It exists for the host that puts this control in a POPUP and keeps the numeric fields on its
+' own dialog -- showing both would be two editable readings of one value, and the popup would be
+' twice as tall as the thing it is for. The control is otherwise unchanged: the same four tabs,
+' the same lists and matrix, the same ColorChanged callback.
+'
+' GetIdealSize SHRINKS ACCORDINGLY, so a host that sizes itself from it (which is the documented
+' way to size this control) gets the compact popup for free. Set it BEFORE that query.
+'
+' Alpha still travels with the colour in this mode -- ShowAlpha only ever governed the FIELD.
+declare sub      PsColorPicker_SetSelectionOnly( byval hCtrl as HWND, byval bSelectionOnly as boolean )
+declare function PsColorPicker_IsSelectionOnly( byval hCtrl as HWND ) as boolean
 
 declare sub      PsColorPicker_SetTab( byval hCtrl as HWND, byval nTab as long )
 declare function PsColorPicker_GetTab( byval hCtrl as HWND ) as long

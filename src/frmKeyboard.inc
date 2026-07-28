@@ -956,7 +956,7 @@ private function frmKeyboard_WndProc( _
 
         case WM_CREATE
             ' Modal: keep the rest of the app out while this is up.
-            DisableAllModeless()
+            EnableWindow(GetParent(hwnd), false)
             return 0
 
         case WM_ERASEBKGND
@@ -989,7 +989,8 @@ private function frmKeyboard_WndProc( _
             ' no way to abandon an edit; the commit is on the OK path only. Reaching this by
             ' any route discards gKeysWork() and leaves gKeys(), keybindings.ini and the
             ' accelerator table exactly as they were found.
-            EnableAllModeless()
+            ' Enables parent window keeping parent's zorder
+            EnableWindow(GetParent(hwnd), true)
             DestroyWindow( hwnd )
             return 0
 

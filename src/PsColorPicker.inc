@@ -947,6 +947,10 @@ private sub PsColorPicker_RenderPreviews( _
             byval b    as PsBufferPaint ptr _
             )
 
+    ' Empty rect = selection-only mode, where there is no preview pair to draw. Gated on the
+    ' RECT rather than on the flag so the painter follows the layout by construction.
+    if IsRectEmpty( @pClr->rcInitial ) then exit sub
+
     dim as HFONT hFontUse = pClr->hTextFont
     if hFontUse = 0 then hFontUse = cast( HFONT, GetStockObject( DEFAULT_GUI_FONT ) )
     b->SetFont( hFontUse )
@@ -1974,6 +1978,26 @@ function PsColorPicker_IsAlphaShown( byval hCtrl as HWND ) as boolean
     dim as PSCOLORPICKER ptr pClr = GetColorPickerPointer( hCtrl )
     if pClr = 0 then return false
     return pClr->bShowAlpha
+end function
+
+
+sub PsColorPicker_SetSelectionOnly( byval hCtrl as HWND, byval bSelectionOnly as boolean )
+    dim as PSCOLORPICKER ptr pClr = GetColorPickerPointer( hCtrl )
+    if pClr = 0 then exit sub
+    if pClr->bSelectionOnly = bSelectionOnly then exit sub
+    pClr->bSelectionOnly = bSelectionOnly
+    ' The caret cannot be left in a field that just disappeared -- ShowAlpha's rule, for the
+    ' same reason and with the same answer: commit rather than drop, because the user's typing
+    ' is still the most recent thing they said.
+    if bSelectionOnly andalso (pClr->nFocusField >= 0) then PsColorPicker_CommitField( pClr )
+    pClr->Refresh()
+end sub
+
+
+function PsColorPicker_IsSelectionOnly( byval hCtrl as HWND ) as boolean
+    dim as PSCOLORPICKER ptr pClr = GetColorPickerPointer( hCtrl )
+    if pClr = 0 then return false
+    return pClr->bSelectionOnly
 end function
 
 sub PsColorPicker_SetTab( byval hCtrl as HWND, byval nTab as long )
