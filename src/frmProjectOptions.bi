@@ -13,15 +13,100 @@
 
 #pragma once
 
-#Define IDC_FRMPROJECTOPTIONS_LABEL1                1000
-#Define IDC_FRMPROJECTOPTIONS_LABEL2                1001
-#Define IDC_FRMPROJECTOPTIONS_LABEL3                1002
-#Define IDC_FRMPROJECTOPTIONS_LABEL4                1003
-#Define IDC_FRMPROJECTOPTIONS_LABEL5                1004
+' THIS HEADER MAY NAME NO Ps* TYPE, and that is a build-order constraint rather than a style
+' choice: frmMain.inc and modRoutines.inc both pull it in, and both are compiled long before
+' the control family's headers are reachable. The same rule frmBuildConfig.bi carries. Every
+' Ps* handle below is therefore a plain HWND, and every callback typedef the implementation
+' needs is declared privately in the .inc.
+
+' Control ids.
+'
+' IDC_FRMPROJECTOPTIONS_CMDSELECT MUST STAY 1006: AfxIFileSaveDialog is handed it as the
+' dialog's persistence GUID, so changing it makes the file dialog forget the folder the user
+' last saved a project into. Same reason frmUserTools pins its browse button to 1012.
 #Define IDC_FRMPROJECTOPTIONS_TXTPROJECTPATH        1005
 #Define IDC_FRMPROJECTOPTIONS_CMDSELECT             1006
 #Define IDC_FRMPROJECTOPTIONS_TXTOPTIONS32          1007
 #Define IDC_FRMPROJECTOPTIONS_TXTOPTIONS64          1008
-#Define IDC_FRMPROJECTOPTIONS_CHKMANIFEST           1009
+#Define IDC_FRMPROJECTOPTIONS_TOGMANIFEST           1009
+#Define IDC_FRMPROJECTOPTIONS_TXTCOMMANDLINE        1010
+#Define IDC_FRMPROJECTOPTIONS_CMDOK                 1011
+#Define IDC_FRMPROJECTOPTIONS_CMDCANCEL             1012
+
+
+' ========================================================================================
+' Layout constants. ALL UNSCALED -- AfxScaleX/Y is applied at every point of use, never
+' stored pre-scaled, so a constant read here is the same number the design was drawn at.
+'
+' The client height is DERIVED, not chosen: the body walk below sums to 471 and the footer
+' is 58 of it, so 480 leaves a 9px tail above the footer rule and no dead band. Change any
+' row or gap constant and this number has to be re-summed -- the layout self-test asserts
+' the walk ends inside the footer, which is what turns a forgotten re-sum into a failure
+' rather than into a control hanging off the bottom edge at 175% DPI.
+' ========================================================================================
+#Define FRMPROJECTOPTIONS_CLIENT_W                   720
+#Define FRMPROJECTOPTIONS_CLIENT_H                   480
+#Define FRMPROJECTOPTIONS_MARGIN                      22
+#Define FRMPROJECTOPTIONS_TOP                         20     ' first section header's top
+#Define FRMPROJECTOPTIONS_FOOTER_H                    58
+
+' A section header: the caption, then a hairline, then air. HDR_AFTER is the air, and the
+' Compiler options header uses HDR_AFTER_HINT instead because a hint line follows it.
+#Define FRMPROJECTOPTIONS_HDR_TEXT_H                  20
+#Define FRMPROJECTOPTIONS_HDR_AFTER                   14
+#Define FRMPROJECTOPTIONS_HDR_AFTER_HINT               8
+#Define FRMPROJECTOPTIONS_HINT_H                      24
+#Define FRMPROJECTOPTIONS_SECTION_GAP                 20
+
+' A row. ROWH is the STRIDE and FIELD_H is the control inside it -- the 16px difference is
+' the vertical breathing room, and it is the only thing that separates two fields.
+#Define FRMPROJECTOPTIONS_ROWH                        46
+#Define FRMPROJECTOPTIONS_FIELD_H                     30
+#Define FRMPROJECTOPTIONS_LABEL_W                    150
+
+' THE BROWSE GUTTER IS RESERVED ON EVERY ROW, not just the one that has a button in it.
+' That is what makes the right edge of the four fields, the "..." button and the manifest
+' toggle one number -- xFieldRight, derived once in PositionWindows -- instead of three
+' that can drift. Asserted as an equality.
+#Define FRMPROJECTOPTIONS_BROWSE_W                    34
+#Define FRMPROJECTOPTIONS_BROWSE_GAP                   8
+
+#Define FRMPROJECTOPTIONS_BTN_W                       92
+#Define FRMPROJECTOPTIONS_BTN_H                       32
+#Define FRMPROJECTOPTIONS_GAP                          8
+
+' Row and section header indices, used by both the layout and the painter.
+#Define PO_ROW_PATH         0
+#Define PO_ROW_COMMANDLINE  1
+#Define PO_ROW_OTHER32      2
+#Define PO_ROW_OTHER64      3
+#Define PO_ROW_MANIFEST     4
+#Define PO_ROW_COUNT        5
+
+#Define PO_HDR_PROJECT      0
+#Define PO_HDR_COMPILER     1
+#Define PO_HDR_OUTPUT       2
+#Define PO_HDR_COUNT        3
+
+
+' ========================================================================================
+' The staging copy.
+'
+' NOTHING BELOW REACHES gApp UNTIL OK. The dialog this replaces wrote straight through, and
+' its Cancel path was only safe by accident. Deliberately dialog-local rather than a field
+' on clsApp: an undo buffer is not application state, and clsConfig's own header already
+' says why variable-length staging arrays do not belong there.
+' ========================================================================================
+type PROJECTOPTIONS_WORK
+    ProjectPath as DWSTRING
+    CommandLine as DWSTRING
+    Other32     as DWSTRING
+    Other64     as DWSTRING
+    Manifest    as boolean
+end type
 
 declare function frmProjectOptions_Show( byval hWndParent as HWND, byval IsNewProject as boolean ) as LRESULT
+
+' TIKO_PROJECTOPTIONS_SELFTEST=1. FALSE runs the headless half (frmMain, at startup); TRUE the
+' layout half, which measures real windows and so is called from Show.
+declare sub frmProjectOptions_RunSelfTest( byval bLayoutHalf as boolean )

@@ -72,6 +72,10 @@ dim shared as DWSTRING gwszDefaultToolchain = "FreeBASIC-1.10.1-winlibs-gcc-9.3.
 ' Declared up here rather than beside its .inc because modCodetips.inc (which BUILDS the
 ' AUTOC_ITEM array) is included well before the frm* block.
 #include once "frmAutoComplete.bi"
+' Same split, same reason: modCodetips.inc calls Codetip_Show, and it is included at :103,
+' well before PsTooltip.inc. This header names no Ps* type; the implementation goes in
+' immediately after PsTooltip.inc.
+#include once "modCodetipTip.bi"
 
 '  Global classes
 dim shared gApp     as clsApp
@@ -146,6 +150,9 @@ dim shared gTTabCtl as clsTopTabCtl
 ' User Tools dialog's Parameters field, which needs a WRAPPED, multi-line tip -- something the
 ' comctl32 path only reaches by hand-sending TTM_SETMAXTIPWIDTH.
 #include once "PsTooltip.inc"
+' The code tip window. Immediately after PsTooltip.inc because it is a PsTooltip driven
+' entirely by hand, and before frmAutoComplete.inc, which calls Codetip_Show on commit.
+#include once "modCodetipTip.inc"
 
 #include once "frmAbout.inc"
 #include once "frmTopTabs.inc"

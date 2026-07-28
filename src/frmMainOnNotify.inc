@@ -352,6 +352,12 @@ function Scintilla_OnNotify( _
                         frmEditorVScroll_UpdateScrollBars(pDoc)
                     end if
 
+                    ' Keep any open code tip honest: dismiss it when the caret has left
+                    ' the call, follow it when the view scrolls. DELIBERATELY OUTSIDE the
+                    ' caret-changed guard below -- a wheel scroll moves where the tip
+                    ' belongs without moving the caret at all.
+                    Codetip_SyncToCaret( pDoc )
+
                     ' Has the caret changed position
                     var caretPos = SciExec( pDoc->hWndActiveScintilla, SCI_GETCURRENTPOS, 0, 0)
 
@@ -513,7 +519,9 @@ function Scintilla_OnNotify( _
                 case ")"      ' Close and active code tip
                     frmAutoComplete_Cancel()
                     pDoc->AutoCompleteType = AUTOCOMPLETE_NONE
-                    SciExec( hEdit, SCI_CALLTIPCANCEL, 0, 0 )
+                    ' Was SCI_CALLTIPCANCEL. The tip is a tiko-owned PsTooltip now, so
+                    ' this is the only thing that closes it on ")".
+                    Codetip_Hide()
 
                 case "(", ","      ' Show code tip
                     ' "(" and "=" were Scintilla fillups: they used to ACCEPT the

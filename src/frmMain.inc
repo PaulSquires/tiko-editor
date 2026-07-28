@@ -1336,7 +1336,11 @@ function frmMain_OnDestroy( byval hwnd as HWND ) as LRESULT
 
     ' Disable drag and drop files
     DragAcceptFiles hwnd, false
-    
+
+    ' The code tip is a top-level WS_POPUP owned by nothing, so it does not go with this
+    ' window. Destroying it also releases PsTooltip's shared clock if it was the last tip.
+    Codetip_Destroy()
+
     PostQuitMessage(0)
     
     function = 0
@@ -1677,6 +1681,10 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ' theme -- so unlike the layout half (which runs from frmBuildConfig_Show) this needs no
     ' AUTOOPEN companion to reach it.
     frmBuildConfig_RunSelfTest()
+    ' The Project Options staging copy and its localized ids. Headless half only -- the layout
+    ' half measures real windows and so runs from frmProjectOptions_Show, reached by
+    ' TIKO_PROJECTOPTIONS_AUTOOPEN below.
+    frmProjectOptions_RunSelfTest( false )
     ' Open the Keyboard Shortcuts dialog immediately, so its layout/filter self-test can be
     ' run without a human driving the menu. The dialog is MODAL, so startup stops here until
     ' it is closed -- that is what this flag is for, and it is why it is not on by default.
@@ -1691,6 +1699,11 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ' stops here until it is closed. Kept deliberately, as frmKeyboard's and frmUserTools'
     ' are: it is what makes the dialog reachable in one command for a hand pass.
     if environ("TIKO_BUILDCONFIG_AUTOOPEN") = "1" then frmBuildConfig_Show( HWND_FRMMAIN )
+
+    ' And the Project Options dialog. FALSE, i.e. the EDIT path rather than the new-project
+    ' one: passing true would set IsNewProjectFlag and close every open document on OK, which
+    ' is not something a self-test run should do to the user's session.
+    if environ("TIKO_PROJECTOPTIONS_AUTOOPEN") = "1" then frmProjectOptions_Show( HWND_FRMMAIN, false )
 
     ' And the same for the About box, whose layout self-test asks the one question a
     ' fixed-size dialog can be asked -- does every page fit -- and therefore needs its real
@@ -1713,6 +1726,15 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ' Create the code-completion popup. Once, here: it is a singleton that outlives every
     ' document, and it needs the theme (LoadThemeFile above) and ghFont() already built.
     frmAutoComplete_Init()
+
+    ' Create the code tip. Same reasoning as the popup above: a singleton that outlives
+    ' every document, needing the theme and ghFont() already built.
+    Codetip_Init()
+
+    ' AFTER Codetip_Init, not up with the other suites: three of its assertions read the
+    ' tip's actual configuration, above all that it is DETACHED from PsTooltip's dwell
+    ' clock. The rest are pure functions and would run anywhere.
+    Codetip_RunSelfTest()
 
     ' Create the main application top tabs control
     frmTopTabs_Show( HWND_FRMMAIN )
@@ -1844,6 +1866,12 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
         ' meant for the popup; and ahead of the TranslateAccelerator chain, so Tab commits
         ' instead of firing IDM_INDENTBLOCK.
         if frmAutoComplete_FilterMessage( @uMsg ) then continue do
+
+        ' The code tip, for Escape only. NOT a PsTooltip pump obligation -- that control
+        ' has no FilterMessage. It sits here for the second of the two reasons above:
+        ' ahead of handleEscKeyModeless, which would otherwise close the Find panel on an
+        ' Escape meant to dismiss the tip.
+        if Codetip_FilterMessage( @uMsg ) then continue do
 
         if handleAltKeyMenuBar(uMsg) then continue do
 

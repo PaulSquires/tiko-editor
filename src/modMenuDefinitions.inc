@@ -143,7 +143,6 @@ Function getMenuText( byval idMenu as long ) As DWSTRING
         case IDM_GOTOSOURCEFILE: wszText = L(232,"Goto Code File")
         case IDM_GOTOMAINFILE: wszText = L(233,"Goto Main File")
         case IDM_GOTORESOURCEFILE: wszText = L(234,"Goto Resource File")
-        case IDM_GOTOLINE: wszText = L(49,"Goto Line") & "..."
         case IDM_BOOKMARKTOGGLE: wszText = L(50,"Toggle Bookmark")
         case IDM_BOOKMARKNEXT: wszText = L(51,"Next Bookmark")
         case IDM_BOOKMARKPREV: wszText = L(52,"Previous Bookmark")
@@ -312,8 +311,6 @@ function buildTopMenuDefinitions() as long
     setTopMenuItem( IDC_MENUBAR_SEARCH, IDM_BOOKMARKNEXT, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_SEARCH, IDM_BOOKMARKPREV, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_SEARCH, IDM_BOOKMARKCLEARALL, 0, false, false )
-    setTopMenuItem( IDC_MENUBAR_SEARCH, 0, 0, false, true )
-    setTopMenuItem( IDC_MENUBAR_SEARCH, IDM_GOTOLINE, 0, false, false )
 
     setTopMenuItem( IDC_MENUBAR_VIEW, IDM_VIEWSIDEPANEL, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_VIEW, IDM_VIEWEXPLORER, 0, false, false )

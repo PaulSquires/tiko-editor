@@ -317,8 +317,12 @@ function ShowCodetip( _
 
     if len(codeTip) then
         codeTip = FormatCodetip(codeTip)
-        SciExec( hEdit, SCI_CALLTIPSHOW, curPos, strptr(codeTip))
-        return true
+        ' Was SCI_CALLTIPSHOW. Now a tiko-owned PsTooltip so the tip is drawn in the
+        ' editor theme (Scintilla's calltip was never themed at all -- there is no
+        ' SCI_CALLTIPSETBACK call anywhere in this app) and so dismissal is ours to
+        ' decide. curPos is the position of the "(", which is what the tip anchors to
+        ' and what the caret must not move back past. See modCodetipTip.bi.
+        return Codetip_Show( pDoc, codeTip, curPos )
     else
         pDoc->AutoCompleteType = AUTOCOMPLETE_NONE
     end if
