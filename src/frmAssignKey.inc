@@ -11,7 +11,7 @@
 '    MERCHANTABILITY or FITNESS for A PARTICULAR PURPOSE.  See the
 '    GNU General Public License for more details.
 
-'  frmUserToolKey.inc  --  assign one User Tool shortcut. See the header in the .bi for why
+'  frmAssignKey.inc  --  assign one User Tool shortcut. See the header in the .bi for why
 '  this dialog exists and why it is not frmKeyboardEdit.
 '
 '  TWO VIEWS, ONE MODEL, exactly as frmKeyboardEdit: a live capture field records a real
@@ -23,11 +23,11 @@
 '  "Ctrl+Alt+R" string, because that is the shape a TYPE_TOOLS record stores. The combined
 '  form is composed for display only, by frmUserTools_ShortcutText.
 
-#include once "frmUserToolKey.bi"
+#include once "frmAssignKey.bi"
 
 
 ' ----------------------------------------------------------------------------------------
-' THE MODEL, private to the dialog. gToolKey* (the .bi) is the hand-off; these are the
+' THE MODEL, private to the dialog. gAssignKey* (the .bi) is the hand-off; these are the
 ' working copies, so Cancel costs nothing.
 ' ----------------------------------------------------------------------------------------
 dim shared gTKKey     as DWSTRING     ' bare key name, "" = no shortcut
@@ -60,7 +60,7 @@ dim shared gTKFlashOn as boolean
 ' number as measured -- frmKeyboardEdit clipped its prompt to "Press the nev" at 175% before
 ' this was separated out, and at 100% it looked perfect.
 ' ========================================================================================
-private function frmUserToolKey_TextWidthPx( byval hwnd as HWND, _
+private function frmAssignKey_TextWidthPx( byval hwnd as HWND, _
                                              byval wszText as DWSTRING, _
                                              byval hFont as HFONT ) as long
     dim as SIZEL sz
@@ -84,7 +84,7 @@ end function
 ' createToolsMenuShortcut has always emitted into the Tools menu, and the two strings sit a
 ' few pixels apart on screen when the menu is open over the dialog.
 ' ========================================================================================
-private function frmUserToolKey_Compose() as DWSTRING
+private function frmAssignKey_Compose() as DWSTRING
     if len(gTKKey) = 0 then return ""
     dim as DWSTRING wsz
     if gTKCtrl  then wsz = wsz & "Ctrl+"
@@ -109,18 +109,57 @@ end function
 '      frmKeyboardEdit_BuildKeyString rather than composing it again, so the two cannot drift.
 '      Get that wrong and every three-modifier shortcut silently reports no clash.
 '
-'   2. THE OTHER USER TOOLS, compared as PARTS -- key name plus three booleans -- which sides
-'      the ordering question entirely. gToolsWork() is the staging array, so a clash against a
-'      tool the user has edited but not yet committed is caught too.
+'   2. THE USER TOOLS, and 3. THE BUILD CONFIGURATIONS, both compared as PARTS -- key name
+'      plus three booleans -- which sides the ordering question entirely.
 '
-' A tool with no key clashes with nothing, and neither does one whose key does not resolve
-' (it can never reach the accelerator table, so it cannot collide inside it).
+' WHICH ARRAY EACH OF THOSE TWO READS, AND WHY IT DIFFERS.
+' For the domain the caller is editing we walk its STAGING array (gToolsWork / gBuildsWork)
+' and skip nSkipIndex, so a clash against a record the user has changed but not yet committed
+' is caught. For the OTHER domain we walk the COMMITTED array (gConfig.Tools /
+' gConfig.Builds) and skip nothing.
+'
+' That is correct rather than a fudge because BOTH host dialogs are modal from frmMain and
+' cannot be open at the same time: the other domain's staging array is guaranteed empty (each
+' dialog seeds it on entry and erases it in WM_DESTROY), so the committed array is the only
+' live truth there is. THE DAY EITHER DIALOG GOES MODELESS, THIS IS THE ASSUMPTION TO
+' RE-CHECK -- it would then have to read whichever array that dialog currently holds.
+'
+' A record with no key clashes with nothing, and neither does one whose key does not resolve
+' (it can never reach an accelerator table, so it cannot collide inside one).
 ' ========================================================================================
-function frmUserToolKey_ClashText( byval wszKey as DWSTRING, _
+' One stored record against the candidate, compared as PARTS. wszCandidateUpper is
+' pre-uppercased by the caller because this runs once per record per keystroke.
+' The stored flags arrive as longs -- TYPE_TOOLS and TYPE_BUILDS both keep them that way so
+' the config writer emits 0/1 rather than true/false.
+private function AssignKey_PartsMatch( byval wszStoredKey as DWSTRING, _
+                                       byval nStoredCtrl as long, _
+                                       byval nStoredAlt as long, _
+                                       byval nStoredShift as long, _
+                                       byval wszCandidateUpper as DWSTRING, _
+                                       byval bCtrl as boolean, _
+                                       byval bAlt as boolean, _
+                                       byval bShift as boolean ) as boolean
+    if ucase(trim(wszStoredKey)) <> wszCandidateUpper then return false
+    if (nStoredCtrl  <> 0) <> bCtrl  then return false
+    if (nStoredAlt   <> 0) <> bAlt   then return false
+    if (nStoredShift <> 0) <> bShift then return false
+    return true
+end function
+
+
+private function AssignKey_OwnerText( byval wszDescription as DWSTRING ) as DWSTRING
+    dim as DWSTRING wszWho = wszDescription
+    if len(wszWho) = 0 then wszWho = L(513,"(untitled)")
+    return L(526,"Already used by") & ": " & wszWho
+end function
+
+
+function frmAssignKey_ClashText( byval wszKey as DWSTRING, _
                                    byval bCtrl as boolean, _
                                    byval bAlt as boolean, _
                                    byval bShift as boolean, _
-                                   byval nSkipToolIndex as long ) as DWSTRING
+                                   byval nDomain as long, _
+                                   byval nSkipIndex as long ) as DWSTRING
 
     if len(wszKey) = 0 then return ""
 
@@ -132,19 +171,47 @@ function frmUserToolKey_ClashText( byval wszKey as DWSTRING, _
     dim as DWSTRING wszCmd = KeyBindings_FindCommandForKeys( wszCanonical )
     if len(wszCmd) then return L(526,"Already used by") & ": " & wszCmd
 
-    ' --- 2. the other user tools ---
-    for i as long = lbound(gToolsWork) to ubound(gToolsWork)
-        if i = nSkipToolIndex then continue for
-        if ucase(trim(gToolsWork(i).wszKey)) <> ucase(wszKey) then continue for
-        dim as boolean bC = (gToolsWork(i).IsCtrl  <> 0)
-        dim as boolean bA = (gToolsWork(i).IsAlt   <> 0)
-        dim as boolean bS = (gToolsWork(i).IsShift <> 0)
-        if (bC = bCtrl) andalso (bA = bAlt) andalso (bS = bShift) then
-            dim as DWSTRING wszWho = gToolsWork(i).wszDescription
-            if len(wszWho) = 0 then wszWho = L(513,"(untitled)")
-            return L(526,"Already used by") & ": " & wszWho
-        end if
-    next
+    dim as DWSTRING wszUpper = ucase(wszKey)
+
+    ' --- 2. the user tools ---
+    if nDomain = ASSIGNKEY_DOMAIN_TOOLS then
+        for i as long = lbound(gToolsWork) to ubound(gToolsWork)
+            if i = nSkipIndex then continue for
+            if AssignKey_PartsMatch( gToolsWork(i).wszKey, gToolsWork(i).IsCtrl, _
+                                     gToolsWork(i).IsAlt, gToolsWork(i).IsShift, _
+                                     wszUpper, bCtrl, bAlt, bShift ) then
+                return AssignKey_OwnerText( gToolsWork(i).wszDescription )
+            end if
+        next
+    else
+        for i as long = lbound(gConfig.Tools) to ubound(gConfig.Tools)
+            if AssignKey_PartsMatch( gConfig.Tools(i).wszKey, gConfig.Tools(i).IsCtrl, _
+                                     gConfig.Tools(i).IsAlt, gConfig.Tools(i).IsShift, _
+                                     wszUpper, bCtrl, bAlt, bShift ) then
+                return AssignKey_OwnerText( gConfig.Tools(i).wszDescription )
+            end if
+        next
+    end if
+
+    ' --- 3. the build configurations ---
+    if nDomain = ASSIGNKEY_DOMAIN_BUILDS then
+        for i as long = lbound(gBuildsWork) to ubound(gBuildsWork)
+            if i = nSkipIndex then continue for
+            if AssignKey_PartsMatch( gBuildsWork(i).wszKey, gBuildsWork(i).IsCtrl, _
+                                     gBuildsWork(i).IsAlt, gBuildsWork(i).IsShift, _
+                                     wszUpper, bCtrl, bAlt, bShift ) then
+                return AssignKey_OwnerText( gBuildsWork(i).wszDescription )
+            end if
+        next
+    else
+        for i as long = lbound(gConfig.Builds) to ubound(gConfig.Builds)
+            if AssignKey_PartsMatch( gConfig.Builds(i).wszKey, gConfig.Builds(i).IsCtrl, _
+                                     gConfig.Builds(i).IsAlt, gConfig.Builds(i).IsShift, _
+                                     wszUpper, bCtrl, bAlt, bShift ) then
+                return AssignKey_OwnerText( gConfig.Builds(i).wszDescription )
+            end if
+        next
+    end if
 
     return ""
 end function
@@ -153,8 +220,9 @@ end function
 ' The clash for the combination currently in the model. Recomputed rather than cached: every
 ' view change goes through RefreshViews, and a cached verdict is one more thing that can be
 ' stale at the moment OK is pressed.
-private function frmUserToolKey_CurrentClash() as DWSTRING
-    return frmUserToolKey_ClashText( gTKKey, gTKCtrl, gTKAlt, gTKShift, gToolKeyIndex )
+private function frmAssignKey_CurrentClash() as DWSTRING
+    return frmAssignKey_ClashText( gTKKey, gTKCtrl, gTKAlt, gTKShift, _
+                                   gAssignKeyDomain, gAssignKeyIndex )
 end function
 
 
@@ -163,9 +231,9 @@ end function
 ' FOR: the field must hold the focus AND still be empty. A blink timer left armed wakes the
 ' process several times a second to repaint something nobody is looking at.
 ' ========================================================================================
-private sub frmUserToolKey_SyncCaretTimer()
+private sub frmAssignKey_SyncCaretTimer()
 
-    if HWND_FRMUSERTOOLKEY_CAPTURE = 0 then exit sub
+    if HWND_FRMASSIGNKEY_CAPTURE = 0 then exit sub
 
     dim as boolean bEmpty   = (len(gTKKey) = 0)
     dim as boolean bWaiting = (gTKCaptureFocus andalso bEmpty)
@@ -176,17 +244,17 @@ private sub frmUserToolKey_SyncCaretTimer()
         ' accessibility; honour that by not animating rather than by picking a rate.
         dim as long nRate = cast(long, GetCaretBlinkTime())
         if nRate <= 0 then
-            KillTimer( HWND_FRMUSERTOOLKEY_CAPTURE, IDT_TKEY_CARET )
+            KillTimer( HWND_FRMASSIGNKEY_CAPTURE, IDT_TKEY_CARET )
             gTKCaretOn = true      ' steady, not absent -- still says "input goes here"
         else
-            SetTimer( HWND_FRMUSERTOOLKEY_CAPTURE, IDT_TKEY_CARET, nRate, 0 )
+            SetTimer( HWND_FRMASSIGNKEY_CAPTURE, IDT_TKEY_CARET, nRate, 0 )
         end if
     else
-        KillTimer( HWND_FRMUSERTOOLKEY_CAPTURE, IDT_TKEY_CARET )
+        KillTimer( HWND_FRMASSIGNKEY_CAPTURE, IDT_TKEY_CARET )
         gTKCaretOn = false
     end if
 
-    AfxRedrawWindow( HWND_FRMUSERTOOLKEY_CAPTURE )
+    AfxRedrawWindow( HWND_FRMASSIGNKEY_CAPTURE )
 
 end sub
 
@@ -194,7 +262,7 @@ end sub
 ' ========================================================================================
 ' Model -> views.
 ' ========================================================================================
-private sub frmUserToolKey_RefreshViews()
+private sub frmAssignKey_RefreshViews()
 
     if gTKSyncing then exit sub
     gTKSyncing = true
@@ -222,16 +290,16 @@ private sub frmUserToolKey_RefreshViews()
     ' chosen the key, and the intermediate combinations along the way are nobody's business.
     ' So this path warns instead, and disables OK for as long as the warning stands. Cancel and
     ' Clear stay live, which is what keeps that from being a trap.
-    PsButton_SetEnabled( ghTKOK, iif( len(frmUserToolKey_CurrentClash()) = 0, true, false ) )
+    PsButton_SetEnabled( ghTKOK, iif( len(frmAssignKey_CurrentClash()) = 0, true, false ) )
 
     gTKSyncing = false
 
     ' The model just changed, so whether there is anything to blink for may have changed with
     ' it -- capturing a shortcut stops the caret, Clear starts it again.
-    frmUserToolKey_SyncCaretTimer()
+    frmAssignKey_SyncCaretTimer()
 
-    if HWND_FRMUSERTOOLKEY_CAPTURE then AfxRedrawWindow( HWND_FRMUSERTOOLKEY_CAPTURE )
-    if HWND_FRMUSERTOOLKEY then AfxRedrawWindow( HWND_FRMUSERTOOLKEY )
+    if HWND_FRMASSIGNKEY_CAPTURE then AfxRedrawWindow( HWND_FRMASSIGNKEY_CAPTURE )
+    if HWND_FRMASSIGNKEY then AfxRedrawWindow( HWND_FRMASSIGNKEY )
 
 end sub
 
@@ -239,7 +307,7 @@ end sub
 ' ========================================================================================
 ' Views -> model.
 ' ========================================================================================
-private sub frmUserToolKey_ModelFromViews()
+private sub frmAssignKey_ModelFromViews()
 
     if gTKSyncing then exit sub
 
@@ -264,7 +332,7 @@ private sub frmUserToolKey_ModelFromViews()
     end if
 
     gTKWhy = ""
-    frmUserToolKey_RefreshViews()
+    frmAssignKey_RefreshViews()
 
 end sub
 
@@ -284,7 +352,7 @@ end sub
 '
 ' ESCAPE IS NOT CLAIMED -- it is the field's exit.
 ' ========================================================================================
-private function frmUserToolKey_CaptureProc( _
+private function frmAssignKey_CaptureProc( _
             byval hwnd   as HWND, _
             byval uMsg   as UINT, _
             byval wParam as WPARAM, _
@@ -309,12 +377,12 @@ private function frmUserToolKey_CaptureProc( _
         case WM_SETFOCUS
             gTKCaptureFocus = true
             gTKCaretOn      = true      ' show immediately; do not wait out a blink period
-            frmUserToolKey_SyncCaretTimer()
+            frmAssignKey_SyncCaretTimer()
             return 0
 
         case WM_KILLFOCUS
             gTKCaptureFocus = false
-            frmUserToolKey_SyncCaretTimer()
+            frmAssignKey_SyncCaretTimer()
             return 0
 
         case WM_TIMER
@@ -373,11 +441,13 @@ private function frmUserToolKey_CaptureProc( _
             ' AcceptCapture because that function is shared with frmKeyboardEdit, where the
             ' answer is different: a clash there is reported and still allowed (the user may be
             ' deliberately taking a shortcut off another command, and the dialog is editing
-            ' every command at once). A user tool cannot take a binding off the editor -- both
-            ' accelerator tables are live at the same time -- so here it is a refusal.
+            ' every command at once). A user tool or a build configuration cannot take a
+            ' binding off the editor -- both accelerator tables are live at the same time --
+            ' so here it is a refusal.
             if bAccept then
-                dim as DWSTRING wszOwner = frmUserToolKey_ClashText( KeyBindings_VKToName( vk ), _
-                                                                     bCtrl, bAlt, bShift, gToolKeyIndex )
+                dim as DWSTRING wszOwner = frmAssignKey_ClashText( KeyBindings_VKToName( vk ), _
+                                                                     bCtrl, bAlt, bShift, _
+                                                                     gAssignKeyDomain, gAssignKeyIndex )
                 if len(wszOwner) then
                     bAccept = false
                     wszWhy  = wszOwner
@@ -392,7 +462,7 @@ private function frmUserToolKey_CaptureProc( _
                 gTKAlt   = bAlt
                 gTKShift = bShift
                 gTKWhy   = ""
-                frmUserToolKey_RefreshViews()
+                frmAssignKey_RefreshViews()
             else
                 ' REFUSED. The message line explains it in words, but words alone make
                 ' "I heard you and said no" look identical to "I never saw that key" -- the
@@ -402,7 +472,7 @@ private function frmUserToolKey_CaptureProc( _
                 gTKFlashOn = true
                 SetTimer( hwnd, IDT_TKEY_FLASH, TKEY_FLASH_MS, 0 )
                 AfxRedrawWindow( hwnd )
-                AfxRedrawWindow( HWND_FRMUSERTOOLKEY )
+                AfxRedrawWindow( HWND_FRMASSIGNKEY )
             end if
 
             bSwallowChar = true
@@ -446,7 +516,7 @@ private function frmUserToolKey_CaptureProc( _
             buffer.SetPenColor( penclr )
             buffer.PaintRoundOutline( @rc, curve, penw )
 
-            dim as DWSTRING wszShow = frmUserToolKey_Compose()
+            dim as DWSTRING wszShow = frmAssignKey_Compose()
             dim as COLORREF clr = ghEditor.ForeColorText
             dim as boolean bWaiting = (len(wszShow) = 0)
             if bWaiting then
@@ -467,7 +537,7 @@ private function frmUserToolKey_CaptureProc( _
                 ' caret slot as one unit, then draw the text into the left part. Centring the
                 ' text alone and appending the caret shuffles the whole sentence a few pixels
                 ' left and right twice a second, which reads as a rendering fault.
-                dim as long tw     = frmUserToolKey_TextWidthPx( hwnd, wszShow, ghFont(GUIFONTBOLD_11) )
+                dim as long tw     = frmAssignKey_TextWidthPx( hwnd, wszShow, ghFont(GUIFONTBOLD_11) )
                 dim as long caretW = AfxScaleX(2)
                 dim as long gapW   = AfxScaleX(6)
                 dim as long x0     = (rc.right - (tw + gapW + caretW)) \ 2
@@ -509,21 +579,21 @@ end function
 ' Control callbacks
 ' ========================================================================================
 
-private sub frmUserToolKey_ToggleChanged( byval hToggle as HWND, byval isChecked as boolean )
-    frmUserToolKey_ModelFromViews()
+private sub frmAssignKey_ToggleChanged( byval hToggle as HWND, byval isChecked as boolean )
+    frmAssignKey_ModelFromViews()
 end sub
 
-private sub frmUserToolKey_KeyListChanged( byval hList as HWND, byval row as integer )
-    frmUserToolKey_ModelFromViews()
+private sub frmAssignKey_KeyListChanged( byval hList as HWND, byval row as integer )
+    frmAssignKey_ModelFromViews()
 end sub
 
 ' No tooltips on the picker: with no callback PsListTree falls back to the row's own text,
 ' which here would pop "F5" over a row already reading "F5".
-private function frmUserToolKey_KeyListTooltip( byval hList as HWND, byval row as integer ) as DWSTRING
+private function frmAssignKey_KeyListTooltip( byval hList as HWND, byval row as integer ) as DWSTRING
     return ""
 end function
 
-private sub frmUserToolKey_KeyListPaint( byval p as PSLISTTREE_PAINTINFO ptr )
+private sub frmAssignKey_KeyListPaint( byval p as PSLISTTREE_PAINTINFO ptr )
     if p = 0 then exit sub
     dim as boolean bActive = (p->isSelected orelse p->isHot)
     p->b->SetBackColor( iif( bActive, ghPanel.BackColorHot, ghEditor.BackColorText ) )
@@ -535,30 +605,30 @@ private sub frmUserToolKey_KeyListPaint( byval p as PSLISTTREE_PAINTINFO ptr )
     p->b->PaintText( p->wszCaption, @rcText, DT_LEFT or DT_END_ELLIPSIS )
 end sub
 
-private sub frmUserToolKey_ButtonClick( byval hButton as HWND, byval id as long )
+private sub frmAssignKey_ButtonClick( byval hButton as HWND, byval id as long )
     select case id
         ' CLEAR, not "Reset": a user tool has no shipped default to go back to, so the only
         ' meaning available is "no shortcut at all". It does NOT close the dialog -- everything
         ' here is still private until OK, so the user gets to see what Clear did first.
-        case IDC_FRMUSERTOOLKEY_CMDCLEAR
+        case IDC_FRMASSIGNKEY_CMDCLEAR
             gTKKey   = ""
             gTKCtrl  = false
             gTKAlt   = false
             gTKShift = false
             gTKWhy   = ""
-            frmUserToolKey_RefreshViews()
-            SetFocus( HWND_FRMUSERTOOLKEY_CAPTURE )
+            frmAssignKey_RefreshViews()
+            SetFocus( HWND_FRMASSIGNKEY_CAPTURE )
 
-        case IDC_FRMUSERTOOLKEY_CMDOK
+        case IDC_FRMASSIGNKEY_CMDOK
             ' The ONLY write to the hand-off. Everything above this line edits private copies.
-            gToolKeyName  = gTKKey
-            gToolKeyCtrl  = gTKCtrl
-            gToolKeyAlt   = gTKAlt
-            gToolKeyShift = gTKShift
-            SendMessage( HWND_FRMUSERTOOLKEY, WM_CLOSE, 0, 0 )
+            gAssignKeyName  = gTKKey
+            gAssignKeyCtrl  = gTKCtrl
+            gAssignKeyAlt   = gTKAlt
+            gAssignKeyShift = gTKShift
+            SendMessage( HWND_FRMASSIGNKEY, WM_CLOSE, 0, 0 )
 
-        case IDC_FRMUSERTOOLKEY_CMDCANCEL
-            SendMessage( HWND_FRMUSERTOOLKEY, WM_CLOSE, 0, 0 )
+        case IDC_FRMASSIGNKEY_CMDCANCEL
+            SendMessage( HWND_FRMASSIGNKEY, WM_CLOSE, 0, 0 )
     end select
 end sub
 
@@ -567,10 +637,10 @@ end sub
 ' Paint the dialog's own chrome: the tool name, the three toggle captions, and the message
 ' line. Everything else on screen belongs to a child control.
 '
-' KEEP THE RUNNING y IN STEP WITH frmUserToolKey_PositionWindows -- the two walk the same
+' KEEP THE RUNNING y IN STEP WITH frmAssignKey_PositionWindows -- the two walk the same
 ' sum, and the .bi writes it down.
 ' ========================================================================================
-private function frmUserToolKey_OnPaint( byval hwnd as HWND ) as LRESULT
+private function frmAssignKey_OnPaint( byval hwnd as HWND ) as LRESULT
 
     dim as PAINTSTRUCT ps
     dim as HDC hdc = BeginPaint( hwnd, @ps )
@@ -584,9 +654,9 @@ private function frmUserToolKey_OnPaint( byval hwnd as HWND ) as LRESULT
     buffer.SetBackColor( ghPanel.BackColor )
     buffer.PaintRect( @rc )
 
-    dim as long mx   = AfxScaleX(FRMTOOLKEY_MARGIN)
-    dim as long y    = AfxScaleY(FRMTOOLKEY_MARGIN)
-    dim as long rowH = AfxScaleY(FRMTOOLKEY_ROW_H)
+    dim as long mx   = AfxScaleX(FRMASSIGNKEY_MARGIN)
+    dim as long y    = AfxScaleY(FRMASSIGNKEY_MARGIN)
+    dim as long rowH = AfxScaleY(FRMASSIGNKEY_ROW_H)
 
     dim as RECT rcT
     rcT.left = mx : rcT.right = rc.right - mx
@@ -596,20 +666,20 @@ private function frmUserToolKey_OnPaint( byval hwnd as HWND ) as LRESULT
     rcT.top = y : rcT.bottom = y + rowH
     buffer.SetForeColor( ghPanel.ForeColorHot )
     buffer.SetFont( ghFont(GUIFONTBOLD_11) )
-    dim as DWSTRING wszWho = gToolKeyCaption
+    dim as DWSTRING wszWho = gAssignKeyCaption
     if len(wszWho) = 0 then wszWho = L(513,"(untitled)")
     buffer.PaintText( wszWho, @rcT, DT_LEFT or DT_END_ELLIPSIS )
     y += rowH
 
     ' NO LABEL ABOVE THE CAPTURE FIELD: the empty field shows "Press the new shortcut" itself,
     ' where the user is already looking.
-    y += AfxScaleY(FRMTOOLKEY_CAPTURE_H) + AfxScaleY(18)
+    y += AfxScaleY(FRMASSIGNKEY_CAPTURE_H) + AfxScaleY(18)
 
     ' The three toggle captions. PsToggle carries no caption and therefore no font, so every
     ' host draws its own -- the same arrangement the Options dialog's rows use.
     rcT.top = y : rcT.bottom = y + rowH
-    dim as long togW = AfxScaleX(FRMTOOLKEY_TOGW)
-    dim as long capW = AfxScaleX(FRMTOOLKEY_CAPW)
+    dim as long togW = AfxScaleX(FRMASSIGNKEY_TOGW)
+    dim as long capW = AfxScaleX(FRMASSIGNKEY_CAPW)
     dim as long x    = mx
     buffer.SetForeColor( ghPanel.ForeColor )
     buffer.SetFont( ghFont(GUIFONT_11) )
@@ -627,12 +697,12 @@ private function frmUserToolKey_OnPaint( byval hwnd as HWND ) as LRESULT
     ' THE MESSAGE LINE. One line serving two purposes, and the refusal wins -- frmKeyboardEdit's
     ' rule and its reasoning: a rejected keystroke is news about what the user just did, a
     ' standing clash is a property of what is already there.
-    y += rowH + AfxScaleY(6) + AfxScaleY(FRMTOOLKEY_KEYLIST_H) + AfxScaleY(12)
+    y += rowH + AfxScaleY(6) + AfxScaleY(FRMASSIGNKEY_KEYLIST_H) + AfxScaleY(12)
     rcT.left = mx : rcT.right = rc.right - mx
     rcT.top = y : rcT.bottom = y + rowH
 
     dim as DWSTRING wszMsg = gTKWhy
-    if len(wszMsg) = 0 then wszMsg = frmUserToolKey_CurrentClash()
+    if len(wszMsg) = 0 then wszMsg = frmAssignKey_CurrentClash()
     if len(wszMsg) then
         buffer.SetForeColor( ghGeneral.iconfail )
         buffer.SetFont( ghFont(GUIFONT_11) )
@@ -649,31 +719,31 @@ end function
 ' ========================================================================================
 ' Lay the children out. Fixed-size dialog, so this runs once.
 ' ========================================================================================
-private sub frmUserToolKey_PositionWindows( byval hwnd as HWND )
+private sub frmAssignKey_PositionWindows( byval hwnd as HWND )
 
     dim as RECT rc
     GetClientRect( hwnd, @rc )
     if (rc.right <= 0) orelse (rc.bottom <= 0) then exit sub
 
-    dim as long mx   = AfxScaleX(FRMTOOLKEY_MARGIN)
-    dim as long rowH = AfxScaleY(FRMTOOLKEY_ROW_H)
-    dim as long y    = AfxScaleY(FRMTOOLKEY_MARGIN) + rowH
+    dim as long mx   = AfxScaleX(FRMASSIGNKEY_MARGIN)
+    dim as long rowH = AfxScaleY(FRMASSIGNKEY_ROW_H)
+    dim as long y    = AfxScaleY(FRMASSIGNKEY_MARGIN) + rowH
 
     ' The capture field.
-    dim as long capH = AfxScaleY(FRMTOOLKEY_CAPTURE_H)
-    SetWindowPos( HWND_FRMUSERTOOLKEY_CAPTURE, 0, mx, y, rc.right - (mx * 2), capH, _
+    dim as long capH = AfxScaleY(FRMASSIGNKEY_CAPTURE_H)
+    SetWindowPos( HWND_FRMASSIGNKEY_CAPTURE, 0, mx, y, rc.right - (mx * 2), capH, _
                   SWP_NOZORDER or SWP_NOACTIVATE )
     y += capH + AfxScaleY(18)
 
     ' The three modifier toggles, on one line.
-    dim as long capW = AfxScaleX(FRMTOOLKEY_CAPW)
+    dim as long capW = AfxScaleX(FRMASSIGNKEY_CAPW)
     dim as long x    = mx
     dim as long tw = 0, th = 0
 
     #macro TKPLACE( _h_ )
         PsToggle_GetIdealSize( _h_, tw, th )
         SetWindowPos( _h_, 0, x, y + (rowH - th) \ 2, tw, th, SWP_NOZORDER or SWP_NOACTIVATE )
-        x += AfxScaleX(FRMTOOLKEY_TOGW) + capW + AfxScaleX(8)
+        x += AfxScaleX(FRMASSIGNKEY_TOGW) + capW + AfxScaleX(8)
     #endmacro
 
     TKPLACE( ghTKTogCtrl )
@@ -683,14 +753,14 @@ private sub frmUserToolKey_PositionWindows( byval hwnd as HWND )
     ' The key picker gets its own full-width band -- it is a scrolling list, not a dropdown,
     ' so it occupies space rather than borrowing the screen.
     y += rowH + AfxScaleY(6)
-    SetWindowPos( ghTKKeyList, 0, mx, y, rc.right - (mx * 2), AfxScaleY(FRMTOOLKEY_KEYLIST_H), _
+    SetWindowPos( ghTKKeyList, 0, mx, y, rc.right - (mx * 2), AfxScaleY(FRMASSIGNKEY_KEYLIST_H), _
                   SWP_NOZORDER or SWP_NOACTIVATE )
 
     ' Footer: Clear bottom-left, OK / Cancel bottom-right -- the same split frmKeyboard and
     ' frmKeyboardEdit use.
-    dim as long btnW = AfxScaleX(FRMTOOLKEY_BTN_W)
-    dim as long btnH = AfxScaleY(FRMTOOLKEY_BTN_H)
-    dim as long btnY = rc.bottom - AfxScaleY(FRMTOOLKEY_MARGIN) - btnH
+    dim as long btnW = AfxScaleX(FRMASSIGNKEY_BTN_W)
+    dim as long btnH = AfxScaleY(FRMASSIGNKEY_BTN_H)
+    dim as long btnY = rc.bottom - AfxScaleY(FRMASSIGNKEY_MARGIN) - btnH
     SetWindowPos( ghTKClear,  0, mx, btnY, btnW, btnH, SWP_NOZORDER or SWP_NOACTIVATE )
     SetWindowPos( ghTKCancel, 0, rc.right - mx - btnW, btnY, btnW, btnH, SWP_NOZORDER or SWP_NOACTIVATE )
     SetWindowPos( ghTKOK,     0, rc.right - mx - (btnW * 2) - AfxScaleX(8), _
@@ -706,7 +776,7 @@ end sub
 ' included after modOptionsRows.inc in the unity build, so unlike frmKeyboard/frmKeyboardEdit
 ' it can simply call them, and the palettes cannot drift.
 ' ========================================================================================
-private sub frmUserToolKey_ApplyTheme( byval hwnd as HWND )
+private sub frmAssignKey_ApplyTheme( byval hwnd as HWND )
 
     dim as PSTOGGLE_COLORS tc
     OptionsTheme_FillToggle( @tc )
@@ -734,7 +804,7 @@ end sub
 ' ========================================================================================
 ' Window procedure
 ' ========================================================================================
-private function frmUserToolKey_WndProc( _
+private function frmAssignKey_WndProc( _
             byval hwnd   as HWND, _
             byval uMsg   as UINT, _
             byval wParam as WPARAM, _
@@ -751,10 +821,10 @@ private function frmUserToolKey_WndProc( _
             return 1
 
         case WM_PAINT
-            return frmUserToolKey_OnPaint( hwnd )
+            return frmAssignKey_OnPaint( hwnd )
 
         case WM_SIZE
-            frmUserToolKey_PositionWindows( hwnd )
+            frmAssignKey_PositionWindows( hwnd )
             return 0
 
         case WM_COMMAND
@@ -768,14 +838,14 @@ private function frmUserToolKey_WndProc( _
 
         case WM_CLOSE
             ' NOTHING IS WRITTEN HERE. The commit is on the OK path only, so reaching this by
-            ' any route leaves gToolKey* exactly as the caller set them.
+            ' any route leaves gAssignKey* exactly as the caller set them.
             EnableWindow( GetParent(hwnd), true )
             DestroyWindow( hwnd )
             return 0
 
         case WM_DESTROY
-            HWND_FRMUSERTOOLKEY         = 0
-            HWND_FRMUSERTOOLKEY_CAPTURE = 0
+            HWND_FRMASSIGNKEY         = 0
+            HWND_FRMASSIGNKEY_CAPTURE = 0
             PostQuitMessage(0)
             return 0
 
@@ -787,17 +857,17 @@ end function
 
 
 ' ========================================================================================
-' frmUserToolKey_Show
+' frmAssignKey_Show
 '
-' Modal. Reads gToolKey* on the way in and writes them back on OK; the caller stages that.
+' Modal. Reads gAssignKey* on the way in and writes them back on OK; the caller stages that.
 ' ========================================================================================
-function frmUserToolKey_Show( byval hWndParent as HWND ) as LRESULT
+function frmAssignKey_Show( byval hWndParent as HWND ) as LRESULT
 
     ' Seed the private model from the hand-off.
-    gTKKey   = gToolKeyName
-    gTKCtrl  = gToolKeyCtrl
-    gTKAlt   = gToolKeyAlt
-    gTKShift = gToolKeyShift
+    gTKKey   = gAssignKeyName
+    gTKCtrl  = gAssignKeyCtrl
+    gTKAlt   = gAssignKeyAlt
+    gTKShift = gAssignKeyShift
     gTKWhy   = ""
     gTKSyncing      = false
     gTKCaptureFocus = false
@@ -817,11 +887,11 @@ function frmUserToolKey_Show( byval hWndParent as HWND ) as LRESULT
     dim pWindow as CWindow ptr = new CWindow
     pWindow->DPI = AfxCWindowOwnerPtr(hWndParent)->DPI
 
-    HWND_FRMUSERTOOLKEY = pWindow->Create( hWndParent, L(499,"Assign Shortcut"), _
-        @frmUserToolKey_WndProc, 0, 0, 0, 0, _
+    HWND_FRMASSIGNKEY = pWindow->Create( hWndParent, L(499,"Assign Shortcut"), _
+        @frmAssignKey_WndProc, 0, 0, 0, 0, _
         WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
         WS_EX_DLGMODALFRAME or WS_EX_CONTROLPARENT or WS_EX_LEFT )
-    pWindow->SetClientSize( FRMTOOLKEY_CLIENT_W, FRMTOOLKEY_CLIENT_H )
+    pWindow->SetClientSize( FRMASSIGNKEY_CLIENT_W, FRMASSIGNKEY_CLIENT_H )
     pWindow->Center( pWindow->hWindow, hWndParent )
 
     ' ---- the capture field ------------------------------------------------------------
@@ -829,26 +899,26 @@ function frmUserToolKey_Show( byval hWndParent as HWND ) as LRESULT
     ' dialog template, so GetNextDlgTabItem walks the child Z-order and Z-order is creation
     ' order. capture -> Ctrl -> Alt -> Shift -> picker -> Clear -> OK -> Cancel.
     dim pCap as CWindow ptr = new CWindow
-    HWND_FRMUSERTOOLKEY_CAPTURE = pCap->Create( HWND_FRMUSERTOOLKEY, "", _
-        @frmUserToolKey_CaptureProc, 0, 0, 0, 0, _
+    HWND_FRMASSIGNKEY_CAPTURE = pCap->Create( HWND_FRMASSIGNKEY, "", _
+        @frmAssignKey_CaptureProc, 0, 0, 0, 0, _
         WS_CHILD or WS_VISIBLE or WS_TABSTOP or WS_CLIPSIBLINGS, 0 )
 
     ' ---- toggles ----------------------------------------------------------------------
-    ghTKTogCtrl  = PsToggle_Create( HWND_FRMUSERTOOLKEY, IDC_FRMUSERTOOLKEY_TOGCTRL )
-    ghTKTogAlt   = PsToggle_Create( HWND_FRMUSERTOOLKEY, IDC_FRMUSERTOOLKEY_TOGALT )
-    ghTKTogShift = PsToggle_Create( HWND_FRMUSERTOOLKEY, IDC_FRMUSERTOOLKEY_TOGSHIFT )
+    ghTKTogCtrl  = PsToggle_Create( HWND_FRMASSIGNKEY, IDC_FRMASSIGNKEY_TOGCTRL )
+    ghTKTogAlt   = PsToggle_Create( HWND_FRMASSIGNKEY, IDC_FRMASSIGNKEY_TOGALT )
+    ghTKTogShift = PsToggle_Create( HWND_FRMASSIGNKEY, IDC_FRMASSIGNKEY_TOGSHIFT )
 
-    PsToggle_SetCheckChangedCallback( ghTKTogCtrl,  @frmUserToolKey_ToggleChanged )
-    PsToggle_SetCheckChangedCallback( ghTKTogAlt,   @frmUserToolKey_ToggleChanged )
-    PsToggle_SetCheckChangedCallback( ghTKTogShift, @frmUserToolKey_ToggleChanged )
+    PsToggle_SetCheckChangedCallback( ghTKTogCtrl,  @frmAssignKey_ToggleChanged )
+    PsToggle_SetCheckChangedCallback( ghTKTogAlt,   @frmAssignKey_ToggleChanged )
+    PsToggle_SetCheckChangedCallback( ghTKTogShift, @frmAssignKey_ToggleChanged )
 
     ' ---- the key picker ---------------------------------------------------------------
-    ghTKKeyList = PsListTree_Create( HWND_FRMUSERTOOLKEY, IDC_FRMUSERTOOLKEY_KEYLIST )
+    ghTKKeyList = PsListTree_Create( HWND_FRMASSIGNKEY, IDC_FRMASSIGNKEY_KEYLIST )
     PsListTree_SetFont( ghTKKeyList, ghFont(GUIFONT_11) )
     ' UNSCALED: PsListTree scales what it is handed, so a pre-scaled value is scaled twice.
-    PsListTree_SetRowHeight( ghTKKeyList, FRMTOOLKEY_KEYROW_H )
-    PsListTree_SetPaintCallback( ghTKKeyList, @frmUserToolKey_KeyListPaint )
-    PsListTree_SetTooltipCallback( ghTKKeyList, @frmUserToolKey_KeyListTooltip )
+    PsListTree_SetRowHeight( ghTKKeyList, FRMASSIGNKEY_KEYROW_H )
+    PsListTree_SetPaintCallback( ghTKKeyList, @frmAssignKey_KeyListPaint )
+    PsListTree_SetTooltipCallback( ghTKKeyList, @frmAssignKey_KeyListTooltip )
     ' Row 0 is "None" and every later row is gKeyNames(row-1) -- the contract the two views
     ' share. Filled from the same vocabulary the capture field spells its keys with.
     PsListTree_AddString( ghTKKeyList, "None" )
@@ -856,24 +926,24 @@ function frmUserToolKey_Show( byval hWndParent as HWND ) as LRESULT
     for i as long = lbound(gKeyNames) to ubound(gKeyNames)
         PsListTree_AddString( ghTKKeyList, gKeyNames(i).wszName )
     next
-    PsListTree_SetSelChangeCallback( ghTKKeyList, @frmUserToolKey_KeyListChanged )
+    PsListTree_SetSelChangeCallback( ghTKKeyList, @frmAssignKey_KeyListChanged )
 
     ' ---- footer -----------------------------------------------------------------------
-    ghTKClear = PsButton_Create( HWND_FRMUSERTOOLKEY, IDC_FRMUSERTOOLKEY_CMDCLEAR )
+    ghTKClear = PsButton_Create( HWND_FRMASSIGNKEY, IDC_FRMASSIGNKEY_CMDCLEAR )
     PsButton_SetText( ghTKClear, L(517,"Clear") )
     PsButton_SetFont( ghTKClear, ghFont(GUIFONT_11) )
-    PsButton_SetClickCallback( ghTKClear, @frmUserToolKey_ButtonClick )
+    PsButton_SetClickCallback( ghTKClear, @frmAssignKey_ButtonClick )
 
-    ghTKOK = PsButton_Create( HWND_FRMUSERTOOLKEY, IDC_FRMUSERTOOLKEY_CMDOK )
+    ghTKOK = PsButton_Create( HWND_FRMASSIGNKEY, IDC_FRMASSIGNKEY_CMDOK )
     PsButton_SetText( ghTKOK, L(0,"OK") )
     PsButton_SetFont( ghTKOK, ghFont(GUIFONT_11) )
     PsButton_SetDefault( ghTKOK, true )
-    PsButton_SetClickCallback( ghTKOK, @frmUserToolKey_ButtonClick )
+    PsButton_SetClickCallback( ghTKOK, @frmAssignKey_ButtonClick )
 
-    ghTKCancel = PsButton_Create( HWND_FRMUSERTOOLKEY, IDC_FRMUSERTOOLKEY_CMDCANCEL )
+    ghTKCancel = PsButton_Create( HWND_FRMASSIGNKEY, IDC_FRMASSIGNKEY_CMDCANCEL )
     PsButton_SetText( ghTKCancel, L(1,"Cancel") )
     PsButton_SetFont( ghTKCancel, ghFont(GUIFONT_11) )
-    PsButton_SetClickCallback( ghTKCancel, @frmUserToolKey_ButtonClick )
+    PsButton_SetClickCallback( ghTKCancel, @frmAssignKey_ButtonClick )
 
     ShowWindow( ghTKTogCtrl, SW_SHOW )
     ShowWindow( ghTKTogAlt, SW_SHOW )
@@ -883,16 +953,16 @@ function frmUserToolKey_Show( byval hWndParent as HWND ) as LRESULT
     ShowWindow( ghTKOK, SW_SHOW )
     ShowWindow( ghTKCancel, SW_SHOW )
 
-    frmUserToolKey_ApplyTheme( HWND_FRMUSERTOOLKEY )
-    frmUserToolKey_PositionWindows( HWND_FRMUSERTOOLKEY )
-    frmUserToolKey_RefreshViews()
+    frmAssignKey_ApplyTheme( HWND_FRMASSIGNKEY )
+    frmAssignKey_PositionWindows( HWND_FRMASSIGNKEY )
+    frmAssignKey_RefreshViews()
 
-    ShowWindow( HWND_FRMUSERTOOLKEY, SW_SHOW )
-    UpdateWindow( HWND_FRMUSERTOOLKEY )
+    ShowWindow( HWND_FRMASSIGNKEY, SW_SHOW )
+    UpdateWindow( HWND_FRMASSIGNKEY )
 
     ' Focus the capture field: it is what the dialog is for, and IsDialogMessage will not Tab
     ' anywhere until something already holds the focus.
-    SetFocus( HWND_FRMUSERTOOLKEY_CAPTURE )
+    SetFocus( HWND_FRMASSIGNKEY_CAPTURE )
 
     ' ---- message loop -----------------------------------------------------------------
     ' NO *_FilterMessage CALL, and that is a property worth keeping -- see the .bi header.
@@ -905,12 +975,12 @@ function frmUserToolKey_Show( byval hWndParent as HWND ) as LRESULT
             if gTKCaptureFocus then
                 SetFocus( ghTKOK )
             else
-                SendMessage( HWND_FRMUSERTOOLKEY, WM_CLOSE, 0, 0 )
+                SendMessage( HWND_FRMASSIGNKEY, WM_CLOSE, 0, 0 )
             end if
             continue while
         end if
 
-        if IsDialogMessage( HWND_FRMUSERTOOLKEY, @uMsg ) = 0 then
+        if IsDialogMessage( HWND_FRMASSIGNKEY, @uMsg ) = 0 then
             TranslateMessage( @uMsg )
             DispatchMessage( @uMsg )
         end if

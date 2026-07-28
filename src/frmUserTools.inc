@@ -214,7 +214,7 @@ end Function
 ' UNCHANGED. Note that the guard below is now belt AND braces: the previous dialog wrote the
 ' literal string "None" into a keyless tool the moment its row was selected, and this is what
 ' stopped that reaching the menu as "Ctrl+NONE". The new dialog stores "" instead (see
-' frmUserToolKey_ModelFromViews), but an existing settings.ini still holds "None" and this
+' frmAssignKey_ModelFromViews), but an existing settings.ini still holds "None" and this
 ' has to keep working for it.
 ' ========================================================================================
 function createToolsMenuShortcut( byval nCtrlID as long ) as DWSTRING
@@ -344,11 +344,11 @@ private function frmUserTools_ShortcutClash( byval idx as long ) as DWSTRING
     dim as DWSTRING wszKey = trim(gToolsWork(idx).wszKey)
     if len(wszKey) = 0 then return ""
     if ucase(wszKey) = "NONE" then return ""
-    return frmUserToolKey_ClashText( wszKey, _
+    return frmAssignKey_ClashText( wszKey, _
                                      iif( gToolsWork(idx).IsCtrl  <> 0, true, false ), _
                                      iif( gToolsWork(idx).IsAlt   <> 0, true, false ), _
                                      iif( gToolsWork(idx).IsShift <> 0, true, false ), _
-                                     idx )
+                                     ASSIGNKEY_DOMAIN_TOOLS, idx )
 end function
 
 
@@ -763,26 +763,32 @@ private sub frmUserTools_DoAssign()
     dim as long idx = frmUserTools_SelectedWorkIndex()
     if idx < 0 then exit sub
 
-    gToolKeyCaption = gToolsWork(idx).wszDescription
-    ' Which row this is, so the clash test skips the tool's own current binding -- without it,
-    ' opening the dialog on a tool that already has Ctrl+1 reports that it clashes with itself
-    ' and disables OK before the user has touched anything.
-    gToolKeyIndex   = idx
-    gToolKeyName    = gToolsWork(idx).wszKey
-    gToolKeyCtrl    = iif( gToolsWork(idx).IsCtrl  <> 0, true, false )
-    gToolKeyAlt     = iif( gToolsWork(idx).IsAlt   <> 0, true, false )
-    gToolKeyShift   = iif( gToolsWork(idx).IsShift <> 0, true, false )
+    gAssignKeyCaption = gToolsWork(idx).wszDescription
+    ' Which domain and which row, so the clash test skips the tool's own current binding --
+    ' without it, opening the dialog on a tool that already has Ctrl+1 reports that it clashes
+    ' with itself and disables OK before the user has touched anything. The domain also tells
+    ' the test to read gToolsWork (staging) for tools and gConfig.Builds (committed) for
+    ' builds, which is right because the two dialogs cannot be open at once.
+    gAssignKeyDomain  = ASSIGNKEY_DOMAIN_TOOLS
+    gAssignKeyIndex   = idx
+    gAssignKeyName    = gToolsWork(idx).wszKey
+    gAssignKeyCtrl    = iif( gToolsWork(idx).IsCtrl  <> 0, true, false )
+    gAssignKeyAlt     = iif( gToolsWork(idx).IsAlt   <> 0, true, false )
+    gAssignKeyShift   = iif( gToolsWork(idx).IsShift <> 0, true, false )
 
-    frmUserToolKey_Show( HWND_FRMUSERTOOLS )
+    frmAssignKey_Show( HWND_FRMUSERTOOLS )
 
-    ' Cancel leaves gToolKey* exactly as set above, so this is a no-op on that path rather
+    ' Cancel leaves gAssignKey* exactly as set above, so this is a no-op on that path rather
     ' than a case that has to be detected.
-    gToolsWork(idx).wszKey  = gToolKeyName
-    gToolsWork(idx).IsCtrl  = iif( gToolKeyCtrl,  1, 0 )
-    gToolsWork(idx).IsAlt   = iif( gToolKeyAlt,   1, 0 )
-    gToolsWork(idx).IsShift = iif( gToolKeyShift, 1, 0 )
+    gToolsWork(idx).wszKey  = gAssignKeyName
+    gToolsWork(idx).IsCtrl  = iif( gAssignKeyCtrl,  1, 0 )
+    gToolsWork(idx).IsAlt   = iif( gAssignKeyAlt,   1, 0 )
+    gToolsWork(idx).IsShift = iif( gAssignKeyShift, 1, 0 )
 
-    gToolKeyIndex = -1
+    ' BOTH sentinels, not just the index: leaving the domain set would make a later
+    ' ASSIGNKEY_DOMAIN_NONE caller silently read staging instead of committed records.
+    gAssignKeyDomain = ASSIGNKEY_DOMAIN_NONE
+    gAssignKeyIndex  = -1
 
     frmUserTools_RefreshRow( idx )
     AfxRedrawWindow( HWND_FRMUSERTOOLS )
@@ -1415,14 +1421,16 @@ sub frmUserTools_RunSelfTest()
     UTASSERT( len(wszLiveKeys) > 0, "found a live Ctrl+<key> editor binding to test against" )
     if len(wszLiveKeys) then
         ' It clashes...
-        dim as DWSTRING wszHit = frmUserToolKey_ClashText( wszLiveKeys, true, false, false, -1 )
+        dim as DWSTRING wszHit = frmAssignKey_ClashText( wszLiveKeys, true, false, false, _
+                                                         ASSIGNKEY_DOMAIN_NONE, -1 )
         UTASSERT( len(wszHit) > 0, "Ctrl+" & wszLiveKeys & " is reported as taken by an editor command" )
         UTASSERT( instr(wszHit, wszLiveOwner) > 0, "the clash names the command that owns it" )
 
         ' ...and the SAME KEY WITHOUT THE MODIFIER DOES NOT. This is the assertion that stops
         ' the one above passing for the wrong reason: a clash test that ignored the modifiers
         ' entirely -- comparing bare key names -- would report a hit here too.
-        dim as DWSTRING wszFree = frmUserToolKey_ClashText( wszLiveKeys, false, true, true, -1 )
+        dim as DWSTRING wszFree = frmAssignKey_ClashText( wszLiveKeys, false, true, true, _
+                                                          ASSIGNKEY_DOMAIN_NONE, -1 )
         UTASSERT( len(wszFree) = 0, "Alt+Shift+" & wszLiveKeys & " is NOT reported as taken" )
     end if
 
@@ -1431,17 +1439,106 @@ sub frmUserTools_RunSelfTest()
     redim gToolsWork(1)
     gToolsWork(0).wszDescription = "AAA" : gToolsWork(0).wszKey = "F12" : gToolsWork(0).IsCtrl = 1
     gToolsWork(1).wszDescription = "BBB" : gToolsWork(1).wszKey = "F12" : gToolsWork(1).IsCtrl = 1
-    UTASSERT( instr( frmUserToolKey_ClashText("F12", true, false, false, 0), "BBB" ) > 0, _
+    UTASSERT( instr( frmAssignKey_ClashText("F12", true, false, false, ASSIGNKEY_DOMAIN_TOOLS, 0), "BBB" ) > 0, _
               "a tool sees the OTHER tool holding its shortcut" )
-    UTASSERT( instr( frmUserToolKey_ClashText("F12", true, false, false, 0), "AAA" ) = 0, _
+    UTASSERT( instr( frmAssignKey_ClashText("F12", true, false, false, ASSIGNKEY_DOMAIN_TOOLS, 0), "AAA" ) = 0, _
               "a tool does not report clashing with itself" )
     ' Differing by one modifier is not a clash.
     gToolsWork(1).IsShift = 1
-    UTASSERT( len( frmUserToolKey_ClashText("F12", true, false, false, 0) ) = 0, _
+    UTASSERT( len( frmAssignKey_ClashText("F12", true, false, false, ASSIGNKEY_DOMAIN_TOOLS, 0) ) = 0, _
               "Ctrl+F12 and Ctrl+Shift+F12 are not a clash" )
     ' A keyless tool cannot clash with anything, however its modifier flags are left.
-    UTASSERT( len( frmUserToolKey_ClashText("", true, false, false, -1) ) = 0, _
+    UTASSERT( len( frmAssignKey_ClashText("", true, false, false, ASSIGNKEY_DOMAIN_TOOLS, -1) ) = 0, _
               "a tool with no key never clashes" )
+
+    ' ---- 4c. TOOLS AND BUILDS MUST SEE EACH OTHER --------------------------------------
+    ' The whole reason frmUserToolKey was generalized into frmAssignKey, and nothing else in
+    ' any suite tests it: before this, the clash test knew only about user tools, so a tool
+    ' and a build configuration could hold the identical accelerator and BOTH dialogs would
+    ' report the keystroke free. One of the two would then simply never fire.
+    '
+    ' Driven through the COMMITTED arrays on purpose -- that is the production path. A
+    ' domain's own staging array is read only while its dialog is open, and the two dialogs
+    ' cannot be open at once, so the cross-domain half always reads gConfig.
+    scope
+        dim as TYPE_TOOLS  keepTools(any)
+        dim as TYPE_BUILDS keepBuilds(any)
+        dim as long nT = ubound(gConfig.Tools), nB = ubound(gConfig.Builds)
+        if nT >= 0 then
+            redim keepTools(nT)
+            for i as long = 0 to nT : keepTools(i) = gConfig.Tools(i) : next
+        end if
+        if nB >= 0 then
+            redim keepBuilds(nB)
+            for i as long = 0 to nB : keepBuilds(i) = gConfig.Builds(i) : next
+        end if
+
+        erase gToolsWork : erase gBuildsWork
+        erase gConfig.Tools : erase gConfig.Builds
+
+        ' FIND a keystroke nothing in the editor owns, rather than hardcoding one. The first
+        ' version of this section used Ctrl+F11 and Ctrl+F10 and BOTH FAILED, because tiko
+        ' binds them: part 1 answered with the editor command and the domain routing under
+        ' test was never reached. Even a keystroke that happens to be free today would start
+        ' testing nothing the day it got bound, and the assertion would stay green.
+        ' Three modifiers, which the editor's own defaults use sparingly.
+        dim as DWSTRING wszCandidates = "F11" & chr(9) & "F10" & chr(9) & "F9" & chr(9) & _
+                                        "F8"  & chr(9) & "F7"  & chr(9) & "F6"
+        dim as DWSTRING wszXKey
+        for i as long = 1 to AfxStrParseCount( wszCandidates, chr(9) )
+            dim as DWSTRING wszTry = AfxStrParse( wszCandidates, i, chr(9) )
+            if len( frmAssignKey_ClashText( wszTry, true, true, true, _
+                                            ASSIGNKEY_DOMAIN_NONE, -1 ) ) = 0 then
+                wszXKey = wszTry : exit for
+            end if
+        next
+        UTASSERT( len(wszXKey) > 0, "found an unbound keystroke to test cross-domain routing with" )
+
+        if len(wszXKey) then
+            ' A committed BUILD holding it is seen by a TOOLS-domain query, whose tools half
+            ' reads the (empty) staging array and whose builds half reads gConfig.
+            redim gConfig.Builds(0)
+            gConfig.Builds(0).wszDescription = "ZZBUILD"
+            gConfig.Builds(0).wszKey         = wszXKey
+            gConfig.Builds(0).IsCtrl         = 1
+            gConfig.Builds(0).IsAlt          = 1
+            gConfig.Builds(0).IsShift        = 1
+            UTASSERT( instr( frmAssignKey_ClashText(wszXKey, true, true, true, _
+                             ASSIGNKEY_DOMAIN_TOOLS, -1), "ZZBUILD" ) > 0, _
+                      "a tool sees a BUILD holding its shortcut" )
+
+            ' And the mirror.
+            redim gConfig.Tools(0)
+            gConfig.Tools(0).wszDescription = "ZZTOOL"
+            gConfig.Tools(0).wszKey         = wszXKey
+            gConfig.Tools(0).IsCtrl         = 1
+            gConfig.Tools(0).IsAlt          = 1
+            gConfig.Tools(0).IsShift        = 1
+            UTASSERT( instr( frmAssignKey_ClashText(wszXKey, true, true, true, _
+                             ASSIGNKEY_DOMAIN_BUILDS, -1), "ZZTOOL" ) > 0, _
+                      "a build sees a TOOL holding its shortcut" )
+
+            ' Modifiers still matter across domains -- what stops the two above passing for
+            ' the wrong reason. The QUERY is held fixed at the combination already proven
+            ' free of any editor binding, and only the STORED record varies, so this cannot
+            ' accidentally be re-testing part 1 either.
+            gConfig.Tools(0).IsShift  = 0
+            gConfig.Builds(0).IsShift = 0
+            UTASSERT( len( frmAssignKey_ClashText(wszXKey, true, true, true, _
+                           ASSIGNKEY_DOMAIN_BUILDS, -1) ) = 0, _
+                      "a stored record differing by one modifier is not a cross-domain clash" )
+        end if
+
+        erase gConfig.Tools : erase gConfig.Builds
+        if nT >= 0 then
+            redim gConfig.Tools(nT)
+            for i as long = 0 to nT : gConfig.Tools(i) = keepTools(i) : next
+        end if
+        if nB >= 0 then
+            redim gConfig.Builds(nB)
+            for i as long = 0 to nB : gConfig.Builds(i) = keepBuilds(i) : next
+        end if
+    end scope
 
     ' Restore.
     erase gToolsWork

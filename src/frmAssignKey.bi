@@ -14,7 +14,12 @@
 #pragma once
 
 ' ========================================================================================
-' Assign one User Tool shortcut.
+' Assign one shortcut. SHARED by the User Tools dialog and the Build Configurations dialog.
+'
+' It began as frmUserToolKey and was generalized in place. Only ONE thing about it was ever
+' User-Tools-specific -- which records the clash test compares against -- so the whole
+' generalization is a domain selector (gAssignKeyDomain) plus two arguments on ClashText.
+' The caption at the top was already a plain string the caller fills.
 '
 ' WHY THIS EXISTS RATHER THAN THREE CHECKBOXES AND A DROPDOWN ON THE PAGE.
 ' The key vocabulary is 90 names. PsComboBox cannot scroll -- frmKeyboardEdit.bi records the
@@ -32,23 +37,33 @@
 ' disagree about which keystrokes are legal.
 '
 ' THE MODEL IS NOT A STRING. frmKeyboardEdit produces a canonical "Ctrl+Shift+D"; a user tool
-' stores IsCtrl/IsAlt/IsShift as separate longs plus a BARE key name resolved through
+' -- and a build configuration, which stores the identical five fields -- keeps
+' IsCtrl/IsAlt/IsShift as separate longs plus a BARE key name resolved through
 ' KeyBindings_PickListKeyToValue. This dialog therefore hands back the parts, and never
 ' composes a combined string that something downstream would have to take apart again.
 '
 ' NO PUMP OBLIGATION: the picker is a PsListTree with in-place editing off, and there is no
-' popup and no wrapped child. There is no frmUserToolKey_FilterMessage and there must not be.
+' popup and no wrapped child. There is no frmAssignKey_FilterMessage and there must not be.
 ' ========================================================================================
 
-#Define IDC_FRMUSERTOOLKEY_TOGCTRL           1301
-#Define IDC_FRMUSERTOOLKEY_TOGALT            1302
-#Define IDC_FRMUSERTOOLKEY_TOGSHIFT          1303
-#Define IDC_FRMUSERTOOLKEY_KEYLIST           1304
-#Define IDC_FRMUSERTOOLKEY_CMDOK             1305
-#Define IDC_FRMUSERTOOLKEY_CMDCANCEL         1306
-#Define IDC_FRMUSERTOOLKEY_CMDCLEAR          1307
+' ----------------------------------------------------------------------------------------
+' WHICH RECORDS THE CLASH TEST COMPARES AGAINST. This is the whole of what used to be
+' hardcoded. The caller names its own domain so the test can skip the record being edited
+' (gAssignKeyIndex) without a tool reporting that it clashes with itself.
+' ----------------------------------------------------------------------------------------
+#Define ASSIGNKEY_DOMAIN_NONE              (-1)   ' check everything, skip nothing
+#Define ASSIGNKEY_DOMAIN_TOOLS               0
+#Define ASSIGNKEY_DOMAIN_BUILDS              1
 
-' Shell metrics, UNSCALED. Walking the running y that frmUserToolKey_OnPaint and
+#Define IDC_FRMASSIGNKEY_TOGCTRL           1301
+#Define IDC_FRMASSIGNKEY_TOGALT            1302
+#Define IDC_FRMASSIGNKEY_TOGSHIFT          1303
+#Define IDC_FRMASSIGNKEY_KEYLIST           1304
+#Define IDC_FRMASSIGNKEY_CMDOK             1305
+#Define IDC_FRMASSIGNKEY_CMDCANCEL         1306
+#Define IDC_FRMASSIGNKEY_CMDCLEAR          1307
+
+' Shell metrics, UNSCALED. Walking the running y that frmAssignKey_OnPaint and
 ' _PositionWindows share:
 '   20 margin + 30 tool name + 46 capture + 18 + 30 toggles + 6 + 210 picker + 12
 '     = message line top 372, and the message line is one 30px row = ends at 402
@@ -61,52 +76,55 @@
 ' blank except after a refused keystroke, so that space was doing nothing at all. It went to
 ' the picker, which is a 90-item list and the one thing here that gains from height. Found by
 ' looking; no assertion had anything to say about it, because everything already fit.
-#Define FRMTOOLKEY_CLIENT_W                   480
-#Define FRMTOOLKEY_CLIENT_H                   470
-#Define FRMTOOLKEY_MARGIN                      20
-#Define FRMTOOLKEY_BTN_W                       92
-#Define FRMTOOLKEY_BTN_H                       32
-#Define FRMTOOLKEY_ROW_H                       30
-#Define FRMTOOLKEY_CAPTURE_H                   46
-#Define FRMTOOLKEY_KEYLIST_H                  210
-#Define FRMTOOLKEY_KEYROW_H                    24
-#Define FRMTOOLKEY_TOGW                        46     ' the toggle's own cell
-#Define FRMTOOLKEY_CAPW                        42     ' its drawn caption
+#Define FRMASSIGNKEY_CLIENT_W                   480
+#Define FRMASSIGNKEY_CLIENT_H                   470
+#Define FRMASSIGNKEY_MARGIN                      20
+#Define FRMASSIGNKEY_BTN_W                       92
+#Define FRMASSIGNKEY_BTN_H                       32
+#Define FRMASSIGNKEY_ROW_H                       30
+#Define FRMASSIGNKEY_CAPTURE_H                   46
+#Define FRMASSIGNKEY_KEYLIST_H                  210
+#Define FRMASSIGNKEY_KEYROW_H                    24
+#Define FRMASSIGNKEY_TOGW                        46     ' the toggle's own cell
+#Define FRMASSIGNKEY_CAPW                        42     ' its drawn caption
 
-dim shared HWND_FRMUSERTOOLKEY         as HWND
-dim shared HWND_FRMUSERTOOLKEY_CAPTURE as HWND
+dim shared HWND_FRMASSIGNKEY         as HWND
+dim shared HWND_FRMASSIGNKEY_CAPTURE as HWND
 
 ' ----------------------------------------------------------------------------------------
 ' THE HAND-OFF. The caller fills these in, calls Show, and reads them back. On Cancel they
 ' are left exactly as they were found -- the dialog edits private copies and writes here only
 ' on OK, which is what makes Cancel mean anything at this level too.
 ' ----------------------------------------------------------------------------------------
-dim shared gToolKeyCaption as DWSTRING    ' the tool's name, shown at the top. Display only.
-dim shared gToolKeyName    as DWSTRING    ' bare key name from gKeyNames, "" = no shortcut
-dim shared gToolKeyCtrl    as boolean
-dim shared gToolKeyAlt     as boolean
-dim shared gToolKeyShift   as boolean
-' Which gToolsWork() row is being edited. Needed so the clash test can skip the tool's OWN
-' current binding -- without it, opening the dialog on a tool that already has Ctrl+1 would
-' immediately report that it clashes with itself. -1 disables the tool-vs-tool half.
-dim shared gToolKeyIndex   as long = -1
+dim shared gAssignKeyCaption as DWSTRING    ' the record's name, shown at the top. Display only.
+dim shared gAssignKeyName    as DWSTRING    ' bare key name from gKeyNames, "" = no shortcut
+dim shared gAssignKeyCtrl    as boolean
+dim shared gAssignKeyAlt     as boolean
+dim shared gAssignKeyShift   as boolean
+' Which domain the caller is editing, and which row of it. Together they let the clash test
+' skip the record's OWN current binding -- without that, opening the dialog on a tool that
+' already has Ctrl+1 would immediately report that it clashes with itself.
+' ASSIGNKEY_DOMAIN_NONE / -1 skips nothing.
+dim shared gAssignKeyDomain  as long = ASSIGNKEY_DOMAIN_NONE
+dim shared gAssignKeyIndex   as long = -1
 
-declare function frmUserToolKey_Show( byval hWndParent as HWND ) as LRESULT
+declare function frmAssignKey_Show( byval hWndParent as HWND ) as LRESULT
 
 ' ========================================================================================
 ' DOES THIS SHORTCUT ALREADY BELONG TO SOMETHING?
 '
-' "" when it is free; otherwise a sentence naming the owner. Checks the live editor bindings
-' (gKeys, through KeyBindings_FindCommandForKeys) AND the other user tools in gToolsWork(),
-' skipping nSkipToolIndex so a tool never reports clashing with itself. Pass -1 to check
-' against every tool.
+' "" when it is free; otherwise a sentence naming the owner. Three sources: the live editor
+' bindings (gKeys, through KeyBindings_FindCommandForKeys), the user tools, and the build
+' configurations. nSkipIndex is skipped WITHIN nDomain only, so a record never reports
+' clashing with itself. Pass ASSIGNKEY_DOMAIN_NONE / -1 to check against everything.
 '
-' Public because the User Tools list needs it too: a settings.ini written before this check
+' Public because both dialogs' lists need it too: a settings.ini written before this check
 ' existed can hold a clash the dialog would now refuse to create, and a shortcut that silently
 ' loses to an editor command is exactly the failure this is here to make visible.
 ' ========================================================================================
-declare function frmUserToolKey_ClashText( byval wszKey as DWSTRING, _
+declare function frmAssignKey_ClashText( byval wszKey as DWSTRING, _
                                            byval bCtrl as boolean, _
                                            byval bAlt as boolean, _
                                            byval bShift as boolean, _
-                                           byval nSkipToolIndex as long ) as DWSTRING
+                                           byval nDomain as long, _
+                                           byval nSkipIndex as long ) as DWSTRING

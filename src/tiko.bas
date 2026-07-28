@@ -108,8 +108,8 @@ dim shared gTTabCtl as clsTopTabCtl
 ' The keyboard shortcut MODEL (gKeys, the defaults table, keybindings.ini, the accelerator
 ' build, the key vocabulary). No UI and no control dependencies -- it needs only modDeclares
 ' (IDM_* / IDC_MENUBAR_*), CWindow and CTextStream, all of which are already in scope. It
-' must precede frmKeyboardEdit / frmBuildConfig / frmUserTools, which call
-' AddShortcutsToComboBox, and frmMain, which builds the table at startup.
+' must precede frmKeyboardEdit / frmAssignKey / frmUserTools / frmBuildConfig, which call
+' into the key vocabulary, and frmMain, which builds the table at startup.
 #include once "modKeyBindings.inc"
 
 ' Custom controls
@@ -165,9 +165,8 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "frmAutoComplete.inc"
 #include once "frmKeyboardEdit.bi"
 #include once "frmKeyboardEdit.inc"
-#include once "frmKeyboard.inc" 
-#include once "frmBuildConfig.inc" 
-#include once "frmOutput.inc" 
+#include once "frmKeyboard.inc"
+#include once "frmOutput.inc"
 #include once "modOptionsRows.inc"
 #include once "frmOptionsColors.inc"
 #include once "frmOptionsCompiler.inc"
@@ -184,13 +183,19 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "frmProjectOptions.inc"
 #include once "frmMainOnCommand.inc"
 #include once "frmMainOnNotify.inc"
-' The User Tools shortcut editor, then the dialog that opens it. Both must follow
+' The shared shortcut editor, then the two dialogs that open it. All three must follow
 ' modOptionsRows.inc (they dress their controls through OptionsTheme_Fill*) and
-' frmKeyboardEdit.inc (frmUserToolKey shares its capture rules), and frmUserToolKey must
-' precede frmUserTools, which calls frmUserToolKey_Show.
-#include once "frmUserToolKey.bi"
-#include once "frmUserToolKey.inc"
+' frmKeyboardEdit.inc (frmAssignKey shares its capture rules), and frmAssignKey must
+' precede frmUserTools and frmBuildConfig, which both call frmAssignKey_Show.
+#include once "frmAssignKey.bi"
+#include once "frmAssignKey.inc"
 #include once "frmUserTools.inc"
+' frmBuildConfig lands HERE, not up with the other frm* dialogs, and the position is
+' load-bearing rather than tidy: it dresses its controls through OptionsTheme_Fill*
+' (modOptionsRows.inc, above) and opens frmAssignKey. Its five exports are reached
+' through frmBuildConfig.bi, which clsConfig.inc pulls in independently far earlier, so
+' every caller still resolves -- FreeBASIC needs only the DECLARATION in scope.
+#include once "frmBuildConfig.inc"
 #include once "modMsgPump.inc"
 #include once "frmMainFile.inc"
 #include once "frmMainEdit.inc"

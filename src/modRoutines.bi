@@ -64,7 +64,6 @@ declare function LoadLocalizationFile( byref wszFileName as DWSTRING, byval IsEn
 declare function GetProcessImageName( byval pe32w as PROCESSENTRY32W ptr, byval pwszExeName as wstring ptr ) as long
 declare function IsProcessRunning( byval wszExeFileName as DWSTRING ) as boolean
 declare function GetRunExecutableFilename() as DWSTRING
-declare function GetListBoxEmptyClientArea( byval hListBox as HWND ) as RECT
 
 ' Add a chr(9)-delimited row to a multi-column PsListTree (see modRoutines.inc).
 declare function ListBox_AddTabbedRow( byval hCtl as HWND, byval wszTabbed as DWSTRING ) as long

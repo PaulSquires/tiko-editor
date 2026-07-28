@@ -1673,6 +1673,10 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ' Input-box dialog geometry. Pure -- no window, no theme, no config -- so unlike the
     ' Options/User Tools suites it needs no AUTOOPEN companion to reach it.
     frmInputBox_RunSelfTest()
+    ' The Build Configurations switch matcher and its localized ids. Headless -- no window, no
+    ' theme -- so unlike the layout half (which runs from frmBuildConfig_Show) this needs no
+    ' AUTOOPEN companion to reach it.
+    frmBuildConfig_RunSelfTest()
     ' Open the Keyboard Shortcuts dialog immediately, so its layout/filter self-test can be
     ' run without a human driving the menu. The dialog is MODAL, so startup stops here until
     ' it is closed -- that is what this flag is for, and it is why it is not on by default.
@@ -1682,6 +1686,11 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ' only runs when the dialog is opened, and this is how it gets opened without a human
     ' driving the menu. Also modal -- startup stops here until it is closed.
     if environ("TIKO_USERTOOLS_AUTOOPEN") = "1" then frmUserTools_Show( HWND_FRMMAIN )
+
+    ' And the Build Configurations dialog, for the same reason -- it is modal, so startup
+    ' stops here until it is closed. Kept deliberately, as frmKeyboard's and frmUserTools'
+    ' are: it is what makes the dialog reachable in one command for a hand pass.
+    if environ("TIKO_BUILDCONFIG_AUTOOPEN") = "1" then frmBuildConfig_Show( HWND_FRMMAIN )
 
     ' And the same for the About box, whose layout self-test asks the one question a
     ' fixed-size dialog can be asked -- does every page fit -- and therefore needs its real

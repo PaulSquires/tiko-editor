@@ -113,7 +113,7 @@ declare function AddShortcutsToComboBox( byval hCombo as HWND ) as long
 ' DELIBERATELY OVER gKeys(), NOT gKeysWork(). frmKeyboard_CheckForKeyConflict is the staging
 ' equivalent and exists only while the Keyboard Shortcuts dialog is open; this one answers for
 ' the bindings the editor is ACTUALLY running on, which is what a caller outside that dialog
-' (frmUserToolKey) needs. The two are not interchangeable and neither should be "unified" into
+' (frmAssignKey) needs. The two are not interchangeable and neither should be "unified" into
 ' the other.
 '
 ' A disabled default is not a binding: it fires nothing, so it clashes with nothing.

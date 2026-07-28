@@ -16,6 +16,57 @@
 #include once "clsTopTabCtl.bi"
 #include once "clsDocument.bi"
 
+
+' ----------------------------------------------------------------------------------------
+' Child handles. Every one of these is zeroed in WM_DESTROY -- the dialog is created and
+' destroyed per invocation, and a stale handle here outlives it.
+' ----------------------------------------------------------------------------------------
+dim shared as HWND ghBCAdd, ghBCDelete, ghBCUp, ghBCDown
+dim shared as HWND ghBCSelectBar
+dim shared as HWND ghBCDescription, ghBCTogDefault, ghBCTarget, ghBCShortcut
+dim shared as HWND ghBCTogExclude, ghBCEditSwitches
+dim shared as HWND ghBCOptions, ghBCSwitches
+dim shared as HWND ghBCOK, ghBCCancel
+
+' A fixed-pitch face at UI size, for the raw options field and the preview block. There is no
+' cached ghFont entry for one -- FIXEDFONT_26 is the About box's wordmark. Created in Show and
+' destroyed after the pump.
+dim shared as HFONT ghBCFontFixed
+
+' ----------------------------------------------------------------------------------------
+' Dialog state.
+' ----------------------------------------------------------------------------------------
+' Which gBuildsWork() row the right pane is showing. -1 = none, and the pane is HIDDEN.
+dim shared gBCCurrent as long = -1
+' TRUE while the pane is being filled from the model, so the change callbacks that fire as a
+' side effect of setting a control do not write straight back into it.
+dim shared gBCLoading as boolean = false
+' Which page of the right pane is up: IDP_FRMBUILDCONFIG_GENERAL or _SWITCHES.
+dim shared gBCPage as long = IDP_FRMBUILDCONFIG_GENERAL
+
+' ----------------------------------------------------------------------------------------
+' The compiler-switches PREVIEW BLOCK.
+'
+' It is PAINTED by the dialog and hit-tested here, not built as a child window: a control
+' would cost a CWindow, a WndProc and a WM_CTLCOLOR path for a target that does exactly one
+' thing (jump to the switches page). Its rects are computed in PositionWindows because both
+' the painter and the mouse handlers need them, and only one of those can derive them.
+' ----------------------------------------------------------------------------------------
+dim shared gBCPreviewRect      as RECT
+dim shared gBCPreviewLabelRect as RECT
+dim shared gBCPreviewHot       as boolean = false
+
+' One label rect per General-page row, indexed by BCROW_*. Derived in PositionWindows from
+' where each control actually landed, and read back by the painter -- so a label can never
+' disagree with the row it names, and each gets exactly the width its own control leaves.
+dim shared gBCRowLabelRect( BCROW_COUNT - 1 ) as RECT
+
+' Hot-tracking is POLLED rather than driven by WM_MOUSEMOVE: the cursor can leave the block by
+' moving onto a child control, where this window never sees another mouse message and the
+' highlight would stick on. Every hot-tracking control in this family carries such a timer for
+' the same reason -- WM_MOUSELEAVE is not reliable enough to be the only mechanism.
+#Define IDT_BCPREVIEW  1
+
 type BUILD_OPTIONS
     groupid as long
     wszText as DWSTRING
@@ -88,17 +139,195 @@ gBuildOptions(25).wszText = "Preserve generated intermediate *.asm / *.c / *.ll 
 
 
 ' ========================================================================================
-' Load all of the build descriptions into the listbox
+' THE COMPILER SWITCH MATCHER  --  is a table row present in an options string, and what
+' does toggling it produce?
+'
+' ONE MATCHER, TWO CALLERS. The painter asks IsChecked and the click handler calls Toggle,
+' and both are built on ContainsSeq, so the two cannot come to disagree about what "checked"
+' means. THEY USED TO. The painter padded both sides of the comparison and the click handler
+' padded only the right, so an options string with no space before a switch was reported
+' unchecked and toggled as though it were checked.
+'
+' EVERYTHING IS A WHITESPACE-DELIMITED TOKEN, and a table row's action is a token SEQUENCE:
+' "-Wc -O1" is two tokens, not a substring. That is what makes -O1 and -O2 distinguishable
+' structurally rather than by luck, and it is what stops the old AfxStrRemove from cutting
+' "-Wc -O2" out of the middle of a hand-typed -p "C:\libs -Wc -O2".
+'
+' COMPARISON IS CASE-SENSITIVE, and that is load-bearing rather than incidental: -c and -C
+' are different FBC switches in different groups, and so are -r and -R. A case-insensitive
+' compare fuses each pair, with no visible symptom until a build behaves oddly. This is the
+' single most likely way to get this code wrong.
+'
+' KNOWN LIMIT, recorded rather than hidden: quoting is not honoured. A token inside "..." is
+' still a token, so the -Wc -O2 inside -p "C:\libs -Wc -O2" IS removable by a group-5 click.
+' That is strictly better than the old behaviour, which cut it silently on any group-5 click
+' whatever the user had asked for, but it is not correct. Handling it needs a real quote-aware
+' lexer and the switch list is not the place to grow one.
 ' ========================================================================================
-function frmBuildConfig_LoadBuildListBox( byval hParent as HWND ) as Long
-    dim hList1 as HWND = GetDlgItem(hParent, IDC_FRMBUILDCONFIG_LIST1)
 
-    ListBox_ResetContent(hList1)
-    for i as long = lbound(gConfig.BuildsTemp) to ubound(gConfig.BuildsTemp)
-        ListBox_AddString(hList1, gConfig.BuildsTemp(i).wszDescription.sptr)
-    NEXT
+' Split into tokens on any run of whitespace. Returns the count; tok() is redim'd to
+' (count-1), and an empty or all-whitespace string leaves it erased.
+'
+' HAND-ROLLED RATHER THAN AfxStrParseCountAny + AfxStrParseAny, AND NOT BY PREFERENCE.
+' Those two disagree with each other about how many fields a string has. AfxStrParseCountAny
+' advances its scan by LEN(wszDelimiter) after each hit -- the length of the whole delimiter
+' SET, 4 here -- while AfxStrParseAny correctly parses with nLenDelimiter = 1. So the count
+' is short whenever two delimiters sit closer together than the set is long, and the parse
+' loop then stops early and DROPS THE TAIL of the string. Measured: "-mt -s console -v" came
+' back as three tokens and lost "-v"; "-s   console    -lang fb" came back as two and lost
+' "-lang fb" entirely. Both are silent -- the result is a valid shorter options string.
+'
+' AfxNova is vendored and not ours to patch as a side effect of this work, so this walks the
+' characters itself. It also removes the last reason this file needed a two-pass split.
+private function BuildOpts_Split( byval wszOptions as DWSTRING, tok() as DWSTRING ) as long
+    erase tok
+    dim as long nLen = len(wszOptions)
+    if nLen = 0 then return 0
+    dim as wstring ptr p = wszOptions.sptr
+    if p = 0 then return 0
 
-    function = 0
+    redim tok(nLen - 1)          ' worst case, every character its own token
+    dim as long n = 0
+    dim as long nStart = -1      ' start of the token being accumulated, -1 = between tokens
+
+    for i as long = 0 to nLen - 1
+        dim as ulong ch = p[i]
+        dim as boolean bWS = (ch = 32) orelse (ch = 9) orelse (ch = 13) orelse (ch = 10)
+        if bWS then
+            if nStart >= 0 then
+                tok(n) = mid(*p, nStart + 1, i - nStart)
+                n += 1
+                nStart = -1
+            end if
+        else
+            if nStart < 0 then nStart = i
+        end if
+    next
+    if nStart >= 0 then
+        tok(n) = mid(*p, nStart + 1, nLen - nStart)
+        n += 1
+    end if
+
+    if n = 0 then
+        erase tok
+    else
+        redim preserve tok(n - 1)
+    end if
+    return n
+end function
+
+
+' The parenthesised action of one table row, as its own token list.
+private function BuildOpts_ActionTokens( byval nIdx as long, tok() as DWSTRING ) as long
+    erase tok
+    if (nIdx < lbound(gBuildOptions)) orelse (nIdx > ubound(gBuildOptions)) then return 0
+    return BuildOpts_Split( AfxStrExtract( gBuildOptions(nIdx).wszText, "(", ")" ), tok() )
+end function
+
+
+' Where does the action's token sequence start inside the options tokens? -1 = nowhere.
+' nFrom lets RemoveAllSeq resume the scan after a deletion.
+private function BuildOpts_ContainsSeq( tok() as DWSTRING, byval nTok as long, _
+                                        act() as DWSTRING, byval nAct as long, _
+                                        byval nFrom as long = 0 ) as long
+    if (nAct < 1) orelse (nTok < nAct) then return -1
+    for i as long = nFrom to nTok - nAct
+        dim as boolean bAll = true
+        for j as long = 0 to nAct - 1
+            ' CASE-SENSITIVE -- see the header. -c/-C and -r/-R depend on it.
+            if tok(i + j) <> act(j) then bAll = false: exit for
+        next
+        if bAll then return i
+    next
+    return -1
+end function
+
+
+' Remove EVERY occurrence of the action's sequence. Returns how many went.
+private function BuildOpts_RemoveAllSeq( tok() as DWSTRING, byref nTok as long, _
+                                         act() as DWSTRING, byval nAct as long ) as long
+    if (nAct < 1) orelse (nTok < nAct) then return 0
+    dim as long nGone = 0
+    dim as long at = BuildOpts_ContainsSeq( tok(), nTok, act(), nAct, 0 )
+    while at >= 0
+        for i as long = at to nTok - nAct - 1
+            tok(i) = tok(i + nAct)
+        next
+        nTok -= nAct
+        nGone += 1
+        if nTok < nAct then exit while
+        ' Resume AT the hole, not after it: two identical sequences back to back would
+        ' otherwise leave the second one behind.
+        at = BuildOpts_ContainsSeq( tok(), nTok, act(), nAct, at )
+    wend
+    return nGone
+end function
+
+
+private function BuildOpts_Join( tok() as DWSTRING, byval nTok as long ) as DWSTRING
+    dim as DWSTRING wsz
+    for i as long = 0 to nTok - 1
+        if i > 0 then wsz = wsz & " "
+        wsz = wsz & tok(i)
+    next
+    return wsz
+end function
+
+
+' ----------------------------------------------------------------------------------------
+' Is this table row's switch present in the options string?
+' ----------------------------------------------------------------------------------------
+private function BuildOpts_IsChecked( byval wszOptions as DWSTRING, byval nIdx as long ) as boolean
+    dim as DWSTRING tok(any), act(any)
+    dim as long nAct = BuildOpts_ActionTokens( nIdx, act() )
+    if nAct < 1 then return false
+    dim as long nTok = BuildOpts_Split( wszOptions, tok() )
+    return iif( BuildOpts_ContainsSeq( tok(), nTok, act(), nAct, 0 ) >= 0, true, false )
+end function
+
+
+' ----------------------------------------------------------------------------------------
+' Toggle this table row and return the new options string.
+'
+' The group is cleared unconditionally and the row re-appended only if it was NOT already
+' checked -- which is what gives the per-groupid radio behaviour AND makes clicking a checked
+' row turn it off. Same logic the old doAddAction flag carried; only the matching changed.
+'
+' Tokens that belong to no table row are copied through in their original order, untouched.
+' Whitespace between them is normalised to a single space, because the string is rebuilt from
+' its tokens. That is deliberate and confined to this path: typing in the raw options field
+' re-derives the CHECK STATE only and never rewrites the text under the caret.
+' ----------------------------------------------------------------------------------------
+private function BuildOpts_Toggle( byval wszOptions as DWSTRING, byval nIdx as long ) as DWSTRING
+    if (nIdx < lbound(gBuildOptions)) orelse (nIdx > ubound(gBuildOptions)) then return wszOptions
+
+    dim as DWSTRING tok(any), act(any)
+    dim as long nTok = BuildOpts_Split( wszOptions, tok() )
+    dim as long nAct = BuildOpts_ActionTokens( nIdx, act() )
+    if nAct < 1 then return wszOptions
+
+    dim as boolean bWasChecked = iif( BuildOpts_ContainsSeq( tok(), nTok, act(), nAct, 0 ) >= 0, true, false )
+
+    dim as long groupid = gBuildOptions(nIdx).groupid
+    for i as long = lbound(gBuildOptions) to ubound(gBuildOptions)
+        if gBuildOptions(i).groupid <> groupid then continue for
+        dim as DWSTRING other(any)
+        dim as long nOther = BuildOpts_ActionTokens( i, other() )
+        if nOther > 0 then BuildOpts_RemoveAllSeq( tok(), nTok, other(), nOther )
+    next
+
+    if bWasChecked = false then
+        ' Room for nTok + nAct entries. The removals above only ever shrink nTok, never the
+        ' array, so this usually does nothing -- but an empty options string leaves tok()
+        ' erased, and appending to that needs the redim.
+        if (nTok + nAct - 1) > ubound(tok) then redim preserve tok(nTok + nAct - 1)
+        for j as long = 0 to nAct - 1
+            tok(nTok + j) = act(j)
+        next
+        nTok += nAct
+    end if
+
+    return BuildOpts_Join( tok(), nTok )
 end function
 
 
@@ -167,99 +396,6 @@ function frmBuildConfig_GetDefaultBuildGUID() as string
     function = ""
 end function
 
-
-' ========================================================================================
-' Swap two entries in the build Listbox
-' ========================================================================================
-function frmBuildConfig_SwapListBoxItems( _
-            byval Item1 as long, _
-            byval Item2 as long _
-            ) as long
-    dim as hwnd hList1 = GetDlgItem( HWND_FRMBUILDCONFIG, IDC_FRMBUILDCONFIG_LIST1)
-    
-    ' Swap the array values
-    swap gConfig.BuildsTemp(Item1), gConfig.BuildsTemp(Item2)
-    
-    ListBox_ReplaceString(hList1, Item1, gConfig.BuildsTemp(Item1).wszDescription)
-    ListBox_ReplaceString(hList1, Item2, gConfig.BuildsTemp(Item2).wszDescription)
-
-    function = 0
-end function
-
-
-' ========================================================================================
-' Set the build description and compiler options depending on what listbox entry is selected
-' ========================================================================================
-function frmBuildConfig_SetBuildConfigTextboxes() as long
-    dim as HWND hList1   = GetDlgItem( HWND_FRMBUILDCONFIG, IDC_FRMBUILDCONFIG_LIST1)
-    dim as HWND hList2   = GetDlgItem( HWND_FRMBUILDCONFIG, IDC_FRMBUILDCONFIG_LSTOPTIONS)
-    dim as HWND hCheck   = GetDlgItem( HWND_FRMBUILDCONFIG, IDC_FRMBUILDCONFIG_CHKISDEFAULT)
-    dim as HWND hText1   = GetDlgItem( HWND_FRMBUILDCONFIG, IDC_FRMBUILDCONFIG_TXTDESCRIPTION)
-    dim as HWND hText2   = GetDlgItem( HWND_FRMBUILDCONFIG, IDC_FRMBUILDCONFIG_TXTOPTIONS)
-    dim as HWND hOpt32   = GetDlgItem( HWND_FRMBUILDCONFIG, IDC_FRMBUILDCONFIG_OPT32)
-    dim as HWND hOpt64   = GetDlgItem( HWND_FRMBUILDCONFIG, IDC_FRMBUILDCONFIG_OPT64)
-    dim as HWND hExcl    = GetDlgItem( HWND_FRMBUILDCONFIG, IDC_FRMBUILDCONFIG_CHKEXCLUDEPOPUP)
-    dim as HWND hIsCtrl  = GetDlgItem( HWND_FRMBUILDCONFIG, IDC_FRMBUILDCONFIG_CHKCTRL)
-    dim as HWND hIsAlt   = GetDlgItem( HWND_FRMBUILDCONFIG, IDC_FRMBUILDCONFIG_CHKALT)
-    dim as HWND hIsShift = GetDlgItem( HWND_FRMBUILDCONFIG, IDC_FRMBUILDCONFIG_CHKSHIFT)
-    dim as HWND hKey     = GetDlgItem( HWND_FRMBUILDCONFIG, IDC_FRMBUILDCONFIG_COMBOKEY)
-    
-    dim as long nCurSel = ListBox_GetCurSel(hList1)
-    if nCurSel < 0 then 
-        AfxSetWindowText( hText1, "")
-        AfxSetWindowText( hText2, "")
-        Button_SetCheck( hCheck, 0)
-        CheckRadioButton(HWND_FRMBUILDCONFIG, IDC_FRMBUILDCONFIG_OPT32, IDC_FRMBUILDCONFIG_OPT64, IDC_FRMBUILDCONFIG_OPT32)
-        EnableWindow(hText1, false)
-        EnableWindow(hText2, false)
-        EnableWindow(hCheck, false)
-        EnableWindow(hOpt32, false)
-        EnableWindow(hOpt64, false)
-        EnableWindow(hList2, false)
-        EnableWindow(hExcl, false)
-        EnableWindow(hIsCtrl, false)
-        EnableWindow(hIsAlt, false)
-        EnableWindow(hIsShift, false)
-        EnableWindow(hKey, false)
-    else
-        AfxSetWindowText( hText1, gConfig.BuildsTemp(nCurSel).wszDescription)
-        AfxSetWindowText( hText2, gConfig.BuildsTemp(nCurSel).wszOptions)
-        Button_SetCheck( hCheck, gConfig.BuildsTemp(nCurSel).IsDefault)
-        Button_SetCheck( hExcl, gConfig.BuildsTemp(nCurSel).ExcludeInPopup)
-
-        Button_SetCheck( hIsCtrl, gConfig.BuildsTemp(nCurSel).IsCtrl)
-        Button_SetCheck( hIsAlt, gConfig.BuildsTemp(nCurSel).IsAlt)
-        Button_SetCheck( hIsShift, gConfig.BuildsTemp(nCurSel).IsShift)
-        if len(gConfig.BuildsTemp(nCurSel).wszKey) = 0 then gConfig.BuildsTemp(nCurSel).wszKey = "None"
-        dim as long sel = ComboBox_FindStringExact( hKey, -1, gConfig.BuildsTemp(nCurSel).wszKey.sptr )
-        ComboBox_SetCurSel( hKey, sel )
-
-        if gConfig.BuildsTemp(nCurSel).Is32bit then
-            CheckRadioButton(HWND_FRMBUILDCONFIG, IDC_FRMBUILDCONFIG_OPT32, IDC_FRMBUILDCONFIG_OPT64, IDC_FRMBUILDCONFIG_OPT32)
-        else   
-            CheckRadioButton(HWND_FRMBUILDCONFIG, IDC_FRMBUILDCONFIG_OPT32, IDC_FRMBUILDCONFIG_OPT64, IDC_FRMBUILDCONFIG_OPT64)
-        END IF
-
-        EnableWindow(hText1, true)
-        EnableWindow(hText2, true)
-        EnableWindow(hCheck, true)
-        EnableWindow(hOpt32, true)
-        EnableWindow(hOpt64, true)
-        EnableWindow(hList2, true)
-        EnableWindow(hExcl, true)
-        EnableWindow(hIsCtrl, true)
-        EnableWindow(hIsAlt, true)
-        EnableWindow(hIsShift, true)
-        EnableWindow(hKey, true)
-    end if
-
-    ' Set the checkmarks in the OptionList Listbox by redrawing the Listbox
-    AfxRedrawWindow(hList2)
-        
-    function = 0
-end function
-                
-
 ' ========================================================================================
 ' Create an accelerator table based on selections for the Build Configurations.
 ' ========================================================================================
@@ -310,532 +446,1515 @@ function frmBuildConfig_CreateAcceleratorTable() as long
     function = 0
 end Function
 
+' ========================================================================================
+' THE SHORTCUT A BUILD DISPLAYS.
+'
+' MODIFIER ORDER IS Ctrl, Shift, Alt AND MUST STAY THAT WAY. It matches
+' createToolsMenuShortcut, which is what the Tools menu has always emitted, and the two sit
+' inches apart on screen. It is NOT the order frmKeyboardEdit_BuildKeyString produces
+' (Ctrl+Alt+Shift), which is what keybindings.ini stores -- the two coexist deliberately,
+' and the CLASH test calls that composer rather than composing a second time here. Get that
+' wrong and every three-modifier shortcut silently reports free.
+'
+' NOTE: before this rebuild there was no build-side composer at all. modContextMenus built
+' the statusbar popup with a hardcoded "" in the shortcut slot, so a build accelerator fired
+' but was never displayed anywhere in the editor.
+'
+' "" AND "None" BOTH MEAN NO SHORTCUT. The old dialog wrote the literal string "None" into
+' wszKey on every selection change and persisted it, so every keyless build in every existing
+' settings.ini already carries it. That is the same shipped bug that was fixed in User Tools.
+' ========================================================================================
+private function frmBuildConfig_ComposeShortcut( byval wszKey as DWSTRING, _
+                                                 byval nCtrl as long, _
+                                                 byval nShift as long, _
+                                                 byval nAlt as long ) as DWSTRING
+    dim as DWSTRING wsz = trim(wszKey)
+    if len(wsz) = 0 then return ""
+    if ucase(wsz) = "NONE" then return ""
 
-' ========================================================================================
-' Process WM_MEASUREITEM message for window/dialog: frmBuildConfig
-' ========================================================================================
-function frmBuildConfig_OnMeasureItem( _
-            byval hwnd as HWND, _
-            byval lpmis as MEASUREITEMSTRUCT ptr _
-            ) as long
-    ' Set the height of the List box items. 
-    dim pWindow as CWindow ptr = AfxCWindowPtr(hwnd)
-    if pWindow then 
-        lpmis->itemHeight = pWindow->ScaleY(FRMBUILDCONFIG_LISTBOX_LINEHEIGHT)
-    end if
-    function = 0
+    dim as DWSTRING wszOut
+    if nCtrl  then wszOut = wszOut & "Ctrl+"
+    if nShift then wszOut = wszOut & "Shift+"
+    if nAlt   then wszOut = wszOut & "Alt+"
+    return wszOut & wsz
+end function
+
+
+' The STAGING row's shortcut -- what the dialog shows while it is open.
+private function frmBuildConfig_ShortcutText( byval idx as long ) as DWSTRING
+    if (idx < lbound(gBuildsWork)) orelse (idx > ubound(gBuildsWork)) then return ""
+    return frmBuildConfig_ComposeShortcut( gBuildsWork(idx).wszKey, gBuildsWork(idx).IsCtrl, _
+                                           gBuildsWork(idx).IsShift, gBuildsWork(idx).IsAlt )
+end function
+
+
+' The COMMITTED row's shortcut -- for the statusbar popup menu, built while this dialog is
+' shut. Same composer, different array, so the menu and the dialog cannot disagree.
+function frmBuildConfig_MenuShortcutText( byval idx as long ) as DWSTRING
+    if (idx < lbound(gConfig.Builds)) orelse (idx > ubound(gConfig.Builds)) then return ""
+    return frmBuildConfig_ComposeShortcut( gConfig.Builds(idx).wszKey, gConfig.Builds(idx).IsCtrl, _
+                                           gConfig.Builds(idx).IsShift, gConfig.Builds(idx).IsAlt )
 end function
 
 
 ' ========================================================================================
-' Process WM_DRAWITEM message for window/dialog: frmBuildConfig
+' A shortcut that SAVES, DISPLAYS and RELOADS perfectly but can never fire.
+'
+' The build's key is a bare name from the pick-list vocabulary. If PickListKeyToValue cannot
+' resolve it -- a stale spelling such as "PageDn" against a resolver that knows "PGDN" --
+' CreateAcceleratorTable skips the entry and there is nothing anywhere to say so.
+'
+' "" and "None" are NOT dead: they mean the build has no shortcut, which is a legal state.
 ' ========================================================================================
-function frmBuildConfig_OnDrawItem( _
-            byval hwnd as HWND, _
-            byval lpdis as const DRAWITEMSTRUCT ptr _
-            ) as long
-
-    dim as RECT rc
-    dim as DWSTRING wszText, wszOptions, wszAction
-    dim as boolean IsChecked = false
-    
-    dim pWindow as CWindow ptr = AfxCWindowPtr(hwnd)
-    if pWindow = 0 then exit function
-        
-    if lpdis->itemID = -1 then exit function
-    
-    select case lpdis->itemAction
-        case ODA_DRAWENTIRE, ODA_SELECT
-            
-            dim as long nSelBuild = ListBox_GetCurSel(GetDlgItem(hwnd, IDC_FRMBUILDCONFIG_LIST1))
-            dim as long nSelOptions = ListBox_GetCurSel(GetDlgItem(hwnd, IDC_FRMBUILDCONFIG_LSTOPTIONS))
-            
-            if lpdis->CtlID = IDC_FRMBUILDCONFIG_LIST1 then
-                wszText = gConfig.BuildsTemp(lpdis->itemID).wszDescription
-            elseif lpdis->CtlID = IDC_FRMBUILDCONFIG_LSTOPTIONS then
-                wszText = gBuildOptions(lpdis->itemID).wszText
-                ' Get the selected item in the Builds listbox and then look at the OptionList for
-                ' that build for each of the individual OptionList build options.
-                if nSelBuild > -1 then 
-                    wszOptions = " " & gConfig.BuildsTemp(nSelBuild).wszOptions & " "
-                    wszAction  = " " & AfxStrExtract(gBuildOptions(lpdis->itemID).wszText, "(", ")") & " "
-                    IsChecked = iif( instr(wszOptions, wszAction), true, false)
-                end if
-            end if
-            
-            dim as PsBufferPaint b
-
-            b.BeginDoubleBuffer(lpdis->hwndItem, lpdis->hDC, lpdis->rcItem)
-                
-            dim as boolean IsHot = false
-            if lpdis->CtlID = IDC_FRMBUILDCONFIG_LIST1 then
-                if lpdis->itemID = nSelBuild then IsHot = true
-            elseif lpdis->CtlID = IDC_FRMBUILDCONFIG_LSTOPTIONS then
-                if lpdis->itemID = nSelOptions then IsHot = true
-            end if
-            
-            dim as COLORREF backclr = iif( IsHot, GetSysColor(COLOR_HIGHLIGHT), GetSysColor(COLOR_WINDOW) )
-            dim as COLORREF foreclr = iif( IsHot, GetSysColor(COLOR_HIGHLIGHTTEXT), GetSysColor(COLOR_WINDOWTEXT) )
-            b.SetForeColor( foreclr )
-            b.SetBackColor( backclr )
-
-            ' Create our rect that works with the entire line
-            SetRect( @rc, 0, 0, b.rcClientWidth, b.rcClientHeight )
-            dim as RECT rcText = rc 
-            dim as RECT rcBitmap = rc 
-        
-            ' Paint the entire background
-            b.PaintRect( @rc )
-
-            if lpdis->CtlID = IDC_FRMBUILDCONFIG_LIST1 then
-                rcText.left += pWindow->ScaleX(10)
-            elseif lpdis->CtlID = IDC_FRMBUILDCONFIG_LSTOPTIONS then
-                b.SetFont( ghFont(SYMBOLFONT_9) )
-                rcBitmap.right = rcBitmap.left + pWindow->ScaleX(20)
-                dim as DWSTRING wszBitmap = iif(IsChecked, wszIconCheckBoxMarked, wszIconCheckBoxEmpty) 
-                b.PaintText( wszBitmap, @rcBitmap, DT_CENTER )
-                rcText.left = rcBitmap.right
-            end if
-            
-            b.SetFont( ghFont(GUIFONT_9) )
-            b.PaintText( wszText, @rcText, DT_LEFT )
-            
-            b.EndDoubleBuffer()
-    
-            return true
-    
-    end select
-
-    function = 0
+private function frmBuildConfig_ShortcutIsDead( byval idx as long ) as boolean
+    if (idx < lbound(gBuildsWork)) orelse (idx > ubound(gBuildsWork)) then return false
+    dim as DWSTRING wszKey = trim(gBuildsWork(idx).wszKey)
+    if len(wszKey) = 0 then return false
+    if ucase(wszKey) = "NONE" then return false
+    return iif( KeyBindings_PickListKeyToValue( wszKey ) = 0, true, false )
 end function
 
 
 ' ========================================================================================
-' Processes messages for the subclassed ListBox window.
+' Does this build's shortcut already belong to an editor command, a user tool, or another
+' build?  "" when it is free.
+'
+' Answers for a build merely SITTING in the list, which the assign dialog cannot: that dialog
+' refuses to CREATE a clash, but a settings.ini written before this check existed can already
+' hold one, and a build whose shortcut duplicates an editor command loses to it silently --
+' the build simply never runs and nothing says why.
 ' ========================================================================================
-function frmBuildConfig_ProcessListboxClick( _
-            byval hwnd as HWND, _
-            byval nCurSel as long _
-            ) as long
-    if nCurSel = -1 then exit function
-    
-    ' Get the action text for this listbox item. 
-    dim as DWSTRING wszText = AfxGetWindowText( GetDlgItem(HWND_FRMBUILDCONFIG, IDC_FRMBUILDCONFIG_TXTOPTIONS)) & " "
-    dim as DWSTRING wszAction = AfxStrExtract(gBuildOptions(nCurSel).wszText, "(", ")") & " "
-    dim as long groupid = gBuildOptions(nCurSel).groupid
-    dim as boolean doAddAction = false
-    
-    ' If the action does not exist then set flag to add it after all other items in 
-    ' the group have been removed.
-    if instr(wszText, wszAction) = 0 then doAddAction = true
+private function frmBuildConfig_ShortcutClash( byval idx as long ) as DWSTRING
+    if (idx < lbound(gBuildsWork)) orelse (idx > ubound(gBuildsWork)) then return ""
+    dim as DWSTRING wszKey = trim(gBuildsWork(idx).wszKey)
+    if len(wszKey) = 0 then return ""
+    if ucase(wszKey) = "NONE" then return ""
+    return frmAssignKey_ClashText( wszKey, _
+                                   iif( gBuildsWork(idx).IsCtrl  <> 0, true, false ), _
+                                   iif( gBuildsWork(idx).IsAlt   <> 0, true, false ), _
+                                   iif( gBuildsWork(idx).IsShift <> 0, true, false ), _
+                                   ASSIGNKEY_DOMAIN_BUILDS, idx )
+end function
 
-    ' Remove all actions with same groupid.
-    for i as long = lbound(gBuildOptions) to ubound(gBuildOptions)
-        if gBuildOptions(i).groupid = groupid then
-            dim as DWSTRING wszRemove = AfxStrExtract(gBuildOptions(i).wszText, "(", ")") & " "
-            wszText = AfxStrRemove(wszText, wszRemove)
+
+' ========================================================================================
+' Staging: seed on entry, commit only on OK.
+' ========================================================================================
+private sub frmBuildConfig_LoadWork()
+    erase gBuildsWork
+    if ubound(gConfig.Builds) < 0 then exit sub
+    redim gBuildsWork(ubound(gConfig.Builds))
+    for i as long = lbound(gConfig.Builds) to ubound(gConfig.Builds)
+        gBuildsWork(i) = gConfig.Builds(i)
+    next
+end sub
+
+
+' ========================================================================================
+' UNASSIGN ANY SHORTCUT THAT CANNOT WORK, rather than reporting it.
+'
+' Two kinds, and neither is the user's doing:
+'
+'   1. UNRESOLVABLE. The stored key name is not one KeyBindings_PickListKeyToValue knows -- a
+'      stale vocabulary spelling such as "PageDn" against a resolver that knows "PGDN". The
+'      accelerator table skips it, so it saves, displays and reloads perfectly while never
+'      once firing.
+'   2. ALREADY TAKEN, by an editor command, a user tool, or an earlier build. Both accelerator
+'      tables are live at once, so the build simply loses and never runs.
+'
+' An earlier version painted these red in the list and spelled the reason out beside the
+' Shortcut row. That was the wrong place for it: the dialog reported a problem it was not
+' offering to fix, on a row the user had not touched, every time they opened it. The assign
+' dialog is where a shortcut is chosen and where the refusal belongs -- it REFUSES to create
+' either kind -- so here the dead binding is simply dropped and the build shows "(none)".
+'
+' It runs against the STAGING copy only, so nothing reaches settings.ini unless OK is pressed.
+' Order matters: walking forwards means the FIRST holder of a duplicated keystroke keeps it
+' and later ones are cleared, which is deterministic rather than dependent on which row the
+' user happens to be looking at.
+' ========================================================================================
+private sub frmBuildConfig_SanitizeWork()
+    for i as long = lbound(gBuildsWork) to ubound(gBuildsWork)
+        dim as DWSTRING wszKey = trim(gBuildsWork(i).wszKey)
+        if len(wszKey) = 0 then continue for
+        ' "None" is the legacy affordance the old dialog wrote on every selection change. It
+        ' is not a key and never was, so it is normalised away here too.
+        dim as boolean bDrop = (ucase(wszKey) = "NONE")
+        if bDrop = false then bDrop = frmBuildConfig_ShortcutIsDead( i )
+        if bDrop = false then bDrop = iif( len( frmBuildConfig_ShortcutClash( i ) ) > 0, true, false )
+        if bDrop then
+            gBuildsWork(i).wszKey  = ""
+            gBuildsWork(i).IsCtrl  = 0
+            gBuildsWork(i).IsAlt   = 0
+            gBuildsWork(i).IsShift = 0
         end if
     next
+end sub
 
-    if doAddAction then 
-        wszText = trim(wszText) & " " & trim(wszAction)
-    end if   
-    
-    AfxSetWindowText( GetDlgItem(HWND_FRMBUILDCONFIG, IDC_FRMBUILDCONFIG_TXTOPTIONS), wszText)
-    AfxRedrawWindow( GetDlgItem(HWND_FRMBUILDCONFIG, IDC_FRMBUILDCONFIG_LSTOPTIONS) )
 
-    function = 0
+' THE ORDER HERE IS LOAD-BEARING. gConfig.Builds first, THEN the accelerator table, THEN the
+' file -- because frmBuildConfig_CreateAcceleratorTable reads gConfig.Builds. Rebuild the
+' table before the copy and it reinstates the pre-edit shortcuts, with nothing reporting it.
+private sub frmBuildConfig_CommitWork()
+    erase gConfig.Builds
+    if ubound(gBuildsWork) >= 0 then
+        redim gConfig.Builds(ubound(gBuildsWork))
+        for i as long = lbound(gBuildsWork) to ubound(gBuildsWork)
+            gConfig.Builds(i) = gBuildsWork(i)
+        next
+    end if
+
+    ' Point the active project or document at the highlighted build, exactly as the dialog
+    ' this replaces did -- this is the only writer of gApp.ProjectBuild on this path.
+    if (gBCCurrent >= 0) andalso (gBCCurrent <= ubound(gConfig.Builds)) then
+        if gApp.IsProjectActive then
+            gApp.ProjectBuild = gConfig.Builds(gBCCurrent).Id
+        else
+            dim pDocMain as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
+            if pDocMain then pDocMain->DocumentBuild = gConfig.Builds(gBCCurrent).Id
+            gConfig.CompilerBuild = gConfig.Builds(gBCCurrent).Id
+        end if
+        frmMain_SetStatusbar
+    end if
+
+    frmBuildConfig_CreateAcceleratorTable()
+    gConfig.SaveConfigFile
+end sub
+
+
+' The staging index behind the highlighted row. ALWAYS via itemData, never the row index --
+' they are the same today only because this list is never filtered.
+private function frmBuildConfig_SelectedWorkIndex() as long
+    if HWND_FRMBUILDCONFIG_LIST = 0 then return -1
+    dim as long row = PsListTree_GetCurSel( HWND_FRMBUILDCONFIG_LIST )
+    if row < 0 then return -1
+    dim as long idx = PsListTree_GetItemData( HWND_FRMBUILDCONFIG_LIST, row )
+    if (idx < lbound(gBuildsWork)) orelse (idx > ubound(gBuildsWork)) then return -1
+    return idx
+end function
+
+
+' ========================================================================================
+' The builds list: Description | (uncaptioned) Default marker
+'
+' NO WARNING COLOURING. An earlier version painted a clashing or unresolvable shortcut cell
+' in ghGeneral.iconfail. There is now nothing to warn about: a shortcut that cannot fire is
+' UNASSIGNED when the staging copy is seeded (see frmBuildConfig_SanitizeWork), and the assign
+' dialog refuses to create a new one -- so a clash cannot survive long enough to be reported.
+' ========================================================================================
+private sub frmBuildConfig_ListPaintRow( byval p as PSLISTTREE_PAINTINFO ptr )
+
+    if p = 0 then exit sub
+    dim as boolean bActive = (p->isSelected orelse p->isHot)
+
+    p->b->SetBackColor( iif( bActive, ghPanel.BackColorHot, ghPanel.BackColor ) )
+    p->b->PaintRect( @p->rc )
+    p->b->SetFont( ghFont(GUIFONT_11) )
+
+    for i as integer = 0 to p->columnCount - 1
+        dim as RECT rcText = p->cells[i].rc
+        rcText.left += AfxScaleX(6)
+        dim as COLORREF clr = iif( bActive, ghPanel.ForeColorHot, ghPanel.ForeColor )
+        ' The default marker is subdued: it is a state, not a heading.
+        if (i = 1) andalso (bActive = false) then clr = ghPopup.ForeColorDisabled
+        p->b->SetForeColor( clr )
+        p->b->PaintText( p->cells[i].wszText, @rcText, _
+                         DT_LEFT or DT_VCENTER or DT_SINGLELINE or DT_END_ELLIPSIS )
+    next
+
+end sub
+
+
+private sub frmBuildConfig_ListPaintHeader( byval p as PSCOLUMNHEADER_PAINTINFO ptr )
+    if p = 0 then exit sub
+
+    p->b->SetBackColor( iif( p->isHot orelse p->isResizeHot, ghPanel.BackColorHot, ghPanel.BackColor ) )
+    p->b->PaintRect( @p->rc )
+
+    dim as RECT rcText = p->rc
+    rcText.left += AfxScaleX(6)
+    p->b->SetFont( ghFont(GUIFONT_11) )
+    p->b->SetForeColor( ghPopup.ForeColorDisabled )
+    p->b->PaintText( p->wszCaption, @rcText, DT_LEFT or DT_VCENTER or DT_SINGLELINE or DT_END_ELLIPSIS )
+
+    dim as RECT rcEdge = p->rc
+    rcEdge.left = rcEdge.right - AfxScaleX(1)
+    p->b->SetBackColor( ghEditor.Divider )
+    p->b->PaintRect( @rcEdge )
+end sub
+
+
+' NO TOOLTIPS, on the rows OR the header. With no callback PsListTree falls back to the row's
+' own text and PsColumnHeader to the column's own caption, so hovering "Shortcut" would pop a
+' tip reading "Shortcut". TWO SEPARATE OPT-OUTS -- it is easy to fix one and leave the other.
+private function frmBuildConfig_ListTooltip( byval hList as HWND, byval row as integer ) as DWSTRING
+    return ""
+end function
+
+private function frmBuildConfig_HeaderTooltip( byval hHeader as HWND, byval idx as integer ) as DWSTRING
+    return ""
+end function
+
+
+' ========================================================================================
+' The compiler switches list.
+'
+' ONE COLUMN, NO HEADER, so columnCount is 0 and the row rect is the whole cell -- the
+' control's classic contract. The checkbox glyph is painted in a reserved cell on the left
+' and the label takes the rest.
+'
+' THE GROUP RULE IS A HAIRLINE, NOT A ROW. Members of one groupid are mutually exclusive, and
+' a spanned separator row per group would cost eleven rows of a list that has to fit 470px.
+' The line is drawn at the TOP of the first row of each group, inside that row's own paint,
+' so it costs no vertical space at all.
+' ========================================================================================
+private sub frmBuildConfig_SwitchPaintRow( byval p as PSLISTTREE_PAINTINFO ptr )
+
+    if p = 0 then exit sub
+    dim as long idx = p->itemID
+    if (idx < lbound(gBuildOptions)) orelse (idx > ubound(gBuildOptions)) then exit sub
+
+    dim as boolean bActive = (p->isSelected orelse p->isHot)
+    p->b->SetBackColor( iif( bActive, ghPanel.BackColorHot, ghPanel.BackColor ) )
+    p->b->PaintRect( @p->rc )
+
+    ' The group rule. Not drawn above the very first row -- there is nothing above it to
+    ' separate it from.
+    if idx > lbound(gBuildOptions) then
+        if gBuildOptions(idx).groupid <> gBuildOptions(idx - 1).groupid then
+            dim as RECT rcRule = p->rc
+            rcRule.bottom = rcRule.top + AfxScaleY(1)
+            p->b->SetBackColor( ghEditor.Divider )
+            p->b->PaintRect( @rcRule )
+            p->b->SetBackColor( iif( bActive, ghPanel.BackColorHot, ghPanel.BackColor ) )
+        end if
+    end if
+
+    dim as boolean bChecked = false
+    if gBCCurrent >= 0 then bChecked = BuildOpts_IsChecked( gBuildsWork(gBCCurrent).wszOptions, idx )
+
+    dim as RECT rcGlyph = p->rc
+    rcGlyph.right = rcGlyph.left + AfxScaleX(FRMBUILDCONFIG_SWGLYPH_W)
+    p->b->SetFont( ghFont(SYMBOLFONT_10) )
+    p->b->SetForeColor( iif( bChecked, ghPanel.ForeColorHot, ghPopup.ForeColorDisabled ) )
+    p->b->PaintText( iif( bChecked, wszIconCheckBoxMarked, wszIconCheckBoxEmpty ), @rcGlyph, _
+                     DT_CENTER or DT_VCENTER or DT_SINGLELINE )
+
+    dim as RECT rcText = p->rc
+    rcText.left = rcGlyph.right + AfxScaleX(4)
+    p->b->SetFont( ghFont(GUIFONT_11) )
+    p->b->SetForeColor( iif( bActive, ghPanel.ForeColorHot, ghPanel.ForeColor ) )
+    p->b->PaintText( gBuildOptions(idx).wszText, @rcText, _
+                     DT_LEFT or DT_VCENTER or DT_SINGLELINE or DT_END_ELLIPSIS )
+
+end sub
+
+
+' ========================================================================================
+' Toggle one switch, from a click or from Space.
+' ========================================================================================
+private sub frmBuildConfig_ToggleSwitch( byval row as long )
+
+    if gBCCurrent < 0 then exit sub
+    if (row < lbound(gBuildOptions)) orelse (row > ubound(gBuildOptions)) then exit sub
+
+    gBuildsWork(gBCCurrent).wszOptions = BuildOpts_Toggle( gBuildsWork(gBCCurrent).wszOptions, row )
+
+    ' The raw field is the same value shown a different way, so it follows. SetText is silent,
+    ' which is what stops this bouncing back through the change callback.
+    gBCLoading = true
+    PsTextBox_SetText( ghBCOptions, gBuildsWork(gBCCurrent).wszOptions )
+    gBCLoading = false
+
+    ' PsListTree_Refresh, NOT AfxRedrawWindow on the control. The checkbox glyphs are painted
+    ' by the row callback onto the control's own SURFACE, which is a child window -- redrawing
+    ' the container never reaches it, so the row kept its old glyph until something else
+    ' happened to invalidate the surface. The check state here is DERIVED from the options
+    ' string rather than stored per row, so there is no row to mark dirty; the whole list has
+    ' to be re-asked. Refresh also preserves the scroll position, which matters because this
+    ' fires on a click far down a 26-row list.
+    PsListTree_Refresh( ghBCSwitches )
+end sub
+
+
+' WHOLE ROW TOGGLES. The dialog this replaces hit-tested a 20x20 box at the left of the row
+' and did nothing at all for a click on the label, which is most of the row's width.
+'
+' FALSE, not TRUE: the control has already applied its own click selection by the time this
+' runs, and returning TRUE would suppress the rest of its default handling.
+private function frmBuildConfig_SwitchListMessage( byval m as PSLISTTREE_MESSAGEINFO ptr ) as boolean
+    if m = 0 then return false
+    if m->uMsg = WM_LBUTTONUP then
+        if m->idx >= 0 then frmBuildConfig_ToggleSwitch( m->idx )
+    end if
+    return false
+end function
+
+
+' ========================================================================================
+' Show one page of the right pane.  ALWAYS call this after PsSelectBar_SetCurSel -- like
+' every setter in this family that one is silent.
+' ========================================================================================
+private sub frmBuildConfig_ShowPage( byval nPageID as long )
+
+    gBCPage = nPageID
+    dim as boolean bGeneral  = (nPageID = IDP_FRMBUILDCONFIG_GENERAL)
+    dim as boolean bHaveRow  = (gBCCurrent >= 0)
+
+    dim as long nGen = iif( bGeneral andalso bHaveRow, SW_SHOW, SW_HIDE )
+    dim as long nSwi = iif( (bGeneral = false) andalso bHaveRow, SW_SHOW, SW_HIDE )
+
+    ShowWindow( ghBCDescription, nGen )
+    ShowWindow( ghBCTogDefault, nGen )
+    ShowWindow( ghBCTarget, nGen )
+    ShowWindow( ghBCShortcut, nGen )
+    ShowWindow( ghBCTogExclude, nGen )
+    ShowWindow( ghBCEditSwitches, nGen )
+
+    ShowWindow( ghBCOptions, nSwi )
+    ShowWindow( ghBCSwitches, nSwi )
+
+    AfxRedrawWindow( HWND_FRMBUILDCONFIG )
+end sub
+
+
+' ========================================================================================
+' Push the highlighted build into the right pane.  -1 hides it entirely.
+'
+' HIDDEN, not disabled: a page of greyed-out fields over an empty list is chrome describing
+' nothing. Same call frmUserTools_LoadDetail makes.
+' ========================================================================================
+private sub frmBuildConfig_LoadDetail( byval nIdx as long )
+
+    gBCCurrent = nIdx
+    gBCLoading = true
+
+    if (nIdx >= lbound(gBuildsWork)) andalso (nIdx <= ubound(gBuildsWork)) then
+        PsTextBox_SetText( ghBCDescription, gBuildsWork(nIdx).wszDescription )
+        PsTextBox_SetText( ghBCOptions, gBuildsWork(nIdx).wszOptions )
+        PsToggle_SetChecked( ghBCTogDefault, iif( gBuildsWork(nIdx).IsDefault <> 0, true, false ) )
+        PsToggle_SetChecked( ghBCTogExclude, iif( gBuildsWork(nIdx).ExcludeInPopup <> 0, true, false ) )
+        ' Is64bit wins when both are set -- a settings.ini can hold any pair, and picking one
+        ' deterministically is better than showing whichever the last writer happened to set.
+        PsComboBox_SetCurSel( ghBCTarget, iif( gBuildsWork(nIdx).Is64bit <> 0, BUILDTARGET_64, BUILDTARGET_32 ) )
+
+        dim as DWSTRING wszSC = frmBuildConfig_ShortcutText( nIdx )
+        if len(wszSC) = 0 then wszSC = L(514,"(none)")
+        PsButton_SetText( ghBCShortcut, wszSC )
+    else
+        gBCCurrent = -1
+    end if
+
+    gBCLoading = false
+
+    PsButton_SetEnabled( ghBCDelete, iif( gBCCurrent >= 0, true, false ) )
+    PsButton_SetEnabled( ghBCUp, iif( gBCCurrent > 0, true, false ) )
+    PsButton_SetEnabled( ghBCDown, iif( (gBCCurrent >= 0) andalso (gBCCurrent < ubound(gBuildsWork)), true, false ) )
+
+    frmBuildConfig_ShowPage( gBCPage )
+    PsListTree_Refresh( ghBCSwitches )
+end sub
+
+
+' ========================================================================================
+' Fill the list from the staging array.  nSelectIdx = -2 keeps the current selection.
+' ========================================================================================
+private sub frmBuildConfig_BuildList( byval nSelectIdx as long = -2 )
+
+    if HWND_FRMBUILDCONFIG_LIST = 0 then exit sub
+
+    dim as long nWant = nSelectIdx
+    if nWant = -2 then nWant = gBCCurrent
+
+    PsListTree_BeginUpdate( HWND_FRMBUILDCONFIG_LIST )
+    PsListTree_Clear( HWND_FRMBUILDCONFIG_LIST )
+
+    for i as long = lbound(gBuildsWork) to ubound(gBuildsWork)
+        dim as DWSTRING wszDesc = gBuildsWork(i).wszDescription
+        if len(wszDesc) = 0 then wszDesc = L(513,"(untitled)")
+        dim as long row = PsListTree_AddString( HWND_FRMBUILDCONFIG_LIST, wszDesc, i )
+        dim as DWSTRING wszDef
+        if gBuildsWork(i).IsDefault <> 0 then wszDef = L(528,"Default")
+        PsListTree_SetCellText( HWND_FRMBUILDCONFIG_LIST, row, 1, wszDef )
+    next
+
+    PsListTree_EndUpdate( HWND_FRMBUILDCONFIG_LIST )
+
+    if ubound(gBuildsWork) < 0 then
+        nWant = -1
+    else
+        if nWant < 0 then nWant = 0
+        if nWant > ubound(gBuildsWork) then nWant = ubound(gBuildsWork)
+        PsListTree_SetCurSel( HWND_FRMBUILDCONFIG_LIST, nWant )
+    end if
+
+    ' SetCurSel is SILENT, so the detail pane has to be told explicitly.
+    frmBuildConfig_LoadDetail( nWant )
+end sub
+
+
+' One row's cells, without rebuilding the list -- which would lose the scroll position.
+private sub frmBuildConfig_RefreshRow( byval idx as long )
+    if HWND_FRMBUILDCONFIG_LIST = 0 then exit sub
+    if (idx < lbound(gBuildsWork)) orelse (idx > ubound(gBuildsWork)) then exit sub
+    dim as DWSTRING wszDesc = gBuildsWork(idx).wszDescription
+    if len(wszDesc) = 0 then wszDesc = L(513,"(untitled)")
+    dim as DWSTRING wszDef
+    if gBuildsWork(idx).IsDefault <> 0 then wszDef = L(528,"Default")
+    PsListTree_SetText( HWND_FRMBUILDCONFIG_LIST, idx, wszDesc )
+    PsListTree_SetCellText( HWND_FRMBUILDCONFIG_LIST, idx, 1, wszDef )
+end sub
+
+
+' ========================================================================================
+' A themed message box owned by THIS dialog.
+'
+' Parented here, never to frmMain: this window is up and modal, and a box owned by a disabled
+' ancestor comes up behind it. PsMessageBox runs its own nested loop, so this is a third
+' modal loop inside this dialog's inside frmMain's -- which works, and is what frmUserTools
+' does for the same confirmation.
+' ========================================================================================
+private function frmBuildConfig_ThemedMsgBox( byval wszText as DWSTRING, _
+                                              byval wszCaption as DWSTRING ) as long
+
+    dim as HWND h = PsMessageBox_Create( HWND_FRMBUILDCONFIG )
+    PsMessageBox_SetCaption( h, wszCaption )
+    PsMessageBox_SetText( h, wszText )
+    PsMessageBox_SetIconKind( h, MBX_ICON_WARNING )
+    PsMessageBox_SetFont( h, ghFont(GUIFONT_11) )
+    PsMessageBox_SetCloseGlyphFont( h, ghFont(SYMBOLFONT_10) )
+
+    ' A larger icon glyph than any cached ghFont, made for this box and freed after DoModal.
+    dim as HFONT hGlyph = 0
+    dim pWin as CWindow ptr = AfxCWindowPtr( HWND_FRMBUILDCONFIG )
+    if pWin then hGlyph = pWin->CreateFont( SYMBOLFONT, 22 )
+    if hGlyph then PsMessageBox_SetGlyphFont( h, hGlyph )
+
+    dim as MBX_COLORS mc
+    mc.BorderColor      = ghEditor.Divider
+    mc.CaptionBackColor = ghPanel.BackColor
+    mc.CaptionForeColor = ghPanel.ForeColorHot
+    mc.CloseBackColor   = ghPanel.BackColor
+    mc.CloseForeColor   = ghPanel.ForeColor
+    mc.BackColor        = ghPanel.BackColor
+    mc.ForeColor        = ghPanel.ForeColor
+    mc.FooterBackColor  = ghPanel.BackColor
+    mc.DividerColor     = ghEditor.Divider
+    PsMessageBox_SetColors( h, @mc )
+
+    dim as PSBUTTON_COLORS bc
+    OptionsTheme_FillButton( @bc )
+    PsMessageBox_SetButtonColors( h, @bc )
+
+    PsMessageBox_AddButton( h, L(0,"OK"), IDOK )
+    PsMessageBox_AddButton( h, L(1,"Cancel"), IDCANCEL )
+    ' Default to Cancel -- this box only ever guards a destructive action. The argument is a
+    ' button INDEX, not an id.
+    PsMessageBox_SetDefaultButton( h, 1 )
+
+    dim as long nResult = PsMessageBox_DoModal( h )
+    if hGlyph then DeleteObject( hGlyph )
+    return nResult
 
 end function
 
 
 ' ========================================================================================
-' Empty client area of a plain owner-drawn system LISTBOX: the strip from below the last
-' visible row to the bottom edge. Used by the subclass WM_ERASEBKGND below to fill just that
-' gap (flicker reduction). This was an unprefixed helper in the old PsListTree.inc, back when
-' that control wrapped a system listbox; the owner-drawn PsListTree no longer does and dropped
-' it, so it lives here now -- its one remaining caller -- operating on frmBuildConfig's own
-' raw LISTBOX.
+' Add / Delete / Move
 ' ========================================================================================
-function GetListBoxEmptyClientArea( byval hListBox as HWND ) as RECT
-    dim as RECT rc: GetClientRect( hListBox, @rc )
-    ' Row height from LB_GETITEMHEIGHT is valid even with zero items (fixed-height
-    ' owner-draw), unlike LB_GETITEMRECT(0) which fails when item 0 doesn't exist.
-    dim as long itemHeight = SendMessage( hListBox, LB_GETITEMHEIGHT, 0, 0 )
-    dim as long NumItems   = ListBox_GetCount(hListBox)
-    dim as long nTopIndex  = SendMessage( hListBox, LB_GETTOPINDEX, 0, 0 )
-    dim as long visible_rows = 0
+private sub frmBuildConfig_DoAdd()
 
-    if (NumItems > 0) andalso (itemHeight > 0) then
-        dim as long ItemsPerPage = (rc.bottom - rc.top) \ itemHeight
-        dim as long bottom_index = nTopIndex + ItemsPerPage
-        if bottom_index >= NumItems then bottom_index = NumItems - 1
-        visible_rows = (bottom_index - nTopIndex) + 1
+    dim as long nAt = gBCCurrent + 1
+    if nAt < 0 then nAt = 0
+
+    dim as long nOld = ubound(gBuildsWork)
+    redim preserve gBuildsWork(nOld + 1)
+    for i as long = ubound(gBuildsWork) to nAt + 1 step -1
+        gBuildsWork(i) = gBuildsWork(i-1)
+    next
+
+    ' FIELD BY FIELD, not a blank TYPE_BUILDS: a member added to that type later then shows up
+    ' as a compile-time reminder here rather than silently defaulting to zero.
+    gBuildsWork(nAt).Id             = AfxGuidText(AfxGuid())
+    gBuildsWork(nAt).wszDescription = ""
+    gBuildsWork(nAt).wszOptions     = ""
+    gBuildsWork(nAt).IsDefault      = 0
+    gBuildsWork(nAt).Is32bit        = 0
+    gBuildsWork(nAt).Is64bit        = 1
+    gBuildsWork(nAt).ExcludeInPopup = 0
+    gBuildsWork(nAt).idMenu         = 0
+    gBuildsWork(nAt).IsCtrl         = 0
+    gBuildsWork(nAt).IsAlt          = 0
+    gBuildsWork(nAt).IsShift        = 0
+    ' "" and NOT "None" -- see frmBuildConfig_ComposeShortcut.
+    gBuildsWork(nAt).wszKey         = ""
+
+    frmBuildConfig_BuildList( nAt )
+    frmBuildConfig_ShowPage( IDP_FRMBUILDCONFIG_GENERAL )
+    PsSelectBar_SetCurSel( ghBCSelectBar, 0 )
+    SetFocus( ghBCDescription )
+end sub
+
+
+private sub frmBuildConfig_DoDelete()
+
+    if gBCCurrent < 0 then exit sub
+
+    if frmBuildConfig_ThemedMsgBox( L(287,"Are you sure you want to delete this build configuration?"), _
+                                    L(276,"Confirm") ) <> IDOK then exit sub
+
+    dim as long nAt = gBCCurrent
+    if ubound(gBuildsWork) = 0 then
+        erase gBuildsWork
+    else
+        for i as long = nAt to ubound(gBuildsWork) - 1
+            gBuildsWork(i) = gBuildsWork(i+1)
+        next
+        redim preserve gBuildsWork(ubound(gBuildsWork) - 1)
     end if
 
-    rc.top = visible_rows * itemHeight
-    if rc.top > rc.bottom then rc.top = rc.bottom
+    frmBuildConfig_BuildList( nAt )
+    SetFocus( HWND_FRMBUILDCONFIG_LIST )
+end sub
 
+
+' The selection follows the RECORD, not the position.
+private sub frmBuildConfig_DoMove( byval nDelta as long )
+    if gBCCurrent < 0 then exit sub
+    dim as long nTo = gBCCurrent + nDelta
+    if (nTo < lbound(gBuildsWork)) orelse (nTo > ubound(gBuildsWork)) then exit sub
+    swap gBuildsWork(gBCCurrent), gBuildsWork(nTo)
+    frmBuildConfig_BuildList( nTo )
+    SetFocus( HWND_FRMBUILDCONFIG_LIST )
+end sub
+
+
+' ========================================================================================
+' Open the shared Assign Shortcut dialog on the highlighted build.
+' ========================================================================================
+private sub frmBuildConfig_DoAssign()
+
+    if gBCCurrent < 0 then exit sub
+    dim as long idx = gBCCurrent
+
+    gAssignKeyCaption = gBuildsWork(idx).wszDescription
+    if len(gAssignKeyCaption) = 0 then gAssignKeyCaption = L(513,"(untitled)")
+    ' Domain AND row, so the clash test skips this build's own current binding -- without it,
+    ' opening on a build that already has Ctrl+2 reports that it clashes with itself and
+    ' disables OK before the user has touched anything.
+    gAssignKeyDomain = ASSIGNKEY_DOMAIN_BUILDS
+    gAssignKeyIndex  = idx
+    ' "None" is a legacy affordance, not a key. Hand the dialog an empty string or it starts
+    ' up showing a shortcut that does not exist.
+    gAssignKeyName   = gBuildsWork(idx).wszKey
+    if ucase(trim(gAssignKeyName)) = "NONE" then gAssignKeyName = ""
+    gAssignKeyCtrl   = iif( gBuildsWork(idx).IsCtrl  <> 0, true, false )
+    gAssignKeyAlt    = iif( gBuildsWork(idx).IsAlt   <> 0, true, false )
+    gAssignKeyShift  = iif( gBuildsWork(idx).IsShift <> 0, true, false )
+
+    frmAssignKey_Show( HWND_FRMBUILDCONFIG )
+
+    ' Cancel leaves gAssignKey* exactly as set above, so this is a no-op on that path rather
+    ' than a case that has to be detected.
+    gBuildsWork(idx).wszKey  = gAssignKeyName
+    gBuildsWork(idx).IsCtrl  = iif( gAssignKeyCtrl,  1, 0 )
+    gBuildsWork(idx).IsAlt   = iif( gAssignKeyAlt,   1, 0 )
+    gBuildsWork(idx).IsShift = iif( gAssignKeyShift, 1, 0 )
+
+    ' BOTH sentinels: leaving the domain set would make a later ASSIGNKEY_DOMAIN_NONE caller
+    ' silently read staging instead of committed records.
+    gAssignKeyDomain = ASSIGNKEY_DOMAIN_NONE
+    gAssignKeyIndex  = -1
+
+    dim as DWSTRING wszSC = frmBuildConfig_ShortcutText( idx )
+    if len(wszSC) = 0 then wszSC = L(514,"(none)")
+    PsButton_SetText( ghBCShortcut, wszSC )
+
+    frmBuildConfig_RefreshRow( idx )
+    AfxRedrawWindow( HWND_FRMBUILDCONFIG )
+    SetFocus( ghBCShortcut )
+end sub
+
+
+' ========================================================================================
+' Control callbacks
+' ========================================================================================
+private sub frmBuildConfig_ButtonClick( byval hButton as HWND, byval id as long )
+    select case id
+        case IDC_FRMBUILDCONFIG_CMDADD          : frmBuildConfig_DoAdd()
+        case IDC_FRMBUILDCONFIG_CMDDELETE       : frmBuildConfig_DoDelete()
+        case IDC_FRMBUILDCONFIG_CMDUP           : frmBuildConfig_DoMove( -1 )
+        case IDC_FRMBUILDCONFIG_CMDDOWN         : frmBuildConfig_DoMove( 1 )
+        case IDC_FRMBUILDCONFIG_CMDSHORTCUT     : frmBuildConfig_DoAssign()
+        case IDC_FRMBUILDCONFIG_CMDEDITSWITCHES
+            PsSelectBar_SetCurSel( ghBCSelectBar, 1 )
+            frmBuildConfig_ShowPage( IDP_FRMBUILDCONFIG_SWITCHES )
+            SetFocus( ghBCSwitches )
+        case IDC_FRMBUILDCONFIG_CMDOK
+            frmBuildConfig_CommitWork()
+            SendMessage( HWND_FRMBUILDCONFIG, WM_CLOSE, 0, 0 )
+        case IDC_FRMBUILDCONFIG_CMDCANCEL
+            SendMessage( HWND_FRMBUILDCONFIG, WM_CLOSE, 0, 0 )
+    end select
+end sub
+
+
+private sub frmBuildConfig_TextChanged( byval hTextBox as HWND )
+    if gBCLoading then exit sub
+    if gBCCurrent < 0 then exit sub
+
+    if hTextBox = ghBCDescription then
+        gBuildsWork(gBCCurrent).wszDescription = PsTextBox_GetText( hTextBox )
+        frmBuildConfig_RefreshRow( gBCCurrent )
+
+    elseif hTextBox = ghBCOptions then
+        ' TYPING HERE RE-DERIVES THE CHECK STATE AND NOTHING ELSE. The text is never rewritten
+        ' under the caret -- only a toggle rebuilds the string from its tokens.
+        gBuildsWork(gBCCurrent).wszOptions = PsTextBox_GetText( hTextBox )
+        PsListTree_Refresh( ghBCSwitches )
+        AfxRedrawWindow( HWND_FRMBUILDCONFIG )
+    end if
+end sub
+
+
+private sub frmBuildConfig_ToggleChanged( byval hToggle as HWND, byval isChecked as boolean )
+    if gBCLoading then exit sub
+    if gBCCurrent < 0 then exit sub
+
+    if hToggle = ghBCTogDefault then
+        ' EXACTLY ONE BUILD MAY BE DEFAULT. Clearing the others changes column 2 on every row,
+        ' so every row is refreshed -- not just this one.
+        gBuildsWork(gBCCurrent).IsDefault = iif( isChecked, 1, 0 )
+        if isChecked then
+            for i as long = lbound(gBuildsWork) to ubound(gBuildsWork)
+                if i <> gBCCurrent then gBuildsWork(i).IsDefault = 0
+            next
+        end if
+        for i as long = lbound(gBuildsWork) to ubound(gBuildsWork)
+            frmBuildConfig_RefreshRow( i )
+        next
+
+    elseif hToggle = ghBCTogExclude then
+        gBuildsWork(gBCCurrent).ExcludeInPopup = iif( isChecked, 1, 0 )
+    end if
+end sub
+
+
+' Is32bit and Is64bit are TWO fields. The combo has one index, so both are written,
+' complementarily, on every change.
+private sub frmBuildConfig_TargetChanged( byval hCombo as HWND, byval idxOld as long, byval idxNew as long )
+    if gBCLoading then exit sub
+    if gBCCurrent < 0 then exit sub
+    gBuildsWork(gBCCurrent).Is32bit = iif( idxNew = BUILDTARGET_32, 1, 0 )
+    gBuildsWork(gBCCurrent).Is64bit = iif( idxNew = BUILDTARGET_64, 1, 0 )
+end sub
+
+
+private sub frmBuildConfig_ListSelChange( byval hList as HWND, byval row as integer )
+    frmBuildConfig_LoadDetail( frmBuildConfig_SelectedWorkIndex() )
+end sub
+
+
+private sub frmBuildConfig_SelectBarChange( byval hBar as HWND, byval idxOld as long, byval idxNew as long )
+    frmBuildConfig_ShowPage( PsSelectBar_GetPanelID( hBar, idxNew ) )
+end sub
+
+
+' ========================================================================================
+' Paint the dialog's own chrome.
+'
+' KEEP THE RUNNING y IN STEP WITH frmBuildConfig_PositionWindows. The two walk the same rows,
+' and the label rect a row draws into is the row the control is placed in.
+' ========================================================================================
+private function frmBuildConfig_OnPaint( byval hwnd as HWND ) as LRESULT
+
+    dim as PAINTSTRUCT ps
+    dim as HDC hdc = BeginPaint( hwnd, @ps )
+
+    dim as RECT rc
+    GetClientRect( hwnd, @rc )
+
+    dim buffer as PsBufferPaint
+    buffer.BeginDoubleBuffer( hwnd, hdc, rc )
+
+    buffer.SetBackColor( ghPanel.BackColor )
+    buffer.PaintRect( @rc )
+
+    dim as long mx      = AfxScaleX(FRMBUILDCONFIG_MARGIN)
+    dim as long titleH  = AfxScaleY(FRMBUILDCONFIG_TITLE_H)
+    dim as long detailX = mx + AfxScaleX(FRMBUILDCONFIG_LIST_W) + AfxScaleX(FRMBUILDCONFIG_DETAIL_GAP)
+    dim as long rowH    = AfxScaleY(FRMBUILDCONFIG_ROWH)
+    dim as long xRight  = rc.right - mx
+
+    ' NOTHING IS DRAWN IN THE TITLE BAND -- it holds the list's four command buttons. A page
+    ' title there would repeat the window caption an inch below itself.
+
+    dim as RECT rcT
+
+    ' ---- the empty state ---------------------------------------------------------------
+    if gBCCurrent < 0 then
+        rcT.left   = detailX
+        rcT.right  = xRight
+        rcT.top    = titleH
+        rcT.bottom = rc.bottom - AfxScaleY(FRMBUILDCONFIG_FOOTER_H)
+        buffer.SetForeColor( ghPanel.ForeColor )
+        buffer.SetFont( ghFont(GUIFONT_11) )
+        buffer.PaintText( L(560,"Select a build configuration, or press Add to create one."), _
+                          @rcT, DT_CENTER or DT_VCENTER or DT_SINGLELINE )
+        buffer.EndDoubleBuffer()
+        EndPaint( hwnd, @ps )
+        return 0
+    end if
+
+    dim as long y = titleH + AfxScaleY(FRMBUILDCONFIG_SELECTBAR_H) + AfxScaleY(12)
+
+    buffer.SetFont( ghFont(GUIFONT_11) )
+    buffer.SetForeColor( ghPanel.ForeColor )
+
+    if gBCPage = IDP_FRMBUILDCONFIG_GENERAL then
+
+        ' ---- Description: a STACKED row, label above a full-width field -----------------
+        rcT.left = detailX : rcT.right = xRight
+        rcT.top  = y       : rcT.bottom = y + AfxScaleY(FRMBUILDCONFIG_STACKLABEL_H)
+        buffer.PaintText( L(278,"Description"), @rcT, DT_LEFT or DT_VCENTER or DT_SINGLELINE or DT_END_ELLIPSIS )
+        y += AfxScaleY(FRMBUILDCONFIG_STACKROW_H)
+
+        ' ---- the label/control rows -----------------------------------------------------
+        ' The rects come from PositionWindows, which is the only place that knows where each
+        ' control landed -- so each label gets exactly the width its own control leaves, and
+        ' the painter cannot drift out of step with the layout by walking a parallel y.
+        '
+        ' NO WARNING TEXT ON THE SHORTCUT ROW. There was: a red sentence beside the button
+        ' when the accelerator was unresolvable or already taken. A shortcut that cannot work
+        ' is now simply UNASSIGNED when the staging copy is seeded, and the assign dialog
+        ' refuses to create another -- so the failure is reported where the choice is made,
+        ' not restated on a row the user has not touched every time they open the dialog.
+        #macro BCROWLABEL( _row_, _text_ )
+            buffer.PaintText( _text_, @gBCRowLabelRect(_row_), _
+                              DT_LEFT or DT_VCENTER or DT_SINGLELINE or DT_END_ELLIPSIS )
+        #endmacro
+
+        BCROWLABEL( BCROW_DEFAULT,  L(280,"Set as default") )
+        BCROWLABEL( BCROW_TARGET,   L(529,"Compiler target") )
+        BCROWLABEL( BCROW_SHORTCUT, L(508,"Shortcut") )
+        BCROWLABEL( BCROW_EXCLUDE,  L(284,"Exclude build from status bar popup menu") )
+
+        ' ---- the switches preview -------------------------------------------------------
+        ' Its rect is computed in PositionWindows and stored, because the mouse handlers
+        ' hit-test it -- there is no child window here to do that for us.
+        dim as RECT rcLbl = gBCPreviewLabelRect
+        buffer.SetForeColor( ghPanel.ForeColor )
+        buffer.PaintText( L(527,"Compiler switches"), @rcLbl, _
+                          DT_LEFT or DT_VCENTER or DT_SINGLELINE or DT_END_ELLIPSIS )
+
+        ' FILL FIRST, THEN STROKE. PaintRoundOutline strokes without filling and takes its
+        ' colour from SetForeColor; PaintRoundBorderRect would fill the interior back over --
+        ' the mistake this family has made four separate times.
+        dim as RECT rcPrev = gBCPreviewRect
+        buffer.SetBackColor( iif( gBCPreviewHot, ghPanel.BackColorHot, ghEditor.BackColorText ) )
+        buffer.PaintRoundRect( @rcPrev, AfxScaleY(6) )
+        buffer.SetForeColor( ghEditor.Divider )
+        buffer.PaintRoundOutline( @rcPrev, AfxScaleY(6), 1 )
+
+        dim as RECT rcTxt = rcPrev
+        rcTxt.left   += AfxScaleX(10)
+        rcTxt.right  -= AfxScaleX(10)
+        rcTxt.top    += AfxScaleY(6)
+        rcTxt.bottom -= AfxScaleY(6)
+
+        ' THE RAW OPTIONS STRING, in the fixed font -- exactly what is handed to fbc, so it can
+        ' never disagree with reality, and it includes any switch typed by hand that has no
+        ' checkbox. Wrapped, not single-lined: PaintTextEx, because PaintText forces
+        ' DT_SINGLELINE and structurally cannot wrap.
+        dim as DWSTRING wszOpts = gBuildsWork(gBCCurrent).wszOptions
+        if len(trim(wszOpts)) = 0 then
+            buffer.SetFont( ghFont(GUIFONT_11) )
+            buffer.SetForeColor( ghPopup.ForeColorDisabled )
+            buffer.PaintText( L(514,"(none)"), @rcTxt, DT_LEFT or DT_VCENTER or DT_SINGLELINE )
+        else
+            buffer.SetFont( ghBCFontFixed )
+            buffer.SetForeColor( ghEditor.ForeColorText )
+            buffer.PaintTextEx( wszOpts, @rcTxt, DT_LEFT or DT_TOP or DT_WORDBREAK or DT_END_ELLIPSIS )
+        end if
+
+    else
+        ' ---- the compiler switches page -------------------------------------------------
+        rcT.left = detailX : rcT.right = xRight
+        rcT.top  = y       : rcT.bottom = y + AfxScaleY(FRMBUILDCONFIG_STACKLABEL_H)
+        buffer.PaintText( L(279,"Compiler Options"), @rcT, DT_LEFT or DT_VCENTER or DT_SINGLELINE or DT_END_ELLIPSIS )
+    end if
+
+    buffer.EndDoubleBuffer()
+    EndPaint( hwnd, @ps )
+
+    function = 0
+end function
+
+
+' ========================================================================================
+' Position the shell's children. Fixed-size dialog, so this runs once after creation.
+' ========================================================================================
+private sub frmBuildConfig_PositionWindows( byval hwnd as HWND )
+
+    dim as RECT rc
+    GetClientRect( hwnd, @rc )
+    if (rc.right <= 0) orelse (rc.bottom <= 0) then exit sub
+
+    dim as long mx      = AfxScaleX(FRMBUILDCONFIG_MARGIN)
+    dim as long titleH  = AfxScaleY(FRMBUILDCONFIG_TITLE_H)
+    dim as long footerH = AfxScaleY(FRMBUILDCONFIG_FOOTER_H)
+    dim as long gap     = AfxScaleX(FRMBUILDCONFIG_GAP)
+    dim as long btnW    = AfxScaleX(FRMBUILDCONFIG_BTN_W)
+    dim as long btnH    = AfxScaleY(FRMBUILDCONFIG_BTN_H)
+    dim as long listW   = AfxScaleX(FRMBUILDCONFIG_LIST_W)
+    dim as long xRight  = rc.right - mx
+
+    ' ---- the list's command strip, in the title band ------------------------------------
+    dim as long cmdW   = AfxScaleX(FRMBUILDCONFIG_CMD_W)
+    dim as long glyphW = AfxScaleX(FRMBUILDCONFIG_GLYPH_W)
+    dim as long cmdY   = (titleH - btnH) \ 2
+    dim as long x      = mx
+    SetWindowPos( ghBCAdd, 0, x, cmdY, cmdW, btnH, SWP_NOZORDER or SWP_NOACTIVATE )
+    x += cmdW + gap
+    SetWindowPos( ghBCDelete, 0, x, cmdY, cmdW, btnH, SWP_NOZORDER or SWP_NOACTIVATE )
+    x += cmdW + (gap * 2)
+    SetWindowPos( ghBCUp, 0, x, cmdY, glyphW, btnH, SWP_NOZORDER or SWP_NOACTIVATE )
+    x += glyphW + AfxScaleX(4)
+    SetWindowPos( ghBCDown, 0, x, cmdY, glyphW, btnH, SWP_NOZORDER or SWP_NOACTIVATE )
+
+    ' ---- the list ----------------------------------------------------------------------
+    dim as long listH = rc.bottom - footerH - titleH
+    if listH < 0 then listH = 0
+    SetWindowPos( HWND_FRMBUILDCONFIG_LIST, 0, mx, titleH, listW, listH, SWP_NOZORDER or SWP_NOACTIVATE )
+
+    ' ---- the right pane ----------------------------------------------------------------
+    dim as long detailX = mx + listW + AfxScaleX(FRMBUILDCONFIG_DETAIL_GAP)
+    dim as long rowH    = AfxScaleY(FRMBUILDCONFIG_ROWH)
+    dim as long fieldH  = AfxScaleY(FRMBUILDCONFIG_FIELD_H)
+    dim as long barH    = AfxScaleY(FRMBUILDCONFIG_SELECTBAR_H)
+    dim as long paneW   = xRight - detailX
+    dim as long paneBot = rc.bottom - footerH
+
+    SetWindowPos( ghBCSelectBar, 0, detailX, titleH, paneW, barH, SWP_NOZORDER or SWP_NOACTIVATE )
+
+    dim as long y = titleH + barH + AfxScaleY(12)
+
+    ' ---- General page ------------------------------------------------------------------
+    ' Description is stacked: its field sits under its own label.
+    SetWindowPos( ghBCDescription, 0, detailX, y + AfxScaleY(FRMBUILDCONFIG_STACKLABEL_H), _
+                  paneW, fieldH, SWP_NOZORDER or SWP_NOACTIVATE )
+    y += AfxScaleY(FRMBUILDCONFIG_STACKROW_H)
+
+    ' Every row places its control right-aligned, then hands the label EVERYTHING to its left
+    ' less one gap. That is what lets "Exclude build from status bar popup menu" have the room
+    ' a 47px toggle is not using, instead of being ellipsized by a gutter sized for the
+    ' shortest caption in the group.
+    #macro PLACEROW( _row_, _ctrlX_ )
+        gBCRowLabelRect(_row_).left   = detailX
+        gBCRowLabelRect(_row_).right  = (_ctrlX_) - gap
+        gBCRowLabelRect(_row_).top    = y
+        gBCRowLabelRect(_row_).bottom = y + rowH
+        y += rowH
+    #endmacro
+
+    dim as long tw = 0, th = 0
+    PsToggle_GetIdealSize( ghBCTogDefault, tw, th )
+    SetWindowPos( ghBCTogDefault, 0, xRight - tw, y + (rowH - th) \ 2, tw, th, _
+                  SWP_NOZORDER or SWP_NOACTIVATE )
+    PLACEROW( BCROW_DEFAULT, xRight - tw )
+
+    ' PsComboBox sizes itself to its WIDEST item, so picking never resizes it. Clamped so it
+    ' cannot eat the whole row -- a translation longer than "FBC 64-bit" is what would
+    ' otherwise leave its label nowhere to go.
+    dim as long cbW = 0, cbH = 0
+    PsComboBox_GetIdealSize( ghBCTarget, cbW, cbH )
+    dim as long cbMax = (paneW * 2) \ 5
+    if cbW > cbMax then cbW = cbMax
+    SetWindowPos( ghBCTarget, 0, xRight - cbW, y + (rowH - cbH) \ 2, cbW, cbH, _
+                  SWP_NOZORDER or SWP_NOACTIVATE )
+    PLACEROW( BCROW_TARGET, xRight - cbW )
+
+    dim as long scW = AfxScaleX(FRMBUILDCONFIG_SHORTCUT_W)
+    SetWindowPos( ghBCShortcut, 0, xRight - scW, y + (rowH - fieldH) \ 2, scW, fieldH, _
+                  SWP_NOZORDER or SWP_NOACTIVATE )
+    PLACEROW( BCROW_SHORTCUT, xRight - scW )
+
+    PsToggle_GetIdealSize( ghBCTogExclude, tw, th )
+    SetWindowPos( ghBCTogExclude, 0, xRight - tw, y + (rowH - th) \ 2, tw, th, _
+                  SWP_NOZORDER or SWP_NOACTIVATE )
+    PLACEROW( BCROW_EXCLUDE, xRight - tw )
+
+    ' ---- the preview block -------------------------------------------------------------
+    ' IT FOLLOWS THE ROWS. It was bottom-anchored first, on the theory that a summary belongs
+    ' at the foot of the page -- and the geometry trace showed the result: the last row ended
+    ' at y=558 and the block began at y=850, leaving 292px (167 unscaled) of dead band through
+    ' the middle of the page at 175% DPI. Every fit assertion passed, because nothing
+    ' overlapped and nothing was clipped; the page was simply broken-looking. Empty space
+    ' BELOW a short page is ordinary. A hole through the middle of one is not.
+    dim as long prevH  = AfxScaleY(FRMBUILDCONFIG_PREVIEW_H)
+    dim as long prevLH = AfxScaleY(FRMBUILDCONFIG_PREVIEWLABEL_H)
+    dim as long editW  = AfxScaleX(FRMBUILDCONFIG_EDIT_W)
+    dim as long prevY  = y + AfxScaleY(12) + prevLH
+
+    gBCPreviewLabelRect.left   = detailX
+    gBCPreviewLabelRect.right  = xRight - editW - gap
+    gBCPreviewLabelRect.top    = prevY - prevLH
+    gBCPreviewLabelRect.bottom = prevY
+
+    gBCPreviewRect.left   = detailX
+    gBCPreviewRect.right  = xRight
+    gBCPreviewRect.top    = prevY
+    gBCPreviewRect.bottom = prevY + prevH
+
+    SetWindowPos( ghBCEditSwitches, 0, xRight - editW, _
+                  gBCPreviewLabelRect.top + (prevLH - AfxScaleY(24)) \ 2, _
+                  editW, AfxScaleY(24), SWP_NOZORDER or SWP_NOACTIVATE )
+
+    ' ---- Compiler switches page --------------------------------------------------------
+    ' Same origin as the General page's first row, so switching tabs does not shift the eye.
+    dim as long ys = titleH + barH + AfxScaleY(12)
+    SetWindowPos( ghBCOptions, 0, detailX, ys + AfxScaleY(FRMBUILDCONFIG_STACKLABEL_H), _
+                  paneW, fieldH, SWP_NOZORDER or SWP_NOACTIVATE )
+    ys += AfxScaleY(FRMBUILDCONFIG_STACKROW_H)
+    dim as long swH = paneBot - AfxScaleY(12) - ys
+    if swH < 0 then swH = 0
+    SetWindowPos( ghBCSwitches, 0, detailX, ys, paneW, swH, SWP_NOZORDER or SWP_NOACTIVATE )
+
+    ' ---- footer ------------------------------------------------------------------------
+    dim as long btnY = rc.bottom - footerH + (footerH - btnH) \ 2
+    SetWindowPos( ghBCCancel, 0, xRight - btnW, btnY, btnW, btnH, SWP_NOZORDER or SWP_NOACTIVATE )
+    SetWindowPos( ghBCOK, 0, xRight - (btnW * 2) - gap, btnY, btnW, btnH, SWP_NOZORDER or SWP_NOACTIVATE )
+
+end sub
+
+
+' ========================================================================================
+' Push the current theme into every child that carries its own colours.
+'
+' Through the Options dialog's shared builders rather than a hand-copied recipe -- this file
+' is included after modOptionsRows.inc, so the palettes cannot drift.
+' ========================================================================================
+private sub frmBuildConfig_ApplyTheme( byval hwnd as HWND )
+
+    #macro DRESSLIST( _h_ )
+        PsListTree_SetBackColor( _h_, ghPanel.BackColor )
+        PsListTree_SetScrollBarColors( _h_, ghPanel.BackColorScrollBar, _
+                                       ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
+        OptionsTheme_ApplyListBorder( _h_ )
+    #endmacro
+
+    DRESSLIST( HWND_FRMBUILDCONFIG_LIST )
+    DRESSLIST( ghBCSwitches )
+
+    OptionsTheme_ApplyTextBox( ghBCDescription )
+    OptionsTheme_ApplyTextBox( ghBCOptions )
+    ' The raw options field is a fixed-pitch readout of what goes to the compiler, so it uses
+    ' the same face the preview block does -- applied AFTER ApplyTextBox, which sets the base
+    ' font itself and would otherwise put it back.
+    PsTextBox_SetFont( ghBCOptions, ghBCFontFixed )
+
+    dim as PSTOGGLE_COLORS tc
+    OptionsTheme_FillToggle( @tc )
+    PsToggle_SetColors( ghBCTogDefault, @tc )
+    PsToggle_SetColors( ghBCTogExclude, @tc )
+
+    dim as PSCOMBOBOX_COLORS cc
+    dim as PSPOPUPMENU_COLORS pc
+    OptionsTheme_FillCombo( @cc, @pc )
+    PsComboBox_SetColors( ghBCTarget, @cc )
+    PsComboBox_SetListColors( ghBCTarget, @pc )
+
+    dim as PSSELECTBAR_COLORS sc
+    PsSelectBar_GetColors( ghBCSelectBar, @sc )
+    sc.BackColor        = ghPanel.BackColor
+    sc.BackColorHot     = ghPanel.BackColor
+    sc.BackColorSelect  = ghPanel.BackColor
+    sc.ForeColor        = ghPopup.ForeColorDisabled
+    sc.ForeColorHot     = ghPanel.ForeColor
+    sc.ForeColorSelect  = ghPanel.ForeColorHot
+    sc.IndicatorColor   = ghPanel.ForeColorHot
+    PsSelectBar_SetColors( ghBCSelectBar, @sc )
+
+    dim as PSBUTTON_COLORS bc
+    OptionsTheme_FillButton( @bc )
+    dim as HWND hBtn(7) = { ghBCAdd, ghBCDelete, ghBCUp, ghBCDown, _
+                            ghBCShortcut, ghBCEditSwitches, ghBCOK, ghBCCancel }
+    for i as long = 0 to 7
+        if hBtn(i) = 0 then continue for
+        PsButton_SetColors( hBtn(i), @bc )
+        PsButton_Refresh( hBtn(i) )
+    next
+
+    Theme_ApplyDarkCaption( hwnd )
+    AfxRedrawWindow( hwnd )
+
+end sub
+
+
+' ========================================================================================
+' Is hCandidate hContainer, or anything nested inside it?
+'
+' Needed because every focusable thing here is a CONTAINER whose real tab stop is an inner
+' child -- a PsTextBox's focus lives on the RichEdit two levels down, and PsListTree's on its
+' row surface, so GetFocus() = hControl is never true.
+' ========================================================================================
+private function frmBuildConfig_IsWithin( byval hCandidate as HWND, byval hContainer as HWND ) as boolean
+    if (hCandidate = 0) orelse (hContainer = 0) then return false
+    dim as HWND h = hCandidate
+    do while h <> 0
+        if h = hContainer then return true
+        h = GetParent( h )
+    loop
+    return false
+end function
+
+
+
+
+
+' ========================================================================================
+' A child's rect in the DIALOG's client coordinates.
+'
+' The layout suite compares controls against the shell's own bands, so every measurement has
+' to be in one coordinate space. GetWindowRect gives screen coordinates; two ScreenToClient
+' calls bring both corners back. A HIDDEN window still reports its last placed rect here,
+' which is why the fit assertions also check the rect is non-empty -- a zeroed rect "fits
+' inside" everything and would pass vacuously.
+' ========================================================================================
+private function frmBuildConfig_ChildRect( byval hChild as HWND ) as RECT
+    dim as RECT rc
+    if hChild = 0 then return rc
+    GetWindowRect( hChild, @rc )
+    dim as POINT pt1 = type( rc.left, rc.top )
+    dim as POINT pt2 = type( rc.right, rc.bottom )
+    ScreenToClient( HWND_FRMBUILDCONFIG, @pt1 )
+    ScreenToClient( HWND_FRMBUILDCONFIG, @pt2 )
+    rc.left = pt1.x : rc.top = pt1.y
+    rc.right = pt2.x : rc.bottom = pt2.y
     return rc
 end function
 
 
 ' ========================================================================================
-' Processes messages for the subclassed ListBox window.
+' THE HEADLESS HALF.  (TIKO_BUILDCONFIG_SELFTEST=1)
+'
+' The switch matcher and the localized ids -- neither needs a window, so this runs from
+' frmMain at startup alongside the other headless suites. The layout half is separate and
+' runs from Show, because it measures real windows at the real DPI.
+'
+' WHY THE MATCHER IS WORTH ASSERTING AT ALL. It replaced a space-padded instr() plus a blind
+' AfxStrRemove, and every one of the cases below is a defect that code actually had -- the
+' two paths disagreeing about "checked", a quoted path losing switches out of its middle, a
+' tab-separated string matching nothing and toggling a duplicate in. None of them raises an
+' error; the result is always a shorter, valid-looking options string.
 ' ========================================================================================
-function frmBuildConfig_ListBox_SubclassProc ( _
-            byval hwnd   as HWND, _                 ' // Control window handle
-            byval uMsg   as UINT, _                 ' // Type of message
-            byval wParam as WPARAM, _               ' // First message parameter
-            byval lParam as LPARAM, _               ' // Second message parameter
-            byval uIdSubclass as UINT_PTR, _        ' // The subclass ID
-            byval dwRefData as DWORD_PTR _          ' // Pointer to reference data
-            ) as LRESULT
+sub frmBuildConfig_RunSelfTest()
 
-    
-    select case uMsg
+    if environ("TIKO_BUILDCONFIG_SELFTEST") <> "1" then exit sub
 
-        case WM_ERASEBKGND
-            ' Only erase the bottom portion of the listbox that extends from the last item
-            ' to the bottom edge of the listbox. All other lines are already drawn. This helps
-            ' reduce screen flicker.
-            dim as RECT rc = GetListBoxEmptyClientArea( HWND )
-            if rc.top < rc.bottom then
-                dim as HDC hDC = cast(HDC, wParam)
-                FillRect(hDC, @rc, GetSysColorBrush(COLOR_WINDOW))
+    dim as long nPass = 0, nFail = 0
+    dim as string sMsg
+
+    ' Two macros because a string comparison wants to REPORT both sides -- a bare pass/fail on
+    ' "the options string is right" is close to useless when it is not.
+    #macro BCEQ( _got_, _want_, _desc_ )
+        scope
+            dim as DWSTRING wszGot = (_got_), wszWant = (_want_)
+            if wszGot = wszWant then
+                nPass += 1
+            else
+                nFail += 1
+                sMsg = "  FAIL: " & (_desc_) & !"\n         got  [" & wszGot & _
+                       !"]\n         want [" & wszWant & "]"
+                print sMsg
             end if
-            return true
-            
-        case WM_GETDLGCODE
-            ' All keyboard input
-            function = DLGC_WANTALLKEYS
-            exit function
+        end scope
+    #endmacro
 
-        case WM_KEYUP
-            select case loword(wParam)
-            case VK_SPACE
-                if uIdSubclass = IDC_FRMBUILDCONFIG_LSTOPTIONS then
-                    dim as long nCurSel = ListBox_GetCurSel(hwnd)
-                    frmBuildConfig_ProcessListboxClick(hwnd, nCurSel)
-                    exit function
-                end if    
-            case VK_ESCAPE
-                PostMessage( GetParent(hwnd), WM_CLOSE, 0, 0 )
-                exit function
-            end select
+    #macro BCASSERT( _cond_, _desc_ )
+        if (_cond_) then
+            nPass += 1
+        else
+            nFail += 1
+            sMsg = "  FAIL: " & (_desc_)
+            print sMsg
+        end if
+    #endmacro
 
-        case WM_MOUSEMOVE
-        case WM_LBUTTONDOWN
-            
-        case WM_LBUTTONUP
-            if uIdSubclass = IDC_FRMBUILDCONFIG_LSTOPTIONS then
-                ' Handle if the checkbox is clicked
-                dim as long nCurSel = ListBox_GetCurSel(hwnd)
-                if nCurSel = -1 then exit function
-                dim pWindow as CWindow ptr = AfxCWindowPtr(GetParent(hwnd))
-                if pWindow = 0 then exit function
-                dim as RECT rc: SendMessage(hwnd, LB_GETITEMRECT, nCurSel, cast(LPARAM, @rc))
-                ' The checkbox is the first 20x20 area (16x16 icon)
-                rc.Left   = rc.Left + pWindow->ScaleX(2)
-                rc.Top    = rc.Top  + pWindow->ScaleY(2)
-                rc.Right  = rc.Left + pWindow->ScaleX(16)
-                rc.Bottom = rc.Top  + pWindow->ScaleY(16)
-                dim as point pt = (loword(lParam), hiword(lParam))
-                if PtInRect(@rc, pt) then
-                    frmBuildConfig_ProcessListboxClick(hwnd, nCurSel)
-                end if
-            end if    
-            
-        case WM_DESTROY
-            ' REQUIRED: Remove control subclassing
-            RemoveWindowSubclass hwnd, @frmBuildConfig_ListBox_SubclassProc, uIdSubclass
+    sMsg = "==== TIKO_BUILDCONFIG_SELFTEST ====" : print sMsg
 
-    End Select
+    ' ---- 1. the switch table, indexed by SWITCH rather than by position ------------------
+    ' So the cases below name switches instead of magic numbers, and the table can be
+    ' re-ordered without silently retargeting every assertion at the wrong row.
+    dim as long iConsole = -1, iGui = -1, iGas64 = -1, iGcc = -1, iErrE = -1
+    dim as long iO1 = -1, iO2 = -1, iSmallC = -1, iBigC = -1, iSmallR = -1, iBigR = -1
+    for i as long = lbound(gBuildOptions) to ubound(gBuildOptions)
+        dim as DWSTRING a = AfxStrExtract( gBuildOptions(i).wszText, "(", ")" )
+        if      a = "-s console" then : iConsole = i
+        elseif  a = "-s gui"     then : iGui     = i
+        elseif  a = "-gen gas64" then : iGas64   = i
+        elseif  a = "-gen gcc"   then : iGcc     = i
+        elseif  a = "-e"         then : iErrE    = i
+        elseif  a = "-Wc -O1"    then : iO1      = i
+        elseif  a = "-Wc -O2"    then : iO2      = i
+        elseif  a = "-c"         then : iSmallC  = i
+        elseif  a = "-C"         then : iBigC    = i
+        elseif  a = "-r"         then : iSmallR  = i
+        elseif  a = "-R"         then : iBigR    = i
+        end if
+    next
+    BCASSERT( (iConsole >= 0) andalso (iGui >= 0) andalso (iGas64 >= 0) andalso (iGcc >= 0) andalso _
+              (iErrE >= 0) andalso (iO1 >= 0) andalso (iO2 >= 0) andalso (iSmallC >= 0) andalso _
+              (iBigC >= 0) andalso (iSmallR >= 0) andalso (iBigR >= 0), _
+              "every switch the suite names is present in gBuildOptions" )
 
-    ' Default processing of Windows messages
-    Function = DefSubclassProc(hwnd, uMsg, wParam, lParam)
+    ' Everything below is guarded on that, so a renamed switch reports ONE failure rather than
+    ' eleven confusing ones from index -1.
+    if iConsole >= 0 andalso iGui >= 0 andalso iGas64 >= 0 andalso iGcc >= 0 andalso iErrE >= 0 andalso _
+       iO1 >= 0 andalso iO2 >= 0 andalso iSmallC >= 0 andalso iBigC >= 0 andalso iSmallR >= 0 andalso iBigR >= 0 then
 
-End Function
+        ' ---- 2. the display path and the toggle path agree ------------------------------
+        ' They did NOT before: the painter padded both sides of its comparison and the click
+        ' handler padded only the right, so "-Wc-e" was drawn unchecked and toggled as though
+        ' it were checked. One string, two answers.
+        BCASSERT( BuildOpts_IsChecked( "-Wc-e", iErrE ) = false, _
+                  "'-Wc-e' does not contain the token -e" )
 
+        ' ---- 3. -Wc -O1 versus -Wc -O2, distinguished as SEQUENCES ----------------------
+        ' Two tokens each, differing in the second. Nothing here is a substring test.
+        BCASSERT( BuildOpts_IsChecked( "-s console -Wc -O2", iO2 ) = true,  "-Wc -O2 is found" )
+        BCASSERT( BuildOpts_IsChecked( "-s console -Wc -O2", iO1 ) = false, "-Wc -O1 is NOT found in a -O2 string" )
+        BCEQ( BuildOpts_Toggle( "-s console -Wc -O2", iO1 ), "-s console -Wc -O1", _
+              "-O1 replaces -O2 within group 5" )
 
-' ========================================================================================
-' Process WM_CREATE message for window/dialog: frmBuildConfig
-' ========================================================================================
-function frmBuildConfig_OnCreate( _
-            byval hwnd as HWND, _
-            byval lpCreateStructPtr as LPCREATESTRUCT _
-            ) as boolean
+        ' ---- 4. CASE SENSITIVITY --------------------------------------------------------
+        ' -c/-C and -r/-R are four distinct FBC switches in three groups. This is the single
+        ' most likely way to get the matcher wrong, and it has no visible symptom until a
+        ' build behaves oddly. A/B-verified: with the compare case-folded, the last assertion
+        ' here returns an EMPTY options string -- both switches gone.
+        BCASSERT( BuildOpts_IsChecked( "-c", iSmallC ) = true,  "-c matches -c" )
+        BCASSERT( BuildOpts_IsChecked( "-c", iBigC )   = false, "-c does NOT match -C" )
+        BCASSERT( BuildOpts_IsChecked( "-R", iSmallR ) = false, "-R does NOT match -r" )
+        BCASSERT( BuildOpts_IsChecked( "-R", iBigR )   = true,  "-R matches -R" )
+        BCEQ( BuildOpts_Toggle( "-c", iBigC ), "-c -C", "-C does not displace -c (different groups)" )
 
-    ' This is a modal popup window so disable the parent window
-    EnableWindow(GetParent(hwnd), false)
+        ' ---- 5. TAB-SEPARATED input -----------------------------------------------------
+        ' The old code split on literal spaces only, so a line pasted from a makefile matched
+        ' nothing -- and toggling then APPENDED A DUPLICATE of a switch already present.
+        BCASSERT( BuildOpts_IsChecked( !"-s\tconsole\t-lang fb", iConsole ) = true, _
+                  "a tab-separated -s console is found" )
+        BCEQ( BuildOpts_Toggle( !"-s\tconsole\t-lang fb", iConsole ), "-lang fb", _
+              "toggling a tab-separated switch removes it rather than duplicating it" )
 
-    '  Message cracker macro expects a True to be returned for a successful
-    '  OnCreate handler even though returning -1 from a standard WM_CREATE
-    '  call would stop creating the window. This is just one of those Windows
-    '  inconsistencies.
-    return true
-end function
+        ' ---- 6. hand-typed switches survive round-tripping ------------------------------
+        BCEQ( BuildOpts_Toggle( "-mt -s console -v", iGui ), "-mt -v -s gui", _
+              "unknown tokens -mt and -v survive a group-0 toggle, in order" )
+        BCEQ( BuildOpts_Toggle( "-Wc -O1 -someflag", iO2 ), "-someflag -Wc -O2", _
+              "only the group's own sequence is removed" )
 
+        ' ---- 7. a checked row toggles OFF -----------------------------------------------
+        BCEQ( BuildOpts_Toggle( "-s console", iConsole ), "", "clicking a checked row unchecks it" )
+        BCEQ( BuildOpts_Toggle( "", iGas64 ), "-gen gas64", "toggling into an empty string" )
+        BCEQ( BuildOpts_Toggle( BuildOpts_Toggle( "-lang fb", iGcc ), iGcc ), "-lang fb", _
+              "on then off returns the original" )
 
-' ========================================================================================
-' Process WM_COMMAND message for window/dialog: frmBuildConfig
-' ========================================================================================
-function frmBuildConfig_OnCommand( _
-            byval hwnd as HWND, _
-            byval id as Long, _
-            byval hwndCtl as HWND, _
-            byval codeNotify as UINT _
-            ) as LRESULT
-
-    dim as HWND hList1 = GetDlgItem( hwnd, IDC_FRMBUILDCONFIG_LIST1)
-    dim as long nCurSel = ListBox_GetCurSel(hList1)
-
-    ' Convert a ListBox DoubleClick into pressing OK button action
-    if (id = IDC_FRMBUILDCONFIG_LIST1) andalso (codeNotify = LBN_DBLCLK) then
-        id = IDOK: codeNotify = BN_CLICKED
+        ' ---- 8. whitespace normalisation, which is confined to the TOGGLE path ----------
+        BCEQ( BuildOpts_Toggle( "-s   console    -lang fb", iGas64 ), "-s console -lang fb -gen gas64", _
+              "toggling normalises runs of whitespace" )
     end if
-    
-    select case id
-        case IDC_FRMBUILDCONFIG_LIST1
-            if codeNotify = LBN_SELCHANGE then
-                frmBuildConfig_SetBuildConfigTextboxes()
-            end if
-            
-        case IDC_FRMBUILDCONFIG_LSTOPTIONS
-            if codeNotify = LBN_SELCHANGE then
-                AfxRedrawWindow(hwndCtl)
-            end if
 
-        case IDC_FRMBUILDCONFIG_TXTDESCRIPTION
-            if codeNotify = EN_CHANGE then
-                ' Update the temp array and the Listbox
-                if nCurSel > -1 then
-                    gConfig.BuildsTemp(nCurSel).wszDescription = AfxGetWindowText(hwndCtl)
-                    ListBox_ReplaceString(hList1, nCurSel, gConfig.BuildsTemp(nCurSel).wszDescription)
-                end if
-            end if
-            
-        case IDC_FRMBUILDCONFIG_TXTOPTIONS
-            if codeNotify = EN_CHANGE then
-                ' Update the temp array 
-                if nCurSel > -1 then
-                    gConfig.BuildsTemp(nCurSel).wszOptions = AfxGetWindowText(hwndCtl)
-                    ' Refresh the Options listbox so any manually entered options will
-                    ' now be checked in the listbox.
-                    AfxRedrawWindow(GetDlgItem(hwnd, IDC_FRMBUILDCONFIG_LSTOPTIONS))
-                end if
-            end if
-            
-        case IDC_FRMBUILDCONFIG_OPT32
-            if codeNotify = BN_CLICKED then
-                ' Update the temp array 
-                if nCurSel > -1 then
-                    if Button_GetCheck(hwndCtl) then
-                        gConfig.BuildsTemp(nCurSel).Is32bit = 1
-                        gConfig.BuildsTemp(nCurSel).Is64bit = 0
-                    else   
-                        gConfig.BuildsTemp(nCurSel).Is32bit = 0
-                        gConfig.BuildsTemp(nCurSel).Is64bit = 1
-                    end if
-                end if
-            end if
+    ' ---- 9. EVERY LOCALIZED ID THIS DIALOG OWNS MUST RESOLVE ----------------------------
+    ' L(id,"default") DISCARDS the default -- it is #Define L(e,s) LL(e) -- so a missing entry
+    ' renders as an EMPTY STRING: a blank caption, a blank column header, a blank button, with
+    ' nothing in the build or the warnings to say so. This is the one failure this dialog can
+    ' have that looks like nothing at all, which is exactly why it is asserted rather than
+    ' eyeballed. A/B-verified by deleting 00527 from english.lang.
+    #macro BCID( _id_ )
+        BCASSERT( len( LL(_id_) ) > 0, "localized id " & str(_id_) & " resolves" )
+    #endmacro
+    ' The exact set this file references -- kept in step with it, not a superset. 516 ("this
+    ' shortcut cannot fire") and 526 ("already used by") were dropped when the warnings gave
+    ' way to simply unassigning a shortcut that cannot work; 526 is still live, but it belongs
+    ' to frmAssignKey now and is asserted there by use.
+    BCID( 0 )   : BCID( 1 )   : BCID( 14 )  : BCID( 276 ) : BCID( 277 )
+    BCID( 278 ) : BCID( 279 ) : BCID( 280 ) : BCID( 282 ) : BCID( 284 )
+    BCID( 287 ) : BCID( 499 ) : BCID( 508 ) : BCID( 510 ) : BCID( 511 )
+    BCID( 512 ) : BCID( 513 ) : BCID( 514 ) : BCID( 525 ) : BCID( 527 )
+    BCID( 528 ) : BCID( 529 ) : BCID( 558 ) : BCID( 559 ) : BCID( 560 )
 
-        case IDC_FRMBUILDCONFIG_OPT64
-            if codeNotify = BN_CLICKED then
-                ' Update the temp array 
-                if nCurSel > -1 then
-                    if Button_GetCheck(hwndCtl) then
-                        gConfig.BuildsTemp(nCurSel).Is32bit = 0
-                        gConfig.BuildsTemp(nCurSel).Is64bit = 1
-                    else   
-                        gConfig.BuildsTemp(nCurSel).Is32bit = 1
-                        gConfig.BuildsTemp(nCurSel).Is64bit = 0
-                    end if
-                end if
-            end if
+    ' ---- 10. the shortcut composer -------------------------------------------------------
+    ' MODIFIER ORDER IS Ctrl+Shift+Alt here, matching createToolsMenuShortcut and the Tools
+    ' menu it sits inches from -- NOT the Ctrl+Alt+Shift that keybindings.ini stores. The two
+    ' coexist deliberately, and the clash test calls frmKeyboardEdit_BuildKeyString rather
+    ' than composing a second time. Asserted because getting it wrong makes every
+    ' three-modifier shortcut silently report free.
+    BCEQ( frmBuildConfig_ComposeShortcut( "F5", 1, 1, 1 ), "Ctrl+Shift+Alt+F5", _
+          "the composer emits Ctrl+Shift+Alt, in that order" )
+    BCEQ( frmBuildConfig_ComposeShortcut( "F5", 1, 0, 1 ), "Ctrl+Alt+F5", _
+          "a skipped modifier does not disturb the order of the rest" )
+    ' "" and "None" are BOTH no-shortcut. The old dialog wrote the literal "None" into wszKey
+    ' on every selection change and persisted it, so every keyless build in every existing
+    ' settings.ini carries it. Treating it as a real key is what produced "Ctrl+NONE".
+    BCEQ( frmBuildConfig_ComposeShortcut( "", 1, 0, 0 ), "", "no key means no shortcut" )
+    BCEQ( frmBuildConfig_ComposeShortcut( "None", 1, 0, 0 ), "", _
+          "the legacy 'None' affordance is not a key" )
+    BCEQ( frmBuildConfig_ComposeShortcut( "none", 1, 1, 1 ), "", _
+          "...whatever its casing" )
 
-        case IDC_FRMBUILDCONFIG_CHKISDEFAULT
-            if codeNotify = BN_CLICKED then
-                ' Update the temp array 
-                if nCurSel > -1 then
-                    gConfig.BuildsTemp(nCurSel).IsDefault = Button_GetCheck(hwndCtl)
-                    ' Can only have 1 entry as the default so ensure all others are reset
-                    if Button_GetCheck(hwndCtl) then
-                        for i as long = lbound(gConfig.BuildsTemp) to ubound(gConfig.BuildsTemp)
-                            if i <> nCurSel then gConfig.BuildsTemp(i).IsDefault = 0
-                        next
-                    end if
-                end if
-            end if
+    sMsg = "==== BUILDCONFIG: " & str(nPass) & " passed, " & str(nFail) & " failed ====" : print sMsg
 
-        case IDC_FRMBUILDCONFIG_CHKEXCLUDEPOPUP
-            if codeNotify = BN_CLICKED then
-                ' Update the temp array 
-                if nCurSel > -1 then
-                    gConfig.BuildsTemp(nCurSel).ExcludeInPopup = Button_GetCheck(hwndCtl)
-                end if
-            end if
-
-        case IDC_FRMBUILDCONFIG_CHKCTRL
-            if codeNotify = BN_CLICKED then
-                ' Update the temp array 
-                if nCurSel > -1 then
-                    gConfig.BuildsTemp(nCurSel).IsCtrl = Button_GetCheck(hwndCtl)
-                end if
-            end if
-
-        case IDC_FRMBUILDCONFIG_CHKALT
-            if codeNotify = BN_CLICKED then
-                ' Update the temp array 
-                if nCurSel > -1 then
-                    gConfig.BuildsTemp(nCurSel).IsAlt = Button_GetCheck(hwndCtl)
-                end if
-            end if
-
-        case IDC_FRMBUILDCONFIG_CHKSHIFT
-            if codeNotify = BN_CLICKED then
-                ' Update the temp array 
-                if nCurSel > -1 then
-                    gConfig.BuildsTemp(nCurSel).IsShift = Button_GetCheck(hwndCtl)
-                end if
-            end if
-
-        case IDC_FRMBUILDCONFIG_COMBOKEY
-            if codeNotify = CBN_SELCHANGE then
-                if nCurSel > -1 then gConfig.BuildsTemp(nCurSel).wszKey = AfxGetWindowText(hwndCtl)
-            end if
-
-        case IDC_FRMBUILDCONFIG_CMDUP
-            if codeNotify = BN_CLICKED then
-                if nCurSel > 0 then
-                    frmBuildConfig_SwapListboxItems(nCurSel, nCurSel-1)
-                end if
-            end if
-
-        case IDC_FRMBUILDCONFIG_CMDDOWN
-            if codeNotify = BN_CLICKED then
-                if nCurSel < ListBox_GetCount(hList1)-1 then
-                    frmBuildConfig_SwapListboxItems(nCurSel, nCurSel+1)
-                end if
-            end if
-
-        case IDC_FRMBUILDCONFIG_CMDINSERT
-            if codeNotify = BN_CLICKED then
-                redim preserve gConfig.BuildsTemp(ubound(gConfig.BuildsTemp) + 1)
-                if ubound(gConfig.BuildsTemp) = -1 then
-                    redim gConfig.BuildsTemp(0)
-                    nCurSel = 0
-                else
-                    if nCurSel = -1 then nCurSel = 0
-                    ' insert the item above current entry in the internal array
-                    for i as long = ubound(gConfig.BuildsTemp) to nCurSel + 1 step -1
-                        gConfig.BuildsTemp(i) = gConfig.BuildsTemp(i-1)
-                    next
-                end if
-                gConfig.BuildsTemp(nCurSel).Id = AfxGuidText(AfxGuid())
-                gConfig.BuildsTemp(nCurSel).wszDescription = ""
-                gConfig.BuildsTemp(nCurSel).wszOptions = ""
-                gConfig.BuildsTemp(nCurSel).IsDefault = 0
-                gConfig.BuildsTemp(nCurSel).Is32bit = 1
-                gConfig.BuildsTemp(nCurSel).Is64bit = 0
-                gConfig.BuildsTemp(nCurSel).ExcludeInPopup = 0
-                ' reload the listbox
-                frmBuildConfig_LoadBuildListBox(hwnd)
-                nCurSel = Min(nCurSel, ubound(gConfig.BuildsTemp))
-                ListBox_SetCurSel(hList1, nCurSel)
-                frmBuildConfig_SetBuildConfigTextboxes()
-                SetFocus hList1
-            end if
-
-        case IDC_FRMBUILDCONFIG_CMDDELETE
-            if codeNotify = BN_CLICKED then
-                if nCurSel > -1  then
-                    if MessageBox( HWND, L(287, "Are you sure you want to delete this build configuration?"), L(276,"Confirm"), _
-                                        MB_YESNOCANCEL or MB_ICONINFORMATION or MB_DEFBUTTON1 ) = IDYES then
-                        if ubound(gConfig.BuildsTemp) = 0 then
-                            erase gConfig.BuildsTemp
-                            nCurSel = -1
-                        else
-                            ' remove the item from the internal array
-                            for i as long = nCurSel to ubound(gConfig.BuildsTemp) - 1
-                                gConfig.BuildsTemp(i) = gConfig.BuildsTemp(i+1)
-                            next
-                            redim preserve gConfig.BuildsTemp(ubound(gConfig.BuildsTemp)-1)
-                        end if
-                        ' reload the listbox
-                        frmBuildConfig_LoadBuildListBox(hwnd)
-                        nCurSel = Min(nCurSel, ubound(gConfig.BuildsTemp))
-                        ListBox_SetCurSel(hList1, nCurSel)
-                        frmBuildConfig_SetBuildConfigTextboxes()
-                        SetFocus hList1
-                    end if
-                end if
-            end if
-
-        case IDOK
-            If codeNotify = BN_CLICKED then
-                ' Copy the temporary items to the main array  
-                redim gConfig.Builds(ubound(gConfig.BuildsTemp))
-                for i as long = lbound(gConfig.BuildsTemp) to ubound(gConfig.BuildsTemp)
-                    gConfig.Builds(i) = gConfig.BuildsTemp(i)   
-                next
-                erase gConfig.BuildsTemp
-                
-                ' Set the active project or the active document to the selected build
-                if nCurSel > -1 then 
-                    If gApp.IsProjectActive then
-                        gApp.ProjectBuild = gConfig.Builds(nCurSel).Id
-                    else
-                        dim pDocMain as clsDocument Ptr 
-                        pDocMain = gTTabCtl.GetActiveDocumentPtr()
-                        if pDocMain then pDocMain->DocumentBuild = gConfig.Builds(nCurSel).Id
-                        gConfig.CompilerBuild = gConfig.Builds(nCurSel).Id
-                    end if
-                    frmMain_SetStatusbar
-                end if
-                
-                frmBuildConfig_CreateAcceleratorTable            
-                gConfig.SaveConfigFile
-                SendMessage( hwnd, WM_CLOSE, 0, 0 )
-                exit function
-            end if
-            
-        case IDCANCEL
-            If codeNotify = BN_CLICKED then
-                SendMessage( hwnd, WM_CLOSE, 0, 0 )
-                exit function
-            end if
-    end select
-
-    function = 0
-end function
+end sub
 
 
 ' ========================================================================================
-' Process WM_CLOSE message for window/dialog: frmBuildConfig
+' THE LAYOUT HALF.  (TIKO_BUILDCONFIG_SELFTEST=1, and the dialog must be OPEN)
+'
+' Runs from Show once the controls exist and the list has been filled, so it measures the
+' real windows at the real DPI rather than the unscaled constants.
+'
+' IT EXISTS BECAUSE THE DIALOG IS FIXED SIZE. Nothing here scrolls, so a control pushed past
+' the viewport does not grow a scrollbar -- it is CLIPPED, silently, and only above 100% DPI
+' where nobody is looking.
+'
+' What it cannot see: the ONE real layout defect found during the rebuild was a 292px dead
+' band through the middle of the General page, and every fit assertion below passed straight
+' through it, because nothing overlapped and nothing was clipped. A gap is not a violation.
+' That one needed the geometry dumped and read.
 ' ========================================================================================
-function frmBuildConfig_OnClose( byval hwnd as HWND ) as LRESULT
-    ' Enables parent window keeping parent's zorder
-    EnableWindow(GetParent(hwnd), true)
-    DestroyWindow( hwnd )
-    function = 0
-end function
+private sub frmBuildConfig_RunLayoutSelfTest()
 
+    if environ("TIKO_BUILDCONFIG_SELFTEST") <> "1" then exit sub
+
+    dim as long nPass = 0, nFail = 0
+    dim as string sMsg
+
+    #macro LAYASSERT( _cond_, _desc_ )
+        if (_cond_) then
+            nPass += 1
+        else
+            nFail += 1
+            sMsg = "  FAIL: " & (_desc_)
+            print sMsg
+        end if
+    #endmacro
+
+    sMsg = "==== TIKO_BUILDCONFIG_SELFTEST (layout) ====" : print sMsg
+
+    ' ---- 1. the shell -------------------------------------------------------------------
+    dim as RECT rcClient
+    GetClientRect( HWND_FRMBUILDCONFIG, @rcClient )
+    LAYASSERT( rcClient.right  = AfxScaleX(FRMBUILDCONFIG_CLIENT_W), "client width is the declared width" )
+    LAYASSERT( rcClient.bottom = AfxScaleY(FRMBUILDCONFIG_CLIENT_H), "client height is the declared height" )
+
+    ' The fixed size is not a preference, it is what makes every viewport one number. A
+    ' resizable frame would make each fit assertion below meaningless.
+    dim as long dwStyle = GetWindowLongPtr( HWND_FRMBUILDCONFIG, GWL_STYLE )
+    LAYASSERT( (dwStyle and WS_THICKFRAME) = 0, "the dialog is not resizable" )
+
+    dim as long titleH  = AfxScaleY(FRMBUILDCONFIG_TITLE_H)
+    dim as long footerH = AfxScaleY(FRMBUILDCONFIG_FOOTER_H)
+    dim as long barH    = AfxScaleY(FRMBUILDCONFIG_SELECTBAR_H)
+    dim as long paneTop = titleH + barH
+    dim as long paneBot = rcClient.bottom - footerH
+
+    ' ---- 2. the list fills the body -----------------------------------------------------
+    dim as RECT rcList = frmBuildConfig_ChildRect( HWND_FRMBUILDCONFIG_LIST )
+    LAYASSERT( (rcList.right > rcList.left) andalso (rcList.bottom > rcList.top), _
+               "the list has a non-empty rect" )
+    LAYASSERT( rcList.top = titleH, "the list starts at the foot of the title band" )
+    LAYASSERT( rcList.bottom = paneBot, "the list ends at the head of the footer" )
+    LAYASSERT( rcList.right - rcList.left = AfxScaleX(FRMBUILDCONFIG_LIST_W), _
+               "the list is the declared width" )
+
+    ' ---- 3. the select bar sits above the pages, not over them -------------------------
+    dim as RECT rcBar = frmBuildConfig_ChildRect( ghBCSelectBar )
+    LAYASSERT( rcBar.left >= rcList.right, "the select bar starts right of the list" )
+    LAYASSERT( rcBar.top = titleH, "the select bar starts at the foot of the title band" )
+    LAYASSERT( rcBar.bottom = paneTop, "the select bar ends where the page area begins" )
+
+    ' ---- 4. NOTHING ON EITHER PAGE IS CLIPPED -------------------------------------------
+    ' The whole point. Both pages are measured, not just the visible one -- a hidden window
+    ' still reports its last placed rect, which is why each is also checked non-empty.
+    #macro FITS( _h_, _name_ )
+        scope
+            dim as RECT rcF = frmBuildConfig_ChildRect( _h_ )
+            LAYASSERT( (rcF.right > rcF.left) andalso (rcF.bottom > rcF.top), _
+                       _name_ & " has a non-empty rect" )
+            LAYASSERT( rcF.bottom <= paneBot, _name_ & " fits above the footer" )
+            LAYASSERT( rcF.top >= paneTop, _name_ & " starts below the select bar" )
+            LAYASSERT( rcF.right <= rcClient.right - AfxScaleX(FRMBUILDCONFIG_MARGIN), _
+                       _name_ & " fits inside the right margin" )
+            LAYASSERT( rcF.left >= rcBar.left, _name_ & " starts inside the right pane" )
+        end scope
+    #endmacro
+
+    FITS( ghBCDescription, "Description" )
+    FITS( ghBCTogDefault,  "Set as default" )
+    FITS( ghBCTarget,      "Compiler target" )
+    FITS( ghBCShortcut,    "Shortcut" )
+    FITS( ghBCTogExclude,  "Exclude from popup" )
+    FITS( ghBCEditSwitches,"Edit" )
+    FITS( ghBCOptions,     "raw options" )
+    FITS( ghBCSwitches,    "switch list" )
+
+    ' The preview block is not a window, so it is checked from its stored rects.
+    LAYASSERT( gBCPreviewRect.bottom > gBCPreviewRect.top, "the preview block has a non-empty rect" )
+    LAYASSERT( gBCPreviewRect.bottom <= paneBot, "the preview block fits above the footer" )
+    LAYASSERT( gBCPreviewLabelRect.bottom = gBCPreviewRect.top, _
+               "the preview's label sits directly on top of it" )
+
+    ' ---- 5. the General page reads top-down, with no row overlapping the next ----------
+    dim as RECT rcDesc = frmBuildConfig_ChildRect( ghBCDescription )
+    dim as RECT rcTogD = frmBuildConfig_ChildRect( ghBCTogDefault )
+    dim as RECT rcTgt  = frmBuildConfig_ChildRect( ghBCTarget )
+    dim as RECT rcSC   = frmBuildConfig_ChildRect( ghBCShortcut )
+    dim as RECT rcTogE = frmBuildConfig_ChildRect( ghBCTogExclude )
+    LAYASSERT( rcDesc.bottom <= rcTogD.top, "Description does not overlap Set as default" )
+    LAYASSERT( rcTogD.bottom <= rcTgt.top,  "Set as default does not overlap Compiler target" )
+    LAYASSERT( rcTgt.bottom  <= rcSC.top,   "Compiler target does not overlap Shortcut" )
+    LAYASSERT( rcSC.bottom   <= rcTogE.top, "Shortcut does not overlap Exclude from popup" )
+    LAYASSERT( rcTogE.bottom <= gBCPreviewLabelRect.top, _
+               "the last row does not overlap the preview block" )
+
+    ' ---- 5b. EVERY ROW LABEL FITS WITHOUT ELLIPSIS -------------------------------------
+    ' The row this exists for is "Exclude build from status bar popup menu", which a fixed
+    ' label gutter rendered as "Exclude build from status bar po...". Each label now runs to
+    ' its OWN control's left edge less a gap, so a long caption borrows the room a small
+    ' toggle is not using -- and that only holds if it is measured, because DrawText clips
+    ' with DT_END_ELLIPSIS and reports nothing.
+    scope
+        dim as HDC hDC = GetDC( HWND_FRMBUILDCONFIG )
+        if hDC then
+            dim as HFONT hOld = SelectObject( hDC, ghFont(GUIFONT_11) )
+
+            #macro LABELFITS( _row_, _text_ )
+                scope
+                    dim as DWSTRING wszL = (_text_)
+                    dim as SIZEL sz
+                    GetTextExtentPoint32( hDC, wszL.sptr, len(wszL), @sz )
+                    dim as long avail = gBCRowLabelRect(_row_).right - gBCRowLabelRect(_row_).left
+                    LAYASSERT( avail >= sz.cx, _
+                               "the label """ & wszL & """ fits (" & str(sz.cx) & _
+                               "px into " & str(avail) & "px)" )
+                end scope
+            #endmacro
+
+            LABELFITS( BCROW_DEFAULT,  L(280,"Set as default") )
+            LABELFITS( BCROW_TARGET,   L(529,"Compiler target") )
+            LABELFITS( BCROW_SHORTCUT, L(508,"Shortcut") )
+            LABELFITS( BCROW_EXCLUDE,  L(284,"Exclude build from status bar popup menu") )
+
+            ' And the contract the rects are built on: a label stops exactly one gap short of
+            ' its own row's control, so the two can never overlap and no row is using a gutter
+            ' sized for a different row.
+            #macro LABELMEETS( _row_, _h_ )
+                scope
+                    dim as RECT rcC = frmBuildConfig_ChildRect( _h_ )
+                    LAYASSERT( gBCRowLabelRect(_row_).right = rcC.left - AfxScaleX(FRMBUILDCONFIG_GAP), _
+                               "row " & str(_row_) & "'s label stops one gap short of its control" )
+                end scope
+            #endmacro
+
+            LABELMEETS( BCROW_DEFAULT,  ghBCTogDefault )
+            LABELMEETS( BCROW_TARGET,   ghBCTarget )
+            LABELMEETS( BCROW_SHORTCUT, ghBCShortcut )
+            LABELMEETS( BCROW_EXCLUDE,  ghBCTogExclude )
+
+            if hOld then SelectObject( hDC, hOld )
+            ReleaseDC( HWND_FRMBUILDCONFIG, hDC )
+        end if
+    end scope
+
+    ' ---- 5c. the list has exactly TWO columns ------------------------------------------
+    ' The Shortcut column was removed; a third would silently squeeze Description again.
+    LAYASSERT( PsListTree_GetColumnCount( HWND_FRMBUILDCONFIG_LIST ) = 2, _
+               "the builds list has two columns" )
+
+    ' ---- 6. both pages start at the same y ---------------------------------------------
+    ' So switching tabs does not shift the eye. Asserted because the two are laid out by
+    ' separate arithmetic and could drift apart without anything else noticing.
+    dim as RECT rcOpts = frmBuildConfig_ChildRect( ghBCOptions )
+    LAYASSERT( rcOpts.top = rcDesc.top, "both pages' first field starts at the same y" )
+
+    ' ---- 7. the footer ------------------------------------------------------------------
+    dim as RECT rcOK = frmBuildConfig_ChildRect( ghBCOK )
+    dim as RECT rcCa = frmBuildConfig_ChildRect( ghBCCancel )
+    LAYASSERT( rcOK.top >= paneBot, "OK is in the footer band" )
+    LAYASSERT( rcOK.right <= rcCa.left, "OK is left of Cancel" )
+    LAYASSERT( rcCa.right = rcClient.right - AfxScaleX(FRMBUILDCONFIG_MARGIN), _
+               "Cancel is flush with the right margin" )
+
+    ' ---- 8. tab order -------------------------------------------------------------------
+    ' BY CONTAINMENT, not by handle: every focusable control here is a container whose real
+    ' tab stop is an inner child, so GetNextDlgTabItem returns something INSIDE the control
+    ' rather than the handle this file holds.
+    dim as HWND hFirst = GetNextDlgTabItem( HWND_FRMBUILDCONFIG, 0, false )
+    LAYASSERT( hFirst <> 0, "the dialog has at least one tab stop" )
+
+    dim as long nStops = 0
+    dim as boolean bSawList = false, bSawDesc = false, bSawOK = false
+    dim as HWND h = hFirst
+    do
+        if h = 0 then exit do
+        nStops += 1
+        if frmBuildConfig_IsWithin( h, HWND_FRMBUILDCONFIG_LIST ) then bSawList = true
+        if frmBuildConfig_IsWithin( h, ghBCDescription ) then bSawDesc = true
+        if frmBuildConfig_IsWithin( h, ghBCOK ) then bSawOK = true
+        h = GetNextDlgTabItem( HWND_FRMBUILDCONFIG, h, false )
+        if nStops > 40 then exit do          ' a cycle that never returns to hFirst
+    loop until h = hFirst
+
+    LAYASSERT( bSawList, "the builds list is in the tab order" )
+    LAYASSERT( bSawDesc, "the Description field is in the tab order" )
+    LAYASSERT( bSawOK,   "the OK button is in the tab order" )
+    LAYASSERT( nStops <= 40, "the tab order is a closed cycle" )
+
+    ' ---- 9. the right pane really is hidden when nothing is selected -------------------
+    ' Exercised rather than reasoned about. The list is left on the row it started on.
+    dim as long nWas = gBCCurrent
+    frmBuildConfig_LoadDetail( -1 )
+    LAYASSERT( IsWindowVisible( ghBCDescription ) = 0, "Description hides when nothing is selected" )
+    LAYASSERT( IsWindowVisible( ghBCSwitches ) = 0, "the switch list hides when nothing is selected" )
+    LAYASSERT( IsWindowEnabled( ghBCDelete ) = 0, "Delete is disabled when nothing is selected" )
+    frmBuildConfig_LoadDetail( nWas )
+    if nWas >= 0 then
+        LAYASSERT( IsWindowVisible( ghBCDescription ) <> 0, "Description comes back with a selection" )
+    end if
+
+    ' ---- 10. the two pages are mutually exclusive --------------------------------------
+    ' They share one parent and are shown/hidden as sets, so "both visible at once" is a
+    ' reachable state rather than an impossible one.
+    if nWas >= 0 then
+        frmBuildConfig_ShowPage( IDP_FRMBUILDCONFIG_GENERAL )
+        LAYASSERT( (IsWindowVisible( ghBCDescription ) <> 0) andalso (IsWindowVisible( ghBCSwitches ) = 0), _
+                   "the General page hides the switch list" )
+        frmBuildConfig_ShowPage( IDP_FRMBUILDCONFIG_SWITCHES )
+        LAYASSERT( (IsWindowVisible( ghBCSwitches ) <> 0) andalso (IsWindowVisible( ghBCDescription ) = 0), _
+                   "the switches page hides the General fields" )
+        frmBuildConfig_ShowPage( IDP_FRMBUILDCONFIG_GENERAL )
+        PsSelectBar_SetCurSel( ghBCSelectBar, 0 )
+    end if
+
+    ' ---- 11. the staging copy is genuinely separate storage ----------------------------
+    ' The whole point of gBuildsWork: Cancel must be a no-op. Asserted rather than trusting
+    ' the redim in LoadWork to have made a copy.
+    if (ubound(gBuildsWork) >= 0) andalso (ubound(gConfig.Builds) >= 0) then
+        dim as DWSTRING wszWas = gConfig.Builds(0).wszDescription
+        gBuildsWork(0).wszDescription = wszWas & "##selftest##"
+        LAYASSERT( gConfig.Builds(0).wszDescription = wszWas, _
+                   "editing staging does not touch gConfig.Builds" )
+        gBuildsWork(0).wszDescription = wszWas
+        frmBuildConfig_RefreshRow( 0 )
+    end if
+
+    sMsg = "==== BUILDCONFIG (layout): " & str(nPass) & " passed, " & str(nFail) & " failed ====" : print sMsg
+
+end sub
 
 ' ========================================================================================
-' Process WM_DESTROY message for window/dialog: frmBuildConfig
+' Window procedure
 ' ========================================================================================
-function frmBuildConfig_OnDestroy( byval hwnd as HWND) as LRESULT
-    HWND_FRMBUILDCONFIG = 0
-    PostQuitMessage(0)
-    function = 0
-end function
-
-
-' ========================================================================================
-' frmBuildConfig Window procedure
-' ========================================================================================
-function frmBuildConfig_WndProc( _
+private function frmBuildConfig_WndProc( _
             byval hwnd   as HWND, _
             byval uMsg   as UINT, _
             byval wParam as WPARAM, _
@@ -843,16 +1962,115 @@ function frmBuildConfig_WndProc( _
             ) as LRESULT
 
     select case uMsg
-        HANDLE_MSG (hwnd, WM_CREATE,      frmBuildConfig_OnCreate)
-        HANDLE_MSG (hwnd, WM_CLOSE,       frmBuildConfig_OnClose)
-        HANDLE_MSG (hwnd, WM_DESTROY,     frmBuildConfig_OnDestroy)
-        HANDLE_MSG (hwnd, WM_COMMAND,     frmBuildConfig_OnCommand)
-        HANDLE_MSG (hwnd, WM_MEASUREITEM, frmBuildConfig_OnMeasureItem)
-        HANDLE_MSG (hwnd, WM_DRAWITEM,    frmBuildConfig_OnDrawItem)
+
+        case WM_CREATE
+            ' Modal: keep the rest of the app out while this is up.
+            EnableWindow( GetParent(hwnd), false )
+            return 0
+
+        case WM_ERASEBKGND
+            ' The whole client is painted in WM_PAINT through one buffer.
+            return 1
+
+        case WM_PAINT
+            return frmBuildConfig_OnPaint( hwnd )
+
+        case WM_SIZE
+            frmBuildConfig_PositionWindows( hwnd )
+            return 0
+
+        case WM_LBUTTONDOWN
+            ' THE PREVIEW BLOCK IS PAINTED, NOT A CHILD WINDOW, so its click lands here. That
+            ' is one fewer CWindow, WndProc and WM_CTLCOLOR path than a real control would
+            ' cost, for a target that does exactly one thing.
+            if (gBCPage = IDP_FRMBUILDCONFIG_GENERAL) andalso (gBCCurrent >= 0) then
+                dim as POINT pt = type( cast(short, loword(lParam)), cast(short, hiword(lParam)) )
+                if PtInRect( @gBCPreviewRect, pt ) then
+                    PsSelectBar_SetCurSel( ghBCSelectBar, 1 )
+                    frmBuildConfig_ShowPage( IDP_FRMBUILDCONFIG_SWITCHES )
+                    SetFocus( ghBCSwitches )
+                    return 0
+                end if
+            end if
+
+        case WM_TIMER
+            ' Hot-tracking the preview block by POLL rather than WM_MOUSEMOVE: the cursor can
+            ' leave it by moving onto a child control, where this window never sees another
+            ' mouse message and the highlight would stick on. Same reason every hot-tracking
+            ' control in this family carries one -- WM_MOUSELEAVE is not reliable enough to be
+            ' the only mechanism.
+            if wParam = IDT_BCPREVIEW then
+                dim as boolean bHot = false
+                if (gBCPage = IDP_FRMBUILDCONFIG_GENERAL) andalso (gBCCurrent >= 0) then
+                    dim as POINT pt
+                    GetCursorPos( @pt )
+                    ScreenToClient( hwnd, @pt )
+                    if PtInRect( @gBCPreviewRect, pt ) then
+                        ' ...and only while this dialog is the one under the cursor, or the
+                        ' block would light up behind a popup sitting over it.
+                        dim as POINT ptScreen
+                        GetCursorPos( @ptScreen )
+                        dim as HWND hUnder = WindowFromPoint( ptScreen )
+                        if frmBuildConfig_IsWithin( hUnder, hwnd ) then bHot = true
+                    end if
+                end if
+                if bHot <> gBCPreviewHot then
+                    gBCPreviewHot = bHot
+                    InvalidateRect( hwnd, @gBCPreviewRect, false )
+                end if
+                return 0
+            end if
+
+        case WM_SETCURSOR
+            if (gBCPage = IDP_FRMBUILDCONFIG_GENERAL) andalso gBCPreviewHot then
+                SetCursor( LoadCursor( null, IDC_HAND ) )
+                return true
+            end if
+
+        case WM_COMMAND
+            ' PsButton routes through its click callback, not WM_COMMAND. What still arrives
+            ' here is IDCANCEL, which IsDialogMessage synthesises for the Escape key.
+            select case loword(wParam)
+                case IDCANCEL
+                    SendMessage( hwnd, WM_CLOSE, 0, 0 )
+                    return 0
+            end select
+
+        case MSG_USER_SHOW_TOOLKEY
+            frmBuildConfig_DoAssign()
+            return 0
+
+        case WM_CLOSE
+            ' NOTHING IS SAVED HERE. The commit is on the OK path only, so reaching this by any
+            ' route discards gBuildsWork() and leaves gConfig.Builds, settings.ini and the
+            ' accelerator table exactly as they were found. The dialog this replaces had no
+            ' working Cancel -- it edited gConfig.BuildsTemp and IDCANCEL simply abandoned it,
+            ' which happened to work but left the array populated for the process lifetime.
+            EnableWindow( GetParent(hwnd), true )
+            DestroyWindow( hwnd )
+            return 0
+
+        case WM_DESTROY
+            KillTimer( hwnd, IDT_BCPREVIEW )
+            HWND_FRMBUILDCONFIG      = 0
+            HWND_FRMBUILDCONFIG_LIST = 0
+            ghBCAdd = 0 : ghBCDelete = 0 : ghBCUp = 0 : ghBCDown = 0
+            ghBCSelectBar = 0
+            ghBCDescription = 0 : ghBCTogDefault = 0 : ghBCTarget = 0
+            ghBCShortcut = 0 : ghBCTogExclude = 0 : ghBCEditSwitches = 0
+            ghBCOptions = 0 : ghBCSwitches = 0
+            ghBCOK = 0 : ghBCCancel = 0
+            gBCCurrent = -1
+            gBCPreviewHot = false
+            ' The staging array outlives the dialog otherwise, holding live DWSTRINGs -- the
+            ' exact leak gConfig.BuildsTemp had.
+            erase gBuildsWork
+            PostQuitMessage(0)
+            return 0
+
     end select
 
-    ' for messages that we don't deal with
-    function = DefWindowProc(hwnd, uMsg, wParam, lParam)
+    function = DefWindowProc( hwnd, uMsg, wParam, lParam )
 
 end function
 
@@ -861,135 +2079,256 @@ end function
 ' frmBuildConfig_Show
 ' ========================================================================================
 function frmBuildConfig_Show( byval hWndParent as HWND ) as LRESULT
-    '  Create the main window and child controls
+
+    ' Seed the staging copy BEFORE any control exists -- everything below is built from
+    ' gBuildsWork(), and gConfig.Builds() is not touched again unless OK commits.
+    frmBuildConfig_LoadWork()
+    ' Immediately after the seed, so every later read of gBuildsWork sees shortcuts that can
+    ' actually fire. Staging only -- nothing is written back unless OK commits.
+    frmBuildConfig_SanitizeWork()
+    gBCCurrent = -1
+    gBCLoading = false
+    gBCPage    = IDP_FRMBUILDCONFIG_GENERAL
+    gBCPreviewHot = false
+
     dim pWindow as CWindow ptr = new CWindow
 
-    dim as HFONT hFontSymbolLarge = pWindow->CreateFont(SYMBOLFONT, 12, FW_NORMAL)
+    HWND_FRMBUILDCONFIG = pWindow->Create( hWndParent, L(277,"Build Configurations"), _
+        @frmBuildConfig_WndProc, 0, 0, 0, 0, _
+        WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
+        WS_EX_DLGMODALFRAME or WS_EX_CONTROLPARENT or WS_EX_LEFT )
+    pWindow->SetClientSize( FRMBUILDCONFIG_CLIENT_W, FRMBUILDCONFIG_CLIENT_H )
+    pWindow->Center( pWindow->hWindow, hWndParent )
 
-    dim as HWnd hForm = _
-        pWindow->Create(hWndParent, L(277,"Build Configurations"), _
-            @frmBuildConfig_WndProc, 0, 0, 0, 0, _
-            WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
-            WS_EX_DLGMODALFRAME or WS_EX_CONTROLPARENT or WS_EX_LEFT )
-    pWindow->SetClientSize(675, 500)
-    pWindow->Center(pWindow->hWindow, hWndParent)
+    ' There is no cached ghFont entry for a fixed-pitch face at UI size -- FIXEDFONT_26 is the
+    ' About box's wordmark. Created here and destroyed after the pump.
+    ghBCFontFixed = pWindow->CreateFont( GUIFIXEDFONT, 10, FW_NORMAL )
 
-    dim hListBox as hwnd = pWindow->AddControl("LISTBOX", , IDC_FRMBUILDCONFIG_LIST1, "", 10, 10, 218, 420, _
-        WS_CHILD or WS_VISIBLE or WS_VSCROLL or WS_TABSTOP or LBS_NOTIFY or _
-        LBS_NOINTEGRALHEIGHT or LBS_OWNERDRAWFIXED or LBS_HASSTRINGS, _
-        WS_EX_CLIENTEDGE or WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_RIGHTSCROLLBAR)
-    pWindow->SetControlSubclass(hListBox, @frmBuildConfig_ListBox_SubclassProc, IDC_FRMBUILDCONFIG_LIST1, @pWindow)
+    ' ---- CREATION ORDER IS THE TAB ORDER ------------------------------------------------
+    '
+    ' These controls live on an ordinary CWindow, not a dialog template, so there is no
+    ' ordinal to set: GetNextDlgTabItem walks the child Z-ORDER, and Z-order is creation
+    ' order. The order built here is
+    '
+    '     list -> select bar -> [General page] -> [switches page] -> Add -> Delete
+    '          -> Up -> Down -> OK -> Cancel
+    '
+    ' i.e. THE WORK FIRST, in reading order, and the chrome after.
 
-    pWindow->AddControl("LABEL", , IDC_FRMBUILDCONFIG_LABEL1, L(278,"Description") & ":", 240, 11, 120, 20, _
-        WS_CHILD or WS_VISIBLE or WS_CLIPSIBLINGS or WS_CLIPCHILDREN or SS_LEFT or SS_NOTIFY, _
-        WS_EX_LEFT or WS_EX_LTRREADING)
-    pWindow->AddControl("CHECKBOX", , IDC_FRMBUILDCONFIG_CHKISDEFAULT, L(280,"Set as default"), 424, 10, 230, 20, _
-        WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_TEXT or BS_NOTIFY or BS_AUTOCHECKBOX or BS_LEFT or BS_VCENTER, _
-        WS_EX_LEFT or WS_EX_LTRREADING)
-    pWindow->AddControl("TEXTBOX", , IDC_FRMBUILDCONFIG_TXTDESCRIPTION, "", 240, 32, 425, 20, _
-        WS_CHILD or WS_VISIBLE or WS_TABSTOP or ES_LEFT or ES_AUTOHSCROLL, _
-        WS_EX_CLIENTEDGE or WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_RIGHTSCROLLBAR)
-    pWindow->AddControl("RADIOBUTTON", , IDC_FRMBUILDCONFIG_OPT32, "FBC 32-bit", 240, 56, 100, 20, _
-        WS_VISIBLE or WS_TABSTOP or BS_AUTORADIOBUTTON or BS_LEFT or BS_VCENTER or WS_GROUP, _
-        WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_RIGHTSCROLLBAR)
-    pWindow->AddControl("LABEL", , IDC_FRMBUILDCONFIG_LABEL3, L(294,"Accelerator") & ":", 424, 56, 100, 18, _
-        WS_CHILD or WS_VISIBLE or WS_CLIPSIBLINGS or WS_CLIPCHILDREN or SS_LEFT or SS_NOTIFY, _
-        WS_EX_LEFT or WS_EX_LTRREADING)
-    pWindow->AddControl("RADIOBUTTON", , IDC_FRMBUILDCONFIG_OPT64, "FBC 64-bit", 240, 76, 100, 20, _
-        WS_VISIBLE or WS_TABSTOP or BS_AUTORADIOBUTTON or BS_LEFT or BS_VCENTER, _
-        WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_RIGHTSCROLLBAR)
-    pWindow->AddControl("CHECKBOX", , IDC_FRMBUILDCONFIG_CHKCTRL, "Ctrl", 424, 76, 46, 19, _
-        WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_TEXT or BS_NOTIFY or BS_AUTOCHECKBOX or BS_LEFT or BS_VCENTER, _
-        WS_EX_LEFT or WS_EX_LTRREADING)
-    pWindow->AddControl("CHECKBOX", , IDC_FRMBUILDCONFIG_CHKALT, "Alt", 470, 76, 42, 19, _
-        WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_TEXT or BS_NOTIFY or BS_AUTOCHECKBOX or BS_LEFT or BS_VCENTER, _
-        WS_EX_LEFT or WS_EX_LTRREADING)
-    pWindow->AddControl("CHECKBOX", , IDC_FRMBUILDCONFIG_CHKSHIFT, "Shift", 512, 76, 44, 19, _
-        WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_TEXT or BS_NOTIFY or BS_AUTOCHECKBOX or BS_LEFT or BS_VCENTER, _
-        WS_EX_LEFT or WS_EX_LTRREADING)
-    dim as HWND hCombo 
-    hCombo = pWindow->AddControl("COMBOBOX", , IDC_FRMBUILDCONFIG_COMBOKEY, "", 556, 74, 103, 200, _
-        WS_CHILD or WS_VISIBLE or WS_VSCROLL or WS_TABSTOP or CBS_DROPDOWNLIST, _
-        WS_EX_CLIENTEDGE or WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_RIGHTSCROLLBAR)
+    ' ---- the builds list ---------------------------------------------------------------
+    HWND_FRMBUILDCONFIG_LIST = PsListTree_Create( HWND_FRMBUILDCONFIG, IDC_FRMBUILDCONFIG_LIST )
 
-    AddShortcutsToComboBox( hCombo )
+    ' TWO columns. There was a Shortcut column here; it is gone deliberately -- the accelerator
+    ' is edited on the General page and shown on its own button, and repeating it in the list
+    ' bought a narrower Description for information the reader already has in front of them.
+    '
+    ' Column 0's width is a placeholder -- it is the FILL column and takes whatever column 1
+    ' leaves. Column 1 is deliberately UNCAPTIONED: it marks a state, and a "Default" heading
+    ' over a column that is empty on every row but one reads as a broken table.
+    PsListTree_AddColumn( HWND_FRMBUILDCONFIG_LIST, L(278,"Description"), 100 )
+    PsListTree_AddColumn( HWND_FRMBUILDCONFIG_LIST, "", pWindow->ScaleX(FRMBUILDCONFIG_COL_DEFAULT) )
+    PsListTree_SetFillColumn( HWND_FRMBUILDCONFIG_LIST, 0 )
+    PsListTree_ShowHeader( HWND_FRMBUILDCONFIG_LIST, true )
 
-    pWindow->AddControl("LABEL", , IDC_FRMBUILDCONFIG_LABEL2, L(279,"Compiler Options") & ":", 240, 102, 170, 18, _
-        WS_CHILD or WS_VISIBLE or WS_CLIPSIBLINGS or WS_CLIPCHILDREN or SS_LEFT or SS_NOTIFY, _
-        WS_EX_LEFT or WS_EX_LTRREADING)
-    pWindow->AddControl("TEXTBOX", , IDC_FRMBUILDCONFIG_TXTOPTIONS, "", 240, 123, 425, 20, _
-        WS_CHILD or WS_VISIBLE or WS_TABSTOP or ES_LEFT or ES_AUTOHSCROLL, _
-        WS_EX_CLIENTEDGE or WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_RIGHTSCROLLBAR)
-    dim hLB as hwnd = pWindow->AddControl("LISTBOX", , IDC_FRMBUILDCONFIG_LSTOPTIONS, "", 240, 149, 425, 263, _
-        WS_CHILD or WS_VISIBLE or WS_VSCROLL or WS_TABSTOP or LBS_NOTIFY or _
-        LBS_NOINTEGRALHEIGHT or LBS_OWNERDRAWFIXED or LBS_HASSTRINGS, _
-        WS_EX_CLIENTEDGE or WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_RIGHTSCROLLBAR)
-    pWindow->SetControlSubclass(hLB, @frmBuildConfig_ListBox_SubclassProc, IDC_FRMBUILDCONFIG_LSTOPTIONS, @pWindow)
+    PsListTree_SetPaintCallback( HWND_FRMBUILDCONFIG_LIST, @frmBuildConfig_ListPaintRow )
+    ' REQUIRED, or the header does not render at all.
+    PsListTree_SetHeaderPaintCallback( HWND_FRMBUILDCONFIG_LIST, @frmBuildConfig_ListPaintHeader )
+    PsListTree_SetSelChangeCallback( HWND_FRMBUILDCONFIG_LIST, @frmBuildConfig_ListSelChange )
+    PsListTree_SetTooltipCallback( HWND_FRMBUILDCONFIG_LIST, @frmBuildConfig_ListTooltip )
+    PsListTree_SetHeaderTooltipCallback( HWND_FRMBUILDCONFIG_LIST, @frmBuildConfig_HeaderTooltip )
+    PsListTree_SetFont( HWND_FRMBUILDCONFIG_LIST, ghFont(GUIFONT_11) )
+    ' UNSCALED: PsListTree scales what it is handed, so a pre-scaled value is scaled twice.
+    ' (PsTextBox_SetMargins and PsButton_SetPadding are the opposite rule in the same family.)
+    PsListTree_SetRowHeight( HWND_FRMBUILDCONFIG_LIST, FRMBUILDCONFIG_ROW_H )
 
-    pWindow->AddControl("CHECKBOX", , IDC_FRMBUILDCONFIG_CHKEXCLUDEPOPUP, _
-        L(284,"Exclude build from status bar popup menu"), 240, 415, 425, 20, _
-        WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_TEXT or BS_NOTIFY or BS_AUTOCHECKBOX or BS_LEFT or BS_VCENTER, _
-        WS_EX_LEFT or WS_EX_LTRREADING)
+    ' ---- the two-page select bar --------------------------------------------------------
+    ghBCSelectBar = PsSelectBar_Create( HWND_FRMBUILDCONFIG, IDC_FRMBUILDCONFIG_SELECTBAR )
+    PsSelectBar_SetFont( ghBCSelectBar, ghFont(GUIFONT_11) )
+    ' NO LEFT PADDING. The bar's default pads every panel on both sides, which indents the
+    ' first panel's text away from the left edge of the pane -- so "General" did not line up
+    ' with the labels and fields directly beneath it. Zeroed on the bar, so the panels stay
+    ' evenly spaced from each other; only the leading edge moves.
+    PsSelectBar_SetPadding( ghBCSelectBar, 0, AfxScaleX(FRMBUILDCONFIG_SELECTBAR_PANELGAP) )
+    PsSelectBar_AddPanel( ghBCSelectBar, L(525,"General"), IDP_FRMBUILDCONFIG_GENERAL )
+    PsSelectBar_AddPanel( ghBCSelectBar, L(527,"Compiler switches"), IDP_FRMBUILDCONFIG_SWITCHES )
+    PsSelectBar_SetSelChangeCallback( ghBCSelectBar, @frmBuildConfig_SelectBarChange )
 
+    ' ---- General page -------------------------------------------------------------------
+    ' PsTextBox documents its margins as RAW pixels and passes them verbatim to EM_SETMARGINS,
+    ' so AfxScaleX is ours to apply here.
+    ghBCDescription = PsTextBox_Create( HWND_FRMBUILDCONFIG, IDC_FRMBUILDCONFIG_TXTDESCRIPTION )
+    PsTextBox_SetFont( ghBCDescription, ghFont(GUIFONT_11) )
+    PsTextBox_SetMargins( ghBCDescription, AfxScaleX(8), AfxScaleX(6) )
+    PsTextBox_SetChangeCallback( ghBCDescription, @frmBuildConfig_TextChanged )
 
-    pWindow->AddControl("BUTTON", , IDC_FRMBUILDCONFIG_CMDINSERT, L(281, "Insert"), 8, 450, 74, 28, _
-        WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_TEXT or BS_PUSHBUTTON or BS_NOTIFY or BS_CENTER or BS_VCENTER, _
-        WS_EX_LEFT or WS_EX_LTRREADING)
-    pWindow->AddControl("BUTTON", , IDC_FRMBUILDCONFIG_CMDDELETE, L(282, "Delete"), 87, 450, 74, 28, _
-        WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_TEXT or BS_PUSHBUTTON or BS_NOTIFY or BS_CENTER or BS_VCENTER, _
-        WS_EX_LEFT or WS_EX_LTRREADING)
-    
-    dim as HWND hCtrl = _
-    pWindow->AddControl("BUTTON", , IDC_FRMBUILDCONFIG_CMDUP, wszIconChevronUp, 166, 450, 28, 28, _
-        WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_TEXT or BS_PUSHBUTTON or BS_NOTIFY or BS_CENTER or BS_VCENTER, _
-        WS_EX_LEFT or WS_EX_LTRREADING)
-    AfxSetWindowFont( hCtrl, hFontSymbolLarge, false )     
+    ghBCTogDefault = PsToggle_Create( HWND_FRMBUILDCONFIG, IDC_FRMBUILDCONFIG_TOGDEFAULT )
+    PsToggle_SetCheckChangedCallback( ghBCTogDefault, @frmBuildConfig_ToggleChanged )
 
-    hCtrl = _
-    pWindow->AddControl("BUTTON", , IDC_FRMBUILDCONFIG_CMDDOWN, wszIconChevronDown, 199, 450, 28, 28, _
-        WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_TEXT or BS_PUSHBUTTON or BS_NOTIFY or BS_CENTER or BS_VCENTER, _
-        WS_EX_LEFT or WS_EX_LTRREADING)
-    AfxSetWindowFont( hCtrl, hFontSymbolLarge, false )     
+    ghBCTarget = PsComboBox_Create( HWND_FRMBUILDCONFIG, IDC_FRMBUILDCONFIG_COMBOTARGET )
+    PsComboBox_SetFont( ghBCTarget, ghFont(GUIFONT_11) )
+    ' ORDER IS BUILDTARGET_32 / _64 and is read back by index. Do not re-order.
+    PsComboBox_AddItem( ghBCTarget, L(558,"FBC 32-bit") )
+    PsComboBox_AddItem( ghBCTarget, L(559,"FBC 64-bit") )
+    PsComboBox_SetCurSel( ghBCTarget, BUILDTARGET_64 )
+    PsComboBox_SetSelChangeCallback( ghBCTarget, @frmBuildConfig_TargetChanged )
 
-    pWindow->AddControl("BUTTON", , IDOK, L(0,"OK"), 508, 450, 74, 28, _
-        WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_TEXT or BS_PUSHBUTTON or BS_NOTIFY or BS_CENTER or BS_VCENTER, _
-        WS_EX_LEFT or WS_EX_LTRREADING)
-    pWindow->AddControl("BUTTON", , IDCANCEL, L(1,"Cancel"), 590, 450, 74, 28, _
-        WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_TEXT or BS_PUSHBUTTON or BS_NOTIFY or BS_CENTER or BS_VCENTER, _
-        WS_EX_LEFT or WS_EX_LTRREADING)
+    ghBCShortcut = PsButton_Create( HWND_FRMBUILDCONFIG, IDC_FRMBUILDCONFIG_CMDSHORTCUT )
+    PsButton_SetFont( ghBCShortcut, ghFont(GUIFONT_11) )
+    PsButton_SetText( ghBCShortcut, L(514,"(none)") )
+    PsButton_SetTooltipText( ghBCShortcut, L(499,"Assign Shortcut") )
+    PsButton_SetClickCallback( ghBCShortcut, @frmBuildConfig_ButtonClick )
 
-    HWND_FRMBUILDCONFIG = hForm
-    
-    ' Copy all of the Builds to the BuildsTemp array because we will work with 
-    ' temporary copies until the user hits OK.
-    redim gConfig.BuildsTemp(ubound(gConfig.Builds))
-    for i as long = lbound(gConfig.Builds) to ubound(gConfig.Builds)
-        gConfig.BuildsTemp(i) = gConfig.Builds(i)   
-    next
-    frmBuildConfig_LoadBuildListBox(hForm)
-    
-    ' Load the Compiler Options Listbox
-    hCtrl = GetDlgItem(hForm, IDC_FRMBUILDCONFIG_LSTOPTIONS)
+    ghBCTogExclude = PsToggle_Create( HWND_FRMBUILDCONFIG, IDC_FRMBUILDCONFIG_TOGEXCLUDEPOPUP )
+    PsToggle_SetCheckChangedCallback( ghBCTogExclude, @frmBuildConfig_ToggleChanged )
+
+    ghBCEditSwitches = PsButton_Create( HWND_FRMBUILDCONFIG, IDC_FRMBUILDCONFIG_CMDEDITSWITCHES )
+    PsButton_SetFont( ghBCEditSwitches, ghFont(GUIFONT_11) )
+    PsButton_SetText( ghBCEditSwitches, L(14,"Edit") )
+    PsButton_SetClickCallback( ghBCEditSwitches, @frmBuildConfig_ButtonClick )
+
+    ' ---- Compiler switches page ---------------------------------------------------------
+    ghBCOptions = PsTextBox_Create( HWND_FRMBUILDCONFIG, IDC_FRMBUILDCONFIG_TXTOPTIONS )
+    PsTextBox_SetMargins( ghBCOptions, AfxScaleX(8), AfxScaleX(6) )
+    PsTextBox_SetChangeCallback( ghBCOptions, @frmBuildConfig_TextChanged )
+
+    ghBCSwitches = PsListTree_Create( HWND_FRMBUILDCONFIG, IDC_FRMBUILDCONFIG_LSTSWITCHES )
+    PsListTree_SetPaintCallback( ghBCSwitches, @frmBuildConfig_SwitchPaintRow )
+    PsListTree_SetMessageCallback( ghBCSwitches, @frmBuildConfig_SwitchListMessage )
+    PsListTree_SetTooltipCallback( ghBCSwitches, @frmBuildConfig_ListTooltip )
+    PsListTree_SetFont( ghBCSwitches, ghFont(GUIFONT_11) )
+    PsListTree_SetRowHeight( ghBCSwitches, FRMBUILDCONFIG_SWROW_H )
+    ' With CS_DBLCLKS a double-click delivers down/up/DBLCLK/up, and this list acts on the UP
+    ' -- so a fast second click would toggle twice, net to nothing, and read as a control bug.
+    PsListTree_PreventDoubleClick( ghBCSwitches, true )
     for i as long = lbound(gBuildOptions) to ubound(gBuildOptions)
-        ListBox_AddString(hCtrl, gBuildOptions(i).wszText.sptr)
+        PsListTree_AddString( ghBCSwitches, gBuildOptions(i).wszText, i )
     next
 
-    
-    ' Set the current build selection 
-    dim as long nCurSel = frmBuildConfig_getActiveBuildIndex()
-    dim hList as HWND = GetDlgItem(hForm, IDC_FRMBUILDCONFIG_LIST1)
-    if nCurSel = -1 then nCurSel = 0 
-    ListBox_SetCurSel(hList, nCurSel)
-    frmBuildConfig_SetBuildConfigTextboxes()
-    
-    SetFocus GetDlgItem(hForm, IDC_FRMBUILDCONFIG_LIST1)
-    
-    ' Process Windows messages(modal)
-    function = pWindow->DoEvents(SW_SHOW)
-    
-    ' Delete the frmBuildConfig CWindow class manually allocated memory 
-    if pWindow then delete(pWindow)
-    if hFontSymbolLarge then DeleteObject(hFontSymbolLarge)
-    
-end function
+    ' ---- the list's command strip -------------------------------------------------------
+    ghBCAdd = PsButton_Create( HWND_FRMBUILDCONFIG, IDC_FRMBUILDCONFIG_CMDADD )
+    PsButton_SetText( ghBCAdd, L(510,"Add") )
+    PsButton_SetFont( ghBCAdd, ghFont(GUIFONT_11) )
+    PsButton_SetClickCallback( ghBCAdd, @frmBuildConfig_ButtonClick )
 
+    ghBCDelete = PsButton_Create( HWND_FRMBUILDCONFIG, IDC_FRMBUILDCONFIG_CMDDELETE )
+    PsButton_SetText( ghBCDelete, L(282,"Delete") )
+    PsButton_SetFont( ghBCDelete, ghFont(GUIFONT_11) )
+    PsButton_SetClickCallback( ghBCDelete, @frmBuildConfig_ButtonClick )
+
+    ' THE GLYPH IS THE CAPTION, NOT THE ICON, and that departs from this workspace's rule that
+    ' the symbol font is a separate paint-time font. PsButton PINS its icon cells to the
+    ' padding and has no icon alignment, so a glyph-only button built with SetGlyphLeft draws
+    ' visibly off-centre in a 32px square. Putting the glyph in the caption slot is the only
+    ' route to a centred one -- and the convention it bends exists to stop a WORD being drawn
+    ' in Segoe Fluent, which cannot happen when the caption IS a glyph.
+    ' The padding must come down with it. SetPadding stores RAW pixels.
+    #macro MAKECHEVRON( _h_, _id_, _glyph_, _tip_ )
+        _h_ = PsButton_Create( HWND_FRMBUILDCONFIG, _id_ )
+        PsButton_SetText( _h_, _glyph_ )
+        PsButton_SetFont( _h_, ghFont(SYMBOLFONT_10) )
+        PsButton_SetTextAlign( _h_, BTN_ALIGN_CENTER )
+        PsButton_SetPadding( _h_, AfxScaleX(4), AfxScaleY(6), AfxScaleX(4), AfxScaleY(6) )
+        PsButton_SetTooltipText( _h_, _tip_ )
+        PsButton_SetClickCallback( _h_, @frmBuildConfig_ButtonClick )
+    #endmacro
+
+    MAKECHEVRON( ghBCUp,   IDC_FRMBUILDCONFIG_CMDUP,   !"\uE70E", L(511,"Move up") )
+    MAKECHEVRON( ghBCDown, IDC_FRMBUILDCONFIG_CMDDOWN, !"\uE70D", L(512,"Move down") )
+
+    ' ---- footer --------------------------------------------------------------------------
+    ghBCOK = PsButton_Create( HWND_FRMBUILDCONFIG, IDC_FRMBUILDCONFIG_CMDOK )
+    PsButton_SetText( ghBCOK, L(0,"OK") )
+    PsButton_SetFont( ghBCOK, ghFont(GUIFONT_11) )
+    PsButton_SetDefault( ghBCOK, true )
+    PsButton_SetClickCallback( ghBCOK, @frmBuildConfig_ButtonClick )
+
+    ghBCCancel = PsButton_Create( HWND_FRMBUILDCONFIG, IDC_FRMBUILDCONFIG_CMDCANCEL )
+    PsButton_SetText( ghBCCancel, L(1,"Cancel") )
+    PsButton_SetFont( ghBCCancel, ghFont(GUIFONT_11) )
+    PsButton_SetClickCallback( ghBCCancel, @frmBuildConfig_ButtonClick )
+
+    ' Only the always-present chrome is shown here. The right pane's visibility belongs to
+    ' ShowPage, which BuildList reaches through LoadDetail.
+    ShowWindow( HWND_FRMBUILDCONFIG_LIST, SW_SHOW )
+    ShowWindow( ghBCSelectBar, SW_SHOW )
+    ShowWindow( ghBCAdd, SW_SHOW )
+    ShowWindow( ghBCDelete, SW_SHOW )
+    ShowWindow( ghBCUp, SW_SHOW )
+    ShowWindow( ghBCDown, SW_SHOW )
+    ShowWindow( ghBCOK, SW_SHOW )
+    ShowWindow( ghBCCancel, SW_SHOW )
+
+    frmBuildConfig_ApplyTheme( HWND_FRMBUILDCONFIG )
+    frmBuildConfig_PositionWindows( HWND_FRMBUILDCONFIG )
+    frmBuildConfig_BuildList()
+
+    SetTimer( HWND_FRMBUILDCONFIG, IDT_BCPREVIEW, 100, 0 )
+
+    ShowWindow( HWND_FRMBUILDCONFIG, SW_SHOW )
+    UpdateWindow( HWND_FRMBUILDCONFIG )
+
+    ' Focus the list: the usual reason for opening this dialog is to pick or edit a build that
+    ' already exists. It also has to be set explicitly for a second reason -- IsDialogMessage
+    ' ignores Tab until a child already holds the focus, and an ordinary CWindow has no dialog
+    ' manager to arrange that.
+    SetFocus( HWND_FRMBUILDCONFIG_LIST )
+
+    ' AFTER the SetFocus above, deliberately: one of its assertions walks the tab order, and
+    ' running it any earlier would sample it before anything had been focused at all.
+    frmBuildConfig_RunLayoutSelfTest()
+
+    if environ("TIKO_BUILDCONFIG_AUTOASSIGN") = "1" then
+        PostMessage( HWND_FRMBUILDCONFIG, MSG_USER_SHOW_TOOLKEY, 0, 0 )
+    end if
+
+    ' ---- message loop --------------------------------------------------------------------
+    ' Its own loop, not CWindow.DoEvents: that has no *_FilterMessage hooks, and this dialog
+    ' owes two of them.
+    dim uMsg as MSG
+    while GetMessage( @uMsg, null, 0, 0 )
+
+        ' MANDATORY. Two PsTextBoxes, each owning a PsPopupMenu context menu; without this it
+        ' has no keyboard navigation and never closes on an outside click.
+        if PsTextBox_FilterMessage( @uMsg ) then continue while
+
+        ' MANDATORY, and it takes the CONTROL handle rather than working off a global -- so a
+        ' second combo added to this dialog needs its own line here.
+        if PsComboBox_FilterMessage( ghBCTarget, @uMsg ) then continue while
+
+        ' SPACE TOGGLES THE FOCUSED SWITCH ROW.
+        '   AFTER the two filters above, so an open context menu or dropdown gets its own
+        '   Space first.
+        '   BEFORE IsDialogMessage, or Space presses the default OK button instead.
+        ' Gated by CONTAINMENT -- PsListTree's focus lives on its row surface, a child, so
+        ' GetFocus() = ghBCSwitches is never true. And it has to be done in the pump at all
+        ' because the control consumes WM_KEYDOWN itself and never offers it to the message
+        ' callback; this is the only door.
+        scope
+            dim as boolean bSpace = ((uMsg.message = WM_KEYDOWN) andalso (uMsg.wParam = VK_SPACE))
+            if bSpace andalso frmBuildConfig_IsWithin( GetFocus(), ghBCSwitches ) then
+                frmBuildConfig_ToggleSwitch( PsListTree_GetCurSel( ghBCSwitches ) )
+                continue while
+            end if
+        end scope
+
+        ' ESCAPE cancels -- explicitly, and AFTER the two popup filters so an open context menu
+        ' or dropdown closes on Escape first rather than the whole dialog going with it.
+        if (uMsg.message = WM_KEYDOWN) andalso (uMsg.wParam = VK_ESCAPE) then
+            SendMessage( HWND_FRMBUILDCONFIG, WM_CLOSE, 0, 0 )
+            continue while
+        end if
+
+        if IsDialogMessage( HWND_FRMBUILDCONFIG, @uMsg ) = 0 then
+            TranslateMessage( @uMsg )
+            DispatchMessage( @uMsg )
+        end if
+    wend
+
+    if ghBCFontFixed then DeleteObject( ghBCFontFixed )
+    ghBCFontFixed = 0
+
+    if pWindow then delete(pWindow)
+
+    function = 0
+
+end function
