@@ -417,9 +417,8 @@ end function
 private sub frmUserTools_ListPaintRow( byval p as PSLISTTREE_PAINTINFO ptr )
     if p = 0 then exit sub
 
-    dim as boolean bActive = (p->isSelected orelse p->isHot)
-    dim as COLORREF backclr = iif( bActive, ghPanel.BackColorHot, ghPanel.BackColor )
-    dim as COLORREF foreclr = iif( bActive, ghPanel.ForeColorHot, ghPanel.ForeColor )
+    dim as COLORREF backclr = iif( p->isSelected, ghPanel.BackColorHot, ghPanel.BackColor )
+    dim as COLORREF foreclr = iif( p->isSelected, ghPanel.ForeColorHot, ghPanel.ForeColor )
 
     p->b->SetBackColor( backclr )
     p->b->PaintRect( @p->rc )
@@ -449,7 +448,7 @@ private sub frmUserTools_ListPaintRow( byval p as PSLISTTREE_PAINTINFO ptr )
                 ' rendering fault, and dim it so it does not read as the tool's actual name.
                 if len(wszCell) = 0 then
                     wszCell = L(513,"(untitled)")
-                    if bActive = false then clr = ghPopup.ForeColorDisabled
+                    if p->isSelected = false then clr = ghPopup.ForeColorDisabled
                 end if
 
             case 1
