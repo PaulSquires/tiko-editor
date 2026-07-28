@@ -45,6 +45,19 @@ declare sub Theme_ApplyAll()
 ' the preview path, and Cancel has to be able to put it all back. Returns TRUE on error.
 declare function Theme_PreviewFile( byval wszShortFilename as DWSTRING ) as boolean
 
+' Push the current theme's colours and the current UI fonts into one PsTooltip.
+'
+' CALL THIS FROM THE TIP'S TEXT CALLBACK, not from the apply layer. That callback runs when a
+' tip is about to show and BEFORE the window is sized, which is the only point where changing
+' the FONT is safe -- a font applied after sizing makes the measured size lie and the text
+' clips (PsTooltip's own SetFont contract). Doing it there also means there is no registry of
+' live tips to keep in step with a theme change: a tip is re-themed on the hover after the
+' switch, and a tip that never shows costs nothing.
+'
+' Takes an HWND rather than a PSTOOLTIP_COLORS ptr because this header is included at
+' tiko.bas:86, well before PsTooltip.bi at 148 -- the type does not exist yet here.
+declare sub Theme_ApplyTooltip( byval hTip as HWND )
+
 ' Coalescing request. Accumulates the mask and (re)arms the timer; the work happens on the
 ' next tick. Dragging inside a colour picker fires hundreds of these a second.
 declare sub Theme_RequestApply( byval nMask as ulong )

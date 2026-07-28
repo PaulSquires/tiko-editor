@@ -23,6 +23,38 @@
 #include once "frmFunctions.bi"
 
 
+' The panel's own tooltip. A PsTooltip rather than the comctl32 tip this window used to build
+' by hand: it is themed (Theme_ApplyTooltip), it wraps, and it adds no pump obligation.
+'
+' There is ONE tip for the window and the hot rect is identified by the TOOL INDEX, exactly the
+' way the Ps* controls identify a hot row. WM_MOUSEMOVE sets the index and the text callback
+' answers for it -- so the hit-test happens once, on the message, rather than a second time
+' against a cursor that has since moved.
+dim shared ghPanelTip as HWND
+
+enum
+    PANELTIP_NONE = -1
+    PANELTIP_ACTIONMENU = 0
+end enum
+
+
+' ========================================================================================
+' Supply the tooltip text for the currently hot rect.
+' ========================================================================================
+' Runs once per hover, immediately before the tip is sized -- which is why the theme push
+' lives here (see modThemeApply.bi). Returning "" means no tip, and suppresses the rest of
+' that hover rather than being re-asked ten times a second.
+private function frmPanel_TipText( byval hTip as HWND, _
+                                   byval hAttached as HWND, _
+                                   byval idx as long ) as DWSTRING
+    Theme_ApplyTooltip( hTip )
+    select case idx
+        case PANELTIP_ACTIONMENU:  return L(440, "More Actions") & "..."
+    end select
+    return ""
+end function
+
+
 ' ========================================================================================
 ' Position all child windows. Called manually and/or by WM_SIZE
 ' ========================================================================================
@@ -117,6 +149,10 @@ end function
 ' Process WM_DESTROY message for window/dialog: frmPanel
 ' ========================================================================================
 function frmPanel_OnDestroy( byval hwnd as HWND ) as LRESULT
+    ' The tip is a WS_POPUP owned by this window, not a child, so it does not go with the
+    ' parent -- destroying it here is also what detaches it from the shared clock's registry.
+    if IsWindow(ghPanelTip) then DestroyWindow( ghPanelTip )
+    ghPanelTip = 0
     function = 0
 end Function
 
@@ -258,10 +294,6 @@ function frmPanel_WndProc( _
             ) as LRESULT
 
     static as boolean isPrevHotAction
-    
-    static as DWSTRING wszPrevTooltip
-    static as HWND hTooltip 
-    if (uMsg = WM_DESTROY) andalso (IsWindow(hToolTip)) then DestroyWindow(hToolTip)
 
     select case uMsg
         HANDLE_MSG (hwnd, WM_SIZE,    frmPanel_OnSize)
@@ -282,24 +314,29 @@ function frmPanel_WndProc( _
         dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMPANEL)
         if pWindow = 0 then exit function
 
+        ' TME_LEAVE only. TME_HOVER existed solely to drive the old WM_MOUSEHOVER tooltip arm;
+        ' PsTooltip does its own dwell timing off the shared clock, so there is nothing left
+        ' for a hover notification to do.
         dim tme as TrackMouseEvent
         tme.cbSize = sizeof(TrackMouseEvent)
-        tme.dwFlags = TME_HOVER or TME_LEAVE
+        tme.dwFlags = TME_LEAVE
         tme.hwndTrack = hwnd
-        tme.dwHoverTime = 20    ' HOVER_DEFAULT is 500
-        TrackMouseEvent(@tme) 
-
-        if IsWindow(hTooltip) = 0 then hTooltip = AfxAddTooltip( hwnd, "", false, false )
+        TrackMouseEvent(@tme)
 
         ' Repaint the gPanelMenuRect to ensure Hot highlighting
-        dim as boolean isHotAction, isHotButton0, isHotButton1 
+        dim as boolean isHotAction, isHotButton0, isHotButton1
         isHotAction = isMouseOverRECT( hwnd, gPanel.rcActionMenu )
 
-        if isHotAction <> isPrevHotAction then   
+        if isHotAction <> isPrevHotAction then
             AfxRedrawWindow( hwnd )
             isPrevHotAction = isHotAction
-        end if   
-            
+        end if
+
+        ' Silent when the index has not changed; on a change it hides any visible tip without
+        ' a fade and clears a suppressed hover, so the new rect gets a fresh offer.
+        PsTooltip_SetToolIndex( ghPanelTip, _
+                                iif( isHotAction, PANELTIP_ACTIONMENU, PANELTIP_NONE ) )
+
         ' The left/right splitter hit-test and drag that used to follow are the PsSplitter
         ' control's job now (frmPanel_SplitterMoved), as is the WM_LBUTTONDOWN handler that
         ' started the drag.
@@ -317,22 +354,10 @@ function frmPanel_WndProc( _
         
 
      case WM_MOUSELEAVE
-        wszPrevTooltip = ""
         isPrevHotAction = false
+        PsTooltip_SetToolIndex( ghPanelTip, PANELTIP_NONE )
         AfxRedrawWindow(hwnd)
 
-
-    case WM_MOUSEHOVER
-        dim as DWSTRING wszTooltip 
-        if isMouseOverRECT( hwnd, gPanel.rcActionMenu ) then
-            wszTooltip  = L(440, "More Actions") & "..."
-        end if
-        ' Display the tooltip
-        if wszTooltip <> wszPrevTooltip then
-            AfxSetTooltipText( hTooltip, hwnd, wszTooltip )
-            wszPrevTooltip = wszTooltip 
-        end if    
-        
     end select
 
     ' for messages that we don't deal with
@@ -356,6 +381,13 @@ function frmPanel_Show( byval hwndParent as hwnd ) as LRESULT
     
     HWND_FRMPANEL = pWindow->Create( hwndParent, @frmPanel_WndProc, 0, 0, nWidth, 0 )
     ShowWindow( HWND_FRMPANEL, iif(gConfig.ShowPanel, SW_SHOW, SW_HIDE) )
+
+    ' Create ALSO attaches -- there is no separate PsTooltip_Attach call. Colours and fonts are
+    ' pushed per hover from frmPanel_TipText, so nothing is set here that a theme change would
+    ' make stale.
+    ghPanelTip = PsTooltip_Create( HWND_FRMPANEL )
+    PsTooltip_SetToolIndex( ghPanelTip, PANELTIP_NONE )
+    PsTooltip_SetTooltipCallback( ghPanelTip, @frmPanel_TipText )
 
     ' Create the child windows
     frmPanelMenu_Show( HWND_FRMPANEL )

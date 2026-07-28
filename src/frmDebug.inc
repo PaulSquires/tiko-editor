@@ -14,6 +14,47 @@
 #include once "frmDebug.bi"
 
 
+' The debugger toolbar's tooltip. A PsTooltip rather than the comctl32 tip this window used to
+' build by hand: it is themed, and it adds no pump obligation.
+'
+' The TOOL INDEX is the gDbgBtns() subscript directly -- no separate id enum is needed here,
+' unlike the top-tab bars, because the hot regions already live in an array. -1 is "no button".
+dim shared ghDebugTip as HWND
+
+
+' ========================================================================================
+' Supply the tooltip text for the button the cursor is over.
+' ========================================================================================
+' Runs once per hover, immediately before the tip is sized, which is why the theme push lives
+' here (see modThemeApply.bi).
+'
+' getMenuText packs the caption and the shortcut into one string separated by a tab; the tab
+' becomes " (" and a ")" closes it, exactly as the old WM_MOUSEHOVER arm did. A button with no
+' shortcut still gets the parentheses -- unchanged behaviour, not an oversight of this refactor.
+private function frmDebug_TipText( byval hTip as HWND, _
+                                   byval hAttached as HWND, _
+                                   byval idx as long ) as DWSTRING
+    Theme_ApplyTooltip( hTip )
+    if idx < lbound(gDbgBtns) orelse idx > ubound(gDbgBtns) then return ""
+    dim as DWSTRING wszTip = gDbgBtns(idx).wszToolTip
+    if len(wszTip) = 0 then return ""
+    return AfxStrReplace( wszTip, wchr(9), " (" ) & ")"
+end function
+
+
+' ========================================================================================
+' Which toolbar button is the cursor over? -1 for none.
+' ========================================================================================
+' Deliberately tests EVERY button, including ones with no caption -- that is what the old
+' hover arm did. The hot-highlight loop in WM_MOUSEMOVE is the one that skips them.
+private function frmDebug_TipHitTest( byval hwnd as HWND ) as long
+    for i as long = lbound(gDbgBtns) to ubound(gDbgBtns)
+        if isMouseOverRECT( hwnd, gDbgBtns(i).rc ) then return i
+    next
+    return -1
+end function
+
+
 ' Enqueue - add message to the end of the queue
 sub gdb_enqueue_message( byref response as string )
     dim newNode as GDBMessage ptr = new GDBMessage
@@ -920,18 +961,19 @@ function frmDebug_WndProc( _
     static as long prev_idxHot = -1
     static as long curr_idxHot = -1
 
-    static as DWSTRING wszPrevTooltip 
-    static as HWND hTooltip
-    if (uMsg = WM_DESTROY) andalso (IsWindow(hToolTip)) then DestroyWindow(hToolTip)
-
     select case uMsg
 
         case WM_CLOSE
             DestroyWindow( hwnd )
             
         case WM_DESTROY
-            HWND_FRMDEBUG_OUTPUT = 0    
-            
+            HWND_FRMDEBUG_OUTPUT = 0
+
+            ' The tip is a WS_POPUP owned by this window, not a child, so it does not go with
+            ' the parent -- destroying it here also removes it from the shared clock's registry.
+            if IsWindow(ghDebugTip) then DestroyWindow( ghDebugTip )
+            ghDebugTip = 0
+
             KillTimer( HWND_FRMDEBUG, gApp.DebugTimerID )
             
             ' Kill the GDB process
@@ -1001,15 +1043,18 @@ function frmDebug_WndProc( _
             SetCapture( hwnd )
             
         case WM_MOUSEMOVE
+            ' TME_LEAVE only. TME_HOVER existed solely to drive the old WM_MOUSEHOVER tooltip
+            ' arm; PsTooltip does its own dwell timing off the shared clock.
             dim tme as TrackMouseEvent
             tme.cbSize = sizeof(TrackMouseEvent)
-            tme.dwFlags = TME_HOVER or TME_LEAVE
+            tme.dwFlags = TME_LEAVE
             tme.hwndTrack = hwnd
-            tme.dwHoverTime = 20    ' HOVER_DEFAULT is 500
-            TrackMouseEvent(@tme) 
+            TrackMouseEvent(@tme)
 
-            if IsWindow(hTooltip) = 0 then hTooltip = AfxAddTooltip( hwnd, "", false, false )
-            
+            ' Silent when the index has not changed; on a change it hides any visible tip
+            ' without a fade and clears a suppressed hover, so the new button gets a fresh offer.
+            PsTooltip_SetToolIndex( ghDebugTip, frmDebug_TipHitTest( hwnd ) )
+
             dim as point pt: GetCursorPos( @pt )
             MapWindowPoints( HWND_DESKTOP, hwnd, cast( point ptr, @pt ), 1 )
 
@@ -1033,13 +1078,15 @@ function frmDebug_WndProc( _
 
                 
         case WM_MOUSELEAVE
-            wszPrevTooltip = ""
             for i as long = lbound(gDbgBtns) to ubound(gDbgBtns)
                 gDbgBtns(i).isHot = false
             next
             prev_idxHot = -1
             curr_idxHot = -1
-            DestroyWindow(hToolTip)
+            ' Was DestroyWindow(hToolTip) -- the comctl32 tip was torn down and rebuilt on the
+            ' next move to force it to forget its state. Clearing the tool index is the whole
+            ' of that job now, and the tip window survives the cursor leaving.
+            PsTooltip_SetToolIndex( ghDebugTip, -1 )
             AfxRedrawWindow( hwnd )
 
 
@@ -1055,27 +1102,6 @@ function frmDebug_WndProc( _
                     exit for
                 end if
             next   
-            
-
-        case WM_MOUSEHOVER
-            dim as DWSTRING wszTooltip
-            for i as long = lbound(gDbgBtns) to ubound(gDbgBtns)
-                if IsMouseOverRECT(hwnd,  gDbgBtns(i).rc ) then 
-                    wszTooltip = gDbgBtns(i).wszToolTip
-                    exit for
-                end if
-            next
-            if (wszTooltip = "") andalso (IsWindow(hTooltip)) then
-                DestroyWindow( hTooltip )
-                exit function
-            end if
-            
-            ' Display the tooltip
-            if wszTooltip <> wszPrevTooltip then
-                dim as DWSTRING wszText = AfxStrReplace( wszTooltip, wchr(9), " (" ) & ")"
-                AfxSetTooltipText( hTooltip, hwnd, wszText )
-                wszPrevTooltip = wszTooltip 
-            end if    
             
 
         case WM_PAINT
@@ -1277,7 +1303,13 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as string, by
     ' Attempt to apply the standard Windows dark theme to the non-client areas of the form.
     ' Reads the theme currently IN MEMORY, not gConfig -- see Theme_IsDark.
     Theme_ApplyDarkCaption( HWND_FRMDEBUG )
-    
+
+    ' Create ALSO attaches -- there is no separate PsTooltip_Attach call. Colours and fonts are
+    ' pushed per hover from frmDebug_TipText, so nothing set here can go stale on a theme change.
+    ghDebugTip = PsTooltip_Create( HWND_FRMDEBUG )
+    PsTooltip_SetToolIndex( ghDebugTip, -1 )
+    PsTooltip_SetTooltipCallback( ghDebugTip, @frmDebug_TipText )
+
     gApp.IsDebuggerActive = true
     
     frmDebug_PositionWindows()

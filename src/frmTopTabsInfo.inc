@@ -15,6 +15,65 @@
 #include once "frmPanelMenu.bi"
 
 
+' This bar's tooltip. A PsTooltip rather than the comctl32 tip built by hand here before: it
+' is themed, it wraps without the hand-sent TTM_SETMAXTIPWIDTH that used to follow the create,
+' and it adds no pump obligation. One tip for the window; the hot rect is carried by the TOOL
+' INDEX, set from WM_MOUSEMOVE, so the hit-test runs once on the message rather than a second
+' time against a cursor that has since moved.
+dim shared ghTopTabsInfoTip as HWND
+
+enum
+    TTITIP_NONE = -1
+    TTITIP_FIND = 0
+    TTITIP_GOTOMAIN
+    TTITIP_GOTOHEADER
+end enum
+
+
+' ========================================================================================
+' Supply the tooltip text for the currently hot rect.
+' ========================================================================================
+' Runs once per hover, immediately before the tip is sized, which is why the theme push lives
+' here (see modThemeApply.bi). Returning "" means no tip for the rest of this hover.
+'
+' The file-type button has no entry on purpose -- it never had a tip, and with no caption
+' fallback in PsTooltip that is now expressed by simply not naming it rather than by a branch
+' assigning "".
+private function frmTopTabsInfo_TipText( byval hTip as HWND, _
+                                         byval hAttached as HWND, _
+                                         byval idx as long ) as DWSTRING
+    Theme_ApplyTooltip( hTip )
+    select case idx
+        case TTITIP_FIND
+            return frmPanelMenu_FormatTooltip( IDM_FIND )
+        case TTITIP_GOTOMAIN
+            return frmPanelMenu_FormatTooltip( IDM_GOTOMAINFILE )
+        case TTITIP_GOTOHEADER
+            ' Resolved at show time, not at hover time: the label depends on which document is
+            ' active, and that can change under a resting cursor.
+            dim as clsDocument ptr pDoc = gTTabCtl.GetActiveDocumentPtr()
+            if pDoc = 0 then return ""
+            if pDoc->ProjectFileType = FILETYPE_HEADER then
+                return frmPanelMenu_FormatTooltip( IDM_GOTOSOURCEFILE )
+            else   ' main, normal, module
+                return frmPanelMenu_FormatTooltip( IDM_GOTOHEADERFILE )
+            end if
+    end select
+    return ""
+end function
+
+
+' ========================================================================================
+' Which of the bar's rects is the cursor over? TTITIP_NONE for none of them.
+' ========================================================================================
+private function frmTopTabsInfo_HitTest( byval hwnd as HWND ) as long
+    if isMouseOverRECT( hwnd, gTTabCtl.rcFindButton ) then return TTITIP_FIND
+    if isMouseOverRECT( hwnd, gTTabCtl.rcGotoMain )   then return TTITIP_GOTOMAIN
+    if isMouseOverRECT( hwnd, gTTabCtl.rcGotoHeader ) then return TTITIP_GOTOHEADER
+    return TTITIP_NONE
+end function
+
+
 ' ========================================================================================
 ' Position all child windows. Called manually and/or by WM_SIZE
 ' ========================================================================================
@@ -111,13 +170,15 @@ function frmTopTabsInfo_WndProc( _
             byval lParam as LPARAM _
             ) as LRESULT
 
-    static as DWSTRING wszPrevTooltip 
-    static as HWND hTooltip 
-    if (uMsg = WM_DESTROY) andalso (IsWindow(hToolTip)) then DestroyWindow(hToolTip)
-
     select Case uMsg
         HANDLE_MSG (hwnd, WM_SIZE, frmTopTabsInfo_OnSize)
-            
+
+    case WM_DESTROY
+        ' The tip is a WS_POPUP owned by this window, not a child, so it does not go with the
+        ' parent -- destroying it here is also what removes it from the shared clock's registry.
+        if IsWindow(ghTopTabsInfoTip) then DestroyWindow( ghTopTabsInfoTip )
+        ghTopTabsInfoTip = 0
+
     case WM_NCDESTROY
         dim pWindow as CWindow ptr = AfxCWindowPtr(hwnd)
         if pWindow then delete(pWindow)
@@ -130,52 +191,24 @@ function frmTopTabsInfo_WndProc( _
         dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN_TOPTABSINFO)
         if pWindow = 0 then exit function
 
+        ' TME_LEAVE only. TME_HOVER existed solely to drive the old WM_MOUSEHOVER tooltip arm;
+        ' PsTooltip does its own dwell timing off the shared clock.
         dim tme as TrackMouseEvent
         tme.cbSize = sizeof(TrackMouseEvent)
-        tme.dwFlags = TME_HOVER or TME_LEAVE
+        tme.dwFlags = TME_LEAVE
         tme.hwndTrack = hwnd
-        tme.dwHoverTime = 20    ' HOVER_DEFAULT is 500
-        TrackMouseEvent(@tme) 
+        TrackMouseEvent(@tme)
 
-        if IsWindow(hTooltip) = 0 then 
-            hTooltip = AfxAddTooltip( hwnd, "", false, false )
-            ' Set the tooltip max width in order to handle the multiline
-            ' text needed for the split editor button.
-            SendMessage( hTooltip, TTM_SETMAXTIPWIDTH, 0, 200 )
-        end if
-    
+        ' Silent when the index has not changed; on a change it hides any visible tip without
+        ' a fade and clears a suppressed hover, so the new rect gets a fresh offer.
+        PsTooltip_SetToolIndex( ghTopTabsInfoTip, frmTopTabsInfo_HitTest( hwnd ) )
+
         AfxRedrawWindow( hwnd )
-        
-           
+
+
     case WM_MOUSELEAVE
-        wszPrevTooltip = ""
+        PsTooltip_SetToolIndex( ghTopTabsInfoTip, TTITIP_NONE )
         AfxRedrawWindow( hwnd )
-
-
-    case WM_MOUSEHOVER
-        dim as DWSTRING wszTooltip 
-        if isMouseOverRECT(hwnd, gTTabCtl.rcFindButton) then
-            wszTooltip  = frmPanelMenu_FormatTooltip( IDM_FIND )
-        elseif isMouseOverRECT(hwnd, gTTabCtl.rcGotoMain) then
-            wszTooltip  = frmPanelMenu_FormatTooltip( IDM_GOTOMAINFILE )
-        elseif isMouseOverRECT(hwnd, gTTabCtl.rcGotoHeader) then
-            dim as clsDocument ptr pDoc = gTTabCtl.GetActiveDocumentPtr()
-            if pDoc then 
-                if pDoc->ProjectFileType = FILETYPE_HEADER then
-                    wszTooltip  = frmPanelMenu_FormatTooltip( IDM_GOTOSOURCEFILE )
-                else   ' main, normal, module
-                    wszTooltip  = frmPanelMenu_FormatTooltip( IDM_GOTOHEADERFILE )
-                end if    
-            end if
-        elseif isMouseOverRECT(hwnd, gTTabCtl.rcFileTypeButton) then
-            wszTooltip = ""
-        end if
-        
-        ' Display the tooltip
-        if wszTooltip <> wszPrevTooltip then
-            AfxSetTooltipText( hTooltip, hwnd, wszTooltip )
-            wszPrevTooltip = wszTooltip 
-        end if    
 
 
     case WM_LBUTTONUP
@@ -295,6 +328,14 @@ function frmTopTabsInfo_Show( byval hwndParent as HWND ) as LRESULT
 
     ' Disable background erasing by only assigning the one style
     pWindow->ClassStyle = CS_DBLCLKS
+
+    ' Create ALSO attaches. 200px was the old TTM_SETMAXTIPWIDTH, kept so the multi-line
+    ' split-editor tip still wraps at the same place; colours and fonts are pushed per hover
+    ' from frmTopTabsInfo_TipText, so nothing set here can go stale on a theme change.
+    ghTopTabsInfoTip = PsTooltip_Create( HWND_FRMMAIN_TOPTABSINFO )
+    PsTooltip_SetToolIndex( ghTopTabsInfoTip, TTITIP_NONE )
+    PsTooltip_SetMaxWidth( ghTopTabsInfoTip, 200 )
+    PsTooltip_SetTooltipCallback( ghTopTabsInfoTip, @frmTopTabsInfo_TipText )
 
     function = 0
     

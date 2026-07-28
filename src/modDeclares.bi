@@ -318,7 +318,6 @@ type FINDREPLACE_TYPE
 end type
 dim shared gFind as FINDREPLACE_TYPE
 dim shared gFindInFiles as FINDREPLACE_TYPE
-dim shared ghFindTooltip as HWND
 
 
 '' Last position in document. Used when "Last Position" menu option is selected.

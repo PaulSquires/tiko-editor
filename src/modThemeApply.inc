@@ -186,6 +186,33 @@ end sub
 
 
 ''
+''  PUSH THE CURRENT THEME AND FONTS INTO ONE PsTooltip
+''
+''  Deliberately NOT driven from Theme_ApplySubsystems, and that is the whole design: the tips
+''  belonging to frmPanel, frmDebug and the three top-tab bars are created once and live for the
+''  life of the window, so a re-push would need a registry of them kept in step with every
+''  create and destroy. Calling this from each tip's TEXT callback instead makes the question go
+''  away -- the callback fires once per hover, just before the tip is sized, so whatever the
+''  theme is at that moment is what the tip wears. See the note in modThemeApply.bi for why the
+''  FONT in particular has to be set at that point rather than later.
+''
+''  The colour mapping is frmUserTools' and frmThemes' recipe, unchanged, so all the editor's
+''  tips agree.
+''
+sub Theme_ApplyTooltip( byval hTip as HWND )
+    if IsWindow(hTip) = 0 then exit sub
+    PsTooltip_SetFonts( hTip, ghFont(GUIFONT_11), ghFont(GUIFONTBOLD_11), ghFont(SYMBOLFONT_10) )
+    dim as PSTOOLTIP_COLORS tipc
+    tipc.BackColor   = ghPopup.BackColor
+    tipc.BorderColor = ghEditor.Divider
+    tipc.ForeColor   = ghPopup.ForeColor
+    tipc.TitleColor  = ghPanel.ForeColorHot
+    tipc.GlyphColor  = ghUI.AccentColor
+    PsTooltip_SetColors( hTip, @tipc )
+end sub
+
+
+''
 ''  RE-PUSH COLOURS INTO THE CONTROLS OF THE GIVEN SUBSYSTEMS, THEN REPAINT
 ''
 sub Theme_ApplySubsystems( byval nMask as ulong )

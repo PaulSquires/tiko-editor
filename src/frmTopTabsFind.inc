@@ -14,6 +14,62 @@
 #include once "frmPanelMenu.bi"
 
 
+' This bar's tooltip. A PsTooltip rather than the comctl32 tip built by hand here before: it
+' is themed, it wraps without the hand-sent TTM_SETMAXTIPWIDTH that used to follow the create,
+' and it adds no pump obligation. One tip for the window; the hot rect is carried by the TOOL
+' INDEX, set from WM_MOUSEMOVE, so the hit-test runs once on the message rather than a second
+' time against a cursor that has since moved.
+dim shared ghTopTabsFindTip as HWND
+
+enum
+    TTFTIP_NONE = -1
+    TTFTIP_TOGGLE = 0
+    TTFTIP_MATCHCASE
+    TTFTIP_WHOLEWORD
+    TTFTIP_UPARROW
+    TTFTIP_DOWNARROW
+    TTFTIP_SELECTION
+    TTFTIP_CLOSE
+end enum
+
+
+' ========================================================================================
+' Supply the tooltip text for the currently hot rect.
+' ========================================================================================
+' Runs once per hover, immediately before the tip is sized, which is why the theme push lives
+' here (see modThemeApply.bi). Returning "" means no tip for the rest of this hover.
+private function frmTopTabsFind_TipText( byval hTip as HWND, _
+                                         byval hAttached as HWND, _
+                                         byval idx as long ) as DWSTRING
+    Theme_ApplyTooltip( hTip )
+    select case idx
+        case TTFTIP_TOGGLE:     return frmPanelMenu_FormatTooltip( IDM_TOGGLEREPLACE )
+        case TTFTIP_MATCHCASE:  return L(163,"Match Case")
+        case TTFTIP_WHOLEWORD:  return L(162,"Match Whole Words")
+        case TTFTIP_UPARROW:    return frmPanelMenu_FormatTooltip( IDM_FINDPREVACCEL )
+        case TTFTIP_DOWNARROW:  return frmPanelMenu_FormatTooltip( IDM_FINDNEXTACCEL )
+        case TTFTIP_SELECTION:  return L(148,"Selection")
+        case TTFTIP_CLOSE:      return L(161,"Close") & " (Esc)"
+    end select
+    return ""
+end function
+
+
+' ========================================================================================
+' Which of the bar's rects is the cursor over? TTFTIP_NONE for none of them.
+' ========================================================================================
+private function frmTopTabsFind_HitTest( byval hwnd as HWND ) as long
+    if isMouseOverRECT( hwnd, gFind.rcToggle )    then return TTFTIP_TOGGLE
+    if isMouseOverRECT( hwnd, gFind.rcMatchCase ) then return TTFTIP_MATCHCASE
+    if isMouseOverRECT( hwnd, gFind.rcWholeWord ) then return TTFTIP_WHOLEWORD
+    if isMouseOverRECT( hwnd, gFind.rcUpArrow )   then return TTFTIP_UPARROW
+    if isMouseOverRECT( hwnd, gFind.rcDownArrow ) then return TTFTIP_DOWNARROW
+    if isMouseOverRECT( hwnd, gFind.rcSelection ) then return TTFTIP_SELECTION
+    if isMouseOverRECT( hwnd, gFind.rcClose )     then return TTFTIP_CLOSE
+    return TTFTIP_NONE
+end function
+
+
 ' ========================================================================================
 ' Position all child windows. Called manually and/or by WM_SIZE
 ' ========================================================================================
@@ -199,14 +255,16 @@ function frmTopTabsFind_WndProc( _
             byval lParam as LPARAM _
             ) as LRESULT
 
-    static as DWSTRING wszPrevTooltip 
-    static as HWND hTooltip 
-    if (uMsg = WM_DESTROY) andalso (IsWindow(hToolTip)) then DestroyWindow(hToolTip)
-
     select Case uMsg
         HANDLE_MSG (hwnd, WM_SIZE, frmTopTabsFind_OnSize)
         HANDLE_MSG (hwnd, WM_COMMAND, frmTopTabsFind_OnCommand)
-            
+
+    case WM_DESTROY
+        ' The tip is a WS_POPUP owned by this window, not a child, so it does not go with the
+        ' parent -- destroying it here is also what removes it from the shared clock's registry.
+        if IsWindow(ghTopTabsFindTip) then DestroyWindow( ghTopTabsFindTip )
+        ghTopTabsFindTip = 0
+
     case WM_NCDESTROY
         dim pWindow as CWindow ptr = AfxCWindowPtr(hwnd)
         if pWindow then delete(pWindow)
@@ -219,51 +277,24 @@ function frmTopTabsFind_WndProc( _
         dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN_TOPTABSFIND)
         if pWindow = 0 then exit function
 
+        ' TME_LEAVE only. TME_HOVER existed solely to drive the old WM_MOUSEHOVER tooltip arm;
+        ' PsTooltip does its own dwell timing off the shared clock.
         dim tme as TrackMouseEvent
         tme.cbSize = sizeof(TrackMouseEvent)
-        tme.dwFlags = TME_HOVER or TME_LEAVE
+        tme.dwFlags = TME_LEAVE
         tme.hwndTrack = hwnd
-        tme.dwHoverTime = 20    ' HOVER_DEFAULT is 500
-        TrackMouseEvent(@tme) 
+        TrackMouseEvent(@tme)
 
-        if IsWindow(hTooltip) = 0 then 
-            hTooltip = AfxAddTooltip( hwnd, "", false, false )
-            ' Set the tooltip max width in order to handle the multiline
-            ' text needed for the split editor button.
-            SendMessage( hTooltip, TTM_SETMAXTIPWIDTH, 0, 200 )
-        end if
-    
+        ' Silent when the index has not changed; on a change it hides any visible tip without
+        ' a fade and clears a suppressed hover, so the new rect gets a fresh offer.
+        PsTooltip_SetToolIndex( ghTopTabsFindTip, frmTopTabsFind_HitTest( hwnd ) )
+
         AfxRedrawWindow( hwnd )
-        
-           
+
+
     case WM_MOUSELEAVE
-        wszPrevTooltip = ""
+        PsTooltip_SetToolIndex( ghTopTabsFindTip, TTFTIP_NONE )
         AfxRedrawWindow( hwnd )
-
-
-    case WM_MOUSEHOVER
-        dim as DWSTRING wszTooltip 
-        if isMouseOverRECT( hwnd, gFind.rcToggle ) then
-            wszTooltip  = frmPanelMenu_FormatTooltip( IDM_TOGGLEREPLACE )
-        elseif isMouseOverRECT( hwnd, gFind.rcMatchCase ) then
-            wszTooltip = L(163,"Match Case")
-        elseif isMouseOverRECT( hwnd, gFind.rcWholeWord ) then
-            wszTooltip = L(162,"Match Whole Words")
-        elseif isMouseOverRECT(hwnd, gFind.rcUpArrow) then
-            wszTooltip  = frmPanelMenu_FormatTooltip( IDM_FINDPREVACCEL )
-        elseif isMouseOverRECT(hwnd, gFind.rcDownArrow) then
-            wszTooltip  = frmPanelMenu_FormatTooltip( IDM_FINDNEXTACCEL )
-        elseif isMouseOverRECT( hwnd, gFind.rcSelection ) then
-            wszTooltip = L(148,"Selection")
-        elseif isMouseOverRECT( hwnd, gFind.rcClose ) then
-            wszTooltip = L(161,"Close") & " (Esc)"
-        end if
-        
-        ' Display the tooltip
-        if wszTooltip <> wszPrevTooltip then
-            AfxSetTooltipText( hTooltip, hwnd, wszTooltip )
-            wszPrevTooltip = wszTooltip 
-        end if    
 
 
     case WM_LBUTTONUP
@@ -424,6 +455,14 @@ function frmTopTabsFind_Show( byval hwndParent as HWND ) as LRESULT
     PsTextBox_SetChangeCallback( hCtlFind, @frmTopTabsFind_TextBoxChange )
     PsTextBox_SetFocusCallback( hCtlFind, @frmTopTabsFind_TextBoxFocus )
     ThemeTextBoxContextMenu( hCtlFind )
+
+    ' Create ALSO attaches. 200px was the old TTM_SETMAXTIPWIDTH, kept so a long tip still
+    ' wraps at the same place; colours and fonts are pushed per hover from
+    ' frmTopTabsFind_TipText, so nothing set here can go stale on a theme change.
+    ghTopTabsFindTip = PsTooltip_Create( HWND_FRMMAIN_TOPTABSFIND )
+    PsTooltip_SetToolIndex( ghTopTabsFindTip, TTFTIP_NONE )
+    PsTooltip_SetMaxWidth( ghTopTabsFindTip, 200 )
+    PsTooltip_SetTooltipCallback( ghTopTabsFindTip, @frmTopTabsFind_TipText )
 
     function = 0
     
