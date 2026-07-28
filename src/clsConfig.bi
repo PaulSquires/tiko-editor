@@ -79,8 +79,7 @@ type clsConfig
         SettingsVersion           as DWSTRING
         Tools(any)                as TYPE_TOOLS
         ToolsTemp(any)            as TYPE_TOOLS  
-        Builds(any)               as TYPE_BUILDS  
-        BuildsTemp(any)           as TYPE_BUILDS  
+        Builds(any)               as TYPE_BUILDS
         Cat(any)                  as TYPE_CATEGORIES
         CatTemp(any)              as TYPE_CATEGORIES
         ExplorerPositionRight     as long = false

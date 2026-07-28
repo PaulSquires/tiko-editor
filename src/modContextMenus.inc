@@ -196,7 +196,14 @@ private sub BuildConfigContextMenu_Rebuild()
         dim as long idMenu = IDM_BUILDCONFIG_POPUP + i
         dim as DWSTRING wszCaption = gConfig.Builds(i).wszDescription
         gConfig.Builds(i).idMenu = idMenu
-        PsPopupMenu_AddItem( ghPopupBuildConfig, idMenu, wszCaption, "", false, _
+        ' The shortcut slot was hardcoded "" here for as long as this menu has existed, so a
+        ' build accelerator fired but was never displayed ANYWHERE in the editor. Composed by
+        ' frmBuildConfig_MenuShortcutText, which is the same composer the dialog uses -- so
+        ' the two cannot come to disagree, and in particular cannot disagree about modifier
+        ' ORDER (Ctrl+Shift+Alt here, matching the Tools menu; keybindings.ini stores
+        ' Ctrl+Alt+Shift, and that difference is deliberate).
+        PsPopupMenu_AddItem( ghPopupBuildConfig, idMenu, wszCaption, _
+                            frmBuildConfig_MenuShortcutText( i ), false, _
                             (wszCaption = wszCurrentBuild) )
     next
 end sub

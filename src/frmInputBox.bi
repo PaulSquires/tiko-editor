@@ -64,7 +64,7 @@
 '
 ' ----------------------------------------------------------------------------------------
 ' THE PROMPT IS PAINTED, NOT A CONTROL. One less child window, and it recolours with the
-' theme for free. frmUserToolKey does the same with its three toggle captions.
+' theme for free. frmAssignKey does the same with its three toggle captions.
 '
 ' NO SELF-TEST FOR THE COMMIT RULE, deliberately: it is a few lines and the dialog is modal,
 ' so an assertion would have to open it. The geometry IS asserted -- see below.
