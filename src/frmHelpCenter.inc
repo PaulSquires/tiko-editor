@@ -368,6 +368,11 @@ end function
 ' ========================================================================================
 sub frmHelpCenter_CaptureState()
     if IsWindow( HWND_FRMHELPCENTER ) = 0 then exit sub
+    ' A preloaded window that has never been revealed has showCmd = SW_HIDE, so capturing
+    ' it would write HelpStartupMaximized = false on every save of a session in which the
+    ' Help Center was never opened -- quietly losing a maximized preference the user set
+    ' in an earlier one.
+    if gHelpCenter.bEverShown = false then exit sub
     if IsIconic( HWND_FRMHELPCENTER ) then exit sub
 
     dim WinPla as WINDOWPLACEMENT
@@ -450,8 +455,11 @@ private function frmHelpCenter_WndProc( byval hwnd   as HWND, _
             return 0
 
         case WM_DESTROY
-            ' Persist the geometry before the window goes.
-            gConfig.SaveConfigFile
+            ' Persist the geometry before the window goes -- but only if there is any. A
+            ' preloaded window torn down at shutdown without ever being shown has nothing
+            ' to contribute, and saving from here would just be a second write of what
+            ' frmMain's own close path is about to write anyway.
+            if gHelpCenter.bEverShown then gConfig.SaveConfigFile
             return 0
 
         case WM_NCDESTROY
@@ -497,6 +505,7 @@ private function frmHelpCenter_WndProc( byval hwnd   as HWND, _
             HWND_FRMHELPCENTER = 0
             gHelpCenter.hWebHost = 0
             gHelpCenter.bLoaded = false
+            gHelpCenter.bEverShown = false
             gHelpCenter.wszPendingQuery = ""
             return 0
 
@@ -507,36 +516,26 @@ end function
 
 
 ' ========================================================================================
-' Show the Help Center, optionally running a search.
+' Build the window and start the pane loading. Shared by _Show and _Preload.
 '
-' wszSearch is already normalized by the caller (frmMainOnCommand), so it is a single
-' line and within the length cap by the time it arrives here.
+' bVisible = FALSE is the preload: the window is placed but left HIDDEN and never brought
+' forward, and every failure path is SILENT -- startup must not raise a message box about
+' a feature the user has not asked for. _Show's create path passes TRUE and behaves
+' exactly as it always did.
+'
+' Returns TRUE only if the window exists and the pane came up.
 ' ========================================================================================
-function frmHelpCenter_Show( byval wszSearch as DWSTRING ) as LRESULT
-
-    ' --- already open: no navigation, just re-focus and re-search --------------------
-    ' Every page of the generated site carries the same header, search box included, so
-    ' there is nothing to navigate to even if the user has browsed deep into a docset.
-    if IsWindow( HWND_FRMHELPCENTER ) then
-        if IsIconic( HWND_FRMHELPCENTER ) then ShowWindow( HWND_FRMHELPCENTER, SW_NORMAL )
-        AllowSetForegroundWindow( ASFW_ANY )
-        SetForegroundWindow( HWND_FRMHELPCENTER )
-        if gHelpCenter.bLoaded then
-            frmHelpCenter_ApplySearch( wszSearch )
-        else
-            ' Still loading: let NavigationCompleted deliver it.
-            gHelpCenter.wszPendingQuery = wszSearch
-        end if
-        exit function
-    end if
+private function frmHelpCenter_CreateWindow( byval bVisible as boolean ) as boolean
 
     ' --- the content has to be there ------------------------------------------------
     dim as DWSTRING wszIndex = HelpCenter_RootFolder() & "index.html"
     if AfxFileExists( wszIndex ) = 0 then
-        frmHelpCenter_ThemedMsgBox( L(94,"Help Center files not found.") & _
-                                    !"\r\n\r\n" & wszIndex, _
-                                    L(90,"Help Center") )
-        exit function
+        if bVisible then
+            frmHelpCenter_ThemedMsgBox( L(94,"Help Center files not found.") & _
+                                        !"\r\n\r\n" & wszIndex, _
+                                        L(90,"Help Center") )
+        end if
+        return false
     end if
 
     dim pWindow as CWindow ptr = new CWindow
@@ -568,18 +567,28 @@ function frmHelpCenter_Show( byval wszSearch as DWSTRING ) as LRESULT
         .rcNormalPosition.Top    = gConfig.HelpStartupTop
         .rcNormalPosition.Right  = gConfig.HelpStartupRight
         .rcNormalPosition.Bottom = gConfig.HelpStartupBottom
-        .showCmd = iif( gConfig.HelpStartupMaximized, SW_MAXIMIZE, SW_SHOWNORMAL )
+        ' SW_HIDE on the preload path. SetWindowPlacement still writes rcNormalPosition
+        ' whatever showCmd says, so the hidden window is the RIGHT SIZE -- which is what
+        ' lets the pane be created and laid out at its final dimensions rather than
+        ' resized in front of the user on the first reveal. _Show applies the real
+        ' restore state later, from bEverShown.
+        .showCmd = iif( bVisible, _
+                        iif( gConfig.HelpStartupMaximized, SW_MAXIMIZE, SW_SHOWNORMAL ), _
+                        SW_HIDE )
     end with
     SetWindowPlacement( pWindow->hWindow, @WinPla )
+    gHelpCenter.bEverShown = bVisible
 
     ' Bring it to the front NOW, before the IsReady wait below, which can block for as
-    ' long as HELPCENTER_READYTIMEOUT while the runtime starts. The reopen path above
-    ' has always done this; the CREATE path did not, so the very first F1 of a session
+    ' long as HELPCENTER_READYTIMEOUT while the runtime starts. The reopen path has
+    ' always done this; the CREATE path did not, so the very first F1 of a session
     ' built the window behind the editor and left the keyboard in Scintilla. The pane
     ' cannot take focus until it exists, so this only handles the frame -- ApplySearch
     ' does the other half once there is something to focus.
-    AllowSetForegroundWindow( ASFW_ANY )
-    SetForegroundWindow( HWND_FRMHELPCENTER )
+    if bVisible then
+        AllowSetForegroundWindow( ASFW_ANY )
+        SetForegroundWindow( HWND_FRMHELPCENTER )
+    end if
 
     ' --- the WebView host child ------------------------------------------------------
     ' A plain STATIC. The pane is hosted here rather than in the frame because CWebView2's
@@ -617,9 +626,11 @@ function frmHelpCenter_Show( byval wszSearch as DWSTRING ) as LRESULT
         delete gHelpCenter.pWeb
         gHelpCenter.pWeb = 0
         DestroyWindow( HWND_FRMHELPCENTER )
-        frmHelpCenter_ThemedMsgBox( L(93,"The Help Center needs the Microsoft Edge WebView2 Runtime, which is not installed on this computer."), _
-                                    L(92,"WebView2 Runtime Required") )
-        exit function
+        if bVisible then
+            frmHelpCenter_ThemedMsgBox( L(93,"The Help Center needs the Microsoft Edge WebView2 Runtime, which is not installed on this computer."), _
+                                        L(92,"WebView2 Runtime Required") )
+        end if
+        return false
     end if
 
     ' Both handlers register themselves in their constructors. They are kept on
@@ -636,13 +647,87 @@ function frmHelpCenter_Show( byval wszSearch as DWSTRING ) as LRESULT
     ' the only one this window actually depends on (ExecuteScript).
 
     gHelpCenter.bLoaded = false
-    gHelpCenter.wszPendingQuery = wszSearch
+    gHelpCenter.wszPendingQuery = ""
     gHelpCenter.pWeb->Navigate( HelpCenter_IndexUrl() )
 
     frmHelpCenter_PositionWindows()
 
+    function = true
+end function
+
+
+' ========================================================================================
+' Bring an existing window to the front, applying the stored restore state the first time.
+'
+' The preload placed the window with showCmd = SW_HIDE, so nothing has yet acted on
+' HelpStartupMaximized -- that happens here, on the first reveal, which is also the first
+' moment it could matter. The dark caption is re-applied because a theme change between
+' the preload and the first F1 would otherwise leave the caption from the theme that was
+' loaded at startup.
+' ========================================================================================
+private sub frmHelpCenter_Reveal()
+    if IsWindow( HWND_FRMHELPCENTER ) = 0 then exit sub
+
+    Theme_ApplyDarkCaption( HWND_FRMHELPCENTER )
+
+    if gHelpCenter.bEverShown = false then
+        dim WinPla as WINDOWPLACEMENT
+        WinPla.Length = sizeof(WinPla)
+        if GetWindowPlacement( HWND_FRMHELPCENTER, @WinPla ) then
+            WinPla.showCmd = iif( gConfig.HelpStartupMaximized, SW_MAXIMIZE, SW_SHOWNORMAL )
+            SetWindowPlacement( HWND_FRMHELPCENTER, @WinPla )
+        end if
+        gHelpCenter.bEverShown = true
+    elseif IsIconic( HWND_FRMHELPCENTER ) then
+        ShowWindow( HWND_FRMHELPCENTER, SW_NORMAL )
+    end if
+
+    AllowSetForegroundWindow( ASFW_ANY )
+    SetForegroundWindow( HWND_FRMHELPCENTER )
+end sub
+
+
+' ========================================================================================
+' Show the Help Center, optionally running a search.
+'
+' wszSearch is already normalized by the caller (frmMainOnCommand), so it is a single
+' line and within the length cap by the time it arrives here.
+'
+' There is no navigation on the reopen path -- nor on the preloaded path, which is the
+' point of the preload. Every page of the generated site carries the same header, search
+' box included, so there is nothing to navigate to even if the user has browsed deep into
+' a docset: revealing the window and scripting the box is the whole of it.
+' ========================================================================================
+function frmHelpCenter_Show( byval wszSearch as DWSTRING ) as LRESULT
+
+    if IsWindow( HWND_FRMHELPCENTER ) = 0 then
+        if frmHelpCenter_CreateWindow( true ) = false then exit function
+    end if
+
+    frmHelpCenter_Reveal()
+
+    if gHelpCenter.bLoaded then
+        frmHelpCenter_ApplySearch( wszSearch )
+    else
+        ' Still loading -- either the create above has only just issued the Navigate, or a
+        ' preload is still in flight. Either way NavigationCompleted delivers it.
+        gHelpCenter.wszPendingQuery = wszSearch
+    end if
+
     function = 0
 end function
+
+
+' ========================================================================================
+' Build the window hidden at startup. See the header for why every failure is silent.
+' ========================================================================================
+sub frmHelpCenter_Preload()
+    if IsWindow( HWND_FRMHELPCENTER ) then exit sub
+    ' Result deliberately discarded: there is nothing to report and nothing to retry. A
+    ' failed preload simply leaves HWND_FRMHELPCENTER at 0, and the next F1 takes the
+    ' ordinary create path, which does the reporting.
+    frmHelpCenter_CreateWindow( false )
+end sub
 
 
 ' ========================================================================================

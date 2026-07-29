@@ -42,7 +42,13 @@ enum
     MSG_USER_SHOW_TOOLKEY
     MSG_USER_RICHEDIT_SELECTALL
     MSG_USER_PARSE_COMPLETE        ' wParam = SCAN_TIER; posted by the fbcParser scan worker
-    
+    ' Builds the Help Center window HIDDEN, so the first F1 of a session costs neither the
+    ' WebView2 startup wait nor the flash of an empty frame. Posted rather than called from
+    ' frmMain_Show: the create path blocks in CWebView2::IsReady for as long as
+    ' HELPCENTER_READYTIMEOUT, and that has to happen with the editor already on screen and
+    ' its message loop running, not part-way through building it.
+    MSG_USER_PRELOAD_HELPCENTER
+
     '' FILE
     IDM_FILE_START
     IDM_FILENEW, IDM_FILEOPEN, IDM_FILEOPENASTEMPLATE

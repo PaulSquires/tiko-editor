@@ -74,6 +74,13 @@ type HELPCENTER_TYPE
     ' Set once the site has loaded at least once, so a later _Show knows it can skip the
     ' navigation and script the page directly.
     as boolean          bLoaded
+    ' FALSE while the window exists but has never been on screen, which is the state
+    ' _Preload leaves it in. Two things read it: _Show, which has to apply the stored
+    ' restore/maximized state the hidden create deliberately did not; and _CaptureState,
+    ' which must NOT persist the geometry of a window the user has never seen -- a hidden
+    ' window's showCmd is SW_HIDE, so capturing it would quietly clear HelpStartupMaximized
+    ' on every save of a session in which the Help Center was never opened.
+    as boolean          bEverShown
 end type
 
 dim shared as HELPCENTER_TYPE gHelpCenter
@@ -93,6 +100,11 @@ declare function HelpCenter_RootFolder() as DWSTRING
 declare sub      frmHelpCenter_ApplySearch( byval wszQuery as DWSTRING )
 
 declare function frmHelpCenter_Show( byval wszSearch as DWSTRING ) as LRESULT
+' Build the window hidden and navigate it, so the first _Show has nothing left to do but
+' reveal it. Silent on every failure path -- a missing site folder or a missing WebView2
+' runtime must not raise a message box at startup for a feature the user has not asked
+' for; the next F1 goes down the ordinary create path and reports it there.
+declare sub      frmHelpCenter_Preload()
 declare function frmHelpCenter_FilterMessage( byval pMsg as MSG ptr ) as boolean
 declare sub      frmHelpCenter_CaptureState()
 declare sub      frmHelpCenter_RunSelfTest()
