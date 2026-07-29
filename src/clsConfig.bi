@@ -137,13 +137,12 @@ type clsConfig
         TabIndentSpaces           as long = true
         MultipleInstances         as long = true
         CompileAutosave           as long = true
+        UnicodeEncoding           as long = false
         ' The encoding a File>New document starts life with -- one of the FILE_ENCODING_*
-        ' values from clsDocument.bi (which tiko.bas includes ahead of this file). It was
-        ' added as a NEW key rather than by repurposing the older "UnicodeEncoding", whose
-        ' every on-disk value was 0 -- which read as an encoding would mean ANSI, silently
-        ' changing the default for every existing install. UnicodeEncoding was never read
-        ' by anything but its own loader and was removed 2026-07-29; a stale key in an
-        ' existing settings.ini is ignored and drops out on the next save.
+        ' values from clsDocument.bi (which tiko.bas includes ahead of this file). It is a
+        ' NEW key rather than a repurposing of UnicodeEncoding above: every settings.ini
+        ' already on disk carries "UnicodeEncoding=0", which read as an encoding would mean
+        ' ANSI, silently changing the default for every existing install.
         NewFileEncoding           as long = FILE_ENCODING_UTF8
         TabSize                   as DWSTRING = "4"
         LocalizationFile          as DWSTRING = "english.lang"

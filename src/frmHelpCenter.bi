@@ -93,7 +93,6 @@ declare function HelpCenter_NormalizeQuery( byval wszText as DWSTRING ) as DWSTR
 declare function HelpCenter_IsSearchableWord( byval wszWord as DWSTRING ) as boolean
 declare function HelpCenter_PathToFileUrl( byval wszPath as DWSTRING ) as DWSTRING
 declare function HelpCenter_IndexUrl() as DWSTRING
-declare function HelpCenter_IsLocalUrl( byval wszUrl as DWSTRING ) as boolean
 declare function HelpCenter_RootFolder() as DWSTRING
 
 ' Forward declared: the NavigationCompleted handler calls it, and that type has to be

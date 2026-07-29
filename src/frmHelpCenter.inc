@@ -60,33 +60,15 @@ end function
 
 
 ' ########################################################################################
-' NewWindowRequested: navigates the PANE to the URI, and never opens a second window.
+' NewWindowRequested: sends the URI to the DEFAULT BROWSER, never into the pane.
 '
 ' THIS IS LOAD-BEARING, NOT POLISH. The ~1,838 winapi\*\procedures\*.html pages in the
-' generated site are link-out launchers, and Win32 search hits carry target="_blank" --
-' so every route to a Microsoft Learn page arrives here as a new-window request rather
-' than as a navigation. Without this handler the pane pops a second WebView2 window.
-'
-' Both halves of the rule matter:
-'
-'  * A USER-INITIATED request navigates the pane. That is the Win32 F1 path: the search
-'    hit is a click, so the Learn page opens where the user is looking instead of in the
-'    default browser. Back is WebView2's own Alt+Left, and frmHelpCenter_Show puts the
-'    pane back on the local site if F1 is pressed while it is off there.
-'
-'  * A NON-user-initiated one is SUPPRESSED OUTRIGHT, and that is what keeps Back
-'    usable. The launcher page's window.open runs ON LOAD, so navigating on it would make
-'    Back land on the launcher, which would immediately throw the user forward again --
-'    an inescapable page. Suppressed, the launcher renders as what it already is: a real
-'    page whose content is the link, one user-initiated click away from the same place.
-'    (It is written to survive exactly this, because a browser's popup blocker refuses
-'    that window.open too.)
-'
-' IsUserInitiated is read rather than assumed, but which way it answers for the launcher's
-' auto-open can only be settled by running it -- TIKO_HELPCENTER_TRACE=1 prints it.
+' generated site are link-out launchers that call window.open( learn.microsoft.com ) ON
+' LOAD, and Win32 search hits carry target="_blank" for the same reason. Without this
+' handler the pane navigates itself off the local docs and onto Microsoft Learn.
 '
 ' Deliberately NOT CWebView2NewWindowRequestedEventHandlerInternal( p, FALSE ): that one
-' redirects EVERY popup into the same view, auto-opens included, which is the back-trap.
+' redirects the popup INTO the same view, which is exactly the failure above.
 ' ########################################################################################
 type HELPCENTER_NEWWINDOW extends CWebView2NewWindowRequestedEventHandler
     declare function Invoke( byval sender as Afx_ICoreWebView2 ptr, _
@@ -113,26 +95,12 @@ function HELPCENTER_NEWWINDOW.Invoke( byval sender as Afx_ICoreWebView2 ptr, _
                                       byval args as Afx_ICoreWebView2NewWindowRequestedEventArgs ptr _
                                       ) as HRESULT
     if args = 0 then return S_OK
-    ' Claim it first: whatever happens below, WebView2 must not open a window of its own.
+    ' Claim it first: whatever happens below, the pane must not navigate.
     args->put_Handled( true )
-
-    ' LONG, not boolean: this is a COM BOOL out-parameter.
-    dim as long bUserInitiated = 0
-    args->get_IsUserInitiated( @bUserInitiated )
-
     dim as wstring ptr pUri
     if SUCCEEDED( args->get_Uri( @pUri ) ) then
         if pUri then
-            if environ("TIKO_HELPCENTER_TRACE") = "1" then
-                dim as string sRep = "  helpcenter: newwindow user=" & str(bUserInitiated) & _
-                                     " uri=" & *pUri
-                print sRep
-            end if
-            ' The auto-open is dropped on the floor -- see the header. Only a click
-            ' moves the pane.
-            if bUserInitiated <> 0 then
-                if m_pWebView2 then m_pWebView2->Navigate( *pUri )
-            end if
+            ShellExecuteW( 0, "open", pUri, 0, 0, SW_SHOWNORMAL )
             CoTaskMemFree( pUri )
         end if
     end if
@@ -174,26 +142,6 @@ end function
 
 function HelpCenter_IndexUrl() as DWSTRING
     function = HelpCenter_PathToFileUrl( HelpCenter_RootFolder() & "index.html" )
-end function
-
-
-' ========================================================================================
-' Is this URL a page of the LOCAL generated site?
-'
-' The pane can now be sitting on learn.microsoft.com -- a Win32 search hit navigates it
-' there rather than opening the default browser. Those pages carry none of our site's
-' chrome, so the search box ApplySearch scripts does not exist on them and F1 would
-' silently do nothing. _Show tests this and navigates home first.
-'
-' Compared against the site's own root rather than merely testing for "file:", so a local
-' HTML file the user has browsed to from a Learn page still counts as off-site. The
-' compare is CASE-INSENSITIVE: WebView2 reports the source URL with its own casing of the
-' drive letter, which need not match what we handed Navigate.
-' ========================================================================================
-function HelpCenter_IsLocalUrl( byval wszUrl as DWSTRING ) as boolean
-    dim as DWSTRING wszRoot = HelpCenter_PathToFileUrl( HelpCenter_RootFolder() )
-    if len( wszUrl ) < len( wszRoot ) then return false
-    function = ( lcase( left( wszUrl, len( wszRoot ) ) ) = lcase( wszRoot ) )
 end function
 
 
@@ -758,19 +706,6 @@ function frmHelpCenter_Show( byval wszSearch as DWSTRING ) as LRESULT
 
     frmHelpCenter_Reveal()
 
-    ' The pane may be sitting on a Microsoft Learn page, which carries no search box of
-    ' ours -- so go home first and let NavigationCompleted deliver the query. Checked
-    ' against the live source rather than a flag: the user can also have walked off-site
-    ' with Alt+Left/Alt+Right, which no flag of ours would see.
-    if gHelpCenter.pWeb then
-        if HelpCenter_IsLocalUrl( gHelpCenter.pWeb->GetSource() ) = false then
-            gHelpCenter.bLoaded = false
-            gHelpCenter.wszPendingQuery = wszSearch
-            gHelpCenter.pWeb->Navigate( HelpCenter_IndexUrl() )
-            return 0
-        end if
-    end if
-
     if gHelpCenter.bLoaded then
         frmHelpCenter_ApplySearch( wszSearch )
     else
@@ -939,30 +874,6 @@ sub frmHelpCenter_RunSelfTest()
         HelpCenter_PathToFileUrl( "C:\c#\i.html" ) = "file:///C:/c%23/i.html" )
     HelpCenter_Check( "url: a question mark is encoded", _
         HelpCenter_PathToFileUrl( "C:\a?b\i.html" ) = "file:///C:/a%3Fb/i.html" )
-
-    ' --- HelpCenter_IsLocalUrl ---------------------------------------------------------
-    ' Decides whether F1 has to navigate home before it can search. A wrong TRUE is the
-    ' bad direction: it scripts a search box that is not on the page and F1 does nothing
-    ' at all, which is exactly how this looked before the check existed.
-    HelpCenter_Check( "local: the index itself is local", _
-        HelpCenter_IsLocalUrl( HelpCenter_IndexUrl() ) = true )
-    HelpCenter_Check( "local: a topic page under the root is local", _
-        HelpCenter_IsLocalUrl( HelpCenter_PathToFileUrl( _
-            HelpCenter_RootFolder() & "afxnova\procedures\p.html" ) ) = true )
-    ' The case the whole feature turns on.
-    HelpCenter_Check( "local: a learn.microsoft.com page is NOT local", _
-        HelpCenter_IsLocalUrl( "https://learn.microsoft.com/en-us/windows/win32/api/" ) = false )
-    HelpCenter_Check( "local: empty is NOT local", _
-        HelpCenter_IsLocalUrl( "" ) = false )
-    ' A file:// URL is not enough on its own -- the user can reach one from a Learn page.
-    HelpCenter_Check( "local: a file URL outside the root is NOT local", _
-        HelpCenter_IsLocalUrl( "file:///C:/somewhere/else/index.html" ) = false )
-    ' Shorter than the root, so the length guard is what answers rather than the compare.
-    HelpCenter_Check( "local: a short URL does not read past the end", _
-        HelpCenter_IsLocalUrl( "file:///" ) = false )
-    ' WebView2 reports the source with its own casing of the drive letter.
-    HelpCenter_Check( "local: the compare is case-insensitive", _
-        HelpCenter_IsLocalUrl( lcase( HelpCenter_IndexUrl() ) ) = true )
 
     ' --- localized ids -----------------------------------------------------------------
     ' len() > 0 CANNOT distinguish a real translation from the English fallback -- a key
