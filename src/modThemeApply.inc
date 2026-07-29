@@ -104,6 +104,7 @@ private sub Theme_BuildWndTable()
     ThemeWnd_Add( @HWND_FRMFUNCTIONS,          THSUB_PANEL )
     ThemeWnd_Add( @HWND_FRMBOOKMARKS,          THSUB_PANEL )
     ThemeWnd_Add( @HWND_FRMPANEL_MENU,         THSUB_PANEL )
+    ThemeWnd_Add( @HWND_FRMPANEL_MENU_RIGHT,   THSUB_PANEL )
     ThemeWnd_Add( @HWND_FRMPANEL_VSCROLLBAR,   THSUB_PANEL )
     ThemeWnd_Add( @HWND_FRMAUTOCOMPLETE,       THSUB_AUTOCOMPLETE )
     ThemeWnd_Add( @HWND_FRMMAIN_SPLITV,        THSUB_EDITORCHROME )
@@ -294,8 +295,7 @@ sub Theme_ApplySubsystems( byval nMask as ulong )
         Theme_PushPanelList( HWND_FRMEXPLORER )
         Theme_PushPanelList( HWND_FRMFUNCTIONS )
         Theme_PushPanelList( HWND_FRMBOOKMARKS )
-        if IsWindow(HWND_FRMPANEL_MENU) then _
-            PsStatusBar_SetBackColor( HWND_FRMPANEL_MENU, ghPanel.BackColor )
+        frmPanelMenu_ApplyTheme()
     end if
 
     if (nMask and THSUB_STATUSBAR) <> 0 then

@@ -215,6 +215,10 @@ dim shared as HWND HWND_FRMEXPLORER
 dim shared as HWND HWND_FRMFUNCTIONS
 dim shared as HWND HWND_FRMBOOKMARKS
 dim shared as HWND HWND_FRMPANEL, HWND_FRMPANEL_MENU, HWND_FRMPANEL_VSCROLLBAR
+' The panel menu is TWO PsIconPanels rather than one bar with a spring: PsIconPanel
+' declares its spacing and justifies the whole run as a block, so the left-hand and
+' right-hand icon groups are separate controls sharing the strip.
+dim shared as HWND HWND_FRMPANEL_MENU_RIGHT
 dim shared as HWND HWND_FRMAUTOCOMPLETE
 dim shared as HWND HWND_FRMEDITOR_HSCROLLBAR(1)
 dim shared as HWND HWND_FRMEDITOR_VSCROLLBAR(1)

@@ -14,8 +14,10 @@
 #pragma once
 
 #define IDC_FRMPANELMENU_ICONBAR              1000
+#define IDC_FRMPANELMENU_ICONBAR_RIGHT        1001
 
 
 declare function frmPanelMenu_FormatTooltip( byval id as integer ) as DWSTRING
 declare function frmPanelMenu_Show( byval hWndParent as HWnd ) as LRESULT
+declare sub      frmPanelMenu_ApplyTheme()
 
