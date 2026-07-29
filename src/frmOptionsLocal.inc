@@ -203,13 +203,12 @@ function frmOptionsLocal_LocalEditCheck() as long
             dim as long idx = val(wszIndex)
             wszTemp = wspace(1024)
             wszPhrase = AfxStrRSet(wszIndex, 5, "0") + wstr(":") + gLocalPhrases(idx)
-            ' Use ** version of DWSTRING on MID statements per the documentation.
-            mid(**wszTemp, 1) = wszPhrase
+            mid(wszTemp, 1) = wszPhrase
             if len(gLangEnglish(idx)) then
                 ' Always attempt to insert the ENGLISH comment at position 60. If the local
                 ' phrase is too long then simply put the ENGLISH comment after it.
                 dim as long nPos = iif( len(wszPhrase) < 60, 60, len(wszPhrase) + 5)
-                mid(**wszTemp, nPos) = "; " & gLangEnglish(idx)
+                mid(wszTemp, nPos) = "; " & gLangEnglish(idx)
             end if
             pStream.WriteLine rtrim(wszTemp)
         next
@@ -262,7 +261,7 @@ function frmOptionsLocal_LoadLocalizationFile( byref wszFilename as wstring ) as
         wKey = "": wData = "": nData = 0
 
         wKey  = left(wst, i-1)
-        wData = mid(**wst, i+1)    ' MID causes problems with Chinese data so ** is used.
+        wData = mid(wst, i+1)    ' MID causes problems with Chinese data so ** is used.
 
         nKey  = val(wKey)
         nData = val(wData)
@@ -310,7 +309,7 @@ private function frmOptionsLocal_PrettyName( byval wszFilename as DWSTRING ) as 
     dim as boolean bStart = true
 
     for i as long = 1 to len(wszName)
-        dim as DWSTRING wszCh = mid(**wszName, i, 1)
+        dim as DWSTRING wszCh = mid(wszName, i, 1)
         if wszCh = "_" then
             wszOut += " "
             bStart = true
