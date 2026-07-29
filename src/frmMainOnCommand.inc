@@ -313,13 +313,25 @@ function frmMain_OnCommand( _
 
         ''   HELP MENU
         case IDM_HELP_CENTER
-            ' F1. Whatever is selected in the editor becomes the search; an empty
-            ' selection just focuses the search box. GetSelText returns "" when nothing is
-            ' selected, so the no-selection case needs no branch of its own.
+            ' F1. The search term is the SELECTION if there is one, otherwise the word
+            ' under the caret -- so F1 works with nothing selected, which is the ordinary
+            ' way to ask about the identifier you are looking at. (GetWord is what the old
+            ' .chm ShowContextHelp used for the same reason.)
+            '
+            ' The selection wins because it is the more explicit of the two: a user who
+            ' has selected "PsListTree_SetFont" means that, not the word the caret happens
+            ' to sit in. Both may be "" -- no document, or the caret on whitespace -- and
+            ' that is a legal outcome: the window opens with the search box focused and
+            ' empty.
             dim pDocHelp as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
             dim as DWSTRING wszHelpSel
-            if pDocHelp then wszHelpSel = pDocHelp->GetSelText()
-            frmHelpCenter_Show( HelpCenter_NormalizeQuery( wszHelpSel ) )
+            if pDocHelp then
+                wszHelpSel = HelpCenter_NormalizeQuery( pDocHelp->GetSelText() )
+                if len( wszHelpSel ) = 0 then
+                    wszHelpSel = HelpCenter_NormalizeQuery( pDocHelp->GetWord() )
+                end if
+            end if
+            frmHelpCenter_Show( wszHelpSel )
 
         case IDM_ABOUT
             frmAbout_Show( hwnd )

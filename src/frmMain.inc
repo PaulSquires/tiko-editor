@@ -1781,7 +1781,7 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ' Opens the Help Center at startup so the interactive pass needs no menu driving --
     ' and so the WebView2 path gets exercised at all, which no assertion can do.
     if environ("TIKO_HELPCENTER_AUTOOPEN") = "1" then
-        frmHelpCenter_Show( "AfxStrClipLeft" )
+        frmHelpCenter_Show( "" )
     end if
 
     ' Create the main application top tabs control

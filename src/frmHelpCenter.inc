@@ -223,6 +223,14 @@ end function
 sub frmHelpCenter_ApplySearch( byval wszQuery as DWSTRING )
     if gHelpCenter.pWeb = 0 then exit sub
 
+    ' The query is chosen in frmMainOnCommand from Scintilla state no assertion can reach
+    ' -- the selection, or the word under the caret -- so this reports what actually
+    ' arrived. TIKO_HELPCENTER_TRACE=1.
+    if environ("TIKO_HELPCENTER_TRACE") = "1" then
+        dim as string sQ = "  helpcenter: search=[" & wszQuery & "]"
+        print sQ
+    end if
+
     dim as DWSTRING wszJS = "(function(){var i=document.getElementById('q');if(!i)return;"
 
     if len( wszQuery ) > 0 then
@@ -550,7 +558,7 @@ function frmHelpCenter_Show( byval wszSearch as DWSTRING ) as LRESULT
 
     ' WebView2 is new to this codebase and nothing in the self-test can reach it, so the
     ' one fact worth reporting is whether the runtime came up and which build answered.
-    if environ("TIKO_HELPCENTER_AUTOOPEN") = "1" then
+    if environ("TIKO_HELPCENTER_TRACE") = "1" then
         dim as string sRep = "  helpcenter: IsReady=" & str(bReady) & _
                              " browser=" & gHelpCenter.pWeb->GetBrowserVersion() & _
                              " url=" & HelpCenter_IndexUrl()
@@ -599,7 +607,12 @@ end function
 ' fully GREEN. What it does cover is the three pure helpers, which is where the escaping
 ' and the URL arithmetic live and where a silent wrong answer is actually possible.
 '
-' The evidence for everything else is the interactive pass, not this file.
+' The evidence for everything else is the interactive pass, not this file. Two hooks exist
+' for that: TIKO_HELPCENTER_AUTOOPEN=1 opens the window at startup, and
+' TIKO_HELPCENTER_TRACE=1 reports whether the WebView2 runtime came up and what query
+' actually reached the pane -- which is the only way to see the F1 term, since it is
+' derived from Scintilla state (the selection, else the word under the caret) that no
+' assertion here can reach.
 ' ========================================================================================
 dim shared as long gHelpCenterTestPass, gHelpCenterTestFail
 

@@ -240,7 +240,7 @@ function frmKeyboard_CreateDefaultKeyBindings() as long
     ' The STRING id changed with the command, and that is the intended migration: an
     ' existing keybindings.ini carrying "IDM_HELP_FB:F1" no longer matches any binding and
     ' is dropped, so the new default F1 applies. A user who had rebound F1 loses that once.
-    frmKeyBoard_AddKeyBinding( "Help", IDM_HELP_CENTER, "IDM_HELP_CENTER", "Help Center (searches the selected text)", "F1" )
+    frmKeyBoard_AddKeyBinding( "Help", IDM_HELP_CENTER, "IDM_HELP_CENTER", "Help Center (searches the selection, or the word under the caret)", "F1" )
 
     ' Load the keybindings settings file. This will update the gKeys array with any
     ' user defined key mappings.
