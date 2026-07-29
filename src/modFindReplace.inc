@@ -15,12 +15,74 @@
 
 
 ' ========================================================================================
+' THE ONE DOOR for the Find/Replace bars' visibility.
+' ========================================================================================
+' Sets the flags, repositions, and restores focus. Every mutator goes through here, so a
+' caller can no longer set state that nothing acts on -- which used to present as "the
+' menu item did nothing", because frmMain_PositionWindows is the only code that turns
+' these flags into windows and it was the CALLER's job to remember to run it.
+'
+' REPLACE IMPLIES FIND. A visible Replace bar with no Find bar above it is not a state the
+' layout has; enforcing it in one place beats trusting five call sites to agree.
+'
+' IDEMPOTENT, AND THAT IS THE POINT OF THE EARLY RETURN. OnCommand_FileClose and
+' OnCommand_ProjectClose both call the hide path unconditionally, on paths where nothing is
+' open. That used to walk every open document, run a full re-layout, and -- the part worth
+' avoiding -- call frmMain_SetFocusToCurrentCodeWindow while that very window was being
+' destroyed.
+function FindReplace_SetVisible( byval bFind as boolean, byval bReplace as boolean ) as long
+    ' The bars are created once at startup, but WM_NCDESTROY zeroes these globals. Without
+    ' the guard every GetDlgItem below silently returns 0 and the work is done on nothing.
+    if IsWindow(HWND_FRMMAIN_FIND) = 0 then return 0
+    if IsWindow(HWND_FRMMAIN_REPLACE) = 0 then return 0
+
+    if bReplace then bFind = true
+
+    if (gFind.bShowFindPanel = bFind) andalso (gFind.bShowReplacePanel = bReplace) then return 0
+
+    dim as boolean bClosing = (gFind.bShowFindPanel = true) andalso (bFind = false)
+
+    gFind.bShowInfoPanel    = true
+    gFind.bShowFindPanel    = bFind
+    gFind.bShowReplacePanel = bReplace
+
+    if bClosing then
+        ' Drop the search highlights AND the Selection latch. Leaving nSelection set was
+        ' how a closed-and-reopened Find bar came back with Selection lit against a marker
+        ' range that no longer described anything -- visible now that the button paints
+        ' from this model rather than from a control's own state.
+        gFind.nSelection = false
+        dim as clsDocument ptr pDoc
+        for i as integer = 0 to gTTabCtl.GetItemCount() - 1
+            pDoc = gTTabCtl.GetpDoc(i)
+            if pDoc = null then continue for
+            pDoc->RemoveMarkerHighlight()
+            pDoc->RemoveSelectionAttributes()
+        next
+    end if
+
+    frmMain_PositionWindows()
+
+    ' Only on the closing edge: opening the bars puts focus in the find field (the caller's
+    ' job), and a no-op call must not move focus at all.
+    if bClosing then frmMain_SetFocusToCurrentCodeWindow()
+
+    return 0
+end function
+
+
+' ========================================================================================
 ' Expand the frmTopTabsInfo area to allow for the Find controls.
 ' ========================================================================================
+' Leaves the Replace bar exactly as it found it -- this used to clear bExpanded while
+' leaving bShowReplacePanel set, which is how Ctrl+F followed by Ctrl+H became a keypress
+' that did nothing.
 function FindControls_Show() as long
+    if IsWindow(HWND_FRMMAIN_FIND) = 0 then return 0
+
     ' pDoc can be null when the Find panel is being shown for Project Search.
     dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
-    if pDoc then 
+    if pDoc then
         dim as boolean isOriginalSelectionMultiline = _
                         cbool(pDoc->CurrentSelection.endline - pDoc->CurrentSelection.startline)
         if pDoc->CurrentSelection.isInitialized = false then isOriginalSelectionMultiline = false
@@ -42,10 +104,7 @@ function FindControls_Show() as long
         end if    
     end if
         
-    gFind.bShowFindPanel = true
-    gFind.bExpanded = false
-
-    return 0
+    return FindReplace_SetVisible( true, gFind.bShowReplacePanel )
 end function
 
 
@@ -53,18 +112,14 @@ end function
 ' Expand the frmTopTabsInfo area to allow for the Replace controls.
 ' ========================================================================================
 function ReplaceControls_Show() as long
+    if IsWindow(HWND_FRMMAIN_REPLACE) = 0 then return 0
+
     ' Display the Replace controls
     AfxSetWindowText( GetDlgItem( HWND_FRMMAIN_REPLACE, IDC_FRMREPLACE_TXTREPLACE ), "" )
 '    if gTTabCtl.tabs(gTTabCtl.CurSel).docType = DocumentType.ProjectSearch then
 '        gFind.bProjectReplaceActive = true
-'    else
-        ' All non-Project Search tabs will always show the Info panel.    
-        gFind.bShowInfoPanel = true
-'    end if    
-    gFind.bShowFindPanel = true
-    gFind.bShowReplacePanel = true
-    gFind.bExpanded = true
-    return 0
+'    end if
+    return FindReplace_SetVisible( true, true )
 end function
 
 
@@ -72,22 +127,7 @@ end function
 ' Hide the Find/Replace controls and collapse the frmTopTabsInfo area.
 ' ========================================================================================
 function FindReplaceControls_Hide() as long
-    gFind.bShowInfoPanel = true
-    gFind.bShowFindPanel = false
-    gFind.bShowReplacePanel = false
-    gFind.bExpanded = false
-
-    ' Remove any Find Highlight selection indicators from open documents.
-    dim as clsDocument ptr pDoc
-    for i as integer = 0 to gTTabCtl.GetItemCount() - 1
-        pDoc = gTTabCtl.GetpDoc(i)
-        if pDoc = null then continue for
-        pDoc->RemoveSelectionAttributes()
-    next
-
-    frmMain_PositionWindows()
-    frmMain_SetFocusToCurrentCodeWindow()
-    return 0
+    return FindReplace_SetVisible( false, false )
 end function
 
 

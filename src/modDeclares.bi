@@ -298,7 +298,6 @@ type FINDREPLACE_TYPE
     nSearchAllOpenDocs  as long
     nSearchProject      as long
     wszResults          as DWSTRING = "0/0"
-    bExpanded           as boolean = false
     bShowInfoPanel      as boolean = true
     bShowFindPanel      as boolean = false
     bShowReplacePanel   as boolean = false

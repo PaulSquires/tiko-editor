@@ -215,8 +215,8 @@ end function
 ' Search action Find
 ' ========================================================================================
 function OnCommand_SearchFindDialog() as LRESULT
+    ' FindControls_Show repositions -- no frmMain_PositionWindows call needed here.
     FindControls_Show()
-    frmMain_PositionWindows()
 
     dim as HWND hCtl = GetDlgItem( HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND)
     gFind.txtFind = AfxGetWindowText(hCtl)
@@ -237,16 +237,17 @@ end function
 ' Search action Replace
 ' ========================================================================================
 function OnCommand_SearchReplaceDialog() as LRESULT
-    ' If Replace is already open then close it (toggle).
-    gFind.bExpanded = not gFind.bExpanded
-    if gFind.bExpanded = false then
-        gFind.bShowReplacePanel = false
+    ' If Replace is already open then close it (toggle). The test now reads the SAME flag
+    ' the layout reads: it used to key off gFind.bExpanded, which Ctrl+F cleared without
+    ' closing anything -- so after a Ctrl+F the first Ctrl+H re-opened an already-open bar
+    ' and appeared to do nothing.
+    if gFind.bShowReplacePanel then
         gFind.bProjectReplaceActive = false
+        FindReplace_SetVisible( true, false )
     else
         FindControls_Show()
         ReplaceControls_Show()
-    end if    
-    frmMain_PositionWindows()
+    end if
 
     dim as HWND hCtl = GetDlgItem( HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND )
     SetFocus( hCtl )

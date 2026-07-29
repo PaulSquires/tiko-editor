@@ -96,15 +96,21 @@ function handleEscKeyModeless( byval uMsg as MSG ) as boolean
     ' is the Project Search tab which always displays the Find pane
     ' but can toggle on/off the Replace with hot key or icon press.
     if (uMsg.message = WM_KEYDOWN) andAlso (uMsg.wParam = VK_ESCAPE) then
+        ' THE PANEL TEST STANDS ALONE, ahead of any tab test. FindControls_Show runs with a
+        ' null pDoc for Project Search, so "a bar is open" and "the current tab is valid"
+        ' are independent facts -- gating the close on the second left Escape dead in
+        ' exactly the state the first was reachable in.
+'        if gTTabCtl.tabs(idx).docType <> DocumentType.ProjectSearch then
+        if (gFind.bShowFindPanel = true) orelse (gFind.bShowReplacePanel = true) then
+            FindReplaceControls_Hide()
+            return true
+        end if
+'        end if
+
+        ' When ESC is pressed it should also ensure to unhighlight any search occurrences.
+        ' This half still wants a valid tab: it acts on the active document.
         dim as long idx = gTTabCtl.GetCurSel()
         if gTTabCtl.IsValidTab(idx) then
-'            if gTTabCtl.tabs(idx).docType <> DocumentType.ProjectSearch then
-                if (gFind.bShowFindPanel = true) orelse (gFind.bShowReplacePanel = true) then
-                    FindReplaceControls_Hide()
-                    return true
-                end if
-'            end if    
-            ' When ESC is pressed it should also ensure to unhighlight any search occurrences.
             dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
             if pDoc then pDoc->RemoveSelectionAttributes()
         end if

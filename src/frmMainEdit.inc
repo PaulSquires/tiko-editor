@@ -107,9 +107,9 @@ function OnCommand_EditIndentBlock( _
     '  so IDM_INDENTBLOCK cannot fire while the popup is up and there is nothing to
     '  special-case.)
     if PsTextBox_HasFocus( GetDlgItem(HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND) ) then
-        if gFind.bExpanded then SetFocus GetDlgItem(HWND_FRMMAIN_REPLACE, IDC_FRMREPLACE_TXTREPLACE)
+        if gFind.bShowReplacePanel then SetFocus GetDlgItem(HWND_FRMMAIN_REPLACE, IDC_FRMREPLACE_TXTREPLACE)
     elseif PsTextBox_HasFocus( GetDlgItem(HWND_FRMMAIN_REPLACE, IDC_FRMREPLACE_TXTREPLACE) ) then
-        if gFind.bExpanded then SetFocus GetDlgItem(HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND)
+        if gFind.bShowReplacePanel then SetFocus GetDlgItem(HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND)
     else
         gApp.SuppressNotify = true
         SetWindowRedraw( hEdit, false )
@@ -133,9 +133,9 @@ function OnCommand_EditUnIndentBlock( _
             ) as LRESULT
     
     if PsTextBox_HasFocus( GetDlgItem(HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND) ) then
-        if gFind.bExpanded then SetFocus GetDlgItem(HWND_FRMMAIN_REPLACE, IDC_FRMREPLACE_TXTREPLACE)
+        if gFind.bShowReplacePanel then SetFocus GetDlgItem(HWND_FRMMAIN_REPLACE, IDC_FRMREPLACE_TXTREPLACE)
     elseif PsTextBox_HasFocus( GetDlgItem(HWND_FRMMAIN_REPLACE, IDC_FRMREPLACE_TXTREPLACE) ) then
-        if gFind.bExpanded then SetFocus GetDlgItem(HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND)
+        if gFind.bShowReplacePanel then SetFocus GetDlgItem(HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND)
     else
         gApp.SuppressNotify = true
         SetWindowRedraw( hEdit, false )
