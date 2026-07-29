@@ -52,6 +52,43 @@ end function
 
 
 ' ========================================================================================
+' Header painter for the three Output panes. A copy of ListBox_LVPaintHeader with the hot
+' branch removed: these headers do not hot-track, so neither a column under the cursor nor
+' a hovered divider changes the fill. frmDebug's Variables pane still uses the shared
+' painter and still hot-tracks -- do not "unify" these two without deciding that as well.
+' ========================================================================================
+sub frmOutput_LVPaintHeader( byval p as PSCOLUMNHEADER_PAINTINFO ptr )
+    dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN)
+    if pWindow = 0 then exit sub
+
+    p->b->SetForeColor( ghOutput.ForeColorHot )
+    p->b->SetBackColor( ghOutput.BackColor )
+    p->b->PaintRect( @p->rc )
+
+    dim as RECT rcText = p->rc
+    rcText.left += pWindow->ScaleX(4)
+    p->b->SetFont( ghFont(GUIFONT_9) )
+    p->b->PaintText( p->wszCaption, @rcText, DT_LEFT )
+
+    ' A one-pixel divider on the trailing edge, so columns read as separated.
+    dim as RECT rcDiv = p->rc
+    rcDiv.left = rcDiv.right - AfxScaleX(1)
+    p->b->SetBackColor( ghOutput.ScrollBarDivider )
+    p->b->PaintRect( @rcDiv )
+end sub
+
+
+' ========================================================================================
+' No tooltips on the Output headers. Unset, PsColumnHeader falls back to the column's own
+' caption, i.e. a tip repeating the text already under the cursor -- returning "" is the
+' documented opt-out.
+' ========================================================================================
+function frmOutput_HeaderTooltip( byval hHeader as HWND, byval idx as integer ) as DWSTRING
+    return ""
+end function
+
+
+' ========================================================================================
 ' Build one of the three Output listview panes. They are identical apart from their
 ' control id, so this is called once each rather than copied three times.
 ' ========================================================================================
@@ -71,7 +108,8 @@ function frmOutput_CreateListView( byval CtrlID as long ) as HWND
     PsListTree_ShowHeader( hCtl, true )
 
     PsListTree_SetPaintCallback( hCtl, @ListBox_LVPaintRow )
-    PsListTree_SetHeaderPaintCallback( hCtl, @ListBox_LVPaintHeader )
+    PsListTree_SetHeaderPaintCallback( hCtl, @frmOutput_LVPaintHeader )
+    PsListTree_SetHeaderTooltipCallback( hCtl, @frmOutput_HeaderTooltip )
     PsListTree_SetColumnAutoSizeCallback( hCtl, @ListBox_LVAutoSizeColumn )
     PsListTree_SetMessageCallback( hCtl, @frmOutput_LVMessage )
 
