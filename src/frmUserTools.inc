@@ -90,9 +90,9 @@ function frmUserTools_ExecuteUserTool( byval pCompile as COMPILE_TYPE ptr, byval
     if (nToolNum < lbound(gConfig.Tools)) orelse (nToolNum > ubound(gConfig.Tools)) then exit function
 
     if gConfig.Tools(nToolNum).IsPromptRun then
-        if MessageBox( HWND_FRMMAIN, L(304,"Please confirm that you wish to run the following User Tool:") + vbcrlf + _
+        if TikoMsgBox( HWND_FRMMAIN, L(304,"Please confirm that you wish to run the following User Tool:") + vbcrlf + _
                         gConfig.Tools(nToolNum).wszDescription, L(276,"Confirm"), _
-                        MB_ICONQUESTION or MB_YESNOCANCEL ) <> IDYES then
+                        TMB_ICON_QUESTION, TMB_YESNOCANCEL ) <> IDYES then
             exit function
         end if
     end if
@@ -620,51 +620,13 @@ end sub
 ' ========================================================================================
 private function frmUserTools_ThemedMsgBox( byval wszText as DWSTRING, _
                                             byval wszCaption as DWSTRING, _
-                                            byval nIconKind as long, _
-                                            byval nPreset as long ) as long
+                                            byval nIcon as long, _
+                                            byval nButtons as long ) as long
 
-    dim as HWND h = PsMessageBox_Create( HWND_FRMUSERTOOLS )
-    PsMessageBox_SetCaption( h, wszCaption )
-    PsMessageBox_SetText( h, wszText )
-    PsMessageBox_SetIconKind( h, nIconKind )
-    PsMessageBox_SetFont( h, ghFont(GUIFONT_11) )
-    PsMessageBox_SetCloseGlyphFont( h, ghFont(SYMBOLFONT_10) )
+    dim as long nDefault = 0
+    if nButtons = TMB_OKCANCEL then nDefault = 1     ' Cancel: it guards a destructive action
 
-    ' A larger icon glyph than any cached ghFont, made for this box and freed after DoModal.
-    dim as HFONT hGlyph = 0
-    dim pWin as CWindow ptr = AfxCWindowPtr( HWND_FRMUSERTOOLS )
-    if pWin then hGlyph = pWin->CreateFont( SYMBOLFONT, 22 )
-    if hGlyph then PsMessageBox_SetGlyphFont( h, hGlyph )
-
-    dim as MBX_COLORS mc
-    mc.BorderColor      = ghEditor.Divider
-    mc.CaptionBackColor = ghPanel.BackColor
-    mc.CaptionForeColor = ghPanel.ForeColorHot
-    mc.CloseBackColor   = ghPanel.BackColor
-    mc.CloseForeColor   = ghPanel.ForeColor
-    mc.BackColor        = ghPanel.BackColor
-    mc.ForeColor        = ghPanel.ForeColor
-    mc.FooterBackColor  = ghPanel.BackColor
-    mc.DividerColor     = ghEditor.Divider
-    PsMessageBox_SetColors( h, @mc )
-
-    dim as PSBUTTON_COLORS bc
-    OptionsTheme_FillButton( @bc )
-    PsMessageBox_SetButtonColors( h, @bc )
-
-    if nPreset = MBX_BTN_OKCANCEL then
-        PsMessageBox_AddButton( h, L(0,"OK"), IDOK )
-        PsMessageBox_AddButton( h, L(1,"Cancel"), IDCANCEL )
-        ' Default to Cancel: this box only ever guards a destructive action.
-        PsMessageBox_SetDefaultButton( h, 1 )
-    else
-        PsMessageBox_AddButton( h, L(0,"OK"), IDOK )
-    end if
-
-    dim as long nResult = PsMessageBox_DoModal( h )
-    if hGlyph then DeleteObject( hGlyph )
-    return nResult
-
+    return TikoMsgBox( HWND_FRMUSERTOOLS, wszText, wszCaption, nIcon, nButtons, nDefault )
 end function
 
 
@@ -718,7 +680,7 @@ private sub frmUserTools_DoDelete()
     if idx < 0 then exit sub
 
     if frmUserTools_ThemedMsgBox( L(300,"Are you sure you want to delete this user tool?"), _
-                                  L(276,"Confirm"), MBX_ICON_WARNING, MBX_BTN_OKCANCEL ) <> IDOK then exit sub
+                                  L(276,"Confirm"), TMB_ICON_WARNING, TMB_OKCANCEL ) <> IDOK then exit sub
 
     if ubound(gToolsWork) = 0 then
         erase gToolsWork

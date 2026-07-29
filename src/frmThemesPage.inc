@@ -454,14 +454,14 @@ private function frmThemes_EnsureForked() as boolean
                              chr(13) & wszFork
 
     if frmThemes_ThemedMsgBox( wszMsg, L(486, "Themes"), _
-                                MBX_ICON_QUESTION, MBX_BTN_OKCANCEL ) <> IDOK then return false
+                                TMB_ICON_QUESTION, TMB_OKCANCEL ) <> IDOK then return false
 
     dim as DWSTRING wszPath = AfxGetExePathName & "settings\themes\" & wszFork
     dim as DWSTRING wszDesc = ghGeneral.description & " (custom)"
 
     if Theme_WriteFile( wszPath, wszDesc ) then
         frmThemes_ThemedMsgBox( L(454, "The new theme file could not be written."), _
-                                 L(486, "Themes"), MBX_ICON_ERROR, MBX_BTN_OK )
+                                 L(486, "Themes"), TMB_ICON_ERROR, TMB_OK )
         return false
     end if
 
@@ -505,7 +505,7 @@ function frmThemes_SaveThemeFile() as boolean
     dim as DWSTRING wszPath = AfxGetExePathName & "settings\themes\" & gThemesWorkFile
     if Theme_WriteFile( wszPath, ghGeneral.description ) then
         frmThemes_ThemedMsgBox( L(454,"The new theme file could not be written."), _
-                                L(486,"Themes"), MBX_ICON_ERROR, MBX_BTN_OK )
+                                L(486,"Themes"), TMB_ICON_ERROR, TMB_OK )
         return false
     end if
 

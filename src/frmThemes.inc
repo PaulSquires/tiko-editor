@@ -56,102 +56,38 @@ declare sub frmThemes_ApplyShellTheme()
 
 ' ========================================================================================
 ' A PsMessageBox dressed in the current theme. The colour page's fork prompt and the delete
-' confirmation both use it. Carried over from the page -- frmOptions' version is not reachable
-' from a dialog that can be opened without frmOptions.
+' confirmation both use it. Kept as its own forwarder rather than calling frmOptions' --
+' HWND_FRMOPTIONS is 0 when this dialog is opened on its own.
+'
+' THE DEFAULT BUTTON WAS BROKEN HERE AND SILENTLY SO. Both branches passed an ID to
+' PsMessageBox_SetDefaultButton, which takes an INDEX and rejects out-of-range values by
+' exiting quietly -- so "default to Cancel" never took effect. TikoMsgBox takes the index.
 ' ========================================================================================
 function frmThemes_ThemedMsgBox( byval wszText as DWSTRING, _
                                  byval wszCaption as DWSTRING, _
-                                 byval nIconKind as long, _
-                                 byval nPreset as long ) as long
+                                 byval nIcon as long, _
+                                 byval nButtons as long ) as long
 
-    dim as HWND h = PsMessageBox_Create( HWND_FRMTHEMES )
-    PsMessageBox_SetCaption( h, wszCaption )
-    PsMessageBox_SetText( h, wszText )
-    PsMessageBox_SetIconKind( h, nIconKind )
-    PsMessageBox_SetFont( h, OptionsFont_Base() )
-    PsMessageBox_SetCloseGlyphFont( h, ghFont(SYMBOLFONT_10) )
+    dim as long nDefault = 0
+    if nButtons = TMB_OKCANCEL then nDefault = 1     ' Cancel: it guards a destructive action
 
-    dim as HFONT hGlyph = 0
-    dim pWin as CWindow ptr = AfxCWindowPtr( HWND_FRMTHEMES )
-    if pWin then hGlyph = pWin->CreateFont( SYMBOLFONT, 22 )
-    if hGlyph then PsMessageBox_SetGlyphFont( h, hGlyph )
-
-    dim as MBX_COLORS mc
-    mc.BorderColor      = ghEditor.Divider
-    mc.CaptionBackColor = ghPanel.BackColor
-    mc.CaptionForeColor = ghPanel.ForeColorHot
-    mc.CloseBackColor   = ghPanel.BackColor
-    mc.CloseForeColor   = ghPanel.ForeColor
-    mc.BackColor        = ghPanel.BackColor
-    mc.ForeColor        = ghPanel.ForeColor
-    mc.FooterBackColor  = ghPanel.BackColor
-    mc.DividerColor     = ghEditor.Divider
-    PsMessageBox_SetColors( h, @mc )
-
-    dim as PSBUTTON_COLORS bc
-    OptionsTheme_FillButton( @bc )
-    PsMessageBox_SetButtonColors( h, @bc )
-
-    if nPreset = MBX_BTN_OKCANCEL then
-        PsMessageBox_AddButton( h, L(0,"OK"), IDOK )
-        PsMessageBox_AddButton( h, L(1,"Cancel"), IDCANCEL )
-        PsMessageBox_SetDefaultButton( h, IDCANCEL )
-    else
-        PsMessageBox_AddButton( h, L(0,"OK"), IDOK )
-        PsMessageBox_SetDefaultButton( h, IDOK )
-    end if
-
-    dim as long nResult = PsMessageBox_DoModal( h )
-    if hGlyph then DeleteObject( hGlyph )
-    return nResult
-
+    return TikoMsgBox( HWND_FRMTHEMES, wszText, wszCaption, _
+                       nIcon, nButtons, nDefault, OptionsFont_Base() )
 end function
 
 
 ' ========================================================================================
-' The Back-with-unsaved-edits prompt: Save / Discard / Cancel. Same dressing as ThemedMsgBox
-' but three buttons, so it is its own function rather than a preset. Returns IDYES (save),
+' The Back-with-unsaved-edits prompt: Save / Discard / Cancel. Returns IDYES (save),
 ' IDNO (discard) or IDCANCEL (stay).
+'
+' Same silent default-button bug as above -- it passed IDYES (6) as an index into three
+' buttons, so Save was never actually the default.
 ' ========================================================================================
 private function frmThemes_AskSaveChanges() as long
-
-    dim as HWND h = PsMessageBox_Create( HWND_FRMTHEMES )
-    PsMessageBox_SetCaption( h, L(486,"Themes") )
-    PsMessageBox_SetText( h, L(554,"Save changes to this theme before leaving?") )
-    PsMessageBox_SetIconKind( h, MBX_ICON_QUESTION )
-    PsMessageBox_SetFont( h, OptionsFont_Base() )
-    PsMessageBox_SetCloseGlyphFont( h, ghFont(SYMBOLFONT_10) )
-
-    dim as HFONT hGlyph = 0
-    dim pWin as CWindow ptr = AfxCWindowPtr( HWND_FRMTHEMES )
-    if pWin then hGlyph = pWin->CreateFont( SYMBOLFONT, 22 )
-    if hGlyph then PsMessageBox_SetGlyphFont( h, hGlyph )
-
-    dim as MBX_COLORS mc
-    mc.BorderColor      = ghEditor.Divider
-    mc.CaptionBackColor = ghPanel.BackColor
-    mc.CaptionForeColor = ghPanel.ForeColorHot
-    mc.CloseBackColor   = ghPanel.BackColor
-    mc.CloseForeColor   = ghPanel.ForeColor
-    mc.BackColor        = ghPanel.BackColor
-    mc.ForeColor        = ghPanel.ForeColor
-    mc.FooterBackColor  = ghPanel.BackColor
-    mc.DividerColor     = ghEditor.Divider
-    PsMessageBox_SetColors( h, @mc )
-
-    dim as PSBUTTON_COLORS bc
-    OptionsTheme_FillButton( @bc )
-    PsMessageBox_SetButtonColors( h, @bc )
-
-    PsMessageBox_AddButton( h, L(7,"Save"), IDYES )
-    PsMessageBox_AddButton( h, L(553,"Discard"), IDNO )
-    PsMessageBox_AddButton( h, L(1,"Cancel"), IDCANCEL )
-    PsMessageBox_SetDefaultButton( h, IDYES )
-
-    dim as long nResult = PsMessageBox_DoModal( h )
-    if hGlyph then DeleteObject( hGlyph )
-    return nResult
-
+    return TikoMsgBox( HWND_FRMTHEMES, _
+                       L(554,"Save changes to this theme before leaving?"), _
+                       L(486,"Themes"), _
+                       TMB_ICON_QUESTION, TMB_SAVE_DISCARD_CANCEL, 0, OptionsFont_Base() )
 end function
 
 
@@ -750,7 +686,7 @@ private sub frmThemes_CloneClick( byval hButton as HWND, byval id as long )
     ' bFailIfExists = false: the Save-As dialog already confirmed any overwrite.
     if AfxCopyFile( wszFolder & wszSrc, wszDest, false ) = false then
         frmThemes_ThemedMsgBox( L(454,"The new theme file could not be written."), _
-                                L(486,"Themes"), MBX_ICON_ERROR, MBX_BTN_OK )
+                                L(486,"Themes"), TMB_ICON_ERROR, TMB_OK )
         exit sub
     end if
 
@@ -780,7 +716,7 @@ private sub frmThemes_DeleteClick( byval hButton as HWND, byval id as long )
     dim as DWSTRING wszFile = gThemeFilenames(sel)
 
     if frmThemes_ThemedMsgBox( L(550,"Delete this theme? This cannot be undone."), _
-                               L(486,"Themes"), MBX_ICON_WARNING, MBX_BTN_OKCANCEL ) <> IDOK then
+                               L(486,"Themes"), TMB_ICON_WARNING, TMB_OKCANCEL ) <> IDOK then
         exit sub
     end if
 

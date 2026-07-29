@@ -133,54 +133,17 @@ end function
 ' ========================================================================================
 ' A themed [Yes] [No] [Cancel] box asking whether to reload. Returns IDYES / IDNO / IDCANCEL.
 '
-' The buttons are localized HERE rather than through PsMessageBox_AddPreset( MBX_BTN_YESNOCANCEL ),
+' The buttons are localized rather than taken from PsMessageBox_AddPreset( MBX_BTN_YESNOCANCEL ),
 ' whose text is hardcoded English (PsMessageBox.inc). That is a real consequence of moving off
-' the Win32 MessageBox, which got OS-localized buttons for free: we own the words now.
+' the Win32 MessageBox, which got OS-localized buttons for free: we own the words now -- and
+' TikoMsgBox is where they live.
 ' ========================================================================================
 private function FileWatch_AskReload( byval pDoc as clsDocument ptr ) as long
-
-    dim as HWND h = PsMessageBox_Create( HWND_FRMMAIN )
-    PsMessageBox_SetCaption( h, L(267, "File Changed") )
-    PsMessageBox_SetText( h, pDoc->DiskFilename & vbCrLf & vbCrLf & _
-                             L(266, "File was changed by another application. Reload it?") )
-    PsMessageBox_SetIconKind( h, MBX_ICON_QUESTION )
-    PsMessageBox_SetFont( h, ghFont(GUIFONT_11) )
-    PsMessageBox_SetCaptionFont( h, ghFont(GUIFONT_11) )
-    PsMessageBox_SetCloseGlyphFont( h, ghFont(SYMBOLFONT_10) )
-
-    ' A larger glyph than any cached ghFont, made for this box and freed after DoModal --
-    ' frmBuildConfig_ThemedMsgBox's pattern.
-    dim as HFONT hGlyph = 0
-    dim pWin as CWindow ptr = AfxCWindowPtr( HWND_FRMMAIN )
-    if pWin then hGlyph = pWin->CreateFont( SYMBOLFONT, 22 )
-    if hGlyph then PsMessageBox_SetGlyphFont( h, hGlyph )
-
-    dim as MBX_COLORS mc
-    mc.BorderColor      = ghEditor.Divider
-    mc.CaptionBackColor = ghPanel.BackColor
-    mc.CaptionForeColor = ghPanel.ForeColorHot
-    mc.CloseBackColor   = ghPanel.BackColor
-    mc.CloseForeColor   = ghPanel.ForeColor
-    mc.BackColor        = ghPanel.BackColor
-    mc.ForeColor        = ghPanel.ForeColor
-    mc.FooterBackColor  = ghPanel.BackColor
-    mc.DividerColor     = ghEditor.Divider
-    PsMessageBox_SetColors( h, @mc )
-
-    dim as PSBUTTON_COLORS bc
-    OptionsTheme_FillButton( @bc )
-    PsMessageBox_SetButtonColors( h, @bc )
-
-    PsMessageBox_AddButton( h, L(98, "Yes"),    IDYES )
-    PsMessageBox_AddButton( h, L(99, "No"),     IDNO )
-    PsMessageBox_AddButton( h, L(1,  "Cancel"), IDCANCEL )
-    PsMessageBox_SetDefaultButton( h, 0 )        ' a button INDEX, not an id
-    PsMessageBox_SetCancelID( h, IDCANCEL )
-
-    dim as long nResult = PsMessageBox_DoModal( h )
-    if hGlyph then DeleteObject( hGlyph )
-    return nResult
-
+    return TikoMsgBox( HWND_FRMMAIN, _
+                       pDoc->DiskFilename & vbCrLf & vbCrLf & _
+                       L(266, "File was changed by another application. Reload it?"), _
+                       L(267, "File Changed"), _
+                       TMB_ICON_QUESTION, TMB_YESNOCANCEL )
 end function
 
 
@@ -188,44 +151,11 @@ end function
 ' A themed [OK] box reporting that the file is gone. Replaces the MB_ICONINFORMATION box.
 ' ========================================================================================
 private function FileWatch_ReportMissing( byval pDoc as clsDocument ptr ) as long
-
-    dim as HWND h = PsMessageBox_Create( HWND_FRMMAIN )
-    PsMessageBox_SetCaption( h, L(267, "File Changed") )
-    PsMessageBox_SetText( h, pDoc->DiskFilename & vbCrLf & vbCrLf & _
-                             L(286, "This document has been deleted or is no longer available.") )
-    PsMessageBox_SetIconKind( h, MBX_ICON_INFO )
-    PsMessageBox_SetFont( h, ghFont(GUIFONT_11) )
-    PsMessageBox_SetCaptionFont( h, ghFont(GUIFONT_11) )
-    PsMessageBox_SetCloseGlyphFont( h, ghFont(SYMBOLFONT_10) )
-
-    dim as HFONT hGlyph = 0
-    dim pWin as CWindow ptr = AfxCWindowPtr( HWND_FRMMAIN )
-    if pWin then hGlyph = pWin->CreateFont( SYMBOLFONT, 22 )
-    if hGlyph then PsMessageBox_SetGlyphFont( h, hGlyph )
-
-    dim as MBX_COLORS mc
-    mc.BorderColor      = ghEditor.Divider
-    mc.CaptionBackColor = ghPanel.BackColor
-    mc.CaptionForeColor = ghPanel.ForeColorHot
-    mc.CloseBackColor   = ghPanel.BackColor
-    mc.CloseForeColor   = ghPanel.ForeColor
-    mc.BackColor        = ghPanel.BackColor
-    mc.ForeColor        = ghPanel.ForeColor
-    mc.FooterBackColor  = ghPanel.BackColor
-    mc.DividerColor     = ghEditor.Divider
-    PsMessageBox_SetColors( h, @mc )
-
-    dim as PSBUTTON_COLORS bc
-    OptionsTheme_FillButton( @bc )
-    PsMessageBox_SetButtonColors( h, @bc )
-
-    PsMessageBox_AddButton( h, L(0, "OK"), IDOK )
-    PsMessageBox_SetDefaultButton( h, 0 )
-
-    dim as long nResult = PsMessageBox_DoModal( h )
-    if hGlyph then DeleteObject( hGlyph )
-    return nResult
-
+    return TikoMsgBox( HWND_FRMMAIN, _
+                       pDoc->DiskFilename & vbCrLf & vbCrLf & _
+                       L(286, "This document has been deleted or is no longer available."), _
+                       L(267, "File Changed"), _
+                       TMB_ICON_INFO, TMB_OK )
 end function
 
 

@@ -90,12 +90,14 @@ function frmProjectOptions_CreateResourceManifest() as Long
     end if
 
     if len(wszFilesMissing) then
-        MessageBox( 0, _
+        ' Parented to the Project Options dialog, which is up and modal at the one call site
+        ' (frmProjectOptions_SaveProjectOptions) -- a box owned by a disabled ancestor comes up
+        ' behind it. This was MessageBox(0), i.e. ownerless, which the Win32 box got away with.
+        TikoMsgBox( HWND_FRMPROJECTOPTIONS, _
                     "The following files(s) are missing from the Settings folder. " + _
                     "Please reinstall the application." & vbcrlf & vbcrlf & _
                     wszFilesMissing, _
-                    "Error", _
-                    MB_OK or MB_ICONWARNING or MB_DEFBUTTON1 or MB_APPLMODAL )
+                    L(201,"Error"), TMB_ICON_WARNING, TMB_OK )
         exit function
     end if
 
@@ -190,8 +192,10 @@ function frmProjectOptions_SaveProjectOptions( byval hwnd as HWND ) as BOOLEAN
     ' The staging copy is the source, not the controls -- the change callbacks keep it
     ' current, so there is nothing to harvest here.
     if len(gPOWork.ProjectPath) = 0 then
-        MessageBox( hwnd, L(217,"Invalid project path specified."), L(201,"Error"), _
-                        MB_OK or MB_ICONINFORMATION or MB_DEFBUTTON1 )
+        ' Parented to THIS dialog, not frmMain: this window is up and modal, and a box owned by
+        ' a disabled ancestor comes up behind it.
+        TikoMsgBox( hwnd, L(217,"Invalid project path specified."), L(201,"Error"), _
+                        TMB_ICON_INFO, TMB_OK )
         return False
     end if
 

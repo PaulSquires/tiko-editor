@@ -1327,8 +1327,8 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as string, by
         gdb_session.hThreadMessages = ThreadCreate( @gdb_threadListener, @gdb_session )
         
     else
-        MessageBox( HWND_FRMMAIN, "Failed to initialize GDB. Ensure gdb.exe is installed correctly.", _
-                    "Error", MB_OK or MB_ICONERROR)
+        TikoMsgBox( HWND_FRMMAIN, "Failed to initialize GDB. Ensure gdb.exe is installed correctly.", _
+                    L(201,"Error"), TMB_ICON_ERROR, TMB_OK )
         DestroyWindow( HWND_FRMMAIN )
         exit function            
     end if

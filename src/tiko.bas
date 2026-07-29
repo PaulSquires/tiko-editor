@@ -99,6 +99,10 @@ dim shared gTTabCtl as clsTopTabCtl
 ' Declarations only, and deliberately naming no Ps* type -- the implementation is included at
 ' the end, once PsMessageBox and OptionsTheme_FillButton exist.
 #include once "modFileWatch.bi"
+' Same split, same reason: TikoMsgBox is called from modCompile.inc (:115) and from tiko.bas's
+' own startup path, both of which are ahead of PsMessageBox.inc. This header names no Ps* type;
+' the implementation is included at the end beside modFileWatch.inc.
+#include once "modMsgBox.bi"
 #include once "clsConfig.inc"
 #include once "PsBufferPaint.inc"
 #include once "modRoutines.inc"
@@ -236,6 +240,9 @@ dim shared gTTabCtl as clsTopTabCtl
 ' OpenSelectedDocument / ReloadDocument / OnCommand_FileClose / OnCommand_ProjectRemove --
 ' so it lands here, and before frmMain.inc, which drives it from WM_TIMER and WM_ACTIVATEAPP.
 #include once "modFileWatch.inc"
+' Needs PsMessageBox and OptionsTheme_FillButton (modOptionsRows.inc), so it cannot go any
+' earlier than this.
+#include once "modMsgBox.inc"
 #include once "frmMain.inc"
 
 
@@ -262,11 +269,15 @@ function WinMain( _
     dim as DWSTRING wszLocalizationFile
     wszLocalizationFile = AfxGetExePathName + wstr("settings\languages\english.lang")
     if LoadLocalizationFile(wszLocalizationFile, true) = false Then
-        MessageBox( 0, _
+        ' TMB_ICON_NONE, and it is not a style choice: SegoeFluentIcons.ttf is loaded further
+        ' down (and one of these boxes is the report that it could not be), so a glyph here
+        ' would draw as a missing-character box. The four startup boxes also run before
+        ' frmMain_Show builds ghFont() or reads a theme -- TikoMsgBox falls back to the system
+        ' message font and GetSysColor for exactly this window. See modMsgBox.bi.
+        TikoMsgBox( 0, _
                     "English Localization file could not be loaded. Aborting application." + vbcrlf + _
                     wszLocalizationFile, _
-                    "Error", _
-                    MB_OK or MB_ICONWARNING or MB_DEFBUTTON1 or MB_APPLMODAL )
+                    "Error", TMB_ICON_NONE, TMB_OK )
         return 1
     end if
     
@@ -274,11 +285,10 @@ function WinMain( _
     ' Load the selected localization file
     wszLocalizationFile = AfxGetExePathName + "settings\languages\" + gConfig.LocalizationFile
     if LoadLocalizationFile(wszLocalizationFile, false) = false then
-        MessageBox( 0, _
+        TikoMsgBox( 0, _
                     "Localization file could not be loaded." + vbcrlf + _
                     wszLocalizationFile, _
-                    "Error", _
-                    MB_OK or MB_ICONWARNING or MB_DEFBUTTON1 or MB_APPLMODAL )
+                    "Error", TMB_ICON_NONE, TMB_OK )
         return 1
     end if
     
@@ -288,10 +298,9 @@ function WinMain( _
     dim as DWSTRING wszFontFile 
     wszFontFile = AfxGetExePathName + "\bin\SegoeFluentIcons.ttf"
     if AddFontResourceEx(wszFontFile.vptr, FR_PRIVATE, NULL) = 0 then
-        MessageBox( 0, _
+        TikoMsgBox( 0, _
                     "Unable to load application font 'SegoeFluentIcons.ttf'. Aborting application." , _
-                    "Error", _
-                    MB_OK or MB_ICONWARNING or MB_DEFBUTTON1 or MB_APPLMODAL )
+                    "Error", TMB_ICON_NONE, TMB_OK )
         return 1
     end if
 
@@ -319,11 +328,10 @@ function WinMain( _
     dim as any ptr pLibScintilla = dylibload("bin\Scintilla64.dll")
 
     if (pLibLexilla = 0) orelse (pLibScintilla = 0) then
-        MessageBox( 0, _
+        TikoMsgBox( 0, _
                     "Error loading Scintilla DLL's. Ensure C++ redistributable is installed:" + vbcrlf + _
                     "https://aka.ms/vs/17/release/vc_redist.x64.exe", _
-                    "Error", _
-                    MB_OK or MB_ICONWARNING or MB_DEFBUTTON1 or MB_APPLMODAL )
+                    "Error", TMB_ICON_NONE, TMB_OK )
         return 1
     end if
     gApp.pfnCreateLexerfn = cast(CreateLexerFn , GetProcAddress(pLibLexilla, "CreateLexer"))

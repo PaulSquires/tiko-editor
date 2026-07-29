@@ -159,16 +159,11 @@ function OnCommand_SearchGotoDefinition( byval pDoc as clsDocument ptr ) as LRES
         dim as wstring ptr pFile = 0
         if refSym.IsValid then pFile = gSymDb.SymFile( refSym )
         if pFile = 0 then
-            dim as HWND hBox = PsMessageBox_Create( HWND_FRMMAIN )
-            PsMessageBox_SetFont( hBox, ghFont(GUIFONT_10) )
-            PsMessageBox_SetCaptionFont( hBox, ghFont(GUIFONT_11) )
-            PsMessageBox_SetGlyphFont( hBox, ghFont(SYMBOLFONT_20) )        ' the ~32px message icon
-            PsMessageBox_SetCloseGlyphFont( hBox, ghFont(SYMBOLFONT_10) )   ' the ~10px close X
-            PsMessageBox_SetCaption( hBox, APPNAME )
-            PsMessageBox_SetText( hBox, L(224,"Symbol definition not found.") )
-            PsMessageBox_SetIconKind( hBox, MBX_ICON_WARNING )
-            PsMessageBox_AddPreset( hBox, MBX_BTN_OK )
-            PsMessageBox_DoModal( hBox )
+            ' This was the one box built inline rather than through a per-dialog helper, and
+            ' the only one that was never themed -- it set fonts but no MBX_COLORS at all, so
+            ' it came up in PsMessageBox's own dark defaults whatever the theme said.
+            TikoMsgBox( HWND_FRMMAIN, L(224,"Symbol definition not found."), APPNAME, _
+                        TMB_ICON_WARNING, TMB_OK )
             exit function
         end if
         wszFilename = *pFile
@@ -441,8 +436,8 @@ function OnCommand_SearchBookmarks( _
             LoadBookmarksFiles()
 
         case IDM_BOOKMARKCLEARALLDOCS
-            if MessageBox( HWND_FRMMAIN, L(316,"Do you want to delete all bookmarks?"), L(276,"Confirm"), _
-                        MB_YESNOCANCEL or MB_ICONQUESTION or MB_DEFBUTTON1 ) <> IDYES then
+            if TikoMsgBox( HWND_FRMMAIN, L(316,"Do you want to delete all bookmarks?"), L(276,"Confirm"), _
+                        TMB_ICON_QUESTION, TMB_YESNOCANCEL ) <> IDYES then
                 return true
             end if            
             dim pDoc as clsDocument ptr = gApp.pDocList

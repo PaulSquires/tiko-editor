@@ -38,8 +38,8 @@ function OnCommand_DebugCommon( byval id as long ) as LRESULT
             pDoc->ToggleBreakPoint( pDoc->GetCurrentLineNumber )
             
         case IDM_DEBUG_DELETEALLBREAKPOINTS
-            if MessageBox( HWND_FRMMAIN, L(315,"Do you want to delete all breakpoints?"), L(276,"Confirm"), _
-                        MB_YESNOCANCEL or MB_ICONQUESTION or MB_DEFBUTTON1 ) <> IDYES then
+            if TikoMsgBox( HWND_FRMMAIN, L(315,"Do you want to delete all breakpoints?"), L(276,"Confirm"), _
+                        TMB_ICON_QUESTION, TMB_YESNOCANCEL ) <> IDYES then
                 return true
             end if            
             dim pDoc as clsDocument ptr = gApp.pDocList

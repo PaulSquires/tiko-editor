@@ -101,8 +101,8 @@ function code_SetCompilerPath( byval pCompile as COMPILE_TYPE ptr ) as boolean
             L(202,"Invalid defined compiler path.") & vbcrlf & _
             "Path: " & pCompile->CompilerPath
         SetCompileStatusBarMessage( "", 0 )
-        MessageBox( HWND_FRMMAIN, wszMsg, L(201,"Error"), _
-                MB_OK Or MB_ICONINFORMATION Or MB_DEFBUTTON1 )
+        TikoMsgBox( HWND_FRMMAIN, wszMsg, L(201,"Error"), _
+                TMB_ICON_INFO, TMB_OK )
         code_Cleanup( pCompile )
         return false        
     end if
@@ -122,8 +122,8 @@ function code_SetMainFile( byval pCompile as COMPILE_TYPE ptr ) as boolean
     if gApp.IsProjectActive then
         pDoc = gApp.GetMainDocumentPtr()
         if pDoc = null then
-            MessageBox( HWND_FRMMAIN, L(208,"No Main file specified for the project."), L(201,"Error"), _
-                            MB_OK Or MB_ICONINFORMATION Or MB_DEFBUTTON1 )
+            TikoMsgBox( HWND_FRMMAIN, L(208,"No Main file specified for the project."), L(201,"Error"), _
+                            TMB_ICON_INFO, TMB_OK )
         end if
     else
         pDoc = gApp.GetMainDocumentPtr()
@@ -575,8 +575,8 @@ function code_Compile( byval wID as long ) as boolean
     if IsProcessRunning( pCompile->OutputFilename ) then
         AfxDeleteFile( pCompile->OutputFilename )
         SetCompileStatusBarMessage( "", 0 )
-        MessageBox( HWND_FRMMAIN, L(200,"Program running") & "...", L(201,"Error"), _
-                        MB_OK Or MB_ICONINFORMATION Or MB_DEFBUTTON1 )
+        TikoMsgBox( HWND_FRMMAIN, L(200,"Program running") & "...", L(201,"Error"), _
+                        TMB_ICON_INFO, TMB_OK )
         code_Cleanup( pCompile )
         return false        
     end if

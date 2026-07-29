@@ -914,48 +914,13 @@ end sub
 ' modal loop inside this dialog's inside frmMain's -- which works, and is what frmUserTools
 ' does for the same confirmation.
 ' ========================================================================================
+' The dressing (colours, fonts, the 22pt icon glyph) lives in TikoMsgBox -- modMsgBox.inc. All
+' that is per-dialog here is the OWNER and the default button.
 private function frmBuildConfig_ThemedMsgBox( byval wszText as DWSTRING, _
                                               byval wszCaption as DWSTRING ) as long
-
-    dim as HWND h = PsMessageBox_Create( HWND_FRMBUILDCONFIG )
-    PsMessageBox_SetCaption( h, wszCaption )
-    PsMessageBox_SetText( h, wszText )
-    PsMessageBox_SetIconKind( h, MBX_ICON_WARNING )
-    PsMessageBox_SetFont( h, ghFont(GUIFONT_11) )
-    PsMessageBox_SetCloseGlyphFont( h, ghFont(SYMBOLFONT_10) )
-
-    ' A larger icon glyph than any cached ghFont, made for this box and freed after DoModal.
-    dim as HFONT hGlyph = 0
-    dim pWin as CWindow ptr = AfxCWindowPtr( HWND_FRMBUILDCONFIG )
-    if pWin then hGlyph = pWin->CreateFont( SYMBOLFONT, 22 )
-    if hGlyph then PsMessageBox_SetGlyphFont( h, hGlyph )
-
-    dim as MBX_COLORS mc
-    mc.BorderColor      = ghEditor.Divider
-    mc.CaptionBackColor = ghPanel.BackColor
-    mc.CaptionForeColor = ghPanel.ForeColorHot
-    mc.CloseBackColor   = ghPanel.BackColor
-    mc.CloseForeColor   = ghPanel.ForeColor
-    mc.BackColor        = ghPanel.BackColor
-    mc.ForeColor        = ghPanel.ForeColor
-    mc.FooterBackColor  = ghPanel.BackColor
-    mc.DividerColor     = ghEditor.Divider
-    PsMessageBox_SetColors( h, @mc )
-
-    dim as PSBUTTON_COLORS bc
-    OptionsTheme_FillButton( @bc )
-    PsMessageBox_SetButtonColors( h, @bc )
-
-    PsMessageBox_AddButton( h, L(0,"OK"), IDOK )
-    PsMessageBox_AddButton( h, L(1,"Cancel"), IDCANCEL )
-    ' Default to Cancel -- this box only ever guards a destructive action. The argument is a
-    ' button INDEX, not an id.
-    PsMessageBox_SetDefaultButton( h, 1 )
-
-    dim as long nResult = PsMessageBox_DoModal( h )
-    if hGlyph then DeleteObject( hGlyph )
-    return nResult
-
+    ' Default index 1 = Cancel -- this box only ever guards a destructive action.
+    return TikoMsgBox( HWND_FRMBUILDCONFIG, wszText, wszCaption, _
+                       TMB_ICON_WARNING, TMB_OKCANCEL, 1 )
 end function
 
 

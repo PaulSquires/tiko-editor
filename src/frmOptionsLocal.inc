@@ -690,7 +690,7 @@ private sub frmOptionsLocal_DeleteClick( byval hButton as HWND, byval id as long
     ' Was MB_YESNOCANCEL; OK/Cancel is behaviourally identical here (No and Cancel both abort)
     ' and, unlike PsMessageBox's English-only Yes/No preset, stays localized.
     if frmOptions_ThemedMsgBox( L(366,"Are you sure you want to delete?"), _
-                                L(276,"Confirm"), MBX_ICON_QUESTION, MBX_BTN_OKCANCEL ) <> IDOK then
+                                L(276,"Confirm"), TMB_ICON_QUESTION, TMB_OKCANCEL ) <> IDOK then
         exit sub
     end if
 

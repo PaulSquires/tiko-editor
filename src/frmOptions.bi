@@ -60,10 +60,11 @@ declare sub      frmOptions_ShowPage( byval nPage as long )
 ' showing/hiding part of itself). Was PsScrollPanel_Recalc; there is no scroll panel now.
 declare sub      frmOptions_RelayoutCurrentPage()
 
-' A theme-matched PsMessageBox owned by the dialog. nPreset is MBX_BTN_OK or
-' MBX_BTN_OKCANCEL; returns the dismissing id (IDOK / IDCANCEL). Runs its own nested modal
-' loop, so it is safe to call from inside the dialog's message loop.
+' A theme-matched PsMessageBox owned by the dialog -- a thin forwarder onto TikoMsgBox that
+' supplies the owner and the Options font. nIcon is TMB_ICON_*, nButtons is TMB_OK or
+' TMB_OKCANCEL; returns the dismissing id (IDOK / IDCANCEL). Runs its own nested modal loop,
+' so it is safe to call from inside the dialog's message loop.
 declare function frmOptions_ThemedMsgBox( byval wszText as DWSTRING, _
                                           byval wszCaption as DWSTRING, _
-                                          byval nIconKind as long, _
-                                          byval nPreset as long ) as long
+                                          byval nIcon as long, _
+                                          byval nButtons as long ) as long

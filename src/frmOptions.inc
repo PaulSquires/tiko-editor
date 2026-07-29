@@ -188,7 +188,7 @@ function frmOptions_SaveEditorOptions() as long
     if bChangesNextRun then
         frmOptions_ThemedMsgBox( _
                 L(108,"Changes will be applied the next time the application is run."), _
-                L(109,"Warning"), MBX_ICON_INFO, MBX_BTN_OK )
+                L(109,"Warning"), TMB_ICON_INFO, TMB_OK )
     end if
 
     function = 0
@@ -995,52 +995,18 @@ end function
 ' ========================================================================================
 function frmOptions_ThemedMsgBox( byval wszText as DWSTRING, _
                                   byval wszCaption as DWSTRING, _
-                                  byval nIconKind as long, _
-                                  byval nPreset as long ) as long
+                                  byval nIcon as long, _
+                                  byval nButtons as long ) as long
 
-    dim as HWND h = PsMessageBox_Create( HWND_FRMOPTIONS )
-    PsMessageBox_SetCaption( h, wszCaption )
-    PsMessageBox_SetText( h, wszText )
-    PsMessageBox_SetIconKind( h, nIconKind )
-    PsMessageBox_SetFont( h, OptionsFont_Base() )
-    PsMessageBox_SetCloseGlyphFont( h, ghFont(SYMBOLFONT_10) )
+    ' Per-dialog: the owner, and the Options page font rather than the application default.
+    ' Everything else (colours, the 22pt icon glyph, the localized buttons) is TikoMsgBox's.
+    '
+    ' A two-button box here only ever guards a destructive action, so Cancel is the default.
+    dim as long nDefault = 0
+    if nButtons = TMB_OKCANCEL then nDefault = 1
 
-    ' A larger icon glyph than any cached ghFont, made for this box and freed after DoModal.
-    dim as HFONT hGlyph = 0
-    dim pWin as CWindow ptr = AfxCWindowPtr( HWND_FRMOPTIONS )
-    if pWin then hGlyph = pWin->CreateFont( SYMBOLFONT, 22 )
-    if hGlyph then PsMessageBox_SetGlyphFont( h, hGlyph )
-
-    ' Colours from the theme. Border/divider are the editor divider; the bands are the
-    ' panel; the close-hot red and the icon accents keep their semantic defaults.
-    dim as MBX_COLORS mc
-    mc.BorderColor      = ghEditor.Divider
-    mc.CaptionBackColor = ghPanel.BackColor
-    mc.CaptionForeColor = ghPanel.ForeColorHot
-    mc.CloseBackColor   = ghPanel.BackColor
-    mc.CloseForeColor   = ghPanel.ForeColor
-    mc.BackColor        = ghPanel.BackColor
-    mc.ForeColor        = ghPanel.ForeColor
-    mc.FooterBackColor  = ghPanel.BackColor
-    mc.DividerColor     = ghEditor.Divider
-    PsMessageBox_SetColors( h, @mc )
-
-    dim as PSBUTTON_COLORS bc
-    OptionsTheme_FillButton( @bc )
-    PsMessageBox_SetButtonColors( h, @bc )
-
-    if nPreset = MBX_BTN_OKCANCEL then
-        PsMessageBox_AddButton( h, L(0,"OK"), IDOK )
-        PsMessageBox_AddButton( h, L(1,"Cancel"), IDCANCEL )
-        ' Default to Cancel: this box only ever guards a destructive action.
-        PsMessageBox_SetDefaultButton( h, 1 )
-    else
-        PsMessageBox_AddButton( h, L(0,"OK"), IDOK )
-    end if
-
-    dim as long nResult = PsMessageBox_DoModal( h )
-    if hGlyph then DeleteObject( hGlyph )
-    function = nResult
+    return TikoMsgBox( HWND_FRMOPTIONS, wszText, wszCaption, _
+                       nIcon, nButtons, nDefault, OptionsFont_Base() )
 end function
 
 

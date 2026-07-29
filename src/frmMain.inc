@@ -1201,8 +1201,8 @@ function frmMain_OnClose( byval hwnd as HWND ) as LRESULT
 
     ' if configuration option to confirm closing editor is active then ask now.
     if gConfig.AskExit then
-        if MessageBox( HWND_FRMMAIN, L(275,"Are you sure you want to exit?"), L(276,"Confirm"), _
-                    MB_YESNOCANCEL or MB_ICONQUESTION or MB_DEFBUTTON1 ) <> IDYES then
+        if TikoMsgBox( HWND_FRMMAIN, L(275,"Are you sure you want to exit?"), L(276,"Confirm"), _
+                    TMB_ICON_QUESTION, TMB_YESNOCANCEL ) <> IDYES then
             return true
         end if            
     end if
