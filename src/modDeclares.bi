@@ -346,6 +346,12 @@ const MENUITEM_HEIGHT = 24
 const EXPLORERITEM_HEIGHT = 22
 const MENUBAR_HEIGHT = 30
 const OUTPUT_TABS_HEIGHT = 40
+' Floor for the Output panel's USER-SET height (gConfig.ShowOutputPanelHeight), in unscaled
+' units. Deliberately ABOVE OUTPUT_TABS_HEIGHT: a stored height equal to the tabs row is
+' indistinguishable from the minimized size, so restoring from it would leave the panel
+' looking minimized while the flag said otherwise. Two rows is the smallest height at which
+' the panel shows any content at all.
+const OUTPUT_PANEL_MIN_HEIGHT = OUTPUT_TABS_HEIGHT * 2
 ' Width reserved at the right of the Output tab strip for the close "X" PsIconPanel. The
 ' glyph cell itself is smaller; the surplus is the breathing room the old hand-drawn rect
 ' got from its 10px right margin.

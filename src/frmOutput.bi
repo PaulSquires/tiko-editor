@@ -51,6 +51,21 @@ declare function frmOutput_PositionWindows() as LRESULT
 declare function frmOutput_Show( byval hWndParent as HWND ) as LRESULT
 declare function frmOutput_ResetAllControls() as long 
 declare function frmOutput_RestorePanel() as long
+' Refresh every persisted Output-panel field from the live windows. Called by
+' SaveConfigFile, so it runs on ALL save paths rather than only on the way out -- see the
+' comment block on those fields in clsConfig.bi. Safe before the panel exists.
+declare sub      frmOutput_CaptureState()
+' Clamp a stored (unscaled) panel height into the legal range. Pure, so the self-test can
+' drive it; also applied on load so an existing settings.ini carrying a ratcheted or
+' divided value self-heals on first run.
+declare function frmOutput_ClampHeight( byval nHeight as long ) as long
+declare sub      frmOutput_RunSelfTest()
+' Second half of the suite, run AFTER frmOutput_Show. It exists because the pure half is
+' structurally blind to the defect this change fixes: reinstating the scale-up inside
+' frmOutput_Show left the pure half completely green, so the only assertion that can catch
+' it has to observe the field ACROSS the call. gOutPanelHeightAtShow is the witness.
+declare sub      frmOutput_RunPostShowSelfTest()
+dim shared gOutPanelHeightAtShow as long
 ' Forward declared: the splitter's message callback is defined above them.
 declare function frmOutput_MinimizePanel() as long
 

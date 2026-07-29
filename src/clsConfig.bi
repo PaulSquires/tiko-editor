@@ -97,8 +97,21 @@ type clsConfig
         CheckUpdates              as long = true
         ShowPanel                 as long = true
         ShowPanelWidth            as long = 250
+        ' The Output panel's persisted state is this PAIR, not one tri-state: all four
+        ' combinations are meaningful, and (0,1) -- closed, but reopens minimized -- is the
+        ' one a single enum could not express. Do not collapse them.
+        '   1,0 open at the user height   1,1 open, minimized
+        '   0,0 closed, reopens at height 0,1 closed, reopens minimized
+        ' All four fields are refreshed together by frmOutput_CaptureState(), which
+        ' SaveConfigFile calls before writing -- so every save path persists a coherent set
+        ' rather than a blend of two sessions. Nothing else may write them.
         ShowOutputPanel           as long = true
-        ShowOutputPanelHeight     as long = OUTPUT_TABS_HEIGHT * 5 ' user set height 
+        ' ALWAYS UNSCALED, in memory as well as on disk -- it is scaled only at the point of
+        ' use (frmOutput_RestorePanel, frmOutput_Show). It used to be scaled in place after
+        ' the window was created and unscaled again in frmMain_OnClose, which meant every
+        ' save that was not the final one wrote a scaled number into a field documented as
+        ' unscaled, and the height grew by the DPI factor on every launch.
+        ShowOutputPanelHeight     as long = OUTPUT_TABS_HEIGHT * 5 ' user set height
         ShowOutputPanelMinimized  as long = true          ' if window is at minimum height (toggled "minimized")
         ShowOutputPanelIndex      as long = 0             ' persisted copy of the Output tab bar's
                                                           ' current panel (default: Compiler Results).

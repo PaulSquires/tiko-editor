@@ -264,6 +264,13 @@ function clsConfig.SaveConfigFile() as long
         if this.HelpStartupBottom <> rc.Bottom then this.HelpStartupBottom = rc.Bottom
     end if
 
+    ' Refresh the Output panel's four persisted fields from the live windows. This MUST
+    ' happen on every save, not just the one in frmMain_OnClose: visibility and tab index
+    ' used to be captured only on the way out, so any other save (Options OK, a theme
+    ' change, opening a project, a session save) wrote this session's minimized flag beside
+    ' the PREVIOUS session's visibility -- which is what a crash then made permanent.
+    frmOutput_CaptureState()
+
     this.CompilerBuild = frmBuildConfig_GetSelectedBuildGUID()
 
     dim pStream as CTextStream   '(utf16)
