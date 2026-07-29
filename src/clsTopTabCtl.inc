@@ -151,7 +151,7 @@ function clsTopTabCtl.SetFocusTab( byval idx as long ) as long
 '                    ReplaceControls_Show()
 '                end if
 '                frmMain_PositionWindows()
-'                dim as HWND hCtl = GetDlgItem( HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND)
+'                dim as HWND hCtl = GetDlgItem( HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND)
 '                SetFocus( hCtl )
 '            else
                 TopTabsInfoPanel_Show()
@@ -182,7 +182,7 @@ function clsTopTabCtl.SetFocusTab( byval idx as long ) as long
 
                     ' If moving to a new Tab and the Find panel is closed then ensure that we 
                     ' remove any find occurrence highlights.
-                    if IsWindowVisible(HWND_FRMMAIN_TOPTABSFIND) = 0 then pDoc->RemoveSelectionAttributes()
+                    if IsWindowVisible(HWND_FRMMAIN_FIND) = 0 then pDoc->RemoveSelectionAttributes()
                 end if
 '            end if    
 
@@ -235,7 +235,7 @@ function clsTopTabCtl.TabFocusLost( byval nTabIdx as long = -1) as long
 '        ' remove any find occurrence highlights.
 '        dim as clsDocument ptr pDoc = this.GetActiveDocumentPtr()
 '        if pDoc then 
-'            if IsWindowVisible(HWND_FRMMAIN_TOPTABSFIND) = 0 then pDoc->RemoveSelectionAttributes()
+'            if IsWindowVisible(HWND_FRMMAIN_FIND) = 0 then pDoc->RemoveSelectionAttributes()
 '        end if
 '    end if
 

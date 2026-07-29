@@ -126,8 +126,8 @@ function handleKeysFindReplace( byval uMsg as MSG ) as boolean
     ' The find/replace textboxes are PsTextBox controls: keyboard focus sits on their
     ' RichEdit CHILD, so compare (and SetFocus) against that handle, not the control's.
     dim as HWND hFocus   = GetFocus()
-    dim as HWND hFind    = PsTextBox_GetRichEditHandle( GetDlgItem( HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND ) )
-    dim as HWND hReplace = PsTextBox_GetRichEditHandle( GetDlgItem( HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE ) )
+    dim as HWND hFind    = PsTextBox_GetRichEditHandle( GetDlgItem( HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND ) )
+    dim as HWND hReplace = PsTextBox_GetRichEditHandle( GetDlgItem( HWND_FRMMAIN_REPLACE, IDC_FRMREPLACE_TXTREPLACE ) )
     dim as HWND hEdit    
     if pDoc then hEdit = pDoc->hWndActiveScintilla
 

@@ -34,7 +34,7 @@ function FindControls_Show() as long
             gFind.txtFind = sFindtext
         end if   
 
-        dim as HWND hCtl = GetDlgItem( HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND)
+        dim as HWND hCtl = GetDlgItem( HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND)
         if sFindText <> AfxGetWindowText(hCtl) then
             AfxSetWindowText( hCtl, sFindText )
             dim as long nLen = len(sFindText)
@@ -54,7 +54,7 @@ end function
 ' ========================================================================================
 function ReplaceControls_Show() as long
     ' Display the Replace controls
-    AfxSetWindowText( GetDlgItem( HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE ), "" )
+    AfxSetWindowText( GetDlgItem( HWND_FRMMAIN_REPLACE, IDC_FRMREPLACE_TXTREPLACE ), "" )
 '    if gTTabCtl.tabs(gTTabCtl.CurSel).docType = DocumentType.ProjectSearch then
 '        gFind.bProjectReplaceActive = true
 '    else
@@ -218,7 +218,7 @@ function FindReplace_NextSelection( _
         gFind.wszResults = "0/0"
     end if
     
-    AfxRedrawWindow( HWND_FRMMAIN_TOPTABSFIND )
+    AfxRedrawWindow( HWND_FRMMAIN_FIND )
     
     return iif(mainIdx > 0, true, false)
     
@@ -282,7 +282,7 @@ function FindReplace_HighlightSearches() as long
         loop
  
         gFind.wszResults = "0/" & gFind.foundCount 
-        AfxRedrawWindow( HWND_FRMMAIN_TOPTABSFIND )
+        AfxRedrawWindow( HWND_FRMMAIN_FIND )
     end if
     
     function = 0
@@ -301,8 +301,8 @@ function FindReplace_DoReplace( _
     dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
     if pDoc = 0 then exit function
 
-    dim as HWND   hWndFind    = GetDlgItem(HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND)
-    dim as HWND   hWndReplace = GetDlgItem(HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE)
+    dim as HWND   hWndFind    = GetDlgItem(HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND)
+    dim as HWND   hWndReplace = GetDlgItem(HWND_FRMMAIN_REPLACE, IDC_FRMREPLACE_TXTREPLACE)
     dim as string txtFind     = str(AfxGetWindowText(hWndFind))
     dim as string txtReplace  = str(AfxGetWindowText(hWndReplace))
     dim as long   lenFind     = len(txtFind)

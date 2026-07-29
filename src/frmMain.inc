@@ -898,27 +898,27 @@ function frmMain_PositionWindows() as LRESULT
 
     if gFind.bShowFindPanel then
         nHeightTabFindPanel = pWindow->ScaleY(TOPTABS_FIND_HEIGHT)
-        SetWindowPos( HWND_FRMMAIN_TOPTABSFIND, 0, _
+        SetWindowPos( HWND_FRMMAIN_FIND, 0, _
                     nLeft, nTop, _     
                     rc.Right - nPanelReserve, nHeightTabFindPanel, _  
                     SWP_SHOWWINDOW or SWP_NOZORDER )
-        frmTopTabsFind_PositionWindows()    
+        frmFind_PositionWindows()    
         nTop += nHeightTabFindPanel
     else    
-        ShowWindow( HWND_FRMMAIN_TOPTABSFIND, SW_HIDE )
+        ShowWindow( HWND_FRMMAIN_FIND, SW_HIDE )
     end if
     
     if (gFind.bShowReplacePanel = true) orelse _
         (IsProjectSearchTab = true andalso gFind.bProjectReplaceActive = true) then
         nHeightTabReplacePanel = pWindow->ScaleY(TOPTABS_REPLACE_HEIGHT)
-        SetWindowPos( HWND_FRMMAIN_TOPTABSREPLACE, 0, _
+        SetWindowPos( HWND_FRMMAIN_REPLACE, 0, _
                     nLeft, nTop, _     
                     rc.Right - nPanelReserve, nHeightTabReplacePanel, _  
                     SWP_SHOWWINDOW or SWP_NOZORDER )
-        frmTopTabsReplace_PositionWindows()    
+        frmReplace_PositionWindows()    
         nTop += nHeightTabReplacePanel
     else    
-        ShowWindow( HWND_FRMMAIN_TOPTABSREPLACE, SW_HIDE )
+        ShowWindow( HWND_FRMMAIN_REPLACE, SW_HIDE )
     end if
                 
 
@@ -1740,8 +1740,8 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     frmTopTabs_Show( HWND_FRMMAIN )
     frmTopTabsMenu_Show( HWND_FRMMAIN ) 
     frmTopTabsInfo_Show( HWND_FRMMAIN )
-    frmTopTabsFind_Show( HWND_FRMMAIN )
-    frmTopTabsReplace_Show( HWND_FRMMAIN )
+    frmFind_Show( HWND_FRMMAIN )
+    frmReplace_Show( HWND_FRMMAIN )
     
     ' Create the main application statusbar
     frmStatusBar_Show( HWND_FRMMAIN )

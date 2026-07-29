@@ -88,8 +88,8 @@ private sub Theme_BuildWndTable()
     ThemeWnd_Add( @HWND_FRMHELPVIEWER,         THSUB_HELPVIEWER,   true )
     ThemeWnd_Add( @HWND_FRMDEBUG,              THSUB_DEBUG,        true )
     ThemeWnd_Add( @HWND_FRMSEARCHSYMBOL,       THSUB_SEARCHSYMBOL, true )
-    ThemeWnd_Add( @HWND_FRMMAIN_TOPTABSFIND,   THSUB_TOPTABS,      true )
-    ThemeWnd_Add( @HWND_FRMMAIN_TOPTABSREPLACE, THSUB_TOPTABS,     true )
+    ThemeWnd_Add( @HWND_FRMMAIN_FIND,   THSUB_TOPTABS,      true )
+    ThemeWnd_Add( @HWND_FRMMAIN_REPLACE, THSUB_TOPTABS,     true )
 
     ' ---- leaf controls -----------------------------------------------------------------
     ' Most of these are children of frmMain and would be caught by its deep redraw, but only
@@ -199,6 +199,44 @@ end sub
 ''  The colour mapping is frmUserTools' and frmThemes' recipe, unchanged, so all the editor's
 ''  tips agree.
 ''
+' ========================================================================================
+' Push the current theme into the top-tabs info bar's icon strip.
+' ========================================================================================
+' Called from the strip's own create (through the declaration in modThemeApply.bi) and again
+' on every THSUB_TOPTABS apply. Only the colours the CONTROL owns are set here: the cells
+' themselves are drawn by frmTopTabsInfo_IconPaint, which reads ghTopTabs live.
+private sub Theme_PushStripIcons( byval hPanel as HWND )
+    if IsWindow(hPanel) = 0 then exit sub
+    dim as PSICONPANEL_COLORS c
+    PsIconPanel_GetColors( hPanel, @c )
+    ' The strip's field colour, not the tab area's -- a hovered button inverts TO BackColor,
+    ' so idle is the hot one. Same inversion the bar has always drawn.
+    c.BackColor         = ghTopTabs.BackColorHot
+    c.ForeColor         = ghTopTabs.ForeColorHot
+    c.BackColorHot      = ghTopTabs.BackColor
+    c.ForeColorHot      = ghTopTabs.ForeColorHot
+    c.BackColorSelect   = ghTopTabs.BackColor
+    c.ForeColorSelect   = ghTopTabs.ForeColorHot
+    c.SeparatorColor    = ghEditor.Divider
+    PsIconPanel_SetColors( hPanel, @c )
+end sub
+
+sub Theme_ApplyTopTabsIcons()
+    Theme_PushStripIcons( ghTopTabsInfoIcons )
+end sub
+
+sub Theme_ApplyFindIcons()
+    Theme_PushStripIcons( ghFindIconsField )
+    Theme_PushStripIcons( ghFindIconsNav )
+    Theme_PushStripIcons( ghFindIconsClose )
+end sub
+
+sub Theme_ApplyReplaceIcons()
+    Theme_PushStripIcons( ghReplaceIconsField )
+    Theme_PushStripIcons( ghReplaceIconsActions )
+end sub
+
+
 sub Theme_ApplyTooltip( byval hTip as HWND )
     if IsWindow(hTip) = 0 then exit sub
     PsTooltip_SetFonts( hTip, ghFont(GUIFONT_11), ghFont(GUIFONTBOLD_11), ghFont(SYMBOLFONT_10) )
@@ -272,12 +310,15 @@ sub Theme_ApplySubsystems( byval nMask as ulong )
         end if
         if IsWindow(HWND_FRMMAIN_TOPTABSMENU) then _
             PsStatusBar_SetBackColor( HWND_FRMMAIN_TOPTABSMENU, ghTopTabs.BackColor )
+        Theme_ApplyTopTabsIcons()
+        Theme_ApplyFindIcons()
+        Theme_ApplyReplaceIcons()
         ' The Find / Replace strips. Both are persistent once created, and their PsTextBoxes
         ' copy colours, so an invalidate alone would leave them on the old theme.
-        Theme_PushTopTabsTextBox( GetDlgItem( HWND_FRMMAIN_TOPTABSFIND, _
-                                              IDC_FRMTOPTABSFIND_TXTFIND ) )
-        Theme_PushTopTabsTextBox( GetDlgItem( HWND_FRMMAIN_TOPTABSREPLACE, _
-                                              IDC_FRMTOPTABSREPLACE_TXTREPLACE ) )
+        Theme_PushTopTabsTextBox( GetDlgItem( HWND_FRMMAIN_FIND, _
+                                              IDC_FRMFIND_TXTFIND ) )
+        Theme_PushTopTabsTextBox( GetDlgItem( HWND_FRMMAIN_REPLACE, _
+                                              IDC_FRMREPLACE_TXTREPLACE ) )
     end if
 
     if (nMask and THSUB_HELPVIEWER) <> 0 then

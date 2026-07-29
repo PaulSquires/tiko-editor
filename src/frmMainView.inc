@@ -131,7 +131,7 @@ function OnCommand_ViewToggleFocus( byval pDoc as clsDocument ptr ) as LRESULT
     dim hCurrent as HWND = pDoc->hWndActiveScintilla
     ' Focus lives on the PsTextBox's RichEdit child; use that handle for the focus
     ' comparisons and SetFocus below.
-    dim hFindCtl as HWND = PsTextBox_GetRichEditHandle( GetDlgItem( HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND ) )
+    dim hFindCtl as HWND = PsTextBox_GetRichEditHandle( GetDlgItem( HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND ) )
     if IsWindowVisible(HWND_FRMMAIN_TOPTABSINFO) = false then hFindCtl = 0
         
     dim idx as long

@@ -212,7 +212,7 @@ their `_Show` scaffolding and the leaked font noted in §2.3 — bugs in one are
 Options dialog creates it three times. This is the cleanest single win in the codebase.
 
 ### 4.2 Find vs Replace top-tab forms
-`frmTopTabsFind.inc` (533 lines) and `frmTopTabsReplace.inc` (402 lines) share large runs of
+`frmFind.inc` (533 lines) and `frmReplace.inc` (402 lines) share large runs of
 identical layout/hit-test/paint logic (~45% of the smaller file diffs, the rest matches).
 Full unification may not pay — Replace genuinely has more controls — but the shared geometry
 and drawing helpers (option-button hit tests, cue-banner handling, combo history) should be

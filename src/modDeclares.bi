@@ -210,7 +210,7 @@ dim shared as HWND HWND_FRMKEYBOARD, HWND_FRMKEYBOARDEDIT
 dim shared as HWND HWND_FRMDEBUG, HWND_FRMDEBUG_OUTPUT
 
 dim shared as HWND HWND_FRMMAIN_TOPTABS, HWND_FRMMAIN_TOPTABSMENU
-dim shared as HWND HWND_FRMMAIN_TOPTABSINFO, HWND_FRMMAIN_TOPTABSFIND, HWND_FRMMAIN_TOPTABSREPLACE
+dim shared as HWND HWND_FRMMAIN_TOPTABSINFO, HWND_FRMMAIN_FIND, HWND_FRMMAIN_REPLACE
 dim shared as HWND HWND_FRMEXPLORER
 dim shared as HWND HWND_FRMFUNCTIONS
 dim shared as HWND HWND_FRMBOOKMARKS
@@ -303,18 +303,14 @@ type FINDREPLACE_TYPE
     bShowFindPanel      as boolean = false
     bShowReplacePanel   as boolean = false
     bProjectReplaceActive as boolean = false
-    rcMatchCase         as RECT
-    rcWholeWord         as RECT
-    rcToggle            as RECT
-    rcSelection         as RECT
-    rcUpArrow           as RECT  
-    rcDownArrow         as RECT  
-    rcDividerLine       as RECT  
+    ' The Find bar's seven icon rects (Match Case, Whole Word, Toggle Replace, Selection,
+    ' Prev, Next, Close) and its divider are three PsIconPanels now (frmFind.inc) -- the
+    ' controls own those cells, so there is nothing left for the host to store. rcResults
+    ' stays: the results count is still painted by the bar itself.
+    ' ...and the Replace bar's three (Preserve Case, Replace, Replace All) are two more
+    ' (frmReplace.inc). rcResults is the only icon-strip rect left in this type, because the
+    ' results count is still painted by the Find bar itself.
     rcResults           as RECT
-    rcPreserve          as RECT 
-    rcReplace           as RECT 
-    rcReplaceAll        as RECT 
-    rcClose             as RECT 
 end type
 dim shared gFind as FINDREPLACE_TYPE
 dim shared gFindInFiles as FINDREPLACE_TYPE

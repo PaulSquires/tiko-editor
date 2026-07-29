@@ -12,8 +12,14 @@
 '    GNU General Public License for more details.
 
 
-#Define IDC_FRMTOPTABSFIND_TXTFIND                  1000
-#Define IDC_FRMTOPTABSREPLACE_TXTREPLACE            1001
+#Define IDC_FRMFIND_TXTFIND                  1000
+#Define IDC_FRMREPLACE_TXTREPLACE            1001
+#Define IDC_FRMTOPTABSINFO_ICONS             1002
+#Define IDC_FRMFIND_ICONSFIELD               1003
+#Define IDC_FRMFIND_ICONSNAV                 1004
+#Define IDC_FRMFIND_ICONSCLOSE               1005
+#Define IDC_FRMREPLACE_ICONSFIELD            1006
+#Define IDC_FRMREPLACE_ICONSACTIONS          1007
 
 
 '' frmTopTabsInfo
@@ -22,9 +28,9 @@ declare function modFindReplace_HighlightSearches() as long
 declare function frmTopTabsInfo_PositionWindows() as LRESULT
 declare function frmTopTabsInfo_Show( byval hwndParent as HWND ) as LRESULT
 
-'' frmTopTabsFind
+'' frmFind
 
-'' frmTopTabsReplace
+'' frmReplace
 declare function TopTabsInfoPanel_Show() as long
 declare function FindReplace_HighlightSearches() as long
 
