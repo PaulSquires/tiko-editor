@@ -87,21 +87,34 @@ function FindControls_Show() as long
                         cbool(pDoc->CurrentSelection.endline - pDoc->CurrentSelection.startline)
         if pDoc->CurrentSelection.isInitialized = false then isOriginalSelectionMultiline = false
         
+        ' AN EMPTY SELECTION IS NOT A SEARCH TERM. GetSelText returns "" when nothing is
+        ' selected, and that "" used to be written straight into the field -- so opening Find
+        ' with no selection SILENTLY WIPED the term you last searched for, and the caller
+        ' promptly read the now-empty box back into gFind.txtFind. Measured, not deduced:
+        ' [SENTINEL] -> [] on a plain Ctrl+F.
+        '
+        ' bSeedField is what keeps that separate from the multi-line case, which clears the
+        ' field DELIBERATELY: searching within a selection starts with no term.
+        dim as boolean bSeedField = true
         dim as string sFindText = pDoc->GetSelText
         if isOriginalSelectionMultiline then
             sFindText = ""
-            gFind.nSelection = true   
+            gFind.nSelection = true
             pDoc->SetMarkerHighlight
+        elseif len(sFindText) = 0 then
+            bSeedField = false          ' nothing selected: keep whatever is already there
         else
             gFind.txtFind = sFindtext
-        end if   
+        end if
 
-        dim as HWND hCtl = GetDlgItem( HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND)
-        if sFindText <> AfxGetWindowText(hCtl) then
-            AfxSetWindowText( hCtl, sFindText )
-            dim as long nLen = len(sFindText)
-            Edit_SetSel( hCtl, nLen, nLen )
-        end if    
+        if bSeedField then
+            dim as HWND hCtl = GetDlgItem( HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND)
+            if sFindText <> AfxGetWindowText(hCtl) then
+                AfxSetWindowText( hCtl, sFindText )
+                dim as long nLen = len(sFindText)
+                Edit_SetSel( hCtl, nLen, nLen )
+            end if
+        end if
     end if
         
     return FindReplace_SetVisible( true, gFind.bShowReplacePanel )
