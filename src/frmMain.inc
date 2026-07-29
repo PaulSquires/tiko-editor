@@ -1774,6 +1774,16 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ' has not been created yet at this point -- the suite is deliberately pure.
     frmOutput_RunSelfTest()
 
+    ' Pure, so it would run anywhere; it sits here so its localized-id assertions run
+    ' after the language file has been loaded.
+    frmHelpCenter_RunSelfTest()
+
+    ' Opens the Help Center at startup so the interactive pass needs no menu driving --
+    ' and so the WebView2 path gets exercised at all, which no assertion can do.
+    if environ("TIKO_HELPCENTER_AUTOOPEN") = "1" then
+        frmHelpCenter_Show( "" )
+    end if
+
     ' Create the main application top tabs control
     frmTopTabs_Show( HWND_FRMMAIN )
     frmTopTabsMenu_Show( HWND_FRMMAIN ) 
@@ -1879,6 +1889,19 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
         if uMsg.message = WM_QUIT then exit do
 
         if handleMouseShowScrollBar(uMsg) then continue do
+
+        ' The Help Center is a MODELESS, NON-OWNED top-level window, and everything below
+        ' this line -- the three TranslateAccelerator calls and IsDialogMessage -- is
+        ' hard-wired to pWindow->hWindow (frmMain) and runs for every message in the queue
+        ' regardless of which window it was destined for. So without this filter, typing
+        ' in the Help Center's search box drives tiko: F1 re-enters the help command,
+        ' Ctrl+S saves a document, Tab fires IDM_INDENTBLOCK.
+        '
+        ' It claims KEYBOARD messages only. Mouse messages must keep reaching the two menu
+        ' filters below, or clicking the Help Center would leave an open tiko menu on
+        ' screen. It sits FIRST for that reason -- it is a destination test, not a
+        ' feature filter, so nothing else should get a look at these keystrokes.
+        if frmHelpCenter_FilterMessage( @uMsg ) then continue do
 
         ' The whole topmenu system (bar highlight, dropdowns, submenus): keyboard
         ' navigation, and dismissal on outside clicks. Consumes every plain key while

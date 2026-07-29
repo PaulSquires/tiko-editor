@@ -129,8 +129,11 @@ enum
     
     
     '' HELP
+    ' IDM_HELP_FB (the .chm through HtmlHelp) and IDM_HELP_TIKO (the RTF frmHelpViewer)
+    ' were both replaced by the one WebView2 Help Center. Nothing persists a raw IDM
+    ' number -- keybindings.ini keys on the STRING id -- so dropping the two slots is safe.
     IDM_HELP_START
-    IDM_HELP_FB, IDM_HELP_TIKO, IDM_ABOUT
+    IDM_HELP_CENTER, IDM_ABOUT
     IDM_HELP_END
     
     '' OTHER
@@ -192,9 +195,10 @@ dim shared as HWND HWND_FRMMAIN_SPLITOUTPUT
 ' gConfig.ExplorerPositionRight, but it is a vertical bar either way, so one control serves
 ' both dock sides.
 dim shared as HWND HWND_FRMMAIN_SPLITPANEL
-dim shared as HWND HWND_FRMHELPVIEWER, HWND_FRMHELPVIEWER_LEFTPANEL, HWND_FRMHELPVIEWER_RIGHTPANEL
-dim shared as HWND HWND_FRMHELPVIEWER_VSCROLLBAR2
-dim shared as HWND HWND_FRMHELPVIEWER_SPLITTER
+' The Help Center: one modeless, non-owned top-level window hosting a WebView2 pane. Its
+' only child is the pane's host window, which frmHelpCenter owns -- so unlike the
+' frmHelpViewer it replaced, there is nothing else to track here.
+dim shared as HWND HWND_FRMHELPCENTER
 ' The General Options and Code Editor pages are table-driven now (modOptionsRows.inc) and
 ' have no child forms of their own, so HWND_FRMOPTIONSGENERAL / ...EDITOR / ...EDITOR2 are
 ' gone. "Advanced Code Editor" is no longer a separate page at all: its settings sit at the

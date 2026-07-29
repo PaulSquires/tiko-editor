@@ -97,7 +97,7 @@ enum THEME_SUBSYS
     THSUB_OUTPUT        = &h00000080   ' frmOutput panes, textboxes, scrollbar, selectbar
     THSUB_AUTOCOMPLETE  = &h00000100
     THSUB_OPTIONSDLG    = &h00000200   ' frmOptions shell + rows + the panel-hosted pages
-    THSUB_HELPVIEWER    = &h00000400
+    THSUB_HELPCENTER    = &h00000400   ' the WebView2 help window's CAPTION only
     THSUB_DEBUG         = &h00000800
     THSUB_SEARCHSYMBOL  = &h00001000
     THSUB_FRAME         = &h00002000   ' DWM caption + frmMain client
@@ -726,11 +726,12 @@ private sub Theme_BuildBindTable()
 
     ' ---- editor: syntax styles (fore + back + bold/italic/underline) ------------------
     ' editor.text also dresses the autocomplete popup, the Options textboxes and the help
-    ' viewer, so it reaches well beyond Scintilla.
+    ' Options textboxes, so it reaches beyond Scintilla. It no longer reaches the help
+    ' window: that is a WebView2 pane and the site brings its own CSS.
     ThemeBind_Add( "editor.text", @ghEditor.ForeColorText, @ghEditor.BackColorText, _
                    @ghEditor.TextBold, @ghEditor.TextItalic, @ghEditor.TextUnderline, _
                    THSUB_SCINTILLA or THSUB_EDITORCHROME or THSUB_AUTOCOMPLETE or _
-                   THSUB_OPTIONSDLG or THSUB_HELPVIEWER )
+                   THSUB_OPTIONSDLG )
     ThemeBind_Add( "editor.comments", @ghEditor.ForeColorComments, @ghEditor.BackColorComments, _
                    @ghEditor.CommentsBold, @ghEditor.CommentsItalic, @ghEditor.CommentsUnderline )
     ThemeBind_Add( "editor.keyword", @ghEditor.ForeColorKeyword, @ghEditor.BackColorKeyword, _

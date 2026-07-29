@@ -15,3 +15,8 @@ REFACTOR_PLAN*.md
 /theme_dump.txt
 /theme_trace.log
 /_theme_selftest.tmp
+
+# The Help Center's WebView2 profile: cache, cookies and local storage, created by the
+# runtime on first open. Machine-specific and regenerated on demand -- never committed.
+# (WebView2Loader.dll IS committed; it is a shipped binary, like bin\Scintilla64.dll.)
+/settings/webview2/
