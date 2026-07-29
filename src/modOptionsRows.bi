@@ -162,6 +162,10 @@ type OPTIONS_WORK
     ForNextVariable       as long
     BraceHighlight        as long
     OccurrenceHighlight   as long
+    ' The combo's selected INDEX -- which is also the FILE_ENCODING_* value, because the
+    ' row's item list is built by walking those constants in order. See the row's own
+    ' comment in OptionsRows_Init and Doc_EncodingName in modRoutines.inc.
+    NewFileEncoding       as long
     ' --- Compiler Setup (hand-written page, frmOptionsCompiler.inc) ---
     ' CompilerToolchain is the selected toolchain FOLDER name, from which Commit rebuilds
     ' both FBWINCompiler32/64. Seeded in Load from the current gConfig path so an unvisited

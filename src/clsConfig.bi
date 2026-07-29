@@ -126,6 +126,12 @@ type clsConfig
         MultipleInstances         as long = true
         CompileAutosave           as long = true
         UnicodeEncoding           as long = false
+        ' The encoding a File>New document starts life with -- one of the FILE_ENCODING_*
+        ' values from clsDocument.bi (which tiko.bas includes ahead of this file). It is a
+        ' NEW key rather than a repurposing of UnicodeEncoding above: every settings.ini
+        ' already on disk carries "UnicodeEncoding=0", which read as an encoding would mean
+        ' ANSI, silently changing the default for every existing install.
+        NewFileEncoding           as long = FILE_ENCODING_UTF8
         TabSize                   as DWSTRING = "4"
         LocalizationFile          as DWSTRING = "english.lang"
         EditorFontname            as DWSTRING = "Consolas"

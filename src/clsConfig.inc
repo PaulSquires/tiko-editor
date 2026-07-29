@@ -299,8 +299,9 @@ function clsConfig.SaveConfigFile() as long
     pStream.WriteLine "HighlightCurrentLine="  & this.HighlightCurrentLine 
     pStream.WriteLine "IndentGuides="          & this.IndentGuides         
     pStream.WriteLine "TabIndentSpaces="       & this.TabIndentSpaces      
-    pStream.WriteLine "UnicodeEncoding="       & this.UnicodeEncoding      
-    pStream.WriteLine "KeywordCase="           & this.KeywordCase          
+    pStream.WriteLine "UnicodeEncoding="       & this.UnicodeEncoding
+    pStream.WriteLine "NewFileEncoding="       & this.NewFileEncoding
+    pStream.WriteLine "KeywordCase="           & this.KeywordCase
     pStream.WriteLine "LocalizationFile="      & this.LocalizationFile     
     pStream.WriteLine "TabSize="               & this.TabSize              
     pStream.WriteLine "PositionMiddle="        & this.PositionMiddle
@@ -726,6 +727,16 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
             case "LocalizationFile":         this.LocalizationFile      = ProcessFromCurdriveApp(wData)
             case "TabSize":                  this.TabSize               = wData
             case "UnicodeEncoding":          this.UnicodeEncoding       = nData
+            ' Clamped rather than trusted: this value is fed straight to a document's
+            ' FileEncoding, and an out-of-range one would reach the save encoder's
+            ' select-case and fall through to no branch at all. A hand-edited or
+            ' garbage key falls back to the compiled-in default instead.
+            case "NewFileEncoding"
+                if (nData >= FILE_ENCODING_ANSI) andalso (nData <= FILE_ENCODING_UTF16_BOM) then
+                    this.NewFileEncoding = nData
+                else
+                    this.NewFileEncoding = FILE_ENCODING_UTF8
+                end if
             case "EditorFontname":           this.EditorFontname        = wData
             case "EditorFontsize":           this.EditorFontsize        = wData
             case "EditorFontCharSet":        this.EditorFontCharSet     = wData

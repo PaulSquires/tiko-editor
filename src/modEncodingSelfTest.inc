@@ -157,6 +157,57 @@ sub Encoding_RunSelfTest()
     ENCASSERT( len(LL(484)) > 0, "L(484) lossy-prompt body is blank -- missing from english.lang" )
     ENCASSERT( len(LL(485)) > 0, "L(485) lossy-prompt title is blank -- missing from english.lang" )
 
+    ' ================= Default encoding for new files =================
+    ' Three separate claims, kept apart on purpose -- the name table, the index/value
+    ' identity the Options combo relies on, and the actual honouring of the setting.
+
+    ' (a) Every encoding has a distinct, non-empty name, and an out-of-range value answers
+    '     ANSI rather than "". A blank name would put an empty row in the combo and an
+    '     empty statusbar panel, neither of which reports anything.
+    for e as long = FILE_ENCODING_ANSI to FILE_ENCODING_UTF16_BOM
+        ENCASSERT( len(Doc_EncodingName(e)) > 0, _
+            "Doc_EncodingName(" & str(e) & ") is blank" )
+        for f as long = FILE_ENCODING_ANSI to FILE_ENCODING_UTF16_BOM
+            if f <= e then continue for
+            ENCASSERT( Doc_EncodingName(e) <> Doc_EncodingName(f), _
+                "Doc_EncodingName: " & str(e) & " and " & str(f) & " share the name """ & _
+                Doc_EncodingName(e) & """" )
+        next
+    next
+    ENCASSERT( Doc_EncodingName(-1) = Doc_EncodingName(FILE_ENCODING_ANSI), _
+        "Doc_EncodingName(-1) should fall back to the ANSI name" )
+    ENCASSERT( Doc_EncodingName(99) = Doc_EncodingName(FILE_ENCODING_ANSI), _
+        "Doc_EncodingName(99) should fall back to the ANSI name" )
+
+    ' (b) The index/value identity the Options combo is built on is asserted in
+    '     OptionsRows_RunBindTest (TIKO_OPTIONS_SELFTEST) instead of here: gOptRows and
+    '     gOptWork are declared by modOptionsRows, which tiko.bas includes well AFTER this
+    '     file, so naming either of them here would not compile.
+
+    ' (c) A NEW DOCUMENT ACTUALLY TAKES THE SETTING. This is the only assertion that would
+    '     fail if the honouring line in clsApp.CreateEmptyDocument were deleted; (a) and (b)
+    '     are both blind to it. Driven for every encoding rather than one, so a hardcoded
+    '     constant left behind cannot pass by coincidentally matching the default.
+    '     gConfig is written here, so it is snapshotted and restored (Theme_RunSelfTest's
+    '     precedent), and every document created is removed again.
+    scope
+        dim as long nSaved = gConfig.NewFileEncoding
+        for e as long = FILE_ENCODING_ANSI to FILE_ENCODING_UTF16_BOM
+            gConfig.NewFileEncoding = e
+            dim pNew as clsDocument ptr = gApp.CreateEmptyDocument( true )
+            if pNew = 0 then
+                nFail += 1 : ? "  FAIL: CreateEmptyDocument returned null"
+            else
+                ENCASSERT( pNew->FileEncoding = e, _
+                    "a new document took encoding " & str(pNew->FileEncoding) & _
+                    " with gConfig.NewFileEncoding = " & str(e) )
+                gApp.RemoveDocument( pNew )
+            end if
+        next
+        gConfig.NewFileEncoding = nSaved
+        ENCASSERT( gConfig.NewFileEncoding = nSaved, "failed to restore gConfig.NewFileEncoding" )
+    end scope
+
     sMsg = "--- encoding self-test: " & str(nPass) & " passed, " & str(nFail) & " failed ---"
     ? sMsg
 

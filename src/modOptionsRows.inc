@@ -235,6 +235,21 @@ sub OptionsRows_Init()
     OptionsRows_Add( OPTPAGE_EDITOR2, OPT_TOGGLE, 412, @gOptWork.BraceHighlight )        ' "Enable Brace Highlighting"
     OptionsRows_Add( OPTPAGE_EDITOR2, OPT_TOGGLE, 419, @gOptWork.OccurrenceHighlight )   ' "Enable Occurrences Highlighting"
 
+    ' The encoding a File>New document starts life with. THE FIRST OPT_COMBO ROW IN THE
+    ' TABLE -- the kind has been fully implemented and unused since the dialog was rebuilt.
+    '
+    ' The item list is built by walking FILE_ENCODING_ANSI..FILE_ENCODING_UTF16_BOM through
+    ' Doc_EncodingName, which is what makes "the selected index is the encoding value" true
+    ' by construction rather than by a mapping table someone has to keep in step. Nothing
+    ' here may reorder the items; the constants decide the order.
+    dim as DWSTRING wszEncItems
+    for nEnc as long = FILE_ENCODING_ANSI to FILE_ENCODING_UTF16_BOM
+        if nEnc > FILE_ENCODING_ANSI then wszEncItems += chr(9)
+        wszEncItems += Doc_EncodingName( nEnc )
+    next
+    OptionsRows_Add( OPTPAGE_EDITOR2, OPT_COMBO, 83, @gOptWork.NewFileEncoding, _
+                     0, 0, 0, wszEncItems )                                          ' "Default encoding for new files"
+
 end sub
 
 
@@ -293,6 +308,7 @@ sub OptionsWork_Load()
     gOptWork.ForNextVariable       = gConfig.ForNextVariable
     gOptWork.BraceHighlight        = gConfig.BraceHighlight
     gOptWork.OccurrenceHighlight   = gConfig.OccurrenceHighlight
+    gOptWork.NewFileEncoding       = gConfig.NewFileEncoding
 
     ' The help file path is stored curdrive-relative and expanded for display, matching
     ' what the old compiler page did in its own Show.
@@ -349,6 +365,10 @@ sub OptionsWork_Commit()
     gConfig.ForNextVariable       = gOptWork.ForNextVariable
     gConfig.BraceHighlight        = gOptWork.BraceHighlight
     gConfig.OccurrenceHighlight   = gOptWork.OccurrenceHighlight
+    ' No conversion: the combo index and the FILE_ENCODING_* value are the same number by
+    ' construction, and OptionsRows_BuildPage has already read back whatever the control
+    ' actually accepted, so an out-of-range stored value cannot survive to here.
+    gConfig.NewFileEncoding       = gOptWork.NewFileEncoding
 
     gConfig.CompilerSwitches      = gOptWork.CompilerSwitches
     gConfig.CompilerIncludes      = gOptWork.CompilerIncludes
@@ -822,6 +842,52 @@ sub OptionsRows_RunBindTest()
     BINDCHK(  91, gConfig.CheckUpdates,         "Check for Updates" )
     BINDCHK( 114, gConfig.SyntaxHighlighting,   "Syntax highlighting" )
     BINDCHK( 124, gConfig.LineNumbering,        "Show line numbers" )
+    BINDCHK(  83, gConfig.NewFileEncoding,      "Default encoding for new files" )
+
+    ' ---- The new-file-encoding combo: index == FILE_ENCODING_* value ------------------
+    ' The row's item list is built by walking the encoding constants through
+    ' Doc_EncodingName, and OptionsRows_ComboChanged stores the raw selected index into
+    ' gOptWork.NewFileEncoding, which Commit copies verbatim into gConfig. So the item
+    ' ORDER is load-bearing: re-ordering it silently makes the dialog set a different
+    ' encoding from the one the user picked, with nothing else to report it.
+    scope
+        dim as long idxRow = -1
+        for i as long = lbound(gOptRows) to ubound(gOptRows)
+            if gOptRows(i).pField = @gOptWork.NewFileEncoding then idxRow = i: exit for
+        next
+        if idxRow < 0 then
+            nFail += 1
+            ? "  FAIL: no row is bound to gOptWork.NewFileEncoding"
+        else
+            #macro ENCROWCHK( cond, msg )
+                if (cond) then
+                    nPass += 1
+                else
+                    nFail += 1
+                    sLine = "  FAIL: " & msg
+                    ? sLine
+                end if
+            #endmacro
+
+            ENCROWCHK( gOptRows(idxRow).nKind = OPT_COMBO, _
+                "the new-file-encoding row is not an OPT_COMBO" )
+            ENCROWCHK( gOptRows(idxRow).nPage = OPTPAGE_EDITOR2, _
+                "the new-file-encoding row is not on the Advanced Code Editor page" )
+            ENCROWCHK( len(LL(gOptRows(idxRow).nLabelID)) > 0, _
+                "L(" & str(gOptRows(idxRow).nLabelID) & ") encoding label is blank" )
+
+            dim as long nItems = AfxStrParseCount( gOptRows(idxRow).wszItems, chr(9) )
+            ENCROWCHK( nItems = (FILE_ENCODING_UTF16_BOM - FILE_ENCODING_ANSI + 1), _
+                "encoding combo has " & str(nItems) & " items, expected one per FILE_ENCODING_*" )
+
+            for e as long = FILE_ENCODING_ANSI to FILE_ENCODING_UTF16_BOM
+                dim as DWSTRING wItem = AfxStrParse( gOptRows(idxRow).wszItems, e + 1, chr(9) )
+                ENCROWCHK( wItem = Doc_EncodingName(e), _
+                    "encoding combo item " & str(e) & " is """ & wItem & """, expected """ & _
+                    Doc_EncodingName(e) & """ -- index no longer equals the encoding value" )
+            next
+        end if
+    end scope
 
     sLine = "--- options bind test: " & str(nPass) & " passed, " & str(nFail) & " failed ---"
     ? sLine

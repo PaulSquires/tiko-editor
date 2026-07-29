@@ -49,6 +49,17 @@ function clsApp.CreateEmptyDocument( byval IsNewFile as boolean = false ) as cls
     if IsNewFile then
         pDoc->NextFileNum += 1
         pDoc->DiskFilename = "Untitled" & pDoc->NextFileNum
+        ' THE SINGLE POINT where the "default encoding for new files" setting is honoured.
+        ' It replaces the hardcoded FILE_ENCODING_UTF8 initialiser on clsDocument.FileEncoding,
+        ' which is still the fallback for a document created any other way.
+        '
+        ' Nothing downstream needed changing: AssignTextBuffer derives the Scintilla codepage
+        ' from FileEncoding on the still-empty buffer (INVARIANT E1), Doc_EncodeForDisk emits
+        ' the matching BOM on the first save, and the statusbar panel reads the field. This is
+        ' also correct for the one OTHER caller that passes true -- the template path in
+        ' frmMainFile -- because LoadDiskFile immediately sniffs the file's real BOM and
+        ' overwrites the field, so a template keeps the encoding it is stored in.
+        pDoc->FileEncoding = gConfig.NewFileEncoding
     end if
     pDoc->ProjectFileType = FILETYPE_UNDEFINED
     pDoc->SetDocumentBuild()

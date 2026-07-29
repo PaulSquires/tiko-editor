@@ -45,6 +45,7 @@ declare function GetFontCharSetID(byref wzCharsetName as DWSTRING ) as long
 declare function isUTF8encoded(byref s as string) as boolean
 declare function Scintilla_GetTextBytes( byval hEdit as hwnd ) as string
 declare function Doc_EncodeForDisk( byref sBuffer as string, byval bSourceIsUtf8 as boolean, byval nTargetEnc as long, byref bLossy as boolean ) as string
+declare function Doc_EncodingName( byval nEnc as long ) as DWSTRING
 declare function ConvertTextBuffer( byval pDoc as clsDocument ptr, byval nNewEncoding as long ) as boolean
 declare function GetFileToString( byref wszFilename as const wstring, byref txtBuffer as string, byval pDoc as clsDocument ptr ) as boolean
 declare function IsCurrentLineIncludeFilename() as boolean

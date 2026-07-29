@@ -466,6 +466,34 @@ end function
 
 
 ' ========================================================================================
+' The display name of a FILE_ENCODING_* value -- the SINGLE source for all four strings.
+'
+' There were two hardcoded copies of this list before (the statusbar panel in
+' frmMain_SetStatusbar and the statusbar popup in ShowFileEncodingContextMenu), and the
+' Options page's "encoding for new files" combo would have made a third. They are now all
+' driven from here, which is what makes the combo's ITEM ORDER and the FILE_ENCODING_*
+' VALUES provably the same thing: the combo is filled by walking ANSI..UTF16_BOM through
+' this function, so the selected index IS the encoding constant and there is no mapping
+' table anywhere to fall out of step.
+'
+' NOT localized, deliberately: these are the encodings' own names, and both call sites this
+' replaces spelled them in English under every language file. Changing that is a separate
+' decision from adding a setting, and would need all six .lang files either way.
+'
+' An unknown value answers "ANSI", matching the `case else` the statusbar has always had --
+' encoding 0 is the one a zeroed/garbage field lands on.
+' ========================================================================================
+function Doc_EncodingName( byval nEnc as long ) as DWSTRING
+    select case nEnc
+        case FILE_ENCODING_UTF8      : return "UTF-8"
+        case FILE_ENCODING_UTF8_BOM  : return "UTF-8 (BOM)"
+        case FILE_ENCODING_UTF16_BOM : return "UTF-16 (BOM)"
+        case else                    : return "ANSI"
+    end select
+end function
+
+
+' ========================================================================================
 ' Produce the exact bytes to write to disk for a document, BOM included.
 '
 '   sBuffer       - the raw Scintilla bytes (from Scintilla_GetTextBytes)

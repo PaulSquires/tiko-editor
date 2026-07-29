@@ -148,12 +148,9 @@ function frmMain_SetStatusbar() as long
         ' a new layout without converting them -- which corrupted the buffer the instant
         ' FileEncoding was relabelled (INVARIANT E1). The codepage is owned by ApplyProperties
         ' (on load) and ConvertTextBuffer (on an explicit user switch), nowhere else.
-        select case pDoc->FileEncoding
-            case FILE_ENCODING_UTF8      : wszText = "UTF-8"
-            case FILE_ENCODING_UTF8_BOM  : wszText = "UTF-8 (BOM)"
-            case FILE_ENCODING_UTF16_BOM : wszText = "UTF-16 (BOM)"
-            case else                    : wszText = "ANSI"
-        end select
+        ' The four names live in Doc_EncodingName (modRoutines.inc), shared with the
+        ' statusbar's own popup and with the Options page's new-file-encoding combo.
+        wszText = Doc_EncodingName( pDoc->FileEncoding )
         PsStatusBar_SetText( HWND_FRMMAIN_STATUSBAR, UTF_PANEL, wszText )
 
         ' PANEL Line Endings
