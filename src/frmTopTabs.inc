@@ -15,49 +15,6 @@
 #include once "PsTabBar.bi"
 
 
-'        if IsWindow(hTooltip) = 0 then 
-'            hTooltip = AfxAddTooltip( hwnd, "", false, false )
-'            ' Set the tooltip max width in order to handle the multiline
-'            ' text needed for the split editor button.
-'            SendMessage( hTooltip, TTM_SETMAXTIPWIDTH, 0, 300 )
-'        end if
-    
-'    case WM_MOUSEHOVER
-'        dim as DWSTRING wszTooltip 
-'        ' test for Action Button, Filename caption or Close caption
-'        curr_idxHot = getHotTabHitTest( hwnd )
-'        if isMouseOverRECT(hwnd, gTTabCtl.rcPrevTabs) then
-'            wszTooltip  = L(431, "Scroll Tabs Left")
-'        elseif isMouseOverRECT(hwnd, gTTabCtl.rcNextTabs) then
-'            wszTooltip  = L(432, "Scroll Tabs Right")
-'        elseif isMouseOverRECT(hwnd, gTTabCtl.rcActionButton) then
-'            wszTooltip  = L(430, "Tab List")
-
-'        elseif isMouseOverRECT(hwnd, gTTabCtl.rcSplitEditor) then
-'            ' If CTRL is pressed then use the top/bottom split, otherwise
-'            ' use the left/right split icon.
-'            if (wszIconSplitEditor = wszIconSplitTopBottom) then
-'                wszTooltip  = L(070,"Toggle Split Editor Top/Bottom")
-'            else    
-'                wszTooltip  = L(069,"Toggle Split Editor Left/Right") & _
-'                                    chr(13,10) & "[Alt]: " & L(071,"Split Top/Bottom")
-'            end if
-
-'        elseif isTabCloseHitTest( hwnd, curr_idxHot ) = curr_idxHot then
-'            wszTooltip  = L(86, "Close Tab")
-'        elseif isMouseOverRECT(hwnd, gTTabCtl.rcActionPanel) then
-'            ' do nothing. no tooltip.
-'        else
-'            if gTTabCtl.IsSafeIndex(curr_idxHot) = false then exit function
-'            wszTooltip = ""
-'            if gTTabCtl.tabs(curr_idxHot).pDoc <> 0 then
-'                wszTooltip = gTTabCtl.tabs(curr_idxHot).pDoc->DiskFilename   
-'            end if    
-'        end if
-        
-
-
-
 ' ========================================================================================
 ' frmTopTabs_PaintCallback
 '
