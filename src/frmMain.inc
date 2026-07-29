@@ -1638,8 +1638,8 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     '
     ' If the system refuses (or reports something unusable) we fall back to the 10pt GUI face,
     ' so ghFont(TOOLTIPFONT) is ALWAYS a valid font and no caller needs a second branch.
-    dim as TIKO_TOOLTIPFONT tipfont
-    if Tooltip_GetSystemFont( tipfont ) then
+    dim as PSTOOLTIP_SYSTEMFONT tipfont
+    if PsTooltip_GetSystemFont( tipfont ) then
         ghFont(TOOLTIPFONT)     = pWindow->CreateFont( tipfont.wszFaceName, tipfont.pointSize, _
                                                        tipfont.lfWeight, tipfont.isItalic )
         ghFont(TOOLTIPFONTBOLD) = pWindow->CreateFont( tipfont.wszFaceName, tipfont.pointSize, _

@@ -1667,6 +1667,52 @@ sub PsTooltip_ApplyDefaults( byval hTooltip as HWND )
     if gTIP_HasDefReshow then PsTooltip_SetReshowDelay( hTooltip, gTIP_DefReshow )
 end sub
 
+' ========================================================================================
+' PsTooltip_GetSystemFont
+'
+' SPI_GETNONCLIENTMETRICS's lfStatusFont -- the face Windows itself draws tooltips and the
+' status bar in. Read-only: this control creates no fonts and owns none, so the caller builds
+' the HFONT and keeps it alive, exactly as it does for PsTooltip_SetFonts.
+'
+' The pixel->point conversion is the whole reason this is worth a shared function rather than
+' six lines in each host; see the contract in the .bi before changing it. Briefly: lfHeight is
+' pixels at the current DPI, a point size is not, and every CreateFont-style call that takes
+' points scales them again.
+' ========================================================================================
+function PsTooltip_GetSystemFont( byref info as PSTOOLTIP_SYSTEMFONT ) as boolean
+    dim as NONCLIENTMETRICSW ncm
+    ncm.cbSize = sizeof(NONCLIENTMETRICSW)
+
+    if SystemParametersInfoW( SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICSW), @ncm, 0 ) = 0 then
+        return false
+    end if
+
+    dim as PSTOOLTIP_SYSTEMFONT got
+    got.wszFaceName = ncm.lfStatusFont.lfFaceName
+    got.pixelHeight = abs( ncm.lfStatusFont.lfHeight )
+    got.lfWeight    = ncm.lfStatusFont.lfWeight
+    got.isBold      = (ncm.lfStatusFont.lfWeight >= FW_BOLD)
+    got.isItalic    = (ncm.lfStatusFont.lfItalic <> 0)
+
+    dim as HDC hDC = GetDC( HWND_DESKTOP )
+    if hDC then
+        dim as long dpiY = GetDeviceCaps( hDC, LOGPIXELSY )
+        if dpiY > 0 then got.pointSize = MulDiv( got.pixelHeight, 72, dpiY )
+        ReleaseDC( HWND_DESKTOP, hDC )
+    end if
+
+    ' Nothing is written to the caller's struct until we know the whole answer is usable. A
+    ' partial fill on the failure path would hand back a face with no size (or a size with no
+    ' face) to a caller that only checked the return value -- and the fallback it was about to
+    ' choose is exactly what it should get instead.
+    if len( got.wszFaceName ) = 0 then return false
+    if got.pointSize <= 0 then return false
+
+    info = got
+    return true
+end function
+
+
 
 sub PsTooltip_SetMoveTolerance( byval hTooltip as HWND, byval nPixels as long )
     dim as PSTOOLTIP ptr pTip = GetTooltipPointer(hTooltip)

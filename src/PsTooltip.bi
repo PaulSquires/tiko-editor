@@ -507,6 +507,43 @@ declare sub      PsTooltip_ClearDefaults()
 ' re-theme a tip that already exists.
 declare sub      PsTooltip_ApplyDefaults( byval hTooltip as HWND )
 
+' --- the system's own tooltip font ------------------------------------------------------------
+' What WINDOWS draws a tooltip in: SPI_GETNONCLIENTMETRICS's lfStatusFont, which is the
+' status-bar/tooltip face. This control creates no fonts -- the family rule -- so this reads the
+' setting and hands back the numbers; building the HFONT stays the host's job and so does owning
+' it.
+'
+' It is here rather than in a host because the reason to want it is the same reason PsTooltip
+' derives its delays from GetDoubleClickTime(): a tip drawn in a different face and size from
+' every other tip on the machine reads as broken. A host that then wants its own font simply
+' does not call this.
+'
+' Returns FALSE if the system refuses, or if what it reports is unusable (no face name, or no
+' derivable point size). The struct is left untouched in that case, so a caller falls back to a
+' face of its own rather than to an empty LOGFONT.
+'
+' USE pointSize, NOT pixelHeight, AND THE DIFFERENCE IS NOT COSMETIC.
+' lfHeight comes back in PIXELS at the process's current DPI. Every font-building call that
+' takes a size in POINTS -- AfxNova's CWindow.CreateFont among them -- DPI-scales what it is
+' given, so handing it the pixel height asks for a font ~1.75x too large on a 175% display AND
+' LOOKS CORRECT AT 100%, which is how that bug ships. Points are DPI-neutral, so the round trip
+' pixels -> points -> CreateFont lands back on the size the system asked for. Measured on a 175%
+' display: LOGPIXELSY 168, pixelHeight 21, pointSize 9.
+'
+' lfWeight is reported as well as isBold because FW_BOLD is a THRESHOLD: a system face at
+' FW_SEMIBOLD would be flattened to "not bold" and rebuilt at FW_NORMAL if only the boolean
+' survived. Build from lfWeight; read isBold when a yes/no is genuinely what you want.
+type PSTOOLTIP_SYSTEMFONT
+    wszFaceName  as DWSTRING
+    pointSize    as long = 0      ' derived from pixelHeight against the screen's LOGPIXELSY
+    pixelHeight  as long = 0      ' abs(lfHeight), exactly as the system reported it
+    lfWeight     as long = 0      ' the raw LOGFONT weight -- build from THIS
+    isBold       as boolean = false
+    isItalic     as boolean = false
+end type
+
+declare function PsTooltip_GetSystemFont( byref info as PSTOOLTIP_SYSTEMFONT ) as boolean
+
 ' --- manual drive. These BYPASS the dwell entirely; the tick still auto-hides them. --------
 ' Show at the current cursor position.
 declare function PsTooltip_Show( byval hTooltip as HWND ) as boolean
