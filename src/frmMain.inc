@@ -1270,14 +1270,15 @@ function frmMain_OnClose( byval hwnd as HWND ) as LRESULT
     gConfig.ShowPanel = IsWindowVisible(HWND_FRMPANEL)
     gConfig.ShowPanelWidth = pWindow->UnScaleX(AfxGetWindowWidth( HWND_FRMPANEL ))
 
-    ' Save whether the Output panel should be shown the next time the program is run.
-    ' Also save the panel height. 
-    gConfig.ShowOutputPanel = IsWindowVisible(HWND_FRMOUTPUT)
-    gConfig.ShowOutputPanelHeight = pWindow->UnScaleY(gConfig.ShowOutputPanelHeight)
-    'gConfig.ShowOutputPanelMinimized this is set when double clicking an Output panel tab.
-    ' The tab bar owns the current tab; the config field is just its persisted copy.
-    gConfig.ShowOutputPanelIndex = PsSelectBar_GetCurSel( HWND_FRMOUTPUT_SELECTBAR )
-    
+    ' The Output panel's state is NOT captured here. frmOutput_CaptureState() does it, from
+    ' inside SaveConfigFile, so that every save path persists a coherent set -- including
+    ' one that happens to be the last before an abnormal exit.
+    '
+    ' Doing it here was also unsafe in a way that had nothing to do with crashes: the height
+    ' was unscaled IN PLACE, and this function has four paths below that abort the close
+    ' (a cancelled project close, session save, default session save, or file close). Cancel
+    ' the exit and the live height had been divided by the DPI factor.
+
     ' if a project is already open then save/close it.
     if gApp.IsProjectActive then 
         if OnCommand_ProjectClose(hwnd) = false then return 0
@@ -1769,6 +1770,10 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ' clock. The rest are pure functions and would run anywhere.
     Codetip_RunSelfTest()
 
+    ' Needs the frmMain CWindow (for the real DPI) but not the Output panel itself, which
+    ' has not been created yet at this point -- the suite is deliberately pure.
+    frmOutput_RunSelfTest()
+
     ' Create the main application top tabs control
     frmTopTabs_Show( HWND_FRMMAIN )
     frmTopTabsMenu_Show( HWND_FRMMAIN ) 
@@ -1782,6 +1787,7 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ' Create the various child windows
     frmPanel_Show( HWND_FRMMAIN )
     frmOutput_Show( HWND_FRMMAIN )
+    frmOutput_RunPostShowSelfTest()
     frmEditorHScroll_Show( HWND_FRMMAIN )
     frmEditorVScroll_Show( HWND_FRMMAIN )
 

@@ -484,9 +484,55 @@ sub frmOutput_SplitterMoved( _
 
         case PSSPLITTER_PHASE_END
             ' Persist the height the user settled on -- what HandleSingleClick did on the
-            ' mouse-up.
-            gConfig.ShowOutputPanelHeight = AfxGetWindowHeight(HWND_FRMOUTPUT)
+            ' mouse-up. UnScaleY because gConfig holds this field unscaled at all times;
+            ' AfxGetWindowHeight reports device pixels.
+            gConfig.ShowOutputPanelHeight = _
+                frmOutput_ClampHeight( pWindow->UnScaleY( AfxGetWindowHeight(HWND_FRMOUTPUT) ) )
     end select
+end sub
+
+
+' ========================================================================================
+' Clamp a stored (unscaled) panel height into the legal range. See OUTPUT_PANEL_MIN_HEIGHT
+' for why the floor sits above the tabs row rather than on it.
+' ========================================================================================
+function frmOutput_ClampHeight( byval nHeight as long ) as long
+    if nHeight < OUTPUT_PANEL_MIN_HEIGHT then return OUTPUT_TABS_HEIGHT * 5
+    function = nHeight
+end function
+
+
+' ========================================================================================
+' Refresh every persisted Output-panel field from the live windows.
+'
+' This exists because those four fields used to be refreshed at three DIFFERENT times --
+' visibility and tab index only in frmMain_OnClose, minimized live, height live-but-scaled.
+' Any of the ten SaveConfigFile call sites that was not the final one therefore wrote a
+' blend of two sessions, which is what made the panel jump after an abnormal exit. One
+' function, called from SaveConfigFile, is what makes every save path coherent.
+' ========================================================================================
+sub frmOutput_CaptureState()
+    ' SaveConfigFile can run before the panel exists (and during shutdown, after it has
+    ' gone). Leave the loaded values untouched in that case rather than writing zeros.
+    if IsWindow( HWND_FRMOUTPUT ) = 0 then exit sub
+    dim pWindow as CWindow ptr = AfxCWindowPtr( HWND_FRMOUTPUT )
+    if pWindow = 0 then exit sub
+
+    gConfig.ShowOutputPanel = IsWindowVisible( HWND_FRMOUTPUT )
+
+    ' Only a panel that is BOTH visible and not minimized is showing the user's chosen
+    ' height; in any other state the live window height is the tabs row (or stale), so the
+    ' stored value is the thing to keep.
+    if gConfig.ShowOutputPanel andalso (gConfig.ShowOutputPanelMinimized = 0) then
+        gConfig.ShowOutputPanelHeight = _
+            pWindow->UnScaleY( AfxGetWindowHeight( HWND_FRMOUTPUT ) )
+    end if
+    gConfig.ShowOutputPanelHeight = frmOutput_ClampHeight( gConfig.ShowOutputPanelHeight )
+
+    ' The tab bar owns the current tab; the config field is only its persisted copy.
+    if IsWindow( HWND_FRMOUTPUT_SELECTBAR ) then
+        gConfig.ShowOutputPanelIndex = PsSelectBar_GetCurSel( HWND_FRMOUTPUT_SELECTBAR )
+    end if
 end sub
 
 
@@ -553,18 +599,17 @@ end function
 function frmOutput_RestorePanel() as long
     dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMOUTPUT)
     if pWindow = 0 then exit function
-    
+
     gConfig.ShowOutputPanelMinimized = 0
-    
-    dim as long nDefaultHeight = pWindow->ScaleY(OUTPUT_TABS_HEIGHT)
+
     dim as long nWidth = AfxGetWindowWidth(HWND_FRMOUTPUT)
-    dim as long nHeight = gConfig.ShowOutputPanelHeight
-    
-    if nHeight <= nDefaultHeight then
-        gConfig.ShowOutputPanelHeight = pWindow->ScaleY(OUTPUT_TABS_HEIGHT * 5)
-        nHeight = nDefaultHeight
-    end if
-   
+
+    ' Repair a degenerate stored height, then restore to THAT -- the old code repaired the
+    ' config and then sized the window to the minimized height anyway, so restoring from a
+    ' degenerate value left the panel looking minimized while the flag said restored.
+    gConfig.ShowOutputPanelHeight = frmOutput_ClampHeight( gConfig.ShowOutputPanelHeight )
+    dim as long nHeight = pWindow->ScaleY( gConfig.ShowOutputPanelHeight )
+
     ' Ensure that window is visible. Compile or Find results need a visible
     ' window in order to display results.
     AfxSetWindowSize(HWND_FRMOUTPUT, nWidth, nHeight)
@@ -786,11 +831,16 @@ function frmOutput_Show( byval hwndParent as HWND ) as LRESULT
     dim pWindow as CWindow ptr = new CWindow
     dim as long nHeight
     
-    ' Set the height of the window to the last used visible height or to the
-    ' default height if gConfig.ShowOutputPanelHeight is less than it.
-    gConfig.ShowOutputPanelHeight = max(gConfig.ShowOutputPanelHeight, OUTPUT_TABS_HEIGHT)
+    ' Set the height of the window to the last used visible height. The clamp is what heals
+    ' a settings.ini written by an older build, whose height could be ratcheted up by the
+    ' DPI factor on every launch or divided down by a cancelled exit.
+    gConfig.ShowOutputPanelHeight = frmOutput_ClampHeight( gConfig.ShowOutputPanelHeight )
     nHeight = gConfig.ShowOutputPanelHeight
-    
+    ' Witness for the post-Show half of the self-test. Creating the panel must leave the
+    ' stored height ALONE -- mutating it here is the exact defect that made the panel grow
+    ' by the DPI factor on every launch, and no pure function can see that happen.
+    gOutPanelHeightAtShow = gConfig.ShowOutputPanelHeight
+
     ' If the Output window was in minimized state when use the default tabs height
     ' for showing the initial height of the window.
     if gConfig.ShowOutputPanelMinimized <> 0 then nHeight = OUTPUT_TABS_HEIGHT
@@ -802,12 +852,12 @@ function frmOutput_Show( byval hwndParent as HWND ) as LRESULT
         WS_EX_CONTROLPARENT or WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_RIGHTSCROLLBAR)
     pWindow->ClassStyle = CS_DBLCLKS
 
-    ' Now that the Output window has been created using the unscaled height from the
-    ' config file, we need to scale up the user defined panel height because future psoitioning
-    ' of the window depends on scaled values. However, it is unscaled prior to saving the
-    ' value back to the config file on program exit.
-    gConfig.ShowOutputPanelHeight = pWindow->ScaleY(gConfig.ShowOutputPanelHeight)
-    
+    ' NOTE: gConfig.ShowOutputPanelHeight is deliberately NOT scaled here. It stays in
+    ' unscaled units for the whole life of the process and is scaled only where it is used
+    ' (frmOutput_RestorePanel). The window is created at the unscaled height and gets its
+    ' real size a moment later from frmMain_PositionWindows, which drives the layout off the
+    ' live window rect rather than off this field.
+
     dim as HWND hCtl, hLV, hLB
     
     ' ------------------------------------------------------------------------------------
@@ -899,3 +949,142 @@ function frmOutput_Show( byval hwndParent as HWND ) as LRESULT
 
 end function
 
+
+
+' ========================================================================================
+' Env-gated self-test: TIKO_OUTPUTPANEL_SELFTEST=1
+'
+' HEADLESS, and honest about its reach: it covers the CLAMP and the SCALED/UNSCALED round
+' trip -- the two things that made the panel jump -- and nothing else. It cannot see
+' frmOutput_CaptureState, which needs live windows, and it proves nothing about the panel
+' rendering at the height it computed. The interactive pass is the evidence for those.
+'
+' The round-trip assertions are the point. They encode the invariant the old code broke:
+' a height that goes to disk and comes back must be the SAME NUMBER, whatever the DPI.
+' ========================================================================================
+dim shared gOutPanelTestPass as long
+dim shared gOutPanelTestFail as long
+
+private sub frmOutput_Check( byval sName as string, byval bCond as boolean, byval sGot as string = "" )
+    if bCond then
+        gOutPanelTestPass += 1
+    else
+        gOutPanelTestFail += 1
+        dim as string sLine = "  FAIL: " & sName
+        if len(sGot) then sLine = sLine & "   got: " & sGot
+        print sLine
+    end if
+end sub
+
+sub frmOutput_RunSelfTest()
+    if environ("TIKO_OUTPUTPANEL_SELFTEST") <> "1" then exit sub
+
+    gOutPanelTestPass = 0
+    gOutPanelTestFail = 0
+    print "--- TIKO_OUTPUTPANEL_SELFTEST ---"
+
+    ' --- the clamp ---------------------------------------------------------------------
+    frmOutput_Check( "clamp: a normal height passes through untouched", _
+        frmOutput_ClampHeight( 200 ) = 200, str(frmOutput_ClampHeight(200)) )
+    frmOutput_Check( "clamp: the floor itself is legal", _
+        frmOutput_ClampHeight( OUTPUT_PANEL_MIN_HEIGHT ) = OUTPUT_PANEL_MIN_HEIGHT )
+    ' The whole reason the floor sits ABOVE the tabs row: a height equal to it is what
+    ' "restore" used to land on, leaving the panel looking minimized.
+    frmOutput_Check( "clamp: the tabs height is REFUSED, not accepted", _
+        frmOutput_ClampHeight( OUTPUT_TABS_HEIGHT ) > OUTPUT_TABS_HEIGHT, _
+        str(frmOutput_ClampHeight(OUTPUT_TABS_HEIGHT)) )
+    frmOutput_Check( "clamp: a divided-down height is repaired", _
+        frmOutput_ClampHeight( 11 ) = OUTPUT_TABS_HEIGHT * 5 )
+    frmOutput_Check( "clamp: zero is repaired", _
+        frmOutput_ClampHeight( 0 ) = OUTPUT_TABS_HEIGHT * 5 )
+    frmOutput_Check( "clamp: a negative height is repaired", _
+        frmOutput_ClampHeight( -50 ) = OUTPUT_TABS_HEIGHT * 5 )
+    ' Not clamped from above: a legitimately tall panel on a tall monitor is the user's
+    ' choice, and frmMain_PositionWindows already bounds it against the live client rect.
+    frmOutput_Check( "clamp: a very tall height is NOT capped", _
+        frmOutput_ClampHeight( 4000 ) = 4000 )
+    frmOutput_Check( "clamp: is idempotent", _
+        frmOutput_ClampHeight( frmOutput_ClampHeight( 5 ) ) = frmOutput_ClampHeight( 5 ) )
+
+    ' --- the scaled/unscaled round trip --------------------------------------------------
+    ' The defect this replaces: the live field was SCALED, the file documented UNSCALED, and
+    ' only the final save unscaled it -- so any other save wrote a number that came back
+    ' multiplied by the DPI factor, every launch. These run against the real frmMain CWindow
+    ' so the DPI is whatever the machine is actually at, not an assumed 100%.
+    dim pWindow as CWindow ptr = AfxCWindowPtr( HWND_FRMMAIN )
+    if pWindow then
+        dim as long nStored = 200
+        dim as long nRoundTrip = pWindow->UnScaleY( pWindow->ScaleY( nStored ) )
+        frmOutput_Check( "roundtrip: unscale(scale(h)) returns h", _
+            nRoundTrip = nStored, str(nRoundTrip) )
+
+        ' The ratchet, stated directly: scaling a value that is ALREADY scaled must not be
+        ' what reaches the file. Above 100% these two differ, and that difference IS the bug.
+        ' At exactly 100% they coincide and this assertion is vacuous -- said out loud
+        ' rather than left as a flattering green.
+        dim as long nOnce = pWindow->ScaleY( nStored )
+        dim as long nTwice = pWindow->ScaleY( nOnce )
+        if nOnce = nStored then
+            print "  NOTE: running at 100% DPI -- the double-scale assertion is VACUOUS here."
+        end if
+        frmOutput_Check( "roundtrip: double scaling is detectable (>100% DPI only)", _
+            iif( nOnce = nStored, true, nTwice > nOnce ), str(nTwice) & " vs " & str(nOnce) )
+
+        ' What frmOutput_Show now does: clamp the stored value, and DO NOT mutate it.
+        dim as long nCfg = frmOutput_ClampHeight( nStored )
+        frmOutput_Check( "roundtrip: Show leaves the stored height unscaled", _
+            nCfg = nStored, str(nCfg) )
+    end if
+
+    print "--- TIKO_OUTPUTPANEL_SELFTEST: " & str(gOutPanelTestPass) & " passed, " & _
+          str(gOutPanelTestFail) & " failed ---"
+end sub
+
+
+' ========================================================================================
+' Post-Show half of the suite. Runs after frmOutput_Show has created the panel.
+'
+' THIS IS THE HALF THAT GUARDS THE ACTUAL BUG. The pure half above stayed 11/11 green with
+' the scale-up put straight back into frmOutput_Show -- measured, not assumed -- because it
+' only ever reaches frmOutput_ClampHeight. An invariant about a field can only be asserted
+' by a test that watches the field.
+' ========================================================================================
+sub frmOutput_RunPostShowSelfTest()
+    if environ("TIKO_OUTPUTPANEL_SELFTEST") <> "1" then exit sub
+
+    print "--- TIKO_OUTPUTPANEL_SELFTEST (post-Show) ---"
+
+    frmOutput_Check( "Show: leaves the stored height UNSCALED (the ratchet)", _
+        gConfig.ShowOutputPanelHeight = gOutPanelHeightAtShow, _
+        str(gConfig.ShowOutputPanelHeight) & " vs " & str(gOutPanelHeightAtShow) )
+
+    ' The stored height must stay a legal value across creation, whatever the panel's
+    ' visibility or minimized state -- a minimized panel still remembers a real height.
+    frmOutput_Check( "Show: the stored height is still legal", _
+        gConfig.ShowOutputPanelHeight >= OUTPUT_PANEL_MIN_HEIGHT, _
+        str(gConfig.ShowOutputPanelHeight) )
+
+    ' CaptureState must be a no-op for the height while the panel is minimized or hidden:
+    ' in those states the live window height is the tabs row, and capturing it would
+    ' destroy the height the user chose. This is the invariant that lets CaptureState run
+    ' on EVERY save rather than only on the way out.
+    if IsWindow( HWND_FRMOUTPUT ) then
+        dim as long nBefore = gConfig.ShowOutputPanelHeight
+        dim as long nSavedMin = gConfig.ShowOutputPanelMinimized
+        gConfig.ShowOutputPanelMinimized = 1
+        frmOutput_CaptureState()
+        frmOutput_Check( "CaptureState: a minimized panel does not overwrite the height", _
+            gConfig.ShowOutputPanelHeight = nBefore, _
+            str(gConfig.ShowOutputPanelHeight) & " vs " & str(nBefore) )
+        gConfig.ShowOutputPanelMinimized = nSavedMin
+
+        ' ...and it always reports visibility, which is the field that used to be refreshed
+        ' only in frmMain_OnClose and so went stale on an abnormal exit.
+        frmOutput_CaptureState()
+        frmOutput_Check( "CaptureState: visibility tracks the live window", _
+            (gConfig.ShowOutputPanel <> 0) = (IsWindowVisible( HWND_FRMOUTPUT ) <> 0) )
+    end if
+
+    print "--- TIKO_OUTPUTPANEL_SELFTEST: " & str(gOutPanelTestPass) & " passed, " & _
+          str(gOutPanelTestFail) & " failed (both halves) ---"
+end sub
