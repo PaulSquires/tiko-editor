@@ -284,7 +284,6 @@ function clsConfig.SaveConfigFile() as long
     pStream.WriteLine "HighlightCurrentLine="  & this.HighlightCurrentLine 
     pStream.WriteLine "IndentGuides="          & this.IndentGuides         
     pStream.WriteLine "TabIndentSpaces="       & this.TabIndentSpaces      
-    pStream.WriteLine "UnicodeEncoding="       & this.UnicodeEncoding
     pStream.WriteLine "NewFileEncoding="       & this.NewFileEncoding
     pStream.WriteLine "KeywordCase="           & this.KeywordCase
     pStream.WriteLine "LocalizationFile="      & this.LocalizationFile     
@@ -710,7 +709,6 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
             case "OccurrenceHighlight":      this.OccurrenceHighlight   = nData
             case "LocalizationFile":         this.LocalizationFile      = ProcessFromCurdriveApp(wData)
             case "TabSize":                  this.TabSize               = wData
-            case "UnicodeEncoding":          this.UnicodeEncoding       = nData
             ' Clamped rather than trusted: this value is fed straight to a document's
             ' FileEncoding, and an out-of-range one would reach the save encoder's
             ' select-case and fall through to no branch at all. A hand-edited or
