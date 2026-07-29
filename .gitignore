@@ -20,3 +20,11 @@ REFACTOR_PLAN*.md
 # runtime on first open. Machine-specific and regenerated on demand -- never committed.
 # (WebView2Loader.dll IS committed; it is a shipped binary, like bin\Scintilla64.dll.)
 /settings/webview2/
+
+# The generated Help Center site: ~31,700 files / ~147 MB, and every helpgen regeneration
+# rewrites all of them (the page shell carries cache-busting ?v= hashes), so tracking it
+# would add ~31k blobs to history per regen -- permanently, since removing them later means
+# a filter-repo force-push that breaks every clone. Staged from C:\dev\HelpCenter\site by
+# _copy_helpcenter.bat instead. WITHOUT IT THE HELP CENTER REPORTS ITS FILES AS MISSING,
+# so a fresh clone needs that script run once.
+/settings/helpcenter/

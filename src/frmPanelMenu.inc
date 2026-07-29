@@ -137,7 +137,7 @@ private function frmPanelMenu_CreateBar( _
     ' These setters take RAW pixels -- the caller DPI-scales (the family rule; only the
     ' Create-time defaults are scaled for you).
     if pWindow then
-        PsIconPanel_SetPadding( hCtrl, pWindow->ScaleX(2), pWindow->ScaleX(2) )
+        PsIconPanel_SetPadding( hCtrl, pWindow->ScaleX(1), pWindow->ScaleX(1) )
         PsIconPanel_SetIconSize( hCtrl, pWindow->ScaleX(20), pWindow->ScaleY(20) )
     end if
 
