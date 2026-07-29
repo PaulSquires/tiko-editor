@@ -127,6 +127,9 @@ function frmSearchSymbol_DoSearch( byval hwndCtl as HWND ) as long
     dim as HWND hList = GetDlgItem( HWND_FRMSEARCHSYMBOL, IDC_FRMSEARCHSYMBOL_LISTBOX )
 
     ShowWindow( hList, SW_HIDE )
+    ' Every keystroke re-runs the search, so the previous result set has to go: the row
+    ' itemID indexes gSymbols(), which has just been rebuilt from scratch.
+    PsListTree_Clear( hList )
     for i as integer = 0 to gSymbolsCount - 1
         PsListTree_AddString( hList, gSymbols(i).wszCaption, i )
     next
@@ -299,8 +302,10 @@ sub frmSearchSymbol_PaintCallback( byval p as PSLISTTREE_PAINTINFO ptr )
     dim as COLORREF foreclr = iif( p->IsSelected, ghPanel.ForeColor,  ghPanel.ForeColor)
     p->b->SetColors( foreclr, backclr )
 
-    ' Create our rect that works with the entire line
-    dim as RECT rc: SetRect( @rc, 0, 0, p->b->rcClientWidth, p->b->rcClientHeight )
+    ' Create our rect that works with the entire line. This is the ROW rect in the
+    ' surface's client coords -- the control paints every visible row into ONE buffer,
+    ' so the buffer's own client rect is the whole list, not this row.
+    dim as RECT rc = p->rc
     
     dim as RECT rcIcon = rc 
     rcIcon.right = rcIcon.left + pWindow->ScaleX(24)
@@ -437,7 +442,8 @@ function frmSearchSymbol_Show( byval hwndParent as HWND ) as LRESULT
     PsListTree_SetMessageCallback( hCtrlList, @frmSearchSymbol_MessageCallback )
     PsListTree_PreventDoubleClick( hCtrlList )
     PsListTree_SetBackColor( hCtrlList, ghPanel.BackColor )
-    PsListTree_SetRowHeight( hCtrlList, 24 )
+    ' Unscaled units -- PsListTree_SetRowHeight DPI-scales what it is handed.
+    PsListTree_SetRowHeight( hCtrlList, 22 )
     PsListTree_SetFont( hCtrlList, ghFont(GUIFONT_10) )
     ' The scrollbar is created/positioned/auto-hidden by the control; we only theme it.
     PsListTree_SetScrollBarWidth( hCtrlList, SCROLLBAR_WIDTH_PANEL )
