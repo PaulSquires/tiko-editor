@@ -172,6 +172,111 @@ function isLowerCaseString( byval sText as string ) as boolean
 end function
 
 
+' The start position of every highlighted match in the active document, in document order,
+' 1-based. Filled by FindReplace_CollectMatchPositions and valid only until the next call.
+' Module-level rather than a byref array parameter because it is redim'd as it grows.
+dim shared gFindMatchPos(any) as long
+
+
+' ========================================================================================
+' Collect the start position of every indicator-8 match up to endPos. Returns the count.
+' ========================================================================================
+' Lifted verbatim out of FindReplace_NextSelection so that the navigation path and the
+' display path cannot come to disagree about what "a match" is or where it starts. The
+' (iStart - lenFind) is that function's own convention and is preserved exactly: the walk
+' reads the indicator range END and steps back over the search term.
+private function FindReplace_CollectMatchPositions( _
+            byval hEdit as HWND, _
+            byval endPos as long, _
+            byval lenFind as long _
+            ) as long
+
+    dim as long nPos, iStart, iEnd, nCount
+
+    redim gFindMatchPos(100) as long
+
+    while nPos <= endPos
+        iStart = SciExec( hEdit, SCI_INDICATORSTART, 8, nPos)
+        iEnd   = SciExec( hEdit, SCI_INDICATOREND, 8, iStart)
+        if (iStart = 0) andalso (iEnd = 0) then exit while    ' no indicators found
+
+        if SciExec( hEdit, SCI_INDICATORVALUEAT, 8, iStart-1) then
+            nCount = nCount + 1
+            if nCount > ubound(gFindMatchPos) then
+                redim preserve gFindMatchPos(nCount) as long
+            end if
+            gFindMatchPos(nCount) = iStart - lenFind
+        end if
+        nPos = iEnd + 1
+    wend
+
+    return nCount
+end function
+
+
+' ========================================================================================
+' Refresh the "current / total" count from where the caret actually is. Moves nothing.
+' ========================================================================================
+' WHY THIS EXISTS: FindReplace_HighlightSearches used to hardcode the numerator to zero
+' ("0/" & foundCount), because scanning for matches and knowing which one you are ON are
+' two different questions and only FindReplace_NextSelection ever answered the second. So
+' every path that re-highlighted WITHOUT navigating displayed 0/N -- switching tabs (the
+' visible one: a document you had already searched came up as 0/12), toggling Match Case,
+' toggling Whole Word, toggling Selection.
+'
+' The rule is the one other editors use: the match CONTAINING the caret, else the next one
+' after it, wrapping to the first when the caret is past the last. That last clause is not
+' arbitrary -- it is what F3 will do from here, so the number and the next keypress agree.
+' A caret sitting inside match 2 of 5 therefore reads "2/5" and F3 goes to 3, which is the
+' behaviour to keep if this is ever revisited.
+'
+' DISPLAY ONLY. It never repositions the caret and never writes gFind.foundCount: the
+' denominator stays whatever FindReplace_HighlightSearches counted (that is the number
+' OnCommand_SearchReplaceActions gates on), so a disagreement between the target search and
+' the indicator walk can only ever show a zero numerator, never a wrong total.
+function FindReplace_UpdateResultsFromCaret() as long
+
+    dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
+    if pDoc = 0 then exit function
+
+    dim as HWND hEdit = pDoc->hWndActiveScintilla
+    dim as long lenFind = len(gFind.txtFind)
+    dim as long endPos
+
+    ' Same "selection or whole document" question FindReplace_NextSelection asks.
+    if (pDoc->CurrentSelection.isInitialized = true) andalso (gFind.nSelection = true) then
+        endPos = SciExec( hEdit, SCI_GETLINEENDPOSITION, pDoc->CurrentSelection.endpos, 0)
+    else
+        endPos = SciExec( hEdit, SCI_GETLENGTH, 0, 0)
+    end if
+
+    dim as long nCount = 0
+    if (lenFind > 0) andalso (endPos > 0) then
+        nCount = FindReplace_CollectMatchPositions( hEdit, endPos, lenFind )
+    end if
+
+    dim as long caretPos = SciExec( hEdit, SCI_GETCURRENTPOS, 0, 0)
+    dim as long idx = 0
+    for i as long = 1 to nCount
+        ' The match END, so a caret anywhere inside a match -- or at either edge of it --
+        ' reports that match rather than the following one.
+        if (gFindMatchPos(i) + lenFind) >= caretPos then
+            idx = i
+            exit for
+        end if
+    next
+    if (idx = 0) andalso (nCount > 0) then idx = 1     ' past the last match: wraps, as F3 does
+
+    if idx > gFind.foundCount then idx = gFind.foundCount
+
+    gFind.wszResults = idx & "/" & gFind.foundCount
+
+    AfxRedrawWindow( HWND_FRMMAIN_FIND )
+
+    function = 0
+end function
+
+
 ' ========================================================================================
 ' Find next/prev selection based on current document position
 ' ========================================================================================
@@ -184,8 +289,8 @@ function FindReplace_NextSelection( _
     dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
     if pDoc = 0 then exit function
 
-    dim as long mainIdx, lenFind, endPos, nPos, iStart, iEnd
-    
+    dim as long mainIdx, lenFind, endPos
+
     dim as hwnd hEdit = pDoc->hWndActiveScintilla
 
     dim txtFind as string = gFind.txtFind
@@ -200,31 +305,16 @@ function FindReplace_NextSelection( _
 
     if endPos = 0 then exit function
  
-    ' Build an array holding all of the positions
-    redim iPositions(100) as long
-    
-    gFind.foundCount = 0 
-    while nPos <= endPos 
-        iStart = SciExec( hEdit, SCI_INDICATORSTART, 8, nPos) 
-        iEnd   = SciExec( hEdit, SCI_INDICATOREND, 8, iStart)
-        if (iStart = 0) andalso (iEnd = 0) then exit while    ' no indicators found
+    ' Build an array holding all of the positions. Shared with the display path
+    ' (FindReplace_UpdateResultsFromCaret) so the two cannot disagree about the matches.
+    gFind.foundCount = FindReplace_CollectMatchPositions( hEdit, endPos, lenFind )
 
-        if SciExec( hEdit, SCI_INDICATORVALUEAT, 8, iStart-1) then
-            gFind.foundCount = gFind.foundCount + 1
-            if gFind.foundCount > ubound(iPositions) then
-                redim preserve iPositions(gFind.foundCount) as long 
-            end if
-            iPositions(gFind.foundCount) = iStart - lenFind 
-        end if
-        nPos = iEnd + 1
-    wend    
-    
     ' Determine the next/prev selection that we should position to.
     if bGetNext then
         ' next selection
         mainIdx = 0
         for i as long = 1 to gFind.foundCount
-            if iPositions(i) > startPos then 
+            if gFindMatchPos(i) > startPos then 
                 mainIdx = i:
                 exit for
             end if
@@ -237,7 +327,7 @@ function FindReplace_NextSelection( _
         ' Previous selection 
         mainIdx = 0
         for i as long = 1 to gFind.foundCount
-            if iPositions(i) >= (startPos - lenFind) then exit for
+            if gFindMatchPos(i) >= (startPos - lenFind) then exit for
             mainIdx = i
         next
         ' If searching past start of buffer without a match then wrap around
@@ -249,9 +339,9 @@ function FindReplace_NextSelection( _
         gFind.wszResults = mainIdx & "/" & gFind.foundCount 
         ' make sure target line is unfolded
         if bRepositionCaret then
-            dim as long currentLine = SciExec( hEdit, SCI_LINEFROMPOSITION, iPositions(mainIdx), 0)
+            dim as long currentLine = SciExec( hEdit, SCI_LINEFROMPOSITION, gFindMatchPos(mainIdx), 0)
             SciExec( hEdit, SCI_ENSUREVISIBLE, currentLine, 0) 
-            SciExec( hEdit, SCI_SETSEL, iPositions(mainIdx), iPositions(mainIdx) + lenFind)
+            SciExec( hEdit, SCI_SETSEL, gFindMatchPos(mainIdx), gFindMatchPos(mainIdx) + lenFind)
         end if
     else    
         SciExec( hEdit, SCI_SETSEL, startPos, startPos)
@@ -320,11 +410,19 @@ function FindReplace_HighlightSearches() as long
             ' Move start position after the text
             startPos = SendMessage(hEdit, SCI_GETTARGETEND, 0, 0)
         loop
- 
-        gFind.wszResults = "0/" & gFind.foundCount 
+
+        ' The numerator used to be hardcoded to 0 here, so every path that re-highlighted
+        ' without navigating displayed 0/N -- most visibly a tab switch, which lands in
+        ' this function (via clsTopTabCtl.SetFocusTab) and nowhere near the navigation
+        ' code that knows which match is current.
+        FindReplace_UpdateResultsFromCaret()
+    else
+        ' An empty search term is not "the previous term's count, still on screen".
+        gFind.foundCount = 0
+        gFind.wszResults = "0/0"
         AfxRedrawWindow( HWND_FRMMAIN_FIND )
     end if
-    
+
     function = 0
 
 end function

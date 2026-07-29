@@ -368,22 +368,6 @@ end function
 
 
 ' ========================================================================================
-' Process WM_COMMAND message for window/dialog: frmFind
-' ========================================================================================
-function frmFind_OnCommand( _
-            byval hwnd as HWND, _
-            byval id as Long, _
-            byval hwndCtl as HWND, _
-            byval codeNotify as UINT _
-            ) as LRESULT
-
-    ' The Find textbox notifies through its PsTextBox callbacks (change/focus), not
-    ' through WM_COMMAND EN_ codes anymore.
-    function = 0
-end function
-
-
-' ========================================================================================
 ' frmFind Window procedure
 ' ========================================================================================
 function frmFind_WndProc( _
@@ -395,7 +379,6 @@ function frmFind_WndProc( _
 
     select Case uMsg
         HANDLE_MSG (hwnd, WM_SIZE, frmFind_OnSize)
-        HANDLE_MSG (hwnd, WM_COMMAND, frmFind_OnCommand)
 
     case WM_DESTROY
         ' The tip is a WS_POPUP owned by this window, not a child, so it does not go with the
