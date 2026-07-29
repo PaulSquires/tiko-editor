@@ -85,7 +85,7 @@ private sub Theme_BuildWndTable()
     ThemeWnd_Add( @HWND_FRMOUTPUT,             THSUB_OUTPUT,       true )
     ThemeWnd_Add( @HWND_FRMPANEL,              THSUB_PANEL,        true )
     ThemeWnd_Add( @HWND_FRMOPTIONS,            THSUB_OPTIONSDLG,   true )
-    ThemeWnd_Add( @HWND_FRMHELPVIEWER,         THSUB_HELPVIEWER,   true )
+    ThemeWnd_Add( @HWND_FRMHELPCENTER,         THSUB_HELPCENTER,   false )
     ThemeWnd_Add( @HWND_FRMDEBUG,              THSUB_DEBUG,        true )
     ThemeWnd_Add( @HWND_FRMSEARCHSYMBOL,       THSUB_SEARCHSYMBOL, true )
     ThemeWnd_Add( @HWND_FRMMAIN_FIND,   THSUB_TOPTABS,      true )
@@ -406,9 +406,10 @@ sub Theme_ApplySubsystems( byval nMask as ulong )
                                               IDC_FRMREPLACE_TXTREPLACE ) )
     end if
 
-    if (nMask and THSUB_HELPVIEWER) <> 0 then
-        Theme_PushPanelList( HWND_FRMHELPVIEWER_LEFTPANEL )
-        Theme_ApplyDarkCaption( HWND_FRMHELPVIEWER )
+    ' The Help Center is a WebView2 pane: the SITE owns its own colours, so the only thing
+    ' a theme change can touch here is the DWM caption.
+    if (nMask and THSUB_HELPCENTER) <> 0 then
+        Theme_ApplyDarkCaption( HWND_FRMHELPCENTER )
     end if
 
     ' The debugger's Variables pane. Only ever populated during a live gdb session, so this

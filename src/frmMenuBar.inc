@@ -129,8 +129,8 @@ end sub
 ' right-click menu, and it has to track a theme change like every other menu.
 '
 ' Dead slots are reused rather than appended to: the textbox popups die with their
-' dialogs (frmSearchSymbol, frmHelpViewer) and a host that opens one repeatedly would
-' otherwise grow this list without bound.
+' dialogs (frmSearchSymbol) and a host that opens one repeatedly would otherwise grow
+' this list without bound.
 ' ========================================================================================
 sub frmMenuBar_RegisterPopup( byval hPopup as HWND, byval bForceCompact as boolean = false )
     if hPopup = 0 then exit sub

@@ -26,7 +26,6 @@
 #include once "frmTopTabs.bi"
 #include once "frmOutput.bi"
 #include once "frmMainOnCommand.bi"
-#include once "frmHelpViewer.bi"
                 
 ''
 ''  CONSTRUCTOR
@@ -40,7 +39,6 @@ constructor clsConfig
     FBKeywordsDefaultFilename = exe_path & "settings\keywords\freebasic_keywords_default.txt" 
     FBCodetipsFilename        = exe_path & "settings\keywords\codetips.ini"
     DefaultSessionFilename    = exe_path & "settings\default.session" 
-    HelpTableOfContents       = exe_path & "settings\help\_toc.txt" 
 end constructor
 
 ''
@@ -241,28 +239,8 @@ function clsConfig.SaveConfigFile() as long
         if this.StartupBottom <> rc.Bottom then this.StartupBottom = rc.Bottom
     end if
 
-    ' Determine the HelpViewer positioning 
-    ' Do not save if minimized
-    if (isWindow(HWND_FRMHELPVIEWER)) andalso (isiconic( HWND_FRMHELPVIEWER ) = 0) then
-        dim WinPla as WINDOWPLACEMENT
-        WinPla.Length = sizeof(WinPla)
-        GetWindowPlacement( HWND_FRMHELPVIEWER, @WinPla )
-        With this
-            .HelpStartupLeft   = WinPla.rcNormalPosition.Left 
-            .HelpStartupTop    = WinPla.rcNormalPosition.Top
-            .HelpStartupRight  = WinPla.rcNormalPosition.Right
-            .HelpStartupBottom = WinPla.rcNormalPosition.Bottom
-            .HelpStartupMaximized = iif( WinPla.showCmd = SW_MAXIMIZE, true, false )
-            .HelpLeftPanelWidth = AfxGetWindowWidth(GetDlgItem(HWND_FRMHELPVIEWER, IDC_FRMHELPVIEWER_LEFTPANEL))
-        end With
-        
-        dim as RECT rc
-        GetWindowRect( HWND_FRMHELPVIEWER, @rc )
-        if this.HelpStartupLeft <> rc.Left then this.HelpStartupLeft = rc.Left
-        if this.HelpStartupTop <> rc.Top then this.HelpStartupTop = rc.Top
-        if this.HelpStartupRight <> rc.Right then this.HelpStartupRight = rc.Right
-        if this.HelpStartupBottom <> rc.Bottom then this.HelpStartupBottom = rc.Bottom
-    end if
+    ' The Help Center's geometry, refreshed the same way and for the same reason.
+    frmHelpCenter_CaptureState()
 
     ' Refresh the Output panel's four persisted fields from the live windows. This MUST
     ' happen on every save, not just the one in frmMain_OnClose: visibility and tab index
@@ -335,7 +313,6 @@ function clsConfig.SaveConfigFile() as long
     pStream.WriteLine "HelpStartupRight="         & this.HelpStartupRight         
     pStream.WriteLine "HelpStartupBottom="        & this.HelpStartupBottom        
     pStream.WriteLine "HelpStartupMaximized="     & this.HelpStartupMaximized     
-    pStream.WriteLine "HelpLeftPanelWidth="       & this.HelpLeftPanelWidth
     ' Note: SidePanel and OutputPanel positions are in unscaled screen coordinates.
     pStream.WriteLine "ShowPanel="                & this.ShowPanel
     pStream.WriteLine "ShowPanelWidth="           & this.ShowPanelWidth    
@@ -777,7 +754,6 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
                     case "HelpStartupRight":         this.HelpStartupRight      = nData
                     case "HelpStartupBottom":        this.HelpStartupBottom     = nData
                     case "HelpStartupMaximized":     this.HelpStartupMaximized  = nData
-                    case "HelpLeftPanelWidth":       this.HelpLeftPanelWidth    = nData
                     case "ShowPanel":                this.ShowPanel             = nData
                     case "ShowPanelWidth":           this.ShowPanelWidth        = nData
                     case "ShowOutputPanel":          this.ShowOutputPanel       = nData

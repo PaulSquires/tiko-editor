@@ -33,6 +33,10 @@
 #include once "AfxNova\CImageCtx.inc"
 #include once "AfxNova\AfxStr.inc"
 #include once "AfxNova\CWinHttpRequest.inc"
+' The Help Center pane. Note this brings in AfxWebView2.bi, which resolves the five loader
+' entrypoints out of WebView2Loader.dll at RUNTIME by plain name -- there is no import lib
+' and no link flag, so the DLL has to sit beside tiko.exe (see _copy_webview2.bat).
+#include once "AfxNova\CWebView2.inc"
 
 using AfxNova
 
@@ -76,6 +80,10 @@ dim shared as DWSTRING gwszDefaultToolchain = "FreeBASIC-1.10.1-winlibs-gcc-9.3.
 ' well before PsTooltip.inc. This header names no Ps* type; the implementation goes in
 ' immediately after PsTooltip.inc.
 #include once "modCodetipTip.bi"
+' Up here rather than beside its .inc because clsConfig.inc calls
+' frmHelpCenter_CaptureState() from the top of SaveConfigFile. This header names CWebView2
+' (hence its position after the AfxNova include above) but no Ps* type.
+#include once "frmHelpCenter.bi"
 
 '  Global classes
 dim shared gApp     as clsApp
@@ -183,7 +191,9 @@ dim shared gTTabCtl as clsTopTabCtl
 ' After frmOptions: frmThemes' colour page uses OptionsFont_Base and OptionsTheme_Fill*
 ' from the options modules, and nothing in frmOptions refers back to frmThemes.
 #include once "frmThemes.inc"
-#include once "frmHelpViewer.inc"
+' After frmOptions.inc / modOptionsRows.inc: its themed message box uses
+' OptionsTheme_FillButton, and PsMessageBox is already in scope above.
+#include once "frmHelpCenter.inc"
 #include once "frmInputBox.inc"
 #include once "frmFindInProject.inc"
 #include once "frmSearchSymbol.inc"
@@ -312,8 +322,8 @@ function WinMain( _
     gApp.pfnCreateLexerfn = cast(CreateLexerFn , GetProcAddress(pLibLexilla, "CreateLexer"))
 
 
-    ' Load the HTML help library for displaying FreeBASIC help *.chm file
-    gpHelpLib = dylibload( "hhctrl.ocx" )
+    ' hhctrl.ocx is no longer loaded: the .chm help path went with ShowContextHelp when the
+    ' Help Center replaced it.
 
     ' Load codetip files
     if gConfig.Codetips then gConfig.LoadCodetips
@@ -331,10 +341,9 @@ function WinMain( _
     function = frmMain_Show( 0 )
 
 
-    ' Free the Scintilla, CaptureConsole and HTML help libraries
+    ' Free the Scintilla and CaptureConsole libraries
     dylibfree(pLibLexilla)
     dylibfree(pLibScintilla)
-    dylibfree(gpHelpLib)
 
     
     ' Unload the font file

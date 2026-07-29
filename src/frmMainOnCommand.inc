@@ -18,7 +18,6 @@
 #include once "clsDocument.bi"
 #include once "frmMain.bi"
 #include once "frmFunctions.bi"
-#include once "frmHelpViewer.bi"
 
 
 ' ========================================================================================
@@ -313,11 +312,14 @@ function frmMain_OnCommand( _
             OnCommand_DebugCommon( id )
 
         ''   HELP MENU
-        case IDM_HELP_FB
-            ShowContextHelp(id) 
-    
-        case IDM_HELP_TIKO
-            frmHelpViewer_Show( HWND_DESKTOP )
+        case IDM_HELP_CENTER
+            ' F1. Whatever is selected in the editor becomes the search; an empty
+            ' selection just focuses the search box. GetSelText returns "" when nothing is
+            ' selected, so the no-selection case needs no branch of its own.
+            dim pDocHelp as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
+            dim as DWSTRING wszHelpSel
+            if pDocHelp then wszHelpSel = pDocHelp->GetSelText()
+            frmHelpCenter_Show( HelpCenter_NormalizeQuery( wszHelpSel ) )
 
         case IDM_ABOUT
             frmAbout_Show( hwnd )

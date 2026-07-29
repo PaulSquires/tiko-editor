@@ -32,14 +32,12 @@ END TYPE
 #Define HH_KEYWORD_LOOKUP  0013
 #Define HH_HELP_CONTEXT    0015
 
-dim shared as any ptr gpHelpLib
 
 declare function RichEditCenterSingleLineText( byval hRichEdit as HWND ) as long
 declare function CompleteIncludeFilename( byval pDoc as clsDocument ptr, byval wszFilename as string ) as string
 declare function getTextWidth( byval hwnd as HWND, byref wszText as wstring, byval FontIndex as long ) as long
 declare function SpawnPreviousInstance() as boolean
 declare function ReloadDocument( byref wszFilename as wstring ) as long
-declare function ShowContextHelp( byval id as long ) as long
 declare function GetTemporaryFilename( byref wszFolder as wstring, byref wszExtension as wstring) as string
 declare function GetFontCharSetID(byref wzCharsetName as DWSTRING ) as long
 declare function isUTF8encoded(byref s as string) as boolean

@@ -72,7 +72,6 @@ type clsConfig
         FBKeywordsDefaultFilename as DWSTRING 
         FBCodetipsFilename        as DWSTRING
         DefaultSessionFilename    as DWSTRING 
-        HelpTableOfContents       as DWSTRING
          
         DateFileTime              as FILETIME
         
@@ -163,7 +162,6 @@ type clsConfig
         HelpStartupRight          as long = 0
         HelpStartupBottom         as long = 0
         HelpStartupMaximized      as long = false
-        HelpLeftPanelWidth        as long = 0
         FBWINCompiler32           as DWSTRING
         FBWINCompiler64           as DWSTRING
         CompilerBuild             as DWSTRING     ' Build GUID
