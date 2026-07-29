@@ -16,7 +16,6 @@
 ''  frmPanelMenu.inc
 ''   
 
-'#include once "frmPanel.bi"
 #include once "frmPanelMenu.bi"
 
 
@@ -36,13 +35,18 @@ end function
 
 ' ========================================================================================
 ' frmPanelMenu_PaintCallback
+'
+' Replaces PsIconPanel's built-in painter for every item. The built-in fills the whole
+' cell; this one draws a rounded pill inside a vertically shrunk cell instead, which is
+' the look the statusbar version had. The control has already filled the client with
+' colors.BackColor, so the area outside the pill needs no painting here.
 ' ========================================================================================
-sub frmPanelMenu_PaintCallback( byval p as PSSTATUSBAR_PAINTINFO ptr )
+sub frmPanelMenu_PaintCallback( byval p as PSICONPANEL_PAINTINFO ptr )
     dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN)
-    if pWindow = 0 then return 
+    if pWindow = 0 then return
     if p = null then return
 
-    ' State priority for the row background/foreground: selected > hot > normal
+    ' State priority for the icon background/foreground: hot > normal
     dim as COLORREF backclr, foreclr
     if p->isHot then
         backclr = ghPanel.BackColorHot
@@ -53,37 +57,27 @@ sub frmPanelMenu_PaintCallback( byval p as PSSTATUSBAR_PAINTINFO ptr )
     end if
     p->b->SetColors(foreclr, backclr)
 
-    ' If this is the Spring panel then we don't want any highlighting because it is
-    ' just a placeholder that separates the left and right icons.
-    if PsStatusBar_GetItemData(p->hStatusBar, p->itemID) = 0 then
-        p->b->SetColors(ghPanel.BackColor, ghPanel.BackColor)
-    end if
-
-    ' Don't paint the background because we will reduce the size of the drawing
-    ' rect and we don't want the outside of that rect to be highlighted.
-'    p->b->PaintRect( @p->rc )
-
     p->b->SetFont( ghFont(SYMBOLFONT_10) )
 
-    dim as integer itemData = PsStatusBar_GetItemData( p->hStatusBar, p->itemID )
-    
+    dim as long id = PsIconPanel_GetItemID( p->hIconPanel, p->itemID )
+
     ' Draw the icon
     dim as RECT rc = p->rc
-    
+
     ' Shrink the drawing rect top and height for better icon drawing squareness.
     dim as integer py = pWindow->ScaleX(6)
     rc.top += py:  rc.bottom -= py
-    p->b->PaintIconButton( p->wszCaption, @rc )
+    p->b->PaintIconButton( p->wszGlyph, @rc )
 
-    ' Should we underline this icon as actively selected    
+    ' Should we underline this icon as actively selected
     dim as boolean bDrawUnderline = false
-    if (itemData = IDM_VIEWEXPLORER) andalso _
+    if (id = IDM_VIEWEXPLORER) andalso _
         (gPanel.hActiveChild = HWND_FRMEXPLORER) then bDrawUnderline = true
-    if (itemData = IDM_FUNCTIONLIST) andalso _
+    if (id = IDM_FUNCTIONLIST) andalso _
         (gPanel.hActiveChild = HWND_FRMFUNCTIONS) then bDrawUnderline = true
-    if (itemData = IDM_BOOKMARKSLIST) andalso _
+    if (id = IDM_BOOKMARKSLIST) andalso _
         (gPanel.hActiveChild = HWND_FRMBOOKMARKS) then bDrawUnderline = true
-    
+
     if (bDrawUnderline = true) then
         rc = p->rc
         rc.left += pWindow->ScaleX(2)
@@ -92,80 +86,114 @@ sub frmPanelMenu_PaintCallback( byval p as PSSTATUSBAR_PAINTINFO ptr )
         p->b->SetPenColor( ghOutput.ForeColor )
         p->b->PaintLine( 1, rc.left, rc.bottom, rc.right, rc.bottom )
     end if
-        
+
 end sub
 
 
 ' ========================================================================================
-' frmPanelMenu_MessageCallback
+' frmPanelMenu_ClickCallback  -- a COMMAND item was clicked (matched press + release)
+'
+' The press/cancel gesture belongs to the control now: pressing an icon, sliding off and
+' releasing fires nothing, where the statusbar version acted on any WM_LBUTTONUP.
 ' ========================================================================================
-function frmPanelMenu_MessageCallback( byval m as PSSTATUSBAR_MESSAGEINFO ptr ) as boolean
-
-    select case m->uMsg
-             
-        case WM_MOUSEHOVER
-            'print "WM_MOUSEHOVER on idx: "; m->idx
-            ' Tooltips are now on-demand via the tooltip callback; nothing to push.
-            return true
-            
-        case WM_LBUTTONUP
-            if m->idx <> -1 then
-                dim as integer idMessage = PsStatusBar_GetItemData( m->hStatusBar, m->idx )
-                PostMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(idMessage, 0), 0 )
-            end if
-            return false
-
-    end select
-
-    ' Return false to allow to fall to the default windows handler
-    return false
-end function    
+sub frmPanelMenu_ClickCallback( byval hCtl as HWND, byval idx as long, byval id as long )
+    if id = 0 then return
+    PostMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(id, 0), 0 )
+end sub
 
 
 ' ========================================================================================
-' frmPanelMenu_TooltipCallback  -- per-row tooltip text, resolved on demand
+' frmPanelMenu_TooltipCallback  -- per-item tooltip text, resolved on demand
 ' ========================================================================================
-function frmPanelMenu_TooltipCallback( byval hCtl as HWND, byval row as integer ) as DWSTRING
-    dim as integer itemData = PsStatusBar_GetItemData( hCtl, row )
-    if itemData = 0 then return ""
-    return frmPanelMenu_FormatTooltip(itemData)
+function frmPanelMenu_TooltipCallback( byval hCtl as HWND, byval idx as long ) as DWSTRING
+    dim as long id = PsIconPanel_GetItemID( hCtl, idx )
+    if id = 0 then return ""
+    return frmPanelMenu_FormatTooltip(id)
 end function
 
 
 ' ========================================================================================
+' frmPanelMenu_CreateBar  -- one of the two icon groups
+' ========================================================================================
+private function frmPanelMenu_CreateBar( _
+            byval hwndParent as HWND, _
+            byval CtrlID as long, _
+            byval nJustify as long _
+            ) as HWND
+
+    dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN)
+
+    dim as HWND hCtrl = PsIconPanel_Create( hwndParent, CtrlID )
+
+    PsIconPanel_SetPaintItemCallback( hCtrl, @frmPanelMenu_PaintCallback )
+    PsIconPanel_SetClickCallback( hCtrl, @frmPanelMenu_ClickCallback )
+    PsIconPanel_SetTooltipCallback( hCtrl, @frmPanelMenu_TooltipCallback )
+    ' Owner-drawn tips. The text policy above is untouched -- PsTipHost switches how a tip
+    ' is drawn and driven, never what it says.
+    PsIconPanel_SetTooltipMode( hCtrl, PSTIP_MODE_PS )
+    PsIconPanel_SetFont( hCtrl, ghFont(SYMBOLFONT_10) )
+    PsIconPanel_SetJustify( hCtrl, nJustify )
+
+    ' These setters take RAW pixels -- the caller DPI-scales (the family rule; only the
+    ' Create-time defaults are scaled for you).
+    if pWindow then
+        PsIconPanel_SetPadding( hCtrl, pWindow->ScaleX(2), pWindow->ScaleX(2) )
+        PsIconPanel_SetIconSize( hCtrl, pWindow->ScaleX(20), pWindow->ScaleY(20) )
+    end if
+
+    return hCtrl
+end function
+
+
+' ========================================================================================
+' frmPanelMenu_ApplyTheme  -- push the current panel colours into both bars
+' ========================================================================================
+sub frmPanelMenu_ApplyTheme()
+    dim as PSICONPANEL_COLORS colors
+    colors.BackColor         = ghPanel.BackColor
+    colors.ForeColor         = ghPanel.ForeColor
+    colors.BackColorHot      = ghPanel.BackColorHot
+    colors.ForeColorHot      = ghPanel.ForeColorHot
+    colors.BackColorSelect   = ghPanel.BackColorHot
+    colors.ForeColorSelect   = ghPanel.ForeColorHot
+    colors.ForeColorDisabled = ghPanel.ForeColor
+    colors.SeparatorColor    = ghPanel.ForeColor
+
+    if IsWindow(HWND_FRMPANEL_MENU) then _
+        PsIconPanel_SetColors( HWND_FRMPANEL_MENU, @colors )
+    if IsWindow(HWND_FRMPANEL_MENU_RIGHT) then _
+        PsIconPanel_SetColors( HWND_FRMPANEL_MENU_RIGHT, @colors )
+end sub
+
+
+' ========================================================================================
 ' frmPanelMenu_Show
+'
+' TWO controls, not one. PsIconPanel has no spring panel: it declares every cell and moves
+' the whole run as a block, so the left-hand and right-hand icon groups are separate
+' panels sharing the strip (frmPanel_PositionWindows splits the width between them).
 ' ========================================================================================
 function frmPanelMenu_Show( byval hwndParent as hwnd ) as LRESULT
 
-    ' Create the statusBar to be used as the icon menu buttons.
-    dim as HWND hCtrl = PsStatusBar_Create( hwndParent, IDC_FRMPANELMENU_ICONBAR )
-    
-    PsStatusBar_SetPaintCallback( hCtrl, @frmPanelMenu_PaintCallback )
-    PsStatusBar_SetMessageCallback( hCtrl, @frmPanelMenu_MessageCallback )
-    PsStatusBar_SetTooltipCallback( hCtrl, @frmPanelMenu_TooltipCallback )
-    PsStatusBar_SetBackColor( hCtrl, ghPanel.BackColor )
-    PsStatusBar_SetPadding( hCtrl, 7 )
-    PsStatusBar_SetFont( hCtrl, ghFont(SYMBOLFONT_10) )
+    dim as HWND hLeft  = frmPanelMenu_CreateBar( hwndParent, IDC_FRMPANELMENU_ICONBAR, IP_JUSTIFY_LEFT )
+    dim as HWND hRight = frmPanelMenu_CreateBar( hwndParent, IDC_FRMPANELMENU_ICONBAR_RIGHT, IP_JUSTIFY_RIGHT )
 
-    PsStatusBar_AddPanel( hCtrl, wszIconExplorer, IDM_VIEWEXPLORER )
-    PsStatusBar_AddPanel( hCtrl, wszIconFunctions, IDM_FUNCTIONLIST )
-    PsStatusBar_AddPanel( hCtrl, wszIconBookmarks, IDM_BOOKMARKSLIST )
-    PsStatusBar_AddPanel( hCtrl, wszIconSettings, IDM_OPTIONSDIALOG )    ' Settings (Environment Options)
-    
-    '(Expandable spring between Right to left orientation)
-    PsStatusBar_AddPanel( hCtrl, "", 0 )
+    PsIconPanel_AddItem( hLeft, IP_KIND_COMMAND, wszIconExplorer, IDM_VIEWEXPLORER )
+    PsIconPanel_AddItem( hLeft, IP_KIND_COMMAND, wszIconFunctions, IDM_FUNCTIONLIST )
+    PsIconPanel_AddItem( hLeft, IP_KIND_COMMAND, wszIconBookmarks, IDM_BOOKMARKSLIST )
+    PsIconPanel_AddItem( hLeft, IP_KIND_COMMAND, wszIconSettings, IDM_OPTIONSDIALOG )   ' Environment Options
 
-    PsStatusBar_AddPanel( hCtrl, wszIconFind, IDM_FINDINPROJECT )
-    PsStatusBar_AddPanel( hCtrl, wszIconSave, IDM_FILESAVEALL )
-    PsStatusBar_AddPanel( hCtrl, wszIconDebug, IDM_DEBUG_STARTDEBUGGING )
-    PsStatusBar_AddPanel( hCtrl, wszIconCompile, IDM_COMPILE )
-    PsStatusBar_AddPanel( hCtrl, wszIconBuildExecute, IDM_BUILDEXECUTE )
+    PsIconPanel_AddItem( hRight, IP_KIND_COMMAND, wszIconFind, IDM_FINDINPROJECT )
+    PsIconPanel_AddItem( hRight, IP_KIND_COMMAND, wszIconSave, IDM_FILESAVEALL )
+    PsIconPanel_AddItem( hRight, IP_KIND_COMMAND, wszIconDebug, IDM_DEBUG_STARTDEBUGGING )
+    PsIconPanel_AddItem( hRight, IP_KIND_COMMAND, wszIconCompile, IDM_COMPILE )
+    PsIconPanel_AddItem( hRight, IP_KIND_COMMAND, wszIconBuildExecute, IDM_BUILDEXECUTE )
 
-    ' Panel 4 absorbs all unused width 
-    PsStatusBar_SetExpandPanel( hCtrl, 4 )
+    HWND_FRMPANEL_MENU       = hLeft
+    HWND_FRMPANEL_MENU_RIGHT = hRight
 
-    HWND_FRMPANEL_MENU = hCtrl
+    frmPanelMenu_ApplyTheme()
 
     function = 0
-    
+
 end function

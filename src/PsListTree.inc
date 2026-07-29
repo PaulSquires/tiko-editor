@@ -4,6 +4,8 @@
 ''   
 
 #include once "PsListTree.bi"
+' The tooltip backend switch, pulled in here so a host needs no extra include line.
+#include once "PsTipHost.inc"
 
 
 function GetListTreePointer( byval hListControl as HWND ) as PSLISTTREE ptr
@@ -257,7 +259,7 @@ end sub
 
 
 ' ========================================================================================
-' Add a string (and optional itemData) to the end of the custom listbox control.
+' Add a string (and optional itemData) to the end of the control.
 ' ========================================================================================
 function PsListTree_AddString( byval hListControl as HWND, byval Text as DWSTRING, byval itemData as integer = 0, byval itemDataExtra as integer = 0 ) as integer
     dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
@@ -592,7 +594,7 @@ end function
 
 
 ' ========================================================================================
-' Set specified row text in the custom listbox control. Returns TRUE on success,
+' Set specified row text in the control. Returns TRUE on success,
 ' FALSE if the row index is invalid.
 ' ========================================================================================
 function PsListTree_SetText( byval hListControl as HWND, byval row as integer, byval Text as DWSTRING ) as boolean
@@ -608,7 +610,7 @@ end function
 
 
 ' ========================================================================================
-' Retrieve specified row text from the custom listbox control.
+' Retrieve specified row text from the control.
 ' ========================================================================================
 function PsListTree_GetText( byval hListControl as HWND, byval row as integer ) as DWSTRING
     dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
@@ -787,7 +789,7 @@ end function
 
 
 ' ========================================================================================
-' Set the user defined row painting callback for the custom listbox control.
+' Set the user defined row painting callback for the control.
 ' ========================================================================================
 sub PsListTree_SetPaintCallback( byval hListControl as HWND, byval usersub as PaintCallbackSub )
     dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
@@ -797,7 +799,7 @@ end sub
 
 
 ' ========================================================================================
-' Set the user defined message callback for the custom listbox control.
+' Set the user defined message callback for the control.
 ' ========================================================================================
 sub PsListTree_SetMessageCallback( byval hListControl as HWND, byval userfunc as MessageCallbackFunc )
     dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
@@ -856,17 +858,68 @@ end function
 
 
 ' ========================================================================================
-' Set the tooltip hovertime for the custom listbox control.
+' Set the tooltip hovertime for the control.
 ' ========================================================================================
+' NEW: this control's tooltip handle used to be private, so a host could not
+' reach the tip at all -- no TTM_*, and no way to see whether one existed.
+' The comctl32 handle, and 0 while on PsTooltip -- the honest answer, since a TTM_* sent
+' to a PsTooltip window is silently ignored.
+function PsListTree_GetTooltipHandle( byval hListControl as HWND ) as HWND
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = 0 then return 0
+    return PsTipHost_SysHandle( @pList->tip )
+end function
+
+' The PsTooltip window, and 0 while on the system backend. This is the door to PsTooltip's
+' own SetColors/SetFonts/SetStyle/SetMaxWidth/SetTitle/SetGlyph, none of which is mirrored
+' on this control.
+function PsListTree_GetPsTooltipHandle( byval hListControl as HWND ) as HWND
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = 0 then return 0
+    return PsTipHost_PsHandle( @pList->tip )
+end function
+
+function PsListTree_SetTooltipMode( byval hListControl as HWND, byval nMode as long ) as boolean
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = 0 then return false
+    return PsTipHost_SetMode( @pList->tip, nMode )
+end function
+
+function PsListTree_GetTooltipMode( byval hListControl as HWND ) as long
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = 0 then return PSTIP_MODE_SYSTEM
+    return PsTipHost_GetMode( @pList->tip )
+end function
+
+' The three delays go through PsTipHost, which STORES them as well as pushing them, so a
+' hover time set before a mode switch is still in force after it. Pushing straight at the
+' live tooltip loses it at the switch -- and the tip still appears, just on a different
+' beat, with nothing reporting the change.
 sub PsListTree_SetHoverTime( byval hListControl as HWND, byval milliseconds as integer )
     dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
-    if pList = null then return 
+    if pList = 0 then exit sub
+    ' The field is STILL READ by TrackMouseEvent as dwHoverTime, so this setter
+    ' drives the hot-tracking dwell as well as the tooltip. Dropping it here would
+    ' silently change when the control considers itself hot.
     pList->HoverTime = milliseconds
+    PsTipHost_SetDelay( @pList->tip, TTDT_INITIAL, milliseconds )
+end sub
+
+sub PsListTree_SetAutoPopTime( byval hListControl as HWND, byval milliseconds as long )
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = 0 then exit sub
+    PsTipHost_SetDelay( @pList->tip, TTDT_AUTOPOP, milliseconds )
+end sub
+
+sub PsListTree_SetReshowTime( byval hListControl as HWND, byval milliseconds as long )
+    dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
+    if pList = 0 then exit sub
+    PsTipHost_SetDelay( @pList->tip, TTDT_RESHOW, milliseconds )
 end sub
 
 
 ' ========================================================================================
-' Set specified row itemData for the custom listbox control.
+' Set specified row itemData for the control.
 ' Returns TRUE on success, FALSE if the row index is invalid.
 ' ========================================================================================
 function PsListTree_SetItemData( byval hListControl as HWND, byval row as integer, byval itemData as integer ) as boolean
@@ -891,7 +944,7 @@ end function
 
 
 ' ========================================================================================
-' Retrieve specified row itemData from the custom listbox control.
+' Retrieve specified row itemData from the control.
 ' ========================================================================================
 function PsListTree_GetItemData( byval hListControl as HWND, byval row as integer ) as integer
     dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
@@ -1100,7 +1153,7 @@ end function
 
 
 ' ========================================================================================
-' Retrieve the row height from the custom listbox control.
+' Retrieve the row height from the control.
 ' ========================================================================================
 function PsListTree_GetRowHeight( byval hListControl as HWND ) as integer
     dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
@@ -1110,7 +1163,7 @@ end function
 
 
 ' ========================================================================================
-' Set the row height for the custom listbox control.
+' Set the row height for the control.
 ' ========================================================================================
 function PsListTree_SetRowHeight( byval hListControl as HWND, byval height as integer ) as integer
     dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
@@ -1563,7 +1616,7 @@ end sub
 
 
 ' ========================================================================================
-' Retrieve the background color from the custom listbox control.
+' Retrieve the background color from the control.
 ' ========================================================================================
 function PsListTree_GetBackColor( byval hListControl as HWND ) as COLORREF
     dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
@@ -1573,7 +1626,7 @@ end function
 
 
 ' ========================================================================================
-' Set the background color for the custom listbox control.
+' Set the background color for the control.
 ' ========================================================================================
 function PsListTree_SetBackColor( byval hListControl as HWND, byval clr as COLORREF ) as COLORREF 
     dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
@@ -1624,7 +1677,7 @@ end sub
 
 
 ' ========================================================================================
-' Retrieve the current row count in the custom listbox control.
+' Retrieve the current row count in the control.
 ' ========================================================================================
 function PsListTree_GetCount( byval hListControl as HWND ) as integer
     dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
@@ -1634,7 +1687,7 @@ end function
 
 
 ' ========================================================================================
-' Refresh the custom listbox control.
+' Refresh the control.
 ' ========================================================================================
 sub PsListTree_Refresh( byval hListControl as HWND ) 
     dim as PSLISTTREE ptr pList = GetListTreePointer(hListControl)
@@ -2246,7 +2299,7 @@ function PsListTree_WndProc( _
         ' Delete the stored listbox data pointer
         dim as PSLISTTREE ptr pList = GetListTreePointer(hwnd)
         if pList then
-            if IsWindow(pList->hToolTip) then DestroyWindow(pList->hToolTip)
+            PsTipHost_Destroy( @pList->tip )
             delete(pList)
         end if
 
@@ -2928,8 +2981,9 @@ function PsListTree_GetEditRow( byval hListControl as HWND ) as integer
 end function
 
 ' Which column the edit is on. The EndLabelEdit callback is not handed the column, so a host that
-' wants only ONE column editable reads it here and returns FALSE for the others -- F2 always opens
-' column 0, whatever column the host's own gesture opened last.
+' wants only ONE column editable reads it here and returns FALSE for the others -- the keyboard
+' and click gestures all open PsListTree_GetEditColumn's column, whatever column the host's own
+' programmatic BeginEdit opened last.
 '
 ' Unlike GetEditRow this does NOT reset to -1 when the edit ends, and that is deliberate:
 ' EndEditInternal tears the editor down BEFORE it calls EndLabelEdit, so a value cleared on
@@ -3283,9 +3337,12 @@ function PsListTreeSurface_WndProc ( _
                             InvalidateRect( hWin, @rc, FALSE )
                     end if
                     pList->nLastHotIdx = idx
-                    ' Row changed: pop the current tip so it re-queries
-                    ' TTN_GETDISPINFOW for the new row on the next hover.
-                    if pList->hTooltip then SendMessage( pList->hTooltip, TTM_POP, 0, 0 )
+                    ' Item changed. On the system backend this pops the tip so it re-queries
+                    ' TTN_GETDISPINFOW for the new item; on PsTooltip it moves the tool index, which
+                    ' hides a visible tip and re-resolves on the next dwell. One call site either way --
+                    ' and the index is what lets the PsTooltip backend report WHICH item a tip is for,
+                    ' which comctl32 never knew.
+                    PsTipHost_SetToolIndex( @pList->tip, idx )
                 end if
             end if
             if pList andalso pList->MessageCallback then
@@ -3518,34 +3575,23 @@ end function
 
 
 ' ========================================================================================
-' Create a tooltip that pulls its text on demand (LPSTR_TEXTCALLBACK) for the whole
-' listbox. Notifications (TTN_GETDISPINFOW) go to the tool's owner = the parent form,
-' which answers them in PsListTree_WndProc using the current hot row.
+' Supply the tooltip text to the PsTooltip backend.
+'
+' This thunk is why PsTipHost never learns the text policy: PsListTree_ResolveTooltipText
+' stays the ONE place that decides what a tip says, and the system backend reaches the
+' same function by the other road (comctl32 asking through TTN_GETDISPINFOW), which is
+' why that arm stays in the WndProc.
 ' ========================================================================================
-function PsListTree_AddTooltip( byval hCtrl as HWND ) as HWND
-    if IsWindow(hCtrl) = 0 then return 0
-    dim as HWND hTooltip = CreateWindowExW( 0, "tooltips_class32", "", _
-                                            WS_POPUP or TTS_ALWAYSTIP, _
-                                            0, 0, 0, 0, NULL, NULL, NULL, NULL )
-    if hTooltip = 0 then return 0
-    SetWindowPos( hTooltip, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE or SWP_NOSIZE or SWP_NOACTIVATE )
-
-    dim tti as TOOLINFOW
-    ' cbSize must match the running comctl32 version (see AfxNova AfxAddTooltip).
-    #ifdef __FB_64BIT__
-        if AfxComCtlVersion < 600 then tti.cbSize = 64 else tti.cbSize = 72
-    #else
-        if AfxComCtlVersion < 600 then tti.cbSize = 44 else tti.cbSize = 48
-    #endif
-    ' hCtrl is a WS_CHILD (the listbox): register the whole control as one tool
-    ' owned by the parent form, and let the tooltip auto-relay via TTF_SUBCLASS.
-    tti.uFlags   = TTF_IDISHWND or TTF_SUBCLASS
-    tti.hwnd     = GetParent(hCtrl)
-    tti.uId      = cast(UINT_PTR, hCtrl)
-    tti.hinst    = GetModuleHandleW(NULL)
-    tti.lpszText = LPSTR_TEXTCALLBACK
-    SendMessageW( hTooltip, TTM_ADDTOOLW, 0, cast(LPARAM, @tti) )
-    return hTooltip
+private function PsListTree_TipTextCallback( byval hTooltip as HWND, byval hAttached as HWND, _
+                                        byval idx as long ) as DWSTRING
+    ' hAttached is the SURFACE window (see PsTipHost_Ensure in Create), and the surface is a
+    ' plain registered class whose UserData is NOT the control's PSLISTTREE. So resolve the
+    ' container first and fall back only if this is ever attached directly. Getting this wrong
+    ' costs nothing visible at build time and every tooltip at run time.
+    dim as PSLISTTREE ptr pL = GetListTreePointer( GetParent(hAttached) )
+    if pL = 0 then pL = GetListTreePointer( hAttached )
+    dim as DWSTRING wszOut = PsListTree_ResolveTooltipText( pL, cast(integer, idx) )
+    return wszOut
 end function
 
 
@@ -3629,7 +3675,17 @@ function PsListTree_Create( byval hWndParent as HWND, byval CtrlID as integer ) 
             WS_CHILD or WS_VISIBLE or WS_CLIPSIBLINGS or WS_CLIPCHILDREN or WS_TABSTOP, _
             0, 0, 0, 0, hForm, cast(HMENU, cast(LONG_PTR, pList->idc_ListTree)), _
             GetModuleHandleW( NULL ), NULL )
-    pList->hTooltip = PsListTree_AddTooltip( hList )
+
+    ' THE TIP IS ATTACHED TO THE SURFACE, NOT THE CONTAINER, which is what the comctl32 tool
+    ' did and is not cosmetic: mouse messages go to the surface child, so a TTF_SUBCLASS tool
+    ' on the container would never see them and the system backend would show no tips at all.
+    ' (PsTooltip would survive it -- it accepts a hover on any descendant of what it is
+    ' attached to -- so this would have broken the DEFAULT backend only.)
+    '
+    ' It is also after UserData(0), which the text callback reads through
+    ' GetListTreePointer(hAttached). That resolves the CONTAINER, so the callback is handed
+    ' the surface and walks up.
+    PsTipHost_Ensure( @pList->tip, hList, @PsListTree_TipTextCallback )
 
     ' Owner-drawn vertical scrollbar, owned and driven by this control. It starts
     ' hidden; the first Refresh/Sync decides whether there is anything to scroll.

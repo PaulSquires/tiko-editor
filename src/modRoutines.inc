@@ -1854,3 +1854,52 @@ sub DoCheckForUpdates( byval param as any ptr )
     end if
    
 end sub
+
+
+' ========================================================================================
+' Tooltip_GetSystemFont
+'
+' What Windows itself draws a tooltip in: SPI_GETNONCLIENTMETRICS's lfStatusFont, which is
+' the status-bar/tooltip face. Returns FALSE and leaves the struct alone if the system
+' refuses -- callers fall back to a face of their own rather than to an empty LOGFONT.
+'
+' THE POINT SIZE IS THE FIELD THAT MATTERS, and converting to it is not cosmetic.
+' lfHeight comes back in PIXELS at the process's current DPI, while CWindow.CreateFont takes
+' POINTS and scales them by the window's DPI itself. Handing it the pixel height would
+' therefore ask for a font ~1.75x too large on a 175% display -- and it would look right at
+' 100%, which is exactly the class of bug that ships. Points are DPI-neutral, so the round
+' trip pixels -> points -> CreateFont lands back on the size the system asked for.
+'
+' lfWeight is kept as well as isBold: FW_BOLD is a threshold, and a system face at FW_SEMIBOLD
+' would be flattened to "not bold" and redrawn at FW_NORMAL if only the boolean survived.
+' ========================================================================================
+function Tooltip_GetSystemFont( byref info as TIKO_TOOLTIPFONT ) as boolean
+    dim as NONCLIENTMETRICSW ncm
+    ncm.cbSize = sizeof(NONCLIENTMETRICSW)
+
+    if SystemParametersInfoW( SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICSW), @ncm, 0 ) = 0 then
+        return false
+    end if
+
+    info.wszFaceName = ncm.lfStatusFont.lfFaceName
+    info.pixelHeight = abs( ncm.lfStatusFont.lfHeight )
+    info.lfWeight    = ncm.lfStatusFont.lfWeight
+    info.isBold      = (ncm.lfStatusFont.lfWeight >= FW_BOLD)
+    info.isItalic    = (ncm.lfStatusFont.lfItalic <> 0)
+
+    ' Pixels -> points, against the real screen DPI (see the header).
+    info.pointSize = 0
+    dim as HDC hDC = GetDC( HWND_DESKTOP )
+    if hDC then
+        dim as long dpiY = GetDeviceCaps( hDC, LOGPIXELSY )
+        if dpiY > 0 then info.pointSize = MulDiv( info.pixelHeight, 72, dpiY )
+        ReleaseDC( HWND_DESKTOP, hDC )
+    end if
+
+    ' A face with no name or no derivable size is not usable, and saying so here means no
+    ' caller has to re-check the two fields it is about to build a font from.
+    if len( info.wszFaceName ) = 0 then return false
+    if info.pointSize <= 0 then return false
+
+    return true
+end function

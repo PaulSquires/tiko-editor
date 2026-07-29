@@ -148,6 +148,7 @@ function frmStatusBar_Show( byval hwndParent as HWND ) as LRESULT
     PsStatusBar_SetPaintCallback( hCtrl, @frmStatusBar_PaintCallback )
     PsStatusBar_SetMessageCallback( hCtrl, @frmStatusBar_MessageCallback )
     PsStatusBar_SetTooltipCallback( hCtrl, @frmStatusBar_TooltipCallback )
+    PsStatusBar_SetTooltipMode( hCtrl, PSTIP_MODE_PS )
     PsStatusBar_SetBackColor( hCtrl, ghStatusBar.BackColor )
     PsStatusBar_SetFont( hCtrl, ghFont(GUIFONT_9) )
 

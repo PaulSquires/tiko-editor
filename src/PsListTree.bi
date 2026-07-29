@@ -2,6 +2,9 @@
 #pragma once
 
 #include once "PsBufferPaint.bi"
+' The tooltip backend switch. The control ships on the SYSTEM (comctl32) backend exactly
+' as it always has; a host opts an instance into PsTooltip with PsListTree_SetTooltipMode.
+#include once "PsTipHost.bi"
 
 ' Polling timer that guarantees hot-tracking is cleared when the mouse leaves the
 ' control. WM_MOUSELEAVE (TME_LEAVE) is not reliably delivered on fast exits, so a
@@ -224,7 +227,10 @@ type ExpandCollapseCallbackSub as sub( byval hListControl as HWND, byval row as 
 
 type PSLISTTREE
     hWin            as HWND
-    hToolTip        as HWND
+    ' The tooltip, whichever backend it is on. Replaces the old hToolTip + HoverTime
+    ' pair; PsListTree_GetTooltipHandle still answers the comctl32 handle, and 0 while
+    ' this instance is on PsTooltip.
+    tip       as PSTIPHOST
     wszTooltip      as DWSTRING
     ' --- Model: rows() is the backing store (capacity = ubound+1); rowCount is
     '     the number of logical rows and the single source of truth for "count". ---
@@ -969,6 +975,17 @@ declare function PsListTree_SetRowHeight( byval hListControl as HWND, byval heig
 declare function PsListTree_GetFont( byval hListControl as HWND ) as HFONT
 declare function PsListTree_SetFont( byval hListControl as HWND, byval hFont as HFONT ) as boolean
 declare sub      PsListTree_SetHoverTime( byval hListControl as HWND, byval milliseconds as integer )
+declare function PsListTree_GetTooltipHandle( byval hListControl as HWND ) as HWND
+declare function PsListTree_SetTooltipMode( byval hListControl as HWND, byval nMode as long ) as boolean
+declare function PsListTree_GetTooltipMode( byval hListControl as HWND ) as long
+' The PsTooltip window, or 0 on the system backend. The door to PsTooltip's own
+' SetColors/SetFonts/SetStyle/SetMaxWidth/SetTitle/SetGlyph -- deliberately not mirrored
+' here, since thirteen controls x twenty setters is 260 wrappers to keep in step.
+declare function PsListTree_GetPsTooltipHandle( byval hListControl as HWND ) as HWND
+' Honoured by BOTH backends. A delay never set keeps the backend's own derivation from
+' the system double-click time.
+declare sub      PsListTree_SetAutoPopTime( byval hListControl as HWND, byval milliseconds as long )
+declare sub      PsListTree_SetReshowTime( byval hListControl as HWND, byval milliseconds as long )
 
 ' ----------------------------------------------------------------------------------------
 ' Border chrome (OFF by default).  Width 0 draws no border and reserves no space, which is
@@ -1022,10 +1039,12 @@ declare sub      PsListTree_SetTwistyGlyphs( byval hListControl as HWND, byval w
 ' focused row), on the programmatic BeginEdit, or -- when SetClickToEdit is on -- on a
 ' single click of the already-current row (explorer rename). It commits on Enter or focus
 ' loss and cancels on Esc. BeginLabelEdit can veto; EndLabelEdit can reject the new text.
-' ANY column is editable, but only column 0 has a gesture of its own: F2 and click-to-edit both
-' open column 0. Editing column N > 0 is programmatic -- the host resolves the clicked column
-' (PsListTree_GetColumnRect) and calls BeginEdit with it. The editor is placed over whichever
-' column is being edited; column 0 alone is inset past the tree indent and the twisty band.
+' ANY column is editable, and WHICH ONE THE GESTURES OPEN IS SETTABLE: F2, Enter (when
+' SetEnterEdits is on) and click-to-edit all open the column set by PsListTree_SetEditColumn,
+' which defaults to 0. Editing a different column on the same gesture is still programmatic --
+' the host resolves the clicked column (PsListTree_GetColumnRect) and calls BeginEdit with it.
+' The editor is placed over whichever column is being edited; column 0 alone is inset past the
+' tree indent and the twisty band.
 ' All programmatic; EndEdit is silent.
 ' ----------------------------------------------------------------------------------------
 declare function PsListTree_EnableLabelEdit( byval hListControl as HWND, byval enable as boolean = true ) as boolean

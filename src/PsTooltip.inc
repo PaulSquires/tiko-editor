@@ -72,6 +72,26 @@ dim shared gTIP_hClock   as HWND
 dim shared gTIP_ClockMs  as long = 0
 dim shared gTIP_ClassReg as boolean = false
 
+' Process-wide defaults applied by PsTooltip_Create. Each is INDEPENDENTLY ARMED, so a field
+' the host never set keeps whatever Create derives for it -- see the .bi header for why that
+' is not one struct. Same thread, same lifetime rules as the registry above.
+dim shared gTIP_DefColors     as PSTOOLTIP_COLORS
+dim shared gTIP_HasDefColors  as boolean = false
+dim shared gTIP_DefFontText   as HFONT
+dim shared gTIP_DefFontTitle  as HFONT
+dim shared gTIP_DefFontGlyph  as HFONT
+dim shared gTIP_HasDefFonts   as boolean = false
+dim shared gTIP_DefStyle      as long = TIP_STYLE_RECT
+dim shared gTIP_HasDefStyle   as boolean = false
+dim shared gTIP_DefMaxWidth   as long = 0
+dim shared gTIP_HasDefMaxW    as boolean = false
+dim shared gTIP_DefInitial    as long = 0
+dim shared gTIP_HasDefInitial as boolean = false
+dim shared gTIP_DefAutoPop    as long = 0
+dim shared gTIP_HasDefAutoPop as boolean = false
+dim shared gTIP_DefReshow     as long = 0
+dim shared gTIP_HasDefReshow  as boolean = false
+
 
 private function GetTooltipPointer( byval hTooltip as HWND ) as PSTOOLTIP ptr
     if hTooltip = 0 then return 0
@@ -1322,6 +1342,11 @@ function PsTooltip_Create( byval hAttach as HWND, byval CtrlID as long = 0 ) as 
     ' opaque before the first show.
     SetLayeredWindowAttributes( hCtrl, 0, 255, LWA_ALPHA )
 
+    ' AFTER every derived value above, so an armed default overrides the derivation and an
+    ' unarmed one leaves it standing. This is the only reason a control's lazily-created tip
+    ' can carry the host's theme without the host ever seeing its HWND.
+    PsTooltip_ApplyDefaults( hCtrl )
+
     TIP_RegistryAdd( hCtrl )
     PsTooltip_Attach( hCtrl, hAttach )
     return hCtrl
@@ -1560,6 +1585,88 @@ sub PsTooltip_SetFadeTime( byval hTooltip as HWND, byval nMs as long )
     if nMs < 0 then nMs = 0
     pTip->nFadeTime = nMs
 end sub
+
+' ========================================================================================
+' PUBLIC API -- process-wide defaults
+'
+' These exist because a control creates its own tip lazily and the host never sees the HWND,
+' so "theme every tooltip on this form" is otherwise unreachable. Setting each independently
+' is what keeps a host that only wants new COLOURS from also flattening the delays Create
+' derived from GetDoubleClickTime().
+' ========================================================================================
+sub PsTooltip_SetDefaultColors( byval pColors as PSTOOLTIP_COLORS ptr )
+    if pColors = 0 then exit sub
+    gTIP_DefColors    = *pColors
+    gTIP_HasDefColors = true
+end sub
+
+sub PsTooltip_SetDefaultFonts( byval hText as HFONT, _
+                               byval hTitle as HFONT = 0, byval hGlyph as HFONT = 0 )
+    gTIP_DefFontText  = hText
+    gTIP_DefFontTitle = hTitle
+    gTIP_DefFontGlyph = hGlyph
+    gTIP_HasDefFonts  = true
+end sub
+
+sub PsTooltip_SetDefaultStyle( byval nStyle as long )
+    gTIP_DefStyle    = nStyle
+    gTIP_HasDefStyle = true
+end sub
+
+sub PsTooltip_SetDefaultMaxWidth( byval nMaxWidth as long )
+    gTIP_DefMaxWidth = nMaxWidth
+    gTIP_HasDefMaxW  = true
+end sub
+
+' A negative argument leaves that delay alone, which is what makes the common case -- "just
+' change the hover time" -- a single call that cannot disturb the other two.
+sub PsTooltip_SetDefaultDelays( byval nInitialMs as long, _
+                                byval nAutoPopMs as long = -1, _
+                                byval nReshowMs as long = -1 )
+    if nInitialMs >= 0 then
+        gTIP_DefInitial    = nInitialMs
+        gTIP_HasDefInitial = true
+    end if
+    if nAutoPopMs >= 0 then
+        gTIP_DefAutoPop    = nAutoPopMs
+        gTIP_HasDefAutoPop = true
+    end if
+    if nReshowMs >= 0 then
+        gTIP_DefReshow    = nReshowMs
+        gTIP_HasDefReshow = true
+    end if
+end sub
+
+sub PsTooltip_ClearDefaults()
+    gTIP_HasDefColors  = false
+    gTIP_HasDefFonts   = false
+    gTIP_HasDefStyle   = false
+    gTIP_HasDefMaxW    = false
+    gTIP_HasDefInitial = false
+    gTIP_HasDefAutoPop = false
+    gTIP_HasDefReshow  = false
+    gTIP_DefFontText   = 0
+    gTIP_DefFontTitle  = 0
+    gTIP_DefFontGlyph  = 0
+end sub
+
+sub PsTooltip_ApplyDefaults( byval hTooltip as HWND )
+    dim as PSTOOLTIP ptr pTip = GetTooltipPointer(hTooltip)
+    if pTip = 0 then exit sub
+
+    ' Deliberately routed through the public setters rather than written to the struct, so the
+    ' dirty-marking and repainting each of them owns cannot be forgotten here.
+    if gTIP_HasDefColors then PsTooltip_SetColors( hTooltip, @gTIP_DefColors )
+    if gTIP_HasDefFonts then
+        PsTooltip_SetFonts( hTooltip, gTIP_DefFontText, gTIP_DefFontTitle, gTIP_DefFontGlyph )
+    end if
+    if gTIP_HasDefStyle then PsTooltip_SetStyle( hTooltip, gTIP_DefStyle )
+    if gTIP_HasDefMaxW then PsTooltip_SetMaxWidth( hTooltip, gTIP_DefMaxWidth )
+    if gTIP_HasDefInitial then PsTooltip_SetInitialDelay( hTooltip, gTIP_DefInitial )
+    if gTIP_HasDefAutoPop then PsTooltip_SetAutoPopDelay( hTooltip, gTIP_DefAutoPop )
+    if gTIP_HasDefReshow then PsTooltip_SetReshowDelay( hTooltip, gTIP_DefReshow )
+end sub
+
 
 sub PsTooltip_SetMoveTolerance( byval hTooltip as HWND, byval nPixels as long )
     dim as PSTOOLTIP ptr pTip = GetTooltipPointer(hTooltip)

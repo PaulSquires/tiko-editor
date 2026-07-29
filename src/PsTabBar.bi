@@ -2,6 +2,9 @@
 #pragma once
 
 #include once "PsBufferPaint.bi"
+' The tooltip backend switch. The control ships on the SYSTEM (comctl32) backend exactly
+' as it always has; a host opts an instance into PsTooltip with PsTabBar_SetTooltipMode.
+#include once "PsTipHost.bi"
 
 ' Polling timer that guarantees hot-tracking is cleared when the mouse leaves the
 ' control. WM_MOUSELEAVE (TME_LEAVE) is not reliably delivered on fast exits, so a
@@ -144,7 +147,10 @@ type TB_ReorderCallbackSub as sub( byval hTabBar as HWND, byval idxFrom as integ
 
 type PSTABBAR
     hWin            as HWND
-    hToolTip        as HWND
+    ' The tooltip, whichever backend it is on. Replaces the old hToolTip + HoverTime
+    ' pair; PsTabBar_GetTooltipHandle still answers the comctl32 handle, and 0 while
+    ' this instance is on PsTooltip.
+    tip       as PSTIPHOST
     wszTooltip      as DWSTRING
     tabs(any)       as PSTABBAR_TABINFO
     tabCount        as integer = 0
@@ -686,6 +692,17 @@ declare sub      PsTabBar_SetBorderWidth( byval hTabBar as HWND, byval nBorderWi
 declare function PsTabBar_GetFont( byval hTabBar as HWND ) as HFONT
 declare function PsTabBar_SetFont( byval hTabBar as HWND, byval hFont as HFONT ) as boolean
 declare sub      PsTabBar_SetHoverTime( byval hTabBar as HWND, byval milliseconds as integer )
+declare function PsTabBar_GetTooltipHandle( byval hTabBar as HWND ) as HWND
+declare function PsTabBar_SetTooltipMode( byval hTabBar as HWND, byval nMode as long ) as boolean
+declare function PsTabBar_GetTooltipMode( byval hTabBar as HWND ) as long
+' The PsTooltip window, or 0 on the system backend. The door to PsTooltip's own
+' SetColors/SetFonts/SetStyle/SetMaxWidth/SetTitle/SetGlyph -- deliberately not mirrored
+' here, since thirteen controls x twenty setters is 260 wrappers to keep in step.
+declare function PsTabBar_GetPsTooltipHandle( byval hTabBar as HWND ) as HWND
+' Honoured by BOTH backends. A delay never set keeps the backend's own derivation from
+' the system double-click time.
+declare sub      PsTabBar_SetAutoPopTime( byval hTabBar as HWND, byval milliseconds as long )
+declare sub      PsTabBar_SetReshowTime( byval hTabBar as HWND, byval milliseconds as long )
 
 ' ----------------------------------------------------------------------------------------
 ' Callbacks.  See the type declarations above for each signature and contract.

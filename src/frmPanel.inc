@@ -84,11 +84,20 @@ function frmPanel_PositionWindows() as LRESULT
 
     ' Position the panel menu
     ' Give it some left margin 
+    ' The menu is two PsIconPanels -- a left-justified group and a right-justified one --
+    ' because PsIconPanel has no spring panel. They split the strip at its midpoint; both
+    ' paint the same background, so the seam is invisible.
     dim as long nMargin = pWindow->ScaleX(10)
+    dim as long nBarWidth = nWidth - (nMargin * 2)
+    dim as long nBarHeight = nPanelMenuHeight - pWindow->ScaleY(1)
+    dim as long nHalf = nBarWidth \ 2
     SetWindowPos( HWND_FRMPANEL_MENU, 0, _
-            nLeft + nMargin, 0, nWidth - (nMargin * 2), _
-            nPanelMenuHeight - pWindow->ScaleY(1), SWP_SHOWWINDOW or SWP_NOZORDER )
-    
+            nLeft + nMargin, 0, nHalf, _
+            nBarHeight, SWP_SHOWWINDOW or SWP_NOZORDER )
+    SetWindowPos( HWND_FRMPANEL_MENU_RIGHT, 0, _
+            nLeft + nMargin + nHalf, 0, nBarWidth - nHalf, _
+            nBarHeight, SWP_SHOWWINDOW or SWP_NOZORDER )
+
     SetWindowPos( HWND_FRMEXPLORER, 0, nLeft, nTop, nWidth, nHeight, SWP_NOZORDER )
     SetWindowPos( HWND_FRMBOOKMARKS, 0, nLeft, nTop, nWidth, nHeight, SWP_NOZORDER )
     SetWindowPos( HWND_FRMFUNCTIONS, 0, nLeft, nTop, nWidth, nHeight, SWP_NOZORDER )
@@ -140,6 +149,7 @@ function frmPanel_PositionWindows() as LRESULT
 
     ' Ensure that the panel menu selected item is in sync with the pane
     AfxRedrawWindow(HWND_FRMPANEL_MENU)
+    AfxRedrawWindow(HWND_FRMPANEL_MENU_RIGHT)
     
     function = 0
 end function

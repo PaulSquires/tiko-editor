@@ -142,6 +142,7 @@ function frmTopTabsMenu_Show( byval hwndParent as HWND ) as LRESULT
     PsStatusBar_SetPaintCallback( hCtrl, @frmTopTabsMenu_PaintCallback )
     PsStatusBar_SetMessageCallback( hCtrl, @frmTopTabsMenu_MessageCallback )
     PsStatusBar_SetTooltipCallback( hCtrl, @frmTopTabsMenu_TooltipCallback )
+    PsStatusBar_SetTooltipMode( hCtrl, PSTIP_MODE_PS )
     PsStatusBar_SetBackColor( hCtrl, ghTopTabs.BackColor )
     PsStatusBar_SetPadding( hCtrl, 7 )
     PsStatusBar_SetFont( hCtrl, ghFont(SYMBOLFONT_10) )
@@ -155,12 +156,9 @@ function frmTopTabsMenu_Show( byval hwndParent as HWND ) as LRESULT
     ' Panel 0 spring ensures that the icon panel becomes flushed right
     PsStatusBar_SetExpandPanel( hCtrl, 0 )
 
-    dim as HWND hTooltip = PsStatusBar_GetTooltipHandle(hCtrl)
-    if hTooltip then 
-        ' Set the tooltip max width in order to handle the multiline
-        ' text needed for the split editor button.
-        SendMessage( hTooltip, TTM_SETMAXTIPWIDTH, 0, 300 )
-    end if
+    ' The multiline text of the split-editor button wraps because PsTooltip wraps natively;
+    ' the max width is armed once in Theme_ArmTooltipDefaults. This used to hand-send
+    ' TTM_SETMAXTIPWIDTH at the comctl32 tip through GetTooltipHandle.
 
     HWND_FRMMAIN_TOPTABSMENU = hCtrl
     

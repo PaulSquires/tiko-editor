@@ -32,9 +32,9 @@ type clsTopTabCtl
     public:
         hWindow           as HWND
         rcDiskFilename    as RECT
-        rcFindButton      as RECT
-        rcGotoMain        as RECT
-        rcGotoHeader      as RECT        ' Can be either GotoHeader or GotoCode depending on underlying filetype.
+        ' The Find / Goto Main / Goto Header buttons that used to live here are a PsIconPanel
+        ' now (frmTopTabsInfo.inc) -- the control owns their cells, so there is nothing left
+        ' for the host to store.
         rcFileTypeButton  as RECT        ' Main, Module, Normal, etc
         rcFindTextRect    as RECT
         rcReplaceTextRect as RECT

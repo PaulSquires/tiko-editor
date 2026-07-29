@@ -479,6 +479,34 @@ declare sub      PsTooltip_SetReshowDelay( byval hTooltip as HWND, byval nMs as 
 declare sub      PsTooltip_SetFadeTime( byval hTooltip as HWND, byval nMs as long )
 declare sub      PsTooltip_SetMoveTolerance( byval hTooltip as HWND, byval nPixels as long )
 
+' --- process-wide defaults ------------------------------------------------------------------
+' Every tip a control creates for itself is created lazily and out of the host's sight, so a
+' host that wants ONE look across a form cannot reach them one at a time. These set what
+' PsTooltip_Create applies to each new tip. Call them once, at startup, BEFORE any tip exists;
+' a tip already created is not retro-fitted (PsTooltip_ApplyDefaults is the door for that).
+'
+' Each is independently armed: a field never set keeps the value Create derives for it, which
+' is why these are separate calls rather than one struct. That matters most for the delays --
+' Create derives all three from GetDoubleClickTime(), and a zeroed struct would silently
+' replace a machine-appropriate 500ms with 0.
+'
+' The fonts are BORROWED exactly as PsTooltip_SetFonts borrows them: the host keeps ownership
+' and must outlive every tip. That is the one real hazard in this block, since the host is
+' promising it to controls it never sees.
+declare sub      PsTooltip_SetDefaultColors( byval pColors as PSTOOLTIP_COLORS ptr )
+declare sub      PsTooltip_SetDefaultFonts( byval hText as HFONT, _
+                                            byval hTitle as HFONT = 0, byval hGlyph as HFONT = 0 )
+declare sub      PsTooltip_SetDefaultStyle( byval nStyle as long )
+declare sub      PsTooltip_SetDefaultMaxWidth( byval nMaxWidth as long )
+declare sub      PsTooltip_SetDefaultDelays( byval nInitialMs as long, _
+                                             byval nAutoPopMs as long = -1, _
+                                             byval nReshowMs as long = -1 )
+' Clear every armed default. New tips fall back to Create's own derivation again.
+declare sub      PsTooltip_ClearDefaults()
+' Apply the armed defaults to one existing tip. Create calls this itself; a host calls it to
+' re-theme a tip that already exists.
+declare sub      PsTooltip_ApplyDefaults( byval hTooltip as HWND )
+
 ' --- manual drive. These BYPASS the dwell entirely; the tick still auto-hides them. --------
 ' Show at the current cursor position.
 declare function PsTooltip_Show( byval hTooltip as HWND ) as boolean

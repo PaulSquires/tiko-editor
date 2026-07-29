@@ -29,8 +29,8 @@ function OnCommand_EditCut( _
     select case GetFocus()
         case PsTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTNOTES)), _
             PsTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTLOGFILE)), _
-            PsTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND)), _
-            PsTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE))
+            PsTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND)), _
+            PsTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMMAIN_REPLACE, IDC_FRMREPLACE_TXTREPLACE))
             SendMessage( GetFocus, WM_CUT, 0, 0 )
         case else     
             SciExec( GetFocus(), iif(GetFocus()=hEdit, SCI_CUT, WM_CUT), 0, 0)
@@ -54,8 +54,8 @@ function OnCommand_EditCopy( _
     select case GetFocus()
         case PsTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTNOTES)), _
             PsTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTLOGFILE)), _
-            PsTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND)), _
-            PsTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE))
+            PsTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND)), _
+            PsTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMMAIN_REPLACE, IDC_FRMREPLACE_TXTREPLACE))
             SendMessage( GetFocus, WM_COPY, 0, 0 )
         case else     
             SciExec( GetFocus(), Iif(GetFocus()=hEdit, SCI_COPY, WM_COPY), 0, 0)
@@ -78,8 +78,8 @@ function OnCommand_EditPaste( _
     select case GetFocus()
         case PsTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTNOTES)), _
              PsTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTLOGFILE)), _
-             PsTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND)), _
-             PsTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE))
+             PsTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND)), _
+             PsTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMMAIN_REPLACE, IDC_FRMREPLACE_TXTREPLACE))
             SendMessage( GetFocus, WM_PASTE, 0, 0 )
         case else     
             SciExec( GetFocus(), Iif(GetFocus()=hEdit, SCI_PASTE, WM_PASTE), 0, 0)
@@ -106,10 +106,10 @@ function OnCommand_EditIndentBlock( _
     '  it. frmAutoComplete_FilterMessage now consumes Tab ahead of TranslateAccelerator,
     '  so IDM_INDENTBLOCK cannot fire while the popup is up and there is nothing to
     '  special-case.)
-    if PsTextBox_HasFocus( GetDlgItem(HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND) ) then
-        if gFind.bExpanded then SetFocus GetDlgItem(HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE)
-    elseif PsTextBox_HasFocus( GetDlgItem(HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE) ) then
-        if gFind.bExpanded then SetFocus GetDlgItem(HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND)
+    if PsTextBox_HasFocus( GetDlgItem(HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND) ) then
+        if gFind.bShowReplacePanel then SetFocus GetDlgItem(HWND_FRMMAIN_REPLACE, IDC_FRMREPLACE_TXTREPLACE)
+    elseif PsTextBox_HasFocus( GetDlgItem(HWND_FRMMAIN_REPLACE, IDC_FRMREPLACE_TXTREPLACE) ) then
+        if gFind.bShowReplacePanel then SetFocus GetDlgItem(HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND)
     else
         gApp.SuppressNotify = true
         SetWindowRedraw( hEdit, false )
@@ -132,10 +132,10 @@ function OnCommand_EditUnIndentBlock( _
             byval hEdit as HWND _
             ) as LRESULT
     
-    if PsTextBox_HasFocus( GetDlgItem(HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND) ) then
-        if gFind.bExpanded then SetFocus GetDlgItem(HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE)
-    elseif PsTextBox_HasFocus( GetDlgItem(HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE) ) then
-        if gFind.bExpanded then SetFocus GetDlgItem(HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND)
+    if PsTextBox_HasFocus( GetDlgItem(HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND) ) then
+        if gFind.bShowReplacePanel then SetFocus GetDlgItem(HWND_FRMMAIN_REPLACE, IDC_FRMREPLACE_TXTREPLACE)
+    elseif PsTextBox_HasFocus( GetDlgItem(HWND_FRMMAIN_REPLACE, IDC_FRMREPLACE_TXTREPLACE) ) then
+        if gFind.bShowReplacePanel then SetFocus GetDlgItem(HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND)
     else
         gApp.SuppressNotify = true
         SetWindowRedraw( hEdit, false )
@@ -163,8 +163,8 @@ function OnCommand_EditSelectAll( _
     select case GetFocus()
         case PsTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTNOTES)), _
             PsTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTLOGFILE)), _
-            PsTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMMAIN_TOPTABSFIND, IDC_FRMTOPTABSFIND_TXTFIND)), _
-            PsTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMMAIN_TOPTABSREPLACE, IDC_FRMTOPTABSREPLACE_TXTREPLACE))
+            PsTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND)), _
+            PsTextBox_GetRichEditHandle(GetDlgItem(HWND_FRMMAIN_REPLACE, IDC_FRMREPLACE_TXTREPLACE))
             Edit_SetSel( GetFocus(), 0, -1 )
         case else     
             SciExec(hEdit, SCI_SELECTALL, 0, 0)

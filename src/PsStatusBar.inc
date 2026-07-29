@@ -4,6 +4,8 @@
 ''   
 
 #include once "PsStatusBar.bi"
+' The tooltip backend switch, pulled in here so a host needs no extra include line.
+#include once "PsTipHost.inc"
 
 
 function GetStatusBarPointer( byval hStatusBarControl as HWND ) as PSSTATUSBAR ptr
@@ -152,9 +154,7 @@ sub PsStatusBar_SetTooltipCallback( byval hStatusBarControl as HWND, byval userf
 end sub
 
 
-' ========================================================================================
 ' Resolve the tooltip text for a panel: host callback if set, else panel Text.
-' ========================================================================================
 function PsStatusBar_ResolveTooltipText( byval pStatus as PSSTATUSBAR ptr, byval idx as integer ) as DWSTRING
     if (pStatus = null) orelse (pStatus->IsValidPanel(idx) = false) then return ""
     if pStatus->TooltipCallback then return pStatus->TooltipCallback( pStatus->hWin, idx )
@@ -162,20 +162,61 @@ function PsStatusBar_ResolveTooltipText( byval pStatus as PSSTATUSBAR ptr, byval
 end function
 
 
-' ========================================================================================
-' Set the tooltip hovertime for the custom statusbar control.
-' ========================================================================================
+' The PsTooltip window, and 0 while on the system backend. This is the door to PsTooltip's
+' own SetColors/SetFonts/SetStyle/SetMaxWidth/SetTitle/SetGlyph, none of which is mirrored
+' on this control.
+function PsStatusBar_GetPsTooltipHandle( byval hStatusBarControl as HWND ) as HWND
+    dim as PSSTATUSBAR ptr pStatus = GetStatusBarPointer(hStatusBarControl)
+    if pStatus = 0 then return 0
+    return PsTipHost_PsHandle( @pStatus->tip )
+end function
+
+function PsStatusBar_SetTooltipMode( byval hStatusBarControl as HWND, byval nMode as long ) as boolean
+    dim as PSSTATUSBAR ptr pStatus = GetStatusBarPointer(hStatusBarControl)
+    if pStatus = 0 then return false
+    return PsTipHost_SetMode( @pStatus->tip, nMode )
+end function
+
+function PsStatusBar_GetTooltipMode( byval hStatusBarControl as HWND ) as long
+    dim as PSSTATUSBAR ptr pStatus = GetStatusBarPointer(hStatusBarControl)
+    if pStatus = 0 then return PSTIP_MODE_SYSTEM
+    return PsTipHost_GetMode( @pStatus->tip )
+end function
+
+' The three delays go through PsTipHost, which STORES them as well as pushing them, so a
+' hover time set before a mode switch is still in force after it. Pushing straight at the
+' live tooltip loses it at the switch -- and the tip still appears, just on a different
+' beat, with nothing reporting the change.
+' NOTE the `as integer` -- this control declared its hover time that way from the start and
+' the two new delays below use `as long` like the rest of the family. Left as it is rather
+' than harmonised: widening a shipped public signature is a change to the API, not a tidy-up.
 sub PsStatusBar_SetHoverTime( byval hStatusBarControl as HWND, byval milliseconds as integer )
     dim as PSSTATUSBAR ptr pStatus = GetStatusBarPointer(hStatusBarControl)
-    if pStatus = null then return 
+    if pStatus = 0 then exit sub
+    ' The field is STILL READ by TrackMouseEvent as dwHoverTime, so this setter
+    ' drives the hot-tracking dwell as well as the tooltip. Dropping it here would
+    ' silently change when the control considers itself hot.
     pStatus->HoverTime = milliseconds
+    PsTipHost_SetDelay( @pStatus->tip, TTDT_INITIAL, milliseconds )
+end sub
+
+sub PsStatusBar_SetAutoPopTime( byval hStatusBarControl as HWND, byval milliseconds as long )
+    dim as PSSTATUSBAR ptr pStatus = GetStatusBarPointer(hStatusBarControl)
+    if pStatus = 0 then exit sub
+    PsTipHost_SetDelay( @pStatus->tip, TTDT_AUTOPOP, milliseconds )
+end sub
+
+sub PsStatusBar_SetReshowTime( byval hStatusBarControl as HWND, byval milliseconds as long )
+    dim as PSSTATUSBAR ptr pStatus = GetStatusBarPointer(hStatusBarControl)
+    if pStatus = 0 then exit sub
+    PsTipHost_SetDelay( @pStatus->tip, TTDT_RESHOW, milliseconds )
 end sub
 
 
 ' ========================================================================================
 ' Set specified idx itemData for the custom statusbar control.
-' Returns TRUE on success, FALSE if the idx index is invalid.
 ' ========================================================================================
+' Returns TRUE on success, FALSE if the idx index is invalid.
 function PsStatusBar_SetItemData( byval hStatusBarControl as HWND, byval idx as integer, byval itemData as integer ) as boolean
     dim as PSSTATUSBAR ptr pStatus = GetStatusBarPointer(hStatusBarControl)
     if pStatus = null then return false
@@ -214,10 +255,12 @@ end function
 ' ========================================================================================
 ' Retrieve the handle of the statusbar's tooltip control.
 ' ========================================================================================
+' The comctl32 handle, and 0 while on PsTooltip -- the honest answer, since a TTM_* sent
+' to a PsTooltip window is silently ignored.
 function PsStatusBar_GetTooltipHandle( byval hStatusBarControl as HWND ) as HWND
     dim as PSSTATUSBAR ptr pStatus = GetStatusBarPointer(hStatusBarControl)
     if pStatus = null then return 0
-    return pStatus->hTooltip
+    return PsTipHost_SysHandle( @pStatus->tip )
 end function
 
 
@@ -470,8 +513,19 @@ end sub
 
 ' ========================================================================================
 ' PsStatusBar Window procedure
+'
 ' This control has no child windows, so there is nothing to subclass: every message is
-' handled here and anything unhandled goes to DefWindowProc.
+' handled here and anything unhandled goes to DefWindowProc. (The earlier design carried a
+' subclass proc copied from PsListBox, which wrapped a real listbox child. It was never
+' installed, so none of it ever ran.)
+'
+' The control takes NO mouse capture. Capture's only product is a guaranteed
+' WM_LBUTTONDOWN -> WM_LBUTTONUP pairing, and nothing here consumes that: there is no press
+' state to strand. Consequences, by design: a WM_LBUTTONDOWN is not guaranteed a matching
+' WM_LBUTTONUP (press inside, release outside -> no up arrives, so a host acting on
+' WM_LBUTTONUP with idx >= 0 correctly does nothing), and press-on-3-drag-to-5-release fires
+' panel 5. If panels ever need true button semantics, track a pressed panel and adopt
+' PsVScrollBar's capture shape (SetCapture + ReleaseCapture + WM_CAPTURECHANGED) wholesale.
 ' ========================================================================================
 function PsStatusBar_WndProc( _
             byval hwnd   as HWND, _
@@ -541,9 +595,12 @@ function PsStatusBar_WndProc( _
                 PsStatusBar_InvalidatePanel( pStatus, idx )                   ' newly hot
                 PsStatusBar_InvalidatePanel( pStatus, pStatus->nLastHotIdx )  ' previously hot
                 pStatus->nLastHotIdx = idx
-                ' Panel changed: pop the current tip so it re-queries TTN_GETDISPINFOW
-                ' for the new panel on the next hover.
-                if pStatus->hTooltip then SendMessage( pStatus->hTooltip, TTM_POP, 0, 0 )
+                ' Item changed. On the system backend this pops the tip so it re-queries
+                ' TTN_GETDISPINFOW for the new item; on PsTooltip it moves the tool index, which
+                ' hides a visible tip and re-resolves on the next dwell. One call site either way --
+                ' and the index is what lets the PsTooltip backend report WHICH item a tip is for,
+                ' which comctl32 never knew.
+                PsTipHost_SetToolIndex( @pStatus->tip, idx )
             end if
             m.idx = idx
             if pStatus->MessageCallback then
@@ -604,7 +661,7 @@ function PsStatusBar_WndProc( _
     case WM_NCDESTROY
         ' Delete the stored statusbar data pointer
         if pStatus then
-            if IsWindow(pStatus->hToolTip) then DestroyWindow(pStatus->hToolTip)
+            PsTipHost_Destroy( @pStatus->tip )
             delete(pStatus)
         end if
 
@@ -627,34 +684,17 @@ end function
 
 
 ' ========================================================================================
-' Create a tooltip that pulls its text on demand (LPSTR_TEXTCALLBACK) for the whole
-' control -- one tool covering the entire bar, not one per panel, because the panels are
-' painted rects rather than windows. TTN_GETDISPINFOW therefore goes to TOOLINFO.hwnd,
-' which is the control itself (NOT the parent form), and PsStatusBar_WndProc answers it
-' using the current hot panel.
+' Supply the tooltip text to the PsTooltip backend.
+'
+' This thunk is why PsTipHost never learns the text policy: PsStatusBar_ResolveTooltipText
+' stays the ONE place that decides what a tip says, and the system backend reaches the
+' same function by the other road (comctl32 asking through TTN_GETDISPINFOW), which is
+' why that arm stays in the WndProc.
 ' ========================================================================================
-private function PsStatusBar_AddTooltip( byval hCtrl as HWND ) as HWND
-    if IsWindow(hCtrl) = 0 then return 0
-    dim as HWND hTooltip = CreateWindowExW( 0, "tooltips_class32", "", _
-                                            WS_POPUP or TTS_ALWAYSTIP, _
-                                            0, 0, 0, 0, NULL, NULL, NULL, NULL )
-    if hTooltip = 0 then return 0
-    SetWindowPos( hTooltip, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE or SWP_NOSIZE or SWP_NOACTIVATE )
-
-    dim tti as TOOLINFOW
-    ' cbSize must match the running comctl32 version (see AfxNova AfxAddTooltip).
-    #ifdef __FB_64BIT__
-        if AfxComCtlVersion < 600 then tti.cbSize = 64 else tti.cbSize = 72
-    #else
-        if AfxComCtlVersion < 600 then tti.cbSize = 44 else tti.cbSize = 48
-    #endif
-    tti.uFlags   = TTF_IDISHWND or TTF_SUBCLASS
-    tti.hwnd     = hCtrl
-    tti.uId      = cast(UINT_PTR, hCtrl)
-    tti.hinst    = GetModuleHandleW(NULL)
-    tti.lpszText = LPSTR_TEXTCALLBACK
-    SendMessageW( hTooltip, TTM_ADDTOOLW, 0, cast(LPARAM, @tti) )
-    return hTooltip
+private function PsStatusBar_TipTextCallback( byval hTooltip as HWND, byval hAttached as HWND, _
+                                        byval idx as long ) as DWSTRING
+    dim as DWSTRING wszOut = PsStatusBar_ResolveTooltipText( GetStatusBarPointer(hAttached), cast(integer, idx) )
+    return wszOut
 end function
 
 
@@ -684,8 +724,11 @@ function PsStatusBar_Create( byval hWndParent as HWND, byval CtrlID as integer )
 
     ' Store the new pointer into the user data area of the statusbar window
     pWindow->UserData(0) = cast(LONG_PTR, pStatus)
+
+    ' AFTER UserData, not before: PsStatusBar_TipTextCallback resolves the control through
+    ' GetStatusBarPointer(hAttached), which reads exactly that slot.
+    PsTipHost_Ensure( @pStatus->tip, hCtrl, @PsStatusBar_TipTextCallback )
     
-    pStatus->hTooltip = PsStatusBar_AddTooltip( hCtrl )
 
     function = hCtrl
     

@@ -88,8 +88,8 @@ private sub Theme_BuildWndTable()
     ThemeWnd_Add( @HWND_FRMHELPVIEWER,         THSUB_HELPVIEWER,   true )
     ThemeWnd_Add( @HWND_FRMDEBUG,              THSUB_DEBUG,        true )
     ThemeWnd_Add( @HWND_FRMSEARCHSYMBOL,       THSUB_SEARCHSYMBOL, true )
-    ThemeWnd_Add( @HWND_FRMMAIN_TOPTABSFIND,   THSUB_TOPTABS,      true )
-    ThemeWnd_Add( @HWND_FRMMAIN_TOPTABSREPLACE, THSUB_TOPTABS,     true )
+    ThemeWnd_Add( @HWND_FRMMAIN_FIND,   THSUB_TOPTABS,      true )
+    ThemeWnd_Add( @HWND_FRMMAIN_REPLACE, THSUB_TOPTABS,     true )
 
     ' ---- leaf controls -----------------------------------------------------------------
     ' Most of these are children of frmMain and would be caught by its deep redraw, but only
@@ -104,6 +104,7 @@ private sub Theme_BuildWndTable()
     ThemeWnd_Add( @HWND_FRMFUNCTIONS,          THSUB_PANEL )
     ThemeWnd_Add( @HWND_FRMBOOKMARKS,          THSUB_PANEL )
     ThemeWnd_Add( @HWND_FRMPANEL_MENU,         THSUB_PANEL )
+    ThemeWnd_Add( @HWND_FRMPANEL_MENU_RIGHT,   THSUB_PANEL )
     ThemeWnd_Add( @HWND_FRMPANEL_VSCROLLBAR,   THSUB_PANEL )
     ThemeWnd_Add( @HWND_FRMAUTOCOMPLETE,       THSUB_AUTOCOMPLETE )
     ThemeWnd_Add( @HWND_FRMMAIN_SPLITV,        THSUB_EDITORCHROME )
@@ -199,16 +200,134 @@ end sub
 ''  The colour mapping is frmUserTools' and frmThemes' recipe, unchanged, so all the editor's
 ''  tips agree.
 ''
-sub Theme_ApplyTooltip( byval hTip as HWND )
-    if IsWindow(hTip) = 0 then exit sub
-    PsTooltip_SetFonts( hTip, ghFont(GUIFONT_11), ghFont(GUIFONTBOLD_11), ghFont(SYMBOLFONT_10) )
-    dim as PSTOOLTIP_COLORS tipc
+' ========================================================================================
+' Push the current theme into the top-tabs info bar's icon strip.
+' ========================================================================================
+' Called from the strip's own create (through the declaration in modThemeApply.bi) and again
+' on every THSUB_TOPTABS apply. Only the colours the CONTROL owns are set here: the cells
+' themselves are drawn by frmTopTabsInfo_IconPaint, which reads ghTopTabs live.
+private sub Theme_PushStripIcons( byval hPanel as HWND )
+    if IsWindow(hPanel) = 0 then exit sub
+    dim as PSICONPANEL_COLORS c
+    PsIconPanel_GetColors( hPanel, @c )
+    ' The strip's field colour, not the tab area's -- a hovered button inverts TO BackColor,
+    ' so idle is the hot one. Same inversion the bar has always drawn.
+    c.BackColor         = ghTopTabs.BackColorHot
+    c.ForeColor         = ghTopTabs.ForeColorHot
+    c.BackColorHot      = ghTopTabs.BackColor
+    c.ForeColorHot      = ghTopTabs.ForeColorHot
+    c.BackColorSelect   = ghTopTabs.BackColor
+    c.ForeColorSelect   = ghTopTabs.ForeColorHot
+    c.SeparatorColor    = ghEditor.Divider
+    PsIconPanel_SetColors( hPanel, @c )
+end sub
+
+sub Theme_ApplyTopTabsIcons()
+    Theme_PushStripIcons( ghTopTabsInfoIcons )
+end sub
+
+sub Theme_ApplyFindIcons()
+    Theme_PushStripIcons( ghFindIconsField )
+    Theme_PushStripIcons( ghFindIconsNav )
+    Theme_PushStripIcons( ghFindIconsClose )
+end sub
+
+sub Theme_ApplyReplaceIcons()
+    Theme_PushStripIcons( ghReplaceIconsField )
+    Theme_PushStripIcons( ghReplaceIconsActions )
+end sub
+
+
+' The one place the tooltip palette is built. Both doors below read it, so a hand-built tip
+' (frmFind, frmPanel, ...) and a control's PsTipHost-owned tip cannot come to disagree.
+' PRIVATE, and it has to be: modThemeApply.bi is included at tiko.bas:86, well before
+' PsTooltip.bi at 148, so a declaration naming PSTOOLTIP_COLORS cannot live in the header.
+private sub Theme_FillTooltipColors( byref tipc as PSTOOLTIP_COLORS )
     tipc.BackColor   = ghPopup.BackColor
     tipc.BorderColor = ghEditor.Divider
     tipc.ForeColor   = ghPopup.ForeColor
     tipc.TitleColor  = ghPanel.ForeColorHot
     tipc.GlyphColor  = ghUI.AccentColor
-    PsTooltip_SetColors( hTip, @tipc )
+end sub
+
+
+' Theme ONE tip -- the door the hand-built tips (frmFind, frmPanel, frmReplace, frmDebug,
+' frmTopTabsInfo) call right after creating theirs, and the one Theme_ApplyHoverTips uses
+' per control.
+'
+' It re-arms and then replays the defaults rather than setting colours and fonts itself.
+' That is deliberate: a tip created by a CONTROL is themed by PsTooltip_Create applying the
+' armed defaults, and a tip themed here used to set its own font triple a few lines away
+' from the one being armed. Two places, one look, and they had already been written with
+' different fonts once. Now there is a single source and no way for the two kinds of tip to
+' diverge.
+sub Theme_ApplyTooltip( byval hTip as HWND )
+    if IsWindow(hTip) = 0 then exit sub
+    Theme_ArmTooltipDefaults()
+    PsTooltip_ApplyDefaults( hTip )
+end sub
+
+
+' ========================================================================================
+' Theme_ArmTooltipDefaults
+'
+' The tips owned by a control through PsTipHost are created by the control, not by us, so
+' there is no call site at which to theme them. PsTooltip's process-wide defaults are the
+' documented door: Create applies whatever is armed here to every new tip.
+'
+' MUST run before any control switches to PSTIP_MODE_PS -- an already-created tip is NOT
+' retro-fitted (that is what Theme_ApplyTooltip is for, and what Theme_ApplyHoverTips does
+' on a theme change).
+'
+' The max width is armed here because PsTooltip wraps natively. It replaces the hand-sent
+' TTM_SETMAXTIPWIDTH that frmFunctions and frmTopTabsMenu used to push at the comctl32 tip
+' -- frmFunctions did it from inside its tooltip callback, i.e. on every tip.
+' ========================================================================================
+sub Theme_ArmTooltipDefaults()
+    dim as PSTOOLTIP_COLORS tipc
+    Theme_FillTooltipColors( tipc )
+    PsTooltip_SetDefaultColors( @tipc )
+    ' THE SYSTEM'S OWN TOOLTIP FACE (SPI_GETNONCLIENTMETRICS lfStatusFont), built once in
+    ' frmMain and guaranteed non-zero there, so there is no fallback branch to write here.
+    ' A tip drawn in a different face and size from every other tip on the machine reads as
+    ' broken -- the same argument PsTooltip already makes for deriving its delays from
+    ' GetDoubleClickTime rather than picking a number.
+    '
+    ' This is the single line to change if the interactive pass says the system size is wrong:
+    ' swapping in ghFont(GUIFONT_10)/ghFont(GUIFONTBOLD_10) restores the hand-picked 10pt.
+    '
+    ' The glyph stays at SYMBOLFONT_10 -- it is an icon, not text, and it is sized to the
+    ' tip's glyph cell rather than to the message.
+    PsTooltip_SetDefaultFonts( ghFont(TOOLTIPFONT), ghFont(TOOLTIPFONTBOLD), ghFont(SYMBOLFONT_10) )
+    PsTooltip_SetDefaultMaxWidth( AfxScaleX(300) )
+
+    ' Half the hover delay. PsTooltip's own default is comctl32's derivation,
+    ' GetDoubleClickTime() -- so this stays tied to the machine's setting rather than
+    ' becoming a hard 250, and a user on a slow double-click still gets a proportional wait.
+    ' Only the INITIAL delay is armed: -1 leaves auto-pop and reshow on that same derivation.
+    dim as long nDbl = GetDoubleClickTime()
+    if nDbl <= 0 then nDbl = 500
+    PsTooltip_SetDefaultDelays( nDbl \ 2, -1, -1 )
+end sub
+
+
+' ========================================================================================
+' Theme_ApplyHoverTips  -- re-theme the PsTipHost-owned tips of the seven adopting controls
+'
+' Each accessor answers 0 while that control is on the system backend, and
+' Theme_ApplyTooltip ignores a non-window, so this is safe for controls that never opted
+' in and for those not yet created.
+' ========================================================================================
+sub Theme_ApplyHoverTips()
+    ' No arm call here: Theme_ApplyTooltip re-arms from the current theme itself.
+    Theme_ApplyTooltip( PsListTree_GetPsTooltipHandle( HWND_FRMEXPLORER ) )
+    Theme_ApplyTooltip( PsListTree_GetPsTooltipHandle( HWND_FRMFUNCTIONS ) )
+    Theme_ApplyTooltip( PsListTree_GetPsTooltipHandle( HWND_FRMBOOKMARKS ) )
+    Theme_ApplyTooltip( PsIconPanel_GetPsTooltipHandle( HWND_FRMPANEL_MENU ) )
+    Theme_ApplyTooltip( PsIconPanel_GetPsTooltipHandle( HWND_FRMPANEL_MENU_RIGHT ) )
+    Theme_ApplyTooltip( PsTabBar_GetPsTooltipHandle( HWND_FRMMAIN_TOPTABS ) )
+    Theme_ApplyTooltip( PsStatusBar_GetPsTooltipHandle( HWND_FRMMAIN_STATUSBAR ) )
+    Theme_ApplyTooltip( PsStatusBar_GetPsTooltipHandle( HWND_FRMMAIN_TOPTABSMENU ) )
 end sub
 
 
@@ -223,6 +342,11 @@ sub Theme_ApplySubsystems( byval nMask as ulong )
     ' a second mapping from subsystem back to fields, which is exactly the duplicate table
     ' this design exists to avoid.
     Theme_FillGlobals()
+
+    ' Unconditional for the same reason Theme_FillGlobals is: the seven hover tips belong to
+    ' five different subsystems, so gating them would need a second subsystem->control map.
+    ' Both halves are cheap and both are no-ops for a control that does not exist yet.
+    Theme_ApplyHoverTips()
 
     ' ---- push: the Ps* controls that copied their colours ------------------------------
     if (nMask and (THSUB_MENUBAR or THSUB_POPUP)) <> 0 then
@@ -256,8 +380,7 @@ sub Theme_ApplySubsystems( byval nMask as ulong )
         Theme_PushPanelList( HWND_FRMEXPLORER )
         Theme_PushPanelList( HWND_FRMFUNCTIONS )
         Theme_PushPanelList( HWND_FRMBOOKMARKS )
-        if IsWindow(HWND_FRMPANEL_MENU) then _
-            PsStatusBar_SetBackColor( HWND_FRMPANEL_MENU, ghPanel.BackColor )
+        frmPanelMenu_ApplyTheme()
     end if
 
     if (nMask and THSUB_STATUSBAR) <> 0 then
@@ -272,12 +395,15 @@ sub Theme_ApplySubsystems( byval nMask as ulong )
         end if
         if IsWindow(HWND_FRMMAIN_TOPTABSMENU) then _
             PsStatusBar_SetBackColor( HWND_FRMMAIN_TOPTABSMENU, ghTopTabs.BackColor )
+        Theme_ApplyTopTabsIcons()
+        Theme_ApplyFindIcons()
+        Theme_ApplyReplaceIcons()
         ' The Find / Replace strips. Both are persistent once created, and their PsTextBoxes
         ' copy colours, so an invalidate alone would leave them on the old theme.
-        Theme_PushTopTabsTextBox( GetDlgItem( HWND_FRMMAIN_TOPTABSFIND, _
-                                              IDC_FRMTOPTABSFIND_TXTFIND ) )
-        Theme_PushTopTabsTextBox( GetDlgItem( HWND_FRMMAIN_TOPTABSREPLACE, _
-                                              IDC_FRMTOPTABSREPLACE_TXTREPLACE ) )
+        Theme_PushTopTabsTextBox( GetDlgItem( HWND_FRMMAIN_FIND, _
+                                              IDC_FRMFIND_TXTFIND ) )
+        Theme_PushTopTabsTextBox( GetDlgItem( HWND_FRMMAIN_REPLACE, _
+                                              IDC_FRMREPLACE_TXTREPLACE ) )
     end if
 
     if (nMask and THSUB_HELPVIEWER) <> 0 then

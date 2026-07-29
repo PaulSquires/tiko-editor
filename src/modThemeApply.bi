@@ -58,6 +58,25 @@ declare function Theme_PreviewFile( byval wszShortFilename as DWSTRING ) as bool
 ' tiko.bas:86, well before PsTooltip.bi at 148 -- the type does not exist yet here.
 declare sub Theme_ApplyTooltip( byval hTip as HWND )
 
+' Arm PsTooltip's process-wide defaults from the current theme, and re-theme the tips the
+' seven PsTipHost-adopting controls own. Neither names a PsTooltip type, so both are
+' declarable here despite the include-order note above.
+declare sub Theme_ArmTooltipDefaults()
+declare sub Theme_ApplyHoverTips()
+
+' The top-tabs info bar's icon strip. Its cells are drawn by frmTopTabsInfo_IconPaint, which
+' reads ghTopTabs live, so this only has to push the colours the CONTROL owns -- the panel
+' background behind the cells, and the disabled/separator colours it would use if the built-in
+' painter ever ran. Declared here (not called directly from frmTopTabsInfo.inc's own create,
+' which is at tiko.bas:160, ahead of this module's implementation at :221).
+declare sub Theme_ApplyTopTabsIcons()
+
+' The same, for the Find bar's three icon strips (field / nav / close).
+declare sub Theme_ApplyFindIcons()
+
+' The same, for the Replace bar's two icon strips (field / actions).
+declare sub Theme_ApplyReplaceIcons()
+
 ' Coalescing request. Accumulates the mask and (re)arms the timer; the work happens on the
 ' next tick. Dragging inside a colour picker fires hundreds of these a second.
 declare sub Theme_RequestApply( byval nMask as ulong )

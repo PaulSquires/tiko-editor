@@ -210,11 +210,15 @@ dim shared as HWND HWND_FRMKEYBOARD, HWND_FRMKEYBOARDEDIT
 dim shared as HWND HWND_FRMDEBUG, HWND_FRMDEBUG_OUTPUT
 
 dim shared as HWND HWND_FRMMAIN_TOPTABS, HWND_FRMMAIN_TOPTABSMENU
-dim shared as HWND HWND_FRMMAIN_TOPTABSINFO, HWND_FRMMAIN_TOPTABSFIND, HWND_FRMMAIN_TOPTABSREPLACE
+dim shared as HWND HWND_FRMMAIN_TOPTABSINFO, HWND_FRMMAIN_FIND, HWND_FRMMAIN_REPLACE
 dim shared as HWND HWND_FRMEXPLORER
 dim shared as HWND HWND_FRMFUNCTIONS
 dim shared as HWND HWND_FRMBOOKMARKS
 dim shared as HWND HWND_FRMPANEL, HWND_FRMPANEL_MENU, HWND_FRMPANEL_VSCROLLBAR
+' The panel menu is TWO PsIconPanels rather than one bar with a spring: PsIconPanel
+' declares its spacing and justifies the whole run as a block, so the left-hand and
+' right-hand icon groups are separate controls sharing the strip.
+dim shared as HWND HWND_FRMPANEL_MENU_RIGHT
 dim shared as HWND HWND_FRMAUTOCOMPLETE
 dim shared as HWND HWND_FRMEDITOR_HSCROLLBAR(1)
 dim shared as HWND HWND_FRMEDITOR_VSCROLLBAR(1)
@@ -268,9 +272,29 @@ redim shared LL(any) as wstring * MAX_PATH
 ' two lowercase letters standing in for an app icon, and Consolas gives them the even weight
 ' and the flat terminals that read as a logotype. Segoe UI at the same size reads as a word.
 #DEFINE FIXEDFONT_26     13
-#DEFINE MAXFONTS         14
+' The SYSTEM tooltip face, read from SPI_GETNONCLIENTMETRICS rather than named here -- see
+' Tooltip_GetSystemFont. Unlike every other entry in this table these are not a face plus a
+' size we chose; they are whatever the user's Windows theme says a tip is drawn in, so on a
+' machine with a non-default appearance setting they will not be Segoe UI 9pt.
+' They live in ghFont() so the existing DeleteObject loop frees them.
+#DEFINE TOOLTIPFONT      14
+#DEFINE TOOLTIPFONTBOLD  15
+#DEFINE MAXFONTS         16
 
 dim shared ghFont(MAXFONTS) as HFONT
+
+
+' What SPI_GETNONCLIENTMETRICS says a tooltip is drawn in. pointSize is what CWindow.CreateFont
+' wants: pixelHeight is DPI-dependent and points are not, so the conversion here is what keeps
+' this correct on a 175% display.
+type TIKO_TOOLTIPFONT
+    wszFaceName  as DWSTRING
+    pointSize    as long = 0     ' derived from pixelHeight and the screen's LOGPIXELSY
+    pixelHeight  as long = 0     ' abs(lfHeight), as the system reported it
+    lfWeight     as long = 0     ' the raw LOGFONT weight, not a boolean
+    isBold       as boolean = false
+    isItalic     as boolean = false
+end type
 
 
 ''
@@ -298,23 +322,18 @@ type FINDREPLACE_TYPE
     nSearchAllOpenDocs  as long
     nSearchProject      as long
     wszResults          as DWSTRING = "0/0"
-    bExpanded           as boolean = false
     bShowInfoPanel      as boolean = true
     bShowFindPanel      as boolean = false
     bShowReplacePanel   as boolean = false
     bProjectReplaceActive as boolean = false
-    rcMatchCase         as RECT
-    rcWholeWord         as RECT
-    rcToggle            as RECT
-    rcSelection         as RECT
-    rcUpArrow           as RECT  
-    rcDownArrow         as RECT  
-    rcDividerLine       as RECT  
+    ' The Find bar's seven icon rects (Match Case, Whole Word, Toggle Replace, Selection,
+    ' Prev, Next, Close) and its divider are three PsIconPanels now (frmFind.inc) -- the
+    ' controls own those cells, so there is nothing left for the host to store. rcResults
+    ' stays: the results count is still painted by the bar itself.
+    ' ...and the Replace bar's three (Preserve Case, Replace, Replace All) are two more
+    ' (frmReplace.inc). rcResults is the only icon-strip rect left in this type, because the
+    ' results count is still painted by the Find bar itself.
     rcResults           as RECT
-    rcPreserve          as RECT 
-    rcReplace           as RECT 
-    rcReplaceAll        as RECT 
-    rcClose             as RECT 
 end type
 dim shared gFind as FINDREPLACE_TYPE
 dim shared gFindInFiles as FINDREPLACE_TYPE

@@ -4,6 +4,8 @@
 ''   
 
 #include once "PsTabBar.bi"
+' The tooltip backend switch, pulled in here so a host needs no extra include line.
+#include once "PsTipHost.inc"
 
 
 private function GetTabBarPointer( byval hTabBar as HWND ) as PSTABBAR ptr
@@ -222,10 +224,68 @@ end function
 ' ========================================================================================
 ' Set the tooltip hovertime for the custom tab bar.
 ' ========================================================================================
+' NEW: this control's tooltip handle used to be private, so a host could not
+' reach the tip at all -- no TTM_*, and no way to see whether one existed.
+' The comctl32 handle, and 0 while on PsTooltip -- the honest answer, since a TTM_* sent
+' to a PsTooltip window is silently ignored.
+function PsTabBar_GetTooltipHandle( byval hTabBar as HWND ) as HWND
+    dim as PSTABBAR ptr pTabBar = GetTabBarPointer(hTabBar)
+    if pTabBar = 0 then return 0
+    return PsTipHost_SysHandle( @pTabBar->tip )
+end function
+
+' The PsTooltip window, and 0 while on the system backend. This is the door to PsTooltip's
+' own SetColors/SetFonts/SetStyle/SetMaxWidth/SetTitle/SetGlyph, none of which is mirrored
+' on this control.
+function PsTabBar_GetPsTooltipHandle( byval hTabBar as HWND ) as HWND
+    dim as PSTABBAR ptr pTabBar = GetTabBarPointer(hTabBar)
+    if pTabBar = 0 then return 0
+    return PsTipHost_PsHandle( @pTabBar->tip )
+end function
+
+function PsTabBar_SetTooltipMode( byval hTabBar as HWND, byval nMode as long ) as boolean
+    dim as PSTABBAR ptr pTabBar = GetTabBarPointer(hTabBar)
+    if pTabBar = 0 then return false
+    return PsTipHost_SetMode( @pTabBar->tip, nMode )
+end function
+
+function PsTabBar_GetTooltipMode( byval hTabBar as HWND ) as long
+    dim as PSTABBAR ptr pTabBar = GetTabBarPointer(hTabBar)
+    if pTabBar = 0 then return PSTIP_MODE_SYSTEM
+    return PsTipHost_GetMode( @pTabBar->tip )
+end function
+
+' The three delays go through PsTipHost, which STORES them as well as pushing them, so a
+' hover time set before a mode switch is still in force after it. Pushing straight at the
+' live tooltip loses it at the switch -- and the tip still appears, just on a different
+' beat, with nothing reporting the change.
+' NOTE the `as integer` -- this control declared its hover time that way from the start.
+' Left as it is rather than harmonised with the family's `as long`: widening a shipped public
+' signature is an API change, not a tidy-up.
+'
+' AND NOTE WHAT THIS NOW DOES THAT IT DID NOT. Before, this setter ONLY stored the field for
+' TrackMouseEvent -- it never touched the tooltip, so this control's tip delay was not
+' settable at all. It now drives both.
 sub PsTabBar_SetHoverTime( byval hTabBar as HWND, byval milliseconds as integer )
     dim as PSTABBAR ptr pTabBar = GetTabBarPointer(hTabBar)
-    if pTabBar = null then return 
+    if pTabBar = 0 then exit sub
+    ' The field is STILL READ by TrackMouseEvent as dwHoverTime, so this setter
+    ' drives the hot-tracking dwell as well as the tooltip. Dropping it here would
+    ' silently change when the control considers itself hot.
     pTabBar->HoverTime = milliseconds
+    PsTipHost_SetDelay( @pTabBar->tip, TTDT_INITIAL, milliseconds )
+end sub
+
+sub PsTabBar_SetAutoPopTime( byval hTabBar as HWND, byval milliseconds as long )
+    dim as PSTABBAR ptr pTabBar = GetTabBarPointer(hTabBar)
+    if pTabBar = 0 then exit sub
+    PsTipHost_SetDelay( @pTabBar->tip, TTDT_AUTOPOP, milliseconds )
+end sub
+
+sub PsTabBar_SetReshowTime( byval hTabBar as HWND, byval milliseconds as long )
+    dim as PSTABBAR ptr pTabBar = GetTabBarPointer(hTabBar)
+    if pTabBar = 0 then exit sub
+    PsTipHost_SetDelay( @pTabBar->tip, TTDT_RESHOW, milliseconds )
 end sub
 
 
@@ -839,9 +899,12 @@ function PsTabBar_WndProc( _
                     PsTabBar_InvalidateTab( pTabBar, pTabBar->nLastHotIdx )  ' previously hot
                     pTabBar->nLastHotIdx = idx
                     pTabBar->bLastHotClose = hotClose
-                    ' Tab changed: pop the current tip so it re-queries TTN_GETDISPINFOW
-                    ' for the new tab on the next hover.
-                    if pTabBar->hTooltip then SendMessage( pTabBar->hTooltip, TTM_POP, 0, 0 )
+                    ' Item changed. On the system backend this pops the tip so it re-queries
+                    ' TTN_GETDISPINFOW for the new item; on PsTooltip it moves the tool index, which
+                    ' hides a visible tip and re-resolves on the next dwell. One call site either way --
+                    ' and the index is what lets the PsTooltip backend report WHICH item a tip is for,
+                    ' which comctl32 never knew.
+                    PsTipHost_SetToolIndex( @pTabBar->tip, idx )
                 elseif hotClose <> pTabBar->bLastHotClose then
                     ' Same tab, but the cursor crossed the close rect's edge: the X's
                     ' rendering changes, so repaint just this tab.
@@ -1097,7 +1160,7 @@ function PsTabBar_WndProc( _
     case WM_NCDESTROY
         ' Delete the stored tab data pointer
         if pTabBar then
-            if IsWindow(pTabBar->hToolTip) then DestroyWindow(pTabBar->hToolTip)
+            PsTipHost_Destroy( @pTabBar->tip )
             delete(pTabBar)
         end if
 
@@ -1120,34 +1183,17 @@ end function
 
 
 ' ========================================================================================
-' Create a tooltip that pulls its text on demand (LPSTR_TEXTCALLBACK) for the whole
-' control -- one tool covering the entire bar, not one per tab, because the tabs are
-' painted rects rather than windows. TTN_GETDISPINFOW therefore goes to TOOLINFO.hwnd,
-' which is the control itself (NOT the parent form), and PsTabBar_WndProc answers it
-' using the current hot tab.
+' Supply the tooltip text to the PsTooltip backend.
+'
+' This thunk is why PsTipHost never learns the text policy: PsTabBar_ResolveTooltipText
+' stays the ONE place that decides what a tip says, and the system backend reaches the
+' same function by the other road (comctl32 asking through TTN_GETDISPINFOW), which is
+' why that arm stays in the WndProc.
 ' ========================================================================================
-private function PsTabBar_AddTooltip( byval hCtrl as HWND ) as HWND
-    if IsWindow(hCtrl) = 0 then return 0
-    dim as HWND hTooltip = CreateWindowExW( 0, "tooltips_class32", "", _
-                                            WS_POPUP or TTS_ALWAYSTIP, _
-                                            0, 0, 0, 0, NULL, NULL, NULL, NULL )
-    if hTooltip = 0 then return 0
-    SetWindowPos( hTooltip, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE or SWP_NOSIZE or SWP_NOACTIVATE )
-
-    dim tti as TOOLINFOW
-    ' cbSize must match the running comctl32 version (see AfxNova AfxAddTooltip).
-    #ifdef __FB_64BIT__
-        if AfxComCtlVersion < 600 then tti.cbSize = 64 else tti.cbSize = 72
-    #else
-        if AfxComCtlVersion < 600 then tti.cbSize = 44 else tti.cbSize = 48
-    #endif
-    tti.uFlags   = TTF_IDISHWND or TTF_SUBCLASS
-    tti.hwnd     = hCtrl
-    tti.uId      = cast(UINT_PTR, hCtrl)
-    tti.hinst    = GetModuleHandleW(NULL)
-    tti.lpszText = LPSTR_TEXTCALLBACK
-    SendMessageW( hTooltip, TTM_ADDTOOLW, 0, cast(LPARAM, @tti) )
-    return hTooltip
+private function PsTabBar_TipTextCallback( byval hTooltip as HWND, byval hAttached as HWND, _
+                                        byval idx as long ) as DWSTRING
+    dim as DWSTRING wszOut = PsTabBar_ResolveTooltipText( GetTabBarPointer(hAttached), cast(integer, idx) )
+    return wszOut
 end function
 
 
@@ -1183,8 +1229,11 @@ function PsTabBar_Create( byval hWndParent as HWND, byval CtrlID as integer ) as
 
     ' Store the new pointer into the user data area of the tab window
     pWindow->UserData(0) = cast(LONG_PTR, pTabBar)
+
+    ' AFTER UserData, not before: PsTabBar_TipTextCallback resolves the control through
+    ' GetTabBarPointer(hAttached), which reads exactly that slot.
+    PsTipHost_Ensure( @pTabBar->tip, hCtrl, @PsTabBar_TipTextCallback )
     
-    pTabBar->hTooltip = PsTabBar_AddTooltip( hCtrl )
 
     function = hCtrl
     

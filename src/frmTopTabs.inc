@@ -231,6 +231,7 @@ function frmTopTabs_Show( byval hwndParent as HWND ) as LRESULT
     PsTabBar_SetPaintCallback( hCtrl, @frmTopTabs_PaintCallback )
     PsTabBar_SetMessageCallback( hCtrl, @frmTopTabs_MessageCallback )
     PsTabBar_SetTooltipCallback( hCtrl, @frmTopTabs_TooltipCallback )
+    PsTabBar_SetTooltipMode( hCtrl, PSTIP_MODE_PS )
     PsTabBar_SetSelChangeCallback( hCtrl, @frmTopTabs_SelChangeCallback )
     PsTabBar_SetCloseCallback( hCtrl, @frmTopTabs_CloseCallback )
     PsTabBar_SetReorderCallback( hCtrl, @frmTopTabs_ReorderCallback )
