@@ -128,6 +128,9 @@ private function frmPanelMenu_CreateBar( _
     PsIconPanel_SetPaintItemCallback( hCtrl, @frmPanelMenu_PaintCallback )
     PsIconPanel_SetClickCallback( hCtrl, @frmPanelMenu_ClickCallback )
     PsIconPanel_SetTooltipCallback( hCtrl, @frmPanelMenu_TooltipCallback )
+    ' Owner-drawn tips. The text policy above is untouched -- PsTipHost switches how a tip
+    ' is drawn and driven, never what it says.
+    PsIconPanel_SetTooltipMode( hCtrl, PSTIP_MODE_PS )
     PsIconPanel_SetFont( hCtrl, ghFont(SYMBOLFONT_10) )
     PsIconPanel_SetJustify( hCtrl, nJustify )
 

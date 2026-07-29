@@ -272,9 +272,29 @@ redim shared LL(any) as wstring * MAX_PATH
 ' two lowercase letters standing in for an app icon, and Consolas gives them the even weight
 ' and the flat terminals that read as a logotype. Segoe UI at the same size reads as a word.
 #DEFINE FIXEDFONT_26     13
-#DEFINE MAXFONTS         14
+' The SYSTEM tooltip face, read from SPI_GETNONCLIENTMETRICS rather than named here -- see
+' Tooltip_GetSystemFont. Unlike every other entry in this table these are not a face plus a
+' size we chose; they are whatever the user's Windows theme says a tip is drawn in, so on a
+' machine with a non-default appearance setting they will not be Segoe UI 9pt.
+' They live in ghFont() so the existing DeleteObject loop frees them.
+#DEFINE TOOLTIPFONT      14
+#DEFINE TOOLTIPFONTBOLD  15
+#DEFINE MAXFONTS         16
 
 dim shared ghFont(MAXFONTS) as HFONT
+
+
+' What SPI_GETNONCLIENTMETRICS says a tooltip is drawn in. pointSize is what CWindow.CreateFont
+' wants: pixelHeight is DPI-dependent and points are not, so the conversion here is what keeps
+' this correct on a 175% display.
+type TIKO_TOOLTIPFONT
+    wszFaceName  as DWSTRING
+    pointSize    as long = 0     ' derived from pixelHeight and the screen's LOGPIXELSY
+    pixelHeight  as long = 0     ' abs(lfHeight), as the system reported it
+    lfWeight     as long = 0     ' the raw LOGFONT weight, not a boolean
+    isBold       as boolean = false
+    isItalic     as boolean = false
+end type
 
 
 ''

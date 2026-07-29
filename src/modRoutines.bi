@@ -70,3 +70,9 @@ declare function ListBox_AddTabbedRow( byval hCtl as HWND, byval wszTabbed as DW
                                             
 
 
+
+
+' The system tooltip face (SPI_GETNONCLIENTMETRICS lfStatusFont). FALSE = unavailable, and
+' the struct is left untouched; see modRoutines.inc for why pointSize, not pixelHeight, is
+' the field to build a font from.
+declare function Tooltip_GetSystemFont( byref info as TIKO_TOOLTIPFONT ) as boolean

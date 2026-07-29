@@ -4,6 +4,11 @@
 ''
 
 #include once "PsIconPanel.bi"
+' The tooltip backend switch, pulled in here so a host needs no extra include line.
+#include once "PsTipHost.inc"
+' Image loader implementation, pulled in here so a host needs no extra include line
+' (#include once guards it if the host includes it too).
+#include once "PsImage.inc"
 
 
 function GetIconPanelPointer( byval hIconPanel as HWND ) as PSICONPANEL ptr
@@ -165,9 +170,43 @@ function PsIconPanel_SetGlyph( byval hIconPanel as HWND, byval idx as long, byva
     dim as PSICONPANEL ptr pIcon = GetIconPanelPointer(hIconPanel)
     if pIcon = null then return false
     if pIcon->IsValidItem(idx) = false then return false
-    pIcon->GetItem(idx)->wszGlyph = Glyph
+    dim as PSICONPANEL_ITEM ptr pit = pIcon->GetItem(idx)
+    pit->wszGlyph = Glyph
+    ' Glyph OR image: setting an actual glyph frees any image on this item.
+    if (len( Glyph ) > 0) andalso (pit->pImage <> 0) then
+        delete pit->pImage : pit->pImage = 0
+    end if
     PsIconPanel_InvalidateItem( pIcon, idx )
     return true
+end function
+
+' ========================================================================================
+' Load an image into an item's cell, replacing its glyph. "" removes it. TRUE on a
+' successful load; on failure the empty image is dropped so nothing draws.
+' ========================================================================================
+function PsIconPanel_SetImage( byval hIconPanel as HWND, byval idx as long, byval Path as DWSTRING ) as boolean
+    dim as PSICONPANEL ptr pIcon = GetIconPanelPointer(hIconPanel)
+    if pIcon = null then return false
+    if pIcon->IsValidItem(idx) = false then return false
+    dim as PSICONPANEL_ITEM ptr pit = pIcon->GetItem(idx)
+
+    if len( Path ) = 0 then
+        ' Removal SUCCEEDS. It used to return FALSE, which a caller could not tell apart from
+        ' a load that failed -- so "did that do what I asked" had no answer on this path.
+        if pit->pImage then delete pit->pImage : pit->pImage = 0
+        PsIconPanel_InvalidateItem( pIcon, idx )
+        return true
+    end if
+
+    if pit->pImage = 0 then pit->pImage = new PsImage
+    dim as long bOK = pit->pImage->Load( Path )
+    if bOK = 0 then
+        delete pit->pImage : pit->pImage = 0
+    else
+        pit->wszGlyph = ""                 ' glyph OR image
+    end if
+    PsIconPanel_InvalidateItem( pIcon, idx )
+    return (bOK <> 0)
 end function
 
 
@@ -506,20 +545,60 @@ end function
 ' ========================================================================================
 ' Retrieve the handle of the panel's tooltip control.
 ' ========================================================================================
+' The comctl32 handle, and 0 while on PsTooltip -- the honest answer, since a TTM_* sent
+' to a PsTooltip window is silently ignored.
 function PsIconPanel_GetTooltipHandle( byval hIconPanel as HWND ) as HWND
     dim as PSICONPANEL ptr pIcon = GetIconPanelPointer(hIconPanel)
     if pIcon = null then return 0
-    return pIcon->hTooltip
+    return PsTipHost_SysHandle( @pIcon->tip )
 end function
 
 
-' ========================================================================================
-' Set the tooltip hovertime for the custom icon panel control.
-' ========================================================================================
+' The PsTooltip window, and 0 while on the system backend. This is the door to PsTooltip's
+' own SetColors/SetFonts/SetStyle/SetMaxWidth/SetTitle/SetGlyph, none of which is mirrored
+' on this control.
+function PsIconPanel_GetPsTooltipHandle( byval hIconPanel as HWND ) as HWND
+    dim as PSICONPANEL ptr pIcon = GetIconPanelPointer(hIconPanel)
+    if pIcon = 0 then return 0
+    return PsTipHost_PsHandle( @pIcon->tip )
+end function
+
+function PsIconPanel_SetTooltipMode( byval hIconPanel as HWND, byval nMode as long ) as boolean
+    dim as PSICONPANEL ptr pIcon = GetIconPanelPointer(hIconPanel)
+    if pIcon = 0 then return false
+    return PsTipHost_SetMode( @pIcon->tip, nMode )
+end function
+
+function PsIconPanel_GetTooltipMode( byval hIconPanel as HWND ) as long
+    dim as PSICONPANEL ptr pIcon = GetIconPanelPointer(hIconPanel)
+    if pIcon = 0 then return PSTIP_MODE_SYSTEM
+    return PsTipHost_GetMode( @pIcon->tip )
+end function
+
+' The three delays go through PsTipHost, which STORES them as well as pushing them, so a
+' hover time set before a mode switch is still in force after it. Pushing straight at the
+' live tooltip loses it at the switch -- and the tip still appears, just on a different
+' beat, with nothing reporting the change.
 sub PsIconPanel_SetHoverTime( byval hIconPanel as HWND, byval milliseconds as long )
     dim as PSICONPANEL ptr pIcon = GetIconPanelPointer(hIconPanel)
-    if pIcon = null then return
+    if pIcon = 0 then exit sub
+    ' The field is STILL READ by TrackMouseEvent as dwHoverTime, so this setter
+    ' drives the hot-tracking dwell as well as the tooltip. Dropping it here would
+    ' silently change when the control considers itself hot.
     pIcon->HoverTime = milliseconds
+    PsTipHost_SetDelay( @pIcon->tip, TTDT_INITIAL, milliseconds )
+end sub
+
+sub PsIconPanel_SetAutoPopTime( byval hIconPanel as HWND, byval milliseconds as long )
+    dim as PSICONPANEL ptr pIcon = GetIconPanelPointer(hIconPanel)
+    if pIcon = 0 then exit sub
+    PsTipHost_SetDelay( @pIcon->tip, TTDT_AUTOPOP, milliseconds )
+end sub
+
+sub PsIconPanel_SetReshowTime( byval hIconPanel as HWND, byval milliseconds as long )
+    dim as PSICONPANEL ptr pIcon = GetIconPanelPointer(hIconPanel)
+    if pIcon = 0 then exit sub
+    PsTipHost_SetDelay( @pIcon->tip, TTDT_RESHOW, milliseconds )
 end sub
 
 
@@ -659,7 +738,10 @@ private sub PsIconPanel_PaintItemDefault( _
         b->SetColors( foreclr, backclr )
         b->PaintRect( @.rc )             ' fill the WHOLE cell, padding included
 
-        if len(.wszGlyph) then
+        ' Image first, else glyph. Both draw into the same declared icon cell (rcIcon).
+        if (.pImage <> 0) andalso (.pImage->IsValid() <> 0) then
+            b->PaintImage( .pImage->Image(), @.rcIcon, PS_IMGFIT_ASPECT )
+        elseif len(.wszGlyph) then
             b->SetFont( pIcon->hIconFont )
             ' PaintText already adds DT_VCENTER / DT_SINGLELINE / DT_NOPREFIX.
             b->PaintText( .wszGlyph, @.rcIcon, DT_CENTER )
@@ -721,6 +803,8 @@ function PsIconPanel_OnPaint( byval hwnd as HWND ) as LRESULT
             p.isPressed  = isPressed
             p.isEnabled  = pIcon->items(i).isEnabled
             p.wszGlyph   = pIcon->items(i).wszGlyph
+            dim as PSICONPANEL_ITEM ptr pit = @pIcon->items(i)
+            p.pImage     = iif( (pit->pImage <> 0) andalso (pit->pImage->IsValid() <> 0), pit->pImage->Image(), cast( CGpImage ptr, 0 ) )
             pIcon->PaintItemCallback( @p )
         else
             PsIconPanel_PaintItemDefault( pIcon, @b, i, isHot, isPressed )
@@ -846,9 +930,12 @@ function PsIconPanel_WndProc( _
                 PsIconPanel_InvalidateItem( pIcon, idx )                 ' newly hot
                 PsIconPanel_InvalidateItem( pIcon, pIcon->nLastHotIdx )  ' previously hot
                 pIcon->nLastHotIdx = idx
-                ' Item changed: pop the current tip so it re-queries TTN_GETDISPINFOW for
-                ' the new item on the next hover.
-                if pIcon->hTooltip then SendMessage( pIcon->hTooltip, TTM_POP, 0, 0 )
+                ' Item changed. On the system backend this pops the tip so it re-queries
+                ' TTN_GETDISPINFOW for the new item; on PsTooltip it moves the tool index,
+                ' which hides a visible tip and re-resolves on the next dwell. One call site
+                ' either way -- and the index is what makes the PsTooltip backend able to
+                ' report WHICH item a tip is for, which comctl32 never knew.
+                PsTipHost_SetToolIndex( @pIcon->tip, idx )
             end if
             m.idx = idx
             if pIcon->MessageCallback then
@@ -994,7 +1081,11 @@ function PsIconPanel_WndProc( _
     case WM_NCDESTROY
         ' Delete the stored icon panel data pointer
         if pIcon then
-            if IsWindow(pIcon->hToolTip) then DestroyWindow(pIcon->hToolTip)
+            PsTipHost_Destroy( @pIcon->tip )
+            ' Free any per-item images we own (raw pointers, not auto-freed by delete pIcon).
+            for i as long = 0 to pIcon->itemCount - 1
+                if pIcon->items(i).pImage then delete pIcon->items(i).pImage : pIcon->items(i).pImage = 0
+            next
             delete(pIcon)
         end if
 
@@ -1017,34 +1108,17 @@ end function
 
 
 ' ========================================================================================
-' Create a tooltip that pulls its text on demand (LPSTR_TEXTCALLBACK) for the whole
-' control -- one tool covering the entire panel, not one per item, because the items are
-' painted rects rather than windows. TTN_GETDISPINFOW therefore goes to TOOLINFO.hwnd,
-' which is the control itself (NOT the parent form), and PsIconPanel_WndProc answers it
-' using the current hot item.
+' Supply the tooltip text to the PsTooltip backend.
+'
+' This thunk is why PsTipHost never learns the text policy: PsIconPanel_ResolveTooltipText
+' stays the ONE place that decides what a tip says, and the system backend reaches the
+' same function by the other road (comctl32 asking through TTN_GETDISPINFOW), which is
+' why that arm stays in the WndProc.
 ' ========================================================================================
-private function PsIconPanel_AddTooltip( byval hCtrl as HWND ) as HWND
-    if IsWindow(hCtrl) = 0 then return 0
-    dim as HWND hTooltip = CreateWindowExW( 0, "tooltips_class32", "", _
-                                            WS_POPUP or TTS_ALWAYSTIP, _
-                                            0, 0, 0, 0, NULL, NULL, NULL, NULL )
-    if hTooltip = 0 then return 0
-    SetWindowPos( hTooltip, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE or SWP_NOSIZE or SWP_NOACTIVATE )
-
-    dim tti as TOOLINFOW
-    ' cbSize must match the running comctl32 version (see AfxNova AfxAddTooltip).
-    #ifdef __FB_64BIT__
-        if AfxComCtlVersion < 600 then tti.cbSize = 64 else tti.cbSize = 72
-    #else
-        if AfxComCtlVersion < 600 then tti.cbSize = 44 else tti.cbSize = 48
-    #endif
-    tti.uFlags   = TTF_IDISHWND or TTF_SUBCLASS
-    tti.hwnd     = hCtrl
-    tti.uId      = cast(UINT_PTR, hCtrl)
-    tti.hinst    = GetModuleHandleW(NULL)
-    tti.lpszText = LPSTR_TEXTCALLBACK
-    SendMessageW( hTooltip, TTM_ADDTOOLW, 0, cast(LPARAM, @tti) )
-    return hTooltip
+private function PsIconPanel_TipTextCallback( byval hTooltip as HWND, byval hAttached as HWND, _
+                                        byval idx as long ) as DWSTRING
+    dim as DWSTRING wszOut = PsIconPanel_ResolveTooltipText( GetIconPanelPointer(hAttached), idx )
+    return wszOut
 end function
 
 
@@ -1078,7 +1152,10 @@ function PsIconPanel_Create( byval hWndParent as HWND, byval CtrlID as long ) as
     ' Store the new pointer into the user data area of the icon panel window
     pWindow->UserData(0) = cast(LONG_PTR, pIcon)
 
-    pIcon->hTooltip = PsIconPanel_AddTooltip( hCtrl )
+    ' AFTER UserData, not before: PsIconPanel_TipTextCallback resolves the control through
+    ' GetIconPanelPointer(hAttached), which reads exactly that slot.
+    PsTipHost_Ensure( @pIcon->tip, hCtrl, @PsIconPanel_TipTextCallback )
+
 
     function = hCtrl
 

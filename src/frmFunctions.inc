@@ -234,8 +234,10 @@ function frmFunctions_TooltipCallback( byval hCtl as HWND, byval row as integer 
         ' row", so the panel showed no tooltips at all.
         wszTooltip = AfxStrParse(wszCaption, 2, "%")
         wszTooltip = FormatCodetip( wszTooltip )
-        SendMessage( pList->hToolTip, TTM_SETMAXTIPWIDTH, 0, 300 )   ' allows for multiline
-    end if    
+        ' The tip wraps because PsTooltip does it natively (armed once, in
+        ' Tooltips_ApplyTheme). This used to hand-send TTM_SETMAXTIPWIDTH to the
+        ' comctl32 tip from inside the callback -- i.e. on every single tip.
+    end if
     return wszTooltip
 end function
 
@@ -250,6 +252,9 @@ function frmFunctions_Show( byval hWndParent as HWND ) as LRESULT
     PsListTree_SetPaintCallback( hCtrl, @frmFunctions_PaintCallback )
     PsListTree_SetMessageCallback( hCtrl, @frmFunctions_MessageCallback )
     PsListTree_SetTooltipCallback( hCtrl, @frmFunctions_TooltipCallback )
+    ' Owner-drawn tips, which is also what makes the calltip wrap without the
+    ' per-tip TTM_SETMAXTIPWIDTH the callback used to send.
+    PsListTree_SetTooltipMode( hCtrl, PSTIP_MODE_PS )
     ' The WM_LBUTTONUP callback opens the clicked function; a double-click would
     ' deliver a second up and open it twice, so suppress double-click delivery.
     PsListTree_PreventDoubleClick( hCtrl )

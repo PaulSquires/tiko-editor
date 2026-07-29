@@ -157,6 +157,7 @@ function frmBookmarks_Show( byval hWndParent as HWND ) as LRESULT
     PsListTree_SetPaintCallback( hCtrl, @frmBookmarks_PaintCallback )
     PsListTree_SetMessageCallback( hCtrl, @frmBookmarks_MessageCallback )
     PsListTree_SetTooltipCallback( hCtrl, @frmBookmarks_TooltipCallback )
+    PsListTree_SetTooltipMode( hCtrl, PSTIP_MODE_PS )
     ' The WM_LBUTTONUP callback opens the clicked function; a double-click would
     ' deliver a second up and open it twice, so suppress double-click delivery.
     PsListTree_PreventDoubleClick( hCtrl )

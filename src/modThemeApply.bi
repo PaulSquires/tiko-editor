@@ -58,6 +58,12 @@ declare function Theme_PreviewFile( byval wszShortFilename as DWSTRING ) as bool
 ' tiko.bas:86, well before PsTooltip.bi at 148 -- the type does not exist yet here.
 declare sub Theme_ApplyTooltip( byval hTip as HWND )
 
+' Arm PsTooltip's process-wide defaults from the current theme, and re-theme the tips the
+' seven PsTipHost-adopting controls own. Neither names a PsTooltip type, so both are
+' declarable here despite the include-order note above.
+declare sub Theme_ArmTooltipDefaults()
+declare sub Theme_ApplyHoverTips()
+
 ' The top-tabs info bar's icon strip. Its cells are drawn by frmTopTabsInfo_IconPaint, which
 ' reads ghTopTabs live, so this only has to push the colours the CONTROL owns -- the panel
 ' background behind the cells, and the disabled/separator colours it would use if the built-in

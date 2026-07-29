@@ -1632,10 +1632,52 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ghFont(GUIFONT_26)     = pWindow->CreateFont(GUIFONT, 26, FW_SEMIBOLD)
     ghFont(FIXEDFONT_26)   = pWindow->CreateFont(GUIFIXEDFONT, 26, FW_BOLD)
 
+    ' The tooltip face comes from the SYSTEM, not from this table -- whatever the user's
+    ' Windows appearance settings say a tip is drawn in. The bold companion is the same face
+    ' at the same size, used for a tip's title line only.
+    '
+    ' If the system refuses (or reports something unusable) we fall back to the 10pt GUI face,
+    ' so ghFont(TOOLTIPFONT) is ALWAYS a valid font and no caller needs a second branch.
+    dim as TIKO_TOOLTIPFONT tipfont
+    if Tooltip_GetSystemFont( tipfont ) then
+        ghFont(TOOLTIPFONT)     = pWindow->CreateFont( tipfont.wszFaceName, tipfont.pointSize, _
+                                                       tipfont.lfWeight, tipfont.isItalic )
+        ghFont(TOOLTIPFONTBOLD) = pWindow->CreateFont( tipfont.wszFaceName, tipfont.pointSize, _
+                                                       FW_HEAVY, tipfont.isItalic )
+    end if
+    if ghFont(TOOLTIPFONT) = 0     then ghFont(TOOLTIPFONT)     = pWindow->CreateFont(GUIFONT, 10, FW_NORMAL)
+    if ghFont(TOOLTIPFONTBOLD) = 0 then ghFont(TOOLTIPFONTBOLD) = pWindow->CreateFont(GUIFONT, 10, FW_HEAVY)
+
+    ' TIKO_TOOLTIPFONT_TRACE=1. Kept rather than deleted because the pixel->point conversion
+    ' above is DPI-dependent and cannot be checked by eye: the only way to know it is right on
+    ' a 175% display is to read the numbers there. Through a "dim as string" first -- printing
+    ' a DWSTRING, or a string & wstring concat, interleaves nulls.
+    if environ("TIKO_TOOLTIPFONT_TRACE") = "1" then
+        dim as HDC hdcTrace = GetDC( HWND_DESKTOP )
+        dim as long dpiTrace = iif( hdcTrace, GetDeviceCaps( hdcTrace, LOGPIXELSY ), 0 )
+        if hdcTrace then ReleaseDC( HWND_DESKTOP, hdcTrace )
+        dim as string sTrace = "--- TIKO_TOOLTIPFONT_TRACE ---" & chr(10) & _
+            "  screen LOGPIXELSY : " & str(dpiTrace) & _
+            "  (" & str( (dpiTrace * 100) \ 96 ) & "%)" & chr(10) & _
+            "  face              : " & str(tipfont.wszFaceName) & chr(10) & _
+            "  pixelHeight       : " & str(tipfont.pixelHeight) & chr(10) & _
+            "  pointSize         : " & str(tipfont.pointSize) & chr(10) & _
+            "  lfWeight          : " & str(tipfont.lfWeight) & _
+            "  bold=" & str(tipfont.isBold) & " italic=" & str(tipfont.isItalic) & chr(10) & _
+            "  ghFont(TOOLTIPFONT)     = " & str(ghFont(TOOLTIPFONT)) & chr(10) & _
+            "  ghFont(TOOLTIPFONTBOLD) = " & str(ghFont(TOOLTIPFONTBOLD))
+        print sTrace
+    end if
+
     HWND_FRMMAIN = pWindow->Create( null, APPNAME, @frmMain_WndProc )
     
     ' Load the currently selected theme (this needs a valid pWindow HWND_FRMMAIN to exists)
     LoadThemeFile()
+    ' Arm PsTooltip's process-wide defaults from the theme just loaded. MUST be before the
+    ' forms below build their controls: a control on PSTIP_MODE_PS creates its own tip and
+    ' the defaults are applied at CREATION -- an existing tip is not retro-fitted, so arming
+    ' this later would leave the seven hover tips on PsTooltip's own dark defaults.
+    Theme_ArmTooltipDefaults()
     ' Env-gated; returns immediately unless TIKO_THEME_SELFTEST=1. Runs here because it needs
     ' a fully parsed theme, and it snapshots/restores gTheme around its destructive cases.
     Theme_RunSelfTest()

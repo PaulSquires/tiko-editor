@@ -2,6 +2,12 @@
 #pragma once
 
 #include once "PsBufferPaint.bi"
+' An item can show a real image file (.ico/.png/.bmp/.jpg) instead of a Fluent glyph.
+' PsImage owns the decode; PsBufferPaint.PaintImage draws it. See PsIconPanel_SetImage.
+#include once "PsImage.bi"
+' The tooltip backend switch. The control ships on the SYSTEM (comctl32) backend exactly
+' as it always has; a host opts an instance into PsTooltip with PsIconPanel_SetTooltipMode.
+#include once "PsTipHost.bi"
 
 ' Polling timer that guarantees hot-tracking is cleared when the mouse leaves the
 ' control. WM_MOUSELEAVE (TME_LEAVE) is not reliably delivered on fast exits, so a
@@ -76,6 +82,11 @@ end type
 type PSICONPANEL_ITEM
     itemKind      as long = IP_KIND_TOGGLE
     wszGlyph      as DWSTRING          ' the Segoe Fluent Icons codepoint(s) to draw
+    ' An image drawn in the icon cell INSTEAD OF the glyph. The control OWNS this PsImage and
+    ' frees it in WM_NCDESTROY. The item slot is glyph OR image: PsIconPanel_SetImage clears
+    ' wszGlyph, PsIconPanel_SetGlyph frees pImage. NULL = no image. It fits the SAME declared
+    ' icon cell a glyph would, so an image needs no layout change.
+    pImage        as PsImage ptr
     wszTooltip    as DWSTRING          ' "" = ask TooltipCallback, then show nothing
     id            as long = 0          ' host command id, reported by ClickCallback
     itemData      as integer = 0       ' free-form host payload
@@ -113,6 +124,9 @@ type PSICONPANEL_PAINTINFO
                                           '   goes false without ending the gesture)
     isEnabled   as boolean
     wszGlyph    as DWSTRING
+    ' Resolved image handle for this item's cell, or NULL. When set, draw this image via
+    ' p->b->PaintImage INSTEAD OF the glyph -- a custom painter should honour it, image first.
+    pImage      as CGpImage ptr
 end type
 
 type PSICONPANEL_MESSAGEINFO
@@ -170,7 +184,10 @@ type IP_SelChangeCallbackSub as sub( byval hIconPanel as HWND, byval idx as long
 
 type PSICONPANEL
     hWin              as HWND
-    hToolTip          as HWND
+    ' The tooltip, whichever backend it is on. Replaces the old hToolTip + HoverTime
+    ' pair; PsIconPanel_GetTooltipHandle still answers the comctl32 handle, and 0 while
+    ' this instance is on PsTooltip.
+    tip         as PSTIPHOST
     wszTooltip        as DWSTRING
     items(any)        as PSICONPANEL_ITEM
     itemCount         as long = 0
@@ -498,6 +515,11 @@ declare function PsIconPanel_HitTest( byval hIconPanel as HWND, byval x as long,
 declare function PsIconPanel_GetItemKind( byval hIconPanel as HWND, byval idx as long ) as long
 declare function PsIconPanel_GetGlyph( byval hIconPanel as HWND, byval idx as long ) as DWSTRING
 declare function PsIconPanel_SetGlyph( byval hIconPanel as HWND, byval idx as long, byval Glyph as DWSTRING ) as boolean
+' Load an image file (.ico/.png/.bmp/.jpg) into an item's cell, replacing its glyph. "" removes
+' whatever image is there. Returns TRUE when the item ends up as you asked -- a successful load,
+' OR a successful removal -- and FALSE only for a bad index or a file that would not decode.
+' The image fits the item's existing icon cell.
+declare function PsIconPanel_SetImage( byval hIconPanel as HWND, byval idx as long, byval Path as DWSTRING ) as boolean
 declare function PsIconPanel_GetItemID( byval hIconPanel as HWND, byval idx as long ) as long
 declare function PsIconPanel_SetItemID( byval hIconPanel as HWND, byval idx as long, byval id as long ) as boolean
 declare function PsIconPanel_GetItemData( byval hIconPanel as HWND, byval idx as long ) as integer
@@ -557,6 +579,16 @@ declare function PsIconPanel_GetFont( byval hIconPanel as HWND ) as HFONT
 declare function PsIconPanel_SetFont( byval hIconPanel as HWND, byval hIconFont as HFONT ) as boolean
 declare function PsIconPanel_GetTooltipHandle( byval hIconPanel as HWND ) as HWND
 declare sub      PsIconPanel_SetHoverTime( byval hIconPanel as HWND, byval milliseconds as long )
+declare function PsIconPanel_SetTooltipMode( byval hIconPanel as HWND, byval nMode as long ) as boolean
+declare function PsIconPanel_GetTooltipMode( byval hIconPanel as HWND ) as long
+' The PsTooltip window, or 0 on the system backend. The door to PsTooltip's own
+' SetColors/SetFonts/SetStyle/SetMaxWidth/SetTitle/SetGlyph -- deliberately not mirrored
+' here, since thirteen controls x twenty setters is 260 wrappers to keep in step.
+declare function PsIconPanel_GetPsTooltipHandle( byval hIconPanel as HWND ) as HWND
+' Honoured by BOTH backends. A delay never set keeps the backend's own derivation from
+' the system double-click time.
+declare sub      PsIconPanel_SetAutoPopTime( byval hIconPanel as HWND, byval milliseconds as long )
+declare sub      PsIconPanel_SetReshowTime( byval hIconPanel as HWND, byval milliseconds as long )
 
 ' ----------------------------------------------------------------------------------------
 ' Tooltips.  Per-item text wins; the callback is consulted only for items with none; an

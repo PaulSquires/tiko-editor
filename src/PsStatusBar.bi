@@ -2,6 +2,9 @@
 #pragma once
 
 #include once "PsBufferPaint.bi"
+' The tooltip backend switch. The control ships on the SYSTEM (comctl32) backend exactly
+' as it always has; a host opts an instance into PsTooltip with PsStatusBar_SetTooltipMode.
+#include once "PsTipHost.bi"
 
 ' Polling timer that guarantees hot-tracking is cleared when the mouse leaves the
 ' control. WM_MOUSELEAVE (TME_LEAVE) is not reliably delivered on fast exits, so a
@@ -69,7 +72,10 @@ type SB_TooltipCallbackFunc as function( byval hStatusBar as HWND, byval idx as 
 
 type PSSTATUSBAR
     hWin            as HWND
-    hToolTip        as HWND
+    ' The tooltip, whichever backend it is on. Replaces the old hToolTip + HoverTime
+    ' pair; PsStatusBar_GetTooltipHandle still answers the comctl32 handle, and 0 while
+    ' this instance is on PsTooltip.
+    tip       as PSTIPHOST
     wszTooltip      as DWSTRING
     panels(any)     as PSSTATUSBAR_PANELINFO
     panelCount      as integer = 0
@@ -355,6 +361,16 @@ declare function PsStatusBar_GetFont( byval hStatusBarControl as HWND ) as HFONT
 declare function PsStatusBar_SetFont( byval hStatusBarControl as HWND, byval hFont as HFONT ) as boolean
 declare function PsStatusBar_GetTooltipHandle( byval hStatusBarControl as HWND ) as HWND
 declare sub      PsStatusBar_SetHoverTime( byval hStatusBarControl as HWND, byval milliseconds as integer )
+declare function PsStatusBar_SetTooltipMode( byval hStatusBarControl as HWND, byval nMode as long ) as boolean
+declare function PsStatusBar_GetTooltipMode( byval hStatusBarControl as HWND ) as long
+' The PsTooltip window, or 0 on the system backend. The door to PsTooltip's own
+' SetColors/SetFonts/SetStyle/SetMaxWidth/SetTitle/SetGlyph -- deliberately not mirrored
+' here, since thirteen controls x twenty setters is 260 wrappers to keep in step.
+declare function PsStatusBar_GetPsTooltipHandle( byval hStatusBarControl as HWND ) as HWND
+' Honoured by BOTH backends. A delay never set keeps the backend's own derivation from
+' the system double-click time.
+declare sub      PsStatusBar_SetAutoPopTime( byval hStatusBarControl as HWND, byval milliseconds as long )
+declare sub      PsStatusBar_SetReshowTime( byval hStatusBarControl as HWND, byval milliseconds as long )
 
 ' ----------------------------------------------------------------------------------------
 ' Callbacks.  See the type declarations above for each signature and contract.
