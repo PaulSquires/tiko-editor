@@ -20,11 +20,34 @@
 ' used to post up to this form.
 ' ========================================================================================
 function frmOutput_LVMessage( byval m as PSLISTTREE_MESSAGEINFO ptr ) as boolean
-    if m->uMsg <> WM_LBUTTONDBLCLK then return false
-    ' m->hList is the inner listbox; the PsListTree container is its parent, and that is what
-    ' SetDocumentErrorPosition queries.
-    SetDocumentErrorPosition( GetParent(m->hList) )
-    return false      ' let the listbox keep its own default handling
+    ' m->hList is the inner surface; the PsListTree container is its parent, and that is what
+    ' SetDocumentErrorPosition and the context menu query.
+    dim as HWND hList = GetParent(m->hList)
+
+    select case m->uMsg
+        case WM_LBUTTONDBLCLK
+            SetDocumentErrorPosition( hList )
+            return false      ' let the listbox keep its own default handling
+
+        case WM_RBUTTONDOWN
+            ' Compiler Results only -- all three panes share this callback.
+            if hList <> HWND_FRMOUTPUT_LVRESULTS then return false
+
+            ' The control does NOT touch the selection on a right-click (it applies click
+            ' selection only for the LEFT button), so the host does the usual thing: a
+            ' press on a row already in the selection LEAVES the selection alone -- which
+            ' is the whole point when the user is right-clicking a multi-row block to copy
+            ' it -- and a press on any other row selects just that one first.
+            if (m->idx >= 0) andalso (PsListTree_GetSel( hList, m->idx ) = false) then
+                PsListTree_SetCurSel( hList, m->idx )
+                PsListTree_Refresh( hList )
+            end if
+
+            ShowOutputResultsContextMenu()
+            return true       ' claimed
+    end select
+
+    return false
 end function
 
 
@@ -51,6 +74,14 @@ function frmOutput_CreateListView( byval CtrlID as long ) as HWND
     PsListTree_SetHeaderPaintCallback( hCtl, @ListBox_LVPaintHeader )
     PsListTree_SetColumnAutoSizeCallback( hCtl, @ListBox_LVAutoSizeColumn )
     PsListTree_SetMessageCallback( hCtl, @frmOutput_LVMessage )
+
+    ' Compiler Results only: Shift ranges / Ctrl toggles, so the right-click "Copy" has a
+    ' multi-row block to work with. Search and TODO stay single-select -- their rows are a
+    ' navigation target, not a body of text, and every click there is a jump.
+    if CtrlID = IDC_FRMOUTPUT_LVRESULTS then
+        PsListTree_SetExtendedSelect( hCtl, true )
+    end if
+
     PsListTree_SetFont( hCtl, ghFont(GUIFONT_9) )
     PsListTree_SetBackColor( hCtl, ghOutput.BackColor )
     PsListTree_SetScrollBarColors( hCtl, ghOutput.BackColorScrollBar, _

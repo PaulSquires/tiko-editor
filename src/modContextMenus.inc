@@ -63,6 +63,7 @@ dim shared as HWND ghPopupFunctionsAction
 dim shared as HWND ghPopupBookmarksAction
 dim shared as HWND ghPopupTopTabCtl
 dim shared as HWND ghPopupTopTabsList
+dim shared as HWND ghPopupOutputResults
 
 ' The context chain currently (or last) shown. The pump filter needs a handle in the open
 ' chain, and PsPopupMenu exposes no "which chain is open" query -- so the host tracks it.
@@ -258,11 +259,18 @@ sub ShowFileEncodingContextMenu()
         case FILE_ENCODING_UTF16_BOM: nEncoding = IDM_UTF16BOM
     end select
 
+    ' Captions come from Doc_EncodingName -- see the note there. The command ids are NOT
+    ' the FILE_ENCODING_* values (they are IDM_* entries in the app's command space), so
+    ' the pairing stays explicit here rather than being derived from a loop counter.
     PsPopupMenu_Clear( ghPopupFileEncoding )
-    PsPopupMenu_AddItem( ghPopupFileEncoding, IDM_ANSI,     "ANSI",         "", false, (nEncoding = IDM_ANSI) )
-    PsPopupMenu_AddItem( ghPopupFileEncoding, IDM_UTF8,     "UTF-8",        "", false, (nEncoding = IDM_UTF8) )
-    PsPopupMenu_AddItem( ghPopupFileEncoding, IDM_UTF8BOM,  "UTF-8 (BOM)",  "", false, (nEncoding = IDM_UTF8BOM) )
-    PsPopupMenu_AddItem( ghPopupFileEncoding, IDM_UTF16BOM, "UTF-16 (BOM)", "", false, (nEncoding = IDM_UTF16BOM) )
+    PsPopupMenu_AddItem( ghPopupFileEncoding, IDM_ANSI, _
+                         Doc_EncodingName(FILE_ENCODING_ANSI),      "", false, (nEncoding = IDM_ANSI) )
+    PsPopupMenu_AddItem( ghPopupFileEncoding, IDM_UTF8, _
+                         Doc_EncodingName(FILE_ENCODING_UTF8),      "", false, (nEncoding = IDM_UTF8) )
+    PsPopupMenu_AddItem( ghPopupFileEncoding, IDM_UTF8BOM, _
+                         Doc_EncodingName(FILE_ENCODING_UTF8_BOM),  "", false, (nEncoding = IDM_UTF8BOM) )
+    PsPopupMenu_AddItem( ghPopupFileEncoding, IDM_UTF16BOM, _
+                         Doc_EncodingName(FILE_ENCODING_UTF16_BOM), "", false, (nEncoding = IDM_UTF16BOM) )
 
     dim as POINT pt: GetCursorPos( @pt )
     ContextMenu_ShowAt( ghPopupFileEncoding, pt.x, pt.y, true )
@@ -577,6 +585,75 @@ end sub
 
 
 ' ========================================================================================
+' The Output panel's Compiler Results list.
+'
+' The list is in EXTENDED-select mode (Shift ranges, Ctrl toggles), so "Copy" can span
+' many rows; they are joined with CRLF, and within a row the cells are joined with a TAB
+' so a paste into a spreadsheet or another editor keeps the columns.
+'
+' COLUMN 0 IS SKIPPED, and that is not a tidy-up: it is the 20px SPACER column
+' frmOutput_CreateListView adds before Line/File/Description, and it is always empty. A
+' generic "join every cell" would put a leading tab on every line.
+'
+' ITS ITEM IDS ARE IDM_COPY / IDM_SELECTALL BUT IT MUST NOT USE ContextMenu_PostCommand:
+' those are the EDITOR's commands and frmMain would route them to Scintilla, copying the
+' source document instead of the results. Hence a callback of its own that acts on the
+' list directly. (The captions are reused for the same reason they are the right ones --
+' L(18) and L(40) already exist, so no new .lang ids were minted.)
+' ========================================================================================
+private sub OutputResultsContextMenu_OnSelect( byval hPopup as HWND, byval id as long )
+    dim as HWND hLV = HWND_FRMOUTPUT_LVRESULTS
+    if hLV = 0 then exit sub
+
+    select case id
+        case IDM_SELECTALL
+            PsListTree_SelectAll( hLV, true )
+            PsListTree_Refresh( hLV )
+
+        case IDM_COPY
+            dim as long nCols = PsListTree_GetColumnCount( hLV )
+            dim selItems() as integer
+            dim as long nSel = PsListTree_GetSelItems( hLV, selItems() )
+            if nSel <= 0 then exit sub
+
+            dim as DWSTRING wszOut, wszRow
+            for i as long = 0 to nSel - 1
+                wszRow = ""
+                if nCols <= 1 then
+                    ' Single-column (no header band) -- the row's own text is all there is.
+                    wszRow = PsListTree_GetText( hLV, selItems(i) )
+                else
+                    for c as long = 1 to nCols - 1
+                        if c > 1 then wszRow = wszRow & chr(9)
+                        wszRow = wszRow & PsListTree_GetCellText( hLV, selItems(i), c )
+                    next
+                end if
+                if i > 0 then wszOut = wszOut & chr(13) & chr(10)
+                wszOut = wszOut & wszRow
+            next
+
+            AfxSetClipboardText( wszOut )
+    end select
+end sub
+
+
+sub ShowOutputResultsContextMenu()
+    dim as HWND hLV = HWND_FRMOUTPUT_LVRESULTS
+    if hLV = 0 then exit sub
+    ' Nothing in the list means nothing to copy and nothing to select: show no menu at all
+    ' rather than two dead rows (ContextMenu_ShowAt's own empty-menu rule, one level up).
+    if PsListTree_GetCount( hLV ) = 0 then exit sub
+
+    PsPopupMenu_Clear( ghPopupOutputResults )
+    PsPopupMenu_AddItem( ghPopupOutputResults, IDM_COPY, L(18, "Copy"), "", _
+                        (PsListTree_GetSelCount( hLV ) = 0) )
+    PsPopupMenu_AddItem( ghPopupOutputResults, IDM_SELECTALL, L(40, "Select All") )
+
+    ContextMenu_ShowAtCursor( ghPopupOutputResults )
+end sub
+
+
+' ========================================================================================
 ' Plumbing
 ' ========================================================================================
 
@@ -626,6 +703,7 @@ sub ContextMenus_Init()
     ghPopupBookmarksAction  = frmMenuBar_CreatePopup( true )
     ghPopupTopTabCtl        = frmMenuBar_CreatePopup( true )
     ghPopupTopTabsList      = frmMenuBar_CreatePopup( true )
+    ghPopupOutputResults    = frmMenuBar_CreatePopup( true )
 
     ' Menus whose ids are real command ids: straight through the WM_COMMAND dispatcher.
     PsPopupMenu_SetSelectCallback( ghPopupTabsInfoFileType, @ContextMenu_PostCommand )
@@ -642,5 +720,6 @@ sub ContextMenus_Init()
     PsPopupMenu_SetSelectCallback( ghPopupSpaces,       @SpacesContextMenu_OnSelect )
     PsPopupMenu_SetSelectCallback( ghPopupTopTabsList,  @TopTabsListContextMenu_OnSelect )
     PsPopupMenu_SetSelectCallback( ghPopupExplorer,     @ExplorerContextMenu_OnSelect )
+    PsPopupMenu_SetSelectCallback( ghPopupOutputResults, @OutputResultsContextMenu_OnSelect )
 
 end sub

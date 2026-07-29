@@ -56,3 +56,8 @@ declare sub ShowExplorerContextMenu( byval pDoc as clsDocument ptr )
 declare sub ShowPanelActionContextMenu( byval rcButton as RECT )
 declare sub ShowTopTabCtlContextMenu( byval idx as long )
 declare sub ShowTopTabsListContextMenu( byval rcButton as RECT )
+
+' The Output panel's Compiler Results list. Copy (the selected rows, joined with CRLF) and
+' Select All. Both act on HWND_FRMOUTPUT_LVRESULTS directly rather than posting a command:
+' IDM_COPY / IDM_SELECTALL are the EDITOR's commands and would act on Scintilla.
+declare sub ShowOutputResultsContextMenu()
