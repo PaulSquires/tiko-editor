@@ -273,7 +273,7 @@ function frmOutput_ShowHideOutputControls( byval hwnd as HWND ) as LRESULT
             hCtrl = hTextBox
             dim as DWSTRING wszText = ltrim(AfxGetWindowText(hTextBox))
             if wszText = "" then
-               AfxSetWindowText(hTextBox, "No compiler log file exists.")
+                AfxSetWindowText(hTextBox, L(96, "No compiler log file exists") )
             end if
 
         case 2    ' search results
