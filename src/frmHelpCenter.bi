@@ -83,6 +83,7 @@ dim shared as HELPCENTER_TYPE gHelpCenter
 ' what the self-test actually exercises -- see the honesty note in _RunSelfTest.
 declare function HelpCenter_JsQuote( byval wszText as DWSTRING ) as DWSTRING
 declare function HelpCenter_NormalizeQuery( byval wszText as DWSTRING ) as DWSTRING
+declare function HelpCenter_IsSearchableWord( byval wszWord as DWSTRING ) as boolean
 declare function HelpCenter_PathToFileUrl( byval wszPath as DWSTRING ) as DWSTRING
 declare function HelpCenter_IndexUrl() as DWSTRING
 declare function HelpCenter_RootFolder() as DWSTRING

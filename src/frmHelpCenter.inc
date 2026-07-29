@@ -186,6 +186,35 @@ end function
 
 
 ' ========================================================================================
+' Is a word-under-the-caret worth searching for?
+'
+' Only the FALLBACK is filtered, never a selection: selecting "=>" is an explicit request
+' and we honour it, but the caret merely sitting somewhere is not. GetWord walks a run of
+' non-word characters when the caret is on punctuation, so F1 on the "'" that opens a
+' comment line -- or on an operator, or a lone digit -- would otherwise fire a search for
+' that character and show "No matches", which reads as the feature being broken.
+'
+' The test is "contains at least one letter", not "is a valid identifier": FreeBASIC names
+' can carry digits and underscores, and "#define" or "__FB_WIN32__" are legitimate things
+' to look up. A pure digit run is not.
+' ========================================================================================
+function HelpCenter_IsSearchableWord( byval wszWord as DWSTRING ) as boolean
+    dim as long nLen = len( wszWord )
+    if nLen = 0 then return false
+    for i as long = 1 to nLen
+        dim as ulong c = asc( mid( wszWord, i, 1 ) )
+        dim as boolean bUpper = (c >= 65) andalso (c <= 90)
+        dim as boolean bLower = (c >= 97) andalso (c <= 122)
+        ' Anything above ASCII is treated as a letter: accented and CJK identifiers are
+        ' letters to their author, and the alternative is refusing to look them up.
+        dim as boolean bWide  = (c > 127)
+        if bUpper orelse bLower orelse bWide then return true
+    next
+    function = false
+end function
+
+
+' ========================================================================================
 ' Escape arbitrary text so it can be pasted into a JavaScript double-quoted string literal.
 '
 ' The input is a Scintilla selection, i.e. text the user chose and we did not write, so
@@ -219,6 +248,12 @@ end function
 '
 ' An empty query focuses the box and leaves it alone -- which is plain F1 with no
 ' selection, and is the same thing the site's own "/" shortcut does.
+'
+' FOCUS TAKES TWO STEPS AND BOTH ARE NEEDED. The JS focus() only moves the DOM's focus
+' INSIDE the pane; if the pane itself does not hold the Win32 focus, the caret does not
+' blink in the search box and typing goes to whatever window does. MoveFocus gives the
+' pane Win32 focus, then the script puts the DOM caret in #q. Doing only the second is
+' what made the first F1 look like it had done nothing.
 ' ========================================================================================
 sub frmHelpCenter_ApplySearch( byval wszQuery as DWSTRING )
     if gHelpCenter.pWeb = 0 then exit sub
@@ -243,6 +278,10 @@ sub frmHelpCenter_ApplySearch( byval wszQuery as DWSTRING )
     wszJS = wszJS & "i.focus();" & _
                     "try{i.setSelectionRange(i.value.length,i.value.length);}catch(e){}" & _
                     "})()"
+
+    ' Win32 focus onto the pane FIRST -- see the two-step note above. Without it the
+    ' script below moves the DOM caret into a control that is not receiving keystrokes.
+    gHelpCenter.pWeb->MoveFocus( COREWEBVIEW2_MOVE_FOCUS_REASON_PROGRAMMATIC )
 
     ' The completion handler is passed explicitly: the default only applies to a direct
     ' call, not through the pointer.
@@ -533,6 +572,15 @@ function frmHelpCenter_Show( byval wszSearch as DWSTRING ) as LRESULT
     end with
     SetWindowPlacement( pWindow->hWindow, @WinPla )
 
+    ' Bring it to the front NOW, before the IsReady wait below, which can block for as
+    ' long as HELPCENTER_READYTIMEOUT while the runtime starts. The reopen path above
+    ' has always done this; the CREATE path did not, so the very first F1 of a session
+    ' built the window behind the editor and left the keyboard in Scintilla. The pane
+    ' cannot take focus until it exists, so this only handles the frame -- ApplySearch
+    ' does the other half once there is something to focus.
+    AllowSetForegroundWindow( ASFW_ANY )
+    SetForegroundWindow( HWND_FRMHELPCENTER )
+
     ' --- the WebView host child ------------------------------------------------------
     ' A plain STATIC. The pane is hosted here rather than in the frame because CWebView2's
     ' constructor writes the host window's GWLP_USERDATA, and a dedicated child keeps that
@@ -689,6 +737,33 @@ sub frmHelpCenter_RunSelfTest()
         len( HelpCenter_NormalizeQuery( string(400, "x") ) ) = HELPCENTER_MAXQUERY )
     HelpCenter_Check( "normalize: at the cap nothing is lost", _
         len( HelpCenter_NormalizeQuery( string(HELPCENTER_MAXQUERY, "x") ) ) = HELPCENTER_MAXQUERY )
+
+    ' --- HelpCenter_IsSearchableWord ---------------------------------------------------
+    ' Filters the word-under-the-caret FALLBACK only. Every "false" here is a case where
+    ' F1 should open an empty search box rather than search for a character.
+    HelpCenter_Check( "word: an identifier is searchable", _
+        HelpCenter_IsSearchableWord( "PsButton_Click" ) = true )
+    HelpCenter_Check( "word: a leading-underscore name is searchable", _
+        HelpCenter_IsSearchableWord( "__FB_WIN32__" ) = true )
+    HelpCenter_Check( "word: a directive is searchable", _
+        HelpCenter_IsSearchableWord( "#define" ) = true )
+    ' The one that was actually observed: F1 with the caret at the start of a comment
+    ' line searched for the apostrophe and showed "No matches".
+    HelpCenter_Check( "word: a lone comment apostrophe is NOT searchable", _
+        HelpCenter_IsSearchableWord( "'" ) = false )
+    HelpCenter_Check( "word: an operator run is NOT searchable", _
+        HelpCenter_IsSearchableWord( "=>" ) = false )
+    HelpCenter_Check( "word: pure digits are NOT searchable", _
+        HelpCenter_IsSearchableWord( "1234" ) = false )
+    HelpCenter_Check( "word: empty is NOT searchable", _
+        HelpCenter_IsSearchableWord( "" ) = false )
+    ' Digits alone are out, but digits attached to letters are a name.
+    HelpCenter_Check( "word: letters plus digits are searchable", _
+        HelpCenter_IsSearchableWord( "keyword2" ) = true )
+    ' Non-ASCII counts as a letter: refusing it would mean refusing to look up any
+    ' identifier its author can actually type.
+    HelpCenter_Check( "word: non-ASCII counts as a letter", _
+        HelpCenter_IsSearchableWord( wchr(&h00E9) ) = true )
 
     ' --- HelpCenter_IndexUrl -----------------------------------------------------------
     dim as DWSTRING wszUrl = HelpCenter_IndexUrl()
