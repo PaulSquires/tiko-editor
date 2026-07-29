@@ -293,6 +293,7 @@ function clsConfig.SaveConfigFile() as long
     pStream.WriteLine "ClickToggleBreakpoint=" & this.ClickToggleBreakpoint
     pStream.WriteLine "BraceHighlight="        & this.BraceHighlight
     pStream.WriteLine "OccurrenceHighlight="   & this.OccurrenceHighlight
+    pStream.WriteLine "DetectExternalFileChanges=" & this.DetectExternalFileChanges
     pStream.WriteLine "EditorFontname="        & this.EditorFontname       
     pStream.WriteLine "EditorFontsize="        & this.EditorFontsize       
     pStream.WriteLine "EditorFontCharSet="     & this.EditorFontCharSet    
@@ -708,6 +709,7 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
             case "ClickToggleBreakpoint":    this.ClickToggleBreakpoint = nData
             case "BraceHighlight":           this.BraceHighlight        = nData
             case "OccurrenceHighlight":      this.OccurrenceHighlight   = nData
+            case "DetectExternalFileChanges": this.DetectExternalFileChanges = nData
             case "LocalizationFile":         this.LocalizationFile      = ProcessFromCurdriveApp(wData)
             case "TabSize":                  this.TabSize               = wData
             case "UnicodeEncoding":          this.UnicodeEncoding       = nData

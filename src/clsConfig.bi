@@ -134,6 +134,11 @@ type clsConfig
         ClickToggleBreakpoint     as long = false         ' left margin click toggles Breakpoint instead of Bookmark
         BraceHighlight            as long = false
         OccurrenceHighlight       as long = false
+        ' Watch open documents for a change made by another program and re-read them without
+        ' asking. Notepad++ calls this pair "File Status Auto-Detection" + "Update silently".
+        ' DEFAULT OFF: a silent reload discards nothing only while the buffer is unmodified,
+        ' so opting in is the user's call, not ours.
+        DetectExternalFileChanges as long = false
         TabIndentSpaces           as long = true
         MultipleInstances         as long = true
         CompileAutosave           as long = true

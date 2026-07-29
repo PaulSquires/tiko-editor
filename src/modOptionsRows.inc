@@ -234,6 +234,7 @@ sub OptionsRows_Init()
                      @gOptWork.AutoIndentation )                                         ' "Append loop variable to For/Next statement"
     OptionsRows_Add( OPTPAGE_EDITOR2, OPT_TOGGLE, 412, @gOptWork.BraceHighlight )        ' "Enable Brace Highlighting"
     OptionsRows_Add( OPTPAGE_EDITOR2, OPT_TOGGLE, 419, @gOptWork.OccurrenceHighlight )   ' "Enable Occurrences Highlighting"
+    OptionsRows_Add( OPTPAGE_EDITOR2, OPT_TOGGLE,  97, @gOptWork.DetectExternalFileChanges ) ' "Detect external file changes and silently reload"
 
     ' The encoding a File>New document starts life with. THE FIRST OPT_COMBO ROW IN THE
     ' TABLE -- the kind has been fully implemented and unused since the dialog was rebuilt.
@@ -308,6 +309,7 @@ sub OptionsWork_Load()
     gOptWork.ForNextVariable       = gConfig.ForNextVariable
     gOptWork.BraceHighlight        = gConfig.BraceHighlight
     gOptWork.OccurrenceHighlight   = gConfig.OccurrenceHighlight
+    gOptWork.DetectExternalFileChanges = gConfig.DetectExternalFileChanges
     gOptWork.NewFileEncoding       = gConfig.NewFileEncoding
 
     ' The help file path is stored curdrive-relative and expanded for display, matching
@@ -365,6 +367,7 @@ sub OptionsWork_Commit()
     gConfig.ForNextVariable       = gOptWork.ForNextVariable
     gConfig.BraceHighlight        = gOptWork.BraceHighlight
     gConfig.OccurrenceHighlight   = gOptWork.OccurrenceHighlight
+    gConfig.DetectExternalFileChanges = gOptWork.DetectExternalFileChanges
     ' No conversion: the combo index and the FILE_ENCODING_* value are the same number by
     ' construction, and OptionsRows_BuildPage has already read back whatever the control
     ' actually accepted, so an out-of-range stored value cannot survive to here.

@@ -96,6 +96,9 @@ dim shared gTTabCtl as clsTopTabCtl
 ' Declarations only. The implementation is included near the very end, once every
 ' frmXxx_ApplyTheme it dispatches to exists -- see the header of modThemeApply.bi.
 #include once "modThemeApply.bi"
+' Declarations only, and deliberately naming no Ps* type -- the implementation is included at
+' the end, once PsMessageBox and OptionsTheme_FillButton exist.
+#include once "modFileWatch.bi"
 #include once "clsConfig.inc"
 #include once "PsBufferPaint.inc"
 #include once "modRoutines.inc"
@@ -229,6 +232,10 @@ dim shared gTTabCtl as clsTopTabCtl
 ' Must come after every frmXxx_ApplyTheme / _SyncTheme it routes to, and before frmMain.inc,
 ' which calls Theme_OnCoalesceTimer from WM_TIMER.
 #include once "modThemeApply.inc"
+' Needs PsMessageBox (its two boxes), OptionsTheme_FillButton (their button colours),
+' OpenSelectedDocument / ReloadDocument / OnCommand_FileClose / OnCommand_ProjectRemove --
+' so it lands here, and before frmMain.inc, which drives it from WM_TIMER and WM_ACTIVATEAPP.
+#include once "modFileWatch.inc"
 #include once "frmMain.inc"
 
 

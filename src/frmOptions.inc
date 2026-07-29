@@ -143,6 +143,11 @@ function frmOptions_SaveEditorOptions() as long
     ' Cancel simply never calls this.
     OptionsWork_Commit()
 
+    ' Arm or disarm the external-change poll to match what was just committed. It has to
+    ' happen here rather than at startup only, or turning the option on would not take effect
+    ' until the next run -- and turning it off would leave the timer running.
+    FileWatch_ApplyConfig()
+
     ' If a localization file is currently being edited then save it now.
     frmOptionsLocal_LocalEditCheck
 

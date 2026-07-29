@@ -1104,76 +1104,23 @@ function frmMain_OnActivateApp( _
     if bInActivateApp then exit function
     bInActivateApp = true
 
-    ' App is gaining focus. 
-    ' (1) Check for files that may have been moved or delete.
+    ' App is gaining focus.
+    ' (1) Check for files that may have been moved or deleted.
     ' (2) Check if files modified by external means.
-    
-    
-    ' (1) Check for files that may have been moved or delete.
-    dim pDoc as clsDocument ptr = gApp.pDocList
-    dim pDocNext as clsDocument ptr
-    
-    do
-        pDoc = gApp.pDocList
-        do until pDoc = 0
-            pDocNext = pDoc->pDocNext
-            
-            if pDoc->IsNewFlag then
-                pDoc = pDocNext: continue do
-            end if
+    '
+    ' Both sweeps live in modFileWatch now, because (2) is also driven by a poll timer while
+    ' the app is in the FOREGROUND -- which is the case this handler structurally cannot see.
+    ' (1) is deliberately not on that timer: it closes documents, and a build writing a file
+    ' by delete-then-rename passes through "missing". See modFileWatch.bi.
+    '
+    ' bRequireSettled is FALSE here: the user has been away, so any write is long finished and
+    ' making them wait another tick would just look broken.
+    FileWatch_ScanMissing()
 
-            if AfxFileExists(pDoc->DiskFilename) = false then
-                ' Ensure that the file is open and displayed
-                OpenSelectedDocument( pDoc->DiskFilename )
-                MessageBox( HWND_FRMMAIN, _
-                                pDoc->DiskFilename & vbCrLf & _ 
-                                L(286, "This document has been deleted or is no longer available."), _
-                                L(267, "File Changed"), MB_ICONINFORMATION or MB_OK)
-                ' Close the file or remove from project.
-                if gApp.IsProjectActive then 
-                    OnCommand_ProjectRemove( 0, pDoc )  ' the first param (id) is not used.
-                else
-                    ' This can not be an IsNew file so we don't have to worry about the pDoc
-                    ' becoming invalid during the FileClose.
-                    OnCommand_FileClose( HWND_FRMMAIN, EFC_CLOSECURRENT )
-                end if    
-            end if    
-
-            pDoc = pDocNext
-        loop
-    loop until pDoc = 0
-
-
-    ' (2) Check if files modified by external means.
-    pDoc = gApp.pDocList
-
-    do until pDoc = 0
-        ' Compare the disk file date time to the value currently stored in document class. 
-        ' Bypass any 'new' untitled files.
-        dim as FILETIME ft = AfxGetFileLastWriteTime(pDoc->DiskFilename)
-        
-        if (AfxFileTimeToVariantTime(ft) <> AfxFileTimeToVariantTime(pDoc->DateFileTime)) andalso _
-            (pDoc->IsNewFlag <> true) then
-            
-            OpenSelectedDocument( pDoc->DiskFilename )
-            dim as long res = MessageBox( HWND_FRMMAIN, _
-                            pDoc->DiskFilename & vbCrLf & _ 
-                            L(266, "File was changed by another application. Reload it?"), _
-                            L(267, "File Changed"), MB_ICONQUESTION or MB_YESNOCANCEL) 
-                
-            if res = IDCANCEL then
-                bInActivateApp = false
-                exit function
-            end if
-            
-            if res = IDYES then
-                ReloadDocument(pDoc->DiskFilename)
-            end if
-
-        end if
-        pDoc->DateFileTime = AfxGetFileLastWriteTime( pDoc->DiskFilename )
-        pDoc = pDoc->pDocNext
-    loop
+    if FileWatch_ScanChanged( false ) = IDCANCEL then
+        bInActivateApp = false
+        exit function
+    end if
 
     bInActivateApp = false
 
@@ -1332,6 +1279,9 @@ function frmMain_OnDestroy( byval hwnd as HWND ) as LRESULT
         KillTimer( HWND_FRMMAIN, gApp.SpinnerTimerID )
     end if
 
+    ' The external-change poll, if it was armed.
+    FileWatch_Stop()
+
     ' Disable drag and drop files
     DragAcceptFiles hwnd, false
 
@@ -1418,6 +1368,12 @@ function frmMain_WndProc( _
                 ' Typing has paused - hand the active document to the scan worker
                 KillTimer( hwnd, IDT_PARSER_DEBOUNCE )
                 gScanMgr.RequestBufferScan( gTTabCtl.GetActiveDocumentPtr() )
+            end if
+            if wParam = IDT_FILEWATCH then
+                ' Deliberately NOT killed: this one repeats until the option is turned off.
+                ' The tick itself decides whether now is a moment to act -- see
+                ' FileWatch_CheckNow, which gates on frmMain being the foreground window.
+                FileWatch_CheckNow()
             end if
             if wParam = IDT_THEME_COALESCE then
                 ' A live theme edit has settled. This timer lives here rather than on the
@@ -1780,6 +1736,11 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ' has not been created yet at this point -- the suite is deliberately pure.
     frmOutput_RunSelfTest()
 
+    ' Pure policy assertions plus a check that the six localized ids its two message boxes
+    ' need are not blank -- so it has to run after the language file is loaded, like the
+    ' suites below.
+    FileWatch_RunSelfTest()
+
     ' Pure, so it would run anywhere; it sits here so its localized-id assertions run
     ' after the language file has been loaded.
     frmHelpCenter_RunSelfTest()
@@ -1863,6 +1824,11 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     AfxForceVisibleDisplay( pWindow->hWindow )
     
     UpdateWindow( pWindow->hWindow )
+
+    ' Arm the external-change poll if the user has asked for it. After the window exists,
+    ' because the timer is owned by HWND_FRMMAIN; harmless with no documents open, since the
+    ' tick sweeps a list that is then empty.
+    FileWatch_ApplyConfig()
 
     ' Open the Environment Options dialog immediately, so its page-fit and focus/tab-order
     ' self-tests can be run without a human driving the menu. Companion to TIKO_KEYBOARD_AUTOOPEN,
