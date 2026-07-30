@@ -1645,6 +1645,10 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ' Env-gated (TIKO_ENCODING_SELFTEST=1). Pure byte-exact + disk round-trip; needs no
     ' document window, so it is safe to run here at startup.
     Encoding_RunSelfTest()
+    ' Env-gated (TIKO_DEBUG_SELFTEST=1). Pure: layout arithmetic, the datatip expression
+    ' walk and the localized strings. It launches nothing -- see the suite's own header
+    ' for what that means it cannot reach.
+    frmDebug_RunSelfTest()
     ' Set the small and large icon for the main window (must be set after main window is created)
     pWindow->BigIcon   = LoadImage( pWindow->InstanceHandle, "IMAGE_AAA_MAINICON", IMAGE_ICON, 32, 32, LR_SHARED)
     pWindow->SmallIcon = LoadImage( pWindow->InstanceHandle, "IMAGE_AAA_MAINICON", IMAGE_ICON, 16, 16, LR_SHARED)

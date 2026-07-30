@@ -473,25 +473,25 @@ private sub frmDebug_LayoutPanes( byval nBarPos as long )
     GetClientRect( HWND_FRMDEBUG, @rc )
     if (rc.right <= 0) orelse (rc.bottom <= 0) then exit sub
 
-    dim as long nTop    = pWindow->ScaleY(FRMDEBUG_TOOLHEIGHT) + pWindow->ScaleY(FRMDEBUG_STATUSHEIGHT)
-    dim as long nTabH   = pWindow->ScaleY(FRMDEBUG_TABHEIGHT)
-    dim as long nSplitW = pWindow->ScaleX(FRMDEBUG_SPLITWIDTH)
-    dim as long xRight  = nBarPos + nSplitW
-    dim as long nRightW = rc.right - xRight
-    if nRightW < 0 then nRightW = 0
+    dim as FRMDEBUG_LAYOUT lo
+    frmDebug_ComputeLayout( rc.right, rc.bottom, nBarPos, _
+                            pWindow->ScaleY(FRMDEBUG_TOOLHEIGHT), _
+                            pWindow->ScaleY(FRMDEBUG_STATUSHEIGHT), _
+                            pWindow->ScaleY(FRMDEBUG_TABHEIGHT), _
+                            pWindow->ScaleX(FRMDEBUG_SPLITWIDTH), lo )
 
     dim as any ptr hDWP = BeginDeferWindowPos( 4 )
     if hDWP = 0 then exit sub
     dim as long fl = SWP_NOZORDER or SWP_NOACTIVATE
 
-    hDWP = DeferWindowPos( hDWP, HWND_FRMDEBUG_SPLITTER, 0, _
-                           nBarPos, nTop, nSplitW, rc.bottom - nTop, fl )
-    hDWP = DeferWindowPos( hDWP, HWND_FRMDEBUG_SELECTBAR, 0, _
-                           0, nTop, nBarPos, nTabH, fl )
-    hDWP = DeferWindowPos( hDWP, HWND_FRMDEBUG_LVVARS, 0, _
-                           0, nTop + nTabH, nBarPos, rc.bottom - nTop - nTabH, fl )
-    hDWP = DeferWindowPos( hDWP, HWND_FRMDEBUG_LVSTACK, 0, _
-                           xRight, nTop, nRightW, rc.bottom - nTop, fl )
+    #macro DWPRECT( h, r )
+        hDWP = DeferWindowPos( hDWP, h, 0, (r).left, (r).top, _
+                               (r).right - (r).left, (r).bottom - (r).top, fl )
+    #endmacro
+    DWPRECT( HWND_FRMDEBUG_SPLITTER,  lo.rcSplit )
+    DWPRECT( HWND_FRMDEBUG_SELECTBAR, lo.rcTabs )
+    DWPRECT( HWND_FRMDEBUG_LVVARS,    lo.rcVars )
+    DWPRECT( HWND_FRMDEBUG_LVSTACK,   lo.rcStack )
     if hDWP then EndDeferWindowPos( hDWP )
 end sub
 
@@ -618,6 +618,76 @@ function frmDebug_IsOpen() as boolean
 end function
 
 ' ==========================================================================================
+' Pure geometry and pure text handling. Both are separated from their callers so the
+' self-test can assert the code that actually runs rather than a copy of it.
+' ==========================================================================================
+sub frmDebug_ComputeLayout( byval cx as long, byval cy as long, byval barPos as long, _
+                            byval nTool as long, byval nStatus as long, byval nTab as long, _
+                            byval nSplit as long, byref lo as FRMDEBUG_LAYOUT )
+    dim as long nTop = nTool + nStatus
+
+    lo.rcStatus.left = 0        : lo.rcStatus.top = nTool
+    lo.rcStatus.right = cx      : lo.rcStatus.bottom = nTool + nStatus
+
+    lo.rcTabs.left = 0          : lo.rcTabs.top = nTop
+    lo.rcTabs.right = barPos    : lo.rcTabs.bottom = nTop + nTab
+
+    lo.rcVars.left = 0          : lo.rcVars.top = nTop + nTab
+    lo.rcVars.right = barPos    : lo.rcVars.bottom = cy
+
+    lo.rcSplit.left = barPos            : lo.rcSplit.top = nTop
+    lo.rcSplit.right = barPos + nSplit  : lo.rcSplit.bottom = cy
+
+    dim as long xRight = barPos + nSplit
+    if xRight > cx then xRight = cx
+    lo.rcStack.left = xRight    : lo.rcStack.top = nTop
+    lo.rcStack.right = cx       : lo.rcStack.bottom = cy
+end sub
+
+function frmDebug_ExprFromLine( byval wszLine as DWSTRING, byval col as long ) as DWSTRING
+    if (col < 1) orelse (col > len(wszLine)) then return ""
+
+    #macro ISIDCH( c )
+        ( ((c) >= 48 andalso (c) <= 57) orelse ((c) >= 65 andalso (c) <= 90) orelse _
+          ((c) >= 97 andalso (c) <= 122) orelse (c) = 95 )
+    #endmacro
+
+    dim as long ch = asc(mid(wszLine, col, 1))
+    if ISIDCH(ch) = 0 then return ""
+
+    ' Walk left through identifier characters AND dots, so the dotted path comes with it --
+    ' hovering "ix" inside "rec.inner.ix" has to evaluate the whole chain, because the bare
+    ' field name resolves to nothing.
+    dim as long loPos = col
+    do while loPos > 1
+        dim as long c2 = asc(mid(wszLine, loPos - 1, 1))
+        if ISIDCH(c2) orelse (c2 = 46) then
+            loPos -= 1
+        else
+            exit do
+        end if
+    loop
+    ' Walk right through identifier characters ONLY: a trailing dot is an incomplete path,
+    ' and the member after it is not what the cursor is on.
+    dim as long hiPos = col
+    do while hiPos < len(wszLine)
+        dim as long c2 = asc(mid(wszLine, hiPos + 1, 1))
+        if ISIDCH(c2) then
+            hiPos += 1
+        else
+            exit do
+        end if
+    loop
+
+    dim as DWSTRING wszExpr = mid(wszLine, loPos, hiPos - loPos + 1)
+    ' A leading dot means the walk started inside a path whose head is off this line.
+    do while (len(wszExpr) > 0) andalso (left(wszExpr, 1) = ".")
+        wszExpr = mid(wszExpr, 2)
+    loop
+    return wszExpr
+end function
+
+' ==========================================================================================
 ' Hover datatips
 '
 ' A PsTooltip driven ENTIRELY BY HAND, the same way tiko's code tips are: Create then
@@ -685,42 +755,7 @@ private function frmDebug_ExprAt( byval hEdit as HWND, byval nPos as long ) as D
     if col > len(wszLine) then col = len(wszLine)
     if col < 1 then return ""
 
-    #macro ISIDCH( c )
-        ( ((c) >= 48 andalso (c) <= 57) orelse ((c) >= 65 andalso (c) <= 90) orelse _
-          ((c) >= 97 andalso (c) <= 122) orelse (c) = 95 )
-    #endmacro
-
-    dim as long ch = asc(mid(wszLine, col, 1))
-    if ISIDCH(ch) = 0 then return ""
-
-    ' Walk left through identifier characters AND dots, so the dotted path comes with it.
-    dim as long lo = col
-    do while lo > 1
-        dim as long c2 = asc(mid(wszLine, lo - 1, 1))
-        if ISIDCH(c2) orelse (c2 = 46) then
-            lo -= 1
-        else
-            exit do
-        end if
-    loop
-    ' Walk right through identifier characters only: a trailing dot would be an incomplete
-    ' path, and the member after it is not what the cursor is on.
-    dim as long hi = col
-    do while hi < len(wszLine)
-        dim as long c2 = asc(mid(wszLine, hi + 1, 1))
-        if ISIDCH(c2) then
-            hi += 1
-        else
-            exit do
-        end if
-    loop
-
-    dim as DWSTRING wszExpr = mid(wszLine, lo, hi - lo + 1)
-    ' A leading dot means the walk started inside a path whose head is off this line.
-    do while (len(wszExpr) > 0) andalso (left(wszExpr, 1) = ".")
-        wszExpr = mid(wszExpr, 2)
-    loop
-    return wszExpr
+    return frmDebug_ExprFromLine( wszLine, col )
 end function
 
 sub frmDebug_ShowDataTip( byval hEdit as HWND, byval nPos as long )
@@ -1086,3 +1121,150 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as DWSTRING, 
     frmDebug_SyncButtons()
     return 0
 end function
+
+
+' ==========================================================================================
+' TIKO_DEBUG_SELFTEST=1
+'
+' WHAT THIS SUITE CANNOT REACH, SAID UP FRONT RATHER THAN LEFT TO BE DISCOVERED.
+'
+' It asserts pure functions: the pane geometry, the datatip expression walk, and the
+' localized strings. It does NOT launch a debuggee, so it cannot tell you whether the
+' debugger stops, steps, unwinds, or renders anything at all. Every defect found in this
+' window so far -- the double-scaled client size, the controls created without WS_VISIBLE,
+' the splitter painted in the background colour, the one-shot default spent before the
+' control existed -- would pass every assertion below, because each produces code that runs
+' and answers correctly when asked.
+'
+' The engine's own behaviour is verified separately and headlessly, by debugparser_test.exe
+' in C:\dev\debugParser. The interactive pass is what covers this window.
+' ==========================================================================================
+dim shared gDbgTestPass as long
+dim shared gDbgTestFail as long
+
+private sub frmDebug_Check( byval sName as string, byval bCond as boolean, byval sGot as string = "" )
+    if bCond then
+        gDbgTestPass += 1
+    else
+        gDbgTestFail += 1
+        dim as string sLine = "  FAIL: " & sName
+        if len(sGot) then sLine = sLine & "   got: " & sGot
+        print sLine
+    end if
+end sub
+
+sub frmDebug_RunSelfTest()
+    if environ("TIKO_DEBUG_SELFTEST") <> "1" then exit sub
+
+    gDbgTestPass = 0
+    gDbgTestFail = 0
+    dim as string sLine
+    print "--- TIKO_DEBUG_SELFTEST ---"
+
+    ' ---- layout ------------------------------------------------------------------------
+    ' 1575 x 1085 is the real client at 175%, read off a live window by TIKO_DEBUGWIN_TRACE.
+    dim as FRMDEBUG_LAYOUT lo
+    dim as long cx = 1575, cy = 1085
+    dim as long nTool = 77, nStatus = 45, nTab = 60, nSplit = 10
+    dim as long bar = 945
+    frmDebug_ComputeLayout( cx, cy, bar, nTool, nStatus, nTab, nSplit, lo )
+
+    frmDebug_Check( "status band sits directly under the toolbar", _
+        lo.rcStatus.top = nTool, str(lo.rcStatus.top) )
+    frmDebug_Check( "tabs start where the status band ends", _
+        lo.rcTabs.top = nTool + nStatus, str(lo.rcTabs.top) )
+    frmDebug_Check( "the variables tree starts where the tabs end", _
+        lo.rcVars.top = lo.rcTabs.bottom, str(lo.rcVars.top) )
+
+    ' The two panes must TILE: no overlap and no gap, or the window shows a seam of its own
+    ' background between them.
+    frmDebug_Check( "the left pane ends exactly at the splitter", _
+        lo.rcVars.right = lo.rcSplit.left, str(lo.rcVars.right) & " vs " & str(lo.rcSplit.left) )
+    frmDebug_Check( "the right pane starts exactly where the splitter ends", _
+        lo.rcStack.left = lo.rcSplit.right, str(lo.rcStack.left) & " vs " & str(lo.rcSplit.right) )
+    frmDebug_Check( "the tab strip is exactly as wide as the pane below it", _
+        lo.rcTabs.right = lo.rcVars.right, str(lo.rcTabs.right) )
+    frmDebug_Check( "all three panes reach the bottom of the client", _
+        (lo.rcVars.bottom = cy) andalso (lo.rcSplit.bottom = cy) andalso (lo.rcStack.bottom = cy), _
+        str(lo.rcVars.bottom) & "/" & str(lo.rcSplit.bottom) & "/" & str(lo.rcStack.bottom) )
+    frmDebug_Check( "the right pane reaches the right edge", _
+        lo.rcStack.right = cx, str(lo.rcStack.right) )
+    frmDebug_Check( "the splitter is the requested thickness", _
+        (lo.rcSplit.right - lo.rcSplit.left) = nSplit, str(lo.rcSplit.right - lo.rcSplit.left) )
+    frmDebug_Check( "no pane has negative width", _
+        (lo.rcVars.right >= lo.rcVars.left) andalso (lo.rcStack.right >= lo.rcStack.left) )
+
+    ' A bar dragged hard against the right edge must not give the stack a negative width --
+    ' DeferWindowPos with a negative extent is not an error, it is a silently wrong window.
+    frmDebug_ComputeLayout( cx, cy, cx - 2, nTool, nStatus, nTab, nSplit, lo )
+    frmDebug_Check( "a bar past the right edge clamps the stack pane to zero, not negative", _
+        lo.rcStack.right >= lo.rcStack.left, _
+        str(lo.rcStack.left) & ".." & str(lo.rcStack.right) )
+
+    ' ---- the datatip expression walk ----------------------------------------------------
+    ' Columns are 1-based, matching mid().
+    dim as DWSTRING wszSrc = "    rec.inner.ix = n * 2"
+    frmDebug_Check( "a bare name resolves to itself", _
+        frmDebug_ExprFromLine( "    total = a + b", 7 ) = "total", _
+        str(frmDebug_ExprFromLine( "    total = a + b", 7 )) )
+    frmDebug_Check( "hovering the LAST member returns the whole dotted path", _
+        frmDebug_ExprFromLine( wszSrc, 15 ) = "rec.inner.ix", _
+        str(frmDebug_ExprFromLine( wszSrc, 15 )) )
+    ' This is the asymmetry that matters: left walks through dots, right does not. Hovering
+    ' the HEAD must not drag in members the cursor is not on.
+    frmDebug_Check( "hovering the HEAD does not drag in the members after it", _
+        frmDebug_ExprFromLine( wszSrc, 5 ) = "rec", _
+        str(frmDebug_ExprFromLine( wszSrc, 5 )) )
+    frmDebug_Check( "hovering a MIDDLE member stops at that member", _
+        frmDebug_ExprFromLine( wszSrc, 9 ) = "rec.inner", _
+        str(frmDebug_ExprFromLine( wszSrc, 9 )) )
+    frmDebug_Check( "whitespace yields nothing", _
+        len(frmDebug_ExprFromLine( wszSrc, 1 )) = 0 )
+    frmDebug_Check( "an operator yields nothing", _
+        len(frmDebug_ExprFromLine( wszSrc, 18 )) = 0, _
+        str(frmDebug_ExprFromLine( wszSrc, 18 )) )
+    frmDebug_Check( "a column past the end of the line yields nothing", _
+        len(frmDebug_ExprFromLine( wszSrc, 9999 )) = 0 )
+    frmDebug_Check( "column zero yields nothing", _
+        len(frmDebug_ExprFromLine( wszSrc, 0 )) = 0 )
+    frmDebug_Check( "an empty line yields nothing", _
+        len(frmDebug_ExprFromLine( "", 1 )) = 0 )
+    frmDebug_Check( "underscores and digits are part of a name", _
+        frmDebug_ExprFromLine( "  my_var2 = 1", 3 ) = "my_var2", _
+        str(frmDebug_ExprFromLine( "  my_var2 = 1", 3 )) )
+    ' A member access written against a call result has no head we can evaluate; the leading
+    ' dot must be stripped rather than passed to the engine as ".field".
+    frmDebug_Check( "a leading dot is stripped", _
+        frmDebug_ExprFromLine( "  ).field = 1", 5 ) = "field", _
+        str(frmDebug_ExprFromLine( "  ).field = 1", 5 )) )
+
+    ' ---- localization --------------------------------------------------------------------
+    ' Every id this window uses must resolve. An id with no entry renders as an EMPTY string,
+    ' so a caption or a whole message box comes up blank with nothing in the build or the
+    ' assertions to say so.
+    dim as long nBlank = 0
+    for id as long = 600 to 625
+        if len( LL(id) ) = 0 then
+            nBlank += 1
+            print "  FAIL: localized id " & id & " is empty"
+        end if
+    next
+    frmDebug_Check( "every debugger string 600-625 resolves", nBlank = 0, str(nBlank) & " blank" )
+
+    for id as long = 247 to 248
+        frmDebug_Check( "reused menu string " & id & " still resolves", len(LL(id)) > 0 )
+    next
+    frmDebug_Check( "reused menu string 255 still resolves", len(LL(255)) > 0 )
+    frmDebug_Check( "reused menu string 256 still resolves", len(LL(256)) > 0 )
+
+    ' len() > 0 CANNOT distinguish a real translation from the English fallback -- the
+    ' loader fills a blank key with English, so this suite reads 26/26 under any language
+    ' file. Printing four of them is what actually distinguishes them.
+    sLine = "  NOTE resolved: 618=" & str(LL(618)) & " | 619=" & str(LL(619)) & _
+            " | 621=" & str(LL(621)) & " | 625=" & str(LL(625))
+    print sLine
+
+    sLine = "--- TIKO_DEBUG_SELFTEST: " & str(gDbgTestPass) & " passed, " & _
+            str(gDbgTestFail) & " failed ---"
+    print sLine
+end sub

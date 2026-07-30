@@ -105,6 +105,26 @@ declare sub      frmDebug_ApplyTheme()
 declare function frmDebug_IsOpen() as boolean
 declare sub      frmDebug_ClearExecutionMarkers()
 declare sub      frmDebug_Trace()
+declare sub      frmDebug_RunSelfTest()
+
+' The pane geometry, computed as a pure function of the client size and the bar position so
+' it can be asserted without a window. LayoutPanes uses this and nothing else, which is what
+' stops the assertions testing a parallel implementation of the layout.
+type FRMDEBUG_LAYOUT
+    rcStatus as RECT
+    rcTabs   as RECT
+    rcVars   as RECT
+    rcSplit  as RECT
+    rcStack  as RECT
+end type
+declare sub frmDebug_ComputeLayout( byval cx as long, byval cy as long, byval barPos as long, _
+                                    byval nTool as long, byval nStatus as long, byval nTab as long, _
+                                    byval nSplit as long, byref lo as FRMDEBUG_LAYOUT )
+
+' The identifier-with-dotted-path under a column of a line. Pure, and separated from the
+' Scintilla plumbing precisely so it can be asserted -- it is the one piece of the datatip
+' path with real edge cases.
+declare function frmDebug_ExprFromLine( byval wszLine as DWSTRING, byval col as long ) as DWSTRING
 ' Takes the Scintilla handle rather than a clsDocument ptr: this header is pulled in by
 ' modCompile.inc, which is included before clsDocument's type is complete.
 declare sub      frmDebug_ShowDataTip( byval hEdit as HWND, byval nPos as long )
