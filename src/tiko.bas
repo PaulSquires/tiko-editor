@@ -117,13 +117,10 @@ dim shared gTTabCtl as clsTopTabCtl
 ' and clsDocument.inc (the clsDocument type it instantiates for the disk round-trip).
 #include once "modEncodingSelfTest.bi"
 #include once "modEncodingSelfTest.inc"
-' The debug-information reader. Deliberately placed with no dependency on anything above it
-' or below it: it names no tiko global and no Ps* type, so it compiles standalone and can be
-' exercised headlessly. See its .bi header for the format and the traps in it.
-#include once "modDebugInfo.inc"
-' Process control. Needs modDebugInfo's line table to place its traps, and _WIN32_WINNT to
-' have been defined above (it is, at the top of this file) for the Wow64 context APIs.
-#include once "modDebugProcess.inc"
+' The debug engine, as a DLL (C:\dev\debugParser -- see _copy_debugparser.bat). This is
+' its ONLY header. It reads the debug information fbc embeds with -g and a gas backend,
+' which gdb cannot read at all, and drives the debuggee against it.
+#include once "debugParser.bi"
 #include once "clsApp.inc"
 #include once "clsSymbolDb.inc"
 #include once "clsScanMgr.inc"
