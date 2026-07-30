@@ -474,6 +474,16 @@ function Scintilla_OnNotify( _
             end if
             
             
+        ' Hovering a variable while the debugger is stopped shows its value. Scintilla's
+        ' dwell timer does the timing, so there is no timer of our own here; the datatip
+        ' itself is a hand-driven PsTooltip that is off the shared dwell clock.
+        case SCN_DWELLSTART
+            pDoc = gTTabCtl.GetActiveDocumentPtr()
+            if pDoc then frmDebug_ShowDataTip( pDoc->hWndActiveScintilla, pNSC->position )
+
+        case SCN_DWELLEND
+            frmDebug_HideDataTip()
+
         case SCN_MARGINCLICK
             ' Folder margin
             pDoc = gTTabCtl.GetActiveDocumentPtr()

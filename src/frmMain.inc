@@ -1902,6 +1902,13 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
         ' textbox in the app.
         if PsTextBox_FilterMessage( @uMsg ) then continue do
 
+        ' MANDATORY once any PsListTree enables label editing, which the debugger's Watch
+        ' list does: without it IsDialogMessage eats Enter and Escape before the in-place
+        ' editor sees them, so a watch expression can be typed but never committed or
+        ' cancelled. Control-wide rather than window-wide -- one call covers every
+        ' PsListTree in the application.
+        if PsListTree_FilterMessage( @uMsg ) then continue do
+
         ' The code-completion popup. Unlike every filter above it, this one consumes ONLY
         ' the navigation and commit keys -- ordinary typing MUST reach Scintilla, which is
         ' what drives the incremental filtering. It sits here for two reasons: ahead of

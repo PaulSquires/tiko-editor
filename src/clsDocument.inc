@@ -1481,6 +1481,12 @@ function clsDocument.ApplyProperties() as long
         SciMsg( pSci(i), SCI_MARKERSETFORE, MARKER_BREAKPOINT, ghEditor.ForeColorBreakpoint )
         SciMsg( pSci(i), SCI_MARKERSETBACK, MARKER_BREAKPOINT, ghEditor.BackColorBreakpoint )
 
+        ' Arm the mouse dwell notification. Without a time set Scintilla's default is
+        ' SC_TIME_FOREVER, SCN_DWELLSTART never arrives, and the debugger's hover datatips
+        ' silently never appear. Half the double-click time, so it follows the machine's own
+        ' setting rather than a number invented here.
+        SciMsg( pSci(i), SCI_SETMOUSEDWELLTIME, GetDoubleClickTime() \ 2, 0 )
+
         ' define debugger cuurent line marker (yellow arrow)
         SciMsg( pSci(i), SCI_MARKERDEFINE, MARKER_DEBUGGER_CURLINE, SC_MARK_SHORTARROW )
         SciMsg( pSci(i), SCI_MARKERSETFORE, MARKER_DEBUGGER_CURLINE, ghEditor.ForeColorDebugLine )

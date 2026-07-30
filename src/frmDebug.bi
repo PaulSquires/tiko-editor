@@ -30,14 +30,16 @@
 ' and calls back in.
 '
 ' ------------------------------------------------------------------------------------------
-' THERE IS NO frmDebug_FilterMessage.
+' PUMP OBLIGATION -- and it is frmMain's, not this file's.
 '
-' None of the controls used here adds a pump obligation: PsButton and PsSelectBar have none,
-' and PsListTree only acquires one if label editing is enabled, which neither list does.
+' Watch expressions are typed IN the variables list, so that control has label editing
+' enabled, and PsListTree.bi is explicit that label editing is the one thing which makes
+' PsListTree_FilterMessage mandatory: without it IsDialogMessage eats Enter and Escape
+' before the in-place editor ever sees them.
 '
-' That changes the day a Watch tab lands: watch expressions are typed IN the list, which
-' means PsListTree_EnableLabelEdit, which means frmMain's pump gains
-' PsListTree_FilterMessage. Adding one is a host change, not a local one.
+' There is still no frmDebug_FilterMessage. The call frmMain's pump gained is
+' PsListTree_FilterMessage, which is control-wide rather than window-wide -- one call covers
+' every PsListTree in the application, so a second editing list would add nothing.
 '
 ' ------------------------------------------------------------------------------------------
 ' THE VARIABLES TREE IS BUILT TO A BOUNDED DEPTH, NOT LAZILY.
@@ -72,7 +74,6 @@
 ' reason: an index shifts when a tab is added.
 #define DEBUG_TAB_LOCALS   0
 #define DEBUG_TAB_GLOBALS  1
-' Not built yet -- see the pump note above for what adding it costs.
 #define DEBUG_TAB_WATCH    2
 
 const as long FRMDEBUG_MAXDEPTH    = 3
@@ -104,3 +105,13 @@ declare sub      frmDebug_ApplyTheme()
 declare function frmDebug_IsOpen() as boolean
 declare sub      frmDebug_ClearExecutionMarkers()
 declare sub      frmDebug_Trace()
+' Takes the Scintilla handle rather than a clsDocument ptr: this header is pulled in by
+' modCompile.inc, which is included before clsDocument's type is complete.
+declare sub      frmDebug_ShowDataTip( byval hEdit as HWND, byval nPos as long )
+declare sub      frmDebug_HideDataTip()
+declare sub      frmDebug_InitDataTip()
+declare sub      frmDebug_DestroyDataTip()
+
+' Watch expressions. Held here rather than in the engine: they are a UI concept -- text the
+' user typed -- and the engine only ever sees them one at a time, already resolved.
+const as long FRMDEBUG_MAXWATCH = 64

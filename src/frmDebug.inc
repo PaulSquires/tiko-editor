@@ -37,6 +37,10 @@ dim shared as DWSTRING gDbgStatusText
 dim shared as long     gDbgCurFrame          ' call-stack frame the variables view is scoped to
 dim shared as boolean  gDbgSessionEnding
 dim shared as boolean  gDbgSplitInit         ' the splitter's default position is chosen once
+dim shared as DWSTRING gDbgWatch(FRMDEBUG_MAXWATCH - 1)
+dim shared as long     gDbgWatchCount
+dim shared as HWND     gDbgDataTip           ' manually driven; see frmDebug_InitDataTip
+dim shared as DWSTRING gDbgDataTipExpr       ' what the visible tip is showing, "" if none
 
 ' ==========================================================================================
 ' Status line
@@ -169,6 +173,36 @@ private sub frmDebug_FillVariables()
                                        PsSelectBar_GetCurSel(HWND_FRMDEBUG_SELECTBAR) )
     end if
 
+    ' Only the Watch list is editable -- its rows ARE the expressions the user typed.
+    PsListTree_EnableLabelEdit( hLV, (nTab = DEBUG_TAB_WATCH) )
+
+    if nTab = DEBUG_TAB_WATCH then
+        for i as long = 0 to gDbgWatchCount - 1
+            dim as long r = PsListTree_AddNode( hLV, -1, gDbgWatch(i) )
+            if r < 0 then exit for
+            dim as DBGP_NODE nd
+            dim as wstring * 512 wexpr = gDbgWatch(i)
+            if debugparser_evaluate( @wexpr, gDbgCurFrame, @nd ) = DBGP_OK then
+                PsListTree_SetCellText( hLV, r, 1, nd.wszValue )
+                PsListTree_SetCellText( hLV, r, 2, nd.wszType )
+                frmDebug_AddChildren( hLV, r, @nd, 1 )
+                PsListTree_SetNodeCollapsed( hLV, r, true )
+            else
+                ' Out of scope is the NORMAL state for a watch on a local while execution
+                ' is somewhere else, so it is reported as such rather than as an error.
+                PsListTree_SetCellText( hLV, r, 1, L(623, "<not in scope>") )
+            end if
+        next
+        ' A trailing blank row is how a watch is added: click it and type. Cheaper than a
+        ' toolbar button, and it is where the eye already is after the last expression.
+        if gDbgWatchCount < FRMDEBUG_MAXWATCH then
+            dim as long r = PsListTree_AddNode( hLV, -1, "" )
+            if r >= 0 then PsListTree_SetCellText( hLV, r, 1, L(624, "<click to add a watch>") )
+        end if
+        PsListTree_Refresh( hLV )
+        exit sub
+    end if
+
     dim as long n
     if nTab = DEBUG_TAB_GLOBALS then
         n = debugparser_global_count()
@@ -196,6 +230,34 @@ private sub frmDebug_FillVariables()
 
     PsListTree_Refresh( hLV )
 end sub
+
+' Committing an in-place edit. An empty result DELETES the watch, which is how a row is
+' removed without a menu; anything else replaces or appends.
+private function frmDebug_EndLabelEdit( byval hListControl as HWND, byval row as integer, _
+                                        byval newText as DWSTRING ) as boolean
+    dim as DWSTRING wszNew = trim(newText)
+
+    if (row >= 0) andalso (row < gDbgWatchCount) then
+        if len(wszNew) = 0 then
+            for k as long = row to gDbgWatchCount - 2
+                gDbgWatch(k) = gDbgWatch(k + 1)
+            next
+            gDbgWatchCount -= 1
+        else
+            gDbgWatch(row) = wszNew
+        end if
+    elseif len(wszNew) then
+        if gDbgWatchCount < FRMDEBUG_MAXWATCH then
+            gDbgWatch(gDbgWatchCount) = wszNew
+            gDbgWatchCount += 1
+        end if
+    end if
+
+    ' Re-evaluate and rebuild, so the new expression shows a value immediately rather than
+    ' waiting for the next stop.
+    frmDebug_FillVariables()
+    return true
+end function
 
 ' ==========================================================================================
 ' Command enable state. Everything except Stop and Break is meaningless while the debuggee
@@ -252,6 +314,7 @@ private sub frmDebug_OnStopped()
     end if
     frmDebug_SetStatus( wszMsg )
 
+    frmDebug_HideDataTip()
     frmDebug_FillCallStack( si.frameCount )
     frmDebug_FillVariables()
     frmDebug_SyncButtons()
@@ -555,6 +618,164 @@ function frmDebug_IsOpen() as boolean
 end function
 
 ' ==========================================================================================
+' Hover datatips
+'
+' A PsTooltip driven ENTIRELY BY HAND, the same way tiko's code tips are: Create then
+' Detach immediately, which takes the tip off PsTooltip's shared dwell clock. A datatip is
+' anchored to a WORD under the cursor, not to a control, so hover timing, auto-pop and
+' mouse-button dismissal all belong to us -- the fade still works.
+' ==========================================================================================
+sub frmDebug_InitDataTip()
+    if IsWindow(gDbgDataTip) then exit sub
+    gDbgDataTip = PsTooltip_Create( HWND_FRMMAIN )
+    if gDbgDataTip = 0 then exit sub
+    PsTooltip_Detach( gDbgDataTip )
+    PsTooltip_SetFonts( gDbgDataTip, ghFont(GUIFONT_10), ghFont(GUIFONTBOLD_11), ghFont(SYMBOLFONT_10) )
+    PsTooltip_SetMaxWidth( gDbgDataTip, AfxScaleX(520) )
+
+    ' The EDITOR palette, not the popup one -- this tip appears over source text and has to
+    ' read as part of it. Same call the code tips make, for the same reason.
+    dim as PSTOOLTIP_COLORS tipc
+    tipc.BackColor   = ghEditor.BackColorText
+    tipc.BorderColor = ghEditor.Divider
+    tipc.ForeColor   = ghEditor.ForeColorText
+    tipc.TitleColor  = ghEditor.ForeColorKeyword
+    tipc.GlyphColor  = ghEditor.ForeColorText
+    PsTooltip_SetColors( gDbgDataTip, @tipc )
+end sub
+
+sub frmDebug_DestroyDataTip()
+    if IsWindow(gDbgDataTip) then DestroyWindow( gDbgDataTip )
+    gDbgDataTip = 0
+    gDbgDataTipExpr = ""
+end sub
+
+sub frmDebug_HideDataTip()
+    if IsWindow(gDbgDataTip) = 0 then exit sub
+    if len(gDbgDataTipExpr) = 0 then exit sub
+    PsTooltip_Hide( gDbgDataTip )
+    gDbgDataTipExpr = ""
+end sub
+
+' The identifier under a document position, including any dotted path it belongs to, so
+' hovering "ix" inside "rec.inner.ix" evaluates the whole chain rather than a bare field
+' name that resolves to nothing.
+private function frmDebug_ExprAt( byval hEdit as HWND, byval nPos as long ) as DWSTRING
+    if hEdit = 0 then return ""
+    dim as long nLine  = SciExec( hEdit, SCI_LINEFROMPOSITION, nPos, 0 )
+    dim as long nStart = SciExec( hEdit, SCI_POSITIONFROMLINE, nLine, 0 )
+    dim as long nEnd   = SciExec( hEdit, SCI_GETLINEENDPOSITION, nLine, 0 )
+    if (nEnd <= nStart) orelse (nPos < nStart) orelse (nPos > nEnd) then return ""
+
+    dim as long nLen = nEnd - nStart
+    if (nLen <= 0) orelse (nLen > 4096) then return ""
+    dim as zstring ptr pBuf = allocate( nLen + 1 )
+    if pBuf = 0 then return ""
+    dim as Sci_TextRange tr
+    tr.chrg.cpMin = nStart
+    tr.chrg.cpMax = nEnd
+    tr.lpstrText  = pBuf
+    SciExec( hEdit, SCI_GETTEXTRANGE, 0, cast(LPARAM, @tr) )
+    pBuf[nLen] = 0
+    dim as DWSTRING wszLine = *pBuf
+    deallocate pBuf
+    if len(wszLine) = 0 then return ""
+
+    dim as long col = nPos - nStart + 1        ' 1-based index into the line
+    if col > len(wszLine) then col = len(wszLine)
+    if col < 1 then return ""
+
+    #macro ISIDCH( c )
+        ( ((c) >= 48 andalso (c) <= 57) orelse ((c) >= 65 andalso (c) <= 90) orelse _
+          ((c) >= 97 andalso (c) <= 122) orelse (c) = 95 )
+    #endmacro
+
+    dim as long ch = asc(mid(wszLine, col, 1))
+    if ISIDCH(ch) = 0 then return ""
+
+    ' Walk left through identifier characters AND dots, so the dotted path comes with it.
+    dim as long lo = col
+    do while lo > 1
+        dim as long c2 = asc(mid(wszLine, lo - 1, 1))
+        if ISIDCH(c2) orelse (c2 = 46) then
+            lo -= 1
+        else
+            exit do
+        end if
+    loop
+    ' Walk right through identifier characters only: a trailing dot would be an incomplete
+    ' path, and the member after it is not what the cursor is on.
+    dim as long hi = col
+    do while hi < len(wszLine)
+        dim as long c2 = asc(mid(wszLine, hi + 1, 1))
+        if ISIDCH(c2) then
+            hi += 1
+        else
+            exit do
+        end if
+    loop
+
+    dim as DWSTRING wszExpr = mid(wszLine, lo, hi - lo + 1)
+    ' A leading dot means the walk started inside a path whose head is off this line.
+    do while (len(wszExpr) > 0) andalso (left(wszExpr, 1) = ".")
+        wszExpr = mid(wszExpr, 2)
+    loop
+    return wszExpr
+end function
+
+sub frmDebug_ShowDataTip( byval hEdit as HWND, byval nPos as long )
+    if debugparser_is_active() = 0 then exit sub
+    ' Only while STOPPED. A running debuggee has no frame to evaluate against, and its
+    ' memory is changing underneath any answer we could give.
+    if debugparser_is_running() <> 0 then exit sub
+    if hEdit = 0 then exit sub
+
+    dim as DWSTRING wszExpr = frmDebug_ExprAt( hEdit, nPos )
+    if len(wszExpr) = 0 then
+        frmDebug_HideDataTip()
+        exit sub
+    end if
+    ' Already showing this one: leave it alone rather than restarting its fade.
+    if wszExpr = gDbgDataTipExpr then exit sub
+
+    dim as DBGP_NODE nd
+    dim as wstring * 512 wexpr = wszExpr
+    if debugparser_evaluate( @wexpr, gDbgCurFrame, @nd ) <> DBGP_OK then
+        frmDebug_HideDataTip()
+        exit sub
+    end if
+
+    frmDebug_InitDataTip()
+    if IsWindow(gDbgDataTip) = 0 then exit sub
+
+    PsTooltip_SetTitle( gDbgDataTip, wszExpr & "   " & nd.wszType )
+    PsTooltip_SetText( gDbgDataTip, nd.wszValue )
+
+    ' Anchor on the WORD, so the tip points at what it describes rather than at the cursor.
+    dim as long nLine   = SciExec( hEdit, SCI_LINEFROMPOSITION, nPos, 0 )
+    dim as long xPos    = SciExec( hEdit, SCI_POINTXFROMPOSITION, 0, nPos )
+    dim as long yPos    = SciExec( hEdit, SCI_POINTYFROMPOSITION, 0, nPos )
+    dim as long nHeight = SciExec( hEdit, SCI_TEXTHEIGHT, nLine, 0 )
+
+    dim as RECT rcAnchor
+    rcAnchor.left   = xPos
+    rcAnchor.top    = yPos
+    rcAnchor.right  = xPos
+    rcAnchor.bottom = yPos + nHeight
+    dim as POINT pt
+    pt.x = rcAnchor.left : pt.y = rcAnchor.top
+    ClientToScreen( hEdit, @pt )
+    rcAnchor.left = pt.x : rcAnchor.top = pt.y
+    pt.x = rcAnchor.right : pt.y = rcAnchor.bottom
+    ClientToScreen( hEdit, @pt )
+    rcAnchor.right = pt.x : rcAnchor.bottom = pt.y
+
+    if PsTooltip_ShowForRect( gDbgDataTip, rcAnchor, TIP_ALIGN_BELOW ) then
+        gDbgDataTipExpr = wszExpr
+    end if
+end sub
+
+' ==========================================================================================
 ' Control construction
 ' ==========================================================================================
 private function frmDebug_CreateListView( byval CtrlID as long ) as HWND
@@ -572,6 +793,11 @@ private function frmDebug_CreateListView( byval CtrlID as long ) as HWND
         PsListTree_ShowTwisty( hCtl, true )
         PsListTree_SetIndentWidth( hCtl, 14 )
         PsListTree_SetTwistyFont( hCtl, ghFont(SYMBOLFONT_9) )
+        ' Watch expressions are typed into column 0. This is what makes
+        ' PsListTree_FilterMessage mandatory in frmMain's pump -- see the header.
+        PsListTree_SetEditColumn( hCtl, 0 )
+        PsListTree_SetEnterEdits( hCtl, true )
+        PsListTree_SetEndLabelEditCallback( hCtl, @frmDebug_EndLabelEdit )
     else
         PsListTree_AddColumn( hCtl, "",                 pWindow->ScaleX(20) )
         PsListTree_AddColumn( hCtl, L(613, "Function"), pWindow->ScaleX(200) )
@@ -691,6 +917,7 @@ private function frmDebug_WndProc( byval hwnd as HWND, byval uMsg as UINT, _
             return 0
 
         case WM_NCDESTROY
+            frmDebug_DestroyDataTip()
             frmDebug_ClearExecutionMarkers()
             gApp.IsDebuggerActive = false
             debugparser_unload()
@@ -787,6 +1014,7 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as DWSTRING, 
     PsSelectBar_SetSelChangeCallback( HWND_FRMDEBUG_SELECTBAR, @frmDebug_TabSelChange )
     PsSelectBar_AddPanel( HWND_FRMDEBUG_SELECTBAR, L(619, "Locals"),  DEBUG_TAB_LOCALS )
     PsSelectBar_AddPanel( HWND_FRMDEBUG_SELECTBAR, L(620, "Globals"), DEBUG_TAB_GLOBALS )
+    PsSelectBar_AddPanel( HWND_FRMDEBUG_SELECTBAR, L(625, "Watch"),   DEBUG_TAB_WATCH )
 
     HWND_FRMDEBUG_LVVARS  = frmDebug_CreateListView( IDC_FRMDEBUG_LVVARS )
     HWND_FRMDEBUG_LVSTACK = frmDebug_CreateListView( IDC_FRMDEBUG_LVSTACK )
