@@ -51,15 +51,22 @@ sub frmTopTabs_PaintCallback( byval p as PSTABBAR_PAINTINFO ptr )
     ' Caption in its precomputed rect, with the font we handed to SetFont (the widths
     ' were measured with it). PaintText applies DT_VCENTER|DT_SINGLELINE itself, and
     ' rcText's symmetric extents keep the text still when selection changes.
-    p->b->SetFont( ghFont(GUIFONT_10) )
-    p->b->PaintText( p->wszCaption, @p->rcText, DT_CENTER )
+    ' The Find in Project tab carries a magnifier to the LEFT of the search term, so it reads
+    ' as a search rather than as a file whose name happens to be the phrase. The caption rect
+    ' gives up that much room on its left; everything else about the tab is unchanged.
+    dim as RECT rcCaption = p->rcText
+    if gTTabCtl.IsFindTab( p->itemID ) then
+        dim as RECT rcIcon = p->rcText
+        rcIcon.right = rcIcon.left + AfxScaleX(16)
+        p->b->SetFont( ghFont(SYMBOLFONT_9) )
+        p->b->PaintText( wszIconFind, @rcIcon, DT_CENTER )
+        rcCaption.left = rcIcon.right
+    end if
 
-'    ' display the "Find" icon if this in a special "Find in Project" tab.
-'    if gTTabCtl.tabs(i).docType = DocumentType.ProjectSearch then
-'        b.SetFont( ghFont(SYMBOLFONT_9) )
-'        b.PaintText( wszIconFind, @gTTabCtl.tabs(i).rcIcon, DT_CENTER )
-'    end if
-               
+    p->b->SetFont( ghFont(GUIFONT_10) )
+    p->b->PaintText( p->wszCaption, @rcCaption, DT_CENTER )
+
+
     ' if this document is dirty then the dirty circle icon overrides the display of the close icon
     ' unless the tab isHot. The dirty icon displays always for active and inactive tabs.
     dim as boolean isDirty 

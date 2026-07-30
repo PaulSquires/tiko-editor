@@ -227,6 +227,7 @@ sub Theme_ApplyTopTabsIcons()
 end sub
 
 sub Theme_ApplyFindIcons()
+    Theme_PushStripIcons( ghFindIconsFold )
     Theme_PushStripIcons( ghFindIconsField )
     Theme_PushStripIcons( ghFindIconsNav )
     Theme_PushStripIcons( ghFindIconsClose )

@@ -20,6 +20,7 @@
 #Define IDC_FRMFIND_ICONSCLOSE               1005
 #Define IDC_FRMREPLACE_ICONSFIELD            1006
 #Define IDC_FRMREPLACE_ICONSACTIONS          1007
+#Define IDC_FRMFIND_ICONSFOLD                1008
 
 
 '' frmTopTabsInfo
@@ -40,6 +41,12 @@ declare function FindReplace_HighlightSearches() as long
 ' reason TopTabsInfoPanel_Show above is.
 declare function FindControls_Show() as long
 declare function ReplaceControls_Show() as long
+
+' Find in Project's collapse-all state, for the Find bar's fold icon. Declared here rather
+' than in frmFindInProject.bi because frmFind.inc is included well before it.
+declare function frmFindInProject_AllCollapsed() as boolean
+declare sub      frmFindInProject_SetAllCollapsed( byval bCollapsed as boolean )
+declare function frmFindInProject_IsActive() as boolean
 
 
 

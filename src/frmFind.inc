@@ -32,6 +32,10 @@ dim shared ghFindTip as HWND
 ' THE VERTICAL DIVIDER IS THE NAV PANEL'S IP_KIND_SEPARATOR, not a hand-drawn line and not a
 ' gFind rect -- gFind.rcDividerLine is gone. A separator is not hit-testable, so it also
 ' cannot be reported to the tooltip by accident.
+' Collapse/Expand All, shown only on the Find in Project tab -- a one-item panel of its own
+' because a PsIconPanel's item set is STATIC by contract, so it cannot be added to the field
+' panel and then removed again for ordinary find.
+dim shared ghFindIconsFold  as HWND
 dim shared ghFindIconsField as HWND
 dim shared ghFindIconsNav   as HWND
 dim shared ghFindIconsClose as HWND
@@ -48,6 +52,7 @@ enum
     FINDTIP_DOWNARROW
     FINDTIP_SELECTION
     FINDTIP_CLOSE
+    FINDTIP_FOLDALL
 end enum
 
 
@@ -68,6 +73,10 @@ private function frmFind_TipText( byval hTip as HWND, _
         case FINDTIP_DOWNARROW:  return frmPanelMenu_FormatTooltip( IDM_FINDNEXTACCEL )
         case FINDTIP_SELECTION:  return L(131,"Selection")
         case FINDTIP_CLOSE:      return L(136,"Close") & " (Esc)"
+        case FINDTIP_FOLDALL
+            ' The tip names what the click WILL do, which is the opposite of the state.
+            if frmFindInProject_AllCollapsed() then return L(403,"Expand All Search Results")
+            return L(402,"Collapse All Search Results")
     end select
     return ""
 end function
@@ -173,6 +182,15 @@ private sub frmFind_IconClick( byval hIconPanel as HWND, byval idx as long, byva
             FindReplace_HighlightSearches()
             AfxRedrawWindow( hIconPanel )
 
+        case FINDTIP_FOLDALL
+            ' Fold or unfold every file in the results. The glyph is re-pointed by
+            ' frmFind_PositionWindows, which the refresh below ends up calling.
+            ' SetAllCollapsed refreshes the surface; the glyph is re-pointed on the next
+            ' layout pass, which frmMain_PositionWindows drives.
+            frmFindInProject_SetAllCollapsed( not frmFindInProject_AllCollapsed() )
+            frmMain_PositionWindows()
+            AfxRedrawWindow( hIconPanel )
+
         case FINDTIP_UPARROW
             PostMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(IDM_FINDPREV, 0), 0 )
 
@@ -235,12 +253,7 @@ function frmFind_PositionWindows() as LRESULT
     dim as long nTop
     dim as long nWidth 
     dim as long nHeight
-    dim as boolean isProjectSearch = false
-    
-'    dim as long idx = gTTabCtl.GetCurSel()
-'    if gTTabCtl.IsValidTab(idx) then
-'        if gTTabCtl.tabs(idx).docType = DocumentType.ProjectSearch then isProjectSearch = true
-'    end if    
+    dim as boolean isProjectSearch = frmFindInProject_IsActive()
 
     dim as HWND hCtlFind = GetDlgItem(HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND)
 
@@ -271,9 +284,30 @@ function frmFind_PositionWindows() as LRESULT
     ' which is why the widths below are asked of the control rather than multiplied out
     ' here. Every setter takes RAW PIXELS (the family rule: only the Create-time defaults
     ' are scaled for us), so iconWidth/nHeight go in already scaled.
+    frmFind_SetIconMetrics( ghFindIconsFold,  iconWidth, nHeight )
     frmFind_SetIconMetrics( ghFindIconsField, iconWidth, nHeight )
     frmFind_SetIconMetrics( ghFindIconsNav,   iconWidth, nHeight )
     frmFind_SetIconMetrics( ghFindIconsClose, iconWidth, nHeight )
+
+    ' FOLD panel: Collapse/Expand All, OUTSIDE the rounded find frame and to its left. Only
+    ' the Find in Project tab has anything to fold, so on an ordinary find it is hidden and
+    ' the textbox keeps the whole width it has always had.
+    if isProjectSearch then
+        dim as long nFoldW = PsIconPanel_GetIdealWidth( ghFindIconsFold )
+        SetWindowPos( ghFindIconsFold, 0, nLeft, nTop, nFoldW, nHeight, _
+                      SWP_NOZORDER or SWP_SHOWWINDOW )
+        ' The glyph names the STATE's opposite: what the next click will do.
+        PsIconPanel_SetGlyph( ghFindIconsFold, 0, _
+                iif( frmFindInProject_AllCollapsed(), wszIconChevronDown, wszIconChevronUp ) )
+        nLeft  += nFoldW + pWindow->ScaleX(4)
+        nWidth -= nFoldW + pWindow->ScaleX(4)
+    else
+        SetWindowPos( ghFindIconsFold, 0, 0, 0, 0, 0, _
+                      SWP_NOZORDER or SWP_NOMOVE or SWP_NOSIZE or SWP_HIDEWINDOW )
+    end if
+
+    ' Re-place the textbox now that the fold icon may have taken room from its left.
+    SetWindowPos( hCtlFind, 0, nLeft, nTop, nWidth, nHeight, SWP_NOZORDER or SWP_SHOWWINDOW )
 
     ' The separator carries the whole gap the old rcDividerLine did: half a cell of air
     ' either side of a hairline rule, so the pair of chevrons stays exactly one icon width
@@ -500,6 +534,13 @@ function frmFind_Show( byval hwndParent as HWND ) as LRESULT
     '
     ' No tooltip TEXT and no tooltip CALLBACK on any of them: the tips are the bar's
     ' PsTooltip, so each control's own comctl32 tip is left with nothing to say.
+    ghFindIconsFold = PsIconPanel_Create( HWND_FRMMAIN_FIND, IDC_FRMFIND_ICONSFOLD )
+        PsIconPanel_SetFont( ghFindIconsFold, ghFont(SYMBOLFONT_9) )
+        PsIconPanel_SetPaintItemCallback( ghFindIconsFold, @frmFind_IconPaint )
+        PsIconPanel_SetMessageCallback( ghFindIconsFold, @frmFind_IconMessage )
+        PsIconPanel_SetClickCallback( ghFindIconsFold, @frmFind_IconClick )
+        PsIconPanel_AddItem( ghFindIconsFold, IP_KIND_COMMAND, wszIconChevronUp, FINDTIP_FOLDALL )
+
     ghFindIconsField = PsIconPanel_Create( HWND_FRMMAIN_FIND, IDC_FRMFIND_ICONSFIELD )
         PsIconPanel_SetFont( ghFindIconsField, ghFont(GUIFONT_9) )
         PsIconPanel_SetPaintItemCallback( ghFindIconsField, @frmFind_IconPaint )

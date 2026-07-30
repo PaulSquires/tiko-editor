@@ -110,10 +110,10 @@ declare function frmFindInProject_BarAction( byval id as long ) as boolean
 ' gTTabCtl.CloseTab, and shutdown via EFC_CLOSEALL -- and that loop owns destroying this
 ' window. A second door would have to duplicate the loop's own tab bookkeeping.
 '
-' True when the Find in Project tab is the ACTIVE tab. The Find bar and the message pump
-' both branch on this, so it is worth having in one place rather than repeating the
-' IsFindTab( GetCurSel ) pair.
-declare function frmFindInProject_IsActive() as boolean
+' True when the Find in Project tab is the ACTIVE tab. The Find bar and the message pump both
+' branch on this, so it is worth having in one place rather than repeating the
+' IsFindTab( GetCurSel ) pair. DECLARED IN frmTopTabs.bi, not here: frmFind.inc needs it and
+' is included well before this file.
 ' Env-gated: TIKO_FINDPROJ_SELFTEST=1. Opens the tab, asserts, closes it again. Must run
 ' after the session has loaded, or the assertions about documents being hidden are vacuous.
 declare sub      frmFindInProject_RunSelfTest()

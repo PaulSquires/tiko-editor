@@ -47,22 +47,130 @@ end type
 dim shared gFipPool(0 to FIP_POOL_MAX - 1) as FIP_SLOT
 dim shared gFipPoolCount as long
 dim shared gFipOldSciProc as WNDPROC
+' Which group currently holds keyboard focus, or -1. The header of that group grows an
+' "Open File" affordance -- the excerpt is a view onto a real file, and this is how you get
+' from it to the file's own tab.
+dim shared gFipFocusGroup as long = -1
+' Where that affordance was last painted, so a click can be hit-tested against it.
+dim shared gFipOpenRect   as RECT
+' Set while the pinned line is being re-asserted, so that the scroll it causes cannot come
+' back through the subclass and re-assert it again forever.
+dim shared gFipPinning    as boolean
 
 
 ' ========================================================================================
 ' The excerpt pool.
 ' ========================================================================================
 
+' Open the focused excerpt's file in a tab of its own, at the line the caret is on. The
+' excerpt is a view onto the real document, so this is a plain tab switch -- there is nothing
+' to load and nothing to save first.
+private sub FipPool_OpenFocusedFile()
+    if gFipFocusGroup < 0 then exit sub
+    if gFipFocusGroup >= gFip.nGroupCount then exit sub
+
+    dim as clsDocument ptr pDoc = gFip.groups(gFipFocusGroup).pDoc
+    if pDoc = 0 then exit sub
+
+    ' Where the caret sits in the excerpt, so the file opens where the user was looking.
+    dim as long nPos = -1
+    for i as long = 0 to gFipPoolCount - 1
+        if gFipPool(i).nRow = -1 then continue for
+        if gFipRows( gFipPool(i).nRow ).nGroup <> gFipFocusGroup then continue for
+        if GetFocus() = gFipPool(i).hWnd then
+            nPos = SciExec( gFipPool(i).hWnd, SCI_GETCURRENTPOS, 0, 0 )
+            exit for
+        end if
+    next
+
+    dim as long idx = gTTabCtl.GetTabIndexByDocumentPtr( pDoc )
+    if idx = -1 then idx = gTTabCtl.AddTab( pDoc )
+    if idx = -1 then exit sub
+
+    gTTabCtl.TabFocusLost( gTTabCtl.GetCurSel() )
+    gTTabCtl.SetFocusTab( idx )
+
+    if (nPos >= 0) andalso IsWindow( pDoc->hWindow(0) ) then
+        SciExec( pDoc->hWindow(0), SCI_GOTOPOS, nPos, 0 )
+        pDoc->CenterCurrentLine
+    end if
+end sub
+
+
 ' Subclass on every slot, for one reason: Scintilla consumes WM_MOUSEWHEEL itself, so a
 ' gesture made with the pointer over an excerpt would scroll THAT VIEW off its pinned line
 ' instead of scrolling the results list. Routed into the bar, which owns the arithmetic.
 private function FipPool_SciProc( byval hwnd as HWND, byval uMsg as UINT, _
                                   byval wParam as WPARAM, byval lParam as LPARAM ) as LRESULT
-    if uMsg = WM_MOUSEWHEEL then
-        PsVScrollBar_HandleWheelDelta( HWND_FRMFINDINPROJECT_VSCROLL, cast(short, hiword(wParam)) )
-        return 0
-    end if
-    return CallWindowProc( gFipOldSciProc, hwnd, uMsg, wParam, lParam )
+    select case uMsg
+        case WM_MOUSEWHEEL
+            PsVScrollBar_HandleWheelDelta( HWND_FRMFINDINPROJECT_VSCROLL, cast(short, hiword(wParam)) )
+            return 0
+
+        case WM_SETFOCUS, WM_KILLFOCUS
+            ' Which group owns the caret decides which header shows "Open File".
+            dim as long g = -1
+            if uMsg = WM_SETFOCUS then
+                for i as long = 0 to gFipPoolCount - 1
+                    if (gFipPool(i).hWnd = hwnd) andalso (gFipPool(i).nRow <> -1) then
+                        g = gFipRows( gFipPool(i).nRow ).nGroup
+                        exit for
+                    end if
+                next
+            end if
+            if g <> gFipFocusGroup then
+                gFipFocusGroup = g
+                if IsWindow( HWND_FRMFINDINPROJECT_SURFACE ) then
+                    AfxRedrawWindow( HWND_FRMFINDINPROJECT_SURFACE )
+                end if
+            end if
+
+        case WM_SYSKEYDOWN, WM_KEYDOWN
+            ' Alt+Enter opens the excerpt's file in a tab of its own. Alt+key arrives as
+            ' WM_SYSKEYDOWN, not WM_KEYDOWN -- handling only the latter would have looked
+            ' right and never fired.
+            if (wParam = VK_RETURN) andalso ((GetKeyState(VK_MENU) and &H8000) <> 0) then
+                FipPool_OpenFocusedFile()
+                return 0
+            end if
+    end select
+
+    dim as LRESULT lr = CallWindowProc( gFipOldSciProc, hwnd, uMsg, wParam, lParam )
+
+    ' AN EXCERPT NEVER SCROLLS. It is a fixed window onto a fixed run of lines, so typing,
+    ' arrowing or clicking must not slide it off them -- you edit within the lines you can
+    ' see. Scintilla scrolls to keep the caret visible on all sorts of messages, so rather
+    ' than trying to enumerate them the pinned line is simply re-asserted after ANY message
+    ' that moved it.
+    ' RE-ENTRANCY GUARD, AND IT IS NOT OPTIONAL. SCI_SETFIRSTVISIBLELINE makes Scintilla
+    ' scroll, which repaints and notifies, which comes straight back through this same
+    ' subclass -- where the line still looks wrong mid-scroll, so it is set again. That
+    ' recurses without bound and takes the process out with a stack overflow: measured, as a
+    ' segfault immediately after the first search.
+    if gFipPinning then return lr
+    gFipPinning = true
+
+    for i as long = 0 to gFipPoolCount - 1
+        if gFipPool(i).hWnd <> hwnd then continue for
+        ' Bounds, not faith: this runs on EVERY message a slot receives, including ones that
+        ' arrive while the row list is being rebuilt underneath it.
+        if (gFipPool(i).nRow < 0) orelse (gFipPool(i).nRow >= gFipRowCount) then exit for
+        dim as long b = gFipRows( gFipPool(i).nRow ).nBlock
+        if (b < 0) orelse (b >= gFip.nBlockCount) then exit for
+
+        dim as long nWant = gFip.blocks(b).nFirstLine
+        if SciExec( hwnd, SCI_GETFIRSTVISIBLELINE, 0, 0 ) <> nWant then
+            SciExec( hwnd, SCI_SETFIRSTVISIBLELINE, nWant, 0 )
+        end if
+        ' Horizontal too: a long line would otherwise pan out from under the block.
+        if SciExec( hwnd, SCI_GETXOFFSET, 0, 0 ) <> 0 then
+            SciExec( hwnd, SCI_SETXOFFSET, 0, 0 )
+        end if
+        exit for
+    next
+
+    gFipPinning = false
+    return lr
 end function
 
 
@@ -407,6 +515,30 @@ private sub FipSurface_SyncScrollBar()
 end sub
 
 
+' Are all the groups folded? Drives which way round the Find bar's fold icon points. With no
+' results at all the answer is FALSE, so the icon offers "collapse" rather than sitting in the
+' expand state over an empty list.
+function frmFindInProject_AllCollapsed() as boolean
+    dim as long nLive = 0
+    for g as long = 0 to gFip.nGroupCount - 1
+        if gFip.groups(g).pDoc = 0 then continue for
+        nLive += 1
+        if gFip.groups(g).bCollapsed = false then return false
+    next
+    return (nLive > 0)
+end function
+
+
+sub frmFindInProject_SetAllCollapsed( byval bCollapsed as boolean )
+    for g as long = 0 to gFip.nGroupCount - 1
+        gFip.groups(g).bCollapsed = bCollapsed
+    next
+    ' Back to the top: after folding everything the old scroll position points into a canvas
+    ' that no longer exists.
+    frmFindInProject_Refresh( true )
+end sub
+
+
 ' Installed into the model as gFipModelChanged. Keeps the scroll where it is: a file dropping
 ' out because its document closed should not also throw the user back to the top.
 private sub frmFindInProject_OnModelChanged()
@@ -465,7 +597,10 @@ private sub FipSurface_PaintHeader( byval b as PsBufferPaint ptr, byref r as FIP
     rc.top    = yTop
     rc.bottom = yTop + r.nHeight
 
-    b->SetBackColor( ghEditor.BackColorLinenumbers )
+    ' A HIGHLIGHTED band, not just a slightly different grey: the separator bars are the
+    ' structure of this list, and they have to read as headings against a client area that is
+    ' otherwise wall-to-wall code.
+    b->SetBackColor( ghEditor.BackColorCurrentLine )
     b->PaintRect( @rc )
 
     dim as long nPad = AfxScaleX(6)
@@ -501,10 +636,53 @@ private sub FipSurface_PaintHeader( byval b as PsBufferPaint ptr, byref r as FIP
     dim as long nCountW = FipSurface_TextW( b, wszCount ) + nPad
     b->PaintText( wszCount, @rcCount, DT_LEFT )
 
+    ' "Open File  Alt+Enter", but only on the group whose excerpt has the caret. It is an
+    ' affordance for something you can only do while you are IN a file, so showing it on every
+    ' header would be noise -- and it would also be ambiguous about which file it meant.
+    dim as long nOpenLeft = rc.right
+    if r.nGroup = gFipFocusGroup then
+        ' Id 401, newly minted: there was no "Open File" string and no blank slot left, so
+        ' MAXIMUM moved 400 -> 401 in all six .lang files, each with a real translation.
+        ' "Alt+Enter" is deliberately NOT localized -- it is a keystroke, not a phrase.
+        dim as DWSTRING wszOpen = L(401, "Open File")
+        dim as DWSTRING wszKey  = "Alt+Enter"
+
+        b->SetFont( ghFont(GUIFONT_9) )
+        dim as long nKeyW  = FipSurface_TextW( b, wszKey )
+        dim as long nOpenW = FipSurface_TextW( b, wszOpen )
+        nOpenLeft = rc.right - nPad - nKeyW - nPad*2 - nOpenW - nPad
+
+        dim as RECT rcOpen = rc
+        rcOpen.left  = nOpenLeft
+        rcOpen.right = rc.right - nPad
+        rcOpen.top    += AfxScaleY(2)
+        rcOpen.bottom -= AfxScaleY(2)
+        b->SetBackColor( ghEditor.BackColorText )
+        b->PaintRoundRect( @rcOpen )
+
+        dim as RECT rcLbl = rcOpen
+        rcLbl.left += nPad
+        b->SetForeColor( ghEditor.ForeColorText )
+        b->SetBackColor( ghEditor.BackColorText )
+        b->PaintText( wszOpen, @rcLbl, DT_LEFT )
+
+        dim as RECT rcKey = rcOpen
+        rcKey.right -= nPad
+        b->SetForeColor( ghEditor.ForeColorLinenumbers )
+        b->PaintText( wszKey, @rcKey, DT_RIGHT )
+
+        ' Remembered so a click can be hit-tested. Only ever one is on screen at a time.
+        gFipOpenRect = rcOpen
+    end if
+
     if len(wszDir) then
         dim as RECT rcDir = rc
         rcDir.left = rcCount.left + nCountW
+        ' Stop the path before the Open File affordance rather than letting it run under it.
+        rcDir.right = nOpenLeft - nPad
         if rcDir.left < rcDir.right then
+            b->SetForeColor( ghEditor.ForeColorLinenumbers )
+            b->SetBackColor( ghEditor.BackColorCurrentLine )
             b->PaintText( wszDir, @rcDir, DT_LEFT )
         end if
     end if
@@ -558,11 +736,31 @@ private sub FipSurface_Render( byval b as PsBufferPaint ptr, byref rc as RECT )
         for i as long = nFirst to gFipRowCount - 1
             dim as long yTop = gFipRows(i).nTop - gFipScrollTop
             if yTop > rc.bottom then exit for
-            ' Only the separator bars are painted. A block row is covered by a real Scintilla
-            ' view, so the background fill above is all it needs from here -- and a row whose
-            ' view could not be bound (the pool is capped) simply shows that background.
+            ' Only the separator bars and the rules between excerpts are painted. A block row
+            ' is covered by a real Scintilla view, so the background fill above is all it
+            ' needs from here -- and a row whose view could not be bound (the pool is capped)
+            ' simply shows that background.
             if gFipRows(i).nKind = FIP_ROW_HEADER then
                 FipSurface_PaintHeader( b, gFipRows(i), yTop, rc )
+            else
+                ' A hairline in the gap BELOW each excerpt, so several excerpts from one file
+                ' read as separate windows onto it rather than as one long run of code. Not
+                ' drawn after the last excerpt in a group -- the next header's own top edge
+                ' already separates those.
+                dim as boolean bLastInGroup = true
+                if (i + 1) < gFipRowCount then
+                    if (gFipRows(i+1).nKind = FIP_ROW_BLOCK) andalso _
+                       (gFipRows(i+1).nGroup = gFipRows(i).nGroup) then bLastInGroup = false
+                end if
+                if bLastInGroup = false then
+                    dim as RECT rcRule
+                    rcRule.left   = gFipMetrics.nIndent
+                    rcRule.right  = rc.right
+                    rcRule.top    = yTop + gFipRows(i).nHeight + (gFipMetrics.nBlockGap \ 2)
+                    rcRule.bottom = rcRule.top + AfxScaleY(1)
+                    b->SetBackColor( ghEditor.Divider )
+                    b->PaintRect( @rcRule )
+                end if
             end if
         next
     end if
@@ -715,7 +913,20 @@ private function FipSurface_WndProc( _
 
         case WM_LBUTTONDOWN
             ' Signed: a click can be dragged above the client area.
-            dim as long i = FipSurface_RowAtPoint( cast(short, hiword(lParam)) )
+            dim as long yClick = cast(short, hiword(lParam))
+            dim as long xClick = cast(short, loword(lParam))
+
+            ' The "Open File" affordance, when one is showing. Tested before the header
+            ' collapse below, or clicking it would fold the group instead.
+            if gFipFocusGroup >= 0 then
+                if (xClick >= gFipOpenRect.left) andalso (xClick < gFipOpenRect.right) andalso _
+                   (yClick >= gFipOpenRect.top) andalso (yClick < gFipOpenRect.bottom) then
+                    FipPool_OpenFocusedFile()
+                    return 0
+                end if
+            end if
+
+            dim as long i = FipSurface_RowAtPoint( yClick )
             if i >= 0 then
                 if gFipRows(i).nKind = FIP_ROW_HEADER then
                     dim as long g = gFipRows(i).nGroup
@@ -1360,6 +1571,47 @@ sub frmFindInProject_RunSelfTest()
             ' ---- does it actually DRAW? ----------------------------------------------------
             dim as long nTonesResults = FipSurface_CountRenderedTones()
 
+            ' ---- collapse all / expand all --------------------------------------------------
+            dim as long nRowsAllOpen = gFipRowCount
+            frmFindInProject_SetAllCollapsed( true )
+            frmFindInProject_Check( "foldall: everything collapsed leaves only headers", _
+                gFipRowCount = gFip.nGroupCount, _
+                str(gFipRowCount) & " vs " & str(gFip.nGroupCount) )
+            frmFindInProject_Check( "foldall: the state reads back as all-collapsed", _
+                frmFindInProject_AllCollapsed() = true )
+            ' Every excerpt view must be parked when there is nothing to show -- a slot left
+            ' visible over a collapsed group would float above the headers.
+            dim as long nStillShowing = 0
+            for i as long = 0 to gFipPoolCount - 1
+                if gFipPool(i).nRow <> -1 then nStillShowing += 1
+            next
+            frmFindInProject_Check( "foldall: no excerpt view is left showing", _
+                nStillShowing = 0, str(nStillShowing) )
+
+            frmFindInProject_SetAllCollapsed( false )
+            frmFindInProject_Check( "foldall: expanding restores every row", _
+                gFipRowCount = nRowsAllOpen, _
+                str(gFipRowCount) & " vs " & str(nRowsAllOpen) )
+            frmFindInProject_Check( "foldall: the state reads back as not-all-collapsed", _
+                frmFindInProject_AllCollapsed() = false )
+
+            ' ---- the excerpt views do not scroll --------------------------------------------
+            ' Moving the caret to the end of the document must NOT slide the view off its
+            ' block: an excerpt is a fixed window onto a fixed run of lines, and you edit
+            ' within the lines you can see.
+            for i as long = 0 to gFipPoolCount - 1
+                if gFipPool(i).nRow = -1 then continue for
+                dim as long bb = gFipRows( gFipPool(i).nRow ).nBlock
+                dim as long nPinned = gFip.blocks(bb).nFirstLine
+                SendMessage( gFipPool(i).hWnd, WM_KEYDOWN, VK_END, 0 )
+                SendMessage( gFipPool(i).hWnd, WM_KEYDOWN, VK_NEXT, 0 )
+                frmFindInProject_Check( "noscroll: the view stayed pinned after caret keys", _
+                    SciExec( gFipPool(i).hWnd, SCI_GETFIRSTVISIBLELINE, 0, 0 ) = nPinned, _
+                    str(SciExec( gFipPool(i).hWnd, SCI_GETFIRSTVISIBLELINE, 0, 0 )) & _
+                    " vs " & str(nPinned) )
+                exit for
+            next
+
             ' ---- navigation and replace ----------------------------------------------------
             ' Next/prev walk LIVE matches and wrap. Enter in the find box funnels to
             ' IDM_FINDNEXT, so this is the same path typing takes.
@@ -1580,8 +1832,10 @@ private sub FipBar_UpdateStatus()
     ' tab alone, which is what lets this stick.
     dim as long idx = gTTabCtl.FindTabIndex()
     if idx <> -1 then
+        ' Once there is a phrase the tab IS the phrase -- no prefix. The magnifier the tab
+        ' painter puts to its left is what says this is a search.
         dim as DWSTRING wszCap = L(206, "Find in Project")
-        if len(gFipLastQuery) then wszCap = L(206, "Find in Project") & ": " & gFipLastQuery
+        if len(gFipLastQuery) then wszCap = gFipLastQuery
         if PsTabBar_GetText( gTTabCtl.hWindow, idx ) <> wszCap then
             PsTabBar_SetText( gTTabCtl.hWindow, idx, wszCap )
         end if
