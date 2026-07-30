@@ -268,9 +268,17 @@ sub FindProject_RunSelfTest()
     FindProject_LineWindow( 99, 2, 100, nF, nL )
     FindProject_Check( "window: the last line clamps at the bottom", _
         (nF = 97) andalso (nL = 99), str(nF) & ".." & str(nL) )
+    ' FILES SHORTER THAN THE 5-LINE WINDOW. The excerpt shows the whole file and nothing
+    ' beyond it -- asking for lines that do not exist would draw blank rows past the end.
     FindProject_LineWindow( 1, 2, 3, nF, nL )
-    FindProject_Check( "window: a file shorter than the window is not inverted", _
+    FindProject_Check( "window: a 3-line file yields exactly its 3 lines", _
         (nF = 0) andalso (nL = 2), str(nF) & ".." & str(nL) )
+    FindProject_LineWindow( 0, 2, 1, nF, nL )
+    FindProject_Check( "window: a 1-line file yields exactly that line", _
+        (nF = 0) andalso (nL = 0), str(nF) & ".." & str(nL) )
+    FindProject_LineWindow( 1, 2, 2, nF, nL )
+    FindProject_Check( "window: a 2-line file yields both lines", _
+        (nF = 0) andalso (nL = 1), str(nF) & ".." & str(nL) )
     ' An empty document would otherwise produce nLast = -1 and a negative line count.
     FindProject_LineWindow( 0, 2, 0, nF, nL )
     FindProject_Check( "window: an empty document gives a single line, not -1", _

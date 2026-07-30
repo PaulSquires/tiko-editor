@@ -133,6 +133,15 @@ private function FipPool_SciProc( byval hwnd as HWND, byval uMsg as UINT, _
                 FipPool_OpenFocusedFile()
                 return 0
             end if
+
+        case WM_SYSCHAR
+            ' AND SWALLOW ITS CHARACTER, or the system beeps on every Alt+Enter. Claiming a
+            ' key without consuming the character it manufactures is the family-wide trap
+            ' written up in CLAUDE.md -- it shipped in five controls at once and was found by
+            ' a user pressing Enter. Here the character is a SYSCHAR because the modifier is
+            ' Alt; everything else Alt does must still reach DefWindowProc, so this is
+            ' narrowed to the one keystroke that was claimed above.
+            if wParam = VK_RETURN then return 0
     end select
 
     dim as LRESULT lr = CallWindowProc( gFipOldSciProc, hwnd, uMsg, wParam, lParam )
@@ -159,6 +168,20 @@ private function FipPool_SciProc( byval hwnd as HWND, byval uMsg as UINT, _
         if (b < 0) orelse (b >= gFip.nBlockCount) then exit for
 
         dim as long nWant = gFip.blocks(b).nFirstLine
+        dim as long nLast = nWant + gFip.blocks(b).nLineCount - 1
+
+        ' CONFINE THE CARET TO THE VISIBLE LINES. Pinning the view alone is not enough: the
+        ' caret would walk out of the block on Down or Ctrl+End and then be editing lines the
+        ' user cannot see. Clamping it here means the arrow keys simply stop at the edges of
+        ' the excerpt, which is what "you edit within the five lines" has to mean.
+        dim as long nCaretLine = SciExec( hwnd, SCI_LINEFROMPOSITION, _
+                                          SciExec( hwnd, SCI_GETCURRENTPOS, 0, 0 ), 0 )
+        if nCaretLine < nWant then
+            SciExec( hwnd, SCI_GOTOPOS, SciExec( hwnd, SCI_POSITIONFROMLINE, nWant, 0 ), 0 )
+        elseif nCaretLine > nLast then
+            SciExec( hwnd, SCI_GOTOPOS, SciExec( hwnd, SCI_GETLINEENDPOSITION, nLast, 0 ), 0 )
+        end if
+
         if SciExec( hwnd, SCI_GETFIRSTVISIBLELINE, 0, 0 ) <> nWant then
             SciExec( hwnd, SCI_SETFIRSTVISIBLELINE, nWant, 0 )
         end if
@@ -515,6 +538,16 @@ private sub FipSurface_SyncScrollBar()
 end sub
 
 
+' The twisty column. FipSurface_PaintHeader puts the chevron at the header's left padding,
+' and the Find bar's fold icon is placed on this same X so the two read as one column.
+function frmFindInProject_TwistyColumnX() as long
+    ' The header bar spans the full client width and pads its contents by this much; the
+    ' chevron is the first thing in it. Blocks are indented further (FIP_INDENT), but the
+    ' headers are not -- so this is a bare padding, not an indent.
+    return AfxScaleX(6)
+end function
+
+
 ' Are all the groups folded? Drives which way round the Find bar's fold icon points. With no
 ' results at all the answer is FALSE, so the icon offers "collapse" rather than sitting in the
 ' expand state over an empty list.
@@ -597,18 +630,24 @@ private sub FipSurface_PaintHeader( byval b as PsBufferPaint ptr, byref r as FIP
     rc.top    = yTop
     rc.bottom = yTop + r.nHeight
 
-    ' A HIGHLIGHTED band, not just a slightly different grey: the separator bars are the
-    ' structure of this list, and they have to read as headings against a client area that is
-    ' otherwise wall-to-wall code.
+    ' A ROUNDED CARD, not a full-width band with a rule under it. The headers are the
+    ' structure of this list, and a card reads as one object holding a filename rather than
+    ' as a line drawn across the client area. Highlighted rather than a slightly different
+    ' grey, so it stands out from what is otherwise wall-to-wall code.
+    dim as RECT rcCard = rc
+    rcCard.left   += AfxScaleX(4)
+    rcCard.right  -= AfxScaleX(4)
+    rcCard.top    += AfxScaleY(2)
+    rcCard.bottom -= AfxScaleY(2)
     b->SetBackColor( ghEditor.BackColorCurrentLine )
-    b->PaintRect( @rc )
+    b->PaintRoundRect( @rcCard )
 
     dim as long nPad = AfxScaleX(6)
 
     ' The twisty. Down = expanded, right = collapsed, which is the direction every tree in
     ' tiko already uses.
     dim as RECT rcGlyph = rc
-    rcGlyph.left  += nPad
+    rcGlyph.left  = frmFindInProject_TwistyColumnX()
     rcGlyph.right = rcGlyph.left + AfxScaleX(16)
     b->SetFont( ghFont(SYMBOLFONT_9) )
     b->SetForeColor( ghEditor.ForeColorText )
@@ -639,7 +678,7 @@ private sub FipSurface_PaintHeader( byval b as PsBufferPaint ptr, byref r as FIP
     ' "Open File  Alt+Enter", but only on the group whose excerpt has the caret. It is an
     ' affordance for something you can only do while you are IN a file, so showing it on every
     ' header would be noise -- and it would also be ambiguous about which file it meant.
-    dim as long nOpenLeft = rc.right
+    dim as long nOpenLeft = rcCard.right
     if r.nGroup = gFipFocusGroup then
         ' Id 401, newly minted: there was no "Open File" string and no blank slot left, so
         ' MAXIMUM moved 400 -> 401 in all six .lang files, each with a real translation.
@@ -650,11 +689,11 @@ private sub FipSurface_PaintHeader( byval b as PsBufferPaint ptr, byref r as FIP
         b->SetFont( ghFont(GUIFONT_9) )
         dim as long nKeyW  = FipSurface_TextW( b, wszKey )
         dim as long nOpenW = FipSurface_TextW( b, wszOpen )
-        nOpenLeft = rc.right - nPad - nKeyW - nPad*2 - nOpenW - nPad
+        nOpenLeft = rcCard.right - nPad - nKeyW - nPad*2 - nOpenW - nPad
 
-        dim as RECT rcOpen = rc
+        dim as RECT rcOpen = rcCard
         rcOpen.left  = nOpenLeft
-        rcOpen.right = rc.right - nPad
+        rcOpen.right = rcCard.right - nPad
         rcOpen.top    += AfxScaleY(2)
         rcOpen.bottom -= AfxScaleY(2)
         b->SetBackColor( ghEditor.BackColorText )
@@ -683,15 +722,13 @@ private sub FipSurface_PaintHeader( byval b as PsBufferPaint ptr, byref r as FIP
         if rcDir.left < rcDir.right then
             b->SetForeColor( ghEditor.ForeColorLinenumbers )
             b->SetBackColor( ghEditor.BackColorCurrentLine )
-            b->PaintText( wszDir, @rcDir, DT_LEFT )
+            b->PaintTextEx( wszDir, @rcDir, DT_LEFT or DT_SINGLELINE or DT_VCENTER or DT_END_ELLIPSIS )
         end if
     end if
 
-    ' Hairline along the bottom so a run of headers reads as separated.
-    dim as RECT rcDiv = rc
-    rcDiv.top = rcDiv.bottom - AfxScaleY(1)
-    b->SetBackColor( ghEditor.Divider )
-    b->PaintRect( @rcDiv )
+    ' (No hairline under the header any more -- the card's own edge is the separation, and a
+    ' rule as well would read as two boundaries for one thing. The hairlines BETWEEN excerpts
+    ' inside a group stay: those genuinely divide sibling windows.)
 end sub
 
 
@@ -1400,6 +1437,26 @@ sub frmFindInProject_RunSelfTest()
                 frmFindInProject_Check( "engine: every block shows at least the context window", _
                     gFip.blocks(b0).nLineCount >= 1, str(gFip.blocks(b0).nLineCount) )
 
+                ' A FILE SHORTER THAN THE 5-LINE WINDOW must not produce a block asking for
+                ' lines it does not have -- the excerpt view would show blank rows below the
+                ' end of the document and the block would be taller than its content.
+                dim as long nDocLines = pTest->GetLineCount()
+                dim as long nOverrun = 0
+                for b as long = 0 to gFip.nBlockCount - 1
+                    if gFip.blocks(b).nGroup <> nGrp then continue for
+                    if (gFip.blocks(b).nFirstLine + gFip.blocks(b).nLineCount) > nDocLines then
+                        nOverrun += 1
+                    end if
+                    if gFip.blocks(b).nFirstLine < 0 then nOverrun += 1
+                next
+                frmFindInProject_Check( "shortfile: no block runs past the end of its document", _
+                    nOverrun = 0, str(nOverrun) & " of " & str(gFip.groups(nGrp).nBlockCount) & _
+                    " blocks, doc has " & str(nDocLines) & " lines" )
+                if nDocLines < 5 then
+                    print "  NOTE: the test document has " & str(nDocLines) & _
+                          " lines -- the short-file path IS being exercised."
+                end if
+
                 ' The remap, driven through the REAL hook rather than the pure function: an
                 ' insertion at the very start of the file must shift every match in it.
                 dim as long nFirstStart = gFip.matches(m0).nStart
@@ -1621,8 +1678,17 @@ sub frmFindInProject_RunSelfTest()
 
             if nFirstLive >= 0 then
                 dim as long nSecond = FindProject_NextLive( nFirstLive, true )
-                frmFindInProject_Check( "nav: forward moves to a different match", _
-                    (nSecond >= 0) andalso (nSecond <> nFirstLive), str(nSecond) )
+                if gFip.nLiveMatches > 1 then
+                    frmFindInProject_Check( "nav: forward moves to a different match", _
+                        (nSecond >= 0) andalso (nSecond <> nFirstLive), str(nSecond) )
+                else
+                    ' WITH A SINGLE MATCH, "next" WRAPS TO ITSELF -- which is right, and which
+                    ' the assertion above cannot express. It was written as an unconditional
+                    ' "moves to a different match" and only passed because every test run so
+                    ' far happened to have several; a 3-line file with one hit failed it.
+                    frmFindInProject_Check( "nav: a lone match wraps to itself", _
+                        nSecond = nFirstLive, str(nSecond) & " vs " & str(nFirstLive) )
+                end if
                 ' Going back from the second must land on the first again.
                 frmFindInProject_Check( "nav: backward is the inverse of forward", _
                     FindProject_NextLive( nSecond, false ) = nFirstLive, _
@@ -1836,8 +1902,39 @@ private sub FipBar_UpdateStatus()
         ' painter puts to its left is what says this is a search.
         dim as DWSTRING wszCap = L(206, "Find in Project")
         if len(gFipLastQuery) then wszCap = gFipLastQuery
+        ' A long phrase is truncated rather than allowed to take over the whole bar. Measured
+        ' in the tab bar's own font, and the "..." is added here rather than left to a paint
+        ' flag because PsTabBar sizes each tab from its caption -- an ellipsis applied only at
+        ' paint time would leave the tab as wide as the untruncated text.
+        dim as long nMaxChars = 32
+        if len(wszCap) > nMaxChars then wszCap = left(wszCap, nMaxChars - 1) & "..."
+
         if PsTabBar_GetText( gTTabCtl.hWindow, idx ) <> wszCap then
             PsTabBar_SetText( gTTabCtl.hWindow, idx, wszCap )
+        end if
+
+        ' The tab has to be WIDE ENOUGH FOR THE PHRASE PLUS THE MAGNIFIER. PsTabBar sizes a
+        ' tab from its caption alone, and the icon is drawn inside the caption rect -- so
+        ' without this floor the icon eats the text's room and a phrase like "include" comes
+        ' out as "iclud". The floor is what the control would have chosen, plus the glyph.
+        ' Measured on a plain DC, NOT through PsBufferPaint: BeginDoubleBuffer calls
+        ' BeginPaint, and doing that outside a WM_PAINT would validate the tab bar's update
+        ' region behind its back.
+        dim as long nWant = 0
+        dim as HDC hdcM = GetDC( gTTabCtl.hWindow )
+        if hdcM then
+            dim as HGDIOBJ hOldFont = SelectObject( hdcM, ghFont(GUIFONT_10) )
+            dim as SIZE sz
+            GetTextExtentPoint32( hdcM, wszCap.sptr, len(wszCap), @sz )
+            SelectObject( hdcM, hOldFont )
+            ReleaseDC( gTTabCtl.hWindow, hdcM )
+            ' text + the magnifier + what the control reserves for its own close/padding.
+            nWant = sz.cx + AfxScaleX(16) + AfxScaleX(56)
+        end if
+        if nWant > 0 then
+            if PsTabBar_GetTabMinWidth( gTTabCtl.hWindow, idx ) <> nWant then
+                PsTabBar_SetTabMinWidth( gTTabCtl.hWindow, idx, nWant )
+            end if
         end if
     end if
 end sub
@@ -1887,6 +1984,34 @@ private sub FipBar_RevealCurrent()
         SciExec( gFipPool(i).hWnd, SCI_SETSEL, gFip.matches(gFipCurrent).nStart, _
                  gFip.matches(gFipCurrent).nStart + gFip.matches(gFipCurrent).nLen )
         SciExec( gFipPool(i).hWnd, SCI_SETFIRSTVISIBLELINE, gFip.blocks(b).nFirstLine, 0 )
+        exit for
+    next
+end sub
+
+
+' If the caret is sitting in an excerpt, move gFipCurrent to the match nearest ahead of it in
+' that file. Without this, clicking into a result and pressing F3 would resume from wherever
+' the previous Enter had got to, which is somewhere else entirely.
+private sub FipBar_SyncCurrentToCaret()
+    dim as HWND hFocus = GetFocus()
+    for i as long = 0 to gFipPoolCount - 1
+        if gFipPool(i).hWnd <> hFocus then continue for
+        if gFipPool(i).nRow = -1 then exit for
+        if (gFipPool(i).nRow < 0) orelse (gFipPool(i).nRow >= gFipRowCount) then exit for
+
+        dim as long g = gFipRows( gFipPool(i).nRow ).nGroup
+        dim as long nPos = SciExec( hFocus, SCI_GETCURRENTPOS, 0, 0 )
+
+        ' The last match at or before the caret, so the NEXT step lands on the one after it.
+        dim as long m0 = gFip.groups(g).nMatchFirst
+        dim as long nBest = -1
+        for m as long = m0 to m0 + gFip.groups(g).nMatchCount - 1
+            if gFip.matches(m).bDead then continue for
+            if gFip.matches(m).nStart <= nPos then nBest = m
+        next
+        ' Caret before every match in the file: step from just before the first one.
+        if nBest = -1 then nBest = m0 - 1
+        gFipCurrent = nBest
         exit for
     next
 end sub
@@ -1943,6 +2068,10 @@ function frmFindInProject_BarAction( byval id as long ) as boolean
             if (wszPhrase <> gFipLastQuery) orelse (gFip.bValid = false) then
                 FipBar_RunSearch()
             else
+                ' START FROM THE CARET, not from wherever the last Enter left off. If the
+                ' user has clicked into an excerpt, that is where they are, and F3 has to
+                ' continue from there rather than jumping back to the stored position.
+                FipBar_SyncCurrentToCaret()
                 dim as long n = FindProject_NextLive( gFipCurrent, bForward )
                 if n <> -1 then
                     gFipCurrent = n

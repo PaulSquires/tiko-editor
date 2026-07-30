@@ -47,6 +47,9 @@ declare function ReplaceControls_Show() as long
 declare function frmFindInProject_AllCollapsed() as boolean
 declare sub      frmFindInProject_SetAllCollapsed( byval bCollapsed as boolean )
 declare function frmFindInProject_IsActive() as boolean
+' X of the group-header twisty column, in surface client coords. The Find bar's fold icon
+' lines up with it -- one function so the two cannot drift apart.
+declare function frmFindInProject_TwistyColumnX() as long
 
 
 

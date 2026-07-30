@@ -96,6 +96,10 @@ private function frmFind_IsLatched( byval id as long ) as boolean
         case FINDTIP_MATCHCASE:  return cbool( gFind.nMatchCase <> 0 )
         case FINDTIP_WHOLEWORD:  return cbool( gFind.nWholeWord <> 0 )
         case FINDTIP_SELECTION:  return cbool( gFind.nSelection <> 0 )
+        ' Toggle Replace stays lit for as long as the Replace bar is open, so the button
+        ' reports a mode rather than blinking once per press. Same reasoning as the three
+        ' above: the model already owns the state, so asking it cannot go stale.
+        case FINDTIP_TOGGLE:     return gFind.bShowReplacePanel
     end select
     return false
 end function
@@ -289,24 +293,36 @@ function frmFind_PositionWindows() as LRESULT
     frmFind_SetIconMetrics( ghFindIconsNav,   iconWidth, nHeight )
     frmFind_SetIconMetrics( ghFindIconsClose, iconWidth, nHeight )
 
-    ' FOLD panel: Collapse/Expand All, OUTSIDE the rounded find frame and to its left. Only
-    ' the Find in Project tab has anything to fold, so on an ordinary find it is hidden and
-    ' the textbox keeps the whole width it has always had.
+    ' FOLD panel: Collapse/Expand All. It sits entirely OUTSIDE the rounded find frame, to
+    ' its left, and is LINED UP WITH THE GROUP-HEADER TWISTIES on the results surface below
+    ' -- it does the same job for every group at once, so the two want to be in one column.
+    ' That column is the surface's own left inset plus the header's internal padding; see
+    ' FIP_INDENT and the nPad in FipSurface_PaintHeader.
+    '
+    ' Only the Find in Project tab has anything to fold, so on an ordinary find it is hidden
+    ' and the find frame keeps the whole width it has always had.
     if isProjectSearch then
         dim as long nFoldW = PsIconPanel_GetIdealWidth( ghFindIconsFold )
-        SetWindowPos( ghFindIconsFold, 0, nLeft, nTop, nFoldW, nHeight, _
+        dim as long xFold  = frmFindInProject_TwistyColumnX()
+        SetWindowPos( ghFindIconsFold, 0, xFold, nTop, nFoldW, nHeight, _
                       SWP_NOZORDER or SWP_SHOWWINDOW )
         ' The glyph names the STATE's opposite: what the next click will do.
         PsIconPanel_SetGlyph( ghFindIconsFold, 0, _
                 iif( frmFindInProject_AllCollapsed(), wszIconChevronDown, wszIconChevronUp ) )
-        nLeft  += nFoldW + pWindow->ScaleX(4)
-        nWidth -= nFoldW + pWindow->ScaleX(4)
+
+        ' Push the whole find frame right so the icon is beside it, never inside it.
+        dim as long nShift = (xFold + nFoldW + pWindow->ScaleX(8)) - gTTabCtl.rcFindTextRect.left
+        if nShift > 0 then
+            gTTabCtl.rcFindTextRect.left += nShift
+            nLeft  += nShift
+            nWidth -= nShift
+        end if
     else
         SetWindowPos( ghFindIconsFold, 0, 0, 0, 0, 0, _
                       SWP_NOZORDER or SWP_NOMOVE or SWP_NOSIZE or SWP_HIDEWINDOW )
     end if
 
-    ' Re-place the textbox now that the fold icon may have taken room from its left.
+    ' Re-place the textbox now that the fold icon may have moved the frame.
     SetWindowPos( hCtlFind, 0, nLeft, nTop, nWidth, nHeight, SWP_NOZORDER or SWP_SHOWWINDOW )
 
     ' The separator carries the whole gap the old rcDividerLine did: half a cell of air
