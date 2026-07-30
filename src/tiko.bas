@@ -307,7 +307,7 @@ function WinMain( _
     ' Load the Segoe Fluent Icons ttf file that is used for displaying the various
     ' icons used within the editor.
     dim as DWSTRING wszFontFile 
-    wszFontFile = AfxGetExePathName + "\bin\SegoeFluentIcons.ttf"
+    wszFontFile = AfxGetExePathName + "SegoeFluentIcons.ttf"
     if AddFontResourceEx(wszFontFile.vptr, FR_PRIVATE, NULL) = 0 then
         TikoMsgBox( 0, _
                     "Unable to load application font 'SegoeFluentIcons.ttf'. Aborting application." , _
@@ -335,8 +335,8 @@ function WinMain( _
 
 
     ' Load the Scintilla code editing dll
-    dim as any ptr pLibLexilla = dylibload("bin\Lexilla64.dll")
-    dim as any ptr pLibScintilla = dylibload("bin\Scintilla64.dll")
+    dim as any ptr pLibLexilla = dylibload("Lexilla64.dll")
+    dim as any ptr pLibScintilla = dylibload("Scintilla64.dll")
 
     if (pLibLexilla = 0) orelse (pLibScintilla = 0) then
         TikoMsgBox( 0, _

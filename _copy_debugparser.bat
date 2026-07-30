@@ -11,7 +11,6 @@ rem  - libdebugParser.dll.a -> src\ (import library; the build links via -p .)
 set SRCDIR=C:\dev\debugParser
 
 copy /y "%SRCDIR%\debugParser.dll"      "%~dp0debugParser.dll"
-copy /y "%SRCDIR%\debugParser.dll"      "%~dp0src\debugParser.dll"
 copy /y "%SRCDIR%\debugParser.bi"       "%~dp0src\debugParser.bi"
 copy /y "%SRCDIR%\libdebugParser.dll.a" "%~dp0src\libdebugParser.dll.a"
 
