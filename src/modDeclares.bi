@@ -222,6 +222,14 @@ dim shared as HWND HWND_FRMOPTIONS
 ' controls live on the scroll panel, so none of the old HWND_FRMOPTIONS* child-form globals
 ' remain.
 dim shared as HWND HWND_FRMFINDINPROJECT, HWND_FRMSEARCHSYMBOL
+
+' The Find in Project tab has no clsDocument, but its excerpt views ARE editable views onto
+' real ones -- so Edit commands have to be able to find them. Answers the focused excerpt's
+' window and its document, or 0/null when the caret is not in one.
+'
+' Declared here rather than in frmFindInProject.bi because modMenus.inc and frmMainEdit.inc
+' both need it and are compiled long before that file.
+declare function frmFindInProject_ActiveEdit( byref pDocOut as clsDocument ptr ) as HWND
 dim shared as HWND HWND_FRMBUILDCONFIG, HWND_FRMUSERTOOLS, HWND_FRMABOUT
 dim shared as HWND HWND_FRMABOUT_TABS, HWND_FRMABOUT_CREDITS, HWND_FRMABOUT_LICENSE
 dim shared as HWND HWND_FRMKEYBOARD, HWND_FRMKEYBOARDEDIT

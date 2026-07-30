@@ -804,9 +804,12 @@ sub FindProject_OnDocumentModified( byval pDocMod as clsDocument ptr, _
                 SciExec( pDocMod->hWindow(0), SCI_MARKERADD, ln, FINDPROJ_MARKER_DIRTY )
             next
 
-            ' The tab's dirty dot is painted from live state, so the bar has to be told to
-            ' repaint -- nothing else invalidates it on a keystroke made in an excerpt.
+            ' The tab's dirty dot and the surface's dirty stripes are both painted from live
+            ' state, so both have to be told to repaint -- nothing else invalidates them on a
+            ' keystroke made inside an excerpt (the excerpt repaints itself, but the stripe
+            ' is drawn OUTSIDE it, on the surface).
             if IsWindow( gTTabCtl.hWindow ) then AfxRedrawWindow( gTTabCtl.hWindow )
+            if gFipModelChanged <> 0 then gFipModelChanged()
         end if
 
         dim as long m0 = gFip.groups(g).nMatchFirst

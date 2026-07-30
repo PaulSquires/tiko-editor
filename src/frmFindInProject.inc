@@ -341,23 +341,15 @@ private sub FipPool_Bind( byval i as long, byval nRow as long, byref rcView as R
         ' STYLES ARE PER-VIEW. The lexer came with the document, but without this the view
         ' renders in Scintilla's default black-on-white.
         pDoc->ApplyPropertiesToView( gFipPool(i).pSciView )
-        ' Re-suppress what ApplyPropertiesToView just set for a full editor: the fold margin
-        ' goes entirely, and margin 1 is repurposed below.
-        SciExec( gFipPool(i).hWnd, SCI_SETMARGINWIDTHN, 2, 0 )
-
-        ' THE DIRTY-LINE STRIPE. Margin 1 becomes a narrow symbol margin showing only our
-        ' marker: a thin bar at the start of any line edited through the results list.
+        ' Re-suppress what ApplyPropertiesToView just set for a full editor.
         '
-        ' All three of these are PER-VIEW -- the margin type, its mask, and the marker's
-        ' definition -- which is precisely why the stripe appears here and not in the file's
-        ' own editor tab, even though the marker itself lives on the shared document.
-        ' Non-sensitive, so it generates no margin clicks to ignore.
-        SciExec( gFipPool(i).hWnd, SCI_SETMARGINTYPEN, 1, SC_MARGIN_SYMBOL )
-        SciExec( gFipPool(i).hWnd, SCI_SETMARGINMASKN, 1, FINDPROJ_MARKER_MASK )
-        SciExec( gFipPool(i).hWnd, SCI_SETMARGINSENSITIVEN, 1, 0 )
-        SciExec( gFipPool(i).hWnd, SCI_SETMARGINWIDTHN, 1, AfxScaleX(3) )
-        SciExec( gFipPool(i).hWnd, SCI_MARKERDEFINE, FINDPROJ_MARKER_DIRTY, SC_MARK_FULLRECT )
-        SciExec( gFipPool(i).hWnd, SCI_MARKERSETBACK, FINDPROJ_MARKER_DIRTY, FIP_DIRTY_COLOR )
+        ' NOTE that the dirty-line stripe is NOT a margin here. The marker still exists and
+        ' still does the tracking -- Scintilla moves it with its line, which is the whole
+        ' reason for using one -- but NO view reveals it. The surface paints the stripe
+        ' itself, in the strip immediately left of this window, so it is not squeezed inside
+        ' the editable area and does not need a margin of its own. See FipSurface_Render.
+        SciExec( gFipPool(i).hWnd, SCI_SETMARGINWIDTHN, 1, 0 )
+        SciExec( gFipPool(i).hWnd, SCI_SETMARGINWIDTHN, 2, 0 )
         ' The match highlight. The RANGES live on the document (filled once per file by
         ' FindProject_ApplyIndicators), but the indicator's appearance is PER-VIEW, so it has
         ' to be described again on every view that should show it.
@@ -625,6 +617,26 @@ function frmFindInProject_TwistyColumnX() as long
 end function
 
 
+' The excerpt that holds the caret, and the document behind it. This is what lets Edit
+' commands work on the Find in Project tab at all: the tab has no document of its own, so
+' every "pDoc = GetActiveDocumentPtr()" gate answers null and the whole Edit menu greys out.
+function frmFindInProject_ActiveEdit( byref pDocOut as clsDocument ptr ) as HWND
+    pDocOut = 0
+    if frmFindInProject_IsActive() = false then return 0
+
+    dim as HWND hFocus = GetFocus()
+    for i as long = 0 to gFipPoolCount - 1
+        if gFipPool(i).hWnd <> hFocus then continue for
+        if (gFipPool(i).nRow < 0) orelse (gFipPool(i).nRow >= gFipRowCount) then return 0
+        dim as long g = gFipRows( gFipPool(i).nRow ).nGroup
+        if gFip.groups(g).pDoc = 0 then return 0
+        pDocOut = gFip.groups(g).pDoc
+        return hFocus
+    next
+    return 0
+end function
+
+
 ' Are all the groups folded? Drives which way round the Find bar's fold icon points. With no
 ' results at all the answer is FALSE, so the icon offers "collapse" rather than sitting in the
 ' expand state over an empty list.
@@ -707,10 +719,15 @@ private sub FipSurface_PaintHeader( byval b as PsBufferPaint ptr, byref r as FIP
     rc.top    = yTop
     rc.bottom = yTop + r.nHeight
 
+    ' The band BEHIND the card is the panel background, so a header row reads as chrome
+    ' rather than as a gap in the code. The card itself keeps the editor's current-line
+    ' colour -- two different jobs, two different palettes.
+    b->SetBackColor( ghPanel.BackColor )
+    b->PaintRect( @rc )
+
     ' A ROUNDED CARD, not a full-width band with a rule under it. The headers are the
     ' structure of this list, and a card reads as one object holding a filename rather than
-    ' as a line drawn across the client area. Highlighted rather than a slightly different
-    ' grey, so it stands out from what is otherwise wall-to-wall code.
+    ' as a line drawn across the client area.
     dim as RECT rcCard = rc
     rcCard.left   += AfxScaleX(4)
     rcCard.right  -= AfxScaleX(4)
@@ -862,6 +879,35 @@ private sub FipSurface_Render( byval b as PsBufferPaint ptr, byref rc as RECT )
             if gFipRows(i).nKind = FIP_ROW_HEADER then
                 FipSurface_PaintHeader( b, gFipRows(i), yTop, rc )
             else
+                ' THE DIRTY-LINE STRIPE, painted here rather than in a Scintilla margin: it
+                ' sits in the strip immediately LEFT of the excerpt window, so it costs the
+                ' editable area nothing and needs no margin, no mask and no marker definition
+                ' in any view. The marker itself is still what remembers WHICH lines -- it
+                ' rides along as text moves, which a list of line numbers of ours would not.
+                dim as long gDirty = gFipRows(i).nGroup
+                if gFip.groups(gDirty).pDoc <> 0 then
+                    dim as HWND hDoc = gFip.groups(gDirty).pDoc->hWindow(0)
+                    if IsWindow( hDoc ) then
+                        dim as long bD = gFipRows(i).nBlock
+                        dim as long yLine = yTop + gFipMetrics.nBlockPad
+                        for ln as long = 0 to gFip.blocks(bD).nLineCount - 1
+                            if yLine > rc.bottom then exit for
+                            dim as long nDocLine = gFip.blocks(bD).nFirstLine + ln
+                            if (SciExec( hDoc, SCI_MARKERGET, nDocLine, 0 ) and _
+                                FINDPROJ_MARKER_MASK) <> 0 then
+                                dim as RECT rcBar
+                                rcBar.right  = gFipMetrics.nIndent
+                                rcBar.left   = rcBar.right - AfxScaleX(3)
+                                rcBar.top    = yLine
+                                rcBar.bottom = yLine + gFipMetrics.nLineHeight
+                                b->SetBackColor( FIP_DIRTY_COLOR )
+                                b->PaintRect( @rcBar )
+                            end if
+                            yLine += gFipMetrics.nLineHeight
+                        next
+                    end if
+                end if
+
                 ' A hairline in the gap BELOW each excerpt, so several excerpts from one file
                 ' read as separate windows onto it rather than as one long run of code. Not
                 ' drawn after the last excerpt in a group -- the next header's own top edge
@@ -1782,15 +1828,37 @@ sub frmFindInProject_RunSelfTest()
                 frmFindInProject_Check( "dirty: the edited line is marked", _
                     (SciExec( pD2->hWindow(0), SCI_MARKERGET, nLn, 0 ) and FINDPROJ_MARKER_MASK) <> 0 )
 
-                ' The mask is per-VIEW, and that is what keeps the stripe out of the file's
-                ' own editor tab. If the document's own window ever unmasked it, the marker
-                ' would start showing in ordinary editing.
-                frmFindInProject_Check( "dirty: the excerpt view reveals the marker", _
-                    (SciExec( gFipPool(i).hWnd, SCI_GETMARGINMASKN, 1, 0 ) and FINDPROJ_MARKER_MASK) <> 0 )
-                frmFindInProject_Check( "dirty: the document's OWN view does not", _
+                ' NO VIEW REVEALS THE MARKER. The stripe is painted by the surface, in the
+                ' strip left of the excerpt, so the marker is pure bookkeeping. Both of these
+                ' are worth asserting: the excerpt because a margin would eat editable width,
+                ' and the document's own view because tiko's default margin-1 mask is EVERY
+                ' non-folder marker -- which is how this leaked into the editor's margin the
+                ' first time round, found by this assertion's earlier form.
+                frmFindInProject_Check( "dirty: no excerpt margin reveals the marker", _
+                    (SciExec( gFipPool(i).hWnd, SCI_GETMARGINMASKN, 1, 0 ) and FINDPROJ_MARKER_MASK) = 0 )
+                frmFindInProject_Check( "dirty: the document's own view does not either", _
                     (SciExec( pD2->hWindow(0), SCI_GETMARGINMASKN, 1, 0 ) and FINDPROJ_MARKER_MASK) = 0 )
 
                 SciExec( pD2->hWindow(0), SCI_MARKERDELETEALL, FINDPROJ_MARKER_DIRTY, 0 )
+
+                ' ---- the Edit menu can reach an excerpt ------------------------------------
+                ' This is what makes Ctrl+Z work in an excerpt: without it every Edit command
+                ' asks GetActiveDocumentPtr, gets null on this tab, and greys itself out.
+                dim as clsDocument ptr pEd
+                frmFindInProject_Check( "edit: nothing focused means no edit window", _
+                    frmFindInProject_ActiveEdit( pEd ) = 0 )
+
+                SetFocus( gFipPool(i).hWnd )
+                dim as HWND hEd = frmFindInProject_ActiveEdit( pEd )
+                frmFindInProject_Check( "edit: a focused excerpt IS the edit window", _
+                    hEd = gFipPool(i).hWnd )
+                frmFindInProject_Check( "edit: and it reports the excerpt's own document", _
+                    pEd = pD2 )
+                ' The document's own active view must be left alone -- OnCommand_EditCommon
+                ' borrows and restores it, and a leak there would send the user's next edit
+                ' in the file's own tab to a window they cannot see.
+                frmFindInProject_Check( "edit: the document's active view was not hijacked", _
+                    pD2->hWndActiveScintilla <> gFipPool(i).hWnd )
                 exit for
             next
 
@@ -2105,11 +2173,10 @@ private sub FipBar_UpdateStatus()
             GetTextExtentPoint32( hdcM, wszCap.sptr, len(wszCap), @sz )
             SelectObject( hdcM, hOldFont )
             ReleaseDC( gTTabCtl.hWindow, hdcM )
-            ' text + the magnifier + room for the dirty dot + what the control reserves for
-            ' its own close/padding. The dot's width is reserved ALWAYS, not only while
-            ' something is dirty, so the tab does not change size the moment you type in an
-            ' excerpt.
-            nWant = sz.cx + AfxScaleX(16) + AfxScaleX(16) + AfxScaleX(56)
+            ' text + the magnifier + what the control reserves for its own close/padding. No
+            ' extra room for the dirty circle: it takes the close button's PLACE rather than
+            ' sitting beside the phrase, so it costs no width.
+            nWant = sz.cx + AfxScaleX(16) + AfxScaleX(56)
         end if
         if nWant > 0 then
             if PsTabBar_GetTabMinWidth( gTTabCtl.hWindow, idx ) <> nWant then

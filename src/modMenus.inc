@@ -109,15 +109,29 @@ function frmMain_EditTopMenuStates() as long
 
     ' Enable or disable specific edit menu items (based on the currently active document)
     dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
-    if pDoc = 0 then exit function
+    dim as HWND hEdit
 
-    ' A code editing window is active
-    if len(pDoc->GetSelText) then
+    if pDoc then
+        hEdit = pDoc->hWndActiveScintilla
+    else
+        ' The Find in Project tab has no document, but a focused excerpt is a real editable
+        ' view -- so the Edit menu has to describe THAT, or every command on it greys out
+        ' and Ctrl+Z does nothing in a window the user is plainly typing into.
+        dim as clsDocument ptr pFip
+        dim as HWND hFip = frmFindInProject_ActiveEdit( pFip )
+        if (hFip = 0) orelse (pFip = 0) then exit function
+        pDoc  = pFip
+        hEdit = hFip
+    end if
+
+    ' A code editing window is active. Selection is asked of the VIEW, not of the document,
+    ' since those differ when the view is an excerpt.
+    if SendMessage( hEdit, SCI_GETSELECTIONEND, 0, 0 ) > _
+       SendMessage( hEdit, SCI_GETSELECTIONSTART, 0, 0 ) then
         EnableTopMenuItem( IDM_CUT, true )
         EnableTopMenuItem( IDM_COPY, true )
     end if
-    
-    dim as HWND hEdit = pDoc->hWndActiveScintilla 
+
     if SendMessage( hEdit, SCI_CANUNDO, 0, 0) then EnableTopMenuItem( IDM_UNDO, true )
     if SendMessage( hEdit, SCI_CANREDO, 0, 0) then EnableTopMenuItem( IDM_REDO, true )
     if SendMessage( hEdit, SCI_CANPASTE, 0, 0) then EnableTopMenuItem( IDM_PASTE, true )
