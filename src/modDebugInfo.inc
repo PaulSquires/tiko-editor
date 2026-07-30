@@ -807,6 +807,19 @@ function DebugInfo_Load( byref imgPath as string, byval imgLoadBase as ulongint 
         end select
     next
 
+    ' fbc emits a placeholder line record at every procedure's entry address carrying the
+    ' line number 1, and folds the first statement's code into the prologue region. Left
+    ' alone, any address that resolves to a procedure entry -- a fault in a prologue, or a
+    ' call-stack frame that returns exactly to one -- reports "line 1" of the file. Relabel
+    ' it with the procedure's own declared line, which is what that code actually is.
+    for i as long = 0 to gDbgLineCount - 1
+        dim as long pi = gDbgLine(i).procIndex
+        if pi < 0 then continue for
+        if gDbgLine(i).lineNum <> 1 then continue for
+        if gDbgLine(i).addr <> gDbgProc(pi).addrStart then continue for
+        if gDbgProc(pi).lineNum > 1 then gDbgLine(i).lineNum = gDbgProc(pi).lineNum
+    next
+
     ' Rebase everything if the image is loaded somewhere other than its preferred base.
     if gDbg.loadBase <> gDbg.imageBase then
         dim as longint delta = cast(longint, gDbg.loadBase) - cast(longint, gDbg.imageBase)
@@ -973,9 +986,17 @@ end function
 function DebugInfo_ProcFromAddr( byval addr as longint ) as long
     for i as long = 0 to gDbgProcCount - 1
         with gDbgProc(i)
-            dim as longint last = .addrEnd
-            if last = 0 then last = .addrEpilog
-            if (addr >= .addrStart) andalso ((last = 0) orelse (addr <= last)) then return i
+            if addr < .addrStart then continue for
+            ' addrEnd is EXCLUSIVE -- it is the address just past the procedure, which is
+            ' also the next procedure's entry. Testing addr <= addrEnd attributes every
+            ' procedure's first instruction to the one before it.
+            if .addrEnd <> 0 then
+                if addr < .addrEnd then return i
+            elseif .addrEpilog <> 0 then
+                if addr <= .addrEpilog then return i
+            else
+                return i
+            end if
         end with
     next
     return -1

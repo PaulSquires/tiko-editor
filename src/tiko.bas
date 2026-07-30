@@ -121,6 +121,9 @@ dim shared gTTabCtl as clsTopTabCtl
 ' or below it: it names no tiko global and no Ps* type, so it compiles standalone and can be
 ' exercised headlessly. See its .bi header for the format and the traps in it.
 #include once "modDebugInfo.inc"
+' Process control. Needs modDebugInfo's line table to place its traps, and _WIN32_WINNT to
+' have been defined above (it is, at the top of this file) for the Wow64 context APIs.
+#include once "modDebugProcess.inc"
 #include once "clsApp.inc"
 #include once "clsSymbolDb.inc"
 #include once "clsScanMgr.inc"
