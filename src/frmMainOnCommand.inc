@@ -21,6 +21,46 @@
 
 
 ' ========================================================================================
+' Route the standard editing commands to a focused text field rather than to the active
+' document.
+'
+' Ctrl+Z / Ctrl+X / Ctrl+C / Ctrl+V are GLOBAL accelerators (modKeyBindings.inc), so the
+' pump's TranslateAccelerator chain turns them into WM_COMMAND before the keystroke can
+' reach whatever control has the focus -- and the handlers then act on
+' pDoc->hWndActiveScintilla unconditionally. The result was that Ctrl+Z typed into the
+' Output panel's Notes box, or into any PsTextBox on a dialog hosted by frmMain, silently
+' undid an edit in the DOCUMENT behind it.
+'
+' The test is the focus window's CLASS, not a PsTextBox lookup: focus sits on the RichEdit
+' child two levels down, and resolving its container would mean reading the UserData area
+' of an arbitrary window (an unchecked GetWindowLongPtr -- see the registry note in
+' PsOptionButton). The RichEdit answers WM_UNDO/WM_CUT/WM_COPY/WM_PASTE itself, and
+' PsTextBox's subclass still gets first look, so numeric-mode paste vetting is unaffected.
+' This deliberately covers the help viewer's RichEdit too -- undo and copy there were
+' hitting the document just the same.
+' ========================================================================================
+private function frmMain_RouteEditToFocusedField( byval id as long ) as boolean
+
+    dim as HWND hFocus = GetFocus()
+    if hFocus = 0 then return false
+
+    dim as wstring * 64 wszClass
+    GetClassNameW( hFocus, @wszClass, 64 )
+    if ucase(wszClass) <> ucase("RichEdit50W") then return false
+
+    select case id
+        case IDM_UNDO,  WM_UNDO  : SendMessageW( hFocus, WM_UNDO,  0, 0 )
+        case IDM_CUT,   WM_CUT   : SendMessageW( hFocus, WM_CUT,   0, 0 )
+        case IDM_COPY,  WM_COPY  : SendMessageW( hFocus, WM_COPY,  0, 0 )
+        case IDM_PASTE, WM_PASTE : SendMessageW( hFocus, WM_PASTE, 0, 0 )
+        case else                : return false
+    end select
+
+    return true
+end function
+
+
+' ========================================================================================
 ' Process WM_COMMAND message for window/dialog: frmMain
 ' ========================================================================================
 function frmMain_OnCommand( _
@@ -98,6 +138,11 @@ function frmMain_OnCommand( _
             killAllPopupMenus()
     end select
     
+    ' A focused text field owns the editing commands. It has to be tested BEFORE the
+    ' dispatch below, which hands them to the active document's Scintilla with no regard
+    ' for where the focus actually is.
+    if frmMain_RouteEditToFocusedField( id ) then return 0
+
     select case id
         ' show any topmenu that were activated via keyboard Alt+ sequences
         case IDC_MENUBAR_FILE to IDC_MENUBAR_HELP
