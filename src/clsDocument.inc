@@ -1153,21 +1153,21 @@ function clsDocument.ToggleBreakPoint( byval nLine as long ) as long
     ' If the Debugger is active then simply make it a breakpoint
     ' rather than a persistemt breakpoint that will get saved between sessions.
     if gApp.IsDebuggerActive = true then
-        ' Determine if the current line has a breakpoint
-        dim as string bp_cmd
+        ' Tell the engine directly. The gdb path needed a two-message round trip to delete
+        ' one breakpoint (-break-list, then match the reply, then -break-delete), and its
+        ' add path was the one site of four that forgot the 0-based to 1-based conversion,
+        ' so a breakpoint set mid-session landed a line early.
         dim as any ptr pSci = this.GetActiveScintillaPtr()
         dim as long fMark = SciMsg( pSci, SCI_MARKERGET, nLine, 0)  ' 32 bit value
-        if bit(fMark, MARKER_BREAKPOINT) then
-            ' Breakpoint exists so delete it.
-            ' Set action to delete the current line breakpoint. When this gdb calls
-            ' response arrives we load the breakpoints array and then call gdb_deleteCurrentLineBreakpoint.
-            gdb_session.current_debug_action = IDM_DELETE_CURRENT_LINE_BREAKPOINT
-            gdb_session.breakpoint_line_to_delete = nLine
-            gdb_send("-break-list")   
-        else
-            ' Breakpoint does not exist so add it.
-            bp_cmd = "break " & chr(34) & ucase(this.DiskFilename) & chr(34) & ":" & nLine
-            gdb_send(bp_cmd )
+        dim as wstring * 520 wszFile = this.DiskFilename
+        dim as long si = debugparser_source_index( @wszFile )
+        if si >= 0 then
+            if bit(fMark, MARKER_BREAKPOINT) then
+                debugparser_remove_breakpoint( si, nLine + 1 )
+            else
+                dim as long lnExec = debugparser_next_executable_line( si, nLine + 1 )
+                if lnExec > 0 then debugparser_add_breakpoint( si, lnExec )
+            end if
         end if
     end if
     
@@ -1480,6 +1480,12 @@ function clsDocument.ApplyProperties() as long
         SciMsg( pSci(i), SCI_MARKERDEFINE, MARKER_BREAKPOINT, SC_MARK_CIRCLE )
         SciMsg( pSci(i), SCI_MARKERSETFORE, MARKER_BREAKPOINT, ghEditor.ForeColorBreakpoint )
         SciMsg( pSci(i), SCI_MARKERSETBACK, MARKER_BREAKPOINT, ghEditor.BackColorBreakpoint )
+
+        ' Arm the mouse dwell notification. Without a time set Scintilla's default is
+        ' SC_TIME_FOREVER, SCN_DWELLSTART never arrives, and the debugger's hover datatips
+        ' silently never appear. Half the double-click time, so it follows the machine's own
+        ' setting rather than a number invented here.
+        SciMsg( pSci(i), SCI_SETMOUSEDWELLTIME, GetDoubleClickTime() \ 2, 0 )
 
         ' define debugger cuurent line marker (yellow arrow)
         SciMsg( pSci(i), SCI_MARKERDEFINE, MARKER_DEBUGGER_CURLINE, SC_MARK_SHORTARROW )

@@ -1645,7 +1645,10 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ' Env-gated (TIKO_ENCODING_SELFTEST=1). Pure byte-exact + disk round-trip; needs no
     ' document window, so it is safe to run here at startup.
     Encoding_RunSelfTest()
-    
+    ' Env-gated (TIKO_DEBUG_SELFTEST=1). Pure: layout arithmetic, the datatip expression
+    ' walk and the localized strings. It launches nothing -- see the suite's own header
+    ' for what that means it cannot reach.
+    frmDebug_RunSelfTest()
     ' Set the small and large icon for the main window (must be set after main window is created)
     pWindow->BigIcon   = LoadImage( pWindow->InstanceHandle, "IMAGE_AAA_MAINICON", IMAGE_ICON, 32, 32, LR_SHARED)
     pWindow->SmallIcon = LoadImage( pWindow->InstanceHandle, "IMAGE_AAA_MAINICON", IMAGE_ICON, 16, 16, LR_SHARED)
@@ -1902,6 +1905,13 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
         ' PsPopupMenu too since the TrackPopupMenu migration. One call covers every
         ' textbox in the app.
         if PsTextBox_FilterMessage( @uMsg ) then continue do
+
+        ' MANDATORY once any PsListTree enables label editing, which the debugger's Watch
+        ' list does: without it IsDialogMessage eats Enter and Escape before the in-place
+        ' editor sees them, so a watch expression can be typed but never committed or
+        ' cancelled. Control-wide rather than window-wide -- one call covers every
+        ' PsListTree in the application.
+        if PsListTree_FilterMessage( @uMsg ) then continue do
 
         ' The code-completion popup. Unlike every filter above it, this one consumes ONLY
         ' the navigation and commit keys -- ordinary typing MUST reach Scintilla, which is

@@ -200,6 +200,7 @@ Function getMenuText( byval idMenu as long ) As DWSTRING
                 wszText = L(246,"Start Debugging")
             end if
         case IDM_DEBUG_STOPDEBUGGING: wszText = L(254,"Stop Debugging")
+        case IDM_DEBUG_PAUSE: wszText = L(601,"Break")
         case IDM_DEBUG_STEPINTO: wszText = L(247,"Step Into")
         case IDM_DEBUG_STEPOVER: wszText = L(248,"Step Over")
         case IDM_DEBUG_STEPOUT: wszText = L(255,"Step Out")
@@ -360,6 +361,7 @@ function buildTopMenuDefinitions() as long
     setTopMenuItem( IDC_MENUBAR_COMPILE, IDM_COMMANDLINE, 0, false, false )
 
     setTopMenuItem( IDC_MENUBAR_DEBUG, IDM_DEBUG_STARTDEBUGGING, 0, false, false )
+    setTopMenuItem( IDC_MENUBAR_DEBUG, IDM_DEBUG_PAUSE, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_DEBUG, IDM_DEBUG_STOPDEBUGGING, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_DEBUG, 0, 0, false, true )
     setTopMenuItem( IDC_MENUBAR_DEBUG, IDM_DEBUG_STEPINTO, 0, false, false )

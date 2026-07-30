@@ -11,20 +11,83 @@
 '    MERCHANTABILITY or FITNESS for A PARTICULAR PURPOSE.  See the
 '    GNU General Public License for more details.
 
+' ==========================================================================================
+' frmDebug - the debugger window.
+'
+' A modeless WS_POPUP owned by frmMain. Every element is a real control in the Ps* idiom;
+' nothing here is hand-painted except the status line and the window background.
+'
+'   [PsButton x7]  Continue  Break  Stop | Step Into  Step Over  Step Out | Run to Cursor
+'   ------------------------------------------------------------------------------------
+'   Stopped - breakpoint  frmMain.inc:412  in frmMain_PositionWindows        (painted)
+'   ------------------------------------------------------------------------------------
+'   [PsSelectBar] Locals Globals         |  Call stack
+'   [PsListTree, a real tree]           |  [PsListTree]
+'                                    PsSplitter (vertical bar, panes side by side)
+'
+' All debugger state lives in debugParser.dll -- this file owns no line table, no
+' breakpoint list and no process handle. It reacts to MSG_DBGP_STOPPED / _EXITED / _FAILED
+' and calls back in.
+'
+' ------------------------------------------------------------------------------------------
+' PUMP OBLIGATION -- and it is frmMain's, not this file's.
+'
+' Watch expressions are typed IN the variables list, so that control has label editing
+' enabled, and PsListTree.bi is explicit that label editing is the one thing which makes
+' PsListTree_FilterMessage mandatory: without it IsDialogMessage eats Enter and Escape
+' before the in-place editor ever sees them.
+'
+' There is still no frmDebug_FilterMessage. The call frmMain's pump gained is
+' PsListTree_FilterMessage, which is control-wide rather than window-wide -- one call covers
+' every PsListTree in the application, so a second editing list would add nothing.
+'
+' ------------------------------------------------------------------------------------------
+' THE VARIABLES TREE IS BUILT TO A BOUNDED DEPTH, NOT LAZILY.
+'
+' PsListTree reports a twisty click through its message callback but does not offer a
+' "node expanded" hook, so there is no clean point at which to fetch children on demand.
+' The tree is therefore built eagerly to FRMDEBUG_MAXDEPTH levels with at most
+' FRMDEBUG_MAXCHILDREN per node, and everything below the top level starts collapsed. The
+' cost is bounded and paid once per stop; the alternative would be a twisty-click handler
+' that has to distinguish "expanding" from "collapsing" by inspecting state the control
+' already owns.
+' ==========================================================================================
+
 #pragma once
 
-#define IDC_BTN_RUN             1001
-#define IDC_BTN_CONTINUE        1002
-#define IDC_BTN_BREAK           1003
-#define IDC_BTN_STOP            1004
-#define IDC_BTN_STEP_INTO       1005
-#define IDC_BTN_STEP_OVER       1006
-#define IDC_BTN_STEP_OUT        1007
-#define IDC_FRMDEBUG_TXTOUTPUT  1008
-#define IDC_FRMDEBUG_LVVARS     1009
+#define IDC_FRMDEBUG_CMDFIRST      1001
+#define IDC_FRMDEBUG_CMDCONTINUE   1001
+#define IDC_FRMDEBUG_CMDBREAK      1002
+#define IDC_FRMDEBUG_CMDSTOP       1003
+#define IDC_FRMDEBUG_CMDSTEPINTO   1004
+#define IDC_FRMDEBUG_CMDSTEPOVER   1005
+#define IDC_FRMDEBUG_CMDSTEPOUT    1006
+#define IDC_FRMDEBUG_CMDRUNCURSOR  1007
+#define IDC_FRMDEBUG_CMDLAST       1007
 
-#define IDM_LOAD_BREAKPOINT_ARRAY           2000
-#define IDM_DELETE_CURRENT_LINE_BREAKPOINT  2001
+#define IDC_FRMDEBUG_SELECTBAR     1010
+#define IDC_FRMDEBUG_LVVARS        1011
+#define IDC_FRMDEBUG_LVSTACK       1012
+#define IDC_FRMDEBUG_SPLITTER      1013
+
+' Tab identity is the panel ID, not the panel index -- frmOutput's rule, for the same
+' reason: an index shifts when a tab is added.
+#define DEBUG_TAB_LOCALS   0
+#define DEBUG_TAB_GLOBALS  1
+#define DEBUG_TAB_WATCH    2
+
+const as long FRMDEBUG_MAXDEPTH    = 3
+const as long FRMDEBUG_MAXCHILDREN = 200
+
+' Unscaled layout constants. Scaled at point of use, never stored scaled -- the Output
+' panel's height bug came from storing a scaled value in a field documented as unscaled.
+const as long FRMDEBUG_DEFWIDTH    = 900
+const as long FRMDEBUG_DEFHEIGHT   = 620
+const as long FRMDEBUG_TOOLHEIGHT  = 44
+const as long FRMDEBUG_STATUSHEIGHT = 26
+const as long FRMDEBUG_TABHEIGHT   = 34
+const as long FRMDEBUG_SPLITWIDTH  = 6
+const as long FRMDEBUG_MINPANE     = 180
 
 type DebugWindowPosition
     bInitialized as boolean = false
@@ -35,88 +98,40 @@ type DebugWindowPosition
     nBottom      as long
 end type
 dim shared gDebugPos as DebugWindowPosition
-        
-enum DEBUG_BUTTONS explicit
-    BUTTON_FIRST         = 0
-    STOP_DEBUGGING       = 0
-    CONTINUE_DEBUGGING   = 1
-    STEP_OVER            = 2
-    STEP_INTO            = 3
-    STEP_OUT             = 4
-    RUN_TO_CURSOR        = 5
-    BUTTON_LAST          = RUN_TO_CURSOR
-end enum
 
-type DEBUG_BUTTONS_TYPE
-    wszToolTip as DWSTRING
-    wszIcon    as DWSTRING
-    wszText    as DWSTRING
-    rc         as RECT            ' client coordinates 
-    nID        as long            ' id to invoke if clicked on
-    isHot      as boolean
+declare function frmDebug_Show( byval hWndParent as HWND, byval executable as DWSTRING, byval cmdparams as DWSTRING ) as LRESULT
+declare sub      frmDebug_Command( byval id as long )
+declare sub      frmDebug_ApplyTheme()
+declare function frmDebug_IsOpen() as boolean
+declare sub      frmDebug_ClearExecutionMarkers()
+declare sub      frmDebug_Trace()
+declare sub      frmDebug_RunSelfTest()
+
+' The pane geometry, computed as a pure function of the client size and the bar position so
+' it can be asserted without a window. LayoutPanes uses this and nothing else, which is what
+' stops the assertions testing a parallel implementation of the layout.
+type FRMDEBUG_LAYOUT
+    rcStatus as RECT
+    rcTabs   as RECT
+    rcVars   as RECT
+    rcSplit  as RECT
+    rcStack  as RECT
 end type
+declare sub frmDebug_ComputeLayout( byval cx as long, byval cy as long, byval barPos as long, _
+                                    byval nTool as long, byval nStatus as long, byval nTab as long, _
+                                    byval nSplit as long, byref lo as FRMDEBUG_LAYOUT )
 
+' The identifier-with-dotted-path under a column of a line. Pure, and separated from the
+' Scintilla plumbing precisely so it can be asserted -- it is the one piece of the datatip
+' path with real edge cases.
+declare function frmDebug_ExprFromLine( byval wszLine as DWSTRING, byval col as long ) as DWSTRING
+' Takes the Scintilla handle rather than a clsDocument ptr: this header is pulled in by
+' modCompile.inc, which is included before clsDocument's type is complete.
+declare sub      frmDebug_ShowDataTip( byval hEdit as HWND, byval nPos as long )
+declare sub      frmDebug_HideDataTip()
+declare sub      frmDebug_InitDataTip()
+declare sub      frmDebug_DestroyDataTip()
 
-type _GDBMessage as GDBMessage
-
-type GDBMessage
-    message   as string
-    pNextNode as _GDBMessage ptr
-end type
-
-type VariableType
-    VarName         as string
-    VarNameDisplay  as string
-    VarValue        as string
-end type
-
-type BreakpointType
-    numberId        as long
-    func            as string
-    linenum         as long
-end type
-
-
-type GDBSession
-    hProcess                  as HANDLE
-    hThread                   as HANDLE
-    hStdInWrite               as HANDLE
-    hStdOutRead               as HANDLE
-    hStdErrRead               as HANDLE
-    dwProcessId               as DWORD
-    initialized               as boolean
-    hThreadMessages           as any ptr
-    KillMessageThread         as boolean
-    hThreadMutex              as any ptr
-
-    current_file_name         as string
-    current_function_name     as string
-    current_function_linenum  as long
-    variable_array(any)       as VariableType
-    breakpoint_array(any)     as BreakpointType
-    is_new_variables          as boolean 
-    current_debug_action      as long               ' IDM_DEBUG_STEPOVER, IDM_DEBUG_STEPOUT, etc
-    breakpoint_line_to_delete as long               ' line where breakpoint during toggle
-
-    function_breakpoints      as string             ' function where breakpoints are temporarily disabled/enabled  
-    disabled_breakpoints      as string             ' simply list of breakpoint numbers cached for subsequent enable breakpoints.
-    
-    ' Message fifo queue
-    head                      as GDBMessage ptr
-    tail                      as GDBMessage ptr
-    count                     as long
-end type
-
-dim shared as GDBSession gdb_session
-
-dim shared gDbgBtns(DEBUG_BUTTONS.BUTTON_LAST) as DEBUG_BUTTONS_TYPE
-
-const as long DEBUG_BUTTON_IMAGE_WIDTH = 18
-
-declare function gdb_dequeue_message() as string
-declare function gdb_isMessageQueueEmpty() as boolean
-declare function gdb_init( byval executable as string = "", byval cmdparams as string = "" ) as boolean
-declare sub      gdb_threadListener( byval userdata as any ptr )
-declare sub      gdb_close()
-declare function gdb_send( byref cmd as string ) as boolean
-declare function frmDebug_Show( byval hWndParent as HWND, byval executable as string, byval cmdparams as string ) as LRESULT
+' Watch expressions. Held here rather than in the engine: they are a UI concept -- text the
+' user typed -- and the engine only ever sees them one at a time, already resolved.
+const as long FRMDEBUG_MAXWATCH = 64

@@ -876,7 +876,7 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
         
         this.Builds(7).id = AfxGuidText(AfxGuid())
         this.Builds(7).wszDescription = "Win64 GUI (Debug)"
-        this.Builds(7).wszOptions = "-g -exx -s gui -gen gcc"
+        this.Builds(7).wszOptions = "-g -exx -s gui -gen gas64"
         this.Builds(7).Is32bit = 0
         this.Builds(7).Is64bit = 1
         this.Builds(7).ExcludeInPopup = 1
@@ -891,7 +891,7 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
 
         this.Builds(9).id = AfxGuidText(AfxGuid())
         this.Builds(9).wszDescription = "Win64 Console (Debug)"
-        this.Builds(9).wszOptions = "-g -exx -s console -gen gcc"
+        this.Builds(9).wszOptions = "-g -exx -s console -gen gas64"
         this.Builds(9).Is32bit = 0
         this.Builds(9).Is64bit = 1
         this.Builds(9).ExcludeInPopup = 1

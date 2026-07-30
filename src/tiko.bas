@@ -65,6 +65,11 @@ dim shared as DWSTRING gwszDefaultToolchain = "FreeBASIC-1.10.1-winlibs-gcc-9.3.
 #include once "modScintilla.bi"
 
 #include once "fbcParser.bi"
+' The debug engine, as a DLL (C:\dev\debugParser -- see _copy_debugparser.bat). This is its
+' ONLY header. It reads the debug information fbc embeds with -g and a gas backend, which gdb
+' cannot read at all, and drives the debuggee against it. Up here beside the other DLL header
+' because clsDocument.ToggleBreakPoint calls into it.
+#include once "debugParser.bi"
 #include once "clsDocument.bi"
 #include once "modDeclares.bi"
 ' Declarations only, and deliberately naming no Ps* type: clsConfig.inc calls
@@ -302,7 +307,7 @@ function WinMain( _
     ' Load the Segoe Fluent Icons ttf file that is used for displaying the various
     ' icons used within the editor.
     dim as DWSTRING wszFontFile 
-    wszFontFile = AfxGetExePathName + "\bin\SegoeFluentIcons.ttf"
+    wszFontFile = AfxGetExePathName + "SegoeFluentIcons.ttf"
     if AddFontResourceEx(wszFontFile.vptr, FR_PRIVATE, NULL) = 0 then
         TikoMsgBox( 0, _
                     "Unable to load application font 'SegoeFluentIcons.ttf'. Aborting application." , _
@@ -330,8 +335,8 @@ function WinMain( _
 
 
     ' Load the Scintilla code editing dll
-    dim as any ptr pLibLexilla = dylibload("bin\Lexilla64.dll")
-    dim as any ptr pLibScintilla = dylibload("bin\Scintilla64.dll")
+    dim as any ptr pLibLexilla = dylibload("Lexilla64.dll")
+    dim as any ptr pLibScintilla = dylibload("Scintilla64.dll")
 
     if (pLibLexilla = 0) orelse (pLibScintilla = 0) then
         TikoMsgBox( 0, _
