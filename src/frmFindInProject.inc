@@ -378,8 +378,19 @@ private sub FipPool_Bind( byval i as long, byval nRow as long, byref rcView as R
         ' NO CURRENT-LINE HIGHLIGHT in an excerpt. A full-width band across a five-line window
         ' is loud, and it is drawn from the editor's own current-line colour -- which appears
         ' when the view takes focus and stays afterwards. That is what the reported
-        ' "repainting problem" looked like, so this is a candidate fix, not a proven one.
+        ' "repainting problem" looked like.
+        '
+        ' BOTH CALLS ARE NEEDED, AND THE SECOND IS THE ONE THAT WORKS. SCI_SETCARETLINEVISIBLE
+        ' is deprecated in Scintilla 5 -- the caret line is driven by an element colour there,
+        ' so passing 0 is silently ignored. Worse, ApplyPropertiesToView sets the colour ONLY
+        ' when gConfig.HighlightCurrentLine is on, so with it off the element keeps Scintilla's
+        ' own default of WHITE: a full-width white band across the block's first line, which is
+        ' exactly where FipPool_SciProc parks the caret after SETDOCPOINTER. Painting the
+        ' highlight in the editor's own background makes it invisible whatever the message
+        ' semantics turn out to be, which is why the colour is set rather than relying on the
+        ' flag. Do not drop either line.
         SciExec( gFipPool(i).hWnd, SCI_SETCARETLINEVISIBLE, 0, 0 )
+        SciExec( gFipPool(i).hWnd, SCI_SETCARETLINEBACK, ghEditor.BackColorText, 0 )
         ' The match highlight. The RANGES live on the document (filled once per file by
         ' FindProject_ApplyIndicators), but the indicator's appearance is PER-VIEW, so it has
         ' to be described again on every view that should show it.
@@ -475,6 +486,12 @@ sub frmFindInProject_ApplyTheme()
         gFip.groups(g).pDoc->ApplyPropertiesToView( gFipPool(i).pSciView )
         SciExec( gFipPool(i).hWnd, SCI_SETMARGINWIDTHN, 1, 0 )
         SciExec( gFipPool(i).hWnd, SCI_SETMARGINWIDTHN, 2, 0 )
+        ' ApplyPropertiesToView has just re-enabled the current-line highlight for a full
+        ' editor, so it has to be suppressed again here exactly as FipPool_Bind does -- this
+        ' path was missing it, which would have brought the white band back on a theme change
+        ' even once the bind path was fixed.
+        SciExec( gFipPool(i).hWnd, SCI_SETCARETLINEVISIBLE, 0, 0 )
+        SciExec( gFipPool(i).hWnd, SCI_SETCARETLINEBACK, ghEditor.BackColorText, 0 )
         ' Re-styling can change the line height, so the pin has to be re-asserted.
         dim as long b = gFipRows( gFipPool(i).nRow ).nBlock
         SciExec( gFipPool(i).hWnd, SCI_SETFIRSTVISIBLELINE, gFip.blocks(b).nFirstLine, 0 )
@@ -842,7 +859,8 @@ private sub FipSurface_PaintHeader( byval b as PsBufferPaint ptr, byref r as FIP
     ' as a line drawn across the client area.
     dim as RECT rcCard = rc
     b->SetPenColor( ghEditor.Divider )
-    b->PaintRoundOutline( @rcCard )
+'    b->PaintRoundOutline( @rcCard )
+    b->PaintRect( @rcCard )
 
     dim as long nPad = AfxScaleX(6)
 
@@ -966,19 +984,6 @@ end sub
 private sub FipSurface_Render( byval b as PsBufferPaint ptr, byref rc as RECT )
     b->SetBackColor( ghEditor.BackColorText )
     b->PaintRect( @rc )
-
-'    if (gFip.bValid = false) orelse (gFipRowCount = 0) then
-'        ' Empty state. Reuses the tab's own caption rather than minting a localized id that
-'        ' would be retired the moment this gets a real message.
-'        dim as RECT rcText = rc
-'        rcText.top  += AfxScaleY(20)
-'        rcText.left += AfxScaleX(20)
-'        b->SetFont( ghFont(GUIFONT_10) )
-'        b->SetForeColor( ghEditor.ForeColorLinenumbers )
-'        b->SetBackColor( ghEditor.BackColorText )
-'        b->PaintText( L(206, "Find in Project"), @rcText, DT_LEFT )
-'        exit sub
-'    end if
 
     dim as long nFirst = FipRows_FirstVisible( gFipRows(), gFipRowCount, gFipScrollTop )
     if nFirst >= 0 then
