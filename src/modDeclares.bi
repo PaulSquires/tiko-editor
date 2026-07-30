@@ -194,10 +194,11 @@ end enum
 
 '  Global window handles
 dim shared as HWND HWND_FRMMAIN, HWND_FRMRECENT, HWND_FRMMAIN_STATUSBAR
-dim shared as HWND HWND_FRMOUTPUT, HWND_FRMOUTPUT_LVRESULTS, HWND_FRMOUTPUT_LVSEARCH
+dim shared as HWND HWND_FRMOUTPUT, HWND_FRMOUTPUT_LVRESULTS
 dim shared as HWND HWND_FRMOUTPUT_LVTODO, HWND_FRMOUTPUT_VSCROLL
-' The tab strip: a PsSelectBar (the five tabs) and a one-item PsIconPanel (the "X"), sized
-' side by side. HWND_FRMOUTPUT_SELECTBAR also HOLDS the current tab -- see frmOutput.bi.
+' The tab strip: a PsSelectBar (the four tabs) and a one-item PsIconPanel (the "X"), sized
+' side by side. HWND_FRMOUTPUT_SELECTBAR also HOLDS the current tab -- see frmOutput.bi,
+' and note that a tab's identity there is its panel ID, not its panel index.
 dim shared as HWND HWND_FRMOUTPUT_SELECTBAR, HWND_FRMOUTPUT_CLOSE
 dim shared as HWND HWND_FRMMAIN_MENUBAR
 ' Editor split bars: one per orientation, created once and shown one at a time to follow
@@ -224,6 +225,14 @@ dim shared as HWND HWND_FRMOPTIONS
 ' controls live on the scroll panel, so none of the old HWND_FRMOPTIONS* child-form globals
 ' remain.
 dim shared as HWND HWND_FRMFINDINPROJECT, HWND_FRMSEARCHSYMBOL
+
+' The Find in Project tab has no clsDocument, but its excerpt views ARE editable views onto
+' real ones -- so Edit commands have to be able to find them. Answers the focused excerpt's
+' window and its document, or 0/null when the caret is not in one.
+'
+' Declared here rather than in frmFindInProject.bi because modMenus.inc and frmMainEdit.inc
+' both need it and are compiled long before that file.
+declare function frmFindInProject_ActiveEdit( byref pDocOut as clsDocument ptr ) as HWND
 dim shared as HWND HWND_FRMBUILDCONFIG, HWND_FRMUSERTOOLS, HWND_FRMABOUT
 dim shared as HWND HWND_FRMABOUT_TABS, HWND_FRMABOUT_CREDITS, HWND_FRMABOUT_LICENSE
 dim shared as HWND HWND_FRMKEYBOARD, HWND_FRMKEYBOARDEDIT

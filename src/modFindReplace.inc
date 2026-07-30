@@ -129,9 +129,12 @@ function ReplaceControls_Show() as long
 
     ' Display the Replace controls
     AfxSetWindowText( GetDlgItem( HWND_FRMMAIN_REPLACE, IDC_FRMREPLACE_TXTREPLACE ), "" )
-'    if gTTabCtl.tabs(gTTabCtl.CurSel).docType = DocumentType.ProjectSearch then
-'        gFind.bProjectReplaceActive = true
-'    end if
+    ' This is the ONLY writer of bProjectReplaceActive, which frmMain_PositionWindows reads
+    ' to keep the Replace bar open on the Find in Project tab. Without it that read is a
+    ' permanently-false disjunct.
+    if gTTabCtl.IsFindTab( gTTabCtl.GetCurSel() ) then
+        gFind.bProjectReplaceActive = true
+    end if
     return FindReplace_SetVisible( true, true )
 end function
 

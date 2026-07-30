@@ -220,7 +220,7 @@ function AttemptAutoInsert() as Long
             for i = nCurLine to 0 step -1
                 strTemp = AfxStrReplace(pDoc->GetLine(i), chr(9), space(IndentSize))
                 if left(ltrim(ucase(strTemp)), 3) = "IF " then
-                    ' Reposition the else/elseif line to line up with the if line
+                     ' Reposition the else/elseif line to line up with the if line
                     nSpaces = instr(ucase(strTemp), "IF ") - 1
                     strPrevLine = FillString(space(nSpaces)) & Trim(pDoc->GetLine(nLine-1), Any Chr(32, 9))  ' need it to be original case
                     pDoc->SetLine(nLine-1, strPrevLine)
@@ -262,7 +262,7 @@ function AttemptAutoInsert() as Long
             nCurLine = pDoc->GetCurrentLineNumber - 2  ' skip the current CASE and look for previous
             for i = nCurLine to 0 step -1
             strTemp = AfxStrReplace( pDoc->GetLine(i), chr(9), space(IndentSize) )
-                dim as string strTempTrim = ltrim(ucase(strTemp))
+                 dim as string strTempTrim = ltrim(ucase(strTemp))
                 if left(strTempTrim, 12) = "SELECT CASE " then
                     exit for   ' no need to keep searching
                 elseif left(strTempTrim, 5) = "CASE " then

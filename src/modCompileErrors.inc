@@ -255,8 +255,10 @@ end function
 ' ========================================================================================
 ' Set the cursor to the error position based on the selected line in:
 ' (1) Compiler Results
-' (2) Search Results
-' (3) TODO
+' (2) TODO
+' It is shared purely by HWND parameter -- it takes any PsListTree whose column 1 is a
+' 1-based line number and column 2 a filename, which every pane frmOutput_CreateListView
+' builds satisfies. Do not specialize it: it also has two direct callers.
 ' ========================================================================================
 function SetDocumentErrorPosition ( byval hLV as HWND ) as long
 
@@ -566,10 +568,9 @@ function ParseLogForError ( _
             frmOutput_PositionWindows()
         end if
       
-        ' Reposition to the correct tab. SetCurSel is silent, so PositionWindows below
+        ' Reposition to the correct tab. SetCurTab is silent, so PositionWindows below
         ' (which ends in ShowHideOutputControls) is what swaps the visible pane.
-        PsSelectBar_SetCurSel( HWND_FRMOUTPUT_SELECTBAR, _
-                              iif( fSwitchToLogFile, OUTPUT_TAB_LOGFILE, OUTPUT_TAB_RESULTS ) )
+        frmOutput_SetCurTab( iif( fSwitchToLogFile, OUTPUT_TAB_LOGFILE, OUTPUT_TAB_RESULTS ) )
         frmOutput_PositionWindows()
         
         ' Only retore the Output window if Errors exist. Warnings only will not trigger

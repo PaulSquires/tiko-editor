@@ -76,10 +76,23 @@ function frmMain_FileTopMenuStates() as long
     EnableTopMenuItem( IDM_BUILDCONFIG, true )
     EnableTopMenuItem( IDM_EXIT, true )
 
-    if gTTabCtl.GetItemCount() then
+    ' GetDocumentTabCount, not GetItemCount: the Find in Project tab makes the tab count
+    ' non-zero while there is no active document, which would light up Save / Save As /
+    ' Rename / Duplicate over nothing.
+    if gTTabCtl.GetDocumentTabCount() then
         for idMenu as long = IDM_FILECLOSE to IDM_MRUSESSION
             EnableTopMenuItem( idMenu, true )
         next
+    end if
+
+    ' ...but the Find in Project tab CAN save: its excerpts edit real files. Save applies to
+    ' the focused excerpt's file, Save All to every result file that is dirty. Close is
+    ' enabled too -- the tab has to be closeable, and its own close path prompts.
+    if frmFindInProject_IsActive() then
+        EnableTopMenuItem( IDM_FILECLOSE, true )
+        dim as clsDocument ptr pFipMenu
+        if frmFindInProject_ActiveEdit( pFipMenu ) then EnableTopMenuItem( IDM_FILESAVE, true )
+        if FindProject_AnyDirty() then EnableTopMenuItem( IDM_FILESAVEALL, true )
     end if
 
     if gApp.IsSessionActive = false then 
@@ -106,15 +119,29 @@ function frmMain_EditTopMenuStates() as long
 
     ' Enable or disable specific edit menu items (based on the currently active document)
     dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
-    if pDoc = 0 then exit function
+    dim as HWND hEdit
 
-    ' A code editing window is active
-    if len(pDoc->GetSelText) then
+    if pDoc then
+        hEdit = pDoc->hWndActiveScintilla
+    else
+        ' The Find in Project tab has no document, but a focused excerpt is a real editable
+        ' view -- so the Edit menu has to describe THAT, or every command on it greys out
+        ' and Ctrl+Z does nothing in a window the user is plainly typing into.
+        dim as clsDocument ptr pFip
+        dim as HWND hFip = frmFindInProject_ActiveEdit( pFip )
+        if (hFip = 0) orelse (pFip = 0) then exit function
+        pDoc  = pFip
+        hEdit = hFip
+    end if
+
+    ' A code editing window is active. Selection is asked of the VIEW, not of the document,
+    ' since those differ when the view is an excerpt.
+    if SendMessage( hEdit, SCI_GETSELECTIONEND, 0, 0 ) > _
+       SendMessage( hEdit, SCI_GETSELECTIONSTART, 0, 0 ) then
         EnableTopMenuItem( IDM_CUT, true )
         EnableTopMenuItem( IDM_COPY, true )
     end if
-    
-    dim as HWND hEdit = pDoc->hWndActiveScintilla 
+
     if SendMessage( hEdit, SCI_CANUNDO, 0, 0) then EnableTopMenuItem( IDM_UNDO, true )
     if SendMessage( hEdit, SCI_CANREDO, 0, 0) then EnableTopMenuItem( IDM_REDO, true )
     if SendMessage( hEdit, SCI_CANPASTE, 0, 0) then EnableTopMenuItem( IDM_PASTE, true )
@@ -235,7 +262,8 @@ function frmMain_CompileTopMenuStates() as long
         EnableTopMenuItem( idMenu, false )
     next
 
-    dim as boolean fEnabled = iif( gApp.IsProjectActive orelse cbool(gTTabCtl.GetItemCount), true, false )
+    ' Document tabs, not all tabs -- see the note in the File menu states above.
+    dim as boolean fEnabled = iif( gApp.IsProjectActive orelse cbool(gTTabCtl.GetDocumentTabCount), true, false )
     EnableTopMenuItem( IDM_BUILDEXECUTE, fEnabled )
     EnableTopMenuItem( IDM_COMPILE, fEnabled )
     EnableTopMenuItem( IDM_REBUILDALL, fEnabled )
@@ -251,7 +279,7 @@ function frmMain_CompileTopMenuStates() as long
 
     ' QuickRun should be enabled for non-Projects
     if gApp.IsProjectActive = false then 
-        if gTTabCtl.GetItemCount then EnableTopMenuItem( IDM_QUICKRUN, true )
+        if gTTabCtl.GetDocumentTabCount then EnableTopMenuItem( IDM_QUICKRUN, true )
     end if
     
     ' Determine if an executable exists based on the current active file or project
@@ -272,7 +300,8 @@ function frmMain_DebugTopMenuStates() as long
         EnableTopMenuItem( idMenu, false )
     next
 
-    dim as boolean fEnabled = iif( gApp.IsProjectActive orelse cbool(gTTabCtl.GetItemCount), true, false )
+    ' Document tabs, not all tabs -- see the note in the File menu states above.
+    dim as boolean fEnabled = iif( gApp.IsProjectActive orelse cbool(gTTabCtl.GetDocumentTabCount), true, false )
     EnableTopMenuItem( IDM_DEBUG_STARTDEBUGGING, fEnabled )
     
     EnableTopMenuItem( IDM_DEBUG_STOPDEBUGGING, gApp.IsDebuggerActive )
@@ -282,7 +311,8 @@ function frmMain_DebugTopMenuStates() as long
     EnableTopMenuItem( IDM_DEBUG_STEPOUT, gApp.IsDebuggerActive )
     EnableTopMenuItem( IDM_DEBUG_RUNTOCURSOR, gApp.IsDebuggerActive )
     
-    fEnabled = iif( cbool(gTTabCtl.GetItemCount), true, false )
+    ' A breakpoint needs a document to sit in.
+    fEnabled = iif( cbool(gTTabCtl.GetDocumentTabCount), true, false )
     EnableTopMenuItem( IDM_DEBUG_TOGGLEBREAKPOINT, fEnabled )
     EnableTopMenuItem( IDM_DEBUG_DELETEALLBREAKPOINTS, fEnabled )
 

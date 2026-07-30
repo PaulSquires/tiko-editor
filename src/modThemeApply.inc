@@ -227,6 +227,7 @@ sub Theme_ApplyTopTabsIcons()
 end sub
 
 sub Theme_ApplyFindIcons()
+    Theme_PushStripIcons( ghFindIconsFold )
     Theme_PushStripIcons( ghFindIconsField )
     Theme_PushStripIcons( ghFindIconsNav )
     Theme_PushStripIcons( ghFindIconsClose )
@@ -404,6 +405,10 @@ sub Theme_ApplySubsystems( byval nMask as ulong )
                                               IDC_FRMFIND_TXTFIND ) )
         Theme_PushTopTabsTextBox( GetDlgItem( HWND_FRMMAIN_REPLACE, _
                                               IDC_FRMREPLACE_TXTREPLACE ) )
+        ' The push above just rewrote the find field's colours, so a phrase that is red for
+        ' having matched nothing has to be re-reddened. Forced past the change cache, which
+        ' cannot see a write it did not make.
+        frmFind_ApplyErrorState( true )
     end if
 
     ' The Help Center is a WebView2 pane: the SITE owns its own colours, so the only thing
@@ -433,6 +438,10 @@ sub Theme_ApplySubsystems( byval nMask as ulong )
             pDoc->ApplyProperties
             pDoc = pDoc->pDocNext
         loop
+        ' Find in Project's excerpt views are Scintilla views too, but they are NOT in
+        ' pDocList -- the loop above cannot reach them, so they would keep the old palette
+        ' until something happened to rebind them.
+        frmFindInProject_ApplyTheme()
     end if
 
     ' ---- then, and only then, repaint ---------------------------------------------------

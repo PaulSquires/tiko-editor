@@ -32,6 +32,13 @@ dim shared ghFindTip as HWND
 ' THE VERTICAL DIVIDER IS THE NAV PANEL'S IP_KIND_SEPARATOR, not a hand-drawn line and not a
 ' gFind rect -- gFind.rcDividerLine is gone. A separator is not hit-testable, so it also
 ' cannot be reported to the tooltip by accident.
+' Collapse/Expand All, shown only on the Find in Project tab -- a one-item panel of its own
+' because a PsIconPanel's item set is STATIC by contract, so it cannot be added to the field
+' panel and then removed again for ordinary find.
+dim shared ghFindIconsFold  as HWND
+' Whether the find field is currently painted in the "found nothing" colour. Cached so the
+' layout pass, which runs often, does not re-push and re-invalidate on every call.
+dim shared gFindTextIsError as boolean = false
 dim shared ghFindIconsField as HWND
 dim shared ghFindIconsNav   as HWND
 dim shared ghFindIconsClose as HWND
@@ -48,6 +55,7 @@ enum
     FINDTIP_DOWNARROW
     FINDTIP_SELECTION
     FINDTIP_CLOSE
+    FINDTIP_FOLDALL
 end enum
 
 
@@ -68,6 +76,10 @@ private function frmFind_TipText( byval hTip as HWND, _
         case FINDTIP_DOWNARROW:  return frmPanelMenu_FormatTooltip( IDM_FINDNEXTACCEL )
         case FINDTIP_SELECTION:  return L(131,"Selection")
         case FINDTIP_CLOSE:      return L(136,"Close") & " (Esc)"
+        case FINDTIP_FOLDALL
+            ' The tip names what the click WILL do, which is the opposite of the state.
+            if frmFindInProject_AllCollapsed() then return L(403,"Expand All Search Results")
+            return L(402,"Collapse All Search Results")
     end select
     return ""
 end function
@@ -82,11 +94,43 @@ end function
 ' modFindReplace.inc) -- and one that FindControls_Show writes directly when it turns
 ' Selection on for a multi-line selection, without going anywhere near this control. Asking
 ' the model at paint time cannot go stale; a latch synced from four call sites can.
+' ========================================================================================
+' A project search that matched NOTHING turns the phrase red.
+'
+' Only on the Find in Project tab: the in-document find reports "0/0" in the results area
+' beside the bar, which the project search has no equivalent of once the list is empty --
+' an empty results surface looks the same whether you have searched or not.
+' ========================================================================================
+sub frmFind_ApplyErrorState( byval bForce as boolean = false )
+    dim as HWND hCtl = GetDlgItem( HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND )
+    if IsWindow( hCtl ) = 0 then exit sub
+
+    ' Hoisted to booleans: mixing these into one andalso chain is warning 38.
+    dim as boolean bOnTab     = frmFindInProject_IsActive()
+    dim as boolean bSearched  = gFip.bValid
+    dim as boolean bHadPhrase = cbool( len(gFip.wszPhrase) > 0 )
+    dim as boolean bNoHits    = cbool( gFip.nLiveMatches = 0 )
+
+    dim as boolean bErr = false
+    if bOnTab andalso bSearched andalso bHadPhrase andalso bNoHits then bErr = true
+
+    if (bErr = gFindTextIsError) andalso (bForce = false) then exit sub
+    gFindTextIsError = bErr
+
+    PsTextBox_SetForeColor( hCtl, iif( bErr, ghGeneral.iconfail, ghTopTabs.ForeColorHot ) )
+    AfxRedrawWindow( hCtl )
+end sub
+
+
 private function frmFind_IsLatched( byval id as long ) as boolean
     select case id
         case FINDTIP_MATCHCASE:  return cbool( gFind.nMatchCase <> 0 )
         case FINDTIP_WHOLEWORD:  return cbool( gFind.nWholeWord <> 0 )
         case FINDTIP_SELECTION:  return cbool( gFind.nSelection <> 0 )
+        ' Toggle Replace stays lit for as long as the Replace bar is open, so the button
+        ' reports a mode rather than blinking once per press. Same reasoning as the three
+        ' above: the model already owns the state, so asking it cannot go stale.
+        case FINDTIP_TOGGLE:     return gFind.bShowReplacePanel
     end select
     return false
 end function
@@ -173,6 +217,15 @@ private sub frmFind_IconClick( byval hIconPanel as HWND, byval idx as long, byva
             FindReplace_HighlightSearches()
             AfxRedrawWindow( hIconPanel )
 
+        case FINDTIP_FOLDALL
+            ' Fold or unfold every file in the results. The glyph is re-pointed by
+            ' frmFind_PositionWindows, which the refresh below ends up calling.
+            ' SetAllCollapsed refreshes the surface; the glyph is re-pointed on the next
+            ' layout pass, which frmMain_PositionWindows drives.
+            frmFindInProject_SetAllCollapsed( not frmFindInProject_AllCollapsed() )
+            frmMain_PositionWindows()
+            AfxRedrawWindow( hIconPanel )
+
         case FINDTIP_UPARROW
             PostMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(IDM_FINDPREV, 0), 0 )
 
@@ -235,12 +288,7 @@ function frmFind_PositionWindows() as LRESULT
     dim as long nTop
     dim as long nWidth 
     dim as long nHeight
-    dim as boolean isProjectSearch = false
-    
-'    dim as long idx = gTTabCtl.GetCurSel()
-'    if gTTabCtl.IsValidTab(idx) then
-'        if gTTabCtl.tabs(idx).docType = DocumentType.ProjectSearch then isProjectSearch = true
-'    end if    
+    dim as boolean isProjectSearch = frmFindInProject_IsActive()
 
     dim as HWND hCtlFind = GetDlgItem(HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND)
 
@@ -271,9 +319,45 @@ function frmFind_PositionWindows() as LRESULT
     ' which is why the widths below are asked of the control rather than multiplied out
     ' here. Every setter takes RAW PIXELS (the family rule: only the Create-time defaults
     ' are scaled for us), so iconWidth/nHeight go in already scaled.
+    frmFind_SetIconMetrics( ghFindIconsFold,  iconWidth, nHeight )
     frmFind_SetIconMetrics( ghFindIconsField, iconWidth, nHeight )
     frmFind_SetIconMetrics( ghFindIconsNav,   iconWidth, nHeight )
     frmFind_SetIconMetrics( ghFindIconsClose, iconWidth, nHeight )
+
+    ' FOLD panel: Collapse/Expand All. It sits entirely OUTSIDE the rounded find frame, to
+    ' its left, and is LINED UP WITH THE GROUP-HEADER TWISTIES on the results surface below
+    ' -- it does the same job for every group at once, so the two want to be in one column.
+    ' That column is the surface's own left inset plus the header's internal padding; see
+    ' FIP_INDENT and the nPad in FipSurface_PaintHeader.
+    '
+    ' Only the Find in Project tab has anything to fold, so on an ordinary find it is hidden
+    ' and the find frame keeps the whole width it has always had.
+    if isProjectSearch then
+        dim as long nFoldW = PsIconPanel_GetIdealWidth( ghFindIconsFold )
+        ' Centre the PANEL on the twisty column, so its glyph -- which the control centres in
+        ' a cell of its own width -- lands on the same X as the header chevrons below.
+        dim as long xFold  = frmFindInProject_TwistyColumnX() - (nFoldW \ 2)
+        if xFold < 0 then xFold = 0
+        SetWindowPos( ghFindIconsFold, 0, xFold, nTop, nFoldW, nHeight, _
+                      SWP_NOZORDER or SWP_SHOWWINDOW )
+        ' The glyph names the STATE's opposite: what the next click will do.
+        PsIconPanel_SetGlyph( ghFindIconsFold, 0, _
+                iif( frmFindInProject_AllCollapsed(), wszIconChevronDown, wszIconChevronUp ) )
+
+        ' Push the whole find frame right so the icon is beside it, never inside it.
+        dim as long nShift = (xFold + nFoldW + pWindow->ScaleX(8)) - gTTabCtl.rcFindTextRect.left
+        if nShift > 0 then
+            gTTabCtl.rcFindTextRect.left += nShift
+            nLeft  += nShift
+            nWidth -= nShift
+        end if
+    else
+        SetWindowPos( ghFindIconsFold, 0, 0, 0, 0, 0, _
+                      SWP_NOZORDER or SWP_NOMOVE or SWP_NOSIZE or SWP_HIDEWINDOW )
+    end if
+
+    ' Re-place the textbox now that the fold icon may have moved the frame.
+    SetWindowPos( hCtlFind, 0, nLeft, nTop, nWidth, nHeight, SWP_NOZORDER or SWP_SHOWWINDOW )
 
     ' The separator carries the whole gap the old rcDividerLine did: half a cell of air
     ' either side of a hairline rule, so the pair of chevrons stays exactly one icon width
@@ -317,6 +401,10 @@ function frmFind_PositionWindows() as LRESULT
     gFind.rcResults.top        = nTop
     gFind.rcResults.right      = xCloseRight - nCloseW
     gFind.rcResults.bottom     = nTop + nHeight
+
+    ' Also covers LEAVING the tab: this runs on every tab switch, so a field left red by a
+    ' fruitless project search goes back to normal for an ordinary Ctrl+F.
+    frmFind_ApplyErrorState()
 
     AfxRedrawWindow( HWND_FRMMAIN_FIND )
 
@@ -500,6 +588,13 @@ function frmFind_Show( byval hwndParent as HWND ) as LRESULT
     '
     ' No tooltip TEXT and no tooltip CALLBACK on any of them: the tips are the bar's
     ' PsTooltip, so each control's own comctl32 tip is left with nothing to say.
+    ghFindIconsFold = PsIconPanel_Create( HWND_FRMMAIN_FIND, IDC_FRMFIND_ICONSFOLD )
+        PsIconPanel_SetFont( ghFindIconsFold, ghFont(SYMBOLFONT_9) )
+        PsIconPanel_SetPaintItemCallback( ghFindIconsFold, @frmFind_IconPaint )
+        PsIconPanel_SetMessageCallback( ghFindIconsFold, @frmFind_IconMessage )
+        PsIconPanel_SetClickCallback( ghFindIconsFold, @frmFind_IconClick )
+        PsIconPanel_AddItem( ghFindIconsFold, IP_KIND_COMMAND, wszIconChevronUp, FINDTIP_FOLDALL )
+
     ghFindIconsField = PsIconPanel_Create( HWND_FRMMAIN_FIND, IDC_FRMFIND_ICONSFIELD )
         PsIconPanel_SetFont( ghFindIconsField, ghFont(GUIFONT_9) )
         PsIconPanel_SetPaintItemCallback( ghFindIconsField, @frmFind_IconPaint )

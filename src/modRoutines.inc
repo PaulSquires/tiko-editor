@@ -727,7 +727,7 @@ function CompleteIncludeFilename( byval pDoc as clsDocument ptr, byval sFilename
     end if
     wszCompleteFilename = AfxStrReplace(wszCompleteFilename, "/", "\")
     wszCompleteFilename = AfxStrReplace(wszCompleteFilename, "\\", "\")
-
+ 
     function = wszCompleteFilename
 end function
 

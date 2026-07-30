@@ -16,7 +16,9 @@
 #define IDC_FRMOUTPUT_TABS                          1000
 #define IDC_FRMOUTPUT_LVRESULTS                     1001
 #define IDC_FRMOUTPUT_TXTLOGFILE                    1002
-#define IDC_FRMOUTPUT_LVSEARCH                      1003
+' 1003 was IDC_FRMOUTPUT_LVSEARCH (the Search Results pane). Deliberately left as a hole
+' rather than closed up: these are control ids, so reusing 1003 gains nothing and renaming
+' the survivors would churn every GetDlgItem call site for no benefit.
 #define IDC_FRMOUTPUT_LVTODO                        1004
 #define IDC_FRMOUTPUT_TXTNOTES                      1005
 #define IDC_FRMOUTPUT_BTNCLOSE                      1006
@@ -28,24 +30,35 @@
 ' tracking and painting) is gone rather than merely bypassed.
 '
 ' The CURRENT TAB lives in the PsSelectBar -- there is deliberately no gOutputTabsCurSel
-' global any more. Read it with PsSelectBar_GetCurSel( HWND_FRMOUTPUT_SELECTBAR ) and set it
-' with PsSelectBar_SetCurSel (silent: only user clicks fire the change callback, so calling
-' it from a handler cannot recurse). gConfig.ShowOutputPanelIndex is the persisted copy,
-' applied to the control once it exists.
+' global any more. Read it with frmOutput_GetCurTab and set it with frmOutput_SetCurTab
+' (silent: only user clicks fire the change callback, so calling it from a handler cannot
+' recurse). gConfig.ShowOutputPanelIndex is the persisted copy, applied to the control once
+' it exists.
 '
-' Panel indices, in the order they are added -- these ARE the values persisted in the
-' config file, so their numbering must not change.
+' A tab's IDENTITY IS ITS PANEL ID, NOT ITS PANEL INDEX, and the two no longer agree.
+' These ARE the values persisted in the config file, so their numbering must not change --
+' which is why removing the Search Results tab left a HOLE at 2 instead of renumbering.
+' settings.ini carries no version key, so a renumber could not tell an old stored 3 (TODO)
+' from a new stored 3 (Notes): every user whose last tab was TODO would silently land on
+' Notes, with nothing to detect it. PsSelectBar_AddPanel already carries a host id per
+' panel, so the id is what is stored and the index is derived. Always convert through
+' frmOutput_GetCurTab / frmOutput_SetCurTab (or PsSelectBar_FindPanelByID / GetPanelID)
+' rather than comparing a raw GetCurSel index against one of these.
 #define OUTPUT_TAB_RESULTS    0
 #define OUTPUT_TAB_LOGFILE    1
-#define OUTPUT_TAB_SEARCH     2
+' 2 was OUTPUT_TAB_SEARCH. Retired -- search results now live in the Find in Project tab.
 #define OUTPUT_TAB_TODO       3
 #define OUTPUT_TAB_NOTES      4
 
 declare sub      frmOutput_TextBoxScrollChanged( byval hTextBox as HWND )
 declare sub      frmOutput_SetTabCaptions()
 declare function frmOutput_ShowNotes() as long
-declare function frmOutput_UpdateToDoListview() as long 
-declare function frmOutput_UpdateSearchListview( byref wszResultFile as wstring ) as long 
+declare function frmOutput_UpdateToDoListview() as long
+' Current tab as an OUTPUT_TAB_* ID, and the setter that takes one. The index<->id
+' conversion lives in exactly these two places -- see the note on the constants above.
+' GetCurTab answers OUTPUT_TAB_RESULTS when the bar does not exist yet.
+declare function frmOutput_GetCurTab() as long
+declare function frmOutput_SetCurTab( byval nTabID as long ) as boolean
 declare function frmOutput_ShowHideOutputControls( byval hwnd as HWND ) As LRESULT
 declare function frmOutput_PositionWindows() as LRESULT
 declare function frmOutput_Show( byval hWndParent as HWND ) as LRESULT

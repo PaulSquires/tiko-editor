@@ -15,12 +15,22 @@
 
 #include once "PsTabBar.bi"
 
-' document types (not to be confused with FileType)
-' Used to distinguish normal code editing documents from Project Search
-enum DocumentType
-    Normal
-    ProjectSearch
-end enum
+' A tab's per-tab payload is the single itemData integer PsTabBar carries, and it normally
+' holds a clsDocument ptr. TAB_FINDINPROJECT is a SENTINEL stored in that same slot to mark
+' the one tab that has no document: the Find in Project results tab. 1 is never a valid
+' pointer.
+'
+' THE SENTINEL IS FILTERED INSIDE GetpDoc, and that is not optional. Roughly seventy call
+' sites across the app are written as "if pDoc then <dereference>", so a sentinel that
+' reached them would pass every one of those truth tests and dereference address 0x1 --
+' crashing in the tab paint callback, in the message pump on every mouse message, and in
+' SetTabText at tab creation. GetpDoc answers NULL for this tab; ask IsFindTab to tell a
+' document-less tab apart from an invalid index.
+'
+' (This replaces an orphaned DocumentType enum -- Normal / ProjectSearch -- left behind when
+' the per-tab TOPTABS_TYPE array that used to hold a docType field was deleted. The enum had
+' no storage behind it and every one of its eleven use sites was commented out.)
+const TAB_FINDINPROJECT = 1
 
 
 ' Forward reference
@@ -45,6 +55,17 @@ type clsTopTabCtl
         declare function SetCurSel( byval idx as integer ) as boolean
         declare function IsValidTab( byval idx as integer ) as boolean
         declare function GetpDoc( byval idx as integer ) as clsDocument ptr
+        ' Is this tab the document-less Find in Project tab? Reads the RAW itemData, so it is
+        ' the only way to distinguish it from an invalid index (GetpDoc answers null for both).
+        declare function IsFindTab( byval idx as integer ) as boolean
+        ' Index of the Find in Project tab, or -1. There is at most one.
+        declare function FindTabIndex() as long
+        ' How many tabs actually hold a document. Menu enablers want THIS, not GetItemCount:
+        ' the Find tab makes the count non-zero while GetActiveDocumentPtr stays null.
+        declare function GetDocumentTabCount() as long
+        ' The value the session/project writers should persist as "ActiveTab=". NOT the raw
+        ' GetCurSel index -- see the implementation for why those differ.
+        declare function SaveActiveTabIndex() as long
         declare function RemoveElement( byval idx as long ) as long
         declare function AddTab( byval pDoc as clsDocument Ptr ) as long
         declare function InsertTab( byval pDoc as clsDocument ptr, byval insertIdx as long ) as long

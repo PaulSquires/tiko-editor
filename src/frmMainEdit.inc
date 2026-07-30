@@ -182,6 +182,8 @@ function OnCommand_EditEncoding( _
             byval pDoc as clsDocument ptr _
             ) as LRESULT
 
+    ' Reachable with no active document -- an accelerator bypasses menu enablement.
+    if pDoc = 0 then exit function
 
     ' Map the menu command to a target encoding. ConvertTextBuffer owns BOTH the byte
     ' conversion and the FileEncoding relabel (INVARIANT E1); the caller must not assign
@@ -212,7 +214,29 @@ function OnCommand_EditCommon( _
             byval id as long, _
             byval pDoc as clsDocument ptr _
             ) as LRESULT
-        
+
+    ' ON THE FIND IN PROJECT TAB there is no active document, but the focused excerpt IS an
+    ' editable view onto a real one -- so Undo, Redo, comment-block and the rest have to act
+    ' on it. hWndActiveScintilla is pointed at the excerpt for the duration and restored
+    ' afterwards, which is what makes the clsDocument methods below (all of which work
+    ' through that field) operate on the view the user is actually in rather than on the
+    ' document's own window, whose caret is somewhere else entirely.
+    dim as HWND hSaved = 0
+    dim as boolean bBorrowed = false
+    if pDoc = 0 then
+        dim as clsDocument ptr pFip
+        dim as HWND hFip = frmFindInProject_ActiveEdit( pFip )
+        if (hFip <> 0) andalso (pFip <> 0) then
+            pDoc      = pFip
+            hSaved    = pDoc->hWndActiveScintilla
+            pDoc->hWndActiveScintilla = hFip
+            bBorrowed = true
+        end if
+    end if
+
+    ' Reachable with no active document -- an accelerator bypasses menu enablement.
+    if pDoc = 0 then exit function
+
     dim as HWND hEdit = pDoc->hWndActiveScintilla
 
     select case id
@@ -235,7 +259,11 @@ function OnCommand_EditCommon( _
         case IDM_TABSTOSPACES:        pDoc->TabsToSpaces()
         case IDM_SELECTLINE:          pDoc->SelectLine(-1)
     end select
-    
+
+    ' Hand the document's own active view back. Straight-line, so there is no path that can
+    ' leave it pointed at an excerpt.
+    if bBorrowed then pDoc->hWndActiveScintilla = hSaved
+
     function = 0
 end function
 

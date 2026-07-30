@@ -336,7 +336,7 @@ function frmMain_ProcessCommandLine( byval hwnd as HWND ) as long
     LoadFunctionsFiles()
 
     function = 0
-end function   
+end function
 
 
 
@@ -763,8 +763,7 @@ end function
 function frmMain_PositionWindows() as LRESULT
     dim as HWND hEdit
     dim as long nLeft, nTop
-    dim as boolean IsProjectSearchTab = false
-    
+
     dim as RECT rc
 
     dim pWindow as CWindow ptr = AfxCWindowPtr( HWND_FRMMAIN )
@@ -847,13 +846,8 @@ function frmMain_PositionWindows() as LRESULT
         ShowWindow( HWND_FRMMAIN_SPLITPANEL, SW_HIDE )
     end if
 
-'    dim as long nTabIdx = gTTabCtl.GetCurSel()
-'    if gTTabCtl.IsValidTab(nTabIdx) then
-'        if gTTabCtl.tabs(nTabIdx).docType = DocumentType.ProjectSearch then
-'            IsProjectSearchTab = true
-'        end if
-'    end if
-    
+    dim as boolean IsProjectSearchTab = frmFindInProject_IsActive()
+
     ' if items exist in the top tabcontrol then show the tab control and account for its height
     if (gTTabCtl.GetItemCount() = 0) then
         nHeightTabControl = 0
@@ -957,27 +951,42 @@ function frmMain_PositionWindows() as LRESULT
         ShowWindow( HWND_FRMMAIN_SPLITOUTPUT, SW_HIDE )
     end if
 
+    ' THE DOCUMENT CLIENT AREA, COMPUTED FOR BOTH BRANCHES. This used to live inside the
+    ' "if pDoc then" block below, which meant that with a document-less tab active (Find in
+    ' Project) nothing computed the rect at all. It depends on nothing document-specific, so
+    ' it is hoisted here and the document branch merely stores it on the document.
+    dim as RECT rcDoc
+    rcDoc.left   = nLeft
+    rcDoc.top    = nTop
+    rcDoc.right  = rc.right
+    rcDoc.bottom = rc.bottom - nHeightStatusBar - nOutputReserve
+    if gConfig.ExplorerPositionRight then rcDoc.right = rc.right - nPanelReserve
+
     if pDoc = 0 then
         frmMain_HideScrollBars()
         ' No document -> no split chrome either.
         ShowWindow( HWND_FRMMAIN_SPLITV, SW_HIDE )
         ShowWindow( HWND_FRMMAIN_SPLITH, SW_HIDE )
     end if
-    
-    if pDoc then 
+
+    ' The Find in Project results surface occupies the same area a document's editors would.
+    ' Keyed on the ACTIVE TAB rather than on "pDoc = 0", because no document is also the
+    ' state with every tab closed, and the surface must not appear then.
+    if IsWindow( HWND_FRMFINDINPROJECT ) then
+        if frmFindInProject_IsActive() then
+            frmFindInProject_PositionWindows( rcDoc )
+        else
+            ShowWindow( HWND_FRMFINDINPROJECT, SW_HIDE )
+        end if
+    end if
+
+    if pDoc then
         ' Position the Scintilla child edit windows
         dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN)
-        dim as RECT rcDoc
-        
-        ' Reduce the height of the client area by the size of the statusbar and menubar.
-        rcDoc.left   = nLeft
-        rcDoc.top    = nTop 
-        rcDoc.right  = rc.right
-        rcDoc.bottom = rc.bottom - nHeightStatusBar - nOutputReserve
-        if gConfig.ExplorerPositionRight then rcDoc.right = rc.right - nPanelReserve
+
         pDoc->rcDocSplitArea = rcDoc
 
-        
+
         ' Editor split bar. Two PsSplitter instances exist (one per orientation, because
         ' orientation is fixed at creation); at most ONE is shown, following the active
         ' document's split mode. The limits are ours to compute -- the control cannot know
@@ -1259,6 +1268,11 @@ function frmMain_OnClose( byval hwnd as HWND ) as LRESULT
     ' its message pump go away - no MSG_USER_PARSE_COMPLETE may arrive after this.
     gScanMgr.Shutdown()
 
+    ' Drop the Find in Project results and destroy the scratch search view. Before
+    ' DestroyWindow, because releasing a Scintilla document is a MESSAGE and needs a live
+    ' window to send it to.
+    FindProject_Shutdown()
+
     DestroyWindow(hwnd)
     
     function = 0
@@ -1448,16 +1462,35 @@ function frmMain_WndProc( _
             ' Set focus to current Scintilla window and update the document
             ' display such as Line#, Col#, Filename, etc.
             frmMain_SetStatusbar()
+
+            ' The Find in Project tab has no document, but it does have somewhere to put the
+            ' caret: back in the excerpt that had it. Done from HERE, on a posted message,
+            ' rather than inline in SetFocusTab -- a tab switch hides and shows several
+            ' windows, and any SetFocus made in the middle of that is liable to be undone by
+            ' the rest of it. That is the whole reason this message exists.
+            if frmFindInProject_IsActive() then
+                if frmFindInProject_RestoreFocus() = false then
+                    SetFocus( GetDlgItem( HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND ) )
+                end if
+                exit function
+            end if
+
             dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
-            if pDoc then 
+            if pDoc then
                 ' Ensure that the correct Explorer listbox entry is selected
                 frmExplorer_SelectItemData( pDoc )
                 SetFocus( pDoc->hWndActiveScintilla )
             end if
 
-        case MSG_USER_PROCESS_COMMANDLINE 
+        case MSG_USER_PROCESS_COMMANDLINE
             ' process any command line arguments that may have been passed to the program.
             frmMain_ProcessCommandLine( hwnd )
+
+            ' Runs HERE rather than beside the other post-Show suites, and here rather than
+            ' inside ProcessCommandLine: it needs the session already restored, and
+            ' ProcessCommandLine takes an early exit on the no-arguments path -- which is the
+            ' normal launch -- so the bottom of that function is unreachable for it.
+            frmFindInProject_RunSelfTest()
 
         case MSG_USER_PROCESS_STARTUPUSERTOOLS
             ' process any User Tools that must display immediately after the main editor
@@ -1742,6 +1775,9 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ' Needs the frmMain CWindow (for the real DPI) but not the Output panel itself, which
     ' has not been created yet at this point -- the suite is deliberately pure.
     frmOutput_RunSelfTest()
+    ' The PURE half of the Find in Project suite -- no window needed, so it runs here with
+    ' the rest. Its wiring half runs later, once the session has been restored.
+    FindProject_RunSelfTest()
 
     ' Pure policy assertions plus a check that the six localized ids its two message boxes
     ' need are not blank -- so it has to run after the language file is loaded, like the

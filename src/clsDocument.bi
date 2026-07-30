@@ -167,6 +167,10 @@ type clsDocument
     declare function SaveFile(byval bSaveAs as boolean = false ) as boolean
     declare function SaveTempFile( byval wszFilename as DWSTRING ) as boolean
     declare function ApplyProperties() as long
+    ' Every PER-VIEW property, applied to one view. ApplyProperties calls it for each split
+    ' window; Find in Project's excerpt views call it too, because styles are per-view in
+    ' Scintilla (only the lexer is per-document) and an unstyled view renders with defaults.
+    declare sub      ApplyPropertiesToView( byval pSciView as any ptr )
     declare function GetTextRange( byval cpMin as long, byval cpMax as long) as string
     declare function ChangeSelectionCase( byval fCase as long) as long 
     declare function GetCurrentLineNumber() as long

@@ -20,6 +20,7 @@
 #Define IDC_FRMFIND_ICONSCLOSE               1005
 #Define IDC_FRMREPLACE_ICONSFIELD            1006
 #Define IDC_FRMREPLACE_ICONSACTIONS          1007
+#Define IDC_FRMFIND_ICONSFOLD                1008
 
 
 '' frmTopTabsInfo
@@ -33,6 +34,29 @@ declare function frmTopTabsInfo_Show( byval hwndParent as HWND ) as LRESULT
 '' frmReplace
 declare function TopTabsInfoPanel_Show() as long
 declare function FindReplace_HighlightSearches() as long
+
+' Both live in modFindReplace.inc, which is included AFTER clsTopTabCtl.inc -- and
+' clsTopTabCtl.SetFocusTab forces the Find bar open when the Find in Project tab is
+' selected, since the find phrase is that tab's whole subject. Declared here for the same
+' reason TopTabsInfoPanel_Show above is.
+declare function FindControls_Show() as long
+declare function ReplaceControls_Show() as long
+
+' Find in Project's collapse-all state, for the Find bar's fold icon. Declared here rather
+' than in frmFindInProject.bi because frmFind.inc is included well before it.
+declare function frmFindInProject_AllCollapsed() as boolean
+declare sub      frmFindInProject_SetAllCollapsed( byval bCollapsed as boolean )
+declare function frmFindInProject_IsActive() as boolean
+' X of the group-header twisty column, in surface client coords. The Find bar's fold icon
+' lines up with it -- one function so the two cannot drift apart.
+declare function frmFindInProject_TwistyColumnX() as long
+' Restore the caret to the excerpt that had it. Declared here for clsTopTabCtl.inc, which is
+' compiled long before frmFindInProject.inc.
+declare function frmFindInProject_RestoreFocus() as boolean
+' Colour the find field red when the phrase matched nothing, and normal otherwise. bForce
+' bypasses the "did it change" cache, which a theme change needs because the theme push
+' rewrites the field's colours underneath it.
+declare sub      frmFind_ApplyErrorState( byval bForce as boolean = false )
 
 
 

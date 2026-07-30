@@ -51,25 +51,39 @@ sub frmTopTabs_PaintCallback( byval p as PSTABBAR_PAINTINFO ptr )
     ' Caption in its precomputed rect, with the font we handed to SetFont (the widths
     ' were measured with it). PaintText applies DT_VCENTER|DT_SINGLELINE itself, and
     ' rcText's symmetric extents keep the text still when selection changes.
-    p->b->SetFont( ghFont(GUIFONT_10) )
-    p->b->PaintText( p->wszCaption, @p->rcText, DT_CENTER )
+    ' The Find in Project tab carries a magnifier to the LEFT of the search term, so it reads
+    ' as a search rather than as a file whose name happens to be the phrase. The caption rect
+    ' gives up that much room on its left; everything else about the tab is unchanged.
+    dim as RECT rcCaption = p->rcText
+    if gTTabCtl.IsFindTab( p->itemID ) then
+        dim as RECT rcIcon = p->rcText
+        rcIcon.right = rcIcon.left + AfxScaleX(16)
+        p->b->SetFont( ghFont(SYMBOLFONT_9) )
+        p->b->PaintText( wszIconFind, @rcIcon, DT_CENTER )
+        rcCaption.left = rcIcon.right
+    end if
 
-'    ' display the "Find" icon if this in a special "Find in Project" tab.
-'    if gTTabCtl.tabs(i).docType = DocumentType.ProjectSearch then
-'        b.SetFont( ghFont(SYMBOLFONT_9) )
-'        b.PaintText( wszIconFind, @gTTabCtl.tabs(i).rcIcon, DT_CENTER )
-'    end if
-               
+    p->b->SetFont( ghFont(GUIFONT_10) )
+    p->b->PaintText( p->wszCaption, @rcCaption, DT_CENTER )
+
+
+
     ' if this document is dirty then the dirty circle icon overrides the display of the close icon
     ' unless the tab isHot. The dirty icon displays always for active and inactive tabs.
-    dim as boolean isDirty 
+    dim as boolean isDirty
     if gTTabCtl.IsValidTab( p->itemID ) then
         dim as clsDocument ptr pDoc = gTTabCtl.GetpDoc(p->itemID)
         if pDoc then
             if cbool(SciExec( pDoc->hWindow(0), SCI_GETMODIFY, 0, 0 )) then isDirty = true
             if pDoc->UserModified then isDirty = true
-        end if    
-    end if    
+        end if
+        ' The Find in Project tab has no document of its own, but its results ARE editable --
+        ' so it is dirty when any file in them is. It then takes the SAME treatment every
+        ' other tab gets below: the circle replaces the close X unless the tab is hot.
+        if gTTabCtl.IsFindTab( p->itemID ) then
+            if FindProject_AnyDirty() then isDirty = true
+        end if
+    end if
 
     if (isDirty = true) andalso (p->isHot = false) andalso (p->isHotClose = false) then
         ' if mouse is over the rcClose then draw the close icon, otherwise draw the dirty circle

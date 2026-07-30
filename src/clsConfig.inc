@@ -761,9 +761,14 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
                     case "ShowOutputPanel":          this.ShowOutputPanel       = nData
                     case "ShowOutputPanelHeight":    this.ShowOutputPanelHeight = nData
                     case "ShowOutputPanelMinimized": this.ShowOutputPanelMinimized = nData
-                    ' Loaded long before the tab bar exists, so it lands in the config
-                    ' field only; frmOutput_Show applies it with PsSelectBar_SetCurSel once
-                    ' the control has been created.
+                    ' A tab ID (an OUTPUT_TAB_* value), not a panel index -- see frmOutput.bi.
+                    ' Loaded long before the tab bar exists, so it lands in the config field
+                    ' only; frmOutput_Show applies it with frmOutput_SetCurTab once the
+                    ' control has been created. Deliberately NOT validated here: only the bar
+                    ' knows which ids actually exist, so validating here would mean keeping a
+                    ' second copy of that set. SetCurTab heals a retired id (2, the removed
+                    ' Search Results tab) to Compiler Results, and frmOutput_CaptureState
+                    ' writes the healed value back on the next save.
                     case "ShowOutputPanelIndex":     this.ShowOutputPanelIndex  = nData
                 end select
             end if
@@ -966,7 +971,9 @@ function clsConfig.SaveSessionFile( byref wszSessionFile as wstring ) as boolean
     
     ' Save all of the loaded tabs
     pStream.WriteLine "BuildConfig=" & this.CompilerBuild
-    pStream.WriteLine "ActiveTab="   & gTTabCtl.GetCurSel()
+    ' Not GetCurSel: the loop below skips tabs, so the file's index space is denser than the
+    ' tab bar's. See clsTopTabCtl.SaveActiveTabIndex.
+    pStream.WriteLine "ActiveTab="   & gTTabCtl.SaveActiveTabIndex()
     pStream.WriteLine "CommandLine=" & gApp.wszCommandLine
 
     nCount = gTTabCtl.GetItemCount()
@@ -1226,8 +1233,8 @@ function clsConfig.ProjectSaveToFile() as boolean
     pStream.WriteLine "ProjectOther64="     & gApp.ProjectOther64
     pStream.WriteLine "ProjectCommandLine=" & gApp.ProjectCommandLine
 
-    ' Save all of the loaded tabs first
-    pStream.WriteLine "ActiveTab=" & gTTabCtl.GetCurSel()
+    ' Save all of the loaded tabs first. Not GetCurSel -- see clsTopTabCtl.SaveActiveTabIndex.
+    pStream.WriteLine "ActiveTab=" & gTTabCtl.SaveActiveTabIndex()
 
     nCount = gTTabCtl.GetItemCount
 

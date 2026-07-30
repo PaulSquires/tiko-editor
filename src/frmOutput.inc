@@ -15,9 +15,34 @@
 
 
 ' ========================================================================================
-' A double-click on any of the three listview panes jumps the editor to that row's
-' file/line. This replaces the MSG_USER_LISTVIEW_LBUTTONDBLCLK round trip the old control
-' used to post up to this form.
+' The ONLY two places that convert between a PsSelectBar panel INDEX and an OUTPUT_TAB_* ID.
+' They stopped being the same number when the Search Results tab was removed: the ids are
+' persisted in settings.ini and therefore cannot be renumbered, so id 2 is now a hole and
+' OUTPUT_TAB_TODO (3) / OUTPUT_TAB_NOTES (4) sit on panel indices 2 / 3. See frmOutput.bi.
+' ========================================================================================
+function frmOutput_GetCurTab() as long
+    if IsWindow( HWND_FRMOUTPUT_SELECTBAR ) = 0 then return OUTPUT_TAB_RESULTS
+    ' GetPanelID answers 0 (= OUTPUT_TAB_RESULTS) for an invalid index, which is the
+    ' fallback we would have written by hand anyway.
+    return PsSelectBar_GetPanelID( HWND_FRMOUTPUT_SELECTBAR, _
+                                   PsSelectBar_GetCurSel( HWND_FRMOUTPUT_SELECTBAR ) )
+end function
+
+function frmOutput_SetCurTab( byval nTabID as long ) as boolean
+    if IsWindow( HWND_FRMOUTPUT_SELECTBAR ) = 0 then return false
+    dim as long idx = PsSelectBar_FindPanelByID( HWND_FRMOUTPUT_SELECTBAR, nTabID )
+    ' A retired or garbage id heals to Compiler Results rather than being refused. This is
+    ' the path a settings.ini still holding the deleted Search Results tab (id 2) takes.
+    if idx = -1 then idx = PsSelectBar_FindPanelByID( HWND_FRMOUTPUT_SELECTBAR, OUTPUT_TAB_RESULTS )
+    if idx = -1 then return false
+    return PsSelectBar_SetCurSel( HWND_FRMOUTPUT_SELECTBAR, idx )
+end function
+
+
+' ========================================================================================
+' A double-click on either listview pane jumps the editor to that row's file/line. This
+' replaces the MSG_USER_LISTVIEW_LBUTTONDBLCLK round trip the old control used to post up
+' to this form.
 ' ========================================================================================
 function frmOutput_LVMessage( byval m as PSLISTTREE_MESSAGEINFO ptr ) as boolean
     ' m->hList is the inner surface; the PsListTree container is its parent, and that is what
@@ -30,7 +55,7 @@ function frmOutput_LVMessage( byval m as PSLISTTREE_MESSAGEINFO ptr ) as boolean
             return false      ' let the listbox keep its own default handling
 
         case WM_RBUTTONDOWN
-            ' Compiler Results only -- all three panes share this callback.
+            ' Compiler Results only -- both panes share this callback.
             if hList <> HWND_FRMOUTPUT_LVRESULTS then return false
 
             ' The control does NOT touch the selection on a right-click (it applies click
@@ -52,7 +77,7 @@ end function
 
 
 ' ========================================================================================
-' Header painter for the three Output panes. A copy of ListBox_LVPaintHeader with the hot
+' Header painter for the Output panes. A copy of ListBox_LVPaintHeader with the hot
 ' branch removed: these headers do not hot-track, so neither a column under the cursor nor
 ' a hovered divider changes the fill. frmDebug's Variables pane still uses the shared
 ' painter and still hot-tracks -- do not "unify" these two without deciding that as well.
@@ -89,8 +114,8 @@ end function
 
 
 ' ========================================================================================
-' Build one of the three Output listview panes. They are identical apart from their
-' control id, so this is called once each rather than copied three times.
+' Build one of the Output listview panes. They are identical apart from their control id,
+' so this is called once each rather than copied per pane.
 ' ========================================================================================
 function frmOutput_CreateListView( byval CtrlID as long ) as HWND
     dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMOUTPUT)
@@ -114,8 +139,8 @@ function frmOutput_CreateListView( byval CtrlID as long ) as HWND
     PsListTree_SetMessageCallback( hCtl, @frmOutput_LVMessage )
 
     ' Compiler Results only: Shift ranges / Ctrl toggles, so the right-click "Copy" has a
-    ' multi-row block to work with. Search and TODO stay single-select -- their rows are a
-    ' navigation target, not a body of text, and every click there is a jump.
+    ' multi-row block to work with. TODO stays single-select -- its rows are a navigation
+    ' target, not a body of text, and every click there is a jump.
     if CtrlID = IDC_FRMOUTPUT_LVRESULTS then
         PsListTree_SetExtendedSelect( hCtl, true )
     end if
@@ -136,7 +161,6 @@ end function
 function frmOutput_ResetAllControls() as long
     PsListTree_Clear( HWND_FRMOUTPUT_LVRESULTS )
     AfxSetWindowText( GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTLOGFILE), "" )
-    PsListTree_Clear( HWND_FRMOUTPUT_LVSEARCH )
     PsListTree_Clear( HWND_FRMOUTPUT_LVTODO )
     AfxSetWindowText( GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTNOTES), "" )
     function = 0
@@ -188,55 +212,11 @@ function frmOutput_UpdateToDoListview() as long
     function = 0
 end function
 
-' ========================================================================================
-' Update the SEARCH listview
-' ========================================================================================
-function frmOutput_UpdateSearchListview( byref wszResultFile as wstring ) as long 
-    dim hLV as HWND = HWND_FRMOUTPUT_LVSEARCH
+' (frmOutput_UpdateSearchListview and the Search Results pane it filled are gone. Project
+'  search results are the Find in Project tab's now -- an editable Scintilla excerpt per
+'  hit, not a row of text -- so there is no second place for them to live. It had already
+'  been dead code for some time: its only caller went with the old frmFindInFiles engine.)
 
-    PsListTree_Clear( hLV )
-
-    if AfxFileExists(wszResultFile) = 0 then exit function
-    
-    dim as DWSTRING wst
-    dim as DWSTRING wszText
-
-    dim pStream as CTextStream
-    if pStream.OpenUnicode(wszResultFile) <> S_OK then exit function
-    
-    do until pStream.EOS
-        wst = pStream.ReadLine
-        
-        wst = trim(wst)
-        if len(wst) = 0 then continue do
-
-        dim as DWSTRING wszFilename, wszLineNum, wszDescription
-        dim as long f1, f2
-        
-        ' Search for the 2nd semicolon
-        f1 = instr( 3, wst, ":" )
-        if f1 then f2 = instr( f1 + 1, wst, ":" )
-
-        if f1 then wszFilename = left(wst, f1 - 1)
-        if f2 > f1 then wszLinenum = mid(wst, f1 + 1, f2 - f1 - 1)
-        if f2 then wszDescription = rtrim(mid(wst, f2 + 1))
-
-        wszText = "" & chr(9) & wszLineNum & chr(9) & wszFilename & chr(9) & wszDescription
-        ListBox_AddTabbedRow( hLV, wszText )
-    loop
-    pStream.Close
-    
-    AfxDeleteFile( wszResultFile )
-    
-    ' Show the search results. SetCurSel is silent, so PositionWindows below (which ends in
-    ' ShowHideOutputControls) is what actually swaps the visible pane.
-    PsSelectBar_SetCurSel( HWND_FRMOUTPUT_SELECTBAR, OUTPUT_TAB_SEARCH )
-    frmOutput_RestorePanel()
-    frmOutput_PositionWindows
-
-    function = 0
-end function
-            
 
 ' ========================================================================================
 ' Show/Hide correct child controls
@@ -255,18 +235,21 @@ function frmOutput_ShowHideOutputControls( byval hwnd as HWND ) as LRESULT
     
     ' By default, hide all controls
     ShowWindow( HWND_FRMOUTPUT_LVRESULTS, SW_HIDE )
-    ShowWindow( HWND_FRMOUTPUT_LVSEARCH, SW_HIDE )
     ShowWindow( HWND_FRMOUTPUT_LVTODO, SW_HIDE )
     ShowWindow( GetDlgItem(hwnd, IDC_FRMOUTPUT_TXTLOGFILE), SW_HIDE )
     ShowWindow( GetDlgItem(hwnd, IDC_FRMOUTPUT_TXTNOTES), SW_HIDE )
     ShowWindow( HWND_FRMOUTPUT_VSCROLL, SW_HIDE )
     
-    select case PsSelectBar_GetCurSel( HWND_FRMOUTPUT_SELECTBAR )
-        case 0    ' compiler results
+    ' Switch on the panel ID, not the index. This used to read the raw GetCurSel and compare
+    ' it against bare literals 0..4 -- which meant it was invisible to a grep for
+    ' OUTPUT_TAB_ and would have silently mapped the wrong pane once the Search Results tab
+    ' was removed and the indices shifted under it.
+    select case frmOutput_GetCurTab()
+        case OUTPUT_TAB_RESULTS
             hLV = HWND_FRMOUTPUT_LVRESULTS
             hCtrl = hLV
 
-        case 1    ' compiler log file
+        case OUTPUT_TAB_LOGFILE
             ' (The old EM_SETRECT 20px-indent hack is gone: the PsTextBox carries a
             ' permanent left margin instead, set at creation.)
             hTextBox = GetDlgItem(hwnd, IDC_FRMOUTPUT_TXTLOGFILE)
@@ -276,15 +259,11 @@ function frmOutput_ShowHideOutputControls( byval hwnd as HWND ) as LRESULT
                 AfxSetWindowText(hTextBox, L(93, "No compiler log file exists") )
             end if
 
-        case 2    ' search results
-            hLV = HWND_FRMOUTPUT_LVSEARCH
-            hCtrl = hLV
-
-        case 3    ' TODO list
+        case OUTPUT_TAB_TODO
             hLV = HWND_FRMOUTPUT_LVTODO
             hCtrl = hLV
 
-        case 4    ' Notes
+        case OUTPUT_TAB_NOTES
             ' Do NOT SetFocus the notes textbox here. This routine is pure
             ' show/hide/layout and is also reached from frmOutput_PositionWindows, which
             ' runs on every background-scan refresh -- focusing here yanked the caret off
@@ -354,7 +333,6 @@ function frmOutput_PositionWindows() as LRESULT
     nTop = nTop + nTabsHeight + pWindow->ScaleY(8)
     
     SetWindowPos( HWND_FRMOUTPUT_LVRESULTS, 0, nLeft, nTop, rc.right, rc.bottom - nTop, SWP_NOZORDER )
-    SetWindowPos( HWND_FRMOUTPUT_LVSEARCH, 0, nLeft, nTop, rc.right, rc.bottom - nTop, SWP_NOZORDER )
     SetWindowPos( HWND_FRMOUTPUT_LVTODO, 0, nLeft, nTop, rc.right, rc.bottom - nTop, SWP_NOZORDER )
     
     SetWindowPos( GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTLOGFILE), 0, _
@@ -567,9 +545,11 @@ sub frmOutput_CaptureState()
     end if
     gConfig.ShowOutputPanelHeight = frmOutput_ClampHeight( gConfig.ShowOutputPanelHeight )
 
-    ' The tab bar owns the current tab; the config field is only its persisted copy.
+    ' The tab bar owns the current tab; the config field is only its persisted copy. What is
+    ' persisted is the tab's ID, never its panel index -- the two stopped agreeing when the
+    ' Search Results tab was removed, and it is the id that an existing settings.ini holds.
     if IsWindow( HWND_FRMOUTPUT_SELECTBAR ) then
-        gConfig.ShowOutputPanelIndex = PsSelectBar_GetCurSel( HWND_FRMOUTPUT_SELECTBAR )
+        gConfig.ShowOutputPanelIndex = frmOutput_GetCurTab()
     end if
 end sub
 
@@ -599,16 +579,22 @@ end function
 sub frmOutput_SetTabCaptions()
     if IsWindow(HWND_FRMOUTPUT_SELECTBAR) = 0 then exit sub
 
-    dim as DWSTRING wszCaption(0 to 4)
+    ' Subscripted by TAB ID, so the retired id 2 is simply an empty slot that no panel ever
+    ' asks for. The loop walks panel INDICES and looks each one's id up -- it must not run to
+    ' a hardcoded 4: this sub is called from frmOutput_PositionWindows on every layout pass,
+    ' so a loop overrunning the panel count would call SetText (which re-measures and
+    ' re-lays out the whole bar) forever, silently, on the hot path.
+    dim as DWSTRING wszCaption(OUTPUT_TAB_RESULTS to OUTPUT_TAB_NOTES)
     wszCaption(OUTPUT_TAB_RESULTS) = ucase(L(154, "Compiler Results"))
     wszCaption(OUTPUT_TAB_LOGFILE) = ucase(L(202, "Compiler Log File"))
-    wszCaption(OUTPUT_TAB_SEARCH)  = ucase(L(207, "Search Results"))
     wszCaption(OUTPUT_TAB_TODO)    = ucase(L(208, "TODO"))
     wszCaption(OUTPUT_TAB_NOTES)   = ucase(L(209, "Notes"))
 
-    for i as long = 0 to 4
-        if PsSelectBar_GetText( HWND_FRMOUTPUT_SELECTBAR, i ) <> wszCaption(i) then
-            PsSelectBar_SetText( HWND_FRMOUTPUT_SELECTBAR, i, wszCaption(i) )
+    for i as long = 0 to PsSelectBar_GetCount( HWND_FRMOUTPUT_SELECTBAR ) - 1
+        dim as long nTabID = PsSelectBar_GetPanelID( HWND_FRMOUTPUT_SELECTBAR, i )
+        if (nTabID < lbound(wszCaption)) orelse (nTabID > ubound(wszCaption)) then continue for
+        if PsSelectBar_GetText( HWND_FRMOUTPUT_SELECTBAR, i ) <> wszCaption(nTabID) then
+            PsSelectBar_SetText( HWND_FRMOUTPUT_SELECTBAR, i, wszCaption(nTabID) )
         end if
     next
 end sub
@@ -659,7 +645,7 @@ end function
 
 
 ' ========================================================================================
-' Tab strip callbacks. The strip is a PsSelectBar (five tabs) plus a one-item PsIconPanel
+' Tab strip callbacks. The strip is a PsSelectBar (four tabs) plus a one-item PsIconPanel
 ' (the "X"), sized side by side by frmOutput_PositionWindows. Between them they replaced
 ' frmOutputTabs_SubclassProc: ~150 lines of rect arithmetic, hit-testing, hover tracking,
 ' tooltip plumbing and painting.
@@ -710,7 +696,8 @@ sub frmOutput_SelectBarSelChange( byval hCtl as HWND, byval idxOld as long, byva
     ' fires on user action only (programmatic SetCurSel is silent), so this cannot be
     ' triggered by a scan refresh -- which is exactly why the SetFocus was moved out of
     ' frmOutput_ShowHideOutputControls and to here.
-    if idxNew = OUTPUT_TAB_NOTES then
+    ' idxNew is a panel INDEX; the comparison is against a tab ID.
+    if PsSelectBar_GetPanelID( hCtl, idxNew ) = OUTPUT_TAB_NOTES then
         SetFocus( GetDlgItem( HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTNOTES ) )
     end if
 end sub
@@ -794,7 +781,6 @@ function frmOutput_WndProc( _
         ' The child listviews (and the PsVScrollBar) have also been destroyed in their
         ' respective WM_NCDESTROY so reset all of their window handles.
         HWND_FRMOUTPUT_LVRESULTS = 0
-        HWND_FRMOUTPUT_LVSEARCH  = 0
         HWND_FRMOUTPUT_LVTODO    = 0
         HWND_FRMOUTPUT_VSCROLL   = 0
         return 0
@@ -844,11 +830,10 @@ function frmOutput_SetControlColors() as long
 
     ' The listview panes' row/header painters read the ghOutput colors live, so a theme
     ' switch only needs the background and scrollbar colors re-pushed plus a repaint.
-    for i as long = 0 to 2
+    for i as long = 0 to 1
         select case i
             case 0 : hCtl = HWND_FRMOUTPUT_LVRESULTS
-            case 1 : hCtl = HWND_FRMOUTPUT_LVSEARCH
-            case 2 : hCtl = HWND_FRMOUTPUT_LVTODO
+            case 1 : hCtl = HWND_FRMOUTPUT_LVTODO
         end select
         PsListTree_SetBackColor( hCtl, ghOutput.BackColor )
         PsListTree_SetScrollBarColors( hCtl, ghOutput.BackColorScrollBar, _
@@ -899,7 +884,7 @@ function frmOutput_Show( byval hwndParent as HWND ) as LRESULT
     dim as HWND hCtl, hLV, hLB
     
     ' ------------------------------------------------------------------------------------
-    ' The tab strip: a PsSelectBar for the five tabs, and a one-item PsIconPanel for the "X".
+    ' The tab strip: a PsSelectBar for the four tabs, and a one-item PsIconPanel for the "X".
     ' Both paint their own backgrounds and abut, so no container window is needed.
     ' ------------------------------------------------------------------------------------
     HWND_FRMOUTPUT_SELECTBAR = PsSelectBar_Create( HWND_FRMOUTPUT, IDC_FRMOUTPUT_TABS )
@@ -914,16 +899,21 @@ function frmOutput_Show( byval hwndParent as HWND ) as LRESULT
         SelectBarColors.BackColor = ghOutput.BackColorHot 
         PsSelectBar_SetColors( HWND_FRMOUTPUT_SELECTBAR, @SelectBarColors )
 
-        ' Panels are added ONCE, in the order the config file's saved index refers to (the
-        ' OUTPUT_TAB_* constants). The captions are pushed by frmOutput_SetTabCaptions,
-        ' which also re-pushes them after a language change.
-        for i as long = 0 to 4
-            PsSelectBar_AddPanel( HWND_FRMOUTPUT_SELECTBAR, "", i )
-        next
+        ' Panels are added ONCE. The third argument is the panel's host ID -- an
+        ' OUTPUT_TAB_* constant, and the value persisted in settings.ini. These are named
+        ' explicitly rather than being a loop counter because the ids are no longer
+        ' contiguous: id 2 (Search Results) is retired, so the ids run 0, 1, 3, 4 across
+        ' panel indices 0, 1, 2, 3.
+        PsSelectBar_AddPanel( HWND_FRMOUTPUT_SELECTBAR, "", OUTPUT_TAB_RESULTS )
+        PsSelectBar_AddPanel( HWND_FRMOUTPUT_SELECTBAR, "", OUTPUT_TAB_LOGFILE )
+        PsSelectBar_AddPanel( HWND_FRMOUTPUT_SELECTBAR, "", OUTPUT_TAB_TODO )
+        PsSelectBar_AddPanel( HWND_FRMOUTPUT_SELECTBAR, "", OUTPUT_TAB_NOTES )
         frmOutput_SetTabCaptions()
-        ' Config load happens long before this control exists, so the persisted index is
-        ' applied HERE. SetCurSel is silent, so this cannot fire the change callback.
-        PsSelectBar_SetCurSel( HWND_FRMOUTPUT_SELECTBAR, gConfig.ShowOutputPanelIndex )
+        ' Config load happens long before this control exists, so the persisted tab is
+        ' applied HERE. SetCurTab is silent, so this cannot fire the change callback, and it
+        ' heals a stored id that no longer exists -- which is the path a settings.ini written
+        ' before the Search Results tab was removed takes.
+        frmOutput_SetCurTab( gConfig.ShowOutputPanelIndex )
 
     HWND_FRMOUTPUT_CLOSE = PsIconPanel_Create( HWND_FRMOUTPUT, IDC_FRMOUTPUT_BTNCLOSE )
         PsIconPanel_SetFont( HWND_FRMOUTPUT_CLOSE, ghFont(SYMBOLFONT_10) )
@@ -963,12 +953,11 @@ function frmOutput_Show( byval hwndParent as HWND ) as LRESULT
         ThemeTextBoxContextMenu( hCtl )
         frmOutput_ShowNotes()
 
-    ' The three listview panes: PsListTree instances with a PsColumnHeader band. All three
-    ' have identical columns, so frmOutput_CreateListView builds one and is called thrice.
+    ' The listview panes: PsListTree instances with a PsColumnHeader band. Both have
+    ' identical columns, so frmOutput_CreateListView builds one and is called twice.
     ' The Description column is the FILL column -- it absorbs whatever width is left, which
     ' is what the old hard-coded ScaleX(1480) was groping at.
     HWND_FRMOUTPUT_LVRESULTS = frmOutput_CreateListView( IDC_FRMOUTPUT_LVRESULTS )
-    HWND_FRMOUTPUT_LVSEARCH  = frmOutput_CreateListView( IDC_FRMOUTPUT_LVSEARCH )
     HWND_FRMOUTPUT_LVTODO    = frmOutput_CreateListView( IDC_FRMOUTPUT_LVTODO )
 
     ' Shared vertical scrollbar for the two textboxes: the reusable PsVScrollBar control,
@@ -1121,6 +1110,55 @@ sub frmOutput_RunPostShowSelfTest()
         frmOutput_CaptureState()
         frmOutput_Check( "CaptureState: visibility tracks the live window", _
             (gConfig.ShowOutputPanel <> 0) = (IsWindowVisible( HWND_FRMOUTPUT ) <> 0) )
+    end if
+
+    ' --- tab ID vs panel INDEX ------------------------------------------------------------
+    ' Removing the Search Results tab left a hole at id 2, so a tab's persisted ID and its
+    ' panel index no longer agree. These assertions exist because getting that wrong is
+    ' SILENT: a stored 3 would quietly select Notes instead of TODO, with no crash, no
+    ' warning and nothing in the build to say so. They run against the real bar, and the
+    ' current tab is saved and restored so the user's state is untouched.
+    if IsWindow( HWND_FRMOUTPUT_SELECTBAR ) then
+        dim as long nTabSaved = frmOutput_GetCurTab()
+
+        frmOutput_Check( "tabs: four panels on the bar", _
+            PsSelectBar_GetCount( HWND_FRMOUTPUT_SELECTBAR ) = 4, _
+            str(PsSelectBar_GetCount( HWND_FRMOUTPUT_SELECTBAR )) )
+
+        ' THE PREMISE OF THE WHOLE SCHEME. If these two are ever equal again the id
+        ' indirection has become vacuous and every assertion below would pass for the wrong
+        ' reason -- so assert the DISAGREEMENT directly rather than relying on it.
+        dim as long nTodoIdx = PsSelectBar_FindPanelByID( HWND_FRMOUTPUT_SELECTBAR, OUTPUT_TAB_TODO )
+        frmOutput_Check( "tabs: TODO's id is NOT its panel index (id 3, index 2)", _
+            nTodoIdx <> OUTPUT_TAB_TODO, "index " & str(nTodoIdx) & " id " & str(OUTPUT_TAB_TODO) )
+
+        ' The retired Search Results id. No panel carries it, which is what makes the heal
+        ' in frmOutput_SetCurTab reachable rather than theoretical.
+        frmOutput_Check( "tabs: the retired Search Results id (2) matches no panel", _
+            PsSelectBar_FindPanelByID( HWND_FRMOUTPUT_SELECTBAR, 2 ) = -1 )
+
+        ' Every surviving tab round-trips: set by id, read back the SAME id.
+        dim as long nIDs(0 to 3) = { OUTPUT_TAB_RESULTS, OUTPUT_TAB_LOGFILE, _
+                                     OUTPUT_TAB_TODO, OUTPUT_TAB_NOTES }
+        for i as long = 0 to 3
+            frmOutput_SetCurTab( nIDs(i) )
+            frmOutput_Check( "tabs: id " & str(nIDs(i)) & " round-trips through SetCurTab", _
+                frmOutput_GetCurTab() = nIDs(i), str(frmOutput_GetCurTab()) )
+        next
+
+        ' A settings.ini written before the Search Results tab was removed. It must land on
+        ' Compiler Results, NOT on whatever panel happens to sit at index 2 (TODO).
+        frmOutput_SetCurTab( 2 )
+        frmOutput_Check( "tabs: a stored id of 2 heals to Compiler Results", _
+            frmOutput_GetCurTab() = OUTPUT_TAB_RESULTS, str(frmOutput_GetCurTab()) )
+
+        ' ...and a stored id of 3 still means TODO. This is the assertion that a renumber
+        ' would have broken, and the reason the ids were left with a hole in them.
+        frmOutput_SetCurTab( 3 )
+        frmOutput_Check( "tabs: a stored id of 3 still selects TODO, not Notes", _
+            frmOutput_GetCurTab() = OUTPUT_TAB_TODO, str(frmOutput_GetCurTab()) )
+
+        frmOutput_SetCurTab( nTabSaved )
     end if
 
     print "--- TIKO_OUTPUTPANEL_SELFTEST: " & str(gOutPanelTestPass) & " passed, " & _

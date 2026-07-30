@@ -22,8 +22,11 @@ function OnCommand_ViewFold( _
             byval id as long, _
             byval pDoc as clsDocument ptr _
             ) as LRESULT
-    
-    select case id      
+
+    ' Reachable with no active document -- an accelerator bypasses menu enablement.
+    if pDoc = 0 then exit function
+
+    select case id
         case IDM_FOLDTOGGLE: pDoc->FoldToggle( pDoc->GetCurrentLineNumber() )
         case IDM_FOLDBELOW:  pDoc->FoldToggleOnwards( pDoc->GetCurrentLineNumber() )
         case IDM_FOLDALL:    pDoc->FoldAll()
@@ -40,9 +43,12 @@ function OnCommand_ViewZoom( _
             byval id as long, _
             byval pDoc as clsDocument ptr _
             ) as LRESULT
-    
+
+    ' Reachable with no active document -- an accelerator bypasses menu enablement.
+    if pDoc = 0 then exit function
+
     dim as HWND hEdit = pDoc->hWndActiveScintilla
-    select case id      
+    select case id
         case IDM_ZOOMIN:    SciExec(hEdit, SCI_ZOOMIN, 0, 0)
         case IDM_ZOOMOUT:   SciExec(hEdit, SCI_ZOOMOUT, 0, 0)
         case IDM_ZOOMRESET: SciExec(hEdit, SCI_SETZOOM, 0, 0)   ' reset to zero zoom
@@ -58,6 +64,9 @@ function OnCommand_ViewSplit( _
             byval id as long, _
             byval pDoc as clsDocument ptr _
             ) as LRESULT
+
+    ' Reachable with no active document -- an accelerator bypasses menu enablement.
+    if pDoc = 0 then exit function
 
     pDoc->SplitX = 0
     pDoc->SplitY = 0
@@ -262,7 +271,7 @@ end function
 function OnCommand_ViewToDo() as LRESULT
     ' toggle close the Output window if it is open and already at ToDo 
     if IsWindowVisible(HWND_FRMOUTPUT) then
-        if PsSelectBar_GetCurSel( HWND_FRMOUTPUT_SELECTBAR ) = OUTPUT_TAB_TODO then
+        if frmOutput_GetCurTab() = OUTPUT_TAB_TODO then
             ShowWindow( HWND_FRMOUTPUT, SW_HIDE )
             frmMain_PositionWindows
             exit function
@@ -274,7 +283,7 @@ function OnCommand_ViewToDo() as LRESULT
     ' Silent: only a user click on the bar fires its change callback, so this cannot
     ' re-enter. frmOutput_PositionWindows ends in ShowHideOutputControls, which is what
     ' actually swaps the visible pane.
-    PsSelectBar_SetCurSel( HWND_FRMOUTPUT_SELECTBAR, OUTPUT_TAB_TODO )
+    frmOutput_SetCurTab( OUTPUT_TAB_TODO )
     frmOutput_PositionWindows
     AfxRedrawWindow( HWND_FRMOUTPUT_SELECTBAR )
     function = 0
@@ -283,7 +292,7 @@ end function
 function OnCommand_ViewNotes() as LRESULT
     ' toggle close the Output window if it is open and already at Notes
     if IsWindowVisible(HWND_FRMOUTPUT) then
-        if PsSelectBar_GetCurSel( HWND_FRMOUTPUT_SELECTBAR ) = OUTPUT_TAB_NOTES then
+        if frmOutput_GetCurTab() = OUTPUT_TAB_NOTES then
             ShowWindow( HWND_FRMOUTPUT, SW_HIDE )
             frmMain_PositionWindows
             exit function
@@ -293,7 +302,7 @@ function OnCommand_ViewNotes() as LRESULT
     end if
     frmMain_PositionWindows
     ' Silent -- see OnCommand_ViewToDo above.
-    PsSelectBar_SetCurSel( HWND_FRMOUTPUT_SELECTBAR, OUTPUT_TAB_NOTES )
+    frmOutput_SetCurTab( OUTPUT_TAB_NOTES )
     frmOutput_PositionWindows
     AfxRedrawWindow( HWND_FRMOUTPUT_SELECTBAR )
     function = 0

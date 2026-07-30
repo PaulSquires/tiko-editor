@@ -76,6 +76,10 @@ dim shared as DWSTRING gwszDefaultToolchain = "FreeBASIC-1.10.1-winlibs-gcc-9.3.
 ' NavHistory_Clear from both of its session-load paths, well ahead of the frm* block. The
 ' implementation goes in after modRoutines.inc, whose OpenSelectedDocument it drives.
 #include once "modNavHistory.bi"
+' Same split, same reason: clsDocument.inc calls FindProject_OnDocumentClosing from
+' DestroyScintillaWindows, well ahead of the modFindProject.inc that implements it. This
+' header names clsDocument ptr and SCNOTIFICATION but no Ps* type.
+#include once "modFindProject.bi"
 #include once "PsBufferPaint.bi"
 #include once "clsTopTabCtl.bi"
 #include once "clsConfig.bi"
@@ -133,6 +137,10 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "modCodetips.inc"
 #include once "modMenuDefinitions.inc"
 #include once "modMRU.inc"
+' The Find in Project search engine and result model. No windows and no Ps* types, so it
+' needs only clsApp/clsDocument/modScintilla, all already in scope. Ahead of
+' modFindReplace.inc because the Find bar drives the project search.
+#include once "modFindProject.inc"
 #include once "modFindReplace.inc"
 #include once "modFuzzy.inc"
 ' The keyboard shortcut MODEL (gKeys, the defaults table, keybindings.ini, the accelerator
