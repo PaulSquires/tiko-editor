@@ -50,6 +50,9 @@ declare function frmFindInProject_IsActive() as boolean
 ' X of the group-header twisty column, in surface client coords. The Find bar's fold icon
 ' lines up with it -- one function so the two cannot drift apart.
 declare function frmFindInProject_TwistyColumnX() as long
+' Restore the caret to the excerpt that had it. Declared here for clsTopTabCtl.inc, which is
+' compiled long before frmFindInProject.inc.
+declare function frmFindInProject_RestoreFocus() as boolean
 
 
 

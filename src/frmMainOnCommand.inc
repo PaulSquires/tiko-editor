@@ -207,6 +207,13 @@ function frmMain_OnCommand( _
             ' guard cannot help. Reachable with no active document: an accelerator bypasses
             ' menu enablement entirely.
         case IDM_FILESAVE
+            ' On the Find in Project tab there is no active document, but the focused excerpt
+            ' is a view onto a real one -- and it is the file the user has just been editing,
+            ' so Ctrl+S has to save THAT.
+            if pDoc = 0 then
+                dim as clsDocument ptr pFipSave
+                if frmFindInProject_ActiveEdit( pFipSave ) then pDoc = pFipSave
+            end if
             if pDoc = 0 then exit function
             OnCommand_FileSave( hwnd, pDoc, pDoc->IsNewFlag, false )
         case IDM_FILESAVEAS:         OnCommand_FileSave( hwnd, pDoc, true, false )

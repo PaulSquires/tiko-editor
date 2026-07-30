@@ -85,6 +85,16 @@ function frmMain_FileTopMenuStates() as long
         next
     end if
 
+    ' ...but the Find in Project tab CAN save: its excerpts edit real files. Save applies to
+    ' the focused excerpt's file, Save All to every result file that is dirty. Close is
+    ' enabled too -- the tab has to be closeable, and its own close path prompts.
+    if frmFindInProject_IsActive() then
+        EnableTopMenuItem( IDM_FILECLOSE, true )
+        dim as clsDocument ptr pFipMenu
+        if frmFindInProject_ActiveEdit( pFipMenu ) then EnableTopMenuItem( IDM_FILESAVE, true )
+        if FindProject_AnyDirty() then EnableTopMenuItem( IDM_FILESAVEALL, true )
+    end if
+
     if gApp.IsSessionActive = false then 
         EnableTopMenuItem( IDM_CLOSESESSION, false )
     end if

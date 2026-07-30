@@ -235,10 +235,15 @@ function clsTopTabCtl.SetFocusTab( byval idx as long ) as long
         ' even though there is nothing to show.
         gTTabCtl.DisplayScintilla( idx, true )
         frmMain_PositionWindows()
-        ' Focus the PsTextBox CONTAINER, not its RichEdit child: PsTextBox.inc is included
-        ' after this file, so PsTextBox_GetRichEditHandle is not nameable here. This is also
-        ' how OnCommand_SearchFindDialog focuses the same field.
-        SetFocus( GetDlgItem( HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND ) )
+        ' Back to where the caret was, if it was in an excerpt. Landing in the search box
+        ' every time is right when the tab is first opened and wrong on every return to it --
+        ' the user was editing, and coming back should resume that.
+        if frmFindInProject_RestoreFocus() = false then
+            ' Focus the PsTextBox CONTAINER, not its RichEdit child: PsTextBox.inc is included
+            ' after this file, so PsTextBox_GetRichEditHandle is not nameable here. This is
+            ' also how OnCommand_SearchFindDialog focuses the same field.
+            SetFocus( GetDlgItem( HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND ) )
+        end if
         return PsTabBar_GetCurSel( this.hWindow )
     end if
 

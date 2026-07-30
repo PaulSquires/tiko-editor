@@ -177,7 +177,7 @@ function OnCommand_FileSave( _
     dim as boolean bReloadFunctions = false
     
     dim as long i, iStart, iEnd
-    
+
     if bSaveAll then
         ' Save All
         iStart = 0
@@ -186,7 +186,22 @@ function OnCommand_FileSave( _
         ' Save
         iStart = gTTabCtl.GetTabIndexByDocumentPtr(pDoc)
         iEnd = iStart
-    end if 
+
+        ' A DOCUMENT WITH NO TAB still has to be saveable. The loop below walks tabs, so a
+        ' document that has none -- which is most of a project's files, and exactly what the
+        ' Find in Project excerpts edit -- produced iStart = -1 and saved nothing at all.
+        if (iStart = -1) andalso (pDoc <> 0) then
+            if IsWindow( pDoc->hWindow(0) ) then
+                dim as boolean bDirty = cbool(SciExec( pDoc->hWindow(0), SCI_GETMODIFY, 0, 0 ) <> 0)
+                if bDirty orelse pDoc->UserModified orelse bSaveAs then
+                    if pDoc->SaveFile(bSaveAs) then return true   ' cancelled
+                    pDoc->ApplyProperties
+                    LoadFunctionsFiles()
+                end if
+            end if
+            return false
+        end if
+    end if
 
     for i = iStart to iEnd
         ' Get the document pointer and then save file to disk
@@ -341,8 +356,16 @@ end function
 function OnCommand_FileSaveAll( byval hwnd as HWND ) as boolean
 
     if gTTabCtl.GetItemCount() = 0 then exit function
-                
-    return OnCommand_FileSave( hwnd, 0, false, true )
+
+    dim as boolean bCancelled = OnCommand_FileSave( hwnd, 0, false, true )
+    if bCancelled then return true
+
+    ' ...and the Find in Project results, whose files usually have NO TAB for the loop above
+    ' to have found. Save All that quietly skipped everything the user had just edited in the
+    ' results list would be the worst kind of wrong.
+    if FindProject_SaveAllDirty() = false then return true
+
+    return false
 end function
 
 
@@ -416,6 +439,17 @@ function OnCommand_FileClose( _
             end if
 
             gTTabCtl.TabFocusLost(i)     ' puts the info strip back, closes the Find bars
+
+            ' DROP THE RESULTS. Closing the tab used to leave the whole model standing, so a
+            ' later Ctrl+Shift+F reopened it showing the OLD result set -- complete with dirty
+            ' stripes computed against line snapshots taken before the files were edited and
+            ' saved. It also leaked: the model holds one document reference per result file,
+            ' and nothing was giving them back.
+            '
+            ' BEFORE DestroyWindow, deliberately: Clear asks the surface to unbind the excerpt
+            ' views first, and after the window is destroyed that callback is gone.
+            FindProject_Clear()
+
             if IsWindow( HWND_FRMFINDINPROJECT ) then
                 DestroyWindow( HWND_FRMFINDINPROJECT )
                 HWND_FRMFINDINPROJECT = 0

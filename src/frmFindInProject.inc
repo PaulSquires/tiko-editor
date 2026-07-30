@@ -59,6 +59,15 @@ dim shared gFipOpenRect   as RECT
 ' Set while the pinned line is being re-asserted, so that the scroll it causes cannot come
 ' back through the subclass and re-assert it again forever.
 dim shared gFipPinning    as boolean
+' Where the caret was when an excerpt last lost focus. Remembered by BLOCK, not by slot or
+' row: slots are recycled and rows are rebuilt, but a block is a stable identity for as long
+' as the result set lives. -1 when the caret has never been in an excerpt.
+dim shared gFipLastEditBlock as long = -1
+dim shared gFipLastEditPos   as long = 0
+' The Find bar's navigation state. Declared up here rather than beside the bar code because
+' the window procedure below resets both when the tab is destroyed.
+dim shared gFipCurrent   as long = -1     ' flat match index the user is sitting on
+dim shared gFipLastQuery as DWSTRING      ' what the last search actually ran for
 
 
 ' ========================================================================================
@@ -161,14 +170,20 @@ private function FipPool_SciProc( byval hwnd as HWND, byval uMsg as UINT, _
         case WM_SETFOCUS, WM_KILLFOCUS
             ' Which group owns the caret decides which header shows "Open File".
             dim as long g = -1
-            if uMsg = WM_SETFOCUS then
-                for i as long = 0 to gFipPoolCount - 1
-                    if (gFipPool(i).hWnd = hwnd) andalso (gFipPool(i).nRow <> -1) then
-                        g = gFipRows( gFipPool(i).nRow ).nGroup
-                        exit for
-                    end if
-                next
-            end if
+            for i as long = 0 to gFipPoolCount - 1
+                if gFipPool(i).hWnd <> hwnd then continue for
+                if gFipPool(i).nRow = -1 then exit for
+                if uMsg = WM_SETFOCUS then
+                    g = gFipRows( gFipPool(i).nRow ).nGroup
+                else
+                    ' LOSING focus: remember where the caret was, so switching away from this
+                    ' tab and back returns to the edit position rather than dumping the user
+                    ' in the search box every time.
+                    gFipLastEditBlock = gFipRows( gFipPool(i).nRow ).nBlock
+                    gFipLastEditPos   = SciExec( hwnd, SCI_GETCURRENTPOS, 0, 0 )
+                end if
+                exit for
+            next
             if g <> gFipFocusGroup then
                 gFipFocusGroup = g
                 if IsWindow( HWND_FRMFINDINPROJECT_SURFACE ) then
@@ -645,6 +660,30 @@ function frmFindInProject_ActiveEdit( byref pDocOut as clsDocument ptr ) as HWND
 end function
 
 
+function frmFindInProject_RestoreFocus() as boolean
+    if gFipLastEditBlock < 0 then return false
+    if gFipLastEditBlock >= gFip.nBlockCount then return false
+
+    ' The block may be off screen, or in a group that has since been collapsed. Bring it back
+    ' into view before looking for the slot showing it -- otherwise there is nothing to focus.
+    dim as long g = gFip.blocks(gFipLastEditBlock).nGroup
+    if gFip.groups(g).pDoc = 0 then return false
+    if gFip.groups(g).bCollapsed then return false
+
+    for i as long = 0 to gFipPoolCount - 1
+        if gFipPool(i).nRow = -1 then continue for
+        if gFipRows( gFipPool(i).nRow ).nBlock <> gFipLastEditBlock then continue for
+        SetFocus( gFipPool(i).hWnd )
+        SciExec( gFipPool(i).hWnd, SCI_GOTOPOS, gFipLastEditPos, 0 )
+        ' GOTOPOS scrolls the caret into view, which would slide the excerpt off its lines.
+        SciExec( gFipPool(i).hWnd, SCI_SETFIRSTVISIBLELINE, _
+                 gFip.blocks(gFipLastEditBlock).nFirstLine, 0 )
+        return true
+    next
+    return false
+end function
+
+
 ' Are all the groups folded? Drives which way round the Find bar's fold icon points. With no
 ' results at all the answer is FALSE, so the icon offers "collapse" rather than sitting in the
 ' expand state over an empty list.
@@ -844,6 +883,10 @@ private sub FipSurface_PaintHeader( byval b as PsBufferPaint ptr, byref r as FIP
             b->SetForeColor( ghEditor.ForeColorLinenumbers )
             b->PaintText( wszKey, @rcKey, DT_RIGHT )
         end if
+
+        ' Remembered so the click handler can tell the button from the rest of the bar, which
+        ' folds. Only one header shows the button at a time, so one rect is enough.
+        gFipOpenRect = rcOpen
     end if
 
     if len(wszDir) then
@@ -1109,19 +1152,25 @@ private function FipSurface_WndProc( _
             dim as long i = FipSurface_RowAtPoint( yClick )
             if i >= 0 then
                 if gFipRows(i).nKind = FIP_ROW_HEADER then
-                    ' THE TWISTY FOLDS, THE REST OF THE HEADER OPENS THE FILE. The header
-                    ' names a file, so clicking it going to that file is the obvious reading;
-                    ' folding is what the chevron is FOR, and giving it the whole bar made
-                    ' the chevron decorative.
-                    dim as long g  = gFipRows(i).nGroup
-                    dim as long cx = frmFindInProject_TwistyColumnX()
-                    if (xClick >= cx - AfxScaleX(10)) andalso (xClick <= cx + AfxScaleX(10)) then
+                    ' THE WHOLE HEADER FOLDS; only the "Open File" button opens. The header is
+                    ' a big target and folding is the thing you do to it constantly, so the
+                    ' bar is the fold and opening gets the explicit button.
+                    dim as long g = gFipRows(i).nGroup
+                    dim as boolean bOnButton = false
+                    if (gFipHotGroup = g) orelse (gFipFocusGroup = g) then
+                        if (xClick >= gFipOpenRect.left) andalso (xClick < gFipOpenRect.right) andalso _
+                           (yClick >= gFipOpenRect.top) andalso (yClick < gFipOpenRect.bottom) then
+                            bOnButton = true
+                        end if
+                    end if
+
+                    if bOnButton then
+                        FipPool_OpenGroupFile( g )
+                    else
                         gFip.groups(g).bCollapsed = not gFip.groups(g).bCollapsed
                         ' Keep the scroll where it is: the header the user clicked should not
                         ' jump out from under the cursor.
                         frmFindInProject_Refresh( false )
-                    else
-                        FipPool_OpenGroupFile( g )
                     end if
                 end if
             end if
@@ -1227,7 +1276,14 @@ private function frmFindInProject_WndProc( _
             HWND_FRMFINDINPROJECT_VSCROLL = 0
             ' The model must not keep calling into a surface that no longer exists.
             gFipModelChanged = 0
+            gFipRepaint      = 0
             gFipUnbindDoc    = 0
+            ' The next search starts from nothing, so the caption starts from nothing too.
+            gFipLastQuery = ""
+            gFipCurrent   = -1
+            gFipFocusGroup = -1
+            gFipHotGroup   = -1
+            gFipLastEditBlock = -1
             return 0
     end select
 
@@ -2110,6 +2166,17 @@ sub frmFindInProject_RunSelfTest()
 
     frmFindInProject_Check( "close: the Find tab is gone", _
         gTTabCtl.FindTabIndex() = -1, str(gTTabCtl.FindTabIndex()) )
+
+    ' CLOSING DROPS THE RESULTS. It did not, and the symptom was silent: reopening with
+    ' Ctrl+Shift+F showed the previous result set, complete with dirty stripes computed
+    ' against line snapshots taken before those files were edited and saved. It also leaked
+    ' one document reference per result file, which nothing was giving back.
+    frmFindInProject_Check( "close: the result model was cleared", _
+        gFip.bValid = false, str(gFip.nGroupCount) & " groups left" )
+    frmFindInProject_Check( "close: no line snapshots survive", _
+        gFip.nOrigCount = 0, str(gFip.nOrigCount) )
+    frmFindInProject_Check( "close: no document reference is still held", _
+        gFip.nBlockCount = 0, str(gFip.nBlockCount) & " blocks left" )
     frmFindInProject_Check( "close: the results window was destroyed", _
         IsWindow( HWND_FRMFINDINPROJECT ) = 0 )
     frmFindInProject_Check( "close: the tab count is back to baseline", _
@@ -2146,10 +2213,6 @@ end sub
 ' ========================================================================================
 ' The Find / Replace bar, retargeted.
 ' ========================================================================================
-dim shared gFipCurrent   as long = -1     ' flat match index the user is sitting on
-dim shared gFipLastQuery as DWSTRING      ' what the last search actually ran for
-
-
 ' Push the "n of m" the Find bar paints, and rename the tab to the phrase.
 private sub FipBar_UpdateStatus()
     dim as long nOrdinal = 0

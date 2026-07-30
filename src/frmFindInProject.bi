@@ -111,6 +111,8 @@ declare sub      frmFindInProject_ApplyTheme()
 ' command, so the caller's single-document path is skipped. This is the ONE interception
 ' point: Enter in the find box already funnels to IDM_FINDNEXT.
 declare function frmFindInProject_BarAction( byval id as long ) as boolean
+' (frmFindInProject_RestoreFocus is declared in frmTopTabs.bi -- clsTopTabCtl.inc calls it
+'  and is compiled long before this file.)
 ' There is deliberately NO frmFindInProject_Close. Closing this tab goes through the ordinary
 ' OnCommand_FileClose path like every other tab -- the tab's X routes there via
 ' gTTabCtl.CloseTab, and shutdown via EFC_CLOSEALL -- and that loop owns destroying this
