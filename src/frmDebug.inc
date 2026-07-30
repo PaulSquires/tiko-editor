@@ -238,6 +238,7 @@ private sub frmDebug_OnStopped()
     frmDebug_FillCallStack( si.frameCount )
     frmDebug_FillVariables()
     frmDebug_SyncButtons()
+    frmDebug_Trace()
 end sub
 
 private sub frmDebug_OnExited( byval exitCode as long )
@@ -377,6 +378,56 @@ private sub frmDebug_PositionWindows()
     ' --- right pane: the call stack; its own header band supplies the caption ---
     dim as long xRight = nBarPos + nSplitW
     SetWindowPos( HWND_FRMDEBUG_LVSTACK, 0, xRight, nTop, rc.right - xRight, rc.bottom - nTop, SWP_NOZORDER )
+end sub
+
+' Env-gated geometry dump (TIKO_DEBUGWIN_TRACE=1). Every rect this window computes, read
+' back from the CONTROLS rather than from the variables that placed them -- a layout bug
+' that leaves a control at 0x0 is invisible to a trace of the intended numbers.
+sub frmDebug_Trace()
+    if environ("TIKO_DEBUGWIN_TRACE") <> "1" then exit sub
+    if IsWindow(HWND_FRMDEBUG) = 0 then exit sub
+    dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMDEBUG)
+    if pWindow = 0 then exit sub
+
+    dim as string sLine
+    dim as RECT rc
+    GetClientRect( HWND_FRMDEBUG, @rc )
+    sLine = "--- TIKO_DEBUGWIN_TRACE ---"
+    print sLine
+    sLine = "  DPI rx=" & str(pWindow->rxRatio) & " ry=" & str(pWindow->ryRatio) & _
+            "   client=" & str(rc.right) & "x" & str(rc.bottom)
+    print sLine
+
+    #macro TRACEWND( nm, h )
+        if IsWindow(h) then
+            dim as RECT r2
+            GetWindowRect( h, @r2 )
+            MapWindowPoints( HWND_DESKTOP, HWND_FRMDEBUG, cast(LPPOINT, @r2), 2 )
+            sLine = "  " & nm & " = (" & str(r2.left) & "," & str(r2.top) & ")-(" & _
+                    str(r2.right) & "," & str(r2.bottom) & ")  " & _
+                    str(r2.right - r2.left) & "x" & str(r2.bottom - r2.top) & _
+                    iif( IsWindowVisible(h), "  visible", "  HIDDEN" )
+            print sLine
+        else
+            sLine = "  " & nm & " = NOT A WINDOW"
+            print sLine
+        end if
+    #endmacro
+
+    for id as long = IDC_FRMDEBUG_CMDFIRST to IDC_FRMDEBUG_CMDLAST
+        TRACEWND( "button" & str(id), gDbgBtn(id) )
+    next
+    TRACEWND( "selectbar", HWND_FRMDEBUG_SELECTBAR )
+    TRACEWND( "splitter ", HWND_FRMDEBUG_SPLITTER )
+    TRACEWND( "vars     ", HWND_FRMDEBUG_LVVARS )
+    TRACEWND( "stack    ", HWND_FRMDEBUG_LVSTACK )
+
+    sLine = "  splitter pos=" & str(PsSplitter_GetPos(HWND_FRMDEBUG_SPLITTER))
+    print sLine
+    sLine = "  rows: vars=" & str(PsListTree_GetCount(HWND_FRMDEBUG_LVVARS)) & _
+            "  stack=" & str(PsListTree_GetCount(HWND_FRMDEBUG_LVSTACK))
+    print sLine
+    print "--- end ---"
 end sub
 
 private sub frmDebug_SplitterMoved( byval hSplitter as HWND, byval newPos as integer, byval nPhase as integer )
@@ -640,7 +691,9 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as DWSTRING, 
     HWND_FRMDEBUG = pWindow->Create( hWndParent, L(618, "Debugger"), @frmDebug_WndProc, 0, 0, 0, 0, _
         WS_POPUP or WS_THICKFRAME or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
         WS_EX_CONTROLPARENT or WS_EX_LEFT )
-    pWindow->SetClientSize( pWindow->ScaleX(FRMDEBUG_DEFWIDTH), pWindow->ScaleY(FRMDEBUG_DEFHEIGHT) )
+    ' UNSCALED. SetClientSize applies the DPI factor itself; passing a pre-scaled value
+    ' squares it, which at 175% turned a 900px window into a 2756px one.
+    pWindow->SetClientSize( FRMDEBUG_DEFWIDTH, FRMDEBUG_DEFHEIGHT )
     pWindow->Center( HWND_FRMDEBUG, hWndParent )
 
     if gDebugPos.bInitialized then
@@ -683,6 +736,17 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as DWSTRING, 
 
     frmDebug_ApplyTheme()
     frmDebug_PositionWindows()
+
+    ' Every Ps* control is created WS_CHILD but NOT WS_VISIBLE: the family leaves showing
+    ' them to the host, which has to position them first. Miss this and the window paints
+    ' its background and nothing else.
+    for id as long = IDC_FRMDEBUG_CMDFIRST to IDC_FRMDEBUG_CMDLAST
+        if IsWindow(gDbgBtn(id)) then ShowWindow( gDbgBtn(id), SW_SHOW )
+    next
+    ShowWindow( HWND_FRMDEBUG_SELECTBAR, SW_SHOW )
+    ShowWindow( HWND_FRMDEBUG_LVVARS,    SW_SHOW )
+    ShowWindow( HWND_FRMDEBUG_LVSTACK,   SW_SHOW )
+    ShowWindow( HWND_FRMDEBUG_SPLITTER,  SW_SHOW )
 
     ' --- seed the breakpoints the user set in the editor ---
     debugparser_clear_breakpoints()

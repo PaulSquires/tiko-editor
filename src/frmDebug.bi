@@ -21,7 +21,7 @@
 '   ------------------------------------------------------------------------------------
 '   Stopped - breakpoint  frmMain.inc:412  in frmMain_PositionWindows        (painted)
 '   ------------------------------------------------------------------------------------
-'   [PsSelectBar] Locals Globals Watch  |  Call stack
+'   [PsSelectBar] Locals Globals         |  Call stack
 '   [PsListTree, a real tree]           |  [PsListTree]
 '                                    PsSplitter (vertical bar, panes side by side)
 '
@@ -30,12 +30,14 @@
 ' and calls back in.
 '
 ' ------------------------------------------------------------------------------------------
-' THERE IS NO frmDebug_FilterMessage AND THERE MUST NOT BE ONE.
+' THERE IS NO frmDebug_FilterMessage.
 '
 ' None of the controls used here adds a pump obligation: PsButton and PsSelectBar have none,
-' and PsListTree only acquires one if label editing is enabled -- which the Locals and Call
-' Stack lists do not use. The Watch list DOES enable it, and that single call is the reason
-' frmMain's pump gains PsListTree_FilterMessage; it is declared there, not here.
+' and PsListTree only acquires one if label editing is enabled, which neither list does.
+'
+' That changes the day a Watch tab lands: watch expressions are typed IN the list, which
+' means PsListTree_EnableLabelEdit, which means frmMain's pump gains
+' PsListTree_FilterMessage. Adding one is a host change, not a local one.
 '
 ' ------------------------------------------------------------------------------------------
 ' THE VARIABLES TREE IS BUILT TO A BOUNDED DEPTH, NOT LAZILY.
@@ -70,6 +72,7 @@
 ' reason: an index shifts when a tab is added.
 #define DEBUG_TAB_LOCALS   0
 #define DEBUG_TAB_GLOBALS  1
+' Not built yet -- see the pump note above for what adding it costs.
 #define DEBUG_TAB_WATCH    2
 
 const as long FRMDEBUG_MAXDEPTH    = 3
@@ -100,3 +103,4 @@ declare sub      frmDebug_Command( byval id as long )
 declare sub      frmDebug_ApplyTheme()
 declare function frmDebug_IsOpen() as boolean
 declare sub      frmDebug_ClearExecutionMarkers()
+declare sub      frmDebug_Trace()
