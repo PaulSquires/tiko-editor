@@ -415,8 +415,8 @@ sub Theme_ApplySubsystems( byval nMask as ulong )
     ' The debugger's Variables pane. Only ever populated during a live gdb session, so this
     ' is the least-exercised path here -- but it is one line and the handle is a global.
     if (nMask and THSUB_DEBUG) <> 0 then
-        Theme_PushOutputList( HWND_FRMDEBUG_OUTPUT )
-        Theme_ApplyDarkCaption( HWND_FRMDEBUG )
+        ' The debugger owns several controls now, so it themes itself.
+        frmDebug_ApplyTheme()
     end if
 
     ' The main window's non-client area. Cheap, and it has to happen on the preview path too,

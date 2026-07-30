@@ -65,6 +65,11 @@ dim shared as DWSTRING gwszDefaultToolchain = "FreeBASIC-1.10.1-winlibs-gcc-9.3.
 #include once "modScintilla.bi"
 
 #include once "fbcParser.bi"
+' The debug engine, as a DLL (C:\dev\debugParser -- see _copy_debugparser.bat). This is its
+' ONLY header. It reads the debug information fbc embeds with -g and a gas backend, which gdb
+' cannot read at all, and drives the debuggee against it. Up here beside the other DLL header
+' because clsDocument.ToggleBreakPoint calls into it.
+#include once "debugParser.bi"
 #include once "clsDocument.bi"
 #include once "modDeclares.bi"
 ' Declarations only, and deliberately naming no Ps* type: clsConfig.inc calls
@@ -117,10 +122,6 @@ dim shared gTTabCtl as clsTopTabCtl
 ' and clsDocument.inc (the clsDocument type it instantiates for the disk round-trip).
 #include once "modEncodingSelfTest.bi"
 #include once "modEncodingSelfTest.inc"
-' The debug engine, as a DLL (C:\dev\debugParser -- see _copy_debugparser.bat). This is
-' its ONLY header. It reads the debug information fbc embeds with -g and a gas backend,
-' which gdb cannot read at all, and drives the debuggee against it.
-#include once "debugParser.bi"
 #include once "clsApp.inc"
 #include once "clsSymbolDb.inc"
 #include once "clsScanMgr.inc"

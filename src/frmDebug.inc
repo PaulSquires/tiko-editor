@@ -11,1336 +11,725 @@
 '    MERCHANTABILITY or FITNESS for A PARTICULAR PURPOSE.  See the
 '    GNU General Public License for more details.
 
+' See frmDebug.bi for the layout, the absence of a pump obligation, and why the variables
+' tree is built to a bounded depth rather than lazily.
+
 #include once "frmDebug.bi"
 
+dim shared as HWND     gDbgBtn(IDC_FRMDEBUG_CMDFIRST to IDC_FRMDEBUG_CMDLAST)
+dim shared as DWSTRING gDbgStatusText
+dim shared as long     gDbgCurFrame          ' call-stack frame the variables view is scoped to
+dim shared as boolean  gDbgSessionEnding
 
-' The debugger toolbar's tooltip. A PsTooltip rather than the comctl32 tip this window used to
-' build by hand: it is themed, and it adds no pump obligation.
-'
-' The TOOL INDEX is the gDbgBtns() subscript directly -- no separate id enum is needed here,
-' unlike the top-tab bars, because the hot regions already live in an array. -1 is "no button".
-dim shared ghDebugTip as HWND
-
-
-' ========================================================================================
-' Supply the tooltip text for the button the cursor is over.
-' ========================================================================================
-' Runs once per hover, immediately before the tip is sized, which is why the theme push lives
-' here (see modThemeApply.bi).
-'
-' getMenuText packs the caption and the shortcut into one string separated by a tab; the tab
-' becomes " (" and a ")" closes it, exactly as the old WM_MOUSEHOVER arm did. A button with no
-' shortcut still gets the parentheses -- unchanged behaviour, not an oversight of this refactor.
-private function frmDebug_TipText( byval hTip as HWND, _
-                                   byval hAttached as HWND, _
-                                   byval idx as long ) as DWSTRING
-    Theme_ApplyTooltip( hTip )
-    if idx < lbound(gDbgBtns) orelse idx > ubound(gDbgBtns) then return ""
-    dim as DWSTRING wszTip = gDbgBtns(idx).wszToolTip
-    if len(wszTip) = 0 then return ""
-    return AfxStrReplace( wszTip, wchr(9), " (" ) & ")"
-end function
-
-
-' ========================================================================================
-' Which toolbar button is the cursor over? -1 for none.
-' ========================================================================================
-' Deliberately tests EVERY button, including ones with no caption -- that is what the old
-' hover arm did. The hot-highlight loop in WM_MOUSEMOVE is the one that skips them.
-private function frmDebug_TipHitTest( byval hwnd as HWND ) as long
-    for i as long = lbound(gDbgBtns) to ubound(gDbgBtns)
-        if isMouseOverRECT( hwnd, gDbgBtns(i).rc ) then return i
-    next
-    return -1
-end function
-
-
-' Enqueue - add message to the end of the queue
-sub gdb_enqueue_message( byref response as string )
-    dim newNode as GDBMessage ptr = new GDBMessage
-    newNode->message = response
-    newNode->pNextNode = 0
-    
-    if gdb_session.tail = 0 then
-        ' Queue is empty
-        gdb_session.head = newNode
-        gdb_session.tail = newNode
-    else
-        ' Add to end
-        gdb_session.tail->pNextNode = newNode
-        gdb_session.tail = newNode
-    end if
-    
-    gdb_session.count += 1
+' ==========================================================================================
+' Status line
+' ==========================================================================================
+private sub frmDebug_SetStatus( byval wszText as DWSTRING )
+    gDbgStatusText = wszText
+    if IsWindow(HWND_FRMDEBUG) then AfxRedrawWindow( HWND_FRMDEBUG )
 end sub
 
-' Dequeue - remove and return message from front of queue
-function gdb_dequeue_message() as string
-    if gdb_session.head = 0 then
-        return ""  ' Queue is empty
-    end if
-    
-    dim tempNode as GDBMessage ptr = gdb_session.head
-    dim msg as string = tempNode->message
-    
-    gdb_session.head = gdb_session.head->pNextNode
-    if gdb_session.head = 0 then
-        gdb_session.tail = 0  ' Queue is now empty
-    end if
-    
-    delete tempNode
-    gdb_session.count -= 1
-    
-    return msg
-end function
-
-' Check if queue is empty
-function gdb_isMessageQueueEmpty() as boolean
-    dim as boolean isEmpty
-    MutexLock( gdb_session.hThreadMutex )
-    isEmpty = (gdb_session.head = 0)
-    MutexUnLock( gdb_session.hThreadMutex )
-    return isEmpty
-end function
-
-' Clear all messages from queue
-sub clearQueue()
-    while gdb_isMessageQueueEmpty() = false
-        gdb_dequeue_message()
-    wend
-end sub
-
-' Initialize GDB session
-function gdb_init( byval executable as string = "", byval cmdparams as string = "" ) as boolean
-    dim as SECURITY_ATTRIBUTES sa
-    dim as HANDLE hStdInRead, hStdInWrite
-    dim as HANDLE hStdOutRead, hStdOutWrite
-    dim as HANDLE hStdErrRead, hStdErrWrite
-    dim as STARTUPINFO si
-    dim as PROCESS_INFORMATION pi
-    dim as string cmdline
-    dim as integer ret
-    
-    ' Set up security attributes for pipe inheritance
-    sa.nLength = sizeof(SECURITY_ATTRIBUTES)
-    sa.bInheritHandle = TRUE
-    sa.lpSecurityDescriptor = NULL
-    
-    ' Create pipes for stdin
-    if CreatePipe( @hStdInRead, @hStdInWrite, @sa, 0 ) = 0 then return false
-    if SetHandleInformation( hStdInWrite, HANDLE_FLAG_INHERIT, 0 ) = 0 then return false
-    
-    ' Create pipes for stdout
-    if CreatePipe( @hStdOutRead, @hStdOutWrite, @sa, 0 ) = 0 then return false
-    if SetHandleInformation( hStdOutRead, HANDLE_FLAG_INHERIT, 0 ) = 0 then return false
-    
-    ' Create pipes for stderr
-    if CreatePipe( @hStdErrRead, @hStdErrWrite, @sa, 0 ) = 0 then return false
-    if SetHandleInformation( hStdErrRead, HANDLE_FLAG_INHERIT, 0 ) = 0 then return false
-    
-    ' Set up startup info
-    si.cb = sizeof(STARTUPINFO)
-    si.hStdError   = hStdErrWrite
-    si.hStdOutput  = hStdOutWrite
-    si.hStdInput   = hStdInRead
-    si.dwFlags     = STARTF_USESTDHANDLES or STARTF_USESHOWWINDOW
-    si.wShowWindow = SW_HIDE
-    
-    ' Build command line
-    dim as DWSTRING wszGDBexe = AfxGetExePathName & "\bin\gdb\gdb.exe"
-    if len(executable) > 0 then
-        cmdline = wszGDBexe & " -q -i=mi2 " & chr(34) & executable & chr(34) & " " & cmdparams
-    else
-        cmdline = wszGDBexe & " -q -i=mi2"
-    end if
-
-    ' Create the GDB process
-    ret = CreateProcess( NULL, cmdline, NULL, NULL, TRUE, _
-                         CREATE_NO_WINDOW, NULL, NULL, @si, @pi )
-    
-    if ret = 0 then
-        dim as DWORD err_code = GetLastError()
-        print "CreateProcess failed with error code: "; err_code
-        select case err_code
-            case 2
-                print "Error: gdb.exe not found. Please ensure GDB is installed and in PATH."
-            case 3
-                print "Error: Path not found."
-            case 5
-                print "Error: Access denied."
-            case 87
-                print "Error: Invalid parameter."
-            case 193
-                print "Error: Not a valid Win32 application."
-            case else
-                print "Error: Unknown error code."
-        end select
-        
-        CloseHandle(hStdInRead)
-        CloseHandle(hStdInWrite)
-        CloseHandle(hStdOutRead)
-        CloseHandle(hStdOutWrite)
-        CloseHandle(hStdErrRead)
-        CloseHandle(hStdErrWrite)
-        return false
-    end if
-    
-       
-    ' Close handles we don't need in parent process
-    CloseHandle(hStdInRead)
-    CloseHandle(hStdOutWrite)
-    CloseHandle(hStdErrWrite)
-    
-    ' Store session info
-    gdb_session.hProcess    = pi.hProcess
-    gdb_session.hThread     = pi.hThread
-    gdb_session.hStdInWrite = hStdInWrite
-    gdb_session.hStdOutRead = hStdOutRead
-    gdb_session.hStdErrRead = hStdErrRead
-    gdb_session.dwProcessId = pi.dwProcessId
-    gdb_session.initialized = true
-
-    return true
-end function
-
-
-' Clear any pending output from pipe
-sub gdb_clear_pipe()
-    if gdb_session.initialized = false then return 
-
-    dim as string buffer = space(4096)
-    dim as DWORD bytes_read, bytes_avail
-    
-    ' Read and discard any pending data
-    do
-        if gdb_session.KillMessageThread = true then exit do
-        
-        if PeekNamedPipe( gdb_session.hStdOutRead, NULL, 0, NULL, @bytes_avail, NULL ) = 0 then exit do
-        if bytes_avail = 0 then exit do
-        
-        if bytes_avail > 4096 then bytes_avail = 4096
-        ReadFile( gdb_session.hStdOutRead, strptr(buffer), bytes_avail, @bytes_read, NULL )
-    loop while bytes_avail > 0
-end sub
-
-
-' Send command to GDB (synchronous)
-function gdb_send( byref cmd as string ) as boolean
-    if gdb_session.initialized = false then return false
-    
-    dim as string full_cmd = cmd + chr(13) + chr(10)
-    dim as DWORD bytes_written
-    dim as integer ret
-    
-    ret = WriteFile( gdb_session.hStdInWrite, strptr(full_cmd), len(full_cmd), @bytes_written, NULL )
-    FlushFileBuffers( gdb_session.hStdInWrite )
-
-    return iif(ret <> 0 andalso bytes_written > 0, true, false)
-end function
-
-
-' Receive response from GDB (synchronous with timeout)
-function gdb_receive() as boolean
-    if gdb_session.initialized = false then return false
-    
-    dim as string buffer = space(4096)
-    dim as DWORD bytes_read, bytes_avail
-    dim as double start_time = timer
-    dim as integer ret
-    
-    dim as integer timeout_ms = 500
-    dim as string response = ""
-    
-    do
-        if gdb_session.KillMessageThread = true then return false
-        if gdb_session.initialized = false then return false
-        
-        ret = PeekNamedPipe( gdb_session.hStdOutRead, NULL, 0, NULL, @bytes_avail, NULL )
-        
-        if (ret <> 0) andalso (bytes_avail > 0) then
-            if bytes_avail > 4096 then bytes_avail = 4096
-            
-            ret = ReadFile( gdb_session.hStdOutRead, strptr(buffer), bytes_avail, @bytes_read, NULL )
-            
-            if (ret <> 0) andalso (bytes_read > 0) then
-                response = response & left(buffer, bytes_read)
-                start_time = timer
-            end if
-        else
-            exit do
-        end if
-        
-        if (timer - start_time) * 1000 > timeout_ms then exit do
-    loop
-
-    if instr(response, "(gdb)") > 0 orelse instr(response, "^done") > 0 orelse _
-       instr(response, "^running") > 0 orelse instr(response, "^error") > 0 orelse _
-       instr(response, "*stopped") > 0 then
-        ' Clear any old data first
-        gdb_clear_pipe()
-
-        ' Create a new message record and add it to the message queue. The WM_TIMER will
-        ' check the message queue for any pending messages.
-        MutexLock( gdb_session.hThreadMutex )
-        gdb_enqueue_message( response )
-        MutexUnLock( gdb_session.hThreadMutex )
-    end if
-        
-    return false
-end function
-
-
-sub gdb_threadListener( byval userdata as any ptr )
-    do until gdb_session.KillMessageThread = true
-        gdb_receive() 
-    loop    
-end sub
-
-
-' Close GDB session
-sub gdb_close()
-    if gdb_session.initialized then
-        gdb_session.KillMessageThread = true
-
-        ' Clear the message queue
-        clearQueue()
-    
-        ' Try to quit gracefully
-        gdb_send("quit")
-        sleep 200
-        
-        ' Check if process is still running
-        dim as DWORD exit_code
-        if GetExitCodeProcess(gdb_session.hProcess, @exit_code) <> 0 then
-            if exit_code = STILL_ACTIVE then
-                ' Send quit again with confirmation disabled
-                gdb_send("set confirm off")
-                sleep 50
-                gdb_send("quit")
-                sleep 200
-                
-                ' If still running, force terminate
-                if GetExitCodeProcess(gdb_session.hProcess, @exit_code) <> 0 then
-                    if exit_code = STILL_ACTIVE then
-                        TerminateProcess(gdb_session.hProcess, 0)
-                        sleep 100
-                    end if
-                end if
-            end if
-        end if
-
-        CloseHandle(gdb_session.hStdInWrite)
-        CloseHandle(gdb_session.hStdOutRead)
-        CloseHandle(gdb_session.hStdErrRead)
-        CloseHandle(gdb_session.hThread)
-        CloseHandle(gdb_session.hProcess)
-
-        gdb_session = type<GDBSession>()
-        
-        gdb_session.initialized = false
-    end if
-end sub
-
-
-function gdb_findResultValue( byref response as string, byref token as string ) as string
-    ' Add to incoming token:   token="
-    dim as string result
-    
-    token = token & "=" & chr(34)
-    dim as integer iStart = instr( response, token )
-    if iStart > 0 then
-        iStart = iStart + len(token)
-        dim as integer iEnd = instr( iStart, response, chr(34) )
-        if iEnd > 0 then
-            result = mid( response, iStart, iEnd - iStart ) 
-        end if
-    end if
-    
-    return result
-end function
-
-
-function gdb_findFunctionArguments( byref response as string, byref token as string ) as string
-    ' Add to incoming token:   token="
-    ' args=[{name="NUMHOURS$1",value="1500"},{name="NUMHOURS$1@entry",value="1500"}]
-    dim as string result
-    
-    token = token & "=" & "["
-    dim as long iStart = instr( response, token )
-    if iStart > 0 then
-        iStart = iStart + len(token)
-        dim as long iEnd = instr( iStart, response, "]" )
-        if iEnd > 0 then
-            result = mid( response, iStart, iEnd - iStart ) 
-        end if
-    end if
-    
-    return result
-end function
-
-
-function gdb_loadBreakpointsArray( byref response as string ) as long
-    dim as string token
-    dim as long p1 
-    dim as long p2
-    
-    p1 = instr( response, "body=" )
-    if p1 = 0 then return 0
-    p1 += 6
-    
-    erase gdb_session.breakpoint_array
-    
-    do
-        dim as long numberId
-        dim as long linenum
-        dim as string func
-        
-        token = "number=" & chr(34)    
-        p1 = instr( p1, response, token )
-        if p1 = 0 then exit do
-        p1 += len(token)
-        numberId = val( mid(response, p1) )
-        
-        token = "func=" & chr(34)
-        p1 = instr( p1, response, token )
-        if p1 = 0 then exit do
-        p1 += len(token)
-        p2 = instr( p1, response, chr(34) )
-        if p2 > 0 then
-            func = mid( response, p1, p2 - p1 ) 
-        end if    
-        p1 = p2 + 1
-
-        token = "line=" & chr(34)
-        p1 = instr( p2, response, token )
-        if p1 = 0 then exit do
-        p1 += len(token)
-        linenum = val( mid(response, p1) )
-        
-        ' Add the newly found breakpoint to the array
-        dim as long ub = ubound(gdb_session.breakpoint_array) + 1
-        redim preserve gdb_session.breakpoint_array(ub)
-        gdb_session.breakpoint_array(ub).numberId = numberId
-        gdb_session.breakpoint_array(ub).func     = func
-        gdb_session.breakpoint_array(ub).linenum  = linenum
-    loop
-    
-    return 0
-end function
-
-
-function gdb_deleteCurrentLineBreakpoint() as long
-    dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr
-    if pDoc = 0 then return 0
-    
-    dim as any ptr pSci = pDoc->GetActiveScintillaPtr()
-    dim fMark as long  ' 32 bit value
-    dim nCurLine as long = gdb_session.breakpoint_line_to_delete + 1  ' add 1 for GDB
-
-    ' Find the breakpoint in the array based on the filename, func, and linenum.
-    for i as long = lbound(gdb_session.breakpoint_array) to ubound(gdb_session.breakpoint_array)
-        if gdb_session.breakpoint_array(i).linenum = nCurLine then
-            if gdb_session.breakpoint_array(i).func = gdb_session.current_function_name then
-                dim as string bp_cmd = "-break-delete " & str(gdb_session.breakpoint_array(i).numberId)
-                gdb_send( bp_cmd )
-                exit for
-            end if        
-        end if
-    next
-    
-    gdb_session.current_debug_action = 0
-    gdb_session.breakpoint_line_to_delete = 0
-    
-    return 0
-end function
-
-    
-function gdb_enableBreaksInFunction() as long
-    if gdb_session.disabled_breakpoints = "" then return 0
-    
-    dim as string send_command = "-break-enable"
-    gdb_send( send_command & gdb_session.disabled_breakpoints )
-
-    gdb_session.function_breakpoints = ""
-    gdb_session.disabled_breakpoints = ""
-
-    return 0
-end function
-
-
-function gdb_disableBreaksInFunction() as long
-    ' Do a batch disable of the breakpoints
-    dim as string send_command = "-break-disable"
-    dim as string breakpoints
-
-    for i as long = lbound(gdb_session.breakpoint_array) to ubound(gdb_session.breakpoint_array)
-        select case gdb_session.current_debug_action
-            case IDM_DEBUG_STEPOVER
-                ' Disable all breakpoints EXCEPT those in the current function
-                if gdb_session.function_breakpoints <> gdb_session.breakpoint_array(i).func then
-                    breakpoints = breakpoints & " " & str(gdb_session.breakpoint_array(i).numberId)
-                end if
-            case IDM_DEBUG_STEPOUT    
-                ' Disable all breakpoints ONLY for those in the current function
-                if gdb_session.function_breakpoints = gdb_session.breakpoint_array(i).func then
-                    breakpoints = breakpoints & " " & str(gdb_session.breakpoint_array(i).numberId)
-                end if
-        end select
-    next
-    gdb_session.disabled_breakpoints = breakpoints
-    
-    if len(breakpoints) then
-        gdb_send( send_command & breakpoints )
-    end if
-        
-    select case gdb_session.current_debug_action
-        case IDM_DEBUG_STEPOVER
-            gdb_send("-exec-next")
-        case IDM_DEBUG_STEPOUT    
-            gdb_send("-exec-finish")
+private function frmDebug_ReasonText( byval reason as long ) as DWSTRING
+    select case reason
+        case DBGP_STOP_ENTRY      : return L(603, "Started")
+        case DBGP_STOP_STEP       : return L(604, "Stepped")
+        case DBGP_STOP_BREAKPOINT : return L(605, "Breakpoint")
+        case DBGP_STOP_TEMPBP     : return L(256, "Run to Cursor")
+        case DBGP_STOP_USERBREAK  : return L(601, "Break")
+        case DBGP_STOP_EXCEPTION  : return L(606, "Exception")
     end select
-    ' the response calls: gdb_enableBreaksInFunction to re-enable
-    ' the function's breakpoints after we stepover or stepout.
-    gdb_session.current_debug_action = 0
-
-    return 0
+    return ""
 end function
 
+' ==========================================================================================
+' Editor markers
+' ==========================================================================================
+sub frmDebug_ClearExecutionMarkers()
+    dim pDoc as clsDocument ptr = gApp.pDocList
+    do until pDoc = 0
+        for i as long = 0 to 1
+            if pDoc->hWindow(i) then
+                SciExec( pDoc->hWindow(i), SCI_MARKERDELETEALL, MARKER_DEBUGGER_CURLINE, 0 )
+            end if
+        next
+        pDoc = pDoc->pDocNext
+    loop
+end sub
 
-function gdb_getVariableDisplayName( byval varName as string ) as string
-    dim as string varDisplayString = AfxStrExtract( 1, varName, "$" )
-    if varDisplayString = varName then return varDisplayString
-    if len(varName) = 0 then return ""
-    
-    dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
-    if pDoc = 0 then exit function
+' Navigate the editor to a location and mark it as the execution point. The marker is ADDED
+' explicitly rather than toggled: the old implementation called ToggleMarker here, which
+' REMOVES the arrow whenever the debugger stops twice on the same line -- which is exactly
+' what a loop body does on every iteration.
+private sub frmDebug_ShowExecutionPoint( byval wszFile as DWSTRING, byval nLine1Based as long )
+    if len(wszFile) = 0 then exit sub
+    if nLine1Based <= 0 then exit sub
 
-    dim as long r, startPos, endPos
+    frmDebug_ClearExecutionMarkers()
+
+    dim as long nLine0 = nLine1Based - 1
+    dim pDoc as clsDocument ptr = OpenSelectedDocument( wszFile, "", nLine0 )
+    if pDoc = 0 then exit sub
 
     dim as HWND hEdit = pDoc->hWndActiveScintilla
-
-    ' Try to find the variable within the source code starting at the function line
-    startPos = SciExec( hEdit, SCI_POSITIONFROMLINE, gdb_session.current_function_linenum, 0)
-    endPos = SciExec( hEdit, SCI_GETLENGTH, 0, 0)
-
-    dim as string txtFind = varDisplayString
-    SciExec( hEdit, SCI_SETTARGETSTART, startPos, 0)
-    SciExec( hEdit, SCI_SETTARGETEND, endPos, 0)
-    r = SciExec( hEdit, SCI_SEARCHINTARGET, len(txtFind), strptr(txtFind))
-    if r then
-        varDisplayString = pDoc->GetTextRange( r, r + len(txtFind) )
-    end if
-
-    function = varDisplayString
-end function
-
-
-function gdb_getVariableDisplayValue( byval varValue as string ) as string
-    dim as string varDisplayString = varValue
-
-    ' Clean the response string
-    dim as string st = varValue
-    st = AfxStrReplace( st, "'#13#10'", "(CRLF)" )
-    st = AfxStrReplace( st, "'#10'", "(LF)" )
-    st = AfxStrReplace( st, "'#13'", "(CR)" )
-    st = AfxStrReplace( st, "'#9'", "(TAB)" )
-    st = AfxStrReplace( st, "\" & chr(34), chr(34) )
-    varValue = st
-
-    ' If dealing with a string then try to extract out the string
-    if left(ucase(varValue), 7) = "DATA = " then
-        dim as string token = " len = "
-        dim as long nLen
-        dim as long i = instr( varValue, token )
-        if i then nLen = val( mid(varValue, i + len(token)) )
-
-        dim as string wszExtractString = AfxStrExtract( 1, varValue, "'", "'" )
-        if len(wszExtractString) then
-            if nLen = 0 then nLen = len(wszExtractString)
-            varDisplayString = chr(34) & wszExtractString & chr(34) & "  (len = " & str(nLen) & ")"
-        end if    
-    end if
-    
-    ' Try converting a Hex number to Decimal
-    if left(varValue, 2) = "0x" then
-        dim as string wszHexString = "&H" & mid(varValue, 3)
-        varDisplayString = wszHexString & "  (dec = " & str(val(wszHexString)) & ")"
-    end if
-
-    function = varDisplayString
-end function
-
-
-function gdb_parseVariablesResponse( byref response as string ) as integer
-    dim as integer i = 1
-    dim as integer nItems = 0
-    dim as integer p1 = 0
-    dim as integer p2 = 0
-    dim as string  keyValue
-    dim as string  valValue
-
-    dim hLV as HWND = HWND_FRMDEBUG_OUTPUT
-
-    dim as DWSTRING wszText
-
-
-    response = trim(response)
-    if len(response) then
-        
-        do while i <= len(response)
-            keyValue = ""
-            valValue = ""
-            
-            '' find name="
-            p1 = instr(i, response, "name=" & chr(34))
-            if p1 = 0 then exit do
-            p1 += 6
-            p2 = instr(p1, response, chr(34))
-            if p2 = 0 then exit do
-            keyValue = mid(response, p1, p2 - p1)
-
-            '' find value="
-            p1 = instr(p2, response, "value=" & chr(34))
-            if p1 = 0 then exit do
-            p1 += 7
-            ' Check if this Value is a list and if yes then adjust how we search for the terminating token.
-            dim as string endToken = chr(34)
-            if mid(response, p1, 1) = "{" then
-                endToken += "}": p1 += 1
-            end if
-            p2 = instr(p1, response, endToken)
-            if p2 = 0 then exit do
-            valValue = mid(response, p1, p2 - p1)
-
-            i = p2 + 1
-            
-            dim as boolean bAddVariable = true
-            if left(keyValue, 3) = "vr$" then bAddVariable = false
-            if left(keyValue, 4) = "TMP$" then bAddVariable = false
-            if instr(valValue, "<optimized out>") then bAddVariable = false
-
-            if (bAddVariable = true) andalso (gdb_session.is_new_variables = true) then
-                redim preserve gdb_session.variable_array(nItems)
-                gdb_session.variable_array(nItems).VarName  = keyValue
-                gdb_session.variable_array(nItems).VarNameDisplay = gdb_getVariableDisplayName( keyValue )
-                gdb_session.variable_array(nItems).VarValue = gdb_getVariableDisplayValue( valValue )
-                nItems += 1
-            else
-                if (bAddVariable = true) andalso (gdb_session.is_new_variables = false) then
-                    ' The variable list already exists so simply find the variable name and update its value
-                    for i as long = lbound(gdb_session.variable_array) to ubound(gdb_session.variable_array)
-                        if gdb_session.variable_array(i).varname = keyValue then
-                            gdb_session.variable_array(i).varvalue = gdb_getVariableDisplayValue( valValue )
-                            exit for
-                        end if
-                    next
-                end if
-            end if
-            
-        loop
-    end if
-    
-
-    if gdb_session.is_new_variables = false then
-        ' Simply update the value held in the ListView
-        for i as long = lbound(gdb_session.variable_array) to ubound(gdb_session.variable_array) - 1
-            for j as long = 0 to PsListTree_GetCount( hLV ) - 1
-                if PsListTree_GetCellText(hLV, j, 1) = gdb_session.variable_array(i).VarName then
-                    PsListTree_SetCellText(hLV, j, 3, gdb_session.variable_array(i).VarValue)
-                    exit for
-                end if
-            next
-        next    
-    end if
-    
-   
-    if gdb_session.is_new_variables = true then
-        ' Add all of new array to the ListView
-        dim as VariableType temp
-
-        ' Simple bubble sort the variables
-        for i as long = lbound(gdb_session.variable_array) to ubound(gdb_session.variable_array) - 1
-            for j as long = i + 1 to ubound(gdb_session.variable_array)
-                if gdb_session.variable_array(i).VarName > gdb_session.variable_array(j).VarName then
-                    temp = gdb_session.variable_array(i)
-                    gdb_session.variable_array(i) = gdb_session.variable_array(j)
-                    gdb_session.variable_array(j) = temp
-                end if
-            next 
-        next 
-
-        PsListTree_Clear( hLV )
-
-        for i as long = lbound(gdb_session.variable_array) to ubound(gdb_session.variable_array)
-            wszText = "" & chr(9) & _
-                        gdb_session.variable_array(i).VarName & chr(9) & _
-                        gdb_session.variable_array(i).VarNameDisplay & chr(9) & _
-                        gdb_session.variable_array(i).VarValue
-            ListBox_AddTabbedRow( hLV, wszText )
-        next
-    end if
-
-
-    ' Now set the flag that the array has variable names
-    gdb_session.is_new_variables = false
-
-    ' Set the column widths to the size of the max text widths
-    dim as long nTextWidth
-    dim as long nVarNameColWidth = getTextWidth( hLV, L(285, "Variable"), GUIFONT_9 )
-    dim as long nVarNameDisplayColWidth = nVarNameColWidth
-    dim as long nVarValueColWidth = getTextWidth( hLV, L(286, "Value"), GUIFONT_9 )
-    
-    for i as long = lbound(gdb_session.variable_array) to ubound(gdb_session.variable_array)
-        ' Get the unscaled width of the text so that we can set the ListView column
-        ' widths after all lines have been evaluated.
-        nTextWidth = getTextWidth( hLV, gdb_session.variable_array(i).varname, GUIFONT_9 )
-        nVarNameColWidth = MAX( nVarNameColWidth, nTextWidth )
-        nTextWidth = getTextWidth( hLV, gdb_session.variable_array(i).VarNameDisplay, GUIFONT_9 )
-        nVarNameDisplayColWidth = MAX( nVarNameDisplayColWidth, nTextWidth )
-        nTextWidth = getTextWidth( hLV, gdb_session.variable_array(i).varvalue, GUIFONT_9 )
-        nVarValueColWidth = MAX( nVarValueColWidth, nTextWidth )
-    next
-    ' Set the column widths based on the variable name and values
-    ' Add a little extra padding to the widths
-    nVarNameColWidth = nVarNameColWidth + 10
-    nVarNameDisplayColWidth = nVarNameDisplayColWidth + 10
-    nVarValueColWidth = nVarValueColWidth + 10
-    PsListTree_SetColumnWidth( hLV, 1, AfxScaleX(nVarNameColWidth) )
-    PsListTree_SetColumnWidth( hLV, 2, AfxScaleX(nVarNameDisplayColWidth) )
-    PsListTree_SetColumnWidth( hLV, 3, AfxScaleX(nVarValueColWidth) )
-
-    ' The old control had to be hidden when empty (its WM_DRAWITEM never fired, leaving a
-    ' white area). PsListTree paints its own empty background, so the pane just stays shown --
-    ' and it repaints itself on mutation, so there is no Refresh to call.
-    ShowWindow( hLV, SW_SHOW )
-
-    return nItems
-end function
-
-
-sub gdb_processResponse( byval response as string ) 
-    dim as string file_name 
-    dim as string function_name 
-    dim as string function_args
-    dim as long   line_number
-
-LM( response )
-LM( "" )
-
-    if instr( response, "^error,msg=" ) then
-LM( "ERROR:" )
-        exit sub
-    end if
-
-    if instr( response, "^done,variables=") then 
-        gdb_parseVariablesResponse( response )
-        exit sub
-    end if
-    
-    if instr( response, "^done,BreakpointTable=") then 
-        gdb_loadBreakpointsArray( response )
-        if gdb_session.current_debug_action = IDM_DELETE_CURRENT_LINE_BREAKPOINT then
-            gdb_deleteCurrentLineBreakpoint()
-        else
-            gdb_session.function_breakpoints = gdb_session.current_function_name
-            gdb_disableBreaksInFunction()
-        end if    
-        exit sub
-    end if
-
-    if instr( response, "*stopped,reason=" & chr(34) & "function-finished" & chr(34)) orelse _   ' StepOut
-       instr( response, "*stopped,reason=" & chr(34) & "end-stepping-range" & chr(34)) then      ' StepOver
-        gdb_enableBreaksInFunction()
-        ' do not exit sub here because we want to check it again in the following If instr statements.
-    end if
-
-    ' Process hitting a Breakpoint
-    if instr( response, "*stopped,reason=" & chr(34) & "breakpoint-hit" & chr(34)) orelse _
-       instr( response, "*stopped,reason=" & chr(34) & "function-finished" & chr(34)) orelse _
-       instr( response, "*stopped,reason=" & chr(34) & "end-stepping-range" & chr(34)) then
-        ' Line numbers in GDB are 1 based whereas Scintilla is 0 based.
-        line_number = val( gdb_findResultValue( response, "line" ) ) - 1
-        file_name = gdb_findResultValue( response, "fullname" )
-        file_name = AfxStrReplace( file_name, "\\", "\" )
-        file_name = AfxStrReplace( file_name, "/", "\" )
-        function_name = gdb_findResultValue( response, "func" )
-        function_args = gdb_findFunctionArguments( response, "args" )
-
-        ' If the current function name or filename has changed then reset the variable array.
-        ' The new values for the array are set in gdb_parseVariablesResponse()
-        if (file_name <> gdb_session.current_file_name) orelse _
-            (function_name <> gdb_session.current_function_name) then
-            erase gdb_session.variable_array
-            gdb_session.is_new_variables = true
-        end if    
-        gdb_session.current_file_name = file_name
-        gdb_session.current_function_name = function_name
-        gdb_session.current_function_linenum = line_number
-
-'gdb_send( "-var-create my_fbc_var * " & chr(34) & "$6FBCCTX" & chr(34) )
-'gdb_send( "-var-create my_fbc_var @ " & chr(34) & "$6FBCCTX" & chr(34) )
-'gdb_send( "-var-list-children --all-values my_fbc_var" )
-
-
-'LM( "STOP: BREAKPOINT OR STEPPING" )
-'LM( "  file_name:     " & file_name )
-'LM( "  function_name: " & function_name )
-'LM( "  function_args: " & function_args )
-'LM( "  line_number:   " & str(line_number) )
-
-        if (len(file_name) > 0) andalso (line_number >= 0) then
-            ' Get the filename as represented in the gApp doc list. That filename is in correct
-            ' lettercase format whereas the filename returned via GDB is all uppercase. If that
-            ' source file has not yet been loaded in the editor then simply use the GDB returned name.
-            dim as DWSTRING wszFilename = file_name
-            dim as clsDocument ptr pDoc = gApp.GetDocumentPtrByFilename(wszFilename)
-            if pDoc then 
-                wszFilename = pDoc->DiskFilename
-            else
-                dim as DWSTRING wszTemp = AfxFilenameOriginalCase( file_name )
-                if AfxFileExists(wszTemp) then wszFilename = wszTemp
-            end if
-            pDoc = OpenSelectedDocument( wszFilename, "", line_number)
-            if pDoc then
-                SciExec( pDoc->hWndActiveScintilla, SCI_MARKERDELETEALL, MARKER_DEBUGGER_CURLINE, 0 )
-                pDoc->ToggleMarker( line_number, MARKER_DEBUGGER_CURLINE )
-                ' Ask to get list of variables and values for current context
-                gdb_send(  "-stack-list-variables --all-values" )
-            end if    
-        end if
-    end if
-
-    if instr( response, "*stopped,reason=" & chr(34) & "exited-normally" & chr(34)) orelse _
-       instr( response, "*stopped,reason=" & chr(34) & "exited" & chr(34)) orelse _
-       instr( response, "*stopped,reason=" & chr(34) & "exited-signalled" & chr(34)) then
-        SetCompileStatusBarMessage( L(259,"Debug Target Exited Normally"), ghIconGood )   ' ghIconGood:green, ghIconBad: red
-        SendMessage( HWND_FRMDEBUG, IDM_DEBUG_STOPDEBUGGING, 0, 0 )
-    end if
-
-    if instr( response, "*stopped,reason=" & chr(34) & "signal-received" & chr(34) & ",signal-name=" & chr(34) & "SIGSEGV" & chr(34)) then
-        SetCompileStatusBarMessage( L(260,"Debug Target Terminated Unexpectantly"), ghIconBad )   ' ghIconGood:green, ghIconBad: red
-        SendMessage( HWND_FRMDEBUG, IDM_DEBUG_STOPDEBUGGING, 0, 0 )
-    end if
-
+    if hEdit = 0 then exit sub
+    SciExec( hEdit, SCI_MARKERDELETEALL, MARKER_DEBUGGER_CURLINE, 0 )
+    SciExec( hEdit, SCI_MARKERADD, nLine0, MARKER_DEBUGGER_CURLINE )
 end sub
 
+' ==========================================================================================
+' Call stack
+' ==========================================================================================
+private sub frmDebug_FillCallStack( byval frameCount as long )
+    dim as HWND hLV = HWND_FRMDEBUG_LVSTACK
+    if IsWindow(hLV) = 0 then exit sub
 
-' ========================================================================================
-' Position all child windows. Called manually and/or by WM_SIZE
-' ========================================================================================
-function frmDebug_PositionWindows() as LRESULT
+    PsListTree_Clear( hLV )
+    for i as long = 0 to frameCount - 1
+        dim as DBGP_FRAME fr
+        if debugparser_get_frame( i, @fr ) <> DBGP_OK then continue for
 
-    dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMDEBUG)
-    if pWindow = 0 then exit function
-    
-    ' Get the entire client area
-    dim as RECT rc: GetClientRect(HWND_FRMDEBUG, @rc)
+        dim as DWSTRING wszFile
+        if len(fr.wszSrcPath) then wszFile = AfxStrPathname( "NAMEX", fr.wszSrcPath )
+        dim as DWSTRING wszLine
+        if fr.lineNum > 0 then wszLine = wstr(str(fr.lineNum))
 
-    dim as long i = 0
-    dim as long nSpacer     = pWindow->ScaleX(4)
-    dim as long nLeft       = rc.left + pWindow->ScaleY(20)
-    dim as long nHeight     = pWindow->ScaleY(TOPTABS_HEIGHT)
-    dim as long nPadding    = 10   ' 5 left 5 right
-    dim as long nImageWidth = DEBUG_BUTTON_IMAGE_WIDTH
+        dim as DWSTRING wszRow = "" & chr(9) & fr.wszProcName & chr(9) & wszLine & chr(9) & wszFile
+        dim as long nRow = ListBox_AddTabbedRow( hLV, wszRow )
+        ' itemData carries the frame index, so selecting a row can re-scope the variables.
+        if nRow >= 0 then PsListTree_SetItemData( hLV, nRow, i )
+    next
+    if frameCount > 0 then PsListTree_SetCurSel( hLV, 0 )
+end sub
 
-    i = DEBUG_BUTTONS.STOP_DEBUGGING
-    gDbgBtns(i).nID        = IDM_DEBUG_STOPDEBUGGING
-    gDbgBtns(i).wszToolTip = getMenuText(gDbgBtns(i).nID)
-    gDbgBtns(i).wszIcon    = wszIconStop
-    gDbgBtns(i).wszText    = L(258,"Stop")
-    gDbgBtns(i).rc.Left    = nLeft
-    gDbgBtns(i).rc.top     = rc.top
-    gDbgBtns(i).rc.right   = nLeft + _
-        pWindow->ScaleX( getTextWidth(HWND_FRMDEBUG, gDbgBtns(i).wszText, GUIFONT_9) + nPadding + nImageWidth)
-    gDbgBtns(i).rc.bottom  = rc.top + nHeight
-    nLeft = gDbgBtns(i).rc.right + nSpacer
+' ==========================================================================================
+' Variables
+'
+' One recursive walk bounded by FRMDEBUG_MAXDEPTH / FRMDEBUG_MAXCHILDREN. Everything below
+' the top level is added collapsed, so a deep UDT costs its reads once but shows as one row.
+' ==========================================================================================
+private sub frmDebug_AddChildren( byval hLV as HWND, byval parentRow as long, _
+                                  byval pParent as DBGP_NODE ptr, byval depth as long )
+    if depth >= FRMDEBUG_MAXDEPTH then exit sub
 
-    i = DEBUG_BUTTONS.CONTINUE_DEBUGGING
-    gDbgBtns(i).nID        = IDM_DEBUG_STARTDEBUGGING
-    gDbgBtns(i).wszToolTip = getMenuText(gDbgBtns(i).nID)
-    gDbgBtns(i).wszIcon    = wszIconContinue
-    gDbgBtns(i).wszText    = L(257,"Continue")
-    gDbgBtns(i).rc.Left    = nLeft
-    gDbgBtns(i).rc.top     = rc.top
-    gDbgBtns(i).rc.right   = nLeft + _
-        pWindow->ScaleX( getTextWidth(HWND_FRMDEBUG, gDbgBtns(i).wszText, GUIFONT_9) + nPadding + nImageWidth)
-    gDbgBtns(i).rc.bottom  = rc.top + nHeight
-    nLeft = gDbgBtns(i).rc.right + nSpacer
+    dim as long n = debugparser_child_count( pParent )
+    if n <= 0 then exit sub
 
-    i = DEBUG_BUTTONS.STEP_OVER
-    gDbgBtns(i).nID        = IDM_DEBUG_STEPOVER
-    gDbgBtns(i).wszToolTip = getMenuText(gDbgBtns(i).nID)
-    gDbgBtns(i).wszIcon    = wszIconStepOver
-    gDbgBtns(i).wszText    = L(248,"Step Over")
-    gDbgBtns(i).rc.Left    = nLeft
-    gDbgBtns(i).rc.top     = rc.top
-    gDbgBtns(i).rc.right   = nLeft + _
-        pWindow->ScaleX( getTextWidth(HWND_FRMDEBUG, gDbgBtns(i).wszText, GUIFONT_9) + nPadding + nImageWidth)
-    gDbgBtns(i).rc.bottom  = rc.top + nHeight
-    nLeft = gDbgBtns(i).rc.right + nSpacer
+    dim as long shown = n
+    if shown > FRMDEBUG_MAXCHILDREN then shown = FRMDEBUG_MAXCHILDREN
 
-    i = DEBUG_BUTTONS.STEP_INTO
-    gDbgBtns(i).nID        = IDM_DEBUG_STEPINTO
-    gDbgBtns(i).wszToolTip = getMenuText(gDbgBtns(i).nID)
-    gDbgBtns(i).wszIcon    = wszIconStepNext
-    gDbgBtns(i).wszText    = L(247,"Step Into")
-    gDbgBtns(i).rc.Left    = nLeft
-    gDbgBtns(i).rc.top     = rc.top
-    gDbgBtns(i).rc.right   = nLeft + _
-        pWindow->ScaleX( getTextWidth(HWND_FRMDEBUG, gDbgBtns(i).wszText, GUIFONT_9) + nPadding + nImageWidth)
-    gDbgBtns(i).rc.bottom  = rc.top + nHeight
-    nLeft = gDbgBtns(i).rc.right + nSpacer
+    for i as long = 0 to shown - 1
+        dim as DBGP_NODE ch
+        if debugparser_child_node( pParent, i, @ch ) <> DBGP_OK then continue for
+        dim as long r = PsListTree_AddNode( hLV, parentRow, ch.wszName )
+        if r < 0 then exit for
+        PsListTree_SetCellText( hLV, r, 1, ch.wszValue )
+        PsListTree_SetCellText( hLV, r, 2, ch.wszType )
+        frmDebug_AddChildren( hLV, r, @ch, depth + 1 )
+        PsListTree_SetNodeCollapsed( hLV, r, true )
+    next
 
-    i = DEBUG_BUTTONS.STEP_OUT
-    gDbgBtns(i).nID        = IDM_DEBUG_STEPOUT
-    gDbgBtns(i).wszToolTip = getMenuText(gDbgBtns(i).nID)
-    gDbgBtns(i).wszIcon    = wszIconStepOut
-    gDbgBtns(i).wszText    = L(255,"Step Out")
-    gDbgBtns(i).rc.Left    = nLeft
-    gDbgBtns(i).rc.top     = rc.top
-    gDbgBtns(i).rc.right   = nLeft + _
-        pWindow->ScaleX( getTextWidth(HWND_FRMDEBUG, gDbgBtns(i).wszText, GUIFONT_9) + nPadding + nImageWidth)
-    gDbgBtns(i).rc.bottom  = rc.top + nHeight
-    nLeft = gDbgBtns(i).rc.right + nSpacer
-
-    i = DEBUG_BUTTONS.RUN_TO_CURSOR
-    gDbgBtns(i).nID        = IDM_DEBUG_RUNTOCURSOR
-    gDbgBtns(i).wszToolTip = getMenuText(gDbgBtns(i).nID)
-    gDbgBtns(i).wszIcon    = wszIconRunToCursor
-    gDbgBtns(i).wszText    = L(256,"Run to Cursor")
-    gDbgBtns(i).rc.Left    = nLeft
-    gDbgBtns(i).rc.top     = rc.top
-    gDbgBtns(i).rc.right   = nLeft + _
-        pWindow->ScaleX( getTextWidth(HWND_FRMDEBUG, gDbgBtns(i).wszText, GUIFONT_9) + nPadding + nImageWidth)
-    gDbgBtns(i).rc.bottom  = rc.top + nHeight
-    nLeft = gDbgBtns(i).rc.right + nSpacer
-
-    AfxRedrawWindow( HWND_FRMDEBUG )
-
-    dim as HWND hCtl 
-    
-    if HWND_FRMDEBUG_OUTPUT = 0 then
-        ' Variables pane: a PsListTree with a PsColumnHeader band, sharing the Output panel's
-        ' row/header painters (same ghOutput colors, same layout). The Value column fills
-        ' the remaining width; the widths of the other two are recomputed from the data on
-        ' every refresh, further down in gdb_ParseVariables.
-        hCtl = PsListTree_Create( HWND_FRMDEBUG, IDC_FRMDEBUG_LVVARS )
-            PsListTree_AddColumn( hCtl, "",                 pWindow->ScaleX(10) )
-            PsListTree_AddColumn( hCtl, L(285, "Variable"), pWindow->ScaleX(75) )
-            PsListTree_AddColumn( hCtl, "",                 pWindow->ScaleX(75) )
-            PsListTree_AddColumn( hCtl, L(286, "Value"),    pWindow->ScaleX(250) )
-            PsListTree_SetFillColumn( hCtl, 3 )
-            PsListTree_ShowHeader( hCtl, true )
-            PsListTree_SetPaintCallback( hCtl, @ListBox_LVPaintRow )
-            PsListTree_SetHeaderPaintCallback( hCtl, @ListBox_LVPaintHeader )
-            PsListTree_SetColumnAutoSizeCallback( hCtl, @ListBox_LVAutoSizeColumn )
-            PsListTree_SetFont( hCtl, ghFont(GUIFONT_9) )
-            PsListTree_SetBackColor( hCtl, ghOutput.BackColor )
-            PsListTree_SetScrollBarColors( hCtl, ghOutput.BackColorScrollBar, _
-                                         ghOutput.ForeColorScrollBar, ghOutput.ForeColorScrollBar )
-
-        HWND_FRMDEBUG_OUTPUT = hCtl
+    ' Say so rather than silently showing a prefix. A truncated list that looks complete is
+    ' worse than a short one that admits what it left out.
+    if n > shown then
+        dim as long r = PsListTree_AddNode( hLV, parentRow, "" )
+        if r >= 0 then
+            PsListTree_SetCellText( hLV, r, 1, L(607, "more elements not shown") & _
+                                    "  (" & str(n - shown) & ")" )
+            PsListTree_SetRowSelectable( hLV, r, false )
+        end if
     end if
-    GetClientRect(HWND_FRMDEBUG, @rc)
-    SetWindowPos( HWND_FRMDEBUG_OUTPUT, 0, 0, nHeight, rc.right, rc.bottom - nHeight, SWP_NOZORDER )
-    
-    function = 0
+end sub
+
+private sub frmDebug_FillVariables()
+    dim as HWND hLV = HWND_FRMDEBUG_LVVARS
+    if IsWindow(hLV) = 0 then exit sub
+
+    PsListTree_Clear( hLV )
+
+    dim as long nTab = DEBUG_TAB_LOCALS
+    if IsWindow(HWND_FRMDEBUG_SELECTBAR) then
+        nTab = PsSelectBar_GetPanelID( HWND_FRMDEBUG_SELECTBAR, _
+                                       PsSelectBar_GetCurSel(HWND_FRMDEBUG_SELECTBAR) )
+    end if
+
+    dim as long n
+    if nTab = DEBUG_TAB_GLOBALS then
+        n = debugparser_global_count()
+    else
+        n = debugparser_local_count( gDbgCurFrame )
+    end if
+
+    for i as long = 0 to n - 1
+        dim as DBGP_NODE nd
+        dim as long rc
+        if nTab = DEBUG_TAB_GLOBALS then
+            rc = debugparser_global_node( i, @nd )
+        else
+            rc = debugparser_local_node( gDbgCurFrame, i, @nd )
+        end if
+        if rc <> DBGP_OK then continue for
+
+        dim as long r = PsListTree_AddNode( hLV, -1, nd.wszName )
+        if r < 0 then exit for
+        PsListTree_SetCellText( hLV, r, 1, nd.wszValue )
+        PsListTree_SetCellText( hLV, r, 2, nd.wszType )
+        frmDebug_AddChildren( hLV, r, @nd, 1 )
+        PsListTree_SetNodeCollapsed( hLV, r, true )
+    next
+
+    PsListTree_Refresh( hLV )
+end sub
+
+' ==========================================================================================
+' Command enable state. Everything except Stop and Break is meaningless while the debuggee
+' is executing, and Break is meaningless while it is stopped.
+' ==========================================================================================
+private sub frmDebug_SyncButtons()
+    dim as boolean bActive  = (debugparser_is_active() <> 0)
+    dim as boolean bRunning = (debugparser_is_running() <> 0)
+    dim as boolean bStopped = false
+    if bActive andalso (bRunning = false) then bStopped = true
+
+    for id as long = IDC_FRMDEBUG_CMDFIRST to IDC_FRMDEBUG_CMDLAST
+        if IsWindow(gDbgBtn(id)) = 0 then continue for
+        dim as boolean bEnable
+        select case id
+            case IDC_FRMDEBUG_CMDSTOP
+                bEnable = bActive
+            case IDC_FRMDEBUG_CMDBREAK
+                bEnable = false
+                if bActive andalso bRunning then bEnable = true
+            case else
+                bEnable = bStopped
+        end select
+        PsButton_SetEnabled( gDbgBtn(id), bEnable )
+    next
+end sub
+
+' ==========================================================================================
+' Stop / exit handling
+' ==========================================================================================
+private sub frmDebug_OnStopped()
+    dim as DBGP_STOPINFO si
+    if debugparser_get_stop( @si ) <> DBGP_OK then exit sub
+
+    gDbgCurFrame = 0
+
+    dim as DWSTRING wszWhere
+    if len(si.wszSrcPath) then
+        wszWhere = AfxStrPathname( "NAMEX", si.wszSrcPath ) & ":" & str(si.lineNum)
+        frmDebug_ShowExecutionPoint( si.wszSrcPath, si.lineNum )
+    else
+        wszWhere = "&h" & hex(si.addr)
+    end if
+
+    dim as DWSTRING wszMsg = frmDebug_ReasonText( si.reason ) & "   " & wszWhere
+    if len(si.wszProcName) then wszMsg = wszMsg & "   " & L(608, "in") & " " & si.wszProcName
+    if si.reason = DBGP_STOP_EXCEPTION then
+        wszMsg = wszMsg & "   " & si.wszExcepText
+        if si.excepCode = &hC0000005 then
+            dim as DWSTRING wszDir = L(610, "reading")
+            if si.excepIsWrite <> 0 then wszDir = L(609, "writing")
+            wszMsg = wszMsg & " (" & wszDir & " &h" & hex(si.excepTarget) & ")"
+        end if
+    end if
+    frmDebug_SetStatus( wszMsg )
+
+    frmDebug_FillCallStack( si.frameCount )
+    frmDebug_FillVariables()
+    frmDebug_SyncButtons()
+end sub
+
+private sub frmDebug_OnExited( byval exitCode as long )
+    gDbgSessionEnding = true
+    gApp.IsDebuggerActive = false
+    frmDebug_ClearExecutionMarkers()
+
+    if exitCode = 0 then
+        SetCompileStatusBarMessage( L(259, "Debug Target Exited Normally"), ghIconGood )
+    else
+        SetCompileStatusBarMessage( L(260, "Debug Target Terminated Unexpectantly"), ghIconBad )
+    end if
+
+    frmMain_DebugTopMenuStates()
+    if IsWindow(HWND_FRMDEBUG) then DestroyWindow( HWND_FRMDEBUG )
+end sub
+
+' ==========================================================================================
+' Commands. Reached from the toolbar, the Debug menu and the accelerators alike.
+' ==========================================================================================
+sub frmDebug_Command( byval id as long )
+    if debugparser_is_active() = 0 then exit sub
+
+    select case id
+        case IDC_FRMDEBUG_CMDCONTINUE, IDM_DEBUG_STARTDEBUGGING
+            debugparser_resume( DBGP_RUN_CONTINUE )
+        case IDC_FRMDEBUG_CMDSTEPINTO, IDM_DEBUG_STEPINTO
+            debugparser_resume( DBGP_RUN_STEPINTO )
+        case IDC_FRMDEBUG_CMDSTEPOVER, IDM_DEBUG_STEPOVER
+            debugparser_resume( DBGP_RUN_STEPOVER )
+        case IDC_FRMDEBUG_CMDSTEPOUT, IDM_DEBUG_STEPOUT
+            debugparser_resume( DBGP_RUN_STEPOUT )
+        case IDC_FRMDEBUG_CMDBREAK, IDM_DEBUG_PAUSE
+            debugparser_pause()
+            frmDebug_SetStatus( L(602, "Pausing at the next source line...") )
+            exit sub
+        case IDC_FRMDEBUG_CMDSTOP, IDM_DEBUG_STOPDEBUGGING
+            debugparser_stop()
+            exit sub
+        case IDC_FRMDEBUG_CMDRUNCURSOR, IDM_DEBUG_RUNTOCURSOR
+            dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
+            if pDoc = 0 then exit sub
+            dim as wstring * 520 wszFile = pDoc->DiskFilename
+            dim as long si = debugparser_source_index( @wszFile )
+            if si < 0 then exit sub
+            dim as long ln = debugparser_next_executable_line( si, pDoc->GetCurrentLineNumber + 1 )
+            if ln < 0 then exit sub
+            debugparser_set_run_to_cursor( si, ln )
+            debugparser_resume( DBGP_RUN_TOCURSOR )
+    end select
+
+    frmDebug_SetStatus( L(600, "Running...") )
+    frmDebug_SyncButtons()
+end sub
+
+private sub frmDebug_ButtonClick( byval hButton as HWND, byval id as long )
+    frmDebug_Command( id )
+end sub
+
+' Selecting a call-stack frame re-scopes the variables view to it and navigates the editor.
+private sub frmDebug_StackSelChange( byval hListControl as HWND, byval row as integer )
+    if row < 0 then exit sub
+    dim as HWND hList = GetParent( hListControl )
+    if IsWindow(hList) = 0 then hList = hListControl
+    dim as long frameIndex = cast(long, PsListTree_GetItemData( hList, row ))
+    if frameIndex < 0 then exit sub
+
+    gDbgCurFrame = frameIndex
+    dim as DBGP_FRAME fr
+    if debugparser_get_frame( frameIndex, @fr ) = DBGP_OK then
+        if (len(fr.wszSrcPath) > 0) andalso (fr.lineNum > 0) then
+            frmDebug_ShowExecutionPoint( fr.wszSrcPath, fr.lineNum )
+        end if
+    end if
+    frmDebug_FillVariables()
+end sub
+
+private sub frmDebug_TabSelChange( byval hSelectBar as HWND, byval idxOld as long, byval idxNew as long )
+    frmDebug_FillVariables()
+end sub
+
+' ==========================================================================================
+' Layout
+' ==========================================================================================
+private sub frmDebug_PositionWindows()
+    if IsWindow(HWND_FRMDEBUG) = 0 then exit sub
+    dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMDEBUG)
+    if pWindow = 0 then exit sub
+
+    dim as RECT rc
+    GetClientRect( HWND_FRMDEBUG, @rc )
+    if (rc.right <= 0) orelse (rc.bottom <= 0) then exit sub
+
+    dim as long nMargin  = pWindow->ScaleX(12)
+    dim as long nToolH   = pWindow->ScaleY(FRMDEBUG_TOOLHEIGHT)
+    dim as long nStatusH = pWindow->ScaleY(FRMDEBUG_STATUSHEIGHT)
+    dim as long nTabH    = pWindow->ScaleY(FRMDEBUG_TABHEIGHT)
+    dim as long nSplitW  = pWindow->ScaleX(FRMDEBUG_SPLITWIDTH)
+    dim as long nMinPane = pWindow->ScaleX(FRMDEBUG_MINPANE)
+
+    ' --- toolbar: buttons left to right at their ideal widths ---
+    dim as long x = nMargin
+    dim as long y = pWindow->ScaleY(6)
+    for id as long = IDC_FRMDEBUG_CMDFIRST to IDC_FRMDEBUG_CMDLAST
+        if IsWindow(gDbgBtn(id)) = 0 then continue for
+        dim as long bw, bh
+        PsButton_GetIdealSize( gDbgBtn(id), bw, bh )
+        SetWindowPos( gDbgBtn(id), 0, x, y, bw, bh, SWP_NOZORDER )
+        x += bw + pWindow->ScaleX(6)
+        ' A wider gap after Stop and after Step Out groups the seven into three sets.
+        if (id = IDC_FRMDEBUG_CMDSTOP) orelse (id = IDC_FRMDEBUG_CMDSTEPOUT) then
+            x += pWindow->ScaleX(14)
+        end if
+    next
+
+    dim as long nTop = nToolH + nStatusH
+
+    ' --- splitter. Its range is recomputed here rather than derived by the control, which
+    ' cannot know what else lives in this client area -- PsSplitter.bi states that.
+    dim as long nMinBar = nMinPane
+    dim as long nMaxBar = rc.right - nMinPane - nSplitW
+    if nMaxBar < nMinBar then nMaxBar = nMinBar
+    PsSplitter_SetRange( HWND_FRMDEBUG_SPLITTER, nMinBar, nMaxBar )
+
+    dim as long nBarPos = PsSplitter_GetPos( HWND_FRMDEBUG_SPLITTER )
+    if (nBarPos < nMinBar) orelse (nBarPos > nMaxBar) then
+        PsSplitter_SetPos( HWND_FRMDEBUG_SPLITTER, rc.right * 3 \ 5 )
+        nBarPos = PsSplitter_GetPos( HWND_FRMDEBUG_SPLITTER )
+    end if
+
+    SetWindowPos( HWND_FRMDEBUG_SPLITTER, 0, nBarPos, nTop, nSplitW, rc.bottom - nTop, SWP_NOZORDER )
+
+    ' --- left pane: tab strip over the variables tree ---
+    SetWindowPos( HWND_FRMDEBUG_SELECTBAR, 0, 0, nTop, nBarPos, nTabH, SWP_NOZORDER )
+    SetWindowPos( HWND_FRMDEBUG_LVVARS, 0, 0, nTop + nTabH, nBarPos, rc.bottom - nTop - nTabH, SWP_NOZORDER )
+
+    ' --- right pane: the call stack; its own header band supplies the caption ---
+    dim as long xRight = nBarPos + nSplitW
+    SetWindowPos( HWND_FRMDEBUG_LVSTACK, 0, xRight, nTop, rc.right - xRight, rc.bottom - nTop, SWP_NOZORDER )
+end sub
+
+private sub frmDebug_SplitterMoved( byval hSplitter as HWND, byval newPos as integer, byval nPhase as integer )
+    frmDebug_PositionWindows()
+end sub
+
+private sub frmDebug_SplitterPaint( byval p as PSSPLITTER_PAINTINFO ptr )
+    if p = 0 then exit sub
+    p->b->SetBackColor( ghOutput.BackColorHot )
+    p->b->PaintRect( @p->rcClient )
+end sub
+
+' ==========================================================================================
+' Theming
+'
+' The list colours are pushed from here rather than through modThemeApply's shared helper:
+' that file is included AFTER this one (it dispatches to every frmXxx_ApplyTheme, so it has
+' to come last), and its helpers are therefore not in scope here.
+' ==========================================================================================
+private sub frmDebug_PushListColors( byval hCtl as HWND )
+    if IsWindow(hCtl) = 0 then exit sub
+    PsListTree_SetBackColor( hCtl, ghOutput.BackColor )
+    PsListTree_SetScrollBarColors( hCtl, ghOutput.BackColorScrollBar, _
+                                   ghOutput.ForeColorScrollBar, ghOutput.ForeColorScrollBar )
+    AfxRedrawWindow( hCtl )
+end sub
+
+sub frmDebug_ApplyTheme()
+    if IsWindow(HWND_FRMDEBUG) = 0 then exit sub
+
+    for id as long = IDC_FRMDEBUG_CMDFIRST to IDC_FRMDEBUG_CMDLAST
+        if IsWindow(gDbgBtn(id)) = 0 then continue for
+        dim as PSBUTTON_COLORS bc
+        PsButton_GetColors( gDbgBtn(id), @bc )
+        bc.BackColor        = ghOutput.BackColorHot
+        bc.BackColorHot     = ghOutput.ForeColorScrollBar
+        bc.BackColorPressed = ghOutput.ForeColorScrollBar
+        bc.ForeColor        = ghOutput.ForeColorHot
+        bc.ForeColorHot     = ghOutput.ForeColorHot
+        bc.BorderColor      = ghOutput.Divider
+        bc.BorderColorHot   = ghOutput.Divider
+        PsButton_SetColors( gDbgBtn(id), @bc )
+    next
+
+    if IsWindow(HWND_FRMDEBUG_SELECTBAR) then
+        dim as PSSELECTBAR_COLORS sc
+        PsSelectBar_GetColors( HWND_FRMDEBUG_SELECTBAR, @sc )
+        sc.BackColor       = ghOutput.BackColorHot
+        sc.ForeColor       = ghOutput.ForeColor
+        sc.ForeColorSelect = ghOutput.ForeColorHot
+        PsSelectBar_SetColors( HWND_FRMDEBUG_SELECTBAR, @sc )
+    end if
+
+    frmDebug_PushListColors( HWND_FRMDEBUG_LVVARS )
+    frmDebug_PushListColors( HWND_FRMDEBUG_LVSTACK )
+    if IsWindow(HWND_FRMDEBUG_SPLITTER) then
+        PsSplitter_SetColors( HWND_FRMDEBUG_SPLITTER, ghOutput.BackColorHot, ghOutput.Divider )
+    end if
+    Theme_ApplyDarkCaption( HWND_FRMDEBUG )
+    AfxRedrawWindow( HWND_FRMDEBUG )
+end sub
+
+function frmDebug_IsOpen() as boolean
+    return (IsWindow(HWND_FRMDEBUG) <> 0)
 end function
 
+' ==========================================================================================
+' Control construction
+' ==========================================================================================
+private function frmDebug_CreateListView( byval CtrlID as long ) as HWND
+    dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMDEBUG)
+    if pWindow = 0 then return 0
 
-' ========================================================================================
-' frmDebug Window procedure
-' ========================================================================================
-function frmDebug_WndProc( _
-            byval hwnd   as HWND, _
-            byval uMsg   as UINT, _
-            byval wParam as WPARAM, _
-            byval lParam as LPARAM _
-            ) as LRESULT
+    dim as HWND hCtl = PsListTree_Create( HWND_FRMDEBUG, CtrlID )
 
-    static as long prev_idxHot = -1
-    static as long curr_idxHot = -1
+    if CtrlID = IDC_FRMDEBUG_LVVARS then
+        PsListTree_AddColumn( hCtl, L(611, "Name"),  pWindow->ScaleX(200) )
+        PsListTree_AddColumn( hCtl, L(286, "Value"), pWindow->ScaleX(220) )
+        PsListTree_AddColumn( hCtl, L(612, "Type"),  pWindow->ScaleX(140) )
+        PsListTree_SetFillColumn( hCtl, 1 )
+        ' A real tree: UDT fields and array elements are children, not flattened rows.
+        PsListTree_ShowTwisty( hCtl, true )
+        PsListTree_SetIndentWidth( hCtl, 14 )
+        PsListTree_SetTwistyFont( hCtl, ghFont(SYMBOLFONT_9) )
+    else
+        PsListTree_AddColumn( hCtl, "",                 pWindow->ScaleX(20) )
+        PsListTree_AddColumn( hCtl, L(613, "Function"), pWindow->ScaleX(200) )
+        PsListTree_AddColumn( hCtl, L(203, "Line"),     pWindow->ScaleX(60) )
+        PsListTree_AddColumn( hCtl, L(204, "File"),     pWindow->ScaleX(160) )
+        PsListTree_SetFillColumn( hCtl, 3 )
+        PsListTree_SetSelChangeCallback( hCtl, @frmDebug_StackSelChange )
+    end if
 
+    PsListTree_ShowHeader( hCtl, true )
+    PsListTree_SetPaintCallback( hCtl, @ListBox_LVPaintRow )
+    PsListTree_SetHeaderPaintCallback( hCtl, @ListBox_LVPaintHeader )
+    PsListTree_SetColumnAutoSizeCallback( hCtl, @ListBox_LVAutoSizeColumn )
+    PsListTree_SetFont( hCtl, ghFont(GUIFONT_9) )
+    PsListTree_SetBackColor( hCtl, ghOutput.BackColor )
+    PsListTree_SetScrollBarColors( hCtl, ghOutput.BackColorScrollBar, _
+                                   ghOutput.ForeColorScrollBar, ghOutput.ForeColorScrollBar )
+    return hCtl
+end function
+
+private sub frmDebug_CreateButton( byval id as long, byval wszText as DWSTRING, byval wszGlyph as DWSTRING )
+    dim as HWND h = PsButton_Create( HWND_FRMDEBUG, id )
+    PsButton_SetText( h, wszText )
+    if len(wszGlyph) then PsButton_SetGlyphLeft( h, wszGlyph )
+    PsButton_SetFont( h, ghFont(GUIFONT_9) )
+    PsButton_SetGlyphFont( h, ghFont(SYMBOLFONT_9) )
+    PsButton_SetClickCallback( h, @frmDebug_ButtonClick )
+    gDbgBtn(id) = h
+end sub
+
+' ==========================================================================================
+' Window procedure
+' ==========================================================================================
+private function frmDebug_WndProc( byval hwnd as HWND, byval uMsg as UINT, _
+                                   byval wParam as WPARAM, byval lParam as LPARAM ) as LRESULT
     select case uMsg
+        case MSG_DBGP_STOPPED
+            frmDebug_OnStopped()
+            return 0
 
-        case WM_CLOSE
-            DestroyWindow( hwnd )
-            
-        case WM_DESTROY
-            HWND_FRMDEBUG_OUTPUT = 0
+        case MSG_DBGP_EXITED
+            frmDebug_OnExited( cast(long, wParam) )
+            return 0
 
-            ' The tip is a WS_POPUP owned by this window, not a child, so it does not go with
-            ' the parent -- destroying it here also removes it from the shared clock's registry.
-            if IsWindow(ghDebugTip) then DestroyWindow( ghDebugTip )
-            ghDebugTip = 0
-
-            KillTimer( HWND_FRMDEBUG, gApp.DebugTimerID )
-            
-            ' Kill the GDB process
-            gdb_close()
-
-            ' Save the current size of the debugger window so that we can re-use
-            ' this position should th euser invoke the debugger again.
-            dim WinPla as WINDOWPLACEMENT
-            WinPla.Length = sizeof(WinPla)
-            GetWindowPlacement( HWND_FRMDEBUG, @WinPla )
-            With gDebugPos
-                .nLeft   = WinPla.rcNormalPosition.Left 
-                .nTop    = WinPla.rcNormalPosition.Top
-                .nRight  = WinPla.rcNormalPosition.Right
-                .nBottom = WinPla.rcNormalPosition.Bottom
-                .bMaximized = iif( WinPla.showCmd = SW_MAXIMIZE, true, false )
-                .bInitialized = true
-            end With
-            
-            ' Reset the global gdb_session variable
-            gdb_session = type<GDBSession>()
-            
-            
-        case WM_NCDESTROY
-            dim pWindow as CWindow ptr = AfxCWindowPtr(hwnd)
-            if pWindow then delete(pWindow)
-            gdb_session.KillMessageThread = true
-            ThreadWait( gdb_session.hThreadMessages )
-            MutexDestroy( gdb_session.hThreadMutex )
-
-            gdb_session.hThreadMessages   = 0
-            gdb_session.hThreadMutex      = 0
-            gdb_session.KillMessageThread = false
-            gdb_session.initialized       = false
-
-            ' Remove any yellow arrow debugger current line marker
-            dim pDoc as clsDocument ptr = gApp.pDocList
-            do until pDoc = 0
-                SciExec( pDoc->hWindow(0), SCI_MARKERDELETEALL, MARKER_DEBUGGER_CURLINE, 0 )
-                pDoc = pDoc->pDocNext
-            loop
-
+        case MSG_DBGP_FAILED
+            dim as wstring * 512 werr
+            debugparser_get_error( @werr, 512 )
             gApp.IsDebuggerActive = false
-            
-        case WM_TIMER
-            if wParam = gApp.DebugTimerID then
-                ' Check for any pending message
-                if gdb_isMessageQueueEmpty() = false then
-                    MutexLock( gdb_session.hThreadMutex )
-                    dim as string message = gdb_dequeue_message()
-                    MutexUnLock( gdb_session.hThreadMutex )
-                    gdb_processResponse( message )    
-                end if
-            end if
+            gDbgSessionEnding = true
+            TikoMsgBox( HWND_FRMMAIN, L(614, "The debugger could not start the program.") & _
+                        chr(13) & chr(13) & werr, L(218, "Confirm"), TMB_ICON_ERROR, TMB_OK )
+            DestroyWindow( hwnd )
+            return 0
 
         case WM_SIZE
-            ' Position all of the child windows
-            if wParam <> SIZE_MINIMIZED then
-                frmDebug_PositionWindows()
-                return 0
-            end if
+            frmDebug_PositionWindows()
+            return 0
 
         case WM_ERASEBKGND
             return true
 
-        case WM_LBUTTONDOWN
-            SetCapture( hwnd )
-            
-        case WM_MOUSEMOVE
-            ' TME_LEAVE only. TME_HOVER existed solely to drive the old WM_MOUSEHOVER tooltip
-            ' arm; PsTooltip does its own dwell timing off the shared clock.
-            dim tme as TrackMouseEvent
-            tme.cbSize = sizeof(TrackMouseEvent)
-            tme.dwFlags = TME_LEAVE
-            tme.hwndTrack = hwnd
-            TrackMouseEvent(@tme)
+        case WM_PAINT
+            dim pWindow as CWindow ptr = AfxCWindowPtr(hwnd)
+            dim as PsBufferPaint b
+            b.BeginDoubleBuffer(hwnd)
+            b.SetBackColor( ghOutput.BackColorHot )
+            b.PaintClientRect()
 
-            ' Silent when the index has not changed; on a change it hides any visible tip
-            ' without a fade and clears a suppressed hover, so the new button gets a fresh offer.
-            PsTooltip_SetToolIndex( ghDebugTip, frmDebug_TipHitTest( hwnd ) )
+            if pWindow then
+                dim as RECT rc
+                GetClientRect( hwnd, @rc )
+                dim as RECT rcStatus
+                rcStatus.left   = pWindow->ScaleX(12)
+                rcStatus.top    = pWindow->ScaleY(FRMDEBUG_TOOLHEIGHT)
+                rcStatus.right  = rc.right - pWindow->ScaleX(12)
+                rcStatus.bottom = rcStatus.top + pWindow->ScaleY(FRMDEBUG_STATUSHEIGHT)
+                b.SetFont( ghFont(GUIFONT_9) )
+                b.SetForeColor( ghOutput.ForeColorHot )
+                b.SetBackColor( ghOutput.BackColorHot )
+                b.PaintText( gDbgStatusText, @rcStatus, DT_LEFT or DT_END_ELLIPSIS )
 
-            dim as point pt: GetCursorPos( @pt )
-            MapWindowPoints( HWND_DESKTOP, hwnd, cast( point ptr, @pt ), 1 )
-
-            ' Are we over one of the buttons
-            curr_idxHot = -1
-            for i as long = lbound(gDbgBtns) to ubound(gDbgBtns)
-                if PtInRect( @gDbgBtns(i).rc, pt ) then
-                    ' Only make hot panels that have actual text
-                    if len(gDbgBtns(i).wszText) then
-                        curr_idxHot = i
-                        gDbgBtns(i).isHot = true
-                    end if   
-                else   
-                    gDbgBtns(i).isHot = false
-                end if
-            next
-            if curr_idxHot <> prev_idxHot then
-                AfxRedrawWindow( hwnd )
-                prev_idxHot = curr_idxHot 
+                ' A hairline under the status line, separating chrome from content.
+                dim as RECT rcLine
+                rcLine.left   = 0
+                rcLine.top    = rcStatus.bottom - 1
+                rcLine.right  = rc.right
+                rcLine.bottom = rcStatus.bottom
+                b.SetBackColor( ghOutput.Divider )
+                b.PaintRect( @rcLine )
             end if
 
-                
-        case WM_MOUSELEAVE
-            for i as long = lbound(gDbgBtns) to ubound(gDbgBtns)
-                gDbgBtns(i).isHot = false
-            next
-            prev_idxHot = -1
-            curr_idxHot = -1
-            ' Was DestroyWindow(hToolTip) -- the comctl32 tip was torn down and rebuilt on the
-            ' next move to force it to forget its state. Clearing the tool index is the whole
-            ' of that job now, and the tip window survives the cursor leaving.
-            PsTooltip_SetToolIndex( ghDebugTip, -1 )
-            AfxRedrawWindow( hwnd )
-
-
-        case WM_LBUTTONUP
-            dim as point pt: GetCursorPos( @pt )
-            MapWindowPoints( HWND_DESKTOP, hwnd, cast( point ptr, @pt ), 1 )
-            SetCursor( LoadCursor( null, IDC_ARROW ))
-            ReleaseCapture
-            ' Are we over one of the status bar panels
-            for i as long = lbound(gDbgBtns) to ubound(gDbgBtns)
-                if PtInRect( @gDbgBtns(i).rc, pt ) then
-                    PostMessage( HWND_FRMDEBUG, gDbgBtns(i).nID, 0, 0 )
-                    exit for
-                end if
-            next   
-            
-
-        case WM_PAINT
-            dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMDEBUG)
-            dim as PsBufferPaint b
-
-            b.BeginDoubleBuffer(hwnd)
-
-            ' Set default back and fore colors
-            b.SetForeColor( ghTopTabs.ForeColor )
-            b.SetBackColor( ghTopTabs.BackColor )
-
-            ' Clear the entire back client area
-            b.PaintClientRect()
-          
-            ' paint the panels
-            for i as long = lbound(gDbgBtns) to ubound(gDbgBtns)
-                dim as COLORREF ForeColor = ghTopTabs.ForeColorHot
-                if gDbgBtns(i).nID = IDM_DEBUG_STARTDEBUGGING then ForeColor = ghGeneral.iconsuccess
-                if gDbgBtns(i).nID = IDM_DEBUG_STOPDEBUGGING then ForeColor = ghGeneral.iconfail
-                
-                if i = curr_idxHot then
-                    b.SetBackColor( ghTopTabs.BackColorHot )
-                else
-                    b.SetBackColor( ghTopTabs.BackColor )
-                end if
-
-                b.PaintRect( @gDbgBtns(i).rc )
-                
-                ' Paint the image
-                b.SetForeColor( ForeColor )
-                dim as long nImageWidth = pWindow->ScaleX(DEBUG_BUTTON_IMAGE_WIDTH)
-                dim as RECT rcIcon = gDbgBtns(i).rc
-                rcIcon.right = rcIcon.left + nImageWidth
-                b.SetFont( ghFont(SYMBOLFONT_9) )
-                b.PaintText( gDbgBtns(i).wszIcon, @rcIcon, DT_CENTER )
-                
-                ' Paint the text
-                b.SetForeColor( ghTopTabs.ForeColorHot )
-                dim as RECT rcText = gDbgBtns(i).rc
-                rcText.left = rcIcon.right
-                b.SetFont( ghFont(GUIFONT_9) )
-                b.PaintText( gDbgBtns(i).wszText, @rcText, DT_CENTER )
-            next
-                                    
             b.EndDoubleBuffer()
-
             return 0
 
-        case IDM_DEBUG_STARTDEBUGGING
-LM( "IDM_DEBUG_STARTDEBUGGING" )
-            gdb_send("-exec-continue")
-        
-        case IDM_DEBUG_STOPDEBUGGING
-LM( "IDM_DEBUG_STOPDEBUGGING" )
-            gdb_send("kill")
-            sleep 100
-            PostMessage( HWND_FRMDEBUG, WM_CLOSE, 0, 0 )
-        
-        case IDM_DEBUG_STEPINTO
-LM( "IDM_DEBUG_STEPINTO" )
-            gdb_send("-exec-step")
-        
-        case IDM_DEBUG_STEPOVER
-LM( "IDM_DEBUG_STEPOVER" )
-            ' Similar problem to STEPOUT, if breakpoints exist in subfunctions.
-            ' Need to disable all breakpoints except those in the current function.
-            gdb_session.current_debug_action = IDM_DEBUG_STEPOVER
-LM( "gdb_send(gdb_session, -break-list)" )
-            gdb_send("-break-list")   
-        
-        case IDM_DEBUG_STEPOUT
-LM( "IDM_DEBUG_STEPOUT" )
-            ' If subsequent breakpoints exist in the function then GDB will break on them
-            ' prior to exiting the function. This is not the expected user experience. We
-            ' want to immediately exit back to the calling code. 
-            ' - List all breakpoints.    -break-list
-            ' - Save the list of breakpoints that match the current_function_name.  
-            ' - Temporarily disable those breakpoints.  -break-disable <bpnum>
-            ' - Issue the -exec-finish
-            ' - Re-enable the breakpoints.  -break-enable <bpnum>
-            gdb_session.current_debug_action = IDM_DEBUG_STEPOUT
-LM( "gdb_send(gdb_session, -break-list)" )
-            gdb_send("-break-list")   
-            ' the response calls: gdb_disableBreaksInFunction
-            ' the "-exec-finish" is sent from gdb_disableBreaksInFunction after the breakpoints are disabled.
-
-        case IDM_DEBUG_RUNTOCURSOR
-LM( "IDM_DEBUG_RUNTOCURSOR" )
-            ' Line numbers in GDB are 1 based whereas Scintilla is 0 based.
-            dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
-            if pDoc then
-                dim as string bp_line = str(pDoc->GetCurrentLineNumber() + 1)
-                dim as string bp_cmd = "tbreak " & chr(34) & pDoc->DiskFilename & chr(34) & ":" & bp_line
-                gdb_send(bp_cmd )
-                gdb_send("-exec-continue")
+        case WM_CLOSE
+            ' Closing the window ends the session. The engine's teardown then posts
+            ' MSG_DBGP_EXITED, and THAT is what destroys this window -- so the debuggee is
+            ' never left running with no way to reach it.
+            if (debugparser_is_active() <> 0) andalso (gDbgSessionEnding = false) then
+                debugparser_stop()
+                return 0
             end if
-            
+            DestroyWindow( hwnd )
+            return 0
+
+        case WM_DESTROY
+            dim as WINDOWPLACEMENT wp
+            wp.length = sizeof(WINDOWPLACEMENT)
+            if GetWindowPlacement( hwnd, @wp ) then
+                gDebugPos.bInitialized = true
+                gDebugPos.bMaximized   = (wp.showCmd = SW_SHOWMAXIMIZED)
+                gDebugPos.nLeft   = wp.rcNormalPosition.left
+                gDebugPos.nTop    = wp.rcNormalPosition.top
+                gDebugPos.nRight  = wp.rcNormalPosition.right
+                gDebugPos.nBottom = wp.rcNormalPosition.bottom
+            end if
+            return 0
+
+        case WM_NCDESTROY
+            frmDebug_ClearExecutionMarkers()
+            gApp.IsDebuggerActive = false
+            debugparser_unload()
+            dim pWindow as CWindow ptr = AfxCWindowPtr(hwnd)
+            if pWindow then delete pWindow
+            HWND_FRMDEBUG           = 0
+            HWND_FRMDEBUG_LVVARS    = 0
+            HWND_FRMDEBUG_LVSTACK   = 0
+            HWND_FRMDEBUG_SELECTBAR = 0
+            HWND_FRMDEBUG_SPLITTER  = 0
+            for id as long = IDC_FRMDEBUG_CMDFIRST to IDC_FRMDEBUG_CMDLAST
+                gDbgBtn(id) = 0
+            next
+            frmMain_DebugTopMenuStates()
+            return 0
     end select
 
-    
-    function = DefWindowProc(hwnd, uMsg, wParam, lParam)
-
+    return DefWindowProc( hwnd, uMsg, wParam, lParam )
 end function
 
-
-function frmDebug_SetInitialBreakpoints( byref session as GDBSession ) as long
-    'break main.c:25                    ' Line 25 in main.c
-    'break utils.c:calculateSum         ' Function in utils.c
-    'break "my file.c":10              ' File with spaces (use quotes)
-    'break C:\path\to\file.c:42        ' Full path with line
-    'break src/module.c:init           ' Relative path
-
-    'tbreak main.c:50                  ' Temporary breakpoint
-    'break main.c:25 if x > 10         ' Conditional breakpoint in file
-    'rbreak main.c:.*                  ' Regex breakpoint (all functions in file)
-    'info line main.c:25               ' Show address of line
-    'list main.c:25                    ' Show source at line
-    
-    ' Iterate all pDoc in the project/files list
-    dim as string sBreakpoints
-    dim as string bp_cmd
-    dim as string bp_file
-    dim as string bp_line
-    dim as long   nCount = 0
-    dim as long   numBreakpoints = 0
-    
-    dim pDoc as clsDocument ptr = gApp.pDocList
-    do until pDoc = 0
-        if pDoc->hWindow(0) <> null then 
-            sBreakpoints = pDoc->GetBreakpoints()
-        end if
-        
-        bp_file = pDoc->DiskFilename
-
-        if len(sBreakpoints) then
-            nCount = AfxStrParseCount( sBreakpoints, "," )
-            for i as long = 1 to nCount
-                ' Line numbers in GDB are 1 based whereas Scintilla is 0 based.
-                bp_line = AfxStrParse( sBreakpoints, i, "," )
-                bp_cmd = bp_cmd & "break " & chr(34) & bp_file & chr(34) & ":" & str(val(bp_line)+1) & chr(10)
-                numBreakpoints += 1
-            next
-        end if
-            
-        pDoc = pDoc->pDocNext
-    loop
-
-    ' If no breakpoints exist then set a temporary breakpoint in the main file
-    if numBreakpoints = 0 then
-'LM( "Set Temp Breakpoint on Main")
-        bp_cmd = "tbreak main"
-'        bp_cmd = "-break-insert -t main"
-        gdb_send( bp_cmd )
-        
-    else    
-'LM( "Set Breakpoints:")
-'LM( bp_cmd & chr(13,10) )
-        bp_cmd = rtrim(bp_cmd, chr(10))
-        gdb_send( bp_cmd )
+' ==========================================================================================
+' frmDebug_Show - builds the window, loads the debug information, seeds the breakpoints the
+' user set in the editor, and starts the session.
+' ==========================================================================================
+function frmDebug_Show( byval hWndParent as HWND, byval executable as DWSTRING, byval cmdparams as DWSTRING ) as LRESULT
+    if IsWindow(HWND_FRMDEBUG) then
+        SetForegroundWindow( HWND_FRMDEBUG )
+        return 0
     end if
 
-    function = 0    
-end function
+    ' Read the debug information BEFORE creating any window. A release build carries none,
+    ' and failing here means no debugger window ever appears rather than an empty one that
+    ' then has to explain itself.
+    dim as wstring * 1024 wszExe = executable
+    dim as long rc = debugparser_load( @wszExe, 0 )
+    if rc <> DBGP_OK then
+        dim as DWSTRING wszMsg
+        if rc = DBGP_ERR_NODEBUGINFO then
+            wszMsg = L(615, "This program carries no debug information.") & chr(13) & chr(13) & _
+                     L(616, "Build it with -g and the gas64 backend, or gas for 32-bit. The gcc backend emits a format that cannot be read.")
+        else
+            dim as wstring * 512 werr
+            debugparser_get_error( @werr, 512 )
+            wszMsg = L(617, "The debug information could not be read.") & chr(13) & chr(13) & werr
+        end if
+        TikoMsgBox( hWndParent, wszMsg, L(218, "Confirm"), TMB_ICON_ERROR, TMB_OK )
+        return 0
+    end if
 
+    gDbgSessionEnding = false
+    gDbgCurFrame      = 0
+    gDbgStatusText    = L(600, "Running...")
 
-' ========================================================================================
-' frmDebug_Show
-' ========================================================================================
-function frmDebug_Show( byval hWndParent as HWND, byval executable as string, byval cmdparams as string ) as LRESULT
-
-    '  Create the main window and child controls
     dim pWindow as CWindow ptr = new CWindow
+    dim pParent as CWindow ptr = AfxCWindowPtr(hWndParent)
+    if pParent then pWindow->DPI = pParent->DPI
 
-    HWND_FRMDEBUG = pWindow->Create( hWndParent, "DEBUGGER", @frmDebug_WndProc, 0, 0, 0, 0, _
-        WS_POPUP or WS_THICKFRAME  or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
+    HWND_FRMDEBUG = pWindow->Create( hWndParent, L(618, "Debugger"), @frmDebug_WndProc, 0, 0, 0, 0, _
+        WS_POPUP or WS_THICKFRAME or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
         WS_EX_CONTROLPARENT or WS_EX_LEFT )
+    pWindow->SetClientSize( pWindow->ScaleX(FRMDEBUG_DEFWIDTH), pWindow->ScaleY(FRMDEBUG_DEFHEIGHT) )
+    pWindow->Center( HWND_FRMDEBUG, hWndParent )
 
     if gDebugPos.bInitialized then
-        dim WinPla as WINDOWPLACEMENT
-        with WinPla
-            .Length = sizeof(WinPla)
-            .rcNormalPosition.Left   = gDebugPos.nLeft
-            .rcNormalPosition.Top    = gDebugPos.nTop
-            .rcNormalPosition.Right  = gDebugPos.nRight
-            .rcNormalPosition.Bottom = gDebugPos.nBottom
-            .showCmd = iif( gDebugPos.bMaximized, SW_MAXIMIZE, SW_SHOWNORMAL )
-        end with
-        SetWindowPlacement( pWindow->hWindow, @WinPla )
-    else
-        pWindow->SetClientSize(625, 460)
-        pWindow->Center(pWindow->hWindow, hWndParent)
+        dim as WINDOWPLACEMENT wp
+        wp.length = sizeof(WINDOWPLACEMENT)
+        wp.rcNormalPosition.left   = gDebugPos.nLeft
+        wp.rcNormalPosition.top    = gDebugPos.nTop
+        wp.rcNormalPosition.right  = gDebugPos.nRight
+        wp.rcNormalPosition.bottom = gDebugPos.nBottom
+        wp.showCmd = iif( gDebugPos.bMaximized, SW_SHOWMAXIMIZED, SW_SHOWNORMAL )
+        SetWindowPlacement( HWND_FRMDEBUG, @wp )
     end if
 
-    ' Set the small and large icon for the main window (must be set after main window is created)
     pWindow->BigIcon   = LoadImage( pWindow->InstanceHandle, "IMAGE_AAA_MAINICON", IMAGE_ICON, 32, 32, LR_SHARED)
     pWindow->SmallIcon = LoadImage( pWindow->InstanceHandle, "IMAGE_AAA_MAINICON", IMAGE_ICON, 16, 16, LR_SHARED)
 
-    ' Attempt to apply the standard Windows dark theme to the non-client areas of the form.
-    ' Reads the theme currently IN MEMORY, not gConfig -- see Theme_IsDark.
-    Theme_ApplyDarkCaption( HWND_FRMDEBUG )
+    ' --- toolbar ---
+    frmDebug_CreateButton( IDC_FRMDEBUG_CMDCONTINUE,  L(253, "Continue Debugging"), wszIconContinue )
+    frmDebug_CreateButton( IDC_FRMDEBUG_CMDBREAK,     L(601, "Break"),              wszIconPause )
+    frmDebug_CreateButton( IDC_FRMDEBUG_CMDSTOP,      L(254, "Stop Debugging"),     wszIconStop )
+    frmDebug_CreateButton( IDC_FRMDEBUG_CMDSTEPINTO,  L(247, "Step Into"),          wszIconStepNext )
+    frmDebug_CreateButton( IDC_FRMDEBUG_CMDSTEPOVER,  L(248, "Step Over"),          wszIconStepOver )
+    frmDebug_CreateButton( IDC_FRMDEBUG_CMDSTEPOUT,   L(255, "Step Out"),           wszIconStepOut )
+    frmDebug_CreateButton( IDC_FRMDEBUG_CMDRUNCURSOR, L(256, "Run to Cursor"),      wszIconRunToCursor )
 
-    ' Create ALSO attaches -- there is no separate PsTooltip_Attach call. Colours and fonts are
-    ' pushed per hover from frmDebug_TipText, so nothing set here can go stale on a theme change.
-    ghDebugTip = PsTooltip_Create( HWND_FRMDEBUG )
-    PsTooltip_SetToolIndex( ghDebugTip, -1 )
-    PsTooltip_SetTooltipCallback( ghDebugTip, @frmDebug_TipText )
+    ' --- tab strip over the variables tree ---
+    HWND_FRMDEBUG_SELECTBAR = PsSelectBar_Create( HWND_FRMDEBUG, IDC_FRMDEBUG_SELECTBAR )
+    PsSelectBar_SetFont( HWND_FRMDEBUG_SELECTBAR, ghFont(GUIFONT_9) )
+    PsSelectBar_SetIndicator( HWND_FRMDEBUG_SELECTBAR, 1, 12 )
+    PsSelectBar_SetSelChangeCallback( HWND_FRMDEBUG_SELECTBAR, @frmDebug_TabSelChange )
+    PsSelectBar_AddPanel( HWND_FRMDEBUG_SELECTBAR, L(619, "Locals"),  DEBUG_TAB_LOCALS )
+    PsSelectBar_AddPanel( HWND_FRMDEBUG_SELECTBAR, L(620, "Globals"), DEBUG_TAB_GLOBALS )
 
-    gApp.IsDebuggerActive = true
-    
+    HWND_FRMDEBUG_LVVARS  = frmDebug_CreateListView( IDC_FRMDEBUG_LVVARS )
+    HWND_FRMDEBUG_LVSTACK = frmDebug_CreateListView( IDC_FRMDEBUG_LVSTACK )
+
+    HWND_FRMDEBUG_SPLITTER = PsSplitter_Create( HWND_FRMDEBUG, IDC_FRMDEBUG_SPLITTER, PSSPLITTER_VERTICAL )
+    PsSplitter_SetPaintCallback( HWND_FRMDEBUG_SPLITTER, @frmDebug_SplitterPaint )
+    PsSplitter_SetPosChangedCallback( HWND_FRMDEBUG_SPLITTER, @frmDebug_SplitterMoved )
+
+    frmDebug_ApplyTheme()
     frmDebug_PositionWindows()
 
-    SetTimer(HWND_FRMDEBUG, gApp.DebugTimerID, 20, null)   ' 20 ms
-    
-    ' The debug executable has been sucessfully created so start the debug thread
-    ' add feed any breakpoints into it.
-    if gdb_init( executable, cmdparams ) then
-        frmDebug_SetInitialBreakpoints( gdb_session )
-        gdb_send("set confirm off" )
-        gdb_send("set language pascal" )
-        
-        gdb_session.hThreadMutex = MutexCreate()
-        gdb_session.hThreadMessages = ThreadCreate( @gdb_threadListener, @gdb_session )
-        
-    else
-        TikoMsgBox( HWND_FRMMAIN, "Failed to initialize GDB. Ensure gdb.exe is installed correctly.", _
-                    L(164,"Error"), TMB_ICON_ERROR, TMB_OK )
-        DestroyWindow( HWND_FRMMAIN )
-        exit function            
-    end if
-    
-    gdb_send("-exec-run")
-    
+    ' --- seed the breakpoints the user set in the editor ---
+    debugparser_clear_breakpoints()
+    dim pDoc as clsDocument ptr = gApp.pDocList
+    do until pDoc = 0
+        if pDoc->hWindow(0) then
+            dim as wstring * 520 wszFile = pDoc->DiskFilename
+            dim as long si = debugparser_source_index( @wszFile )
+            if si >= 0 then
+                dim as DWSTRING wszBps = pDoc->GetBreakPoints()
+                dim as long n = AfxStrParseCount( wszBps, "," )
+                for i as long = 1 to n
+                    dim as DWSTRING wszOne = AfxStrParse( wszBps, i, "," )
+                    if len(trim(wszOne)) = 0 then continue for
+                    ' Editor lines are 0-based; the engine's are 1-based. That boundary is
+                    ' stated once, here, because the old gdb path converted it in four
+                    ' places and got one of them wrong.
+                    dim as long ln = valint(wszOne) + 1
+                    ' The line table says which lines actually generated code, so a
+                    ' breakpoint on a comment or a declaration moves forward to the next
+                    ' real one instead of silently never firing.
+                    dim as long lnExec = debugparser_next_executable_line( si, ln )
+                    if lnExec > 0 then debugparser_add_breakpoint( si, lnExec )
+                next
+            end if
+        end if
+        pDoc = pDoc->pDocNext
+    loop
+
     ShowWindow( HWND_FRMDEBUG, SW_SHOW )
-    
+    UpdateWindow( HWND_FRMDEBUG )
+
+    gApp.IsDebuggerActive = true
+    frmMain_DebugTopMenuStates()
+
+    dim as wstring * 1024 wszParams = cmdparams
+    if debugparser_start( @wszExe, @wszParams, HWND_FRMDEBUG ) <> DBGP_OK then
+        dim as wstring * 512 werr
+        debugparser_get_error( @werr, 512 )
+        gApp.IsDebuggerActive = false
+        gDbgSessionEnding = true
+        TikoMsgBox( hWndParent, L(614, "The debugger could not start the program.") & _
+                    chr(13) & chr(13) & werr, L(218, "Confirm"), TMB_ICON_ERROR, TMB_OK )
+        DestroyWindow( HWND_FRMDEBUG )
+        return 0
+    end if
+
+    frmDebug_SyncButtons()
     return 0
 end function
-
-
-
-
-

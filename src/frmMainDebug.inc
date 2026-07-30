@@ -28,11 +28,19 @@ function OnCommand_DebugCommon( byval id as long ) as LRESULT
 
     select case id
         case IDM_DEBUG_STARTDEBUGGING
-            code_Compile(id)
-            
-        case IDM_DEBUG_STARTDEBUGGING, IDM_DEBUG_STOPDEBUGGING, _
-            IDM_DEBUG_STEPINTO, IDM_DEBUG_STEPOVER, IDM_DEBUG_STEPOUT, IDM_DEBUG_RUNTOCURSOR
-            SendMessage( HWND_FRMDEBUG, id, 0, 0 )
+            ' Start and Continue share one menu item, whose caption changes with the state.
+            ' They used to share one CASE as well -- listed twice, and FreeBASIC takes the
+            ' first match -- so Continue recompiled and opened a second debugger instead of
+            ' resuming. Only the toolbar button ever worked.
+            if gApp.IsDebuggerActive then
+                frmDebug_Command( IDM_DEBUG_STARTDEBUGGING )
+            else
+                code_Compile(id)
+            end if
+
+        case IDM_DEBUG_STOPDEBUGGING, IDM_DEBUG_PAUSE, IDM_DEBUG_STEPINTO, _
+             IDM_DEBUG_STEPOVER, IDM_DEBUG_STEPOUT, IDM_DEBUG_RUNTOCURSOR
+            frmDebug_Command( id )
 
         case IDM_DEBUG_TOGGLEBREAKPOINT
             pDoc->ToggleBreakPoint( pDoc->GetCurrentLineNumber )

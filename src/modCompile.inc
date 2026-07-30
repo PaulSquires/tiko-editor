@@ -501,14 +501,23 @@ function code_Compile( byval wID as long ) as boolean
         pCompile->CompileFlags = AfxStrRemove( pCompile->CompileFlags, " -O3" )
         pCompile->CompileFlags = AfxStrRemove( pCompile->CompileFlags, " -Os" )
         pCompile->CompileFlags = AfxStrRemove( pCompile->CompileFlags, " -Ofast" )
-        ' If gcc already exists then no need to replace chosen backend. Only do
-        ' the replacements if gcc is not found.
-        if instr( pCompile->CompileFlags, " -gen gcc" ) = 0 then
-            ' Replace llvm, gas, gas64 with gcc (ensure replacement string is same size as search string)
-            ' Search for gas64 before gas because gas will match before gas64.
-            pCompile->CompileFlags = AfxStrReplace( pCompile->CompileFlags, " -gen gas64", " -gen gcc  " )
-            pCompile->CompileFlags = AfxStrReplace( pCompile->CompileFlags, " -gen gas", " -gen gcc" )
-            pCompile->CompileFlags = AfxStrReplace( pCompile->CompileFlags, " -gen llvm", " -gen gcc " )
+        ' Force a GAS backend. This used to force gcc, because gdb cannot read what the
+        ' gas backends emit -- fbc's changelog describes that data as "for FBdebugger
+        ' only". The cost was debugging a DIFFERENT binary from the one being built, with
+        ' multidimensional arrays collapsed to one dimension and line numbers that did not
+        ' correspond well. tiko now reads the format directly (debugParser.dll), so the
+        ' debug build stays on the backend the project actually uses.
+        dim as DWSTRING wszWantGen = iif( pCompile->bCompile32, wstr(" -gen gas"), wstr(" -gen gas64") )
+        if instr( pCompile->CompileFlags, wszWantGen ) = 0 then
+            ' Strip whatever backend was selected, then append the one we need. Done by
+            ' removal rather than same-length substitution because " -gen gcc" and
+            ' " -gen gas64" are different lengths and the old padding trick does not
+            ' generalise in this direction.
+            pCompile->CompileFlags = AfxStrRemove( pCompile->CompileFlags, " -gen gas64" )
+            pCompile->CompileFlags = AfxStrRemove( pCompile->CompileFlags, " -gen gas" )
+            pCompile->CompileFlags = AfxStrRemove( pCompile->CompileFlags, " -gen gcc" )
+            pCompile->CompileFlags = AfxStrRemove( pCompile->CompileFlags, " -gen llvm" )
+            pCompile->CompileFlags += wszWantGen
         end if
         pCompile->CompileFlags += " -g -exx -nostrip "
     end if

@@ -132,6 +132,9 @@ enum
     IDM_DEBUG_START
     IDM_DEBUG_STARTDEBUGGING
     IDM_DEBUG_STOPDEBUGGING
+    ' New with the native debugger. The gdb implementation had no way to interrupt a
+    ' running program at all -- the only routes back were a breakpoint or Stop.
+    IDM_DEBUG_PAUSE
     IDM_DEBUG_STEPINTO
     IDM_DEBUG_STEPOVER
     IDM_DEBUG_STEPOUT
@@ -224,7 +227,8 @@ dim shared as HWND HWND_FRMFINDINPROJECT, HWND_FRMSEARCHSYMBOL
 dim shared as HWND HWND_FRMBUILDCONFIG, HWND_FRMUSERTOOLS, HWND_FRMABOUT
 dim shared as HWND HWND_FRMABOUT_TABS, HWND_FRMABOUT_CREDITS, HWND_FRMABOUT_LICENSE
 dim shared as HWND HWND_FRMKEYBOARD, HWND_FRMKEYBOARDEDIT
-dim shared as HWND HWND_FRMDEBUG, HWND_FRMDEBUG_OUTPUT
+dim shared as HWND HWND_FRMDEBUG, HWND_FRMDEBUG_LVVARS, HWND_FRMDEBUG_LVSTACK
+dim shared as HWND HWND_FRMDEBUG_SELECTBAR, HWND_FRMDEBUG_SPLITTER
 
 dim shared as HWND HWND_FRMMAIN_TOPTABS, HWND_FRMMAIN_TOPTABSMENU
 dim shared as HWND HWND_FRMMAIN_TOPTABSINFO, HWND_FRMMAIN_FIND, HWND_FRMMAIN_REPLACE
@@ -413,6 +417,7 @@ dim shared as wstring * 10 _
     wszIconSplitEditor, wszIconSplitLeftRight, wszIconSplitTopBottom, wszIconThemes, _
     wszIconSettings, wszIconCheckBoxEmpty, wszIconCheckBoxMarked, _
     wszIconContinue, wszIconStop, wszIconStepNext, wszIconStepOver, wszIconStepOut, wszIconRunToCursor, _
+    wszIconPause, _
     wszIconSave, wszIconFind, wszIconToggleReplace, _
     wszIconGotoMain, wszIconGotoHeader, wszIconGotoSource, _
     wszSearchFile, wszSearchFunction, wszSearchType, wszSearchEnum, _
