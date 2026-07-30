@@ -13,6 +13,20 @@
 
 ' See frmDebug.bi for the layout, the absence of a pump obligation, and why the variables
 ' tree is built to a bounded depth rather than lazily.
+'
+' ------------------------------------------------------------------------------------------
+' WS_EX_COMPOSITED IS ON THIS WINDOW, AND IT IS THE ONLY ONE IN TIKO THAT HAS IT.
+'
+' Dragging the splitter tore. Batching the pane moves into one DeferWindowPos pass helped and
+' was worth doing on its own, but did not fix it: a PsListTree is a CONTAINER, so resizing one
+' re-places its own surface, header and scrollbar as separate child moves that no batching at
+' this level can reach. WS_EX_COMPOSITED makes Windows paint the whole hierarchy bottom-up
+' into an off-screen buffer and blit it once, which is the only thing that covers those.
+'
+' The cost is real and is accepted here rather than hidden: every repaint of this window
+' allocates and blits a full-window buffer, so it is slower per paint than the default. That
+' is the right trade for a window whose panes are resized by dragging, and the wrong one for
+' frmMain, which repaints constantly while typing. Do not copy it there without measuring.
 
 #include once "frmDebug.bi"
 
@@ -368,7 +382,11 @@ private sub frmDebug_PositionWindows()
     ' The default position has to be chosen BEFORE SetRange, not after: SetRange clamps the
     ' current position into the new range silently, so by the time it returns the bar is
     ' never out of range and an "is it out of range" test can never fire.
-    if gDbgSplitInit = false then
+    ' Guarded on the splitter EXISTING, not just on the flag. SetClientSize and Center both
+    ' fire WM_SIZE, which lays out -- so an unguarded one-shot is spent on a pass that runs
+    ' before this control is created, and the default silently never applies.
+    dim as boolean bHaveSplitter = (IsWindow(HWND_FRMDEBUG_SPLITTER) <> 0)
+    if bHaveSplitter andalso (gDbgSplitInit = false) then
         gDbgSplitInit = true
         PsSplitter_SetPos( HWND_FRMDEBUG_SPLITTER, rc.right * 3 \ 5 )
     end if
@@ -733,7 +751,7 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as DWSTRING, 
 
     HWND_FRMDEBUG = pWindow->Create( hWndParent, L(618, "Debugger"), @frmDebug_WndProc, 0, 0, 0, 0, _
         WS_POPUP or WS_THICKFRAME or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
-        WS_EX_CONTROLPARENT or WS_EX_LEFT )
+        WS_EX_CONTROLPARENT or WS_EX_LEFT or WS_EX_COMPOSITED )
     ' UNSCALED. SetClientSize applies the DPI factor itself; passing a pre-scaled value
     ' squares it, which at 175% turned a 900px window into a 2756px one.
     pWindow->SetClientSize( FRMDEBUG_DEFWIDTH, FRMDEBUG_DEFHEIGHT )
@@ -754,9 +772,9 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as DWSTRING, 
     pWindow->SmallIcon = LoadImage( pWindow->InstanceHandle, "IMAGE_AAA_MAINICON", IMAGE_ICON, 16, 16, LR_SHARED)
 
     ' --- toolbar ---
-    frmDebug_CreateButton( IDC_FRMDEBUG_CMDCONTINUE,  L(253, "Continue Debugging"), wszIconContinue )
+    frmDebug_CreateButton( IDC_FRMDEBUG_CMDCONTINUE,  L(621, "Continue"), wszIconContinue )
     frmDebug_CreateButton( IDC_FRMDEBUG_CMDBREAK,     L(601, "Break"),              wszIconPause )
-    frmDebug_CreateButton( IDC_FRMDEBUG_CMDSTOP,      L(254, "Stop Debugging"),     wszIconStop )
+    frmDebug_CreateButton( IDC_FRMDEBUG_CMDSTOP,      L(622, "Stop"),     wszIconStop )
     frmDebug_CreateButton( IDC_FRMDEBUG_CMDSTEPINTO,  L(247, "Step Into"),          wszIconStepNext )
     frmDebug_CreateButton( IDC_FRMDEBUG_CMDSTEPOVER,  L(248, "Step Over"),          wszIconStepOver )
     frmDebug_CreateButton( IDC_FRMDEBUG_CMDSTEPOUT,   L(255, "Step Out"),           wszIconStepOut )
