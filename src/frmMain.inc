@@ -1645,7 +1645,12 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ' Env-gated (TIKO_ENCODING_SELFTEST=1). Pure byte-exact + disk round-trip; needs no
     ' document window, so it is safe to run here at startup.
     Encoding_RunSelfTest()
-    
+    ' Env-gated (TIKO_DEBUGINFO_DUMP=<path to a -g built exe>). Parses that exe's embedded
+    ' gas/gas64 debug information and prints every table. This is the only way to verify the
+    ' debug-info reader -- no layout assertion can reach a parser, and a parser that returns
+    ' self-consistent nonsense passes every round-trip check it makes against itself.
+    DebugInfo_RunDump()
+
     ' Set the small and large icon for the main window (must be set after main window is created)
     pWindow->BigIcon   = LoadImage( pWindow->InstanceHandle, "IMAGE_AAA_MAINICON", IMAGE_ICON, 32, 32, LR_SHARED)
     pWindow->SmallIcon = LoadImage( pWindow->InstanceHandle, "IMAGE_AAA_MAINICON", IMAGE_ICON, 16, 16, LR_SHARED)

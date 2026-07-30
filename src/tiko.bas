@@ -117,6 +117,10 @@ dim shared gTTabCtl as clsTopTabCtl
 ' and clsDocument.inc (the clsDocument type it instantiates for the disk round-trip).
 #include once "modEncodingSelfTest.bi"
 #include once "modEncodingSelfTest.inc"
+' The debug-information reader. Deliberately placed with no dependency on anything above it
+' or below it: it names no tiko global and no Ps* type, so it compiles standalone and can be
+' exercised headlessly. See its .bi header for the format and the traps in it.
+#include once "modDebugInfo.inc"
 #include once "clsApp.inc"
 #include once "clsSymbolDb.inc"
 #include once "clsScanMgr.inc"
