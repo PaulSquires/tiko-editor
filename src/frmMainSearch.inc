@@ -194,10 +194,12 @@ function OnCommand_SearchFindActions( _
             byval pDoc as clsDocument ptr _
             ) as LRESULT
 
-    ' Reachable with no active document -- an accelerator bypasses menu enablement, and the
-    ' Find in Project tab is itself a document-less tab with the Find bar open on it. Project
-    ' search navigation is retargeted here in a later phase; for now these actions, which all
-    ' walk a single document, do nothing rather than fault.
+    ' On the Find in Project tab these actions mean the PROJECT search, not this document's.
+    ' Enter in the find box already funnels here through IDM_FINDNEXT, so this one test
+    ' retargets typing, F3, and the bar's own prev/next icons together.
+    if frmFindInProject_BarAction( id ) then return 0
+
+    ' Reachable with no active document -- an accelerator bypasses menu enablement.
     if pDoc = 0 then exit function
 
     dim as HWND hEdit = pDoc->hWndActiveScintilla
@@ -265,8 +267,10 @@ function OnCommand_SearchReplaceActions( _
             byval pDoc as clsDocument ptr _
             ) as LRESULT
 
-    ' Reachable with no active document -- see OnCommand_SearchFindActions above. Project-wide
-    ' replace is a later phase; a single-document replace has nothing to act on here.
+    ' Project-wide replace on the Find in Project tab.
+    if frmFindInProject_BarAction( id ) then return 0
+
+    ' Reachable with no active document -- see OnCommand_SearchFindActions above.
     if pDoc = 0 then exit function
 
     dim as HWND hEdit = pDoc->hWndActiveScintilla

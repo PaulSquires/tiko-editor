@@ -153,6 +153,12 @@ private sub FipPool_Bind( byval i as long, byval nRow as long, byref rcView as R
         ' Re-suppress what ApplyPropertiesToView just set for a full editor.
         SciExec( gFipPool(i).hWnd, SCI_SETMARGINWIDTHN, 1, 0 )
         SciExec( gFipPool(i).hWnd, SCI_SETMARGINWIDTHN, 2, 0 )
+        ' The match highlight. The RANGES live on the document (filled once per file by
+        ' FindProject_ApplyIndicators), but the indicator's appearance is PER-VIEW, so it has
+        ' to be described again on every view that should show it.
+        SciExec( gFipPool(i).hWnd, SCI_INDICSETSTYLE, FINDPROJ_INDICATOR, INDIC_STRAIGHTBOX )
+        SciExec( gFipPool(i).hWnd, SCI_INDICSETFORE, FINDPROJ_INDICATOR, ghEditor.ForeColorOccurrence )
+        SciExec( gFipPool(i).hWnd, SCI_INDICSETALPHA, FINDPROJ_INDICATOR, 90 )
     end if
 
     ' Pin the window onto the block's first line. Re-asserted on every sync, not just on a
@@ -1127,7 +1133,15 @@ sub frmFindInProject_RunSelfTest()
                 p = instr( p + 1, sText, sPhrase )
             loop
 
+            ' THE SEARCH IS SYNCHRONOUS ON THE UI THREAD. Timed and reported rather than
+            ' assumed to be fast enough: this is the number that decides whether it has to
+            ' move to a worker thread.
+            dim as double t0 = timer
             FindProject_Search( sPhrase, true, false )
+            dim as double nSearchMs = (timer - t0) * 1000
+            print "  SEARCH: " & str(gApp.GetDocumentCount()) & " documents scanned, " & _
+                  str(gFip.nMatchCount) & " matches in " & str(gFip.nGroupCount) & _
+                  " files, " & str(cint(nSearchMs)) & " ms"
 
             ' Find this document's group.
             dim as long nGrp = -1
@@ -1346,6 +1360,108 @@ sub frmFindInProject_RunSelfTest()
             ' ---- does it actually DRAW? ----------------------------------------------------
             dim as long nTonesResults = FipSurface_CountRenderedTones()
 
+            ' ---- navigation and replace ----------------------------------------------------
+            ' Next/prev walk LIVE matches and wrap. Enter in the find box funnels to
+            ' IDM_FINDNEXT, so this is the same path typing takes.
+            dim as long nFirstLive = FindProject_NextLive( -1, true )
+            frmFindInProject_Check( "nav: there is a first live match", _
+                nFirstLive >= 0, str(nFirstLive) )
+
+            if nFirstLive >= 0 then
+                dim as long nSecond = FindProject_NextLive( nFirstLive, true )
+                frmFindInProject_Check( "nav: forward moves to a different match", _
+                    (nSecond >= 0) andalso (nSecond <> nFirstLive), str(nSecond) )
+                ' Going back from the second must land on the first again.
+                frmFindInProject_Check( "nav: backward is the inverse of forward", _
+                    FindProject_NextLive( nSecond, false ) = nFirstLive, _
+                    str(FindProject_NextLive( nSecond, false )) )
+                ' Every match belongs to a block, or it could never be revealed.
+                frmFindInProject_Check( "nav: the match maps to a block", _
+                    FindProject_BlockOfMatch( nFirstLive ) >= 0, _
+                    str(FindProject_BlockOfMatch( nFirstLive )) )
+            end if
+
+            ' A dead match is skipped rather than returned.
+            if (nFirstLive >= 0) andalso (gFip.nLiveMatches > 1) then
+                gFip.matches(nFirstLive).bDead = true
+                frmFindInProject_Check( "nav: a dead match is skipped", _
+                    FindProject_NextLive( -1, true ) <> nFirstLive )
+                gFip.matches(nFirstLive).bDead = false
+            end if
+
+            ' REPLACE. Done last of the model tests because it edits the real buffer -- the
+            ' document is left dirty and is NEVER saved, which is the whole contract.
+            ' RE-SEARCH FIRST. The remap section above fired two SYNTHETIC SCN_MODIFIED
+            ' notifications at the model describing insertions that never happened to the real
+            ' buffer, so every stored offset is now several bytes adrift. Replacing against
+            ' that model writes to the wrong places -- which is precisely what the
+            ' "no occurrence survives" assertion below reported (22 left, on a real project)
+            ' and what the byte-count assertion could not see.
+            FindProject_Search( sPhrase, true, false )
+            nGrp = -1
+            for g as long = 0 to gFip.nGroupCount - 1
+                if gFip.groups(g).pDoc = pTest then nGrp = g: exit for
+            next
+
+            dim as long nLiveBefore = gFip.nLiveMatches
+            dim as long nLenBefore  = SciExec( pTest->hWindow(0), SCI_GETLENGTH, 0, 0 )
+            ' THIS FILE's share of the replacements. Not the project-wide total: the length
+            ' check below measures ONE document, and comparing it against every file's matches
+            ' passed only because a single-file test run made the two numbers identical. A run
+            ' against a real 123-document project reported 94458 vs 95426.
+            dim as long nGroupLive = 0
+            for i as long = gFip.groups(nGrp).nMatchFirst to _
+                            gFip.groups(nGrp).nMatchFirst + gFip.groups(nGrp).nMatchCount - 1
+                if gFip.matches(i).bDead = false then nGroupLive += 1
+            next
+            ' All punctuation, and two bytes longer than the phrase. Both properties matter:
+            ' the length change makes later offsets drift if the replacement order is wrong,
+            ' and a replacement that cannot CONTAIN the phrase is what lets the count below
+            ' detect that drift.
+            dim as string sRepl = string( len(sPhrase) + 2, asc("~") )
+            dim as long nReplaced = FindProject_ReplaceAll( sRepl )
+
+            frmFindInProject_Check( "replace: every live match was replaced", _
+                nReplaced = nLiveBefore, str(nReplaced) & " vs " & str(nLiveBefore) )
+            frmFindInProject_Check( "replace: nothing is left matching the old phrase", _
+                gFip.nLiveMatches = 0, str(gFip.nLiveMatches) )
+            frmFindInProject_Check( "replace: this document grew by 2 bytes per match in it", _
+                SciExec( pTest->hWindow(0), SCI_GETLENGTH, 0, 0 ) = nLenBefore + (nGroupLive * 2), _
+                str(SciExec( pTest->hWindow(0), SCI_GETLENGTH, 0, 0 )) & " vs " & _
+                str(nLenBefore + (nGroupLive * 2)) )
+
+            ' THE ONE THAT CATCHES MISPLACEMENT. The length check above cannot: each
+            ' REPLACETARGET writes the same number of bytes wherever it lands, so the total
+            ' delta is identical whether the offsets were right or drifting. Measured -- with
+            ' the replace loop running forwards instead of backwards, every assertion above
+            ' stayed green. Counting the text is what actually proves the right bytes moved.
+            dim as string sAfter = pTest->GetText()
+            dim as long nOldLeft = 0, nNewFound = 0, p2 = instr( sAfter, sPhrase )
+            do while p2 > 0
+                nOldLeft += 1
+                p2 = instr( p2 + 1, sAfter, sPhrase )
+            loop
+            p2 = instr( sAfter, sRepl )
+            do while p2 > 0
+                nNewFound += 1
+                p2 = instr( p2 + 1, sAfter, sRepl )
+            loop
+            frmFindInProject_Check( "replace: no occurrence of the old phrase survives", _
+                nOldLeft = 0, str(nOldLeft) & " left" )
+            frmFindInProject_Check( "replace: the replacement appears once per match", _
+                nNewFound = nGroupLive, str(nNewFound) & " vs " & str(nGroupLive) )
+            frmFindInProject_Check( "replace: the document is left DIRTY, not saved", _
+                SciExec( pTest->hWindow(0), SCI_GETMODIFY, 0, 0 ) <> 0 )
+
+            ' ...and one undo puts the whole file back, because the replacements were wrapped
+            ' in ONE undo action per file rather than one per match.
+            SciExec( pTest->hWindow(0), SCI_UNDO, 0, 0 )
+            frmFindInProject_Check( "replace: ONE undo reverses the whole file", _
+                SciExec( pTest->hWindow(0), SCI_GETLENGTH, 0, 0 ) = nLenBefore, _
+                str(SciExec( pTest->hWindow(0), SCI_GETLENGTH, 0, 0 )) & " vs " & str(nLenBefore) )
+            ' Leave the buffer exactly as it was found.
+            SciExec( pTest->hWindow(0), SCI_SETSAVEPOINT, 0, 0 )
+
             ' ---- the close funnel ----------------------------------------------------------
             ' A document whose Scintilla windows are going away takes its results with it, and
             ' every excerpt view bound to it must let go BEFORE the model releases its
@@ -1423,13 +1539,190 @@ sub frmFindInProject_RunSelfTest()
     frmFindInProject_Check( "close: the document editors are visible again", _
         frmFindInProject_CountVisibleEditors() = nVisBefore, _
         str(frmFindInProject_CountVisibleEditors()) & " vs " & str(nVisBefore) )
-    frmFindInProject_Check( "close: the previously active tab is current again", _
-        gTTabCtl.GetCurSel() = nSelBefore, _
-        str(gTTabCtl.GetCurSel()) & " vs " & str(nSelBefore) )
+    ' The invariant that actually matters: whatever is current now is a REAL DOCUMENT TAB.
+    '
+    ' This used to compare against the tab that was current before the Find tab opened, which
+    ' was only ever true by accident -- the bare-SetFocusTab section above deliberately moves
+    ' the selection, so with a single file open it happened to land back on 0 and with a real
+    ' project it did not. An assertion that passes because the test has one document is worse
+    ' than no assertion.
+    if nTabsBefore > 0 then
+        frmFindInProject_Check( "close: a real document tab is current again", _
+            (gTTabCtl.GetCurSel() >= 0) andalso (gTTabCtl.GetActiveDocumentPtr() <> 0), _
+            str(gTTabCtl.GetCurSel()) )
+    end if
 
     print "--- TIKO_FINDPROJ_SELFTEST: " & str(gFipTestPass) & " passed, " & _
           str(gFipTestFail) & " failed ---"
 end sub
+
+
+' ========================================================================================
+' The Find / Replace bar, retargeted.
+' ========================================================================================
+dim shared gFipCurrent   as long = -1     ' flat match index the user is sitting on
+dim shared gFipLastQuery as DWSTRING      ' what the last search actually ran for
+
+
+' Push the "n of m" the Find bar paints, and rename the tab to the phrase.
+private sub FipBar_UpdateStatus()
+    dim as long nOrdinal = 0
+    if gFipCurrent >= 0 then
+        for i as long = 0 to gFipCurrent
+            if gFip.matches(i).bDead = false then nOrdinal += 1
+        next
+    end if
+    gFind.wszResults = str(nOrdinal) & "/" & str(gFip.nLiveMatches)
+    gFind.foundCount = gFip.nLiveMatches
+    if IsWindowVisible( HWND_FRMMAIN_FIND ) then AfxRedrawWindow( HWND_FRMMAIN_FIND )
+
+    ' The tab takes the phrase's name once there is one. SetTabText leaves a document-less
+    ' tab alone, which is what lets this stick.
+    dim as long idx = gTTabCtl.FindTabIndex()
+    if idx <> -1 then
+        dim as DWSTRING wszCap = L(206, "Find in Project")
+        if len(gFipLastQuery) then wszCap = L(206, "Find in Project") & ": " & gFipLastQuery
+        if PsTabBar_GetText( gTTabCtl.hWindow, idx ) <> wszCap then
+            PsTabBar_SetText( gTTabCtl.hWindow, idx, wszCap )
+        end if
+    end if
+end sub
+
+
+' Bring a match on screen and select it in whichever excerpt view is showing it.
+private sub FipBar_RevealCurrent()
+    if gFipCurrent < 0 then exit sub
+    dim as long b = FindProject_BlockOfMatch( gFipCurrent )
+    if b = -1 then exit sub
+
+    ' A collapsed group has no row for the block, so open it first.
+    dim as long g = gFip.blocks(b).nGroup
+    if gFip.groups(g).bCollapsed then
+        gFip.groups(g).bCollapsed = false
+        frmFindInProject_Refresh( false )
+    end if
+
+    dim as long nRow = -1
+    for r as long = 0 to gFipRowCount - 1
+        if (gFipRows(r).nKind = FIP_ROW_BLOCK) andalso (gFipRows(r).nBlock = b) then nRow = r: exit for
+    next
+    if nRow = -1 then exit sub
+
+    ' Scroll only as far as needed: if the block is already fully on screen, leave the view
+    ' where it is rather than yanking it to the top on every Enter.
+    dim as RECT rcClient
+    GetClientRect( HWND_FRMFINDINPROJECT_SURFACE, @rcClient )
+    dim as long nTop = gFipRows(nRow).nTop
+    dim as long nBot = nTop + gFipRows(nRow).nHeight
+    dim as long nPage = rcClient.bottom - rcClient.top
+    if nTop < gFipScrollTop then
+        gFipScrollTop = nTop
+    elseif nBot > (gFipScrollTop + nPage) then
+        gFipScrollTop = nBot - nPage
+    end if
+    FipSurface_SyncScrollBar()
+    PsVScrollBar_SetPos( HWND_FRMFINDINPROJECT_VSCROLL, gFipScrollTop )
+    FipPool_Sync()
+    AfxRedrawWindow( HWND_FRMFINDINPROJECT_SURFACE )
+
+    ' Select the match inside its excerpt view, so "next" is visible rather than merely
+    ' scrolled to. The pin is re-asserted afterwards because setting a selection scrolls the
+    ' caret into view and would otherwise slide the block off its lines.
+    for i as long = 0 to gFipPoolCount - 1
+        if gFipPool(i).nRow <> nRow then continue for
+        SciExec( gFipPool(i).hWnd, SCI_SETSEL, gFip.matches(gFipCurrent).nStart, _
+                 gFip.matches(gFipCurrent).nStart + gFip.matches(gFipCurrent).nLen )
+        SciExec( gFipPool(i).hWnd, SCI_SETFIRSTVISIBLELINE, gFip.blocks(b).nFirstLine, 0 )
+        exit for
+    next
+end sub
+
+
+' Run the search for whatever is in the find box.
+private sub FipBar_RunSearch()
+    dim as HWND hCtl = GetDlgItem( HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND )
+    dim as DWSTRING wszPhrase = AfxGetWindowText( hCtl )
+    gFind.txtFind = wszPhrase
+
+    if len(wszPhrase) = 0 then
+        FindProject_Clear()
+        gFipLastQuery = ""
+        gFipCurrent = -1
+        frmFindInProject_Refresh( true )
+        FipBar_UpdateStatus()
+        exit sub
+    end if
+
+    dim as double t0 = timer
+    FindProject_Search( wszPhrase, cbool(gFind.nMatchCase), cbool(gFind.nWholeWord) )
+    dim as double nMs = (timer - t0) * 1000
+
+    gFipLastQuery = wszPhrase
+    gFipCurrent = FindProject_NextLive( -1, true )
+    frmFindInProject_Refresh( true )
+    FipBar_UpdateStatus()
+    FipBar_RevealCurrent()
+
+    ' THE SEARCH IS SYNCHRONOUS ON THE UI THREAD. This is the number that decides whether it
+    ' has to move to a worker -- reported rather than guessed at.
+    if environ("TIKO_FINDPROJ_TRACE") = "1" then
+        dim as string sMsg = "FINDPROJ: " & str(gFip.nMatchCount) & " matches in " & _
+                             str(gFip.nGroupCount) & " files, " & _
+                             str(gApp.GetDocumentCount()) & " documents scanned, " & _
+                             str(cint(nMs)) & " ms"
+        print sMsg
+    end if
+end sub
+
+
+function frmFindInProject_BarAction( byval id as long ) as boolean
+    if frmFindInProject_IsActive() = false then return false
+
+    dim as HWND hCtl = GetDlgItem( HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND )
+    dim as DWSTRING wszPhrase = AfxGetWindowText( hCtl )
+
+    select case id
+        case IDM_FINDNEXT, IDM_FINDNEXTACCEL, IDM_FINDPREV, IDM_FINDPREVACCEL
+            dim as boolean bForward = (id = IDM_FINDNEXT) orelse (id = IDM_FINDNEXTACCEL)
+            ' A changed phrase means a new search; the same phrase means step through what is
+            ' already there. That is what makes Enter both "search" and "next".
+            if (wszPhrase <> gFipLastQuery) orelse (gFip.bValid = false) then
+                FipBar_RunSearch()
+            else
+                dim as long n = FindProject_NextLive( gFipCurrent, bForward )
+                if n <> -1 then
+                    gFipCurrent = n
+                    FipBar_UpdateStatus()
+                    FipBar_RevealCurrent()
+                end if
+            end if
+            return true
+
+        case IDM_REPLACENEXT, IDM_REPLACEPREV
+            dim as DWSTRING wszRep = AfxGetWindowText( _
+                    GetDlgItem( HWND_FRMMAIN_REPLACE, IDC_FRMREPLACE_TXTREPLACE ) )
+            if gFipCurrent >= 0 then
+                FindProject_ReplaceOne( gFipCurrent, wszRep )
+                ' The replaced match is dead now; move to the next live one.
+                gFipCurrent = FindProject_NextLive( gFipCurrent, true )
+                frmFindInProject_Refresh( false )
+                FipBar_UpdateStatus()
+                FipBar_RevealCurrent()
+            end if
+            return true
+
+        case IDM_REPLACEALL
+            dim as DWSTRING wszRep = AfxGetWindowText( _
+                    GetDlgItem( HWND_FRMMAIN_REPLACE, IDC_FRMREPLACE_TXTREPLACE ) )
+            FindProject_ReplaceAll( wszRep )
+            gFipCurrent = -1
+            frmFindInProject_Refresh( false )
+            FipBar_UpdateStatus()
+            return true
+    end select
+
+    return false
+end function
 
 
 ' ========================================================================================

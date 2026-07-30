@@ -123,6 +123,9 @@ sub FindProject_Clear()
     dim as HWND hMsg = FindProject_Messenger()
     for g as long = 0 to gFip.nGroupCount - 1
         if gFip.groups(g).pSciDoc = 0 then continue for
+        ' Take the highlight off the document before letting go of it, or a closed search
+        ' leaves its marks behind in the user's editor.
+        FindProject_ClearIndicators( g )
         if gFipUnbindDoc <> 0 then gFipUnbindDoc( gFip.groups(g).pSciDoc )
         if hMsg then
             SciExec( hMsg, SCI_RELEASEDOCUMENT, 0, cast(LPARAM, gFip.groups(g).pSciDoc) )
@@ -528,7 +531,167 @@ function FindProject_Search( byval wszPhrase as DWSTRING, _
     gFip.nLiveMatches = gFip.nMatchCount
     gFip.bValid = true
 
+    for g as long = 0 to gFip.nGroupCount - 1
+        FindProject_ApplyIndicators( g )
+    next
+
     function = gFip.nMatchCount
+end function
+
+
+' ========================================================================================
+' Match highlighting.
+'
+' Indicator RANGES belong to the Document, so they are filled once per file and show up in
+' every view of it -- the excerpt views AND the file's own editor tab, which is the same way
+' the Find bar's own highlight behaves. The indicator's COLOUR is per-view; FipPool_Bind sets
+' that on each excerpt.
+' ========================================================================================
+sub FindProject_ApplyIndicators( byval nGroup as long )
+    if (nGroup < 0) orelse (nGroup >= gFip.nGroupCount) then exit sub
+    dim as clsDocument ptr pDoc = gFip.groups(nGroup).pDoc
+    if pDoc = 0 then exit sub
+    if IsWindow( pDoc->hWindow(0) ) = 0 then exit sub
+
+    dim as HWND h = pDoc->hWindow(0)
+    SciExec( h, SCI_SETINDICATORCURRENT, FINDPROJ_INDICATOR, 0 )
+    SciExec( h, SCI_INDICATORCLEARRANGE, 0, SciExec( h, SCI_GETLENGTH, 0, 0 ) )
+
+    dim as long m0 = gFip.groups(nGroup).nMatchFirst
+    for i as long = m0 to m0 + gFip.groups(nGroup).nMatchCount - 1
+        if gFip.matches(i).bDead then continue for
+        SciExec( h, SCI_INDICATORFILLRANGE, gFip.matches(i).nStart, gFip.matches(i).nLen )
+    next
+end sub
+
+
+sub FindProject_ClearIndicators( byval nGroup as long )
+    if (nGroup < 0) orelse (nGroup >= gFip.nGroupCount) then exit sub
+    dim as clsDocument ptr pDoc = gFip.groups(nGroup).pDoc
+    if pDoc = 0 then exit sub
+    if IsWindow( pDoc->hWindow(0) ) = 0 then exit sub
+
+    dim as HWND h = pDoc->hWindow(0)
+    SciExec( h, SCI_SETINDICATORCURRENT, FINDPROJ_INDICATOR, 0 )
+    SciExec( h, SCI_INDICATORCLEARRANGE, 0, SciExec( h, SCI_GETLENGTH, 0, 0 ) )
+end sub
+
+
+' ========================================================================================
+' Navigation helpers.
+' ========================================================================================
+function FindProject_NextLive( byval nFrom as long, byval bForward as boolean ) as long
+    if gFip.nMatchCount <= 0 then return -1
+    dim as long nStep = iif( bForward, 1, -1 )
+    dim as long i = nFrom
+    for n as long = 1 to gFip.nMatchCount
+        i += nStep
+        if i >= gFip.nMatchCount then i = 0
+        if i < 0 then i = gFip.nMatchCount - 1
+        if gFip.matches(i).bDead then continue for
+        ' A match whose file has been closed is still in the array but has nowhere to go.
+        dim as long g = -1
+        for gg as long = 0 to gFip.nGroupCount - 1
+            if (i >= gFip.groups(gg).nMatchFirst) andalso _
+               (i < gFip.groups(gg).nMatchFirst + gFip.groups(gg).nMatchCount) then g = gg: exit for
+        next
+        if g = -1 then continue for
+        if gFip.groups(g).pDoc = 0 then continue for
+        return i
+    next
+    function = -1
+end function
+
+
+function FindProject_BlockOfMatch( byval nMatch as long ) as long
+    for b as long = 0 to gFip.nBlockCount - 1
+        if (nMatch >= gFip.blocks(b).nMatchFirst) andalso _
+           (nMatch < gFip.blocks(b).nMatchFirst + gFip.blocks(b).nMatchCount) then return b
+    next
+    function = -1
+end function
+
+
+' ========================================================================================
+' Replace.
+'
+' Files are left DIRTY -- nothing is written to disk. A project-wide replace that saved as it
+' went would be unrecoverable outside per-file undo.
+' ========================================================================================
+function FindProject_ReplaceOne( byval nMatch as long, byval wszReplace as DWSTRING ) as boolean
+    if (nMatch < 0) orelse (nMatch >= gFip.nMatchCount) then return false
+    if gFip.matches(nMatch).bDead then return false
+
+    dim as long g = -1
+    for gg as long = 0 to gFip.nGroupCount - 1
+        if (nMatch >= gFip.groups(gg).nMatchFirst) andalso _
+           (nMatch < gFip.groups(gg).nMatchFirst + gFip.groups(gg).nMatchCount) then g = gg: exit for
+    next
+    if g = -1 then return false
+    if gFip.groups(g).pDoc = 0 then return false
+    if IsWindow( gFip.groups(g).pDoc->hWindow(0) ) = 0 then return false
+
+    ' Deliberately NOT suppressed: one replace is one edit, and letting it go through the
+    ' ordinary SCN_MODIFIED path means every other match in the file is remapped by the same
+    ' code that handles the user's own typing. The replaced match is killed by that remap (a
+    ' delete overlapping it), which is exactly right.
+    dim as string sRep = wszReplace
+    dim as HWND h = gFip.groups(g).pDoc->hWindow(0)
+    SciExec( h, SCI_BEGINUNDOACTION, 0, 0 )
+    SciExec( h, SCI_SETTARGETSTART, gFip.matches(nMatch).nStart, 0 )
+    SciExec( h, SCI_SETTARGETEND, gFip.matches(nMatch).nStart + gFip.matches(nMatch).nLen, 0 )
+    SciExec( h, SCI_REPLACETARGET, len(sRep), strptr(sRep) )
+    SciExec( h, SCI_ENDUNDOACTION, 0, 0 )
+
+    FindProject_ApplyIndicators( g )
+    function = true
+end function
+
+
+function FindProject_ReplaceAll( byval wszReplace as DWSTRING ) as long
+    if gFip.bValid = false then return 0
+    dim as string sRep = wszReplace
+    dim as long nDone = 0
+
+    ' The hook is suppressed and the model updated by hand. Driving N replacements through
+    ' SCN_MODIFIED would remap every match in the file N times over -- O(N^2) on a file with
+    ' hundreds of hits.
+    gFipSuppressRemap = true
+
+    for g as long = 0 to gFip.nGroupCount - 1
+        if gFip.groups(g).pDoc = 0 then continue for
+        if IsWindow( gFip.groups(g).pDoc->hWindow(0) ) = 0 then continue for
+
+        dim as HWND h = gFip.groups(g).pDoc->hWindow(0)
+        dim as long m0 = gFip.groups(g).nMatchFirst
+        dim as long mN = m0 + gFip.groups(g).nMatchCount - 1
+
+        ' ONE undo action per FILE. Scintilla has no cross-document undo, so a project-wide
+        ' replace is N separate undo entries by nature -- one per file, not one per match.
+        SciExec( h, SCI_BEGINUNDOACTION, 0, 0 )
+
+        ' BACKWARDS. Replacing the last match first leaves every earlier offset untouched, so
+        ' no remapping is needed inside the loop at all.
+        for i as long = mN to m0 step -1
+            if gFip.matches(i).bDead then continue for
+            SciExec( h, SCI_SETTARGETSTART, gFip.matches(i).nStart, 0 )
+            SciExec( h, SCI_SETTARGETEND, gFip.matches(i).nStart + gFip.matches(i).nLen, 0 )
+            SciExec( h, SCI_REPLACETARGET, len(sRep), strptr(sRep) )
+            gFip.matches(i).bDead = true
+            gFip.nLiveMatches -= 1
+            nDone += 1
+        next
+
+        SciExec( h, SCI_ENDUNDOACTION, 0, 0 )
+        FindProject_ClearIndicators( g )
+    next
+
+    gFipSuppressRemap = false
+
+    ' The blocks stay: the point of showing them after a replace is to see what the files now
+    ' say. Nothing matches the old phrase any more, which is why every match is dead.
+    if gFipModelChanged <> 0 then gFipModelChanged()
+    function = nDone
 end function
 
 

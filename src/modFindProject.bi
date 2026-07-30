@@ -161,4 +161,24 @@ declare sub      FindProject_OnDocumentModified( byval pDocMod as clsDocument pt
                                                  byval nModPos as long, byval nModLen as long, _
                                                  byval nLinesAdded as long )
 
+' Indicator used to mark project-search hits inside the excerpt views. 0-7 belong to the
+' lexer, 8 is the Find bar's highlight, 9 brace matching, 10 occurrence highlight.
+#define FINDPROJ_INDICATOR  11
+
+' Paint (or clear) the match indicator over a group's document. Indicator RANGES live on the
+' document, so this runs once per file -- but the indicator's COLOUR is per-view, which is why
+' FipPool_Bind styles each excerpt view separately.
+declare sub      FindProject_ApplyIndicators( byval nGroup as long )
+declare sub      FindProject_ClearIndicators( byval nGroup as long )
+
+' Replace every live match in the project. Returns how many were replaced. Files are left
+' DIRTY -- nothing is written to disk.
+declare function FindProject_ReplaceAll( byval wszReplace as DWSTRING ) as long
+' Replace one match by its flat index. Returns TRUE if it was replaced.
+declare function FindProject_ReplaceOne( byval nMatch as long, byval wszReplace as DWSTRING ) as boolean
+' Next/previous LIVE match after (before) nFrom, wrapping. -1 when there are none.
+declare function FindProject_NextLive( byval nFrom as long, byval bForward as boolean ) as long
+' Which block holds this match? -1 if none.
+declare function FindProject_BlockOfMatch( byval nMatch as long ) as long
+
 declare sub      FindProject_RunSelfTest()

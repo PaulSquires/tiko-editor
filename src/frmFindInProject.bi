@@ -101,6 +101,10 @@ declare sub      frmFindInProject_Refresh( byval bResetScroll as boolean = false
 ' Re-style the excerpt views after a theme change. They are Scintilla views but are not in
 ' gApp.pDocList, so modThemeApply's document walk cannot reach them.
 declare sub      frmFindInProject_ApplyTheme()
+' The Find / Replace bar acted while this tab is current. Returns TRUE when it handled the
+' command, so the caller's single-document path is skipped. This is the ONE interception
+' point: Enter in the find box already funnels to IDM_FINDNEXT.
+declare function frmFindInProject_BarAction( byval id as long ) as boolean
 ' There is deliberately NO frmFindInProject_Close. Closing this tab goes through the ordinary
 ' OnCommand_FileClose path like every other tab -- the tab's X routes there via
 ' gTTabCtl.CloseTab, and shutdown via EFC_CLOSEALL -- and that loop owns destroying this
