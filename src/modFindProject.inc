@@ -54,13 +54,22 @@ private sub FindProject_UnbindScratch()
 end sub
 
 
+function FindProject_Messenger() as HWND
+    return FindProject_Scratch()
+end function
+
+
 sub FindProject_Shutdown()
+    ' ORDER IS LOAD-BEARING. Clear() gives back one document reference per result file, and
+    ' SCI_RELEASEDOCUMENT is a MESSAGE -- it needs a live Scintilla window to send it to. Destroy
+    ' the scratch first and every document the search ever touched leaks, permanently, with its
+    ' lexer state attached.
+    FindProject_Clear()
     FindProject_UnbindScratch()
     if IsWindow( gFipScratch ) then
         DestroyWindow( gFipScratch )
         gFipScratch = 0
     end if
-    FindProject_Clear()
 end sub
 
 
@@ -102,9 +111,25 @@ end sub
 ' Drop everything.
 ' ========================================================================================
 sub FindProject_Clear()
-    ' NOTE for the excerpt pool: this is where the model's per-file document reference will be
-    ' released once the pooled views exist. It holds none yet -- the scratch is unbound after
-    ' every document, so nothing here owns a Scintilla document.
+    ' Give back the ONE document reference the model holds per result file.
+    '
+    ' That single reference is the whole refcount discipline: SCI_SETDOCPOINTER does its own
+    ' release-old / addref-new, so an excerpt view rebinding from file A to file B decrements
+    ' A -- and this reference is what guarantees A survives that regardless of how many views
+    ' happen to be pointed at it.
+    '
+    ' Unbind the views BEFORE releasing, or a slot is left pointing at a document whose last
+    ' reference just went.
+    dim as HWND hMsg = FindProject_Messenger()
+    for g as long = 0 to gFip.nGroupCount - 1
+        if gFip.groups(g).pSciDoc = 0 then continue for
+        if gFipUnbindDoc <> 0 then gFipUnbindDoc( gFip.groups(g).pSciDoc )
+        if hMsg then
+            SciExec( hMsg, SCI_RELEASEDOCUMENT, 0, cast(LPARAM, gFip.groups(g).pSciDoc) )
+        end if
+        gFip.groups(g).pSciDoc = 0
+    next
+
     erase gFip.groups
     erase gFip.matches
     erase gFip.blocks
@@ -441,12 +466,22 @@ private sub FindProject_SearchOneDocument( byval pDoc as clsDocument ptr, _
         pDoc->AssignTextBuffer()
     end if
 
+    ' ONE reference per FILE, taken here and given back in FindProject_Clear. Never one per
+    ' excerpt view: SCI_SETDOCPOINTER already does release-old/addref-new for the view itself,
+    ' so per-slot bookkeeping would be both redundant and easy to get wrong. This single
+    ' reference is what makes a rebind -- and a document the user closes -- safe.
+    dim as any ptr pSciDocNew = 0
+    if IsWindow( pDoc->hWindow(0) ) then
+        pSciDocNew = cast( any ptr, SciExec( pDoc->hWindow(0), SCI_GETDOCPOINTER, 0, 0 ) )
+        if pSciDocNew then
+            SciExec( pDoc->hWindow(0), SCI_ADDREFDOCUMENT, 0, cast(LPARAM, pSciDocNew) )
+        end if
+    end if
+
     FindProject_EnsureGroupCap( gFip.nGroupCount + 1 )
     with gFip.groups( gFip.nGroupCount )
         .pDoc        = pDoc
-        .pSciDoc     = iif( IsWindow( pDoc->hWindow(0) ), _
-                            cast( any ptr, SciExec( pDoc->hWindow(0), SCI_GETDOCPOINTER, 0, 0 ) ), _
-                            cast( any ptr, 0 ) )
+        .pSciDoc     = pSciDocNew
         .wszFile     = pDoc->DiskFilename
         .bCollapsed  = false
         .nMatchFirst = nFirstMatch
@@ -495,6 +530,50 @@ function FindProject_Search( byval wszPhrase as DWSTRING, _
 
     function = gFip.nMatchCount
 end function
+
+
+' ========================================================================================
+' A document is losing its Scintilla windows. Drop its results.
+'
+' Called from clsDocument.DestroyScintillaWindows -- the only choke point that covers all
+' three routes. clsApp.RemoveAllDocuments does NOT call RemoveDocument (project close goes
+' that way), and ReloadDocument destroys the Scintilla document while the clsDocument ptr
+' SURVIVES, which the file watcher triggers with no user action at all. Hooking the two
+' clsApp functions would miss both.
+'
+' The group is emptied rather than removed from the array: blocks and rows address groups by
+' index, so compacting here would invalidate every one of them at once. FipRows_Build skips a
+' group whose pDoc is null, so the file simply disappears from the results -- which is the
+' right answer, since its excerpts had nothing left to show.
+' ========================================================================================
+sub FindProject_OnDocumentClosing( byval pDocGone as clsDocument ptr )
+    if pDocGone = 0 then exit sub
+    if gFip.bValid = false then exit sub
+
+    dim as boolean bChanged = false
+    dim as HWND hMsg = FindProject_Messenger()
+
+    for g as long = 0 to gFip.nGroupCount - 1
+        if gFip.groups(g).pDoc <> pDocGone then continue for
+
+        if gFip.groups(g).pSciDoc then
+            ' Views first, then the reference -- the same order Clear uses, and for the same
+            ' reason: a slot must never be left pointing at a released document.
+            if gFipUnbindDoc <> 0 then gFipUnbindDoc( gFip.groups(g).pSciDoc )
+            if hMsg then
+                SciExec( hMsg, SCI_RELEASEDOCUMENT, 0, cast(LPARAM, gFip.groups(g).pSciDoc) )
+            end if
+        end if
+
+        gFip.groups(g).pDoc    = 0
+        gFip.groups(g).pSciDoc = 0
+        bChanged = true
+    next
+
+    ' Tell the surface to rebuild. It cannot be called directly from here -- this file is
+    ' included long before it -- so it hands us this callback when it is created.
+    if bChanged andalso (gFipModelChanged <> 0) then gFipModelChanged()
+end sub
 
 
 ' ========================================================================================

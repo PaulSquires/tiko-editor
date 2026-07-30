@@ -433,6 +433,10 @@ sub Theme_ApplySubsystems( byval nMask as ulong )
             pDoc->ApplyProperties
             pDoc = pDoc->pDocNext
         loop
+        ' Find in Project's excerpt views are Scintilla views too, but they are NOT in
+        ' pDocList -- the loop above cannot reach them, so they would keep the old palette
+        ' until something happened to rebind them.
+        frmFindInProject_ApplyTheme()
     end if
 
     ' ---- then, and only then, repaint ---------------------------------------------------

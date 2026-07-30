@@ -97,6 +97,33 @@ dim shared gFip as FINDPROJ_MODEL
 ' also try to remap the same edit. (Used from Phase 6's project-wide replace.)
 dim shared gFipSuppressRemap as boolean
 
+' ----------------------------------------------------------------------------------------
+' The model tells the surface it changed through this, rather than calling into it directly:
+' modFindProject is included well before frmFindInProject and must not name it. The surface
+' installs it when it is created.
+' ----------------------------------------------------------------------------------------
+type FIP_ModelChangedSub as sub()
+dim shared gFipModelChanged as FIP_ModelChangedSub
+
+' ----------------------------------------------------------------------------------------
+' Somewhere to send SCI_RELEASEDOCUMENT. It is a MESSAGE, so releasing a document needs a
+' live Scintilla window -- destroy every window first and the references can never be given
+' back. The scratch view is the designated messenger and is destroyed LAST.
+' ----------------------------------------------------------------------------------------
+declare function FindProject_Messenger() as HWND
+' Unbind any excerpt view pointed at this document. Installed by the surface for the same
+' include-order reason as gFipModelChanged; null until then.
+type FIP_UnbindDocSub as sub( byval pSciDoc as any ptr )
+dim shared gFipUnbindDoc as FIP_UnbindDocSub
+
+' A document is about to lose its Scintilla windows -- closed, or reloaded from disk. Its
+' results cannot outlive it: the excerpt views have nothing to bind to, and every byte offset
+' refers to a buffer that is going away. Called from clsDocument.DestroyScintillaWindows,
+' which is the ONLY choke point that covers all three routes (RemoveDocument,
+' RemoveAllDocuments -- which does not call the first -- and ReloadDocument, which the file
+' watcher drives with no user action at all).
+declare sub      FindProject_OnDocumentClosing( byval pDocGone as clsDocument ptr )
+
 
 ' Run a search over every document. Returns the number of matches found.
 declare function FindProject_Search( byval wszPhrase as DWSTRING, _

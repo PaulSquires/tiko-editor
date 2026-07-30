@@ -71,6 +71,10 @@ dim shared as DWSTRING gwszDefaultToolchain = "FreeBASIC-1.10.1-winlibs-gcc-9.3.
 ' NavHistory_Clear from both of its session-load paths, well ahead of the frm* block. The
 ' implementation goes in after modRoutines.inc, whose OpenSelectedDocument it drives.
 #include once "modNavHistory.bi"
+' Same split, same reason: clsDocument.inc calls FindProject_OnDocumentClosing from
+' DestroyScintillaWindows, well ahead of the modFindProject.inc that implements it. This
+' header names clsDocument ptr and SCNOTIFICATION but no Ps* type.
+#include once "modFindProject.bi"
 #include once "PsBufferPaint.bi"
 #include once "clsTopTabCtl.bi"
 #include once "clsConfig.bi"

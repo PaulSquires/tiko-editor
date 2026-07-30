@@ -25,6 +25,249 @@ dim shared gFipScrollTop   as long
 dim shared gFipMetrics     as FIP_METRICS
 dim shared as HWND HWND_FRMFINDINPROJECT_SURFACE, HWND_FRMFINDINPROJECT_VSCROLL
 
+' ----------------------------------------------------------------------------------------
+' THE EXCERPT POOL.
+'
+' One real Scintilla view per VISIBLE block, recycled as the list scrolls -- never one per
+' result. At the ~2000 matches a project search can produce, a view per match is not a design
+' choice, it is an out-of-resources bug.
+'
+' Each slot is bound to a document with SCI_SETDOCPOINTER and pinned to a first visible line,
+' so it is a genuine second view onto the real buffer: real syntax colouring, real line
+' numbers, and edits that land in the actual file. The refcount discipline that makes
+' rebinding safe lives in modFindProject -- one reference per FILE, held by the model.
+' ----------------------------------------------------------------------------------------
+type FIP_SLOT
+    hWnd     as HWND
+    pSciView as any ptr
+    pSciDoc  as any ptr   ' what it is currently bound to, or 0
+    nRow     as long      ' the FIP_ROW it is showing, or -1 when parked
+end type
+
+dim shared gFipPool(0 to FIP_POOL_MAX - 1) as FIP_SLOT
+dim shared gFipPoolCount as long
+dim shared gFipOldSciProc as WNDPROC
+
+
+' ========================================================================================
+' The excerpt pool.
+' ========================================================================================
+
+' Subclass on every slot, for one reason: Scintilla consumes WM_MOUSEWHEEL itself, so a
+' gesture made with the pointer over an excerpt would scroll THAT VIEW off its pinned line
+' instead of scrolling the results list. Routed into the bar, which owns the arithmetic.
+private function FipPool_SciProc( byval hwnd as HWND, byval uMsg as UINT, _
+                                  byval wParam as WPARAM, byval lParam as LPARAM ) as LRESULT
+    if uMsg = WM_MOUSEWHEEL then
+        PsVScrollBar_HandleWheelDelta( HWND_FRMFINDINPROJECT_VSCROLL, cast(short, hiword(wParam)) )
+        return 0
+    end if
+    return CallWindowProc( gFipOldSciProc, hwnd, uMsg, wParam, lParam )
+end function
+
+
+' Park a slot: hide it and let go of whatever document it held.
+private sub FipPool_Park( byval i as long )
+    if gFipPool(i).hWnd = 0 then exit sub
+    ShowWindow( gFipPool(i).hWnd, SW_HIDE )
+    if gFipPool(i).pSciDoc then
+        ' A null document pointer makes Scintilla give the view a fresh empty buffer of its
+        ' own, releasing the one it held.
+        SciExec( gFipPool(i).hWnd, SCI_SETDOCPOINTER, 0, 0 )
+        gFipPool(i).pSciDoc = 0
+    end if
+    gFipPool(i).nRow = -1
+end sub
+
+
+' Installed into the model as gFipUnbindDoc: called just before it releases a document, so no
+' slot is left pointing at one whose last reference has gone.
+private sub FipPool_UnbindDoc( byval pSciDoc as any ptr )
+    if pSciDoc = 0 then exit sub
+    for i as long = 0 to gFipPoolCount - 1
+        if gFipPool(i).pSciDoc = pSciDoc then FipPool_Park( i )
+    next
+end sub
+
+
+' Grow the pool to n slots (capped). Slots are created once and live until teardown.
+private sub FipPool_Ensure( byval n as long )
+    if n > FIP_POOL_MAX then n = FIP_POOL_MAX
+    if n <= gFipPoolCount then exit sub
+    if IsWindow( HWND_FRMFINDINPROJECT_SURFACE ) = 0 then exit sub
+
+    for i as long = gFipPoolCount to n - 1
+        dim as HWND h = CreateWindowEx( 0, "Scintilla", "", _
+                            WS_CHILD or WS_CLIPSIBLINGS, 0, 0, 0, 0, _
+                            HWND_FRMFINDINPROJECT_SURFACE, _
+                            cast(HMENU, IDC_SCINTILLA_EXCERPT + i), _
+                            GetModuleHandle(null), null )
+        if h = 0 then exit for
+
+        ' MANDATORY. The modification event mask is per-VIEW and defaults to every event, and
+        ' every view bound to a document is one of that document's watchers -- so a pool left
+        ' at the default fans a full-mask SCN_MODIFIED (and every restyle) out of each of its
+        ' slots on every keystroke the user types in a file it happens to be showing.
+        SciExec( h, SCI_SETMODEVENTMASK, 0, 0 )
+        SciExec( h, SCI_SETVSCROLLBAR, 0, 0 )
+        SciExec( h, SCI_SETHSCROLLBAR, 0, 0 )
+        ' An excerpt has no room for, and no use for, breakpoints or folding: the symbol and
+        ' fold margins are suppressed and only the line-number margin survives. This also
+        ' removes the margin-click notifications entirely rather than having to ignore them.
+        SciExec( h, SCI_SETMARGINWIDTHN, 1, 0 )
+        SciExec( h, SCI_SETMARGINWIDTHN, 2, 0 )
+        ' No horizontal scrolling inside a fixed 5-line window; long lines simply clip.
+        SciExec( h, SCI_SETSCROLLWIDTHTRACKING, 0, 0 )
+
+        gFipOldSciProc = cast( WNDPROC, SetWindowLongPtr( h, GWLP_WNDPROC, _
+                                                          cast(LONG_PTR, @FipPool_SciProc) ) )
+
+        gFipPool(i).hWnd     = h
+        gFipPool(i).pSciView = cast( any ptr, SciExec( h, SCI_GETDIRECTPOINTER, 0, 0 ) )
+        gFipPool(i).pSciDoc  = 0
+        gFipPool(i).nRow     = -1
+        gFipPoolCount = i + 1
+    next
+end sub
+
+
+' Bind a slot to a block row and place it.
+private sub FipPool_Bind( byval i as long, byval nRow as long, byref rcView as RECT )
+    dim as long g = gFipRows(nRow).nGroup
+    dim as long b = gFipRows(nRow).nBlock
+    dim as clsDocument ptr pDoc = gFip.groups(g).pDoc
+    if pDoc = 0 then exit sub
+
+    dim as any ptr pSciDoc = gFip.groups(g).pSciDoc
+    if pSciDoc = 0 then exit sub
+
+    if gFipPool(i).pSciDoc <> pSciDoc then
+        ' SCI_SETDOCPOINTER releases the view's old document and adds a reference to the new
+        ' one by itself, so there is nothing to balance here. The model's own per-file
+        ' reference is what keeps the OLD document alive through this.
+        SciExec( gFipPool(i).hWnd, SCI_SETDOCPOINTER, 0, cast(LPARAM, pSciDoc) )
+        gFipPool(i).pSciDoc = pSciDoc
+        ' STYLES ARE PER-VIEW. The lexer came with the document, but without this the view
+        ' renders in Scintilla's default black-on-white.
+        pDoc->ApplyPropertiesToView( gFipPool(i).pSciView )
+        ' Re-suppress what ApplyPropertiesToView just set for a full editor.
+        SciExec( gFipPool(i).hWnd, SCI_SETMARGINWIDTHN, 1, 0 )
+        SciExec( gFipPool(i).hWnd, SCI_SETMARGINWIDTHN, 2, 0 )
+    end if
+
+    ' Pin the window onto the block's first line. Re-asserted on every sync, not just on a
+    ' rebind: clicking into an excerpt moves its caret, and anything that then scrolls the
+    ' caret into view would slide the block off the lines it is supposed to be showing.
+    SciExec( gFipPool(i).hWnd, SCI_SETFIRSTVISIBLELINE, gFip.blocks(b).nFirstLine, 0 )
+
+    SetWindowPos( gFipPool(i).hWnd, 0, rcView.left, rcView.top, _
+                  rcView.right - rcView.left, rcView.bottom - rcView.top, _
+                  SWP_NOZORDER or SWP_SHOWWINDOW )
+    gFipPool(i).nRow = nRow
+end sub
+
+
+' Match the pool to what is on screen. Called after every scroll and every rebuild.
+private sub FipPool_Sync()
+    if IsWindow( HWND_FRMFINDINPROJECT_SURFACE ) = 0 then exit sub
+
+    dim as RECT rcClient
+    GetClientRect( HWND_FRMFINDINPROJECT_SURFACE, @rcClient )
+
+    ' Which block rows are on screen?
+    dim as long nVisible(0 to FIP_POOL_MAX - 1)
+    dim as long nVisCount = 0
+    dim as long nFirst = FipRows_FirstVisible( gFipRows(), gFipRowCount, gFipScrollTop )
+    if nFirst >= 0 then
+        for r as long = nFirst to gFipRowCount - 1
+            if (gFipRows(r).nTop - gFipScrollTop) > rcClient.bottom then exit for
+            if gFipRows(r).nKind <> FIP_ROW_BLOCK then continue for
+            if nVisCount >= FIP_POOL_MAX then exit for
+            nVisible(nVisCount) = r
+            nVisCount += 1
+        next
+    end if
+
+    FipPool_Ensure( nVisCount )
+
+    ' Park every slot showing a row that is no longer visible. Done as a separate pass so the
+    ' reuse pass below can find them: a slot already on the right row must NOT be rebound, or
+    ' every scroll tick would re-run SETDOCPOINTER and the styling with it.
+    for i as long = 0 to gFipPoolCount - 1
+        if gFipPool(i).nRow = -1 then continue for
+        dim as boolean bStillVisible = false
+        for v as long = 0 to nVisCount - 1
+            if nVisible(v) = gFipPool(i).nRow then bStillVisible = true: exit for
+        next
+        if bStillVisible = false then FipPool_Park( i )
+    next
+
+    for v as long = 0 to nVisCount - 1
+        dim as long nRow = nVisible(v)
+
+        dim as RECT rcView
+        rcView.left   = gFipMetrics.nIndent
+        rcView.right  = rcClient.right
+        rcView.top    = gFipRows(nRow).nTop - gFipScrollTop + gFipMetrics.nBlockPad
+        rcView.bottom = rcView.top + (gFip.blocks( gFipRows(nRow).nBlock ).nLineCount * _
+                                      gFipMetrics.nLineHeight)
+
+        ' Already showing this row: reposition and re-pin, nothing more.
+        dim as long nSlot = -1
+        for i as long = 0 to gFipPoolCount - 1
+            if gFipPool(i).nRow = nRow then nSlot = i: exit for
+        next
+        if nSlot = -1 then
+            for i as long = 0 to gFipPoolCount - 1
+                if gFipPool(i).nRow = -1 then nSlot = i: exit for
+            next
+        end if
+        if nSlot = -1 then continue for      ' pool exhausted; the row just shows empty
+
+        FipPool_Bind( nSlot, nRow, rcView )
+    next
+end sub
+
+
+sub frmFindInProject_ApplyTheme()
+    if IsWindow( HWND_FRMFINDINPROJECT ) = 0 then exit sub
+
+    for i as long = 0 to gFipPoolCount - 1
+        if gFipPool(i).nRow = -1 then continue for
+        dim as long g = gFipRows( gFipPool(i).nRow ).nGroup
+        if gFip.groups(g).pDoc = 0 then continue for
+        gFip.groups(g).pDoc->ApplyPropertiesToView( gFipPool(i).pSciView )
+        SciExec( gFipPool(i).hWnd, SCI_SETMARGINWIDTHN, 1, 0 )
+        SciExec( gFipPool(i).hWnd, SCI_SETMARGINWIDTHN, 2, 0 )
+        ' Re-styling can change the line height, so the pin has to be re-asserted.
+        dim as long b = gFipRows( gFipPool(i).nRow ).nBlock
+        SciExec( gFipPool(i).hWnd, SCI_SETFIRSTVISIBLELINE, gFip.blocks(b).nFirstLine, 0 )
+    next
+
+    PsVScrollBar_SetColors( HWND_FRMFINDINPROJECT_VSCROLL, ghEditor.BackColorScrollBar, _
+                            ghEditor.ForeColorScrollBar, ghEditor.ForeColorScrollBar )
+
+    ' A font or size change moves the line height, which moves every block height and the
+    ' whole canvas with it -- so this is a full re-measure, not just a repaint.
+    frmFindInProject_Refresh( false )
+end sub
+
+
+private sub FipPool_Destroy()
+    for i as long = 0 to gFipPoolCount - 1
+        if gFipPool(i).hWnd then
+            ' Let go of the document BEFORE the window dies.
+            SciExec( gFipPool(i).hWnd, SCI_SETDOCPOINTER, 0, 0 )
+            DestroyWindow( gFipPool(i).hWnd )
+        end if
+        gFipPool(i).hWnd     = 0
+        gFipPool(i).pSciView = 0
+        gFipPool(i).pSciDoc  = 0
+        gFipPool(i).nRow     = -1
+    next
+    gFipPoolCount = 0
+end sub
+
 
 ' ========================================================================================
 ' PURE geometry. No window, no document.
@@ -51,6 +294,11 @@ function FipRows_Build( rows() as FIP_ROW, byref nRowCount as long, _
     redim rows(0 to nMax - 1)
 
     for g as long = 0 to gFip.nGroupCount - 1
+        ' A group whose document has been closed or reloaded is emptied rather than removed
+        ' (indices have to stay stable), so it simply contributes no rows and the file drops
+        ' out of the list.
+        if gFip.groups(g).pDoc = 0 then continue for
+
         with rows(nRowCount)
             .nKind   = FIP_ROW_HEADER
             .nGroup  = g
@@ -127,7 +375,6 @@ private sub FipMetrics_Measure( byref m as FIP_METRICS )
     m.nHeaderHeight = AfxScaleY(FIP_HEADER_HEIGHT)
     m.nBlockPad     = AfxScaleY(FIP_BLOCK_PAD)
     m.nBlockGap     = AfxScaleY(FIP_BLOCK_GAP)
-    m.nGutter       = AfxScaleX(FIP_GUTTER_WIDTH)
     m.nIndent       = AfxScaleX(FIP_INDENT)
 end sub
 
@@ -154,11 +401,25 @@ private sub FipSurface_SyncScrollBar()
 end sub
 
 
+' Installed into the model as gFipModelChanged. Keeps the scroll where it is: a file dropping
+' out because its document closed should not also throw the user back to the top.
+private sub frmFindInProject_OnModelChanged()
+    frmFindInProject_Refresh( false )
+end sub
+
+
 sub frmFindInProject_Refresh( byval bResetScroll as boolean = false )
     FipMetrics_Measure( gFipMetrics )
     gFipCanvasH = FipRows_Build( gFipRows(), gFipRowCount, gFipMetrics )
     if bResetScroll then gFipScrollTop = 0
     FipSurface_SyncScrollBar()
+    ' Park every slot first: the row list has just been rebuilt, so a slot's stored row index
+    ' refers to the OLD list and would otherwise be matched against the new one by number.
+    for i as long = 0 to gFipPoolCount - 1
+        gFipPool(i).nRow = -1
+        if gFipPool(i).hWnd then ShowWindow( gFipPool(i).hWnd, SW_HIDE )
+    next
+    FipPool_Sync()
     if IsWindow( HWND_FRMFINDINPROJECT_SURFACE ) then
         AfxRedrawWindow( HWND_FRMFINDINPROJECT_SURFACE )
     end if
@@ -250,86 +511,12 @@ private sub FipSurface_PaintHeader( byval b as PsBufferPaint ptr, byref r as FIP
 end sub
 
 
-' ========================================================================================
-' One excerpt block.
-'
-' PLACEHOLDER RENDERING, deliberately: the lines are painted here with a proportional GUI
-' font, which is not what code should look like. It exists so the GEOMETRY can be measured
-' and asserted before a real Scintilla view is involved -- the pooled views replace this
-' whole function, and they bring the editor's own font, styling and match highlighting with
-' them. The block HEIGHT is already the real one (nLineHeight comes from SCI_TEXTHEIGHT), so
-' swapping the painter in will not move anything.
-' ========================================================================================
-private sub FipSurface_PaintBlock( byval b as PsBufferPaint ptr, byref r as FIP_ROW, _
-                                   byval yTop as long, byref rcClient as RECT )
-    dim as long nBlock = r.nBlock
-    dim as clsDocument ptr pDoc = gFip.groups(r.nGroup).pDoc
-    if pDoc = 0 then exit sub
+' (FipSurface_PaintBlock is gone. Excerpt blocks are REAL SCINTILLA VIEWS now -- see
+'  FipPool_Sync -- so the surface paints only the background behind them and the separator
+'  bars. The painted placeholder it replaced drew line numbers and raw line text in a
+'  proportional font; it existed so the geometry could be asserted before any Scintilla was
+'  involved, and the block heights it was measured against are unchanged.)
 
-    dim as RECT rc
-    rc.left   = gFipMetrics.nIndent
-    rc.right  = rcClient.right
-    rc.top    = yTop
-    rc.bottom = yTop + r.nHeight
-
-    b->SetBackColor( ghEditor.BackColorText )
-    b->PaintRect( @rc )
-
-    ' The line-number gutter, running the full height of the block.
-    dim as RECT rcGutter = rc
-    rcGutter.right = rcGutter.left + gFipMetrics.nGutter
-    b->SetBackColor( ghEditor.BackColorLinenumbers )
-    b->PaintRect( @rcGutter )
-
-    dim as boolean bUtf8 = (pDoc->FileEncoding <> FILE_ENCODING_ANSI)
-    dim as long nFirst = gFip.blocks(nBlock).nFirstLine
-    dim as long y = yTop + gFipMetrics.nBlockPad
-
-    for i as long = 0 to gFip.blocks(nBlock).nLineCount - 1
-        ' Bail as soon as the rest of the block is below the viewport.
-        if y > rcClient.bottom then exit for
-
-        dim as long nLine = nFirst + i
-
-        dim as RECT rcNum
-        rcNum.left   = rc.left
-        rcNum.right  = rcGutter.right - AfxScaleX(6)
-        rcNum.top    = y
-        rcNum.bottom = y + gFipMetrics.nLineHeight
-        b->SetFont( ghFont(GUIFONT_9) )
-        b->SetForeColor( ghEditor.ForeColorLinenumbers )
-        b->SetBackColor( ghEditor.BackColorLinenumbers )
-        ' 1-based, as the editor's own margin shows them.
-        b->PaintText( str(nLine + 1), @rcNum, DT_RIGHT )
-
-        dim as string sLine = pDoc->GetLine( nLine )
-        ' GetLine keeps the line ending; painting it would draw a stray glyph.
-        do while len(sLine) > 0
-            dim as long c = asc( right(sLine, 1) )
-            if (c <> 10) andalso (c <> 13) then exit do
-            sLine = left( sLine, len(sLine) - 1 )
-        loop
-
-        dim as DWSTRING wszLine
-        ' A UTF-8 document has to go through the .utf8 property or non-latin text garbles.
-        if bUtf8 then
-            wszLine.utf8 = sLine
-        else
-            wszLine = sLine
-        end if
-
-        dim as RECT rcLine
-        rcLine.left   = rcGutter.right + AfxScaleX(6)
-        rcLine.right  = rc.right
-        rcLine.top    = y
-        rcLine.bottom = y + gFipMetrics.nLineHeight
-        b->SetForeColor( ghEditor.ForeColorText )
-        b->SetBackColor( ghEditor.BackColorText )
-        b->PaintText( wszLine, @rcLine, DT_LEFT )
-
-        y += gFipMetrics.nLineHeight
-    next
-end sub
 
 
 ' ========================================================================================
@@ -365,10 +552,11 @@ private sub FipSurface_Render( byval b as PsBufferPaint ptr, byref rc as RECT )
         for i as long = nFirst to gFipRowCount - 1
             dim as long yTop = gFipRows(i).nTop - gFipScrollTop
             if yTop > rc.bottom then exit for
+            ' Only the separator bars are painted. A block row is covered by a real Scintilla
+            ' view, so the background fill above is all it needs from here -- and a row whose
+            ' view could not be bound (the pool is capped) simply shows that background.
             if gFipRows(i).nKind = FIP_ROW_HEADER then
                 FipSurface_PaintHeader( b, gFipRows(i), yTop, rc )
-            else
-                FipSurface_PaintBlock( b, gFipRows(i), yTop, rc )
             end if
         next
     end if
@@ -505,8 +693,10 @@ private function FipSurface_WndProc( _
             return 0
 
         case WM_SIZE
-            ' The page size changed, so the scrollbar range and the clamp both move.
+            ' The page size changed, so the scrollbar range and the clamp both move -- and the
+            ' excerpt views have to be re-placed and re-widened to match.
             FipSurface_SyncScrollBar()
+            FipPool_Sync()
             return 0
 
         case WM_MOUSEWHEEL
@@ -547,6 +737,10 @@ end function
 ' ========================================================================================
 private sub FipSurface_ScrollCallback( byval hSB as HWND, byval nPos as integer )
     gFipScrollTop = nPos
+    ' The excerpt views move with the content: they are positioned in VIEWPORT coordinates,
+    ' so a scroll repositions them rather than moving one big page. Only the handful that are
+    ' on screen exist, which is what makes that cheap.
+    FipPool_Sync()
     if IsWindow( HWND_FRMFINDINPROJECT_SURFACE ) then
         AfxRedrawWindow( HWND_FRMFINDINPROJECT_SURFACE )
     end if
@@ -578,6 +772,17 @@ private function frmFindInProject_WndProc( _
             b.EndDoubleBuffer()
             return 0
 
+        case WM_DESTROY
+            ' BEFORE the windows go: every excerpt view has to let go of its document while it
+            ' is still alive to be told. Handled here rather than in WM_NCDESTROY because by
+            ' then the children are already gone and there is nothing left to send to.
+            '
+            ' The model's own per-file references are NOT released here -- they survive the
+            ' tab being closed and are given back by FindProject_Clear, whose messenger is the
+            ' scratch view in modFindProject, destroyed last of all at shutdown.
+            FipPool_Destroy()
+            return 0
+
         case WM_NCDESTROY
             dim as CWindow ptr pWindow = AfxCWindowPtr(hwnd)
             if pWindow then delete(pWindow)
@@ -586,6 +791,9 @@ private function frmFindInProject_WndProc( _
             ' handle in its WM_NCDESTROY; the scrollbar's is a plain global, so it is cleared
             ' here rather than left dangling.
             HWND_FRMFINDINPROJECT_VSCROLL = 0
+            ' The model must not keep calling into a surface that no longer exists.
+            gFipModelChanged = 0
+            gFipUnbindDoc    = 0
             return 0
     end select
 
@@ -635,6 +843,12 @@ function frmFindInProject_CreateWindow() as HWND
     PsVScrollBar_SetScrollCallback( HWND_FRMFINDINPROJECT_VSCROLL, @FipSurface_ScrollCallback )
     PsVScrollBar_SetColors( HWND_FRMFINDINPROJECT_VSCROLL, ghEditor.BackColorScrollBar, _
                             ghEditor.ForeColorScrollBar, ghEditor.ForeColorScrollBar )
+
+    ' Hand the model its two callbacks. It is included long before this file and cannot name
+    ' anything in it, so this is how it reaches the surface at all -- to say "I changed" and,
+    ' critically, "let go of this document, I am about to release it".
+    gFipModelChanged = @frmFindInProject_OnModelChanged
+    gFipUnbindDoc    = @FipPool_UnbindDoc
 
     return HWND_FRMFINDINPROJECT
 end function
@@ -1039,8 +1253,129 @@ sub frmFindInProject_RunSelfTest()
                 str(gFipRowCount) & "/" & str(gFipCanvasH) & " vs " & _
                 str(nRowsOpen) & "/" & str(nCanvasOpen) )
 
+            ' ---- the excerpt pool ----------------------------------------------------------
+            dim as long nBound = 0
+            dim as long nBadDoc = 0
+            dim as long nBadLine = 0
+            for i as long = 0 to gFipPoolCount - 1
+                if gFipPool(i).nRow = -1 then continue for
+                nBound += 1
+                dim as long gg = gFipRows( gFipPool(i).nRow ).nGroup
+                dim as long bb = gFipRows( gFipPool(i).nRow ).nBlock
+                ' Bound to the RIGHT document...
+                if gFipPool(i).pSciDoc <> gFip.groups(gg).pSciDoc then nBadDoc += 1
+                ' ...and pinned to the block's first line. Getting this wrong shows the wrong
+                ' five lines, which looks like a search bug rather than a view bug.
+                if SciExec( gFipPool(i).hWnd, SCI_GETFIRSTVISIBLELINE, 0, 0 ) <> _
+                   gFip.blocks(bb).nFirstLine then nBadLine += 1
+            next
+
+            frmFindInProject_Check( "pool: at least one excerpt view is bound", _
+                nBound > 0, str(nBound) & " bound of " & str(gFipPoolCount) )
+            frmFindInProject_Check( "pool: every bound view holds its group's document", _
+                nBadDoc = 0, str(nBadDoc) & " wrong" )
+            frmFindInProject_Check( "pool: every bound view is pinned to its block's line", _
+                nBadLine = 0, str(nBadLine) & " wrong" )
+            frmFindInProject_Check( "pool: no more views exist than blocks on screen", _
+                gFipPoolCount <= FIP_POOL_MAX, str(gFipPoolCount) )
+
+            ' EVERY SLOT MUST BE SILENT. The modification event mask is per-view and defaults
+            ' to every event, and each view bound to a document is one of its watchers -- so a
+            ' pool left at the default fans a full-mask SCN_MODIFIED, plus every restyle, out
+            ' of each slot on every keystroke typed in a file it happens to be showing. That
+            ' is invisible except as "the editor got slow after I searched", which is exactly
+            ' the kind of thing no other assertion here would ever catch.
+            dim as long nNoisy = 0
+            dim as long nMargins = 0
+            for i as long = 0 to gFipPoolCount - 1
+                if gFipPool(i).hWnd = 0 then continue for
+                if SciExec( gFipPool(i).hWnd, SCI_GETMODEVENTMASK, 0, 0 ) <> 0 then nNoisy += 1
+                ' Breakpoints and folding have no meaning in a five-line excerpt, and
+                ' suppressing the margins removes their click notifications outright.
+                if SciExec( gFipPool(i).hWnd, SCI_GETMARGINWIDTHN, 1, 0 ) <> 0 then nMargins += 1
+                if SciExec( gFipPool(i).hWnd, SCI_GETMARGINWIDTHN, 2, 0 ) <> 0 then nMargins += 1
+            next
+            frmFindInProject_Check( "pool: every view has its modification events silenced", _
+                nNoisy = 0, str(nNoisy) & " noisy of " & str(gFipPoolCount) )
+            frmFindInProject_Check( "pool: the symbol and fold margins are suppressed", _
+                nMargins = 0, str(nMargins) & " margins still open" )
+
+            ' A pooled view is a SECOND VIEW ONTO THE REAL DOCUMENT, not a copy. Proved by
+            ' asking it for its document pointer and comparing against the document's own
+            ' window -- if these ever differ, edits in an excerpt are going somewhere else.
+            if nBound > 0 then
+                dim as long nSlot = -1
+                for i as long = 0 to gFipPoolCount - 1
+                    if gFipPool(i).nRow <> -1 then nSlot = i: exit for
+                next
+                dim as long gg = gFipRows( gFipPool(nSlot).nRow ).nGroup
+                dim as any ptr pViewDoc = cast( any ptr, _
+                    SciExec( gFipPool(nSlot).hWnd, SCI_GETDOCPOINTER, 0, 0 ) )
+                dim as any ptr pRealDoc = cast( any ptr, _
+                    SciExec( gFip.groups(gg).pDoc->hWindow(0), SCI_GETDOCPOINTER, 0, 0 ) )
+                frmFindInProject_Check( "pool: the view shares the document, it is not a copy", _
+                    (pViewDoc <> 0) andalso (pViewDoc = pRealDoc) )
+
+                ' The text the view reports must be the file's own text, which is the end-to-end
+                ' proof that the binding worked.
+                frmFindInProject_Check( "pool: the view sees the document's real length", _
+                    SciExec( gFipPool(nSlot).hWnd, SCI_GETLENGTH, 0, 0 ) = _
+                    SciExec( gFip.groups(gg).pDoc->hWindow(0), SCI_GETLENGTH, 0, 0 ) )
+            end if
+
+            ' SCROLLING MUST NOT REBIND A VIEW THAT IS STILL ON SCREEN. If it did, every tick
+            ' would re-run SETDOCPOINTER and the full style push with it.
+            dim as long nRowBefore = -1
+            for i as long = 0 to gFipPoolCount - 1
+                if gFipPool(i).nRow <> -1 then nRowBefore = gFipPool(i).nRow: exit for
+            next
+            dim as any ptr pDocBefore = 0
+            for i as long = 0 to gFipPoolCount - 1
+                if gFipPool(i).nRow = nRowBefore then pDocBefore = gFipPool(i).pSciDoc: exit for
+            next
+            FipPool_Sync()
+            dim as boolean bStillThere = false
+            for i as long = 0 to gFipPoolCount - 1
+                if (gFipPool(i).nRow = nRowBefore) andalso (gFipPool(i).pSciDoc = pDocBefore) then
+                    bStillThere = true: exit for
+                end if
+            next
+            frmFindInProject_Check( "pool: a re-sync keeps an on-screen view on its row", _
+                bStillThere orelse (nRowBefore = -1) )
+
             ' ---- does it actually DRAW? ----------------------------------------------------
             dim as long nTonesResults = FipSurface_CountRenderedTones()
+
+            ' ---- the close funnel ----------------------------------------------------------
+            ' A document whose Scintilla windows are going away takes its results with it, and
+            ' every excerpt view bound to it must let go BEFORE the model releases its
+            ' reference. Driven through the real notifier, which is what
+            ' clsDocument.DestroyScintillaWindows calls.
+            dim as any ptr pDocSci = gFip.groups(nGrp).pSciDoc
+            dim as long nBoundToIt = 0
+            for i as long = 0 to gFipPoolCount - 1
+                if gFipPool(i).pSciDoc = pDocSci then nBoundToIt += 1
+            next
+
+            FindProject_OnDocumentClosing( pTest )
+
+            frmFindInProject_Check( "closing: the group was emptied", _
+                (gFip.groups(nGrp).pDoc = 0) andalso (gFip.groups(nGrp).pSciDoc = 0) )
+            dim as long nStillBound = 0
+            for i as long = 0 to gFipPoolCount - 1
+                if gFipPool(i).pSciDoc = pDocSci then nStillBound += 1
+            next
+            frmFindInProject_Check( "closing: no excerpt view is left on the released document", _
+                nStillBound = 0, str(nStillBound) & " of " & str(nBoundToIt) & " still bound" )
+            ' The file drops out of the list entirely -- its excerpts had nothing left to show.
+            dim as long nHeadersLeft = 0
+            for i as long = 0 to gFipRowCount - 1
+                if gFipRows(i).nKind = FIP_ROW_HEADER then
+                    if gFipRows(i).nGroup = nGrp then nHeadersLeft += 1
+                end if
+            next
+            frmFindInProject_Check( "closing: the file is gone from the results", _
+                nHeadersLeft = 0, str(nHeadersLeft) )
 
             ' Leave no results behind: this suite runs at startup, not on the user's command.
             FindProject_Clear()

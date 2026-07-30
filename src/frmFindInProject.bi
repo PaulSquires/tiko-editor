@@ -31,11 +31,18 @@
 #define IDC_FRMFINDINPROJECT_SURFACE   1000
 #define IDC_FRMFINDINPROJECT_VSCROLL   1001
 
+' Control id BASE for the pooled excerpt views: slot n is IDC_SCINTILLA_EXCERPT + n.
+' Deliberately far from IDC_SCINTILLA(+1), which clsDocument.IsValidScintillaID matches --
+' that is a control-ID test and cannot otherwise tell a pooled view from a document's own.
+#define IDC_SCINTILLA_EXCERPT        400
+' Upper bound on live excerpt views. The pool only ever needs to cover the viewport plus a
+' little, since a view is rebound as it scrolls rather than created.
+#define FIP_POOL_MAX                  48
+
 ' Unscaled metrics. Everything is put through AfxScaleX/Y at layout time.
 #define FIP_HEADER_HEIGHT   24      ' the filename separator bar
 #define FIP_BLOCK_PAD        4      ' above and below an excerpt's lines
 #define FIP_BLOCK_GAP        8      ' between one excerpt and the next
-#define FIP_GUTTER_WIDTH    56      ' line-number column inside an excerpt
 #define FIP_INDENT          10      ' excerpts inset from the left edge
 
 ' ----------------------------------------------------------------------------------------
@@ -67,7 +74,6 @@ type FIP_METRICS
     nHeaderHeight as long
     nBlockPad     as long
     nBlockGap     as long
-    nGutter       as long
     nIndent       as long
 end type
 
@@ -92,6 +98,9 @@ declare sub      frmFindInProject_PositionWindows( byval rcDoc as RECT )
 ' Adopt the current gFip model: re-measure, rebuild the row list, reset the scroll and push
 ' the scrollbar range. Call after every search and after a collapse/expand.
 declare sub      frmFindInProject_Refresh( byval bResetScroll as boolean = false )
+' Re-style the excerpt views after a theme change. They are Scintilla views but are not in
+' gApp.pDocList, so modThemeApply's document walk cannot reach them.
+declare sub      frmFindInProject_ApplyTheme()
 ' There is deliberately NO frmFindInProject_Close. Closing this tab goes through the ordinary
 ' OnCommand_FileClose path like every other tab -- the tab's X routes there via
 ' gTTabCtl.CloseTab, and shutdown via EFC_CLOSEALL -- and that loop owns destroying this
