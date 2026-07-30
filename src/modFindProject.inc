@@ -146,6 +146,7 @@ sub FindProject_Clear()
     gFip.bMatchCase   = false
     gFip.bWholeWord   = false
     gFip.bValid       = false
+    gFip.bCapped      = false
 end sub
 
 
@@ -381,6 +382,11 @@ private sub FindProject_BuildBlocks( byval nGroup as long, byval nLineCount as l
             FindProject_LineWindow( gFip.matches(i+1).nLine, FINDPROJ_CONTEXT_LINES, _
                                     nLineCount, nF2, nL2 )
             if FindProject_ShouldMerge( nLast, nF2 ) = false then exit do
+            ' AN EXCERPT STAYS AN EXCERPT. Without this, a file in which nearly every line
+            ' matches collapses into a single block spanning the whole file -- which is not an
+            ' excerpt, and whose per-line snapshot then costs one GetLine for every line of
+            ' every file. Stopping here starts a new block instead.
+            if (nL2 - nFirst + 1) > FINDPROJ_MAX_BLOCK_LINES then exit do
             if nL2 > nLast then nLast = nL2
             nMatchCount += 1
             i += 1
@@ -486,6 +492,11 @@ private sub FindProject_SearchOneDocument( byval pDoc as clsDocument ptr, _
         ' Belt: a target that did not advance would spin forever.
         if startPos <= r then startPos = r + 1
         if startPos >= nLength then exit do
+        ' The cap. Reported, not silent -- see FindProject_Search.
+        if gFip.nMatchCount >= FINDPROJ_MAX_MATCHES then
+            gFip.bCapped = true
+            exit do
+        end if
     loop
 
     if nFound = 0 then
@@ -547,6 +558,7 @@ function FindProject_Search( byval wszPhrase as DWSTRING, _
     gFip.wszPhrase  = wszPhrase
     gFip.bMatchCase = bMatchCase
     gFip.bWholeWord = bWholeWord
+    gFip.bCapped    = false
 
     dim as long nFlags = 0
     if bMatchCase then nFlags = (nFlags or SCFIND_MATCHCASE)
@@ -561,6 +573,12 @@ function FindProject_Search( byval wszPhrase as DWSTRING, _
     dim pDoc as clsDocument ptr = gApp.pDocList
     do until pDoc = 0
         FindProject_SearchOneDocument( pDoc, sPhrase, nFlags )
+        ' Stop walking documents once the cap is reached: continuing would realize every
+        ' remaining file for results that are already being truncated.
+        if gFip.nMatchCount >= FINDPROJ_MAX_MATCHES then
+            gFip.bCapped = true
+            exit do
+        end if
         pDoc = pDoc->pDocNext
     loop
 

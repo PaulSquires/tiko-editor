@@ -125,3 +125,5 @@ declare function frmFindInProject_BarAction( byval id as long ) as boolean
 ' Env-gated: TIKO_FINDPROJ_SELFTEST=1. Opens the tab, asserts, closes it again. Must run
 ' after the session has loaded, or the assertions about documents being hidden are vacuous.
 declare sub      frmFindInProject_RunSelfTest()
+' Env-gated: TIKO_FINDPROJ_REPRO=1. Drives the reported no-hits-then-corrected-phrase crash.
+declare sub      frmFindInProject_RunRepro()

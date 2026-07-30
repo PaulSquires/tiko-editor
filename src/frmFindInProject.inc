@@ -1836,6 +1836,27 @@ sub frmFindInProject_RunSelfTest()
             frmFindInProject_Check( "noresults: and the results really did come back", _
                 gFip.nMatchCount = nHitsBefore, _
                 str(gFip.nMatchCount) & " vs " & str(nHitsBefore) )
+            frmFindInProject_Check( "noresults: a normal search is not reported as capped", _
+                gFip.bCapped = false )
+
+            ' THE CAP. A one-character phrase over this project left the editor unresponsive
+            ' for over three minutes before the two bounds went in -- from the outside,
+            ' indistinguishable from a crash.
+            FindProject_Search( "e", false, false )
+            frmFindInProject_Check( "cap: a huge search stops at the match cap", _
+                gFip.nMatchCount <= FINDPROJ_MAX_MATCHES, str(gFip.nMatchCount) )
+            frmFindInProject_Check( "cap: and reports itself as capped", _
+                gFip.bCapped = true )
+            ' The other half: no block may swallow a whole file, or its per-line snapshot
+            ' costs one GetLine for every line of every matching file.
+            dim as long nFatBlocks = 0
+            for b as long = 0 to gFip.nBlockCount - 1
+                if gFip.blocks(b).nLineCount > FINDPROJ_MAX_BLOCK_LINES then nFatBlocks += 1
+            next
+            frmFindInProject_Check( "cap: no excerpt grew past the block cap", _
+                nFatBlocks = 0, str(nFatBlocks) & " of " & str(gFip.nBlockCount) )
+
+            FindProject_Search( sPhrase, true, false )
             frmFindInProject_Refresh( true )
             ' The group index is rebuilt by those searches.
             nGrp = -1
@@ -2313,6 +2334,9 @@ private sub FipBar_UpdateStatus()
         next
     end if
     gFind.wszResults = str(nOrdinal) & "/" & str(gFip.nLiveMatches)
+    ' A capped search says so rather than quietly reporting a round number as if it were the
+    ' whole answer.
+    if gFip.bCapped then gFind.wszResults = gFind.wszResults & "+"
     gFind.foundCount = gFip.nLiveMatches
     ' A search that found nothing turns the phrase red.
     frmFind_ApplyErrorState()
@@ -2549,6 +2573,97 @@ end function
 
 
 ' ========================================================================================
+' Env-gated repro: TIKO_FINDPROJ_REPRO=1
+'
+' Drives the REPORTED SEQUENCE through the real entry points -- a search that finds nothing,
+' then a corrected phrase and Enter -- because that is the one that crashes and no assertion
+' reaches it. BarAction is the function the Enter key actually funnels into, and the phrase
+' is read from the field, so the field is written first exactly as typing would.
+' ========================================================================================
+' Drain the queue, so everything the real application would have processed between two
+' keystrokes actually runs -- posted messages above all. MSG_USER_SETFOCUS is posted, not
+' sent, so without this the repro skips the focus restore entirely.
+private sub FipRepro_Pump()
+    dim as MSG uMsg
+    dim as long n = 0
+    do while PeekMessage( @uMsg, null, 0, 0, PM_REMOVE )
+        TranslateMessage( @uMsg )
+        DispatchMessage( @uMsg )
+        n += 1
+        if n > 2000 then exit do
+    loop
+end sub
+
+
+sub frmFindInProject_RunRepro()
+    if environ("TIKO_FINDPROJ_REPRO") <> "1" then exit sub
+
+    dim as HWND hCtl = GetDlgItem( HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND )
+    if IsWindow( hCtl ) = 0 then
+        print "REPRO: no find field -- open the tab first"
+        exit sub
+    end if
+
+    print "REPRO: step 1 -- a phrase that matches nothing"
+    AfxSetWindowText( hCtl, chr(1) & "nomatch" & chr(1) )
+    frmFindInProject_BarAction( IDM_FINDNEXT )
+    FipRepro_Pump()
+    print "REPRO: step 1 searched, matches = " & str(gFip.nLiveMatches) & _
+          ", current = " & str(gFipCurrent)
+    ' RENDER. The real application paints between every keystroke, and the painter is the
+    ' only thing that walks the blocks' line snapshots -- so a repro that never paints is
+    ' skipping the most likely place for this to go wrong.
+    print "REPRO: step 1 render, tones = " & str( FipSurface_CountRenderedTones() )
+
+    print "REPRO: step 2 -- correct it to a phrase that DOES match, then Enter"
+    AfxSetWindowText( hCtl, "function" )
+    frmFindInProject_BarAction( IDM_FINDNEXT )
+    FipRepro_Pump()
+    print "REPRO: step 2 searched, matches = " & str(gFip.nLiveMatches) & _
+          ", current = " & str(gFipCurrent)
+    print "REPRO: step 2 render, tones = " & str( FipSurface_CountRenderedTones() )
+
+    print "REPRO: step 3 -- Enter again on the same phrase (navigate)"
+    frmFindInProject_BarAction( IDM_FINDNEXT )
+    FipRepro_Pump()
+    print "REPRO: step 3 searched, current = " & str(gFipCurrent)
+    print "REPRO: step 3 render, tones = " & str( FipSurface_CountRenderedTones() )
+
+    ' And scroll, which rebinds the pooled views against the new model.
+    print "REPRO: step 4 -- scroll through the results"
+    for n as long = 1 to 20
+        PsVScrollBar_HandleWheelDelta( HWND_FRMFINDINPROJECT_VSCROLL, -120 )
+        FipSurface_CountRenderedTones()
+    next
+    print "REPRO: step 4 survived"
+
+    ' A very short phrase, which is a plausible "good search text" and produces an enormous
+    ' result set -- the case that stresses every array's growth and the per-block line
+    ' snapshots hardest.
+    print "REPRO: step 5 -- a one-character phrase (huge result set)"
+    AfxSetWindowText( hCtl, "e" )
+    frmFindInProject_BarAction( IDM_FINDNEXT )
+    FipRepro_Pump()
+    print "REPRO: step 5 searched, matches = " & str(gFip.nLiveMatches) & _
+          ", blocks = " & str(gFip.nBlockCount) & ", snapshot lines = " & str(gFip.nOrigCount)
+    ' NOTE on the tone count here: it is legitimately 1 when the viewport happens to sit
+    ' wholly inside one excerpt, because that area is covered by a Scintilla child and the
+    ' surface paints only its own background behind it. Checked, not assumed.
+    print "REPRO: step 5 rows = " & str(gFipRowCount) & ", scroll = " & str(gFipScrollTop) & _
+          ", capped = " & str(gFip.bCapped)
+    print "REPRO: step 5 render, tones = " & str( FipSurface_CountRenderedTones() )
+
+    print "REPRO: step 6 -- back to a normal phrase"
+    AfxSetWindowText( hCtl, "function" )
+    frmFindInProject_BarAction( IDM_FINDNEXT )
+    FipRepro_Pump()
+    print "REPRO: step 6 survived, matches = " & str(gFip.nLiveMatches)
+
+    print "REPRO: completed without crashing"
+end sub
+
+
+' ========================================================================================
 ' frmFindInProject_Show
 '
 ' Reached from the Search menu, the Ctrl+Shift+F accelerator and the Explorer panel's
@@ -2580,6 +2695,9 @@ function frmFindInProject_Show() as LRESULT
     ' auto width it was given for the default caption, so the magnifier ate the first
     ' characters of it.
     FipBar_UpdateStatus()
+
+    ' Env-gated crash repro. Last, so it runs against a fully built tab.
+    frmFindInProject_RunRepro()
 
     function = 0
 end function

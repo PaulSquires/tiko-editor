@@ -39,6 +39,25 @@
 ' Lines of context either side of a matched line, so a lone match shows 5 lines.
 #define FINDPROJ_CONTEXT_LINES  2
 
+' ----------------------------------------------------------------------------------------
+' TWO CAPS, both found by measurement rather than caution.
+'
+' Searching a project for a single common character -- "e" -- left the editor unresponsive
+' for over THREE MINUTES with no result, which from the outside is indistinguishable from a
+' crash. Two things go quadratic-ish at once, and each needs its own bound:
+'
+'   * The sheer number of matches. Every one is recorded, indicator-filled on its document,
+'     and walked by navigation.
+'   * The COALESCING. When nearly every line matches, their context windows all touch, so a
+'     whole file collapses into ONE block spanning thousands of lines -- and each block
+'     snapshots every one of its lines for the dirty-stripe baseline. An excerpt that is the
+'     entire file is not an excerpt anyway.
+'
+' A capped search is reported as capped (see FindProject_WasCapped), never silently truncated.
+' ----------------------------------------------------------------------------------------
+#define FINDPROJ_MAX_MATCHES     5000
+#define FINDPROJ_MAX_BLOCK_LINES   40
+
 ' Control id for the hidden scratch view. Deliberately NOT IDC_SCINTILLA(+1), which
 ' clsDocument.IsValidScintillaID matches and frmMain_OnNotify uses to decide whether a
 ' notification belongs to a document.
@@ -97,6 +116,7 @@ type FINDPROJ_MODEL
     bMatchCase   as boolean
     bWholeWord   as boolean
     bValid       as boolean         ' a search has been run
+    bCapped      as boolean         ' the match cap was hit; results are incomplete
 end type
 dim shared gFip as FINDPROJ_MODEL
 
