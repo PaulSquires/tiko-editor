@@ -16,6 +16,8 @@
 
 #include once "frmDebug.bi"
 
+declare sub frmDebug_LayoutPanes( byval nBarPos as long )
+
 dim shared as HWND     gDbgBtn(IDC_FRMDEBUG_CMDFIRST to IDC_FRMDEBUG_CMDLAST)
 dim shared as DWSTRING gDbgStatusText
 dim shared as long     gDbgCurFrame          ' call-stack frame the variables view is scoped to
@@ -373,15 +375,43 @@ private sub frmDebug_PositionWindows()
     PsSplitter_SetRange( HWND_FRMDEBUG_SPLITTER, nMinBar, nMaxBar )
     dim as long nBarPos = PsSplitter_GetPos( HWND_FRMDEBUG_SPLITTER )
 
-    SetWindowPos( HWND_FRMDEBUG_SPLITTER, 0, nBarPos, nTop, nSplitW, rc.bottom - nTop, SWP_NOZORDER )
+    frmDebug_LayoutPanes( nBarPos )
+end sub
 
-    ' --- left pane: tab strip over the variables tree ---
-    SetWindowPos( HWND_FRMDEBUG_SELECTBAR, 0, 0, nTop, nBarPos, nTabH, SWP_NOZORDER )
-    SetWindowPos( HWND_FRMDEBUG_LVVARS, 0, 0, nTop + nTabH, nBarPos, rc.bottom - nTop - nTabH, SWP_NOZORDER )
+' The four windows that move when the splitter does, placed in ONE atomic pass.
+'
+' Four separate SetWindowPos calls each repaint as they land, and during a drag that runs on
+' every mouse move -- which is what tore. DeferWindowPos moves them together, so the panes
+' change size once per message instead of four times.
+private sub frmDebug_LayoutPanes( byval nBarPos as long )
+    if IsWindow(HWND_FRMDEBUG) = 0 then exit sub
+    dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMDEBUG)
+    if pWindow = 0 then exit sub
 
-    ' --- right pane: the call stack; its own header band supplies the caption ---
-    dim as long xRight = nBarPos + nSplitW
-    SetWindowPos( HWND_FRMDEBUG_LVSTACK, 0, xRight, nTop, rc.right - xRight, rc.bottom - nTop, SWP_NOZORDER )
+    dim as RECT rc
+    GetClientRect( HWND_FRMDEBUG, @rc )
+    if (rc.right <= 0) orelse (rc.bottom <= 0) then exit sub
+
+    dim as long nTop    = pWindow->ScaleY(FRMDEBUG_TOOLHEIGHT) + pWindow->ScaleY(FRMDEBUG_STATUSHEIGHT)
+    dim as long nTabH   = pWindow->ScaleY(FRMDEBUG_TABHEIGHT)
+    dim as long nSplitW = pWindow->ScaleX(FRMDEBUG_SPLITWIDTH)
+    dim as long xRight  = nBarPos + nSplitW
+    dim as long nRightW = rc.right - xRight
+    if nRightW < 0 then nRightW = 0
+
+    dim as any ptr hDWP = BeginDeferWindowPos( 4 )
+    if hDWP = 0 then exit sub
+    dim as long fl = SWP_NOZORDER or SWP_NOACTIVATE
+
+    hDWP = DeferWindowPos( hDWP, HWND_FRMDEBUG_SPLITTER, 0, _
+                           nBarPos, nTop, nSplitW, rc.bottom - nTop, fl )
+    hDWP = DeferWindowPos( hDWP, HWND_FRMDEBUG_SELECTBAR, 0, _
+                           0, nTop, nBarPos, nTabH, fl )
+    hDWP = DeferWindowPos( hDWP, HWND_FRMDEBUG_LVVARS, 0, _
+                           0, nTop + nTabH, nBarPos, rc.bottom - nTop - nTabH, fl )
+    hDWP = DeferWindowPos( hDWP, HWND_FRMDEBUG_LVSTACK, 0, _
+                           xRight, nTop, nRightW, rc.bottom - nTop, fl )
+    if hDWP then EndDeferWindowPos( hDWP )
 end sub
 
 ' Env-gated geometry dump (TIKO_DEBUGWIN_TRACE=1). Every rect this window computes, read
@@ -435,7 +465,11 @@ sub frmDebug_Trace()
 end sub
 
 private sub frmDebug_SplitterMoved( byval hSplitter as HWND, byval newPos as integer, byval nPhase as integer )
-    frmDebug_PositionWindows()
+    ' Only the panes move with the bar. The toolbar and the status line do not, so a drag
+    ' must not re-place seven buttons on every mouse move -- that is repaint churn with no
+    ' visible effect. The control has already moved ITSELF by the time this fires; putting
+    ' it back at the same coordinates is the documented harmless no-op.
+    frmDebug_LayoutPanes( newPos )
 end sub
 
 private sub frmDebug_SplitterPaint( byval p as PSSPLITTER_PAINTINFO ptr )
