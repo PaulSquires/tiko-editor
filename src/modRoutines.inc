@@ -592,54 +592,6 @@ function isUTF8encoded( byref s as string ) as boolean
 end function
 
 
-'function isUTF8encoded(byref text as string) as boolean
-'    dim as ubyte ptr p = strptr(text)
-'    dim as integer nlen = len(text)
-'    dim as integer i = 0
-'    dim as boolean hasUTF8Sequences = false
-
-'    while i < nlen
-'        dim as ubyte c = p[i]
-
-'        if c < &h80 then
-'            ' ASCII character
-'            i += 1
-
-'        elseif (c and &hE0) = &hC0 then
-'            ' 2-byte UTF-8 sequence
-'            if i + 1 >= nlen then return false
-'            if (p[i + 1] and &hC0) <> &h80 then return false
-'            if c < &hC2 then return false
-'            hasUTF8Sequences = true
-'            i += 2
-
-'        elseif (c and &hF0) = &hE0 then
-'            ' 3-byte UTF-8 sequence
-'            if i + 2 >= nlen then return false
-'            if (p[i + 1] and &hC0) <> &h80 then return false
-'            if (p[i + 2] and &hC0) <> &h80 then return false
-'            hasUTF8Sequences = true
-'            i += 3
-
-'        elseif (c and &hF8) = &hF0 then
-'            ' 4-byte UTF-8 sequence
-'            if i + 3 >= nlen then return false
-'            if (p[i + 1] and &hC0) <> &h80 then return false
-'            if (p[i + 2] and &hC0) <> &h80 then return false
-'            if (p[i + 3] and &hC0) <> &h80 then return false
-'            hasUTF8Sequences = true
-'            i += 4
-
-'        else
-'            ' Invalid byte for UTF-8
-'            return false
-'        end if
-'    wend
-
-'    return hasUTF8Sequences
-'end function
-
-
 ' ========================================================================================
 ' Open a disk file and read it into a string (ANSI or UTF8)
 ' ========================================================================================

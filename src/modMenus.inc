@@ -154,7 +154,7 @@ function frmMain_SearchTopMenuStates() as long
         EnableTopMenuItem( idMenu, true )
     next
 
-    for idMenu as long = IDM_REPLACE to IDM_GOTOLINE
+    for idMenu as long = IDM_REPLACE to IDM_SETFOCUSEDITOR
         EnableTopMenuItem( idMenu, true )
     next
 

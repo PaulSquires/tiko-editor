@@ -90,7 +90,7 @@ enum
     IDM_FINDNEXTACCEL, IDM_FINDPREVACCEL
     ' Placed here DELIBERATELY -- outside both of the blanket re-enable ranges in
     ' frmMain_SearchTopMenuStates (IDM_SEARCHSYMBOL..IDM_FINDPREVACCEL and
-    ' IDM_REPLACE..IDM_GOTOLINE), so these two can be greyed on their own condition
+    ' IDM_REPLACE..IDM_SETFOCUSEDITOR), so these two can be greyed on their own condition
     ' the way IDM_FINDINPROJECT below is. Inside a range, the loop would force them on.
     IDM_GOBACK, IDM_GOFORWARD
     IDM_FINDINPROJECT, IDM_REPLACE, IDM_TOGGLEREPLACE
@@ -101,7 +101,9 @@ enum
     IDM_BOOKMARKTOGGLE, IDM_BOOKMARKNEXT, IDM_BOOKMARKPREV, IDM_BOOKMARKCLEARALL
     IDM_BOOKMARKCLEARALLDOCS, IDM_CLEARALLBOOKMARKNODE, IDM_REMOVEBOOKMARKNODE
     IDM_GOTONEXTCOMPILEERROR, IDM_GOTOPREVCOMPILEERROR
-    IDM_SETFOCUSEDITOR, IDM_GOTOLINE
+    ' IDM_SETFOCUSEDITOR must stay LAST in this block -- frmMain_SearchTopMenuStates
+    ' re-enables IDM_REPLACE..IDM_SETFOCUSEDITOR as a range.
+    IDM_SETFOCUSEDITOR
     IDM_SEARCH_END
     
     '' VIEW

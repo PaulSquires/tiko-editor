@@ -106,9 +106,13 @@ function frmStatusBar_MessageCallback( byval m as PSSTATUSBAR_MESSAGEINFO ptr ) 
             ' No capture is taken, so an up only arrives while the cursor is still over the
             ' control: idx = -1 means "released over empty bar area". We simply need to 
             ' retrieve the command message stored in itemData and post it to frmMain.
+            ' An itemData of 0 is a panel with no command attached (the Ln/Col readout) --
+            ' posting it would send WM_COMMAND id 0 to frmMain for nothing.
             if m->idx <> -1 then
                 dim as integer idMessage = PsStatusBar_GetItemData(m->hStatusBar, m->idx)
-                PostMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(idMessage, 0), 0 )
+                if idMessage <> 0 then
+                    PostMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(idMessage, 0), 0 )
+                end if
             end if
             return false
 
@@ -152,7 +156,10 @@ function frmStatusBar_Show( byval hwndParent as HWND ) as LRESULT
     PsStatusBar_SetBackColor( hCtrl, ghStatusBar.BackColor )
     PsStatusBar_SetFont( hCtrl, ghFont(GUIFONT_9) )
 
-    PsStatusBar_AddPanel( hCtrl, "", IDM_GOTOLINE )
+    ' The Ln/Col readout is INERT -- itemData 0 means "no command", which the message
+    ' callback below skips. It is excluded from the hot state in the painter for the same
+    ' reason: there is nothing to click.
+    PsStatusBar_AddPanel( hCtrl, "" )
     PsStatusBar_AddPanel( hCtrl, "", IDM_VIEWOUTPUT )            ' the spring
     PsStatusBar_AddPanel( hCtrl, "", IDM_THEMES )
     PsStatusBar_AddPanel( hCtrl, "", IDM_BUILDCONFIG )
