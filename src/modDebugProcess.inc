@@ -509,17 +509,33 @@ private sub DebugWorker( byval userdata as any ptr )
 
                 select case code
 
-                    case EXCEPTION_BREAKPOINT
-                        if gDbgSession.sawEntryBp = false then
-                            ' The loader breakpoint, delivered once before any user code.
-                            ' It is not a user stop; it is where the traps get armed.
-                            gDbgSession.sawEntryBp = true
-                            gDbgSession.pendingMode = DBG_RUN_STEPINTO
-                            ArmLineTraps()
-                            ' Stop at the program's first statement rather than running on,
-                            ' which matches what "Start Debugging" is expected to do.
+                    case EXCEPTION_BREAKPOINT, STATUS_WX86_BREAKPOINT
+                        ' A breakpoint exception is only OURS if we armed a trap at exactly
+                        ' this address. Anything else -- the loader breakpoint, and for a
+                        ' WOW64 target the SECOND one the 32-bit ntdll raises, or an INT3
+                        ' the program itself contains -- is passed straight through. Keying
+                        ' this off a "first breakpoint" flag instead leaves a 32-bit target
+                        ' spinning on ntdll's own trap forever, because there is nothing
+                        ' there for us to restore and step over.
+                        dim as long liOwn = DebugInfo_LineFromAddr( cast(longint, exAddr) )
+                        dim as boolean bOurTrap = false
+                        if liOwn >= 0 then
+                            if (gDbgLine(liOwn).addr = cast(longint, exAddr)) andalso gDbgLineArmed(liOwn) then
+                                bOurTrap = true
+                            end if
+                        end if
+
+                        if bOurTrap = false then
+                            if gDbgSession.sawEntryBp = false then
+                                ' The first foreign breakpoint is the loader's, and it is
+                                ' the earliest point at which the image is mapped and the
+                                ' line traps can be written.
+                                gDbgSession.sawEntryBp = true
+                                gDbgSession.pendingMode = DBG_RUN_STEPINTO
+                                ArmLineTraps()
+                            end if
                         else
-                            dim as long li = DebugInfo_LineFromAddr( cast(longint, exAddr) )
+                            dim as long li = liOwn
                             dim as DBG_STOPREASON why = DBG_STOP_STEP
 
                             if gDbgSession.pauseRequested then
@@ -574,7 +590,7 @@ private sub DebugWorker( byval userdata as any ptr )
                             end if
                         end if
 
-                    case EXCEPTION_SINGLE_STEP
+                    case EXCEPTION_SINGLE_STEP, STATUS_WX86_SINGLE_STEP
                         ' The one instruction after a StepOverTrap has retired; put the trap
                         ' back. The trap flag clears itself.
                         if gDbgPendingRearm <> 0 then

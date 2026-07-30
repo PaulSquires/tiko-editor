@@ -969,8 +969,18 @@ function DebugInfo_LineFromAddr( byval addr as longint ) as long
             hi = mid_ - 1
         end if
     loop
-    ' Not an exact hit. A fault can land in the middle of a statement, so answer the line
-    ' whose range contains the address rather than nothing at all.
+    ' Not an exact hit. A fault can land mid-statement, so the preceding line is the right
+    ' answer -- but ONLY if the address is still inside that line's procedure. Without this
+    ' bound, any address outside user code (a trap in ntdll, a frame that returns into a
+    ' system DLL) resolves to the last line of the program and reports it confidently.
+    if best < 0 then return -1
+    dim as long pi = gDbgLine(best).procIndex
+    if pi >= 0 then
+        dim as longint last = gDbgProc(pi).addrEnd
+        if last = 0 then last = gDbgProc(pi).addrEpilog
+        if (last <> 0) andalso (addr >= last) then return -1
+        if addr < gDbgProc(pi).addrStart then return -1
+    end if
     return best
 end function
 

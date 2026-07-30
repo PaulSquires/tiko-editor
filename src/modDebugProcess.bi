@@ -87,6 +87,13 @@ const as long MSG_USER_DEBUG_STOPPED = WM_USER + 810   ' wParam = DBG_STOPREASON
 const as long MSG_USER_DEBUG_EXITED  = WM_USER + 811   ' wParam = exit code
 const as long MSG_USER_DEBUG_FAILED  = WM_USER + 812   ' launch failed; see gDbgSession.lastError
 
+' A 32-bit process running under WOW64 reports its breakpoint and single-step exceptions
+' with DIFFERENT codes from a native one -- measured, not assumed: a 32-bit target reported
+' &h4000001F where the 64-bit path reports EXCEPTION_BREAKPOINT. FreeBASIC's headers do not
+' declare these, and without them every trap in a 32-bit target is treated as a crash.
+const as DWORD STATUS_WX86_SINGLE_STEP = &h4000001E
+const as DWORD STATUS_WX86_BREAKPOINT  = &h4000001F
+
 enum DBG_RUNMODE
     DBG_RUN_STEPINTO = 0       ' stop at the next executable line, wherever it is
     DBG_RUN_STEPOVER           ' as above, but skip anything deeper than the current frame
