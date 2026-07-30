@@ -402,6 +402,19 @@ function OnCommand_FileClose( _
         ' tab's own X goes through gTTabCtl.CloseTab, and shutdown through EFC_CLOSEALL -- so
         ' this is the single place its window is destroyed.
         if gTTabCtl.IsFindTab(i) then
+            ' THE RESULTS ARE EDITABLE, so closing this tab can throw away real work. The
+            ' files it edited may have no tab of their own -- a project loads every file but
+            ' tabs only some -- so nothing else in this loop would ever prompt for them.
+            if FindProject_AnyDirty() then
+                gTTabCtl.SetFocusTab(i)
+                r = TikoMsgBox( hwnd, L(74,"Save current changes?") & wstr(" ") & wText, APPNAME, _
+                                TMB_ICON_QUESTION, TMB_YESNOCANCEL )
+                if r = IDCANCEL then exit function
+                if r = IDYES then
+                    if FindProject_SaveAllDirty() = false then exit function  ' a save was cancelled
+                end if
+            end if
+
             gTTabCtl.TabFocusLost(i)     ' puts the info strip back, closes the Find bars
             if IsWindow( HWND_FRMFINDINPROJECT ) then
                 DestroyWindow( HWND_FRMFINDINPROJECT )

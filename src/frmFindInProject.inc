@@ -350,6 +350,11 @@ private sub FipPool_Bind( byval i as long, byval nRow as long, byref rcView as R
         ' the editable area and does not need a margin of its own. See FipSurface_Render.
         SciExec( gFipPool(i).hWnd, SCI_SETMARGINWIDTHN, 1, 0 )
         SciExec( gFipPool(i).hWnd, SCI_SETMARGINWIDTHN, 2, 0 )
+        ' NO CURRENT-LINE HIGHLIGHT in an excerpt. A full-width band across a five-line window
+        ' is loud, and it is drawn from the editor's own current-line colour -- which appears
+        ' when the view takes focus and stays afterwards. That is what the reported
+        ' "repainting problem" looked like, so this is a candidate fix, not a proven one.
+        SciExec( gFipPool(i).hWnd, SCI_SETCARETLINEVISIBLE, 0, 0 )
         ' The match highlight. The RANGES live on the document (filled once per file by
         ' FindProject_ApplyIndicators), but the indicator's appearance is PER-VIEW, so it has
         ' to be described again on every view that should show it.
@@ -363,9 +368,12 @@ private sub FipPool_Bind( byval i as long, byval nRow as long, byref rcView as R
     ' caret into view would slide the block off the lines it is supposed to be showing.
     SciExec( gFipPool(i).hWnd, SCI_SETFIRSTVISIBLELINE, gFip.blocks(b).nFirstLine, 0 )
 
+    ' SWP_NOCOPYBITS: repaint the moved window rather than blitting its old pixels to the new
+    ' position. Without it a view that scrolls into a different place can arrive carrying
+    ' stale rows -- the other half of the reported repainting artifact.
     SetWindowPos( gFipPool(i).hWnd, 0, rcView.left, rcView.top, _
                   rcView.right - rcView.left, rcView.bottom - rcView.top, _
-                  SWP_NOZORDER or SWP_SHOWWINDOW )
+                  SWP_NOZORDER or SWP_SHOWWINDOW or SWP_NOCOPYBITS )
     gFipPool(i).nRow = nRow
 end sub
 
@@ -668,11 +676,31 @@ private sub frmFindInProject_OnModelChanged()
 end sub
 
 
+' Repaint the surface and nothing else. Deliberately does NOT rebuild or re-bind: this runs
+' on every keystroke, and Refresh hides every pooled view on its way through -- which takes
+' the caret out of the excerpt being typed into.
+private sub frmFindInProject_OnRepaint()
+    if IsWindow( HWND_FRMFINDINPROJECT_SURFACE ) then
+        AfxRedrawWindow( HWND_FRMFINDINPROJECT_SURFACE )
+    end if
+end sub
+
+
 sub frmFindInProject_Refresh( byval bResetScroll as boolean = false )
     FipMetrics_Measure( gFipMetrics )
     gFipCanvasH = FipRows_Build( gFipRows(), gFipRowCount, gFipMetrics )
     if bResetScroll then gFipScrollTop = 0
     FipSurface_SyncScrollBar()
+
+    ' Hiding the focused window takes the focus with it, so remember where it was and put it
+    ' back. The per-keystroke path avoids this function entirely (see gFipRepaint), but a
+    ' rebuild can still happen while the caret is in an excerpt -- typing a newline, for one.
+    dim as HWND hFocusWas = GetFocus()
+    dim as boolean bFocusInPool = false
+    for i as long = 0 to gFipPoolCount - 1
+        if gFipPool(i).hWnd = hFocusWas then bFocusInPool = true: exit for
+    next
+
     ' Park every slot first: the row list has just been rebuilt, so a slot's stored row index
     ' refers to the OLD list and would otherwise be matched against the new one by number.
     for i as long = 0 to gFipPoolCount - 1
@@ -680,6 +708,14 @@ sub frmFindInProject_Refresh( byval bResetScroll as boolean = false )
         if gFipPool(i).hWnd then ShowWindow( gFipPool(i).hWnd, SW_HIDE )
     next
     FipPool_Sync()
+
+    ' Hoisted to booleans: IsWindow/IsWindowVisible return BOOL, and mixing those into an
+    ' andalso chain with a real boolean is warning 38.
+    dim as boolean bStillThere = cbool( IsWindow( hFocusWas ) <> 0 )
+    dim as boolean bStillShown = cbool( IsWindowVisible( hFocusWas ) <> 0 )
+    if bFocusInPool andalso bStillThere andalso bStillShown then
+        SetFocus( hFocusWas )
+    end if
     if IsWindow( HWND_FRMFINDINPROJECT_SURFACE ) then
         AfxRedrawWindow( HWND_FRMFINDINPROJECT_SURFACE )
     end if
@@ -729,12 +765,8 @@ private sub FipSurface_PaintHeader( byval b as PsBufferPaint ptr, byref r as FIP
     ' structure of this list, and a card reads as one object holding a filename rather than
     ' as a line drawn across the client area.
     dim as RECT rcCard = rc
-    rcCard.left   += AfxScaleX(4)
-    rcCard.right  -= AfxScaleX(4)
-    rcCard.top    += AfxScaleY(2)
-    rcCard.bottom -= AfxScaleY(2)
-    b->SetBackColor( ghEditor.BackColorCurrentLine )
-    b->PaintRoundRect( @rcCard )
+    b->SetPenColor( ghEditor.Divider )
+    b->PaintRoundOutline( @rcCard )
 
     dim as long nPad = AfxScaleX(6)
 
@@ -757,7 +789,8 @@ private sub FipSurface_PaintHeader( byval b as PsBufferPaint ptr, byref r as FIP
     dim as RECT rcText = rc
     rcText.left = rcGlyph.right + nPad
 
-    b->SetFont( ghFont(GUIFONTBOLD_10) )
+'    b->SetFont( ghFont(GUIFONTBOLD_10) )
+    b->SetFont( ghFont(GUIFONT_10) )
     b->SetForeColor( ghEditor.ForeColorText )
     dim as long nNameW = FipSurface_TextW( b, wszName ) + nPad
     b->PaintText( wszName, @rcText, DT_LEFT )
@@ -884,29 +917,21 @@ private sub FipSurface_Render( byval b as PsBufferPaint ptr, byref rc as RECT )
                 ' editable area nothing and needs no margin, no mask and no marker definition
                 ' in any view. The marker itself is still what remembers WHICH lines -- it
                 ' rides along as text moves, which a list of line numbers of ours would not.
-                dim as long gDirty = gFipRows(i).nGroup
-                if gFip.groups(gDirty).pDoc <> 0 then
-                    dim as HWND hDoc = gFip.groups(gDirty).pDoc->hWindow(0)
-                    if IsWindow( hDoc ) then
-                        dim as long bD = gFipRows(i).nBlock
-                        dim as long yLine = yTop + gFipMetrics.nBlockPad
-                        for ln as long = 0 to gFip.blocks(bD).nLineCount - 1
-                            if yLine > rc.bottom then exit for
-                            dim as long nDocLine = gFip.blocks(bD).nFirstLine + ln
-                            if (SciExec( hDoc, SCI_MARKERGET, nDocLine, 0 ) and _
-                                FINDPROJ_MARKER_MASK) <> 0 then
-                                dim as RECT rcBar
-                                rcBar.right  = gFipMetrics.nIndent
-                                rcBar.left   = rcBar.right - AfxScaleX(3)
-                                rcBar.top    = yLine
-                                rcBar.bottom = yLine + gFipMetrics.nLineHeight
-                                b->SetBackColor( FIP_DIRTY_COLOR )
-                                b->PaintRect( @rcBar )
-                            end if
-                            yLine += gFipMetrics.nLineHeight
-                        next
+                dim as long bD = gFipRows(i).nBlock
+                dim as long yLine = yTop + gFipMetrics.nBlockPad
+                for ln as long = 0 to gFip.blocks(bD).nLineCount - 1
+                    if yLine > rc.bottom then exit for
+                    if FindProject_IsLineDirty( bD, ln ) then
+                        dim as RECT rcBar
+                        rcBar.right  = gFipMetrics.nIndent
+                        rcBar.left   = rcBar.right - AfxScaleX(3)
+                        rcBar.top    = yLine
+                        rcBar.bottom = yLine + gFipMetrics.nLineHeight
+                        b->SetBackColor( FIP_DIRTY_COLOR )
+                        b->PaintRect( @rcBar )
                     end if
-                end if
+                    yLine += gFipMetrics.nLineHeight
+                next
 
                 ' A hairline in the gap BELOW each excerpt, so several excerpts from one file
                 ' read as separate windows onto it rather than as one long run of code. Not
@@ -1257,6 +1282,7 @@ function frmFindInProject_CreateWindow() as HWND
     ' anything in it, so this is how it reaches the surface at all -- to say "I changed" and,
     ' critically, "let go of this document, I am about to release it".
     gFipModelChanged = @frmFindInProject_OnModelChanged
+    gFipRepaint      = @frmFindInProject_OnRepaint
     gFipUnbindDoc    = @FipPool_UnbindDoc
 
     return HWND_FRMFINDINPROJECT
@@ -1818,28 +1844,25 @@ sub frmFindInProject_RunSelfTest()
                 if pD2 = 0 then continue for
 
                 dim as long nLn = gFip.blocks(bb2).nFirstLine
-                SciExec( pD2->hWindow(0), SCI_MARKERDELETEALL, FINDPROJ_MARKER_DIRTY, 0 )
-                frmFindInProject_Check( "dirty: no line is marked before an edit", _
-                    (SciExec( pD2->hWindow(0), SCI_MARKERGET, nLn, 0 ) and FINDPROJ_MARKER_MASK) = 0 )
+                frmFindInProject_Check( "dirty: an untouched line is not dirty", _
+                    FindProject_IsLineDirty( bb2, 0 ) = false )
 
-                ' Drive the REAL notifier, which is what frmMain_OnNotify calls.
-                FindProject_OnDocumentModified( pD2, SC_MOD_INSERTTEXT, _
-                        SciExec( pD2->hWindow(0), SCI_POSITIONFROMLINE, nLn, 0 ), 1, 0 )
-                frmFindInProject_Check( "dirty: the edited line is marked", _
-                    (SciExec( pD2->hWindow(0), SCI_MARKERGET, nLn, 0 ) and FINDPROJ_MARKER_MASK) <> 0 )
+                ' Type into the line for real, then take it back. THE UNDO IS THE POINT: a
+                ' flag set on edit would still be set here, which is exactly the bug this
+                ' replaced. Comparing against the text captured at search time is what makes
+                ' "no longer different" mean "no longer dirty".
+                dim as HWND hD2 = pD2->hWindow(0)
+                SciExec( hD2, SCI_BEGINUNDOACTION, 0, 0 )
+                SciExec( hD2, SCI_INSERTTEXT, _
+                         SciExec( hD2, SCI_POSITIONFROMLINE, nLn, 0 ), @"zz" )
+                SciExec( hD2, SCI_ENDUNDOACTION, 0, 0 )
+                frmFindInProject_Check( "dirty: an edited line IS dirty", _
+                    FindProject_IsLineDirty( bb2, 0 ) = true )
 
-                ' NO VIEW REVEALS THE MARKER. The stripe is painted by the surface, in the
-                ' strip left of the excerpt, so the marker is pure bookkeeping. Both of these
-                ' are worth asserting: the excerpt because a margin would eat editable width,
-                ' and the document's own view because tiko's default margin-1 mask is EVERY
-                ' non-folder marker -- which is how this leaked into the editor's margin the
-                ' first time round, found by this assertion's earlier form.
-                frmFindInProject_Check( "dirty: no excerpt margin reveals the marker", _
-                    (SciExec( gFipPool(i).hWnd, SCI_GETMARGINMASKN, 1, 0 ) and FINDPROJ_MARKER_MASK) = 0 )
-                frmFindInProject_Check( "dirty: the document's own view does not either", _
-                    (SciExec( pD2->hWindow(0), SCI_GETMARGINMASKN, 1, 0 ) and FINDPROJ_MARKER_MASK) = 0 )
-
-                SciExec( pD2->hWindow(0), SCI_MARKERDELETEALL, FINDPROJ_MARKER_DIRTY, 0 )
+                SciExec( hD2, SCI_UNDO, 0, 0 )
+                frmFindInProject_Check( "dirty: undoing the edit clears it again", _
+                    FindProject_IsLineDirty( bb2, 0 ) = false )
+                SciExec( hD2, SCI_SETSAVEPOINT, 0, 0 )
 
                 ' ---- the Edit menu can reach an excerpt ------------------------------------
                 ' This is what makes Ctrl+Z work in an excerpt: without it every Edit command
@@ -2395,6 +2418,12 @@ function frmFindInProject_Show() as LRESULT
     ' Adopt whatever the model holds. After SetFocusTab, so the surface has its real size and
     ' the scrollbar's page height is the one it will actually have.
     frmFindInProject_Refresh( true )
+
+    ' Re-assert the caption and the tab's width. Reopening the tab on an existing search has
+    ' to show the PHRASE, not "Find in Project" -- and without this the tab also kept the
+    ' auto width it was given for the default caption, so the magnifier ate the first
+    ' characters of it.
+    FipBar_UpdateStatus()
 
     function = 0
 end function

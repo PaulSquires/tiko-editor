@@ -133,6 +133,8 @@ sub FindProject_Clear()
         gFip.groups(g).pSciDoc = 0
     next
 
+    erase gFip.origLines
+    gFip.nOrigCount = 0
     erase gFip.groups
     erase gFip.matches
     erase gFip.blocks
@@ -391,7 +393,33 @@ private sub FindProject_BuildBlocks( byval nGroup as long, byval nLineCount as l
             .nLineCount  = nLast - nFirst + 1
             .nMatchFirst = nMatchFirst
             .nMatchCount = nMatchCount
+            .nOrigFirst  = gFip.nOrigCount
+            .nOrigCount  = 0
         end with
+
+        ' Snapshot the block's lines AS FOUND. This is the baseline the dirty stripe compares
+        ' against; without it the stripe could only say "this line was typed in at some
+        ' point", which stays true after an undo.
+        dim as clsDocument ptr pDocSnap = gFip.groups(nGroup).pDoc
+        if pDocSnap then
+            if IsWindow( pDocSnap->hWindow(0) ) then
+                dim as long nLines = nLast - nFirst + 1
+                if (gFip.nOrigCount + nLines) > (ubound(gFip.origLines) + 1) then
+                    dim as long nCap = ubound(gFip.origLines) + 1
+                    if nCap < 256 then nCap = 256
+                    do while nCap < (gFip.nOrigCount + nLines)
+                        nCap *= 2
+                    loop
+                    redim preserve gFip.origLines(0 to nCap - 1)
+                end if
+                for ln as long = 0 to nLines - 1
+                    gFip.origLines( gFip.nOrigCount ) = pDocSnap->GetLine( nFirst + ln )
+                    gFip.nOrigCount += 1
+                next
+                gFip.blocks( gFip.nBlockCount ).nOrigCount = nLines
+            end if
+        end if
+
         gFip.nBlockCount += 1
         gFip.groups(nGroup).nBlockCount += 1
 
@@ -564,9 +592,6 @@ sub FindProject_ApplyIndicators( byval nGroup as long )
     dim as HWND h = pDoc->hWindow(0)
     SciExec( h, SCI_SETINDICATORCURRENT, FINDPROJ_INDICATOR, 0 )
     SciExec( h, SCI_INDICATORCLEARRANGE, 0, SciExec( h, SCI_GETLENGTH, 0, 0 ) )
-    ' A fresh search starts from a clean slate: the dirty marks describe edits made THROUGH
-    ' the results list, so they belong to the result set that is being replaced.
-    SciExec( h, SCI_MARKERDELETEALL, FINDPROJ_MARKER_DIRTY, 0 )
 
     dim as long m0 = gFip.groups(nGroup).nMatchFirst
     for i as long = m0 to m0 + gFip.groups(nGroup).nMatchCount - 1
@@ -585,10 +610,40 @@ sub FindProject_ClearIndicators( byval nGroup as long )
     dim as HWND h = pDoc->hWindow(0)
     SciExec( h, SCI_SETINDICATORCURRENT, FINDPROJ_INDICATOR, 0 )
     SciExec( h, SCI_INDICATORCLEARRANGE, 0, SciExec( h, SCI_GETLENGTH, 0, 0 ) )
-    ' The dirty marks go with the results. Left behind, they would sit on the document for
-    ' the rest of the session with nothing left to explain them.
-    SciExec( h, SCI_MARKERDELETEALL, FINDPROJ_MARKER_DIRTY, 0 )
 end sub
+
+
+function FindProject_IsLineDirty( byval nBlock as long, byval nLineInBlock as long ) as boolean
+    if (nBlock < 0) orelse (nBlock >= gFip.nBlockCount) then return false
+    if nLineInBlock < 0 then return false
+
+    dim as clsDocument ptr pDoc = gFip.groups( gFip.blocks(nBlock).nGroup ).pDoc
+    if pDoc = 0 then return false
+    if IsWindow( pDoc->hWindow(0) ) = 0 then return false
+
+    ' Past the snapshot: the block grew, so these lines did not exist when the search ran.
+    if nLineInBlock >= gFip.blocks(nBlock).nOrigCount then return true
+
+    dim as DWSTRING wszNow = pDoc->GetLine( gFip.blocks(nBlock).nFirstLine + nLineInBlock )
+    return (wszNow <> gFip.origLines( gFip.blocks(nBlock).nOrigFirst + nLineInBlock ))
+end function
+
+
+' Save every result file with unsaved changes. FALSE if the user cancelled one of them, which
+' the caller takes as "abandon the close".
+function FindProject_SaveAllDirty() as boolean
+    for g as long = 0 to gFip.nGroupCount - 1
+        dim as clsDocument ptr pDoc = gFip.groups(g).pDoc
+        if pDoc = 0 then continue for
+        if IsWindow( pDoc->hWindow(0) ) = 0 then continue for
+        if SciExec( pDoc->hWindow(0), SCI_GETMODIFY, 0, 0 ) = 0 then
+            if pDoc->UserModified = false then continue for
+        end if
+        ' SaveFile returns TRUE when the user cancelled (its own inverted convention).
+        if pDoc->SaveFile() then return false
+    next
+    return true
+end function
 
 
 ' Any result file with unsaved changes? The Find tab shows a dot when so.
@@ -792,24 +847,23 @@ sub FindProject_OnDocumentModified( byval pDocMod as clsDocument ptr, _
         if IsWindow( pDocMod->hWindow(0) ) then
             nEditLine = SciExec( pDocMod->hWindow(0), SCI_LINEFROMPOSITION, nModPos, 0 )
 
-            ' MARK THE EDITED LINE as dirty. Placement is per-document, so this is done once
-            ' here however many views the document has; only the excerpt views define the
-            ' marker and unmask it, so it shows there and nowhere else.
-            '
-            ' An insertion spanning lines marks all of them -- paste a block and the whole
-            ' block is flagged, not just the line the caret started on.
-            dim as long nTo = nEditLine
-            if nLinesAdded > 0 then nTo = nEditLine + nLinesAdded
-            for ln as long = nEditLine to nTo
-                SciExec( pDocMod->hWindow(0), SCI_MARKERADD, ln, FINDPROJ_MARKER_DIRTY )
-            next
+            ' (Nothing is marked here. Which lines are dirty is DERIVED at paint time by
+            '  comparing them against the text captured when the search ran -- see
+            '  FindProject_IsLineDirty -- so an edit that is undone stops being dirty by
+            '  itself. A marker set here could only ever say "this was typed in at some
+            '  point", which stays true after an undo.)
 
-            ' The tab's dirty dot and the surface's dirty stripes are both painted from live
-            ' state, so both have to be told to repaint -- nothing else invalidates them on a
-            ' keystroke made inside an excerpt (the excerpt repaints itself, but the stripe
-            ' is drawn OUTSIDE it, on the surface).
+            ' The tab's dirty dot and the surface's dirty stripes are painted from live state,
+            ' so both need a repaint -- nothing else invalidates them on a keystroke made
+            ' inside an excerpt (the excerpt repaints itself, but the stripe is drawn OUTSIDE
+            ' it, on the surface).
+            '
+            ' A REPAINT, NOT A REBUILD. Calling the model-changed callback here rebuilt the
+            ' row list, which hides and re-binds every pooled view -- and hiding the focused
+            ' window destroys the focus, so the excerpt lost the caret after every single
+            ' character typed into it. Measured.
             if IsWindow( gTTabCtl.hWindow ) then AfxRedrawWindow( gTTabCtl.hWindow )
-            if gFipModelChanged <> 0 then gFipModelChanged()
+            if gFipRepaint <> 0 then gFipRepaint()
         end if
 
         dim as long m0 = gFip.groups(g).nMatchFirst

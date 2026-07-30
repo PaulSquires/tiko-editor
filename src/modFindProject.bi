@@ -62,6 +62,11 @@ type FINDPROJ_BLOCK
     nLineCount  as long
     nMatchFirst as long     ' index into the model's flat matches array
     nMatchCount as long
+    ' The block's lines AS THEY WERE when the search ran, in the model's flat origLines
+    ' array. This is the baseline the dirty stripe compares against, so a line that is edited
+    ' and then undone stops being dirty -- which a "was it touched" flag cannot express.
+    nOrigFirst  as long
+    nOrigCount  as long
 end type
 
 ' One file's worth of results. Matches and blocks live in the model's FLAT arrays and are
@@ -82,6 +87,8 @@ type FINDPROJ_MODEL
     groups(any)  as FINDPROJ_GROUP
     matches(any) as FINDPROJ_MATCH
     blocks(any)  as FINDPROJ_BLOCK
+    origLines(any) as DWSTRING     ' every block's lines as found, addressed by range
+    nOrigCount   as long
     nGroupCount  as long
     nMatchCount  as long            ' entries in matches(), dead ones included
     nBlockCount  as long
@@ -104,6 +111,10 @@ dim shared gFipSuppressRemap as boolean
 ' ----------------------------------------------------------------------------------------
 type FIP_ModelChangedSub as sub()
 dim shared gFipModelChanged as FIP_ModelChangedSub
+' Repaint only -- no rebuild, no re-binding, and above all no hiding of windows. Used on the
+' per-keystroke path, where a rebuild would take the focus away from the excerpt being typed
+' into.
+dim shared gFipRepaint      as FIP_ModelChangedSub
 
 ' ----------------------------------------------------------------------------------------
 ' Somewhere to send SCI_RELEASEDOCUMENT. It is a MESSAGE, so releasing a document needs a
@@ -165,18 +176,19 @@ declare sub      FindProject_OnDocumentModified( byval pDocMod as clsDocument pt
 ' lexer, 8 is the Find bar's highlight, 9 brace matching, 10 occurrence highlight.
 #define FINDPROJ_INDICATOR  11
 
-' MARKER for a line edited through an excerpt. 1-4 are tiko's (bookmark, breakpoint,
-' occurrences, debugger current line) and the folder markers start at 25.
-'
-' A marker is the right mechanism rather than a list of line numbers because SCINTILLA MOVES
-' MARKERS WITH THEIR LINES: insert a line above one and it follows, with no remapping of ours
-' to get wrong. Marker PLACEMENT is per-document, but the marker's DEFINITION and the margin
-' mask that reveals it are per-VIEW -- which is what keeps this visible in the excerpts and
-' invisible in the file's own editor tab, where the user did not ask for it.
-#define FINDPROJ_MARKER_DIRTY   5
-#define FINDPROJ_MARKER_MASK    (1 shl FINDPROJ_MARKER_DIRTY)
-' Is any file in the results modified? Drives the dot on the tab.
+' Is any file in the results modified? Drives the circle on the tab.
 declare function FindProject_AnyDirty() as boolean
+' Save them all. FALSE when the user cancelled one, which aborts the close that asked.
+declare function FindProject_SaveAllDirty() as boolean
+' Has this line of this block been changed since the search ran? Compared against the text
+' captured at search time.
+'
+' A SCINTILLA MARKER WAS TRIED FIRST AND IS WRONG FOR THIS. A marker tracks its line as text
+' moves, which is genuinely useful -- but it is set on an edit and nothing takes it off again,
+' so undoing a change left the stripe behind. Comparing the text answers the question that is
+' actually being asked ("is this line different from what was found?") rather than "was this
+' line ever touched", and it answers it correctly after an undo.
+declare function FindProject_IsLineDirty( byval nBlock as long, byval nLineInBlock as long ) as boolean
 
 ' Paint (or clear) the match indicator over a group's document. Indicator RANGES live on the
 ' document, so this runs once per file -- but the indicator's COLOUR is per-view, which is why
