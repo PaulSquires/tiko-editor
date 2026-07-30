@@ -51,6 +51,9 @@ dim shared gFipOldSciProc as WNDPROC
 ' "Open File" affordance -- the excerpt is a view onto a real file, and this is how you get
 ' from it to the file's own tab.
 dim shared gFipFocusGroup as long = -1
+' Which group's header the cursor is over, or -1. Hovering one offers "Open File" too --
+' without the Alt+Enter hint, which only means anything while an excerpt has the caret.
+dim shared gFipHotGroup   as long = -1
 ' Where that affordance was last painted, so a click can be hit-tested against it.
 dim shared gFipOpenRect   as RECT
 ' Set while the pinned line is being re-asserted, so that the scroll it causes cannot come
@@ -65,23 +68,33 @@ dim shared gFipPinning    as boolean
 ' Open the focused excerpt's file in a tab of its own, at the line the caret is on. The
 ' excerpt is a view onto the real document, so this is a plain tab switch -- there is nothing
 ' to load and nothing to save first.
-private sub FipPool_OpenFocusedFile()
-    if gFipFocusGroup < 0 then exit sub
-    if gFipFocusGroup >= gFip.nGroupCount then exit sub
+private sub FipPool_OpenGroupFile( byval g as long )
+    if (g < 0) orelse (g >= gFip.nGroupCount) then exit sub
 
-    dim as clsDocument ptr pDoc = gFip.groups(gFipFocusGroup).pDoc
+    dim as clsDocument ptr pDoc = gFip.groups(g).pDoc
     if pDoc = 0 then exit sub
 
-    ' Where the caret sits in the excerpt, so the file opens where the user was looking.
+    ' Where the caret sits in whichever excerpt of this file has focus, so the file opens
+    ' where the user was looking. -1 when the click came from the header instead, in which
+    ' case the document keeps whatever position it already had.
     dim as long nPos = -1
     for i as long = 0 to gFipPoolCount - 1
         if gFipPool(i).nRow = -1 then continue for
-        if gFipRows( gFipPool(i).nRow ).nGroup <> gFipFocusGroup then continue for
+        if gFipRows( gFipPool(i).nRow ).nGroup <> g then continue for
         if GetFocus() = gFipPool(i).hWnd then
             nPos = SciExec( gFipPool(i).hWnd, SCI_GETCURRENTPOS, 0, 0 )
             exit for
         end if
     next
+
+    ' A header click with no focused excerpt still deserves to land somewhere useful: the
+    ' file's FIRST match, which is what the user was looking at in the list.
+    if nPos = -1 then
+        dim as long m0 = gFip.groups(g).nMatchFirst
+        for m as long = m0 to m0 + gFip.groups(g).nMatchCount - 1
+            if gFip.matches(m).bDead = false then nPos = gFip.matches(m).nStart: exit for
+        next
+    end if
 
     dim as long idx = gTTabCtl.GetTabIndexByDocumentPtr( pDoc )
     if idx = -1 then idx = gTTabCtl.AddTab( pDoc )
@@ -94,6 +107,12 @@ private sub FipPool_OpenFocusedFile()
         SciExec( pDoc->hWindow(0), SCI_GOTOPOS, nPos, 0 )
         pDoc->CenterCurrentLine
     end if
+end sub
+
+
+' Alt+Enter's target: the group whose excerpt currently has the caret.
+private sub FipPool_OpenFocusedFile()
+    FipPool_OpenGroupFile( gFipFocusGroup )
 end sub
 
 
@@ -322,9 +341,23 @@ private sub FipPool_Bind( byval i as long, byval nRow as long, byref rcView as R
         ' STYLES ARE PER-VIEW. The lexer came with the document, but without this the view
         ' renders in Scintilla's default black-on-white.
         pDoc->ApplyPropertiesToView( gFipPool(i).pSciView )
-        ' Re-suppress what ApplyPropertiesToView just set for a full editor.
-        SciExec( gFipPool(i).hWnd, SCI_SETMARGINWIDTHN, 1, 0 )
+        ' Re-suppress what ApplyPropertiesToView just set for a full editor: the fold margin
+        ' goes entirely, and margin 1 is repurposed below.
         SciExec( gFipPool(i).hWnd, SCI_SETMARGINWIDTHN, 2, 0 )
+
+        ' THE DIRTY-LINE STRIPE. Margin 1 becomes a narrow symbol margin showing only our
+        ' marker: a thin bar at the start of any line edited through the results list.
+        '
+        ' All three of these are PER-VIEW -- the margin type, its mask, and the marker's
+        ' definition -- which is precisely why the stripe appears here and not in the file's
+        ' own editor tab, even though the marker itself lives on the shared document.
+        ' Non-sensitive, so it generates no margin clicks to ignore.
+        SciExec( gFipPool(i).hWnd, SCI_SETMARGINTYPEN, 1, SC_MARGIN_SYMBOL )
+        SciExec( gFipPool(i).hWnd, SCI_SETMARGINMASKN, 1, FINDPROJ_MARKER_MASK )
+        SciExec( gFipPool(i).hWnd, SCI_SETMARGINSENSITIVEN, 1, 0 )
+        SciExec( gFipPool(i).hWnd, SCI_SETMARGINWIDTHN, 1, AfxScaleX(3) )
+        SciExec( gFipPool(i).hWnd, SCI_MARKERDEFINE, FINDPROJ_MARKER_DIRTY, SC_MARK_FULLRECT )
+        SciExec( gFipPool(i).hWnd, SCI_MARKERSETBACK, FINDPROJ_MARKER_DIRTY, FIP_DIRTY_COLOR )
         ' The match highlight. The RANGES live on the document (filled once per file by
         ' FindProject_ApplyIndicators), but the indicator's appearance is PER-VIEW, so it has
         ' to be described again on every view that should show it.
@@ -723,17 +756,23 @@ private sub FipSurface_PaintHeader( byval b as PsBufferPaint ptr, byref r as FIP
     ' affordance for something you can only do while you are IN a file, so showing it on every
     ' header would be noise -- and it would also be ambiguous about which file it meant.
     dim as long nOpenLeft = rcCard.right
-    if r.nGroup = gFipFocusGroup then
+    if (r.nGroup = gFipFocusGroup) orelse (r.nGroup = gFipHotGroup) then
         ' Id 401, newly minted: there was no "Open File" string and no blank slot left, so
         ' MAXIMUM moved 400 -> 401 in all six .lang files, each with a real translation.
         ' "Alt+Enter" is deliberately NOT localized -- it is a keystroke, not a phrase.
         dim as DWSTRING wszOpen = L(401, "Open File")
-        dim as DWSTRING wszKey  = "Alt+Enter"
+
+        ' THE SHORTCUT IS SHOWN ONLY WHERE IT WOULD WORK. Alt+Enter acts on the excerpt
+        ' holding the caret, so on a merely-hovered header it would advertise a keystroke
+        ' that does nothing.
+        dim as DWSTRING wszKey = ""
+        if r.nGroup = gFipFocusGroup then wszKey = "Alt+Enter"
 
         b->SetFont( ghFont(GUIFONT_9) )
-        dim as long nKeyW  = FipSurface_TextW( b, wszKey )
+        dim as long nKeyW = 0
+        if len(wszKey) then nKeyW = FipSurface_TextW( b, wszKey ) + nPad*2
         dim as long nOpenW = FipSurface_TextW( b, wszOpen )
-        nOpenLeft = rcCard.right - nPad - nKeyW - nPad*2 - nOpenW - nPad
+        nOpenLeft = rcCard.right - nPad - nKeyW - nOpenW - nPad
 
         dim as RECT rcOpen = rcCard
         rcOpen.left  = nOpenLeft
@@ -749,13 +788,12 @@ private sub FipSurface_PaintHeader( byval b as PsBufferPaint ptr, byref r as FIP
         b->SetBackColor( ghEditor.BackColorText )
         b->PaintText( wszOpen, @rcLbl, DT_LEFT )
 
-        dim as RECT rcKey = rcOpen
-        rcKey.right -= nPad
-        b->SetForeColor( ghEditor.ForeColorLinenumbers )
-        b->PaintText( wszKey, @rcKey, DT_RIGHT )
-
-        ' Remembered so a click can be hit-tested. Only ever one is on screen at a time.
-        gFipOpenRect = rcOpen
+        if len(wszKey) then
+            dim as RECT rcKey = rcOpen
+            rcKey.right -= nPad
+            b->SetForeColor( ghEditor.ForeColorLinenumbers )
+            b->PaintText( wszKey, @rcKey, DT_RIGHT )
+        end if
     end if
 
     if len(wszDir) then
@@ -997,25 +1035,52 @@ private function FipSurface_WndProc( _
             dim as long yClick = cast(short, hiword(lParam))
             dim as long xClick = cast(short, loword(lParam))
 
-            ' The "Open File" affordance, when one is showing. Tested before the header
-            ' collapse below, or clicking it would fold the group instead.
-            if gFipFocusGroup >= 0 then
-                if (xClick >= gFipOpenRect.left) andalso (xClick < gFipOpenRect.right) andalso _
-                   (yClick >= gFipOpenRect.top) andalso (yClick < gFipOpenRect.bottom) then
-                    FipPool_OpenFocusedFile()
-                    return 0
-                end if
-            end if
-
             dim as long i = FipSurface_RowAtPoint( yClick )
             if i >= 0 then
                 if gFipRows(i).nKind = FIP_ROW_HEADER then
-                    dim as long g = gFipRows(i).nGroup
-                    gFip.groups(g).bCollapsed = not gFip.groups(g).bCollapsed
-                    ' Keep the scroll where it is: the header the user clicked should not
-                    ' jump out from under the cursor.
-                    frmFindInProject_Refresh( false )
+                    ' THE TWISTY FOLDS, THE REST OF THE HEADER OPENS THE FILE. The header
+                    ' names a file, so clicking it going to that file is the obvious reading;
+                    ' folding is what the chevron is FOR, and giving it the whole bar made
+                    ' the chevron decorative.
+                    dim as long g  = gFipRows(i).nGroup
+                    dim as long cx = frmFindInProject_TwistyColumnX()
+                    if (xClick >= cx - AfxScaleX(10)) andalso (xClick <= cx + AfxScaleX(10)) then
+                        gFip.groups(g).bCollapsed = not gFip.groups(g).bCollapsed
+                        ' Keep the scroll where it is: the header the user clicked should not
+                        ' jump out from under the cursor.
+                        frmFindInProject_Refresh( false )
+                    else
+                        FipPool_OpenGroupFile( g )
+                    end if
                 end if
+            end if
+            return 0
+
+        case WM_MOUSEMOVE
+            ' Hot-track the headers so a hovered one can offer "Open File".
+            dim as long yMove = cast(short, hiword(lParam))
+            dim as long nHot  = -1
+            dim as long r     = FipSurface_RowAtPoint( yMove )
+            if r >= 0 then
+                if gFipRows(r).nKind = FIP_ROW_HEADER then nHot = gFipRows(r).nGroup
+            end if
+            if nHot <> gFipHotGroup then
+                gFipHotGroup = nHot
+                AfxRedrawWindow( hwnd )
+            end if
+            ' Ask to be told when the cursor leaves, or the last hovered header would keep
+            ' its button after the mouse has gone.
+            dim as TRACKMOUSEEVENT tme
+            tme.cbSize    = sizeof(TRACKMOUSEEVENT)
+            tme.dwFlags   = TME_LEAVE
+            tme.hwndTrack = hwnd
+            TrackMouseEvent( @tme )
+            return 0
+
+        case WM_MOUSELEAVE
+            if gFipHotGroup <> -1 then
+                gFipHotGroup = -1
+                AfxRedrawWindow( hwnd )
             end if
             return 0
 
@@ -1616,14 +1681,14 @@ sub frmFindInProject_RunSelfTest()
             for i as long = 0 to gFipPoolCount - 1
                 if gFipPool(i).hWnd = 0 then continue for
                 if SciExec( gFipPool(i).hWnd, SCI_GETMODEVENTMASK, 0, 0 ) <> 0 then nNoisy += 1
-                ' Breakpoints and folding have no meaning in a five-line excerpt, and
-                ' suppressing the margins removes their click notifications outright.
-                if SciExec( gFipPool(i).hWnd, SCI_GETMARGINWIDTHN, 1, 0 ) <> 0 then nMargins += 1
+                ' Folding has no meaning in a five-line excerpt. Margin 1 is NOT checked for
+                ' zero any more -- it carries the dirty-line stripe now, which is why this
+                ' assertion had to change rather than the code.
                 if SciExec( gFipPool(i).hWnd, SCI_GETMARGINWIDTHN, 2, 0 ) <> 0 then nMargins += 1
             next
             frmFindInProject_Check( "pool: every view has its modification events silenced", _
                 nNoisy = 0, str(nNoisy) & " noisy of " & str(gFipPoolCount) )
-            frmFindInProject_Check( "pool: the symbol and fold margins are suppressed", _
+            frmFindInProject_Check( "pool: the fold margin is suppressed", _
                 nMargins = 0, str(nMargins) & " margins still open" )
 
             ' A pooled view is a SECOND VIEW ONTO THE REAL DOCUMENT, not a copy. Proved by
@@ -1695,6 +1760,39 @@ sub frmFindInProject_RunSelfTest()
                 str(gFipRowCount) & " vs " & str(nRowsAllOpen) )
             frmFindInProject_Check( "foldall: the state reads back as not-all-collapsed", _
                 frmFindInProject_AllCollapsed() = false )
+
+            ' ---- the dirty-line marker ------------------------------------------------------
+            ' An edit made through an excerpt marks its line, and the mark is a Scintilla
+            ' MARKER so it rides along when lines move rather than needing remapping of ours.
+            for i as long = 0 to gFipPoolCount - 1
+                if gFipPool(i).nRow = -1 then continue for
+                dim as long gg2 = gFipRows( gFipPool(i).nRow ).nGroup
+                dim as long bb2 = gFipRows( gFipPool(i).nRow ).nBlock
+                dim as clsDocument ptr pD2 = gFip.groups(gg2).pDoc
+                if pD2 = 0 then continue for
+
+                dim as long nLn = gFip.blocks(bb2).nFirstLine
+                SciExec( pD2->hWindow(0), SCI_MARKERDELETEALL, FINDPROJ_MARKER_DIRTY, 0 )
+                frmFindInProject_Check( "dirty: no line is marked before an edit", _
+                    (SciExec( pD2->hWindow(0), SCI_MARKERGET, nLn, 0 ) and FINDPROJ_MARKER_MASK) = 0 )
+
+                ' Drive the REAL notifier, which is what frmMain_OnNotify calls.
+                FindProject_OnDocumentModified( pD2, SC_MOD_INSERTTEXT, _
+                        SciExec( pD2->hWindow(0), SCI_POSITIONFROMLINE, nLn, 0 ), 1, 0 )
+                frmFindInProject_Check( "dirty: the edited line is marked", _
+                    (SciExec( pD2->hWindow(0), SCI_MARKERGET, nLn, 0 ) and FINDPROJ_MARKER_MASK) <> 0 )
+
+                ' The mask is per-VIEW, and that is what keeps the stripe out of the file's
+                ' own editor tab. If the document's own window ever unmasked it, the marker
+                ' would start showing in ordinary editing.
+                frmFindInProject_Check( "dirty: the excerpt view reveals the marker", _
+                    (SciExec( gFipPool(i).hWnd, SCI_GETMARGINMASKN, 1, 0 ) and FINDPROJ_MARKER_MASK) <> 0 )
+                frmFindInProject_Check( "dirty: the document's OWN view does not", _
+                    (SciExec( pD2->hWindow(0), SCI_GETMARGINMASKN, 1, 0 ) and FINDPROJ_MARKER_MASK) = 0 )
+
+                SciExec( pD2->hWindow(0), SCI_MARKERDELETEALL, FINDPROJ_MARKER_DIRTY, 0 )
+                exit for
+            next
 
             ' ---- the excerpt views do not scroll --------------------------------------------
             ' Moving the caret to the end of the document must NOT slide the view off its
@@ -2007,8 +2105,11 @@ private sub FipBar_UpdateStatus()
             GetTextExtentPoint32( hdcM, wszCap.sptr, len(wszCap), @sz )
             SelectObject( hdcM, hOldFont )
             ReleaseDC( gTTabCtl.hWindow, hdcM )
-            ' text + the magnifier + what the control reserves for its own close/padding.
-            nWant = sz.cx + AfxScaleX(16) + AfxScaleX(56)
+            ' text + the magnifier + room for the dirty dot + what the control reserves for
+            ' its own close/padding. The dot's width is reserved ALWAYS, not only while
+            ' something is dirty, so the tab does not change size the moment you type in an
+            ' excerpt.
+            nWant = sz.cx + AfxScaleX(16) + AfxScaleX(16) + AfxScaleX(56)
         end if
         if nWant > 0 then
             if PsTabBar_GetTabMinWidth( gTTabCtl.hWindow, idx ) <> nWant then

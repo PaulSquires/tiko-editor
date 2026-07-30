@@ -1511,6 +1511,14 @@ sub clsDocument.ApplyPropertiesToView( byval pSciView as any ptr )
         ''
         ''  MARGIN 1: Non-Folding symbols (defaults to width 16) (Bookmark symbol, etc) (will be same color as line numbering)
         SciMsg( pSciView, SCI_SETMARGINTYPEN, 1, SC_MARGIN_TEXT )
+        ' Reveal ONLY the four markers tiko actually puts here (bookmark, breakpoint,
+        ' occurrences, debugger current line). Scintilla's default for this margin is EVERY
+        ' non-folder marker, so anything else that ever adds one -- Find in Project's
+        ' dirty-line marker was the first -- would silently start drawing in the editor's
+        ' margin. Measured: it did.
+        SciMsg( pSciView, SCI_SETMARGINMASKN, 1, _
+                (1 shl MARKER_BOOKMARK) or (1 shl MARKER_BREAKPOINT) or _
+                (1 shl MARKER_OCCURRENCES) or (1 shl MARKER_DEBUGGER_CURLINE) )
         SciMsg( pSciView, SCI_SETMARGINSENSITIVEN, 1, 1 )
         SciMsg( pSciView, SCI_SETMARGINWIDTHN, 1, iif(gConfig.LeftMargin, 16 * rxRatio, 0) )
                     

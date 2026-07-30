@@ -564,6 +564,9 @@ sub FindProject_ApplyIndicators( byval nGroup as long )
     dim as HWND h = pDoc->hWindow(0)
     SciExec( h, SCI_SETINDICATORCURRENT, FINDPROJ_INDICATOR, 0 )
     SciExec( h, SCI_INDICATORCLEARRANGE, 0, SciExec( h, SCI_GETLENGTH, 0, 0 ) )
+    ' A fresh search starts from a clean slate: the dirty marks describe edits made THROUGH
+    ' the results list, so they belong to the result set that is being replaced.
+    SciExec( h, SCI_MARKERDELETEALL, FINDPROJ_MARKER_DIRTY, 0 )
 
     dim as long m0 = gFip.groups(nGroup).nMatchFirst
     for i as long = m0 to m0 + gFip.groups(nGroup).nMatchCount - 1
@@ -582,7 +585,22 @@ sub FindProject_ClearIndicators( byval nGroup as long )
     dim as HWND h = pDoc->hWindow(0)
     SciExec( h, SCI_SETINDICATORCURRENT, FINDPROJ_INDICATOR, 0 )
     SciExec( h, SCI_INDICATORCLEARRANGE, 0, SciExec( h, SCI_GETLENGTH, 0, 0 ) )
+    ' The dirty marks go with the results. Left behind, they would sit on the document for
+    ' the rest of the session with nothing left to explain them.
+    SciExec( h, SCI_MARKERDELETEALL, FINDPROJ_MARKER_DIRTY, 0 )
 end sub
+
+
+' Any result file with unsaved changes? The Find tab shows a dot when so.
+function FindProject_AnyDirty() as boolean
+    for g as long = 0 to gFip.nGroupCount - 1
+        if gFip.groups(g).pDoc = 0 then continue for
+        if IsWindow( gFip.groups(g).pDoc->hWindow(0) ) = 0 then continue for
+        if SciExec( gFip.groups(g).pDoc->hWindow(0), SCI_GETMODIFY, 0, 0 ) <> 0 then return true
+        if gFip.groups(g).pDoc->UserModified then return true
+    next
+    return false
+end function
 
 
 ' ========================================================================================
@@ -773,6 +791,22 @@ sub FindProject_OnDocumentModified( byval pDocMod as clsDocument ptr, _
         dim as long nEditLine = 0
         if IsWindow( pDocMod->hWindow(0) ) then
             nEditLine = SciExec( pDocMod->hWindow(0), SCI_LINEFROMPOSITION, nModPos, 0 )
+
+            ' MARK THE EDITED LINE as dirty. Placement is per-document, so this is done once
+            ' here however many views the document has; only the excerpt views define the
+            ' marker and unmask it, so it shows there and nowhere else.
+            '
+            ' An insertion spanning lines marks all of them -- paste a block and the whole
+            ' block is flagged, not just the line the caret started on.
+            dim as long nTo = nEditLine
+            if nLinesAdded > 0 then nTo = nEditLine + nLinesAdded
+            for ln as long = nEditLine to nTo
+                SciExec( pDocMod->hWindow(0), SCI_MARKERADD, ln, FINDPROJ_MARKER_DIRTY )
+            next
+
+            ' The tab's dirty dot is painted from live state, so the bar has to be told to
+            ' repaint -- nothing else invalidates it on a keystroke made in an excerpt.
+            if IsWindow( gTTabCtl.hWindow ) then AfxRedrawWindow( gTTabCtl.hWindow )
         end if
 
         dim as long m0 = gFip.groups(g).nMatchFirst

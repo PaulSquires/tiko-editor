@@ -66,6 +66,31 @@ sub frmTopTabs_PaintCallback( byval p as PSTABBAR_PAINTINFO ptr )
     p->b->SetFont( ghFont(GUIFONT_10) )
     p->b->PaintText( p->wszCaption, @rcCaption, DT_CENTER )
 
+    ' A dot to the RIGHT of the phrase when any file in the results has unsaved changes --
+    ' the results are editable, so the tab has to be able to say that something in there is
+    ' dirty. Placed from the measured text rather than at the rect's edge, so it sits beside
+    ' the word instead of floating off near the close button.
+    if gTTabCtl.IsFindTab( p->itemID ) then
+        if FindProject_AnyDirty() then
+            dim as RECT rcMeas
+            rcMeas.right  = 32000
+            rcMeas.bottom = 32000
+            p->b->PaintTextEx( p->wszCaption, @rcMeas, DT_LEFT or DT_SINGLELINE or DT_CALCRECT )
+            dim as long nTextW = rcMeas.right - rcMeas.left
+            dim as long xMid   = (rcCaption.left + rcCaption.right) \ 2
+
+            dim as RECT rcDot = rcCaption
+            rcDot.left  = xMid + (nTextW \ 2) + AfxScaleX(4)
+            rcDot.right = rcDot.left + AfxScaleX(12)
+            if rcDot.right > p->rcText.right then
+                rcDot.right = p->rcText.right
+                rcDot.left  = rcDot.right - AfxScaleX(12)
+            end if
+            p->b->SetFont( ghFont(SYMBOLFONT_9) )
+            p->b->PaintText( wszIconDirty, @rcDot, DT_CENTER )
+        end if
+    end if
+
 
     ' if this document is dirty then the dirty circle icon overrides the display of the close icon
     ' unless the tab isHot. The dirty icon displays always for active and inactive tabs.

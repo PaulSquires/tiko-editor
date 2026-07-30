@@ -165,6 +165,19 @@ declare sub      FindProject_OnDocumentModified( byval pDocMod as clsDocument pt
 ' lexer, 8 is the Find bar's highlight, 9 brace matching, 10 occurrence highlight.
 #define FINDPROJ_INDICATOR  11
 
+' MARKER for a line edited through an excerpt. 1-4 are tiko's (bookmark, breakpoint,
+' occurrences, debugger current line) and the folder markers start at 25.
+'
+' A marker is the right mechanism rather than a list of line numbers because SCINTILLA MOVES
+' MARKERS WITH THEIR LINES: insert a line above one and it follows, with no remapping of ours
+' to get wrong. Marker PLACEMENT is per-document, but the marker's DEFINITION and the margin
+' mask that reveals it are per-VIEW -- which is what keeps this visible in the excerpts and
+' invisible in the file's own editor tab, where the user did not ask for it.
+#define FINDPROJ_MARKER_DIRTY   5
+#define FINDPROJ_MARKER_MASK    (1 shl FINDPROJ_MARKER_DIRTY)
+' Is any file in the results modified? Drives the dot on the tab.
+declare function FindProject_AnyDirty() as boolean
+
 ' Paint (or clear) the match indicator over a group's document. Indicator RANGES live on the
 ' document, so this runs once per file -- but the indicator's COLOUR is per-view, which is why
 ' FipPool_Bind styles each excerpt view separately.

@@ -45,6 +45,12 @@
 #define FIP_BLOCK_GAP        8      ' between one excerpt and the next
 #define FIP_INDENT          10      ' excerpts inset from the left edge
 
+' The dirty-line stripe's colour. DELIBERATELY NOT THEMED: no key in the editor palette is a
+' warning yellow, and pressing an unrelated one into service (bookmark, occurrence) would
+' make the stripe change meaning with the theme. A literal amber is honest about being a
+' fixed signal colour. COLORREF is 0x00BBGGRR, so this is R230 G180 B80.
+#define FIP_DIRTY_COLOR     &H50B4E6
+
 ' ----------------------------------------------------------------------------------------
 ' THE VIRTUAL CANVAS.
 '
