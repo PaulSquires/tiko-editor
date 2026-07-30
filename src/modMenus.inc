@@ -138,7 +138,14 @@ function frmMain_SearchTopMenuStates() as long
 
     ' if any documents exist in the editor then enable FindInProject
     if gApp.GetDocumentCount then EnableTopMenuItem( IDM_FINDINPROJECT, true )
-        
+
+    ' Go Back / Go Forward answer to the history, not to the active document -- entries are
+    ' filenames, so Back still works with every tab closed. Both ids sit outside the two
+    ' blanket re-enable loops below, which is what lets these decisions stand.
+    EnableTopMenuItem( IDM_GOBACK, NavHistory_CanBack() )
+    EnableTopMenuItem( IDM_GOFORWARD, NavHistory_CanForward() )
+
+
     ' Enable or disable specific edit menu items (based on the currently active document)
     dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
     if pDoc = 0 then exit function

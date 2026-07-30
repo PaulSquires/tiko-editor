@@ -136,7 +136,10 @@ Function getMenuText( byval idMenu as long ) As DWSTRING
         case IDM_FINDINPROJECT: wszText = L(256,"Find in Project") & "..."
         case IDM_REPLACE: wszText = L(46,"Replace") & "..."
         case IDM_GOTODEFINITION: wszText = L(47,"Goto Definition")
-        case IDM_LASTPOSITION: wszText = L(48,"Last Position")
+        ' Index 48 was "Last Position", which this feature replaces -- reused rather than
+        ' appended, and retranslated in all six .lang files.
+        case IDM_GOBACK: wszText = L(48,"Go Back")
+        case IDM_GOFORWARD: wszText = L(101,"Go Forward")
         case IDM_GOTONEXTFUNCTION: wszText = L(84,"Next Function")
         case IDM_GOTOPREVFUNCTION: wszText = L(85,"Previous Function")
         case IDM_GOTOHEADERFILE: wszText = L(231,"Goto Header File")
@@ -301,7 +304,8 @@ function buildTopMenuDefinitions() as long
     setTopMenuItem( IDC_MENUBAR_SEARCH, IDM_REPLACE, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_SEARCH, 0, 0, false, true )
     setTopMenuItem( IDC_MENUBAR_SEARCH, IDM_GOTODEFINITION, 0, false, false )
-    setTopMenuItem( IDC_MENUBAR_SEARCH, IDM_LASTPOSITION, 0, false, false )
+    setTopMenuItem( IDC_MENUBAR_SEARCH, IDM_GOBACK, 0, false, false )
+    setTopMenuItem( IDC_MENUBAR_SEARCH, IDM_GOFORWARD, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_SEARCH, 0, 0, false, true )
     setTopMenuItem( IDC_MENUBAR_SEARCH, IDM_GOTONEXTFUNCTION, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_SEARCH, IDM_GOTOPREVFUNCTION, 0, false, false )

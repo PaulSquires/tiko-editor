@@ -42,68 +42,6 @@ end function
 
 
 ' ========================================================================================
-' Save the current editor position so we can return to it should the user invoke
-' the Last Position option. 
-' ========================================================================================
-function OnCommand_SearchPushLastPosition( byval pDoc as clsDocument ptr ) as long
-    ' Add this position to the end of the global gLastPosition() array. This will act
-    ' as a LIFO push/pop type of stack.
-    if pDoc = 0 then exit function
-
-    dim as long ub = ubound(gLastPosition) + 1
-    redim preserve gLastPosition(ub)
-    
-    dim as HWND hEdit = pDoc->hWndActiveScintilla
-    gLastPosition(ub).pDoc       = pDoc
-    gLastPosition(ub).nFirstLine = SciExec( hEdit, SCI_GETFIRSTVISIBLELINE, 0, 0) 
-    gLastPosition(ub).nPosition  = SciExec( hEdit, SCI_GETCURRENTPOS, 0, 0) 
-    
-    function = 0
-end function
-
-
-' ========================================================================================
-' Save the current editor position so we can return to it should the user invoke
-' the Last Position option. 
-' ========================================================================================
-function OnCommand_SearchPopLastPosition() as long
-     ' Attempt to retrieve the pDoc from the en dof the gLastPosition array which would
-     ' essentially be the LIFO entry. It is possible that pDoc no longer exists so we
-     ' need to test to ensure that is valid. If not valid, then we remove it from the array
-     ' and continue to test down the array until a good entry is found or until the
-     ' array is empty.
-     dim as long ub = ubound(gLastPosition)
-     if ub = -1 then return 0     ' no entries exist
-     
-     dim as clsDocument ptr pDoc = gLastPosition(ub).pDoc
-     
-    ' Test if the pDoc pointer is still valid. If it is not then recurse until
-    ' we find a good one.
-    if gApp.IsValidDocumentPointer( pDoc ) = false then
-        if ub = 0 then   
-            ' at the start of array so simply erase and exit testing
-            erase gLastPosition
-        else
-            ' remove this no longer valid array entry.
-            redim preserve gLastPosition( ub - 1 )   
-            OnCommand_SearchPopLastPosition()
-        end if    
-        return 0
-    end if
-
-    ' If we reach this point then the pDoc is valid so process it.
-    ' Position ourselves to the correct previous position.
-    OpenSelectedDocument( pDoc->DiskFilename )
-    SciExec( GetFocus, SCI_SETFIRSTVISIBLELINE, gLastPosition(ub).nFirstLine, 0) 
-    SciExec( GetFocus, SCI_GOTOPOS, gLastPosition(ub).nPosition, 0) 
-    ' Now pop it off the end of the array
-    redim preserve gLastPosition( ub - 1 )   
-    
-    function = 0
-end function
-
-
-' ========================================================================================
 ' Position editor to document/function/variable under the current caret position
 ' ========================================================================================
 function OnCommand_SearchGotoDefinition( byval pDoc as clsDocument ptr ) as LRESULT
@@ -177,21 +115,9 @@ function OnCommand_SearchGotoDefinition( byval pDoc as clsDocument ptr ) as LRES
 
     end if
     
-    ' Save our current position in case user invokes "Last Position" option,   
-    OnCommand_SearchPushLastPosition( pDoc )
+    ' The departure point is recorded inside OpenSelectedDocument now -- it is the one choke
+    ' point every navigation passes through, so no caller needs its own push.
     OpenSelectedDocument( wszFilename, sSymbolName, nLineNum )
-
-    function = 0
-end function
-
-
-' ========================================================================================
-' Return to most previous position (invoked when "Last Position" is selected)
-' ========================================================================================
-function OnCommand_SearchGotoLastPosition() as LRESULT
-
-    ' Attempt to go back to previous position when "Last Position" option is chosen.   
-    OnCommand_SearchPopLastPosition()
 
     function = 0
 end function
@@ -287,7 +213,12 @@ function OnCommand_SearchFindActions( _
         end if
     end if
 
-    dim as long startPos = SendMessage( hEdit, SCI_GETCURRENTPOS, 0, 0) 
+    dim as long startPos = SendMessage( hEdit, SCI_GETCURRENTPOS, 0, 0)
+
+    ' A Find is a navigation within the document. Recorded here because it never reaches
+    ' OpenSelectedDocument. A search that finds nothing leaves the caret where it was, and
+    ' the same-file/same-line rule in NavHistory_AppendEntry collapses that to one entry.
+    NavHistory_RecordJump()
 
     select case id
         case IDM_FINDPREV
@@ -311,9 +242,11 @@ function OnCommand_SearchFindActions( _
             if IsWindowVisible(HWND_FRMMAIN_FIND) = 0 then pDoc->RemoveSelectionAttributes()
 
     end select
-    
+
+    NavHistory_NoteArrival()
+
     SetFocus( hFocus )
-    
+
     function = 0
 end function
 
@@ -363,14 +296,20 @@ function OnCommand_SearchGotoFile( _
     dim as HWND hEdit = pDoc->hWndActiveScintilla
     
     select case id
+        ' These two move the caret WITHIN the document, so they never reach
+        ' OpenSelectedDocument and need to record for themselves.
         case IDM_GOTONEXTFUNCTION
+            NavHistory_RecordJump()
             pDoc->GotoNextFunction
+            NavHistory_NoteArrival()
             exit function
-        
+
         case IDM_GOTOPREVFUNCTION
+            NavHistory_RecordJump()
             pDoc->GotoPrevFunction
+            NavHistory_NoteArrival()
             exit function
-            
+
         case IDM_GOTONEXTTAB
             gTTabCtl.NextTab
             exit function
@@ -403,9 +342,6 @@ function OnCommand_SearchGotoFile( _
     ' If the document when going to is the same as the one that we are 
     ' already in then no need to execute the movement.
     if pDocFile = pDoc then exit function
-    
-    ' Save our current position in case user invokes "Last Position" option,   
-    OnCommand_SearchPushLastPosition( pDoc )
 
     OpenSelectedDocument( wszFilename )
     
@@ -424,9 +360,17 @@ function OnCommand_SearchBookmarks( _
     dim as HWND hEdit = pDoc->hWndActiveScintilla
 
     select case id
-        case IDM_BOOKMARKNEXT:     pDoc->NextBookmark
-        case IDM_BOOKMARKPREV:     pDoc->PrevBookmark
-        
+        ' In-document jumps: record here, since OpenSelectedDocument is not involved.
+        case IDM_BOOKMARKNEXT
+            NavHistory_RecordJump()
+            pDoc->NextBookmark
+            NavHistory_NoteArrival()
+
+        case IDM_BOOKMARKPREV
+            NavHistory_RecordJump()
+            pDoc->PrevBookmark
+            NavHistory_NoteArrival()
+
         case IDM_BOOKMARKCLEARALL
             SciExec( hEdit, SCI_MARKERDELETEALL, -1, 0 )
             ClearBookmarks()

@@ -53,7 +53,6 @@ declare function OnCommand_SearchFindInProject() as LRESULT
 declare function OnCommand_SearchFindActions( byval id as long, byval pDoc as clsDocument ptr ) as LRESULT
 declare function OnCommand_SearchReplaceActions( byval id as long, byval pDoc as clsDocument ptr ) as LRESULT
 declare function OnCommand_SearchGotoDefinition( byval pDoc as clsDocument ptr ) as LRESULT
-declare function OnCommand_SearchGotoLastPosition() as LRESULT
 declare function OnCommand_SearchGotoCompileError( byval bMoveNext as boolean ) as long
 declare function OnCommand_SearchGotoFile( byval id as long, byval pDoc as clsDocument ptr ) as LRESULT
 declare function OnCommand_SearchBookmarks( byval id as long, byval pDoc as clsDocument ptr ) as LRESULT

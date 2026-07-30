@@ -854,8 +854,14 @@ function OpenSelectedDocument( _
     '   3. When a Find In Files line is selected.
     '   4. When a Goto Definition word is clicked on.
     '   5. When a compile error occurs and need to position to the error line.
-    '   6. When right-click select #Include file to open. 
-    
+    '   6. When right-click select #Include file to open.
+
+    ' Every one of those six is a navigation, so this is the one choke point where the
+    ' position being LEFT gets recorded for Go Back. Both calls are no-ops while
+    ' NavHistory_Goto is driving us (see NavHistory_IsRecordingAllowed) -- otherwise a Back
+    ' would record its own destination and never advance.
+    NavHistory_RecordJump()
+
     ' if incoming FunctionName then search for its filename and line number.
     if len( wszFunctionName ) andalso (nLineNumber = -1) then
         dim as SYMBOLREF refProc = gSymDb.FindProc( wszFunctionName )
@@ -914,8 +920,11 @@ function OpenSelectedDocument( _
             SciExec( hEdit, SCI_GOTOLINE, nLineNumber, 0) 
             pDoc->CenterCurrentLine
         end if
-    end if 
-    
+
+        ' Where we have arrived, so a later Go Back has somewhere to come from.
+        NavHistory_NoteArrival()
+    end if
+
     function = pDoc
 end function
 

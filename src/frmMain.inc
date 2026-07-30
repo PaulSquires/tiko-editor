@@ -1732,6 +1732,10 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ' clock. The rest are pure functions and would run anywhere.
     Codetip_RunSelfTest()
 
+    ' Mostly pure, but its last section drives the real NavHistory_Goto, so it needs gApp
+    ' and gTTabCtl to exist. It opens nothing: the target filename does not exist on disk.
+    NavHistory_RunSelfTest()
+
     ' Needs the frmMain CWindow (for the real DPI) but not the Output panel itself, which
     ' has not been created yet at this point -- the suite is deliberately pure.
     frmOutput_RunSelfTest()

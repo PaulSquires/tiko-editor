@@ -87,9 +87,14 @@ enum
     IDM_SEARCHSYMBOL
     IDM_FIND, IDM_FINDNEXT, IDM_FINDPREV
     IDM_REPLACENEXT, IDM_REPLACEPREV, IDM_REPLACEALL
-    IDM_FINDNEXTACCEL, IDM_FINDPREVACCEL 
+    IDM_FINDNEXTACCEL, IDM_FINDPREVACCEL
+    ' Placed here DELIBERATELY -- outside both of the blanket re-enable ranges in
+    ' frmMain_SearchTopMenuStates (IDM_SEARCHSYMBOL..IDM_FINDPREVACCEL and
+    ' IDM_REPLACE..IDM_GOTOLINE), so these two can be greyed on their own condition
+    ' the way IDM_FINDINPROJECT below is. Inside a range, the loop would force them on.
+    IDM_GOBACK, IDM_GOFORWARD
     IDM_FINDINPROJECT, IDM_REPLACE, IDM_TOGGLEREPLACE
-    IDM_GOTODEFINITION, IDM_LASTPOSITION
+    IDM_GOTODEFINITION
     IDM_CLOSETAB, IDM_GOTONEXTFUNCTION, IDM_GOTOPREVFUNCTION
     IDM_GOTONEXTTAB, IDM_GOTOPREVTAB, IDM_EDITORSPLIT, IDM_TABSLIST
     IDM_GOTOHEADERFILE, IDM_GOTOSOURCEFILE, IDM_GOTOMAINFILE, IDM_GOTORESOURCEFILE
@@ -336,13 +341,9 @@ dim shared gFind as FINDREPLACE_TYPE
 dim shared gFindInFiles as FINDREPLACE_TYPE
 
 
-'' Last position in document. Used when "Last Position" menu option is selected.
-type LASTPOSITION_TYPE
-    pDoc       as clsDocument Ptr
-    nFirstLine as long     ' first visible line on screen
-    nPosition  as long     ' Position in Scintilla document where caret is positioned
-end type
-dim shared gLastPosition(any) as LASTPOSITION_TYPE
+' (LASTPOSITION_TYPE / gLastPosition are gone. The navigation history that replaced them
+'  lives in modNavHistory.bi -- it keys on the filename rather than a clsDocument ptr, which
+'  is what let the old array dangle whenever a file was closed.)
 
 
 ' (The menubar's own item/state globals are gone: the PsMenuBar control owns its items,

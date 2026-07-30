@@ -382,6 +382,12 @@ function Scintilla_OnNotify( _
 
                         ' Update any brace highlighting
                         frmMain_DoBraceMatching( pDoc->hWndActiveScintilla )
+
+                        ' The navigation-history edit debounce: the caret has moved, so if
+                        ' it has now LEFT the line that was being edited, that edit location
+                        ' is finished and becomes a history entry. This is what makes a run
+                        ' of typing collapse to one entry instead of one per keystroke.
+                        NavHistory_CheckPendingEdit( pDoc )
                     end if
                 end if
             end if
@@ -432,6 +438,11 @@ function Scintilla_OnNotify( _
                     if (gApp.IsProjectLoading = false) andalso (gApp.IsFileLoading = false) then
                         SetTimer( HWND_FRMMAIN, IDT_PARSER_DEBOUNCE, PARSER_DEBOUNCE_MS, 0 )
                     end if
+
+                    ' Stamp this as the pending edit location for the navigation history.
+                    ' Nothing is appended yet -- SCN_UPDATEUI appends it once the caret
+                    ' leaves this line, so typing here costs no array work.
+                    NavHistory_NoteEdit( pDoc )
                     if (pNSC->modificationType and SC_MOD_DELETETEXT) then
                         hEdit = pDoc->hWndActiveScintilla
                         if frmAutoComplete_IsOpen() then

@@ -1043,8 +1043,9 @@ function clsConfig.LoadSessionFile( byref wszSessionFile as wstring ) as boolean
     ' Clear any previous info from the Output windows
     frmOutput_ResetAllControls()
     
-    ' Clear the gLastPosition() navigation array
-    erase gLastPosition
+    ' Clear the navigation history. Its entries are filenames rather than document pointers
+    ' now, so they can no longer dangle -- but they describe the workspace being left.
+    NavHistory_Clear()
 
     dim pDoc as clsDocument ptr
     dim as DWSTRING wst, wKey, wData, wszFilename
@@ -1507,8 +1508,9 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
 
     this.wszLastActiveSession = gApp.ProjectFilename
 
-    ' Clear the gLastPosition() navigation array
-    erase gLastPosition
+    ' Clear the navigation history. Its entries are filenames rather than document pointers
+    ' now, so they can no longer dangle -- but they describe the workspace being left.
+    NavHistory_Clear()
 
     frmMain_PositionWindows()
     frmMain_SetFocusToCurrentCodeWindow()

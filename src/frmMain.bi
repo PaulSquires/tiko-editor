@@ -43,7 +43,6 @@
 
 declare function frmMain_OpenProjectSafely( byval HWnd as HWnd, byref wszProjectFileName as const WString ) as Boolean
 declare function frmMain_GotoFile( byval pDoc as clsDocument ptr, byval nMenuId as long ) as long
-declare function frmMain_GotoLastPosition() as long
 declare function frmMain_GotoDefinition( byval pDoc as clsDocument Ptr ) as long
 declare function frmMain_SetStatusbar() as long
 declare function frmMain_SetFocusToCurrentCodeWindow() as long

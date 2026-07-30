@@ -98,8 +98,15 @@ end sub
 ' SetCurSel calls at startup are programmatic and stay silent).
 ' ========================================================================================
 sub frmTopTabs_SelChangeCallback( byval hTabBar as HWND, byval idxOld as integer, byval idxNew as integer )
+    ' A tab click is a navigation, and this is the ONLY place that sees it as one: the
+    ' control fires this for user clicks only, so the programmatic SetFocusTab calls
+    ' elsewhere (including the one NavHistory_Goto drives) never reach here.
+    NavHistory_RecordJump()
+
     gTTabCtl.TabFocusLost( idxOld )
     gTTabCtl.SetFocusTab( idxNew )
+
+    NavHistory_NoteArrival()
 end sub
 
 ' ========================================================================================

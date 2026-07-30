@@ -67,6 +67,10 @@ dim shared as DWSTRING gwszDefaultToolchain = "FreeBASIC-1.10.1-winlibs-gcc-9.3.
 #include once "fbcParser.bi"
 #include once "clsDocument.bi"
 #include once "modDeclares.bi"
+' Declarations only, and deliberately naming no Ps* type: clsConfig.inc calls
+' NavHistory_Clear from both of its session-load paths, well ahead of the frm* block. The
+' implementation goes in after modRoutines.inc, whose OpenSelectedDocument it drives.
+#include once "modNavHistory.bi"
 #include once "PsBufferPaint.bi"
 #include once "clsTopTabCtl.bi"
 #include once "clsConfig.bi"
@@ -106,6 +110,8 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "clsConfig.inc"
 #include once "PsBufferPaint.inc"
 #include once "modRoutines.inc"
+' After modRoutines.inc: NavHistory_Goto drives OpenSelectedDocument.
+#include once "modNavHistory.inc"
 #include once "clsDocument.inc"
 ' Encoding conversion self-test. After modRoutines.inc (Doc_EncodeForDisk/GetFileToString)
 ' and clsDocument.inc (the clsDocument type it instantiates for the disk round-trip).
