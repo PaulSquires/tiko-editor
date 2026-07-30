@@ -1809,6 +1809,40 @@ sub frmFindInProject_RunSelfTest()
                 str(gFipRowCount) & "/" & str(gFipCanvasH) & " vs " & _
                 str(nRowsOpen) & "/" & str(nCanvasOpen) )
 
+            ' ---- a fruitless search reddens the phrase -------------------------------------
+            ' The state is asserted rather than the pixel: what the field is TOLD to paint is
+            ' the part that can be wrong here.
+            frmFindInProject_Check( "noresults: a search WITH hits leaves the field normal", _
+                gFindTextIsError = false )
+
+            ' A phrase that cannot occur, BUILT AT RUNTIME so it never exists as a literal in
+            ' any file. The first version was a literal string of punctuation -- and it
+            ' matched, once, because this suite searches tiko's own project and the needle was
+            ' sitting right here in the source being searched. Control characters cannot
+            ' appear in a text source, and concatenating keeps even the pieces apart.
+            dim as long nHitsBefore = gFip.nMatchCount
+            dim as DWSTRING wszNeedle = chr(1) & "nomatch" & chr(1)
+            FindProject_Search( wszNeedle, true, false )
+            frmFind_ApplyErrorState()
+            frmFindInProject_Check( "noresults: a search with NO hits reddens the field", _
+                gFindTextIsError = true, str(gFip.nLiveMatches) & " matches" )
+
+            ' ...and finding something again clears it. Without this the assertion above
+            ' would pass on a field that had simply been red since startup.
+            FindProject_Search( sPhrase, true, false )
+            frmFind_ApplyErrorState()
+            frmFindInProject_Check( "noresults: finding hits again clears the red", _
+                gFindTextIsError = false, str(gFip.nLiveMatches) & " matches" )
+            frmFindInProject_Check( "noresults: and the results really did come back", _
+                gFip.nMatchCount = nHitsBefore, _
+                str(gFip.nMatchCount) & " vs " & str(nHitsBefore) )
+            frmFindInProject_Refresh( true )
+            ' The group index is rebuilt by those searches.
+            nGrp = -1
+            for g as long = 0 to gFip.nGroupCount - 1
+                if gFip.groups(g).pDoc = pTest then nGrp = g: exit for
+            next
+
             ' ---- the excerpt pool ----------------------------------------------------------
             dim as long nBound = 0
             dim as long nBadDoc = 0
@@ -2280,6 +2314,8 @@ private sub FipBar_UpdateStatus()
     end if
     gFind.wszResults = str(nOrdinal) & "/" & str(gFip.nLiveMatches)
     gFind.foundCount = gFip.nLiveMatches
+    ' A search that found nothing turns the phrase red.
+    frmFind_ApplyErrorState()
     if IsWindowVisible( HWND_FRMMAIN_FIND ) then AfxRedrawWindow( HWND_FRMMAIN_FIND )
 
     ' The tab takes the phrase's name once there is one. SetTabText leaves a document-less

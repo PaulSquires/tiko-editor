@@ -53,6 +53,10 @@ declare function frmFindInProject_TwistyColumnX() as long
 ' Restore the caret to the excerpt that had it. Declared here for clsTopTabCtl.inc, which is
 ' compiled long before frmFindInProject.inc.
 declare function frmFindInProject_RestoreFocus() as boolean
+' Colour the find field red when the phrase matched nothing, and normal otherwise. bForce
+' bypasses the "did it change" cache, which a theme change needs because the theme push
+' rewrites the field's colours underneath it.
+declare sub      frmFind_ApplyErrorState( byval bForce as boolean = false )
 
 
 

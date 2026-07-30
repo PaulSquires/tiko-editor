@@ -36,6 +36,9 @@ dim shared ghFindTip as HWND
 ' because a PsIconPanel's item set is STATIC by contract, so it cannot be added to the field
 ' panel and then removed again for ordinary find.
 dim shared ghFindIconsFold  as HWND
+' Whether the find field is currently painted in the "found nothing" colour. Cached so the
+' layout pass, which runs often, does not re-push and re-invalidate on every call.
+dim shared gFindTextIsError as boolean = false
 dim shared ghFindIconsField as HWND
 dim shared ghFindIconsNav   as HWND
 dim shared ghFindIconsClose as HWND
@@ -91,6 +94,34 @@ end function
 ' modFindReplace.inc) -- and one that FindControls_Show writes directly when it turns
 ' Selection on for a multi-line selection, without going anywhere near this control. Asking
 ' the model at paint time cannot go stale; a latch synced from four call sites can.
+' ========================================================================================
+' A project search that matched NOTHING turns the phrase red.
+'
+' Only on the Find in Project tab: the in-document find reports "0/0" in the results area
+' beside the bar, which the project search has no equivalent of once the list is empty --
+' an empty results surface looks the same whether you have searched or not.
+' ========================================================================================
+sub frmFind_ApplyErrorState( byval bForce as boolean = false )
+    dim as HWND hCtl = GetDlgItem( HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND )
+    if IsWindow( hCtl ) = 0 then exit sub
+
+    ' Hoisted to booleans: mixing these into one andalso chain is warning 38.
+    dim as boolean bOnTab     = frmFindInProject_IsActive()
+    dim as boolean bSearched  = gFip.bValid
+    dim as boolean bHadPhrase = cbool( len(gFip.wszPhrase) > 0 )
+    dim as boolean bNoHits    = cbool( gFip.nLiveMatches = 0 )
+
+    dim as boolean bErr = false
+    if bOnTab andalso bSearched andalso bHadPhrase andalso bNoHits then bErr = true
+
+    if (bErr = gFindTextIsError) andalso (bForce = false) then exit sub
+    gFindTextIsError = bErr
+
+    PsTextBox_SetForeColor( hCtl, iif( bErr, ghGeneral.iconfail, ghTopTabs.ForeColorHot ) )
+    AfxRedrawWindow( hCtl )
+end sub
+
+
 private function frmFind_IsLatched( byval id as long ) as boolean
     select case id
         case FINDTIP_MATCHCASE:  return cbool( gFind.nMatchCase <> 0 )
@@ -370,6 +401,10 @@ function frmFind_PositionWindows() as LRESULT
     gFind.rcResults.top        = nTop
     gFind.rcResults.right      = xCloseRight - nCloseW
     gFind.rcResults.bottom     = nTop + nHeight
+
+    ' Also covers LEAVING the tab: this runs on every tab switch, so a field left red by a
+    ' fruitless project search goes back to normal for an ordinary Ctrl+F.
+    frmFind_ApplyErrorState()
 
     AfxRedrawWindow( HWND_FRMMAIN_FIND )
 

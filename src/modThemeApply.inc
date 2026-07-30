@@ -405,6 +405,10 @@ sub Theme_ApplySubsystems( byval nMask as ulong )
                                               IDC_FRMFIND_TXTFIND ) )
         Theme_PushTopTabsTextBox( GetDlgItem( HWND_FRMMAIN_REPLACE, _
                                               IDC_FRMREPLACE_TXTREPLACE ) )
+        ' The push above just rewrote the find field's colours, so a phrase that is red for
+        ' having matched nothing has to be re-reddened. Forced past the change cache, which
+        ' cannot see a write it did not make.
+        frmFind_ApplyErrorState( true )
     end if
 
     ' The Help Center is a WebView2 pane: the SITE owns its own colours, so the only thing
