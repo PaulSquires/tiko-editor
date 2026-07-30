@@ -131,9 +131,9 @@ function frmStatusBar_TooltipCallback( byval hCtl as HWND, byval idx as integer 
     
     ' Only some of the panels actually have tooltips
     select case idx 
-        case COMPILE_STATUS_PANEL:   wszTooltip = L(251,"View Output Window")
-        case THEMES_DIALOG_PANEL:    wszTooltip = L(486,"Themes")
-        case BUILD_DIALOG_PANEL:     wszTooltip = L(277,"Build Configurations") & "..."
+        case COMPILE_STATUS_PANEL:   wszTooltip = L(201,"View Output Window")
+        case THEMES_DIALOG_PANEL:    wszTooltip = L(329,"Themes")
+        case BUILD_DIALOG_PANEL:     wszTooltip = L(219,"Build Configurations") & "..."
     end select
 
     return wszTooltip

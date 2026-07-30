@@ -299,7 +299,7 @@ function SetLogFileTextbox( byval pCompile as COMPILE_TYPE ptr ) as long
     
     dim as DWSTRING wszText = _
         pCompile->wszOutputMsg + _
-        L(178,"Command Line") + ": " + vbcrlf + _
+        L(143,"Command Line") + ": " + vbcrlf + _
         pCompile->wszFullCommandLine + vbcrlf + vbcrlf + _
         pCompile->wszFullLogFile 
                 
@@ -545,13 +545,13 @@ function ParseLogForError ( _
     if (NumWarnings > 0) orelse (NumErrors > 0) orelse (NumDirectives > 0) then
     
         wszIconCompileMsg = _
-                L(193, "Errors")   & " " & NumErrors   & "  " & _
-                L(192, "Warnings") & " " & NumWarnings & _
+                L(156, "Errors")   & " " & NumErrors   & "  " & _
+                L(155, "Warnings") & " " & NumWarnings & _
                 "  [" & _
                 AfxLocalDateStr( "yyyy-MM-dd" ) & "  " & _
                 AfxLocalTimeStr( "hh:mm:ss" ) & _
                 "]"
-        pCompile->wszOutputMsg = L(229,"Failed Compile")  & " (" & wszIconCompileMsg & ")" & vbcrlf
+        pCompile->wszOutputMsg = L(191,"Failed Compile")  & " (" & wszIconCompileMsg & ")" & vbcrlf
         pCompile->wszStatusBarMessage = wszIconCompileMsg
         SetCompileStatusBarMessage( wszIconCompileMsg, ghIconBad )
        
@@ -587,11 +587,11 @@ function ParseLogForError ( _
         ' we are not compiling modules
         dim as long nFileSize = AfxGetFileSize(pCompile->OutputFilename)
         wszIconCompileMsg = _
-                L(193, "Errors") & " " & NumErrors & "  " & _
-                L(192, "Warnings") & " " & NumWarnings & _
+                L(156, "Errors") & " " & NumErrors & "  " & _
+                L(155, "Warnings") & " " & NumWarnings & _
                 "  [ " & AfxStrPathname("NAMEX", pCompile->OutputFilename) & "  " & _
                 rtrim(AfxStrFormatKBSize(nFileSize)) & " (" & _
-                wstr(nFileSize) & " " & L(199,"bytes") & ") ]"
+                wstr(nFileSize) & " " & L(162,"bytes") & ") ]"
         pCompile->wszStatusBarMessage = wszIconCompileMsg         
         SetCompileStatusBarMessage( wszIconCompileMsg, ghIconGood )
 
@@ -599,11 +599,11 @@ function ParseLogForError ( _
        
 '        dim as double ElapsedTime = (pCompile->EndTime-pCompile->StartTime) * 1000
 '        dim as DWSTRING wszElapsedTime 
-'        dim as DWSTRING wszTimeUnits = L(198,"seconds")
+'        dim as DWSTRING wszTimeUnits = L(161,"seconds")
 '        if ElapsedTime < 1000 then  
 '            ' less than a second so display milliseconds
 '            wszElapsedTime = format(ElapsedTime, "0.000")
-'            'wszTimeUnits = L(197,"milliseconds")
+'            'wszTimeUnits = L(160,"milliseconds")
 '        else
 '            ' over 1000 milliseconds so display using seconds
 '            wszElapsedTime = format(ElapsedTime / 1000, "0.0")
@@ -612,17 +612,17 @@ function ParseLogForError ( _
         dim as double ElapsedTime = (pCompile->EndTime-pCompile->StartTime) 
         dim as DWSTRING wszElapsedTime = _
             iif( ElapsedTime > 1, format(ElapsedTime, "0.0"), format(ElapsedTime, "0.000") )
-        dim as DWSTRING wszTimeUnits = L(198,"seconds")
+        dim as DWSTRING wszTimeUnits = L(161,"seconds")
 
         pCompile->wszOutputMsg = _   ' this gets output to the Output window
-            L(228,"Successful Compile")  & " (" & _
-            L(193,"Errors")              & " " & NumErrors & " " & _
-            L(192,"Warnings")            & " " & NumWarnings & ")" & vbcrlf & vbcrlf & _
-            L(194,"Primary Source:")     & " " & pCompile->MainFilename & vbCrLf & _
-            L(195,"Target Compilation:") & " " & pCompile->OutputFilename & " (" & _
+            L(190,"Successful Compile")  & " (" & _
+            L(156,"Errors")              & " " & NumErrors & " " & _
+            L(155,"Warnings")            & " " & NumWarnings & ")" & vbcrlf & vbcrlf & _
+            L(157,"Primary Source:")     & " " & pCompile->MainFilename & vbCrLf & _
+            L(158,"Target Compilation:") & " " & pCompile->OutputFilename & " (" & _
                                     rtrim(AfxStrFormatKBSize(nFileSize)) & ", " & _
-                                    str(nFileSize) & " " & L(199,"bytes") & ")" & vbcrlf & _
-            L(196,"Compile Time:")       & " " & wszElapsedTime & _
+                                    str(nFileSize) & " " & L(162,"bytes") & ")" & vbcrlf & _
+            L(159,"Compile Time:")       & " " & wszElapsedTime & _
                                     " " & wszTimeUnits & " (" & _
                                     AfxLocalDateStr( "yyyy-MM-dd" ) & " " & _
                                     AfxLocalTimeStr( "hh:mm:ss" ) & ")" & vbcrlf

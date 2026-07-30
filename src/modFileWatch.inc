@@ -141,8 +141,8 @@ end function
 private function FileWatch_AskReload( byval pDoc as clsDocument ptr ) as long
     return TikoMsgBox( HWND_FRMMAIN, _
                        pDoc->DiskFilename & vbCrLf & vbCrLf & _
-                       L(266, "File was changed by another application. Reload it?"), _
-                       L(267, "File Changed"), _
+                       L(210, "File was changed by another application. Reload it?"), _
+                       L(211, "File Changed"), _
                        TMB_ICON_QUESTION, TMB_YESNOCANCEL )
 end function
 
@@ -153,8 +153,8 @@ end function
 private function FileWatch_ReportMissing( byval pDoc as clsDocument ptr ) as long
     return TikoMsgBox( HWND_FRMMAIN, _
                        pDoc->DiskFilename & vbCrLf & vbCrLf & _
-                       L(286, "This document has been deleted or is no longer available."), _
-                       L(267, "File Changed"), _
+                       L(226, "This document has been deleted or is no longer available."), _
+                       L(211, "File Changed"), _
                        TMB_ICON_INFO, TMB_OK )
 end function
 
@@ -478,17 +478,17 @@ sub FileWatch_RunSelfTest()
     ' ---- the three localized strings the boxes need resolve to something ------------------
     ' L() DISCARDS ITS DEFAULT (modDeclares.bi), so a missing .lang id renders a BLANK button
     ' or a blank message with nothing else reporting it.
-    FWCHK( len(LL(98))  > 0, "localized id 98 (Yes) is not empty" )
-    FWCHK( len(LL(99))  > 0, "localized id 99 (No) is not empty" )
-    FWCHK( len(LL(266)) > 0, "localized id 266 (changed prompt) is not empty" )
-    FWCHK( len(LL(267)) > 0, "localized id 267 (caption) is not empty" )
-    FWCHK( len(LL(286)) > 0, "localized id 286 (deleted notice) is not empty" )
-    FWCHK( len(LL(97))  > 0, "localized id 97 (the option's caption) is not empty" )
+    FWCHK( len(LL(95))  > 0, "localized id 98 (Yes) is not empty" )
+    FWCHK( len(LL(96))  > 0, "localized id 99 (No) is not empty" )
+    FWCHK( len(LL(210)) > 0, "localized id 266 (changed prompt) is not empty" )
+    FWCHK( len(LL(211)) > 0, "localized id 267 (caption) is not empty" )
+    FWCHK( len(LL(226)) > 0, "localized id 286 (deleted notice) is not empty" )
+    FWCHK( len(LL(94))  > 0, "localized id 97 (the option's caption) is not empty" )
 
     ' A blank id passes the check above under ANY language file, because LoadLocalizationFile
     ' fills an empty translation with the English text -- so print the two new ones rather than
     ' claiming a language-independent pass. Under english.lang these read Yes/No.
-    dim as string sShow = "NOTE  id 98=" & str(LL(98)) & " | id 99=" & str(LL(99))
+    dim as string sShow = "NOTE  id 98=" & str(LL(95)) & " | id 99=" & str(LL(96))
     ? sShow
 
     dim as string sRpt = "--- file watch: " & str(nPass) & " passed, " & str(nFail) & " failed ---"

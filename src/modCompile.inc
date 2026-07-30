@@ -36,7 +36,7 @@
 ' ========================================================================================
 function code_Initialize() as COMPILE_TYPE ptr
     ' Indicate in the StatusBar that we have started to compile
-    SetCompileStatusBarMessage( L(449, "Generating compiler files") & "...", 0 )
+    SetCompileStatusBarMessage( L(294, "Generating compiler files") & "...", 0 )
     gApp.IsCompiling = true    
 
     dim pCompile as COMPILE_TYPE ptr = new COMPILE_TYPE
@@ -98,10 +98,10 @@ function code_SetCompilerPath( byval pCompile as COMPILE_TYPE ptr ) as boolean
     ' Check to see if the compiler exists
     if AfxFileExists(pCompile->CompilerPath) = false then 
         dim as DWSTRING wszMsg = _
-            L(202,"Invalid defined compiler path.") & vbcrlf & _
+            L(165,"Invalid defined compiler path.") & vbcrlf & _
             "Path: " & pCompile->CompilerPath
         SetCompileStatusBarMessage( "", 0 )
-        TikoMsgBox( HWND_FRMMAIN, wszMsg, L(201,"Error"), _
+        TikoMsgBox( HWND_FRMMAIN, wszMsg, L(164,"Error"), _
                 TMB_ICON_INFO, TMB_OK )
         code_Cleanup( pCompile )
         return false        
@@ -122,7 +122,7 @@ function code_SetMainFile( byval pCompile as COMPILE_TYPE ptr ) as boolean
     if gApp.IsProjectActive then
         pDoc = gApp.GetMainDocumentPtr()
         if pDoc = null then
-            TikoMsgBox( HWND_FRMMAIN, L(208,"No Main file specified for the project."), L(201,"Error"), _
+            TikoMsgBox( HWND_FRMMAIN, L(171,"No Main file specified for the project."), L(164,"Error"), _
                             TMB_ICON_INFO, TMB_OK )
         end if
     else
@@ -388,7 +388,7 @@ function code_CompileModules( byval pCompile as COMPILE_TYPE ptr ) as boolean
                     if (nFileCount mod 5) = 0 then AfxDoEvents
                     
                     ' Prepend with # so that spinner shows
-                    dim as DWSTRING wst = L(203, "Compiling") + "... " + AfxStrPathname("NAMEX", pDoc->DiskFilename) 
+                    dim as DWSTRING wst = L(166, "Compiling") + "... " + AfxStrPathname("NAMEX", pDoc->DiskFilename) 
                     SetCompileStatusBarMessage( wst, 0 )
                     
                     dim as DWSTRING wszCommand = pCompile->CompilerPath
@@ -575,7 +575,7 @@ function code_Compile( byval wID as long ) as boolean
     if IsProcessRunning( pCompile->OutputFilename ) then
         AfxDeleteFile( pCompile->OutputFilename )
         SetCompileStatusBarMessage( "", 0 )
-        TikoMsgBox( HWND_FRMMAIN, L(200,"Program running") & "...", L(201,"Error"), _
+        TikoMsgBox( HWND_FRMMAIN, L(163,"Program running") & "...", L(164,"Error"), _
                         TMB_ICON_INFO, TMB_OK )
         code_Cleanup( pCompile )
         return false        
@@ -645,7 +645,7 @@ function code_Compile( byval wID as long ) as boolean
 
 
     ' Prepend with # so that spinner shows
-    dim as DWSTRING wst = "#" + L(203, "Compiling") + "... " + AfxStrPathname("NAMEX", pCompile->MainFilename) 
+    dim as DWSTRING wst = "#" + L(166, "Compiling") + "... " + AfxStrPathname("NAMEX", pCompile->MainFilename) 
     SetCompileStatusBarMessage( wst, 0 )
     SetCursor( LoadCursor(0, IDC_WAIT) )
 

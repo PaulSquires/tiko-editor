@@ -686,9 +686,9 @@ function gdb_parseVariablesResponse( byref response as string ) as integer
 
     ' Set the column widths to the size of the max text widths
     dim as long nTextWidth
-    dim as long nVarNameColWidth = getTextWidth( hLV, L(437, "Variable"), GUIFONT_9 )
+    dim as long nVarNameColWidth = getTextWidth( hLV, L(285, "Variable"), GUIFONT_9 )
     dim as long nVarNameDisplayColWidth = nVarNameColWidth
-    dim as long nVarValueColWidth = getTextWidth( hLV, L(438, "Value"), GUIFONT_9 )
+    dim as long nVarValueColWidth = getTextWidth( hLV, L(286, "Value"), GUIFONT_9 )
     
     for i as long = lbound(gdb_session.variable_array) to ubound(gdb_session.variable_array)
         ' Get the unscaled width of the text so that we can set the ListView column
@@ -813,12 +813,12 @@ LM( "ERROR:" )
     if instr( response, "*stopped,reason=" & chr(34) & "exited-normally" & chr(34)) orelse _
        instr( response, "*stopped,reason=" & chr(34) & "exited" & chr(34)) orelse _
        instr( response, "*stopped,reason=" & chr(34) & "exited-signalled" & chr(34)) then
-        SetCompileStatusBarMessage( L(323,"Debug Target Exited Normally"), ghIconGood )   ' ghIconGood:green, ghIconBad: red
+        SetCompileStatusBarMessage( L(259,"Debug Target Exited Normally"), ghIconGood )   ' ghIconGood:green, ghIconBad: red
         SendMessage( HWND_FRMDEBUG, IDM_DEBUG_STOPDEBUGGING, 0, 0 )
     end if
 
     if instr( response, "*stopped,reason=" & chr(34) & "signal-received" & chr(34) & ",signal-name=" & chr(34) & "SIGSEGV" & chr(34)) then
-        SetCompileStatusBarMessage( L(324,"Debug Target Terminated Unexpectantly"), ghIconBad )   ' ghIconGood:green, ghIconBad: red
+        SetCompileStatusBarMessage( L(260,"Debug Target Terminated Unexpectantly"), ghIconBad )   ' ghIconGood:green, ghIconBad: red
         SendMessage( HWND_FRMDEBUG, IDM_DEBUG_STOPDEBUGGING, 0, 0 )
     end if
 
@@ -847,7 +847,7 @@ function frmDebug_PositionWindows() as LRESULT
     gDbgBtns(i).nID        = IDM_DEBUG_STOPDEBUGGING
     gDbgBtns(i).wszToolTip = getMenuText(gDbgBtns(i).nID)
     gDbgBtns(i).wszIcon    = wszIconStop
-    gDbgBtns(i).wszText    = L(322,"Stop")
+    gDbgBtns(i).wszText    = L(258,"Stop")
     gDbgBtns(i).rc.Left    = nLeft
     gDbgBtns(i).rc.top     = rc.top
     gDbgBtns(i).rc.right   = nLeft + _
@@ -859,7 +859,7 @@ function frmDebug_PositionWindows() as LRESULT
     gDbgBtns(i).nID        = IDM_DEBUG_STARTDEBUGGING
     gDbgBtns(i).wszToolTip = getMenuText(gDbgBtns(i).nID)
     gDbgBtns(i).wszIcon    = wszIconContinue
-    gDbgBtns(i).wszText    = L(321,"Continue")
+    gDbgBtns(i).wszText    = L(257,"Continue")
     gDbgBtns(i).rc.Left    = nLeft
     gDbgBtns(i).rc.top     = rc.top
     gDbgBtns(i).rc.right   = nLeft + _
@@ -871,7 +871,7 @@ function frmDebug_PositionWindows() as LRESULT
     gDbgBtns(i).nID        = IDM_DEBUG_STEPOVER
     gDbgBtns(i).wszToolTip = getMenuText(gDbgBtns(i).nID)
     gDbgBtns(i).wszIcon    = wszIconStepOver
-    gDbgBtns(i).wszText    = L(312,"Step Over")
+    gDbgBtns(i).wszText    = L(248,"Step Over")
     gDbgBtns(i).rc.Left    = nLeft
     gDbgBtns(i).rc.top     = rc.top
     gDbgBtns(i).rc.right   = nLeft + _
@@ -883,7 +883,7 @@ function frmDebug_PositionWindows() as LRESULT
     gDbgBtns(i).nID        = IDM_DEBUG_STEPINTO
     gDbgBtns(i).wszToolTip = getMenuText(gDbgBtns(i).nID)
     gDbgBtns(i).wszIcon    = wszIconStepNext
-    gDbgBtns(i).wszText    = L(311,"Step Into")
+    gDbgBtns(i).wszText    = L(247,"Step Into")
     gDbgBtns(i).rc.Left    = nLeft
     gDbgBtns(i).rc.top     = rc.top
     gDbgBtns(i).rc.right   = nLeft + _
@@ -895,7 +895,7 @@ function frmDebug_PositionWindows() as LRESULT
     gDbgBtns(i).nID        = IDM_DEBUG_STEPOUT
     gDbgBtns(i).wszToolTip = getMenuText(gDbgBtns(i).nID)
     gDbgBtns(i).wszIcon    = wszIconStepOut
-    gDbgBtns(i).wszText    = L(319,"Step Out")
+    gDbgBtns(i).wszText    = L(255,"Step Out")
     gDbgBtns(i).rc.Left    = nLeft
     gDbgBtns(i).rc.top     = rc.top
     gDbgBtns(i).rc.right   = nLeft + _
@@ -907,7 +907,7 @@ function frmDebug_PositionWindows() as LRESULT
     gDbgBtns(i).nID        = IDM_DEBUG_RUNTOCURSOR
     gDbgBtns(i).wszToolTip = getMenuText(gDbgBtns(i).nID)
     gDbgBtns(i).wszIcon    = wszIconRunToCursor
-    gDbgBtns(i).wszText    = L(320,"Run to Cursor")
+    gDbgBtns(i).wszText    = L(256,"Run to Cursor")
     gDbgBtns(i).rc.Left    = nLeft
     gDbgBtns(i).rc.top     = rc.top
     gDbgBtns(i).rc.right   = nLeft + _
@@ -926,9 +926,9 @@ function frmDebug_PositionWindows() as LRESULT
         ' every refresh, further down in gdb_ParseVariables.
         hCtl = PsListTree_Create( HWND_FRMDEBUG, IDC_FRMDEBUG_LVVARS )
             PsListTree_AddColumn( hCtl, "",                 pWindow->ScaleX(10) )
-            PsListTree_AddColumn( hCtl, L(437, "Variable"), pWindow->ScaleX(75) )
+            PsListTree_AddColumn( hCtl, L(285, "Variable"), pWindow->ScaleX(75) )
             PsListTree_AddColumn( hCtl, "",                 pWindow->ScaleX(75) )
-            PsListTree_AddColumn( hCtl, L(438, "Value"),    pWindow->ScaleX(250) )
+            PsListTree_AddColumn( hCtl, L(286, "Value"),    pWindow->ScaleX(250) )
             PsListTree_SetFillColumn( hCtl, 3 )
             PsListTree_ShowHeader( hCtl, true )
             PsListTree_SetPaintCallback( hCtl, @ListBox_LVPaintRow )
@@ -1328,7 +1328,7 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as string, by
         
     else
         TikoMsgBox( HWND_FRMMAIN, "Failed to initialize GDB. Ensure gdb.exe is installed correctly.", _
-                    L(201,"Error"), TMB_ICON_ERROR, TMB_OK )
+                    L(164,"Error"), TMB_ICON_ERROR, TMB_OK )
         DestroyWindow( HWND_FRMMAIN )
         exit function            
     end if

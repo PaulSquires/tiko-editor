@@ -36,7 +36,7 @@ function OnCommand_CompileCommon( byval id as long ) as LRESULT
             dim as DWSTRING wszText
             wszText = iif( gApp.IsProjectActive, gApp.ProjectCommandLine, gApp.wszCommandLine )
             if frmInputBox_Show( HWND_FRMMAIN, _
-                        L(178,"Command Line"), L(179,"Enter command line arguments:"), _
+                        L(143,"Command Line"), L(144,"Enter command line arguments:"), _
                         wszText ) = IDOK then
                 if gApp.IsProjectActive then
                     gApp.ProjectCommandLine = wszText

@@ -798,7 +798,7 @@ sub Theme_RunSelfTest()
     '    build or the assertions to say so. That is exactly how the group headers shipped
     '    captionless. english.lang is the fallback for every other language, so checking it
     '    covers them all.
-    for nId as long = 452 to 480
+    for nId as long = 297 to 323
         dim as boolean bHasText = false
         if (nId >= lbound(LL)) andalso (nId <= ubound(LL)) then bHasText = (len(LL(nId)) > 0)
         THASSERT( bHasText, "localized string " & str(nId) & " is missing from english.lang" )

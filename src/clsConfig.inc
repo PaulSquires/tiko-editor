@@ -532,19 +532,19 @@ function clsConfig.SetCategoryDefaults() as long
         this.Cat(CATINDEX_FILES).wszDescription = L(2, "File")
         
         this.Cat(CATINDEX_MAIN).idFileType = FILETYPE_MAIN
-        this.Cat(CATINDEX_MAIN).wszDescription = L(212, "Main")
+        this.Cat(CATINDEX_MAIN).wszDescription = L(175, "Main")
         
         this.Cat(CATINDEX_RESOURCE).idFileType = FILETYPE_RESOURCE
-        this.Cat(CATINDEX_RESOURCE).wszDescription = L(213, "Resource")
+        this.Cat(CATINDEX_RESOURCE).wszDescription = L(176, "Resource")
         
         this.Cat(CATINDEX_HEADER).idFileType = FILETYPE_HEADER
-        this.Cat(CATINDEX_HEADER).wszDescription = L(175, "Header")
+        this.Cat(CATINDEX_HEADER).wszDescription = L(141, "Header")
         
         this.Cat(CATINDEX_MODULE).idFileType = FILETYPE_MODULE
-        this.Cat(CATINDEX_MODULE).wszDescription = L(211, "Module")
+        this.Cat(CATINDEX_MODULE).wszDescription = L(174, "Module")
         
         this.Cat(CATINDEX_NORMAL).idFileType = FILETYPE_NORMAL
-        this.Cat(CATINDEX_NORMAL).wszDescription = L(210, "Normal")
+        this.Cat(CATINDEX_NORMAL).wszDescription = L(173, "Normal")
     end if
 
     function = 0

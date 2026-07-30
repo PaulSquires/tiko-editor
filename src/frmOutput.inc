@@ -101,9 +101,9 @@ function frmOutput_CreateListView( byval CtrlID as long ) as HWND
     ' Columns, in the order the chr(9)-delimited rows are built: spacer, Line, File,
     ' Description. Description is the fill column.
     PsListTree_AddColumn( hCtl, "",                  pWindow->ScaleX(20) )
-    PsListTree_AddColumn( hCtl, L(253, "Line"),      pWindow->ScaleX(75) )
-    PsListTree_AddColumn( hCtl, L(254, "File"),      pWindow->ScaleX(250) )
-    PsListTree_AddColumn( hCtl, L(255, "Description"), pWindow->ScaleX(250) )
+    PsListTree_AddColumn( hCtl, L(203, "Line"),      pWindow->ScaleX(75) )
+    PsListTree_AddColumn( hCtl, L(204, "File"),      pWindow->ScaleX(250) )
+    PsListTree_AddColumn( hCtl, L(205, "Description"), pWindow->ScaleX(250) )
     PsListTree_SetFillColumn( hCtl, 3 )
     PsListTree_ShowHeader( hCtl, true )
 
@@ -273,7 +273,7 @@ function frmOutput_ShowHideOutputControls( byval hwnd as HWND ) as LRESULT
             hCtrl = hTextBox
             dim as DWSTRING wszText = ltrim(AfxGetWindowText(hTextBox))
             if wszText = "" then
-                AfxSetWindowText(hTextBox, L(96, "No compiler log file exists") )
+                AfxSetWindowText(hTextBox, L(93, "No compiler log file exists") )
             end if
 
         case 2    ' search results
@@ -600,11 +600,11 @@ sub frmOutput_SetTabCaptions()
     if IsWindow(HWND_FRMOUTPUT_SELECTBAR) = 0 then exit sub
 
     dim as DWSTRING wszCaption(0 to 4)
-    wszCaption(OUTPUT_TAB_RESULTS) = ucase(L(191, "Compiler Results"))
-    wszCaption(OUTPUT_TAB_LOGFILE) = ucase(L(252, "Compiler Log File"))
-    wszCaption(OUTPUT_TAB_SEARCH)  = ucase(L(262, "Search Results"))
-    wszCaption(OUTPUT_TAB_TODO)    = ucase(L(263, "TODO"))
-    wszCaption(OUTPUT_TAB_NOTES)   = ucase(L(264, "Notes"))
+    wszCaption(OUTPUT_TAB_RESULTS) = ucase(L(154, "Compiler Results"))
+    wszCaption(OUTPUT_TAB_LOGFILE) = ucase(L(202, "Compiler Log File"))
+    wszCaption(OUTPUT_TAB_SEARCH)  = ucase(L(207, "Search Results"))
+    wszCaption(OUTPUT_TAB_TODO)    = ucase(L(208, "TODO"))
+    wszCaption(OUTPUT_TAB_NOTES)   = ucase(L(209, "Notes"))
 
     for i as long = 0 to 4
         if PsSelectBar_GetText( HWND_FRMOUTPUT_SELECTBAR, i ) <> wszCaption(i) then
@@ -932,7 +932,7 @@ function frmOutput_Show( byval hwndParent as HWND ) as LRESULT
         PsIconPanel_SetPaintItemCallback( HWND_FRMOUTPUT_CLOSE, @frmOutput_ClosePaint )
         PsIconPanel_SetClickCallback( HWND_FRMOUTPUT_CLOSE, @frmOutput_CloseClick )
         PsIconPanel_AddItem( HWND_FRMOUTPUT_CLOSE, IP_KIND_COMMAND, wszIconClose, IDC_FRMOUTPUT_BTNCLOSE )
-        PsIconPanel_SetTooltipText( HWND_FRMOUTPUT_CLOSE, 0, L(161, "Close") )
+        PsIconPanel_SetTooltipText( HWND_FRMOUTPUT_CLOSE, 0, L(136, "Close") )
 
         dim as PSICONPANEL_COLORS IconPanelColors 
         PsIconPanel_GetColors( HWND_FRMOUTPUT_CLOSE, @IconPanelColors )

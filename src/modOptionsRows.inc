@@ -188,31 +188,31 @@ sub OptionsRows_Init()
     erase gOptRows
 
     ' ---- General Options -------------------------------------------------------------
-    OptionsRows_Add( OPTPAGE_GENERAL, OPT_TOGGLE, 119, @gOptWork.MultipleInstances ) ' "Allow multiple instances"
-    OptionsRows_Add( OPTPAGE_GENERAL, OPT_TOGGLE, 121, @gOptWork.CompileAutosave )   ' "Autosave files before compiling"
-    OptionsRows_Add( OPTPAGE_GENERAL, OPT_TOGGLE, 274, @gOptWork.AskExit )           ' "Ask before exiting the editor"
-    OptionsRows_Add( OPTPAGE_GENERAL, OPT_TOGGLE, 423, @gOptWork.RestoreSession )    ' "Restore previous session/project files on startup"
-    OptionsRows_Add( OPTPAGE_GENERAL, OPT_TOGGLE, 133, @gOptWork.CompactMenus )      ' "Use Compact Menu Interface"
-    OptionsRows_Add( OPTPAGE_GENERAL, OPT_TOGGLE,  91, @gOptWork.CheckUpdates )      ' "Check for Updates"
+    OptionsRows_Add( OPTPAGE_GENERAL, OPT_TOGGLE, 115, @gOptWork.MultipleInstances ) ' "Allow multiple instances"
+    OptionsRows_Add( OPTPAGE_GENERAL, OPT_TOGGLE, 117, @gOptWork.CompileAutosave )   ' "Autosave files before compiling"
+    OptionsRows_Add( OPTPAGE_GENERAL, OPT_TOGGLE, 216, @gOptWork.AskExit )           ' "Ask before exiting the editor"
+    OptionsRows_Add( OPTPAGE_GENERAL, OPT_TOGGLE, 275, @gOptWork.RestoreSession )    ' "Restore previous session/project files on startup"
+    OptionsRows_Add( OPTPAGE_GENERAL, OPT_TOGGLE, 129, @gOptWork.CompactMenus )      ' "Use Compact Menu Interface"
+    OptionsRows_Add( OPTPAGE_GENERAL, OPT_TOGGLE,  88, @gOptWork.CheckUpdates )      ' "Check for Updates"
 
     ' ---- Code Editor -----------------------------------------------------------------
     ' Everything the old Code Editor page carried, in its original order.
-    OptionsRows_Add( OPTPAGE_EDITOR, OPT_TOGGLE, 114, @gOptWork.SyntaxHighlighting )    ' "Syntax highlighting"
-    OptionsRows_Add( OPTPAGE_EDITOR, OPT_TOGGLE, 116, @gOptWork.ConfineCaret )          ' "Confine caret to text"
-    OptionsRows_Add( OPTPAGE_EDITOR, OPT_TOGGLE, 117, @gOptWork.HighlightCurrentLine )  ' "Highlight current line"
-    OptionsRows_Add( OPTPAGE_EDITOR, OPT_TOGGLE, 118, @gOptWork.TabIndentSpaces )       ' "Treat Tab as spaces"
-    OptionsRows_Add( OPTPAGE_EDITOR, OPT_TOGGLE, 122, @gOptWork.LeftMargin )            ' "Show left margin"
-    OptionsRows_Add( OPTPAGE_EDITOR, OPT_TOGGLE, 123, @gOptWork.FoldMargin )            ' "Show fold margin"
-    OptionsRows_Add( OPTPAGE_EDITOR, OPT_TOGGLE, 124, @gOptWork.LineNumbering )         ' "Show line numbers"
-    OptionsRows_Add( OPTPAGE_EDITOR, OPT_TOGGLE, 125, @gOptWork.IndentGuides )          ' "Show Indentation guides"
-    OptionsRows_Add( OPTPAGE_EDITOR, OPT_TOGGLE, 306, @gOptWork.RightEdge )             ' "Show right edge column"
+    OptionsRows_Add( OPTPAGE_EDITOR, OPT_TOGGLE, 110, @gOptWork.SyntaxHighlighting )    ' "Syntax highlighting"
+    OptionsRows_Add( OPTPAGE_EDITOR, OPT_TOGGLE, 112, @gOptWork.ConfineCaret )          ' "Confine caret to text"
+    OptionsRows_Add( OPTPAGE_EDITOR, OPT_TOGGLE, 113, @gOptWork.HighlightCurrentLine )  ' "Highlight current line"
+    OptionsRows_Add( OPTPAGE_EDITOR, OPT_TOGGLE, 114, @gOptWork.TabIndentSpaces )       ' "Treat Tab as spaces"
+    OptionsRows_Add( OPTPAGE_EDITOR, OPT_TOGGLE, 118, @gOptWork.LeftMargin )            ' "Show left margin"
+    OptionsRows_Add( OPTPAGE_EDITOR, OPT_TOGGLE, 119, @gOptWork.FoldMargin )            ' "Show fold margin"
+    OptionsRows_Add( OPTPAGE_EDITOR, OPT_TOGGLE, 120, @gOptWork.LineNumbering )         ' "Show line numbers"
+    OptionsRows_Add( OPTPAGE_EDITOR, OPT_TOGGLE, 121, @gOptWork.IndentGuides )          ' "Show Indentation guides"
+    OptionsRows_Add( OPTPAGE_EDITOR, OPT_TOGGLE, 242, @gOptWork.RightEdge )             ' "Show right edge column"
     ' The right-edge column number is meaningless while the column is hidden, so the row
     ' is gated on the toggle above it -- the same relationship the old page expressed by
     ' putting the field directly underneath its checkbox.
-    OptionsRows_Add( OPTPAGE_EDITOR, OPT_NUMERIC, 307, @gOptWork.RightEdgePosition, _
+    OptionsRows_Add( OPTPAGE_EDITOR, OPT_NUMERIC, 243, @gOptWork.RightEdgePosition, _
                      @gOptWork.RightEdge, 1, 500 )                                      ' "Edge margin position"
-    OptionsRows_Add( OPTPAGE_EDITOR, OPT_TOGGLE, 407, @gOptWork.PositionMiddle )        ' "Position searches to middle of screen"
-    OptionsRows_Add( OPTPAGE_EDITOR, OPT_TOGGLE, 414, @gOptWork.ClickToggleBreakpoint ) ' "Margin click toggles Breakpoint rather than Bookmark"
+    OptionsRows_Add( OPTPAGE_EDITOR, OPT_TOGGLE, 266, @gOptWork.PositionMiddle )        ' "Position searches to middle of screen"
+    OptionsRows_Add( OPTPAGE_EDITOR, OPT_TOGGLE, 269, @gOptWork.ClickToggleBreakpoint ) ' "Margin click toggles Breakpoint rather than Bookmark"
     ' TAB SIZE and CASE were here. They are font-shaped settings, not editing behaviour, so
     ' they moved to the bottom of the Editor Font page (frmOptionsColors) as native controls.
     ' OptionsWork_Load/Commit still marshal gOptWork.TabSize / .KeywordCase either way -- those
@@ -225,16 +225,16 @@ sub OptionsRows_Init()
     ' scrolls only the Editor page turns that trade the other way, because twenty rows do not
     ' fit and thirteen do. The boundary is not a new judgement -- it is the one the original
     ' dialog drew, recovered from the deleted form rather than re-invented.
-    OptionsRows_Add( OPTPAGE_EDITOR2, OPT_TOGGLE, 115, @gOptWork.Codetips )              ' "Enable CodeTips"
-    OptionsRows_Add( OPTPAGE_EDITOR2, OPT_TOGGLE,  95, @gOptWork.AutoComplete )          ' "Enable Autocomplete"
-    OptionsRows_Add( OPTPAGE_EDITOR2, OPT_TOGGLE, 417, @gOptWork.CharacterAutoComplete ) ' "Enable Character Autocompletion"
-    OptionsRows_Add( OPTPAGE_EDITOR2, OPT_TOGGLE, 120, @gOptWork.AutoIndentation )       ' "Enable Auto Indentation"
+    OptionsRows_Add( OPTPAGE_EDITOR2, OPT_TOGGLE, 111, @gOptWork.Codetips )              ' "Enable CodeTips"
+    OptionsRows_Add( OPTPAGE_EDITOR2, OPT_TOGGLE,  92, @gOptWork.AutoComplete )          ' "Enable Autocomplete"
+    OptionsRows_Add( OPTPAGE_EDITOR2, OPT_TOGGLE, 271, @gOptWork.CharacterAutoComplete ) ' "Enable Character Autocompletion"
+    OptionsRows_Add( OPTPAGE_EDITOR2, OPT_TOGGLE, 116, @gOptWork.AutoIndentation )       ' "Enable Auto Indentation"
     ' Gated, exactly as the old page gated it with EnableWindow.
-    OptionsRows_Add( OPTPAGE_EDITOR2, OPT_TOGGLE, 416, @gOptWork.ForNextVariable, _
+    OptionsRows_Add( OPTPAGE_EDITOR2, OPT_TOGGLE, 270, @gOptWork.ForNextVariable, _
                      @gOptWork.AutoIndentation )                                         ' "Append loop variable to For/Next statement"
-    OptionsRows_Add( OPTPAGE_EDITOR2, OPT_TOGGLE, 412, @gOptWork.BraceHighlight )        ' "Enable Brace Highlighting"
-    OptionsRows_Add( OPTPAGE_EDITOR2, OPT_TOGGLE, 419, @gOptWork.OccurrenceHighlight )   ' "Enable Occurrences Highlighting"
-    OptionsRows_Add( OPTPAGE_EDITOR2, OPT_TOGGLE,  97, @gOptWork.DetectExternalFileChanges ) ' "Detect external file changes and silently reload"
+    OptionsRows_Add( OPTPAGE_EDITOR2, OPT_TOGGLE, 267, @gOptWork.BraceHighlight )        ' "Enable Brace Highlighting"
+    OptionsRows_Add( OPTPAGE_EDITOR2, OPT_TOGGLE, 272, @gOptWork.OccurrenceHighlight )   ' "Enable Occurrences Highlighting"
+    OptionsRows_Add( OPTPAGE_EDITOR2, OPT_TOGGLE,  94, @gOptWork.DetectExternalFileChanges ) ' "Detect external file changes and silently reload"
 
     ' The encoding a File>New document starts life with. THE FIRST OPT_COMBO ROW IN THE
     ' TABLE -- the kind has been fully implemented and unused since the dialog was rebuilt.
@@ -248,7 +248,7 @@ sub OptionsRows_Init()
         if nEnc > FILE_ENCODING_ANSI then wszEncItems += chr(9)
         wszEncItems += Doc_EncodingName( nEnc )
     next
-    OptionsRows_Add( OPTPAGE_EDITOR2, OPT_COMBO, 83, @gOptWork.NewFileEncoding, _
+    OptionsRows_Add( OPTPAGE_EDITOR2, OPT_COMBO, 81, @gOptWork.NewFileEncoding, _
                      0, 0, 0, wszEncItems )                                          ' "Default encoding for new files"
 
 end sub
@@ -837,15 +837,15 @@ sub OptionsRows_RunBindTest()
 
     ? "--- TIKO_OPTIONS_SELFTEST (row/field binding) ---"
 
-    BINDCHK( 119, gConfig.MultipleInstances,    "Allow multiple instances" )
-    BINDCHK( 121, gConfig.CompileAutosave,      "Autosave before compiling" )
-    BINDCHK( 274, gConfig.AskExit,              "Ask before exiting" )
-    BINDCHK( 423, gConfig.RestoreSession,       "Restore previous session" )
-    BINDCHK( 133, gConfig.CompactMenus,         "Use Compact Menu Interface" )
-    BINDCHK(  91, gConfig.CheckUpdates,         "Check for Updates" )
-    BINDCHK( 114, gConfig.SyntaxHighlighting,   "Syntax highlighting" )
-    BINDCHK( 124, gConfig.LineNumbering,        "Show line numbers" )
-    BINDCHK(  83, gConfig.NewFileEncoding,      "Default encoding for new files" )
+    BINDCHK( 115, gConfig.MultipleInstances,    "Allow multiple instances" )
+    BINDCHK( 117, gConfig.CompileAutosave,      "Autosave before compiling" )
+    BINDCHK( 216, gConfig.AskExit,              "Ask before exiting" )
+    BINDCHK( 275, gConfig.RestoreSession,       "Restore previous session" )
+    BINDCHK( 129, gConfig.CompactMenus,         "Use Compact Menu Interface" )
+    BINDCHK(  88, gConfig.CheckUpdates,         "Check for Updates" )
+    BINDCHK( 110, gConfig.SyntaxHighlighting,   "Syntax highlighting" )
+    BINDCHK( 120, gConfig.LineNumbering,        "Show line numbers" )
+    BINDCHK(  81, gConfig.NewFileEncoding,      "Default encoding for new files" )
 
     ' ---- The new-file-encoding combo: index == FILE_ENCODING_* value ------------------
     ' The row's item list is built by walking the encoding constants through

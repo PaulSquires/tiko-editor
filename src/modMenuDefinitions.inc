@@ -48,14 +48,14 @@ Function getMenuText( byval idMenu as long ) As DWSTRING
         case IDC_MENUBAR_FILE: wszText = L(2,"&File")
         case IDC_MENUBAR_EDIT: wszText =  L(14,"Edit")
         case IDC_MENUBAR_SEARCH: wszText = L(42,"Search")
-        case IDC_MENUBAR_VIEW: wszText = L(54,"View")
-        case IDC_MENUBAR_PROJECT: wszText = L(63,"Project")
-        case IDC_MENUBAR_COMPILE: wszText = L(64,"Compile")
-        case IDC_MENUBAR_DEBUG: wszText = L(309,"Debug")
-        case IDC_MENUBAR_HELP: wszText = L(73,"Help")
+        case IDC_MENUBAR_VIEW: wszText = L(53,"View")
+        case IDC_MENUBAR_PROJECT: wszText = L(62,"Project")
+        case IDC_MENUBAR_COMPILE: wszText = L(63,"Compile")
+        case IDC_MENUBAR_DEBUG: wszText = L(245,"Debug")
+        case IDC_MENUBAR_HELP: wszText = L(71,"Help")
         case IDC_MENUBAR_UPDATE
             if gApp.IsUpdateAvailable then
-                wszText = L(100,"Update Available")
+                wszText = L(97,"Update Available")
             end if
 
         case IDM_FILENEW: wszText = L(3,"New")
@@ -64,7 +64,7 @@ Function getMenuText( byval idMenu as long ) As DWSTRING
         case IDM_MRU: return L(10,"Open Recent")
         case IDM_MRUBASE to IDM_MRUBASE + 9
             return gConfig.MRU( idMenu - IDM_MRUBASE )
-        case IDM_MRUCLEAR: return L(225, "Clear this list")   
+        case IDM_MRUCLEAR: return L(188, "Clear this list")   
         case IDM_MRUFILES: return L(11,"(Empty)")
         case IDM_FILECLOSE: wszText = L(5,"Close") 
         case IDM_FILECLOSEALL: wszText = L(6,"Close All") 
@@ -73,27 +73,27 @@ Function getMenuText( byval idMenu as long ) As DWSTRING
         case IDM_FILERENAME: wszText = L(21,"Rename") & "..."
         case IDM_FILEDUPLICATE: wszText = L(22,"Duplicate")
         case IDM_FILESAVEALL: wszText = L(9,"Save All")
-        case IDM_SAVESESSION: wszText = L(425,"Save Session") & "..."
-        case IDM_LOADSESSION: wszText = L(426,"Load Session") & "..."
-        case IDM_CLOSESESSION: wszText = L(436,"Close Session")
-        case IDM_MRUSESSION: wszText = L(218,"Recent Sessions")
+        case IDM_SAVESESSION: wszText = L(277,"Save Session") & "..."
+        case IDM_LOADSESSION: wszText = L(278,"Load Session") & "..."
+        case IDM_CLOSESESSION: wszText = L(284,"Close Session")
+        case IDM_MRUSESSION: wszText = L(181,"Recent Sessions")
         case IDM_MRUSESSIONBASE to IDM_MRUSESSIONBASE + 9
             return gConfig.MRUSESSION( idMenu - IDM_MRUSESSIONBASE )
-        case IDM_MRUSESSIONCLEAR: return L(225, "Clear this list")   
+        case IDM_MRUSESSIONCLEAR: return L(188, "Clear this list")   
         case IDM_MRUSESSIONFILES: return L(11,"(Empty)")
-        case IDM_KEYBOARDSHORTCUTS: wszText = L(220,"Keyboard Shortcuts") & "..."
-        case IDM_USERTOOLS: return L(289,"User Tools")
-        case IDM_USERTOOLSDIALOG: wszText = L(289,"User Tools") & "..."
+        case IDM_KEYBOARDSHORTCUTS: wszText = L(183,"Keyboard Shortcuts") & "..."
+        case IDM_USERTOOLS: return L(229,"User Tools")
+        case IDM_USERTOOLSDIALOG: wszText = L(229,"User Tools") & "..."
         case IDM_USERTOOLSBASE to IDM_USERTOOLSBASE + ubound(gConfig.Tools)
             dim as DWSTRING wszText = gConfig.Tools(idMenu - IDM_USERTOOLSBASE).wszDescription
             dim as DWSTRING wszShortcut = createToolsMenuShortcut(idMenu - IDM_USERTOOLSBASE)
             if len(wszShortcut) then wszText = wszText & chr(9) & wszShortcut
             return wszText
         case IDM_USERTOOLSLIST: return L(11,"(Empty)")
-        case IDM_OPTIONS: return L(288,"Preferences")
-        case IDM_OPTIONSDIALOG: wszText = L(62,"Environment Options") & "..."
-        case IDM_THEMES: wszText = L(486,"Themes") & "..."
-        case IDM_BUILDCONFIG: wszText = L(277,"Build Configurations") & "..."
+        case IDM_OPTIONS: return L(228,"Preferences")
+        case IDM_OPTIONSDIALOG: wszText = L(61,"Environment Options") & "..."
+        case IDM_THEMES: wszText = L(329,"Themes") & "..."
+        case IDM_BUILDCONFIG: wszText = L(219,"Build Configurations") & "..."
         case IDM_EXIT: wszText = L(13,"Exit") 
 
         case IDM_UNDO: wszText = L(15,"Undo")
@@ -111,104 +111,104 @@ Function getMenuText( byval idMenu as long ) As DWSTRING
         case IDM_SELECTALL: wszText = L(40,"Select All")
             
         case IDM_TOGGLEREPLACE
-             wszText = L(270, "Toggle Replace mode")
+             wszText = L(213, "Toggle Replace mode")
              idMenu = IDM_REPLACE
         case IDM_FINDPREV, IDM_FINDPREVACCEL     
              wszText = L(45, "Find Previous")
         case IDM_FINDNEXT, IDM_FINDNEXTACCEL     
              wszText = L(44, "Find Next")
 
-        case IDM_GOTOPREVTAB: wszText = L(431, "Scroll Tabs Left")
-        case IDM_GOTONEXTTAB: wszText = L(432, "Scroll Tabs Right")
-        case IDM_TABSLIST: wszText = L(430, "Tab List")              
+        case IDM_GOTOPREVTAB: wszText = L(280, "Scroll Tabs Left")
+        case IDM_GOTONEXTTAB: wszText = L(281, "Scroll Tabs Right")
+        case IDM_TABSLIST: wszText = L(279, "Tab List")              
         case IDM_EDITORSPLIT
             ' If CTRL is pressed then use the top/bottom split, otherwise
             ' use the left/right split icon.
             if (wszIconSplitEditor = wszIconSplitTopBottom) then
-                wszText = L(070,"Toggle Split Editor Top/Bottom")
+                wszText = L(68,"Toggle Split Editor Top/Bottom")
             else    
-                wszText = L(069,"Toggle Split Editor Left/Right") & _
-                              chr(13,10) & "[Alt]: " & L(071,"Split Top/Bottom")
+                wszText = L(67,"Toggle Split Editor Left/Right") & _
+                              chr(13,10) & "[Alt]: " & L(69,"Split Top/Bottom")
             end if
 
         case IDM_SEARCHSYMBOL: wszText = L(37,"Search Symbol") & "..."
         case IDM_FIND: wszText = L(43,"Find") & "..."
-        case IDM_FINDINPROJECT: wszText = L(256,"Find in Project") & "..."
+        case IDM_FINDINPROJECT: wszText = L(206,"Find in Project") & "..."
         case IDM_REPLACE: wszText = L(46,"Replace") & "..."
         case IDM_GOTODEFINITION: wszText = L(47,"Goto Definition")
         ' Index 48 was "Last Position", which this feature replaces -- reused rather than
         ' appended, and retranslated in all six .lang files.
         case IDM_GOBACK: wszText = L(48,"Go Back")
-        case IDM_GOFORWARD: wszText = L(101,"Go Forward")
-        case IDM_GOTONEXTFUNCTION: wszText = L(84,"Next Function")
-        case IDM_GOTOPREVFUNCTION: wszText = L(85,"Previous Function")
-        case IDM_GOTOHEADERFILE: wszText = L(231,"Goto Header File")
-        case IDM_GOTOSOURCEFILE: wszText = L(232,"Goto Code File")
-        case IDM_GOTOMAINFILE: wszText = L(233,"Goto Main File")
-        case IDM_GOTORESOURCEFILE: wszText = L(234,"Goto Resource File")
-        case IDM_BOOKMARKTOGGLE: wszText = L(50,"Toggle Bookmark")
-        case IDM_BOOKMARKNEXT: wszText = L(51,"Next Bookmark")
-        case IDM_BOOKMARKPREV: wszText = L(52,"Previous Bookmark")
-        case IDM_BOOKMARKCLEARALL: wszText = L(53,"Clear Bookmarks")
+        case IDM_GOFORWARD: wszText = L(98,"Go Forward")
+        case IDM_GOTONEXTFUNCTION: wszText = L(82,"Next Function")
+        case IDM_GOTOPREVFUNCTION: wszText = L(83,"Previous Function")
+        case IDM_GOTOHEADERFILE: wszText = L(192,"Goto Header File")
+        case IDM_GOTOSOURCEFILE: wszText = L(193,"Goto Code File")
+        case IDM_GOTOMAINFILE: wszText = L(194,"Goto Main File")
+        case IDM_GOTORESOURCEFILE: wszText = L(195,"Goto Resource File")
+        case IDM_BOOKMARKTOGGLE: wszText = L(49,"Toggle Bookmark")
+        case IDM_BOOKMARKNEXT: wszText = L(50,"Next Bookmark")
+        case IDM_BOOKMARKPREV: wszText = L(51,"Previous Bookmark")
+        case IDM_BOOKMARKCLEARALL: wszText = L(52,"Clear Bookmarks")
 
-        case IDM_VIEWSIDEPANEL: wszText = L(246,"View Side Panel")
-        case IDM_VIEWEXPLORER: wszText = L(250,"View Explorer Window")
-        case IDM_FUNCTIONLIST: wszText = L(221,"View Function List")
-        case IDM_BOOKMARKSLIST: wszText = L(443,"View Bookmarks List")
-        case IDM_VIEWOUTPUT: wszText = L(251,"View Output Window")
+        case IDM_VIEWSIDEPANEL: wszText = L(197,"View Side Panel")
+        case IDM_VIEWEXPLORER: wszText = L(200,"View Explorer Window")
+        case IDM_FUNCTIONLIST: wszText = L(184,"View Function List")
+        case IDM_BOOKMARKSLIST: wszText = L(291,"View Bookmarks List")
+        case IDM_VIEWOUTPUT: wszText = L(201,"View Output Window")
         case IDM_EXPLORERPOSITION:
-            wszText = L(87,"Move Explorer Window") & " " & _
-            iif(gConfig.ExplorerPositionRight, L(88, "Left"), L(89, "Right"))
-        case IDM_SPLITLEFTRIGHT: wszText = L(69,"Toggle Split Editor Left/Right")
-        case IDM_SPLITTOPBOTTOM: wszText = L(70,"Toggle Split Editor Top/Bottom")
-        case IDM_ZOOMIN: wszText = L(59,"Zoom In")
-        case IDM_ZOOMOUT: wszText = L(60,"Zoom Out")
-        case IDM_ZOOMRESET: wszText = L(72,"Zoom Reset")
-        case IDM_FOLDTOGGLE: wszText = L(55,"Toggle Current Fold Point")
-        case IDM_FOLDBELOW: wszText = L(56,"Toggle Current And All Below")
-        case IDM_FOLDALL: wszText = L(57,"Fold All")
-        case IDM_UNFOLDALL: wszText = L(58,"Unfold All")
-        case IDM_RESTOREMAIN: wszText = L(61,"Restore Main Window Size")
-        case IDM_VIEWTODO: wszText = L(263,"TODO")
-        case IDM_VIEWNOTES: wszText = L(264,"Notes")
+            wszText = L(84,"Move Explorer Window") & " " & _
+            iif(gConfig.ExplorerPositionRight, L(85, "Left"), L(86, "Right"))
+        case IDM_SPLITLEFTRIGHT: wszText = L(67,"Toggle Split Editor Left/Right")
+        case IDM_SPLITTOPBOTTOM: wszText = L(68,"Toggle Split Editor Top/Bottom")
+        case IDM_ZOOMIN: wszText = L(58,"Zoom In")
+        case IDM_ZOOMOUT: wszText = L(59,"Zoom Out")
+        case IDM_ZOOMRESET: wszText = L(70,"Zoom Reset")
+        case IDM_FOLDTOGGLE: wszText = L(54,"Toggle Current Fold Point")
+        case IDM_FOLDBELOW: wszText = L(55,"Toggle Current And All Below")
+        case IDM_FOLDALL: wszText = L(56,"Fold All")
+        case IDM_UNFOLDALL: wszText = L(57,"Unfold All")
+        case IDM_RESTOREMAIN: wszText = L(60,"Restore Main Window Size")
+        case IDM_VIEWTODO: wszText = L(208,"TODO")
+        case IDM_VIEWNOTES: wszText = L(209,"Notes")
 
-        case IDM_PROJECTNEW: wszText = L(180,"New Project") & "..."
-        case IDM_PROJECTOPEN: wszText = L(182,"Open Project") & "..." 
-        case IDM_MRUPROJECT: wszText = L(219,"Recent Projects")
+        case IDM_PROJECTNEW: wszText = L(145,"New Project") & "..."
+        case IDM_PROJECTOPEN: wszText = L(147,"Open Project") & "..." 
+        case IDM_MRUPROJECT: wszText = L(182,"Recent Projects")
         case IDM_MRUPROJECTBASE to IDM_MRUPROJECTBASE + 9
             return gConfig.MRUPROJECT( idMenu - IDM_MRUPROJECTBASE )
-        case IDM_MRUPROJECTCLEAR: return L(225, "Clear this list")   
+        case IDM_MRUPROJECTCLEAR: return L(188, "Clear this list")   
         case IDM_MRUPROJECTFILES: return L(11,"(Empty)")
-        case IDM_PROJECTCLOSE: wszText = L(183,"Close Project")
-        case IDM_PROJECTSAVE: wszText = L(184,"Save Project")
-        case IDM_PROJECTSAVEAS: wszText = L(185,"Save Project As") & "..."
-        case IDM_PROJECTFILESADD: wszText = L(207,"Add Files to Project") & "..."
-        case IDM_PROJECTOPTIONS: wszText = L(186,"Project Options") & "..."      
+        case IDM_PROJECTCLOSE: wszText = L(148,"Close Project")
+        case IDM_PROJECTSAVE: wszText = L(149,"Save Project")
+        case IDM_PROJECTSAVEAS: wszText = L(150,"Save Project As") & "..."
+        case IDM_PROJECTFILESADD: wszText = L(170,"Add Files to Project") & "..."
+        case IDM_PROJECTOPTIONS: wszText = L(151,"Project Options") & "..."      
 
-        case IDM_BUILDEXECUTE: wszText = L(65,"Build And Execute")
-        case IDM_COMPILE: wszText = L(64,"Compile")
-        case IDM_REBUILDALL: wszText = L(268,"Rebuild All")
-        case IDM_QUICKRUN: wszText = L(285,"Quick Run")
-        case IDM_RUNEXE: wszText = L(67,"Run Executable")
-        case IDM_COMMANDLINE: wszText = L(68,"Command Line") & "..."
-        case IDM_COMPILEMODULE: wszText = L(81,"Compile Module")
+        case IDM_BUILDEXECUTE: wszText = L(64,"Build And Execute")
+        case IDM_COMPILE: wszText = L(63,"Compile")
+        case IDM_REBUILDALL: wszText = L(212,"Rebuild All")
+        case IDM_QUICKRUN: wszText = L(225,"Quick Run")
+        case IDM_RUNEXE: wszText = L(65,"Run Executable")
+        case IDM_COMMANDLINE: wszText = L(66,"Command Line") & "..."
+        case IDM_COMPILEMODULE: wszText = L(79,"Compile Module")
 
         case IDM_DEBUG_STARTDEBUGGING
             if gApp.IsDebuggerActive then
-                wszText = L(317,"Continue Debugging")
+                wszText = L(253,"Continue Debugging")
             else    
-                wszText = L(310,"Start Debugging")
+                wszText = L(246,"Start Debugging")
             end if
-        case IDM_DEBUG_STOPDEBUGGING: wszText = L(318,"Stop Debugging")
-        case IDM_DEBUG_STEPINTO: wszText = L(311,"Step Into")
-        case IDM_DEBUG_STEPOVER: wszText = L(312,"Step Over")
-        case IDM_DEBUG_STEPOUT: wszText = L(319,"Step Out")
-        case IDM_DEBUG_RUNTOCURSOR: wszText = L(320,"Run to Cursor")
-        case IDM_DEBUG_TOGGLEBREAKPOINT: wszText = L(313,"Toggle Breakpoint")
-        case IDM_DEBUG_DELETEALLBREAKPOINTS: wszText = L(314,"Delete All Breakpoints")
+        case IDM_DEBUG_STOPDEBUGGING: wszText = L(254,"Stop Debugging")
+        case IDM_DEBUG_STEPINTO: wszText = L(247,"Step Into")
+        case IDM_DEBUG_STEPOVER: wszText = L(248,"Step Over")
+        case IDM_DEBUG_STEPOUT: wszText = L(255,"Step Out")
+        case IDM_DEBUG_RUNTOCURSOR: wszText = L(256,"Run to Cursor")
+        case IDM_DEBUG_TOGGLEBREAKPOINT: wszText = L(249,"Toggle Breakpoint")
+        case IDM_DEBUG_DELETEALLBREAKPOINTS: wszText = L(250,"Delete All Breakpoints")
 
-        case IDM_HELP_CENTER: wszText = L(90,"Help Center")
-        case IDM_ABOUT: wszText = L(74,"About")
+        case IDM_HELP_CENTER: wszText = L(87,"Help Center")
+        case IDM_ABOUT: wszText = L(72,"About")
 
         case else
             return ""

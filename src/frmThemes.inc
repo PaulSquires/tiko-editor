@@ -85,8 +85,8 @@ end function
 ' ========================================================================================
 private function frmThemes_AskSaveChanges() as long
     return TikoMsgBox( HWND_FRMTHEMES, _
-                       L(554,"Save changes to this theme before leaving?"), _
-                       L(486,"Themes"), _
+                       L(394,"Save changes to this theme before leaving?"), _
+                       L(329,"Themes"), _
                        TMB_ICON_QUESTION, TMB_SAVE_DISCARD_CANCEL, 0, OptionsFont_Base() )
 end function
 
@@ -209,7 +209,7 @@ private sub frmThemes_MarkActiveRow()
     for i as long = lbound(gThemeFilenames) to ubound(gThemeFilenames)
         dim as boolean bActive = (ucase(gThemeFilenames(i)) = ucase(gConfig.ThemeShortFilename))
         dim as DWSTRING wszMark = ""
-        if bActive then wszMark = L(492,"Active")
+        if bActive then wszMark = L(335,"Active")
         PsListTree_SetCellText( ghThemesList, i, THEMECOL_ACTIVE, wszMark )
     next
     PsListTree_EndUpdate( ghThemesList )
@@ -685,8 +685,8 @@ private sub frmThemes_CloneClick( byval hButton as HWND, byval id as long )
 
     ' bFailIfExists = false: the Save-As dialog already confirmed any overwrite.
     if AfxCopyFile( wszFolder & wszSrc, wszDest, false ) = false then
-        frmThemes_ThemedMsgBox( L(454,"The new theme file could not be written."), _
-                                L(486,"Themes"), TMB_ICON_ERROR, TMB_OK )
+        frmThemes_ThemedMsgBox( L(299,"The new theme file could not be written."), _
+                                L(329,"Themes"), TMB_ICON_ERROR, TMB_OK )
         exit sub
     end if
 
@@ -694,7 +694,7 @@ private sub frmThemes_CloneClick( byval hButton as HWND, byval id as long )
 
     ' Tag the copy's description with "(cloned)". Load it into gTheme (so Theme_WriteFile keeps
     ' the copied colours), overwrite the description, and write it back.
-    dim as DWSTRING wszDesc = GetThemeDescription( wszDest ) & " " & L(556,"(cloned)")
+    dim as DWSTRING wszDesc = GetThemeDescription( wszDest ) & " " & L(396,"(cloned)")
     Theme_PreviewFile( wszClone )
     ghGeneral.description = wszDesc
     Theme_WriteFile( wszDest, wszDesc )
@@ -715,8 +715,8 @@ private sub frmThemes_DeleteClick( byval hButton as HWND, byval id as long )
 
     dim as DWSTRING wszFile = gThemeFilenames(sel)
 
-    if frmThemes_ThemedMsgBox( L(550,"Delete this theme? This cannot be undone."), _
-                               L(486,"Themes"), TMB_ICON_WARNING, TMB_OKCANCEL ) <> IDOK then
+    if frmThemes_ThemedMsgBox( L(390,"Delete this theme? This cannot be undone."), _
+                               L(329,"Themes"), TMB_ICON_WARNING, TMB_OKCANCEL ) <> IDOK then
         exit sub
     end if
 
@@ -808,7 +808,7 @@ end sub
 ' change marks the theme dirty (and forks a built-in at save time).
 private sub frmThemes_DescEditClick( byval hButton as HWND, byval id as long )
     dim as DWSTRING wszDesc = ghGeneral.description
-    if frmInputBox_Show( HWND_FRMTHEMES, L(486,"Themes"), L(547,"Description"), wszDesc ) = IDOK then
+    if frmInputBox_Show( HWND_FRMTHEMES, L(329,"Themes"), L(387,"Description"), wszDesc ) = IDOK then
         ghGeneral.description = wszDesc
         gThemesDescEdited = true
         frmThemes_MarkEdited()
@@ -885,14 +885,14 @@ function frmThemes_WndProc( _
             if hHead = 0 then hHead = ghFont(GUIFONTBOLD_11)
 
             ' Line 1: the big bold "Themes".
-            dim as DWSTRING s1 = L(486,"Themes")
+            dim as DWSTRING s1 = L(329,"Themes")
             dim as RECT r1 : SetRect( @r1, hx, yTop, rc.right - mx, yTop + lineH )
             b.SetFont( hHead )
             b.SetForeColor( ghPanel.ForeColorHot )
             b.PaintText( s1, @r1, DT_LEFT )
 
             ' Line 2, directly under it: the current active theme.
-            dim as DWSTRING s2 = L(492,"Active") & ":  " & _
+            dim as DWSTRING s2 = L(335,"Active") & ":  " & _
                                  GetThemeDescription( frmThemes_ThemesFolder() & gConfig.ThemeShortFilename )
             dim as RECT r2 : SetRect( @r2, hx, yTop + lineH, rc.right - mx, yTop + lineH + AfxScaleY(22) )
             b.SetFont( ghFont(GUIFONT_11) )
@@ -907,7 +907,7 @@ function frmThemes_WndProc( _
             dim as HFONT hHead = ghThemesHeadFont
             if hHead = 0 then hHead = ghFont(GUIFONTBOLD_11)
 
-            dim as DWSTRING sT = L(551,"Edit theme")
+            dim as DWSTRING sT = L(391,"Edit theme")
             dim as RECT rT : SetRect( @rT, listLeftX, AfxScaleY(8), rRight, AfxScaleY(34) )
             b.SetFont( hHead )
             b.SetForeColor( ghPanel.ForeColorHot )
@@ -933,7 +933,7 @@ function frmThemes_WndProc( _
                      rc.right \ 2, rc.bottom )
             b.SetFont( ghFont(GUIFONT_10) )
             b.SetForeColor( ghUI.AccentColor )
-            b.PaintText( L(555,"Unsaved changes"), @rDirty, DT_LEFT or DT_VCENTER or DT_SINGLELINE )
+            b.PaintText( L(395,"Unsaved changes"), @rDirty, DT_LEFT or DT_VCENTER or DT_SINGLELINE )
         end if
 
         b.EndDoubleBuffer()
@@ -1006,7 +1006,7 @@ function frmThemes_Show( byval hWndParent as HWND ) as LRESULT
     pWindow->DPI = AfxCWindowOwnerPtr(hWndParent)->DPI
 
     ' FIXED SIZE -- no WS_THICKFRAME. The colour page's three columns have to fit one known width.
-    HWND_FRMTHEMES = pWindow->Create( hWndParent, L(486,"Themes"), @frmThemes_WndProc, 0, 0, 0, 0, _
+    HWND_FRMTHEMES = pWindow->Create( hWndParent, L(329,"Themes"), @frmThemes_WndProc, 0, 0, 0, 0, _
         WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
         WS_EX_DLGMODALFRAME or WS_EX_CONTROLPARENT )
     pWindow->SetClientSize( FRMTHEMES_CLIENT_W, FRMTHEMES_CLIENT_H )
@@ -1020,8 +1020,8 @@ function frmThemes_Show( byval hWndParent as HWND ) as LRESULT
 
     ' ---- SELECT-view children -----------------------------------------------------------
     ghThemesList = PsListTree_Create( HWND_FRMTHEMES, IDC_FRMTHEMES_LSTTHEMES )
-    PsListTree_AddColumn( ghThemesList, L(546,"Theme"),       AfxScaleX(200) )
-    PsListTree_AddColumn( ghThemesList, L(547,"Description"), AfxScaleX(240) )
+    PsListTree_AddColumn( ghThemesList, L(386,"Theme"),       AfxScaleX(200) )
+    PsListTree_AddColumn( ghThemesList, L(387,"Description"), AfxScaleX(240) )
     PsListTree_AddColumn( ghThemesList, "",                   AfxScaleX(80) )
     PsListTree_SetFillColumn( ghThemesList, THEMECOL_DESC )
     PsListTree_ShowHeader( ghThemesList, true )
@@ -1043,25 +1043,25 @@ function frmThemes_Show( byval hWndParent as HWND ) as LRESULT
     PsButton_SetDefault( ghThemesEdit, true )
 
     ghThemesClone = PsButton_Create( HWND_FRMTHEMES, IDC_FRMTHEMES_CMDCLONE )
-    PsButton_SetText( ghThemesClone, L(548,"Clone") )
+    PsButton_SetText( ghThemesClone, L(388,"Clone") )
     PsButton_SetClickCallback( ghThemesClone, @frmThemes_CloneClick )
 
     ghThemesDelete = PsButton_Create( HWND_FRMTHEMES, IDC_FRMTHEMES_CMDDELETE )
-    PsButton_SetText( ghThemesDelete, L(282,"Delete") )
+    PsButton_SetText( ghThemesDelete, L(223,"Delete") )
     PsButton_SetClickCallback( ghThemesDelete, @frmThemes_DeleteClick )
 
     ghThemesSetActive = PsButton_Create( HWND_FRMTHEMES, IDC_FRMTHEMES_CMDSETACTIVE )
-    PsButton_SetText( ghThemesSetActive, L(549,"Set as active") )
+    PsButton_SetText( ghThemesSetActive, L(389,"Set as active") )
     PsButton_SetClickCallback( ghThemesSetActive, @frmThemes_SetActiveClick )
 
     ghThemesClose = PsButton_Create( HWND_FRMTHEMES, IDC_FRMTHEMES_CMDCLOSE )
-    PsButton_SetText( ghThemesClose, L(161,"Close") )
+    PsButton_SetText( ghThemesClose, L(136,"Close") )
     PsButton_SetClickCallback( ghThemesClose, @frmThemes_CloseClick )
 
     ' ---- EDIT-view children -------------------------------------------------------------
     ghThemesBar = PsSelectBar_Create( HWND_FRMTHEMES, IDC_FRMTHEMES_SELECTBAR )
-    PsSelectBar_AddPanel( ghThemesBar, L(463,"Syntax Colors"), THEMEPAGE_SYNTAX )
-    PsSelectBar_AddPanel( ghThemesBar, L(464,"Interface Colors"), THEMEPAGE_INTERFACE )
+    PsSelectBar_AddPanel( ghThemesBar, L(306,"Syntax Colors"), THEMEPAGE_SYNTAX )
+    PsSelectBar_AddPanel( ghThemesBar, L(307,"Interface Colors"), THEMEPAGE_INTERFACE )
     ' Zero the FIRST tab's left padding so its text starts at the bar's left edge (aligned with
     ' the Back button); -1 keeps its right padding at the bar default.
     PsSelectBar_SetPanelPadding( ghThemesBar, 0, 0, -1 )
@@ -1078,7 +1078,7 @@ function frmThemes_Show( byval hWndParent as HWND ) as LRESULT
     ghThemesBack = PsButton_Create( HWND_FRMTHEMES, IDC_FRMTHEMES_CMDGOBACK )
     ' A left chevron (U+2039) before the caption -- built with wchr so the source file's
     ' encoding cannot mangle it.
-    PsButton_SetText( ghThemesBack, wchr(&h2039) & "  " & L(491,"Back") )
+    PsButton_SetText( ghThemesBack, wchr(&h2039) & "  " & L(334,"Back") )
     PsButton_SetClickCallback( ghThemesBack, @frmThemes_GoBackClick )
 
     ' Edit-description icon (a pencil glyph); opens frmInputBox to change the description text.
@@ -1093,7 +1093,7 @@ function frmThemes_Show( byval hWndParent as HWND ) as LRESULT
 
     ' A THEMED PsTooltip on the edit button (not PsButton's comctl32 one). Create also attaches.
     ghThemesDescTip = PsTooltip_Create( ghThemesDescEdit )
-    PsTooltip_SetText( ghThemesDescTip, L(557,"Edit theme description") )
+    PsTooltip_SetText( ghThemesDescTip, L(397,"Edit theme description") )
     PsTooltip_SetFonts( ghThemesDescTip, ghFont(GUIFONT_11), ghFont(GUIFONTBOLD_11), ghFont(SYMBOLFONT_10) )
     PsTooltip_SetStyle( ghThemesDescTip, TIP_STYLE_BALLOON )
     frmThemes_ThemeDescTip()
@@ -1104,7 +1104,7 @@ function frmThemes_Show( byval hWndParent as HWND ) as LRESULT
     PsButton_SetDefault( ghThemesSave, true )
 
     ghThemesRevert = PsButton_Create( HWND_FRMTHEMES, IDC_FRMTHEMES_CMDREVERT )
-    PsButton_SetText( ghThemesRevert, L(552,"Revert") )
+    PsButton_SetText( ghThemesRevert, L(392,"Revert") )
     PsButton_SetClickCallback( ghThemesRevert, @frmThemes_RevertClick )
 
     frmThemes_ApplyShellTheme()

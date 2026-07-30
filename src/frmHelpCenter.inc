@@ -501,16 +501,16 @@ private function frmHelpCenter_CreateWindow( byval bVisible as boolean ) as bool
     dim as DWSTRING wszIndex = HelpCenter_RootFolder() & "index.html"
     if AfxFileExists( wszIndex ) = 0 then
         if bVisible then
-            frmHelpCenter_ThemedMsgBox( L(94,"Help Center files not found.") & _
+            frmHelpCenter_ThemedMsgBox( L(91,"Help Center files not found.") & _
                                         !"\r\n\r\n" & wszIndex, _
-                                        L(90,"Help Center") )
+                                        L(87,"Help Center") )
         end if
         return false
     end if
 
     dim pWindow as CWindow ptr = new CWindow
 
-    dim as DWSTRING wszText = L(90,"Help Center")
+    dim as DWSTRING wszText = L(87,"Help Center")
     HWND_FRMHELPCENTER = pWindow->Create( _
         HWND_DESKTOP, wszText, @frmHelpCenter_WndProc, 0, 0, 0, 0, _
         WS_POPUP or WS_OVERLAPPEDWINDOW or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
@@ -597,8 +597,8 @@ private function frmHelpCenter_CreateWindow( byval bVisible as boolean ) as bool
         gHelpCenter.pWeb = 0
         DestroyWindow( HWND_FRMHELPCENTER )
         if bVisible then
-            frmHelpCenter_ThemedMsgBox( L(93,"The Help Center needs the Microsoft Edge WebView2 Runtime, which is not installed on this computer."), _
-                                        L(92,"WebView2 Runtime Required") )
+            frmHelpCenter_ThemedMsgBox( L(90,"The Help Center needs the Microsoft Edge WebView2 Runtime, which is not installed on this computer."), _
+                                        L(89,"WebView2 Runtime Required") )
         end if
         return false
     end if
@@ -849,12 +849,12 @@ sub frmHelpCenter_RunSelfTest()
     ' len() > 0 CANNOT distinguish a real translation from the English fallback -- a key
     ' left blank in a translation is filled with English at load. The resolved values are
     ' printed for that reason; read them, do not just count the passes.
-    HelpCenter_Check( "lang: 90 (Help Center) is present",  len( LL(90) ) > 0 )
-    HelpCenter_Check( "lang: 92 (runtime title) is present", len( LL(92) ) > 0 )
-    HelpCenter_Check( "lang: 93 (runtime body) is present",  len( LL(93) ) > 0 )
-    HelpCenter_Check( "lang: 94 (files missing) is present", len( LL(94) ) > 0 )
-    dim as string sLang = "  resolved: 90=" & LL(90) & " | 92=" & LL(92) & _
-                          " | 94=" & LL(94)
+    HelpCenter_Check( "lang: 90 (Help Center) is present",  len( LL(87) ) > 0 )
+    HelpCenter_Check( "lang: 92 (runtime title) is present", len( LL(89) ) > 0 )
+    HelpCenter_Check( "lang: 93 (runtime body) is present",  len( LL(90) ) > 0 )
+    HelpCenter_Check( "lang: 94 (files missing) is present", len( LL(91) ) > 0 )
+    dim as string sLang = "  resolved: 90=" & LL(87) & " | 92=" & LL(89) & _
+                          " | 94=" & LL(91)
     print sLang
 
     print "--- TIKO_HELPCENTER_SELFTEST: " & str(gHelpCenterTestPass) & " passed, " & _

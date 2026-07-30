@@ -839,7 +839,7 @@ private sub frmBuildConfig_LoadDetail( byval nIdx as long )
         PsComboBox_SetCurSel( ghBCTarget, iif( gBuildsWork(nIdx).Is64bit <> 0, BUILDTARGET_64, BUILDTARGET_32 ) )
 
         dim as DWSTRING wszSC = frmBuildConfig_ShortcutText( nIdx )
-        if len(wszSC) = 0 then wszSC = L(514,"(none)")
+        if len(wszSC) = 0 then wszSC = L(354,"(none)")
         PsButton_SetText( ghBCShortcut, wszSC )
     else
         gBCCurrent = -1
@@ -871,10 +871,10 @@ private sub frmBuildConfig_BuildList( byval nSelectIdx as long = -2 )
 
     for i as long = lbound(gBuildsWork) to ubound(gBuildsWork)
         dim as DWSTRING wszDesc = gBuildsWork(i).wszDescription
-        if len(wszDesc) = 0 then wszDesc = L(513,"(untitled)")
+        if len(wszDesc) = 0 then wszDesc = L(353,"(untitled)")
         dim as long row = PsListTree_AddString( HWND_FRMBUILDCONFIG_LIST, wszDesc, i )
         dim as DWSTRING wszDef
-        if gBuildsWork(i).IsDefault <> 0 then wszDef = L(528,"Default")
+        if gBuildsWork(i).IsDefault <> 0 then wszDef = L(368,"Default")
         PsListTree_SetCellText( HWND_FRMBUILDCONFIG_LIST, row, 1, wszDef )
     next
 
@@ -898,9 +898,9 @@ private sub frmBuildConfig_RefreshRow( byval idx as long )
     if HWND_FRMBUILDCONFIG_LIST = 0 then exit sub
     if (idx < lbound(gBuildsWork)) orelse (idx > ubound(gBuildsWork)) then exit sub
     dim as DWSTRING wszDesc = gBuildsWork(idx).wszDescription
-    if len(wszDesc) = 0 then wszDesc = L(513,"(untitled)")
+    if len(wszDesc) = 0 then wszDesc = L(353,"(untitled)")
     dim as DWSTRING wszDef
-    if gBuildsWork(idx).IsDefault <> 0 then wszDef = L(528,"Default")
+    if gBuildsWork(idx).IsDefault <> 0 then wszDef = L(368,"Default")
     PsListTree_SetText( HWND_FRMBUILDCONFIG_LIST, idx, wszDesc )
     PsListTree_SetCellText( HWND_FRMBUILDCONFIG_LIST, idx, 1, wszDef )
 end sub
@@ -965,8 +965,8 @@ private sub frmBuildConfig_DoDelete()
 
     if gBCCurrent < 0 then exit sub
 
-    if frmBuildConfig_ThemedMsgBox( L(287,"Are you sure you want to delete this build configuration?"), _
-                                    L(276,"Confirm") ) <> IDOK then exit sub
+    if frmBuildConfig_ThemedMsgBox( L(227,"Are you sure you want to delete this build configuration?"), _
+                                    L(218,"Confirm") ) <> IDOK then exit sub
 
     dim as long nAt = gBCCurrent
     if ubound(gBuildsWork) = 0 then
@@ -1003,7 +1003,7 @@ private sub frmBuildConfig_DoAssign()
     dim as long idx = gBCCurrent
 
     gAssignKeyCaption = gBuildsWork(idx).wszDescription
-    if len(gAssignKeyCaption) = 0 then gAssignKeyCaption = L(513,"(untitled)")
+    if len(gAssignKeyCaption) = 0 then gAssignKeyCaption = L(353,"(untitled)")
     ' Domain AND row, so the clash test skips this build's own current binding -- without it,
     ' opening on a build that already has Ctrl+2 reports that it clashes with itself and
     ' disables OK before the user has touched anything.
@@ -1032,7 +1032,7 @@ private sub frmBuildConfig_DoAssign()
     gAssignKeyIndex  = -1
 
     dim as DWSTRING wszSC = frmBuildConfig_ShortcutText( idx )
-    if len(wszSC) = 0 then wszSC = L(514,"(none)")
+    if len(wszSC) = 0 then wszSC = L(354,"(none)")
     PsButton_SetText( ghBCShortcut, wszSC )
 
     frmBuildConfig_RefreshRow( idx )
@@ -1164,7 +1164,7 @@ private function frmBuildConfig_OnPaint( byval hwnd as HWND ) as LRESULT
         rcT.bottom = rc.bottom - AfxScaleY(FRMBUILDCONFIG_FOOTER_H)
         buffer.SetForeColor( ghPanel.ForeColor )
         buffer.SetFont( ghFont(GUIFONT_11) )
-        buffer.PaintText( L(560,"Select a build configuration, or press Add to create one."), _
+        buffer.PaintText( L(400,"Select a build configuration, or press Add to create one."), _
                           @rcT, DT_CENTER or DT_VCENTER or DT_SINGLELINE )
         buffer.EndDoubleBuffer()
         EndPaint( hwnd, @ps )
@@ -1181,7 +1181,7 @@ private function frmBuildConfig_OnPaint( byval hwnd as HWND ) as LRESULT
         ' ---- Description: a STACKED row, label above a full-width field -----------------
         rcT.left = detailX : rcT.right = xRight
         rcT.top  = y       : rcT.bottom = y + AfxScaleY(FRMBUILDCONFIG_STACKLABEL_H)
-        buffer.PaintText( L(278,"Description"), @rcT, DT_LEFT or DT_VCENTER or DT_SINGLELINE or DT_END_ELLIPSIS )
+        buffer.PaintText( L(220,"Description"), @rcT, DT_LEFT or DT_VCENTER or DT_SINGLELINE or DT_END_ELLIPSIS )
         y += AfxScaleY(FRMBUILDCONFIG_STACKROW_H)
 
         ' ---- the label/control rows -----------------------------------------------------
@@ -1199,17 +1199,17 @@ private function frmBuildConfig_OnPaint( byval hwnd as HWND ) as LRESULT
                               DT_LEFT or DT_VCENTER or DT_SINGLELINE or DT_END_ELLIPSIS )
         #endmacro
 
-        BCROWLABEL( BCROW_DEFAULT,  L(280,"Set as default") )
-        BCROWLABEL( BCROW_TARGET,   L(529,"Compiler target") )
-        BCROWLABEL( BCROW_SHORTCUT, L(508,"Shortcut") )
-        BCROWLABEL( BCROW_EXCLUDE,  L(284,"Exclude build from status bar popup menu") )
+        BCROWLABEL( BCROW_DEFAULT,  L(222,"Set as default") )
+        BCROWLABEL( BCROW_TARGET,   L(369,"Compiler target") )
+        BCROWLABEL( BCROW_SHORTCUT, L(349,"Shortcut") )
+        BCROWLABEL( BCROW_EXCLUDE,  L(224,"Exclude build from status bar popup menu") )
 
         ' ---- the switches preview -------------------------------------------------------
         ' Its rect is computed in PositionWindows and stored, because the mouse handlers
         ' hit-test it -- there is no child window here to do that for us.
         dim as RECT rcLbl = gBCPreviewLabelRect
         buffer.SetForeColor( ghPanel.ForeColor )
-        buffer.PaintText( L(527,"Compiler switches"), @rcLbl, _
+        buffer.PaintText( L(367,"Compiler switches"), @rcLbl, _
                           DT_LEFT or DT_VCENTER or DT_SINGLELINE or DT_END_ELLIPSIS )
 
         ' FILL FIRST, THEN STROKE. PaintRoundOutline strokes without filling and takes its
@@ -1235,7 +1235,7 @@ private function frmBuildConfig_OnPaint( byval hwnd as HWND ) as LRESULT
         if len(trim(wszOpts)) = 0 then
             buffer.SetFont( ghFont(GUIFONT_11) )
             buffer.SetForeColor( ghPopup.ForeColorDisabled )
-            buffer.PaintText( L(514,"(none)"), @rcTxt, DT_LEFT or DT_VCENTER or DT_SINGLELINE )
+            buffer.PaintText( L(354,"(none)"), @rcTxt, DT_LEFT or DT_VCENTER or DT_SINGLELINE )
         else
             buffer.SetFont( ghBCFontFixed )
             buffer.SetForeColor( ghEditor.ForeColorText )
@@ -1246,7 +1246,7 @@ private function frmBuildConfig_OnPaint( byval hwnd as HWND ) as LRESULT
         ' ---- the compiler switches page -------------------------------------------------
         rcT.left = detailX : rcT.right = xRight
         rcT.top  = y       : rcT.bottom = y + AfxScaleY(FRMBUILDCONFIG_STACKLABEL_H)
-        buffer.PaintText( L(279,"Compiler Options"), @rcT, DT_LEFT or DT_VCENTER or DT_SINGLELINE or DT_END_ELLIPSIS )
+        buffer.PaintText( L(221,"Compiler Options"), @rcT, DT_LEFT or DT_VCENTER or DT_SINGLELINE or DT_END_ELLIPSIS )
     end if
 
     buffer.EndDoubleBuffer()
@@ -1633,19 +1633,19 @@ sub frmBuildConfig_RunSelfTest()
     ' renders as an EMPTY STRING: a blank caption, a blank column header, a blank button, with
     ' nothing in the build or the warnings to say so. This is the one failure this dialog can
     ' have that looks like nothing at all, which is exactly why it is asserted rather than
-    ' eyeballed. A/B-verified by deleting 00527 from english.lang.
+    ' eyeballed. A/B-verified by deleting 00367 from english.lang.
     #macro BCID( _id_ )
         BCASSERT( len( LL(_id_) ) > 0, "localized id " & str(_id_) & " resolves" )
     #endmacro
-    ' The exact set this file references -- kept in step with it, not a superset. 516 ("this
-    ' shortcut cannot fire") and 526 ("already used by") were dropped when the warnings gave
-    ' way to simply unassigning a shortcut that cannot work; 526 is still live, but it belongs
+    ' The exact set this file references -- kept in step with it, not a superset. 356 ("this
+    ' shortcut cannot fire") and 366 ("already used by") were dropped when the warnings gave
+    ' way to simply unassigning a shortcut that cannot work; 366 is still live, but it belongs
     ' to frmAssignKey now and is asserted there by use.
-    BCID( 0 )   : BCID( 1 )   : BCID( 14 )  : BCID( 276 ) : BCID( 277 )
-    BCID( 278 ) : BCID( 279 ) : BCID( 280 ) : BCID( 282 ) : BCID( 284 )
-    BCID( 287 ) : BCID( 499 ) : BCID( 508 ) : BCID( 510 ) : BCID( 511 )
-    BCID( 512 ) : BCID( 513 ) : BCID( 514 ) : BCID( 525 ) : BCID( 527 )
-    BCID( 528 ) : BCID( 529 ) : BCID( 558 ) : BCID( 559 ) : BCID( 560 )
+    BCID( 0 )   : BCID( 1 )   : BCID( 14 )  : BCID( 218 ) : BCID( 219 )
+    BCID( 220 ) : BCID( 221 ) : BCID( 222 ) : BCID( 223 ) : BCID( 224 )
+    BCID( 227 ) : BCID( 342 ) : BCID( 349 ) : BCID( 350 ) : BCID( 351 )
+    BCID( 352 ) : BCID( 353 ) : BCID( 354 ) : BCID( 365 ) : BCID( 367 )
+    BCID( 368 ) : BCID( 369 ) : BCID( 398 ) : BCID( 399 ) : BCID( 400 )
 
     ' ---- 10. the shortcut composer -------------------------------------------------------
     ' MODIFIER ORDER IS Ctrl+Shift+Alt here, matching createToolsMenuShortcut and the Tools
@@ -1804,10 +1804,10 @@ private sub frmBuildConfig_RunLayoutSelfTest()
                 end scope
             #endmacro
 
-            LABELFITS( BCROW_DEFAULT,  L(280,"Set as default") )
-            LABELFITS( BCROW_TARGET,   L(529,"Compiler target") )
-            LABELFITS( BCROW_SHORTCUT, L(508,"Shortcut") )
-            LABELFITS( BCROW_EXCLUDE,  L(284,"Exclude build from status bar popup menu") )
+            LABELFITS( BCROW_DEFAULT,  L(222,"Set as default") )
+            LABELFITS( BCROW_TARGET,   L(369,"Compiler target") )
+            LABELFITS( BCROW_SHORTCUT, L(349,"Shortcut") )
+            LABELFITS( BCROW_EXCLUDE,  L(224,"Exclude build from status bar popup menu") )
 
             ' And the contract the rects are built on: a label stops exactly one gap short of
             ' its own row's control, so the two can never overlap and no row is using a gutter
@@ -2058,7 +2058,7 @@ function frmBuildConfig_Show( byval hWndParent as HWND ) as LRESULT
 
     dim pWindow as CWindow ptr = new CWindow
 
-    HWND_FRMBUILDCONFIG = pWindow->Create( hWndParent, L(277,"Build Configurations"), _
+    HWND_FRMBUILDCONFIG = pWindow->Create( hWndParent, L(219,"Build Configurations"), _
         @frmBuildConfig_WndProc, 0, 0, 0, 0, _
         WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
         WS_EX_DLGMODALFRAME or WS_EX_CONTROLPARENT or WS_EX_LEFT )
@@ -2090,7 +2090,7 @@ function frmBuildConfig_Show( byval hWndParent as HWND ) as LRESULT
     ' Column 0's width is a placeholder -- it is the FILL column and takes whatever column 1
     ' leaves. Column 1 is deliberately UNCAPTIONED: it marks a state, and a "Default" heading
     ' over a column that is empty on every row but one reads as a broken table.
-    PsListTree_AddColumn( HWND_FRMBUILDCONFIG_LIST, L(278,"Description"), 100 )
+    PsListTree_AddColumn( HWND_FRMBUILDCONFIG_LIST, L(220,"Description"), 100 )
     PsListTree_AddColumn( HWND_FRMBUILDCONFIG_LIST, "", pWindow->ScaleX(FRMBUILDCONFIG_COL_DEFAULT) )
     PsListTree_SetFillColumn( HWND_FRMBUILDCONFIG_LIST, 0 )
     PsListTree_ShowHeader( HWND_FRMBUILDCONFIG_LIST, true )
@@ -2114,8 +2114,8 @@ function frmBuildConfig_Show( byval hWndParent as HWND ) as LRESULT
     ' with the labels and fields directly beneath it. Zeroed on the bar, so the panels stay
     ' evenly spaced from each other; only the leading edge moves.
     PsSelectBar_SetPadding( ghBCSelectBar, 0, AfxScaleX(FRMBUILDCONFIG_SELECTBAR_PANELGAP) )
-    PsSelectBar_AddPanel( ghBCSelectBar, L(525,"General"), IDP_FRMBUILDCONFIG_GENERAL )
-    PsSelectBar_AddPanel( ghBCSelectBar, L(527,"Compiler switches"), IDP_FRMBUILDCONFIG_SWITCHES )
+    PsSelectBar_AddPanel( ghBCSelectBar, L(365,"General"), IDP_FRMBUILDCONFIG_GENERAL )
+    PsSelectBar_AddPanel( ghBCSelectBar, L(367,"Compiler switches"), IDP_FRMBUILDCONFIG_SWITCHES )
     PsSelectBar_SetSelChangeCallback( ghBCSelectBar, @frmBuildConfig_SelectBarChange )
 
     ' ---- General page -------------------------------------------------------------------
@@ -2132,15 +2132,15 @@ function frmBuildConfig_Show( byval hWndParent as HWND ) as LRESULT
     ghBCTarget = PsComboBox_Create( HWND_FRMBUILDCONFIG, IDC_FRMBUILDCONFIG_COMBOTARGET )
     PsComboBox_SetFont( ghBCTarget, ghFont(GUIFONT_11) )
     ' ORDER IS BUILDTARGET_32 / _64 and is read back by index. Do not re-order.
-    PsComboBox_AddItem( ghBCTarget, L(558,"FBC 32-bit") )
-    PsComboBox_AddItem( ghBCTarget, L(559,"FBC 64-bit") )
+    PsComboBox_AddItem( ghBCTarget, L(398,"FBC 32-bit") )
+    PsComboBox_AddItem( ghBCTarget, L(399,"FBC 64-bit") )
     PsComboBox_SetCurSel( ghBCTarget, BUILDTARGET_64 )
     PsComboBox_SetSelChangeCallback( ghBCTarget, @frmBuildConfig_TargetChanged )
 
     ghBCShortcut = PsButton_Create( HWND_FRMBUILDCONFIG, IDC_FRMBUILDCONFIG_CMDSHORTCUT )
     PsButton_SetFont( ghBCShortcut, ghFont(GUIFONT_11) )
-    PsButton_SetText( ghBCShortcut, L(514,"(none)") )
-    PsButton_SetTooltipText( ghBCShortcut, L(499,"Assign Shortcut") )
+    PsButton_SetText( ghBCShortcut, L(354,"(none)") )
+    PsButton_SetTooltipText( ghBCShortcut, L(342,"Assign Shortcut") )
     PsButton_SetClickCallback( ghBCShortcut, @frmBuildConfig_ButtonClick )
 
     ghBCTogExclude = PsToggle_Create( HWND_FRMBUILDCONFIG, IDC_FRMBUILDCONFIG_TOGEXCLUDEPOPUP )
@@ -2171,12 +2171,12 @@ function frmBuildConfig_Show( byval hWndParent as HWND ) as LRESULT
 
     ' ---- the list's command strip -------------------------------------------------------
     ghBCAdd = PsButton_Create( HWND_FRMBUILDCONFIG, IDC_FRMBUILDCONFIG_CMDADD )
-    PsButton_SetText( ghBCAdd, L(510,"Add") )
+    PsButton_SetText( ghBCAdd, L(350,"Add") )
     PsButton_SetFont( ghBCAdd, ghFont(GUIFONT_11) )
     PsButton_SetClickCallback( ghBCAdd, @frmBuildConfig_ButtonClick )
 
     ghBCDelete = PsButton_Create( HWND_FRMBUILDCONFIG, IDC_FRMBUILDCONFIG_CMDDELETE )
-    PsButton_SetText( ghBCDelete, L(282,"Delete") )
+    PsButton_SetText( ghBCDelete, L(223,"Delete") )
     PsButton_SetFont( ghBCDelete, ghFont(GUIFONT_11) )
     PsButton_SetClickCallback( ghBCDelete, @frmBuildConfig_ButtonClick )
 
@@ -2197,8 +2197,8 @@ function frmBuildConfig_Show( byval hWndParent as HWND ) as LRESULT
         PsButton_SetClickCallback( _h_, @frmBuildConfig_ButtonClick )
     #endmacro
 
-    MAKECHEVRON( ghBCUp,   IDC_FRMBUILDCONFIG_CMDUP,   !"\uE70E", L(511,"Move up") )
-    MAKECHEVRON( ghBCDown, IDC_FRMBUILDCONFIG_CMDDOWN, !"\uE70D", L(512,"Move down") )
+    MAKECHEVRON( ghBCUp,   IDC_FRMBUILDCONFIG_CMDUP,   !"\uE70E", L(351,"Move up") )
+    MAKECHEVRON( ghBCDown, IDC_FRMBUILDCONFIG_CMDDOWN, !"\uE70D", L(352,"Move down") )
 
     ' ---- footer --------------------------------------------------------------------------
     ghBCOK = PsButton_Create( HWND_FRMBUILDCONFIG, IDC_FRMBUILDCONFIG_CMDOK )

@@ -154,8 +154,8 @@ sub Encoding_RunSelfTest()
     DISKTRIP( FILE_ENCODING_ANSI,      "ANSI",       FILE_ENCODING_ANSI,      outA )
 
     ' Localization ids owned by the lossy prompt must exist (blank = silent failure).
-    ENCASSERT( len(LL(484)) > 0, "L(484) lossy-prompt body is blank -- missing from english.lang" )
-    ENCASSERT( len(LL(485)) > 0, "L(485) lossy-prompt title is blank -- missing from english.lang" )
+    ENCASSERT( len(LL(327)) > 0, "L(327) lossy-prompt body is blank -- missing from english.lang" )
+    ENCASSERT( len(LL(328)) > 0, "L(328) lossy-prompt title is blank -- missing from english.lang" )
 
     ' ================= Default encoding for new files =================
     ' Three separate claims, kept apart on purpose -- the name table, the index/value

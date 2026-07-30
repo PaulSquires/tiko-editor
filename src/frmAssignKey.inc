@@ -149,8 +149,8 @@ end function
 
 private function AssignKey_OwnerText( byval wszDescription as DWSTRING ) as DWSTRING
     dim as DWSTRING wszWho = wszDescription
-    if len(wszWho) = 0 then wszWho = L(513,"(untitled)")
-    return L(526,"Already used by") & ": " & wszWho
+    if len(wszWho) = 0 then wszWho = L(353,"(untitled)")
+    return L(366,"Already used by") & ": " & wszWho
 end function
 
 
@@ -169,7 +169,7 @@ function frmAssignKey_ClashText( byval wszKey as DWSTRING, _
     ' --- 1. the editor's commands ---
     dim as DWSTRING wszCanonical = frmKeyboardEdit_BuildKeyString( vk, bCtrl, bAlt, bShift )
     dim as DWSTRING wszCmd = KeyBindings_FindCommandForKeys( wszCanonical )
-    if len(wszCmd) then return L(526,"Already used by") & ": " & wszCmd
+    if len(wszCmd) then return L(366,"Already used by") & ": " & wszCmd
 
     dim as DWSTRING wszUpper = ucase(wszKey)
 
@@ -520,7 +520,7 @@ private function frmAssignKey_CaptureProc( _
             dim as COLORREF clr = ghEditor.ForeColorText
             dim as boolean bWaiting = (len(wszShow) = 0)
             if bWaiting then
-                wszShow = L(501,"Press the new shortcut")
+                wszShow = L(343,"Press the new shortcut")
                 clr = ghPanel.ForeColor
             end if
 
@@ -667,7 +667,7 @@ private function frmAssignKey_OnPaint( byval hwnd as HWND ) as LRESULT
     buffer.SetForeColor( ghPanel.ForeColorHot )
     buffer.SetFont( ghFont(GUIFONTBOLD_11) )
     dim as DWSTRING wszWho = gAssignKeyCaption
-    if len(wszWho) = 0 then wszWho = L(513,"(untitled)")
+    if len(wszWho) = 0 then wszWho = L(353,"(untitled)")
     buffer.PaintText( wszWho, @rcT, DT_LEFT or DT_END_ELLIPSIS )
     y += rowH
 
@@ -887,7 +887,7 @@ function frmAssignKey_Show( byval hWndParent as HWND ) as LRESULT
     dim pWindow as CWindow ptr = new CWindow
     pWindow->DPI = AfxCWindowOwnerPtr(hWndParent)->DPI
 
-    HWND_FRMASSIGNKEY = pWindow->Create( hWndParent, L(499,"Assign Shortcut"), _
+    HWND_FRMASSIGNKEY = pWindow->Create( hWndParent, L(342,"Assign Shortcut"), _
         @frmAssignKey_WndProc, 0, 0, 0, 0, _
         WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
         WS_EX_DLGMODALFRAME or WS_EX_CONTROLPARENT or WS_EX_LEFT )
@@ -930,7 +930,7 @@ function frmAssignKey_Show( byval hWndParent as HWND ) as LRESULT
 
     ' ---- footer -----------------------------------------------------------------------
     ghTKClear = PsButton_Create( HWND_FRMASSIGNKEY, IDC_FRMASSIGNKEY_CMDCLEAR )
-    PsButton_SetText( ghTKClear, L(517,"Clear") )
+    PsButton_SetText( ghTKClear, L(357,"Clear") )
     PsButton_SetFont( ghTKClear, ghFont(GUIFONT_11) )
     PsButton_SetClickCallback( ghTKClear, @frmAssignKey_ButtonClick )
 

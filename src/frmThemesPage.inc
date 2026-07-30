@@ -236,22 +236,22 @@ end function
 ' The localized heading for a category id. Display only -- nothing branches on this.
 function frmThemes_CategoryTitle( byval nCat as long ) as DWSTRING
     select case nCat
-        case THEMECAT_MAIN:      return L(465, "Main Window")
-        case THEMECAT_PANEL:     return L(466, "Side Panels")
-        case THEMECAT_TOPTABS:   return L(467, "Document Tabs")
-        case THEMECAT_MENUBAR:   return L(468, "Menu Bar")
-        case THEMECAT_POPUP:     return L(469, "Menus and Popups")
-        case THEMECAT_STATUSBAR: return L(470, "Status Bar")
-        case THEMECAT_OUTPUT:    return L(471, "Output Pane")
-        case THEMECAT_COMPILE:   return L(472, "Build Indicators")
-        case THEMECAT_SHARED:    return L(473, "Shared Chrome")
-        case THEMECAT_SYNTAX:    return L(475, "Text and Syntax")
-        case THEMECAT_CURSOR:    return L(476, "Cursor and Selection")
-        case THEMECAT_MARGINS:   return L(477, "Margins and Folding")
-        case THEMECAT_MARKERS:   return L(478, "Markers and Highlights")
-        case THEMECAT_EDCHROME:  return L(479, "Editor Chrome")
+        case THEMECAT_MAIN:      return L(308, "Main Window")
+        case THEMECAT_PANEL:     return L(309, "Side Panels")
+        case THEMECAT_TOPTABS:   return L(310, "Document Tabs")
+        case THEMECAT_MENUBAR:   return L(311, "Menu Bar")
+        case THEMECAT_POPUP:     return L(312, "Menus and Popups")
+        case THEMECAT_STATUSBAR: return L(313, "Status Bar")
+        case THEMECAT_OUTPUT:    return L(314, "Output Pane")
+        case THEMECAT_COMPILE:   return L(315, "Build Indicators")
+        case THEMECAT_SHARED:    return L(316, "Shared Chrome")
+        case THEMECAT_SYNTAX:    return L(318, "Text and Syntax")
+        case THEMECAT_CURSOR:    return L(319, "Cursor and Selection")
+        case THEMECAT_MARGINS:   return L(320, "Margins and Folding")
+        case THEMECAT_MARKERS:   return L(321, "Markers and Highlights")
+        case THEMECAT_EDCHROME:  return L(322, "Editor Chrome")
     end select
-    return L(474, "Other")
+    return L(317, "Other")
 end function
 
 
@@ -448,20 +448,20 @@ private function frmThemes_EnsureForked() as boolean
 
     dim as DWSTRING wszFork = frmThemes_MakeForkName( gThemeCurrentShortFilename )
 
-    dim as DWSTRING wszMsg = L(452, "This is a built-in theme and cannot be modified.") & _
+    dim as DWSTRING wszMsg = L(297, "This is a built-in theme and cannot be modified.") & _
                              chr(13) & chr(13) & _
-                             L(453, "Your changes will be saved as a new theme:") & _
+                             L(298, "Your changes will be saved as a new theme:") & _
                              chr(13) & wszFork
 
-    if frmThemes_ThemedMsgBox( wszMsg, L(486, "Themes"), _
+    if frmThemes_ThemedMsgBox( wszMsg, L(329, "Themes"), _
                                 TMB_ICON_QUESTION, TMB_OKCANCEL ) <> IDOK then return false
 
     dim as DWSTRING wszPath = AfxGetExePathName & "settings\themes\" & wszFork
     dim as DWSTRING wszDesc = ghGeneral.description & " (custom)"
 
     if Theme_WriteFile( wszPath, wszDesc ) then
-        frmThemes_ThemedMsgBox( L(454, "The new theme file could not be written."), _
-                                 L(486, "Themes"), TMB_ICON_ERROR, TMB_OK )
+        frmThemes_ThemedMsgBox( L(299, "The new theme file could not be written."), _
+                                 L(329, "Themes"), TMB_ICON_ERROR, TMB_OK )
         return false
     end if
 
@@ -504,8 +504,8 @@ function frmThemes_SaveThemeFile() as boolean
 
     dim as DWSTRING wszPath = AfxGetExePathName & "settings\themes\" & gThemesWorkFile
     if Theme_WriteFile( wszPath, ghGeneral.description ) then
-        frmThemes_ThemedMsgBox( L(454,"The new theme file could not be written."), _
-                                L(486,"Themes"), TMB_ICON_ERROR, TMB_OK )
+        frmThemes_ThemedMsgBox( L(299,"The new theme file could not be written."), _
+                                L(329,"Themes"), TMB_ICON_ERROR, TMB_OK )
         return false
     end if
 
@@ -632,7 +632,7 @@ private sub frmThemes_EnsureColorPopup()
     PsColorPicker_SetColorChangedCallback( ghThemePopupPicker, @frmThemes_PopupPickerChanged )
     PsColorPicker_SetPaletteCallbacks( ghThemePopupPicker, @frmThemes_PaletteCount, _
                                        @frmThemes_PaletteEntry, @frmThemes_PaletteAssign )
-    PsColorPicker_SetAssignText( ghThemePopupPicker, L(481, "Use named color") )
+    PsColorPicker_SetAssignText( ghThemePopupPicker, L(324, "Use named color") )
 
     dim as PSCOLORPICKER_COLORS pc
     frmThemes_FillPickerColors( @pc )
@@ -1130,22 +1130,22 @@ sub frmThemes_Build( byval nPage as long, byval hPage as HWND )
     PsListTree_SetScrollBarWidth( ghThemeKeys, SCROLLBAR_WIDTH_PANEL )
 
     ghThemeFore = PsButton_Create( hPage, IDC_FRMTHEMES_CMDFORE )
-    PsButton_SetText( ghThemeFore, L(455, "Foreground") & "..." )
+    PsButton_SetText( ghThemeFore, L(300, "Foreground") & "..." )
     PsButton_SetClickCallback( ghThemeFore, @frmThemes_ForeClick )
 
     ghThemeBack = PsButton_Create( hPage, IDC_FRMTHEMES_CMDBACK )
-    PsButton_SetText( ghThemeBack, L(456, "Background") & "..." )
+    PsButton_SetText( ghThemeBack, L(301, "Background") & "..." )
     PsButton_SetClickCallback( ghThemeBack, @frmThemes_BackClick )
 
     ' Undo glyph (Segoe Fluent Icons E7A7) plus the caption. The glyph font is a SEPARATE
     ' paint-time input from the text font -- see PsButton_SetGlyphFont.
     ghThemeResetF = PsButton_Create( hPage, IDC_FRMTHEMES_CMDRESETF )
     PsButton_SetGlyphLeft( ghThemeResetF, wchr(&hE7A7) )
-    PsButton_SetTooltipText( ghThemeResetF, L(480, "Reset") )
+    PsButton_SetTooltipText( ghThemeResetF, L(323, "Reset") )
     PsButton_SetClickCallback( ghThemeResetF, @frmThemes_ResetForeClick )
 
     ghThemeResetB = PsButton_Create( hPage, IDC_FRMTHEMES_CMDRESETB )
-    PsButton_SetTooltipText( ghThemeResetB, L(480, "Reset") )
+    PsButton_SetTooltipText( ghThemeResetB, L(323, "Reset") )
     PsButton_SetGlyphLeft( ghThemeResetB, wchr(&hE7A7) )
     PsButton_SetClickCallback( ghThemeResetB, @frmThemes_ResetBackClick )
 
@@ -1189,8 +1189,8 @@ sub frmThemes_Build( byval nPage as long, byval hPage as HWND )
     PsColorPicker_SetPaletteCallbacks( ghThemePicker, @frmThemes_PaletteCount, _
                                        @frmThemes_PaletteEntry, @frmThemes_PaletteAssign )
     ' Every word the user reads is supplied by the host: the control does no localization.
-    PsColorPicker_SetAssignText( ghThemePicker, L(481, "Use named color") )
-    PsColorPicker_SetPreviewText( ghThemePicker, L(482, "Initial"), L(483, "Current") )
+    PsColorPicker_SetAssignText( ghThemePicker, L(324, "Use named color") )
+    PsColorPicker_SetPreviewText( ghThemePicker, L(325, "Initial"), L(326, "Current") )
 
     ' THE PICKER'S OWN ALPHA FIELD STAYS HIDDEN, deliberately, even on an alpha-capable key.
     ' This page already has a PsNumericUpDown bound to alpha, which knows which CHANNEL the
@@ -1397,17 +1397,17 @@ function frmThemes_Layout( byval nPage as long, byval hPage as HWND, byval cxPan
         PsToggle_GetIdealSize( ghThemeBold, togW, togH )
         dim as long lblX = xEdit + togW + AfxScaleX(10)
         dim as long lblDY = (togH - textH) \ 2                ' vertically centre the label with the pill
-        frmThemes_AddLabel( L(459, "Bold"), lblX, yEdit + lblDY, xEdit + editW, yEdit + togH )
+        frmThemes_AddLabel( L(302, "Bold"), lblX, yEdit + lblDY, xEdit + editW, yEdit + togH )
         SetWindowPos( ghThemeBold, 0, xEdit, yEdit, togW, togH, SWP_NOZORDER or SWP_NOACTIVATE )
         yEdit += togH + rowGap
-        frmThemes_AddLabel( L(460, "Italic"), lblX, yEdit + lblDY, xEdit + editW, yEdit + togH )
+        frmThemes_AddLabel( L(303, "Italic"), lblX, yEdit + lblDY, xEdit + editW, yEdit + togH )
         SetWindowPos( ghThemeItalic, 0, xEdit, yEdit, togW, togH, SWP_NOZORDER or SWP_NOACTIVATE )
         yEdit += togH + rowGap
-        frmThemes_AddLabel( L(461, "Underline"), lblX, yEdit + lblDY, xEdit + editW, yEdit + togH )
+        frmThemes_AddLabel( L(304, "Underline"), lblX, yEdit + lblDY, xEdit + editW, yEdit + togH )
         SetWindowPos( ghThemeUnder, 0, xEdit, yEdit, togW, togH, SWP_NOZORDER or SWP_NOACTIVATE )
         yEdit += togH + rowGap + rowGap
 
-        frmThemes_AddLabel( L(462, "Opacity"), xEdit, yEdit, xEdit + editW, yEdit + textH )
+        frmThemes_AddLabel( L(305, "Opacity"), xEdit, yEdit, xEdit + editW, yEdit + textH )
         yEdit += textH + AfxScaleY(8)
         ' Same height as the plain fields now that PsNumericUpDown insets its value cell by
         ' border + nVertPadding -- the inner PsTextBox clears the frame instead of clipping.

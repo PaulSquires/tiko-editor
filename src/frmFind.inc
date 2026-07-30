@@ -62,12 +62,12 @@ private function frmFind_TipText( byval hTip as HWND, _
     Theme_ApplyTooltip( hTip )
     select case idx
         case FINDTIP_TOGGLE:     return frmPanelMenu_FormatTooltip( IDM_TOGGLEREPLACE )
-        case FINDTIP_MATCHCASE:  return L(163,"Match Case")
-        case FINDTIP_WHOLEWORD:  return L(162,"Match Whole Words")
+        case FINDTIP_MATCHCASE:  return L(138,"Match Case")
+        case FINDTIP_WHOLEWORD:  return L(137,"Match Whole Words")
         case FINDTIP_UPARROW:    return frmPanelMenu_FormatTooltip( IDM_FINDPREVACCEL )
         case FINDTIP_DOWNARROW:  return frmPanelMenu_FormatTooltip( IDM_FINDNEXTACCEL )
-        case FINDTIP_SELECTION:  return L(148,"Selection")
-        case FINDTIP_CLOSE:      return L(161,"Close") & " (Esc)"
+        case FINDTIP_SELECTION:  return L(131,"Selection")
+        case FINDTIP_CLOSE:      return L(136,"Close") & " (Esc)"
     end select
     return ""
 end function
@@ -487,7 +487,7 @@ function frmFind_Show( byval hwndParent as HWND ) as LRESULT
     PsTextBox_SetForeColor( hCtlFind, ghTopTabs.ForeColorHot )
     PsTextBox_SetBackColor( hCtlFind, ghTopTabs.BackColorHot )
     PsTextBox_SetBorderWidth( hCtlFind, 0 )                       ' flat, as before
-    PsTextBox_SetCueBannerText( hCtlFind, L(158,"Find") & "..." )
+    PsTextBox_SetCueBannerText( hCtlFind, L(135,"Find") & "..." )
     PsTextBox_SetCueBannerColor( hCtlFind, ghTopTabs.ForeColor )
     PsTextBox_SetChangeCallback( hCtlFind, @frmFind_TextBoxChange )
     PsTextBox_SetFocusCallback( hCtlFind, @frmFind_TextBoxFocus )

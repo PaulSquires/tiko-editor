@@ -112,15 +112,15 @@ end sub
 ' ========================================================================================
 private function frmOptions_PageTitle( byval nPage as long ) as DWSTRING
     select case nPage
-        case OPTPAGE_GENERAL:         return L(226,"General Options")
-        case OPTPAGE_EDITOR:          return L(110,"Code Editor")
-        case OPTPAGE_EDITOR2:         return L(107,"Advanced Code Editor")
-        case OPTPAGE_COLORS:          return L(487,"Editor Font")
-        case OPTPAGE_COMPILER:        return L(112,"Compiler Setup")
-        case OPTPAGE_LOCAL:           return L(129,"Localization")
-        case OPTPAGE_KEYWORDS:        return L(177,"FreeBASIC Keywords")
-        case OPTPAGE_KEYWORDSWINAPI:  return L(435,"Windows Api Keywords")
-        case OPTPAGE_KEYWORDSEXTRA:   return L(439,"Extra Keywords")
+        case OPTPAGE_GENERAL:         return L(189,"General Options")
+        case OPTPAGE_EDITOR:          return L(107,"Code Editor")
+        case OPTPAGE_EDITOR2:         return L(104,"Advanced Code Editor")
+        case OPTPAGE_COLORS:          return L(330,"Editor Font")
+        case OPTPAGE_COMPILER:        return L(108,"Compiler Setup")
+        case OPTPAGE_LOCAL:           return L(125,"Localization")
+        case OPTPAGE_KEYWORDS:        return L(142,"FreeBASIC Keywords")
+        case OPTPAGE_KEYWORDSWINAPI:  return L(283,"Windows Api Keywords")
+        case OPTPAGE_KEYWORDSEXTRA:   return L(287,"Extra Keywords")
     end select
     ' RETURN throughout, never `function =`: fbc rejects mixing the two styles in a
     ' procedure returning an object with a constructor, and DWSTRING is one.
@@ -187,8 +187,8 @@ function frmOptions_SaveEditorOptions() as long
 
     if bChangesNextRun then
         frmOptions_ThemedMsgBox( _
-                L(108,"Changes will be applied the next time the application is run."), _
-                L(109,"Warning"), TMB_ICON_INFO, TMB_OK )
+                L(105,"Changes will be applied the next time the application is run."), _
+                L(106,"Warning"), TMB_ICON_INFO, TMB_OK )
     end if
 
     function = 0
@@ -1124,15 +1124,15 @@ private sub frmOptions_BuildNavList( byval hList as HWND )
         end scope
     #endmacro
 
-    NAVITEM( L(226,"General Options"),      OPTPAGE_GENERAL )
-    NAVITEM( L(110,"Code Editor"),          OPTPAGE_EDITOR )
-    NAVITEM( L(107,"Advanced Code Editor"), OPTPAGE_EDITOR2 )
-    NAVITEM( L(487,"Editor Font"),          OPTPAGE_COLORS )
-    NAVITEM( L(112,"Compiler Setup"),       OPTPAGE_COMPILER )
-    NAVITEM( L(129,"Localization"),         OPTPAGE_LOCAL )
-    NAVITEM( L(177,"FreeBASIC Keywords"),   OPTPAGE_KEYWORDS )
-    NAVITEM( L(435,"Windows Api Keywords"), OPTPAGE_KEYWORDSWINAPI )
-    NAVITEM( L(439,"Extra Keywords"),       OPTPAGE_KEYWORDSEXTRA )
+    NAVITEM( L(189,"General Options"),      OPTPAGE_GENERAL )
+    NAVITEM( L(107,"Code Editor"),          OPTPAGE_EDITOR )
+    NAVITEM( L(104,"Advanced Code Editor"), OPTPAGE_EDITOR2 )
+    NAVITEM( L(330,"Editor Font"),          OPTPAGE_COLORS )
+    NAVITEM( L(108,"Compiler Setup"),       OPTPAGE_COMPILER )
+    NAVITEM( L(125,"Localization"),         OPTPAGE_LOCAL )
+    NAVITEM( L(142,"FreeBASIC Keywords"),   OPTPAGE_KEYWORDS )
+    NAVITEM( L(283,"Windows Api Keywords"), OPTPAGE_KEYWORDSWINAPI )
+    NAVITEM( L(287,"Extra Keywords"),       OPTPAGE_KEYWORDSEXTRA )
 
     PsListTree_EndUpdate( hList )
 
@@ -1180,7 +1180,7 @@ function frmOptions_Show( byval hWndParent as HWND ) as LRESULT
 
     dim pWindow as CWindow ptr = new CWindow
 
-    HWND_FRMOPTIONS = pWindow->Create( hWndParent, L(113,"Environment Options"), @frmOptions_WndProc, 0, 0, 0, 0, _
+    HWND_FRMOPTIONS = pWindow->Create( hWndParent, L(109,"Environment Options"), @frmOptions_WndProc, 0, 0, 0, 0, _
         WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
         WS_EX_DLGMODALFRAME or WS_EX_CONTROLPARENT or WS_EX_LEFT )
     pWindow->SetClientSize( FRMOPTIONS_CLIENT_W, FRMOPTIONS_CLIENT_H )
@@ -1205,7 +1205,7 @@ function frmOptions_Show( byval hWndParent as HWND ) as LRESULT
     PsTextBox_SetBorderWidth( HWND_FRMOPTIONS_SEARCH, 0 )
     PsTextBox_SetCornerRadius( HWND_FRMOPTIONS_SEARCH, 0 )
     PsTextBox_SetMargins( HWND_FRMOPTIONS_SEARCH, AfxScaleX(4), AfxScaleX(4) )
-    PsTextBox_SetCueBannerText( HWND_FRMOPTIONS_SEARCH, L(488,"Search settings...") )
+    PsTextBox_SetCueBannerText( HWND_FRMOPTIONS_SEARCH, L(331,"Search settings...") )
     PsTextBox_SetChangeCallback( HWND_FRMOPTIONS_SEARCH, @frmOptions_SearchChanged )
 
     ' ---- navigation list -------------------------------------------------------------

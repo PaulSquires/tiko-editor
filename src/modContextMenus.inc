@@ -161,20 +161,20 @@ private sub AddProjectFileTypesToPopup( _
     dim as long msg
 
     msg = iif( fExplorerTreeview, IDM_SETFILEMAIN_EXPLORERTREEVIEW, IDM_SETFILEMAIN )
-    PsPopupMenu_AddItem( hPopup, msg, L(206,"Main file"), "", false, (msg = nFileType) )
+    PsPopupMenu_AddItem( hPopup, msg, L(169,"Main file"), "", false, (msg = nFileType) )
 
     msg = iif( fExplorerTreeview, IDM_SETFILEHEADER_EXPLORERTREEVIEW, IDM_SETFILEHEADER )
-    PsPopupMenu_AddItem( hPopup, msg, L(181,"Header file"), "", false, (msg = nFileType) )
+    PsPopupMenu_AddItem( hPopup, msg, L(146,"Header file"), "", false, (msg = nFileType) )
 
     if gApp.IsProjectActive then
         msg = iif( fExplorerTreeview, IDM_SETFILEMODULE_EXPLORERTREEVIEW, IDM_SETFILEMODULE )
-        PsPopupMenu_AddItem( hPopup, msg, L(205,"Module file"), "", false, (msg = nFileType) )
+        PsPopupMenu_AddItem( hPopup, msg, L(168,"Module file"), "", false, (msg = nFileType) )
         msg = iif( fExplorerTreeview, IDM_SETFILERESOURCE_EXPLORERTREEVIEW, IDM_SETFILERESOURCE )
-        PsPopupMenu_AddItem( hPopup, msg, L(209,"Resource file"), "", false, (msg = nFileType) )
+        PsPopupMenu_AddItem( hPopup, msg, L(172,"Resource file"), "", false, (msg = nFileType) )
     end if
 
     msg = iif( fExplorerTreeview, IDM_SETFILENORMAL_EXPLORERTREEVIEW, IDM_SETFILENORMAL )
-    PsPopupMenu_AddItem( hPopup, msg, L(204,"Normal file"), "", false, (msg = nFileType) )
+    PsPopupMenu_AddItem( hPopup, msg, L(167,"Normal file"), "", false, (msg = nFileType) )
 end sub
 
 
@@ -352,7 +352,7 @@ sub ShowScintillaContextMenu()
     ' menu option to allow to open it.
     if IsCurrentLineIncludeFilename() then
         PsPopupMenu_AddItem( ghPopupScintilla, IDM_OPENINCLUDE, _
-                L(75,"Open") + chr(32, 34) + gApp.IncludeFilename + chr(34) )
+                L(73,"Open") + chr(32, 34) + gApp.IncludeFilename + chr(34) )
         PsPopupMenu_AddSeparator( ghPopupScintilla )
     end if
 
@@ -363,9 +363,9 @@ sub ShowScintillaContextMenu()
     PsPopupMenu_AddItem( ghPopupScintilla, IDM_COPY,  L(18,"Copy") )
     PsPopupMenu_AddItem( ghPopupScintilla, IDM_PASTE, L(19,"Paste") )
     PsPopupMenu_AddSeparator( ghPopupScintilla )
-    PsPopupMenu_AddItem( ghPopupScintilla, IDM_DEBUG_TOGGLEBREAKPOINT, L(313,"Toggle Breakpoint") )
+    PsPopupMenu_AddItem( ghPopupScintilla, IDM_DEBUG_TOGGLEBREAKPOINT, L(249,"Toggle Breakpoint") )
     if gApp.IsDebuggerActive then
-        PsPopupMenu_AddItem( ghPopupScintilla, IDM_DEBUG_RUNTOCURSOR, L(320,"Run to Cursor") )
+        PsPopupMenu_AddItem( ghPopupScintilla, IDM_DEBUG_RUNTOCURSOR, L(256,"Run to Cursor") )
     end if
     PsPopupMenu_AddSeparator( ghPopupScintilla )
     PsPopupMenu_AddItem( ghPopupScintilla, IDM_INDENTBLOCK,   L(23,"Block Indent") )
@@ -452,7 +452,7 @@ sub ShowExplorerContextMenu( byval pDoc as clsDocument ptr )
     PsPopupMenu_Clear( ghPopupExplorer )
 
     if gApp.IsProjectActive then
-        PsPopupMenu_AddItem( ghPopupExplorer, IDM_FILEOPEN_EXPLORERLISTBOX, L(75,"Open") )
+        PsPopupMenu_AddItem( ghPopupExplorer, IDM_FILEOPEN_EXPLORERLISTBOX, L(73,"Open") )
         PsPopupMenu_AddSeparator( ghPopupExplorer )
         if (gTTabCtl.GetTabIndexByDocumentPtr( pDoc ) <> -1) orelse (nSelCount > 1) then
             PsPopupMenu_AddItem( ghPopupExplorer, IDM_FILECLOSE_EXPLORERLISTBOX, L(5,"Close") )
@@ -466,7 +466,7 @@ sub ShowExplorerContextMenu( byval pDoc as clsDocument ptr )
             PsPopupMenu_AddSeparator( ghPopupExplorer )
         end if
         PsPopupMenu_AddItem( ghPopupExplorer, IDM_REMOVEFILEFROMPROJECT_EXPLORERLISTBOX, _
-                            L(190,"Remove from project") )
+                            L(153,"Remove from project") )
     else
         PsPopupMenu_AddItem( ghPopupExplorer, IDM_FILECLOSE_EXPLORERLISTBOX, L(5,"Close") )
         if nSelCount = 1 then
@@ -495,31 +495,31 @@ sub ShowPanelActionContextMenu( byval rcButton as RECT )
         case HWND_FRMEXPLORER
             hPopup = ghPopupExplorerAction
             PsPopupMenu_Clear( hPopup )
-            PsPopupMenu_AddItem( hPopup, IDM_EXPLORER_EXPANDALL,   L(441,"Expand All") )
-            PsPopupMenu_AddItem( hPopup, IDM_EXPLORER_COLLAPSEALL, L(442,"Collapse All") )
+            PsPopupMenu_AddItem( hPopup, IDM_EXPLORER_EXPANDALL,   L(289,"Expand All") )
+            PsPopupMenu_AddItem( hPopup, IDM_EXPLORER_COLLAPSEALL, L(290,"Collapse All") )
             PsPopupMenu_AddSeparator( hPopup )
-            PsPopupMenu_AddItem( hPopup, IDM_CLOSEPANEL, L(161,"Close") )
+            PsPopupMenu_AddItem( hPopup, IDM_CLOSEPANEL, L(136,"Close") )
 
         case HWND_FRMFUNCTIONS
             hPopup = ghPopupFunctionsAction
             PsPopupMenu_Clear( hPopup )
-            PsPopupMenu_AddItem( hPopup, IDM_FUNCTIONS_EXPANDALL,   L(441,"Expand All") )
-            PsPopupMenu_AddItem( hPopup, IDM_FUNCTIONS_COLLAPSEALL, L(442,"Collapse All") )
+            PsPopupMenu_AddItem( hPopup, IDM_FUNCTIONS_EXPANDALL,   L(289,"Expand All") )
+            PsPopupMenu_AddItem( hPopup, IDM_FUNCTIONS_COLLAPSEALL, L(290,"Collapse All") )
             PsPopupMenu_AddSeparator( hPopup )
-            PsPopupMenu_AddItem( hPopup, IDM_FUNCTIONS_VIEWASTREE, L(445,"View as Tree") )
-            PsPopupMenu_AddItem( hPopup, IDM_FUNCTIONS_VIEWASLIST, L(446,"View as List") )
+            PsPopupMenu_AddItem( hPopup, IDM_FUNCTIONS_VIEWASTREE, L(292,"View as Tree") )
+            PsPopupMenu_AddItem( hPopup, IDM_FUNCTIONS_VIEWASLIST, L(293,"View as List") )
             PsPopupMenu_AddSeparator( hPopup )
-            PsPopupMenu_AddItem( hPopup, IDM_CLOSEPANEL, L(161,"Close") )
+            PsPopupMenu_AddItem( hPopup, IDM_CLOSEPANEL, L(136,"Close") )
 
         case HWND_FRMBOOKMARKS
             hPopup = ghPopupBookmarksAction
             PsPopupMenu_Clear( hPopup )
-            PsPopupMenu_AddItem( hPopup, IDM_BOOKMARKS_EXPANDALL,   L(441,"Expand All") )
-            PsPopupMenu_AddItem( hPopup, IDM_BOOKMARKS_COLLAPSEALL, L(442,"Collapse All") )
+            PsPopupMenu_AddItem( hPopup, IDM_BOOKMARKS_EXPANDALL,   L(289,"Expand All") )
+            PsPopupMenu_AddItem( hPopup, IDM_BOOKMARKS_COLLAPSEALL, L(290,"Collapse All") )
             PsPopupMenu_AddSeparator( hPopup )
-            PsPopupMenu_AddItem( hPopup, IDM_BOOKMARKCLEARALLDOCS, L(53,"Clear Bookmarks") )
+            PsPopupMenu_AddItem( hPopup, IDM_BOOKMARKCLEARALLDOCS, L(52,"Clear Bookmarks") )
             PsPopupMenu_AddSeparator( hPopup )
-            PsPopupMenu_AddItem( hPopup, IDM_CLOSEPANEL, L(161,"Close") )
+            PsPopupMenu_AddItem( hPopup, IDM_CLOSEPANEL, L(136,"Close") )
 
         case else
             exit sub
@@ -545,15 +545,15 @@ sub ShowTopTabCtlContextMenu( byval idx as long )
     PsPopupMenu_AddItem( ghPopupTopTabCtl, IDM_FILEDUPLICATE, L(22,"Duplicate") )
     PsPopupMenu_AddSeparator( ghPopupTopTabCtl )
     PsPopupMenu_AddItem( ghPopupTopTabCtl, IDM_FILECLOSEALL,       L(6,"Close All"),               "", (MaxiTab <= 0) )
-    PsPopupMenu_AddItem( ghPopupTopTabCtl, IDM_FILECLOSEALLOTHERS, L(354,"Close Others"),          "", (MaxiTab <= 0) )
-    PsPopupMenu_AddItem( ghPopupTopTabCtl, IDM_CLOSEALLBACKWARD,   L(355,"Close Tabs on the Left"), "", (CuriTab <= 0) )
-    PsPopupMenu_AddItem( ghPopupTopTabCtl, IDM_CLOSEALLFORWARD,    L(356,"Close Tabs on the Right"), "", (MaxiTab <= CuriTab) )
+    PsPopupMenu_AddItem( ghPopupTopTabCtl, IDM_FILECLOSEALLOTHERS, L(261,"Close Others"),          "", (MaxiTab <= 0) )
+    PsPopupMenu_AddItem( ghPopupTopTabCtl, IDM_CLOSEALLBACKWARD,   L(262,"Close Tabs on the Left"), "", (CuriTab <= 0) )
+    PsPopupMenu_AddItem( ghPopupTopTabCtl, IDM_CLOSEALLFORWARD,    L(263,"Close Tabs on the Right"), "", (MaxiTab <= CuriTab) )
 
     dim pDoc as clsDocument ptr = gTTabCtl.GetDocumentPtr(idx)
     if pDoc then
         if gApp.IsProjectActive then
             PsPopupMenu_AddSeparator( ghPopupTopTabCtl )
-            PsPopupMenu_AddItem( ghPopupTopTabCtl, IDM_REMOVEFILEFROMPROJECT, L(190,"Remove from project") )
+            PsPopupMenu_AddItem( ghPopupTopTabCtl, IDM_REMOVEFILEFROMPROJECT, L(153,"Remove from project") )
         end if
         AddProjectFileTypesToPopup( ghPopupTopTabCtl, pDoc, true, false )
     end if

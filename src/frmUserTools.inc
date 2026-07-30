@@ -90,8 +90,8 @@ function frmUserTools_ExecuteUserTool( byval pCompile as COMPILE_TYPE ptr, byval
     if (nToolNum < lbound(gConfig.Tools)) orelse (nToolNum > ubound(gConfig.Tools)) then exit function
 
     if gConfig.Tools(nToolNum).IsPromptRun then
-        if TikoMsgBox( HWND_FRMMAIN, L(304,"Please confirm that you wish to run the following User Tool:") + vbcrlf + _
-                        gConfig.Tools(nToolNum).wszDescription, L(276,"Confirm"), _
+        if TikoMsgBox( HWND_FRMMAIN, L(241,"Please confirm that you wish to run the following User Tool:") + vbcrlf + _
+                        gConfig.Tools(nToolNum).wszDescription, L(218,"Confirm"), _
                         TMB_ICON_QUESTION, TMB_YESNOCANCEL ) <> IDYES then
             exit function
         end if
@@ -447,7 +447,7 @@ private sub frmUserTools_ListPaintRow( byval p as PSLISTTREE_PAINTINFO ptr )
                 ' it afterwards. Show a placeholder rather than a blank row that looks like a
                 ' rendering fault, and dim it so it does not read as the tool's actual name.
                 if len(wszCell) = 0 then
-                    wszCell = L(513,"(untitled)")
+                    wszCell = L(353,"(untitled)")
                     if p->isSelected = false then clr = ghPopup.ForeColorDisabled
                 end if
 
@@ -679,8 +679,8 @@ private sub frmUserTools_DoDelete()
     dim as long idx = frmUserTools_SelectedWorkIndex()
     if idx < 0 then exit sub
 
-    if frmUserTools_ThemedMsgBox( L(300,"Are you sure you want to delete this user tool?"), _
-                                  L(276,"Confirm"), TMB_ICON_WARNING, TMB_OKCANCEL ) <> IDOK then exit sub
+    if frmUserTools_ThemedMsgBox( L(237,"Are you sure you want to delete this user tool?"), _
+                                  L(218,"Confirm"), TMB_ICON_WARNING, TMB_OKCANCEL ) <> IDOK then exit sub
 
     if ubound(gToolsWork) = 0 then
         erase gToolsWork
@@ -786,7 +786,7 @@ private sub frmUserTools_ButtonClick( byval hButton as HWND, byval id as long )
 
         case IDC_FRMUSERTOOLS_CMDBROWSEFOLDER
             if gUTCurrent < 0 then exit sub
-            dim as DWSTRING wszFolder = AfxBrowseForFolder( HWND_FRMUSERTOOLS, L(293,"Working Folder"), curdir )
+            dim as DWSTRING wszFolder = AfxBrowseForFolder( HWND_FRMUSERTOOLS, L(232,"Working Folder"), curdir )
             if len(wszFolder) then
                 PsTextBox_SetText( ghUTFolder, wszFolder )
                 gToolsWork(gUTCurrent).wszWorkingFolder = wszFolder
@@ -917,7 +917,7 @@ private function frmUserTools_OnPaint( byval hwnd as HWND ) as LRESULT
         rcT.bottom = rc.bottom - AfxScaleY(FRMUSERTOOLS_FOOTER_H)
         buffer.SetForeColor( ghPanel.ForeColor )
         buffer.SetFont( ghFont(GUIFONT_11) )
-        buffer.PaintText( L(521,"Select a tool, or press Add to create one."), @rcT, _
+        buffer.PaintText( L(361,"Select a tool, or press Add to create one."), @rcT, _
                           DT_CENTER or DT_VCENTER or DT_SINGLELINE )
         buffer.EndDoubleBuffer()
         EndPaint( hwnd, @ps )
@@ -937,9 +937,9 @@ private function frmUserTools_OnPaint( byval hwnd as HWND ) as LRESULT
         y += rowH
     #endmacro
 
-    ROWLABEL( L(290,"Tool Name") )
-    ROWLABEL( L(291,"Command") )
-    ROWLABEL( L(518,"Parameters") )
+    ROWLABEL( L(230,"Tool Name") )
+    ROWLABEL( L(231,"Command") )
+    ROWLABEL( L(358,"Parameters") )
 
     ' THE SUBSTITUTION CODES ARE A TOOLTIP, NOT A LABEL. They used to be drawn here, on a line
     ' under the Parameters field -- which cost a row of the fixed page to a reference card the
@@ -948,7 +948,7 @@ private function frmUserTools_OnPaint( byval hwnd as HWND ) as LRESULT
     ' Parameters field itself (see frmUserTools_Show), where they are read by hovering the
     ' thing they apply to.
 
-    ROWLABEL( L(293,"Working Folder") )
+    ROWLABEL( L(232,"Working Folder") )
 
     ' ---- the shortcut row -------------------------------------------------------------
     ' The label, then the shortcut itself drawn as text where a field would be -- there is no
@@ -956,18 +956,18 @@ private function frmUserTools_OnPaint( byval hwnd as HWND ) as LRESULT
     dim as long yShortcut = y
     rcT.left = detailX : rcT.right = fieldX - AfxScaleX(FRMUSERTOOLS_GAP)
     rcT.top  = y       : rcT.bottom = y + rowH
-    buffer.PaintText( L(508,"Shortcut"), @rcT, DT_LEFT or DT_VCENTER or DT_SINGLELINE or DT_END_ELLIPSIS )
+    buffer.PaintText( L(349,"Shortcut"), @rcT, DT_LEFT or DT_VCENTER or DT_SINGLELINE or DT_END_ELLIPSIS )
 
     dim as DWSTRING wszShortcut = frmUserTools_ShortcutText( gUTCurrent )
     dim as COLORREF clrShortcut = ghEditor.ForeColorText
     if len(wszShortcut) = 0 then
-        wszShortcut = L(514,"(none)")
+        wszShortcut = L(354,"(none)")
         clrShortcut = ghPopup.ForeColorDisabled
     elseif frmUserTools_ShortcutIsDead( gUTCurrent ) then
         ' Said in WORDS as well as in colour. The list marks the cell red; a reader who cannot
         ' see that gets nothing from it, and "this saves and never fires" is not something to
         ' encode in a hue alone.
-        wszShortcut = wszShortcut & "   " & L(516,"This shortcut cannot fire -- reassign it.")
+        wszShortcut = wszShortcut & "   " & L(356,"This shortcut cannot fire -- reassign it.")
         clrShortcut = ghGeneral.iconfail
     else
         ' ...and the same for a shortcut that is real but already spoken for. The assign dialog
@@ -985,7 +985,7 @@ private function frmUserTools_OnPaint( byval hwnd as HWND ) as LRESULT
     buffer.SetForeColor( ghPanel.ForeColor )
     y += rowH
 
-    ROWLABEL( L(519,"Action") )
+    ROWLABEL( L(359,"Action") )
 
     ' ---- the divider ------------------------------------------------------------------
     y += AfxScaleY(FRMUSERTOOLS_GAP)
@@ -1010,10 +1010,10 @@ private function frmUserTools_OnPaint( byval hwnd as HWND ) as LRESULT
         y += rowH
     #endmacro
 
-    TOGGLELABEL( L(295,"Prompt for confirmation when Tool is invoked") )
-    TOGGLELABEL( L(296,"Run minimized") )
-    TOGGLELABEL( L(297,"Wait for Tool to complete before continuing") )
-    TOGGLELABEL( L(299,"Display this item in the editor menu") )
+    TOGGLELABEL( L(233,"Prompt for confirmation when Tool is invoked") )
+    TOGGLELABEL( L(234,"Run minimized") )
+    TOGGLELABEL( L(235,"Wait for Tool to complete before continuing") )
+    TOGGLELABEL( L(236,"Display this item in the editor menu") )
 
     buffer.EndDoubleBuffer()
     EndPaint( hwnd, @ps )
@@ -1657,7 +1657,7 @@ function frmUserTools_Show( byval hWndParent as HWND ) as LRESULT
 
     dim pWindow as CWindow ptr = new CWindow
 
-    HWND_FRMUSERTOOLS = pWindow->Create( hWndParent, L(289,"User Tools"), _
+    HWND_FRMUSERTOOLS = pWindow->Create( hWndParent, L(229,"User Tools"), _
         @frmUserTools_WndProc, 0, 0, 0, 0, _
         WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
         WS_EX_DLGMODALFRAME or WS_EX_CONTROLPARENT or WS_EX_LEFT )
@@ -1682,8 +1682,8 @@ function frmUserTools_Show( byval hWndParent as HWND ) as LRESULT
 
     ' Column 0's width is a placeholder -- it is the FILL column and takes whatever the
     ' Shortcut column leaves.
-    PsListTree_AddColumn( HWND_FRMUSERTOOLS_LIST, L(520,"Tool"), 100 )
-    PsListTree_AddColumn( HWND_FRMUSERTOOLS_LIST, L(508,"Shortcut"), pWindow->ScaleX(FRMUSERTOOLS_COL_SHORTCUT) )
+    PsListTree_AddColumn( HWND_FRMUSERTOOLS_LIST, L(360,"Tool"), 100 )
+    PsListTree_AddColumn( HWND_FRMUSERTOOLS_LIST, L(349,"Shortcut"), pWindow->ScaleX(FRMUSERTOOLS_COL_SHORTCUT) )
     PsListTree_SetFillColumn( HWND_FRMUSERTOOLS_LIST, 0 )      ' the tool name absorbs the slack
     PsListTree_ShowHeader( HWND_FRMUSERTOOLS_LIST, true )
 
@@ -1739,17 +1739,17 @@ function frmUserTools_Show( byval hWndParent as HWND ) as LRESULT
     '
     ' Create ALSO attaches -- there is no separate PsTooltip_Attach call needed here.
     ghUTParamsTip = PsTooltip_Create( ghUTParams )
-    PsTooltip_SetTitle( ghUTParamsTip, L(518,"Parameters") )
+    PsTooltip_SetTitle( ghUTParamsTip, L(358,"Parameters") )
     ' ONE LOCALIZED ID PER LINE, joined here. A .lang entry is a single line of a UTF-16 text
     ' file and cannot carry an embedded newline, so a four-line tip cannot be one id -- and
     ' splitting it this way also lets a translator size each line independently.
     ' PsTooltip draws the message with PaintTextEx (no DT_SINGLELINE), so DrawText honours the
     ' line feeds; the max width wraps anything still too long for the widest of them.
     PsTooltip_SetText( ghUTParamsTip, _
-        L(515,"<P>   project name")            & !"\n" & _
-        L(522,"<S>   main source file")        & !"\n" & _
-        L(523,"<W>   word at the caret")       & !"\n" & _
-        L(524,"<E>   compiled exe / dll / lib") )
+        L(355,"<P>   project name")            & !"\n" & _
+        L(362,"<S>   main source file")        & !"\n" & _
+        L(363,"<W>   word at the caret")       & !"\n" & _
+        L(364,"<E>   compiled exe / dll / lib") )
     ' 400, not 320: at 320 the longest line wrapped to a two-word orphan ("/ lib") on its own
     ' row, which reads as a fifth code. Measured off the render, not guessed.
     PsTooltip_SetMaxWidth( ghUTParamsTip, 400 )
@@ -1771,7 +1771,7 @@ function frmUserTools_Show( byval hWndParent as HWND ) as LRESULT
     PsButton_SetClickCallback( ghUTBrowseFolder, @frmUserTools_ButtonClick )
 
     ghUTAssign = PsButton_Create( HWND_FRMUSERTOOLS, IDC_FRMUSERTOOLS_CMDASSIGN )
-    PsButton_SetText( ghUTAssign, L(499,"Assign Shortcut") )
+    PsButton_SetText( ghUTAssign, L(342,"Assign Shortcut") )
     PsButton_SetFont( ghUTAssign, ghFont(GUIFONT_11) )
     PsButton_SetClickCallback( ghUTAssign, @frmUserTools_ButtonClick )
 
@@ -1779,10 +1779,10 @@ function frmUserTools_Show( byval hWndParent as HWND ) as LRESULT
     PsComboBox_SetFont( ghUTAction, ghFont(GUIFONT_11) )
     ' ORDER IS THE PERSISTED Action VALUE -- see USERTOOL_ACTION_* in the .bi. These four
     ' cannot be re-ordered for readability without rewriting every settings.ini in the world.
-    PsComboBox_AddItem( ghUTAction, L(303,"Invoke only when selected by user") )
-    PsComboBox_AddItem( ghUTAction, L(302,"Invoke during pre-compile") )
-    PsComboBox_AddItem( ghUTAction, L(301,"Invoke during post-compile") )
-    PsComboBox_AddItem( ghUTAction, L(402,"Invoke immediately after editor starts") )
+    PsComboBox_AddItem( ghUTAction, L(240,"Invoke only when selected by user") )
+    PsComboBox_AddItem( ghUTAction, L(239,"Invoke during pre-compile") )
+    PsComboBox_AddItem( ghUTAction, L(238,"Invoke during post-compile") )
+    PsComboBox_AddItem( ghUTAction, L(265,"Invoke immediately after editor starts") )
     PsComboBox_SetCurSel( ghUTAction, USERTOOL_ACTION_SELECTED )
     PsComboBox_SetSelChangeCallback( ghUTAction, @frmUserTools_ActionChanged )
 
@@ -1798,12 +1798,12 @@ function frmUserTools_Show( byval hWndParent as HWND ) as LRESULT
 
     ' ---- the list's command strip -----------------------------------------------------
     ghUTAdd = PsButton_Create( HWND_FRMUSERTOOLS, IDC_FRMUSERTOOLS_CMDADD )
-    PsButton_SetText( ghUTAdd, L(510,"Add") )
+    PsButton_SetText( ghUTAdd, L(350,"Add") )
     PsButton_SetFont( ghUTAdd, ghFont(GUIFONT_11) )
     PsButton_SetClickCallback( ghUTAdd, @frmUserTools_ButtonClick )
 
     ghUTDelete = PsButton_Create( HWND_FRMUSERTOOLS, IDC_FRMUSERTOOLS_CMDDELETE )
-    PsButton_SetText( ghUTDelete, L(282,"Delete") )
+    PsButton_SetText( ghUTDelete, L(223,"Delete") )
     PsButton_SetFont( ghUTDelete, ghFont(GUIFONT_11) )
     PsButton_SetClickCallback( ghUTDelete, @frmUserTools_ButtonClick )
 
@@ -1834,8 +1834,8 @@ function frmUserTools_Show( byval hWndParent as HWND ) as LRESULT
         PsButton_SetClickCallback( _h_, @frmUserTools_ButtonClick )
     #endmacro
 
-    MAKECHEVRON( ghUTUp,   IDC_FRMUSERTOOLS_CMDUP,   !"\uE70E", L(511,"Move up") )
-    MAKECHEVRON( ghUTDown, IDC_FRMUSERTOOLS_CMDDOWN, !"\uE70D", L(512,"Move down") )
+    MAKECHEVRON( ghUTUp,   IDC_FRMUSERTOOLS_CMDUP,   !"\uE70E", L(351,"Move up") )
+    MAKECHEVRON( ghUTDown, IDC_FRMUSERTOOLS_CMDDOWN, !"\uE70D", L(352,"Move down") )
 
     ' ---- footer -----------------------------------------------------------------------
     ghUTOK = PsButton_Create( HWND_FRMUSERTOOLS, IDC_FRMUSERTOOLS_CMDOK )

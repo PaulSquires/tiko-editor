@@ -97,7 +97,7 @@ function frmProjectOptions_CreateResourceManifest() as Long
                     "The following files(s) are missing from the Settings folder. " + _
                     "Please reinstall the application." & vbcrlf & vbcrlf & _
                     wszFilesMissing, _
-                    L(201,"Error"), TMB_ICON_WARNING, TMB_OK )
+                    L(164,"Error"), TMB_ICON_WARNING, TMB_OK )
         exit function
     end if
 
@@ -194,7 +194,7 @@ function frmProjectOptions_SaveProjectOptions( byval hwnd as HWND ) as BOOLEAN
     if len(gPOWork.ProjectPath) = 0 then
         ' Parented to THIS dialog, not frmMain: this window is up and modal, and a box owned by
         ' a disabled ancestor comes up behind it.
-        TikoMsgBox( hwnd, L(217,"Invalid project path specified."), L(201,"Error"), _
+        TikoMsgBox( hwnd, L(180,"Invalid project path specified."), L(164,"Error"), _
                         TMB_ICON_INFO, TMB_OK )
         return False
     end if
@@ -497,7 +497,7 @@ private function frmProjectOptions_OnPaint( byval hwnd as HWND ) as LRESULT
 
     dim as long xLabelRight = gPOLayout.xField - AfxScaleX(FRMPROJECTOPTIONS_GAP)
 
-    ROWLABEL( PO_ROW_PATH,        xLabelRight, L(240,"Project path") )
+    ROWLABEL( PO_ROW_PATH,        xLabelRight, L(196,"Project path") )
     ROWLABEL( PO_ROW_COMMANDLINE, xLabelRight, L(35,"Command line") )
     ROWLABEL( PO_ROW_OTHER32,     xLabelRight, L(33,"32-bit compiler") )
     ROWLABEL( PO_ROW_OTHER64,     xLabelRight, L(34,"64-bit compiler") )
@@ -506,7 +506,7 @@ private function frmProjectOptions_OnPaint( byval hwnd as HWND ) as LRESULT
         dim as long tw = 0, th = 0
         PsToggle_GetIdealSize( ghPOManifest, tw, th )
         ROWLABEL( PO_ROW_MANIFEST, gPOLayout.xFieldRight - tw - AfxScaleX(FRMPROJECTOPTIONS_GAP), _
-                  L(308,"Create resource file and manifest") )
+                  L(244,"Create resource file and manifest") )
     end scope
 
     ' ---- the footer rule ---------------------------------------------------------------
@@ -607,7 +607,7 @@ sub frmProjectOptions_RunSelfTest( byval bLayoutHalf as boolean )
         ' L(id,"default") DISCARDS the default: an id with no entry in english.lang renders as
         ' an EMPTY STRING, so a caption or a whole section header comes up blank with nothing
         ' in the build or the warnings to say so.
-        dim as long ids(0 to 10) = { 27, 31, 32, 33, 34, 35, 39, 82, 240, 308, 217 }
+        dim as long ids(0 to 10) = { 27, 31, 32, 33, 34, 35, 39, 80, 196, 244, 180 }
         for i as long = 0 to 10
             dim as string sName = "lang id " & str(ids(i)) & " is not blank"
             CHECK( len(LL(ids(i))) > 0, sName )
@@ -625,7 +625,7 @@ sub frmProjectOptions_RunSelfTest( byval bLayoutHalf as boolean )
             dim as string sL = "  resolved: " & str(27) & "=" & LL(27) & " | " & _
                                str(31) & "=" & LL(31) & " | " & str(35) & "=" & LL(35)
             print sL
-            dim as string sL2 = "  resolved: " & str(82) & "=" & LL(82)
+            dim as string sL2 = "  resolved: " & str(80) & "=" & LL(80)
             print sL2
         end scope
 
@@ -930,9 +930,9 @@ function frmProjectOptions_Show( _
     gApp.IsNewProjectFlag = IsNewProject
     frmProjectOptions_LoadWork( IsNewProject )
 
-    dim as DWSTRING wszTitle = L(214,"Project Options")
+    dim as DWSTRING wszTitle = L(177,"Project Options")
     if IsNewProject then
-        wszTitle = wszTitle & " - " & L(215,"New Project")
+        wszTitle = wszTitle & " - " & L(178,"New Project")
     else
         wszTitle = wszTitle & " - " & gApp.ProjectName
     end if
@@ -970,7 +970,7 @@ function frmProjectOptions_Show( _
     PsButton_SetClickCallback( ghPOSelect, @frmProjectOptions_ButtonClick )
 
     MAKEFIELD( ghPOCommandLine, IDC_FRMPROJECTOPTIONS_TXTCOMMANDLINE )
-    PsTextBox_SetCueBannerText( ghPOCommandLine, L(82,"arguments passed when the project is run") )
+    PsTextBox_SetCueBannerText( ghPOCommandLine, L(80,"arguments passed when the project is run") )
 
     MAKEFIELD( ghPOOther32, IDC_FRMPROJECTOPTIONS_TXTOPTIONS32 )
     MAKEFIELD( ghPOOther64, IDC_FRMPROJECTOPTIONS_TXTOPTIONS64 )

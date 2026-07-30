@@ -108,7 +108,7 @@ function frmFindInProject_Show() as LRESULT
 '    if iTab = -1 then 
 '        iTab = gTTabCtl.AddTab( pDoc )  
 '        gTTabCtl.tabs(iTab).docType = DocumentType.ProjectSearch
-'        gTTabCtl.SetTabText(iTab).wszText = L(256,"Find in Project")
+'        gTTabCtl.SetTabText(iTab).wszText = L(206,"Find in Project")
 '    end if
 
 '    gTTabCtl.SetFocusTab(iTab)
