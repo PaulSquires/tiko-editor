@@ -34,5 +34,12 @@ declare function frmTopTabsInfo_Show( byval hwndParent as HWND ) as LRESULT
 declare function TopTabsInfoPanel_Show() as long
 declare function FindReplace_HighlightSearches() as long
 
+' Both live in modFindReplace.inc, which is included AFTER clsTopTabCtl.inc -- and
+' clsTopTabCtl.SetFocusTab forces the Find bar open when the Find in Project tab is
+' selected, since the find phrase is that tab's whole subject. Declared here for the same
+' reason TopTabsInfoPanel_Show above is.
+declare function FindControls_Show() as long
+declare function ReplaceControls_Show() as long
+
 
 

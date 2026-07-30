@@ -203,7 +203,12 @@ function frmMain_OnCommand( _
         case IDM_FILENEW:            OnCommand_FileNew( hwnd )
         case IDM_FILEOPEN:           OnCommand_FileOpen( hwnd, true )
         case IDM_FILEOPENASTEMPLATE: OnCommand_FileOpen( hwnd, true, true )
-        case IDM_FILESAVE:           OnCommand_FileSave( hwnd, pDoc, pDoc->IsNewFlag, false )
+            ' pDoc->IsNewFlag is dereferenced IN THE ARGUMENT LIST, so the callee's own null
+            ' guard cannot help. Reachable with no active document: an accelerator bypasses
+            ' menu enablement entirely.
+        case IDM_FILESAVE
+            if pDoc = 0 then exit function
+            OnCommand_FileSave( hwnd, pDoc, pDoc->IsNewFlag, false )
         case IDM_FILESAVEAS:         OnCommand_FileSave( hwnd, pDoc, true, false )
         case IDM_FILERENAME:         OnCommand_FileRename( hwnd, pDoc )
         case IDM_FILEDUPLICATE:      OnCommand_FileDuplicate( hwnd, pDoc )

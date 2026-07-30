@@ -397,39 +397,50 @@ function OnCommand_FileClose( _
     for i as long = nCount - 1 to 0 step -1
         if bCloseIndex(i) = false then continue for
 
-        ' If this is the ProjectSearch tab then ensure to reset its flag that tracks
-        ' whether to display the Replace controls specifically for ProjectSearch tab.
-'        if gTTabCtl.tabs(i).docType = DocumentType.ProjectSearch then
-'            gTTabCtl.TabFocusLost(i)
-'            gFind.bProjectReplaceActive = false
-'        end if    
+        ' The Find in Project tab has no document, so none of the save-prompt or
+        ' Scintilla-hiding work below applies to it. Every close route reaches here -- the
+        ' tab's own X goes through gTTabCtl.CloseTab, and shutdown through EFC_CLOSEALL -- so
+        ' this is the single place its window is destroyed.
+        if gTTabCtl.IsFindTab(i) then
+            gTTabCtl.TabFocusLost(i)     ' puts the info strip back, closes the Find bars
+            if IsWindow( HWND_FRMFINDINPROJECT ) then
+                DestroyWindow( HWND_FRMFINDINPROJECT )
+                HWND_FRMFINDINPROJECT = 0
+            end if
+            gTTabCtl.RemoveElement(i)
+            continue for
+        end if
 
         pDoc = gTTabCtl.GetDocumentPtr(i)
-        if pDoc then 
-            if IsWindow(pDoc->hWindow(0)) = 0 then continue for
-        
-            if cbool(SciExec( pDoc->hWindow(0), SCI_GETMODIFY, 0, 0)) orelse _
-                (pDoc->UserModified = true) then
-                
-                gTTabCtl.SetFocusTab(i)
-                r = TikoMsgBox( hwnd, L(74,"Save current changes?") & wstr(" ") & wText, APPNAME, _
-                                TMB_ICON_QUESTION, TMB_YESNOCANCEL )
-                if r = IDCANCEL then exit function
-                if r = IDYES then 
-                    r = pDoc->SaveFile()
-                    if r = true then exit function   ' save was cancelled
-                    elseif r = IDNO then
+        if pDoc then
+            ' A document with no Scintilla windows still has to lose its tab. This used to
+            ' be "continue for", which skipped the RemoveElement below and so made such a
+            ' tab impossible to close at all -- reachable now that a project's untabbed
+            ' documents can be realized on demand.
+            if IsWindow(pDoc->hWindow(0)) then
+                if cbool(SciExec( pDoc->hWindow(0), SCI_GETMODIFY, 0, 0)) orelse _
+                    (pDoc->UserModified = true) then
+
+                    gTTabCtl.SetFocusTab(i)
+                    r = TikoMsgBox( hwnd, L(74,"Save current changes?") & wstr(" ") & wText, APPNAME, _
+                                    TMB_ICON_QUESTION, TMB_YESNOCANCEL )
+                    if r = IDCANCEL then exit function
+                    if r = IDYES then
+                        r = pDoc->SaveFile()
+                        if r = true then exit function   ' save was cancelled
+                        elseif r = IDNO then
+                    end if
                 end if
+
+                ' Hide the Scintilla editing windows, and the split bar with them -- this used
+                ' to be SetRectEmpty on the document's gripper rect, but the bar is a real
+                ' window (owned by frmMain) now.
+                for ii as long = lbound(pDoc->hWindow) to ubound(pDoc->hWindow)
+                    ShowWindow( pDoc->hWindow(ii), SW_HIDE)
+                next
+                ShowWindow( HWND_FRMMAIN_SPLITV, SW_HIDE )
+                ShowWindow( HWND_FRMMAIN_SPLITH, SW_HIDE )
             end if
-            
-            ' Hide the Scintilla editing windows, and the split bar with them -- this used
-            ' to be SetRectEmpty on the document's gripper rect, but the bar is a real
-            ' window (owned by frmMain) now.
-            for ii as long = lbound(pDoc->hWindow) to ubound(pDoc->hWindow)
-                ShowWindow( pDoc->hWindow(ii), SW_HIDE)
-            next
-            ShowWindow( HWND_FRMMAIN_SPLITV, SW_HIDE )
-            ShowWindow( HWND_FRMMAIN_SPLITH, SW_HIDE )
         end if
 
         ' remove tab from PsTabBar

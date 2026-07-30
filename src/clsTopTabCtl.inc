@@ -45,7 +45,85 @@ function clsTopTabCtl.GetpDoc( byval idx as integer ) as clsDocument ptr
     if this.IsValidTab(idx) = false then return null
     ' Cast the pDoc stored in the itemData integer.
     dim as integer itemData = PsTabBar_GetItemData(this.hWindow, idx)
+    ' The Find in Project tab has no document. Filtering the sentinel HERE is what makes the
+    ' ~70 "if pDoc then <dereference>" call sites correct without touching any of them -- see
+    ' the note on TAB_FINDINPROJECT in clsTopTabCtl.bi.
+    if itemData = TAB_FINDINPROJECT then return null
     return cast(clsDocument ptr, itemData)
+end function
+
+
+''
+''  Raw itemData test, so this can see what GetpDoc deliberately hides.
+''
+function clsTopTabCtl.IsFindTab( byval idx as integer ) as boolean
+    if this.IsValidTab(idx) = false then return false
+    return (PsTabBar_GetItemData(this.hWindow, idx) = TAB_FINDINPROJECT)
+end function
+
+
+''
+''  What "ActiveTab=" in a session or project file should hold.
+''
+''  It is NOT the raw GetCurSel index. Both writers skip tabs on their way to disk -- a tab
+''  with no document (Find in Project) and a document that has never been saved (IsNewFlag) --
+''  so the file's index space is denser than the live tab bar's, and every tab after a skipped
+''  one shifts down by one. Writing the live index means reopening on the wrong document.
+''
+''  LoadSessionFile sanity-checks the value it reads with IsValidTab, but that cannot detect an
+''  index which is in range and simply wrong, which is exactly what this produces.
+''
+''  The IsNewFlag half of this was already broken before the Find tab existed: any untitled
+''  document sitting to the left of the active tab shifted it. Fixed here because the two skip
+''  conditions have to agree with the writers, and there is no way to honour one without the
+''  other.
+''
+function clsTopTabCtl.SaveActiveTabIndex() as long
+    dim as long nCur = this.GetCurSel()
+    if this.IsValidTab(nCur) = false then return 0
+
+    ' The active tab is itself not written (the Find tab, or an unsaved document): there is no
+    ' honest answer, so land on the first restored document.
+    dim as clsDocument ptr pCur = this.GetpDoc(nCur)
+    if pCur = 0 then return 0
+    if pCur->IsNewFlag then return 0
+
+    ' Count only the tabs ahead of it that WILL be written.
+    dim as long nWritten = 0
+    for i as long = 0 to nCur - 1
+        dim as clsDocument ptr pDoc = this.GetpDoc(i)
+        if pDoc = 0 then continue for
+        if pDoc->IsNewFlag then continue for
+        nWritten += 1
+    next
+    function = nWritten
+end function
+
+
+''
+''  There is at most one Find in Project tab. Returns -1 when it is not open.
+''
+function clsTopTabCtl.FindTabIndex() as long
+    dim as long nCount = this.GetItemCount()
+    for i as long = 0 to nCount - 1
+        if this.IsFindTab(i) then return i
+    next
+    function = -1
+end function
+
+
+''
+''  Tabs that actually hold a document. This is what a menu enabler wants: with the Find tab
+''  open, GetItemCount is non-zero while GetActiveDocumentPtr can still be null, which would
+''  light up File and Compile commands over nothing.
+''
+function clsTopTabCtl.GetDocumentTabCount() as long
+    dim as long nCount = this.GetItemCount()
+    dim as long nDocs = 0
+    for i as long = 0 to nCount - 1
+        if this.GetpDoc(i) then nDocs += 1
+    next
+    function = nDocs
 end function
 
 ''
@@ -142,18 +220,28 @@ function clsTopTabCtl.SetFocusTab( byval idx as long ) as long
     ' TOPTABS_CHANGED:  Set the new current tab and display edit window, etc.
     PsTabBar_SetCurSel( this.hWindow, idx )
 
-'            ' Hide the companion frmTopTabsInfo pane if this is not a NORMAL document.
-'            ' For example, if displaying "Find in Project" search.
-'            if gTTabCtl.tabs(gTTabCtl.CurSel).docType = DocumentType.ProjectSearch then
-'                TopTabsInfoPanel_Hide()
-'                FindControls_Show()
-'                if gFind.bShowReplacePanel then
-'                    ReplaceControls_Show()
-'                end if
-'                frmMain_PositionWindows()
-'                dim as HWND hCtl = GetDlgItem( HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND)
-'                SetFocus( hCtl )
-'            else
+    ' The Find in Project tab has no document, so it takes none of the per-document work
+    ' below. It replaces the file-info strip with the Find bar -- the find phrase IS this
+    ' tab's subject, so the bar is not optional chrome here -- and puts the caret in it.
+    if this.IsFindTab(idx) then
+        FindControls_Show()
+        if gFind.bShowReplacePanel then ReplaceControls_Show()
+        ' TopTabsInfoPanel_Hide MUST come AFTER those two. FindReplace_SetVisible sets
+        ' bShowInfoPanel = true unconditionally, so hiding the strip first is silently undone
+        ' -- and it also early-returns when the bar state already matches, which makes the
+        ' ordering matter in both directions. Hiding last is correct either way.
+        TopTabsInfoPanel_Hide()
+        ' Hide the outgoing document's editors. DisplayScintilla's hide-all loop does this
+        ' even though there is nothing to show.
+        gTTabCtl.DisplayScintilla( idx, true )
+        frmMain_PositionWindows()
+        ' Focus the PsTextBox CONTAINER, not its RichEdit child: PsTextBox.inc is included
+        ' after this file, so PsTextBox_GetRichEditHandle is not nameable here. This is also
+        ' how OnCommand_SearchFindDialog focuses the same field.
+        SetFocus( GetDlgItem( HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND ) )
+        return PsTabBar_GetCurSel( this.hWindow )
+    end if
+
                 TopTabsInfoPanel_Show()
                 gTTabCtl.DisplayScintilla( idx, true )
                 frmMain_PositionWindows()
@@ -184,7 +272,6 @@ function clsTopTabCtl.SetFocusTab( byval idx as long ) as long
                     ' remove any find occurrence highlights.
                     if IsWindowVisible(HWND_FRMMAIN_FIND) = 0 then pDoc->RemoveSelectionAttributes()
                 end if
-'            end if    
 
     function = PsTabBar_GetCurSel( this.hWindow )
 end function
@@ -220,24 +307,15 @@ end function
 ''
 ''
 function clsTopTabCtl.TabFocusLost( byval nTabIdx as long = -1) as long
-    ' If changing away from the Project Search tab then close any open
-    ' Find and Replace panes so that they do not display when the new tab
-    ' is switched to and displayed.
-'    if gTTabCtl.IsValidTab(nTabIdx) then
-'        if gTTabCtl.tabs(nTabIdx).docType = DocumentType.ProjectSearch then
-'            gFind.bShowInfoPanel = true
-'            gFind.bShowFindPanel = false
-'            gFind.bShowReplacePanel = false
-'            gFind.bExpanded = false
-'        end if
-
-'        ' If moving to a new Tab and the Find panel is closed then ensure that we 
-'        ' remove any find occurrence highlights.
-'        dim as clsDocument ptr pDoc = this.GetActiveDocumentPtr()
-'        if pDoc then 
-'            if IsWindowVisible(HWND_FRMMAIN_FIND) = 0 then pDoc->RemoveSelectionAttributes()
-'        end if
-'    end if
+    ' Leaving the Find in Project tab: put the file-info strip back and close the Find and
+    ' Replace bars, so they do not follow us onto a document tab that never asked for them.
+    ' SetFocusTab forced them open on the way in.
+    if this.IsFindTab(nTabIdx) then
+        gFind.bShowInfoPanel = true
+        gFind.bShowFindPanel = false
+        gFind.bShowReplacePanel = false
+        gFind.bProjectReplaceActive = false
+    end if
 
     ' Hide the editing window being moved away from
     gTTabCtl.DisplayScintilla( nTabIdx, false )
@@ -277,22 +355,32 @@ function clsTopTabCtl.DisplayScintilla( byval idx as long, byval bShow as boolea
     ' Show/Hide the Scintilla editing window for the incoming tab index
     if this.IsValidTab(idx) = false then exit function
     dim as clsDocument ptr pDocShow = this.GetpDoc(idx)
-    if pDocShow = null then return 0
 
-    ' Hide all documents and their associated scrollbars
+    ' HIDE-ALL RUNS FIRST, AND UNCONDITIONALLY. It used to sit below an early return on a
+    ' null pDocShow, which meant switching TO a document-less tab (Find in Project) left the
+    ' outgoing document's editors painted on top of it.
+    '
+    ' Fixing it here rather than at the call sites is deliberate: TabFocusLost -- which hides
+    ' the outgoing tab -- is paired with SetFocusTab on only two of the nine paths that change
+    ' tabs. The other seven call SetFocusTab bare (clsConfig's project load, three sites in
+    ' frmMainFile, the tab right-click, the tabs-list menu, OpenSelectedDocument) and rely on
+    ' this loop. One fix covers all seven.
     dim pDoc as clsDocument ptr = gApp.pDocList
-    
+
     do until pDoc = 0
         ' Scintilla windows and scrollbars
         ShowWindow(pDoc->hWindow(0), SW_HIDE)
         ShowWindow(pDoc->hWindow(1), SW_HIDE)
         pDoc = pDoc->pDocNext
     loop
-    
-    ' Show/Hide our current active Scintilla window and scrollbar
-    ShowWindow(pDocShow->hWindow(0), iif(bShow, SW_SHOWNORMAL, SW_HIDE))
-    ShowWindow(pDocShow->hWindow(1), iif(bShow, SW_SHOWNORMAL, SW_HIDE))
-    
+
+    ' Show/Hide our current active Scintilla window and scrollbar. Nothing to show for a tab
+    ' with no document -- frmMain_PositionWindows puts the results surface in that space.
+    if pDocShow then
+        ShowWindow(pDocShow->hWindow(0), iif(bShow, SW_SHOWNORMAL, SW_HIDE))
+        ShowWindow(pDocShow->hWindow(1), iif(bShow, SW_SHOWNORMAL, SW_HIDE))
+    end if
+
     function = 0
 end function
     
@@ -313,7 +401,11 @@ function clsTopTabCtl.SetTabText( byval idx as long ) as long
 
     dim as clsDocument ptr pDoc = this.GetpDoc(idx)
 
-    if pDoc then 
+    ' The pDoc test is what protects the Find in Project tab's caption. That matters more than
+    ' it looks: frmMain_SetStatusbar calls SetTabText(-1) on every caret move, so a caption
+    ' set by hand with PsTabBar_SetText survives only because a doc-less tab falls straight
+    ' through here. Do not "fix" this into an unconditional derive-from-filename.
+    if pDoc then
         ' Set the text that displays on the tab
         dim as DWSTRING wszOldText = this.GetTabText( idx )
         dim as DWSTRING wszNewText = AfxStrPathname( "NAMEX", pDoc->DiskFilename )

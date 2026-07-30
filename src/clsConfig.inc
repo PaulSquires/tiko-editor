@@ -971,7 +971,9 @@ function clsConfig.SaveSessionFile( byref wszSessionFile as wstring ) as boolean
     
     ' Save all of the loaded tabs
     pStream.WriteLine "BuildConfig=" & this.CompilerBuild
-    pStream.WriteLine "ActiveTab="   & gTTabCtl.GetCurSel()
+    ' Not GetCurSel: the loop below skips tabs, so the file's index space is denser than the
+    ' tab bar's. See clsTopTabCtl.SaveActiveTabIndex.
+    pStream.WriteLine "ActiveTab="   & gTTabCtl.SaveActiveTabIndex()
     pStream.WriteLine "CommandLine=" & gApp.wszCommandLine
 
     nCount = gTTabCtl.GetItemCount()
@@ -1231,8 +1233,8 @@ function clsConfig.ProjectSaveToFile() as boolean
     pStream.WriteLine "ProjectOther64="     & gApp.ProjectOther64
     pStream.WriteLine "ProjectCommandLine=" & gApp.ProjectCommandLine
 
-    ' Save all of the loaded tabs first
-    pStream.WriteLine "ActiveTab=" & gTTabCtl.GetCurSel()
+    ' Save all of the loaded tabs first. Not GetCurSel -- see clsTopTabCtl.SaveActiveTabIndex.
+    pStream.WriteLine "ActiveTab=" & gTTabCtl.SaveActiveTabIndex()
 
     nCount = gTTabCtl.GetItemCount
 

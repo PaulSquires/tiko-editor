@@ -194,6 +194,12 @@ function OnCommand_SearchFindActions( _
             byval pDoc as clsDocument ptr _
             ) as LRESULT
 
+    ' Reachable with no active document -- an accelerator bypasses menu enablement, and the
+    ' Find in Project tab is itself a document-less tab with the Find bar open on it. Project
+    ' search navigation is retargeted here in a later phase; for now these actions, which all
+    ' walk a single document, do nothing rather than fault.
+    if pDoc = 0 then exit function
+
     dim as HWND hEdit = pDoc->hWndActiveScintilla
     dim as HWND hWndFind = GetDlgItem(HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND)
     dim as HWND hFocus = GetFocus()
@@ -258,7 +264,11 @@ function OnCommand_SearchReplaceActions( _
             byval id as long, _
             byval pDoc as clsDocument ptr _
             ) as LRESULT
-            
+
+    ' Reachable with no active document -- see OnCommand_SearchFindActions above. Project-wide
+    ' replace is a later phase; a single-document replace has nothing to act on here.
+    if pDoc = 0 then exit function
+
     dim as HWND hEdit = pDoc->hWndActiveScintilla
 
     select case id
@@ -356,7 +366,10 @@ function OnCommand_SearchBookmarks( _
             byval id as long, _
             byval pDoc as clsDocument ptr _
             ) as LRESULT
-        
+
+    ' Reachable with no active document -- an accelerator bypasses menu enablement.
+    if pDoc = 0 then exit function
+
     dim as HWND hEdit = pDoc->hWndActiveScintilla
 
     select case id

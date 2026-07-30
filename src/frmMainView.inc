@@ -22,8 +22,11 @@ function OnCommand_ViewFold( _
             byval id as long, _
             byval pDoc as clsDocument ptr _
             ) as LRESULT
-    
-    select case id      
+
+    ' Reachable with no active document -- an accelerator bypasses menu enablement.
+    if pDoc = 0 then exit function
+
+    select case id
         case IDM_FOLDTOGGLE: pDoc->FoldToggle( pDoc->GetCurrentLineNumber() )
         case IDM_FOLDBELOW:  pDoc->FoldToggleOnwards( pDoc->GetCurrentLineNumber() )
         case IDM_FOLDALL:    pDoc->FoldAll()
@@ -40,9 +43,12 @@ function OnCommand_ViewZoom( _
             byval id as long, _
             byval pDoc as clsDocument ptr _
             ) as LRESULT
-    
+
+    ' Reachable with no active document -- an accelerator bypasses menu enablement.
+    if pDoc = 0 then exit function
+
     dim as HWND hEdit = pDoc->hWndActiveScintilla
-    select case id      
+    select case id
         case IDM_ZOOMIN:    SciExec(hEdit, SCI_ZOOMIN, 0, 0)
         case IDM_ZOOMOUT:   SciExec(hEdit, SCI_ZOOMOUT, 0, 0)
         case IDM_ZOOMRESET: SciExec(hEdit, SCI_SETZOOM, 0, 0)   ' reset to zero zoom
@@ -58,6 +64,9 @@ function OnCommand_ViewSplit( _
             byval id as long, _
             byval pDoc as clsDocument ptr _
             ) as LRESULT
+
+    ' Reachable with no active document -- an accelerator bypasses menu enablement.
+    if pDoc = 0 then exit function
 
     pDoc->SplitX = 0
     pDoc->SplitY = 0

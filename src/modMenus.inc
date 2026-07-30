@@ -76,7 +76,10 @@ function frmMain_FileTopMenuStates() as long
     EnableTopMenuItem( IDM_BUILDCONFIG, true )
     EnableTopMenuItem( IDM_EXIT, true )
 
-    if gTTabCtl.GetItemCount() then
+    ' GetDocumentTabCount, not GetItemCount: the Find in Project tab makes the tab count
+    ' non-zero while there is no active document, which would light up Save / Save As /
+    ' Rename / Duplicate over nothing.
+    if gTTabCtl.GetDocumentTabCount() then
         for idMenu as long = IDM_FILECLOSE to IDM_MRUSESSION
             EnableTopMenuItem( idMenu, true )
         next
@@ -235,7 +238,8 @@ function frmMain_CompileTopMenuStates() as long
         EnableTopMenuItem( idMenu, false )
     next
 
-    dim as boolean fEnabled = iif( gApp.IsProjectActive orelse cbool(gTTabCtl.GetItemCount), true, false )
+    ' Document tabs, not all tabs -- see the note in the File menu states above.
+    dim as boolean fEnabled = iif( gApp.IsProjectActive orelse cbool(gTTabCtl.GetDocumentTabCount), true, false )
     EnableTopMenuItem( IDM_BUILDEXECUTE, fEnabled )
     EnableTopMenuItem( IDM_COMPILE, fEnabled )
     EnableTopMenuItem( IDM_REBUILDALL, fEnabled )
@@ -251,7 +255,7 @@ function frmMain_CompileTopMenuStates() as long
 
     ' QuickRun should be enabled for non-Projects
     if gApp.IsProjectActive = false then 
-        if gTTabCtl.GetItemCount then EnableTopMenuItem( IDM_QUICKRUN, true )
+        if gTTabCtl.GetDocumentTabCount then EnableTopMenuItem( IDM_QUICKRUN, true )
     end if
     
     ' Determine if an executable exists based on the current active file or project
@@ -272,7 +276,8 @@ function frmMain_DebugTopMenuStates() as long
         EnableTopMenuItem( idMenu, false )
     next
 
-    dim as boolean fEnabled = iif( gApp.IsProjectActive orelse cbool(gTTabCtl.GetItemCount), true, false )
+    ' Document tabs, not all tabs -- see the note in the File menu states above.
+    dim as boolean fEnabled = iif( gApp.IsProjectActive orelse cbool(gTTabCtl.GetDocumentTabCount), true, false )
     EnableTopMenuItem( IDM_DEBUG_STARTDEBUGGING, fEnabled )
     
     EnableTopMenuItem( IDM_DEBUG_STOPDEBUGGING, gApp.IsDebuggerActive )
@@ -281,7 +286,8 @@ function frmMain_DebugTopMenuStates() as long
     EnableTopMenuItem( IDM_DEBUG_STEPOUT, gApp.IsDebuggerActive )
     EnableTopMenuItem( IDM_DEBUG_RUNTOCURSOR, gApp.IsDebuggerActive )
     
-    fEnabled = iif( cbool(gTTabCtl.GetItemCount), true, false )
+    ' A breakpoint needs a document to sit in.
+    fEnabled = iif( cbool(gTTabCtl.GetDocumentTabCount), true, false )
     EnableTopMenuItem( IDM_DEBUG_TOGGLEBREAKPOINT, fEnabled )
     EnableTopMenuItem( IDM_DEBUG_DELETEALLBREAKPOINTS, fEnabled )
 

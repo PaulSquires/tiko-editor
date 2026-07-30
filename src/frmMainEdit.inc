@@ -182,6 +182,8 @@ function OnCommand_EditEncoding( _
             byval pDoc as clsDocument ptr _
             ) as LRESULT
 
+    ' Reachable with no active document -- an accelerator bypasses menu enablement.
+    if pDoc = 0 then exit function
 
     ' Map the menu command to a target encoding. ConvertTextBuffer owns BOTH the byte
     ' conversion and the FileEncoding relabel (INVARIANT E1); the caller must not assign
@@ -212,7 +214,10 @@ function OnCommand_EditCommon( _
             byval id as long, _
             byval pDoc as clsDocument ptr _
             ) as LRESULT
-        
+
+    ' Reachable with no active document -- an accelerator bypasses menu enablement.
+    if pDoc = 0 then exit function
+
     dim as HWND hEdit = pDoc->hWndActiveScintilla
 
     select case id
