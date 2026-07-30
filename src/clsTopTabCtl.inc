@@ -235,15 +235,12 @@ function clsTopTabCtl.SetFocusTab( byval idx as long ) as long
         ' even though there is nothing to show.
         gTTabCtl.DisplayScintilla( idx, true )
         frmMain_PositionWindows()
-        ' Back to where the caret was, if it was in an excerpt. Landing in the search box
-        ' every time is right when the tab is first opened and wrong on every return to it --
-        ' the user was editing, and coming back should resume that.
-        if frmFindInProject_RestoreFocus() = false then
-            ' Focus the PsTextBox CONTAINER, not its RichEdit child: PsTextBox.inc is included
-            ' after this file, so PsTextBox_GetRichEditHandle is not nameable here. This is
-            ' also how OnCommand_SearchFindDialog focuses the same field.
-            SetFocus( GetDlgItem( HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND ) )
-        end if
+        ' POSTED, not set here. Back to where the caret was if it was in an excerpt, and the
+        ' search box otherwise -- but a tab switch hides and shows several windows, and a
+        ' SetFocus made part-way through that gets undone by the rest of it. frmMain's
+        ' MSG_USER_SETFOCUS handler does it once the churn is over, which is what that
+        ' message has always been for.
+        frmMain_SetFocusToCurrentCodeWindow()
         return PsTabBar_GetCurSel( this.hWindow )
     end if
 

@@ -1462,8 +1462,21 @@ function frmMain_WndProc( _
             ' Set focus to current Scintilla window and update the document
             ' display such as Line#, Col#, Filename, etc.
             frmMain_SetStatusbar()
+
+            ' The Find in Project tab has no document, but it does have somewhere to put the
+            ' caret: back in the excerpt that had it. Done from HERE, on a posted message,
+            ' rather than inline in SetFocusTab -- a tab switch hides and shows several
+            ' windows, and any SetFocus made in the middle of that is liable to be undone by
+            ' the rest of it. That is the whole reason this message exists.
+            if frmFindInProject_IsActive() then
+                if frmFindInProject_RestoreFocus() = false then
+                    SetFocus( GetDlgItem( HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND ) )
+                end if
+                exit function
+            end if
+
             dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
-            if pDoc then 
+            if pDoc then
                 ' Ensure that the correct Explorer listbox entry is selected
                 frmExplorer_SelectItemData( pDoc )
                 SetFocus( pDoc->hWndActiveScintilla )

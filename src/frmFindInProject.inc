@@ -176,9 +176,9 @@ private function FipPool_SciProc( byval hwnd as HWND, byval uMsg as UINT, _
                 if uMsg = WM_SETFOCUS then
                     g = gFipRows( gFipPool(i).nRow ).nGroup
                 else
-                    ' LOSING focus: remember where the caret was, so switching away from this
-                    ' tab and back returns to the edit position rather than dumping the user
-                    ' in the search box every time.
+                    ' Losing focus: take one last reading. The continuous record in the
+                    ' post-processing below is the reliable one; this only narrows the gap
+                    ' between the final keystroke and the focus actually going.
                     gFipLastEditBlock = gFipRows( gFipPool(i).nRow ).nBlock
                     gFipLastEditPos   = SciExec( hwnd, SCI_GETCURRENTPOS, 0, 0 )
                 end if
@@ -244,6 +244,16 @@ private function FipPool_SciProc( byval hwnd as HWND, byval uMsg as UINT, _
 
         dim as long nWant = gFip.blocks(b).nFirstLine
         dim as long nLast = nWant + gFip.blocks(b).nLineCount - 1
+
+        ' REMEMBER WHERE THE CARET IS, on every message this view handles while it has focus.
+        ' Recording it only on WM_KILLFOCUS was too fragile: a tab switch hides this window's
+        ' ancestors, and whether that produces a kill-focus this subclass actually sees is not
+        ' something to depend on. Updating it continuously costs one comparison and cannot
+        ' miss.
+        if GetFocus() = hwnd then
+            gFipLastEditBlock = b
+            gFipLastEditPos   = SciExec( hwnd, SCI_GETCURRENTPOS, 0, 0 )
+        end if
 
         ' CONFINE THE CARET TO THE VISIBLE LINES. Pinning the view alone is not enough: the
         ' caret would walk out of the block on Down or Ctrl+End and then be editing lines the
@@ -669,6 +679,33 @@ function frmFindInProject_RestoreFocus() as boolean
     dim as long g = gFip.blocks(gFipLastEditBlock).nGroup
     if gFip.groups(g).pDoc = 0 then return false
     if gFip.groups(g).bCollapsed then return false
+
+    ' Make sure the pool actually reflects what is on screen before looking for the slot: the
+    ' tab has just been shown again, and a resize may not have fired.
+    FipPool_Sync()
+
+    ' If the block scrolled out of view while the user was elsewhere, bring it back -- there
+    ' is no slot showing it otherwise, and the caret would have nowhere to go.
+    dim as long nRowWanted = -1
+    for r as long = 0 to gFipRowCount - 1
+        if (gFipRows(r).nKind = FIP_ROW_BLOCK) andalso _
+           (gFipRows(r).nBlock = gFipLastEditBlock) then nRowWanted = r: exit for
+    next
+    if nRowWanted <> -1 then
+        dim as RECT rcCl
+        GetClientRect( HWND_FRMFINDINPROJECT_SURFACE, @rcCl )
+        dim as long nPage = rcCl.bottom - rcCl.top
+        dim as long nTop  = gFipRows(nRowWanted).nTop
+        dim as long nBot  = nTop + gFipRows(nRowWanted).nHeight
+        if nTop < gFipScrollTop then
+            gFipScrollTop = nTop
+        elseif nBot > (gFipScrollTop + nPage) then
+            gFipScrollTop = nBot - nPage
+        end if
+        FipSurface_SyncScrollBar()
+        PsVScrollBar_SetPos( HWND_FRMFINDINPROJECT_VSCROLL, gFipScrollTop )
+        FipPool_Sync()
+    end if
 
     for i as long = 0 to gFipPoolCount - 1
         if gFipPool(i).nRow = -1 then continue for
@@ -1938,6 +1975,26 @@ sub frmFindInProject_RunSelfTest()
                 ' in the file's own tab to a window they cannot see.
                 frmFindInProject_Check( "edit: the document's active view was not hijacked", _
                     pD2->hWndActiveScintilla <> gFipPool(i).hWnd )
+
+                ' ---- focus survives leaving and returning to the tab -----------------------
+                ' The reported failure: put the caret in an excerpt, switch to another tab,
+                ' come back, and the caret was in the SEARCH BOX. The position is recorded on
+                ' every message the focused view handles -- not only on WM_KILLFOCUS, which a
+                ' tab switch does not reliably deliver to this subclass -- so by now it has
+                ' been captured just by the SetFocus above.
+                dim as long nPos2 = SciExec( gFipPool(i).hWnd, SCI_POSITIONFROMLINE, nLn, 0 ) + 1
+                SciExec( gFipPool(i).hWnd, SCI_GOTOPOS, nPos2, 0 )
+                ' One more message so the record is taken.
+                SendMessage( gFipPool(i).hWnd, WM_KEYDOWN, VK_RIGHT, 0 )
+                frmFindInProject_Check( "focus: the edit position was remembered", _
+                    gFipLastEditBlock = bb2, str(gFipLastEditBlock) & " vs " & str(bb2) )
+
+                ' Take focus away, exactly as switching tabs does, then ask for it back.
+                SetFocus( HWND_FRMMAIN )
+                frmFindInProject_Check( "focus: it is restored to the excerpt, not the box", _
+                    frmFindInProject_RestoreFocus() = true )
+                frmFindInProject_Check( "focus: and the caret really is in that excerpt", _
+                    GetFocus() = gFipPool(i).hWnd )
                 exit for
             next
 
