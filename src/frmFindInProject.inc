@@ -97,6 +97,38 @@ private sub FipPool_OpenFocusedFile()
 end sub
 
 
+' Would this keystroke take the caret out of the excerpt's own lines? Answered BEFORE the
+' key reaches Scintilla, so the answer can be "do nothing" rather than "undo it afterwards".
+private function FipPool_KeyWouldLeaveBlock( byval hwnd as HWND, byval nKey as WPARAM ) as boolean
+    for i as long = 0 to gFipPoolCount - 1
+        if gFipPool(i).hWnd <> hwnd then continue for
+        if (gFipPool(i).nRow < 0) orelse (gFipPool(i).nRow >= gFipRowCount) then return false
+        dim as long b = gFipRows( gFipPool(i).nRow ).nBlock
+        if (b < 0) orelse (b >= gFip.nBlockCount) then return false
+
+        dim as long nFirst = gFip.blocks(b).nFirstLine
+        dim as long nLast  = nFirst + gFip.blocks(b).nLineCount - 1
+        dim as long nLine  = SciExec( hwnd, SCI_LINEFROMPOSITION, _
+                                      SciExec( hwnd, SCI_GETCURRENTPOS, 0, 0 ), 0 )
+        dim as boolean bCtrl = ((GetKeyState(VK_CONTROL) and &H8000) <> 0)
+
+        select case nKey
+            case VK_UP, VK_PRIOR
+                return (nLine <= nFirst)
+            case VK_DOWN, VK_NEXT
+                return (nLine >= nLast)
+            case VK_HOME
+                ' Plain Home is start-of-line and stays put; Ctrl+Home is start-of-DOCUMENT.
+                if bCtrl then return (nLine <= nFirst)
+            case VK_END
+                if bCtrl then return (nLine >= nLast)
+        end select
+        return false
+    next
+    return false
+end function
+
+
 ' Subclass on every slot, for one reason: Scintilla consumes WM_MOUSEWHEEL itself, so a
 ' gesture made with the pointer over an excerpt would scroll THAT VIEW off its pinned line
 ' instead of scrolling the results list. Routed into the bar, which owns the arithmetic.
@@ -132,6 +164,15 @@ private function FipPool_SciProc( byval hwnd as HWND, byval uMsg as UINT, _
             if (wParam = VK_RETURN) andalso ((GetKeyState(VK_MENU) and &H8000) <> 0) then
                 FipPool_OpenFocusedFile()
                 return 0
+            end if
+
+            ' LEAVING THE BLOCK IS A NO-OP, not a clamp. Letting the key through and pulling
+            ' the caret back afterwards is what produced the reported behaviour: Up on the
+            ' first line jumped the caret to column 0, Down on the last line to end of line.
+            ' Swallowing the keystroke before Scintilla sees it means nothing moves at all,
+            ' which is what "you cannot leave the five lines" should feel like.
+            if uMsg = WM_KEYDOWN then
+                if FipPool_KeyWouldLeaveBlock( hwnd, wParam ) then return 0
             end if
 
         case WM_SYSCHAR
@@ -541,10 +582,13 @@ end sub
 ' The twisty column. FipSurface_PaintHeader puts the chevron at the header's left padding,
 ' and the Find bar's fold icon is placed on this same X so the two read as one column.
 function frmFindInProject_TwistyColumnX() as long
-    ' The header bar spans the full client width and pads its contents by this much; the
-    ' chevron is the first thing in it. Blocks are indented further (FIP_INDENT), but the
-    ' headers are not -- so this is a bare padding, not an indent.
-    return AfxScaleX(6)
+    ' THE CENTRE of the twisty column, not its left edge.
+    '
+    ' Both users of it centre a glyph on it, and they do so in cells of DIFFERENT widths --
+    ' the header paints into a 16px box, the Find bar's fold icon into a PsIconPanel cell as
+    ' tall as the find field. Matching left edges therefore did NOT line the two glyphs up;
+    ' only a shared centre does.
+    return AfxScaleX(6) + AfxScaleX(8)
 end function
 
 
@@ -647,7 +691,7 @@ private sub FipSurface_PaintHeader( byval b as PsBufferPaint ptr, byref r as FIP
     ' The twisty. Down = expanded, right = collapsed, which is the direction every tree in
     ' tiko already uses.
     dim as RECT rcGlyph = rc
-    rcGlyph.left  = frmFindInProject_TwistyColumnX()
+    rcGlyph.left  = frmFindInProject_TwistyColumnX() - AfxScaleX(8)
     rcGlyph.right = rcGlyph.left + AfxScaleX(16)
     b->SetFont( ghFont(SYMBOLFONT_9) )
     b->SetForeColor( ghEditor.ForeColorText )
@@ -1660,12 +1704,47 @@ sub frmFindInProject_RunSelfTest()
                 if gFipPool(i).nRow = -1 then continue for
                 dim as long bb = gFipRows( gFipPool(i).nRow ).nBlock
                 dim as long nPinned = gFip.blocks(bb).nFirstLine
+                dim as long nLastLine = nPinned + gFip.blocks(bb).nLineCount - 1
                 SendMessage( gFipPool(i).hWnd, WM_KEYDOWN, VK_END, 0 )
                 SendMessage( gFipPool(i).hWnd, WM_KEYDOWN, VK_NEXT, 0 )
                 frmFindInProject_Check( "noscroll: the view stayed pinned after caret keys", _
                     SciExec( gFipPool(i).hWnd, SCI_GETFIRSTVISIBLELINE, 0, 0 ) = nPinned, _
                     str(SciExec( gFipPool(i).hWnd, SCI_GETFIRSTVISIBLELINE, 0, 0 )) & _
                     " vs " & str(nPinned) )
+
+                ' LEAVING THE BLOCK IS A NO-OP. Park the caret on the first line, press Up,
+                ' and NOTHING may move -- not the line, and not the column either. Clamping
+                ' after the fact (which is what this replaced) left the caret at column 0,
+                ' so the position, not just the line, is what has to be compared.
+                SciExec( gFipPool(i).hWnd, SCI_GOTOPOS, _
+                         SciExec( gFipPool(i).hWnd, SCI_GETLINEENDPOSITION, nPinned, 0 ), 0 )
+                dim as long nPosBefore = SciExec( gFipPool(i).hWnd, SCI_GETCURRENTPOS, 0, 0 )
+                SendMessage( gFipPool(i).hWnd, WM_KEYDOWN, VK_UP, 0 )
+                frmFindInProject_Check( "noscroll: Up on the first line does nothing at all", _
+                    SciExec( gFipPool(i).hWnd, SCI_GETCURRENTPOS, 0, 0 ) = nPosBefore, _
+                    str(SciExec( gFipPool(i).hWnd, SCI_GETCURRENTPOS, 0, 0 )) & _
+                    " vs " & str(nPosBefore) )
+
+                SciExec( gFipPool(i).hWnd, SCI_GOTOPOS, _
+                         SciExec( gFipPool(i).hWnd, SCI_POSITIONFROMLINE, nLastLine, 0 ), 0 )
+                nPosBefore = SciExec( gFipPool(i).hWnd, SCI_GETCURRENTPOS, 0, 0 )
+                SendMessage( gFipPool(i).hWnd, WM_KEYDOWN, VK_DOWN, 0 )
+                frmFindInProject_Check( "noscroll: Down on the last line does nothing at all", _
+                    SciExec( gFipPool(i).hWnd, SCI_GETCURRENTPOS, 0, 0 ) = nPosBefore, _
+                    str(SciExec( gFipPool(i).hWnd, SCI_GETCURRENTPOS, 0, 0 )) & _
+                    " vs " & str(nPosBefore) )
+
+                ' ...but a move INSIDE the block is untouched. Without this, "does nothing"
+                ' would also pass if the subclass ate every arrow key.
+                if gFip.blocks(bb).nLineCount > 1 then
+                    SciExec( gFipPool(i).hWnd, SCI_GOTOPOS, _
+                             SciExec( gFipPool(i).hWnd, SCI_POSITIONFROMLINE, nPinned, 0 ), 0 )
+                    nPosBefore = SciExec( gFipPool(i).hWnd, SCI_GETCURRENTPOS, 0, 0 )
+                    SendMessage( gFipPool(i).hWnd, WM_KEYDOWN, VK_DOWN, 0 )
+                    frmFindInProject_Check( "noscroll: Down INSIDE the block still moves", _
+                        SciExec( gFipPool(i).hWnd, SCI_GETCURRENTPOS, 0, 0 ) <> nPosBefore, _
+                        str(SciExec( gFipPool(i).hWnd, SCI_GETCURRENTPOS, 0, 0 )) )
+                end if
                 exit for
             next
 
@@ -1979,11 +2058,25 @@ private sub FipBar_RevealCurrent()
     ' Select the match inside its excerpt view, so "next" is visible rather than merely
     ' scrolled to. The pin is re-asserted afterwards because setting a selection scrolls the
     ' caret into view and would otherwise slide the block off its lines.
+    ' THE EDITING CARET MOVES WITH THE NAVIGATION, not just the scroll position: after F3 the
+    ' match is where you are, so typing continues there.
+    '
+    ' Focus follows only when it was already in an excerpt. Pressing Enter repeatedly in the
+    ' find box has to keep working, and stealing focus out of the box on every Enter would
+    ' break that -- so a keystroke made from the box moves the caret without taking the box's
+    ' focus away, and one made from an excerpt keeps you in the excerpts.
+    dim as boolean bFocusInPool = false
+    dim as HWND hFocus = GetFocus()
+    for i as long = 0 to gFipPoolCount - 1
+        if gFipPool(i).hWnd = hFocus then bFocusInPool = true: exit for
+    next
+
     for i as long = 0 to gFipPoolCount - 1
         if gFipPool(i).nRow <> nRow then continue for
         SciExec( gFipPool(i).hWnd, SCI_SETSEL, gFip.matches(gFipCurrent).nStart, _
                  gFip.matches(gFipCurrent).nStart + gFip.matches(gFipCurrent).nLen )
         SciExec( gFipPool(i).hWnd, SCI_SETFIRSTVISIBLELINE, gFip.blocks(b).nFirstLine, 0 )
+        if bFocusInPool then SetFocus( gFipPool(i).hWnd )
         exit for
     next
 end sub

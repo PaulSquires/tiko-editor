@@ -303,7 +303,10 @@ function frmFind_PositionWindows() as LRESULT
     ' and the find frame keeps the whole width it has always had.
     if isProjectSearch then
         dim as long nFoldW = PsIconPanel_GetIdealWidth( ghFindIconsFold )
-        dim as long xFold  = frmFindInProject_TwistyColumnX()
+        ' Centre the PANEL on the twisty column, so its glyph -- which the control centres in
+        ' a cell of its own width -- lands on the same X as the header chevrons below.
+        dim as long xFold  = frmFindInProject_TwistyColumnX() - (nFoldW \ 2)
+        if xFold < 0 then xFold = 0
         SetWindowPos( ghFindIconsFold, 0, xFold, nTop, nFoldW, nHeight, _
                       SWP_NOZORDER or SWP_SHOWWINDOW )
         ' The glyph names the STATE's opposite: what the next click will do.
