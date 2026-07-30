@@ -20,6 +20,7 @@ dim shared as HWND     gDbgBtn(IDC_FRMDEBUG_CMDFIRST to IDC_FRMDEBUG_CMDLAST)
 dim shared as DWSTRING gDbgStatusText
 dim shared as long     gDbgCurFrame          ' call-stack frame the variables view is scoped to
 dim shared as boolean  gDbgSessionEnding
+dim shared as boolean  gDbgSplitInit         ' the splitter's default position is chosen once
 
 ' ==========================================================================================
 ' Status line
@@ -361,13 +362,16 @@ private sub frmDebug_PositionWindows()
     dim as long nMinBar = nMinPane
     dim as long nMaxBar = rc.right - nMinPane - nSplitW
     if nMaxBar < nMinBar then nMaxBar = nMinBar
-    PsSplitter_SetRange( HWND_FRMDEBUG_SPLITTER, nMinBar, nMaxBar )
 
-    dim as long nBarPos = PsSplitter_GetPos( HWND_FRMDEBUG_SPLITTER )
-    if (nBarPos < nMinBar) orelse (nBarPos > nMaxBar) then
+    ' The default position has to be chosen BEFORE SetRange, not after: SetRange clamps the
+    ' current position into the new range silently, so by the time it returns the bar is
+    ' never out of range and an "is it out of range" test can never fire.
+    if gDbgSplitInit = false then
+        gDbgSplitInit = true
         PsSplitter_SetPos( HWND_FRMDEBUG_SPLITTER, rc.right * 3 \ 5 )
-        nBarPos = PsSplitter_GetPos( HWND_FRMDEBUG_SPLITTER )
     end if
+    PsSplitter_SetRange( HWND_FRMDEBUG_SPLITTER, nMinBar, nMaxBar )
+    dim as long nBarPos = PsSplitter_GetPos( HWND_FRMDEBUG_SPLITTER )
 
     SetWindowPos( HWND_FRMDEBUG_SPLITTER, 0, nBarPos, nTop, nSplitW, rc.bottom - nTop, SWP_NOZORDER )
 
@@ -436,7 +440,11 @@ end sub
 
 private sub frmDebug_SplitterPaint( byval p as PSSPLITTER_PAINTINFO ptr )
     if p = 0 then exit sub
-    p->b->SetBackColor( ghOutput.BackColorHot )
+    ' NOT the window background. Painting the bar in BackColorHot -- which is what this
+    ' window's own WM_PAINT fills with -- makes a correctly placed splitter invisible.
+    dim as COLORREF clr = ghOutput.Divider
+    if p->isHot orelse p->isDragging then clr = ghOutput.ForeColorScrollBar
+    p->b->SetBackColor( clr )
     p->b->PaintRect( @p->rcClient )
 end sub
 
@@ -681,6 +689,7 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as DWSTRING, 
     end if
 
     gDbgSessionEnding = false
+    gDbgSplitInit     = false
     gDbgCurFrame      = 0
     gDbgStatusText    = L(600, "Running...")
 
