@@ -585,8 +585,32 @@ function frmMain_OnNotify( _
             byval pNMHDR as NMHDR ptr _
             ) as LRESULT
 
+    ' ------------------------------------------------------------------------------------
+    ' THE FIND IN PROJECT REMAP, AND IT HAS TO BE HERE -- above the active-document gate
+    ' below, and above the SuppressNotify test inside it.
+    '
+    ' That gate reads gTTabCtl.GetActiveDocumentPtr(), which is NULL while the Find in
+    ' Project tab is the active tab -- which is precisely the situation an edit typed into a
+    ' result excerpt happens in. Anything placed inside the gate would never run for it.
+    '
+    ' The document is resolved from the SENDER (GetDocumentPtrByWindow), not from the active
+    ' tab, so the attribution is correct no matter which view the edit came from. Every view
+    ' bound to a document is one of its watchers, so an edit made in an excerpt still
+    ' produces this notification from the document's OWN windows -- which is why the excerpt
+    ' views themselves need no notifications at all.
+    ' ------------------------------------------------------------------------------------
+    if pNMHDR->code = SCN_MODIFIED then
+        dim as SCNOTIFICATION ptr pNotify = cast( SCNOTIFICATION ptr, pNMHDR )
+        dim as clsDocument ptr pDocMod = gApp.GetDocumentPtrByWindow( pNMHDR->hwndFrom )
+        if pDocMod then
+            FindProject_OnDocumentModified( pDocMod, pNotify->modificationType, _
+                                            pNotify->position, pNotify->length, _
+                                            pNotify->linesAdded )
+        end if
+    end if
+
     dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
-    if pDoc then 
+    if pDoc then
         if pDoc->IsValidScintillaID(id) then
             ' Process Scintilla control notification messages. First, check to see if the notifications
             ' have been suppressed by a bulk modification activity that should only update the screen

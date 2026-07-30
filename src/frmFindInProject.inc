@@ -310,6 +310,123 @@ sub frmFindInProject_RunSelfTest()
         gTTabCtl.GetCurSel() = nSelBefore, _
         str(gTTabCtl.GetCurSel()) & " vs " & str(nSelBefore) )
 
+    ' ---- the search engine, against an independent oracle ---------------------------------
+    ' THE PURE HALF IS BLIND TO WHETHER THE ENGINE FINDS ANYTHING. It only ever reaches the
+    ' remap and window arithmetic, so stubbing the search out entirely leaves it fully green.
+    ' What follows checks the real thing: it takes a phrase out of a real document's own text,
+    ' counts the occurrences itself with plain string operations, and requires the engine to
+    ' agree -- both on how many there are and on where each one is.
+    dim as clsDocument ptr pTest = 0
+    dim pWalk as clsDocument ptr = gApp.pDocList
+    do until pWalk = 0
+        if IsWindow( pWalk->hWindow(0) ) then pTest = pWalk: exit do
+        pWalk = pWalk->pDocNext
+    loop
+
+    if pTest = 0 then
+        print "  NOTE: no realized document -- the search-engine assertions are SKIPPED."
+    else
+        dim as string sText = pTest->GetText()
+
+        ' Take the first run of >= 5 letters as the phrase, so this works against whatever
+        ' file happens to be open rather than against a hardcoded needle.
+        dim as string sPhrase
+        dim as long nRun = 0, nRunStart = 0
+        for i as long = 1 to len(sText)
+            dim as long c = asc( mid(sText, i, 1) )
+            dim as boolean bAlpha = ((c >= 65) andalso (c <= 90)) orelse ((c >= 97) andalso (c <= 122))
+            if bAlpha then
+                if nRun = 0 then nRunStart = i
+                nRun += 1
+                if nRun >= 5 then sPhrase = mid(sText, nRunStart, 5): exit for
+            else
+                nRun = 0
+            end if
+        next
+
+        if len(sPhrase) = 0 then
+            print "  NOTE: no usable phrase in the test document -- search assertions SKIPPED."
+        else
+            ' The oracle: count case-sensitively with instr, which shares no code with the
+            ' engine (that goes through Scintilla's SCI_SEARCHINTARGET).
+            dim as long nOracle = 0
+            dim as long p = instr( sText, sPhrase )
+            do while p > 0
+                nOracle += 1
+                p = instr( p + 1, sText, sPhrase )
+            loop
+
+            FindProject_Search( sPhrase, true, false )
+
+            ' Find this document's group.
+            dim as long nGrp = -1
+            for g as long = 0 to gFip.nGroupCount - 1
+                if gFip.groups(g).pDoc = pTest then nGrp = g: exit for
+            next
+
+            frmFindInProject_Check( "engine: the test document produced a group", _
+                nGrp <> -1, "phrase [" & sPhrase & "] oracle " & str(nOracle) )
+
+            if nGrp <> -1 then
+                frmFindInProject_Check( "engine: match count agrees with the oracle", _
+                    gFip.groups(nGrp).nMatchCount = nOracle, _
+                    str(gFip.groups(nGrp).nMatchCount) & " vs " & str(nOracle) )
+
+                ' EVERY recorded offset must actually point at the phrase in the raw bytes.
+                ' This is the assertion that would catch a position off by a BOM, by a line
+                ' ending, or by a UTF-8 unit -- none of which a count can see.
+                dim as long nBadPos = 0
+                dim as long m0 = gFip.groups(nGrp).nMatchFirst
+                for i as long = m0 to m0 + gFip.groups(nGrp).nMatchCount - 1
+                    if mid( sText, gFip.matches(i).nStart + 1, len(sPhrase) ) <> sPhrase then
+                        nBadPos += 1
+                    end if
+                next
+                frmFindInProject_Check( "engine: every offset points at the phrase", _
+                    nBadPos = 0, str(nBadPos) & " wrong of " & str(gFip.groups(nGrp).nMatchCount) )
+
+                ' Structural contract of the coalescing: every match belongs to exactly one
+                ' block, and blocks run in ascending line order without overlapping.
+                dim as long nSumMatches = 0
+                dim as long nOutOfOrder  = 0
+                dim as long nPrevLast    = -1
+                dim as long b0 = gFip.groups(nGrp).nBlockFirst
+                for b as long = b0 to b0 + gFip.groups(nGrp).nBlockCount - 1
+                    nSumMatches += gFip.blocks(b).nMatchCount
+                    if gFip.blocks(b).nFirstLine <= nPrevLast then nOutOfOrder += 1
+                    nPrevLast = gFip.blocks(b).nFirstLine + gFip.blocks(b).nLineCount - 1
+                next
+                frmFindInProject_Check( "engine: every match belongs to exactly one block", _
+                    nSumMatches = gFip.groups(nGrp).nMatchCount, _
+                    str(nSumMatches) & " vs " & str(gFip.groups(nGrp).nMatchCount) )
+                frmFindInProject_Check( "engine: blocks ascend and never overlap", _
+                    nOutOfOrder = 0, str(nOutOfOrder) & " out of order" )
+                frmFindInProject_Check( "engine: every block shows at least the context window", _
+                    gFip.blocks(b0).nLineCount >= 1, str(gFip.blocks(b0).nLineCount) )
+
+                ' The remap, driven through the REAL hook rather than the pure function: an
+                ' insertion at the very start of the file must shift every match in it.
+                dim as long nFirstStart = gFip.matches(m0).nStart
+                FindProject_OnDocumentModified( pTest, SC_MOD_INSERTTEXT, 0, 7, 0 )
+                frmFindInProject_Check( "remap: the hook shifted a match by the insert length", _
+                    gFip.matches(m0).nStart = nFirstStart + 7, _
+                    str(gFip.matches(m0).nStart) & " vs " & str(nFirstStart + 7) )
+
+                ' ...and the suppression flag the replace loop will rely on really suppresses.
+                dim as long nNow = gFip.matches(m0).nStart
+                gFipSuppressRemap = true
+                FindProject_OnDocumentModified( pTest, SC_MOD_INSERTTEXT, 0, 7, 0 )
+                gFipSuppressRemap = false
+                frmFindInProject_Check( "remap: gFipSuppressRemap blocks the hook", _
+                    gFip.matches(m0).nStart = nNow, _
+                    str(gFip.matches(m0).nStart) & " vs " & str(nNow) )
+            end if
+
+            ' Leave no results behind: this suite runs at startup, not on the user's command.
+            FindProject_Clear()
+        end if
+    end if
+
     print "--- TIKO_FINDPROJ_SELFTEST: " & str(gFipTestPass) & " passed, " & _
           str(gFipTestFail) & " failed ---"
 end sub

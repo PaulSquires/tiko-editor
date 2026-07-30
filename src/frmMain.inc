@@ -1268,6 +1268,11 @@ function frmMain_OnClose( byval hwnd as HWND ) as LRESULT
     ' its message pump go away - no MSG_USER_PARSE_COMPLETE may arrive after this.
     gScanMgr.Shutdown()
 
+    ' Drop the Find in Project results and destroy the scratch search view. Before
+    ' DestroyWindow, because releasing a Scintilla document is a MESSAGE and needs a live
+    ' window to send it to.
+    FindProject_Shutdown()
+
     DestroyWindow(hwnd)
     
     function = 0
@@ -1754,6 +1759,9 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ' Needs the frmMain CWindow (for the real DPI) but not the Output panel itself, which
     ' has not been created yet at this point -- the suite is deliberately pure.
     frmOutput_RunSelfTest()
+    ' The PURE half of the Find in Project suite -- no window needed, so it runs here with
+    ' the rest. Its wiring half runs later, once the session has been restored.
+    FindProject_RunSelfTest()
 
     ' Pure policy assertions plus a check that the six localized ids its two message boxes
     ' need are not blank -- so it has to run after the language file is loaded, like the

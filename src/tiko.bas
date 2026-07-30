@@ -128,6 +128,10 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "modCodetips.inc"
 #include once "modMenuDefinitions.inc"
 #include once "modMRU.inc"
+' The Find in Project search engine and result model. No windows and no Ps* types, so it
+' needs only clsApp/clsDocument/modScintilla, all already in scope. Ahead of
+' modFindReplace.inc because the Find bar drives the project search.
+#include once "modFindProject.inc"
 #include once "modFindReplace.inc"
 #include once "modFuzzy.inc"
 ' The keyboard shortcut MODEL (gKeys, the defaults table, keybindings.ini, the accelerator
