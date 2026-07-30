@@ -967,18 +967,18 @@ private sub FipSurface_Render( byval b as PsBufferPaint ptr, byref rc as RECT )
     b->SetBackColor( ghEditor.BackColorText )
     b->PaintRect( @rc )
 
-    if (gFip.bValid = false) orelse (gFipRowCount = 0) then
-        ' Empty state. Reuses the tab's own caption rather than minting a localized id that
-        ' would be retired the moment this gets a real message.
-        dim as RECT rcText = rc
-        rcText.top  += AfxScaleY(20)
-        rcText.left += AfxScaleX(20)
-        b->SetFont( ghFont(GUIFONT_10) )
-        b->SetForeColor( ghEditor.ForeColorLinenumbers )
-        b->SetBackColor( ghEditor.BackColorText )
-        b->PaintText( L(206, "Find in Project"), @rcText, DT_LEFT )
-        exit sub
-    end if
+'    if (gFip.bValid = false) orelse (gFipRowCount = 0) then
+'        ' Empty state. Reuses the tab's own caption rather than minting a localized id that
+'        ' would be retired the moment this gets a real message.
+'        dim as RECT rcText = rc
+'        rcText.top  += AfxScaleY(20)
+'        rcText.left += AfxScaleX(20)
+'        b->SetFont( ghFont(GUIFONT_10) )
+'        b->SetForeColor( ghEditor.ForeColorLinenumbers )
+'        b->SetBackColor( ghEditor.BackColorText )
+'        b->PaintText( L(206, "Find in Project"), @rcText, DT_LEFT )
+'        exit sub
+'    end if
 
     dim as long nFirst = FipRows_FirstVisible( gFipRows(), gFipRowCount, gFipScrollTop )
     if nFirst >= 0 then
@@ -1822,10 +1822,32 @@ sub frmFindInProject_RunSelfTest()
             ' appear in a text source, and concatenating keeps even the pieces apart.
             dim as long nHitsBefore = gFip.nMatchCount
             dim as DWSTRING wszNeedle = chr(1) & "nomatch" & chr(1)
+            ' THE FIELD HAS TO HOLD THE PHRASE. The red is keyed on the field still showing
+            ' what was searched -- that is what makes editing clear it -- so a test that
+            ' searches without putting the phrase in the field is not reproducing anything
+            ' the user can do. Real searches always come from this field.
+            AfxSetWindowText( GetDlgItem( HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND ), wszNeedle )
             FindProject_Search( wszNeedle, true, false )
             frmFind_ApplyErrorState()
             frmFindInProject_Check( "noresults: a search with NO hits reddens the field", _
                 gFindTextIsError = true, str(gFip.nLiveMatches) & " matches" )
+
+            ' EDITING THE FAILED PHRASE CLEARS THE RED, without searching again. The red
+            ' reports the outcome of a search, so once the text differs from what was
+            ' searched it is describing something nobody has looked for yet.
+            dim as HWND hFld = GetDlgItem( HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND )
+            AfxSetWindowText( hFld, gFip.wszPhrase & "x" )
+            frmFind_ApplyErrorState()
+            frmFindInProject_Check( "noresults: editing the phrase clears the red", _
+                gFindTextIsError = false )
+
+            ' ...and putting the failed phrase back makes it red again WITHOUT a new search,
+            ' which is what proves the test is keyed on the text rather than on having just
+            ' typed something.
+            AfxSetWindowText( hFld, gFip.wszPhrase )
+            frmFind_ApplyErrorState()
+            frmFindInProject_Check( "noresults: restoring the failed phrase reddens it again", _
+                gFindTextIsError = true )
 
             ' ...and finding something again clears it. Without this the assertion above
             ' would pass on a field that had simply been red since startup.
@@ -2255,11 +2277,15 @@ sub frmFindInProject_RunSelfTest()
             print "  TONES: with results = " & str(nTonesResults) & _
                   ", empty state = " & str(nTonesEmpty) & " (cap 64)"
 
-            ' Ink reached the surface at all. A render that draws nothing, or floods the whole
-            ' client with one colour, reports 1 here -- and satisfies every geometry
-            ' assertion above.
-            frmFindInProject_Check( "render: the empty state draws something", _
-                nTonesEmpty > 1, str(nTonesEmpty) )
+            ' THE EMPTY STATE IS DELIBERATELY BLANK. It used to paint a "Find in Project"
+            ' placeholder and this asserted that it drew ink; that message has since been
+            ' commented out in FipSurface_Render, so one tone is now the CORRECT answer and
+            ' the old assertion was testing a behaviour that no longer exists.
+            '
+            ' It still earns its place as the baseline for the comparison below: whatever the
+            ' empty surface costs, a surface with results has to beat it.
+            frmFindInProject_Check( "render: an empty surface is just the background", _
+                nTonesEmpty <= 2, str(nTonesEmpty) )
 
             ' THE DISCRIMINATING ONE, and it is RELATIVE rather than an absolute floor
             ' inherited from a sibling: how many tones a healthy render produces depends on

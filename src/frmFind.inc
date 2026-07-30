@@ -110,9 +110,16 @@ sub frmFind_ApplyErrorState( byval bForce as boolean = false )
     dim as boolean bSearched  = gFip.bValid
     dim as boolean bHadPhrase = cbool( len(gFip.wszPhrase) > 0 )
     dim as boolean bNoHits    = cbool( gFip.nLiveMatches = 0 )
+    ' AND THE FIELD STILL HOLDS THE PHRASE THAT FAILED. The red reports the outcome of a
+    ' SEARCH, so the moment the user edits the text it is describing something that has not
+    ' been searched for -- and saying "no results" about a phrase nobody has looked for yet
+    ' is just wrong. Editing clears it; the next Enter decides again.
+    dim as boolean bSameText  = cbool( AfxGetWindowText( hCtl ) = gFip.wszPhrase )
 
     dim as boolean bErr = false
-    if bOnTab andalso bSearched andalso bHadPhrase andalso bNoHits then bErr = true
+    if bOnTab andalso bSearched andalso bHadPhrase andalso bNoHits andalso bSameText then
+        bErr = true
+    end if
 
     if (bErr = gFindTextIsError) andalso (bForce = false) then exit sub
     gFindTextIsError = bErr
@@ -421,6 +428,10 @@ end function
 sub frmFind_TextBoxChange( byval hTextBox as HWND )
     ' User edits only (was the EN_CHANGE path): re-run the incremental search.
     gFind.txtFind = PsTextBox_GetText( hTextBox )
+
+    ' Editing takes the "found nothing" red off immediately: the phrase in the field is no
+    ' longer the one that failed. It comes back, or does not, on the next Enter.
+    frmFind_ApplyErrorState()
     dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
     if pDoc then
         FindReplace_HighlightSearches()
