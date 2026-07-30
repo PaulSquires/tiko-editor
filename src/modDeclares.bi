@@ -191,10 +191,11 @@ end enum
 
 '  Global window handles
 dim shared as HWND HWND_FRMMAIN, HWND_FRMRECENT, HWND_FRMMAIN_STATUSBAR
-dim shared as HWND HWND_FRMOUTPUT, HWND_FRMOUTPUT_LVRESULTS, HWND_FRMOUTPUT_LVSEARCH
+dim shared as HWND HWND_FRMOUTPUT, HWND_FRMOUTPUT_LVRESULTS
 dim shared as HWND HWND_FRMOUTPUT_LVTODO, HWND_FRMOUTPUT_VSCROLL
-' The tab strip: a PsSelectBar (the five tabs) and a one-item PsIconPanel (the "X"), sized
-' side by side. HWND_FRMOUTPUT_SELECTBAR also HOLDS the current tab -- see frmOutput.bi.
+' The tab strip: a PsSelectBar (the four tabs) and a one-item PsIconPanel (the "X"), sized
+' side by side. HWND_FRMOUTPUT_SELECTBAR also HOLDS the current tab -- see frmOutput.bi,
+' and note that a tab's identity there is its panel ID, not its panel index.
 dim shared as HWND HWND_FRMOUTPUT_SELECTBAR, HWND_FRMOUTPUT_CLOSE
 dim shared as HWND HWND_FRMMAIN_MENUBAR
 ' Editor split bars: one per orientation, created once and shown one at a time to follow
