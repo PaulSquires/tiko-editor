@@ -1738,6 +1738,20 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ' are: it is what makes the dialog reachable in one command for a hand pass.
     if environ("TIKO_BUILDCONFIG_AUTOOPEN") = "1" then frmBuildConfig_Show( HWND_FRMMAIN )
 
+    ' And the debugger, against an ALREADY-BUILT executable named by the variable. Unlike the
+    ' dialogs above this one is modeless, so startup continues and the session runs normally.
+    '
+    ' It exists because the debugger window is otherwise only reachable by compiling a project
+    ' and pressing F5, which puts its real geometry out of reach of any unattended check --
+    ' and geometry is exactly what this window has gone wrong at before. Pair it with
+    ' TIKO_DEBUGWIN_TRACE=1, which dumps every control's rect READ BACK FROM THE CONTROL plus
+    ' visible/hidden, on every stop. A trace of intended numbers cannot see a pane stranded at
+    ' 0x0; that is what happened last time.
+    scope
+        dim as DWSTRING wszAutoRun = environ("TIKO_DEBUG_AUTORUN")
+        if len(wszAutoRun) then frmDebug_Show( HWND_FRMMAIN, wszAutoRun, "" )
+    end scope
+
     ' And the Project Options dialog. FALSE, i.e. the EDIT path rather than the new-project
     ' one: passing true would set IsNewProjectFlag and close every open document on OK, which
     ' is not something a self-test run should do to the user's session.

@@ -550,7 +550,15 @@ sub frmDebug_FillWatch()
 end sub
 
 ' Every variables pane, in one call. Used by the stop handler and by anything that re-scopes.
+'
+' The descriptor array is reset HERE and only here. It is append-only by design -- an index
+' already handed to a row's itemData has to stay valid -- so something has to drop the lot,
+' and the only safe moment is when every tree that could be holding an index is about to be
+' rebuilt. That is exactly this function. A single-tree refill (a header click re-sorting
+' globals) appends instead, which is bounded by how often a person clicks a header; without
+' this reset a long stepping session would accumulate a DBGP_NODE per row per stop.
 private sub frmDebug_FillVariables()
+    frmDebug_RowsReset()
     frmDebug_FillGlobals()
     frmDebug_FillLocals()
     frmDebug_FillWatch()
@@ -702,6 +710,22 @@ private sub frmDebug_OnStopped()
     frmDebug_FillVariables()
     frmDebug_SyncButtons()
     frmDebug_Trace()
+
+    ' TIKO_DEBUG_AUTOSTEP=n -- step n times and stop, unattended.
+    '
+    ' It exists for ONE reason: the changed-value highlight is only observable across TWO
+    ' stops, and nothing else here can reach a second one without a person pressing a key. It
+    ' is what showed the highlight correctly tracking a loop counter over 14 steps -- and, on
+    ' the same run, showed a dynamic array reading as eight junk dimensions before its REDIM
+    ' had executed, which was a real engine bug and is now rejected as "<not allocated>".
+    ' Pair it with TIKO_DEBUG_AUTORUN and TIKO_DEBUG_TRACEEXPAND.
+    if len(environ("TIKO_DEBUG_AUTOSTEP")) then
+        static as long nAutoSteps
+        nAutoSteps += 1
+        if nAutoSteps < valint(environ("TIKO_DEBUG_AUTOSTEP")) then
+            debugparser_resume( DBGP_RUN_STEPINTO )
+        end if
+    end if
 end sub
 
 private sub frmDebug_OnExited( byval exitCode as long )
@@ -961,6 +985,47 @@ sub frmDebug_Trace()
             "  watch=" & str(PsListTree_GetCount(HWND_FRMDEBUG_LVWATCH)) & _
             "  descriptors=" & str(gDbgRowCount)
     print sLine
+    ' Expand every top-level variables row and dump the resulting tree. Separate from the
+    ' rect dump above because it drives real work rather than reading state, and because the
+    ' path it drives -- frmDebug_ExpandRowChildren -- is otherwise reachable only by clicking
+    ' a twisty, which no unattended run can do. This is what showed a 10,000-element array
+    ' coming out as 100 groups ending exactly at [9900 .. 9999] and costing 224 rows.
+    if environ("TIKO_DEBUG_TRACEEXPAND") = "1" then
+        #macro DUMPTREE( hG, nm )
+            scope
+                for r as long = PsListTree_GetCount(hG) - 1 to 0 step -1
+                    dim as long kk = cast(long, PsListTree_GetItemData( hG, r ))
+                    if (kk < 0) orelse (kk >= gDbgRowCount) then continue for
+                    if gDbgRow(kk).kind <> DBGROW_NODE then continue for
+                    if gDbgRow(kk).nd.hasChildren = 0 then continue for
+                    frmDebug_ExpandRowChildren( hG, r )
+                next
+                sLine = "  -- " & nm & ", every top-level row expanded --"
+                print sLine
+                for r as long = 0 to PsListTree_GetCount(hG) - 1
+                    ' The leading marker is the CHANGED flag -- the one thing about this
+                    ' window that is otherwise only visible as a colour, and therefore the
+                    ' one thing a trace can say something useful about.
+                    dim as long kk2 = cast(long, PsListTree_GetItemData( hG, r ))
+                    dim as string sMark = "  "
+                    if (kk2 >= 0) andalso (kk2 < gDbgRowCount) then
+                        if gDbgRow(kk2).bChanged then sMark = " *"
+                    end if
+                    sLine = sMark & " " & space(PsListTree_GetLevel(hG, r) * 2) & _
+                            str(PsListTree_GetText(hG, r)) & " | " & _
+                            str(PsListTree_GetCellText(hG, r, 1)) & " | " & _
+                            str(PsListTree_GetCellText(hG, r, 2))
+                    print sLine
+                next
+                sLine = "   rows=" & str(PsListTree_GetCount(hG)) & _
+                        "  descriptors=" & str(gDbgRowCount)
+                print sLine
+            end scope
+        #endmacro
+        DUMPTREE( HWND_FRMDEBUG_LVGLOBALS, "globals" )
+        DUMPTREE( HWND_FRMDEBUG_LVLOCALS,  "locals" )
+    end if
+
     print "--- end ---"
 end sub
 
