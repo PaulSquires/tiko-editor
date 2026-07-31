@@ -436,7 +436,7 @@ dim shared as wstring * 10 _
     wszIconSplitEditor, wszIconThemes, _
     wszIconSettings, wszIconCheckBoxEmpty, wszIconCheckBoxMarked, _
     wszIconContinue, wszIconStop, wszIconStepNext, wszIconStepOver, wszIconStepOut, wszIconRunToCursor, _
-    wszIconPause, wszIconSortAsc, wszIconSortDesc, _
+    wszIconPause, wszIconSortAsc, wszIconSortDesc, wszIconTrash, _
     wszIconSave, wszIconFind, wszIconToggleReplace, _
     wszIconGotoMain, wszIconGotoHeader, wszIconGotoSource, _
     wszIconUndock, wszIconDock, _
@@ -528,6 +528,7 @@ dim shared spinner(0 to 7) as DWSTRING => { _
     ' BOM-less file is read as three Latin-1 bytes and renders as mojibake (PsToolbar).
     wszIconSortAsc           = !"\uE70E"     ' chevron up
     wszIconSortDesc          = !"\uE70D"     ' chevron down
+    wszIconTrash             = !"\uE74D"     ' trashcan - delete the selected watch
 
     ' Autocomplete popup kind markers. Plain geometric characters drawn in the regular
     ' GUI font, NOT Segoe Fluent Icons: the popup already switches colour per kind, and

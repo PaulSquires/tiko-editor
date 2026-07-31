@@ -101,6 +101,7 @@
 #define IDC_FRMDEBUG_SPLITLEFT     1016
 #define IDC_FRMDEBUG_SPLITRIGHT    1017
 #define IDC_FRMDEBUG_CMDADDWATCH   1018
+#define IDC_FRMDEBUG_CMDDELWATCH   1019
 
 ' A UDT still expands eagerly one level at a time; this bounds the FIELD count, not an
 ' array's element count, which is grouped instead.
@@ -203,14 +204,16 @@ declare sub      frmDebug_DestroyDataTip()
 ' user typed -- and the engine only ever sees them one at a time, already resolved.
 const as long FRMDEBUG_MAXWATCH = 64
 
-' The watch list's delete affordance: an X at the LEADING EDGE of each row, shown only while
-' the cursor is on that row. It is drawn inside column 0 rather than being a column of its
-' own, and that is forced rather than chosen -- PsListTree draws the row's own Text in
-' column 0 and hangs the tree indent and twisty off it, so a real column 0 would put the X
-' where the expander belongs and push the name out of the tree column entirely. The painter
-' reserves the first FRMDEBUG_DELCOLW pixels of column 0 and insets the name past them,
-' which reads exactly as a leading column and costs the tree model nothing.
-const as long FRMDEBUG_DELCOLW = 26
+' Adding and deleting a watch are BUTTONS in the WATCH caption band, not gestures on a row.
+'
+' Both in-row alternatives were built and both were removed, for reasons that are properties
+' of PsListTree rather than of this window: a trailing "<click to add>" prompt needs
+' click-to-edit, which the control applies inside its own WM_LBUTTONDOWN BEFORE the host can
+' veto the click; and a per-row X needs cell hit-testing, which the control does not do (it
+' reports rows), plus a per-column tooltip, which it re-resolves only when the hot ROW
+' changes. A button has a real hit area, a real tooltip and a real disabled state, and the
+' trashcan acts on the SELECTED row -- so which watch is about to go is visible before the
+' click rather than decided by where the cursor happens to be.
 
 ' ------------------------------------------------------------------------------------------
 ' Row descriptors
