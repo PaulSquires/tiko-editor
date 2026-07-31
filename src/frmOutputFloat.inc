@@ -535,6 +535,25 @@ sub frmOutputFloat_RunSelfTest()
     frmOutput_Check( "icon: the ""X"" is hidden while floating", _
         (GetWindowLongPtr( HWND_FRMOUTPUT_CLOSE, GWL_STYLE ) and WS_VISIBLE) = 0 )
 
+    ' A HIDDEN control still has a position, and this one used to be parked exactly ONE CELL
+    ' PAST the strip's right edge -- so any pass that showed it before the hide caught up
+    ' drew a red "X" hanging off the corner of the floating window. Hidden is not the same as
+    ' harmless: assert where it is parked, not just that it is invisible.
+    scope
+        dim as RECT rcPanel, rcClose, rcUndock
+        GetClientRect( HWND_FRMOUTPUT, @rcPanel )
+        GetWindowRect( HWND_FRMOUTPUT_CLOSE, @rcClose )
+        GetWindowRect( HWND_FRMOUTPUT_UNDOCK, @rcUndock )
+        MapWindowPoints( HWND_DESKTOP, HWND_FRMOUTPUT, cast(LPPOINT, @rcClose), 2 )
+        MapWindowPoints( HWND_DESKTOP, HWND_FRMOUTPUT, cast(LPPOINT, @rcUndock), 2 )
+        frmOutput_Check( "icon: the hidden ""X"" is parked INSIDE the panel, not past its edge", _
+            (rcClose.right <= rcPanel.right) andalso (rcClose.left >= rcPanel.left), _
+            str(rcClose.left) & ".." & str(rcClose.right) & " in 0.." & str(rcPanel.right) )
+        frmOutput_Check( "icon: the dock icon takes the rightmost cell while floating", _
+            rcUndock.right >= rcPanel.right - AfxScaleX(2), _
+            str(rcUndock.right) & " vs " & str(rcPanel.right) )
+    end scope
+
     ' CaptureState must not overwrite the banked docked height with the frame's client
     ' height. Drive it with a witness rather than trusting the guard by inspection.
     dim as long nWitness = 777

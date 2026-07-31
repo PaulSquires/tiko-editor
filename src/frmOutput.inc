@@ -328,21 +328,42 @@ function frmOutput_PositionWindows() as LRESULT
     nTabsHeight = pWindow->ScaleY(OUTPUT_TABS_HEIGHT)
     dim as long nCellWidth  = pWindow->ScaleX(OUTPUT_CLOSE_WIDTH)
     dim as long nStripWidth = rc.right - rc.left
-    ' The "X" hides while floating. Read its OWN WS_VISIBLE bit, never IsWindowVisible:
-    ' that walks the ancestor chain, so with the panel itself hidden -- which is simply the
-    ' Output panel being closed, an entirely ordinary state -- every child reads as
-    ' invisible and the strip would be laid out for a missing button that is really there.
-    dim as boolean bCloseShown = _
-        (GetWindowLongPtr( HWND_FRMOUTPUT_CLOSE, GWL_STYLE ) and WS_VISIBLE) <> 0
+    ' The "X" hides while floating -- a window that carries its own caption X has no use for
+    ' a second one. That is asked of the DOCK STATE directly rather than read back out of the
+    ' button's WS_VISIBLE bit, which is what it used to do: the bit is set by
+    ' frmOutput_UpdateDockIcon, and a layout pass can run between the dock state flipping and
+    ' that sub catching up -- measured, it does -- so the strip was laid out for a button
+    ' whose visibility was one pass stale.
+    '
+    ' (The old comment about reading GWL_STYLE rather than IsWindowVisible was right about
+    ' IsWindowVisible: it walks the ancestor chain, so with the panel simply closed every
+    ' child reads as invisible. Asking the dock state sidesteps both hazards.)
+    dim as boolean bCloseShown = (frmOutputFloat_IsFloating() = false)
     dim as long nIconsWidth = nCellWidth + iif( bCloseShown, nCellWidth, 0 )
-    dim as long nIconsLeft  = nLeft + nStripWidth - nIconsWidth
+
+    ' Laid out RIGHT TO LEFT. The "X" owns the rightmost cell whether or not it is currently
+    ' shown, and the undock icon takes the cell to its left, or that same cell when there is
+    ' no "X" beside it. Built the other way round -- an origin derived from how many icons
+    ' are visible, then filled left to right -- the hidden "X" landed at exactly the strip's
+    ' right edge and hung off the corner of the window, which is visible for as long as any
+    ' pass shows it before the hide catches up.
+    dim as long nCloseLeft  = nLeft + nStripWidth - nCellWidth
+    dim as long nUndockLeft = nCloseLeft - iif( bCloseShown, nCellWidth, 0 )
 
     SetWindowPos( HWND_FRMOUTPUT_SELECTBAR, 0, _
                   nLeft, nTop, nStripWidth - nIconsWidth, nTabsHeight, SWP_NOZORDER )
     SetWindowPos( HWND_FRMOUTPUT_UNDOCK, 0, _
-                  nIconsLeft, nTop, nCellWidth, nTabsHeight, SWP_NOZORDER )
+                  nUndockLeft, nTop, nCellWidth, nTabsHeight, SWP_NOZORDER )
     SetWindowPos( HWND_FRMOUTPUT_CLOSE, 0, _
-                  nIconsLeft + nCellWidth, nTop, nCellWidth, nTabsHeight, SWP_NOZORDER )
+                  nCloseLeft, nTop, nCellWidth, nTabsHeight, SWP_NOZORDER )
+
+    if environ("TIKO_OUTPUTICONS_TRACE") = "1" then
+        dim as string sT = "  ICONS floating=" & str(frmOutputFloat_IsFloating()) & _
+            "  strip=" & str(nLeft) & ".." & str(nLeft + nStripWidth) & _
+            "  cell=" & str(nCellWidth) & "  closeShown=" & str(bCloseShown) & _
+            "  undockX=" & str(nUndockLeft) & "  closeX=" & str(nCloseLeft)
+        print sT
+    end if
 
     ' Re-push the captions so a language change is picked up, exactly as the old code did by
     ' rebuilding them here every time -- but only when one actually differs. SetText
