@@ -229,7 +229,15 @@ sub frmOutputFloat_Undock()
     ' height and the docked value would be unrecoverable.
     frmOutput_CaptureState()
 
-    dim as boolean bWasVisible = iif( IsWindowVisible( HWND_FRMOUTPUT ), true, false )
+    ' The panel's OWN WS_VISIBLE bit, never IsWindowVisible -- that walks the ancestor chain,
+    ' and the startup restore runs from frmMain_Show BEFORE frmMain itself is placed and
+    ' shown. So IsWindowVisible answers FALSE for a panel that is perfectly visible as far as
+    ' its own style is concerned, the float would be created and never shown, and the next
+    ' save would then capture ShowOutputPanel = false from that hidden frame -- losing the
+    ' setting permanently and unticking View>Output. (Third site in this change to hit the
+    ' same trap; the other two are frmOutput_PositionWindows and the self-test.)
+    dim as boolean bWasVisible = _
+        (GetWindowLongPtr( HWND_FRMOUTPUT, GWL_STYLE ) and WS_VISIBLE) <> 0
     dim as HWND    hFocus      = GetFocus()
 
     if frmOutputFloat_CreateWindow() = false then
@@ -497,6 +505,34 @@ sub frmOutputFloat_RunSelfTest()
     frmOutputFloat_SetVisible( true )
     frmOutput_Check( "visible: showing it again shows the frame", _
         IsWindowVisible( HWND_FRMOUTPUTFLOAT ) <> 0 )
+
+    ' A VISIBLE PANEL MUST UNDOCK INTO A VISIBLE FRAME, and this suite is the right place to
+    ' assert it because of WHEN it runs: from frmMain_Show, before frmMain has been placed
+    ' and shown. IsWindowVisible walks the ancestor chain, so at this moment it answers FALSE
+    ' for a panel whose own WS_VISIBLE bit is set -- which is exactly the startup restore's
+    ' situation. Reading it the wrong way created the float and never showed it, and the next
+    ' save then captured ShowOutputPanel = false off that hidden frame, losing the setting
+    ' for good. Driven from the style bit on both sides so the assertion cannot inherit the
+    ' very mistake it is testing for.
+    frmOutputFloat_Dock()
+    ShowWindow( HWND_FRMOUTPUT, SW_SHOW )
+    frmOutput_Check( "startup: the panel's own WS_VISIBLE bit is set", _
+        (GetWindowLongPtr( HWND_FRMOUTPUT, GWL_STYLE ) and WS_VISIBLE) <> 0 )
+    frmOutputFloat_Undock()
+    frmOutput_Check( "startup: undocking a VISIBLE panel yields a VISIBLE frame", _
+        (GetWindowLongPtr( HWND_FRMOUTPUTFLOAT, GWL_STYLE ) and WS_VISIBLE) <> 0 )
+    ' And the round trip that lost the setting: capture from that frame must report it
+    ' visible, not false.
+    frmOutput_CaptureState()
+    frmOutput_Check( "startup: CaptureState reports the visible float as visible", _
+        gConfig.ShowOutputPanel <> 0, str(gConfig.ShowOutputPanel) )
+
+    ' The mirror, so this pair cannot pass by simply always showing the frame.
+    frmOutputFloat_Dock()
+    ShowWindow( HWND_FRMOUTPUT, SW_HIDE )
+    frmOutputFloat_Undock()
+    frmOutput_Check( "startup: undocking a HIDDEN panel yields a HIDDEN frame", _
+        (GetWindowLongPtr( HWND_FRMOUTPUTFLOAT, GWL_STYLE ) and WS_VISIBLE) = 0 )
 
     ' --- dock ----------------------------------------------------------------------------
     frmOutputFloat_Dock()
