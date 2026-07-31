@@ -244,11 +244,15 @@ sub frmOutputFloat_Undock()
     SetWindowPos( HWND_FRMOUTPUT, HWND_TOP, 0, 0, rc.right, rc.bottom, _
                   SWP_FRAMECHANGED or SWP_SHOWWINDOW )
 
-    ' "Minimized" is unrenderable in a window with its own frame, and leaving the flag set
-    ' would make the re-dock land in the looks-minimized-but-flag-says-restored state that
-    ' frmOutput_RestorePanel exists to prevent. The docked HEIGHT was banked above, so
-    ' clearing this loses nothing.
-    gConfig.ShowOutputPanelMinimized = 0
+    ' ShowOutputPanelMinimized IS DELIBERATELY LEFT ALONE. It is half of the banked DOCKED
+    ' state, exactly like ShowOutputPanelHeight beside it, and _Dock reads it back to decide
+    ' which height to restore to -- so undocking a minimized panel and closing the float
+    ' returns it minimized rather than sprung open. Clearing it here (which this did at
+    ' first) silently discarded that, and no floating-state assertion could see it: the
+    ' flag is unobservable for as long as the panel has a frame of its own.
+    '
+    ' Nothing reads it while floating either. frmOutput_MinimizePanel and _RestorePanel both
+    ' exit early in that state, so a stale-looking flag cannot drive the panel anywhere.
     gConfig.OutputFloating = 1
 
     ' SetParent can orphan the focus when the focused window is inside the moved subtree.
@@ -300,12 +304,18 @@ sub frmOutputFloat_Dock()
     ' design rests on these two lines being this way round.
     SetParent( HWND_FRMOUTPUT, HWND_FRMMAIN )
 
+    ' Restore to whichever DOCKED height the banked pair calls for. A panel that was
+    ' minimized when it undocked comes back minimized -- the flag survived the float
+    ' untouched, and frmOutput_Show reads the same pair the same way at startup, so the
+    ' undock/dock round trip and a restart agree about what "minimized" restores to.
     dim pWindow as CWindow ptr = AfxCWindowPtr( HWND_FRMOUTPUT )
     if pWindow then
         gConfig.ShowOutputPanelHeight = frmOutput_ClampHeight( gConfig.ShowOutputPanelHeight )
+        dim as long nHeight = gConfig.ShowOutputPanelHeight
+        if gConfig.ShowOutputPanelMinimized <> 0 then nHeight = OUTPUT_TABS_HEIGHT
         AfxSetWindowSize( HWND_FRMOUTPUT, _
                           AfxGetWindowWidth( HWND_FRMOUTPUT ), _
-                          pWindow->ScaleY( gConfig.ShowOutputPanelHeight ) )
+                          pWindow->ScaleY( nHeight ) )
     end if
     SetWindowPos( HWND_FRMOUTPUT, 0, 0, 0, 0, 0, _
                   SWP_NOMOVE or SWP_NOSIZE or SWP_NOZORDER or SWP_FRAMECHANGED )
@@ -404,6 +414,7 @@ sub frmOutputFloat_RunSelfTest()
 
     dim as long nResults0 = PsListTree_GetCount( hResults0 )
     dim as long nHeight0  = gConfig.ShowOutputPanelHeight
+    dim as long nMin0     = gConfig.ShowOutputPanelMinimized
     dim as DWSTRING wszGlyphDocked = PsIconPanel_GetGlyph( HWND_FRMOUTPUT_UNDOCK, 0 )
 
     ' Own WS_VISIBLE bit, not IsWindowVisible: that walks the ancestor chain, so with the
@@ -447,7 +458,12 @@ sub frmOutputFloat_RunSelfTest()
         IsWindowVisible( HWND_FRMMAIN_SPLITOUTPUT ) = 0 )
     frmOutput_Check( "undock: the panel itself is shown (the FRAME carries visibility)", _
         (GetWindowLongPtr( HWND_FRMOUTPUT, GWL_STYLE ) and WS_VISIBLE) <> 0 )
-    frmOutput_Check( "undock: minimized was cleared", gConfig.ShowOutputPanelMinimized = 0 )
+    ' NOT cleared -- banked, like the height beside it. This assertion used to say the
+    ' opposite and was asserting a defect: undocking a minimized panel and closing the float
+    ' brought it back sprung open. The flag is unobservable while floating, so nothing else
+    ' in this suite can see it.
+    frmOutput_Check( "undock: the docked MINIMIZED flag is banked, not cleared", _
+        gConfig.ShowOutputPanelMinimized = nMin0, str(gConfig.ShowOutputPanelMinimized) )
 
     ' The icon flipped and the "X" went away.
     frmOutput_Check( "icon: the glyph CHANGED on undock", _
@@ -546,8 +562,40 @@ sub frmOutputFloat_RunSelfTest()
     frmOutput_Check( "survive: the current tab is unchanged", _
         frmOutput_GetCurTab() = nTabAtStart, str(frmOutput_GetCurTab()) )
 
+    ' --- the MINIMIZED docked state survives the float ------------------------------------
+    ' Driven explicitly over BOTH values rather than riding on whatever the app happened to
+    ' start in: the reported defect only shows from one of the two, so a suite that tests
+    ' only the state it inherits is green about half the time for no reason it can name.
+    ' The panel must come back at the TABS height when it left minimized, and at the user's
+    ' height when it did not -- the flag alone is not enough, since the first version of this
+    ' fix could have restored the flag and still sized the window wrong.
+    dim pWin as CWindow ptr = AfxCWindowPtr( HWND_FRMOUTPUT )
+    if pWin then
+        for nWantMin as long = 1 to 0 step -1
+            gConfig.ShowOutputPanelMinimized = nWantMin
+            gConfig.ShowOutputPanelHeight    = nHeight0
+
+            frmOutputFloat_Undock()
+            frmOutput_Check( "minimized(" & str(nWantMin) & "): the flag survives the undock", _
+                gConfig.ShowOutputPanelMinimized = nWantMin, _
+                str(gConfig.ShowOutputPanelMinimized) )
+
+            frmOutputFloat_Dock()
+            frmOutput_Check( "minimized(" & str(nWantMin) & "): the flag survives the dock", _
+                gConfig.ShowOutputPanelMinimized = nWantMin, _
+                str(gConfig.ShowOutputPanelMinimized) )
+
+            dim as long nWantH = iif( nWantMin <> 0, OUTPUT_TABS_HEIGHT, nHeight0 )
+            dim as long nGotH  = pWin->UnScaleY( AfxGetWindowHeight( HWND_FRMOUTPUT ) )
+            frmOutput_Check( "minimized(" & str(nWantMin) & "): the panel docks at the right height", _
+                nGotH = nWantH, str(nGotH) & " vs " & str(nWantH) )
+        next
+    end if
+
     ' --- restore -------------------------------------------------------------------------
     PsTextBox_SetText( hLog0, wszLog0 )
+    gConfig.ShowOutputPanelMinimized = nMin0
+    gConfig.ShowOutputPanelHeight    = nHeight0
     frmOutput_SetCurTab( nTabAtStart )
     if bWasFloating then frmOutputFloat_Undock()
     frmOutputFloat_SetVisible( bVisAtStart )
