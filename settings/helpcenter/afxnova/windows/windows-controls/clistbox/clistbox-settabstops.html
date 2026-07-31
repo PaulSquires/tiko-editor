@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CListBox.SetTabStops — Help Center</title>
+<meta name="description" content="Sets the tab-stop positions in a list box.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/clistbox/clistbox-settabstops.html">
+<meta property="og:title" content="CListBox.SetTabStops">
+<meta property="og:description" content="Sets the tab-stop positions in a list box.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/clistbox/clistbox-settabstops.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-controls/clistbox/clistbox-settabstops.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../clistbox-class.html">CListBox Class</a></div>
+<h1>CListBox.SetTabStops<span class="h1kind">method</span></h1>
+<p class="lede">Sets the tab-stop positions in a list box.</p>
+<div class="badges"><a class="badge" href="../../index.html">Windows</a><span class="badge">method</span><span class="badge">CListBox.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION SetTabStops (BYVAL hListBox AS HWND, BYVAL cTabs AS LONG, BYVAL prgTabs AS LONG PTR)</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>hListBox</code></td><td></td><td>The handle of the listbox control.</td></tr><tr><td><code>cTabs</code></td><td></td><td>Specifies the number of tab stops.</td></tr><tr><td><code>prgTabs</code></td><td></td><td>Pointer to the first member of an array of integers containing the tab stops. The integers represent the number of quarters of the average character width for the font that is selected into the list box. For example, a tab stop of 4 is placed at 1.0 character units, and a tab stop of 6 is placed at 1.5 average character units. However, if the list box is part of a dialog box, the integers are in dialog template units. The tab stops must be sorted in ascending order; backward tabs are not allowed.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>If all the specified tabs are set, the return value is TRUE; otherwise, it is FALSE.</p>
+<h2>Description</h2>
+<p>Sets the tab-stop positions in a list box.</p>
+<h2>Remarks</h2>
+<p>To respond to the LB_SETTABSTOPS message, the list box must have been created with the LBS_USETABSTOPS style.</p>
+<p>If <em>cTabs</em> is 0 and <em>prgTabs</em> is NULL, the default tab stop is two dialog template units. If <em>cTabs</em> is 1, the list box will have tab stops separated by the distance specified by <em>prgTabs</em>.</p>
+<p>If <em>prgTabs</em> points to more than a single value, a tab stop will be set for each value in <em>prgTabs</em>, up to the number specified by <em>cTabs</em>.</p>
+<p>The values specified by <em>prgTabs</em> are in dialog template units, which are the device-independent units used in dialog box templates. To convert measurements from dialog template units to screen units (pixels), use the <strong>MapDialogRect</strong> function.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CListBox.inc</code></li><li>Defined in <span class="srcref">AfxNova/CListBox.inc:560</span></li><li>Documented in <span class="srcref">Windows/WIndows Controls/CListBox Class.md</span></li><li>Topic: <a href="../clistbox-class.html">CListBox Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

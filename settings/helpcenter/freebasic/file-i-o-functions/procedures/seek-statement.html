@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Seek (Statement) — Help Center</title>
+<meta name="description" content="Sets the position of the next read/write operation on a file">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/file-i-o-functions/procedures/seek-statement.html">
+<meta property="og:title" content="Seek (Statement)">
+<meta property="og:description" content="Sets the position of the next read/write operation on a file">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/file-i-o-functions/procedures/seek-statement.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/file-i-o-functions/procedures/seek-statement.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>Seek (Statement)<span class="h1kind">statement</span></h1>
+<p class="lede">Sets the position of the next read/write operation on a file</p>
+<div class="badges"><a class="badge" href="../index.html">File I/O Functions</a><span class="badge">statement</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>Seek [#]filenum, position</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>filenum</code></td><td></td><td>file number of an opened a file</td></tr><tr><td><code>position</code></td><td></td><td>the new position for i/o operations</td></tr></tbody></table></div>
+<h2>Description</h2>
+<br>
+Sets the position at which the next read or write operation on a file will occur.<br>
+<br>
+The position is given in records if the file was opened in <code><a href="random.html">Random</a></code> access mode, in bytes in any other case. The position is 1 based -- the first record of a file is at position 1.<br>
+<br>
+The <code><a href="seek-function.html">Seek</a></code> function is used to get the position of the next read or write operation.<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Differences from QB</h3><br>
+<ul><li> None<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="seek-function.html">Seek (Function)</a></code><br>
+<li> <code><a href="open.html">Open</a></code><br>
+<br>
+</li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-cm">' e.g. if you want to skip to the 100th byte in the file for reading/writing:</span>
+
+
+
+<span class="tok-kw">Dim</span> <span>f</span> <span class="tok-kw">As</span> <span class="tok-kw">Long</span>
+
+
+
+<span>f</span> <span>=</span> <span class="tok-kw">FreeFile</span>
+
+<span class="tok-kw">Open</span> <span>&quot;file.ext&quot;</span> <span class="tok-kw">For</span> <span class="tok-kw">Binary</span> <span class="tok-kw">As</span> <span>#</span><span>f</span>
+
+
+
+<span class="tok-kw">Seek</span> <span>f</span><span>,</span> <span class="tok-nu">100</span>
+
+
+
+<span class="tok-kw">Close</span> <span>#</span><span>f</span></pre></code><br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgSeekset.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

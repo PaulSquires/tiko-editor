@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CWindow.Adding controls — Help Center</title>
+<meta name="description" content="CWindow.Adding controls — AfxNova method reference.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-gui/cwindow/cwindow-adding-controls.html">
+<meta property="og:title" content="CWindow.Adding controls">
+<meta property="og:description" content="CWindow.Adding controls — AfxNova method reference.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-gui/cwindow/cwindow-adding-controls.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-gui/cwindow/cwindow-adding-controls.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cwindow-class.html">CWindow Class</a></div>
+<h1>CWindow.Adding controls<span class="h1kind">method</span></h1>
+<div class="badges"><a class="badge" href="../../index.html">Windows</a><span class="badge">method</span><span class="badge">CWindow.inc</span><span class="badge badge--warn">doc-orphan</span></div>
+<div class="note note--warn"><strong>No implementation located.</strong> This member is documented, but the source scan found no matching declaration. It is likely declared in a header this scan does not resolve, or provided by a macro.</div>
+<h2>Description</h2>
+<p>To add controls to the window you can use the <strong>AddControl</strong> method. Alternatively, you can use the API function <strong>CreateWindowEx</strong>, but then you will have to do scaling by yourself.</p>
+<p>Besides the registered class names for the controls, in many cases you can use easier to remember aliases. For example. you can use "STATUSBAR" instead of "MSCTLS_STATUSBAR32".</p>
+<p>The <strong>AddControl</strong> method also provides default styles for all the Windows controls. Therefore, you can save typing unless you need to use different styles.</p>
+<p>For example, to add a button you can use</p>
+<p>instead of</p>
+<p>For a list of predefined class names and styles, see the <strong>AddControl</strong> method.</p>
+<p>If the application is DPI aware, controls created with the <strong>AddControl</strong> method are scaled according to the DPI setting.</p>
+<h2>Examples</h2>
+<p>pWindow.AddControl("Button", pWindow.hWindow, IDCANCEL, "&amp;Close", 350, 250, 75, 23)</p>
+<p>pWindow.AddControl("Button", pWindow.hWindow, IDCANCEL, "&amp;Close", 350, 250, 75, 23, _ WS_CHILD OR WS_VISIBLE OR WS_TABSTOP OR BS_PUSHBUTTON OR BS_CENTER OR BS_VCENTER)</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CWindow.inc</code></li><li>Documented in <span class="srcref">Windows/Windows GUI/CWindow Class.md</span></li><li>Topic: <a href="../cwindow-class.html">CWindow Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

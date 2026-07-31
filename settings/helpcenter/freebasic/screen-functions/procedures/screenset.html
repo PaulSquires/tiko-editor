@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ScreenSet — Help Center</title>
+<meta name="description" content="Sets current work and visible pages">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/screen-functions/procedures/screenset.html">
+<meta property="og:title" content="ScreenSet">
+<meta property="og:description" content="Sets current work and visible pages">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/screen-functions/procedures/screenset.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/screen-functions/procedures/screenset.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>ScreenSet<span class="h1kind">sub</span></h1>
+<p class="lede">Sets current work and visible pages</p>
+<div class="badges"><a class="badge" href="../index.html">Screen Functions</a><span class="badge">sub</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>Declare Sub ScreenSet ( ByVal work_page As Long = -1, ByVal visible_page As Long = -1 )</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>work_page</code></td><td></td><td>index to working page</td></tr><tr><td><code>visible_page</code></td><td></td><td>index to visible page</td></tr></tbody></table></div>
+<h2>Description</h2>
+<br>
+<code><b>ScreenSet</b></code> allows to set the current working page and the current visible page. Page numbers range from <code>0</code> to <code><i>num_pages</i> - 1</code>, where <code><i>num_pages</i></code> is the number of pages specified when setting the graphics mode with <code><a href="screenres.html">ScreenRes</a></code> or <code><a href="screen-graphics.html">Screen (Graphics)</a></code>.  You can use this function to achieve page-flipping or double-buffering.<br>
+<br>
+If you provide <code><i>visible_page</i></code> but omit <code><i>work_page</i></code>, only the visible page is changed. If you provide <code><i>work_page</i></code> but omit <code><i>visible_page</i></code>, only the work page is changed. If you omit both arguments, both work page and visible page are reset to page 0.<br>
+<br>
+<code><b>ScreenSet</b></code> provides one method of writing to the screen without instantly displaying changes to the user.  See also <code><a href="screenlock.html">ScreenLock</a></code> / <code><a href="screenunlock.html">ScreenUnlock</a></code> for an alternative method of doing this.<br>
+<br>
+Note: The current cursor position is not handled independently for each video page. Therefore, when another working page is selected, the starting cursor position corresponds to the last cursor position on the previous working page (same behavior for the text cursor and the graphics cursor).<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Usage</h3><code><br>
+<b>ScreenSet</b> [ <i>work_page</i> ] [, <i>visible_page</i> ]<br>
+</code><br>
+
+<h3>Dialect Differences</h3><br>
+<ul><li> Not available in the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang qb</a></i> dialect unless referenced with the alias <code><b>__Screenset</b></code>.<br>
+<br>
+</li></ul>
+<h3>Differences from QB</h3><br>
+<ul><li> New to FreeBASIC<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="screen-graphics.html">Screen (Graphics)</a></code><br>
+<li> <code><a href="screenres.html">ScreenRes</a></code><br>
+<li> <code><a href="screencopy.html">ScreenCopy</a></code><br>
+<li> <code><a href="screenlock.html">ScreenLock</a></code><br>
+<li> <code><a href="screenunlock.html">ScreenUnlock</a></code><br>
+<br>
+</li></li></li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-cm">' Open graphics screen (320*200, 8bpp) with 2 pages</span>
+
+<span class="tok-kw">ScreenRes</span> <span class="tok-nu">320</span><span>,</span> <span class="tok-nu">200</span><span>,</span> <span class="tok-nu">8</span><span>,</span> <span class="tok-nu">2</span>
+
+
+
+<span class="tok-cm">' Work on page 1 while displaying page 0</span>
+
+<span class="tok-kw">ScreenSet</span> <span class="tok-nu">1</span><span>,</span> <span class="tok-nu">0</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>x</span> <span>=</span> <span>-</span><span class="tok-nu">40</span>
+
+
+
+<span class="tok-kw">Do</span>
+
+    <span class="tok-cm">'' Clear the screen, draw a box, update x</span>
+
+    <span class="tok-kw">Cls</span>
+
+    <span class="tok-kw">Line</span> <span>(</span><span>x</span><span>,</span> <span class="tok-nu">80</span><span>)-</span><span class="tok-kw">Step</span><span>(</span><span class="tok-nu">39</span><span>,</span> <span class="tok-nu">39</span><span>),</span> <span class="tok-nu">4</span><span>,</span> <span>BF</span>
+
+    <span>x</span> <span>+=</span> <span class="tok-nu">1</span><span>:</span> <span class="tok-kw">If</span> <span>(</span><span>x</span> <span>&gt;</span> <span class="tok-nu">319</span><span>)</span> <span class="tok-kw">Then</span> <span>x</span> <span>=</span> <span>-</span><span class="tok-nu">40</span>
+
+    
+
+    <span class="tok-cm">' Wait for vertical sync: only used to control refresh rate, can be put anywhere in the Do loop</span>
+
+    <span class="tok-kw">ScreenSync</span>
+
+    
+
+    <span class="tok-cm">' Copy work page to visible page</span>
+
+    <span class="tok-kw">ScreenCopy</span>
+
+    
+
+<span class="tok-kw">Loop</span> <span class="tok-kw">While</span> <span class="tok-kw">Inkey</span> <span>=</span> <span>&quot;&quot;</span></pre></code><br>
+<br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgScreenset.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

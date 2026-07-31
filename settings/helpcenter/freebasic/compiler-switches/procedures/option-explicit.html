@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Option Explicit — Help Center</title>
+<meta name="description" content="Forces variables, objects and arrays to be declared before they are used">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/compiler-switches/procedures/option-explicit.html">
+<meta property="og:title" content="Option Explicit">
+<meta property="og:description" content="Forces variables, objects and arrays to be declared before they are used">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/compiler-switches/procedures/option-explicit.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/compiler-switches/procedures/option-explicit.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>Option Explicit<span class="h1kind">keyword</span></h1>
+<p class="lede">Forces variables, objects and arrays to be declared before they are used</p>
+<div class="badges"><a class="badge" href="../index.html">Compiler Switches</a><span class="badge">keyword</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>Option Explicit</code></pre>
+<h2>Description</h2>
+<br>
+<code><b>Option Explicit</b></code> is a statement that forces any following variable, object or array usage to be preceded by a declaration, with, for example, <code><a href="../../variable-declarations/procedures/dim.html">Dim</a></code> or <code><a href="../../variable-declarations/procedures/static.html">Static</a></code>. This rule remains in effect for the rest of the module in which <code><b>Option Explicit</b></code> is used, and cannot be overridden.<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Dialect Differences</h3><br>
+<ul><li> Only available in the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang fblite</a></i> and <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang qb</a></i> dialects.<br>
+<br>
+</li></ul>
+<h3>Differences from QB</h3><br>
+<ul><li>New to FreeBASIC<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="../../intrinsic-defines/procedures/fb-option-explicit.html">__FB_OPTION_EXPLICIT__</a></code><br>
+<br>
+</li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-cm">'' Compile with the &quot;-lang qb&quot; or &quot;-lang fblite&quot; compiler switches</span>
+
+
+
+<span>#lang &quot;fblite&quot;
+
+</span>
+
+<span class="tok-kw">Option</span> <span class="tok-kw">Explicit</span>
+
+
+
+<span class="tok-kw">Dim</span> <span>a</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>            <span class="tok-cm">' 'a' must be declared..</span>
+
+<span>a</span> <span>=</span> <span class="tok-nu">1</span>                       <span class="tok-cm">' ..or this statement will fail to compile.</span></pre></code><br>
+<br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgOptionexplicit.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

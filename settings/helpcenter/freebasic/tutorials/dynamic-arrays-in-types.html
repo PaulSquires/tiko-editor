@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dynamic Arrays in Types — Help Center</title>
+<meta name="description" content="Dynamic Arrays in Types — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/dynamic-arrays-in-types.html">
+<meta property="og:title" content="Dynamic Arrays in Types">
+<meta property="og:description" content="Dynamic Arrays in Types — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/dynamic-arrays-in-types.html">
+<link rel="stylesheet" href="../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/dynamic-arrays-in-types.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>Dynamic Arrays in Types</h1>
+<h2>Documentation</h2>
+
+	<i>Written by <a href="../reference/rdc.html">rdc</a></i><br>
+<br>
+<div> Introduction </div><br>
+<br>
+A dynamic array in a type definition is a very useful feature, but FreeBASIC did not support it before. Or rather, it did not support it directly before. However, you could create dynamic arrays by using pointers and the associated memory functions.<br>
+<br>
+An array is simply a contiguous block of memory that holds a certain data type. Arrays in FreeBASIC use an array descriptor to describe the data contained within the array, and you can use this same technique to build a dynamic array within a type. The two elements you need within your type-def are a pointer to a particular data type, and a size indicator. <br>
+<br>
+You can then use the ptr field to allocate a block of memory to the needed size, and save that size in the size indicator field. The size field is used to tell you how many elements are currently in the array. Once the array has been initialized, you can then use pointer indexing to access each element in the array.<br>
+<br>
+<div> Getting the Point(er) in Code </div><br>
+<br>
+The following program illustrates the steps in creating, initializing and resizing a dynamic type-def array.<br>
+<code><pre class="code"><span class="tok-cm">'Define type:</span>
+
+<span class="tok-cm">'size is current size of array</span>
+
+<span class="tok-cm">'darray will contain array data</span>
+
+<span class="tok-kw">Type</span> <span>DType</span>
+
+    <span>size</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+    <span>darray</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span class="tok-kw">Ptr</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-cm">'Create an instance of type</span>
+
+<span class="tok-kw">Dim</span> <span>myType</span> <span class="tok-kw">As</span> <span>DType</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>i</span><span>,</span> <span>tmp</span>
+
+
+
+<span class="tok-cm">'Create enough space for elements</span>
+
+<span>myType.darray</span> <span>=</span> <span class="tok-kw">CAllocate</span><span>(</span><span class="tok-nu">5</span><span>,</span> <span class="tok-kw">SizeOf</span><span>(</span><span class="tok-kw">Integer</span><span>))</span>
+
+<span class="tok-cm">'Set the length of the array</span>
+
+<span class="tok-cm">'in the array size indicator</span>
+
+<span>myType.size</span> <span>=</span> <span class="tok-nu">5</span>
+
+
+
+<span class="tok-cm">'Load data into array</span>
+
+<span class="tok-kw">For</span> <span>i</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span>myType.Size</span> <span>-</span> <span class="tok-nu">1</span> 
+
+    <span>myType.darray</span><span>[</span><span>i</span><span>]</span> <span>=</span> <span>i</span>
+
+<span class="tok-kw">Next</span>
+
+
+
+<span class="tok-cm">'Print data</span>
+
+<span class="tok-kw">For</span> <span>i</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span>myType.Size</span> <span>-</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;darray[&quot;</span><span>;</span><span>i</span><span>;</span><span>&quot; ]:&quot;</span><span>;</span><span>myType.darray</span><span>[</span><span>i</span><span>]</span>
+
+<span class="tok-kw">Next</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Press any key...&quot;</span>
+
+<span class="tok-kw">Sleep</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+<span class="tok-cm">'Save the current array size</span>
+
+<span>tmp</span> <span>=</span> <span>myType.size</span>
+
+<span class="tok-cm">'Now resize the array</span>
+
+<span class="tok-cm">'myType.darray = Reallocate(myType.darray, 10)</span>
+
+<span>myType.darray</span> <span>=</span> <span class="tok-kw">Reallocate</span><span>(</span><span>myType.darray</span><span>,</span> <span class="tok-nu">10</span> <span>*</span> <span class="tok-kw">SizeOf</span><span>(</span><span class="tok-kw">Integer</span><span>))</span> <span class="tok-cm">' Editors Note: above code line changed to this</span>
+
+<span class="tok-cm">'Set the length indicator</span>
+
+<span>myType.size</span> <span>=</span> <span class="tok-nu">10</span>
+
+
+
+<span class="tok-cm">'Load in data into new allocation</span>
+
+<span class="tok-kw">For</span> <span>i</span> <span>=</span> <span>tmp</span> <span class="tok-kw">To</span> <span>myType.Size</span> <span>-</span> <span class="tok-nu">1</span>
+
+    <span>myType.darray</span><span>[</span><span>i</span><span>]</span> <span>=</span> <span>i</span>
+
+<span class="tok-kw">Next</span>
+
+
+
+<span class="tok-cm">'Print out contents</span>
+
+<span class="tok-kw">For</span> <span>i</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span>myType.Size</span> <span>-</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;darray[&quot;</span><span>;</span><span>i</span><span>;</span><span>&quot; ]:&quot;</span><span>;</span><span>myType.darray</span><span>[</span><span>i</span><span>]</span>
+
+<span class="tok-kw">Next</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Press any key...&quot;</span>
+
+<span class="tok-kw">Sleep</span>
+
+
+
+<span class="tok-cm">'Free allocated space</span>
+
+<span class="tok-kw">Deallocate</span> <span>myType.darray</span>
+
+
+
+<span class="tok-kw">End</span></pre></code><br>
+<br>
+<div> How it Works </div><br>
+<br>
+The first step is, of course, to define the type-def:<br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span>DType</span>
+
+    <span>size</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+    <span>darray</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span class="tok-kw">Ptr</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span></pre></code><br>
+Since this is just an example there are only two elements within the type, a size indicator and the array pointer. Notice that the array pointer is defined as an Integer ptr. When you define a pointer to a particular type, you are creating a "typed" pointer. The compiler can use this type information to check to make sure the values being placed into the array are valid, and will also use this information for pointer arithmetic.<br>
+<br>
+The next step is to define the working variables.<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span>myType</span> <span class="tok-kw">As</span> <span>DType</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>i</span><span>,</span> <span>tmp</span></pre></code><br>
+Here an instance of the type is created, as well as some working variables that are used in the following code. WARNING: You must initialize the array pointer before you can use it; using an uninitialized ptr can cause program crashes, system lockups and all sorts of bad things. <br>
+<code><pre class="code"><span>myType.darray</span> <span>=</span> <span class="tok-kw">CAllocate</span><span>(</span><span class="tok-nu">5</span><span>,</span> <span class="tok-kw">SizeOf</span><span>(</span><span class="tok-kw">Integer</span><span>))</span>
+
+<span>myType.size</span> <span>=</span> <span class="tok-nu">5</span></pre></code><br>
+These two lines of code initialize the array pointer to hold 5 integers. Callocate is used to allocate the memory segment, since Callocate will initialize the segment to zeros.<br>
+<br>
+The size field stores the current length of the array. Now, of course, you could calculate the size of the array by simply dividing the number of bytes in the allocation by the size of an integer, but using a size indicator within the type is much cleaner and saves you a calculation in your program.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">For</span> <span>i</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span>myType.Size</span> <span>-</span> <span class="tok-nu">1</span> 
+
+    <span>myType.darray</span><span>[</span><span>i</span><span>]</span> <span>=</span> <span>i</span>
+
+<span class="tok-kw">Next</span></pre></code><br>
+This section of code loads the array with some values. You can see why saving the size of the array simplifies the coding process. Since the array is a typed pointer, you can access the array using the pointer indexing method, which is almost like accessing a predefined array.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">For</span> <span>i</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span>myType.Size</span> <span>-</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;darray[&quot;</span><span>;</span><span>i</span><span>;</span><span>&quot; ]:&quot;</span><span>;</span><span>myType.darray</span><span>[</span><span>i</span><span>]</span>
+
+<span class="tok-kw">Next</span></pre></code><br>
+This section simply prints out the values using the same method that was used to load the array.<br>
+<br>
+Of course, this should be a dynamic array, so you should be able to resize the array, and this is exactly what the next section of code will do.<br>
+<code><pre class="code"><span>tmp</span> <span>=</span> <span>myType.size</span>
+
+<span class="tok-cm">'myType.darray = Reallocate(myType.darray, 10)</span>
+
+<span>myType.darray</span> <span>=</span> <span class="tok-kw">Reallocate</span><span>(</span><span>myType.darray</span><span>,</span> <span class="tok-nu">10</span> <span>*</span> <span class="tok-kw">SizeOf</span><span>(</span><span class="tok-kw">Integer</span><span>))</span> <span class="tok-cm">' Editors Note: above code line changed to this</span>
+
+
+
+<span>myType.size</span> <span>=</span> <span class="tok-nu">10</span></pre></code><br>
+The first line of code saves the current size of the array so that the new memory segment can be initialized while not overwriting any existing data. You will see this in a moment.<br>
+<br>
+The second line uses the Reallocate function to resize the memory segment, that is, resize the array. In this case, the array is being made larger; you could of course make the array smaller. If you were to make the array smaller, any data not in the new segment would be lost, as you would expect.<br>
+<br>
+The last line of code above saves the new array size in the size indicator.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">For</span> <span>i</span> <span>=</span> <span>tmp</span> <span class="tok-kw">To</span> <span>myType.Size</span> <span>-</span> <span class="tok-nu">1</span>
+
+    <span>myType.darray</span><span>[</span><span>i</span><span>]</span> <span>=</span> <span>i</span>
+
+<span class="tok-kw">Next</span></pre></code><br>
+Here, you can see why the old array size was saved. In the For statement, the initialization procedure iterates through the newly added indexes, storing data within the memory segment. This is like using the Redim Preserve statement on a normal array.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">For</span> <span>i</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span>myType.Size</span> <span>-</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;darray[&quot;</span><span>;</span><span>i</span><span>;</span><span>&quot; ]:&quot;</span><span>;</span><span>myType.darray</span><span>[</span><span>i</span><span>]</span>
+
+<span class="tok-kw">Next</span></pre></code><br>
+This code section simply prints out the new values.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Deallocate</span> <span>myType.darray</span></pre></code><br>
+This is vitally important. You should always deallocate any allocated memory that you have created in your program to prevent memory leaks.<br>
+<br>
+When you run the program you should see the following output:<br>
+<code><pre class="code"><span>darray</span><span>[</span> <span class="tok-nu">0</span> <span>]:</span> <span class="tok-nu">0</span>
+
+<span>darray</span><span>[</span> <span class="tok-nu">1</span> <span>]:</span> <span class="tok-nu">1</span>
+
+<span>darray</span><span>[</span> <span class="tok-nu">2</span> <span>]:</span> <span class="tok-nu">2</span>
+
+<span>darray</span><span>[</span> <span class="tok-nu">3</span> <span>]:</span> <span class="tok-nu">3</span>
+
+<span>darray</span><span>[</span> <span class="tok-nu">4</span> <span>]:</span> <span class="tok-nu">4</span>
+
+<span>Press</span> <span class="tok-kw">Any</span> <span>key...</span>
+
+
+
+<span>darray</span><span>[</span> <span class="tok-nu">0</span> <span>]:</span> <span class="tok-nu">0</span>
+
+<span>darray</span><span>[</span> <span class="tok-nu">1</span> <span>]:</span> <span class="tok-nu">1</span>
+
+<span>darray</span><span>[</span> <span class="tok-nu">2</span> <span>]:</span> <span class="tok-nu">2</span>
+
+<span>darray</span><span>[</span> <span class="tok-nu">3</span> <span>]:</span> <span class="tok-nu">3</span>
+
+<span>darray</span><span>[</span> <span class="tok-nu">4</span> <span>]:</span> <span class="tok-nu">4</span>
+
+<span>darray</span><span>[</span> <span class="tok-nu">5</span> <span>]:</span> <span class="tok-nu">5</span>
+
+<span>darray</span><span>[</span> <span class="tok-nu">6</span> <span>]:</span> <span class="tok-nu">6</span>
+
+<span>darray</span><span>[</span> <span class="tok-nu">7</span> <span>]:</span> <span class="tok-nu">7</span>
+
+<span>darray</span><span>[</span> <span class="tok-nu">8</span> <span>]:</span> <span class="tok-nu">8</span>
+
+<span>darray</span><span>[</span> <span class="tok-nu">9</span> <span>]:</span> <span class="tok-nu">9</span>
+
+<span>Press</span> <span class="tok-kw">Any</span> <span>key...</span></pre></code><br>
+The first print out shows the original array. The second print out shows the newly resized array.<br>
+<br>
+<br>
+<br>
+<div> Dynamic arrays fields as non-static members are now supported inside UDT </div><br>
+<br>
+Previous example but transposed, by using a dynamic array field as non-static member inside the UDT (feature now supported):<br>
+<code><pre class="code"><span class="tok-cm">'Define type:</span>
+
+<span class="tok-cm">'darray will contain array data</span>
+
+<span class="tok-kw">Type</span> <span>DType</span>
+
+    <span>darray</span><span>(</span><span class="tok-kw">Any</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-cm">'Create an instance of type</span>
+
+<span class="tok-kw">Dim</span> <span>myType</span> <span class="tok-kw">As</span> <span>DType</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>i</span><span>,</span> <span>tmp</span>
+
+
+
+<span class="tok-cm">'Create enough space for elements</span>
+
+<span class="tok-kw">ReDim</span> <span>myType.darray</span><span>(</span><span class="tok-nu">4</span><span>)</span>
+
+
+
+<span class="tok-cm">'Load data into array</span>
+
+<span class="tok-kw">For</span> <span>i</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-kw">UBound</span><span>(</span><span>myType.darray</span><span>)</span>
+
+    <span>myType.darray</span><span>(</span><span>i</span><span>)</span> <span>=</span> <span>i</span>
+
+<span class="tok-kw">Next</span>
+
+
+
+<span class="tok-cm">'Print data</span>
+
+<span class="tok-kw">For</span> <span>i</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-kw">UBound</span><span>(</span><span>myType.darray</span><span>)</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;darray(&quot;</span><span>;</span><span>i</span><span>;</span><span>&quot; ):&quot;</span><span>;</span> <span>myType.darray</span><span>(</span><span>i</span><span>)</span>
+
+<span class="tok-kw">Next</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Press any key...&quot;</span>
+
+<span class="tok-kw">Sleep</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+<span class="tok-cm">'Save the current array upper bound</span>
+
+<span>tmp</span> <span>=</span> <span class="tok-kw">UBound</span><span>(</span><span>myType.darray</span><span>)</span>
+
+<span class="tok-cm">'Now resize the array</span>
+
+<span class="tok-kw">ReDim</span> <span class="tok-kw">Preserve</span> <span>myType.darray</span><span>(</span><span class="tok-nu">10</span><span>)</span>
+
+
+
+<span class="tok-cm">'Load in data into new allocation</span>
+
+<span class="tok-kw">For</span> <span>i</span> <span>=</span> <span>tmp</span> <span>+</span> <span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-kw">UBound</span><span>(</span><span>myType.darray</span><span>)</span>
+
+    <span>myType.darray</span><span>(</span><span>i</span><span>)</span> <span>=</span> <span>i</span>
+
+<span class="tok-kw">Next</span>
+
+
+
+<span class="tok-cm">'Print out contents</span>
+
+<span class="tok-kw">For</span> <span>i</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-kw">UBound</span><span>(</span><span>myType.darray</span><span>)</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;darray(&quot;</span><span>;</span><span>i</span><span>;</span><span>&quot; ):&quot;</span><span>;</span><span>myType.darray</span><span>(</span><span>i</span><span>)</span>
+
+<span class="tok-kw">Next</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Press any key...&quot;</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+<br>
+<i>Last reviewed by sancho3 on February 08, 2018  Notes: Error in code fixed and noted</i>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../index.html">Home</a> ·
+         <a href="../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../nav.js?v=70a6b70236"></script>
+<script src="../../search-index.js"></script>
+<script src="../../assets/app.js?v=456d079659"></script>
+<script src="../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

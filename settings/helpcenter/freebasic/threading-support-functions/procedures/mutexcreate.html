@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MutexCreate — Help Center</title>
+<meta name="description" content="Creates a mutex used for synchronizing the execution of threads">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/threading-support-functions/procedures/mutexcreate.html">
+<meta property="og:title" content="MutexCreate">
+<meta property="og:description" content="Creates a mutex used for synchronizing the execution of threads">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/threading-support-functions/procedures/mutexcreate.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/threading-support-functions/procedures/mutexcreate.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>MutexCreate<span class="h1kind">function</span></h1>
+<p class="lede">Creates a mutex used for synchronizing the execution of threads</p>
+<div class="badges"><a class="badge" href="../index.html">Threading Support Functions</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>Declare Function MutexCreate ( ) As Any Ptr</code></pre>
+<h2>Return value</h2>
+<br>
+The <code><a href="../../procedures/procedures/any.html">Any</a> <a href="../../standard-data-types/procedures/pointer-ptr.html">Ptr</a></code> handle of the mutex created, or the null pointer (0) on failure.<br>
+<br>
+
+<h2>Description</h2>
+<br>
+Mutexes, short for "Mutually Exclusive", are a way of synchronizing shared data within threads.  If there is a global variable used by multiple threads (or a local static variable used by a single thread called multiple times), it should be "locked" during its use with a mutex.  This halts all threads using <code><a href="mutexlock.html">MutexLock</a></code> with that mutex (including the implicit main thread executing main program), until it is unlocked with <code><a href="mutexunlock.html">MutexUnlock</a></code>.<br>
+<br>
+<code>Mutexcreate</code> creates a mutex, returning a handle which is to be referred to when locking, unlocking, or destroying the mutex.  Mutexes created with <code>Mutexcreate</code> should be destroyed when no longer needed or before the end of the program with <code><a href="mutexdestroy.html">MutexDestroy</a></code>.<br>
+<br>
+A  mutex is a lock that guarantees three things:<br>
+1. Atomicity - Locking a mutex is an atomic operation, meaning that the operating system (or threads library) assures you that if you locked a mutex, no other thread succeeded in locking this mutex at the same time.<br>
+2. Singularity - If a thread managed to lock a mutex, it is assured that no other thread will be able to lock the thread until the original thread releases the lock.<br>
+3. Non-Busy Wait - If a thread attempts to lock a thread that was locked by a second thread, the first thread will be suspended (and will not consume any CPU resources) until the lock is freed by the second thread. At this time, the first thread will wake up and continue execution, having the mutex locked by it. <br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Usage</h3><code><br>
+<i>result</i> = <b>MutexCreate</b><br>
+</code><br>
+
+<h3>Dialect Differences</h3><br>
+<ul><li> Threading is not allowed in the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang qb</a></i> dialect.<br>
+<br>
+</li></ul>
+<h3>Platform Differences</h3><br>
+<ul><li> The DOS version of FreeBASIC does not allow for threads, as the OS does not support them.<br>
+<li> In Linux the threads are always started in the order they are created, this can't be assumed in Win32. It's an OS, not a FreeBASIC issue. <br>
+<br>
+</li></li></ul>
+<h3>Differences from QB</h3><br>
+<ul><li> New to FreeBASIC<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="mutexdestroy.html">MutexDestroy</a></code><br>
+<li> <code><a href="mutexlock.html">MutexLock</a></code><br>
+<li> <code><a href="mutexunlock.html">MutexUnlock</a></code><br>
+<li> <code><a href="threadcreate.html">ThreadCreate</a></code><br>
+<li> <code><a href="threadwait.html">ThreadWait</a></code><br>
+<br>
+</li></li></li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+See also the <code><a href="threadcreate.html">ThreadCreate</a></code> examples.<br>
+<br>
+<code><pre class="code"><span class="tok-cm">'Visual example of mutual exclusion between 2 threads by using Mutex:</span>
+
+<span class="tok-cm">'the &quot;user-defined thread&quot; computes the points coordinates on a circle,</span>
+
+<span class="tok-cm">'and the &quot;main thread&quot; plots the points.</span>
+
+<span class="tok-cm">'</span>
+
+<span class="tok-cm">'Principle of mutual exclusion</span>
+
+<span class="tok-cm">'          Thread#A                XOR                  Thread#B</span>
+
+<span class="tok-cm">'.....                                         .....</span>
+
+<span class="tok-cm">'MutexLock(mut)                                MutexLock(mut)</span>
+
+<span class="tok-cm">'  Do_something#A_with_exclusion                 Do_something#B_with_exclusion</span>
+
+<span class="tok-cm">'MutexUnlock(mut)                              MutexUnlock(mut)</span>
+
+<span class="tok-cm">'.....                                         .....</span>
+
+<span class="tok-cm">'</span>
+
+<span class="tok-cm">'Behavior:</span>
+
+<span class="tok-cm">'- The first point must be pre-calculated.</span>
+
+<span class="tok-cm">'- Nothing prevents that a same calculated point could be plotted several times</span>
+
+<span class="tok-cm">'(depends on execution times of the loops between main thread and user thread).</span>
+
+<span class="tok-cm">'- Nothing prevents that a calculated point could be not plotted</span>
+
+<span class="tok-cm">'(same remark on the loop times).</span>
+
+<span class="tok-cm">'</span>
+
+<span class="tok-cm">'If you comment out the lines containing &quot;MutexLock&quot; and &quot;MutexUnlock&quot;</span>
+
+<span class="tok-cm">'(inside &quot;user-defined thread&quot; or/and &quot;main thread&quot;),</span>
+
+<span class="tok-cm">'there will be no longer mutual exclusion between computation of coordinates and plotting of points,</span>
+
+<span class="tok-cm">'and many points will not be plotted on circle (due to non coherent coordinates).</span>
+
+
+
+<span class="tok-cm">'-----------------------------------------------------------------------------------------------------</span>
+
+
+
+<span class="tok-kw">Type</span> <span>ThreadUDT</span>                                   <span class="tok-cm">'Generic user thread UDT</span>
+
+    <span class="tok-kw">Dim</span> <span>handle</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span>                        <span class="tok-cm">'Any Ptr handle to user thread</span>
+
+    <span class="tok-kw">Dim</span> <span>sync</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span>                          <span class="tok-cm">'Any Ptr handle to mutex</span>
+
+    <span class="tok-kw">Dim</span> <span>quit</span> <span class="tok-kw">As</span> <span class="tok-kw">Byte</span>                             <span class="tok-cm">'Boolean to end user thread</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Static</span> <span class="tok-kw">Sub</span> <span>Thread</span> <span>(</span><span class="tok-kw">ByVal</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span><span>)</span> <span class="tok-cm">'Generic user thread procedure</span>
+
+    <span class="tok-kw">Dim</span> <span>procedure</span> <span class="tok-kw">As</span> <span class="tok-kw">Sub</span> <span>(</span><span class="tok-kw">ByVal</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span><span>)</span>      <span class="tok-cm">'Procedure(Any Ptr) to be executed by user thread</span>
+
+    <span class="tok-kw">Dim</span> <span>p</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span>                             <span class="tok-cm">'Any Ptr to pass to procedure executed by user thread</span>
+
+    <span class="tok-kw">Const</span> <span class="tok-kw">False</span> <span class="tok-kw">As</span> <span class="tok-kw">Byte</span> <span>=</span> <span class="tok-nu">0</span>                      <span class="tok-cm">'Constante &quot;false&quot;</span>
+
+    <span class="tok-kw">Const</span> <span class="tok-kw">True</span> <span class="tok-kw">As</span> <span class="tok-kw">Byte</span> <span>=</span> <span class="tok-kw">Not</span> <span class="tok-kw">False</span>               <span class="tok-cm">'Constante &quot;true&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Static</span> <span class="tok-kw">Sub</span> <span>ThreadUDT.Thread</span> <span>(</span><span class="tok-kw">ByVal</span> <span>param</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span><span>)</span> <span class="tok-cm">'Generic user thread procedure</span>
+
+    <span class="tok-kw">Dim</span> <span>tp</span> <span class="tok-kw">As</span> <span>ThreadUDT</span> <span class="tok-kw">Ptr</span> <span>=</span> <span>param</span>                  <span class="tok-cm">'Casting to generic user thread UDT</span>
+
+    <span class="tok-kw">Do</span>
+
+        <span class="tok-kw">Static</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>I</span>
+
+        <span class="tok-kw">MutexLock</span><span>(</span><span>tp</span><span>-&gt;</span><span>sync</span><span>)</span>                          <span class="tok-cm">'Mutex (Lock) for user thread</span>
+
+        <span>tp</span><span>-&gt;</span><span>procedure</span><span>(</span><span>tp</span><span>-&gt;</span><span>p</span><span>)</span>                         <span class="tok-cm">'Procedure(Any Ptr) to be executed by user thread</span>
+
+        <span>I</span> <span>+=</span> <span class="tok-nu">1</span>
+
+        <span class="tok-kw">Locate</span> <span class="tok-nu">30</span><span>,</span> <span class="tok-nu">38</span>
+
+        <span class="tok-kw">Print</span> <span>I</span><span>;</span>
+
+        <span class="tok-kw">MutexUnlock</span><span>(</span><span>tp</span><span>-&gt;</span><span>sync</span><span>)</span>                        <span class="tok-cm">'Mutex (Unlock) for user thread</span>
+
+        <span class="tok-kw">Sleep</span> <span class="tok-nu">5</span><span>,</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">Loop</span> <span class="tok-kw">Until</span> <span>tp</span><span>-&gt;</span><span>quit</span> <span>=</span> <span>tp</span><span>-&gt;</span><span class="tok-kw">True</span>                   <span class="tok-cm">'Test for ending user thread</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-cm">'-----------------------------------------------------------------------------------------------------</span>
+
+
+
+<span class="tok-kw">Type</span> <span>Point2D</span>
+
+    <span class="tok-kw">Dim</span> <span>x</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+    <span class="tok-kw">Dim</span> <span>y</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Const</span> <span>x0</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">640</span> <span>/</span> <span class="tok-nu">2</span>
+
+<span class="tok-kw">Const</span> <span>y0</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">480</span> <span>/</span> <span class="tok-nu">2</span>
+
+<span class="tok-kw">Const</span> <span>r0</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">200</span>
+
+<span class="tok-kw">Const</span> <span>pi</span> <span class="tok-kw">As</span> <span class="tok-kw">Single</span> <span>=</span> <span class="tok-nu">4</span> <span>*</span> <span class="tok-kw">Atn</span><span>(</span><span class="tok-nu">1</span><span>)</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>PointOnCircle</span> <span>(</span><span class="tok-kw">ByVal</span> <span>p</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span><span>)</span>
+
+    <span class="tok-kw">Dim</span> <span>pp</span> <span class="tok-kw">As</span> <span>Point2D</span> <span class="tok-kw">Ptr</span> <span>=</span> <span>p</span>
+
+    <span class="tok-kw">Dim</span> <span>teta</span> <span class="tok-kw">As</span> <span class="tok-kw">Single</span> <span>=</span> <span class="tok-nu">2</span> <span>*</span> <span>pi</span> <span>*</span> <span class="tok-kw">Rnd</span>
+
+    <span>pp</span><span>-&gt;</span><span>x</span> <span>=</span> <span>x0</span> <span>+</span> <span>r0</span> <span>*</span> <span class="tok-kw">Cos</span><span>(</span><span>teta</span><span>)</span>
+
+    <span class="tok-kw">Sleep</span> <span class="tok-nu">5</span><span>,</span> <span class="tok-nu">1</span>                         <span class="tok-cm">'To increase possibility of uncorrelated data occurrence</span>
+
+    <span>pp</span><span>-&gt;</span><span>y</span> <span>=</span> <span>y0</span> <span>+</span> <span>r0</span> <span>*</span> <span class="tok-kw">Sin</span><span>(</span><span>teta</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+
+
+<span class="tok-kw">Screen</span> <span class="tok-nu">12</span>
+
+<span class="tok-kw">Locate</span> <span class="tok-nu">30</span><span>,</span> <span class="tok-nu">2</span>
+
+<span class="tok-kw">Print</span> <span>&quot;&lt;any_key&gt; : exit&quot;</span><span>;</span>
+
+<span class="tok-kw">Locate</span> <span class="tok-nu">30</span><span>,</span> <span class="tok-nu">27</span>
+
+<span class="tok-kw">Print</span> <span>&quot;calculated:&quot;</span><span>;</span>
+
+<span class="tok-kw">Locate</span> <span class="tok-nu">30</span><span>,</span> <span class="tok-nu">54</span>
+
+<span class="tok-kw">Print</span> <span>&quot;plotted:&quot;</span><span>;</span>
+
+
+
+<span class="tok-kw">Dim</span> <span>Pptr</span> <span class="tok-kw">As</span> <span>Point2D</span> <span class="tok-kw">Ptr</span> <span>=</span> <span class="tok-kw">New</span> <span>Point2D</span>
+
+<span>PointOnCircle</span><span>(</span><span>Pptr</span><span>)</span>                   <span class="tok-cm">' Computation for a first point valid on the circle</span>
+
+
+
+<span class="tok-kw">Dim</span> <span>Tptr</span> <span class="tok-kw">As</span> <span>ThreadUDT</span> <span class="tok-kw">Ptr</span> <span>=</span> <span class="tok-kw">New</span> <span>ThreadUDT</span>
+
+<span>Tptr</span><span>-&gt;</span><span>sync</span> <span>=</span> <span class="tok-kw">MutexCreate</span>
+
+<span>Tptr</span><span>-&gt;</span><span>procedure</span> <span>=</span> <span>@</span><span>PointOnCircle</span>
+
+<span>Tptr</span><span>-&gt;</span><span>p</span> <span>=</span> <span>Pptr</span>
+
+<span>Tptr</span><span>-&gt;</span><span>handle</span> <span>=</span> <span class="tok-kw">ThreadCreate</span><span>(@</span><span>ThreadUDT.Thread</span><span>,</span> <span>Tptr</span><span>)</span>
+
+
+
+<span class="tok-kw">Do</span>
+
+    <span class="tok-kw">Static</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>I</span>
+
+    <span class="tok-kw">Sleep</span> <span class="tok-nu">5</span><span>,</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">MutexLock</span><span>(</span><span>Tptr</span><span>-&gt;</span><span>sync</span><span>)</span>   <span class="tok-cm">'Mutex (Lock) for main thread</span>
+
+    <span class="tok-kw">PSet</span> <span>(</span><span>Pptr</span><span>-&gt;</span><span>x</span><span>,</span> <span>Pptr</span><span>-&gt;</span><span>y</span><span>)</span> <span class="tok-cm">'Plotting one point</span>
+
+    <span>I</span> <span>+=</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">Locate</span> <span class="tok-nu">30</span><span>,</span> <span class="tok-nu">62</span>
+
+    <span class="tok-kw">Print</span> <span>I</span><span>;</span>
+
+    <span class="tok-kw">MutexUnlock</span><span>(</span><span>Tptr</span><span>-&gt;</span><span>sync</span><span>)</span> <span class="tok-cm">'Mutex (Unlock) for main thread</span>
+
+<span class="tok-kw">Loop</span> <span class="tok-kw">Until</span> <span class="tok-kw">Inkey</span> <span>&lt;&gt;</span> <span>&quot;&quot;</span>
+
+ 
+
+<span>Tptr</span><span>-&gt;</span><span>quit</span> <span>=</span> <span>Tptr</span><span>-&gt;</span><span class="tok-kw">True</span>
+
+<span class="tok-kw">ThreadWait</span><span>(</span><span>Tptr</span><span>-&gt;</span><span>handle</span><span>)</span>
+
+<span class="tok-kw">MutexDestroy</span><span>(</span><span>Tptr</span><span>-&gt;</span><span>sync</span><span>)</span>
+
+<span class="tok-kw">Delete</span> <span>Tptr</span>
+
+<span class="tok-kw">Delete</span> <span>Pptr</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+See also the similar <code><a href="condcreate.html">CondCreate</a></code> example<br>
+<br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgMutexCreate.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

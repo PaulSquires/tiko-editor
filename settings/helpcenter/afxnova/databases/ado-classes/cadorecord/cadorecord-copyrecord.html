@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CAdoRecord.CopyRecord — Help Center</title>
+<meta name="description" content="Copies an entity represented by a Record to another location.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadorecord/cadorecord-copyrecord.html">
+<meta property="og:title" content="CAdoRecord.CopyRecord">
+<meta property="og:description" content="Copies an entity represented by a Record to another location.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadorecord/cadorecord-copyrecord.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/databases/ado-classes/cadorecord/cadorecord-copyrecord.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cadorecord-class.html">CAdoRecord Class</a></div>
+<h1>CAdoRecord.CopyRecord<span class="h1kind">method</span></h1>
+<p class="lede">Copies an entity represented by a Record to another location.</p>
+<div class="badges"><a class="badge" href="../../index.html">Databases</a><span class="badge">method</span><span class="badge">CADORecord.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION CopyRecord (BYREF wszSource AS WSTRING = &quot;&quot;, BYREF wszDestination AS WSTRING = &quot;&quot;, BYREF wszUserName AS WSTRING = &quot;&quot;, BYREF wszPassword AS WSTRING = &quot;&quot;, BYVAL Options AS MoveRecordOptionsEnum = adCopyUnspecified, BYVAL Async AS BOOLEAN = FALSE) AS DWSTRING</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>wszSource</code></td><td></td><td>Optional. A string value that contains a URL specifying the entity to be copied (for example, a file or directory). If <em>Source</em> is omitted or specifies an empty string, the file or directory represented by the current <code>Record</code> will be copied.</td></tr><tr><td><code>wszDestination</code></td><td></td><td>Optional. A string value that contains a URL specifying the location where <em>Source</em> will be copied.</td></tr><tr><td><code>wszUserName</code></td><td></td><td>Optional. A string value that contains the user ID that, if needed, authorizes access to <em>Destination</em>.</td></tr><tr><td><code>wszPassword</code></td><td></td><td>Optional. A string value that contains the password that, if needed, verifies <em>UserName</em>.</td></tr><tr><td><code>Options</code></td><td></td><td>Optional. A <strong>CopyRecordOptionsEnum</strong> value that has a default value of <strong>adCopyUnspecified</strong>. Specifies the behavior of this method.</td></tr><tr><td><code>Async</code></td><td></td><td>Optional. A Boolean value that, when True, specifies that this operation should be asynchronous.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>Typically returns the value of <em>Destination</em>. However, the exact value returned is provider-dependent.</p>
+<h2>Description</h2>
+<p>Copies a entity represented by a <code>Record</code> to another location.</p>
+<h2>Remarks</h2>
+<p>The values of <em>Source</em> and <em>Destination</em> must not be identical; otherwise, a run-time error occurs. At least one of the server, path, or resource names must differ.</p>
+<p>All children (for example, subdirectories) of <em>Source</em> are copied recursively, unless <strong>adCopyNonRecursive</strong> is specified. In a recursive operation, <em>Destination</em> must not be a subdirectory of Source; otherwise, the operation will not complete.</p>
+<p>This method fails if <em>Destination</em> identifies an existing entity (for example, a file or directory), unless <strong>adCopyOverWrite</strong> is specified.</p>
+<p><strong>Important</strong>: Use the <strong>adCopyOverWrite</strong> option judiciously. For example, specifying this option when copying a file to a directory will delete the directory and replace it with the file.</p>
+<p><strong>Note</strong>: URLs using the http scheme will automatically invoke the Microsoft OLE DB Provider for Internet Publishing.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CADORecord.inc</code></li><li>Defined in <span class="srcref">AfxNova/CAdoRecord.inc:369</span></li><li>Documented in <span class="srcref">Databases/ADO Classes/CAdoRecord Class.md</span></li><li>Topic: <a href="../cadorecord-class.html">CAdoRecord Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

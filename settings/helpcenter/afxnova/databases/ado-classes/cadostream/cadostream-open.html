@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CAdoStream.Open — Help Center</title>
+<meta name="description" content="Opens a connection to a data source.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadostream/cadostream-open.html">
+<meta property="og:title" content="CAdoStream.Open">
+<meta property="og:description" content="Opens a connection to a data source.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadostream/cadostream-open.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/databases/ado-classes/cadostream/cadostream-open.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cadostream-class.html">CAdoStream Class</a></div>
+<h1>CAdoStream.Open<span class="h1kind">method</span></h1>
+<p class="lede">Opens a connection to a data source.</p>
+<div class="badges"><a class="badge" href="../../index.html">Databases</a><span class="badge">method</span><span class="badge">CAdoStream.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION Open (BYREF dvSource AS DVARIANT = TYPE&lt;VARIANT&gt;(VT_ERROR,0,0,0,DISP_E_PARAMNOTFOUND), BYVAL nMode AS ConnectModeEnum = adModeUnknown, BYVAL Options AS StreamOpenOptionsEnum = adOpenStreamUnspecified, BYREF wszUserName AS WSTRING = &quot;&quot;, BYREF wszPassword AS WSTRING = &quot;&quot;) AS HRESULT</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>dvSource</code></td><td></td><td>Optional. A <strong>Variant</strong> value that specifies the source of data for the <code>Stream</code>. <em>dvSource</em> may contain an absolute URL string that points to an existing node in a well-known tree structure, like an e-mail or file system. A URL should be specified using the URL keyword ("URL=scheme://server/folder"). Alternately, <em>dvSource</em> may contain a reference to an already open <code>Record</code> object, which opens the default stream associated with the <code>Record</code>. If <em>dvSource</em> is not specified, a <code>Stream</code> is instantiated and opened, associated with no underlying source by default.</td></tr><tr><td><code>nMode</code></td><td></td><td>Optional. A <strong>ConnectModeEnum</strong> value that specifies the access mode for the resultant <code>Stream</code> (for example, read/write or read-only). Default value is <strong>adModeUnknown</strong>. See the <strong>Mode</strong> property for more information about access modes. If <strong>Mode</strong> is not specified, it is inherited by the source object. For example, if the source <code>Record</code> is opened in read-only mode, the <code>Stream</code> will also be opened in read-only mode by default.</td></tr><tr><td><code>Options</code></td><td></td><td>Optional. A <strong>StreamOpenOptionsEnum</strong> value. Default value is <strong>adOpenStreamUnspecified</strong>.</td></tr><tr><td><code>wszUserName</code></td><td></td><td>Optional. A string value that contains the user identification that, if needed, accesses the <code>Stream</code> object.</td></tr><tr><td><code>wszPassword</code></td><td></td><td>Optional. A sring value that contains the password that, if needed, accesses the <code>Stream</code> object.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>S_OK (0) or an HRESULT code.</p>
+<h2>Description</h2>
+<p>Opens a connection to a data source.</p>
+<h2>Remarks</h2>
+<p>When a <code>Record</code> object is passed in as the source parameter, the <em>UserID</em> and <em>Password</em> parameters are not used because access to the <code>Record</code> object is already available. Similarly, the <strong>Mode</strong> of the <code>Record</code> object is transferred to the <code>Stream</code> object. When <strong>dvSource</strong> is not specified, the <code>Stream</code> opened contains no data and has a <strong>Size</strong> of zero (0). To avoid losing any data that is written to this <code>Stream</code> when the <code>Stream</code> is closed, save the <code>Stream</code> with the <strong>CopyTo</strong> or <strong>SaveToFile</strong> methods, or save it to another memory location.</p>
+<p>An <strong>Open</strong> <strong>Options</strong> value of <strong>adOpenStreamFromRecord</strong> identifies the contents of the <strong>Source</strong> parameter to be an already open <code>Record</code> object. The default behavior is to treat <strong>Source</strong> as a URL that points directly to a node in a tree structure, such as a file. The default stream associated with that node is opened.</p>
+<p>While the <code>Stream</code> is not open, it is possible to read all the read-only properties of the <code>Stream</code>. If a <code>Stream</code> is opened asynchronously, all subsequent operations (other than checking the <strong>State</strong> and other read-only properties) are blocked until the <strong>Open</strong> operation is completed.</p>
+<p>In addition to the options discussed above, by not specifying <strong>Source</strong>, you can simply instantiate a <code>Stream</code> object in memory without associating it with an underlying source. You can dynamically add data to the stream simply by writing binary or text data to the <code>Stream</code> with <strong>Write</strong> or <strong>WriteText</strong>, or by loading data from a file with <strong>LoadFromFile</strong>.</p>
+<h2>Example</h2>
+<p>#include once "AfxNova/CADODB.inc" USING AfxNova</p>
+<p>' // Open a stream in memory DIM pStream AS CAdoStream pStream.Type_ = adTypeText pStream.LineSeparator = adCRLF pStream.Open</p>
+<p>' // Write some text to it pStream.WriteText "This is a test string", adWriteLine pStream.WriteText "This is another test string", adWriteLine</p>
+<p>' // Set the position at the beginning of the file pStream.Position = 0 ' // Read the lines DIM dwsText AS DWSTRING = pStream.ReadText(adReadLine) print dwsText dwsText = pStream.ReadText(adReadLine) print dwsText</p>
+<p>' // Save the contents to a file pStream.SaveToFile "TestStream.txt", adSaveCreateOverWrite pStream.Close</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CAdoStream.inc</code></li><li>Defined in <span class="srcref">AfxNova/CAdoStream.inc:352</span></li><li>Documented in <span class="srcref">Databases/ADO Classes/CAdoStream Class.md</span></li><li>Topic: <a href="../cadostream-class.html">CAdoStream Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

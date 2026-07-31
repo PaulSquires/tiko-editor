@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CTextRow Class — Help Center</title>
+<meta name="description" content="CTextRow Class — 55 documented members. Windows reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/ctextrow-class.html">
+<meta property="og:title" content="CTextRow Class">
+<meta property="og:description" content="CTextRow Class — 55 documented members. Windows reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/ctextrow-class.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-controls/ctextrow-class.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span>Windows</div>
+<h1>CTextRow Class</h1>
+<h2>Members (55)</h2>
+<div class="memberlist"><a href="ctextrow/ctextrow-apply.html"><span class="m-n">Apply</span><span class="m-d">Applies the formatting attributes of this text row object to the specified rows in the associated **ITextRange2**.</span></a><a href="ctextrow/ctextrow-attach.html"><span class="m-n">Attach</span><span class="m-d">Attaches an **ITextRow** interface pointer to the class.</span></a><a href="ctextrow/ctextrow-canchange.html"><span class="m-n">CanChange</span><span class="m-d">Determines whether changes can be made to this row.</span></a><a href="ctextrow/ctextrow-cast.html"><span class="m-n">CAST</span><span class="m-d">Cast operator.</span></a><a href="ctextrow/ctextrow-constructors.html"><span class="m-n">CONSTRUCTORS</span><span class="m-d">Called when a class variable is created.</span></a><a href="ctextrow/ctextrow-destructor.html"><span class="m-n">DESTRUCTOR</span><span class="m-d">Called automatically when a class variable goes out of scope or is destroyed.</span></a><a href="ctextrow/ctextrow-detach.html"><span class="m-n">Detach</span><span class="m-d">Detaches the underlying **ITextRow** interface pointer from the class.</span></a><a href="ctextrow/ctextrow-getalignment.html"><span class="m-n">GetAlignment</span><span class="m-d">Gets the horizontal alignment of a row.</span></a><a href="ctextrow/ctextrow-getcellalignment.html"><span class="m-n">GetCellAlignment</span><span class="m-d">Gets the vertical alignment of the active cell.</span></a><a href="ctextrow/ctextrow-getcellbordercolors.html"><span class="m-n">GetCellBorderColors</span><span class="m-d">Gets the border colors of the active cell.</span></a><a href="ctextrow/ctextrow-getcellborderwidths.html"><span class="m-n">GetCellBorderWidths</span><span class="m-d">Gets the border widths of the active cell.</span></a><a href="ctextrow/ctextrow-getcellcolorback.html"><span class="m-n">GetCellColorBack</span><span class="m-d">Gets the background color of the active cell.</span></a><a href="ctextrow/ctextrow-getcellcolorfore.html"><span class="m-n">GetCellColorFore</span><span class="m-d">Gets the foreground color of the active cell.</span></a><a href="ctextrow/ctextrow-getcellcount.html"><span class="m-n">GetCellCount</span><span class="m-d">Gets the count of cells in a row.</span></a><a href="ctextrow/ctextrow-getcellcountcache.html"><span class="m-n">GetCellCountCache</span><span class="m-d">Gets the count of cells cached for this row.</span></a><a href="ctextrow/ctextrow-getcellindex.html"><span class="m-n">GetCellIndex</span><span class="m-d">Gets the index of the active cell to get or set parameters for.</span></a><a href="ctextrow/ctextrow-getcellmargin.html"><span class="m-n">GetCellMargin</span><span class="m-d">Gets the cell margin of this row.</span></a><a href="ctextrow/ctextrow-getcellmergeflags.html"><span class="m-n">GetCellMergeFlags</span><span class="m-d">Gets the merge flags of the active cell.</span></a><a href="ctextrow/ctextrow-getcellshading.html"><span class="m-n">GetCellShading</span><span class="m-d">Gets the shading of the active cell.</span></a><a href="ctextrow/ctextrow-getcellverticaltext.html"><span class="m-n">GetCellVerticalText</span><span class="m-d">Gets the vertical-text setting of the active cell.</span></a><a href="ctextrow/ctextrow-getcellwidth.html"><span class="m-n">GetCellWidth</span><span class="m-d">Gets the width of the active cell.</span></a><a href="ctextrow/ctextrow-geterrorinfo.html"><span class="m-n">GetErrorInfo</span><span class="m-d">Returns a description of the last result code.</span></a><a href="ctextrow/ctextrow-getheight.html"><span class="m-n">GetHeight</span><span class="m-d">Gets the height of the row.</span></a><a href="ctextrow/ctextrow-getindent.html"><span class="m-n">GetIndent</span><span class="m-d">Gets the indent of this row.</span></a><a href="ctextrow/ctextrow-getkeeptogether.html"><span class="m-n">GetKeepTogether</span><span class="m-d">Gets whether this row is allowed to be broken across pages.</span></a><a href="ctextrow/ctextrow-getkeepwithnext.html"><span class="m-n">GetKeepWithNext</span><span class="m-d">Gets whether this row should appear on the same page as the row that follows it.</span></a><a href="ctextrow/ctextrow-getlastresult.html"><span class="m-n">GetLastResult</span><span class="m-d">Returns the last result code</span></a><a href="ctextrow/ctextrow-getnestlevel.html"><span class="m-n">GetNestLevel</span><span class="m-d">Gets the nest level of a table.</span></a><a href="ctextrow/ctextrow-getproperty.html"><span class="m-n">GetProperty</span><span class="m-d">Gets the value of the specified property.</span></a><a href="ctextrow/ctextrow-getrtl.html"><span class="m-n">GetRTL</span><span class="m-d">Gets whether this row has right-to-left orientation.</span></a><a href="ctextrow/ctextrow-insert.html"><span class="m-n">Insert</span><span class="m-d">Inserts a row, or rows, at the location identified by the associated **ITextRange2** object.</span></a><a href="ctextrow/ctextrow-isequal.html"><span class="m-n">IsEqual</span><span class="m-d">Compares two table rows to determine if they have the same properties.</span></a><a href="ctextrow/ctextrow-let.html"><span class="m-n">LET</span><span class="m-d">Assignment operator.</span></a><a href="ctextrow/ctextrow-reset.html"><span class="m-n">Reset</span><span class="m-d">Resets a row.</span></a><a href="ctextrow/ctextrow-setalignment.html"><span class="m-n">SetAlignment</span><span class="m-d">Sets the horizontal alignment of a row.</span></a><a href="ctextrow/ctextrow-setcellalignment.html"><span class="m-n">SetCellAlignment</span><span class="m-d">Sets the vertical alignment of the active cell.</span></a><a href="ctextrow/ctextrow-setcellbordercolors.html"><span class="m-n">SetCellBorderColors</span><span class="m-d">Sets the border colors of the active cell.</span></a><a href="ctextrow/ctextrow-setcellborderwidths.html"><span class="m-n">SetCellBorderWidths</span><span class="m-d">Sets the border widths of the active cell.</span></a><a href="ctextrow/ctextrow-setcellcolorback.html"><span class="m-n">SetCellColorBack</span><span class="m-d">Sets the background color of the active cell.</span></a><a href="ctextrow/ctextrow-setcellcolorfore.html"><span class="m-n">SetCellColorFore</span><span class="m-d">Sets the foreground color of the active cell.</span></a><a href="ctextrow/ctextrow-setcellcount.html"><span class="m-n">SetCellCount</span><span class="m-d">Sets the count of cells in a row.</span></a><a href="ctextrow/ctextrow-setcellcountcache.html"><span class="m-n">SetCellCountCache</span><span class="m-d">Sets the count of cells cached for this row.</span></a><a href="ctextrow/ctextrow-setcellindex.html"><span class="m-n">SetCellIndex</span><span class="m-d">Sets the index of the active cell to get or set parameters for.</span></a><a href="ctextrow/ctextrow-setcellmargin.html"><span class="m-n">SetCellMargin</span><span class="m-d">Sets the cell margin of this row.</span></a><a href="ctextrow/ctextrow-setcellmergeflags.html"><span class="m-n">SetCellMergeFlags</span><span class="m-d">Sets the merge flags of the active cell.</span></a><a href="ctextrow/ctextrow-setcellshading.html"><span class="m-n">SetCellShading</span><span class="m-d">Sets the shading of the active cell.</span></a><a href="ctextrow/ctextrow-setcellverticaltext.html"><span class="m-n">SetCellVerticalText</span><span class="m-d">Sets the vertical-text setting of the active cell.</span></a><a href="ctextrow/ctextrow-setcellwidth.html"><span class="m-n">SetCellWidth</span><span class="m-d">Sets the width of the active cell.</span></a><a href="ctextrow/ctextrow-setheight.html"><span class="m-n">SetHeight</span><span class="m-d">Sets the height of the row.</span></a><a href="ctextrow/ctextrow-setindent.html"><span class="m-n">SetIndent</span><span class="m-d">Sets the indent of this row.</span></a><a href="ctextrow/ctextrow-setkeeptogether.html"><span class="m-n">SetKeepTogether</span><span class="m-d">Sets whether this row is allowed to be broken across pages.</span></a><a href="ctextrow/ctextrow-setproperty.html"><span class="m-n">SetProperty</span><span class="m-d">Sets the value of the specified property.</span></a><a href="ctextrow/ctextrow-setresult.html"><span class="m-n">SetResult</span><span class="m-d">Sets the last result code.</span></a><a href="ctextrow/ctextrow-setrtl.html"><span class="m-n">SetRTL</span><span class="m-d">Sets whether this row has right-to-left orientation.</span></a><a href="ctextrow/ctextrow-textrowptr.html"><span class="m-n">TextRowPtr</span><span class="m-d">Returns a pointer to the underlying **ITextRow** interface.</span></a></div>
+<h2>Documentation</h2>
+<h2 id="ctextrow-class">CTextRow Class</h2>
+<p>Class that wraps all the methods of the <strong>ITextRow</strong> interface.</p>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="ctextrow/ctextrow-constructors.html">CONSTRUCTORS</a></td><td>Called when a class variable is created.</td></tr><tr><td><a href="ctextrow/ctextrow-destructor.html">DESTRUCTOR</a></td><td>Called automatically when a class variable goes out of scope or is destroyed.</td></tr><tr><td><a href="ctextrow/ctextrow-let.html">LET</a></td><td>Assignment operator.</td></tr><tr><td><a href="ctextrow/ctextrow-cast.html">CAST</a></td><td>Cast operator.</td></tr><tr><td><a href="ctextrow/ctextrow-textrowptr.html">TextRowPtr</a></td><td>Returns a pointer to the underlying <strong>ITextRow</strong> interface.</td></tr><tr><td><a href="ctextrow/ctextrow-attach.html">Attach</a></td><td>Attaches an <strong>ITextRow</strong> interface pointer to the class.</td></tr><tr><td><a href="ctextrow/ctextrow-detach.html">Detach</a></td><td>Detaches the underlying <strong>ITextRow</strong> interface pointer from the class.</td></tr></tbody></table></div>
+<hr>
+<h4 id="itextrow-interface">ITextRow Interface</h4>
+<p>The <strong>ITextRow</strong> interface provides methods to insert one or more identical table rows, and to retrieve and change table row properties. To insert nonidentical rows, call <strong>Insert</strong> for each different row configuration.</p>
+<p>The <strong>ITextRow</strong> interface inherits from the <strong>IDispatch</strong> interface. <strong>ITextRow</strong> also has these types of members:</p>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="ctextrow/ctextrow-getalignment.html">GetAlignment</a></td><td>Gets the horizontal alignment of a row.</td></tr><tr><td><a href="ctextrow/ctextrow-setalignment.html">SetAlignment</a></td><td>Sets the horizontal alignment of a row.</td></tr><tr><td><a href="ctextrow/ctextrow-getcellcount.html">GetCellCount</a></td><td>Gets the count of cells in a row.</td></tr><tr><td><a href="ctextrow/ctextrow-setcellcount.html">SetCellCount</a></td><td>Sets the count of cells in a row.</td></tr><tr><td><a href="ctextrow/ctextrow-getcellcountcache.html">GetCellCountCache</a></td><td>Gets the count of cells cached for this row.</td></tr><tr><td><a href="ctextrow/ctextrow-setcellcountcache.html">SetCellCountCache</a></td><td>Sets the count of cells cached for this row.</td></tr><tr><td><a href="ctextrow/ctextrow-getcellindex.html">GetCellIndex</a></td><td>Gets the index of the active cell to get or set parameters for.</td></tr><tr><td><a href="ctextrow/ctextrow-setcellindex.html">SetCellIndex</a></td><td>Sets the index of the active cell to get or set parameters for.</td></tr><tr><td><a href="ctextrow/ctextrow-getcellmargin.html">GetCellMargin</a></td><td>Gets the cell margin of this row.</td></tr><tr><td><a href="ctextrow/ctextrow-setcellmargin.html">SetCellMargin</a></td><td>Sets the cell margin of this row.</td></tr><tr><td><a href="ctextrow/ctextrow-getheight.html">GetHeight</a></td><td>Gets the height of the row.</td></tr><tr><td><a href="ctextrow/ctextrow-setheight.html">SetHeight</a></td><td>Sets the height of the row.</td></tr><tr><td><a href="ctextrow/ctextrow-getindent.html">GetIndent</a></td><td>Gets the indent of this row.</td></tr><tr><td><a href="ctextrow/ctextrow-setindent.html">SetIndent</a></td><td>Sets the indent of this row.</td></tr><tr><td><a href="ctextrow/ctextrow-getkeeptogether.html">GetKeepTogether</a></td><td>Gets whether this row is allowed to be broken across pages.</td></tr><tr><td><a href="ctextrow/ctextrow-setkeeptogether.html">SetKeepTogether</a></td><td>Sets whether this row is allowed to be broken across pages.</td></tr><tr><td><a href="ctextrow/ctextrow-getkeepwithnext.html">GetKeepWithNext</a></td><td>Gets whether this row should appear on the same page as the row that follows it.</td></tr><tr><td><a href="#setkeepwithnext">SetKeepWithNext</a></td><td>Sets whether this row should appear on the same page as the row that follows it.</td></tr><tr><td><a href="ctextrow/ctextrow-getnestlevel.html">GetNestLevel</a></td><td>Gets the nest level of a table.</td></tr><tr><td><a href="ctextrow/ctextrow-getrtl.html">GetRTL</a></td><td>Gets whether this row has right-to-left orientation.</td></tr><tr><td><a href="ctextrow/ctextrow-setrtl.html">SetRTL</a></td><td>Sets whether this row has right-to-left orientation.</td></tr><tr><td><a href="ctextrow/ctextrow-getcellalignment.html">GetCellAlignment</a></td><td>Gets the vertical alignment of the active cell.</td></tr><tr><td><a href="ctextrow/ctextrow-setcellalignment.html">SetCellAlignment</a></td><td>Sets the vertical alignment of the active cell.</td></tr><tr><td><a href="ctextrow/ctextrow-getcellcolorback.html">GetCellColorBack</a></td><td>Gets the background color of the active cell.</td></tr><tr><td><a href="ctextrow/ctextrow-setcellcolorback.html">SetCellColorBack</a></td><td>Sets the background color of the active cell.</td></tr><tr><td><a href="ctextrow/ctextrow-getcellcolorfore.html">GetCellColorFore</a></td><td>Gets the foreground color of the active cell.</td></tr><tr><td><a href="ctextrow/ctextrow-setcellcolorfore.html">SetCellColorFore</a></td><td>Sets the foreground color of the active cell.</td></tr><tr><td><a href="ctextrow/ctextrow-getcellmergeflags.html">GetCellMergeFlags</a></td><td>Gets the merge flags of the active cell.</td></tr><tr><td><a href="ctextrow/ctextrow-setcellmergeflags.html">SetCellMergeFlags</a></td><td>Sets the merge flags of the active cell.</td></tr><tr><td><a href="ctextrow/ctextrow-getcellshading.html">GetCellShading</a></td><td>Gets the shading of the active cell.</td></tr><tr><td><a href="ctextrow/ctextrow-setcellshading.html">SetCellShading</a></td><td>Sets the shading of the active cell.</td></tr><tr><td><a href="ctextrow/ctextrow-getcellverticaltext.html">GetCellVerticalText</a></td><td>Gets the vertical-text setting of the active cell.</td></tr><tr><td><a href="ctextrow/ctextrow-setcellverticaltext.html">SetCellVerticalText</a></td><td>Sets the vertical-text setting of the active cell.</td></tr><tr><td><a href="ctextrow/ctextrow-getcellwidth.html">GetCellWidth</a></td><td>Gets the width of the active cell.</td></tr><tr><td><a href="ctextrow/ctextrow-setcellwidth.html">SetCellWidth</a></td><td>Sets the width of the active cell.</td></tr><tr><td><a href="ctextrow/ctextrow-getcellbordercolors.html">GetCellBorderColors</a></td><td>Gets the border colors of the active cell.</td></tr><tr><td><a href="ctextrow/ctextrow-getcellborderwidths.html">GetCellBorderWidths</a></td><td>Gets the border widths of the active cell.</td></tr><tr><td><a href="ctextrow/ctextrow-setcellbordercolors.html">SetCellBorderColors</a></td><td>Sets the border colors of the active cell.</td></tr><tr><td><a href="ctextrow/ctextrow-setcellborderwidths.html">SetCellBorderWidths</a></td><td>Sets the border widths of the active cell.</td></tr><tr><td><a href="ctextrow/ctextrow-apply.html">Apply</a></td><td>Applies the formatting attributes of this text row object to the specified rows in the associated <strong>ITextRange2</strong>.</td></tr><tr><td><a href="ctextrow/ctextrow-canchange.html">CanChange</a></td><td>Determines whether changes can be made to this row.</td></tr><tr><td><a href="ctextrow/ctextrow-getproperty.html">GetProperty</a></td><td>Gets the value of the specified property.</td></tr><tr><td><a href="ctextrow/ctextrow-insert.html">Insert</a></td><td>Inserts a row, or rows, at the location identified by the associated <strong>ITextRange2</strong> object.</td></tr><tr><td><a href="ctextrow/ctextrow-isequal.html">IsEqual</a></td><td>Compares two table rows to determine if they have the same properties.</td></tr><tr><td><a href="ctextrow/ctextrow-reset.html">Reset</a></td><td>Resets a row.</td></tr><tr><td><a href="ctextrow/ctextrow-setproperty.html">SetProperty</a></td><td>Sets the value of the specified property.</td></tr></tbody></table></div>
+<hr>
+<h4 id="methods-inherited-from-ctextobjectbase-class">Methods inherited from CTextObjectBase Class</h4>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="ctextrow/ctextrow-getlastresult.html">GetLastResult</a></td><td>Returns the last result code</td></tr><tr><td><a href="ctextrow/ctextrow-setresult.html">SetResult</a></td><td>Sets the last result code.</td></tr><tr><td><a href="ctextrow/ctextrow-geterrorinfo.html">GetErrorInfo</a></td><td>Returns a description of the last result code.</td></tr></tbody></table></div>
+<hr>
+<h3 id="constructors">CONSTRUCTORS</h3>
+<p>Called when a <code>CTextRow</code> class variable is created.</p>
+<pre class="code"><code>DECLARE CONSTRUCTOR
+DECLARE CONSTRUCTOR (BYVAL pTextRow AS ITextRow PTR, BYVAL fAddRef AS BOOLEAN = FALSE)</code></pre>
+<h3 id="constructor-empty">CONSTRUCTOR (Empty)</h3>
+<p>Can be used, for example, when we have an <strong>ITextRow</strong> interface pointer returned by a function and we want to attach it to a new instance of the <strong>CTextRow</strong> class. To get a pointer to the <strong>ITextRow</strong> interface call the <strong>GetRow</strong> method of the <strong>CTextDocument2</strong> class.</p>
+<pre class="code"><code>DIM pCTextRow AS CTextRow
+pCTextRow.Attach(pTextRow)</code></pre>
+<h3 id="constructor-itextrow-ptr">CONSTRUCTOR (ITextRow PTR)</h3>
+<pre class="code"><code>CONSTRUCTOR CTextRow (BYVAL pTextRow AS ITextRow PTR, BYVAL fAddRef AS BOOLEAN = FALSE)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pTextRow</em></td><td>An <strong>ITextRow</strong> interface pointer.</td></tr><tr><td><em>fAddRef</em></td><td>Optional. <strong>TRUE</strong> to increment the reference count of the passed <strong>ITextRow</strong> interface pointer; otherwise, <strong>FALSE</strong>. Default is <strong>FALSE</strong>.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>A pointer to the new instance of the class.</p>
+<hr>
+<h3 id="destructor">DESTRUCTOR</h3>
+<p>Called automatically when a class variable goes out of scope or is destroyed.</p>
+<pre class="code"><code>DESTRUCTOR CTextRow</code></pre>
+<hr>
+<h3 id="let">LET</h3>
+<p>Assignment operator. The assigned pointer must be an "addrefed" one.</p>
+<pre class="code"><code>OPERATOR LET (BYVAL pTextRow AS ITextRow PTR)</code></pre>
+<hr>
+<h3 id="cast">CAST</h3>
+<p>Cast operator.</p>
+<pre class="code"><code>OPERATOR CAST () AS ITextRow PTR</code></pre>
+<hr>
+<h3 id="textrowptr">TextRowPtr</h3>
+<p>Returns a pointer to the underlying <strong>ITextRow</strong> interface</p>
+<pre class="code"><code>FUNCTION TextRowPtr () AS ITextRow PTR</code></pre>
+<hr>
+<h3 id="attach">Attach</h3>
+<p>Attaches an <strong>ITextRow</strong> interface pointer to the class.</p>
+<pre class="code"><code>FUNCTION Attach (BYVAL pTextRow AS ITextRow PTR, BYVAL fAddRef AS BOOLEAN = FALSE) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pTextRow</em></td><td>The <strong>ITextRow</strong> interface pointer to attach.</td></tr><tr><td><em>fAddRef</em></td><td><strong>TRUE</strong> to increment the reference count of the object; otherwise, <strong>FALSE</strong>. Default is <strong>FALSE</strong>.</td></tr></tbody></table></div>
+<p>+++</p>
+<h3 id="detach">Detach</h3>
+<p>Detaches the interface pointer from the class</p>
+<pre class="code"><code>FUNCTION Detach () AS ITextRow PTR</code></pre>
+<hr>
+<h3 id="getlastresult">GetLastResult</h3>
+<p>Returns the last result code</p>
+<pre class="code"><code>FUNCTION GetLastResult () AS HRESULT</code></pre>
+<hr>
+<h3 id="setresult">SetResult</h3>
+<p>Sets the last result code.</p>
+<pre class="code"><code>FUNCTION SetResult (BYVAL Result AS HRESULT) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>Result</em></td><td>The <strong>HRESULT</strong> error code returned by the methods.</td></tr></tbody></table></div>
+<hr>
+<h3 id="geterrorinfo">GetErrorInfo</h3>
+<p>Returns a description of the last result code.</p>
+<pre class="code"><code>FUNCTION CTOMBase.GetErrorInfo () AS DWSTRING
+   IF SUCCEEDED(m_Result) THEN RETURN "Success"
+   DIM s AS DWSTRING = "Error &amp;h" &amp; HEX(m_Result, 8)
+   SELECT CASE m_Result
+      CASE E_POINTER : s += ": E_POINTER - Null pointer"
+      CASE S_OK : s += ": S_OK - Success"
+      CASE S_FALSE : s += ": S_FALSE - Failure"
+      CASE E_NOTIMPL : s += ": E_NOTIMPL - Not implemented."
+      CASE E_INVALIDARG : s += ": E_INVALIDARG - Invalid argument"
+      CASE E_OUTOFMEMORY : s += ": E_OUTOFMEMORY - Insufficient memory"
+'      CASE E_FILENOTFOUND : s += "E_FILENOTFOUND - File not found"
+      CASE &amp;h80070002 : s += "E_FILENOTFOUND - File not found"
+      CASE E_ACCESSDENIED : s += "E_ACCESSDENIED - Access denied"
+      CASE E_FAIL : s += ": E_FAIL - Access denied"
+      CASE NOERROR : s += ": NOERROR - Success" '' (same as S_OK)
+      CASE CO_E_RELEASED:  : s += ": CO_E_RELEASED: - The object has been released"
+      CASE ELSE
+         s += "Unknown error"
+   END SELECT
+   RETURN s
+END FUNCTION</code></pre>
+<hr>
+<h3 id="getalignment">GetAlignment</h3>
+<p>Gets the horizontal alignment of a row.</p>
+<pre class="code"><code>FUNCTION GetAlignment () AS LONG</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>The horizontal alignment. It can be one of the following values.</p>
+<div class="table-wrap"><table><thead><tr><th>Constant</th><th>Value</th><th>Meaning</th></tr></thead><tbody><tr><td><strong>tomAlignLeft</strong></td><td>0</td><td>Text aligns with the left margin.</td></tr><tr><td><strong>tomAlignCenter</strong></td><td>1</td><td>Text is centered between the margins.</td></tr><tr><td><strong>tomAlignRight</strong></td><td>2</td><td>Text aligns with the right margin.</td></tr></tbody></table></div>
+<h5 id="result-code">Result code</h5>
+<p>If the method succeeds, <strong>GetLastResult</strong> returns <strong>NOERROR</strong>. Otherwise, it returns an <strong>HRESULT</strong> error code.</p>
+<hr>
+<h3 id="setalignment">SetAlignment</h3>
+<p>Sets the horizontal alignment of a row.</p>
+<pre class="code"><code>FUNCTION SetAlignment (BYVAL Value AS LONG) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>Value</em></td><td>The new horizontal alignment. It can be one of the following values.</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>Constant</th><th>Value</th><th>Meaning</th></tr></thead><tbody><tr><td><strong>tomAlignLeft</strong></td><td>0</td><td>Text aligns with the left margin.</td></tr><tr><td><strong>tomAlignCenter</strong></td><td>1</td><td>Text is centered between the margins.</td></tr><tr><td><strong>tomAlignRight</strong></td><td>2</td><td>Text aligns with the right margin.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the method succeeds, it returns <strong>NOERROR</strong>. Otherwise, it returns an <strong>HRESULT</strong> error code.</p>
+<hr>
+<h3 id="getcellcount">GetCellCount</h3>
+<p>Gets the count of cells in this row.</p>
+<pre class="code"><code>FUNCTION GetCellCount () AS LONG</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>The cell count for this row.</p>
+<h5 id="result-code">Result code</h5>
+<p>If the method succeeds, <strong>GetLastResult</strong> returns <strong>NOERROR</strong>. Otherwise, it returns an <strong>HRESULT</strong> error code.</p>
+<hr>
+<h3 id="setcellcount">SetCellCount</h3>
+<p>Sets the count of cells in a row.</p>
+<pre class="code"><code>FUNCTION SetCellCount (BYVAL Value AS LONG) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>Value</em></td><td>The row cell count.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the method succeeds, it returns <strong>NOERROR</strong>. Otherwise, it returns an <strong>HRESULT</strong> error code.</p>
+<hr>
+<h3 id="getcellcountcache">GetCellCountCache</h3>
+<p>Gets the count of cells cached for this row.</p>
+<pre class="code"><code>FUNCTION GetCellCountCache () AS LONG</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>The cached cell count.</p>
+<h5 id="result-code">Result code</h5>
+<p>If the method succeeds, <strong>GetLastResult</strong> returns <strong>NOERROR</strong>. Otherwise, it returns an <strong>HRESULT</strong> error code.</p>
+<hr>
+<h3 id="setcellcountcache">SetCellCountCache</h3>
+<p>Sets the count of cells cached for a row.</p>
+<pre class="code"><code>FUNCTION SetCellCountCache (BYVAL Value AS LONG) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>Value</em></td><td>The row cell count.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the method succeeds, it returns <strong>NOERROR</strong>. Otherwise, it returns an <strong>HRESULT</strong> error code.</p>
+<h5 id="remarks">Remarks</h5>
+<p>If all cells are identical, properties need to be cached only for the cell with index 0. If the cached count is less than the cell count, the cell parameters for index CellCountCache – 1 are used for cells with larger indices.</p>
+<hr>
+<h3 id="getcellindex">GetCellIndex</h3>
+<p>Gets the index of the active cell to get or set parameters for.</p>
+<pre class="code"><code>FUNCTION GetCellIndex () AS LONG</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>The cell index.</p>
+<h5 id="result-code">Result code</h5>
+<p>If the method succeeds, <strong>GetLastResult</strong> returns <strong>NOERROR</strong>. Otherwise, it returns an <strong>HRESULT</strong> error code.</p>
+<hr>
+<h3 id="setcellindex">SetCellIndex</h3>
+<p>Sets the index of the active cell.</p>
+<pre class="code"><code>FUNCTION SetCellIndex (BYVAL Value AS LONG) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>Value</em></td><td>The cell index.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the method succeeds, it returns <strong>NOERROR</strong>. Otherwise, it returns an <strong>HRESULT</strong> error code.</p>
+<h5 id="remarks">Remarks</h5>
+<p>You can get or set parameters for an active cell.</p>
+<p>If the cell index is greater than the cell count, and the cell index is less that 63 (the maximum cell count), then the cell count is increased to cell index + 1.</p>
+<hr>
+<h3 id="getcellmargin">GetCellMargin</h3>
+<p>Gets the cell margin of this row.</p>
+<pre class="code"><code>FUNCTION GetCellMargin () AS LONG</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>The cell margin.</p>
+<h5 id="result-code">Result code</h5>
+<p>If the method succeeds, <strong>GetLastResult</strong> returns <strong>NOERROR</strong>. Otherwise, it returns an <strong>HRESULT</strong> error code.</p>
+<hr>
+<h3 id="setcellmargin">SetCellMargin</h3>
+<p>Sets the cell margin of a row.</p>
+<pre class="code"><code>FUNCTION SetCellMargin (BYVAL Value AS LONG) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>Value</em></td><td>The cell margin. The cell margin is used for all cells in the row and is typically about 108 twips or 0.075 inches.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the method succeeds, it returns <strong>NOERROR</strong>. Otherwise, it returns an <strong>HRESULT</strong> error code.</p>
+<hr>
+<h3 id="getheight">GetHeight</h3>
+<p>Gets the height of the row.</p>
+<pre class="code"><code>FUNCTION GetHeight () AS LONG</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>The row height. A value of 0 indicates autoheight.</p>
+<h5 id="result-code">Result code</h5>
+<p>If the method succeeds, <strong>GetLastResult</strong> returns <strong>NOERROR</strong>. Otherwise, it returns an <strong>HRESULT</strong> error code.</p>
+<hr>
+<h3 id="setheight">SetHeight</h3>
+<p>Sets the cell margin of a row.</p>
+<pre class="code"><code>FUNCTION SetHeight (BYVAL Value AS LONG) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>Value</em></td><td>The row height. A value of 0 indicates autoheight.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the method succeeds, it returns <strong>NOERROR</strong>. Otherwise, it returns an <strong>HRESULT</strong> error code.</p>
+<hr>
+<h3 id="getindent">GetIndent</h3>
+<p>Gets the indent of this row.</p>
+<pre class="code"><code>FUNCTION GetIndent () AS LONG</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>The indent of the row.</p>
+<h5 id="result-code">Result code</h5>
+<p>If the method succeeds, <strong>GetLastResult</strong> returns <strong>NOERROR</strong>. Otherwise, it returns an <strong>HRESULT</strong> error code.</p>
+<hr>
+<h3 id="setindent">SetIndent</h3>
+<p>Sets the indent of a row.</p>
+<pre class="code"><code>FUNCTION SetIndent (BYVAL Value AS LONG) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>Value</em></td><td>The row indent.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the method succeeds, it returns <strong>NOERROR</strong>. Otherwise, it returns an <strong>HRESULT</strong> error code.</p>
+<hr>
+<h3 id="getkeeptogether">GetKeepTogether</h3>
+<p>Gets whether this row is allowed to be broken across pages.</p>
+<pre class="code"><code>FUNCTION GetKeepTogether () AS LONG</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>A <strong>tomBool</strong> value that indicates whether this row can be broken across pages.</p>
+<h5 id="result-code">Result code</h5>
+<p>If the method succeeds, <strong>GetLastResult</strong> returns <strong>NOERROR</strong>. Otherwise, it returns an <strong>HRESULT</strong> error code.</p>
+<hr>
+<h3 id="setkeeptogether">SetKeepTogether</h3>
+<p>Sets whether this row is allowed to be broken across pages.</p>
+<pre class="code"><code>FUNCTION SetKeepTogether (BYVAL Value AS LONG) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>Value</em></td><td>A <strong>tomBool</strong> value that indicates whether this row can be broken across pages.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the method succeeds, it returns <strong>NOERROR</strong>. Otherwise, it returns an <strong>HRESULT</strong> error code.</p>
+<hr>
+<h3 id="getkeepwithnext">GetKeepWithNext</h3>
+<p>Gets whether this row is allowed to be broken across pages.</p>
+<pre class="code"><code>FUNCTION GetKeepWithNext () AS LONG</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>A <strong>tomBool</strong> value that indicates whether this row can be broken across pages.</p>
+<h5 id="result-code">Result code</h5>
+<p>If the method succeeds, <strong>GetLastResult</strong> returns <strong>NOERROR</strong>. Otherwise, it returns an <strong>HRESULT</strong> error code.</p>
+<hr>
+<h3 id="getnestlevel">GetNestLevel</h3>
+<p>Gets the nest level of a table.</p>
+<pre class="code"><code>FUNCTION GetNestLevel () AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>Value</em></td><td>The nest level.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the method succeeds, it returns <strong>NOERROR</strong>. Otherwise, it returns an <strong>HRESULT</strong> error code.</p>
+<h5 id="remarks">Remarks</h5>
+<p>The nest level of the table is identified by the associated <strong>ITextRange2</strong> object. If there is only a single table, the nest level is 1. If there is no table, the nest level is 0.</p>
+<hr>
+<h3 id="getrtl">GetRTL</h3>
+<p>Gets whether this row has right-to-left orientation.</p>
+<pre class="code"><code>FUNCTION GetRTL () AS LONG</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>A <strong>tomBool</strong> value that indicates whether this row has right-to-left orientation.</p>
+<h5 id="result-code">Result code</h5>
+<p>If the method succeeds, <strong>GetLastResult</strong> returns <strong>NOERROR</strong>. Otherwise, it returns an <strong>HRESULT</strong> error code.</p>
+<hr>
+<h3 id="setrtl">SetRTL</h3>
+<p>Sets whether this row has right-to-left orientation.</p>
+<pre class="code"><code>FUNCTION SetRTL (BYVAL Value AS LONG) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>Value</em></td><td>A <strong>tomBool</strong> value that can be one of the following.</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>Value</th><th>Meaning</th></tr></thead><tbody><tr><td><strong>tomTrue</strong></td><td>Right-to-left orientation.</td></tr><tr><td><strong>tomFalse</strong></td><td>Left-to-right orientation.</td></tr><tr><td><strong>tomToggle</strong></td><td>Toggles the orientation.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the method succeeds, it returns <strong>NOERROR</strong>. Otherwise, it returns an <strong>HRESULT</strong> error code.</p>
+<hr>
+<h3 id="getcellalignment">GetCellAlignment</h3>
+<p>Gets the vertical alignment of the active cell.</p>
+<pre class="code"><code>FUNCTION GetCellAlignment () AS LONG</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>The vertical alignment.</p>
+<h5 id="result-code">Result code</h5>
+<p>If the method succeeds, <strong>GetLastResult</strong> returns <strong>NOERROR</strong>. Otherwise, it returns an <strong>HRESULT</strong> error code.</p>
+<hr>
+<h3 id="setcellalignment">SetCellAlignment</h3>
+<p>Sets the vertical alignment of the active cell.</p>
+<pre class="code"><code>FUNCTION SetCellAlignment (BYVAL Value AS LONG) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>Value</em></td><td>The vertical alignment.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the method succeeds, it returns <strong>NOERROR</strong>. Otherwise, it returns an <strong>HRESULT</strong> error code.</p>
+<hr>
+<h3 id="getcellcolorback">&gt;GetCellColorBack</h3>
+<p>Gets the background color of the active cell.</p>
+<pre class="code"><code>FUNCTION GetCellColorBack () AS LONG</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>The background color.</p>
+<h5 id="result-code">Result code</h5>
+<p>If the method succeeds, <strong>GetLastResult</strong> returns <strong>NOERROR</strong>. Otherwise, it returns an <strong>HRESULT</strong> error code.</p>
+<hr>
+<h3 id="setcellcolorback">SetCellColorBack</h3>
+<p>Sets the background color of the active cell.</p>
+<pre class="code"><code>FUNCTION SetCellColorBack (BYVAL Value AS LONG) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>Value</em></td><td>The background color.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the method succeeds, it returns <strong>NOERROR</strong>. Otherwise, it returns an <strong>HRESULT</strong> error code.</p>
+<h5 id="remarks">Remarks</h5>
+<p>See <strong>GetCellShading</strong> to see how the background color is used together with the foreground color.</p>
+<hr>
+<h3 id="getcellcolorfore">GetCellColorFore</h3>
+<p>Gets the foreground color of the active cell.</p>
+<pre class="code"><code>FUNCTION GetCellColorFore () AS LONG</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>Gets the foreground color of the active cell.</p>
+<h5 id="result-code">Result code</h5>
+<p>If the method succeeds, <strong>GetLastResult</strong> returns <strong>NOERROR</strong>. Otherwise, it returns an <strong>HRESULT</strong> error code.</p>
+<hr>
+<h3 id="setcellcolorfore">SetCellColorFore</h3>
+<p>Sets the foreground color of the active cell.</p>
+<pre class="code"><code>FUNCTION SetCellColorFore (BYVAL Value AS LONG) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>Value</em></td><td>The foreground color.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the method succeeds, it returns <strong>NOERROR</strong>. Otherwise, it returns an <strong>HRESULT</strong> error code.</p>
+<h5 id="remarks">Remarks</h5>
+<p>See <strong>GetCellShading</strong> to see how the foreground color is used together with the background color.</p>
+<hr>
+<h3 id="getcellmergeflags">GetCellMergeFlags</h3>
+<p>Gets the merge flags of the active cell.</p>
+<pre class="code"><code>FUNCTION GetCellMergeFlags () AS LONG</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>The merge flag of the active cell. The flag can be one of the following:</p>
+<div class="table-wrap"><table><thead><tr><th>Flag</th><th>Meaning</th></tr></thead><tbody><tr><td><strong>tomHContCell</strong></td><td>Any cell except the start in a horizontally merged cell set.</td></tr><tr><td><strong>tomHStartCell</strong></td><td>The top cell in vertically merged cell set.</td></tr><tr><td><strong>tomVLowCell</strong></td><td>Any cell except the top cell in a vertically merged cell set.</td></tr><tr><td><strong>tomVTopCell</strong></td><td>The top cell in vertically merged cell set.</td></tr></tbody></table></div>
+<h5 id="result-code">Result code</h5>
+<p>If the method succeeds, <strong>GetLastResult</strong> returns <strong>NOERROR</strong>. Otherwise, it returns an <strong>HRESULT</strong> error code.</p>
+<hr>
+<h3 id="setcellmergeflags">SetCellMergeFlags</h3>
+<p>Sets the merge flags of the active cell.</p>
+<pre class="code"><code>FUNCTION SetCellMergeFlags (BYVAL Value AS LONG) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>Value</em></td><td>The merge flag. It can be one of these values.</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>Flag</th><th>Meaning</th></tr></thead><tbody><tr><td><strong>tomHContCell</strong></td><td>Any cell except the start in a horizontally merged cell set.</td></tr><tr><td><strong>tomHStartCell</strong></td><td>The top cell in vertically merged cell set.</td></tr><tr><td><strong>tomVLowCell</strong></td><td>Any cell except the top cell in a vertically merged cell set.</td></tr><tr><td><strong>tomVTopCell</strong></td><td>The top cell in vertically merged cell set.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the method succeeds, it returns <strong>NOERROR</strong>. Otherwise, it returns an <strong>HRESULT</strong> error code.</p>
+<hr>
+<h3 id="getcellshading">GetCellShading</h3>
+<p>Gets the shading of the active cell.</p>
+<pre class="code"><code>FUNCTION GetCellShading () AS LONG</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>The shading of the active cell. See Remarks.</p>
+<h5 id="result-code">Result code</h5>
+<p>If the method succeeds, <strong>GetLastResult</strong> returns <strong>NOERROR</strong>. Otherwise, it returns an <strong>HRESULT</strong> error code.</p>
+<h5 id="remarks">Remarks</h5>
+<p>The shading is given in hundredths of a percent, so full shading is given by the value 10000. The shading percentage determines the mix of the cell foreground and background colors to be used for the cell background. A shading of 0 uses the cell background color alone. A shading of 10000 (100%) uses the foreground color alone. Values in between mix the foreground and background colors, weighting the background with (10000 – CellShading)/1000 and the foreground with CellShading/1000. These ratios are applied to the red, green, and blue channels independently of one another.</p>
+<hr>
+<h3 id="setcellshading">SetCellShading</h3>
+<p>Sets the shading of the active cell.</p>
+<pre class="code"><code>FUNCTION SetCellShading (BYVAL Value AS LONG) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>Value</em></td><td>The shading of the active cell.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>The shading is given in hundredths of a percent, so full shading is given by the value 10000. The shading percentage determines the mix of the cell foreground and background colors to be used for the cell background. A shading of 0 uses the cell background color alone. A shading of 10000 (100%) uses the foreground color alone. Values in between mix the foreground and background colors, weighting the background with (10000 – CellShading)/1000 and the foreground with CellShading/1000. These ratios are applied to the red, green, and blue channels independently of one another.</p>
+<h5 id="return-value">Return value</h5>
+<p>If the method succeeds, it returns <strong>NOERROR</strong>. Otherwise, it returns an <strong>HRESULT</strong> error code.</p>
+<hr>
+<h3 id="getcellverticaltext">GetCellVerticalText</h3>
+<p>Gets the vertical-text setting of the active cell.</p>
+<p>This property is not currently implemented.</p>
+<pre class="code"><code>FUNCTION GetCellVerticalText () AS LONG</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>The vertical-text setting.</p>
+<h5 id="result-code">Result code</h5>
+<p>If the method succeeds, <strong>GetLastResult</strong> returns <strong>NOERROR</strong>. Otherwise, it returns an <strong>HRESULT</strong> error code.</p>
+<hr>
+<h3 id="setcellverticaltext">SetCellVerticalText</h3>
+<p>Sets the vertical-text setting of the active cell.</p>
+<p>This property is not currently implemented.</p>
+<pre class="code"><code>FUNCTION SetCellVerticalText (BYVAL Value AS LONG) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>Value</em></td><td>The vertical-text setting.</td></tr></tbody></table></div>
+<hr>
+<h3 id="getcellwidth">GetCellWidth</h3>
+<p>Gets the width of the active cell.</p>
+<pre class="code"><code>FUNCTION GetCellWidth () AS LONG</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>The width of the active cell, in twips.</p>
+<h5 id="result-code">Result code</h5>
+<p>If the method succeeds, <strong>GetLastResult</strong> returns <strong>NOERROR</strong>. Otherwise, it returns an <strong>HRESULT</strong> error code.</p>
+<h5 id="remarks">Remarks</h5>
+<p>The width of the cell, and/or the entire row, must be less than 22 inches (1440 x 22).</p>
+<hr>
+<h3 id="setcellwidth">SetCellWidth</h3>
+<p>Sets the active cell width in twips.</p>
+<pre class="code"><code>FUNCTION SetCellWidth (BYVAL Value AS LONG) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>Value</em></td><td>The width of the active cell.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>The total width of the entire row must be less than 22 inches, or 1440×22.</p>
+<hr>
+<h3 id="getcellbordercolors">GetCellBorderColors</h3>
+<p>Gets the border colors of the active cell.</p>
+<pre class="code"><code>FUNCTION GetCellBorderColors (BYVAL pcrLeft AS LONG PTR, BYVAL pcrTop AS LONG PTR, _
+   BYVAL pcrRight AS LONG PTR, BYVAL pcrBottom AS LONG PTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pcrLeft</em></td><td>The active-cell left border color.</td></tr><tr><td><em>pcrTop</em></td><td>The active-cell top border color.</td></tr><tr><td><em>pcrRight</em></td><td>The active-cell right border color.</td></tr><tr><td><em>pcrBottom</em></td><td>The active-cell bottom border color.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the method succeeds, it returns <strong>NOERROR</strong>. Otherwise, it returns an <strong>HRESULT</strong> error code.</p>
+<hr>
+<h3 id="getcellborderwidths">GetCellBorderWidths</h3>
+<p>Gets the border widths of the active cell.</p>
+<pre class="code"><code>FUNCTION GetCellBorderWidths (BYVAL pduLeft AS LONG PTR, BYVAL pduTop AS LONG PTR, _
+   BYVAL pduRight AS LONG PTR, BYVAL pduBottom AS LONG PTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pduLeft</em></td><td>The active-cell left border width.</td></tr><tr><td><em>pduTop</em></td><td>The active-cell top border width.</td></tr><tr><td><em>pduRight</em></td><td>The active-cell right border width.</td></tr><tr><td><em>pduBottom</em></td><td>The active-cell bottom border width.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the method succeeds, it returns <strong>NOERROR</strong>. Otherwise, it returns an <strong>HRESULT</strong> error code.</p>
+<hr>
+<h3 id="setcellbordercolors">SetCellBorderColors</h3>
+<p>Sets the border colors of the active cell.</p>
+<pre class="code"><code>FUNCTION SetCellBorderColors (BYVAL crLeft AS LONG, BYVAL crTop AS LONG, _
+   BYVAL crRight AS LONG, BYVAL crBottom AS LONG) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>crLeft</em></td><td>The left border color.</td></tr><tr><td><em>crTop</em></td><td>The top border color.</td></tr><tr><td><em>crRight</em></td><td>The right border color.</td></tr><tr><td><em>crBottom</em></td><td>The bottom border color.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the method succeeds, it returns <strong>NOERROR</strong>. Otherwise, it returns an <strong>HRESULT</strong> error code.</p>
+<hr>
+<h3 id="setcellborderwidths">SetCellBorderWidths</h3>
+<p>Sets the border widths of the active cell.</p>
+<pre class="code"><code>FUNCTION SetCellBorderWidths (BYVAL duLeft AS LONG, BYVAL duTop AS LONG, _
+   BYVAL duRight AS LONG, BYVAL duBottom AS LONG) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>duLeft</em></td><td>The left border width.</td></tr><tr><td><em>duTop</em></td><td>The top border width.</td></tr><tr><td><em>duRight</em></td><td>The right border width.</td></tr><tr><td><em>duBottom</em></td><td>The bottom border width.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the method succeeds, it returns <strong>NOERROR</strong>. Otherwise, it returns an <strong>HRESULT</strong> error code.</p>
+<hr>
+<h3 id="apply">Apply</h3>
+<p>Applies the formatting attributes of this text row object to the specified rows in the associated <strong>ITextRange2</strong>.</p>
+<pre class="code"><code>FUNCTION Apply (BYVAL cRow AS LONG, BYVAL Flags AS LONG) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>cRow</em></td><td>The number of rows to apply this text row object to.</td></tr><tr><td><em>Flags</em></td><td>A flag that controls how the formatting attributes are applied. It can be one of the following values.</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>Value</th><th>Meaning</th></tr></thead><tbody><tr><td><strong>tomCellStructureChangeOnly</strong></td><td>Apply formatting attributes only to cell widths or the cell count (enables you to change column widths or insert/delete columns without changing other properties, such as cell borders).</td></tr><tr><td><strong>tomRowApplyDefault</strong></td><td>Apply formatting attributes to the full application, not just cell widths and count.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the method succeeds, it returns <strong>NOERROR</strong>. Otherwise, it returns an <strong>HRESULT</strong> error code.</p>
+<hr>
+<h3 id="canchange">CanChange</h3>
+<p>Determines whether changes can be made to this row.</p>
+<pre class="code"><code>FUNCTION CanChange () AS LONG</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>A <strong>tomBool</strong> indicating whether the row can be edited. It is <strong>tomTrue</strong> only if the row can be edited.</p>
+<h5 id="result-code">Result code</h5>
+<p>If the method succeeds, <strong>GetLastResult</strong> returns <strong>NOERROR</strong>. Otherwise, it returns an <strong>HRESULT</strong> error code.</p>
+<hr>
+<h3 id="getproperty">GetProperty</h3>
+<p>Gets the value of the specified property.</p>
+<pre class="code"><code>FUNCTION GetProperty (BYVAL nType AS LONG) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>nType</em></td><td>The ID of the property to retrieve.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The value for the property.</p>
+<h5 id="result-code">Result code</h5>
+<p>If the method succeeds, <strong>GetLastResult</strong> returns <strong>NOERROR</strong>. Otherwise, it returns an <strong>HRESULT</strong> error code.</p>
+<hr>
+<h3 id="insert">Insert</h3>
+<p>Inserts a row, or rows, at the location identified by the associated <strong>ITextRange2</strong> object.</p>
+<pre class="code"><code>FUNCTION Insert (BYVAL cRow AS LONG) AS HRESULT</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>If the method succeeds, it returns <strong>NOERROR</strong>. Otherwise, it returns an <strong>HRESULT</strong> error code.</p>
+<hr>
+<h3 id="isequal">IsEqual</h3>
+<p>Compares two table rows to determine if they have the same properties.</p>
+<pre class="code"><code>FUNCTION IsEqual (BYVAL pRow AS ITextRow PTR) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pRow</em></td><td>The row to compare to.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The comparison result: <strong>tomTrue</strong> if equal, and <strong>tomFalse</strong> if not.</p>
+<h5 id="result-code">Result code</h5>
+<p>If the method succeeds, it returns <strong>NOERROR</strong>. Otherwise, it returns an <strong>HRESULT</strong> error code.</p>
+<hr>
+<h3 id="reset">Reset</h3>
+<p>Resets a row.</p>
+<pre class="code"><code>FUNCTION Reset (BYVAL Value AS LONG = tomRowUpdate) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>Value</em></td><td>The **tomRowUpdate reset value: Update the row to have the properties of the table row identified by the associated text range.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the method succeeds, it returns <strong>S_OK</strong>. If the method fails, it returns one of the following COM error codes.</p>
+<div class="table-wrap"><table><thead><tr><th>Result code</th><th>Description</th></tr></thead><tbody><tr><td><strong>E_ACCESSDENIED</strong></td><td>Write access is denied.</td></tr><tr><td><strong>E_OUTOFMEMORY</strong></td><td>Insufficient memory.</td></tr></tbody></table></div>
+<hr>
+<h3 id="setproperty">SetProperty</h3>
+<p>Sets the value of the specified property.</p>
+<pre class="code"><code>FUNCTION SetProperty (BYVAL nType AS LONG, BYVAL Value AS LONG) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>nType</em></td><td>The ID of the property to set.</td></tr><tr><td><em>Value</em></td><td>The value to set.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the method succeeds, it returns <strong>NOERROR</strong>. Otherwise, it returns an <strong>HRESULT</strong> error code.</p>
+<hr>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

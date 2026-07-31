@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Static (Member) — Help Center</title>
+<meta name="description" content="Declare a static member procedure or variable">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/user-defined-types/procedures/static-member.html">
+<meta property="og:title" content="Static (Member)">
+<meta property="og:description" content="Declare a static member procedure or variable">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/user-defined-types/procedures/static-member.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/user-defined-types/procedures/static-member.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>Static (Member)<span class="h1kind">member</span></h1>
+<p class="lede">Declare a static member procedure or variable</p>
+<div class="badges"><a class="badge" href="../index.html">User Defined Types</a><span class="badge">member</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>Type typename</code></pre>
+<pre class="code sig"><code>Static variablename As DataType [, ...]</code></pre>
+<pre class="code sig"><code>Declare Static Sub|Function procedurename ...</code></pre>
+<pre class="code sig"><code>...</code></pre>
+<pre class="code sig"><code>End Type</code></pre>
+<pre class="code sig"><code>Dim typename.variablename As DataType [= initializer] [, ...]</code></pre>
+<pre class="code sig"><code>[Static] Sub|Function typename.procedurename ...</code></pre>
+<pre class="code sig"><code>...</code></pre>
+<h2>Description</h2>
+<br>
+<ul><li> Static member procedures<br>
+</li></ul><div class="indent"><code><b>Static</b></code> methods do not have an implicit <code><a href="this.html">This</a></code> instance argument passed to them. This allows them to be used like normal non-member procedures (for example with callback procedure pointers).  An advantage of <code><b>Static</b></code> methods are that they are encapsulated in the <code><i>typename</i></code> namespace, and therefore have the ability to access the <code><a href="private-access-control.html">Private</a></code> or <code><a href="protected-access-control.html">Protected</a></code> members or methods of instances of <code><i>typename</i></code>.<br>
+<br>
+<code><b>Static</b></code> methods can be called directly anywhere in code, like normal non-member procedures, or on objects of type <code><i>typename</i></code>, similar to non-static methods, however either way there is no implicit or explicit <code><a href="this.html">This</a></code> (or explicit <code><a href="base-member-access.html">Base (Member Access)</a></code>) access possible from within a static method.<br>
+<br>
+For member procedures with a <code><b>Static</b></code> declaration, <code><b>Static</b></code> may also be specified on the corresponding procedure bodies, for improved code readability.<br>
+<br>
+</div><ul><li> Static member variables<br>
+</li></ul><div class="indent"><code><b>Static</b></code> member variables are created and initialized only once independently of any object construction, in contrast to non-static ("instance") member variables which are created again and again for each separate object. <code><b>Static</b></code> members are always <code><a href="../../variable-declarations/procedures/shared.html">Shared</a></code>, even if <code><a href="../../variable-declarations/procedures/shared.html">Shared</a></code> was not specified in the declaration. Thus, <code><b>Static</b></code> member variables are similar to global variables, except that they are declared in a <code><b>Type</b></code> namespace.<br>
+<br>
+Each <code><b>Static</b></code> member variable declared in a Type must be explicitly allocated somewhere outside the type by using a <code><a href="../../variable-declarations/procedures/dim.html">Dim</a></code> statement. The declaration inside the Type is the prototype that is visible to every module seeing the Type declaration. The definition outside the Type allocates and optionally initializes the <code><b>Static</b></code> member variable. There can only be one definition per <code><b>Static</b></code> member variable: it can only be allocated in a single module, not in multiple ones. This is the same as for <code><a href="../../modularizing/procedures/extern.html">Extern</a></code> variables.<br>
+<br>
+A <code><b>Static</b></code> member variable is subject to member access control except for its definition outside the Type. If a private <code><b>Static</b></code> member variable is to be explicitly initialized outside the Type's member procedures, an initializer must be provided with the definition.<br>
+<br>
+</div>
+<h2>Remarks</h2>
+<h3>Differences from QB</h3><br>
+<ul><li> New to FreeBASIC<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="../../operators/operators/procedures/class.html">Class</a></code><br>
+<li> <code><a href="../../procedures/procedures/declare.html">Declare</a></code><br>
+<li> <code><a href="../../operators/operators/procedures/type-udt.html">Type</a></code><br>
+<li> <code><a href="../../variable-declarations/procedures/static.html">Static</a></code><br>
+<br>
+</li></li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-cm">'' Example showing how the actual procedure invoked by a member can be set at runtime.</span>
+
+<span class="tok-cm">'' using static member procedures.</span>
+
+<span class="tok-kw">Type</span> <span>_Object</span>
+
+
+
+  <span class="tok-kw">Enum</span> <span>handlertype</span>
+
+    <span>ht_default</span>
+
+    <span>ht_A</span>
+
+    <span>ht_B</span>
+
+  <span class="tok-kw">End</span> <span class="tok-kw">Enum</span>
+
+
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span><span>(</span> <span class="tok-kw">ByVal</span> <span>ht</span> <span class="tok-kw">As</span> <span>handlertype</span> <span>=</span> <span>ht_default</span><span>)</span>
+
+
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>handler</span><span>()</span>
+
+
+
+<span class="tok-kw">Private</span><span>:</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Static</span> <span class="tok-kw">Sub</span> <span>handler_default</span><span>(</span> <span class="tok-kw">ByRef</span> <span>obj</span> <span class="tok-kw">As</span> <span>_Object</span> <span>)</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Static</span> <span class="tok-kw">Sub</span> <span>handler_A</span><span>(</span> <span class="tok-kw">ByRef</span> <span>obj</span> <span class="tok-kw">As</span> <span>_Object</span> <span>)</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Static</span> <span class="tok-kw">Sub</span> <span>handler_B</span><span>(</span> <span class="tok-kw">ByRef</span> <span>obj</span> <span class="tok-kw">As</span> <span>_Object</span> <span>)</span>
+
+  <span>handler_func</span> <span class="tok-kw">As</span> <span class="tok-kw">Sub</span><span>(</span> <span class="tok-kw">ByRef</span> <span>obj</span> <span class="tok-kw">As</span> <span>_Object</span> <span>)</span>
+
+
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>_Object</span><span>(</span> <span class="tok-kw">ByVal</span> <span>ht</span> <span class="tok-kw">As</span> <span>handlertype</span> <span>)</span>
+
+  <span class="tok-kw">Select</span> <span class="tok-kw">Case</span> <span>ht</span>
+
+  <span class="tok-kw">Case</span> <span>ht_A</span>
+
+    <span>handler_func</span> <span>=</span> <span>@</span><span>_Object.handler_A</span>
+
+  <span class="tok-kw">Case</span> <span>ht_B</span>
+
+    <span>handler_func</span> <span>=</span> <span>@</span><span>_Object.handler_B</span>
+
+  <span class="tok-kw">Case</span> <span class="tok-kw">Else</span>
+
+    <span>handler_func</span> <span>=</span> <span>@</span><span>_Object.handler_default</span>
+
+  <span class="tok-kw">End</span> <span class="tok-kw">Select</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>_Object.handler</span><span>()</span>
+
+  <span>handler_func</span><span>(</span><span class="tok-kw">This</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>_Object.handler_default</span><span>(</span> <span class="tok-kw">ByRef</span> <span>obj</span> <span class="tok-kw">As</span> <span>_Object</span> <span>)</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;Handling using default method&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>_Object.handler_A</span><span>(</span> <span class="tok-kw">ByRef</span> <span>obj</span> <span class="tok-kw">As</span> <span>_Object</span> <span>)</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;Handling using method A&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>_Object.handler_B</span><span>(</span> <span class="tok-kw">ByRef</span> <span>obj</span> <span class="tok-kw">As</span> <span>_Object</span> <span>)</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;Handling using method B&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-kw">Dim</span> <span>objects</span><span>(</span><span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">4</span><span>)</span> <span class="tok-kw">As</span> <span>_Object</span> <span>=&gt;</span> <span>_</span>
+
+  <span>{</span> <span>_</span>
+
+    <span>_Object.handlertype.ht_B</span><span>,</span> <span>_</span>
+
+    <span>_Object.handlertype.ht_default</span><span>,</span> <span>_</span>
+
+    <span>_Object.handlertype.ht_A</span> <span>_</span>
+
+  <span>}</span>
+
+  <span class="tok-cm">'' 4th array item will be _Object.handlertype.ht_default</span>
+
+
+
+<span class="tok-kw">For</span> <span>i</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">4</span>
+
+  <span class="tok-kw">Print</span> <span>i</span><span>,</span>
+
+  <span>objects</span><span>(</span><span>i</span><span>).</span><span>handler</span><span>()</span>
+
+<span class="tok-kw">Next</span> <span>i</span></pre></code><br>
+<br>
+<code><pre class="code"><span class="tok-cm">'' Assign an unique ID to every instance of a Type (ID incremented in order of creation)</span>
+
+
+
+<span class="tok-kw">Type</span> <span>UDT</span>
+
+  <span class="tok-kw">Public</span><span>:</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Property</span> <span>getID</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>()</span>
+
+  <span class="tok-kw">Private</span><span>:</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>ID</span>
+
+    <span class="tok-kw">Static</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>countID</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>UDT.countID</span> <span>=</span> <span class="tok-nu">0</span>
+
+
+
+<span class="tok-kw">Property</span> <span>UDT.getID</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+  <span class="tok-kw">Property</span> <span>=</span> <span>This.ID</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Property</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>UDT</span> <span>()</span>
+
+  <span>This.ID</span> <span>=</span> <span>UDT.countID</span>
+
+  <span>UDT.countID</span> <span>+=</span> <span class="tok-nu">1</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT</span> <span>uFirst</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT</span> <span>uSecond</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT</span> <span>uThird</span>
+
+
+
+<span class="tok-kw">Print</span> <span>uFirst.getID</span>
+
+<span class="tok-kw">Print</span> <span>uSecond.getID</span>
+
+<span class="tok-kw">Print</span> <span>uThird.getID</span></pre></code><br>
+<br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgStaticMember.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

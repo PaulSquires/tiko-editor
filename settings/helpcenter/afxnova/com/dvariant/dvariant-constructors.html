@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DVARIANT.Constructors — Help Center</title>
+<meta name="description" content="Initialize the class with the specified value.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/com/dvariant/dvariant-constructors.html">
+<meta property="og:title" content="DVARIANT.Constructors">
+<meta property="og:description" content="Initialize the class with the specified value.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/com/dvariant/dvariant-constructors.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/com/dvariant/dvariant-constructors.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../dvariant-class.html">DVARIANT Class</a></div>
+<h1>DVARIANT.Constructors<span class="h1kind">constructor</span></h1>
+<p class="lede">Initialize the class with the specified value.</p>
+<div class="badges"><a class="badge" href="../index.html">COM</a><span class="badge">constructor</span><span class="badge">DVARIANT.INC</span><span class="badge badge--warn">doc-orphan</span></div>
+<div class="note note--warn"><strong>No implementation located.</strong> This member is documented, but the source scan found no matching declaration. It is likely declared in a header this scan does not resolve, or provided by a macro.</div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>CONSTRUCTOR</code></pre>
+<pre class="code sig"><code>CONSTRUCTOR (BYREF dv AS DVARIANT)</code></pre>
+<pre class="code sig"><code>CONSTRUCTOR (BYVAL v AS VARIANT)</code></pre>
+<pre class="code sig"><code>CONSTRUCTOR (BYVAL pwsz AS WSTRING PTR)</code></pre>
+<pre class="code sig"><code>CONSTRUCTOR (BYREF dws AS DWSTRING)</code></pre>
+<pre class="code sig"><code>CONSTRUCTOR (BYREF bs AS BSTRING)</code></pre>
+<pre class="code sig"><code>CONSTRUCTOR (BYVAL pvar AS VARIANT PTR)</code></pre>
+<pre class="code sig"><code>CONSTRUCTOR (BYVAL cy AS CURRENCY)</code></pre>
+<pre class="code sig"><code>CONSTRUCTOR (BYVAL dec AS DECIMAL)</code></pre>
+<pre class="code sig"><code>DECLARE CONSTRUCTOR (BYVAL _value AS LONG)</code></pre>
+<pre class="code sig"><code>CONSTRUCTOR (BYREF pDisp AS IDispatch PTR, BYVAL fAddRef AS BOOLEAN = FALSE)</code></pre>
+<pre class="code sig"><code>CONSTRUCTOR (BYREF pUnk AS IUnknown PTR, BYVAL fAddRef AS BOOLEAN = FALSE)</code></pre>
+<pre class="code sig"><code>CONSTRUCTOR (BYVAL _value AS LONGINT, BYVAL _vType AS WORD = VT_I4)</code></pre>
+<pre class="code sig"><code>CONSTRUCTOR (BYVAL _value AS DOUBLE, BYVAL _vType AS WORD = VT_R8)</code></pre>
+<pre class="code sig"><code>CONSTRUCTOR (BYVAL _value AS LONGINT, BYREF strType AS STRING)</code></pre>
+<pre class="code sig"><code>CONSTRUCTOR (BYVAL _value AS DOUBLE, BYREF strType AS STRING)</code></pre>
+<pre class="code sig"><code>CONSTRUCTOR (BYVAL _pvar AS ANY PTR, BYVAL _vType AS WORD)</code></pre>
+<pre class="code sig"><code>CONSTRUCTOR (BYVAL _pvar AS ANY PTR, BYREF strType AS STRING)</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>cv</code></td><td></td><td>A DVARIANT.</td></tr><tr><td><code>v</code></td><td></td><td>A VARIANT.</td></tr><tr><td><code>pvar</code></td><td></td><td>Pointer to a VARIANT.</td></tr><tr><td><code>cy</code></td><td></td><td>A currency structure.</td></tr><tr><td><code>dec</code></td><td></td><td>A decimal structure.</td></tr><tr><td><code>b</code></td><td></td><td>A boolean value (TRUE or FALSE).</td></tr><tr><td><code>pwsz</code></td><td></td><td>Pointer to an unicode string. You can also pass a Free Basic ansi string or a string literal.</td></tr><tr><td><code>bs</code></td><td></td><td>A BSTRING.</td></tr><tr><td><code>dws</code></td><td></td><td>A DWSTRING.</td></tr><tr><td><code>pDisp</code></td><td></td><td>Pointer to a DISPATCH interface.</td></tr><tr><td><code>pUnk</code></td><td></td><td>Pointer to a UNKNOWN interface.</td></tr><tr><td><code>_value</code></td><td></td><td>A numeric value or variable.</td></tr><tr><td><code>_pvar</code></td><td></td><td>Pointer to a variable. This will create a VT_BYREF variant of the specified type.</td></tr><tr><td><code>_vtype</code></td><td></td><td>The variant type, e.g. VT_I4, VT_UI4.</td></tr><tr><td><code>strType</code></td><td></td><td>The variant type as a string: "BOOL", "BYTE", "UBYTE", "SHORT", "USHORT, "INT", UINT", "LONG", "ULONG", "LONGINT", "SINGLE, "DOUBLE", "NULL".</td></tr><tr><td><code>fAddRef</code></td><td></td><td>TRUE or FALSE. If TRUE, increases the reference count of the passed interface.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Creates an instance of the DVARIANT class.</p>
+<h2>Examples</h2>
+<p>DIM dv AS DVARIANT = "Test string"   ' Creates a VT_BSTR (8) variant DIM dv AS DVARIANT = 12345           ' Creates a VT_I4 (3) variant DIM dv AS DVARIANT = 123456.78       ' Creates a VT_R8 (5) variant</p>
+<p>SUB Foo (BYREF dv AS DVARIANT) PRINT dv END SUB</p>
+<p>Foo "Test string" Foo 12345 Foo DVARIANT(12345, "LONG")</p>
+<p>SUB Foo (BYVAL dv AS DVARIANT PTR) PRINT AfxDVarToStr(dv) END SUB Foo @DVARIANT("Test string") Foo @DVARIANT(12345) Foo @DVARIANT(12345, "LONG")<code>`</code></p>
+<p>SUB Foo (BYVAL v AS VARIANT) PRINT AfxVarToStr(v) END SUB</p>
+<p>Foo DVARIANT("Test string") Foo DVARIANT(12345) Foo DVARIANT(12345, "LONG")</p>
+<p>SUB Foo (BYVAL v AS VARIANT PTR) PRINT AfxVarToStr(v) END SUB Foo DVARIANT("Test string") Foo DVARIANT(12345) Foo DVARIANT(12345, "LONG")</p>
+<p>We can use the constructors to pass values to parameters in procedures without assigning them first to a variable, e.g.:</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>DVARIANT.INC</code></li><li>Documented in <span class="srcref">COM/DVARIANT Class.md</span></li><li>Topic: <a href="../dvariant-class.html">DVARIANT Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

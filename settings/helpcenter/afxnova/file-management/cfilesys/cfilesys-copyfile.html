@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CFileSys.CopyFile — Help Center</title>
+<meta name="description" content="Copies one or more files from one location to another.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/file-management/cfilesys/cfilesys-copyfile.html">
+<meta property="og:title" content="CFileSys.CopyFile">
+<meta property="og:description" content="Copies one or more files from one location to another.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/file-management/cfilesys/cfilesys-copyfile.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/file-management/cfilesys/cfilesys-copyfile.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cfilesys-class.html">CFileSys Class</a></div>
+<h1>CFileSys.CopyFile<span class="h1kind">method</span></h1>
+<p class="lede">Copies one or more files from one location to another.</p>
+<div class="badges"><a class="badge" href="../index.html">File Management</a><span class="badge">method</span><span class="badge">CFileSys.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION CopyFile (BYREF wszSource AS WSTRING, BYREF wszDestination AS WSTRING, BYVAL OverWriteFiles AS BOOLEAN = TRUE) AS HRESULT</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>wszSource</code></td><td></td><td>Character string file specification, which can include wildcard characters, for one or more files to be copied.</td></tr><tr><td><code>wszDestination</code></td><td></td><td>Character string destination where the file or files from source are to be copied. Wildcard characters are not allowed.</td></tr><tr><td><code>OverWriteFiles</code></td><td></td><td>Boolean value that indicates if existing files are to be overwritten. If true, files are overwritten; if false, they are not. The default is true. Note that <strong>CopyFile</strong> will fail if destination has the read-only attribute set, regardless of the value of overwrite.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>HRESULT. S_OK (0) on success, or an error code on failure.</p>
+<h2>Description</h2>
+<p>Copies one or more files from one location to another.</p>
+<h2>Remarks</h2>
+<p>Wildcard characters can only be used in the last path component of the <em>wszSource</em> argument. For example, you can use:</p>
+<p>But you can't use:</p>
+<p>If <em>wszSource</em> contains wildcard characters, or destination ends with a path separator ("\\"), it is assumed that destination is an existing folder in which to copy matching files. Otherwise, destination is assumed to be the name of a file to create. In either case, three things can happen when an individual file is copied:</p>
+<ul><li>If destination does not exist, source gets copied. This is the usual case.</li></ul>
+<ul><li>If destination is an existing file, an error occurs if overwrite is False. Otherwise, an attempt is made to copy source over the existing file.</li></ul>
+<ul><li>If destination is a directory, an error occurs.</li></ul>
+<ul><li>An error also occurs if a source using wildcard characters doesn't match any files. The <strong>CopyFile</strong> method stops on the first error it encounters. No attempt is made to roll back or undo any changes made before an error occurs.</li></ul>
+<p>Files copied to a new destination path will keep the same file name. To rename the copied file, simply include the new file name in the destination path. For example, this will copy the file to a new location and the file in the new location will have a different name:</p>
+<h2>Examples</h2>
+<p>#INCLUDE ONCE "AfxNova/CFileSys.inc" DIM pFileSys AS CFileSys pFileSys.CopyFile("c:\mydocuments\letters\*.doc", "c:\tempfolder\")</p>
+<p>pFileSys.CopyFile("c:\mydocuments\*\R1???97.xls", "c:\tempfolder")</p>
+<p>pFileSys.CopyFile("c:\mydocuments\letters\sample.doc", "c:\tempfolder\sample_new.doc")</p>
+<p>#INCLUDE ONCE "AfxNova/CFileSys.inc" DIM pFileSys AS CFileSys pFileSys.CopyFile("C:\MyFolder\MyFile.txt", "C:\MyOtherFolder\MyFile.txt")</p>
+<p>CFileSys().CopyFile("C:\MyFolder\MyFile.txt", "C:\MyOtherFolder\MyFile.txt")</p>
+<p>Alternate syntax:</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CFileSys.inc</code></li><li>Defined in <span class="srcref">AfxNova/CFileSys.inc:239</span></li><li>Documented in <span class="srcref">File Management/CFileSys Class.md</span></li><li>Topic: <a href="../cfilesys-class.html">CFileSys Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

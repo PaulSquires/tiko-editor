@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Interfacing with C — Help Center</title>
+<meta name="description" content="Interfacing with C — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/interfacing-with-c.html">
+<meta property="og:title" content="Interfacing with C">
+<meta property="og:description" content="Interfacing with C — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/interfacing-with-c.html">
+<link rel="stylesheet" href="../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/interfacing-with-c.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>Interfacing with C</h1>
+<h2>Documentation</h2>
+
+	NOTE! Have to do some spell checking, verify text, code and filenames.<br>
+<br>
+<div>Foreword</div><br>
+This is a tiny basic tutorial on how to write a simple library in C and then use it in FreeBASIC. The tutorial should be possible to follow without to much knowledge of C or FreeBASIC. After doing this tutorial you should be able to compile a static and a dynamically linked C library. Translate the necessary header files to FreeBASIC header files and understand how to use the libraries in a FreeBASIC project.<br>
+<br>
+<br>
+<div>What is a library</div><br>
+<br>
+<div>Prerequisite</div><br>
+This tutorial was written and tested with FreeBASIC 0.16b and the latest Current release of MinGW32 at the time. As a note Dev-cpp uses MinGW32 as it's compiler tool chain. You also  get code::blocks with a mingw32 bundle.<br>
+<br>
+<br>
+<div>Formal description of the task at hand</div><br>
+To demonstrate usage of a C library in FreeBASIC we need to create the simplest possible library with a few functions. A test file in C to demonstrate that our library works as intended. Then we have to translate the library header file to a FreeBASIC header file (*.bi) and finally create a test project in FreeBASIC using the library.<br>
+<br>
+<div>Creating the files</div><br>
+So our file list will look like this:<br>
+myClib.c:           C file implementing our library.<br>
+myClib.h:           C header file describing the libraries interface.<br>
+myClibCTest.c:     C file implementing our test program in C.<br>
+myClib.bi:          FreeBASIC header file. A translation of myClib.h.<br>
+myClibFBTest.bas:  FreeBASIC<br>
+make.cmd:         A sample shell script compiling the library and test files.<br>
+<br>
+<br>
+<b>The C file to become a static library. myClib.c </b><br>
+<pre class="code">(C)
+/* A function adding two integers and returning the result */
+#include "myClib.h"
+int SampleAddInt(int i1, int i2)
+{
+	return i1 + i2;
+}
+
+/* A function doing nothing ;) */
+void SampleFunction1()
+{
+	/* insert code here */
+
+}
+
+/* A function always returning zero */
+int SampleFunction2()
+{
+	/* insert code here */
+
+	return 10;
+}
+</pre><b>The header file myClib.h</b><br>
+<pre class="code">(C)
+int  SampleAddInt(int i1, int i2);
+void SampleFunction1();
+int  SampleFunction2();
+</pre><br>
+<b>A C test project to verify that the static lib is C compatible. myClibCTest.c:</b><br>
+<pre class="code">(C)
+#include <stdio.h>
+#include <stdlib.h>
+#include "myClib.h"
+int main(int argc, char *argv[])
+{
+  printf("SampleAddInt(5, 5):=%d\n", SampleAddInt(5, 5));
+  system("PAUSE");	
+  return 0;
+}
+</pre><br>
+<br>
+<b>Translating the C header file to a FreeBASIC header file</b><br>
+myClib.bi: To interface the static library and automatically include it (#inclib "myClib" ) i have this file.<br>
+<code><pre class="code"><span class="tok-cm">''include file for libmyClib.a</span>
+
+<span>#ifndef __myClib_bi__
+
+#define __myClib_bi__
+
+#inclib &quot;myClib&quot;
+
+</span>
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Function</span> <span>SampleAddInt</span> <span class="tok-kw">cdecl</span> <span class="tok-kw">Alias</span> <span>&quot;SampleAddInt&quot;</span> <span>(</span><span class="tok-kw">ByVal</span> <span>i1</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span class="tok-kw">ByVal</span> <span>i2</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>SampleFunction1</span> <span class="tok-kw">cdecl</span> <span class="tok-kw">Alias</span> <span>&quot;SampleFunction1&quot;</span> <span>()</span>
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Function</span> <span>SampleFunction2</span> <span class="tok-kw">cdecl</span> <span class="tok-kw">Alias</span> <span>&quot;SampleFunction2&quot;</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+<span>#endif
+
+</span></pre></code><br>
+<br>
+<br>
+<b>And finally the FreeBASIC file using the library</b><br>
+myClibFBTest.bas:<br>
+<code><pre class="code"><span class="tok-cm">''Testing functions in myClib.bi</span>
+
+<span>#include &quot;myClib.bi&quot;
+
+</span><span class="tok-cm">''</span>
+
+<span class="tok-kw">Print</span> <span>&quot;SampleAddInt(10, 10):=&quot;</span><span>,</span> <span>SampleAddInt</span><span>(</span><span class="tok-nu">10</span><span>,</span> <span class="tok-nu">10</span><span>)</span>
+
+<span class="tok-cm">'' Just a dumy call</span>
+
+<span>SampleFunction1</span><span>()</span>
+
+<span class="tok-cm">''</span>
+
+<span class="tok-kw">Print</span> <span>&quot;SampleFunction2():=&quot;</span><span>,</span> <span>SampleFunction2</span><span>()</span></pre></code><br>
+<br>
+<br>
+<b>The make file: make.cmd</b><br>
+I have created a batch file to compile all the files. Including a sample in C using the static library. Note the config lines at the top which has to be modified to suite your setup.<br>
+<pre class="code">(cmd)
+@REM TODO: Set PATH's for this session.
+SET PATH=C:\mingw32\bin;c:\mingw32\mingw32\bin
+SET MINGW_INCLUDE="C:/MinGW32/include"
+SET MINGW_LIB="C:/MinGW32/lib"
+
+@REM
+@REM fbc testing SET fbc="C:\portableapps\FreeBASIC\fbc.exe"
+SET fbc="C:\FreeBasic16b\fbc.exe"
+@echo *** Verify pat's to compilers
+@pause
+@echo off
+
+@REM
+@REM Remove old files
+DEL /F *.o  *.a myClibFBTest.exe
+
+@REM
+@REM Create static lib from c source
+gcc.exe -c myClib.c -o myClib.o -I%MINGW_INCLUDE%
+
+@REM
+@REM ar: creating libstatictest.a
+ar r libmyClib.a myClib.o 
+
+@REM
+@REM No nead for ranlib anymore? ar is supposed to take care of it 
+ranlib libmyClib.a
+
+
+@REM
+@REM Create a test with a C file
+
+gcc.exe -c myClibCTest.c -o myClibCTest.o -I%MINGW_INCLUDE%
+gcc.exe myClibCTest.o -o "myClibCTest.exe" -L%MINGW_LIB% libmyClib.a
+
+echo =====================================
+echo RUnning C sample
+echo =====================================
+myClibCTest.exe
+
+echo =====================================
+echo Creating FreeBASIC sample
+echo =====================================
+REM I thought this explicit reference is unnecessary as I use #inclib
+SET fbcop= -I myClib
+SET fbcfl="myClibFBTest.bas" 
+%fbc% %fbcop% %fbcfl%
+echo =====================================
+echo RUnning FreeBASIC sample
+echo =====================================
+myClibFBTest.exe
+@pause
+</pre><br>
+<br>
+<div>Encountered error messages and their solutions</div><br>
+<b>undefined reference to</b><br>
+Trying to link against the static C library without using the cdecl alias "functionname" in the FreeBASIC header file results in errors like this.<br>
+<pre class="code">(cmd)
+C:\code>"C:\FreeBasic16b\fbc.exe"     "myClibFBTest.bas"
+myClibFBTest.o:fake:(.text+0x3d): undefined reference to `SAMPLEADDINT@8'
+myClibFBTest.o:fake:(.text+0x4a): undefined reference to `SAMPLEFUNCTION1@0'
+myClibFBTest.o:fake:(.text+0x67): undefined reference to `SAMPLEFUNCTION2@0'
+Press any key to continue . . .
+</pre><br>
+To resolve this you will have to locate function declarations in a *.bi file that look like this:<br>
+<code><pre class="code"><span class="tok-kw">Declare</span> <span class="tok-kw">Function</span> <span>SampleAddInt</span><span>(</span><span class="tok-kw">ByVal</span> <span>i1</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span class="tok-kw">ByVal</span> <span>i2</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span></pre></code><br>
+And change it to something like this:<br>
+<code><pre class="code"><span class="tok-kw">Declare</span> <span class="tok-kw">Function</span> <span>SampleAddInt</span> <span class="tok-kw">cdecl</span> <span class="tok-kw">Alias</span> <span>&quot;SampleAddInt&quot;</span> <span>(</span><span class="tok-kw">ByVal</span> <span>i1</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span class="tok-kw">ByVal</span> <span>i2</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span></pre></code><br>
+<br>
+<br>
+<div>Appendix A: links</div><br>
+The basis for this tutorial is several threads in the forum.<br>
+When it evolves and can stand alone the links to the threads might be removed.<br>
+Some interesting links containing information on interfacing libraries created in FreeBASIC and used by other languages or visa versa.<br>
+<br>
+<a href="http://www.freebasic.net/forum/viewtopic.php?t=6515">How do I compile a C project as a static lib for inclusion..</a><br>
+
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../index.html">Home</a> ·
+         <a href="../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../nav.js?v=70a6b70236"></script>
+<script src="../../search-index.js"></script>
+<script src="../../assets/app.js?v=456d079659"></script>
+<script src="../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

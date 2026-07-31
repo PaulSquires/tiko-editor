@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CADOField.Status — Help Center</title>
+<meta name="description" content="Indicates the status of a field.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadofield/cadofield-status.html">
+<meta property="og:title" content="CADOField.Status">
+<meta property="og:description" content="Indicates the status of a field.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadofield/cadofield-status.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/databases/ado-classes/cadofield/cadofield-status.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cadofields-class.html">CAdoFields Class</a></div>
+<h1>CADOField.Status<span class="h1kind">property</span></h1>
+<p class="lede">Indicates the status of a field.</p>
+<div class="badges"><a class="badge" href="../../index.html">Databases</a><span class="badge">property</span><span class="badge">CADOField.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>PROPERTY Status () AS LONG</code></pre>
+<h2>Return value</h2>
+<p>A <strong>FieldStatusEnum</strong> value. The default value is adFieldOK.</p>
+<h2>Description</h2>
+<p>Indicates the status of a field. Returns a <strong>FieldStatusEnum</strong> value.</p>
+<h2>Remarks</h2>
+<p>Changes to the value of a <code>Field</code> object in the <code>Fields</code> collection of a <code>Record</code> object are cached until the object's <strong>Update</strong> method is called. At that point, if the change to the <code>Field</code>'s value caused an error, OLE DB raises the error DB_E_ERRORSOCCURRED (2147749409). The <strong>Status</strong> property of any of the <code>Field</code> objects in the <code>Fields</code> collection that caused the error will contain a value from the <strong>FieldStatusEnum</strong> describing the cause of the problem.</p>
+<p>To enhance performance, additions and deletions to the <code>Fields</code> collections of the <code>Record</code> object are cached until the <strong>Update</strong> method is called, and then the changes are made in a batch optimistic update. If the <strong>Update</strong> method is not called, the server is not updated. If any updates fail then an OLE DB provider error (DB_E_ERRORSOCCURRED) is returned and the <strong>Status</strong> property indicates the combined values of the operation and error status code. For example, <strong>adFieldPendingInsert OR adFieldPermissionDenied</strong>. The <strong>Status</strong> property for each <code>Field</code> can be used to determine why the <code>Field</code> was not added, modified, or deleted.</p>
+<p>Many types of problems encountered when adding, modifying, or deleting a <code>Field</code> are reported through the <strong>Status</strong> property. For example, if the user deletes a <code>Field</code>, it is marked for deletion from the <code>Fields</code> collection. If the subsequent <strong>Update</strong> returns an error because the user tried to delete a <code>Field</code> for which they do not have permission, the <code>Field</code> will have a <strong>Status</strong> of <strong>adFieldPermissionDenied</strong> or <strong>adFieldPendingDelete</strong>. Calling the <strong>CancelUpdate</strong> method restores original values and sets the <strong>Status</strong> to <strong>adFieldOK</strong>.</p>
+<p>Similarly, the <strong>Update</strong> method may return an error because a new <code>Field</code> was added and given an inappropriate value. In that case the new <code>Field</code> will be in the <code>Fields</code> collection and have a status of <strong>adFieldPendingInsert</strong> and perhaps <strong>adFieldCantCreate</strong> (depending upon your provider). You can supply an appropriate value for the new <code>Field</code> and call <strong>Update</strong> again.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CADOField.inc</code></li><li>Defined in <span class="srcref">AfxNova/CAdoFields.inc:367</span></li><li>Documented in <span class="srcref">Databases/ADO Classes/CAdoFields Class.md</span></li><li>Topic: <a href="../cadofields-class.html">CAdoFields Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

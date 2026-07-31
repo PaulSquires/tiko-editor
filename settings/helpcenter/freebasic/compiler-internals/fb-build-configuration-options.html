@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FB build configuration options — Help Center</title>
+<meta name="description" content="FB build configuration options — 0 documented members. Compiler Internals reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/compiler-internals/fb-build-configuration-options.html">
+<meta property="og:title" content="FB build configuration options">
+<meta property="og:description" content="FB build configuration options — 0 documented members. Compiler Internals reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/compiler-internals/fb-build-configuration-options.html">
+<link rel="stylesheet" href="../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/compiler-internals/fb-build-configuration-options.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Compiler Internals</div>
+<h1>FB build configuration options</h1>
+<h2>Documentation</h2>
+
+	<br>
+The FB makefile aswell as the compiler/rtlib/gfxlib2 source code offers some configuration options. If you build FB by using the FB makefile, then it makes sense to use the FB makefile's configuration options. If you build FB by compiling the sources manually (without using the FB makefile), then of course you can only use the source code configuration options, and you are responsible for putting the FB setup together properly yourself.<br>
+<br>
+The compiler and rtlib/gfxlib2 source code both handle some #defines which allow for some configuration. For example, #defining ENABLE_STANDALONE when building the compiler (by specifying <code>-d ENABLE_STANDALONE</code> on the fbc command line) will adjust the compiler for a <a href="normal-vs-standalone-freebasic.html">standalone setup</a>. As another example, #defining DISABLE_FFI when building the rtlib (by specifying <code>-DDISABLE_FFI</code> on the gcc command line) will cause the rtlib to be built without using the libffi headers (<code>ffi.h</code>). This disables <a href="../threading-support-functions/procedures/threadcall.html">ThreadCall</a> support in the rtlib, but can be useful if you do not have libffi.<br>
+<br>
+When using the FB makefile, you can set some variables on the make command line or inside <code>config.mk</code> that affect how the makefile will invoke the fbc/gcc compilers and what directory layout it will use for the FB setup. This includes cases where the makefile will automatically pass the configuration options on to the compiler/rtlib/gfxlib2 source code. For example, specifying ENABLE_STANDALONE=1 to the FB makefile causes it to use <code>-d ENABLE_STANDALONE</code> when building the new compiler (to make it standalone) and to put the newly built compiler and libraries into the standalone directory layout.<br>
+<br>
+<b><u>FB makefile commands</u></b><br>
+<br>
+<ul><li> none or <code>all</code><br>
+</li></ul><div class="indent"><div class="indent">The default - builds everything that needs to be built<br>
+</div></div><ul><li> <code>compiler</code>, <code>rtlib</code>, <code>gfxlib2</code><br>
+</li></ul><div class="indent"><div class="indent">Used to build a specific component only. For example, this can be used to build an <code>rtlib</code> for a specific target, in order to be able to cross-compile FB programs (such as the <code>compiler</code>) for that target.<br>
+</div></div><ul><li> <code>clean[-component]</code><br>
+</li></ul><div class="indent"><div class="indent">Used to remove built files. <code>make clean</code> removes all built files, while for example <code>make clean-compiler</code> removes only the files built for the compiler, allowing the compiler to be recompiled more quickly, without the need to rebuild the whole rtlib/gfxlib2 code.<br>
+</div></div><ul><li> <code>install[-component]</code>, <code>uninstall[-component]</code><br>
+</li></ul><div class="indent"><div class="indent">Used to copy the built files into the directory specified by the <code>prefix</code> variable, or remove them from there. This is most useful to install the normal build into <code>/usr/local</code> on Linux/BSD systems. For the standalone build, <code>make install</code> will also work and copy over or remove the files. However, the standalone build uses an incompatible directory layout and should not be installed into <code>/usr/local</code> or similar directories because of this.<br>
+<br>
+Note that it is fine to run the newly built FB setup right from the directory where it was compiled; <code>make install</code> is not necessary to make it work (unless the <code>prefix</code> path was hard-coded into the compiler via <code>ENABLE_PREFIX</code>).<br>
+<br>
+Additionally there are <code>install-includes</code> and <code>uninstall-includes</code> commands, which copy/remove just the FB includes (header files). Note that there is no <code>make includes</code> or similar command, as the includes do not need to be built.<br>
+<br>
+</div></div><b><u>FB makefile configuration</u></b><br>
+<br>
+The following variables are intended to be set on the make command line or inside a file called <code>config.mk</code> next to the FB makefile which is read in by the FB makefile. <code>config.mk</code> is useful for setting variables in a permanent way such that you do not have to specify them manually everytime when invoking make.<br>
+<br>
+Make command line example:<br>
+<br>
+<pre class="code">$ make CFLAGS='-O2 -g'</pre><br>
+config.mk example:<br>
+<br>
+<pre class="code">CFLAGS = -O2 -g</pre><br>
+<ul><li> <code>FBFLAGS</code>, <code>FBCFLAGS</code>, <code>FBLFLAGS</code><br>
+</li></ul><div class="indent"><div class="indent">Extra fbc flags to be used when compiling and/or linking the compiler. The default is <code>-maxerr 1</code> (check the FB makefile for more details). Typically this is used to add options such as <code>-g -exx</code> to build a debug version the compiler.<br>
+</div></div><ul><li> <code>CFLAGS</code><br>
+</li></ul><div class="indent"><div class="indent">Extra gcc flags to be used when compiling rtlib and gfxlib2. The default is <code>-O2</code> (check the FB makefile for more details). Typically this is overridden for debugging purposes by doing <code>CFLAGS=-g</code>.<br>
+</div></div><ul><li> <code>prefix</code><br>
+</li></ul><div class="indent"><div class="indent">The FB installation path. The default is <code>/usr/local</code>. Note: MSYS maps <code>/usr/local</code> to <code>C:\msys\1.0\local</code>.<br>
+<br>
+This is only used...<br>
+</div></div><ul><ul><ul><li> by the makefile's <code>install</code> and <code>uninstall</code> commands, <br>
+<li> in the compiler (hard-coded) if ENABLE_PREFIX was used<br>
+</li></li></ul></ul></ul><div class="indent"><div class="indent">Note that in combination with bash on Win32 (e.g. from DJGPP or MSYS) it's necessary to use forward slashes instead of backslashes in directory paths, for example: <code>prefix=C:/MinGW</code><br>
+</div></div><ul><li> <code>TARGET</code><br>
+</li></ul><div class="indent"><div class="indent">This variable can be set to a gcc toolchain triplet such as <code>i686-pc-linux-gnu</code> or <code>x86_64-w64-mingw32</code> in order to cross-compile using that GCC cross-compiler toolchain. The makefile will use <code><span>fbc -target $(TARGET)</span></code> instead of <code><span>fbc</span></code>, and <code><span>$(TARGET)-gcc</span></code> instead of <code><span>gcc</span></code>.<br>
+<br>
+For example, on a Debian GNU/Linux system with the <code>i686-w64-mingw32</code> GCC cross-compiler installed, you can build the win32 rtlib like this:<br>
+<br>
+<pre class="code"># Build the win32 rtlib/gfxlib2
+make rtlib gfxlib2 TARGET=i686-w64-mingw32
+
+# Install it into /usr/local/lib/i686-w64-mingw32-freebasic
+make install-rtlib install-gfxlib2 TARGET=i686-w64-mingw32
+</pre>It will supplement the existing fbc installation in <code>/usr/local</code>, like a plugin, and from now on you can cross-compile FB programs for win32 by doing:<br>
+<br>
+<pre class="code">fbc -target i686-w64-mingw32 ...
+</pre></div></div><ul><li> <code>FBC</code>, <code>CC</code>, <code>AR</code><br>
+</li></ul><div class="indent"><div class="indent">These variables specify the fbc, gcc and ar programs used during the build. You can specify them to override the defaults, for example:<br>
+<br>
+</div></div><ul><ul><ul><li> <code>make FBC=~/FreeBASIC-0.90.1-linux/fbc CC="gcc -m32"</code><br>
+</li></ul></ul></ul><div class="indent"><div class="indent"><code>FBC</code> affects the <code>compiler</code> source code only, while <code>CC</code> and <code>AR</code> are used for <code>rtlib</code> and <code>gfxlib2</code>.<br>
+</div></div><ul><li> <code>V=1</code><br>
+</li></ul><div class="indent"><div class="indent"><code>V</code> for verbose. By default, the makefile does not display the full command lines used during compilation, but just prints out the latest tool and file name combination to give a better visual indication of the build progress. It also makes warnings and errors stand out more in the console window. If the variable <code>V</code> is set, the echoing tricks are disabled and full command lines will be shown, as GNU make normally does.<br>
+</div></div><ul><li> <code>ENABLE_STANDALONE=1</code><br>
+</li></ul><div class="indent"><div class="indent">Build a standalone FB setup instead of the normal Unix-style setup, see also: <a href="normal-vs-standalone-freebasic.html">the standalone vs. normal comparison</a>. This causes the makefile to use the standalone directory layout and to use <code>-d ENABLE_STANDALONE</code> when building the compiler.<br>
+</div></div><ul><li> <code>ENABLE_STRIPALL=1</code><br>
+</li></ul><div class="indent"><div class="indent">Enable the <code><a href="../using-the-freebasic-compiler/command-line-options/compiler-option-strip.html">-strip</a></code> compiler option by default.  If <code>ENABLE_STRIPALL=1</code> is not given, this is the default for dos/win.<br>
+</div></div><ul><li> <code>ENABLE_STRIPALL=0</code><br>
+</li></ul><div class="indent"><div class="indent">Enable the <code><a href="../using-the-freebasic-compiler/command-line-options/compiler-option-nostrip.html">-nostrip</a></code> compiler option by default.  If <code>ENABLE_STRIPALL=1</code> is not given, this is the default for linux (basically, everything other target besides dos.win).<br>
+</div></div><ul><li> <code>ENABLE_PREFIX=1</code><br>
+</li></ul><div class="indent"><div class="indent">This causes the makefile to use <code>-d ENABLE_PREFIX=$(prefix)</code> when building the compiler.<br>
+</div></div><ul><li> <code>ENABLE_SUFFIX=foo</code><br>
+</li></ul><div class="indent"><div class="indent">This causes the makefile to use <code>-d ENABLE_SUFFIX=$(ENABLE_SUFFIX)</code> when building the compiler, and to append the given suffix string to the <code>fbc</code> executable's and <code>lib/</code> directories' names.<br>
+<br>
+For example, using <code>ENABLE_PREFIX=-0.24</code> will give you <code>bin/fbc-0.24.exe</code> and a <code>lib/freebasic-0.24/</code> directory, instead of the default <code>bin/fbc.exe</code> and <code>lib/freebasic/</code>. This allows installing multiple versions of compiler and runtime in parallel.<br>
+<br>
+Note: The <code>include/freebasic/</code> directory name is not affected, and the FB headers are always shared by all installed FB versions (FB's headers and their directory layouts are designed to be able to do that).<br>
+<br>
+This is only supported for the normal (non-standalone) build. It is not needed for the standalone build, because everyone of those can be in a separate installation directory anyways, while normal (non-standalone) builds may have to share a common installation directory such as <code>/usr/local</code> or <code>C:\MinGW</code>.<br>
+</div></div><ul><li> <code>BUILD_PREFIX=&lt;prefix&gt;</code><br>
+</li></ul><div class="indent"><div class="indent">This is automatically set depending on the target but can override for special builds where the build tools have different file naming than the target to build (i.e. cross compiling)<br>
+</div></div><ul><li> <code>ENABLE_LIB64=1</code><br>
+</li></ul><div class="indent"><div class="indent">This causes the makefile to use <code>-d ENABLE_LIB64</code> when building the compiler. 64bit libraries are placed into <code>lib64/freebasic/</code> instead of <code>lib/freebasic/</code>.<br>
+</div></div><ul><li> <code>DISABLE_GAS64_DEBUG=1</code><br>
+</li></ul><div class="indent"><div class="indent">Use "-d DISABLE_GAS64_DEBUG" (see below)<br>
+</div></div><ul><li> <code>DISABLE_STDCXX_PATH=1</code><br>
+</li></ul><div class="indent"><div class="indent">Tells fbc to not search for some libstdc/libc depending on target platform<br>
+</div></div><ul><li> <code>DEFAULT_CPUTYPE_X86=&lt;FB_CPUTYPE&gt;</code><br>
+</li></ul><div class="indent"><div class="indent">Sets default x86 cpu type to one of <code>FB_CPU_TYPE</code><br>
+For example <code>make compiler DEFAULT_CPUTYPE_X86=FB_CPUTYPE_386</code><br>
+</div></div><ul><li> <code>DEFAULT_CPUTYPE_ARM=&lt;FB_CPUTYPE&gt;</code><br>
+</li></ul><div class="indent"><div class="indent">Sets default arm cpu type to one of <code>FB_CPUTYPE</code><br>
+<code>make compiler DEFAULT_CPUTYPE_ARM=FB_CPUTYPE_ARM7A_FP</code><br>
+<br>
+</div></div><ul><li> <code>FBFORKID=name</code><br>
+</li></ul><div class="indent"><div class="indent">Tells fbc to set a custom value for <code><a href="../intrinsic-defines/procedures/fb-build-fork-id.html">__FB_BUILD_FORK_ID__</a></code><br>
+<br>
+</div></div><b><u>Compiler source code configuration (FBFLAGS)</u></b><br>
+<br>
+<ul><li> <code>-d ENABLE_STANDALONE</code><br>
+</li></ul><div class="indent"><div class="indent">This makes the compiler behave as a standalone tool that cannot rely on the system to have certain programs or libraries. See <a href="normal-vs-standalone-freebasic.html">the normal vs. standalone comparison</a> for more information.<br>
+</div></div><ul><li> <code>-d ENABLE_STRIPALL</code><br>
+</li></ul><div class="indent"><div class="indent">Enable the <code><a href="../using-the-freebasic-compiler/command-line-options/compiler-option-strip.html">-strip</a></code> by default, otherwise <code><a href="../using-the-freebasic-compiler/command-line-options/compiler-option-nostrip.html">-nostrip</a></code> is default.<br>
+</div></div><ul><li> <code>-d ENABLE_SUFFIX=foo</code><br>
+</li></ul><div class="indent"><div class="indent">This makes the compiler append the given suffix to the <code>lib/freebasic/</code> directory name when searching for its own <code>lib/freebasic/</code> directory. For example, <code>-d ENABLE_SUFFIX=-0.24</code> causes it to look for <code>lib/freebasic-0.24/</code> instead of <code>lib/freebasic/</code>. Corresponding the ENABLE_SUFFIX=foo makefile option, this adjust the compiler to work in the new directory layout.<br>
+</div></div><ul><li> <code>-d ENABLE_PREFIX=/some/path</code><br>
+</li></ul><div class="indent"><div class="indent">This causes the given prefix path to be hard-coded into the compiler, disabling the use of <code><a href="../operating-system-functions/procedures/exepath.html">Exepath()</a></code>. Thus it will no longer be relocatable. This is useful if its known that the compiler does not need to be relocatable, or if <code>exepath()</code> does not work properly (for example, in FB 0.90.1, this is the case for FreeBSD).<br>
+</div></div><ul><li> <code>-d ENABLE_LIB64</code><br>
+</li></ul><div class="indent"><div class="indent">This makes the compiler search 64bit libraries in <code>lib64/freebasic/</code> instead of <code>lib/freebasic/</code>. This only affects the normal (non-standalone) build. 32bit libraries are still searched in <code>lib/freebasic/</code>.<br>
+</div></div><ul><li> <code>-d FBSHA1=some-sha-1</code><br>
+</li></ul><div class="indent"><div class="indent">This makes the compiler store 'some-sha-1' in the compiler for version information as built in define <code><a href="../intrinsic-defines/procedures/fb-build-sha1.html">__FB_BUILD_SHA1__</a></code><br>
+</div></div><ul><li> <code>-d DISABLE_GAS64_DEBUG</code><br>
+</li></ul><div class="indent"><div class="indent">This makes the compiler disable gas64 debugging comments in asm files even if <code><a href="../compiler-options/procedures/fb-debug.html">__FB_DEBUG__</a></code> is defined (-g)<br>
+</div></div><ul><li> <code>-d DISABLE_STDCXX_PATH</code><br>
+</li></ul><div class="indent"><div class="indent">This makes the compiler to not search for some libstdc/libc depending on target platform<br>
+</div></div><ul><li> <code>-d BUILD_FB_DEFAULT_CPUTYPE_X86=&lt;FB_CPUTYPE&gt;</code><br>
+</li></ul><div class="indent"><div class="indent">This make the compiler set default x86 cpu type to one of FB_CPUTYPE<br>
+</div></div><ul><li> <code>-d BUILD_FB_DEFAULT_CPUTYPE_ARM=&lt;FB_CPUTYPE&gt;</code><br>
+</li></ul><div class="indent"><div class="indent">This make the compiler set default arm cpu type to one of FB_CPUTYPE<br>
+<br>
+</div><code>-d FBFORKID="name"</code><br>
+<div class="indent">This makes the compiler set a custom value for <code><a href="../intrinsic-defines/procedures/fb-build-fork-id.html">__FB_BUILD_FORK_ID__</a></code><br>
+<br>
+</div></div><b><u>rtlib and gfxlib2 source code configuration (CFLAGS)</u></b><br>
+<br>
+<ul><li> <code>-DDISABLE_X11</code><br>
+</li></ul><div class="indent"><div class="indent">With this, the Unix rtlib/gfxlib2 will not use X11 headers, disabling gfxlib2's X11 graphics driver and some of the rtlib's Linux console functionality (affects multikey() and console mouse handling).<br>
+</div></div><ul><li> <code>-DDISABLE_GPM</code><br>
+</li></ul><div class="indent"><div class="indent">With this, the Linux rtlib will not use General Purpose Mouse headers (gpm.h), disabling the Linux <a href="../user-input-functions-graphics-library/procedures/getmouse.html">GetMouse</a> functionality.<br>
+</div></div><ul><li> <code>-DDISABLE_FFI</code><br>
+</li></ul><div class="indent"><div class="indent">With this, the rtlib will not use libffi headers (ffi.h), disabling the <a href="../threading-support-functions/procedures/threadcall.html">ThreadCall</a> functionality.<br>
+</div></div><ul><li> <code>-DDISABLE_OPENGL</code><br>
+</li></ul><div class="indent"><div class="indent">With this, the gfxlib2 will not use OpenGL headers, disabling the OpenGL graphics drivers.<br>
+</div></div><ul><li> <code>-DDISABLE_FBDEV</code><br>
+</li></ul><div class="indent"><div class="indent">With this, the gfxlib2 will not use, Linux framebuffer device headers (disables Linux fbdev gfx driver)<br>
+</div></div><ul><li> <code>-DDISABLE_D3D10</code><br>
+</li></ul><div class="indent"><div class="indent">With this, the gfxlib2 will not use, DirectX 10 driver (disable D2D driver in windows)<br>
+</div></div><ul><li> <code>-DDISABLE_NCURSES</code><br>
+</li></ul><div class="indent"><div class="indent">With this, the rtlib will not use, libtinfo or ncurses headers (disables console commands)<br>
+</div></div><ul><li> <code>-DDISABLE_LANGINFO</code><br>
+</li></ul><div class="indent"><div class="indent">With this, the rtlib will not use, locale info (affects Unix only; makes no difference unless you call setlocale() manually). Does not remove setlocale(LC_CTYPE, "") call.<br>
+</div></div><ul><li> <code>-DDISABLE_WCHAR</code><br>
+</li></ul><div class="indent"><div class="indent">With this, the rtlib will not use, wchar_t type or functions. wstring becomes ASCII only (fbc needs to match this).<br>
+<br>
+</div></div><div>See also</div><div><br>
+<ul><li> <a href="freebasic-build-options.html">FreeBASIC Build Options</a><br>
+<br>
+</li></ul><br>
+</div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../index.html">Home</a> ·
+         <a href="../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../nav.js?v=70a6b70236"></script>
+<script src="../../search-index.js"></script>
+<script src="../../assets/app.js?v=456d079659"></script>
+<script src="../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

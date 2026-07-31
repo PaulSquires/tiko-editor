@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GdipRecordMetafileFileName — Help Center</title>
+<meta name="description" content="Creates a **Metafile** object for recording.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdiprecordmetafilefilename.html">
+<meta property="og:title" content="GdipRecordMetafileFileName">
+<meta property="og:description" content="Creates a **Metafile** object for recording.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdiprecordmetafilefilename.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/procedures/gdiprecordmetafilefilename.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../graphics-functions.html">Graphics Functions</a></div>
+<h1>GdipRecordMetafileFileName<span class="h1kind">function</span></h1>
+<p class="lede">Creates a **Metafile** object for recording.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GdipRecordMetafileFileName (BYVAL fileName AS WSTRING PTR, BYVAL referenceHdc AS HDC, BYVAL type AS EmfType, BYVAL frameRect AS GpRectF PTR, BYVAL frameUnit AS MetafileFrameUnit, BYVAL description AS WSTRING PTR, BYVAL metafile AS GpMetafile PTR PTR) AS GpStatus</code></pre>
+<div class="note">Also documented as <code>GdipRecordMetafileFileNameI</code> — one description covers them all.</div>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>fileName</code></td><td></td><td>[in] Pointer to a wide-character string that specifies the name of the file in which the metafile will be saved.</td></tr><tr><td><code>referenceHdc</code></td><td></td><td>[in] Windows handle to a device context that contains attributes of a display device.</td></tr><tr><td><code>type</code></td><td></td><td>[in] Element of the <strong>EmfType</strong> enumeration that specifies the type of metafile that will be recorded. The default value is <em>EmfTypeEmfPlusDual</em>. !</td></tr><tr><td><code>frameRect</code></td><td></td><td>[in] Reference to a rectangle that bounds the metafile display.</td></tr><tr><td><code>frameUnit</code></td><td></td><td>[in] Element of the <strong>MetafileFrameUnit</strong> enumeration that specifies the unit of measure for <em>frameRect</em>. The default value is <em>MetafileFrameUnitGdi</em>.</td></tr><tr><td><code>description</code></td><td></td><td>[in] Pointer to a wide-character string that specifies the descriptive name of the metafile. The default value is NULL.</td></tr><tr><td><code>metafile</code></td><td></td><td>[out] Pointer to a <strong>GpMetafile</strong> variable that receives a pointer to the new created <strong>Metafile</strong> object.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Creates a <strong>Metafile</strong> object for recording.</p>
+<h2>Remarks</h2>
+<p>When recording to a file, the file must be writable, and GDI+ must be able to obtain an exclusive lock on the file.</p>
+<h2>Example</h2>
+<p>' ======================================================================================== ' The following example creates a Metafile. The code uses the Metafile to record a sequence ' of graphics commands and then saves the recorded commands in a file named MetafileTest.emf. ' Note that the function that creates the metafile (GdipRecordMetafileFileName) receives a ' device context handle, and we retrieve a Graphics handle calling the GdipGetImageGraphicsContext ' function passing the metafile handle. The recording stops (and the recorded commands are ' saved to the file) when the Graphics handle is deleted with GdipDeleteGraphics. To display ' the metafile, a new Graphics handle is retrieved calling the GdipCreateFromHDC function ' and passing the Graphics and Metafile handles to the GdipDrawImage function. Note that ' the code uses the same Metafile handle to record and to display (play back) the metafile. ' A metafile contains its own graphics state, which is defined by the Graphics object used ' to record the metafile. Any properties of the Graphics object (clip region, world ' transformation, smoothing mode, and the like) that you set while recording the metafile ' will be stored in the metafile. When you display the metafile, the drawing will be done ' according to those stored properties. ' ======================================================================================== SUB Example_RecordMetafileFileName (BYVAL hdc AS HDC)</p>
+<p>DIM hStatus AS LONG</p>
+<p>' // Create a Metafile object for recording DIM metafile AS GpMetaFile PTR DIM wszFileName AS WSTRING * 64 = "MetafileTest.emf" hStatus = GdipRecordMetafileFileName(wszFileName, hdc, EmfTypeEmfPlusDual, NULL, _</p>
+<pre class="code"><code>MetafileFrameUnitGdi, "", @metafile)</code></pre>
+<p>IF hStatus &lt;&gt; StatusOk THEN EXIT SUB</p>
+<p>' // Create a Graphics object that is associated with the Metafile object DIM graphics AS GpGraphics PTR hStatus = GdipGetImageGraphicsContext(metafile, @graphics)</p>
+<p>' // Get the DPI scaling ratios DIM dpiX AS SINGLE hStatus = GdipGetDpiX(graphics, @dpiX) DIM rxRatio AS SINGLE = dpiX / 96 DIM dpiY AS SINGLE hStatus = GdipGetDpiY(graphics, @dpiY) Dim ryRatio AS SINGLE = dpiY / 96</p>
+<p>'   ' // Set the scale transform hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)</p>
+<p>' // Create a pen and a solid brush DIM greenPen AS GpPen PTR hStatus = GdipCreatePen1(ARGB_LIGHTGREEN, 1 * rxRatio, UnitPixel, @greenPen) ' // Add a rectangle and an ellipse to the metafile hStatus = GdipDrawRectangle(graphics, greenPen, 50, 10, 25, 75) hStatus = GdipDrawEllipse(graphics, greenPen, 100, 10, 25, 75) ' // Add an ellipse (drawn with antialiasing) to the metafile. hStatus = GdipSetSmoothingMode(graphics, SmoothingModeHighQuality) hStatus = GdipDrawEllipse(graphics, greenPen, 150, 10, 25, 75) ' // Add some text (drawn with antialiasing) to the metafile. DIM fontFamily AS GpFontFamily PTR DIM font AS GpFont PTR hStatus = GdipCreateFontFamilyFromName("Arial", NULL, @fontFamily) IF fontFamily THEN</p>
+<pre class="code"><code>hStatus = GdipCreateFont(fontFamily, AfxGdipPointsToPixels(18, TRUE), FontStyleRegular, UnitPixel, @font)
+  GdipDeleteFontFamily(fontFamily)</code></pre>
+<p>END IF hStatus = GdipSetTextRenderingHint(graphics, TextRenderingHintAntiAlias) hStatus = GdipRotateWorldTransform(graphics, 30.0, MatrixOrderPrepend) DIM wszText AS WSTRING * 64 = "Smooth Text" DIM rcf AS GpRectF rcf.x = 50.0 : rcf.y = 50.0 DIM solidBrush AS GpBrush PTR hStatus = GdipCreateSolidFill(ARGB_BLUE, @solidBrush) hStatus = GdipDrawString(graphics, wszText, LEN(wszText), font, @rcf, NULL, solidBrush) ' // Stop recording by deleting the Graphics object GdipDeleteGraphics(graphics) ' // Free resources IF font THEN GdipDeleteFont(font) IF solidBrush THEN GdipDeleteBrush(solidBrush) IF greenPen THEN GdipDeletePen(greenPen)</p>
+<p>' // Create a Graphics object that is associated with the device context DIM playbackGraphics AS GpGraphics PTR hStatus = GdipCreateFromHDC(hdc, @playbackGraphics) IF playbackGraphics THEN</p>
+<pre class="code"><code>' // Display the metafile
+   hStatus = GdipDrawImage(playbackGraphics, metafile, 60 * rxRatio, 10 * ryRatio)
+  ' // Delete the Graphics object
+  GdipDeleteGraphics(playbackGraphics)</code></pre>
+<p>END IF</p>
+<p>' // Dispose the Metafile object IF @metafile THEN GdipDisposeImage(metafile)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/AfxGdiPlus.bi:1961</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Flat  Api/GdiPlusGraphics.md</span></li><li>Topic: <a href="../graphics-functions.html">Graphics Functions</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

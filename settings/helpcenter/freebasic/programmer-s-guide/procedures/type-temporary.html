@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Type (Temporary) — Help Center</title>
+<meta name="description" content="Creates a temporary copy of a user defined type">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/programmer-s-guide/procedures/type-temporary.html">
+<meta property="og:title" content="Type (Temporary)">
+<meta property="og:description" content="Creates a temporary copy of a user defined type">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/programmer-s-guide/procedures/type-temporary.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/programmer-s-guide/procedures/type-temporary.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>Type (Temporary)<span class="h1kind">keyword</span></h1>
+<p class="lede">Creates a temporary copy of a user defined type</p>
+<div class="badges"><a class="badge" href="../index.html">Programmer&#x27;s Guide</a><span class="badge">keyword</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>result = Type( initializers, ... )</code></pre>
+<pre class="code sig"><code>result = Type&lt;typename&gt;( initializers, ... )</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>initializers</code></td><td></td><td>Initial values for the type (or only the firsts)</td></tr><tr><td><code>typename</code></td><td></td><td>The name of the <code><a href="../../operators/operators/procedures/type-udt.html">Type</a></code> or <code><a href="../../user-defined-types/procedures/union.html">Union</a></code></td></tr></tbody></table></div>
+<h2>Return value</h2>
+<br>
+A temporary copy of the type.<br>
+<br>
+
+<h2>Description</h2>
+<br>
+Used to create a temporary type.  If <code><i>typename</i></code> is not explicitly given, it will be inferred from its usage if possible.  Usage of the temporary copy may include assigning it to a variable, passing it as a parameter to a procedure, or returning it as a value from a procedure.<br>
+<br>
+For a type without own or inherited constructor (excluding also any type that is directly or indirectly derived from <code><a href="../../standard-data-types/procedures/object.html">Object</a></code>), the temporary type syntax is allowed if all type data-fields (including those inherited) are numeric primitives only and without any default initializers.<br>
+If at same time the type is without destructor, the compiler does a direct assignment instead of using a temporary copy.<br>
+<br>
+The <code><a href="../../user-defined-types/procedures/constructor.html">Constructor</a></code> for the type, if there is one with parameters matching with the <code><i>initializers</i></code> provided, will be called when the temporary copy is created, and the <code><a href="../../user-defined-types/procedures/destructor.html">Destructor</a></code> for the type, if there is one, will be called immediately after its use. But when there is a matching constructor, the temporary type expression may be simply replaced by <code><i>typename( initializers</i>, ... )</code>.<br>
+If there is a constructor at least but none which matches with the <code><i>initializers</i></code>, the temporary type syntax is obviously disallowed.<br>
+<br>
+It can create not only a temporary copy of an user defined type, but also a temporary copy of predefined data-type as a variable-length string or any numeric data-type (all standard data-types excluding fixed-length strings).<br>
+<br>
+It can also be used as an even shorter shortcut than <code><a href="../../user-defined-types/procedures/with.html">With</a></code> (see below) if you are changing all the data-fields (or the n firsts only).<br>
+<br>
+A temporary object is destroyed at the end of execution of the statement (where it's defined), but its corresponding allocated memory is not released and remains available (unused) until going out the scope where statement is.<br>
+In the particular case where a temporary type is used in a <code><a href="../../user-defined-types/procedures/with.html">With</a></code> expression, the destruction of the temporary type is deferred to the end of the <code><a href="../../user-defined-types/procedures/with.html">With</a></code> scope.<br>
+<br>
+Note: <code><a href="../../variable-declarations/procedures/static.html">Static</a></code> qualifier used at procedure definition level does not apply to temporary types.<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Differences from QB</h3><br>
+<ul><li> New to FreeBASIC<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="../../operators/operators/procedures/type-udt.html">Type...End Type</a></code><br>
+<li> <code><a href="../../user-defined-types/procedures/type-alias.html">Type (Alias)</a></code><br>
+<br>
+</li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span>Example</span>
+
+    <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>field1</span>
+
+    <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>field2</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Dim</span> <span>myexample</span> <span class="tok-kw">As</span> <span>Example</span>
+
+
+
+<span class="tok-cm">'' Filling the type by setting each field</span>
+
+<span>myexample.field1</span> <span>=</span> <span class="tok-nu">1</span>
+
+<span>myexample.field2</span> <span>=</span> <span class="tok-nu">2</span>
+
+
+
+<span class="tok-cm">'' Filling the type by setting each field using WITH</span>
+
+<span class="tok-kw">With</span> <span>myexample</span>
+
+    <span>.</span><span>field1</span> <span>=</span> <span class="tok-nu">1</span>
+
+    <span>.</span><span>field2</span> <span>=</span> <span class="tok-nu">2</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">With</span>
+
+
+
+<span class="tok-cm">'' Fill the variable's fields with a  temporary type</span>
+
+<span>myexample</span> <span>=</span> <span class="tok-kw">Type</span><span>(</span> <span class="tok-nu">1</span><span>,</span> <span class="tok-nu">2</span> <span>)</span></pre></code><br>
+<br>
+<code><pre class="code"><span class="tok-cm">'' Passing a user-defined types to a procedure using a temporary type</span>
+
+<span class="tok-cm">'' where the type can be inferred.</span>
+
+
+
+<span class="tok-kw">Type</span> <span>S</span>
+
+  <span class="tok-kw">As</span> <span class="tok-kw">Single</span> <span>x</span><span>,</span> <span>y</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>test</span> <span>(</span> <span>v</span> <span class="tok-kw">As</span> <span>S</span> <span>)</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;S&quot;</span><span>,</span> <span>v.x</span><span>,</span> <span>v.y</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span>test</span><span>(</span> <span class="tok-kw">Type</span><span>(</span> <span class="tok-nu">1</span><span>,</span> <span class="tok-nu">2</span> <span>)</span> <span>)</span></pre></code><br>
+<br>
+<code><pre class="code"><span class="tok-cm">'' Passing a user-defined type to a procedure using temporary types</span>
+
+<span class="tok-cm">'' where the type is ambiguous and the name of the type must be specified.</span>
+
+
+
+<span class="tok-kw">Type</span> <span>S</span>
+
+  <span class="tok-kw">As</span> <span class="tok-kw">Single</span> <span>x</span><span>,</span> <span>y</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Type</span> <span>T</span>
+
+  <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>x</span><span>,</span> <span>y</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Union</span> <span>U</span>
+
+  <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>x</span><span>,</span> <span>y</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Union</span>
+
+
+
+<span class="tok-cm">'' Overloaded procedure test()</span>
+
+<span class="tok-kw">Sub</span> <span>test</span> <span class="tok-kw">Overload</span> <span>(</span> <span>v</span> <span class="tok-kw">As</span> <span>S</span> <span>)</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;S&quot;</span><span>,</span> <span>v.x</span><span>,</span> <span>v.y</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>test</span> <span>(</span> <span>v</span> <span class="tok-kw">As</span> <span>T</span> <span>)</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;T&quot;</span><span>,</span> <span>v.x</span><span>,</span> <span>v.y</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>test</span> <span>(</span> <span>v</span> <span class="tok-kw">As</span> <span>U</span> <span>)</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;U&quot;</span><span>,</span> <span>v.x</span><span>,</span> <span>v.y</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-cm">'' Won't work: ambiguous</span>
+
+<span class="tok-cm">'' test( type( 1, 2 ) )</span>
+
+
+
+<span class="tok-cm">'' Specify name of type instead</span>
+
+<span>test</span><span>(</span> <span class="tok-kw">Type</span><span>&lt;</span><span>S</span><span>&gt;(</span> <span class="tok-nu">1</span><span>,</span> <span class="tok-nu">2</span> <span>)</span> <span>)</span>
+
+<span>test</span><span>(</span> <span class="tok-kw">Type</span><span>&lt;</span><span>T</span><span>&gt;(</span> <span class="tok-nu">1</span><span>,</span> <span class="tok-nu">2</span> <span>)</span> <span>)</span>
+
+<span>test</span><span>(</span> <span class="tok-kw">Type</span><span>&lt;</span><span>U</span><span>&gt;(</span> <span class="tok-nu">1</span> <span>)</span> <span>)</span></pre></code><br>
+<br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgTypeTemp.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CAxHost Class — Help Center</title>
+<meta name="description" content="CAxHost Class — 18 documented members. COM reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/com/caxhost-class.html">
+<meta property="og:title" content="CAxHost Class">
+<meta property="og:description" content="CAxHost Class — 18 documented members. COM reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/com/caxhost-class.html">
+<link rel="stylesheet" href="../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/com/caxhost-class.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span>COM</div>
+<h1>CAxHost Class</h1>
+<h2>Members (18)</h2>
+<div class="memberlist"><a href="procedures/afxcaxhostdispobj.html"><span class="m-n">AfxCAxHostDispObj</span><span class="m-d">Returns a reference to the control&#x27;s default interface given the handle of the window that hosts it.</span></a><a href="procedures/afxcaxhostdispptr.html"><span class="m-n">AfxCAxHostDispPtr</span><span class="m-d">Returns a reference to the control&#x27;s default interface given the handle of the window that hosts it.</span></a><a href="procedures/afxcaxhostforwardmessage.html"><span class="m-n">AfxCAxHostForwardMessage</span><span class="m-d">Forwards the Windows messages to the OLE Container window for processing.</span></a><a href="procedures/afxcaxhostptr.html"><span class="m-n">AfxCAxHostPtr</span><span class="m-d">Returns a reference to the OLE container class given the handle of its associated window.</span></a><a href="procedures/afxcaxhostwindow.html"><span class="m-n">AfxCAxHostWindow</span><span class="m-d">Returns the OLE container window handle given the handle of the form, or any control in the form, and its control identifier.</span></a><a href="caxhost/caxhost-advise.html"><span class="m-n">Advise</span><span class="m-d">Establishes a connection between a connection point object and the client&#x27;s sink.</span></a><a href="caxhost/caxhost-constructor.html"><span class="m-n">Constructor</span><span class="m-d">Creates an instance of the OLE container using a ProgId.</span></a><a href="caxhost/caxhost-constructor.html"><span class="m-n">Constructor</span><span class="m-d">Creates an instance of the OLE container using a ProgId.</span></a><a href="caxhost/caxhost-constructor.html"><span class="m-n">Constructor</span><span class="m-d">Creates an instance of the OLE container using a ProgId.</span></a><a href="caxhost/caxhost-ctrlid.html"><span class="m-n">CtrlID</span><span class="m-d">Returns the identifier of the container&#x27;s window.</span></a><a href="caxhost/caxhost-guidfromstr.html"><span class="m-n">GuidFromStr</span><span class="m-d">Converts a string into a 16-byte (128-bit) Globally Unique Identifier (GUID).</span></a><a href="caxhost/caxhost-guidtext.html"><span class="m-n">GuidText</span><span class="m-d">Returns a 38-byte human-readable guid string from a 16-byte GUID.</span></a><a href="caxhost/caxhost-hwindow.html"><span class="m-n">hWindow</span><span class="m-d">Returns the handle of the hosting window.</span></a><a href="caxhost/caxhost-ocxdispobj.html"><span class="m-n">OcxDispObj</span><span class="m-d">Returns a reference to the control&#x27;s default interface given the handle of the window that hosts it.</span></a><a href="caxhost/caxhost-ocxdispptr.html"><span class="m-n">OcxDispPtr</span><span class="m-d">Returns a reference to the control&#x27;s default interface given the handle of the window that hosts it.</span></a><a href="caxhost/caxhost-olecreatefont.html"><span class="m-n">OleCreateFont</span><span class="m-d">Creates a standard IFont object.</span></a><a href="caxhost/caxhost-olecreatefontdisp.html"><span class="m-n">OleCreateFontDisp</span><span class="m-d">Creates a standard IFont object.</span></a><a href="caxhost/caxhost-unadvise.html"><span class="m-n">Unadvise</span><span class="m-d">Terminates an advisory connection previously established by the **Advise** method between a connection point object and a client&#x27;s sink.</span></a></div>
+<h2>Documentation</h2>
+<h2 id="caxhost-class">CAxHost Class</h2>
+<p><code>CAxHost</code> implements an OLE Container using a custom control to host ActiveX controls.</p>
+<p><strong>Include file</strong>: AfxNova/CaxHost.inc.</p>
+<hr>
+<h4 id="constructors">Constructors</h4>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="#caxhost_ambiendisp">CAXHOST_AMBIENTDISP structure</a></td><td>Contains information the ambient properties of the CAxHost control.</td></tr><tr><td><a href="caxhost/caxhost-constructor.html">Constructor(ProgID)</a></td><td>Creates an instance of the OLE container using a ProgId.</td></tr><tr><td><a href="#constructor2">Constructor(ClsId)</a></td><td>Creates an instance of the OLE container using a Clsid.</td></tr><tr><td><a href="#constructor3">Constructor(LibName)</a></td><td>Creates an instance of the OLE container using an unregistered OCX.</td></tr></tbody></table></div>
+<hr>
+<h4 id="methods">Methods</h4>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="caxhost/caxhost-advise.html">Advise</a></td><td>Establishes a connection between a connection point object and the client's sink.</td></tr><tr><td><a href="caxhost/caxhost-ctrlid.html">CtrlID</a></td><td>Returns the identifier of the container's window.</td></tr><tr><td><a href="caxhost/caxhost-guidfromstr.html">GuidFromStr</a></td><td>Converts a string into a 16-byte (128-bit) Globally Unique Identifier (GUID).</td></tr><tr><td><a href="caxhost/caxhost-guidtext.html">GuidText</a></td><td>Returns a 38-byte human-readable guid string from a 16-byte GUID.</td></tr><tr><td><a href="caxhost/caxhost-hwindow.html">hWindow</a></td><td>Returns the handle of the hosting window.</td></tr><tr><td><a href="caxhost/caxhost-ocxdispobj.html">OcxDispObj</a></td><td>Returns a reference to the control's default interface given the handle of the window that hosts it.</td></tr><tr><td><a href="caxhost/caxhost-ocxdispptr.html">OcxDispPtr</a></td><td>Returns a reference to the control's default interface given the handle of the window that hosts it.</td></tr><tr><td><a href="caxhost/caxhost-olecreatefont.html">OleCreateFont</a></td><td>Creates a standard IFont object.</td></tr><tr><td><a href="caxhost/caxhost-olecreatefontdisp.html">OleCreateFontDisp</a></td><td>Creates a standard IFont object.</td></tr><tr><td><a href="caxhost/caxhost-unadvise.html">Unadvise</a></td><td>Terminates an advisory connection previously established by the <strong>Advise</strong> method between a connection point object and a client's sink.</td></tr></tbody></table></div>
+<hr>
+<h4 id="helper-procedures">Helper Procedures</h4>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="procedures/afxcaxhostdispobj.html">AfxCAxHostDispObj</a></td><td>Returns a reference to the control's default interface given the handle of the window that hosts it.</td></tr><tr><td><a href="procedures/afxcaxhostdispptr.html">AfxCAxHostDispPtr</a></td><td>Returns a reference to the control's default interface given the handle of the window that hosts it.</td></tr><tr><td><a href="procedures/afxcaxhostptr.html">AfxCAxHostPtr</a></td><td>Returns a reference to the OLE container class given the handle of its associated window.</td></tr><tr><td><a href="procedures/afxcaxhostwindow.html">AfxCAxHostWindow</a></td><td>Returns the OLE container window handle given the handle of the form, or any control in the form, and its control identifier.</td></tr><tr><td><a href="procedures/afxcaxhostforwardmessage.html">AfxCAxHostForwardMessage</a></td><td>Forwards the Windows messages to the OLE Container window for processing.</td></tr></tbody></table></div>
+<hr>
+<h3 id="caxhost_ambiendisp">CAXHOST_AMBIENTDISP Structure</h3>
+<p>Contains information the ambient properties of the <code>CAxHost</code> control.</p>
+<pre class="code"><code>TYPE CAXHOST_AMBIENTDISP
+   Font AS IFontDisp PTR
+   BackColor AS LONG = &amp;hFFFFFF
+   ForeColor AS LONG = 0
+   LocaleID AS LONG = LOCALE_USER_DEFAULT
+   Silent AS VARIANT_BOOL = -1
+   UIDead AS VARIANT_BOOL = 0
+   DisplayAsDefault AS VARIANT_BOOL = 0
+   SupportMnemonics AS VARIANT_BOOL = -1
+   OffLineIfNoConnected AS VARIANT_BOOL = -1
+   DlCtFlags AS LONG = 0
+END TYPE</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Member</th><th>Description</th></tr></thead><tbody><tr><td><strong>Font</strong></td><td>Pointer to a <strong>IFontDisp</strong> interface. To create the font you can use the <strong>OleCreateFontDisp</strong> method of the CAxHost class or the <strong>AfxOleCreateFontDisp</strong> function. The default font is SegoeUI, 9 points.</td></tr><tr><td><strong>BackColor</strong></td><td>Specifies the back color of the container. The default color is white. You can use the FreeBasic BGR macro to set the color.</td></tr><tr><td><strong>ForeColor</strong></td><td>Specifies the fore color of the container. The default color is black. You can use the FreeBasic BGR macro to set the color.</td></tr><tr><td><strong>LocaleID</strong></td><td>Specifies the ambient locale ID of the container.</td></tr><tr><td><strong>Silent</strong></td><td>Indicates the bind operation will be completed silently. No user interface or user notification will occur.</td></tr><tr><td><strong>UIDead</strong></td><td>Indicates whether the container wants the control to respond to user-interface actions. If TRUE, the control should not respond. Default value: FALSE.</td></tr><tr><td><strong>DisplayAsDefault</strong></td><td>A flag that is TRUE if the container has marked the control in this site to be a default button, and therefore a button control should draw itself with a thicker frame. Default value: FALSE.</td></tr><tr><td><strong>SupportMnemonics</strong></td><td>Indicates whether the container supports keyboard mnemonics. Default value: TRUE.</td></tr><tr><td><strong>OffLineIfNotConnected</strong></td><td>WebBrowser control. The control support offline browsing.</td></tr><tr><td><strong>DlCtFlags</strong></td><td>A combination of following flags, using the bitwise OR operator, to indicate your preferences. Most of the flag values have negative effects, that is, they prevent behavior that normally happens. For instance, scripts are normally executed by the WebBrowser Control if you don't customize its behavior. But if you set the DLCTL_NOSCRIPTS flag, no scripts will execute in that instance of the control. However, three flags—DLCTL_DLIMAGES, DLCTL_VIDEOS, and DLCTL_BGSOUNDS—work exactly opposite. If you set flags at all, you must set these three for the WebBrowser Control to behave in its default manner vis-a-vis images, videos and sounds.</td></tr></tbody></table></div>
+<p><strong>Flags</strong></p>
+<ul><li>DLCTL_DLIMAGES, DLCTL_VIDEOS, and DLCTL_BGSOUNDS: Images, videos, and background sounds will be downloaded from the server and displayed or played if these flags are set. They will not be downloaded and displayed if the flags are not set.</li><li>DLCTL_NO_SCRIPTS and DLCTL_NO_JAVA: Scripts and Java applets will not be executed.</li><li>DLCTL_NO_DLACTIVEXCTLS and DLCTL_NO_RUNACTIVEXCTLS : ActiveX controls will not be downloaded or will not be executed.</li><li>DLCTL_DOWNLOADONLY: The page will only be downloaded, not displayed.</li><li>DLCTL_NO_FRAMEDOWNLOAD: The WebBrowser Control will download and parse a frameset, but not the individual frame objects within the frameset.</li><li>DLCTL_RESYNCHRONIZE and DLCTL_PRAGMA_NO_CACHE: These flags cause cache refreshes. With DLCTL_RESYNCHRONIZE, the server will be asked for update status. Cached files will be used if the server indicates that the cached information is up-to-date. With DLCTL_PRAGMA_NO_CACHE, files will be re-downloaded from the server regardless of the update status of the files.</li><li>DLCTL_NO_BEHAVIORS: Behaviors are not downloaded and are disabled in the document.</li><li>DLCTL_NO_METACHARSET_HTML: Character sets specified in meta elements are suppressed.</li><li>DLCTL_URL_ENCODING_DISABLE_UTF8 and DLCTL_URL_ENCODING_ENABLE_UTF8: These flags function similarly to the DOCHOSTUIFLAG_URL_ENCODING_DISABLE_UTF8 and DOCHOSTUIFLAG_URL_ENCODING_ENABLE_UTF8 flags used with IDocHostUIHandler.GetHostInfo. The difference is that the DOCHOSTUIFLAG flags are checked only when the WebBrowser Control is first instantiated. The download flags here for the ambient property change are checked whenever the WebBrowser Control needs to perform a download.</li><li>DLCTL_NO_CLIENTPULL: No client pull operations will be performed.</li><li>DLCTL_SILENT: No user interface will be displayed during downloads.</li><li>DLCTL_FORCEOFFLINE: The WebBrowser Control always operates in offline mode.</li><li>DLCTL_OFFLINEIFNOTCONNECTED and DLCTL_OFFLINE: These flags are the same. The WebBrowser Control will operate in offline mode if not connected to the Internet.</li></ul>
+<hr>
+<h3 id="constructor1">Constructor(ProgId)</h3>
+<p>Creates an instance of the OLE container using a ProgId.</p>
+<pre class="code"><code>CONSTRUCTOR CAxHost (BYVAL pWindow AS CWindow PTR, BYVAL cID AS LONG_PTR, _
+   BYREF wszProgID AS WSTRING, BYVAL x AS LONG = 0, BYVAL y AS LONG = 0, _
+   BYVAL nWidth AS LONG = 0, BYVAL nHeight AS LONG = 0, _
+   BYVAL dwStyle AS DWORD = 0, BYVAL dwExStyle AS DWORD = 0, _
+   BYVAL pAmbientDisp AS CAXHOST_AMBIENTDISP PTR = NULL)</code></pre>
+<pre class="code"><code>CONSTRUCTOR CAxHost (BYVAL pWindow AS CWindow PTR, BYVAL cID AS INTEGER, _
+   BYREF wszProgID AS WSTRING, BYREF wszLicKey AS WSTRING, BYVAL x AS LONG = 0, _
+   BYVAL y AS LONG = 0, BYVAL nWidth AS LONG = 0, BYVAL nHeight AS LONG = 0, _
+   BYVAL dwStyle AS DWORD = 0, BYVAL dwExStyle AS DWORD = 0, _
+   BYVAL pAmbientDisp AS CAXHOST_AMBIENTDISP PTR = NULL)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pWindow</em></td><td>Pointer to the instance of the <strong>CWindow</strong> class used to create the form.</td></tr><tr><td><em>cID</em></td><td>The identifier of the control. It must be unique.</td></tr><tr><td><em>wszProgID</em></td><td>The <strong>ProgID</strong> of the object to create, such "MSCAL.Calendar".</td></tr><tr><td><em>wszLicKey</em></td><td>The license key of the control, if the control is licensed.</td></tr><tr><td><em>x, y</em></td><td>The coordinates of the upper-left corner of the window relative to the upper-left corner of the parent window's client area.</td></tr><tr><td><em>nWidth</em></td><td>The width of the window.</td></tr><tr><td><em>nHeight</em></td><td>The height of the window.</td></tr><tr><td><em>dwStyle</em></td><td>The style of the window being created.</td></tr><tr><td><em>dwExStyle</em></td><td>The extended style of the window being created.</td></tr><tr><td><em>pAmbientDisp</em></td><td>Pointer to a <strong>CAXHOST_AMBIENTDISP</strong> structure.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<p>The following example embeds an instance of the WebBrowser control and navigates to a site:</p>
+<pre class="code"><code>#define UNICODE
+#include once "AfxNova/DVARIANT.inc"
+#INCLUDE ONCE "AfxNova/CWindow.inc"
+#include once "AfxNova/CAxHost.inc"
+USING AfxNova
+
+DECLARE FUNCTION wWinMain (BYVAL hInstance AS HINSTANCE, _
+                           BYVAL hPrevInstance AS HINSTANCE, _
+                           BYVAL pwszCmdLine AS WSTRING PTR, _
+                           BYVAL nCmdShow AS LONG) AS LONG
+   END wWinMain(GetModuleHandleW(NULL), NULL, wCommand(), SW_NORMAL)
+
+' // Forward declaration
+DECLARE FUNCTION WndProc (BYVAL hwnd AS HWND, BYVAL uMsg AS UINT, BYVAL wParam AS WPARAM, BYVAL lParam AS LPARAM) AS LRESULT
+
+CONST IDC_WEBBROWSER = 1001
+
+' ========================================================================================
+' Main
+' ========================================================================================
+FUNCTION wWinMain (BYVAL hInstance AS HINSTANCE, _
+                   BYVAL hPrevInstance AS HINSTANCE, _
+                   BYVAL pwszCmdLine AS WSTRING PTR, _
+                   BYVAL nCmdShow AS LONG) AS LONG
+
+   ' // Set process DPI aware
+   SetProcessDpiAwareness(PROCESS_SYSTEM_DPI_AWARE)
+   ' // Enable visual styles without including a manifest file
+   AfxEnableVisualStyles
+
+   ' // Creates the main window
+   DIM pWindow AS CWindow = "MyClassName"   ' Use the name you wish
+   DIM hWin AS HWND = pWindow.Create(NULL, "CWindow - CAxHost -WebBrowser", @WndProc)
+   ' // Sizes it by setting the wanted width and height of its client area
+   pWindow.SetClientSize(900, 450)
+   ' // Centers the window
+   pWindow.Center
+
+   ' // Create an instance of the WebBrowser control
+   DIM pHost AS CAxHost = CAxHost(@pWindow, IDC_WEBBROWSER, "Shell.Explorer", 0, 0, pWindow.ClientWidth, pWindow.ClientHeight)
+   ' // Get a direct pointer to the Afx_IWebBrowser2 interface
+   DIM hWb AS HWND = GetDlgItem(pWindow.hWindow, IDC_WEBBROWSER)
+   DIM pWb AS Afx_IWebBrowser2 PTR = CAST(ANY PTR, AfxCAxHostDispPtr(hWb))
+   IF pWb THEN
+      DIM dvUrl AS DVARIANT = "http://www.jose.it-berater.org/index.html"
+      DIM hr AS HRESULT = pWb-&gt;Navigate2(dvUrl, NULL, NULL, NULL, NULL)
+   END IF
+
+   ' // Displays the window and dispatches the Windows messages
+   FUNCTION = pWindow.DoEvents(nCmdShow)
+
+END FUNCTION
+' ========================================================================================
+
+' ========================================================================================
+' Main window procedure
+' ========================================================================================
+FUNCTION WndProc (BYVAL hwnd AS HWND, BYVAL uMsg AS UINT, BYVAL wParam AS WPARAM, BYVAL lParam AS LPARAM) AS LRESULT
+
+   SELECT CASE uMsg
+
+      ' // If an application processes this message, it should return zero to continue
+      ' // creation of the window. If the application returns –1, the window is destroyed
+      ' // and the CreateWindowExW function returns a NULL handle.
+      CASE WM_CREATE
+         RETURN 0
+
+      ' // Sent when the user selects a command item from a menu, when a control sends a
+      ' // notification message to its parent window, or when an accelerator keystroke is translated.
+      CASE WM_COMMAND
+         SELECT CASE CBCTL(wParam, lParam)
+            CASE IDCANCEL
+               ' // If ESC key pressed, close the application by sending an WM_CLOSE message
+               IF CBCTLMSG(wParam, lParam) = BN_CLICKED THEN SendMessageW(hwnd, WM_CLOSE, 0, 0)
+         END SELECT
+         RETURN 0
+
+      CASE WM_DESTROY
+         ' // End the application by sending an WM_QUIT message
+         PostQuitMessage(0)
+         RETURN 0
+
+   END SELECT
+
+   ' // Default processing of Windows messages
+   FUNCTION = DefWindowProcW(hwnd, uMsg, wParam, lParam)
+
+END FUNCTION
+' ========================================================================================</code></pre>
+<hr>
+<h2 id="constructor2">Constructor(ClsId)</h2>
+<p>Creates an instance of the OLE container using a ClsId.</p>
+<pre class="code"><code>CONSTRUCTOR CAxHost (BYVAL pWindow AS CWindow PTR, BYVAL cID AS LONG_PTR, _
+   BYREF classID AS CONST CLSID, BYREF riid AS CONST IID, BYVAL x AS LONG = 0, BYVAL y AS LONG = 0, _
+   BYVAL nWidth AS LONG = 0, BYVAL nHeight AS LONG = 0, BYVAL dwStyle AS DWORD = 0, _
+   BYVAL dwExStyle AS DWORD = 0, BYVAL pAmbientDisp AS CAXHOST_AMBIENTDISP PTR = NULL)</code></pre>
+<pre class="code"><code>CONSTRUCTOR CAxHost (BYVAL pWindow AS CWindow PTR, BYVAL cID AS INTEGER, _
+   BYREF classID AS CONST CLSID, BYREF riid AS CONST IID, BYREF wszLicKey AS WSTRING, _
+   BYVAL x AS LONG = 0, BYVAL y AS LONG = 0, BYVAL nWidth AS LONG = 0, BYVAL nHeight AS LONG = 0, _
+   BYVAL dwStyle AS DWORD = 0, BYVAL dwExStyle AS DWORD = 0, _
+   BYVAL pAmbientDisp AS CAXHOST_AMBIENTDISP PTR = NULL)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pWindow</em></td><td>Pointer to the instance of the <strong>CWindow</strong> class used to create the form.</td></tr><tr><td><em>cID</em></td><td>The identifier of the control. It must be unique.</td></tr><tr><td><em>classID</em></td><td>The <strong>CLSID</strong> of the object to create, such "{8E27C92B-1264-101C-8A2F-040224009C02}"</td></tr><tr><td><em>riid</em></td><td>The <strong>IID</strong> of the object to create, such "{8E27C92C-1264-101C-8A2F-040224009C02}".</td></tr><tr><td><em>wszLicKey</em></td><td>The license key of the control, if the control is licensed.</td></tr><tr><td><em>x, y</em></td><td>The coordinates of the upper-left corner of the window relative to the upper-left corner of the parent window's client area.</td></tr><tr><td><em>nWidth</em></td><td>The width of the window.</td></tr><tr><td><em>nHeight</em></td><td>The height of the window.</td></tr><tr><td><em>dwStyle</em></td><td>The style of the window being created.</td></tr><tr><td><em>dwExStyle</em></td><td>The extended style of the window being created.</td></tr><tr><td><em>pAmbientDisp</em></td><td>Pointer to a <strong>CAXHOST_AMBIENTDISP</strong> structure.</td></tr></tbody></table></div>
+<hr>
+<h3 id="constructor3">Constructor(LibName)</h3>
+<p>Creates an instance of the OLE container using an unregistered OCX.</p>
+<pre class="code"><code>CONSTRUCTOR CAxHost (BYVAL pWindow AS CWindow PTR, BYVAL cID AS LONG_PTR, _
+   BYREF wszLibName AS WSTRING, BYREF classID AS CONST CLSID, BYREF riid AS CONST IID, _
+   BYVAL x AS LONG = 0, BYVAL y AS LONG = 0, BYVAL nWidth AS LONG = 0, _
+   BYVAL nHeight AS LONG = 0, BYVAL dwStyle AS DWORD = 0, BYVAL dwExStyle AS DWORD = 0, _
+   BYVAL pAmbientDisp AS CAXHOST_AMBIENTDISP = NULL)</code></pre>
+<pre class="code"><code>CONSTRUCTOR CAxHost (BYVAL pWindow AS CWindow PTR, BYVAL cID AS INTEGER, _
+   BYREF wszLibName AS WSTRING, BYREF classID AS CONST CLSID, BYREF riid AS CONST IID, _
+   BYREF wszLicKey AS WSTRING, BYVAL x AS LONG = 0, BYVAL y AS LONG = 0, _
+   BYVAL nWidth AS LONG = 0, BYVAL nHeight AS LONG = 0, BYVAL dwStyle AS DWORD = 0, _
+   BYVAL dwExStyle AS DWORD = 0, BYVAL pAmbientDisp AS CAXHOST_AMBIENTDISP PTR = NULL)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pWindow</em></td><td>Pointer to the instance of the <strong>CWindow</strong> class used to create the form.</td></tr><tr><td><em>cID</em></td><td>The identifier of the control. It must be unique.</td></tr><tr><td><em>wszLibName</em></td><td>The full qualified path to the OCX file.</td></tr><tr><td><em>classID</em></td><td>The <strong>CLSID</strong> of the object to create, such "{8E27C92B-1264-101C-8A2F-040224009C02}"</td></tr><tr><td><em>riid</em></td><td>The <strong>IID</strong> of the object to create, such "{8E27C92C-1264-101C-8A2F-040224009C02}".</td></tr><tr><td><em>wszLicKey</em></td><td>The license key of the control, if the control is licensed.</td></tr><tr><td><em>x, y</em></td><td>The coordinates of the upper-left corner of the window relative to the upper-left corner of the parent window's client area.</td></tr><tr><td><em>nWidth</em></td><td>The width of the window.</td></tr><tr><td><em>nHeight</em></td><td>The height of the window.</td></tr><tr><td><em>dwStyle</em></td><td>The style of the window being created.</td></tr><tr><td><em>dwExStyle</em></td><td>The extended style of the window being created.</td></tr><tr><td><em>pAmbientDisp</em></td><td>Pointer to a <strong>CAXHOST_AMBIENTDISP</strong> structure.</td></tr></tbody></table></div>
+<pre class="code"><code>DIM wszLibName AS WSTRING * 260 = ExePath &amp; "\MSCOMCT2.OCX"
+DIM CLSID_MSComCtl2_MonthView AS CLSID = (&amp;h232E456A, &amp;h87C3, &amp;h11D1, {&amp;h8B, &amp;hE3,&amp;h00, &amp;h00, &amp;hF8, &amp;h75, &amp;h4D, &amp;hA1})
+DIM IID_MSComCtl2_MonthView AS CLSID = (&amp;h232E4565, &amp;h87C3, &amp;h11D1, {&amp;h8B, &amp;hE3,&amp;h00, &amp;h00, &amp;hF8, &amp;h75, &amp;h4D, &amp;hA1})
+DIM RTLKEY_MSCOMCT2 AS WSTRING * 260 = "651A8940-87C5-11d1-8BE3-0000F8754DA1"
+DIM pAxHost AS CAxHost PTR = CAxHost(@pWindow, IDC_WEBBROWSER, wszLibName, CLSID_MSComCtl2_MonthView, _
+    IID_MSComCtl2_MonthView, RTLKEY_MSCOMCT2, 0, 0, pWindow.ClientWidth, pWindow.ClientHeight)</code></pre>
+<hr>
+<h3 id="advise">Advise</h3>
+<p>Establishes a connection between a connection point object and the client's sink.</p>
+<pre class="code"><code>FUNCTION Advise (BYVAL pEvtObj AS IDispatch PTR, BYVAL riid AS IID PTR) AS HRESULT
+FUNCTION Advise (BYVAL pEvtObj AS IDispatch PTR, BYVAL riid AS CONST IID) AS HRESULT
+FUNCTION Advise (BYVAL pEvtObj AS IDispatch PTR, BYREF riid AS IID) AS HRESULT
+FUNCTION Advise (BYVAL pEvtObj AS IDispatch PTR, BYVAL riid AS IID PTR) AS HRESULT
+FUNCTION Advise (BYVAL pEvtObj AS IDispatch PTR, BYREF riid AS CONST IID) AS HRESULT
+FUNCTION Advise (BYVAL pEvtObj AS IDispatch PTR, BYREF riid AS IID) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pEvtObj</em></td><td>Pointer to the sink event's class. The client's sink receives outgoing calls from the connection point.</td></tr><tr><td><em>riid</em></td><td>IID of the events interface of the hosted OCX.</td></tr></tbody></table></div>
+<p>Return value</p>
+<p>S_OK (0) or an error code.</p>
+<hr>
+<h3 id="ctrlid">CtrlID</h3>
+<p>Returns the identifier of the container's window.</p>
+<pre class="code"><code>FUNCTION CtrlID () AS LONG</code></pre>
+<hr>
+<h3 id="guidfromstr">GuidFromStr</h3>
+<p>Converts a string into a 16-byte (128-bit) Globally Unique Identifier (GUID)</p>
+<pre class="code"><code>FUNCTION GuidFromStr (BYVAL pwszGuidText AS WSTRING PTR = NULL) AS GUID</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pwszGuidText</em></td><td>To be valid, the string must contain exactly 32 hexadecimal digits, delimited by hyphens and enclosed by curly braces. For example: {B09DE715-87C1-11D1-8BE3-0000F8754DA1}. If pwszGuidText is omited, <strong>GuidFromStr</strong> generates a new unique guid.</td></tr></tbody></table></div>
+<hr>
+<h3 id="guidtext">GuidText</h3>
+<p>Returns a 38-byte human-readable guid string from a 16-byte GUID.</p>
+<pre class="code"><code>FUNCTION GuidText (BYVAL classID AS CLSID PTR) AS STRING
+FUNCTION GuidText (BYVAL riid AS REFIID) AS STRING
+FUNCTION GuidText (BYVAL classID AS CLSID) AS STRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>classID, riid</em></td><td>The 16-byte GUID.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The GUID as a human readable string.</p>
+<hr>
+<h3 id="hwindow">hWindow</h3>
+<p>Returns the handle of the hosting window.</p>
+<pre class="code"><code>FUNCTION hWindow () AS HWND</code></pre>
+<hr>
+<h3 id="ocxdispobj">OcxDispObj</h3>
+<p>Returns a reference to the control's default interface given the handle of the window that hosts it. This is a reference counted pointer, so you must release it calling the <strong>Release</strong> method of the interface, the <strong>IUnknown_Release</strong> macro or the <strong>AfxSaRelease</strong> function.</p>
+<pre class="code"><code>FUNCTION OcxDispObj () AS IDispatch PTR</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>IDispatch. A reference to the ActiveX control's default interface.</p>
+<hr>
+<h3 id="ocxdispptr">OcxDispPtr</h3>
+<p>Returns a reference to the control's default interface given the handle of the window that hosts it. This is not a reference counted pointer, so you must not release it.</p>
+<pre class="code"><code>FUNCTION OcxDispPtr () AS IDispatch PTR</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>IDispatch. A reference to the ActiveX control's default interface.</p>
+<hr>
+<h3 id="olecreatefont">OleCreateFont</h3>
+<p>Creates a standard <strong>IFont</strong> object.</p>
+<pre class="code"><code>FUNCTION OleCreateFont (BYREF wszFaceName AS WSTRING, BYVAL cySize AS LONG, _
+   BYVAL fWeight AS LONG = FW_NORMAL, BYVAL fItalic AS UBYTE = FALSE, _
+   BYVAL fUnderline AS UBYTE = FALSE, BYVAL fStrikeOut AS UBYTE = FALSE, _
+   BYVAL fCharSet AS UBYTE = DEFAULT_CHARSET) AS IFont PTR</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszFaceName</em></td><td>A string that specifies the typeface name of the font. The length of this string must not exceed 31 characters. The <strong>EnumFontFamilies</strong> function can be used to enumerate the typeface names of all currently available fonts. If <em>wszFaceName</em> is an empty string, GDI uses the first font that matches the other specified attributes.</td></tr><tr><td><em>cySize</em></td><td>Specifies the height, in logical units, of the font's character cell or character.</td></tr><tr><td><em>fWeight</em></td><td>Initial weight of the font. If the weight is below 550 (the average of FW_NORMAL, 400, and FW_BOLD, 700), then the Bold property is also initialized to FALSE. If the weight is above 550, the Bold property is set to TRUE.<br>The following values are defined for convenience: FW_DONTCARE (0), FW_THIN (100), FW_EXTRALIGHT (200), FW_ULTRALIGHT (200), FW_LIGHT (300), FW_NORMAL (400), FW_REGULAR (400), FW_MEDIUM (500), FW_SEMIBOLD (600), FW_DEMIBOLD (600), FW_BOLD (700), FW_EXTRABOLD (800), FW_ULTRABOLD (800), FW_HEAVY (900), FW_BLACK (900)</td></tr><tr><td><em>fItalic</em></td><td>Specifies an italic font if set to TRUE.</td></tr><tr><td><em>fUnderline</em></td><td>Specifies an underlined font if set to TRUE.</td></tr><tr><td><em>fStrikeOut</em></td><td>Specifies a strikeout font if set to TRUE.</td></tr><tr><td><em>fCharSet</em></td><td>Specifies the character set. The following values are predefined:<br>ANSI_CHARSET, BALTIC_CHARSET, CHINESEBIG5_CHARSET, DEFAULT_CHARSET, EASTEUROPE_CHARSET, GB2312_CHARSET, GREEK_CHARSET, HANGUL_CHARSET, MAC_CHARSET, OEM_CHARSET, RUSSIAN_CHARSET, SHIFTJIS_CHARSET, SYMBOL_CHARSET, TURKISH_CHARSET.<br>Korean Windows: JOHAB_CHARSET<br>Middle-Eastern Windows: HEBREW_CHARSET, ARABIC_CHARSET.<br>Thai Windows: THAI_CHARSET.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>A pointer to the object indicates success. NULL indicates failure.</p>
+<h5 id="usage-examples">Usage examples</h5>
+<pre class="code"><code>DIM pFont AS IFont = CAxHost.CreateFont("MS Sans Serif", 8, FW_NORMAL, , , , DEFAULT_CHARSET)
+DIM pFont AS IFont = CAxHost.CreateFont("Courier New", 10, FW_BOLD, , , , DEFAULT_CHARSET)
+DIM pFont AS IFont = CAxHost.CreateFont("Marlett", 8, FW_NORMAL, , , , SYMBOL_CHARSET)</code></pre>
+<hr>
+<h3 id="olecreatefontdisp">OleCreateFontDisp</h3>
+<p>Creates a standard <strong>IFontDisp</strong> object.</p>
+<pre class="code"><code>FUNCTION OleCreateFontDisp (BYREF wszFaceName AS WSTRING, BYVAL cySize AS LONG, _
+   BYVAL fWeight AS LONG = FW_NORMAL, BYVAL fItalic AS UBYTE = FALSE, _
+   BYVAL fUnderline AS UBYTE = FALSE, BYVAL fStrikeOut AS UBYTE = FALSE, _
+   BYVAL fCharSet AS UBYTE = DEFAULT_CHARSET) AS IFont PTR</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszFaceName</em></td><td>A string that specifies the typeface name of the font. The length of this string must not exceed 31 characters. The <strong>EnumFontFamilies</strong> function can be used to enumerate the typeface names of all currently available fonts. If <em>wszFaceName</em> is an empty string, GDI uses the first font that matches the other specified attributes.</td></tr><tr><td><em>cySize</em></td><td>Specifies the height, in logical units, of the font's character cell or character.</td></tr><tr><td><em>fWeight</em></td><td>Initial weight of the font. If the weight is below 550 (the average of FW_NORMAL, 400, and FW_BOLD, 700), then the Bold property is also initialized to FALSE. If the weight is above 550, the Bold property is set to TRUE.<br>The following values are defined for convenience: FW_DONTCARE (0), FW_THIN (100), FW_EXTRALIGHT (200), FW_ULTRALIGHT (200), FW_LIGHT (300), FW_NORMAL (400), FW_REGULAR (400), FW_MEDIUM (500), FW_SEMIBOLD (600), FW_DEMIBOLD (600), FW_BOLD (700), FW_EXTRABOLD (800), FW_ULTRABOLD (800), FW_HEAVY (900), FW_BLACK (900)</td></tr><tr><td><em>fItalic</em></td><td>Specifies an italic font if set to TRUE.</td></tr><tr><td><em>fUnderline</em></td><td>Specifies an underlined font if set to TRUE.</td></tr><tr><td><em>fStrikeOut</em></td><td>Specifies a strikeout font if set to TRUE.</td></tr><tr><td><em>fCharSet</em></td><td>Specifies the character set. The following values are predefined:<br>ANSI_CHARSET, BALTIC_CHARSET, CHINESEBIG5_CHARSET, DEFAULT_CHARSET, EASTEUROPE_CHARSET, GB2312_CHARSET, GREEK_CHARSET, HANGUL_CHARSET, MAC_CHARSET, OEM_CHARSET, RUSSIAN_CHARSET, SHIFTJIS_CHARSET, SYMBOL_CHARSET, TURKISH_CHARSET.<br>Korean Windows: JOHAB_CHARSET<br>Middle-Eastern Windows: HEBREW_CHARSET, ARABIC_CHARSET.<br>Thai Windows: THAI_CHARSET.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>A pointer to the object indicates success. NULL indicates failure.</p>
+<h5 id="usage-examples">Usage examples</h5>
+<pre class="code"><code>DIM pFontDisp AS IFontDisp = CAxHost.CreateFontDisp("MS Sans Serif", 8, FW_NORMAL, , , , DEFAULT_CHARSET)
+DIM pFontDisp AS IFontDisp = CAxHost.CreateFontDisp("Courier New", 10, FW_BOLD, , , , DEFAULT_CHARSET)
+DIM pFontDisp AS IFontDisp = CAxHost.CreateFontDisp("Marlett", 8, FW_NORMAL, , , , SYMBOL_CHARSET)</code></pre>
+<hr>
+<h3 id="unadvise">Unadvise</h3>
+<p>Terminates an advisory connection previously established by the <strong>Advise</strong> method between a connection point object and a client's sink.</p>
+<pre class="code"><code>FUNCTION Unadvise () AS HRESULT</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>S_OK (0) or an error code.</p>
+<hr>
+<h3 id="afxcaxhostdispobj">AfxCAxHostDispObj</h3>
+<p>Returns a reference to the control's default interface given the handle of the window that hosts it. This is a reference counted pointer, so you must release it calling the <strong>Release</strong> method of the interface, the <strong>IUnknown_Release</strong> macro or the <strong>AfxSafeRelease</strong> function.</p>
+<pre class="code"><code>FUNCTION AfxCAxHostDispObj (BYVAL hwnd AS HWND) AS IDispatch PTR</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hwnd</em></td><td>Handle of the window that hosts the ActiveX control. If you don't know the value of this handle, you can get it calling the <strong>AfxCAxHostWindow</strong> function.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>IDispatch. A reference to the ActiveX control's default interface.</p>
+<hr>
+<h3 id="afxcaxhostdispptr">AfxCAxHostDispPtr</h3>
+<p>Returns a reference to the OLE container class given the handle of its associated window. This is not an AddRefed pointer, so don't release it.</p>
+<pre class="code"><code>FUNCTION AfxCAxHostDispPtr (BYVAL hwnd AS HWND) AS IDispatch PTR</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hwnd</em></td><td>Handle of the window that hosts the ActiveX control. If you don't know the value of this handle, you can get it calling the <strong>AfxCAxHostWindow</strong> function.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>IDispatch. A reference to the ActiveX control's default interface.</p>
+<hr>
+<h3 id="afxcaxhostptr">AfxCAxHostPtr</h3>
+<p>Returns a reference to the OLE container class given the handle of its associated window.</p>
+<pre class="code"><code>FUNCTION AfxCAxHostPtr (BYVAL hwnd AS HWND) AS CAxHost PTR
+FUNCTION AfxCAxHostPtr (BYVAL hwnd AS HWND, BYVAL cID AS WORD) AS CAxHost PTR</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hwnd</em></td><td>Handle of the window that hosts the ActiveX control. If you don't know the value of this handle, you can get it calling the <strong>AfxCAxHostWindow</strong> function.</td></tr><tr><td><em>cID</em></td><td>Identifier of the control, e.g. IDC_WEBBROWSER.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>A pointer to the <code>CAxHost</code> class or NULL.</p>
+<hr>
+<h3 id="afxcaxhostwindow">AfxCAxHostWindow</h3>
+<p>Returns the OLE container window handle given the handle of the form, or any control in the form, and its control identifier.</p>
+<pre class="code"><code>FUNCTION AfxCAxHostWindow (BYVAL hwnd AS HWND, BYVAL cID AS WORD) AS HWND</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hwnd</em></td><td>Handle of the window that hosts he ActiveX control. If you don't know the value of this handle, you can get it calling the <strong>AfxCAxHostWindow</strong> function.</td></tr><tr><td><em>cID</em></td><td>Identifier of the control, e.g. IDC_WEBBROWSER.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The handle of the window or NULL.</p>
+<hr>
+<h3 id="afxcaxhostforwardmessage">AfxCAxHostForwardMessage</h3>
+<p>Forwards the Windows messages to the OLE Container window for processing.</p>
+<pre class="code"><code>FUNCTION AfxCAxHostForwardMessage (BYVAL hctl AS HWND, BYVAL pMsg AS tagMSG PTR) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hctl</em></td><td>Handle of the control.</td></tr><tr><td><em>pMsg</em></td><td>A pointer to a <strong>MSG</strong> structure that contains information about a message</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>TRUE if the message was processed, FALSE if not.</p>
+<h5 id="remarks">Remarks</h5>
+<p>Active in-place objects must always be given the first chance at translating accelerator keystrokes. You can provide this opportunity by calling <strong>IOleInPlaceActiveObject.TranslateAccelerator</strong> from your container's message loop before doing any other translation. You should apply your own translation only when this method returns FALSE.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>' // Dispatch Windows messages
+DIM uMsg AS MSG
+WHILE (GetMessageW(@uMsg, NULL, 0, 0) &lt;&gt; FALSE)
+   IF AfxForwardMessage(GetFocus, @uMsg) = FALSE THEN
+      IF IsDialogMessageW(hWndMain, @uMsg) = 0 THEN
+         TranslateMessage(@uMsg)
+         DispatchMessageW(@uMsg)
+      END IF
+   END IF
+WEND</code></pre>
+<hr>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../index.html">Home</a> ·
+         <a href="../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../nav.js?v=70a6b70236"></script>
+<script src="../../search-index.js"></script>
+<script src="../../assets/app.js?v=456d079659"></script>
+<script src="../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

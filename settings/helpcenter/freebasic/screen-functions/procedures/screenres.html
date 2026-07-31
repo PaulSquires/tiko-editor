@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ScreenRes — Help Center</title>
+<meta name="description" content="Initializes a graphics mode by specifying horizontal and vertical resolution">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/screen-functions/procedures/screenres.html">
+<meta property="og:title" content="ScreenRes">
+<meta property="og:description" content="Initializes a graphics mode by specifying horizontal and vertical resolution">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/screen-functions/procedures/screenres.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/screen-functions/procedures/screenres.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>ScreenRes<span class="h1kind">function</span></h1>
+<p class="lede">Initializes a graphics mode by specifying horizontal and vertical resolution</p>
+<div class="badges"><a class="badge" href="../index.html">Screen Functions</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>Declare Function ScreenRes ( ByVal width As Long, ByVal height As Long, ByVal depth As Long = 8, ByVal num_pages As Long = 1, ByVal flags As Long = 0, ByVal refresh_rate As Long = 0 ) As Long</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>width</code></td><td></td><td>,</td></tr><tr><td><code>height</code></td><td></td><td>The display width and height, respectively. For fullscreen mode, the user should check the availability of the resolution using <code><a href="screenlist.html">ScreenList</a></code>.</td></tr><tr><td><code>depth</code></td><td></td><td>The color depth in bits per pixel. Valid color depths are: <code>1</code>, <code>2</code>, <code>4</code>, <code>8</code>, <code>16</code> and <code>32</code>.  Values of <code>15</code> and <code>24</code> are also allowed as aliases for <code>16</code> and <code>32</code>, respectively.  If omitted, the default is 8 bits per pixel.  8 bits and below will give a palette image.  The default palette will be the first <code>2 <a href="../../operators/arithmetic-operators/procedures/operator-exponentiate.html">^</a> <i>depth</i></code> colors of the 256-color palette used in <code><a href="screen-graphics.html">Screen (Graphics)</a> 13</code>.</td></tr><tr><td><code>num_pages</code></td><td></td><td>The number of video pages to create, defaults to <code>1</code>. (see <code><a href="screen-graphics.html">Screen (Graphics)</a></code>)</td></tr><tr><td><code>flags</code></td><td></td><td>Used to set various properties of the screen, including fullscreen mode and graphics driver priority. (see the standard header "fbgfx.bi" for available flags)</td></tr><tr><td><code>refresh_rate</code></td><td></td><td>The desired refresh rate of the screen, only has an effect for fullscreen modes, and some systems and drivers only. Defaults to an appropriate value, invalid refresh rates will be ignored.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<br>
+Returns zero (<code>0</code>) if successful, or a non-zero error code to indicate a failure. <i><a href="../../language-documentation/other/error-handling.html">(throws a runtime error)</a></i> (???)<br>
+<br>
+
+<h2>Description</h2>
+<br>
+<code><b>ScreenRes</b></code> tells the compiler to link the GfxLib and initializes a QB-only, QB-on-GUI or OpenGL graphics mode, depending on the <code><i>flags</i></code> setting.<br>
+<br>
+<code><b>ScreenRes</b></code>  clears the created window or the full screen. In non-fullscreen modes, the resolution does not have to match any resolution of the graphics card. Resolutions like <code>555x111</code> are possible, GfxLib will create a window of such size. See the page <a href="../../graphics-library-reference/gfxlib-freebasic-graphics-library-overview.html">GfxLib overview</a> for DOS issues.<br>
+<br>
+The font size in <code><b>ScreenRes</b></code> modes is set to 8x8 by default.  This can be changed by setting the number of text rows/columns, using the <code><a href="../../console-functions/procedures/width.html">Width</a></code> function.<br>
+<br>
+In QB-only modes a dumb window or fullscreen resolution is set, one or more buffers in standard memory are created,  console commands are redirected to their graphic versions, a <a href="../../graphics-library-reference/default-palettes.html">default palette</a> is set and an automatic screen refresh thread is started. QB-like graphics and console statements can be used.  <br>
+<br>
+ In QB-on-GUI modes one or more buffers in standard memory are created,  console commands are redirected to their graphic versions and a <a href="../../graphics-library-reference/default-palettes.html">default palette</a> is set. QB-like  graphics and console statements can be used.  It is up to the user to create a window and to refresh it with the contents of the graphics buffers.<br>
+<br>
+In OpenGL modes a dumb window or fullscreen resolution is set, one or more buffers in standard memory are created, and the system's OpenGL library is initialized. From here only OpenGL commands can be used to write to the graphics buffer. QB-like and console commands are forbidden. This mode allows to initialize OpenGL in a portable way.<br>
+<br>
+The error code returned by <code><b>ScreenRes</b></code> can be checked using <code><a href="../../error-handling-functions/procedures/err.html">Err</a></code> in the next line. The function version of  <code><b>ScreenRes</b></code> returns directly the error code as a 32 bit <code><a href="../../standard-data-types/procedures/long.html">Long</a></code>.<br>
+<br>
+<u><code>flags</code> details:</u><br>
+<br>
+If flags are omitted, FreeBASIC uses QB-compatible graphics in windowed (except in DOS) mode.  These constants are defined in <code>fbgfx.bi</code>.  In the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang fb</a></i> dialect, these constants are part of the <code>FB</code> <code><a href="../../modularizing/procedures/namespace.html">Namespace</a></code>. Their values can be combined to form a mask using <code><a href="../../operators/logical-operators/procedures/operator-or-inclusive-disjunction.html">Operator Or</a></code>. Note that most of the flags are not supported in DOS.<br>
+<br>
+Available flags:<br>
+<br>
+<u>graphic mode flags</u><br>
+<div class="indent"><code>GFX_NULL</code>: Starts a QB-on-GUI graphics mode.  It creates a graphics buffer but not a window.  User must implement the window, the events manager and refresh the screen as needed.  This mode allows to mix FreeBASIC drawing functions with API-driven windows.  Alternatively, it allows to process graphics (for example files) without making it visible on the screen, even in a purely console application.  This flag overrides all other mode flags.  See an <a href="../../reference/gfx-null.html">Example of GFX_NULL</a> in Windows.<br>
+<code>GFX_OPENGL</code>: Initializes OpenGL to draw in a dumb window. FreeBASIC graphic functions can't be used.  The screen is not automatically updated, <code><a href="flip.html">Flip</a></code> must be used.  This option provides a portable way to initialize the OpenGL Library.<br>
+If none of the above options is specified, FreeBASIC enters the QB-only graphics mode: it creates a buffer and a dumb window and sets a thread that automatically updates the screen and manages keyboard and mouse.  The FreeBASIC drawing functions can be used.<br>
+<br>
+</div><u>window mode flags</u><br>
+<div class="indent">Window mode flags are meaningless if  <code>GFX_NULL</code> mode is used<br>
+<code>GFX_WINDOWED</code>: If windowed mode is supported, FreeBASIC opens a window of the requested size in the present desktop<br>
+<code>GFX_FULLSCREEN</code>: The graphics card switch mode is switched to the requested mode and color depth and OS fullscreen mode is used.  If the mode is not available in the present card FreeBASIC switches to windowed mode.<br>
+If <code>GFX_FULLSCREEN</code> is not specified, the behavior for <code>GFX_WINDOWED</code> is assumed.<br>
+<code>GFX_NO_SWITCH</code>: Prevents the user from changing to fullscreen or to windowed mode by pressing Alt-Enter.<br>
+<code>GFX_NO_FRAME</code>: Creates a window without a border.<br>
+<code>GFX_SHAPED_WINDOW</code>: Creates transparent regions wherever RGBA(255, 0, 255, 0) is drawn on the screen.<br>
+<code>GFX_ALWAYS_ON_TOP</code>: Creates a window that stays always on top.<br>
+<br>
+</div><u>option flags</u><br>
+<div class="indent">Flags working in any mode, they activate special behaviors<br>
+<code>GFX_ALPHA_PRIMITIVES</code>: Tells the graphics library to enable alpha channel support for all drawing primitives. This means the alpha specified in a color value (via either the <code><a href="../../2d-drawing-functions/procedures/rgba.html">RGBA</a></code> macro or direct color in the form <code>&h<i>AARRGGBB</i></code>) will always be used by all primitives.<br>
+<code>GFX_HIGH_PRIORITY</code>: Tells the graphics library to enable a higher priority for graphics processing.  Only has an effect on <code>gdi</code> and <code>DirectX</code> drivers on Win32 platform and <code>Direct2D</code> added on new platforms.<br>
+<code>GFX_NO_X86_MMX</code>: Tells the graphics library not to use MMX blitters on X86 even if MMX cpu instructions are available.<br>
+<br>
+</div><u>OpenGL Buffer flags</u><br>
+<div class="indent">These flags work only in OpenGL graphics mode, must be combined with GFX_OPENGL<br>
+<code>GFX_STENCIL_BUFFER</code>: Forces OpenGL to use Stencil buffer <br>
+<code>GFX_ACCUMULATION_BUFFER</code>: Forces OpenGL to use Accumulation buffer<br>
+<code>GFX_MULTISAMPLE</code>: Requests fullscreen anti-aliasing through the ARB_multisample extension<br>
+<br>
+</div>Depending on whether the <code>GFX_FULLSCREEN</code> parameter is present or not, <code><b>Screen</b></code> will try to set the specified video mode in fullscreen or windowed mode, respectively.  If fullscreen mode is set and the system cannot set specified mode in fullscreen, it will try in windowed mode. If windowed mode is set and the system fails to open a window for specified mode, it will try fullscreen.  If everything fails, <code><b>Screen</b></code> will have no effect and execution will resume from the statement following the <code><b>Screen</b></code> call.  You should take care of checking if a graphics mode has been set or not, and behave accordingly; a way to check if <code><b>Screen</b></code> is successful is to test the return value of the <code><a href="screenptr.html">ScreenPtr</a></code> function; see its page for details.<br>
+<br>
+Note:<br>
+<div class="indent"><code>Screen 0</code> closes any graphics window, but also clears the console window if it exists.<br>
+<code>Screen 0, , , GFX_SCREEN_EXIT</code> (with <code>GFX_SCREEN_EXIT=&h80000000</code>) also closes any graphics window, but does not clear the console window if it exists (previous text is preserved).<br>
+<br>
+</div><u>Graphics mode console</u><br>
+Console commands (<code><a href="../../console-functions/procedures/locate.html">Locate</a></code>, <code><a href="../../console-functions/procedures/print.html">Print</a></code>), input can be used both with standard QB <code><b>Screen</b></code> modes and with the extended ones too, provided the standard color depth is not modified by using the second argument of <code><b>Screen</b></code>. Where the table says more than one text resolution is available for the text mode, the required text resolution can be requested by using <code><a href="../../console-functions/procedures/width.html">Width</a></code>.  Any characters <code><a href="../../console-functions/procedures/print.html">Print</a></code>ed will erase the background around them; it does not use a transparent background.<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Usage</h3><code><br>
+<b>ScreenRes</b> <i>width</i>, <i>height</i> [, [<i>depth</i>] [, [<i>num_pages</i>] [, [<i>flags</i>] [, <i>refresh_rate</i> ]]]]<br>
+<i>result</i> = <b>ScreenRes</b>( <i>width</i>, <i>height</i> [, [<i>depth</i>] [, [<i>num_pages</i>] [, [<i>flags</i>] [, <i>refresh_rate</i> ]]]] )<br>
+</code><br>
+
+<h3>Version</h3><br>
+Since 1.20.0: <code>GFX_NO_X86_MMX</code><br>
+<br>
+
+<h3>Platform Differences</h3><br>
+<ul><li> In DOS, Windowing and OpenGL related switches are not available, and other issues, see <a href="../../graphics-library-reference/gfxlib-freebasic-graphics-library-overview.html">GfxLib overview</a><br>
+<br>
+</li></ul>
+<h3>Dialect Differences</h3><br>
+<ul><li> Not available in the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang qb</a></i> dialect unless referenced with the alias <code><b>__Screenres</b></code>.<br>
+<br>
+</li></ul>
+<h3>Differences from QB</h3><br>
+<ul><li> New to FreeBASIC<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="screen-graphics.html">Screen (Graphics)</a></code> The QB-like way to set graphics mode<br>
+<li> <code><a href="screenlist.html">ScreenList</a></code> Check display modes available for FB GfxLib to use<br>
+<li> <code><a href="screencontrol.html">ScreenControl</a></code> Select driver and more <br>
+<li> <code><a href="screenlock.html">ScreenLock</a></code><br>
+<li> <code><a href="screenunlock.html">ScreenUnlock</a></code><br>
+<li> <code><a href="screenptr.html">ScreenPtr</a></code> Semi-low level access<br>
+<li> <code><a href="screenset.html">ScreenSet</a></code><br>
+<li> <code><a href="screencopy.html">ScreenCopy</a></code><br>
+<li> <code><a href="screeninfo.html">ScreenInfo</a></code><br>
+<li> <code><a href="screenglproc.html">ScreenGLProc</a></code><br>
+<li> <code><a href="../../tutorials/programmer-s-guide/internal-graphics-formats.html">Internal pixel formats</a></code><br>
+<li> <code>FaqPggfxlib2</code><br>
+<br>
+</li></li></li></li></li></li></li></li></li></li></li></li></ul><br>
+
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-cm">' Set the screen mode to 320*200, with 8 bits per pixel</span>
+
+<span class="tok-kw">ScreenRes</span> <span class="tok-nu">320</span><span>,</span> <span class="tok-nu">200</span><span>,</span> <span class="tok-nu">8</span>
+
+
+
+<span class="tok-cm">' Draw color bands in a diagonal pattern over the whole screen</span>
+
+<span class="tok-kw">For</span> <span>y</span> <span class="tok-kw">As</span> <span class="tok-kw">Long</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">200</span><span>-</span><span class="tok-nu">1</span>
+
+    <span class="tok-kw">For</span> <span>x</span> <span class="tok-kw">As</span> <span class="tok-kw">Long</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">320</span><span>-</span><span class="tok-nu">1</span>
+
+        <span class="tok-kw">PSet</span> <span>(</span><span>x</span><span>,</span><span>y</span><span>),(</span><span>x</span> <span>+</span> <span>y</span><span>)</span> <span class="tok-kw">And</span> <span class="tok-nu">255</span>
+
+    <span class="tok-kw">Next</span> <span>x</span>
+
+<span class="tok-kw">Next</span> <span>y</span>
+
+
+
+<span class="tok-cm">' Display the text &quot;Hello World!!&quot; over the lines we've drawn, in the top-left hand corner</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Hello world!!&quot;</span>
+
+
+
+<span class="tok-cm">' Keep the window open until the user presses a key</span>
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgScreenres.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

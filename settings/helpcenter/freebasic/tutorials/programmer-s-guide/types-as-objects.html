@@ -1,0 +1,1138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Types as Objects — Help Center</title>
+<meta name="description" content="Types as Objects — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/types-as-objects.html">
+<meta property="og:title" content="Types as Objects">
+<meta property="og:description" content="Types as Objects — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/types-as-objects.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/programmer-s-guide/types-as-objects.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>Types as Objects</h1>
+<h2>Documentation</h2>
+
+	An example of the overloadable operators and member procedures<br>
+<br>
+<div>Description</div><div><br>
+When a Type structure is used to define a user object, many procedure kinds can also be added to the data field skeleton to simplify its use by any user:<br>
+<div class="indent"><b>-</b> Sub, Function and Properties members.<br>
+<b>-</b> Constructors and Destructor.<br>
+<b>-</b> Overload Operators (inside and outside Type definition).<br>
+<br>
+</div>The following example is just a syntactic template for their declarations and definitions:<br>
+<div class="indent"><code><pre class="code"><span class="tok-cm">'' Sample Type showing available methods and operators</span>
+
+<span class="tok-cm">'' Practically this is a pointless example, as the only</span>
+
+<span class="tok-cm">'' data member is an Integer.  It serves only as a</span>
+
+<span class="tok-cm">'' guide to syntax.</span>
+
+<span class="tok-cm">''</span>
+
+<span class="tok-cm">'' There are many other combinations that can be</span>
+
+<span class="tok-cm">'' used in passed parameters.  For simplicity</span>
+
+<span class="tok-cm">'' This example only uses byref and type T</span>
+
+<span class="tok-cm">'' where ever possible.</span>
+
+
+
+<span class="tok-cm">'' The type 'DataType' is included to show where</span>
+
+<span class="tok-cm">'' any data type might be used</span>
+
+<span class="tok-kw">Type</span> <span>DataType</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+
+
+<span class="tok-cm">'' The type 'UDT' is included to show where only </span>
+
+<span class="tok-cm">'' a UDT data type can be used</span>
+
+<span class="tok-kw">Type</span> <span>UDT</span>
+
+  <span>value</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-cm">'' Our main type</span>
+
+<span class="tok-kw">Type</span> <span>T</span>
+
+  <span>value</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+  <span>value_array</span><span>(</span> <span class="tok-nu">0</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+
+
+  <span class="tok-cm">'' let, cast, combined assignment operators,</span>
+
+  <span class="tok-cm">'' constructors, and the destructor, must be</span>
+
+  <span class="tok-cm">'' declared inside the type.</span>
+
+  <span class="tok-cm">''</span>
+
+  <span class="tok-cm">'' Parameters can be passed Byval or Byref</span>
+
+  <span class="tok-cm">'' in most (All? - verify this).</span>
+
+  <span class="tok-cm">''</span>
+
+  <span class="tok-cm">'' All procs can be overloaded with different</span>
+
+  <span class="tok-cm">'' types as parameters.  In many cases this is not</span>
+
+  <span class="tok-cm">'' necessary as the TYPE can be coerced and</span>
+
+  <span class="tok-cm">'' converted depending on the CAST methods</span>
+
+  <span class="tok-cm">'' it exposes.  The compiler will to its best</span>
+
+  <span class="tok-cm">'' to evaluate statements and expressions if</span>
+
+  <span class="tok-cm">'' there is enough information to complete</span>
+
+  <span class="tok-cm">'' the operation.</span>
+
+  <span class="tok-cm">''</span>
+
+  <span class="tok-cm">'' For example,</span>
+
+  <span class="tok-cm">'' Even though operator += may not be overloaded</span>
+
+  <span class="tok-cm">'' but operator let and operator + are, the</span>
+
+  <span class="tok-cm">'' compiler will convert the T += datatype</span>
+
+  <span class="tok-cm">'' to T = T + datatype.</span>
+
+
+
+  <span class="tok-cm">'' Nonstatic members must be declared inside the</span>
+
+  <span class="tok-cm">'' type.</span>
+
+  <span class="tok-cm">''</span>
+
+  <span class="tok-cm">'' All Nonstatic members are implicitly</span>
+
+  <span class="tok-cm">'' passed a hidden **this** parameter having</span>
+
+  <span class="tok-cm">'' the same type as the TYPE in which they are</span>
+
+  <span class="tok-cm">'' declared.</span>
+
+  <span class="tok-cm">''</span>
+
+  <span class="tok-cm">'' Nonstatic member overloaded operators do not</span>
+
+  <span class="tok-cm">'' return a type.  All operations are done on the</span>
+
+  <span class="tok-cm">'' hidden this parameter.</span>
+
+  <span class="tok-cm">''</span>
+
+  <span class="tok-cm">'' Properties: Can be value properties or single</span>
+
+  <span class="tok-cm">'' indexed value properties</span>
+
+  <span class="tok-cm">'' GET/SET methods must be each delcared if used.</span>
+
+
+
+  <span class="tok-cm">'' Nonstatic Member Declarations:</span>
+
+
+
+  <span class="tok-cm">'' Memory Allocation/Deallocation</span>
+
+  
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">New</span> <span>(</span> <span class="tok-kw">ByVal</span> <span>size</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span> <span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">New</span><span>[]</span> <span>(</span> <span class="tok-kw">ByVal</span> <span>size</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span> <span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Delete</span> <span>(</span> <span class="tok-kw">ByVal</span> <span>buf</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>)</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Delete</span><span>[]</span> <span>(</span> <span class="tok-kw">ByVal</span> <span>buf</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>)</span>
+
+
+
+  <span class="tok-cm">'' Assignment</span>
+
+
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Let</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>T</span> <span>)</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Let</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span>
+
+
+
+  <span class="tok-cm">'' Cast can be overloaded to return multiple types</span>
+
+
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Cast</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Cast</span> <span>()</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+
+
+  <span class="tok-cm">'' Combined assignment</span>
+
+
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span>+=</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>T</span> <span>)</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span>+=</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span>-=</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span>*=</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span>/=</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span>\=</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Mod</span><span>=</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Shl</span><span>=</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Shr</span><span>=</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">And</span><span>=</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Or</span><span>=</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Xor</span><span>=</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Imp</span><span>=</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Eqv</span><span>=</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span>^=</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span>&amp;=</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span>
+
+  
+
+  <span class="tok-cm">'' Address of</span>
+
+
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span>@</span> <span>()</span> <span class="tok-kw">As</span> <span>DataType</span> <span class="tok-kw">Ptr</span>
+
+
+
+  <span class="tok-cm">'' Constructors can be overloaded</span>
+
+
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>()</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>T</span> <span>)</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span>
+
+
+
+  <span class="tok-cm">'' There can be only one destructor</span>
+
+
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Destructor</span> <span>()</span>
+
+
+
+  <span class="tok-cm">'' Nonstatic member functions and subs</span>
+
+  <span class="tok-cm">'' overloaded procs must have different parameters</span>
+
+
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Function</span> <span>f</span> <span>(</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Function</span> <span>f</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>arg1</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>s</span> <span>(</span> <span>)</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>s</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>arg1</span> <span class="tok-kw">As</span> <span>T</span> <span>)</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>s</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>arg1</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span>
+
+
+
+  <span class="tok-cm">'' Properties</span>
+
+
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Property</span> <span>p</span> <span>()</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Property</span> <span>p</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>new_value</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span>
+
+
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Property</span> <span>pidx</span> <span>(</span> <span class="tok-kw">ByVal</span> <span>index</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Property</span> <span>pidx</span> <span>(</span> <span class="tok-kw">ByVal</span> <span>index</span> <span class="tok-kw">As</span> <span>DataType</span><span>,</span> <span class="tok-kw">ByRef</span> <span>new_value</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span>
+
+
+
+  <span class="tok-cm">'' Iterator</span>
+
+  
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">For</span> <span>()</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Step</span> <span>()</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Next</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>cond</span> <span class="tok-kw">As</span> <span>T</span> <span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">For</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>stp</span> <span class="tok-kw">As</span> <span>T</span> <span>)</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Step</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>stp</span> <span class="tok-kw">As</span> <span>T</span> <span>)</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Next</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>cond</span> <span class="tok-kw">As</span> <span>T</span><span>,</span> <span class="tok-kw">ByRef</span> <span>stp</span> <span class="tok-kw">As</span> <span>T</span> <span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-cm">'' These must be global procedures</span>
+
+<span class="tok-cm">'' Globals are not prefixed with the the TYPE name</span>
+
+
+
+<span class="tok-cm">'' At least one parameter must be of Type 'T'</span>
+
+<span class="tok-cm">'' For simplicity, type 'T' is always given first for binary ops</span>
+
+<span class="tok-cm">'' in this example</span>
+
+
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span>-</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>T</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Not</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>T</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span>-&gt;</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>T</span> <span>)</span> <span class="tok-kw">As</span> <span>UDT</span>
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span>*</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>T</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span>+</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>lhs</span> <span class="tok-kw">As</span> <span>T</span><span>,</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span>-</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>lhs</span> <span class="tok-kw">As</span> <span>T</span><span>,</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span> 
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span>*</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>lhs</span> <span class="tok-kw">As</span> <span>T</span><span>,</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span>/</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>lhs</span> <span class="tok-kw">As</span> <span>T</span><span>,</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span>\</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>lhs</span> <span class="tok-kw">As</span> <span>T</span><span>,</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Mod</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>lhs</span> <span class="tok-kw">As</span> <span>T</span><span>,</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Shl</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>lhs</span> <span class="tok-kw">As</span> <span>T</span><span>,</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Shr</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>lhs</span> <span class="tok-kw">As</span> <span>T</span><span>,</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">And</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>lhs</span> <span class="tok-kw">As</span> <span>T</span><span>,</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Or</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>lhs</span> <span class="tok-kw">As</span> <span>T</span><span>,</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Xor</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>lhs</span> <span class="tok-kw">As</span> <span>T</span><span>,</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Imp</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>lhs</span> <span class="tok-kw">As</span> <span>T</span><span>,</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Eqv</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>lhs</span> <span class="tok-kw">As</span> <span>T</span><span>,</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span>^</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>lhs</span> <span class="tok-kw">As</span> <span>T</span><span>,</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span>=</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>lhs</span> <span class="tok-kw">As</span> <span>T</span><span>,</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span>&lt;&gt;</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>lhs</span> <span class="tok-kw">As</span> <span>T</span><span>,</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span>&lt;</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>lhs</span> <span class="tok-kw">As</span> <span>T</span><span>,</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span>&gt;</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>lhs</span> <span class="tok-kw">As</span> <span>T</span><span>,</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span>&lt;=</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>lhs</span> <span class="tok-kw">As</span> <span>T</span><span>,</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span>&gt;=</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>lhs</span> <span class="tok-kw">As</span> <span>T</span><span>,</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span>&amp;</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>lhs</span> <span class="tok-kw">As</span> <span>T</span><span>,</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Abs</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>arg</span> <span class="tok-kw">As</span> <span>UDT</span> <span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Double</span>
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Fix</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>arg</span> <span class="tok-kw">As</span> <span>UDT</span> <span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Double</span>
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Frac</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>arg</span> <span class="tok-kw">As</span> <span>UDT</span> <span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Double</span>
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Int</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>arg</span> <span class="tok-kw">As</span> <span>UDT</span> <span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Double</span>
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Sgn</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>arg</span> <span class="tok-kw">As</span> <span>UDT</span> <span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Double</span>
+
+
+
+<span class="tok-cm">'' Global procedures (subs and funcs) can also accept the TYPE</span>
+
+<span class="tok-cm">'' as a parameter or return it as a value, as could be done</span>
+
+<span class="tok-cm">'' in previous versions of FreeBASIC.</span>
+
+<span class="tok-cm">'' No example given. See function or sub in the manual.</span>
+
+
+
+<span class="tok-cm">'' All TYPE members are defined outside the TYPE</span>
+
+
+
+<span class="tok-cm">'' Nonstatic members must be prefixed with type name</span>
+
+<span class="tok-cm">'' in this case 'T'</span>
+
+
+
+<span class="tok-cm">'' Name resolution in a NAMESPACE is same as other</span>
+
+<span class="tok-cm">'' subs/funcs.  Use USING or prefix the namespace name</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>T.new</span> <span>(</span> <span class="tok-kw">ByVal</span> <span>size</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span> <span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span>
+
+    <span class="tok-kw">Operator</span> <span>=</span> <span class="tok-kw">Allocate</span><span>(</span> <span>size</span> <span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+ 
+
+<span class="tok-kw">Operator</span> <span>T.new</span><span>[]</span> <span>(</span> <span class="tok-kw">ByVal</span> <span>size</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span> <span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span>
+
+    <span class="tok-kw">Operator</span> <span>=</span> <span class="tok-kw">Allocate</span><span>(</span> <span>size</span> <span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>T.delete</span> <span>(</span> <span class="tok-kw">ByVal</span> <span>buf</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>)</span>
+
+    <span class="tok-kw">Deallocate</span> <span>buf</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>T.delete</span><span>[]</span> <span>(</span> <span class="tok-kw">ByVal</span> <span>buf</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>)</span>
+
+    <span class="tok-kw">Deallocate</span> <span>buf</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>T.let</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>T</span> <span>)</span>
+
+  <span>value</span> <span>=</span> <span>rhs.value</span>  
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>T.let</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span>
+
+  <span>value</span> <span>=</span> <span>rhs</span>  
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>T.cast</span> <span>(</span> <span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+  <span class="tok-kw">Return</span> <span class="tok-kw">Str</span><span>(</span> <span>value</span> <span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>T.cast</span> <span>(</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+  <span class="tok-kw">Return</span> <span>value</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>T.</span><span>+=</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>T</span> <span>)</span>
+
+  <span>value</span> <span>+=</span> <span>rhs.value</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>T.</span><span>+=</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span>
+
+  <span>value</span> <span>+=</span> <span>rhs</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>T.</span><span>-=</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span>
+
+  <span>value</span> <span>-=</span> <span>rhs</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>T.</span><span>*=</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span>
+
+  <span>value</span> <span>*=</span> <span>rhs</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>T.</span><span>/=</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span>
+
+  <span>value</span> <span>/=</span> <span>rhs</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>T.</span><span>\=</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span>
+
+  <span>value</span> <span>\=</span> <span>rhs</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>T.mod</span><span>=</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span>
+
+  <span>value</span> <span class="tok-kw">Mod</span><span>=</span> <span>rhs</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>T.shl</span><span>=</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span>
+
+  <span>value</span> <span class="tok-kw">Shl</span><span>=</span> <span>rhs</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>T.shr</span><span>=</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span>
+
+  <span>value</span> <span class="tok-kw">Shr</span><span>=</span> <span>rhs</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>T.and</span><span>=</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span>
+
+  <span>value</span> <span class="tok-kw">And</span><span>=</span> <span>rhs</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>T.or</span><span>=</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span>
+
+  <span>value</span> <span class="tok-kw">Or</span><span>=</span> <span>rhs</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>T.xor</span><span>=</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span>
+
+  <span>value</span> <span class="tok-kw">Xor</span><span>=</span> <span>rhs</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>T.imp</span><span>=</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span>
+
+  <span>value</span> <span class="tok-kw">Imp</span><span>=</span> <span>rhs</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>T.eqv</span><span>=</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span>
+
+  <span>value</span> <span class="tok-kw">Eqv</span><span>=</span> <span>rhs</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>T.</span><span>^=</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span>
+
+  <span>value</span> <span>^=</span> <span>rhs</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>T.&amp;</span><span>=</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span>
+
+  <span class="tok-kw">Dim</span> <span>tmp</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+  <span>tmp</span> <span>&amp;=</span> <span class="tok-kw">Str</span><span>(</span> <span>rhs</span> <span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>T.</span><span>@</span> <span>()</span> <span class="tok-kw">As</span> <span>DataType</span> <span class="tok-kw">Ptr</span>
+
+  <span class="tok-kw">Return</span><span>(</span> <span class="tok-kw">Cast</span><span>(</span> <span>DataType</span> <span class="tok-kw">Ptr</span><span>,</span> <span>@</span><span class="tok-kw">This</span> <span>))</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+
+
+<span class="tok-cm">'' Constructors:</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>T</span> <span>()</span>
+
+  <span class="tok-cm">'' default constructor</span>
+
+  <span>value</span> <span>=</span> <span class="tok-nu">0</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>T</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>T</span> <span>)</span>
+
+  <span class="tok-cm">'' copy constructor</span>
+
+  <span>value</span> <span>=</span> <span>rhs.value</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>T</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span>
+
+  <span class="tok-cm">'' custom constructor</span>
+
+  <span>value</span> <span>=</span> <span>rhs</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-cm">'' There can be only one destructor</span>
+
+
+
+<span class="tok-kw">Destructor</span> <span>T</span> <span>()</span>
+
+  <span class="tok-cm">'' clean-up, none in this example</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Destructor</span>
+
+
+
+
+
+
+
+<span class="tok-cm">'' Globals must specify all arguments and return type</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>-</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>T</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+  <span class="tok-kw">Return</span> <span>(-</span><span>rhs.value</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span class="tok-kw">Not</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>T</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+  <span class="tok-kw">Return</span> <span>(</span><span class="tok-kw">Not</span> <span>rhs.value</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>-&gt;</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>T</span> <span>)</span> <span class="tok-kw">As</span> <span>UDT</span>
+
+  <span class="tok-kw">Return</span> <span class="tok-kw">Type</span><span>(</span><span class="tok-nu">4</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>*</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>T</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+  <span class="tok-kw">Return</span> <span class="tok-nu">5</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>+</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>lhs</span> <span class="tok-kw">As</span> <span>T</span><span>,</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+  <span class="tok-kw">Return</span> <span>(</span><span>lhs.value</span> <span>+</span> <span>rhs</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>-</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>lhs</span> <span class="tok-kw">As</span> <span>T</span><span>,</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+  <span class="tok-kw">Return</span> <span>(</span><span>lhs.value</span> <span>-</span> <span>rhs</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>*</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>lhs</span> <span class="tok-kw">As</span> <span>T</span><span>,</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+  <span class="tok-kw">Return</span> <span>(</span><span>lhs.value</span> <span>*</span> <span>rhs</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>/</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>lhs</span> <span class="tok-kw">As</span> <span>T</span><span>,</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+  <span class="tok-kw">Return</span> <span>(</span><span>lhs.value</span> <span>/</span> <span>rhs</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>\</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>lhs</span> <span class="tok-kw">As</span> <span>T</span><span>,</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+  <span class="tok-kw">Return</span> <span>(</span><span>lhs.value</span> <span>\</span> <span>rhs</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span class="tok-kw">Mod</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>lhs</span> <span class="tok-kw">As</span> <span>T</span><span>,</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+  <span class="tok-kw">Return</span> <span>(</span><span>lhs.value</span> <span class="tok-kw">Mod</span> <span>rhs</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span class="tok-kw">Shl</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>lhs</span> <span class="tok-kw">As</span> <span>T</span><span>,</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+  <span class="tok-kw">Return</span> <span>(</span><span>lhs.value</span> <span class="tok-kw">Shl</span> <span>rhs</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span class="tok-kw">Shr</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>lhs</span> <span class="tok-kw">As</span> <span>T</span><span>,</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+  <span class="tok-kw">Return</span> <span>(</span><span>lhs.value</span> <span class="tok-kw">Shr</span> <span>rhs</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span class="tok-kw">And</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>lhs</span> <span class="tok-kw">As</span> <span>T</span><span>,</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+  <span class="tok-kw">Return</span> <span>(</span><span>lhs.value</span> <span class="tok-kw">And</span> <span>rhs</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span class="tok-kw">Or</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>lhs</span> <span class="tok-kw">As</span> <span>T</span><span>,</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+  <span class="tok-kw">Return</span> <span>(</span><span>lhs.value</span> <span class="tok-kw">Or</span> <span>rhs</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span class="tok-kw">Xor</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>lhs</span> <span class="tok-kw">As</span> <span>T</span><span>,</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+  <span class="tok-kw">Return</span> <span>(</span><span>lhs.value</span> <span class="tok-kw">Xor</span> <span>rhs</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span class="tok-kw">Imp</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>lhs</span> <span class="tok-kw">As</span> <span>T</span><span>,</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+  <span class="tok-kw">Return</span> <span>(</span><span>lhs.value</span> <span class="tok-kw">Imp</span> <span>rhs</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span class="tok-kw">Eqv</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>lhs</span> <span class="tok-kw">As</span> <span>T</span><span>,</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+  <span class="tok-kw">Return</span> <span>(</span><span>lhs.value</span> <span class="tok-kw">Eqv</span> <span>rhs</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>^</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>lhs</span> <span class="tok-kw">As</span> <span>T</span><span>,</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+  <span class="tok-kw">Return</span> <span>(</span><span>lhs.value</span> <span>^</span> <span>rhs</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>=</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>lhs</span> <span class="tok-kw">As</span> <span>T</span><span>,</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+  <span class="tok-kw">Return</span> <span>(</span><span>lhs.value</span> <span>=</span> <span>rhs</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>&lt;&gt;</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>lhs</span> <span class="tok-kw">As</span> <span>T</span><span>,</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+  <span class="tok-kw">Return</span> <span>(</span><span>lhs.value</span> <span>&lt;&gt;</span> <span>rhs</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>&lt;</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>lhs</span> <span class="tok-kw">As</span> <span>T</span><span>,</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+  <span class="tok-kw">Return</span> <span>(</span><span>lhs.value</span> <span>&lt;</span> <span>rhs</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>&gt;</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>lhs</span> <span class="tok-kw">As</span> <span>T</span><span>,</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+  <span class="tok-kw">Return</span> <span>(</span><span>lhs.value</span> <span>&gt;</span> <span>rhs</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>&lt;=</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>lhs</span> <span class="tok-kw">As</span> <span>T</span><span>,</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+  <span class="tok-kw">Return</span> <span>(</span><span>lhs.value</span> <span>&lt;=</span> <span>rhs</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>&gt;=</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>lhs</span> <span class="tok-kw">As</span> <span>T</span><span>,</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+  <span class="tok-kw">Return</span> <span>(</span><span>lhs.value</span> <span>&gt;=</span> <span>rhs</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>&amp;</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>lhs</span> <span class="tok-kw">As</span> <span>T</span><span>,</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+  <span class="tok-kw">Return</span> <span class="tok-kw">Val</span><span>(</span><span>lhs.value</span> <span>&amp;</span> <span>rhs</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span class="tok-kw">Abs</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>arg</span> <span class="tok-kw">As</span> <span>UDT</span> <span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Double</span>
+
+    <span class="tok-kw">Return</span> <span class="tok-kw">Abs</span><span>(</span><span>arg.value</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span class="tok-kw">Fix</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>arg</span> <span class="tok-kw">As</span> <span>UDT</span> <span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Double</span>
+
+    <span class="tok-kw">Return</span> <span class="tok-kw">Fix</span><span>(</span><span>arg.value</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span class="tok-kw">Frac</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>arg</span> <span class="tok-kw">As</span> <span>UDT</span> <span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Double</span>
+
+    <span class="tok-kw">Return</span> <span class="tok-kw">Frac</span><span>(</span><span>arg.value</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span class="tok-kw">Int</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>arg</span> <span class="tok-kw">As</span> <span>UDT</span> <span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Double</span>
+
+    <span class="tok-kw">Return</span> <span class="tok-kw">Int</span><span>(</span><span>arg.value</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span class="tok-kw">Sgn</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>arg</span> <span class="tok-kw">As</span> <span>UDT</span> <span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Double</span>
+
+    <span class="tok-kw">Return</span> <span class="tok-kw">Sgn</span><span>(</span><span>arg.value</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-cm">'' Nonstatic member methods</span>
+
+
+
+<span class="tok-kw">Function</span> <span>T.f</span> <span>(</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+  <span class="tok-kw">Dim</span> <span>x</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+  <span class="tok-kw">Return</span> <span>x</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Function</span> <span>T.f</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>arg1</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+  <span>arg1</span> <span>=</span> <span>this.value</span>
+
+  <span class="tok-kw">Return</span> <span>value</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>T.s</span> <span>(</span> <span>)</span>
+
+  <span class="tok-cm">'' refer to the type using</span>
+
+  
+
+  <span class="tok-cm">'' with block</span>
+
+  <span class="tok-kw">With</span> <span class="tok-kw">This</span>
+
+    <span>.</span><span>value</span> <span>=</span> <span class="tok-nu">1</span>
+
+  <span class="tok-kw">End</span> <span class="tok-kw">With</span>
+
+  
+
+  <span class="tok-cm">'' field access</span>
+
+  <span>this.value</span> <span>=</span> <span class="tok-nu">2</span>
+
+  
+
+  <span class="tok-cm">'' directly</span>
+
+  <span>value</span> <span>=</span> <span class="tok-nu">3</span>
+
+
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>T.s</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>arg1</span> <span class="tok-kw">As</span> <span>T</span> <span>)</span>
+
+  <span>value</span> <span>=</span> <span>arg1.value</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>T.s</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>arg1</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span>
+
+  <span>value</span> <span>=</span> <span>arg1</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-kw">Property</span> <span>T.p</span> <span>()</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+  <span class="tok-cm">'' GET property</span>
+
+  <span class="tok-kw">Return</span> <span>value</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Property</span>
+
+
+
+<span class="tok-kw">Property</span> <span>T.p</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>new_value</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span>
+
+  <span class="tok-cm">'' SET property</span>
+
+  <span>value</span> <span>=</span> <span>new_value</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Property</span>
+
+
+
+<span class="tok-kw">Property</span> <span>T.pidx</span> <span>(</span> <span class="tok-kw">ByVal</span> <span>index</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span> <span class="tok-kw">As</span> <span>DataType</span>
+
+  <span class="tok-cm">'' GET indexed property</span>
+
+  <span class="tok-kw">Return</span> <span>value_array</span><span>(</span> <span>index</span> <span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Property</span>
+
+
+
+<span class="tok-kw">Property</span> <span>T.pidx</span> <span>(</span> <span class="tok-kw">ByVal</span> <span>index</span> <span class="tok-kw">As</span> <span>DataType</span><span>,</span> <span class="tok-kw">ByRef</span> <span>new_value</span> <span class="tok-kw">As</span> <span>DataType</span> <span>)</span>
+
+  <span class="tok-cm">'' SET indexed property</span>
+
+  <span>value_array</span><span>(</span> <span>index</span> <span>)</span> <span>=</span> <span>new_value</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Property</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>T.for</span> <span>()</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>T.step</span> <span>()</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>T.next</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>cond</span> <span class="tok-kw">As</span> <span>T</span> <span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+  <span class="tok-kw">Return</span> <span class="tok-nu">0</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>T.for</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>stp</span> <span class="tok-kw">As</span> <span>T</span> <span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span> 
+
+
+
+<span class="tok-kw">Operator</span> <span>T.step</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>stp</span> <span class="tok-kw">As</span> <span>T</span> <span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>T.next</span> <span>(</span> <span class="tok-kw">ByRef</span> <span>cond</span> <span class="tok-kw">As</span> <span>T</span><span>,</span> <span class="tok-kw">ByRef</span> <span>stp</span> <span class="tok-kw">As</span> <span>T</span> <span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+  <span class="tok-kw">Return</span> <span class="tok-nu">0</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-cm">'' new, delete, delete[]</span>
+
+
+
+<span class="tok-cm">'' Allocate object</span>
+
+<span class="tok-kw">Dim</span> <span>X</span> <span class="tok-kw">As</span> <span>T</span> <span class="tok-kw">Ptr</span> <span>=</span> <span class="tok-kw">New</span> <span>T</span>
+
+
+
+<span class="tok-cm">'' Deallocate object</span>
+
+<span class="tok-kw">Delete</span> <span>X</span>
+
+
+
+<span class="tok-cm">'' Allocate object vector</span>
+
+<span class="tok-kw">Dim</span> <span>Xlist</span> <span class="tok-kw">As</span> <span>T</span> <span class="tok-kw">Ptr</span> <span>=</span> <span class="tok-kw">New</span> <span>T</span><span>[</span><span class="tok-nu">10</span><span>]</span>
+
+
+
+<span class="tok-cm">'' Deallocate object vector</span>
+
+<span class="tok-kw">Delete</span><span>[]</span> <span>Xlist</span></pre></code><br>
+</div></div><div>See also</div><div><br>
+<ul><li> <code><a href="../../operators/operators/procedures/type-udt.html">Type</a></code><br>
+<br>
+</li></ul></div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

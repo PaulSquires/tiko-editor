@@ -1,0 +1,1028 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Windows Management Instrumentation (WMI) — Help Center</title>
+<meta name="description" content="Windows Management Instrumentation (WMI) — 24 documented members. COM reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/com/windows-management-instrumentation-wmi.html">
+<meta property="og:title" content="Windows Management Instrumentation (WMI)">
+<meta property="og:description" content="Windows Management Instrumentation (WMI) — 24 documented members. COM reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/com/windows-management-instrumentation-wmi.html">
+<link rel="stylesheet" href="../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/com/windows-management-instrumentation-wmi.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span>COM</div>
+<h1>Windows Management Instrumentation (WMI)</h1>
+<h2>Members (24)</h2>
+<div class="memberlist"><a href="procedures/constructor-moniker.html"><span class="m-n">Constructor (Moniker)</span><span class="m-d">Connects to WMI using a moniker.</span></a><a href="procedures/constructor-server.html"><span class="m-n">Constructor (Server)</span><span class="m-d">Connects to the namespace that is specified on the *wszNamespace* parameter on the computer that is specified in the *wszServer* parameter. The target computer can be either local or remote, but it must have WMI installed.</span></a><a href="procedures/cwmiservices.html"><span class="m-n">CWmiServices</span><span class="m-d"></span></a><a href="procedures/cwmiservices.html"><span class="m-n">CWmiServices</span><span class="m-d"></span></a><a href="procedures/execquery.html"><span class="m-n">ExecQuery</span><span class="m-d">Executes a query to retrieve objects.</span></a><a href="procedures/get.html"><span class="m-n">Get</span><span class="m-d">Retrieves an object, that is either a class definition or an instance, based on the object path.</span></a><a href="procedures/geterrorcodetext.html"><span class="m-n">GetErrorCodeText</span><span class="m-d">Returns the text string description associated with the WMI error code.</span></a><a href="procedures/getfacilitycodetext.html"><span class="m-n">GetFacilityCodeText</span><span class="m-d">Returns the name of the subsystem where the error occurred, such as &quot;Windows&quot;, &quot;WBEM&quot;, &quot;SSPI&quot;, or &quot;RPC&quot;.</span></a><a href="procedures/getlastresult.html"><span class="m-n">GetLastResult</span><span class="m-d">Returns the last result code.</span></a><a href="procedures/getnamedproperties.html"><span class="m-n">GetNamedProperties</span><span class="m-d">Retrieves a named collection of the properties for the current class or instance.</span></a><a href="procedures/instancesof.html"><span class="m-n">InstancesOf</span><span class="m-d">Creates an enumerator that returns the instances of a specified class according to the user-specified selection criteria.</span></a><a href="procedures/newenum.html"><span class="m-n">NewEnum</span><span class="m-d">Retrieves an enumerator for the collection.</span></a><a href="procedures/nextobject.html"><span class="m-n">NextObject</span><span class="m-d">Retrieves the next item in the enumeration sequence.</span></a><a href="procedures/objectscount.html"><span class="m-n">ObjectsCount</span><span class="m-d">Returns the number of objects in the collection.</span></a><a href="procedures/objectsetptr.html"><span class="m-n">ObjectSetPtr</span><span class="m-d">Returns a pointer to the **ISWbemObjectSet** interface. Don&#x27;t call **IUnknown_Release** on it.</span></a><a href="procedures/propertysetptr.html"><span class="m-n">PropertySetPtr</span><span class="m-d">Returns a pointer to the **ISWbemPropertySet** interface. Don&#x27;t call **IUnknown_Release** on it.</span></a><a href="procedures/propscount.html"><span class="m-n">PropsCount</span><span class="m-d">Returns the number of objects in the property set collection.</span></a><a href="procedures/propvalue.html"><span class="m-n">PropValue</span><span class="m-d">Retrieves the variant value of the WMI property.</span></a><a href="procedures/resetenum.html"><span class="m-n">ResetEnum</span><span class="m-d">Resets the enumeration sequence to the beginning.</span></a><a href="procedures/servicesobj.html"><span class="m-n">ServicesObj</span><span class="m-d">Returns a counted reference of the underlying dispatch pointer. You must release it, e.g. calling call **IUnknown_Release** or the function **AfxSafeRelease** when no longer need it.</span></a><a href="procedures/servicesptr.html"><span class="m-n">ServicesPtr</span><span class="m-d">Returns a pointer to the ISWbemServices interface. Don&#x27;t call **IUnknown_Release** on it.</span></a><a href="procedures/wmidatetostr.html"><span class="m-n">WmiDateToStr</span><span class="m-d">Converts a date and time value in the CIM DATETIME format to a string containing the date based on the specified mask, e.g. &quot;dd-MM-yyyy&quot;.</span></a><a href="procedures/wmitimetofiletime.html"><span class="m-n">WmiTimeToFileTime</span><span class="m-d">Converts a date and time value in the CIM DATETIME format to the FILETIME format.</span></a><a href="procedures/wmitimetostr.html"><span class="m-n">WmiTimeToStr</span><span class="m-d">Converts a date and time value in the CIM DATETIME format to a string containing the date based on the specified mask, e.g. &quot;hh&#x27;:&#x27;mm&#x27;:&#x27;ss tt&quot;.</span></a></div>
+<h2>Documentation</h2>
+<h2 id="windows-management-instrumentation-wmi">Windows Management Instrumentation (WMI)</h2>
+<p>Windows Management Instrumentation (WMI) is the infrastructure for management data and operations on Windows-based operating systems.</p>
+<p><code>CWmiServices</code> is a wrapper class on top of the WMI scripting interfaces.</p>
+<p><code>CWmiServices</code> supports three ways of retrieving information.</p>
+<ul><li>The first one uses an enumerator (the standard <strong>IEnumVARIANT</strong> interface).</li><li>The second way is to call the <strong>GetNamedProperties</strong> method after executing the query. <strong>GetNamedProperties</strong> generates a named collection of properties. This has the advantage of not having to use <strong>CDispInvoke</strong>.</li><li>The third way is to use the <strong>Get</strong> method. It retrieves an object, that is either a class definition or an instance, based on the specified object path. Using this object, it generates a named collection of properties. The disadvantage over <strong>ExecQuery</strong> is that you can't choose the properties to return: it returns all the properties of the specified WMI class.</li></ul>
+<p><strong>Include file</strong>: AfxNova/CWmiDisp.inc.</p>
+<h2 id="constructors">Constructors</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="procedures/constructor-moniker.html">Constructor (Moniker)</a></td><td>Connects to WMI using a moniker.</td></tr><tr><td><a href="procedures/constructor-server.html">Constructor (Server)</a></td><td>Connects to the namespace that is specified on the <em>wszNamespace</em> parameter on the computer that is specified in the <em>wszServer</em> parameter. The target computer can be either local or remote, but it must have WMI installed.</td></tr></tbody></table></div>
+<hr>
+<h2 id="methods">Methods</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="procedures/execquery.html">ExecQuery</a></td><td>Executes a query to retrieve objects.</td></tr><tr><td><a href="procedures/get.html">Get</a></td><td>Retrieves an object, that is either a class definition or an instance, based on the object path.</td></tr><tr><td><a href="procedures/geterrorcodetext.html">GetErrorCodeText</a></td><td>Returns the text string description associated with the WMI error code.</td></tr><tr><td><a href="procedures/getfacilitycodetext.html">GetFacilityCodeText</a></td><td>Returns the name of the subsystem where the error occurred, such as "Windows", "WBEM", "SSPI", or "RPC".</td></tr><tr><td><a href="procedures/getlastresult.html">GetLastResult</a></td><td>Returns the last result code.</td></tr><tr><td><a href="procedures/getnamedproperties.html">GetNamedProperties</a></td><td>Retrieves a named collection of the properties for the current class or instance.</td></tr><tr><td><a href="procedures/instancesof.html">InstancesOf</a></td><td>Creates an enumerator that returns the instances of a specified class according to the user-specified selection criteria.</td></tr><tr><td><a href="procedures/newenum.html">NewEnum</a></td><td>Retrieves an enumerator for the collection.</td></tr><tr><td><a href="procedures/nextobject.html">NextObject</a></td><td>Retrieves the next item in the enumeration sequence.</td></tr><tr><td><a href="procedures/objectscount.html">ObjectsCount</a></td><td>Returns the number of objects in the collection.</td></tr><tr><td><a href="procedures/objectsetptr.html">ObjectSetPtr</a></td><td>Returns a pointer to the <strong>ISWbemObjectSet</strong> interface. Don't call <strong>IUnknown_Release</strong> on it.</td></tr><tr><td><a href="procedures/propertysetptr.html">PropertySetPtr</a></td><td>Returns a pointer to the <strong>ISWbemPropertySet</strong> interface. Don't call <strong>IUnknown_Release</strong> on it.</td></tr><tr><td><a href="procedures/propscount.html">PropsCount</a></td><td>Returns the number of objects in the property set collection.</td></tr><tr><td><a href="procedures/propvalue.html">PropValue</a></td><td>Retrieves the variant value of the WMI property.</td></tr><tr><td><a href="procedures/resetenum.html">ResetEnum</a></td><td>Resets the enumeration sequence to the beginning.</td></tr><tr><td><a href="procedures/servicesobj.html">ServicesObj</a></td><td>Returns a counted reference of the underlying dispatch pointer. You must release it, e.g. calling call <strong>IUnknown_Release</strong> or the function <strong>AfxSafeRelease</strong> when no longer need it.</td></tr><tr><td><a href="procedures/servicesptr.html">ServicesPtr</a></td><td>Returns a pointer to the ISWbemServices interface. Don't call <strong>IUnknown_Release</strong> on it.</td></tr><tr><td><a href="procedures/wmidatetostr.html">WmiDateToStr</a></td><td>Converts a date and time value in the CIM DATETIME format to a string containing the date based on the specified mask, e.g. "dd-MM-yyyy".</td></tr><tr><td><a href="procedures/wmitimetofiletime.html">WmiTimeToFileTime</a></td><td>Converts a date and time value in the CIM DATETIME format to the FILETIME format.</td></tr><tr><td><a href="procedures/wmitimetostr.html">WmiTimeToStr</a></td><td>Converts a date and time value in the CIM DATETIME format to a string containing the date based on the specified mask, e.g. "hh':'mm':'ss tt".</td></tr></tbody></table></div>
+<hr>
+<h3 id="constructor1">Constructor (Moniker)</h3>
+<p>Connects to WMI using a moniker.</p>
+<pre class="code"><code>CONSTRUCTOR CWmiServices (BYREF wszDisplayName AS WSTRING)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszDisplayName</em></td><td>The display name for the object to be created.</td></tr></tbody></table></div>
+<h5 id="examples">Examples</h5>
+<pre class="code"><code>' // Connect to WMI using a moniker
+' // Note: $ is used to avoid the pedantic warning of the compiler about escape characters
+DIM pServices AS CWmiServices = $"winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2"</code></pre>
+<p>This example uses <strong>CWmiServices</strong> and <strong>CDispInvoke</strong> to easily set the specified printer as the default printer:</p>
+<pre class="code"><code>' // Connect with WMI in the local computer and get the properties of the specified printer
+DIM pDisp AS CDispInvoke = CWmiServices( _
+   $"winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2:" &amp; _
+   "Win32_Printer.DeviceID='OKI B410'").ServicesObj
+
+' // Set the printer as the default printer
+DIM dvRes AS DVARIANT = pDisp.Invoke("SetDefaultPrinter")
+print "Result: ", VAL(dvRes)</code></pre>
+<hr>
+<h3 id="constructor2">Constructor (Server)</h3>
+<p>Connects to the namespace that is specified on the <em>wszNamespace</em> parameter on the computer that is specified in the <em>wszServer</em> parameter. The target computer can be either local or remote, but it must have WMI installed.</p>
+<pre class="code"><code>CONSTRUCTOR CWmiServices (BYREF wszServer AS WSTRING, BYREF wszNamespace AS WSTRING, _
+   BYREF wszUser AS WSTRING = "", BYREF wszPassword AS WSTRING = "", _
+   BYREF wszLocale AS WSTRING = "", BYREF wszAuthority AS WSTRING = "", _
+   BYVAL iSecurityFlags AS LONG = wbemConnectFlagUseMaxWait)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszServer</em></td><td>The computer name to which you are connecting. If the remote computer is in a different domain than the user account under which you log in, then use the fully qualified computer name. If you do not provide this parameter, the call defaults to the local computer.<br>Example: server1.network.fabrikam<br>You also can use an IP address in this parameter. If the IP address is in IPv6 format, the target computer must be running IPv6. An address in IPv4 looks like 111.222.333.444. An IP address in IPv6 format looks like 2010:836B:4179::836B:4179</td></tr><tr><td><em>wszNamespace</em></td><td>A string that specifies the namespace to which you log on. For example, to log on to the root\default namespace, use root\\default. If you do not specify this parameter, it defaults to the namespace that is configured as the default namespace for scripting.<br>Example: DIM pServices AS CWmiServices = CWmiServices(".", "root\\cimv2")<br>where "." is a shortcut for the local computer.</td></tr><tr><td><em>wszPassword</em></td><td>A string that specifies the password to use when attempting to connect. Leave the parameter blank to use the current security context. The <em>wszPassword</em> parameter should only be used with connections to remote WMI servers. If you attempt to specify <em>wszPassword</em> for a local WMI connection, the connection attempt fails. If Kerberos authentication is in use then the username and password that is specified in <em>wszUser</em> and <em>wszPassword</em> cannot be intercepted on the network.</td></tr><tr><td><em>wszLocale</em></td><td>A string that specifies the localization code. If you want to use the current locale, leave it blank. If not blank, this parameter must be a string that indicates the desired locale where information must be retrieved. For Microsoft locale identifiers, the format of the string is "MS_xxxx", where xxxx is a string in the hexadecimal form that indicates the LCID. For example, American English would appear as "MS_409".</td></tr><tr><td><em>wszAuthority</em></td><td>Optional.<br>"": This parameter is optional. However, if specified, only Kerberos or NTLMDomain can be used.<br> "Kerberos": If the <em>wszAuthority</em> parameter begins with the string "Kerberos:", then Kerberos authentication is used and this parameter should contain a Kerberos principal name. The Kerberos principal name is specified as Kerberos:domain, such as Kerberos:fabrikam where fabrikam is the server to which you are  attempting to connect. Example: "Kerberos:DOMAIN"<br>"NTLMDomain": To use NT Lan Manager (NTLM) authentication, you must specify it as NTLMDomain:domain, such as NTLMDomain:fabrikam where fabrikam is the name of the domain. Example: "NTLMDomain:DOMAIN"<br>If you leave this parameter blank, the operating system negotiates with COM to determine whether NTLM or Kerberos authentication is used. This parameter should only be used with connections to remote WMI servers. If you attempt to set the authority for a local WMI connection, the connection attempt fails.<br>Note: If the domain is specified in <em>wszUser</em>, which is the preferred location, then it must not be specified here. Specifying the domain in both parameters results in an Invalid Parameter error.</td></tr><tr><td><em>iSecurityFlags</em></td><td>Optional. Used to pass flag values to the <em>ConnectServer</em> method of the <strong>ISWbemLocator</strong> interface.<br><em>0 (&amp;h0)</em>: A value of 0 for this parameter causes the call to <em>ConnectServer</em> to return only after the connection to the server is established. This could cause your program to stop responding indefinitely if the connection cannot be established.<br><em>wbemConnectFlagUseMaxWait (128 (&amp;H80))</em>&lt;&gt; The <em>ConnectServer</em> call is guaranteed to return in 2 minutes or less. Use this flag to prevent your program from ceasing to respond indefinitely if the connection cannot be established.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If successful, WMI returns an <strong>SWbemServices</strong> object that is bound to the namespace that is specified in <em>wszNamespace</em> on the computer that is specified in <em>wszServer</em>.</p>
+<p><strong>Usage example</strong> (with the local computer):</p>
+<pre class="code"><code>DIM pServices AS CWmiServices = CWmiServices(".", "root\cimv2")</code></pre>
+<h4 id="remarks">Remarks</h4>
+<p>The <em>ConnectServer</em> method is often used when connecting to an account with a different username and password—credentials—on a remote computer because you cannot specify a different password in a moniker string.</p>
+<p>Using an IPv4 address to connect to a remote server may result in unexpected behavior. The likely cause is stale DNS entries in your environment. In these circumstances, the stale PTR entry for the machine will be used, with unpredictable results. To avoid this behavior, you can append a period (".") to the IP address before calling <em>ConnectServer</em>. This causes the reverse DNS lookup to fail, but may allow the <em>ConnectServer</em> call to succeed on the correct machine.</p>
+<hr>
+<h3 id="execquery">ExecQuery</h3>
+<p>Executes a query to retrieve objects. These objects are available through the retrieved <strong>SWbemObjectSet</strong> collection.</p>
+<pre class="code"><code>FUNCTION ExecQuery (BYREF wszQuery AS WSTRING, BYVAL iFlags AS LONG = wbemFlagReturnWhenComplete) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszQuery</em></td><td>Required. A string that contains the text of the query. This parameter cannot be blank.</td></tr><tr><td><em>iFlags</em></td><td>Optional. An integer that determines the behavior of the query and determines whether this call returns immediately. The default value for this parameter is <em>wbemFlagReturnWhenComplete</em>. This parameter can accept the following values.</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>Flag</th><th>Description</th></tr></thead><tbody><tr><td><em>wbemFlagForwardOnly</em></td><td>Causes a forward-only enumerator to be returned. Forward-only enumerators are generally much faster and use less memory than conventional enumerators, but they do not allow calls to <strong>SWbemObject.Clone_</strong>.</td></tr><tr><td><em>wbemFlagReturnWhenComplete</em></td><td>Causes this call to block until the query is complete. This flag calls the method in the synchronous mode.</td></tr><tr><td><em>wbemFlagBidirectional</em></td><td>Causes WMI to retain pointers to objects of the enumeration until the client releases the enumerator.</td></tr><tr><td><em>wbemFlagReturnImmediately</em></td><td>Causes the call to return immediately.</td></tr><tr><td><em>wbemQueryFlagPrototype</em></td><td>Used for prototyping. This flag stops the query from happening and returns an object that looks like a typical result object.</td></tr><tr><td><em>wbemFlagUseAmendedQualifiers</em></td><td>Causes WMI to return class amendment data with the base class definition.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns S_OK (0) on success, or an HRESULT code on failure.</p>
+<h5 id="examples">Examples</h5>
+<p>Using an enumerator (the standard <strong>IEnumVARIANT</strong> interface) to retrieve the information:</p>
+<pre class="code"><code>#include "AfxNova/CWmiDisp.inc"
+USING AfxNova
+
+' // Connect to WMI using a moniker
+' // Note: $ is used to avoid the pedantic warning of the compiler about escape characters
+DIM pServices AS CWmiServices = $"winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2"
+
+' // Execute a query
+DIM hr AS HRESULT = pServices.ExecQuery("SELECT Caption, SerialNumber FROM Win32_BIOS")
+
+' // Get the number of objects retrieved
+DIM nCount AS LONG = pServices.ObjectsCount
+print "Count: ", nCount
+
+' // Enumerate the objects using the standard IEnumVARIANT enumerator (NextObject method)
+' // and retrieve the properties using the CDispInvoke class.
+DIM pDispServ AS CDispInvoke = pServices.NextObject
+PRINT "Caption: "; pDispServ.Get("Caption")
+PRINT "Serial number: "; pDispServ.Get("SerialNumber")</code></pre>
+<p>If the query returns more than one object, then we will use a loop:</p>
+<pre class="code"><code>#include "AfxNova/CWmiDisp.inc"
+USING AfxNova
+
+' // Connect to WMI using a moniker
+' // Note: $ is used to avoid the pedantic warning of the compiler about escape characters
+DIM pServices AS CWmiServices = $"winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2"
+
+' // Execute a query
+DIM hr AS HRESULT = pServices.ExecQuery("SELECT * FROM Win32_Printer")
+
+' // Get the number of objects retrieved
+DIM nCount AS LONG = pServices.ObjectsCount
+
+' // Enumerate the objects
+FOR i AS LONG = 0 TO nCount - 1
+   PRINT "--- Index " &amp; STR(i) &amp; " ---"
+   DIM pDispServ AS CDispInvoke = pServices.NextObject
+   PRINT "Caption: "; pDispServ.Get("Caption")
+   PRINT "Capabilities "; pDispServ.Get("Capabilities")
+NEXT</code></pre>
+<p>To improve enumeration performance set the <em>iFlags</em> parameter of the <strong>ExecQuery</strong> method to <em>WbemFlagReturnImmediately</em> and <em>WbemFlagForwardOnly</em> (the combined value of these flags is 48) to allow semisynchronous return of the data with an enumerator that discards each item from WMI as it is delivered. In this case don't call the <strong>ObjectsCount</strong> method because it will return 0, since the operation has not been completed.</p>
+<pre class="code"><code>#include "AfxNova/CWmiDisp.inc"
+USING AfxNova
+
+' // Connect to WMI using a moniker
+' // Note: $ is used to avoid the pedantic warning of the compiler about escape characters
+DIM pServices AS CWmiServices = $"winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2"
+
+' // Execute a query
+DIM hr AS HRESULT = pServices.ExecQuery("SELECT Caption, SerialNumber FROM Win32_BIOS", 48)
+
+' // Enumerate the objects using the standard IEnumVARIANT enumerator (NextObject method)
+' // and retrieve the properties using the CDispInvoke class.
+DIM pDispServ AS CDispInvoke = pServices.NextObject
+PRINT "Caption: "; pDispServ.Get("Caption")
+PRINT "Serial number: "; pDispServ.Get("SerialNumber")</code></pre>
+<p>If there are several objects in the collection, we can use a loop:</p>
+<pre class="code"><code>#include "AfxNova/CWmiDisp.inc"
+USING AfxNova
+
+' // Connect to WMI using a moniker
+' // Note: $ is used to avoid the pedantic warning of the compiler about escape characters
+DIM pServices AS CWmiServices = $"winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2"
+
+' // Execute a query
+DIM hr AS HRESULT = pServices.ExecQuery("SELECT * FROM Win32_Printer", 48)
+
+' // Enumerate the objects using the standard IEnumVARIANT enumerator (NextObject method)
+' // and retrieve the properties using the CDispInvoke class.
+DIM pDispServ AS CDispInvoke
+DO
+   pDispServ = pServices.NextObject
+   IF pDispServ.DispPtr = NULL THEN EXIT DO
+   PRINT "Caption: "; pDispServ.Get("Caption")
+   PRINT "Capabilities "; pDispServ.Get("Capabilities")
+LOOP</code></pre>
+<p>Calling the <strong>GetNamedProperties</strong> method after executing the query. <strong>GetNamedProperties</strong> generates a named collection of properties. This has the advantage of not having to use <strong>CDispInvoke</strong>.</p>
+<pre class="code"><code>#include "AfxNova/CWmiDisp.inc"
+USING AfxNova
+
+' // Connect to WMI using a moniker
+' // Note: $ is used to avoid the pedantic warning of the compiler about escape characters
+DIM pServices AS CWmiServices = $"winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2"
+
+' // Execute a query
+DIM hr AS HRESULT = pServices.ExecQuery("SELECT Caption, SerialNumber FROM Win32_BIOS")
+
+' // Get the number of objects retrieved
+DIM nCount AS LONG = pServices.ObjectsCount
+
+' // Get a collection of named properties
+IF pServices.GetNamedProperties &lt;&gt; S_OK THEN PRINT "Failed to get the named properties"
+
+' // Retrieve the value of the properties
+PRINT pServices.PropValue("Caption")
+PRINT pServices.PropValue("SerialNumber")</code></pre>
+<p><strong>Using a loop</strong>:</p>
+<pre class="code"><code>#include "AfxNova/CWmiDisp.inc"
+USING AfxNova
+
+' // Connect to WMI using a moniker
+' // Note: $ is used to avoid the pedantic warning of the compiler about escape characters
+DIM pServices AS CWmiServices = $"winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2"
+
+' // Execute a query
+DIM hr AS HRESULT = pServices.ExecQuery("SELECT * FROM Win32_Printer")
+
+' // Get the number of objects retrieved
+DIM nCount AS LONG = pServices.ObjectsCount
+
+' // Enumerate the objects
+FOR i AS LONG = 0 TO nCount - 1
+   PRINT "--- Index " &amp; STR(i) &amp; " ---"
+   ' // Get a collection of named properties
+   IF pServices.GetNamedProperties(i) = S_OK THEN
+      PRINT pServices.PropValue("Caption")
+      PRINT pServices.PropValue("Capabilities")
+   END IF
+NEXT</code></pre>
+<h5 id="example">Example</h5>
+<p>The following example monitors process performance information.</p>
+<pre class="code"><code>DO   ' // fake loop to avoid nested IFs/ENDIFs
+
+   ' // Connect to WMI using a moniker
+   ' // Note: $ is used to avoid the pedantic warning of the compiler about escape characters
+   DIM pServices AS CWmiServices = $"winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2"
+   IF pServices.ServicesPtr = NULL THEN EXIT DO
+
+   ' // Execute a query
+   DIM hr AS HRESULT = pServices.ExecQuery("SELECT * FROM Win32_Process")
+   IF hr &lt;&gt; S_OK THEN PRINT AfxWmiGetErrorCodeText(hr) : EXIT DO
+
+   ' // Get the number of objects retrieved
+   DIM nCount AS LONG = pServices.ObjectsCount
+   print "Number of objects: ", nCount
+   IF nCount = 0 THEN PRINT "No objects found" : EXIT DO
+
+   ' // Enumerate the objects
+   FOR i AS LONG = 0 TO nCount - 1
+      PRINT "--- Index " &amp; STR(i) &amp; " ---"
+      ' // Get a collection of named properties
+      IF pServices.GetNamedProperties(i) = S_OK THEN
+         PRINT pServices.PropValue("Name")
+         PRINT pServices.PropValue("ProcessID")
+         PRINT pServices.PropValue("ThreadCount")
+         PRINT pServices.PropValue("PageFileUsage")
+         PRINT pServices.PropValue("PageFaults")
+         PRINT pServices.PropValue("WorkingSetSize")
+      END IF
+   NEXT
+
+   EXIT DO   ' // Inconditional exit
+LOOP</code></pre>
+<p>Using an enumerator:</p>
+<pre class="code"><code>DO   ' // fake loop to avoid nested IFs/ENDIFs
+
+   ' // Connect to WMI using a moniker
+   ' // Note: $ is used to avoid the pedantic warning of the compiler about escape characters
+   DIM pServices AS CWmiServices = $"winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2"
+   IF pServices.ServicesPtr = NULL THEN EXIT DO
+
+   ' // Execute a query
+   DIM hr AS HRESULT = pServices.ExecQuery("SELECT * FROM Win32_Process", 48)
+   IF hr &lt;&gt; S_OK THEN PRINT AfxWmiGetErrorCodeText(hr) : EXIT DO
+
+   ' // Enumerate the objects using the standard IEnumVARIANT enumerator (NextObject method)
+   ' // and retrieve the properties using the CDispInvoke class.
+   DIM pDispServ AS CDispInvoke
+   DO
+      pDispServ = pServices.NextObject
+      IF pDispServ.DispPtr = NULL THEN EXIT DO
+      PRINT "Name: "; pDispServ.Get("Name")
+      PRINT "ProcessID "; pDispServ.Get("ProcessID")
+      PRINT "ThreadCount "; pDispServ.Get("ThreadCount")
+      PRINT "PageFileUsage "; pDispServ.Get("PageFileUsage")
+      PRINT "PageFaults "; pDispServ.Get("PageFaults")
+      PRINT "WorkingSetSize "; pDispServ.Get("WorkingSetSize")
+   LOOP
+
+   EXIT DO   ' // Inconditional exit
+LOOP</code></pre>
+<hr>
+<h3 id="get">Get</h3>
+<p>Retrieves an object, that is either a class definition or an instance, based on the object path. This method retrieves only objects from the namespace that is associated with the current <strong>SWbemServices</strong> object.</p>
+<pre class="code"><code>FUNCTION Get (BYREF wszObjectPath AS WsTRING, BYVAL iFlags AS LONG = 0, _
+   BYVAL objWbemNamedValueSet AS Afx_IDispatch PTR = NULL) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszObjectPath</em></td><td>A string that contains the object path of the object to retrieve. If this value is empty, the empty object that is returned can become a new class.</td></tr><tr><td><em>iFlags</em></td><td>Optional. An integer value that determines the behavior of the query. This parameter can accept the following value: <em>wbemFlagUseAmendedQualifiers</em>: Causes WMI to return class amendment data with the base class definition.</td></tr><tr><td><em>objWbemNamedValueSet</em></td><td>Optional. Typically, this is undefined. Otherwise, this is an <strong>SWbemNamedValueSet</strong> object whose elements represent the context information that can be used by the provider that is servicing the request. A provider that supports or requires such information must document the recognized value names, data type of the value, allowed values, and semantics.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>S_OK on success or an error code.</p>
+<p>May return one of the error codes in the following list:</p>
+<div class="table-wrap"><table><thead><tr><th>Error</th><th>Value</th><th>Description</th></tr></thead><tbody><tr><td><em>wbemErrAccessDenied</em></td><td>-2147749891 (&amp;h80041003)</td><td>Current user does not have the permission to access the object.</td></tr><tr><td><em>wbemErrFailed</em></td><td>-2147749889 (&amp;h80041001)</td><td>Unspecified error.</td></tr><tr><td><em>wbemErrInvalidParameter</em></td><td>-2147749896 (&amp;h80041008)</td><td>A specified parameter is not valid.</td></tr><tr><td><em>wbemErrInvalidObjectPath</em></td><td>-2147749946 (&amp;h8004103A)</td><td>Specified path was not valid.</td></tr><tr><td><em>wbemErrNotFound</em></td><td>-2147749890 (&amp;h80041002)</td><td>Requested object could not be found.</td></tr><tr><td><em>wbemErrOutOfMemory</em></td><td>-2147749894 (&amp;h80041006)</td><td>Not enough memory to complete the operation.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<pre class="code"><code>#include "AfxNova/CWmiDisp.inc"
+using AfxNova
+
+' // Connect to WMI using a moniker
+DIM pServices AS CWmiServices = $"winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2"
+ 
+' // Get an instance of the printer "OKI B410" --&gt; change me
+DIM hr AS HRESULT = pServices.Get("Win32_Printer.DeviceID='OKI B410'")
+
+' // Number of properties
+PRINT "Number of properties: ", pServices.PropsCount
+PRINT
+
+' // Display some properties
+PRINT "Port name: "; pServices.PropValue("PortName")
+PRINT "Attributes: "; pServices.PropValue("Attributes")
+PRINT "Paper sizes supported: "; pServices.PropValue("PaperSizesSupported")</code></pre>
+<p>Example</p>
+<pre class="code"><code>#include "AfxNpva/CWmiDisp.inc"
+USING AfxNova
+
+' // Connect to WMI using a moniker
+'DIM pServices AS CWmiServices = $"winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2"
+' Use the constructor for server connection, just for trying...
+DIM pServices AS CWmiServices = CWmiServices(".", "root\cimv2")
+ 
+ '// Get an instance of a file --&gt; change me
+DIM dwsPath AS DWSTRING = ExePath &amp; "\EX_CWMI_Get_01.bas"   ' --&gt; change me
+DIM hr AS HRESULT = pServices.Get("CIM_DataFile.Name='" &amp; dwsPath &amp; "'")
+
+' // Number of properties
+PRINT "Number of properties: ", pServices.PropsCount
+PRINT
+
+' // Display some properties
+PRINT "Relative path: "; pServices.PropValue("Path")
+PRINT "FileName: "; pServices.PropValue("FileName")
+PRINT "Extension: "; pServices.PropValue("Extension")
+PRINT "Size: "; pServices.PropValue("Filesize")
+'PRINT pServices.PropValue("LastModified")
+PRINT "Date last modified: "; pServices.WmiDateToStr(pServices.PropValue("LastModified"), "dd-MM-yyyy")   ' // change the mask if needed</code></pre>
+<hr>
+<h3 id="geterrorcodetext">GetErrorCodeText</h3>
+<p>Returns the text string description associated with the WMI error code.</p>
+<pre class="code"><code>FUNCTION GetErrorCodeText (BYVAL hRes AS HRESULT) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hRes</em></td><td>The WMI error code.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The localized text string description associated with the WMI error code.</p>
+<hr>
+<h3 id="getfacilitycodetext">GetFacilityCodeText</h3>
+<p>Returns the name of the subsystem where the error occurred, such as "Windows", "WBEM", "SSPI", or "RPC".</p>
+<pre class="code"><code>FUNCTION GetFacilityCodeText (BYVAL hRes AS HRESULT) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hRes</em></td><td>The WMI error code.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The name of the subsystem where the error occurred.</p>
+<hr>
+<h3 id="getlastresult">GetLastResult</h3>
+<p>Returns the result code returned by the last executed method.</p>
+<pre class="code"><code>FUNCTION GetLastResult () AS HRESULT</code></pre>
+<hr>
+<h3 id="getnamedproperties">GetNamedProperties</h3>
+<p>Retrieves a named collection of the properties for the current class or instance.</p>
+<pre class="code"><code>FUNCTION GetNamedProperties (BYVAL idx AS LONG = 0) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>idx</em></td><td>The zero-based index of the member of the collection.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>S_OK on success or an error code.</p>
+<p>May return one of the error codes in the following list:</p>
+<div class="table-wrap"><table><thead><tr><th>Error</th><th>Value</th><th>Description</th></tr></thead><tbody><tr><td><em>wbemErrFailed</em></td><td>-2147749889 (&amp;h80041001)</td><td>Unspecified error.</td></tr><tr><td><em>wbemErrInvalidParameter</em></td><td>-2147749896 (&amp;h80041008)</td><td>A specified parameter is not valid.</td></tr><tr><td><em>wbemErrOutOfMemory</em></td><td>-2147749894 (&amp;h80041006)</td><td>Not enough memory to complete the operation.</td></tr></tbody></table></div>
+<h5 id="examples">Examples</h5>
+<pre class="code"><code>#include "AfxNova/CWmiDisp.inc"
+USING AfxNova
+
+' // Connect to WMI using a moniker
+' // Note: $ is used to avoid the pedantic warning of the compiler about escape characters
+DIM pServices AS CWmiServices = $"winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2"
+
+' // Execute a query
+DIM hr AS HRESULT = pServices.ExecQuery("SELECT Caption, SerialNumber FROM Win32_BIOS")
+
+' // Get the number of objects retrieved
+DIM nCount AS LONG = pServices.ObjectsCount
+print "Number of objects: ", nCount
+
+' // Get a collection of named properties
+IF pServices.GetNamedProperties &lt;&gt; S_OK THEN PRINT "Failed to get the named properties"
+
+' // Retrieve the value of the properties
+PRINT pServices.PropValue("Caption")
+PRINT pServices.PropValue("SerialNumber")</code></pre>
+<p>Using a loop:</p>
+<pre class="code"><code>#include "AfxNova/CWmiDisp.inc"
+USING AfxNova
+
+' // Connect to WMI using a moniker
+' // Note: $ is used to avoid the pedantic warning of the compiler about escape characters
+DIM pServices AS CWmiServices = $"winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2"
+
+' // Execute a query
+DIM hr AS HRESULT = pServices.ExecQuery("SELECT * FROM Win32_Printer")
+
+' // Get the number of objects retrieved
+DIM nCount AS LONG = pServices.ObjectsCount
+print "Number of objects: ", nCount
+
+' // Enumerate the objects
+FOR i AS LONG = 0 TO nCount - 1
+   PRINT "--- Index " &amp; STR(i) &amp; " ---"
+   ' // Get a collection of named properties
+   IF pServices.GetNamedProperties(i) = S_OK THEN
+      PRINT pServices.PropValue("Caption")
+      PRINT pServices.PropValue("Capabilities")
+   END IF
+NEXT</code></pre>
+<hr>
+<h3 id="instancesof">InstancesOf</h3>
+<p>Creates an enumerator that returns the instances of a specified class according to the user-specified selection criteria. This method implements a simple query. More complex queries may require the use of the <strong>ExecQuery</strong> method. By default, the method is called in the semisynchronous mode.</p>
+<pre class="code"><code>FUNCTION InstancesOf (BYREF wszClass AS WSTRING, BYVAL iFlags AS LONG = wbemFlagReturnImmediately) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszClass</em></td><td>Required. A string that contains the name of the class for which instances are desired. This parameter cannot be blank.</td></tr><tr><td><em>iFlags</em></td><td>Optional. This parameter determines how detailed the call enumerates and if this call returns immediately. The default value for this parameter is <em>wbemFlagReturnImmediately</em>. This parameter can accept the following values.</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>Flag</th><th>Description</th></tr></thead><tbody><tr><td><em>wbemFlagForwardOnly</em></td><td>Causes a forward-only enumerator to be returned. Forward-only enumerators are generally much faster and use less memory than conventional enumerators, but they do not allow calls to <strong>SWbemObject.Clone_</strong>.</td></tr><tr><td><em>wbemFlagReturnWhenComplete</em></td><td>Causes this call to block until the query is complete. This flag calls the method in the synchronous mode.</td></tr><tr><td><em>wbemFlagBidirectional</em></td><td>Causes WMI to retain pointers to objects of the enumeration until the client releases the enumerator.</td></tr><tr><td><em>wbemFlagReturnImmediately</em></td><td>Causes the call to return immediately.</td></tr><tr><td><em>wbemQueryFlagPrototype</em></td><td>Used for prototyping. This flag stops the query from happening and returns an object that looks like a typical result object.</td></tr><tr><td><em>wbemFlagUseAmendedQualifiers</em></td><td>Causes WMI to return class amendment data with the base class definition.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>S_OK on success or an error code.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>#include "AfxNova/CWmiDisp.inc"
+USING AfxNova
+
+' // Connect to WMI using a moniker
+' // Note: $ is used to avoid the pedantic warning of the compiler about escape characters
+DIM pServices AS CWmiServices = $"winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2"
+
+' // Retrieve the instances of
+DIM hr AS HRESULT = pServices.InstancesOf("Win32_Printer")
+
+' // Enumerate the objects using the standard IEnumVARIANT enumerator (NextObject method)
+' // and retrieve the properties using the CDispInvoke class.
+DIM pDispServ AS CDispInvoke
+DO
+   pDispServ = pServices.NextObject
+   IF pDispServ.DispPtr = NULL THEN EXIT DO
+   PRINT "Caption: "; pDispServ.Get("Caption")
+   PRINT "Capabilities "; pDispServ.Get("Capabilities")
+LOOP</code></pre>
+<hr>
+<h3 id="newenum">NewEnum</h3>
+<p>Retrieves an enumerator for the collection.</p>
+<p>Note: If <strong>ExecQuery</strong> has been called using the <em>wbemFlagReturnImmediately</em> flag, the enumerator won't be available until the operation has completed.</p>
+<pre class="code"><code>FUNCTION NewEnum () AS BOOLEAN</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>TRUE if the enumerator has been retrieved or FALSE otherwise.</p>
+<hr>
+<h3 id="nextobject">NextObject</h3>
+<p>Retrieves the next item in the enumeration sequence.</p>
+<p>Note: The first time that you call this method, it retrieves the first item.</p>
+<pre class="code"><code>FUNCTION NextObject () AS DVARIANT</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>Te retrieved object.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>#include "AfxNova/CWmiDisp.inc"
+USING AfxNova
+
+' // Connect to WMI using a moniker
+' // Note: $ is used to avoid the pedantic warning of the compiler about escape characters
+DIM pServices AS CWmiServices = $"winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2"
+
+' // Execute a query
+DIM hr AS HRESULT = pServices.ExecQuery("SELECT Caption, SerialNumber FROM Win32_BIOS")
+
+' // Get the number of objects retrieved
+DIM nCount AS LONG = pServices.ObjectsCount
+print "Count: ", nCount
+
+' // Enumerate the objects using the standard IEnumVARIANT enumerator (NextObject method)
+' // and retrieve the properties using the CDispInvoke class.
+DIM pDispServ AS CDispInvoke = pServices.NextObject
+PRINT "Caption: "; pDispServ.Get("Caption")
+PRINT "Serial number: "; pDispServ.Get("SerialNumber")</code></pre>
+<p>To improve enumeration performance set the <em>iFlags</em> parameter of the <strong>ExecQuery</strong> method to <em>WbemFlagReturnImmediately</em> and <em>WbemFlagForwardOnly</em> (the combined value of these flags is 48) to allow semisynchronous return of the data with an enumerator that discards each item from WMI as it is delivered. In this case don't call the <strong>ObjectsCount</strong> method because it will return 0, since the operation has not been completed.</p>
+<pre class="code"><code>#include "AfxNova/CWmiDisp.inc"
+USING AfxNova
+
+' // Connect to WMI using a moniker
+' // Note: $ is used to avoid the pedantic warning of the compiler about escape characters
+DIM pServices AS CWmiServices = $"winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2"
+
+' // Execute a query
+DIM hr AS HRESULT = pServices.ExecQuery("SELECT Caption, SerialNumber FROM Win32_BIOS", 48)
+
+' // Enumerate the objects using the standard IEnumVARIANT enumerator (NextObject method)
+' // and retrieve the properties using the CDispInvoke class.
+DIM pDispServ AS CDispInvoke = pServices.NextObject
+PRINT "Caption: "; pDispServ.Get("Caption")
+PRINT "Serial number: "; pDispServ.Get("SerialNumber")</code></pre>
+<hr>
+<h3 id="objectscount">ObjectsCount</h3>
+<p>Returns the number of objects in the collection.</p>
+<pre class="code"><code>FUNCTION ObjectsCount () AS LONG</code></pre>
+<h5 id="remarks">Remarks</h5>
+<p>If <strong>ExecQuery</strong> has been called without the <em>wbemFlagReturnWhenComplete</em> flag, this method will return 0 because the operation has not been completed.</p>
+<hr>
+<h3 id="objectsetptr">ObjectSetPtr</h3>
+<p>Returns a pointer to the <strong>ISWbemObjectSet</strong> interface. Don't call <strong>IUnknown_Release</strong> on it.</p>
+<pre class="code"><code>FUNCTION ObjectSetPtr () AS ANY PTR</code></pre>
+<hr>
+<h3 id="propertysetptr">PropertySetPtr</h3>
+<p>Returns a pointer to the <strong>ISWbemPropertySet</strong> interface. Don't call <strong>IUnknown_Release</strong> on it.</p>
+<pre class="code"><code>FUNCTION PropertySetPtr () AS ANY PTR</code></pre>
+<hr>
+<h3 id="propscount">PropsCount</h3>
+<p>Returns the number of objects in the property set collection.</p>
+<pre class="code"><code>FUNCTION PropsCount () AS LONG</code></pre>
+<hr>
+<h3 id="propvalue">PropValue</h3>
+<p>Gets/sets the variant value of the WMI property.</p>
+<pre class="code"><code>PROPERTY PropValue (BYREF wszName AS WSTRING) AS DVARIANT
+PROPERTY PropValue (BYREF wszName AS WSTRING, BYREF dvValue AS DVARIANT)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszName</em></td><td>Name of the property to retrieve.</td></tr><tr><td><em>dvValue</em></td><td>The variant value to set.</td></tr></tbody></table></div>
+<hr>
+<h3 id="resetenum">ResetEnum</h3>
+<p>Resets the enumeration sequence to the beginning.</p>
+<pre class="code"><code>FUNCTION ResetEnum () AS BOOLEAN</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>TRUE if the enumerator has been reset or FALSE otherwise.</p>
+<hr>
+<h3 id="servicesobj">ServicesObj</h3>
+<p>Returns a counted reference of the underlying dispatch pointer. You must release it, e.g. calling call <strong>IUnknown_Release</strong> or the function <strong>AfxSafeRelease</strong> when no longer need it.</p>
+<pre class="code"><code>FUNCTION ServicesObj () AS ANY PTR</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>A counted reference to the <strong>ISWbemServices</strong> interface. Because it is a an addrefered pointer, you must release it when no longer needed.</p>
+<hr>
+<h3 id="servicesptr">ServicesPtr</h3>
+<p>Returns a pointer to the <strong>ISWbemServices</strong> interface. Don't call IUnknown_Release on it.</p>
+<pre class="code"><code>FUNCTION ServicesPtr () AS ANY PTR</code></pre>
+<hr>
+<h3 id="wmidatetostr">WmiDateToStr</h3>
+<p>Converts a date and time value in the CIM DATETIME format to a string containing the date based on the specified mask, e.g. "dd-MM-yyyy".</p>
+<pre class="code"><code>FUNCTION WmiDateToStr (BYVAL pwszDateTime AS WSTRING PTR, BYREF wszMask AS WSTRING, _
+   BYVAL bIsLocal AS BOOLEAN = TRUE) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pwszDateTime</em></td><td>The date and time value in the CIM DATETIME format.</td></tr><tr><td><em>wszMask</em></td><td>A picture string that is used to form the date.</td></tr><tr><td><em>bIsLocal</em></td><td>Indicates whether the returned value is interpreted as local time. The UTC property then contains the local time converted to the correct Coordinated Universal Times (UTC) offset. If the value is FALSE, then the value is interpreted as UTC with a zero (0) offset.</td></tr></tbody></table></div>
+<p>The format types "d", and "y" must be lowercase and the letter "M" must be uppercase.</p>
+<p>For example, to get the date string "Wed, Aug 31 94", the application uses the picture string "ddd',' MMM dd yy".</p>
+<p>The following table defines the format types used to represent days:</p>
+<div class="table-wrap"><table><thead><tr><th>Format type</th><th>Description</th></tr></thead><tbody><tr><td>d</td><td>Day of the month as digits without leading zeros for single-digit days.</td></tr><tr><td>dd</td><td>Day of the month as digits with leading zeros for single-digit days.</td></tr><tr><td>ddd</td><td>Abbreviated day of the week, for example, "Mon" in English (United States).</td></tr><tr><td>dddd</td><td>Day of the week.</td></tr></tbody></table></div>
+<p>The following table defines the format types used to represent months:</p>
+<div class="table-wrap"><table><thead><tr><th>Format type</th><th>Description</th></tr></thead><tbody><tr><td>M</td><td>Month as digits without leading zeros for single-digit months.</td></tr><tr><td>MM</td><td>Month as digits with leading zeros for single-digit months.</td></tr><tr><td>MMM</td><td>Abbreviated month, for example, "Nov" in English (United States).</td></tr><tr><td>MMMM</td><td>Month value, for example, "November" for English (United States), and "Noviembre" for Spanish (Spain).</td></tr></tbody></table></div>
+<p>The following table defines the format types used to represent years:</p>
+<div class="table-wrap"><table><thead><tr><th>Format type</th><th>Description</th></tr></thead><tbody><tr><td>y</td><td>Year represented only by the last digit.</td></tr><tr><td>yy</td><td>Year represented only by the last two digits. A leading zero is added for single-digit years.</td></tr><tr><td>yyyy</td><td>Year represented by a full four or five digits, depending on the calendar used. Thai Buddhist and Korean calendars have five-digit years. The "yyyy" pattern shows five digits for these two calendars, and four digits for all other supported calendars. Calendars that have single-digit or two-digit years, such as for the Japanese Emperor era, are represented differently. A single-digit year is represented with a leading zero, for example, "03". A two-digit year is represented with two digits, for example, "13". No additional leading zeros are displayed.</td></tr><tr><td>yyyyy</td><td>Behaves identically to "yyyy".</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The formatted date as a string.</p>
+<hr>
+<h3 id="wmitimetofiletime">WmiTimeToFileTime</h3>
+<p>Converts a date and time value in the CIM DATETIME format to the FILETIME format.</p>
+<pre class="code"><code>FUNCTION WmiTimeToFileTime (BYVAL pwszDateTime AS WSTRING PTR, BYVAL bIsLocal AS BOOLEAN = TRUE) AS FILETIME</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pwszDateTime</em></td><td>The date and time value in the CIM DATETIME format.</td></tr><tr><td><em>bIsLocal</em></td><td>Indicates whether the returned value is interpreted as local time. The UTC property then contains the local time converted to the correct Coordinated Universal Times (UTC) offset. If the value is FALSE, then the value is interpreted as UTC with a zero (0) offset.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The date and time value as a <strong>FILETIME</strong> structure.</p>
+<hr>
+<h3 id="wmitimetostr">WmiTimeToStr</h3>
+<p>Converts a date and time value in the CIM DATETIME format to a string containing the date based on the specified mask, e.g. "hh':'mm':'ss tt".</p>
+<pre class="code"><code>FUNCTION WmiTimeToStr (BYVAL pwszDateTime AS WSTRING PTR, BYREF wszMask AS WSTRING, _
+   BYVAL bIsLocal AS BOOLEAN = TRUE) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pwszDateTime</em></td><td>The date and time value in the CIM DATETIME format.</td></tr><tr><td><em>wszMask</em></td><td>A picture string that is used to form the time.</td></tr><tr><td><em>bIsLocal</em></td><td>Indicates whether the returned value is interpreted as local time. The UTC property then contains the local time converted to the correct Coordinated Universal Times (UTC) offset. If the value is FALSE, then the value is interpreted as UTC with a zero (0) offset.</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>Picture</th><th>Description</th></tr></thead><tbody><tr><td>h</td><td>Hours with no leading zero for single-digit hours; 12-hour clock</td></tr><tr><td>hh</td><td>Hours with leading zero for single-digit hours; 12-hour clock</td></tr><tr><td>H</td><td>Hours with no leading zero for single-digit hours; 24-hour clock</td></tr><tr><td>HH</td><td>Hours with leading zero for single-digit hours; 24-hour clock</td></tr><tr><td>m</td><td>Minutes with no leading zero for single-digit minutes</td></tr><tr><td>mm</td><td>Minutes with leading zero for single-digit minutes</td></tr><tr><td>s</td><td>Seconds with no leading zero for single-digit seconds</td></tr><tr><td>ss</td><td>Seconds with leading zero for single-digit seconds</td></tr><tr><td>t</td><td>One character time marker string, such as A or P</td></tr><tr><td>tt</td><td>Multi-character time marker string, such as AM or PM</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The formatted date as a string.</p>
+<hr>
+<h4 id="examples-to-call-methods-of-wmi-classes">Examples to call methods of WMI classes</h4>
+<pre class="code"><code>#cmdline "-s console"
+#include "AfxNova/CWmiDisp.inc"
+using AfxNova
+
+DO   ' // fake loop to allow early exit
+
+' // Connect to WMI using a moniker
+DIM pServices AS CWmiServices = $"winmgmts:{impersonationLevel=impersonate}!\\.\root\default:StdRegProv"
+IF pServices.ServicesPtr = NULL THEN EXIT DO
+ 
+' // Assign the WMI services object pointer to CDispInvoke
+' // CWmiServices.ServicesObj returns an AddRefed pointer, whereas CWmiServices.ServicesPtr not.
+DIM pDispServices AS CDispInvoke = CDispInvoke(pServices.ServicesObj)
+
+' Parameters of the GetStringValue method:
+' %HKEY_LOCAL_MACHINE ("2147483650") - The value must be specified as an string and in decimal, not hexadecimal.
+' vDefKey = [IN]  "2147483650"
+' vPath   = [IN]  "Software\Microsoft\Windows NT\CurrentVersion"
+' vValue  = [OUT] "ProductName"
+
+DIM bsValue AS BSTRING
+DIM dvRes AS DVARIANT = pDispServices.Invoke("GetStringValue", "2147483650", _
+    $"Software\Microsoft\Windows NT\CurrentVersion", "ProductName", DVARIANT(bsValue.vptr, VT_BSTR))
+PRINT bsValue
+
+EXIT DO   ' // exit the fake loop
+LOOP</code></pre>
+<hr>
+<pre class="code"><code>#cmdline "-s console"
+#include "AfxNova/CWmiDisp.inc"
+using AfxNova
+
+DO   ' // fake loop to allow early exit
+
+' // Connect to WMI using a moniker
+DIM pServices AS CWmiServices = ( _
+   $"winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2:Win32_Process")
+IF pServices.ServicesPtr = NULL THEN EXIT DO
+ 
+' // Assign the WMI services object pointer to CDispInvoke
+' // CWmiServices.ServicesObj returns an AddRefed pointer, whereas CWmiServices.ServicesPtr not.
+DIM pDispServices AS CDispInvoke = CDispInvoke(pServices.ServicesObj)
+
+' // Note: Although the WMI documentation says that this OUT parameter is an UInt32,
+' // it only works if I use "LONG".
+DIM ProcessId AS LONG
+pDispServices.Invoke("Create", "notepad.exe", AfxDVarOptPrm, AfxDVarOptPrm, DVARIANT(@ProcessId, "LONG"))
+PRINT "Process id: ", ProcessId
+
+EXIT DO   ' // exit the fake loop
+LOOP</code></pre>
+<hr>
+<h4 id="miscellaneous-wrapper-functions">Miscellaneous wrapper functions</h4>
+<pre class="code"><code>' ========================================================================================
+' Retrieves the baseboard (also known as a motherboard or system board) serial number.
+' ========================================================================================
+PRIVATE FUNCTION AfxGetBaseBoardSerialNumber (BYREF wszServerName AS WSTRING = ".") AS DWSTRING
+   DIM pServices AS CWmiServices = $"winmgmts:{impersonationLevel=impersonate}!\\" &amp; wszServerName &amp; $"\root\cimv2"
+   DIM nError AS DWORD = GetLastError
+   IF nError THEN AfxMsg(__FUNCTION__ &amp; CHR(13,10) &amp; "Error: &amp;h" &amp; HEX(nError, 8) &amp; CHR(13,10) &amp; AfxWmiGetErrorCodeText(nError))
+   IF pServices.ServicesPtr = NULL THEN RETURN ""
+   pServices.ExecQuery("SELECT SerialNumber FROM Win32_BaseBoard")
+   pServices.GetNamedProperties
+   RETURN pServices.PropValue("SerialNumber")
+END FUNCTION
+' ========================================================================================</code></pre>
+<pre class="code"><code>' ========================================================================================
+' Retrieves the Bios serial number.
+' ========================================================================================
+PRIVATE FUNCTION AfxGetBiosSerialNumber (BYREF wszServerName AS WSTRING = ".") AS DWSTRING
+   DIM pServices AS CWmiServices = $"winmgmts:{impersonationLevel=impersonate}!\\" &amp; wszServerName &amp; $"\root\cimv2"
+   DIM nError AS DWORD = GetLastError
+   IF nError THEN AfxMsg(__FUNCTION__ &amp; CHR(13,10) &amp; "Error: &amp;h" &amp; HEX(nError, 8) &amp; CHR(13,10) &amp; AfxWmiGetErrorCodeText(nError))
+   IF pServices.ServicesPtr = NULL THEN RETURN ""
+   pServices.ExecQuery("SELECT SerialNumber FROM Win32_BIOS")
+   pServices.GetNamedProperties
+   RETURN pServices.PropValue("SerialNumber")
+END FUNCTION
+' ========================================================================================</code></pre>
+<hr>
+<pre class="code"><code>' ========================================================================================
+' Retrieves the manufacturer serial number.
+' Contrarily to the serial number returned by AfxGetDiskDriveSerialNumber, this one won't
+' change even if you format your hard drive.
+' Requires Windows Vista+.
+' ========================================================================================
+PRIVATE FUNCTION AfxGetManufacturerSerialNumber (BYREF wszServerName AS WSTRING = ".") AS DWSTRING
+   DIM pServices AS CWmiServices = $"winmgmts:{impersonationLevel=impersonate}!\\" &amp; wszServerName &amp; $"\root\cimv2"
+   DIM nError AS DWORD = GetLastError
+   IF nError THEN AfxMsg(__FUNCTION__ &amp; CHR(13,10) &amp; "Error: &amp;h" &amp; HEX(nError, 8) &amp; CHR(13,10) &amp; AfxWmiGetErrorCodeText(nError))
+   IF pServices.ServicesPtr = NULL THEN RETURN ""
+   pServices.ExecQuery("SELECT SerialNumber FROM Win32_PhysicalMedia")
+   pServices.GetNamedProperties
+   RETURN pServices.PropValue("SerialNumber")
+END FUNCTION
+' ========================================================================================</code></pre>
+<hr>
+<pre class="code"><code>' ========================================================================================
+' Retrieves the disk drive serial number.
+' Contrarily to the serial number returned by AfxGetManufacturerSerialNumber, that does not
+' change, this one will change every time the hard drive is formatted.
+' Requires Windows Vista+.
+' ========================================================================================
+PRIVATE FUNCTION AfxGetDiskDriveSerialNumber (BYREF wszServerName AS WSTRING = ".") AS STRING
+   DIM pServices AS CWmiServices = $"winmgmts:{impersonationLevel=impersonate}!\\" &amp; wszServerName &amp; $"\root\cimv2"
+   DIM nError AS DWORD = GetLastError
+   IF nError THEN AfxMsg(__FUNCTION__ &amp; CHR(13,10) &amp; "Error: &amp;h" &amp; HEX(nError, 8) &amp; CHR(13,10) &amp; AfxWmiGetErrorCodeText(nError))
+   IF pServices.ServicesPtr = NULL THEN RETURN ""
+   pServices.ExecQuery("SELECT SerialNumber FROM Win32_DiskDrive")
+   pServices.GetNamedProperties
+   RETURN pServices.PropValue("SerialNumber")
+END FUNCTION
+' ========================================================================================</code></pre>
+<hr>
+<pre class="code"><code>' ========================================================================================
+' Retrieves the system running on the Windows-based computer. The following list identifiers
+' the returned value: "X86-based PC", "MIPS-based PC", "Alpha-based PC", "Power PC",
+' "SH-x PC", "StrongARM PC", "64-bit Intel PC", "64-bit Alpha PC", "Unknown", "X86-Nec98 PC".
+' ========================================================================================
+PRIVATE FUNCTION AfxGetSystemType (BYREF wszServerName AS WSTRING = ".") AS DWSTRING
+   DIM pServices AS CWmiServices = $"winmgmts:{impersonationLevel=impersonate}!\\" &amp; wszServerName &amp; $"\root\cimv2"
+   DIM nError AS DWORD = GetLastError
+   IF nError THEN AfxMsg(__FUNCTION__ &amp; CHR(13,10) &amp; "Error: &amp;h" &amp; HEX(nError, 8) &amp; CHR(13,10) &amp; AfxWmiGetErrorCodeText(nError))
+   IF pServices.ServicesPtr = NULL THEN RETURN ""
+   pServices.ExecQuery("SELECT SystemType FROM Win32_ComputerSystem")
+   pServices.GetNamedProperties
+   RETURN pServices.PropValue("SystemType")
+END FUNCTION
+' ========================================================================================</code></pre>
+<hr>
+<pre class="code"><code>' ========================================================================================
+' Retrieves the type of the computer in use, such as laptop, desktop, or Tablet.
+' Not available in Windows Server 2003, Windows XP, Windows 2000, Windows NT 4.0, and Windows Me/98/95.
+' Value   Meaning
+' ------- --------------------------------------------
+' 0 (&amp;H0) Unspecified
+' 1 (&amp;H1) Desktop
+' 2 (&amp;H2) Mobile
+' 3 (&amp;H3) Workstation
+' 4 (&amp;H4) Enterprise Server
+' 5 (&amp;H5) Small Office and Home Office (SOHO) Server
+' 6 (&amp;H6) Appliance PC
+' 7 (&amp;H7) Performance Server
+' 8 (&amp;H8) Maximum
+' ========================================================================================
+PRIVATE FUNCTION AfxGetPCSystemType (BYREF wszServerName AS WSTRING = ".") AS USHORT
+   DIM pServices AS CWmiServices = $"winmgmts:{impersonationLevel=impersonate}!\\" &amp; wszServerName &amp; $"\root\cimv2"
+   DIM nError AS DWORD = GetLastError
+   IF nError THEN AfxMsg(__FUNCTION__ &amp; CHR(13,10) &amp; "Error: &amp;h" &amp; HEX(nError, 8) &amp; CHR(13,10) &amp; AfxWmiGetErrorCodeText(nError))
+   IF pServices.ServicesPtr = NULL THEN RETURN 0
+   pServices.ExecQuery("SELECT PCSystemType FROM Win32_ComputerSystem")
+   pServices.GetNamedProperties
+   RETURN VAL(pServices.PropValue("PCSystemType"))
+END FUNCTION
+' ========================================================================================</code></pre>
+<hr>
+<pre class="code"><code>' ========================================================================================
+' Retrieves the name of the disk drive from which the Windows operating system starts.
+' Example: "\Device\Harddisk0"
+' ========================================================================================
+PRIVATE FUNCTION AfxGetBootDevice (BYREF wszServerName AS WSTRING = ".") AS DWSTRING
+   DIM pServices AS CWmiServices = $"winmgmts:{impersonationLevel=impersonate}!\\" &amp; wszServerName &amp; $"\root\cimv2"
+   DIM nError AS DWORD = GetLastError
+   IF nError THEN AfxMsg(__FUNCTION__ &amp; CHR(13,10) &amp; "Error: &amp;h" &amp; HEX(nError, 8) &amp; CHR(13,10) &amp; AfxWmiGetErrorCodeText(nError))
+   IF pServices.ServicesPtr = NULL THEN RETURN ""
+   pServices.ExecQuery("SELECT BootDevice FROM Win32_OperatingSystem")
+   pServices.GetNamedProperties
+   RETURN pServices.PropValue("BootDevice")
+END FUNCTION
+' ========================================================================================</code></pre>
+<hr>
+<pre class="code"><code>' ========================================================================================
+' Type of build used for an operating system.
+' Examples: "retail build", "checked build", "Multiprocessor Free".
+' ========================================================================================
+PRIVATE FUNCTION AfxGetOSBuildType (BYREF wszServerName AS WSTRING = ".") AS DWSTRING
+   DIM pServices AS CWmiServices = $"winmgmts:{impersonationLevel=impersonate}!\\" &amp; wszServerName &amp; $"\root\cimv2"
+   DIM nError AS DWORD = GetLastError
+   IF nError THEN AfxMsg(__FUNCTION__ &amp; CHR(13,10) &amp; "Error: &amp;h" &amp; HEX(nError, 8) &amp; CHR(13,10) &amp; AfxWmiGetErrorCodeText(nError))
+   IF pServices.ServicesPtr = NULL THEN RETURN ""
+   pServices.ExecQuery("SELECT BuildType FROM Win32_OperatingSystem")
+   pServices.GetNamedProperties
+   RETURN pServices.PropValue("BuildType")
+END FUNCTION
+' ========================================================================================</code></pre>
+<hr>
+<pre class="code"><code>' ========================================================================================
+' Short description of the object—a one-line string. The string includes the operating
+' system version. For example, "Microsoft Windows 7 Enterprise ". This property can be localized.
+' Windows Vista and Windows 7: This property may contain trailing characters. For example,
+' the string "Microsoft Windows 7 Enterprise " (trailing space included) may be necessary
+' to retrieve information using this property.
+' ========================================================================================
+PRIVATE FUNCTION AfxGetOSCaption (BYREF wszServerName AS WSTRING = ".") AS DWSTRING
+   DIM pServices AS CWmiServices = $"winmgmts:{impersonationLevel=impersonate}!\\" &amp; wszServerName &amp; $"\root\cimv2"
+   DIM nError AS DWORD = GetLastError
+   IF nError THEN AfxMsg(__FUNCTION__ &amp; CHR(13,10) &amp; "Error: &amp;h" &amp; HEX(nError, 8) &amp; CHR(13,10) &amp; AfxWmiGetErrorCodeText(nError))
+   IF pServices.ServicesPtr = NULL THEN RETURN ""
+   pServices.ExecQuery("SELECT Caption FROM Win32_OperatingSystem")
+   pServices.GetNamedProperties
+   RETURN pServices.PropValue("Caption")
+END FUNCTION
+' ========================================================================================</code></pre>
+<hr>
+<pre class="code"><code>' ========================================================================================
+' Number, in minutes, an operating system is offset from Greenwich mean time (GMT).
+' The number is positive, negative, or zero.
+' ========================================================================================
+PRIVATE FUNCTION AfxGetOSCurrentTimeZone (BYREF wszServerName AS WSTRING = ".") AS USHORT
+   DIM pServices AS CWmiServices = $"winmgmts:{impersonationLevel=impersonate}!\\" &amp; wszServerName &amp; $"\root\cimv2"
+   DIM nError AS DWORD = GetLastError
+   IF nError THEN AfxMsg(__FUNCTION__ &amp; CHR(13,10) &amp; "Error: &amp;h" &amp; HEX(nError, 8) &amp; CHR(13,10) &amp; AfxWmiGetErrorCodeText(nError))
+   IF pServices.ServicesPtr = NULL THEN RETURN 0
+   pServices.ExecQuery("SELECT CurrentTimeZone FROM Win32_OperatingSystem")
+   pServices.GetNamedProperties
+   RETURN VAL(pServices.PropValue("CurrentTimeZone"))
+END FUNCTION
+' ========================================================================================</code></pre>
+<hr>
+<pre class="code"><code>' ========================================================================================
+' Name of the registered user of the operating system. Example: "Ben Smith".
+' ========================================================================================
+PRIVATE FUNCTION AfxGetOSRegisteredUser (BYREF wszServerName AS WSTRING = ".") AS DWSTRING
+   DIM pServices AS CWmiServices = $"winmgmts:{impersonationLevel=impersonate}!\\" &amp; wszServerName &amp; $"\root\cimv2"
+   DIM nError AS DWORD = GetLastError
+   IF nError THEN AfxMsg(__FUNCTION__ &amp; CHR(13,10) &amp; "Error: &amp;h" &amp; HEX(nError, 8) &amp; CHR(13,10) &amp; AfxWmiGetErrorCodeText(nError))
+   IF pServices.ServicesPtr = NULL THEN RETURN ""
+   pServices.ExecQuery("SELECT RegisteredUser FROM Win32_OperatingSystem")
+   pServices.GetNamedProperties
+   RETURN pServices.PropValue("RegisteredUser")
+END FUNCTION
+' ========================================================================================</code></pre>
+<hr>
+<pre class="code"><code>' ========================================================================================
+' Company name for the registered user of the operating system.
+' Example: "Microsoft Corporation"
+' ========================================================================================
+PRIVATE FUNCTION AfxGetOSOrganization (BYREF wszServerName AS WSTRING = ".") AS DWSTRING
+   DIM pServices AS CWmiServices = $"winmgmts:{impersonationLevel=impersonate}!\\" &amp; wszServerName &amp; $"\root\cimv2"
+   DIM nError AS DWORD = GetLastError
+   IF nError THEN AfxMsg(__FUNCTION__ &amp; CHR(13,10) &amp; "Error: &amp;h" &amp; HEX(nError, 8) &amp; CHR(13,10) &amp; AfxWmiGetErrorCodeText(nError))
+   IF pServices.ServicesPtr = NULL THEN RETURN ""
+   pServices.ExecQuery("SELECT Organization FROM Win32_OperatingSystem")
+   pServices.GetNamedProperties
+   RETURN pServices.PropValue("Organization")
+END FUNCTION
+' ========================================================================================</code></pre>
+<hr>
+<pre class="code"><code>' ========================================================================================
+' The date in which the OS was installed.
+' ========================================================================================
+PRIVATE FUNCTION AfxGetOSInstallDate (BYREF wszServerName AS WSTRING = ".") AS DWSTRING
+   DIM pServices AS CWmiServices = $"winmgmts:{impersonationLevel=impersonate}!\\" &amp; wszServerName &amp; $"\root\cimv2"
+   DIM nError AS DWORD = GetLastError
+   IF nError THEN AfxMsg(__FUNCTION__ &amp; CHR(13,10) &amp; "Error: &amp;h" &amp; HEX(nError, 8) &amp; CHR(13,10) &amp; AfxWmiGetErrorCodeText(nError))
+   IF pServices.ServicesPtr = NULL THEN RETURN ""
+   pServices.ExecQuery("SELECT InstallDate FROM Win32_OperatingSystem")
+   pServices.GetNamedProperties
+   RETURN pServices.PropValue("InstallDate")
+END FUNCTION
+' ========================================================================================</code></pre>
+<hr>
+<pre class="code"><code>' ========================================================================================
+' Date and time the operating system was last restarted.
+' ========================================================================================
+PRIVATE FUNCTION AfxGetOSLastBootUpTime (BYREF wszServerName AS WSTRING = ".") AS DWSTRING
+   DIM pServices AS CWmiServices = $"winmgmts:{impersonationLevel=impersonate}!\\" &amp; wszServerName &amp; $"\root\cimv2"
+   DIM nError AS DWORD = GetLastError
+   IF nError THEN AfxMsg(__FUNCTION__ &amp; CHR(13,10) &amp; "Error: &amp;h" &amp; HEX(nError, 8) &amp; CHR(13,10) &amp; AfxWmiGetErrorCodeText(nError))
+   IF pServices.ServicesPtr = NULL THEN RETURN ""
+   pServices.ExecQuery("SELECT LastBootUpTime FROM Win32_OperatingSystem")
+   pServices.GetNamedProperties
+   RETURN pServices.PropValue("LastBootUpTime")
+END FUNCTION
+' ========================================================================================</code></pre>
+<hr>
+<pre class="code"><code>' ========================================================================================
+' Encryption level for secure transactions: 40-bit, 128-bit, or n-bit.
+' ========================================================================================
+PRIVATE FUNCTION AfxGetOSEncryptionLevel (BYREF wszServerName AS WSTRING = ".") AS ULONG
+   DIM pServices AS CWmiServices = $"winmgmts:{impersonationLevel=impersonate}!\\" &amp; wszServerName &amp; $"\root\cimv2"
+   DIM nError AS DWORD = GetLastError
+   IF nError THEN AfxMsg(__FUNCTION__ &amp; CHR(13,10) &amp; "Error: &amp;h" &amp; HEX(nError, 8) &amp; CHR(13,10) &amp; AfxWmiGetErrorCodeText(nError))
+   IF pServices.ServicesPtr = NULL THEN RETURN 0
+   pServices.ExecQuery("SELECT EncryptionLevel FROM Win32_OperatingSystem")
+   pServices.GetNamedProperties
+   RETURN VAL(pServices.PropValue("EncryptionLevel"))
+END FUNCTION
+' ========================================================================================</code></pre>
+<hr>
+<pre class="code"><code>' ========================================================================================
+' Number, in kilobytes, of physical memory currently unused and available.
+' ========================================================================================
+PRIVATE FUNCTION AfxGetOSFreePhysicalMemory (BYREF wszServerName AS WSTRING = ".") AS ULONGLONG
+   DIM pServices AS CWmiServices = $"winmgmts:{impersonationLevel=impersonate}!\\" &amp; wszServerName &amp; $"\root\cimv2"
+   DIM nError AS DWORD = GetLastError
+   IF nError THEN AfxMsg(__FUNCTION__ &amp; CHR(13,10) &amp; "Error: &amp;h" &amp; HEX(nError, 8) &amp; CHR(13,10) &amp; AfxWmiGetErrorCodeText(nError))
+   IF pServices.ServicesPtr = NULL THEN RETURN 0
+   pServices.ExecQuery("SELECT FreePhysicalMemory FROM Win32_OperatingSystem")
+   pServices.GetNamedProperties
+   RETURN VAL(pServices.PropValue("FreePhysicalMemory"))
+END FUNCTION
+' ========================================================================================</code></pre>
+<hr>
+<pre class="code"><code>' ========================================================================================
+' Number, in kilobytes, that can be mapped into the operating system paging files without
+' causing any other pages to be swapped out.
+' ========================================================================================
+PRIVATE FUNCTION AfxGetOSFreeSpaceInPagingFiles (BYREF wszServerName AS WSTRING = ".") AS ULONGLONG
+   DIM pServices AS CWmiServices = $"winmgmts:{impersonationLevel=impersonate}!\\" &amp; wszServerName &amp; $"\root\cimv2"
+   DIM nError AS DWORD = GetLastError
+   IF nError THEN AfxMsg(__FUNCTION__ &amp; CHR(13,10) &amp; "Error: &amp;h" &amp; HEX(nError, 8) &amp; CHR(13,10) &amp; AfxWmiGetErrorCodeText(nError))
+   IF pServices.ServicesPtr = NULL THEN RETURN 0
+   pServices.ExecQuery("SELECT FreeSpaceInPagingFiles FROM Win32_OperatingSystem")
+   pServices.GetNamedProperties
+   RETURN VAL(pServices.PropValue("FreeSpaceInPagingFiles"))
+END FUNCTION
+' ========================================================================================</code></pre>
+<hr>
+<pre class="code"><code>' ========================================================================================
+' Number, in kilobytes, of virtual memory currently unused and available.
+' ========================================================================================
+PRIVATE FUNCTION AfxGetOSFreeVirtualMemory (BYREF wszServerName AS WSTRING = ".") AS ULONGLONG
+   DIM pServices AS CWmiServices = $"winmgmts:{impersonationLevel=impersonate}!\\" &amp; wszServerName &amp; $"\root\cimv2"
+   DIM nError AS DWORD = GetLastError
+   IF nError THEN AfxMsg(__FUNCTION__ &amp; CHR(13,10) &amp; "Error: &amp;h" &amp; HEX(nError, 8) &amp; CHR(13,10) &amp; AfxWmiGetErrorCodeText(nError))
+   IF pServices.ServicesPtr = NULL THEN RETURN 0
+   pServices.ExecQuery("SELECT FreeVirtualMemory FROM Win32_OperatingSystem")
+   pServices.GetNamedProperties
+   RETURN VAL(pServices.PropValue("FreeVirtualMemory"))
+END FUNCTION
+' ========================================================================================</code></pre>
+<hr>
+<pre class="code"><code>' ========================================================================================
+' Maximum number of process contexts the operating system can support. The default value
+' set by the provider is 4294967295 (0xFFFFFFFF). If there is no fixed maximum, the value
+' should be 0 (zero). On systems that have a fixed maximum, this object can help diagnose
+' failures that occur when the maximum is reached—if unknown, enter 4294967295 (0xFFFFFFFF).
+' ========================================================================================
+PRIVATE FUNCTION AfxGetOSMaxNumberOfProcesses (BYREF wszServerName AS WSTRING = ".") AS ULONG
+   DIM pServices AS CWmiServices = $"winmgmts:{impersonationLevel=impersonate}!\\" &amp; wszServerName &amp; $"\root\cimv2"
+   DIM nError AS DWORD = GetLastError
+   IF nError THEN AfxMsg(__FUNCTION__ &amp; CHR(13,10) &amp; "Error: &amp;h" &amp; HEX(nError, 8) &amp; CHR(13,10) &amp; AfxWmiGetErrorCodeText(nError))
+   IF pServices.ServicesPtr = NULL THEN RETURN 0
+   pServices.ExecQuery("SELECT MaxNumberOfProcesses FROM Win32_OperatingSystem")
+   pServices.GetNamedProperties
+   RETURN VAL(pServices.PropValue("MaxNumberOfProcesses"))
+END FUNCTION
+' ========================================================================================</code></pre>
+<hr>
+<pre class="code"><code>' ========================================================================================
+' Maximum number, in kilobytes, of memory that can be allocated to a process.
+' ========================================================================================
+PRIVATE FUNCTION AfxGetOSMaxProcessMemorySize (BYREF wszServerName AS WSTRING = ".") AS ULONGLONG
+   DIM pServices AS CWmiServices = $"winmgmts:{impersonationLevel=impersonate}!\\" &amp; wszServerName &amp; $"\root\cimv2"
+   DIM nError AS DWORD = GetLastError
+   IF nError THEN AfxMsg(__FUNCTION__ &amp; CHR(13,10) &amp; "Error: &amp;h" &amp; HEX(nError, 8) &amp; CHR(13,10) &amp; AfxWmiGetErrorCodeText(nError))
+   IF pServices.ServicesPtr = NULL THEN RETURN 0
+   pServices.ExecQuery("SELECT MaxProcessMemorySize FROM Win32_OperatingSystem")
+   pServices.GetNamedProperties
+   RETURN VAL(pServices.PropValue("MaxProcessMemorySize"))
+END FUNCTION
+' ========================================================================================</code></pre>
+<hr>
+<pre class="code"><code>' ========================================================================================
+' Number of process contexts currently loaded or running on the operating system.
+' ========================================================================================
+PRIVATE FUNCTION AfxGetOSNumberOfProcesses (BYREF wszServerName AS WSTRING = ".") AS ULONG
+   DIM pServices AS CWmiServices = $"winmgmts:{impersonationLevel=impersonate}!\\" &amp; wszServerName &amp; $"\root\cimv2"
+   DIM nError AS DWORD = GetLastError
+   IF nError THEN AfxMsg(__FUNCTION__ &amp; CHR(13,10) &amp; "Error: &amp;h" &amp; HEX(nError, 8) &amp; CHR(13,10) &amp; AfxWmiGetErrorCodeText(nError))
+   IF pServices.ServicesPtr = NULL THEN RETURN 0
+   pServices.ExecQuery("SELECT NumberOfProcesses FROM Win32_OperatingSystem")
+   pServices.GetNamedProperties
+   RETURN VAL(pServices.PropValue("NumberOfProcesses"))
+END FUNCTION
+' ========================================================================================</code></pre>
+<hr>
+<pre class="code"><code>' ========================================================================================
+' Number of user sessions for which the operating system is storing state information currently.
+' ========================================================================================
+PRIVATE FUNCTION AfxGetOSNumberOfUsers (BYREF wszServerName AS WSTRING = ".") AS ULONG
+   DIM pServices AS CWmiServices = $"winmgmts:{impersonationLevel=impersonate}!\\" &amp; wszServerName &amp; $"\root\cimv2"
+   DIM nError AS DWORD = GetLastError
+   IF nError THEN AfxMsg(__FUNCTION__ &amp; CHR(13,10) &amp; "Error: &amp;h" &amp; HEX(nError, 8) &amp; CHR(13,10) &amp; AfxWmiGetErrorCodeText(nError))
+   IF pServices.ServicesPtr = NULL THEN RETURN 0
+   pServices.ExecQuery("SELECT NumberOfUsers FROM Win32_OperatingSystem")
+   pServices.GetNamedProperties
+   RETURN VAL(pServices.PropValue("NumberOfUsers"))
+END FUNCTION
+' ========================================================================================</code></pre>
+<hr>
+<pre class="code"><code>' ========================================================================================
+' Number, in kilobytes, of virtual memory. For example, this may be calculated by adding
+' the amount of total RAM to the amount of paging space, that is, adding the amount of
+' memory in or aggregated by the computer system to the property, SizeStoredInPagingFiles.
+' ========================================================================================
+PRIVATE FUNCTION AfxGetOSTotalVirtualMemorySize (BYREF wszServerName AS WSTRING = ".") AS ULONGLONG
+   DIM pServices AS CWmiServices = $"winmgmts:{impersonationLevel=impersonate}!\\" &amp; wszServerName &amp; $"\root\cimv2"
+   DIM nError AS DWORD = GetLastError
+   IF nError THEN AfxMsg(__FUNCTION__ &amp; CHR(13,10) &amp; "Error: &amp;h" &amp; HEX(nError, 8) &amp; CHR(13,10) &amp; AfxWmiGetErrorCodeText(nError))
+   IF pServices.ServicesPtr = NULL THEN RETURN 0
+   pServices.ExecQuery("SELECT TotalVirtualMemorySize FROM Win32_OperatingSystem")
+   pServices.GetNamedProperties
+   RETURN VAL(pServices.PropValue("TotalVirtualMemorySize"))
+END FUNCTION
+' ========================================================================================</code></pre>
+<hr>
+<pre class="code"><code>' ========================================================================================
+' Total amount, in kilobytes, of physical memory available to the operating system. This
+' value does not necessarily indicate the true amount of physical memory, but what is
+' reported to the operating system as available to it.
+' ========================================================================================
+PRIVATE FUNCTION AfxGetOSTotalVisibleMemorySize (BYREF wszServerName AS WSTRING = ".") AS ULONGLONG
+   DIM pServices AS CWmiServices = $"winmgmts:{impersonationLevel=impersonate}!\\" &amp; wszServerName &amp; $"\root\cimv2"
+   DIM nError AS DWORD = GetLastError
+   IF nError THEN AfxMsg(__FUNCTION__ &amp; CHR(13,10) &amp; "Error: &amp;h" &amp; HEX(nError, 8) &amp; CHR(13,10) &amp; AfxWmiGetErrorCodeText(nError))
+   IF pServices.ServicesPtr = NULL THEN RETURN 0
+   pServices.ExecQuery("SELECT TotalVisibleMemorySize FROM Win32_OperatingSystem")
+   pServices.GetNamedProperties
+   RETURN VAL(pServices.PropValue("TotalVisibleMemorySize"))
+END FUNCTION
+' ========================================================================================</code></pre>
+<hr>
+<pre class="code"><code>' ========================================================================================
+' Media Access Control (MAC) address of the network adapter. A MAC address is assigned by
+' the manufacturer to uniquely identify the network adapter. Example: "00:80:C7:8F:6C:96".
+' ========================================================================================
+PRIVATE FUNCTION AfxGetNetworkAdapterMACAddress (BYREF wszServerName AS WSTRING = ".") AS DWSTRING
+   DIM pServices AS CWmiServices = $"winmgmts:{impersonationLevel=impersonate}!\\" &amp; wszServerName &amp; $"\root\cimv2"
+   DIM nError AS DWORD = GetLastError
+   IF nError THEN AfxMsg(__FUNCTION__ &amp; CHR(13,10) &amp; "Error: &amp;h" &amp; HEX(nError, 8) &amp; CHR(13,10) &amp; AfxWmiGetErrorCodeText(nError))
+   IF pServices.ServicesPtr = NULL THEN RETURN ""
+   pServices.ExecQuery("SELECT MACAddress FROM Win32_NetworkAdapterConfiguration")
+   pServices.GetNamedProperties
+   RETURN pServices.PropValue("MACAddress")
+END FUNCTION
+' ========================================================================================</code></pre>
+<hr>
+<pre class="code"><code>' ========================================================================================
+' Gets the physical sector size of the physical disk, in bytes. For example: for 4K native
+' and 512-byte emulated disks, the value of this property should be 4096.
+' ========================================================================================
+PRIVATE FUNCTION AfxGetPhysicalDiskSectorSize (BYREF wszServerName AS WSTRING = ".") AS UINT64
+   DIM pServices AS CWmiServices = $"winmgmts:{impersonationLevel=impersonate}!\\" &amp; wszServerName &amp; $"\root\Microsoft\Windows\Storage"
+   DIM nError AS DWORD = GetLastError
+   IF nError THEN AfxMsg(__FUNCTION__ &amp; CHR(13,10) &amp; "Error: &amp;h" &amp; HEX(nError, 8) &amp; CHR(13,10) &amp; AfxWmiGetErrorCodeText(nError))
+   IF pServices.ServicesPtr = NULL THEN RETURN 0
+   pServices.ExecQuery("SELECT PhysicalSectorSize FROM MSFT_PhysicalDisk")
+   pServices.GetNamedProperties
+   RETURN VAL(pServices.PropValue("PhysicalSectorSize"))
+END FUNCTION
+' ========================================================================================</code></pre>
+<hr>
+<pre class="code"><code>' ========================================================================================
+' Gets the total physical storage size of the disk, in bytes.
+' ========================================================================================
+PRIVATE FUNCTION AfxGetPhysicalDiskSize (BYREF wszServerName AS WSTRING = ".") AS UINT64
+   DIM pServices AS CWmiServices = $"winmgmts:{impersonationLevel=impersonate}!\\" &amp; wszServerName &amp; $"\root\Microsoft\Windows\Storage"
+   DIM nError AS DWORD = GetLastError
+   IF nError THEN AfxMsg(__FUNCTION__ &amp; CHR(13,10) &amp; "Error: &amp;h" &amp; HEX(nError, 8) &amp; CHR(13,10) &amp; AfxWmiGetErrorCodeText(nError))
+   IF pServices.ServicesPtr = NULL THEN RETURN 0
+   pServices.ExecQuery("SELECT Size FROM MSFT_PhysicalDisk")
+   pServices.GetNamedProperties
+   RETURN VAL(pServices.PropValue("Size"))
+END FUNCTION
+' ========================================================================================</code></pre>
+<hr>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../index.html">Home</a> ·
+         <a href="../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../nav.js?v=70a6b70236"></script>
+<script src="../../search-index.js"></script>
+<script src="../../assets/app.js?v=456d079659"></script>
+<script src="../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

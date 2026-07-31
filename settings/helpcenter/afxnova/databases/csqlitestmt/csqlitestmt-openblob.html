@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CSQLiteStmt.OpenBlob — Help Center</title>
+<meta name="description" content="Opens a handle to a BLOB.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/databases/csqlitestmt/csqlitestmt-openblob.html">
+<meta property="og:title" content="CSQLiteStmt.OpenBlob">
+<meta property="og:description" content="Opens a handle to a BLOB.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/databases/csqlitestmt/csqlitestmt-openblob.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/databases/csqlitestmt/csqlitestmt-openblob.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../csqlite-class.html">CSQLite Class</a></div>
+<h1>CSQLiteStmt.OpenBlob<span class="h1kind">method</span></h1>
+<p class="lede">Opens a handle to a BLOB.</p>
+<div class="badges"><a class="badge" href="../index.html">Databases</a><span class="badge">method</span><span class="badge">CSQLite.inc</span><span class="badge badge--warn">doc-orphan</span></div>
+<div class="note note--warn"><strong>No implementation located.</strong> This member is documented, but the source scan found no matching declaration. It is likely declared in a header this scan does not resolve, or provided by a macro.</div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION OpenBlob (BYREF szDbName AS ZSTRING, BYREF szTableName AS ZSTRING, BYREF szColumnName AS ZSTRING, BYVAL iRow AS sqlite3_int64, BYVAL flags AS LONG = 0) AS sqlite3_blob PTR</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>szDbName</code></td><td></td><td>The database name. Note that the database name is not the filename that contains the database but rather the symbolic name of the database that appears after the AS keyword when the database is connected using ATTACH. For the main database file, the database name is "main". For TEMP tables, the database name is "temp".</td></tr><tr><td><code>szTableName</code></td><td></td><td>The table name.</td></tr><tr><td><code>szColumnName</code></td><td></td><td>The column name.</td></tr><tr><td><code>iRow</code></td><td></td><td>The row number. If the row that a BLOB handle points to is modified by an UPDATE, DELETE, or by ON CONFLICT side-effects then the BLOB handle is marked as "expired". This is true if any column of the row is changed, even a column other than the one the BLOB handle is open on. Calls to <strong>BlobRead</strong> and <strong>BlobWrite</strong> for an expired BLOB handle fail with a return code of SQLITE_ABORT. Changes written into a BLOB prior to the BLOB expiring are not rolled back by the expiration of the BLOB. Such changes will eventually commit if the transaction continues to completion.</td></tr><tr><td><code>flags</code></td><td></td><td>If the flags parameter is non-zero, then the BLOB is opened for read and write access. If it is zero, the BLOB is opened for read access. It is not possible to open a column that is part of an index or primary key for writing. If foreign key constraints are enabled, it is not possible to open a column that is part of a child key for writing.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>On success, the new BLOB handle is returned. On failure, the returned pointer will be null. To get the error code, call <strong>GetLastResult</strong>.</p>
+<h2>Description</h2>
+<p>This function opens a handle to the BLOB located in row <em>iRow</em>, column <em>szColumnName</em>, table <em>szTableName</em> in database <em>szDbName</em>; in other words, the same BLOB that would be selected by:</p>
+<h2>Remarks</h2>
+<p>Use the <strong>BlobBytes</strong> function to determine the size of the opened blob. The size of a blob may not be changed by this function. Use the UPDATE SQL command to change the size of a blob.</p>
+<p>The <strong>BindZeroblob</strong> and <strong>ResultZeroblob</strong> functions and the built-in zeroblob SQL function can be used, if desired, to create an empty, zero-filled blob in which to read or write using this function.</p>
+<p>To avoid a resource leak, every open BLOB handle should eventually be released by a call to **CloseBlob*.</p>
+<h2>Examples</h2>
+<p>SELECT szColumn FROM szDb.szTable WHERE rowid = qRow;</p>
+<p>' Blob '#CONSOLE ON #define UNICODE #INCLUDE ONCE "AfxNova/AfxWin.inc" #INCLUDE ONCE "AfxNova/CSQLite3.inc" USING AfxNova</p>
+<p>' // Optional: Specify the DLL path and/or name ' // This allows to use a DLL with a different name that sqlite3.dll, ' // located anywhere, avoiding the need to have multiple copies of the same dll. DIM pSql AS CSQLite = "sqlite3_64.dll" IF pSql.m_hLib = NULL THEN END</p>
+<p>' // Create a new database ' // I'm deleting and recreating the database for testing purposes DIM dwsDbName AS DWSTRING = AfxGetExePathName &amp; "TestBlob.sdb" IF AfxFileExists(dwsDbName) THEN AfxDeleteFile(dwsDbName) DIM pDbc AS CSQLiteDb = dwsDbName</p>
+<p>' // Create a table IF pDbc.Exec("CREATE TABLE t (xyz blob)") &lt;&gt; SQLITE_DONE THEN AfxMsg "Unable to create the table" END END IF</p>
+<p>' // Prepare the statement DIM sql AS DWSTRING = "INSERT INTO t (xyz) VALUES (?)" DIM pStmt AS CSqliteStmt = pDbc.Prepare(sql) ' // Bind the blob DIM fakeBlob AS STRING fakeBlob = STRING(500, "A") pStmt.BindBlob(1, STRPTR(fakeBlob), 500, SQLITE_TRANSIENT) ' // Execute the prepared statement pStmt.Step_ PRINT "Row id was", pDbc.LastInsertRowId</p>
+<p>' // Open the blob DIM pBlob AS CSQLiteBlob = pDbc.OpenBlob("main", "t", "xyz", 1) DIM nBlobBytes AS LONG = pBlob.Bytes PRINT "Blob bytes: ", nBlobBytes ' // Read the blob DIM strBlob AS STRING strBlob = STRING(nBlobBytes, CHR(0)) pBlob.Read(STRPTR(strBlob), nBlobBytes) PRINT strBlob</p>
+<p>PRINT PRINT "Press any key..." SLEEP</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CSQLite.inc</code></li><li>Documented in <span class="srcref">Databases/CSQLite Class.md</span></li><li>Topic: <a href="../csqlite-class.html">CSQLite Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

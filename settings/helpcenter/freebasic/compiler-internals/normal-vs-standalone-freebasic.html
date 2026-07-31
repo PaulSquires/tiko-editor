@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Normal vs. Standalone FreeBASIC — Help Center</title>
+<meta name="description" content="Normal vs. Standalone FreeBASIC — 0 documented members. Compiler Internals reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/compiler-internals/normal-vs-standalone-freebasic.html">
+<meta property="og:title" content="Normal vs. Standalone FreeBASIC">
+<meta property="og:description" content="Normal vs. Standalone FreeBASIC — 0 documented members. Compiler Internals reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/compiler-internals/normal-vs-standalone-freebasic.html">
+<link rel="stylesheet" href="../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/compiler-internals/normal-vs-standalone-freebasic.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Compiler Internals</div>
+<h1>Normal vs. Standalone FreeBASIC</h1>
+<h2>Documentation</h2>
+
+	<br>
+When built from source, FreeBASIC can be configured for and installed in one of these two different setups:<br>
+<br>
+<table><tr><td><b><u>Normal build (default)</u></b><br>
+</td><td><b><u>Standalone build</u></b><br>
+</td></tr></table><div>&nbsp;</div><table><tr><td>Normal directory layout:<br>
+<ul><li> bin/<br>
+<ul><li> fbc.exe<br>
+<li> [&lt;target&gt;-]ld.exe<br>
+<li> <i>other tools for native/cross compilation...</i><br>
+</li></li></li></ul><li> include/<br>
+<ul><li> freebasic/<br>
+<ul><li> fbgfx.bi<br>
+<li> <i>other headers...</i><br>
+</li></li></ul></li></ul><li> lib/<br>
+<ul><li> freebasic/<br>
+<ul><li> &lt;target&gt;/<br>
+<ul><li> libfb.a<br>
+<li> <i>other libraries...</i><br>
+</li></li></ul></li></ul></li></ul></li></li></li></ul></td><td>Standalone directory layout:<br>
+<ul><li> bin/<br>
+<ul><li> &lt;target&gt;/<br>
+<ul><li> ld.exe<br>
+<li> <i>other tools...</i><br>
+</li></li></ul></li></ul><li> inc/<br>
+<ul><li> fbgfx.bi<br>
+<li> <i>other headers...</i><br>
+</li></li></ul><li> lib/<br>
+<ul><li> &lt;target&gt;/<br>
+<ul><li> libfb.a<br>
+<li> <i>other libraries...</i><br>
+</li></li></ul></li></ul><li> fbc.exe<br>
+</li></li></li></li></ul></td></tr></table><div>&nbsp;</div><table><tr><td>Differences to the standalone build:<br>
+<br>
+<ul><li> fbc is located in <code>bin/</code>, like other programs<br>
+<li> looks for includes in <code>include/freebasic/</code>, instead of <code>inc/</code>, to cleanly separate FB headers from system headers<br>
+<li> looks for its own libraries in <code>lib/freebasic/</code> instead of <code>lib/</code>, to cleanly separate FB libraries from system libraries<br>
+<li> looks for binutils/gcc 1) in <code>bin/</code> and 2) by relying on <code>PATH</code><br>
+<li> looks for crt/gcc libraries 1) in <code>lib/freebasic/</code> and 2) by running "<code>gcc -print-file-name=...</code>"<br>
+<li> <code><a href="../using-the-freebasic-compiler/command-line-options/compiler-option-target.html">-target</a></code> option accepts system triplets such as "<code>i686-pc-linux-gnu</code>" or "<code>x86_64-w64-mingw32</code>"<br>
+<li> the target name given to the <code><a href="../using-the-freebasic-compiler/command-line-options/compiler-option-target.html">-target</a></code> option is prepended to the gcc/binutils program names when cross-compiling<br>
+<li> compatible with the standard <code>/usr</code> or <code>/usr/local</code> directories<br>
+<li> typically used for the FB-linux release<br>
+<li> uses <code>windres</code> from binutils to compile win32 resource scripts<br>
+<br>
+</li></li></li></li></li></li></li></li></li></li></ul>This makes the normal FB build integrate with GNU/Linux distributions and other Unix-like systems pretty well, allows fbc to be installed into MinGW or DJGPP trees next to gcc, and allows fbc to work with binutils/gcc cross-compiling toolchains.<br>
+</td><td>Differences to the normal build:<br>
+<br>
+<ul><li> the fbc binary is located at the toplevel, not inside <code>bin/</code><br>
+<li> looks for tools inside <code>bin/&lt;target&gt;/</code>, i.e. it uses <code>bin/&lt;target&gt;/ld.exe</code> instead of <code>bin/[&lt;target&gt;-]ld.exe</code><br>
+<li> looks for FB includes in <code>inc/</code>, not in <code>include/freebasic/</code><br>
+<li> looks for libraries in <code>lib/</code>, not in <code>lib/freebasic/</code><br>
+<li> does not try to rely on <code>PATH</code> and use system tools<br>
+<li> does not try to query gcc to find files<br>
+<li> <code><a href="../using-the-freebasic-compiler/command-line-options/compiler-option-target.html">-target</a></code> only accepts simple FB target names, no system triplets<br>
+<li> typically used for the FB-dos and FB-win32 releases<br>
+<li> uses GoRC to compile win32 resource scripts<br>
+<br>
+</li></li></li></li></li></li></li></li></li></ul>The standalone build is intended to be used for self-contained installations such as the traditional FB-win32 and FB-dos releases. It also allows adding fbc to the PATH, without having to add the whole <code>bin/</code> directory.<br>
+</td></tr></table><div>&nbsp;</div><br>
+<br>
+
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../index.html">Home</a> ·
+         <a href="../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../nav.js?v=70a6b70236"></script>
+<script src="../../search-index.js"></script>
+<script src="../../assets/app.js?v=456d079659"></script>
+<script src="../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

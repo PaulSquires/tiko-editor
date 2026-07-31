@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Step — Help Center</title>
+<meta name="description" content="Statement modifier.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/miscellaneous-keywords/procedures/step.html">
+<meta property="og:title" content="Step">
+<meta property="og:description" content="Statement modifier.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/miscellaneous-keywords/procedures/step.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/miscellaneous-keywords/procedures/step.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>Step<span class="h1kind">keyword</span></h1>
+<p class="lede">Statement modifier.</p>
+<div class="badges"><a class="badge" href="../index.html">Miscellaneous Keywords</a><span class="badge">keyword</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>For iterator = initial_value To end_value Step increment</code></pre>
+<pre class="code sig"><code>Line [ buffer, ] Step ( x1, y1 ) - Step ( x2, y2 ) [, [ color ][, [ B|BF ][, style ] ] ]</code></pre>
+<pre class="code sig"><code>Circle [ target, ] Step ( x, y ), radius [, [ color ][, [ start ][, [ end ][, [ aspect ][, F] ] ] ] ]</code></pre>
+<pre class="code sig"><code>Paint [ target, ] STEP ( x, y ) [, [ paint ][, [ border_color ] ] ]</code></pre>
+<h2>Description</h2>
+<br>
+In a <code><a href="../../operators/iterating-operators/procedures/for-next.html">For</a></code> statement, <code><b>Step</b></code> specifies the increment of the loop iterator with each loop.<br>
+<br>
+In a <code><a href="../../2d-drawing-functions/procedures/line-graphics.html">Line</a></code>, <code><a href="../../2d-drawing-functions/procedures/circle.html">Circle</a></code> or <code><a href="../../2d-drawing-functions/procedures/paint.html">Paint</a></code> statement, <code><b>Step</b></code> indicates that the following coordinate has values relative to the graphics cursor.<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>See also</h3><br>
+<ul><li> <code><a href="../../operators/iterating-operators/procedures/for-next.html">For...Next</a></code><br>
+<li> <code><a href="../../2d-drawing-functions/procedures/line-graphics.html">Line</a></code><br>
+<li> <code><a href="../../2d-drawing-functions/procedures/circle.html">Circle</a></code><br>
+<li> <code><a href="../../2d-drawing-functions/procedures/paint.html">Paint</a></code><br>
+<br>
+</li></li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span>i</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+<span class="tok-kw">For</span> <span>I</span><span>=</span><span class="tok-nu">10</span> <span class="tok-kw">To</span> <span class="tok-nu">1</span> <span class="tok-kw">Step</span> <span>-</span><span class="tok-nu">1</span>
+
+<span class="tok-kw">Next</span></pre></code><br>
+<br>
+<code><pre class="code"><span class="tok-kw">Line</span> <span>-</span><span class="tok-kw">Step</span><span>(</span><span class="tok-nu">10</span><span>,</span><span class="tok-nu">10</span><span>),</span><span class="tok-nu">13</span></pre></code><br>
+<br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgStep.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

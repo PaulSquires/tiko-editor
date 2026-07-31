@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CAdoStream.LoadFromFile — Help Center</title>
+<meta name="description" content="Loads the contents of an existing file into a `Stream`.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadostream/cadostream-loadfromfile.html">
+<meta property="og:title" content="CAdoStream.LoadFromFile">
+<meta property="og:description" content="Loads the contents of an existing file into a `Stream`.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadostream/cadostream-loadfromfile.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/databases/ado-classes/cadostream/cadostream-loadfromfile.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cadostream-class.html">CAdoStream Class</a></div>
+<h1>CAdoStream.LoadFromFile<span class="h1kind">method</span></h1>
+<p class="lede">Loads the contents of an existing file into a `Stream`.</p>
+<div class="badges"><a class="badge" href="../../index.html">Databases</a><span class="badge">method</span><span class="badge">CAdoStream.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION LoadFromFile (BYREF wszFileName AS WSTRING) AS HRESULT</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>wszFileName</code></td><td></td><td>A string value that contains the name of a file to be loaded into the <code>Stream</code>. <em>wszFileName</em> can contain any valid path and name in UNC format. If the specified file does not exist, a run-time error occurs.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Loads the contents of an existing file into a <code>Stream</code>.</p>
+<h2>Remarks</h2>
+<p>This method may be used to load the contents of a local file into a <code>Stream</code> object. This may be used to upload the contents of a local file to a server.</p>
+<p>The <code>Stream</code> object must be already open before calling LoadFromFile. This method does not change the binding of the <code>Stream</code> object; it will still be bound to the object specified by the URL or <code>Record</code> with which the Stream was originally opened.</p>
+<p><strong>LoadFromFile</strong> overwrites the current contents of the <code>Stream</code> object with data read from the file. Any existing bytes in the <code>Stream</code> are overwritten by the contents of the file. Any previously existing and remaining bytes following the <strong>EOS</strong> created by <strong>LoadFromFile</strong>, are truncated.</p>
+<p>After a call to <strong>LoadFromFile</strong>, the current position is set to the beginning of the <code>Stream</code> (Position is 0).</p>
+<p>Because 2 bytes may be added to the beginning of the stream for encoding, the size of the stream may not exactly match the size of the file from which it was loaded.</p>
+<h2>Examples</h2>
+<p>#include once "AfxNova/CADODB.inc" USING AfxNova</p>
+<p>' // Open a stream in memory DIM pStream AS CAdoStream pStream.Charset = "_autodetect" pStream.Open ' // Load a file in the stream DIM hr AS HRESULT = pStream.LoadFromFile(ExePath &amp; "\Test1.bas") ' // Read all the text PRINT pStream.ReadText ' // Close the stream pStream.Close</p>
+<p>#include once "AfxNova/CADODB.inc" USING AfxNova</p>
+<p>' // Open a stream in memory DIM pStream AS CAdoStream pStream.Charset = "_autodetect" pStream.Open ' // Load a file in the stream DIM hr AS HRESULT = pStream.LoadFromFile(ExePath &amp; "\Test1.bas") ' // Read the text line by line DO WHILE NOT pStream.EOS PRINT pStream.ReadText(adReadLine) LOOP ' // Close the stream pStream.Close</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CAdoStream.inc</code></li><li>Defined in <span class="srcref">AfxNova/CAdoStream.inc:448</span></li><li>Documented in <span class="srcref">Databases/ADO Classes/CAdoStream Class.md</span></li><li>Topic: <a href="../cadostream-class.html">CAdoStream Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

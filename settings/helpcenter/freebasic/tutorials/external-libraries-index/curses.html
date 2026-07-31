@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Curses — Help Center</title>
+<meta name="description" content="Curses — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/external-libraries-index/curses.html">
+<meta property="og:title" content="Curses">
+<meta property="og:description" content="Curses — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/external-libraries-index/curses.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/external-libraries-index/curses.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>Curses</h1>
+<h2>Documentation</h2>
+
+	Standardized console user interface library<br>
+<br>
+Website: http://pdcurses.sourceforge.net/ and http://www.gnu.org/software/ncurses/<br>
+Platforms supported: DOS, Win32, Linux<br>
+Headers to include: curses.bi<br>
+Header versions: pdcurses 3.4, ncurses 5.9<br>
+Note: On Win32 systems pdcurses is used, on Linux it uses the standard ncurses library.<br>
+Examples: yes, in examples/console/curses/<br>
+<br>
+<div>Example</div><div><br>
+<code><pre class="code"><span>#include Once &quot;curses.bi&quot;
+
+</span>
+
+<span>initscr</span><span>()</span>
+
+<span>cbreak</span><span>()</span>
+
+<span>noecho</span><span>()</span>
+
+<span>start_color</span><span>()</span>
+
+
+
+<span class="tok-cm">'' The default pair 0 will have the console's default colors</span>
+
+
+
+<span class="tok-cm">'' Set pair 1 to be white/blue</span>
+
+<span>init_pair</span><span>(</span><span class="tok-nu">1</span><span>,</span> <span>COLOR_WHITE</span><span>,</span> <span>COLOR_BLUE</span><span>)</span>
+
+
+
+<span class="tok-cm">'' Select pair 1, so from now on output will be white text on blue background</span>
+
+<span>attrset</span><span>(</span><span>COLOR_PAIR</span><span>(</span><span class="tok-nu">1</span><span>))</span>
+
+
+
+<span>printw</span><span>(!</span><span>&quot;Hello, world!\n&quot;</span><span>)</span>
+
+
+
+<span class="tok-cm">'' Reset to pair 0</span>
+
+<span>attrset</span><span>(</span><span>COLOR_PAIR</span><span>(</span><span class="tok-nu">0</span><span>))</span>
+
+
+
+<span class="tok-cm">'' Sleep</span>
+
+<span>printw</span><span>(!</span><span>&quot;Waiting for keypress...\n&quot;</span><span>)</span>
+
+<span>getch</span><span>()</span>
+
+
+
+<span>endwin</span><span>()</span></pre></code><br>
+<br>
+<br>
+   <br>
+</div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

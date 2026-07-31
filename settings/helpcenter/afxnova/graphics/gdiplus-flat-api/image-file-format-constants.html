@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Image File Format Constants — Help Center</title>
+<meta name="description" content="Image File Format Constants — 0 documented members. Graphics reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/image-file-format-constants.html">
+<meta property="og:title" content="Image File Format Constants">
+<meta property="og:description" content="Image File Format Constants — 0 documented members. Graphics reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/image-file-format-constants.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/image-file-format-constants.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span>Graphics</div>
+<h1>Image File Format Constants</h1>
+<h2>Documentation</h2>
+<h2 id="image-file-format-constants">Image File Format Constants</h2>
+<p>The <strong>GdipGetImageRawFormat</strong> function returns a globally unique identifier (GUID) that indicates the file format of an image. The following constants represent the GUIDs that identify those file formats.</p>
+<h5 id="imageformatbmp">ImageFormatBMP</h5>
+<p>B96B3CAB-0728-11D3-9D7B-0000F81EF32E Indicates the Microsoft Windowsbitmap (BMP) format.</p>
+<h5 id="imageformatemf">ImageFormatEMF</h5>
+<p>B96B3CAC-0728-11D3-9D7B-0000F81EF32E Indicates the Enhanced Metafile (EMF) format.</p>
+<h5 id="imageformatexif">ImageFormatEXIF</h5>
+<p>B96B3CB2-0728-11D3-9D7B-0000F81EF32E Indicates the Exif (Exchangeable Image File) format.</p>
+<h5 id="imageformatgif">ImageFormatGIF</h5>
+<p>B96B3CB0-0728-11D3-9D7B-0000F81EF32E Indicates the Graphics Interchange Format (GIF) format.</p>
+<h5 id="imageformaticon">ImageFormatIcon</h5>
+<p>B96B3CB5-0728-11D3-9D7B-0000F81EF32E Indicates the Icon format.</p>
+<h5 id="imageformatjpeg">ImageFormatJPEG</h5>
+<p>B96B3CAE-0728-11D3-9D7B-0000F81EF32E Indicates the JPEG format.</p>
+<h5 id="imageformatmemorybmp">ImageFormatMemoryBMP</h5>
+<p>B96B3CAB-0728-11D3-9D7B-0000F81EF32E Indicates that the image was constructed from a memory bitmap.</p>
+<h5 id="imageformatpng">ImageFormatPNG</h5>
+<p>B96B3CAF-0728-11D3-9D7B-0000F81EF32E Indicates the Portable Network Graphics (PNG) format.</p>
+<h5 id="imageformattiff">ImageFormatTIFF</h5>
+<p>B96B3CB1-0728-11D3-9D7B-0000F81EF32E Indicates the Tagged Image File Format (TIFF) format.</p>
+<h5 id="imageformatundefined">ImageFormatUndefined</h5>
+<p>B96B3CA9-0728-11D3-9D7B-0000F81EF32E Indicates that Windows GDI+ is unable to determine the format.</p>
+<h5 id="imageformatwmf">ImageFormatWMF</h5>
+<p>B96B3CAD-0728-11D3-9D7B-0000F81EF32E Indicates the Windows Metafile Format (WMF) format.</p>
+<hr>
+<h2 id="image-frame-dimension-constants">Image Frame Dimension Constants</h2>
+<p>The Graphics Interchange Format (GIF) and Tagged Image File Format (TIFF) image file formats enable you to store multiple frames in a single image file. Multiple frames in a GIF file are used for animation, so the frames are said to be in the time dimension. Multiple frames in a TIFF file are typically used as separate pages, so the frames are said to be in the page dimension.</p>
+<p>The following constants represent globally unique identifiers (GUIDs) that identify the page and time dimensions.</p>
+<h5 id="framedimensionpage">FrameDimensionPage</h5>
+<p>7462DC86-6180-4C7E-8E3F-EE7333A7A483</p>
+<h5 id="framedimensionresolution">FrameDimensionResolution</h5>
+<p>84236F7B-3BD3-428F-8DAB-4EA1439CA315</p>
+<h5 id="framedimensiontime">FrameDimensionTime</h5>
+<p>6AEDBD6D-3FB5-418A-83A6-7F45229DC872</p>
+<hr>
+<h2 id="image-encoder-constants">Image Encoder Constants</h2>
+<p>The <strong>GdpiSaveImageToFile</strong>, <strong>GdpiSaveImageToStream</strong>, <strong>GdpiSaveAdd</strong> and <strong>GdpiSaveAddImage</strong> functions receive an <strong>EncoderParameters</strong> structure that contains an array of <strong>EncoderParameter</strong> objects. Each <strong>EncoderParameter</strong> object has a globally unique identifier (GUID) data member that specifies the parameter category. The following constants represent GUIDs that specify the various parameter categories.</p>
+<h5 id="encoderchrominancetable">EncoderChrominanceTable</h5>
+<p>F2E455DC-09B3-4316-8260-676ADA32481C</p>
+<h5 id="encodercolordepth">EncoderColorDepth</h5>
+<p>66087055-AD66-4C7C-9A18-38A2310B8337</p>
+<h5 id="encodercolorspace">EncoderColorSpace</h5>
+<p>AE7A62A0-EE2C-49D8-9D07-1BA8A927596E</p>
+<h5 id="encodercompression">EncoderCompression</h5>
+<p>E09D739D-CCD4-44EE-8EBA-3FBF8BE4FC58</p>
+<h5 id="encoderluminancetable">EncoderLuminanceTable</h5>
+<p>EDB33BCE-0266-4A77-B904-27216099E717</p>
+<h5 id="encoderquality">EncoderQuality</h5>
+<p>1D5BE4B5-FA4A-452D-9CDD-5DB35105E7EB</p>
+<h5 id="encoderrendermethod">EncoderRenderMethod</h5>
+<p>6D42C53A-229A-4825-8BB7-5C99E2B9A8B8</p>
+<h5 id="encodersaveflag">EncoderSaveFlag</h5>
+<p>292266FC-AC40-47BF-8CFC-A85B89A655DE</p>
+<h5 id="encoderscanmethod">EncoderScanMethod</h5>
+<p>3A4E2661-3109-4E56-8536-42C156E7DCFA</p>
+<h5 id="encodertransformation">EncoderTransformation</h5>
+<p>8D0EB2D1-A58E-4EA8-AA14-108074B7B6F9</p>
+<h5 id="encoderversion">EncoderVersion</h5>
+<p>24D18C76-814A-41A4-BF53-1C219CCCF797</p>
+<h5 id="encoderimageitems">EncoderImageItems</h5>
+<p>63875E13-1F1D-45AB-9195-A29B6066A650</p>
+<h5 id="encodersaveascmyk">EncoderSaveAsCMYK</h5>
+<p>A219BBC9-0A9D-4005-A3EE-3A421B8BB06C</p>
+<hr>
+<h2 id="image-pixel-format-constants">Image Pixel Format Constants</h2>
+<p>The following constants specify various pixel formats used in bitmaps.</p>
+<h5 id="pixelformat1bppindexed">PixelFormat1bppIndexed</h5>
+<p>196865 Specifies that the format is 1 bit per pixel, indexed.</p>
+<h5 id="pixelformat4bppindexed">PixelFormat4bppIndexed</h5>
+<p>197634 Specifies that the format is 4 bits per pixel, indexed.</p>
+<h5 id="pixelformat8bppindexed">PixelFormat8bppIndexed</h5>
+<p>198659 Specifies that the format is 8 bits per pixel, indexed.</p>
+<h5 id="pixelformat16bppargb1555">PixelFormat16bppARGB1555</h5>
+<p>397319 Specifies that the format is 16 bits per pixel; 1 bit is used for the alpha component, and 5 bits each are used for the red, green, and blue components.</p>
+<h5 id="pixelformat16bppgrayscale">PixelFormat16bppGrayScale</h5>
+<p>1052676 Specifies that the format is 16 bits per pixel, grayscale.</p>
+<h5 id="pixelformat16bpprgb555">PixelFormat16bppRGB555</h5>
+<p>135173 Specifies that the format is 16 bits per pixel; 5 bits each are used for the red, green, and blue components. The remaining bit is not used.</p>
+<h5 id="pixelformat16bpprgb565">PixelFormat16bppRGB565</h5>
+<p>135174 Specifies that the format is 16 bits per pixel; 5 bits are used for the red component, 6 bits are used for the green component, and 5 bits are used for the blue component.</p>
+<h5 id="pixelformat24bpprgb">PixelFormat24bppRGB</h5>
+<p>137224 Specifies that the format is 24 bits per pixel; 8 bits each are used for the red, green, and blue components.</p>
+<h5 id="pixelformat32bppargb">PixelFormat32bppARGB</h5>
+<p>2498570 Specifies that the format is 32 bits per pixel; 8 bits each are used for the alpha, red, green, and blue components.</p>
+<h5 id="pixelformat32bpppargb">PixelFormat32bppPARGB</h5>
+<p>925707 Specifies that the format is 32 bits per pixel; 8 bits each are used for the alpha, red, green, and blue components. The red, green, and blue components are premultiplied according to the alpha component.</p>
+<h5 id="pixelformat32bpprgb">PixelFormat32bppRGB</h5>
+<p>139273 Specifies that the format is 32 bits per pixel; 8 bits each are used for the red, green, and blue components. The remaining 8 bits are not used.</p>
+<h5 id="pixelformat48bpprgb">PixelFormat48bppRGB</h5>
+<p>1060876 Specifies that the format is 48 bits per pixel; 16 bits each are used for the red, green, and blue components.</p>
+<h5 id="pixelformat64bppargb">PixelFormat64bppARGB</h5>
+<p>3424269 Specifies that the format is 64 bits per pixel; 16 bits each are used for the alpha, red, green, and blue components.</p>
+<h5 id="pixelformat64bpppargb">PixelFormat64bppPARGB</h5>
+<p>1851406 Specifies that the format is 64 bits per pixel; 16 bits each are used for the alpha, red, green, and blue components. The red, green, and blue components are premultiplied according to the alpha component.</p>
+<h5 id="remarks">Remarks</h5>
+<p><strong>PixelFormat48bppRGB</strong>, <strong>PixelFormat64bppARGB</strong>, and <strong>PixelFormat64bppPARGB</strong> use 16 bits per color component (channel). Microsoft Windows GDI+ version 1.0 can read 16-bits-per-channel images, but such images are converted to an 8-bits-per-channel format for processing, displaying, and saving.</p>
+<hr>
+<h2 id="image-property-tag-type-constants">Image Property Tag Type Constants</h2>
+<p>You can store and retrieve image metadata with the help of a <strong>PropertyItem</strong> structure. The type data member of a <strong>PropertyItem</strong>  structure specifies the data type of the values stored in the value data member of that same <strong>PropertyItem</strong> structure.</p>
+<p>The following constants can be assigned to the type data member of a <strong>PropertyItem</strong> structure.</p>
+<p>PixelFormat4bppIndexed</p>
+<p>197634</p>
+<p>Specifies that the format is 4 bits per pixel, indexed.</p>
+<p>PropertyTagTypeASCII</p>
+<p>2</p>
+<p>Specifies that the value data member is a null-terminated ASCII string. If you set the type data member of a PropertyItem object to PropertyTagTypeASCII, you should set the length data member to the length of the string including the NULL terminator. For example, the string HELLO would have a length of 6.</p>
+<h5 id="propertytagtypebyte">PropertyTagTypeByte</h5>
+<p>1 Specifies that the value data member is an array of bytes.</p>
+<h5 id="propertytagtypelong">PropertyTagTypeLong</h5>
+<p>4 Specifies that the value data member is an array of unsigned long (32-bit) integers.</p>
+<h5 id="propertytagtyperational">PropertyTagTypeRational</h5>
+<p>4 Specifies that the value data member is an array of pairs of unsigned long integers. Each pair represents a fraction; the first integer is the numerator and the second integer is the denominator.</p>
+<h5 id="propertytagtypeshort">PropertyTagTypeShort</h5>
+<p>3 Specifies that the value data member is an array of unsigned short (16-bit) integers.</p>
+<h5 id="propertytagtypeslong">PropertyTagTypeSLONG</h5>
+<p>9 Specifies that the value data member is an array of signed long (32-bit) integers.</p>
+<h5 id="propertytagtypesrational">PropertyTagTypeSRational</h5>
+<p>10 Specifies that the value data member is an array of pairs of signed long integers. Each pair represents a fraction; the first integer is the numerator and the second integer is the denominator.</p>
+<h5 id="propertytagtypeundefined">PropertyTagTypeUndefined</h5>
+<p>7 Specifies that the value data member is an array of bytes that can hold values of any data type.</p>
+<hr>
+<h2 id="image-property-tag-constants">Image Property Tag Constants</h2>
+<p>Several image file formats enable you to store metadata along with an image. Metadata is information about an image, for example, title, width, camera model, and artist. Microsoft Windows GDI+ provides a uniform way of storing and retrieving metadata from image files in the Tagged Image File Format (TIFF), JPEG, Portable Network Graphics (PNG), and Exchangeable Image File (EXIF) formats.</p>
+<p>In GDI+, a piece of metadata is called a property item, and an individual property item is identified by a numerical constant called a property tag. You can store and retrieve metadata by calling the <strong>GdipSetPropertyItem</strong> and <strong>GdipGetPropertyItem</strong> functions, and you don't have to be concerned with the details of how a particular file format stores that metadata.</p>
+<p>The following topics list and describe the property items supported by GDI+. The descriptions are brief and general so that they apply to a variety of file formats. For a detailed description of how a property item is used in a particular file format, see the specification for that file format. For links to several file format specifications, see <a href="https://learn.microsoft.com/en-us/windows/win32/gdiplus/-gdiplus-constant-image-file-format-specifications" target="_blank" rel="noopener">Image File Format Specifications</a>.For more information about metadata, see <a href="https://learn.microsoft.com/en-us/windows/win32/gdiplus/-gdiplus-reading-and-writing-metadata-use" target="_blank" rel="noopener">Reading and Writing Metadata</a> and <a href="https://learn.microsoft.com/en-us/windows/win32/gdiplus/-gdiplus-constant-image-property-tag-type-constants" target="_blank" rel="noopener">Image Property Tag Type Constants</a>.</p>
+<p>The following table lists the Microsoft Windows GDI+ image property tags in numerical order.</p>
+<div class="table-wrap"><table><thead><tr><th>Property Tag</th><th>Value</th></tr></thead><tbody><tr><td>PropertyTagGpsVer</td><td>&amp;h0000</td></tr><tr><td>PropertyTagGpsLatitudeRef</td><td>&amp;h0001</td></tr><tr><td>PropertyTagGpsLatitude</td><td>&amp;h0002</td></tr><tr><td>PropertyTagGpsLongitudeRef</td><td>&amp;h0003</td></tr><tr><td>PropertyTagGpsLongitude</td><td>&amp;h0004</td></tr><tr><td>PropertyTagGpsAltitudeRef</td><td>&amp;h0005</td></tr><tr><td>PropertyTagGpsAltitude</td><td>&amp;h0006</td></tr><tr><td>PropertyTagGpsGpsTime</td><td>&amp;h0007</td></tr><tr><td>PropertyTagGpsGpsSatellites</td><td>&amp;h0008</td></tr><tr><td>PropertyTagGpsGpsStatus</td><td>&amp;h0009</td></tr><tr><td>PropertyTagGpsGpsMeasureMode</td><td>&amp;h000A</td></tr><tr><td>PropertyTagGpsGpsDop</td><td>&amp;h000B</td></tr><tr><td>PropertyTagGpsSpeedRef</td><td>&amp;h000C</td></tr><tr><td>PropertyTagGpsSpeed</td><td>&amp;h000D</td></tr><tr><td>PropertyTagGpsTrackRef</td><td>&amp;h000E</td></tr><tr><td>PropertyTagGpsTrack</td><td>&amp;h000F</td></tr><tr><td>PropertyTagGpsImgDirRef</td><td>&amp;h0010</td></tr><tr><td>PropertyTagGpsImgDir</td><td>&amp;h0011</td></tr><tr><td>PropertyTagGpsMapDatum</td><td>&amp;h0012</td></tr><tr><td>PropertyTagGpsDestLatRef</td><td>&amp;h0013</td></tr><tr><td>PropertyTagGpsDestLat</td><td>&amp;h0014</td></tr><tr><td>PropertyTagGpsDestLongRef</td><td>&amp;h0015</td></tr><tr><td>PropertyTagGpsDestLong</td><td>&amp;h0016</td></tr><tr><td>PropertyTagGpsDestBearRef</td><td>&amp;h0017</td></tr><tr><td>PropertyTagGpsDestBear</td><td>&amp;h0018</td></tr><tr><td>PropertyTagGpsDestDistRef</td><td>&amp;h0019</td></tr><tr><td>PropertyTagGpsDestDist</td><td>&amp;h001A</td></tr><tr><td>PropertyTagNewSubfileType</td><td>&amp;h00FE</td></tr><tr><td>PropertyTagSubfileType</td><td>&amp;h00FF</td></tr><tr><td>PropertyTagImageWidth</td><td>&amp;h0100</td></tr><tr><td>PropertyTagImageHeight</td><td>&amp;h0101</td></tr><tr><td>PropertyTagBitsPerSample</td><td>&amp;h0102</td></tr><tr><td>PropertyTagCompression</td><td>&amp;h0103</td></tr><tr><td>PropertyTagPhotometricInterp</td><td>&amp;h0106</td></tr><tr><td>PropertyTagThreshHolding</td><td>&amp;h0107</td></tr><tr><td>PropertyTagCellWidth</td><td>&amp;h0108</td></tr><tr><td>PropertyTagCellHeight</td><td>&amp;h0109</td></tr><tr><td>PropertyTagFillOrder</td><td>&amp;h010A</td></tr><tr><td>PropertyTagDocumentName</td><td>&amp;h010D</td></tr><tr><td>PropertyTagImageDescription</td><td>&amp;h010E</td></tr><tr><td>PropertyTagEquipMake</td><td>&amp;h010F</td></tr><tr><td>PropertyTagEquipModel</td><td>&amp;h0110</td></tr><tr><td>PropertyTagStripOffsets</td><td>&amp;h0111</td></tr><tr><td>PropertyTagOrientation</td><td>&amp;h0112</td></tr><tr><td>PropertyTagSamplesPerPixel</td><td>&amp;h0115</td></tr><tr><td>PropertyTagRowsPerStrip</td><td>&amp;h0116</td></tr><tr><td>PropertyTagStripBytesCount</td><td>&amp;h0117</td></tr><tr><td>PropertyTagMinSampleValue</td><td>&amp;h0118</td></tr><tr><td>PropertyTagMaxSampleValue</td><td>&amp;h0119</td></tr><tr><td>PropertyTagXResolution</td><td>&amp;h011A</td></tr><tr><td>PropertyTagYResolution</td><td>&amp;h011B</td></tr><tr><td>PropertyTagPlanarConfig</td><td>&amp;h011C</td></tr><tr><td>PropertyTagPageName</td><td>&amp;h011D</td></tr><tr><td>PropertyTagXPosition</td><td>&amp;h011E</td></tr><tr><td>PropertyTagYPosition</td><td>&amp;h011F</td></tr><tr><td>PropertyTagFreeOffset</td><td>&amp;h0120</td></tr><tr><td>PropertyTagFreeByteCounts</td><td>&amp;h0121</td></tr><tr><td>PropertyTagGrayResponseUnit</td><td>&amp;h0122</td></tr><tr><td>PropertyTagGrayResponseCurve</td><td>&amp;h0123</td></tr><tr><td>PropertyTagT4Option</td><td>&amp;h0124</td></tr><tr><td>PropertyTagT6Option</td><td>&amp;h0125</td></tr><tr><td>PropertyTagResolutionUnit</td><td>&amp;h0128</td></tr><tr><td>PropertyTagPageNumber</td><td>&amp;h0129</td></tr><tr><td>PropertyTagTransferFunction</td><td>&amp;h012D</td></tr><tr><td>PropertyTagSoftwareUsed</td><td>&amp;h0131</td></tr><tr><td>PropertyTagDateTime</td><td>&amp;h0132</td></tr><tr><td>PropertyTagArtist</td><td>&amp;h013B</td></tr><tr><td>PropertyTagHostComputer</td><td>&amp;h013C</td></tr><tr><td>PropertyTagPredictor</td><td>&amp;h013D</td></tr><tr><td>PropertyTagWhitePoint</td><td>&amp;h013E</td></tr><tr><td>PropertyTagPrimaryChromaticities</td><td>&amp;h013F</td></tr><tr><td>PropertyTagColorMap</td><td>&amp;h0140</td></tr><tr><td>PropertyTagHalftoneHints</td><td>&amp;h0141</td></tr><tr><td>PropertyTagTileWidth</td><td>&amp;h0142</td></tr><tr><td>PropertyTagTileLength</td><td>&amp;h0143</td></tr><tr><td>PropertyTagTileOffset</td><td>&amp;h0144</td></tr><tr><td>PropertyTagTileByteCounts</td><td>&amp;h0145</td></tr><tr><td>PropertyTagInkSet</td><td>&amp;h014C</td></tr><tr><td>PropertyTagInkNames</td><td>&amp;h014D</td></tr><tr><td>PropertyTagNumberOfInks</td><td>&amp;h014E</td></tr><tr><td>PropertyTagDotRange</td><td>&amp;h0150</td></tr><tr><td>PropertyTagTargetPrinter</td><td>&amp;h0151</td></tr><tr><td>PropertyTagExtraSamples</td><td>&amp;h0152</td></tr><tr><td>PropertyTagSampleFormat</td><td>&amp;h0153</td></tr><tr><td>PropertyTagSMinSampleValue</td><td>&amp;h0154</td></tr><tr><td>PropertyTagSMaxSampleValue</td><td>&amp;h0155</td></tr><tr><td>PropertyTagTransferRange</td><td>&amp;h0156</td></tr><tr><td>PropertyTagJPEGProc</td><td>&amp;h0200</td></tr><tr><td>PropertyTagJPEGInterFormat</td><td>&amp;h0201</td></tr><tr><td>PropertyTagJPEGInterLength</td><td>&amp;h0202</td></tr><tr><td>PropertyTagJPEGRestartInterval</td><td>&amp;h0203</td></tr><tr><td>PropertyTagJPEGLosslessPredictors</td><td>&amp;h0205</td></tr><tr><td>PropertyTagJPEGPointTransforms</td><td>&amp;h0206</td></tr><tr><td>PropertyTagJPEGQTables</td><td>&amp;h0207</td></tr><tr><td>PropertyTagJPEGDCTables</td><td>&amp;h0208</td></tr><tr><td>PropertyTagJPEGACTables</td><td>&amp;h0209</td></tr><tr><td>PropertyTagYCbCrCoefficients</td><td>&amp;h0211</td></tr><tr><td>PropertyTagYCbCrSubsampling</td><td>&amp;h0212</td></tr><tr><td>PropertyTagYCbCrPositioning</td><td>&amp;h0213</td></tr><tr><td>PropertyTagREFBlackWhite</td><td>&amp;h0214</td></tr><tr><td>PropertyTagGamma</td><td>&amp;h0301</td></tr><tr><td>PropertyTagICCProfileDescriptor</td><td>&amp;h0302</td></tr><tr><td>PropertyTagSRGBRenderingIntent</td><td>&amp;h0303</td></tr><tr><td>PropertyTagImageTitle</td><td>&amp;h0320</td></tr><tr><td>PropertyTagResolutionXUnit</td><td>&amp;h5001</td></tr><tr><td>PropertyTagResolutionYUnit</td><td>&amp;h5002</td></tr><tr><td>PropertyTagResolutionXLengthUnit</td><td>&amp;h5003</td></tr><tr><td>PropertyTagResolutionYLengthUnit</td><td>&amp;h5004</td></tr><tr><td>PropertyTagPrintFlags</td><td>&amp;h5005</td></tr><tr><td>PropertyTagPrintFlagsVersion</td><td>&amp;h5006</td></tr><tr><td>PropertyTagPrintFlagsCrop</td><td>&amp;h5007</td></tr><tr><td>PropertyTagPrintFlagsBleedWidth</td><td>&amp;h5008</td></tr><tr><td>PropertyTagPrintFlagsBleedWidthScale</td><td>&amp;h5009</td></tr><tr><td>PropertyTagHalftoneLPI</td><td>&amp;h500A</td></tr><tr><td>PropertyTagHalftoneLPIUnit</td><td>&amp;h500B</td></tr><tr><td>PropertyTagHalftoneDegree</td><td>&amp;h500C</td></tr><tr><td>PropertyTagHalftoneShape</td><td>&amp;h500D</td></tr><tr><td>PropertyTagHalftoneMisc</td><td>&amp;h500E</td></tr><tr><td>PropertyTagHalftoneScreen</td><td>&amp;h500F</td></tr><tr><td>PropertyTagJPEGQuality</td><td>&amp;h5010</td></tr><tr><td>PropertyTagGridSize</td><td>&amp;h5011</td></tr><tr><td>PropertyTagThumbnailFormat</td><td>&amp;h5012</td></tr><tr><td>PropertyTagThumbnailWidth</td><td>&amp;h5013</td></tr><tr><td>PropertyTagThumbnailHeight</td><td>&amp;h5014</td></tr><tr><td>PropertyTagThumbnailColorDepth</td><td>&amp;h5015</td></tr><tr><td>PropertyTagThumbnailPlanes</td><td>&amp;h5016</td></tr><tr><td>PropertyTagThumbnailRawBytes</td><td>&amp;h5017</td></tr><tr><td>PropertyTagThumbnailSize</td><td>&amp;h5018</td></tr><tr><td>PropertyTagThumbnailCompressedSize</td><td>&amp;h5019</td></tr><tr><td>PropertyTagColorTransferFunction</td><td>&amp;h501A</td></tr><tr><td>PropertyTagThumbnailData</td><td>&amp;h501B</td></tr><tr><td>PropertyTagThumbnailImageWidth</td><td>&amp;h5020</td></tr><tr><td>PropertyTagThumbnailImageHeight</td><td>&amp;h5021</td></tr><tr><td>PropertyTagThumbnailBitsPerSample</td><td>&amp;h5022</td></tr><tr><td>PropertyTagThumbnailCompression</td><td>&amp;h5023</td></tr><tr><td>PropertyTagThumbnailPhotometricInterp</td><td>&amp;h5024</td></tr><tr><td>PropertyTagThumbnailImageDescription</td><td>&amp;h5025</td></tr><tr><td>PropertyTagThumbnailEquipMake</td><td>&amp;h5026</td></tr><tr><td>PropertyTagThumbnailEquipModel</td><td>&amp;h5027</td></tr><tr><td>PropertyTagThumbnailStripOffsets</td><td>&amp;h5028</td></tr><tr><td>PropertyTagThumbnailOrientation</td><td>&amp;h5029</td></tr><tr><td>PropertyTagThumbnailSamplesPerPixel</td><td>&amp;h502A</td></tr><tr><td>PropertyTagThumbnailRowsPerStrip</td><td>&amp;h502B</td></tr><tr><td>PropertyTagThumbnailStripBytesCount</td><td>&amp;h502C</td></tr><tr><td>PropertyTagThumbnailResolutionX</td><td>&amp;h502D</td></tr><tr><td>PropertyTagThumbnailResolutionY</td><td>&amp;h502E</td></tr><tr><td>PropertyTagThumbnailPlanarConfig</td><td>&amp;h502F</td></tr><tr><td>PropertyTagThumbnailResolutionUnit</td><td>&amp;h5030</td></tr><tr><td>PropertyTagThumbnailTransferFunction</td><td>&amp;h5031</td></tr><tr><td>PropertyTagThumbnailSoftwareUsed</td><td>&amp;h5032</td></tr><tr><td>PropertyTagThumbnailDateTime</td><td>&amp;h5033</td></tr><tr><td>PropertyTagThumbnailArtist</td><td>&amp;h5034</td></tr><tr><td>PropertyTagThumbnailWhitePoint</td><td>&amp;h5035</td></tr><tr><td>PropertyTagThumbnailPrimaryChromaticities</td><td>&amp;h5036</td></tr><tr><td>PropertyTagThumbnailYCbCrCoefficients</td><td>&amp;h5037</td></tr><tr><td>PropertyTagThumbnailYCbCrSubsampling</td><td>&amp;h5038</td></tr><tr><td>PropertyTagThumbnailYCbCrPositioning</td><td>&amp;h5039</td></tr><tr><td>PropertyTagThumbnailRefBlackWhite</td><td>&amp;h503A</td></tr><tr><td>PropertyTagThumbnailCopyRight</td><td>&amp;h503B</td></tr><tr><td>PropertyTagLuminanceTable</td><td>&amp;h5090</td></tr><tr><td>PropertyTagChrominanceTable</td><td>&amp;h5091</td></tr><tr><td>PropertyTagFrameDelay</td><td>&amp;h5100</td></tr><tr><td>PropertyTagLoopCount</td><td>&amp;h5101</td></tr><tr><td>PropertyTagGlobalPalette</td><td>&amp;h5102</td></tr><tr><td>PropertyTagIndexBackground</td><td>&amp;h5103</td></tr><tr><td>PropertyTagIndexTransparent</td><td>&amp;h5104</td></tr><tr><td>PropertyTagPixelUnit</td><td>&amp;h5110</td></tr><tr><td>PropertyTagPixelPerUnitX</td><td>&amp;h5111</td></tr><tr><td>PropertyTagPixelPerUnitY</td><td>&amp;h5112</td></tr><tr><td>PropertyTagPaletteHistogram</td><td>&amp;h5113</td></tr><tr><td>PropertyTagCopyright</td><td>&amp;h8298</td></tr><tr><td>PropertyTagExifExposureTime</td><td>&amp;h829A</td></tr><tr><td>PropertyTagExifFNumber</td><td>&amp;h829D</td></tr><tr><td>PropertyTagExifIFD</td><td>&amp;h8769</td></tr><tr><td>PropertyTagICCProfile</td><td>&amp;h8773</td></tr><tr><td>PropertyTagExifExposureProg</td><td>&amp;h8822</td></tr><tr><td>PropertyTagExifSpectralSense</td><td>&amp;h8824</td></tr><tr><td>PropertyTagGpsIFD</td><td>&amp;h8825</td></tr><tr><td>PropertyTagExifISOSpeed</td><td>&amp;h8827</td></tr><tr><td>PropertyTagExifOECF</td><td>&amp;h8828</td></tr><tr><td>PropertyTagExifVer</td><td>&amp;h9000</td></tr><tr><td>PropertyTagExifDTOrig</td><td>&amp;h9003</td></tr><tr><td>PropertyTagExifDTDigitized</td><td>&amp;h9004</td></tr><tr><td>PropertyTagExifCompConfig</td><td>&amp;h9101</td></tr><tr><td>PropertyTagExifCompBPP</td><td>&amp;h9102</td></tr><tr><td>PropertyTagExifShutterSpeed</td><td>&amp;h9201</td></tr><tr><td>PropertyTagExifAperture</td><td>&amp;h9202</td></tr><tr><td>PropertyTagExifBrightness</td><td>&amp;h9203</td></tr><tr><td>PropertyTagExifExposureBias</td><td>&amp;h9204</td></tr><tr><td>PropertyTagExifMaxAperture</td><td>&amp;h9205</td></tr><tr><td>PropertyTagExifSubjectDist</td><td>&amp;h9206</td></tr><tr><td>PropertyTagExifMeteringMode</td><td>&amp;h9207</td></tr><tr><td>PropertyTagExifLightSource</td><td>&amp;h9208</td></tr><tr><td>PropertyTagExifFlash</td><td>&amp;h9209</td></tr><tr><td>PropertyTagExifFocalLength</td><td>&amp;h920A</td></tr><tr><td>PropertyTagExifMakerNote</td><td>&amp;h927C</td></tr><tr><td>PropertyTagExifUserComment</td><td>&amp;h9286</td></tr><tr><td>PropertyTagExifDTSubsec</td><td>&amp;h9290</td></tr><tr><td>PropertyTagExifDTOrigSS</td><td>&amp;h9291</td></tr><tr><td>PropertyTagExifDTDigSS</td><td>&amp;h9292</td></tr><tr><td>PropertyTagExifFPXVer</td><td>&amp;hA000</td></tr><tr><td>PropertyTagExifColorSpace</td><td>&amp;hA001</td></tr><tr><td>PropertyTagExifPixXDim</td><td>&amp;hA002</td></tr><tr><td>PropertyTagExifPixYDim</td><td>&amp;hA003</td></tr><tr><td>PropertyTagExifRelatedWav</td><td>&amp;hA004</td></tr><tr><td>PropertyTagExifInterop</td><td>&amp;hA005</td></tr><tr><td>PropertyTagExifFlashEnergy</td><td>&amp;hA20B</td></tr><tr><td>PropertyTagExifSpatialFR</td><td>&amp;hA20C</td></tr><tr><td>PropertyTagExifFocalXRes</td><td>&amp;hA20E</td></tr><tr><td>PropertyTagExifFocalYRes</td><td>&amp;hA20F</td></tr><tr><td>PropertyTagExifFocalResUnit</td><td>&amp;hA210</td></tr><tr><td>PropertyTagExifSubjectLoc</td><td>&amp;hA214</td></tr><tr><td>PropertyTagExifExposureIndex</td><td>&amp;hA215</td></tr><tr><td>PropertyTagExifSensingMethod</td><td>&amp;hA217</td></tr><tr><td>PropertyTagExifFileSource</td><td>&amp;hA300</td></tr><tr><td>PropertyTagExifSceneType</td><td>&amp;hA301</td></tr><tr><td>PropertyTagExifCfaPattern</td><td>&amp;hA302</td></tr></tbody></table></div>
+<hr>
+<h2 id="property-item-descrptions">Property Item Descrptions</h2>
+<p>Descriptions of the property items supported by Windows GDI+.</p>
+<p><a href="https://learn.microsoft.com/en-us/windows/win32/gdiplus/-gdiplus-constant-property-item-descriptions" target="_blank" rel="noopener">Property item descriptions</a></p>
+<hr>
+<h2 id="image-file-format-specifications">Image File Format Specifications</h2>
+<p>The following table lists several documents that give detailed descriptions of how metadata is stored in image files.</p>
+<div class="table-wrap"><table><thead><tr><th>Document</th><th>Location</th></tr></thead><tbody><tr><td>Tagged Image File Format (TIFF) Specification</td><td><a href="https://www.loc.gov/preservation/digital/formats/fdd/fdd000022.shtml" target="_blank" rel="noopener">https://www.loc.gov/preservation/digital/formats/fdd/fdd000022.shtml</a></td></tr><tr><td>Exif Specification</td><td><a href="https://www.loc.gov/preservation/digital/formats/fdd/fdd000146.shtml" target="_blank" rel="noopener">https://www.loc.gov/preservation/digital/formats/fdd/fdd000146.shtml</a></td></tr><tr><td>Portable Network Graphics (PNG) Specification</td><td><a href="https://www.w3.org/TR/2003/REC-PNG-20031110/" target="_blank" rel="noopener">https://www.w3.org/TR/2003/REC-PNG-20031110/</a></td></tr><tr><td>ISO/IEC 10918-1 (JPEG)</td><td><a href="https://www.iso.org/iso/iso_catalogue/catalogue_tc/catalogue_detail.htm?csnumber=18902" target="_blank" rel="noopener">https://www.iso.org/iso/iso_catalogue/catalogue_tc/catalogue_detail.htm?csnumber=18902</a></td></tr><tr><td>ICC.1:1998-09</td><td><a href="https://www.color.org" target="_blank" rel="noopener">https://www.color.org</a></td></tr></tbody></table></div>
+<hr>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

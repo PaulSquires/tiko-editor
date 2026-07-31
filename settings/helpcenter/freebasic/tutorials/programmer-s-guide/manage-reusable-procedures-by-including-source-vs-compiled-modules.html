@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Manage Reusable Procedures by Including Source vs Compiled Modules — Help Center</title>
+<meta name="description" content="Manage Reusable Procedures by Including Source vs Compiled Modules — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/manage-reusable-procedures-by-including-source-vs-compiled-modules.html">
+<meta property="og:title" content="Manage Reusable Procedures by Including Source vs Compiled Modules">
+<meta property="og:description" content="Manage Reusable Procedures by Including Source vs Compiled Modules — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/manage-reusable-procedures-by-including-source-vs-compiled-modules.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/programmer-s-guide/manage-reusable-procedures-by-including-source-vs-compiled-modules.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>Manage Reusable Procedures by Including Source vs Compiled Modules</h1>
+<h2>Documentation</h2>
+
+	How to <b>manage</b> FreeBASIC <b>reusable procedures</b> by <b>including source modules</b> versus <b>including compiled modules</b>.<br>
+<code><i>(written with help of Josep Roca's posts)</i></code><br>
+<br>
+<b>Preamble:</b><br>
+<br>
+When old OSs (like DOS) were used, compiling by separate modules was mandatory as soon as the program was not very short, because of the small memory size available for the compiler (about 200 KB with Quick Basic 4.5).<br>
+Now, with modern PC and OS, this compilation limit is pushed back by a factor of about 10000, and the compile time for a large file in one go has become acceptable especially with FreeBASIC.<br>
+This allows to use another method (than a library of compiled files) to manage the reusable user procedures.<br>
+<br>
+First, the reusable user procedures source codes are grouped into different source modules, for example by functionality.<br>
+Then the process is different depending on each method used.<br>
+<br>
+To simplify the explanation that follows, it is considered that there is only one source file containing the main program, which calls the various user procedures contained in source modules for reuse.<br>
+But one can easily complete these methods to take into account a main program spread over several source files.<br>
+<br>
+<div>First method: The compiled modules stored in a library file are included in the linking process with the compiled main program</div><div><br>
+The principle of this method is by only accessing to the compiled user procedures.<br>
+<br>
+The different modules (containing the sources of the user procedures to be reused) are turned in to object files and then stored into a library file (using the <code><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lib.html">-lib</a></code> compile option).<br>
+Finally the source file of the main program is compiled, then linked to the library, to make an executable (using the <code><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-l.html">-l &lt; libname &gt;</a></code> compile option, or the <code><a href="../../preprocessor/procedures/inclib.html">#Inclib &quot;Libname&quot;</a></code> directive put at beginning of the main program source code).<br>
+<br>
+For each compiled module, if at least one procedure is called, then the entire module will be added in the final executable.<br>
+<br>
+Thus, the granularity of the added code to the executable is at the module level (coarse granularity).<br>
+<br>
+</div><div>Second method: The source modules are included directly in the main source program to be compiled in one go</div><div><br>
+The principle of this method is by fully accessing to the sources of user procedures.<br>
+<br>
+The different modules (containing the sources of the user procedures to be reused) are directly included in the source of the main program (using the <code><a href="../../preprocessor/procedures/include.html">#Include &quot;File&quot;</a></code> directive for each module, put at the beginning of the main program source code).<br>
+Finally, the big resulting source file is compiled in one go to make it an executable.<br>
+<br>
+Since the compiler processes a single source file, all reusable user procedures can be declared as <code><a href="../../modularizing/procedures/private.html">Private</a></code> (which is obviously impossible when using library because the external links are required during the linkage).<br>
+As a result, only the Private procedures really called will be kept in the executable.<br>
+<br>
+Thus, the granularity of the code added to the executable is at the elementary procedure level (fine granularity).<br>
+<br>
+<b>Note:</b><br>
+<div class="indent">The compiler removes the Private procedures that are not called, but this does not currently work for Private procedures that are only called by other Private procedures that are not called themselves, because the first ones appear as being called.<br>
+The problem is that the one-pass compiler only uses a simple flag to track the "used" state of a procedure, which is set whenever the procedure is accessed, no matter from where.<br>
+<br>
+</div></div><div>See also</div><div><br>
+<ul><li> <a href="../../using-the-freebasic-compiler/fbc-command-line.html">fbc command-line</a><br>
+<li> <a href="source-files-bas.html">Source Files (.bas)</a><br>
+<li> <a href="header-files-bi.html">Header Files (.bi)</a><br>
+<li> <a href="using-prebuilt-libraries.html">Using Prebuilt Libraries</a>	<br>
+<br>
+</li></li></li></li></ul></div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

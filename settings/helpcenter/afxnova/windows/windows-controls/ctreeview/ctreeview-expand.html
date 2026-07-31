@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CTreeView.Expand — Help Center</title>
+<meta name="description" content="Expands or collapses the list of child items associated with the specified parent item, if any.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/ctreeview/ctreeview-expand.html">
+<meta property="og:title" content="CTreeView.Expand">
+<meta property="og:description" content="Expands or collapses the list of child items associated with the specified parent item, if any.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/ctreeview/ctreeview-expand.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-controls/ctreeview/ctreeview-expand.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../ctreeview-class.html">CTreeView Class</a></div>
+<h1>CTreeView.Expand<span class="h1kind">method</span></h1>
+<p class="lede">Expands or collapses the list of child items associated with the specified parent item, if any.</p>
+<div class="badges"><a class="badge" href="../../index.html">Windows</a><span class="badge">method</span><span class="badge">CTreeView.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION Expand (BYVAL hTreeView AS HWND, BYVAL hItem AS HTREEITEM, BYVAL code AS UINT) AS BOOLEAN</code></pre>
+<pre class="code sig"><code>FUNCTION Expand (BYVAL hTreeView AS HWND, BYVAL hItem AS HTREEITEM) AS BOOLEAN</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>hTreeView</code></td><td></td><td>The handle of the TreeView control.</td></tr><tr><td><code>hItem</code></td><td></td><td>Handle to the parent item that will be expanded or collapsed.</td></tr><tr><td><code>code</code></td><td></td><td>Action flag.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>Returns TRUE if the operation was successful, or FALSE otherwise.</p>
+<h2>Description</h2>
+<p>Expands or collapses the list of child items associated with the specified parent item, if any.</p>
+<p>Expands the list of child items associated with the specified parent item, if any.</p>
+<p>Action flag. This parameter can be one or more of the following values:</p>
+<h2>Remarks</h2>
+<p>Expanding a node that is already expanded is considered a successful operation and returns TRUE. Collapsing a node returns FALSE if the node is already collapsed; otherwise it returns TRUE. Attempting to expand or collapse a node that has no children is considered a failure and <strong>Expand</strong> returns FALSE.</p>
+<p>When an item is first expanded by a <strong>TVM_EXPAND</strong> message, the action generates <strong>TVN_ITEMEXPANDING</strong> and <strong>TVN_ITEMEXPANDED</strong> notification codes and the item's <strong>TVIS_EXPANDEDONCE</strong> state flag is set. As long as this state flag remains set, subsequent <strong>TVM_EXPAND</strong> messages do not generate <strong>TVN_ITEMEXPANDING</strong> or <strong>TVN_ITEMEXPANDED</strong> notifications. To reset the <strong>TVIS_EXPANDEDONCE</strong> state flag, you must send a <strong>TVM_EXPAND</strong> message with the <strong>TVE_COLLAPSE</strong> and <strong>TVE_COLLAPSERESET</strong> flags set. Attempting to explicitly set <strong>TVIS_EXPANDEDONCE</strong> will result in unpredictable behavior.</p>
+<p>The expand operation may fail if the owner of the treeview control denies the operation in response to a <strong>TVN_ITEMEXPANDING</strong> notification.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CTreeView.inc</code></li><li>Defined in <span class="srcref">AfxNova/CTreeView.inc:321</span></li><li>Documented in <span class="srcref">Windows/WIndows Controls/CTreeView Class.md</span></li><li>Topic: <a href="../ctreeview-class.html">CTreeView Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

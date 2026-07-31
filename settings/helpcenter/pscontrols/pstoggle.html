@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PsToggle — Help Center</title>
+<meta name="description" content="An owner-drawn toggle switch for FreeBASIC Win32 applications: a rounded pill whose fill changes with state, and a circular knob that sits at the left end when the switch is OFF and the right end when it is ON.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/pscontrols/pstoggle.html">
+<meta property="og:title" content="PsToggle">
+<meta property="og:description" content="An owner-drawn toggle switch for FreeBASIC Win32 applications: a rounded pill whose fill changes with state, and a circular knob that sits at the left end when the switch is OFF and the right end when it is ON.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/pscontrols/pstoggle.html">
+<link rel="stylesheet" href="../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="pscontrols/pstoggle.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../index.html">Help Center</a><span>›</span><a href="../index.html">PlanetSquires Controls</a></div>
+<h2 id="pstoggle">PsToggle</h2>
+<p>An owner-drawn toggle switch for FreeBASIC Win32 applications: a rounded pill whose fill changes with state, and a circular knob that sits at the left end when the switch is OFF and the right end when it is ON.</p>
+<p>It is the control you reach for in a settings list, where a checkbox would work but a switch reads better. It takes focus, so it can be reached with Tab and operated with Space or Enter, and it draws itself entirely — there is no system control underneath, and nothing about its appearance depends on the visual style the user happens to be running. Every colour it paints is one you can set.</p>
+<p>The control has no caption. It draws only the track and the knob, so a label goes beside it, positioned by you. There is no animation: the knob is at one end or the other.</p>
+<hr>
+<h3 id="what-it-looks-like">What it looks like</h3>
+<p><img src="PsToggle.png" alt="The PsToggle demo"></p>
+<p>Eight rows: ON with the focus ring, OFF, custom green colours, disabled-but-still-ON, a square switch from a host painter, and the three justifications inside a deliberately wide cell. The pill and knob are drawn through <code>PsBufferPaint</code>'s GDI+ primitives, which is why the shoulders and the knob rim are smooth at this size.</p>
+<hr>
+<h3 id="requirements">Requirements</h3>
+<p><strong>Files to copy into your project:</strong></p>
+<div class="table-wrap"><table><thead><tr><th>File</th><th>Purpose</th></tr></thead><tbody><tr><td><code>PsToggle.bi</code></td><td>Declarations — types, callbacks, constants, function prototypes</td></tr><tr><td><code>PsToggle.inc</code></td><td>Implementation</td></tr><tr><td><code>PsBufferPaint.bi</code></td><td>The flicker-free drawing surface the control paints through</td></tr><tr><td><code>PsBufferPaint.inc</code></td><td>Its implementation</td></tr></tbody></table></div>
+<p><strong>AfxNova is required.</strong> The control is built on <code>CWindow</code>, and <code>PsBufferPaint</code> draws through <code>AfxNova\CGdiPlus.inc</code>. Sources include AfxNova relative to the workspace root (<code>#include once "AfxNova\CWindow.inc"</code>), so builds need the workspace root on the include path:</p>
+<pre class="code" data-lang="bash"><code>fbc64.exe -i "C:\dev" main.bas</code></pre>
+<p><strong>Include order.</strong> <code>PsToggle.inc</code> pulls in its own <code>.bi</code>, which pulls in <code>PsBufferPaint.bi</code>. The two implementation files are included in this order:</p>
+<pre class="code" data-lang="freebasic"><code>#include once "PsBufferPaint.inc"
+#include once "PsToggle.inc"</code></pre>
+<p><strong>GDI+ must be running before the first repaint and must outlive the last one.</strong> The control renders all of its geometry through GDI+, so bracket your message loop:</p>
+<pre class="code" data-lang="freebasic"><code>dim as ULONG_PTR gdipToken = AfxGdipInit()
+' ... create windows, run the message loop ...
+AfxGdipShutdown( gdipToken )</code></pre>
+<p><code>AfxGdipShutdown</code> must come after every window is destroyed, because each repaint builds and tears down a <code>PsBufferPaint</code>.</p>
+<p><strong>Never name an identifier <code>ok</code>.</strong> GDI+ defines <code>Ok = 0</code> as a <code>Status</code> enum value in namespace <code>AfxNova</code>, and hosts customarily say <code>using AfxNova</code>. An existing variable, parameter or function called <code>ok</code> becomes a duplicate definition the moment you adopt these files. Use <code>bOK</code> instead.</p>
+<p><strong>For Tab navigation, call <code>IsDialogMessage</code> in your message pump.</strong> The control is a tabstop, but only the dialog manager moves focus between tabstops:</p>
+<pre class="code" data-lang="freebasic"><code>do while GetMessage( @uMsg, null, 0, 0 )
+    if uMsg.message = WM_QUIT then exit do
+    if IsDialogMessage( hWndForm, @uMsg ) = 0 then
+        TranslateMessage @uMsg
+        DispatchMessage @uMsg
+    end if
+loop</code></pre>
+<p>Without it you still get full mouse behaviour, and Space and Enter still work once the control has focus — only Tab navigation is lost. There is no other pump obligation: the control needs no message filter of its own.</p>
+<p><strong>Give something the focus at startup.</strong> <code>IsDialogMessage</code> acts only when the focused window is already a descendant of the window you pass it. A real dialog does this in <code>WM_INITDIALOG</code>; an ordinary window must call <code>SetFocus</code> on its first control itself. Skip it and the first Tab does nothing, which is indistinguishable from the tabstops being broken.</p>
+<hr>
+<h3 id="quick-start">Quick start</h3>
+<pre class="code" data-lang="freebasic"><code>' Create it. The control is created zero-sized and hidden.
+dim as HWND hToggle = PsToggle_Create( hWndParent, IDC_MYFORM_TOGGLE )
+
+' Be told when the user flips it.
+PsToggle_SetCheckChangedCallback( hToggle, @MyToggle_CheckChanged )
+
+' Set the initial state. This is silent — the callback above does not fire.
+PsToggle_SetChecked( hToggle, true )
+
+' Ask how big it wants to be, then place it. GetIdealSize is valid immediately,
+' before the control has ever been sized.
+dim as long iw, ih
+PsToggle_GetIdealSize( hToggle, iw, ih )
+SetWindowPos( hToggle, 0, x, y, iw, ih, SWP_NOZORDER )
+
+ShowWindow( hToggle, SW_SHOW )</code></pre>
+<p>And the callback:</p>
+<pre class="code" data-lang="freebasic"><code>sub MyToggle_CheckChanged( byval hToggle as HWND, byval isChecked as boolean )
+    ' Fired only for user action: a completed click, or Space/Enter.
+    ' The control's state is already updated, so PsToggle_GetChecked() = isChecked.
+    gConfig.WordWrap = isChecked
+end sub</code></pre>
+<p>That is the whole minimum. Everything below is refinement.</p>
+<hr>
+<h3 id="concepts">Concepts</h3>
+<h4 id="the-handle-is-a-real-hwnd">The handle is a real HWND</h4>
+<p><code>PsToggle_Create</code> returns an ordinary window handle, and every <code>PsToggle_*</code> function takes it. It is not an opaque type, so you can treat the control as the window it is — <code>SetWindowPos</code> to place and size it, <code>ShowWindow</code> to show it, <code>GetDlgItem</code> to find it by the <code>CtrlID</code> you passed at creation.</p>
+<h4 id="it-is-created-zero-sized-and-hidden">It is created zero-sized and hidden</h4>
+<p><code>PsToggle_Create</code> gives the control the styles <code>WS_CHILD</code>, <code>WS_TABSTOP</code>, <code>WS_CLIPSIBLINGS</code> and <code>WS_CLIPCHILDREN</code>, and no extended style at all. <code>WS_VISIBLE</code> is deliberately absent, so a newly created control shows nothing until you size it and call <code>ShowWindow</code>. That lets you build and configure a control before it is ever seen.</p>
+<h4 id="geometry-is-derived-never-assigned">Geometry is derived, never assigned</h4>
+<p>The control computes three rectangles and owns all three. You influence them through the layout setters; you never write them.</p>
+<div class="table-wrap"><table><thead><tr><th>Rect</th><th>What it is</th></tr></thead><tbody><tr><td><code>rcTrack</code></td><td>The pill</td></tr><tr><td><code>rcKnob</code></td><td>The circle, already at whichever end the current state calls for</td></tr><tr><td><code>rcVisual</code></td><td><code>rcTrack</code> grown on all four sides by the focus-ring band</td></tr></tbody></table></div>
+<p>The formulas, if you need to predict them:</p>
+<pre class="code"><code>  ringPad      = focusGap + focusThickness
+  knobDia      = trackHeight - 2*knobInset          (floored at 1)
+
+  rcTrack.top  = clientTop + (clientH - trackHeight) \ 2        ALWAYS v-centred
+  rcTrack.left = LEFT   -&gt; clientLeft  + ringPad
+                 CENTER -&gt; clientLeft  + (clientW - trackWidth) \ 2
+                 RIGHT  -&gt; clientRight - ringPad - trackWidth
+
+  rcKnob.top   = rcTrack.top + knobInset            (w = h = knobDia)
+  rcKnob.left  = OFF -&gt; rcTrack.left  + knobInset
+                 ON  -&gt; rcTrack.right - knobInset - knobDia
+
+  rcVisual     = rcTrack inflated by ringPad on all four sides</code></pre>
+<p>Layout is lazy. A setter marks the layout stale and asks for a repaint; the next paint — or any rect query — recomputes it. There is no begin-update / end-update pair to remember, and setting six properties in a row costs one layout pass, not six.</p>
+<p>The knob's diameter follows the track <strong>height</strong> and the inset, never the width. Widening the track lengthens the pill and leaves the knob the same size.</p>
+<h4 id="the-pill-has-an-intrinsic-size">The pill has an intrinsic size</h4>
+<p>It does not stretch to fill the control. Give the control a client area larger than the pill needs and the pill is <em>placed</em> inside it — horizontally by the justification setting, and always vertically centred.</p>
+<h4 id="the-focus-ring-band-is-always-reserved">The focus-ring band is always reserved</h4>
+<p>The ring is drawn inside a band of <code>focusGap + focusThickness</code> pixels around the track, and that band is reserved whether or not the control currently has focus. This is why the pill does not jump sideways when you Tab onto it — and it is why changing either focus-ring value changes the control's ideal size.</p>
+<p><code>PsToggle_GetIdealSize</code> returns those full visual bounds, ring band included. Size the control with it and the ring is never clipped.</p>
+<h4 id="pixels-and-who-scales-them">Pixels, and who scales them</h4>
+<p>Only the creation-time defaults are DPI-scaled for you:</p>
+<div class="table-wrap"><table><thead><tr><th>Setting</th><th>Default</th><th>DPI-scaled at create?</th></tr></thead><tbody><tr><td>Track width</td><td>40</td><td>Yes</td></tr><tr><td>Track height</td><td>20</td><td>Yes</td></tr><tr><td>Knob inset</td><td>2</td><td>Yes</td></tr><tr><td>Focus-ring gap</td><td>3</td><td>Yes</td></tr><tr><td>Border thickness</td><td>1</td><td><strong>No</strong></td></tr><tr><td>Focus-ring thickness</td><td>1</td><td><strong>No</strong></td></tr></tbody></table></div>
+<p>Every setter afterwards takes raw pixels and expects <strong>you</strong> to scale — typically <code>pWindow-&gt;ScaleX(...)</code> / <code>ScaleY(...)</code>. The two thickness values should not be scaled at all: a hairline should stay a hairline at any DPI.</p>
+<h4 id="programmatic-changes-are-silent">Programmatic changes are silent</h4>
+<p><code>PsToggle_SetChecked</code> never fires the change callback. The callback reports <strong>user</strong> action — a completed click, or Space/Enter — and nothing else. This follows Win32's own <code>BM_SETCHECK</code> / <code>BN_CLICKED</code> split, and it means you can safely call <code>PsToggle_SetChecked</code> from inside your own change handler without recursing.</p>
+<h4 id="how-a-click-is-decided">How a click is decided</h4>
+<p>Pressing the left button focuses the control, then takes mouse capture. The state flips on <strong>release</strong>, and only if the press started on the control and the cursor is still over it. So the standard escape gesture works: press, slide off, release — nothing happens.</p>
+<p>While a press is live and the cursor has slid outside, the control stops painting as pressed but the gesture is not over. Slide back on and it re-arms.</p>
+<p>Space and Enter take exactly the same path as a completed click, so the keyboard and the mouse cannot drift apart: both are user action, both notify.</p>
+<h4 id="keyboard-handling-is-narrow-on-purpose">Keyboard handling is narrow on purpose</h4>
+<p>The control answers <code>WM_GETDLGCODE</code> with <code>DLGC_WANTALLKEYS</code> only for Space and Enter, and only when the dialog manager is asking about one specific message. Claiming keys unconditionally would swallow Tab and break the very navigation the control opted into by being a tabstop; claiming nothing would let <code>IsDialogMessage</code> route Enter to your dialog's default button before the control ever saw it.</p>
+<h4 id="enabling-and-disabling-is-real-not-cosmetic">Enabling and disabling is real, not cosmetic</h4>
+<p><code>PsToggle_SetEnabled</code> calls <code>EnableWindow</code>. A disabled window receives no mouse input at all and the dialog manager's Tab skips it, so there is no way for a click or a keystroke to get past a cosmetic check. If you call <code>EnableWindow</code> on the control directly, the control notices and greys itself, so the two routes cannot disagree.</p>
+<p>Disabling does <strong>not</strong> change the checked state. A disabled ON switch still reads as ON, which is why the colour struct carries separate disabled colours for each state.</p>
+<h4 id="lifetime">Lifetime</h4>
+<p>The control frees itself when its window is destroyed. It owns no host resources: no font, no tooltip window, nothing to release. Destroy the parent and you are done.</p>
+<hr>
+<h3 id="behaviour-and-limits">Behaviour and limits</h3>
+<p>Firm properties of the control, not settings:</p>
+<ul><li><strong>No caption and no font.</strong> There is no <code>SetFont</code> / <code>GetFont</code>. Nothing about this control's geometry is measured, so it never takes a device context. Put your label beside it.</li><li><strong>No tooltip support.</strong> There is no tooltip callback and no tooltip window is created. If you want a tip, add your own tool over the control's <code>HWND</code>.</li><li><strong>No animation.</strong> The knob is at one end or the other; it does not slide.</li><li><strong>No tri-state.</strong> Checked or unchecked.</li><li><strong>No hit-test function.</strong> The entire client rectangle is the hit area, so a hit test could only ever return TRUE for points the caller already knows are inside.</li><li><strong>Double-clicks are not special.</strong> <code>CS_DBLCLKS</code> is deliberately off, so a rapid second click arrives as an ordinary down/up pair and flips the switch again. That is what you want from a control whose job is to flip once per click — with <code>CS_DBLCLKS</code> on, every second rapid click would arrive as <code>WM_LBUTTONDBLCLK</code> and be dropped.</li><li><strong>Arrow keys are not handled.</strong> Only Space and Enter activate the control. Left/right as off/on is a common switch idiom, but claiming the arrows would take them away from the dialog manager's navigation.</li><li><strong>The right mouse button is reported, never acted on.</strong> A context menu is your business. No capture is taken for the right button, so a right-up can arrive without a matching down.</li><li><strong>Invalid justification values are ignored</strong>, leaving the current setting in place, rather than laying the pill out somewhere unexpected.</li><li><strong>When the control is too small for the pill, justification degrades to LEFT and the pill clips at the edge.</strong> Rects are computed honestly rather than squeezed, so the pill keeps its proper shape and only the part past the edge is lost. The same applies vertically: a client shorter than the track clips top and bottom rather than deforming the pill.</li></ul>
+<hr>
+<h3 id="api-reference">API reference</h3>
+<h4 id="creation">Creation</h4>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody><tr><td><code>PsToggle_Create( hWndParent, CtrlID ) as HWND</code></td><td>Creates the control as a child of <code>hWndParent</code> and returns its window handle. <code>CtrlID</code> becomes the window's <code>GWLP_ID</code>, so <code>GetDlgItem</code> finds it. Created zero-sized and hidden — size it with <code>PsToggle_GetIdealSize</code>, place it with <code>SetWindowPos</code>, then <code>ShowWindow</code>.</td></tr></tbody></table></div>
+<h4 id="state">State</h4>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody><tr><td><code>PsToggle_GetChecked( hToggle ) as boolean</code></td><td>TRUE when the switch is ON (knob at the right end).</td></tr><tr><td><code>PsToggle_SetChecked( hToggle, isChecked )</code></td><td>Sets the state and repaints. <strong>Silent</strong> — does not fire the change callback. No-op when the state already matches.</td></tr><tr><td><code>PsToggle_GetEnabled( hToggle ) as boolean</code></td><td>The control's enabled state.</td></tr><tr><td><code>PsToggle_SetEnabled( hToggle, isEnabled )</code></td><td>Enables or disables through <code>EnableWindow</code>, so input really stops. Disabling clears any hover and cancels a live press immediately rather than waiting for the next mouse move. Does not change the checked state.</td></tr><tr><td><code>PsToggle_GetFocused( hToggle ) as boolean</code></td><td>TRUE while the control has keyboard focus and is painting its focus ring.</td></tr><tr><td><code>PsToggle_Refresh( hToggle )</code></td><td>Marks the layout stale and requests a repaint with background erase. Rarely needed — every setter does this for you.</td></tr></tbody></table></div>
+<h4 id="layout">Layout</h4>
+<p>All setters take <strong>raw pixels</strong>; you do the DPI scaling. Each marks the layout stale and requests a repaint.</p>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody><tr><td><code>PsToggle_GetTrackSize( hToggle, byref nTrackWidth, byref nTrackHeight )</code></td><td>The pill's current size in pixels.</td></tr><tr><td><code>PsToggle_SetTrackSize( hToggle, nTrackWidth, nTrackHeight )</code></td><td>Sets the pill's size. Each dimension is clamped to a minimum of 1. Changing the height also changes the knob's diameter.</td></tr><tr><td><code>PsToggle_GetKnobInset( hToggle ) as long</code></td><td>The gap between the track edge and the knob, on all four sides.</td></tr><tr><td><code>PsToggle_SetKnobInset( hToggle, nKnobInset )</code></td><td>Sets that gap; clamped to a minimum of 0. An inset larger than half the track height yields a knob of diameter 1 rather than an invalid shape.</td></tr><tr><td><code>PsToggle_GetBorderThickness( hToggle ) as long</code></td><td>The track's border thickness.</td></tr><tr><td><code>PsToggle_SetBorderThickness( hToggle, nThickness )</code></td><td>Sets it; clamped to a minimum of 0, where <strong>0 means no border at all</strong>. Repaints but never re-lays-out — the border is drawn inside the track, so it moves nothing. Do not DPI-scale this value.</td></tr><tr><td><code>PsToggle_GetFocusRing( hToggle, byref nGap, byref nThickness )</code></td><td>The gap from the track to the focus ring, and the ring's own thickness.</td></tr><tr><td><code>PsToggle_SetFocusRing( hToggle, nGap, nThickness )</code></td><td>Sets both; each clamped to a minimum of 0. <strong>Both change the ideal size</strong>, because the ring's band is reserved whether or not the control has focus. Do not DPI-scale the thickness.</td></tr><tr><td><code>PsToggle_GetJustify( hToggle ) as long</code></td><td>The current horizontal placement: <code>TOG_JUSTIFY_LEFT</code>, <code>TOG_JUSTIFY_CENTER</code> (the default) or <code>TOG_JUSTIFY_RIGHT</code>.</td></tr><tr><td><code>PsToggle_SetJustify( hToggle, nJustify )</code></td><td>Places the pill horizontally when the control is wider than the pill needs. Values outside the three constants are ignored. The pill is <strong>always</strong> vertically centred; there is no vertical justification.</td></tr><tr><td><code>PsToggle_GetIdealSize( hToggle, byref nWidth, byref nHeight )</code></td><td>The full visual bounds — <code>(trackW + 2×ringPad) × (trackH + 2×ringPad)</code>, where <code>ringPad = focusGap + focusThickness</code>. Computed from the scalars rather than from the layout, so it is <strong>valid before the control has ever been sized</strong>.</td></tr><tr><td><code>PsToggle_GetTrackRect( hToggle, byref rc ) as boolean</code></td><td>The pill's rectangle in client coordinates.</td></tr><tr><td><code>PsToggle_GetKnobRect( hToggle, byref rc ) as boolean</code></td><td>The knob's rectangle, already positioned for the current state.</td></tr><tr><td><code>PsToggle_GetVisualRect( hToggle, byref rc ) as boolean</code></td><td>The track inflated by the focus-ring band.</td></tr></tbody></table></div>
+<p>The three rect queries force any pending layout first, so their results are always current. Each returns FALSE — leaving <code>rc</code> empty — when the control has no client area yet, which is the case between <code>PsToggle_Create</code> and the first <code>SetWindowPos</code>.</p>
+<h4 id="appearance">Appearance</h4>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody><tr><td><code>PsToggle_GetColors( hToggle, pColors as PSTOGGLE_COLORS ptr )</code></td><td>Fills your struct with the control's current colours.</td></tr><tr><td><code>PsToggle_SetColors( hToggle, pColors as PSTOGGLE_COLORS ptr )</code></td><td>Copies the whole struct in and repaints with background erase.</td></tr></tbody></table></div>
+<p>To change one colour, read-modify-write:</p>
+<pre class="code" data-lang="freebasic"><code>dim as PSTOGGLE_COLORS clrs
+PsToggle_GetColors( hToggle, @clrs )
+clrs.TrackColorOn       = BGR( 62,140, 90)
+clrs.TrackBorderColorOn = BGR( 62,140, 90)
+PsToggle_SetColors( hToggle, @clrs )</code></pre>
+<h4 id="callback-registration">Callback registration</h4>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody><tr><td><code>PsToggle_SetPaintCallback( hToggle, usersub )</code></td><td>Installs a renderer that draws the whole control <strong>instead of</strong> the built-in painter. Repaints.</td></tr><tr><td><code>PsToggle_SetMessageCallback( hToggle, userfunc )</code></td><td>Installs an observer for mouse, focus and key messages.</td></tr><tr><td><code>PsToggle_SetCheckChangedCallback( hToggle, usersub )</code></td><td>Installs the handler told when the <strong>user</strong> flips the switch.</td></tr></tbody></table></div>
+<p>All three are optional and independent.</p>
+<hr>
+<h3 id="colors">Colors</h3>
+<p>The colour surface is one flat struct, <code>PSTOGGLE_COLORS</code>, with twenty <code>COLORREF</code> fields: three drawn parts (track fill, track border, knob) × two states (ON / OFF) × three moods (idle, hot, disabled), plus the control's own background and the focus ring. Every field ships with a usable dark-theme default, so a control you never call <code>PsToggle_SetColors</code> on still looks right.</p>
+<div class="table-wrap"><table><thead><tr><th>Field</th><th>Paints</th></tr></thead><tbody><tr><td><code>BackColor</code></td><td>The control's own client area, behind the pill</td></tr><tr><td><code>FocusRingColor</code></td><td>The focus ring, drawn only while the control has focus</td></tr><tr><td><code>TrackColorOn</code></td><td>Pill fill, ON, idle</td></tr><tr><td><code>TrackColorOnHot</code></td><td>Pill fill, ON, mouse over or pressed</td></tr><tr><td><code>TrackColorOnDisabled</code></td><td>Pill fill, ON, disabled</td></tr><tr><td><code>TrackBorderColorOn</code></td><td>Pill border, ON, idle</td></tr><tr><td><code>TrackBorderColorOnHot</code></td><td>Pill border, ON, mouse over or pressed</td></tr><tr><td><code>TrackBorderColorOnDisabled</code></td><td>Pill border, ON, disabled</td></tr><tr><td><code>KnobColorOn</code></td><td>Knob, ON, idle</td></tr><tr><td><code>KnobColorOnHot</code></td><td>Knob, ON, mouse over or pressed</td></tr><tr><td><code>KnobColorOnDisabled</code></td><td>Knob, ON, disabled</td></tr><tr><td><code>TrackColorOff</code></td><td>Pill fill, OFF, idle</td></tr><tr><td><code>TrackColorOffHot</code></td><td>Pill fill, OFF, mouse over or pressed</td></tr><tr><td><code>TrackColorOffDisabled</code></td><td>Pill fill, OFF, disabled</td></tr><tr><td><code>TrackBorderColorOff</code></td><td>Pill border, OFF, idle</td></tr><tr><td><code>TrackBorderColorOffHot</code></td><td>Pill border, OFF, mouse over or pressed</td></tr><tr><td><code>TrackBorderColorOffDisabled</code></td><td>Pill border, OFF, disabled</td></tr><tr><td><code>KnobColorOff</code></td><td>Knob, OFF, idle</td></tr><tr><td><code>KnobColorOffHot</code></td><td>Knob, OFF, mouse over or pressed</td></tr><tr><td><code>KnobColorOffDisabled</code></td><td>Knob, OFF, disabled</td></tr></tbody></table></div>
+<h4 id="which-colour-wins">Which colour wins</h4>
+<p>The built-in painter picks one fill, one border and one knob colour per repaint, in this precedence:</p>
+<pre class="code"><code>disabled   &gt;   hot or pressed   &gt;   idle</code></pre>
+<p>within whichever of the two state groups (ON or OFF) currently applies.</p>
+<p><strong>There are no pressed colours.</strong> A live press renders as hot, which reads correctly for a control that flips on release. The pressed flag is still handed to a paint callback, so a custom renderer can draw a distinct pressed look if it wants one.</p>
+<p><strong>Disabled colours are per-state on purpose:</strong> a disabled ON switch must still read as ON.</p>
+<h4 id="why-the-on-pill-looks-borderless-by-default">Why the ON pill looks borderless by default</h4>
+<p><code>TrackBorderColorOn*</code> defaults to exactly the matching <code>TrackColorOn*</code>, so the ON pill reads as a solid shape with no outline. The OFF pill is distinguished the other way: its fill sits close to the background and its border is markedly lighter, so it reads as an outline. That asymmetry is the intended look. If you want a visible ON border, set the field to something different from the fill.</p>
+<h4 id="what-the-painter-draws">What the painter draws</h4>
+<div class="table-wrap"><table><thead><tr><th>Part</th><th>Shape</th></tr></thead><tbody><tr><td>Track</td><td>A rounded rectangle whose corner ellipse is as wide and tall as the rect's own height. That, and only that, is what makes both ends exact semicircles and turns a rounded rectangle into a pill. Drawn with a border when the border thickness is above 0, filled without one at 0.</td></tr><tr><td>Knob</td><td>A filled ellipse, no rim.</td></tr><tr><td>Focus ring</td><td>A rounded <strong>outline</strong> over <code>rcVisual</code>, drawn only while the control has focus and the ring thickness is above 0. Never a fill — it is drawn over the pill, and a filled shape there would erase it.</td></tr></tbody></table></div>
+<p>All of it goes through <code>PsBufferPaint</code>, which renders geometry with GDI+, so the pill's shoulders and the knob's rim are antialiased. A paint callback gets that same buffer and inherits the same antialiased primitives.</p>
+<hr>
+<h3 id="callbacks">Callbacks</h3>
+<h4 id="check-changed">Check changed</h4>
+<pre class="code" data-lang="freebasic"><code>type TOG_CheckChangedCallbackSub as sub( byval hToggle as HWND, byval isChecked as boolean )</code></pre>
+<p>The user flipped the switch — a completed click, or Space/Enter. Fires <strong>after</strong> the control's state is updated, so <code>PsToggle_GetChecked( hToggle )</code> already equals <code>isChecked</code>.</p>
+<p>It does not fire for <code>PsToggle_SetChecked</code>, which is what makes it safe to call that setter from inside this handler.</p>
+<h4 id="paint">Paint</h4>
+<pre class="code" data-lang="freebasic"><code>type TOG_PaintCallbackSub as sub( byval p as PSTOGGLE_PAINTINFO ptr )</code></pre>
+<p>Draws the whole control <strong>instead of</strong> the built-in painter. Paint through <code>p-&gt;b</code>, the control's double buffer for this repaint — do not touch the screen DC.</p>
+<p>The control has already filled the client with <code>BackColor</code> before calling you, so a callback that only wants to add something on top does not have to repaint the background.</p>
+<p><code>PSTOGGLE_PAINTINFO</code> carries everything you need:</p>
+<div class="table-wrap"><table><thead><tr><th>Field</th><th>Meaning</th></tr></thead><tbody><tr><td><code>hToggle</code></td><td>The control, so the callback can query it</td></tr><tr><td><code>b</code></td><td>The control's <code>PsBufferPaint</code> for this repaint (borrowed, not owned)</td></tr><tr><td><code>rcClient</code></td><td>The whole client area</td></tr><tr><td><code>rcTrack</code></td><td>The pill</td></tr><tr><td><code>rcKnob</code></td><td>The circle, already at the end the current state calls for</td></tr><tr><td><code>rcVisual</code></td><td><code>rcTrack</code> inflated by the focus-ring padding</td></tr><tr><td><code>isChecked</code></td><td>ON when TRUE</td></tr><tr><td><code>isHot</code></td><td>The mouse is over the control</td></tr><tr><td><code>isPressed</code></td><td>A live left press <strong>and</strong> the cursor is still inside</td></tr><tr><td><code>isEnabled</code></td><td>The control's enabled state</td></tr><tr><td><code>isFocused</code></td><td>Draw a focus ring when TRUE</td></tr></tbody></table></div>
+<p>All three rects are precomputed. Use them as given — in particular, do not re-derive the knob from the track by repeating the inset arithmetic, because the inset can change underneath you.</p>
+<p><code>isPressed</code> goes FALSE when the cursor slides off during a press, without the gesture ending. That is deliberate: the press should stop <em>looking</em> armed the moment the cursor leaves.</p>
+<blockquote><p><strong>A paint callback that fills a rectangle covering the whole control will erase everything under it.</strong> Draw your additions, not a background — the control has already painted one.</p></blockquote>
+<h4 id="message">Message</h4>
+<pre class="code" data-lang="freebasic"><code>type TOG_MessageCallbackFunc as function( byval m as PSTOGGLE_MESSAGEINFO ptr ) as boolean</code></pre>
+<p>Observes messages as they arrive. Return TRUE to suppress the control's own handling of that message, FALSE to let it proceed.</p>
+<p><code>PSTOGGLE_MESSAGEINFO</code> carries <code>hToggle</code>, <code>uMsg</code>, <code>wParam</code> and <code>lParam</code>.</p>
+<p>Mouse messages, focus changes (<code>WM_SETFOCUS</code>, <code>WM_KILLFOCUS</code>) and <code>WM_KEYDOWN</code> are all reported here.</p>
+<p><strong>Your return value is ignored for three messages:</strong></p>
+<div class="table-wrap"><table><thead><tr><th>Message</th><th>Why</th></tr></thead><tbody><tr><td><code>WM_LBUTTONUP</code></td><td>The control holds mouse capture across a press, and the up-message is what releases it. A callback that suppressed it would strand the capture and route every later click to this control. Suppressing <code>WM_LBUTTONDOWN</code> suppresses the press itself, which <em>is</em> allowed — no capture has been taken at that point.</td></tr><tr><td><code>WM_SETFOCUS</code></td><td>Focus is a fact the system reports, not an action to veto. The state is already updated by the time you are called. A host that does not want the control focusable must not make it a tabstop.</td></tr><tr><td><code>WM_KILLFOCUS</code></td><td>As above.</td></tr></tbody></table></div>
+<p>For every other message, TRUE suppresses the default handling.</p>
+<hr>
+<h3 id="constants">Constants</h3>
+<pre class="code" data-lang="freebasic"><code>enum
+    TOG_JUSTIFY_LEFT = 0
+    TOG_JUSTIFY_CENTER      ' the default
+    TOG_JUSTIFY_RIGHT
+end enum</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Constant</th><th>Value</th><th>Meaning</th></tr></thead><tbody><tr><td><code>PSTOGGLE_DEFAULT_TRACKW</code></td><td>40</td><td>Default track width, DPI-scaled at create</td></tr><tr><td><code>PSTOGGLE_DEFAULT_TRACKH</code></td><td>20</td><td>Default track height, DPI-scaled at create</td></tr><tr><td><code>PSTOGGLE_DEFAULT_KNOBINSET</code></td><td>2</td><td>Default knob inset, DPI-scaled at create</td></tr><tr><td><code>PSTOGGLE_DEFAULT_BORDERTHICK</code></td><td>1</td><td>Default border thickness, never DPI-scaled</td></tr><tr><td><code>PSTOGGLE_DEFAULT_FOCUSGAP</code></td><td>3</td><td>Default focus-ring gap, DPI-scaled at create</td></tr><tr><td><code>PSTOGGLE_DEFAULT_FOCUSTHICK</code></td><td>1</td><td>Default focus-ring thickness, never DPI-scaled</td></tr></tbody></table></div>
+    <footer class="foot">
+      <p>PlanetSquires owner-drawn controls for FreeBASIC / AfxNova. Copyright © Paul Squires, distributed under the MIT License. Documentation generated from each control&#x27;s own README. <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../index.html">Home</a> ·
+         <a href="../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../nav.js?v=70a6b70236"></script>
+<script src="../search-index.js"></script>
+<script src="../assets/app.js?v=456d079659"></script>
+<script src="../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

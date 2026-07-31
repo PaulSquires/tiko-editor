@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GdipCreateLineBrushFromRectWithAngle — Help Center</title>
+<meta name="description" content="Creates a **LinearGradientBrush** object from a set of boundary points and boundary colors.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipcreatelinebrushfromrectwithangle.html">
+<meta property="og:title" content="GdipCreateLineBrushFromRectWithAngle">
+<meta property="og:description" content="Creates a **LinearGradientBrush** object from a set of boundary points and boundary colors.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipcreatelinebrushfromrectwithangle.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/procedures/gdipcreatelinebrushfromrectwithangle.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../gdipluslineargradientbrush.html">GdiPlusLinearGradientBrush</a></div>
+<h1>GdipCreateLineBrushFromRectWithAngle<span class="h1kind">function</span></h1>
+<p class="lede">Creates a **LinearGradientBrush** object from a set of boundary points and boundary colors.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GdipCreateLineBrushFromRectWithAngle (BYVAL rect AS CONST GpRectF PTR, BYVAL color1 AS ARGB, BYVAL color2 AS ARGB, BYVAL angle AS REAL, BYVAL isAngleScalable AS BOOL, BYVAL wrapMode AS GpWrapMode, BYVAL lineGradient AS GpLineGradient PTR PTR) AS GpStatus</code></pre>
+<div class="note">Also documented as <code>GdipCreateLineBrushFromRectWithAngleI</code> — one description covers them all.</div>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>rect</code></td><td></td><td>[in] Reference to a rectangle that specifies the starting and ending points of the gradient. The upper-left corner of the rectangle is the starting point. The lower-right corner is the ending point.</td></tr><tr><td><code>color1</code></td><td></td><td>[in] ARGB color that specifies the color at the starting boundary line of a linear gradient brush.</td></tr><tr><td><code>color2</code></td><td></td><td>[in] ARGB color that specifies the color at the ending boundary line of a linear gradient brush.</td></tr><tr><td><code>angle</code></td><td></td><td>[in] Single precision value that, if <em>isAngleScalable</em> is TRUE, specifies the base angle from which the angle of the directional line is calculated, or that, if <em>isAngleScalable</em> is FALSE, specifies the angle of the directional line. The angle is measured from the top of the rectangle that is specified by rect and must be in degrees. The gradient follows the directional line.</td></tr><tr><td><code>isAngleScalable</code></td><td></td><td>[in] Boolean value that specifies whether the angle is scalable. If <em>isAngleScalable</em> is TRUE, the angle of the directional line is scalable; otherwise, the angle is not scalable.</td></tr><tr><td><code>wrapMode</code></td><td></td><td>[in] A member of the <strong>WrapMode</strong> enumeration that specifies how areas filled with the brush are tiled.</td></tr><tr><td><code>lineGradient</code></td><td></td><td>[out] Pointer to a variable that receives a pointer to the new created <strong>LinearGradientBrush</strong> object.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Creates a <strong>LinearGradientBrush</strong> object from a set of boundary points and boundary colors.</p>
+<h2>Example</h2>
+<p>' ======================================================================================== ' Creates a LinearGradientBrush object from a set of boundary points and boundary colors. ' This function is perfect for diagonal gradients or when you want precise control over the ' gradient direction. ' ======================================================================================== SUB Example_CreateLineBrushFromRectWithAngle (BYVAL hdc AS HDC)</p>
+<p>DIM hStatus AS LONG</p>
+<p>' // Create a graphics object from the device context DIM graphics AS GpGraphics PTR hStatus = GdipCreateFromHDC(hdc, @graphics)</p>
+<p>' // Get the DPI scaling ratios DIM dpiX AS SINGLE hStatus = GdipGetDpiX(graphics, @dpiX) DIM rxRatio AS SINGLE = dpiX / 96 DIM dpiY AS SINGLE hStatus = GdipGetDpiY(graphics, @dpiY) Dim ryRatio AS SINGLE = dpiY / 96 ' // Set the scale transform hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)</p>
+<p>' // Define gradient rectangle DIM rcf AS GpRectF = (0, 0, 200, 100)</p>
+<p>' // Create brush with angle DIM brush AS GpLineGradient PTR GdipCreateLineBrushFromRectWithAngle(@rcf, ARGB_RED, ARGB_BLUE, 45.0, TRUE, WrapModeTile, @brush)</p>
+<p>' // Fill rectangle GdipFillRectangle(graphics, brush, rcf.x, rcf.y, rcf.Width, rcf.Height)</p>
+<p>' // Cleanup IF brush THEN GdipDeleteBrush(brush) IF graphics THEN GdipDeleteGraphics(graphics)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/AfxGdiPlus.bi:2165</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Flat  Api/GdiPlusLinearGradientBrush.md</span></li><li>Topic: <a href="../gdipluslineargradientbrush.html">GdiPlusLinearGradientBrush</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

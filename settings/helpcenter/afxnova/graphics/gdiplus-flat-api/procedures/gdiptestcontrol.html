@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GdipTestControl — Help Center</title>
+<meta name="description" content="Used for internal testing of Microsoft® Windows® GDI+.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdiptestcontrol.html">
+<meta property="og:title" content="GdipTestControl">
+<meta property="og:description" content="Used for internal testing of Microsoft® Windows® GDI+.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdiptestcontrol.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/procedures/gdiptestcontrol.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../bitmap-functions.html">Bitmap Functions</a></div>
+<h1>GdipTestControl<span class="h1kind">function</span></h1>
+<p class="lede">Used for internal testing of Microsoft® Windows® GDI+.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GdipTestControl (BYVAL control AS GpTestControlEnum, BYVAL param AS VOID PTR) AS GpStatus</code></pre>
+<h2>Remarks</h2>
+<p>Used for internal testing of Microsoft® Windows® GDI+. Specifies changes in image-processing behavior. The meaning of the param parameter varies depending on the value passed in the control parameter.</p>
+<p>If the control parameter is set to <em>TestControlForceBilinear</em>, <em>param</em> points to a boolean value. If that value is TRUE and the current interpolation mode is anything other than <em>InterpolationModeNearestNeighbor</em>, then the <em>InerpolationModeBilinear</em> algorithm is used. If the value pointed to by param is FALSE or if the current interpolation mode is <em>InterpolationModeNearestNeighbor</em>, then the behavior of GDI+ is unchanged.</p>
+<p>If the control parameter is set to <em>TestControlNoICM</em>, param points to a boolean value. If that value is TRUE, then ICM profiles are ignored when images are loaded into memory. If the value pointed to by param is FALSE, then the behavior of GDI+ is unchanged.</p>
+<p>If the control parameter is set to <em>TestControlGetBuildNumber</em>, param is an output parameter that points to a 32-bit integer variable. That variable receives the GDI+ build number.</p>
+<p><strong>GdipTestControl</strong> is not thread-safe; it assumes that there is only one thread using GDI+. If you call <strong>GdipTestControl</strong> in a multithreaded environment, the results are unpredictable.</p>
+<p>The <em>GpTestControlEnum</em> enumeration has three elements: TestControlForceBilinear = 0, TestControlNoICM = 1, and TestControlGetBuildNumber = 2.</p>
+<h2>Examples</h2>
+<p>DIM buildNumber AS LONG GdipTestControl(TestControlGetBuildNumber, @buildNumber) print buildNumber</p>
+<p>Retrieves the internal build number of GDI+.</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/AfxGdiPlus.bi:2457</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Flat  Api/GdiPlusBitmap.md</span></li><li>Topic: <a href="../bitmap-functions.html">Bitmap Functions</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

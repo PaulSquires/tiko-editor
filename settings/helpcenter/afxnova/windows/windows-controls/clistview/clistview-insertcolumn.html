@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CListView.InsertColumn — Help Center</title>
+<meta name="description" content="Inserts a new column in a list-view control.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/clistview/clistview-insertcolumn.html">
+<meta property="og:title" content="CListView.InsertColumn">
+<meta property="og:description" content="Inserts a new column in a list-view control.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/clistview/clistview-insertcolumn.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-controls/clistview/clistview-insertcolumn.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../clistview-class.html">CListView Class</a></div>
+<h1>CListView.InsertColumn<span class="h1kind">method</span></h1>
+<p class="lede">Inserts a new column in a list-view control.</p>
+<div class="badges"><a class="badge" href="../../index.html">Windows</a><span class="badge">method</span><span class="badge">CListView.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION InsertColumn (BYVAL hListView AS HWND, BYVAL iCol AS LONG, BYVAL pcol AS LVCOLUMNW PTR) AS LONG</code></pre>
+<pre class="code sig"><code>FUNCTION InsertColumn (BYVAL hListView AS HWND, BYVAL iCol AS LONG, BYREF col AS LVCOLUMNW) AS LONG</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>hListView</code></td><td></td><td>Handle to the ListView control.</td></tr><tr><td><code>iCol</code></td><td></td><td>The index of the new column.</td></tr><tr><td><code>pcol</code></td><td></td><td>A pointer to an <strong>LVCOLUMNW</strong> structure that contains the attributes of the new column.</td></tr><tr><td><code>col</code></td><td></td><td>An <strong>LVCOLUMNW</strong> structure that contains the attributes of the new column.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>Returns the index of the new column if successful, or -1 otherwise.</p>
+<h2>Description</h2>
+<p>Inserts a new column in a list-view control.</p>
+<h2>Remarks</h2>
+<p>Columns are visible only in report (details) view.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CListView.inc</code></li><li>Defined in <span class="srcref">AfxNova/CListView.inc:1194</span></li><li>Documented in <span class="srcref">Windows/WIndows Controls/CListView Class.md</span></li><li>Topic: <a href="../clistview-class.html">CListView Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

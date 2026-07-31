@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>InStrRev — Help Center</title>
+<meta name="description" content="Locates the last occurrence of a substring or character within a string">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/string-functions/procedures/instrrev.html">
+<meta property="og:title" content="InStrRev">
+<meta property="og:description" content="Locates the last occurrence of a substring or character within a string">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/string-functions/procedures/instrrev.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/string-functions/procedures/instrrev.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>InStrRev<span class="h1kind">function</span></h1>
+<p class="lede">Locates the last occurrence of a substring or character within a string</p>
+<div class="badges"><a class="badge" href="../index.html">String Functions</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>Declare Function InStrRev ( ByRef str As Const String, [ Any ] ByRef substring As Const String, ByVal start As Integer = -1 ) As Integer</code></pre>
+<pre class="code sig"><code>Declare Function InStrRev ( ByRef str As Const WString, [ Any ] ByRef substring As Const WString, ByVal start As Integer = -1 ) As Integer</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>str</code></td><td></td><td>The string where to search.</td></tr><tr><td><code>substring</code></td><td></td><td>The substring to find.</td></tr><tr><td><code>start</code></td><td></td><td>The position in</td></tr><tr><td><code>str</code></td><td></td><td>at which the search will begin. The first character starts at position 1.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<br>
+The position of the last occurrence of <code><i>substring</i></code> in <code><i>str</i></code>.<br>
+<br>
+
+<h2>Description</h2>
+<br>
+Locates the position of the last occurrence of a substring or character within a string.  If <code><i>start</i></code> parameter is not given or is less than zero, the search begins at the last character.<br>
+<br>
+Zero (0) is returned if:<br>
+<ul><ul><li> <code><i>substring</i></code> is not found, or<br>
+<li> either <code><i>str</i></code> or <code><i>substring</i></code> is an empty strings, or <br>
+<li> <code><i>start</i></code> is zero, or <br>
+<li> start is greater than the length of <code><i>str</i></code>.<br>
+<br>
+</li></li></li></li></ul></ul>If the <code><b>Any</b></code> keyword is specified, <code><b>InStrRev</b></code> returns the last occurrence of any character in <code><i>substring</i></code>.<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Usage</h3><code><br>
+<i>last</i> = <b>InStrRev</b>( <i>str</i>, [ <b>Any</b> ] <i>substring</i> [, <i>start</i> ]  )<br>
+</code><br>
+
+<h3>Platform Differences</h3><br>
+<ul><li> The wide-character string version of <code><b>InStrRev</b></code> is not supported for DOS target.<br>
+<br>
+</li></ul>
+<h3>Dialect Differences</h3><br>
+<ul><li> Not available in the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang qb</a></i> dialect unless referenced with the alias <code><b>__Instrrev</b></code>.<br>
+<br>
+</li></ul>
+<h3>Differences from QB</h3><br>
+<ul><li> New to FreeBASIC<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="instr.html">InStr</a></code><br>
+<li> <code><a href="mid-function.html">Mid (Function)</a></code><br>
+<br>
+</li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-cm">' It will return 4</span>
+
+<span class="tok-kw">Print</span> <span class="tok-kw">InStrRev</span><span>(</span><span>&quot;abcdefg&quot;</span><span>,</span> <span>&quot;de&quot;</span><span>)</span>
+
+
+
+<span class="tok-cm">' It will return 0</span>
+
+<span class="tok-kw">Print</span> <span class="tok-kw">InStrRev</span><span>(</span><span>&quot;abcdefg&quot;</span><span>,</span> <span>&quot;h&quot;</span><span>)</span></pre></code><br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span>test</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+<span class="tok-kw">Dim</span> <span>idx</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+
+
+<span>test</span> <span>=</span> <span>&quot;abababab&quot;</span>
+
+<span>idx</span> <span>=</span> <span class="tok-kw">InStrRev</span><span>(</span><span>test</span><span>,</span> <span>&quot;b&quot;</span><span>)</span>
+
+
+
+<span class="tok-kw">Do</span> <span class="tok-kw">While</span> <span>idx</span> <span>&gt;</span> <span class="tok-nu">0</span> <span class="tok-cm">'if not found loop will be skipped</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;&quot;&quot;b&quot;&quot; at &quot;</span> <span>&amp;</span> <span>idx</span>
+
+    <span>idx</span> <span>=</span> <span class="tok-kw">InStrRev</span><span>(</span><span>Test</span><span>,</span> <span>&quot;b&quot;</span><span>,</span> <span>idx</span> <span>-</span> <span class="tok-nu">1</span><span>)</span>
+
+<span class="tok-kw">Loop</span></pre></code><br>
+<br>
+<table><tr><td>'A Unicode example:<br>
+dim text as wstring*20<br>
+text = "&#1055;&#1088;&#1080;&#1074;&#1077;&#1090;, &#1084;&#1080;&#1088;!"<br>
+print instrrev(text,"&#1077;&#1090;") ' displays 5<br>
+</td><div>&nbsp;</div></tr></table>
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgInstrrev.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

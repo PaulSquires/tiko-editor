@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GdipTransformPointsI — Help Center</title>
+<meta name="description" content="Converts an array of points from one coordinate space to another. The conversion is based on the current world and page transformations of the **Graphics** object.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdiptransformpointsi.html">
+<meta property="og:title" content="GdipTransformPointsI">
+<meta property="og:description" content="Converts an array of points from one coordinate space to another. The conversion is based on the current world and page transformations of the **Graphics** object.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdiptransformpointsi.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/procedures/gdiptransformpointsi.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../graphics-functions.html">Graphics Functions</a></div>
+<h1>GdipTransformPointsI<span class="h1kind">function</span></h1>
+<p class="lede">Converts an array of points from one coordinate space to another. The conversion is based on the current world and page transformations of the **Graphics** object.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GdipTransformPointsI (BYVAL graphics AS GpGraphics PTR, BYVAL destSpace AS GpCoordinateSpace, BYVAL srcSpace AS GpCoordinateSpace, BYVAL points AS GpPoint PTR, BYV AL count AS INT_) AS GpStatus</code></pre>
+<div class="note">Also documented as <code>GdipTransformPoints</code> — one description covers them all.</div>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>graphics</code></td><td></td><td>[in] Pointer to the <strong>Graphics</strong> object.</td></tr><tr><td><code>destSpace</code></td><td></td><td>[in] Element of the <strong>CoordinateSpace</strong> enumeration that specifies the destination coordinate space.</td></tr><tr><td><code>srcSpace</code></td><td></td><td>[in] Element of the <strong>CoordinateSpace</strong> enumeration that specifies the source coordinate space.</td></tr><tr><td><code>points</code></td><td></td><td>[in, out] Pointer to an array that, on input, holds the points to be converted and, on output, holds the converted points.</td></tr><tr><td><code>count</code></td><td></td><td>[in] Long integer value that specifies the number of elements in the pts array.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Converts an array of points from one coordinate space to another. The conversion is based on the current world and page transformations of the <strong>Graphics</strong> object.</p>
+<h2>Remarks</h2>
+<p>The world transformation converts points from the world coordinate space to the page coordinate space. The page transformation converts points from the page coordinate space to the device coordinate space.</p>
+<h2>Example</h2>
+<p>' ======================================================================================== ' The following example creates a Graphics object and sets its world transformation to a ' translation 40 units right and 30 units down. Then the code creates an array of points ' and passes the address of that array to the GdipTransformPoints method of the same Graphics ' object. The points in the array are transformed by the world transformation of the Graphics ' object. The code calls the GdipDrawLine method twice: once to connect the two points before ' the transformation and once to connect the two points after the transformation. ' ======================================================================================== SUB Example_TransformPoints (BYVAL hdc AS HDC)</p>
+<p>DIM hStatus AS LONG</p>
+<p>' // Create a graphics object from the device context DIM graphics AS GpGraphics PTR hStatus = GdipCreateFromHDC(hdc, @graphics)</p>
+<p>' // Get the DPI scaling ratios DIM dpiX AS SINGLE hStatus = GdipGetDpiX(graphics, @dpiX) DIM rxRatio AS SINGLE = dpiX / 96 DIM dpiY AS SINGLE hStatus = GdipGetDpiY(graphics, @dpiY) Dim ryRatio AS SINGLE = dpiY / 96 ' // Set the scale transform hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)</p>
+<p>' // Draw a line that connects the two points. ' // No transformation has been performed yet. DIM pts(1) AS GpPointF, pen AS GpPen PTR pts(0).x = 0 : pts(0).y = 0 : pts(1).x = 100 : pts(1).y = 50 hStatus = GdipCreatePen1(ARGB_BLACK, 1 * rxRatio, UnitPixel, @pen) hStatus = GdipDrawLine(graphics, pen, pts(0).x, pts(0).y, pts(1).x, pts(1).y)</p>
+<p>' // Set the world transformation of the Graphics object. hStatus = GdipTranslateWorldTransform(graphics, 40, 30, MatrixOrderPrepend)</p>
+<p>' // Transform the points in the array from world to page coordinates. hStatus = GdipTransformPoints(graphics, CoordinateSpacePage, CoordinateSpaceWorld, @pts(0), 2)</p>
+<p>' // It is the world transformation that takes points from world ' // space to page space. Because the world transformation is a ' // translation 40 to the right and 30 down, the ' // points in the array are now (40, 30) and (140, 80).</p>
+<p>' // Draw a line that connects the transformed points. DIM pen2 AS GpPen PTR hStatus = GdipCreatePen1(ARGB_BLUE, 1 * rxRatio, UnitPixel, @pen2) hStatus = GdipResetWorldTransform(graphics) hStatus = GdipDrawLine(graphics, pen2, pts(0).x, pts(0).y, pts(1).x, pts(1).y)</p>
+<p>' // Cleanup IF pen2 THEN GdipDeletePen(pen2) IF pen THEN GdipDeletePen(pen) IF graphics THEN GdipDeleteGraphics(graphics)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/AfxGdiPlus.bi:1783</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Flat  Api/GdiPlusGraphics.md</span></li><li>Topic: <a href="../graphics-functions.html">Graphics Functions</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

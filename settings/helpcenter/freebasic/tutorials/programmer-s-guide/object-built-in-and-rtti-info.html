@@ -1,0 +1,2040 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OBJECT built-in and RTTI info — Help Center</title>
+<meta name="description" content="OBJECT built-in and RTTI info — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/object-built-in-and-rtti-info.html">
+<meta property="og:title" content="OBJECT built-in and RTTI info">
+<meta property="og:description" content="OBJECT built-in and RTTI info — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/object-built-in-and-rtti-info.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/programmer-s-guide/object-built-in-and-rtti-info.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>OBJECT built-in and RTTI info</h1>
+<h2>Documentation</h2>
+
+	How the <b>OBJECT built-in</b> implements the capacity of inheritance polymorphism and the <b>Run-Time Type Information</b> for identification.<br>
+<a></a><br>
+<b>Preamble:</b><br>
+<br>
+The <code><a href="../../standard-data-types/procedures/object.html">Object</a></code> built-in type provides to all types derived (using the <code><a href="../../user-defined-types/procedures/extends.html">Extends</a></code> declaration):<br>
+<div class="indent"><b>-</b> The ability to redefine a method (using the <code><a href="../../user-defined-types/procedures/abstract.html">Abstract</a></code> / <code><a href="../../user-defined-types/procedures/virtual.html">Virtual</a></code> keywords) in a derived-type (sub-type) inheriting from a base-type (super-type). It is then possible to call the method of an object without worrying about its intrinsic type: it is the inheritance polymorphism (sub-type polymorphism).<br>
+<b>-</b> The capacity of determining the real type of an object at run-time, which can be different of its at compile-time. The operator <code><a href="../../operators/type-or-class-operators/procedures/operator-is-run-time-type-information.html">Is (Run-Time Type Information)</a></code> uses it to check if an object is compatible to a type derived from its compile-time type, because RTTI provides not only the run-time typename of the object but also all names of its different base-types, up to the <code><a href="../../standard-data-types/procedures/object.html">Object</a></code> built-in type.<br>
+<br>
+</div><u>Table of Contents</u><br>
+<div class="indent"><b><a href="#ProPgObjectRtti1">1. Mechanism under the hood for inheritance polymorphism and RTTI info</a></b><br>
+<b><a href="#ProPgObjectRtti2">2. Inheritance polymorphism mechanism demonstrated by both true operating and faithful emulation</a></b><br>
+<b><a href="#ProPgObjectRtti3">3. Demangle typenames from RTTI info</a></b><br>
+<br>
+</div><a></a><br>
+<div>1. Mechanism under the hood for inheritance polymorphism and RTTI info</div><div><br>
+The abstract/virtual member procedures are implemented using virtual procedure tables (vtbl). vtbl is, simply explained, a table of static procedures pointers.<br>
+The compiler fills a vtbl for each polymorphic type, i.e. a type defining at least an abstract/virtual procedure or a type derived from the former.<br>
+vtbl contains entries for all abstract/virtual procedures available in the type, including the abstract/virtual procedures defined in upper level of inheritance hierarchy (for abstract procedure not still implemented, a null pointer is set in the vtbl).<br>
+<br>
+Each vtbl contains the correct addresses of procedures for each abstract/virtual procedure in corresponding type. Here correct means the address of the corresponding procedure of the most derived-type that defines/overrides that procedure:<br>
+<div class="indent"><b>-</b> When the type is instantiated, the instance will contain a pointer (vptr) to the virtual procedure table (vtbl) of the instantiated type.<br>
+<b>-</b> When an object of a derived-type is referenced within a pointer/reference of base-type, then abstract/virtual procedure feature really performs. The call of an abstract/virtual procedure is somehow translated at run-time and the corresponding procedure from the virtual procedure table of the type of underlying object (not of the pointer/reference type) is chosen.<br>
+<b>-</b> Thus, what procedure is called depends on what the real type of object the pointer/reference points to, which can't be known at compile-time, that is why the abstract/virtual procedure call is decided at run-time.<br>
+<br>
+</div>Therefore, the abstract/virtual procedure call (by means of a pointer or a reference) is not an ordinary call and has a little performance overhead, which may turn into a huge if we have numerous calls.<br>
+The abstract/virtual procedure call is converted by compiler to something else by using the proper vtbl addressed by the vptr value (located at offset 0 in the instance data):<br>
+<div class="indent">Let be <i>'method1()'</i>, <i>'method2()'</i>, <i>'method3()'</i> the first three abstract or virtual member procedures declared in an inheritance type structure, and <i>'pt'</i> a based pointer to a derived object:<br>
+<div class="indent"><code>pt-&gt;method1()</code><br>
+<code>pt-&gt;method2()</code><br>
+<code>pt-&gt;method3()</code><br>
+</div>are about translated by the compiler into respectively:<br>
+<div class="indent"><code>Cptr(Sub (Byref As typename), Cptr(Any Ptr Ptr Ptr, pt)[0][0])(*pt)</code><br>
+<code>Cptr(Sub (Byref As typename), Cptr(Any Ptr Ptr Ptr, pt)[0][1])(*pt)</code><br>
+<code>Cptr(Sub (Byref As typename), Cptr(Any Ptr Ptr Ptr, pt)[0][2])(*pt)</code><br>
+<div class="indent">- The first indirection <code>[0]</code> allows to access to the value of the vptr from the address of the instance. This value correspond to the address of the vtbl.<br>
+- The second indirection <code>[0]</code> or <code>[1]</code> or <code>[2]</code> allows to access in the vtbl to the static address of the virtual procedures <i>'method1()'</i> or <i>'method2()'</i> or <i>'method3()'</i> respectively (in the declaration order of the abstract or virtual procedures of the Type structure).<br>
+<br>
+</div></div></div>For the vptr value setting:<br>
+<div class="indent"><b>-</b> The compiler generates some extra code in the constructor of each type (from the base-type up to the instantiated type), which it adds before the user code. Even if the user does not define a constructor, the compiler generates a default one, and the initialization of vptr is there (from the vtbl address of the base-type up to the one of the instantiated type). So each time an object of a polymorphic type is created, vptr is correctly initialized and finally points to the vtbl of that instantiated type.<br>
+<b>-</b> At the end, when the object is destructed, the destructors are called in the reverse order (from the instantiated type up to the base-type). The compiler also generates some extra code in the destructor of each type, which it adds before the user code. Even if the user does not define a destructor, the compiler generates a default one, and the de-initialization of vptr is there (from the vtbl address of the instantiated type up to the one of the base-type).<br>
+<b>-</b> This initialization/de-initialization of the vptr value by step is mandatory so that the user code in each constructor/destructor can call the polymorphic procedures at the correct type level during the successive steps of construction/destruction.<br>
+<br>
+</div>The built-in Object type also provides the RTTI (Run-Time Type Information) capacity for all types derived from it using the Extends declaration:<br>
+<div class="indent"><b>-</b> The RTTI capacity allows to determine the real type of an object at run-time, which can be different of its at compile-time.<br>
+<b>-</b> The operator Is (rtti) uses it to check if an object is compatible to a type derived from its compile-time type, because RTTI provides not only the real runtime type-name of the object but also all type-names of its base types, up to the Object built-in type.<br>
+<b>-</b> Nevertheless these type-names stored by RTTI (referenced by a specific pointer in the vtbl) are mangled names inaccessible directly from a FreeBASIC keyword.<br>
+<br>
+</div>How are chained the entities: object instance, vptr, vtbl (vtable), and RTTI info:<br>
+<div class="indent"><b>-</b> Instance -&gt; Vptr -&gt; Vtbl -&gt; RTTI info chaining:<br>
+<div class="indent">- For any type derived (directly or indirectly) from the Object built-in type, a hidden pointer vptr is added at beginning (located at offset 0) of its data fields (own or inherited). This vptr points to the virtual table vtbl of the considered type.<br>
+- The vtbl contains the list of the addresses of all abstract/virtual procedures (from the offset 0). The vtbl also contains (located at offset -1) a pointer to the Run Time Type Information (RTTI) info block of the considered type.<br>
+- The RTTI info block contains (located at offset +1) a pointer to the mangled-typename of the considered type (ascii characters). The RTTI info block also contains (located at offset +2) a pointer to the RTTI info block of its Base. All RTTI info blocks for up-hierarchy are so chained.<br>
+<br>
+</div><b>-</b> Instance -&gt; Vptr -&gt; Vtbl -&gt; RTTI info diagram:<br>
+<div class="indent"><pre class="code">
+'                                      vtbl (vtable)
+'                                  .-------------------.
+'                              [-2]|   reserved (0)    |               RTTI info                Mangled Typename
+'                                  |-------------------|       .-----------------------.       .---------------.
+'         Instance of UDT      [-1]| Ptr to RTTI info  |--->[0]|     reserved (0)      |       |Typename string|
+'      .-------------------.       |-------------------|       |-----------------------|       |     with      |
+'   [0]| vptr: Ptr to vtbl |--->[0]|Ptr to virt proc #1|   [+1]|Ptr to Mangled Typename|--->[0]| length (ASCII)|
+'      |-------------------|       |-------------------|       |-----------------------|       |       &       |
+'      |UDT member field #a|   [+1]|Ptr to virt proc #2|   [+2]| Ptr to Base RTTI info |---.   |  name (ASCII) |
+'      |-------------------|       |-------------------|       |_______________________|   |   |      for      |
+'      |UDT member field #b|   [+2]|Ptr to virt proc #3|   ________________________________|   |each component |
+'      |-------------------|       :- - - - - - - - - -:  |                                    |_______________|
+'      |UDT member field #c|       :                   :  |             Base RTTI info
+'      :- - - - - - - - - -:       :                   :  |       .----------------------------.
+'      :                   :       |___________________|  '--->[0]|        reserved (0)        |
+'      :                   :                                      |----------------------------|
+'      |___________________|                                  [+1]|Ptr to Mangled Base Typename|--->
+'                                                                 |----------------------------|
+'                                                             [+2]| Ptr to Base.Base RTTI info |---.
+'                                                                 |____________________________|   |
+'                                                                                                  |
+'                                                                                                  V
+			</pre></div></div><div><a href="#ProPgObjectRttiTop">Back to top</a></div><br>
+<a></a><br>
+</div><div>2. Inheritance polymorphism mechanism demonstrated by both true operating and faithful emulation</div><div><br>
+In the below proposed example, the polymorphic part is broken down to better bring out all the elements necessary for the mechanics of polymorphism.<br>
+<br>
+<u>Example of inheritance polymorphism, true operating: 'Animal type collection'</u><br>
+<div class="indent">The generic base-type chosen is any <i>'animal'</i> (abstraction).<br>
+The specialized derived-types are a <i>'dog'</i>, a <i>'cat'</i>, and a <i>'bird'</i> (each defining a non-static string member containing its type-name).<br>
+The abstract procedures declared in the generic base-type, and which must be defined in each specialized derived-type, are:<br>
+<div class="indent"><b>-</b> <i>'addr_override_fct()'</i>: returns the instance address,<br>
+<b>-</b> <i>'speak_override_fct()'</i>: returns the way of speaking,<br>
+<b>-</b> <i>'type_override_sub()'</i>: prints the type-name (from a string member with initialyzer).<br>
+<br>
+</div></div><ul><ul><li> <i>'animal'</i> type declaration (generic base-type):<br>
+</li></ul></ul><div class="indent"><div class="indent"><div class="indent"><b>-</b> Three public abstract procedures (<i>'addr_override_fct()'</i>, <i>'speak_override_fct()'</i>, <i>'type_override_sub()'</i>) are declared (but without any body defining them).<br>
+<b>-</b> This base-type is non-instantiable, because containing an abstract procedure at least.<br>
+<pre class="code">
+'Base-type animal:
+	Type animal Extends Object
+		Public:
+			Declare Abstract Function addr_override_fct () As animal Ptr
+			Declare Abstract Function speak_override_fct () As String
+			Declare Abstract Sub type_override_sub ()
+	End Type
+				</pre></div></div></div><ul><ul><li> <i>'dog'</i>, <i>'cat'</i>, <i>'bird'</i> types declarations (specialized derived-types):<br>
+</li></ul></ul><div class="indent"><div class="indent"><div class="indent"><b>-</b> For each derived-type, the three same public procedures (<i>'addr_override_fct()'</i>, <i>'speak_override_fct()'</i>, <i>'type_override_sub()'</i>) are declared virtual, and their bodies are specialized for each derived-type.<br>
+<b>-</b> For each derived-type, a non-static string member initialized with its type-name.<br>
+<b>-</b> Each derived-type is instantiable, because implementing all abstract procedures declared in its base.<br>
+<pre class="code">
+'Derived-type dog:
+	Type dog Extends animal
+		Public:
+			Declare Virtual Function addr_override_fct () As animal Ptr Override
+			Declare Virtual Function speak_override_fct () As String Override
+			Declare Virtual Sub type_override_sub () Override
+		Private:
+			Dim As String animal_type = "dog"
+	End Type
+				</pre><pre class="code">
+'Derived-type cat:
+	Type cat Extends animal
+		Public:
+			Declare Virtual Function addr_override_fct () As animal Ptr Override
+			Declare Virtual Function speak_override_fct () As String Override
+			Declare Virtual Sub type_override_sub () Override
+		Private:
+			Dim As String animal_type = "cat"
+	End Type
+				</pre><pre class="code">
+'Derived-type bird:
+	Type bird Extends animal
+		Public:
+			Declare Virtual Function addr_override_fct () As animal Ptr Override
+			Declare Virtual Function speak_override_fct () As String Override
+			Declare Virtual Sub type_override_sub () Override
+		Private:
+			Dim As String animal_type = "bird"
+	End Type
+				</pre></div></div></div><ul><ul><li> Full code of example:<br>
+</li></ul></ul><div class="indent"><div class="indent"><div class="indent"><b>-</b> To be able to trigger polymorphism, a base-type pointer array (<i>'animal_list'</i>) is declared then initialized with instances of different derived-types (a dog, a cat, a bird), in order to constitute a collection of objects from different types (but all having a common base-type).<br>
+<b>-</b> So, the same compiled code line, put in a loop (iterator <i>'I'</i>), processes all instances from different types (<i>'animal_list(I)-&gt;addr_override_fct()'</i>, <i>'animal_list(I)-&gt;speak_override_fct()'</i>, <i>'animal_list(I)-&gt;type_override_sub()'</i>), because the polymorphism mechanic allows to call each specialized procedure at run-time. <br>
+<code><pre class="code"><span class="tok-cm">'Base-type animal:</span>
+
+    <span class="tok-kw">Type</span> <span>animal</span> <span class="tok-kw">Extends</span> <span class="tok-kw">Object</span>
+
+        <span class="tok-kw">Public</span><span>:</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Abstract</span> <span class="tok-kw">Function</span> <span>addr_override_fct</span> <span>()</span> <span class="tok-kw">As</span> <span>animal</span> <span class="tok-kw">Ptr</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Abstract</span> <span class="tok-kw">Function</span> <span>speak_override_fct</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Abstract</span> <span class="tok-kw">Sub</span> <span>type_override_sub</span> <span>()</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-cm">'Derived-type dog:</span>
+
+    <span class="tok-kw">Type</span> <span>dog</span> <span class="tok-kw">Extends</span> <span>animal</span>
+
+        <span class="tok-kw">Public</span><span>:</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Virtual</span> <span class="tok-kw">Function</span> <span>addr_override_fct</span> <span>()</span> <span class="tok-kw">As</span> <span>animal</span> <span class="tok-kw">Ptr</span> <span class="tok-kw">Override</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Virtual</span> <span class="tok-kw">Function</span> <span>speak_override_fct</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span class="tok-kw">Override</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Virtual</span> <span class="tok-kw">Sub</span> <span>type_override_sub</span> <span>()</span> <span class="tok-kw">Override</span>
+
+        <span class="tok-kw">Private</span><span>:</span>
+
+            <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>animal_type</span> <span>=</span> <span>&quot;dog&quot;</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+    
+
+    <span class="tok-cm">'override_sub procedures for dog object:</span>
+
+        <span class="tok-kw">Virtual</span> <span class="tok-kw">Function</span> <span>dog.addr_override_fct</span> <span>()</span> <span class="tok-kw">As</span> <span>animal</span> <span class="tok-kw">Ptr</span>
+
+            <span class="tok-kw">Return</span> <span>@</span><span class="tok-kw">This</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+        <span class="tok-kw">Virtual</span> <span class="tok-kw">Function</span> <span>dog.speak_override_fct</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+            <span class="tok-kw">Return</span> <span>&quot;Woof!&quot;</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+        <span class="tok-kw">Virtual</span> <span class="tok-kw">Sub</span> <span>dog.type_override_sub</span> <span>()</span>
+
+            <span class="tok-kw">Print</span> <span>This.animal_type</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-cm">'Derived-type cat:</span>
+
+    <span class="tok-kw">Type</span> <span>cat</span> <span class="tok-kw">Extends</span> <span>animal</span>
+
+        <span class="tok-kw">Public</span><span>:</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Virtual</span> <span class="tok-kw">Function</span> <span>addr_override_fct</span> <span>()</span> <span class="tok-kw">As</span> <span>animal</span> <span class="tok-kw">Ptr</span> <span class="tok-kw">Override</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Virtual</span> <span class="tok-kw">Function</span> <span>speak_override_fct</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span class="tok-kw">Override</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Virtual</span> <span class="tok-kw">Sub</span> <span>type_override_sub</span> <span>()</span> <span class="tok-kw">Override</span>
+
+        <span class="tok-kw">Private</span><span>:</span>
+
+            <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>animal_type</span> <span>=</span> <span>&quot;cat&quot;</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+   
+
+    <span class="tok-cm">'override_sub mehods for cat object:</span>
+
+        <span class="tok-kw">Virtual</span> <span class="tok-kw">Function</span> <span>cat.addr_override_fct</span> <span>()</span> <span class="tok-kw">As</span> <span>animal</span> <span class="tok-kw">Ptr</span>
+
+            <span class="tok-kw">Return</span> <span>@</span><span class="tok-kw">This</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+        <span class="tok-kw">Virtual</span> <span class="tok-kw">Function</span> <span>cat.speak_override_fct</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+            <span class="tok-kw">Return</span> <span>&quot;Meow!&quot;</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+        <span class="tok-kw">Virtual</span> <span class="tok-kw">Sub</span> <span>cat.type_override_sub</span> <span>()</span>
+
+            <span class="tok-kw">Print</span> <span>This.animal_type</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-cm">'Derived-type bird:</span>
+
+    <span class="tok-kw">Type</span> <span>bird</span> <span class="tok-kw">Extends</span> <span>animal</span>
+
+        <span class="tok-kw">Public</span><span>:</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Virtual</span> <span class="tok-kw">Function</span> <span>addr_override_fct</span> <span>()</span> <span class="tok-kw">As</span> <span>animal</span> <span class="tok-kw">Ptr</span> <span class="tok-kw">Override</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Virtual</span> <span class="tok-kw">Function</span> <span>speak_override_fct</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span class="tok-kw">Override</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Virtual</span> <span class="tok-kw">Sub</span> <span>type_override_sub</span> <span>()</span> <span class="tok-kw">Override</span>
+
+        <span class="tok-kw">Private</span><span>:</span>
+
+            <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>animal_type</span> <span>=</span> <span>&quot;bird&quot;</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+   
+
+    <span class="tok-cm">'override_sub mehods for bird object:</span>
+
+        <span class="tok-kw">Virtual</span> <span class="tok-kw">Function</span> <span>bird.addr_override_fct</span> <span>()</span> <span class="tok-kw">As</span> <span>animal</span> <span class="tok-kw">Ptr</span>
+
+            <span class="tok-kw">Return</span> <span>@</span><span class="tok-kw">This</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+        <span class="tok-kw">Virtual</span> <span class="tok-kw">Function</span> <span>bird.speak_override_fct</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+            <span class="tok-kw">Return</span> <span>&quot;Cheep!&quot;</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+        <span class="tok-kw">Virtual</span> <span class="tok-kw">Sub</span> <span>bird.type_override_sub</span> <span>()</span>
+
+            <span class="tok-kw">Print</span> <span>This.animal_type</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-cm">'Create a dog and cat and bird dynamic instances referred through an animal pointer list:</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>dog</span> <span class="tok-kw">Ptr</span> <span>p_my_dog</span> <span>=</span> <span class="tok-kw">New</span> <span>dog</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>cat</span> <span class="tok-kw">Ptr</span> <span>p_my_cat</span> <span>=</span> <span class="tok-kw">New</span> <span>cat</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>bird</span> <span class="tok-kw">Ptr</span> <span>p_my_bird</span> <span>=</span> <span class="tok-kw">New</span> <span>bird</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>animal</span> <span class="tok-kw">Ptr</span> <span>animal_list</span> <span>(</span><span class="tok-nu">1</span> <span class="tok-kw">To</span> <span>...)</span> <span>=</span> <span>{</span><span>p_my_dog</span><span>,</span> <span>p_my_cat</span><span>,</span> <span>p_my_bird</span><span>}</span>
+
+
+
+<span class="tok-cm">'Have the animals speak and eat:</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;INHERITANCE POLYMORPHISM&quot;</span><span>,</span> <span>&quot;@object&quot;</span><span>,</span> <span>&quot;speak&quot;</span><span>,</span> <span>&quot;type&quot;</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;   true operating&quot;</span>
+
+    <span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-kw">LBound</span><span>(</span><span>animal_list</span><span>)</span> <span class="tok-kw">To</span> <span class="tok-kw">UBound</span><span>(</span><span>animal_list</span><span>)</span>
+
+        <span class="tok-kw">Print</span> <span>&quot;      animal #&quot;</span> <span>&amp;</span> <span>I</span> <span>&amp;</span> <span>&quot;:&quot;</span><span>,</span>
+
+        <span class="tok-kw">Print</span> <span>animal_list</span><span>(</span><span>I</span><span>)-&gt;</span><span>addr_override_fct</span><span>(),</span>   <span class="tok-cm">'real polymorphism</span>
+
+        <span class="tok-kw">Print</span> <span>animal_list</span><span>(</span><span>I</span><span>)-&gt;</span><span>speak_override_fct</span><span>(),</span>  <span class="tok-cm">'real polymorphism</span>
+
+        <span>animal_list</span><span>(</span><span>I</span><span>)-&gt;</span><span>type_override_sub</span><span>()</span>          <span class="tok-cm">'real polymorphism</span>
+
+    <span class="tok-kw">Next</span> <span>I</span>
+
+
+
+<span class="tok-kw">Sleep</span>
+
+
+
+<span class="tok-kw">Delete</span> <span>p_my_dog</span>
+
+<span class="tok-kw">Delete</span> <span>p_my_cat</span>
+
+<span class="tok-kw">Delete</span> <span>p_my_bird</span></pre></code><br>
+Ouput:<br>
+<div class="indent"><pre class="code">
+INHERITANCE POLYMORPHISM    @object       speak         type
+   true operating
+	  animal #1:            11479616      Woof!         dog
+	  animal #2:            11479688      Meow!         cat
+	  animal #3:            11479760      Cheep!        bird
+					</pre></div></div></div></div><u>Example of polymorphism emulation very close to real operating of 'Animal type collection'</u><br>
+<div class="indent">This following emulation of sub-type polymorphism is very close to the real operating:<br>
+<div class="indent"><b>-</b> A static procedure pointer table <i>'callback_table()'</i> is defined for each derived-type to emulate the vtbl (an instance reference will be passed as first parameter to each static procedure to emulate the hidden 'This' reference passed to any non-static member procedure).<br>
+<pre class="code">
+'Derived-type dog:
+	Type dog Extends animal
+		Private:
+			Static As Any Ptr callback_table(0 To 2)
+		Public:
+			Declare Static Function addr_callback_fct (Byref As dog) As animal Ptr
+			Declare Static Function speak_callback_fct (Byref As dog) As String
+			Declare Static Sub type_callback_sub (Byref As dog)
+			Declare Constructor ()
+		Private:
+			Dim As String animal_type = "dog"
+	End Type
+	Static As Any Ptr dog.callback_table(0 To 2) = {@dog.addr_callback_fct, @dog.speak_callback_fct, @dog.type_callback_sub}
+			</pre><pre class="code">
+'Derived-type cat:
+	Type cat Extends animal
+		Private:
+			Static As Any Ptr callback_table(0 To 2)
+		Public:
+			Declare Static Function addr_callback_fct (Byref As cat) As animal Ptr
+			Declare Static Function speak_callback_fct (Byref As cat) As String
+			Declare Static Sub type_callback_sub (Byref As cat)
+			Declare Constructor ()
+		Private:
+			Dim As String animal_type = "cat"
+	End Type
+	Static As Any Ptr cat.callback_table(0 To 2) = {@cat.addr_callback_fct, @cat.speak_callback_fct, @cat.type_callback_sub}
+			</pre><pre class="code">
+'Derived-type bird:
+	Type bird Extends animal
+		Private:
+			Static As Any Ptr callback_table(0 To 2)
+		Public:
+			Declare Static Function addr_callback_fct (Byref As bird) As animal Ptr
+			Declare Static Function speak_callback_fct (Byref As bird) As String
+			Declare Static Sub type_callback_sub (Byref As bird)
+			Declare Constructor ()
+		Private:
+			Dim As String animal_type = "bird"
+	End Type
+	Static As Any Ptr bird.callback_table(0 To 2) = {@bird.addr_callback_fct, @bird.speak_callback_fct, @bird.type_callback_sub}
+			</pre><b>-</b> At the base-type level, a non static pointer <i>'callback_ptr'</i> is allocated for any derived-type instance to emulate the vptr (its value, initialized by the constructor, will depend on what derived-type is constructed: address of the following described table).<br>
+<b>-</b> At the base-type level, each abstract procedure is replaced by a member procedure calling the proper derived procedure through the <i>'callback_ptr'</i> / <i>'callback_table(I)'</i> (<i>'I'</i> being the index inside the table corresponding to this procedure).<br>
+<pre class="code">
+'Base-type animal:
+	Type animal
+		Protected:
+			Dim As Any Ptr Ptr callback_ptr
+		Public:
+			Declare Function addr_callback_fct () As animal Ptr
+			Declare Function speak_callback_fct () As String
+			Declare Sub type_callback_sub ()
+	End Type
+
+	Function animal.addr_callback_fct () As animal Ptr
+		Return Cptr(Function (Byref As animal) As animal Ptr, This.callback_ptr[0])(This)
+	End Function
+	Function animal.speak_callback_fct () As String
+		Return Cptr(Function (Byref As animal) As String, This.callback_ptr[1])(This)
+	End Function
+	Sub animal.type_callback_sub ()
+		Cptr(Sub (Byref As animal), This.callback_ptr[2])(This)
+	End Sub
+			</pre></div></div><ul><ul><li> Full code of emulation:<br>
+</li></ul></ul><div class="indent"><div class="indent"><div class="indent"><code><pre class="code"><span class="tok-cm">' Emulation of polymorphism is very close to the real operating:</span>
+
+<span class="tok-cm">' - a non static pointer is allocated for any derived-type instance to emulate the vptr</span>
+
+<span class="tok-cm">'   (its value will depend on what derived-type is constructed: address of the following table)</span>
+
+<span class="tok-cm">' - a static procedure pointer table is defined for each derived type to emulate the vtable</span>
+
+<span class="tok-cm">'   (an instance reference is passed as first parameter to each static procedure to emulate the hidden 'This' reference passed to any non-static member procedure)</span>
+
+
+
+
+
+<span class="tok-cm">'Base-type animal:</span>
+
+    <span class="tok-kw">Type</span> <span>animal</span>
+
+        <span class="tok-kw">Protected</span><span>:</span>
+
+            <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span class="tok-kw">Ptr</span> <span>callback_ptr</span>
+
+        <span class="tok-kw">Public</span><span>:</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Function</span> <span>addr_callback_fct</span> <span>()</span> <span class="tok-kw">As</span> <span>animal</span> <span class="tok-kw">Ptr</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Function</span> <span>speak_callback_fct</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>type_callback_sub</span> <span>()</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+    <span class="tok-kw">Function</span> <span>animal.addr_callback_fct</span> <span>()</span> <span class="tok-kw">As</span> <span>animal</span> <span class="tok-kw">Ptr</span>
+
+        <span class="tok-kw">Return</span> <span class="tok-kw">CPtr</span><span>(</span><span class="tok-kw">Function</span> <span>(</span><span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>animal</span><span>)</span> <span class="tok-kw">As</span> <span>animal</span> <span class="tok-kw">Ptr</span><span>,</span> <span>This.callback_ptr</span><span>[</span><span class="tok-nu">0</span><span>])(</span><span class="tok-kw">This</span><span>)</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+    <span class="tok-kw">Function</span> <span>animal.speak_callback_fct</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+        <span class="tok-kw">Return</span> <span class="tok-kw">CPtr</span><span>(</span><span class="tok-kw">Function</span> <span>(</span><span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>animal</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>,</span> <span>This.callback_ptr</span><span>[</span><span class="tok-nu">1</span><span>])(</span><span class="tok-kw">This</span><span>)</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+    <span class="tok-kw">Sub</span> <span>animal.type_callback_sub</span> <span>()</span>
+
+        <span class="tok-kw">CPtr</span><span>(</span><span class="tok-kw">Sub</span> <span>(</span><span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>animal</span><span>),</span> <span>This.callback_ptr</span><span>[</span><span class="tok-nu">2</span><span>])(</span><span class="tok-kw">This</span><span>)</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-cm">'Derived-type dog:</span>
+
+    <span class="tok-kw">Type</span> <span>dog</span> <span class="tok-kw">Extends</span> <span>animal</span>
+
+        <span class="tok-kw">Private</span><span>:</span>
+
+            <span class="tok-kw">Static</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>callback_table</span><span>(</span><span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">2</span><span>)</span>
+
+        <span class="tok-kw">Public</span><span>:</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Static</span> <span class="tok-kw">Function</span> <span>addr_callback_fct</span> <span>(</span><span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>dog</span><span>)</span> <span class="tok-kw">As</span> <span>animal</span> <span class="tok-kw">Ptr</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Static</span> <span class="tok-kw">Function</span> <span>speak_callback_fct</span> <span>(</span><span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>dog</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Static</span> <span class="tok-kw">Sub</span> <span>type_callback_sub</span> <span>(</span><span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>dog</span><span>)</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>()</span>
+
+        <span class="tok-kw">Private</span><span>:</span>
+
+            <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>animal_type</span> <span>=</span> <span>&quot;dog&quot;</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+    <span class="tok-kw">Static</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>dog.callback_table</span><span>(</span><span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">2</span><span>)</span> <span>=</span> <span>{@</span><span>dog.addr_callback_fct</span><span>,</span> <span>@</span><span>dog.speak_callback_fct</span><span>,</span> <span>@</span><span>dog.type_callback_sub</span><span>}</span>
+
+
+
+<span class="tok-cm">'callback_sub methods + constructor for dog object:</span>
+
+    <span class="tok-kw">Static</span> <span class="tok-kw">Function</span> <span>dog.addr_callback_fct</span> <span>(</span><span class="tok-kw">ByRef</span> <span>d</span> <span class="tok-kw">As</span> <span>dog</span><span>)</span> <span class="tok-kw">As</span> <span>animal</span> <span class="tok-kw">Ptr</span>
+
+        <span class="tok-kw">Return</span> <span>@</span><span>d</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+    <span class="tok-kw">Static</span> <span class="tok-kw">Function</span> <span>dog.speak_callback_fct</span> <span>(</span><span class="tok-kw">ByRef</span> <span>d</span> <span class="tok-kw">As</span> <span>dog</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+        <span class="tok-kw">Return</span> <span>&quot;Woof!&quot;</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+    <span class="tok-kw">Static</span> <span class="tok-kw">Sub</span> <span>dog.type_callback_sub</span> <span>(</span><span class="tok-kw">ByRef</span> <span>d</span> <span class="tok-kw">As</span> <span>dog</span><span>)</span>
+
+        <span class="tok-kw">Print</span> <span>d.animal_type</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+    <span class="tok-kw">Constructor</span> <span>dog</span> <span>()</span>
+
+        <span>This.callback_ptr</span> <span>=</span> <span>@</span><span>callback_table</span><span>(</span><span class="tok-nu">0</span><span>)</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-cm">'Derived-type cat:</span>
+
+    <span class="tok-kw">Type</span> <span>cat</span> <span class="tok-kw">Extends</span> <span>animal</span>
+
+        <span class="tok-kw">Private</span><span>:</span>
+
+            <span class="tok-kw">Static</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>callback_table</span><span>(</span><span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">2</span><span>)</span>
+
+        <span class="tok-kw">Public</span><span>:</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Static</span> <span class="tok-kw">Function</span> <span>addr_callback_fct</span> <span>(</span><span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>cat</span><span>)</span> <span class="tok-kw">As</span> <span>animal</span> <span class="tok-kw">Ptr</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Static</span> <span class="tok-kw">Function</span> <span>speak_callback_fct</span> <span>(</span><span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>cat</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Static</span> <span class="tok-kw">Sub</span> <span>type_callback_sub</span> <span>(</span><span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>cat</span><span>)</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>()</span>
+
+        <span class="tok-kw">Private</span><span>:</span>
+
+            <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>animal_type</span> <span>=</span> <span>&quot;cat&quot;</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+    <span class="tok-kw">Static</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>cat.callback_table</span><span>(</span><span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">2</span><span>)</span> <span>=</span> <span>{@</span><span>cat.addr_callback_fct</span><span>,</span> <span>@</span><span>cat.speak_callback_fct</span><span>,</span> <span>@</span><span>cat.type_callback_sub</span><span>}</span>
+
+
+
+<span class="tok-cm">'callback_sub mehods + constructor for cat object:</span>
+
+    <span class="tok-kw">Static</span> <span class="tok-kw">Function</span> <span>cat.addr_callback_fct</span> <span>(</span><span class="tok-kw">ByRef</span> <span>c</span> <span class="tok-kw">As</span> <span>cat</span><span>)</span> <span class="tok-kw">As</span> <span>animal</span> <span class="tok-kw">Ptr</span>
+
+        <span class="tok-kw">Return</span> <span>@</span><span>c</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+    <span class="tok-kw">Static</span> <span class="tok-kw">Function</span> <span>cat.speak_callback_fct</span> <span>(</span><span class="tok-kw">ByRef</span> <span>c</span> <span class="tok-kw">As</span> <span>cat</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+        <span class="tok-kw">Return</span> <span>&quot;Meow!&quot;</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+    <span class="tok-kw">Static</span> <span class="tok-kw">Sub</span> <span>cat.type_callback_sub</span> <span>(</span><span class="tok-kw">ByRef</span> <span>c</span> <span class="tok-kw">As</span> <span>cat</span><span>)</span>
+
+        <span class="tok-kw">Print</span> <span>c.animal_type</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+    <span class="tok-kw">Constructor</span> <span>cat</span> <span>()</span>
+
+        <span>This.callback_ptr</span> <span>=</span> <span>@</span><span>callback_table</span><span>(</span><span class="tok-nu">0</span><span>)</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-cm">'Derived-type bird:</span>
+
+    <span class="tok-kw">Type</span> <span>bird</span> <span class="tok-kw">Extends</span> <span>animal</span>
+
+        <span class="tok-kw">Private</span><span>:</span>
+
+            <span class="tok-kw">Static</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>callback_table</span><span>(</span><span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">2</span><span>)</span>
+
+        <span class="tok-kw">Public</span><span>:</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Static</span> <span class="tok-kw">Function</span> <span>addr_callback_fct</span> <span>(</span><span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>bird</span><span>)</span> <span class="tok-kw">As</span> <span>animal</span> <span class="tok-kw">Ptr</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Static</span> <span class="tok-kw">Function</span> <span>speak_callback_fct</span> <span>(</span><span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>bird</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Static</span> <span class="tok-kw">Sub</span> <span>type_callback_sub</span> <span>(</span><span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>bird</span><span>)</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>()</span>
+
+        <span class="tok-kw">Private</span><span>:</span>
+
+            <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>animal_type</span> <span>=</span> <span>&quot;bird&quot;</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+    <span class="tok-kw">Static</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>bird.callback_table</span><span>(</span><span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">2</span><span>)</span> <span>=</span> <span>{@</span><span>bird.addr_callback_fct</span><span>,</span> <span>@</span><span>bird.speak_callback_fct</span><span>,</span> <span>@</span><span>bird.type_callback_sub</span><span>}</span>
+
+
+
+<span class="tok-cm">'callback_sub mehods + constructor for bird object:</span>
+
+    <span class="tok-kw">Static</span> <span class="tok-kw">Function</span> <span>bird.addr_callback_fct</span> <span>(</span><span class="tok-kw">ByRef</span> <span>b</span> <span class="tok-kw">As</span> <span>bird</span><span>)</span> <span class="tok-kw">As</span> <span>animal</span> <span class="tok-kw">Ptr</span>
+
+        <span class="tok-kw">Return</span> <span>@</span><span>b</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+    <span class="tok-kw">Static</span> <span class="tok-kw">Function</span> <span>bird.speak_callback_fct</span> <span>(</span><span class="tok-kw">ByRef</span> <span>b</span> <span class="tok-kw">As</span> <span>bird</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+        <span class="tok-kw">Return</span> <span>&quot;Cheep!&quot;</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+    <span class="tok-kw">Static</span> <span class="tok-kw">Sub</span> <span>bird.type_callback_sub</span> <span>(</span><span class="tok-kw">ByRef</span> <span>b</span> <span class="tok-kw">As</span> <span>bird</span><span>)</span>
+
+        <span class="tok-kw">Print</span> <span>b.animal_type</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+    <span class="tok-kw">Constructor</span> <span>bird</span> <span>()</span>
+
+        <span>This.callback_ptr</span> <span>=</span> <span>@</span><span>callback_table</span><span>(</span><span class="tok-nu">0</span><span>)</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-cm">'Create a dog and cat and bird dynamic instances referred through an animal pointer list:</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>dog</span> <span class="tok-kw">Ptr</span> <span>p_my_dog</span> <span>=</span> <span class="tok-kw">New</span> <span>dog</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>cat</span> <span class="tok-kw">Ptr</span> <span>p_my_cat</span> <span>=</span> <span class="tok-kw">New</span> <span>cat</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>bird</span> <span class="tok-kw">Ptr</span> <span>p_my_bird</span> <span>=</span> <span class="tok-kw">New</span> <span>bird</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>animal</span> <span class="tok-kw">Ptr</span> <span>animal_list</span> <span>(</span><span class="tok-nu">1</span> <span class="tok-kw">To</span> <span>...)</span> <span>=</span> <span>{</span><span>p_my_dog</span><span>,</span> <span>p_my_cat</span><span>,</span> <span>p_my_bird</span><span>}</span>
+
+
+
+<span class="tok-cm">'Have the animals speak and eat:</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;SUB-TYPE POLYMORPHISM&quot;</span><span>,</span> <span>&quot;@object&quot;</span><span>,</span> <span>&quot;speak&quot;</span><span>,</span> <span>&quot;type&quot;</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;   by emulation&quot;</span>
+
+    <span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-kw">LBound</span><span>(</span><span>animal_list</span><span>)</span> <span class="tok-kw">To</span> <span class="tok-kw">UBound</span><span>(</span><span>animal_list</span><span>)</span>
+
+        <span class="tok-kw">Print</span> <span>&quot;      animal #&quot;</span> <span>&amp;</span> <span>I</span> <span>&amp;</span> <span>&quot;:&quot;</span><span>,</span>
+
+        <span class="tok-kw">Print</span> <span>animal_list</span><span>(</span><span>I</span><span>)-&gt;</span><span>addr_callback_fct</span><span>(),</span>   <span class="tok-cm">'emulated polymorphism</span>
+
+        <span class="tok-kw">Print</span> <span>animal_list</span><span>(</span><span>I</span><span>)-&gt;</span><span>speak_callback_fct</span><span>(),</span>  <span class="tok-cm">'emulated polymorphism</span>
+
+        <span>animal_list</span><span>(</span><span>I</span><span>)-&gt;</span><span>type_callback_sub</span><span>()</span>          <span class="tok-cm">'emulated polymorphism</span>
+
+    <span class="tok-kw">Next</span> <span>I</span>
+
+
+
+<span class="tok-kw">Sleep</span>
+
+
+
+<span class="tok-kw">Delete</span> <span>p_my_dog</span>
+
+<span class="tok-kw">Delete</span> <span>p_my_cat</span>
+
+<span class="tok-kw">Delete</span> <span>p_my_bird</span></pre></code><br>
+Output:<br>
+<div class="indent"><pre class="code">
+SUB-TYPE POLYMORPHISM       @object       speak         type
+   by emulation
+	  animal #1:            12462656      Woof!         dog
+	  animal #2:            12462728      Meow!         cat
+	  animal #3:            12462800      Cheep!        bird
+					</pre></div></div></div></div><u>Same example, with both real code and emulation code of 'Animal type collection'</u><br>
+<div class="indent">The real code and emulation code are nested in a single code for easier comparison:<br>
+<div class="indent"><code><pre class="code"><span class="tok-cm">' Emulated polymorphism (with explicit callback member procedures)</span>
+
+<span class="tok-cm">' and</span>
+
+<span class="tok-cm">' True polymorphism (with abstract/virtual member procedures),</span>
+
+<span class="tok-cm">' both in an inheritance structure.</span>
+
+
+
+
+
+<span class="tok-cm">'Base-type animal:</span>
+
+    <span class="tok-kw">Type</span> <span>animal</span> <span class="tok-kw">Extends</span> <span class="tok-kw">Object</span>  <span class="tok-cm">'Extends Object' useful for true polymorphism only</span>
+
+    <span class="tok-cm">' for true polymorphism:</span>
+
+        <span class="tok-kw">Public</span><span>:</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Abstract</span> <span class="tok-kw">Function</span> <span>addr_override_fct</span> <span>()</span> <span class="tok-kw">As</span> <span>animal</span> <span class="tok-kw">Ptr</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Abstract</span> <span class="tok-kw">Function</span> <span>speak_override_fct</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Abstract</span> <span class="tok-kw">Sub</span> <span>type_override_sub</span> <span>()</span>
+
+    <span class="tok-cm">' for polymorphism emulation:</span>
+
+        <span class="tok-kw">Protected</span><span>:</span>
+
+            <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span class="tok-kw">Ptr</span> <span>callback_ptr</span>
+
+        <span class="tok-kw">Public</span><span>:</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Function</span> <span>addr_callback_fct</span> <span>()</span> <span class="tok-kw">As</span> <span>animal</span> <span class="tok-kw">Ptr</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Function</span> <span>speak_callback_fct</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>type_callback_sub</span> <span>()</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+    <span class="tok-cm">' for polymorphism emulation:</span>
+
+        <span class="tok-kw">Function</span> <span>animal.addr_callback_fct</span> <span>()</span> <span class="tok-kw">As</span> <span>animal</span> <span class="tok-kw">Ptr</span>
+
+            <span class="tok-kw">Return</span> <span class="tok-kw">CPtr</span><span>(</span><span class="tok-kw">Function</span> <span>(</span><span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>animal</span><span>)</span> <span class="tok-kw">As</span> <span>animal</span> <span class="tok-kw">Ptr</span><span>,</span> <span>This.callback_ptr</span><span>[</span><span class="tok-nu">0</span><span>])(</span><span class="tok-kw">This</span><span>)</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+        <span class="tok-kw">Function</span> <span>animal.speak_callback_fct</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+            <span class="tok-kw">Return</span> <span class="tok-kw">CPtr</span><span>(</span><span class="tok-kw">Function</span> <span>(</span><span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>animal</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>,</span> <span>This.callback_ptr</span><span>[</span><span class="tok-nu">1</span><span>])(</span><span class="tok-kw">This</span><span>)</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+        <span class="tok-kw">Sub</span> <span>animal.type_callback_sub</span> <span>()</span>
+
+            <span class="tok-kw">CPtr</span><span>(</span><span class="tok-kw">Sub</span> <span>(</span><span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>animal</span><span>),</span> <span>This.callback_ptr</span><span>[</span><span class="tok-nu">2</span><span>])(</span><span class="tok-kw">This</span><span>)</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-cm">'Derived-type dog:</span>
+
+    <span class="tok-kw">Type</span> <span>dog</span> <span class="tok-kw">Extends</span> <span>animal</span>
+
+    <span class="tok-cm">' for true polymorphism:</span>
+
+        <span class="tok-kw">Public</span><span>:</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Virtual</span> <span class="tok-kw">Function</span> <span>addr_override_fct</span> <span>()</span> <span class="tok-kw">As</span> <span>animal</span> <span class="tok-kw">Ptr</span> <span class="tok-kw">Override</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Virtual</span> <span class="tok-kw">Function</span> <span>speak_override_fct</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span class="tok-kw">Override</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Virtual</span> <span class="tok-kw">Sub</span> <span>type_override_sub</span> <span>()</span> <span class="tok-kw">Override</span>
+
+    <span class="tok-cm">' for polymorphism emulation:</span>
+
+        <span class="tok-kw">Private</span><span>:</span>
+
+            <span class="tok-kw">Static</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>callback_table</span><span>(</span><span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">2</span><span>)</span>
+
+        <span class="tok-kw">Public</span><span>:</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Static</span> <span class="tok-kw">Function</span> <span>addr_callback_fct</span> <span>(</span><span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>dog</span><span>)</span> <span class="tok-kw">As</span> <span>animal</span> <span class="tok-kw">Ptr</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Static</span> <span class="tok-kw">Function</span> <span>speak_callback_fct</span> <span>(</span><span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>dog</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Static</span> <span class="tok-kw">Sub</span> <span>type_callback_sub</span> <span>(</span><span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>dog</span><span>)</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>()</span>
+
+    <span class="tok-cm">' for all:</span>
+
+        <span class="tok-kw">Private</span><span>:</span>
+
+            <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>animal_type</span> <span>=</span> <span>&quot;dog&quot;</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+    <span class="tok-cm">' for true polymorphism:</span>
+
+        <span class="tok-cm">' override_sub methods for dog object:</span>
+
+            <span class="tok-kw">Virtual</span> <span class="tok-kw">Function</span> <span>dog.addr_override_fct</span> <span>()</span> <span class="tok-kw">As</span> <span>animal</span> <span class="tok-kw">Ptr</span>
+
+                <span class="tok-kw">Return</span> <span>@</span><span class="tok-kw">This</span>
+
+            <span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+            <span class="tok-kw">Virtual</span> <span class="tok-kw">Function</span> <span>dog.speak_override_fct</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+                <span class="tok-kw">Return</span> <span>&quot;Woof!&quot;</span>
+
+            <span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+            <span class="tok-kw">Virtual</span> <span class="tok-kw">Sub</span> <span>dog.type_override_sub</span> <span>()</span>
+
+                <span class="tok-kw">Print</span> <span>This.animal_type</span>
+
+            <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+    <span class="tok-cm">' for polymorphism emulation:</span>
+
+        <span class="tok-kw">Static</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>dog.callback_table</span><span>(</span><span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">2</span><span>)</span> <span>=</span> <span>{@</span><span>dog.addr_callback_fct</span><span>,</span> <span>@</span><span>dog.speak_callback_fct</span><span>,</span> <span>@</span><span>dog.type_callback_sub</span><span>}</span>
+
+        <span class="tok-cm">'callback_sub methods + constructor for dog object:</span>
+
+            <span class="tok-kw">Static</span> <span class="tok-kw">Function</span> <span>dog.addr_callback_fct</span> <span>(</span><span class="tok-kw">ByRef</span> <span>d</span> <span class="tok-kw">As</span> <span>dog</span><span>)</span> <span class="tok-kw">As</span> <span>animal</span> <span class="tok-kw">Ptr</span>
+
+                <span class="tok-kw">Return</span> <span>@</span><span>d</span>
+
+            <span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+            <span class="tok-kw">Static</span> <span class="tok-kw">Function</span> <span>dog.speak_callback_fct</span> <span>(</span><span class="tok-kw">ByRef</span> <span>d</span> <span class="tok-kw">As</span> <span>dog</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+                <span class="tok-kw">Return</span> <span>&quot;Woof!&quot;</span>
+
+            <span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+            <span class="tok-kw">Static</span> <span class="tok-kw">Sub</span> <span>dog.type_callback_sub</span> <span>(</span><span class="tok-kw">ByRef</span> <span>d</span> <span class="tok-kw">As</span> <span>dog</span><span>)</span>
+
+                <span class="tok-kw">Print</span> <span>d.animal_type</span>
+
+            <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+            <span class="tok-kw">Constructor</span> <span>dog</span> <span>()</span>
+
+                <span>This.callback_ptr</span> <span>=</span> <span>@</span><span>callback_table</span><span>(</span><span class="tok-nu">0</span><span>)</span>
+
+            <span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-cm">'Derived-type cat:</span>
+
+    <span class="tok-kw">Type</span> <span>cat</span> <span class="tok-kw">Extends</span> <span>animal</span>
+
+    <span class="tok-cm">' for true polymorphism:</span>
+
+        <span class="tok-kw">Public</span><span>:</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Virtual</span> <span class="tok-kw">Function</span> <span>addr_override_fct</span> <span>()</span> <span class="tok-kw">As</span> <span>animal</span> <span class="tok-kw">Ptr</span> <span class="tok-kw">Override</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Virtual</span> <span class="tok-kw">Function</span> <span>speak_override_fct</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span class="tok-kw">Override</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Virtual</span> <span class="tok-kw">Sub</span> <span>type_override_sub</span> <span>()</span> <span class="tok-kw">Override</span>
+
+    <span class="tok-cm">' for polymorphism emulation:</span>
+
+        <span class="tok-kw">Private</span><span>:</span>
+
+            <span class="tok-kw">Static</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>callback_table</span><span>(</span><span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">2</span><span>)</span>
+
+        <span class="tok-kw">Public</span><span>:</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Static</span> <span class="tok-kw">Function</span> <span>addr_callback_fct</span> <span>(</span><span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>cat</span><span>)</span> <span class="tok-kw">As</span> <span>animal</span> <span class="tok-kw">Ptr</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Static</span> <span class="tok-kw">Function</span> <span>speak_callback_fct</span> <span>(</span><span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>cat</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Static</span> <span class="tok-kw">Sub</span> <span>type_callback_sub</span> <span>(</span><span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>cat</span><span>)</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>()</span>
+
+    <span class="tok-cm">' for all:</span>
+
+        <span class="tok-kw">Private</span><span>:</span>
+
+            <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>animal_type</span> <span>=</span> <span>&quot;cat&quot;</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+    <span class="tok-cm">' for true polymorphism:</span>
+
+        <span class="tok-cm">' override_sub mehods for cat object:</span>
+
+            <span class="tok-kw">Virtual</span> <span class="tok-kw">Function</span> <span>cat.addr_override_fct</span> <span>()</span> <span class="tok-kw">As</span> <span>animal</span> <span class="tok-kw">Ptr</span>
+
+                <span class="tok-kw">Return</span> <span>@</span><span class="tok-kw">This</span>
+
+            <span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+            <span class="tok-kw">Virtual</span> <span class="tok-kw">Function</span> <span>cat.speak_override_fct</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+                <span class="tok-kw">Return</span> <span>&quot;Meow!&quot;</span>
+
+            <span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+            <span class="tok-kw">Virtual</span> <span class="tok-kw">Sub</span> <span>cat.type_override_sub</span> <span>()</span>
+
+                <span class="tok-kw">Print</span> <span>This.animal_type</span>
+
+            <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+    <span class="tok-cm">' for polymorphism emulation:</span>
+
+        <span class="tok-kw">Static</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>cat.callback_table</span><span>(</span><span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">2</span><span>)</span> <span>=</span> <span>{@</span><span>cat.addr_callback_fct</span><span>,</span> <span>@</span><span>cat.speak_callback_fct</span><span>,</span> <span>@</span><span>cat.type_callback_sub</span><span>}</span>
+
+        <span class="tok-cm">' callback_sub mehods + constructor for cat object:</span>
+
+            <span class="tok-kw">Static</span> <span class="tok-kw">Function</span> <span>cat.addr_callback_fct</span> <span>(</span><span class="tok-kw">ByRef</span> <span>c</span> <span class="tok-kw">As</span> <span>cat</span><span>)</span> <span class="tok-kw">As</span> <span>animal</span> <span class="tok-kw">Ptr</span>
+
+                <span class="tok-kw">Return</span> <span>@</span><span>c</span>
+
+            <span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+            <span class="tok-kw">Static</span> <span class="tok-kw">Function</span> <span>cat.speak_callback_fct</span> <span>(</span><span class="tok-kw">ByRef</span> <span>c</span> <span class="tok-kw">As</span> <span>cat</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+                <span class="tok-kw">Return</span> <span>&quot;Meow!&quot;</span>
+
+            <span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+            <span class="tok-kw">Static</span> <span class="tok-kw">Sub</span> <span>cat.type_callback_sub</span> <span>(</span><span class="tok-kw">ByRef</span> <span>c</span> <span class="tok-kw">As</span> <span>cat</span><span>)</span>
+
+                <span class="tok-kw">Print</span> <span>c.animal_type</span>
+
+            <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+            <span class="tok-kw">Constructor</span> <span>cat</span> <span>()</span>
+
+                <span>This.callback_ptr</span> <span>=</span> <span>@</span><span>callback_table</span><span>(</span><span class="tok-nu">0</span><span>)</span>
+
+            <span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-cm">'Derived-type bird:</span>
+
+    <span class="tok-kw">Type</span> <span>bird</span> <span class="tok-kw">Extends</span> <span>animal</span>
+
+    <span class="tok-cm">' for true polymorphism:</span>
+
+        <span class="tok-kw">Public</span><span>:</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Virtual</span> <span class="tok-kw">Function</span> <span>addr_override_fct</span> <span>()</span> <span class="tok-kw">As</span> <span>animal</span> <span class="tok-kw">Ptr</span> <span class="tok-kw">Override</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Virtual</span> <span class="tok-kw">Function</span> <span>speak_override_fct</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span class="tok-kw">Override</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Virtual</span> <span class="tok-kw">Sub</span> <span>type_override_sub</span> <span>()</span> <span class="tok-kw">Override</span>
+
+    <span class="tok-cm">' for polymorphism emulation:</span>
+
+        <span class="tok-kw">Private</span><span>:</span>
+
+            <span class="tok-kw">Static</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>callback_table</span><span>(</span><span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">2</span><span>)</span>
+
+        <span class="tok-kw">Public</span><span>:</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Static</span> <span class="tok-kw">Function</span> <span>addr_callback_fct</span> <span>(</span><span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>bird</span><span>)</span> <span class="tok-kw">As</span> <span>animal</span> <span class="tok-kw">Ptr</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Static</span> <span class="tok-kw">Function</span> <span>speak_callback_fct</span> <span>(</span><span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>bird</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Static</span> <span class="tok-kw">Sub</span> <span>type_callback_sub</span> <span>(</span><span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>bird</span><span>)</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>()</span>
+
+    <span class="tok-cm">' for all:</span>
+
+        <span class="tok-kw">Private</span><span>:</span>
+
+            <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>animal_type</span> <span>=</span> <span>&quot;bird&quot;</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+    <span class="tok-cm">' for true polymorphism:</span>
+
+        <span class="tok-cm">' override_sub mehods for bird object:</span>
+
+            <span class="tok-kw">Virtual</span> <span class="tok-kw">Function</span> <span>bird.addr_override_fct</span> <span>()</span> <span class="tok-kw">As</span> <span>animal</span> <span class="tok-kw">Ptr</span>
+
+                <span class="tok-kw">Return</span> <span>@</span><span class="tok-kw">This</span>
+
+            <span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+            <span class="tok-kw">Virtual</span> <span class="tok-kw">Function</span> <span>bird.speak_override_fct</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+                <span class="tok-kw">Return</span> <span>&quot;Cheep!&quot;</span>
+
+            <span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+            <span class="tok-kw">Virtual</span> <span class="tok-kw">Sub</span> <span>bird.type_override_sub</span> <span>()</span>
+
+                <span class="tok-kw">Print</span> <span>This.animal_type</span>
+
+            <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+    <span class="tok-cm">' for polymorphism emulation:</span>
+
+        <span class="tok-kw">Static</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>bird.callback_table</span><span>(</span><span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">2</span><span>)</span> <span>=</span> <span>{@</span><span>bird.addr_callback_fct</span><span>,</span> <span>@</span><span>bird.speak_callback_fct</span><span>,</span> <span>@</span><span>bird.type_callback_sub</span><span>}</span>
+
+        <span class="tok-cm">' callback_sub mehods + constructor for bird object:</span>
+
+            <span class="tok-kw">Static</span> <span class="tok-kw">Function</span> <span>bird.addr_callback_fct</span> <span>(</span><span class="tok-kw">ByRef</span> <span>b</span> <span class="tok-kw">As</span> <span>bird</span><span>)</span> <span class="tok-kw">As</span> <span>animal</span> <span class="tok-kw">Ptr</span>
+
+                <span class="tok-kw">Return</span> <span>@</span><span>b</span>
+
+            <span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+            <span class="tok-kw">Static</span> <span class="tok-kw">Function</span> <span>bird.speak_callback_fct</span> <span>(</span><span class="tok-kw">ByRef</span> <span>b</span> <span class="tok-kw">As</span> <span>bird</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+                <span class="tok-kw">Return</span> <span>&quot;Cheep!&quot;</span>
+
+            <span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+            <span class="tok-kw">Static</span> <span class="tok-kw">Sub</span> <span>bird.type_callback_sub</span> <span>(</span><span class="tok-kw">ByRef</span> <span>b</span> <span class="tok-kw">As</span> <span>bird</span><span>)</span>
+
+                <span class="tok-kw">Print</span> <span>b.animal_type</span>
+
+            <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+            <span class="tok-kw">Constructor</span> <span>bird</span> <span>()</span>
+
+                <span>This.callback_ptr</span> <span>=</span> <span>@</span><span>callback_table</span><span>(</span><span class="tok-nu">0</span><span>)</span>
+
+            <span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-cm">'Create a dog and cat and bird dynamic instances referred through an animal pointer list:</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>dog</span> <span class="tok-kw">Ptr</span> <span>p_my_dog</span> <span>=</span> <span class="tok-kw">New</span> <span>dog</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>cat</span> <span class="tok-kw">Ptr</span> <span>p_my_cat</span> <span>=</span> <span class="tok-kw">New</span> <span>cat</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>bird</span> <span class="tok-kw">Ptr</span> <span>p_my_bird</span> <span>=</span> <span class="tok-kw">New</span> <span>bird</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>animal</span> <span class="tok-kw">Ptr</span> <span>animal_list</span> <span>(</span><span class="tok-nu">1</span> <span class="tok-kw">To</span> <span>...)</span> <span>=</span> <span>{</span><span>p_my_dog</span><span>,</span> <span>p_my_cat</span><span>,</span> <span>p_my_bird</span><span>}</span>
+
+
+
+<span class="tok-cm">'Have the animals speak and eat:</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;SUB-TYPE POLYMORPHISM&quot;</span><span>,</span> <span>&quot;@object&quot;</span><span>,</span> <span>&quot;speak&quot;</span><span>,</span> <span>&quot;type&quot;</span>
+
+    <span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-kw">LBound</span><span>(</span><span>animal_list</span><span>)</span> <span class="tok-kw">To</span> <span class="tok-kw">UBound</span><span>(</span><span>animal_list</span><span>)</span>
+
+        <span class="tok-kw">Print</span> <span>&quot;   animal #&quot;</span> <span>&amp;</span> <span>I</span> <span>&amp;</span> <span>&quot;:&quot;</span>
+
+        <span class="tok-cm">' for override_sub:</span>
+
+            <span class="tok-kw">Print</span> <span>&quot;      true operating:&quot;</span><span>,</span>
+
+            <span class="tok-kw">Print</span> <span>animal_list</span><span>(</span><span>I</span><span>)-&gt;</span><span>addr_override_fct</span><span>(),</span>   <span class="tok-cm">'real polymorphism</span>
+
+            <span class="tok-kw">Print</span> <span>animal_list</span><span>(</span><span>I</span><span>)-&gt;</span><span>speak_override_fct</span><span>(),</span>  <span class="tok-cm">'real polymorphism</span>
+
+            <span>animal_list</span><span>(</span><span>I</span><span>)-&gt;</span><span>type_override_sub</span><span>()</span>          <span class="tok-cm">'real polymorphism</span>
+
+        <span class="tok-cm">' for polymorphism emulation:</span>
+
+            <span class="tok-kw">Print</span> <span>&quot;      by emulation:&quot;</span><span>,</span>
+
+            <span class="tok-kw">Print</span> <span>animal_list</span><span>(</span><span>I</span><span>)-&gt;</span><span>addr_callback_fct</span><span>(),</span>   <span class="tok-cm">'emulated polymorphism</span>
+
+            <span class="tok-kw">Print</span> <span>animal_list</span><span>(</span><span>I</span><span>)-&gt;</span><span>speak_callback_fct</span><span>(),</span>  <span class="tok-cm">'emulated polymorphism</span>
+
+            <span>animal_list</span><span>(</span><span>I</span><span>)-&gt;</span><span>type_callback_sub</span><span>()</span>          <span class="tok-cm">'emulated polymorphism</span>
+
+    <span class="tok-kw">Next</span> <span>I</span>
+
+
+
+<span class="tok-kw">Sleep</span>
+
+
+
+<span class="tok-kw">Delete</span> <span>p_my_dog</span>
+
+<span class="tok-kw">Delete</span> <span>p_my_cat</span>
+
+<span class="tok-kw">Delete</span> <span>p_my_bird</span></pre></code><br>
+Output:<br>
+<div class="indent"><pre class="code">
+SUB-TYPE POLYMORPHISM       @object       speak         type
+   animal #1:
+	  true operating:       11217472      Woof!         dog
+	  by emulation:         11217472      Woof!         dog
+   animal #2:
+	  true operating:       11217552      Meow!         cat
+	  by emulation:         11217552      Meow!         cat
+   animal #3:
+	  true operating:       11217632      Cheep!        bird
+	  by emulation:         11217632      Cheep!        bird
+				</pre></div></div></div><div><a href="#ProPgObjectRttiTop">Back to top</a></div><br>
+<a></a><br>
+</div><div>3. Demangle typenames from RTTI info</div><div><br>
+Extraction of the mangled typename from the RTTI info:<br>
+<div class="indent"><b>-</b> From the instance address, the RTTI info pointer of the type of the instance is accessed through a double indirection (with offsets: [0][-1]).<br>
+<b>-</b> The RTTI info pointer chaining described above allows to access RTTI info of the selected type in the inheritance hierarchy (up to the Object built-in type). This is done by means of an iteration on the pointer indirection (with offset: [+2]).<br>
+<b>-</b> Then the selected mangled typename is accessed (final indirection with offset: [+1])<br>
+<br>
+</div>Function 'mangledTypeNameFromRTTI()' to extract the mangled typenames:<br>
+<div class="indent"><pre class="code">
+Function mangledTypeNameFromRTTI (Byval po As Object Ptr, Byval baseIndex As Integer = 0) As String
+	' Function to get any mangled-typename in the inheritance up hierarchy
+	' of the type of an instance (address: 'po') compatible with the built-in 'Object'
+	'
+	' ('baseIndex =  0' to get the mangled-typename of the instance)
+	' ('baseIndex = -1' to get the base mangled-typename of the instance, or "" if not existing)
+	' ('baseIndex = -2' to get the base.base mangled-typename of the instance, or "" if not existing)
+	' (.....)
+	'
+		Dim As String s
+		Dim As Zstring Ptr pz
+		Dim As Any Ptr p = Cptr(Any Ptr Ptr Ptr, po)[0][-1]  ' Ptr to RTTI info
+		For I As Integer = baseIndex To -1
+			p = Cptr(Any Ptr Ptr, p)[2]                  ' Ptr to Base RTTI info of previous RTTI info
+			If p = 0 Then Return s
+		Next I
+		pz = Cptr(Any Ptr Ptr, p)[1]                         ' Ptr to mangled-typename
+		s = *pz
+		Return s
+End Function
+		</pre></div>Example of mangled typenames extraction from RTTI info, for an inheritance structure (three derived level) declared inside a namespace block:<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Namespace</span> <span>oop</span>
+
+    <span class="tok-kw">Type</span> <span>parent</span> <span class="tok-kw">Extends</span> <span class="tok-kw">Object</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+    <span class="tok-kw">Type</span> <span>child</span> <span class="tok-kw">Extends</span> <span>parent</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+    <span class="tok-kw">Type</span> <span>grandchild</span> <span class="tok-kw">Extends</span> <span>child</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+
+
+<span class="tok-kw">Function</span> <span>mangledTypeNameFromRTTI</span> <span>(</span><span class="tok-kw">ByVal</span> <span>po</span> <span class="tok-kw">As</span> <span class="tok-kw">Object</span> <span class="tok-kw">Ptr</span><span>,</span> <span class="tok-kw">ByVal</span> <span>baseIndex</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+    <span class="tok-cm">' Function to get any mangled-typename in the inheritance up hierarchy</span>
+
+    <span class="tok-cm">' of the type of an instance (address: 'po') compatible with the built-in 'Object'</span>
+
+    <span class="tok-cm">'</span>
+
+    <span class="tok-cm">' ('baseIndex =  0' to get the mangled-typename of the instance)</span>
+
+    <span class="tok-cm">' ('baseIndex = -1' to get the base mangled-typename of the instance, or &quot;&quot; if not existing)</span>
+
+    <span class="tok-cm">' ('baseIndex = -2' to get the base.base mangled-typename of the instance, or &quot;&quot; if not existing)</span>
+
+    <span class="tok-cm">' (.....)</span>
+
+    <span class="tok-cm">'</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>s</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span class="tok-kw">Ptr</span> <span>pz</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>p</span> <span>=</span> <span class="tok-kw">CPtr</span><span>(</span><span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span class="tok-kw">Ptr</span> <span class="tok-kw">Ptr</span><span>,</span> <span>po</span><span>)[</span><span class="tok-nu">0</span><span>][-</span><span class="tok-nu">1</span><span>]</span>  <span class="tok-cm">' Ptr to RTTI info</span>
+
+        <span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span>baseIndex</span> <span class="tok-kw">To</span> <span>-</span><span class="tok-nu">1</span>
+
+            <span>p</span> <span>=</span> <span class="tok-kw">CPtr</span><span>(</span><span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span class="tok-kw">Ptr</span><span>,</span> <span>p</span><span>)[</span><span class="tok-nu">2</span><span>]</span>                      <span class="tok-cm">' Ptr to Base RTTI info of previous RTTI info</span>
+
+            <span class="tok-kw">If</span> <span>p</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">Then</span> <span class="tok-kw">Return</span> <span>s</span>
+
+        <span class="tok-kw">Next</span> <span>I</span>
+
+        <span>pz</span> <span>=</span> <span class="tok-kw">CPtr</span><span>(</span><span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span class="tok-kw">Ptr</span><span>,</span> <span>p</span><span>)[</span><span class="tok-nu">1</span><span>]</span>                         <span class="tok-cm">' Ptr to mangled-typename</span>
+
+        <span>s</span> <span>=</span> <span>*</span><span>pz</span>
+
+        <span class="tok-kw">Return</span> <span>s</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Object</span> <span class="tok-kw">Ptr</span> <span>p</span> <span>=</span> <span class="tok-kw">New</span> <span>oop.grandchild</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;Mangled typenames list, from RTTI info:&quot;</span>
+
+<span class="tok-kw">Print</span> <span>&quot;  &quot;</span> <span>&amp;</span> <span>mangledTypeNameFromRTTI</span><span>(</span><span>p</span><span>,</span> <span class="tok-nu">0</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>&quot;  &quot;</span> <span>&amp;</span> <span>mangledTypeNameFromRTTI</span><span>(</span><span>p</span><span>,</span> <span>-</span><span class="tok-nu">1</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>&quot;  &quot;</span> <span>&amp;</span> <span>mangledTypeNameFromRTTI</span><span>(</span><span>p</span><span>,</span> <span>-</span><span class="tok-nu">2</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>&quot;  &quot;</span> <span>&amp;</span> <span>mangledTypeNameFromRTTI</span><span>(</span><span>p</span><span>,</span> <span>-</span><span class="tok-nu">3</span><span>)</span>
+
+<span class="tok-kw">Delete</span> <span>p</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+Output:<br>
+<div class="indent"><pre class="code">
+Mangled typenames list, from RTTI info:
+  N3OOP10GRANDCHILDE
+  N3OOP5CHILDE
+  N3OOP6PARENTE
+  6OBJECT
+			</pre></div></div><u>Implementation of the mangled typenames</u><br>
+<div class="indent">From the above output, the mangling process on typenames can be highlighted with the following formatting:<br>
+<div class="indent"><b><code>N3<u>OOP</u>10<u>GRANDCHILD</u>E</code></b><br>
+(for <i>'oop.grandchild'</i>)<br>
+<br>
+<b><code>N3<u>OOP</u>5<u>CHILD</u>E</code></b><br>
+(for <i>'oop.child'</i>)<br>
+<br>
+<b><code>N3<u>OOP</u>6<u>PARENT</u>E</code></b><br>
+(for <i>'oop.parent'</i>)<br>
+<br>
+<b><code>6<u>Object</u></code></b><br>
+(for <i>'Object'</i>)<br>
+<br>
+</div>Details on the the mangling process on typenames in the RTTI info:<br>
+<div class="indent"><b>-</b> The mangled typename is a Zstring (ended by the null character).<br>
+<b>-</b> Each component (one dot as separator) of the full typename (converted to uppercase) is preceded by its number of characters encoded in ASCII itself (based on length-prefixed strings).<br>
+<b>-</b> When the type is inside at least one namespace, the mangled typename string begins with an additional "N" and ends with an additional "E".<br>
+<div class="indent">(prefix "N" and suffix "E" from Nested-name ... Ending)<br>
+<br>
+</div></div></div><u>Extract the typenames (demangled) from RTTI info</u><br>
+<div class="indent">The previous function (<i>'mangledTypeNameFromRTTI()'</i>) can be now completed with a demangling process.<br>
+<br>
+Function <i>'typeNameFromRTTI()'</i> to extract the demangled typenames:<br>
+<div class="indent"><pre class="code">
+Function typeNameFromRTTI (Byval po As Object Ptr, Byval baseIndex As Integer = 0) As String
+	' Function to get any typename in the inheritance up hierarchy
+	' of the type of an instance (address: 'po') compatible with the built-in 'Object'
+	'
+	' ('baseIndex =  0' to get the typename of the instance)
+	' ('baseIndex = -1' to get the base.typename of the instance, or "" if not existing)
+	' ('baseIndex = -2' to get the base.base.typename of the instance, or "" if not existing)
+	' (.....)
+	'
+		Dim As String s
+		Dim As Zstring Ptr pz
+		Dim As Any Ptr p = Cptr(Any Ptr Ptr Ptr, po)[0][-1]     ' Ptr to RTTI info
+		For I As Integer = baseIndex To -1
+			p = Cptr(Any Ptr Ptr, p)[2]                     ' Ptr to Base RTTI info of previous RTTI info
+			If p = 0 Then Return s
+		Next I
+		pz = Cptr(Any Ptr Ptr, p)[1]                            ' Ptr to mangled-typename
+		Do
+			Do While (*pz)[0] > Asc("9") Orelse (*pz)[0] < Asc("0")
+				If (*pz)[0] = 0 Then Return s
+				pz += 1
+			Loop
+			Dim As Integer N = Val(*pz)
+			Do
+				pz += 1
+			Loop Until (*pz)[0] > Asc("9") Orelse (*pz)[0] < Asc("0")
+			If s <> "" Then s &= "."
+			s &= Left(*pz, N)
+			pz += N
+		Loop
+End Function
+			</pre></div>Previous example completed with the above function:<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Namespace</span> <span>oop</span>
+
+    <span class="tok-kw">Type</span> <span>parent</span> <span class="tok-kw">Extends</span> <span class="tok-kw">Object</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+    <span class="tok-kw">Type</span> <span>child</span> <span class="tok-kw">Extends</span> <span>parent</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+    <span class="tok-kw">Type</span> <span>grandchild</span> <span class="tok-kw">Extends</span> <span>child</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+
+
+<span class="tok-kw">Function</span> <span>mangledTypeNameFromRTTI</span> <span>(</span><span class="tok-kw">ByVal</span> <span>po</span> <span class="tok-kw">As</span> <span class="tok-kw">Object</span> <span class="tok-kw">Ptr</span><span>,</span> <span class="tok-kw">ByVal</span> <span>baseIndex</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+    <span class="tok-cm">' Function to get any mangled-typename in the inheritance up hierarchy</span>
+
+    <span class="tok-cm">' of the type of an instance (address: 'po') compatible with the built-in 'Object'</span>
+
+    <span class="tok-cm">'</span>
+
+    <span class="tok-cm">' ('baseIndex =  0' to get the mangled-typename of the instance)</span>
+
+    <span class="tok-cm">' ('baseIndex = -1' to get the base mangled-typename of the instance, or &quot;&quot; if not existing)</span>
+
+    <span class="tok-cm">' ('baseIndex = -2' to get the base.base mangled-typename of the instance, or &quot;&quot; if not existing)</span>
+
+    <span class="tok-cm">' (.....)</span>
+
+    <span class="tok-cm">'</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>s</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span class="tok-kw">Ptr</span> <span>pz</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>p</span> <span>=</span> <span class="tok-kw">CPtr</span><span>(</span><span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span class="tok-kw">Ptr</span> <span class="tok-kw">Ptr</span><span>,</span> <span>po</span><span>)[</span><span class="tok-nu">0</span><span>][-</span><span class="tok-nu">1</span><span>]</span>  <span class="tok-cm">' Ptr to RTTI info</span>
+
+        <span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span>baseIndex</span> <span class="tok-kw">To</span> <span>-</span><span class="tok-nu">1</span>
+
+            <span>p</span> <span>=</span> <span class="tok-kw">CPtr</span><span>(</span><span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span class="tok-kw">Ptr</span><span>,</span> <span>p</span><span>)[</span><span class="tok-nu">2</span><span>]</span>                      <span class="tok-cm">' Ptr to Base RTTI info of previous RTTI info</span>
+
+            <span class="tok-kw">If</span> <span>p</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">Then</span> <span class="tok-kw">Return</span> <span>s</span>
+
+        <span class="tok-kw">Next</span> <span>I</span>
+
+        <span>pz</span> <span>=</span> <span class="tok-kw">CPtr</span><span>(</span><span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span class="tok-kw">Ptr</span><span>,</span> <span>p</span><span>)[</span><span class="tok-nu">1</span><span>]</span>                         <span class="tok-cm">' Ptr to mangled-typename</span>
+
+        <span>s</span> <span>=</span> <span>*</span><span>pz</span>
+
+        <span class="tok-kw">Return</span> <span>s</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Function</span> <span>typeNameFromRTTI</span> <span>(</span><span class="tok-kw">ByVal</span> <span>po</span> <span class="tok-kw">As</span> <span class="tok-kw">Object</span> <span class="tok-kw">Ptr</span><span>,</span> <span class="tok-kw">ByVal</span> <span>baseIndex</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+    <span class="tok-cm">' Function to get any typename in the inheritance up hierarchy</span>
+
+    <span class="tok-cm">' of the type of an instance (address: 'po') compatible with the built-in 'Object'</span>
+
+    <span class="tok-cm">'</span>
+
+    <span class="tok-cm">' ('baseIndex =  0' to get the typename of the instance)</span>
+
+    <span class="tok-cm">' ('baseIndex = -1' to get the base.typename of the instance, or &quot;&quot; if not existing)</span>
+
+    <span class="tok-cm">' ('baseIndex = -2' to get the base.base.typename of the instance, or &quot;&quot; if not existing)</span>
+
+    <span class="tok-cm">' (.....)</span>
+
+    <span class="tok-cm">'</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>s</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span class="tok-kw">Ptr</span> <span>pz</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>p</span> <span>=</span> <span class="tok-kw">CPtr</span><span>(</span><span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span class="tok-kw">Ptr</span> <span class="tok-kw">Ptr</span><span>,</span> <span>po</span><span>)[</span><span class="tok-nu">0</span><span>][-</span><span class="tok-nu">1</span><span>]</span>          <span class="tok-cm">' Ptr to RTTI info</span>
+
+        <span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span>baseIndex</span> <span class="tok-kw">To</span> <span>-</span><span class="tok-nu">1</span>
+
+            <span>p</span> <span>=</span> <span class="tok-kw">CPtr</span><span>(</span><span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span class="tok-kw">Ptr</span><span>,</span> <span>p</span><span>)[</span><span class="tok-nu">2</span><span>]</span>                              <span class="tok-cm">' Ptr to Base RTTI info of previous RTTI info</span>
+
+            <span class="tok-kw">If</span> <span>p</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">Then</span> <span class="tok-kw">Return</span> <span>s</span>
+
+        <span class="tok-kw">Next</span> <span>I</span>
+
+        <span>pz</span> <span>=</span> <span class="tok-kw">CPtr</span><span>(</span><span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span class="tok-kw">Ptr</span><span>,</span> <span>p</span><span>)[</span><span class="tok-nu">1</span><span>]</span>                                 <span class="tok-cm">' Ptr to mangled-typename</span>
+
+        <span class="tok-kw">Do</span>
+
+            <span class="tok-kw">Do</span> <span class="tok-kw">While</span> <span>(*</span><span>pz</span><span>)[</span><span class="tok-nu">0</span><span>]</span> <span>&gt;</span> <span class="tok-kw">Asc</span><span>(</span><span>&quot;9&quot;</span><span>)</span> <span class="tok-kw">OrElse</span> <span>(*</span><span>pz</span><span>)[</span><span class="tok-nu">0</span><span>]</span> <span>&lt;</span> <span class="tok-kw">Asc</span><span>(</span><span>&quot;0&quot;</span><span>)</span>
+
+                <span class="tok-kw">If</span> <span>(*</span><span>pz</span><span>)[</span><span class="tok-nu">0</span><span>]</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">Then</span> <span class="tok-kw">Return</span> <span>s</span>
+
+                <span>pz</span> <span>+=</span> <span class="tok-nu">1</span>
+
+            <span class="tok-kw">Loop</span>
+
+            <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>N</span> <span>=</span> <span class="tok-kw">Val</span><span>(*</span><span>pz</span><span>)</span>
+
+            <span class="tok-kw">Do</span>
+
+                <span>pz</span> <span>+=</span> <span class="tok-nu">1</span>
+
+            <span class="tok-kw">Loop</span> <span class="tok-kw">Until</span> <span>(*</span><span>pz</span><span>)[</span><span class="tok-nu">0</span><span>]</span> <span>&gt;</span> <span class="tok-kw">Asc</span><span>(</span><span>&quot;9&quot;</span><span>)</span> <span class="tok-kw">OrElse</span> <span>(*</span><span>pz</span><span>)[</span><span class="tok-nu">0</span><span>]</span> <span>&lt;</span> <span class="tok-kw">Asc</span><span>(</span><span>&quot;0&quot;</span><span>)</span>
+
+            <span class="tok-kw">If</span> <span>s</span> <span>&lt;&gt;</span> <span>&quot;&quot;</span> <span class="tok-kw">Then</span> <span>s</span> <span>&amp;=</span> <span>&quot;.&quot;</span>
+
+            <span>s</span> <span>&amp;=</span> <span class="tok-kw">Left</span><span>(*</span><span>pz</span><span>,</span> <span>N</span><span>)</span>
+
+            <span>pz</span> <span>+=</span> <span>N</span>
+
+        <span class="tok-kw">Loop</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Object</span> <span class="tok-kw">Ptr</span> <span>p</span> <span>=</span> <span class="tok-kw">New</span> <span>oop.grandchild</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;Mangled typenames list, from RTTI info:&quot;</span>
+
+<span class="tok-kw">Print</span> <span>&quot;  &quot;</span> <span>&amp;</span> <span>mangledTypeNameFromRTTI</span><span>(</span><span>p</span><span>,</span> <span class="tok-nu">0</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>&quot;  &quot;</span> <span>&amp;</span> <span>mangledTypeNameFromRTTI</span><span>(</span><span>p</span><span>,</span> <span>-</span><span class="tok-nu">1</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>&quot;  &quot;</span> <span>&amp;</span> <span>mangledTypeNameFromRTTI</span><span>(</span><span>p</span><span>,</span> <span>-</span><span class="tok-nu">2</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>&quot;  &quot;</span> <span>&amp;</span> <span>mangledTypeNameFromRTTI</span><span>(</span><span>p</span><span>,</span> <span>-</span><span class="tok-nu">3</span><span>)</span>
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Typenames (demangled) list, from RTTI info:&quot;</span>
+
+<span class="tok-kw">Print</span> <span>&quot;  &quot;</span> <span>&amp;</span> <span>typeNameFromRTTI</span><span>(</span><span>p</span><span>,</span> <span class="tok-nu">0</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>&quot;  &quot;</span> <span>&amp;</span> <span>typeNameFromRTTI</span><span>(</span><span>p</span><span>,</span> <span>-</span><span class="tok-nu">1</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>&quot;  &quot;</span> <span>&amp;</span> <span>typeNameFromRTTI</span><span>(</span><span>p</span><span>,</span> <span>-</span><span class="tok-nu">2</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>&quot;  &quot;</span> <span>&amp;</span> <span>typeNameFromRTTI</span><span>(</span><span>p</span><span>,</span> <span>-</span><span class="tok-nu">3</span><span>)</span>
+
+<span class="tok-kw">Delete</span> <span>p</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+Output:<br>
+<div class="indent"><pre class="code">
+Mangled typenames list, from RTTI info:
+  N3OOP10GRANDCHILDE
+  N3OOP5CHILDE
+  N3OOP6PARENTE
+  6OBJECT
+
+Typenames (demangled) list, from RTTI info:
+  OOP.GRANDCHILD
+  OOP.CHILD
+  OOP.PARENT
+  OBJECT
+				</pre></div></div></div><u>Extract at once the Typename (demangled) and all those of its base-types hierarchy, from RTTI info</u><br>
+<div class="indent">Simply by calling the previous function in a loop with a decreasing parameter <i>'baseIndex'</i> (from the value 0) and to stop it as soon as an empty string is returned. Finaly by returning a string containing the different typenames with a hierarchic separator between each.<br>
+<br>
+Function <i>'typeNameHierarchyFromRTTI()'</i> to extract the Typename (demangled) and all those of its base-types hierarchy:<br>
+<div class="indent"><pre class="code">
+Function typeNameHierarchyFromRTTI (Byval po As Object Ptr) As String
+	' Function to get the typename inheritance up hierarchy
+	' of the type of an instance (address: po) compatible with the built-in 'Object'
+	'
+		Dim As String s = TypeNameFromRTTI(po)
+		Dim As Integer i = -1
+		Do
+			Dim As String s0 = typeNameFromRTTI(po, i)
+			If s0 = "" Then Exit Do
+			s &= "->" & s0
+			i -= 1
+		Loop
+		Return s
+End Function
+			</pre></div>Previous example again completed with the above function:<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Namespace</span> <span>oop</span>
+
+    <span class="tok-kw">Type</span> <span>parent</span> <span class="tok-kw">Extends</span> <span class="tok-kw">Object</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+    <span class="tok-kw">Type</span> <span>child</span> <span class="tok-kw">Extends</span> <span>parent</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+    <span class="tok-kw">Type</span> <span>grandchild</span> <span class="tok-kw">Extends</span> <span>child</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+
+
+<span class="tok-kw">Function</span> <span>mangledTypeNameFromRTTI</span> <span>(</span><span class="tok-kw">ByVal</span> <span>po</span> <span class="tok-kw">As</span> <span class="tok-kw">Object</span> <span class="tok-kw">Ptr</span><span>,</span> <span class="tok-kw">ByVal</span> <span>baseIndex</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+    <span class="tok-cm">' Function to get any mangled-typename in the inheritance up hierarchy</span>
+
+    <span class="tok-cm">' of the type of an instance (address: 'po') compatible with the built-in 'Object'</span>
+
+    <span class="tok-cm">'</span>
+
+    <span class="tok-cm">' ('baseIndex =  0' to get the mangled-typename of the instance)</span>
+
+    <span class="tok-cm">' ('baseIndex = -1' to get the base mangled-typename of the instance, or &quot;&quot; if not existing)</span>
+
+    <span class="tok-cm">' ('baseIndex = -2' to get the base.base mangled-typename of the instance, or &quot;&quot; if not existing)</span>
+
+    <span class="tok-cm">' (.....)</span>
+
+    <span class="tok-cm">'</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>s</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span class="tok-kw">Ptr</span> <span>pz</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>p</span> <span>=</span> <span class="tok-kw">CPtr</span><span>(</span><span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span class="tok-kw">Ptr</span> <span class="tok-kw">Ptr</span><span>,</span> <span>po</span><span>)[</span><span class="tok-nu">0</span><span>][-</span><span class="tok-nu">1</span><span>]</span>  <span class="tok-cm">' Ptr to RTTI info</span>
+
+        <span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span>baseIndex</span> <span class="tok-kw">To</span> <span>-</span><span class="tok-nu">1</span>
+
+            <span>p</span> <span>=</span> <span class="tok-kw">CPtr</span><span>(</span><span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span class="tok-kw">Ptr</span><span>,</span> <span>p</span><span>)[</span><span class="tok-nu">2</span><span>]</span>                      <span class="tok-cm">' Ptr to Base RTTI info of previous RTTI info</span>
+
+            <span class="tok-kw">If</span> <span>p</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">Then</span> <span class="tok-kw">Return</span> <span>s</span>
+
+        <span class="tok-kw">Next</span> <span>I</span>
+
+        <span>pz</span> <span>=</span> <span class="tok-kw">CPtr</span><span>(</span><span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span class="tok-kw">Ptr</span><span>,</span> <span>p</span><span>)[</span><span class="tok-nu">1</span><span>]</span>                         <span class="tok-cm">' Ptr to mangled-typename</span>
+
+        <span>s</span> <span>=</span> <span>*</span><span>pz</span>
+
+        <span class="tok-kw">Return</span> <span>s</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Function</span> <span>typeNameFromRTTI</span> <span>(</span><span class="tok-kw">ByVal</span> <span>po</span> <span class="tok-kw">As</span> <span class="tok-kw">Object</span> <span class="tok-kw">Ptr</span><span>,</span> <span class="tok-kw">ByVal</span> <span>baseIndex</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+    <span class="tok-cm">' Function to get any typename in the inheritance up hierarchy</span>
+
+    <span class="tok-cm">' of the type of an instance (address: 'po') compatible with the built-in 'Object'</span>
+
+    <span class="tok-cm">'</span>
+
+    <span class="tok-cm">' ('baseIndex =  0' to get the typename of the instance)</span>
+
+    <span class="tok-cm">' ('baseIndex = -1' to get the base.typename of the instance, or &quot;&quot; if not existing)</span>
+
+    <span class="tok-cm">' ('baseIndex = -2' to get the base.base.typename of the instance, or &quot;&quot; if not existing)</span>
+
+    <span class="tok-cm">' (.....)</span>
+
+    <span class="tok-cm">'</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>s</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span class="tok-kw">Ptr</span> <span>pz</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>p</span> <span>=</span> <span class="tok-kw">CPtr</span><span>(</span><span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span class="tok-kw">Ptr</span> <span class="tok-kw">Ptr</span><span>,</span> <span>po</span><span>)[</span><span class="tok-nu">0</span><span>][-</span><span class="tok-nu">1</span><span>]</span>          <span class="tok-cm">' Ptr to RTTI info</span>
+
+        <span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span>baseIndex</span> <span class="tok-kw">To</span> <span>-</span><span class="tok-nu">1</span>
+
+            <span>p</span> <span>=</span> <span class="tok-kw">CPtr</span><span>(</span><span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span class="tok-kw">Ptr</span><span>,</span> <span>p</span><span>)[</span><span class="tok-nu">2</span><span>]</span>                              <span class="tok-cm">' Ptr to Base RTTI info of previous RTTI info</span>
+
+            <span class="tok-kw">If</span> <span>p</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">Then</span> <span class="tok-kw">Return</span> <span>s</span>
+
+        <span class="tok-kw">Next</span> <span>I</span>
+
+        <span>pz</span> <span>=</span> <span class="tok-kw">CPtr</span><span>(</span><span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span class="tok-kw">Ptr</span><span>,</span> <span>p</span><span>)[</span><span class="tok-nu">1</span><span>]</span>                                 <span class="tok-cm">' Ptr to mangled-typename</span>
+
+        <span class="tok-kw">Do</span>
+
+            <span class="tok-kw">Do</span> <span class="tok-kw">While</span> <span>(*</span><span>pz</span><span>)[</span><span class="tok-nu">0</span><span>]</span> <span>&gt;</span> <span class="tok-kw">Asc</span><span>(</span><span>&quot;9&quot;</span><span>)</span> <span class="tok-kw">OrElse</span> <span>(*</span><span>pz</span><span>)[</span><span class="tok-nu">0</span><span>]</span> <span>&lt;</span> <span class="tok-kw">Asc</span><span>(</span><span>&quot;0&quot;</span><span>)</span>
+
+                <span class="tok-kw">If</span> <span>(*</span><span>pz</span><span>)[</span><span class="tok-nu">0</span><span>]</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">Then</span> <span class="tok-kw">Return</span> <span>s</span>
+
+                <span>pz</span> <span>+=</span> <span class="tok-nu">1</span>
+
+            <span class="tok-kw">Loop</span>
+
+            <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>N</span> <span>=</span> <span class="tok-kw">Val</span><span>(*</span><span>pz</span><span>)</span>
+
+            <span class="tok-kw">Do</span>
+
+                <span>pz</span> <span>+=</span> <span class="tok-nu">1</span>
+
+            <span class="tok-kw">Loop</span> <span class="tok-kw">Until</span> <span>(*</span><span>pz</span><span>)[</span><span class="tok-nu">0</span><span>]</span> <span>&gt;</span> <span class="tok-kw">Asc</span><span>(</span><span>&quot;9&quot;</span><span>)</span> <span class="tok-kw">OrElse</span> <span>(*</span><span>pz</span><span>)[</span><span class="tok-nu">0</span><span>]</span> <span>&lt;</span> <span class="tok-kw">Asc</span><span>(</span><span>&quot;0&quot;</span><span>)</span>
+
+            <span class="tok-kw">If</span> <span>s</span> <span>&lt;&gt;</span> <span>&quot;&quot;</span> <span class="tok-kw">Then</span> <span>s</span> <span>&amp;=</span> <span>&quot;.&quot;</span>
+
+            <span>s</span> <span>&amp;=</span> <span class="tok-kw">Left</span><span>(*</span><span>pz</span><span>,</span> <span>N</span><span>)</span>
+
+            <span>pz</span> <span>+=</span> <span>N</span>
+
+        <span class="tok-kw">Loop</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Function</span> <span>typeNameHierarchyFromRTTI</span> <span>(</span><span class="tok-kw">ByVal</span> <span>po</span> <span class="tok-kw">As</span> <span class="tok-kw">Object</span> <span class="tok-kw">Ptr</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+    <span class="tok-cm">' Function to get the typename inheritance up hierarchy</span>
+
+    <span class="tok-cm">' of the type of an instance (address: po) compatible with the built-in 'Object'</span>
+
+    <span class="tok-cm">'</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>s</span> <span>=</span> <span>TypeNameFromRTTI</span><span>(</span><span>po</span><span>)</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>i</span> <span>=</span> <span>-</span><span class="tok-nu">1</span>
+
+        <span class="tok-kw">Do</span>
+
+            <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>s0</span> <span>=</span> <span>typeNameFromRTTI</span><span>(</span><span>po</span><span>,</span> <span>i</span><span>)</span>
+
+            <span class="tok-kw">If</span> <span>s0</span> <span>=</span> <span>&quot;&quot;</span> <span class="tok-kw">Then</span> <span class="tok-kw">Exit</span> <span class="tok-kw">Do</span>
+
+            <span>s</span> <span>&amp;=</span> <span>&quot;-&gt;&quot;</span> <span>&amp;</span> <span>s0</span>
+
+            <span>i</span> <span>-=</span> <span class="tok-nu">1</span>
+
+        <span class="tok-kw">Loop</span>
+
+        <span class="tok-kw">Return</span> <span>s</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Object</span> <span class="tok-kw">Ptr</span> <span>p</span> <span>=</span> <span class="tok-kw">New</span> <span>oop.grandchild</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;Mangled typenames list, from RTTI info:&quot;</span>
+
+<span class="tok-kw">Print</span> <span>&quot;  &quot;</span> <span>&amp;</span> <span>mangledTypeNameFromRTTI</span><span>(</span><span>p</span><span>,</span> <span class="tok-nu">0</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>&quot;  &quot;</span> <span>&amp;</span> <span>mangledTypeNameFromRTTI</span><span>(</span><span>p</span><span>,</span> <span>-</span><span class="tok-nu">1</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>&quot;  &quot;</span> <span>&amp;</span> <span>mangledTypeNameFromRTTI</span><span>(</span><span>p</span><span>,</span> <span>-</span><span class="tok-nu">2</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>&quot;  &quot;</span> <span>&amp;</span> <span>mangledTypeNameFromRTTI</span><span>(</span><span>p</span><span>,</span> <span>-</span><span class="tok-nu">3</span><span>)</span>
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Typenames (demangled) list, from RTTI info:&quot;</span>
+
+<span class="tok-kw">Print</span> <span>&quot;  &quot;</span> <span>&amp;</span> <span>typeNameFromRTTI</span><span>(</span><span>p</span><span>,</span> <span class="tok-nu">0</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>&quot;  &quot;</span> <span>&amp;</span> <span>typeNameFromRTTI</span><span>(</span><span>p</span><span>,</span> <span>-</span><span class="tok-nu">1</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>&quot;  &quot;</span> <span>&amp;</span> <span>typeNameFromRTTI</span><span>(</span><span>p</span><span>,</span> <span>-</span><span class="tok-nu">2</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>&quot;  &quot;</span> <span>&amp;</span> <span>typeNameFromRTTI</span><span>(</span><span>p</span><span>,</span> <span>-</span><span class="tok-nu">3</span><span>)</span>
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Typename (demangled) and all those of its base-types hierarchy, from RTTI info:&quot;</span>
+
+<span class="tok-kw">Print</span> <span>&quot;  &quot;</span> <span>&amp;</span> <span>typeNameHierarchyFromRTTI</span><span>(</span><span>p</span><span>)</span>
+
+<span class="tok-kw">Delete</span> <span>p</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+Output:<br>
+<div class="indent"><pre class="code">
+Mangled typenames list, from RTTI info:
+  N3OOP10GRANDCHILDE
+  N3OOP5CHILDE
+  N3OOP6PARENTE
+  6OBJECT
+
+Typenames (demangled) list, from RTTI info:
+  OOP.GRANDCHILD
+  OOP.CHILD
+  OOP.PARENT
+  OBJECT
+
+Typename (demangled) and all those of its base-types hierarchy, from RTTI info:
+  OOP.GRANDCHILD->OOP.CHILD->OOP.PARENT->OBJECT
+				</pre></div></div></div><u>Compare the typename (demangled) extracted from RTTI info to a string variable</u><br>
+<div class="indent">As the various steps of demangling, the successive elements of the typname extracted from the RTTI info are compared with those of the chain provided (as soon as an element is different, "false" is returned immediately).<br>
+<br>
+Function <i>'typeNameEqualFromRTTI()'</i> to compared the typename (demangled) extracted from RTTI info to a string variable:<br>
+<div class="indent"><pre class="code">
+Function typeNameEqualFromRTTI (Byval po As Object Ptr, Byref typeName As String) As Boolean
+	' Function to get true if the instance typename (address: po) is the same than the passed string
+	'
+		Dim As String t = Ucase(typeName)
+		Dim As ZString Ptr pz = Cptr(Any Ptr Ptr Ptr Ptr, po)[0][-1][1] ' Ptr to Mangled Typename
+		Dim As Integer i = 1
+		Do
+			Do While (*pz)[0] > Asc("9") Orelse (*pz)[0] < Asc("0")
+				If (*pz)[0] = 0 Then Return True
+				pz += 1
+			Loop
+			Dim As Integer N = Val(*pz)
+			Do
+				pz += 1
+			Loop Until (*pz)[0] > Asc("9") Orelse (*pz)[0] < Asc("0")
+			If i > 1 Then
+				If Mid(t, i, 1) <> "." Then Return False Else i += 1
+			End If
+			If Mid(t, i, N) <> Left(*pz, N) Then Return False Else pz += N : i += N
+		Loop
+End Function
+			</pre></div>Previous example finally completed with the above function:<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Namespace</span> <span>oop</span>
+
+    <span class="tok-kw">Type</span> <span>parent</span> <span class="tok-kw">Extends</span> <span class="tok-kw">Object</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+    <span class="tok-kw">Type</span> <span>child</span> <span class="tok-kw">Extends</span> <span>parent</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+    <span class="tok-kw">Type</span> <span>grandchild</span> <span class="tok-kw">Extends</span> <span>child</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+
+
+<span class="tok-kw">Function</span> <span>mangledTypeNameFromRTTI</span> <span>(</span><span class="tok-kw">ByVal</span> <span>po</span> <span class="tok-kw">As</span> <span class="tok-kw">Object</span> <span class="tok-kw">Ptr</span><span>,</span> <span class="tok-kw">ByVal</span> <span>baseIndex</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+    <span class="tok-cm">' Function to get any mangled-typename in the inheritance up hierarchy</span>
+
+    <span class="tok-cm">' of the type of an instance (address: 'po') compatible with the built-in 'Object'</span>
+
+    <span class="tok-cm">'</span>
+
+    <span class="tok-cm">' ('baseIndex =  0' to get the mangled-typename of the instance)</span>
+
+    <span class="tok-cm">' ('baseIndex = -1' to get the base mangled-typename of the instance, or &quot;&quot; if not existing)</span>
+
+    <span class="tok-cm">' ('baseIndex = -2' to get the base.base mangled-typename of the instance, or &quot;&quot; if not existing)</span>
+
+    <span class="tok-cm">' (.....)</span>
+
+    <span class="tok-cm">'</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>s</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span class="tok-kw">Ptr</span> <span>pz</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>p</span> <span>=</span> <span class="tok-kw">CPtr</span><span>(</span><span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span class="tok-kw">Ptr</span> <span class="tok-kw">Ptr</span><span>,</span> <span>po</span><span>)[</span><span class="tok-nu">0</span><span>][-</span><span class="tok-nu">1</span><span>]</span>  <span class="tok-cm">' Ptr to RTTI info</span>
+
+        <span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span>baseIndex</span> <span class="tok-kw">To</span> <span>-</span><span class="tok-nu">1</span>
+
+            <span>p</span> <span>=</span> <span class="tok-kw">CPtr</span><span>(</span><span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span class="tok-kw">Ptr</span><span>,</span> <span>p</span><span>)[</span><span class="tok-nu">2</span><span>]</span>                      <span class="tok-cm">' Ptr to Base RTTI info of previous RTTI info</span>
+
+            <span class="tok-kw">If</span> <span>p</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">Then</span> <span class="tok-kw">Return</span> <span>s</span>
+
+        <span class="tok-kw">Next</span> <span>I</span>
+
+        <span>pz</span> <span>=</span> <span class="tok-kw">CPtr</span><span>(</span><span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span class="tok-kw">Ptr</span><span>,</span> <span>p</span><span>)[</span><span class="tok-nu">1</span><span>]</span>                         <span class="tok-cm">' Ptr to mangled-typename</span>
+
+        <span>s</span> <span>=</span> <span>*</span><span>pz</span>
+
+        <span class="tok-kw">Return</span> <span>s</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Function</span> <span>typeNameFromRTTI</span> <span>(</span><span class="tok-kw">ByVal</span> <span>po</span> <span class="tok-kw">As</span> <span class="tok-kw">Object</span> <span class="tok-kw">Ptr</span><span>,</span> <span class="tok-kw">ByVal</span> <span>baseIndex</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+    <span class="tok-cm">' Function to get any typename in the inheritance up hierarchy</span>
+
+    <span class="tok-cm">' of the type of an instance (address: 'po') compatible with the built-in 'Object'</span>
+
+    <span class="tok-cm">'</span>
+
+    <span class="tok-cm">' ('baseIndex =  0' to get the typename of the instance)</span>
+
+    <span class="tok-cm">' ('baseIndex = -1' to get the base.typename of the instance, or &quot;&quot; if not existing)</span>
+
+    <span class="tok-cm">' ('baseIndex = -2' to get the base.base.typename of the instance, or &quot;&quot; if not existing)</span>
+
+    <span class="tok-cm">' (.....)</span>
+
+    <span class="tok-cm">'</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>s</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span class="tok-kw">Ptr</span> <span>pz</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>p</span> <span>=</span> <span class="tok-kw">CPtr</span><span>(</span><span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span class="tok-kw">Ptr</span> <span class="tok-kw">Ptr</span><span>,</span> <span>po</span><span>)[</span><span class="tok-nu">0</span><span>][-</span><span class="tok-nu">1</span><span>]</span>          <span class="tok-cm">' Ptr to RTTI info</span>
+
+        <span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span>baseIndex</span> <span class="tok-kw">To</span> <span>-</span><span class="tok-nu">1</span>
+
+            <span>p</span> <span>=</span> <span class="tok-kw">CPtr</span><span>(</span><span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span class="tok-kw">Ptr</span><span>,</span> <span>p</span><span>)[</span><span class="tok-nu">2</span><span>]</span>                              <span class="tok-cm">' Ptr to Base RTTI info of previous RTTI info</span>
+
+            <span class="tok-kw">If</span> <span>p</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">Then</span> <span class="tok-kw">Return</span> <span>s</span>
+
+        <span class="tok-kw">Next</span> <span>I</span>
+
+        <span>pz</span> <span>=</span> <span class="tok-kw">CPtr</span><span>(</span><span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span class="tok-kw">Ptr</span><span>,</span> <span>p</span><span>)[</span><span class="tok-nu">1</span><span>]</span>                                 <span class="tok-cm">' Ptr to mangled-typename</span>
+
+        <span class="tok-kw">Do</span>
+
+            <span class="tok-kw">Do</span> <span class="tok-kw">While</span> <span>(*</span><span>pz</span><span>)[</span><span class="tok-nu">0</span><span>]</span> <span>&gt;</span> <span class="tok-kw">Asc</span><span>(</span><span>&quot;9&quot;</span><span>)</span> <span class="tok-kw">OrElse</span> <span>(*</span><span>pz</span><span>)[</span><span class="tok-nu">0</span><span>]</span> <span>&lt;</span> <span class="tok-kw">Asc</span><span>(</span><span>&quot;0&quot;</span><span>)</span>
+
+                <span class="tok-kw">If</span> <span>(*</span><span>pz</span><span>)[</span><span class="tok-nu">0</span><span>]</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">Then</span> <span class="tok-kw">Return</span> <span>s</span>
+
+                <span>pz</span> <span>+=</span> <span class="tok-nu">1</span>
+
+            <span class="tok-kw">Loop</span>
+
+            <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>N</span> <span>=</span> <span class="tok-kw">Val</span><span>(*</span><span>pz</span><span>)</span>
+
+            <span class="tok-kw">Do</span>
+
+                <span>pz</span> <span>+=</span> <span class="tok-nu">1</span>
+
+            <span class="tok-kw">Loop</span> <span class="tok-kw">Until</span> <span>(*</span><span>pz</span><span>)[</span><span class="tok-nu">0</span><span>]</span> <span>&gt;</span> <span class="tok-kw">Asc</span><span>(</span><span>&quot;9&quot;</span><span>)</span> <span class="tok-kw">OrElse</span> <span>(*</span><span>pz</span><span>)[</span><span class="tok-nu">0</span><span>]</span> <span>&lt;</span> <span class="tok-kw">Asc</span><span>(</span><span>&quot;0&quot;</span><span>)</span>
+
+            <span class="tok-kw">If</span> <span>s</span> <span>&lt;&gt;</span> <span>&quot;&quot;</span> <span class="tok-kw">Then</span> <span>s</span> <span>&amp;=</span> <span>&quot;.&quot;</span>
+
+            <span>s</span> <span>&amp;=</span> <span class="tok-kw">Left</span><span>(*</span><span>pz</span><span>,</span> <span>N</span><span>)</span>
+
+            <span>pz</span> <span>+=</span> <span>N</span>
+
+        <span class="tok-kw">Loop</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Function</span> <span>typeNameHierarchyFromRTTI</span> <span>(</span><span class="tok-kw">ByVal</span> <span>po</span> <span class="tok-kw">As</span> <span class="tok-kw">Object</span> <span class="tok-kw">Ptr</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+    <span class="tok-cm">' Function to get the typename inheritance up hierarchy</span>
+
+    <span class="tok-cm">' of the type of an instance (address: po) compatible with the built-in 'Object'</span>
+
+    <span class="tok-cm">'</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>s</span> <span>=</span> <span>TypeNameFromRTTI</span><span>(</span><span>po</span><span>)</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>i</span> <span>=</span> <span>-</span><span class="tok-nu">1</span>
+
+        <span class="tok-kw">Do</span>
+
+            <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>s0</span> <span>=</span> <span>typeNameFromRTTI</span><span>(</span><span>po</span><span>,</span> <span>i</span><span>)</span>
+
+            <span class="tok-kw">If</span> <span>s0</span> <span>=</span> <span>&quot;&quot;</span> <span class="tok-kw">Then</span> <span class="tok-kw">Exit</span> <span class="tok-kw">Do</span>
+
+            <span>s</span> <span>&amp;=</span> <span>&quot;-&gt;&quot;</span> <span>&amp;</span> <span>s0</span>
+
+            <span>i</span> <span>-=</span> <span class="tok-nu">1</span>
+
+        <span class="tok-kw">Loop</span>
+
+        <span class="tok-kw">Return</span> <span>s</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Function</span> <span>typeNameEqualFromRTTI</span> <span>(</span><span class="tok-kw">ByVal</span> <span>po</span> <span class="tok-kw">As</span> <span class="tok-kw">Object</span> <span class="tok-kw">Ptr</span><span>,</span> <span class="tok-kw">ByRef</span> <span>typeName</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Boolean</span>
+
+    <span class="tok-cm">' Function to get true if the instance typename (address: po) is the same than the passed string</span>
+
+    <span class="tok-cm">'</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>t</span> <span>=</span> <span class="tok-kw">UCase</span><span>(</span><span>typeName</span><span>)</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span class="tok-kw">Ptr</span> <span>pz</span> <span>=</span> <span class="tok-kw">CPtr</span><span>(</span><span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span class="tok-kw">Ptr</span> <span class="tok-kw">Ptr</span> <span class="tok-kw">Ptr</span><span>,</span> <span>po</span><span>)[</span><span class="tok-nu">0</span><span>][-</span><span class="tok-nu">1</span><span>][</span><span class="tok-nu">1</span><span>]</span> <span class="tok-cm">' Ptr to Mangled Typename</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>i</span> <span>=</span> <span class="tok-nu">1</span>
+
+        <span class="tok-kw">Do</span>
+
+            <span class="tok-kw">Do</span> <span class="tok-kw">While</span> <span>(*</span><span>pz</span><span>)[</span><span class="tok-nu">0</span><span>]</span> <span>&gt;</span> <span class="tok-kw">Asc</span><span>(</span><span>&quot;9&quot;</span><span>)</span> <span class="tok-kw">OrElse</span> <span>(*</span><span>pz</span><span>)[</span><span class="tok-nu">0</span><span>]</span> <span>&lt;</span> <span class="tok-kw">Asc</span><span>(</span><span>&quot;0&quot;</span><span>)</span>
+
+                <span class="tok-kw">If</span> <span>(*</span><span>pz</span><span>)[</span><span class="tok-nu">0</span><span>]</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">Then</span> <span class="tok-kw">Return</span> <span class="tok-kw">True</span>
+
+                <span>pz</span> <span>+=</span> <span class="tok-nu">1</span>
+
+            <span class="tok-kw">Loop</span>
+
+            <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>N</span> <span>=</span> <span class="tok-kw">Val</span><span>(*</span><span>pz</span><span>)</span>
+
+            <span class="tok-kw">Do</span>
+
+                <span>pz</span> <span>+=</span> <span class="tok-nu">1</span>
+
+            <span class="tok-kw">Loop</span> <span class="tok-kw">Until</span> <span>(*</span><span>pz</span><span>)[</span><span class="tok-nu">0</span><span>]</span> <span>&gt;</span> <span class="tok-kw">Asc</span><span>(</span><span>&quot;9&quot;</span><span>)</span> <span class="tok-kw">OrElse</span> <span>(*</span><span>pz</span><span>)[</span><span class="tok-nu">0</span><span>]</span> <span>&lt;</span> <span class="tok-kw">Asc</span><span>(</span><span>&quot;0&quot;</span><span>)</span>
+
+            <span class="tok-kw">If</span> <span>i</span> <span>&gt;</span> <span class="tok-nu">1</span> <span class="tok-kw">Then</span>
+
+                <span class="tok-kw">If</span> <span class="tok-kw">Mid</span><span>(</span><span>t</span><span>,</span> <span>i</span><span>,</span> <span class="tok-nu">1</span><span>)</span> <span>&lt;&gt;</span> <span>&quot;.&quot;</span> <span class="tok-kw">Then</span> <span class="tok-kw">Return</span> <span class="tok-kw">False</span> <span class="tok-kw">Else</span> <span>i</span> <span>+=</span> <span class="tok-nu">1</span>
+
+            <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+            <span class="tok-kw">If</span> <span class="tok-kw">Mid</span><span>(</span><span>t</span><span>,</span> <span>i</span><span>,</span> <span>N</span><span>)</span> <span>&lt;&gt;</span> <span class="tok-kw">Left</span><span>(*</span><span>pz</span><span>,</span> <span>N</span><span>)</span> <span class="tok-kw">Then</span> <span class="tok-kw">Return</span> <span class="tok-kw">False</span> <span class="tok-kw">Else</span> <span>pz</span> <span>+=</span> <span>N</span> <span>:</span> <span>i</span> <span>+=</span> <span>N</span>
+
+        <span class="tok-kw">Loop</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Object</span> <span class="tok-kw">Ptr</span> <span>p</span> <span>=</span> <span class="tok-kw">New</span> <span>oop.grandchild</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;Mangled typenames list, from RTTI info:&quot;</span>
+
+<span class="tok-kw">Print</span> <span>&quot;  &quot;</span> <span>&amp;</span> <span>mangledTypeNameFromRTTI</span><span>(</span><span>p</span><span>,</span> <span class="tok-nu">0</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>&quot;  &quot;</span> <span>&amp;</span> <span>mangledTypeNameFromRTTI</span><span>(</span><span>p</span><span>,</span> <span>-</span><span class="tok-nu">1</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>&quot;  &quot;</span> <span>&amp;</span> <span>mangledTypeNameFromRTTI</span><span>(</span><span>p</span><span>,</span> <span>-</span><span class="tok-nu">2</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>&quot;  &quot;</span> <span>&amp;</span> <span>mangledTypeNameFromRTTI</span><span>(</span><span>p</span><span>,</span> <span>-</span><span class="tok-nu">3</span><span>)</span>
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Typenames (demangled) list, from RTTI info:&quot;</span>
+
+<span class="tok-kw">Print</span> <span>&quot;  &quot;</span> <span>&amp;</span> <span>typeNameFromRTTI</span><span>(</span><span>p</span><span>,</span> <span class="tok-nu">0</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>&quot;  &quot;</span> <span>&amp;</span> <span>typeNameFromRTTI</span><span>(</span><span>p</span><span>,</span> <span>-</span><span class="tok-nu">1</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>&quot;  &quot;</span> <span>&amp;</span> <span>typeNameFromRTTI</span><span>(</span><span>p</span><span>,</span> <span>-</span><span class="tok-nu">2</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>&quot;  &quot;</span> <span>&amp;</span> <span>typeNameFromRTTI</span><span>(</span><span>p</span><span>,</span> <span>-</span><span class="tok-nu">3</span><span>)</span>
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Typename (demangled) and all those of its base-types hierarchy, from RTTI info:&quot;</span>
+
+<span class="tok-kw">Print</span> <span>&quot;  &quot;</span> <span>&amp;</span> <span>typeNameHierarchyFromRTTI</span><span>(</span><span>p</span><span>)</span>
+
+<span class="tok-kw">Delete</span> <span>p</span>
+
+<span class="tok-kw">Print</span>
+
+<span>p</span> <span>=</span> <span class="tok-kw">New</span> <span>oop.child</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Is the typename of an oop.child instance the same as &quot;&quot;child&quot;&quot;?&quot;</span>
+
+<span class="tok-kw">Print</span> <span>&quot;  &quot;</span> <span>&amp;</span> <span>typeNameEqualFromRTTI</span><span>(</span><span>p</span><span>,</span> <span>&quot;child&quot;</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Is the typename of an oop.child instance the same as &quot;&quot;oop.child&quot;&quot;?&quot;</span>
+
+<span class="tok-kw">Print</span> <span>&quot;  &quot;</span> <span>&amp;</span> <span>typeNameEqualFromRTTI</span><span>(</span><span>p</span><span>,</span> <span>&quot;oop.child&quot;</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Is the typename of an oop.child instance the same as &quot;&quot;oop.grandchild&quot;&quot;?&quot;</span>
+
+<span class="tok-kw">Print</span> <span>&quot;  &quot;</span> <span>&amp;</span> <span>typeNameEqualFromRTTI</span><span>(</span><span>p</span><span>,</span> <span>&quot;oop.grandchild&quot;</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Is the typename of an oop.child instance the same as &quot;&quot;oop.parent&quot;&quot;?&quot;</span>
+
+<span class="tok-kw">Print</span> <span>&quot;  &quot;</span> <span>&amp;</span> <span>typeNameEqualFromRTTI</span><span>(</span><span>p</span><span>,</span> <span>&quot;oop.parent&quot;</span><span>)</span>
+
+<span class="tok-kw">Delete</span> <span>p</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+Output:<br>
+<div class="indent"><pre class="code">
+Mangled typenames list, from RTTI info:
+  N3OOP10GRANDCHILDE
+  N3OOP5CHILDE
+  N3OOP6PARENTE
+  6OBJECT
+
+Typenames (demangled) list, from RTTI info:
+  OOP.GRANDCHILD
+  OOP.CHILD
+  OOP.PARENT
+  OBJECT
+
+Typename (demangled) and all those of its base-types hierarchy, from RTTI info:
+  OOP.GRANDCHILD->OOP.CHILD->OOP.PARENT->OBJECT
+
+Is the typename of an oop.child instance the same as "child"?
+  false
+Is the typename of an oop.child instance the same as "oop.child"?
+  true
+Is the typename of an oop.child instance the same as "oop.grandchild"?
+  false
+Is the typename of an oop.child instance the same as "oop.parent"?
+  false
+				</pre></div></div></div><div><a href="#ProPgObjectRttiTop">Back to top</a></div><br>
+<br>
+</div><div>See also</div><div><br>
+<ul><li> <a href="composition-aggregation-inheritance.html">Composition, Aggregation, Inheritance</a><br>
+<li> <a href="inheritance-polymorphism.html">Inheritance Polymorphism</a><br>
+<br>
+</li></li></ul></div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

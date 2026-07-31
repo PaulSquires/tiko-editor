@@ -1,0 +1,652 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Variable Initializers — Help Center</title>
+<meta name="description" content="Variable Initializers — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/variable-initializers.html">
+<meta property="og:title" content="Variable Initializers">
+<meta property="og:description" content="Variable Initializers — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/variable-initializers.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/programmer-s-guide/variable-initializers.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>Variable Initializers</h1>
+<h2>Documentation</h2>
+
+	Variable initializers are supported for initializing pre-built type variables, UDT objects and arrays.<br>
+<a></a><br>
+<b>Preamble:</b><br>
+<br>
+Pre-built type variables, user defined type (UDT) objects and arrays are initialized to zero (or <code>'<a href="../../intrinsic-defines/procedures/false.html">False</a>'</code> for <code>'<a href="../../standard-data-types/procedures/boolean.html">Boolean</a>'</code>) or null strings by default when they are created.<br>
+<br>
+To avoid the overhead of default variable initialization, the <code>'<a href="../../procedures/procedures/any.html">Any</a>'</code> initializer can be used with <code>'<a href="../../variable-declarations/procedures/dim.html">Dim</a>'</code> to tell the compiler to only reserve the place for the variable in memory but not initialize it, so the variable will contain garbage. In this case the programmer should not make assumptions about the initial values.<br>
+<br>
+Pre-built type variables, UDT objects and arrays may be given a value at the time of their declaration using <code>'<a href="../../variable-declarations/procedures/dim.html">Dim</a> ...'</code>, with the syntaxes shown below.<br>
+Pre-built type variables, UDT objects and arrays are initialized as they would in a normal assignment, using an <code>'='</code> sign. The <code>'=&gt;'</code> sign can also be used, allowing to avoid the declaration resembling an expression for example when declaring fixed length strings.<br>
+<br>
+<u>Table of Contents</u><br>
+<div class="indent"><b><a href="#ProPgInitialization1">1. Initializer syntax and validity for pre-built type variable declaration</a></b><br>
+<b><a href="#ProPgInitialization2">2. Initializer syntax and validity for UDT object declaration</a></b><br>
+<b><a href="#ProPgInitialization3">3. Initializer syntax and validity for array declaration</a></b><br>
+<b><a href="#ProPgInitialization4">4. Nested Initializer syntax with another</a></b><br>
+<br>
+</div><a></a><br>
+<div>1. Initializer syntax and validity for pre-built type variable declaration</div><div><br>
+The main pre-built types are:<br>
+<div class="indent"><b>-</b> Integer types<br>
+<b>-</b> Floating-point types<br>
+<b>-</b> Boolean types<br>
+<b>-</b> String types<br>
+<br>
+</div><u>Initializer syntaxes</u><br>
+<div class="indent">4 basic syntaxes are described below.<br>
+<br>
+Static allocations with initializer:<br>
+<div class="indent"><code>(1) <a href="../../variable-declarations/procedures/dim.html">Dim</a> <i>variable_symbol</i> [<a href="../../miscellaneous-keywords/procedures/as.html">As</a> PreBuiltType] = <i>expression</i></code><br>
+<code>or:</code><br>
+<code>(2) <a href="../../variable-declarations/procedures/dim.html">Dim</a> <a href="../../variable-declarations/procedures/byref-variables.html">ByRef</a> <i>ref_variable_symbol</i> [<a href="../../miscellaneous-keywords/procedures/as.html">As</a> PreBuiltType] = <i>variable</i></code><br>
+<br>
+</div>Dynamic allocations with initializer:<br>
+<div class="indent"><code>(3) <a href="../../variable-declarations/procedures/dim.html">Dim</a> <i>ptr_variable_symbol</i> <a href="../../miscellaneous-keywords/procedures/as.html">As</a> PreBuiltType <a href="../../standard-data-types/procedures/pointer-ptr.html">Ptr</a> = <a href="../../operators/memory-operators/procedures/operator-new-expression.html">New</a> PreBuiltType( <i>expression</i> )</code><br>
+<code>or:</code><br>
+<code>(4) <a href="../../variable-declarations/procedures/dim.html">Dim</a> <a href="../../variable-declarations/procedures/byref-variables.html">ByRef</a> <i>ref_variable_symbol</i> <a href="../../miscellaneous-keywords/procedures/as.html">As</a> PreBuiltType = <a href="../../operators/pointer-operators/procedures/operator-value-of.html">*</a><a href="../../operators/memory-operators/procedures/operator-new-expression.html">New</a> PreBuiltType( <i>expression</i> )</code><br>
+<br>
+</div></div><u>Initializer validity</u><br>
+<div class="indent"><b>-</b> <code><i>expression</i></code>:<br>
+<div class="indent">Must produce an evaluated value of <code>'PreBuiltType'</code> type or compatible.<br>
+</div><b>-</b> <code><i>variable</i></code>:<br>
+<div class="indent"><code>'PreBuiltType'</code> variable or compatible, when <code>'<a href="../../miscellaneous-keywords/procedures/as.html">As</a> PreBuiltType'</code> is specified.<br>
+<br>
+</div></div><u>Declaration syntax for global symbol</u><br>
+<div class="indent">If using global symbols when declaring pre-built type variable with initializer (<code>'<a href="../../variable-declarations/procedures/dim.html">Dim</a> <a href="../../variable-declarations/procedures/shared.html">Shared</a>'</code> or <code>'<a href="../../variable-declarations/procedures/static.html">Static</a> [<a href="../../variable-declarations/procedures/shared.html">Shared</a>]'</code> or <code>'<a href="../../variable-declarations/procedures/static.html">Static</a> <a href="../../variable-declarations/procedures/var.html">Var</a> [<a href="../../variable-declarations/procedures/shared.html">Shared</a>]'</code>, instead of <code>'<a href="../../variable-declarations/procedures/dim.html">Dim</a>'</code>), the initializer argument must at least be able to be evaluated at the start of the program so that it can be placed in the .data section:<br>
+<div class="indent"><b>-</b> The initializer syntaxe for variable-length string becomes no longer valid because the <code>'<i>variable_symbol</i>'</code> must refer to a dynamic memory block in the heap.<br>
+<b>-</b> For the other pre-built type variables, the initializer syntaxe remains valid if the provided argument can be evaluated at compile time.<br>
+<br>
+</div></div><u>Example</u><br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Dim</span> <span>d</span> <span class="tok-kw">As</span> <span class="tok-kw">Double</span> <span>=</span> <span class="tok-nu">1234.56789</span>
+
+
+
+<span class="tok-kw">Print</span> <span>d</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+</div><b>Note:</b><br>
+<div class="indent">In the <code><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang fb</a></code> only, <code>'<a href="../../variable-declarations/procedures/var.html">Var</a>'</code> can be used instead of <code>'<a href="../../variable-declarations/procedures/dim.html">Dim</a>'</code> (removing the explicit type declaration), except for an initializer value of <code>'<a href="../../standard-data-types/procedures/wstring.html">WString</a>'</code> type.<br>
+<br>
+</div><div><a href="#ProPgInitializationTop">Back to top</a></div><br>
+<a></a><br>
+</div><div>2. Initializer syntax and validity for UDT object declaration</div><div><br>
+The UDT (User Defined Type) is a type structure defined by the user, in addition to the already existing pre-built types.<br>
+<br>
+All the following assumes that any statement below (1 to 7) has the access rights to any constructor explicitly defined in the UDT, if any exists.<br>
+<br>
+<u>Initializer syntaxes</u><br>
+<div class="indent">7 basic syntaxes are described below.<br>
+<br>
+Static allocations with initializer:<br>
+<div class="indent"><code>(1) <a href="../../variable-declarations/procedures/dim.html">Dim</a> <i>udt_symbol</i> <a href="../../miscellaneous-keywords/procedures/as.html">As</a> UdtName = ( <i>argument_list</i> )</code><br>
+<code>or:</code><br>
+<code>(2) <a href="../../variable-declarations/procedures/dim.html">Dim</a> <i>udt_symbol</i> <a href="../../miscellaneous-keywords/procedures/as.html">As</a> UdtName = <i>udt_instance</i></code><br>
+<code>or:</code><br>
+<code>(3) <a href="../../variable-declarations/procedures/dim.html">Dim</a> <a href="../../variable-declarations/procedures/byref-variables.html">ByRef</a> <i>ref_udt_symbol</i> <a href="../../miscellaneous-keywords/procedures/as.html">As</a> UdtName = <i>udt_instance</i></code><br>
+<code>or:</code><br>
+<code>(4) <a href="../../variable-declarations/procedures/dim.html">Dim</a> <i>udt_symbol</i> <a href="../../miscellaneous-keywords/procedures/as.html">As</a> UdtName = UdtName( <i>argument_list</i> )</code><br>
+<code>or:</code><br>
+<code>(5) <a href="../../variable-declarations/procedures/dim.html">Dim</a> <i>udt_symbol</i> <a href="../../miscellaneous-keywords/procedures/as.html">As</a> UdtName = <a href="../../programmer-s-guide/procedures/type-temporary.html">Type</a>[&lt;UdtName&gt;]( <i>argument_list</i> )</code><br>
+<br>
+</div>Dynamic allocations with initializer:<br>
+<div class="indent"><code>(6) <a href="../../variable-declarations/procedures/dim.html">Dim</a> <i>ptr_udt_symbol</i> <a href="../../miscellaneous-keywords/procedures/as.html">As</a> UdtName <a href="../../standard-data-types/procedures/pointer-ptr.html">Ptr</a> = <a href="../../operators/memory-operators/procedures/operator-new-expression.html">New</a> UdtName( <i>argument_list</i> )</code><br>
+<code>or:</code><br>
+<code>(7) <a href="../../variable-declarations/procedures/dim.html">Dim</a> <a href="../../variable-declarations/procedures/byref-variables.html">ByRef</a> <i>ref_udt_symbol</i> <a href="../../miscellaneous-keywords/procedures/as.html">As</a> UdtName = <a href="../../operators/pointer-operators/procedures/operator-value-of.html">*</a><a href="../../operators/memory-operators/procedures/operator-new-expression.html">New</a> UdtName( <i>argument_list</i> )</code><br>
+<br>
+</div></div><u>Parameters</u><br>
+<div class="indent"><b>-</b> <code><i>argument_list</i></code>:<br>
+<div class="indent">List of any argument type (with comma delimited items).<br>
+If there is only one argument, the <code>'= <a href="../../programmer-s-guide/procedures/type-temporary.html">Type</a>[&lt;UdtName&gt;]( <i>argument</i> )'</code> initializer (if valid) can be shortened into <code>'= ( <i>argument</i> )'</code> or even <code>'= <i>argument</i>'</code> (case of the conversion-constructor).<br>
+</div><b>-</b> <code><i>udt_instance</i></code>:<br>
+<div class="indent">Instance of <code>'UdtName'</code> or compatible (derived type).<br>
+<br>
+</div></div><u>Initializer validity</u><br>
+<div class="indent"><b>- <code>Initializer syntax line (1)</code></b>:<br>
+<div class="indent">Valid only if exists none constructor (neither implicit nor explicit).<br>
+</div><b>- <code>Initializer syntax line (2 or 3)</code></b>:<br>
+<div class="indent">Always valid.<br>
+Case of the copy-construction (2) and reference declaration (3).<br>
+</div><b>- <code>Initializer syntax line (4)</code></b>:<br>
+<div class="indent">Valid only if exists an implicit or explicit constructor matching the <code>'<i>argument_list</i>'</code>.<br>
+</div><b>- <code>Initializer syntax line (5)</code></b>:<br>
+<div class="indent">Valid only if exists none constructor (neither implicit nor explicit), or otherwise if exists at least a constructor (implicit or explicit) matching the <code>'<i>argument_list</i>'</code>.<br>
+</div><b>- <code>Initializer syntax line (6 or 7)</code></b>:<br>
+<div class="indent">Its validity follows the same rules as that of the <b><code>initializer syntax line (5)</code></b> above.<br>
+<br>
+</div>But the most complex are the rules determining the existence of an implicit constructor depending on the type structure:<br>
+<div class="indent"><b>-</b> Apart from the default-constructor and the default copy-constructor, any other type of constructor exists only if it is explicitly defined.<br>
+<b>-</b> For the implicit default-constructor and the implicit copy-constructor, it depends on the type structure, for example they both exist for (main cases):<br>
+<div class="indent"><b>-</b> type having or inheriting a member field with a implicit/explicit default-constructor (including member string),<br>
+<b>-</b> or type having a base with an implicit/explicit default-constructor (including type derived from <a href="../../standard-data-types/procedures/object.html">Object)</a>,<br>
+<b>-</b> .....,<br>
+<b>-</b> otherwise for example, only a variable member with an initializer itself induces only an implicit default-constructor. but no implicit copy-constructor.<br>
+<br>
+</div></div></div><u>Description</u><br>
+<div class="indent">When a UDT has an implicit constructor (due to a string member, or a variable member with an initializer itself, or a data member with constructor, or UDT derived from <a href="../../standard-data-types/procedures/object.html">Object</a>, or since fbc version 1.20.0 containing a STRING*N field plus another data type field) or an explicit constructor, then a simple initializer as <code>'= ( <i>argument_list</i> )'</code>, the first initializer syntax in the list (1), becomes not valid.<br>
+In that case, an advanced initialization can be applied by using a constructor matching the initialization expression of the last four syntaxes in the list (4 to 7).<br>
+<br>
+The simpler initializer syntax, the first in the list (1), can always be replaced by one of the last four initializer syntaxes in the list (4 to 7), but the contrary does not work.<br>
+<br>
+The second initializer syntax in the list (2) is the special case of copy-construction. This initializer syntax always works, either by default copy-construction or by the way of a copy-constructor (implicit or explicit).<br>
+<br>
+The third initializer syntax in the list (3) is the special case of reference declaration which must always have an initializer. This initializer syntax always works if <code>'<i>udt_instance</i>'</code> is a reference (or a dereferenced pointer).<br>
+<br>
+</div><u>Declaration syntax for global symbol</u><br>
+<div class="indent">If using global symbols when declaring UDT object with initializer (<code>'<a href="../../variable-declarations/procedures/dim.html">Dim</a> <a href="../../variable-declarations/procedures/shared.html">Shared</a>'</code> or <code>'<a href="../../variable-declarations/procedures/static.html">Static</a> [<a href="../../variable-declarations/procedures/shared.html">Shared</a>]'</code> or <code>'<a href="../../variable-declarations/procedures/static.html">Static</a> <a href="../../variable-declarations/procedures/var.html">Var</a> [<a href="../../variable-declarations/procedures/shared.html">Shared</a>]'</code>, instead of <code>'<a href="../../variable-declarations/procedures/dim.html">Dim</a>'</code>), the initializer argument(s) must at least be able to be evaluated at the start of the program so that it can be placed in the .data section:<br>
+<div class="indent"><b>-</b> The initializer syntaxes (6) and (7) in the list become no longer valid because the symbol must refer to a dynamic memory block in the heap.<br>
+<b>-</b> The other initializer syntaxes remain valid if the provided argument(s) can be evaluated at compile time. If the initializer must call an existing constructor (implicit or explicit), it is the constructor code, called when the program starts, which writes the "initial" values into the .data section.<br>
+<br>
+</div></div><u>Commented example</u><br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Type</span> <span>UDT1</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>I</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>J</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT1</span> <span>u11</span> <span>=</span> <span>(</span><span class="tok-nu">1</span><span>,</span> <span class="tok-nu">2</span><span>)</span>                  <span class="tok-cm">'' default-construction + initialization</span>
+
+<span class="tok-cm">'Dim As UDT1 u12 = UDT1(1, 2)             '' not valid: no Constructor(As Integer, As Integer)</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT1</span> <span>u13</span> <span>=</span> <span class="tok-kw">Type</span><span>&lt;</span><span>UDT1</span><span>&gt;(</span><span class="tok-nu">1</span><span>,</span> <span class="tok-nu">2</span><span>)</span>        <span class="tok-cm">'' default-construction + initialization</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT1</span> <span class="tok-kw">Ptr</span> <span>pu14</span> <span>=</span> <span class="tok-kw">New</span> <span>UDT1</span><span>(</span><span class="tok-nu">1</span><span>,</span> <span class="tok-nu">2</span><span>)</span>     <span class="tok-cm">'' default-construction + initialization</span>
+
+    <span class="tok-kw">Delete</span> <span>pu14</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>UDT1</span> <span>ru15</span> <span>=</span> <span>*</span><span class="tok-kw">New</span> <span>UDT1</span><span>(</span><span class="tok-nu">1</span><span>,</span> <span class="tok-nu">2</span><span>)</span>  <span class="tok-cm">'' default-construction + initialization</span>
+
+    <span class="tok-kw">Delete</span> <span>@</span><span>ru15</span>
+
+   
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT1</span> <span>u16</span> <span>=</span> <span>u13</span>                     <span class="tok-cm">'' default copy-construction</span>
+
+<span class="tok-cm">'Dim As UDT1 u17 = UDT1(u13)              '' not valid: no implicit Constructor(As UDT1)</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT1</span> <span>u18</span> <span>=</span> <span class="tok-kw">Type</span><span>&lt;</span><span>UDT1</span><span>&gt;(</span><span>u13</span><span>)</span>         <span class="tok-cm">'' default-construction + initialization</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT1</span> <span class="tok-kw">Ptr</span> <span>pu19</span> <span>=</span> <span class="tok-kw">New</span> <span>UDT1</span><span>(</span><span>u13</span><span>)</span>      <span class="tok-cm">'' default-construction + initialization</span>
+
+    <span class="tok-kw">Delete</span> <span>pu19</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>UDT1</span> <span>ru110</span> <span>=</span> <span>*</span><span class="tok-kw">New</span> <span>UDT1</span><span>(</span><span>u13</span><span>)</span>  <span class="tok-cm">'' default-construction + initialization</span>
+
+    <span class="tok-kw">Delete</span> <span>@</span><span>ru110</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+
+
+
+
+<span class="tok-kw">Type</span> <span>UDT2</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>I</span> <span>=</span> <span class="tok-kw">Any</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>J</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>()</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>(</span><span class="tok-kw">ByVal</span> <span>_I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span class="tok-kw">ByVal</span> <span>_J</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+<span class="tok-kw">Constructor</span> <span>UDT2</span> <span>()</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;UDT2.Constructor()&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+<span class="tok-kw">Constructor</span> <span>UDT2</span> <span>(</span><span class="tok-kw">ByVal</span> <span>_I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span class="tok-kw">ByVal</span> <span>_J</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;UDT2.Constructor(Byval As Integer, Byval As Integer)&quot;</span>
+
+    <span>This.I</span> <span>=</span> <span>_I</span>
+
+    <span>This.J</span> <span>=</span> <span>_J</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-cm">'Dim As UDT2 u21 = (1, 2)                  '' not valid: exist constructor (due at least to '= Any' initialiser)</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT2</span> <span>u22</span> <span>=</span> <span>UDT2</span><span>(</span><span class="tok-nu">1</span><span>,</span> <span class="tok-nu">2</span><span>)</span>               <span class="tok-cm">'' call Constructor(As Integer, As Integer)</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT2</span> <span>u23</span> <span>=</span> <span class="tok-kw">Type</span><span>&lt;</span><span>UDT2</span><span>&gt;(</span><span class="tok-nu">1</span><span>,</span> <span class="tok-nu">2</span><span>)</span>         <span class="tok-cm">'' call Constructor(As Integer, As Integer)</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT2</span> <span class="tok-kw">Ptr</span> <span>pu24</span> <span>=</span> <span class="tok-kw">New</span> <span>UDT2</span><span>(</span><span class="tok-nu">1</span><span>,</span> <span class="tok-nu">2</span><span>)</span>      <span class="tok-cm">'' call Constructor(As Integer, As Integer)</span>
+
+    <span class="tok-kw">Delete</span> <span>pu24</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>UDT2</span> <span>ru25</span> <span>=</span> <span>*</span><span class="tok-kw">New</span> <span>UDT2</span><span>(</span><span class="tok-nu">1</span><span>,</span> <span class="tok-nu">2</span><span>)</span>   <span class="tok-cm">'' call Constructor(As Integer, As Integer)</span>
+
+    <span class="tok-kw">Delete</span> <span>@</span><span>ru25</span>
+
+   
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT2</span> <span>u26</span> <span>=</span> <span>u23</span>                      <span class="tok-cm">'' default copy-construction</span>
+
+<span class="tok-cm">'Dim As UDT2 u27 = UDT2(u23)               '' not valid: no implicit Constructor(As UDT2)</span>
+
+<span class="tok-cm">'Dim As UDT2 u28 = Type&lt;UDT2&gt;(u23)         '' not valid: no implicit Constructor(As UDT2)</span>
+
+<span class="tok-cm">'Dim As UDT2 Ptr pu29 = New UDT2(u23)      '' not valid: no implicit Constructor(As UDT2)</span>
+
+<span class="tok-cm">'Dim Byref As UDT2 ru210 = *New UDT2(u23)  '' not valid: no implicit Constructor(As UDT2)</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+
+
+
+
+<span class="tok-kw">Type</span> <span>UDT3</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>I</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>S</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>()</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>(</span><span class="tok-kw">ByVal</span> <span>_I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span class="tok-kw">ByRef</span> <span>_S</span> <span class="tok-kw">As</span> <span class="tok-kw">Const</span> <span class="tok-kw">String</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+<span class="tok-kw">Constructor</span> <span>UDT3</span> <span>()</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;UDT3.Constructor()&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+<span class="tok-kw">Constructor</span> <span>UDT3</span> <span>(</span><span class="tok-kw">ByVal</span> <span>_I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span class="tok-kw">ByRef</span> <span>_S</span> <span class="tok-kw">As</span> <span class="tok-kw">Const</span> <span class="tok-kw">String</span><span>)</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;UDT3.Constructor(Byval As Integer, Byref As Const String)&quot;</span>
+
+    <span>This.I</span> <span>=</span> <span>_I</span>
+
+    <span>This.S</span> <span>=</span> <span>_S</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-cm">'Dim As UDT3 u31 = (1, &quot;2&quot;)                 '' not valid: exist constructor (due at least to string member)</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT3</span> <span>u32</span> <span>=</span> <span>UDT3</span><span>(</span><span class="tok-nu">1</span><span>,</span> <span>&quot;2&quot;</span><span>)</span>              <span class="tok-cm">'' call Constructor(As Integer, As String)</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT3</span> <span>u33</span> <span>=</span> <span class="tok-kw">Type</span><span>&lt;</span><span>UDT3</span><span>&gt;(</span><span class="tok-nu">1</span><span>,</span> <span>&quot;2&quot;</span><span>)</span>        <span class="tok-cm">'' call Constructor(As Integer, As String)</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT3</span> <span class="tok-kw">Ptr</span> <span>pu34</span> <span>=</span> <span class="tok-kw">New</span> <span>UDT3</span><span>(</span><span class="tok-nu">1</span><span>,</span> <span>&quot;2&quot;</span><span>)</span>     <span class="tok-cm">'' call Constructor(As Integer, As String)</span>
+
+    <span class="tok-kw">Delete</span> <span>pu34</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>UDT3</span> <span>ru35</span> <span>=</span> <span>*</span><span class="tok-kw">New</span> <span>UDT3</span><span>(</span><span class="tok-nu">1</span><span>,</span> <span>&quot;2&quot;</span><span>)</span>  <span class="tok-cm">'' call Constructor(As Integer, As String)</span>
+
+    <span class="tok-kw">Delete</span> <span>@</span><span>ru35</span>
+
+   
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT3</span> <span>u36</span> <span>=</span> <span>u33</span>                       <span class="tok-cm">'' default copy-construction</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT3</span> <span>u37</span> <span>=</span> <span>UDT3</span><span>(</span><span>u33</span><span>)</span>                 <span class="tok-cm">'' call implicit Constructor(As UDT3)</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT3</span> <span>u38</span> <span>=</span> <span class="tok-kw">Type</span><span>&lt;</span><span>UDT3</span><span>&gt;(</span><span>u33</span><span>)</span>           <span class="tok-cm">'' call implicit Constructor(As UDT3)</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT3</span> <span class="tok-kw">Ptr</span> <span>pu39</span> <span>=</span> <span class="tok-kw">New</span> <span>UDT3</span><span>(</span><span>u33</span><span>)</span>        <span class="tok-cm">'' call implicit Constructor(As UDT3)</span>
+
+    <span class="tok-kw">Delete</span> <span>pu39</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>UDT3</span> <span>ru310</span> <span>=</span> <span>*</span><span class="tok-kw">New</span> <span>UDT3</span><span>(</span><span>u33</span><span>)</span>    <span class="tok-cm">'' call implicit Constructor(As UDT3)</span>
+
+    <span class="tok-kw">Delete</span> <span>@</span><span>ru310</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+
+
+
+
+<span class="tok-kw">Type</span> <span>UDT4</span> <span class="tok-kw">Extends</span> <span class="tok-kw">Object</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>I</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>J</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>()</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>(</span><span class="tok-kw">ByVal</span> <span>_I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span class="tok-kw">ByVal</span> <span>_J</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+<span class="tok-kw">Constructor</span> <span>UDT4</span> <span>()</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;UDT4.Constructor()&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+<span class="tok-kw">Constructor</span> <span>UDT4</span> <span>(</span><span class="tok-kw">ByVal</span> <span>_I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span class="tok-kw">ByVal</span> <span>_J</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;UDT4.Constructor(Byval As Integer, Byval As Integer)&quot;</span>
+
+    <span>This.I</span> <span>=</span> <span>_I</span>
+
+    <span>This.J</span> <span>=</span> <span>_J</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-cm">'Dim As UDT4 u41 = (1, 2)                 '' not valid: exist constructor (due at least to Object as base)</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT4</span> <span>u42</span> <span>=</span> <span>UDT4</span><span>(</span><span class="tok-nu">1</span><span>,</span> <span class="tok-nu">2</span><span>)</span>              <span class="tok-cm">'' call Constructor(As Integer, As Integer)</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT4</span> <span>u43</span> <span>=</span> <span class="tok-kw">Type</span><span>&lt;</span><span>UDT4</span><span>&gt;(</span><span class="tok-nu">1</span><span>,</span> <span class="tok-nu">2</span><span>)</span>        <span class="tok-cm">'' call Constructor(As Integer, As Integer)</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT4</span> <span class="tok-kw">Ptr</span> <span>pu44</span> <span>=</span> <span class="tok-kw">New</span> <span>UDT4</span><span>(</span><span class="tok-nu">1</span><span>,</span> <span class="tok-nu">2</span><span>)</span>     <span class="tok-cm">'' call Constructor(As Integer, As Integer)</span>
+
+    <span class="tok-kw">Delete</span> <span>pu44</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>UDT4</span> <span>ru45</span> <span>=</span> <span>*</span><span class="tok-kw">New</span> <span>UDT4</span><span>(</span><span class="tok-nu">1</span><span>,</span> <span class="tok-nu">2</span><span>)</span>  <span class="tok-cm">'' call Constructor(As Integer, As Integer)</span>
+
+    <span class="tok-kw">Delete</span> <span>@</span><span>ru45</span>
+
+   
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT4</span> <span>u46</span> <span>=</span> <span>u43</span>                     <span class="tok-cm">'' default copy-construction</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT4</span> <span>u47</span> <span>=</span> <span>UDT4</span><span>(</span><span>u43</span><span>)</span>               <span class="tok-cm">'' call implicit Constructor(As UDT4)</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT4</span> <span>u48</span> <span>=</span> <span class="tok-kw">Type</span><span>&lt;</span><span>UDT4</span><span>&gt;(</span><span>u43</span><span>)</span>         <span class="tok-cm">'' call implicit Constructor(As UDT4)</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT4</span> <span class="tok-kw">Ptr</span> <span>pu49</span> <span>=</span> <span class="tok-kw">New</span> <span>UDT4</span><span>(</span><span>u43</span><span>)</span>      <span class="tok-cm">'' call implicit Constructor(As UDT4)</span>
+
+    <span class="tok-kw">Delete</span> <span>pu49</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>UDT4</span> <span>ru410</span> <span>=</span> <span>*</span><span class="tok-kw">New</span> <span>UDT4</span><span>(</span><span>u43</span><span>)</span>  <span class="tok-cm">'' call implicit Constructor(As UDT4)</span>
+
+    <span class="tok-kw">Delete</span> <span>@</span><span>ru410</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+
+
+
+
+<span class="tok-cm">' Note for static UDT declaration + initializer:</span>
+
+<span class="tok-cm">'    When the initializer expression calling the constructor has only one parameter 'x', example:</span>
+
+<span class="tok-cm">'    'Dim As UDT u = UDT(x)', in this case, 'UDT(x)' can be shortened into '(x)' or even 'x', like:</span>
+
+<span class="tok-cm">'    'Dim As UDT u = (x)' or even 'Dim As UDT u = x', but all these statements call the constructor.</span>
+
+<span class="tok-cm">'    (a constructor with one parameter is called a conversion-constructor)</span>
+
+
+
+<span class="tok-cm">' The six below declarations + initialisers all call only the conversion-constructor</span>
+
+
+
+<span class="tok-kw">Type</span> <span>UDT5</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>I</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>()</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>(</span><span class="tok-kw">ByVal</span> <span>_I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+<span class="tok-kw">Constructor</span> <span>UDT5</span> <span>()</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;UDT5.Constructor()&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+<span class="tok-kw">Constructor</span> <span>UDT5</span> <span>(</span><span class="tok-kw">ByVal</span> <span>_I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;UDT5.Constructor(Byval As Integer)&quot;</span>
+
+    <span>This.I</span> <span>=</span> <span>_I</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT5</span> <span>u51</span> <span>=</span> <span>UDT5</span><span>(</span><span class="tok-nu">1</span><span>)</span>                  <span class="tok-cm">'' call Constructor(As Integer)</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT5</span> <span>u52</span> <span>=</span> <span class="tok-kw">Type</span><span>&lt;</span><span>UDT5</span><span>&gt;(</span><span class="tok-nu">1</span><span>)</span>            <span class="tok-cm">'' call Constructor(As Integer)</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT5</span> <span>u53</span> <span>=</span> <span>(</span><span class="tok-nu">1</span><span>)</span>                      <span class="tok-cm">'' call Constructor(As Integer)</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT5</span> <span>u54</span> <span>=</span> <span class="tok-nu">1</span>                        <span class="tok-cm">'' call Constructor(As Integer)</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT5</span> <span class="tok-kw">Ptr</span> <span>pu55</span> <span>=</span> <span class="tok-kw">New</span> <span>UDT5</span><span>(</span><span class="tok-nu">1</span><span>)</span>         <span class="tok-cm">'' call Constructor(As Integer)</span>
+
+    <span class="tok-kw">Delete</span> <span>pu55</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>UDT5</span> <span>ru56</span> <span>=</span> <span>*</span><span class="tok-kw">New</span> <span>UDT5</span><span>(</span><span class="tok-nu">1</span><span>)</span>      <span class="tok-cm">'' call Constructor(As Integer)</span>
+
+    <span class="tok-kw">Delete</span> <span>@</span><span>ru56</span>
+
+   
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT5</span> <span>u57</span> <span>=</span> <span>u54</span>                      <span class="tok-cm">'' default copy-construction</span>
+
+<span class="tok-cm">'Dim As UDT5 u58 = UDT5(u54)               '' not valid: no implicit Constructor(As UDT5)</span>
+
+<span class="tok-cm">'Dim As UDT5 u59 = Type&lt;UDT5&gt;(u54)         '' not valid: no implicit Constructor(As UDT5)</span>
+
+<span class="tok-cm">'Dim As UDT5 Ptr pu510 = New UDT5(u54)     '' not valid: no implicit Constructor(As UDT5)</span>
+
+<span class="tok-cm">'Dim Byref As UDT5 ru511 = *New UDT5(u54)  '' not valid: no implicit Constructor(As UDT5)</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+</div><b>Note:</b><br>
+<div class="indent">In the <code><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang fb</a></code> only, <code>'<a href="../../variable-declarations/procedures/var.html">Var</a>'</code> can be used instead of <code>'<a href="../../variable-declarations/procedures/dim.html">Dim</a>'</code> (removing the explicit type declaration), but it must not have ambiguity on the type of the initializer value.<br>
+In the previous example, only <code>'Var u11 = (1, 2)'</code> does not work, but <code>'Var u13 = Type&lt;UDT1&gt;(1, 2)'</code> works.<br>
+<br>
+</div><div><a href="#ProPgInitializationTop">Back to top</a></div><br>
+<a></a><br>
+</div><div>3. Initializer syntax and validity for array declaration</div><div><br>
+The array can be of any <code><a href="../../reference/data-types.html">DataType</a></code>.<br>
+<br>
+<u>Initializer syntax</u><br>
+<div class="indent">1 basic syntax is described below.<br>
+(arrays of references is not supported presently)<br>
+<br>
+<code><a href="../../variable-declarations/procedures/dim.html">Dim</a> <i>array_symbol</i> ([<i>lbound</i> To] <i>ubound</i>) [AS <a href="../../reference/data-types.html">DataType</a>] = { <i>expression</i> [, ...] }</code><br>
+<br>
+</div><u>Parameter</u><br>
+<div class="indent"><b>-</b> <code>'<i>lbound</i>'</code>, <code>'<i>ubound</i>'</code>:<br>
+<div class="indent">Constant numeric values.<br>
+</div><b>-</b> <code>'<i>expression(s)</i>'</code>:<br>
+<div class="indent">List given in comma delimited items, then enclosed by curly brackets.<br>
+Initialization list ordered from <code>'<i>lbound</i>'</code> to <code>'<i>ubound</i>'</code>.<br>
+Must produce evaluated values of <code>'<a href="../../reference/data-types.html">DataType</a>'</code> type or compatible.<br>
+<br>
+</div></div><u>Initializer validity</u><br>
+<div class="indent"><code>'<i>lbound</i>'</code> and <code>'<i>ubound</i>'</code> must be constant numeric values because variable-length (dynamic) array declaration does not support any initializer.<br>
+Only fixed-length (static) array declaration supports an initializer.<br>
+<br>
+</div><u>Declaration syntax for global symbol</u><br>
+<div class="indent">If using global symbols when declaring array variable with initializer (<code>'<a href="../../variable-declarations/procedures/dim.html">Dim</a> <a href="../../variable-declarations/procedures/shared.html">Shared</a>'</code> or <code>'<a href="../../variable-declarations/procedures/static.html">Static</a> [<a href="../../variable-declarations/procedures/shared.html">Shared</a>]'</code>, instead of <code>'<a href="../../variable-declarations/procedures/dim.html">Dim</a>'</code>), the initializer argument(s) must at least be able to be evaluated at the start of the program so that it can be placed in the .data section:<br>
+<div class="indent"><b>-</b> The initializer syntaxe for fixed-length (static) array of variable-length string become no longer valid because the symbol must refer to a dynamic memory block in the heap.<br>
+<b>-</b> For the fixed-length (static) arrays of other pre-built type variables, the initializer syntaxe remains valid if the provided expression(s) can be evaluated at compile time.<br>
+<br>
+</div></div><u>Example</u><br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Dim</span> <span>array</span><span>(</span><span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">4</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>=</span> <span>{</span><span>&quot;array(0)&quot;</span><span>,</span> <span>&quot;array(1)&quot;</span><span>,</span> <span>&quot;array(2)&quot;</span><span>,</span> <span>&quot;array(3)&quot;</span><span>,</span> <span>&quot;array(4)&quot;</span><span>}</span>
+
+
+
+<span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">4</span>
+
+    <span class="tok-kw">Print</span> <span>array</span><span>(</span><span>I</span><span>),</span>
+
+<span class="tok-kw">Next</span> <span>I</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+</div><b>Note:</b><br>
+<div class="indent">Even in the <code><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang fb</a></code>, <code>'<a href="../../variable-declarations/procedures/var.html">Var</a>'</code> can not be used instead of <code>'<a href="../../variable-declarations/procedures/dim.html">Dim</a>'</code>, because <code>'<a href="../../variable-declarations/procedures/var.html">Var</a>'</code> does not support the array declaration.<br>
+<br>
+</div><div><a href="#ProPgInitializationTop">Back to top</a></div><br>
+<a></a><br>
+</div><div>4. Nested Initializer syntax with another</div><div><br>
+These methods of initializing variables can be nested within one another for complex assignments.<br>
+For instance, to initialize a multidimensional array:<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Dim</span> <span>array</span><span>(</span><span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">3</span><span>,</span> <span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">5</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span>_</span>
+
+    <span>{</span> <span>_</span>
+
+        <span>{</span><span class="tok-nu">11</span><span>,</span> <span class="tok-nu">12</span><span>,</span> <span class="tok-nu">13</span><span>,</span> <span class="tok-nu">14</span><span>,</span> <span class="tok-nu">15</span><span>},</span> <span>_</span>
+
+        <span>{</span><span class="tok-nu">21</span><span>,</span> <span class="tok-nu">22</span><span>,</span> <span class="tok-nu">23</span><span>,</span> <span class="tok-nu">24</span><span>,</span> <span class="tok-nu">25</span><span>},</span> <span>_</span>
+
+        <span>{</span><span class="tok-nu">31</span><span>,</span> <span class="tok-nu">32</span><span>,</span> <span class="tok-nu">33</span><span>,</span> <span class="tok-nu">34</span><span>,</span> <span class="tok-nu">35</span><span>}</span> <span>_</span>
+
+    <span>}</span>
+
+
+
+<span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">3</span>
+
+    <span class="tok-kw">For</span> <span>J</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">5</span>
+
+        <span class="tok-kw">Print</span> <span>array</span><span>(</span><span>I</span><span>,</span> <span>J</span><span>),</span>
+
+    <span class="tok-kw">Next</span> <span>J</span>
+
+    <span class="tok-kw">Print</span>
+
+<span class="tok-kw">Next</span> <span>I</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+In this declaration, the values for the left-most dimension are given as 5-index arrays.<br>
+Nesting allows for arrays of any dimension to be initialized.<br>
+<br>
+</div>UDTs and arrays can be nested within each other as well.<br>
+For instance, the following code declares and initializes an array of UDTs:<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Type</span> <span>mytype</span>
+
+    <span>var1</span> <span class="tok-kw">As</span> <span class="tok-kw">Double</span>
+
+    <span>var2</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+    <span>var3</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span class="tok-kw">Ptr</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Dim</span> <span>MyVar</span><span>(</span><span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">1</span><span>)</span> <span class="tok-kw">As</span> <span>mytype</span> <span>=</span> <span>_</span>
+
+    <span>{</span> <span>_</span>
+
+        <span>(</span><span class="tok-nu">1.1</span><span>,</span> <span class="tok-nu">1</span><span>,</span> <span>@</span><span>&quot;Hello&quot;</span><span>),</span> <span>_</span>
+
+        <span>(</span><span class="tok-nu">2.2</span><span>,</span> <span class="tok-nu">2</span><span>,</span> <span>@</span><span>&quot;GoodBye&quot;</span><span>)</span> <span>_</span>
+
+    <span>}</span>
+
+
+
+<span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">Print</span> <span>MyVar</span><span>(</span><span>I</span><span>).</span><span>var1</span><span>,</span> <span>MyVar</span><span>(</span><span>I</span><span>).</span><span>var2</span><span>,</span> <span>*</span><span>MyVar</span><span>(</span><span>I</span><span>).</span><span>var3</span>
+
+<span class="tok-kw">Next</span> <span>I</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+</div><b>Note:</b><br>
+<div class="indent">Even in the <code><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang fb</a></code>, <code>'<a href="../../variable-declarations/procedures/var.html">Var</a>'</code> can not be used instead of <code>'<a href="../../variable-declarations/procedures/dim.html">Dim</a>'</code>, because <code>'<a href="../../variable-declarations/procedures/var.html">Var</a>'</code> does not support the array declaration.<br>
+<br>
+</div><div><a href="#ProPgInitializationTop">Back to top</a></div><br>
+<br>
+</div><div>Dialect Differences</div><div><br>
+<ul><li> In the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang qb</a></i> dialect, variables cannot be initialised.<br>
+<li> In the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang fblite</a></i> dialect, the explicit type declaration can be omitted in <code>'<a href="../../variable-declarations/procedures/dim.html">Dim</a> ... = ...'</code>, but only for the <code><a href="../../standard-data-types/procedures/integer.html">Integer</a></code> type (initializer value must match the <code><a href="../../standard-data-types/procedures/integer.html">Integer</a></code> type).<br>
+<br>
+</li></li></ul></div><div>Differences from QB</div><div><br>
+<ul><li> Variable Initializers are new to FreeBASIC.<br>
+<li> The alternate syntax <code>'Dim [Byref] As DataType <i>symbolname</i> = ...'</code> is new to FreeBASIC.<br>
+<br>
+</li></li></ul></div><div>See also</div><div><br>
+<ul><li> <a href="implicit-declarations.html">Implicit declarations</a><br>
+<li> <a href="constant-expressions.html">Constant Expressions</a><br>
+<li> <code><a href="../../variable-declarations/procedures/dim.html">Dim</a></code><br>
+<li> <code><a href="../../variable-declarations/procedures/shared.html">Shared</a></code><br>
+<li> <code><a href="../../variable-declarations/procedures/static.html">Static</a></code><br>
+<li> <code><a href="../../variable-declarations/procedures/var.html">Var</a></code><br>
+<br>
+</li></li></li></li></li></li></ul></div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CGpPathGradientBrush.SetFocusScales — Help Center</title>
+<meta name="description" content="Sets the focus scales of this brush.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgppathgradientbrush/cgppathgradientbrush-setfocusscales.html">
+<meta property="og:title" content="CGpPathGradientBrush.SetFocusScales">
+<meta property="og:description" content="Sets the focus scales of this brush.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgppathgradientbrush/cgppathgradientbrush-setfocusscales.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-classes/cgppathgradientbrush/cgppathgradientbrush-setfocusscales.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cgpbrush-class.html">CGpBrush Class</a></div>
+<h1>CGpPathGradientBrush.SetFocusScales<span class="h1kind">method</span></h1>
+<p class="lede">Sets the focus scales of this brush.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">method</span><span class="badge">CGpBrush.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION SetFocusScales (BYVAL xScale AS SINGLE, BYVAL yScale AS SINGLE) AS GpStatus</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>xScale</code></td><td></td><td>Single precision number that specifies the x focus scale.</td></tr><tr><td><code>yScale</code></td><td></td><td>Single precision number that specifies the y focus scale.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>If the function succeeds, it returns <strong>Ok</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h2>Description</h2>
+<p>Sets the focus scales of this path gradient brush.</p>
+<h2>Remarks</h2>
+<p>By default, the center color of a path gradient is at the center point. By calling <strong>SetFocusScales</strong>, you can specify that the center color should appear along a path that surrounds the center point. That path is the boundary path scaled by a factor of <em>xScale</em> in the x direction and by a factor of <em>yScale</em> in the y direction. The area inside the scaled path is filled with the center color.</p>
+<h2>Example</h2>
+<p>' ======================================================================================== ' The following example creates a PathGradientBrush object based on a triangular path. The ' code calls the PathGradientBrush::SetFocusScales method of the PathGradientBrush object ' to set the brush's focus scales to (0.2, 0.2). Then the code uses the path gradient brush ' to paint a rectangle that includes the triangular path. ' ======================================================================================== SUB Example_SetFocusScales (BYVAL hdc AS HDC)</p>
+<p>' // Create a graphics object from the window device context DIM graphics AS CGpGraphics = hdc ' // Set the scale transform graphics.ScaleTransformForDpi</p>
+<p>DIM points(0 TO 2) AS GpPoint = {(100, 0), (200, 200), (0, 200)}</p>
+<p>' // No GraphicsPath object is created. The PathGradientBrush ' // object is constructed directly from the array of points. DIM pthGrBrush AS CGpPathGradientBrush = CGpPathGradientBrush(@points(0), 3)</p>
+<p>DIM colors(0 TO 1) AS ARGB = {ARGB_RED, ARGB_BLUE}</p>
+<p>' // red at the boundary of the outer triangle ' // blue at the boundary of the inner triangle DIM relativePositions(0 TO 1) AS SINGLE = {0.0, 1.0} pthGrBrush.SetInterpolationColors(@colors(0), @relativePositions(0), 2)</p>
+<p>' // The inner triangle is formed by scaling the outer triangle ' // about its centroid. The scaling factor is 0.2 in both the x and y directions. pthGrBrush.SetFocusScales(0.2, 0.2)</p>
+<p>' // Fill a rectangle that is larger than the triangle ' // specified in the Point array. The portion of the ' // rectangle outside the triangle will not be painted. graphics.FillRectangle(@pthGrBrush, 0, 0, 200, 200)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CGpBrush.inc</code></li><li>Defined in <span class="srcref">AfxNova/CGpBrush.inc:880</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Classes/CGpBrush Classes.md</span></li><li>Topic: <a href="../cgpbrush-class.html">CGpBrush Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

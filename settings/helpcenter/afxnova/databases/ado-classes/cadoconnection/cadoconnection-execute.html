@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CAdoConnection.Execute — Help Center</title>
+<meta name="description" content="Executes the specified query, SQL statement, stored procedure, or provider-specific text.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadoconnection/cadoconnection-execute.html">
+<meta property="og:title" content="CAdoConnection.Execute">
+<meta property="og:description" content="Executes the specified query, SQL statement, stored procedure, or provider-specific text.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadoconnection/cadoconnection-execute.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/databases/ado-classes/cadoconnection/cadoconnection-execute.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cadoconnection-class.html">CAdoConnection Class</a></div>
+<h1>CAdoConnection.Execute<span class="h1kind">method</span></h1>
+<p class="lede">Executes the specified query, SQL statement, stored procedure, or provider-specific text.</p>
+<div class="badges"><a class="badge" href="../../index.html">Databases</a><span class="badge">method</span><span class="badge">CAdoConnection.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION Execute (BYREF wszCommandText AS WSTRING, BYVAL RecordsAffected AS LONG PTR = NULL, BYVAL Options AS LONG = -1) AS Afx_ADORecordset PTR</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>wszCommandText</code></td><td></td><td>A string value that contains the SQL statement, stored procedure, a URL, or provider-specific text to execute. Optionally, table names can be used but only if the provider is SQL aware. For example if a table name of "Customers" is used, ADO will automatically prepend the standard SQL Select syntax to form and pass "SELECT * FROM Customers" as a T-SQL statement to the provider.</td></tr><tr><td><code>RecordsAffected</code></td><td></td><td>Optional. Pointer to a LONG to which the provider returns the number of records that the operation affected.</td></tr><tr><td><code>Options</code></td><td></td><td>Optional. A Long value that indicates how the provider should evaluate the <strong>CommandText</strong> argument. Can be a bitmask of one or more <strong>CommandTypeENum</strong> or <strong>ExecuteOptionEnum</strong> values.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>An <strong>Afx_ADORecordset</strong> object reference on success, or NULL on failure.</p>
+<h2>Description</h2>
+<p>Executes the specified query, SQL statement, stored procedure, or provider-specific text.</p>
+<p>Use the <strong>ExecuteOptionEnum</strong> value <strong>adExecuteNoRecords</strong> to improve performance by minimizing internal processing.</p>
+<p>Do not use <strong>adExecuteStream</strong> with the <strong>Execute</strong> method of a <code>Connection</code> object.</p>
+<p>Do not use the <strong>CommandTypeEnum</strong> values of <strong>adCmdFile</strong> or <strong>adCmdTableDirect</strong> with <strong>Execute</strong>. These values can only be used as options with the <strong>Open</strong> and <strong>Requery</strong> methods of a <code>Recordset</code>.</p>
+<h2>Remarks</h2>
+<p>Using the <strong>Execute</strong> method on a <code>Connection</code> object executes whatever query you pass to the method in the <strong>CommandText</strong> argument on the specified connection. If the <strong>CommandText</strong> argument specifies a row-returning query, any results that the execution generates are stored in a new <code>Recordset</code> object. If the command is not intended to return results (for example, an SQL UPDATE query) the provider returns Nothing as long as the option <strong>adExecuteNoRecords</strong> is specified; otherwise <strong>Execute</strong> returns a closed <code>Recordset</code>.</p>
+<p>The returned <code>Recordset</code> object is always a read-only, forward-only cursor. If you need a <code>Recordset</code> object with more functionality, first create a <code>Recordset</code> object with the desired property settings, then use the <code>Recordset</code> object's <strong>Open</strong> method to execute the query and return the desired cursor type.</p>
+<p>The contents of the <strong>CommandText</strong> argument are specific to the provider and can be standard SQL syntax or any special command format that the provider supports.</p>
+<p>An <strong>ExecuteComplete</strong> event will be issued when this operation concludes.</p>
+<p><strong>Note</strong>: URLs using the http scheme will automatically invoke the Microsoft OLE DB Provider for Internet Publishing.</p>
+<h2>Example</h2>
+<p>#include "AfxNova/CADODB.inc" USING AfxNova</p>
+<p>' // === Open the connection DIM pConnection AS CAdoConnection pConnection.Open "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=biblio.mdb"</p>
+<p>' // == Create a Command object DIM pCommand AS CAdoCommand</p>
+<p>' // === Set the active connection pCommand.ActiveConnection = pConnection</p>
+<p>' // === Set the CommandText property pCommand.CommandText = "SELECT TOP 20 * FROM Authors ORDER BY Author"</p>
+<p>' // === Create the recordset by executing a query and attaching ' // === the resulting recordset to an instance of the CAdoRecordset class. DIM pRecordset AS CAdoRecordset = pCommand.Execute</p>
+<p>' // === Parse the recordset ' // While not at the end of the recordset... DO WHILE NOT pRecordset.EOF ' // Get the content of the "Author" column PRINT pRecordset.Collect("Author") ' // Fetch the next row IF pRecordset.MoveNext &lt;&gt; S_OK THEN EXIT DO LOOP</p>
+<p>' // === Close the recordset and the connection ' // If you don't close them, they will be closed when the application ends pRecordset.Close pConnection.Close</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CAdoConnection.inc</code></li><li>Defined in <span class="srcref">AfxNova/CAdoConnection.inc:419</span></li><li>Documented in <span class="srcref">Databases/ADO Classes/CAdoConnection Class.md</span></li><li>Topic: <a href="../cadoconnection-class.html">CAdoConnection Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

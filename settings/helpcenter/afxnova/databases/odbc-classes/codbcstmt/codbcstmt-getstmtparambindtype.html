@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CODBCStmt.GetStmtParamBindType — Help Center</title>
+<meta name="description" content="Gets an SQLUINTEGER value that indicates the binding orientation to be used for dynamic parameters.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/databases/odbc-classes/codbcstmt/codbcstmt-getstmtparambindtype.html">
+<meta property="og:title" content="CODBCStmt.GetStmtParamBindType">
+<meta property="og:description" content="Gets an SQLUINTEGER value that indicates the binding orientation to be used for dynamic parameters.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/databases/odbc-classes/codbcstmt/codbcstmt-getstmtparambindtype.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/databases/odbc-classes/codbcstmt/codbcstmt-getstmtparambindtype.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../codbcstmt-class.html">CODBCStmt Class</a></div>
+<h1>CODBCStmt.GetStmtParamBindType<span class="h1kind">method</span></h1>
+<p class="lede">Gets an SQLUINTEGER value that indicates the binding orientation to be used for dynamic parameters.</p>
+<div class="badges"><a class="badge" href="../../index.html">Databases</a><span class="badge">method</span><span class="badge">CODBCStmt.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GetStmtParamBindType () AS SQLUINTEGER</code></pre>
+<h2>Return value</h2>
+<p>The binding orientation.</p>
+<p><strong>Result code</strong> (GetLastResult)</p>
+<p>SQL_SUCCESS, SQL_SUCCESS_WITH_INFO, SQL_ERROR, or SQL_INVALID_HANDLE.</p>
+<h2>Description</h2>
+<p>Gets an SQLUINTEGER value that indicates the binding orientation to be used for dynamic parameters.</p>
+<h2>Remarks</h2>
+<p>This field is set to SQL_PARAM_BIND_BY_COLUMN (the default) to select column-wise binding.</p>
+<p>To select row-wise binding, this field is set to the length of the structure or an instance of a buffer that will be bound to a set of dynamic parameters. This length must include space for all of the bound parameters and any padding of the structure or buffer to ensure that when the address of a bound parameter is incremented with the specified length, the result will point to the beginning of the same parameter in the next set of parameters. When using the sizeof operator in ANSI C, this behavior is guaranteed.</p>
+<p>Setting this statement attribute sets the SQL_DESC_ BIND_TYPE field in the APD header.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CODBCStmt.inc</code></li><li>Defined in <span class="srcref">AfxNova/COdbcStmt.inc:1737</span></li><li>Documented in <span class="srcref">Databases/ODBC Classes/CODBCStmt Class.md</span></li><li>Topic: <a href="../codbcstmt-class.html">CODBCStmt Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

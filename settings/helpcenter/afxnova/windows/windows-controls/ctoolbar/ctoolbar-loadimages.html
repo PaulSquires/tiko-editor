@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CToolbar.LoadImages — Help Center</title>
+<meta name="description" content="Loads system-defined button images into a toolbar control&#x27;s image list.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/ctoolbar/ctoolbar-loadimages.html">
+<meta property="og:title" content="CToolbar.LoadImages">
+<meta property="og:description" content="Loads system-defined button images into a toolbar control&#x27;s image list.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/ctoolbar/ctoolbar-loadimages.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-controls/ctoolbar/ctoolbar-loadimages.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../ctoolbar-class.html">CToolbar Class</a></div>
+<h1>CToolbar.LoadImages<span class="h1kind">method</span></h1>
+<p class="lede">Loads system-defined button images into a toolbar control&#x27;s image list.</p>
+<div class="badges"><a class="badge" href="../../index.html">Windows</a><span class="badge">method</span><span class="badge">CToolbar.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION LoadImages (BYVAL hToolbar AS HWND, BYVAL iBitmapID AS DWORD, BYVAL hinst AS HINSTANCE) AS LONG</code></pre>
+<pre class="code sig"><code>FUNCTION LoadImages (BYVAL hToolbar AS HWND, BYVAL iBitmapID AS DWORD) AS LONG</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>hToolbar</code></td><td></td><td>Handle to the toolbar control.</td></tr><tr><td><code>iBitmapID</code></td><td></td><td>Identifier of a system-defined button image list. This parameter can be set to one of the following values (see below).</td></tr><tr><td><code>hInst</code></td><td></td><td>Instance handle. This parameter must be set to HINST_COMMCTRL.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>The count of images in the image list. Returns zero if the toolbar has no image list or if the existing image list is empty.</p>
+<h2>Description</h2>
+<p>Loads system-defined button images into a toolbar control's image list.</p>
+<h2>Remarks</h2>
+<p>You must use the proper image index values when you prepare <strong>TBBUTTON</strong> structures prior to sending the <strong>TB_ADDBUTTONSW</strong> message. For a list of image index values for these preset bitmaps, see <a href="https://learn.microsoft.com/en-us/windows/win32/controls/toolbar-standard-button-image-index-values" target="_blank" rel="noopener">Toolbar Standard Button Image Index Values</a>.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CToolbar.inc</code></li><li>Defined in <span class="srcref">AfxNova/CToolbar.inc:909</span></li><li>Documented in <span class="srcref">Windows/WIndows Controls/CToolbar Class.md</span></li><li>Topic: <a href="../ctoolbar-class.html">CToolbar Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CGpPathGradientBrush.GetSurroundColorCount — Help Center</title>
+<meta name="description" content="Gets the number of colors that have been specified for the boundary path of this brush.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgppathgradientbrush/cgppathgradientbrush-getsurroundcolorcount.html">
+<meta property="og:title" content="CGpPathGradientBrush.GetSurroundColorCount">
+<meta property="og:description" content="Gets the number of colors that have been specified for the boundary path of this brush.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgppathgradientbrush/cgppathgradientbrush-getsurroundcolorcount.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-classes/cgppathgradientbrush/cgppathgradientbrush-getsurroundcolorcount.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cgpbrush-class.html">CGpBrush Class</a></div>
+<h1>CGpPathGradientBrush.GetSurroundColorCount<span class="h1kind">method</span></h1>
+<p class="lede">Gets the number of colors that have been specified for the boundary path of this brush.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">method</span><span class="badge">CGpBrush.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GetSurroundColorCount () AS INT</code></pre>
+<h2>Return value</h2>
+<p>This method returns the number of colors that have been specified for the boundary path of this path gradient brush.</p>
+<h2>Description</h2>
+<p>Gets the number of colors that have been specified for the boundary path of this path gradient brush.</p>
+<h2>Example</h2>
+<p>' ======================================================================================== ' The following example creates a PathGradientBrush object based on a triangular path that ' is defined by an array of three points. The code calls the PathGradientBrush.SetSurroundColors ' method of the PathGradientBrush object to specify a color for each of the points that ' define the triangle. The PathGradientBrush.GetSurroundColorCount method determines the ' current number of surround colors (the colors specified for the brush's boundary path). ' Next, the code allocates a buffer large enough to receive the array of surround colors ' and calls PathGradientBrush.GetSurroundColors to fill that buffer. Finally the code fills ' a small square with each of the brush's surround colors. ' ======================================================================================== SUB Example_GetSurroundColors (BYVAL hdc AS HDC)</p>
+<p>' // Create a graphics object from the window device context DIM graphics AS CGpGraphics = hdc ' // Set the scale transform graphics.ScaleTransformForDpi</p>
+<p>DIM points(0 TO 2) AS GpPoint = {(100, 0), (200, 200), (0, 200)} DIM pthGrBrush AS CGpPathGradientBrush = CGpPathGradientBrush(@points(0), 3)</p>
+<p>DIM nCount AS LONG = 3 DIM colors(0 TO 2) AS ARGB = {ARGB_RED, ARGB_BLUE, ARGB_AQUA} pthGrBrush.SetSurroundColors(@colors(0), @nCount)</p>
+<p>' // Obtain information about the path gradient brush. DIM colorCount AS LONG = pthGrBrush.GetSurroundColorCount DIM rgColors(colorCount - 1) AS ARGB pthGrBrush.GetSurroundColors(@rgColors(0), @colorCount)</p>
+<p>' // Fill a small square with each of the surround colors. DIM solidBrush AS CGpSolidBrush = GDIP_ARGB(255, 255, 255, 255) FOR j AS LONG = 0 TO colorCount - 1</p>
+<pre class="code"><code>solidBrush.SetColor(rgColors(j))
+  graphics.FillRectangle(@solidBrush, 15 * j, 0, 10, 10)</code></pre>
+<p>NEXT</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CGpBrush.inc</code></li><li>Defined in <span class="srcref">AfxNova/CGpBrush.inc:605</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Classes/CGpBrush Classes.md</span></li><li>Topic: <a href="../cgpbrush-class.html">CGpBrush Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

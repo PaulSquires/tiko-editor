@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CODBC.GetDiagRec — Help Center</title>
+<meta name="description" content="Returns the current values of multiple fields of a diagnostic record that contains error, warning, and status information.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/databases/odbc-classes/codbc/codbc-getdiagrec.html">
+<meta property="og:title" content="CODBC.GetDiagRec">
+<meta property="og:description" content="Returns the current values of multiple fields of a diagnostic record that contains error, warning, and status information.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/databases/odbc-classes/codbc/codbc-getdiagrec.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/databases/odbc-classes/codbc/codbc-getdiagrec.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../odbc-classes.html">ODBC Classes</a></div>
+<h1>CODBC.GetDiagRec<span class="h1kind">method</span></h1>
+<p class="lede">Returns the current values of multiple fields of a diagnostic record that contains error, warning, and status information.</p>
+<div class="badges"><a class="badge" href="../../index.html">Databases</a><span class="badge">method</span><span class="badge">CODBCDbc.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GetDiagRec (BYVAL RecNumber AS SQLSMALLINT, BYVAL Sqlstate AS WSTRING PTR, BYVAL NativeError AS SQLINTEGER PTR, BYVAL MessageText AS WSTRING PTR, BYVAL BufferLength AS SQLSMALLINT, BYVAL TextLength AS SQLSMALLINT PTR) AS SQLRETURN</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>RecNumber</code></td><td></td><td>Indicates the status record from which the application seeks information. Status records are numbered from 1.</td></tr><tr><td><code>SQlState</code></td><td></td><td>Pointer to a buffer in which to return a five-character SQLSTATE code pertaining to the diagnostic record <em>RecNumber</em>. The first two characters indicate the class; the next three indicate the subclass. This information is contained in the SQL_DIAG_SQLSTATE diagnostic field.</td></tr><tr><td><code>NativeError</code></td><td></td><td>Pointer to a buffer in which to return the native error code, specific to the data source. This information is contained in the SQL_DIAG_NATIVE diagnostic field.</td></tr><tr><td><code>MessageText</code></td><td></td><td>Pointer to a buffer in which to return the diagnostic message text string. This information is contained in the SQL_DIAG_MESSAGE_TEXT diagnostic field.</td></tr><tr><td><code>BufferLength</code></td><td></td><td>Length of the <em>MessageText</em> buffer in characters. There is no maximum length of the diagnostic message text.</td></tr><tr><td><code>TextLength</code></td><td></td><td>Pointer to a buffer in which to return the total number of bytes (excluding the number of bytes required for the null-termination character) available to return in <em>MessageText</em>. If the number of bytes available to return is greater than <em>BufferLength</em>, the diagnostic message text in <em>MessageText</em> is truncated to <em>BufferLength</em> minus the length of a null-termination character.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>SQL_SUCCESS, SQL_SUCCESS_WITH_INFO, SQL_ERROR, or SQL_INVALID_HANDLE.</p>
+<h2>Description</h2>
+<p>Returns the current values of multiple fields of a diagnostic record that contains error, warning, and status information. Unlike <strong>GetDiagField</strong>, which returns one diagnostic field per call, <strong>GetDiagRec</strong> returns several commonly used fields of a diagnostic record, including the SQLSTATE, the native error code, and the diagnostic message text.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CODBCDbc.inc</code></li><li>Defined in <span class="srcref">AfxNova/COdbcDbc.inc:124</span></li><li>Documented in <span class="srcref">Databases/ODBC Classes/CODBC Class.md</span></li><li>Topic: <a href="../odbc-classes.html">ODBC Classes</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

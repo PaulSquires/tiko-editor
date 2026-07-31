@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Select Case — Help Center</title>
+<meta name="description" content="Select Case — 0 documented members. Compiler Internals reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/compiler-internals/select-case.html">
+<meta property="og:title" content="Select Case">
+<meta property="og:description" content="Select Case — 0 documented members. Compiler Internals reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/compiler-internals/select-case.html">
+<link rel="stylesheet" href="../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/compiler-internals/select-case.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Compiler Internals</div>
+<h1>Select Case</h1>
+<h2>Documentation</h2>
+
+	<br>
+<b><u>Basic implementation</u></b><br>
+<div class="indent"><pre class="code">
+dim i as integer		dim i as integer
+
+				scope
+select case i + 123			dim temp as integer = any
+					temp = i + 123
+
+case 1					if( temp <> 1 ) then goto cmplabel1
+					scope
+	print "1"				print "1"
+					end scope
+					goto endlabel
+
+case 2					cmplabel1:
+					if( temp <> 2 ) then goto cmplabel2
+					scope
+	print "2"				print "2"
+					end scope
+					goto endlabel
+
+case else				cmplabel2:
+					scope
+	print "else"				print "else"
+					end scope
+
+end select				cmplabel3:    '' unused only because in this example the last CASE is not conditional
+					endlabel:
+				end scope
+</pre><br>
+</div><ul><li> SELECT CASE<br>
+<ul><li> opens the implicit outer scope<br>
+<li> declares the temp var<br>
+<ul><li> when inside a procedure with STATIC, the temp var will be made STATIC<br>
+<li> the FB_SYMBATTRIB_TEMP is removed from the temp var, because it lives longer than just one statement<br>
+</li></li></ul><li> emits the assignment<br>
+<li> declares the end label<br>
+</li></li></li></li></ul><li> each CASE<br>
+<ul><li> if there was a previous CASE<br>
+<ul><li> closes the previous CASE's scope<br>
+<li> emits a jump to the end label<br>
+</li></li></ul><li> emits the label for this CASE<br>
+<li> emits a conditional branch that jumps to the next CASE if the CASE condition is not met<br>
+<li> opens the CASE's scope<br>
+<li> CASE ELSE does not emit a conditional branch<br>
+<li> once CASE ELSE was used, no further CASE blocks are allowed<br>
+</li></li></li></li></li></li></ul><li> END SELECT<br>
+<ul><li> closes the previous CASE's scope<br>
+<li> emits an extra CASE label at the end (There is no CASE coming anymore, but this allows the last CASE to jump to the end, if it is a conditional CASE. The last CASE could jump to the SELECT's end label instead, but that would require some special case handling code.)<br>
+<li> emits the end label<br>
+</li></li></li></ul><li> any EXIT SELECTs jump immediately to the end label<br>
+<br>
+<br>
+</li></li></li></li></ul><b><u>SELECT CASE on strings/zstrings/fixstrs</u></b><br>
+<div class="indent"><pre class="code">
+dim s as string			dim s as string
+
+				scope
+select case s + "1"			dim temp as string
+
+					fb_StrAssign( temp, s )
+					fb_StrConcatAssign( temp, "1" )
+
+case "1"				if( fb_StrCompare( temp, "1" ) <> 0 ) then goto cmplabel1
+					scope
+	print "1"				print "1"
+					end scope
+					goto endlabel
+
+					cmplabel1:
+end select				endlabel:
+					fb_StrDelete( temp )    '' destroying the temp var at scope end
+				end scope
+
+				fb_StrDelete( s )
+</pre><br>
+</div><ul><li> SELECT CASE on string/zstring/fixstr expressions uses a string temp var<br>
+<ul><li> probably because that's easiest<br>
+<li> knowing the string length will potentially speed up the following comparisons<br>
+<li> the dynamic memory allocation can be a slow down too<br>
+</li></li></li></ul><li> the string temp var is destroyed at scope end or scope breaks (e.g. reaching END SELECT, or EXIT FUNCTION from within a CASE block)<br>
+<br>
+</li></li></ul><b><u>SELECT CASE on wstrings</u></b><br>
+<div class="indent"><pre class="code">
+dim w as wstring * 10			dim w as wstring * 10
+
+					scope
+select case w + wstr( "1" )			dim temp as wstring ptr
+
+						dim tempexpr as wstring ptr = w + wstr( "1" )
+						temp = fb_WstrAlloc( fb_WstrLen( tempexpr ) )
+						fb_WstrAssign( temp, tempexpr )
+
+case wstr( "1" )				if( fb_WstrCompare( temp, wstr( "1" ) ) <> 0 ) then goto cmplabel1
+						scope
+	print "1"					print "1"
+						end scope
+						goto endlabel
+
+						cmplabel1:
+end select					endlabel:
+						fb_WstrDelete( temp )    '' destroying the temp var at scope end
+					end scope
+</pre><br>
+</div><ul><li> similar to SELECT CASE on zstrings, for wstring expressions a wstring is dynamically allocated<br>
+<li> the temp wstring is treated much like a dynamic wstring object would be<br>
+<ul><li> it is a VAR symbol with type WCHAR PTR<br>
+<li> marked with FB_SYMBSTATS_WSTRING<br>
+<li> this allows ctor/dtor checks to recognize it and give it the needed treatment<br>
+</li></li></li></ul><li> this way, the temp wstring is destroyed at scope end or scope breaks<br>
+<br>
+<br>
+</li></li></li></ul><b><u>SELECT CASE without temp var</u></b><br>
+<div class="indent">When the expression given to the <span><code>select</code></span> statement is just a simple variable access, then no temporary variable needs to be created. In this case, the given variable itself will be used in the comparisons at each <span><code>case</code></span> statement. For example:<br>
+<br>
+<pre class="code">
+dim i as integer		dim i as integer
+
+				scope
+select case i
+
+case 1					if( i <> 1 ) then goto cmplabel1
+					scope
+	print "1"				print "1"
+					end scope
+					goto endlabel
+
+end select				cmplabel1:
+					endlabel:
+				end scope
+</pre><br>
+<br>
+</div><br>
+
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../index.html">Home</a> ·
+         <a href="../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../nav.js?v=70a6b70236"></script>
+<script src="../../search-index.js"></script>
+<script src="../../assets/app.js?v=456d079659"></script>
+<script src="../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

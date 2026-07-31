@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CDEC.Math operators — Help Center</title>
+<meta name="description" content="Add, subtract, multiply or divide decimal numbers.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/numeric-datatypes/cdec/cdec-math-operators.html">
+<meta property="og:title" content="CDEC.Math operators">
+<meta property="og:description" content="Add, subtract, multiply or divide decimal numbers.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/numeric-datatypes/cdec/cdec-math-operators.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/numeric-datatypes/cdec/cdec-math-operators.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cdec-class.html">CDEC Class</a></div>
+<h1>CDEC.Math operators<span class="h1kind">operator</span></h1>
+<p class="lede">Add, subtract, multiply or divide decimal numbers.</p>
+<div class="badges"><a class="badge" href="../index.html">Numeric Datatypes</a><span class="badge">operator</span><span class="badge badge--warn">doc-orphan</span></div>
+<div class="note note--warn"><strong>No implementation located.</strong> This member is documented, but the source scan found no matching declaration. It is likely declared in a header this scan does not resolve, or provided by a macro.</div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>OPERATOR + (BYREF dec1 AS CDEC, BYREF dec2 AS CDEC) AS CDEC</code></pre>
+<pre class="code sig"><code>OPERATOR += (BYREF dec AS CDEC)</code></pre>
+<pre class="code sig"><code>OPERATOR - (BYREF dec1 AS CDEC, BYREF dec2 AS CDEC) AS CDEC</code></pre>
+<pre class="code sig"><code>OPERATOR -= (BYREF dec AS CDEC)</code></pre>
+<pre class="code sig"><code>OPERATOR * (BYREF dec1 AS CDEC, BYREF dec2 AS CDEC) AS CDEC</code></pre>
+<pre class="code sig"><code>OPERATOR *= (BYREF dec AS CDEC)</code></pre>
+<pre class="code sig"><code>OPERATOR / (BYREF dec AS CDEC, BYVAL cOperand AS CDEC) AS CDEC</code></pre>
+<pre class="code sig"><code>OPERATOR /= (BYREF cOperand AS CDEC)</code></pre>
+<h2>Remarks</h2>
+<p>The version OPERATOR - (BYREF dec AS CDEC) AS CDEC changes the sign of a decimal number.</p>
+<p>Other FreeBasic operators such AND, MOD, OR, SHL and SHR can also be used with CDEC variables, e.g. c = c AND 1, c = c MOD 5, etc.</p>
+<h2>Examples</h2>
+<p>DIM dec AS CDEC = 12345.1234 dec = dec + 111.11 dec = dec - 111.11 dec = dec * 2 dec = dec / 2 dec += 123 dec -= 123 dec *= 2.3 dec /= 2.3</p>
+<p>DIM dec AS CDEC = 123 dec = -dec</p>
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">Numeric Datatypes/CDEC Class.md</span></li><li>Topic: <a href="../cdec-class.html">CDEC Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

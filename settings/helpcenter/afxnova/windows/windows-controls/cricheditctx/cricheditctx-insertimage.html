@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CRichEditCtx.InsertImage — Help Center</title>
+<meta name="description" content="Replaces the selection with a blob that displays an image.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/cricheditctx/cricheditctx-insertimage.html">
+<meta property="og:title" content="CRichEditCtx.InsertImage">
+<meta property="og:description" content="Replaces the selection with a blob that displays an image.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/cricheditctx/cricheditctx-insertimage.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-controls/cricheditctx/cricheditctx-insertimage.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cricheditctx-class.html">CRichEditCtx Class</a></div>
+<h1>CRichEditCtx.InsertImage<span class="h1kind">method</span></h1>
+<p class="lede">Replaces the selection with a blob that displays an image.</p>
+<div class="badges"><a class="badge" href="../../index.html">Windows</a><span class="badge">method</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION InsertImage OVERLOAD (BYREF wszFileName AS WSTRING, BYVAL xWidth AS LONG = 0, BYVAL yHeight AS LONG = 0, BYVAL Ascent AS LONG = 0, BYVAL nType AS LONG = TA_BASELINE, BYREF wszAlternateText AS WSTRING = &quot;&quot;) AS BOOLEAN</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>wszFileName</code></td><td></td><td>Path and name of the image file to load.</td></tr><tr><td><code>xWidth</code></td><td></td><td>Optional. Image width in pixels. If both <em>xWidth</em> and <em>yWidth</em> parameters are 0, the method retrieves the size of the image using GDI+.</td></tr><tr><td><code>yHeight</code></td><td></td><td>Optional. Image heigh in pixels. If both <em>xWidth</em> and <em>yWidth</em> parameters are 0, the method retrieves the size of the image using GDI+.</td></tr><tr><td><code>Ascent</code></td><td></td><td>Optional. If <em>nType</em> is TA_BASELINE (the default value), this parameter is the distance, in pixels, that the top of the image extends above the text baseline. If <em>nType</em> is TA_BASELINE and ascent is zero, the bottom of the image is placed at the text baseline.</td></tr><tr><td><code>nType</code></td><td></td><td>Optional. The vertical alignment of the image. It can be one of the following values.<br><strong>TA_BASELINE</strong>. Align the image relative to the text baseline.<br><strong>TA_BOTTOM</strong>. Align the bottom of the image at the bottom of the text line.<br><strong>TA_TOP</strong>. Align the top of the image at the top of the text line.</td></tr><tr><td><code>wszAlternateText</code></td><td></td><td>Optional. The alternate text for the image.</td></tr><tr><td><code>ip</code></td><td></td><td>A <a href="https://learn.microsoft.com/en-us/windows/win32/api/richedit/ns-richedit-richedit_image_parameters" target="_blank" rel="noopener">RICHEDIT_IMAGE_PARAMETERS</a> structure that contains the image blob.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>Returns a boolean value: 0 for success and -1 for failure. To get extended error information call <strong>GetErrorInfo</strong>, which can return <strong>S_OK</strong> if successful, or one of the following error codes.</p>
+<p>Overloaded method that replaces the selection with a blob that displays an image. Uses HIMETRIC units.</p>
+<p>Returns S_OK if successful, or one of the following error codes.</p>
+<h2>Description</h2>
+<p>Overloaded method that replaces the selection with a blob that displays an image. It uses pixels instead of HIMETRIC units and it is DPI aware. Can insert and display .bmp, .jpg, .png and .gif files.</p>
+<h2>Example</h2>
+<p>FUNCTION InsertImage OVERLOAD (BYREF ip AS RICHEDIT_IMAGE_PARAMETERS) AS DWORD</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/CRichEditCtx.inc:2713</span></li><li>Documented in <span class="srcref">Windows/WIndows Controls/RichEdit/CRichEditCtx Class.md</span></li><li>Topic: <a href="../cricheditctx-class.html">CRichEditCtx Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

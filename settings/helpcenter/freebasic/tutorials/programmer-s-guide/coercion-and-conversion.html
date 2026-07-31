@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Coercion and Conversion — Help Center</title>
+<meta name="description" content="Coercion and Conversion — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/coercion-and-conversion.html">
+<meta property="og:title" content="Coercion and Conversion">
+<meta property="og:description" content="Coercion and Conversion — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/coercion-and-conversion.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/programmer-s-guide/coercion-and-conversion.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>Coercion and Conversion</h1>
+<h2>Documentation</h2>
+
+	Transfer the data of a given type variable to a variable of another type requires conversion.<br>
+<br>
+<div>Coercion of Numeric Data Types in Expressions and Arguments</div><div><br>
+For the integer types, the rule depends on the following ranking:<br>
+<div class="indent">in 32bit:<br>
+<div class="indent">byte &lt; ubyte &lt; short &lt; ushort &lt; long &lt; integer &lt; ulong &lt; uinteger &lt; longint &lt; ulongint<br>
+</div>in 64bit:<br>
+<div class="indent">byte &lt; ubyte &lt; short &lt; ushort &lt; long &lt; ulong &lt; longint &lt; integer &lt; ulongint &lt; uinteger<br>
+</div></div>First,  in accordance to the above ranking, all arguments smaller than Integer are converted to Integer.<br>
+Then, if arguments have different size, the smaller argument is converted to match the bigger one. Next, if arguments have different signedness, the signed argument is converted to unsigned to match the other one.<br>
+Finally, the (U)Integer types replace:<br>
+<div class="indent">in 32bit:<br>
+<div class="indent">the (U)Long types<br>
+</div>in 64bit:<br>
+<div class="indent">the (U)Longint types<br>
+<br>
+</div></div>On the other hand, if one of the arguments is a Single or a Double, both arguments are converted and/or promoted to Double.<br>
+<br>
+</div><div>Conversion of Numeric Data Types</div><div><br>
+A type conversion will occur implicitly when an expression or variable is assigned, passed as a parameter to a procedure, or returned as a result from a procedure. Conversions may also be explicit when using CAST or one of the built-in conversion functions (among standard functions).<br>
+<br>
+<u>Integer To Integer, any combination of Signed and Unsigned</u><br>
+<ul><ul><li> Any integer type to a smaller integer type: least significant bits are retained<br>
+<li> Any integer type to a larger integer type: sign extended to fill most significant bits<br>
+</li></li></ul></ul><u>Integer to Single or Double</u><br>
+<ul><ul><li> Possible loss of precision<br>
+</li></ul></ul><u>Double to Single</u><br>
+<ul><ul><li> Possible loss of precision<br>
+<li> If the value of the Double exceeds the range of a Single result is +/- INF<br>
+</li></li></ul></ul><u>Double or Single to Integer</u><br>
+<ul><ul><li> Possible loss of precision<br>
+<li> If the value of the floating point number exceeds the range of the target type are results are undefined.  A run-time error is not raised.<br>
+<br>
+</li></li></ul></ul></div><div>Conversions using User Data Type constructors and operators</div><div><br>
+For conversion between built-in types (among standard types like between numeric types as above or between string types), the compiler knows what to do without the need for instructions from user.<br>
+This is called the implicit internal conversion (or coercion).<br>
+<br>
+When one of the two types is at least a UDT (User Defined Type), the user has to code some UDT procedures to define how do the conversion.<br>
+Then, the conversion execution can be explicit if the user specifies what UDT procedure must be used, or implicit if the user leaves the choice to compiler.<br>
+<br>
+In the world of UDTs, conversions can be controlled by means of three member procedures:<br>
+<ul><ul><li> Single-argument constructor: allow conversion from a particular type to initialize an object.<br>
+<li> Assignment operator: allow conversion from a particular type on assignment.<br>
+<li> Type-cast operator: allow conversion to a particular type.<br>
+<br>
+</li></li></li></ul></ul>For a construction with implicit initialization ('Dim As UDT u = v'), the compiler searches by priority:<br>
+<ul><ul><li> Firstly a matched constructor (for u type from v type).<br>
+<li> Secondly a cast operator (for v type to special type (*)) and its matching conversion-constructor (for u type from special type (*)).<br>
+<li> Thirdly finally a matched cast operator (for v type to u type).<br>
+</li></li></li></ul></ul><div class="indent">(a matched let operator (for u type from v type) is not searched by compiler on a construction with implicit initialization)<br>
+<br>
+</div>For an implicit copy-construction ('Byval As u_type') when passing a v type parameter, the compiler searches by priority:<br>
+<ul><ul><li> Firstly a matched constructor (for u type from v type).<br>
+<li> Secondly a cast operator (for v type to special type (*)) and its matching conversion-constructor (for u type from special type (*)).<br>
+<li> Thirdly finally a matched cast operator (for v type to u type).<br>
+</li></li></li></ul></ul><div class="indent">(a matched let operator (for u type from v type) is not searched by compiler on a construction with implicit initialization)<br>
+<br>
+</div>For an implicit reference-passing ('Byref As u_type') when passing a v type parameter, the compiler searches by priority:<br>
+<ul><ul><li> Firstly a matched cast operator (for v type to u type).<br>
+<li> Secondly a matched constructor (for u type from v type).<br>
+<li> Thirdly finally a cast operator (for v type to special type (*)) and its matching conversion-constructor (for u type from special type (*)).<br>
+</li></li></li></ul></ul><div class="indent">(a matched let operator (for u type from v type) is not searched by compiler on an implicit reference-passing)<br>
+<br>
+</div>For an implicit assignment ('u = v'), or an implicit return from function by assigning ('Function = v') with function returning u type, the compiler searches by priority:<br>
+<ul><ul><li> Firstly a matched let operator (for u type from v type).<br>
+<li> Secondly a cast operator (for v type to special type (*)) and its matching let operator (for u type from special type (*)).<br>
+<li> Thirdly a matched cast operator (for v type to u type).<br>
+<li> Fourthly finally a matched constructor (for u type from v type) and an explicit copy-let operator (u type).<br>
+<br>
+</li></li></li></li></ul></ul>For an implicit return from function by exiting immediately ('Return v') with function returning u type, the compiler searches by priority:<br>
+<ul><ul><li> Firstly a matched constructor (for u type from v type).<br>
+<li> Secondly a cast operator (for v type to special type (*)) and its matching conversion-constructor (for u type from special type (*)).<br>
+</li></li></ul></ul><div class="indent">If an explicit copy-constructor (u type) exists:<br>
+</div><ul><ul><li> Thirdly a matched cast operator (for v type to u type).<br>
+<li> Fourthly finally a matched let operator (for u type from v type).<br>
+</li></li></ul></ul><div class="indent">Else (an explicit copy-constructor (u type) does not exist):<br>
+</div><ul><ul><li> Thirdly a matched let operator (for u type from v type).<br>
+<li> Fourthly finally a matched cast operator (for v type to u type).<br>
+<br>
+</li></li></ul></ul>special type (*) : pointer or string, or UDT if there is no explicit copy-constructor / explicit copy-assignment operator for u type<br>
+<br>
+<b>Note:</b><br>
+Only the member procedures directly impacted in the conversion process itself are cited above:<br>
+<b>-</b> the copy-constructor (u type) and the copy-let operator (u type) are not cited when only their implicit definition is sufficient and not their explicit definition,<br>
+<b>-</b> the default constructor (u type) is not cited whereas an implicit version, otherwise explicit version if another explicit constructor (u type) is defined, is always required in the 'Function = v' case, but not for the conversion process itself.<br>
+<br>
+</div><div>Example</div><div><br>
+Very simple syntaxic example highlighting the conversion capabilities by using Cast operator (explicit and implicit), Constructor (explicit and implicit) and Let operator (implicit):<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Type</span> <span>UDT</span>
+
+  <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>I</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Cast</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>(</span><span class="tok-kw">ByVal</span> <span>I0</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Let</span> <span>(</span><span class="tok-kw">ByVal</span> <span>I0</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>UDT.Cast</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+  <span class="tok-kw">Return</span> <span>This.I</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>UDT</span> <span>(</span><span class="tok-kw">ByVal</span> <span>I0</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+  <span>This.I</span> <span>=</span> <span>I0</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>UDT.Let</span> <span>(</span><span class="tok-kw">ByVal</span> <span>I0</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+  <span>This.I</span> <span>=</span> <span>I0</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>J</span> <span>=</span> <span class="tok-nu">12</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT</span> <span>u1</span> <span>=</span> <span>UDT</span><span>(</span><span>J</span><span>)</span>  <span class="tok-cm">'' construction with explicit initialization using the defined &quot;Constructor(Byval As Integer)&quot; operator</span>
+
+<span class="tok-kw">Print</span> <span>u1.I</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT</span> <span>u2</span> <span>=</span> <span>J</span>       <span class="tok-cm">'' construction with implicit initialization by compiler using the defined &quot;Constructor(Byval As Integer)&quot; operator</span>
+
+<span class="tok-kw">Print</span> <span>u2.I</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+<span>u1.I</span> <span>=</span> <span class="tok-nu">34</span>
+
+<span>J</span> <span>=</span> <span class="tok-kw">Cast</span><span>(</span><span class="tok-kw">Integer</span><span>,</span> <span>u1</span><span>)</span>  <span class="tok-cm">'' explicit assignment using the defined &quot;Cast() As Integer&quot; operator</span>
+
+<span class="tok-kw">Print</span> <span>J</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>K</span>
+
+<span>K</span> <span>=</span> <span>u1</span>                 <span class="tok-cm">'' implicit assignment by compiler using the defined &quot;Cast() As Integer&quot; operator</span>
+
+<span class="tok-kw">Print</span> <span>K</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+<span>J</span> <span>=</span> <span class="tok-nu">56</span>
+
+<span>u1</span> <span>=</span> <span>J</span>                 <span class="tok-cm">'' implicit assignment by compiler using the defined &quot;Let(Byval As Integer)&quot; operator</span>
+
+<span class="tok-kw">Print</span> <span>u1.I</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+</div></div><div>See also</div><div><br>
+<ul><li> <a href="../../standard-data-types/standard-data-types.html">Standard Data Types</a><br>
+<li> <a href="../../language-documentation/variables-and-data-types/standard-data-type-limits.html">Variable Types</a><br>
+<li> <a href="../../converting-data-types/converting-data-types.html">Casting and Conversion Functions</a><br>
+<li> <a href="../../user-defined-types/user-defined-types.html">User Defined Types</a><br>
+<br>
+</li></li></li></li></ul></div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

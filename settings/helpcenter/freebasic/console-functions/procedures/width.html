@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Width — Help Center</title>
+<meta name="description" content="Sets or gets the number of rows and columns of the display">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/console-functions/procedures/width.html">
+<meta property="og:title" content="Width">
+<meta property="og:description" content="Sets or gets the number of rows and columns of the display">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/console-functions/procedures/width.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/console-functions/procedures/width.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>Width<span class="h1kind">keyword</span></h1>
+<p class="lede">Sets or gets the number of rows and columns of the display</p>
+<div class="badges"><a class="badge" href="../index.html">Console Functions</a><span class="badge">keyword</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>Width [columns] [, rows]</code></pre>
+<pre class="code sig"><code>Width LPrint columns</code></pre>
+<pre class="code sig"><code>Width { #filenum | devicename }, columns</code></pre>
+<pre class="code sig"><code>result = Width( )</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>columns</code></td><td></td><td>columns (in characters) for output</td></tr><tr><td><code>rows</code></td><td></td><td>rows (in characters) for output</td></tr><tr><td><code>filenum</code></td><td></td><td>file number to apply to</td></tr><tr><td><code>devicename</code></td><td></td><td>device name to apply to</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<br>
+Returns a 32 bit <code><a href="../../standard-data-types/procedures/long.html">Long</a></code> where the <a href="../../bit-manipulation/procedures/hiword.html">High Word</a> is the number of rows and the <a href="../../bit-manipulation/procedures/loword.html">Low Word</a> is the number of columns currently set.<br>
+<br>
+
+<h2>Description</h2>
+<br>
+Sets the maximum number of columns of characters of an output device (console, printer or text file). If text sent to the device reaches the width an automatic carriage return is generated.<br>
+<br>
+Using <code><b>Width</b></code> as a function returns the current console width in the low word and the current height in the high word.<br>
+<br>
+If a device is not given then <code><b>Width</b></code> takes effect on the active console/graphics screen, and a second argument specifying maximum number of rows is allowed.<br>
+<br>
+In graphics modes <code><b>Width</b></code> is used to indirectly select the font size by setting one of the character height * width pairs allowed (See <code><a href="../../screen-functions/procedures/screen-graphics.html">Screen (Graphics)</a></code>). If  <code><i>rows</i></code> / <code><i>cols</i></code> is an invalid combination, no changes are made to the screen display.<br>
+Valid font heights are 8 pixels, 14 pixels and 16 pixels.  The fonts all have a fixed width of 8 pixels.<br>
+(see second example)<br>
+<br>
+Using the <code><b>Width</b></code> command in graphic mode also forces a screen clear (<code><a href="cls.html">Cls</a></code>).<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Platform Differences</h3><br>
+<ul><li> In a Windows console any values &gt; <code>0</code> can be used in windowed mode.<br>
+<li> On a DOS or Windows full-screen console, the valid dimensions depend on the capabilities of the hardware.<br>
+<li> Linux doesn't allow applications to change the console size.<br>
+<br>
+</li></li></li></ul>
+<h3>Differences from QB</h3><br>
+<ul><li> <code><i>columns</i></code> was limited to <code>40</code> or <code>80</code>, while <code><i>rows</i></code> could be <code>25</code>, <code>30</code>, <code>43</code>, <code>50</code> or <code>60</code>, depending on the graphics hardware and screen mode being used.<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="../../bit-manipulation/procedures/loword.html">LoWord</a></code><br>
+<li> <code><a href="../../bit-manipulation/procedures/hiword.html">HiWord</a></code><br>
+<li> <code><a href="csrlin.html">CsrLin</a></code><br>
+<li> <code><a href="pos.html">Pos</a></code><br>
+<br>
+</li></li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Long</span> <span>w</span>
+
+<span>w</span> <span>=</span> <span class="tok-kw">Width</span>
+
+<span class="tok-kw">Print</span> <span>&quot;rows: &quot;</span> <span>&amp;</span> <span class="tok-kw">HiWord</span><span>(</span><span>w</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>&quot;cols: &quot;</span> <span>&amp;</span> <span class="tok-kw">LoWord</span><span>(</span><span>w</span><span>)</span></pre></code><br>
+<br>
+<code><pre class="code"><span class="tok-cm">''Set up a graphics screen</span>
+
+<span class="tok-kw">Const</span> <span>W</span> <span>=</span> <span class="tok-nu">320</span><span>,</span> <span>H</span> <span>=</span> <span class="tok-nu">200</span>
+
+<span class="tok-kw">ScreenRes</span> <span>W</span><span>,</span> <span>H</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Long</span> <span>twid</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span> <span>tw</span><span>,</span> <span>th</span>
+
+
+
+<span class="tok-cm">'' Fetch and print current text width/height:</span>
+
+<span>twid</span> <span>=</span> <span class="tok-kw">Width</span><span>()</span>
+
+<span>tw</span> <span>=</span> <span class="tok-kw">LoWord</span><span>(</span><span>twid</span><span>):</span> <span>th</span> <span>=</span> <span class="tok-kw">HiWord</span><span>(</span><span>twid</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Default for current screen (8*8)&quot;</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Width:  &quot;</span> <span>&amp;</span> <span>tw</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Height: &quot;</span> <span>&amp;</span> <span>th</span>
+
+<span class="tok-kw">Sleep</span>
+
+
+
+<span class="tok-kw">Width</span> <span>W</span><span>\</span><span class="tok-nu">8</span><span>,</span> <span>H</span><span>\</span><span class="tok-nu">16</span> <span class="tok-cm">'' Use 8*16 font</span>
+
+
+
+<span>twid</span> <span>=</span> <span class="tok-kw">Width</span><span>()</span>
+
+<span>tw</span> <span>=</span> <span class="tok-kw">LoWord</span><span>(</span><span>twid</span><span>):</span> <span>th</span> <span>=</span> <span class="tok-kw">HiWord</span><span>(</span><span>twid</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Set to 8*16 font&quot;</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Width:  &quot;</span> <span>&amp;</span> <span>tw</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Height: &quot;</span> <span>&amp;</span> <span>th</span>
+
+<span class="tok-kw">Sleep</span>
+
+
+
+<span class="tok-kw">Width</span> <span>W</span><span>\</span><span class="tok-nu">8</span><span>,</span> <span>H</span><span>\</span><span class="tok-nu">14</span> <span class="tok-cm">'' Use 8*14 font</span>
+
+
+
+<span>twid</span> <span>=</span> <span class="tok-kw">Width</span><span>()</span>
+
+<span>tw</span> <span>=</span> <span class="tok-kw">LoWord</span><span>(</span><span>twid</span><span>):</span> <span>th</span> <span>=</span> <span class="tok-kw">HiWord</span><span>(</span><span>twid</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Set to 8*14 font&quot;</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Width:  &quot;</span> <span>&amp;</span> <span>tw</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Height: &quot;</span> <span>&amp;</span> <span>th</span>
+
+<span class="tok-kw">Sleep</span>
+
+
+
+<span class="tok-kw">Width</span> <span>W</span><span>\</span><span class="tok-nu">8</span><span>,</span> <span>H</span><span>\</span><span class="tok-nu">8</span> <span class="tok-cm">'' Use 8*8 font</span>
+
+
+
+<span>twid</span> <span>=</span> <span class="tok-kw">Width</span><span>()</span>
+
+<span>tw</span> <span>=</span> <span class="tok-kw">LoWord</span><span>(</span><span>twid</span><span>):</span> <span>th</span> <span>=</span> <span class="tok-kw">HiWord</span><span>(</span><span>twid</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Set to 8*8 font&quot;</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Width:  &quot;</span> <span>&amp;</span> <span>tw</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Height: &quot;</span> <span>&amp;</span> <span>th</span>
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgWidth.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

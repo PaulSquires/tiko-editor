@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CellBackColor — Help Center</title>
+<meta name="description" content="Returns or sets the background colors of individual cells or cell ranges.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-gui/procedures/cellbackcolor.html">
+<meta property="og:title" content="CellBackColor">
+<meta property="og:description" content="Returns or sets the background colors of individual cells or cell ranges.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-gui/procedures/cellbackcolor.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-gui/procedures/cellbackcolor.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../microsoft-hierarchical-grid.html">Microsoft Hierarchical Grid</a></div>
+<h1>CellBackColor<span class="h1kind">property</span></h1>
+<p class="lede">Returns or sets the background colors of individual cells or cell ranges.</p>
+<div class="badges"><a class="badge" href="../../index.html">Windows</a><span class="badge">property</span><span class="badge badge--warn">doc-orphan</span></div>
+<div class="note note--warn"><strong>No implementation located.</strong> This member is documented, but the source scan found no matching declaration. It is likely declared in a header this scan does not resolve, or provided by a macro.</div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>PROPERTY CellBackColor () AS OLE_COLOR</code></pre>
+<pre class="code sig"><code>PROPERTY CellBackColor (BYVAL bkColor AS OLE_COLOR)</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>bkColor</code></td><td></td><td>A numeric expression that specifies the color for the current cell selection. Setting this property to zero paints the cell using the standard background color.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Returns or sets the background color of the currently active cell or a selected range of cells.</p>
+<p>The property affects the cell(s) determined by the current <strong>Row</strong> and <strong>Col</strong> properties.</p>
+<p>Set for Single Cell:</p>
+<p>Set for a Range: To color multiple cells at once, set the <strong>FillStyle</strong> property to <strong>flexFillRepeat</strong>.</p>
+<h2>Examples</h2>
+<p>grid.Row = 2 ' Target row grid.Col = 1 ' Target column grid.CellBackColor = vbRed ' Set color to red</p>
+<p>grid.FillStyle = flexFillRepeat grid.Row = 1: grid.Col = 1 grid.RowSel = 3: grid.ColSel = 3 grid.CellBackColor = vbBlue grid.FillStyle = flexFillSingle ' Reset to single-cell mode</p>
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">Windows/Windows GUI/MSHFlexGrid Class.md</span></li><li>Topic: <a href="../microsoft-hierarchical-grid.html">Microsoft Hierarchical Grid</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

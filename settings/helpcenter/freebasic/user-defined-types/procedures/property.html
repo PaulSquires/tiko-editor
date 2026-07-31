@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Property — Help Center</title>
+<meta name="description" content="Declares or defines a property in a type or class">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/user-defined-types/procedures/property.html">
+<meta property="og:title" content="Property">
+<meta property="og:description" content="Declares or defines a property in a type or class">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/user-defined-types/procedures/property.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/user-defined-types/procedures/property.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>Property<span class="h1kind">property</span></h1>
+<p class="lede">Declares or defines a property in a type or class</p>
+<div class="badges"><a class="badge" href="../index.html">User Defined Types</a><span class="badge">property</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>{ Type | Class } typename</code></pre>
+<pre class="code sig"><code>Declare Property fieldname () [ ByRef ] As datatype</code></pre>
+<pre class="code sig"><code>Declare Property fieldname ( [ ByRef | ByVal ] new_value As datatype )</code></pre>
+<pre class="code sig"><code>Declare Property fieldname ( [ ByRef | ByVal ] index As datatype ) [ ByRef ] As datatype</code></pre>
+<pre class="code sig"><code>Declare Property fieldname ( [ ByRef | ByVal ] index As datatype, [ ByRef | ByVal ] new_value As datatype )</code></pre>
+<pre class="code sig"><code>End { Type | Class }</code></pre>
+<pre class="code sig"><code>Property typename.fieldname () [ ByRef ] As datatype [ Export ]</code></pre>
+<pre class="code sig"><code>statements</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>typename</code></td><td></td><td>name of the <code><a href="../../operators/operators/procedures/type-udt.html">Type</a></code> or <code><a href="../../operators/operators/procedures/class.html">Class</a></code></td></tr><tr><td><code>fieldname</code></td><td></td><td>name of the property</td></tr><tr><td><code>new_value</code></td><td></td><td>the value passed to property to be assigned</td></tr><tr><td><code>index</code></td><td></td><td>the property index value</td></tr></tbody></table></div>
+<h2>Description</h2>
+<br>
+<code><b>Property</b></code> fields are used to get and set values of a <code><a href="../../operators/operators/procedures/type-udt.html">Type</a></code> or <code><a href="../../operators/operators/procedures/class.html">Class</a></code> in the same way as other data fields except instead of a simple assignment to a field or a value retrieved from field, a procedure is executed.<br>
+<br>
+<code><i>typename</i></code> is the name of the type for which the <code><b>Property</b></code> method is declared and defined.  Name resolution for <code><i>typename</i></code> follows the same rules as procedures when used in a <code><a href="../../modularizing/procedures/namespace.html">Namespace</a></code>.<br>
+<br>
+A <b>Property</b> may optionally have one <code><i>index</i></code> parameter.  When indexed, properties are accessed as <code><i>fieldname(Index)</i> [ = value ]</code>.<br>
+A <b>Property</b> without <code><i>index</i></code> parameter must always be used without empty parentheses after <code><i>fieldname</i></code>.<br>
+A get-<b>Property</b> can also return a reference by specifying <code><a href="../../procedures/procedures/byref-function-results.html">ByRef</a> <a href="../../miscellaneous-keywords/procedures/as.html">As</a> <i>return_type</i></code>.<br>
+<br>
+A hidden <code><a href="this.html">This</a></code> parameter having the same type as <code><i>typename</i></code> is passed to the property procedure.  <code><a href="this.html">This</a></code> is used to access the fields of the <code><a href="../../operators/operators/procedures/type-udt.html">Type</a></code> or <code><a href="../../operators/operators/procedures/class.html">Class</a></code>.<br>
+<br>
+<b>Note:</b> A standard <b>Property</b> (get & set) does not work with combination operators (as "+="). But a result byref get-<b>Property</b> (as more generally any result byref function) works with combination operators.<br>
+<br>
+<b>Note:</b> When a get-<b>Property</b> is defined with one <code><i>index</i></code> parameter, the <code><i>fieldname</i>=</code> syntax can not be used to return a value. For such a get-<b>Property</b>, the <code>property=</code> syntax (in addition to the <code><a href="../../control-flow-statements/procedures/return-from-procedure.html">Return</a></code> syntax) is only the one allowed.<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>See also</h3><br>
+<ul><li> <code><a href="../../operators/operators/procedures/class.html">Class</a></code><br>
+<li> <code><a href="../../operators/operators/procedures/type-udt.html">Type</a></code><br>
+<br>
+</li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span>Vector2D</span>
+
+  <span class="tok-kw">As</span> <span class="tok-kw">Single</span> <span>x</span><span>,</span> <span>y</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Cast</span><span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Property</span> <span>Length</span><span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">Single</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Property</span> <span>Length</span><span>(</span> <span class="tok-kw">ByVal</span> <span>new_length</span> <span class="tok-kw">As</span> <span class="tok-kw">Single</span> <span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>Vector2D.cast</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+  <span class="tok-kw">Return</span> <span>&quot;(&quot;</span> <span>+</span> <span class="tok-kw">Str</span><span>(</span><span>x</span><span>)</span> <span>+</span> <span>&quot;, &quot;</span> <span>+</span> <span class="tok-kw">Str</span><span>(</span><span>y</span><span>)</span> <span>+</span> <span>&quot;)&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Property</span> <span>Vector2D.Length</span><span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">Single</span>
+
+  <span>Length</span> <span>=</span> <span class="tok-kw">Sqr</span><span>(</span> <span>x</span> <span>*</span> <span>x</span> <span>+</span> <span>y</span> <span>*</span> <span>y</span> <span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Property</span>
+
+
+
+<span class="tok-kw">Property</span> <span>Vector2D.Length</span><span>(</span> <span class="tok-kw">ByVal</span> <span>new_length</span> <span class="tok-kw">As</span> <span class="tok-kw">Single</span> <span>)</span>
+
+  <span class="tok-kw">Dim</span> <span>m</span> <span class="tok-kw">As</span> <span class="tok-kw">Single</span> <span>=</span> <span>Length</span>
+
+  <span class="tok-kw">If</span> <span>m</span> <span>&lt;&gt;</span> <span class="tok-nu">0</span> <span class="tok-kw">Then</span>
+
+    <span class="tok-cm">'' new vector = old / length * new_length</span>
+
+    <span>x</span> <span>*=</span> <span>new_length</span> <span>/</span> <span>m</span>
+
+    <span>y</span> <span>*=</span> <span>new_length</span> <span>/</span> <span>m</span>
+
+  <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Property</span>
+
+
+
+<span class="tok-kw">Dim</span> <span>a</span> <span class="tok-kw">As</span> <span>Vector2D</span> <span>=</span> <span>(</span> <span class="tok-nu">3</span><span>,</span> <span class="tok-nu">4</span> <span>)</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;a = &quot;</span><span>;</span> <span>a</span>
+
+<span class="tok-kw">Print</span> <span>&quot;a.length = &quot;</span><span>;</span> <span>a.length</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+<span>a.length</span> <span>=</span> <span class="tok-nu">10</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;a = &quot;</span><span>;</span> <span>a</span>
+
+<span class="tok-kw">Print</span> <span>&quot;a.length = &quot;</span><span>;</span> <span>a.length</span></pre></code><br>
+Output:<br>
+<pre class="code">
+a = (3, 4)
+a.length =  5
+
+a = (6, 8)
+a.length =  10
+</pre>Property Indexing:<br>
+<code><pre class="code"><span class="tok-cm">'' True/False</span>
+
+<span class="tok-kw">Namespace</span> <span>BOOL</span>
+
+  <span class="tok-kw">Const</span> <span class="tok-kw">False</span> <span>=</span> <span class="tok-nu">0</span>
+
+  <span class="tok-kw">Const</span> <span class="tok-kw">True</span> <span>=</span> <span class="tok-kw">Not</span> <span class="tok-kw">False</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+
+
+<span class="tok-kw">Type</span> <span>BitNum</span>
+
+  <span>Num</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span>
+
+  
+
+    <span class="tok-cm">'' Get/Set Properties each with an Index.</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Property</span> <span>NumBit</span><span>(</span> <span class="tok-kw">ByVal</span> <span>Index</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Property</span> <span>NumBit</span><span>(</span> <span class="tok-kw">ByVal</span> <span>Index</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span class="tok-kw">ByVal</span> <span>Value</span> <span class="tok-kw">As</span> <span class="tok-kw">Byte</span> <span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+  <span class="tok-cm">'' Get a bit by it's index.</span>
+
+<span class="tok-kw">Property</span> <span>BitNum.NumBit</span><span>(</span> <span class="tok-kw">ByVal</span> <span>Index</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+  <span class="tok-kw">Return</span> <span class="tok-kw">Bit</span><span>(</span> <span>This.Num</span><span>,</span> <span>Index</span> <span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Property</span>
+
+
+
+  <span class="tok-cm">'' Set a bit by it's index.</span>
+
+<span class="tok-kw">Property</span> <span>BitNum.NumBit</span><span>(</span> <span class="tok-kw">ByVal</span> <span>Index</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span class="tok-kw">ByVal</span> <span>Value</span> <span class="tok-kw">As</span> <span class="tok-kw">Byte</span> <span>)</span>
+
+
+
+    <span class="tok-cm">'' Make sure index is in Integer range.</span>
+
+  <span class="tok-kw">If</span> <span>Index</span> <span>&gt;=</span> <span>(</span> <span class="tok-kw">SizeOf</span><span>(</span><span>This.Num</span><span>)</span> <span>*</span> <span class="tok-nu">8</span> <span>)</span> <span class="tok-kw">Then</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;Out of uInteger Range!&quot;</span>
+
+    <span class="tok-kw">Exit</span> <span class="tok-kw">Property</span>
+
+  <span class="tok-kw">Else</span>
+
+    <span class="tok-kw">If</span> <span>Index</span> <span>&lt;</span> <span class="tok-nu">0</span> <span class="tok-kw">Then</span> <span class="tok-kw">Exit</span> <span class="tok-kw">Property</span>
+
+  <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+  
+
+  <span class="tok-kw">If</span> <span>Value</span> <span>=</span> <span>BOOL.FALSE</span> <span class="tok-kw">Then</span>
+
+    <span>This.Num</span> <span>=</span> <span class="tok-kw">BitReset</span><span>(</span> <span>This.Num</span><span>,</span> <span>Index</span> <span>)</span>
+
+  <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+  
+
+  <span class="tok-kw">If</span> <span>Value</span> <span>=</span> <span>BOOL.TRUE</span> <span class="tok-kw">Then</span>
+
+    <span>This.Num</span> <span>=</span> <span class="tok-kw">BitSet</span><span>(</span> <span>This.Num</span><span>,</span> <span>Index</span> <span>)</span>
+
+  <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+  
+
+<span class="tok-kw">End</span> <span class="tok-kw">Property</span>
+
+
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>BitNum</span> <span>Foo</span>
+
+
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;Testing property indexing with data types:&quot;</span>
+
+<span class="tok-kw">Print</span> <span>&quot;FOO Number's Value: &quot;</span> <span>&amp;</span> <span>Foo.Num</span>
+
+
+
+  <span class="tok-cm">'' Set the bit in the number as true.</span>
+
+<span>Foo.NumBit</span><span>(</span><span class="tok-nu">31</span><span>)</span> <span>=</span> <span>BOOL.TRUE</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Set the 31st bit of FOO&quot;</span>
+
+
+
+  <span class="tok-cm">'' Print to see if our bit has been changed.</span>
+
+<span class="tok-kw">Print</span> <span>&quot;FOO Number's Value: &quot;</span> <span>&amp;</span> <span>Foo.Num</span>
+
+<span class="tok-kw">Print</span> <span>&quot;FOO 31st Bit Set? &quot;</span> <span>&amp;</span> <span>Foo.NumBit</span><span>(</span><span class="tok-nu">31</span><span>)</span>
+
+<span class="tok-kw">Sleep</span>
+
+<span class="tok-kw">Print</span> <span>&quot;&quot;</span></pre></code><br>
+Output:<br>
+<pre class="code">
+Testing property indexing with data types:
+FOO Number's Value: 0
+Set the 31st bit of FOO
+FOO Number's Value: 2147483648
+FOO 31st Bit Set? -1
+</pre>
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgProperty.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

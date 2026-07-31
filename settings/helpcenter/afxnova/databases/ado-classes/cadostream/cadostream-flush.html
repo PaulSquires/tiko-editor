@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CAdoStream.Flush — Help Center</title>
+<meta name="description" content="Forces the contents of the `Stream` remaining in the ADO buffer to the underlying object with which the `Stream` is associated.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadostream/cadostream-flush.html">
+<meta property="og:title" content="CAdoStream.Flush">
+<meta property="og:description" content="Forces the contents of the `Stream` remaining in the ADO buffer to the underlying object with which the `Stream` is associated.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadostream/cadostream-flush.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/databases/ado-classes/cadostream/cadostream-flush.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cadostream-class.html">CAdoStream Class</a></div>
+<h1>CAdoStream.Flush<span class="h1kind">method</span></h1>
+<p class="lede">Forces the contents of the `Stream` remaining in the ADO buffer to the underlying object with which the `Stream` is associated.</p>
+<div class="badges"><a class="badge" href="../../index.html">Databases</a><span class="badge">method</span><span class="badge">CAdoStream.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION Flush () AS HRESULT</code></pre>
+<h2>Return value</h2>
+<p>S_OK (0) or an HRESULT code.</p>
+<h2>Description</h2>
+<p>Forces the contents of the <code>Stream</code> remaining in the ADO buffer to the underlying object with which the <code>Stream</code> is associated.</p>
+<h2>Remarks</h2>
+<p>This method may be used to send the contents of the stream buffer to the underlying object (for example, the node or file represented by the URL that is the source of the <code>Stream</code> object). This method should be called when you want to ensure that all changes made to the contents of a <code>Stream</code> have been written. However, with ADO it is not usually necessary to call <strong>Flush</strong>, as ADO continuously flushes its buffer as much as possible in the background. Changes to the content of a <code>Stream</code> are made automatically, not cached until <strong>Flush</strong> is called.</p>
+<p>Closing a <code>Stream</code> with the <strong>Close</strong> method flushes the contents of a <code>Stream</code> automatically; there is no need to explicitly call <strong>Flush</strong> immediately before <strong>Close</strong>.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CAdoStream.inc</code></li><li>Defined in <span class="srcref">AfxNova/CAdoStream.inc:429</span></li><li>Documented in <span class="srcref">Databases/ADO Classes/CAdoStream Class.md</span></li><li>Topic: <a href="../cadostream-class.html">CAdoStream Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

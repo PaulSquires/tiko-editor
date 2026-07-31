@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unlock — Help Center</title>
+<meta name="description" content="Removes a previous access restriction (lock) on a file">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/file-i-o-functions/procedures/unlock.html">
+<meta property="og:title" content="Unlock">
+<meta property="og:description" content="Removes a previous access restriction (lock) on a file">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/file-i-o-functions/procedures/unlock.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/file-i-o-functions/procedures/unlock.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>Unlock<span class="h1kind">keyword</span></h1>
+<p class="lede">Removes a previous access restriction (lock) on a file</p>
+<div class="badges"><a class="badge" href="../index.html">File I/O Functions</a><span class="badge">keyword</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>Unlock #filenum, record</code></pre>
+<pre class="code sig"><code>Unlock #filenum, start To end</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>filenum</code></td><td></td><td>The file number used to <code><a href="open.html">Open</a></code> the file.</td></tr><tr><td><code>record</code></td><td></td><td>The record (<code><a href="random.html">Random</a></code> files) to unlock.</td></tr><tr><td><code>start</code></td><td></td><td>The first byte position (<code><a href="binary.html">Binary</a></code> files) in a range to unlock.</td></tr><tr><td><code>end</code></td><td></td><td>The last byte position (<code><a href="binary.html">Binary</a></code> files) in a range to unlock.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<br>
+<code><b>Unlock</b></code> removes the temporary access restriction set by <code><a href="lock.html">Lock</a></code>.<br>
+<br>
+It is strongly recommended to use the same arguments used in the previous <code><a href="lock.html">Lock</a></code>.<br>
+<br>
+<b>Note: This command does not always work, neither as documented nor as expected. It appears to be broken at the moment.</b><br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Differences from QB</h3><br>
+<ul><li> Currently, FB cannot implicitly unlock the entire file<br>
+<li> In <code><a href="random.html">Random</a></code> mode, FB cannot unlock a range of records<br>
+<br>
+</li></li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="lock.html">Lock</a></code><br>
+<li> <code><a href="open.html">Open</a></code><br>
+<li> <code><a href="../../screen-functions/procedures/screenunlock.html">ScreenUnlock</a></code><br>
+<br>
+</li></li></li></ul><br>
+
+
+ 
+
+<h2>Example</h2>
+<br>
+<div class="indent"> For an example see <code><a href="lock.html">Lock</a></code>.<br>
+<br>
+</div>
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgUnlock.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

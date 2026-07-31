@@ -1,0 +1,647 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CEdit Class — Help Center</title>
+<meta name="description" content="CEdit Class — 64 documented members. Windows reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/cedit-class.html">
+<meta property="og:title" content="CEdit Class">
+<meta property="og:description" content="CEdit Class — 64 documented members. Windows reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/cedit-class.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-controls/cedit-class.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span>Windows</div>
+<h1>CEdit Class</h1>
+<h2>Members (64)</h2>
+<div class="memberlist"><a href="cedit/cedit-canundo.html"><span class="m-n">CanUndo</span><span class="m-d">Determines whether there are any actions in an edit control&#x27;s undo queue.</span></a><a href="cedit/cedit-charfrompos.html"><span class="m-n">CharFromPos</span><span class="m-d">Gets information about the character closest to a specified point in the client area of an edit control.</span></a><a href="cedit/cedit-clear.html"><span class="m-n">Clear</span><span class="m-d">Deletes (clears) the current selection, if any, from the edit control.</span></a><a href="cedit/cedit-copy.html"><span class="m-n">Copy</span><span class="m-d">Copies the current selection to the clipboard in CF_TEXT format.</span></a><a href="cedit/cedit-cut.html"><span class="m-n">Cut</span><span class="m-d">Deletes (cuts) the current selection, if any, in the edit control and copy the deletedtext to the clipboard in CF_TEXT format.</span></a><a href="cedit/cedit-disable.html"><span class="m-n">Disable</span><span class="m-d">Disables a button</span></a><a href="cedit/cedit-emptyundobuffer.html"><span class="m-n">EmptyUndoBuffer</span><span class="m-d">Resets the undo flag of an edit control.</span></a><a href="cedit/cedit-enable.html"><span class="m-n">Enable</span><span class="m-d">Enables a button.</span></a><a href="cedit/cedit-fmtlines.html"><span class="m-n">FmtLines</span><span class="m-d">Sets a flag that determines whether a multiline edit control includes soft line-break characters.</span></a><a href="cedit/cedit-getcuebannertext.html"><span class="m-n">GetCueBannerText</span><span class="m-d">Gets the text that is displayed as the textual cue, or tip, in an edit control.</span></a><a href="cedit/cedit-getfirstvisibleline.html"><span class="m-n">GetFirstVisibleLine</span><span class="m-d">Gets the zero-based index of the uppermost visible line in a multiline edit control.</span></a><a href="cedit/cedit-gethandle.html"><span class="m-n">GetHandle</span><span class="m-d">Gets a handle of the memory currently allocated for a multiline edit control&#x27;s text.</span></a><a href="cedit/cedit-getimestatus.html"><span class="m-n">GetIMEStatus</span><span class="m-d">Retrieves a set of status flags that indicate how the edit control interacts with the Input Method Editor (IME).</span></a><a href="cedit/cedit-getleftmargin.html"><span class="m-n">GetLeftMargin</span><span class="m-d">Returns the width of the left margin for an edit control.</span></a><a href="cedit/cedit-getlimittext.html"><span class="m-n">GetLimitText</span><span class="m-d">Gets the current text limit for an edit control. The return value is the text limit.</span></a><a href="cedit/cedit-getline.html"><span class="m-n">GetLine</span><span class="m-d">Copies a line of text from an edit control.</span></a><a href="cedit/cedit-getlinecount.html"><span class="m-n">GetLineCount</span><span class="m-d">Gets the number of lines in a multiline edit control.</span></a><a href="cedit/cedit-getmargins.html"><span class="m-n">GetMargins</span><span class="m-d">Returns the width of the left margin in the LOWORD, and the width of the right margin in the HIWORD.</span></a><a href="cedit/cedit-getmodify.html"><span class="m-n">GetModify</span><span class="m-d">Gets the state of an edit control&#x27;s modification flag.</span></a><a href="cedit/cedit-getpasswordchar.html"><span class="m-n">GetPasswordChar</span><span class="m-d">Gets the password character that an edit control displays when the user enters text.</span></a><a href="cedit/cedit-getrect.html"><span class="m-n">GetRect</span><span class="m-d">Gets the formatting rectangle of an edit control.</span></a><a href="cedit/cedit-getrightmargin.html"><span class="m-n">GetRightMargin</span><span class="m-d"></span></a><a href="cedit/cedit-getsel.html"><span class="m-n">GetSel</span><span class="m-d">Gets the starting and ending character positions of the current selection in an edit control.</span></a><a href="cedit/cedit-getselend.html"><span class="m-n">GetSelEnd</span><span class="m-d">Gets the ending character position of the current selection in an edit control.</span></a><a href="cedit/cedit-getselstart.html"><span class="m-n">GetSelStart</span><span class="m-d">Gets the starting character position of the current selection in an edit control.</span></a><a href="cedit/cedit-gettext.html"><span class="m-n">GetText</span><span class="m-d">Retrieves the text from an edit control.</span></a><a href="cedit/cedit-gettextlength.html"><span class="m-n">GetTextLength</span><span class="m-d">Retrieves the text length from an edit control.</span></a><a href="cedit/cedit-getthumb.html"><span class="m-n">GetThumb</span><span class="m-d">Gets the position of the scroll box (thumb) in the vertical scroll bar of a multiline edit control.</span></a><a href="cedit/cedit-getwordbreakproc.html"><span class="m-n">GetWordBreakProc</span><span class="m-d">Gets the address of the currently registered word-break procedure.</span></a><a href="cedit/cedit-getzoom.html"><span class="m-n">GetZoom</span><span class="m-d">Gets the current zoom ratio for a multiline edit control. The zoom ration is always between 1/64 and 64.</span></a><a href="cedit/cedit-hideballoontip.html"><span class="m-n">HideBalloonTip</span><span class="m-d">Hides any balloon tip associated with an edit control.</span></a><a href="cedit/cedit-limittext.html"><span class="m-n">LimitText</span><span class="m-d">Sets the text limit of an edit control.</span></a><a href="cedit/cedit-linefromchar.html"><span class="m-n">LineFromChar</span><span class="m-d">Gets the index of the line that contains the specified character index in a multiline edit control.</span></a><a href="cedit/cedit-lineindex.html"><span class="m-n">LineIndex</span><span class="m-d">Gets the character index of the first character of a specified line in a multiline edit control.</span></a><a href="cedit/cedit-linelength.html"><span class="m-n">LineLength</span><span class="m-d">Retrieves the length, in characters, of a line in an edit control.</span></a><a href="cedit/cedit-linescroll.html"><span class="m-n">LineScroll</span><span class="m-d">Scrolls the text in a multiline edit control.</span></a><a href="cedit/cedit-paste.html"><span class="m-n">Paste</span><span class="m-d">Copies the current content of the clipboard to the edit control at the current caretposition. Data is inserted only if the clipboard contains data in CF_TEXT format.</span></a><a href="cedit/cedit-posfromchar.html"><span class="m-n">PosFromChar</span><span class="m-d">Retrieves the client area coordinates of a specified character in an edit control.</span></a><a href="cedit/cedit-removedarkmode.html"><span class="m-n">RemoveDarkMode</span><span class="m-d">Removes dark mode from the button.</span></a><a href="cedit/cedit-replacesel.html"><span class="m-n">ReplaceSel</span><span class="m-d">Replaces the current selection in an edit control with the specified text.</span></a><a href="cedit/cedit-scroll.html"><span class="m-n">Scroll</span><span class="m-d">Scrolls the text vertically in a multiline edit control.</span></a><a href="cedit/cedit-scrollcaret.html"><span class="m-n">ScrollCaret</span><span class="m-d">Scrolls the caret into view in an edit control.</span></a><a href="cedit/cedit-setcuebannertext.html"><span class="m-n">SetCueBannerText</span><span class="m-d">Sets the textual cue, or tip, that is displayed by the edit control to prompt the user for information.</span></a><a href="cedit/cedit-setdarkmode.html"><span class="m-n">SetDarkMode</span><span class="m-d">Sets the dark mode of the edit control.</span></a><a href="cedit/cedit-setextendedstyle.html"><span class="m-n">SetExtendedStyle</span><span class="m-d">Sets extended styles for edit controls using the style mask.</span></a><a href="cedit/cedit-sethandle.html"><span class="m-n">SetHandle</span><span class="m-d">Sets the handle of the memory that will be used by a multiline edit control.</span></a><a href="cedit/cedit-setimestatus.html"><span class="m-n">SetIMEStatus</span><span class="m-d">Sets the status flags that determine how an edit control interacts with the Input Method Editor (IME).</span></a><a href="cedit/cedit-setleftmargin.html"><span class="m-n">SetLeftMargin</span><span class="m-d">Sets the width of the left margin for an edit control.</span></a><a href="cedit/cedit-setlimittext.html"><span class="m-n">SetLimitText</span><span class="m-d">Sets the text limit of an edit control.</span></a><a href="cedit/cedit-setmargins.html"><span class="m-n">SetMargins</span><span class="m-d">Sets the widths of the left and right margins for an edit control.</span></a><a href="cedit/cedit-setmodify.html"><span class="m-n">SetModify</span><span class="m-d">Sets or clears the modification flag for an edit control.</span></a><a href="cedit/cedit-setpasswordchar.html"><span class="m-n">SetPasswordChar</span><span class="m-d">Sets or removes the password character for an edit control.</span></a><a href="cedit/cedit-setreadonly.html"><span class="m-n">SetReadOnly</span><span class="m-d">Sets or removes the read-only style (ES_READONLY) of an edit control.</span></a><a href="cedit/cedit-setrect.html"><span class="m-n">SetRect</span><span class="m-d">Sets the formatting rectangle of a multiline edit control.</span></a><a href="cedit/cedit-setrectnopaint.html"><span class="m-n">SetRectNoPaint</span><span class="m-d">Sets the formatting rectangle of a multiline edit control, but itdoes not redraw the edit control window.</span></a><a href="cedit/cedit-setrightmargin.html"><span class="m-n">SetRightMargin</span><span class="m-d">Sets the width of the left margin for an edit control.</span></a><a href="cedit/cedit-setsel.html"><span class="m-n">SetSel</span><span class="m-d">Selects a range of characters in an edit control.</span></a><a href="cedit/cedit-settabstops.html"><span class="m-n">SetTabStops</span><span class="m-d"></span></a><a href="cedit/cedit-settext.html"><span class="m-n">SetText</span><span class="m-d">Sets the text of an edit control.</span></a><a href="cedit/cedit-setwordbreakproc.html"><span class="m-n">SetWordBreakProc</span><span class="m-d">&#x27; Replaces an edit control&#x27;s default Wordwrap function with an application-defined Wordwrap function.</span></a><a href="cedit/cedit-setzoom.html"><span class="m-n">SetZoom</span><span class="m-d">Sets the zoom ratio for a multiline edit control or a rich edit control.</span></a><a href="cedit/cedit-setzoomable.html"><span class="m-n">SetZoomable</span><span class="m-d">Makes a multiline edit control zoomable.</span></a><a href="cedit/cedit-showballoontip.html"><span class="m-n">ShowBalloonTip</span><span class="m-d">Displays a balloon tip associated with an edit control.</span></a><a href="cedit/cedit-undo.html"><span class="m-n">Undo</span><span class="m-d">Undoes the last edit control operation in the control&#x27;s undo queue.</span></a></div>
+<h2>Documentation</h2>
+<h2 id="cedit-class">CEdit Class</h2>
+<p><code>CEdit</code> is a class on top of the Edit control. An <em>edit control</em> is a rectangular control window typically used in a dialog box to permit the user to enter and edit text by typing on the keyboard. The system automatically processes all user-initiated text operations and notifies the application when the operations are completed.</p>
+<p>See: <a href="https://learn.microsoft.com/en-us/windows/win32/controls/about-edit-controls" target="_blank" rel="noopener">About Edit Controls</a></p>
+<p><strong>Include file</strong>: CEdit.inc.</p>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="cedit/cedit-canundo.html">CanUndo</a></td><td>Determines whether there are any actions in an edit control's undo queue.</td></tr><tr><td><a href="cedit/cedit-charfrompos.html">CharFromPos</a></td><td>Gets information about the character closest to a specified point in the client area of an edit control.</td></tr><tr><td><a href="cedit/cedit-clear.html">Clear</a></td><td>Deletes (clears) the current selection, if any, from the edit control.</td></tr><tr><td><a href="cedit/cedit-copy.html">Copy</a></td><td>Copies the current selection to the clipboard in CF_TEXT format.</td></tr><tr><td><a href="cedit/cedit-cut.html">Cut</a></td><td>Deletes (cuts) the current selection, if any, in the edit control and copy the deletedtext to the clipboard in CF_TEXT format.</td></tr><tr><td><a href="cedit/cedit-disable.html">Disable</a></td><td>Disables a button</td></tr><tr><td><a href="cedit/cedit-emptyundobuffer.html">EmptyUndoBuffer</a></td><td>Resets the undo flag of an edit control.</td></tr><tr><td><a href="cedit/cedit-enable.html">Enable</a></td><td>Enables a button.</td></tr><tr><td><a href="cedit/cedit-fmtlines.html">FmtLines</a></td><td>Sets a flag that determines whether a multiline edit control includes soft line-break characters.</td></tr><tr><td><a href="cedit/cedit-getcuebannertext.html">GetCueBannerText</a></td><td>Gets the text that is displayed as the textual cue, or tip, in an edit control.</td></tr><tr><td><a href="cedit/cedit-getfirstvisibleline.html">GetFirstVisibleLine</a></td><td>Gets the zero-based index of the uppermost visible line in a multiline edit control.</td></tr><tr><td><a href="cedit/cedit-gethandle.html">GetHandle</a></td><td>Gets a handle of the memory currently allocated for a multiline edit control's text.</td></tr><tr><td><a href="cedit/cedit-getimestatus.html">GetIMEStatus</a></td><td>Retrieves a set of status flags that indicate how the edit control interacts with the Input Method Editor (IME).</td></tr><tr><td><a href="cedit/cedit-getlimittext.html">GetLimitText</a></td><td>Gets the current text limit for an edit control. The return value is the text limit.</td></tr><tr><td><a href="cedit/cedit-getline.html">GetLine</a></td><td>Copies a line of text from an edit control.</td></tr><tr><td><a href="cedit/cedit-getlinecount.html">GetLineCount</a></td><td>Gets the number of lines in a multiline edit control.</td></tr><tr><td><a href="cedit/cedit-getmargins.html">GetMargins</a></td><td>Returns the width of the left margin in the LOWORD, and the width of the right margin in the HIWORD.</td></tr><tr><td><a href="cedit/cedit-getleftmargin.html">GetLeftMargin</a></td><td>Returns the width of the left margin for an edit control.</td></tr><tr><td><a href="cedit/cedit-getrightmargin.html">GetRightMargin</a></td><td>Returns the width of the right margin for an edit control.</td></tr><tr><td><a href="cedit/cedit-getmodify.html">GetModify</a></td><td>Gets the state of an edit control's modification flag.</td></tr><tr><td><a href="cedit/cedit-getpasswordchar.html">GetPasswordChar</a></td><td>Gets the password character that an edit control displays when the user enters text.</td></tr><tr><td><a href="cedit/cedit-getrect.html">GetRect</a></td><td>Gets the formatting rectangle of an edit control.</td></tr><tr><td><a href="cedit/cedit-getsel.html">GetSel</a></td><td>Gets the starting and ending character positions of the current selection in an edit control.</td></tr><tr><td><a href="cedit/cedit-getselstart.html">GetSelStart</a></td><td>Gets the starting character position of the current selection in an edit control.</td></tr><tr><td><a href="cedit/cedit-getselend.html">GetSelEnd</a></td><td>Gets the ending character position of the current selection in an edit control.</td></tr><tr><td><a href="cedit/cedit-gettext.html">GetText</a></td><td>Retrieves the text from an edit control.</td></tr><tr><td><a href="cedit/cedit-gettextlength.html">GetTextLength</a></td><td>Retrieves the text length from an edit control.</td></tr><tr><td><a href="cedit/cedit-getthumb.html">GetThumb</a></td><td>Gets the position of the scroll box (thumb) in the vertical scroll bar of a multiline edit control.</td></tr><tr><td><a href="cedit/cedit-getwordbreakproc.html">GetWordBreakProc</a></td><td>Gets the address of the currently registered word-break procedure.</td></tr><tr><td><a href="cedit/cedit-getzoom.html">GetZoom</a></td><td>Gets the current zoom ratio for a multiline edit control. The zoom ration is always between 1/64 and 64.</td></tr><tr><td><a href="cedit/cedit-hideballoontip.html">HideBalloonTip</a></td><td>Hides any balloon tip associated with an edit control.</td></tr><tr><td><a href="cedit/cedit-limittext.html">LimitText</a></td><td>Sets the text limit of an edit control.</td></tr><tr><td><a href="cedit/cedit-linefromchar.html">LineFromChar</a></td><td>Gets the index of the line that contains the specified character index in a multiline edit control.</td></tr><tr><td><a href="cedit/cedit-lineindex.html">LineIndex</a></td><td>Gets the character index of the first character of a specified line in a multiline edit control.</td></tr><tr><td><a href="cedit/cedit-linelength.html">LineLength</a></td><td>Retrieves the length, in characters, of a line in an edit control.</td></tr><tr><td><a href="#linescoll">LineScroll</a></td><td>Scrolls the text in a multiline edit control.</td></tr><tr><td><a href="cedit/cedit-paste.html">Paste</a></td><td>Copies the current content of the clipboard to the edit control at the current caretposition. Data is inserted only if the clipboard contains data in CF_TEXT format.</td></tr><tr><td><a href="cedit/cedit-posfromchar.html">PosFromChar</a></td><td>Retrieves the client area coordinates of a specified character in an edit control.</td></tr><tr><td><a href="cedit/cedit-removedarkmode.html">RemoveDarkMode</a></td><td>Removes dark mode from the button.</td></tr><tr><td><a href="cedit/cedit-replacesel.html">ReplaceSel</a></td><td>Replaces the current selection in an edit control with the specified text.</td></tr><tr><td><a href="cedit/cedit-scroll.html">Scroll</a></td><td>Scrolls the text vertically in a multiline edit control.</td></tr><tr><td><a href="cedit/cedit-scrollcaret.html">ScrollCaret</a></td><td>Scrolls the caret into view in an edit control.</td></tr><tr><td><a href="cedit/cedit-setcuebannertext.html">SetCueBannerText</a></td><td>Sets the textual cue, or tip, that is displayed by the edit control to prompt the user for information.</td></tr><tr><td><a href="#setcuebannertextfocused">SetCueBannerTextFocused</a></td><td>Sets the text that is displayed as the textual cue, or tip, for an edit control.</td></tr><tr><td><a href="#setdarknode">SetDarkMode</a></td><td>Sets the dark mode of the edit control.</td></tr><tr><td><a href="cedit/cedit-setextendedstyle.html">SetExtendedStyle</a></td><td>Sets extended styles for edit controls using the style mask.</td></tr><tr><td><a href="cedit/cedit-sethandle.html">SetHandle</a></td><td>Sets the handle of the memory that will be used by a multiline edit control.</td></tr><tr><td><a href="cedit/cedit-setimestatus.html">SetIMEStatus</a></td><td>Sets the status flags that determine how an edit control interacts with the Input Method Editor (IME).</td></tr><tr><td><a href="cedit/cedit-limittext.html">SetLimitText</a></td><td>Sets the text limit of an edit control.</td></tr><tr><td><a href="cedit/cedit-setmargins.html">SetMargins</a></td><td>Sets the widths of the left and right margins for an edit control.</td></tr><tr><td><a href="cedit/cedit-setleftmargin.html">SetLeftMargin</a></td><td>Sets the width of the left margin for an edit control.</td></tr><tr><td><a href="cedit/cedit-setrightmargin.html">SetRightMargin</a></td><td>Sets the width of the left margin for an edit control.</td></tr><tr><td><a href="cedit/cedit-setmodify.html">SetModify</a></td><td>Sets or clears the modification flag for an edit control.</td></tr><tr><td><a href="cedit/cedit-setpasswordchar.html">SetPasswordChar</a></td><td>Sets or removes the password character for an edit control.</td></tr><tr><td><a href="cedit/cedit-setreadonly.html">SetReadOnly</a></td><td>Sets or removes the read-only style (ES_READONLY) of an edit control.</td></tr><tr><td><a href="cedit/cedit-setrect.html">SetRect</a></td><td>Sets the formatting rectangle of a multiline edit control.</td></tr><tr><td><a href="cedit/cedit-setrectnopaint.html">SetRectNoPaint</a></td><td>Sets the formatting rectangle of a multiline edit control, but itdoes not redraw the edit control window.</td></tr><tr><td><a href="cedit/cedit-setsel.html">SetSel</a></td><td>Selects a range of characters in an edit control.</td></tr><tr><td><a href="cedit/cedit-settabstops.html">SetTabStops</a></td><td>Sets the tab stops in a multiline edit control.</td></tr><tr><td><a href="cedit/cedit-settext.html">SetText</a></td><td>Sets the text of an edit control.</td></tr><tr><td><a href="cedit/cedit-setwordbreakproc.html">SetWordBreakProc</a></td><td>' Replaces an edit control's default Wordwrap function with an application-defined Wordwrap function.</td></tr><tr><td><a href="cedit/cedit-setzoom.html">SetZoom</a></td><td>Sets the zoom ratio for a multiline edit control or a rich edit control.</td></tr><tr><td><a href="cedit/cedit-setzoomable.html">SetZoomable</a></td><td>Makes a multiline edit control zoomable.</td></tr><tr><td><a href="cedit/cedit-showballoontip.html">ShowBalloonTip</a></td><td>Displays a balloon tip associated with an edit control.</td></tr><tr><td><a href="cedit/cedit-undo.html">Undo</a></td><td>Undoes the last edit control operation in the control's undo queue.</td></tr></tbody></table></div>
+<hr>
+<h4 id="canundo">CanUndo</h4>
+<p>Determines whether there are any actions in an edit control's undo queue.</p>
+<pre class="code"><code>FUNCTION CanUndo (BYVAL hEdit AS HWND) AS BOOLEAN</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>If there are actions in the control's undo queue, the return value is true. If the undo queue is empty, the return value is false.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CEdit.CanUndo(hEdit)</code></pre>
+<hr>
+<h4 id="charfrompos">CharFromPos</h4>
+<p>Gets information about the character closest to a specified point in the client area of an edit control.</p>
+<pre class="code"><code>FUNCTION CharFromPos (BYVAL hEdit AS HWND, BYVAL x AS SHORT, BYVAL y AS SHORT) AS DWORD</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td>x</td><td>The x-coordinate of a point in the control's client area.</td></tr><tr><td>y</td><td>The y-coordinate of a point in the control's client area.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>The coordinates are in screen units and are relative to the upper-left corner of the control's client area.</p>
+<h5 id="return-value">Return value</h5>
+<p>The <strong>LOWORD</strong> specifies the zero-based index of the character nearest the specified point. This index is relative to the beginning of the control, not the beginning of the line. If the specified point is beyond the last character in the edit control, the return value indicates the last character in the control. The <strong>HIWORD</strong> specifies the zero-based index of the line that contains the character. For single-line edit controls, this value is zero. The index indicates the line delimiter if the specified point is beyond the last visible character in a line.</p>
+<hr>
+<h4 id="clear">Clear</h4>
+<p>Sends a message to an edit control to delete (clear) the current selection, if any, from the edit control.</p>
+<pre class="code"><code>SUB Clear (BYVAL hEdit AS HWND)</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>This method does not return a value.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CEdit.Clear(hEdit)</code></pre>
+<hr>
+<h4 id="copy">Copy</h4>
+<p>Sends a message to an edit control to copy the current selection to the clipboard in CF_TEXT format.</p>
+<pre class="code"><code>SUB Copy (BYVAL hEdit AS HWND)</code></pre>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CEdit.Copy(hEdit)</code></pre>
+<hr>
+<h4 id="cut">Cut</h4>
+<p>Sends a message to an edit control to delete (cut) the current selection, if any, in the edit control and copy the deleted text to the clipboard in CF_TEXT format.</p>
+<pre class="code"><code>SUB Cut (BYVAL hEdit AS HWND)</code></pre>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CEdit.Cut(hEdit)</code></pre>
+<hr>
+<h4 id="disable">Disable</h4>
+<p>Disables mouse and keyboard input to the specified window or control. When input is disabled, the window does not receive input such as mouse clicks and key presses.</p>
+<pre class="code"><code>SUB Disable (BYVAL hEdit AS HWND)</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>Returns FALSE if the control was previously disabled; otherwise TRUE.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CEdit.Disable(hEdit)</code></pre>
+<h5 id="remarks">Remarks</h5>
+<p>If the window is being disabled, the system sends a <strong>WM_CANCELMODE</strong> message. If the enabled state of a window is changing, the system sends a <strong>WM_ENABLE</strong> message after the <strong>WM_CANCELMODE</strong> message. If a window is already disabled, its child windows are implicitly disabled, although they are not sent a <strong>WM_ENABLE</strong> message.</p>
+<p>A window must be enabled before it can be activated. For example, if an application is displaying a modeless dialog box and has disabled its main window, the application must enable the main window before destroying the dialog box. Otherwise, another window will receive the keyboard focus and be activated. If a child window is disabled, it is ignored when the system tries to determine which window should receive mouse messages.</p>
+<p>By default, a window is enabled when it is created. To create a window that is initially disabled, an application can specify the <strong>WS_DISABLED</strong> style in the <strong>CreateWindow</strong> or <strong>CreateWindowEx</strong> function. After a window has been created, an application can use <strong>EnableWindow</strong> API function to enable or disable the window.</p>
+<p>An application can use this function to disable a control in a dialog box. A disabled control cannot receive the keyboard focus, nor can a user gain access to it.</p>
+<hr>
+<h4 id="enable">Enable</h4>
+<p>Enables mouse and keyboard input to the specified window or control. When input is enabled, the window receives all input.</p>
+<pre class="code"><code>SUB Enable (BYVAL hEdit AS HWND)</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>Returns FALSE if the control was previously enabled; otherwise TRUE.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CEdit.Enable(hEdit)</code></pre>
+<h5 id="remarks">Remarks</h5>
+<p>If the window is being disabled, the system sends a <strong>WM_CANCELMODE</strong> message. If the enabled state of a window is changing, the system sends a <strong>WM_ENABLE</strong> message after the <strong>WM_CANCELMODE</strong> message. If a window is already disabled, its child windows are implicitly disabled, although they are not sent a <strong>WM_ENABLE</strong> message.</p>
+<p>A window must be enabled before it can be activated. For example, if an application is displaying a modeless dialog box and has disabled its main window, the application must enable the main window before destroying the dialog box. Otherwise, another window will receive the keyboard focus and be activated. If a child window is disabled, it is ignored when the system tries to determine which window should receive mouse messages.</p>
+<p>By default, a window is enabled when it is created. To create a window that is initially disabled, an application can specify the <strong>WS_DISABLED</strong> style in the <strong>CreateWindow</strong> or <strong>CreateWindowEx</strong> function. After a window has been created, an application can use the <strong>EnableWindow</strong> API function to enable or disable the window.</p>
+<p>An application can use this method to enable a control in a dialog box.</p>
+<hr>
+<h4 id="emptyundobuffer">EmptyUndoBuffer</h4>
+<p>Resets the undo flag of an edit control. The undo flag is set whenever an operation within the edit control can be undone.</p>
+<pre class="code"><code>SUB EmptyUndoBuffer (BYVAL hEdit AS HWND)</code></pre>
+<h5 id="remarks">Remarks</h5>
+<p>This method empties all undo and redo buffers. The undo flag is automatically reset whenever the edit control receives a <strong>WM_SETTEXT</strong> or <strong>EM_SETHANDLE</strong> message.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CEdit.EmptyUndoBuffer(hEdit)</code></pre>
+<hr>
+<h4 id="fmtlines">FmtLines</h4>
+<p>Sets a flag that determines whether a multiline edit control includes soft line-break characters. A soft line break consists of two carriage returns and a line feed and is inserted at the end of a line that is broken because of wordwrapping.</p>
+<pre class="code"><code>SUB FmtLines (BYVAL hEdit AS HWND, BYVAL AddEolFlag AS BOOLEAN) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hEdit</em></td><td>The handle of the edit control.</td></tr><tr><td><em>AddEolFlag</em></td><td>A value of TRUE inserts the characters; a value of FALSE removes them.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The return value is identical to the <em>AddEolFlag</em> parameter.</p>
+<h5 id="remarks">Remarks</h5>
+<p>This message affects only the buffer returned by the <strong>GetHandle</strong> method and the text returned by the <strong>WM_GETTEXT</strong> message. It has no effect on the display of the text within the edit control.</p>
+<p>The <strong>EM_FMTLINES</strong> message does not affect a line that ends with a hard line break. A hard line break consists of one carriage return and a line feed.</p>
+<p>The size of the text changes when this message is processed.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CEdit.FmtLines(hEdit, TRUE)</code></pre>
+<hr>
+<h4 id="getcuebannertext">GetCueBannerText</h4>
+<p>Gets the text that is displayed as the textual cue, or tip, in an edit control.</p>
+<pre class="code"><code>FUNCTION GetCueBannerText (BYVAL pwszText AS WSTRING PTR, BYVAL cchText AS LONG) AS BOOLEAN
+FUNCTION CEdit.GetCueBannerText (BYVAL hEdit AS HWND, BYVAL cchText AS DWORD) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hEdit</em></td><td>The handle of the edit control.</td></tr><tr><td><em>pwszText</em></td><td>A pointer to a Unicode buffer that receives the text set as the textual cue. The caller is responsible for allocating the buffer.</td></tr><tr><td><em>cchText</em></td><td>The size of the buffer pointed to by <em>pwszText</em> in characters, including the terminating NULL.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>To use this method, you must provide a manifest specifying Comclt32.dll version 6.0.</p>
+<hr>
+<h4 id="getfirstvisibleline">GetFirstVisibleLine</h4>
+<p>Gets the zero-based index of the uppermost visible line in a multiline edit control.</p>
+<pre class="code"><code>FUNCTION CEdit.GetFirstVisibleLine (BYVAL hEdit AS HWND) AS LONG</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>The return value is the zero-based index of the uppermost visible line in a multiline edit control.</p>
+<p>For single-line edit controls, the return value is the zero-based index of the first visible character.</p>
+<h5 id="remarks">Remarks</h5>
+<p>The number of lines and the length of the lines in an edit control depend on the width of the control and the current Wordwrap setting.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM nLine AS LONG = CEdit.GetFirstVisibleLine(hEdit)</code></pre>
+<hr>
+<h4 id="gethandle">GetHandle</h4>
+<p>Gets a handle of the memory currently allocated for a multiline edit control's text.</p>
+<pre class="code"><code>FUNCTION GetHandle (BYVAL hEdit AS HWND) AS HLOCAL</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>The return value is a memory handle identifying the buffer that holds the content of the edit control. If an error occurs, such as sending the message to a single-line edit control, the return value is zero.</p>
+<h5 id="remarks">Remarks</h5>
+<p>If the function succeeds, the application can access the contents of the edit control by casting the return value to <strong>HLOCAL</strong> and passing it to <strong>LocalLock</strong>. <strong>LocalLock</strong> returns a pointer to a buffer that is a null-terminated array of characters. For example, The application may not change the contents of the buffer. To unlock the buffer, the application calls <strong>LocalUnlock</strong> before allowing the edit control to receive new messages.</p>
+<p>If your application cannot abide by the restrictions imposed by <strong>EM_GETHANDLE</strong>, use the <strong>GetWindowTextLength</strong> and <strong>GetWindowText</strong> functions to copy the contents of the edit control into an application-provided buffer.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM h AS HLOCAL = CEdit.GetHandle(hEdit)</code></pre>
+<hr>
+<h4 id="getimestatus">GetIMEStatus</h4>
+<p>Gets a set of status flags that indicate how the edit control interacts with the Input Method Editor (IME).</p>
+<pre class="code"><code>FUNCTION GetIMEStatus (BYVAL hEdit AS HWND, BYVAL nStatusType AS LONG) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>nStatusType</em></td><td>The type of status to retrieve. This parameter can be the following value:<br><strong>EMSIS_COMPOSITIONSTRING</strong>: Sets behavior for handling the composition string.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Data specific to the type of status to retrieve. With the <strong>EMSIS_COMPOSITIONSTRING</strong> value for <em>nStatusType</em>, this return value is one or more of the following values.</p>
+<div class="table-wrap"><table><thead><tr><th>Return code</th><th>Description</th></tr></thead><tbody><tr><td><strong>EIMES_GETCOMPSTRATONCE</strong></td><td>If this flag is set, the edit control hooks the <strong>WM_IME_COMPOSITION</strong> message with fFlags set to <strong>GCS_RESULTSTR</strong> and returns the result string immediately. If this flag is not set, the edit control passes the <strong>WM_IME_COMPOSITION</strong> message to the default window procedure and processes the result string from the <strong>WM_CHAR</strong> message; this is the default behavior of the edit control.</td></tr><tr><td><strong>EIMES_CANCELCOMPSTRINFOCUS</strong></td><td>If this flag is set, the edit control cancels the composition string when it receives the <strong>WM_SETFOCUS</strong> message. If this flag is not set, the edit control does not cancel the composition string; this is the default behavior of the edit control.</td></tr><tr><td><strong>EIMES_COMPLETECOMPSTRKILLFOCUS</strong></td><td>If this flag is set, the edit control completes the composition string upon receiving the <strong>WM_KILLFOCUS</strong> message. If this flag is not set, the edit control does not complete the composition string; this is the default behavior of the edit control.</td></tr></tbody></table></div>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM status AS LONG = CEdit.GetIMEStatus(hEdit, EMSIS_COMPOSITIONSTRING)</code></pre>
+<hr>
+<h4 id="getlimittext">GetLimitText</h4>
+<p>Gets a set of status flags that indicate how the edit control interacts with the Input Method Editor (IME).</p>
+<pre class="code"><code>FUNCTION GetLimitText (BYVAL hEdit AS HWND) AS DWORD</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>The return value is the text limit.</p>
+<h5 id="remarks">Remarks</h5>
+<p>The text limit is the maximum amount of text, in characters, that the control can contain.</p>
+<pre class="code"><code>DIM txtLimit AS DWORD = CEdit.GetLimitText(hEdit)</code></pre>
+<hr>
+<h4 id="getline">GetLine</h4>
+<p>Copies a line of text from an edit control and places it in a specified buffer. You can send this message to either an edit control or a rich edit control.</p>
+<pre class="code"><code>FUNCTION GetLine (BYVAL hEdit AS HWND, BYVAL which AS DWORD) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hEdit</em></td><td>The handle of the edit control.</td></tr><tr><td><em>which</em></td><td>The zero-based index of the line to retrieve from a multiline edit control. A value of zero specifies the topmost line. This parameter is ignored by a single-line edit control.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The return value is the number of characters copied. The return value is zero if the line number specified by the <em>which</em> parameter is greater than the number of lines in the edit control.</p>
+<h5 id="remarks">Remarks</h5>
+<p>The copied line does not contain a terminating null character.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM dwsText AS DWSTRING = CEdit.GetLine(hEdit, 5)</code></pre>
+<hr>
+<h4 id="getlinecount">GetLineCount</h4>
+<p>Gets the number of lines in a multiline edit control.</p>
+<pre class="code"><code>FUNCTION GetLineCount (BYVAL hEdit AS HWND) AS LONG</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>The return value is an integer specifying the total number of text lines in the multiline edit control or rich edit control. If the control has no text, the return value is 1. The return value will never be less than 1.</p>
+<h5 id="remarks">Remarks</h5>
+<p>Retrieves the total number of text lines, not just the number of lines that are currently visible.</p>
+<p>If the Wordwrap feature is enabled, the number of lines can change when the dimensions of the editing window change.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM lineCount AS LONG = CEdit.GetLineCount(hEdit)</code></pre>
+<hr>
+<h4 id="getmargins">GetMargins</h4>
+<p>Gets the widths of the left and right margins for an edit control.</p>
+<pre class="code"><code>FUNCTION GetMargins (BYVAL hEdit AS HWND) AS DWORD</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>Returns the width of the left margin in the LOWORD, and the width of the right margin in the HIWORD.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM dwMargins AS DWORD = CEdit.GetMargins(hEdit)</code></pre>
+<hr>
+<h4 id="getleftmargin">GetLeftMargin</h4>
+<p>Gets the width of the left margin for an edit control.</p>
+<pre class="code"><code>FUNCTION GetLeftMargin (BYVAL hEdit AS HWND) AS WORD</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>Returns the width of the left margin.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM leftMargin AS WORD = CEdit.GetLeftMargin(hEdit)</code></pre>
+<hr>
+<h4 id="getrigthmargin">GetRigthMargin</h4>
+<p>Gets the width of the right margin for an edit control.</p>
+<pre class="code"><code>FUNCTION GetRightMargin (BYVAL hEdit AS HWND) AS WORD</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>Returns the width of the right margin.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM rightMargin AS WORD = CEdit.GetRightMargin(hEdit)</code></pre>
+<hr>
+<h4 id="getmodify">GetModify</h4>
+<p>Gets the state of an edit control's modification flag. The flag indicates whether the contents of the edit control have been modified.</p>
+<pre class="code"><code>FUNCTION GetModify (BYVAL hEdit AS HWND) AS BOOLEAN</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>If the contents of edit control have been modified, the return value is TRUE; otherwise, it is FALSE.</p>
+<h5 id="remarks">Remarks</h5>
+<p>The system automatically clears the modification flag to zero when the control is created. If the user changes the control's text, the system sets the flag to nonzero. You can send the EM_SETMODIFY message to the edit control to set or clear the flag.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM bModify AS BOOLEAN = CEdit.GetModify(hEdit)</code></pre>
+<hr>
+<h4 id="getpasswordchar">GetPasswordChar</h4>
+<p>Gets the password character that an edit control displays when the user enters text.</p>
+<pre class="code"><code>FUNCTION GetPasswordChar (BYVAL hEdit AS HWND) AS LONG</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>The return value specifies the character to be displayed in place of any characters typed by the user. If the return value is NULL, there is no password character, and the control displays the characters typed by the user.</p>
+<h5 id="remarks">Remarks</h5>
+<p>If an edit control is created with the <strong>ES_PASSWORD</strong> style, the default password character is set to an asterisk (*). If an edit control is created without the <strong>ES_PASSWORD</strong> style, there is no password character. To change the password character, send the <strong>SetPasswordChar</strong> method.</p>
+<p>Multiline edit controls do not support the password style or messages.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM c AS LOMG = CEdit.GetPasswordChar(hEdit)</code></pre>
+<hr>
+<h4 id="getrect">GetRect</h4>
+<p>Gets the formatting rectangle of an edit control. The formatting rectangle is the limiting rectangle into which the control draws the text. The limiting rectangle is independent of the size of the edit-control window.</p>
+<pre class="code"><code>SUB CEdit.GetRect (BYVAL hEdit AS HWND, BYVAL prc AS RECT PTR)
+SUB GetRect (BYVAL hEdit AS HWND, BYREF rc AS RECT)
+FUNCTION GetRect (NYVAL hEdit AS HWND) AS RECT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>prc</em></td><td>A pointer to a <strong>RECT</strong> structure that receives the formatting rectangle.</td></tr><tr><td><em>rc</em></td><td>A <strong>RECT</strong> structure that receives the formatting rectangle.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Gets the formatting rectangle of an edit control. The formatting rectangle is the limiting rectangle into which the control draws the text. The limiting rectangle is independent of the size of the edit-control window.</p>
+<h5 id="usage-examples">Usage examples</h5>
+<pre class="code"><code>DIM rc AS RECT
+CEdit.GetRect(hEdit, @rc)
+CEdit.GetRect(hEdit, rc)
+rc = CEdit.GetRect(hEdit)</code></pre>
+<hr>
+<h4 id="getsel">GetSel</h4>
+<p>Gets the starting and ending character positions (in characters) of the current selection in an edit control.</p>
+<pre class="code"><code>FUNCTION CEdit.GetSel (BYVAL hEdit AS HWND, BYVAL pdwStartPos AS DWORD PTR, BYVAL pdwEndPos AS DWORD PTR) AS LONG
+FUNCTION GetSel (BYVAL hEdit AS HWND, BYREF dwStartPos AS DWORD, BYREF dwEndPos AS DWORD) AS LONG
+FUNCTION GetSel (BYVAL hEdit AS HWND) AS POINTL</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hEdit</em></td><td>The handle of the edit control</td></tr><tr><td><em>dwStartPos</em></td><td>A pointer to a DWORD value that receives the starting position of the selection. This parameter can be NULL.</td></tr><tr><td><em>dwEndPos</em></td><td>A pointer to a DWORD value that receives the position of the first unselected character after the end of the selection. This parameter can be NULL.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The starting and ending character positions (in characters) of the current selection in an edit control.</p>
+<h5 id="remarks">Remarks</h5>
+<p>If there is no selection, the starting and ending values are both the position of the caret.</p>
+<h5 id="usage-examples">Usage examples</h5>
+<pre class="code"><code>DIM AS DWORD dwStartPos, dwEndPos
+CEdit.GetSel(hEdit, @dwStartPos, @dwEndPos)
+CEdit.GetSel(hEdit, dwStartPos, dwEndPos)
+DIM pt AS POINTL
+pt = CEdit.GetSel(hEdit)</code></pre>
+<hr>
+<h4 id="getselstart">GetSelStart</h4>
+<p>Gets the starting character position of the current selection in an edit control.</p>
+<pre class="code"><code>FUNCTION GetSelStart (BYVAL hEdit AS HWND) AS DWORD</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>The starting character position of the current selection in an edit control.</p>
+<h5 id="remarks">Remarks</h5>
+<p>If there is no selection, the starting and ending values are both the position of the caret.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM sel AS DWORD = CEdit.GetSelStart(hEdit)</code></pre>
+<hr>
+<h4 id="getselend">GetSelEnd</h4>
+<p>Gets the ending character position of the current selection in an edit control.</p>
+<pre class="code"><code>FUNCTION GetSelEnd (BYVAL hEdit AS HWND) AS DWORD</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>The ending character position of the current selection in an edit control.</p>
+<h5 id="remarks">Remarks</h5>
+<p>If there is no selection, the starting and ending values are both the position of the caret.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM sel AS DWORD = CEdit.GetSelEnd(hEdit)</code></pre>
+<hr>
+<h4 id="gettext">GetText</h4>
+<p>Retrieves the text in a edit control.</p>
+<pre class="code"><code>FUNCTION GetText (BYVAL hEdit AS HWND) AS DWSTRING</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>The retrieved text.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM dwsText AS DWSTRING = CEdit.GetText(hEdit)</code></pre>
+<hr>
+<h4 id="gettextlength">GetTextLength</h4>
+<p>Retrieves the length of the text in a edit control.</p>
+<pre class="code"><code>FUNCTION GetTextLength (BYVAL hEdit AS HWND) AS LONG</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>The length of the text in a edit control.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM nLen AS LONG = CEdit.GetTextLength(hEdit)</code></pre>
+<hr>
+<h4 id="getthumb">GetThumb</h4>
+<p>Gets the position of the scroll box (thumb) in the vertical scroll bar of a multiline edit control.</p>
+<pre class="code"><code>FUNCTION GetThumb (BYVAL HEdit AS HWND) AS LONG</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>The position of the scroll box.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM nPos AS LONG = CEdit.GetThumb(hEdit)</code></pre>
+<hr>
+<h4 id="getwordbreakproc">GetWordBreakProc</h4>
+<p>Gets the address of the current Wordwrap function.</p>
+<pre class="code"><code>FUNCTION GetWordBreakProc (BYVAL hEdit AS HWND) AS LONG_PTR</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>The address of the current Wordwrap function.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM proc AS LONG_PTR = CEdit.GetWordBreakProc(hEdit)</code></pre>
+<hr>
+<h4 id="hideballoontip">HideBalloonTip</h4>
+<p>Hides any balloon tip associated with an edit control.</p>
+<pre class="code"><code>FUNCTION HideBalloonTip (BYVAL hEdit AS HWND) AS BOOLEAN</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>If the method succeeds, it returns TRUE. Otherwise it returns FALSE.</p>
+<p>To use this method, you must provide a manifest specifying Comclt32.dll version 6.0.</p>
+<pre class="code"><code>DIM bRes AS BOOLEAN = CEdit.HideBalloonTip(hEdit)</code></pre>
+<hr>
+<h4 id="limittext">LimitText / SetLimitText</h4>
+<p>Sets the text limit of an edit control. The text limit is the maximum amount of text, in characters, that the user can type into the edit control.</p>
+<pre class="code"><code>SUB LimitText (BYVAL hEdit AS HWND, BYVAL chMax AS DWORD)
+SUB SetLimitText (BYVAL hEdit AS HWND, BYVAL chMax AS DWORD)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hEdit</em></td><td>The handle of the edit control.</td></tr><tr><td><em>chMax</em></td><td>The maximum number of characters the user can enter. This number does not include the terminating null character.</td></tr></tbody></table></div>
+<h5 id="usage-examples">Usage examples</h5>
+<pre class="code"><code>CEdit.LimitText(hEdit, 50)
+CEdit.SetLimitText(hEdit, 50)</code></pre>
+<hr>
+<h4 id="linefromchar">LineFromChar</h4>
+<p>Gets the index of the line that contains the specified character index in a multiline edit control. A character index is the zero-based index of the character from the beginning of the edit control.</p>
+<pre class="code"><code>FUNCTION LineFromChar (BYVAL hEdit AS HWND, BYVAL index AS LONG) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hEdit</em></td><td>The handle of the edit control.</td></tr><tr><td><em>index</em></td><td>The character index of the character contained in the line whose number is to be retrieved. If this parameter is -1, it retrieves either the line number of the current line (the line containing the caret) or, if there is a selection, the line number of the line containing the beginning of the selection.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The return value is the zero-based line number of the line containing the character index specified by <em>index</em>.</p>
+<hr>
+<h4 id="lineindex">LineIndex</h4>
+<p>Gets the character index of the first character of a specified line in a multiline edit control. A character index is the zero-based index of the character from the beginning of the edit control.</p>
+<pre class="code"><code>FUNCTION LineIndex (BYVAL hEdit AS HWND, BYVAL nLine AS LONG) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hEdit</em></td><td>The handle of the edit control.</td></tr><tr><td><em>nLine</em></td><td>The zero-based line number. A value of -1 specifies the current line number (the line that contains the caret).</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The return value is the character index of the line specified in the <em>nLine</em> parameter, or it is -1 if the specified line number is greater than the number of lines in the edit control.</p>
+<hr>
+<h4 id="linelength">LineLength</h4>
+<p>Retrieves the length, in characters, of a line in an edit control.</p>
+<pre class="code"><code>FUNCTION LineLength (BYVAL hEdit AS HWND, BYVAL index AS LONG) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hEdit</em></td><td>The handle of the edit control.</td></tr><tr><td><em>index</em></td><td>The character index of a character in the line whose length is to be retrieved. If this parameter is greater than the number of characters in the control, the return value is zero.This parameter can be -1. In this case, the method returns the number of unselected characters on lines containing selected characters. For example, if the selection extended from the fourth character of one line through the eighth character from the end of the next line, the return value would be 10 (three characters on the first line and seven on the next).</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The length, in characters, of a line in an edit control.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM nLen AS LONG = CEdit.LineLength(hEdit, 5)</code></pre>
+<hr>
+<h4 id="linescroll">LineScroll</h4>
+<p>Scrolls the text in a multiline edit control.</p>
+<pre class="code"><code>FUNCTION LineScroll (BYVAL hEdit AS HWND, BYVAL x AS LONG, BYVAL y AS LONG) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>x</em></td><td>The number of characters to scroll horizontally.</td></tr><tr><td><em>y</em></td><td>The number of characters to scroll vertically.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the message is sent to a multiline edit control, the return value is TRUE.</p>
+<p>If the message is sent to a single-line edit control, the return value is FALSE.</p>
+<h5 id="remarks">Remarks</h5>
+<p>The control does not scroll vertically past the last line of text in the edit control. If the current line plus the number of lines specified by the lParam parameter exceeds the total number of lines in the edit control, the value is adjusted so that the last line of the edit control is scrolled to the top of the edit-control window.</p>
+<p>The <strong>LineScroll</strong> method scrolls the text vertically or horizontally in a multiline edit control. It can be used to scroll horizontally past the last character of any line.</p>
+<hr>
+<h4 id="paste">Paste</h4>
+<p>Copies the current content of the clipboard to the edit control at the current caret position. Data is inserted only if the clipboard contains data in CF_TEXT format.</p>
+<pre class="code"><code>SUB Paste (BYVAL hEdit AS HWND)</code></pre>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CEdit.Paste(hEdit)</code></pre>
+<hr>
+<h4 id="posfromchar">PosFromChar</h4>
+<p>Retrieves the client area coordinates of a specified character in an edit control.</p>
+<pre class="code"><code>FUNCTION PosFromChar (BYVAL hEdit AS HWND, BYVAL index AS LONG) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hEdit</em></td><td>The handle of the edit control.</td></tr><tr><td><em>index</em></td><td>The zero-based index of the character.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The return value contains the client area coordinates of the character. The <strong>LOWORD</strong> contains the horizontal coordinate and the <strong>HIWORD</strong> contains the vertical coordinate.</p>
+<h5 id="remarks">Remarks</h5>
+<p>A returned coordinate can be a negative value if the specified character is not displayed in the edit control's client area. The coordinates are truncated to integer values.</p>
+<p>If the character is a line delimiter, the returned coordinates indicate a point just beyond the last visible character in the line. If the specified index is greater than the index of the last character in the control, the control returns -1.</p>
+<hr>
+<h4 id="replacesel">ReplaceSel</h4>
+<p>Replaces the selected text in an edit control or a rich edit control with the specified text.</p>
+<pre class="code"><code>SUB ReplaceSel (BYVAL hEdit AS HWND, BYVAL bCanBeUndone AS BOOLEAN, BYVAL pwszText AS WSTRING PTR)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>bCanBeUndone</em></td><td>Specifies whether the replacement operation can be undone. If this is TRUE, the operation can be undone. If this is FALSE, the operation cannot be undone.</td></tr><tr><td><em>pwszText</em></td><td>A pointer to a null-terminated string containing the replacement text.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>Use the <strong>ReplaceSel</strong> mrthod to replace only a portion of the text in an edit control. To replace all of the text, use the <strong>SetText</strong> method.</p>
+<p>If there is no selection, the replacement text is inserted at the caret.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CEdit.ReplaceSel(hEdit, TRUE, "new text")</code></pre>
+<hr>
+<h4 id="scroll">Scroll</h4>
+<p>Scrolls the text vertically in a multiline edit control. This message is equivalent to sending a <strong>WM_VSCROLL</strong> message to the edit control.</p>
+<pre class="code"><code>FUNCTION Scroll (BYVAL hEdit AS HWND, BYVAL nAction AS LONG) AS DWORD</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hEdit</em></td><td>The handle of the edit control.</td></tr><tr><td><em>nAction</em></td><td>The action the scroll bar is to take. This parameter can be one of the following values.</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>Value</th><th>Meaning</th></tr></thead><tbody><tr><td>SB_LINEDOWN</td><td>Scrolls down one line.</td></tr><tr><td>SB_LINEUP</td><td>Scrolls up one line.</td></tr><tr><td>SB_PAGEDOWN</td><td>Scrolls down one page.</td></tr><tr><td>SB_PAGEUP</td><td>Scrolls up one page.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the method is successful, the HIWORD of the return value is TRUE, and the LOWORD is the number of lines that the command scrolls. The number returned may not be the same as the actual number of lines scrolled if the scrolling moves to the beginning or the end of the text. If the wParam parameter specifies an invalid value, the return value is FALSE.</p>
+<h5 id="remarks">Remarks</h5>
+<p>To scroll to a specific line or character position, use the <strong>LineScroll</strong> method. To scroll the caret into view, use the <strong>ScrollCaret</strong> method.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CEdit.Scroll(hEdit, SB_LINEDOWN)</code></pre>
+<hr>
+<h4 id="scrollcaret">ScrollCaret</h4>
+<p>Scrolls the caret into view in an edit control.</p>
+<pre class="code"><code>SUB ScrollCaret (BYVAL HEdit AS HWND)</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>This method does not return a value.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CEdit.ScrollCaret(hEdit)</code></pre>
+<hr>
+<h4 id="setcuebannertext">SetCueBannerText</h4>
+<p>Sets the text that is displayed as the textual cue, or tip, for an edit control.</p>
+<pre class="code"><code>SUB SetCueBannerText (BYVAL hEdit AS HWND, BYVAL pwszText AS WSTRING PTR, BYVAL fDrawFocused AS BOOLEAN = FALSE) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hEdit</em></td><td>The handle of the edit control.</td></tr><tr><td><em>pwszText</em></td><td>A pointer to a Unicode string that contains the text to display as the textual cue.</td></tr><tr><td><em>bDrawFocused</em></td><td>TRUE if the cue banner should show even when the edit control has focus; otherwise, FALSE. FALSE is the default behavior—the cue banner disappears when the user clicks in the control.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the message succeeds, it returns TRUE. Otherwise it returns FALSE.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CEdit.SetCueBanneText(hEdit, "Cue text)</code></pre>
+<hr>
+<h4 id="sethandle">SetHandle</h4>
+<p>Sets the handle of the memory that will be used by a multiline edit control.</p>
+<pre class="code"><code>SUB SetHandle (BYVAL hEdit AS HWND; BYVAL hLocal AS ..HLOCAL)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hEdit</em></td><td>The handle of the edit control.</td></tr><tr><td><em>hLocal</em></td><td>A handle to the memory buffer the edit control uses to store the currently displayed text instead of allocating its own memory. If necessary, the control reallocates this memory.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>This method does not return a value.</p>
+<h5 id="remarks">Remarks</h5>
+<p>Before an application sets a new memory handle, it should call the <strong>GetHandle</strong> method to retrieve the handle of the current memory buffer and should free that memory.</p>
+<p>An edit control automatically reallocates the given buffer whenever it needs additional space for text, or it removes enough text so that additional space is no longer needed.</p>
+<p>Calling <strong>SetHandle</strong> clears the undo buffer (the <strong>Undo</strong> method returns zero) and the internal modification flag (<strong>GetModify</strong> returns zero). The edit control window is redrawn.</p>
+<hr>
+<h4 id="setimestatus">SetIMEStatus</h4>
+<p>Sets the status flags that determine how an edit control interacts with the Input Method Editor (IME).</p>
+<pre class="code"><code>SUB SetIMEStatus (BYVAL hEdit AS HWND, BYVAL nStatusType AS LONG, BYVAL flags AS DWORD) AS DWORD</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hEdit</em></td><td>The handle of the edit control.</td></tr><tr><td><em>nStatusType</em></td><td>The type of status to set. This parameter can be <strong>EMSIS_COMPOSITIONSTRING</strong>.</td></tr><tr><td><em>flags</em></td><td>Data specific to the status type. If <em>nStatusType</em> is <strong>EMSIS_COMPOSITIONSTRING</strong>, this parameter can be one or more of the following values.</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>Value</th><th>Meaning</th></tr></thead><tbody><tr><td><strong>EIMES_GETCOMPSTRATONCE</strong></td><td>If this flag is set, the edit control hooks the <strong>WM_IME_COMPOSITION</strong> message with fFlags set to <strong>GCS_RESULTSTR</strong> and returns the result string immediately. If this flag is not set, the edit control passes the <strong>WM_IME_COMPOSITION</strong> message to the default window procedure and processes the result string from the <strong>WM_CHAR</strong> message; this is the default behavior of the edit control.</td></tr><tr><td><strong>EIMES_CANCELCOMPSTRINFOCUS</strong></td><td>If this flag is set, the edit control cancels the composition string when it receives the <strong>WM_SETFOCUS</strong> message. If this flag is not set, the edit control does not cancel the composition string; this is the default behavior of the edit control.</td></tr><tr><td><strong>EIMES_COMPLETECOMPSTRKILLFOCUS</strong></td><td>If this flag is set, the edit control completes the composition string upon receiving the <strong>WM_KILLFOCUS</strong> message. If this flag is not set, the edit control does not complete the composition string; this is the default behavior of the edit control.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns the previous value of the <em>flags</em> parameter.</p>
+<hr>
+<h4 id="setmargins">SetMargins</h4>
+<p>Sets the widths of the left and right margins for an edit control. The message redraws the control to reflect the new margins.</p>
+<pre class="code"><code>SUB SetMargins (BYVAL hEdit AS HWND, BYVAL nMargins AS LONG, BYVAL nWidth AS LONG)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hEdit</em></td><td>The handle of the edit control.</td></tr><tr><td><em>nMargins</em></td><td>One or more of the following values:<br><strong>EC_LEFTMARGIN</strong>: Sets the left margin.<br><strong>EC_RIGHTMARGIN</strong>: Sets the right margin.</td></tr><tr><td><em>nWidth</em></td><td>The low-order word specifies the new width of the left margin, in pixels. The high-order word specifies the new width of the right margin, in pixels.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>This method does not return a value.</p>
+<hr>
+<h4 id="setleftmargin">SetLeftMargin</h4>
+<p>Sets the width of the left margin for an edit control. The message redraws the control to reflect the new margins.</p>
+<pre class="code"><code>SUB SetLeftMargin (BYVAL hEdit AS HWND, BYVAL nWidth AS WORD)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hEdit</em></td><td>The handle of the edit control.</td></tr><tr><td><em>nWidth</em></td><td>The new width of the left margin, in pixels.</td></tr></tbody></table></div>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CEdit.SetLeftMargin(hEdit, 30)</code></pre>
+<hr>
+<h4 id="setrightmargin">SetRightMargin</h4>
+<p>Sets the width of the right margin for an edit control. The message redraws the control to reflect the new margins.</p>
+<pre class="code"><code>SUB SetRightMargin (BYVAL hEdit AS HWND, BYVAL nWidth AS WORD)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hEdit</em></td><td>The handle of the edit control.</td></tr><tr><td><em>nWidth</em></td><td>The new width of the right margin, in pixels.</td></tr></tbody></table></div>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CEdit.SetRightMargin(hEdit, 30)</code></pre>
+<hr>
+<h4 id="setmodify">SetModify</h4>
+<p>Sets or clears the modification flag for an edit control. The modification flag indicates whether the text within the edit control has been modified.</p>
+<pre class="code"><code>SUB SetModify (BYVAL hEdit AS HWND, BYVAL bModify AS BOOLEAN)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hEdit</em></td><td>The handle of the edit control.</td></tr><tr><td><em>bModify</em></td><td>The new value for the modification flag. A value of TRUE indicates the text has been modified, and a value of FALSE indicates it has not been modified.</td></tr></tbody></table></div>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CEdit.SetModify(hEdit, TRUE)</code></pre>
+<hr>
+<h4 id="setpasswordchar">SetPasswordChar</h4>
+<p>Sets or removes the password character for an edit control. When a password character is set, that character is displayed in place of the characters typed by the user.</p>
+<pre class="code"><code>SUB SetPasswordChar (BYVAL hEdit AS HWND, BYVAL dwchar AS DWORD)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hEdit</em></td><td>The handle of the edit control.</td></tr><tr><td><em>dwchar</em></td><td>The character to be displayed in place of the characters typed by the user. If this parameter is zero, the control removes the current password character and displays the characters typed by the user.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>When an edit control receives the <strong>EM_SETPASSWORDCHAR</strong> message, the control redraws all visible characters using the character specified by the <em>dwchar</em> parameter. If <em>dwchar</em> is zero, the control redraws all visible characters using the characters typed by the user.</p>
+<p>If an edit control is created with the <strong>ES_PASSWORD</strong> style, the default password character is set to an asterisk (*). If an edit control is created without the <strong>ES_PASSWORD</strong> style, there is no password character. The <strong>ES_PASSWORD</strong> style is removed if the <strong>SetPasswordChar</strong> method is called with the <em>dwchar</em> parameter set to zero.</p>
+<p>Multiline edit controls do not support the password style or messages.</p>
+<hr>
+<h4 id="setreadonly">SetReadOnly</h4>
+<p>Sets or removes the read-only style (<strong>ES_READONLY</strong>) of an edit control.</p>
+<pre class="code"><code>FUNCTION SetReadOnly (BYVAL hEdit AS HWND, BYVAL bReadOnly AS BOOLEAN) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hEdit</em></td><td>The handle of the edit control.</td></tr><tr><td><em>bReadOnly</em></td><td>Specifies whether to set or remove the <strong>ES_READONLY</strong> style. A value of TRUE sets the <strong>ES_READONLY</strong> style; a value of FALSE removes the <strong>ES_READONLY</strong> style.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the operation succeeds, the return value is TRUE. If the operation fails, the return value is FALSE.</p>
+<h5 id="remarks">Remarks</h5>
+<p>When an edit control has the <strong>ES_READONLY</strong> style, the user cannot change the text within the edit control.</p>
+<p>To determine whether an edit control has the <strong>ES_READONLY</strong> style, use the <strong>GetWindowLong</strong> function with the <strong>GWL_STYLE</strong> flag.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CEdit.SetReadOnly(hEdit, TRUE)</code></pre>
+<hr>
+<h4 id="setrect">SetRect</h4>
+<p>Sets the formatting rectangle of a multiline edit control. The formatting rectangle is the limiting rectangle into which the control draws the text. The limiting rectangle is independent of the size of the edit control window. This message is processed only by multiline edit controls.</p>
+<pre class="code"><code>SUB SetRect (BYVAL hEdit AS HWND, BYVAL prc AS RECT PTR)
+SUB SetRect (BYVAL hEdit AS HWND, BYREF rc AS RECT)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hEdit</em></td><td>The handle of the edit control.</td></tr><tr><td><em>prc</em></td><td>A pointer to a <strong>RECT</strong> structure that specifies the new dimensions of the rectangle. If this parameter is NULL, the formatting rectangle is set to its default values.</td></tr><tr><td><em>rc</em></td><td>A <strong>RECT</strong> structure that specifies the new dimensions of the rectangle. If this parameter is NULL, the formatting rectangle is set to its default values.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>Setting <em>prc</em> to NULL has no effect if a touch device is installed, or if <strong>SetRect</strong> is called from a thread that has a hook installed (see <strong>SetWindowsHookEx</strong>). In these cases, <em>prc</em> should contain a valid pointer to a <strong>RECT</strong> structure.</p>
+<p>The <strong>SetRect</strong> method causes the text of the edit control to be redrawn. To change the size of the formatting rectangle without redrawing the text, use the <strong>SetRectNoPaint</strong> method.</p>
+<p>When an edit control is first created, the formatting rectangle is set to a default size. You can use the <strong>SetRect</strong> method to make the formatting rectangle larger or smaller than the edit control window.</p>
+<p>If the edit control does not have a horizontal scroll bar, and the formatting rectangle is set to be larger than the edit control window, lines of text exceeding the width of the edit control window (but smaller than the width of the formatting rectangle) are clipped instead of wrapped.</p>
+<p>If the edit control contains a border, the formatting rectangle is reduced by the size of the border. If you are adjusting the rectangle returned by an <strong>GetRect</strong> method, you must remove the size of the border before using the rectangle with the <strong>SetRect</strong> method.</p>
+<hr>
+<h4 id="setrectnopaint">SetRectNoPaint</h4>
+<p>Sets the formatting rectangle of a multiline edit control. The <strong>SetRectNoPain</strong> method is identical to the <strong>SetRect</strong> message, except that <strong>SetRectNoPaint</strong> does not redraw the edit control window.</p>
+<p>The formatting rectangle is the limiting rectangle into which the control draws the text. The limiting rectangle is independent of the size of the edit control window.</p>
+<p>This message is processed only by multiline edit controls.</p>
+<pre class="code"><code>SUB SetRectNoPaint (BYVAL hEdit AS HWND, BYREF rc AS RECT)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hEdit</em></td><td>The handle of the edit control.</td></tr><tr><td><em>prc</em></td><td>A pointer to a <strong>RECT</strong> structure that specifies the new dimensions of the rectangle. If this parameter is NULL, the formatting rectangle is set to its default values.</td></tr><tr><td><em>rc</em></td><td>A <strong>RECT</strong> structure that specifies the new dimensions of the rectangle. If this parameter is NULL, the formatting rectangle is set to its default values.</td></tr></tbody></table></div>
+<hr>
+<h4 id="setsel">SetSel</h4>
+<p>Selects a range of characters in an edit control.</p>
+<pre class="code"><code>SUB SetSel (BYVAL hEdit AS HWND, BYVAL nStart AS LONG, BYVAL nEnd AS LONG)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hEdit</em></td><td>The handle of the edit control.</td></tr><tr><td><em>nStart</em></td><td>The starting character position of the selection.</td></tr><tr><td><em>nEnd</em></td><td>The ending character position of the selection.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>This method does not return a value.</p>
+<h5 id="remarks">Remarks</h5>
+<p>The start value can be greater than the end value. The lower of the two values specifies the character position of the first character in the selection. The higher value specifies the position of the first character beyond the selection.</p>
+<p>The start value is the anchor point of the selection, and the end value is the active end. If the user uses the SHIFT key to adjust the size of the selection, the active end can move but the anchor point remains the same.</p>
+<p>If the start is 0 and the end is -1, all the text in the edit control is selected. If the start is -1, any current selection is deselected.</p>
+<p>The control displays a flashing caret at the end position regardless of the relative values of start and end.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CEdit.SetSel(hEdit, 10, 20)</code></pre>
+<hr>
+<h4 id="settabpos">SetTabPos</h4>
+<p>Sets the tab stops in a multiline edit control. When text is copied to the control, any tab character in the text causes space to be generated up to the next tab stop. This message is processed only by multiline edit controls.</p>
+<pre class="code"><code>FUNCTION SetTabStops (BYVAL hEdit AS HWND, BYVAL cTabs AS LONG, BYVAL prgTabStops AS LONG) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hEdit</em></td><td>The handle of the edit control.</td></tr><tr><td><em>cTabs</em></td><td>The number of tab stops contained in the array. If this parameter is zero, the <em>prgTabStops</em> parameter is ignored and default tab stops are set at every 32 dialog template units. If this parameter is 1, tab stops are set at every n dialog template units, where n is the distance pointed to by the <em>prgTabStops</em> parameter. If this parameter is greater than 1, <em>prgTabStops</em> is a pointer to an array of tab stops.</td></tr><tr><td><em>prgTabStops</em></td><td>A pointer to an array of unsigned integers specifying the tab stops, in dialog template units. If the <em>cTabs</em> parameter is 1, this parameter is a pointer to an unsigned integer containing the distance between all tab stops, in dialog template units.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>This method does not automatically redraw the edit control window. If the application is changing the tab stops for text already in the edit control, it should call the <strong>InvalidateRect</strong> function to redraw the edit control window.</p>
+<p>The values specified in the array are in dialog template units, which are the device-independent units used in dialog box templates. To convert measurements from dialog template units to screen units (pixels), use the <strong>MapDialogRect</strong> function.</p>
+<hr>
+<h4 id="settext">SetText</h4>
+<p>Changes the text of the edit control.</p>
+<pre class="code"><code>FUNCTION SetText (BYVAL hEdit AS HWND, BYVAL pwszText AS WSTRING PTR) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hEdit</em></td><td>The handle of the edit control.</td></tr><tr><td><em>pwszText</em></td><td>The new text.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the function succeeds, the return value is TRUE. If the function fails, the return value is FALSE.</p>
+<h5 id="remarks">Remarks</h5>
+<p>The <strong>SetText</strong> method does not expand tab characters (ASCII code 0x09). Tab characters are displayed as vertical bar (|) characters.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CEdit.SetTextl(hEdit, "New text")</code></pre>
+<hr>
+<h4 id="setwordbreakproc">SetWordBreakProc</h4>
+<p>Replaces an edit control's default Wordwrap function with an application-defined Wordwrap function. You can send this message to either an edit control or a rich edit control.</p>
+<pre class="code"><code>SUB SetWordBreakProc (BYAL hEdit AS HWND, BYVAL pfn AS LONG_PTR)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hEdit</em></td><td>The handle of the edit control.</td></tr><tr><td><em>pfn</em></td><td>The address of the application-defined Wordwrap function. For more information about breaking lines, see the description of the <a href="https://learn.microsoft.com/en-us/windows/win32/api/winuser/nc-winuser-editwordbreakprocw" target="_blank" rel="noopener">EditWordBreakProc</a> callback function.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>A Wordwrap function scans a text buffer that contains text to be sent to the screen, looking for the first word that does not fit on the current screen line. The Wordwrap function places this word at the beginning of the next line on the screen.</p>
+<p>A Wordwrap function defines the point at which the system should break a line of text for multiline edit controls, usually at a space character that separates two words. Either a multiline or a single-line edit control might call this function when the user presses arrow keys in combination with the CTRL key to move the caret to the next word or previous word. The default Wordwrap function breaks a line of text at a space character. The application-defined function may define the Wordwrap to occur at a hyphen or a character other than the space character.</p>
+<hr>
+<h4 id="showballoontip">ShowBalloonTip</h4>
+<p>Displays a balloon tip associated with an edit control.</p>
+<pre class="code"><code>FUNCTION ShowBalloonTip (BYVAL hEdit AS HWND, BYVAL peditballoontip AS EDITBALLOONTIP PTR) AS BOOLEAN
+FUNCTION ShowBalloonTip (BYVAL hEdit AS HWND, BYREF edittip AS EDITBALLOONTIP) AS BOOLEAN
+FUNCTION ShowBalloonTip (BYVAL hEdit AS HWND, BYVAL pwszTitle AS WSTRING PTR, _
+   BYVAL pwszText AS WSTRING PTR, BYVAL iIcon AS LONG) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hEdit</em></td><td>The handle of the edit control.</td></tr><tr><td><em>peditballoontip</em></td><td>A pointer to an <strong>EDITBALLOONTIP</strong> structure that contains information about the balloon tip to display.</td></tr><tr><td><em>pwszTitle</em></td><td>The title of the ballon tip.</td></tr><tr><td><em>pwszText</em></td><td>The text of the ballon tip.</td></tr><tr><td><em>iIcon</em></td><td>type of icon to associate with the balloon tip. This member can be one of the following values.</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>Value</th><th>Meaning</th></tr></thead><tbody><tr><td><em>TTI_ERROR</em></td><td>Use the error icon.</td></tr><tr><td><em>TTI_INFO</em></td><td>Use the information icon.</td></tr><tr><td><em>TTI_NONE</em></td><td>Use no icon.</td></tr><tr><td><em>TTI_WARNING</em></td><td>Use the warning icon.</td></tr><tr><td><em>TTI_INFO_LARGE</em></td><td>Use the large information icon. This is assumed to be an HICON value.</td></tr><tr><td><em>TTI_WARNING_LARGE</em></td><td>Use the large warning icon. This is assumed to be an HICON value.</td></tr><tr><td><em>TTI_ERROR_LARGE</em></td><td>Use the large error icon. This is assumed to be an HICON value.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the message succeeds, it returns TRUE. Otherwise it returns FALSE.</p>
+<h5 id="remarks">Remarks</h5>
+<p>To use this message, you must provide a manifest specifying Comclt32.dll version 6.0.</p>
+<hr>
+<h4 id="undo">Undo</h4>
+<p>Undoes the last edit control operation in the control's undo queue.</p>
+<pre class="code"><code>SUB Undo (BYVAL hEdit AS HWND)</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>For a single-line edit control, the return value is always TRUE.</p>
+<p>For a multiline edit control, the return value is TRUE if the undo operation is successful, or FALSE if the undo operation fails.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CEdit.Undo(hEdit)</code></pre>
+<h5 id="remarks">Remarks</h5>
+<p>An undo operation can also be undone. For example, you can restore deleted text with the first <strong>Undo</strong> message, and remove the text again with a second <strong>Undo</strong> message as long as there is no intervening edit operation.</p>
+<hr>
+<h4 id="setdarkmode">SetDarkMode</h4>
+<p>Sets the dark mode of the edit control.</p>
+<pre class="code"><code>FUNCTION SetDarkMode (BYVAL hEdit AS HWND) AS HRESULT</code></pre>
+<h5 id="example-usage">Example usage</h5>
+<pre class="code"><code>CEdit.SetDarkMode(hEdit)</code></pre>
+<hr>
+<h4 id="removedarkmode">RemoveDarkMode</h4>
+<p>Removes dark mode from the button.</p>
+<pre class="code"><code>FUNCTION RemoveDarkMode (BYVAL hEdit AS HWND) AS HRESULT</code></pre>
+<h5 id="example-usage">Example usage</h5>
+<pre class="code"><code>CEdit.RemoveDarkMode(hEdit)</code></pre>
+<h3 id="setextendedstyle">SetExtendedStyle</h3>
+<p>Sets extended styles for edit controls using the style mask.</p>
+<pre class="code"><code>FUNCTION CEdit.SetExtendedStyle (BYVAL hEdit AS HWND, BYVAL dwExStyle AS DWORD, BYVAL dwMask AS DWORD) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hEdit</em></td><td>The handle of the edit control.</td></tr><tr><td><em>dwExStyle</em></td><td>A DWORD value that specifies the extended edit control styles to set.</td></tr><tr><td><em>dwMask</em></td><td>A DWORD value that specifies which styles are to be affected.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If this message succeeds, it returns S_OK. Otherwise, it returns an HRESULT error code.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CEdit.SetExtendedStyle(hEditMulti, ES_EX_ZOOMABLE, ES_EX_ZOOMABLE)</code></pre>
+<hr>
+<h3 id="getzoom">GetZoom</h3>
+<p>Gets the current zoom ratio for a multiline edit control or a rich edit control. The zoom ration is always between 1/64 and 64.</p>
+<pre class="code"><code>FUNCTION CEdit.GetZoom (BYVAL hEdit AS HWND, BYVAL pzNum AS DWORD PTR, BYVAL pzDen AS DWORD PTR) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hEdit</em></td><td>The handle of the edit control.</td></tr><tr><td><em>pzNum</em></td><td>Receives the numerator of the zoom ratio.</td></tr><tr><td><em>pzDen</em></td><td>Receives the denominator of the zoom ratio.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The message returns TRUE if message is processed, which it will be if both <em>pzNum</em> and <em>pzDen</em> are not NULL.</p>
+<h5 id="remarks">Remarks</h5>
+<p>Supported in Windows 10 1809 and later. The edit control needs to have the <strong>ES_EX_ZOOMABLE</strong> extended style set, for this message to have an effect</p>
+<hr>
+<h3 id="setzoom">SetZoom</h3>
+<p>Sets the zoom ratio for a multiline edit control or a rich edit control. The ratio must be a value between 1/64 and 64. The edit control needs to have the <strong>ES_EX_ZOOMABLE</strong> extended style set, for this message to have an effect</p>
+<pre class="code"><code>FUNCTION CEdit.SetZoom (BYVAL hEdit AS HWND, BYVAL zNum AS DWORD, BYVAL zDen AS DWORD) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hEdit</em></td><td>The handle of the edit control.</td></tr><tr><td><em>zNum</em></td><td>Numerator of the zoom ratio.</td></tr><tr><td><em>zDen</em></td><td>Denominator of the zoom ratio. These parameters can have the following values.</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>Value</th><th>Meaning</th></tr></thead><tbody><tr><td><strong>Both 0</strong></td><td>Turns off zooming by using the EM_SETZOOM message (zooming may still occur using TxGetExtent).</td></tr><tr><td><strong>1/64 &lt; (wParam / lParam) &lt; 64</strong></td><td>Zooms display by the zoom ratio numerator/denominator.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the new zoom setting is accepted, the return value is TRUE.</p>
+<p>If the new zoom setting is not accepted, the return value is FALSE.</p>
+<h5 id="remarks">Remarks</h5>
+<p>Supported in Windows 10 1809 and later. The edit control needs to have the <strong>ES_EX_ZOOMABLE</strong> extended style set, for this message to have an effect</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CEdit.SetZoom(hEditMulti, 150, 100)</code></pre>
+<hr>
+<h3 id="setzoomable">SetZoomable</h3>
+<p>Makes a multiline edit control zoomable.</p>
+<pre class="code"><code>FUNCTION CEdit.SetZoomable (BYVAL hEdit AS HWND) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hEdit</em></td><td>The handle of the edit control.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If this message succeeds, it returns S_OK. Otherwise, it returns an HRESULT error code.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CEdit.SetZoom(ablehEditMulti)</code></pre>
+<hr>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

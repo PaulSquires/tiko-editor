@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CRichEditOleCallback.GetNewStorage — Help Center</title>
+<meta name="description" content="Provides storage for a new object pasted from the clipboard or read in from an Rich Text Format (RTF) stream.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/cricheditolecallback/cricheditolecallback-getnewstorage.html">
+<meta property="og:title" content="CRichEditOleCallback.GetNewStorage">
+<meta property="og:description" content="Provides storage for a new object pasted from the clipboard or read in from an Rich Text Format (RTF) stream.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/cricheditolecallback/cricheditolecallback-getnewstorage.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-controls/cricheditolecallback/cricheditolecallback-getnewstorage.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cricheditolecallback-class.html">CRichEditOleCallback Class</a></div>
+<h1>CRichEditOleCallback.GetNewStorage<span class="h1kind">method</span></h1>
+<p class="lede">Provides storage for a new object pasted from the clipboard or read in from an Rich Text Format (RTF) stream.</p>
+<div class="badges"><a class="badge" href="../../index.html">Windows</a><span class="badge">method</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GetNewStorage (BYVAL lplpstg AS LPSTORAGE PTR) AS HRESULT</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>lplpstg</code></td><td></td><td>The address of the <strong>IStorage</strong> interface created for the new object.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>Returns <strong>S_OK</strong> on success. If the method fails, it can return one of the following values.</p>
+<h2>Description</h2>
+<p>Provides storage for a new object pasted from the clipboard or read in from an Rich Text Format (RTF) stream.</p>
+<h2>Remarks</h2>
+<p>This method must be implemented to allow cut, copy, paste, drag, and drop operations of Component Object Model (COM) objects.</p>
+<h2>Example</h2>
+<p>FUNCTION CRichEditOleCallback.GetNewStorage (BYVAL lplpstg AS LPSTORAGE PTR) AS HRESULT DIM hr AS HRESULT DIM pILockBytes AS ILockBytes PTR hr = CreateILockBytesOnHGlobal(NULL, TRUE, @pILockBytes) IF FAILED(hr) THEN RETURN hr hr = StgCreateDocfileOnILockBytes(pILockBytes, _</p>
+<pre class="code"><code>STGM_SHARE_EXCLUSIVE OR STGM_READWRITE OR STGM_CREATE, 0, lplpstg)</code></pre>
+<p>RETURN hr END FUNCTION</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/CRichEditOleCallback.inc:31</span></li><li>Documented in <span class="srcref">Windows/WIndows Controls/RichEdit/CRichEditOleCallback Class.md</span></li><li>Topic: <a href="../cricheditolecallback-class.html">CRichEditOleCallback Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

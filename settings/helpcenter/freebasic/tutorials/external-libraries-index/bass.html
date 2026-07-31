@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BASS — Help Center</title>
+<meta name="description" content="BASS — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/external-libraries-index/bass.html">
+<meta property="og:title" content="BASS">
+<meta property="og:description" content="BASS — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/external-libraries-index/bass.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/external-libraries-index/bass.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>BASS</h1>
+<h2>Documentation</h2>
+
+	Audio library for use in Windows with a Beta Version for Linux.<br>
+<br>
+Website: http://www.un4seen.com/bass.html<br>
+Platforms supported: Win32, Linux (beta)<br>
+Headers to include: bass.bi<br>
+Header version: 2.4.14<br>
+Examples: in examples/sound/BASS/<br>
+<br>
+<div>Example</div><div><br>
+<code><pre class="code"><span>#include Once &quot;bass.bi&quot;
+
+</span>
+
+<span class="tok-cm">'' this mod file should be available in the fbc package:</span>
+
+<span class="tok-kw">Const</span> <span>SOUND_FILE</span> <span>=</span> <span>&quot;..\..\sound\data\dne_trtn.mod&quot;</span>
+
+
+
+<span class="tok-kw">If</span> <span>(</span><span>BASS_GetVersion</span><span>()</span> <span>&lt;</span> <span>MAKELONG</span><span>(</span><span class="tok-nu">2</span><span>,</span><span class="tok-nu">2</span><span>))</span> <span class="tok-kw">Then</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;BASS version 2.2 or above required!&quot;</span>
+
+    <span class="tok-kw">End</span> <span class="tok-nu">1</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+
+
+<span class="tok-kw">If</span> <span>(</span><span>BASS_Init</span><span>(-</span><span class="tok-nu">1</span><span>,</span> <span class="tok-nu">44100</span><span>,</span> <span class="tok-nu">0</span><span>,</span> <span class="tok-nu">0</span><span>,</span> <span class="tok-nu">0</span><span>)</span> <span>=</span> <span class="tok-nu">0</span><span>)</span> <span class="tok-kw">Then</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;Could not initialize BASS&quot;</span>
+
+    <span class="tok-kw">End</span> <span class="tok-nu">1</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>HMUSIC</span> <span>test</span> <span>=</span> <span>BASS_MusicLoad</span><span>(</span><span class="tok-kw">False</span><span>,</span> <span>@</span><span>SOUND_FILE</span><span>,</span> <span class="tok-nu">0</span><span>,</span> <span class="tok-nu">0</span><span>,</span> <span>BASS_MUSIC_LOOP</span><span>,</span> <span class="tok-nu">0</span><span>)</span>
+
+<span class="tok-kw">If</span> <span>(</span><span>test</span> <span>=</span> <span class="tok-nu">0</span><span>)</span> <span class="tok-kw">Then</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;BASS could not load '&quot;</span> <span>&amp;</span> <span>SOUND_FILE</span> <span>&amp;</span> <span>&quot;'&quot;</span>
+
+    <span>BASS_Free</span><span>()</span>
+
+    <span class="tok-kw">End</span> <span class="tok-nu">1</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+
+
+<span>BASS_ChannelPlay</span><span>(</span><span>test</span><span>,</span> <span class="tok-kw">False</span><span>)</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;Sound playing; waiting to keypress to stop and exit...&quot;</span>
+
+<span class="tok-kw">Sleep</span>
+
+
+
+<span>BASS_ChannelStop</span><span>(</span><span>test</span><span>)</span>
+
+<span>BASS_MusicFree</span><span>(</span><span>test</span><span>)</span>
+
+<span>BASS_Stop</span><span>()</span>
+
+<span>BASS_Free</span><span>()</span></pre></code><br>
+<br>
+</div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

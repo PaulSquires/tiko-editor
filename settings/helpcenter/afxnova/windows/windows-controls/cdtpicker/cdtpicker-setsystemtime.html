@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CDtPicker.SetSystemtime — Help Center</title>
+<meta name="description" content="Sets a date and time picker (DTP) control to a given date and time.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/cdtpicker/cdtpicker-setsystemtime.html">
+<meta property="og:title" content="CDtPicker.SetSystemtime">
+<meta property="og:description" content="Sets a date and time picker (DTP) control to a given date and time.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/cdtpicker/cdtpicker-setsystemtime.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-controls/cdtpicker/cdtpicker-setsystemtime.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cdtpicker-class.html">CDtPicker Class</a></div>
+<h1>CDtPicker.SetSystemtime<span class="h1kind">method</span></h1>
+<p class="lede">Sets a date and time picker (DTP) control to a given date and time.</p>
+<div class="badges"><a class="badge" href="../../index.html">Windows</a><span class="badge">method</span><span class="badge">CDtPicker.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION SetSystemtime (BYVAL hDtp AS HWND, BYVAL gd AS DWORD, BYVAL pst AS SYSTEMTIME PTR) AS DWORD</code></pre>
+<pre class="code sig"><code>FUNCTION SetSystemtime (BYVAL hDtp AS HWND, BYVAL gd AS DWORD, BYREF st AS SYSTEMTIME) AS DWORD</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>hDtp</code></td><td></td><td>A handle to the DTP control.</td></tr><tr><td><code>gd</code></td><td></td><td>A value that specifies which range values are valid. This value can be a combination of the following:<br><strong>GDT_VALID</strong>:  Set the DTP control according to the data within the SYSTEMTIME structure pointed to by pst.<br><strong>GDT_NONE</strong>: Set the DTP control to "no date" and clear its check box. When this flag is specified, pst is ignored. This flag applies only to DTP controls that are set to the <strong>DTS_SHOWNONE</strong> style.</td></tr><tr><td><code>pst</code></td><td></td><td>A pointer to a <strong>SYSTEMTIME</strong> structure that contains the system time information by which to set the DTP control.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>Returns nonzero if successful, or zero otherwise.</p>
+<h2>Description</h2>
+<p>Sets a date and time picker (DTP) control to a given date and time.</p>
+<h2>Examples</h2>
+<p>DIM st AS SYSTEMTIME st.wDay = 15 st.wMonth = 8 st.wYear = 2016 CDtPicker.SetSystemTime(hDtp, GDT_VALID, @st)</p>
+<p>#define UNICODE #define _WIN32_WINNT &amp;h0602 #INCLUDE ONCE "AfxNova/CWindow.inc" #INCLUDE ONCE "AfxNova/CDtPicker.inc" USING AfxNova</p>
+<p>DECLARE FUNCTION wWinMain (BYVAL hInstance AS HINSTANCE, _</p>
+<pre class="code"><code>BYVAL hPrevInstance AS HINSTANCE, _
+                       BYVAL pwszCmdLine AS WSTRING PTR, _
+                       BYVAL nCmdShow AS LONG) AS LONG</code></pre>
+<p>END wWinMain(GetModuleHandleW(NULL), NULL, wCommand(), SW_NORMAL)</p>
+<p>' // Forward declaration DECLARE FUNCTION WndProc (BYVAL hwnd AS HWND, BYVAL uMsg AS UINT, BYVAL wParam AS WPARAM, BYVAL lParam AS LPARAM) AS LRESULT</p>
+<p>CONST IDC_LABEL = 1001 CONST IDC_DTPICKER = 1002</p>
+<p>' ======================================================================================== ' Main ' ======================================================================================== FUNCTION wWinMain (BYVAL hInstance AS HINSTANCE, _</p>
+<pre class="code"><code>BYVAL hPrevInstance AS HINSTANCE, _
+               BYVAL pwszCmdLine AS WSTRING PTR, _
+               BYVAL nCmdShow AS LONG) AS LONG</code></pre>
+<p>' // Set process DPI aware SetProcessDpiAwareness(PROCESS_SYSTEM_DPI_AWARE) ' // Enable visual styles without including a manifest file AfxEnableVisualStyles</p>
+<p>' // Creates the main window DIM pWindow AS CWindow = "MyClassName"   ' Use the name you wish DIM hWin AS HWND = pWindow.Create(NULL, "CWindow - Button", @WndProc) ' // Sizes it by setting the wanted width and height of its client area pWindow.SetClientSize(400, 220) ' // Centers the window pWindow.Center ' // Set the main window background color pWindow.SetBackColor(RGB_OLDLACE)</p>
+<p>pWindow.AddControl("Label", hWin, IDC_LABEL, "Select one date with the mouse", 50, 20, 300, 23) DIM htDTP AS HWND = pWindow.AddControl("DateTimePicker", hWin, IDC_DTPICKER, "", 100, 60, 150, 23) ' // Anchor the controls pWindow.AnchorControl(IDC_LABEL, AFX_ANCHOR_WIDTH) pWindow.AnchorControl(IDC_DTPICKER, AFX_ANCHOR_WIDTH)</p>
+<p>' // Set the date DIM st AS SYSTEMTIME st.wDay = 15 st.wMonth = 8 st.wYear = 2026 CDtPicker.SetSystemTime(htDTP, GDT_VALID, @st)</p>
+<p>' // Adds a button pWindow.AddControl("Button", hWin, IDCANCEL, "&amp;Close", 270, 155, 75, 30) ' // Anchors the button to the bottom and the right side of the main window pWindow.AnchorControl(IDCANCEL, AFX_ANCHOR_BOTTOM_RIGHT)</p>
+<p>' // Displays the window and dispatches the Windows messages FUNCTION = pWindow.DoEvents(nCmdShow)</p>
+<p>END FUNCTION ' ========================================================================================</p>
+<p>' ======================================================================================== ' Main window procedure ' ======================================================================================== FUNCTION WndProc (BYVAL hwnd AS HWND, BYVAL uMsg AS UINT, BYVAL wParam AS WPARAM, BYVAL lParam AS LPARAM) AS LRESULT</p>
+<p>SELECT CASE uMsg</p>
+<pre class="code"><code>' // If an application processes this message, it should return zero to continue
+  ' // creation of the window. If the application returns –1, the window is destroyed
+  ' // and the CreateWindowExW function returns a NULL handle.
+  CASE WM_CREATE
+     AfxEnableDarkModeForWindow(hwnd)
+     RETURN 0
+
+  ' // Theme has changed
+  CASE WM_THEMECHANGED
+     AfxEnableDarkModeForWindow(hwnd)
+     RETURN 0
+
+  ' // Sent when the user selects a command item from a menu, when a control sends a
+  ' // notification message to its parent window, or when an accelerator keystroke is translated.
+  CASE WM_COMMAND
+     SELECT CASE CBCTL(wParam, lParam)
+        CASE IDCANCEL
+           ' // If ESC key pressed, close the application by sending an WM_CLOSE message
+           IF CBCTLMSG(wParam, lParam) = BN_CLICKED THEN SendMessageW(hwnd, WM_CLOSE, 0, 0)
+     END SELECT
+     RETURN 0
+
+  CASE WM_NOTIFY
+     ' // Notification messages
+     DIM dtp AS NMDATETIMECHANGE
+     CBNMTYPESET(dtp, wParam, lParam)
+     IF dtp.nmhdr.idfrom = IDC_DTPICKER THEN
+        IF dtp.nmhdr.code = DTN_DATETIMECHANGE THEN
+           ' // Get the selected date
+           DIM wszDate AS WSTRING * 260
+           GetDateFormatW LOCALE_USER_DEFAULT, DATE_LONGDATE, @dtp.st, NULL, wszDate, SIZEOF(wszDate)\2
+           SetWindowText(GetDlgItem(hwnd, IDC_LABEL), "Selected date: " &amp; wszDate)
+        END IF
+     END IF
+
+  CASE WM_DESTROY
+     ' // End the application by sending an WM_QUIT message
+     PostQuitMessage(0)
+     RETURN 0</code></pre>
+<p>END SELECT</p>
+<p>' // Default processing of Windows messages FUNCTION = DefWindowProcW(hwnd, uMsg, wParam, lParam)</p>
+<p>END FUNCTION ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CDtPicker.inc</code></li><li>Defined in <span class="srcref">AfxNova/CDtPicker.inc:108</span></li><li>Documented in <span class="srcref">Windows/WIndows Controls/CDtPicker Class.md</span></li><li>Topic: <a href="../cdtpicker-class.html">CDtPicker Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

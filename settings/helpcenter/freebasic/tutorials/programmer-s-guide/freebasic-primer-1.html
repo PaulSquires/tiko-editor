@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FreeBASIC Primer #1 — Help Center</title>
+<meta name="description" content="FreeBASIC Primer #1 — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/freebasic-primer-1.html">
+<meta property="og:title" content="FreeBASIC Primer #1">
+<meta property="og:description" content="FreeBASIC Primer #1 — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/freebasic-primer-1.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/programmer-s-guide/freebasic-primer-1.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>FreeBASIC Primer #1</h1>
+<h2>Documentation</h2>
+
+	This primer is intended for beginning beginners, for those who are just starting to learn how to program and using FreeBASIC do to it.<br>
+<br>
+<div>Learning the language</div><div><br>
+Learning a programming language means learning the words to write it and knowing what they mean when they are written.  We don't need to learn them all at once.  But learning a few important words that do something will help us get started.  Here we are just going to concentrate on these keywords:<br>
+<br>
+<ul><li> <code><a href="../../variable-declarations/procedures/dim.html">Dim</a></code><br>
+<li> <code><a href="../../console-functions/procedures/print.html">Print</a></code><br>
+<li> <code><a href="../../user-input-runtime-library/procedures/input.html">Input</a></code><br>
+<li> <code><a href="../../operators/iterating-operators/procedures/for-next.html">For...Next</a></code><br>
+<li> <code><a href="../../control-flow-statements/procedures/if-then.html">If...Then</a></code><br>
+<li> <code><a href="../../control-flow-statements/procedures/do-loop.html">Do...Loop</a></code><br>
+<br>
+</li></li></li></li></li></li></ul></div><div>Hello World!</div><div><br>
+No beginners reference is complete without this example.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Print</span> <span>&quot;Hello World!&quot;</span></pre></code><br>
+The text between the pair of double quotes is a literal string.  The <code><a href="../../console-functions/procedures/print.html">Print</a></code> statement is used to output text to the display.  If you can edit, compile, and execute this example, you are on your way.<br>
+<br>
+<b>Note:</b> A program terminates immediately after executing the last line of code. User can add a <code><a href="../../miscellaneous-keywords/procedures/sleep.html">Sleep</a></code> statement to induce a pause until pressing any key to complete instruction (see last example for usage).<br>
+<br>
+</div><div>Using a Variable to Store Data</div><div><br>
+Sometimes in a program we will want to store some information somewhere, in memory, and then use it later.  To store something in memory we use a variable.  All variables in FreeBASIC are of some specific type, like a number or a string.  We use the <code><a href="../../variable-declarations/procedures/dim.html">Dim</a></code> statement to declare a variable name and specify what type of information we want to store in it.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span>text</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+<span>text</span> <span>=</span> <span>&quot;Hello World!&quot;</span>
+
+<span class="tok-kw">Print</span> <span>text</span></pre></code><br>
+We are using <code><a href="../../variable-declarations/procedures/dim.html">Dim</a></code> to let the compiler know that we want to use a variable named <code><i>text</i></code> in our program and that we will be putting <code><a href="../../operators/preprocessor-operators/procedures/string.html">String</a></code> data in it.  We then assign (copy) <code>"Hello World!"</code> in to the variable.  Finally, we use <code><a href="../../console-functions/procedures/print.html">Print</a></code> to output it to the display.<br>
+<br>
+</div><div>Using a Variable in an Expression</div><div><br>
+An <i>expression</i> is a generic term for describing a part of the source code that can be evaluated.  After an expression is evaluated, we can then do something with it, like assign (copy) it to a variable.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>a</span><span>,</span> <span>b</span><span>,</span> <span>text</span>
+
+<span>a</span> <span>=</span> <span>&quot;Hello&quot;</span>
+
+<span>b</span> <span>=</span> <span>&quot;World&quot;</span>
+
+<span>text</span> <span>=</span> <span>a</span> <span>+</span> <span>&quot; &quot;</span> <span>+</span> <span>b</span> <span>+</span> <span>&quot;!&quot;</span>
+
+<span class="tok-kw">Print</span> <span>text</span></pre></code><br>
+We are assigning the variables <code><i>a</i></code> and <code><i>b</i></code> with some data.  We are then using the variables <code><i>a</i></code> and <code><i>b</i></code> in an expression which is then assigned to <code><i>text</i></code>.  Finally, we output the result to the display.<br>
+<br>
+</div><div>Getting Input from the User</div><div><br>
+Often, we have no idea what data is needed for a program unless the user gives it to us.  We can't put it in our source code since we won't know what it is until the user runs the program and tells us what it is.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span>answer</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+<span class="tok-kw">Input</span> <span>&quot;Type something and press enter:&quot;</span><span>,</span> <span>answer</span>
+
+<span class="tok-kw">Print</span> <span>&quot;You typed: '&quot;</span><span>;</span> <span>answer</span><span>;</span> <span>&quot;'&quot;</span></pre></code><br>
+Here the <code><a href="../../user-input-runtime-library/procedures/input.html">Input</a></code> statement will first, output some information to the display, and then wait for the user to give the program some data.  In this example, we just output back to the display, exactly what the user typed in.<br>
+<br>
+<br>
+</div><div>Doing Some Math</div><div><br>
+Variables and expressions are not just limited to strings.  Most early languages didn't handle strings very well if at all.  Writing mathematical expressions is similar to how they might be written with pencil and paper.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>a</span><span>,</span> <span>b</span><span>,</span> <span>c</span>
+
+
+
+<span>a</span> <span>=</span> <span class="tok-nu">5</span>
+
+<span>b</span> <span>=</span> <span class="tok-nu">7</span>
+
+<span>c</span> <span>=</span> <span>a</span> <span>+</span> <span>b</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;a = &quot;</span><span>;</span> <span>a</span>
+
+<span class="tok-kw">Print</span> <span>&quot;b = &quot;</span><span>;</span> <span>b</span>
+
+<span class="tok-kw">Print</span> <span>&quot;a + b = &quot;</span><span>;</span> <span>c</span></pre></code><br>
+We are assigning values to the variables <code><i>a</i></code>, <code><i>b</i></code> and <code><i>c</i></code>.  We are using <code><a href="../../standard-data-types/procedures/integer.html">Integer</a></code> for the variables' data type.  An integer can be positive or negative, but not have any fractions.<br>
+<br>
+</div><div>Doing Some Math with Input</div><div><br>
+This is similar to the previous example, except we will let the user choose the numbers we are going to add together.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>a</span><span>,</span> <span>b</span><span>,</span> <span>r</span>
+
+<span class="tok-kw">Input</span> <span>&quot;Enter a number:&quot;</span><span>,</span> <span>a</span>
+
+<span class="tok-kw">Input</span> <span>&quot;Enter another number:&quot;</span><span>,</span> <span>b</span>
+
+
+
+<span>r</span> <span>=</span> <span>a</span> <span>+</span> <span>b</span>
+
+<span class="tok-kw">Print</span> <span>&quot;The sum of the numbers is &quot;</span><span>;</span> <span>r</span></pre></code><br>
+<code><a href="../../variable-declarations/procedures/dim.html">Dim</a></code> lets the compiler know which variable names we want to use and that they are going to hold <code><a href="../../standard-data-types/procedures/integer.html">Integer</a></code> data.  We are using <code><a href="../../user-input-runtime-library/procedures/input.html">Input</a></code> to get the numbers from the user, and <code><a href="../../console-functions/procedures/print.html">Print</a></code> to display the results.<br>
+<br>
+</div><div>Doing More Math with Input</div><div><br>
+Numeric variables are not limited to just integers.  We can also use  <code><a href="../../standard-data-types/procedures/single.html">Single</a></code> or <code><a href="../../mathematical-functions/procedures/double.html">Double</a></code> precision data types which can represent fractions.  In  this example we will take some input from the user to convert a weight in pounds to kilograms.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Single</span> <span>lb</span><span>,</span> <span>kg</span>
+
+<span class="tok-kw">Input</span> <span>&quot;Enter a weight in pounds:&quot;</span><span>,</span> <span>lb</span>
+
+
+
+<span>kg</span> <span>=</span> <span>lb</span> <span>*</span> <span class="tok-nu">0.454</span>
+
+<span class="tok-kw">Print</span> <span>lb</span><span>;</span> <span>&quot; lb. is equal to &quot;</span><span>;</span> <span>kg</span><span>;</span> <span>&quot; kg&quot;</span></pre></code><br>
+<br>
+</div><div>Repeating Statements</div><div><br>
+Using <code><a href="../../operators/iterating-operators/procedures/for-next.html">For...Next</a></code> statement we can tell the program to do something repeatedly a set number of times.  For example lets say we wanted to add up all the numbers from 1 to 100.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span>total</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+<span class="tok-kw">Dim</span> <span>number</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+<span>total</span> <span>=</span> <span class="tok-nu">0</span>
+
+<span class="tok-kw">For</span> <span>number</span> <span>=</span> <span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">100</span>
+
+  <span>total</span> <span>=</span> <span>total</span> <span>+</span> <span>number</span>
+
+<span class="tok-kw">Next</span>
+
+<span class="tok-kw">Print</span> <span>&quot;The sum of number from 1 to 100 is &quot;</span><span>;</span> <span>total</span></pre></code><br>
+<br>
+</div><div>Making a Decision</div><div><br>
+A program can choose which statements to execute using a conditional statement like <code><a href="../../control-flow-statements/procedures/if-then.html">If...Then</a></code>.  We can use the value of a variable or the result of an expression to decide if we should, or should not, execute one or more statements.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span>number</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+<span class="tok-kw">Input</span> <span>&quot;Enter a number : &quot;</span><span>,</span> <span>number</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Your number is &quot;</span><span>;</span>
+
+<span class="tok-kw">If</span> <span>number</span> <span>&lt;</span> <span class="tok-nu">0</span> <span class="tok-kw">Then</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;negative&quot;</span>
+
+<span class="tok-kw">ElseIf</span> <span>number</span> <span>&gt;</span> <span class="tok-nu">0</span> <span class="tok-kw">Then</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;positive&quot;</span>
+
+<span class="tok-kw">Else</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;zero&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">If</span></pre></code><br>
+<br>
+After getting a number from the user, we are going to output a word ( positive, negative, or zero ) based on which condition matches the statement.<br>
+<br>
+</div><div>Repeating Statements (Again)</div><div><br>
+Here we will use another looping structure <code><a href="../../control-flow-statements/procedures/do-loop.html">Do...Loop</a></code> to repeat some statements.  How will the program know to stop repeating the statements?  We will use <code><a href="../../control-flow-statements/procedures/if-then.html">If...Then</a></code> to make the decision when to get out of the loop.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Single</span>   <span>total</span><span>,</span> <span>count</span><span>,</span> <span>number</span>   <span class="tok-cm">' multi variable declaration (same type)</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>   <span>text</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;This program will calculate the sum and average for a&quot;</span>
+
+<span class="tok-kw">Print</span> <span>&quot;list of numbers. Enter an empty value to see results.&quot;</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+<span class="tok-kw">Do</span>
+
+  <span class="tok-kw">Input</span> <span>&quot;Enter a number: &quot;</span><span>,</span> <span>text</span>       <span class="tok-cm">' get user input</span>
+
+  <span class="tok-kw">If</span> <span>text</span> <span>=</span> <span>&quot;&quot;</span> <span class="tok-kw">Then</span> <span class="tok-kw">Exit</span> <span class="tok-kw">Do</span>            <span class="tok-cm">' if empty -&gt; quit Do/Loop</span>
+
+  <span>count</span> <span>+=</span> <span class="tok-nu">1</span>                           <span class="tok-cm">' increment count by: 1</span>
+
+  <span>total</span> <span>+=</span> <span class="tok-kw">Val</span><span>(</span><span>text</span><span>)</span>                   <span class="tok-cm">' add and assign new value</span>
+
+<span class="tok-kw">Loop</span>
+
+
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Print</span> <span>&quot;You entered:    &quot;</span><span>;</span> <span>count</span><span>;</span> <span>&quot;  number(s)&quot;</span>
+
+<span class="tok-kw">Print</span> <span>&quot;The sum is:     &quot;</span><span>;</span> <span>total</span>
+
+
+
+<span class="tok-kw">If</span> <span>count</span> <span>&gt;</span> <span class="tok-nu">0</span> <span class="tok-kw">Then</span> <span class="tok-kw">Print</span> <span>&quot;The average is: &quot;</span><span>;</span> <span>total</span> <span>/</span> <span>count</span>
+
+
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Any keypress ends program. &quot;</span><span>;</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+<br>
+</div><div>See also</div><div><br>
+<ul><li> <code><a href="../../variable-declarations/procedures/dim.html">Dim</a></code><br>
+<li> <code><a href="../../console-functions/procedures/print.html">Print</a></code><br>
+<li> <code><a href="../../console-functions/procedures/print.html">?</a></code><br>
+<li> <code><a href="../../user-input-runtime-library/procedures/input.html">Input</a></code><br>
+<li> <code><a href="../../operators/iterating-operators/procedures/for-next.html">For...Next</a></code><br>
+<li> <code><a href="../../control-flow-statements/procedures/if-then.html">If...Then</a></code><br>
+<li> <code><a href="../../control-flow-statements/procedures/do-loop.html">Do...Loop</a></code><br>
+<br>
+</li></li></li></li></li></li></li></ul></div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

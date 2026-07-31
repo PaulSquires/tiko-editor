@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CODBCStmt.SetStmtAsyncEnable — Help Center</title>
+<meta name="description" content="Sets an SQLUINTEGER value that specifies whether a function called with the specified statement is executed asynchronously.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/databases/odbc-classes/codbcstmt/codbcstmt-setstmtasyncenable.html">
+<meta property="og:title" content="CODBCStmt.SetStmtAsyncEnable">
+<meta property="og:description" content="Sets an SQLUINTEGER value that specifies whether a function called with the specified statement is executed asynchronously.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/databases/odbc-classes/codbcstmt/codbcstmt-setstmtasyncenable.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/databases/odbc-classes/codbcstmt/codbcstmt-setstmtasyncenable.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../codbcstmt-class.html">CODBCStmt Class</a></div>
+<h1>CODBCStmt.SetStmtAsyncEnable<span class="h1kind">method</span></h1>
+<p class="lede">Sets an SQLUINTEGER value that specifies whether a function called with the specified statement is executed asynchronously.</p>
+<div class="badges"><a class="badge" href="../../index.html">Databases</a><span class="badge">method</span><span class="badge">CODBCStmt.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION SetStmtAsyncEnable (BYVAL dwAttr AS SQLUINTEGER) AS SQLRETURN</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>dwAttr</code></td><td></td><td>Value of the attribute.<br><strong>SQL_ASYNC_ENABLE_OFF</strong> = Off (the default)<br><strong>SQL_ASYNC_ENABLE_ON</strong> = On</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>SQL_ASYNC_ENABLE_OFF or SQL_ASYNC_ENABLE_ON.</p>
+<p><strong>Result code</strong> (GetLastResult)</p>
+<p>SQL_SUCCESS, SQL_SUCCESS_WITH_INFO, SQL_ERROR, or SQL_INVALID_HANDLE.</p>
+<h2>Description</h2>
+<p>Sets an SQLUINTEGER value that specifies whether a function called with the specified statement is executed asynchronously.</p>
+<p><strong>Note</strong>: Optional feature not implemented by the Microsoft Access Driver.</p>
+<h2>Remarks</h2>
+<p>Once a function has been called asynchronously, only the original function, <strong>Cancel</strong>, <strong>GetDiagField</strong>, or <strong>GetDiagRec</strong> can be called on the statement, and only the original function, <strong>AllocStmt</strong>, <strong>GetDiagField</strong>, <strong>GetDiagRec</strong>, or <strong>GetFunctions</strong> can be called on the connection associated with the statement, until the original function returns a code other than SQL_STILL_EXECUTING. Any other function called on the statement or the connection associated with the statement returns SQL_ERROR with an SQLSTATE of HY010 (Function sequence error). Functions can be called on other statements.</p>
+<p>For drivers with statement level asynchronous execution support, the statement attribute SQL_ATTR_ASYNC_ENABLE may be set. Its initial value is the same as the value of the connection level attribute with the same name at the time the statement handle was allocated.</p>
+<p>For drivers with connection-level, asynchronous-execution support, the statement attribute SQL_ATTR_ASYNC_ENABLE is read-only. Its value is the same as the value of the connection level attribute with the same name at the time the statement handle was allocated. Calling <strong>SetStmtAttr</strong> to set SQL_ATTR_ASYNC_ENABLE when the SQL_ASYNC_MODE InfoType returns SQL_AM_CONNECTION returns SQLSTATE HYC00 (Optional feature not implemented).</p>
+<p>As a standard practice, applications should execute functions asynchronously only on single-thread operating systems. On multithread operating systems, applications should execute functions on separate threads rather than executing them asynchronously on the same thread. No functionality is lost if drivers that operate only on multithread operating systems do not need to support asynchronous execution.</p>
+<p>The following functions can be executed asynchronously:</p>
+<p>BulkOperations ColAttribute ColumnPrivileges Columns CopyDesc DescribeCol DescribeParam ExecDirect Execute Fetch FetchScroll ForeignKeys GetData GetDescField\[1] GetDescRec\[1] GetDiagField GetDiagRec GetTypeInfo MoreResults NumParams NumResultCols ParamData Prepare PrimaryKeys ProcedureColumns Procedures PutData SetPos SpecialColumns Statistics TablePrivileges Tables.</p>
+<p>\[1] These functions can be called asynchronously only if the descriptor is an implementation descriptor, not an application descriptor.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CODBCStmt.inc</code></li><li>Defined in <span class="srcref">AfxNova/COdbcStmt.inc:1442</span></li><li>Documented in <span class="srcref">Databases/ODBC Classes/CODBCStmt Class.md</span></li><li>Topic: <a href="../codbcstmt-class.html">CODBCStmt Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

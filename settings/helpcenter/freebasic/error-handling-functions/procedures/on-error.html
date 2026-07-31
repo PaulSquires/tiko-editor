@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>On Error — Help Center</title>
+<meta name="description" content="Error handling statement to set the current error handler">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/error-handling-functions/procedures/on-error.html">
+<meta property="og:title" content="On Error">
+<meta property="og:description" content="Error handling statement to set the current error handler">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/error-handling-functions/procedures/on-error.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/error-handling-functions/procedures/on-error.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>On Error<span class="h1kind">keyword</span></h1>
+<p class="lede">Error handling statement to set the current error handler</p>
+<div class="badges"><a class="badge" href="../index.html">Error Handling Functions</a><span class="badge">keyword</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>On [Local] Error Goto label</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>label</code></td><td></td><td>Label to jump to when an error occurs</td></tr></tbody></table></div>
+<h2>Description</h2>
+<br>
+<b>On Error</b> triggers a jump to an error handler when an error occurs. Such errors can be triggered by built-in statements such as <code><a href="../../file-i-o-functions/procedures/open.html">Open</a></code>, or when the <code><a href="error.html">Error</a></code> statement is used.<br>
+<br>
+Note: The error checking for built-in statements is only enabled if the program is compiled with one of the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-e.html">-e</a></i>, <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-ex.html">-ex</a></i> or <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-exx.html">-exx</a></i> options. <b>On Error</b> remains working with <code><a href="error.html">Error</a></code> even when none of these options are used.<br>
+<br>
+<code><a href="local.html">On Local Error</a></code> can be used to specify a local error handler inside a procedure. This allows for specialized per-procedure error handling and will override the global error handler, if any.<br>
+Without <code><a href="local.html">Local</a></code>, the handler must be in the main part of the module.<br>
+Remark: Presently, the <code><a href="local.html">Local</a></code> clause is ignored by the compiler.<br>
+<br>
+<code><b>On Error Goto 0</b></code> deactivates the current error handler.<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Differences from QB</h3><br>
+<ul><li> QB has no LOCAL clause and requires the label to be in the main part of the module. <br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="error.html">Error</a></code><br>
+<li> <code><a href="local.html">Local</a></code><br>
+<li> <code><a href="err.html">Err</a></code><br>
+<li> <code><a href="../../miscellaneous/runtime-error-codes.html">Runtime Error Codes</a></code><br>
+<li> <code><a href="../../language-documentation/other/error-handling.html">Error Handling</a></code><br>
+<li> <code><a href="../../tutorials/programmer-s-guide/labels.html">Labels</a></code><br>
+<br>
+</li></li></li></li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-cm">'' Compile with QB (-lang qb) dialect</span>
+
+
+
+<span class="tok-cm">'$lang: &quot;qb&quot;</span>
+
+
+
+<span class="tok-kw">On</span> <span class="tok-kw">Error</span> <span class="tok-kw">Goto</span> <span>errorhandler</span>
+
+<span class="tok-kw">Error</span> <span class="tok-nu">24</span> <span class="tok-cm">'' simulate an error</span>
+
+<span class="tok-kw">Print</span> <span>&quot;this message will not be seen&quot;</span>
+
+
+
+<span>errorhandler</span><span>:</span>
+
+<span>n</span> <span>=</span> <span class="tok-kw">Err</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Error #&quot;</span><span>;</span> <span>n</span><span>;</span> <span>&quot;!&quot;</span>
+
+<span class="tok-kw">End</span></pre></code><br>
+<br>
+<code><pre class="code"><span class="tok-cm">'' compile as: fbc onerror.bas -ex</span>
+
+
+
+<span>#lang &quot;fblite&quot;
+
+</span>
+
+<span class="tok-kw">Function</span> <span>hFileExists</span><span>(</span> <span>filename</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span class="tok-kw">Static</span>
+
+    <span class="tok-kw">Dim</span> <span>f</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+
+
+    <span>hFileExists</span> <span>=</span> <span class="tok-nu">0</span>
+
+
+
+    <span class="tok-kw">On</span> <span class="tok-kw">Local</span> <span class="tok-kw">Error</span> <span class="tok-kw">Goto</span> <span>exitfunction</span>
+
+
+
+    <span>f</span> <span>=</span> <span class="tok-kw">FreeFile</span>
+
+    <span class="tok-kw">Open</span> <span>filename</span> <span class="tok-kw">For</span> <span class="tok-kw">Input</span> <span class="tok-kw">As</span> <span>#</span><span>f</span>
+
+    
+
+    <span class="tok-kw">Close</span> <span>#</span><span>f</span>
+
+
+
+    <span>hFileExists</span> <span>=</span> <span>-</span><span class="tok-nu">1</span>
+
+
+
+<span>exitfunction</span><span>:</span>
+
+    <span class="tok-kw">Exit</span> <span class="tok-kw">Function</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+
+
+    <span class="tok-kw">Print</span> <span>&quot;File exists (0=false): &quot;</span><span>;</span> <span>hFileExists</span><span>(</span> <span class="tok-kw">Command</span> <span>)</span>
+
+
+
+    <span class="tok-kw">On</span> <span class="tok-kw">Error</span> <span class="tok-kw">Goto</span> <span>errhandler</span>
+
+    <span class="tok-kw">Error</span> <span class="tok-nu">1234</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;back from resume next&quot;</span>
+
+    <span class="tok-kw">End</span> <span class="tok-nu">0</span>
+
+
+
+<span>errhandler</span><span>:</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;error number: &quot;</span> <span>+</span> <span class="tok-kw">Str</span><span>(</span> <span class="tok-kw">Err</span> <span>)</span> <span>+</span> <span>&quot; at line: &quot;</span> <span>+</span> <span class="tok-kw">Str</span><span>(</span> <span class="tok-kw">Erl</span> <span>)</span>
+
+    <span class="tok-kw">Resume</span> <span class="tok-kw">Next</span></pre></code><br>
+<br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgOnerror.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

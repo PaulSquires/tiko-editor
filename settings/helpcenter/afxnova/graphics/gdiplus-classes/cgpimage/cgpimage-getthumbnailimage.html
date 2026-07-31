@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CGpImage.GetThumbnailImage — Help Center</title>
+<meta name="description" content="Gets a thumbnail image from the Image object.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpimage/cgpimage-getthumbnailimage.html">
+<meta property="og:title" content="CGpImage.GetThumbnailImage">
+<meta property="og:description" content="Gets a thumbnail image from the Image object.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpimage/cgpimage-getthumbnailimage.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-classes/cgpimage/cgpimage-getthumbnailimage.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cgpimage-class.html">CGpImage Class</a></div>
+<h1>CGpImage.GetThumbnailImage<span class="h1kind">method</span></h1>
+<p class="lede">Gets a thumbnail image from the Image object.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">method</span><span class="badge">CGpBitmap.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GetThumbnailImage (BYVAL thumbWidth AS UINT, BYVAL thumbHeight AS UINT, BYVAL pThumbnail AS CGpImage PTR, BYVAL pCallback AS ANY PTR = NULL, BYVAL callbackData AS ANY PTR = NULL) AS GpStatus</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>thumbWidth</code></td><td></td><td>Width, in pixels, of the requested thumbnail image.</td></tr><tr><td><code>thumbHeight</code></td><td></td><td>Height, in pixels, of the requested thumbnail image.</td></tr><tr><td><code>pThumbnail</code></td><td></td><td>Pointer to an <strong>Image</strong> object that will receive the requested thumbnail image.</td></tr><tr><td><code>pCallback</code></td><td></td><td>Optional. Callback function that you provide. During the process of creating or retrieving the thumbnail image, GDI+ calls this function to give you the opportunity to abort the process. The default value is NULL.</td></tr><tr><td><code>callbackData</code></td><td></td><td>Optional. Pointer to a block of memory that contains data to be used by the callback function. The default value is NULL.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>If the function succeeds, it returns <strong>StatusOk</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h2>Description</h2>
+<p>Gets a thumbnail image from an <strong>Image</strong> object.</p>
+<h2>Remarks</h2>
+<p>A thumbnail image is a small copy of an image. Some image files have a thumbnail image embedded in the file. In such cases, this method retrieves the embedded thumbnail image. If there is no embedded thumbnail image, this method creates a thumbnail image by scaling the main image to the size specified in the <em>thumbWidth</em> and <em>thumbHeight</em> parameters. If both of those parameters are 0, a system-defined size is used.</p>
+<h2>Example</h2>
+<p>' ======================================================================================== ' The following example creates a Bitmap object based on a JPEG file. The code calls the ' Bitmao.GetThumbnailImage method of that Bitmap object and then displays the thumbnail image ' along with the main image. ' ======================================================================================== SUB Example_GetThumbnailImage (BYVAL hdc AS HDC)</p>
+<p>' // Create a graphics object from the window device context DIM graphics AS CGpGraphics = hdc ' // Set the scaling factors using the DPI ratios graphics.ScaleTransformForDpi</p>
+<p>' // Create a Bitmap object from a JPEG file. DIM bmp AS CGpBitmap = "climber.jpg" ' // Set the resolution of the image using the DPI ratios bmp.SetResolutionForDpi</p>
+<p>' // Get a thumbnail of the image of the specified width and height DIM thumbnail AS CGpBitmap bmp.GetThumbnailImage(70, 50, @thumbnail)</p>
+<p>' // Draw the original image graphics.DrawImage(@bmp, 10, 10) ' // Draw the thumbnail image graphics.DrawImage(@thumbnail, 220, 10)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CGpBitmap.inc</code></li><li>Defined in <span class="srcref">AfxNova/CGpBitmap.inc:417</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Classes/CGpImage Classes.md</span></li><li>Topic: <a href="../cgpimage-class.html">CGpImage Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

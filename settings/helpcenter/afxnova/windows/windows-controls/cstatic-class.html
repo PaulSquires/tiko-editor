@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CStatic Class — Help Center</title>
+<meta name="description" content="CStatic Class — 18 documented members. Windows reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/cstatic-class.html">
+<meta property="og:title" content="CStatic Class">
+<meta property="og:description" content="CStatic Class — 18 documented members. Windows reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/cstatic-class.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-controls/cstatic-class.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span>Windows</div>
+<h1>CStatic Class</h1>
+<h2>Members (18)</h2>
+<div class="memberlist"><a href="cstatic/cstatic-deletebitmap.html"><span class="m-n">DeleteBitmap</span><span class="m-d">Deletes a bitmap associated with a static control.</span></a><a href="cstatic/cstatic-deletecursor.html"><span class="m-n">DeleteCursor</span><span class="m-d">Deletes a cursor associated with a static control.</span></a><a href="cstatic/cstatic-deleteenhancedmetafile.html"><span class="m-n">DeleteEnhancedMetafile</span><span class="m-d">Deletes an enhanced metafile associated with a static control.</span></a><a href="cstatic/cstatic-deleteicon.html"><span class="m-n">DeleteIcon</span><span class="m-d">Deletes an icon associated with a static control.</span></a><a href="cstatic/cstatic-deleteimage.html"><span class="m-n">DeleteImage</span><span class="m-d">Deletes an image associated with a static control.</span></a><a href="cstatic/cstatic-disable.html"><span class="m-n">Disable</span><span class="m-d">Disables the control.</span></a><a href="cstatic/cstatic-enable.html"><span class="m-n">Enable</span><span class="m-d">Enables the control.</span></a><a href="cstatic/cstatic-geticon.html"><span class="m-n">GetIcon</span><span class="m-d">Retrieves a handle to the icon associated with a static control that has the SS_ICON style.</span></a><a href="cstatic/cstatic-getimage.html"><span class="m-n">GetImage</span><span class="m-d">Retrieves a handle to the image (icon or bitmap) associated with a static control.</span></a><a href="cstatic/cstatic-gettext.html"><span class="m-n">GetText</span><span class="m-d">Gets the text of a static control.</span></a><a href="cstatic/cstatic-gettextlength.html"><span class="m-n">GetTextLength</span><span class="m-d">Gets the length of the text of a static control.</span></a><a href="cstatic/cstatic-setbitmap.html"><span class="m-n">SetBitmap</span><span class="m-d">Associates a bitmap with a static control.</span></a><a href="cstatic/cstatic-setcursor.html"><span class="m-n">SetCursor</span><span class="m-d">Associates a cursor with a static control.</span></a><a href="cstatic/cstatic-setenhancedmetafile.html"><span class="m-n">SetEnhancedMetafile</span><span class="m-d">Associates an enhanced metafile with a static control.</span></a><a href="cstatic/cstatic-seticon.html"><span class="m-n">SetIcon</span><span class="m-d">Associates an icon with an static control.</span></a><a href="cstatic/cstatic-seticon.html"><span class="m-n">SetIcon</span><span class="m-d">Associates an icon with an static control.</span></a><a href="cstatic/cstatic-setimage.html"><span class="m-n">SetImage</span><span class="m-d">Associates a new image with a static control.</span></a><a href="cstatic/cstatic-settext.html"><span class="m-n">SetText</span><span class="m-d">Sets the text of a static control.</span></a></div>
+<h2>Documentation</h2>
+<h2 id="cstatic-class">CStatic Class</h2>
+<p>Applications often use static controls to label other controls or to separate a group of controls. Although static controls are child windows, they cannot be selected. Therefore, they cannot receive the keyboard focus and cannot have a keyboard interface. A static control that has the SS_NOTIFY style receives mouse input, notifying the parent window when the user clicks or double clicks the control. Static controls belong to the STATIC window class.</p>
+<p>Although static controls can be used in overlapped, pop-up, and child windows, they are designed for use in dialog boxes, where the system standardizes their behavior. By using static controls outside dialog boxes, a developer increases the risk that the application might behave in a nonstandard fashion. Typically, a developer either uses static controls in dialog boxes or uses the SS_OWNERDRAW style to create customized static controls.</p>
+<p>See: <a href="https://learn.microsoft.com/en-us/windows/win32/controls/about-static-controls" target="_blank" rel="noopener">About Static Controls</a></p>
+<p><strong>Include file</strong>: CStatic.inc.</p>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="cstatic/cstatic-deletebitmap.html">DeleteBitmap</a></td><td>Deletes a bitmap associated with a static control.</td></tr><tr><td><a href="cstatic/cstatic-deletecursor.html">DeleteCursor</a></td><td>Deletes a cursor associated with a static control.</td></tr><tr><td><a href="cstatic/cstatic-deleteenhancedmetafile.html">DeleteEnhancedMetafile</a></td><td>Deletes an enhanced metafile associated with a static control.</td></tr><tr><td><a href="cstatic/cstatic-deleteicon.html">DeleteIcon</a></td><td>Deletes an icon associated with a static control.</td></tr><tr><td><a href="cstatic/cstatic-deleteimage.html">DeleteImage</a></td><td>Deletes an image associated with a static control.</td></tr><tr><td><a href="cstatic/cstatic-disable.html">Disable</a></td><td>Disables the control.</td></tr><tr><td><a href="cstatic/cstatic-enable.html">Enable</a></td><td>Enables the control.</td></tr><tr><td><a href="cstatic/cstatic-geticon.html">GetIcon</a></td><td>Retrieves a handle to the icon associated with a static control that has the SS_ICON style.</td></tr><tr><td><a href="cstatic/cstatic-getimage.html">GetImage</a></td><td>Retrieves a handle to the image (icon or bitmap) associated with a static control.</td></tr><tr><td><a href="#getext">GetText</a></td><td>Gets the text of a static control.</td></tr><tr><td><a href="#getextlength">GetTextLength</a></td><td>Gets the length of the text of a static control.</td></tr><tr><td><a href="cstatic/cstatic-setbitmap.html">SetBitmap</a></td><td>Associates a bitmap with a static control.</td></tr><tr><td><a href="cstatic/cstatic-setcursor.html">SetCursor</a></td><td>Associates a cursor with a static control.</td></tr><tr><td><a href="cstatic/cstatic-setenhancedmetafile.html">SetEnhancedMetafile</a></td><td>Associates an enhanced metafile with a static control.</td></tr><tr><td><a href="cstatic/cstatic-seticon.html">SetIcon</a></td><td>Associates an icon with an static control.</td></tr><tr><td><a href="cstatic/cstatic-setimage.html">SetImage</a></td><td>Associates a new image with a static control.</td></tr><tr><td><a href="cstatic/cstatic-settext.html">SetText</a></td><td>Sets the text of a static control.</td></tr></tbody></table></div>
+<hr>
+<h4 id="deletebitmap">DeleteBitmap</h4>
+<p>Deletes a bitmap associated with a static control. Returns TRUE o FALSE.</p>
+<pre class="code"><code>FUNCTION DeleteBitmap (BYVAL hStatic AS HWND) AS BOOLEAN</code></pre>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CStatic.DeleteBitmap(hStatic)</code></pre>
+<hr>
+<h4 id="deletecursor">DeleteCursor</h4>
+<p>Deletes a cursor associated with a static control. Returns TRUE or FALSE.</p>
+<pre class="code"><code>FUNCTION DeleteCursor (BYVAL hStatic AS HWND) AS BOOLEAN</code></pre>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CStatic.DeleteCursor(hStatic)</code></pre>
+<hr>
+<h4 id="deleteenhancedmetafile">DeleteEnhancedMetafile</h4>
+<p>Deletes an enhanced metafile associated with a static control. Returns TRUE or FALSE.</p>
+<pre class="code"><code>FUNCTION DeleteEnhancedMetafile (BYVAL hStatic AS HWND) AS BOOLEAN</code></pre>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CStatic.DeleteEnhancedMetafile(hStatic)</code></pre>
+<hr>
+<h4 id="deleteicon">DeleteIcon</h4>
+<p>Deletes an icon associated with a static control. Returns TRUE o FALSE.</p>
+<pre class="code"><code>FUNCTION DeleteIcon (BYVAL hStatic AS HWND) AS BOOLEAN</code></pre>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CStatic.DeleteIcon(hStatic)</code></pre>
+<hr>
+<h4 id="deleteimage">DeleteImage</h4>
+<p>Deletes an image associated with a static control. Returns TRUE or FALSE.</p>
+<pre class="code"><code>FUNCTION DeleteImage (BYVAL hStatic AS HWND) AS BOOLEAN</code></pre>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CStatic.DeleteImage(hStatic)</code></pre>
+<hr>
+<h4 id="disable">Disable</h4>
+<p>Disables the control. Returns False if the control was previous disabled; otherwise TRUE</p>
+<pre class="code"><code>FUNCTION Disable (BYVAL hStatic AS HWND) AS BOOLEAN</code></pre>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CStatic.Disable(hStatic)</code></pre>
+<hr>
+<h4 id="enable">Enable</h4>
+<p>Enables the control. Returns False if the control was previous enabled; otherwise TRUE</p>
+<pre class="code"><code>FUNCTION Enable (BYVAL hStatic AS HWND) AS BOOLEAN</code></pre>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CStatic.Enable(hStatic)</code></pre>
+<hr>
+<h4 id="geticon">GetIcon</h4>
+<p>Retrieves a handle to the icon associated with a static control that has the SS_ICON style.</p>
+<pre class="code"><code>FUNCTION GetIcon (BYVAL hStatic AS HWND) AS HICON</code></pre>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM hIcon AS HICON = CStatic.GetIcon(hStatic)</code></pre>
+<hr>
+<h4 id="getimage">GetImage</h4>
+<p>Retrieves a handle to the image (icon or bitmap) associated with a static control. The return value is a handle to the image, if any; otherwise, it is NULL.</p>
+<pre class="code"><code>FUNCTION GetImage (BYVAL hStatic AS HWND) AS HICON</code></pre>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM hImage AS HANDLE = CStatic.GetIcon(hStatic)</code></pre>
+<hr>
+<h4 id="gettext">GetText</h4>
+<p>Gets the text of a static control.</p>
+<pre class="code"><code>FUNCTION GetText (BYVAL hStatic AS HWND) AS DWSTRING</code></pre>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM dwsText AS DWSTRING = CStatic.GetText(hStatic)</code></pre>
+<hr>
+<h4 id="gettextlength">GetTextLength</h4>
+<p>Gets the length of the text of a static control.</p>
+<pre class="code"><code>FUNCTION GetTextLength (BYVAL hStatic AS HWND) AS LONG</code></pre>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM nLen AS LONG = CStatic.GetTextLength(hStatic)</code></pre>
+<hr>
+<h4 id="setbitmap">SetBitmap</h4>
+<p>Associates a bitmap with a static control. The return value is a handle to the image previously associated with the static control, if any; otherwise, it is NULL.</p>
+<pre class="code"><code>FUNCTION SetBitmap (BYVAL hStatic AS HWND, BYVAL hBmp AS HBITMAP) AS HBITMAP</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hBmp</em></td><td>Handle of the bitmap to set.</td></tr></tbody></table></div>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM hOldBmp AS HBITMAP = CStatic.SetBitmap(hStatic, hBmp)</code></pre>
+<hr>
+<h4 id="setcursor">SetCursor</h4>
+<p>Associates a cursor with a static control. The return value is a handle to the cursor previously associated with the static control.</p>
+<pre class="code"><code>FUNCTION SetCursor (BYVAL hStatic AS HWND, BYVAL hCur AS HCURSOR) AS HCURSOR</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hCur</em></td><td>Handle of the cursor to set.</td></tr></tbody></table></div>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM hOldCur AS HCURSOR = CStatic.SetCursor(hStatic, hCur)</code></pre>
+<hr>
+<h4 id="setenhancedmetafile">SetEnhancedMetafile</h4>
+<p>Associates an enhanced metafile with a static control. The return value is a handle to the image previously associated with the static control, if any; otherwise, it is NULL.</p>
+<pre class="code"><code>FUNCTION SetEnhancedMetafile (BYVAL hStatic AS HWND, BYVAL hEMF AS HENHMETAFILE) AS HCURSOR</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hEMF</em></td><td>Handle of the enhanced metafile to set.</td></tr></tbody></table></div>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM hOldEMF AS HENHMETAFILE = CStatic.SetCursor(hStatic, hEMF)</code></pre>
+<hr>
+<h4 id="seticon">SetIcon</h4>
+<p>Associates an icon with an static control. The return value is a handle to the icon previously associated with the static control, if any; otherwise, it is NULL.</p>
+<pre class="code"><code>FUNCTION SetIcon (BYVAL hStatic AS HWND, BYVAL hIcon AS HICON) AS HICON</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hIcon</em></td><td>Handle of the icon to set.</td></tr></tbody></table></div>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM hOldIcon AS HICON = CStatic.SetIcon(hStatic, hIcon)</code></pre>
+<hr>
+<h4 id="setimage">SetImage</h4>
+<p>Associates a new image with a static control. The return value is a handle to the image previously associated with the static control, if any; otherwise, it is NULL.</p>
+<pre class="code"><code>FUNCTION SetIcon (BYVAL hStatic AS HWND, BYVAL nType AS LONG, BYVAL hImage AS HANDLE) AS HANDLE</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hStatic</em></td><td>Handle of the static control.</td></tr><tr><td><em>nType</em></td><td>Type of the image to set.</td></tr><tr><td><em>hImage</em></td><td>Handle of the image to set.</td></tr></tbody></table></div>
+<p>To associate an image with a static control, the control must have the proper style. The following table shows the style needed for each image type.</p>
+<div class="table-wrap"><table><thead><tr><th>Image type</th><th>Static control type</th></tr></thead><tbody><tr><td><strong>IMAGE_BITMAP</strong></td><td>SS_BITMAP</td></tr><tr><td><strong>IMAGE_CURSOR</strong></td><td>SS_ICON</td></tr><tr><td><strong>IMAGE_ENHMETAFILE</strong></td><td>SS_ENHMETAFILE</td></tr><tr><td><strong>IMAGE_ICON</strong></td><td>SS_ICON</td></tr></tbody></table></div>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM hOldBmp AS HICON = CStatic.SetImage(hStatic, IMAGE_BITMAP, hBmp)
+DIM hOldIcon AS HICON = CStatic.SetImage(hStatic, IMAGE_ICON, hIcon)
+DIM hOldCur AS HCURSOR = CStatic.SetImage(hStatic, IMAGE_CURSOR, hCur)
+DIM hOldEMF AS HCURSOR = CStatic.SetImage(hStatic, IMAGE_ENHMETAFILE, hEMF)</code></pre>
+<hr>
+<h4 id="settext">SetText</h4>
+<p>Sets the text of a static control.</p>
+<pre class="code"><code>FUNCTION SetText (BYVAL hStatic AS HWND, BYVAL pwszText AS WSTRING PTR) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hStatic</em></td><td>Handle of the static control.</td></tr><tr><td><em>pwszText</em></td><td>The text to set.</td></tr></tbody></table></div>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>CStatic.SetText(hStatic, "New text")</code></pre>
+<hr>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

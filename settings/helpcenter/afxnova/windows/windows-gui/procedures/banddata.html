@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BandData — Help Center</title>
+<meta name="description" content="Returns or sets an arbitrary long value associated with each band.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-gui/procedures/banddata.html">
+<meta property="og:title" content="BandData">
+<meta property="og:description" content="Returns or sets an arbitrary long value associated with each band.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-gui/procedures/banddata.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-gui/procedures/banddata.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../microsoft-hierarchical-grid.html">Microsoft Hierarchical Grid</a></div>
+<h1>BandData<span class="h1kind">property</span></h1>
+<p class="lede">Returns or sets an arbitrary long value associated with each band.</p>
+<div class="badges"><a class="badge" href="../../index.html">Windows</a><span class="badge">property</span><span class="badge badge--warn">doc-orphan</span></div>
+<div class="note note--warn"><strong>No implementation located.</strong> This member is documented, but the source scan found no matching declaration. It is likely declared in a header this scan does not resolve, or provided by a macro.</div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>PROPERTY BandData (BYVAL band AS LONG) AS LONG</code></pre>
+<pre class="code sig"><code>PROPERTY BandData (BYVAL band AS LONG, BYVAL nData AS LONG)</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>band</code></td><td></td><td>The zero-based index of the band (e.g., 0 for the parent level, 1 for the first child level).</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Returns or sets an arbitrary long value associated with each band. This property is an array that stores a Long for every band in the grid. It is purely for developer use and is never visible to the end-user.</p>
+<h2>Remarks</h2>
+<p>It is an "arbitrary" value, meaning it has no inherent effect on the grid's display. It is used programmatically to "tag" bands with information such as a database table ID, a bit-mask for permissions, or a custom state flag.</p>
+<p>In complex hierarchical views (Master-Detail-Subdetail), <strong>BandData</strong> is often used to quickly identify which database entity a specific band represents without having to check the grid's data source or binding string.</p>
+<h2>Example</h2>
+<p>' Tag the parent band with a custom code (e.g., 100) grid.BandData(0) = 100</p>
+<p>' Tag the first child band with a custom code (e.g., 200) grid.BandData(1) = 200</p>
+<p>' Later, check which band the user is currently interacting with If grid.BandData(grid.BandDisplay) = 100 Then</p>
+<pre class="code"><code>Print "You are in the primary data level."</code></pre>
+<p>End If</p>
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">Windows/Windows GUI/MSHFlexGrid Class.md</span></li><li>Topic: <a href="../microsoft-hierarchical-grid.html">Microsoft Hierarchical Grid</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

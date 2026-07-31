@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Assignments — Help Center</title>
+<meta name="description" content="Assignments — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/assignments.html">
+<meta property="og:title" content="Assignments">
+<meta property="og:description" content="Assignments — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/assignments.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/programmer-s-guide/assignments.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>Assignments</h1>
+<h2>Documentation</h2>
+
+	<b>Assignments</b> typically allow a variable to hold different values at different times during its life-span and scope.<br>
+<br>
+<div>Single assignment statement</div><div><br>
+An assignment statement consists of a variable (simple or with indices, or even a byref function result) and an expression (constructed from variables, constants, operators, and parentheses):<br>
+<div class="indent"><b><code>variable = expression</code></b><br>
+</div>Executing an assignment statement evaluates the expression on the right-hand side and assigns it to the variable on the left-hand side.<br>
+<br>
+For an assignment operation, it is necessary that the value of the expression is well-defined (it is a valid 'rvalue') and that the variable represents a modifiable entity (it is a valid modifiable (non-const) 'lvalue').<br>
+For an assignment to be well formed, the type of the expression on the right-hand side should be compatible with the type of the variable on the left-hand side (in other words, it must be possible to cast the expression to the type of the variable).<br>
+<br>
+An example of a simple assignment is as follows:<br>
+<div class="indent"><b><code>x = 0</code></b><br>
+</div>For the above example, the variable <b><code>'x'</code></b> must be declared as being of numeric type.<br>
+After the assignment statement executes, the variable <b><code>'x'</code></b> will have the value zero (either as an integer or a floating-point value, depending on its type).<br>
+<br>
+In an assignment statement:<br>
+<div class="indent"><b>-</b> The expression is evaluated in the current state of the program.<br>
+<b>-</b> The variable is assigned the computed value, replacing the prior value of that variable.<br>
+</div>Because the right-hand side is evaluated first, it is possible to increment a variable by writing:<br>
+<div class="indent"><b><code>x = x + 1</code></b><br>
+<br>
+</div></div><div>Compound assignment statement</div><div><br>
+Arithmetic operators may be used in compound arithmetic and assignment operations.<br>
+<br>
+For example, consider the following example of compound addition and assignment:<br>
+<div class="indent"><b><code>x += 7</code></b><br>
+</div>The compound arithmetic and assignment statement above is equivalent to the following long form:<br>
+<div class="indent"><b><code>x = x + 7</code></b><br>
+<br>
+</div>More generally, the compound form (with operator op):<br>
+<div class="indent"><b><code>x op= y</code></b><br>
+</div>is equivalent to:<br>
+<div class="indent"><b><code>x = x op y</code></b><br>
+<br>
+</div>The compound statement is legal whenever the long form is legal. This requires that the operation <b><code>'x op y'</code></b> must itself be well formed and that the result of the operation be assignable to <b><code>'x'</code></b>.<br>
+<br>
+</div><div>Assignment versus equality</div><div><br>
+The use of the equals sign <b><code>'='</code></b> as an assignment operator has been frequently criticized, due to the conflict with equal as comparison for equality. This results both in confusion by novices in writing code, and confusion even by experienced programmers in reading code.<br>
+Beginning programmers sometimes confuse assignment with the relational operator for equality, as <b><code>'='</code></b> means equality in mathematics, and is used for assignment in many languages. But assignment alters the value of a variable, while equality testing tests whether two expressions have the same value.<br>
+<br>
+In FreeBASIC, a single equals sign <b><code>'='</code></b> is generally used for both the assignment operator and the equality relational operator, with context determining which is meant.<br>
+For this purpose (and for solving some cases of ambiguity of the parser), the alternative symbol <b><code>'=&gt;'</code></b> can be used for assignments in place of <b><code>'='</code></b> (same as already used commonly for the initializers inside declarations).<br>
+<b>Note:</b> the <b><code>'=&gt;'</code></b> symbol has been chosen against <b><code>'&lt;='</code></b> (already the operator 'Less Than Or Equal') and <b><code>':='</code></b> (<b><code>':'</code></b> used as statement separator).<br>
+<br>
+Statements can even mix assignment and equality operators.<br>
+For example:<br>
+<div class="indent"><b><code>x = a = b</code></b><br>
+</div>is parsed as:<br>
+<div class="indent"><b><code>x = ( a = b )</code></b><br>
+</div>The equality expression <b><code>'a = b'</code></b> above returns <b><code>'-1'</code></b> <code>or</code> <b><code>'0'</code></b>, or <b><code>'true'</code></b> <code>or</code> <b><code>'false'</code></b>, depending on the types of the variables <b><code>'a'</code></b> and <b><code>'b'</code></b>, but the values of these variables are not modified. Only the equality expression result is assigned to <b><code>'x'</code></b>.<br>
+In the above assignment statement, using parentheses around the equality expression allows to highlight the global behavior.<br>
+The alternative symbol <b><code>'=&gt;'</code></b> can also be used:<br>
+<div class="indent"><b><code>x =&gt; a = b</code></b><br>
+(<b><code>'=&gt;'</code></b> can not be also used as symbol for equality operator)<br>
+<br>
+</div></div><div>Example</div><div><br>
+Example illustrating the different cases:<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>x</span><span>,</span> <span>y</span><span>,</span> <span>z</span>
+
+
+
+<span>x</span> <span>=</span> <span class="tok-nu">5</span>          <span class="tok-cm">''        (or 'x =&gt; 5')</span>
+
+<span class="tok-kw">Print</span> <span>x</span>        <span class="tok-cm">''  5     (assignment expression is a constant)</span>
+
+
+
+<span>y</span> <span>=</span> <span>x</span> <span>+</span> <span class="tok-nu">4</span>      <span class="tok-cm">''        (or 'y =&gt; x + 4')</span>
+
+<span class="tok-kw">Print</span> <span>y</span>        <span class="tok-cm">''  9     (assignment expression is the sum of a variable and a constant)</span>
+
+
+
+<span>y</span> <span>=</span> <span>y</span> <span>+</span> <span class="tok-nu">3</span>      <span class="tok-cm">''        (or 'y =&gt; y + 3')</span>
+
+<span class="tok-kw">Print</span> <span>y</span>        <span class="tok-cm">''  12    (value of x is incremented by 3)</span>
+
+
+
+<span>z</span> <span>=</span> <span class="tok-nu">3</span>          <span class="tok-cm">''        (or 'z =&gt; 3')</span>
+
+<span>z</span> <span>*=</span> <span>x</span>         <span class="tok-cm">''        (or 'z *=&gt; x')</span>
+
+<span class="tok-kw">Print</span> <span>z</span>        <span class="tok-cm">''  15    (value of z is multiplied by value of x)</span>
+
+
+
+<span class="tok-kw">If</span> <span>x</span> <span>=</span> <span>y</span> <span class="tok-kw">Then</span>  <span class="tok-cm">''        (value of x is not modified)</span>
+
+  <span class="tok-kw">Print</span> <span>x</span>
+
+<span class="tok-kw">Else</span>
+
+  <span class="tok-kw">Print</span> <span>x</span><span>,</span> <span>y</span>   <span class="tok-cm">''  5     12</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+
+
+<span>x</span> <span>=</span> <span>y</span> <span>=</span> <span>z</span>      <span class="tok-cm">''        (or 'x =&gt; y = z')    (value of y is not modified)</span>
+
+<span class="tok-kw">Print</span> <span>x</span><span>,</span> <span>y</span><span>,</span> <span>z</span>  <span class="tok-cm">''  0     12    15</span></pre></code><br>
+</div></div><div>See also</div><div><br>
+<ul><li> <code><a href="../../operators/operators/procedures/operator-assign.html">Operator =[&gt;] (Assignment)</a></code><br>
+<li> <code><a href="../../operators/relational-operators/procedures/operator-equal.html">Operator = (Equal)</a></code><br>
+<li> <a href="../../operators/operators/operators.html">Operator List</a><br>
+<li> <a href="../../language-documentation/operators/operator-precedence.html">Operator Precedence</a><br>
+<br>
+</li></li></li></li></ul></div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

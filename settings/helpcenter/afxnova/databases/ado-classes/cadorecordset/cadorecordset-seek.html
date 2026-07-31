@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CADORecordset.Seek — Help Center</title>
+<meta name="description" content="Searches the index of a `Recordset` to quickly locate the row that matches the specified values, and changes the current row position to that row.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadorecordset/cadorecordset-seek.html">
+<meta property="og:title" content="CADORecordset.Seek">
+<meta property="og:description" content="Searches the index of a `Recordset` to quickly locate the row that matches the specified values, and changes the current row position to that row.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadorecordset/cadorecordset-seek.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/databases/ado-classes/cadorecordset/cadorecordset-seek.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cadorecordset-class.html">CADORecordset Class</a></div>
+<h1>CADORecordset.Seek<span class="h1kind">method</span></h1>
+<p class="lede">Searches the index of a `Recordset` to quickly locate the row that matches the specified values, and changes the current row position to that row.</p>
+<div class="badges"><a class="badge" href="../../index.html">Databases</a><span class="badge">method</span><span class="badge">CADORecordset.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION Seek (BYREF dvKeyValues AS DVARIANT, BYVAL SeekOption AS SeekEnum = adSeekFirstEQ) AS HRESULT</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>dvKeyValues</code></td><td></td><td>An array of Variant values. An index consists of one or more columns and the array contains a value to compare against each corresponding column.</td></tr><tr><td><code>SeekOption</code></td><td></td><td>Optional. A <strong>SeekEnum</strong> value that specifies the type of comparison to be made between the columns of the index and the corresponding <em>KeyValues</em>.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>S_OK (0) or an HRESULT code.</p>
+<h2>Description</h2>
+<p>Searches the index of a <code>Recordset</code> to quickly locate the row that matches the specified values, and changes the current row position to that row.</p>
+<h2>Remarks</h2>
+<p>Use the <strong>Seek</strong> method in conjunction with the <strong>Index</strong> property if the underlying provider supports indexes on the <code>Recordset</code> object. Use the <strong>Supports</strong>(<em>adSeek</em>) method to determine whether the underlying provider supports Seek, and the <strong>Supports</strong>(<em>adIndex</em>) method to determine whether the provider supports indexes. (For example, the OLE DB Provider for Microsoft Jet supports <strong>Seek</strong> and <strong>Index</strong>.)</p>
+<p>If <strong>Seek</strong> does not find the desired row, no error occurs, and the row is positioned at the end of the <code>Recordset</code>. Set the <strong>Index</strong> property to the desired index before executing this method.</p>
+<p>This method is supported only with server-side cursors. Seek is not supported when the <code>Recordset</code> object's <strong>CursorLocation</strong> property value is <strong>adUseClient</strong>.</p>
+<p>This method can only be used when the <code>Recordset</code> object has been opened with a <strong>CommandTypeEnum</strong> value of <strong>adCmdTableDirect</strong>.</p>
+<h2>Example</h2>
+<p>#include once "AfxNova/CADODB.inc" USING AfxNova</p>
+<p>' // Open the connection DIM pConnection AS CAdoConnection pConnection.Open("Provider=Microsoft.Jet.OLEDB.4.0;Data Source=biblio.mdb")</p>
+<p>' // Set the cursor location DIM pRecordset AS CAdoRecordset pRecordset.CursorLocation = adUseServer</p>
+<p>' // Open the recordset DIM dvSource AS DVARIANT = "Publishers" DIM hr AS HRESULT = pRecordset.Open(dvSource, pConnection, adOpenKeyset, adLockOptimistic, adCmdTableDirect)</p>
+<p>' // Set the index pRecordset.Index = "PrimaryKey"</p>
+<p>' // Seek the record 70 pRecordset.Seek 70, 1</p>
+<p>' // Parse the recordset DO WHILE NOT pRecordset.EOF ' // Get the contents DIM dvRes1 AS DVARIANT = pRecordset.Collect("PubID") DIM dvRes2 AS DVARIANT = pRecordset.Collect("Name") DIM dvRes3 AS DVARIANT = pRecordset.Collect("Company Name") PRINT dvRes1 &amp; " " &amp; dvRes2 &amp; " " &amp; dvRes3 ' // Fetch the next row IF pRecordset.MoveNext &lt;&gt; S_OK THEN EXIT DO LOOP</p>
+<p>' // === Close the recordset and the connection ' // If you don't close them, they will be closed when the application ends pRecordset.Close pConnection.Close</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CADORecordset.inc</code></li><li>Defined in <span class="srcref">AfxNova/CAdoRecordset.inc:1083</span></li><li>Documented in <span class="srcref">Databases/ADO Classes/CAdoRecordset Class.md</span></li><li>Topic: <a href="../cadorecordset-class.html">CADORecordset Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

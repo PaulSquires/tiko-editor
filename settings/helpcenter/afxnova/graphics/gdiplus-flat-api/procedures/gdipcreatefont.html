@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GdipCreateFont — Help Center</title>
+<meta name="description" content="Creates a **Font** object based on a **FontFamily** object, a size, a font style, and a unit of measurement.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipcreatefont.html">
+<meta property="og:title" content="GdipCreateFont">
+<meta property="og:description" content="Creates a **Font** object based on a **FontFamily** object, a size, a font style, and a unit of measurement.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipcreatefont.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/procedures/gdipcreatefont.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../font-functions.html">Font Functions</a></div>
+<h1>GdipCreateFont<span class="h1kind">function</span></h1>
+<p class="lede">Creates a **Font** object based on a **FontFamily** object, a size, a font style, and a unit of measurement.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GdipCreateFont (BYVAL fontFamily AS GpFontFamily PTR, BYVAL emSize AS REAL, BYVAL style AS INT_, BYVAL unit AS GpUnit, BYVAL font AS GpFont PTR PTR) AS GpStatus</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>fontFamily</code></td><td></td><td>[in] Pointer to a <strong>FontFamily</strong> object that specifies information such as the string that identifies the font family and the font family's text metrics measured in design units.</td></tr><tr><td><code>emSize</code></td><td></td><td>[in] Single precision value that specifies the em size of the font measured in the units specified in the unit parameter.</td></tr><tr><td><code>style</code></td><td></td><td>[[in] Long integer value that specifies the style of the typeface. This value must be an element of the FontStyle enumeration or the result of a bitwise OR applied to two or more of these elements. For example, %FontStyleBold OR %FontStyleUnderline OR %FontStyleStrikeout sets the style as a combination of the three styles. The default value is %FontStyleRegular</td></tr><tr><td><code>unit</code></td><td></td><td>[in] Element of the <em>GpUnit</em> enumeration that specifies the unit of measurement for the font size. The default value is <em>UnitPoint</em>.</td></tr><tr><td><code>font</code></td><td></td><td>[out] Pointer to a variable that receives a pointer to the new created <strong>Font</strong> object.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Creates a <strong>Font</strong> object based on a <strong>FontFamily</strong> object, a size, a font style, and a unit of measurement.</p>
+<h2>Examples</h2>
+<p>' ======================================================================================== ' The following example creates a Font object and then uses it to draw text. ' ======================================================================================== SUB Example_CreateFont (BYVAL hdc AS HDC)</p>
+<p>DIM hStatus AS LONG</p>
+<p>' // Create a graphics object from the device context DIM graphics AS GpGraphics PTR hStatus = GdipCreateFromHDC(hdc, @graphics)</p>
+<p>' // Get the DPI scaling ratios DIM dpiX AS SINGLE hStatus = GdipGetDpiX(graphics, @dpiX) DIM rxRatio AS SINGLE = dpiX / 96 DIM dpiY AS SINGLE hStatus = GdipGetDpiY(graphics, @dpiY) DIM ryRatio AS SINGLE = dpiY / 96 ' // Set the scale transform hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)</p>
+<p>' // Create the font DIM fontFamily AS GpFontFamily PTR hStatus = GdipCreateFontFamilyFromName("Arial", NULL, @fontFamily) DIM font AS GpFont PTR IF hStatus = StatusOk THEN</p>
+<pre class="code"><code>hStatus = GdipCreateFont(fontFamily, AfxGdipPointsToPixels(18, TRUE), FontStyleRegular, UnitPixel, @font)
+  GdipDeleteFontFamily(fontFamily)</code></pre>
+<p>END IF</p>
+<p>' // Create a solid brush DIM solidBrush AS GpSolidFill PTR hStatus = GdipCreateSolidFill(ARGB_BLUE, @solidBrush)</p>
+<p>' // Draw a string DIM rcf AS GpRectF = (30, 30, 0, 0) DIM wszText AS WSTRING * 64 = "Text drawn using an Arial font" hStatus = GdipDrawString(graphics, wszText, LEN(wszText), font, @rcf, NULL, solidBrush)</p>
+<p>' // Cleanup IF font THEN GdipDeleteFont(font) IF solidBrush THEN GdipDeleteBrush(solidBrush) IF graphics THEN GdipDeleteGraphics(graphics)</p>
+<p>END SUB ' ========================================================================================</p>
+<p>' ======================================================================================== ' The following example creates a Font object from a font family and then uses it to draw text. ' ======================================================================================== SUB Example_CreateFontFromFamily (BYVAL hdc AS HDC)</p>
+<p>DIM hStatus AS LONG</p>
+<p>' // Create a graphics object from the device context DIM graphics AS GpGraphics PTR hStatus = GdipCreateFromHDC(hdc, @graphics)</p>
+<p>' // Get the DPI scaling ratios DIM dpiX AS SINGLE hStatus = GdipGetDpiX(graphics, @dpiX) DIM rxRatio AS SINGLE = dpiX / 96 DIM dpiY AS SINGLE hStatus = GdipGetDpiY(graphics, @dpiY) DIM ryRatio AS SINGLE = dpiY / 96 ' // Set the scale transform hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)</p>
+<p>' // Create a font family DIM fontFamily AS GpFontFamily PTR hStatus = GdipCreateFontFamilyFromName("Arial", NULL, @fontFamily)</p>
+<p>' // Create a font from the font family DIM font AS GpFont PTR IF hStatus = StatusOk THEN</p>
+<pre class="code"><code>hStatus = GdipCreateFont(fontFamily, AfxGdipPointsToPixels(14, TRUE), FontStyleRegular, UnitPixel, @font)</code></pre>
+<p>END IF</p>
+<p>' // Create a solid brush DIM solidBrush AS GpSolidFill PTR hStatus = GdipCreateSolidFill(ARGB_BLUE, @solidBrush)</p>
+<p>' // Draw a string DIM rcf AS GpRectF = (30, 30, 0, 0) DIM wszText AS WSTRING * 64 = "This is a Font created from a FontFamily" hStatus = GdipDrawString(graphics, wszText, LEN(wszText), font, @rcf, NULL, solidBrush)</p>
+<p>' // Cleanup IF font THEN GdipDeleteFont(font) IF solidBrush THEN GdipDeleteBrush(solidBrush) IF graphics THEN GdipDeleteGraphics(graphics)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/AfxGdiPlus.bi:1704</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Flat  Api/GdiPlusFont.md</span></li><li>Topic: <a href="../font-functions.html">Font Functions</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

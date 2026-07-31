@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Command — Help Center</title>
+<meta name="description" content="Returns command line parameters used to call the program">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/operating-system-functions/procedures/command.html">
+<meta property="og:title" content="Command">
+<meta property="og:description" content="Returns command line parameters used to call the program">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/operating-system-functions/procedures/command.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/operating-system-functions/procedures/command.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>Command<span class="h1kind">function</span></h1>
+<p class="lede">Returns command line parameters used to call the program</p>
+<div class="badges"><a class="badge" href="../index.html">Operating System Functions</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>Declare Function Command ( ByVal index As Long = -1 ) As String</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>index</code></td><td></td><td>Zero-based index for a particular command-line argument.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<br>
+  Returns the command-line arguments(s).<br>
+<br>
+
+<h2>Description</h2>
+<br>
+<code><b>Command</b></code> returns command-line arguments passed to the program upon execution.<br>
+<br>
+If <code><i>index</i></code> is less than zero (<code>&lt; 0</code>), a space-separated list of all command-line arguments is returned, otherwise, a single argument is returned. A value of zero (<code>0</code>) returns the name of the executable; and values of one (<code>1</code>) and greater return each command-line argument.<br>
+<br>
+If <code><i>index</i></code> is greater than the number of arguments passed to the program, the null string (<code>"</code><code>"</code>) is returned.<br>
+<br>
+When the command line is parsed for arguments, everything between double quotes in the parameter list will be considered as a single block, and is returned without the double quotes.<br>
+<br>
+By default, filename globbing for arguments (expansion of wildcards to filenames) is used on all ports of FreeBASIC for compatibility.  Arguments on the command line containing wildcards are typically not expanded if when no file is matched or if properly quoted.  Other special characters for redirection are typically not returned unless properly quoted.  Consult the documentation on the shell being used for more information on the proper quoting of command line arguments.<br>
+There may be some strange behavior when using backslash(es) in command line arguments, and the result may even depend on the platform.<br>
+<br>
+<i><b>WARNING</b>: By nature of constructor precedence in FreeBASIC and main() initialization, calling <code><b>Command</b></code> within a global constructor (module constructor or UDT constructor called for static/shared object) is not safe (may even induce a runtime error).</i><br>
+<br>
+<u>Disabling filename globbing under Windows</u><br>
+<div class="indent">Define the following global variable(s) somewhere in the source:<br>
+<code><pre class="code"><span class="tok-cm">'' For MinGW.org and Cygwin runtimes:</span>
+
+<span class="tok-kw">Extern</span> <span>_CRT_glob</span> <span class="tok-kw">Alias</span> <span>&quot;_CRT_glob&quot;</span> <span class="tok-kw">As</span> <span class="tok-kw">Long</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">Shared</span> <span>_CRT_glob</span> <span class="tok-kw">As</span> <span class="tok-kw">Long</span> <span>=</span> <span class="tok-nu">0</span>
+
+
+
+<span class="tok-cm">'' For MinGW-w64 runtime:</span>
+
+<span class="tok-kw">Extern</span> <span>_dowildcard</span> <span class="tok-kw">Alias</span> <span>&quot;_dowildcard&quot;</span> <span class="tok-kw">As</span> <span class="tok-kw">Long</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">Shared</span> <span>_dowildcard</span> <span class="tok-kw">As</span> <span class="tok-kw">Long</span> <span>=</span> <span class="tok-nu">0</span></pre></code><br>
+</div><u>Disabling filename globbing under Dos</u><br>
+<div class="indent">Define the following function somewhere in the source:<br>
+<code><pre class="code"><span class="tok-kw">Function</span> <span>__crt0_glob_function</span> <span class="tok-kw">Alias</span> <span>&quot;__crt0_glob_function&quot;</span> <span>(</span> <span class="tok-kw">ByVal</span> <span>arg</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span> <span class="tok-kw">Ptr</span> <span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span> <span class="tok-kw">Ptr</span> <span class="tok-kw">Ptr</span>
+
+  <span class="tok-kw">Return</span> <span class="tok-nu">0</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span></pre></code><br>
+<br>
+</div><u>Disabling filename globbing under Linux</u><br>
+<div class="indent">Filename globbing is handled by the command shell.  Quote the argument containing wildcards or disable filename globbing in the shell prior to executing the command.  For example in bash use 'set -f' to disable wildcard expansion<br>
+<br>
+</div>
+<h2>Remarks</h2>
+<h3>Usage</h3><code><br>
+<i>result</i> = <b>Command</b>[$]( [ <i>index</i> ] )<br>
+</code><br>
+
+<h3>Dialect Differences</h3><br>
+<ul><li> The string type suffix "$" is required in the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang qb</a></i> dialect.<br>
+<li> The string type suffix "$" is optional in the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang fblite</a></i> dialect.<br>
+<li> The string type suffix "$" is ignored in the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang fb</a></i> dialect, warn only with the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-w.html">-w suffix</a></i> compile option (or <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-w.html">-w pedantic</a></i> compile option).<br>
+<br>
+</li></li></li></ul>
+<h3>Differences from QB</h3><br>
+<ul><li> The numeric argument was not supported in QB.<br>
+<li> QB converted the parameter list to uppercase before returning it, FreeBASIC doesn't.<br>
+<li> By default arguments containing wildcard characters are expanded (filename globbing)<br>
+<br>
+</li></li></li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="../../intrinsic-defines/procedures/fb-argc.html">__FB_ARGC__</a></code><br>
+<li> <code><a href="../../intrinsic-defines/procedures/fb-argv.html">__FB_ARGV__</a></code><br>
+<li> <code><a href="exec.html">Exec</a></code><br>
+<li> <code><a href="run.html">Run</a></code><br>
+<br>
+</li></li></li></li></ul><br>
+
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-kw">Print</span> <span>&quot;program launched via: &quot;</span> <span>&amp;</span> <span class="tok-kw">Command</span><span>(</span><span class="tok-nu">0</span><span>)</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Long</span> <span>i</span> <span>=</span> <span class="tok-nu">1</span>
+
+<span class="tok-kw">Do</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>arg</span> <span>=</span> <span class="tok-kw">Command</span><span>(</span><span>i</span><span>)</span>
+
+    <span class="tok-kw">If</span> <span class="tok-kw">Len</span><span>(</span><span>arg</span><span>)</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">Then</span>
+
+        <span class="tok-kw">Exit</span> <span class="tok-kw">Do</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+
+
+    <span class="tok-kw">Print</span> <span>&quot;command line argument &quot;</span> <span>&amp;</span> <span>i</span> <span>&amp;</span> <span>&quot; = &quot;&quot;&quot;</span> <span>&amp;</span> <span>arg</span> <span>&amp;</span> <span>&quot;&quot;&quot;&quot;</span>
+
+    <span>i</span> <span>+=</span> <span class="tok-nu">1</span>
+
+<span class="tok-kw">Loop</span>
+
+
+
+<span class="tok-kw">If</span> <span>i</span> <span>=</span> <span class="tok-nu">1</span> <span class="tok-kw">Then</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;(no command line arguments)&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgCommand.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Memory Functions — Help Center</title>
+<meta name="description" content="Memory Functions — 0 documented members. Memory Functions reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/memory-functions/memory-functions.html">
+<meta property="og:title" content="Memory Functions">
+<meta property="og:description" content="Memory Functions — 0 documented members. Memory Functions reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/memory-functions/memory-functions.html">
+<link rel="stylesheet" href="../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/memory-functions/memory-functions.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Memory Functions</div>
+<h1>Memory Functions</h1>
+<h2>Documentation</h2>
+
+	Procedures that work with static and dynamic memory.<br>
+<br>
+<div>Description</div><div><br>
+<div class="indent">These procedures provide access to the free store, or heap. Memory from the free store can be reserved and freed, and procedures are provided to read and write directly to that memory.<br>
+<br>
+</div><b><a href="#DYNAMEM">Working with Dynamic Memory</a></b><br>
+<div class="indent">Procedures that reserve, resize or free dynamic memory.<br>
+</div><b><a href="#MISC">Miscellaneous Procedures</a></b><br>
+<div class="indent">Procedures that read or write values to and from addresses in memory.<br>
+<br>
+</div><table><tr><td><a></a><b><u>Working with Dynamic Memory</u></b><br>
+<div class="indent"><b><a href="procedures/allocate.html">Allocate</a></b><br>
+<div class="indent">Reserves a number of bytes of uninitialized memory and returns the address.<br>
+</div><b><a href="procedures/callocate.html">CAllocate</a></b><br>
+<div class="indent">Reserves a number of bytes of initialized (zeroed) memory and returns the address.<br>
+</div><b><a href="procedures/reallocate.html">Reallocate</a></b><br>
+<div class="indent">Changes the size of reserved memory.<br>
+</div><b><a href="procedures/deallocate.html">Deallocate</a></b><br>
+<div class="indent">Returns reserved memory back to the system.<br>
+</div></div></td><td><a></a><b><u>Miscellaneous Procedures</u></b><br>
+<div class="indent"><b><a href="procedures/peek.html">Peek</a></b><br>
+<div class="indent">Reads some type of value from an address.<br>
+</div><b><a href="procedures/poke.html">Poke</a></b><br>
+<div class="indent">Writes some type of value to an address.<br>
+</div><b><a href="procedures/clear.html">Clear</a></b><br>
+<div class="indent">Clears data in an array with a specified value.<br>
+</div><b><a href="procedures/fb-memcopy.html">Fb_Memcopy</a></b><br>
+<div class="indent">Copies a block of memory from a location to another.<br>
+(memory areas must not overlap)<br>
+</div><b><a href="procedures/fb-memcopyclear.html">fb_MemCopyClear</a></b><br>
+<div class="indent">Copies the first part of a block of memory from a location to another and clears the rest.<br>
+(memory areas must not overlap)<br>
+</div><b><a href="procedures/fb-memmove.html">Fb_Memmove</a></b><br>
+<div class="indent">Copies a block of memory from a location to another.<br>
+(memory areas may overlap)<br>
+</div><b><a href="procedures/swap.html">Swap</a></b><br>
+<div class="indent">Exchange the contents of two variables.<br>
+</div><b><a href="procedures/sadd.html">SAdd</a></b><br>
+<div class="indent">Returns the address for the data in a zstring/wstring variable.<br>
+</div></div></td></tr></table><div>&nbsp;</div></div><div>See also</div><div><br>
+<ul><li> <a href="../operators/memory-operators/memory-operators.html">Memory Operators</a><br>
+<br>
+</li></ul></div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../index.html">Home</a> ·
+         <a href="../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../nav.js?v=70a6b70236"></script>
+<script src="../../search-index.js"></script>
+<script src="../../assets/app.js?v=456d079659"></script>
+<script src="../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CGpAdjustableArrowCap.IsFilled — Help Center</title>
+<meta name="description" content="Determines whether the arrow cap is filled.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpadjustablearrowcap/cgpadjustablearrowcap-isfilled.html">
+<meta property="og:title" content="CGpAdjustableArrowCap.IsFilled">
+<meta property="og:description" content="Determines whether the arrow cap is filled.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpadjustablearrowcap/cgpadjustablearrowcap-isfilled.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-classes/cgpadjustablearrowcap/cgpadjustablearrowcap-isfilled.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cgpcustomlinecap-class.html">CGpCustomLineCap Class</a></div>
+<h1>CGpAdjustableArrowCap.IsFilled<span class="h1kind">method</span></h1>
+<p class="lede">Determines whether the arrow cap is filled.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">method</span><span class="badge">CGpLineCaps.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION IsFilled () AS BOOLEAN</code></pre>
+<h2>Return value</h2>
+<p>If the arrow cap is filled, this method returns TRUE; otherwise, it returns FALSE.</p>
+<h2>Description</h2>
+<p>Determines whether the arrow cap is filled.</p>
+<h2>Example</h2>
+<p>' ======================================================================================== ' The following example creates an AdjustableArrowCap object, myArrow, and sets the fill ' mode to TRUE. The code then creates a Pen object and assigns myArrow as the ending line ' cap for this Pen object. Next, the code tests whether myArrow is filled and, if it is, ' draws a line. ' ======================================================================================== SUB Example_IsFilled (BYVAL hdc AS HDC)</p>
+<p>' // Create a graphics object from the window device context DIM graphics AS CGpGraphics = hdc ' // Set the scale transform graphics.ScaleTransformForDpi</p>
+<p>' // Create an AdjustableArrowCap with a height of 10 pixels DIM myArrow AS CGpAdjustableArrowCap = CGpAdjustableArrowCap(10, 10, CTRUE) ' // Adjust to DPI by setting the scale width myArrow.SetWidthScale(rxRatio)</p>
+<p>' // Create a Pen, and assign myArrow as the end cap DIM arrowPen AS CGpPen = ARGB_Violet arrowPen.SetCustomEndCap(@myArrow)</p>
+<p>' // If the cap is filled, draw a line using arrowPen IF myArrow.IsFilled THEN graphics.DrawLine(@arrowPen, 0, 0, 100, 100)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CGpLineCaps.inc</code></li><li>Defined in <span class="srcref">AfxNova/CGpLineCaps.inc:262</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Classes/CGpCustomLineCap Classes.md</span></li><li>Topic: <a href="../cgpcustomlinecap-class.html">CGpCustomLineCap Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

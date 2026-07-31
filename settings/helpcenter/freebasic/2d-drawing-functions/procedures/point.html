@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Point — Help Center</title>
+<meta name="description" content="Returns the color attribute of a specified pixel coordinate">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/2d-drawing-functions/procedures/point.html">
+<meta property="og:title" content="Point">
+<meta property="og:description" content="Returns the color attribute of a specified pixel coordinate">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/2d-drawing-functions/procedures/point.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/2d-drawing-functions/procedures/point.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>Point<span class="h1kind">keyword</span></h1>
+<p class="lede">Returns the color attribute of a specified pixel coordinate</p>
+<div class="badges"><a class="badge" href="../index.html">2D Drawing Functions</a><span class="badge">keyword</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>result = Point( coord_x, coord_y [,buffer] )</code></pre>
+<pre class="code sig"><code>result = Point( function_index )</code></pre>
+<h2>Return value</h2>
+<br>
+The return datatype is a <code><a href="../../standard-data-types/procedures/ulong.html">ULong</a></code>.<br>
+<br>
+If the <code><i>x</i>, <i>y</i></code> coordinates of a pixel are provided <b><code>Point</code></b> returns the color attribute at the specified coordinates, as an 8-bit palette index in 8 bpp indexed modes, a 24-bit RGB value in 16 bpp modes (upper 8 bits unused, limited precision of R,G,B), and a 32-bit RGB or RGBA value in 32 bpp modes (upper 8 bits unused or holding Alpha). Note that it does NOT return a 16-bit value (5 bits R + 6 bits G + 5 bits B).<br>
+<br>
+If the argument is a function index, <b><code>Point</code></b> returns one of the graphics cursor coordinates set by the last graphics command.<br>
+<br>
+<div><table><tr><td>Argument</td><td> Value Returned </td></tr><tr><td> 0</td><td>The current physical x coordinate.</td></tr><tr><td>1</td><td>The current physical y coordinate.</td></tr><tr><td> 2</td><td>The current view x coordinate. This returns the same value as the POINT(0) function if the WINDOW statement has not been used.</td></tr><tr><td>3</td><td>The current view y coordinate. This returns the same value as the POINT(1) function if the WINDOW statement has not been used.</td></tr></table></div><br>
+<br>
+
+<h2>Description</h2>
+<br>
+GfxLib Function with two different uses.<br>
+If supplied with two coordinates it reads the color of the pixel at the coordinate <code><i>coord_x</i></code>, <code><i>coord_y</i></code> of the screen, or of the <code><i>buffer</i></code>, if supplied.<br>
+The value return is a color index in a 256 or less color <code><a href="../../screen-functions/procedures/screen-graphics.html">Screen (Graphics)</a></code>, and an <code><a href="rgb.html">RGB</a></code> value in true color modes. If the coordinates are off-screen or off-buffer, <code>-1</code> is returned<br>
+<br>
+If supplied with a single value it returns the one of the coordinates of the graphics cursor as set by the last graphics command executed. If the last command was executed in a buffer, the values returned will be coordinates in the buffer. Arguments out of the range <code>0</code>-<code>3</code> will return <code>0</code>.<br>
+<br>
+The function <code><b>Point</b></code> does not work in text modes.<br>
+<br>
+Speed note: while <code><b>Point</b></code> provides valid results, it is quite slow to call repeatedly due to the overhead of additional calculations and checks. Much better performance can be achieved by using direct memory access using the results obtained from <code><a href="imageinfo.html">ImageInfo</a></code> and <code><a href="../../screen-functions/procedures/screeninfo.html">ScreenInfo</a></code>/<code><a href="../../screen-functions/procedures/screenptr.html">ScreenPtr</a></code>.<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Usage</h3><br>
+<code><i>coord_x</i></code><br>
+<div class="indent">x coordinate of the pixel<br>
+</div><code><i>coord_y</i></code><br>
+<div class="indent">y coordinate of the pixel<br>
+</div><code><i>buffer</i></code><br>
+<div class="indent">the image buffer to read from<br>
+</div><code><i>function_index</i></code><br>
+<div class="indent">the type of screen coordinate to return: one of the values <code>0</code>, <code>1</code>, <code>2</code>, <code>3</code><br>
+<br>
+</div>
+<h3>Version</h3><br>
+Before fbc 1.08.0, the return datatype was an <code><a href="../../standard-data-types/procedures/integer.html">Integer</a></code>.<br>
+<br>
+
+<h3>Differences from QB</h3><br>
+<ul><li> <code><i>buffer</i></code> is new to FreeBASIC<br>
+<li> In 16 bpp and 32 bpp modes, a 32-bit value is returned instead of an 8-bit palette index<br>
+<br>
+</li></li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="pset-statement.html">PSet</a></code> - write pixels<br>
+<li> <code><a href="../../screen-functions/procedures/pmap.html">PMap</a></code><br>
+<li> <code><a href="../../console-functions/procedures/color.html">Color</a></code><br>
+<li> <code><a href="../../screen-functions/procedures/view-graphics.html">View (Graphics)</a></code><br>
+<li> <code><a href="../../screen-functions/procedures/window.html">Window</a></code><br>
+<li> <code><a href="../../tutorials/programmer-s-guide/internal-graphics-formats.html">Internal pixel formats</a></code><br>
+<br>
+</li></li></li></li></li></li></ul><br>
+
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-cm">' Set an appropriate screen mode - 320 x 240 x 8bpp indexed color</span>
+
+<span class="tok-kw">ScreenRes</span> <span class="tok-nu">320</span><span>,</span> <span class="tok-nu">240</span><span>,</span> <span class="tok-nu">8</span>
+
+
+
+<span class="tok-cm">' Draw a line using color 12 (light red)</span>
+
+<span class="tok-kw">Line</span> <span>(</span><span class="tok-nu">20</span><span>,</span><span class="tok-nu">20</span><span>)-(</span><span class="tok-nu">100</span><span>,</span><span class="tok-nu">100</span><span>),</span> <span class="tok-nu">12</span>
+
+
+
+<span class="tok-cm">' Print the color of a point on the line</span>
+
+<span class="tok-kw">Print</span> <span class="tok-kw">Point</span><span>(</span><span class="tok-nu">20</span><span>,</span><span class="tok-nu">20</span><span>)</span>
+
+
+
+<span class="tok-cm">' Sleep before the program closes</span>
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+Output:<br>
+<div class="indent"><pre class="code">
+12
+		</pre></div>
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgPoint.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

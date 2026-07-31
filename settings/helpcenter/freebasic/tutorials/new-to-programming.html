@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>New to Programming? — Help Center</title>
+<meta name="description" content="New to Programming? — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/new-to-programming.html">
+<meta property="og:title" content="New to Programming?">
+<meta property="og:description" content="New to Programming? — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/new-to-programming.html">
+<link rel="stylesheet" href="../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/new-to-programming.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>New to Programming?</h1>
+<h2>Documentation</h2>
+
+	If you're new to programming in general, you should probably learn what some basic concepts are:<br>
+<br>
+<b>How Your Program Is Run</b><br>
+<ul><li>What a Compiler Is<br>
+<li>Syntax<br>
+<li>Program Flow<br>
+</li></li></li></ul><b>Variables</b><br>
+<div class="indent"><a href="#datatypes">-Basic DataTypes</a><br>
+</div><b>Input/Output (IO)</b><br>
+<br>
+The above being the most important programming concepts for an absolute beginner to programming to learn.  I will go over how these concepts work in FreeBASIC.  It is also important to learn how to use the manual, located at www.freebasic.net/wiki  Most programming communities and language will have manuals with both descriptions and demonstrations.  ALWAYS refer to the manual before looking elsewhere.  Chances are the information you want is in the manual, and if it's not, it can be added.<br>
+<br>
+This tutorial's on Version 1.0.  Don't care for the revision number ^^;;<br>
+<br>
+<div>How Your Program is Run</div><br>
+<br>
+<b>What a Compiler Is</b><br>
+<br>
+FreeBASIC is a compiled programming language, rather than interpreted.  What this means, is that FreeBASIC takes the code that you type in, such as "PRINT" or "SLEEP" and translates that directly into Assembly or Machine Code.  Assembler and Machine Code are what the computer understands.  In general, you will never code in Machine Code, no matter how "low level" (how close you are to programming machine code) you go.<br>
+<br>
+FreeBASIC is a High Level programming language.  FreeBASIC makes it so the programmer has to do less work to get more done.  With higher level programming, you don't have to worry about the more complex areas of programming.  In programming languages such as C and ASM, which are lower level, the programmer has the advantage of manipulating the computer on a more precise and less human level, with the disadvantage of having to know more about internals.<br>
+<br>
+Your compiler of choice will depend on your situation.  If you want complete control over every action being taken by your computer, you may wish to code in ASM or C.  However, as computers and compilers have progressed, you no longer have to worry as much about the speed and lower level details of your code.  In many ways, the entire purpose of higher level programming is to make sure you don't have to worry about those things.  FreeBASIC handles many optimizations and improvements that you would normally have to do by hand for you, while still allowing you to access lower level areas of control if you wish.  One problem with this, however, which is a common problem in most higher level forms of programming, is the high levels of implicit actions being taken by the compiler.  If you want to work with lower level code in a higher level language, you need to know how to explicitly control certain aspects of your code.<br>
+<br>
+<b>Syntax</b><br>
+<br>
+Syntax is how words and commands are grouped together in programming.  The order that they are in, what commands are allowed where, and if consistent, will lay down rules as to how you will structure your program.<br>
+<br>
+For example, in programming, you will come across the task of calling commands, and giving those commands something to do.  Your syntax rules will tell you how you can call this command, and what is or isn't allowed.  They will help you call the command intelligently, and help prevent possible errors that could occur in a more "syntax free" (what is essentially impossible in most forms of programming) environment.<br>
+<br>
+The syntax for FreeBASIC generally goes as follows:  CommandName [Argument,] [Another Argument]<br>
+<br>
+While the above may look confusing at first, it's actually very simple.  All that says is that you give the compiler a command, and then give your arguments after the command.  The comma is what separates the arguments from one another.  An example command could be:  Draw Circle, 10.  We can assume that Draw will draw something, Circle will be the shape that it draws, and 10 will be the radius of the circle being drawn.  In that case, the syntax rules for that command may look something like this:  Draw [Shape,] [Size]<br>
+<br>
+FreeBASIC is *not* case sensitive.  Calling a command 'DRaW' is the same as calling the command 'draw'.<br>
+<br>
+<b>Program Flow</b><br>
+<br>
+FreeBASIC's code is read from the TOP of the code, to the BOTTOM, one line at a time.  When the line of code is read by the compiler, or the compiled code for that line is read by the computer, the command that's on the line will be executed (it will be ran, it will happen, your computer will do what the code tells it to).  Example code can be:<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Print</span> <span>&quot;HI&quot;</span>
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+<br>
+Since the code PRINT is on the line above SLEEP, PRINT will be run first.  SLEEP is the next line and will be executed after PRINT is finished executing.<br>
+<br>
+Comments can be made in FreeBASIC, which are ignored, and will not become a part of your program.  Comments can take up a full line if you begin them with ', or can be multiple line comments if you begin them with /' and end them with '/.  Here's an example of using comments.  Notice how none of the code or characters within the comments are even noticed by the compiler.<br>
+<br>
+<code><pre class="code"><span class="tok-cm">'  ABLASHD</span>
+
+<span class="tok-cm">' PRINT &quot;HI!&quot; ' This line of code will never even be printed, because it's commented.</span>
+
+<span class="tok-kw">Print</span> <span>&quot;This is not a comment.  This event will occur.&quot;</span>  <span class="tok-cm">' Print that it's not a comment onto the screen.</span>
+
+<span class="tok-kw">Sleep</span> <span class="tok-cm">' pause the program until the user hits a key.</span></pre></code><br>
+<br>
+<div>Variables</div><br>
+<br>
+What are variables?  They're the most important part of programming, that's what.  Any time you do anything useful in programming, you're going to store information in variables.<br>
+<br>
+Do you recall doing algebra or using letters in math, in school?  An example might be something like:  x = 4, 1 + x = 5.  When programming, variables are exactly that.  They are words or letters that hold values in programming.  These values may store important data such as a name, how much health your main character in your video game has, or even something as simple as the color of one pixel.  When you make a variable, you actually are storing the data it holds small piece of the computer's memory.  In FreeBASIC, and most programming languages, you will work with variables a lot.<br>
+<br>
+To create variables in FreeBASIC, we use the DIM command.  What does DIM stand for?  I'm not sure, but it could stand for DIMENSION, where programmers would define the "size" of their variable.  DIM is used to tell FreeBASIC that we're creating a new variable in our program.  The command is described in high detail on <a href="../variable-declarations/procedures/dim.html">This Page</a>, but we're going to explain it in less detail here.<br>
+<br>
+The most simple syntax for DIM is:  DIM [VariableName] AS [DataType] [="[Value] ]<br>
+<br>
+What this does, is it tells FreeBASIC:<br>
+- We're making a variable, because we typed in the command DIM<br>
+- We're naming the variable [VariableName] (Where VariableName is the name of the variable you want to make.  A variable can be named X, Y, AlexPritchard, BLahblh, Foo, etc.)<br>
+- We're specifying the type of variable, because we typed in AS after VariableName<br>
+- We're making the variable of the type [DataType] (Datatype can be something that holds numbers, letters, or a whole bunch of stuff!)<br>
+- We can also assign the value of the variable by putting EQUALS (=) after our variable creation.<br>
+<br>
+Example:<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span>foo</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">5</span>
+
+<span class="tok-kw">Print</span> <span>foo</span>
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+<br>
+In our program, we created foo. FOO was created as an INTEGER (A <a href="../standard-data-types/standard-data-types.html">datatype</a> which holds numbers) We gave foo the value of 5.  We then call the command PRINT, which PRINTS information on our screen.  We PRINT foo, so the number 5 should be PRINTed on the screen.  We then SLEEP, which pauses our program until we hit a key.<br>
+<br>
+<a></a><br>
+<b>Basic DataTypes</b><br>
+<br>
+Variables are a tough subject, I think, to begin with in programming.  There's a lot of different types of variables!  The type of variable is the data type.  'The kind of data that's held in this type of variable', and you wondered why they shortened it to datatype?  ^^;;  For starters, we'll get you familiar with these types of variables:<br>
+<br>
+Integer - Hold numbers WITHOUT DECIMAL PLACES.  Will generally be the size of your computer's registry, which is not a topic I will be going over.<br>
+Double - Holds numbers WITH DECIMAL PLACES.  Holds very large and small numbers, with high levels of precision (how close to any value you give the variable it's actual value will be)<br>
+String - A nice feature in FreeBASIC.  STRING is a datatype which holds letters and numbers for you.  Built for storing information such as your name, and cool information to put on the screen, such as cooking directions.<br>
+<br>
+Remember, follow the proper DIM syntax.  DIM variablename as INTEGER will make an INTEGER called variablename, which you can use in your program.  You can replace INTEGER with DOUBLE, or STRING.  BE CAREFUL!  Data Types are *NOT* always compatible with each other!  You can not give a STRING the value of 5!  You can however, give it the value of "5" (quotes specify string characters in FB).  You can not have an integer or double equal "5", as "5" is a string, and not a number.<br>
+<br>
+Here is a really cool example, which demonstrates how you can use variables to store your name.<br>
+<br>
+<code><pre class="code"><span class="tok-cm">'' Create the variable MyName.  Assign it's value to be 'Alex'</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>MyName</span> <span>=</span> <span>&quot;Alex&quot;</span>
+
+
+
+<span class="tok-cm">'' Print The MyName variable</span>
+
+<span class="tok-kw">Print</span> <span>MyName</span>
+
+
+
+<span class="tok-cm">'' pause the program until the user hits a key.</span>
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+<br>
+<div>Input/Output</div><br>
+<br>
+Input is the receiving of information.  When your get input on something, someone or something else is giving it to you.  You are getting their ouput.  (GETTING SOMETHING, Retrieving Something)<br>
+<br>
+Output is the sending of information.  When you ouput to something, you're the one giving input to them.  (GIVING SOMETHING, Sending Something)<br>
+<br>
+Input and Output are often put together, and are shortened as I/O, or IO.<br>
+<br>
+<br>
+FreeBASIC has MANY methods of input and output.  For a beginner, most of these could end up confusing you, because they generally require better knowledge of variables and more complex forms of programming.  We're going to study the very basics of I/O.<br>
+<br>
+You remember the command PRINT in the above examples?  That's OUTPUT.  PRINT OUTPUTS to the computer screen.  PRINT is a very basic form of output, and it's easy to learn, too!  You just call the command PRINT, then tell it what you want it to print.  If you want to Print words, you put those enclosed in Double-Quotes.  If you want to print variables, you just give PRINT the name of the variable you want to print.<br>
+<br>
+Print [WhatToPrint]<br>
+Example:<br>
+<br>
+<code><pre class="code"><span class="tok-cm">'' Print the words, HI! to the screen</span>
+
+<span class="tok-kw">Print</span> <span>&quot;HI!&quot;</span>
+
+
+
+<span class="tok-cm">'' create a new integer and name it foo.  Give it the value of 10.</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>foo</span> <span>=</span> <span class="tok-nu">10</span>
+
+
+
+<span class="tok-cm">'' Print the value of foo.</span>
+
+<span class="tok-kw">Print</span> <span>foo</span>
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+<br>
+INPUT isn't much harder, either.  However, whenever you input, you have to get that input and put it into something.  Just how like in order to give output, we have to give the PRINT command something to output.  We already know variables, right?  We will use our variables to store information that the user inputs.<br>
+<br>
+1) We need a variable to store that information in.<br>
+2) We need to call a command to get input.<br>
+3) We need to print the input to make sure we stored the information correctly.<br>
+<br>
+I know how to do 1 and 3, but what about 2?  We're going to learn a new command for this.  Can you guess it's name?  INPUT!  Yup ^^;; To get INPUT, we will use the command, INPUT.<br>
+<br>
+Input's syntax is as follows:  INPUT [VariableToInputTo]<br>
+<br>
+You can also use input like so:  INPUT [Output String To Tell User What to Input,] [VariableToInputTo]<br>
+<br>
+The first version of INPUT will let you get input, and put it right into the variable.  The second version OUTPUTS your message to the screen before asking for input.  This way, the user will know what to input!  Alternatively, you can just use the PRINT command before INPUT to send the user a message, but sometimes being able to put related code on one line is a convenience.<br>
+<br>
+Example:<br>
+<br>
+<code><pre class="code"><span class="tok-cm">'' Create a string.  We will hold the user's name in the string!</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>MyName</span>
+
+
+
+<span class="tok-cm">'' Get the user's name!</span>
+
+<span class="tok-cm">'' The message Please Enter Your Name is posted on the screen,</span>
+
+<span class="tok-cm">'' and then the user has a chance to enter in their name!</span>
+
+<span class="tok-kw">Input</span> <span>&quot;Please enter your name!&quot;</span><span>,</span> <span>MyName</span>
+
+
+
+<span class="tok-cm">'' Print the user's name that we just got.</span>
+
+<span class="tok-cm">'' Just like input, we can print several messages or</span>
+
+<span class="tok-cm">'' execute different types of commands by separating them by commas.</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Your Name Is: &quot;</span><span>,</span> <span>MyName</span>
+
+
+
+<span class="tok-cm">'' pause the program until the user hits a key</span>
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+<br>
+That demonstrates both INPUT and OUTPUT!  Both are essential in programming, or at least graphical programming.  OUTPUT can be many different things, as well as INPUT.  You might be getting input from a robotic arm's sensors rather than from the user's keyboard.  You might be outputting to a power drill rather than a monitor.  It really depends on the hardware and the purpose of your program.<br>
+<br>
+At the time, and in most cases, you don't have to worry so much about where the input comes from, or where it's going to when dealing with your standard I/O functions.  More advanced methods of I/O let you decide where it's coming from (which input to get) and where it's going to (where to send output to).<br>
+<br>
+<div>Programming Definitions</div><br>
+<br>
+Argument:  See Parameter<br>
+<br>
+ASM:  The lowest level code that a human will want to read.  This can be compiled directly into machine code.<br>
+<br>
+Compiling:  The process of turning text in one language to another.  Ex:  BASIC in FreeBASIC compiles into ASM.  That ASM compiles into machine code.<br>
+<br>
+Machine Code:  0's and 1's.  This is *the* code that your computer will understand.<br>
+<br>
+Parameter:  Data that you pass to a command you call in programming.  Parameters being passed allow commands to be directed as to HOW they will do something, or what they will do.  Passing a parameter 'Rectangle' to a command 'Draw', it would make sense if that drew a rectangle onto your screen.<br>
+<br>
+Pixel:  One 'dot' on your monitor.  Monitors are made up of thousands of tiny dots which are lit up of different colors.  The color depends on the value of the pixel variable that the monitor receives.  Believe it or not, even your hardware will use variables, in many ways.<br>
+<br>
+Syntax:  How words are grouped together.  Your syntax in programming are sets of rules that tell you what code can be placed where.  It makes sure that only logical code is allowed.  Ex:  Print "Hi".  PRINT is the COMMAND, "Hi" is what the command will PRINT.  Make sense?<br>
+<br>
+Variable:  A word that holds data in programming.  You assign these words values, and with those values, you can save information on your program.<br>
+<br>
+<i>Last Reviewed by Sancho3 on February 06, 2018</i>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../index.html">Home</a> ·
+         <a href="../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../nav.js?v=70a6b70236"></script>
+<script src="../../search-index.js"></script>
+<script src="../../assets/app.js?v=456d079659"></script>
+<script src="../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CGpBitmap.ApplyEffect — Help Center</title>
+<meta name="description" content="Alters a **Bitmap** object by applying a specified effect.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpbitmap/cgpbitmap-applyeffect.html">
+<meta property="og:title" content="CGpBitmap.ApplyEffect">
+<meta property="og:description" content="Alters a **Bitmap** object by applying a specified effect.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpbitmap/cgpbitmap-applyeffect.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-classes/cgpbitmap/cgpbitmap-applyeffect.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cgpimage-class.html">CGpImage Class</a></div>
+<h1>CGpBitmap.ApplyEffect<span class="h1kind">method</span></h1>
+<p class="lede">Alters a **Bitmap** object by applying a specified effect.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">method</span><span class="badge">CGpBitmap.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION ApplyEffect (BYVAL pEffect AS CGpEffect PTR, BYVAL roi AS RECT PTR = NULL) AS GpStatus</code></pre>
+<pre class="code sig"><code>FUNCTION ApplyEffect (BYVAL pEffect AS CGpEffect PTR, BYVAL roi AS RECT PTR, BYVAL useAuxData AS BOOLEAN, BYVAL auxData AS ANY PTR PTR, BYVAL auxDataSize AS INT_ PTR) AS GpStatus</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>effect</code></td><td></td><td>[in] The effect to be applied.</td></tr><tr><td><code>roi</code></td><td></td><td>in] Pointer to a <strong>RECT</strong> structure that specifies the portion of the input bitmap to which the effect is applied. Pass <strong>NULL</strong> to specify that the effect applies to the entire input bitmap.</td></tr><tr><td><code>useAuxData</code></td><td></td><td>[in] Flag that specifies whether the function should return a pointer to the auxiliary data that it creates.</td></tr><tr><td><code>auxData</code></td><td></td><td>[out] Pointer to a set of lookup tables.</td></tr><tr><td><code>auxDataSize</code></td><td></td><td>[out] Size, in bytes, of the auxiliary data.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Alters a <strong>Bitmap</strong> object by applying a specified effect.</p>
+<p>Flat API function: <strong>GdipBitmapApplyEffect</strong></p>
+<h2>Examples</h2>
+<p>' ======================================================================================== ' This example loads an image from disk and applies a blur effect using GDI+ 1.1. ' ======================================================================================== SUB Example_BlurEffect (BYVAL hdc AS HDC)</p>
+<p>' // Create a graphics object from the window device context DIM graphics AS CGpGraphics = hdc ' // Set the scaling factors using the DPI ratios graphics.ScaleTransformForDpi</p>
+<p>' // Create a Bitmap object from a JPEG file. DIM bmp AS CGpBitmap = "climber.jpg" ' // Set the resolution of the image using the DPI ratios bmp.SetResolutionForDpi</p>
+<p>' // Create a blur effect DIM blurEffect AS CGpBlur ' // Set parameters: radius = 6.0, expandEdge = FALSE DIM blurPrms AS BlurParams = (6.0, FALSE) blurEffect.SetParameters(@blurPrms) ' // Apply effect to the whole image bmp.ApplyEffect(@blurEffect)</p>
+<p>' // Draw the image graphics.DrawImage(@bmp, 10, 10)</p>
+<p>END SUB ' ========================================================================================</p>
+<p>' ======================================================================================== ' This example loads an image from disk and applies a brightness effect using GDI+ 1.1. ' ======================================================================================== SUB Example_Brightnessffect (BYVAL hdc AS HDC)</p>
+<p>' // Create a graphics object from the window device context DIM graphics AS CGpGraphics = hdc ' // Set the scaling factors using the DPI ratios graphics.ScaleTransformForDpi</p>
+<p>' // Create a Bitmap object from a JPEG file. DIM bmp AS CGpBitmap = "climber.jpg" ' // Set the resolution of the image using the DPI ratios bmp.SetResolutionForDpi</p>
+<p>' // Create a brightness and contrast effect DIM brightnessEffect AS CGpBrightnessContrast ' // Set parameters: brightness = 50, contrast = 50 DIM bcParams AS BrightnessContrastParams = (50, 20) brightnessEffect.SetParameters(@bcParams) ' // Apply effect to the whole image bmp.ApplyEffect(@brightnessEffect)</p>
+<p>' // Draw the image graphics.DrawImage(@bmp, 10, 10)</p>
+<p>END SUB ' ========================================================================================</p>
+<p>' ======================================================================================== ' This example loads an image from disk and applies a sharpen effect using GDI+ 1.1. ' ======================================================================================== SUB Example_SharpenEffect (BYVAL hdc AS HDC)</p>
+<p>' // Create a graphics object from the window device context DIM graphics AS CGpGraphics = hdc ' // Set the scaling factors using the DPI ratios graphics.ScaleTransformForDpi</p>
+<p>' // Create a Bitmap object from a JPEG file. DIM bmp AS CGpBitmap = "climber.jpg" ' // Set the resolution of the image using the DPI ratios bmp.SetResolutionForDpi</p>
+<p>' // Create a sharpen effect DIM sharpenEffect AS CGpSharpen ' // Set parameters: radius = 3.0, expandEdge = FALSE DIM sharpenParams AS SharpenParams = (3.0, FALSE) sharpenEffect.SetParameters(@sharpenParams) ' // Apply effect to the whole image bmp.ApplyEffect(@sharpenEffect)</p>
+<p>' // Draw the image graphics.DrawImage(@bmp, 10, 10)</p>
+<p>END SUB ' ========================================================================================</p>
+<p>' ======================================================================================== ' This example loads an image from disk and applies a red eyes correction effect using GDI+ 1.1. ' ======================================================================================== SUB Example_BitmapRedEyeCorrectionEffect (BYVAL hdc AS HDC)</p>
+<p>' // Create a graphics object from the window device context DIM graphics AS CGpGraphics = hdc ' // Set the scaling factors using the DPI ratios graphics.ScaleTransformForDpi</p>
+<p>' // Create a Bitmap object from a JPEG file. DIM bmp AS CGpBitmap = "RedEyes.jpg" ' // Set the resolution of the image using the DPI ratios bmp.SetResolutionForDpi</p>
+<p>' // Create a red eyes correction effect DIM redEyeEffect AS CGpRedEyeCorrection</p>
+<p>' // We need to specify one or more rectangles that enclose the red-eye areas. ' // These are passed as an array of RECT structures.</p>
+<p>' // Define two rectangles around the eyes ' // Change the values according the coordinates of your image DIM eyeRects(0 TO 1) AS RECT eyeRects(0).left   =   1 : eyeRects(0).top    =   1 eyeRects(0).right  = 400 : eyeRects(0).bottom = 250 eyeRects(1).left   =   1 : eyeRects(1).top    =   1 eyeRects(1).right  = 400 : eyeRects(1).bottom = 250</p>
+<p>' // Fill a RedEyeCorrectionParams structure DIM redeyeParams AS RedEyeCorrectionParams redeyeParams.numberOfAreas = 2 redeyeParams.areas = @eyeRects(0) ' // Calculate the size of the paameters DIM paramsSize AS UINT = SIZEOF(RedEyeCorrectionParams) + redeyeParams.numberOfAreas * SIZEOF(RECT) ' // Set the parameters redEyeEffect.SetParameters(@redeyeParams)</p>
+<p>' // Apply effect to the whole image bmp.ApplyEffect(@redEyeEffect)</p>
+<p>' // Draw the image graphics.DrawImage(@bmp, 5, 5)</p>
+<p>END SUB ' ========================================================================================</p>
+<p>' ======================================================================================== ' The HueSaturationLightness effecty enables you to change the hue, saturation, and lightness ' of a bitmap. To specify the magnitudes of the changes in hue, saturation, and lightness, ' pass a HueSaturationLightnessParams structure to the SetParameters method. ' ======================================================================================== SUB Example_BitmapHueSaturationLightnessEffect (BYVAL hdc AS HDC)</p>
+<p>' // Create a graphics object from the window device context DIM graphics AS CGpGraphics = hdc ' // Set the scaling factors using the DPI ratios graphics.ScaleTransformForDpi</p>
+<p>' // Create a Bitmap object from a JPEG file. DIM bmp AS CGpBitmap = "climber.jpg" ' // Set the resolution of the image using the DPI ratios bmp.SetResolutionForDpi</p>
+<p>' // Create a HueSaturationLightness effect DIM hueEffect AS CGpHueSaturationLightness ' // Set the parameters DIM hslParams AS HueSaturationLightnessParams hslParams.hueLevel = 45            ' Rotate hue slightly hslParams.saturationLevel = 30     ' Boost saturation hslParams.lightnessLevel = -10     ' Slightly darken hueEffect.SetParameters(@hslParams)</p>
+<p>' // Apply effect to the whole image bmp.ApplyEffect(@hueEffect)</p>
+<p>' // Draw the image graphics.DrawImage(@bmp, 10, 10)</p>
+<p>END SUB ' ========================================================================================</p>
+<p>' ======================================================================================== ' The Levels effect encompasses three bitmap adjustments: highlight, midtone, and shadow. ' You can apply one or more of those adjustments to a bitmap by passing calling the ' ApplyEffect method. To specify the intensities of the adjustments, pass the ' address of a LevelsParams structure to the SetParameters method. ' ======================================================================================== SUB Example_LevelsEffect (BYVAL hdc AS HDC)</p>
+<p>' // Create a graphics object from the window device context DIM graphics AS CGpGraphics = hdc ' // Set the scaling factors using the DPI ratios graphics.ScaleTransformForDpi</p>
+<p>' // Create a Bitmap object from a JPEG file. DIM bmp AS CGpBitmap = "climber.jpg" ' // Set the resolution of the image using the DPI ratios bmp.SetResolutionForDpi</p>
+<p>' // Create a levels effect DIM levelsEffect AS CGpLevels ' // Set the parameters DIM levelsParams AS LevelsParams levelsParams.highlight =  20    ' Boost highlights levelsParams.midtone   =  10    ' Slightly brighten midtones levelsParams.shadow    = -15    ' Deepen shadows levelsEffect.SetParameters(@levelsParams)</p>
+<p>' // Apply effect to the whole image bmp.ApplyEffect(@levelsEffect)</p>
+<p>' // Draw the image graphics.DrawImage(@bmp, 10, 10)</p>
+<p>END SUB ' ========================================================================================</p>
+<p>' ======================================================================================== ' The Tint effect enables you to apply a tint to a bitmap. To specify the nature of the tint, ' pass the address of a TintParams structure to the SetParameters method. ' ======================================================================================== SUB Example_TintEffect (BYVAL hdc AS HDC)</p>
+<p>' // Create a graphics object from the window device context DIM graphics AS CGpGraphics = hdc ' // Set the scaling factors using the DPI ratios graphics.ScaleTransformForDpi</p>
+<p>' // Create a Bitmap object from a JPEG file. DIM bmp AS CGpBitmap = "climber.jpg" ' // Set the resolution of the image using the DPI ratios bmp.SetResolutionForDpi</p>
+<p>' // Create a tint effect DIM tintEffect AS CGpTint ' // Set parameters: Hue = +120 (green), Amount = 60 (moderate tint) DIM tintPrms AS TintParams = (120, 60) tintEffect.SetParameters(@tintPrms) ' // Apply effect to the whole image bmp.ApplyEffect(@tintEffect)</p>
+<p>' // Draw the image graphics.DrawImage(@bmp, 10, 10)</p>
+<p>END SUB ' ========================================================================================</p>
+<p>' ======================================================================================== ' The ColorLUT effect lets you define lookup tables for each channel—Alpha, Red, Green, ' and Blue—with 256 entries each. For every pixel in the image: ' The channel value (0–255) is used as an index. ' The corresponding value in the LUT replaces the original. ' This means you can: ' Invert colors ' Apply posterization ' Simulate film-like grading ' Create custom stylizations ' ======================================================================================== SUB Example_ColorLUTEffect (BYVAL hdc AS HDC)</p>
+<p>' // Create a graphics object from the window device context DIM graphics AS CGpGraphics = hdc ' // Set the scaling factors using the DPI ratios graphics.ScaleTransformForDpi</p>
+<p>' // Create a Bitmap object from a JPEG file. DIM bmp AS CGpBitmap = "climber.jpg" ' // Set the resolution of the image using the DPI ratios bmp.SetResolutionForDpi</p>
+<p>' // Create a ColorLUT effect DIM colorLUTEffect AS CGpColorLUT</p>
+<p>' // Create LUTs: identity (no change) DIM lut AS ColorLUTParams FOR i AS LONG = 0 TO 255</p>
+<pre class="code"><code>lut.lutB(i) = i
+  lut.lutG(i) = i
+  lut.lutR(i) = i
+  lut.lutA(i) = i</code></pre>
+<p>NEXT</p>
+<p>' // Example: invert red channel FOR i AS LONG = 0 TO 255</p>
+<pre class="code"><code>lut.lutR(i) = 255 - i</code></pre>
+<p>NEXT</p>
+<p>' // Set parameters colorLUTEffect.SetParameters(@lut)</p>
+<p>' // Apply effect to the whole image bmp.ApplyEffect(@colorLUTEffect)</p>
+<p>' // Draw the image graphics.DrawImage(@bmp, 10, 10)</p>
+<p>END SUB ' ========================================================================================</p>
+<p>' ======================================================================================== ' The ColorLUT effect lets you define lookup tables for each channel—Alpha, Red, Green, ' and Blue—with 256 entries each. For every pixel in the image: ' The channel value (0–255) is used as an index. ' The corresponding value in the LUT replaces the original. ' This means you can: ' Invert colors ' Apply posterization ' Simulate film-like grading ' Create custom stylizations ' The following example applies the effect to the specified region only. ' ======================================================================================== SUB Example_ColorLUTEffectRegion (BYVAL hdc AS HDC)</p>
+<p>' // Create a graphics object from the window device context DIM graphics AS CGpGraphics = hdc ' // Set the scaling factors using the DPI ratios graphics.ScaleTransformForDpi</p>
+<p>' // Create a Bitmap object from a JPEG file. DIM bmp AS CGpBitmap = "climber.jpg" ' // Set the resolution of the image using the DPI ratios bmp.SetResolutionForDpi</p>
+<p>' // Create a ColorLut effect DIM colorLUTEffect AS CGpColorLUT</p>
+<p>' // Create LUTs: identity (no change) DIM lut AS ColorLUTParams FOR i AS LONG = 0 TO 255</p>
+<pre class="code"><code>lut.lutB(i) = i
+  lut.lutG(i) = i
+  lut.lutR(i) = i
+  lut.lutA(i) = i</code></pre>
+<p>NEXT</p>
+<p>' // Example: invert red channel FOR i AS LONG = 0 TO 255</p>
+<pre class="code"><code>lut.lutR(i) = 255 - i</code></pre>
+<p>NEXT</p>
+<p>' // Set parameters colorLUTEffect.SetParameters(@lut)</p>
+<p>' // Define the region of interest (ROI) DIM roi AS RECT roi.left   = 20 roi.top    = 20 roi.right  = 150 roi.bottom = 100</p>
+<p>' // Apply effect to the whole image bmp.ApplyEffect(@colorLUTEffect, @roi)</p>
+<p>' // Draw the image graphics.DrawImage(@bmp, 10, 10)</p>
+<p>END SUB ' ========================================================================================</p>
+<p>' ======================================================================================== ' Converts the image to grayscale by averaging RGB channels. ' ======================================================================================== SUB Example_GrayScaleEffect (BYVAL hdc AS HDC)</p>
+<p>' // Create a graphics object from the window device context DIM graphics AS CGpGraphics = hdc ' // Set the scaling factors using the DPI ratios graphics.ScaleTransformForDpi</p>
+<p>' // Create a Bitmap object from a JPEG file. DIM bmp AS CGpBitmap = "climber.jpg" ' // Set the resolution of the image using the DPI ratios bmp.SetResolutionForDpi</p>
+<p>' // Create grayscale matrix DIM grayMatrix(0 TO 4, 0 TO 4) AS SINGLE = {{0.3, 0.3, 0.3, 0.0, 0.0}, _</p>
+<pre class="code"><code>{0.59, 0.59, 0.59, 0.0, 0.0}, {0.11, 0.11, 0.11, 0.0, 0.0}, _
+  {0.0, 0.0, 0.0, 1.0, 0.0}, {0.0, 0.0, 0.0, 0.0, 1.0}}</code></pre>
+<p>' // Create a gray matrix effect DIM grayEffect AS CGpColorMatrix ' // Set parameters grayEffect.SetParameters(cast(ColorMatrix PTR, @grayMatrix(0, 0))) ' // Apply effect to the whole image bmp.ApplyEffect(@grayEffect)</p>
+<p>' // Draw the image graphics.DrawImage(@bmp, 10, 10)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CGpBitmap.inc</code></li><li>Defined in <span class="srcref">AfxNova/CGpBitmap.inc:736</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Classes/CGpImage Classes.md</span></li><li>Topic: <a href="../cgpimage-class.html">CGpImage Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

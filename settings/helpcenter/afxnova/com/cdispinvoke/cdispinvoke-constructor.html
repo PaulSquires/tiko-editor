@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CDispInvoke.Constructor — Help Center</title>
+<meta name="description" content="Creates a single uninitialized object of the class associated with a specified ProgID or CLSID.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/com/cdispinvoke/cdispinvoke-constructor.html">
+<meta property="og:title" content="CDispInvoke.Constructor">
+<meta property="og:description" content="Creates a single uninitialized object of the class associated with a specified ProgID or CLSID.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/com/cdispinvoke/cdispinvoke-constructor.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/com/cdispinvoke/cdispinvoke-constructor.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cdispinvoke-class.html">CDispInvoke Class</a></div>
+<h1>CDispInvoke.Constructor<span class="h1kind">constructor</span></h1>
+<p class="lede">Creates a single uninitialized object of the class associated with a specified ProgID or CLSID.</p>
+<div class="badges"><a class="badge" href="../index.html">COM</a><span class="badge">constructor</span><span class="badge">CDispInvoke.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>CONSTRUCTOR CDispInvoke (BYVAL vDisp AS VARIANT PTR, BYVAL fAddRef AS BOOLEAN = TRUE)</code></pre>
+<pre class="code sig"><code>CONSTRUCTOR CDispInvoke (BYVAL vDisp AS VARIANT, BYVAL fAddRef AS BOOLEAN = TRUE)</code></pre>
+<pre class="code sig"><code>CONSTRUCTOR CDispInvoke (BYREF cvDisp AS DVARIANT)</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>wszProgID</code></td><td></td><td>The ProgID or the CLSID of the object to create.<br>A ProgID such as "MSCAL.Calendar.7"<br>A CLSID such as "{8E27C92B-1264-101C-8A2F-040224009C02}"</td></tr><tr><td><code>wszLicKey</code></td><td></td><td>Optional. The license key as a unicode string.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Creates a single uninitialized object of the class associated with a specified ProgID or CLSID.</p>
+<h2>Examples</h2>
+<p>DIM pDispInvoke AS CDispInvoke = "Scripting.Dictionary" ' -or- pDispInvoke = CDispInvoke(CLSID_Dictionary) ' where CLSID_Dictionary has been declared as '    CONST CLSID_Dictionary = "{EE09B103-97E0-11CF-978F-00A02463E06F}"</p>
+<p>#include once "AfxNova/CDispInvoke.inc" USING AfxNova</p>
+<p>' // Create an instance of the RegExp object DIM pDisp AS CDispInvoke = "VBScript.RegExp" ' // To check for success, see if the value returned by the DispPtr method is not null IF pDisp.DispPtr = NULL THEN END</p>
+<p>' // Set some properties ' // Use VARIANT_TRUE or CTRUE, not TRUE, because Free Basic TRUE is a BOOLEAN data type, not a LONG pDisp.Put("Pattern") = ".is" pDisp.Put("IgnoreCase") = VARIANT_TRUE pDisp.Put("Global") = VARIANT_TRUE</p>
+<p>' // Execute a search DIM pMatches AS CDispInvoke = pDisp.Invoke("Execute", "IS1 is2 IS3 is4") ' // Parse the collection of matches IF pMatches.DispPtr THEN ' // Get the number of matches DIM nCount AS LONG = VAL(pMatches.Get("Count")) ' // This is equivalent to: ' DIM dvRes AS DVARIANT = pMatches.Get("Count") ' DIM nCount AS LONG = (VAL(dvRes) FOR i AS LONG = 0 TO nCount -1</p>
+<pre class="code"><code>' // Get a pointer to the Match object
+  ' // When using COM Automation, it's not always necessary to make sure that the
+  ' // passed variant with a numeric value is of the exact type, since the standard
+  ' // implementation of DispInvoke tries to coerce parameters. However, it is always
+  ' // safer to use a syntax like DVARIANT(i, "LONG")) than DVARIANT(i)</code></pre>
+<p>'      DIM pMatch AS CDIspInvoke = pMatches.Get("Item", DVARIANT(i, "LONG"))</p>
+<pre class="code"><code>DIM pMatch AS CDIspInvoke = pMatches.Get("Item", i)
+  IF pMatch.DispPtr THEN
+     ' // Get the value of the match and convert it to a string
+     print pMatch.Get("Value")
+  END IF</code></pre>
+<p>NEXT END IF</p>
+<p>PRINT PRINT "Press any key..." SLEEP</p>
+<p>The following example demonstrates how to use it to create an instance of the VBScript RegExp object and execute a search.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CDispInvoke.inc</code></li><li>Defined in <span class="srcref">AfxNova/CDispInvoke.inc:187</span></li><li>Documented in <span class="srcref">COM/CDispInvoke Class.md</span></li><li>Topic: <a href="../cdispinvoke-class.html">CDispInvoke Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

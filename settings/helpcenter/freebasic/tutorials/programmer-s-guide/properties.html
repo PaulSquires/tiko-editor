@@ -1,0 +1,673 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Properties — Help Center</title>
+<meta name="description" content="Properties — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/properties.html">
+<meta property="og:title" content="Properties">
+<meta property="og:description" content="Properties — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/properties.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/programmer-s-guide/properties.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>Properties</h1>
+<h2>Documentation</h2>
+
+	Properties are a special mix of member variable and member procedure. <br>
+<br>
+They provide a way to set or retrieve values of an object, through normal looking assignments or member accesses, but also let the object perform actions if it needs to update itself.<br>
+<br>
+<b><a href="#BASIC">Basic properties</a></b><br>
+Declaring and using setter and getter properties.<br>
+<b><a href="#INDEXED">Indexed properties</a></b><br>
+Properties with an additional parameter.<br>
+<br>
+<a></a><div>Basic properties</div><div><br>
+<br>
+A property is declared similar to a <a href="member-procedures.html">member procedure</a>, except that the <a href="../../user-defined-types/procedures/property.html">Property</a> keyword is used instead of <code><a href="../../procedures/procedures/sub.html">Sub</a></code> or <code><a href="../../procedures/procedures/function.html">Function</a></code>. For example, let's consider a window class for a windowing system or GUI library.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span class="tok-kw">Window</span>
+
+<span class="tok-kw">Private</span><span>:</span>
+
+    <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>title_</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Window</span> <span>w</span></pre></code><br>
+<br>
+In order to set the window's title, a <i>setter</i> property can be added:<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span class="tok-kw">Window</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Property</span> <span>title</span><span>(</span><span class="tok-kw">ByRef</span> <span>s</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>)</span>
+
+<span class="tok-kw">Private</span><span>:</span>
+
+    <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>title_</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Property</span> <span>Window.title</span><span>(</span><span class="tok-kw">ByRef</span> <span>s</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>)</span>
+
+    <span>this.title_</span> <span>=</span> <span>s</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Property</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Window</span> <span>w</span>
+
+<span>w.title</span> <span>=</span> <span>&quot;My Window&quot;</span></pre></code><br>
+<br>
+It is very similar to a member <a href="../../procedures/procedures/sub.html">Sub</a>, as it takes a parameter and updates the object to the new state based on the parameter. However, the syntax for sending this parameter is a basic assignment, not a function call. By assigning the new value to the <code>title</code> property, the property procedure will automatically be called with the given new value, and can update the window to reflect the change. It is up to the object how to represent the property state internally.<br>
+<br>
+By design, properties can only be assigned one value at a time, and as a result the property procedure can not have more than one parameter.<br>
+<br>
+After setting the window title, it should also be possible to retrieve it. Here is how to add a <i>getter</i> property:<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span class="tok-kw">Window</span>
+
+    <span class="tok-cm">'' setter</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Property</span> <span>title</span><span>(</span><span class="tok-kw">ByRef</span> <span>s</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>)</span>
+
+    <span class="tok-cm">'' getter</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Property</span> <span>title</span><span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+<span class="tok-kw">Private</span><span>:</span>
+
+    <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>title_</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-cm">'' setter</span>
+
+<span class="tok-kw">Property</span> <span>Window.title</span><span>(</span><span class="tok-kw">ByRef</span> <span>s</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>)</span>
+
+    <span>this.title_</span> <span>=</span> <span>s</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Property</span>
+
+
+
+<span class="tok-cm">'' getter</span>
+
+<span class="tok-kw">Property</span> <span>Window.title</span><span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+    <span class="tok-kw">Return</span> <span>this.title_</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Property</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Window</span> <span>w</span>
+
+<span>w.title</span> <span>=</span> <span>&quot;My Window&quot;</span>
+
+<span class="tok-kw">Print</span> <span>w.title</span></pre></code><br>
+<br>
+The getter is very similar to a <a href="../../procedures/procedures/function.html">Function</a>. It is supposed to return the current value of the property, and it allows the current value to be calculated from other internal values, if needed. Note that both <i>setter</i> and <i>getter</i> use the same identifier, indicating they handle the same property.<br>
+<br>
+Just like <a href="member-procedures.html">method overloading</a>, it is possible to specify multiple setters, provided they have different parameter types:<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span class="tok-kw">Window</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Property</span> <span>title</span><span>(</span><span class="tok-kw">ByRef</span> <span>s</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>)</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Property</span> <span>title</span><span>(</span><span class="tok-kw">ByVal</span> <span>i</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Property</span> <span>title</span><span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+<span class="tok-kw">Private</span><span>:</span>
+
+    <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>title_</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Property</span> <span>Window.title</span><span>(</span><span class="tok-kw">ByRef</span> <span>s</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>)</span>
+
+    <span>this.title_</span> <span>=</span> <span>s</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Property</span>
+
+
+
+<span class="tok-kw">Property</span> <span>Window.title</span><span>(</span><span class="tok-kw">ByVal</span> <span>i</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+    <span>this.title_</span> <span>=</span> <span>&quot;Number: &quot;</span> <span>&amp;</span> <span>i</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Property</span>
+
+
+
+<span class="tok-kw">Property</span> <span>Window.title</span><span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+    <span class="tok-kw">Return</span> <span>this.title_</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Property</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Window</span> <span>w</span>
+
+<span>w.title</span> <span>=</span> <span>&quot;My Window&quot;</span>
+
+<span class="tok-kw">Print</span> <span>w.title</span>
+
+<span>w.title</span> <span>=</span> <span class="tok-nu">5</span>
+
+<span class="tok-kw">Print</span> <span>w.title</span></pre></code><br>
+<br>
+In comparison to this example of properties, here is similar code that does not use properties:<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span class="tok-kw">Window</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>set_title</span><span>(</span><span class="tok-kw">ByRef</span> <span>s</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>)</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>set_title</span><span>(</span><span class="tok-kw">ByVal</span> <span>i</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Function</span> <span>get_title</span><span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+<span class="tok-kw">Private</span><span>:</span>
+
+    <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>title</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>Window.set_title</span><span>(</span><span class="tok-kw">ByRef</span> <span>s</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>)</span>
+
+    <span>this.title</span> <span>=</span> <span>s</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>Window.set_title</span><span>(</span><span class="tok-kw">ByVal</span> <span>i</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+    <span>this.title</span> <span>=</span> <span>&quot;Number: &quot;</span> <span>&amp;</span> <span>i</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-kw">Function</span> <span>Window.get_title</span><span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+    <span class="tok-kw">Return</span> <span>this.title</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Window</span> <span>w</span>
+
+<span>w.set_title</span><span>(</span><span>&quot;My Window&quot;</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>w.get_title</span><span>()</span>
+
+<span>w.set_title</span><span>(</span><span class="tok-nu">5</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>w.get_title</span><span>()</span></pre></code><br>
+<br>
+The code is basically the same, only the syntax is different. Properties are specifically designed to combine the setter/getter concept and the language's normal way of literally <a href="../../operators/assignment-operators/assignment-operators.html">assigning</a> and <a href="../../operators/type-or-class-operators/type-or-class-operators.html">accessing</a> values to a class' member variables. It is up to the programmers to decide which way they prefer.<br>
+<br>
+Here is an example demonstrating a text user interface window class allowing to set position and title using properties:<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Namespace</span> <span>tui</span>
+
+    <span class="tok-kw">Type</span> <span class="tok-kw">Point</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>x</span><span>,</span> <span>y</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+    <span class="tok-kw">Type</span> <span>char</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span> <span>value</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span> <span class="tok-kw">Color</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+    <span class="tok-kw">Type</span> <span class="tok-kw">Window</span>
+
+        <span class="tok-cm">'' public</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>_</span>
+
+            <span>(</span> <span>_</span>
+
+                <span>x</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">1</span><span>,</span> <span>y</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">1</span><span>,</span> <span>_</span>
+
+                <span>w</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">20</span><span>,</span> <span>h</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">5</span><span>,</span> <span>_</span>
+
+                <span>title</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span class="tok-kw">Ptr</span> <span>=</span> <span class="tok-nu">0</span> <span>_</span>
+
+            <span>)</span>
+
+        
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Destructor</span>
+
+
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>show</span>
+
+
+
+        <span class="tok-cm">'' title property</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Property</span> <span>title</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Property</span> <span>title</span><span>(</span> <span>new_title</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>)</span>
+
+
+
+        <span class="tok-cm">'' position properties</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Property</span> <span>x</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Property</span> <span>x</span><span>(</span> <span>new_x</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>)</span>
+
+
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Property</span> <span>y</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Property</span> <span>y</span><span>(</span> <span>new_y</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>)</span>
+
+
+
+    <span class="tok-kw">Private</span><span>:</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>redraw</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>remove</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>drawtitle</span>
+
+
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>p_title</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Point</span> <span class="tok-kw">Pos</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Point</span> <span>siz</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+    <span class="tok-kw">Constructor</span> <span class="tok-kw">Window</span> <span>_</span>
+
+        <span>(</span> <span>_</span>
+
+            <span>x_</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span>y_</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span>_</span>
+
+            <span>w_</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span>h_</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span>_</span>
+
+            <span>title_</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span class="tok-kw">Ptr</span> <span>_</span>
+
+        <span>)</span>
+
+
+
+        <span>pos.x</span> <span>=</span> <span>x_</span>
+
+        <span>pos.y</span> <span>=</span> <span>y_</span>
+
+        <span>siz.x</span> <span>=</span> <span>w_</span>
+
+        <span>siz.y</span> <span>=</span> <span>h_</span>
+
+
+
+        <span class="tok-kw">If</span><span>(</span> <span>title_</span> <span>=</span> <span class="tok-nu">0</span> <span>)</span> <span class="tok-kw">Then</span>
+
+            <span>title_</span> <span>=</span> <span>@</span><span>&quot;untitled&quot;</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+
+
+        <span>p_title</span> <span>=</span> <span>*</span><span>title_</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+    <span class="tok-kw">Destructor</span> <span class="tok-kw">Window</span>
+
+        <span class="tok-kw">Color</span> <span class="tok-nu">7</span><span>,</span> <span class="tok-nu">0</span>
+
+        <span class="tok-kw">Cls</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Destructor</span>
+
+
+
+    <span class="tok-kw">Property</span> <span>window.title</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+        <span>title</span> <span>=</span> <span>p_title</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Property</span>
+
+
+
+    <span class="tok-kw">Property</span> <span>window.title</span><span>(</span> <span>new_title</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>)</span>
+
+        <span>p_title</span> <span>=</span> <span>new_title</span>
+
+        <span>drawtitle</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Property</span>
+
+
+
+    <span class="tok-kw">Property</span> <span>window.x</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+        <span class="tok-kw">Return</span> <span>pos.x</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Property</span>
+
+
+
+    <span class="tok-kw">Property</span> <span>window.x</span><span>(</span> <span>new_x</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>)</span>
+
+        <span>remove</span>
+
+        <span>pos.x</span> <span>=</span> <span>new_x</span>
+
+        <span>redraw</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Property</span>
+
+
+
+    <span class="tok-kw">Property</span> <span>window.y</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+        <span class="tok-kw">Property</span> <span>=</span> <span>pos.y</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Property</span>
+
+
+
+    <span class="tok-kw">Property</span> <span>window.y</span><span>(</span> <span>new_y</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>)</span>
+
+        <span>remove</span>
+
+        <span>pos.y</span> <span>=</span> <span>new_y</span>
+
+        <span>redraw</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Property</span>
+
+
+
+    <span class="tok-kw">Sub</span> <span>window.show</span>
+
+        <span>redraw</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+    <span class="tok-kw">Sub</span> <span>window.drawtitle</span>
+
+        <span class="tok-kw">Locate</span> <span>pos.y</span><span>,</span> <span>pos.x</span>
+
+        <span class="tok-kw">Color</span> <span class="tok-nu">15</span><span>,</span> <span class="tok-nu">1</span>
+
+        <span class="tok-kw">Print</span> <span class="tok-kw">Space</span><span>(</span> <span>siz.x</span> <span>);</span>
+
+        <span class="tok-kw">Locate</span> <span>pos.y</span><span>,</span> <span>pos.x</span> <span>+</span> <span>(</span><span>siz.x</span> <span>\</span> <span class="tok-nu">2</span><span>)</span> <span>-</span> <span>(</span><span class="tok-kw">Len</span><span>(</span> <span>p_title</span> <span>)</span> <span>\</span> <span class="tok-nu">2</span><span>)</span>
+
+        <span class="tok-kw">Print</span> <span>p_title</span><span>;</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+    <span class="tok-kw">Sub</span> <span>window.remove</span>
+
+        <span class="tok-kw">Color</span> <span class="tok-nu">0</span><span>,</span> <span class="tok-nu">0</span>
+
+        <span class="tok-kw">Var</span> <span>sp</span> <span>=</span> <span class="tok-kw">Space</span><span>(</span> <span>siz.x</span> <span>)</span>
+
+        <span class="tok-kw">For</span> <span>i</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span>pos.y</span> <span class="tok-kw">To</span> <span>pos.y</span> <span>+</span> <span>siz.y</span> <span>-</span> <span class="tok-nu">1</span>
+
+            <span class="tok-kw">Locate</span> <span>i</span><span>,</span> <span>pos.x</span>
+
+            <span class="tok-kw">Print</span> <span>sp</span><span>;</span>
+
+        <span class="tok-kw">Next</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+    <span class="tok-kw">Sub</span> <span>window.redraw</span>
+
+        <span>drawtitle</span>
+
+        <span class="tok-kw">Color</span> <span class="tok-nu">8</span><span>,</span> <span class="tok-nu">7</span>
+
+        <span class="tok-kw">Var</span> <span>sp</span> <span>=</span> <span class="tok-kw">Space</span><span>(</span> <span>siz.x</span> <span>)</span>
+
+        <span class="tok-kw">For</span> <span>i</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span>pos.y</span> <span>+</span> <span class="tok-nu">1</span> <span class="tok-kw">To</span> <span>pos.y</span> <span>+</span> <span>siz.y</span> <span>-</span> <span class="tok-nu">1</span>
+
+            <span class="tok-kw">Locate</span> <span>i</span><span>,</span> <span>pos.x</span>
+
+            <span class="tok-kw">Print</span> <span>sp</span><span>;</span>
+
+        <span class="tok-kw">Next</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+
+
+<span class="tok-kw">Dim</span> <span>win</span> <span class="tok-kw">As</span> <span>tui.window</span> <span>=</span> <span>tui.window</span><span>(</span> <span class="tok-nu">3</span><span>,</span> <span class="tok-nu">5</span><span>,</span> <span class="tok-nu">50</span><span>,</span> <span class="tok-nu">15</span> <span>)</span>
+
+
+
+<span>win.show</span>
+
+<span class="tok-kw">Sleep</span> <span class="tok-nu">500</span>
+
+
+
+<span>win.title</span> <span>=</span> <span>&quot;Window 1&quot;</span>
+
+<span class="tok-kw">Sleep</span> <span class="tok-nu">250</span>
+
+<span>win.x</span> <span>=</span> <span>win.x</span> <span>+</span> <span class="tok-nu">10</span>
+
+<span class="tok-kw">Sleep</span> <span class="tok-nu">250</span>
+
+
+
+<span>win.title</span> <span>=</span> <span>&quot;Window 2&quot;</span>
+
+<span class="tok-kw">Sleep</span> <span class="tok-nu">250</span>
+
+<span>win.y</span> <span>=</span> <span>win.y</span> <span>-</span> <span class="tok-nu">2</span>
+
+<span class="tok-kw">Sleep</span> <span class="tok-nu">250</span>
+
+
+
+<span class="tok-kw">Locate</span> <span class="tok-nu">25</span><span>,</span> <span class="tok-nu">1</span>
+
+<span class="tok-kw">Color</span> <span class="tok-nu">7</span><span>,</span> <span class="tok-nu">0</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Press any key...&quot;</span><span>;</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+<br>
+Note how updating the window's position or title automatically causes the window to be redrawn.<br>
+<br>
+<a></a></div><div>Indexed properties</div><div><br>
+<br>
+Properties can have an additional parameter that is called an <code>index</code> (currently only one additional parameter is allowed). The index is specified in parentheses behind the property's name, as if the property was an array (with only one dimension). For example:<br>
+<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Type</span> <span>IntArray</span>
+
+    <span class="tok-cm">'' setters</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Property</span> <span>value</span><span>(</span><span>index</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span>v</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Property</span> <span>value</span><span>(</span><span>index</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>,</span> <span>v</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Property</span> <span>value</span><span>(</span><span>index</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span>v</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>)</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Property</span> <span>value</span><span>(</span><span>index</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>,</span> <span>v</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>)</span>
+
+
+
+    <span class="tok-cm">'' getters</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Property</span> <span>value</span><span>(</span><span>index</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Property</span> <span>value</span><span>(</span><span>index</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+
+
+<span class="tok-kw">Private</span><span>:</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>data_</span><span>(</span><span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">9</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Property</span> <span>IntArray.value</span><span>(</span><span>index</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+    <span class="tok-kw">Return</span> <span>This.data_</span><span>(</span><span>index</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Property</span>
+
+
+
+<span class="tok-kw">Property</span> <span>IntArray.value</span><span>(</span><span>index</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+    <span class="tok-kw">Return</span> <span>This.data_</span><span>(</span><span class="tok-kw">CInt</span><span>(</span><span>index</span><span>))</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Property</span>
+
+
+
+<span class="tok-kw">Property</span> <span>IntArray.value</span><span>(</span><span>index</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span>v</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+    <span>This.data_</span><span>(</span><span>index</span><span>)</span> <span>=</span> <span>v</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Property</span>
+
+
+
+<span class="tok-kw">Property</span> <span>IntArray.value</span><span>(</span><span>index</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>,</span> <span>v</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+    <span>This.data_</span><span>(</span><span class="tok-kw">CInt</span><span>(</span><span>index</span><span>))</span> <span>=</span> <span>v</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Property</span>
+
+
+
+<span class="tok-kw">Property</span> <span>IntArray.value</span><span>(</span><span>index</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span>v</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>)</span>
+
+    <span>This.data_</span><span>(</span><span>index</span><span>)</span> <span>=</span> <span class="tok-kw">CInt</span><span>(</span><span>v</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Property</span>
+
+
+
+<span class="tok-kw">Property</span> <span>IntArray.value</span><span>(</span><span>index</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>,</span> <span>v</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>)</span>
+
+    <span>This.data_</span><span>(</span><span class="tok-kw">CInt</span><span>(</span><span>index</span><span>))</span> <span>=</span> <span class="tok-kw">CInt</span><span>(</span><span>v</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Property</span>
+
+
+
+<span class="tok-kw">Dim</span> <span>a</span> <span class="tok-kw">As</span> <span>IntArray</span>
+
+
+
+<span>a.value</span><span>(</span><span class="tok-nu">0</span><span>)</span> <span>=</span> <span class="tok-nu">1234</span>
+
+<span>a.value</span><span>(</span><span>&quot;1&quot;</span><span>)</span> <span>=</span> <span class="tok-nu">5678</span>
+
+<span>a.value</span><span>(</span><span class="tok-nu">2</span><span>)</span> <span>=</span> <span>&quot;-1234&quot;</span>
+
+<span>a.value</span><span>(</span><span>&quot;3&quot;</span><span>)</span> <span>=</span> <span>&quot;-5678&quot;</span>
+
+
+
+<span class="tok-kw">Print</span> <span>a.value</span><span>(</span><span class="tok-nu">0</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>a.value</span><span>(</span><span>&quot;1&quot;</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>a.value</span><span>(</span><span class="tok-nu">2</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>a.value</span><span>(</span><span>&quot;3&quot;</span><span>)</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+</div>This simulates an integer array that can be assigned strings, and even be indexed with strings. See KeyPgProperty for another example.<br>
+<br>
+</div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

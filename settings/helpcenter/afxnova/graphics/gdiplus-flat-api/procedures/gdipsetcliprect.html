@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GdipSetClipRect — Help Center</title>
+<meta name="description" content="Updates the clipping region of the **Graphics** object to a region that is the combination of itself and a rectangle.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipsetcliprect.html">
+<meta property="og:title" content="GdipSetClipRect">
+<meta property="og:description" content="Updates the clipping region of the **Graphics** object to a region that is the combination of itself and a rectangle.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipsetcliprect.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/procedures/gdipsetcliprect.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../graphics-functions.html">Graphics Functions</a></div>
+<h1>GdipSetClipRect<span class="h1kind">function</span></h1>
+<p class="lede">Updates the clipping region of the **Graphics** object to a region that is the combination of itself and a rectangle.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GdipSetClipRect (BYVAL graphics AS GpGraphics PTR, BYVAL x AS REAL, BYVAL y AS REAL, BYVAL width AS REAL, BYVAL height AS REAL, BYVAL combineMode AS CombineMode) AS GpStatus</code></pre>
+<div class="note">Also documented as <code>GdipSetClipRectI</code> — one description covers them all.</div>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>graphics</code></td><td></td><td>[in] Pointer to the <strong>Graphics</strong> object.</td></tr><tr><td><code>x</code></td><td></td><td>[in] The x-coordinate of the rectangle to be combined with the clipping region of the <strong>Graphics</strong> object.</td></tr><tr><td><code>y</code></td><td></td><td>[in] The y-coordinate of the rectangle to be combined with the clipping region of the <strong>Graphics</strong> object.</td></tr><tr><td><code>width</code></td><td></td><td>[in] The width of the rectangle to be combined with the clipping region of the <strong>Graphics</strong> object.</td></tr><tr><td><code>height</code></td><td></td><td>[in] The height of the rectangle to be combined with the clipping region of the <strong>Graphics</strong> object.</td></tr><tr><td><code>combineMode</code></td><td></td><td>[in] Element of the <strong>CombineMode</strong> enumeration that specifies how the specified region is combined with the clipping region of the <strong>Graphics</strong> object. The default value is <em>CombineModeReplace</em>.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Updates the clipping region of the <strong>Graphics</strong> object to a region that is the combination of itself and a rectangle.</p>
+<h2>Examples</h2>
+<p>' ======================================================================================== ' The following example uses a rectangle to update a clipping region and then draws a ' rectangle that demonstrates the updated clipping region. ' ======================================================================================== SUB Example_SetClipRect (BYVAL hdc AS HDC)</p>
+<p>DIM hStatus AS LONG</p>
+<p>' // Create a graphics object from the device context DIM graphics AS GpGraphics PTR hStatus = GdipCreateFromHDC(hdc, @graphics)</p>
+<p>' // Get the DPI scaling ratios DIM dpiX AS SINGLE hStatus = GdipGetDpiX(graphics, @dpiX) DIM rxRatio AS SINGLE = dpiX / 96 DIM dpiY AS SINGLE hStatus = GdipGetDpiY(graphics, @dpiY) Dim ryRatio AS SINGLE = dpiY / 96 ' // Set the scale transform hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)</p>
+<p>' // Create a SolidBrush DIM brush AS GpBrush PTR hStatus = GdipCreateSolidFill(ARGB_BLUE, @brush)</p>
+<p>' // Set the clipping region to its exclusion. hStatus = GdipSetClipRect(graphics, 125, 50, 200, 200, CombineModeReplace)</p>
+<p>' // Fill a rectangle to demonstrate the clipping region. hStatus = GdipFillRectangle(graphics, brush, 0, 0, 400, 310)</p>
+<p>' // Cleanup IF brush THEN GdipDeleteBrush(brush) IF graphics THEN GdipDeleteGraphics(graphics)</p>
+<p>END SUB ' ========================================================================================</p>
+<p>' ======================================================================================== ' The following example sets a clipping region and updates the clipping region. It then ' draws rectangles to demonstrate the effective clipping region. ' ======================================================================================== SUB Example_SetClipRect2 (BYVAL hdc AS HDC)</p>
+<p>DIM hStatus AS LONG</p>
+<p>' // Create a graphics object from the device context DIM graphics AS GpGraphics PTR hStatus = GdipCreateFromHDC(hdc, @graphics)</p>
+<p>' // Get the DPI scaling ratios DIM dpiX AS SINGLE hStatus = GdipGetDpiX(graphics, @dpiX) DIM rxRatio AS SINGLE = dpiX / 96 DIM dpiY AS SINGLE hStatus = GdipGetDpiY(graphics, @dpiY) Dim ryRatio AS SINGLE = dpiY / 96 ' // Set the scale transform hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)</p>
+<p>' // Set the clipping region. hStatus = GdipSetClipRect(graphics, 0.5, 0.5, 200.5, 200.5, CombineModeReplace)</p>
+<p>' // Update the clipping region to the portion of the rectangle that ' // intersects with the current clipping region. hStatus = GdipSetClipRect(graphics, 100.5, 100.5, 200.5, 200.5, CombineModeIntersect)</p>
+<p>' // Create a solid brush DIM brush AS GpBrush PTR hStatus = GdipCreateSolidFill(ARGB_BLUE, @brush)</p>
+<p>' // Fill a rectangle to demonstrate the effective clipping region. hStatus = GdipFillRectangle(graphics, brush, 0, 0, 450, 320)</p>
+<p>' // Reset the clipping region to infinite. hStatus = GdipResetClip(graphics)</p>
+<p>' // Draw clipRect and intersectRect. DIM blackPen AS GpPen PTR, redPen AS GpPen PTR hStatus = GdipCreatePen1(ARGB_BLACK, 1, UnitWorld, @blackPen) hStatus = GdipCreatePen1(ARGB_RED, 1, UnitWorld, @redPen) hStatus = GdipDrawRectangle(graphics, blackPen, 0.5, 0.5, 200.5, 200.5) hStatus = GdipDrawRectangle(graphics, redPen, 100.5, 100.5, 200.5, 200.5)</p>
+<p>' // Cleanup IF blackPen THEN GdipDeletePen(blackPen) IF redPen THEN GdipDeletePen(redPen) IF brush THEN GdipDeleteBrush(brush) IF graphics THEN GdipDeleteGraphics(graphics)</p>
+<p>END SUB ' ========================================================================================</p>
+<p>' ======================================================================================== ' The following example sets a clipping region and updates the clipping region. It then ' draws rectangles to demonstrate the effective clipping region. ' ======================================================================================== SUB Example_IntersectClip (BYVAL hdc AS HDC)</p>
+<p>DIM hStatus AS LONG</p>
+<p>' // Create a graphics object from the device context DIM graphics AS GpGraphics PTR hStatus = GdipCreateFromHDC(hdc, @graphics)</p>
+<p>' // Get the DPI scaling ratios DIM dpiX AS SINGLE hStatus = GdipGetDpiX(graphics, @dpiX) DIM rxRatio AS SINGLE = dpiX / 96 DIM dpiY AS SINGLE hStatus = GdipGetDpiY(graphics, @dpiY) Dim ryRatio AS SINGLE = dpiY / 96 ' // Set the scale transform hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)</p>
+<p>' // Define clipping rectangle DIM clipRect AS GpRectF = (0.5, 0.5, 200.5, 200.5) hStatus = GdipSetClipRect(graphics, clipRect.X, clipRect.Y, clipRect.Width, clipRect.Height, CombineModeReplace)</p>
+<p>' // Define intersection rectangle DIM intRect AS GpRectF = (100.5, 100.5, 200.5, 200.5) hStatus = GdipSetClipRect(graphics, intRect.X, intRect.Y, intRect.Width, intRect.Height, CombineModeIntersect)</p>
+<p>' // Create solid brush (opaque blue) DIM brush AS GpBrush PTR hStatus = GdipCreateSolidFill(GDIP_ARGB(255, 0, 0, 255), @brush)</p>
+<p>' // Fill a large rectangle to show clipping effect hStatus = GdipFillRectangle(graphics, brush, 0, 0, 500, 500)</p>
+<p>' // Reset clipping region hStatus = GdipResetClip(graphics)</p>
+<p>' // Create pens DIM AS GpPen PTR penBlack, penRed hStatus = GdipCreatePen1(GDIP_ARGB(255, 0, 0, 0), 2.0, UnitPixel, @penBlack) hStatus = GdipCreatePen1(GDIP_ARGB(255, 255, 0, 0), 2.0, UnitPixel, @penRed)</p>
+<p>' // Draw clipRect and intersectRect outlines hStatus = GdipDrawRectangle(graphics, penBlack, clipRect.X, clipRect.Y, clipRect.Width, clipRect.Height) hStatus = GdipDrawRectangle(graphics, penRed, intRect.X, intRect.Y, intRect.Width, intRect.Height)</p>
+<p>' // Cleanup IF brush THEN GdipDeleteBrush(brush) IF penBlack THEN GdipDeletePen(penBlack) IF penRed THEN GdipDeletePen(penRed) IF graphics THEN GdipDeleteGraphics(graphics)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/AfxGdiPlus.bi:1916</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Flat  Api/GdiPlusGraphics.md</span></li><li>Topic: <a href="../graphics-functions.html">Graphics Functions</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

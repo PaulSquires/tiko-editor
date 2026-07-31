@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GdipIsOutlineVisiblePathPointI — Help Center</title>
+<meta name="description" content="Determines whether a specified point touches the outline of this path when the path is drawn by a specified **Graphics** object and a specified pen.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipisoutlinevisiblepathpointi.html">
+<meta property="og:title" content="GdipIsOutlineVisiblePathPointI">
+<meta property="og:description" content="Determines whether a specified point touches the outline of this path when the path is drawn by a specified **Graphics** object and a specified pen.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipisoutlinevisiblepathpointi.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/procedures/gdipisoutlinevisiblepathpointi.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../graphicspath-functions.html">GraphicsPath Functions</a></div>
+<h1>GdipIsOutlineVisiblePathPointI<span class="h1kind">function</span></h1>
+<p class="lede">Determines whether a specified point touches the outline of this path when the path is drawn by a specified **Graphics** object and a specified pen.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GdipIsOutlineVisiblePathPointI (BYVAL path AS GpPath PTR, BYVAL x AS INT_, BYVAL y AS INT_, BYVAL pen AS GpPen PTR, BYVAL graphics AS GpGraphics PTR, BYVAL result AS BOOL PTR) AS GpStatus</code></pre>
+<div class="note">Also documented as <code>GdipIsOutlineVisiblePathPoint</code> — one description covers them all.</div>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>path</code></td><td></td><td>[in] Pointer to the <strong>GraphicsPath</strong> object.</td></tr><tr><td><code>x</code></td><td></td><td>[in] The x-coordinate of the point to be tested.</td></tr><tr><td><code>y</code></td><td></td><td>[in] The y-coordinate of the point to be tested.</td></tr><tr><td><code>pen</code></td><td></td><td>[in] Pointer to a <strong>Pen</strong> object. This method determines whether the test point touches the path outline that would be drawn by this pen. More points will touch an outline drawn by a wide pen than will touch an outline drawn by a narrow pen.</td></tr><tr><td><code>graphics</code></td><td></td><td>[in] Pointer to a <strong>Graphics</strong> object that specifies a world-to-device transformation. If the value of this parameter is NULL, the test is done in world coordinates; otherwise, the test is done in device coordinates. The default value is NULL.</td></tr><tr><td><code>result</code></td><td></td><td>[out] Pointer to a variable that receives a boolean value indicating whether test point touches the outline of this path (TRUE) or not (FALSE).</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Determines whether a specified point touches the outline of this path when the path is drawn by a specified <strong>Graphics</strong> object and a specified pen.</p>
+<h2>Example</h2>
+<p>' ======================================================================================== ' The following example creates an elliptical path and draws that path with a wide yellow pen. ' Then the code tests each point in an array to see whether the point touches the outline ' (as it would be drawn by the wide yellow pen) of the path. Points that touch the outline ' are painted green, and points that don't touch the outline are painted red. ' ======================================================================================== SUB Example_IsOutlineVisible (BYVAL hdc AS HDC)</p>
+<p>DIM hStatus AS LONG</p>
+<p>' // Create a graphics object from the device context DIM graphics AS GpGraphics PTR hStatus = GdipCreateFromHDC(hdc, @graphics)</p>
+<p>' // Get the DPI scaling ratios DIM dpiX AS SINGLE hStatus = GdipGetDpiX(graphics, @dpiX) DIM rxRatio AS SINGLE = dpiX / 96 DIM dpiY AS SINGLE hStatus = GdipGetDpiY(graphics, @dpiY) Dim ryRatio AS SINGLE = dpiY / 96 ' // Set the scale transform hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)</p>
+<p>' // Create the pen and brush DIM yellowPen AS GpPen PTR hStatus = GdipCreatePen1(ARGB_YELLOW, 20, UnitWorld, @yellowPen) DIM brush AS GpBrush PTR hStatus = GdipCreateSolidFill(ARGB_RED, @brush)</p>
+<p>' // Create GraphicsPath DIM path AS GpPath PTR hStatus = GdipCreatePath(FillModeAlternate, @path) ' // Add an ellipse hStatus = GdipAddPathEllipse(path, 50, 50, 200, 100) ' // Draw the path hStatus = GdipDrawPath(graphics, yellowPen, path)</p>
+<p>' // Create an array of three points, and determine whether each ' // point in the array touches the outline of the path. ' // If a point touches the outline, paint it in green. ' // If a point does not touch the outline, paint it red. DIM pts(2) AS GpPointF pts(0).x = 230 : pts(0).y = 138 pts(1).x = 100 : pts(1).y = 120 pts(2).x = 150 : pts(2).y = 170</p>
+<p>FOR i AS LONG = 0 TO 2</p>
+<pre class="code"><code>DIM result AS BOOL
+  hStatus = GdipIsOutlineVisiblePathPoint(path, pts(i).x, pts(i).y, yellowPen, NULL, @result)
+  IF result THEN
+     hStatus = GdipSetSolidFillColor(brush, ARGB_LIGHTGREEN)
+  ELSE
+     hStatus = GdipSetSolidFillColor(brush, ARGB_RED)
+  END IF
+  hStatus = GdipFillEllipse(graphics, brush, pts(i).x - 3, pts(i).y - 3, 6, 6)</code></pre>
+<p>NEXT</p>
+<p>' // Cleanup IF yellowPen THEN GdipDeleteBrush(yellowPen) IF brush THEN GdipDeleteBrush(brush) IF path THEN GdipDeletePath(path) IF graphics THEN GdipDeleteGraphics(graphics)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/AfxGdiPlus.bi:2062</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Flat  Api/GdiPlusGraphicsPath.md</span></li><li>Topic: <a href="../graphicspath-functions.html">GraphicsPath Functions</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

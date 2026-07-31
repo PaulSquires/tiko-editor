@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CGpLinearGradientBrush.GetTransform — Help Center</title>
+<meta name="description" content="Gets the transformation matrix.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgplineargradientbrush/cgplineargradientbrush-gettransform.html">
+<meta property="og:title" content="CGpLinearGradientBrush.GetTransform">
+<meta property="og:description" content="Gets the transformation matrix.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgplineargradientbrush/cgplineargradientbrush-gettransform.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-classes/cgplineargradientbrush/cgplineargradientbrush-gettransform.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cgpbrush-class.html">CGpBrush Class</a></div>
+<h1>CGpLinearGradientBrush.GetTransform<span class="h1kind">method</span></h1>
+<p class="lede">Gets the transformation matrix.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">method</span><span class="badge">CGpBrush.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GetTransform (BYVAL pMatrix AS CGpMatrix PTR) AS GpStatus</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>pMatrix</code></td><td></td><td>Pointer to a <strong>Matrix</strong> object that receives the transformation matrix.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>If the function succeeds, it returns <strong>Ok</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h2>Description</h2>
+<p>Gets the transformation matrix of this linear gradient brush.</p>
+<h2>Remarks</h2>
+<p>A <strong>LinearGradientBrush</strong> object maintains a transformation matrix that can store any affine transformation. When you use a linear gradient brush to fill an area, GDI+ transforms the brush's boundary lines according to the brush's transformation matrix and then fills the area. The transformed boundaries exist only during rendering; the boundaries stored in the <strong>LinearGradientBrush</strong> object are not transformed</p>
+<h2>Example</h2>
+<p>' ======================================================================================== ' The following example creates a linear gradient brush and sets its transformation matrix. ' Next, the code gets the brush's transformation matrix and proceeds to inspect or use the ' matrix elements. ' ======================================================================================== SUB Example_GetTransform (BYVAL hdc AS HDC)</p>
+<p>' // Create a graphics object from the window device context DIM graphics AS CGpGraphics = hdc ' // Set the scale transform graphics.ScaleTransformForDpi</p>
+<p>' // Create a linear gradient brush. DIM pt1 AS GpPoint = (0, 0) DIM pt2 AS GpPoint = (200, 0) DIM linGrBrush AS CGpLinearGradientBrush = CGpLinearGradientBrush(@pt1, @pt2, ARGB_BLACK, ARGB_BLUE)</p>
+<p>' // Set the transformation DIM matrixSet AS CGpMatrix = CGpMatrix(0, 1, -1, 0, 0, 0) linGrBrush.SetTransform(@matrixSet)</p>
+<p>' // Obtain information about the linear gradient brush. DIM matrixGet AS CGpMatrix DIM elements(0 TO 5) AS SINGLE</p>
+<p>linGrBrush.GetTransform(@matrixGet) matrixGet.GetElements(@elements(0))</p>
+<p>graphics.FillRectangle(@CGpSolidBrush(ARGB_BLACK), 0, 0, 20, 20)</p>
+<p>FOR j AS LONG = 0 TO 5</p>
+<pre class="code"><code>' // Inspect or use the value in elements[j].
+  OutputDebugStringW WSTR(elements(j))</code></pre>
+<p>NEXT</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CGpBrush.inc</code></li><li>Defined in <span class="srcref">AfxNova/CGpBrush.inc:461</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Classes/CGpBrush Classes.md</span></li><li>Topic: <a href="../cgpbrush-class.html">CGpBrush Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

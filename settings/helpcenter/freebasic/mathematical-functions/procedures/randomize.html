@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Randomize — Help Center</title>
+<meta name="description" content="Seeds the random number generator">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/mathematical-functions/procedures/randomize.html">
+<meta property="og:title" content="Randomize">
+<meta property="og:description" content="Seeds the random number generator">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/mathematical-functions/procedures/randomize.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/mathematical-functions/procedures/randomize.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>Randomize<span class="h1kind">sub</span></h1>
+<p class="lede">Seeds the random number generator</p>
+<div class="badges"><a class="badge" href="../index.html">Mathematical Functions</a><span class="badge">sub</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>Declare Sub Randomize ( ByVal seed As Double = -1.0, ByVal algorithm As Long = 0 )</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>seed</code></td><td></td><td>A <code><a href="double.html">Double</a></code> seed value for the random number generator, but the fractional part is clipped for all algorithms except algorithm #4 (see below). If omitted, a value based on <code><a href="../../date-and-time-functions/procedures/timer.html">Timer</a></code> will be used instead.</td></tr><tr><td><code>algorithm</code></td><td></td><td>An integer value to select the algorithm (see the standard header "fbprng.bi" for available algorithms). If omitted, the default algorithm for the current <a href="../../freebasic-dialects-and-qbasic/freebasic-dialects.html">language dialect</a> is used.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<br>
+Sets the random seed that helps <code><a href="rnd.html">Rnd</a></code> generate random numbers, and selects the algorithm to use.<br>
+The constants for <code><i>algorithm</i></code> are defined in <code>fbprng.bi</code>. In the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang fb</a></i> dialect, these constants are part of the <code>FB</code> <code><a href="../../modularizing/procedures/namespace.html">Namespace</a></code>.<br>
+Valid values for <code><i>algorithm</i></code> are:<br>
+<div class="indent"><code>FB_RND_AUTO (0)</code> - Default for current <a href="../../freebasic-dialects-and-qbasic/freebasic-dialects.html">language dialect</a>. This is algorithm <code>FB_RND_MTWIST (3)</code> in the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang fb</a></i> dialect, <code>FB_RND_QB (4)</code> in the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang qb</a></i> dialect and <code>FB_RND_CRT (1)</code> in the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang fblite</a></i> dialect.<br>
+<code>FB_RND_CRT (1)</code> - Uses the C runtime library's <code>rand()</code> function. This will give different results depending on the platform.<br>
+<code>FB_RND_FAST (2)</code> - Uses a fast implementation. This should be stable across all platforms, and provides 32-bit granularity, reasonable degree of randomness.<br>
+<code>FB_RND_MTWIST (3)</code> - Uses the Mersenne Twister. This should be stable across all platforms, provides 32-bit granularity, and gives a high degree of randomness.<br>
+<code>FB_RND_QB (4)</code> - Uses a function that is designed to give the same random number sequences as QBASIC. This should be stable across all platforms, and provides 24-bit precision, with a low degree of randomness.<br>
+<code>FB_RND_REAL (5)</code> - Available on Win32 and Linux, using system features (Win32 Crypto API, Linux /dev/urandom) to provide cryptographically random numbers. If those system APIs are unavailable, algorithm <code>FB_RND_MTWIST (3)</code> will be used instead.<br>
+<br>
+For any given seed, each algorithm will produce a specific, deterministic sequence of numbers for that seed. If you want each call to <code><b>Randomize</b></code> to produce a different sequence of numbers, a seed that is not quite predictable should be used - for example, the value returned from <code><a href="../../date-and-time-functions/procedures/timer.html">Timer</a></code>. Omitting the <code><i>seed</i></code> parameter will use a value based on this.<br>
+<br>
+Note: for all algorithms except algorithm #4, because the fractional part of the seed is clipped, the using the <code><a href="../../date-and-time-functions/procedures/timer.html">Timer</a></code> value directly as a parameter will produce the same seed if used more than once in the same second. However, it is generally not worth calling <code><b>Randomize</b></code> twice with unpredictable seeds anyway, because the second sequence will be no more random than the first, or even possibly worse by inducing sequence overlapping. In most cases, the Mersenne twister should provide a sufficiently random sequence of numbers, without requiring reseeding between <code><a href="rnd.html">Rnd</a></code> calls.<br>
+<br>
+When you call <code><b>Randomize</b></code> with the QB compatible algorithm, part of the old seed is retained. This means that if you call <code><b>Randomize</b></code> several times with the same seed, you will <b>not</b> get the same sequence each time. To get a specific sequence in QB compatible mode, set the seed by calling <code><a href="rnd.html">Rnd</a></code> with a negative parameter.<br>
+<br>
+<b>Note:</b><br>
+<div class="indent"><div class="indent"><code><b>Randomize</b></code> is thread-safe (by using an internal mutex), but not thread specific.<br>
+Unfinished structures for other random number generators are also available in the standard header "fbprng.bi".<br>
+<br>
+</div></div></div>
+<h2>Remarks</h2>
+<h3>Usage</h3><code><br>
+<b>Randomize</b> [ <i>seed</i> ][, <i>algorithm</i> ]<br>
+</code><br>
+
+<h3>Version</h3><br>
+<ul><li> Before fbc 1.10.0 (for fbc 1.08.0 and fbc 1.09.0), "fbprng.bi" was named "fbmath.bi".<br>
+<li> Before fbc 1.08.0:<br>
+</li></li></ul><div class="indent">The standard "fbmath.bi" header for available algorithms did not exist.<br>
+<code><b>Randomize</b></code> was not thread-safe.<br>
+<br>
+</div>
+<h3>Dialect Differences</h3><br>
+The default algorithm used depends on the current dialect in use:<br>
+<ul><ul><li> With the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang fb</a></i> dialect, a 32 bit Mersenne Twister function with a granularity of 32 bits is used.<br>
+<li> With the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang qb</a></i> dialect, a function giving the same output as <code><a href="rnd.html">Rnd</a></code> in QB is used. The granularity is 24 bits.<br>
+<li> With the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang deprecated</a></i> and <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang fblite</a></i> dialects, the function in the C runtime available in the system is used. The function has a granularity of 15 bits in Win32, and 32 bits in Linux and DOS.<br>
+<br>
+</li></li></li></ul></ul>
+<h3>Differences from QB</h3><br>
+<ul><li> The <code><i>algorithm</i></code> parameter is new to FreeBASIC.<br>
+<li> QBASIC only had one algorithm (replicated in FB in algorithm number <code><b>4</b></code>, and set as the default in the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang qb</a></i> dialect).<br>
+<br>
+</li></li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="rnd.html">Rnd</a></code><br>
+<li> <a href="../../freebasic-dialects-and-qbasic/freebasic-dialects.html">Language dialects</a><br>
+<br>
+</li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-cm">'' Seed the RNG to the method using C's rand()</span>
+
+<span class="tok-kw">Randomize</span> <span>,</span> <span class="tok-nu">1</span>
+
+
+
+<span class="tok-cm">'' Print a sequence of random numbers</span>
+
+<span class="tok-kw">For</span> <span>i</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">10</span>
+
+    <span class="tok-kw">Print</span> <span class="tok-kw">Rnd</span>
+
+<span class="tok-kw">Next</span></pre></code><br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgRandomize.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

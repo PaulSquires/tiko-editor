@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DWSTRING Class — Help Center</title>
+<meta name="description" content="DWSTRING Class — 11 documented members. String Management reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/string-management/dwstring-class.html">
+<meta property="og:title" content="DWSTRING Class">
+<meta property="og:description" content="DWSTRING Class — 11 documented members. String Management reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/string-management/dwstring-class.html">
+<link rel="stylesheet" href="../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/string-management/dwstring-class.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span>String Management</div>
+<h1>DWSTRING Class</h1>
+<h2>Members (11)</h2>
+<div class="memberlist"><a href="dwstring/dwstring-bstr.html"><span class="m-n">bstr</span><span class="m-d">Returns the contents of the `DWSTRING` as a `BSTR`.</span></a><a href="dwstring/dwstring-capacity.html"><span class="m-n">Capacity</span><span class="m-d">Gets/sets the size of the internal buffer.</span></a><a href="dwstring/dwstring-chrw.html"><span class="m-n">ChrW</span><span class="m-d">Returns a wide-character string from a codepoint.</span></a><a href="dwstring/dwstring-constructors.html"><span class="m-n">Constructors</span><span class="m-d">Initialize the class with the specified value.</span></a><a href="dwstring/dwstring-jscript.html"><span class="m-n">JScript</span><span class="m-d">Converts the DWSTRING content into a safe JavaScript expression for use with WebView2 ExecuteScript.</span></a><a href="dwstring/dwstring-oem.html"><span class="m-n">OEM</span><span class="m-d">Converts from Unicode to OEM code page.</span></a><a href="dwstring/dwstring-operator.html"><span class="m-n">Operator *</span><span class="m-d">One * returns the address of the `DWSTRING` buffer.&lt;br&gt; Two ** returns the address of the start of the string data.</span></a><a href="dwstring/dwstring-operator-cast.html"><span class="m-n">Operator Cast</span><span class="m-d">Returns a pointer to the `DWSTRING` buffer or the string data.&lt;br&gt;Casting is automatic. You don&#x27;t have to call this operator.</span></a><a href="dwstring/dwstring-utf8.html"><span class="m-n">Utf8</span><span class="m-d">Converts from UTF8 to Unicode and from Unicode to UTF8.</span></a><a href="dwstring/dwstring-vptr.html"><span class="m-n">vptr</span><span class="m-d">Returns the address of the string buffer.</span></a><a href="dwstring/dwstring-wchar.html"><span class="m-n">wchar</span><span class="m-d">Returns the string data as a new unicode string allocated with **CoTaskMemAlloc**.</span></a></div>
+<h2>Documentation</h2>
+<h2 id="dwstring-class">DWSTRING Class</h2>
+<p>The <code>DWSTRING</code> class implements a dynamic unicode null terminated string. Free Basic has a dynamic string data type (STRING). a fixed-length ansi data type (ZSTRING) and a fixed-length unicode data type (WSTRING), but it lacks a dynamic unicode string. <code>DWSTRING</code> behaves as if it was a native data type, working transparently with all of the intrinsic Free Basic string functions and operators (consult the FreeBasic documentation for a list of them and how they work). One important diference is that <code>VARPTR</code> and the <code>@</code> operator don't return the address of the buffer, but the address of the class. To get the address of the buffer use <code>STRPTR</code> or the <code>*</code> operator.</p>
+<p><strong>Include file</strong>: AfxNova/DWSTRING.inc.</p>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="dwstring/dwstring-constructors.html">Constructors</a></td><td>Initialize the class with the specified value.</td></tr><tr><td><a href="dwstring/dwstring-capacity.html">Capacity</a></td><td>Gets/sets the size of the internal buffer.</td></tr><tr><td><a href="dwstring/dwstring-operator.html">Operator \*</a></td><td>One * returns the address of the <code>DWSTRING</code> buffer.<br> Two ** returns the address of the start of the string data.</td></tr><tr><td><a href="dwstring/dwstring-operator-cast.html">Operator Cast</a></td><td>Returns a pointer to the <code>DWSTRING</code> buffer or the string data.<br>Casting is automatic. You don't have to call this operator.</td></tr><tr><td><a href="dwstring/dwstring-chrw.html">ChrW</a></td><td>Returns a wide-character string from a codepoint.</td></tr><tr><td><a href="dwstring/dwstring-bstr.html">bstr</a></td><td>Returns the contents of the <code>DWSTRING</code> as a <code>BSTR</code>.</td></tr><tr><td><a href="dwstring/dwstring-oem.html">OEM</a></td><td>Converts from Unicode to OEM code page.</td></tr><tr><td><a href="dwstring/dwstring-utf8.html">Utf8</a></td><td>Converts from UTF8 to Unicode and from Unicode to UTF8.</td></tr><tr><td><a href="dwstring/dwstring-vptr.html">vptr</a></td><td>Returns the address of the string buffer.</td></tr><tr><td><a href="dwstring/dwstring-wchar.html">wchar</a></td><td>Returns the string data as a new unicode string allocated with <strong>CoTaskMemAlloc</strong>.</td></tr><tr><td><a href="dwstring/dwstring-jscript.html">JScript</a></td><td>Converts the DWSTRING content into a safe JavaScript expression for use with WebView2 ExecuteScript.</td></tr></tbody></table></div>
+<h2 id="constructors">Constructors</h2>
+<pre class="code"><code>CONSTRUCTOR
+CONSTRUCTOR (BYREF wszStr AS CONST WSTRING)
+CONSTRUCTOR (BYVAL pwszStr AS WSTRING PTR)
+CONSTRUCTOR (BYREF ansiStr AS STRING, BYVAL nCodePage AS UINT = 0)
+CONSTRUCTOR (BYREF dws AS DWSTRING)
+CONSTRUCTOR (BYREF bs AS BSTRING)
+CONSTRUCTOR (BYVAL nChars AS LONG, BYREF wszFill AS CONST WSTRING)
+CONSTRUCTOR (BYVAL n AS LONGINT)
+CONSTRUCTOR (BYVAL n AS DOUBLE)</code></pre>
+<ol><li>Creates an empty Unicode string buffer with an initial null-terminated string.</li></ol>
+<pre class="code"><code>Example: DIM dws AS DWSTRING</code></pre>
+<ol><li>Initializes a <code>DWSTRING</code> instance from a wide string pointer.</li></ol>
+<pre class="code"><code>DIM wsz AS WSTRING * 30 = "This is a test string"
+DIM dwsText AS DWSTRING = wsz</code></pre>
+<ol><li>Initializes a <code>DWSTRING</code> from an ANSI or UTF-8 encoded string, with optional code page support.</li></ol>
+<pre class="code"><code>Example: DIM s AS STRING = "Hello, world"
+         DIM dws AS DWSTRING = s
+Example: DIM dws AS DWSTRING = DWSTRING("Hello, utf", CP_UTF8)</code></pre>
+<p>For a list of code pages see: <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/dd317756(v=vs.85" target="_blank" rel="noopener">Code Page Identifiers</a>.aspx)</p>
+<ol><li>Creates a copy of an existing <code>DWSTRING</code>.</li></ol>
+<pre class="code"><code>Example: DIM dws1 AS DWSTRING = "Test string"
+         DIM dws2 AS DWSTRING = dws1</code></pre>
+<ol><li>Creates a <code>DWSTRING</code> with a fixed-length buffer, initialized with a fill character.</li></ol>
+<pre class="code"><code>Example: DIM dws AS DWSTRING = DWSTRING(260, " ")</code></pre>
+<ol><li>Initializes a <code>DWSTRING</code> with a numeric value, allowing automatic conversion.</li></ol>
+<pre class="code"><code>Example: DIM dwsNum AS DWSTRING = 12345
+Example: DIM dwsFloat AS DWSTRING = 3.1415</code></pre>
+<h5 id="remarks">Remarks</h5>
+<p><code>DWSTRING</code> works transparently with literals and Free Basic native strings, e.g.</p>
+<pre class="code"><code>DIM dws AS DWSTRING = "One"
+DIM s AS STRING = "Three"
+dws = dws &amp; " Two " &amp; s
+PRINT dws</code></pre>
+<p>It can be used with Windows API functions, e.g.</p>
+<pre class="code"><code>DIM nLen AS LONG = SendMessageW(hwnd, WM_GETTEXTLENGTH, 0, 0)
+DIM dwsText AS DWSTRING = WSPACE(nLen + 1)
+SendMessageW(hwnd, WM_GETTEXT, nLen + 1, cast(LPARAM, *cwsText))
+dwsText = LEFT(dwsText, LEN(dwsText) - 1)
+PRINT dwsText</code></pre>
+<p>We can use arrays of <code>DWSTRING</code> strings transparently, e.g.</p>
+<pre class="code"><code>DIM rg(1 TO 10) AS DWSTRING
+FOR i AS LONG = 1 TO 10
+   rg(i) = "string " &amp; i
+NEXT
+FOR i AS LONG = 1 TO 10
+   PRINT rg(i)
+NEXT</code></pre>
+<p>A two-dimensional array</p>
+<pre class="code"><code>DIM rg2 (1 TO 2, 1 TO 2) AS DWSTRING
+rg2(1, 1) = "string 1 1"
+rg2(1, 2) = "string 1 2"
+rg2(2, 1) = "string 2 1"
+rg2(2, 2) = "string 2 2"
+PRINT rg2(2, 1)</code></pre>
+<p>REDIM PRESERVE / ERASE</p>
+<pre class="code"><code>REDIM rg(0) AS DWSTRING
+rg(0) = "string 0"
+REDIM PRESERVE rg(0 TO 2) AS DWSTRING
+rg(1) = "string 1"
+rg(2) = "string 2"
+PRINT rg(0)
+PRINT rg(1)
+PRINT rg(2)
+ERASE rg</code></pre>
+<p>You can also use it with files:</p>
+<p>Using FreeBasic intrinsic statements:</p>
+<pre class="code"><code>DIM dws AS DWSTRING = "Дмитрий Дмитриевич Шостакович"
+DIM f AS LONG = FREEFILE
+OPEN "Test.txt" FOR OUTPUT ENCODING "utf16" AS #f
+PRINT #f, dws
+CLOSE #f</code></pre>
+<p>Using the Windows API:</p>
+<pre class="code"><code>' // Writing to a file
+DIM dwsFilename AS DWSTRING = "тест.txt"
+DIM dwsText AS DWSTRING = "Дмитрий Дмитриевич Шостакович"
+DIM hFile AS HANDLE = CreateFileW(dwsFilename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL)
+IF hFile THEN
+   DIM dwBytesWritten AS DWORD
+   DIM bSuccess AS LONG = WriteFile(hFile, dwsText, LEN(dwsText) * 2, @dwBytesWritten, NULL)
+   CloseHandle(hFile)
+END IF</code></pre>
+<pre class="code"><code>' // Read the file
+hFile = CreateFileW(dwsFilename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL)
+IF hFile THEN
+   DIM dwFileSize AS DWORD = GetFileSize(hFile, NULL)
+   IF dwFileSize THEN
+      DIM dwsOut AS DWSTRING = WSPACE(dwFileSize \ 2)
+      DIM bSuccess AS LONG = ReadFile(hFile, *dwsOut, dwFileSize, NULL, NULL)
+      CloseHandle(hFile)
+      PRINT dwsOut
+   END IF
+END IF</code></pre>
+<p>Notice that, contrarily to <strong>CreateFileW</strong>, FreeBasic's OPEN statement doesn't allow to use unicode for the file name.</p>
+<hr>
+<h2 id="operators">Operators</h2>
+<h4 id="operator*">Operator *</h4>
+<p>Dereferences the <code>DWSTRING</code>.<br>One * returns the address of the <code>DWSTRING</code> buffer.<br>Two ** returns the address of the start of the string data.</p>
+<pre class="code"><code>OPERATOR * (BYREF dws AS DWSTRING) AS WSTRING PTR</code></pre>
+<hr>
+<h2 id="casting-and-conversions">Casting and Conversions</h2>
+<h4 id="operatorcast">Operator Cast</h4>
+<pre class="code"><code>OPERATOR CAST () BYREF AS CONST WSTRING
+OPERATOR CAST () AS ANY PTR</code></pre>
+<p>Returns a pointer to the <code>DWSTRING</code> buffer or the string data. These operators aren't called directly.</p>
+<hr>
+<h4 id="bstr">bstr</h4>
+<p>Returns the contents of the <code>DWSTRING</code> as a BSTR.</p>
+<pre class="code"><code>FUNCTION bstr () AS BSTR</code></pre>
+<hr>
+<h4 id="oem">OEM</h4>
+<p>Converts from Unicode to OEM code page and from OEM to Unicode.</p>
+<pre class="code"><code>PROPERTY OEM () AS STRING
+PROPERTY OEM (BYREF OEMString AS STRING)</code></pre>
+<hr>
+<h4 id="utf8">Utf8</h4>
+<p>Converts from UTF8 to Unicode and from Unicode to UTF8.</p>
+<pre class="code"><code>PROPERTY Utf8() AS STRING
+PROPERTY Utf8 (BYREF utf8String AS STRING)</code></pre>
+<hr>
+<h4 id="vptr">vptr</h4>
+<p>Returns the address of the string buffer.</p>
+<pre class="code"><code>FUNCTION vptr () AS WSTRING PTR</code></pre>
+<hr>
+<h4 id="wchar">wchar</h4>
+<p>Returns the string data as a new unicode string allocated with <strong>CoTaskMemAlloc</strong>.</p>
+<pre class="code"><code>FUNCTION wchar () AS WSTRING PTR</code></pre>
+<p>Useful when we need to pass a pointer to a null terminated wide string to a function or method that will release it. If we pass a WSTRING it will GPF. If the length of the input string is 0, <strong>CoTaskMemAlloc</strong> allocates a zero-length item and returns a valid pointer to that item. If there is insufficient memory available, <strong>CoTaskMemAlloc</strong> returns NULL.</p>
+<hr>
+<h2 id="methods">Methods</h2>
+<h4 id="capacity">Capacity</h4>
+<p>Gets/sets the size of the internal buffer. The size is the number of bytes which can be stored without further expansion.</p>
+<pre class="code"><code>PROPERTY Capacity() AS UINT
+PROPERTY Capacity (BYVAL nValue AS LONG)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>nValue</em></td><td>The new capacity value, in bytes. If the new capacity is equal to the current capacity, no operation is performed; is it is smaller, the buffer is shortened and the contents that exceed the new capacity are lost. If you pass an odd number, 1 is added to the value to make it even.</td></tr></tbody></table></div>
+<hr>
+<h4 id="chrw">ChrW</h4>
+<p>Returns a wide-character string from a codepoint. If the codepoint is higher than 65535, the value returned a surrogate pair.</p>
+<pre class="code"><code>FUNCTION ChrW (BYVAL codePoint AS UInteger) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>codepoint</em></td><td>The code point.</td></tr></tbody></table></div>
+<hr>
+<h4 id="jscript">JScript</h4>
+<p>Converts the <code>DWSTRING</code> content into a safe JavaScript expression for use with <code>WebView2</code> <strong>ExecuteScript</strong>.</p>
+<pre class="code"><code>PROPERTY DWSTRING.JScript () AS STRING</code></pre>
+<p><code>WebView2</code> requires UTF-8 text when passing strings to JavaScript. This property takes the internal UTF-8 byte sequence of the <code>DWSTRING</code> and generates a JavaScripy expression of the form:</p>
+<pre class="code"><code>new TextDecoder('utf-8').decode(Uint8Array.from([b1,b2,b3,...]))</code></pre>
+<p>This guarantees that any Unicode text (including accents, symbols and emojis) is transmitted correctly to JavaScript without escaping issues, broken quotes, or encoding mismatches.</p>
+<p>The user can therefore pass <code>DWSTRING</code> values directly to <strong>ExecuteScript</strong> without worrying about UTF-8 handling or manual escaping.</p>
+<h5 id="usage-example">Usage example:</h5>
+<pre class="code"><code>m_pWebView-&gt;ExecuteScript("console.log(" &amp; myString.JScript &amp; ");")</code></pre>
+<h5 id="notes">Notes</h5>
+<p>The returned value is valid JavaScript code, not a literal string.</p>
+<hr>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../index.html">Home</a> ·
+         <a href="../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../nav.js?v=70a6b70236"></script>
+<script src="../../search-index.js"></script>
+<script src="../../assets/app.js?v=456d079659"></script>
+<script src="../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

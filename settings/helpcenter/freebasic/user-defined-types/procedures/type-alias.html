@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Type (Alias) — Help Center</title>
+<meta name="description" content="Declares an alternative name for a type">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/user-defined-types/procedures/type-alias.html">
+<meta property="og:title" content="Type (Alias)">
+<meta property="og:description" content="Declares an alternative name for a type">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/user-defined-types/procedures/type-alias.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/user-defined-types/procedures/type-alias.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>Type (Alias)<span class="h1kind">alias</span></h1>
+<p class="lede">Declares an alternative name for a type</p>
+<div class="badges"><a class="badge" href="../index.html">User Defined Types</a><span class="badge">alias</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>Type typename As symbol</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>typename</code></td><td></td><td>new alternative name.</td></tr><tr><td><code>symbol</code></td><td></td><td>symbol or data type declaration to associate with</td></tr><tr><td><code>typename</code></td><td></td><td>.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<br>
+<code><i>symbol</i></code> may refer to any declared data type including a built-in data type, <code><a href="../../procedures/procedures/sub.html">Sub</a></code> or <code><a href="../../procedures/procedures/function.html">Function</a></code> pointer, <code><a href="../../operators/operators/procedures/type-udt.html">Type</a></code> declaration, <code><a href="union.html">Union</a></code> declaration, or <code><a href="enum.html">Enum</a></code> declaration.<br>
+<br>
+A Type Alias can be used to allow forward declarations of parameters in procedure declarations, but only used with pointers (whatever their passing mode), or otherwise with parameters (excluding arrays) but passed or returned only by reference. Generally the bodies of such procedures need to be implemented further in the code once the actual types are well defined (for example because of the passing of such a reference; or when such a pointer passed is then dereferenced in any form).<br>
+A Type Alias can also be used to allow forward declarations of data fields in <a href="../user-defined-types.html">User Defined Types</a>, but only used with pointers.<br>
+<br>
+A type alias must be used to allow declaration of pointer to a function pointer, otherwise ptr applies on return type and not on function.<br>
+<br>
+A Type Alias declaration can also be nested inside a UDT structure declaration for a <code><a href="../../operators/operators/procedures/type-udt.html">Type</a> or a </code><a href="union.html">Union</a>.<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Version</h3><br>
+<ul><li> Since fbc 1.10.0: Nesting of a Type Alias declaration inside a structure declaring a UDT (Type or Union) is allowed.<br>
+<br>
+</li></ul>
+<h3>Differences from QB</h3><br>
+<ul><li> New to FreeBASIC<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="../../operators/operators/procedures/type-udt.html">Type...End Type</a></code><br>
+<li> <code><a href="../../programmer-s-guide/procedures/type-temporary.html">Type (Temporary)</a></code><br>
+<br>
+</li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span>ParentFwd</span> <span class="tok-kw">As</span> <span>Parent</span>
+
+<span class="tok-kw">Type</span> <span>Child</span>
+
+    <span class="tok-kw">Name</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span>*</span> <span class="tok-nu">32</span>
+
+    <span>ParentRef</span> <span class="tok-kw">As</span> <span>ParentFwd</span> <span class="tok-kw">Ptr</span>
+
+    <span class="tok-cm">''...</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Type</span> <span>Parent</span>
+
+    <span class="tok-kw">Name</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span>*</span> <span class="tok-nu">32</span>
+
+    <span>ChildList</span><span>(</span><span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">9</span><span>)</span> <span class="tok-kw">As</span> <span>Child</span>
+
+    <span class="tok-cm">''...</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Dim</span> <span>p</span> <span class="tok-kw">As</span> <span>Parent</span>
+
+<span>p.Name</span> <span>=</span> <span>&quot;Foo&quot;</span>
+
+<span class="tok-kw">With</span> <span>p.ChildList</span><span>(</span><span class="tok-nu">0</span><span>)</span>
+
+    <span>.</span><span class="tok-kw">Name</span> <span>=</span> <span>&quot;Jr.&quot;</span>
+
+    <span>.</span><span>ParentRef</span> <span>=</span> <span>@</span><span>p</span>
+
+    <span class="tok-cm">'' ...</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">With</span>    
+
+
+
+<span class="tok-kw">With</span> <span>p.ChildList</span><span>(</span><span class="tok-nu">0</span><span>)</span>
+
+    <span class="tok-kw">Print</span> <span>.</span><span class="tok-kw">Name</span><span>;</span> <span>&quot; is child of &quot;</span><span>;</span> <span>.</span><span>parentRef</span><span>-&gt;</span><span class="tok-kw">Name</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">With</span></pre></code><br>
+<code><pre class="code"><span class="tok-kw">Function</span> <span>triple</span> <span>(</span><span class="tok-kw">ByVal</span> <span>i</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+    <span class="tok-kw">Return</span> <span class="tok-nu">3</span> <span>*</span> <span>i</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Type</span> <span class="tok-kw">As</span> <span class="tok-kw">Function</span> <span>(</span><span class="tok-kw">ByVal</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>function_alias</span>
+
+
+
+<span class="tok-cm">'Dim As Function (Byval As Integer) As Integer f  ''this syntax works but is less readable than the next code line</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>function_alias</span> <span>f</span>
+
+<span>f</span> <span>=</span> <span>@</span><span>triple</span>
+
+<span class="tok-kw">Print</span> <span>f</span><span>(</span><span class="tok-nu">123</span><span>)</span>
+
+
+
+<span class="tok-cm">'Dim As Function (Byval As Integer) As Integer Ptr pf  ''this syntax does not work because Ptr applies on Integer and not on function</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>function_alias</span> <span class="tok-kw">Ptr</span> <span>pf</span>                           <span class="tok-cm">''this syntax works</span>
+
+<span>pf</span> <span>=</span> <span>@</span><span>f</span>
+
+<span class="tok-kw">Print</span> <span>(*</span><span>pf</span><span>)(</span><span class="tok-nu">123</span><span>)</span>  <span class="tok-cm">''the dereferenced pointer to procedure pointer must be enclosed in parentheses</span></pre></code><br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgTypeAlias.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

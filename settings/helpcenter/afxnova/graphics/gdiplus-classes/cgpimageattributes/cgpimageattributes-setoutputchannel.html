@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CGpImageAttributes.SetOutputChannel — Help Center</title>
+<meta name="description" content="Sets the CMYK output channel for a specified category.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpimageattributes/cgpimageattributes-setoutputchannel.html">
+<meta property="og:title" content="CGpImageAttributes.SetOutputChannel">
+<meta property="og:description" content="Sets the CMYK output channel for a specified category.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpimageattributes/cgpimageattributes-setoutputchannel.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-classes/cgpimageattributes/cgpimageattributes-setoutputchannel.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cgpimage-class.html">CGpImage Class</a></div>
+<h1>CGpImageAttributes.SetOutputChannel<span class="h1kind">method</span></h1>
+<p class="lede">Sets the CMYK output channel for a specified category.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">method</span><span class="badge">CGpImageAttributes.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION SetOutputChannel (BYVAL channelFlags AS LONG, BYVAL nType AS ColorAdjustType = ColorAdjustTypeDefault) AS GpStatus</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>channelFlags</code></td><td></td><td>Element of the <strong>ColorChannelFlags</strong> enumeration that specifies the output channel.</td></tr><tr><td><code>nType</code></td><td></td><td>Optional. Element of the <strong>ColorAdjustType</strong> enumeration that specifies the category for which the color key is cleared. The default value is <strong>ColorAdjustTypeDefault</strong>.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>If the function succeeds, it returns <strong>StatusOk</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h2>Description</h2>
+<p>Sets the CMYK output channel for a specified category.</p>
+<h2>Remarks</h2>
+<p>You can use the <strong>SetOutputChannel</strong> method to convert an image to a cyan-magenta-yellow-black (CMYK) color space and examine the intensities of one of the CMYK color channels. For example, suppose you create an <strong>ImageAttributes</strong> object and set its bitmap output channel to <strong>ColorChannelFlagsC</strong>. If you pass the address of that <strong>ImageAttributes</strong> object to the <strong>DrawImage</strong> method, the cyan component of each pixel is calculated, and each pixel in the rendered image is a shade of gray that indicates the intensity of its cyan channel. Similarly, you can render images that indicate the intensities of the magenta, yellow, and black channels.</p>
+<p>An <strong>ImageAttributes</strong> object maintains color and grayscale settings for five adjustment categories: default, bitmap, brush, pen, and text. For example, you can specify an output channel for the default category and a different output channel for the bitmap category.</p>
+<p>The default color- and grayscale-adjustment settings apply to all categories that don't have adjustment settings of their own. For example, if you never specify any adjustment settings for the bitmap category, then the default settings apply to the bitmap category.</p>
+<p>As soon as you specify a color- or grayscale-adjustment setting for a certain category, the default adjustment settings no longer apply to that category. For example, suppose you specify a collection of adjustment settings for the default category. If you set the output channel for the bitmap category by passing <strong>ColorAdjustTypeBitmap</strong> to the <strong>SetOutputChannel</strong> method, then none of the default adjustment settings will apply to bitmaps.</p>
+<p>Flat API function: <strong>GdipSetImageAttributesOutputChannel</strong>.</p>
+<h2>Example</h2>
+<p>' ======================================================================================== ' The following example creates an Image object and calls the DrawImage method to draw the ' image. Then the code creates an ImageAttributes object and sets its bitmap output channel ' to cyan (ColorChannelFlagsC). The code calls DrawImage a second time, passing the address ' of the Image object and the address of the ImageAttributes object. The cyan channel of ' each pixel is calculated, and the rendered image shows the intensities of the cyan channel ' as shades of gray. The code calls DrawImage three more times to show the intensities of ' the magenta, yellow, and black channels. ' ======================================================================================== SUB Example_SetOutputChannel (BYVAL hdc AS HDC)</p>
+<p>' // Create a graphics object from the window device context DIM graphics AS CGpGraphics = hdc ' // Set the scaling factors using the DPI ratios graphics.ScaleTransformForDpi</p>
+<p>' // Create an Image object based on a .bmp file. ' // The image has one stripe with RGB components (160, 0, 0) ' // and one stripe with RGB components (0, 140, 0). DIM image AS CGpBitmap = "Mosaic2.bmp" image.SetResolutionForDpi</p>
+<p>' // Draw the image unaltered. DIM nWidth AS UINT = image.GetWidth DIM nHeight AS UINT = image.GetHeight graphics.DrawImage(@image, 10, 10, nWidth, nHeight)</p>
+<p>' // Create an ImageAttributes object, and set its bitmap threshold to 0.6. DIM imgAttr AS CGpImageAttributes</p>
+<p>' // Draw the image, showing the intensity of the cyan channel. imgAttr.SetOutputChannel(ColorChannelFlagsC) DIM rc AS GpRect = (110, 10, nWidth, nHeight) graphics.DrawImage(@image, @rc, 0, 0, nWidth, nHeight, UnitPixel, @imgAttr)</p>
+<p>' // Draw the image, showing the intensity of the magenta channel. imgAttr.SetOutputChannel(ColorChannelFlagsM) rc = Type&lt;GpRect&gt;(210, 10, nWidth, nHeight) graphics.DrawImage(@image, @rc, 0, 0, nWidth, nHeight, UnitPixel, @imgAttr)</p>
+<pre class="code"><code>' // Draw the image, showing the intensity of the yellow channel.</code></pre>
+<p>imgAttr.SetOutputChannel(ColorChannelFlagsY) rc = Type&lt;GpRect&gt;(10, 110, nWidth, nHeight) graphics.DrawImage(@image, @rc, 0, 0, nWidth, nHeight, UnitPixel, @imgAttr)</p>
+<pre class="code"><code>' // Draw the image, showing the intensity of the black channel.</code></pre>
+<p>imgAttr.SetOutputChannel(ColorChannelFlagsK) rc = Type&lt;GpRect&gt;(110, 110, nWidth, nHeight) graphics.DrawImage(@image, @rc, 0, 0, nWidth, nHeight, UnitPixel, @imgAttr)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CGpImageAttributes.inc</code></li><li>Defined in <span class="srcref">AfxNova/CGpImageAttributes.inc:167</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Classes/CGpImage Classes.md</span></li><li>Topic: <a href="../cgpimage-class.html">CGpImage Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

@@ -1,0 +1,1375 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CXmlLite Class — Help Center</title>
+<meta name="description" content="CXmlLite Class — 69 documented members. File Management reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/file-management/cxmllite-class.html">
+<meta property="og:title" content="CXmlLite Class">
+<meta property="og:description" content="CXmlLite Class — 69 documented members. File Management reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/file-management/cxmllite-class.html">
+<link rel="stylesheet" href="../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/file-management/cxmllite-class.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span>File Management</div>
+<h1>CXmlLite Class</h1>
+<h2>Members (69)</h2>
+<div class="memberlist"><a href="cxmlwriter/cxmlwriter-writeattributestring.html"><span class="m-n">WriteAttributeString</span><span class="m-d">Writes an attribute.</span></a><a href="cxmlwriter/cxmlwriter-writeelementstring.html"><span class="m-n">WriteElementString</span><span class="m-d">Writes out an element with the specified prefix, name, namespace, and value.</span></a><a href="cxmlwriter/cxmlwriter-writeendelement.html"><span class="m-n">WriteEndElement</span><span class="m-d">Closes one element.</span></a><a href="cxmlwriter/cxmlwriter-writefullendelement.html"><span class="m-n">WriteFullEndElement</span><span class="m-d">Closes one element and pops the corresponding namespace scope.</span></a><a href="cxmlwriter/cxmlwriter-writestartelement.html"><span class="m-n">WriteStartElement</span><span class="m-d">Writes out the specified start tag and associates it with the specified namespace.</span></a><a href="cxmlwriterlite/cxmlwriterlite-constructors.html"><span class="m-n">Constructors</span><span class="m-d">Creates instances of the classes.</span></a><a href="cxmlwriterlite/cxmlwriterlite-cxmlreader.html"><span class="m-n">CXmlReader</span><span class="m-d"></span></a><a href="cxmlwriterlite/cxmlwriterlite-cxmlreader.html"><span class="m-n">CXmlReader</span><span class="m-d"></span></a><a href="cxmlwriterlite/cxmlwriterlite-cxmlwriter.html"><span class="m-n">CXmlWriter</span><span class="m-d"></span></a><a href="cxmlwriterlite/cxmlwriterlite-cxmlwriter.html"><span class="m-n">CXmlWriter</span><span class="m-d"></span></a><a href="cxmlwriterlite/cxmlwriterlite-destructors.html"><span class="m-n">Destructors</span><span class="m-d">Destroys the classes and frees resources.</span></a><a href="cxmlwriterlite/cxmlwriterlite-error-codes.html"><span class="m-n">Error codes</span><span class="m-d">XmlLite error codes and their associated symbolic codes and descriptions.</span></a><a href="cxmlwriterlite/cxmlwriterlite-flush.html"><span class="m-n">Flush</span><span class="m-d">Flushes whatever is in the buffer to the underlying stream and then flushes the underlying stream.</span></a><a href="cxmlwriterlite/cxmlwriterlite-getattributecount.html"><span class="m-n">GetAttributeCount</span><span class="m-d">Returns the number of attributes in the current node.</span></a><a href="cxmlwriterlite/cxmlwriterlite-getbaseuri.html"><span class="m-n">GetBaseUri</span><span class="m-d">Gets the base URI of the token, if applicable.</span></a><a href="cxmlwriterlite/cxmlwriterlite-getdepth.html"><span class="m-n">GetDepth</span><span class="m-d">Returns the depth of the current node in the document.</span></a><a href="cxmlwriterlite/cxmlwriterlite-geterrorinfo.html"><span class="m-n">GetErrorInfo</span><span class="m-d">Returns a description of the last result code.</span></a><a href="cxmlwriterlite/cxmlwriterlite-getlastresult.html"><span class="m-n">GetLastResult</span><span class="m-d"></span></a><a href="cxmlwriterlite/cxmlwriterlite-getlinenumber.html"><span class="m-n">GetLineNumber</span><span class="m-d">Gets the line number where the reader is positioned in the document.</span></a><a href="cxmlwriterlite/cxmlwriterlite-getlineposition.html"><span class="m-n">GetLinePosition</span><span class="m-d">Gets the line position where the reader is positioned in the document.</span></a><a href="cxmlwriterlite/cxmlwriterlite-getlocalname.html"><span class="m-n">GetLocalName</span><span class="m-d">Allows the client to determine the difference between elements that have a closing tag, but do not contain content, and elements that do not have a closing tag.</span></a><a href="cxmlwriterlite/cxmlwriterlite-getnamespaceuri.html"><span class="m-n">GetNamespaceUri</span><span class="m-d">Gets the namespace URI of the node that the reader is currently positioned on.</span></a><a href="cxmlwriterlite/cxmlwriterlite-getnodetype.html"><span class="m-n">GetNodeType</span><span class="m-d">Provides the type of the current node.</span></a><a href="cxmlwriterlite/cxmlwriterlite-getprefix.html"><span class="m-n">GetPrefix</span><span class="m-d">Gets the namespace prefix of the node that the reader is currently positioned on.</span></a><a href="cxmlwriterlite/cxmlwriterlite-getproperty.html"><span class="m-n">GetProperty</span><span class="m-d">Returns the specified property. A program can get properties at any time.</span></a><a href="cxmlwriterlite/cxmlwriterlite-getproperty.html"><span class="m-n">GetProperty</span><span class="m-d">Returns the specified property. A program can get properties at any time.</span></a><a href="cxmlwriterlite/cxmlwriterlite-getqualifiedname.html"><span class="m-n">GetQualifiedName</span><span class="m-d">Gets the qualified name of the node that the reader is currently positioned on.</span></a><a href="cxmlwriterlite/cxmlwriterlite-getvalue.html"><span class="m-n">GetValue</span><span class="m-d">Returns the value of the current token, if applicable.</span></a><a href="cxmlwriterlite/cxmlwriterlite-isdefault.html"><span class="m-n">IsDefault</span><span class="m-d">Indicates whether the attribute was specified in the source document or implied by the Document Type Definition (DTD).</span></a><a href="cxmlwriterlite/cxmlwriterlite-isemptyelement.html"><span class="m-n">IsEmptyElement</span><span class="m-d">Allows the client to determine the difference between elements that have a closing tag, but do not contain content, and elements that do not have a closing tag.</span></a><a href="cxmlwriterlite/cxmlwriterlite-iseof.html"><span class="m-n">IsEOF</span><span class="m-d">Returns TRUE if the end of the input is reached.</span></a><a href="cxmlwriterlite/cxmlwriterlite-ixmlreader-properties.html"><span class="m-n">IXmlReader Properties</span><span class="m-d">Your application can get properties via the **GetProperty** (IXmlReader) method, and can set properties via the **SetProperty** (IXmlReader) method.</span></a><a href="cxmlwriterlite/cxmlwriterlite-ixmlwriter-properties.html"><span class="m-n">IXmlWriter Properties</span><span class="m-d">Your application can get properties via the **GetProperty** (IXmlWriter) method, and can set properties via the **SetProperty** (IXmlWriter) method.</span></a><a href="cxmlwriterlite/cxmlwriterlite-movetoattributebyname.html"><span class="m-n">MoveToAttributeByName</span><span class="m-d">Moves the reader to the attribute with the specified name.</span></a><a href="cxmlwriterlite/cxmlwriterlite-movetoelement.html"><span class="m-n">MoveToElement</span><span class="m-d">Moves to the element that owns the current attribute node.</span></a><a href="cxmlwriterlite/cxmlwriterlite-movetofirstattribute.html"><span class="m-n">MoveToFirstAttribute</span><span class="m-d">Moves the reader position to the first attribute within the current node.</span></a><a href="cxmlwriterlite/cxmlwriterlite-movetonextattribute.html"><span class="m-n">MoveToNextAttribute</span><span class="m-d">Advances the reader to the next attribute.</span></a><a href="cxmlwriterlite/cxmlwriterlite-read.html"><span class="m-n">Read</span><span class="m-d">Reads the next node from the stream and returns the type of the node.</span></a><a href="cxmlwriterlite/cxmlwriterlite-readvaluechunk.html"><span class="m-n">ReadValueChunk</span><span class="m-d">Reads up to a maximum of the specified chunk size (as available) from the value of the current node and copy the value into the specified buffer.</span></a><a href="cxmlwriterlite/cxmlwriterlite-setinput.html"><span class="m-n">SetInput</span><span class="m-d">Sets the input source of the XML document to be parsed.</span></a><a href="cxmlwriterlite/cxmlwriterlite-setoutput.html"><span class="m-n">SetOutput</span><span class="m-d">Sets the output stream for the writer.</span></a><a href="cxmlwriterlite/cxmlwriterlite-setproperty.html"><span class="m-n">SetProperty</span><span class="m-d">Sets the specified property.</span></a><a href="cxmlwriterlite/cxmlwriterlite-setproperty.html"><span class="m-n">SetProperty</span><span class="m-d">Sets the specified property.</span></a><a href="cxmlwriterlite/cxmlwriterlite-setresult.html"><span class="m-n">SetResult</span><span class="m-d">Sets the last result code.</span></a><a href="cxmlwriterlite/cxmlwriterlite-writeattributes.html"><span class="m-n">WriteAttributes</span><span class="m-d">Copies attributes from the specified source IXmlReader to the IXmlWriter.</span></a><a href="cxmlwriterlite/cxmlwriterlite-writeattributestring.html"><span class="m-n">WriteAttributeString</span><span class="m-d">Writes an attribute.</span></a><a href="cxmlwriterlite/cxmlwriterlite-writecdata.html"><span class="m-n">WriteCData</span><span class="m-d">Writes out a CDATA section that contains the specified text.</span></a><a href="cxmlwriterlite/cxmlwriterlite-writecharentity.html"><span class="m-n">WriteCharEntity</span><span class="m-d">Writes a character entity for the provided Unicode character value.</span></a><a href="cxmlwriterlite/cxmlwriterlite-writechars.html"><span class="m-n">WriteChars</span><span class="m-d">Writes out the specified text content, escaping markup.</span></a><a href="cxmlwriterlite/cxmlwriterlite-writecomment.html"><span class="m-n">WriteComment</span><span class="m-d">Writes out a comment that contains the specified text.</span></a><a href="cxmlwriterlite/cxmlwriterlite-writedoctype.html"><span class="m-n">WriteDocType</span><span class="m-d">Writes out the &lt;!DOCTYPE ...&gt; declaration with the specified name and optional attributes.</span></a><a href="cxmlwriterlite/cxmlwriterlite-writeelementstring.html"><span class="m-n">WriteElementString</span><span class="m-d">Writes out an element with the specified prefix, name, namespace, and value.</span></a><a href="cxmlwriterlite/cxmlwriterlite-writeenddocument.html"><span class="m-n">WriteEndDocument</span><span class="m-d">Closes any open elements or attributes, then closes the current document.</span></a><a href="cxmlwriterlite/cxmlwriterlite-writeendelement.html"><span class="m-n">WriteEndElement</span><span class="m-d">Closes one element.</span></a><a href="cxmlwriterlite/cxmlwriterlite-writeentityref.html"><span class="m-n">WriteEntityRef</span><span class="m-d">Writes out an entity reference with the specified name.</span></a><a href="cxmlwriterlite/cxmlwriterlite-writefullendelement.html"><span class="m-n">WriteFullEndElement</span><span class="m-d">Closes one element and pops the corresponding namespace scope.</span></a><a href="cxmlwriterlite/cxmlwriterlite-writename.html"><span class="m-n">WriteName</span><span class="m-d">Writes out the specified name, ensuring that the name is valid according to the XML specification.</span></a><a href="cxmlwriterlite/cxmlwriterlite-writenmtoken.html"><span class="m-n">WriteNmToken</span><span class="m-d">Writes out the specified name, ensuring that the name is a valid NmToken according to the XML specification.</span></a><a href="cxmlwriterlite/cxmlwriterlite-writenode.html"><span class="m-n">WriteNode</span><span class="m-d">Copies the current node from the specified source IXmlReader to the IXmlWriter.</span></a><a href="cxmlwriterlite/cxmlwriterlite-writenodeshallow.html"><span class="m-n">WriteNodeShallow</span><span class="m-d">Copies the current node from the specified source IXmlReader to the IXmlWriter, without writing the children of the current node.</span></a><a href="cxmlwriterlite/cxmlwriterlite-writeprocessinginstruction.html"><span class="m-n">WriteProcessingInstruction</span><span class="m-d">Writes a processing instruction.</span></a><a href="cxmlwriterlite/cxmlwriterlite-writequalifiedname.html"><span class="m-n">WriteQualifiedName</span><span class="m-d">Writes out the specified namespace-qualified name by looking up the prefix that is in scope for the specified namespace.</span></a><a href="cxmlwriterlite/cxmlwriterlite-writeraw.html"><span class="m-n">WriteRaw</span><span class="m-d">Enables the caller to write out raw markup manually.</span></a><a href="cxmlwriterlite/cxmlwriterlite-writerawchars.html"><span class="m-n">WriteRawChars</span><span class="m-d">Writes out raw markup manually.</span></a><a href="cxmlwriterlite/cxmlwriterlite-writestartdocument.html"><span class="m-n">WriteStartDocument</span><span class="m-d">Writes out the XML declaration with the version &quot;1.0&quot;. The encoding attribute is determinedby the implementation of IXmlWriterOutput. By default, the encoding is UTF-8.</span></a><a href="cxmlwriterlite/cxmlwriterlite-writestartelement.html"><span class="m-n">WriteStartElement</span><span class="m-d">Writes out the specified start tag and associates it with the specified namespace.</span></a><a href="cxmlwriterlite/cxmlwriterlite-writestring.html"><span class="m-n">WriteString</span><span class="m-d">Writes out the specified text content, escaping any markup in the content.</span></a><a href="cxmlwriterlite/cxmlwriterlite-writesurrogatecharentity.html"><span class="m-n">WriteSurrogateCharEntity</span><span class="m-d">Forces the generation of a surrogate character entity for the specified string value.</span></a><a href="cxmlwriterlite/cxmlwriterlite-writewhitespace.html"><span class="m-n">WriteWhitespace</span><span class="m-d">Writes out the specified white space.</span></a></div>
+<h2>Documentation</h2>
+<h2 id="cxmllite-class">CXmlLite Class</h2>
+<p><code>CXmlLite</code> is a class that wraps the <code>XmlLite</code> interfaces.</p>
+<p>The <code>XmlLite</code> library allows developers to build high-performance XML-based applications that provide a high degree of interoperability with other applications that adhere to the XML 1.0 standard. The primary goals of <code>XmlLite</code> are ease of use, performance, and standards compliance.</p>
+<h5 id="xmllite-usage-scenarios">XmlLite Usage Scenarios</h5>
+<p>XML can be used as a format for storing documents, such as Microsoft Office Word documents. It can also be used to encode data for marshalling method calls across machine boundaries (SOAP). Businesses can use XML for sending and receiving purchase orders and invoices. Web technologies can use XML to send data between the Web server and the client's Web browser. Database servers can return the data from queries in XML for further processing by other applications. Because it is such a flexible format, XML can be used in a vast variety of scenarios.</p>
+<p>The focus of <code>XmlLite</code> is on performance. <code>XmlLite</code> enables developers to write efficient (fast) code to read and write XML documents. In most scenarios, <code>XmlLite</code> parses faster than either the DOM in MSXML or SAX2 in MSXML.</p>
+<p>Because <code>XmlLite</code> is oriented towards optimum performance, it does not provide for document validation. Validation via XSD schemas or DTDs is not supported. If you require validation, it is recommended that you use either MSXML or System.XML.</p>
+<p>If you read a document that refers to an external XSD schema, the <code>XmlLite</code> reader ignores the external schema. Even if the document is invalid per the schema, the <code>XmlLite</code> reader will report no errors.</p>
+<p>If you read a document that contains an inline schema, the <code>XmlLite</code> reader returns all of the elements and attributes of the inline schema, just as if they were parts of the XML document.</p>
+<p><code>XmlLite</code> does not support scripting languages. If you need to use XML from JScript or Visual Basic Scripting Edition (VBScript), it is more appropriate to use the Document Object Model (DOM) in MSXML.</p>
+<p>Document Type Definitions (DTDs) are supported, but only for entity expansion and defaults for attributes, not for document validation. If you require DTD validation, it is recommended that you use either MSXML or System.XML.</p>
+<p>If you enable DTDs, note the following: If you use <code>XmlLite</code> to read a document that refers to a DTD and the document is not valid per that DTD, no error will be thrown.</p>
+<hr>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="cxmlwriterlite/cxmlwriterlite-constructors.html">Constructors</a></td><td>Creates instances of the classes.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-destructors.html">Destructors</a></td><td>Destroys the classes and frees resources.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-geterrorinfo.html">GetErrorInfo</a></td><td>Returns a description of the last result code.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-getlastresult.html">GetLastResult</a></td><td>Returns the last result code.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-setresult.html">SetResult</a></td><td>Sets the last result code.</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="#enumtypes">Enumerated types</a></td><td>Enumerated constants in the XmlLite programming interface.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-error-codes.html">Error codes</a></td><td>XmlLite error codes and their associated symbolic codes and descriptions.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-ixmlreader-properties.html">IXmlReader Properties</a></td><td>Your application can get properties via the <strong>GetProperty</strong> (IXmlReader) method, and can set properties via the <strong>SetProperty</strong> (IXmlReader) method.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-ixmlwriter-properties.html">IXmlWriter Properties</a></td><td>Your application can get properties via the <strong>GetProperty</strong> (IXmlWriter) method, and can set properties via the <strong>SetProperty</strong> (IXmlWriter) method.</td></tr></tbody></table></div>
+<h3 id="cxmlreader">CXmlReader</h3>
+<p>This class is a programming interface for reading XML.It implements the methods and properties that allow you to process XML.</p>
+<h4 id="methods">Methods</h4>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="cxmlwriterlite/cxmlwriterlite-getattributecount.html">GetAttributeCount</a></td><td>Returns the number of attributes in the current node.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-getbaseuri.html">GetBaseUri</a></td><td>Gets the base URI of the token, if applicable.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-getdepth.html">GetDepth</a></td><td>Returns the depth of the current node in the document.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-getlinenumber.html">GetLineNumber</a></td><td>Gets the line number where the reader is positioned in the document.</td></tr><tr><td><a href="#getlinenposition">GetLinePosition</a></td><td>Gets the line position where the reader is positioned in the document.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-getlocalname.html">GetLocalName</a></td><td>Allows the client to determine the difference between elements that have a closing tag, but do not contain content, and elements that do not have a closing tag.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-getnamespaceuri.html">GetNamespaceUri</a></td><td>Gets the namespace URI of the node that the reader is currently positioned on.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-getnodetype.html">GetNodeType</a></td><td>Provides the type of the current node.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-getprefix.html">GetPrefix</a></td><td>Gets the namespace prefix of the node that the reader is currently positioned on.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-getproperty.html">GetProperty</a></td><td>Returns the specified property. A program can get properties at any time.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-getqualifiedname.html">GetQualifiedName</a></td><td>Gets the qualified name of the node that the reader is currently positioned on.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-getvalue.html">GetValue</a></td><td>Returns the value of the current token, if applicable.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-isdefault.html">IsDefault</a></td><td>Indicates whether the attribute was specified in the source document or implied by the Document Type Definition (DTD).</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-isemptyelement.html">IsEmptyElement</a></td><td>Allows the client to determine the difference between elements that have a closing tag, but do not contain content, and elements that do not have a closing tag.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-iseof.html">IsEOF</a></td><td>Returns TRUE if the end of the input is reached.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-movetofirstattribute.html">MoveToFirstAttribute</a></td><td>Moves the reader position to the first attribute within the current node.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-movetonextattribute.html">MoveToNextAttribute</a></td><td>Advances the reader to the next attribute.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-movetoattributebyname.html">MoveToAttributeByName</a></td><td>Moves the reader to the attribute with the specified name.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-movetoelement.html">MoveToElement</a></td><td>Moves to the element that owns the current attribute node.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-read.html">Read</a></td><td>Reads the next node from the stream and returns the type of the node.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-readvaluechunk.html">ReadValueChunk</a></td><td>Reads up to a maximum of the specified chunk size (as available) from the value of the current node and copy the value into the specified buffer.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-setinput.html">SetInput</a></td><td>Sets the input source of the XML document to be parsed.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-setproperty.html">SetProperty</a></td><td>Sets the specified property.</td></tr></tbody></table></div>
+<hr>
+<h3 id="cxmlwriter-class">CXmlWriter Class</h3>
+<p>This class is a programming interface for writing XML.It implements the methods and properties that allow you write XML.</p>
+<h4 id="methods">Methods</h4>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="cxmlwriterlite/cxmlwriterlite-flush.html">Flush</a></td><td>Flushes whatever is in the buffer to the underlying stream and then flushes the underlying stream.</td></tr><tr><td><a href="#getpropertywriter">GetProperty</a></td><td>Returns the specified property. A program can get properties at any time.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-setoutput.html">SetOutput</a></td><td>Sets the output stream for the writer.</td></tr><tr><td><a href="#setpropertywriter">SetProperty</a></td><td>Sets the specified property.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-writeattributes.html">WriteAttributes</a></td><td>Copies attributes from the specified source IXmlReader to the IXmlWriter.</td></tr><tr><td><a href="cxmlwriter/cxmlwriter-writeattributestring.html">WriteAttributeString</a></td><td>Writes an attribute.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-writecdata.html">WriteCData</a></td><td>Writes out a CDATA section that contains the specified text.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-writecharentity.html">WriteCharEntity</a></td><td>Writes a character entity for the provided Unicode character value.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-writechars.html">WriteChars</a></td><td>Writes out the specified text content, escaping markup.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-writecomment.html">WriteComment</a></td><td>Writes out a comment that contains the specified text.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-writedoctype.html">WriteDocType</a></td><td>Writes out the &lt;!DOCTYPE ...&gt; declaration with the specified name and optional attributes.</td></tr><tr><td><a href="cxmlwriter/cxmlwriter-writeelementstring.html">WriteElementString</a></td><td>Writes out an element with the specified prefix, name, namespace, and value.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-writeenddocument.html">WriteEndDocument</a></td><td>Closes any open elements or attributes, then closes the current document.</td></tr><tr><td><a href="cxmlwriter/cxmlwriter-writeendelement.html">WriteEndElement</a></td><td>Closes one element.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-writeentityref.html">WriteEntityRef</a></td><td>Writes out an entity reference with the specified name.</td></tr><tr><td><a href="cxmlwriter/cxmlwriter-writefullendelement.html">WriteFullEndElement</a></td><td>Closes one element and pops the corresponding namespace scope.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-writename.html">WriteName</a></td><td>Writes out the specified name, ensuring that the name is valid according to the XML specification.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-writenmtoken.html">WriteNmToken</a></td><td>Writes out the specified name, ensuring that the name is a valid NmToken according to the XML specification.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-writenode.html">WriteNode</a></td><td>Copies the current node from the specified source IXmlReader to the IXmlWriter.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-writenodeshallow.html">WriteNodeShallow</a></td><td>Copies the current node from the specified source IXmlReader to the IXmlWriter, without writing the children of the current node.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-writeprocessinginstruction.html">WriteProcessingInstruction</a></td><td>Writes a processing instruction.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-writequalifiedname.html">WriteQualifiedName</a></td><td>Writes out the specified namespace-qualified name by looking up the prefix that is in scope for the specified namespace.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-writeraw.html">WriteRaw</a></td><td>Enables the caller to write out raw markup manually.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-writerawchars.html">WriteRawChars</a></td><td>Writes out raw markup manually.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-writestartdocument.html">WriteStartDocument</a></td><td>Writes out the XML declaration with the version "1.0". The encoding attribute is determinedby the implementation of IXmlWriterOutput. By default, the encoding is UTF-8.</td></tr><tr><td><a href="cxmlwriter/cxmlwriter-writestartelement.html">WriteStartElement</a></td><td>Writes out the specified start tag and associates it with the specified namespace.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-writestring.html">WriteString</a></td><td>Writes out the specified text content, escaping any markup in the content.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-writesurrogatecharentity.html">WriteSurrogateCharEntity</a></td><td>Forces the generation of a surrogate character entity for the specified string value.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-writewhitespace.html">WriteWhitespace</a></td><td>Writes out the specified white space.</td></tr></tbody></table></div>
+<hr>
+<h3 id="cxmlwriterlite-class">CXmlWriterLite Class</h3>
+<p>This class is a programming interface for writing XML quickly, introduced in Windows 10. It implements an interface with most of the same methods as <code>IXmlWriter</code>, except for <strong>WriteQualifiedName</strong>. Some method signatures are slightly different between <strong>IXmlWriter</strong> and <strong>IXmlWriterLite</strong>. For more information, see the individual method topics. <strong>IXmlWriterLite</strong> can be used anywhere <strong>IXmlWriter</strong> is used. <strong>IXmlWriterLite</strong> is faster than <strong>IXmlWriter</strong> because it skips validation of namespaces and attributes, and does not maintain information that is required to automatically close tags. Use <strong>IXmlWriterLite</strong> when you can maintain complete XML document correctness in your code, and output speed is of highest importance. Otherwise, we recommend that you use <strong>IXmlWriter</strong> for its ease of coding and the XML validation it provides.</p>
+<h4 id="methods">Methods</h4>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="cxmlwriterlite/cxmlwriterlite-flush.html">Flush</a></td><td>Flushes whatever is in the buffer to the underlying stream and then flushes the underlying stream.</td></tr><tr><td><a href="#getpropertywriter">GetProperty</a></td><td>Returns the specified property. A program can get properties at any time.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-setoutput.html">SetOutput</a></td><td>Sets the output stream for the writer.</td></tr><tr><td><a href="#setpropertywriter">SetProperty</a></td><td>Sets the specified property.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-writeattributes.html">WriteAttributes</a></td><td>Copies attributes from the specified source IXmlReader to the IXmlWriter.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-writeattributestring.html">WriteAttributeString</a></td><td>Writes an attribute.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-writecdata.html">WriteCData</a></td><td>Writes out a CDATA section that contains the specified text.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-writecharentity.html">WriteCharEntity</a></td><td>Writes a character entity for the provided Unicode character value.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-writechars.html">WriteChars</a></td><td>Writes out the specified text content, escaping markup.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-writecomment.html">WriteComment</a></td><td>Writes out a comment that contains the specified text.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-writedoctype.html">WriteDocType</a></td><td>Writes out the &lt;!DOCTYPE ...&gt; declaration with the specified name and optional attributes.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-writeelementstring.html">WriteElementString</a></td><td>Writes out an element with the specified prefix, name, namespace, and value.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-writeenddocument.html">WriteEndDocument</a></td><td>Closes any open elements or attributes, then closes the current document.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-writeendelement.html">WriteEndElement</a></td><td>Closes one element.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-writeentityref.html">WriteEntityRef</a></td><td>Writes out an entity reference with the specified name.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-writefullendelement.html">WriteFullEndElement</a></td><td>Closes one element and pops the corresponding namespace scope.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-writename.html">WriteName</a></td><td>Writes out the specified name, ensuring that the name is valid according to the XML specification.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-writenmtoken.html">WriteNmToken</a></td><td>Writes out the specified name, ensuring that the name is a valid NmToken according to the XML specification.</td></tr><tr><td><a href="#writenodewriter">WriteNode</a></td><td>Copies the current node from the specified source IXmlReader to the IXmlWriter.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-writenodeshallow.html">WriteNodeShallow</a></td><td>Copies the current node from the specified source IXmlReader to the IXmlWriter, without writing the children of the current node.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-writeprocessinginstruction.html">WriteProcessingInstruction</a></td><td>Writes a processing instruction.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-writeraw.html">WriteRaw</a></td><td>Enables the caller to write out raw markup manually.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-writerawchars.html">WriteRawChars</a></td><td>Writes out raw markup manually.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-writestartdocument.html">WriteStartDocument</a></td><td>Writes out the XML declaration with the version "1.0". The encoding attribute is determinedby the implementation of IXmlWriterOutput. By default, the encoding is UTF-8.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-writestartelement.html">WriteStartElement</a></td><td>Writes out the specified start tag and associates it with the specified namespace.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-writestring.html">WriteString</a></td><td>Writes out the specified text content, escaping any markup in the content.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-writesurrogatecharentity.html">WriteSurrogateCharEntity</a></td><td>Forces the generation of a surrogate character entity for the specified string value.</td></tr><tr><td><a href="cxmlwriterlite/cxmlwriterlite-writewhitespace.html">WriteWhitespace</a></td><td>Writes out the specified white space.</td></tr></tbody></table></div>
+<hr>
+<h5 id="example">Example</h5>
+<pre class="code"><code>'#CONSOLE ON
+#define UNICODE
+#define _WIN32_WINNT &amp;h0602
+'#define _CXMLLITE_DEBUG_ 1
+#include once "AfxNova/CXmlLite.inc"
+USING AfxNova
+
+SCOPE
+
+DIM pWriter AS CXmlWriterLite
+DIM hr AS HRESULT
+
+' // Fake loop to avoid multiple IF/END IF nesting
+DO
+   
+   ' // Create an output stream
+   DIM pFileOutputStream AS IStream PTR
+   hr = SHCreateStreamOnFileEx("output.xml", STGM_CREATE OR STGM_WRITE, FILE_ATTRIBUTE_NORMAL, TRUE, NULL, @pFileOutputStream)
+   IF FAILED(hr) THEN
+      PRINT "SHCreateStreamOnFileEx error &amp;h" &amp; HEX(hr)
+      EXIT DO
+   END IF
+
+   ' // Set the output source
+   hr = pWriter.SetOutput(cast(IUnknown PTR, pFileOutputStream))
+   IF FAILED(hr) THEN
+      PRINT "IXmlWriter.SetOutput error &amp;h" &amp; HEX(hr)
+      EXIT DO
+   END IF
+
+   ' // Write the XML document
+   pWriter.WriteStartDocument(XmlStandalone_Yes)
+   pWriter.WriteStartElement("bookstore")
+
+   pWriter.WriteStartElement("book")
+   pWriter.WriteAttributeString("category", "children")
+      pWriter.WriteElementString("title", "Harry Potter")
+      pWriter.WriteElementString("author", "J K. Rowling")
+      pWriter.WriteElementString("year", "2005")
+      pWriter.WriteElementString("price", "29.99")
+   pWriter.WriteEndElement("book")
+
+   pWriter.WriteEndElement("bookstore")
+   pWriter.WriteEndDocument
+
+   PRINT "XML file written successfully."
+   PRINT "Press any key"
+   SLEEP
+
+   ' // Unconditional exit
+   EXIT DO
+LOOP
+
+END SCOPE
+
+SCOPE
+
+DIM pReader AS CXmlReader
+DIM hr AS HRESULT
+
+DO
+   ' // Open read-only input stream
+   DIM pFileInputStream AS IStream PTR
+   hr = SHCreateStreamOnFileEx("output.xml", STGM_READ, FILE_ATTRIBUTE_NORMAL, FALSE, NULL, @pFileInputStream)
+   IF FAILED(hr) THEN
+      PRINT "SHCreateStreamOnFile error &amp;h" &amp; HEX(hr)
+      EXIT DO
+   END IF
+
+   ' // Set the DtdProcessing_Prohibit property
+   hr = pReader.SetProperty(XmlReaderProperty_DtdProcessing, DtdProcessing_Prohibit)
+
+   ' // Set the input source of the XML document to be parsed
+   hr = pReader.SetInput(cast(IUnknown PTR, pFileInputStream))
+   IF FAILED(hr) THEN
+      PRINT "IXmlReader.SetInput error &amp;h" &amp; HEX(hr)
+      EXIT DO
+   END IF
+
+   ' // Parse the xml file
+   DIM nodeType AS XmlNodeType
+   DO
+      hr = pReader.Read(@nodeType)
+      IF hr &lt;&gt; S_OK THEN EXIT DO
+      SELECT CASE nodeType
+      CASE XmlNodeType_Element
+         PRINT "Element: "; pReader.GetLocalName
+         ' // If the element has attributes, iterate through them
+         IF pReader.MoveToFirstAttribute = S_OK THEN
+            DO
+               PRINT "  Attribute: "; pReader.GetLocalName; " = "; pReader.GetValue
+            LOOP WHILE pReader.MoveToNextAttribute = S_OK
+            pReader.MoveToElement ' return to the element
+         END IF
+      CASE XmlNodeType_Text
+         PRINT "Value: "; pReader.GetValue
+      CASE XmlNodeType_EndElement
+         PRINT "End element: "; pReader.GetLocalName
+      END SELECT
+
+   LOOP
+
+   ' // Unconditional exit
+   EXIT DO
+LOOP
+
+END SCOPE
+
+PRINT
+PRINT "Press any key"
+SLEEP</code></pre>
+<hr>
+<h3 id="enumtypes">Enumerated types</h3>
+<p>Enumerated constants in the <code>XmlLite</code> programming interface.</p>
+<h4 id="dtdprocessing-enumeration">DtdProcessing enumeration</h4>
+<p>Values that indicate how an IXmlWriter processes a Document Type Definition (DTD).</p>
+<pre class="code"><code>enum DtdProcessing
+    DtdProcessing_Prohibit = 0
+    DtdProcessing_Parse = 1  
+end enum</code></pre>
+<h5 id="dtdprocessing_prohibit">DtdProcessing_Prohibit</h5>
+<p>Prohibits DTDs in the input XML. If a DTD is detected in the input, the parser will return an error and move reader to an error state. Further calls to the reader will continue to return errors and the reader will be in error state. The reader can be reset by calling SetInput(NULL).</p>
+<h5 id="dtdprocessing_parse">DtdProcessing_Parse</h5>
+<p>Allows DTDs in the document and will parse DTDs as per the XML 1.0 specification.</p>
+<h5 id="xmlconformancelevel-enumeration">XmlConformanceLevel enumeration</h5>
+<p>Values for specifying the conformance level on an IXmlReader.</p>
+<pre class="code"><code>enum XmlConformanceLevel
+    XmlConformanceLevel_Auto = 0
+    XmlConformanceLevel_Document = 1
+    XmlConformanceLevel_Fragment = 2
+end enum</code></pre>
+<h5 id="xmlconformancelevel_auto">XmlConformanceLevel_Auto</h5>
+<p>The reader automatically detects whether to perform document or fragment checking.</p>
+<h5 id="xmlconformancelevel_document">XmlConformanceLevel_Document</h5>
+<p>The input should be a well-formed XML document as defined in the XML specification For more information, see the Extensible Markup Language (XML) 1.0 Specification.</p>
+<h5 id="xmlconformancelevel_fragment">XmlConformanceLevel_Fragment</h5>
+<p>The input should be treated as a XML fragment. In this case, the input should conform to the Well-Formed Parsed Entities section of the XML specification. For more information, see Section 4.3.2 of the Extensible Markup Language (XML) 1.0 Specification.</p>
+<p>This value is not supported for IXmlReader in this release. IXmlWriter does support this setting.</p>
+<h4 id="xmlnodetype-enumeration">XmlNodeType enumeration</h4>
+<p>Values that indicate the type of a current node.</p>
+<pre class="code"><code>enum XmlNodeType
+    XmlNodeType_None = 0
+    XmlNodeType_Element = 1
+    XmlNodeType_Attribute = 2
+    XmlNodeType_Text = 3
+    XmlNodeType_CDATA = 4
+    XmlNodeType_ProcessingInstruction = 7
+    XmlNodeType_Comment = 8
+    XmlNodeType_DocumentType = 10
+    XmlNodeType_Whitespace = 13
+    XmlNodeType_EndElement = 15
+    XmlNodeType_XmlDeclaration = 17
+end enum</code></pre>
+<h5 id="xmlnodetype_none">XmlNodeType_None</h5>
+<p>Node type: none.</p>
+<h5 id="xmlnodetype_element">XmlNodeType_Element</h5>
+<p>Node type: Element.</p>
+<h5 id="xmlnodetype_attribute">XmlNodeType_Attribute</h5>
+<p>Node type: Attribute.</p>
+<h5 id="xmlnodetype_text">XmlNodeType_Text</h5>
+<p>Node type: Text.</p>
+<h5 id="xmlnodetype_cdata">XmlNodeType_CDATA</h5>
+<p>Node type: CDATA.</p>
+<h5 id="xmlnodetype_processinginstruction">XmlNodeType_ProcessingInstruction</h5>
+<p>Node type: ProcessingInstruction.</p>
+<h5 id="xmlnodetype_comment">XmlNodeType_Comment</h5>
+<p>Node type: Comment.</p>
+<h5 id="xmlnodetype_documenttype">XmlNodeType_DocumentType</h5>
+<p>Node type: DocumentType.</p>
+<h5 id="xmlnodetype_whitespace">XmlNodeType_Whitespace</h5>
+<p>Node type: Whitespace.</p>
+<h5 id="xmlnodetype_endelement">XmlNodeType_EndElement</h5>
+<p>Node type: EndElement.</p>
+<h5 id="xmlnodetype_xmldeclaration">XmlNodeType_XmlDeclaration</h5>
+<p>Node type: XmlDeclaration.</p>
+<h4 id="xmlreadstate-enumeration">XmlReadState enumeration</h4>
+<p>Values that indicate the state of an IXmlReader.</p>
+<pre class="code"><code>enum XmlReadState
+    XmlReadState_Initial = 0
+    XmlReadState_Interactive = 1
+    XmlReadState_Error = 2
+    XmlReadState_EndOfFile = 3
+    XmlReadState_Closed = 4</code></pre>
+<h5 id="xmlreadstate_initial">XmlReadState_Initial</h5>
+<p>The state the reader is in after the input to the reader has been initialized. For example, <strong>SetInput</strong> has been successfully called.</p>
+<h5 id="xmlreadstate_interactive">XmlReadState_Interactive</h5>
+<p>The state the reader is in during parsing. Typically, the reader enters this state after the first call to Read. The reader remains in this state until it reaches the end of the file, an unrecoverable error occurs, or the underlying stream is closed.</p>
+<h5 id="xmlreadstate_error">XmlReadState_Error</h5>
+<p>The state the reader is in when unrecoverable errors are encountered.</p>
+<h5 id="xmlreadstate_endoffile">XmlReadState_EndOfFile</h5>
+<p>The state the reader is in when the end of file is reached.</p>
+<h5 id="xmlreadstate_closed">XmlReadState_Closed</h5>
+<p>The state the reader is in when the underlying stream is closed. This is also the initial state the reader is in when the reader is created.</p>
+<h4 id="xmlstandalone-enumeration">XmlStandalone enumeration</h4>
+<p>Values that indicate how an IXmlWriter produces the standalone attribute of the XML declaration.</p>
+<pre class="code"><code>enum XmlStandalone
+    XmlStandalone_Omit = 0
+    XmlStandalone_Yes = 1
+    XmlStandalone_No = 2
+end enum</code></pre>
+<h5 id="xmlstandalone_omit">XmlStandalone_Omit</h5>
+<p>Omits the standalone attribute.</p>
+<h5 id="xmlstandalone_yes">XmlStandalone_Yes</h5>
+<p>Writes the standalone attribute with the value "yes".</p>
+<h5 id="xmlstandalone_no">XmlStandalone_No</h5>
+<p>Writes the standalone attribute with the value "no".</p>
+<hr>
+<h3 id="errorcodes">Error codes</h3>
+<p>XmlLite error codes and their associated symbolic codes and descriptions.</p>
+<div class="table-wrap"><table><thead><tr><th>Symbol</th><th>Hex code</th><th>Description</th></tr></thead><tbody><tr><td>MX_E_INPUTEND</td><td>&amp;hC00CEE01</td><td>unexpected end of input</td></tr><tr><td>MX_E_ENCODING</td><td>&amp;hC00CEE02</td><td>unrecognized encoding</td></tr><tr><td>MX_E_ENCODINGSWITCH</td><td>&amp;hC00CEE03</td><td>unable to switch the encoding</td></tr><tr><td>MX_E_ENCODINGSIGNATURE</td><td>&amp;hC00CEE04</td><td>unrecognized input signature</td></tr><tr><td>WC_E_WHITESPACE</td><td>&amp;hC00CEE21</td><td>whitespace expected</td></tr><tr><td>WC_E_SEMICOLON</td><td>0xC00CEE22</td><td>semicolon expected</td></tr><tr><td>WC_E_GREATERTHAN</td><td>&amp;hC00CEE23</td><td>'&gt;' expected</td></tr><tr><td>WC_E_QUOTE</td><td>&amp;hC00CEE24</td><td>quote expected</td></tr><tr><td>WC_E_EQUAL</td><td>&amp;hC00CEE25</td><td>equal expected</td></tr><tr><td>WC_E_LESSTHAN</td><td>&amp;hC00CEE26</td><td>well-formedness constraint: no '&lt;' in attribute value</td></tr><tr><td>WC_E_HEXDIGIT</td><td>&amp;hC00CEE27</td><td>hexadecimal digit expected</td></tr><tr><td>WC_E_DIGIT</td><td>&amp;hC00CEE28</td><td>decimal digit expected</td></tr><tr><td>WC_E_LEFTBRACKET</td><td>&amp;hC00CEE29</td><td>'\[' expected</td></tr><tr><td>WC_E_LEFTPAREN</td><td>&amp;hC00CEE2A</td><td>'(' expected</td></tr><tr><td>WC_E_XMLCHARACTER</td><td>&amp;hC00CEE2B</td><td>illegal xml character</td></tr><tr><td>WC_E_NAMECHARACTER</td><td>&amp;hC00CEE2C</td><td>illegal name character</td></tr><tr><td>WC_E_SYNTAX</td><td>&amp;hC00CEE2D</td><td>incorrect document syntax</td></tr><tr><td>WC_E_CDSECT</td><td>&amp;hC00CEE2E</td><td>incorrect CDATA section syntax</td></tr><tr><td>WC_E_COMMENT</td><td>&amp;hC00CEE2F</td><td>incorrect comment syntax</td></tr><tr><td>WC_E_CONDSECT</td><td>0&amp;h00CEE30</td><td>incorrect conditional section syntax</td></tr><tr><td>WC_E_DECLATTLIST</td><td>&amp;hC00CEE31</td><td>incorrect ATTLIST declaration syntax</td></tr><tr><td>WC_E_DECLDOCTYPE</td><td>&amp;hC00CEE32</td><td>incorrect DOCTYPE declaration syntax</td></tr><tr><td>WC_E_DECLELEMENT</td><td>&amp;hC00CEE33</td><td>incorrect ELEMENT declaration syntax</td></tr><tr><td>WC_E_DECLENTITY</td><td>&amp;hC00CEE34</td><td>incorrect ENTITY declaration syntax</td></tr><tr><td>WC_E_DECLNOTATION</td><td>&amp;hC00CEE35</td><td>incorrect NOTATION declaration syntax</td></tr><tr><td>WC_E_NDATA</td><td>&amp;hC00CEE36</td><td>NDATA expected</td></tr><tr><td>WC_E_PUBLIC</td><td>&amp;hC00CEE37</td><td>PUBLIC expected</td></tr><tr><td>WC_E_SYSTEM</td><td>&amp;hC00CEE38</td><td>SYSTEM expected</td></tr><tr><td>WC_E_NAME</td><td>&amp;hC00CEE39</td><td>name expected</td></tr><tr><td>WC_E_ROOTELEMENT</td><td>0&amp;h00CEE3A</td><td>one root element</td></tr><tr><td>WC_E_ELEMENTMATCH</td><td>&amp;hC00CEE3B</td><td>well-formedness constraint: element type match</td></tr><tr><td>WC_E_UNIQUEATTRIBUTE</td><td>&amp;hC00CEE3C</td><td>well-formedness constraint: unique attribute spec</td></tr><tr><td>WC_E_TEXTXMLDECL</td><td>&amp;hC00CEE3D</td><td>text/xmldecl not at the beginning of input</td></tr><tr><td>WC_E_LEADINGXML</td><td>&amp;hC00CEE3E</td><td>leading "xml"</td></tr><tr><td>WC_E_TEXTDECL</td><td>&amp;hC00CEE3F</td><td>incorrect text declaration syntax</td></tr><tr><td>WC_E_XMLDECL</td><td>&amp;hC00CEE40</td><td>incorrect xml declaration syntax</td></tr><tr><td>WC_E_ENCNAME</td><td>&amp;hC00CEE41</td><td>incorrect encoding name syntax</td></tr><tr><td>WC_E_PUBLICID</td><td>&amp;hC00CEE42</td><td>incorrect public identifier syntax</td></tr><tr><td>WC_E_PESINTERNALSUBSET</td><td>&amp;hC00CEE43</td><td>well-formedness constraint: pes in internal subset</td></tr><tr><td>WC_E_PESBETWEENDECLS</td><td>&amp;hC00CEE44</td><td>well-formedness constraint: pes between declarations</td></tr><tr><td>WC_E_NORECURSION</td><td>&amp;hC00CEE45</td><td>well-formedness constraint: no recursion</td></tr><tr><td>WC_E_ENTITYCONTENT</td><td>&amp;hC00CEE46</td><td>entity content not well formed</td></tr><tr><td>WC_E_UNDECLAREDENTITY</td><td>&amp;hC00CEE47</td><td>well-formedness constraint: undeclared entity</td></tr><tr><td>WC_E_PARSEDENTITY</td><td>&amp;hC00CEE48</td><td>well-formedness constraint: parsed entity</td></tr><tr><td>WC_E_NOEXTERNALENTITYREF</td><td>&amp;hC00CEE49</td><td>well-formedness constraint: no external entity references</td></tr><tr><td>WC_E_PI</td><td>&amp;hC00CEE4A</td><td>incorrect processing instruction syntax</td></tr><tr><td>WC_E_SYSTEMID</td><td>&amp;hC00CEE4B</td><td>incorrect system identifier syntax</td></tr><tr><td>WC_E_QUESTIONMARK</td><td>&amp;hC00CEE4C</td><td>'?' expected</td></tr><tr><td>WC_E_CDSECTEND</td><td>&amp;hC00CEE4D</td><td>no ']]&gt;' in element content</td></tr><tr><td>WC_E_MOREDATA</td><td>&amp;hC00CEE4E</td><td>not all chunks of value have been read</td></tr><tr><td>WC_E_DTDPROHIBITED</td><td>&amp;hC00CEE4F</td><td>DTD was found but is prohibited</td></tr><tr><td>WC_E_INVALIDXMLSPACE</td><td>&amp;hC00CEE50</td><td>xml:space attribute with invalid value</td></tr><tr><td>NC_E_QNAMECHARACTER</td><td>&amp;hC00CEE61</td><td>illegal qualified name character</td></tr><tr><td>NC_E_QNAMECOLON</td><td>&amp;hC00CEE62</td><td>multiple colons in qualified name</td></tr><tr><td>NC_E_NAMECOLON</td><td>&amp;hC00CEE63</td><td>colon in name</td></tr><tr><td>NC_E_DECLAREDPREFIX</td><td>&amp;hC00CEE64</td><td>declared prefix</td></tr><tr><td>NC_E_UNDECLAREDPREFIX</td><td>&amp;hC00CEE65</td><td>undeclared prefix</td></tr><tr><td>NC_E_EMPTYURI</td><td>&amp;hC00CEE66</td><td>non default namespace with empty uri</td></tr><tr><td>NC_E_XMLPREFIXRESERVED</td><td>&amp;hC00CEE67</td><td>"xml" prefix is reserved and must have the <a href="http://www.w3.org/XML/1998/namespace" target="_blank" rel="noopener">http://www.w3.org/XML/1998/namespace</a> URI</td></tr><tr><td>NC_E_XMLNSPREFIXRESERVED</td><td>&amp;hC00CEE68</td><td>"xmlns" prefix is reserved for use by XML</td></tr><tr><td>NC_E_XMLURIRESERVED</td><td>&amp;hC00CEE69</td><td>xml namespace URI (http://www.w3.org/XML/1998/namespace) must be assigned only to prefix "xml"</td></tr><tr><td>NC_E_XMLNSURIRESERVED</td><td>&amp;hC00CEE6A</td><td>xmlns namespace URI (http://www.w3.org/2000/xmlns/) is reserved and must not be used</td></tr><tr><td>SC_E_MAXELEMENTDEPTH</td><td>&amp;hc00cee81</td><td>element depth exceeds limit in XmlReaderProperty_MaxElementDepth</td></tr><tr><td>SC_E_MAXENTITYEXPANSION</td><td>0xc00cee82</td><td>entity expansion exceeds limit in XmlReaderProperty_MaxEntityExpansion</td></tr><tr><td>WR_E_NONWHITESPACE</td><td>&amp;hC00CEF01</td><td>writer: specified string is not whitespace</td></tr><tr><td>WR_E_NSPREFIXDECLARED</td><td>&amp;hC00CEF02</td><td>writer: namespace prefix is already declared with a different namespace</td></tr><tr><td>WR_E_NSPREFIXWITHEMPTYNSURI</td><td>&amp;hC00CEF03</td><td>writer: It is not allowed to declare a namespace prefix with empty URI (for example xmlns:p=””).</td></tr><tr><td>WR_E_DUPLICATEATTRIBUTE</td><td>&amp;hC00CEF04</td><td>writer: duplicate attribute</td></tr><tr><td>WR_E_XMLNSPREFIXDECLARATION</td><td>&amp;hC00CEF05</td><td>writer: can not redefine the xmlns prefix</td></tr><tr><td>WR_E_XMLPREFIXDECLARATION</td><td>&amp;hC00CEF06</td><td>writer: xml prefix must have the <a href="http://www.w3.org/XML/1998/namespace" target="_blank" rel="noopener">http://www.w3.org/XML/1998/namespace</a> URI</td></tr><tr><td>WR_E_XMLURIDECLARATION</td><td>&amp;hC00CEF07</td><td>writer: xml namespace URI (http://www.w3.org/XML/1998/namespace) must be assigned only to prefix "xml"</td></tr><tr><td>WR_E_XMLNSURIDECLARATION</td><td>&amp;hC00CEF08</td><td>writer: xmlns namespace URI (http://www.w3.org/2000/xmlns/) is reserved and must not be used</td></tr><tr><td>WR_E_NAMESPACEUNDECLARED</td><td>&amp;hC00CEF09</td><td>writer: namespace is not declared</td></tr><tr><td>WR_E_INVALIDXMLSPACE</td><td>&amp;hC00CEF0A</td><td>writer: invalid value of xml:space attribute (allowed values are "default" and "preserve")</td></tr><tr><td>WR_E_INVALIDACTION</td><td>&amp;hC00CEF0B</td><td>writer: performing the requested action would result in invalid XML document</td></tr><tr><td>WR_E_INVALIDSURROGATEPAIR</td><td>&amp;hC00CEF0C</td><td>writer: input contains invalid or incomplete surrogate pair</td></tr><tr><td>XML_E_INVALID_DECIMAL</td><td>&amp;hC00CE01D</td><td>character in character entity is not a decimal digit as was expected.</td></tr><tr><td>XML_E_INVALID_HEXIDECIMAL</td><td>&amp;hC00CE01E</td><td>character in character entity is not a hexadecimal digit as was expected.</td></tr><tr><td>XML_E_INVALID_UNICODE</td><td>&amp;hC00CE01F</td><td>character entity has invalid Unicode value.</td></tr></tbody></table></div>
+<h3 id="readerproperties">IXmlReader properties</h3>
+<p>Your application can get properties via the <strong>GetProperty</strong> method, and can set properties via the <strong>SetProperty</strong> method. |</p>
+<div class="table-wrap"><table><thead><tr><th>Property</th><th>Description</th></tr></thead><tbody><tr><td><em>XmlReaderProperty_ConformanceLevel</em></td><td>Specifies which level of conformance should be checked by the reader.</td></tr><tr><td><em>XmlReaderProperty_DtdProcessing</em></td><td>Specifies whether Document Type Definitions (DTDs) are prohibited or allowed in the document.</td></tr><tr><td><em>XmlReaderProperty_MaxElementDepth</em></td><td>Allows the user to set the maximum levels of nesting in elements.</td></tr><tr><td><em>XmlReaderProperty_MaxEntityExpansion</em></td><td>Allows the user to set the maximum number of entities that resolves to 3 or more characters.</td></tr><tr><td><em>XmlReaderProperty_MultiLanguage</em></td><td>A pointer to an instance of <strong>IMultiLanguage2</strong> (MLANG).</td></tr><tr><td><em>XmlReaderProperty_RandomAccess</em></td><td>Indicates whether the reader should use random access on the input stream.</td></tr><tr><td><em>XmlReaderProperty_ReadState</em></td><td>Reports the state of the reader.</td></tr><tr><td><em>XmlReaderProperty_XmlResolver</em></td><td>Provides an implementation of the <strong>IXmlResolver</strong> interface for the reader to enable external entity resolution.</td></tr></tbody></table></div>
+<h5 id="note">Note</h5>
+<p>These "properties" are actually implemented just as individual constants within the <em>XmlReaderProperty</em> enumerated type. However, because these constants signify different characteristics of the XML reader, they have been treated separately.</p>
+<hr>
+<h3 id="writerproperties">IXmlWriter properties</h3>
+<p>Your application can get properties via the <strong>GetProperty</strong> method, and can set properties via the <strong>SetProperty</strong> method. |</p>
+<div class="table-wrap"><table><thead><tr><th>Property</th><th>Description</th></tr></thead><tbody><tr><td><em>XmlWriterProperty_ByteOrderMark</em></td><td>Specifies whether the writer should write a Byte Order Mark (BOM) to the beginning of the output.</td></tr><tr><td><em>XmlWriterProperty_ConformanceLevel</em></td><td>Specifies which level of conformance should be output by the writer.</td></tr><tr><td><em>XmlWriterProperty_Indent</em></td><td>Specifies whether to indent the XML output.</td></tr><tr><td><em>XmlWriterProperty_MultiLanguage</em></td><td>Specifies an implementation of the <strong>IMultiLanguage2</strong> to use for encodings which are not natively supported.</td></tr><tr><td><em>XmlWriterProperty_OmitXmlDeclaration</em></td><td>Specifies whether the writer should omit the XML declaration at the beginning of the document.</td></tr></tbody></table></div>
+<h5 id="note">Note</h5>
+<p>These "properties" are actually implemented just as individual constants within the <em>XmlWriterProperty</em> enumerated type. However, because these constants signify different characteristics of the XML writer, they have been treated separately.</p>
+<hr>
+<h3 id="constructors">Constructors</h3>
+<pre class="code"><code>CONSTRUCTOR CXmlReader</code></pre>
+<p>Deault constructor. Creates a new <code>IXmlReader</code>. After creating the reader, the input stream for the reader can be set by using the <strong>SetOutput</strong> method of the reader.</p>
+<pre class="code"><code>CONSTRUCTOR CXmlReader (BYVAL pInputStream AS IUnknown PTR, BYVAL nEncodingPage AS UINT, _
+   BYVAL fEncodingHint AS BOOLEAN = FALSE, BYVAL pwszBAseURi AS LPCWSTR = NULL)</code></pre>
+<p>Creates an instance of <code>IXmlReader</code> with the provided parameters. This is normally used when the input stream does not have a BOM.</p>
+<pre class="code"><code>CONSTRUCTOR CXmlReader (BYVAL pInputStream AS IUnknown PTR, BYVAL LPCWSTR AS LPCWSTR, _
+   BYVAL fEncodingHint AS BOOLEAN = FALSE, BYVAL pwszBAseURi AS LPCWSTR = NULL)</code></pre>
+<p>Creates an instance of IXmlReader with the provided parameters. This is normally used when the input stream does not have a BOM.</p>
+<pre class="code"><code>CONSTRUCTOR CXmlWriter</code></pre>
+<p>Deault constructor. Creates a new <code>IXmlWriter</code>. After creating the writer, the output stream for the writer can be set by using the <strong>SetOutput</strong> method of the writer.</p>
+<pre class="code"><code>CONSTRUCTOR CXmlWriter (BYVAL pOutputStream AS IUnknown PTR, BYVAL nEncodingPage AS UINT)</code></pre>
+<p>Creates an instance of <code>IXmlWriter</code> with the specified parameters.</p>
+<pre class="code"><code>CONSTRUCTOR CXmlWriter (BYVAL pOutputStream AS IUnknown PTR, BYVAL nEncodingPage AS LPCWSTR)</code></pre>
+<p>Creates an instance of <code>IXmlWriter</code> with the specified parameters.</p>
+<pre class="code"><code>CONSTRUCTOR CXmlWriterLite</code></pre>
+<p>Deault constructor. Creates a new <code>IXmlWriterLite</code>. After creating the writer, the output stream for the writer can be set by using the <strong>SetOutput</strong> method of the writer.</p>
+<pre class="code"><code>CONSTRUCTOR CXmlWriterLite (BYVAL pOutputStream AS IUnknown PTR, BYVAL nEncodingPage AS UINT)</code></pre>
+<p>Creates an instance of <code>IXmlWriterLite</code> with the specified parameters.</p>
+<pre class="code"><code>CONSTRUCTOR CXmlWriterLite (BYVAL pOutputStream AS IUnknown PTR, BYVAL nEncodingPage AS LPCWSTR)</code></pre>
+<p>Creates an instance of <code>IXmlWriterLite</code> with the specified parameters.</p>
+<hr>
+<h3 id="destructors">Destructors</h3>
+<p>Destroys the classes and frees resources.</p>
+<pre class="code"><code>DESTRUCTOR CXmlReader</code></pre>
+<pre class="code"><code>DESTRUCTOR CXmlWriter</code></pre>
+<pre class="code"><code>DESTRUCTOR CXmlWriterLite</code></pre>
+<hr>
+<h3 id="geterrorinfo">GetErrorInfo</h3>
+<p>Returns a description of the last result code.</p>
+<pre class="code"><code>FUNCTION GetErrorInfo (BYVAL nError AS LONG = -1) AS DWSTRING</code></pre>
+<hr>
+<h3 id="getlastresult">GetLastResult</h3>
+<p>Returns the result code returned by the last executed method.</p>
+<pre class="code"><code>FUNCTION GetLastResult () AS HRESULT</code></pre>
+<hr>
+<h3 id="setresult">SetResult</h3>
+<p>Sets the last result code.</p>
+<pre class="code"><code>FUNCTION SetResult (BYVAL Result AS HRESULT) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>Result</em></td><td>The <strong>HRESULT</strong> error code returned by the methods.</td></tr></tbody></table></div>
+<hr>
+<h3 id="getattributecount">GetAttributeCount</h3>
+<p>Returns the number of attributes in the current node.</p>
+<pre class="code"><code>FUNCTION GetAttributeCount () AS UINT</code></pre>
+<h5 id="remarks">Remarks</h5>
+<p>For <code>Element</code>, <code>XmlDeclaration</code>, and <code>DocumentType</code> nodes, this method returns the number of attributes for the node.</p>
+<p>For <code>Attribute</code> nodes, the method returns the number of attributes for the <code>Element</code> node that owns the current attribute.</p>
+<p>For any other nodes the method returns 0.</p>
+<p>Consider the following example:</p>
+<pre class="code"><code>&lt;?xml version="1.0" encoding="utf-8" ?&gt;  
+&lt;book name=”My Funny Book” publisher="Funny Book Press" address="123 Infinite Loop"&gt;  
+    ...  
+&lt;/book&gt;</code></pre>
+<p>While on the <code>xml</code> declaration, <code>version</code>, or <code>encoding</code>, the attribute count will be 2.</p>
+<p>While on <code>book</code>, <code>name</code>, <code>publisher</code>, or <code>address</code> the attribute count will be 3.</p>
+<p>This method allows the application writer to inspect the number of attributes on the node. This enables the allocation of an appropriate amount of memory for storing the attributes if necessary. This can provide performance benefits.</p>
+<h5 id="gelastresult">GeLastResult</h5>
+<p>Returns <strong>S_OK</strong> if no error is generated.</p>
+<hr>
+<h3 id="getbaseuri">GetBaseUri</h3>
+<p>Gets the base URI of the token, if applicable.</p>
+<pre class="code"><code>FUNCTION GetBaseUri () AS DWSTRING</code></pre>
+<h5 id="remarks">Remarks</h5>
+<p>The base URI tells you where the nodes came from. If there is no base URI for the nodes being returned (for example, if the nodes were parsed from an in-memory string), the base URI is an empty string.</p>
+<p>When parsing the content of an element, the base URI can change. This is most often the case when using streaming APIs such as <strong>ReadValueChunk</strong>. For example, suppose you have an element node that contains text content which includes an entity reference:</p>
+<pre class="code"><code>&lt;item&gt;1234&amp;ref1;5678&lt;/item&gt; </code></pre>
+<p>When positioned on the text <code>1234</code>, the base URI is reported as the base URI of the document. When positioned on the <code>&amp;ref1</code>; entity reference, the base URI is reported as the resolved location for the entity if the entity contains markup and is external to the document. An example of an entity with markup is:</p>
+<pre class="code"><code>&lt;!ENTITY ref1 "&lt;a&gt;Hello XML Markup&lt;/a&gt;"&gt;</code></pre>
+<p>If the entity is just text with no markup, the XML parsing continues until the end of the next element is reached (in the previous example, <code>&lt;/item&gt;</code>). Therefore, the base URI property is always the same as the base URI for the document. For example, an element that contains the following entity reference (<code>&amp;ref2;</code>) does not have a different base URI for that entity reference:</p>
+<pre class="code"><code>&lt;!ENTITY ref2 "just some text"&gt;</code></pre>
+<p>The only time the base URI property for an entity reference that contains only text can be different from the base URI of the document is when the <code>ResolveUri</code> method is called on <code>IXmlResolver</code>.</p>
+<p>Another case where the base URI can change during parsing is when an XML document is composed of chunks of data aggregated from Document Type Definitions (DTDs). See the W3C XML specification for more details. The granularity of base URI information in that specification applies to this property.</p>
+<h5 id="gelastresult">GeLastResult</h5>
+<p>Returns <strong>S_OK</strong> if no error is generated.</p>
+<hr>
+<h3 id="getdepth">GetDepth</h3>
+<p>Returns the depth of the current node in the document.</p>
+<pre class="code"><code>FUNCTION GetDepth () AS UINT</code></pre>
+<h5 id="remarks">Remarks</h5>
+<p>The depth is the level of nesting of the current node. The depth of an attribute is one greater than the depth of the element that contains it.</p>
+<p>This method is intended to be used primarily to defend against denial of service attacks in which a malicious XML document could cause a malfunction in the parser due to excessively nested nodes.</p>
+<p>Retrieving the depth while positioned on an <code>XmlNodeType_Element</code> or <code>XmlNodeType_EndElement</code> node returns the depth before processing the node. For example, consider the following document:</p>
+<pre class="code"><code>&lt;Parent&gt;  
+&lt;Child&gt;  
+&lt;/Child&gt;  
+&lt;/Parent&gt;</code></pre>
+<p>When positioned on the <code>&lt;Parent&gt;</code> start node, the depth is reported as 0.</p>
+<p>When positioned on the <code>&lt;Child&gt;</code> start node, the depth is reported as 1.</p>
+<p>When positioned on the <code>&lt;/Child&gt;</code> end node, the depth is reported as 2.</p>
+<p>When positioned on the <code>&lt;/Parent&gt;</code> end node, the depth is reported as 1.</p>
+<h5 id="gelastresult">GeLastResult</h5>
+<p>Returns <strong>S_OK</strong> if no error is generated.</p>
+<hr>
+<h3 id="getlinenumber">GetLineNumber</h3>
+<p>Gets the line number where the reader is positioned in the document.</p>
+<pre class="code"><code>FUNCTION GetLineNumber () AS UINT</code></pre>
+<h5 id="remarks">Remarks</h5>
+<p>This method is most useful for reporting the line number if an error occurs.</p>
+<p>The starting number is 1. For example, if the XML document is <code>&lt;root/&gt;</code> and the reader is on <code>&lt;</code>, the line number is 1 and the line position is 1.</p>
+<p>When you are about to read a node that contains whitespace and text, this method returns the line number of the first non-whitespace text. This may not be what you expect; you may expect the line number of the start of the node. However, XmlLite's focus is on high performance, and for performance the reader advances to the first non-whitespace text. This method returns the line number where the reader is currently positioned in the document, not the line number of the start of the next node.</p>
+<h5 id="gelastresult">GeLastResult</h5>
+<p>Returns <strong>S_OK</strong> if no error is generated.</p>
+<hr>
+<h3 id="getlineposition">GetLinePosition</h3>
+<p>Gets the line position where the reader is positioned in the document.</p>
+<pre class="code"><code>FUNCTION GetLinePosition () AS UINT</code></pre>
+<h5 id="remarks">Remarks</h5>
+<p>This method is most useful for reporting the position on the line if an error occurs.</p>
+<p>The starting number is 1. For example, if the XML document is <code>&lt;root/&gt;</code> and the reader is on <code>&lt;</code>, the line number is 1 and the line position is 1.</p>
+<p>When you are about to read a node that contains whitespace and text, this method returns the position of the first non-whitespace text. This may not be what you expect; you may expect the position of the first character of the node. However, XmlLite's focus is on high performance, and for performance the reader advances to the first non-whitespace text. This method returns the line position where the reader is positioned in the document, not the first position of the next node.</p>
+<h5 id="gelastresult">GeLastResult</h5>
+<p>Returns <strong>S_OK</strong> if no error is generated.</p>
+<hr>
+<h3 id="getlocalname">GetLocalName</h3>
+<p>Gets the local name of the node that the reader is currently positioned on. If no local name is available, this method returns an empty string.</p>
+<pre class="code"><code>FUNCTION GetLocalName () AS DWSTRING</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>The local name of the node that the reader is currently positioned on. The returned string is always NULL terminated.</p>
+<p>If no local name is available, the returned string is empty.</p>
+<h5 id="remarks">Remarks</h5>
+<p>If the reader is positioned on the element <code>&lt;p:abc/&gt;</code>, for example, this method returns the string "abc"</p>
+<h5 id="gelastresult">GeLastResult</h5>
+<p>Returns <strong>S_OK</strong> if no error is generated.</p>
+<hr>
+<h3 id="getnamespaceuri">GetNamespaceUri</h3>
+<p>Gets the namespace URI of the node that the reader is currently positioned on. If no namespace URI is available, returns an empty string.</p>
+<pre class="code"><code>FUNCTION GetNamespaceUri () AS DWSTRING</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>The namespace URI of the node that the reader is currently positioned on. The returned string is always NULL terminated.</p>
+<p>If no namespace URI is available, the returned string is empty.</p>
+<h5 id="remarks">Remarks</h5>
+<p>For example, returns <code>"u://1"</code> for the element <code>&lt;xyz:abc xmlns:xyz="u://1" /&gt;</code>.</p>
+<h5 id="gelastresult">GeLastResult</h5>
+<p>Returns <strong>S_OK</strong> if no error is generated.</p>
+<hr>
+<h3 id="getnodetype">GetNodeType</h3>
+<p>Returns the type of the current node.</p>
+<pre class="code"><code>FUNCTION GetNodeType () AS XmlNodeType </code></pre>
+<h5 id="gelastresult">GeLastResult</h5>
+<p>Returns <strong>S_OK</strong> if no error is generated.</p>
+<hr>
+<h3 id="getprefix">GetPrefix</h3>
+<p>Gets the namespace prefix of the node that the reader is currently positioned on. If no prefix is available, returns an empty string.</p>
+<pre class="code"><code>FUNCTION GetPrefix () AS DWSTRING</code></pre>
+<h5 id="remarks">Remarks</h5>
+<p>This method returns the namespace prefix. For example, if you call this method for an element <code>&lt;xyz:abc xmlns:xyz="u://1" /&gt;</code>, it returns <code>"xyz"</code>.</p>
+<h5 id="gelastresult">GeLastResult</h5>
+<p>Returns <strong>S_OK</strong> if no error is generated.</p>
+<hr>
+<h3 id="getpropertyreader">GetProperty (CXmlReader)</h3>
+<p>Returns the specified property. A program can get properties at any time.</p>
+<pre class="code"><code>FUNCTION GetProperty (BYVAL nProperty AS UINT) AS LONG_PTR</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>The enumeration that identifies the property to be retrieved. For more information, see <strong>IXmlReader Properties</strong>.</p>
+<h5 id="getlastresult">GetLastResult</h5>
+<p>Returns S_OK if no error is generated. If an invalid property name is passed, returns E_NOTIMPL.</p>
+<h5 id="remarks">Remarks</h5>
+<p>Although, most of the values returned are native or simple types, a few are COM objects. For example, the <strong>XmlReaderProperty_MultiLanguage</strong> property references a COM <strong>IMultiLanguage2</strong> instance. In these cases, the pointer returned by a successful call to the <strong>GetProperty</strong> method should be released through a call to the standard COM <strong>IUnknown.Release</strong> function.</p>
+<hr>
+<h3 id="getqualifiedname">GetQualifiedName</h3>
+<p>Gets the qualified name of the node that the reader is currently positioned on. If no qualified name is available, returns an empty string.</p>
+<pre class="code"><code>FUNCTION GetQualifiedName () AS DWStRING</code></pre>
+<h5 id="remarks">Remarks</h5>
+<p>This method does not expand namespace prefixes. For example, if the reader is positioned on the element <code>&lt;p:abc /&gt;</code>, this method returns the string "p:abc".</p>
+<h5 id="gelastresult">GeLastResult</h5>
+<p>Returns <strong>S_OK</strong> if no error is generated.</p>
+<hr>
+<h3 id="getvalue">GetValue</h3>
+<p>Returns the value of the current token, if applicable.</p>
+<pre class="code"><code>FUNCTION GetValue () AS DWSTRING</code></pre>
+<h5 id="remarks">Remarks</h5>
+<p>Returns the value of the current token, if applicable. This method does not process or interpret the value returned.</p>
+<p>This method does not return to the start of a value that has already been partially read. In other words, if <strong>ReadValueChunk</strong> has already been called while the reader is positioned on this text node, <strong>GetValue</strong> will return only the part of the value that has not already been read.</p>
+<p>This method returns an empty string if the reader is positioned on an element node.</p>
+<p>When the reader is positioned on a processing instruction, this method returns the content of the processing instruction. For example, when the reader is positioned on the text node of the processing instruction <code>&lt;?xyz abc?&gt;</code>, <strong>GetValue</strong> returns the string "abc".</p>
+<p>When the reader is positioned on the content of a document type declaration, <strong>GetValue</strong> returns the content of the internal Document Type Definition (DTD) that is referenced by the document type declaration.</p>
+<h5 id="gelastresult">GeLastResult</h5>
+<p>Returns <strong>S_OK</strong> if no error is generated.</p>
+<hr>
+<h3 id="isdefault">IsDefault</h3>
+<p>Indicates whether the attribute was specified in the source document or implied by the Document Type Definition (DTD).</p>
+<pre class="code"><code>FUNCTION IsDefault () AS BOOLEAN</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>Returns TRUE if the attribute was implied by the DTD. If the attribute was not implied by the DTD, or the node is not an attribute, returns FALSE.</p>
+<h5 id="remarks">Remarks</h5>
+<p>Because DTDs allow only attributes to be defined with defaults, this property is TRUE only for attribute nodes.</p>
+<hr>
+<h3 id="isemptyelement">IsEmptyElement</h3>
+<p>This method allows the client to determine the difference between elements that have a closing tag, but do not contain content, and elements that do not have a closing tag.</p>
+<pre class="code"><code>FUNCTION IsEmptyElement () AS BOOLEAN</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>Returns TRUE if the current element ends with /&gt;; otherwise, returns FALSE.</p>
+<h5 id="remarks">Remarks</h5>
+<p><strong>IsEmptyElement</strong> returns FALSE for the following element:</p>
+<pre class="code"><code>&lt;element attribute="123"&gt;&lt;/element&gt;  </code></pre>
+<p><strong>IsEmptyElement</strong> returns TRUE for the following element:</p>
+<pre class="code"><code>&lt;element attribute="123"/&gt;  </code></pre>
+<p>Note that when writing elements, an <code>XmlNodeType_EndElement</code> node is not generated for empty element start tags.</p>
+<p>If the method is not applicable, it will return FALSE.</p>
+<p>You should save the value of <strong>IsEmptyElement</strong> before processing attributes, or call <strong>MoveToElement</strong> to make <strong>IsEmptyElement</strong> valid after processing attributes.</p>
+<p><strong>IsEmptyElement</strong> returns FALSE when <code>XmlReader</code> is positioned on an attribute node, even if attribute's parent element is empty.</p>
+<hr>
+<h3 id="iseof">IsEOF</h3>
+<p>Returns TRUE if the end of the input is reached.</p>
+<pre class="code"><code>FUNCTION IsEOF () AS BOOLEAN</code></pre>
+<hr>
+<h3 id="movetofirstattribute">MoveToFirstAttribute</h3>
+<p>Moves the reader position to the first attribute within the current node.</p>
+<pre class="code"><code>FUNCTION MoveToFirstAttribute () AS HRESULT</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>Returns <strong>S_OK</strong> if no error is generated. Returns <strong>E_PENDING</strong> if the data is unavailable, and the stream is paused. If there are no attributes on the current node, returns <strong>S_FALSE</strong> and does not move the position of the reader.</p>
+<h5 id="remarks">Remarks</h5>
+<p>This method is most often used to return to the beginning of the attribute list. If the data is unavailable this method returns <strong>E_PENDING</strong> and the reader does not move forward.</p>
+<p>After this method is called, the attributes collection on the element is still accessible; the application can then call other methods that move the reader within the attributes collection.</p>
+<hr>
+<h3 id="movetonextattribute">MoveToNextAttribute</h3>
+<p>Advances the reader to the next attribute.</p>
+<pre class="code"><code>FUNCTION MoveToNextAttribute () AS HRESULT</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>Returns <strong>S_OK</strong> if no error is generated. Returns <strong>E_PENDING</strong> if the data is unavailable, and the stream is paused. Returns <strong>S_FALSE</strong> if there are no more attributes on this element.</p>
+<h5 id="remarks">Remarks</h5>
+<p>This method moves the reader through the list of attributes. Moving through attributes invalidates properties for the element, because the element properties are replaced with attribute properties. If the attribute is unavailable this method returns <strong>E_PENDING</strong> and the stream is paused. If there are no more attributes, this method returns <strong>S_FALSE</strong> and the reader does not move forward. If the reader is positioned on an element, this method moves the reader to the first attribute of the element.</p>
+<p>After this method is called, the attributes collection on this element is still accessible. The application can then call other methods that move the reader within the attributes collection.</p>
+<hr>
+<h3 id="movetoattributebyname">MoveToAttributeByName</h3>
+<p>Moves the reader to the attribute with the specified name.</p>
+<pre class="code"><code>FUNCTION MoveToAttributeByName (BYVAL pwszLocalName AS LPCWSTR, BYVAL pwszNamespaceUri AS LPCWSTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pwszLocalName</em></td><td>The local name of the attribute.</td></tr><tr><td><em>pwszNamespaceUri</em></td><td>The namespace of the attribute. If pwszNamespaceUri is NULL, the search will match only attributes with no namespaces.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns <strong>S_OK</strong> if no error is generated. Returns <strong>E_PENDING</strong> if the data is unavailable, and the stream is paused. If the attribute is not found, this method returns <strong>S_FALSE</strong> and leaves the position of the reader unchanged.</p>
+<h5 id="remarks">Remarks</h5>
+<p>This method is implemented as a convenience. You can use this method if you have to get the value of one or two attributes, and you are not very concerned about performance.</p>
+<p>Using this method frequently might decrease performance. The normal programming pattern is to iterate through all of the attributes on an element and save all values in a data construct that is under your own control. Calling this method does not allow the parser to return all attributes in the most efficient manner.</p>
+<p>After this method is called, the attributes collection on this element is still accessible. The application can then call other methods that move the reader within the attributes collection.</p>
+<p>If the attribute is temporarily unable to be read this method returns <strong>E_PENDING</strong>.</p>
+<hr>
+<h3 id="movetoelement">MoveToElement</h3>
+<p>Moves to the element that owns the current attribute node. After navigating through the attributes on an element, use this method to move the reader back to the element.</p>
+<pre class="code"><code>FUNCTION MoveToElement () AS HRESULT</code></pre>
+<h5 id="remarks">Remarks</h5>
+<p>This method behaves the same way for attributes of elements within the document itself, attributes of an <code>XmlNodeType_XmlDeclaration</code>, and attributes of an <code>XmlNodeType_DocumentType</code> declaration.</p>
+<h5 id="gelastresult">GeLastResult</h5>
+<p>Returns <strong>S_OK</strong> if no error is generated.</p>
+<hr>
+<h3 id="read">Read</h3>
+<p>Reads the next node from the stream and returns the type of the node.</p>
+<pre class="code"><code>FUNCTION Read (BYVAL nodeType AS XmlNodeType PTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>nodeType</em></td><td>Returns the type of node that is read. This value can be NULL, in which case the node type will not be returned.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns <strong>S_OK</strong> if no error is generated. Returns <strong>E_PENDING</strong> if the data is unavailable, and the stream is paused. At the end of the input stream, returns <strong>S_FALSE</strong>.</p>
+<h5 id="remarks">Remarks</h5>
+<p>In <code>XmlLite</code>, the reader is positioned on a node. When you get the value and attributes of the node, you get them for the node on which the reader is positioned. The Read method moves the position of the reader to the next node in the stream; subsequent calls to the methods that get the values, name, and attributes return them for the new node.</p>
+<p>This method skips attributes. To read attributes use the <strong>MoveToFirstAttribute</strong>, <strong>MoveToNextAttribute</strong>, and <strong>MoveToAttributeByName</strong> methods.</p>
+<p>This method returns <strong>E_PENDING</strong> if the data is unavailable, and the stream is paused. The handling of the <strong>E_PENDING</strong> return value is up to the calling method.</p>
+<hr>
+<h3 id="readvaluechunk">ReadValueChunk</h3>
+<p>This method will read up to a maximum of the specified chunk size (as available) from the value of the current node and copy the value into the specified buffer.</p>
+<pre class="code"><code>FUNCTION ReadValueChunk (BYVAL buffer AS WSTRING PTR, BYVAL chunkSize AS UINT, BYVAL pcwchRead AS UINT PTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>buffer</em></td><td>You must pass in a buffer that is at least <em>chunkSize</em> characters long. The value of the token will be read into the buffer.</td></tr><tr><td><em>chunkSize</em></td><td>The chunk size required, in characters. Any value from 0 to 4G is valid for chunk size.</td></tr><tr><td><em>pcwchRead</em></td><td>The size of the string read. This argument cannot be NULL.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns <strong>S_OK</strong> if no error is generated. Returns <strong>E_PENDING</strong> if the data is unavailable, and the stream is paused. Returns <strong>S_FALSE</strong> if no more content is available to be read.</p>
+<h5 id="remarks">Remarks</h5>
+<p>The size of the buffer should be greater than or equal to that of the specified chunk size.</p>
+<p>If the remaining value is shorter than the required chunk size, the method will return only the remaining value and notify the call through the pcwchRead argument of its size.</p>
+<p>This method will not span a surrogate pair. When the number of characters requested would split a surrogate pair, this method returns one fewer character than the number requested.</p>
+<p>If the content is temporarily unable to be read this method returns <strong>E_PENDING</strong> and does not move forward.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM buffer AS WSTRING * 128   ' room for 128 characters
+DIM cbRead AS UINT
+DIM hr AS HRESULT
+
+DO
+    hr = pReader.ReadValueChunk(@buffer, 127, @cbRead)
+    IF hr = S_OK AND cbRead &gt; 0 THEN
+        PRINT buffer
+    END IF
+LOOP WHILE hr = S_OK AND cbRead &gt; 0</code></pre>
+<hr>
+<h3 id="setinput">SetInput</h3>
+<p>Sets the input source of the XML document to be parsed.</p>
+<pre class="code"><code>FUNCTION SetInput (BYVAL pInputStream AS IUnknown PTR) AS HRESULT
+FUNCTION SetInput (BYVAL pInputStream AS IUnknown PTR, BYVAL nEncodingPage AS UINT) AS HRESULT
+FUNCTION SetInput (BYVAL pInputStream AS IUnknown PTR, BYVAL nEncodingName AS LPCWSTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pInputStream</em></td><td>The input stream to be parsed.</td></tr></tbody></table></div>
+<h5 id="gelastresult">GeLastResult</h5>
+<p>Returns <strong>S_OK</strong> if no error is generated.</p>
+<h5 id="remarks">Remarks</h5>
+<p>The input source can be one of the following types:</p>
+<p>A class derived from <code>IStream</code> or <code>ISequentialStream</code>. The reader will use defaults for all the additional properties of the input.</p>
+<p>A code page:</p>
+<ul><li>UTF-8 (65001) -&gt; Universal option, recommended for almost all projects.</li><li>UTF-16 (1200/1201) -&gt; When working with Windows APIs or requiring internal compatibility.</li><li>ISO-8859-1 / Windows-1252 -&gt; Only for compatibility with older European systems.</li><li>Asian code pages -&gt; Only if required by the target system.</li></ul>
+<p>An encoding string:</p>
+<ul><li>"utf-8" -&gt; Universal option, recommended for almost all projects.</li><li>"utf-16" -&gt; When working with Windows APIs or requiring internal compatibility.</li><li>"ISO-8859-1" -&gt; For compatibility with older European systems.</li><li>"windows-1252"  &gt; For compatibility with older European systems.</li></ul>
+<p>NULL. This resets the input, releasing the previously set input object.</p>
+<h5 id="subtle-points">Subtle points</h5>
+<p>If you pass "utf-8" as a name, <strong>XmlLite</strong> will honor the XML declaration and BOM if present.</p>
+<p>If you pass a code page, <strong>XmlLite</strong> uses that as a hard hint, even if the XML declaration disagrees. That's useful for legacy files but can override the document's self-declared encoding.</p>
+<p>BOM presence is critical for utf-16 detection. Without BOM, you'll need to force encoding via the overloades method.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>'#CONSOLE ON
+#define UNICODE
+#define _WIN32_WINNT &amp;h0602
+#include once "AfxNova/CXmlLite.inc"
+USING AfxNova
+
+DIM pReader AS CXmlReader
+DIM hr AS HRESULT
+
+' // Fake loop to avoid multiple IF/END IF nesting
+DO
+   
+   ' // Open read-only input stream
+   DIM pFileStream AS IStream PTR
+   hr = SHCreateStreamOnFileEx("books.xml", STGM_READ, FILE_ATTRIBUTE_NORMAL, FALSE, NULL, @pFileStream)
+   IF FAILED(hr) THEN
+      PRINT "SHCreateStreamOnFile error &amp;h" &amp; HEX(hr)
+      EXIT DO
+   END IF
+
+   ' // Set the DtdProcessing_Prohibit property
+   hr = pReader.SetProperty(XmlReaderProperty_DtdProcessing, DtdProcessing_Prohibit)
+
+   ' // Set the input source of the XML document to be parsed
+   hr = pReader.SetInput(cast(IUnknown PTR, pFileStream))
+   IF FAILED(hr) THEN
+      PRINT "IXmlReader.SetInput error &amp;h" &amp; HEX(hr)
+      EXIT DO
+   END IF
+
+   ' // Parse the xml file
+   DIM nodeType AS XmlNodeType
+   DO
+      hr = pReader.Read(@nodeType)
+      IF hr &lt;&gt; S_OK THEN EXIT DO
+      SELECT CASE nodeType
+         CASE XmlNodeType_XmlDeclaration
+            PRINT "XmlDeclaration"
+         CASE XmlNodeType_Element
+            IF pReader.IsEmptyElement THEN
+               PRINT "Empty"
+            ELSE
+               PRINT "Element: ", pReader.GetLocalName
+            END IF
+         CASE XmlNodeType_EndElement
+            IF pReader.IsEmptyElement THEN
+               PRINT "Empty"
+            ELSE
+               PRINT "End element: ", pReader.GetLocalName
+            END IF
+         CASE XmlNodeType_Text
+            PRINT "Value: ", pReader.GetValue
+      END SELECT
+   LOOP
+
+   ' // Unconditional exit
+   EXIT DO
+LOOP
+
+PRINT
+PRINT "Press any key"
+SLEEP</code></pre>
+<h5 id="example">Example</h5>
+<pre class="code"><code>'#CONSOLE ON
+#define UNICODE
+#define _WIN32_WINNT &amp;h0602
+#include once "AfxNova/CXmlLite.inc"
+USING AfxNova
+
+DIM pReader AS CXmlReader
+DIM hr AS HRESULT
+
+' // Fake loop to avoid multiple IF/END IF nesting
+DO
+   
+   ' // Open read-only input stream
+   DIM pFileStream AS IStream PTR
+   hr = SHCreateStreamOnFileEx("stocks.xml", STGM_READ, FILE_ATTRIBUTE_NORMAL, FALSE, NULL, @pFileStream)
+   IF FAILED(hr) THEN
+      PRINT "SHCreateStreamOnFile error &amp;h" &amp; HEX(hr)
+      EXIT DO
+   END IF
+
+   ' // Set the DtdProcessing_Prohibit property
+   hr = pReader.SetProperty(XmlReaderProperty_DtdProcessing, DtdProcessing_Prohibit)
+
+   ' // Set the input source of the XML document to be parsed
+   ' // Code pages:
+   ' // UTF-8 (65001) -&gt; Universal option, recommended for almost all projects.
+   ' // UTF-16 (1200/1201) -&gt; When working with Windows APIs or requiring internal compatibility.
+   ' // ISO-8859-1 / Windows-1252 -&gt; Only for compatibility with older European systems.
+   ' // Asian code pages -&gt; Only if required by the target system.
+'   hr = pReader.SetInput(cast(IUnknown PTR, pFileStream), 65001)
+   hr = pReader.SetInput(cast(IUnknown PTR, pFileStream), "utf-8")
+   IF FAILED(hr) THEN
+      PRINT "IXmlReader.SetInput error &amp;h" &amp; HEX(hr)
+      EXIT DO
+   END IF
+
+   ' // Parse the xml file
+   DIM nodeType AS XmlNodeType
+   DO
+      hr = pReader.Read(@nodeType)
+      IF hr &lt;&gt; S_OK THEN EXIT DO
+      SELECT CASE nodeType
+         CASE XmlNodeType_XmlDeclaration
+            PRINT "XmlDeclaration"
+         CASE XmlNodeType_Element
+            IF pReader.IsEmptyElement THEN
+               PRINT "Empty"
+            ELSE
+               PRINT "Element: ", pReader.GetLocalName
+            END IF
+         CASE XmlNodeType_EndElement
+            IF pReader.IsEmptyElement THEN
+               PRINT "Empty"
+            ELSE
+               PRINT "End element: ", pReader.GetLocalName
+            END IF
+         CASE XmlNodeType_Text
+            PRINT "Value: ", pReader.GetValue
+      END SELECT
+   LOOP
+
+   ' // Unconditional exit
+   EXIT DO
+LOOP
+
+PRINT
+PRINT "Press any key"
+SLEEP</code></pre>
+<hr>
+<h3 id="setpropertyreader">SetProperty (CXmlReader)</h3>
+<p>Sets the specified property.</p>
+<pre class="code"><code>FUNCTION SetProperty (BYVAL nProperty AS UINT, BYVAL pValue AS LONG_PTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>nProperty</em></td><td>The enumeration that identifies the property to be retrieved. For more information, see <strong>IXmlReader Properties</strong>.</td></tr><tr><td><em>pValue</em></td><td>The property value.</td></tr></tbody></table></div>
+<h5 id="gelastresult">GeLastResult</h5>
+<p>Returns <strong>S_OK</strong> if no error is generated. If an invalid property name is passed, returns <strong>E_NOTIMPL</strong>.</p>
+<h5 id="remarks">Remarks</h5>
+<p>A program should only set properties before parsing starts—that is, before the first call to <strong>Read</strong>.</p>
+<p>The following code sets the <code>XmlReaderProperty_DtdProcessing</code> property to prohibit DTDs.</p>
+<pre class="code"><code>hr = pReader-&gt;SetProperty(XmlReaderProperty_DtdProcessing, DtdProcessing_Prohibit)
+IF FAILED(hr) THEN
+    PRINT "Error setting XmlReaderProperty_DtdProcessing, error is ", hr)
+END IF</code></pre>
+<hr>
+<h3 id="flushwriter">Flush (CXmlWriter / CXmlWriterLite)</h3>
+<p>Flushes whatever is in the buffer to the underlying stream and then flushes the underlying stream.</p>
+<pre class="code"><code>FUNCTION Flush () AS HRESULT</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>Returns <strong>S_OK</strong> if no error is generated.</p>
+<h5 id="remarks">Remarks</h5>
+<p>If the flush operation fails, this typically indicates an error in the underlying stream. In this case, the writer may not be in a recoverable state.</p>
+<p>If the output stream for the writer is an <strong>IStream</strong> interface, this method will also flush the underlying stream by calling the <strong>IStream.Commit</strong> Method of the output stream.</p>
+<hr>
+<h3 id="getpropertywriter">GetProperty (CXmlWriter / CXmlWriterLite)</h3>
+<p>Returns the specified property. A program can get properties at any time.</p>
+<pre class="code"><code>FUNCTION GetProperty (BYVAL nProperty AS UINT) AS LONG_PTR</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>nProperty</em></td><td>The enumeration that identifies the property to be retrieved. For more information, see <strong>IXmlReader Properties</strong>.</td></tr></tbody></table></div>
+<h5 id="getlastresult">GetLastResult</h5>
+<p>Returns <strong>S_OK</strong> if no error is generated. If an invalid property name is passed, returns <strong>E_NOTIMPL</strong>.</p>
+<h5 id="remarks">Remarks</h5>
+<p>Although, most of the values returned are native or simple types, a few are COM objects. For example, the <strong>XmlReaderProperty_MultiLanguage</strong> property references a COM <strong>IMultiLanguage2</strong> instance. In these cases, the pointer returned by a successful call to the <strong>GetProperty</strong> method should be released through a call to the standard COM <strong>IUnknown.Release</strong> function.</p>
+<hr>
+<h3 id="setoutput">SetOutput</h3>
+<p>Sets the output stream for the writer.</p>
+<pre class="code"><code>FUNCTION SetOutput (BYVAL pOutputStream AS IUnknown PTR) AS HRESULT
+FUNCTION SetOutput (BYVAL pOutputStream AS IUnknown PTR, BYVAL nEncodingPage AS UINT) AS HRESULT
+FUNCTION SetOutput (BYVAL pOutputStream AS IUnknown PTR, BYVAL pwszEncodingName AS LPCWSTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pOutput</em></td><td>The output stream for the writer.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns <strong>S_OK</strong> if no error is generated.</p>
+<h5 id="remarks">Remarks</h5>
+<p><code>IXmlWriter</code> can accept several types of output stream:</p>
+<p>A class derived from <strong>ISequentialStream</strong></p>
+<p>The writer will write the output to the provided ISequentialStream using the default UTF-8 encoding.</p>
+<p>A class derived from <strong>IStream</strong></p>
+<p>The writer will write the output to the provided IStream using the default UTF-8 encoding.</p>
+<p>The output source can be one of the following types:</p>
+<p>A class derived from <code>IStream</code> or <code>ISequentialStream</code>. The reader will use defaults for all the additional properties of the input.</p>
+<p>A code page:</p>
+<ul><li>UTF-8 (65001) -&gt; Universal option, recommended for almost all projects.</li><li>UTF-16 (1200/1201) -&gt; When working with Windows APIs or requiring internal compatibility.</li><li>ISO-8859-1 / Windows-1252 -&gt; Only for compatibility with older European systems.</li><li>Asian code pages -&gt; Only if required by the target system.</li></ul>
+<p>An encoding string:</p>
+<ul><li>"utf-8" -&gt; Universal option, recommended for almost all projects.</li><li>"utf-16" -&gt; When working with Windows APIs or requiring internal compatibility.</li><li>"ISO-8859-1" -&gt; For compatibility with older European systems.</li><li>"windows-1252"  &gt; For compatibility with older European systems.</li></ul>
+<p><strong>NULL</strong></p>
+<p>This resets the writer, releasing the previously set output object. This forces the writer to flush all the data into the stream, but does not force the stream itself to flush.</p>
+<p>Use the <strong>Flush</strong> method to force the writer to write out all the buffered data to the output stream.</p>
+<h5 id="subtle-points">Subtle points</h5>
+<p>If you pass "utf-8" as a name, <strong>XmlLite</strong> will honor the XML declaration and BOM if present.</p>
+<p>If you pass a code page, <strong>XmlLite</strong> uses that as a hard hint, even if the XML declaration disagrees. That's useful for legacy files but can override the document's self-declared encoding.</p>
+<p>BOM presence is critical for utf-16 detection. Without BOM, you'll need to force encoding via the overloades method.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>'#CONSOLE ON
+#define UNICODE
+#define _WIN32_WINNT &amp;h0602
+'#define _CXMLLITE_DEBUG_ 1
+#include once "AfxNova/CXmlLite.inc"
+USING AfxNova
+
+SCOPE
+
+DIM pWriter AS CXmlWriter
+DIM hr AS HRESULT
+
+' // Fake loop to avoid multiple IF/END IF nesting
+DO
+   
+   ' // Create an output stream
+   DIM pFileOutputStream AS IStream PTR
+   hr = SHCreateStreamOnFileEx("output.xml", STGM_READ OR STGM_WRITE, FILE_ATTRIBUTE_NORMAL, FALSE, NULL, @pFileOutputStream)
+   IF FAILED(hr) THEN
+      PRINT "SHCreateStreamOnFile error &amp;h" &amp; HEX(hr)
+      EXIT DO
+   END IF
+
+   ' // Set the output source
+   hr = pWriter.SetOutput(cast(IUnknown PTR, pFileOutputStream))
+   IF FAILED(hr) THEN
+      PRINT "IXmlWriter.SetOutput error &amp;h" &amp; HEX(hr)
+      EXIT DO
+   END IF
+
+   ' // Write the XML document
+   pWriter.WriteStartDocument(XmlStandalone_Yes)
+   pWriter.WriteStartElement(NULL, "bookstore", NULL)
+
+   pWriter.WriteStartElement(NULL, "book", NULL)
+   pWriter.WriteAttributeString(NULL, "category", NULL, "children")
+      pWriter.WriteElementString(NULL, "title", NULL, "Harry Potter")
+      pWriter.WriteElementString(NULL, "author", NULL, "J K. Rowling")
+      pWriter.WriteElementString(NULL, "year", NULL, "2005")
+      pWriter.WriteElementString(NULL, "price", NULL, "29.99")
+   pWriter.WriteEndElement ' book
+
+   pWriter.WriteEndElement ' bookstore
+   pWriter.WriteEndDocument
+
+   PRINT "XML file written successfully."
+   PRINT "Press any key"
+   SLEEP
+
+   ' // Unconditional exit
+   EXIT DO
+LOOP
+
+END SCOPE
+
+SCOPE
+
+DIM pReader AS CXmlReader
+DIM hr AS HRESULT
+
+DO
+   ' // Open read-only input stream
+   DIM pFileInputStream AS IStream PTR
+   hr = SHCreateStreamOnFileEx("output.xml", STGM_READ, FILE_ATTRIBUTE_NORMAL, FALSE, NULL, @pFileInputStream)
+   IF FAILED(hr) THEN
+      PRINT "SHCreateStreamOnFile error &amp;h" &amp; HEX(hr)
+      EXIT DO
+   END IF
+
+   ' // Set the DtdProcessing_Prohibit property
+   hr = pReader.SetProperty(XmlReaderProperty_DtdProcessing, DtdProcessing_Prohibit)
+
+   ' // Set the input source of the XML document to be parsed
+   hr = pReader.SetInput(cast(IUnknown PTR, pFileInputStream))
+   IF FAILED(hr) THEN
+      PRINT "IXmlReader.SetInput error &amp;h" &amp; HEX(hr)
+      EXIT DO
+   END IF
+
+   ' // Parse the xml file
+   DIM nodeType AS XmlNodeType
+   DO
+      hr = pReader.Read(@nodeType)
+      IF hr &lt;&gt; S_OK THEN EXIT DO
+      SELECT CASE nodeType
+      CASE XmlNodeType_Element
+         PRINT "Element: "; pReader.GetLocalName
+         ' // If the element has attributes, iterate through them
+         IF pReader.MoveToFirstAttribute = S_OK THEN
+            DO
+               PRINT "  Attribute: "; pReader.GetLocalName; " = "; pReader.GetValue
+            LOOP WHILE pReader.MoveToNextAttribute = S_OK
+            pReader.MoveToElement ' return to the element
+         END IF
+      CASE XmlNodeType_Text
+         PRINT "Value: "; pReader.GetValue
+      CASE XmlNodeType_EndElement
+         PRINT "End element: "; pReader.GetLocalName
+      END SELECT
+
+   LOOP
+
+   ' // Unconditional exit
+   EXIT DO
+LOOP
+
+END SCOPE
+
+PRINT
+PRINT "Press any key"
+SLEEP</code></pre>
+<h5 id="example">Example</h5>
+<pre class="code"><code>'#CONSOLE ON
+#define UNICODE
+#define _WIN32_WINNT &amp;h0602
+'#define _CXMLLITE_DEBUG_ 1
+#include once "AfxNova/CXmlLite.inc"
+USING AfxNova
+
+' =========================
+' Writer: Creates several books
+' =========================
+SCOPE
+
+' // Fake loop to avoid multiple IF/END IF nesting
+DO
+
+   DIM pWriter AS CXmlWriter
+   DIM hr AS HRESULT
+
+   ' // Create an output stream
+   DIM pFileOutputStream AS IStream PTR
+   hr = SHCreateStreamOnFileEx("books2.xml", STGM_CREATE OR STGM_WRITE, FILE_ATTRIBUTE_NORMAL, TRUE, NULL, @pFileOutputStream)
+   IF FAILED(hr) THEN
+      PRINT "SHCreateStreamOnFile error &amp;h" &amp; HEX(hr)
+      EXIT DO
+   END IF
+
+   ' // Set the output source
+   hr = pWriter.SetOutput(cast(IUnknown PTR, pFileOutputStream))
+   IF FAILED(hr) THEN
+      PRINT "SetOutput error &amp;h" &amp; HEX(hr)
+      EXIT DO
+   END IF
+
+   ' // Write the XML document
+   pWriter.WriteStartDocument(XmlStandalone_Yes)
+   pWriter.WriteStartElement(NULL, "bookstore", NULL)
+
+      ' // First book
+      pWriter.WriteStartElement(NULL, "book", NULL)
+      pWriter.WriteAttributeString(NULL, "category", NULL, "children")
+         pWriter.WriteElementString(NULL, "title", NULL, "Harry Potter")
+         pWriter.WriteElementString(NULL, "author", NULL, "J K. Rowling")
+         pWriter.WriteElementString(NULL, "year", NULL, "2005")
+         pWriter.WriteElementString(NULL, "price", NULL, "29.99")
+      pWriter.WriteEndElement ' book
+
+      ' // Second book
+      pWriter.WriteStartElement(NULL, "book", NULL)
+      pWriter.WriteAttributeString(NULL, "category", NULL, "fiction")
+         pWriter.WriteElementString(NULL, "title", NULL, "The Hobbit")
+         pWriter.WriteElementString(NULL, "author", NULL, "J R. R. Tolkien")
+         pWriter.WriteElementString(NULL, "year", NULL, "1937")
+         pWriter.WriteElementString(NULL, "price", NULL, "19.99")
+      pWriter.WriteEndElement ' book
+
+   pWriter.WriteEndElement ' bookstore
+   pWriter.WriteEndDocument
+
+   PRINT "XML file written successfully."
+   PRINT "Press any key"
+   SLEEP
+
+   ' // Unconditional exit
+   EXIT DO
+LOOP
+
+END SCOPE
+
+' ==========================
+' Reader: read several books
+' ==========================
+SCOPE
+
+DO
+   
+   DIM pReader AS CXmlReader
+   DIM hr AS HRESULT
+
+   ' // Open read-only input stream
+   DIM pFileInputStream AS IStream PTR
+   hr = SHCreateStreamOnFileEx("books2.xml", STGM_READ, FILE_ATTRIBUTE_NORMAL, FALSE, NULL, @pFileInputStream)
+   IF FAILED(hr) THEN
+      PRINT "SHCreateStreamOnFile error &amp;h" &amp; HEX(hr)
+      EXIT DO
+   END IF
+
+   ' // Set the DtdProcessing_Prohibit property
+   hr = pReader.SetProperty(XmlReaderProperty_DtdProcessing, DtdProcessing_Prohibit)
+   hr = pReader.SetInput(cast(IUnknown PTR, pFileInputStream))
+
+   DIM nodeType AS XmlNodeType
+   DO
+      hr = pReader.Read(@nodeType)
+      IF hr &lt;&gt; S_OK THEN EXIT DO
+
+      SELECT CASE nodeType
+         CASE XmlNodeType_Element
+            PRINT "Element: "; pReader.GetLocalName
+
+            ' // If there are attributes, display them
+            IF pReader.MoveToFirstAttribute() = S_OK THEN
+               DO
+                  PRINT "  Attribute: "; pReader.GetLocalName; " = "; pReader.GetValue
+               LOOP WHILE pReader.MoveToNextAttribute() = S_OK
+               pReader.MoveToElement()
+            END IF
+
+         CASE XmlNodeType_Text
+            PRINT "Value: "; pReader.GetValue
+
+         CASE XmlNodeType_EndElement
+            PRINT "End element: "; pReader.GetLocalName
+      END SELECT
+   LOOP
+
+   ' // Unconditional exit
+   EXIT DO
+LOOP
+
+END SCOPE
+
+PRINT
+PRINT "Press any key"
+SLEEP</code></pre>
+<hr>
+<h3 id="setpropertywriter">SetProperty (CXmlWriter / CXmlWriterLite)</h3>
+<p>Sets the specified property.</p>
+<pre class="code"><code>FUNCTION SetProperty (BYVAL nProperty AS UINT, BYVAL pValue AS LONG_PTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>nProperty</em></td><td>The enumeration that identifies the property to be retrieved. For more information, see <strong>IXmlWriter Properties</strong>.</td></tr><tr><td><em>pValue</em></td><td>The property value.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns <strong>S_OK</strong> if no error is generated. If an invalid property name is passed, returns <strong>E_NOTIMPL</strong>.</p>
+<h5 id="remarks">Remarks</h5>
+<p>After writing starts, it is not recommended that you call this method.</p>
+<p>The following code sets the <code>XmlReaderProperty_DtdProcessing</code> property to prohibit DTDs.</p>
+<pre class="code"><code>hr = pWriter-&gt;SetProperty(XmlReaderProperty_DtdProcessing, DtdProcessing_Prohibit)
+IF FAILED(hr) THEN
+    PRINT "Error setting XmlReaderProperty_DtdProcessing, error is ", hr)
+END IF</code></pre>
+<hr>
+<h3 id="writeattributes">WriteAttributes</h3>
+<p>Copies attributes from the specified source <code>IXmlReader</code> to the IXmlWriter`.</p>
+<pre class="code"><code>FUNCTION WriteAttributes (BYVAL pReader AS Afx_IXmlReader PTR, BYVAL fWriteDefaultAttributes AS BOOLEAN) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pReader</em></td><td>The reader to copy the attributes from. This argument cannot be NULL.</td></tr><tr><td><em>fWriteDefaultAttributes</em></td><td>Specifies whether to also copy the default attributes from the reader.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns <strong>S_OK</strong> if no error is generated.</p>
+<h5 id="remarks">Remarks</h5>
+<p>The attributes copied depend on the current position of the reader:</p>
+<p>If the reader is positioned on an element node, this method copies all of the attributes contained by the element.</p>
+<p>If the reader is positioned on an attribute node, this method copies the current attribute and the rest of the attributes contained by the element.</p>
+<p>If the reader is positioned on an <em>XmlNodeType_XmlDeclaration</em>, this method writes out all the attributes of the declaration.</p>
+<p>If the reader is positioned on any other node type, calling this method has no effect.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>pWriter-&gt;WriteAttributes(pReader, FALSE)</code></pre>
+<hr>
+<h3 id="writeattributestring">WriteAttributeString (CXmlWriter)</h3>
+<p>Writes an attribute.</p>
+<pre class="code"><code>FUNCTION WriteAttributeString (BYVAL pwszPrefix AS LPCWSTR, BYVAL pwszLocalName AS LPCWSTR, _
+   BYVAL pwszNamespaceUri AS LPCWSTR, BYVAL pwszValue AS LPCWSTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pwszPrefix</em></td><td>The namespace prefix for the attribute. NULL is equivalent to an empty string.</td></tr><tr><td><em>pwszLocalName</em></td><td>The local name of the attribute. NULL is a valid value only if <em>pwszPrefix</em> has a value of <code>xmlns</code>.</td></tr><tr><td><em>pwszNamespaceUri</em></td><td>The namespace URI for the attribute. NULL is equivalent to an empty string.</td></tr><tr><td><em>pwszValue</em></td><td>The value of the attribute. NULL is equivalent to an empty string.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns <strong>S_OK</strong> if no error is generated.</p>
+<h5 id="remarks">Remarks</h5>
+<p>When the attribute name is <code>xmlns</code>, this method also treats the attribute as a namespace declaration and associates the declared prefix with the specified namespace. In this case, if a namespace has already been specified for this element, that namespace is overridden and any child elements written with the original namespace are automatically written out as part of the new namespace.</p>
+<p>If NULL is supplied for <em>pwszLocalName</em> and the value of <em>pwszPrefix</em> is not <code>xmlns</code>, this method returns an error.</p>
+<hr>
+<h3 id="writeattributestringlite">WriteAttributeString (CXmlWriterLite)</h3>
+<p>Writes an attribute.</p>
+<pre class="code"><code>FUNCTION WriteAttributeString (BYVAL pwszQName AS WSTRING PTR, _
+   BYVAL pwszValue AS Const WSTRING PTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pwszQName</em></td><td>The qualified name for the attribute. NULL causes an error.</td></tr><tr><td><em>pwszValue</em></td><td>The value of the attribute. NULL is equivalent to an empty string.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns <strong>S_OK</strong> if no error is generated.</p>
+<h5 id="remarks">Remarks</h5>
+<p>Creates an attribute in the current element by using <em>pwszQName</em> as the qualified name for the attribute and <em>pwszValue</em> as the attribute value. <strong>WriteAttributeString</strong> performs no validation that the attribute name or value is allowed in the current element. When the attribute name is xmlns or xmlns:prefix, this method creates the attribute as a namespace declaration. This associates the default namespace or, if present, the declared prefix with the namespace URI specified in <em>pwszValue</em>. Because <strong>IXmlWriterLite</strong> performs no namespace validation, you must be careful not to create duplicate or conflicting namespace declarations.</p>
+<hr>
+<h3 id="writecdata">WriteCData</h3>
+<p>Writes out a CDATA section that contains the specified text.</p>
+<pre class="code"><code>FUNCTION WriteCData (BYVAL pwszText AS LPCWSTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pwszText</em></td><td>The content of the CDATA section. NULL is equivalent to an empty string.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns <strong>S_OK</strong> if no error is generated.</p>
+<h5 id="remarks">Remarks</h5>
+<p>This method produces a CDATA section in the following format, where text is the provided text:</p>
+<pre class="code"><code>&lt;![CDATA[text]]&gt;  </code></pre>
+<p>When the pwszText parameter is NULL, this method produces a CDATA section that contains no content, like this:</p>
+<pre class="code"><code>&lt;![CDATA[]]&gt;  </code></pre>
+<p>If the text block provided contains the characters <code>"]]&gt;"</code>, which denote the end of a CDATA section, the writer creates a second CDATA section that contains the content after the second <code>"]"</code> character. This prevents the CDATA section from being truncated.</p>
+<p>This method does not combine adjacent CDATA sections, even if there have been no other method calls between calls to the <strong>WriteCData</strong> method.</p>
+<hr>
+<h3 id="writecharentity">WriteCharEntity</h3>
+<p>Writes a character entity for the provided Unicode character value. This method writes the character entity in hexadecimal format.</p>
+<pre class="code"><code>FUNCTION WriteCharEntity (BYVAL wch AS WCHAR PTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wch</em></td><td>The charater to write.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns <strong>S_OK</strong> if no error is generated.</p>
+<h5 id="remarks">Remarks</h5>
+<p>This method does not accept surrogate pairs. To write a surrogate pair, see <strong>WriteSurrogateCharEntity</strong>.</p>
+<hr>
+<h3 id="writechars">WriteChars</h3>
+<p>Writes out the specified text content, escaping markup.</p>
+<pre class="code"><code>FUNCTION WriteChars (BYVAL pwch AS WSTRING PTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pwch</em></td><td>The characters to write.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns <strong>S_OK</strong> if no error is generated.</p>
+<h5 id="remarks">Remarks</h5>
+<p>If characters is NULL, this method writes out the text with no data content. That is, the value written is "".</p>
+<p>Surrogate pair characters cannot be split across multiple buffer writes when the <strong>WriteChars</strong> method is called. Therefore, surrogate pairs require special handling. The XML specification defines the valid ranges for surrogate pairs.</p>
+<hr>
+<h3 id="writecomment">WriteComment</h3>
+<p>Writes out a comment that contains the specified text.</p>
+<pre class="code"><code>FUNCTION WriteComment (BYVAL pwszComment AS LPCWSTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pwszComment</em></td><td>The text of the comment. NULL is equivalent to an empty string.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns <strong>S_OK</strong> if no error is generated.</p>
+<h5 id="remarks">Remarks</h5>
+<p>This method produces a comment in the following format, where text is the text provided:</p>
+<pre class="code"><code>&lt;!-- text --&gt;</code></pre>
+<p>If the text block provided contains the characters <code>"--&gt;"</code>, which denote the end of a comment, this method will insert a space between the two <code>"-"</code> characters. This change to the text prevents the writer from producing an XML document that is not well-formed.</p>
+<p>If the <em>pwszComment</em> parameter is NULL, the writer produces a comment that does not contain any text.</p>
+<hr>
+<h3 id="writedoctype">WriteDocType</h3>
+<p>Writes out the &lt;!DOCTYPE ...&gt; declaration with the specified name and optional attributes.</p>
+<pre class="code"><code>FUNCTION WriteDocType (BYVAL pwszName AS LPCWSTR, BYVAL pwszPublicId AS LPCWSTR, _
+   BYVAL pwszSystemId AS LPCWSTR, BYVAL pwszSubset AS LPCWSTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pwszName</em></td><td>The name of the DOCTYPE. This parameter cannot be empty or NULL.</td></tr><tr><td><em>pwszPublicId</em></td><td>If non-NULL, this method writes <code>PUBLIC "pubid" "sysid"</code> where pubid and sysid are replaced with the value of the specified arguments. NULL indicates that the public ID is to be omitted; this is not equivalent to an empty string.</td></tr><tr><td><em>pwszSystemId</em></td><td>If <em>pwszPublicId</em> is NULL and <em>pwszSystemId</em> is non-NULL, the method writes <code>SYSTEM "sysid"</code> where sysid is replaced with the value of this argument. NULL indicates that the system ID is to be omitted; this is not equivalent to an empty string.</td></tr><tr><td><em>pwszSubset</em></td><td>If non-NULL, the method writes <code>[subset]</code> where subset is replaced with the value of this argument. If this parameter is NULL, no subset is written out. If no subset is written, the square brackets are not written either. NULL is not equivalent to an empty string; an empty string argument will cause the brackets to be written.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns <strong>S_OK</strong> if no error is generated.</p>
+<h5 id="remarks">Remarks</h5>
+<p>The <strong>WriteDocType</strong> method does not check for invalid characters in <em>pwszSystemId</em> and <em>pwszPublicId</em> values. It also does not check for valid Document Type Definition (DTD)/XML syntax.</p>
+<pre class="code"><code>DIM subset AS WSTRING * 260 = _
+L"&lt;!ELEMENT Employees (Employee)+&gt;\n"  
+L"&lt;!ELEMENT Employee EMPTY&gt;\n"  
+L"&lt;!ATTLIST Employee firstname CDATA #REQUIRED&gt;\n"  
+L"&lt;!ENTITY Company 'Microsoft'&gt;\n";</code></pre>
+<p>Results in the following XML:</p>
+<pre class="code"><code>&lt;!DOCTYPE Employees [&lt;!ELEMENT Employees (Employee)+&gt;  
+&lt;!ELEMENT Employee EMPTY&gt;  
+&lt;!ATTLIST Employee firstname CDATA #REQUIRED&gt;  
+&lt;!ENTITY Company 'Microsoft'&gt;  
+]&gt;</code></pre>
+<hr>
+<h3 id="writeelementstring">WriteElementString (CXmlWriter)</h3>
+<p>Writes out an element with the specified prefix, name, namespace, and value.</p>
+<pre class="code"><code>FUNCTION WriteElementString (BYVAL pwszPrefix AS LPCWSTR, BYVAL pwszLocalName AS LPCWSTR, _
+   BYVAL pwszNamespaceUri AS LPCWSTR, BYVAL pwszValue AS LPCWSTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pwszPrefix</em></td><td>The namespace prefix of the element. NULL is equivalent to an empty string.</td></tr><tr><td><em>pwszLocalName</em></td><td>The local name of the element. NULL will result in an error.</td></tr><tr><td><em>pwszNamespaceUri</em></td><td>The namespace URI of the element. NULL is equivalent to an empty string.</td></tr><tr><td><em>pwszValue</em></td><td>The value of the element. NULL indicates that there is no content to write. In contrast, an empty string indicates that this element has an empty value.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns <strong>S_OK</strong> if no error is generated.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>pWriter-&gt;WriteElementString(NULL, "myElement", NULL, "myValue")</code></pre>
+<hr>
+<h3 id="writeelementstringlite">WriteElementString (CXmlWriterLite)</h3>
+<p>Writes out an element by using the specified prefix, name, namespace, and value.</p>
+<pre class="code"><code>FUNCTION WriteElementString (BYVAL pwszQName AS WSTRING PTR, BYVAL pwszValue AS LPCWSTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pwszQName</em></td><td>The qualified name of the element. NULL causes an error.</td></tr><tr><td><em>pwszValue</em></td><td>The value of the element. NULL indicates that there is no content to write. In contrast, an empty string indicates that this element has an empty value.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns <strong>S_OK</strong> if no error is generated.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>pWriter-&gt;WriteElementString("myElement", "myValue")</code></pre>
+<hr>
+<h3 id="writeenddocument">WriteEndDocument</h3>
+<p>Closes any open elements or attributes, then closes the current document. To reinitialize the writer so that a new document can be written, you must call <strong>SetOutput</strong>.</p>
+<pre class="code"><code>FUNCTION WriteEndDocument () AS HRESULT</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>Returns <strong>S_OK</strong> if no error is generated.</p>
+<hr>
+<h3 id="writeendelement">WriteEndElement (CXmlWriter)</h3>
+<p>Closes one element. If the element contains no content, this method writes a short end tag <code>("/&gt;")</code>. Otherwise, this method writes the full end tag.</p>
+<pre class="code"><code>FUNCTION WriteEndElement () AS HRESULT</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>Returns <strong>S_OK</strong> if no error is generated.</p>
+<hr>
+<h3 id="writeendelementlite">WriteEndElement (CXmlWriterLite)</h3>
+<p>Closes one element. If the element contains no content, this method writes a short end tag <code>("/&gt;")</code>. Otherwise, this method writes the full end tag.</p>
+<pre class="code"><code>FUNCTION WriteEndElement (BYVAL pwszQName AS WSTRING PTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pwszQName</em></td><td>The qualified name of the element to close. NULL causes an error.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns <strong>S_OK</strong> if no error is generated.</p>
+<hr>
+<h3 id="writeentityref">WriteEntityRef</h3>
+<p>Writes out an entity reference with the specified name.</p>
+<pre class="code"><code>FUNCTION WriteEntityRef (BYVAL pwszName AS LPCWSTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pwszName</em></td><td>The name of the entity reference. NULL is not valid.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns <strong>S_OK</strong> if no error is generated.</p>
+<h5 id="remarks">Remarks</h5>
+<p>This method produces an entity reference in the following format, where name is the name provided:</p>
+<pre class="code"><code>&amp;name;</code></pre>
+<p>This method returns an error if NULL is supplied for the name.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>pWriter-&gt;WriteEntityRef("myEntity")</code></pre>
+<hr>
+<h3 id="writefullendelement">WriteFullEndElement (CXmlWriter)</h3>
+<p>Closes one element and pops the corresponding namespace scope. This method always writes the full end tag.</p>
+<pre class="code"><code>FUNCTION WriteFullEndElement () AS HRESULT</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>Returns <strong>S_OK</strong> if no error is generated.</p>
+<h5 id="remarks">Remarks</h5>
+<p>Use this method in cases where it is important to guarantee a full end tag. For example, you might use this method if you are writing an HTML <code>&lt;script&gt;</code> element. In HTML, a script block must be always be closed with the full end tag <code>&lt;/script&gt;</code> for browsers to properly interpret the block.</p>
+<hr>
+<h3 id="writefullendelementlite">WriteFullEndElement (CXmlWriterLite)</h3>
+<p>Closes the named element. This method always writes the full end tag.</p>
+<pre class="code"><code>FUNCTION WriteFullEndElement (BYVAL pwszQName AS CONST WSTRING PTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pwszName</em></td><td>The qualified name of the element to close. NULL causes an error.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns <strong>S_OK</strong> if no error is generated.</p>
+<h5 id="remarks">Remarks</h5>
+<p>Use this method when you must guarantee a full end tag. For example, you might use this method if you are writing an HTML <code>&lt;script&gt;</code> element. In HTML, a script block must always be closed with the full end tag <code>&lt;/script&gt;</code> for browsers to correctly interpret the block.</p>
+<hr>
+<h3 id="writename">WriteName</h3>
+<p>Writes out the specified name, ensuring that the name is valid according to the XML specification.</p>
+<pre class="code"><code>FUNCTION WriteName (BYVAL pwszName AS LPCWSTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pwszName</em></td><td>The name to write.. NULL is invalid.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns <strong>S_OK</strong> if no error is generated. Returns an error if pwszName is NULL or the name is not valid. An example of an invalid name is one that starts with a colon <code>(":")</code>.</p>
+<h5 id="remarks">Remarks</h5>
+<p>WriteName ensures that the name is valid according to the Namespaces in XML specification.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>pWriter-&gt;WriteName("myName")</code></pre>
+<hr>
+<h3 id="writenmtoken">WriteNmToken</h3>
+<p>Writes out the specified name, ensuring that the name is a valid <code>NmToken</code> according to the XML specification.</p>
+<pre class="code"><code>FUNCTION WriteNmToken (BYVAL pwszNmToken AS LPCWSTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pwszName</em></td><td>The name to write.. NULL is invalid.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns <strong>S_OK</strong> if no error is generated. Returns an error if pwszNmToken is NULL or the name is not a valid <code>NmToken</code>.</p>
+<h5 id="remarks">Remarks</h5>
+<p>If NULL is supplied for the name, an error is returned.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code> pWriter-&gt;WriteNmToken("myNmToken")</code></pre>
+<hr>
+<h3 id="writenode">WriteNode</h3>
+<p>Copies the current node from the specified source <strong>IXmlReader</strong> to the <strong>IXmlWriter</strong>. This method moves the <strong>IXmlReader</strong> source to the start of the next sibling node, reading all of the child nodes of the current node. If the reader is in the initial state, this method copies all of the nodes in the reader.</p>
+<pre class="code"><code>FUNCTION WriteNode (BYVAL pReader AS Afx_IXmlReader PTR, BYVAL fWriteDefaultAttributes AS BOOLEAN) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pReader</em></td><td>The reader to read from.</td></tr><tr><td><em>fWriteDefaultAttributes</em></td><td>Specifies whether to also copy the default attributes from the specified <strong>IXmlReader</strong>.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns <strong>S_FALSE</strong> if no error is generated.</p>
+<h5 id="remarks">Remarks</h5>
+<p>When the <strong>IXmlReader</strong> is already at the end of the input, or has been closed, the reader contains no nodes to be written. In this case, this method does not write any nodes to the writer.</p>
+<p>When the <strong>IXmlReader</strong> has an <strong>IXmlResolver</strong> specified, Entity Reference nodes may have been resolved with that resolver. For the <strong>IXmlReader</strong>, the resolved entity is a child node of the Entity Reference node.</p>
+<p>Notice that attribute nodes have no siblings, but are instead considered as metadata contained by element nodes. Therefore, attribute nodes cannot be copied individually.</p>
+<p>The specified <strong>IXmlReader</strong> can supply default attributes from a Document Type Definition (DTD). When the <em>fWriteDefaultAttributes</em> property is set to TRUE, all default values from the supplied data source are written to the output. When the <em>fWriteDefaultAttributes</em> property is set to FALSE, no default values from the supplied data source are written to the output.</p>
+<p>The following table shows the actions this method takes, depending on the <strong>XmlNodeType</strong> of the current node.</p>
+<div class="table-wrap"><table><thead><tr><th>XmlNodeType</th><th>Description</th></tr></thead><tbody><tr><td>None</td><td>This occurs when the reader is in the XmlReaderState_Initial state. If there is no XmlNodeType, the writer writes out all the nodes regardless of type. That is, the writer consumes the IXmlReader and writes out all the nodes read, including attributes, processing instructions, comments, and so on.</td></tr><tr><td>Element</td><td>The writer writes out the element node and all child nodes of the element. It also writes out all attributes of all nodes that are written out.</td></tr><tr><td>Attribute</td><td>This node type is not directly supported when writing. Attributes are written out when their parent element is written. To write individual attributes, use the WriteAttributes method or the or WriteAttributeString method. This node type is primarily used when reading and parsing documents.</td></tr><tr><td>Text</td><td>The writer writes out the text node.</td></tr><tr><td>CDATA</td><td>The writer writes out the CDATA section node.</td></tr><tr><td>EntityReference</td><td>The writer writes the Entity Reference node.</td></tr><tr><td>ProcessingInstruction</td><td>The writer writes the PI node.</td></tr><tr><td>Comment</td><td>The writer writes the Comment node.</td></tr><tr><td>DocumentType</td><td>The writer writes the DocType node.</td></tr><tr><td>Whitespace</td><td>The writer writes the Whitespace node.</td></tr><tr><td>SignificantWhitespace</td><td>The writer writes the Significant Whitespace node.</td></tr><tr><td>EndElement</td><td>No operation.</td></tr><tr><td>EndEntity</td><td>This node type is not supported when writing. Entities are automatically ending when writing them.</td></tr><tr><td>XmlDeclaration</td><td>Writes out the XmlDeclaration node..</td></tr></tbody></table></div>
+<h5 id="note">Note</h5>
+<p>If the specified <strong>IXmlReader</strong> returns white space and the <strong>XmlWriterProperty_Indent</strong> property is set to TRUE, both the reader and the writer can indent nodes.</p>
+<hr>
+<h3 id="writenodeshallow">WriteNodeShallow</h3>
+<p>Copies the current node from the specified source <strong>IXmlReader</strong> to the <strong>IXmlWriter</strong>, without writing the children of the current node.</p>
+<pre class="code"><code>FUNCTION WriteNodeShallow (BYVAL pReader AS Afx_IXmlReader PTR, BYVAL fWriteDefaultAttributes AS BOOLEAN) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pReader</em></td><td>The reader to read from.</td></tr><tr><td><em>fWriteDefaultAttributes</em></td><td>Specifies whether to also copy the default attributes or elements from the supplied <strong>IXmlReader</strong>.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns <strong>S_OK</strong> if no error is generated.</p>
+<h5 id="remarks">Remarks</h5>
+<p>This method copies the current node from the specified <strong>IXmlReader</strong> to the <strong>IXmlWriter</strong>, without writing the children of the current node. This method is similar to <strong>WriteNode</strong>, except that it will only write the current node. It will not close the node, and will not move the reader forward.</p>
+<hr>
+<h3 id="writeprocessinginstruction">WriteProcessingInstruction</h3>
+<p>Writes a processing instruction.</p>
+<pre class="code"><code>FUNCTION WriteProcessingInstruction (BYVAL pwszName AS LPCWSTR, BYVAL pwszText AS LPCWSTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pwszName</em></td><td>The name of the processing instruction. This parameter cannot be NULL.</td></tr><tr><td><em>pwszText</em></td><td>The text content of the processing instruction. NULL is equivalent to an empty string.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns <strong>S_OK</strong> if no error is generated.</p>
+<h5 id="remarks">Remarks</h5>
+<p>The writer creates a processing instruction by writing the provided name and text with a space after the name.</p>
+<p>If the pwszText parameter is NULL, this method returns <strong>S_OK</strong> and writes a processing instruction with no text content.</p>
+<p>If the text block provided contains the characters <code>"?&gt;"</code>, which denote the end of a processing instruction, the writer inserts a space after the <code>"?"</code> character. This change to the text prevents the writer from producing an XML document that is not well-formed.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>pWriter-&gt;WriteProcessingInstruction("xml-stylesheet", "href=\"mystyle.css\" title=\"Compact\" type=\"text/css\"")</code></pre>
+<hr>
+<h3 id="writequalifiedname">WriteQualifiedName</h3>
+<p>Writes out the specified namespace-qualified name by looking up the prefix that is in scope for the specified namespace.</p>
+<pre class="code"><code>FUNCTION WriteQualifiedName (BYVAL pwszLocalName AS LPCWSTR PTR, BYVAL pwszNamespaceUri AS LPCWSTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pwszLocalName</em></td><td>The local name to write. NULL is not valid.</td></tr><tr><td><em>pwszNamespaceUri</em></td><td>The namespace URI of the name to write. NULL is equivalent to the empty string.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns <strong>S_OK</strong> if no error is generated.</p>
+<h5 id="remarks">Remarks</h5>
+<p>This method outputs the qualified name given the specified namespace and local name. If the provided namespace is not in scope, then this method returns an error. If the provided namespace is in scope and the namespace has a namespace prefix, then this method writes the qualified name with the prefix. If the namespace provided is the current default namespace, the name does not need a prefix and this method does not produce one.</p>
+<p>The <strong>WriteQualifiedName</strong> method returns an error if pwszLocalName is NULL or the name is not valid according to the Namespaces in XML specification. An example of this is if the name starts with a colon (":").</p>
+<hr>
+<h3 id="writeraw">WriteRaw</h3>
+<p>Enables the caller to write out raw markup manually. You can avoid creating entities for special characters by using this method.</p>
+<pre class="code"><code>FUNCTION WriteRaw (BYVAL pwszData AS LPCWSTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pwszData</em></td><td>The data to write. Writes nothing if NULL.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns <strong>S_OK</strong> if no error is generated.</p>
+<h5 id="remarks">Remarks</h5>
+<p>If <em>pwszData</em> is NULL, nothing is written. In contrast, if this parameter is an empty string, an empty text entry is written. That is, the value written is "".</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>pWriter-&gt;WriteRaw("&lt;elementWrittenRaw/&gt;")</code></pre>
+<hr>
+<h3 id="writerawchars">WriteRawChars</h3>
+<p>Writes out raw markup manually. Using this method allows an application to avoid creating entities for special characters.</p>
+<pre class="code"><code>FUNCTION WriteRawChars (BYVAL pwch AS CONST WSTRING PTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pwch</em></td><td>Pointer to the characters to write. NULL is valid only if count is zero.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns <strong>S_OK</strong> if no error is generated.</p>
+<h5 id="remarks">Remarks</h5>
+<p>Writes nothing if the count parameter is 0 or if the characters parameter is NULL.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>pWriter-&gt;WriteRawChars("&lt;rawCharacters/&gt;")</code></pre>
+<hr>
+<h3 id="writestartdocument">WriteStartDocument</h3>
+<p>Writes out the XML declaration with the version "1.0". The encoding attribute is determined by the implementation of <strong>IXmlWriterOutput</strong>. By default, the encoding is UTF-8.</p>
+<pre class="code"><code>FUNCTION WriteStartDocument (BYVAL standalone AS XmlStandalone) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>standalone</em></td><td>If <em>XmlStandalone_Omit</em> does not write a standalone attribute in the XML declaration, one of the following occurs: If <em>XmlStandalone_No</em>, the writer writes standalone="no". If <em>XmlStandalone_Yes</em>, the writer writes standalone="yes".</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns <strong>S_OK</strong> if no error is generated.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>pWriter-&gt;WriteStartDocument(XmlStandalone_Omit)</code></pre>
+<hr>
+<h3 id="writestartelement">WriteStartElement (CXmlWriter)</h3>
+<p>Writes out the specified start tag and associates it with the specified namespace.</p>
+<pre class="code"><code>FUNCTION WriteStartElement (BYVAL pwszPrefix AS LPCWSTR, BYVAL pwszLocalName AS LPCWSTR, _
+   BYVAL pwszNamespaceUri AS LPCWSTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pwszPrefix</em></td><td>The namespace prefix of the element. A NULL value is equivalent to an empty string.</td></tr><tr><td><em>pwszLocalName</em></td><td>The local name of the element. A NULL value is not valid.</td></tr><tr><td><em>pwszNamespaceUri</em></td><td>The namespace URI of the element. NULL is equivalent to an empty string.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns S_OK if no error is generated.</p>
+<h5 id="remarks">Remarks</h5>
+<p>After calling this method, an application can either write attributes or write content. To write content, use <strong>WriteComment</strong>, <strong>WriteString</strong>, or <strong>WriteStartElement</strong>.</p>
+<p>A program must call <strong>WriteEndElement</strong> to close the element. The <strong>WriteEndElement</strong> method might write a full end tag, or it might close the element using the short form. The <strong>WriteFullEndElement</strong> method always writes a full end tag.</p>
+<h5 id="usahe-example">Usahe example</h5>
+<pre class="code"><code>pWriter-&gt;WriteStartElement(NULL, "containsEntity", NULL)</code></pre>
+<hr>
+<h3 id="writestartelementlite">WriteStartElement (CXmlWriterLite)</h3>
+<p>Writes out the specified start tag.</p>
+<pre class="code"><code>WriteStartElement (BYVAL pwszQName AS CONST WSTRING PTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pwszQName</em></td><td>The qualified name of the element to open. NULL causes an error.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns S_OK if no error is generated.</p>
+<h5 id="remarks">Remarks</h5>
+<p>After calling this method, an application can either write attributes or write content. To write content, use <strong>WriteComment</strong>, <strong>WriteString</strong>, or <strong>WriteStartElement</strong>.</p>
+<p>A program must call <strong>WriteEndElement</strong> or <strong>WriteFullEndElement</strong> to close the element. The <strong>WriteEndElement</strong> method might write a full end tag, or it might close the element by using the short form. The <strong>WriteFullEndElement</strong> method always writes a full end tag.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>pWriter-&gt;WriteEndElement("containsEntity")</code></pre>
+<hr>
+<h3 id="writestring">WriteString</h3>
+<p>Writes out the specified text content, escaping any markup in the content.</p>
+<pre class="code"><code>FUNCTION WriteString (BYVAL pwszText AS LPCWSTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pwszText</em></td><td>The text to write. NULL is valid and indicates that no operation is to be performed.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns <strong>S_OK</strong> if no error is generated.</p>
+<h5 id="remarks">Remarks</h5>
+<p>If the value is NULL, this method returns <strong>S_OK</strong> but does not write any content. In contrast, if <em>pwzText</em> is an empty string, the value written is "".</p>
+<p>Surrogate pair characters cannot be split across multiple buffers when this method is called. Therefore, surrogate pairs require special handling. The XML specification defines the valid ranges for surrogate pairs. To write a surrogate pair, see <strong>WriteSurrogateCharEntity</strong>.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>pWriter-&gt;WriteString("Markup is &lt;escaped&gt; for this string")</code></pre>
+<hr>
+<h3 id="writesurrogatecharentity">WriteSurrogateCharEntity</h3>
+<p>Forces the generation of a surrogate character entity for the specified string value.</p>
+<pre class="code"><code>FUNCTION WriteSurrogateCharEntity (BYVAL wchLow AS WCHAR, BYVAL wchHigh AS WCHAR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wchLow</em></td><td>Low-surrogate for the pair. The code value must be in the range U+DC00 - U+DFFF.</td></tr><tr><td><em>wchHigh</em></td><td>High-surrogate for the pair. The code value must be in the range U+D800 - U+DBFF.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns S_OK if no error is generated.</p>
+<h5 id="remarks">Remarks</h5>
+<p>A surrogate pair is defined as character code consisting of a sequence of two Unicode values, where the first value is a high-surrogate and the second value is a low-surrogate. The <em>lowChar</em> and <em>highChar</em> parameters must be a valid surrogate character pair, otherwise an error is returned and the writer does not produce output. The writer writes surrogate pairs in hexadecimal format.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>WriteSurrogateCharEntity(&amp;hD800, &amp;hDC00)</code></pre>
+<hr>
+<h3 id="writewhitespace">WriteWhitespace</h3>
+<p>Writes out the specified white space.</p>
+<pre class="code"><code>FUNCTION WriteWhitespace (BYVAL pwszWhitespace AS LPCWSTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pwszWhitespace</em></td><td>The white space to write. NULL is valid and indicates that no operation is to be performed.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns S_OK if no error is generated.</p>
+<h5 id="remarks">Remarks</h5>
+<p>Use this method to manually format an XML document.</p>
+<p>When the whitespace parameter is NULL, this method returns <strong>S_OK</strong> without writing any content. In contrast, if the parameter is an empty string, the value written is "".</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>pWriter-&gt;WriteWhitespace("\n")</code></pre>
+<hr>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../index.html">Home</a> ·
+         <a href="../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../nav.js?v=70a6b70236"></script>
+<script src="../../search-index.js"></script>
+<script src="../../assets/app.js?v=456d079659"></script>
+<script src="../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

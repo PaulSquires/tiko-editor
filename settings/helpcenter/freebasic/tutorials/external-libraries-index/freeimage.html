@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FreeImage — Help Center</title>
+<meta name="description" content="FreeImage — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/external-libraries-index/freeimage.html">
+<meta property="og:title" content="FreeImage">
+<meta property="og:description" content="FreeImage — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/external-libraries-index/freeimage.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/external-libraries-index/freeimage.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>FreeImage</h1>
+<h2>Documentation</h2>
+
+	FreeImage is an Open Source library project for developers who would like to support popular graphics image formats like PNG, BMP, JPEG, TIFF and others as needed by today's multimedia applications. FreeImage is easy to use, fast, multithreading safe, compatible with all 32-bit versions of Windows, and cross-platform (works both with Linux and Mac OS X).<br>
+<br>
+Website: http://freeimage.sourceforge.net/<br>
+Platforms supported: Win32, Linux<br>
+Headers to include: FreeImage.bi<br>
+Header version: 3.15.1<br>
+Example included: yes, in examples/files/FreeImage<br>
+<br>
+<div>Example</div><div><br>
+Here follows an example of using FreeImage in FreeBASIC.  If using Windows you will require freeimage.dll which is available from the <a href="http://freeimage.sourceforge.net/">FreeImage site</a>.<br>
+<code><pre class="code"><span class="tok-cm">'' Code example for loading all common image types using FreeImage.</span>
+
+<span class="tok-cm">'' The example loads an image passed as a command line argument.</span>
+
+
+
+<span class="tok-cm">'' The function FI_Load returns a null pointer (0) if there was an error during</span>
+
+<span class="tok-cm">'' loading.  Otherwise it returns a 32-bit PUT compatible buffer.</span>
+
+
+
+<span>#include &quot;FreeImage.bi&quot;
+
+#include &quot;crt.bi&quot;
+
+#include &quot;fbgfx.bi&quot;
+
+</span>
+
+<span class="tok-kw">Function</span> <span>FI_Load</span><span>(</span><span>filename</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span>
+
+    <span class="tok-kw">If</span> <span class="tok-kw">Len</span><span>(</span><span>filename</span><span>)</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">Then</span>
+
+        <span class="tok-kw">Return</span> <span>NULL</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+
+
+    <span class="tok-cm">'' Find out the image format</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>FREE_IMAGE_FORMAT</span> <span>form</span> <span>=</span> <span>FreeImage_GetFileType</span><span>(</span><span class="tok-kw">StrPtr</span><span>(</span><span>filename</span><span>),</span> <span class="tok-nu">0</span><span>)</span>
+
+    <span class="tok-kw">If</span> <span>form</span> <span>=</span> <span>FIF_UNKNOWN</span> <span class="tok-kw">Then</span>
+
+        <span>form</span> <span>=</span> <span>FreeImage_GetFIFFromFilename</span><span>(</span><span class="tok-kw">StrPtr</span><span>(</span><span>filename</span><span>))</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+
+
+    <span class="tok-cm">'' Exit if unknown</span>
+
+    <span class="tok-kw">If</span> <span>form</span> <span>=</span> <span>FIF_UNKNOWN</span> <span class="tok-kw">Then</span>
+
+        <span class="tok-kw">Return</span> <span>NULL</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+
+
+    <span class="tok-cm">'' Always load jpegs accurately</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span> <span>flags</span> <span>=</span> <span class="tok-nu">0</span>
+
+    <span class="tok-kw">If</span> <span>form</span> <span>=</span> <span>FIF_JPEG</span> <span class="tok-kw">Then</span>
+
+        <span>flags</span> <span>=</span> <span>JPEG_ACCURATE</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+
+
+    <span class="tok-cm">'' Load the image into memory</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>FIBITMAP</span> <span class="tok-kw">Ptr</span> <span>image</span> <span>=</span> <span>FreeImage_Load</span><span>(</span><span>form</span><span>,</span> <span class="tok-kw">StrPtr</span><span>(</span><span>filename</span><span>),</span> <span>flags</span><span>)</span>
+
+    <span class="tok-kw">If</span> <span>image</span> <span>=</span> <span>NULL</span> <span class="tok-kw">Then</span>
+
+        <span class="tok-cm">'' FreeImage failed to read in the image</span>
+
+        <span class="tok-kw">Return</span> <span>NULL</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+
+
+    <span class="tok-cm">'' Flip the image so it matches FB's coordinate system</span>
+
+    <span>FreeImage_FlipVertical</span><span>(</span><span>image</span><span>)</span>
+
+
+
+    <span class="tok-cm">'' Convert to 32 bits per pixel</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>FIBITMAP</span> <span class="tok-kw">Ptr</span> <span>image32</span> <span>=</span> <span>FreeImage_ConvertTo32Bits</span><span>(</span><span>image</span><span>)</span>
+
+
+
+    <span class="tok-cm">'' Get the image's size</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span> <span>w</span> <span>=</span> <span>FreeImage_GetWidth</span><span>(</span><span>image</span><span>)</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span> <span>h</span> <span>=</span> <span>FreeImage_GetHeight</span><span>(</span><span>image</span><span>)</span>
+
+
+
+    <span class="tok-cm">'' Create an FB image of the same size</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>fb.Image</span> <span class="tok-kw">Ptr</span> <span>sprite</span> <span>=</span> <span class="tok-kw">ImageCreate</span><span>(</span><span>w</span><span>,</span> <span>h</span><span>)</span>
+
+
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Byte</span> <span class="tok-kw">Ptr</span> <span>target</span> <span>=</span> <span class="tok-kw">CPtr</span><span>(</span><span class="tok-kw">Byte</span> <span class="tok-kw">Ptr</span><span>,</span> <span>sprite</span> <span>+</span> <span class="tok-nu">1</span><span>)</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>target_pitch</span> <span>=</span> <span>sprite</span><span>-&gt;</span><span>pitch</span>
+
+
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>source</span> <span>=</span> <span>FreeImage_GetBits</span><span>(</span><span>image32</span><span>)</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>source_pitch</span> <span>=</span> <span>FreeImage_GetPitch</span><span>(</span><span>image32</span><span>)</span>
+
+
+
+    <span class="tok-cm">'' And copy over the pixels, row by row</span>
+
+    <span class="tok-kw">For</span> <span>y</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span>(</span><span>h</span> <span>-</span> <span class="tok-nu">1</span><span>)</span>
+
+        <span>memcpy</span><span>(</span><span>target</span> <span>+</span> <span>(</span><span>y</span> <span>*</span> <span>target_pitch</span><span>),</span> <span>_</span>
+
+               <span>source</span> <span>+</span> <span>(</span><span>y</span> <span>*</span> <span>source_pitch</span><span>),</span> <span>_</span>
+
+               <span>w</span> <span>*</span> <span class="tok-nu">4</span><span>)</span>
+
+    <span class="tok-kw">Next</span>
+
+
+
+    <span>FreeImage_Unload</span><span>(</span><span>image32</span><span>)</span>
+
+    <span>FreeImage_Unload</span><span>(</span><span>image</span><span>)</span>
+
+
+
+    <span class="tok-kw">Return</span> <span>sprite</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">ScreenRes</span> <span class="tok-nu">640</span><span>,</span> <span class="tok-nu">480</span><span>,</span> <span class="tok-nu">32</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>filename</span> <span>=</span> <span class="tok-kw">Command</span><span>(</span><span class="tok-nu">1</span><span>)</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>image</span> <span>=</span> <span>FI_Load</span><span>(</span><span>filename</span><span>)</span>
+
+<span class="tok-kw">If</span> <span>image</span> <span>&lt;&gt;</span> <span class="tok-nu">0</span> <span class="tok-kw">Then</span>
+
+    <span class="tok-kw">Put</span> <span>(</span><span class="tok-nu">0</span><span>,</span> <span class="tok-nu">0</span><span>),</span> <span>image</span>
+
+    <span class="tok-kw">ImageDestroy</span><span>(</span><span>image</span><span>)</span>
+
+<span class="tok-kw">Else</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;Problem while loading file : &quot;</span> <span>&amp;</span> <span>filename</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+<br>
+</div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

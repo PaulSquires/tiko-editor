@@ -1,0 +1,807 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FBgfx Image and Font Buffers — Help Center</title>
+<meta name="description" content="FBgfx Image and Font Buffers — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/fbgfx-image-and-font-buffers.html">
+<meta property="og:title" content="FBgfx Image and Font Buffers">
+<meta property="og:description" content="FBgfx Image and Font Buffers — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/fbgfx-image-and-font-buffers.html">
+<link rel="stylesheet" href="../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/fbgfx-image-and-font-buffers.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>FBgfx Image and Font Buffers</h1>
+<h2>Documentation</h2>
+
+	Creating and understanding your FBgfx image and font buffers<br>
+<br>
+The FBgfx Image Buffer<br>
+<div class="indent">Creating Buffers<br>
+Buffer Format<br>
+Getting Pixels<br>
+</div>The FBgfx Font Header<br>
+<div class="indent">Header Details<br>
+Creating a Font Buffer<br>
+Assigning Font Characters<br>
+</div>Tips & Tricks<br>
+<div class="indent">Coloring your Custom Fonts<br>
+ScrPtr vs ImgBuf<br>
+<br>
+<br>
+</div><div>The FBgfx Image Buffer</div><br>
+<br>
+FBgfx has a new data type in .17 and above.  This type is called <code>IMAGE</code>.  You can use it by including the FBgfx Header in your program (<code><a href="../preprocessor/procedures/include.html">#include</a> "fbgfx.bi"</code>) and then accessing the namespace for FBgfx, via <code>FB.IMAGE</code>.  When we create buffers in this tutorial, we're going to be using the <code>fb.Image <a href="../standard-data-types/procedures/pointer-ptr.html">Ptr</a></code> type.  A pointer, because it's dynamic memory which we can resize.<br>
+<br>
+To use an image in the FBgfx Library, you have to create it via image buffer.  Your buffer is an area of memory allocated (created, made available) for your image.  You have to deallocate (free, make available to other programs) the buffer when you are done using it at the end of your program.  FBgfx has its own internal pixel format, as well as an image header at the beginning of every buffer created.  The image header contains information about your image.  Things like its width, height, bit depth, etc., while the pixel Buffer contains the actual colors for each individual pixel in RGB (red, blue, green) format.<br>
+<br>
+<b>Creating Buffers</b><br>
+<br>
+The size of the buffer you create will vary depending on screen depth.  Your bytes-per-pixel are the number of bytes needed to store individual pixels.  Thus, a 32-bit pixel depth screen will need 4 bytes per pixel (8 bits in a byte).  You don't need to worry about this, however, as using the <code>fb.Image <a href="../standard-data-types/procedures/pointer-ptr.html">Ptr</a></code> setup to create your buffer makes it very easy to get the information we need from our buffers.  You only need to know this information to understand how much size a buffer may take up total, for memory usage information.<br>
+<br>
+Actually creating the buffer is very simple.  It's just a simple creation of an <code>fb.Image <a href="../standard-data-types/procedures/pointer-ptr.html">Ptr</a></code>, and a call to <code><a href="../2d-drawing-functions/procedures/imagecreate.html">ImageCreate</a></code> (Example1.bas):<br>
+<br>
+<code><pre class="code"><span>#include &quot;fbgfx.bi&quot;
+
+</span>
+
+  <span class="tok-cm">'' Our image width/height</span>
+
+<span class="tok-kw">Const</span> <span>ImgW</span> <span>=</span> <span class="tok-nu">64</span>
+
+<span class="tok-kw">Const</span> <span>ImgH</span> <span>=</span> <span class="tok-nu">64</span>
+
+
+
+  <span class="tok-cm">'' Screens have to be created before a call to imagecreate</span>
+
+<span class="tok-kw">ScreenRes</span> <span class="tok-nu">640</span><span>,</span> <span class="tok-nu">480</span><span>,</span> <span class="tok-nu">32</span>
+
+
+
+  <span class="tok-cm">'' Create our buffer</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>FB.Image</span> <span class="tok-kw">Ptr</span> <span>myBuf</span> <span>=</span> <span class="tok-kw">ImageCreate</span><span>(</span><span>ImgW</span><span>,</span> <span>ImgH</span><span>)</span>
+
+
+
+  <span class="tok-cm">'' Print the address of our buffer.</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Buffer created at: &quot;</span> <span>&amp;</span> <span>myBuf</span>
+
+<span class="tok-kw">Sleep</span>
+
+
+
+  <span class="tok-cm">'' Destroy our buffer.  Always DESTROY buffers you CREATE</span>
+
+<span class="tok-kw">ImageDestroy</span><span>(</span> <span>myBuf</span> <span>)</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Our buffer was destroyed.&quot;</span>
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+<br>
+<b>Code Dissection</b><br>
+<br>
+<code><pre class="code"><span>#include &quot;fbgfx.bi&quot;
+
+</span></pre></code><br>
+<br>
+This includes the header file which contains the definition for the <code>fb.Image</code> type.<br>
+<br>
+<code><pre class="code"><span class="tok-cm">'' Our image width/height</span>
+
+<span class="tok-kw">Const</span> <span>ImgW</span> <span>=</span> <span class="tok-nu">64</span>
+
+<span class="tok-kw">Const</span> <span>ImgH</span> <span>=</span> <span class="tok-nu">64</span></pre></code><br>
+<br>
+This creates constants which will be used to decide the size of our image.  FBgfx doesn't know about these.  We'll have to pass them to <code><a href="../2d-drawing-functions/procedures/imagecreate.html">ImageCreate</a></code> when we use it.<br>
+<br>
+<code><pre class="code"><span class="tok-cm">'' Screens have to be created before a call to imagecreate</span>
+
+<span class="tok-kw">ScreenRes</span> <span class="tok-nu">640</span><span>,</span> <span class="tok-nu">480</span><span>,</span> <span class="tok-nu">32</span></pre></code><br>
+<br>
+This creates our FBgfx screen.  <code><a href="../2d-drawing-functions/procedures/imagecreate.html">ImageCreate</a></code> needs to know our bit depth beforehand.  However, FBgfx's <code><a href="../2d-drawing-functions/procedures/imagecreate.html">ImageCreate</a></code> now has an extra parameter allowing you to set the depth yourself.<br>
+<br>
+<code><pre class="code"><span class="tok-cm">'' Create our buffer</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>FB.Image</span> <span class="tok-kw">Ptr</span> <span>myBuf</span> <span>=</span> <span class="tok-kw">ImageCreate</span><span>(</span><span>ImgW</span><span>,</span> <span>ImgH</span><span>)</span></pre></code><br>
+<br>
+This first of all creates a pointer that is of the <code>fb.Image</code> type.  It's just a location of memory.  We haven't filled it with anything yet.  In fact, right now it equals zero, and could not be used.  That's considered to be null.<br>
+<br>
+The <code><a href="../2d-drawing-functions/procedures/imagecreate.html">ImageCreate</a></code> call returns the address of an area in memory of a newly created <code>fb.Image</code> which we initialize our pointer with.  The size of this buffer depends on the bit depth, but the width/height of the image contained in the buffer is going to be the ones we set earlier.  <code><a href="../2d-drawing-functions/procedures/imagecreate.html">ImageCreate</a></code> can also take a fill color and depth as the third and fourth arguments, respectively; if not specified, the image will be created filled with the transparent color and match the current screen color depth.<br>
+<br>
+We now have allocated a space in memory.  It's enough space to hold an ImgWxImgH image, along with the data FBgfx holds within its <code>fb.Image</code> type.  We'll need to destroy it later for proper memory management.<br>
+<br>
+<code><pre class="code"><span class="tok-cm">'' Print the address of our buffer.</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Buffer created at: &quot;</span> <span>&amp;</span> <span>myBuf</span>
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+<br>
+This is just there to let you know what we've done.  We print the address of <code>myBuf</code>.  If it's not <code>0</code>, we can assume that <code><a href="../2d-drawing-functions/procedures/imagecreate.html">ImageCreate</a></code> had worked.<br>
+<br>
+<code><pre class="code"><span class="tok-cm">'' Destroy our buffer.  Always DESTROY buffers you CREATE</span>
+
+<span class="tok-kw">ImageDestroy</span><span>(</span> <span>myBuf</span> <span>)</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Our buffer was destroyed.&quot;</span>
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+<br>
+Here we destroy our buffer with a call to <code><a href="../2d-drawing-functions/procedures/imagedestroy.html">ImageDestroy</a></code>.  We don't have to use <code><a href="../2d-drawing-functions/procedures/imagedestroy.html">ImageDestroy</a></code> to deallocate our buffer, but it's best to use it for consistency and clarity.<br>
+<br>
+<b>Buffer Format</b><br>
+<br>
+Now that we know how to create buffers, we might want to know more information about what's being held inside of them.  You can open up the <code>fbgfx.bi</code> header file and find the <code>fb.Image</code> type, and you can see all of this cool stuff inside of it.<br>
+<br>
+We actually don't need to know much about the format itself.  The reason for this is, we used an <code>fb.Image <a href="../standard-data-types/procedures/pointer-ptr.html">Ptr</a></code>.  Everything after the <code>Buf + <a href="../miscellaneous-keywords/procedures/sizeof.html">SizeOf</a>(fb.Image)</code> in memory belongs to pixels.  Everything before that is the header.  The header can be accessed very easily because we used the <code>fb.Image <a href="../standard-data-types/procedures/pointer-ptr.html">Ptr</a></code>.  All you have to know is what you want to look for.<br>
+<br>
+<b>FB.IMAGE Data Type</b><br>
+<br>
+<code><pre class="code"><span class="tok-cm">'' Image buffer header, new style (incorporates old header)</span>
+
+    <span class="tok-cm">''</span>
+
+    <span class="tok-kw">Type</span> <span>IMAGE</span> <span class="tok-kw">Field</span> <span>=</span> <span class="tok-nu">1</span>
+
+        <span class="tok-kw">Union</span>
+
+            <span>old</span> <span class="tok-kw">As</span> <span>_OLD_HEADER</span>
+
+            <span class="tok-kw">Type</span> <span class="tok-kw">As</span> <span class="tok-kw">ULong</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">Union</span>
+
+        <span>bpp</span> <span class="tok-kw">As</span> <span class="tok-kw">Long</span>
+
+        <span class="tok-kw">Width</span> <span class="tok-kw">As</span> <span class="tok-kw">ULong</span>
+
+        <span>height</span> <span class="tok-kw">As</span> <span class="tok-kw">ULong</span>
+
+        <span>pitch</span> <span class="tok-kw">As</span> <span class="tok-kw">ULong</span>
+
+        <span>_reserved</span><span>(</span><span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">12</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span>
+
+        
+
+<span class="tok-cm">'  '' properties</span>
+
+<span class="tok-cm">'  declare property pixels() as ubyte ptr</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+    
+
+    <span class="tok-cm">'' This is a trick to obtain a pointer to the pixels data area</span>
+
+    <span class="tok-cm">''</span>
+
+<span class="tok-cm">' property IMAGE.pixels() as ubyte ptr</span>
+
+<span class="tok-cm">'  return cast(ubyte ptr, @this) + sizeof(IMAGE)</span>
+
+<span class="tok-cm">' end property</span></pre></code><br>
+<br>
+This same information can be found in <code>fbgfx.bi</code>.  As you can see, this data type saves a *lot* of neat information about your buffer.  The Width, Height, Pitch (bytes per row), and Bit Depth (bytes per pixel) are all contained.  In the union is included the type of header, and the old header itself within the same space.  The new header format is indicated by a type value of <code>7</code>.  The old header format is not used in the default dialect in the newer versions of FB, so we're not going to cover it here.<br>
+<br>
+How do we access that information within the header?  If you're familiar with pointers (which you should be, we used a pointer for our buffer in the first example), then all you have to do is access your buffer like a pointer, and directly access the data within.  This may leave you to believe that all that's contained in your buffer is the <code>fb.Image</code> type itself, but that's just not true.  Using a <code>fb.Image <a href="../standard-data-types/procedures/pointer-ptr.html">Ptr</a></code> allows the compiler to think that's what's contained in the buffer, even though only the first part does so.<br>
+<br>
+<b>Getting Pixels</b><br>
+<br>
+The first section of our buffer which FreeBASIC helps us out with contains the header information.  Add the size of the <code>fb.Image</code> to our address, and the rest of our buffer contains pixels (Example2.bas).<br>
+<br>
+<code><pre class="code"><span class="tok-cm">'' We have to include this to use our FB.IMAGE datatype, remember.</span>
+
+<span>#include &quot;fbgfx.bi&quot;
+
+</span></pre></code><br>
+<br>
+Remember to include our <code>fb.Image</code> data type!<br>
+<br>
+<code><pre class="code"><span class="tok-cm">'' This one is very important.</span>
+
+  <span class="tok-cm">'' We cast to a ubyte ptr first off, to get the exact byte our pixels begin.</span>
+
+  <span class="tok-cm">'' We then cast to a uLong ptr, simply to avoid &quot;suspicious assignment&quot;</span>
+
+  <span class="tok-cm">'' warnings.</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">ULong</span> <span class="tok-kw">Ptr</span> <span>myPix</span> <span>=</span> <span class="tok-kw">Cast</span><span>(</span> <span class="tok-kw">ULong</span> <span class="tok-kw">Ptr</span><span>,</span> <span>(</span> <span class="tok-kw">Cast</span><span>(</span> <span class="tok-kw">UByte</span> <span class="tok-kw">Ptr</span><span>,</span> <span>myBuf</span> <span>)</span> <span>+</span> <span class="tok-kw">SizeOf</span><span>(</span><span>FB.Image</span><span>)</span> <span>)</span> <span>)</span></pre></code><br>
+<br>
+Phew.  Alright.  We have to make sure we get the exact address of our pixels.  A ulong contains 4 bytes.  3 of these are used for our RGB, and the extra is generally used for alpha when you need it (some people are very resourceful and will use the alpha byte - or channel - to store all kinds of data).  If we're even ONE BYTE off, your Red can become your Green, and your Blue into your Red!  So we have to cast to a <code><a href="../standard-data-types/procedures/ubyte.html">UByte</a> <a href="../standard-data-types/procedures/pointer-ptr.html">Ptr</a></code> first.<br>
+<br>
+You probably also noticed that we simply added <code>sizeof(fb.Image)</code> to our address.  That's another perk of using <code>fb.Image</code>!  If you add its size to the start of the buffer, we have just skipped all the memory addresses relating to the header and are now at our pixels.<br>
+<br>
+Finally, we cast it all to a <code><a href="../standard-data-types/procedures/ulong.html">ULong</a> <a href="../standard-data-types/procedures/pointer-ptr.html">Ptr</a></code>, mainly for safety.  We're in 32 bit depth mode, so we need 4 bytes per pixels.  A <code><a href="../standard-data-types/procedures/ulong.html">ULong</a></code> has that.<br>
+<br>
+Here's a small line if you still don't understand how this works.  Here is our buffer:  |FB.IMAGE Header|Pixels|<br>
+<br>
+If what's contained in the first section of our buffer is the <code>fb.Image</code> Header, it's obviously going to be that big in size.  So, we can get our address for the pixels, simply by adding the size of the <code>fb.Image</code> datatype onto our original address.<br>
+<br>
+One problem though!  If we add that size to our buffer address, to try and get a new one, we end up with strange results.  This is because our datatype isn't one byte long.  We have to cast to a <code><a href="../standard-data-types/procedures/ubyte.html">UByte</a> <a href="../standard-data-types/procedures/pointer-ptr.html">Ptr</a></code> first, then add the address.  A <code><a href="../standard-data-types/procedures/ubyte.html">UByte</a></code> is one byte long, so we'll get the exact byte we need in memory to work with.<br>
+<br>
+Finally, we're in 32-bits.  We just cast to a <code><a href="../standard-data-types/procedures/ubyte.html">UByte</a> <a href="../standard-data-types/procedures/pointer-ptr.html">Ptr</a></code>.  Although we *can* just assign the uLong ptr the address of the <code><a href="../standard-data-types/procedures/ubyte.html">UByte</a></code>, it's best practice to cast it to a <code><a href="../standard-data-types/procedures/ulong.html">ULong</a> <a href="../standard-data-types/procedures/pointer-ptr.html">Ptr</a></code> first.  We finally have the address of our pixels, in the right datatype (one per pixel!).  We could manipulate those pixels directly now, if we'd like.<br>
+<br>
+<br>
+<code><pre class="code"><span class="tok-cm">'' Print information stored in our buffer.</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Image Width: &quot;</span> <span>&amp;</span> <span>myBuf</span><span>-&gt;</span><span class="tok-kw">Width</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Image Height: &quot;</span> <span>&amp;</span> <span>myBuf</span><span>-&gt;</span><span>Height</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Image Byte Depth: &quot;</span> <span>&amp;</span> <span>myBuf</span><span>-&gt;</span><span>BPP</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Image Pitch: &quot;</span> <span>&amp;</span> <span>myBuf</span><span>-&gt;</span><span>Pitch</span>
+
+<span class="tok-kw">Print</span> <span>&quot;&quot;</span></pre></code><br>
+<br>
+This is what I was talking about earlier.  FB will treat your pointer as if it's an <code>fb.Image <a href="../standard-data-types/procedures/pointer-ptr.html">Ptr</a></code>, so you can access the data in the header directly.  Since we have the size of the image as well as its pixels address now, we could edit and manipulate them as if they were a pointer to our screen buffer!  See ScrPtr vs ImgBuf.bas for an example on this.<br>
+<br>
+<div>FBGfx Font Header</div><br>
+<br>
+<b>Header Details</b><br>
+<br>
+The first row of an image buffer that will be used as a font contains the header information for your font, on a byte by byte basis (remember that the first row of pixels are going to be the first byes since it's stored in row-&gt;column).<br>
+<br>
+The very first byte tells us what version of the header we're using.  Currently, only 0 is supported, as only one header version has been released.  The second byte tells us the first character supported in our font, and the third byte tells us the last.<br>
+<br>
+0; Byte; Header Version<br>
+1; Byte; First Character Supported<br>
+2; Byte; Last Character Supported<br>
+3 to (3 + LastChar - FirstChar); Byte; Width of each Character in our font.<br>
+<br>
+<b>Creating a Font Buffer</b><br>
+<br>
+If you had a font that supported character 37 as the first, and character 200 as the last, your bytes would contain:<br>
+<br>
+0 for the header version.  It's the current only version supported.<br>
+37 for the first character supported.<br>
+200 for the last character supported.<br>
+94 bytes containing the widths of each character.<br>
+<br>
+Since the first row is taken up for header data, the font buffer will be an image buffer whose height is the font height plus one.  That is, if you have a font height of 8, you need a buffer height of 9.  You'll be putting the font in the second row of your buffer, rather than the first as you usually would.<br>
+<br>
+Here's an example (Example3.bas), which creates a font buffer.  It only creates it and assigns header data right now, not the actual font:<br>
+<br>
+<code><pre class="code"><span class="tok-cm">'' The first supported character</span>
+
+<span class="tok-kw">Const</span> <span>FirstChar</span> <span>=</span> <span class="tok-nu">32</span>
+
+  <span class="tok-cm">'' Last supported character</span>
+
+<span class="tok-kw">Const</span> <span>LastChar</span> <span>=</span> <span class="tok-nu">190</span>
+
+  <span class="tok-cm">'' Number of characters total.</span>
+
+<span class="tok-kw">Const</span> <span>NumChar</span> <span>=</span> <span>(</span><span>LastChar</span> <span>-</span> <span>FirstChar</span><span>)</span> <span>+</span> <span class="tok-nu">1</span></pre></code><br>
+<br>
+These constants help us.  It makes the code cleaner and faster.<br>
+<br>
+<br>
+<code><pre class="code"><span class="tok-cm">'' Create a font buffer large enough to hold 96 characters, with widths of 8.</span>
+
+  <span class="tok-cm">'' Remember to make our buffer one height larger than the font itself.</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>FB.Image</span> <span class="tok-kw">Ptr</span> <span>myFont</span> <span>=</span> <span class="tok-kw">ImageCreate</span><span>(</span> <span>(</span> <span>NumChar</span> <span>*</span> <span class="tok-nu">8</span> <span>),</span> <span class="tok-nu">8</span> <span>+</span> <span class="tok-nu">1</span> <span>)</span></pre></code><br>
+<br>
+Create our font buffer.  Remember, we need to add horizontal space for each character in the font (8 pixels wide).  We also need to add an extra row for our font header information.<br>
+<br>
+<br>
+<code><pre class="code"><span class="tok-cm">'' Our font header information.</span>
+
+  <span class="tok-cm">'' Cast to uByte ptr for safety and consistency, remember.</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span> <span class="tok-kw">Ptr</span> <span>myHeader</span> <span>=</span> <span class="tok-kw">Cast</span><span>(</span><span class="tok-kw">UByte</span> <span class="tok-kw">Ptr</span><span>,</span> <span>myFont</span> <span>)</span></pre></code><br>
+<br>
+Get the exact, cast, and having no warnings address of our font buffer.  The header goes on a byte by byte basis, so we can't work on this with an <code>fb.Image</code> type.<br>
+<br>
+<br>
+<code><pre class="code"><span class="tok-cm">'' Assign font buffer header.</span>
+
+  <span class="tok-cm">'' Header version</span>
+
+<span>myHeader</span><span>[</span><span class="tok-nu">0</span><span>]</span> <span>=</span> <span class="tok-nu">0</span>
+
+  <span class="tok-cm">'' First supported character</span>
+
+<span>myHeader</span><span>[</span><span class="tok-nu">1</span><span>]</span> <span>=</span> <span>FirstChar</span>
+
+  <span class="tok-cm">'' Last supported character</span>
+
+<span>myHeader</span><span>[</span><span class="tok-nu">2</span><span>]</span> <span>=</span> <span>LastChar</span></pre></code><br>
+<br>
+Assign the header information described above, into the first three bytes.  The header version, the first supported character, and the last supported character.<br>
+<br>
+<br>
+<code><pre class="code"><span class="tok-cm">'' Assign the widths of each character in the font.</span>
+
+<span class="tok-kw">For</span> <span>DoVar</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span>NumChar</span> <span>-</span> <span class="tok-nu">1</span>
+
+    <span class="tok-cm">'' Skip the header, if you recall</span>
+
+  <span>myHeader</span><span>[</span><span class="tok-nu">3</span> <span>+</span> <span>DoVar</span><span>]</span> <span>=</span> <span class="tok-nu">8</span>  
+
+<span class="tok-kw">Next</span></pre></code><br>
+<br>
+Each character in our font can have its own width, so we have to assign these.  The <code>3 +</code> skips the header information.  ##DoVar## starts at 0, so the first time it runs through that code, we'll be at index 3.  Give all supported characters a width of 8.<br>
+<br>
+<br>
+<code><pre class="code"><span class="tok-cm">'' Remember to destroy our image buffer.</span>
+
+<span class="tok-kw">ImageDestroy</span><span>(</span> <span>myFont</span> <span>)</span></pre></code><br>
+<br>
+Just reminding you :D<br>
+<br>
+<b>Assigning Font Characters</b><br>
+<br>
+This is fairly simple.  We'll use <span>FreeBASIC</span>'s default font to draw onto our buffer.  Remember to draw starting at column 1, rather than column 0, as the very first column is reserved for header data.  Start the character you're drawing at your first supported character, and give it the color you want.  Be warned, you can't have custom colors when drawing your font.  When you add a character to our buffer, it's stuck the color you draw it as!  See the tips & tricks section on how to get around this, however.<br>
+<br>
+Here's the modified code (Example4.bas), where we'll add the font drawing via FreeBASIC's default font onto our buffer.<br>
+<br>
+<code><pre class="code"><span class="tok-cm">'' NEW!!!</span>
+
+  <span class="tok-cm">'' Our current font character.</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span> <span>CurChar</span></pre></code><br>
+<br>
+Just to have a quick index of the current ASCII character we're drawing onto our font.<br>
+<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Draw</span> <span class="tok-kw">String</span> <span>myFont</span><span>,</span> <span>(</span> <span>DoVar</span> <span>*</span> <span class="tok-nu">8</span><span>,</span> <span class="tok-nu">1</span> <span>),</span> <span class="tok-kw">Chr</span><span>(</span><span>CurChar</span><span>),</span> <span class="tok-kw">RGB</span><span>(</span><span class="tok-kw">Rnd</span> <span>*</span> <span class="tok-nu">255</span><span>,</span> <span class="tok-kw">Rnd</span> <span>*</span> <span class="tok-nu">255</span><span>,</span> <span class="tok-kw">Rnd</span> <span>*</span> <span class="tok-nu">255</span><span>)</span></pre></code><br>
+<br>
+Skip the first row of our image buffer, as that contains font buffer information.  Draw our font using FBgfx's font as our custom font.  Fill it with a random color.  You should note that we're drawing right into our buffer, with "<code>Draw String myFont</code>...".<br>
+<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Print</span> <span class="tok-kw">Chr</span><span>(</span><span>CurChar</span><span>);</span></pre></code><br>
+<br>
+Just for clarity, so you can see the characters we're drawing into the buffer.<br>
+<br>
+<br>
+<code><pre class="code"><span class="tok-cm">'' Use our font buffer to draw some text!</span>
+
+<span class="tok-kw">Draw</span> <span class="tok-kw">String</span> <span>(</span><span class="tok-nu">0</span><span>,</span> <span class="tok-nu">80</span><span>),</span> <span>&quot;Hello!&quot;</span><span>,</span> <span>,</span> <span>myFont</span>
+
+<span class="tok-kw">Draw</span> <span class="tok-kw">String</span> <span>(</span><span class="tok-nu">0</span><span>,</span> <span class="tok-nu">88</span><span>),</span> <span>&quot;HOW ARE ya DOIN Today?!  YA DOIN FINE?!&quot;</span><span>,</span> <span>,</span> <span>myFont</span>
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+<br>
+Test out our new font.  Of course, it's the same one we're used to.  You could have created your own from your own custom font buffer somewhere.<br>
+<br>
+<div>Tips & Tricks</div><br>
+<br>
+<b>Coloring Your Custom Fonts</b><br>
+<br>
+Alright, so by now you have realized that once you color a custom font, you can't use <code><a href="../2d-drawing-functions/procedures/draw-string.html">Draw String</a></code> to change that color.  Well, no fear, we can get around that (CustFontCol.bas).  It might be a bit slow, however.<br>
+<br>
+We can create a font object, which has a function to return a font buffer.  What the code does is it redraws the font buffer every time we change color, and returns the font buffer stored in the object.  This *could* in theory be sped up if we knew the range of characters to redraw, so we could only redraw from the lowest to the highest.  Figuring out that range in itself, could also be slow.<br>
+<br>
+<code><pre class="code"><span>#include &quot;fbgfx.bi&quot;
+
+</span>
+
+<span class="tok-kw">Type</span> <span>Font</span>
+
+    <span class="tok-cm">'' Our font buffer.</span>
+
+  <span>Buf</span>     <span class="tok-kw">As</span> <span>FB.Image</span> <span class="tok-kw">Ptr</span>
+
+    <span class="tok-cm">'' Font header.</span>
+
+  <span>Hdr</span>     <span class="tok-kw">As</span> <span class="tok-kw">UByte</span> <span class="tok-kw">Ptr</span>
+
+  
+
+    <span class="tok-cm">'' Current font color.</span>
+
+  <span>Col</span>     <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span>
+
+  
+
+    <span class="tok-cm">'' Make our font buffer.</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>Make</span><span>(</span> <span class="tok-kw">ByVal</span> <span>_Col_</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span> <span>=</span> <span class="tok-kw">RGB</span><span>(</span><span class="tok-nu">255</span><span>,</span> <span class="tok-nu">255</span><span>,</span> <span class="tok-nu">255</span><span>)</span> <span>)</span>
+
+    <span class="tok-cm">'' Change the font color and edit the font buffer.</span>
+
+    <span class="tok-cm">'' Return the new font.</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Function</span> <span>myFont</span><span>(</span> <span class="tok-kw">ByVal</span> <span>_Col_</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span> <span>=</span> <span class="tok-kw">RGB</span><span>(</span><span class="tok-nu">255</span><span>,</span> <span class="tok-nu">255</span><span>,</span> <span class="tok-nu">255</span><span>)</span> <span>)</span> <span class="tok-kw">As</span> <span>FB.Image</span> <span class="tok-kw">Ptr</span>
+
+  
+
+    <span class="tok-cm">'' Create/Destroy our font.</span>
+
+      <span class="tok-cm">'' Set a default color to it if you like.</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span><span>(</span> <span class="tok-kw">ByVal</span> <span>_Col_</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span> <span>=</span> <span class="tok-kw">RGB</span><span>(</span><span class="tok-nu">255</span><span>,</span> <span class="tok-nu">255</span><span>,</span> <span class="tok-nu">255</span><span>)</span> <span>)</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Destructor</span><span>()</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+  <span class="tok-cm">'' Create our font's buffer.</span>
+
+<span class="tok-kw">Constructor</span> <span>Font</span><span>(</span> <span class="tok-kw">ByVal</span> <span>_Col_</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span> <span>=</span> <span class="tok-kw">RGB</span><span>(</span><span class="tok-nu">255</span><span>,</span> <span class="tok-nu">255</span><span>,</span> <span class="tok-nu">255</span><span>)</span> <span>)</span>
+
+  <span>This.Make</span><span>(</span> <span>_Col_</span> <span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+  <span class="tok-cm">'' Destroy font buffer.</span>
+
+<span class="tok-kw">Destructor</span> <span>Font</span><span>()</span>
+
+  <span class="tok-kw">ImageDestroy</span><span>(</span> <span>Buf</span> <span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Destructor</span>
+
+
+
+  <span class="tok-cm">'' Assign the FBgfx font into our font buffer.</span>
+
+<span class="tok-kw">Sub</span> <span>Font.Make</span><span>(</span> <span class="tok-kw">ByVal</span> <span>_Col_</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span> <span>=</span> <span class="tok-kw">RGB</span><span>(</span><span class="tok-nu">255</span><span>,</span> <span class="tok-nu">255</span><span>,</span> <span class="tok-nu">255</span><span>)</span> <span>)</span>
+
+    <span class="tok-cm">'' No image buffer data.  Create it.</span>
+
+  <span class="tok-kw">If</span> <span>This.Buf</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">Then</span>
+
+  
+
+      <span class="tok-cm">'' No screen created yet.</span>
+
+    <span class="tok-kw">If</span> <span class="tok-kw">ScreenPtr</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">Then</span> <span class="tok-kw">Exit</span> <span class="tok-kw">Sub</span>
+
+    
+
+      <span class="tok-cm">'' Support 256 characters, 8 in width.</span>
+
+      <span class="tok-cm">'' Add the extra row for the font header.</span>
+
+    <span>This.Buf</span> <span>=</span> <span class="tok-kw">ImageCreate</span><span>(</span> <span class="tok-nu">256</span> <span>*</span> <span class="tok-nu">8</span><span>,</span> <span class="tok-nu">9</span> <span>)</span>
+
+    
+
+      <span class="tok-cm">'' Get the address of the font header,</span>
+
+      <span class="tok-cm">'' which is the same as getting our pixel address</span>
+
+      <span class="tok-cm">'' Except that we always will use a ubyte.</span>
+
+    <span>This.Hdr</span> <span>=</span> <span class="tok-kw">Cast</span><span>(</span><span class="tok-kw">UByte</span> <span class="tok-kw">Ptr</span><span>,</span> <span>This.Buf</span><span>)</span> <span>+</span> <span class="tok-kw">SizeOf</span><span>(</span><span>FB.Image</span><span>)</span>
+
+    
+
+      <span class="tok-cm">'' Assign header information.</span>
+
+    <span>This.Hdr</span><span>[</span><span class="tok-nu">0</span><span>]</span> <span>=</span> <span class="tok-nu">0</span>
+
+      <span class="tok-cm">'' First supported character</span>
+
+    <span>This.Hdr</span><span>[</span><span class="tok-nu">1</span><span>]</span> <span>=</span> <span class="tok-nu">0</span>
+
+      <span class="tok-cm">'' Last supported character</span>
+
+    <span>This.Hdr</span><span>[</span><span class="tok-nu">2</span><span>]</span> <span>=</span> <span class="tok-nu">255</span>
+
+  <span class="tok-kw">Else</span>
+
+    <span class="tok-kw">If</span> <span>This.Col</span> <span>=</span> <span>_Col_</span> <span class="tok-kw">Then</span> <span class="tok-kw">Exit</span> <span class="tok-kw">Sub</span>
+
+    
+
+  <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+  
+
+    <span class="tok-cm">'' Draw our font.</span>
+
+  <span class="tok-kw">For</span> <span>DoVar</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">255</span>
+
+      <span class="tok-cm">'' Set font width information.</span>
+
+    <span>This.Hdr</span><span>[</span><span class="tok-nu">3</span> <span>+</span> <span>DoVar</span><span>]</span> <span>=</span> <span class="tok-nu">8</span>
+
+    
+
+    <span class="tok-kw">Draw</span> <span class="tok-kw">String</span> <span>This.Buf</span><span>,</span> <span>(</span><span>DoVar</span> <span>*</span> <span class="tok-nu">8</span><span>,</span> <span class="tok-nu">1</span><span>),</span> <span class="tok-kw">Chr</span><span>(</span><span>DoVar</span><span>),</span> <span>_Col_</span>
+
+  <span class="tok-kw">Next</span>
+
+  
+
+    <span class="tok-cm">'' Remember our font color.</span>
+
+  <span>This.Col</span> <span>=</span> <span>_Col_</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+  <span class="tok-cm">'' Get the buffer for our font.</span>
+
+  <span class="tok-cm">'' Remake the font if the color's different.</span>
+
+<span class="tok-kw">Function</span> <span>Font.myFont</span><span>(</span> <span class="tok-kw">ByVal</span> <span>_Col_</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span> <span>=</span> <span class="tok-kw">RGB</span><span>(</span><span class="tok-nu">255</span><span>,</span> <span class="tok-nu">255</span><span>,</span> <span class="tok-nu">255</span><span>)</span> <span>)</span> <span class="tok-kw">As</span> <span>FB.Image</span> <span class="tok-kw">Ptr</span>
+
+    <span class="tok-cm">'' If our colors match, just return the current buffer.</span>
+
+  <span class="tok-kw">If</span> <span>_Col_</span> <span>=</span> <span>Col</span> <span class="tok-kw">Then</span>
+
+    <span class="tok-kw">Return</span> <span>Buf</span>
+
+  <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+  
+
+    <span class="tok-cm">'' Make the font with a new color.</span>
+
+  <span>This.Make</span><span>(</span> <span>_Col_</span> <span>)</span>
+
+    <span class="tok-cm">'' Return out buffer.</span>
+
+  <span class="tok-kw">Return</span> <span>This.Buf</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+
+
+  <span class="tok-cm">'' MAIN CODE HERE!</span>
+
+<span class="tok-kw">ScreenRes</span> <span class="tok-nu">640</span><span>,</span> <span class="tok-nu">480</span><span>,</span> <span class="tok-nu">32</span>
+
+
+
+  <span class="tok-cm">'' Create our font.</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>Font</span> <span>myFont</span> <span>=</span> <span class="tok-kw">RGB</span><span>(</span><span class="tok-nu">255</span><span>,</span> <span class="tok-nu">255</span><span>,</span> <span class="tok-nu">255</span><span>)</span>
+
+
+
+  <span class="tok-cm">'' Draw a string using our custom font.</span>
+
+<span class="tok-kw">Draw</span> <span class="tok-kw">String</span> <span>(</span><span class="tok-nu">0</span><span>,</span><span class="tok-nu">0</span><span>),</span> <span>&quot;Hello.  I am the custom font.&quot;</span><span>,,</span> <span>myFont.myFont</span><span>()</span>
+
+  <span class="tok-cm">'' Gasp.  A new color!</span>
+
+<span class="tok-kw">Draw</span> <span class="tok-kw">String</span> <span>(</span><span class="tok-nu">0</span><span>,</span><span class="tok-nu">8</span><span>),</span> <span>&quot;Hello.  I am the custom font.&quot;</span><span>,,</span> <span>myFont.myFont</span><span>(</span><span class="tok-kw">RGB</span><span>(</span><span class="tok-nu">255</span><span>,</span> <span class="tok-nu">0</span><span>,</span> <span class="tok-nu">0</span><span>))</span>
+
+<span class="tok-kw">Sleep</span>
+
+
+
+  <span class="tok-cm">'' Speed test.  Turns out it's quite slow.</span>
+
+<span class="tok-kw">Scope</span>
+
+  <span class="tok-kw">Randomize</span> <span class="tok-kw">Timer</span>
+
+    <span class="tok-cm">'' Our timer.</span>
+
+  <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Double</span> <span>T</span> <span>=</span> <span class="tok-kw">Timer</span>
+
+  
+
+    <span class="tok-cm">'' Time how long it takes to make a new font this way.</span>
+
+  <span class="tok-kw">For</span> <span>DoVar</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">499</span>
+
+    <span>myFont.Make</span><span>(</span> <span class="tok-kw">RGB</span><span>(</span><span class="tok-kw">Rnd</span> <span>*</span> <span class="tok-nu">255</span><span>,</span> <span class="tok-kw">Rnd</span> <span>*</span> <span class="tok-nu">255</span><span>,</span> <span class="tok-kw">Rnd</span> <span>*</span> <span class="tok-nu">255</span><span>)</span> <span>)</span>
+
+  <span class="tok-kw">Next</span>
+
+  
+
+    <span class="tok-cm">'' And we're all done.  Print important data.</span>
+
+  <span class="tok-kw">Locate</span> <span class="tok-nu">3</span><span>,</span> <span class="tok-nu">1</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;Time to Re-Draw font 499 times: &quot;</span> <span>&amp;</span> <span>(</span> <span class="tok-kw">Timer</span> <span>-</span> <span>T</span> <span>)</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;Time per Re-Draw: &quot;</span> <span>&amp;</span> <span>(</span> <span class="tok-kw">Timer</span> <span>-</span> <span>T</span> <span>)</span> <span>/</span> <span class="tok-nu">500</span>
+
+  <span class="tok-kw">Sleep</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Scope</span></pre></code><br>
+<br>
+<b>ScrPtr vs ImgBuf</b><br>
+<br>
+Comparison of how to draw onto image buffer pixels, versus how to draw on the screen's buffer (ScrPtr vs ImgBuf.bas):<br>
+<br>
+<code><pre class="code"><span>#include &quot;fbgfx.bi&quot;
+
+</span>
+
+
+
+<span class="tok-kw">ScreenRes</span> <span class="tok-nu">640</span><span>,</span> <span class="tok-nu">480</span><span>,</span> <span class="tok-nu">32</span>
+
+
+
+
+
+  <span class="tok-cm">'' Create a buffer the size of our screen.</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>FB.IMAGE</span> <span class="tok-kw">Ptr</span> <span>myBuf</span> <span>=</span> <span class="tok-kw">ImageCreate</span><span>(</span> <span class="tok-nu">640</span><span>,</span> <span class="tok-nu">480</span> <span>)</span>
+
+
+
+  <span class="tok-cm">'' Get the address of our screen's buffer.</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">ULong</span> <span class="tok-kw">Ptr</span> <span>myScrPix</span> <span>=</span> <span class="tok-kw">ScreenPtr</span>
+
+  <span class="tok-cm">'' Get the address of our pixel's buffer.</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">ULong</span> <span class="tok-kw">Ptr</span> <span>myBufPix</span> <span>=</span> <span class="tok-kw">Cast</span><span>(</span> <span class="tok-kw">ULong</span> <span class="tok-kw">Ptr</span><span>,</span> <span class="tok-kw">Cast</span><span>(</span> <span class="tok-kw">UByte</span> <span class="tok-kw">Ptr</span><span>,</span> <span>myBuf</span> <span>)</span> <span>+</span> <span class="tok-kw">SizeOf</span><span>(</span><span>FB.IMAGE</span><span>)</span> <span>)</span>
+
+
+
+
+
+  <span class="tok-cm">'' Lock our page.  Fill the entire page with white.</span>
+
+<span class="tok-kw">ScreenLock</span>
+
+
+
+  <span class="tok-cm">'' Alternatively, if the screen resolution's unknown, use ScreenInfo to</span>
+
+  <span class="tok-cm">'' make this more secure</span>
+
+  
+
+  <span class="tok-cm">'' Note: this code assumes no padding between rows.  To prevent this,</span>
+
+  <span class="tok-cm">'' you need to use ScreenInfo to get the screen's pitch, and calculate</span>
+
+  <span class="tok-cm">'' row offsets using that instead.</span>
+
+  <span class="tok-kw">For</span> <span>xVar</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">639</span>
+
+    <span class="tok-kw">For</span> <span>yVar</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">479</span>
+
+      <span>myScrPix</span><span>[</span> <span>(</span> <span>yVar</span> <span>*</span> <span class="tok-nu">640</span> <span>)</span> <span>+</span> <span>xVar</span> <span>]</span> <span>=</span> <span class="tok-kw">RGB</span><span>(</span><span class="tok-nu">255</span><span>,</span> <span class="tok-nu">255</span><span>,</span> <span class="tok-nu">255</span><span>)</span>
+
+    <span class="tok-kw">Next</span>
+
+  <span class="tok-kw">Next</span>
+
+
+
+<span class="tok-kw">ScreenUnlock</span>
+
+<span class="tok-kw">Sleep</span>
+
+
+
+
+
+  <span class="tok-cm">'' Draw onto our image buffer all red.</span>
+
+<span class="tok-kw">For</span> <span>xVar</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span>myBuf</span><span>-&gt;</span><span class="tok-kw">Width</span> <span>-</span> <span class="tok-nu">1</span>
+
+  <span class="tok-kw">For</span> <span>yVar</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span>myBuf</span><span>-&gt;</span><span>Height</span> <span>-</span> <span class="tok-nu">1</span>
+
+    <span>myBufPix</span><span>[</span> <span>(</span> <span>yVar</span> <span>*</span> <span>(</span><span>myBuf</span><span>-&gt;</span><span>Pitch</span> <span>\</span> <span class="tok-kw">SizeOf</span><span>(*</span><span>myBufPix</span><span>))</span> <span>)</span> <span>+</span> <span>xVar</span> <span>]</span> <span>=</span> <span class="tok-kw">RGB</span><span>(</span><span class="tok-nu">255</span><span>,</span> <span class="tok-nu">0</span><span>,</span> <span class="tok-nu">0</span><span>)</span>
+
+  <span class="tok-kw">Next</span>
+
+<span class="tok-kw">Next</span>
+
+
+
+  <span class="tok-cm">'' Put the red buffer on the screen.</span>
+
+<span class="tok-kw">Put</span> <span>(</span><span class="tok-nu">0</span><span>,</span><span class="tok-nu">0</span><span>),</span> <span>myBuf</span><span>,</span> <span class="tok-kw">PSet</span>
+
+<span class="tok-kw">Sleep</span>
+
+
+
+<span class="tok-kw">ImageDestroy</span><span>(</span> <span>myBuf</span> <span>)</span>
+
+
+
+
+
+<span class="tok-cm">/'</span>
+
+<span class="tok-cm">  ScreenPtr:</span>
+
+<span class="tok-cm"> 1) Get address of screen buffer</span>
+
+<span class="tok-cm">    (remember that FBgfx uses a dummy buffer that it flips automatically)</span>
+
+<span class="tok-cm"> 2) Lock page</span>
+
+<span class="tok-cm"> 3) Draw onto screen address</span>
+
+<span class="tok-cm"> 4) Unlock page to show buffer</span>
+
+<span class="tok-cm">  </span>
+
+<span class="tok-cm">  Image Buffer:</span>
+
+<span class="tok-cm"> 1) Create an image buffer</span>
+
+<span class="tok-cm"> 2) Get the address of image pixels</span>
+
+<span class="tok-cm"> 3) Draw onto image pixels</span>
+
+<span class="tok-cm">    (you can use neat stuff like the buffer information to help you here)</span>
+
+<span class="tok-cm"> 4) Put down Image where you please</span>
+
+<span class="tok-cm">    (another big plus!)</span>
+
+<span class="tok-cm">    </span>
+
+<span class="tok-cm">  About Drawing:</span>
+
+<span class="tok-cm"> cast(ubyte ptr, mybuff) + Y * Pitch + X * Bpp</span>
+
+<span class="tok-cm"> </span>
+
+<span class="tok-cm"> Every Y contains PITCH number of bytes.  In order to reach your new Y, you </span>
+
+<span class="tok-cm"> have to skip an entire row.</span>
+
+<span class="tok-cm"> </span>
+
+<span class="tok-cm"> It should be safe to do the pointer arithmetic in cases where the pointer's data</span>
+
+<span class="tok-cm"> type is not one byte long, so you may find it easier to use a pointer type to</span>
+
+<span class="tok-cm"> match your bit depth.</span>
+
+<span class="tok-cm"> In these cases you should divide the Pitch and BPP by the size of the pointer type.</span>
+
+<span class="tok-cm"> Conveniently, in this case the Pitch should always be divisible by the pixel's type </span>
+
+<span class="tok-cm"> size. And, obviously, so will the BPP, which will just cancel to 1 :D</span>
+
+<span class="tok-cm"> </span>
+
+<span class="tok-cm">'/</span></pre></code>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../index.html">Home</a> ·
+         <a href="../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../nav.js?v=70a6b70236"></script>
+<script src="../../search-index.js"></script>
+<script src="../../assets/app.js?v=456d079659"></script>
+<script src="../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

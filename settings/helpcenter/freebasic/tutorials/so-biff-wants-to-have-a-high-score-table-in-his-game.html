@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>So Biff wants to have a high score table in his game — Help Center</title>
+<meta name="description" content="So Biff wants to have a high score table in his game — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/so-biff-wants-to-have-a-high-score-table-in-his-game.html">
+<meta property="og:title" content="So Biff wants to have a high score table in his game">
+<meta property="og:description" content="So Biff wants to have a high score table in his game — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/so-biff-wants-to-have-a-high-score-table-in-his-game.html">
+<link rel="stylesheet" href="../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/so-biff-wants-to-have-a-high-score-table-in-his-game.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>So Biff wants to have a high score table in his game</h1>
+<h2>Documentation</h2>
+
+	Written by Lachie Dazdarian (September, 2007)<br>
+<br>
+<b>Introduction</b><br>
+<br>
+On more than one occasion I was inquired by a programming newbie about a set of routines that load a high score table from an external file, input a new high score properly, and then save the modified high scores table.<br>
+Using the same set of routines for high scores since the days of Ball Blazing Fantasy, I decided to write a tutorial on them and implement some lacking flexibility (plus few fixes) there, something that was long needed to be done but wasn't due the fact the routines did their job perfectly.<br>
+The tutorial will also point you out to some useful (for high scores table managing) additional routines, like the name inputting and file encryption ones, not written by me.<br>
+<br>
+<br>
+<b>Let's do it!</b><br>
+<br>
+It's fairly obvious we'll need two separate subroutines, one for loading/reading our high score table, and one for writing/modifying it.<br>
+We'll start with loading/reading of a high score table, as that part is easier and a logical start.<br>
+The subroutine for reading a high score table should work relatively simple. It will open a file which contains name and score entries, storing them in appropriate variables and then printing them on the screen, this part being most dependent on the developer's wishes and needs (the method of printing, position of the high score table, its formatting, etc.).<br>
+First, we should create a text file containing our name and score entries. Create a file named 'high_scores.dat', open it with Notepad and input this:<br>
+<br>
+<code><pre class="code"><span>FRED</span>
+
+<span class="tok-nu">10000</span>
+
+<span>BILL</span>
+
+<span class="tok-nu">9000</span>
+
+<span>SARAH</span>
+
+<span class="tok-nu">8000</span>
+
+<span>BOB</span>
+
+<span class="tok-nu">7000</span>
+
+<span>RED</span>
+
+<span class="tok-nu">6000</span>
+
+<span>SUE</span>
+
+<span class="tok-nu">5000</span>
+
+<span>DAVID</span>
+
+<span class="tok-nu">4000</span>
+
+<span>GREG</span>
+
+<span class="tok-nu">3000</span>
+
+<span>TIM</span>
+
+<span class="tok-nu">2000</span>
+
+<span>GEORGE</span>
+
+<span class="tok-nu">1000</span></pre></code><br>
+<br>
+It contains 10 high score entries, formatted with name followed by the accompanying score. I find this formatting the most suitable for editing, although you can pick one where all the names all listed first, and then followed by all the scores. Still, no important benefits from any type of these two formattings, so we'll work with the one I stared with.<br>
+<br>
+This file will be used with the following 'ReadHighScore' subroutine.<br>
+<br>
+Let's start our main program with some needed initiation statements:<br>
+<br>
+<code><pre class="code"><span>#include &quot;fbgfx.bi&quot;
+
+</span><span class="tok-kw">Using</span> <span>FB</span>
+
+
+
+<span class="tok-kw">Const</span> <span>num_of_entries</span> <span>=</span> <span class="tok-nu">10</span></pre></code><br>
+<br>
+'num_of_entries' will flag the number of score entries (names or scores in the high score table), and should correspond with the number of entries in the 'high_score.dat' file (not lines, but high score ENTRIES!).<br>
+<br>
+We should now declare our subroutine with:<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>ReadHighScore</span> <span>(</span><span>highscore_file</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>)</span></pre></code><br>
+<br>
+The 'highscore_file' variable will flag the file you want for the 'ReadHighScore' subroutine to open. Not necessary to declare the subroutine like this, but this adds some flexibility to it.<br>
+<br>
+After this, we should declare the following variables:<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span class="tok-kw">Shared</span> <span>workpage</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">Shared</span> <span>hname</span><span>(</span><span>num_of_entries</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">Shared</span> <span>hscore</span><span>(</span><span>num_of_entries</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span></pre></code><br>
+<br>
+'workpage' variable is not related to this tutorial and will be used to swap screen work pages inside the loop where the high score table will be drawn. 'hname' array will hold the name entries, while 'hscore' array will hold the score entries from the high score table.<br>
+<br>
+Finally, let's initialize our screen and work/visible pages with:<br>
+<br>
+<code><pre class="code"><span class="tok-kw">ScreenRes</span> <span class="tok-nu">640</span><span>,</span> <span class="tok-nu">480</span><span>,</span> <span class="tok-nu">32</span><span>,</span> <span class="tok-nu">2</span><span>,</span> <span>GFX_ALPHA_PRIMITIVES</span><span>+</span><span>GFX_WINDOWED</span>
+
+<span class="tok-kw">ScreenSet</span> <span class="tok-nu">1</span><span>,</span> <span class="tok-nu">0</span></pre></code><br>
+<br>
+Following this code we should place this:<br>
+<br>
+<code><pre class="code"><span>ReadHighScore</span> <span>&quot;high_scores.dat&quot;</span>
+
+<span class="tok-kw">End</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>ReadHighScore</span> <span>(</span><span>highscore_file</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>)</span>
+
+
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span></pre></code><br>
+<br>
+You can compile this code, but nothing will happen as the 'ReadHighScore' subroutine is empty. Let's fill it up!<br>
+We need to start it by opening the 'high_scores.dat' file and reading the needed data from it. Please refer to FreeBASIC's OPEN statement for info on file opening in FreeBASIC if not familiar with it.<br>
+<br>
+As we want to open the file using a FREE file handle, we need to dimension a variable that will hold this information and pass it into it. Use this code:<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span>free_filehandle</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+
+
+<span>free_filehandle</span> <span>=</span> <span class="tok-kw">FreeFile</span></pre></code><br>
+<br>
+We should now open the high score file with:<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Open</span> <span>highscore_file</span> <span class="tok-kw">For</span> <span class="tok-kw">Input</span> <span class="tok-kw">As</span> <span>#</span><span>free_filehandle</span></pre></code><br>
+<br>
+After the file is opened for reading (FOR INPUT), let's use a for loop to retrieve all the data from it and store it in our 'hname' and 'hscore' variables:<br>
+<br>
+<code><pre class="code"><span class="tok-kw">For</span> <span>count_entry</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">1</span> <span class="tok-kw">To</span> <span>num_of_entries</span>
+
+<span class="tok-kw">Input</span> <span>#</span><span>free_filehandle</span><span>,</span> <span>hname</span><span>(</span><span>count_entry</span><span>)</span>
+
+<span class="tok-kw">Input</span> <span>#</span><span>free_filehandle</span><span>,</span> <span>hscore</span><span>(</span><span>count_entry</span><span>)</span>
+
+<span class="tok-cm">' If the end of file is reached, exit the FOR loop.</span>
+
+<span class="tok-kw">If</span> <span class="tok-kw">EOF</span><span>(</span><span>free_filehandle</span><span>)</span> <span class="tok-kw">Then</span> <span class="tok-kw">Exit</span> <span class="tok-kw">For</span>
+
+<span class="tok-kw">Next</span> <span>count_entry</span></pre></code><br>
+<br>
+Note how the 'count_entry' variable is used and how for each entry the name is stored FOLLOWED by the accompanying score. 'hname(1)' will flag the name with the top score, while 'hscore(1)' the top score. 'hname(num_of_entries)' will flag the name with the lowest score, while 'hscore(num_of_entries)' the lowest score in the high score table.<br>
+<br>
+Don't forget now to close the file with:<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Close</span> <span>#</span><span>free_filehandle</span></pre></code><br>
+<br>
+All we need now is a loop that will display all these names and scores, nicely arranged in a table.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Do</span>
+
+
+
+<span class="tok-kw">ScreenLock</span>
+
+<span class="tok-kw">ScreenSet</span> <span>workpage</span><span>,</span> <span>workpage</span> <span class="tok-kw">Xor</span> <span class="tok-nu">1</span>
+
+
+
+<span class="tok-kw">Line</span> <span>(</span><span class="tok-nu">0</span><span>,</span><span class="tok-nu">0</span><span>)-(</span><span class="tok-nu">639</span><span>,</span><span class="tok-nu">479</span><span>),</span> <span class="tok-kw">RGBA</span><span>(</span><span class="tok-nu">0</span><span>,</span> <span class="tok-nu">0</span><span>,</span> <span class="tok-nu">0</span><span>,</span> <span class="tok-nu">255</span><span>),</span> <span>BF</span>
+
+
+
+<span class="tok-kw">Draw</span> <span class="tok-kw">String</span> <span>(</span><span class="tok-nu">285</span><span>,</span> <span class="tok-nu">120</span><span>),</span> <span>&quot;TOP SCORES&quot;</span><span>,</span> <span class="tok-kw">RGBA</span><span>(</span><span class="tok-nu">255</span><span>,</span><span class="tok-nu">255</span><span>,</span> <span class="tok-nu">255</span><span>,</span> <span class="tok-nu">255</span><span>)</span>
+
+
+
+<span class="tok-kw">For</span> <span>count_entry</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">1</span> <span class="tok-kw">To</span> <span>num_of_entries</span>
+
+<span class="tok-kw">Draw</span> <span class="tok-kw">String</span> <span>(</span><span class="tok-nu">270</span><span>,</span> <span class="tok-nu">140</span> <span>+</span> <span>count_entry</span> <span>*</span> <span class="tok-nu">12</span><span>),</span> <span>hname</span><span>(</span><span>count_entry</span><span>),</span> <span class="tok-kw">RGBA</span><span>(</span><span class="tok-nu">255</span><span>,</span><span class="tok-nu">255</span><span>,</span> <span class="tok-nu">255</span><span>,</span> <span class="tok-nu">250</span><span>-</span><span>count_entry</span><span>*</span><span class="tok-nu">10</span><span>)</span>
+
+<span class="tok-kw">Draw</span> <span class="tok-kw">String</span> <span>(</span><span class="tok-nu">340</span><span>,</span> <span class="tok-nu">140</span> <span>+</span> <span>(</span><span>count_entry</span><span>)</span> <span>*</span> <span class="tok-nu">12</span><span>),</span> <span>hscore</span><span>(</span><span>count_entry</span><span>),</span> <span class="tok-kw">RGBA</span><span>(</span><span class="tok-nu">255</span><span>,</span><span class="tok-nu">255</span><span>,</span> <span class="tok-nu">255</span><span>,</span> <span class="tok-nu">250</span><span>-</span><span>count_entry</span><span>*</span><span class="tok-nu">10</span><span>)</span>
+
+<span class="tok-kw">Next</span> <span>count_entry</span>
+
+
+
+<span class="tok-kw">Draw</span> <span class="tok-kw">String</span> <span>(</span><span class="tok-nu">245</span><span>,</span> <span class="tok-nu">400</span><span>),</span> <span>&quot;Press ESCAPE to exit&quot;</span><span>,</span> <span class="tok-kw">RGBA</span><span>(</span><span class="tok-nu">255</span><span>,</span><span class="tok-nu">255</span><span>,</span> <span class="tok-nu">255</span><span>,</span> <span class="tok-nu">220</span><span>)</span>
+
+
+
+<span>workpage</span> <span class="tok-kw">Xor</span> <span>=</span> <span class="tok-nu">1</span>
+
+<span class="tok-kw">ScreenUnlock</span>
+
+
+
+<span class="tok-kw">Sleep</span> <span class="tok-nu">10</span>
+
+
+
+<span class="tok-kw">Loop</span> <span class="tok-kw">Until</span> <span class="tok-kw">MultiKey</span><span>(</span><span>SC_ESCAPE</span><span>)</span></pre></code><br>
+<br>
+A simple DO...LOOP that ends when the user pushes ESCAPE.<br>
+I used Draw String to print the names and the scores. Another FOR loop is used to loop through the name and score entries, and to display them lower score under the next higher one (note how the Y position of the text to display is connected with the 'count_entry' variable - increase 12 to get more space between scores vertically). I also used a small trick to display each next score with lower translucency (last parameter in the RGBA function).<br>
+<br>
+After placing all this code in the 'ReadHighScore' subroutine, you can compile it and the desired result will appear on the screen.<br>
+<br>
+Now when we are done with the easy part of the problem, let's move onto writing new entries into our high score table.<br>
+<br>
+I constructed the 'WriteHighScore' subroutine like this:<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Sub</span> <span>WriteHighScore</span> <span>(</span><span>highscore_file</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>,</span> <span>users_score</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span></pre></code><br>
+<br>
+Which means it will be called with a high scores table file and a score we want to input. If this score evaluates to be lower that the lowest in the high score table, no code will be executed.<br>
+<br>
+This subroutine should start with the following code:<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span>free_filehandle</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+
+
+<span class="tok-kw">Dim</span> <span>startwrite</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+
+
+<span>free_filehandle</span> <span>=</span> <span class="tok-kw">FreeFile</span>
+
+
+
+<span class="tok-kw">Open</span> <span>highscore_file</span> <span class="tok-kw">For</span> <span class="tok-kw">Input</span> <span class="tok-kw">As</span> <span>#</span><span>free_filehandle</span>
+
+
+
+<span class="tok-kw">For</span> <span>count_entry</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">1</span> <span class="tok-kw">To</span> <span>num_of_entries</span>
+
+<span class="tok-kw">Input</span> <span>#</span><span>free_filehandle</span><span>,</span> <span>hname</span><span>(</span><span>count_entry</span><span>)</span>
+
+<span class="tok-kw">Input</span> <span>#</span><span>free_filehandle</span><span>,</span> <span>hscore</span><span>(</span><span>count_entry</span><span>)</span>
+
+<span class="tok-cm">' If the end of file is reached, exit the FOR loop.</span>
+
+<span class="tok-kw">If</span> <span class="tok-kw">EOF</span><span>(</span><span>free_filehandle</span><span>)</span> <span class="tok-kw">Then</span> <span class="tok-kw">Exit</span> <span class="tok-kw">For</span>
+
+<span class="tok-kw">Next</span> <span>count_entry</span>
+
+
+
+<span class="tok-kw">Close</span> <span>#</span><span>free_filehandle</span></pre></code><br>
+<br>
+As you see it starts as the 'ReadHighScore' subroutine. In order to evaluate the user's score and alter the very high score table we need to open the file containing our high score entries and store them in appropriated variables. 'startwrite' variable will flag where the new entry is to be placed inside the high score table (on which position).<br>
+The code that follows should be opened with an IF clause that will execute the code inside it only if the user's score is higher than the lowest score in the high score table (naturally):<br>
+<br>
+<code><pre class="code"><span class="tok-kw">If</span> <span>users_score</span> <span>&gt;</span> <span>hscore</span><span>(</span><span>num_of_entries</span><span>)</span> <span class="tok-kw">Then</span>
+
+
+
+<span class="tok-kw">For</span> <span>check_score</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">1</span> <span class="tok-kw">To</span> <span>num_of_entries</span>
+
+
+
+<span class="tok-kw">If</span> <span>users_score</span> <span>&gt;</span> <span>hscore</span><span>(</span><span>check_score</span><span>)</span> <span class="tok-kw">Then</span>
+
+<span>InputName</span>
+
+<span class="tok-cm">' Record the position where the new score is</span>
+
+<span class="tok-cm">' to placed and exit FOR loop.</span>
+
+<span>startwrite</span> <span>=</span> <span>check_score</span>
+
+<span class="tok-kw">Exit</span> <span class="tok-kw">For</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+
+
+<span class="tok-kw">Next</span> <span>check_score</span></pre></code><br>
+<br>
+The FOR loop 'goes' through the high score entries from the highest to the lowest, and when an entry with a lower score is found this is the place (flagged with 'startwrite' and 'check_score') where our new entry will be recorded. For example, in the first loop the program checks for 'hscore(1)' - the top score in the high score table. If the user's score ends up being higher than it, it's obvious the user's score is the new top score and 'startwrite' needs to be 1. 'InputName' is a subroutine we'll create later, and inside it the user will be...inputting his name. :P<br>
+<br>
+What follows is the 'nexus' of our routine, the code that places the new high score entry on the proper position, and bumps all the lower ones one position down.<br>
+<br>
+Check the following code:<br>
+<br>
+<code><pre class="code"><span class="tok-kw">If</span> <span>startwrite</span> <span>=</span> <span>num_of_entries</span> <span class="tok-kw">Then</span>
+
+<span>hscore</span><span>(</span><span>startwrite</span><span>)</span> <span>=</span> <span>users_score</span>
+
+<span>hname</span><span>(</span><span>startwrite</span><span>)</span> <span>=</span> <span>playername</span>
+
+<span class="tok-kw">Else</span>
+
+ 
+
+<span class="tok-kw">For</span> <span>write_pos</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span>(</span><span>num_of_entries</span> <span>-</span> <span class="tok-nu">1</span><span>)</span> <span class="tok-kw">To</span> <span>startwrite</span> <span class="tok-kw">Step</span> <span>-</span><span class="tok-nu">1</span>
+
+<span>hscore</span><span>(</span><span>write_pos</span> <span>+</span> <span class="tok-nu">1</span><span>)</span> <span>=</span> <span>hscore</span><span>(</span><span>write_pos</span><span>)</span>
+
+<span>hname</span><span>(</span><span>write_pos</span> <span>+</span> <span class="tok-nu">1</span><span>)</span> <span>=</span> <span>hname</span><span>(</span><span>write_pos</span><span>)</span>
+
+<span class="tok-kw">Next</span> <span>write_pos</span>
+
+<span>hscore</span><span>(</span><span>startwrite</span><span>)</span> <span>=</span> <span>users_score</span>
+
+<span>hname</span><span>(</span><span>startwrite</span><span>)</span> <span>=</span> <span>playername</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">If</span></pre></code><br>
+<br>
+First condition checks if the new entry is the lowest (last) in the high score table. If this is the case, we don't need to bump down any entries with a lower score as there are none, but only replace the lowest score entry with the new one.<br>
+If this is NOT the case, a FOR loop is executed which loops from the lowest high score entry to the new high score entry (flagged with 'startwrite'), meaning, from bottom to top.<br>
+<br>
+For example, if our high score table has 10 entries and the new entry needs to be placed on position 5, the loop goes from 9 to 5. When "write_pos" is 9, values from 'hscore(9)' and 'hname(9)' are passed to 'hscore(9+1)' and 'hname(9+1)'. When 'write_pos' is 8, values from 'hscore(8)' and 'hname(8)' are passed to 'hscore(8+1)' and 'hname(8+1)'. And so on.<br>
+<br>
+After the FOR loop we need to input the new entry on its appropriate position (flagged with 'startwrite'), new entry being set with 'users_score' and 'playername', where 'playername' will be inputted inside the 'InputName' sub.<br>
+<br>
+The last thing in the 'WriteHighScore' sub we need to do is to store the new high score entries back to file:<br>
+<br>
+<code><pre class="code"><span>free_filehandle</span> <span>=</span> <span class="tok-kw">FreeFile</span>
+
+
+
+<span class="tok-kw">Open</span> <span>highscore_file</span> <span class="tok-kw">For</span> <span class="tok-kw">Output</span> <span class="tok-kw">As</span> <span>free_filehandle</span>
+
+<span class="tok-kw">For</span> <span>count_entry</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">1</span> <span class="tok-kw">To</span> <span>num_of_entries</span>
+
+<span class="tok-kw">Print</span> <span>#</span><span>free_filehandle</span><span>,</span> <span>hname</span><span>(</span><span>count_entry</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>#</span><span>free_filehandle</span><span>,</span> <span>hscore</span><span>(</span><span>count_entry</span><span>)</span>
+
+<span class="tok-kw">Next</span> <span>count_entry</span>
+
+<span class="tok-kw">Close</span> <span>free_filehandle</span></pre></code><br>
+<br>
+Note how FOR OUTPUT is used and PRINT for writing data into external files.<br>
+After this I placed a 'ReadHighScore' call and closed with END IF as I find it good that a new high score table should display after a new entry has been inputted in it.<br>
+All we need now is to create the 'InputName' sub like this:<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Sub</span> <span>InputName</span>
+
+
+
+<span class="tok-kw">ScreenSet</span> <span>workpage</span><span>,</span> <span>workpage</span> <span class="tok-kw">Xor</span> <span class="tok-nu">1</span>
+
+<span class="tok-kw">ScreenSet</span> <span class="tok-nu">0</span><span>,</span><span class="tok-nu">0</span>
+
+<span class="tok-kw">Line</span> <span>(</span><span class="tok-nu">0</span><span>,</span><span class="tok-nu">0</span><span>)-(</span><span class="tok-nu">639</span><span>,</span><span class="tok-nu">479</span><span>),</span> <span class="tok-kw">RGBA</span><span>(</span><span class="tok-nu">0</span><span>,</span> <span class="tok-nu">0</span><span>,</span> <span class="tok-nu">0</span><span>,</span> <span class="tok-nu">255</span><span>),</span> <span>BF</span>
+
+<span class="tok-kw">Locate</span> <span class="tok-nu">12</span><span>,</span> <span class="tok-nu">17</span>
+
+<span class="tok-kw">Input</span> <span>;</span> <span>&quot;Please input your name: &quot;</span><span>,</span> <span>playername</span>
+
+
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span></pre></code><br>
+<br>
+Of course, this will look totally different in your game. Perhaps you'll ask the player to input his/her name on a different place in the game (like when he/she starts a new game). Just have in mind you need one.<br>
+<br>
+To test the routines just place...<br>
+<br>
+<code><pre class="code"><span>ReadHighScore</span> <span>&quot;high_scores.dat&quot;</span>
+
+<span>WriteHighScore</span> <span>&quot;high_scores.dat&quot;</span><span>,</span> <span class="tok-nu">4500</span>
+
+<span class="tok-kw">End</span></pre></code><br>
+<br>
+...after first SCREENSET (outside subroutines). Change the second parameter with 'WriteHighScore' call to input different scores on different locations in the high score table. I'm sure you are aware that when calling 'WriteHighScore' the second parameter mustn't be hard-coded with a static number, but with a variable in which you'll store player's score, whatever that may be in your case (ie. 'Player.Score').<br>
+<br>
+<b>What's next?</b><br>
+<br>
+The only other things I wish to share regarding this issue is related to high score encryption and better name inputting routine. As both routines I'm using are not by me, I will only brush off them and provide them in an example program you can easily use for your own needs.<br>
+Encryption is done using two functions, 'neoENCpass' and 'neodeENCpass'. One for encryption and one for decryption. They are called with a string (high score entry string in our case) and password, password being any string you choose and the same must be used for encrypting and decrypting (of course).<br>
+Just after you retrieve an string entry from a file you decrypt it like this:<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Input</span> <span>#</span><span>free_filehandle</span><span>,</span> <span>hname</span><span>(</span><span>count_entry</span><span>)</span>
+
+<span>neoENCdepass</span> <span class="tok-kw">SAdd</span><span>(</span><span>hname</span><span>(</span><span>count_entry</span><span>)),</span> <span class="tok-kw">Len</span><span>(</span><span>hname</span><span>(</span><span>count_entry</span><span>)),</span> <span>&quot;yourpass&quot;</span></pre></code><br>
+<br>
+With 'hscore' variables, being INTEGER, we need to use a temporary STRING variable which has to be decrypted and then pass its value to 'hscore'.<br>
+The only annoying feature of this method is the fact you need a separate source code to encrypt/decrypt your high score files, as the routines inside a project will work only if the high score file is previously encrypted. I provided a small program which does this encrypting for you. It is recommended you keep a backup of your high score file in a separate folder (I also provided this in the zip downloads), even if not encrypting it.<br>
+Instead of encryption you can use BINARY files, which I don't know how to use at this moment (don't have time to learn; I'm submitting the tutorial in the nick of time), and which also AREN'T the same as ENCRYPTION. Encrypted files using these routines  people can only decrypt if they know the password (well, most people), while BINARIES can be read by anyone having your source. Ah yes, when providing your source code to public be sure to change the encryption passwords inside it.<br>
+Anyway, you might not need or prefer encryption at all. But I personally like having my high score/script files encrypted so than not every Dick and Tom can change/read them with Notepad. Unencrypted high scores might kill the challenge to beat them with some players.<br>
+Name inputting routine I won't go describing as that's irrelevant. You have to code, read it. It's much better than plain INPUT (you can use it with custom font printing libraries) and allows you to limit the number of characters in the name. The routine was done by 'Ryan Szrama', and all thanks go to him.<br>
+Download the extended example (with encryption and better name inputting): http://lachie.phatcode.net/Downloads/Managing_A_High_Score_Table.zip<br>
+<br>
+And that's it for this tutorial.<br>
+Until next time, have fun!<br>
+<br>
+A tutorial written by Lachie D. (mailto CHR$(58) lachie13 CHR$(64) yahoo CHR$(46) com ; http://lachie.phatcode.net - The Maker Of Stuff)<br>
+
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../index.html">Home</a> ·
+         <a href="../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../nav.js?v=70a6b70236"></script>
+<script src="../../search-index.js"></script>
+<script src="../../assets/app.js?v=456d079659"></script>
+<script src="../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

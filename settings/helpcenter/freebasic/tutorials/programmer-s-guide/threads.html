@@ -1,0 +1,674 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Threads — Help Center</title>
+<meta name="description" content="Threads — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/threads.html">
+<meta property="og:title" content="Threads">
+<meta property="og:description" content="Threads — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/threads.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/programmer-s-guide/threads.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>Threads</h1>
+<h2>Documentation</h2>
+
+	The built-in procedures that create, and detach/wait-for the <b>Threads</b>.<br>
+<br>
+<b>Preamble:</b><br>
+<br>
+When a program starts executing, it has one implicit thread running (this is already a full-fledged thread).<br>
+This "main" thread executes the main function of the program.<br>
+This same program can explicitly launch additional threads that will run in a competitive manner (both between them and with the main thread).<br>
+<br>
+All threads (including the main thread) share the same memory, and thus can access the same global variables, same heap memory, same set of file descriptors, etc.<br>
+All these threads execute in parallel (i.e. using time slices, or if the system has several processors/cores, then really in parallel).<br>
+<br>
+<div>Creating a thread</div><div><br>
+There are two methods to create a thread:<br>
+<div class="indent"><b>-</b> a "classic" method <code><a href="../../threading-support-functions/procedures/threadcreate.html">ThreadCreate</a></code> that starts a specific user-defined subroutine type (which has obligatorily one single parameter, an <i>'Any Ptr'</i> type pointer) in a separate execution thread, this first method being 100% safe,<br>
+<b>-</b> a "specific" method <code><a href="../../threading-support-functions/procedures/threadcall.html">ThreadCall</a></code> that should have start any user-defined subroutine type (which may have almost any number and any type of parameters) in a separate execution thread, but for the moment this second method is bugged.<br>
+<br>
+</div><u>Classic method (100% safe) - <code><a href="../../threading-support-functions/procedures/threadcreate.html">ThreadCreate</a></code></u><br>
+<div class="indent"><b>-</b> Syntax:<br>
+<div class="indent"><code><a href="../../procedures/procedures/declare.html">Declare</a> <a href="../../procedures/procedures/function.html">Function</a> <a href="../../threading-support-functions/procedures/threadcreate.html">ThreadCreate</a> ( <a href="../../procedures/procedures/byval.html">ByVal</a> <i>procptr</i> <a href="../../miscellaneous-keywords/procedures/as.html">As</a> <a href="../../procedures/procedures/sub.html">Sub</a> ( <a href="../../procedures/procedures/byval.html">ByVal</a> <i>userdata</i> <a href="../../miscellaneous-keywords/procedures/as.html">As</a> <a href="../../procedures/procedures/any.html">Any</a> <a href="../../standard-data-types/procedures/pointer-ptr.html">Ptr</a> ), <a href="../../procedures/procedures/byval.html">ByVal</a> <i>param</i> <a href="../../miscellaneous-keywords/procedures/as.html">As</a> <a href="../../procedures/procedures/any.html">Any</a> <a href="../../standard-data-types/procedures/pointer-ptr.html">Ptr</a> = 0, 		<a href="../../procedures/procedures/byval.html">ByVal</a> <i>stack_size</i> <a href="../../miscellaneous-keywords/procedures/as.html">As</a> <a href="../../standard-data-types/procedures/integer.html">Integer</a> = 0 ) <a href="../../miscellaneous-keywords/procedures/as.html">As</a> <a href="../../procedures/procedures/any.html">Any</a> <a href="../../standard-data-types/procedures/pointer-ptr.html">Ptr</a></code><br>
+</div><b>-</b> Usage:<br>
+<div class="indent"><code><i>threadid</i> = <a href="../../threading-support-functions/procedures/threadcreate.html">ThreadCreate</a> ( <i>procptr</i> [, [ <i>param</i> ] [, <i>stack_size</i> ] ] )</code><br>
+</div><b>-</b> Parameters:<br>
+<div class="indent"><code><i>procptr</i></code><br>
+<div class="indent">A pointer to the <code><a href="../../procedures/procedures/sub.html">Sub</a></code> intended to work as a thread. The sub must have the following signature (same parameters, same calling convention) to be compatible to <code><i>procptr</i></code>:<br>
+<div class="indent"><code><a href="../../procedures/procedures/declare.html">Declare</a> <a href="../../procedures/procedures/sub.html">Sub</a> myThread ( <a href="../../procedures/procedures/byval.html">ByVal</a> <i>userdata</i> <a href="../../miscellaneous-keywords/procedures/as.html">As</a> <a href="../../procedures/procedures/any.html">Any</a> <a href="../../standard-data-types/procedures/pointer-ptr.html">Ptr</a> )</code><br>
+</div></div><code><i>userdata</i></code><br>
+<div class="indent">The <code>Any Ptr</code> parameter of the <code><a href="../../procedures/procedures/sub.html">Sub</a></code> intended to work as a thread. FreeBASIC expects this parameter to be present, it must not be omitted! <br>
+</div><code><i>param</i></code><br>
+<div class="indent"><code>Any Ptr</code> argument that will be passed to the thread <code><a href="../../procedures/procedures/sub.html">Sub</a></code> pointed to by <code><i>procptr</i></code> through its <code><i>userdata</i></code> parameter. For example, this can be a pointer to a structure or an array containing various information for the thread sub to work with. If <code><i>param</i></code> is not given, <code>0</code> (zero) will be passed to the thread sub's <code><i>userdata</i></code> parameter instead.<br>
+</div><code><i>stack_size</i></code><br>
+<div class="indent">Optional number of bytes to reserve for this thread's stack.<br>
+</div></div><b>-</b> Return value:<br>
+<div class="indent">The <code><a href="../../procedures/procedures/any.html">Any</a> <a href="../../standard-data-types/procedures/pointer-ptr.html">Ptr</a></code> handle <code><i>(threadid)</i></code> to the thread created, or the null pointer (<code>0</code>) on failure.<br>
+<br>
+</div><b>Note:</b><br>
+<div class="indent"><b>-</b> The <code><i>userdata</i></code> parameter can be unused in the body of the <code>myThread</code> sub, but declaring it as an <code>Any Ptr</code> parameter is always mandatory in the header. In this case, the corresponding <code><i>param</i></code> parameter can then be omitted when calling <code><a href="../../threading-support-functions/procedures/threadcreate.html">ThreadCreate</a></code>, or else a needless argument can still be passed ('0' is commonly used because this value is directly compatible with any pointer). See the 1st and 2nd example.<br>
+<b>-</b> In the case where data must be passed to <code>myThread</code>, the Any Ptr <code><i>param</i></code> can be used to reference them, usually requiring a type conversion (implicit or explicit) into <code>Any Ptr</code> before passing it to <code><a href="../../threading-support-functions/procedures/threadcreate.html">ThreadCreate</a></code>, and a reverse type conversion from <code>Any Ptr</code> in the body of <code>myThread</code> before using it. See the 3rd example.<br>
+<br>
+</div></div><u>Specific method (bugged) - <code><a href="../../threading-support-functions/procedures/threadcall.html">ThreadCall</a></code></u><br>
+<div class="indent"><b>-</b> Syntax:<br>
+<div class="indent"><code><a href="../../procedures/procedures/declare.html">Declare</a> <a href="../../procedures/procedures/function.html">Function</a> <a href="../../threading-support-functions/procedures/threadcall.html">ThreadCall</a> <i>subname</i> ( [<i>paramlist</i>] ) <a href="../../miscellaneous-keywords/procedures/as.html">As</a> <a href="../../procedures/procedures/any.html">Any</a> <a href="../../standard-data-types/procedures/pointer-ptr.html">Ptr</a></code><br>
+</div><b>-</b> Usage:<br>
+<div class="indent"><code><i>threadid</i> = <a href="../../threading-support-functions/procedures/threadcall.html">ThreadCall</a> <i>subname</i> ( [<i>paramlist</i>] )</code><br>
+</div><b>-</b> Parameters:<br>
+<div class="indent"><code><i>subname</i></code><br>
+<div class="indent">The name of a subroutine<br>
+</div><code><i>paramlist</i></code><br>
+<div class="indent">A list of parameters to pass to the subroutine, as with a normal sub call.	<br>
+</div></div><b>-</b> Return value:<br>
+<div class="indent">The <code><a href="../../procedures/procedures/any.html">Any</a> <a href="../../standard-data-types/procedures/pointer-ptr.html">Ptr</a></code> handle <code><i>(threadid)</i></code> to the thread created, or the null pointer (<code>0</code>) on failure.<br>
+<br>
+</div><b>Warning:</b><br>
+<div class="indent">Presently when <code><a href="../../threading-support-functions/procedures/threadcall.html">ThreadCall</a></code> involves to pass parameters to the thread, there is no guarantee that the corresponding data are still maintained after the end of the <a href="../../threading-support-functions/procedures/threadcall.html">ThreadCall</a> statement and this until the thread is really launched. That can cause bad behavior.<br>
+Therefore it is more advisable for the moment to use <code><a href="../../threading-support-functions/procedures/threadcreate.html">ThreadCreate</a></code> (100% safe) instead.<br>
+<br>
+</div></div><u>Description</u><br>
+<div class="indent">Several different threads can be created from the same <code><a href="../../procedures/procedures/sub.html">Sub</a></code>, with different passed arguments allowing to define the behavior of each.<br>
+<br>
+There may be a long time between the end of the <code><a href="../../threading-support-functions/procedures/threadcreate.html">ThreadCreate</a></code>/<code><a href="../../threading-support-functions/procedures/threadcall.html">ThreadCall</a></code> statement execution and the effective launch of the thread. So some statements following the <code><a href="../../threading-support-functions/procedures/threadcreate.html">ThreadCreate</a></code>/<code><a href="../../threading-support-functions/procedures/threadcall.html">ThreadCall</a></code> statement can be executed before the actual launch of the thread.<br>
+Conversely, the thread body can start executing even before <code><a href="../../threading-support-functions/procedures/threadcreate.html">ThreadCreate</a></code>/<code><a href="../../threading-support-functions/procedures/threadcall.html">ThreadCall</a></code> returns.<br>
+<br>
+There is no guarantee about the order in which different threads execute, and no assumptions can be made about the order in which multiple created threads actually start executing (except in Linux).<br>
+<br>
+By default, a thread is always created in the "joinable" state, ie its handle is accessible by its <code><i>'threadid'</i></code> identifier.<br>
+If a thread ends in this state (joinable), the resources that were assigned to it will not be released automatically (but only at the main thread termination).<br>
+<br>
+So a good habit is to always use one and only one of the following two methods for a thread to finish properly (see the paragraph below):<br>
+<div class="indent"><b>-</b> either  waiting for the thread end,<br>
+<b>-</b> otherwise detaching the thread (the thread becomes no longer joinable).<br>
+<br>
+</div>Each running thread can be identified by its handle which is unique among all running threads.<br>
+When a new thread is created, a handle to the thread is returned by the creation function.<br>
+When the thread runs code, <code><a href="../../threading-support-functions/procedures/threadself.html">ThreadSelf</a></code> (from fbc version 1.08) allows to also return the handle of the thread (the implicit main thread also has its own unique handle).<br>
+<code><a href="../../threading-support-functions/procedures/threadself.html">ThreadSelf</a></code> may be used to code some sort of TLS (Thread Local Storage) from the unique handle of each thread (including the implicit main thread). Therefore, a same global variable name may be defined, but with a stored value specific to the thread that accesses it. This allows generic procedures to be coded, but with parameters depending on the thread which executes them.<br>
+<br>
+</div></div><div>Waiting for a thread end, otherwise detaching a thread</div><div><br>
+There are two methods to induce a proper thread termination:<br>
+<div class="indent"><b>-</b> either a first method <code><a href="../../threading-support-functions/procedures/threadwait.html">ThreadWait</a></code> where another thread waits for this thread to finish,<br>
+<b>-</b> otherwise a second method <code><a href="../../threading-support-functions/procedures/threaddetach.html">ThreadDetach</a></code> where another thread detaches this thread and continues.<br>
+<br>
+</div><u>First method - <code><a href="../../threading-support-functions/procedures/threadwait.html">ThreadWait</a></code></u><br>
+<div class="indent"><b>-</b> Syntax:<br>
+<div class="indent"><code><a href="../../procedures/procedures/declare.html">Declare</a> <a href="../../procedures/procedures/sub.html">Sub</a> <a href="../../threading-support-functions/procedures/threadwait.html">ThreadWait</a> ( <a href="../../procedures/procedures/byval.html">ByVal</a> <i>threadid</i> <a href="../../miscellaneous-keywords/procedures/as.html">As</a> <a href="../../procedures/procedures/any.html">Any</a> <a href="../../standard-data-types/procedures/pointer-ptr.html">Ptr</a> )</code><br>
+</div><b>-</b> Usage:<br>
+<div class="indent"><code><a href="../../threading-support-functions/procedures/threadwait.html">ThreadWait</a> ( <i>threadid</i> )</code><br>
+</div><b>-</b> Parameters:<br>
+<div class="indent"><code><i>threadid</i></code><br>
+<div class="indent"><code><a href="../../procedures/procedures/any.html">Any</a> <a href="../../standard-data-types/procedures/pointer-ptr.html">Ptr</a></code> handle of a thread created by <code><a href="../../threading-support-functions/procedures/threadcreate.html">ThreadCreate</a></code> or <code><a href="../../threading-support-functions/procedures/threadcall.html">ThreadCall</a></code><br>
+</div></div><b>-</b> Note:<br>
+<div class="indent">In other language (as C++), the <i>'wait()'</i> suffix is called <i>'join()'</i>.<br>
+<br>
+</div></div><u>Second method - <code><a href="../../threading-support-functions/procedures/threaddetach.html">ThreadDetach</a></code></u><br>
+<div class="indent"><b>-</b> Syntax:<br>
+<div class="indent"><code><a href="../../procedures/procedures/declare.html">Declare</a> <a href="../../procedures/procedures/sub.html">Sub</a> <a href="../../threading-support-functions/procedures/threaddetach.html">ThreadDetach</a> ( <a href="../../procedures/procedures/byval.html">ByVal</a> <i>threadid</i> <a href="../../miscellaneous-keywords/procedures/as.html">As</a> <a href="../../procedures/procedures/any.html">Any</a> <a href="../../standard-data-types/procedures/pointer-ptr.html">Ptr</a> )</code><br>
+</div><b>-</b> Usage:<br>
+<div class="indent"><code>#include "fbthread.bi"</code><br>
+<code><a href="../../threading-support-functions/procedures/threaddetach.html">ThreadDetach</a> ( <i>threadid</i> )</code><br>
+</div><b>-</b> Parameters:<br>
+<div class="indent"><code><i>threadid</i></code><br>
+<div class="indent"><code><a href="../../procedures/procedures/any.html">Any</a> <a href="../../standard-data-types/procedures/pointer-ptr.html">Ptr</a></code> handle of a thread created by <code><a href="../../threading-support-functions/procedures/threadcreate.html">ThreadCreate</a></code> or <code><a href="../../threading-support-functions/procedures/threadcall.html">ThreadCall</a></code><br>
+<br>
+</div></div></div><u>Description</u><br>
+<div class="indent">After creating it, the programmer must make sure that the thread is either waited for (joined) otherwise detached, and this from another thread (including the main thread).<br>
+<br>
+<code><a href="../../threading-support-functions/procedures/threadwait.html">ThreadWait</a></code> waits for a thread to complete its execution, and then release the resources associated with the thread handle. <code><a href="../../threading-support-functions/procedures/threadwait.html">ThreadWait</a></code> does not return until the thread (designated by the identifier) ends.<br>
+During the wait, the caller does not consume CPU time.<br>
+<code><a href="../../threading-support-functions/procedures/threadwait.html">ThreadWait</a></code> does not force the thread to end. If a thread requires a signal to force an end, a mechanism such as a shared flag must be used.<br>
+<br>
+<code><a href="../../threading-support-functions/procedures/threaddetach.html">ThreadDetach</a></code> releases resources associated with the thread handle. The thread handle will be destroyed by <code><a href="../../threading-support-functions/procedures/threaddetach.html">ThreadDetach</a></code> and can no longer be used.<br>
+Unlike <code><a href="../../threading-support-functions/procedures/threadwait.html">ThreadWait</a></code>, <code><a href="../../threading-support-functions/procedures/threaddetach.html">ThreadDetach</a></code> does not wait for the end of the thread, and its execution continues independently. All allocated resources will be freed once the thread is complete.<br>
+<br>
+After <code><a href="../../threading-support-functions/procedures/threadwait.html">ThreadWait</a></code> or <code><a href="../../threading-support-functions/procedures/threaddetach.html">ThreadDetach</a></code> is applied, the thread can no longer be joined, so the handle identifier value must not be used again in any of these commands.<br>
+<br>
+Generally, before finishing, a 'parent' thread is waiting for the 'child' thread to finish.<br>
+But if the programmer chooses not to wait until the end of the thread (and necessarily detaches it only), then he must make sure that the data accessed by that thread is valid until the thread has finished with it. Otherwise, one may encounter a situation where the 'parent' thread holds pointers/references to local variables and the 'child' thread hasn't finished when the 'parent' thread finishes (the variables being destroyed because becoming out of scope).<br>
+<br>
+</div></div><div>Example</div><div><br>
+<ul><li> Small example proving multi-threading capacity:<br>
+</li></ul><div class="indent"><b>-</b> In a non multi-threading code, we cannot do anything else while waiting for the "Line Input" instruction to return.<br>
+<b>-</b> Multi-threading makes this possible.<br>
+<code><pre class="code"><span class="tok-kw">Sub</span> <span>thread</span><span>(</span><span class="tok-kw">ByVal</span> <span>p</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span><span>)</span>
+
+    <span class="tok-kw">Do</span>
+
+        <span class="tok-kw">Static</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>t</span>
+
+        <span class="tok-kw">Draw</span> <span class="tok-kw">String</span> <span>(</span><span class="tok-nu">0</span><span>,</span> <span class="tok-nu">16</span><span>),</span> <span>t</span><span>,</span> <span class="tok-nu">0</span>
+
+        <span>t</span> <span>=</span> <span class="tok-kw">Time</span>
+
+        <span class="tok-kw">Draw</span> <span class="tok-kw">String</span> <span>(</span><span class="tok-nu">0</span><span>,</span> <span class="tok-nu">16</span><span>),</span> <span>t</span>
+
+        <span class="tok-kw">Do</span>
+
+            <span class="tok-kw">If</span> <span>*</span><span class="tok-kw">Cast</span><span>(</span><span class="tok-kw">String</span> <span class="tok-kw">Ptr</span><span>,</span> <span>p</span><span>)</span> <span>=</span> <span>&quot;quit&quot;</span> <span class="tok-kw">Then</span> <span class="tok-kw">Exit</span> <span class="tok-kw">Sub</span>
+
+            <span class="tok-kw">Sleep</span> <span class="tok-nu">100</span><span>,</span> <span class="tok-nu">1</span>
+
+        <span class="tok-kw">Loop</span> <span class="tok-kw">Until</span> <span class="tok-kw">Time</span> <span>&lt;&gt;</span> <span>t</span>  <span class="tok-cm">' to limit flickering</span>
+
+    <span class="tok-kw">Loop</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>s</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>pThread</span>
+
+
+
+<span class="tok-kw">Screen</span> <span class="tok-nu">12</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Time is updated by thread even while 'Line Input' is waiting for characters:&quot;</span><span>;</span>
+
+<span class="tok-kw">Locate</span> <span class="tok-nu">4</span><span>,</span> <span class="tok-nu">1</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Enter any character line to test, or 'quit' to finish:&quot;</span>
+
+<span>pThread</span> <span>=</span> <span class="tok-kw">ThreadCreate</span><span>(@</span><span>thread</span><span>,</span> <span>@</span><span>s</span><span>)</span>
+
+<span class="tok-kw">Do</span>
+
+    <span class="tok-kw">Locate</span> <span class="tok-nu">5</span><span>,</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">Print</span> <span class="tok-kw">Space</span><span>(</span><span class="tok-kw">Len</span><span>(</span><span>s</span><span>));</span>
+
+    <span class="tok-kw">Locate</span> <span class="tok-nu">5</span><span>,</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">Line</span> <span class="tok-kw">Input</span> <span>s</span>
+
+<span class="tok-kw">Loop</span> <span class="tok-kw">Until</span> <span>s</span> <span>=</span> <span>&quot;quit&quot;</span>
+
+<span class="tok-kw">ThreadWait</span><span>(</span><span>pThread</span><span>)</span></pre></code><br>
+</div><ul><li> The 'Main' thread displays ten "M" characters while the 'Child' thread simultaneously displays ten "C" characters.<br>
+</li></ul>A <i>'Sleep x, 1'</i> tempo is put in the <i>'For'</i> loop of each thread (main thread and child thread) to release time-slice allowing the other thread to execute as well.<br>
+The tempos are set so that the execution time of the child thread <i>'For'</i> loop is greater than the one of the main thread <i>'For'</i> loop.<br>
+<br>
+<div class="indent"><b>-</b> Using <code><a href="../../threading-support-functions/procedures/threadcreate.html">ThreadCreate</a></code> ..... <code><a href="../../threading-support-functions/procedures/threadwait.html">ThreadWait</a></code>:<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>thread</span> <span>(</span><span class="tok-kw">ByVal</span> <span>userdata</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span><span>)</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>threadID</span>  <span class="tok-cm">'' declaration of an 'Any Ptr' thread-ID of the child thread</span>
+
+
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;&quot;&quot;M&quot;&quot;: from 'Main' thread&quot;</span>
+
+<span class="tok-kw">Print</span> <span>&quot;&quot;&quot;C&quot;&quot;: from 'Child' thread&quot;</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+<span>threadID</span> <span>=</span> <span class="tok-kw">ThreadCreate</span><span>(@</span><span>thread</span><span>)</span>  <span class="tok-cm">'' creation of the child thread from the main thread</span>
+
+
+
+<span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">10</span>  <span class="tok-cm">'' 'For' loop of the main thread</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;M&quot;</span><span>;</span>
+
+    <span class="tok-kw">Sleep</span> <span class="tok-nu">150</span><span>,</span> <span class="tok-nu">1</span>
+
+<span class="tok-kw">Next</span> <span>I</span>
+
+
+
+<span class="tok-kw">ThreadWait</span><span>(</span><span>threadID</span><span>)</span>  <span class="tok-cm">'' waiting for the child thread termination</span>
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Print</span> <span>&quot;'Child' thread finished&quot;</span>
+
+
+
+<span class="tok-kw">Sleep</span>
+
+
+
+
+
+<span class="tok-kw">Sub</span> <span>thread</span> <span>(</span><span class="tok-kw">ByVal</span> <span>userdata</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span><span>)</span>  <span class="tok-cm">'' sub executed by the child thread</span>
+
+    <span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">10</span>          <span class="tok-cm">'' 'For' loop of the child thread</span>
+
+        <span class="tok-kw">Print</span> <span>&quot;C&quot;</span><span>;</span>
+
+        <span class="tok-kw">Sleep</span> <span class="tok-nu">350</span><span>,</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">Next</span> <span>I</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span></pre></code><br>
+Output example:<br>
+<div class="indent"><pre class="code">
+"M": from 'Main' thread
+"C": from 'Child' thread
+
+MCMMCMMCMMCMMMCCCCCC
+'Child' thread finished
+				</pre></div></div><b>-</b> Using <code><a href="../../threading-support-functions/procedures/threadcreate.html">ThreadCreate</a></code> + <code><a href="../../threading-support-functions/procedures/threaddetach.html">ThreadDetach</a></code> ..... (a global end-flag is added at the end of the child thread):<br>
+<div class="indent"><code><pre class="code"><span>#include &quot;fbthread.bi&quot;
+
+</span>
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>thread</span> <span>(</span><span class="tok-kw">ByVal</span> <span>userdata</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span><span>)</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>threadID</span>          <span class="tok-cm">'' declaration of an 'Any Ptr' thread-ID of the child thread</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">Shared</span> <span class="tok-kw">As</span> <span class="tok-kw">Boolean</span> <span>threadEnd</span>  <span class="tok-cm">'' declaration of a global 'Boolean' thread-End flag for the child thread</span>
+
+
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;&quot;&quot;M&quot;&quot;: from 'Main' thread&quot;</span>
+
+<span class="tok-kw">Print</span> <span>&quot;&quot;&quot;C&quot;&quot;: from 'Child' thread&quot;</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+<span>threadID</span> <span>=</span> <span class="tok-kw">ThreadCreate</span><span>(@</span><span>thread</span><span>)</span>  <span class="tok-cm">'' creation of the child thread from the main thread</span>
+
+<span class="tok-kw">ThreadDetach</span><span>(</span><span>threadID</span><span>)</span>            <span class="tok-cm">'' detaching the child thread</span>
+
+
+
+<span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">10</span>  <span class="tok-cm">'' 'For' loop of the main thread</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;M&quot;</span><span>;</span>
+
+    <span class="tok-kw">Sleep</span> <span class="tok-nu">150</span><span>,</span> <span class="tok-nu">1</span>
+
+<span class="tok-kw">Next</span> <span>I</span>
+
+
+
+<span class="tok-kw">While</span> <span>threadEnd</span> <span>=</span> <span class="tok-kw">False</span>  <span class="tok-cm">'' waiting for the thread-End flag = 'True' from the child thread</span>
+
+<span class="tok-kw">Wend</span>
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Print</span> <span>&quot;'Child' thread finishing or finished&quot;</span>
+
+
+
+<span class="tok-kw">Sleep</span>
+
+
+
+
+
+<span class="tok-kw">Sub</span> <span>thread</span> <span>(</span><span class="tok-kw">ByVal</span> <span>userdata</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span><span>)</span>  <span class="tok-cm">'' sub executed by the child thread</span>
+
+    <span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">10</span>          <span class="tok-cm">'' 'For' loop of the child thread</span>
+
+        <span class="tok-kw">Print</span> <span>&quot;C&quot;</span><span>;</span>
+
+        <span class="tok-kw">Sleep</span> <span class="tok-nu">350</span><span>,</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">Next</span> <span>I</span>
+
+    <span>threadEnd</span> <span>=</span> <span class="tok-kw">True</span>                    <span class="tok-cm">'' set the thrend-End flag to 'True'</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span></pre></code><br>
+Output example:<br>
+<div class="indent"><pre class="code">
+"M": from 'Main' thread
+"C": from 'Child' thread
+
+MCMMCMMCMMCMMMCCCCCC
+'Child' thread finishing or finished
+				</pre></div></div></div><ul><li> A UDT for a multi-timer feature:<br>
+</li></ul><div class="indent"><b>-</b> using internally a joinable thread (<code><a href="../../threading-support-functions/procedures/threadcreate.html">ThreadCreate</a></code> ..... <code><a href="../../threading-support-functions/procedures/threadwait.html">ThreadWait</a></code>) to sequence each timer,<br>
+<b>-</b> and call-backing externally a detached thread (<code><a href="../../threading-support-functions/procedures/threadcreate.html">ThreadCreate</a></code> + <code><a href="../../threading-support-functions/procedures/threaddetach.html">ThreadDetach</a></code> .....) as event for user.<br>
+</div>The user event being triggered by a detached-thread callback from the timer loop, the requested time-out is only biased by the execution time of <code><a href="../../threading-support-functions/procedures/threadcreate.html">ThreadCreate</a></code> + <code><a href="../../threading-support-functions/procedures/threaddetach.html">ThreadDetach</a></code> (small time about constant) and not by a <code><a href="../../threading-support-functions/procedures/threadwait.html">ThreadWait</a></code> waiting-for:<br>
+<div class="indent"><code><pre class="code"><span class="tok-cm">'    Only 4 member procedures in public access (the first 3 returning 'true' if success, 'false' else):</span>
+
+<span class="tok-cm">'        - Function 'Set' to parametrize the considered timer (time-out in ms, pointer to user thread)</span>
+
+<span class="tok-cm">'        - Function 'Start' to start the considered timer</span>
+
+<span class="tok-cm">'        - Function 'Stop' to stop the considered timer (then, the considered timer may be re-Set and re-Start)</span>
+
+<span class="tok-cm">'        - Property 'Counter' to get the occurrence number of the timer</span>
+
+<span class="tok-cm">'    Plus an 'Any Ptr' in public access:</span>
+
+<span class="tok-cm">'        - Pointer field 'userdata' to point to any user data structure (optional usage)</span>
+
+<span class="tok-cm">'</span>
+
+<span class="tok-cm">'    Remark:</span>
+
+<span class="tok-cm">'        - Pointer to the considered timer instance is provided to the user thread procedure</span>
+
+<span class="tok-cm">'          in order to be able to factorize the treatment per timers group,</span>
+
+<span class="tok-cm">'          and to address the right user data structure if used (see example for usage).</span>
+
+<span class="tok-cm">'</span>
+
+<span class="tok-cm">'    In private access:</span>
+
+<span class="tok-cm">'        - 4 internal variables (time-out value, pointer to user thread, handle to timer thread, counter of occurence)</span>
+
+<span class="tok-cm">'        - Static timer thread</span>
+
+
+
+
+
+<span>#include &quot;fbthread.bi&quot;
+
+</span><span class="tok-kw">Type</span> <span>UDT_timer_thread</span>
+
+    <span class="tok-kw">Public</span><span>:</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Function</span> <span>Set</span> <span>(</span><span class="tok-kw">ByVal</span> <span>time_out</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span><span>,</span> <span>_</span>
+
+                              <span class="tok-kw">ByVal</span> <span>timer_procedure</span> <span class="tok-kw">As</span> <span class="tok-kw">Sub</span><span>(</span><span class="tok-kw">ByVal</span> <span>param</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span><span>))</span> <span>_</span>
+
+                              <span class="tok-kw">As</span> <span class="tok-kw">Boolean</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Function</span> <span>Start</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">Boolean</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Function</span> <span class="tok-kw">Stop</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">Boolean</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Property</span> <span>Counter</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>userdata</span>
+
+    <span class="tok-kw">Private</span><span>:</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span> <span>tempo</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Sub</span><span>(</span><span class="tok-kw">ByVal</span> <span>param</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span><span>)</span> <span>routine</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>handle</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span> <span>count</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Static</span> <span class="tok-kw">Sub</span> <span>thread</span> <span>(</span><span class="tok-kw">ByVal</span> <span>param</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Function</span> <span>UDT_timer_thread.Set</span> <span>(</span><span class="tok-kw">ByVal</span> <span>time_out</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span><span>,</span> <span>_</span>
+
+                              <span class="tok-kw">ByVal</span> <span>timer_procedure</span> <span class="tok-kw">As</span> <span class="tok-kw">Sub</span><span>(</span><span class="tok-kw">ByVal</span> <span>param</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span><span>))</span> <span>_</span>
+
+                              <span class="tok-kw">As</span> <span class="tok-kw">Boolean</span>
+
+    <span class="tok-kw">If</span> <span>timer_procedure</span> <span>&gt;</span> <span class="tok-nu">0</span> <span class="tok-kw">And</span> <span>This.handle</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">Then</span>
+
+        <span>This.tempo</span> <span>=</span> <span>time_out</span>
+
+        <span>This.routine</span> <span>=</span> <span>timer_procedure</span>
+
+        <span>This.count</span> <span>=</span> <span class="tok-nu">0</span>
+
+        <span class="tok-kw">Function</span> <span>=</span> <span class="tok-kw">True</span>
+
+    <span class="tok-kw">Else</span>
+
+        <span class="tok-kw">Function</span> <span>=</span> <span class="tok-kw">False</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Function</span> <span>UDT_timer_thread.Start</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">Boolean</span>
+
+    <span class="tok-kw">If</span> <span>This.handle</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">And</span> <span>This.routine</span> <span>&gt;</span> <span class="tok-nu">0</span> <span class="tok-kw">Then</span>
+
+        <span>This.handle</span> <span>=</span> <span class="tok-kw">ThreadCreate</span><span>(@</span><span>UDT_timer_thread.thread</span><span>,</span> <span>@</span><span class="tok-kw">This</span><span>)</span>
+
+        <span class="tok-kw">Function</span> <span>=</span> <span class="tok-kw">True</span>
+
+    <span class="tok-kw">Else</span>
+
+        <span class="tok-kw">Function</span> <span>=</span> <span class="tok-kw">False</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Function</span> <span>UDT_timer_thread.Stop</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">Boolean</span>
+
+    <span class="tok-kw">If</span> <span>This.handle</span> <span>&gt;</span> <span class="tok-nu">0</span> <span class="tok-kw">Then</span>
+
+        <span class="tok-kw">Dim</span> <span>p</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>=</span> <span class="tok-nu">0</span>
+
+        <span class="tok-kw">Swap</span> <span>p</span><span>,</span> <span>This.handle</span>
+
+        <span class="tok-kw">ThreadWait</span><span>(</span><span>p</span><span>)</span>
+
+        <span class="tok-kw">Function</span> <span>=</span> <span class="tok-kw">True</span>
+
+    <span class="tok-kw">Else</span>
+
+        <span class="tok-kw">Function</span> <span>=</span> <span class="tok-kw">False</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Property</span> <span>UDT_timer_thread.Counter</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span>
+
+    <span class="tok-kw">Return</span> <span>This.count</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Property</span>
+
+
+
+<span class="tok-kw">Static</span> <span class="tok-kw">Sub</span> <span>UDT_timer_thread.thread</span> <span>(</span><span class="tok-kw">ByVal</span> <span>param</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span><span>)</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT_timer_thread</span> <span class="tok-kw">Ptr</span> <span>pu</span> <span>=</span> <span>param</span>
+
+    <span class="tok-kw">While</span> <span>pu</span><span>-&gt;</span><span>handle</span> <span>&gt;</span> <span class="tok-nu">0</span>
+
+        <span class="tok-kw">Sleep</span> <span>pu</span><span>-&gt;</span><span>tempo</span><span>,</span> <span class="tok-nu">1</span>
+
+        <span>pu</span><span>-&gt;</span><span>count</span> <span>+=</span> <span class="tok-nu">1</span>
+
+        <span class="tok-kw">If</span> <span>pu</span><span>-&gt;</span><span>routine</span> <span>&gt;</span> <span class="tok-nu">0</span> <span class="tok-kw">Then</span>
+
+            <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>p</span> <span>=</span> <span class="tok-kw">ThreadCreate</span><span>(</span><span class="tok-kw">Cast</span><span>(</span><span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span><span>,</span> <span>pu</span><span>-&gt;</span><span>routine</span><span>),</span> <span>param</span><span>)</span>
+
+            <span class="tok-kw">ThreadDetach</span><span>(</span><span>p</span><span>)</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+    <span class="tok-kw">Wend</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-cm">'---------------------------------------------------------------------------------------------------</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span> <span>tempo1</span> <span>=</span> <span class="tok-nu">950</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span> <span>tempo2</span> <span>=</span> <span class="tok-nu">380</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT_timer_thread</span> <span>timer1</span>
+
+    <span>timer1.userdata</span> <span>=</span> <span class="tok-kw">New</span> <span class="tok-kw">String</span><span>(</span><span>&quot;        callback from timer #1 (&quot;</span> <span>&amp;</span> <span>tempo1</span> <span>&amp;</span> <span>&quot;ms)&quot;</span><span>)</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT_timer_thread</span> <span>timer2</span>
+
+    <span>timer2.userdata</span> <span>=</span> <span class="tok-kw">New</span> <span class="tok-kw">String</span><span>(</span><span>&quot;        callback from timer #2 (&quot;</span> <span>&amp;</span> <span>tempo2</span> <span>&amp;</span> <span>&quot;ms)&quot;</span><span>)</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>User_thread</span> <span>(</span><span class="tok-kw">ByVal</span> <span>param</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span><span>)</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT_timer_thread</span> <span class="tok-kw">Ptr</span> <span>pu</span> <span>=</span> <span>param</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span class="tok-kw">Ptr</span> <span>ps</span> <span>=</span> <span>pu</span><span>-&gt;</span><span>userdata</span>
+
+    <span class="tok-kw">Print</span> <span>*</span><span>ps</span> <span>&amp;</span> <span>&quot;, occurrence: &quot;</span> <span>&amp;</span> <span>pu</span><span>-&gt;</span><span>Counter</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;Beginning of test&quot;</span>
+
+<span class="tok-kw">If</span> <span>timer1.Set</span><span>(</span><span>tempo1</span><span>,</span> <span>@</span><span>User_thread</span><span>)</span> <span class="tok-kw">Then</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;    timer #1 set OK&quot;</span>
+
+    <span class="tok-kw">If</span> <span>timer1.Start</span> <span class="tok-kw">Then</span>
+
+        <span class="tok-kw">Print</span> <span>&quot;        timer #1 start OK&quot;</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+<span class="tok-kw">If</span> <span>timer2.Set</span><span>(</span><span>tempo2</span><span>,</span> <span>@</span><span>User_thread</span><span>)</span> <span class="tok-kw">Then</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;    timer #2 set OK&quot;</span>
+
+    <span class="tok-kw">If</span> <span>timer2.Start</span> <span class="tok-kw">Then</span>
+
+        <span class="tok-kw">Print</span> <span>&quot;        timer #2 start OK&quot;</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+<span class="tok-kw">Print</span> <span>&quot;    Then, any key to stop the timers&quot;</span>
+
+
+
+<span class="tok-kw">Sleep</span>
+
+
+
+<span class="tok-kw">If</span> <span>timer1.stop</span> <span class="tok-kw">Then</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;    timer #1 stop OK&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+<span class="tok-kw">If</span> <span>timer2.stop</span> <span class="tok-kw">Then</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;    timer #2 stop OK&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+<span class="tok-kw">Sleep</span> <span class="tok-nu">500</span><span>,</span> <span class="tok-nu">1</span>
+
+<span class="tok-kw">Print</span> <span>&quot;End of test&quot;</span>
+
+<span class="tok-kw">Delete</span> <span class="tok-kw">Cast</span><span>(</span><span class="tok-kw">String</span> <span class="tok-kw">Ptr</span><span>,</span> <span>timer1.userdata</span><span>)</span>
+
+<span class="tok-kw">Delete</span> <span class="tok-kw">Cast</span><span>(</span><span class="tok-kw">String</span> <span class="tok-kw">Ptr</span><span>,</span> <span>timer2.userdata</span><span>)</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+Output example:<br>
+<div class="indent"><pre class="code">
+Beginning of test
+	timer #1 set OK
+		timer #1 start OK
+	timer #2 set OK
+		timer #2 start OK
+	Then, any key to stop the timers
+		callback from timer #2 (380ms), occurrence: 1
+		callback from timer #2 (380ms), occurrence: 2
+		callback from timer #1 (950ms), occurrence: 1
+		callback from timer #2 (380ms), occurrence: 3
+		callback from timer #2 (380ms), occurrence: 4
+		callback from timer #1 (950ms), occurrence: 2
+		callback from timer #2 (380ms), occurrence: 5
+		callback from timer #2 (380ms), occurrence: 6
+		callback from timer #2 (380ms), occurrence: 7
+		callback from timer #1 (950ms), occurrence: 3
+		callback from timer #2 (380ms), occurrence: 8
+		callback from timer #2 (380ms), occurrence: 9
+		callback from timer #1 (950ms), occurrence: 4
+		callback from timer #2 (380ms), occurrence: 10
+		callback from timer #2 (380ms), occurrence: 11
+		callback from timer #2 (380ms), occurrence: 12
+	timer #1 stop OK
+		callback from timer #1 (950ms), occurrence: 5
+	timer #2 stop OK
+		callback from timer #2 (380ms), occurrence: 13
+End of test
+			</pre></div></div></div><div>See also</div><div><br>
+<ul><li> <code><a href="../../threading-support-functions/procedures/threadcreate.html">ThreadCreate</a></code>, <code><a href="../../threading-support-functions/procedures/threadcall.html">ThreadCall</a></code><br>
+<li> <code><a href="../../threading-support-functions/procedures/threadself.html">ThreadSelf</a></code><br>
+<li> <code><a href="../../threading-support-functions/procedures/threadwait.html">ThreadWait</a></code>, <code><a href="../../threading-support-functions/procedures/threaddetach.html">ThreadDetach</a></code><br>
+<li> <a href="multi-threading.html">Multi-Threading Overview</a><br>
+<li> <a href="mutual-exclusion.html">Mutual Exclusion</a><br>
+<li> <a href="conditional-variables.html">Conditional Variables</a><br>
+<li> <a href="critical-sections.html">Critical Sections</a><br>
+<li> <a href="critical-sections-faq.html">Critical Sections FAQ</a><br>
+<br>
+</li></li></li></li></li></li></li></li></ul></div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

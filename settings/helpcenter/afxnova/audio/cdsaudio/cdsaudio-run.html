@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CDSAudio.Run — Help Center</title>
+<meta name="description" content="Runs all the filters in the filter graph.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/audio/cdsaudio/cdsaudio-run.html">
+<meta property="og:title" content="CDSAudio.Run">
+<meta property="og:description" content="Runs all the filters in the filter graph.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/audio/cdsaudio/cdsaudio-run.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/audio/cdsaudio/cdsaudio-run.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cdsaudio-class.html">CDSAudio Class</a></div>
+<h1>CDSAudio.Run<span class="h1kind">method</span></h1>
+<p class="lede">Runs all the filters in the filter graph.</p>
+<div class="badges"><a class="badge" href="../index.html">Audio</a><span class="badge">method</span><span class="badge">CDSAudio.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION Run () AS HRESULT</code></pre>
+<h2>Description</h2>
+<p>Runs all the filters in the filter graph.</p>
+<h2>Remarks</h2>
+<p>If the filter graph is stopped, this method pauses the graph before running. If the graph is already running, the method returns S_OK but has no effect.</p>
+<p>The graph runs until the application calls the <strong>Pause</strong> or <strong>Stop</strong> method. When playback reaches the end of the stream, the graph continues to run, but the filters do not stream any more data. At that point, the application can pause or stop the graph.</p>
+<p>This method does not seek to the beginning of the stream. Therefore, if you run the graph, pause it, and then run it again, playback resumes from the paused position. If you run the graph after it has reached the end of the stream, nothing is rendered. To seek the graph, use the the <strong>GetCurrentPosition</strong> and <strong>SetPositions</strong> methods.</p>
+<p>If method returns S_FALSE, it means that the method returned before all of the filters switched to a running state. The filters will complete the transition after the method returns. Optionally, you can wait for the transition to complete by calling the <strong>GetState</strong> method with a timeout value. However, this is not required.</p>
+<p>If the <strong>Run</strong> method returns an error code, it means that one or more filters failed to run. However, some filters might be in a running state. In a multistream graph, entire streams might be playing successfully. Typically the application would tear down the graph and report an error in this case.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CDSAudio.inc</code></li><li>Defined in <span class="srcref">AfxNova/CDSAudio.inc:169</span></li><li>Documented in <span class="srcref">Audio/CDSAudio Class.md</span></li><li>Topic: <a href="../cdsaudio-class.html">CDSAudio Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

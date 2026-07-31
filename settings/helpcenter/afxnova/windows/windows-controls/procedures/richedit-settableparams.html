@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RichEdit_SetTableParams — Help Center</title>
+<meta name="description" content="Changes the parameters of rows in a table.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/procedures/richedit-settableparams.html">
+<meta property="og:title" content="RichEdit_SetTableParams">
+<meta property="og:description" content="Changes the parameters of rows in a table.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/procedures/richedit-settableparams.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-controls/procedures/richedit-settableparams.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../richedit-procedures.html">RichEdit Procedures</a></div>
+<h1>RichEdit_SetTableParams<span class="h1kind">function</span></h1>
+<p class="lede">Changes the parameters of rows in a table.</p>
+<div class="badges"><a class="badge" href="../../index.html">Windows</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION RichEdit_SetTableParams (BYVAL hRichEdit AS HWND, BYVAL lptp AS TABLEROWPARMS PTR, BYVAL lptcp AS TABLECELLPARMS PTR) AS DWORD</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>hRichEdit</code></td><td></td><td>The handle of the rich edit control.</td></tr><tr><td><code>lptp</code></td><td></td><td>A pointer to a <a href="https://learn.microsoft.com/en-us/windows/win32/api/richedit/ns-richedit-tablerowparms" target="_blank" rel="noopener">TABLEROWPARMS</a> structure.</td></tr><tr><td><code>lptcp</code></td><td></td><td>A pointer to a <a href="https://learn.microsoft.com/en-us/windows/win32/api/richedit/ns-richedit-tablecellparms" target="_blank" rel="noopener">TABLECELLPARMS</a> structure.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>Returns <strong>S_OK</strong> if successful, or one of the following error codes.</p>
+<h2>Description</h2>
+<p>Changes the parameters of rows in a table.</p>
+<h2>Remarks</h2>
+<p>This message changes the parameters of the number of rows specified by the <strong>cRow</strong> member of the <strong>TABLEROWPARMS</strong> structure, if the table has that many consecutive rows. If <strong>cRow</strong> is less than 0, the message iterates until the end of the table. If the new cell count differs from the current cell count by +1 or 1, it inserts or deletes the cell at the index specified by the <strong>iCell</strong> member of <strong>TABLEROWPARMS</strong>. The starting table row is identified by a character position. This position is specified by <strong>cpStartRow</strong> members with values that are greater than or equal to zero. The position should be inside the table row, but not inside a nested table, unless you want to change that table s parameters. If the <strong>cpStartRow</strong> member is 1, the character position is given by the current selection. For this, position the selection anywhere inside the table row, or select the row with the active end of the selection at the end of the table row.</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/AfxRichEdit.inc:1012</span></li><li>Documented in <span class="srcref">Windows/WIndows Controls/RichEdit/RichEdit Procedures.md</span></li><li>Topic: <a href="../richedit-procedures.html">RichEdit Procedures</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

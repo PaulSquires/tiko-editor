@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ColHeader — Help Center</title>
+<meta name="description" content="Specifies whether headers should display for the specified band.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-gui/procedures/colheader.html">
+<meta property="og:title" content="ColHeader">
+<meta property="og:description" content="Specifies whether headers should display for the specified band.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-gui/procedures/colheader.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-gui/procedures/colheader.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../microsoft-hierarchical-grid.html">Microsoft Hierarchical Grid</a></div>
+<h1>ColHeader<span class="h1kind">property</span></h1>
+<p class="lede">Specifies whether headers should display for the specified band.</p>
+<div class="badges"><a class="badge" href="../../index.html">Windows</a><span class="badge">property</span><span class="badge badge--warn">doc-orphan</span></div>
+<div class="note note--warn"><strong>No implementation located.</strong> This member is documented, but the source scan found no matching declaration. It is likely declared in a header this scan does not resolve, or provided by a macro.</div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>PROPERTY ColHeader (BYVAL BandNumber AS LONG) AS ColHeaderSettings</code></pre>
+<pre class="code sig"><code>PROPERTY ColHeader (BYVAL BandNumber AS LONG, BYVAL settings AS ColHeaderSettings)</code></pre>
+<pre class="code sig"><code>PROPERTY ColHeader () AS ColHeaderSettings</code></pre>
+<pre class="code sig"><code>PROPERTY ColHeader (BYVAL settings AS ColHeaderSettings)</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>BandNumber</code></td><td></td><td>A zero‑based index identifying the band specifies that contains the headers that will show or be hidden. If the band number is omited, band 0 is assumed.</td></tr><tr><td><code>settings</code></td><td></td><td><em>flexColHeaderOn</em>: The headers display for each band.<br><em>flexColHeaderOff</em>: No headers display for the band.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Determines whether column headers are displayed for a specific band in the grid.</p>
+<h2>Remarks</h2>
+<p>If you are not using data-bound bands, headers are created by setting <strong>FixedRows</strong> and assigning text to the first row (Row 0).</p>
+<p><strong>Alignment</strong>: Use <code>ColAlignment(index)</code> to align data, but note that header text (row 0) sometimes requires separate formatting or manual alignment characters.</p>
+<h2>Examples</h2>
+<p>' Define Header Row: Set FixedRows = 1 to create a non-scrolling top row. ' Set Header Text: Use the TextMatrix property to assign titles: grid.FixedRows = 1 grid.TextMatrix(0, 0) = "ID" grif.TextMatrix(0, 1) = "Name"</p>
+<p>grid.FixedRows = 2 grid.TextMatrix(0, 0) = "Employee" grid.TextMatrix(1, 0) = "ID"</p>
+<p>If grid.MouseRow = 0 Then</p>
+<pre class="code"><code>' Header clicked → perform sorting</code></pre>
+<p>End If</p>
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">Windows/Windows GUI/MSHFlexGrid Class.md</span></li><li>Topic: <a href="../microsoft-hierarchical-grid.html">Microsoft Hierarchical Grid</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

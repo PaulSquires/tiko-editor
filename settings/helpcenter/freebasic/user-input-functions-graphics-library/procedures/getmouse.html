@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GetMouse — Help Center</title>
+<meta name="description" content="Retrieves the status of the mouse pointing device">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/user-input-functions-graphics-library/procedures/getmouse.html">
+<meta property="og:title" content="GetMouse">
+<meta property="og:description" content="Retrieves the status of the mouse pointing device">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/user-input-functions-graphics-library/procedures/getmouse.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/user-input-functions-graphics-library/procedures/getmouse.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>GetMouse<span class="h1kind">function</span></h1>
+<p class="lede">Retrieves the status of the mouse pointing device</p>
+<div class="badges"><a class="badge" href="../index.html">User Input Functions (Graphics Library)</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>Declare Function GetMouse ( ByRef x As Long, ByRef y As Long, ByRef wheel As Long = 0, ByRef buttons As Long = 0, ByRef clip As Long = 0 ) As Long</code></pre>
+<pre class="code sig"><code>Declare Function GetMouse ( ByRef x As LongInt, ByRef y As LongInt, ByRef wheel As LongInt = 0, ByRef buttons As LongInt = 0, ByRef clip As LongInt = 0 ) As Long</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>x</code></td><td></td><td>x coordinate value</td></tr><tr><td><code>y</code></td><td></td><td>y coordinate value</td></tr><tr><td><code>wheel</code></td><td></td><td>scroll wheel value</td></tr><tr><td><code>buttons</code></td><td></td><td>button status</td></tr><tr><td><code>clip</code></td><td></td><td>clip status</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<br>
+<code>0</code> on success, or <code>1</code> on error (for example because the mouse is outside the graphic window) or on failure. <i><a href="../../language-documentation/other/error-handling.html">(sets a runtime error)</a></i><br>
+<br>
+
+<h2>Description</h2>
+<br>
+<code><b>GetMouse</b></code> retrieves the mouse position and buttons status; information is returned in the variables passed to this function by reference. If a mouse is not available, all variables will contain the <code>-1</code> value. <br>
+<br>
+If in console mode, the <code><i>x</i></code> and <code><i>y</i></code> coordinates are the character cell coordinates the mouse is currently on; the upper left corner of the screen is at coordinates <code>0, 0</code>. If the mouse moves out of the console window, <code><b>GetMouse</b></code> returns the last coordinate on the window that the mouse was on. If in console mode and fullscreen, the scroll wheel value is not returned. <br>
+<br>
+If in graphics mode, <code><i>x</i></code> and <code><i>y</i></code> will always be returned in pixel coordinates still relative to the upper left corner of the screen, which is at 0,0 in this case; custom coordinates system set via <code><a href="../../screen-functions/procedures/view-graphics.html">View</a></code> or <code><a href="../../screen-functions/procedures/window.html">Window</a></code> do not affect the coordinates returned by <code><b>GetMouse</b></code>.<br>
+If the mouse runs off the graphic window, all values are set to <code>-1</code> and the return value of the function is set to <code>1</code>. This may result in misinterpretation for the buttons and wheel if the return value of the function is not also tested.<br>
+<br>
+<code><i>Wheel</i></code> is the mouse wheel counter; rotating the wheel away from you makes the count to increase, rotating the wheel toward you makes it to decrease. At program startup or when a new graphics mode is set via <code><a href="../../screen-functions/procedures/screen-graphics.html">Screen (Graphics)</a></code>, wheel position is reset to 0. FreeBASIC may not always support mouse wheels for a given platform, in which case 0 is always returned.<br>
+<br>
+<code><i>Buttons</i></code> stores the buttons status as a bitmask: bit 0 is set if left mouse button is down; bit 1 is set if right mouse button is down; bit 2 is set if middle mouse button / wheel is down.<br>
+<br>
+<code><i>Clip</i></code> stores the mouse clipping status; if <code>1</code>, the mouse is currently clipped to the graphics window; if <code>0</code>, the mouse is not clipped.<br>
+<br>
+The error code returned by <code><b>GetMouse</b></code> can be checked using <code><a href="../../error-handling-functions/procedures/err.html">Err</a></code> in the next line. The function version of  <code><b>GetMouse</b></code> returns directly the error code as a 32 bit <code><a href="../../standard-data-types/procedures/long.html">Long</a></code>.<br>
+<br>
+<b>Warning:</b> When the flag GFX_SHAPED_WINDOW is set (see <code><a href="../../screen-functions/procedures/screenres.html">ScreenRes</a></code>), <code><b>GetMouse</b></code> is only active in any colored area, ie there where color &lt;&gt; RGBA(255, 0, 255, alpha).<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Usage</h3><code><br>
+<i>result</i> = <b>GetMouse</b> (<i>x</i>, <i>y</i> [, [ <i>wheel</i> ] [, [ <i>buttons</i> ] [, [ <i>clip</i> ]]]])<br>
+</code><br>
+
+<h3>Dialect Differences</h3><br>
+<ul><li> Not available in the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang qb</a></i> dialect unless referenced with the alias <code><b>__Getmouse</b></code>.  The variables passed must also be of type <code><a href="../../standard-data-types/procedures/long.html">Long</a></code> instead of <code><a href="../../standard-data-types/procedures/integer.html">Integer</a></code>.<br>
+<br>
+</li></ul>
+<h3>Platform Differences</h3><br>
+<ul><li> On Win32, scroll wheel changes are not guaranteed to be detected in full-screen console mode.  Confirmed on WinXP: In windowed mode, mouse wheel changes are seen, but in full-screen console mode they are not.<br>
+<li> In DOS, the "clip" value has no relevance.  Additionally the wheel and middle button will not work unless supported and enabled by the mouse driver. See also FaqDOS.<br>
+<br>
+</li></li></ul>
+<h3>Differences from QB</h3><br>
+<ul><li> New to FreeBASIC<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="../../screen-functions/procedures/screenres.html">ScreenRes</a></code> setting graph mode by resolution<br>
+<li> <code><a href="../../screen-functions/procedures/screen-graphics.html">Screen (Graphics)</a></code> setting mode the QB-like way<br>
+<li> <code><a href="setmouse.html">SetMouse</a></code><br>
+<li> <code><a href="multikey.html">MultiKey</a></code><br>
+<li> <code><a href="getjoystick.html">GetJoystick</a></code><br>
+<li> <code><a href="../../screen-functions/procedures/event-message-data-from-screenevent.html">Event</a></code><br>
+<li> <code><a href="../../screen-functions/procedures/screenevent.html">ScreenEvent</a></code><br>
+<br>
+</li></li></li></li></li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Long</span> <span>x</span><span>,</span> <span>y</span><span>,</span> <span>buttons</span><span>,</span> <span>res</span> 
+
+<span class="tok-cm">' Set video mode and enter loop</span>
+
+<span class="tok-kw">ScreenRes</span> <span class="tok-nu">640</span><span>,</span> <span class="tok-nu">480</span><span>,</span> <span class="tok-nu">8</span>
+
+<span class="tok-kw">Do</span>
+
+    <span class="tok-cm">' Get mouse x, y and buttons. Discard wheel position.</span>
+
+    <span>res</span> <span>=</span> <span class="tok-kw">GetMouse</span> <span>(</span><span>x</span><span>,</span> <span>y</span><span>,</span> <span>,</span> <span>buttons</span><span>)</span>
+
+    <span class="tok-kw">Locate</span> <span class="tok-nu">1</span><span>,</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">If</span> <span>res</span> <span>&lt;&gt;</span> <span class="tok-nu">0</span> <span class="tok-kw">Then</span> <span class="tok-cm">'' Failure</span>
+
+
+
+<span>#ifdef __FB_DOS__
+
+</span>        <span class="tok-kw">Print</span> <span>&quot;Mouse or mouse driver not available&quot;</span>
+
+<span>#else
+
+</span>        <span class="tok-kw">Print</span> <span>&quot;Mouse not available or not on window&quot;</span>
+
+<span>#endif
+
+</span>
+
+    <span class="tok-kw">Else</span>
+
+        <span class="tok-kw">Print</span> <span class="tok-kw">Using</span> <span>&quot;Mouse position: ###:###  Buttons: &quot;</span><span>;</span> <span>x</span><span>;</span> <span>y</span><span>;</span>
+
+        <span class="tok-kw">If</span> <span>buttons</span> <span class="tok-kw">And</span> <span class="tok-nu">1</span> <span class="tok-kw">Then</span> <span class="tok-kw">Print</span> <span>&quot;L&quot;</span><span>;</span>
+
+        <span class="tok-kw">If</span> <span>buttons</span> <span class="tok-kw">And</span> <span class="tok-nu">2</span> <span class="tok-kw">Then</span> <span class="tok-kw">Print</span> <span>&quot;R&quot;</span><span>;</span>
+
+        <span class="tok-kw">If</span> <span>buttons</span> <span class="tok-kw">And</span> <span class="tok-nu">4</span> <span class="tok-kw">Then</span> <span class="tok-kw">Print</span> <span>&quot;M&quot;</span><span>;</span>
+
+        <span class="tok-kw">Print</span> <span>&quot;   &quot;</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+<span class="tok-kw">Loop</span> <span class="tok-kw">While</span> <span class="tok-kw">Inkey</span> <span>=</span> <span>&quot;&quot;</span>
+
+<span class="tok-kw">End</span></pre></code><br>
+<code><pre class="code"><span class="tok-cm">'Example 2: type-union-type structure</span>
+
+<span class="tok-kw">Type</span> <span>mouse</span>
+
+    <span class="tok-kw">As</span> <span class="tok-kw">Long</span> <span>res</span>
+
+    <span class="tok-kw">As</span> <span class="tok-kw">Long</span> <span>x</span><span>,</span> <span>y</span><span>,</span> <span>wheel</span><span>,</span> <span>clip</span>
+
+    <span class="tok-kw">Union</span>
+
+        <span>buttons</span> <span class="tok-kw">As</span> <span class="tok-kw">Long</span>
+
+        <span class="tok-kw">Type</span>
+
+            <span class="tok-kw">Left</span><span>:</span><span class="tok-nu">1</span> <span class="tok-kw">As</span> <span class="tok-kw">Long</span>
+
+            <span class="tok-kw">Right</span><span>:</span><span class="tok-nu">1</span> <span class="tok-kw">As</span> <span class="tok-kw">Long</span>
+
+            <span>middle</span><span>:</span><span class="tok-nu">1</span> <span class="tok-kw">As</span> <span class="tok-kw">Long</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Union</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+ 
+
+<span class="tok-kw">Screen</span> <span class="tok-nu">11</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>mouse</span> <span>m</span>
+
+
+
+<span class="tok-kw">Do</span>
+
+    <span>m.res</span> <span>=</span> <span class="tok-kw">GetMouse</span><span>(</span> <span>m.x</span><span>,</span> <span>m.y</span><span>,</span> <span>m.wheel</span><span>,</span> <span>m.buttons</span><span>,</span> <span>m.clip</span> <span>)</span>
+
+    <span class="tok-kw">ScreenLock</span>
+
+    <span class="tok-kw">Cls</span>
+
+    <span class="tok-kw">Print</span> <span class="tok-kw">Using</span> <span>&quot;res = #&quot;</span><span>;</span> <span>m.res</span>
+
+    <span class="tok-kw">Print</span> <span class="tok-kw">Using</span> <span>&quot;x = ###; y = ###; wheel = +###; clip = ##&quot;</span><span>;</span> <span>m.x</span><span>;</span> <span>m.y</span><span>;</span> <span>m.wheel</span><span>;</span> <span>m.clip</span>
+
+    <span class="tok-kw">Print</span> <span class="tok-kw">Using</span> <span>&quot;buttons = ##; left = #; middle = #; right = #&quot;</span><span>;</span> <span>m.buttons</span><span>;</span> <span>m.left</span><span>;</span> <span>m.middle</span><span>;</span> <span>m.right</span>
+
+    <span class="tok-kw">ScreenUnlock</span>
+
+    <span class="tok-kw">Sleep</span> <span class="tok-nu">10</span><span>,</span> <span class="tok-nu">1</span>
+
+<span class="tok-kw">Loop</span> <span class="tok-kw">While</span> <span class="tok-kw">Inkey</span> <span>=</span> <span>&quot;&quot;</span></pre></code><br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgGetmouse.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

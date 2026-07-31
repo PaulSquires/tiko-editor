@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Binary — Help Center</title>
+<meta name="description" content="Specifies file or device to be opened for binary mode">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/file-i-o-functions/procedures/binary.html">
+<meta property="og:title" content="Binary">
+<meta property="og:description" content="Specifies file or device to be opened for binary mode">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/file-i-o-functions/procedures/binary.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/file-i-o-functions/procedures/binary.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>Binary<span class="h1kind">keyword</span></h1>
+<p class="lede">Specifies file or device to be opened for binary mode</p>
+<div class="badges"><a class="badge" href="../index.html">File I/O Functions</a><span class="badge">keyword</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>Open filename for Binary [Access access_type] [Lock lock_type] as [#]filenum</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>filename</code></td><td></td><td>file name to open</td></tr><tr><td><code>access_type</code></td><td></td><td>indicates whether the file may be read from, written to or both</td></tr><tr><td><code>lock_type</code></td><td></td><td>locking to be used while the file is open</td></tr><tr><td><code>filenum</code></td><td></td><td>unused file number to associate with the open file</td></tr></tbody></table></div>
+<h2>Description</h2>
+<br>
+Opens a file or device for reading and/or writing binary data in the file <code><i>filenum</i></code>, with free format.<br>
+If the file does not exist, a new file will be created. The file pointer is initialized by <code><a href="open.html">Open</a></code> at byte no. 1. <br>
+<code><a href="get-file-i-o.html">Get #</a></code> and <code><a href="put-file-i-o.html">Put #</a></code> file operations move the file pointer according to the size of the data, the pointer can be set to any byte in the file.<br>
+The data existing in the file is preserved by <code><a href="open.html">Open</a></code>. <br>
+This file mode can use any buffer variable to read/write data in the file.   <br>
+The data is saved in binary mode, in the same internal format FreeBASIC uses, by means of <code><a href="get-file-i-o.html">Get #</a></code> and <code><a href="put-file-i-o.html">Put #</a></code>.<br>
+<br>
+<code><i>filename</i></code> must be a string expression resulting in a legal file name in the target OS, without wildcards. The file will be sought for in the present directory, unless a path is given.<br>
+<br>
+<code><i>Access_type</i></code> By default <code><b>Binary</b></code> mode allows to both read and write the file, unless an <code><a href="access.html">Access</a></code> type is specified, it must be one of: <br>
+<ul><ul><li> <code><b>Read</b></code> - the file is opened for input only<br>
+<li> <code><b>Write</b></code> - the file is opened for output only<br>
+<li> <code><b>Read Write</b></code> - the file is opened for input and output (the default)<br>
+<br>
+</li></li></li></ul></ul><code><i>Lock_type</i></code> indicates the way the file is locked  for other processes (users or threads), it is one of:<br>
+<ul><ul><li> <code><b>Shared</b></code> - The file can be freely accessed by other processes     <br>
+<li> <code><b>Lock Read</b></code> - The file can't be opened simultaneously for reading<br>
+<li> <code><b>Lock Write</b></code> - The file can't be opened simultaneously for writing<br>
+<li> <code><b>Lock Read Write</b></code> - The file cannot be opened simultaneously by other processes.<br>
+</li></li></li></li></ul></ul><div class="indent">If no lock type is stated, the file will be <code><b>Shared</b></code> for other threads of the program and <code><b>Lock Read Write</b></code> for other programs.<br>
+<code><a href="lock.html">Lock</a></code> and <code><a href="unlock.html">Unlock</a></code> can be used to restrict temporally access to parts of a file.<br>
+<br>
+<br>
+</div><code><i>filenum</i></code> is a valid file number (in the range <code>1..255</code>) not being used for any other file presently open. The file number identifies the file for the rest of file operations. A free file number can be found using the <code><a href="freefile.html">FreeFile</a></code> function.<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Differences from QB</h3><br>
+<ul><li> None<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="open.html">Open</a></code><br>
+<li> <code><a href="put-file-i-o.html">Put #</a></code><br>
+<li> <code><a href="get-file-i-o.html">Get #</a></code><br>
+<li> <code><a href="random.html">Random</a></code><br>
+<li> <code><a href="append.html">Append</a></code><br>
+<li> <code><a href="output.html">Output</a></code><br>
+<li> <code><a href="input-file-mode.html">Input</a></code><br>
+<br>
+</li></li></li></li></li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-cm">'' Create a binary data file with one number in it</span>
+
+<span class="tok-kw">Dim</span> <span>x</span> <span class="tok-kw">As</span> <span class="tok-kw">Single</span> <span>=</span> <span class="tok-nu">17.164</span>
+
+
+
+<span class="tok-kw">Open</span> <span>&quot;MyFile.Dat&quot;</span> <span class="tok-kw">For</span> <span class="tok-kw">Binary</span> <span class="tok-kw">As</span> <span>#</span><span class="tok-nu">1</span>
+
+  <span class="tok-cm">'' put without a position setting will put from the last known file position</span>
+
+  <span class="tok-cm">'' in this case, the very beginning of the file.</span>
+
+  <span class="tok-kw">Put</span> <span>#</span><span class="tok-nu">1</span><span>,</span> <span>,</span> <span>x</span>
+
+<span class="tok-kw">Close</span> <span>#</span><span class="tok-nu">1</span></pre></code><br>
+<br>
+<code><pre class="code"><span class="tok-cm">'' Now read the number from the file</span>
+
+<span class="tok-kw">Dim</span> <span>x</span> <span class="tok-kw">As</span> <span class="tok-kw">Single</span> <span>=</span> <span class="tok-nu">0</span>
+
+
+
+<span class="tok-kw">Open</span> <span>&quot;MyFile.Dat&quot;</span> <span class="tok-kw">For</span> <span class="tok-kw">Binary</span> <span class="tok-kw">As</span> <span>#</span><span class="tok-nu">1</span>
+
+  <span class="tok-kw">Get</span> <span>#</span><span class="tok-nu">1</span><span>,</span> <span>,</span> <span>x</span>
+
+<span class="tok-kw">Close</span> <span>#</span><span class="tok-nu">1</span>
+
+
+
+<span class="tok-kw">Print</span> <span>x</span></pre></code><br>
+<br>
+<code><pre class="code"><span class="tok-cm">'' Read entire contents of a file to a string</span>
+
+<span class="tok-kw">Dim</span> <span>txt</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+
+
+<span class="tok-kw">Open</span> <span>&quot;myfile.txt&quot;</span> <span class="tok-kw">For</span> <span class="tok-kw">Binary</span> <span class="tok-kw">Access</span> <span class="tok-kw">Read</span> <span class="tok-kw">As</span> <span>#</span><span class="tok-nu">1</span>
+
+  <span class="tok-kw">If</span> <span class="tok-kw">LOF</span><span>(</span><span class="tok-nu">1</span><span>)</span> <span>&gt;</span> <span class="tok-nu">0</span> <span class="tok-kw">Then</span>
+
+    <span class="tok-cm">'' our string has as many characters as the file has in bytes</span>
+
+    <span>txt</span> <span>=</span> <span class="tok-kw">String</span><span>(</span><span class="tok-kw">LOF</span><span>(</span><span class="tok-nu">1</span><span>),</span> <span class="tok-nu">0</span><span>)</span>
+
+    <span class="tok-cm">'' size of txt is known.  entire string filled with file data</span>
+
+    <span class="tok-kw">Get</span> <span>#</span><span class="tok-nu">1</span><span>,</span> <span>,</span> <span>txt</span>
+
+  <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+<span class="tok-kw">Close</span> <span>#</span><span class="tok-nu">1</span>
+
+
+
+<span class="tok-kw">Print</span> <span>txt</span></pre></code><br>
+<br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgBinary.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

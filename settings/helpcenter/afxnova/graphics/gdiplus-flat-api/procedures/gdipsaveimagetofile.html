@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GdipSaveImageToFile — Help Center</title>
+<meta name="description" content="Saves an **Image** object to a file.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipsaveimagetofile.html">
+<meta property="og:title" content="GdipSaveImageToFile">
+<meta property="og:description" content="Saves an **Image** object to a file.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipsaveimagetofile.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/procedures/gdipsaveimagetofile.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../image-functions.html">Image Functions</a></div>
+<h1>GdipSaveImageToFile<span class="h1kind">function</span></h1>
+<p class="lede">Saves an **Image** object to a file.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GdipSaveImageToFile (BYVAL image As GpImage PTR, BYVAL finename AS WSTRING PTR, BYVAL clsidEncoder AS CLSID PTR, BYVAL encoderParams AS EncoderParameters PTR) AS GpStatus</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>image</code></td><td></td><td>[in] Pointer to the <strong>Image</strong> object.</td></tr><tr><td><code>finename</code></td><td></td><td>[in] Pointer to a null-terminated unicode string that specifies the path name for the saved image.</td></tr><tr><td><code>clsidEncoder</code></td><td></td><td>[in] Pointer to a <strong>CLSID</strong> that specifies the encoder to use to save the image.</td></tr><tr><td><code>encoderParams</code></td><td></td><td>[in]  Pointer to an <strong>EncoderParameters</strong> structure that holds parameters used by the encoder. The default value is NULL.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Saves an image to a file.</p>
+<h2>Examples</h2>
+<p>'#CONSOLE ON #define _WIN32_WINNT &amp;h0602 #INCLUDE ONCE "AfxNova/AfxGdiPlus.inc" USING AfxNova</p>
+<p>DIM hStatus AS LONG</p>
+<p>' // Initialize GDI+ DIM token AS ULONG_PTR = AfxGdipInit</p>
+<p>' // Load the original image from file DIM image AS GpImage PTR hStatus = GdipLoadImageFromFile("RYDER_Winona_01.jpg", @image)</p>
+<p>' // Fill and EncoderParameter structure with the compression DIM compression AS ULONG = EncoderValueCompressionLZW DIM ep(1) AS EncoderParameter ep(0).Guid = EncoderCompression ep(0).NumberOfValues = 1 ep(0).Type = EncoderParameterValueTypeLong ep(0).Value = @compression</p>
+<p>DIM colorDepth AS ULONG = 24 ep(1).Guid = EncoderColorDepth ep(1).NumberOfValues = 1 ep(1).Type = EncoderParameterValueTypeLong ep(1).Value = @colorDepth</p>
+<p>DIM encoderParams AS EncoderParameters encoderParams.Count = 2 encoderParams.Parameter(0) = ep(0) encoderParams.Parameter(1) = ep(1)</p>
+<p>' // Get the TIFF encoder CLSID DIM clsid AS CLSID = AfxGdipGetEncoderClsid("image/tiff")</p>
+<p>' // Save the image with parameters hStatus = GdipSaveImageToFile(image, "RYDER_Winona_01.tiff", @clsid, @encoderParams) IF hStatus = 0 THEN PRINT "Image converted successfully" ElSE PRINT "Save failed, status = "; hStatus END IF</p>
+<p>' // Cleanup IF image THEN GdipDisposeImage(image)</p>
+<p>' // Shutdown GDI+ AfxGdipShutdown token</p>
+<p>PRINT PRINT "Press any key" SLEEP</p>
+<p>' ======================================================================================== ' Saves a GDI+ image to file. ' Parameters: ' - pImage = Pointer to the GDI+ image to save. ' - wszFileName = Path name for the image to be saved. ' - wszMimeType = Mime type. '   "image/bmp" = Bitmap (.bmp) '   "image/gif" = GIF (.gif) '   "image/jpeg" = JPEG (.jpg) '   "image/png" = PNG (.png) '   "image/tiff" = TIFF (.tiff) ' Return value: ' If the method succeeds, it returns Ok, which is an element of the Status enumeration. ' If the method fails, it returns one of the other elements of the Status enumeration. ' ======================================================================================== PRIVATE FUNCTION AfxGdipSaveImageToFile (BYVAL pImage AS GpImage PTR, BYREF wszFileName AS WSTRING, BYREF wszMimeType AS WSTRING) AS LONG IF pImage = NULL OR LEN(TRIM(wszFileName)) = 0 THEN RETURN InvalidParameter ' // Initialize Gdiplus DIM token AS ULONG_PTR = AfxGdipInit IF token = 0 THEN EXIT FUNCTION DIM clsidEncoder AS GUID = AfxGdipGetEncoderClsid(wszMimeType) FUNCTION = GdipSaveImageToFile(pImage, @wszFileName, @clsidEncoder, NULL) ' // Shutdown Gdiplus GdiplusShutdown token END FUNCTION ' ======================================================================================== ' ======================================================================================== PRIVATE FUNCTION AfxGdipSaveImageToBmp (BYVAL pImage AS GpImage PTR, BYREF wszFileName AS WSTRING) AS LONG FUNCTION = AfxGdipSaveImageToFile(pImage, wszFilename, "image/bmp") END FUNCTION ' ======================================================================================== ' ======================================================================================== PRIVATE FUNCTION AfxGdipSaveImageToJpeg (BYVAL pImage AS GpImage PTR, BYREF wszFileName AS WSTRING) AS LONG FUNCTION = AfxGdipSaveImageToFile(pImage, wszFilename, "image/jpeg") END FUNCTION ' ======================================================================================== ' ======================================================================================== PRIVATE FUNCTION AfxGdipSaveImageToPng (BYVAL pImage AS GpImage PTR, BYREF wszFileName AS WSTRING) AS LONG FUNCTION = AfxGdipSaveImageToFile(pImage, wszFilename, "image/png") END FUNCTION ' ======================================================================================== ' ======================================================================================== PRIVATE FUNCTION AfxGdipSaveImageToGif (BYVAL pImage AS GpImage PTR, BYREF wszFileName AS WSTRING) AS LONG FUNCTION = AfxGdipSaveImageToFile(pImage, wszFilename, "image/gif") END FUNCTION ' ======================================================================================== ' ======================================================================================== PRIVATE FUNCTION AfxGdipSaveImageToTiff (BYVAL pImage AS GpImage PTR, BYREF wszFileName AS WSTRING) AS LONG FUNCTION = AfxGdipSaveImageToFile(pImage, wszFilename, "image/tiff") END FUNCTION ' ========================================================================================</p>
+<p>' ======================================================================================== ' Saves a Windows bitmap to file. ' Parameters: ' - hbmp = Handle to the Windows bitmap. ' - wszFileName = Path name for the image to be saved. ' - wszMimeType = Mime type (default: "image/bmp"). '   "image/bmp" = Bitmap (.bmp) '   "image/gif" = GIF (.gif) '   "image/jpeg" = JPEG (.jpg) '   "image/png" = PNG (.png) '   "image/tiff" = TIFF (.tiff) ' Return value: ' If the method succeeds, it returns Ok, which is an element of the Status enumeration. ' If the method fails, it returns one of the other elements of the Status enumeration. ' ======================================================================================== PRIVATE FUNCTION AfxGdipSaveHBITMAPToFile (BYVAL hbmp AS HBITMAP, BYREF wszFileName AS WSTRING, BYREF wszMimeType AS WSTRING = "image/bmp") AS LONG IF hbmp = NULL OR LEN(TRIM(wszFileName)) = 0 THEN RETURN InvalidParameter ' // Initialize Gdiplus DIM token AS ULONG_PTR = AfxGdipInit ' // Create a Bitmap object from an HBITMAP DIM pBitmap AS GpBitmap PTR GdipCreateBitmapFromHBITMAP(hbmp, NULL, @pBitmap) IF pBitmap THEN</p>
+<pre class="code"><code>DIM clsidEncoder AS GUID = AfxGdipGetEncoderClsid(wszMimeType)
+  FUNCTION = GdipSaveImageToFile(CAST(GpImage PTR, pBitmap), @wszFileName, @clsidEncoder, NULL)
+  GdipDisposeImage(cast(GpImage PTR, pBitmap))</code></pre>
+<p>END IF IF token = 0 THEN EXIT FUNCTION ' // Shutdown Gdiplus GdiplusShutdown token END FUNCTION ' ========================================================================================</p>
+<p>This example demonstrates how to set the compression and color depth when converting an image to the tiff format. The <strong>EncoderParameters</strong> structure has two members, a dword with the number of <strong>EncoderParameter</strong> structures and an array of <strong>EncoderParameter</strong> structures.</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/AfxGdiPlus.bi:2080</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Flat  Api/GdiPlusImage.md</span></li><li>Topic: <a href="../image-functions.html">Image Functions</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

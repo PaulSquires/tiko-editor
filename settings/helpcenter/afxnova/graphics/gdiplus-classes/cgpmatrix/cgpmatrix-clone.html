@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CGpMatrix.Clone — Help Center</title>
+<meta name="description" content="Copies the contents of the existing **Matrix** object into a new **Matrix** object.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpmatrix/cgpmatrix-clone.html">
+<meta property="og:title" content="CGpMatrix.Clone">
+<meta property="og:description" content="Copies the contents of the existing **Matrix** object into a new **Matrix** object.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpmatrix/cgpmatrix-clone.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-classes/cgpmatrix/cgpmatrix-clone.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cgpmatrix-class.html">CGpMatrix Class</a></div>
+<h1>CGpMatrix.Clone<span class="h1kind">method</span></h1>
+<p class="lede">Copies the contents of the existing **Matrix** object into a new **Matrix** object.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">method</span><span class="badge">CGpMatrix.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION Clone (BYVAL pCloneMatrix AS CGpMatrix PTR) AS GpStatus</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>pCloneMatrix</code></td><td></td><td>Pointer to the Matrix object where to copy the contents of the existing object.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>If the function succeeds, it returns <strong>Ok</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h2>Description</h2>
+<p>Copies the contents of the existing <strong>Matrix</strong> object into a new <strong>Matrix</strong> object.</p>
+<h2>Example</h2>
+<p>' ======================================================================================== ' The following example creates a Matrix object that represents a horizontal scaling. The ' code creates a second matrix by calling the Matrix::Clone method of the first matrix. ' Then the code calls the Matrix::Translate method of the second matrix. At that point, ' the second matrix represents a composite transformation: first scale, then translate. ' The code passes the address of the first matrix to the SetTransform method of a Graphics ' object and then uses that Graphics object to draw a scaled rectangle. Then the code passes ' the address of the second matrix to the SetTransform method of the same Graphics object. ' Finally, the code calls the DrawRectangle method of the Graphics object a second time to ' draw a rectangle that is scaled and translated. ' ======================================================================================== SUB Example_Clone (BYVAL hdc AS HDC)</p>
+<p>' // Create a graphics object from the window device context DIM graphics AS CGpGraphics = hdc ' // Get the DPI scaling ratios DIM rxRatio AS SINGLE = graphics.GetDpiX / 96 DIM ryRatio AS SINGLE = graphics.GetDpiY / 96</p>
+<p>' // Horizontal scaling DIM matrix AS CGpMatrix = CGpMatrix(3.0, 0.0, 0.0, 1.0, 0.0, 0.0) ' // Clone the matrix DIM clonedMatrix AS CGpMatrix matrix.Clone(@clonedMatrix)</p>
+<p>' // Translate the cloned matrix clonedMatrix.Translate(40.0 * rxRatio, 25.0 * ryRatio, MatrixOrderAppend)</p>
+<p>' // Create a pem DIM myPen AS CGpPen = CGpPen(ARGB_BLUE) ' // Scale graphics.SetTransform(@matrix) graphics.DrawRectangle(@myPen, 0, 0, 100 * rxRatio, 100 * ryRatio) ' // Scale and translate graphics.SetTransform(@clonedMatrix) graphics.DrawRectangle(@myPen, 0, 0, 100 * rxRatio, 100 * ryRatio)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CGpMatrix.inc</code></li><li>Defined in <span class="srcref">AfxNova/CGpMatrix.inc:231</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Classes/CGpMatrix Class.md</span></li><li>Topic: <a href="../cgpmatrix-class.html">CGpMatrix Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

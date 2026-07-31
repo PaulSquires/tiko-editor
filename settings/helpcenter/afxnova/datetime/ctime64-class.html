@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CTime64 Class — Help Center</title>
+<meta name="description" content="CTime64 Class — 33 documented members. DateTime reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/datetime/ctime64-class.html">
+<meta property="og:title" content="CTime64 Class">
+<meta property="og:description" content="CTime64 Class — 33 documented members. DateTime reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/datetime/ctime64-class.html">
+<link rel="stylesheet" href="../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/datetime/ctime64-class.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span>DateTime</div>
+<h1>CTime64 Class</h1>
+<h2>Members (33)</h2>
+<div class="memberlist"><a href="ctime64/ctime64-cast-operator.html"><span class="m-n">CAST Operator</span><span class="m-d">Returns the **CTime64** value as a long integer.</span></a><a href="ctime64/ctime64-constructors.html"><span class="m-n">Constructors</span><span class="m-d">Create new **CTime64** objects initialized to the specified value.</span></a><a href="ctime64/ctime64-format.html"><span class="m-n">Format</span><span class="m-d">Converts a **CTime64** object to a string.</span></a><a href="ctime64/ctime64-formatgmt.html"><span class="m-n">FormatGmt</span><span class="m-d">Converts a **CTime64** object to a string.</span></a><a href="ctime64/ctime64-getasfiletime.html"><span class="m-n">GetAsFileTime</span><span class="m-d">Returns the time as a **FILETIME** structure.</span></a><a href="ctime64/ctime64-getassystemtime.html"><span class="m-n">GetAsSystemTime</span><span class="m-d">Returns the time as a **SYSTEMTIME** structure.</span></a><a href="ctime64/ctime64-getcurrenttime.html"><span class="m-n">GetCurrentTime</span><span class="m-d">Returns a **CTime64** object that represents the current system date and time.</span></a><a href="ctime64/ctime64-getday.html"><span class="m-n">GetDay</span><span class="m-d">Returns the day represented by the **CTime64** object.</span></a><a href="ctime64/ctime64-getdayofweek.html"><span class="m-n">GetDayOfWeek</span><span class="m-d">Returns the day of the week represented by the **CTime64** object.</span></a><a href="ctime64/ctime64-getgmttime.html"><span class="m-n">GetGmtTime</span><span class="m-d">Gets a **tm** structure that contains a decomposition of the time contained in this **CTime64** object.</span></a><a href="ctime64/ctime64-gethour.html"><span class="m-n">GetHour</span><span class="m-d">Returns the hour represented by the **CTime64** object.</span></a><a href="ctime64/ctime64-getlocaltime.html"><span class="m-n">GetLocalTime</span><span class="m-d">Gets a **tm** structure that contains a decomposition of the time contained in this **CTime64** object.</span></a><a href="ctime64/ctime64-getminute.html"><span class="m-n">GetMinute</span><span class="m-d">Returns the minute represented by the **CTime64** object.</span></a><a href="ctime64/ctime64-getmonth.html"><span class="m-n">GetMonth</span><span class="m-d">Returns the month represented by the **CTime64** object.</span></a><a href="ctime64/ctime64-getsecond.html"><span class="m-n">GetSecond</span><span class="m-d">Returns the second represented by the **CTime64** object.</span></a><a href="ctime64/ctime64-gettime.html"><span class="m-n">GetTime</span><span class="m-d">Returns a **\_\_time64_t** (LONGLONG) value for the given **CTime64** object.</span></a><a href="ctime64/ctime64-getyear.html"><span class="m-n">GetYear</span><span class="m-d">Returns the year represented by the **CTime64** object.</span></a><a href="ctime64/ctime64-let-operator.html"><span class="m-n">LET Operator</span><span class="m-d">Assigns a value to a **CTime64** object.</span></a><a href="ctime64/ctime64-operators.html"><span class="m-n">Operators</span><span class="m-d">Adds, subtracts or compares **CTime64** objects.</span></a><a href="ctime64/ctime64-setdatetime.html"><span class="m-n">SetDateTime</span><span class="m-d">Sets the date and time of this **CTime64** object.</span></a><a href="ctimespan/ctimespan-cast-operator.html"><span class="m-n">CAST Operator</span><span class="m-d">Returns the **CTimeSpan** value as a long integer.</span></a><a href="ctimespan/ctimespan-constructors.html"><span class="m-n">Constructors</span><span class="m-d">Create new **CTimeSpan** objects initialized to the specified value.</span></a><a href="ctimespan/ctimespan-getdays.html"><span class="m-n">GetDays</span><span class="m-d">Returns a value that represents the number of days in this **CTimeSpan**.</span></a><a href="ctimespan/ctimespan-gethours.html"><span class="m-n">GetHours</span><span class="m-d">Returns a value that represents the number of hours in the current day (–23 through 23).</span></a><a href="ctimespan/ctimespan-getminutes.html"><span class="m-n">GetMinutes</span><span class="m-d">Returns a value that represents the number of minutes in the current hour (–59 through 59).</span></a><a href="ctimespan/ctimespan-getseconds.html"><span class="m-n">GetSeconds</span><span class="m-d">Returns a value that represents the number of seconds in the current hour (–59 through 59).</span></a><a href="ctimespan/ctimespan-gettimespan.html"><span class="m-n">GetTimeSpan</span><span class="m-d">Returns the underlying time value from this **CTimeSpan** object.</span></a><a href="ctimespan/ctimespan-gettotalhours.html"><span class="m-n">GetTotalHours</span><span class="m-d">Returns a value that represents the total number of complete hours in this **CTimeSpan**.</span></a><a href="ctimespan/ctimespan-gettotalminutes.html"><span class="m-n">GetTotalMinutes</span><span class="m-d">Returns a value that represents the total number of complete minutes in this **CTimeSpan**.</span></a><a href="ctimespan/ctimespan-gettotalseconds.html"><span class="m-n">GetTotalSeconds</span><span class="m-d">Retrieves this date/time-span value expressed in seconds.</span></a><a href="ctimespan/ctimespan-let-operator.html"><span class="m-n">LET Operator</span><span class="m-d">Assigns a value to a **CTimeSpan** object.</span></a><a href="ctimespan/ctimespan-operators.html"><span class="m-n">Operators</span><span class="m-d">Adds, subtracts or compares **CTimeSpan** objects.</span></a><a href="ctimespan/ctimespan-settimespan.html"><span class="m-n">SetTimeSpan</span><span class="m-d">Sets the value of this date/time-span value.</span></a></div>
+<h2>Documentation</h2>
+<h2 id="ctime64-class">CTime64 Class</h2>
+<p>Represents an absolute time and date.</p>
+<ul><li><strong>CTime64</strong> values are based on coordinated universal time (UTC), which is equivalent to Coordinated Universal time (Greenwich Mean Time, GMT).</li><li>A companion class, <strong>CTimeSpan</strong>, represents a time interval.</li><li>The upper date limit is 12/31/3000. The lower limit is 1/1/1970 12:00:00 AM GMT.</li></ul>
+<p><strong>Include file</strong>: AfxNova/CTime64.inc</p>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="ctime64/ctime64-constructors.html">Constructors</a></td><td>Create new <strong>CTime64</strong> objects initialized to the specified value.</td></tr><tr><td><a href="ctime64/ctime64-cast-operator.html">CAST Operator</a></td><td>Returns the <strong>CTime64</strong> value as a long integer.</td></tr><tr><td><a href="ctime64/ctime64-let-operator.html">LET Operator</a></td><td>Assigns a value to a <strong>CTime64</strong> object.</td></tr><tr><td><a href="ctime64/ctime64-operators.html">Operators</a></td><td>Adds, subtracts or compares <strong>CTime64</strong> objects.</td></tr><tr><td><a href="ctime64/ctime64-format.html">Format</a></td><td>Converts a <strong>CTime64</strong> object to a string.</td></tr><tr><td><a href="ctime64/ctime64-format.html">FormatGmt</a></td><td>Converts a <strong>CTime64</strong> object to a string.</td></tr><tr><td><a href="ctime64/ctime64-getasfiletime.html">GetAsFileTime</a></td><td>Returns the time as a <strong>FILETIME</strong> structure.</td></tr><tr><td><a href="ctime64/ctime64-getassystemtime.html">GetAsSystemTime</a></td><td>Returns the time as a <strong>SYSTEMTIME</strong> structure.</td></tr><tr><td><a href="ctime64/ctime64-getcurrenttime.html">GetCurrentTime</a></td><td>Returns a <strong>CTime64</strong> object that represents the current system date and time.</td></tr><tr><td><a href="ctime64/ctime64-getday.html">GetDay</a></td><td>Returns the day represented by the <strong>CTime64</strong> object.</td></tr><tr><td><a href="ctime64/ctime64-getdayofweek.html">GetDayOfWeek</a></td><td>Returns the day of the week represented by the <strong>CTime64</strong> object.</td></tr><tr><td><a href="ctime64/ctime64-getgmttime.html">GetGmtTime</a></td><td>Gets a <strong>tm</strong> structure that contains a decomposition of the time contained in this <strong>CTime64</strong> object.</td></tr><tr><td><a href="ctime64/ctime64-gethour.html">GetHour</a></td><td>Returns the hour represented by the <strong>CTime64</strong> object.</td></tr><tr><td><a href="ctime64/ctime64-getlocaltime.html">GetLocalTime</a></td><td>Gets a <strong>tm</strong> structure that contains a decomposition of the time contained in this <strong>CTime64</strong> object.</td></tr><tr><td><a href="ctime64/ctime64-getminute.html">GetMinute</a></td><td>Returns the minute represented by the <strong>CTime64</strong> object.</td></tr><tr><td><a href="ctime64/ctime64-getmonth.html">GetMonth</a></td><td>Returns the month represented by the <strong>CTime64</strong> object.</td></tr><tr><td><a href="ctime64/ctime64-getsecond.html">GetSecond</a></td><td>Returns the second represented by the <strong>CTime64</strong> object.</td></tr><tr><td><a href="ctime64/ctime64-gettime.html">GetTime</a></td><td>Returns a <strong>\_\_time64_t</strong> (LONGLONG) value for the given <strong>CTime64</strong> object.</td></tr><tr><td><a href="ctime64/ctime64-getyear.html">GetYear</a></td><td>Returns the year represented by the <strong>CTime64</strong> object.</td></tr><tr><td><a href="ctime64/ctime64-setdatetime.html">SetDateTime</a></td><td>Sets the date and time of this <strong>CTime64</strong> object.</td></tr></tbody></table></div>
+<hr>
+<h2 id="ctimespan-class">CTimeSpan Class</h2>
+<p>An amount of time, which is internally stored as the number of seconds in the time span.</p>
+<ul><li>The <strong>CTimeSpan</strong> methods convert seconds to various combinations of days, hours, minutes, and seconds.</li><li>The <strong>CTimeSpan</strong> object is stored in a \_\_time64_t structure, which is 8 bytes.</li><li>A companion class, <strong>CTime64</strong>, represents an absolute time.</li></ul>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="ctimespan/ctimespan-constructors.html">Constructors</a></td><td>Create new <strong>CTimeSpan</strong> objects initialized to the specified value.</td></tr><tr><td><a href="ctimespan/ctimespan-cast-operator.html">CAST Operator</a></td><td>Returns the <strong>CTimeSpan</strong> value as a long integer.</td></tr><tr><td><a href="ctimespan/ctimespan-let-operator.html">LET Operator</a></td><td>Assigns a value to a <strong>CTimeSpan</strong> object.</td></tr><tr><td><a href="ctimespan/ctimespan-operators.html">Operators</a></td><td>Adds, subtracts or compares <strong>CTimeSpan</strong> objects.</td></tr><tr><td><a href="ctimespan/ctimespan-getdays.html">GetDays</a></td><td>Returns a value that represents the number of days in this <strong>CTimeSpan</strong>.</td></tr><tr><td><a href="ctimespan/ctimespan-gethours.html">GetHours</a></td><td>Returns a value that represents the number of hours in the current day (–23 through 23).</td></tr><tr><td><a href="ctimespan/ctimespan-getminutes.html">GetMinutes</a></td><td>Returns a value that represents the number of minutes in the current hour (–59 through 59).</td></tr><tr><td><a href="ctimespan/ctimespan-getseconds.html">GetSeconds</a></td><td>Returns a value that represents the number of seconds in the current hour (–59 through 59).</td></tr><tr><td><a href="ctimespan/ctimespan-gettimespan.html">GetTimeSpan</a></td><td>Returns the underlying time value from this <strong>CTimeSpan</strong> object.</td></tr><tr><td><a href="ctimespan/ctimespan-gettotalhours.html">GetTotalHours</a></td><td>Returns a value that represents the total number of complete hours in this <strong>CTimeSpan</strong>.</td></tr><tr><td><a href="ctimespan/ctimespan-gettotalminutes.html">GetTotalMinutes</a></td><td>Returns a value that represents the total number of complete minutes in this <strong>CTimeSpan</strong>.</td></tr><tr><td><a href="ctimespan/ctimespan-gettotalseconds.html">GetTotalSeconds</a></td><td>Retrieves this date/time-span value expressed in seconds.</td></tr><tr><td><a href="ctimespan/ctimespan-settimespan.html">SetTimeSpan</a></td><td>Sets the value of this date/time-span value.</td></tr></tbody></table></div>
+<hr>
+<h3 id="constructors1">Constructors (CTime64)</h3>
+<p>Create new <strong>CTime64</strong> objects initialized to the specified value.</p>
+<pre class="code"><code>CONSTRUCTOR CTime64
+CONSTRUCTOR CTime64 (BYVAL timeSrc AS LONGLONG)
+CONSTRUCTOR CTime64 (BYREF systimeSrc AS SYSTEMTIME)
+CONSTRUCTOR CTime64 (BYREF filetimeSrc AS FILETIME)
+CONSTRUCTOR CTime64 (BYVAL nYear AS LONG, BYVAL nMonth AS LONG, BYVAL nDay AS LONG, _
+   BYVAL nHour AS LONG, BYVAL nMin AS LONG, BYVAL nSec AS LONG)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>timeSrc</em></td><td>A \_\_time64_t (LONGLONG) value.</td></tr><tr><td><em>systimeSrc</em></td><td>A <strong>SYSTEMTIME</strong> structure to be converted to a <strong>\_\_time64_t</strong> (LONGLONG) value and copied into the new <strong>CTime64</strong> object.</td></tr><tr><td><em>filetimeSrc</em></td><td>A <strong>FILETIME</strong> structure to be converted to a <strong>\_\_time64_t</strong> (LONGLONG) value and copied into  the new <strong>CTime64</strong> object. Note that <strong>FILETIME</strong> uses Universal Coordinated Time (UTC), so if you pass a local time in the structure, your results will be incorrect.</td></tr><tr><td><em>nYear / nMonth / nDay / nHour / nMin / nSec</em></td><td>Indicates the date and time values to be copied into the new <strong>CTime64</strong> object.</td></tr></tbody></table></div>
+<h5 id="examples">Examples</h5>
+<p>Initializes a <strong>CTime64</strong> object from an existing <strong>\_\_time64_t</strong> value.</p>
+<pre class="code"><code>DIM ct1 AS CTime64 = CTime64().GetCurrentTime()
+DIM ct2 AS CTime64 = ct1.GetTime</code></pre>
+<p><strong>Note</strong>: You can also use DIM ct2 AS CTime64 = ct1</p>
+<p>Initializes a <strong>CTime64</strong> object from individual date/time values.</p>
+<pre class="code"><code>' // Year = 2017, Month = 10 (October), Day = 9, Hour = 11, Minutes = 32, Seconds = 45
+DIM ct AS CTime64 = CTime64(2017, 10, 9, 11, 32, 45)</code></pre>
+<p>Initializes a <strong>CTime64</strong> object from a <strong>SYSTEMTIME</strong> structure.</p>
+<pre class="code"><code>' // Year = 2017, Month = 10 (October), Day = 9, Hour = 11, Minutes = 32, Seconds = 45
+DIM st AS SYSTEMTIME 
+st.wYear = 2017
+st.wMonth = 10
+st.wDayOfWeek = 0
+st.wDay = 9
+st.wHour = 11
+st.wMinute = 32
+st.wSecond = 45
+st.wMilliseconds = 0
+' --or--
+DIM st AS SYSTEMTIME = (2017, 10, 0, 9, 11, 32, 45, 0)
+DIM ct AS CTime64 = st
+' --or--
+DIM ct AS CTime64
+ct.SetDateTime(2017, 10, 9, 11, 32, 45)
+DIM st AS SYSTEMTIME = ct.GetAsSystemtime
+DIM ct2 AS CTime64 = st
+' --or--
+DIM ct AS CTime64
+ct.SetDateTime(2017, 10, 9, 11, 32, 45)
+DIM ct2 AS CTime64 = ct.GetAsSystemtime</code></pre>
+<hr>
+<h3 id="castop1">CAST Operator (CTime64)</h3>
+<p>Returns the underlying value from this <strong>CTime64</strong> object.</p>
+<pre class="code"><code>OPERATOR CAST () AS LONGLONG</code></pre>
+<hr>
+<h3 id="letop1">LET Operator (=) (CTime64)</h3>
+<p>Assigns a value to a <strong>CTime64</strong> object.</p>
+<pre class="code"><code>OPERATOR LET (BYVAL timeSrc AS LONGLONG)
+OPERATOR LET (BYREF st AS SYSTEMTIME)
+OPERATOR LET (BYREF ft AS FILETIME)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>timeSrc</em></td><td>A \_\_time64_t (LONGLONG) value.</td></tr><tr><td><em>st</em></td><td>A <strong>SYSTEMTIME</strong> structure to be converted to a <strong>\_\_time64_t</strong> (LONGLONG) value and copied into the new <strong>CTime64</strong> object.</td></tr><tr><td><em>ft</em></td><td>A <strong>FILETIME</strong> structure to be converted to a <strong>\_\_time64_t</strong> (LONGLONG) value and copied into  the new <strong>CTime64</strong> object. Note that <strong>FILETIME</strong> uses Universal Coordinated Time (UTC), so if you pass a local time in the structure, your results will be incorrect.</td></tr></tbody></table></div>
+<hr>
+<h3 id="operators1">Operators (CTime64)</h3>
+<p>Adds, subtracts or compares <strong>CTime64</strong> objects.</p>
+<pre class="code"><code>OPERATOR + (BYREF dt AS CTime64, BYREF dateSpan AS CTimeSpan) AS CTime64
+OPERATOR - (BYREF dt AS CTime64, BYREF dateSpan AS CTimeSpan) AS CTime64
+OPERATOR - (BYREF dt1 AS CTime64, BYREF dt2 AS CTime64) AS CTimeSpan
+OPERATOR += (BYREF dateSpan AS CTimeSpan)
+OPERATOR -= (BYREF dateSpan AS CTimeSpan)
+OPERATOR = (BYREF dt1 AS CTime64, BYREF dt2 AS CTime64) AS BOOLEAN
+OPERATOR &lt;&gt; (BYREF dt1 AS CTime64, BYREF dt2 AS CTime64) AS BOOLEAN
+OPERATOR &lt; (BYREF dt1 AS CTime64, BYREF dt2 AS CTime64) AS BOOLEAN
+OPERATOR &gt; (BYREF dt1 AS CTime64, BYREF dt2 AS CTime64) AS BOOLEAN
+OPERATOR &lt;= (BYREF dt1 AS CTime64, BYREF dt2 AS CTime64) AS BOOLEAN
+OPERATOR &gt;= (BYREF dt1 AS CTime64, BYREF dt2 AS CTime64) AS BOOLEAN</code></pre>
+<h5 id="remarks">Remarks</h5>
+<pre class="code"><code>+ Adds a CTimeSpan object to a CTime64 object.
+- Subtracts a CTimeSpan object from a CTime64 object.
+- Subtracts a CTime64 object from another CTime64 object.
++= Adds a CTimeSpan object to this CTime64 object.
+-= Subtracts a CTimeSpan object from this CTime64 object.</code></pre>
+<hr>
+<h3 id="format">Format / FormatGmt (CTime64)</h3>
+<p>Converts a <strong>CTime64</strong> object to a string.</p>
+<pre class="code"><code>FUNCTION Format (BYREF wszFmt AS WSTRING) AS DWSTRING
+FUNCTION FormatGmt (BYREF wszFmt AS WSTRING) AS DWSTRING</code></pre>
+<p>Formatting codes:</p>
+<div class="table-wrap"><table><thead><tr><th>Code</th><th>Meaning</th></tr></thead><tbody><tr><td>%a</td><td>Abbreviated weekday name</td></tr><tr><td>%A</td><td>Full weekday name</td></tr><tr><td>%b</td><td>Abbreviated month name</td></tr><tr><td>%B</td><td>Full month name</td></tr><tr><td>%c</td><td>Date and time representation appropriate for locale</td></tr><tr><td>%d</td><td>Day of month as decimal number (01 – 31)</td></tr><tr><td>%H</td><td>Hour in 24-hour format (00 – 23)</td></tr><tr><td>%I</td><td>Hour in 12-hour format (01 – 12)</td></tr><tr><td>%j</td><td>Day of year as decimal number (001 – 366)</td></tr><tr><td>%m</td><td>Month as decimal number (01 – 12)</td></tr><tr><td>%M</td><td>Minute as decimal number (00 – 59)</td></tr><tr><td>%p</td><td>Current locale's A.M./P.M. indicator for 12-hour clock</td></tr><tr><td>%S</td><td>Second as decimal number (00 – 59)</td></tr><tr><td>%U</td><td>Week of year as decimal number, with Sunday as first day of week (00 – 53)</td></tr><tr><td>%w</td><td>Weekday as decimal number (0 – 6; Sunday is 0)</td></tr><tr><td>%W</td><td>Week of year as decimal number, with Monday as first day of week (00 – 53)</td></tr><tr><td>%x</td><td>Date representation for current locale</td></tr><tr><td>%X</td><td>Time representation for current locale</td></tr><tr><td>%y</td><td>Year without century, as decimal number (00 – 99)</td></tr><tr><td>%Y</td><td>Year with century, as decimal number</td></tr><tr><td>%z, %Z</td><td>Either the time-zone name or time zone abbreviation, depending on registry settings; no characters if time zone is unknown</td></tr><tr><td>%%</td><td>Percent sign</td></tr></tbody></table></div>
+<p>The # flag may prefix any formatting code. In that case, the meaning of the format code is changed as follows.</p>
+<ul><li>%#a, %#A, %#b, %#B, %#p, %#X, %#z, %#Z, %#%: # flag is ignored.</li><li>%#c: Long date and time representation, appropriate for current locale. For example: "Tuesday, March 14, 1995, 12:41:29".</li><li>%#x* Long date representation, appropriate to current locale. For example: "Tuesday, March 14, 1995".</li><li>%#d, %#H, %#I, %#j, %#m, %#M, %#S, %#U, %#w, %#W, %#y, %#Y: Remove leading zeros (if any).</li></ul>
+<h5 id="remarks">Remarks</h5>
+<p>Formats the value by using the format string which contains special formatting codes that are preceded by a percent sign (%).</p>
+<p><strong>Format</strong> uses the local time and <strong>FormatGmt</strong> the <strong>Gmt</strong> time.</p>
+<h5 id="examples">Examples</h5>
+<pre class="code"><code>print ct.Format("%A, %B %d, %Y %H:%M:%S")
+print ct.FormatGmt("%A, %B %d, %Y %H:%M:%S")</code></pre>
+<hr>
+<h3 id="getasfiletime">GetAsFileTime (CTime64)</h3>
+<p>Converts the time information stored in the <strong>CTime64</strong> object to a Win32–compatible FILETIME structure. A <strong>FILETIME</strong> structure contains a 64-bit value representing the number of 100-nanosecond intervals since January 1, 1601 (UTC).</p>
+<pre class="code"><code>FUNCTION GetAsFileTime () AS FILETIME</code></pre>
+<hr>
+<h3 id="getassystemtime">GetAsSystemTime (CTime64)</h3>
+<p>Converts the time information stored in the <strong>CTime64</strong> object to a Win32–compatible <strong>SYSTEMTIME</strong> structure.</p>
+<pre class="code"><code>FUNCTION GetAsSystemTime () AS SYSTEMTIME</code></pre>
+<hr>
+<h3 id="getcurrenttime">GetCurrentTime (CTime64)</h3>
+<p>Returns a <strong>CTime64</strong> object that represents the current time.</p>
+<pre class="code"><code>FUNCTION GetCurrentTime () AS CTime64</code></pre>
+<hr>
+<h3 id="getday">GetDay (CTime64)</h3>
+<p>Returns the day represented by the <strong>CTime64</strong> object.</p>
+<pre class="code"><code>FUNCTION GetDay () AS LONG</code></pre>
+<h5 id="example">Example</h5>
+<pre class="code"><code>DIM ct AS CTime64
+ct = ct.GetTime
+PRINT ct.GetDay</code></pre>
+<hr>
+<h3 id="getdayofweek">GetDayOfWeek (CTime64)</h3>
+<p>Returns the day of the week represented by the <strong>CTime64</strong> object.</p>
+<pre class="code"><code>FUNCTION GetDayOfWeek () AS LONG</code></pre>
+<h5 id="example">Example</h5>
+<pre class="code"><code>DIM ct AS CTime64
+ct = ct.GetTime
+PRINT ct.GetDayOfWeek</code></pre>
+<hr>
+<h3 id="getgmttime">GetGmtTime (CTime64)</h3>
+<p>Gets a <strong>tm</strong> structure that contains a decomposition of the time contained in this <strong>CTime64</strong> object.</p>
+<pre class="code"><code>FUNCTION GetGmtTime () AS tm</code></pre>
+<h5 id="remarks">Remarks</h5>
+<p>The fields of the structure type <strong>tm</strong> store the following values, each of which is an integer:</p>
+<p>tm_sec : Seconds after minute (0 – 59).<br> tm_min : Minutes after hour (0 – 59).<br> tm_hour : Hours after midnight (0 – 23).<br> tm_mday : Day of month (1 – 31).<br> tm_mon : Month (0 – 11; January = 0).<br> tm_year : Year (current year minus 1900).<br> tm_wday : Day of week (0 – 6; Sunday = 0).<br> tm_yday : Day of year (0 – 365; January 1 = 0).<br> tm_isdst : Positive value if daylight saving time is in effect; 0 if daylight saving time is not in effect; negative value if status of daylight saving time is unknown.</p>
+<hr>
+<h3 id="gethour">GetHour (CTime64)</h3>
+<p>Returns the hour represented by the <strong>CTime64</strong> object.</p>
+<pre class="code"><code>FUNCTION GetHour () AS LONG</code></pre>
+<h5 id="example">Example</h5>
+<pre class="code"><code>DIM ct AS CTime64
+ct = ct.GetTime
+PRINT ct.GetHour</code></pre>
+<hr>
+<h3 id="getlocaltime">GetLocalTime (CTime64)</h3>
+<p>Gets a <strong>tm</strong> structure that contains a decomposition of the time contained in this <strong>CTime64</strong> object.</p>
+<pre class="code"><code>FUNCTION GetLocalTime () AS tm</code></pre>
+<h5 id="remarks">Remarks</h5>
+<p>The fields of the structure type tm store the following values, each of which is an integer:</p>
+<p>tm_sec : Seconds after minute (0 – 59).<br> tm_min : Minutes after hour (0 – 59).<br> tm_hour : Hours after midnight (0 – 23).<br> tm_mday : Day of month (1 – 31).<br> tm_mon : Month (0 – 11; January = 0).<br> tm_year : Year (current year minus 1900).<br> tm_wday : Day of week (0 – 6; Sunday = 0).<br> tm_yday : Day of year (0 – 365; January 1 = 0).<br> tm_isdst : Positive value if daylight saving time is in effect; 0 if daylight saving time is not in effect; negative value if status of daylight saving time is unknown.</p>
+<hr>
+<h3 id="getminute">GetMinute (CTime64)</h3>
+<p>Returns the minute represented by the <strong>CTime64</strong> object.</p>
+<pre class="code"><code>FUNCTION GetMinute () AS LONG</code></pre>
+<h5 id="example">Example</h5>
+<pre class="code"><code>DIM ct AS CTime64
+ct = ct.GetTime
+PRINT ct.GetMinute</code></pre>
+<hr>
+<h3 id="getmonth">GetMonth (CTime64)</h3>
+<p>Returns the month represented by the <strong>CTime64</strong> object.</p>
+<pre class="code"><code>FUNCTION GetMonth () AS LONG</code></pre>
+<h5 id="example">Example</h5>
+<pre class="code"><code>DIM ct AS CTime64
+ct = ct.GetTime
+PRINT ct.GetMonth</code></pre>
+<hr>
+<h3 id="getsecond">GetSecond (CTime64)</h3>
+<p>Returns the second represented by the <strong>CTime64</strong> object.</p>
+<pre class="code"><code>FUNCTION GetSecond () AS LONG</code></pre>
+<h5 id="example">Example</h5>
+<pre class="code"><code>DIM ct AS CTime64
+ct = ct.GetTime
+PRINT ct.GetSecond</code></pre>
+<hr>
+<h3 id="gettime">GetTime (CTime64)</h3>
+<p>Returns a <strong>\_\_time64_t</strong> (LONGLONG) value for the given <strong>CTime64</strong> object.</p>
+<pre class="code"><code>FUNCTION GetTime () AS LONGLONG</code></pre>
+<h5 id="example">Example</h5>
+<pre class="code"><code>DIM ct AS CTime64
+ct = ct.GetTime</code></pre>
+<hr>
+<h3 id="getyear">GetYear (CTime64)</h3>
+<p>Returns the year represented by the <strong>CTime64</strong> object.</p>
+<pre class="code"><code>FUNCTION GetYear () AS LONG</code></pre>
+<h5 id="example">Example</h5>
+<pre class="code"><code>DIM ct AS CTime64
+ct = ct.GetTime
+PRINT ct.GetYear</code></pre>
+<hr>
+<h3 id="setdatetime">SetDateTime (CTime64)</h3>
+<p>Sets the date and time of this <strong>CTime64</strong> object.</p>
+<pre class="code"><code>FUNCTION SetDateTime (BYVAL nYear AS WORD, BYVAL nMonth AS WORD, BYVAL nDay AS WORD, _
+   BYVAL nHour AS WORD = 0, BYVAL nMin AS WORD = 0, BYVAL nSec AS WORD = 0) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>nYear</em></td><td>The year (1970-3000).</td></tr><tr><td><em>nMonth</em></td><td>The month (1-12).</td></tr><tr><td><em>nDay</em></td><td>The day (1-31).</td></tr><tr><td><em>nHour</em></td><td>The hour (0-23).</td></tr><tr><td><em>nMinute</em></td><td>The minutes (0-59).</td></tr><tr><td><em>nHour</em></td><td>The seconds (0-59).</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' // Year = 2017, Month = 10 (October), Day = 9, Hour = 11, Minutes = 32, Seconds = 45
+DIM ct AS CTime64 = CTime64(2017, 10, 9, 11, 32, 45)</code></pre>
+<hr>
+<h3 id="constructors2">Constructors (CTimeSpan)</h3>
+<p>Create new <strong>CTimespan</strong> objects initialized to the specified value.</p>
+<pre class="code"><code>CONSTRUCTOR CTimeSpan
+CONSTRUCTOR CTimeSpan (BYVAL lltime AS LONGLONG)
+CONSTRUCTOR CTimeSpan (BYVAL lDays AS LONG, BYVAL nHours AS LONG, BYVAL nMins AS LONG, BYVAL nSecs AS LONG)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>lltime</em></td><td>A <strong>\_\_time64_t</strong> (LONGLONG) value.</td></tr><tr><td><em>lDays / nHours / nMins / nSecs</em></td><td>Indicates the day and time values to be copied into the new <strong>CTimeSpan</strong> object.</td></tr></tbody></table></div>
+<hr>
+<h3 id="castop2">CAST Operator (CTimeSpan)</h3>
+<p>Returns the underlying value from this <strong>CTimeSpan</strong> object.</p>
+<pre class="code"><code>OPERATOR CAST () AS LONGLONG</code></pre>
+<hr>
+<h3 id="letop2">LET Operator (=) (CTimeSpan)</h3>
+<p>Assigns a value to a <strong>CTimeSpan</strong> object.</p>
+<pre class="code"><code>OPERATOR LET (BYVAL nSpan AS LONGLONG)
+OPERATOR LET (BYREF cSpan AS CTimeSpan)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>nSpan</em></td><td>A \_\_time64_t (LONGLONG) value.</td></tr><tr><td><em>cSpan</em></td><td>A <strong>CTimeSpan</strong> object.</td></tr></tbody></table></div>
+<hr>
+<h3 id="operators2">Operators (CTimeSpan)</h3>
+<p>Adds, subtracts or compares <strong>CTimeSpan</strong> objects.</p>
+<pre class="code"><code>OPERATOR + (BYREF cSpan1 AS CTimeSpan, BYREF cSpan2 AS CTimeSpan) AS CTime64
+OPERATOR - (BYREF cSpan1 AS CTimeSpan, BYREF cSpan2 AS CTimeSpan) AS CTime64
+OPERATOR - (BYREF cSpan1 AS CTimeSpan, BYREF cSpan2 AS CTimeSpan) AS CTimeSpan
+OPERATOR += (BYREF cSpan AS CTimeSpan)
+OPERATOR -= (BYREF cSpan AS CTimeSpan)
+OPERATOR = (BYREF cSpan1 AS CTimeSpan, BYREF cSpan2 AS CTimeSpan) AS BOOLEAN
+OPERATOR &lt;&gt; (BYREF cSpan1 AS CTimeSpan, BYREF cSpan2 AS CTimeSpan) AS BOOLEAN
+OPERATOR &lt; (BYREF cSpan1 AS CTimeSpan, BYREF cSpan2 AS CTimeSpan) AS BOOLEAN
+OPERATOR &gt; (BYREF cSpan1 AS CTimeSpan, BYREF cSpan2 AS CTimeSpan) AS BOOLEAN
+OPERATOR &lt;= (BYREF cSpan1 AS CTimeSpan, BYREF cSpan2 AS CTimeSpan) AS BOOLEAN
+OPERATOR &gt;= (BYREF cSpan1 AS CTimeSpan, BYREF cSpan2 AS CTimeSpan) AS BOOLEAN</code></pre>
+<h5 id="remarks">Remarks</h5>
+<pre class="code"><code>+ Adds a CTimeSpan value to another CTimeSpan object.
+- Subtracts a CTimeSpan value from another CTimeSpan object.
++= Adds a CTimeSpan value to this CTimeSpan object.
+-= Subtracts a CTimeSpan value from this CTimeSpan object.</code></pre>
+<hr>
+<h3 id="getdays">GetDays (CTimeSpan)</h3>
+<p>Returns a value that represents the number of days in this <strong>CTimeSpan</strong>.</p>
+<pre class="code"><code>FUNCTION GetDays () AS LONG</code></pre>
+<hr>
+<h3 id="gethours">GetHours (CTimeSpan)</h3>
+<p>Returns a value that represents the number of hours in the current day (–23 through 23).</p>
+<pre class="code"><code>FUNCTION GetHours () AS LONG</code></pre>
+<hr>
+<h3 id="getminutes">GetMinutes (CTimeSpan)</h3>
+<p>Returns a value that represents the number of minutes in the current hour (–59 through 59).</p>
+<pre class="code"><code>FUNCTION GetMinutes () AS LONG</code></pre>
+<hr>
+<h3 id="getseconds">GetSeconds (CTimeSpan)</h3>
+<p>Returns a value that represents the number of seconds in the current hour (–59 through 59).</p>
+<pre class="code"><code>FUNCTION GetSeconds () AS LONG</code></pre>
+<hr>
+<h3 id="gettimespan">GetTimeSpan (CTimeSpan)</h3>
+<p>Returns the underlying time value from this <strong>CTimeSpan</strong> object.</p>
+<pre class="code"><code>FUNCTION GetTimespan () AS LONG</code></pre>
+<hr>
+<h3 id="gettotalhours">GetTotalHours (CTimeSpan)</h3>
+<p>Returns a value that represents the total number of complete hours in this <strong>CTimeSpan</strong>.</p>
+<pre class="code"><code>FUNCTION GetTotalHours () AS LONG</code></pre>
+<hr>
+<h3 id="gettotalminutes">GetTotalMinutes (CTimeSpan)</h3>
+<p>Returns a value that represents the total number of complete minutes in this <strong>CTimeSpan</strong>.</p>
+<pre class="code"><code>FUNCTION GetTotalMinutes () AS LONG</code></pre>
+<hr>
+<h3 id="gettotalseconds">GetTotalSeconds (CTimeSpan)</h3>
+<p>Retrieves this date/time-span value expressed in seconds.</p>
+<pre class="code"><code>FUNCTION GetTotalSeconds () AS LONG</code></pre>
+<hr>
+<h3 id="settimespan">SetTimeSpan (CTimeSpan)</h3>
+<p>Sets the value of this date/time-span value.</p>
+<pre class="code"><code>SUB SetTimeSpan (BYVAL lltime AS LONGLONG)
+SUB SetTimeSpan (BYVAL lDays AS LONG, BYVAL nHours AS LONG, BYVAL nMins AS LONG, BYVAL nSecs AS LONG)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>lltime</em></td><td>A \_\_time64_t (LONGLONG) value.</td></tr><tr><td><em>lDays / nHours / nMins / nSecs</em></td><td>Indicates the day and time values to be copied into the <strong>CTimeSpan</strong> object.</td></tr></tbody></table></div>
+<hr>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../index.html">Home</a> ·
+         <a href="../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../nav.js?v=70a6b70236"></script>
+<script src="../../search-index.js"></script>
+<script src="../../assets/app.js?v=456d079659"></script>
+<script src="../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

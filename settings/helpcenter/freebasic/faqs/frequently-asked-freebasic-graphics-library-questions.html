@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Frequently Asked FreeBASIC Graphics Library Questions — Help Center</title>
+<meta name="description" content="Frequently Asked FreeBASIC Graphics Library Questions — 0 documented members. FAQs reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/faqs/frequently-asked-freebasic-graphics-library-questions.html">
+<meta property="og:title" content="Frequently Asked FreeBASIC Graphics Library Questions">
+<meta property="og:description" content="Frequently Asked FreeBASIC Graphics Library Questions — 0 documented members. FAQs reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/faqs/frequently-asked-freebasic-graphics-library-questions.html">
+<link rel="stylesheet" href="../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/faqs/frequently-asked-freebasic-graphics-library-questions.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>FAQs</div>
+<h1>Frequently Asked FreeBASIC Graphics Library Questions</h1>
+<h2>Documentation</h2>
+
+	<br>
+<a></a><br>
+<br>
+<b>FreeBASIC Graphics Library questions:</b><br>
+<div class="indent"><b>- <a href="#item1">How can I link/use Gfxlib?</a></b><br>
+<b>- <a href="#item2">What about the fbgfx.bi header file?</a></b><br>
+<b>- <a href="#item3">How are Get/Put arrays managed?</a></b><br>
+<b>- <a href="#item4">Why is Bsave/Bload crashing?</a></b><br>
+<b>- <a href="#item5">How can I get the red, green, blue, or alpha component of a colour?</a></b><br>
+<b>- <a href="#item6">How can I make the 'x' button in the window header close my application?</a></b><br>
+<b>- <a href="#item7">Can't run programs using Screen 13 or 14 in fullscreen !</a></b><br>
+<b>- <a href="#item8">Why does Imagecreate return a NULL pointer?</a></b><br>
+<br>
+</div><br>
+<br>
+<br>
+<div><b>FreeBASIC Graphics Library questions</b></div><br>
+<br>
+<a></a><b>How can I link/use Gfxlib?</b><br>
+<div class="indent">Gfxlib is "built in" into the language, it is not necessary to include any .bi file or to link any library explicitly. FreeBASIC detects you want to use Gfxlib when you use the <a href="../screen-functions/procedures/screen-graphics.html">Screen (Graphics)</a> or <a href="../screen-functions/procedures/screenres.html">ScreenRes</a> statements. So to use Gfxlib, just start a graphics screen mode and use the graphics commands.<br>
+<br>
+</div><a href="#item0">Back to top</a><br>
+<br>
+<a></a><b>What about the <code>fbgfx.bi</code> header file?</b><br>
+<div class="indent">The <code>fbgfx.bi</code> header file is available for inclusion by your program, and contains constant and type definitions that may be helpful to the programmer when using Gfxlib. You do not have to explicitly include this file to use Gfxlib however; the header is only available as an aid. It contains the constants for the mode flags that can be passed to <a href="../screen-functions/procedures/screen-graphics.html">Screen (Graphics)</a> and <a href="../screen-functions/procedures/screenres.html">ScreenRes</a>, and also definitions of <a href="../graphics-library-reference/dos-keyboard-scancodes.html">Keyboard scancodes</a> and the <a href="../tutorials/programmer-s-guide/internal-graphics-formats.html">fb.Image buffer structure</a>.<br>
+<br>
+</div><a href="#item0">Back to top</a><br>
+<br>
+<a></a><b>How are Get/Put arrays managed?</b><br>
+<div class="indent">In FreeBASIC, images can be used as arrays (as in QB) or as pointers. Either way, the image data is contained in one continuous chunk. The chunk consists of an header followed by the image data. The header can be of two types (old-style and new-style) and determines the format of the following image data, for details see GfxInternalFormats .<br>
+<br>
+</div><a href="#item0">Back to top</a><br>
+<br>
+<a></a><b>Why is Bsave/Bload crashing?</b><br>
+<div class="indent">Bsave/Bload can only be used to load and save graphics screens in FreeBASIC. It can't be used to save a text mode screen. To load and save an array check this <a href="../reference/bload-bsave-text-mode-work-around.html">snippet using file Get/Put</a> .<br>
+<br>
+</div><a href="#item0">Back to top</a><br>
+<br>
+<a></a><b>How can I get the red, green, blue, or alpha component of a color?</b><br>
+<br>
+<div class="indent">Each byte in a color attribute corresponds with the red, green, blue, and alpha components.  The following example shows how to extract the component values from a 16, 24, or 32 bit color attribute.<br>
+<br>
+</div><code><pre class="code"><span>#define rgb_a(x) ((x) Shr 24)
+
+#define rgb_r(x) ((x) Shr 16 And 255)
+
+#define rgb_g(x) ((x) Shr 8 And 255)
+
+#define rgb_b(x) ((x) And 255)
+
+</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span> <span>c</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>x</span><span>,</span> <span>y</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span> <span>red</span><span>,</span> <span>green</span><span>,</span> <span>blue</span><span>,</span> <span class="tok-kw">Alpha</span>
+
+
+
+<span class="tok-cm">'' Assume a 16, 24, or 32 bit screen mode has been set</span>
+
+<span>c</span> <span>=</span> <span class="tok-kw">Point</span><span>(</span><span>x</span><span>,</span> <span>y</span><span>)</span>
+
+<span>red</span> <span>=</span> <span>rgb_r</span><span>(</span><span>c</span><span>)</span>
+
+<span>green</span> <span>=</span> <span>rgb_g</span><span>(</span><span>c</span><span>)</span>
+
+<span>blue</span> <span>=</span> <span>rgb_b</span><span>(</span><span>c</span><span>)</span>
+
+<span class="tok-kw">Alpha</span> <span>=</span> <span>rgb_a</span><span>(</span><span>c</span><span>)</span></pre></code><br>
+<br>
+<a href="#item0">Back to top</a><br>
+<br>
+<a></a><b>How can I make the 'x' button in the window header close my application?</b><br>
+<div class="indent">In windowed graphics mode you can test for the press of the window's X (close) button with <code><a href="../user-input-runtime-library/procedures/inkey.html">Inkey</a></code>, checking for the value Chr( 255 ) + "k" (which is also the code returned for Alt+F4). This applies to Win32 and Linux, in DOS there is no "X" button.<br>
+<br>
+Here is a small example:<br>
+<br>
+</div><code><pre class="code"><span class="tok-cm">'' &quot;X&quot; close button example , Win32 and Linux only</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>key</span>
+
+<span class="tok-kw">Screen</span> <span class="tok-nu">13</span>
+
+<span class="tok-kw">Do</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;Click the 'x' to close this app.&quot;</span>
+
+  <span class="tok-kw">Sleep</span>
+
+  <span>key</span> <span>=</span> <span class="tok-kw">Inkey</span>
+
+<span class="tok-kw">Loop</span> <span class="tok-kw">Until</span> <span>key</span> <span>=</span> <span class="tok-kw">Chr</span><span>(</span><span class="tok-nu">27</span><span>)</span> <span class="tok-kw">Or</span> <span>key</span> <span>=</span> <span class="tok-kw">Chr</span><span>(</span><span class="tok-nu">255</span><span>,</span> <span class="tok-nu">107</span><span>)</span> <span class="tok-cm">'escape or x-button</span></pre></code><br>
+<br>
+<a href="#item0">Back to top</a><br>
+<br>
+<a></a><b>Can't run programs using Screen 13 or 14 in full-screen!</b><br>
+<div class="indent">It's a hardware/driver limitation (Win32 and Linux only?). Video cards don't implement those low resolution graphic modes nowadays. If full-screen is required you should rewrite it using at least Screen 17 or 18, or a resolution of 640x480 or higher to be sure modern hardware can handle it.<br>
+<br>
+</div><a href="#item0">Back to top</a><br>
+<br>
+<a></a><b>Why does Imagecreate return a NULL pointer?</b><br>
+<div class="indent"><a href="../2d-drawing-functions/procedures/imagecreate.html">ImageCreate</a> needs to create an image buffer that fits the current screen's pixel format, and it cannot do so if there is no screen mode setup yet, so it returns NULL, very likely resulting in a NULL pointer access later on that crashes the program.<br>
+<br>
+This is known to happen when Imagecreate is called <i>before</i> the graphics library was initialized with a call to <a href="../screen-functions/procedures/screen-graphics.html">Screen (Graphics)</a> or <a href="../screen-functions/procedures/screenres.html">ScreenRes</a>, as may happen when Imagecreate is called in a global constructor that is invoked before the Screen or Screenres call in the main part of the program. In such a case it is necessary to move the screen initialization into a constructor too, and have it execute before the image-creating constructors.<br>
+<br>
+</div><a href="#item0">Back to top</a><br>
+<br>
+<div>See also</div><div><br>
+<ul><li> <a href="frequently-asked-questions.html">Compiler FAQ</a><br>
+<li> <a href="frequently-asked-fb-runtime-library-questions.html">FB Runtime Library FAQ</a><br>
+<li> <a href="frequently-asked-freebasic-graphics-library-questions.html">Frequently Asked FreeBASIC Graphics Library Questions</a><br>
+<br>
+</li></li></li></ul></div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../index.html">Home</a> ·
+         <a href="../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../nav.js?v=70a6b70236"></script>
+<script src="../../search-index.js"></script>
+<script src="../../assets/app.js?v=456d079659"></script>
+<script src="../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#lang — Help Center</title>
+<meta name="description" content="Preprocessor statement to set the compiler dialect.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/preprocessor/procedures/lang.html">
+<meta property="og:title" content="#lang">
+<meta property="og:description" content="Preprocessor statement to set the compiler dialect.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/preprocessor/procedures/lang.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/preprocessor/procedures/lang.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>#lang<span class="h1kind">keyword</span></h1>
+<p class="lede">Preprocessor statement to set the compiler dialect.</p>
+<div class="badges"><a class="badge" href="../index.html">Preprocessor</a><span class="badge">keyword</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>#lang &quot;lang&quot;</code></pre>
+<h2>Description</h2>
+<br>
+If the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-forcelang.html">-forcelang</a></i> option was not given on the command line, <code><b>#lang</b></code> can be used to set the dialect for the source module in which it appears.  At most two passes will be made on the source module.  On the first pass, if the specified dialect is anything other than the default dialect (chosen with <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang</a></i>, or <code>"fb"</code> by default), the compiler will reset the parser for another pass and restart compilation at the beginning of the source module.  If this directive is encountered again on the second pass, and the specified dialect does not match the new current dialect, a warning is issued and compilation continues.  If any errors were encountered on the first pass, the compiler will not attempt a second pass."<br>
+<br>
+<code><b>#lang</b></code> may not be used in any compound statement, scope, or subroutine.  However, it may be nested in module level preprocessor statements or used in an include file.<br>
+<br>
+There is currently no restriction on where this directive may be placed in a source module.  In future this may change, therefore best practice would be to use this directive before the first declaration, definition, or executable statement in the source.<br>
+<br>
+This directive overrides the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang</a></i> option if it was given on the command line.  However, if the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-forcelang.html">-forcelang</a></i> option was given on the command line, this directive will have no effect.  A warning is issued, the directive is ignored, and compilation will continue.  This allows the user to explicitly override <code><b>#lang</b></code> directives.<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Differences from QB</h3><br>
+<ul><li> New to FreeBASIC<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="../../compiler-switches/procedures/lang.html">$Lang</a></code><br>
+<li> <code><a href="../../intrinsic-defines/procedures/fb-lang.html">__FB_LANG__</a></code><br>
+<li> <a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">Compiler Option: -lang</a><br>
+<li> <a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-forcelang.html">Compiler Option: -forcelang</a><br>
+<li> <a href="../../freebasic-dialects-and-qbasic/freebasic-dialects.html">FreeBASIC Dialects</a><br>
+<li> <code><a href="../../compiler-options/procedures/cmdline.html">#Cmdline</a></code><br>
+<br>
+</li></li></li></li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span>#lang &quot;fblite&quot;
+
+</span></pre></code><br>
+<br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgPplang.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

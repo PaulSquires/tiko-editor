@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CGpMatrix.Reset — Help Center</title>
+<meta name="description" content="Updates this matrix with the elements of the identity matrix.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpmatrix/cgpmatrix-reset.html">
+<meta property="og:title" content="CGpMatrix.Reset">
+<meta property="og:description" content="Updates this matrix with the elements of the identity matrix.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpmatrix/cgpmatrix-reset.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-classes/cgpmatrix/cgpmatrix-reset.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cgpmatrix-class.html">CGpMatrix Class</a></div>
+<h1>CGpMatrix.Reset<span class="h1kind">method</span></h1>
+<p class="lede">Updates this matrix with the elements of the identity matrix.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">method</span><span class="badge">CGpMatrix.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION Reset () AS GpStatus</code></pre>
+<h2>Return value</h2>
+<p>If the function succeeds, it returns <strong>Ok</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h2>Description</h2>
+<p>Updates this matrix with the elements of the identity matrix.</p>
+<h2>Example</h2>
+<p>' ======================================================================================== ' The following example creates a Matrix object that represents a horizontal scaling by a ' factor of 5 and a vertical scaling by a factor of 3. The code calls the Matrix.Reset ' method to replace the elements of that matrix with the elements of the identity matrix. ' Then the code calls the Matrix::Translate method to update the matrix with the product ' of itself (the identity) and a translation matrix. The result is that the matrix ' represents only the translation, not the scaling. The code uses the matrix to set the ' world transformation of a Graphics object and then draws a rectangle that is transformed ' according to that world transformation. ' ======================================================================================== SUB Example_Reset (BYVAL hdc AS HDC)</p>
+<p>' // Create a graphics object from the window device context DIM graphics AS CGpGraphics = hdc ' // Get the DPI scaling ratios DIM rxRatio AS SINGLE = graphics.GetDpiX / 96 DIM ryRatio AS SINGLE = graphics.GetDpiY / 96</p>
+<p>' // Create a pen DIM myPen AS CGpPen = CGpPen(ARGB_RED, rxRatio)</p>
+<p>DIM matrix AS CGpMatrix = CGpMatrix(5.0, 0.0, 0.0, 3.0, 0.0, 0.0) matrix.Reset matrix.Translate(50.0 * rxRatio, 40.0 * ryRatio)</p>
+<p>graphics.SetTransform(@matrix) graphics.DrawRectangle(@myPen, 0, 0, 100 * rxRatio, 100 * ryRatio)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CGpMatrix.inc</code></li><li>Defined in <span class="srcref">AfxNova/CGpMatrix.inc:98</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Classes/CGpMatrix Class.md</span></li><li>Topic: <a href="../cgpmatrix-class.html">CGpMatrix Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

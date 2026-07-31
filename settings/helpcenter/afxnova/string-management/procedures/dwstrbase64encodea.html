@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DWStrBase64EncodeA — Help Center</title>
+<meta name="description" content="Converts the contents of an ASCII string to Base64 mime encoding.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/string-management/procedures/dwstrbase64encodea.html">
+<meta property="og:title" content="DWStrBase64EncodeA">
+<meta property="og:description" content="Converts the contents of an ASCII string to Base64 mime encoding.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/string-management/procedures/dwstrbase64encodea.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/string-management/procedures/dwstrbase64encodea.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../string-procedures.html">String Procedures</a></div>
+<h1>DWStrBase64EncodeA<span class="h1kind">function</span></h1>
+<p class="lede">Converts the contents of an ASCII string to Base64 mime encoding.</p>
+<div class="badges"><a class="badge" href="../index.html">String Management</a><span class="badge">function</span><span class="badge">DWSTRProcs.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION DEStrBase64EncodeA (BYREF strData AS STRING) AS STRING</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>strData</code></td><td></td><td>The string to encode.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>The encoded string on succeess, or a null string on failure.</p>
+<h2>Description</h2>
+<p>Converts the contents of an ascii string to Base64 mime encoding.</p>
+<h2>Remarks</h2>
+<p>Base64 is a group of similar encoding schemes that represent binary data in an ASCII string format by translating it into a radix-64 representation. The Base64 term originates from a specific MIME content transfer encoding.</p>
+<p>Base64 encoding schemes are commonly used when there is a need to encode binary data that needs be stored and transferred over media that are designed to deal with textual data. This is to ensure that the data remains intact without modification during transport. Base64 is used commonly in a number of applications including email via MIME, and storing complex data in XML.</p>
+<p>If we want to encode a unicode string, we must convert it to utf8 before calling AfxBase64Encode, e.g.</p>
+<p>To decode it, we can use</p>
+<p>or</p>
+<h2>Examples</h2>
+<p>DIM dws AS DWSTRING = "おはようございます – Good morning!" DIM s AS STRING = DWStrBase64EncodeA(dws.Utf8)</p>
+<p>DIM dwsOut AS DWSTRING = DWSTRING(DWStrBase64DecodeA(s), CP_UTF8)</p>
+<p>DIM dwsOut AS DWSTRING dws.utf8 = DWStrBase64DecodeA(s)</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>DWSTRProcs.inc</code></li><li>Defined in <span class="srcref">AfxNova/DWStrProcs.inc:1492</span></li><li>Documented in <span class="srcref">String Management/DWString Procedures.md</span></li><li>Topic: <a href="../string-procedures.html">String Procedures</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

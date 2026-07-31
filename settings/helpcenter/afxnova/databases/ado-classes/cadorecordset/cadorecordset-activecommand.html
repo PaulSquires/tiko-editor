@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CADORecordset.ActiveCommand — Help Center</title>
+<meta name="description" content="Indicates the `Command` object that created the associated `Recordset` object.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadorecordset/cadorecordset-activecommand.html">
+<meta property="og:title" content="CADORecordset.ActiveCommand">
+<meta property="og:description" content="Indicates the `Command` object that created the associated `Recordset` object.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadorecordset/cadorecordset-activecommand.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/databases/ado-classes/cadorecordset/cadorecordset-activecommand.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cadorecordset-class.html">CADORecordset Class</a></div>
+<h1>CADORecordset.ActiveCommand<span class="h1kind">property</span></h1>
+<p class="lede">Indicates the `Command` object that created the associated `Recordset` object.</p>
+<div class="badges"><a class="badge" href="../../index.html">Databases</a><span class="badge">property</span><span class="badge">CADORecordset.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>PROPERTY ActiveCommand () AS Afx_ADOCommand PTR</code></pre>
+<h2>Return value</h2>
+<p>A <code>Command</code> object reference.</p>
+<h2>Description</h2>
+<p>Indicates the <code>Command</code> object that created the associated <code>Recordset</code> object.</p>
+<h2>Example</h2>
+<p>#include once "AfxNova/CADODB.inc" USING AfxNova</p>
+<p>' ======================================================================================== ' The ShowActiveCommand routine is given only a Recordset object, yet it must print the ' command text and parameter that created the Recordset. This can be done because the ' Recordset object's ActiveCommand property yields the associated Command object. ' The Command object's CommandText property yields the parameterized command that was ' substituted for the command's parameter placeholder ("?"). ' ======================================================================================== SUB ShowActiveCommand (BYREF pConnection AS CAdoConnection, BYREF pRecordset AS CAdoRecordset)</p>
+<p>DIM pCommand AS CAdoCommand = pRecordset.ActiveCommand DIM dwsCommandText AS DWSTRING = pCommand.CommandText DIM pParameters AS CAdoParameters = pCommand.Parameters DIM pParameter AS CAdoParameter = pParameters.Item("Name") DIM dvValue AS DVARIANT = pParameter.Value PRINT "Command text: "; dwsCommandText PRINT "Parameter: "; dvValue</p>
+<p>IF pRecordset.BOF THEN</p>
+<pre class="code"><code>PRINT "Name = '"; dvValue; "'not found"</code></pre>
+<p>ELSE</p>
+<pre class="code"><code>DIM dvAuthor AS DVARIANT = pRecordset.Collect("Author")
+  DIM dvID AS DVARIANT = pRecordset.Collect("Author")
+  PRINT "Name= "; dvAuthor; ","; dvID</code></pre>
+<p>END IF</p>
+<p>END SUB ' ========================================================================================</p>
+<p>' // Open the connection DIM pConnection AS CAdoConnection pConnection.Open("Provider=Microsoft.Jet.OLEDB.4.0;Data Source=biblio.mdb")</p>
+<p>' Set the ADOCommand active connection DIM pCommand AS CAdoCommand pCommand.ActiveConnection = pConnection</p>
+<p>' //Set the command text pCommand.CommandText = "SELECT * FROM Authors WHERE Author = ?" ' // Create the parameter DIM pParameter AS CAdoParameter = pCommand.CreateParameter("Name", adChar, adParamInput, 255, "Bard, Dick") ' // Add the parameter to the collection DIM pParameters AS CAdoParameters = pCommand.Parameters pParameters.Append(pParameter)</p>
+<p>' // Create the recordset by executing the command string DIM pRecordset AS CAdoRecordset = pCommand.Execute ' // Display the results ShowActiveCommand pConnection, pRecordset</p>
+<p>' // === Close the recordset and the connection ' // If you don't close them, they will be closed when the application ends pRecordset.Close pConnection.Close</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CADORecordset.inc</code></li><li>Defined in <span class="srcref">AfxNova/CAdoRecordset.inc:406</span></li><li>Documented in <span class="srcref">Databases/ADO Classes/CAdoRecordset Class.md</span></li><li>Topic: <a href="../cadorecordset-class.html">CADORecordset Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

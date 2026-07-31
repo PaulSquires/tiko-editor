@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Getting source code updates and recompiling FB — Help Center</title>
+<meta name="description" content="Getting source code updates and recompiling FB — 0 documented members. Compiler Internals reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/compiler-internals/getting-source-code-updates-and-recompiling-fb.html">
+<meta property="og:title" content="Getting source code updates and recompiling FB">
+<meta property="og:description" content="Getting source code updates and recompiling FB — 0 documented members. Compiler Internals reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/compiler-internals/getting-source-code-updates-and-recompiling-fb.html">
+<link rel="stylesheet" href="../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/compiler-internals/getting-source-code-updates-and-recompiling-fb.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Compiler Internals</div>
+<h1>Getting source code updates and recompiling FB</h1>
+<h2>Documentation</h2>
+
+	<br>
+To download updates made available in the fbc Git repository, you can do a pull, either using your preferred graphical Git tool, or in a terminal:<br>
+<br>
+<pre class="code">git pull</pre><br>
+To take a look at incoming changes <i>before</i> applying them, do this:<br>
+<br>
+<pre class="code"># Update remote branches
+git fetch
+
+# Take a look
+gitk --all
+
+# Everything looks ok? Then merge the remote branch into the current branch to apply the update.
+git merge origin/master
+</pre><br>
+Rebuilding is, most of the time, as easy as as running "make" again. Of course, if you used compilation options (like ENABLE_STANDALONE) for the build, you have to specify them again this time, unless they are (still) set in <code>config.mk</code>.<br>
+<br>
+<pre class="code">make
+# or if needed:
+make ENABLE_STANDALONE=1</pre><br>
+As a special exception, for the DOS build it is necessary to run <code>make clean</code> before <code>make</code> to properly rebuild FB after source modules have been renamed or deleted. The reason for this is that under DOS/DJGPP the makefile uses *.o wildcards to link fbc and archive libfb.a etc., instead of passing the explicit .o file names, because it has to obey the command line length limitation. If <code>make clean</code> is not run, it may use old left-over object files from a previous build. Luckily, we do not rename or delete source files often.<br>
+<br>
+<br>
+
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../index.html">Home</a> ·
+         <a href="../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../nav.js?v=70a6b70236"></script>
+<script src="../../search-index.js"></script>
+<script src="../../assets/app.js?v=456d079659"></script>
+<script src="../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

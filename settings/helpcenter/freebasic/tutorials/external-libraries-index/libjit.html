@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>libjit — Help Center</title>
+<meta name="description" content="libjit — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/external-libraries-index/libjit.html">
+<meta property="og:title" content="libjit">
+<meta property="og:description" content="libjit — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/external-libraries-index/libjit.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/external-libraries-index/libjit.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>libjit</h1>
+<h2>Documentation</h2>
+
+	LibJIT is a fairly straightforward, lightweight library for runtime compilation with a simple and stable ABI.<br>
+<br>
+Website: https://www.gnu.org/software/libjit/<br>
+Platforms supported: Windows, Linux, DOS<br>
+Headers to include: jit.bi<br>
+Header version: git a8293e141b79c28734a3633a81a43f92f29fc2d7<br>
+<br>
+<div>Example</div><div><br>
+<code><pre class="code"><span class="tok-cm">'' Simple mul/add example</span>
+
+
+
+<span>#include &quot;jit.bi&quot;
+
+</span>
+
+<span class="tok-cm">' initialize libjit</span>
+
+<span class="tok-kw">Dim</span> <span>context</span> <span class="tok-kw">As</span> <span>jit_context_t</span> <span>=</span> <span>jit_context_create</span><span>()</span>
+
+<span>jit_context_build_start</span><span>(</span><span>context</span><span>)</span>
+
+
+
+<span class="tok-cm">' define function mul_add(x, y, z)</span>
+
+<span class="tok-kw">Dim</span> <span>params</span><span>(</span><span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">2</span><span>)</span> <span class="tok-kw">As</span> <span>jit_type_t</span> <span>=</span> <span>{</span><span>jit_type_int</span><span>,</span> <span>jit_type_int</span><span>,</span> <span>jit_type_int</span><span>}</span>
+
+<span class="tok-kw">Dim</span> <span>signature</span> <span class="tok-kw">As</span> <span>jit_type_t</span> <span>=</span> <span>jit_type_create_signature</span><span>(</span> <span>_</span>  
+
+    <span>jit_abi_cdecl</span><span>,</span>  <span>_</span> <span class="tok-cm">' C-style function</span>
+
+    <span>jit_type_int</span><span>,</span>   <span>_</span> <span class="tok-cm">' Return type</span>
+
+    <span>@</span><span>params</span><span>(</span><span class="tok-nu">0</span><span>),</span>     <span>_</span> <span class="tok-cm">' Parameter array</span>
+
+    <span class="tok-nu">3</span><span>,</span>              <span>_</span> <span class="tok-cm">' Number of components</span>
+
+    <span class="tok-nu">1</span>               <span>_</span> <span class="tok-cm">' Count references?</span>
+
+<span>)</span>
+
+<span class="tok-kw">Dim</span> <span>mul_add</span> <span class="tok-kw">As</span> <span>jit_function_t</span> <span>=</span> <span>jit_function_create</span><span>(</span><span>context</span><span>,</span> <span>signature</span><span>)</span>
+
+
+
+<span class="tok-cm">' build function (result = (x*y)+z)</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>jit_value_t</span> <span>x</span><span>,</span> <span>y</span><span>,</span> <span>z</span><span>,</span> <span>temp1</span><span>,</span> <span>temp2</span>
+
+<span>x</span> <span>=</span> <span>jit_value_get_param</span><span>(</span><span>mul_add</span><span>,</span> <span class="tok-nu">0</span><span>)</span>
+
+<span>y</span> <span>=</span> <span>jit_value_get_param</span><span>(</span><span>mul_add</span><span>,</span> <span class="tok-nu">1</span><span>)</span>
+
+<span>temp1</span> <span>=</span> <span>jit_insn_mul</span><span>(</span><span>mul_add</span><span>,</span> <span>x</span><span>,</span> <span>y</span><span>)</span>
+
+<span>z</span> <span>=</span> <span>jit_value_get_param</span><span>(</span><span>mul_add</span><span>,</span> <span class="tok-nu">2</span><span>)</span>
+
+<span>temp2</span> <span>=</span> <span>jit_insn_add</span><span>(</span><span>mul_add</span><span>,</span> <span>temp1</span><span>,</span> <span>z</span><span>)</span>
+
+<span>jit_insn_return</span><span>(</span><span>mul_add</span><span>,</span> <span>temp2</span><span>)</span>
+
+
+
+<span class="tok-cm">' compile function function</span>
+
+<span>jit_function_compile</span><span>(</span><span>mul_add</span><span>)</span>
+
+<span>jit_context_build_end</span><span>(</span><span>context</span><span>)</span>
+
+
+
+<span class="tok-cm">' call function</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>a</span><span>=</span><span class="tok-nu">3</span><span>,</span> <span>b</span><span>=</span><span class="tok-nu">5</span><span>,</span> <span>c</span><span>=</span><span class="tok-nu">2</span><span>,</span> <span>result</span>
+
+<span class="tok-kw">Dim</span> <span>args</span><span>(</span><span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">2</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span class="tok-kw">Ptr</span> <span>=</span> <span>{@</span><span>a</span><span>,</span> <span>@</span><span>b</span><span>,</span> <span>@</span><span>c</span><span>}</span>
+
+<span>jit_function_apply</span><span>(</span><span>mul_add</span><span>,</span> <span>@</span><span>args</span><span>(</span><span class="tok-nu">0</span><span>),</span> <span>@</span><span>result</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span class="tok-kw">Using</span> <span>&quot;mul__add(&amp;, &amp;, &amp;) = &amp;&quot;</span><span>;</span> <span>a</span><span>;</span> <span>b</span><span>;</span> <span>c</span><span>;</span> <span>result</span>
+
+
+
+<span class="tok-cm">' clean up libjit</span>
+
+<span>jit_context_destroy</span><span>(</span><span>context</span><span>)</span></pre></code><br>
+<br>
+<code><pre class="code"><span class="tok-cm">'' GCD calculation example</span>
+
+
+
+<span>#include &quot;jit.bi&quot;
+
+</span>
+
+<span class="tok-cm">' initialize libjit</span>
+
+<span class="tok-kw">Dim</span> <span>context</span> <span class="tok-kw">As</span> <span>jit_context_t</span> <span>=</span> <span>jit_context_create</span><span>()</span>
+
+<span>jit_context_build_start</span><span>(</span><span>context</span><span>)</span>
+
+
+
+<span class="tok-cm">' define function gcd(x as uinteger, y as uinteger) as uinteger</span>
+
+<span class="tok-kw">Dim</span> <span>params</span><span>(</span><span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">1</span><span>)</span> <span class="tok-kw">As</span> <span>jit_type_t</span> <span>=</span> <span>{</span><span>jit_type_uint</span><span>,</span> <span>jit_type_uint</span><span>}</span>
+
+<span class="tok-kw">Dim</span> <span>signature</span> <span class="tok-kw">As</span> <span>jit_type_t</span> <span>=</span> <span>jit_type_create_signature</span><span>(</span> <span>_</span>  
+
+    <span>jit_abi_cdecl</span><span>,</span>  <span>_</span> <span class="tok-cm">' C-style function</span>
+
+    <span>jit_type_uint</span><span>,</span>  <span>_</span> <span class="tok-cm">' Return type</span>
+
+    <span>@</span><span>params</span><span>(</span><span class="tok-nu">0</span><span>),</span>     <span>_</span> <span class="tok-cm">' Parameter array</span>
+
+    <span class="tok-nu">2</span><span>,</span>              <span>_</span> <span class="tok-cm">' Number of components</span>
+
+    <span class="tok-nu">1</span>               <span>_</span> <span class="tok-cm">' Count references?</span>
+
+<span>)</span>
+
+<span class="tok-kw">Dim</span> <span>gcd</span> <span class="tok-kw">As</span> <span>jit_function_t</span> <span>=</span> <span>jit_function_create</span><span>(</span><span>context</span><span>,</span> <span>signature</span><span>)</span>
+
+
+
+<span class="tok-cm">' build function</span>
+
+<span class="tok-cm">' check x = y</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>jit_value_t</span> <span>x</span><span>,</span> <span>y</span><span>,</span> <span>x_eq_y</span>
+
+<span>x</span> <span>=</span> <span>jit_value_get_param</span><span>(</span><span>gcd</span><span>,</span> <span class="tok-nu">0</span><span>)</span>
+
+<span>y</span> <span>=</span> <span>jit_value_get_param</span><span>(</span><span>gcd</span><span>,</span> <span class="tok-nu">1</span><span>)</span>
+
+<span>x_eq_y</span> <span>=</span> <span>jit_insn_eq</span><span>(</span><span>gcd</span><span>,</span> <span>x</span><span>,</span> <span>y</span><span>)</span>
+
+
+
+<span class="tok-cm">' if x = y, return x</span>
+
+<span class="tok-kw">Dim</span> <span>label_x_ne_y</span> <span class="tok-kw">As</span> <span>jit_label_t</span> <span>=</span> <span>jit_label_undefined</span>
+
+<span>jit_insn_branch_if_not</span><span>(</span><span>gcd</span><span>,</span> <span>x_eq_y</span><span>,</span> <span>@</span><span>label_x_ne_y</span><span>)</span>
+
+<span>jit_insn_return</span><span>(</span><span>gcd</span><span>,</span> <span>x</span><span>)</span>
+
+
+
+<span class="tok-cm">' else if...</span>
+
+<span>jit_insn_label</span><span>(</span><span>gcd</span><span>,</span> <span>@</span><span>label_x_ne_y</span><span>)</span>
+
+
+
+<span class="tok-cm">' check x &lt; y</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>jit_value_t</span> <span>x_lt_y</span>
+
+<span class="tok-kw">Dim</span> <span>label_x_gte_y</span> <span class="tok-kw">As</span> <span>jit_label_t</span> <span>=</span> <span>jit_label_undefined</span>
+
+<span>x_lt_y</span> <span>=</span> <span>jit_insn_lt</span><span>(</span><span>gcd</span><span>,</span> <span>x</span><span>,</span> <span>y</span><span>)</span>
+
+<span>jit_insn_branch_if_not</span><span>(</span><span>gcd</span><span>,</span> <span>x_lt_y</span><span>,</span> <span>@</span><span>label_x_gte_y</span><span>)</span>
+
+
+
+<span class="tok-cm">' if x &lt; y, return gcd(x, y-x)</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>jit_value_t</span> <span>gcd_args</span><span>(</span><span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">2</span><span>),</span> <span>gcd_result</span>
+
+<span>gcd_args</span><span>(</span><span class="tok-nu">0</span><span>)</span> <span>=</span> <span>x</span>
+
+<span>gcd_args</span><span>(</span><span class="tok-nu">1</span><span>)</span> <span>=</span> <span>jit_insn_sub</span><span>(</span><span>gcd</span><span>,</span> <span>y</span><span>,</span> <span>x</span><span>)</span>
+
+<span>gcd_result</span> <span>=</span> <span>jit_insn_call</span><span>(</span> <span>_</span>
+
+    <span>gcd</span><span>,</span>          <span>_</span> <span class="tok-cm">' where we are calling from</span>
+
+    <span>&quot;gcd&quot;</span><span>,</span>        <span>_</span> <span class="tok-cm">' function name</span>
+
+    <span>gcd</span><span>,</span>          <span>_</span> <span class="tok-cm">' function reference</span>
+
+    <span class="tok-nu">0</span><span>,</span>            <span>_</span> <span class="tok-cm">' signature = auto</span>
+
+    <span>@</span><span>gcd_args</span><span>(</span><span class="tok-nu">0</span><span>),</span> <span>_</span> <span class="tok-cm">' arguments</span>
+
+    <span class="tok-nu">2</span><span>,</span>            <span>_</span> <span class="tok-cm">' argument count</span>
+
+    <span class="tok-nu">0</span>             <span>_</span> <span class="tok-cm">' flags = nothing special</span>
+
+<span>)</span>
+
+<span>jit_insn_return</span><span>(</span><span>gcd</span><span>,</span> <span>gcd_result</span><span>)</span>
+
+
+
+<span class="tok-cm">' else...</span>
+
+<span>jit_insn_label</span><span>(</span><span>gcd</span><span>,</span> <span>@</span><span>label_x_gte_y</span><span>)</span>
+
+
+
+<span class="tok-cm">' return gcd(x-y, y)</span>
+
+<span>gcd_args</span><span>(</span><span class="tok-nu">0</span><span>)</span> <span>=</span> <span>jit_insn_sub</span><span>(</span><span>gcd</span><span>,</span> <span>x</span><span>,</span> <span>y</span><span>)</span>
+
+<span>gcd_args</span><span>(</span><span class="tok-nu">1</span><span>)</span> <span>=</span> <span>y</span>
+
+<span>gcd_result</span> <span>=</span> <span>jit_insn_call</span><span>(</span> <span>_</span>
+
+    <span>gcd</span><span>,</span>          <span>_</span> <span class="tok-cm">' where we are calling from</span>
+
+    <span>&quot;gcd&quot;</span><span>,</span>        <span>_</span> <span class="tok-cm">' function name</span>
+
+    <span>gcd</span><span>,</span>          <span>_</span> <span class="tok-cm">' function reference</span>
+
+    <span class="tok-nu">0</span><span>,</span>            <span>_</span> <span class="tok-cm">' signature = auto</span>
+
+    <span>@</span><span>gcd_args</span><span>(</span><span class="tok-nu">0</span><span>),</span> <span>_</span> <span class="tok-cm">' arguments</span>
+
+    <span class="tok-nu">2</span><span>,</span>            <span>_</span> <span class="tok-cm">' argument count</span>
+
+    <span class="tok-nu">0</span>             <span>_</span> <span class="tok-cm">' flags = nothing special</span>
+
+<span>)</span>
+
+<span>jit_insn_return</span><span>(</span><span>gcd</span><span>,</span> <span>gcd_result</span><span>)</span>
+
+
+
+<span class="tok-cm">' compile function</span>
+
+<span>jit_function_compile</span><span>(</span><span>gcd</span><span>)</span>
+
+<span>jit_context_build_end</span><span>(</span><span>context</span><span>)</span>
+
+
+
+<span class="tok-cm">' call function</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>jit_uint</span> <span>a</span><span>=</span><span class="tok-nu">21</span><span>,</span> <span>b</span><span>=</span><span class="tok-nu">14</span><span>,</span> <span>result</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>jit_uint</span> <span class="tok-kw">Ptr</span> <span>args</span><span>(</span><span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">1</span><span>)</span> <span>=</span> <span>{@</span><span>a</span><span>,</span> <span>@</span><span>b</span><span>}</span>
+
+<span>jit_function_apply</span><span>(</span><span>gcd</span><span>,</span> <span>@</span><span>args</span><span>(</span><span class="tok-nu">0</span><span>),</span> <span>@</span><span>result</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span class="tok-kw">Using</span> <span>&quot;gcd(&amp;, &amp;) = &amp;&quot;</span><span>;</span> <span>a</span><span>;</span> <span>b</span><span>;</span> <span>result</span>
+
+
+
+<span class="tok-cm">' clean up libjit</span>
+
+<span>jit_context_destroy</span><span>(</span><span>context</span><span>)</span></pre></code><br>
+<br>
+</div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

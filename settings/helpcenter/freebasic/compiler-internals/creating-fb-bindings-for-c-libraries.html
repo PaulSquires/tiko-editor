@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Creating FB bindings for C libraries — Help Center</title>
+<meta name="description" content="Creating FB bindings for C libraries — 0 documented members. Compiler Internals reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/compiler-internals/creating-fb-bindings-for-c-libraries.html">
+<meta property="og:title" content="Creating FB bindings for C libraries">
+<meta property="og:description" content="Creating FB bindings for C libraries — 0 documented members. Compiler Internals reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/compiler-internals/creating-fb-bindings-for-c-libraries.html">
+<link rel="stylesheet" href="../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/compiler-internals/creating-fb-bindings-for-c-libraries.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Compiler Internals</div>
+<h1>Creating FB bindings for C libraries</h1>
+<h2>Documentation</h2>
+
+	<br>
+This page aims to document the problems and solutions commonly encountered when creating FB bindings for C libraries.<br>
+<br>
+In general, FB and C/C++ are very similar. FB follows the same ABI as GCC where applicable, in order to be binary-compatible as much as possible. The language syntax is also similar to C/C++. As a result, a lot of type and procedure declarations can be translated directly 1:1 between C and FB. However, there also are constructs which cannot be translated directly, for example: typedefs declaring function types. FB has function pointer types, but not plain function types.<br>
+<ul><li> The good news: We have tools (<a href="http://www.freebasic.net/forum/viewtopic.php?f=8&amp;t=18712">fbfrog</a> and <a href="http://www.freebasic.net/forum/viewtopic.php?f=8&amp;t=15364">h_2_bi</a>) which can do most of the translation automatically.<br>
+<li> The bad news: There always are some problems which cannot be solved automatically and thus need to be fixed manually.<br>
+<br>
+</li></li></ul><b><u>Data types</u></b><br>
+<br>
+<div class="indent"><div><table><tr><td> C/C++ type </td><td> Size in bytes (GCC on Linux/Windows) </td><td> Corresponding FreeBASIC type (on 32bit or 64bit) </td></tr><tr><td> char </td><td> 1 </td><td> Byte </td></tr><tr><td> short [int] </td><td> 2 </td><td> Short </td></tr><tr><td> int </td><td> 4 </td><td> Long </td></tr><tr><td> enum (underlying type int) </td><td> 4 </td><td> Long </td></tr><tr><td> long long [int] </td><td> 8 </td><td> LongInt </td></tr><tr><td> float </td><td> 4 </td><td> Single </td></tr><tr><td> double </td><td> 8 </td><td> Double </td></tr><tr><td> long double </td><td> 12 on 32bit, 16 on 64bit </td><td> CLongDouble from crt/longdouble.bi </td></tr><tr><td> _Bool/bool </td><td> 1 </td><td> Byte / Boolean </td></tr><tr><td> * (pointer) </td><td> 4 on 32bit, 8 on 64bit </td><td> Ptr/Pointer </td></tr><tr><td> ssize_t, intptr_t </td><td> 4 on 32bit, 8 on 64bit </td><td> Integer </td></tr><tr><td> size_t, uintptr_t </td><td> 4 on 32bit, 8 on 64bit </td><td> UInteger </td></tr><tr><td> long [int] </td><td> 4 on 32bit systems and Win64 (!), 8 on 64bit Linux/BSD </td><td> CLong from crt/long.bi </td></tr></table></div><br>
+<br>
+</div><ul><li> Caveat: <code>int</code>/<code>long</code> is not <code>Integer</code>/<code>Long</code>. In FB, <code>Integer</code> corresponds to <code>Pointer</code> - it's 32bit on 32bit and 64bit on 64bit (on all operating systems). <code>Long</code> stays 32bit everywhere. In C, <code>int</code> stays 32bit everywhere, and <code>long</code> only corresponds to pointers on Linux/BSD systems, but not on Win64, where <code>long</code> is still 32bit. On Win64, <code>long long</code> is the only 64bit integer type in C. Thus, neither C's <code>int</code> nor C's <code>long</code> are compatible to FB's <code>Integer</code>.<br>
+<li> Caveat: <code>long int</code> is not <code>LongInt</code>. FB's <code>LongInt</code> corresponds to C's <code>long long</code>, not C's <code>long</code>.<br>
+<li> <code>int</code> can be translated to <code>Long</code>, as both are 32bit consistently.<br>
+<li> <code>ssize_t</code> or <code>intptr_t</code> can be translated to <code>Integer</code> because they typically have the same size as pointers.<br>
+<li> <code>long</code> cannot be translated directly, but we have <code>crt/long.bi</code> which provides the target-specific <code>clong</code> and <code>culong</code> type aliases.<br>
+<li> <code>long double</code> cannot be translated directly, but we have <code>crt/longdouble.bi</code> which provides the target-specific <code>clongdouble</code> type.<br>
+<li> <code>enum</code> is a special case. Typically their underlying type is <code>int</code> (32bit), but in FB <code>Enum</code> uses <code>Integer</code> (32bit/64bit) and it does not allow changing that. Thus <code>enums</code> (used as data type in declarations) cannot be translated as <code>Enums</code>.<br>
+</li></li></li></li></li></li></li></ul><div class="indent"><div class="indent">For example:<br>
+<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Enum</span> <span>MyEnum</span> <span>{</span>
+
+    <span>A</span><span>,</span>
+
+    <span>B</span>
+
+<span>}</span></pre></code><br>
+</div>has to be translated as:<br>
+<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Type</span> <span>MyEnum</span> <span class="tok-kw">As</span> <span class="tok-kw">Long</span>
+
+<span class="tok-kw">Enum</span>
+
+    <span>A</span>
+
+    <span>B</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Enum</span></pre></code><br>
+</div></div></div><ul><li> <code>BOOL</code> from <code>windows.h</code> is just a typedef for <code>int</code>, and should not be confused with the C <code>_Bool</code> or C++ <code>bool</code> types.<br>
+<br>
+</li></ul><b><u>Symbol name conflicts</u></b><br>
+<br>
+<ul><li> C/C++ is case-sensitive, with ~50 keywords<br>
+<li> FreeBASIC is case-insensitive, with ~400 keywords<br>
+<li> C code sometimes uses FB keywords as symbol identifiers, for example <code>INT</code>, <code>string</code>, <code>open</code>. Such symbols must be renamed.<br>
+<li> C code often contains identifiers which differ only in case, for example <code>GET_VERSION</code> and <code>get_version</code>. This is not allowed in FB; one of the symbols must be renamed.<br>
+<li> In C, a macro can have the same identifier as a function. This is not allowed in FB; one of the symbols must be renamed.<br>
+</li></li></li></li></li></ul><div class="indent"><b>Examples</b><br>
+<br>
+<div class="indent">C code using FB keywords as identifiers:<br>
+<code><pre class="code"><span>typedef</span> <span class="tok-kw">Int</span> <span class="tok-kw">Int</span><span>;</span>
+
+<span>void</span> <span class="tok-kw">Open</span><span>(</span><span>void</span><span>);</span></pre></code><br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span>INT_</span> <span class="tok-kw">As</span> <span class="tok-kw">Long</span>
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>open_</span> <span class="tok-kw">cdecl</span> <span class="tok-kw">Alias</span> <span>&quot;open&quot;</span><span>()</span></pre></code><br>
+<br>
+C code relying on case-sensitivity:<br>
+<code><pre class="code"><span>void</span> <span>foo</span><span>(</span><span>void</span><span>);</span>
+
+<span>void</span> <span>Foo</span><span>(</span><span>void</span><span>);</span>
+
+<span>void</span> <span>FOO</span><span>(</span><span>void</span><span>);</span></pre></code><br>
+<code><pre class="code"><span class="tok-cm">'' Wrong translation:</span>
+
+<span class="tok-kw">Extern</span> <span>&quot;C&quot;</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>foo</span><span>()</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>Foo</span><span>()</span>  <span class="tok-cm">'' error: duplicate definition</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>FOO</span><span>()</span>  <span class="tok-cm">'' error: duplicate definition</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Extern</span></pre></code><br>
+<code><pre class="code"><span class="tok-cm">'' Correct translation:</span>
+
+<span class="tok-kw">Extern</span> <span>&quot;C&quot;</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>foo</span><span>()</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>Foo_</span> <span class="tok-kw">Alias</span> <span>&quot;Foo&quot;</span><span>()</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>FOO__</span> <span class="tok-kw">Alias</span> <span>&quot;FOO&quot;</span><span>()</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Extern</span></pre></code><br>
+<br>
+Another classic example where this kind of conflict happens:<br>
+<code><pre class="code"><span>#define GET_VERSION_NUMBER 123
+
+</span><span class="tok-kw">Int</span> <span>get_version_number</span><span>(</span><span>void</span><span>);</span></pre></code><br>
+<code><pre class="code"><span class="tok-kw">Extern</span> <span>&quot;C&quot;</span>
+
+    <span>#define GET_VERSION_NUMBER_ 123  '' renamed to avoid conflict
+
+</span>    <span class="tok-kw">Declare</span> <span class="tok-kw">Function</span> <span>get_version_number</span><span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">Long</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Extern</span></pre></code><br>
+<br>
+Conflict between procedure and macro:<br>
+<code><pre class="code"><span>void</span> <span>f</span><span>(</span><span class="tok-kw">Int</span><span>);</span>
+
+<span>#define f(i) f(i + 1)
+
+</span></pre></code><br>
+<code><pre class="code"><span class="tok-kw">Extern</span> <span>&quot;C&quot;</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>f</span><span>(</span><span class="tok-kw">ByVal</span> <span class="tok-kw">As</span> <span class="tok-kw">Long</span><span>)</span>
+
+    <span>#define f_(i) f(i + 1)  '' renamed to avoid conflict
+
+</span><span class="tok-kw">End</span> <span class="tok-kw">Extern</span></pre></code><br>
+</div><b>Solutions</b><br>
+<br>
+</div><ul><ul><li> Symbols should be renamed by appending <code>_</code> underscores. This way we solve the conflicts and still stay close to the original API.<br>
+<li> Renaming a symbol should not cause further renames (for example, if <code>foo</code> must be renamed, but <code>foo_</code> already exists, then <code>foo</code> should be renamed to <code>foo__</code> instead)<br>
+<li> A list of renamed symbols should be available in the binding or in the binding's documentation such that users can identify such differences to the original API.<br>
+<li> Fields inside structures do not need to be renamed just because they match an FB keyword. By using the "<code>As DataType Name</code>" syntax they can be use FB keywords as identifiers. This only works as long as it is a simple structure (plain old data), not a class.<br>
+</li></li></li></li></ul></ul><div class="indent"><div class="indent"><div class="indent"><code><pre class="code"><span class="tok-kw">Type</span> <span>UdtWithKeywordFields</span>
+
+    <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span class="tok-kw">Ptr</span> <span class="tok-kw">String</span>  <span class="tok-cm">'' Field &quot;String&quot; of type ZString Ptr</span>
+
+    <span class="tok-kw">As</span> <span class="tok-kw">Long</span> <span class="tok-kw">Type</span>  <span class="tok-cm">'' Field &quot;Type&quot; of type &quot;Long&quot;</span>
+
+    <span class="tok-kw">As</span> <span class="tok-kw">Long</span> <span class="tok-kw">As</span>  <span class="tok-cm">'' Field &quot;As&quot; of type &quot;Long&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span></pre></code><br>
+<br>
+</div></div></div><b><u>Function types</u></b><br>
+<br>
+<div class="indent">In C it's possible to have typedefs with function types. Dereferencing a function pointer type results in a function type. FB only has function pointer types, but not function types.<br>
+<br>
+<code><pre class="code"><span>//</span> <span>A</span> <span class="tok-kw">Function</span> <span>typedef</span> <span>(</span><span class="tok-kw">Function</span> <span>result</span> <span>=</span> <span>void</span><span>,</span> <span>no</span> <span>parameters</span><span>)</span>
+
+<span>typedef</span> <span>void</span> <span>F</span><span>(</span><span>void</span><span>);</span>
+
+
+
+<span>//</span> <span class="tok-kw">Using</span> <span>it</span> <span class="tok-kw">To</span> <span class="tok-kw">Declare</span> <span>a</span> <span class="tok-kw">Function</span> <span>called</span> <span>f1</span>
+
+<span>F</span> <span>f1</span><span>;</span>
+
+
+
+<span>//</span> <span>Usually</span> <span>f1</span> <span>would</span> <span>be</span> <span>declared</span> <span>like</span> <span class="tok-kw">This</span> <span>(</span><span>use</span> <span>of</span> <span class="tok-kw">Function</span> <span>typedefs</span> <span class="tok-kw">Is</span> <span>pretty</span> <span>rare</span><span>):</span>
+
+<span>void</span> <span>f1</span><span>(</span><span>void</span><span>);</span>
+
+
+
+<span>//</span> <span>A</span> <span>more</span> <span class="tok-kw">Common</span> <span>use</span> <span class="tok-kw">For</span> <span class="tok-kw">Function</span> <span>typedefs</span> <span class="tok-kw">Is</span> <span class="tok-kw">To</span> <span class="tok-kw">Declare</span> <span>pointers</span> <span class="tok-kw">To</span> <span>them</span> <span>(</span><span class="tok-kw">Function</span> <span>pointers</span><span>):</span>
+
+<span class="tok-kw">Extern</span> <span>F</span> <span>*</span><span>pf1</span><span>;</span></pre></code><br>
+<br>
+Since FB does not have function types, such typedefs have to be solved out, or turned into a function pointer:<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Extern</span> <span>&quot;C&quot;</span>
+
+
+
+<span class="tok-kw">Type</span> <span>F</span> <span class="tok-kw">As</span> <span class="tok-kw">Sub</span><span>()</span>  <span class="tok-cm">'' Function pointer type</span>
+
+
+
+<span class="tok-cm">'' Declaring procedures is only possible with Declare in FB</span>
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>f1</span><span>()</span>
+
+
+
+<span class="tok-cm">'' But at least FB has function pointer types.</span>
+
+<span class="tok-cm">'' Since F already is the function pointer in the FB translation, there is no extra PTR here</span>
+
+<span class="tok-kw">Extern</span> <span>pf1</span> <span class="tok-kw">As</span> <span>F</span>
+
+
+
+<span class="tok-kw">End</span> <span class="tok-kw">Extern</span></pre></code><br>
+<br>
+</div><br>
+
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../index.html">Home</a> ·
+         <a href="../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../nav.js?v=70a6b70236"></script>
+<script src="../../search-index.js"></script>
+<script src="../../assets/app.js?v=456d079659"></script>
+<script src="../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

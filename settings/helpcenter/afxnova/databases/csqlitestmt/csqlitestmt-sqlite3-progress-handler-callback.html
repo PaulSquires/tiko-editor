@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CSQLiteStmt.sqlite3_progress_handler_callback — Help Center</title>
+<meta name="description" content="CSQLiteStmt.sqlite3_progress_handler_callback — AfxNova method reference.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/databases/csqlitestmt/csqlitestmt-sqlite3-progress-handler-callback.html">
+<meta property="og:title" content="CSQLiteStmt.sqlite3_progress_handler_callback">
+<meta property="og:description" content="CSQLiteStmt.sqlite3_progress_handler_callback — AfxNova method reference.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/databases/csqlitestmt/csqlitestmt-sqlite3-progress-handler-callback.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/databases/csqlitestmt/csqlitestmt-sqlite3-progress-handler-callback.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../csqlite-class.html">CSQLite Class</a></div>
+<h1>CSQLiteStmt.sqlite3_progress_handler_callback<span class="h1kind">method</span></h1>
+<div class="badges"><a class="badge" href="../index.html">Databases</a><span class="badge">method</span><span class="badge">CSQLite.inc</span><span class="badge badge--warn">doc-orphan</span></div>
+<div class="note note--warn"><strong>No implementation located.</strong> This member is documented, but the source scan found no matching declaration. It is likely declared in a header this scan does not resolve, or provided by a macro.</div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION sqlite3_progress_handler_callback CDECL (BYVAL pArg AS ANY PTR) AS LONG</code></pre>
+<div class="note">Also documented as <code>ProgressHandler</code> — one description covers them all.</div>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>nOps</code></td><td></td><td>Number of virtual machine instructions that are evaluated between successive invocations of the callback.</td></tr><tr><td><code>pCallback</code></td><td></td><td>Pointer to the callback function.</td></tr><tr><td><code>pArg</code></td><td></td><td>Data that is passed through as the only parameter to the callback function.</td></tr><tr><td><code>op</code></td><td></td><td>An integer constant, taken from the set of SQLITE_DBSTATUS options, that determines the parameter to interrogate.</td></tr><tr><td><code>pCurrent</code></td><td></td><td>The current value of the requested parameter.</td></tr><tr><td><code>pHighwater</code></td><td></td><td>The highest instantaneous value.</td></tr><tr><td><code>resetFlag</code></td><td></td><td>TRUE or FALSE. If true, then the highest instantaneous value is reset back down to the current value.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>The number of bytes freed.</p>
+<p>SQLITE_OK (0) on success and a non-zero error code on failure.</p>
+<h2>Description</h2>
+<p>The <strong>ProgressHandler</strong> method causes a callback function to be invoked periodically during long running calls to <strong>Step_</strong> and <strong>GetRow</strong> for a database connection. An example use for this interface is to keep a GUI updated during a large query.</p>
+<p>Callback function prototype:</p>
+<h2>Remarks</h2>
+<p>Only a single progress handler may be defined at one time per database connection; setting a new progress handler cancels the old one. Setting parameter pCallBack to NULL disables the progress handler. The progress handler is also disabled by setting pCallBack to a value less than 1.</p>
+<p>If the progress callback returns non-zero, the operation is interrupted. This feature can be used to implement a "Cancel" button on a GUI progress dialog box.</p>
+<p>The progress handler callback must not do anything that will modify the database connection that invoked the progress handler. Note that <strong>Prepare</strong> and <strong>Step_</strong> both modify their database connections for the meaning of "modify" in this paragraph.</p>
+<h2>Example</h2>
+<p>SQLITE_DBSTATUS_LOOKASIDE_USED      = 0 SQLITE_DBSTATUS_CACHE_USED          = 1 SQLITE_DBSTATUS_SCHEMA_USED         = 2 SQLITE_DBSTATUS_STMT_USED           = 3 SQLITE_DBSTATUS_LOOKASIDE_HIT       = 4 SQLITE_DBSTATUS_LOOKASIDE_MISS_SIZE = 5 SQLITE_DBSTATUS_LOOKASIDE_MISS_FULL = 6 SQLITE_DBSTATUS_CACHE_HIT           = 7 SQLITE_DBSTATUS_CACHE_MISS          = 8 SQLITE_DBSTATUS_CACHE_WRITE         = 9</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CSQLite.inc</code></li><li>Documented in <span class="srcref">Databases/CSQLite Class.md</span></li><li>Topic: <a href="../csqlite-class.html">CSQLite Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

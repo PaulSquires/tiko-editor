@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CGpGraphics.EndContainer — Help Center</title>
+<meta name="description" content="Closes a graphics container that was previously opened by the **BeginContainer** method.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpgraphics/cgpgraphics-endcontainer.html">
+<meta property="og:title" content="CGpGraphics.EndContainer">
+<meta property="og:description" content="Closes a graphics container that was previously opened by the **BeginContainer** method.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpgraphics/cgpgraphics-endcontainer.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-classes/cgpgraphics/cgpgraphics-endcontainer.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cgpgraphics-class.html">CGpGraphics Class</a></div>
+<h1>CGpGraphics.EndContainer<span class="h1kind">method</span></h1>
+<p class="lede">Closes a graphics container that was previously opened by the **BeginContainer** method.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">method</span><span class="badge">CGpGraphics.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION EndContainer (BYVAL state AS GraphicsContainer) AS GpStatus</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>state</code></td><td></td><td>Value (previously returned by <strong>BeginContainer</strong>) that identifies the container to be closed.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>If the function succeeds, it returns <strong>StatusOk</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h2>Description</h2>
+<p>Closes a graphics container that was previously opened by the <strong>BeginContainer</strong> method.</p>
+<h2>Remarks</h2>
+<p>When you call the <strong>BeginContainer</strong> method of a <strong>Graphics</strong> object, an information block that holds the state of the <strong>Graphics</strong> object is put on a stack. The <strong>BeginContainer</strong> method returns a value that identifies that information block. When you pass the identifying value to the <strong>EndContainer</strong> method, the information block is removed from the stack and is used to restore the <strong>Graphics</strong> object to the state it was in at the time of the <strong>BeginContainer</strong> call.</p>
+<p>Containers can be nested; that is, you can call the <strong>BeginContainer</strong> method several times before you call the <strong>EndContainer</strong> method. Each time you call the <strong>BeginContainer</strong> method, an information block is put on the stack, and you receive an identifier for the information block. When you pass one of those identifiers to the <strong>EndContainer</strong> method, the <strong>Graphics</strong> object is returned to the state it was in at the time of the <strong>BeginContainer</strong> call that returned that particular identifier. The information block placed on the stack by that BeginContainer call is removed from the stack, and all information blocks placed on that stack after that <strong>BeginContainer</strong> call are also removed.</p>
+<p>Calls to the <strong>Save</strong> method place information blocks on the same stack as calls to the <strong>BeginContainer</strong> method. Just as an <strong>EndContainer</strong> call is paired with a <strong>BeginContainer</strong> call, a <strong>Restore</strong> call is paired with a <strong>Save</strong> call.</p>
+<p>Caution  When you call <strong>EndContainer</strong>, all information blocks placed on the stack (by <strong>Save</strong> or by <strong>BeginContainer</strong>) after the corresponding call to <strong>BeginContainer</strong> are removed from the stack. Likewise, when you call <strong>Restore</strong>, all information blocks placed on the stack (by <strong>Save</strong> or by <strong>BeginContainer</strong>) after the corresponding call to <strong>Save</strong> are removed from the stack.</p>
+<h2>Example</h2>
+<p>See example in <strong>BeginContainer</strong></p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CGpGraphics.inc</code></li><li>Defined in <span class="srcref">AfxNova/CGpGraphics.inc:1564</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Classes/CGpGraphics Classes.md</span></li><li>Topic: <a href="../cgpgraphics-class.html">CGpGraphics Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GdiPlusNotification — Help Center</title>
+<meta name="description" content="GdiPlusNotification — 0 documented members. Graphics reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/gdiplusnotification.html">
+<meta property="og:title" content="GdiPlusNotification">
+<meta property="og:description" content="GdiPlusNotification — 0 documented members. Graphics reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/gdiplusnotification.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/gdiplusnotification.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span>Graphics</div>
+<h1>GdiPlusNotification</h1>
+<h2>Documentation</h2>
+<h3 id="notification-functions">Notification Functions</h3>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="#gdiplusnotificationhook">GdiplusNotificationHook</a></td><td>The <strong>GdiplusStartup</strong> function returns (in its output parameter) a pointer to a <strong>GdiplusStartupOutput</strong> structure. One of the members of the structure is a pointer to a notification hook function that has the same signature as <strong>GdiplusNotificationHook</strong>. There are two ways you can call the notification hook function; you can use the pointer returned by <strong>GdiplusStartup</strong> or you can call <strong>GdiplusNotificationHook</strong>. In fact, <strong>GdiplusNotificationHook</strong> simply verifies that you have suppressed the background thread and then calls the notification hook function that is returned by <strong>GdiplusStartup</strong>. The token parameter receives an identifier that you should later pass in a corresponding call to the notification unhook function.</td></tr><tr><td><a href="#gdiplusnotificationunhook">GdiplusNotificationUnhook</a></td><td>The <strong>GdiplusStartup</strong> function returns (in its output parameter) a pointer to a <strong>GdiplusStartupOutput</strong> structure. One of the members of the structure is a pointer to a notification unhook function that has the same signature as <strong>GdiplusNotificationUnhook</strong>. There are two ways you can call the notification unhook function; you can use the pointer returned by <strong>GdiplusStartup</strong> or you can call <strong>GdiplusNotificationUnhook</strong>. In fact, <strong>GdiplusNotificationUnhook</strong> simply verifies that you have suppressed the background thread and then calls the notification unhook function that is returned by <strong>GdiplusStartup</strong>. When you call the notification unhook function, pass the token that you previously received from a corresponding call to the notification hook function. If you do not do this, there will be resource leaks that won't be cleaned up until the process exits.</td></tr></tbody></table></div>
+<hr>
+<p>Example: Using GdiplusNotificationHook and GdiplusNotificationUnhook</p>
+<pre class="code"><code>' Startup input/output structures
+DIM startupInput AS GdiplusStartupInput
+DIM startupOutput AS GdiplusStartupOutput
+DIM gdipToken AS ULONG_PTR
+
+' Suppress background thread
+startupInput.GdiplusVersion = 1
+startupInput.SuppressBackgroundThread = TRUE
+
+' Start GDI+
+GdipStartup(@gdipToken, @startupInput, @startupOutput)
+
+' Hook notifications (optional, rarely needed)
+DIM hookToken AS ULONG_PTR
+GdiplusNotificationHook(@hookToken)
+
+' ... perform GDI+ operations ...
+
+' Unhook notifications before shutdown
+GdiplusNotificationUnhook(hookToken)
+
+' Shutdown GDI+
+GdipShutdown(gdipToken)</code></pre>
+<p>When to Use These</p>
+<p>Only when SuppressBackgroundThread = TRUE in GdiplusStartupInput.</p>
+<p>They allow manual control over GDI+ notifications, typically in environments where background threads are restricted (e.g., certain embedded systems or plugin hosts).</p>
+<p>Most applications do not need to use these functions.</p>
+<p><strong>GDI+ Startup Module with Notification Hook</strong></p>
+<pre class="code"><code>' ========================================================================================
+' GDI+ Startup with optional notification hook/unhook
+' ========================================================================================
+TYPE GDIP_StartupContext
+    gdipToken AS ULONG_PTR
+    hookToken AS ULONG_PTR
+    graphicsReady AS BOOLEAN
+END TYPE
+
+SUB GDIP_StartupWithHook (BYREF ctx AS GDIP_StartupContext)
+    DIM startupInput AS GdiplusStartupInput
+    DIM startupOutput AS GdiplusStartupOutput
+
+    startupInput.GdiplusVersion = 1
+    startupInput.SuppressBackgroundThread = TRUE
+
+    IF GdipStartup(@ctx.gdipToken, @startupInput, @startupOutput) = 0 THEN
+        ctx.graphicsReady = TRUE
+        GdiplusNotificationHook(@ctx.hookToken)
+    END IF
+END SUB
+
+SUB GDIP_ShutdownWithUnhook (BYREF ctx AS GDIP_StartupContext)
+    IF ctx.graphicsReady THEN
+        GdiplusNotificationUnhook(ctx.hookToken)
+        GdipShutdown(ctx.gdipToken)
+        ctx.graphicsReady = FALSE
+    END IF
+END SUB</code></pre>
+<p><strong>Usage example</strong></p>
+<pre class="code"><code>DIM ctx AS GDIP_StartupContext
+GDIP_StartupWithHook(ctx)
+
+' ... perform GDI+ operations ...
+
+GDIP_ShutdownWithUnhook(ctx)</code></pre>
+<p><strong>Notes</strong></p>
+<p>SuppressBackgroundThread = TRUE is required for the hook/unhook functions to work.</p>
+<p>This module ensures proper cleanup and avoids resource leaks.</p>
+<p>Ideal for plugin environments, embedded systems, or apps with strict thread control.</p>
+<p>They’re rarely used in typical applications, but essential in environments where background threads must be avoided—like certain plugin hosts or embedded systems.</p>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

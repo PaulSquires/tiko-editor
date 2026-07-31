@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Locate — Help Center</title>
+<meta name="description" content="Sets the current cursor position">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/console-functions/procedures/locate.html">
+<meta property="og:title" content="Locate">
+<meta property="og:description" content="Sets the current cursor position">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/console-functions/procedures/locate.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/console-functions/procedures/locate.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>Locate<span class="h1kind">function</span></h1>
+<p class="lede">Sets the current cursor position</p>
+<div class="badges"><a class="badge" href="../index.html">Console Functions</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>Declare Function Locate( row As Long = 0, column As Long = 0, state As Long = -1, start As Long = 0, stop As Long = 0 ) As Long</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>row</code></td><td></td><td>the 1-based vertical character position in the console.</td></tr><tr><td><code>column</code></td><td></td><td>the 1-based horizontal character position in the console.</td></tr><tr><td><code>state</code></td><td></td><td>the state of the cursor in console-mode only: <code>0</code> is off, <code>1</code> is on; text cursor is never visible in graphics mode.</td></tr><tr><td><code>start</code></td><td></td><td>Ignored. Allowed for <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang qb</a></i> dialect compatibility only.</td></tr><tr><td><code>stop</code></td><td></td><td>Ignored. Allowed for <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang qb</a></i> dialect compatibility only.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<br>
+Returns a 32 bit <code><a href="../../standard-data-types/procedures/long.html">Long</a></code> containing the current cursor position and state. The <a href="../../bit-manipulation/procedures/lobyte.html">Low Byte Of The Low Word</a> contains the column, the <a href="../../bit-manipulation/procedures/hibyte.html">High Byte Of The Low Word</a> contains the row, and the <a href="../../bit-manipulation/procedures/hiword.html">High Word</a> contains the cursor state.<br>
+<br>
+If any of the <i>row</i>, <i>column</i> or <i>state</i> parameters were just set by the call to <code><b>Locate</b></code>, then the return value will reflect these new values, not the previous ones. If any of the parameters were omitted in the call to <code><b>Locate</b></code>, then the return value will reflect the current values, which are the same as before the call to <code><b>Locate</b></code>.<br>
+<br>
+<code><b>Locate</b></code> will attempt to position the cursor at the specified row and column. If the position is beyond the screen extents, cursor will not reposition. And next <code><a href="print.html">Print</a></code> to the screen will continue at last valid cursor position.  When printing to the last line of the screen, and the <code><a href="print.html">Print</a></code> statement has a new line character, the screen will scroll and reposition the cursor automatically to the last line, column 1.<br>
+<br>
+
+<h2>Description</h2>
+<br>
+Sets the text cursor in both graphics and console modes.<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Usage</h3><code><br>
+<b>Locate</b> [<i>row</i>], [<i>column</i>], [<i>state</i>]<br>
+<br>
+<i>result</i> = <b>Locate</b>( [<i>row</i>], [<i>column</i>], [<i>state</i>] )<br>
+<i>new_column</i> = <a href="../../bit-manipulation/procedures/lobyte.html">LoByte</a>( <i>result</i> )<br>
+<i>new_row</i> = <a href="../../bit-manipulation/procedures/hibyte.html">HiByte</a>( <i>result</i> )<br>
+<i>new_state</i> = <a href="../../bit-manipulation/procedures/hiword.html">HiWord</a>( <i>result</i> )<br>
+</code><br>
+
+<h3>Differences from QB</h3><br>
+<ul><li> The <code><i>start</i></code> and <code><i>stop</i></code> arguments have no effect in FreeBASIC.<br>
+<li> QB will raise an error if <code><i>row</i></code> or <code><i>column</i></code> are beyond the screen extents.<br>
+<br>
+</li></li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="csrlin.html">CsrLin</a></code><br>
+<li> <code><a href="pos.html">Pos</a></code><br>
+<li> <code><a href="print.html">Print</a></code><br>
+<li> <code><a href="print.html">?</a></code><br>
+<br>
+</li></li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-kw">Locate</span> <span class="tok-nu">10</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Current line:&quot;</span><span>;</span> <span class="tok-kw">CsrLin</span></pre></code><br>
+<br>
+<code><pre class="code"><span class="tok-cm">'' Text cursor + mouse tracking</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Long</span> <span>x</span> <span>=</span> <span class="tok-nu">0</span><span>,</span> <span>y</span> <span>=</span> <span class="tok-nu">0</span><span>,</span> <span>dx</span><span>,</span> <span>dy</span>
+
+
+
+<span class="tok-kw">Cls</span>
+
+<span class="tok-kw">Locate</span> <span>,</span> <span>,</span> <span class="tok-nu">1</span>
+
+
+
+<span class="tok-kw">While</span> <span class="tok-kw">Inkey</span> <span>&lt;&gt;</span> <span class="tok-kw">Chr</span><span>(</span><span class="tok-nu">27</span><span>)</span>
+
+    <span class="tok-kw">GetMouse</span> <span>dx</span><span>,</span> <span>dy</span>
+
+    <span class="tok-kw">If</span><span>(</span> <span>dx</span> <span>&lt;&gt;</span> <span>x</span> <span class="tok-kw">Or</span> <span>dy</span> <span>&lt;&gt;</span> <span>y</span> <span>)</span> <span class="tok-kw">Then</span>
+
+        <span class="tok-kw">Locate</span> <span>y</span><span>+</span><span class="tok-nu">1</span><span>,</span> <span>x</span><span>+</span><span class="tok-nu">1</span><span>:</span> <span class="tok-kw">Print</span> <span>&quot; &quot;</span><span>;</span>
+
+        <span>x</span> <span>=</span> <span>dx</span>
+
+        <span>y</span> <span>=</span> <span>dy</span>
+
+        <span class="tok-kw">Locate</span> <span class="tok-nu">1</span><span>,</span> <span class="tok-nu">1</span><span>:</span> <span class="tok-kw">Print</span> <span>x</span><span>,</span> <span>y</span><span>,</span> <span>&quot;&quot;</span>
+
+        <span class="tok-kw">Locate</span> <span>y</span><span>+</span><span class="tok-nu">1</span><span>,</span> <span>x</span><span>+</span><span class="tok-nu">1</span><span>:</span> <span class="tok-kw">Print</span> <span>&quot;X&quot;</span><span>;</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+<span class="tok-kw">Wend</span></pre></code><br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgLocate.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CTextRange2.EndKey — Help Center</title>
+<meta name="description" content="Mimics the functionality of the End key.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/ctextrange2/ctextrange2-endkey.html">
+<meta property="og:title" content="CTextRange2.EndKey">
+<meta property="og:description" content="Mimics the functionality of the End key.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/ctextrange2/ctextrange2-endkey.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-controls/ctextrange2/ctextrange2-endkey.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../ctextrange2-class.html">CTextRange2 Class</a></div>
+<h1>CTextRange2.EndKey<span class="h1kind">method</span></h1>
+<p class="lede">Mimics the functionality of the End key.</p>
+<div class="badges"><a class="badge" href="../../index.html">Windows</a><span class="badge">method</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION EndKey (BYVAL Unit AS LONG = tomLine, BYVAL Extend AS LONG = 0) AS LONG</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>Unit</code></td><td></td><td>Unit to use in the End key operation. It can take on one of the following values (see table below).</td></tr><tr><td><code>Extend</code></td><td></td><td>Flag that indicates how to change the selection. If <em>Extend</em> is zero (or <strong>tomMove</strong>), the method collapses the selection to an insertion point. If <em>Extend</em> is 1 (or <strong>tomExtend</strong>), the method moves the active end and leaves the other end alone. The default value is zero.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>The count of characters that the insertion point or the active end is moved.</p>
+<h2>Description</h2>
+<p>Mimics the functionality of the End key.</p>
+<h2>Remarks</h2>
+<p>Setting <em>Extend</em> to <strong>tomExtend</strong> (or nonzero) corresponds to the Shift key being pressed. Setting <em>Unit</em> to <strong>tomLine</strong> corresponds to the Ctrl key not being pressed. Setting <em>Unit</em> to <strong>tomStory</strong> to Ctrl being pressed.</p>
+<p>The <strong>HomeKey</strong> and <strong>EndKey</strong> methods are used to mimic the standard Home/End key behavior.</p>
+<p>The <strong>tomLine</strong> value mimics the Home or End key behavior without the Ctrl key pressed, while <strong>tomStory</strong> mimics the behavior with the Ctrl key pressed. Similarly, <strong>tomMove</strong> mimics the Home or End key behavior without the Shift key pressed, while <strong>tomExtend</strong> mimics the behavior with the Shift key pressed. So EndKey(tomStory) converts the selection into an insertion point at the end of the associated story, while EndKey(tomStory, tomExtend) moves the active end of the selection to the end of the story and leaves the other end where it was.</p>
+<p>The <strong>HomeKey</strong> and <strong>EndKey</strong> methods are logical methods like the <strong>Move</strong> methods, rather than directional methods. Thus, they depend on the language that is involved. For example, in Arabic text, <strong>HomeKey</strong> moves to the right end of a line, whereas in English text, it moves to the left. Thus, <strong>HomeKey</strong> and <strong>EndKey</strong> are different than the <strong>MoveLeft</strong> and <strong>MoveRight</strong> methods. Also, note that the <strong>EndKey</strong> method is quite different from the <strong>End</strong> property, which is the cp at the end of the selection. <strong>HomeKey</strong> and <strong>EndKey</strong> also differ from the <strong>StartOf</strong> and <strong>EndOf</strong> methods in that they extend from the active end, whereas <strong>StartOf</strong> extends from Start and <strong>EndOf</strong> extends from End.</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/CTextRange2.inc:816</span></li><li>Documented in <span class="srcref">Windows/WIndows Controls/RichEdit/CTextRange2 Class.md</span></li><li>Topic: <a href="../ctextrange2-class.html">CTextRange2 Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

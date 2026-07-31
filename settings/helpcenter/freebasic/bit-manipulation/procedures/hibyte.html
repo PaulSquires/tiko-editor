@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HiByte — Help Center</title>
+<meta name="description" content="Gets the second byte of the operand.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/bit-manipulation/procedures/hibyte.html">
+<meta property="og:title" content="HiByte">
+<meta property="og:description" content="Gets the second byte of the operand.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/bit-manipulation/procedures/hibyte.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/bit-manipulation/procedures/hibyte.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>HiByte<span class="h1kind">keyword</span></h1>
+<p class="lede">Gets the second byte of the operand.</p>
+<div class="badges"><a class="badge" href="../index.html">Bit Manipulation</a><span class="badge">keyword</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>#define HiByte( expr ) ((Cast(UInteger, expr) And &amp;h0000FF00) Shr 8)</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>expr</code></td><td></td><td>A numeric expression, converted to an <code><a href="uinteger.html">UInteger</a></code> value.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<br>
+Returns the value of the high byte of the low 16bit word of <i>expr</i>.<br>
+<br>
+
+<h2>Description</h2>
+<br>
+This macro converts the numeric expression <code><i>expr</i></code> to an <code><a href="uinteger.html">UInteger</a></code> value, then expands to an <code><a href="uinteger.html">UInteger</a></code> representing the value of its second byte - that is the most-significant (high) byte of the least-significant (low) 16bit word of <i>expr</i>.<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Usage</h3><code><br>
+<i>result</i> = <b>HiByte</b>( <i>expr</i> )<br>
+</code><br>
+
+<h3>Dialect Differences</h3><br>
+<ul><li> Not available in the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang qb</a></i> dialect unless referenced with the alias <code><b>__HIBYTE</b></code>.<br>
+<br>
+</li></ul>
+<h3>Differences from QB</h3><br>
+<ul><li> New to FreeBASIC<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="lobyte.html">LoByte</a></code><br>
+<li> <code><a href="loword.html">LoWord</a></code><br>
+<li> <code><a href="hiword.html">HiWord</a></code><br>
+<br>
+</li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span>N</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span>
+
+
+
+<span class="tok-cm">'Note there are 16 bits</span>
+
+<span>N</span> <span>=</span> <span class="tok-nu">&amp;b1010101110000001</span>
+
+<span class="tok-kw">Print</span> <span>&quot;N is                                       &quot;</span><span>;</span> <span>N</span>
+
+<span class="tok-kw">Print</span> <span>&quot;The binary representation of N is          &quot;</span><span>;</span> <span class="tok-kw">Bin</span><span>(</span><span>N</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>&quot;The most significant byte (MSB) of N is    &quot;</span><span>;</span> <span class="tok-kw">HiByte</span><span>(</span><span>N</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>&quot;The least significant byte (LSB) of N is   &quot;</span><span>;</span> <span class="tok-kw">LoByte</span><span>(</span><span>N</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>&quot;The binary representation of the MSB is    &quot;</span><span>;</span> <span class="tok-kw">Bin</span><span>(</span><span class="tok-kw">HiByte</span><span>(</span><span>N</span><span>))</span>
+
+<span class="tok-kw">Print</span> <span>&quot;The binary representation of the LSB is    &quot;</span><span>;</span> <span class="tok-kw">Bin</span><span>(</span><span class="tok-kw">LoByte</span><span>(</span><span>N</span><span>))</span>
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+<br>
+The output would look like:<br>
+<pre class="code">
+N Is                                       43905
+The Binary representation of N Is          1010101110000001
+The most significant Byte (MSB) of N Is    171
+The least significant Byte (LSB) of N Is   129
+The Binary representation of the MSB Is    10101011
+The Binary representation of the LSB Is    10000001
+</pre><br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgHibyte.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

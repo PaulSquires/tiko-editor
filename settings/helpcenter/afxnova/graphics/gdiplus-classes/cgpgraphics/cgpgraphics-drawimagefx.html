@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CGpGraphics.DrawImageFX — Help Center</title>
+<meta name="description" content="Draws a portion of an image after applying a specified effect.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpgraphics/cgpgraphics-drawimagefx.html">
+<meta property="og:title" content="CGpGraphics.DrawImageFX">
+<meta property="og:description" content="Draws a portion of an image after applying a specified effect.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpgraphics/cgpgraphics-drawimagefx.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-classes/cgpgraphics/cgpgraphics-drawimagefx.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cgpgraphics-class.html">CGpGraphics Class</a></div>
+<h1>CGpGraphics.DrawImageFX<span class="h1kind">method</span></h1>
+<p class="lede">Draws a portion of an image after applying a specified effect.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">method</span><span class="badge">CGpGraphics.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION DrawImageFX (BYVAL pImage AS CGpImage PTR, BYREF sourceRect AS GpRectF, BYVAL pMatrix AS CGpMatrix PTR, BYREF gpEffect AS CGpEffect, BYREF gpImageAttributes AS CGpImageAttributes, BYVAL srcUnit AS GpUnit) AS GpStatus</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>pImage</code></td><td></td><td>Pointer to an <strong>Image</strong> object that specifies the image to be drawn.</td></tr><tr><td><code>sourceRect</code></td><td></td><td>Pointer to a <strong>GpRectF</strong> structure that specifies the portion of the image to be drawn.</td></tr><tr><td><code>pMatrix</code></td><td></td><td>Pointer to a <strong>Matrix</strong> object that specifies the parallelogram in which the image portion is rendered. The destination parallelogram is calculated by applying the affine transformation stored in the matrix to the source rectangle.</td></tr><tr><td><code>pEffect</code></td><td></td><td>Pointer to a instance of a descendant of the <strong>CGpEffect</strong> class. The descendant specifies an effect or adjustment (for example, a change in contrast) that is applied to the image before rendering. The image is not permanently altered by the effect.</td></tr><tr><td><code>imageAttributes</code></td><td></td><td>Pointer to an <strong>ImageAttributes</strong> object that specifies color adjustments to be applied when the image is rendered. Can be NULL.</td></tr><tr><td><code>srcUnit</code></td><td></td><td>Element of the <strong>GpUnit</strong> enumeration that specifies the unit of measure for the source rectangle.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>If the function succeeds, it returns <strong>StatusOk</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h2>Description</h2>
+<p>Draws a portion of an image after applying a specified effect.</p>
+<p><strong>Note</strong>: Not yet implemented.</p>
+<h2>Examples</h2>
+<p>' ======================================================================================== ' Draws an image. ' ======================================================================================== SUB Example_DrawImageFX (BYVAL hdc AS HDC)</p>
+<p>' // Create a graphics object from the window device context DIM graphics AS CGpGraphics = hdc ' // Set the scale transform graphics.ScaleTransformForDpi</p>
+<p>' // Create an Image object. DIM image AS CGpBitmap = "climber.jpg" image.SetResolutionForDpi</p>
+<p>' // Get image dimensions DIM nWidth AS UINT = image.GetWidth DIM nHeight AS UINT = image.GetHeight</p>
+<p>' // Define source rectangle using actual image size DIM srcRect AS GpRectF = (0, 0, nWidth, nHeight)</p>
+<p>' // Create transformation matrix ' // Position image at 10, 10. DIM matrix AS CGpMatrix = CGpMatrix(1.0, 0.0, 0.0, 1.0, 10.0, 10.0)</p>
+<p>' // Draw image with effect graphics.DrawImageFX(@image, @srcRect, @matrix, NULL, NULL, UnitPixel)</p>
+<p>END SUB ' ========================================================================================</p>
+<p>' ======================================================================================== ' Draws a portion of an image after applying a blur effect. ' ======================================================================================== SUB Example_DrawImageFX (BYVAL hdc AS HDC)</p>
+<p>' // Create a graphics object from the window device context DIM graphics AS CGpGraphics = hdc ' // Set the scale transform graphics.ScaleTransformForDpi</p>
+<p>' // Create an Image object. DIM image AS CGpBitmap = "climber.jpg" image.SetResolutionForDpi</p>
+<p>' // Get image dimensions DIM nWidth AS UINT = image.GetWidth DIM nHeight AS UINT = image.GetHeight</p>
+<p>' // Define source rectangle using actual image size DIM srcRect AS GpRectF = (0, 0, nWidth, nHeight)</p>
+<p>' // Create transformation matrix DIM matrix AS CGpMatrix = CGpMatrix(1.0, 0.0, 0.0, 1.0, 10.0, 10.0)</p>
+<p>' // Create blur effect DIM pBlurEffect AS CGpBlur DIM blurPrms AS BlurParams = (5.0, CTRUE) pBlurEffect.SetParameters(@blurPrms)</p>
+<p>' // Draw image with effect graphics.DrawImageFX(@image, @srcRect, @matrix, @pBlurEffect, NULL, UnitPixel)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CGpGraphics.inc</code></li><li>Defined in <span class="srcref">AfxNova/CGpGraphics.inc:1199</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Classes/CGpGraphics Classes.md</span></li><li>Topic: <a href="../cgpgraphics-class.html">CGpGraphics Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

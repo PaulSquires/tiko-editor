@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#Pragma Reserve — Help Center</title>
+<meta name="description" content="Preprocessor directive">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/preprocessor/procedures/pragma-reserve.html">
+<meta property="og:title" content="#Pragma Reserve">
+<meta property="og:description" content="Preprocessor directive">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/preprocessor/procedures/pragma-reserve.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/preprocessor/procedures/pragma-reserve.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>#Pragma Reserve<span class="h1kind">keyword</span></h1>
+<p class="lede">Preprocessor directive</p>
+<div class="badges"><a class="badge" href="../index.html">Preprocessor</a><span class="badge">keyword</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>#pragma reserve symbol</code></pre>
+<pre class="code sig"><code>#pragma reserve (extern) symbol</code></pre>
+<pre class="code sig"><code>#pragma reserve (asm) symbol</code></pre>
+<pre class="code sig"><code>#pragma reserve (asm, extern) symbol) or #pragma reserve (extern, asm) symbol)</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>symbol</code></td><td></td><td>symbol name to reserve.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<br>
+<code><b>#pragma reserved</b></code> statements are preprocessor directives that allow user to reserve symbol names by accessing to the internal symbol tables of the fbc compiler:<br>
+<div class="indent"><b>-</b> <code><b>#pragma reserve</b> <i>symbol</i></code><br>
+<div class="indent"><div class="indent">statement will reserve a symbol name in the current scope / namespace and generate an error if the symbol is redefined or used in an expression.<br>
+</div></div><b>-</b> <code><b>#pragma reserve</b> <b>(extern)</b> <i>symbol</i></code><br>
+<div class="indent"><div class="indent">statement will reserve a global symbol name and generate a warning if the reserved symbol is used for a module level procedure or shared variable in the global namespace.<br>
+</div></div><b>-</b> <code><b>#pragma reserve</b> <b>(asm)</b> <i>symbol</i></code><br>
+<div class="indent"><div class="indent">statement will reserve an ASM symbol name in all ASM statements and blocks.<br>
+</div></div><b>-</b> <code><b>#pragma reserve</b> <b>(asm, extern)</b> <i>symbol</i>)</code> or <code><b>#pragma reserve</b> <b>(extern, asm)</b> <i>symbol</i>)</code><br>
+<div class="indent"><div class="indent">Do both  previous statements: this combined statement will reserve a global ASM symbol name and generate a warning if the reserved symbol is used for a module level procedure or shared variable in the global namespace.<br>
+<br>
+</div></div></div>The primary objective with the two first syntaxes is to create a mechanism to help deal with some symbols causing compile errors or run-time crashes.<br>
+Some symbol names in fbc compiler are emitted as-is to the backend compilers (gcc, as, etc) where the symbol name is a reserved keyword by the backend compiler.<br>
+There are typically two outcomes:<br>
+<div class="indent"><b>-</b> compilation error in the backend,<br>
+<b>-</b> bad code generation in the backend (successful compile and unexpected run time crashes).<br>
+</div>Using <code><b>#pragma reserve</b> <i>symbol</i></code> statement allows the fbc compiler to output an error message dedicated to the illegal use of this symbol name in the current scope / namespace.<br>
+Using <code><b>#pragma reserve (extern) </b> <i>symbol</i></code> statement allows the fbc compiler to output a warning message dedicated to the illegal use of this symbol name for a module level procedure or shared variable in the global namespace.<br>
+<br>
+A closely related secondary objective with the third and forth syntax is ASM words used in ASM blocks and statements.<br>
+This allows to add new ASM instruction name in the fbc ASM keywords list (so not yet implicitly reserved by fbc).<br>
+Therefore, using <code><b>#pragma reserve</b> <b>(asm)</b> <i>symbol</i></code> or <code><b>#pragma reserve</b> <b>(asm, extern)</b> <i>symbol</i></code> or any <code><b>#pragma reserve</b> <b>(extern, asm)</b> <i>symbol</i></code> statement allows the fbc compiler to always emit an undecorated ASM instruction symbol name to the backend compiler.<br>
+<br>
+<b>Note:</b> <code><b>#pragma reserve</b> <b>(extern)</b></code> and <code><b>#pragma reserve</b> <b>(asm)</b> (and any combined syntax)</code> throw an error if used in any scope block or procedure.<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Version</h3><br>
+<ul><li> Since fbc 1.09.0<br>
+<br>
+</li></ul>
+<h3>Differences from QB</h3><br>
+<ul><li> New to FreeBASIC<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="pragma.html">#pragma</a></code><br>
+<li> <a href="../../tutorials/programmer-s-guide/preprocessor.html">Preprocessor Overview</a><br>
+<br>
+</li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+Example (for the mechanism only) to prohibit/warn the definition/use of a symbol name:<br>
+<div class="indent"><code><pre class="code"><span>#pragma reserve myName1
+
+#pragma reserve myName2
+
+#pragma reserve myName3
+
+#pragma reserve myName4
+
+#pragma reserve myName5
+
+#pragma reserve (Extern) myName11
+
+#pragma reserve (Extern) myName12
+
+#pragma reserve (Extern) myName13
+
+#pragma reserve (Extern) myName14
+
+#pragma reserve (Extern) myName15
+
+</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>myName1</span>             <span class="tok-cm">'' error: Duplicated definition, myName1 in 'Dim As Integer myName1 ...</span>
+
+<span class="tok-kw">Print</span> <span>myName1</span>                      <span class="tok-cm">'' error: Illegal use of reserved symbol, found 'myName1' in 'Print myName1 ...</span>
+
+
+
+<span class="tok-kw">Scope</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>myName2</span>         <span class="tok-cm">'' OK</span>
+
+    <span class="tok-kw">Print</span> <span>myName2</span>                  <span class="tok-cm">'' OK</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Scope</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>myName11</span>            <span class="tok-cm">'' OK</span>
+
+<span class="tok-kw">Print</span> <span>myName11</span>                     <span class="tok-cm">'' OK</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">Shared</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>myName12</span>     <span class="tok-cm">'' warning: Use of reserved global or backend symbol, myName12</span>
+
+<span class="tok-kw">Print</span> <span>myName12</span>                     <span class="tok-cm">'' OK</span>
+
+
+
+<span class="tok-kw">Namespace</span> <span>N</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>myName3</span>         <span class="tok-cm">'' OK</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>myName13</span>        <span class="tok-cm">'' OK</span>
+
+    <span class="tok-kw">Sub</span> <span>myName4</span><span>()</span>                  <span class="tok-cm">'' OK</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+    <span class="tok-kw">Sub</span> <span>myName14</span><span>()</span>                 <span class="tok-cm">'' OK</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+<span class="tok-kw">Print</span> <span>N.myName3</span>                    <span class="tok-cm">'' OK</span>
+
+<span class="tok-kw">Print</span> <span>N.myName13</span>                   <span class="tok-cm">'' OK</span>
+
+<span>N.myName4</span><span>()</span>                        <span class="tok-cm">'' OK</span>
+
+<span>N.myName14</span><span>()</span>                       <span class="tok-cm">'' OK</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>myName5</span><span>()</span>                      <span class="tok-cm">'' error: Duplicated definition, before ''' in 'Sub myName4() ...</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+<span>myName5</span><span>()</span>                          <span class="tok-cm">'' error: Illegal use of reserved symbol, found 'myName4' in 'myName4() ...</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>myName15</span><span>()</span>                     <span class="tok-cm">'' warning: Use of reserved global or backend symbol, myName14</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+<span>myName15</span><span>()</span>                         <span class="tok-cm">'' OK</span></pre></code><br>
+</div>Suppose that 'xyz' is a new ASM instruction not yet entered in the fbc ASM keywords list (so not yet implicitly reserved by fbc), and this 'xyz' symbol is also used to define a global variable name:<br>
+<div class="indent"><b>-</b> thus fbc emits to the backend compiler a decorated 'xyz' symbol (<code><b>XYZ$</b></code>) in the inserted ASM block:<br>
+<div class="indent"><div class="indent"><code><pre class="code"><span class="tok-cm">'' for x86_64</span>
+
+
+
+<span>#cmdline &quot;-gen gas64 -r&quot;
+
+</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">Shared</span> <span>xyz</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>proc</span> <span class="tok-kw">Naked</span><span>()</span>
+
+    <span class="tok-kw">Asm</span>
+
+        <span>xyz</span>
+
+        <span>ret</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Asm</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-cm">/'</span>
+
+<span class="tok-cm">OUTPUT in the .asm file:</span>
+
+
+
+<span class="tok-cm">   .intel_syntax noprefix</span>
+
+<span class="tok-cm">   .section .text</span>
+
+<span class="tok-cm">   .text</span>
+
+<span class="tok-cm">   .globl PROC</span>
+
+<span class="tok-cm">PROC:</span>
+
+<span class="tok-cm">   .L_0004:</span>
+
+<span class="tok-cm">   XYZ$</span>
+
+<span class="tok-cm">   ret</span>
+
+<span class="tok-cm">   .L_0005:</span>
+
+<span class="tok-cm">   ret</span>
+
+<span class="tok-cm">.....</span>
+
+
+
+<span class="tok-cm">'/</span></pre></code><br>
+</div></div><b>-</b> after reserving the 'xyz' ASM symbol, fbc now emits to the backend compiler an undecorated 'xyz' symbol (<code><b>xyz</b></code>) in the inserted ASM block:<br>
+<div class="indent"><div class="indent"><code><pre class="code"><span class="tok-cm">'' for x86_64</span>
+
+
+
+<span>#cmdline &quot;-gen gas64 -r&quot;
+
+#pragma reserve(Asm) xyz
+
+</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">Shared</span> <span>xyz</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>proc</span> <span class="tok-kw">Naked</span><span>()</span>
+
+    <span class="tok-kw">Asm</span>
+
+        <span>xyz</span>
+
+        <span>ret</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Asm</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-cm">/'</span>
+
+<span class="tok-cm">OUTPUT in the .asm file:</span>
+
+
+
+<span class="tok-cm">   .intel_syntax noprefix</span>
+
+<span class="tok-cm">   .section .text</span>
+
+<span class="tok-cm">   .text</span>
+
+<span class="tok-cm">   .globl PROC</span>
+
+<span class="tok-cm">PROC:</span>
+
+<span class="tok-cm">   .L_0004:</span>
+
+<span class="tok-cm">   xyz</span>
+
+<span class="tok-cm">   ret</span>
+
+<span class="tok-cm">   .L_0005:</span>
+
+<span class="tok-cm">   ret</span>
+
+<span class="tok-cm">.....</span>
+
+
+
+<span class="tok-cm">'/</span></pre></code><br>
+</div></div></div>
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgPpPragmaReserve.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

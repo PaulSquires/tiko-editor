@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CGpImageAttributes.SetGamma — Help Center</title>
+<meta name="description" content="Sets the gamma value for a specified category.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpimageattributes/cgpimageattributes-setgamma.html">
+<meta property="og:title" content="CGpImageAttributes.SetGamma">
+<meta property="og:description" content="Sets the gamma value for a specified category.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpimageattributes/cgpimageattributes-setgamma.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-classes/cgpimageattributes/cgpimageattributes-setgamma.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cgpimage-class.html">CGpImage Class</a></div>
+<h1>CGpImageAttributes.SetGamma<span class="h1kind">method</span></h1>
+<p class="lede">Sets the gamma value for a specified category.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">method</span><span class="badge">CGpImageAttributes.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION SetGamma (BYVAL gamma AS SINGLE, BYVAL nType AS ColorAdjustType = ColorAdjustTypeDefault) AS GpStatus</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>gamma</code></td><td></td><td>The gamma value.</td></tr><tr><td><code>nType</code></td><td></td><td>Optional. Element of the <strong>ColorAdjustType</strong> enumeration that specifies the category for which the color key is cleared. The default value is <strong>ColorAdjustTypeDefault</strong>.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>If the function succeeds, it returns <strong>StatusOk</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h2>Description</h2>
+<p>Sets the gamma value for a specified category.</p>
+<h2>Remarks</h2>
+<p>An <strong>ImageAttributes</strong> object maintains color and grayscale settings for five adjustment categories: default, bitmap, brush, pen, and text. For example, you can specify a gamma value for the default category, a different gamma value for the bitmap category, and still a different gamma value for the pen category.</p>
+<p>The default color- and grayscale-adjustment settings apply to all categories that don't have adjustment settings of their own. For example, if you never specify any adjustment settings for the pen category, then the default settings apply to the pen category.</p>
+<p>As soon as you specify a color- or grayscale-adjustment setting for a certain category, the default adjustment settings no longer apply to that category. For example, suppose you specify a collection of adjustment settings for the default category. If you set the gamma value for the pen category by passing <strong>ColorAdjustTypePen</strong> to the <strong>SetGamma</strong> method, then none of the default adjustment settings will apply to pens.</p>
+<p>Flat API function: <strong>GdipSetImageAttributesGamma</strong>.</p>
+<h2>Example</h2>
+<p>' ======================================================================================== ' This example applies gamma correction to an image using the SetGamma method. ' ======================================================================================== SUB Example_SetGamma (BYVAL hdc AS HDC)</p>
+<p>' // Create a graphics object from the window device context DIM graphics AS CGpGraphics = hdc ' // Set the scaling factors using the DPI ratios graphics.ScaleTransformForDpi</p>
+<p>' // Create an Image object based on a .bmp file. ' // The image has one stripe with RGB components (160, 0, 0) ' // and one stripe with RGB components (0, 140, 0). DIM image AS CGpBitmap = "climber.jpg" image.SetResolutionForDpi</p>
+<p>' // Get the width and height of the image DIM nWidth AS UINT = image.GetWidth DIM nHeight AS UINT = image.GetHeight</p>
+<p>' // Draw the image with no color adjustment. graphics.DrawImage(@image, 10, 10, nWidth, nHeight)</p>
+<p>' // Create an ImageAttributes object, and set its bitmap threshold to 0.6. DIM imgAttr AS CGpImageAttributes</p>
+<p>' // Apply gamma correction (e.g., 2.2) imgAttr.SetGamma(2.2)</p>
+<p>' // Draw original image graphics.DrawImage(@image, 10, 10, nWidth, nHeight)</p>
+<p>' // Draw gamma-adjusted image DIM rc AS GpRect = (200, 10, nWidth, nHeight) graphics.DrawImage(@image, @rc, 0, 0, nWidth, nHeight, UnitPixel, @imgAttr)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CGpImageAttributes.inc</code></li><li>Defined in <span class="srcref">AfxNova/CGpImageAttributes.inc:118</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Classes/CGpImage Classes.md</span></li><li>Topic: <a href="../cgpimage-class.html">CGpImage Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

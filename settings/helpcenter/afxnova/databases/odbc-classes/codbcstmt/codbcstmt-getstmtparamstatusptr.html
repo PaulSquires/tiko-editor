@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CODBCStmt.GetStmtParamStatusPtr — Help Center</title>
+<meta name="description" content="Gets an SQLUSMALLINT value that points to an array of SQLUSMALLINT values containing status information for each row of parameter values after a call to **Execute** or **ExecDirect**.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/databases/odbc-classes/codbcstmt/codbcstmt-getstmtparamstatusptr.html">
+<meta property="og:title" content="CODBCStmt.GetStmtParamStatusPtr">
+<meta property="og:description" content="Gets an SQLUSMALLINT value that points to an array of SQLUSMALLINT values containing status information for each row of parameter values after a call to **Execute** or **ExecDirect**.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/databases/odbc-classes/codbcstmt/codbcstmt-getstmtparamstatusptr.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/databases/odbc-classes/codbcstmt/codbcstmt-getstmtparamstatusptr.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../codbcstmt-class.html">CODBCStmt Class</a></div>
+<h1>CODBCStmt.GetStmtParamStatusPtr<span class="h1kind">method</span></h1>
+<p class="lede">Gets an SQLUSMALLINT value that points to an array of SQLUSMALLINT values containing status information for each row of parameter values after a call to **Execute** or **ExecDirect**.</p>
+<div class="badges"><a class="badge" href="../../index.html">Databases</a><span class="badge">method</span><span class="badge">CODBCStmt.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GetStmtParamStatusPtr () AS SQLUINTEGER</code></pre>
+<h2>Return value</h2>
+<p>The pointer to the array.</p>
+<p><strong>Result code</strong> (GetLastResult)</p>
+<p>SQL_SUCCESS, SQL_SUCCESS_WITH_INFO, SQL_ERROR, or SQL_INVALID_HANDLE.</p>
+<h2>Description</h2>
+<p>Gets an SQLUSMALLINT value that points to an array of SQLUSMALLINT values containing status information for each row of parameter values after a  call to <strong>Execute</strong> or <strong>ExecDirect</strong>. This field is required only if PARAMSET_SIZE is greater than 1.</p>
+<h2>Remarks</h2>
+<p>The status values can contain the following values:</p>
+<p><strong>SQL_PARAM_SUCCESS</strong>: The SQL statement was successfully executed for this set of parameters.</p>
+<p><strong>SQL_PARAM_SUCCESS_WITH_INFO</strong>: The SQL statement was successfully executed for this set of parameters; however, warning information is available in the diagnostics data structure.</p>
+<p><strong>SQL_PARAM_ERROR</strong>: There was an error in processing this set of parameters. Additional error information is available in the diagnostics data structure.</p>
+<p><strong>SQL_PARAM_UNUSED</strong>: This parameter set was unused, possibly due to the fact that some previous parameter set caused an error that aborted further processing, or because SQL_PARAM_IGNORE was set for that set of parameters in the array specified by the SQL_ATTR_PARAM_OPERATION_PTR.</p>
+<p><strong>SQL_PARAM_DIAG_UNAVAILABLE</strong>: The driver treats arrays of parameters as a monolithic unit and so does not generate this level of error information.</p>
+<p>This statement attribute can be set to a null pointer, in which case the driver does not return parameter status values. This attribute can be set at any time, but the new value is not used until the next time <strong>Execute</strong> or <strong>ExecDirect</strong> is called. Note that setting this attribute can affect the output parameter behavior implemented by the driver.</p>
+<p>Setting this statement attribute sets the SQL_DESC_ARRAY_STATUS_PTR field in the IPD header.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CODBCStmt.inc</code></li><li>Defined in <span class="srcref">AfxNova/COdbcStmt.inc:1815</span></li><li>Documented in <span class="srcref">Databases/ODBC Classes/CODBCStmt Class.md</span></li><li>Topic: <a href="../codbcstmt-class.html">CODBCStmt Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CADORecordset.Sort — Help Center</title>
+<meta name="description" content="Sets or returns a string value that indicates the field names in the `Recordset` on which to sort.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadorecordset/cadorecordset-sort.html">
+<meta property="og:title" content="CADORecordset.Sort">
+<meta property="og:description" content="Sets or returns a string value that indicates the field names in the `Recordset` on which to sort.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadorecordset/cadorecordset-sort.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/databases/ado-classes/cadorecordset/cadorecordset-sort.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cadorecordset-class.html">CADORecordset Class</a></div>
+<h1>CADORecordset.Sort<span class="h1kind">property</span></h1>
+<p class="lede">Sets or returns a string value that indicates the field names in the `Recordset` on which to sort.</p>
+<div class="badges"><a class="badge" href="../../index.html">Databases</a><span class="badge">property</span><span class="badge">CADORecordset.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>PROPERTY Sort() AS DWSTRING</code></pre>
+<pre class="code sig"><code>PROPERTY Sort (BYREF wszCriteria AS WSTRING)</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>wszCriteria</code></td><td></td><td>A value that indicates the field names in the <code>Recordset</code> on which to sort. Each name is separated by a comma, and is optionally followed by a blank and the keyword, ASC, which sorts the field in ascending order, or DESC, which sorts the field in descending order. By default, if no keyword is specified, the field is sorted in ascending order.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>The sorting criteria.</p>
+<h2>Description</h2>
+<p>Indicates one or more field names on which the <code>Recordset</code> is sorted, and whether each field is sorted in ascending or descending order.</p>
+<p>Sets or returns a string value that indicates the field names in the <code>Recordset</code> on which to sort.</p>
+<h2>Remarks</h2>
+<p>This property requires the <strong>CursorLocation</strong> property to be set to <strong>adUseClient</strong>. A temporary index will be created for each field specified in the <strong>Sort</strong> property if an index does not already exist.</p>
+<p>The sort operation is efficient because data is not physically rearranged, but is simply accessed in the order specified by the index.</p>
+<p>When the value of the <strong>Sort</strong> property is anything other than an empty string, the <strong>Sort</strong> property order takes precedence over the order specified in an ORDER BY clause included in the SQL statement used to open the <code>Recordset</code>.</p>
+<p>The <code>Recordset</code> does not have to be opened before accessing the <strong>Sort</strong> property; it can be set at any time after the <code>Recordset</code> object is instantiated.</p>
+<p>Setting the <strong>Sort</strong> property to an empty string will reset the rows to their original order and delete temporary indexes. Existing indexes will not be deleted.</p>
+<p>Suppose a <code>Recordset</code> contains three fields named <em>firstName</em>, <em>middleInitial</em>, and <em>lastName</em>. Set the <strong>Sort</strong> property to the string, "lastName DESC, firstName ASC", which will order the Recordset by last name in descending order, then by first name in ascending order. The middle initial is ignored.</p>
+<p>No field can be named "ASC" or "DESC" because those names conflict with the keywords ASC and DESC. Give a field with a conflicting name an alias by using the AS keyword in the query that returns the Recordset.</p>
+<h2>Example</h2>
+<p>#include "AfxNova/CADODB.inc" USING AfxNova</p>
+<p>' // Open the connection DIM pConnection AS CAdoConnection pConnection.Open "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=biblio.mdb"</p>
+<p>' // Set the cursor location DIM pRecordset AS CAdoRecordset pRecordset.CursorLocation = adUseClient</p>
+<p>' // Open the recordset pRecordset.Open("Publishers", pConnection, adOpenKeyset, adLockOptimistic, adCmdTableDirect)</p>
+<p>' // Set the Sort property pRecordset.Sort = "City ASC, Name ASC"</p>
+<p>' // Parse the recordset DO WHILE NOT pRecordset.EOF ' // Get the contents of the "City" and "Name" columns DIM dvRes1 AS DVARIANT = pRecordset.Collect("City") DIM dvRes2 AS DVARIANT = pRecordset.Collect("Name") PRINT dvRes1 &amp; " " &amp; dvRes2 ' // Fetch the next row IF pRecordset.MoveNext &lt;&gt; S_OK THEN EXIT DO LOOP</p>
+<p>' // === Close the recordset and the connection ' // If you don't close them, they will be closed when the application ends pRecordset.Close pConnection.Close</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CADORecordset.inc</code></li><li>Defined in <span class="srcref">AfxNova/CAdoRecordset.inc:1000</span></li><li>Documented in <span class="srcref">Databases/ADO Classes/CAdoRecordset Class.md</span></li><li>Topic: <a href="../cadorecordset-class.html">CADORecordset Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

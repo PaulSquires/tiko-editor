@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CTextRange2.InRange — Help Center</title>
+<meta name="description" content="Determines whether this range is within or at the same text as a specified range.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/ctextrange2/ctextrange2-inrange.html">
+<meta property="og:title" content="CTextRange2.InRange">
+<meta property="og:description" content="Determines whether this range is within or at the same text as a specified range.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/ctextrange2/ctextrange2-inrange.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-controls/ctextrange2/ctextrange2-inrange.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../ctextrange2-class.html">CTextRange2 Class</a></div>
+<h1>CTextRange2.InRange<span class="h1kind">method</span></h1>
+<p class="lede">Determines whether this range is within or at the same text as a specified range.</p>
+<div class="badges"><a class="badge" href="../../index.html">Windows</a><span class="badge">method</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION InRange (BYVAL pRange AS ITextRange2 PTR) AS LONG</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>pRange</code></td><td></td><td>Text that is compared to the current range.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>The comparison result. The pointer can be null. The method returns <strong>tomTrue</strong> only if the range is in or at the same text as <em>pRange</em>.</p>
+<h2>Description</h2>
+<p>Determines whether this range is within or at the same text as a specified range.</p>
+<h2>Remarks</h2>
+<p>For range2 to be contained in range1, both ranges must be in the same story, and the limits of range2 must satisfy either of the following statements.</p>
+<ul><li>The start and end character positions of range1 are the same as range2. That is, both ranges are degenerate and have identical insertion points.</li><li>Range2 is a nondegenerate range with start and end character positions at or within those of range1.</li></ul>
+<p>The following example shows how to walk one range with another.</p>
+<p>When the <strong>FindText</strong>, <strong>MoveWhile</strong>, and <strong>MoveUntil</strong> method families are used, you can use one range to walk another by specifying the appropriate limit count of characters (for an example, see the Remarks in <strong>Find</strong>).</p>
+<p><strong>IsEqual</strong> is a special case of <strong>InRange</strong> that returns <strong>tomTrue</strong> if the <em>pRange</em> has the same start and end character positions and belongs to the same story.</p>
+<h2>Example</h2>
+<p>range2 = range1.GetDuplicate range2.SetEnd = range2.SetStart       ' Collapse range2 to its start position While range2.InRange(range1)          ' Iterate so long as range2 remains within range1 ...   ' This code would change the range2 character positions Wend</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/CTextRange2.inc:426</span></li><li>Documented in <span class="srcref">Windows/WIndows Controls/RichEdit/CTextRange2 Class.md</span></li><li>Topic: <a href="../ctextrange2-class.html">CTextRange2 Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

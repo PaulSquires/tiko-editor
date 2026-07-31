@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CGpPen.GetBrush — Help Center</title>
+<meta name="description" content="Gets the **Brush** object that is currently set for this **Pen** object.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgppen/cgppen-getbrush.html">
+<meta property="og:title" content="CGpPen.GetBrush">
+<meta property="og:description" content="Gets the **Brush** object that is currently set for this **Pen** object.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgppen/cgppen-getbrush.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-classes/cgppen/cgppen-getbrush.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cgppen-class.html">CGpPen Class</a></div>
+<h1>CGpPen.GetBrush<span class="h1kind">method</span></h1>
+<p class="lede">Gets the **Brush** object that is currently set for this **Pen** object.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">method</span><span class="badge">CGpPen.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GetBrush (BYVAL pBrush AS CGpBrush PTR) AS GpStatus</code></pre>
+<h2>Return value</h2>
+<p>This method returns a pointer to a <strong>Brush</strong> object that is currently used to fill a line.</p>
+<h2>Description</h2>
+<p>Gets the <strong>Brush</strong> object that is currently set for this <strong>Pen</strong> object.</p>
+<h2>Example</h2>
+<p>' ======================================================================================== ' The following example creates a Brush object, creates a Pen object based on the Brush ' object, draws a line with the pen, gets the Brush from the pen, and then uses the Brush ' to fill a rectangle. ' ======================================================================================== SUB Example_GetBrush (BYVAL hdc AS HDC)</p>
+<p>' // Create a graphics object from the window device context DIM graphics AS CGpGraphics = hdc ' // Set the scale transform graphics.ScaleTransformForDpi</p>
+<p>' // Create a HatchBrush object DIM hatchBrush AS CGpHatchBrush = CGpHatchBrush(HatchStyleVertical, ARGB_RED, ARGB_BLUE)</p>
+<p>' // Create a pen, and set the brush for the pen DIM pen AS CGpPen = CGpPen(ARGB_RED, 10) pen.SetBrush(@hatchBrush)</p>
+<p>' // Draw a line with the pen graphics.DrawLine(@pen, 0, 0, 200, 100)</p>
+<p>' // Get the pen's brush, and use that brush to fill a rectangle. DIM pBrush AS CGpBrush pen.GetBrush(@pBrush) graphics.FillRectangle(@pBrush, 0, 100, 200, 100)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CGpPen.inc</code></li><li>Defined in <span class="srcref">AfxNova/CGpPen.inc:332</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Classes/CGpPen Class.md</span></li><li>Topic: <a href="../cgppen-class.html">CGpPen Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

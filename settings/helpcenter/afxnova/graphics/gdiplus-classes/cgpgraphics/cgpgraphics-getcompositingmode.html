@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CGpGraphics.GetCompositingMode — Help Center</title>
+<meta name="description" content="Gets the compositing mode currently set for this **Graphics** object.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpgraphics/cgpgraphics-getcompositingmode.html">
+<meta property="og:title" content="CGpGraphics.GetCompositingMode">
+<meta property="og:description" content="Gets the compositing mode currently set for this **Graphics** object.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpgraphics/cgpgraphics-getcompositingmode.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-classes/cgpgraphics/cgpgraphics-getcompositingmode.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cgpgraphics-class.html">CGpGraphics Class</a></div>
+<h1>CGpGraphics.GetCompositingMode<span class="h1kind">method</span></h1>
+<p class="lede">Gets the compositing mode currently set for this **Graphics** object.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">method</span><span class="badge">CGpGraphics.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GetCompositingMode () AS CompositingMode</code></pre>
+<h2>Return value</h2>
+<p>This method returns an element of the <strong>CompositingMode</strong> enumeration that indicates the compositing mode currently set for this <strong>Graphics</strong> object.</p>
+<h2>Description</h2>
+<p>Gets the compositing mode currently set for this <strong>Graphics</strong> object.</p>
+<h2>Remarks</h2>
+<p>Suppose you create a <strong>SolidBrush</strong> object based on a color that has an alpha component of 192, which is about 75 percent of 255. If your <strong>Graphics</strong> object has its compositing mode set to <strong>CompositingModeSourceOver</strong>, then areas filled with the solid brush are a blend that is 75 percent brush color and 25 percent background color. If your <strong>Graphics</strong> object has its compositing mode set to <strong>CompositingModeSourceCopy</strong>, then the background color is not blended with the brush color. However, the color rendered by the brush has an intensity that is 75 percent of what it would be if the alpha component were 255.</p>
+<h2>Example</h2>
+<p>' ======================================================================================== ' The following example creates a Graphics object and sets its compositing mode to ' CompositingModeSourceCopy. The code creates a SolidBrush object based on a color with an ' alpha component of 128. The code passes the address of that brush to the Graphics.FillRectangle ' method of the Graphics object to fill a rectangle with a color that is not blended with ' the background color. The call to the Graphics.CompositingMode method of the Graphics ' object demonstrates how to obtain the compositing mode (which is already known in this ' case). The code determines whether the compositing mode is CompositingModeSourceCopy and ' if so, changes it to CompositingModeSourceOver. Then the code calls Graphics.FillRectangle ' a second time to fill a rectangle with a color that is a half-and-half blend of the brush ' color and the background color. ' ======================================================================================== SUB Example_CompositingMode (BYVAL hdc AS HDC)</p>
+<p>' // Create a graphics object from the window device context DIM graphics AS CGpGraphics = hdc ' // Set the scale transform graphics.ScaleTransformForDpi</p>
+<p>graphics.SetCompositingMode(CompositingModeSourceCopy) DIM alphaBrush AS CGpSolidBrush = GDIP_ARGB(128, 255, 0, 0) graphics.FillRectangle(@alphaBrush, 0, 0, 100, 100)</p>
+<p>' // Get the compositing mode. DIM compMode AS CompositingMode compMode = graphics.GetCompositingMode</p>
+<p>' // Change the compositing mode if it is CompositingModeSourceCopy. IF compMode = CompositingModeSourceCopy THEN</p>
+<pre class="code"><code>graphics.SetCompositingMode(CompositingModeSourceOver)</code></pre>
+<p>END IF</p>
+<p>graphics.FillRectangle(@alphaBrush, 0, 100, 100, 100)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CGpGraphics.inc</code></li><li>Defined in <span class="srcref">AfxNova/CGpGraphics.inc:153</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Classes/CGpGraphics Classes.md</span></li><li>Topic: <a href="../cgpgraphics-class.html">CGpGraphics Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

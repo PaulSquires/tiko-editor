@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Using FreeBASIC Built Libraries with GCC — Help Center</title>
+<meta name="description" content="Using FreeBASIC Built Libraries with GCC — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/using-freebasic-built-libraries-with-gcc.html">
+<meta property="og:title" content="Using FreeBASIC Built Libraries with GCC">
+<meta property="og:description" content="Using FreeBASIC Built Libraries with GCC — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/using-freebasic-built-libraries-with-gcc.html">
+<link rel="stylesheet" href="../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/using-freebasic-built-libraries-with-gcc.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>Using FreeBASIC Built Libraries with GCC</h1>
+<h2>Documentation</h2>
+
+	<i>by Jeff Marshall</i><br>
+<br>
+Shows how to create a static library with FreeBASIC and then call it from a C program using GCC as the compiler.<br>
+<br>
+This article shows Windows usage throughout, but application to FreeBASIC on other platforms is similar.<br>
+<br>
+<b><u>In this tutorial:</u></b><br>
+<div class="indent"><a href="#S1">A Simple Test</a><br>
+<a href="#S2">FreeBASIC Library With Dependencies</a><br>
+<a href="#S3">Using FreeBASIC as a Smart Linker</a><br>
+<br>
+<br>
+</div><a></a><b><u>A Simple Test</u></b><br>
+<br>
+For this simple test we are going to create a FreeBASIC static library, one without any dependencies.  This will make it easier the first time around, and will allow us to check that the basics are working:<br>
+<br>
+First we need a library, and for for this it will be just a single trivial function that will add two integers together and return the result.  Notice the use of <code><b>cdecl</b></code> and <code>Alias</code> in our procedure definition.  By default, C uses the <code><b>cdecl</b></code> calling convention.  Using <code><b>Alias</b></code> in the FreeBASIC declaration makes matching case sensitivity between FreeBASIC and C easier.  <i>C is case sensitive, whereas FreeBASIC normally is not.</i><br>
+<br>
+<code><pre class="code"><span class="tok-cm">'' mylib1.bas</span>
+
+
+
+<span class="tok-kw">Function</span> <span>Add2Numbers</span> <span class="tok-kw">cdecl</span> <span class="tok-kw">Alias</span> <span>&quot;Add2Numbers&quot;</span> <span>_</span>
+
+    <span>(</span> <span>_</span>
+
+        <span class="tok-kw">ByVal</span> <span>x</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span>_</span>
+
+        <span class="tok-kw">ByVal</span> <span>y</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>_</span>
+
+    <span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+
+
+    <span class="tok-kw">Return</span> <span>x</span> <span>+</span> <span>y</span>
+
+
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span></pre></code><br>
+<br>
+Create a file called <code>mylib1.bas</code> as above and compile it with:<br>
+<br>
+<div class="indent"><code>fbc -lib mylib1.bas</code>.  <br>
+<br>
+</div>This will create our static library <code>libmylib1.a</code>.  Next we need a C program that is going to call the library we just made.  We must add a prototype that exactly matches the function we have in the FreeBASIC library.  The C listing below is our main entry point, will set up a couple of variables to call <code>Add2Numbers()</code>, and print the results.<br>
+<br>
+<code><pre class="code"><span>/*</span> <span>test1.c</span> <span>*/</span>
+
+
+
+<span>#include &lt;stdio.h&gt;
+
+</span>
+
+<span>/*</span> <span>Prototype</span> <span>from</span> <span>libmylib.a</span> <span>*/</span>
+
+<span class="tok-kw">Int</span> <span>Add2Numbers</span><span>(</span> <span class="tok-kw">Int</span> <span>x</span><span>,</span> <span class="tok-kw">Int</span> <span>y</span> <span>);</span>
+
+
+
+<span class="tok-kw">Int</span> <span>main</span> <span>()</span>
+
+<span>{</span>
+
+    <span class="tok-kw">Int</span> <span>a</span> <span>=</span> <span class="tok-nu">5</span><span>;</span>
+
+    <span class="tok-kw">Int</span> <span>b</span> <span>=</span> <span class="tok-nu">7</span><span>;</span>
+
+    <span class="tok-kw">Int</span> <span>c</span> <span>=</span> <span>Add2Numbers</span><span>(</span> <span>a</span><span>,</span> <span>b</span> <span>);</span>
+
+
+
+    <span>printf</span><span>(</span> <span>&quot;a = %d\n&quot;</span><span>,</span> <span>a</span> <span>);</span>
+
+    <span>printf</span><span>(</span> <span>&quot;c = %d\n&quot;</span><span>,</span> <span>b</span> <span>);</span>
+
+    <span>printf</span><span>(</span> <span>&quot;a + b = %d\n&quot;</span><span>,</span> <span>c</span> <span>);</span>
+
+
+
+    <span class="tok-kw">Return</span> <span class="tok-nu">0</span><span>;</span>
+
+<span>}</span></pre></code><br>
+<br>
+To compile this C program using the FreeBASIC library we just made we need to compile <code>test1.c</code> as we normally would but also tell it which libraries are needed.  In our case, it is <code>libmylib1.a</code>.<br>
+<br>
+<div class="indent"><code>gcc test1.c -L . -l mylib1 -o test1.exe</code><br>
+<br>
+</div>The '-L .' option tells the linker to search in the current directory for libraries, and the '-l mylib1' indicates that we want to link with the library we just created.  This is the simplest case becase the libmylib1.a library has no dependencies.  If mylib1.bas needed other libraries, for example the FreeBASIC run-time library libfb.a, we would need to specify that as well to gcc.<br>
+<br>
+<br>
+<a></a><b><u>FreeBASIC Library With Dependencies</u></b><br>
+<br>
+Here we create a FreeBASIC library that uses some features from the FreeBASIC runtime and graphics library.  In this case we will have to specify any additional needed libraries to GCC.<br>
+<br>
+<code><pre class="code"><span class="tok-cm">'' mylib2.bas</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>TestGfx</span> <span class="tok-kw">cdecl</span> <span class="tok-kw">Alias</span> <span>&quot;TestGfx&quot;</span> <span>()</span>
+
+
+
+    <span class="tok-kw">Screen</span> <span class="tok-nu">12</span>
+
+
+
+    <span class="tok-kw">Line</span> <span>(</span><span class="tok-nu">0</span><span>,</span><span class="tok-nu">0</span><span>)-(</span><span class="tok-nu">100</span><span>,</span><span class="tok-nu">100</span><span>),</span><span class="tok-nu">15</span>
+
+
+
+    <span class="tok-kw">Sleep</span>
+
+
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span></pre></code><br>
+<br>
+Create a file called <code>mylib2.bas</code> with the listing above and compile it with:<br>
+<br>
+<div class="indent"><code>fbc -lib mylib2.bas</code>.<br>
+<br>
+</div>This will create our static library <code>libmylib2.a</code>.  Next we need a C program that is going to call the library we just made.  We must add a prototype that exactly matches the function we have in the FreeBASIC library.  This C listing will provide our entry point and just call <code>TestGfx()</code> before terminating.<br>
+<br>
+<code><pre class="code"><span>/*</span> <span>test2.c</span> <span>*/</span>
+
+
+
+<span>void</span> <span>TestGfx</span><span>();</span>
+
+
+
+<span class="tok-kw">Int</span> <span>main</span><span>()</span>
+
+<span>{</span>
+
+
+
+    <span>TestGfx</span><span>();</span>
+
+
+
+    <span class="tok-kw">Return</span> <span class="tok-nu">0</span><span>;</span>
+
+
+
+<span>}</span></pre></code><br>
+<br>
+To compile and link <code>test2.c</code> directly with <code>gcc</code>, not only do we need to tell <code>gcc</code> that we want to link with <code>libmylib2.a</code>, but also every other library that <code>libmylib2.a</code> needs.<br>
+<br>
+<div class="indent"><pre class="code">gcc test2.c -L. -lmylib2 -L"C:\FreeBASIC\lib\win32" "C:\FreeBASIC\lib\win32\fbrt0.o" -lfbgfx -lfb -lgdi32 -o test2.exe</pre><br>
+</div>Depending on what our FreeBASIC library uses, it we may use several additional libraries, we must specify all the names of the libraries on the <code>gcc</code> command line.  In this example, FreeBASIC is located in "C:\FreeBASIC", but you should specify whatever directory you installed FreeBASIC to.  "C:\"FreeBASIC\lib\win32\fbrt0.o" is a special startup file that will initialize the FreeBASIC runtime library.  More specifically, it is initialized after the C runtime library, but before any of our program code is called.  The additional <code>-lfbgfx</code>, <code>-lfb</code>, <code>-lgdi32</code>, are the additional libraries needed to complete linking.  The actual libraries will vary depending on which FreeBASIC runtime functions are used, and which platform, for DOS or Linux, the program is being compiled for.<br>
+<br>
+<br>
+<a></a><b><u>Using FreeBASIC as a Smart Linker</u></b><br>
+<br>
+FreeBASIC has a neat built-in feature that stores a little bit of extra information in the library indicating what compile time options were used, and which dependent libraries are needed.  This is a FreeBASIC only feature, so this kind of capability won't be found when using <code>gcc</code> as the main compiler and linker.<br>
+<br>
+If we reuse the examples from the previous section, <code>mylib2.bas</code> and <code>test2.c</code>, but just go about compiling and linking them differently, we can save ourselves a bunch of typing.  Plus we usually won't have to know or remember what our FreeBASIC built library's dependencies are.  Compile <code>mylib2.bas</code> as before in to a static library.<br>
+<br>
+<div class="indent"><code>fbc -lib mytest2.bas</code><br>
+<br>
+</div>Next we compile our C test program.  Notice the '-c' option for the <code>gcc</code> command line.  This indicates that we are just going to compile the C source, but not link it yet.  <code>test2.o</code> will still have the entry point, but we are going to put it in an object file instead of trying to create an executable right away.<br>
+<br>
+<div class="indent"><code>gcc -c test2.c -o test2.o</code><br>
+<br>
+</div>Lastly, we use <code>fbc</code> to perform the link step.  We are not compiling any basic source files here, but we are going to use the smart linking capabilities of FreeBASIC such that the command line is fairly simple:<br>
+<br>
+<div class="indent"><code>fbc test2.o -l mylib2</code><br>
+<br>
+</div>This will create an executable named <code>test2.exe</code> because <code>test2.o</code> was specified first on the command line.  FreeBASIC will read the extra information stored in <code>libmylib2.a</code> and automatically know which additional libraries to link with.  That's loads easier than using <code>gcc</code> directly, especially when many extra FreeBASIC built libraries are needed.<br>
+<br>
+<br>
+<div>See also</div><div><br>
+<ul><li> <a href="programmer-s-guide/static-libraries.html">Static Libraries</a><br>
+<br>
+</li></ul></div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../index.html">Home</a> ·
+         <a href="../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../nav.js?v=70a6b70236"></script>
+<script src="../../search-index.js"></script>
+<script src="../../assets/app.js?v=456d079659"></script>
+<script src="../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

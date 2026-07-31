@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CDOMessage.AddAttachment — Help Center</title>
+<meta name="description" content="Adds an attachment to the message.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/com/cdomessage/cdomessage-addattachment.html">
+<meta property="og:title" content="CDOMessage.AddAttachment">
+<meta property="og:description" content="Adds an attachment to the message.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/com/cdomessage/cdomessage-addattachment.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/com/cdomessage/cdomessage-addattachment.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cdomessage-class.html">CDOMessage Class</a></div>
+<h1>CDOMessage.AddAttachment<span class="h1kind">method</span></h1>
+<p class="lede">Adds an attachment to the message.</p>
+<div class="badges"><a class="badge" href="../index.html">COM</a><span class="badge">method</span><span class="badge">CDOMessage.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION AddAttachment (BYREF wszURL AS WSTRING, BYREF wszUserName AS WSTRING = &quot;&quot;, BYREF wszPassword AS WSTRING = &quot;&quot;) AS HRESULT</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>wszURL</code></td><td></td><td>The full path and file name of the message to be attached to this message.</td></tr><tr><td><code>wszUserName</code></td><td></td><td>An optional user name to use for authentication when retrieving the resource using Hypertext Transfer Protocol (HTTP). Can be used to set the credentials for both the basic and NTLM authentication mechanisms.</td></tr><tr><td><code>wszPassword</code></td><td></td><td>An optional password to use for authentication when retrieving the resource using the HTTP. Can be used to set the credentials for the basic and NTLM authentication mechanisms.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Adds an attachment to the message.</p>
+<p>Return value</p>
+<p>S_OK or an HRESULT code.</p>
+<h2>Remarks</h2>
+<p>The <strong>AddAttachment</strong> method adds the attachment by first retrieving the resource specified by the Uniform Resource Locator (URL) and then adding the content to the message's <strong>Attachments</strong> collection within a <strong>BodyPart</strong> object.</p>
+<p>The URL prefixes supported in the URL parameter are file://, ftp://, <a href="http://," target="_blank" rel="noopener">http://,</a> and <a href="https://." target="_blank" rel="noopener">https://.</a> The default prefix is file://. This facilitates designation of paths starting with drive letters and of universal naming convention (UNC) paths.</p>
+<p>The <strong>MIMEFormatted</strong> property determines how the attachment is formatted when the message is serialized for delivery to a Simple Mail Transfer Protocol (SMTP) service. If this property is set to True, the attachment is formatted using Multipurpose Internet Mail Extensions (MIME). If the property is set to False, the attachment is added to the serialized content stream in Uuencoded format.</p>
+<p>If you populate the <strong>HTMLBody</strong> property before calling the <strong>AddAttachment</strong> method, any inline images are displayed as part of the message.</p>
+<p>Use the <strong>UserName</strong> and <strong>Password</strong> parameters when you are requesting Web pages using Hypertext Transfer Protocol (HTTP) from a server that requires client authentication. If the Web server supports only the basic authentication mechanism, these credentials must be supplied. If the Web server supports the NTLM authentication mechanism, by default, the current process security context is used to authenticate; however, you can specify alternate credentials for NTLM authentication with the <strong>UserName</strong> and <strong>Password</strong> properties.</p>
+<p><strong>Important</strong>: Storing user names and passwords inside source code can lead to security vulnerabilities in your software. Do not store user names and passwords in your production code.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CDOMessage.inc</code></li><li>Defined in <span class="srcref">AfxNova/CDOMessage.inc:339</span></li><li>Documented in <span class="srcref">COM/CDOMessage Class.md</span></li><li>Topic: <a href="../cdomessage-class.html">CDOMessage Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

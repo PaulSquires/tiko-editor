@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CDOMessage.ConfigValue — Help Center</title>
+<meta name="description" content="Sets the value of the specified configuration field.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/com/cdomessage/cdomessage-configvalue.html">
+<meta property="og:title" content="CDOMessage.ConfigValue">
+<meta property="og:description" content="Sets the value of the specified configuration field.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/com/cdomessage/cdomessage-configvalue.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/com/cdomessage/cdomessage-configvalue.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cdomessage-class.html">CDOMessage Class</a></div>
+<h1>CDOMessage.ConfigValue<span class="h1kind">method</span></h1>
+<p class="lede">Sets the value of the specified configuration field.</p>
+<div class="badges"><a class="badge" href="../index.html">COM</a><span class="badge">method</span><span class="badge">CDOMessage.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION ConfigValue (BYREF wszField AS WSTRING, BYREF wszValue AS WSTRING) AS HRESULT</code></pre>
+<pre class="code sig"><code>FUNCTION ConfigValue (BYREF wszField AS WSTRING, BYVAL value AS LONG) AS HRESULT</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>wszField</code></td><td></td><td>The <code>http://schemas.microsoft.com/cdo/configuration</code> namespace defines the majority of fields used to set configurations for various CDO objects. These configuration fields are set using an implementation of the <strong>IConfiguration.Fields</strong> collection.<br><br>Many CDO objects use information stored in an associated <strong>Configuration</strong> object to define configuration settings. One example is the <strong>Message</strong> object, where you use its associated <strong>Configuration</strong> object to set fields such as sendusing. This field defines whether to send the message using the local SMTP service drop directory (if the local machine has the SMTP service installed), an SMTP service directly over the network. If sending over the network, you set smtpserver to specify the IP address or DNS name of the machine hosting the SMTP service, and optionally, smtpserverport to specify a port value. If credentials are required for connecting to an SMTP service, you can specify them by setting the sendusername and sendpassword.<br>A similar set of fields exists for posting messages using either a local NNTP service pickup directory, or over the network.</td></tr><tr><td><code>wszValue</code></td><td></td><td>The string value to set.</td></tr><tr><td><code>value</code></td><td></td><td>The numeric value to set.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>S_OK (0) or an HRESULT code.</p>
+<h2>Description</h2>
+<p>Sets the value of the specified configuration field.</p>
+<p>All of the names listed below are also defined as string constants in the file <strong>AfxCDOSys.bi</strong> for convenience.</p>
+<h2>Examples</h2>
+<p>cdoAutoPromoteBodyParts = "http://schemas.microsoft.com/cdo/configuration/autopromotebodyparts" cdoFlushBuffersOnWrite = "http://schemas.microsoft.com/cdo/configuration/flushbuffersonwrite" cdoHTTPCookies = "http://schemas.microsoft.com/cdo/configuration/httpcookies" cdoLanguageCode = "http://schemas.microsoft.com/cdo/configuration/languagecode" cdoNNTPAccountName = "http://schemas.microsoft.com/cdo/configuration/nntpaccountname" cdoNNTPAuthenticate = "http://schemas.microsoft.com/cdo/configuration/nntpauthenticate" cdoNNTPConnectionTimeout = "http://schemas.microsoft.com/cdo/configuration/nntpconnectiontimeout" cdoNNTPServer = "http://schemas.microsoft.com/cdo/configuration/nntpserver" cdoNNTPServerPickupDirectory = "http://schemas.microsoft.com/cdo/configuration/nntpserverpickupdirectory" cdoNNTPServerPort = "http://schemas.microsoft.com/cdo/configuration/nntpserverport" cdoNNTPUseSSL = "http://schemas.microsoft.com/cdo/configuration/nntpusessl" cdoPostEmailAddress = "http://schemas.microsoft.com/cdo/configuration/postemailaddress" cdoPostPassword = "http://schemas.microsoft.com/cdo/configuration/postpassword" cdoPostUserName = "http://schemas.microsoft.com/cdo/configuration/postusername" cdoPostUserReplyEmailAddress = "http://schemas.microsoft.com/cdo/configuration/postuserreplyemailaddress" cdoPostUsingMethod = "http://schemas.microsoft.com/cdo/configuration/postusing" cdoSaveSentItems = "http://schemas.microsoft.com/cdo/configuration/savesentitems" cdoSendEmailAddress = "http://schemas.microsoft.com/cdo/configuration/sendemailaddress" cdoSendPassword = "http://schemas.microsoft.com/cdo/configuration/sendpassword" cdoSendUserName = "http://schemas.microsoft.com/cdo/configuration/sendusername" cdoSendUserReplyEmailAddress = "http://schemas.microsoft.com/cdo/configuration/senduserreplyemailaddress" cdoSendUsingMethod = "http://schemas.microsoft.com/cdo/configuration/sendusing" cdoSMTPAccountName = "http://schemas.microsoft.com/cdo/configuration/smtpaccountname" cdoSMTPAuthenticate = "http://schemas.microsoft.com/cdo/configuration/smtpauthenticate" cdoSMTPConnectionTimeout = "http://schemas.microsoft.com/cdo/configuration/smtpconnectiontimeout" cdoSMTPServer = "http://schemas.microsoft.com/cdo/configuration/smtpserver" cdoSMTPServerPickupDirectory = "http://schemas.microsoft.com/cdo/configuration/smtpserverpickupdirectory" cdoSMTPServerPort = "http://schemas.microsoft.com/cdo/configuration/smtpserverport" cdoSMTPUseSSL = "http://schemas.microsoft.com/cdo/configuration/smtpusessl" cdoURLGetLatestVersion = "http://schemas.microsoft.com/cdo/configuration/urlgetlatestversion" cdoURLProxyBypass = "http://schemas.microsoft.com/cdo/configuration/urlproxybypass" cdoURLProxyServer = "http://schemas.microsoft.com/cdo/configuration/urlproxyserver" cdoUseMessageResponseText = "http://schemas.microsoft.com/cdo/configuration/usemessageresponsetext"</p>
+<p>' // Create an instance of the CDOMessage class DIM pMsg AS CDOMessage ' // Configuration pMsg.ConfigValue(cdoSendUsingMethod, CdoSendUsingPort) pMsg.ConfigValue(cdoSMTPServer, "smtp.xxxxx.xxx") pMsg.ConfigValue(cdoSMTPServerPort, 25) pMsg.ConfigValue(cdoSMTPAuthenticate, 1) pMsg.ConfigValue(cdoSendUserName, "xxxx@xxxx.xxx") pMsg.ConfigValue(cdoSendPassword, "xxxxxxxx") pMsg.ConfigValue(cdoSMTPUseSSL, 1) pMsg.ConfigUpdate</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CDOMessage.inc</code></li><li>Defined in <span class="srcref">AfxNova/CDOMessage.inc:137</span></li><li>Documented in <span class="srcref">COM/CDOMessage Class.md</span></li><li>Topic: <a href="../cdomessage-class.html">CDOMessage Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

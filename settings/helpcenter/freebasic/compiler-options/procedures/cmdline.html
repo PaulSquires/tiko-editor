@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#Cmdline — Help Center</title>
+<meta name="description" content="Preprocessor directive">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/compiler-options/procedures/cmdline.html">
+<meta property="og:title" content="#Cmdline">
+<meta property="og:description" content="Preprocessor directive">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/compiler-options/procedures/cmdline.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/compiler-options/procedures/cmdline.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>#Cmdline<span class="h1kind">keyword</span></h1>
+<p class="lede">Preprocessor directive</p>
+<div class="badges"><a class="badge" href="../index.html">Compiler Options</a><span class="badge">keyword</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>#cmdline &quot;args...&quot;</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>args...</code></td><td></td><td>argument list (separated by spaces) of valid <code><a href="../compiler-options.html">Compiler Options</a></code> except <code><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-print.html">-print</a></code> and also generic option <code>-help</code>.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<br>
+<code><b>#cmdline</b></code> is a pre-processor directive that allows specifying <code><a href="../compiler-options.html">compiler options</a></code> from inside the first specified fb source file.  The first source file is the first specified '.bas' file given on the shell or IDE command line invoking the fbc compiler.  <code><b>#cmdline</b></code> directives specified in the first source file affect all source files subsequently compiled.  <code><b>#cmdline</b></code> directives inside source files other than the first source file are ignored.<br>
+<br>
+<code><b>#cmdline</b></code> is only allowed at module scope and can be conditionally processed with <code><a href="../../preprocessor/procedures/if.html">#if</a></code> pre-processor statements.  <code><b>#cmdline</b></code> statements must appear before any declarative or executable statements.  Any <code><b>#cmdline</b></code> statements after the first declarative or executable statement are ignored.<br>
+<br>
+<code><b>#cmdline</b></code> directives are processed on the first pass of the the first '.bas' source file when they appear in the source file.  If an invalid command line option is given in the <code><b>#cmdline</b></code> statment, compilation immediately aborts. <code><b>#cmdline</b></code> directives are ignored on the second pass of the source file even if a conditional <code><a href="../../preprocessor/procedures/if.html">#if</a></code> would add something different on the second pass.<br>
+<br>
+At first fbc initializes as usual and begins parsing the fb source code using the options given from the shell or IDE's <code><i>fbc ...</i></code> command line.  As <code><b>#cmdline</b></code> directives are processed, they are merged into the current compiler configuration.  Depending on the command line options encountered, fbc can continue parsing, restart the parser, or restart fbc (for example: no restart after <code><b>#cmdline "-mt"</b></code>, restart the parser after <code><b>#cmdline "-gen gcc"</b></code>, restart the build after <code><b>#cmdline "-target win64"</b></code>).<br>
+<br>
+fbc has no clever way to detect when all the <code><b>#cmdline</b></code> directives in source have been processed, so there are 2 pseudo command line options to instruct fbc what to next if it is necessary:<br>
+<div class="indent"><code><b>#cmdline "-end"</b></code><br>
+<div class="indent">option to restart parser or build if needed.<br>
+</div><code><b>#cmdline "-restart"</b></code><br>
+<div class="indent">option to always restart build.<br>
+</div></div>If neither <code><b>#cmdline "-end"</b></code> nor <code><b>#cmdline "-restart"</b></code> were encountered, fbc continues processing to the end of the first source file and restarts only if necessary. <br>
+<br>
+Adding <code><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-z.html">-z nocmdline</a></code> in the shell/IDE command line option ignores <code><b>#cmdline</b></code> directives completely in source and allows user to override all source directives using the shell/IDE <code><i>fbc</i></code> compiler command line only.<br>
+<br>
+Adding <code><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-w.html">-w all</a></code> on the shell/IDE command line option allows to get warnings about ignored <code><b>#cmdline</b></code> directives.<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Version</h3><br>
+<ul><li> Since fbc 1.09.0<br>
+<br>
+</li></ul>
+<h3>Differences from QB</h3><br>
+<ul><li> New to FreeBASIC<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <a href="../../using-the-freebasic-compiler/fbc-command-line.html">fbc command-line</a><br>
+<li> <a href="../compiler-options.html">Compiler Options</a><br>
+<li> <a href="../../intrinsic-defines/intrinsic-defines.html">Intrinsic Defines</a><br>
+<br>
+</li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+Add a simple option in source to set the optimization level for GCC:<br>
+<div class="indent"><code><pre class="code"><span>#cmdline &quot;-O 2&quot;
+
+</span>
+
+<span class="tok-kw">Print</span> <span class="tok-kw">__FB_OPTIMIZE__</span>  <span class="tok-cm">'' just to check the optimization level</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+</div>When #cmdline is not processed (no 'invalid command-line option' error message is reported):<br>
+(fbc parser is active when checking for #cmdline, so it's expected that it follows sames rules as any other source code)<br>
+<div class="indent"><code><pre class="code"><span class="tok-cm">'' not processed in single line comments</span>
+
+<span class="tok-cm">'#cmdline &quot;asdf&quot;</span>
+
+
+
+<span class="tok-cm">'' not processed in multi line comments</span>
+
+<span class="tok-cm">/'</span>
+
+<span class="tok-cm">#cmdline &quot;-asdf&quot;</span>
+
+<span class="tok-cm">'/</span>
+
+
+
+<span class="tok-cm">'' not processed in strings</span>
+
+<span class="tok-kw">Print</span> <span>&quot;#cmdline &quot;&quot;-asdf&quot;&quot;&quot;</span>
+
+
+
+<span class="tok-cm">'' not processed if skipping over a conditional</span>
+
+<span>#if 0
+
+</span>   <span>#cmdline &quot;-asdf&quot;
+
+#endif
+
+</span>
+
+<span class="tok-cm">'' not processed when defining macros (as long as the macro is not called)</span>
+
+<span>#macro DOARGS
+
+</span>   <span>#cmdline &quot;-asdf&quot;
+
+#endmacro
+
+</span>
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+</div>Set options in source based on real <code><i>fbc ...</i></code> compiler command line option given:<br>
+(full error checking is activated depending if debug option '-g' was given on the <code><i>fbc ...</i></code> compiler command line)<br>
+<div class="indent"><code><pre class="code"><span class="tok-cm">'' '-g' command line option given on the real ##//fbc ...//## compiler command line?</span>
+
+
+
+<span>#if __FB_DEBUG__
+
+</span>   <span>#cmdline &quot;-exx -w pedantic -w constness&quot;
+
+#endif
+
+</span></pre></code><br>
+</div>Define a global symbol for all modules, starting with two modules: main.bas and tools.bas, and compile both with the single '$ fbc main.bas' compiler command line:<br>
+(this is different than #include tools.bas in main.bas because the two modules are compiled separately then linked)<br>
+<div class="indent"><code><pre class="code"><span class="tok-cm">'' main.bas</span>
+
+<span class="tok-cm">''</span>
+
+<span class="tok-cm">'' compile with:</span>
+
+<span class="tok-cm">''   $ fbc main.bas</span>
+
+<span class="tok-cm">''</span>
+
+<span class="tok-cm">'' and will be same as if we did:</span>
+
+<span class="tok-cm">''   $ fbc main.bas tools.bas -d DoTrickyStuff</span>
+
+
+
+<span class="tok-cm">'' add the tools module</span>
+
+<span>#cmdline &quot;-b tools.bas&quot;  '' or: #cmdline &quot;tools.bas&quot;
+
+</span>
+
+<span class="tok-cm">'' gobal #define for all modules</span>
+
+<span>#cmdline &quot;-d DoTrickyStuff&quot;
+
+</span>
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Function</span> <span>IsTrickyTools</span><span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">Boolean</span>
+
+
+
+<span>#ifdef DoTrickyStuff
+
+</span><span class="tok-kw">Print</span> <span>&quot;DoTrickyStuff is defined in the main.bas module&quot;</span>
+
+<span>#endif
+
+</span>
+
+<span class="tok-kw">If</span> <span>IsTrickyTools</span><span>()</span> <span class="tok-kw">Then</span>
+
+<span class="tok-kw">Print</span> <span>&quot;DoTrickyStuff is defined in the tools.bas module&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+<code><pre class="code"><span class="tok-cm">'' tools.bas</span>
+
+<span class="tok-cm">''</span>
+
+
+
+<span class="tok-kw">Function</span> <span>IsTrickyTools</span><span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">Boolean</span>
+
+   <span>#ifdef DoTrickyStuff
+
+</span>    <span class="tok-kw">Return</span> <span class="tok-kw">True</span>
+
+   <span>#else
+
+</span>      <span class="tok-kw">Return</span> <span class="tok-kw">False</span>
+
+   <span>#endif
+
+</span><span class="tok-kw">End</span> <span class="tok-kw">Function</span></pre></code><br>
+</div>
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgPpcmdline.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CGpGraphics.MeasureCharacterRanges — Help Center</title>
+<meta name="description" content="Gets a set of regions each of which bounds a range of character positions within a string.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpgraphics/cgpgraphics-measurecharacterranges.html">
+<meta property="og:title" content="CGpGraphics.MeasureCharacterRanges">
+<meta property="og:description" content="Gets a set of regions each of which bounds a range of character positions within a string.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpgraphics/cgpgraphics-measurecharacterranges.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-classes/cgpgraphics/cgpgraphics-measurecharacterranges.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cgpgraphics-class.html">CGpGraphics Class</a></div>
+<h1>CGpGraphics.MeasureCharacterRanges<span class="h1kind">method</span></h1>
+<p class="lede">Gets a set of regions each of which bounds a range of character positions within a string.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">method</span><span class="badge">CGpGraphics.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION MeasureCharacterRanges (BYVAL pwszString AS WSTRING PTR, BYVAL length AS INT_, BYVAL pFont AS CGpFont PTR, BYVAL layoutRect AS GpRectF PTR, BYVAL pStringFormat AS CGpStringFormat PTR, BYVAL regionCount AS INT_, BYVAL regions AS CGpRegion PTR) AS GpStatus</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>pwszString</code></td><td></td><td>Pointer to a wide-character string. Important  For bidirectional: languages, such as Arabic, the string length must not exceed 2046 characters.</td></tr><tr><td><code>pFont</code></td><td></td><td>Pointer to a <strong>Font</strong> object that specifies the font characteristics (the family name, size, and style of the font) to be applied to the string.</td></tr><tr><td><code>layoutRect</code></td><td></td><td>Reference to a rectangle that bounds the string.</td></tr><tr><td><code>stringFormat</code></td><td></td><td>Pointer to a <strong>StringFormat</strong> object that specifies the character ranges and layout information, such as alignment, trimming, tab stops, and so forth.</td></tr><tr><td><code>regionCount</code></td><td></td><td>Integer that specifies the number of regions that are expected to be received into the regions array. This number should be equal to the number of character ranges currently in the <strong>StringFormat</strong> object.</td></tr><tr><td><code>regions</code></td><td></td><td>Pointer to an array of <strong>Region</strong> objects that receives the regions, each of which bounds a range of text.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>If the function succeeds, it returns <strong>StatusOk</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h2>Description</h2>
+<p>Gets a set of regions each of which bounds a range of character positions within a string.</p>
+<h2>Example</h2>
+<p>' ======================================================================================== ' The following example defines three ranges of character positions within a string and ' sets those ranges in a StringFormat object. Next, the MeasureCharacterRanges method is ' used to get the three regions of the display that are occupied by the characters that ' are specified by the ranges. This is done for three different layout rectangles to show ' how the regions change according to the layout of the string. Also, on the third repetition ' of this, the string format flags are changed so that the regions measured will include ' trailing spaces. ' ======================================================================================== SUB Example_MeasureCharacterRanges (BYVAL hdc AS HDC)</p>
+<p>' // Create a graphics object from the window device context DIM graphics AS CGpGraphics = hdc ' // Set the scale transform DIM rxRatio AS SINGLE = graphics.GetDpiX / 96 DIM ryRatio AS SINGLE = graphics.GetDpiY / 96 graphics.ScaleTransform(rxRatio, ryRatio)</p>
+<p>' // Create font DIM font AS CGpFont = CGpFont("Times New Roman", AfxGdipPointsToPixels(16, TRUE), FontStyleRegular)</p>
+<p>' // Create brushes and pen DIM blueBrush AS CGpSolidBrush = ARGB_BLUE DIM redBrush AS CGpSolidBrush = GDIP_ARGB(100, 255, 0, 0) DIM blackPen AS CGpPen = CGpPen(ARGB_BLACK, 1.0) blackPen.ScaleTransform(rxRatio, ryRatio)</p>
+<p>' // Create string format and define character ranges DIM stringFormat AS CGpStringFormat DIM charRanges(2) AS GpCharacterRange charRanges(0).First = 3  : charRanges(0).Length = 5 charRanges(1).First = 15 : charRanges(1).Length = 2 charRanges(2).First = 30 : charRanges(2).Length = 15 stringFormat.SetMeasurableCharacterRanges(3, @charRanges(0))</p>
+<p>' // Allocate regions DIM regions(2) AS CGpRegion</p>
+<p>' // Text to measure DIM text AS WSTRING * 128 = "The quick, brown fox easily jumps over the lazy dog."</p>
+<p>' // Measure and draw for layoutRectA DIM layoutRectA AS GpRectF = (20.0, 20.0, 130.0, 130.0) graphics.MeasureCharacterRanges(text, -1, @font, @layoutRectA, @stringFormat, 3, @regions(0)) graphics.DrawString(text, -1, @font, @layoutRectA, @stringFormat, @blueBrush) graphics.DrawRectangle(@blackPen, layoutRectA.X, layoutRectA.Y, layoutRectA.Width, layoutRectA.Height) FOR i AS LONG = 0 TO 2</p>
+<pre class="code"><code>graphics.FillRegion(@redBrush, @regions(i))</code></pre>
+<p>NEXT</p>
+<p>' // Measure and draw for layoutRectB DIM layoutRectB AS GpRectF = (160.0, 20.0, 165.0, 130.0) graphics.MeasureCharacterRanges(text, -1, @font, @layoutRectB, @stringFormat, 3, @regions(0)) graphics.DrawString(text, -1, @font, @layoutRectB, @stringFormat, @blueBrush) graphics.DrawRectangle(@blackPen, layoutRectB.X, layoutRectB.Y, layoutRectB.Width, layoutRectB.Height) FOR i AS LONG = 0 TO 2</p>
+<pre class="code"><code>graphics.FillRegion(@redBrush, @regions(i))</code></pre>
+<p>NEXT</p>
+<p>' // Set trailing space flag and draw for layoutRectC DIM layoutRectC AS GpRectF = (335.0, 20.0, 165.0, 130.0) stringFormat.SetFormatFlags(StringFormatFlagsMeasureTrailingSpaces) graphics.MeasureCharacterRanges(text, -1, @font, @layoutRectC, @stringFormat, 3, @regions(0)) graphics.DrawString(text, -1, @font, @layoutRectC, @stringFormat, @blueBrush) graphics.DrawRectangle(@blackPen, layoutRectC.X, layoutRectC.Y, layoutRectC.Width, layoutRectC.Height) FOR i AS LONG = 0 TO 2</p>
+<pre class="code"><code>graphics.FillRegion(@redBrush, @regions(i))</code></pre>
+<p>NEXT</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CGpGraphics.inc</code></li><li>Defined in <span class="srcref">AfxNova/CGpGraphics.inc:977</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Classes/CGpGraphics Classes.md</span></li><li>Topic: <a href="../cgpgraphics-class.html">CGpGraphics Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

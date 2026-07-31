@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Variable Scope — Help Center</title>
+<meta name="description" content="Variable Scope — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/variable-scope.html">
+<meta property="og:title" content="Variable Scope">
+<meta property="og:description" content="Variable Scope — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/variable-scope.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/programmer-s-guide/variable-scope.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>Variable Scope</h1>
+<h2>Documentation</h2>
+
+	Visibility and access rules for variables and objects<br>
+<br>
+A variable's scope refers to its visibility in a program. A variable is not visible (cannot be accessed) outside the scope in which it was declared. Where and how a variable is declared determines its scope.<br>
+<br>
+In FreeBASIC, there are 4 categories of scope: <b><i>local</i></b>, <b><i>shared</i></b>, <b><i>common</i></b> and <b><i>common shared</i></b>. Each of these scopes has different visibility rules, which are detailed below.<br>
+<br>
+<div>Local Scope</div><div><br>
+Variables declared in the local scope are visible only in the most local instance of the IF, SELECT, WITH, FOR, WHILE, DO, SCOPE, procedure, or module block in which they are declared.<br>
+<br>
+<ul><li> <code><a href="../../procedures/procedures/sub.html">Sub</a></code>, <code><a href="../../procedures/procedures/function.html">Function</a></code>, the main body, and each compound statement implicitly define a new local scope block. <br>
+<li> Explicitly declared variables using <code><a href="../../variable-declarations/procedures/dim.html">Dim</a></code> or <code><a href="../../array-functions/procedures/redim.html">ReDim</a></code> or <code><a href="../../variable-declarations/procedures/static.html">Static</a></code> take the scope of the local most block in which they are declared. <br>
+<li> Implicit variables take the scope of the the local most <code><a href="../../variable-declarations/procedures/scope-end-scope.html">Scope...End Scope</a></code> block in which they are first used, otherwise take the scope of the <code><a href="../../procedures/procedures/sub.html">Sub</a></code>, <code><a href="../../procedures/procedures/function.html">Function</a></code>, or main body in which they are used. <br>
+<br>
+</li></li></li></ul>In the local scope, there is no visibility between module-level code and procedure level code. Furthermore, variables dimensioned within a block decision or loop statement will only be visible within the block in which they are dimensioned. Variables declared in the local scope of a module are not visible in any of the procedures within that module. Similarly, local variables declared inside procedures are not visible in the module-level code, nor any other procedure within the module.<br>
+<br>
+Variables declared inside <code><a href="../../variable-declarations/procedures/scope-end-scope.html">Scope</a></code> blocks may only be declared of local scope, and are not visible outside the block. <code><a href="../../variable-declarations/procedures/scope-end-scope.html">Scope</a></code> blocks, however, inherit the surrounding scope, so local variables declared outside the <code><a href="../../variable-declarations/procedures/scope-end-scope.html">Scope</a></code> block will be visible inside (<i>see example program</i>).<br>
+<br>
+You can declare a variable to be of local scope explicitly by using the <code><a href="../../variable-declarations/procedures/dim.html">Dim</a></code> statement, or implicitly (for only <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang qb</a></i> and <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang fblite</a></i> dialects) by simply introducing the variable (<i>see <a href="implicit-declarations.html">Implicit Declarations</a></i>). The example program <code><b>local.bas</b></code> demonstrates visibility rules for the local scope.<br>
+<br>
+<code><b>local.bas</b></code><br>
+<code><pre class="code"><span class="tok-cm">'' visible only in this module</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>local_moduleLevel1</span>
+
+
+
+<span class="tok-cm">'' OK.</span>
+
+<span class="tok-kw">Print</span> <span>local_moduleLevel1</span>
+
+
+
+<span class="tok-kw">Scope</span>
+
+  <span class="tok-cm">'' OK; SCOPE Blocks inherit outer scope</span>
+
+  <span class="tok-kw">Print</span> <span>local_moduleLevel1</span>
+
+  
+
+  <span class="tok-cm">'' visible only in this SCOPE Block</span>
+
+  <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>local_moduleLevel2</span>
+
+
+
+  <span class="tok-cm">'' OK.</span>
+
+  <span class="tok-kw">Print</span> <span>local_moduleLevel2</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Scope</span>
+
+
+
+<span class="tok-cm">'' Error; can't see inner-SCOPE vars</span>
+
+<span class="tok-cm">'' print local_moduleLevel2</span>
+
+
+
+<span class="tok-kw">Function</span> <span>some_function</span><span>(</span> <span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+  <span class="tok-cm">'' visible only in this function</span>
+
+  <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>local_functionLevel</span>
+
+
+
+  <span class="tok-cm">'' OK.</span>
+
+  <span class="tok-kw">Print</span> <span>local_functionLevel</span>
+
+
+
+  <span class="tok-cm">'' Error; can't see local module-level vars  </span>
+
+  <span class="tok-cm">'' print local_moduleLevel1</span>
+
+
+
+  <span class="tok-cm">'' Error; can't see local module-level vars</span>
+
+  <span class="tok-cm">'' print local_moduleLevel2</span>
+
+
+
+  <span class="tok-kw">Function</span> <span>=</span> <span class="tok-nu">0</span>
+
+
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-cm">'' print local_functionLevel                    '' Error; can't see function_level vars</span>
+
+<span class="tok-kw">End</span> <span class="tok-nu">0</span></pre></code><br>
+<br>
+</div><div>Shared Scope</div><div><br>
+Variables declared in the shared scope of a module are visible to both the module and all procedures of that module.<br>
+<br>
+Unlike the local scope, the shared scope makes module-level variables visible to procedures of that module. In other words, the module <i>shares</i> its declarations with its procedures.<br>
+<br>
+Variables can only be declared to be of shared scope at the module-level. Ie., only modules can share variables. Neither procedures nor <code><a href="../../variable-declarations/procedures/scope-end-scope.html">Scope</a></code> blocks can declare variables in the shared scope, thus variables declared there can only be local to that procedure or block.<br>
+<br>
+You can declare a variable to be of shared scope by using the DIM (or REDIM or STATIC) statement with the <code><a href="../../variable-declarations/procedures/shared.html">Shared</a></code> keyword. The example program <code><b>shared_scope.bas</b></code> demonstrates visibility rules for the shared scope.<br>
+<br>
+<code><b>shared.bas</b></code><br>
+<code><pre class="code"><span class="tok-cm">'' visible throughout this module</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">Shared</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>shared_moduleLevel1</span>
+
+
+
+<span class="tok-cm">'' OK.</span>
+
+<span class="tok-kw">Print</span> <span>shared_moduleLevel1</span>
+
+
+
+<span class="tok-kw">Scope</span>
+
+  <span class="tok-cm">'' OK; can see outer-scope vars</span>
+
+  <span class="tok-kw">Print</span> <span>shared_moduleLevel1</span>
+
+  
+
+  <span class="tok-cm">'' Error; SCOPE-level vars cannot be shared</span>
+
+  <span class="tok-cm">'' dim shared as integer shared_ModuleLevel2</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Scope</span>
+
+
+
+<span class="tok-kw">End</span> <span class="tok-nu">0</span>
+
+
+
+<span class="tok-kw">Function</span> <span>some_function</span><span>(</span> <span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+  <span class="tok-cm">'' OK; can see shared module-level vars</span>
+
+  <span class="tok-kw">Print</span> <span>shared_moduleLevel1</span>
+
+
+
+  <span class="tok-cm">'' Error; function-level vars cannot be shared  </span>
+
+  <span class="tok-cm">'' dim shared as integer sharedFunctionLevel</span>
+
+
+
+  <span class="tok-kw">Function</span> <span>=</span> <span class="tok-nu">0</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span></pre></code><br>
+<br>
+</div><div>Common Scope</div><div><br>
+Variables declared in the common scope are visible to all modules.<br>
+<br>
+Variables declared with <code><a href="../../modularizing/procedures/common.html">Common</a></code> are visible to other modules with a matching <code><a href="../../modularizing/procedures/common.html">Common</a></code> variable declaration.  The variable name declared must match from between modules.<br>
+<br>
+<code><b>module1.bas</b></code><br>
+<code><pre class="code"><span class="tok-cm">'' compile with:</span>
+
+<span class="tok-cm">''    fbc -lang qb module1.bas module2.bas</span>
+
+
+
+<span class="tok-cm">'$lang: &quot;qb&quot;</span>
+
+
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>Print_Values</span><span>()</span>
+
+<span class="tok-kw">Common</span> <span>m1</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+<span class="tok-kw">Common</span> <span>m2</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+                      <span class="tok-cm">' This is executed after all other modules</span>
+
+<span>m1</span> <span>=</span> <span class="tok-nu">1</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;Module1&quot;</span>       
+
+<span class="tok-kw">Print</span> <span>&quot;m1 = &quot;</span><span>;</span> <span>m1</span>     <span class="tok-cm">' m1 = 1 as set in this module</span>
+
+<span class="tok-kw">Print</span> <span>&quot;m2 = &quot;</span><span>;</span> <span>m2</span>     <span class="tok-cm">' m2 = 2 as set in module2</span>
+
+
+
+<span>Print_Values</span></pre></code><br>
+<code><b>module2.bas</b></code><br>
+<code><pre class="code"><span class="tok-kw">Common</span> <span>m1</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+<span class="tok-kw">Common</span> <span>m2</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+
+
+<span>m2</span> <span>=</span> <span class="tok-nu">2</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;Module2&quot;</span>       <span class="tok-cm">' This is executed first</span>
+
+<span class="tok-kw">Print</span> <span>&quot;m1 = &quot;</span><span>;</span> <span>m1</span>     <span class="tok-cm">' m1 = 0 (by default)</span>
+
+<span class="tok-kw">Print</span> <span>&quot;m2 = &quot;</span><span>;</span> <span>m2</span>     <span class="tok-cm">' m2 = 2</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>Print_Values</span><span>()</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;Module2.Print_Values&quot;</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;m1 = &quot;</span><span>;</span> <span>m1</span>   <span class="tok-cm">' Implicit variable = 0, because '-lang qb' use</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;m2 = &quot;</span><span>;</span> <span>m2</span>   <span class="tok-cm">' Implicit variable = 0, because '-lang qb' use</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span></pre></code><br>
+<i><b><code>Output:</code></b></i><br>
+<pre class="code">
+  Module2
+  m1 = 0
+  m2 = 2
+  Module1
+  m1 = 1
+  m2 = 2
+  Module2.Print_Values
+  m1 = 0
+  m2 = 0
+</pre><br>
+</div><div>Common Shared Scope</div><div><br>
+Variables declared in the common shared scope are visible to all modules and all procedures of those modules.<br>
+<br>
+Variables declared with <code><a href="../../modularizing/procedures/common.html">Common</a></code> are visible to other modules with a matching <code><a href="../../modularizing/procedures/common.html">Common</a></code> variable declaration.  The variable name declared must match from between modules.  Within a module the <code><a href="../../variable-declarations/procedures/shared.html">Shared</a></code> declaration modifier gives the variable module scope and makes the variable visible to all subs and functions.<br>
+<br>
+<i><b><code>module3.bas</code></b></i><br>
+<code><pre class="code"><span class="tok-cm">'' compile with:</span>
+
+<span class="tok-cm">''    fbc module3.bas module4.bas</span>
+
+
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>Print_Values</span><span>()</span>
+
+<span class="tok-kw">Common</span> <span>m1</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+<span class="tok-kw">Common</span> <span>m2</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+
+
+<span class="tok-cm">'' This is executed after all other modules</span>
+
+<span>m1</span> <span>=</span> <span class="tok-nu">1</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;Module3&quot;</span>       
+
+<span class="tok-kw">Print</span> <span>&quot;m1 = &quot;</span><span>;</span> <span>m1</span>     <span class="tok-cm">'' m1 = 1 as set in this module</span>
+
+<span class="tok-kw">Print</span> <span>&quot;m2 = &quot;</span><span>;</span> <span>m2</span>     <span class="tok-cm">'' m2 = 2 as set in module2</span>
+
+
+
+<span>Print_Values</span></pre></code><br>
+<code><b>module4.bas</b></code><br>
+<code><pre class="code"><span class="tok-kw">Common</span> <span class="tok-kw">Shared</span> <span>m1</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+<span class="tok-kw">Common</span> <span class="tok-kw">Shared</span> <span>m2</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+
+
+<span>m2</span> <span>=</span> <span class="tok-nu">2</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;Module4&quot;</span>       <span class="tok-cm">'' This is executed first</span>
+
+<span class="tok-kw">Print</span> <span>&quot;m1 = &quot;</span><span>;</span> <span>m1</span>     <span class="tok-cm">'' m1 = 0 (by default)</span>
+
+<span class="tok-kw">Print</span> <span>&quot;m2 = &quot;</span><span>;</span> <span>m2</span>     <span class="tok-cm">'' m2 = 2</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>Print_Values</span><span>()</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;Module4.Print_Values&quot;</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;m1 = &quot;</span><span>;</span> <span>m1</span>   <span class="tok-cm">'' m1 = 1    </span>
+
+  <span class="tok-kw">Print</span> <span>&quot;m2 = &quot;</span><span>;</span> <span>m2</span>   <span class="tok-cm">'' m2 = 2</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span></pre></code><br>
+<i><b><code>Output:</code></b></i><br>
+<pre class="code">
+  Module4
+  m1 = 0
+  m2 = 2
+  Module3
+  m1 = 1
+  m2 = 2
+  Module4.Print_Values
+  m1 = 1
+  m2 = 2
+</pre><br>
+</div><div>Example</div><div><br>
+See examples above.<br>
+<br>
+</div><div>See also</div><div><br>
+<ul><li> <code><a href="../../variable-declarations/procedures/scope-end-scope.html">Scope</a></code><br>
+<li> <code><a href="../../variable-declarations/procedures/dim.html">Dim</a></code><br>
+<li> <code><a href="../../modularizing/procedures/common.html">Common</a></code><br>
+<li> <code><a href="../../variable-declarations/procedures/shared.html">Shared</a></code><br>
+<li> <a href="variables.html">Variables</a><br>
+<li> <a href="implicit-declarations.html">Implicit Declarations</a><br>
+<li> <a href="simple-variable-lifetime-vs-scope.html">Simple Variable Lifetime vs Scope</a><br>
+<li> <a href="dynamic-object-and-data-lifetime.html">Dynamic Object and Data Lifetime</a><br>
+<br>
+</li></li></li></li></li></li></li></li></ul></div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

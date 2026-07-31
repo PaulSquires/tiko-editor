@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PsDatePicker — Help Center</title>
+<meta name="description" content="An owner-drawn date picker: an editable date field with a calendar icon on the right, and a popup calendar the control owns. Typing a date and picking one from the calendar are two routes to the same SYSTEMTIME value.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/pscontrols/psdatepicker.html">
+<meta property="og:title" content="PsDatePicker">
+<meta property="og:description" content="An owner-drawn date picker: an editable date field with a calendar icon on the right, and a popup calendar the control owns. Typing a date and picking one from the calendar are two routes to the same SYSTEMTIME value.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/pscontrols/psdatepicker.html">
+<link rel="stylesheet" href="../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="pscontrols/psdatepicker.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../index.html">Help Center</a><span>›</span><a href="../index.html">PlanetSquires Controls</a></div>
+<h2 id="psdatepicker">PsDatePicker</h2>
+<p>An owner-drawn date picker: an editable date field with a calendar icon on the right, and a popup calendar the control owns. Typing a date and picking one from the calendar are two routes to the same <code>SYSTEMTIME</code> value.</p>
+<p>The field is a real editing control — a borderless <code>PsTextBox</code> — so typing, the caret, selection, undo, paste and the right-click menu all behave the way a text box does. The calendar is a separate top-level window: a month grid with prev/next navigation, a clickable title that drills down from days to months to a decade of years, an optional second month side by side, week-start choice, a min/max range, a today ring, and an optional clickable "Today" band at the foot.</p>
+<p><strong>The host owns date format and parsing.</strong> The control stores a <code>SYSTEMTIME</code> and imposes no locale: you supply a Format callback that renders a date into field text and a Parse callback that resolves typed text back into a date. Without a Format callback it falls back to ISO <code>yyyy-MM-dd</code> so it is usable before you wire anything; without a Parse callback typed text is never accepted and only the calendar can set the date.</p>
+<p>If you want a calendar embedded in your window rather than dropping out of a field, that is <code>PsCalendar</code> — no text box, no popup, and no pump obligation.</p>
+<p>Repository: &lt;<a href="https://github.com/PaulSquires/PsDatePicker&gt;" target="_blank" rel="noopener">https://github.com/PaulSquires/PsDatePicker&gt;</a></p>
+<hr>
+<h3 id="what-it-looks-like">What it looks like</h3>
+<p><img src="PsDatePicker.png" alt="PsDatePicker"></p>
+<p>Four pickers: a single month, two months side by side with the Today footer, a Monday-start calendar limited to a 60-day range, and an empty-allowed field with a host day painter.</p>
+<hr>
+<h3 id="requirements">Requirements</h3>
+<p>This control both <strong>wraps a real child</strong> and <strong>owns a second top-level window</strong>, so its file list is longer than most. Copy all of these:</p>
+<div class="table-wrap"><table><thead><tr><th>File</th><th>What it is</th></tr></thead><tbody><tr><td><code>PsDatePicker.bi</code></td><td>Public header — types, enums, callback typedefs, declarations</td></tr><tr><td><code>PsDatePicker.inc</code></td><td>Implementation</td></tr><tr><td><code>PsTextBox.bi</code> / <code>PsTextBox.inc</code></td><td>The editable field</td></tr><tr><td><code>PsPopupMenu.bi</code> / <code>PsPopupMenu.inc</code></td><td>The field's right-click menu (required by <code>PsTextBox</code>)</td></tr><tr><td><code>PsBufferPaint.bi</code> / <code>PsBufferPaint.inc</code></td><td>Flicker-free GDI+ drawing surface</td></tr><tr><td><code>PsTipHost.bi</code> / <code>PsTipHost.inc</code></td><td>The tooltip backend switch</td></tr><tr><td><code>PsTooltip.bi</code> / <code>PsTooltip.inc</code></td><td>The optional owner-drawn tooltip backend (required by <code>PsTipHost</code>)</td></tr></tbody></table></div>
+<p>It also needs the AfxNova framework on the include path (<code>fbc -i "C:\dev"</code> if AfxNova lives at <code>C:\dev\AfxNova</code>).</p>
+<h4 id="include-order">Include order</h4>
+<p><code>PsDatePicker.bi</code> names types from <code>PsBufferPaint</code>, <code>PsTipHost</code> and <code>PsTextBox</code> and includes those headers itself, but the <strong>implementations</strong> must be pulled in ahead of it, in this order:</p>
+<pre class="code" data-lang="freebasic"><code>#include once "windows.bi"
+#include once "AfxNova\CWindow.inc"
+#include once "AfxNova\AfxStr.inc"
+#include once "AfxNova\AfxGdiplus.inc"
+using AfxNova
+
+#include once "PsBufferPaint.inc"
+#include once "PsPopupMenu.inc"
+#include once "PsTextBox.inc"
+#include once "PsDatePicker.inc"</code></pre>
+<p><code>PsDatePicker.inc</code> includes <code>PsTipHost.inc</code> (and through it <code>PsTooltip.inc</code>) for you, so those two need no line of their own — but the files must be present.</p>
+<h4 id="initialise-gdi">Initialise GDI+</h4>
+<p>The control renders through GDI+. Bracket your message loop with <code>AfxGdipInit</code> and <code>AfxGdipShutdown</code>, or it draws nothing at all:</p>
+<pre class="code" data-lang="freebasic"><code>dim as ULONG_PTR gdipToken = AfxGdipInit()
+' ... create windows, run the message loop ...
+AfxGdipShutdown( gdipToken )</code></pre>
+<p><code>AfxGdipShutdown</code> must come <strong>after</strong> every window is destroyed.</p>
+<h4 id="do-not-name-anything-ok">Do not name anything <code>ok</code></h4>
+<p>GDI+ defines <code>Ok = 0</code> as a <code>Status</code> enum value in namespace <code>AfxNova</code>, and your host almost certainly says <code>using AfxNova</code>. Any identifier of your own called <code>ok</code> becomes a duplicate definition the moment you adopt this control. Use <code>bOK</code>.</p>
+<h4 id="message-pump--psdatepicker_filtermessage-is-not-optional">Message pump — <code>PsDatePicker_FilterMessage</code> is NOT optional</h4>
+<pre class="code" data-lang="freebasic"><code>dim uMsg as MSG
+do while GetMessage(@uMsg, null, 0, 0)
+    if PsDatePicker_FilterMessage( @uMsg ) then continue do
+    TranslateMessage @uMsg
+    DispatchMessage @uMsg
+loop</code></pre>
+<p>One call discharges three obligations at once:</p>
+<ol><li>it forwards to <code>PsTextBox_FilterMessage</code>, without which the field's right-click menu has no keyboard navigation and never closes on an outside click;</li><li>it dismisses the open calendar on <strong>Esc</strong> and on a click outside it — the popup never takes activation, so it cannot see either event itself;</li><li>it arms a one-shot guard so that an icon click which just dismissed the calendar does not instantly reopen it.</li></ol>
+<p>Skip the call and the calendar becomes a popup you can only close by picking a date.</p>
+<p>Tab navigation into and out of the field needs no <code>IsDialogMessage</code>: <code>PsTextBox</code> handles <code>VK_TAB</code> itself, and the container carries <code>WS_EX_CONTROLPARENT</code> so that walk can see through it.</p>
+<hr>
+<h3 id="quick-start">Quick start</h3>
+<pre class="code" data-lang="freebasic"><code>dim as HWND hDate = PsDatePicker_Create( hMainWindow, IDC_MYDATE )
+PsDatePicker_SetFont( hDate, hFont )                       ' caller-owned HFONT
+PsDatePicker_SetFormatCallback( hDate, @MyFormat )         ' date -&gt; field text
+PsDatePicker_SetParseCallback( hDate, @MyParse )           ' typed text -&gt; date
+PsDatePicker_SetDateChangedCallback( hDate, @MyChanged )
+
+dim as SYSTEMTIME stNow
+GetLocalTime( @stNow )
+PsDatePicker_SetDate( hDate, PsDatePicker_MakeDate( stNow.wYear, stNow.wMonth, stNow.wDay ) )
+
+' Size it to whatever it asks for, then show it.
+dim as long w, h
+PsDatePicker_GetIdealSize( hDate, w, h )
+SetWindowPos( hDate, NULL, 20, 20, w, h, SWP_NOZORDER )
+ShowWindow( hDate, SW_SHOW )</code></pre>
+<p>And the callbacks it wires:</p>
+<pre class="code" data-lang="freebasic"><code>' date -&gt; display text
+sub MyFormat( byval hCtrl as HWND, byval pDate as SYSTEMTIME ptr, byref sOut as DWSTRING )
+    if pDate = 0 then sOut = "" : exit sub
+    sOut = str(pDate-&gt;wYear) &amp; "-" &amp; format(pDate-&gt;wMonth,"00") &amp; "-" &amp; format(pDate-&gt;wDay,"00")
+end sub
+
+' typed text -&gt; date. Return FALSE for anything you cannot accept.
+function MyParse( byval hCtrl as HWND, byval sText as DWSTRING, byval pDate as SYSTEMTIME ptr ) as boolean
+    if pDate = 0 then return false
+    dim as string s = trim( sText )
+    dim as long y = valint( mid(s, 1, 4) )
+    dim as long m = valint( mid(s, 6, 2) )
+    dim as long d = valint( mid(s, 9, 2) )
+    if (m &lt; 1) orelse (m &gt; 12) then return false
+    if (d &lt; 1) orelse (d &gt; PsDatePicker_DaysInMonth( y, m )) then return false
+    *pDate = PsDatePicker_MakeDate( y, m, d )
+    return true
+end function
+
+sub MyChanged( byval hCtrl as HWND, byval pDate as SYSTEMTIME ptr, byval bHasDate as boolean )
+    if bHasDate = false then exit sub          ' the field was cleared
+    ' pDate is the new value
+end sub</code></pre>
+<hr>
+<h3 id="concepts">Concepts</h3>
+<h4 id="the-handle-is-a-real-hwnd">The handle is a real <code>HWND</code></h4>
+<p><code>PsDatePicker_Create</code> returns an ordinary child window. Position and size it with <code>SetWindowPos</code>, show it with <code>ShowWindow</code>, destroy it with its parent. It is created 0×0 and invisible; nothing appears until you size and show it.</p>
+<h4 id="format-and-parse-must-round-trip">Format and Parse must round-trip</h4>
+<p>This is the one wiring mistake that produces no error message. On commit the control calls your Parse callback with whatever is in the field; if Parse returns FALSE the field <strong>silently reverts</strong> to the last text the control wrote — which is exactly what it looks like when the user typed nothing at all. So if your Format produces <code>"Jul 24, 2026"</code> and your Parse only understands digits, every commit made after the calendar or a setter wrote the field will fail and revert.</p>
+<p>Assert <code>Parse( Format( d ) ) = d</code> for a few dates when you wire the pair.</p>
+<h4 id="focus-lives-two-levels-down">Focus lives two levels down</h4>
+<p>The field is a <code>PsTextBox</code>, whose own input window is a RichEdit. <code>GetFocus() = hCtrl</code> is <strong>never</strong> true. Ask <code>PsDatePicker_HasFocus</code> instead.</p>
+<h4 id="programmatic-setters-are-silent">Programmatic setters are silent</h4>
+<p><code>SetDate</code>, <code>ClearDate</code>, <code>SetRange</code> and <code>ReformatText</code> never fire <code>DateChangedCallback</code>. It fires only for user action: a typed commit (Enter, or focus leaving the field) or a calendar pick. That is what lets you call a setter from inside your own handler without re-entering it.</p>
+<p><code>DropDownCallback</code> is the deliberate exception: it reports a window-state transition rather than a value change, so it fires for <code>PsDatePicker_DropDown</code> and <code>PsDatePicker_CloseUp</code> too.</p>
+<h4 id="rects-are-derived-never-set">Rects are derived, never set</h4>
+<p><code>rcFrame</code>, <code>rcField</code>, <code>rcDiv</code> and <code>rcIcon</code> are computed from the client rect on the next paint after anything invalidates the layout. You cannot assign them; you read them back with <code>GetFrameRect</code> / <code>GetFieldRect</code> / <code>GetIconRect</code>, each of which returns FALSE while the control has never been given a non-empty size.</p>
+<p>The layout is:</p>
+<pre class="code"><code>icon    = the right nIconWidth pixels, full height
+divider = nDividerThick pixels immediately left of the icon
+field   = from left + nCornerRadius to the divider,
+          inset top and bottom by nBorderThick</code></pre>
+<p>The field is inset by the corner radius so the frame's rounded left corners survive underneath the child's square rectangle. The <code>PsTextBox</code> child is moved to <code>rcField</code> on every layout.</p>
+<h4 id="the-calendar-is-a-popup-the-control-owns">The calendar is a popup the control owns</h4>
+<p>It is created <strong>lazily</strong> — <code>PsDatePicker_GetCalendarHandle</code> returns 0 until the first open — and destroyed with the control. It is a <code>WS_POPUP</code> that never takes activation, so your window stays foreground and keystrokes keep flowing to it; that is why dismissal runs through the pump filter, and why the popup polls the foreground window (every 100 ms) to close itself on alt-tab.</p>
+<p>Only one picker's calendar is open at a time process-wide.</p>
+<p>Every open <strong>re-seeds</strong> the calendar from the control: week start, month count, footer, range, the selected date, and today. The view always reopens on the days grid, and the displayed month is the selected date's month, or today's when there is no date.</p>
+<h4 id="sizes-are-dpi-scaled-once-at-create">Sizes are DPI-scaled once, at Create</h4>
+<p>The icon width, field padding, vertical padding and corner radius are scaled for the monitor's DPI when the control is created; the calendar's own metrics are scaled when the popup is created. Every setter afterwards takes <strong>raw pixels</strong> — scale them yourself. The border and divider thicknesses are rules, not sizes, and are never scaled: a hairline stays a hairline.</p>
+<hr>
+<h3 id="behaviour-and-limits">Behaviour and limits</h3>
+<ul><li><strong>The pump filter is mandatory.</strong> See Requirements.</li><li><strong>The calendar is mouse-driven for selection.</strong> F4, Alt+Down and Down open it (and close it again); Esc, an outside click and alt-tab dismiss it. There are no arrow keys inside the popup — you cannot move the selection from the keyboard.</li><li><strong><code>nMonthCount</code> is 1 or 2.</strong> Anything else is clamped. Only the left panel carries the chevrons and the interactive title; the right one is a static caption.</li><li><strong>The drill-down uses the left panel only.</strong> In two-month mode the right half is blank chrome while the months or years grid is showing.</li><li><strong>The day grid is a fixed 6×7.</strong> The popup never changes height between months.</li><li><strong>Month names and weekday abbreviations in the calendar chrome are English</strong> and cannot be replaced. Only the field's text goes through your Format callback. (<code>PsCalendar</code> takes host-supplied names if you need localized chrome.)</li><li><strong>The range clamps, it does not refuse.</strong> <code>SetDate</code> and a typed commit both clamp into <code>[min, max]</code>; an inverted min/max pair is swapped rather than left unsatisfiable.</li><li><strong>Empty is a legal value</strong> unless you turn it off with <code>SetAllowEmpty(false)</code>, in which case clearing the field reverts to the last valid text on commit.</li><li><strong>There is no keyboard route to the Today footer</strong> — it is a click target.</li><li><strong><code>CS_DBLCLKS</code> is off.</strong> A rapid second click on the icon is a legitimate close-then-reopen and arrives as two <code>WM_LBUTTONDOWN</code>.</li><li><strong>The tooltip is calendar-only.</strong> There is no tip on the field or the icon, and none at all until you set a <code>TooltipCallback</code>.</li></ul>
+<hr>
+<h3 id="api-reference">API reference</h3>
+<h4 id="creation-children-focus">Creation, children, focus</h4>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Behaviour</th></tr></thead><tbody><tr><td><code>PsDatePicker_Create( hWndParent, CtrlID ) as HWND</code></td><td>Creates the control and its embedded field. Returns a real child <code>HWND</code>, sized 0×0 and hidden — size and show it yourself.</td></tr><tr><td><code>PsDatePicker_GetTextBoxHandle( hCtrl ) as HWND</code></td><td>The embedded <code>PsTextBox</code>, for <code>PsTextBox_*</code> styling. Do not give it a border or change its margins: the container owns both.</td></tr><tr><td><code>PsDatePicker_GetCalendarHandle( hCtrl ) as HWND</code></td><td>The popup calendar window, or <strong>0 until it has been opened once</strong>. The window survives a close and is reused.</td></tr><tr><td><code>PsDatePicker_HasFocus( hCtrl ) as boolean</code></td><td>True when the field owns the caret. Use this — <code>GetFocus() = hCtrl</code> is never true.</td></tr></tbody></table></div>
+<h4 id="value">Value</h4>
+<p>All silent; none of these fire <code>DateChangedCallback</code>.</p>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Behaviour</th></tr></thead><tbody><tr><td><code>PsDatePicker_GetDate( hCtrl, byref st ) as boolean</code></td><td>Fills <code>st</code> and returns TRUE, or returns FALSE and leaves <code>st</code> alone when there is no date.</td></tr><tr><td><code>PsDatePicker_SetDate( hCtrl, byref st )</code></td><td>Clamps into the range, normalises to a date-only <code>SYSTEMTIME</code>, and rewrites the field through Format.</td></tr><tr><td><code>PsDatePicker_ClearDate( hCtrl )</code></td><td>Drops to the no-date state and empties the field. Legal regardless of <code>SetAllowEmpty</code> — that governs the <em>user</em>, not you.</td></tr><tr><td><code>PsDatePicker_HasDate( hCtrl ) as boolean</code></td><td>Whether a date is currently set.</td></tr><tr><td><code>PsDatePicker_GetRange( hCtrl, byref stMin, byref stMax, byref bHasMin, byref bHasMax )</code></td><td>Reads the bounds and whether each is in force.</td></tr><tr><td><code>PsDatePicker_SetRange( hCtrl, byref stMin, byref stMax, bHasMin, bHasMax )</code></td><td>Sets either or both bounds. An inverted pair is <strong>swapped</strong>. The current date is re-clamped and the field rewritten, silently. Out-of-range days paint disabled and are unclickable, and the chevrons disable when there is nothing reachable beyond them.</td></tr><tr><td><code>PsDatePicker_GetAllowEmpty( hCtrl ) as boolean</code></td><td>Default TRUE.</td></tr><tr><td><code>PsDatePicker_SetAllowEmpty( hCtrl, bAllow )</code></td><td>FALSE makes a commit on an empty field revert to the last valid text instead of clearing the date.</td></tr><tr><td><code>PsDatePicker_ReformatText( hCtrl )</code></td><td>Re-runs Format on the current date and rewrites the field — call it after your own date-format preference changes.</td></tr></tbody></table></div>
+<h4 id="calendar-behaviour">Calendar behaviour</h4>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Behaviour</th></tr></thead><tbody><tr><td><code>PsDatePicker_GetWeekStart( hCtrl ) as long</code></td><td><code>DTP_SUNDAY</code> (default) or <code>DTP_MONDAY</code>.</td></tr><tr><td><code>PsDatePicker_SetWeekStart( hCtrl, nWeekStart )</code></td><td>Anything that is not <code>DTP_MONDAY</code> is taken as <code>DTP_SUNDAY</code>. Takes effect at the next open.</td></tr><tr><td><code>PsDatePicker_GetMonthCount( hCtrl ) as long</code></td><td>1 (default) or 2.</td></tr><tr><td><code>PsDatePicker_SetMonthCount( hCtrl, nCount )</code></td><td><strong>Clamped to 1..2.</strong> Takes effect at the next open.</td></tr><tr><td><code>PsDatePicker_GetShowToday( hCtrl ) as boolean</code></td><td>Default TRUE.</td></tr><tr><td><code>PsDatePicker_SetShowToday( hCtrl, bShow )</code></td><td>Draw the ring on today's cell. The ring is suppressed on a cell that is also selected.</td></tr><tr><td><code>PsDatePicker_GetShowTodayFooter( hCtrl ) as boolean</code></td><td>Default <strong>FALSE</strong>.</td></tr><tr><td><code>PsDatePicker_SetShowTodayFooter( hCtrl, bShow )</code></td><td>Adds a clickable "Today: …" band at the foot, present in every view. Silent. If the calendar is open it is re-laid-out and <strong>resized immediately</strong>, because the band changes the popup's height.</td></tr><tr><td><code>PsDatePicker_DropDown( hCtrl )</code></td><td>Opens the calendar. A no-op when disabled or already open. Fires <code>DropDownCallback(true)</code> <strong>before</strong> the calendar is built or seeded.</td></tr><tr><td><code>PsDatePicker_CloseUp( hCtrl )</code></td><td>Closes it, hides any tip and stops the foreground poll. Fires <code>DropDownCallback(false)</code> only if it was actually open.</td></tr><tr><td><code>PsDatePicker_IsDroppedDown( hCtrl ) as boolean</code></td><td>Whether the calendar is showing.</td></tr></tbody></table></div>
+<h4 id="layout-and-appearance">Layout and appearance</h4>
+<p>Every size below is in <strong>raw pixels</strong> — scale for DPI yourself.</p>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Behaviour</th></tr></thead><tbody><tr><td><code>PsDatePicker_GetFont( hCtrl ) as HFONT</code></td><td>The text font, or 0.</td></tr><tr><td><code>PsDatePicker_SetFont( hCtrl, hFont )</code></td><td><strong>Caller-owned</strong>; never deleted by the control. Used by the field <em>and</em> the calendar. Re-lays out and repaints.</td></tr><tr><td><code>PsDatePicker_GetIconFont( hCtrl ) as HFONT</code></td><td>The host-supplied glyph font, or 0 when the control's own default is in use.</td></tr><tr><td><code>PsDatePicker_SetIconFont( hCtrl, hFont )</code></td><td>Caller-owned. Pass <strong>0 to restore</strong> the control's default (Segoe Fluent Icons, created at Create and deleted with the control).</td></tr><tr><td><code>PsDatePicker_GetIconGlyph( hCtrl ) as DWSTRING</code></td><td>The current glyph string.</td></tr><tr><td><code>PsDatePicker_SetIconGlyph( hCtrl, sGlyph )</code></td><td>Any string — it is drawn with the icon font. Default is <code>&amp;hE787</code> ("Calendar").</td></tr><tr><td><code>PsDatePicker_GetIconWidth( hCtrl ) as long</code></td><td>Width of the icon cell.</td></tr><tr><td><code>PsDatePicker_SetIconWidth( hCtrl, nWidth )</code></td><td>Negative values clamp to 0. Changes the field width, so it also changes <code>GetIdealSize</code>.</td></tr><tr><td><code>PsDatePicker_GetCornerRadius( hCtrl ) as long</code></td><td>Frame corner radius.</td></tr><tr><td><code>PsDatePicker_SetCornerRadius( hCtrl, nRadius )</code></td><td>Clamped at 0. Also the field's left inset, so it moves the text.</td></tr><tr><td><code>PsDatePicker_GetBorderThickness( hCtrl ) as long</code></td><td>Frame border, default 1.</td></tr><tr><td><code>PsDatePicker_SetBorderThickness( hCtrl, nThickness )</code></td><td>Clamped at 0. Not DPI-scaled by the control — a hairline stays a hairline.</td></tr><tr><td><code>PsDatePicker_GetIdealSize( hCtrl, byref nWidth, byref nHeight )</code></td><td>Width for the current field text, or for a representative long date (<code>"Wednesday, September 30, 2222"</code>) when the field is empty, plus icon, divider, corner inset and border. Height is one text line plus vertical padding and border. Valid before the control has ever been sized.</td></tr><tr><td><code>PsDatePicker_GetEnabled( hCtrl ) as boolean</code></td><td></td></tr><tr><td><code>PsDatePicker_SetEnabled( hCtrl, isEnabled )</code></td><td>Goes through <code>EnableWindow</code> on the container <strong>and</strong> the field, so the disable is enforced by the system rather than being cosmetic. Disabling closes an open calendar and clears the icon hover.</td></tr><tr><td><code>PsDatePicker_Refresh( hCtrl )</code></td><td>Marks the layout dirty and invalidates — the next paint re-derives every rect.</td></tr></tbody></table></div>
+<h4 id="geometry">Geometry</h4>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Behaviour</th></tr></thead><tbody><tr><td><code>PsDatePicker_GetFrameRect( hCtrl, byref rc ) as boolean</code></td><td>The whole client rect. FALSE if the control has never had a non-empty size.</td></tr><tr><td><code>PsDatePicker_GetFieldRect( hCtrl, byref rc ) as boolean</code></td><td>Where the <code>PsTextBox</code> child sits. Same FALSE rule.</td></tr><tr><td><code>PsDatePicker_GetIconRect( hCtrl, byref rc ) as boolean</code></td><td>The icon cell. Same FALSE rule.</td></tr><tr><td><code>PsDatePicker_HitTest( hCtrl, pt ) as long</code></td><td><strong>1</strong> for a point inside the icon cell, <strong>0</strong> for anything else — including the field, which is a child window and hits nothing here.</td></tr></tbody></table></div>
+<h4 id="colours">Colours</h4>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Behaviour</th></tr></thead><tbody><tr><td><code>PsDatePicker_GetColors( hCtrl, pColors )</code></td><td>Copies the struct out.</td></tr><tr><td><code>PsDatePicker_SetColors( hCtrl, pColors )</code></td><td>Copies it in, pushes the field colours into the embedded <code>PsTextBox</code>, and repaints the control and any open calendar. Read-modify-write: <code>GetColors</code> → assign → <code>SetColors</code>.</td></tr></tbody></table></div>
+<h4 id="callback-registration">Callback registration</h4>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Behaviour</th></tr></thead><tbody><tr><td><code>PsDatePicker_SetParseCallback( hCtrl, userfunc )</code></td><td>Resolve typed text to a date. With none set, typed text is never accepted.</td></tr><tr><td><code>PsDatePicker_SetFormatCallback( hCtrl, usersub )</code></td><td>Render a date into field text. <strong>Immediately re-renders</strong> the current date in the new format.</td></tr><tr><td><code>PsDatePicker_SetDateChangedCallback( hCtrl, usersub )</code></td><td>User-driven value changes only.</td></tr><tr><td><code>PsDatePicker_SetDropDownCallback( hCtrl, usersub )</code></td><td>Calendar opened/closed, programmatic opens included.</td></tr><tr><td><code>PsDatePicker_SetPaintCallback( hCtrl, usersub )</code></td><td>Replace the editing-box painter entirely.</td></tr><tr><td><code>PsDatePicker_SetDayPaintCallback( hCtrl, usersub )</code></td><td>Replace the painter for one calendar day cell.</td></tr><tr><td><code>PsDatePicker_SetMessageCallback( hCtrl, userfunc )</code></td><td>Observe messages.</td></tr><tr><td><code>PsDatePicker_SetTooltipCallback( hCtrl, userfunc )</code></td><td>Supply the text for the day cell under the cursor. <strong>No callback means no tooltip machinery is ever created.</strong></td></tr></tbody></table></div>
+<h4 id="tooltips">Tooltips</h4>
+<p>The calendar's day-cell tip is <strong>tracked</strong>: the control resolves the text, positions the tip on the cell and shows it immediately, rather than letting a dwell decide. It is also <strong>lazy</strong> — nothing is built until a day cell actually asks for a tip, and nothing is built at all unless a <code>TooltipCallback</code> is set.</p>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Behaviour</th></tr></thead><tbody><tr><td><code>PsDatePicker_SetTooltipMode( hDatePicker, nMode ) as boolean</code></td><td><code>PSTIP_MODE_SYSTEM</code> (default, the comctl32 tip) or <code>PSTIP_MODE_PS</code> (<code>PsTooltip</code>). <strong>Refuses</strong> any other value and returns FALSE. The text is unaffected — both backends are fed by the same <code>TooltipCallback</code>.</td></tr><tr><td><code>PsDatePicker_GetTooltipMode( hDatePicker ) as long</code></td><td>The stored mode.</td></tr><tr><td><code>PsDatePicker_GetTooltipHandle( hDatePicker ) as HWND</code></td><td>The comctl32 tooltip window; 0 unless the system backend is current <strong>and</strong> a day cell has already asked for a tip.</td></tr><tr><td><code>PsDatePicker_GetPsTooltipHandle( hDatePicker ) as HWND</code></td><td>The <code>PsTooltip</code> window under the same rule. This is the door to <code>PsTooltip</code>'s own colour, font, style, title and max-width setters — they are not mirrored here.</td></tr></tbody></table></div>
+<p>The mode is remembered on the <strong>picker</strong>, not the popup. The popup's tip is destroyed with the popup, so a mode stored there would revert to the default the second time a user opened the calendar; setting the mode applies to the current popup if there is one and to every later one.</p>
+<h4 id="host-message-pump">Host message pump</h4>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Behaviour</th></tr></thead><tbody><tr><td><code>PsDatePicker_FilterMessage( pMsg ) as boolean</code></td><td>Call once per message, before <code>TranslateMessage</code>. Returns TRUE when the message was consumed. It forwards to <code>PsTextBox_FilterMessage</code>, consumes <strong>Esc</strong> to close an open calendar, and closes the calendar on a button-down outside it — that one returns FALSE so the click still reaches its target, and arms the reopen guard when the click landed on this control. Not optional.</td></tr></tbody></table></div>
+<h4 id="date-helpers">Date helpers</h4>
+<p>Pure functions, safe to call before any control exists. The serial is a day count that makes every month and year rollover fall out of ordinary arithmetic.</p>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Behaviour</th></tr></thead><tbody><tr><td><code>PsDatePicker_IsLeapYear( y ) as boolean</code></td><td>Proleptic Gregorian.</td></tr><tr><td><code>PsDatePicker_DaysInMonth( y, m ) as long</code></td><td>28–31.</td></tr><tr><td><code>PsDatePicker_DateToSerial( y, m, d ) as longint</code></td><td>Day serial for a calendar date.</td></tr><tr><td><code>PsDatePicker_SerialToDate( serial, byref y, byref m, byref d )</code></td><td>The inverse.</td></tr><tr><td><code>PsDatePicker_DowSunday( y, m, d ) as long</code></td><td>Day of week, <strong>0 = Sunday … 6 = Saturday</strong>.</td></tr><tr><td><code>PsDatePicker_LeadingCells( y, m, nWeekStart ) as long</code></td><td>0–6: how many cells of the previous month lead the grid for that month under that week start.</td></tr><tr><td><code>PsDatePicker_MakeDate( y, m, d ) as SYSTEMTIME</code></td><td>A date-only <code>SYSTEMTIME</code> with the time fields zeroed.</td></tr><tr><td><code>PsDatePicker_AddMonths( byref st, delta ) as SYSTEMTIME</code></td><td>Steps whole months, clamping the day to the target month's length (31 Jan + 1 month = 28/29 Feb).</td></tr><tr><td><code>PsDatePicker_DecadeBase( y ) as long</code></td><td>The decade start: 2021 → 2020, 2030 → 2030. The years grid runs from one before this.</td></tr></tbody></table></div>
+<h4 id="test-seam-and-render-probes">Test seam and render probes</h4>
+<p>These drive the real calendar painter into an offscreen buffer, so a host that replaces the day painter can assert its render is sane. They take the <strong>calendar</strong> handle, not the control's.</p>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Behaviour</th></tr></thead><tbody><tr><td><code>PsDatePicker_TestPrepareCalendar( hCtrl, eView, anchorYear, anchorMonth ) as HWND</code></td><td>Builds, seeds and sizes the calendar <strong>without showing it</strong>, sets the view and displayed month, and lays out every rect at the real client size. Returns the calendar handle, or 0.</td></tr><tr><td><code>GetDatePickerCalPointer( hCal ) as PSDATEPICKER_CAL ptr</code></td><td>The popup's private state, for reading calendar geometry (<code>rcDayCell</code>, <code>rcTodayFooter</code>, <code>panelMonth</code>, …). Note the unprefixed name. Read it; do not write it.</td></tr><tr><td><code>PsDatePicker_TestCalendarTones( hCal ) as long</code></td><td>Distinct colours over the whole client, sampled on a stride and capped at 256. A healthy calendar produces many; a flooded one produces 1–2.</td></tr><tr><td><code>PsDatePicker_TestFooterTones( hCal ) as long</code></td><td>The same inside the Today band. <strong>0 when the footer is off</strong> — geometry proves where the band is, not that anything was drawn in it.</td></tr><tr><td><code>PsDatePicker_TestPartBrightness( hCal, nPart ) as long</code></td><td>Brightest pixel in a part: <code>0</code> = prev chevron, <code>1</code> = next chevron, <code>100 + k</code> = day cell <em>k</em> of panel 0. Returns -1 if the calendar is unusable. Use it to prove a disabled chevron or day really renders dimmer — a check on the colour <em>field</em> only proves the field.</td></tr></tbody></table></div>
+<p>A tone floor copied from another control is meaningless: the number depends on what else is inside the rect.</p>
+<hr>
+<h3 id="colors">Colors</h3>
+<p><code>PSDATEPICKER_COLORS</code> is a flat struct of <code>COLORREF</code> fields, all carrying defaults for a dark theme. Read-modify-write it with <code>GetColors</code> / <code>SetColors</code>.</p>
+<h4 id="frame-and-field">Frame and field</h4>
+<div class="table-wrap"><table><thead><tr><th>Field</th><th>Paints</th><th>When</th></tr></thead><tbody><tr><td><code>BackColor</code></td><td>The client behind the rounded frame</td><td>Always — it is what shows through the corners</td></tr><tr><td><code>BorderColor</code></td><td>The frame outline</td><td>Enabled and unfocused</td></tr><tr><td><code>FocusBorderColor</code></td><td>The frame outline</td><td>While the field has the caret</td></tr><tr><td><code>BorderColorDisabled</code></td><td>The frame outline</td><td>Disabled</td></tr><tr><td><code>DividerColor</code></td><td>The hairline between field and icon</td><td>Enabled</td></tr><tr><td><code>DividerColorDisabled</code></td><td>The same hairline</td><td>Disabled</td></tr><tr><td><code>FieldBackColor</code></td><td>The field fill</td><td>Enabled — pushed into the <code>PsTextBox</code></td></tr><tr><td><code>FieldForeColor</code></td><td>The date text</td><td>Enabled — drawn by the RichEdit, not by this control</td></tr><tr><td><code>FieldBackColorDisabled</code></td><td>The field fill</td><td>Disabled</td></tr><tr><td><code>FieldForeColorDisabled</code></td><td>The date text</td><td>Disabled</td></tr></tbody></table></div>
+<h4 id="icon-cell">Icon cell</h4>
+<div class="table-wrap"><table><thead><tr><th>Field</th><th>Paints</th><th>When</th></tr></thead><tbody><tr><td><code>IconColor</code></td><td>The icon cell fill</td><td>At rest. <strong>Defaults equal to <code>FieldBackColor</code></strong>, which is why the cell reads flat until hovered</td></tr><tr><td><code>IconBackColorHot</code></td><td>The icon cell fill</td><td>Cursor over the icon</td></tr><tr><td><code>IconGlyphColor</code></td><td>The glyph</td><td>At rest</td></tr><tr><td><code>IconGlyphColorHot</code></td><td>The glyph</td><td>Cursor over the icon</td></tr><tr><td><code>IconGlyphColorDisabled</code></td><td>The glyph</td><td>Disabled</td></tr></tbody></table></div>
+<h4 id="calendar-chrome">Calendar chrome</h4>
+<div class="table-wrap"><table><thead><tr><th>Field</th><th>Paints</th><th>When</th></tr></thead><tbody><tr><td><code>CalBackColor</code></td><td>The popup background</td><td>Always</td></tr><tr><td><code>CalBorderColor</code></td><td>The popup's outline</td><td>Always</td></tr><tr><td><code>TitleColor</code></td><td>The "March 2021" title</td><td>At rest</td></tr><tr><td><code>TitleColorHot</code></td><td>The title</td><td>Cursor over it (panel 0 only — the right panel's caption is inert)</td></tr><tr><td><code>NavGlyphColor</code></td><td>The ‹ › chevrons</td><td>Enabled</td></tr><tr><td><code>NavGlyphColorHot</code></td><td>A chevron</td><td>Cursor over it</td></tr><tr><td><code>NavGlyphColorDisabled</code></td><td>A chevron</td><td>Nothing reachable in that direction within the range</td></tr><tr><td><code>WeekdayColor</code></td><td>The Su Mo Tu … header row</td><td>Always</td></tr></tbody></table></div>
+<h4 id="day-cells">Day cells</h4>
+<div class="table-wrap"><table><thead><tr><th>Field</th><th>Paints</th><th>When</th></tr></thead><tbody><tr><td><code>DayColor</code></td><td>The day number</td><td>Ordinary weekday of the displayed month</td></tr><tr><td><code>DayColorWeekend</code></td><td>The day number</td><td>Saturday or Sunday of the displayed month</td></tr><tr><td><code>DayColorAdjacent</code></td><td>The day number</td><td>A leading/trailing day from the neighbouring month — <strong>dimmed but still clickable</strong></td></tr><tr><td><code>DayColorDisabled</code></td><td>The day number</td><td>Outside the min/max range, inert</td></tr><tr><td><code>DayBackColorHot</code></td><td>A rounded chip behind the cell</td><td>Cursor over an in-range cell</td></tr><tr><td><code>DayForeColorHot</code></td><td>The day number</td><td>Same</td></tr><tr><td><code>DayBackColorSelected</code></td><td>A rounded chip behind the cell</td><td>The selected day</td></tr><tr><td><code>DayForeColorSelected</code></td><td>The day number</td><td>Same</td></tr><tr><td><code>TodayRingColor</code></td><td>A thin outline on the cell</td><td>Today, when <code>SetShowToday</code> is on and the cell is not selected</td></tr></tbody></table></div>
+<h4 id="today-footer">Today footer</h4>
+<p>Only used when <code>SetShowTodayFooter</code> is on. The band has no fill of its own — it sits on <code>CalBackColor</code> — so these three are the caption colour alone.</p>
+<div class="table-wrap"><table><thead><tr><th>Field</th><th>Paints</th><th>When</th></tr></thead><tbody><tr><td><code>TodayFooterColor</code></td><td>The "Today: …" caption</td><td>At rest, today in range</td></tr><tr><td><code>TodayFooterColorHot</code></td><td>The caption</td><td>Cursor over the band</td></tr><tr><td><code>TodayFooterColorDisabled</code></td><td>The caption</td><td>Today falls outside the min/max range — the band is inert and does not hot-track</td></tr></tbody></table></div>
+<p><strong>Keep <code>DayColorAdjacent</code> and <code>DayColorDisabled</code> clearly apart.</strong> An adjacent day is clickable and navigates to its month; a disabled day does nothing. If the two are close in luminance, a range like "the next 60 days" shows most of the month greyed with no way to tell which greys can be clicked. The defaults sit far apart deliberately.</p>
+<h4 id="day-cell-precedence">Day-cell precedence</h4>
+<p>Background first: <code>selected</code> → <code>hot</code> (and only when not disabled) → nothing. Then the today ring, drawn only when the cell is not selected. Then the number:</p>
+<pre class="code"><code>disabled &gt; selected &gt; hot &gt; adjacent &gt; weekend &gt; ordinary</code></pre>
+<p>Note that <code>disabled</code> beats <code>selected</code> here, and that <code>hot</code> beats <code>adjacent</code> — an out-of-month day under the cursor takes the hot colour.</p>
+<hr>
+<h3 id="callbacks">Callbacks</h3>
+<p>Every typedef carries the <code>DTP_</code> prefix.</p>
+<h4 id="dtp_parsecallbackfunc"><code>DTP_ParseCallbackFunc</code></h4>
+<pre class="code" data-lang="freebasic"><code>function MyParse( byval hCtrl as HWND, byval sText as DWSTRING, byval pDate as SYSTEMTIME ptr ) as boolean</code></pre>
+<p>Called on <strong>commit</strong> — Enter, or focus leaving the field — with the field's current text. Fill <code>*pDate</code> and return TRUE, or return FALSE for text you cannot accept, in which case the field reverts to the last text the control wrote. Empty text never reaches you: the control handles it according to <code>SetAllowEmpty</code>. A date you return is clamped into the range afterwards.</p>
+<blockquote><p><strong><code>sText</code> is <code>byval</code> — copy that signature exactly.</strong> Declaring it <code>byref … as const DWSTRING</code> and then copying it (<code>dim as DWSTRING c = sText</code>, the obvious first line of any parser) <strong>corrupts the process heap</strong>: AfxNova's <code>DWSTRING</code> copy constructor is not const-correct. The crash lands far from the cause, often much later and in unrelated code.</p></blockquote>
+<h4 id="dtp_formatcallbacksub"><code>DTP_FormatCallbackSub</code></h4>
+<pre class="code" data-lang="freebasic"><code>sub MyFormat( byval hCtrl as HWND, byval pDate as SYSTEMTIME ptr, byref sOut as DWSTRING )</code></pre>
+<p>Render a date into field text. Called whenever the control writes the field — a setter, a calendar pick, a successful parse, <code>ReformatText</code>, or <code>SetFormatCallback</code> itself — and also for the Today footer's caption, so the band matches the field above it. With no callback the control falls back to ISO <code>yyyy-MM-dd</code>.</p>
+<h4 id="dtp_datechangedcallbacksub"><code>DTP_DateChangedCallbackSub</code></h4>
+<pre class="code" data-lang="freebasic"><code>sub MyChanged( byval hCtrl as HWND, byval pDate as SYSTEMTIME ptr, byval bHasDate as boolean )</code></pre>
+<p><strong>User action only</strong> — a typed commit or a calendar pick (including the Today footer, which routes through the same commit path, so it fires exactly once). Every programmatic setter is silent. It fires only when the value actually changed. <code>bHasDate</code> is FALSE when the user cleared the field, and <code>pDate</code> then holds the stale previous value — test the flag, not the pointer.</p>
+<h4 id="dtp_dropdowncallbacksub"><code>DTP_DropDownCallbackSub</code></h4>
+<pre class="code" data-lang="freebasic"><code>sub MyDropDown( byval hCtrl as HWND, byval isOpen as boolean )</code></pre>
+<p>The calendar opened or closed, <strong>programmatic opens included</strong>. The opening edge runs before the calendar is created or seeded, which makes it the just-in-time hook for setting a range or a month count that depends on current state. If the popup fails to be created, the closing edge fires immediately so the pairing holds.</p>
+<h4 id="dtp_paintcallbacksub"><code>DTP_PaintCallbackSub</code></h4>
+<pre class="code" data-lang="freebasic"><code>sub MyPaint( byval p as PSDATEPICKER_PAINTINFO ptr )</code></pre>
+<p>Replaces the built-in painter for the <strong>editing box</strong> — frame, divider and icon. It never draws the date text; the RichEdit child does that, on top of whatever you paint. The buffer's background has already been filled with <code>BackColor</code> before you are called.</p>
+<blockquote><p>A callback that fills a rectangle covering the whole control erases everything already drawn. Draw your additions, not a background.</p></blockquote>
+<h5 id="psdatepicker_paintinfo"><code>PSDATEPICKER_PAINTINFO</code></h5>
+<div class="table-wrap"><table><thead><tr><th>Field</th><th>What it is</th></tr></thead><tbody><tr><td><code>hCtrl</code></td><td>The control window</td></tr><tr><td><code>b</code></td><td>The <code>PsBufferPaint</code> surface to draw into</td></tr><tr><td><code>rcClient</code></td><td>The full client rect</td></tr><tr><td><code>rcFrame</code></td><td>The frame — currently the whole client</td></tr><tr><td><code>rcField</code></td><td>Where the <code>PsTextBox</code> child sits; anything you draw here is covered by it</td></tr><tr><td><code>rcDiv</code></td><td>The divider hairline</td></tr><tr><td><code>rcIcon</code></td><td>The icon cell</td></tr><tr><td><code>isEnabled</code></td><td>The control as a whole</td></tr><tr><td><code>isFocused</code></td><td>The field has the caret</td></tr><tr><td><code>isOpen</code></td><td>The calendar is dropped down</td></tr><tr><td><code>iconHot</code></td><td>The cursor is over the icon cell</td></tr><tr><td><code>iconPressed</code></td><td>The icon is being pressed</td></tr></tbody></table></div>
+<h4 id="dtp_daypaintcallbacksub"><code>DTP_DayPaintCallbackSub</code></h4>
+<pre class="code" data-lang="freebasic"><code>sub MyDayPaint( byval p as PSDATEPICKER_DAYPAINTINFO ptr )</code></pre>
+<p>Draws <strong>one</strong> day cell, replacing the built-in day painter for that cell. The cell's background has already been filled with <code>CalBackColor</code>. This is the granular hook — availability shading, appointment dots, per-day colouring.</p>
+<h5 id="psdatepicker_daypaintinfo"><code>PSDATEPICKER_DAYPAINTINFO</code></h5>
+<div class="table-wrap"><table><thead><tr><th>Field</th><th>What it is</th></tr></thead><tbody><tr><td><code>hCtrl</code></td><td>The <strong>picker</strong> control, not the popup</td></tr><tr><td><code>b</code></td><td>The <code>PsBufferPaint</code> surface</td></tr><tr><td><code>rcCell</code></td><td>The cell rect, in calendar client coordinates</td></tr><tr><td><code>stDate</code></td><td>The date this cell represents</td></tr><tr><td><code>dayNumber</code></td><td>1–31, the number to draw</td></tr><tr><td><code>monthIndex</code></td><td>0 = left/only panel, 1 = right panel</td></tr><tr><td><code>isAdjacent</code></td><td>A leading/trailing day of the neighbouring month — dim it, but it is clickable</td></tr><tr><td><code>isWeekend</code></td><td>Saturday or Sunday, from the cell's own date</td></tr><tr><td><code>isToday</code></td><td></td></tr><tr><td><code>isSelected</code></td><td></td></tr><tr><td><code>isHot</code></td><td>The cursor is over this cell (never set for an out-of-range cell)</td></tr><tr><td><code>isDisabled</code></td><td>Outside the min/max range, unclickable</td></tr><tr><td><code>isEnabled</code></td><td>The control as a whole</td></tr></tbody></table></div>
+<h4 id="dtp_messagecallbackfunc"><code>DTP_MessageCallbackFunc</code></h4>
+<pre class="code" data-lang="freebasic"><code>function MyMessage( byval m as PSDATEPICKER_MESSAGEINFO ptr ) as boolean</code></pre>
+<p>Observes messages arriving at the container and at the embedded field. Return TRUE to suppress the control's own handling.</p>
+<p><strong>The return value is ignored for four messages</strong>, because each has already changed state by the time you are offered it, so suppressing it could only leave the control disagreeing with what the system has done: <code>WM_KILLFOCUS</code> (a claimed kill-focus would skip the typed-text commit), <code>WM_LBUTTONUP</code> (a claimed button-up would strand state the control has to unwind), <code>WM_MOUSELEAVE</code> (the hot flag and its repaint happen regardless) and <code>WM_ENABLE</code> (the enabled flag, the field colours and the repaint happen regardless).</p>
+<h5 id="psdatepicker_messageinfo"><code>PSDATEPICKER_MESSAGEINFO</code></h5>
+<div class="table-wrap"><table><thead><tr><th>Field</th><th>What it is</th></tr></thead><tbody><tr><td><code>hCtrl</code></td><td>The control window (even for a message that arrived at the field)</td></tr><tr><td><code>uMsg</code></td><td>The message</td></tr><tr><td><code>wParam</code></td><td></td></tr><tr><td><code>lParam</code></td><td></td></tr></tbody></table></div>
+<h4 id="dtp_tooltipcallbackfunc"><code>DTP_TooltipCallbackFunc</code></h4>
+<pre class="code" data-lang="freebasic"><code>function MyTooltip( byval t as PSDATEPICKER_TOOLTIPINFO ptr ) as boolean</code></pre>
+<p>Supply the tip for the day under the cursor. Fill <code>outText</code> and return TRUE; return FALSE — or leave <code>outText</code> empty — for no tip on that day. Called once per day cell as the cursor moves between cells, not once per mouse move.</p>
+<p><strong>Setting this callback is what turns tooltips on.</strong> With none set, no tip window is ever created.</p>
+<h5 id="psdatepicker_tooltipinfo"><code>PSDATEPICKER_TOOLTIPINFO</code></h5>
+<div class="table-wrap"><table><thead><tr><th>Field</th><th>What it is</th></tr></thead><tbody><tr><td><code>hCtrl</code></td><td>The picker control</td></tr><tr><td><code>stDate</code></td><td>The day under the cursor</td></tr><tr><td><code>isValid</code></td><td>FALSE when the cursor is not over a day cell</td></tr><tr><td><code>outText</code></td><td>Fill this with the tip text; empty means no tip</td></tr></tbody></table></div>
+<hr>
+<h3 id="constants">Constants</h3>
+<h4 id="week-start">Week start</h4>
+<div class="table-wrap"><table><thead><tr><th>Value</th><th>Meaning</th></tr></thead><tbody><tr><td><code>DTP_SUNDAY</code> (0)</td><td>Default</td></tr><tr><td><code>DTP_MONDAY</code> (1)</td><td></td></tr></tbody></table></div>
+<h4 id="calendar-view">Calendar view</h4>
+<div class="table-wrap"><table><thead><tr><th>Value</th><th>Meaning</th></tr></thead><tbody><tr><td><code>DTP_VIEW_DAYS</code> (0)</td><td>The month grid. Every open reseeds to this</td></tr><tr><td><code>DTP_VIEW_MONTHS</code></td><td>A 3×4 grid of the twelve months</td></tr><tr><td><code>DTP_VIEW_YEARS</code></td><td>A 3×4 grid of a decade, starting one year before the decade base</td></tr></tbody></table></div>
+<h4 id="hit-test-parts">Hit-test parts</h4>
+<p>Returned inside <code>DTP_HITRESULT</code> by the calendar's internal hit test, and the vocabulary the <code>nPart</code> arguments of the render probes echo.</p>
+<div class="table-wrap"><table><thead><tr><th>Value</th><th>Meaning</th></tr></thead><tbody><tr><td><code>DTP_HIT_NONE</code></td><td></td></tr><tr><td><code>DTP_HIT_PREV</code> / <code>DTP_HIT_NEXT</code></td><td>The chevrons (panel 0 only)</td></tr><tr><td><code>DTP_HIT_TITLE</code></td><td>The interactive title — zooms out one level</td></tr><tr><td><code>DTP_HIT_DAYCELL</code></td><td><code>index</code> 0–41, <code>panel</code> 0 or 1</td></tr><tr><td><code>DTP_HIT_MONTHCELL</code> / <code>DTP_HIT_YEARCELL</code></td><td><code>index</code> 0–11</td></tr><tr><td><code>DTP_HIT_TODAY</code></td><td>The optional footer band</td></tr></tbody></table></div>
+<p><code>PsDatePicker_HitTest</code> on the <strong>control</strong> is a different, much smaller vocabulary: 1 for the icon cell, 0 for everything else.</p>
+<h4 id="tooltip-modes">Tooltip modes</h4>
+<div class="table-wrap"><table><thead><tr><th>Value</th><th>Meaning</th></tr></thead><tbody><tr><td><code>PSTIP_MODE_SYSTEM</code> (0)</td><td>The comctl32 tracking tip. Default</td></tr><tr><td><code>PSTIP_MODE_PS</code> (1)</td><td><code>PsTooltip</code> — owner-drawn, with wrap, a title band and an icon cell</td></tr></tbody></table></div>
+<h4 id="cross-window-messages">Cross-window messages</h4>
+<p>Sent by the popup to the control. Listed because they pass through a host message callback, not because a host should send them.</p>
+<div class="table-wrap"><table><thead><tr><th>Message</th><th>Meaning</th></tr></thead><tbody><tr><td><code>DTP_CM_DATEPICKED</code></td><td>The user picked a day. <code>lParam</code> is a <code>SYSTEMTIME ptr</code>, valid for the synchronous send only</td></tr><tr><td><code>DTP_CM_CALCLOSED</code></td><td>The popup dismissed itself</td></tr></tbody></table></div>
+<h4 id="layout-defaults">Layout defaults</h4>
+<p>Sizes are DPI-scaled at Create unless noted.</p>
+<div class="table-wrap"><table><thead><tr><th>Constant</th><th>Default</th><th>What it is</th></tr></thead><tbody><tr><td><code>CDTP_DEFAULT_ICONWIDTH</code></td><td>28</td><td>The icon cell</td></tr><tr><td><code>CDTP_DEFAULT_FIELDPAD</code></td><td>6</td><td>Field padding, left and right</td></tr><tr><td><code>CDTP_DEFAULT_VERTPAD</code></td><td>5</td><td>Above and below the text, for <code>GetIdealSize</code></td></tr><tr><td><code>CDTP_DEFAULT_CORNERRADIUS</code></td><td>6</td><td></td></tr><tr><td><code>CDTP_DEFAULT_BORDERTHICK</code></td><td>1</td><td><strong>Not scaled</strong></td></tr><tr><td><code>CDTP_DEFAULT_DIVIDERTHICK</code></td><td>1</td><td><strong>Not scaled</strong></td></tr><tr><td><code>CDTP_DEFAULT_ICONGLYPH</code></td><td><code>&amp;hE787</code></td><td>Segoe Fluent Icons "Calendar"</td></tr><tr><td><code>CDTP_DEFAULT_ICONFONTPT</code></td><td>11</td><td>Point size of the control-created icon font</td></tr><tr><td><code>CDTP_CAL_PAD</code></td><td>8</td><td>Popup padding, all four sides</td></tr><tr><td><code>CDTP_CAL_GUTTER</code></td><td>12</td><td>Between the two month panels</td></tr><tr><td><code>CDTP_CAL_HEADERH</code></td><td>34</td><td>The title/chevron band</td></tr><tr><td><code>CDTP_CAL_CHEVW</code></td><td>28</td><td>Each chevron cell</td></tr><tr><td><code>CDTP_CAL_WEEKDAYH</code></td><td>22</td><td>The weekday header row</td></tr><tr><td><code>CDTP_CAL_FOOTERH</code></td><td>30</td><td>The Today band</td></tr><tr><td><code>CDTP_CAL_CELLMINW</code></td><td>34</td><td>Minimum day-cell width — seven of these set the panel's ideal width</td></tr><tr><td><code>CDTP_CAL_CELLMINH</code></td><td>30</td><td>Minimum day-cell height — six set the ideal height</td></tr><tr><td><code>CDTP_MY_COLS</code> / <code>CDTP_MY_ROWS</code></td><td>3 / 4</td><td>The months and years grids</td></tr></tbody></table></div>
+<h4 id="mouse-wheel">Mouse wheel</h4>
+<p>Over the open calendar, a wheel notch <strong>away</strong> from the user shows the <strong>previous</strong> month; toward the user shows the next. Sub-notch deltas from a precision touchpad accumulate rather than being dropped, and a notch stops at a disabled chevron.</p>
+<hr>
+<h3 id="related-controls">Related controls</h3>
+<ul><li><strong><code>PsTextBox</code></strong> is the editing field. Its docs cover the text behaviour you inherit — caret, selection, undo, paste, the right-click menu — and the reason <code>PsPopupMenu</code> is on the file list. Its <code>FilterMessage</code> obligation is discharged for you by <code>PsDatePicker_FilterMessage</code>.</li><li><strong><code>PsTooltip</code></strong> is the optional tip backend selected by <code>PsDatePicker_SetTooltipMode</code>. Style it through the handle <code>PsDatePicker_GetPsTooltipHandle</code> hands back.</li><li><strong><code>PsCalendar</code></strong> is the embedded, non-popup calendar: the same grid and drill-down as a normal child control, with host-supplied month names, keyboard selection, and no pump obligation.</li></ul>
+<p>GPL-3.0.</p>
+    <footer class="foot">
+      <p>PlanetSquires owner-drawn controls for FreeBASIC / AfxNova. Copyright © Paul Squires, distributed under the MIT License. Documentation generated from each control&#x27;s own README. <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../index.html">Home</a> ·
+         <a href="../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../nav.js?v=70a6b70236"></script>
+<script src="../search-index.js"></script>
+<script src="../assets/app.js?v=456d079659"></script>
+<script src="../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GdipSetPathGradientTransform — Help Center</title>
+<meta name="description" content="Sets the transformation matrix of this path gradient brush.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipsetpathgradienttransform.html">
+<meta property="og:title" content="GdipSetPathGradientTransform">
+<meta property="og:description" content="Sets the transformation matrix of this path gradient brush.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipsetpathgradienttransform.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/procedures/gdipsetpathgradienttransform.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../gdipluspathgradientbrush.html">GdiPlusPathGradientBrush</a></div>
+<h1>GdipSetPathGradientTransform<span class="h1kind">function</span></h1>
+<p class="lede">Sets the transformation matrix of this path gradient brush.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GdipSetPathGradientTransform (BYVAL brush AS GpPathGradient PTR, BYVAL matrix AS GpMatrix PTR) AS GpStatus</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>brush</code></td><td></td><td>[in] Pointer to the <strong>PathGradientBrush</strong> object.</td></tr><tr><td><code>matrix</code></td><td></td><td>[in] Pointer to a variable that specifies the transformation matrix.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Sets the transformation matrix of this path gradient brush.</p>
+<h2>Remarks</h2>
+<p>A <strong>PathGradientBrush</strong> object has a <strong>GraphicsPath</strong> object that serves as the boundary path for the brush. When you paint with a path gradient brush, only the area inside the boundary path is filled. If the brush's transformation matrix is set to represent any transformation other than the identity, then the boundary path is transformed according to that matrix during rendering, and only the area inside the transformed path is filled.</p>
+<h2>Example</h2>
+<p>' ======================================================================================== ' The following example creates a PathGradientBrush object based on a triangular path. The ' GdipFillRectangle function uses the path gradient brush to paint a rectangle that ' contains the triangular path. Next, the code creates a Matrix object that represents a ' composite transformation (rotate, then translate) and passes the address of that Matrix ' object to the GdipSetPathGradientTransform function. The code calls GdipFillRectangle a ' second time to paint the same rectangle using the transformed path gradient brush. ' ======================================================================================== SUB Example_SetPathGradientTransform (BYVAL hdc AS HDC)</p>
+<p>DIM hStatus AS LONG</p>
+<p>' // Create a graphics object from the device context DIM graphics AS GpGraphics PTR hStatus = GdipCreateFromHDC(hdc, @graphics)</p>
+<p>' // Get the DPI scaling ratios DIM dpiX AS SINGLE hStatus = GdipGetDpiX(graphics, @dpiX) DIM rxRatio AS SINGLE = dpiX / 96 DIM dpiY AS SINGLE hStatus = GdipGetDpiY(graphics, @dpiY) DIM ryRatio AS SINGLE = dpiY / 96 ' // Set the scale transform hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)</p>
+<p>' // Creates a gradient brush based on an array of points DIM pts(0 TO 2) AS GpPointF = {(0, 0), (100, 0), (100, 100)} DIM brush AS GpPathGradient PTR hStatus = GdipCreatePathGradient(@pts(0), 3, WrapModeClamp, @brush)</p>
+<pre class="code"><code>' // Sets the surround colors</code></pre>
+<p>DIM  count AS LONG = 3 DIM colors(0 TO 2) AS ARGB = {ARGB_RED, ARGB_LIGHTGREEN, ARGB_BLACK} hStatus = GdipSetPathGradientSurroundColorsWithCount(brush, @colors(0), @count)</p>
+<p>' // Fill an area with the path gradient brush (no transformation). hStatus = GdipFillRectangle(graphics, brush, 0, 0, 200, 200)</p>
+<p>' // Set the transformation for the brush (rotate, then translate). DIM matrix AS GpMatrix PTR hStatus = GdipCreateMatrix2(0, 1, -1, 0, 150, 60, @matrix) hStatus = GdipSetPathGradientTransform(brush, matrix)</p>
+<p>' // Fill the same area with the transformed path gradient brush. hStatus = GdipFillRectangle(graphics, brush, 0, 0, 200, 200)</p>
+<p>' // Cleanup IF matrix THEN GdipDeleteMatrix(matrix) IF brush THEN GdipDeleteBrush(brush) IF graphics THEN GdipDeleteGraphics(graphics)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/AfxGdiPlus.bi:2266</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Flat  Api/GdiPlusPathGradientBrush.md</span></li><li>Topic: <a href="../gdipluspathgradientbrush.html">GdiPlusPathGradientBrush</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

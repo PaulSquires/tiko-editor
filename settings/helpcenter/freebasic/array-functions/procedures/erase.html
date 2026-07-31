@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Erase — Help Center</title>
+<meta name="description" content="Statement to erase arrays">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/array-functions/procedures/erase.html">
+<meta property="og:title" content="Erase">
+<meta property="og:description" content="Statement to erase arrays">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/array-functions/procedures/erase.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/array-functions/procedures/erase.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>Erase<span class="h1kind">sub</span></h1>
+<p class="lede">Statement to erase arrays</p>
+<div class="badges"><a class="badge" href="../index.html">Array Functions</a><span class="badge">sub</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>Declare Sub Erase ( array As Any [, ... ] )</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>array</code></td><td></td><td>An array to be erased.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<br>
+Using <code><b>Erase</b></code> on a fixed-length array resets all elements without freeing the allocated memory.<br>
+In case of objects, there is destruction then re-construction.<br>
+<br>
+Using <code><b>Erase</b></code> on a variable-length array (array already sized) frees the memory allocated for the array elements, but the array remains declared at its same scope level (with the same datatype and number of dimensions), only the high/low bounds values of each dimension are reset (-1/0).<br>
+In case of objects, there is destruction before freeing memory.<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Usage</h3><code><br>
+<b>Erase</b>( <i>array0</i> [, <i>array1</i> ... <i>arrayN</i> ] )<br>
+</code><br>
+
+<h3>Differences from QB</h3><br>
+<ul><li> None<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="../../modularizing/procedures/common.html">Common</a></code><br>
+<li> <code><a href="../../variable-declarations/procedures/dim.html">Dim</a></code><br>
+<li> <code><a href="../../modularizing/procedures/extern.html">Extern</a></code><br>
+<li> <code><a href="lbound.html">LBound</a></code><br>
+<li> <code><a href="redim.html">ReDim</a></code><br>
+<li> <code><a href="../../variable-declarations/procedures/static.html">Static</a></code><br>
+<li> <code><a href="ubound.html">UBound</a></code><br>
+<li> <code><a href="../../variable-declarations/procedures/var.html">Var</a></code><br>
+<br>
+</li></li></li></li></li></li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span>MyArray1</span><span>(</span><span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">10</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+<span class="tok-kw">ReDim</span> <span>MyArray2</span><span>(</span><span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">10</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> 
+
+
+
+<span class="tok-kw">Erase</span> <span>MyArray1</span><span>,</span> <span>MyArray2</span></pre></code><br>
+Example showing the before and after results of single-dimension arrays:<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Dim</span> <span>MyArray1</span><span>(</span><span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">10</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+<span class="tok-kw">ReDim</span> <span>MyArray2</span><span>(</span><span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">10</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;MyArray1&quot;</span><span>,</span> <span class="tok-kw">LBound</span><span>(</span> <span>MyArray1</span> <span>),</span> <span class="tok-kw">UBound</span><span>(</span> <span>MyArray1</span> <span>)</span> <span class="tok-cm">' prints: MyArray1       1             10</span>
+
+<span class="tok-kw">Print</span> <span>&quot;MyArray2&quot;</span><span>,</span> <span class="tok-kw">LBound</span><span>(</span> <span>MyArray2</span> <span>),</span> <span class="tok-kw">UBound</span><span>(</span> <span>MyArray2</span> <span>)</span> <span class="tok-cm">' prints: MyArray2       1             10</span>
+
+
+
+<span class="tok-kw">Erase</span> <span>MyArray1</span><span>,</span> <span>MyArray2</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;MyArray1&quot;</span><span>,</span> <span class="tok-kw">LBound</span><span>(</span> <span>MyArray1</span> <span>),</span> <span class="tok-kw">UBound</span><span>(</span> <span>MyArray1</span> <span>)</span> <span class="tok-cm">' prints: MyArray1       1             10</span>
+
+<span class="tok-kw">Print</span> <span>&quot;MyArray2&quot;</span><span>,</span> <span class="tok-kw">LBound</span><span>(</span> <span>MyArray2</span> <span>),</span> <span class="tok-kw">UBound</span><span>(</span> <span>MyArray2</span> <span>)</span> <span class="tok-cm">' prints: MyArray2       0            -1</span></pre></code><br>
+</div>Example showing the before and after results of multi-dimension arrays:<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Dim</span> <span>MyArray1</span><span>(</span><span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">3</span><span>,</span> <span class="tok-nu">4</span> <span class="tok-kw">To</span> <span class="tok-nu">9</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+<span class="tok-kw">ReDim</span> <span>MyArray2</span><span>(</span><span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">3</span><span>,</span> <span class="tok-nu">4</span> <span class="tok-kw">To</span> <span class="tok-nu">9</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+
+
+<span class="tok-kw">Print</span> <span>,</span> <span>&quot;LOWER&quot;</span><span>,</span> <span>&quot;UPPER&quot;</span>
+
+<span class="tok-kw">Print</span> <span>&quot;MyArray1&quot;</span><span>,</span> <span>_</span>
+
+      <span class="tok-kw">LBound</span><span>(</span> <span>MyArray1</span><span>,</span> <span class="tok-nu">1</span> <span>);</span> <span>&quot;, &quot;</span><span>;</span> <span class="tok-kw">LBound</span><span>(</span> <span>MyArray1</span><span>,</span> <span class="tok-nu">2</span> <span>),</span> <span>_</span>
+
+      <span class="tok-kw">UBound</span><span>(</span> <span>MyArray1</span><span>,</span> <span class="tok-nu">1</span> <span>);</span> <span>&quot;, &quot;</span><span>;</span> <span class="tok-kw">UBound</span><span>(</span> <span>MyArray1</span><span>,</span> <span class="tok-nu">2</span> <span>)</span>
+
+<span class="tok-kw">Print</span> <span>&quot;MyArray2&quot;</span><span>,</span> <span>_</span>
+
+      <span class="tok-kw">LBound</span><span>(</span> <span>MyArray2</span><span>,</span> <span class="tok-nu">1</span> <span>);</span> <span>&quot;, &quot;</span><span>;</span> <span class="tok-kw">LBound</span><span>(</span> <span>MyArray2</span><span>,</span> <span class="tok-nu">2</span> <span>),</span> <span>_</span>
+
+      <span class="tok-kw">UBound</span><span>(</span> <span>MyArray2</span><span>,</span> <span class="tok-nu">1</span> <span>);</span> <span>&quot;, &quot;</span><span>;</span> <span class="tok-kw">UBound</span><span>(</span> <span>MyArray2</span><span>,</span> <span class="tok-nu">2</span> <span>)</span>
+
+
+
+<span class="tok-kw">Erase</span> <span>MyArray1</span><span>,</span> <span>MyArray2</span>
+
+
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Print</span> <span>&quot;MyArray1&quot;</span><span>,</span> <span>_</span>
+
+      <span class="tok-kw">LBound</span><span>(</span> <span>MyArray1</span><span>,</span> <span class="tok-nu">1</span> <span>);</span> <span>&quot;, &quot;</span><span>;</span> <span class="tok-kw">LBound</span><span>(</span> <span>MyArray1</span><span>,</span> <span class="tok-nu">2</span> <span>),</span> <span>_</span>
+
+      <span class="tok-kw">UBound</span><span>(</span> <span>MyArray1</span><span>,</span> <span class="tok-nu">1</span> <span>);</span> <span>&quot;, &quot;</span><span>;</span> <span class="tok-kw">UBound</span><span>(</span> <span>MyArray1</span><span>,</span> <span class="tok-nu">2</span> <span>)</span>
+
+<span class="tok-kw">Print</span> <span>&quot;MyArray2&quot;</span><span>,</span> <span>_</span>
+
+      <span class="tok-kw">LBound</span><span>(</span> <span>MyArray2</span><span>,</span> <span class="tok-nu">1</span> <span>);</span> <span>&quot;, &quot;</span><span>;</span> <span class="tok-kw">LBound</span><span>(</span> <span>MyArray2</span><span>,</span> <span class="tok-nu">2</span> <span>),</span> <span>_</span>
+
+      <span class="tok-kw">UBound</span><span>(</span> <span>MyArray2</span><span>,</span> <span class="tok-nu">1</span> <span>);</span> <span>&quot;, &quot;</span><span>;</span> <span class="tok-kw">UBound</span><span>(</span> <span>MyArray2</span><span>,</span> <span class="tok-nu">2</span> <span>)</span></pre></code><br>
+The above example will output:<br>
+<div class="indent"><code><pre class="code">              LOWER         UPPER
+MyArray1       1,  4         3,  9
+MyArray2       1,  4         3,  9
+
+MyArray1       1,  4         3,  9
+MyArray2       0,  0        -1, -1
+			</pre></code><br>
+</div></div>
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgErase.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

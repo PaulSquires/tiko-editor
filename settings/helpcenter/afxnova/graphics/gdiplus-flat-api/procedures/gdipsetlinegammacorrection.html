@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GdipSetLineGammaCorrection — Help Center</title>
+<meta name="description" content="Specifies whether gamma correction is enabled for a linear gradient brush.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipsetlinegammacorrection.html">
+<meta property="og:title" content="GdipSetLineGammaCorrection">
+<meta property="og:description" content="Specifies whether gamma correction is enabled for a linear gradient brush.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipsetlinegammacorrection.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/procedures/gdipsetlinegammacorrection.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../gdipluslineargradientbrush.html">GdiPlusLinearGradientBrush</a></div>
+<h1>GdipSetLineGammaCorrection<span class="h1kind">function</span></h1>
+<p class="lede">Specifies whether gamma correction is enabled for a linear gradient brush.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GdipSetLineGammaCorrection (BYVAL brush AS GpLineGradient PTR, BYVAL useGammaCorrection AS BOOL) AS GpStatus</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>brush</code></td><td></td><td>[in] Pointer to the <strong>LinearGradientBrush</strong> object.</td></tr><tr><td><code>useGammaCorrection</code></td><td></td><td>[in] Boolean value that specifies whether gamma correction occurs during rendering. TRUE specifies that gamma correction is enabled, and FALSE specifies that gamma correction is not enabled. By default, gamma correction is disabled during construction of a <strong>LinearGradientBrush object</strong>.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Specifies whether gamma correction is enabled for a linear gradient brush.</p>
+<h2>Example</h2>
+<p>' ======================================================================================== ' Enables gamma correction to adjust how colors blend based on human perception. ' Helps gradients appear more visually consistent across devices. ' ======================================================================================== SUB Example_SetLineGammaCorrection (BYVAL hdc AS HDC)</p>
+<p>DIM hStatus AS LONG</p>
+<p>' // Create a graphics object from the device context DIM graphics AS GpGraphics PTR hStatus = GdipCreateFromHDC(hdc, @graphics)</p>
+<p>' // Get the DPI scaling ratios DIM dpiX AS SINGLE hStatus = GdipGetDpiX(graphics, @dpiX) DIM rxRatio AS SINGLE = dpiX / 96 DIM dpiY AS SINGLE hStatus = GdipGetDpiY(graphics, @dpiY) Dim ryRatio AS SINGLE = dpiY / 96 ' // Set the scale transform hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)</p>
+<p>' // Create a linear gradient brush DIM rcf AS GpRectF = (0, 0, 200, 100) DIM brush AS GpLineGradient PTR GdipCreateLineBrushFromRect(@rcf, ARGB_GREEN, ARGB_BLACK, LinearGradientModeVertical, WrapModeTile, @brush)</p>
+<p>' // Enable gamma correction GdipSetLineGammaCorrection(brush, TRUE)</p>
+<p>' // Fill rectangle GdipFillRectangle(graphics, brush, rcf.x, rcf.y, rcf.Width, rcf.Height)</p>
+<p>' // Cleanup IF brush THEN GdipDeleteBrush(brush) IF graphics THEN GdipDeleteGraphics(graphics)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/AfxGdiPlus.bi:2173</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Flat  Api/GdiPlusLinearGradientBrush.md</span></li><li>Topic: <a href="../gdipluslineargradientbrush.html">GdiPlusLinearGradientBrush</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

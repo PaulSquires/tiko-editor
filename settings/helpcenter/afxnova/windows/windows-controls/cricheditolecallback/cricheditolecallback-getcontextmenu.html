@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CRichEditOleCallback.GetContextMenu — Help Center</title>
+<meta name="description" content="Queries the application for a context menu to use on a right-click event.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/cricheditolecallback/cricheditolecallback-getcontextmenu.html">
+<meta property="og:title" content="CRichEditOleCallback.GetContextMenu">
+<meta property="og:description" content="Queries the application for a context menu to use on a right-click event.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/cricheditolecallback/cricheditolecallback-getcontextmenu.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-controls/cricheditolecallback/cricheditolecallback-getcontextmenu.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cricheditolecallback-class.html">CRichEditOleCallback Class</a></div>
+<h1>CRichEditOleCallback.GetContextMenu<span class="h1kind">method</span></h1>
+<p class="lede">Queries the application for a context menu to use on a right-click event.</p>
+<div class="badges"><a class="badge" href="../../index.html">Windows</a><span class="badge">method</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GetContextMenu (BYVAL seltype AS WORD, BYVAL lpoleobj AS LPOLEOBJECT, BYVAL lpchrg AS CHARRANGE PTR, BYVAL lphmenu AS HMENU PTR) AS HRESULT</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>seltype</code></td><td></td><td>Selection type. The value, which specifies the contents of the new selection, can be one or more of the following values.<br><strong>SEL_EMPTY</strong>. The selection is empty.<br><strong>SEL_TEXT</strong>. Text.<br><strong>SEL_OBJECT</strong>. At least one COM object.<br><strong>SEL_MULTICHAR</strong>. More than one character of text.<br><strong>SEL_MULTIOBJECT</strong>. More than one COM object.<br><strong>GCM_RIGHTMOUSEDROP</strong>. Indicates that a context menu for a right-mouse drag drop should be generated. The <em>lpoleobj</em> parameter is a pointer to the <a href="https://learn.microsoft.com/en-us/windows/win32/api/objidl/nn-objidl-idataobject" target="_blank" rel="noopener">IDataObject</a> interface for the object being dropped.</td></tr><tr><td><code>lpoleobj</code></td><td></td><td>Pointer to an interface. If the <em>seltype</em> parameter includes the <strong>SEL_OBJECT</strong> flag, <em>lpoleobj</em> is a pointer to the <a href="https://learn.microsoft.com/en-us/windows/win32/api/oleidl/nn-oleidl-ioleobject" target="_blank" rel="noopener">IOleObject</a> interface for the first selected COM object. If seltype includes the <strong>GCM_RIGHTMOUSEDROP</strong> flag, <em>lpoleobj</em> is a pointer to an <a href="https://learn.microsoft.com/en-us/windows/win32/api/objidl/nn-objidl-idataobject" target="_blank" rel="noopener">IDataObject</a> interface. Otherwise, <em>lpoleobj</em> is NULL. If you hold on to the interface pointer, you must call the <strong>AddRef</strong> method to increment the object's reference count.</td></tr><tr><td><code>lpchrg</code></td><td></td><td>Pointer to a <a href="https://learn.microsoft.com/en-us/windows/win32/api/richedit/ns-richedit-charrange" target="_blank" rel="noopener">CHARRANGE</a> structure containing the current selection.</td></tr><tr><td><code>lphmenu</code></td><td></td><td>The handle of a context menu to use. This parameter is ignored if an error is returned. A rich edit control destroys the menu when it is finished with it so the client should not.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Queries the application for a context menu to use on a right-click event.</p>
+<p>Returns <strong>S_OK</strong> on success. If the method fails, it can return the following value.</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/CRichEditOleCallback.inc:40</span></li><li>Documented in <span class="srcref">Windows/WIndows Controls/RichEdit/CRichEditOleCallback Class.md</span></li><li>Topic: <a href="../cricheditolecallback-class.html">CRichEditOleCallback Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

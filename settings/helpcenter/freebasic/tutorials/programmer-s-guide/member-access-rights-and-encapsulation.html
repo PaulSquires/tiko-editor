@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Member Access Rights and Encapsulation — Help Center</title>
+<meta name="description" content="Member Access Rights and Encapsulation — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/member-access-rights-and-encapsulation.html">
+<meta property="og:title" content="Member Access Rights and Encapsulation">
+<meta property="og:description" content="Member Access Rights and Encapsulation — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/member-access-rights-and-encapsulation.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/programmer-s-guide/member-access-rights-and-encapsulation.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>Member Access Rights and Encapsulation</h1>
+<h2>Documentation</h2>
+
+	Restricting member access to certain parts of code.<br>
+<br>
+<div>Member Access Rights</div><div><br>
+<u>Overview</u><br>
+<div class="indent">All members of a <code><a href="../../operators/operators/procedures/type-udt.html">Type</a></code> - including member data, procedures, constants, etc. - belong in one of three different classifications, each with its own rules dictating where in code they may be accessed, or referred to.<br>
+These rules are called access rights.<br>
+There are public, protected and private members, and they are declared in a <code><a href="../../operators/operators/procedures/type-udt.html">Type</a></code> definition following a <code><a href="../../user-defined-types/procedures/public-access-control.html">Public</a></code>, <code><a href="../../user-defined-types/procedures/protected-access-control.html">Protected</a></code> or <code><a href="../../user-defined-types/procedures/private-access-control.html">Private</a></code> label, respectively.<br>
+<br>
+By default, that is, without an access classification label, members of a <code><a href="../../operators/operators/procedures/type-udt.html">Type</a></code> are public.<br>
+<br>
+</div><u>Public members</u><br>
+<div class="indent">Public members can be referred to from anywhere; they are accessible from, for example, member procedures or module-level code or procedures.<br>
+<br>
+</div><u>Protected members</u><br>
+<div class="indent">Protected members can only be accessed from member procedures of the <code><a href="../../operators/operators/procedures/type-udt.html">Type</a></code> they are declared in, or member procedures of a derived <code><a href="../../operators/operators/procedures/type-udt.html">Type</a></code>. They are not accessible to outside code.<br>
+<br>
+</div><u>Private members</u><br>
+<div class="indent">Private members can only be accessed from member procedures of the <code><a href="../../operators/operators/procedures/type-udt.html">Type</a></code> they are declared in. They are not accessible to outside code or member procedures from a derived <code><a href="../../operators/operators/procedures/type-udt.html">Type</a></code>.<br>
+<br>
+</div><u>Constructors and destructors</u><br>
+<div class="indent">Constructors and destructors follow the same rules as any other member:<br>
+<div class="indent"><b>-</b> When public, objects can be instantiated and destroyed from anywhere in code.<br>
+<b>-</b> When protected, objects can be instantiated and destroyed only from member procedures of their <code><a href="../../operators/operators/procedures/type-udt.html">Type</a></code> or a derived <code><a href="../../operators/operators/procedures/type-udt.html">Type</a></code>.<br>
+<b>-</b> Private constructors and destructors restrict object instantiation solely to member procedures of their <code><a href="../../operators/operators/procedures/type-udt.html">Type</a></code>.<br>
+<br>
+</div></div></div><div>Encapsulation</div><div><br>
+<u>Overview</u><br>
+<div class="indent">Encapsulation is the process of keeping the details about how an object is implemented hidden away from users of the object.<br>
+Instead, users of the object access the object through a public interface.<br>
+In this way, users are able to use the object without having to understand how it is implemented.<br>
+<br>
+Encapsulation is implemented via access specifiers (Private, Protected or Public).<br>
+Typically, all member variables of the <code><a href="../../operators/operators/procedures/type-udt.html">Type</a></code> are made private (hiding the implementation details), and most member procedures are made public (exposing an interface for the user).<br>
+Although requiring users of the <code><a href="../../operators/operators/procedures/type-udt.html">Type</a></code> to use the public interface may seem more burdensome than providing public access to the member variables directly, doing so actually provides a large number of useful benefits that help encourage <code><a href="../../operators/operators/procedures/type-udt.html">Type</a></code> re-usability and maintainability.<br>
+<br>
+</div><u>Benefit of encapsulated Types</u><br>
+<div class="indent"><b>Protection:</b><br>
+<div class="indent">Global access to variables is dangerous because you don’t have strict control over who has access to the global variable, or how they use it.<br>
+Only the public members of a <code><a href="../../operators/operators/procedures/type-udt.html">Type</a></code> suffers from the same problem, but just on a smaller scale.<br>
+<br>
+Encapsulation allows the programmer of a <code><a href="../../operators/operators/procedures/type-udt.html">Type</a></code> to:<br>
+<div class="indent"><b>-</b> Actively control the access to its internals (pointers, variables, ...), by: none / read only / write only / read & write.<br>
+<b>-</b> Secure operations, by denying certain destructive user actions (like pointer overwriting, deallocating, ...)<br>
+<br>
+</div></div><b>Abstraction:</b><br>
+<div class="indent">With a fully encapsulated <code><a href="../../operators/operators/procedures/type-udt.html">Type</a></code>, you only need to know what member procedures are publicly available to use the <code><a href="../../operators/operators/procedures/type-udt.html">Type</a></code>, what arguments they take, and what values they return. It doesn’t matter how the <code><a href="../../operators/operators/procedures/type-udt.html">Type</a></code> was implemented internally.<br>
+<br>
+For example, a <code><a href="../../operators/operators/procedures/type-udt.html">Type</a></code> holding a list of names could have been implemented using different data structures.<br>
+In order to use the <code><a href="../../operators/operators/procedures/type-udt.html">Type</a></code>, you don’t need to know (or care) which.<br>
+This dramatically reduces the complexity of your programs, and also reduces mistakes.<br>
+<br>
+Hiding the internal implementation details:<br>
+<div class="indent"><b>-</b> internal members declared as Private/Protected and user interface using methods and properties as getter/setter,<br>
+<b>-</b> in addition to define constructors, copy-constructor, destructor, assignment operators, ... ,<br>
+</div>provides some abstraction.<br>
+More than any other reason, this is the key advantage of encapsulation.<br>
+<br>
+</div></div></div><div>Examples</div><div><br>
+<ul><li> In the example below, the data member <code><i>hour</i></code>, <code><i>minute</i></code>, and <code><i>second</i></code> are private while the member procedures <code><i>set_Time()</i></code>, <code><i>get_Time()</i></code> and <code><i>increment_Time()</i></code> are public:<br>
+</li></ul><div class="indent"><b>-</b> As all data is declared as private, the data is only accessible through the public procedures provided by the <code><a href="../../operators/operators/procedures/type-udt.html">Type</a></code>.<br>
+<b>-</b> This also allows programmers to validate changes to data members before making such a change. In this example, the <code><i>set_Time()</i></code> procedure would be written to check to valid values for time (hour between 0 and 23, minute and second between 0 and 59).<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Type</span> <span>my_Time</span>
+
+    <span class="tok-kw">Public</span><span>:</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>set_Time</span> <span>(</span><span class="tok-kw">ByVal</span> <span>new_Hour</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span><span>,</span> <span class="tok-kw">ByVal</span> <span>new_Minute</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span><span>,</span> <span class="tok-kw">ByVal</span> <span>new_Second</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span><span>)</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>get_Time</span> <span>(</span><span class="tok-kw">ByRef</span> <span>curr_Hour</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span><span>,</span> <span class="tok-kw">ByRef</span> <span>curr_Minute</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span><span>,</span> <span class="tok-kw">ByRef</span> <span>curr_Second</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span><span>)</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Function</span> <span>get_Time</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>increment_Time</span> <span>()</span>
+
+    <span class="tok-kw">Private</span><span>:</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span> <span class="tok-kw">Hour</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span> <span class="tok-kw">Minute</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span> <span class="tok-kw">Second</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span></pre></code><br>
+</div>Example of use:<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Type</span> <span>my_Time</span>
+
+    <span class="tok-kw">Public</span><span>:</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>set_Time</span> <span>(</span><span class="tok-kw">ByVal</span> <span>new_Hour</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span><span>,</span> <span class="tok-kw">ByVal</span> <span>new_Minute</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span><span>,</span> <span class="tok-kw">ByVal</span> <span>new_Second</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span><span>)</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>get_Time</span> <span>(</span><span class="tok-kw">ByRef</span> <span>curr_Hour</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span><span>,</span> <span class="tok-kw">ByRef</span> <span>curr_Minute</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span><span>,</span> <span class="tok-kw">ByRef</span> <span>curr_Second</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span><span>)</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Function</span> <span>get_Time</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>increment_Time</span> <span>()</span>
+
+    <span class="tok-kw">Private</span><span>:</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span> <span class="tok-kw">Hour</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span> <span class="tok-kw">Minute</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span> <span class="tok-kw">Second</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>my_Time.set_Time</span> <span>(</span><span class="tok-kw">ByVal</span> <span>new_Hour</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span><span>,</span> <span class="tok-kw">ByVal</span> <span>new_Minute</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span><span>,</span> <span class="tok-kw">ByVal</span> <span>new_Second</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span><span>)</span>
+
+    <span class="tok-kw">If</span> <span>new_Hour</span> <span>&lt;=</span> <span class="tok-nu">23</span> <span class="tok-kw">And</span> <span>new_Minute</span> <span>&lt;=</span> <span class="tok-nu">59</span> <span class="tok-kw">And</span> <span>New_Second</span> <span>&lt;=</span> <span class="tok-nu">59</span> <span class="tok-kw">Then</span>
+
+        <span>This.Hour</span> <span>=</span> <span>new_Hour</span>
+
+        <span>This.Minute</span> <span>=</span> <span>new_Minute</span>
+
+        <span>This.Second</span> <span>=</span> <span>new_Second</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>my_Time.get_Time</span> <span>(</span><span class="tok-kw">ByRef</span> <span>curr_Hour</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span><span>,</span> <span class="tok-kw">ByRef</span> <span>curr_Minute</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span><span>,</span> <span class="tok-kw">ByRef</span> <span>curr_Second</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span><span>)</span>
+
+    <span>curr_Hour</span> <span>=</span> <span>This.Hour</span>
+
+    <span>curr_Minute</span> <span>=</span> <span>This.Minute</span>
+
+    <span>curr_Second</span> <span>=</span> <span>This.Second</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-kw">Function</span> <span>my_Time.get_Time</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+    <span class="tok-kw">Return</span> <span class="tok-kw">Right</span><span>(</span><span>&quot;0&quot;</span> <span>&amp;</span> <span class="tok-kw">Str</span><span>(</span><span>This.Hour</span><span>),</span> <span class="tok-nu">2</span><span>)</span> <span>&amp;</span> <span>&quot;:&quot;</span> <span>&amp;</span> <span class="tok-kw">Right</span><span>(</span><span>&quot;0&quot;</span> <span>&amp;</span> <span class="tok-kw">Str</span><span>(</span><span>This.Minute</span><span>),</span> <span class="tok-nu">2</span><span>)</span> <span>&amp;</span> <span>&quot;:&quot;</span> <span>&amp;</span> <span class="tok-kw">Right</span><span>(</span><span>&quot;0&quot;</span> <span>&amp;</span> <span class="tok-kw">Str</span><span>(</span><span>This.second</span><span>),</span> <span class="tok-nu">2</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>my_Time.increment_Time</span> <span>()</span>
+
+    <span>This.Second</span> <span>+=</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">If</span> <span>This.Second</span> <span>=</span> <span class="tok-nu">60</span> <span class="tok-kw">Then</span>
+
+        <span>This.Second</span> <span>=</span> <span class="tok-nu">0</span>
+
+        <span>This.Minute</span> <span>+=</span> <span class="tok-nu">1</span>
+
+        <span class="tok-kw">If</span> <span>This.Minute</span> <span>=</span> <span class="tok-nu">60</span> <span class="tok-kw">Then</span>
+
+            <span>This.Minute</span> <span>=</span> <span class="tok-nu">0</span>
+
+            <span>This.Hour</span> <span>+=</span> <span class="tok-nu">1</span>
+
+            <span class="tok-kw">If</span> <span>This.Hour</span> <span>=</span> <span class="tok-nu">24</span> <span class="tok-kw">Then</span>
+
+                <span>This.Hour</span> <span>=</span> <span class="tok-nu">0</span>
+
+            <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>my_Time</span> <span>my_T</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span> <span>h</span><span>,</span> <span>m</span><span>,</span> <span>s</span>
+
+<span class="tok-kw">Input</span> <span>&quot;Hour? &quot;</span><span>,</span> <span>h</span>
+
+<span class="tok-kw">Input</span> <span>&quot;Minute? &quot;</span><span>,</span> <span>m</span>
+
+<span class="tok-kw">Input</span> <span>&quot;Second? &quot;</span><span>,</span> <span>s</span>
+
+<span>my_T.set_Time</span><span>(</span><span>h</span><span>,</span> <span>m</span><span>,</span> <span>s</span><span>)</span>
+
+
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Double</span> <span>Tr</span> <span>=</span> <span class="tok-kw">Int</span><span>(</span><span class="tok-kw">Timer</span><span>)</span>
+
+<span class="tok-kw">Do</span>
+
+    <span class="tok-kw">If</span> <span>Tr</span> <span>&lt;&gt;</span> <span class="tok-kw">Int</span><span>(</span><span class="tok-kw">Timer</span><span>)</span> <span class="tok-kw">Then</span>
+
+        <span>Tr</span> <span>=</span> <span class="tok-kw">Int</span><span>(</span><span class="tok-kw">Timer</span><span>)</span>
+
+        <span>my_T.increment_Time</span><span>()</span>
+
+        <span class="tok-kw">Locate</span>  <span>,</span> <span class="tok-nu">1</span><span>,</span> <span class="tok-nu">0</span>
+
+        <span class="tok-kw">Print</span> <span>my_T.get_Time</span><span>;</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+    <span class="tok-kw">Sleep</span> <span class="tok-nu">100</span><span>,</span> <span class="tok-nu">1</span>
+
+<span class="tok-kw">Loop</span> <span class="tok-kw">Until</span> <span class="tok-kw">Inkey</span> <span>&lt;&gt;</span> <span>&quot;&quot;</span>
+
+<span class="tok-kw">Print</span></pre></code><br>
+</div></div><ul><li> For a more advanced example using OOP (with encapsulation + abstraction + inheritance + polymorphism), see the example (Graph type collection) in <a href="inheritance-polymorphism.html">'Inheritance Polymorphism'</a>.<br>
+<br>
+</li></ul></div><div>See also</div><div><br>
+<ul><li> <a href="properties.html">Properties</a><br>
+<br>
+</li></ul></div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

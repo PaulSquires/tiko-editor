@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GdiPlusGraphicsPath — Help Center</title>
+<meta name="description" content="GpPath">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdiplusgraphicspath.html">
+<meta property="og:title" content="GdiPlusGraphicsPath">
+<meta property="og:description" content="GpPath">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdiplusgraphicspath.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/procedures/gdiplusgraphicspath.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../gdiplus-objects.html">GdiPlus Objects</a></div>
+<h1>GdiPlusGraphicsPath<span class="h1kind">operator</span></h1>
+<p class="lede">GpPath</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">operator</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>PRIVATE OPERATOR GdiPlusGraphicsPath.@ () AS GpPath PTR PTR</code></pre>
+<h2>Description</h2>
+<p>A GraphicsPath object stores a sequence of lines, curves, and shapes. You can draw the entire sequence by calling the GdipDrawPath function. You can partition the sequence of lines, curves, and shapes into figures, and with the help of the PathIterator functions, you can draw selected figures. You can also place markers in the sequence, so that you can draw selected portions of the path.</p>
+<h2>Examples</h2>
+<p>' ======================================================================================== TYPE GdiPlusGraphicsPath Public: m_Path AS GpPath PTR DECLARE CONSTRUCTOR (BYVAL path AS GpPath PTR = NULL) DECLARE CONSTRUCTOR (BYVAL nFillMode AS FillMode) DECLARE CONSTRUCTOR (BYVAL pts AS GpPointF PTR, BYVAL types AS BYTE PTR, BYVAL nCount AS LONG, BYVAL nFillMode AS FillMode = FillModeAlternate) DECLARE CONSTRUCTOR (BYVAL pts AS GpPoint PTR, BYVAL types AS BYTE PTR, BYVAL nCount AS LONG, BYVAL nFillMode AS FillMode = FillModeAlternate) DECLARE DESTRUCTOR DECLARE OPERATOR @ () AS GpPath PTR PTR DECLARE OPERATOR CAST () AS GpPath PTR END TYPE ' ========================================================================================</p>
+<p>' ===================================================================================== ' Constructors ' ===================================================================================== PRIVATE CONSTRUCTOR GdiPlusGraphicsPath (BYVAL path AS GpPath PTR = NULL) IF path THEN SetLastError(GdipClonePath(path, @m_Path)) END CONSTRUCTOR ' ===================================================================================== ' ======================================================================================== PRIVATE CONSTRUCTOR GdiPlusGraphicsPath (BYVAL nFillMode AS FillMode) SetLastError(GdipCreatePath(nFillMode, @m_Path)) END CONSTRUCTOR ' ======================================================================================== ' ===================================================================================== ' Creates a GraphicsPath object based on an array of points, an array of types, and a fill mode. ' Default value for fillMode: FillModeAlternate(0). ' ===================================================================================== PRIVATE CONSTRUCTOR GdiPlusGraphicsPath (BYVAL pts AS GpPointF PTR, BYVAL types AS BYTE PTR, BYVAL nCount AS LONG, BYVAL nFillMode AS FillMode = FillModeAlternate) SetLastError(GdipCreatePath2(pts, types, nCount, nFillmode, @m_Path)) END CONSTRUCTOR ' ===================================================================================== ' ===================================================================================== PRIVATE CONSTRUCTOR GdiPlusGraphicsPath (BYVAL pts AS GpPoint PTR, BYVAL types AS BYTE PTR, BYVAL nCount AS LONG, BYVAL nFillMode AS FillMode = FillModeAlternate) SetLastError(GdipCreatePath2I(pts, types, nCount, nFillmode, @m_Path)) END CONSTRUCTOR ' ===================================================================================== ' ===================================================================================== ' Cleanup ' ===================================================================================== PRIVATE DESTRUCTOR GdiPlusGraphicsPath IF m_Path THEN GdipDeletePath(m_Path) END DESTRUCTOR ' ===================================================================================== ' ======================================================================================== ' Returns a pointer to the GpGraphicsPath object ' ======================================================================================== PRIVATE OPERATOR * (BYREF path AS GdiPlusGraphicsPath) AS GpPath PTR RETURN path.m_Path END OPERATOR ' ======================================================================================== ' ======================================================================================== ' Returns the address of a pointer to the GpGraphicsPath object ' ======================================================================================== PRIVATE OPERATOR GdiPlusGraphicsPath.@ () AS GpPath PTR PTR RETURN @m_Path END OPERATOR ' ======================================================================================== ' ======================================================================================== PRIVATE OPERATOR GdiPlusGraphicsPath.CAST () AS GpPath PTR RETURN m_Path END OPERATOR ' ========================================================================================</p>
+<p>' ======================================================================================== ' This example creates a GraphicsPath and adds a shape to it. ' ======================================================================================== SUB Example_CreatePath (BYVAL hdc AS HDC)</p>
+<p>' // Create a graphics object from the device context DIM graphics AS GdiPlusGraphics = hdc ' // Set the scale transform graphics.ScaleTransform</p>
+<p>' // Create GraphicsPath DIM path AS GdiPlusGraphicsPath = FillModeAlternate</p>
+<p>' // Add a shape to the path GdipAddPathEllipse(path, 120, 80, 150, 100)</p>
+<p>' // Create pen DIM pen AS GdiPlusPen = GdiPlusPen(ARGB_MIDNIGHTBLUE, 2, UnitWorld)</p>
+<p>' // Draw path GdipDrawPath(graphics, pen, path)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/AfxGdipObjects.inc:1551</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Flat  Api/GdiPlus Objects.md</span></li><li>Topic: <a href="../gdiplus-objects.html">GdiPlus Objects</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

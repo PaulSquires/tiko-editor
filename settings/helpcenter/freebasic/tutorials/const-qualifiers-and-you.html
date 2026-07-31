@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Const Qualifiers and You — Help Center</title>
+<meta name="description" content="Const Qualifiers and You — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/const-qualifiers-and-you.html">
+<meta property="og:title" content="Const Qualifiers and You">
+<meta property="og:description" content="Const Qualifiers and You — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/const-qualifiers-and-you.html">
+<link rel="stylesheet" href="../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/const-qualifiers-and-you.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>Const Qualifiers and You</h1>
+<h2>Documentation</h2>
+
+	Note:  As with all things regarding scope, Const qualifiers may be a bit difficult to understand.  You should have a thorough understanding of variable scope before attempting to understand Const qualfiers.<br>
+<br>
+Also note my cliche title, which I chose because of it's clicheness.<br>
+<br>
+What the heck are Const qualifiers?  they're a standard part of C++ and they exist in FreeBASIC too.  Const qualifiers are yet another form of protection - they allow some "variables" to act like constants to certain parts of your program, in other words some parts of the program are allowed to access (read) them but not modify them.  Just another kind of type safety, really, but an extremely useful one.  In particular, they are very useful in OO situations, but you can probably benefit from them to some degree even if you aren't interested in OOP.<br>
+<br>
+The Const qualifier in FreeBASIC is essentially an extension to data type declarations, and they may be used with Dim, UDT members, and procedure parameters.  Generally you put it right after the "As" part of the variables's data type declaration:<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Const</span> <span class="tok-kw">Integer</span> <span>my_const_int</span> <span>=</span> <span class="tok-nu">5</span></pre></code><br>
+<br>
+(By the way, throughout this tutorial I use only Integers and Integer Ptrs as examples - however, Const qualifiers <i>should</i> work the same way with all other variable types, including Types, Enums, and anything else that declares something.  If for any reason it doesn't, it's probably a bug and you should report it.)<br>
+<br>
+Note in this case we are allowed to change it once - when we create it.  But after that, you may not change it any more.  In fact, you <i>must</i> initialize it - the compiler will give an error if you don't (interestingly, you are allowed to set it equal to "Any", in which the contents are not guaranteed and could be anything).  But you may not do anything that modifies it after that.  It will actually give you an error if, for example, you try to do something like this:<br>
+<br>
+<code><pre class="code"><span>my_const_int</span> <span>=</span> <span class="tok-nu">3</span></pre></code><br>
+<br>
+Yet, since this doesn't change the variable any, you can do<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Print</span> <span>my_const_int</span></pre></code><br>
+<br>
+Now this is all very good, but it doesn't seem much different from the normal usage of Const.  That is, the following two lines so far seem to mean, for all practical purposes, the same thing:<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Const</span> <span class="tok-kw">Integer</span> <span>my_const_int</span> <span>=</span> <span class="tok-nu">5</span>
+
+<span class="tok-kw">Const</span> <span>my_int</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">5</span></pre></code><br>
+<br>
+Do they?  Not quite.  You see, the Const qualifier allows you to create consts that act as variables except that they can't be modified.  That means you can put them inside Types and other places.  What's more, you can put them inside Sub/Function declarations - and this is a very key reason for their existence:<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Sub</span> <span>my_sub</span> <span>(</span><span>some_num</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span></pre></code><br>
+<br>
+Normally functions are allowed to modify the variables you send to them.  Of course, whether they modify the original variable or just a local copy of the variable depends on whether you use ByVal or ByRef (and of course pointers is a whole different things altogether), but they normally are allowed to modify a variable.  This may be undesirable, for whatever reason, and the Const qualifier exists to prevent that.  In the function given above, some_num can be modified by the function.  Normally it would only be a local copy that is modified, which is fine, since it won't affect the original Const Integer, but what if we declare the function like this?<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Sub</span> <span>my_sub</span> <span>(</span><span class="tok-kw">ByRef</span> <span>some_num</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span></pre></code><br>
+<br>
+Now my_sub has direct access to whatever variable you pass to it, and for that reason you are not allowed to do this sort of thing<br>
+<br>
+<code><pre class="code"><span>my_sub</span><span>(</span><span>my_const_int</span><span>)</span></pre></code><br>
+<br>
+Why?  Simply because the function may modify the variable.  We don't know for sure that it will, of course, but it might, so we can't do that.  In fact, the error you'll get if you try to compile that is "Invalid assignment/conversion."  It's almost as if the Const Integer is a different variable type, but only when it's ByRef.  In that case, it would act like trying to pass a string to an integer argument (or vice-versa).  Yet if it's not passed ByRef, we don't have a problem, since there's no way the function can possibly modify the variable!<br>
+<br>
+And of course, if we did something like this:<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Sub</span> <span>my_sub</span> <span>(</span><span class="tok-kw">ByRef</span> <span>some_num</span> <span class="tok-kw">As</span> <span class="tok-kw">Const</span> <span class="tok-kw">Integer</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span></pre></code><br>
+<br>
+Then it compiles just fine, but if you try to do the following within the function, you get an error:<br>
+<br>
+<code><pre class="code"><span>some_num</span> <span>=</span> <span class="tok-nu">3</span></pre></code><br>
+<br>
+Why?  Once again, the original variable has been passed ByRef to the sub.  It's now in local scope, but because it's ByRef, any modifications to the variable would modify the original, which cannot be done.  Once again, it's entirely possible to create a copy of the variable and modify it all you want:<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>copy_of_some_num</span> <span>=</span> <span>some_num</span>
+
+<span>copy_of_some_num</span> <span>=</span> <span class="tok-nu">3</span></pre></code><br>
+<br>
+But you can't modify some_num itself!<br>
+<br>
+Now we come to pointers.  What about them?  For pointers it's a bit more complicated;  it's possible to declare the pointer <i>itself</i> as Const, OR what the pointer points to - or even BOTH!  So all of the following are valid:<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>my_sub_a</span> <span>(</span><span class="tok-kw">ByRef</span> <span>ptr_A</span> <span class="tok-kw">As</span> <span class="tok-kw">Const</span> <span class="tok-kw">Byte</span> <span class="tok-kw">Ptr</span><span>)</span>
+
+
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>my_sub_b</span> <span>(</span><span class="tok-kw">ByRef</span> <span>ptr_B</span> <span class="tok-kw">As</span> <span class="tok-kw">Byte</span> <span class="tok-kw">Const</span> <span class="tok-kw">Ptr</span><span>)</span>
+
+
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>my_sub_c</span> <span>(</span><span class="tok-kw">ByRef</span> <span>ptr_C</span> <span class="tok-kw">As</span> <span class="tok-kw">Const</span> <span class="tok-kw">Byte</span> <span class="tok-kw">Const</span> <span class="tok-kw">Ptr</span><span>)</span></pre></code><br>
+<br>
+The first one makes it so you can change the pointer itself all you want, but not the data that the pointer points to (even if you change *what* the pointer points to).  The second allows you to change what the pointer points to, but you can't make it point to anything else.  The third won't let you change what the pointer points to OR the pointer itself!  In all cases you can make a copy of the pointer - <i>but it must be a Const Integer Ptr or a Const Integer Const Ptr since otherwise you would be able to change the contents of whatever the original pointer points to!</i>  This is great protection against anything being modified!<br>
+<br>
+In case the behaviour of the Const qualifier seems a bit strange to you, I'll explain exactly how it decides what's safe to allow and what isn't.  It can actually be summed up pretty quickly:  The Const qualifier aims to protect the original data.  It doesn't care if you make a copy of the data, or change that copy, it just doesn't want you to be able to change the original data.  Remembering this will help you a great deal.  Of course, it needs to know <i>what</i> the original data is, which is why when there's pointers involved there are so many different places to put the Const qualifier (and you can even put it in twice - or more, depending on how many pointers there are!)  So long as you remember what the Const qualifier is for, you'll never have any difficulty figuring out where to put it - or even if you need it at all (or if you need to <i>not</i> use it).<br>
+<br>
+You can also use the Const qualifier in UDTs.  In fact, it's actually a very important thing to OOP (in a similar fashion to Namespaces, which while not a direct part of OOP nevertheless are very much related) - but even if you don't use OOP you can still use Const qualifiers in your Types.  I don't even really need to show you an example, as it's pretty obvious by now how it works, but here's an example for you:<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span>my_type</span>
+
+  <span class="tok-kw">As</span> <span class="tok-kw">Const</span> <span class="tok-kw">Integer</span> <span>t_int</span><span>=</span> <span class="tok-nu">5</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>my_type</span> <span>t</span>
+
+
+
+<span>t.t_int</span> <span>=</span> <span class="tok-nu">3</span></pre></code><br>
+<br>
+And obviously this won't compile, since the member t_int is Const.  Furthermore, you can also declare the variable of that type (in this case, t) with the Const qualifier.  The following will not compile either, since ALL members of t are Const:<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span>my_type</span>
+
+  <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>t_int</span><span>=</span> <span class="tok-nu">5</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Const</span> <span>my_type</span> <span>t</span>
+
+
+
+<span>t.t_int</span> <span>=</span> <span class="tok-nu">3</span></pre></code><br>
+<br>
+As for the OOP side of things (and if you aren't interested in OOP you can skip this part) - you may be wondering about methods.  Methods implicitly pass the object ByRef as this when called.  Is there a way to create constant objects?  Of course!  We've already seen that.  But some object methods will modify the object, and some won't.  Is there a distinction?  The answer is yes.  As of November 23, 2007, we now have Const procs.  That means you can do this:<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span>my_object</span>
+
+  <span class="tok-kw">Public</span><span>:</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>modifier_sub</span> <span>()</span>
+
+    
+
+    <span class="tok-cm">'Subs that do not modify the object are declared Const...</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Const</span> <span class="tok-kw">Sub</span> <span>non_modifier_sub</span> <span>()</span>
+
+  <span class="tok-kw">Private</span><span>:</span>
+
+    <span>some_num</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">3</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>my_object.modifier_sub</span> <span>()</span>
+
+  <span>this.some_num</span> <span>=</span> <span class="tok-nu">3</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>my_object.non_modifier_sub</span><span>()</span>
+
+  <span class="tok-kw">Print</span> <span>this.some_num</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-cm">'Note that only Const objects must be initialized (though in this case the non-Const object will also be),</span>
+
+<span class="tok-cm">'just like variables.  Thus, you must either have a Constructor for the object, or else you must give all variables</span>
+
+<span class="tok-cm">'default initial values (as I did here), in which case the compiler makes a default constructor for you.</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Const</span> <span>my_object</span> <span>t</span> <span>=</span> <span>my_object</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>my_object</span> <span>u</span>
+
+
+
+<span class="tok-cm">'Both of these will compile:</span>
+
+<span>t.non_modifier_sub</span><span>()</span>
+
+<span>u.non_modifier_sub</span><span>()</span>
+
+
+
+<span class="tok-cm">'...but the first of these will not compile, since non-Const methods of Const objects may not be called!</span>
+
+<span>t.modifier_sub</span><span>()</span>
+
+<span>u.modifier_sub</span><span>()</span>
+
+
+
+<span class="tok-cm">'Sleep so we can see the results</span>
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+<br>
+Once again, the way this works is based on the simple rule.  Since the implicitly passed copy of this is passed ByRef, any method is normally able to modify the contents of the object - and if the object is declared As Const, that's not supposed to happen!  Thus, there are essentially two kinds of method.  The two kinds are given names in the C++ documentation page (listed below in the references):  there are mutators and inspectors.  Mutators may modify objects, but inspectors do not.  Thus, for objects declared As Const, only the inspector methods for those objects may be used - while all methods may be called for non-Const objects.  The inspector methods are, of course, the ones declared as Const methods.  Thus, for Const objects only their Const methods may be used.<br>
+<br>
+<br>
+This is all very good, but some of you may be asking - Why do I need this?  Well, a direct answer would be out of the *scope* (heh) of this tutorial, so I'll counter - why do we need scope at all?  The reason for Const qualifiers (and the future Const methods) is the same as the reason for scope within procedures and modules, and the same reason for hiding of variables in objects:  because we want to be certain that something won't unexpectedly change in the middle of the program, when we least expect it.  Sometimes we want things to change, and that's when we <i>don't</i> use the Const qualifier.  But when you want something to stay what it is, you use the Const qualifier, and you can be certain it will not change (and the compiler won't compile the code if there is danger of it happening!)  This is the definition of Const, how it works, and it's the reason you use it!  And in general, it's the reason you use <i>any</i> scoping control or data hiding.<br>
+<br>
+<br>
+<b>Some final notes</b><br>
+If you use Const qualifiers, remember that it is a relatively new feature.  There is very little documentation to tell us what is "wrong" or "right", so generally it will take some experimenting.  If you feel that it does something it shouldn't do (or doesn't do something it should), by all means report it on the forum!  If it is seen as a problem by anyone else, submit a bug report.  In general, however, it should work exactly as I've said and all the examples given should do as I say they will (compile if I say they will, not compile if I say they won't).  One very important thing to remember, of course, is that they aren't in the latest official release - you must have the latest SVN release for them to work (if the compiler gives an error about one of the examples given here that I told you will compile, then you'll know you need a newer version).<br>
+<br>
+If you have any other difficulties with Const qualifiers, remember that even though there's no documentation for them there are plenty of people on the forum who know about and understand them, and can help you with any questions you may have.<br>
+<br>
+If you still don't understand Const qualifiers, you probably are a newbie who doesn't know much about scope yet anyways - and that's fine, you'll learn as you go.  Eventually some decent documentation for this feature will be created, but until then this is all you have.  Bear in mind:  if you don't understand how they work, you probably won't need them.  I for one have written fine programs long before they were around, and I'll probably continue to do so without using them anywhere they aren't needed.  There are specific instances when they're useful, and if you understand those instances then you may as well use them when those instances arise.  But if you don't understand, that's fine!<br>
+<br>
+Finally, here are some links that should be helpful.  The first is a C++ documentation page about Const qualifiers in C++ - of course, it only makes sense if you understand C++, and they also talk about things we don't have yet (i.e., Const methods).  Nevertheless it's a fine place to start if you know any C++, so check it out if you like.  There is also a link to a forum topic in which I asked about FreeBASIC development (and learned about Const qualifiers), and a link to the original SourceForge Feature Request page in which Const qualifiers were originally requested as a feature:<br>
+<br>
+https://isocpp.org/wiki/faq/const-correctness<br>
+http://www.freebasic.net/forum/viewtopic.php?t=9975&postdays=0&postorder=asc&start=0<br>
+http://sourceforge.net/tracker/index.php?func=detail&aid=1480621&group_id=122342&atid=693199
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../index.html">Home</a> ·
+         <a href="../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../nav.js?v=70a6b70236"></script>
+<script src="../../search-index.js"></script>
+<script src="../../assets/app.js?v=456d079659"></script>
+<script src="../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

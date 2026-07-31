@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GdipBitmapGetHistogram — Help Center</title>
+<meta name="description" content="Returns one or more histograms for specified color channels of the specified **Bitmap** object.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipbitmapgethistogram.html">
+<meta property="og:title" content="GdipBitmapGetHistogram">
+<meta property="og:description" content="Returns one or more histograms for specified color channels of the specified **Bitmap** object.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipbitmapgethistogram.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/procedures/gdipbitmapgethistogram.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../bitmap-functions.html">Bitmap Functions</a></div>
+<h1>GdipBitmapGetHistogram<span class="h1kind">function</span></h1>
+<p class="lede">Returns one or more histograms for specified color channels of the specified **Bitmap** object.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GdipBitmapGetHistogram (BYVAL bmp AS GpBitmap PTR, BYVAL fmt AS HistogramFormat, BYVAL NumberOfEntries AS UINT, BYVAL channel0 AS UINT PTR, BYVAL channel1 AS UINT PTR, BYVAL channel2 AS UINT PTR, BYVAL channel3 AS UINT PTR) AS GpStatus</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>bmp</code></td><td></td><td>[in] Pointer to the <strong>Bitmap</strong> object.</td></tr><tr><td><code>fmt</code></td><td></td><td>[in] Element of the <strong>HistogramFormat</strong> enumeration that specifies the channels for which histograms will be created.</td></tr><tr><td><code>NumberOfEntries</code></td><td></td><td>[in] Integer that specifies the number of elements (of type UINT) in each of the arrays pointed to by <em>channel0</em>, <em>channel1</em>, <em>channel2</em>, and <em>channel3</em>. You must allocate memory for those arrays before you call <strong>GdipBitmapGetHistogram</strong>. To determine the required number of elements, call <strong>GdipBitmapGetHistogramSize</strong>.</td></tr><tr><td><code>channel0</code></td><td></td><td>[out] Pointer to an array of UINTs that receives the first histogram.</td></tr><tr><td><code>channel1</code></td><td></td><td>[out] Pointer to an array of UINTs that receives the second histogram if there is a second histogram. Pass <strong>NULL</strong> if there is no second histogram.</td></tr><tr><td><code>channel2</code></td><td></td><td>[out] Pointer to an array of UINTs that receives the third histogram if there is a third histogram. Pass <strong>NULL</strong> if there is no third histogram.</td></tr><tr><td><code>channel3</code></td><td></td><td>[out] Pointer to an array of UINTs that receives the fourth histogram if there is a fourth histogram. Pass <strong>NULL</strong> if there is no fourth histogram.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Returns one or more histograms for specified color channels of the specified <strong>Bitmap</strong> object.</p>
+<h2>Example</h2>
+<p>' ======================================================================================== ' This example loads an image from disk and gets the histogram. ' ======================================================================================== SUB Example_GetHistogram (BYVAL hdc AS HDC)</p>
+<p>DIM hStatus AS LONG</p>
+<p>' // Create a graphics object from the device context DIM graphics AS GpGraphics PTR hStatus = GdipCreateFromHDC(hdc, @graphics)</p>
+<p>' // Get the DPI scaling ratios DIM dpiX AS SINGLE hStatus = GdipGetDpiX(graphics, @dpiX) DIM rxRatio AS SINGLE = dpiX / 96 DIM dpiY AS SINGLE hStatus = GdipGetDpiY(graphics, @dpiY) DIM ryRatio AS SINGLE = dpiY / 96 ' // Set the scale transform hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)</p>
+<p>' // Create a bitmap object from a .jpg file DIM bmp AS GpBitmap PTR hStatus = GdipCreateBitmapFromFile("climber.jpg", @bmp) ' // Set the resolution of this Bitmap object to the user's DPI settings hStatus = GdipBitmapSetResolution(bmp, dpiX, dpiY)</p>
+<p>' Get histogram size DIM entries AS UINT GdipBitmapGetHistogramSize(HistogramFormatARGB, @entries)</p>
+<p>' Allocate histogram arrays DIM red(entries - 1) AS UINT DIM green(entries - 1) AS UINT DIM blue(entries - 1) AS UINT DIM alpha(entries - 1) AS UINT</p>
+<p>' Extract histograms GdipBitmapGetHistogram(bmp, HistogramFormatARGB, entries, @red(0), @green(0), @blue(0), @alpha(0))</p>
+<p>' Example: print peak red value DIM maxRed AS UINT = 0 FOR i AS UINT = 0 TO entries - 1</p>
+<pre class="code"><code>IF red(i) &gt; maxRed THEN maxRed = red(i)</code></pre>
+<p>NEXT AfxMsg ("Max red intensity count: " &amp; WSTR(maxRed))</p>
+<p>' // Draw the image hStatus = GdipDrawImage(graphics, CAST(GpImage PTR, bmp), 0, 0)</p>
+<p>' // Cleanup IF bmp THEN hStatus = GdipDisposeImage(CAST(GpImage PTR, bmp)) IF graphics THEN hStatus = GdipDeleteGraphics(graphics)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/AfxGdiPlus.bi:1659</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Flat  Api/GdiPlusBitmap.md</span></li><li>Topic: <a href="../bitmap-functions.html">Bitmap Functions</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

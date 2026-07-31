@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GdipGetPropertyIdList — Help Center</title>
+<meta name="description" content="Gets a list of the property identifiers used in the metadata of the image.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipgetpropertyidlist.html">
+<meta property="og:title" content="GdipGetPropertyIdList">
+<meta property="og:description" content="Gets a list of the property identifiers used in the metadata of the image.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipgetpropertyidlist.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/procedures/gdipgetpropertyidlist.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../image-functions.html">Image Functions</a></div>
+<h1>GdipGetPropertyIdList<span class="h1kind">function</span></h1>
+<p class="lede">Gets a list of the property identifiers used in the metadata of the image.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GdipGetPropertyIdList (BYVAL image AS GpImage PTR, BYVAL numOfProperty AS UINT, BYVAL list AS PROPID PTR) AS GpStatus</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>image</code></td><td></td><td>[in] Pointer to the <strong>Image</strong> object.</td></tr><tr><td><code>numOfProperty</code></td><td></td><td>[in] Integer that specifies the number of elements in the list array. Call the <strong>GetPropertyCount</strong> method to determine this number.</td></tr><tr><td><code>list</code></td><td></td><td>[out] Pointer to an array that receives the property identifiers.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Gets a list of the property identifiers used in the metadata of the image.</p>
+<h2>Example</h2>
+<p>' ======================================================================================== ' Gets a list of the property identifiers used in the metadata of an Image object. ' ========================================================================================</p>
+<p>'#CONSOLE ON #define _WIN32_WINNT &amp;h0602 #INCLUDE ONCE "AfxNova/AfxGdiPlus.inc" USING AfxNova</p>
+<p>DIM hStatus AS LONG</p>
+<p>' // Initialize GDI+ DIM token AS ULONG_PTR = AfxGdipInit</p>
+<p>' // Load the original image from file DIM image AS GpImage PTR hStatus = GdipLoadImageFromFile("climber.jpg", @image)</p>
+<p>' // Get the pixel format DIM rguid AS GUID hStatus = GdipGetImageRawFormat(image, @rguid)</p>
+<p>' // Get the number of properties DIM count AS UINT hStatus = GdipGetPropertyCount(image, @count) PRINT "Number of properties =" &amp; STR(count)</p>
+<p>' // Get the list of properties DIM propIDs(count - 1) AS PROPID hStatus = GdipGetPropertyIdList(image, count, @propIDs(0)) FOR i AS LONG = 0 TO count - 1 PRINT "PROPID: " &amp; HEX(propIDs(i)) NEXT</p>
+<p>' // Cleanup IF image THEN GdipDisposeImage(image)</p>
+<p>' // Shutdown GDI+ AfxGdipShutdown token</p>
+<p>PRINT PRINT "Press any key" SLEEP</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/AfxGdiPlus.bi:2111</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Flat  Api/GdiPlusImage.md</span></li><li>Topic: <a href="../image-functions.html">Image Functions</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

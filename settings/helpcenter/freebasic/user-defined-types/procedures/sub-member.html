@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sub (Member) — Help Center</title>
+<meta name="description" content="Declares or defines a member procedure">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/user-defined-types/procedures/sub-member.html">
+<meta property="og:title" content="Sub (Member)">
+<meta property="og:description" content="Declares or defines a member procedure">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/user-defined-types/procedures/sub-member.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/user-defined-types/procedures/sub-member.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>Sub (Member)<span class="h1kind">member</span></h1>
+<p class="lede">Declares or defines a member procedure</p>
+<div class="badges"><a class="badge" href="../index.html">User Defined Types</a><span class="badge">member</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>{ Type | Class | Union } typename</code></pre>
+<pre class="code sig"><code>Declare [ Static | Const ] Sub fieldname [calling convention specifier] [ Alias external_name ] ( [ parameters ] ) [ Static ]</code></pre>
+<pre class="code sig"><code>End { Type | Class | Union }</code></pre>
+<pre class="code sig"><code>Sub typename.fieldname ( [ parameters ] ) [ Export ]</code></pre>
+<pre class="code sig"><code>statements</code></pre>
+<pre class="code sig"><code>End Sub</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>typename</code></td><td></td><td>name of the <code><a href="../../operators/operators/procedures/type-udt.html">Type</a></code>, <code><a href="../../operators/operators/procedures/class.html">Class</a></code>, or <code><a href="union.html">Union</a></code></td></tr><tr><td><code>fieldname</code></td><td></td><td>name of the procedure</td></tr><tr><td><code>external_name</code></td><td></td><td>name of field as seen when externally linked</td></tr><tr><td><code>parameters</code></td><td></td><td>the parameters to be passed to the procedure</td></tr><tr><td><code>calling convention specifier</code></td><td></td><td>can be one of: <code><a href="../../procedures/procedures/cdecl.html">cdecl</a></code>, <code><a href="../../procedures/procedures/stdcall.html">stdcall</a></code> or <code><a href="../../procedures/procedures/pascal.html">pascal</a></code></td></tr></tbody></table></div>
+<h2>Description</h2>
+<br>
+<code><b>Sub</b></code> members are accessed with <code><a href="../../operators/type-or-class-operators/procedures/operator-member-access.html">Operator . (Member Access)</a></code> or <code><a href="../../operators/type-or-class-operators/procedures/operator-pointer-to-member-access.html">Operator -&gt; (Pointer To Member Access)</a></code> to call a member procedure and may optionally accept parameters either <code><a href="../../procedures/procedures/byval.html">ByVal</a></code> or <code><a href="../../procedures/procedures/byref-parameters.html">ByRef</a></code>.  <code><i>typename</i></code> be overloaded  without explicit use of the <code><a href="../../procedures/procedures/overload.html">Overload</a></code> keyword.<br>
+<br>
+<code><i>typename</i></code> is the name of the type for which the <code><b>Sub</b></code> method is declared and defined.  Name resolution for <code><i>typename</i></code> follows the same rules as procedures when used in a <code><a href="../../modularizing/procedures/namespace.html">Namespace</a></code>.<br>
+<br>
+A hidden <code><a href="this.html">This</a></code> parameter having the same type as <code><i>typename</i></code> is passed to non-static member procedures.  <code><a href="this.html">This</a></code> is used to access the fields of the <code><a href="../../operators/operators/procedures/type-udt.html">Type</a></code>, <code><a href="../../operators/operators/procedures/class.html">Class</a></code>, or <code><a href="union.html">Union</a></code>.<br>
+To access duplicated symbols defined as global outside the Type, add one or preferably two dot(s) as prefix: <code>.SomeSymbol</code> or preferably <code>..SomeSymbol</code> (or only <code>..SomeSymbol</code> if inside a <a href="with.html">With..End With</a> block).<br>
+<br>
+A <code><a href="static-member.html">Static (Member)</a></code> may be declared using the <code><b>Static</b></code> specifier.  A <code><a href="const-member.html">Const (Member)</a></code> may be declared using the <code><b>Const</b></code> specifier.<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Dialect Differences</h3><br>
+<ul><li> Only available in the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang fb</a></i> dialect.<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="../../operators/operators/procedures/class.html">Class</a></code><br>
+<li> <code><a href="function-member.html">Function (Member)</a></code><br>
+<li> <code><a href="../../procedures/procedures/sub.html">Sub</a></code><br>
+<li> <code><a href="../../operators/operators/procedures/type-udt.html">Type</a></code><br>
+<br>
+</li></li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span>Statistics</span>
+
+  <span>count</span> <span class="tok-kw">As</span> <span class="tok-kw">Single</span>
+
+  <span>sum</span> <span class="tok-kw">As</span> <span class="tok-kw">Single</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>AddValue</span><span>(</span> <span class="tok-kw">ByVal</span> <span>x</span> <span class="tok-kw">As</span> <span class="tok-kw">Single</span> <span>)</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>ShowResults</span><span>(</span> <span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>Statistics.AddValue</span><span>(</span> <span class="tok-kw">ByVal</span> <span>x</span> <span class="tok-kw">As</span> <span class="tok-kw">Single</span> <span>)</span>
+
+  <span>count</span> <span>+=</span> <span class="tok-nu">1</span>
+
+  <span>sum</span> <span>+=</span> <span>x</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>Statistics.ShowResults</span><span>(</span> <span>)</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;Number of Values = &quot;</span><span>;</span> <span>count</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;Average          = &quot;</span><span>;</span>
+
+  <span class="tok-kw">If</span><span>(</span> <span>count</span> <span>&gt;</span> <span class="tok-nu">0</span> <span>)</span> <span class="tok-kw">Then</span>
+
+    <span class="tok-kw">Print</span> <span>sum</span> <span>/</span> <span>count</span>
+
+  <span class="tok-kw">Else</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;N/A&quot;</span>
+
+  <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-kw">Dim</span> <span>stats</span> <span class="tok-kw">As</span> <span>Statistics</span>
+
+
+
+<span>stats.AddValue</span> <span class="tok-nu">17.5</span>
+
+<span>stats.AddValue</span> <span class="tok-nu">20.1</span>
+
+<span>stats.AddValue</span> <span class="tok-nu">22.3</span>
+
+<span>stats.AddValue</span> <span class="tok-nu">16.9</span>
+
+
+
+<span>stats.ShowResults</span></pre></code><br>
+<b>Output:</b><br>
+<pre class="code">
+Number of Values =  4
+Average          =  19.2
+</pre><br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgMemberSub.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

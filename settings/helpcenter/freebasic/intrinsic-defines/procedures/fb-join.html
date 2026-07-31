@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__FB_JOIN__ — Help Center</title>
+<meta name="description" content="Intrinsic define (macro) performed by the compiler.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/intrinsic-defines/procedures/fb-join.html">
+<meta property="og:title" content="__FB_JOIN__">
+<meta property="og:description" content="Intrinsic define (macro) performed by the compiler.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/intrinsic-defines/procedures/fb-join.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/intrinsic-defines/procedures/fb-join.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>__FB_JOIN__<span class="h1kind">keyword</span></h1>
+<p class="lede">Intrinsic define (macro) performed by the compiler.</p>
+<div class="badges"><a class="badge" href="../index.html">Intrinsic Defines</a><span class="badge">keyword</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>__FB_JOIN__( arg1, arg2 )</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>arg1</code></td><td></td><td>,</td></tr><tr><td><code>arg2</code></td><td></td><td>left (1) and right (2) arguments to join</td></tr></tbody></table></div>
+<h2>Description</h2>
+<br>
+Joins two token arguments together as one, similar to token pasting operator (<code><a href="../../operators/preprocessor-operators/procedures/operator-preprocessor-concatenate.html">##</a></code>) but more powerfull (will resolve arguments before joining).<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Version</h3><br>
+<ul><li> Since fbc 1.08.0<br>
+<br>
+</li></ul>
+<h3>Differences from QB</h3><br>
+<ul><li> New to FreeBASIC<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="../../operators/preprocessor-operators/procedures/operator-preprocessor-concatenate.html">Operator ## (Preprocessor Concatenate)</a></code><br>
+<br>
+</li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span>#macro m ( arg1, arg2 )
+
+</span>    <span>#print arg1##arg2
+
+</span>    <span>#print __FB_JOIN__( arg1, arg2 )
+
+#endmacro
+
+</span>
+
+<span>m</span><span>(</span><span>Free</span><span>,</span> <span>BASIC</span><span>)</span>
+
+
+
+<span class="tok-cm">/' Compiler output:</span>
+
+<span class="tok-cm">FreeBASIC</span>
+
+<span class="tok-cm">FreeBASIC</span>
+
+<span class="tok-cm">'/</span></pre></code><br>
+<code><pre class="code"><span>#define PREFIX p
+
+#define SUFFIX _T
+
+</span>
+
+<span class="tok-cm">'' this won't work - arguments not expanded</span>
+
+<span>#define   makename1( x )  PREFIX##x##SUFFIX
+
+</span>
+
+<span class="tok-cm">'' this will work - can do this in older versions of fbc too</span>
+
+<span>#define join( a, b ) a##b
+
+#define makename2( x ) join( PREFIX, join( x, SUFFIX ) )
+
+</span>
+
+<span class="tok-cm">'' built in __FB_JOIN__() -- works pretty much like join() above</span>
+
+<span>#define   makename3( x )  __FB_JOIN__( PREFIX, __FB_JOIN__( x, SUFFIX ) )
+
+</span>
+
+<span>#macro dump( arg )
+
+</span>    <span>#print #arg
+
+#endmacro
+
+</span>
+
+<span>dump</span><span>(</span> <span>makename1</span><span>(</span><span>text</span><span>)</span> <span>)</span>
+
+<span>dump</span><span>(</span> <span>makename2</span><span>(</span><span>text</span><span>)</span> <span>)</span>
+
+<span>dump</span><span>(</span> <span>makename3</span><span>(</span><span>text</span><span>)</span> <span>)</span>
+
+
+
+<span class="tok-cm">/' Compiler output:</span>
+
+<span class="tok-cm">PREFIXtextSUFFIX</span>
+
+<span class="tok-cm">ptext_T</span>
+
+<span class="tok-cm">ptext_T</span>
+
+<span class="tok-cm">'/</span></pre></code><br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgDdfbjoin.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

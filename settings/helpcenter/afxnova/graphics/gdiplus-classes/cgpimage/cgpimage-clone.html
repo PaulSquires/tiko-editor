@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CGpImage.Clone — Help Center</title>
+<meta name="description" content="Copies the contents of the existing Image object into a new Image object.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpimage/cgpimage-clone.html">
+<meta property="og:title" content="CGpImage.Clone">
+<meta property="og:description" content="Copies the contents of the existing Image object into a new Image object.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpimage/cgpimage-clone.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-classes/cgpimage/cgpimage-clone.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cgpimage-class.html">CGpImage Class</a></div>
+<h1>CGpImage.Clone<span class="h1kind">method</span></h1>
+<p class="lede">Copies the contents of the existing Image object into a new Image object.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">method</span><span class="badge">CGpBitmap.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION Clone (BYVAL pCloneImage AS CGpImage PTR) AS GpStatus</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>pCloneImage</code></td><td></td><td>Pointer to the <strong>Image</strong> object where to copy the contents of the existing object.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Copies the contents of the existing <strong>Image</strong> object into a new <strong>Image</strong> object.</p>
+<h2>Examples</h2>
+<p>' ======================================================================================== ' The following example creates an Image object based on a JPEG file. The code creates a ' second Image object by cloning the first. Then the code calls the DrawImage method twice ' to draw the two images. ' ======================================================================================== SUB Example_Clone (BYVAL hdc AS HDC)</p>
+<p>' // Create a graphics object from the window device context DIM graphics AS CGpGraphics = hdc ' // Get the DPI scaling ratio DIM rxRatio AS SINGLE = graphics.GetDpiX / 96 DIM ryRatio AS SINGLE = graphics.GetDpiY / 96</p>
+<p>' // Create an Image object, and then clone it. DIM image1 AS CGpImage = "climber.jpg" DIM pImage2 AS CGpImage image1.Clone(@pImage2) ' // You can also use: ' DIM pImage2 AS CGpImage = @image1</p>
+<p>' // Draw the original image and the cloned image. graphics.DrawImage(@image1, 20 * rxRatio, 20 * ryRatio) graphics.DrawImage(@pImage2, 230 * rxRatio, 20 * ryRatio)</p>
+<p>END SUB ' ========================================================================================</p>
+<p>SUB Example_Clone (BYVAL hdc AS HDC)</p>
+<p>' // Create a graphics object from the window device context DIM graphics AS CGpGraphics = hdc ' // Set the scaling factors using the DPI ratios graphics.ScaleTransformForDpi</p>
+<p>' // Create an Image object, and then clone it. DIM image1 AS CGpBitmap = "climber.jpg" image1.SetResolutionForDpi DIM image2 AS CGpBitmap = @image1</p>
+<p>' // Draw the original image and the cloned image. graphics.DrawImage(@image1, 10, 10) graphics.DrawImage(@image2, 200, 10)</p>
+<p>END SUB</p>
+<p>This DPI aware version uses the <code>CGpBitmap</code> class to create the <strong>Image</strong> object and to clone it. Using the <code>CGpBitmap</code> class is needed to be able to use the <strong>SetResolution</strong> method.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CGpBitmap.inc</code></li><li>Defined in <span class="srcref">AfxNova/CGpBitmap.inc:407</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Classes/CGpImage Classes.md</span></li><li>Topic: <a href="../cgpimage-class.html">CGpImage Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

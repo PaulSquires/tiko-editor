@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GdipIsVisiblePathPointI — Help Center</title>
+<meta name="description" content="Determines whether a specified point lies in the area that is filled when this path is filled by a specified **Graphics** object.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipisvisiblepathpointi.html">
+<meta property="og:title" content="GdipIsVisiblePathPointI">
+<meta property="og:description" content="Determines whether a specified point lies in the area that is filled when this path is filled by a specified **Graphics** object.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipisvisiblepathpointi.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/procedures/gdipisvisiblepathpointi.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../graphicspath-functions.html">GraphicsPath Functions</a></div>
+<h1>GdipIsVisiblePathPointI<span class="h1kind">function</span></h1>
+<p class="lede">Determines whether a specified point lies in the area that is filled when this path is filled by a specified **Graphics** object.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GdipIsVisiblePathPointI (BYVAL path AS GpPath PTR, BYVAL x AS INT_, BYVAL y AS INT_, BYVAL graphics AS GpGraphics PTR, BYVAL result AS BOOL PTR) AS GpStatus</code></pre>
+<div class="note">Also documented as <code>GdipIsVisiblePathPoint</code> — one description covers them all.</div>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>path</code></td><td></td><td>[in] Pointer to the <strong>GraphicsPath</strong> object.</td></tr><tr><td><code>x</code></td><td></td><td>[in] The x-coordinate of the point to be tested.</td></tr><tr><td><code>y</code></td><td></td><td>[in] The y-coordinate of the point to be tested.</td></tr><tr><td><code>graphics</code></td><td></td><td>[in] Pointer to a <strong>Graphics</strong> object that specifies a world-to-device transformation. If the value of this parameter is NULL, the test is done in world coordinates; otherwise, the test is done in device coordinates. The default value is NULL.</td></tr><tr><td><code>result</code></td><td></td><td>[out] Pointer to a variable that receives a boolean value indicating whether test point lies in the interior of this path (TRUE) or not (FALSE).</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Determines whether a specified point lies in the area that is filled when this path is filled by a specified <strong>Graphics</strong> object.</p>
+<h2>Examples</h2>
+<p>' ======================================================================================== ' This example checks if a point lies inside the filled area of a GraphicsPath. ' ======================================================================================== SUB Example_IsVisiblePathPoint (BYVAL hdc AS HDC)</p>
+<p>DIM hStatus AS LONG</p>
+<p>' // Create a graphics object from the device context DIM graphics AS GpGraphics PTR hStatus = GdipCreateFromHDC(hdc, @graphics)</p>
+<p>' // Get the DPI scaling ratios DIM dpiX AS SINGLE hStatus = GdipGetDpiX(graphics, @dpiX) DIM rxRatio AS SINGLE = dpiX / 96 DIM dpiY AS SINGLE hStatus = GdipGetDpiY(graphics, @dpiY) Dim ryRatio AS SINGLE = dpiY / 96 ' // Set the scale transform hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)</p>
+<p>' // Create GraphicsPath DIM path AS GpPath PTR hStatus = GdipCreatePath(FillModeAlternate, @path) hStatus = GdipAddPathEllipse(path, 100, 80, 150, 100)</p>
+<p>' // Check if point is on the path ' // Returns error 5 (StatusObjectBusy) DIM isVisible AS BOOL hStatus = GdipIsVisiblePathPoint(path, 150, 120, graphics, @isVisible) IF isVisible THEN</p>
+<pre class="code"><code>AfxMsg "Point is visible"</code></pre>
+<p>ELSE</p>
+<pre class="code"><code>AfxMsg "Point is not visible"</code></pre>
+<p>END IF</p>
+<p>' // Create a Pen DIM pen AS GpPen PTR hStatus = GdipCreatePen1(ARGB_BLACK, 5, UnitWorld, @pen)</p>
+<p>' // Draw the path hStatus = GdipDrawPath(graphics, pen, path)</p>
+<p>' // Cleanup IF pen THEN GdipDeleteBrush(pen) IF path THEN GdipDeletePath(path) IF graphics THEN GdipDeleteGraphics(graphics)</p>
+<p>END SUB ' ========================================================================================</p>
+<p>' ======================================================================================== ' The following example creates an elliptical path and draws that path with a wide yellow pen. ' Then the code tests each point in an array to see whether the point touches the outline ' (as it would be drawn by the wide yellow pen) of the path. Points that touch the outline ' are painted green, and points that don't touch the outline are painted red. ' ======================================================================================== SUB Example_IsVisiblePathPoint (BYVAL hdc AS HDC)</p>
+<p>DIM hStatus AS LONG</p>
+<p>' // Create a graphics object from the device context DIM graphics AS GpGraphics PTR hStatus = GdipCreateFromHDC(hdc, @graphics)</p>
+<p>' // Get the DPI scaling ratios DIM dpiX AS SINGLE hStatus = GdipGetDpiX(graphics, @dpiX) DIM rxRatio AS SINGLE = dpiX / 96 DIM dpiY AS SINGLE hStatus = GdipGetDpiY(graphics, @dpiY) Dim ryRatio AS SINGLE = dpiY / 96 ' // Set the scale transform hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)</p>
+<p>' // Create the pen and brush DIM yellowPen AS GpPen PTR hStatus = GdipCreatePen1(ARGB_YELLOW, 20, UnitWorld, @yellowPen) DIM brush AS GpBrush PTR hStatus = GdipCreateSolidFill(ARGB_RED, @brush)</p>
+<p>' // Create GraphicsPath DIM path AS GpPath PTR hStatus = GdipCreatePath(FillModeAlternate, @path) ' // Add an ellipse hStatus = GdipAddPathEllipse(path, 50, 50, 200, 100) ' // Draw the path hStatus = GdipDrawPath(graphics, yellowPen, path)</p>
+<p>' // Create an array of four points, and determine whether each ' // point in the array touches the outline of the path. ' // If a point touches the outline, paint it green. ' // If a point does not touch the outline, paint it red. DIM pts(3) AS GpPointF pts(0).x = 50  : pts(0).y = 100 pts(1).x = 270 : pts(1).y = 100 pts(2).x = 150 : pts(2).y = 170 pts(3).x = 180 : pts(3).y = 60</p>
+<p>FOR i AS LONG = 0 TO 3</p>
+<pre class="code"><code>DIM result AS BOOL
+  hStatus = GdipIsVisiblePathPoint(path, pts(i).x, pts(i).y, graphics, @result)
+  IF result THEN
+     hStatus = GdipSetSolidFillColor(brush, ARGB_LIGHTGREEN)
+  ELSE
+     hStatus = GdipSetSolidFillColor(brush, ARGB_RED)
+  END IF
+  hStatus = GdipFillEllipse(graphics, brush, pts(i).x - 3, pts(i).y - 3, 6, 6)</code></pre>
+<p>NEXT</p>
+<p>' // Cleanup IF yellowPen THEN GdipDeleteBrush(yellowPen) IF brush THEN GdipDeleteBrush(brush) IF path THEN GdipDeletePath(path) IF graphics THEN GdipDeleteGraphics(graphics)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/AfxGdiPlus.bi:2059</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Flat  Api/GdiPlusGraphicsPath.md</span></li><li>Topic: <a href="../graphicspath-functions.html">GraphicsPath Functions</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

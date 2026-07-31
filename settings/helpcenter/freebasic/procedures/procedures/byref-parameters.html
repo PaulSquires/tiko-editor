@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Byref (Parameters) — Help Center</title>
+<meta name="description" content="Declaration specifier to explicitly pass a parameter by reference">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/procedures/procedures/byref-parameters.html">
+<meta property="og:title" content="Byref (Parameters)">
+<meta property="og:description" content="Declaration specifier to explicitly pass a parameter by reference">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/procedures/procedures/byref-parameters.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/procedures/procedures/byref-parameters.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>Byref (Parameters)<span class="h1kind">keyword</span></h1>
+<p class="lede">Declaration specifier to explicitly pass a parameter by reference</p>
+<div class="badges"><a class="badge" href="../index.html">Procedures</a><span class="badge">keyword</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>ByRef param As datatype</code></pre>
+<h2>Description</h2>
+<br>
+Passes a variable by reference, that is its address, to a subroutine or function. When a variable is passed by reference, the contents of the variable can be changed by the target subroutine or function.<br>
+<br>
+In <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang qb</a></i> and <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang fblite</a></i> dialects, <code><b>ByRef</b></code> is the default parameter passing convention, unless <code><a href="../../compiler-switches/procedures/option-byval.html">Option ByVal</a></code> is in effect.<br>
+<br>
+Opposite of <code><a href="byval.html">ByVal</a></code>.<br>
+<br>
+<b>Note:</b> A constant or a literal expression can also be passed to such a procedure (which gets by reference), but they are obviously not modifiable from the procedure body. In that case, the compiler passes by reference a temporary variable initialized with the constant or the literal expression.<br>
+<br>
+<b>Note:</b> Since fbc version 1.20.0, arguments of STRING*N type are copied to a temporary variable when passed to BYREF ZSTRING (or BYVAL ZSTRING PTR) parameters (since there is no expectation that STRING*N will have it's own terminating null character) and copied back after the call.<br>
+<br>
+<b>Warning:</b> When passing by reference, it is recommended to pass an argument of the same type (or fully compatible, like a derived type for example) as that of the declared parameter. Although in some cases the compiler accepts to pass a different type, often the result is not the one expected.<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Usage</h3><code><br>
+[ <a href="declare.html">Declare</a> ] { <a href="sub.html">Sub</a> | <a href="function.html">Function</a> } <i>proc_name</i> ( <b>ByRef</b> <i>param</i> <a href="../../miscellaneous-keywords/procedures/as.html">As</a> <a href="../../reference/data-types.html">datatype</a>  )<br>
+</code><br>
+
+<h3>Dialect Differences</h3><br>
+<ul><li> In <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang fb</a></i> dialect, <code><a href="byval.html">ByVal</a></code> is the default parameter passing convention for all built-in types except <code><a href="../../operators/preprocessor-operators/procedures/string.html">String</a></code> and user-defined <code><a href="../../operators/operators/procedures/type-udt.html">Type</a></code> which are passed <code><b>ByRef</b></code> by default. The <code><a href="../../standard-data-types/procedures/zstring.html">ZString</a></code> and <code><a href="../../standard-data-types/procedures/wstring.html">WString</a></code> built-in types are also passed <code><b>ByRef</b></code> by default, but passing <code><a href="byval.html">ByVal</a></code> is forbidden. Arrays are always passed <code><b>ByRef</b></code> and the use of the specifier <code><b>ByRef</b></code> or <code><a href="byval.html">ByVal</a></code> is forbidden.<br>
+<li> In <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang qb</a></i> and <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang fblite</a></i> dialects, <code><b>ByRef</b></code> is the default parameter passing convention.<br>
+<br>
+</li></li></ul>
+<h3>Differences from QB</h3><br>
+<ul><li> New to FreeBASIC<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <a href="../../tutorials/programmer-s-guide/passing-arguments-to-procedures.html">Passing Arguments to Procedures</a><br>
+<li> <code><a href="declare.html">Declare</a></code><br>
+<li> <code><a href="byval.html">ByVal</a></code><br>
+<li> <code><a href="byref-function-results.html">Byref (Function Results)</a></code><br>
+<li> <code><a href="../../variable-declarations/procedures/byref-variables.html">Byref (Variables)</a></code><br>
+<br>
+</li></li></li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span>MyVar</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>ChangeVar</span><span>(</span><span class="tok-kw">ByRef</span> <span>AVar</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+    <span>AVar</span> <span>=</span> <span>AVar</span> <span>+</span> <span class="tok-nu">1</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span>MyVar</span> <span>=</span> <span class="tok-nu">1</span>
+
+<span class="tok-kw">Print</span> <span>&quot;MyVar: &quot;</span><span>;</span> <span>MyVar</span> <span class="tok-cm">'output = 1</span>
+
+<span>ChangeVar</span> <span>MyVar</span>
+
+<span class="tok-kw">Print</span> <span>&quot;MyVar: &quot;</span><span>;</span> <span>MyVar</span> <span class="tok-cm">'output = 2</span>
+
+<span class="tok-kw">Sleep</span>
+
+<span class="tok-kw">End</span></pre></code><br>
+<br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgByref.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>
