@@ -14,7 +14,7 @@ general.version: 1.0.0
 
 compile.iconsuccess.foreground: 138,209,138  # green
 compile.iconfail.foreground: 255,0,0         # red
-output.valuechanged.foreground: 046,158,074  # soft green - a debugger value that changed on the last step
+output.valuechanged.foreground: 198,106,012  # soft orange - a debugger value that changed on the last step
 
 main.panel.background: %WHITE
 

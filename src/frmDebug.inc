@@ -1221,8 +1221,11 @@ end sub
 ' field on the paint struct would be the alternative, and that is a change to a control five
 ' other hosts share, for this window's convenience.)
 '
-' ghGeneral.iconfail is 255,0,0 in BOTH shipped themes, so unlike ui.accent it cannot be
-' legible in one and invisible in the other.
+' The colour is output.valuechanged -- a soft ORANGE, and its own theme key rather than a
+' reuse of an icon colour. It is deliberately DIFFERENT per theme (240,178,102 dark /
+' 198,106,12 light): a tint light enough to read against the dark Output background is
+' washed out on white, so one shared value would be legible in one theme and not the other.
+' That is the ui.accent trap, and this key exists to avoid it.
 ' ==========================================================================================
 private sub frmDebug_PaintVarRowFor( byval hLV as HWND, byval p as PSLISTTREE_PAINTINFO ptr )
     dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN)
@@ -1263,9 +1266,9 @@ private sub frmDebug_PaintVarRowFor( byval hLV as HWND, byval p as PSLISTTREE_PA
 
     ' -1, not 0, is "this row has no descriptor". PsListTree_AddNode defaults itemData to
     ' ZERO, so a row added without one silently claimed descriptor 0 and inherited its
-    ' changed flag -- which is why the "<click to add a watch>" row turned green whenever the
-    ' first global happened to change. Every row that has no descriptor now passes
-    ' FRMDEBUG_NOROW explicitly.
+    ' changed flag -- which is why the "<click to add a watch>" row lit up in the changed
+    ' colour whenever the first global happened to change. Every row that has no descriptor
+    ' now passes FRMDEBUG_NOROW explicitly.
     dim as boolean bChanged = false
     dim as long k = cast(long, PsListTree_GetItemData( hLV, p->itemID ))
     if (k >= 0) andalso (k < gDbgRowCount) then bChanged = gDbgRow(k).bChanged
