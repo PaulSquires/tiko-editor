@@ -391,7 +391,10 @@ const OUTPUT_PANEL_MIN_HEIGHT = OUTPUT_TABS_HEIGHT * 2
 ' Width reserved at the right of the Output tab strip for the close "X" PsIconPanel. The
 ' glyph cell itself is smaller; the surplus is the breathing room the old hand-drawn rect
 ' got from its 10px right margin.
-const OUTPUT_CLOSE_WIDTH = 40
+' The cell each Output strip icon gets. The GLYPH is 20 unscaled and centred in it, so this
+' number IS the spacing: at 40 the two icons sat a full icon-width apart and read as two
+' unrelated controls rather than a pair.
+const OUTPUT_CLOSE_WIDTH = 30
 const PANEL_ICON_HEIGHT = 24
 
 ' Debounce timer on HWND_FRMMAIN: restarted on every editor modification;

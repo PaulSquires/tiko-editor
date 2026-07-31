@@ -363,6 +363,26 @@ function frmOutput_PositionWindows() as LRESULT
             "  cell=" & str(nCellWidth) & "  closeShown=" & str(bCloseShown) & _
             "  undockX=" & str(nUndockLeft) & "  closeX=" & str(nCloseLeft)
         print sT
+        ' Read BACK from the windows, and in the FRAME's coordinates -- the numbers above are
+        ' what was asked for, which is not evidence about where anything landed.
+        dim as HWND hFrame = GetParent( HWND_FRMOUTPUT )
+        if IsWindow(hFrame) then
+            dim as RECT rcF, rcP, rcU, rcC
+            GetClientRect( hFrame, @rcF )
+            GetWindowRect( HWND_FRMOUTPUT, @rcP )
+            GetWindowRect( HWND_FRMOUTPUT_UNDOCK, @rcU )
+            GetWindowRect( HWND_FRMOUTPUT_CLOSE, @rcC )
+            MapWindowPoints( HWND_DESKTOP, hFrame, cast(LPPOINT, @rcP), 2 )
+            MapWindowPoints( HWND_DESKTOP, hFrame, cast(LPPOINT, @rcU), 2 )
+            MapWindowPoints( HWND_DESKTOP, hFrame, cast(LPPOINT, @rcC), 2 )
+            sT = "    parent client 0.." & str(rcF.right) & _
+                 "   panel=" & str(rcP.left) & ".." & str(rcP.right) & _
+                 "   undock=" & str(rcU.left) & ".." & str(rcU.right) & _
+                 "   close=" & str(rcC.left) & ".." & str(rcC.right) & _
+                 iif( (GetWindowLongPtr(HWND_FRMOUTPUT_CLOSE, GWL_STYLE) and WS_VISIBLE) <> 0, _
+                      "  CLOSE-VISIBLE", "  close-hidden" )
+            print sT
+        end if
     end if
 
     ' Re-push the captions so a language change is picked up, exactly as the old code did by
