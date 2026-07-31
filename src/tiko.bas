@@ -85,6 +85,8 @@ dim shared as DWSTRING gwszDefaultToolchain = "FreeBASIC-1.10.1-winlibs-gcc-9.3.
 #include once "clsApp.bi"
 #include once "clsSymbolDb.bi"
 #include once "clsScanMgr.bi"
+#include once "modUnusedSymbols.bi"
+#include once "frmUnusedSymbols.bi"
 ' Declared up here rather than beside its .inc because modCodetips.inc (which BUILDS the
 ' AUTOC_ITEM array) is included well before the frm* block.
 #include once "frmAutoComplete.bi"
@@ -132,6 +134,10 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "clsApp.inc"
 #include once "clsSymbolDb.inc"
 #include once "clsScanMgr.inc"
+' After clsSymbolDb.inc (it reads the reference counts through gSymDb's
+' accessors) and after modRoutines.inc, whose OpenSelectedDocument the window
+' drives. The MODEL only; the window comes in with the frm* block.
+#include once "modUnusedSymbols.inc"
 #include once "clsTopTabCtl.inc"
 #include once "modAutoInsert.inc"
 #include once "modCompile.inc"
@@ -174,6 +180,9 @@ dim shared gTTabCtl as clsTopTabCtl
 ' of those are already included above, so only the ordering below matters.
 #include once "PsToggle.inc"
 #include once "PsButton.inc"
+' Vendored for the Unused Symbols report's kind filters. Its dependencies
+' (PsBufferPaint, PsTipHost/PsTooltip) are already here and byte-identical.
+#include once "PsCheckBox.inc"
 #include once "PsComboBox.inc"
 #include once "PsScrollPanel.inc"
 #include once "PsNumericUpDown.inc"
@@ -255,6 +264,8 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "frmMainCompile.inc"
 #include once "frmMainDebug.inc"
 #include once "frmDebug.inc"
+' After modUnusedSymbols.inc (the model) and modRoutines.inc (OpenSelectedDocument).
+#include once "frmUnusedSymbols.inc"
 ' Late on purpose: the context menus' select callbacks call into the OnCommand_*
 ' handlers, the panel loaders and frmMenuBar_CreatePopup, so every one of those must
 ' already be declared. (Its declarations come in early via modContextMenus.bi.)

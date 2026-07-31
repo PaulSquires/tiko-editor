@@ -150,6 +150,18 @@ type clsSymbolDb
         declare function SymBodyLine( byval r as SYMBOLREF ) as long          ' 0 if declare-only
         declare function SymParent( byval r as SYMBOLREF ) as SYMBOLREF
 
+        ' -- reference counts (see FBCP_SYMBFLAG_REFTRACKED in fbcParser.bi) --
+        ' Only meaningful when SymFlags() has FBCP_SYMBFLAG_REFTRACKED; without it
+        ' a zero means UNKNOWN, not unused.
+        declare function SymReadCount( byval r as SYMBOLREF ) as long
+        declare function SymWriteCount( byval r as SYMBOLREF ) as long
+        declare function SymRefFile( byval r as SYMBOLREF ) as wstring ptr    ' 0 if no reference
+        declare function SymRefLine( byval r as SYMBOLREF ) as long           ' 0 if no reference
+
+        ' Root of the toolchain include tree ("" when not derivable), for the
+        ' user-files-only test EnumAllProcsTypes also applies. Already uppercased.
+        declare function ToolchainIncludeRoot() as DWSTRING
+
         ' -- calltip synthesis (replaces stored CallTip strings) --
         declare function BuildCalltip( byval refProc as SYMBOLREF ) as DWSTRING
         ' Does this proc take any caller-supplied parameter? Stops at the first one

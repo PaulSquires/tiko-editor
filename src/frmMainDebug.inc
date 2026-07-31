@@ -42,6 +42,9 @@ function OnCommand_DebugCommon( byval id as long ) as LRESULT
              IDM_DEBUG_STEPOVER, IDM_DEBUG_STEPOUT, IDM_DEBUG_RUNTOCURSOR
             frmDebug_Command( id )
 
+        case IDM_DEBUG_UNUSEDSYMBOLS
+            frmUnusedSymbols_Show( HWND_FRMMAIN )
+
         case IDM_DEBUG_TOGGLEBREAKPOINT
             pDoc->ToggleBreakPoint( pDoc->GetCurrentLineNumber )
             

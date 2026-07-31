@@ -747,6 +747,34 @@ function clsSymbolDb.SymFlags( byval r as SYMBOLREF ) as long
     function = r.pRSet->pResult->symbols[r.idx].flags
 end function
 
+function clsSymbolDb.SymReadCount( byval r as SYMBOLREF ) as long
+    if r.IsValid = false then return 0
+    function = r.pRSet->pResult->symbols[r.idx].readCount
+end function
+
+function clsSymbolDb.SymWriteCount( byval r as SYMBOLREF ) as long
+    if r.IsValid = false then return 0
+    function = r.pRSet->pResult->symbols[r.idx].writeCount
+end function
+
+function clsSymbolDb.SymRefFile( byval r as SYMBOLREF ) as wstring ptr
+    if r.IsValid = false then return 0
+    dim as long fi = r.pRSet->pResult->symbols[r.idx].refFileIndex
+    if fi < 0 then return 0
+    if fi >= r.pRSet->pResult->fileCount then return 0
+    function = cast( wstring ptr, @r.pRSet->pResult->stringPool[ r.pRSet->pResult->fileOffsets[fi] ] )
+end function
+
+function clsSymbolDb.SymRefLine( byval r as SYMBOLREF ) as long
+    if r.IsValid = false then return 0
+    function = r.pRSet->pResult->symbols[r.idx].refLine
+end function
+
+function clsSymbolDb.ToolchainIncludeRoot() as DWSTRING
+    if len( gConfig.FBWINCompiler64 ) = 0 then return ""
+    return ucase( AfxStrPathname( "PATH", ProcessFromCurdriveApp( gConfig.FBWINCompiler64 ) ) & "inc" )
+end function
+
 function clsSymbolDb.SymLine( byval r as SYMBOLREF ) as long
     if r.IsValid = false then return 0
     function = r.pRSet->pResult->symbols[r.idx].lineNum

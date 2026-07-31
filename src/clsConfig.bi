@@ -112,6 +112,11 @@ type clsConfig
         ' unscaled, and the height grew by the DPI factor on every launch.
         ShowOutputPanelHeight     as long = OUTPUT_TABS_HEIGHT * 5 ' user set height
         ShowOutputPanelMinimized  as long = true          ' if window is at minimum height (toggled "minimized")
+        ' Unused Symbols report. The toggles are a bitmask of (1 shl UNUSED_KIND); the
+        ' default 63 is all six kinds on, which is what the report is for.
+        UnusedKindMask            as long = 63
+        UnusedSortCol             as long = 0
+        UnusedSortDesc            as boolean = false
         ShowOutputPanelIndex      as long = 0             ' persisted copy of the Output tab bar's
                                                           ' current panel (default: Compiler Results).
                                                           ' The bar itself owns it at runtime --

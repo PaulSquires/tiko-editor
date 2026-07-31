@@ -1590,6 +1590,24 @@ function frmMain_WndProc( _
                     ' active file's text; project scans sweep every user file on
                     ' disk) - refresh the panel either way.
                     frmOutput_UpdateToDoListview()
+
+                    ' TIKO_UNUSED_AUTOOPEN=1: open the Unused Symbols report as soon as a
+                    ' project scan lands, which is the only way to reach its LAYOUT
+                    ' self-test without a human driving the menu -- the report needs a
+                    ' completed project scan before it has anything to show.
+                    ' A completed project scan refreshes an open Unused Symbols report.
+                    ' This is how its Refresh button lands: the button only REQUESTS a scan,
+                    ' because acting on the report changes both the line numbers and the
+                    ' reference counts, so re-reading the old scan would be stale.
+                    if (nTier = ScanTierProject) andalso frmUnusedSymbols_IsOpen() then
+                        frmUnusedSymbols_Rebuild()
+                    end if
+
+                    dim as boolean bAutoOpenUnused = cbool( nTier = ScanTierProject )
+                    bAutoOpenUnused = bAutoOpenUnused andalso _
+                                      cbool( environ("TIKO_UNUSED_AUTOOPEN") = "1" )
+                    bAutoOpenUnused = bAutoOpenUnused andalso (frmUnusedSymbols_IsOpen() = false)
+                    if bAutoOpenUnused then frmUnusedSymbols_Show( HWND_FRMMAIN )
                 end if
             end if
 
@@ -1688,6 +1706,9 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ' walk and the localized strings. It launches nothing -- see the suite's own header
     ' for what that means it cannot reach.
     frmDebug_RunSelfTest()
+    ' Unused Symbols: the model only (comparator + filter). Pure, so it needs no scan and
+    ' no window -- which is also everything it cannot reach; see the suite's header.
+    UnusedSymbols_RunSelfTest()
     ' Set the small and large icon for the main window (must be set after main window is created)
     pWindow->BigIcon   = LoadImage( pWindow->InstanceHandle, "IMAGE_AAA_MAINICON", IMAGE_ICON, 32, 32, LR_SHARED)
     pWindow->SmallIcon = LoadImage( pWindow->InstanceHandle, "IMAGE_AAA_MAINICON", IMAGE_ICON, 16, 16, LR_SHARED)
