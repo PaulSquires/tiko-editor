@@ -60,9 +60,9 @@ dim shared as long         gDbgRowCount
 dim shared as FRMDEBUG_SORT gDbgSortGlobals
 dim shared as FRMDEBUG_SORT gDbgSortLocals
 
-' Which watch row is the "<click to add a watch>" prompt, so the painter can dim it and the
-' click handler can open an editor on it. -1 when the list is full.
-dim shared as long gDbgWatchAddRow = -1
+' The + button in the WATCH caption band. A real control rather than a painted glyph, so it
+' carries its own tooltip, hover and press states for free.
+dim shared as HWND gDbgBtnAddWatch
 
 ' ==========================================================================================
 ' Status line
@@ -543,21 +543,31 @@ sub frmDebug_FillWatch()
             ' somewhere else, so it is reported as such rather than as an error.
             PsListTree_SetCellText( hLV, r, 1, L(623, "<not in scope>") )
         end if
-        ' The delete affordance. Drawn as a glyph by the painter rather than stored as text,
-        ' so it renders in the symbol font without the rest of the row doing so.
-        PsListTree_SetCellText( hLV, r, WATCHCOL_DELETE, "" )
     next
 
-    ' A trailing blank row is how a watch is added: click it and type. Cheaper than a toolbar
-    ' button, and it is where the eye already is after the last expression. The prompt is in
-    ' column 0 -- the column that is actually edited, so the text sits where the caret will.
-    if gDbgWatchCount < FRMDEBUG_MAXWATCH then
-        dim as long r = PsListTree_AddNode( hLV, -1, L(624, "<click to add a watch>"), FRMDEBUG_NOROW )
-        if r >= 0 then gDbgWatchAddRow = r
-    else
-        gDbgWatchAddRow = -1
-    end if
+    ' A watch is added with the + in the WATCH caption band, NOT with a trailing prompt row.
+    ' The prompt row was tried and removed: it depended on click-to-edit, which PsListTree
+    ' applies before a host can veto a click, so it fought the delete X and opened an editor
+    ' on rows it should not have. A button is a button.
     PsListTree_Refresh( hLV )
+    if IsWindow(gDbgBtnAddWatch) then
+        PsButton_SetEnabled( gDbgBtnAddWatch, (gDbgWatchCount < FRMDEBUG_MAXWATCH) )
+    end if
+end sub
+
+' The + beside the WATCH caption. Appends an empty expression and opens its editor straight
+' away, so the gesture is one click and then type.
+private sub frmDebug_AddWatchClick( byval hButton as HWND, byval id as long )
+    if gDbgWatchCount >= FRMDEBUG_MAXWATCH then exit sub
+    gDbgWatch(gDbgWatchCount) = ""
+    gDbgWatchCount += 1
+    frmDebug_FillWatch()
+
+    dim as long r = gDbgWatchCount - 1
+    if IsWindow(HWND_FRMDEBUG_LVWATCH) andalso (r >= 0) then
+        PsListTree_SetCurSel( HWND_FRMDEBUG_LVWATCH, r )
+        PsListTree_BeginEdit( HWND_FRMDEBUG_LVWATCH, r, 0 )
+    end if
 end sub
 
 ' Every variables pane, in one call. Used by the stop handler and by anything that re-scopes.
@@ -615,8 +625,8 @@ end sub
 ' ------------------------------------------------------------------------------------------
 private function frmDebug_WatchDeleteHit( byval hLV as HWND, byval xClient as long ) as boolean
     dim as RECT rc
-    if PsListTree_GetColumnRect( hLV, WATCHCOL_DELETE, rc ) = false then return false
-    return (xClient >= rc.left) andalso (xClient < rc.right)
+    if PsListTree_GetColumnRect( hLV, 0, rc ) = false then return false
+    return (xClient >= rc.left) andalso (xClient < rc.left + AfxScaleX(FRMDEBUG_DELCOLW))
 end function
 
 ' Removes the watch a row stands for and rebuilds. Rows past the last real watch -- the
@@ -631,13 +641,42 @@ private sub frmDebug_DeleteWatch( byval row as long )
 end sub
 
 ' The X is hit-tested on the button-DOWN and acted on there, so no capture is taken: by the
-' time the row is gone there is no press to cancel. Returning TRUE swallows the click, which
-' matters -- otherwise the same click also opens the editor on a row about to be deleted.
+' time the row is gone there is no press to cancel.
+'
+' RETURNING TRUE HERE DOES NOT PREVENT AN EDIT, which is why click-to-edit is off on this
+' list. PsListTree starts an in-place edit at the END of its own WM_LBUTTONDOWN handling and
+' calls the message callback AFTER that (PsListTree.inc, the BeginEditInternal call sits
+' immediately above the MessageCallback call), so by the time a host can veto the click the
+' editor is already open. Clicking the X used to open an editor on the row it was about to
+' delete for exactly that reason. An existing watch is edited by double-clicking it or by
+' pressing ENTER on it instead.
+'
+' WM_MOUSEMOVE is also watched, and only to keep the tooltip honest: PsListTree re-resolves a
+' tip when the hot ROW changes and never when the cursor crosses a column, so a tip that
+' depends on the column would be resolved once, on entry to the row, and then be wrong for
+' the rest of it. Popping the tip on a column change forces the next dwell to ask again.
 private function frmDebug_WatchMessage( byval m as PSLISTTREE_MESSAGEINFO ptr ) as boolean
     if m = 0 then return false
+
+    if m->uMsg = WM_MOUSEMOVE then
+        static as boolean bWasOverX
+        dim as boolean bOverX = false
+        if (m->idx >= 0) andalso (m->idx < gDbgWatchCount) then
+            bOverX = frmDebug_WatchDeleteHit( m->hList, GET_X_LPARAM(m->lParam) )
+        end if
+        if bOverX <> bWasOverX then
+            bWasOverX = bOverX
+            dim as HWND hTip = PsListTree_GetTooltipHandle( m->hList )
+            if hTip then SendMessage( hTip, TTM_POP, 0, 0 )
+            ' The X appears and disappears with the cursor, so the row has to repaint.
+            AfxRedrawWindow( m->hList )
+        end if
+        return false
+    end if
+
     if m->uMsg <> WM_LBUTTONDOWN then return false
     if m->idx < 0 then return false
-    if m->idx >= gDbgWatchCount then return false          ' the prompt row has no X
+    if m->idx >= gDbgWatchCount then return false          ' a child row has no X of its own
     if frmDebug_WatchDeleteHit( m->hList, GET_X_LPARAM(m->lParam) ) = false then return false
     frmDebug_DeleteWatch( m->idx )
     return true
@@ -648,21 +687,20 @@ end function
 ' repeated the row's own text back at the user would be noise on every hover.
 private function frmDebug_WatchTooltip( byval hListControl as HWND, byval row as integer ) as DWSTRING
     if (row < 0) orelse (row >= gDbgWatchCount) then return ""
-    dim as HWND hLV = HWND_FRMDEBUG_LVWATCH
     dim as POINT pt
     GetCursorPos( @pt )
-    ScreenToClient( hLV, @pt )
-    if frmDebug_WatchDeleteHit( hLV, pt.x ) = false then return ""
+    ScreenToClient( hListControl, @pt )
+    if frmDebug_WatchDeleteHit( hListControl, pt.x ) = false then return ""
     return L(628, "Delete Watch")
 end function
 
-' The prompt row is not an expression, so its caption is blanked before the editor opens --
-' otherwise "<click to add a watch>" is what the editor hands you to type over. The callback
-' cannot supply the text (it only vetoes), so the row itself is changed.
-private function frmDebug_BeginLabelEdit( byval hListControl as HWND, byval row as integer ) as boolean
-    if row >= gDbgWatchCount then PsListTree_SetText( hListControl, row, "" )
-    return true
-end function
+' Double-click, or ENTER on the focused row -- one callback for both, which is what
+' ActivateCallback is. Only a row that IS a watch can be edited; an expanded child of one is
+' a field of the value, not an expression.
+private sub frmDebug_WatchActivate( byval hListControl as HWND, byval row as integer )
+    if (row < 0) orelse (row >= gDbgWatchCount) then exit sub
+    PsListTree_BeginEdit( hListControl, row, 0 )
+end sub
 
 ' Committing an in-place edit. An empty result DELETES the watch, which is how a row is
 ' removed without a menu; anything else replaces or appends.
@@ -856,11 +894,17 @@ private sub frmDebug_ButtonClick( byval hButton as HWND, byval id as long )
 end sub
 
 ' Selecting a call-stack frame re-scopes the variables view to it and navigates the editor.
+' Selecting a call-stack frame RE-SCOPES the whole window to it: the Locals pane shows that
+' frame's variables, the Watch pane re-evaluates its expressions against it, and the editor
+' navigates to the call site. Globals are unaffected -- they have no frame.
+'
+' The callback is handed the CONTROL (PsListTree passes pList->hWin), so the old GetParent
+' here resolved to the debugger WINDOW, which is a live HWND and therefore passed the
+' IsWindow guard -- every GetItemData then ran against the wrong window and answered 0. The
+' frame index was always 0, so clicking a stack row did nothing at all.
 private sub frmDebug_StackSelChange( byval hListControl as HWND, byval row as integer )
     if row < 0 then exit sub
-    dim as HWND hList = GetParent( hListControl )
-    if IsWindow(hList) = 0 then hList = hListControl
-    dim as long frameIndex = cast(long, PsListTree_GetItemData( hList, row ))
+    dim as long frameIndex = cast(long, PsListTree_GetItemData( hListControl, row ))
     if frameIndex < 0 then exit sub
 
     gDbgCurFrame = frameIndex
@@ -993,6 +1037,17 @@ private sub frmDebug_LayoutPanes()
     DWPRECT( HWND_FRMDEBUG_LVWATCH,    lo.rcWatch )
     if hDWP then EndDeferWindowPos( hDWP )
 
+    ' The + sits at the RIGHT end of the WATCH caption band, square and inset, so it never
+    ' collides with the caption text however long a translation of "WATCH" turns out to be.
+    if IsWindow(gDbgBtnAddWatch) then
+        dim as long nPad = pWindow->ScaleY(4)
+        dim as long nSide = (lo.rcCapWatch.bottom - lo.rcCapWatch.top) - nPad * 2
+        if nSide < 1 then nSide = 1
+        SetWindowPos( gDbgBtnAddWatch, 0, _
+                      lo.rcCapWatch.right - nSide - pWindow->ScaleX(8), _
+                      lo.rcCapWatch.top + nPad, nSide, nSide, SWP_NOZORDER or SWP_NOACTIVATE )
+    end if
+
     ' The caption bands are painted, so moving a bar has to invalidate them explicitly --
     ' the trees repaint themselves, the bands do not.
     AfxRedrawWindow( HWND_FRMDEBUG )
@@ -1042,6 +1097,7 @@ sub frmDebug_Trace()
     TRACEWND( "locals    ", HWND_FRMDEBUG_LVLOCALS )
     TRACEWND( "stack     ", HWND_FRMDEBUG_LVSTACK )
     TRACEWND( "watch     ", HWND_FRMDEBUG_LVWATCH )
+    TRACEWND( "addwatch  ", gDbgBtnAddWatch )
 
     sLine = "  bars: main=" & str(PsSplitter_GetPos(HWND_FRMDEBUG_SPLITMAIN)) & _
             "  left=" & str(PsSplitter_GetPos(HWND_FRMDEBUG_SPLITLEFT)) & _
@@ -1184,11 +1240,26 @@ private sub frmDebug_PaintVarRowFor( byval hLV as HWND, byval p as PSLISTTREE_PA
     p->b->SetFont( ghFont(GUIFONT_9) )
 
     ' A group row ("[100 .. 199]") is chrome, not data -- dimmed so the eye runs past it to
-    ' the elements. The watch list's "<click to add>" prompt is dimmed by the same rule.
+    ' the elements.
     dim as COLORREF foreNormal = ghOutput.ForeColorHot
     if p->isSelectable = false then foreNormal = ghOutput.ForeColor
-    dim as boolean bAddPrompt = (hLV = HWND_FRMDEBUG_LVWATCH) andalso (p->itemID = gDbgWatchAddRow)
-    if bAddPrompt then foreNormal = ghOutput.ForeColor
+
+    ' The delete X, on the WATCH list only, on a row that stands for a real watch, and ONLY
+    ' while the cursor is on that row. isHot is honoured here and nowhere else in this
+    ' window: a control that appears on hover has to know where the cursor is, and an X shown
+    ' on every row at once would read as a column of noise beside a list of expressions.
+    dim as long nDelW = 0
+    if (hLV = HWND_FRMDEBUG_LVWATCH) andalso (p->itemID < gDbgWatchCount) then
+        nDelW = pWindow->ScaleX(FRMDEBUG_DELCOLW)
+        if p->isHot andalso (p->columnCount > 0) then
+            dim as RECT rcX = p->cells[0].rc
+            rcX.right = rcX.left + nDelW
+            p->b->SetFont( ghFont(SYMBOLFONT_9) )
+            p->b->SetForeColor( ghOutput.ForeColor )
+            p->b->PaintText( wszIconClose, @rcX, DT_CENTER )
+            p->b->SetFont( ghFont(GUIFONT_9) )
+        end if
+    end if
 
     ' -1, not 0, is "this row has no descriptor". PsListTree_AddNode defaults itemData to
     ' ZERO, so a row added without one silently claimed descriptor 0 and inherited its
@@ -1208,20 +1279,11 @@ private sub frmDebug_PaintVarRowFor( byval hLV as HWND, byval p as PSLISTTREE_PA
     end if
 
     for i as integer = 0 to p->columnCount - 1
-        ' The watch list's delete column is a GLYPH, in the symbol font, and only on rows
-        ' that stand for a real watch -- the trailing prompt has nothing to delete.
-        if (hLV = HWND_FRMDEBUG_LVWATCH) andalso (i = WATCHCOL_DELETE) then
-            if bAddPrompt = false then
-                p->b->SetFont( ghFont(SYMBOLFONT_9) )
-                p->b->SetForeColor( ghOutput.ForeColor )
-                p->b->PaintText( wszIconClose, @p->cells[i].rc, DT_CENTER )
-                p->b->SetFont( ghFont(GUIFONT_9) )
-            end if
-            continue for
-        end if
-
         dim as RECT rcText = p->cells[i].rc
         rcText.left += pWindow->ScaleX(4)
+        ' Column 0's text starts PAST the X band, whether or not an X is currently drawn --
+        ' the name must not shift sideways as the cursor enters and leaves the row.
+        if i = 0 then rcText.left += nDelW
         dim as COLORREF clr = foreNormal
         if bChanged andalso (i = 1) then clr = ghGeneral.debugchanged
         p->b->SetForeColor( clr )
@@ -1341,6 +1403,20 @@ sub frmDebug_ApplyTheme()
         bc.BorderColorHot   = ghOutput.Divider
         PsButton_SetColors( gDbgBtn(id), @bc )
     next
+
+    if IsWindow(gDbgBtnAddWatch) then
+        dim as PSBUTTON_COLORS ac
+        PsButton_GetColors( gDbgBtnAddWatch, @ac )
+        ' The caption band is BackColorHot, so the button melts into it until hovered.
+        ac.BackColor        = ghOutput.BackColorHot
+        ac.BackColorHot     = ghOutput.ForeColorScrollBar
+        ac.BackColorPressed = ghOutput.ForeColorScrollBar
+        ac.ForeColor        = ghOutput.ForeColor
+        ac.ForeColorHot     = ghOutput.ForeColorHot
+        ac.BorderColor      = ghOutput.BackColorHot
+        ac.BorderColorHot   = ghOutput.Divider
+        PsButton_SetColors( gDbgBtnAddWatch, @ac )
+    end if
 
     frmDebug_PushListColors( HWND_FRMDEBUG_LVGLOBALS )
     frmDebug_PushListColors( HWND_FRMDEBUG_LVLOCALS )
@@ -1706,9 +1782,14 @@ private function frmDebug_CreateListView( byval CtrlID as long ) as HWND
         PsListTree_SetPaintCallback( hCtl, @frmDebug_PaintStackRow )
         PsListTree_SetHeaderPaintCallback( hCtl, @frmDebug_PaintVarHeader )
     else
-        PsListTree_AddColumn( hCtl, L(611, "Name"),  pWindow->ScaleX(180) )
-        PsListTree_AddColumn( hCtl, L(286, "Value"), pWindow->ScaleX(180) )
-        PsListTree_AddColumn( hCtl, L(612, "Type"),  pWindow->ScaleX(140) )
+        ' Value is the column being READ -- it carries array shapes, string previews and
+        ' "{ 3 fields }" -- so it is given the room and is the fill column. Name and Type are
+        ' both short and predictable.
+        PsListTree_AddColumn( hCtl, L(611, "Name"),  pWindow->ScaleX(140) )
+        PsListTree_AddColumn( hCtl, L(286, "Value"), pWindow->ScaleX(540) )
+        PsListTree_AddColumn( hCtl, L(612, "Type"),  pWindow->ScaleX(80) )
+        ' Value is the FILL column, so it absorbs whatever the other two do not use -- the
+        ' way to widen it further is to widen the pane, which the splitters now remember.
         PsListTree_SetFillColumn( hCtl, 1 )
         ' A real tree: UDT fields and array index groups are children, not flattened rows.
         PsListTree_ShowTwisty( hCtl, true )
@@ -1732,19 +1813,18 @@ private function frmDebug_CreateListView( byval CtrlID as long ) as HWND
                 ' PsListTree_FilterMessage mandatory in frmMain's pump -- see the header.
                 ' Not sortable: these rows are in the order the user entered them, which is
                 ' the only order that means anything here.
-                PsListTree_AddColumn( hCtl, "", pWindow->ScaleX(FRMDEBUG_DELCOLW) )
-                PsListTree_SetFillColumn( hCtl, 1 )
                 PsListTree_SetPaintCallback( hCtl, @frmDebug_PaintWatchRow )
                 PsListTree_SetHeaderPaintCallback( hCtl, @frmDebug_PaintVarHeader )
                 PsListTree_EnableLabelEdit( hCtl, true )
                 PsListTree_SetEditColumn( hCtl, 0 )
                 PsListTree_SetEnterEdits( hCtl, true )
-                ' A single click opens the editor, so the "<click to add a watch>" prompt
-                ' means what it says. Without this the row had to be selected and ENTER
-                ' pressed, which nothing on screen told the user.
-                PsListTree_SetClickToEdit( hCtl, true )
+                ' CLICK-TO-EDIT IS DELIBERATELY OFF. PsListTree opens the editor inside its
+                ' own WM_LBUTTONDOWN, before the message callback runs, so a host cannot stop
+                ' a click from starting an edit -- which made clicking the delete X open an
+                ' editor on the row it was about to remove. Double-click and ENTER edit
+                ' instead, and both are routed explicitly.
+                PsListTree_SetActivateCallback( hCtl, @frmDebug_WatchActivate )
                 PsListTree_SetEndLabelEditCallback( hCtl, @frmDebug_EndLabelEdit )
-                PsListTree_SetBeginLabelEditCallback( hCtl, @frmDebug_BeginLabelEdit )
                 PsListTree_SetMessageCallback( hCtl, @frmDebug_WatchMessage )
                 ' The editor is created lazily and owned by the control, so a host cannot
                 ' reach the PsTextBox to colour it -- without this it opens black-on-white
@@ -1906,6 +1986,7 @@ private function frmDebug_WndProc( byval hwnd as HWND, byval uMsg as UINT, _
             HWND_FRMDEBUG_SPLITMAIN  = 0
             HWND_FRMDEBUG_SPLITLEFT  = 0
             HWND_FRMDEBUG_SPLITRIGHT = 0
+            gDbgBtnAddWatch          = 0
             ' The descriptors hold a DBGP_NODE each; a long session that expanded a lot of
             ' arrays can be holding thousands, and the session they describe is over.
             frmDebug_RowsReset()
@@ -2013,6 +2094,16 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as DWSTRING, 
         PsSplitter_SetPaintCallback( h, @frmDebug_SplitterPaint )
         PsSplitter_SetPosChangedCallback( h, @frmDebug_SplitterMoved )
     #endmacro
+    ' The + that adds a watch, living in the WATCH caption band. A PsButton rather than a
+    ' painted glyph so it brings its own tooltip, hover and press states.
+    gDbgBtnAddWatch = PsButton_Create( HWND_FRMDEBUG, IDC_FRMDEBUG_CMDADDWATCH )
+    PsButton_SetGlyphLeft( gDbgBtnAddWatch, wszIconAddFileButton )
+    PsButton_SetGlyphFont( gDbgBtnAddWatch, ghFont(SYMBOLFONT_9) )
+    PsButton_SetFont( gDbgBtnAddWatch, ghFont(GUIFONT_9) )
+    PsButton_SetPadding( gDbgBtnAddWatch, 0, 0, 0, 0 )
+    PsButton_SetTooltipText( gDbgBtnAddWatch, L(629, "Add Watch") )
+    PsButton_SetClickCallback( gDbgBtnAddWatch, @frmDebug_AddWatchClick )
+
     MAKESPLITTER( HWND_FRMDEBUG_SPLITMAIN,  IDC_FRMDEBUG_SPLITMAIN,  PSSPLITTER_VERTICAL )
     MAKESPLITTER( HWND_FRMDEBUG_SPLITLEFT,  IDC_FRMDEBUG_SPLITLEFT,  PSSPLITTER_HORIZONTAL )
     MAKESPLITTER( HWND_FRMDEBUG_SPLITRIGHT, IDC_FRMDEBUG_SPLITRIGHT, PSSPLITTER_HORIZONTAL )
@@ -2033,6 +2124,7 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as DWSTRING, 
     ShowWindow( HWND_FRMDEBUG_SPLITMAIN,   SW_SHOW )
     ShowWindow( HWND_FRMDEBUG_SPLITLEFT,   SW_SHOW )
     ShowWindow( HWND_FRMDEBUG_SPLITRIGHT,  SW_SHOW )
+    ShowWindow( gDbgBtnAddWatch,           SW_SHOW )
 
     ' --- seed the breakpoints the user set in the editor ---
     '
@@ -2416,14 +2508,18 @@ sub frmDebug_RunSelfTest()
     ' Every id this window uses must resolve. An id with no entry renders as an EMPTY string,
     ' so a caption or a whole message box comes up blank with nothing in the build or the
     ' assertions to say so.
+    ' 624 is the retired "<click to add a watch>" prompt. It is deliberately still in the
+    ' .lang files and deliberately NOT asserted: the slot stays claimed so a future feature
+    ' does not reuse the id and inherit a stale translation in five languages.
     dim as long nBlank = 0
-    for id as long = 600 to 627
+    for id as long = 600 to 629
+        if id = 624 then continue for
         if len( LL(id) ) = 0 then
             nBlank += 1
             print "  FAIL: localized id " & id & " is empty"
         end if
     next
-    frmDebug_Check( "every debugger string 600-627 resolves", nBlank = 0, str(nBlank) & " blank" )
+    frmDebug_Check( "every debugger string 600-629 resolves (624 retired)", nBlank = 0, str(nBlank) & " blank" )
 
     for id as long = 247 to 248
         frmDebug_Check( "reused menu string " & id & " still resolves", len(LL(id)) > 0 )
@@ -2438,7 +2534,7 @@ sub frmDebug_RunSelfTest()
     ' in one of the six files still resolves, and only reading it back catches that.
     sLine = "  NOTE resolved: 247=" & str(LL(247)) & " | 618=" & str(LL(618)) & _
             " | 619=" & str(LL(619)) & " | 620=" & str(LL(620)) & _
-            " | 626=" & str(LL(626)) & " | 627=" & str(LL(627))
+            " | 627=" & str(LL(627)) & " | 629=" & str(LL(629))
     print sLine
 
     sLine = "--- TIKO_DEBUG_SELFTEST: " & str(gDbgTestPass) & " passed, " & _

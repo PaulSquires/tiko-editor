@@ -100,6 +100,7 @@
 #define IDC_FRMDEBUG_LVWATCH       1015
 #define IDC_FRMDEBUG_SPLITLEFT     1016
 #define IDC_FRMDEBUG_SPLITRIGHT    1017
+#define IDC_FRMDEBUG_CMDADDWATCH   1018
 
 ' A UDT still expands eagerly one level at a time; this bounds the FIELD count, not an
 ' array's element count, which is grouped instead.
@@ -202,12 +203,14 @@ declare sub      frmDebug_DestroyDataTip()
 ' user typed -- and the engine only ever sees them one at a time, already resolved.
 const as long FRMDEBUG_MAXWATCH = 64
 
-' The watch list carries a fourth, narrow column holding an X per row -- clicking it deletes
-' that watch. It is a column rather than a context menu because a watch list is a thing you
-' prune constantly, and because there is nowhere else to put it: these rows are edited in
-' place, so a right-click menu would compete with the editor.
-#define WATCHCOL_DELETE  3
-const as long FRMDEBUG_DELCOLW = 28
+' The watch list's delete affordance: an X at the LEADING EDGE of each row, shown only while
+' the cursor is on that row. It is drawn inside column 0 rather than being a column of its
+' own, and that is forced rather than chosen -- PsListTree draws the row's own Text in
+' column 0 and hangs the tree indent and twisty off it, so a real column 0 would put the X
+' where the expander belongs and push the name out of the tree column entirely. The painter
+' reserves the first FRMDEBUG_DELCOLW pixels of column 0 and insets the name past them,
+' which reads exactly as a leading column and costs the tree model nothing.
+const as long FRMDEBUG_DELCOLW = 26
 
 ' ------------------------------------------------------------------------------------------
 ' Row descriptors
