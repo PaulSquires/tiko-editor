@@ -207,7 +207,10 @@ function frmMain_ViewTopMenuStates() as long
 
     CheckMarkTopMenuItem( IDM_VIEWSIDEPANEL, iif( IsWindowVisible(HWND_FRMPANEL), true, false ))
     CheckMarkTopMenuItem( IDM_VIEWEXPLORER, iif( IsWindowVisible(HWND_FRMEXPLORER), true, false ))
-    CheckMarkTopMenuItem( IDM_VIEWOUTPUT, iif( IsWindowVisible(HWND_FRMOUTPUT), true, false ))
+    ' Asked of the FLOAT FRAME while the panel is undocked -- the panel itself is always
+    ' visible then, so testing it directly would leave this ticked even with the floating
+    ' window hidden.
+    CheckMarkTopMenuItem( IDM_VIEWOUTPUT, iif( IsWindowVisible(frmOutputFloat_VisibilityTarget()), true, false ))
     CheckMarkTopMenuItem( IDM_FUNCTIONLIST, iif( IsWindowVisible(HWND_FRMFUNCTIONS), true, false ))
     CheckMarkTopMenuItem( IDM_BOOKMARKSLIST, iif( IsWindowVisible(HWND_FRMBOOKMARKS), true, false ))
 

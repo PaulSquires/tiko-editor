@@ -83,6 +83,10 @@ private sub Theme_BuildWndTable()
     ' ---- container forms: redraw children too -----------------------------------------
     ThemeWnd_Add( @HWND_FRMMAIN, THSUB_FRAME or THSUB_EDITORCHROME or THSUB_SCINTILLA, true )
     ThemeWnd_Add( @HWND_FRMOUTPUT,             THSUB_OUTPUT,       true )
+    ' The Output panel's floating frame. This table is built once, but it stores the ADDRESS
+    ' of each handle, so a window created later in the session (as this one always is) is
+    ' picked up with no rebuild -- which is exactly why that indirection is there.
+    ThemeWnd_Add( @HWND_FRMOUTPUTFLOAT,        THSUB_OUTPUT,       true )
     ThemeWnd_Add( @HWND_FRMPANEL,              THSUB_PANEL,        true )
     ThemeWnd_Add( @HWND_FRMOPTIONS,            THSUB_OPTIONSDLG,   true )
     ThemeWnd_Add( @HWND_FRMHELPCENTER,         THSUB_HELPCENTER,   false )
@@ -364,6 +368,9 @@ sub Theme_ApplySubsystems( byval nMask as ulong )
 
     if (nMask and THSUB_OUTPUT) <> 0 then
         frmOutput_SetControlColors()
+        ' The floating frame's own WM_PAINT reads ghOutput live, so the only thing a theme
+        ' change has to push at it is the DWM caption -- the Help Center's case exactly.
+        if IsWindow(HWND_FRMOUTPUTFLOAT) then Theme_ApplyDarkCaption( HWND_FRMOUTPUTFLOAT )
     end if
 
     if (nMask and THSUB_OPTIONSDLG) <> 0 then

@@ -113,6 +113,11 @@ enum
     IDM_ZOOMIN, IDM_ZOOMOUT, IDM_ZOOMRESET
     IDM_FOLDTOGGLE, IDM_FOLDBELOW, IDM_FOLDALL, IDM_UNFOLDALL
     IDM_VIEWTODO, IDM_VIEWNOTES, IDM_RESTOREMAIN, IDM_EXPLORERPOSITION
+    ' Undock the Output panel into its own floating window / dock it back. Reached only
+    ' from the Output panel's own context menu and its undock icon -- deliberately NOT on
+    ' the View menu and NOT in the WM_COMMAND dispatcher, because the toggle reparents
+    ' HWND_FRMOUTPUT and must run while the gesture that asked for it is finished.
+    IDM_OUTPUTDOCKTOGGLE
     IDM_VIEW_END
     
     '' PROJECT
@@ -199,7 +204,17 @@ dim shared as HWND HWND_FRMOUTPUT_LVTODO, HWND_FRMOUTPUT_VSCROLL
 ' The tab strip: a PsSelectBar (the four tabs) and a one-item PsIconPanel (the "X"), sized
 ' side by side. HWND_FRMOUTPUT_SELECTBAR also HOLDS the current tab -- see frmOutput.bi,
 ' and note that a tab's identity there is its panel ID, not its panel index.
-dim shared as HWND HWND_FRMOUTPUT_SELECTBAR, HWND_FRMOUTPUT_CLOSE
+' Two PsIconPanels rather than one, because PsIconPanel is STATIC BY CONTRACT and has no
+' hide/delete API: the undock icon lives in its own control so the "X" can be hidden with a
+' plain ShowWindow while the panel is floating (where "close" has no meaning in a window
+' that already has a caption X). They abut and paint the same background, so the seam is
+' invisible -- frmPanelMenu's left/right pattern.
+dim shared as HWND HWND_FRMOUTPUT_SELECTBAR, HWND_FRMOUTPUT_UNDOCK, HWND_FRMOUTPUT_CLOSE
+' The Output panel's floating frame. Owned by HWND_FRMMAIN, WS_EX_TOOLWINDOW, and while it
+' exists HWND_FRMOUTPUT is a CHILD OF IT rather than of frmMain. The panel window itself is
+' never destroyed and recreated, so every pane's content survives an undock/dock cycle.
+' IsWindow on this handle is the single source of truth for the dock state.
+dim shared as HWND HWND_FRMOUTPUTFLOAT
 dim shared as HWND HWND_FRMMAIN_MENUBAR
 ' Editor split bars: one per orientation, created once and shown one at a time to follow
 ' whichever split mode the ACTIVE document is in (PsSplitter's orientation is fixed at
@@ -429,6 +444,7 @@ dim shared as wstring * 10 _
     wszIconPause, _
     wszIconSave, wszIconFind, wszIconToggleReplace, _
     wszIconGotoMain, wszIconGotoHeader, wszIconGotoSource, _
+    wszIconUndock, wszIconDock, _
     wszSearchFile, wszSearchFunction, wszSearchType, wszSearchEnum, _
     wszAutoCGlyphProc, wszAutoCGlyphType, wszAutoCGlyphEnum, wszAutoCGlyphVar, wszAutoCGlyphKeyword
 
@@ -453,7 +469,13 @@ dim shared spinner(0 to 7) as DWSTRING => { _
 ' Symbol characters display in top menus, frmExplorer, and tab control
 
 '"Segoe Fluent Icons"
-    wszIconClose             = !"\uE10A"      ' light X  
+    wszIconClose             = !"\uE10A"      ' light X
+    ' The Output panel's undock/dock icon. PLACEHOLDERS: chosen from the Fluent set without
+    ' having seen them rendered at SYMBOLFONT_10 beside the X, so they are the author's to
+    ' swap during the interactive pass. Escapes, never pasted characters -- a pasted glyph in
+    ' a BOM-less file is read as three Latin-1 bytes with no build error.
+    wszIconUndock            = !"\uE8A7"      ' open in new window
+    wszIconDock              = !"\uE944"      ' back to window
     wszIconChevronLeft       = !"\uE012"
     wszIconChevronRight      = !"\uE013" 
     wszIconChevronUp         = !"\uE014"

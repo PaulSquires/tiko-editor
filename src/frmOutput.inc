@@ -230,7 +230,12 @@ function frmOutput_ShowHideOutputControls( byval hwnd as HWND ) as LRESULT
     if pWindow = 0 then exit function
 
     ShowWindow( HWND_FRMOUTPUT_SELECTBAR, SW_SHOW )
-    ShowWindow( HWND_FRMOUTPUT_CLOSE, SW_SHOW )
+    ShowWindow( HWND_FRMOUTPUT_UNDOCK, SW_SHOW )
+    ' The "X" is the one strip control that is NOT unconditionally shown: it hides while the
+    ' panel is floating, where "close" has no meaning in a window that already carries its
+    ' own caption X. This runs at the end of every layout pass, so showing it here
+    ' unconditionally would undo frmOutput_UpdateDockIcon a few lines after it ran.
+    ShowWindow( HWND_FRMOUTPUT_CLOSE, iif( frmOutputFloat_IsFloating(), SW_HIDE, SW_SHOW ) )
     AfxRedrawWindow( HWND_FRMOUTPUT_SELECTBAR )
     
     ' By default, hide all controls
@@ -308,17 +313,31 @@ function frmOutput_PositionWindows() as LRESULT
     dim as long nTabsHeight
     dim as RECT rc: GetClientRect( HWND_FRMOUTPUT, @rc )
     
-    ' The tab strip: PsSelectBar on the left, the one-item PsIconPanel ("X") hard against the
-    ' right. They abut, and each paints its own background, so together they cover the strip
-    ' -- there is no container window behind them.
+    ' The tab strip: PsSelectBar on the left, then the one-item PsIconPanels hard against the
+    ' right -- the undock icon and, when docked, the "X" outside it. They abut, and each
+    ' paints its own background, so together they cover the strip: there is no container
+    ' window behind them.
+    '
+    ' The icon cells are reserved per VISIBLE control, so hiding the "X" while floating hands
+    ' its width back to the tab bar rather than leaving a gap.
     nTabsHeight = pWindow->ScaleY(OUTPUT_TABS_HEIGHT)
-    dim as long nCloseWidth = pWindow->ScaleX(OUTPUT_CLOSE_WIDTH)
+    dim as long nCellWidth  = pWindow->ScaleX(OUTPUT_CLOSE_WIDTH)
     dim as long nStripWidth = rc.right - rc.left
+    ' The "X" hides while floating. Read its OWN WS_VISIBLE bit, never IsWindowVisible:
+    ' that walks the ancestor chain, so with the panel itself hidden -- which is simply the
+    ' Output panel being closed, an entirely ordinary state -- every child reads as
+    ' invisible and the strip would be laid out for a missing button that is really there.
+    dim as boolean bCloseShown = _
+        (GetWindowLongPtr( HWND_FRMOUTPUT_CLOSE, GWL_STYLE ) and WS_VISIBLE) <> 0
+    dim as long nIconsWidth = nCellWidth + iif( bCloseShown, nCellWidth, 0 )
+    dim as long nIconsLeft  = nLeft + nStripWidth - nIconsWidth
 
     SetWindowPos( HWND_FRMOUTPUT_SELECTBAR, 0, _
-                  nLeft, nTop, nStripWidth - nCloseWidth, nTabsHeight, SWP_NOZORDER )
+                  nLeft, nTop, nStripWidth - nIconsWidth, nTabsHeight, SWP_NOZORDER )
+    SetWindowPos( HWND_FRMOUTPUT_UNDOCK, 0, _
+                  nIconsLeft, nTop, nCellWidth, nTabsHeight, SWP_NOZORDER )
     SetWindowPos( HWND_FRMOUTPUT_CLOSE, 0, _
-                  nLeft + nStripWidth - nCloseWidth, nTop, nCloseWidth, nTabsHeight, SWP_NOZORDER )
+                  nIconsLeft + nCellWidth, nTop, nCellWidth, nTabsHeight, SWP_NOZORDER )
 
     ' Re-push the captions so a language change is picked up, exactly as the old code did by
     ' rebuilding them here every time -- but only when one actually differs. SetText
@@ -481,6 +500,11 @@ sub frmOutput_SplitterMoved( _
     dim pWindow as CWindow ptr = AfxCWindowPtr( HWND_FRMMAIN )
     if pWindow = 0 then exit sub
     if IsWindow( HWND_FRMOUTPUT ) = 0 then exit sub
+    ' Defensive: frmMain_PositionWindows hides the bar while the panel is floating, so this
+    ' should be unreachable. It writes gConfig.ShowOutputPanelHeight from a window whose
+    ' height is the float frame's client area, which would silently overwrite the banked
+    ' docked height -- so the guard is cheap insurance against a stray in-flight drag.
+    if frmOutputFloat_IsFloating() then exit sub
 
     select case nPhase
         case PSSPLITTER_PHASE_MOVE
@@ -533,6 +557,22 @@ sub frmOutput_CaptureState()
     if IsWindow( HWND_FRMOUTPUT ) = 0 then exit sub
     dim pWindow as CWindow ptr = AfxCWindowPtr( HWND_FRMOUTPUT )
     if pWindow = 0 then exit sub
+
+    ' FLOATING: the panel is a child of the float frame, so BOTH captures below would be
+    ' wrong -- its height is the frame's client height, not the user's docked height, and its
+    ' IsWindowVisible is always TRUE because the FRAME carries visibility while floating. So
+    ' the frame answers the visibility question, its own geometry fields carry its size, and
+    ' the docked height/minimized pair is left exactly as it was banked at undock time.
+    if frmOutputFloat_IsFloating() then
+        gConfig.OutputFloating  = 1
+        gConfig.ShowOutputPanel = IsWindowVisible( HWND_FRMOUTPUTFLOAT )
+        frmOutputFloat_CaptureState()
+        if IsWindow( HWND_FRMOUTPUT_SELECTBAR ) then
+            gConfig.ShowOutputPanelIndex = frmOutput_GetCurTab()
+        end if
+        exit sub
+    end if
+    gConfig.OutputFloating = 0
 
     gConfig.ShowOutputPanel = IsWindowVisible( HWND_FRMOUTPUT )
 
@@ -605,6 +645,10 @@ end sub
 ' Result of double clicking an Output panel tab or clicking the "X' close icon.
 ' ========================================================================================
 function frmOutput_MinimizePanel() as long
+    ' Meaningless while floating: the panel fills its own frame, so shrinking it to the tabs
+    ' row would leave a mostly empty window rather than a collapsed strip. The frame's own
+    ' minimize box is what minimizes a floating panel.
+    if frmOutputFloat_IsFloating() then exit function
     dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMOUTPUT)
     if pWindow = 0 then exit function
     gConfig.ShowOutputPanelMinimized = 1
@@ -621,6 +665,15 @@ end function
 ' Result of double clicking an Output panel tab.
 ' ========================================================================================
 function frmOutput_RestorePanel() as long
+    ' FLOATING: "make sure the panel is showing" means show and raise the FRAME. This is the
+    ' path a failed build takes (modCompileErrors), so without it a compile error would
+    ' surface nothing at all whenever the panel happened to be undocked and behind the
+    ' editor -- the silent failure this whole branch exists to prevent.
+    if frmOutputFloat_IsFloating() then
+        frmOutputFloat_SetVisible( true )
+        exit function
+    end if
+
     dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMOUTPUT)
     if pWindow = 0 then exit function
 
@@ -729,6 +782,14 @@ function frmOutput_SelectBarMessage( byval m as PSSELECTBAR_MESSAGEINFO ptr ) as
             elseif m->idx <> -1 then
                 frmOutput_RestorePanel()
             end if
+
+        case WM_RBUTTONDOWN
+            ' The dock/undock menu, offered from the whole tab strip (and from both icon
+            ' bands, through frmOutput_IconPanelMessage). Not from the four content panes:
+            ' the results list and both textboxes already have menus of their own.
+            ' PsPopupMenu is non-modal, so this returns immediately and the toggle runs from
+            ' the select callback -- never synchronously from inside this button-down.
+            ShowOutputDockContextMenu()
     end select
     ' Never suppress: the control needs its own default handling (and the result is ignored
     ' for WM_LBUTTONUP anyway -- it is what releases the mouse capture).
@@ -754,8 +815,56 @@ sub frmOutput_ClosePaint( byval p as PSICONPANEL_PAINTINFO ptr )
 end sub
 
 
+' Both icon panels share this. The click callback fires AFTER PsIconPanel has released its
+' capture, so undocking from here -- which reparents the control's own grandparent -- is safe.
 sub frmOutput_CloseClick( byval hCtl as HWND, byval idx as long, byval id as long )
-    OnCommand_ViewOutput()      ' toggle the Output window off
+    select case id
+        case IDC_FRMOUTPUT_BTNUNDOCK
+            frmOutputFloat_Toggle()
+        case IDC_FRMOUTPUT_BTNCLOSE
+            OnCommand_ViewOutput()      ' toggle the Output window off
+    end select
+end sub
+
+
+' ----------------------------------------------------------------------------------------
+' Right-click on either icon band -> the dock/undock context menu. Shared with the tab
+' strip, so the whole strip offers it and the four content panes keep the menus they have.
+' Never suppress: the control needs its own default handling, and the result is ignored for
+' WM_LBUTTONUP anyway (that is what releases the mouse capture).
+' ----------------------------------------------------------------------------------------
+function frmOutput_IconPanelMessage( byval m as PSICONPANEL_MESSAGEINFO ptr ) as boolean
+    if m->uMsg = WM_RBUTTONDOWN then ShowOutputDockContextMenu()
+    return false
+end function
+
+
+' ========================================================================================
+' Point the undock icon at whichever direction is currently available, and show or hide the
+' "X" beside it.
+'
+' While floating the "X" is hidden: "close" has no meaning in a window that already carries
+' its own caption X, and the caption X is what re-docks. Hiding it hands its cell width back
+' to the tab bar, which is why the re-layout at the end is not optional.
+' ========================================================================================
+sub frmOutput_UpdateDockIcon()
+    if IsWindow( HWND_FRMOUTPUT_UNDOCK ) = 0 then exit sub
+    dim as boolean bFloating = frmOutputFloat_IsFloating()
+
+    ' Spelled out rather than folded into iif(): both arms are strings, and the family keeps
+    ' iif to numerics.
+    if bFloating then
+        PsIconPanel_SetGlyph( HWND_FRMOUTPUT_UNDOCK, 0, wszIconDock )
+        PsIconPanel_SetTooltipText( HWND_FRMOUTPUT_UNDOCK, 0, L(405, "Dock Output Window") )
+    else
+        PsIconPanel_SetGlyph( HWND_FRMOUTPUT_UNDOCK, 0, wszIconUndock )
+        PsIconPanel_SetTooltipText( HWND_FRMOUTPUT_UNDOCK, 0, L(404, "Undock Output Window") )
+    end if
+
+    if IsWindow( HWND_FRMOUTPUT_CLOSE ) then
+        ShowWindow( HWND_FRMOUTPUT_CLOSE, iif( bFloating, SW_HIDE, SW_SHOW ) )
+    end if
+    frmOutput_PositionWindows()
 end sub
 
 
@@ -915,12 +1024,32 @@ function frmOutput_Show( byval hwndParent as HWND ) as LRESULT
         ' before the Search Results tab was removed takes.
         frmOutput_SetCurTab( gConfig.ShowOutputPanelIndex )
 
+    ' The undock icon, in its OWN PsIconPanel rather than as a second item in the one below.
+    ' PsIconPanel is static by contract -- no hide/delete API, and that omission is the point
+    ' of the control -- so a separate window is what lets the "X" be hidden with a plain
+    ' ShowWindow while the panel is floating. Both paint the same background and abut, so the
+    ' seam is invisible; frmPanelMenu's left/right split established the pattern.
+    HWND_FRMOUTPUT_UNDOCK = PsIconPanel_Create( HWND_FRMOUTPUT, IDC_FRMOUTPUT_BTNUNDOCK )
+        PsIconPanel_SetFont( HWND_FRMOUTPUT_UNDOCK, ghFont(SYMBOLFONT_10) )
+        PsIconPanel_SetJustify( HWND_FRMOUTPUT_UNDOCK, IP_JUSTIFY_CENTER )
+        PsIconPanel_SetIconSize( HWND_FRMOUTPUT_UNDOCK, pWindow->ScaleX(20), pWindow->ScaleY(20) )
+        PsIconPanel_SetPaintItemCallback( HWND_FRMOUTPUT_UNDOCK, @frmOutput_ClosePaint )
+        PsIconPanel_SetClickCallback( HWND_FRMOUTPUT_UNDOCK, @frmOutput_CloseClick )
+        PsIconPanel_SetMessageCallback( HWND_FRMOUTPUT_UNDOCK, @frmOutput_IconPanelMessage )
+        PsIconPanel_AddItem( HWND_FRMOUTPUT_UNDOCK, IP_KIND_COMMAND, wszIconUndock, IDC_FRMOUTPUT_BTNUNDOCK )
+
+        dim as PSICONPANEL_COLORS UndockColors
+        PsIconPanel_GetColors( HWND_FRMOUTPUT_UNDOCK, @UndockColors )
+        UndockColors.BackColor = ghOutput.BackColorHot
+        PsIconPanel_SetColors( HWND_FRMOUTPUT_UNDOCK, @UndockColors )
+
     HWND_FRMOUTPUT_CLOSE = PsIconPanel_Create( HWND_FRMOUTPUT, IDC_FRMOUTPUT_BTNCLOSE )
         PsIconPanel_SetFont( HWND_FRMOUTPUT_CLOSE, ghFont(SYMBOLFONT_10) )
         PsIconPanel_SetJustify( HWND_FRMOUTPUT_CLOSE, IP_JUSTIFY_CENTER )
         PsIconPanel_SetIconSize( HWND_FRMOUTPUT_CLOSE, pWindow->ScaleX(20), pWindow->ScaleY(20) )
         PsIconPanel_SetPaintItemCallback( HWND_FRMOUTPUT_CLOSE, @frmOutput_ClosePaint )
         PsIconPanel_SetClickCallback( HWND_FRMOUTPUT_CLOSE, @frmOutput_CloseClick )
+        PsIconPanel_SetMessageCallback( HWND_FRMOUTPUT_CLOSE, @frmOutput_IconPanelMessage )
         PsIconPanel_AddItem( HWND_FRMOUTPUT_CLOSE, IP_KIND_COMMAND, wszIconClose, IDC_FRMOUTPUT_BTNCLOSE )
         PsIconPanel_SetTooltipText( HWND_FRMOUTPUT_CLOSE, 0, L(136, "Close") )
 
@@ -970,6 +1099,9 @@ function frmOutput_Show( byval hwndParent as HWND ) as LRESULT
 
     frmOutput_ResetAllControls
     frmOutput_SetControlColors
+    ' Point the undock icon the right way before the first layout pass -- it decides whether
+    ' the "X" is shown, which decides how much width the tab bar gets.
+    frmOutput_UpdateDockIcon
     frmOutput_PositionWindows
     
     function = 0

@@ -96,6 +96,10 @@ dim shared as DWSTRING gwszDefaultToolchain = "FreeBASIC-1.10.1-winlibs-gcc-9.3.
 ' frmHelpCenter_CaptureState() from the top of SaveConfigFile. This header names CWebView2
 ' (hence its position after the AfxNova include above) but no Ps* type.
 #include once "frmHelpCenter.bi"
+' Same reason: clsConfig.inc calls frmOutputFloat_IsFloating / _CaptureState from the
+' frmOutput_CaptureState guard, and that runs from the top of SaveConfigFile. This header
+' deliberately names no Ps* type, so it can sit here ahead of the whole Ps* block.
+#include once "frmOutputFloat.bi"
 
 '  Global classes
 dim shared gApp     as clsApp
@@ -207,6 +211,10 @@ dim shared gTTabCtl as clsTopTabCtl
 #include once "frmKeyboardEdit.inc"
 #include once "frmKeyboard.inc"
 #include once "frmOutput.inc"
+' Immediately after frmOutput.inc, whose functions it drives. It names PsBufferPaint, so it
+' must follow that include; and it must precede modContextMenus.inc, modThemeApply.inc and
+' frmMain.inc, all of which call into it.
+#include once "frmOutputFloat.inc"
 #include once "modOptionsRows.inc"
 #include once "frmOptionsColors.inc"
 #include once "frmOptionsCompiler.inc"

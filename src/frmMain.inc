@@ -921,9 +921,19 @@ function frmMain_PositionWindows() as LRESULT
     '
     ' nOutputReserve is what the editor area gives up: panel + bar, or nothing at all when
     ' the panel is hidden.
+    '
+    ' A FLOATING panel reserves nothing here and takes the else branch, which already does
+    ' the whole collapse. The floating test has to be explicit rather than folded into the
+    ' visibility one: while undocked the panel IS visible -- it fills its own frame's client
+    ' area -- so IsWindowVisible alone would keep reserving space at the bottom of frmMain
+    ' for a window that is no longer there.
     dim as long nGrabOut = pWindow->ScaleY(SPLITTER_GRAB)
     dim as long nOutputReserve = 0
-    if IsWindowVisible(HWND_FRMOUTPUT) then
+    ' Hoisted to a boolean local: IsWindowVisible answers a long, and mixing that with a
+    ' boolean in an andalso is warning 38.
+    dim as boolean bDockedAndVisible = _
+        (frmOutputFloat_IsFloating() = false) andalso (IsWindowVisible(HWND_FRMOUTPUT) <> 0)
+    if bDockedAndVisible then
         ' Limits are ours to compute: the panel floors at its tabs height (as before), and
         ' the editor now floors too, so the panel can no longer be dragged up until the
         ' edit area is a sliver.
@@ -1810,6 +1820,12 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     frmPanel_Show( HWND_FRMMAIN )
     frmOutput_Show( HWND_FRMMAIN )
     frmOutput_RunPostShowSelfTest()
+    ' Restore the persisted dock state. Deliberately AFTER the post-Show self-test, whose
+    ' witness assertions are about the DOCKED create path, and before the splitter exists --
+    ' _Undock's frmMain_PositionWindows call handles a not-yet-created bar the same way the
+    ' rest of that function does.
+    if gConfig.OutputFloating then frmOutputFloat_Undock()
+    frmOutputFloat_RunSelfTest()
     frmEditorHScroll_Show( HWND_FRMMAIN )
     frmEditorVScroll_Show( HWND_FRMMAIN )
 
@@ -1999,7 +2015,27 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
             ' the application started (for example, changing the compiler path).
             gConfig.ReloadConfigFileTest()
             
-            if IsDialogMessage(pWindow->hWindow, @uMsg) = 0 then
+            ' IsDialogMessage is PER DIALOG ROOT, so a keystroke destined for the FLOATING
+            ' Output panel has to be handed the float frame instead: passed frmMain, a Tab
+            ' typed in the floating Notes box would navigate frmMain's controls.
+            '
+            ' Retargeting here rather than adding a frmOutputFloat_FilterMessage above is
+            ' deliberate, and it is the opposite of what frmHelpCenter needs. The Help
+            ' Center's filter claims keystrokes wholesale so they never reach the three
+            ' TranslateAccelerator calls; the floating panel MUST still reach them, because
+            ' Ctrl+C / Ctrl+V in its Notes box are routed by frmMain's accelerator table to
+            ' OnCommand_EditCopy, which then dispatches on GetFocus(). That works unchanged
+            ' across the reparent -- GetFocus is per-thread and does not care which
+            ' top-level window owns the focused control -- and a wholesale filter is exactly
+            ' what would break it.
+            dim as HWND hDlgRoot = pWindow->hWindow
+            if frmOutputFloat_IsFloating() then
+                if GetAncestor( uMsg.hwnd, GA_ROOT ) = HWND_FRMOUTPUTFLOAT then
+                    hDlgRoot = HWND_FRMOUTPUTFLOAT
+                end if
+            end if
+
+            if IsDialogMessage(hDlgRoot, @uMsg) = 0 then
                 TranslateMessage @uMsg    ' Translates virtual-key messages into character messages.
                 DispatchMessage @uMsg     ' Dispatches a message to a window procedure.
             end if

@@ -23,6 +23,7 @@
 #define IDC_FRMOUTPUT_TXTNOTES                      1005
 #define IDC_FRMOUTPUT_BTNCLOSE                      1006
 #define IDC_FRMOUTPUT_VSCROLL                       1007
+#define IDC_FRMOUTPUT_BTNUNDOCK                     1008
 
 ' The tab strip is a PsSelectBar plus a one-item PsIconPanel for the "X", sized side by side
 ' to cover the strip. There is no container behind them: each paints its own background, so
@@ -72,6 +73,13 @@ declare sub      frmOutput_CaptureState()
 ' drive it; also applied on load so an existing settings.ini carrying a ratcheted or
 ' divided value self-heals on first run.
 declare function frmOutput_ClampHeight( byval nHeight as long ) as long
+' Point the undock icon at whichever direction is currently available, and show or hide the
+' "X" beside it. Called on every dock-state change. Safe before the controls exist.
+' NOTE: frmOutput_IconPanelMessage is deliberately NOT declared here. This header is pulled
+' in by clsConfig.inc, far ahead of the Ps* block, so it may name no Ps* type -- and that
+' callback takes a PSICONPANEL_MESSAGEINFO. It is defined in frmOutput.inc ahead of its only
+' caller, exactly as frmOutput_SelectBarMessage and frmOutput_ClosePaint are.
+declare sub      frmOutput_UpdateDockIcon()
 declare sub      frmOutput_RunSelfTest()
 ' Second half of the suite, run AFTER frmOutput_Show. It exists because the pure half is
 ' structurally blind to the defect this change fixes: reinstating the scale-up inside
