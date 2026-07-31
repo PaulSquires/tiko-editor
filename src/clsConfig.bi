@@ -167,6 +167,18 @@ type clsConfig
         HelpStartupRight          as long = 0
         HelpStartupBottom         as long = 0
         HelpStartupMaximized      as long = false
+        ' The Output panel's FLOATING (undocked) state. OutputFloating is the dock state and is
+        ' ORTHOGONAL to ShowOutputPanel above, which means "the Output surface is visible,
+        ' wherever it happens to live" -- a floating panel can be hidden and a docked one shown.
+        ' The five geometry fields are SCALED screen coordinates, the same convention as
+        ' StartupLeft/HelpStartupLeft above; a zero Right/Bottom is the "no stored geometry"
+        ' sentinel that frmOutputFloat_CreateWindow heals with a default size.
+        OutputFloating            as long = 0
+        OutputFloatLeft           as long = 0
+        OutputFloatTop            as long = 0
+        OutputFloatRight          as long = 0
+        OutputFloatBottom         as long = 0
+        OutputFloatMaximized      as long = false
         FBWINCompiler32           as DWSTRING
         FBWINCompiler64           as DWSTRING
         CompilerBuild             as DWSTRING     ' Build GUID

@@ -65,3 +65,8 @@ declare sub ShowEditorSplitContextMenu( byval rcButton as RECT )
 ' Select All. Both act on HWND_FRMOUTPUT_LVRESULTS directly rather than posting a command:
 ' IDM_COPY / IDM_SELECTALL are the EDITOR's commands and would act on Scintilla.
 declare sub ShowOutputResultsContextMenu()
+
+' The Output panel's tab strip and icon bands. One item, captioned "Undock Output Window" or
+' "Dock Output Window" depending on the current state. Deliberately NOT offered on the four
+' content panes: the results list and both textboxes already have their own menus.
+declare sub ShowOutputDockContextMenu()

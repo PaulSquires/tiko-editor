@@ -228,10 +228,17 @@ function OnCommand_ViewBookmarksList() as LRESULT
     function = 0
 end function
 
+' Toggle the Output panel's VISIBILITY, wherever it currently lives. Dock state is
+' orthogonal: turning the panel off while it is floating hides the floating window and
+' leaves it floating, so turning it back on brings it up floating again. Undocking and
+' docking is the separate IDM_OUTPUTDOCKTOGGLE command.
+'
+' frmOutputFloat_VisibilityTarget is what makes that work: while floating the panel itself
+' is always shown (it fills the frame's client area) and the FRAME carries visibility, so
+' asking HWND_FRMOUTPUT would read "visible" forever and the toggle would only ever hide.
 function OnCommand_ViewOutput() as LRESULT
-    dim as long nShowFlag = iif(IsWindowVisible(HWND_FRMOUTPUT), SW_HIDE, SW_SHOW)
-    ShowWindow( HWND_FRMOUTPUT, nShowFlag )
-    frmMain_PositionWindows
+    dim as HWND hTarget = frmOutputFloat_VisibilityTarget()
+    frmOutputFloat_SetVisible( iif( IsWindowVisible(hTarget), false, true ) )
     function = 0
 end function
 
@@ -269,15 +276,17 @@ end function
 ' View Todo, Notes
 ' ========================================================================================
 function OnCommand_ViewToDo() as LRESULT
-    ' toggle close the Output window if it is open and already at ToDo 
-    if IsWindowVisible(HWND_FRMOUTPUT) then
+    ' The visibility half goes through the dock-aware target for the same reason
+    ' OnCommand_ViewOutput does; only the tab switch below is dock-independent.
+    dim as HWND hTarget = frmOutputFloat_VisibilityTarget()
+    ' toggle close the Output window if it is open and already at ToDo
+    if IsWindowVisible(hTarget) then
         if frmOutput_GetCurTab() = OUTPUT_TAB_TODO then
-            ShowWindow( HWND_FRMOUTPUT, SW_HIDE )
-            frmMain_PositionWindows
+            frmOutputFloat_SetVisible( false )
             exit function
         end if
     else
-        ShowWindow( HWND_FRMOUTPUT, SW_SHOW )
+        frmOutputFloat_SetVisible( true )
     end if
     frmMain_PositionWindows
     ' Silent: only a user click on the bar fires its change callback, so this cannot
@@ -290,15 +299,15 @@ function OnCommand_ViewToDo() as LRESULT
 end function
 
 function OnCommand_ViewNotes() as LRESULT
+    dim as HWND hTarget = frmOutputFloat_VisibilityTarget()
     ' toggle close the Output window if it is open and already at Notes
-    if IsWindowVisible(HWND_FRMOUTPUT) then
+    if IsWindowVisible(hTarget) then
         if frmOutput_GetCurTab() = OUTPUT_TAB_NOTES then
-            ShowWindow( HWND_FRMOUTPUT, SW_HIDE )
-            frmMain_PositionWindows
+            frmOutputFloat_SetVisible( false )
             exit function
         end if
     else
-        ShowWindow( HWND_FRMOUTPUT, SW_SHOW )
+        frmOutputFloat_SetVisible( true )
     end if
     frmMain_PositionWindows
     ' Silent -- see OnCommand_ViewToDo above.

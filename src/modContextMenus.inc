@@ -65,6 +65,7 @@ dim shared as HWND ghPopupTopTabCtl
 dim shared as HWND ghPopupTopTabsList
 dim shared as HWND ghPopupEditorSplit
 dim shared as HWND ghPopupOutputResults
+dim shared as HWND ghPopupOutputDock
 
 ' The context chain currently (or last) shown. The pump filter needs a handle in the open
 ' chain, and PsPopupMenu exposes no "which chain is open" query -- so the host tracks it.
@@ -681,6 +682,38 @@ end sub
 
 
 ' ========================================================================================
+' The Output panel's tab strip and icon bands: undock the panel into its own floating
+' window, or dock it back.
+'
+' One item, and its CAPTION carries the direction rather than the id -- the same single
+' toggle the undock icon beside the "X" performs, so there is one command and one code
+' path whichever way the panel is currently sitting.
+'
+' Its id is IDM_OUTPUTDOCKTOGGLE and it deliberately does NOT go through
+' ContextMenu_PostCommand: undocking reparents HWND_FRMOUTPUT, and doing that from a POSTED
+' message would run it at an arbitrary later point in the pump rather than while the menu's
+' own gesture is finished and the mouse capture released.
+' ========================================================================================
+private sub OutputDockContextMenu_OnSelect( byval hPopup as HWND, byval id as long )
+    if id = IDM_OUTPUTDOCKTOGGLE then frmOutputFloat_Toggle()
+end sub
+
+
+sub ShowOutputDockContextMenu()
+    if IsWindow( HWND_FRMOUTPUT ) = 0 then exit sub
+
+    PsPopupMenu_Clear( ghPopupOutputDock )
+    if frmOutputFloat_IsFloating() then
+        PsPopupMenu_AddItem( ghPopupOutputDock, IDM_OUTPUTDOCKTOGGLE, L(405, "Dock Output Window") )
+    else
+        PsPopupMenu_AddItem( ghPopupOutputDock, IDM_OUTPUTDOCKTOGGLE, L(404, "Undock Output Window") )
+    end if
+
+    ContextMenu_ShowAtCursor( ghPopupOutputDock )
+end sub
+
+
+' ========================================================================================
 ' Plumbing
 ' ========================================================================================
 
@@ -732,6 +765,7 @@ sub ContextMenus_Init()
     ghPopupTopTabsList      = frmMenuBar_CreatePopup( true )
     ghPopupEditorSplit      = frmMenuBar_CreatePopup( true )
     ghPopupOutputResults    = frmMenuBar_CreatePopup( true )
+    ghPopupOutputDock       = frmMenuBar_CreatePopup( true )
 
     ' Menus whose ids are real command ids: straight through the WM_COMMAND dispatcher.
     PsPopupMenu_SetSelectCallback( ghPopupTabsInfoFileType, @ContextMenu_PostCommand )
@@ -750,5 +784,6 @@ sub ContextMenus_Init()
     PsPopupMenu_SetSelectCallback( ghPopupTopTabsList,  @TopTabsListContextMenu_OnSelect )
     PsPopupMenu_SetSelectCallback( ghPopupExplorer,     @ExplorerContextMenu_OnSelect )
     PsPopupMenu_SetSelectCallback( ghPopupOutputResults, @OutputResultsContextMenu_OnSelect )
+    PsPopupMenu_SetSelectCallback( ghPopupOutputDock,    @OutputDockContextMenu_OnSelect )
 
 end sub

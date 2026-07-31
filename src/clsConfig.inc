@@ -323,6 +323,14 @@ function clsConfig.SaveConfigFile() as long
     ' Written from this.ShowOutputPanelIndex, which frmMain refreshes from the tab bar
     ' (PsSelectBar_GetCurSel) just before the config is saved.
     pStream.WriteLine "ShowOutputPanelIndex="     & this.ShowOutputPanelIndex
+    ' Note: the floating Output window's positions are in scaled screen coordinates (the
+    ' Startup/HelpStartup convention above, NOT the unscaled one the two lines above use).
+    pStream.WriteLine "OutputFloating="           & this.OutputFloating
+    pStream.WriteLine "OutputFloatLeft="          & this.OutputFloatLeft
+    pStream.WriteLine "OutputFloatTop="           & this.OutputFloatTop
+    pStream.WriteLine "OutputFloatRight="         & this.OutputFloatRight
+    pStream.WriteLine "OutputFloatBottom="        & this.OutputFloatBottom
+    pStream.WriteLine "OutputFloatMaximized="     & this.OutputFloatMaximized
     pStream.WriteLine ""
 
     ' for each folder location determine if it resides on the same drive as
@@ -770,6 +778,16 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
                     ' Search Results tab) to Compiler Results, and frmOutput_CaptureState
                     ' writes the healed value back on the next save.
                     case "ShowOutputPanelIndex":     this.ShowOutputPanelIndex  = nData
+                    ' The floating Output window. These live inside the isHotReload guard for
+                    ' the same reason every other geometry key does, and for one extra: a hot
+                    ' reload firing while the panel is undocked would otherwise teleport a live
+                    ' window to whatever rect happened to be on disk.
+                    case "OutputFloating":           this.OutputFloating        = nData
+                    case "OutputFloatLeft":          this.OutputFloatLeft       = nData
+                    case "OutputFloatTop":           this.OutputFloatTop        = nData
+                    case "OutputFloatRight":         this.OutputFloatRight      = nData
+                    case "OutputFloatBottom":        this.OutputFloatBottom     = nData
+                    case "OutputFloatMaximized":     this.OutputFloatMaximized  = nData
                 end select
             end if
             
