@@ -1530,12 +1530,6 @@ function frmMain_WndProc( _
             ThreadWait( pThread )
             frmMenuBar_PositionWindows()
 
-        case MSG_USER_PRELOAD_HELPCENTER
-            ' Build the Help Center window hidden and start it loading. Silent on every
-            ' failure path -- see frmHelpCenter_Preload. It is a no-op when the window
-            ' already exists, which is what TIKO_HELPCENTER_AUTOOPEN leaves behind.
-            frmHelpCenter_Preload()
-
         case MSG_USER_SHOWAUTOCOMPLETE
             ' wParam carries the AUTOCOMPLETE_NOTIFY_* reason for the rebuild.
             return ShowAutocompleteList( clng(wParam) )
@@ -1910,12 +1904,6 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
 
     ' Post a message to check for any Tiko updated version.
     PostMessage( pWindow->hWindow, MSG_USER_PROCESS_CHECKFORUPDATE, 0, 0 )
-
-    ' Post a message to build the Help Center hidden, so the first F1 costs neither the
-    ' WebView2 startup wait nor the flash of an empty frame. LAST of the four: it is the
-    ' only one the user did not ask for, so it takes the queue behind the command line,
-    ' the startup user tools and the update check.
-    PostMessage( pWindow->hWindow, MSG_USER_PRELOAD_HELPCENTER, 0, 0 )
 
     
     ' Process windows events
