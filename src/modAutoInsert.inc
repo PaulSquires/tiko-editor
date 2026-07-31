@@ -155,7 +155,7 @@ function AttemptAutoInsert() as Long
             if mid(strPrevLine, i, 1) = chr(9) then
                 nSpaces = nSpaces + IndentSize
             else
-                Exit For
+                exit For
             end if
         else
             nSpaces = nSpaces + 1
@@ -209,7 +209,7 @@ function AttemptAutoInsert() as Long
         exit function
     end if
     
-    
+        
     ''''''''''
     ' ELSE / ELSEIF
     '   Search backwards in the most recent IF/THEN line and use the 

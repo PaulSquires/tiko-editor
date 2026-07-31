@@ -291,7 +291,7 @@ function OnCommand_FileRename( _
     LoadFunctionsFiles()
     LoadBookmarksFiles()
 
-    frmMain_SetFocusToCurrentCodeWindow
+    frmMain_SetFocusToCurrentCodeWindow()
 
     function = 0
 end function

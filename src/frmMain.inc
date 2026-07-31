@@ -191,6 +191,8 @@ function frmMain_SetStatusbar() as long
     gTTabCtl.SetTabText(-1)  ' this will only repaint if text has changed
     ' repaint the tab to ensure that the unsaved indicator changes
     AfxRedrawWindow( HWND_FRMMAIN_TOPTABS )
+    ' Also ensure that the TopTabInfo panel filename is also in sync
+    AfxRedrawWindow( HWND_FRMMAIN_TOPTABSINFO )
 
     function = 0
 end Function
@@ -1899,8 +1901,6 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ' the startup user tools and the update check.
     PostMessage( pWindow->hWindow, MSG_USER_PRELOAD_HELPCENTER, 0, 0 )
 
-    
-    
     
     ' Process windows events
     dim uMsg as MSG

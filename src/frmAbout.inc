@@ -86,14 +86,15 @@ private sub frmAbout_BuildCredits()
     nRow = PsListTree_AddString( HWND_FRMABOUT_CREDITS, "ImortisInglorian", 2 )
     PsListTree_SetCellText( HWND_FRMABOUT_CREDITS, nRow, 1, L(382,"Ideas and testing") )
 
-    nRow = PsListTree_AddString( HWND_FRMABOUT_CREDITS, "Neil Hodgson", 3 )
+    nRow = PsListTree_AddString( HWND_FRMABOUT_CREDITS, "Laurent GRAS (SARG)", 3 )
+    PsListTree_SetCellText( HWND_FRMABOUT_CREDITS, nRow, 1, L(382,"Ideas and testing") )
+
+    nRow = PsListTree_AddString( HWND_FRMABOUT_CREDITS, "Neil Hodgson", 4 )
     PsListTree_SetCellText( HWND_FRMABOUT_CREDITS, nRow, 1, L(383,"Scintilla editing component") )
 
-    nRow = PsListTree_AddString( HWND_FRMABOUT_CREDITS, "FreeBASIC Development Team", 4 )
+    nRow = PsListTree_AddString( HWND_FRMABOUT_CREDITS, "FreeBASIC Development Team", 5 )
     PsListTree_SetCellText( HWND_FRMABOUT_CREDITS, nRow, 1, L(384,"The compiler tiko is built on and for") )
 
-    nRow = PsListTree_AddString( HWND_FRMABOUT_CREDITS, "Emma", 5 )
-    PsListTree_SetCellText( HWND_FRMABOUT_CREDITS, nRow, 1, L(385,"AI agent assistant") )
 
     ' EVERY ROW IS NON-SELECTABLE. This is a roll of names, not a picker: there is nothing to
     ' do with a selected contributor, so a highlight that follows the mouse is an affordance
