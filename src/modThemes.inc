@@ -11,12 +11,6 @@
 '    MERCHANTABILITY or FITNESS for A PARTICULAR PURPOSE.  See the
 '    GNU General Public License for more details.
 
-'https://learn.microsoft.com/en-us/windows/win32/api/dwmapi/nf-dwmapi-dwmsetwindowattribute
-'declare function DwmSetWindowAttribute lib "Dwmapi.dll" alias "DwmSetWindowAttribute" ( _
-'    hwnd as HWND, dwAttribute as DWORD, pvAttribute as LPCVOID, cbAttribute as DWORD) as HRESULT
-'const DWMWA_USE_IMMERSIVE_DARK_MODE = 20
-
-
 type THEME_TYPE
     keyValue as DWSTRING
     keyData as DWSTRING
