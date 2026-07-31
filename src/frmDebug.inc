@@ -326,7 +326,11 @@ private function frmDebug_AddGroupRow( byval hLV as HWND, byval parentRow as lon
     gDbgRow(k).nd      = *pArray
     gDbgRow(k).idxLo   = idxLo
     gDbgRow(k).idxHi   = idxHi
-    gDbgRow(k).wszPath = wszPath
+    ' A group's path has to differ from its ARRAY's -- they used to be the same string, so
+    ' every group of one array was indistinguishable from the array and from its siblings.
+    ' Nothing depended on it until expansion state had to survive a step, which is keyed on
+    ' exactly this.
+    gDbgRow(k).wszPath = wszPath & "#" & str(idxLo) & "-" & str(idxHi)
 
     dim as DWSTRING wszCaption = "[" & str(idxLo) & " .. " & str(idxHi) & "]"
     dim as long r = PsListTree_AddNode( hLV, parentRow, wszCaption, k )
@@ -432,6 +436,93 @@ private sub frmDebug_ExpandCollapse( byval hListControl as HWND, byval row as in
     frmDebug_ExpandRowChildren( hListControl, row )
 end sub
 
+' ==========================================================================================
+' Expansion state has to SURVIVE A STEP
+'
+' Every stop rebuilds all three variables trees from scratch, so without this an expanded
+' node closes on every step -- which makes inspecting one element of an array impossible,
+' since reaching it is several twisty clicks and stepping is the whole point of being there.
+'
+' What is remembered is the set of expanded PATHS, not row indices: rows move as soon as
+' anything above them expands or the sort changes, and a variable that goes out of scope
+' takes its index with it. A path that no longer resolves simply never matches, which is
+' exactly the "unless the group itself no longer exists" rule -- it needs no special case.
+'
+' The scroll position is restored too. Re-opening the node you were reading and then
+' scrolling it off the top would answer the letter of the problem and not the point of it.
+' ==========================================================================================
+const as long FRMDEBUG_MAXEXPAND = 256
+const as long FRMDEBUG_TREESLOTS = 3            ' globals, locals, watch
+
+dim shared as DWSTRING gDbgExp(FRMDEBUG_TREESLOTS - 1, FRMDEBUG_MAXEXPAND - 1)
+dim shared as long     gDbgExpCount(FRMDEBUG_TREESLOTS - 1)
+dim shared as long     gDbgExpTop(FRMDEBUG_TREESLOTS - 1)
+
+' Record which nodes are open, before the rows that describe them are thrown away.
+'
+' A row count of zero means the descriptors have ALREADY been reset for this rebuild, so
+' there is nothing left to read -- and in that case the stash must be left exactly as it is
+' rather than cleared, because it is what the restore is about to use. That is what lets
+' frmDebug_FillVariables capture all three trees up front and each fill still call this.
+private sub frmDebug_CaptureExpanded( byval nSlot as long, byval hLV as HWND )
+    if (nSlot < 0) orelse (nSlot >= FRMDEBUG_TREESLOTS) then exit sub
+    if IsWindow(hLV) = 0 then exit sub
+    if gDbgRowCount = 0 then exit sub
+
+    gDbgExpCount(nSlot) = 0
+    gDbgExpTop(nSlot)   = PsListTree_GetTopIndex( hLV )
+
+    for r as long = 0 to PsListTree_GetCount(hLV) - 1
+        if gDbgExpCount(nSlot) >= FRMDEBUG_MAXEXPAND then exit for
+        if PsListTree_IsCollapsed( hLV, r ) then continue for
+        if PsListTree_HasChildren( hLV, r ) = false then continue for
+        dim as long k = cast(long, PsListTree_GetItemData( hLV, r ))
+        if (k < 0) orelse (k >= gDbgRowCount) then continue for
+        if len(gDbgRow(k).wszPath) = 0 then continue for
+        gDbgExp(nSlot, gDbgExpCount(nSlot)) = gDbgRow(k).wszPath
+        gDbgExpCount(nSlot) += 1
+    next
+end sub
+
+private function frmDebug_WasExpanded( byval nSlot as long, byval wszPath as DWSTRING ) as boolean
+    if (nSlot < 0) orelse (nSlot >= FRMDEBUG_TREESLOTS) then return false
+    for i as long = 0 to gDbgExpCount(nSlot) - 1
+        if gDbgExp(nSlot, i) = wszPath then return true
+    next
+    return false
+end function
+
+' Re-open everything that was open. The walk runs FORWARD and re-reads the row count each
+' time round, because expanding a node inserts its children immediately after it -- so a
+' nested node is reached by the same pass that opened its parent, at any depth, with no
+' recursion here.
+private sub frmDebug_RestoreExpanded( byval nSlot as long, byval hLV as HWND )
+    if (nSlot < 0) orelse (nSlot >= FRMDEBUG_TREESLOTS) then exit sub
+    if IsWindow(hLV) = 0 then exit sub
+    if gDbgExpCount(nSlot) <= 0 then exit sub
+
+    PsListTree_BeginUpdate( hLV )
+    dim as long r = 0
+    do while r < PsListTree_GetCount(hLV)
+        dim as long k = cast(long, PsListTree_GetItemData( hLV, r ))
+        if (k >= 0) andalso (k < gDbgRowCount) then
+            if (gDbgRow(k).bFilled = false) andalso (len(gDbgRow(k).wszPath) > 0) then
+                if frmDebug_WasExpanded( nSlot, gDbgRow(k).wszPath ) then
+                    frmDebug_ExpandRowChildren( hLV, r )
+                    ' The SILENT setter, deliberately: the user did not just toggle this, so
+                    ' the expand/collapse callback must not fire and re-enter the fill.
+                    PsListTree_SetNodeCollapsed( hLV, r, false )
+                end if
+            end if
+        end if
+        r += 1
+    loop
+    PsListTree_EndUpdate( hLV )
+
+    if gDbgExpTop(nSlot) > 0 then PsListTree_SetTopIndex( hLV, gDbgExpTop(nSlot) )
+    PsListTree_Refresh( hLV )
+end sub
+
 ' ------------------------------------------------------------------------------------------
 ' Sorting. The MODEL is sorted before rows are built, never the control -- PsListTree does
 ' not sort and says so; it only hands the host a header click. Top-level rows only: array
@@ -477,6 +568,8 @@ end sub
 ' ------------------------------------------------------------------------------------------
 private sub frmDebug_FillVarList( byval hLV as HWND, byval bGlobals as boolean, byref srt as FRMDEBUG_SORT )
     if IsWindow(hLV) = 0 then exit sub
+    dim as long nSlot = iif( bGlobals, 0, 1 )
+    frmDebug_CaptureExpanded( nSlot, hLV )
     PsListTree_Clear( hLV )
 
     dim as long n
@@ -513,6 +606,7 @@ private sub frmDebug_FillVarList( byval hLV as HWND, byval bGlobals as boolean, 
         if frmDebug_AddNodeRow( hLV, -1, @nodes(i), wszScope & nodes(i).wszName, true ) < 0 then exit for
     next
     PsListTree_Refresh( hLV )
+    frmDebug_RestoreExpanded( nSlot, hLV )
 end sub
 
 sub frmDebug_FillGlobals()
@@ -526,6 +620,7 @@ end sub
 sub frmDebug_FillWatch()
     dim as HWND hLV = HWND_FRMDEBUG_LVWATCH
     if IsWindow(hLV) = 0 then exit sub
+    frmDebug_CaptureExpanded( 2, hLV )
     PsListTree_Clear( hLV )
 
     for i as long = 0 to gDbgWatchCount - 1
@@ -552,6 +647,7 @@ sub frmDebug_FillWatch()
     ' applies before a host can veto a click, so it fought the delete X and opened an editor
     ' on rows it should not have. A button is a button.
     PsListTree_Refresh( hLV )
+    frmDebug_RestoreExpanded( 2, hLV )
     if IsWindow(gDbgBtnAddWatch) then
         PsButton_SetEnabled( gDbgBtnAddWatch, (gDbgWatchCount < FRMDEBUG_MAXWATCH) )
     end if
@@ -582,6 +678,12 @@ end sub
 ' globals) appends instead, which is bounded by how often a person clicks a header; without
 ' this reset a long stepping session would accumulate a DBGP_NODE per row per stop.
 private sub frmDebug_FillVariables()
+    ' Capture BEFORE the reset: the stash is read out of the descriptors, and the reset is
+    ' what destroys them. Each fill then calls capture again and finds a row count of zero,
+    ' which leaves its stash intact -- see frmDebug_CaptureExpanded.
+    frmDebug_CaptureExpanded( 0, HWND_FRMDEBUG_LVGLOBALS )
+    frmDebug_CaptureExpanded( 1, HWND_FRMDEBUG_LVLOCALS )
+    frmDebug_CaptureExpanded( 2, HWND_FRMDEBUG_LVWATCH )
     frmDebug_RowsReset()
     frmDebug_FillGlobals()
     frmDebug_FillLocals()
@@ -1080,15 +1182,34 @@ sub frmDebug_Trace()
     ' a twisty, which no unattended run can do. This is what showed a 10,000-element array
     ' coming out as 100 groups ending exactly at [9900 .. 9999] and costing 224 rows.
     if environ("TIKO_DEBUG_TRACEEXPAND") = "1" then
+        ' Expanded on the FIRST stop only, then merely dumped. That is what makes this a test
+        ' of whether expansion SURVIVES a step: re-expanding on every stop would print an
+        ' open tree either way and prove nothing.
+        static as boolean bExpandedOnce
+
         #macro DUMPTREE( hG, nm )
             scope
-                for r as long = PsListTree_GetCount(hG) - 1 to 0 step -1
-                    dim as long kk = cast(long, PsListTree_GetItemData( hG, r ))
-                    if (kk < 0) orelse (kk >= gDbgRowCount) then continue for
-                    if gDbgRow(kk).kind <> DBGROW_NODE then continue for
-                    if gDbgRow(kk).nd.hasChildren = 0 then continue for
-                    frmDebug_ExpandRowChildren( hG, r )
-                next
+                if bExpandedOnce = false then
+                    for r as long = PsListTree_GetCount(hG) - 1 to 0 step -1
+                        dim as long kk = cast(long, PsListTree_GetItemData( hG, r ))
+                        if (kk < 0) orelse (kk >= gDbgRowCount) then continue for
+                        if gDbgRow(kk).kind <> DBGROW_NODE then continue for
+                        if gDbgRow(kk).nd.hasChildren = 0 then continue for
+                        frmDebug_ExpandRowChildren( hG, r )
+                        PsListTree_SetNodeCollapsed( hG, r, false )
+                    next
+                    ' ...and the FIRST index group of the first array, so the dump covers a
+                    ' NESTED open node. Survival of a top-level node says nothing about one
+                    ' that only exists because its parent is open.
+                    for r as long = 0 to PsListTree_GetCount(hG) - 1
+                        dim as long kg = cast(long, PsListTree_GetItemData( hG, r ))
+                        if (kg < 0) orelse (kg >= gDbgRowCount) then continue for
+                        if gDbgRow(kg).kind <> DBGROW_GROUP then continue for
+                        frmDebug_ExpandRowChildren( hG, r )
+                        PsListTree_SetNodeCollapsed( hG, r, false )
+                        exit for
+                    next
+                end if
                 sLine = "  -- " & nm & ", every top-level row expanded --"
                 print sLine
                 for r as long = 0 to PsListTree_GetCount(hG) - 1
@@ -1113,6 +1234,7 @@ sub frmDebug_Trace()
         #endmacro
         DUMPTREE( HWND_FRMDEBUG_LVGLOBALS, "globals" )
         DUMPTREE( HWND_FRMDEBUG_LVLOCALS,  "locals" )
+        bExpandedOnce = true
     end if
 
     print "--- end ---"
@@ -1996,6 +2118,10 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as DWSTRING, 
     gDbgSortLocals.nCol  = -1 : gDbgSortLocals.bDesc  = false
     frmDebug_RowsReset()
     frmDebug_ValueReset()
+    for i as long = 0 to FRMDEBUG_TREESLOTS - 1
+        gDbgExpCount(i) = 0
+        gDbgExpTop(i)   = 0
+    next
 
     dim pWindow as CWindow ptr = new CWindow
     dim pParent as CWindow ptr = AfxCWindowPtr(hWndParent)
@@ -2204,6 +2330,11 @@ end function
 '     needs a control, a message pump and a stopped debuggee. The GROUPING arithmetic is
 '     asserted; the wiring that invokes it is not, so a node that silently shows nothing but
 '     its placeholder for ever would pass this suite.
+'   - EXPANSION SURVIVING A STEP. It is a capture out of live rows and a restore into rebuilt
+'     ones, so it needs both a control and two stops. Verified instead by
+'     TIKO_DEBUG_TRACEEXPAND, which opens the tree on the FIRST stop only and then merely
+'     dumps it -- re-expanding every stop would print an open tree either way and prove
+'     nothing. Measured: 323 rows held across six steps, nested group elements included.
 '   - RUN TO THE FIRST BREAKPOINT. It is a branch on the first MSG_DBGP_STOPPED of a live
 '     session. Nothing here posts that message.
 '
