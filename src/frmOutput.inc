@@ -135,6 +135,11 @@ function frmOutput_CreateListView( byval CtrlID as long ) as HWND
     PsListTree_SetPaintCallback( hCtl, @ListBox_LVPaintRow )
     PsListTree_SetHeaderPaintCallback( hCtl, @frmOutput_LVPaintHeader )
     PsListTree_SetHeaderTooltipCallback( hCtl, @frmOutput_HeaderTooltip )
+    ' PsTooltip, matching the rest of the application. WHICH tips appear is unchanged: with
+    ' no row callback PsListTree still falls back to the row's own column-0 text, so the
+    ' compiler-result and TODO rows keep the tip they have always had -- this changes only
+    ' what draws it.
+    PsListTree_SetTooltipMode( hCtl, PSTIP_MODE_PS )
     PsListTree_SetColumnAutoSizeCallback( hCtl, @ListBox_LVAutoSizeColumn )
     PsListTree_SetMessageCallback( hCtl, @frmOutput_LVMessage )
 
@@ -1067,6 +1072,11 @@ function frmOutput_Show( byval hwndParent as HWND ) as LRESULT
     ' ShowWindow while the panel is floating. Both paint the same background and abut, so the
     ' seam is invisible; frmPanelMenu's left/right split established the pattern.
     HWND_FRMOUTPUT_UNDOCK = PsIconPanel_Create( HWND_FRMOUTPUT, IDC_FRMOUTPUT_BTNUNDOCK )
+    ' PsTooltip rather than the system tip, so this panel matches the seven forms migrated on
+    ' 2026-07-29 and picks up ghPopup's colours and the system tooltip FACE. Armed before any
+    ' SetTooltipText: PsTipHost builds the tool on first use and a tip inherits the defaults
+    ' current at that moment.
+    PsIconPanel_SetTooltipMode( HWND_FRMOUTPUT_UNDOCK, PSTIP_MODE_PS )
         PsIconPanel_SetFont( HWND_FRMOUTPUT_UNDOCK, ghFont(SYMBOLFONT_10) )
         PsIconPanel_SetJustify( HWND_FRMOUTPUT_UNDOCK, IP_JUSTIFY_CENTER )
         PsIconPanel_SetIconSize( HWND_FRMOUTPUT_UNDOCK, pWindow->ScaleX(20), pWindow->ScaleY(20) )
@@ -1081,6 +1091,7 @@ function frmOutput_Show( byval hwndParent as HWND ) as LRESULT
         PsIconPanel_SetColors( HWND_FRMOUTPUT_UNDOCK, @UndockColors )
 
     HWND_FRMOUTPUT_CLOSE = PsIconPanel_Create( HWND_FRMOUTPUT, IDC_FRMOUTPUT_BTNCLOSE )
+    PsIconPanel_SetTooltipMode( HWND_FRMOUTPUT_CLOSE, PSTIP_MODE_PS )
         PsIconPanel_SetFont( HWND_FRMOUTPUT_CLOSE, ghFont(SYMBOLFONT_10) )
         PsIconPanel_SetJustify( HWND_FRMOUTPUT_CLOSE, IP_JUSTIFY_CENTER )
         PsIconPanel_SetIconSize( HWND_FRMOUTPUT_CLOSE, pWindow->ScaleX(20), pWindow->ScaleY(20) )

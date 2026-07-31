@@ -145,6 +145,7 @@ declare sub      frmDebug_Trace()
 declare sub      frmDebug_RunSelfTest()
 declare sub      frmDebug_CaptureState()
 declare sub      frmDebug_ArmButtonTooltips()
+declare function frmDebug_GetButton( byval id as long ) as HWND
 
 ' The pane geometry, computed as a pure function of the client size and the three bar
 ' positions so it can be asserted without a window. LayoutPanes uses this and nothing else,

@@ -3,6 +3,14 @@
 ''
 
 #include once "PsButton.bi"
+' The image loader's implementation, pulled in here so a host that already includes PsButton.inc
+' needs no extra include line (PsColorPicker/PsVScrollBar precedent). #include once guards it if
+' the host includes it too.
+#include once "PsImage.inc"
+' Likewise the tooltip backend switch, which pulls PsTooltip.inc in behind it. Adopting this
+' control therefore still costs the host no new include line -- but it DOES add two files to
+' the copy list (PsTipHost + PsTooltip), which the README records.
+#include once "PsTipHost.inc"
 
 
 ' Forward declaration: the content setters re-apply auto-size, and they are defined well above
@@ -117,22 +125,31 @@ private sub PsButton_RenderDefault( _
     dim as HFONT hGlyphUse = pBtn->hGlyphFont
     if hGlyphUse = 0 then hGlyphUse = hTextUse
 
-    ' ---- the left glyph ----------------------------------------------------------------
-    ' The cell is a LAYOUT rect, not a measurement of the glyph: the control never measures the
-    ' icon font, so a glyph too large for the cell clips rather than resizing the button.
+    ' ---- the left icon: image first, else glyph ----------------------------------------
+    ' The cell is a LAYOUT rect, not a measurement of the icon: the control never measures the
+    ' icon font, so a glyph too large for the cell clips rather than resizing the button. An
+    ' image is fitted into the same cell, aspect preserved.
     if IsRectEmpty( @p->rcIconLeft ) = 0 then
         dim as RECT rcGL = p->rcIconLeft
-        b->SetFont( hGlyphUse )
-        b->SetColors( clrIcon, clrBack )
-        b->PaintText( p->wszGlyphLeft, @rcGL, DT_CENTER )
+        if p->pImageLeft then
+            b->PaintImage( p->pImageLeft, @rcGL, PS_IMGFIT_ASPECT )
+        else
+            b->SetFont( hGlyphUse )
+            b->SetColors( clrIcon, clrBack )
+            b->PaintText( p->wszGlyphLeft, @rcGL, DT_CENTER )
+        end if
     end if
 
-    ' ---- the right glyph ---------------------------------------------------------------
+    ' ---- the right icon: image first, else glyph ---------------------------------------
     if IsRectEmpty( @p->rcIconRight ) = 0 then
         dim as RECT rcGR = p->rcIconRight
-        b->SetFont( hGlyphUse )
-        b->SetColors( clrIcon, clrBack )
-        b->PaintText( p->wszGlyphRight, @rcGR, DT_CENTER )
+        if p->pImageRight then
+            b->PaintImage( p->pImageRight, @rcGR, PS_IMGFIT_ASPECT )
+        else
+            b->SetFont( hGlyphUse )
+            b->SetColors( clrIcon, clrBack )
+            b->PaintText( p->wszGlyphRight, @rcGR, DT_CENTER )
+        end if
     end if
 
     ' ---- the caption -------------------------------------------------------------------
@@ -204,6 +221,10 @@ private sub PsButton_FillPaintInfo( _
     p->wszText       = pBtn->wszText
     p->wszGlyphLeft  = pBtn->wszGlyphLeft
     p->wszGlyphRight = pBtn->wszGlyphRight
+    ' Resolve the images to their decoded handles (NULL when absent or failed to load), so the
+    ' painter and any callback draw the image without reaching back into the control.
+    p->pImageLeft  = iif( (pBtn->pImageLeft  <> 0) andalso (pBtn->pImageLeft->IsValid()  <> 0), pBtn->pImageLeft->Image(),  cast( CGpImage ptr, 0 ) )
+    p->pImageRight = iif( (pBtn->pImageRight <> 0) andalso (pBtn->pImageRight->IsValid() <> 0), pBtn->pImageRight->Image(), cast( CGpImage ptr, 0 ) )
     p->nTextAlign    = pBtn->nTextAlign
 end sub
 
@@ -479,6 +500,9 @@ function PsButton_WndProc( _
         end if
 
     case WM_SETFOCUS, WM_KILLFOCUS
+        ' A pending swallow must not survive a focus change: the WM_CHAR it was armed for is
+        ' not coming, and a stale flag would eat the next character instead.
+        if pBtn then pBtn->bAteKeyDown = false
         ' Focus is a FACT reported by the system, not an action a host can veto, so the state
         ' is updated first and the callback's result is IGNORED. A host that wants to refuse
         ' focus must not make the control a tabstop in the first place.
@@ -502,6 +526,14 @@ function PsButton_WndProc( _
         ' before the control ever saw it. Per-message is the only answer that gets both right.
         if lParam then
             dim as MSG ptr pMsg = cast( MSG ptr, lParam )
+            ' Claim the CHARACTER produced by a key we already consumed. Claiming a key with
+            ' DLGC_WANTALLKEYS makes IsDialogMessage TranslateMessage it, which manufactures a
+            ' matching WM_CHAR; if nothing claims that, it reaches DefWindowProc and beeps.
+            if pMsg->message = WM_CHAR then
+                if pBtn then
+                    if pBtn->bAteKeyDown then return DLGC_WANTALLKEYS
+                end if
+            end if
             if pMsg->message = WM_KEYDOWN then
                 select case pMsg->wParam
                 case VK_SPACE, VK_RETURN
@@ -511,8 +543,25 @@ function PsButton_WndProc( _
         end if
         return 0
 
+    case WM_CHAR
+        ' Swallow the character generated by a key WM_KEYDOWN already acted on, so it never
+        ' reaches DefWindowProc -- which beeps at a character no control wants. The keystroke
+        ' works either way, so the beep is the ONLY symptom and no assertion can hear it.
+        '
+        ' Anything we did not consume falls through untouched. WM_SYSCHAR is deliberately not
+        ' touched either: swallowing it would break Alt+F4 and the host's menu mnemonics.
+        if pBtn = 0 then exit select
+        if pBtn->bAteKeyDown then
+            pBtn->bAteKeyDown = false
+            return 0
+        end if
+
     case WM_KEYDOWN
         if pBtn = 0 then exit select
+        ' Arm the character swallow (see WM_CHAR). Every path below that handles one of these
+        ' keys consumes it, so the key alone decides -- and only keys that actually produce a
+        ' WM_CHAR are armed.
+        pBtn->bAteKeyDown = (wParam = VK_SPACE) orelse (wParam = VK_RETURN)
         if pBtn->isEnabled = false then return 0
         if PsButton_CallMessage( pBtn, hwnd, uMsg, wParam, lParam ) then return 0
         select case wParam
@@ -616,9 +665,11 @@ function PsButton_WndProc( _
 
     case WM_NCDESTROY
         ' Delete the stored button data pointer. The two fonts are the host's and are left
-        ' alone; the tooltip window is ours and goes with us.
+        ' alone; the tooltip window and the two PsImages are ours and go with us.
         if pBtn then
-            if IsWindow(pBtn->hToolTip) then DestroyWindow(pBtn->hToolTip)
+            PsTipHost_Destroy( @pBtn->tip )
+            if pBtn->pImageLeft  then delete pBtn->pImageLeft  : pBtn->pImageLeft  = 0
+            if pBtn->pImageRight then delete pBtn->pImageRight : pBtn->pImageRight = 0
             delete(pBtn)
         end if
 
@@ -636,32 +687,19 @@ end function
 
 
 ' ========================================================================================
-' Create a tooltip that pulls its text on demand (LPSTR_TEXTCALLBACK) for the whole control.
-' TTN_GETDISPINFOW therefore goes to TOOLINFO.hwnd, which is the control itself (NOT the parent
-' form), and PsButton_WndProc answers it.
+' Supply the tooltip text to the PsTooltip backend.
+'
+' This thunk exists so PsTipHost never learns the text policy: it hands PsTooltip a callback
+' and PsTooltip_ResolveTooltipText above stays the ONE place that decides what a button's tip
+' says. The system backend reaches the same function by a different road -- comctl32 asks the
+' control through TTN_GETDISPINFOW -- which is why that arm stays in the WndProc.
+'
+' idx is ignored: a button is a whole-control tip and has no items.
 ' ========================================================================================
-private function PsButton_AddTooltip( byval hCtrl as HWND ) as HWND
-    if IsWindow(hCtrl) = 0 then return 0
-    dim as HWND hTooltip = CreateWindowExW( 0, "tooltips_class32", "", _
-                                            WS_POPUP or TTS_ALWAYSTIP, _
-                                            0, 0, 0, 0, NULL, NULL, NULL, NULL )
-    if hTooltip = 0 then return 0
-    SetWindowPos( hTooltip, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE or SWP_NOSIZE or SWP_NOACTIVATE )
-
-    dim tti as TOOLINFOW
-    ' cbSize must match the running comctl32 version (see AfxNova AfxAddTooltip).
-    #ifdef __FB_64BIT__
-        if AfxComCtlVersion < 600 then tti.cbSize = 64 else tti.cbSize = 72
-    #else
-        if AfxComCtlVersion < 600 then tti.cbSize = 44 else tti.cbSize = 48
-    #endif
-    tti.uFlags   = TTF_IDISHWND or TTF_SUBCLASS
-    tti.hwnd     = hCtrl
-    tti.uId      = cast(UINT_PTR, hCtrl)
-    tti.hinst    = GetModuleHandleW(NULL)
-    tti.lpszText = LPSTR_TEXTCALLBACK
-    SendMessageW( hTooltip, TTM_ADDTOOLW, 0, cast(LPARAM, @tti) )
-    return hTooltip
+private function PsButton_TipTextCallback( byval hTooltip as HWND, byval hAttached as HWND, _
+                                           byval idx as long ) as DWSTRING
+    dim as DWSTRING wszOut = PsButton_ResolveTooltipText( GetButtonPointer(hAttached) )
+    return wszOut
 end function
 
 
@@ -717,12 +755,15 @@ function PsButton_Create( byval hWndParent as HWND, byval CtrlID as long ) as HW
     pBtn->nCurvature  = pWindow->ScaleY( PSBUTTON_DEFAULT_CURVATURE )
     pBtn->nFocusGap   = pWindow->ScaleY( PSBUTTON_DEFAULT_FOCUSGAP )
 
-    pBtn->hToolTip = PsButton_AddTooltip( hCtrl )
-
     SetWindowLongPtr( hCtrl, GWLP_ID, CtrlID )
 
     ' Store the new pointer into the user data area of the control window
     pWindow->UserData(0) = cast(LONG_PTR, pBtn)
+
+    ' AFTER UserData, not before. PsButton_TipTextCallback resolves the button through
+    ' GetButtonPointer(hAttached), which reads exactly that slot -- so building the tip first
+    ' would leave a window in which a resolve returns "" for a button that has text.
+    PsTipHost_Ensure( @pBtn->tip, hCtrl, @PsButton_TipTextCallback )
 
     function = hCtrl
 
@@ -758,6 +799,10 @@ sub PsButton_SetGlyphLeft( byval hButton as HWND, byval Glyph as DWSTRING )
     dim as PSBUTTON ptr pBtn = GetButtonPointer(hButton)
     if pBtn = 0 then exit sub
     pBtn->wszGlyphLeft = Glyph
+    ' Glyph OR image: setting an actual glyph frees any image on this side.
+    if (len( Glyph ) > 0) andalso (pBtn->pImageLeft <> 0) then
+        delete pBtn->pImageLeft : pBtn->pImageLeft = 0
+    end if
     pBtn->Refresh()
     PsButton_ApplyAutoSize( pBtn )
 end sub
@@ -773,9 +818,63 @@ sub PsButton_SetGlyphRight( byval hButton as HWND, byval Glyph as DWSTRING )
     dim as PSBUTTON ptr pBtn = GetButtonPointer(hButton)
     if pBtn = 0 then exit sub
     pBtn->wszGlyphRight = Glyph
+    if (len( Glyph ) > 0) andalso (pBtn->pImageRight <> 0) then
+        delete pBtn->pImageRight : pBtn->pImageRight = 0
+    end if
     pBtn->Refresh()
     PsButton_ApplyAutoSize( pBtn )
 end sub
+
+' ========================================================================================
+' Load an image file into an icon cell, replacing the glyph on that side. "" removes it.
+' Returns non-zero on a successful load; on failure the (empty) image is dropped so
+' HasIconLeft/Right stays honest. The image honours the existing icon cell size.
+' ========================================================================================
+function PsButton_SetImageLeft( byval hButton as HWND, byval Path as DWSTRING ) as long
+    dim as PSBUTTON ptr pBtn = GetButtonPointer(hButton)
+    if pBtn = 0 then return 0
+
+    if len( Path ) = 0 then
+        if pBtn->pImageLeft then delete pBtn->pImageLeft : pBtn->pImageLeft = 0
+        pBtn->Refresh()
+        PsButton_ApplyAutoSize( pBtn )
+        return 0
+    end if
+
+    if pBtn->pImageLeft = 0 then pBtn->pImageLeft = new PsImage
+    dim as long bOK = pBtn->pImageLeft->Load( Path )
+    if bOK = 0 then
+        delete pBtn->pImageLeft : pBtn->pImageLeft = 0
+    else
+        pBtn->wszGlyphLeft = ""                 ' glyph OR image
+    end if
+    pBtn->Refresh()
+    PsButton_ApplyAutoSize( pBtn )
+    function = bOK
+end function
+
+function PsButton_SetImageRight( byval hButton as HWND, byval Path as DWSTRING ) as long
+    dim as PSBUTTON ptr pBtn = GetButtonPointer(hButton)
+    if pBtn = 0 then return 0
+
+    if len( Path ) = 0 then
+        if pBtn->pImageRight then delete pBtn->pImageRight : pBtn->pImageRight = 0
+        pBtn->Refresh()
+        PsButton_ApplyAutoSize( pBtn )
+        return 0
+    end if
+
+    if pBtn->pImageRight = 0 then pBtn->pImageRight = new PsImage
+    dim as long bOK = pBtn->pImageRight->Load( Path )
+    if bOK = 0 then
+        delete pBtn->pImageRight : pBtn->pImageRight = 0
+    else
+        pBtn->wszGlyphRight = ""
+    end if
+    pBtn->Refresh()
+    PsButton_ApplyAutoSize( pBtn )
+    function = bOK
+end function
 
 function PsButton_GetID( byval hButton as HWND ) as long
     dim as PSBUTTON ptr pBtn = GetButtonPointer(hButton)
@@ -1139,19 +1238,53 @@ sub PsButton_SetTooltipText( byval hButton as HWND, byval Text as DWSTRING )
     pBtn->wszTooltip = Text
 end sub
 
+' The comctl32 handle, and 0 while this instance is on PsTooltip -- which is the honest
+' answer, not a gap: a host reaching through here is about to send a TTM_* message, and one
+' sent to a PsTooltip window would be silently ignored.
 function PsButton_GetTooltipHandle( byval hButton as HWND ) as HWND
     dim as PSBUTTON ptr pBtn = GetButtonPointer(hButton)
     if pBtn = 0 then return 0
-    return pBtn->hToolTip
+    return PsTipHost_SysHandle( @pBtn->tip )
 end function
 
+function PsButton_GetPsTooltipHandle( byval hButton as HWND ) as HWND
+    dim as PSBUTTON ptr pBtn = GetButtonPointer(hButton)
+    if pBtn = 0 then return 0
+    return PsTipHost_PsHandle( @pBtn->tip )
+end function
+
+function PsButton_SetTooltipMode( byval hButton as HWND, byval nMode as long ) as boolean
+    dim as PSBUTTON ptr pBtn = GetButtonPointer(hButton)
+    if pBtn = 0 then return false
+    return PsTipHost_SetMode( @pBtn->tip, nMode )
+end function
+
+function PsButton_GetTooltipMode( byval hButton as HWND ) as long
+    dim as PSBUTTON ptr pBtn = GetButtonPointer(hButton)
+    if pBtn = 0 then return PSTIP_MODE_SYSTEM
+    return PsTipHost_GetMode( @pBtn->tip )
+end function
+
+' The three delays. All of them go through PsTipHost, which STORES them as well as pushing
+' them -- so a host that sets a hover time and later switches backend keeps the hover time it
+' asked for. Pushing straight at the live tooltip would lose it at the switch, and the tip
+' would still appear, just on a different beat, with nothing reporting the change.
 sub PsButton_SetHoverTime( byval hButton as HWND, byval milliseconds as long )
     dim as PSBUTTON ptr pBtn = GetButtonPointer(hButton)
     if pBtn = 0 then exit sub
-    pBtn->HoverTime = milliseconds
-    if pBtn->hToolTip then
-        SendMessageW( pBtn->hToolTip, TTM_SETDELAYTIME, TTDT_INITIAL, cast(LPARAM, milliseconds) )
-    end if
+    PsTipHost_SetDelay( @pBtn->tip, TTDT_INITIAL, milliseconds )
+end sub
+
+sub PsButton_SetAutoPopTime( byval hButton as HWND, byval milliseconds as long )
+    dim as PSBUTTON ptr pBtn = GetButtonPointer(hButton)
+    if pBtn = 0 then exit sub
+    PsTipHost_SetDelay( @pBtn->tip, TTDT_AUTOPOP, milliseconds )
+end sub
+
+sub PsButton_SetReshowTime( byval hButton as HWND, byval milliseconds as long )
+    dim as PSBUTTON ptr pBtn = GetButtonPointer(hButton)
+    if pBtn = 0 then exit sub
+    PsTipHost_SetDelay( @pBtn->tip, TTDT_RESHOW, milliseconds )
 end sub
 
 
@@ -1719,7 +1852,236 @@ sub PsButton_RunSelfTest( byval hWndParent as HWND )
     sD = "distinct tones in the left icon cell=" & str(tIcon)
     BTNTest_Check( "the left glyph actually reached the surface", (tIcon > 1), sD )
 
+    ' ---- 18. an IMAGE reserves the icon cell, replaces the glyph, and reaches the surface --
+    ' Build a small multi-tone opaque bitmap, save it, load it as the left image. Multi-tone on
+    ' purpose: a solid image scaled to exactly fill the 16x16 cell would read as ONE tone and the
+    ' render probe below could not tell it from a wiped cell.
+    scope
+        dim as wstring * 260 wszTmp = "__psbtn_st.png"
+        dim as BITMAPINFO bi
+        bi.bmiHeader.biSize        = sizeof( BITMAPINFOHEADER )
+        bi.bmiHeader.biWidth       = 24
+        bi.bmiHeader.biHeight      = -24
+        bi.bmiHeader.biPlanes      = 1
+        bi.bmiHeader.biBitCount    = 32
+        bi.bmiHeader.biCompression = BI_RGB
+        dim as ulong ptr pB
+        dim as HBITMAP hbm = CreateDIBSection( null, @bi, DIB_RGB_COLORS, cast(any ptr ptr, @pB), null, 0 )
+        if hbm andalso pB then
+            for yy as long = 0 to 23
+                for xx as long = 0 to 23
+                    dim as ulong c = &hFF3399EE
+                    if ((xx < 12) xor (yy < 12)) then c = &hFFEE9933   ' 2x2 checker -> >=2 tones
+                    pB[yy * 24 + xx] = c
+                next
+            next
+            scope
+                dim as PsImage tmp
+                tmp.LoadFromBitmap( hbm )
+                if tmp.IsValid() then AfxGdipSaveImageToPng( tmp.Image()->m_pImage, wszTmp )
+            end scope
+        end if
+        if hbm then DeleteObject( hbm )
+
+        ' Baseline: caption only, no icons at all.
+        PsButton_SetGlyphLeft( h, "" )
+        PsButton_SetGlyphRight( h, "" )
+        PsButton_SetText( h, CAPTION )
+        dim as long baseW, baseH
+        PsButton_GetIdealSize( h, baseW, baseH )
+
+        dim as long okLoad = PsButton_SetImageLeft( h, wszTmp )
+        BTNTest_Check( "SetImageLeft loads the file", okLoad <> 0, "returned " & str(okLoad) )
+
+        PsButton_GetIdealSize( h, w, hh )
+        sD = "base=" & str(baseW) & " withImage=" & str(w) & " delta=" & str(w - baseW)
+        BTNTest_Check( "an image reserves iconW + gap (same as a glyph)", (w - baseW) = (16 + 8), sD )
+
+        ' Either/or: the glyph on that side was cleared by setting an image.
+        dim as wstring * 16 wgl = PsButton_GetGlyphLeft( h )
+        BTNTest_Check( "setting an image clears the glyph on that side", (len(wgl) = 0), "glyph=[" & str(wgl) & "]" )
+
+        ' Render: the image reached the left icon cell.
+        SetWindowPos( h, 0, 0, 0, w, hh, SWP_NOZORDER or SWP_NOMOVE or SWP_NOACTIVATE )
+        dim as long tImg = PsButton_CountRenderedTones( h, BTN_PART_ICONLEFT )
+        BTNTest_Check( "the image reached the left icon cell", (tImg > 1), "tones=" & str(tImg) )
+
+        ' Removing the image gives the cell (and its gap) back.
+        PsButton_SetImageLeft( h, "" )
+        PsButton_GetIdealSize( h, w, hh )
+        BTNTest_Check( "removing the image reclaims the cell", (w = baseW), "now=" & str(w) & " base=" & str(baseW) )
+
+        DeleteFileW( wszTmp )
+    end scope
+
     DestroyWindow(h)
+
+    ' ------------------------------------------------------------------------------------
+    ' The Enter/Space BEEP.
+    '
+    ' Claiming a key with DLGC_WANTALLKEYS makes IsDialogMessage TranslateMessage it, which
+    ' manufactures a matching WM_CHAR. Nothing consuming that character means it reaches
+    ' DefWindowProc, and the system beeps -- while the keystroke itself works perfectly. The
+    ' beep is the ONLY symptom, so it cannot be heard by any assertion; what is asserted here
+    ' is the mechanism that suppresses it, entirely through messages.
+    '
+    ' The control is DISABLED on purpose: the arm happens before the enabled check, so the
+    ' mechanism is identical while nothing fires a callback or opens a dropdown -- and a
+    ' disabled control that swallows the key owes the character too.
+    scope
+        dim as HWND hBeep = PsButton_Create( hWndParent, 7801 )
+        PsButton_SetEnabled( hBeep, false )
+
+        dim as MSG mBeep
+        mBeep.hwnd = hBeep : mBeep.message = WM_CHAR : mBeep.wParam = 13
+
+        SendMessageW( hBeep, WM_KEYDOWN, VK_RETURN, 0 )
+        dim as LRESULT dc1 = SendMessageW( hBeep, WM_GETDLGCODE, 13, cast(LPARAM, @mBeep) )
+        BTNTest_Check( "Enter arms the WM_CHAR swallow that stops the system beep", _
+            (dc1 and DLGC_WANTALLKEYS) <> 0, "dlgcode=&h" & hex(dc1) )
+
+        SendMessageW( hBeep, WM_CHAR, 13, 0 )
+        dim as LRESULT dc2 = SendMessageW( hBeep, WM_GETDLGCODE, 13, cast(LPARAM, @mBeep) )
+        ' The disarm is the proof the WM_CHAR was consumed. The return value cannot be:
+        ' DefWindowProc also returns 0 for WM_CHAR, so it reads the same when it fell through.
+        BTNTest_Check( "...and the WM_CHAR is then swallowed instead of reaching DefWindowProc", _
+            (dc2 and DLGC_WANTALLKEYS) = 0, "dlgcode=&h" & hex(dc2) )
+
+        ' A key we never claimed must leave ordinary characters alone, or a host accelerator
+        ' on a printable key would stop working.
+        SendMessageW( hBeep, WM_KEYDOWN, VK_TAB, 0 )
+        mBeep.wParam = asc("a")
+        dim as LRESULT dc3 = SendMessageW( hBeep, WM_GETDLGCODE, asc("a"), cast(LPARAM, @mBeep) )
+        BTNTest_Check( "an unclaimed key leaves ordinary characters alone", _
+            (dc3 and DLGC_WANTALLKEYS) = 0, "dlgcode=&h" & hex(dc3) )
+
+        DestroyWindow( hBeep )
+    end scope
+
+    ' ====================================================================================
+    ' TOOLTIP BACKEND -- mode, handles, and the delays surviving a switch
+    '
+    ' What is worth asserting here is NOT that the setters store what they were handed. It is
+    ' that (a) the control still ships on the system backend, (b) a switch actually swaps the
+    ' windows rather than leaving both alive, and (c) a hover time set on one backend is still
+    ' in force after a switch to the other. (c) is the one with a real failure mode behind it:
+    ' pushing a delay straight at the live tooltip loses it silently at the switch, and the tip
+    ' still appears -- just on a different beat, with nothing to say so.
+    '
+    ' The text policy is asserted ACROSS the switch too, because the whole claim of this
+    ' feature is that the backend changes how a tip is drawn and never what it says.
+    ' ====================================================================================
+    scope
+        dim as HWND hT = PsButton_Create( hWndParent, 9807 )
+        if hT = 0 then
+            BTNTest_Check( "tooltip: could not create a test button", false, "Create returned 0" )
+        else
+            BTNTest_Check( "tooltip: the control still ships on the SYSTEM backend", _
+                (PsButton_GetTooltipMode( hT ) = PSTIP_MODE_SYSTEM), _
+                "mode = " & str(PsButton_GetTooltipMode( hT )) )
+            BTNTest_Check( "tooltip: a comctl32 window exists on the system backend", _
+                (PsButton_GetTooltipHandle( hT ) <> 0) andalso IsWindow(PsButton_GetTooltipHandle( hT )), _
+                "hSys = " & str(cast(integer, PsButton_GetTooltipHandle( hT ))) )
+            BTNTest_Check( "tooltip: and the PsTooltip handle is 0 while on the system backend", _
+                (PsButton_GetPsTooltipHandle( hT ) = 0), _
+                "hPs = " & str(cast(integer, PsButton_GetPsTooltipHandle( hT ))) )
+
+            ' Set the hover time on the SYSTEM backend, then switch. comctl32 can be asked what
+            ' it stored, so this half is verified against the tooltip itself rather than
+            ' against our own copy of the number.
+            PsButton_SetHoverTime( hT, 777 )
+            dim as long nSysInitial = SendMessageW( PsButton_GetTooltipHandle( hT ), _
+                                                    TTM_GETDELAYTIME, TTDT_INITIAL, 0 )
+            BTNTest_Check( "tooltip: SetHoverTime reaches the comctl32 tip", _
+                (nSysInitial = 777), "TTM_GETDELAYTIME = " & str(nSysInitial) & " ms" )
+
+            dim as HWND hSysBefore = PsButton_GetTooltipHandle( hT )
+            dim as boolean bSwitched = PsButton_SetTooltipMode( hT, PSTIP_MODE_PS )
+            BTNTest_Check( "tooltip: switching to PsTooltip succeeds", bSwitched, _
+                "mode = " & str(PsButton_GetTooltipMode( hT )) )
+            BTNTest_Check( "tooltip: the outgoing comctl32 window is DESTROYED, not orphaned", _
+                (IsWindow(hSysBefore) = 0) andalso (PsButton_GetTooltipHandle( hT ) = 0), _
+                "old hSys alive = " & str(IsWindow(hSysBefore)) )
+
+            dim as HWND hPs = PsButton_GetPsTooltipHandle( hT )
+            BTNTest_Check( "tooltip: a PsTooltip window exists after the switch", _
+                (hPs <> 0) andalso IsWindow(hPs), "hPs = " & str(cast(integer, hPs)) )
+            BTNTest_Check( "tooltip: the PsTooltip is ATTACHED to the button, not to its parent", _
+                (PsTooltip_GetAttached( hPs ) = hT), _
+                "attached = " & str(cast(integer, PsTooltip_GetAttached( hPs ))) )
+
+            ' THE ASSERTION THIS BLOCK EXISTS FOR.
+            dim as PSTOOLTIP ptr pTip = GetTooltipPointer( hPs )
+            BTNTest_Check( "tooltip: the hover time set on the OLD backend is honoured by the new one", _
+                (pTip <> 0) andalso (pTip->nInitialDelay = 777), _
+                "PsTooltip initial delay = " & str(iif(pTip, pTip->nInitialDelay, -1)) & " ms" )
+
+            ' Text policy: same rule, both backends -- resolved THROUGH THE CALLBACK THE TIP
+            ' ACTUALLY HOLDS, not by calling our thunk directly. That distinction is not
+            ' pedantry: the first version of this assertion called PsButton_TipTextCallback
+            ' itself, and an A/B that removed the SetTooltipCallback wiring entirely left the
+            ' whole suite at 77/77 green -- a switched button would have shown no tip at all.
+            ' A real dwell is what would exercise this end to end, and no self-test can produce
+            ' one, so the wiring is what has to be asserted.
+            PsButton_SetTooltipText( hT, "authored" )
+            BTNTest_Check( "tooltip: the PsTooltip backend is WIRED to the control's text policy", _
+                (pTip <> 0) andalso (pTip->TooltipCallback <> 0), _
+                "callback installed = " & str(iif(pTip andalso pTip->TooltipCallback, 1, 0)) )
+            dim as DWSTRING wszA
+            if (pTip <> 0) andalso (pTip->TooltipCallback <> 0) then
+                wszA = pTip->TooltipCallback( hPs, hT, -1 )
+            end if
+            BTNTest_Check( "tooltip: authored text wins on the PsTooltip backend too", _
+                (wszA = "authored"), "resolved = " & str(wszA) )
+
+            ' A whole-control tip has no items, so the index must not disturb it. This is the
+            ' call site that sends TTM_POP on the system backend.
+            dim as PSBUTTON ptr pBT = GetButtonPointer(hT)
+            PsTipHost_SetToolIndex( @pBT->tip, -1 )
+            BTNTest_Check( "tooltip: SetToolIndex(-1) leaves the whole-control tip alive", _
+                IsWindow(PsButton_GetPsTooltipHandle( hT )) <> 0, "hPs still a window" )
+
+            ' ...and back. A mode switch is not one-way, and the delay has to survive the
+            ' return trip as well or "honoured by both" is only half true.
+            PsButton_SetTooltipMode( hT, PSTIP_MODE_SYSTEM )
+            BTNTest_Check( "tooltip: switching back rebuilds the comctl32 tip", _
+                (PsButton_GetTooltipHandle( hT ) <> 0) andalso _
+                (IsWindow(PsButton_GetTooltipHandle( hT )) <> 0) andalso _
+                (PsButton_GetPsTooltipHandle( hT ) = 0), _
+                "hSys = " & str(cast(integer, PsButton_GetTooltipHandle( hT ))) )
+            dim as long nBack = SendMessageW( PsButton_GetTooltipHandle( hT ), _
+                                              TTM_GETDELAYTIME, TTDT_INITIAL, 0 )
+            BTNTest_Check( "tooltip: ...carrying the hover time back with it", _
+                (nBack = 777), "TTM_GETDELAYTIME = " & str(nBack) & " ms" )
+
+            ' An unset delay must NOT be forced to zero by the switch machinery: comctl32's own
+            ' default is what a host that expressed no opinion is entitled to.
+            BTNTest_Check( "tooltip: an unset delay is left at the backend's own default", _
+                (SendMessageW( PsButton_GetTooltipHandle( hT ), TTM_GETDELAYTIME, TTDT_AUTOPOP, 0 ) > 0), _
+                "autopop = " & str(SendMessageW( PsButton_GetTooltipHandle( hT ), TTM_GETDELAYTIME, TTDT_AUTOPOP, 0 )) & " ms" )
+
+            DestroyWindow( hT )
+        end if
+    end scope
+
+    ' The process-wide defaults are PsTooltip's, but the reason they exist is THIS: a control
+    ' builds its own tip and the host never sees the handle, so an armed default is the only
+    ' way a host theme can reach it. Asserted here, from the host side, rather than only in
+    ' PsTooltip's own suite where no control is involved.
+    scope
+        PsTooltip_SetDefaultMaxWidth( 246 )
+        dim as HWND hT2 = PsButton_Create( hWndParent, 9808 )
+        if hT2 <> 0 then
+            PsButton_SetTooltipMode( hT2, PSTIP_MODE_PS )
+            dim as HWND hPs2 = PsButton_GetPsTooltipHandle( hT2 )
+            BTNTest_Check( "tooltip: a host's process-wide default reaches a tip the control built itself", _
+                (hPs2 <> 0) andalso (PsTooltip_GetMaxWidth( hPs2 ) = 246), _
+                "maxwidth = " & str(iif(hPs2, PsTooltip_GetMaxWidth( hPs2 ), -1)) )
+            DestroyWindow( hT2 )
+        end if
+        ' Leave the process as it was found, or every later tip in this run inherits it.
+        PsTooltip_ClearDefaults()
+    end scope
 
     dim as string sSummary = "=== PsButton: " & str(gBTN_TestCount - gBTN_FailCount) & _
                              "/" & str(gBTN_TestCount) & " assertions passed"

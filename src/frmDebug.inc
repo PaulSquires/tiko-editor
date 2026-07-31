@@ -1164,6 +1164,29 @@ sub frmDebug_Trace()
     TRACEWND( "addwatch  ", gDbgBtnAddWatch )
     TRACEWND( "delwatch  ", gDbgBtnDelWatch )
 
+    ' Which tooltip BACKEND each surface ended up on. A SetTooltipMode call that never landed
+    ' is invisible otherwise -- the tips still work, they are simply drawn by comctl32 in the
+    ' system colours, which on a dark theme is the whole thing this migration was for.
+    #macro TIPMODE( nm, h, getter )
+        if IsWindow(h) then
+            sLine = "  tip " & nm & " = " & iif( getter(h) <> 0, "PsTooltip", "SYSTEM" )
+            print sLine
+        end if
+    #endmacro
+    for id as long = IDC_FRMDEBUG_CMDFIRST to IDC_FRMDEBUG_CMDLAST
+        TIPMODE( "button" & str(id), gDbgBtn(id), PsButton_GetPsTooltipHandle )
+    next
+    TIPMODE( "addwatch  ", gDbgBtnAddWatch,         PsButton_GetPsTooltipHandle )
+    TIPMODE( "delwatch  ", gDbgBtnDelWatch,         PsButton_GetPsTooltipHandle )
+    TIPMODE( "globals   ", HWND_FRMDEBUG_LVGLOBALS, PsListTree_GetPsTooltipHandle )
+    TIPMODE( "locals    ", HWND_FRMDEBUG_LVLOCALS,  PsListTree_GetPsTooltipHandle )
+    TIPMODE( "stack     ", HWND_FRMDEBUG_LVSTACK,   PsListTree_GetPsTooltipHandle )
+    TIPMODE( "watch     ", HWND_FRMDEBUG_LVWATCH,   PsListTree_GetPsTooltipHandle )
+    TIPMODE( "output-lv ", HWND_FRMOUTPUT_LVRESULTS, PsListTree_GetPsTooltipHandle )
+    TIPMODE( "output-todo", HWND_FRMOUTPUT_LVTODO,  PsListTree_GetPsTooltipHandle )
+    TIPMODE( "output-undock", HWND_FRMOUTPUT_UNDOCK, PsIconPanel_GetPsTooltipHandle )
+    TIPMODE( "output-close ", HWND_FRMOUTPUT_CLOSE,  PsIconPanel_GetPsTooltipHandle )
+
     sLine = "  bars: main=" & str(PsSplitter_GetPos(HWND_FRMDEBUG_SPLITMAIN)) & _
             "  left=" & str(PsSplitter_GetPos(HWND_FRMDEBUG_SPLITLEFT)) & _
             "  right=" & str(PsSplitter_GetPos(HWND_FRMDEBUG_SPLITRIGHT))
@@ -1517,6 +1540,19 @@ function frmDebug_IsOpen() as boolean
     return (IsWindow(HWND_FRMDEBUG) <> 0)
 end function
 
+' One button by command id, for the theme pass -- which has to reach every tooltip in the
+' application and would otherwise need gDbgBtn() and the two caption buttons made global.
+' Answers 0 for an unknown id or a closed window, which is what lets the caller ask
+' unconditionally.
+function frmDebug_GetButton( byval id as long ) as HWND
+    select case id
+        case IDC_FRMDEBUG_CMDADDWATCH : return gDbgBtnAddWatch
+        case IDC_FRMDEBUG_CMDDELWATCH : return gDbgBtnDelWatch
+        case IDC_FRMDEBUG_CMDFIRST to IDC_FRMDEBUG_CMDLAST : return gDbgBtn(id)
+    end select
+    return 0
+end function
+
 ' ==========================================================================================
 ' Persisted geometry
 '
@@ -1582,8 +1618,13 @@ private function frmDebug_TipFor( byval wszCaption as DWSTRING, byval idmCommand
 end function
 
 sub frmDebug_ArmButtonTooltips()
+    ' PSTIP_MODE_PS is set here rather than at Create, and re-set on every re-arm, because it
+    ' is idempotent and this is the one place every button passes through. The mode has to be
+    ' armed BEFORE the text: PsTipHost builds the tool on first use, and the defaults a tip
+    ' is created with are the ones Theme_ArmTooltipDefaults last published.
     #macro ARMTIP( id, wszCap, idm )
         if IsWindow(gDbgBtn(id)) then
+            PsButton_SetTooltipMode( gDbgBtn(id), PSTIP_MODE_PS )
             PsButton_SetTooltipText( gDbgBtn(id), frmDebug_TipFor( wszCap, idm ) )
         end if
     #endmacro
@@ -1917,6 +1958,11 @@ private function frmDebug_CreateListView( byval CtrlID as long ) as HWND
     PsListTree_ShowHeader( hCtl, true )
     PsListTree_SetColumnAutoSizeCallback( hCtl, @ListBox_LVAutoSizeColumn )
     PsListTree_SetHeaderTooltipCallback( hCtl, @frmDebug_NoHeaderTooltip )
+    ' All four panes on PsTooltip. WHICH tips appear is unchanged -- with no row callback the
+    ' control still falls back to the row's own column-0 text; this changes only what draws
+    ' it. (The column HEADERS stay on comctl32 because PsColumnHeader has no PsTipHost, and
+    ' that is invisible here: frmDebug_NoHeaderTooltip suppresses them outright.)
+    PsListTree_SetTooltipMode( hCtl, PSTIP_MODE_PS )
     PsListTree_SetFont( hCtl, ghFont(GUIFONT_9) )
     PsListTree_SetBackColor( hCtl, ghOutput.BackColor )
     PsListTree_SetScrollBarColors( hCtl, ghOutput.BackColorScrollBar, _
@@ -2186,6 +2232,7 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as DWSTRING, 
         PsButton_SetGlyphFont( h, ghFont(SYMBOLFONT_9) )
         PsButton_SetFont( h, ghFont(GUIFONT_9) )
         PsButton_SetPadding( h, 0, 0, 0, 0 )
+        PsButton_SetTooltipMode( h, PSTIP_MODE_PS )
         PsButton_SetTooltipText( h, tip )
         PsButton_SetClickCallback( h, cb )
     #endmacro
