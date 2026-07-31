@@ -249,6 +249,11 @@ function clsConfig.SaveConfigFile() as long
     ' the PREVIOUS session's visibility -- which is what a crash then made permanent.
     frmOutput_CaptureState()
 
+    ' The debugger window's geometry and its three splitter positions, when it is open. Same
+    ' reason as the two above: a save can happen at any time while a debug session is
+    ' running, and it must record where the window is NOW.
+    frmDebug_CaptureState()
+
     this.CompilerBuild = frmBuildConfig_GetSelectedBuildGUID()
 
     dim pStream as CTextStream   '(utf16)
@@ -331,6 +336,17 @@ function clsConfig.SaveConfigFile() as long
     pStream.WriteLine "OutputFloatRight="         & this.OutputFloatRight
     pStream.WriteLine "OutputFloatBottom="        & this.OutputFloatBottom
     pStream.WriteLine "OutputFloatMaximized="     & this.OutputFloatMaximized
+    ' Note: the debugger window's positions are in scaled screen coordinates (the
+    ' Startup/HelpStartup convention), but its three splitters are a PERCENT x 10000 of the
+    ' span each divides -- see clsConfig.bi for why they are not pixels.
+    pStream.WriteLine "DebugLeft="                & this.DebugLeft
+    pStream.WriteLine "DebugTop="                 & this.DebugTop
+    pStream.WriteLine "DebugRight="               & this.DebugRight
+    pStream.WriteLine "DebugBottom="              & this.DebugBottom
+    pStream.WriteLine "DebugMaximized="           & this.DebugMaximized
+    pStream.WriteLine "DebugSplitMain="           & this.DebugSplitMain
+    pStream.WriteLine "DebugSplitLeft="           & this.DebugSplitLeft
+    pStream.WriteLine "DebugSplitRight="          & this.DebugSplitRight
     pStream.WriteLine ""
 
     ' for each folder location determine if it resides on the same drive as
@@ -788,6 +804,19 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
                     case "OutputFloatRight":         this.OutputFloatRight      = nData
                     case "OutputFloatBottom":        this.OutputFloatBottom     = nData
                     case "OutputFloatMaximized":     this.OutputFloatMaximized  = nData
+                    ' The debugger window, inside the guard for the same reason: a hot reload
+                    ' during a live debug session must not move the window or its bars.
+                    case "DebugLeft":                this.DebugLeft             = nData
+                    case "DebugTop":                 this.DebugTop              = nData
+                    case "DebugRight":               this.DebugRight            = nData
+                    case "DebugBottom":              this.DebugBottom           = nData
+                    case "DebugMaximized":           this.DebugMaximized        = nData
+                    ' Clamped on the way IN, so a hand-edited or corrupt settings.ini heals
+                    ' rather than producing a bar outside its own pane. 0 is a legal stored
+                    ' value only in the sense that the range clamp will move it back.
+                    case "DebugSplitMain":           this.DebugSplitMain  = iif( (nData > 0) andalso (nData < FRMDEBUG_PCTSCALE), nData, FRMDEBUG_DEFPCTMAIN )
+                    case "DebugSplitLeft":           this.DebugSplitLeft  = iif( (nData > 0) andalso (nData < FRMDEBUG_PCTSCALE), nData, FRMDEBUG_DEFPCTLEFT )
+                    case "DebugSplitRight":          this.DebugSplitRight = iif( (nData > 0) andalso (nData < FRMDEBUG_PCTSCALE), nData, FRMDEBUG_DEFPCTRIGHT )
                 end select
             end if
             

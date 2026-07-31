@@ -157,6 +157,29 @@ type DBGP_NODE
 	wszValue    as wstring * DBGP_MAXVALUE
 end type
 
+'' The shape of an array variable.
+''
+'' Ask for this on any node whose hasChildren is set and you want to know whether it is a UDT
+'' or an array -- debugparser_array_info answers non-zero only for an array. It covers both
+'' kinds: a fixed array's bounds come from the debug information, a REDIM array's from its
+'' run-time descriptor, so for the dynamic case the answer is only valid while the debuggee is
+'' stopped and can be different at the next stop.
+''
+'' `total` is the product of every extent and is exactly what debugparser_child_count reports,
+'' so children are addressed by a single linear index in ROW-MAJOR order (the last subscript
+'' varies fastest, matching memory). There is no cap: a ten-million-element array reports ten
+'' million children, and deciding how to present that is the host's business.
+type DBGP_ARRAYINFO
+	dims      as long                       '' 1..DBGP_MAXDIM
+	lo(0 to 7) as longint
+	hi(0 to 7) as longint
+	elemSize  as longint                    '' bytes per element
+	total     as longint                    '' product of every extent
+	isDynamic as long                       '' non-zero for a REDIM array
+end type
+
+const DBGP_MAXDIM = 8
+
 #ifdef DEBUGPARSER_BUILDING_DLL
 	#define DBGP_DECL(fn) declare
 #endif
@@ -203,6 +226,7 @@ end type
 	declare function debugparser_child_count( byval pNode as DBGP_NODE ptr ) as long
 	declare function debugparser_child_node( byval pNode as DBGP_NODE ptr, byval index as long, byval pOut as DBGP_NODE ptr ) as long
 	declare function debugparser_evaluate( byval wszExpr as wstring ptr, byval frameIndex as long, byval pNode as DBGP_NODE ptr ) as long
+		declare function debugparser_array_info( byval pNode as DBGP_NODE ptr, byval pOut as DBGP_ARRAYINFO ptr ) as long
 
 #else
 
@@ -242,6 +266,7 @@ end type
 	declare function debugparser_child_count lib "debugParser" alias "DEBUGPARSER_CHILD_COUNT" ( byval pNode as DBGP_NODE ptr ) as long
 	declare function debugparser_child_node lib "debugParser" alias "DEBUGPARSER_CHILD_NODE" ( byval pNode as DBGP_NODE ptr, byval index as long, byval pOut as DBGP_NODE ptr ) as long
 	declare function debugparser_evaluate lib "debugParser" alias "DEBUGPARSER_EVALUATE" ( byval wszExpr as wstring ptr, byval frameIndex as long, byval pNode as DBGP_NODE ptr ) as long
+	declare function debugparser_array_info lib "debugParser" alias "DEBUGPARSER_ARRAY_INFO" ( byval pNode as DBGP_NODE ptr, byval pOut as DBGP_ARRAYINFO ptr ) as long
 
 #endif
 

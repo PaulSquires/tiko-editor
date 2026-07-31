@@ -932,6 +932,12 @@ function frmKeyboard_BuildAcceleratorTable() as long
 
     pWindow->CreateAcceleratorTable()
 
+    ' The debugger's button tooltips quote the keystroke for each command, so they go stale
+    ' the moment a binding changes. Re-armed here rather than in the Keyboard dialog, because
+    ' this is the one place every rebind path converges on. A no-op when the window is
+    ' closed, which is the usual case.
+    if frmDebug_IsOpen() then frmDebug_ArmButtonTooltips()
+
     function = 0
 end function
 
