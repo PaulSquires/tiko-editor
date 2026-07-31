@@ -128,7 +128,7 @@ function frmKeyboard_CreateDefaultKeyBindings() as long
     ' defaults table against exactly that. AccelKeyToValue accepts both spellings, so the
     ' shortcut fired either way -- this was a consistency failure, not a broken key.
     ' Nothing migrates: keybindings.ini stores only wszUserKeys, never a default.
-    frmKeyBoard_AddKeyBinding( "File", IDM_OPTIONSDIALOG, "IDM_OPTIONSDIALOG", "Environment options", "Ctrl+Comma" )
+    frmKeyBoard_AddKeyBinding( "File", IDM_OPTIONSDIALOG, "IDM_OPTIONSDIALOG", "Options", "Ctrl+Comma" )
     frmKeyBoard_AddKeyBinding( "File", IDM_THEMES, "IDM_THEMES", "Theme Editor", "Ctrl+Shift+T" )
     frmKeyBoard_AddKeyBinding( "File", IDM_KEYBOARDSHORTCUTS, "IDM_KEYBOARDSHORTCUTS", "Keyboard shortcuts", "Ctrl+K" )
     frmKeyBoard_AddKeyBinding( "File", IDM_BUILDCONFIG, "IDM_BUILDCONFIG", "Build configurations", "F7" )

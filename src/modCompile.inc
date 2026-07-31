@@ -523,7 +523,7 @@ function code_Compile( byval wID as long ) as boolean
     end if
 
 
-    ' Process any user specified Include Paths (per Environment Options). These are added
+    ' Process any user specified Include Paths (per Options). These are added
     ' to CompileFlags and passed to the compiler using the -i directive.
     dim as DWSTRING includePath
     dim as long numpaths = AfxStrParseCount(gConfig.CompilerIncludes, ";")
@@ -558,7 +558,7 @@ function code_Compile( byval wID as long ) as boolean
 
     else
         ' No active project. We will add any generic compiler switches that the user may have
-        ' specified in "Environment Options / Compiler Setup".
+        ' specified in "Options / Compiler Setup".
         pCompile->CompileFlags += " " + gConfig.CompilerSwitches + " " + pCompile->CompileIncludes  
     end if
 

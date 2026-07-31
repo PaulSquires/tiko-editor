@@ -11,7 +11,7 @@
 '    MERCHANTABILITY or FITNESS for A PARTICULAR PURPOSE.  See the
 '    GNU General Public License for more details.
 
-'  modOptionsRows.bi  --  the data-driven settings rows behind the Environment Options
+'  modOptionsRows.bi  --  the data-driven settings rows behind the Options
 '                         dialog, plus the staging copy of the settings they edit.
 '
 '  WHY A TABLE

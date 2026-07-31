@@ -11,7 +11,7 @@
 '    MERCHANTABILITY or FITNESS for A PARTICULAR PURPOSE.  See the
 '    GNU General Public License for more details.
 
-'  frmOptions.inc  --  the Environment Options dialog shell.
+'  frmOptions.inc  --  the Options dialog shell.
 '
 '  SHAPE
 '      +---------------------+----------------------------------------+
@@ -1180,7 +1180,7 @@ function frmOptions_Show( byval hWndParent as HWND ) as LRESULT
 
     dim pWindow as CWindow ptr = new CWindow
 
-    HWND_FRMOPTIONS = pWindow->Create( hWndParent, L(109,"Environment Options"), @frmOptions_WndProc, 0, 0, 0, 0, _
+    HWND_FRMOPTIONS = pWindow->Create( hWndParent, L(109,"Options"), @frmOptions_WndProc, 0, 0, 0, 0, _
         WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
         WS_EX_DLGMODALFRAME or WS_EX_CONTROLPARENT or WS_EX_LEFT )
     pWindow->SetClientSize( FRMOPTIONS_CLIENT_W, FRMOPTIONS_CLIENT_H )

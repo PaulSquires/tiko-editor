@@ -14,7 +14,7 @@
 '  frmOptionsCompiler.bi
 '
 '  The Compiler Setup page. Unlike the old version this is NOT a child CWindow: its
-'  controls are built directly onto the Environment Options scroll panel's page window and
+'  controls are built directly onto the Options scroll panel's page window and
 '  driven by the same hooks the table-driven pages use (build / layout / paint / show /
 '  theme). It reads and writes gOptWork, never gConfig, so Cancel is a no-op and the page
 '  can be built lazily on first visit.

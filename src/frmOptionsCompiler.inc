@@ -13,7 +13,7 @@
 
 '  frmOptionsCompiler.inc  --  the Compiler Setup page (see frmOptionsCompiler.bi).
 '
-'  A hand-written page hosted directly on the Environment Options scroll panel. Controls
+'  A hand-written page hosted directly on the Options scroll panel. Controls
 '  come from the reusable family; every value goes through gOptWork, never gConfig.
 
 #include once "frmOptionsCompiler.bi"

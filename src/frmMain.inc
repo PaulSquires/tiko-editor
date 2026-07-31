@@ -1875,7 +1875,7 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ' tick sweeps a list that is then empty.
     FileWatch_ApplyConfig()
 
-    ' Open the Environment Options dialog immediately, so its page-fit and focus/tab-order
+    ' Open the Options dialog immediately, so its page-fit and focus/tab-order
     ' self-tests can be run without a human driving the menu. Companion to TIKO_KEYBOARD_AUTOOPEN,
     ' and here for the same reason: TIKO_OPTIONS_SELFTEST only runs when the dialog is OPENED, and
     ' the focus half of it cannot be reached any other way. The dialog is MODAL, so startup stops

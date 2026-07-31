@@ -181,7 +181,7 @@ function frmPanelMenu_Show( byval hwndParent as hwnd ) as LRESULT
     PsIconPanel_AddItem( hLeft, IP_KIND_COMMAND, wszIconExplorer, IDM_VIEWEXPLORER )
     PsIconPanel_AddItem( hLeft, IP_KIND_COMMAND, wszIconFunctions, IDM_FUNCTIONLIST )
     PsIconPanel_AddItem( hLeft, IP_KIND_COMMAND, wszIconBookmarks, IDM_BOOKMARKSLIST )
-    PsIconPanel_AddItem( hLeft, IP_KIND_COMMAND, wszIconSettings, IDM_OPTIONSDIALOG )   ' Environment Options
+    PsIconPanel_AddItem( hLeft, IP_KIND_COMMAND, wszIconSettings, IDM_OPTIONSDIALOG )   ' Options
 
     PsIconPanel_AddItem( hRight, IP_KIND_COMMAND, wszIconFind, IDM_FINDINPROJECT )
     PsIconPanel_AddItem( hRight, IP_KIND_COMMAND, wszIconSave, IDM_FILESAVEALL )

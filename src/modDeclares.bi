@@ -63,7 +63,7 @@ enum
     IDM_LOADSESSION, IDM_SAVESESSION, IDM_CLOSESESSION
     IDM_MRU, IDM_MRUFILES, IDM_MRUSESSION, IDM_MRUSESSIONFILES
     IDM_OPENINCLUDE, IDM_KEYBOARDSHORTCUTS 
-    IDM_OPTIONS, IDM_OPTIONSDIALOG, IDM_BUILDCONFIG, IDM_BUILDCONFIG_POPUP, IDM_THEMES
+    IDM_SETTINGS, IDM_OPTIONSDIALOG, IDM_BUILDCONFIG, IDM_BUILDCONFIG_POPUP, IDM_THEMES
     IDM_USERTOOLS, IDM_USERTOOLSDIALOG
     IDM_EXIT
     IDM_FILE_END
@@ -221,7 +221,7 @@ dim shared as HWND HWND_FRMHELPCENTER
 ' gone. "Advanced Code Editor" is no longer a separate page at all: its settings sit at the
 ' bottom of the one scrolling Code Editor page.
 dim shared as HWND HWND_FRMOPTIONS
-' The entire Environment Options dialog is panel-hosted / table-driven now: every page's
+' The entire Options dialog is panel-hosted / table-driven now: every page's
 ' controls live on the scroll panel, so none of the old HWND_FRMOPTIONS* child-form globals
 ' remain.
 dim shared as HWND HWND_FRMFINDINPROJECT, HWND_FRMSEARCHSYMBOL
@@ -289,7 +289,7 @@ redim shared LL(any) as wstring * MAX_PATH
 #DEFINE SYMBOLFONT_10    6
 #DEFINE SYMBOLFONT_12    7
 #DEFINE SYMBOLFONT_20    8
-' Larger GUI faces, added for the Environment Options dialog (whose base font is 11pt).
+' Larger GUI faces, added for the Options dialog (whose base font is 11pt).
 ' MAXFONTS is both the array bound and the bound of the DeleteObject loop in frmMain, so a
 ' new entry here is freed without touching the cleanup.
 #DEFINE GUIFONT_11       9

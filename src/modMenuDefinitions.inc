@@ -90,8 +90,8 @@ Function getMenuText( byval idMenu as long ) As DWSTRING
             if len(wszShortcut) then wszText = wszText & chr(9) & wszShortcut
             return wszText
         case IDM_USERTOOLSLIST: return L(11,"(Empty)")
-        case IDM_OPTIONS: return L(228,"Preferences")
-        case IDM_OPTIONSDIALOG: wszText = L(61,"Environment Options") & "..."
+        case IDM_SETTINGS: return L(228,"Settings")
+        case IDM_OPTIONSDIALOG: wszText = L(61,"Options") & "..."
         case IDM_THEMES: wszText = L(329,"Themes") & "..."
         case IDM_BUILDCONFIG: wszText = L(219,"Build Configurations") & "..."
         case IDM_EXIT: wszText = L(13,"Exit") 
@@ -270,11 +270,11 @@ function buildTopMenuDefinitions() as long
     setTopMenuItem( IDC_MENUBAR_FILE, IDM_MRUSESSION, IDM_MRUSESSIONFILES, false, false )
     setTopMenuItem( IDC_MENUBAR_FILE, 0, 0, false, true )
     setTopMenuItem( IDC_MENUBAR_FILE, IDM_USERTOOLS, IDM_USERTOOLSLIST, false, false )
-    setTopMenuItem( IDC_MENUBAR_FILE, IDM_OPTIONS, IDM_OPTIONSDIALOG, false, false )
-    setTopMenuItem( IDM_OPTIONS, IDM_OPTIONSDIALOG, 0, false, false )
-    setTopMenuItem( IDM_OPTIONS, IDM_THEMES, 0, false, false )
-    setTopMenuItem( IDM_OPTIONS, IDM_BUILDCONFIG, 0, false, false )
-    setTopMenuItem( IDM_OPTIONS, IDM_KEYBOARDSHORTCUTS, 0, false, false )
+    setTopMenuItem( IDC_MENUBAR_FILE, IDM_SETTINGS, IDM_OPTIONSDIALOG, false, false )
+    setTopMenuItem( IDM_SETTINGS, IDM_OPTIONSDIALOG, 0, false, false )
+    setTopMenuItem( IDM_SETTINGS, IDM_THEMES, 0, false, false )
+    setTopMenuItem( IDM_SETTINGS, IDM_BUILDCONFIG, 0, false, false )
+    setTopMenuItem( IDM_SETTINGS, IDM_KEYBOARDSHORTCUTS, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_FILE, 0, 0, false, true )
     setTopMenuItem( IDC_MENUBAR_FILE, IDM_EXIT, 0, false, false )
     
