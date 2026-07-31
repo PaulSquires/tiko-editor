@@ -127,8 +127,14 @@ dim shared gThemeBind(any) as THEMEBIND_TYPE
 type GENERAL_HANDLES_TYPE
     description as DWSTRING
     version as DWSTRING
-    iconfail as COLORREF      
-    iconsuccess as COLORREF      
+    iconfail as COLORREF
+    iconsuccess as COLORREF
+    ' The debugger's "this value changed on the last step" colour. Its own key rather than a
+    ' reuse of iconsuccess: that one is 0,128,0 in both shipped themes, which is a signal
+    ' colour for a status glyph and too dark to read as small text on the Output background.
+    ' This wants to catch the eye without shouting -- it appears on several rows at once
+    ' while stepping a loop.
+    debugchanged as COLORREF
 end type
 dim shared ghGeneral as GENERAL_HANDLES_TYPE
 
@@ -716,6 +722,7 @@ private sub Theme_BuildBindTable()
     ' ---- general / compile / main ----------------------------------------------------
     ThemeBind_Add( "compile.iconsuccess", @ghGeneral.iconsuccess )
     ThemeBind_Add( "compile.iconfail",    @ghGeneral.iconfail )
+    ThemeBind_Add( "output.valuechanged",  @ghGeneral.debugchanged )
     ThemeBind_Add( "main.panel",          0, @ghMain.BackColor )
 
     ' ---- editor: syntax styles (fore + back + bold/italic/underline) ------------------

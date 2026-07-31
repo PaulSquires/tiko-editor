@@ -60,6 +60,10 @@ dim shared as long         gDbgRowCount
 dim shared as FRMDEBUG_SORT gDbgSortGlobals
 dim shared as FRMDEBUG_SORT gDbgSortLocals
 
+' Which watch row is the "<click to add a watch>" prompt, so the painter can dim it and the
+' click handler can open an editor on it. -1 when the list is full.
+dim shared as long gDbgWatchAddRow = -1
+
 ' ==========================================================================================
 ' Status line
 ' ==========================================================================================
@@ -525,26 +529,33 @@ sub frmDebug_FillWatch()
     for i as long = 0 to gDbgWatchCount - 1
         dim as DBGP_NODE nd
         dim as wstring * 512 wexpr = gDbgWatch(i)
+        dim as long r
         if debugparser_evaluate( @wexpr, gDbgCurFrame, @nd ) = DBGP_OK then
             ' The row's caption is what the USER typed, not the name the engine resolved it
             ' to -- editing the row has to hand the editor back the same text.
-            dim as long r = frmDebug_AddNodeRow( hLV, -1, @nd, "W:" & gDbgWatch(i), true )
+            r = frmDebug_AddNodeRow( hLV, -1, @nd, "W:" & gDbgWatch(i), true )
             if r < 0 then exit for
             PsListTree_SetText( hLV, r, gDbgWatch(i) )
         else
-            dim as long r = PsListTree_AddNode( hLV, -1, gDbgWatch(i) )
+            r = PsListTree_AddNode( hLV, -1, gDbgWatch(i), FRMDEBUG_NOROW )
             if r < 0 then exit for
             ' Out of scope is the NORMAL state for a watch on a local while execution is
             ' somewhere else, so it is reported as such rather than as an error.
             PsListTree_SetCellText( hLV, r, 1, L(623, "<not in scope>") )
         end if
+        ' The delete affordance. Drawn as a glyph by the painter rather than stored as text,
+        ' so it renders in the symbol font without the rest of the row doing so.
+        PsListTree_SetCellText( hLV, r, WATCHCOL_DELETE, "" )
     next
 
-    ' A trailing blank row is how a watch is added: click it and type. Cheaper than a
-    ' toolbar button, and it is where the eye already is after the last expression.
+    ' A trailing blank row is how a watch is added: click it and type. Cheaper than a toolbar
+    ' button, and it is where the eye already is after the last expression. The prompt is in
+    ' column 0 -- the column that is actually edited, so the text sits where the caret will.
     if gDbgWatchCount < FRMDEBUG_MAXWATCH then
-        dim as long r = PsListTree_AddNode( hLV, -1, "" )
-        if r >= 0 then PsListTree_SetCellText( hLV, r, 1, L(624, "<click to add a watch>") )
+        dim as long r = PsListTree_AddNode( hLV, -1, L(624, "<click to add a watch>"), FRMDEBUG_NOROW )
+        if r >= 0 then gDbgWatchAddRow = r
+    else
+        gDbgWatchAddRow = -1
     end if
     PsListTree_Refresh( hLV )
 end sub
@@ -593,6 +604,65 @@ private sub frmDebug_HeaderClick( byval hHeader as HWND, byval idx as integer )
     end if
     AfxRedrawWindow( hLV )
 end sub
+
+' ------------------------------------------------------------------------------------------
+' The watch list's delete column
+'
+' PsListTree hit-tests rows, not cells -- there is no "which column is the cursor over"
+' call -- so the host works it out from the column rects, which ARE public. Contained to this
+' one column rather than being a general facility: the alternative is a change to a control
+' five other hosts share, for this window's convenience.
+' ------------------------------------------------------------------------------------------
+private function frmDebug_WatchDeleteHit( byval hLV as HWND, byval xClient as long ) as boolean
+    dim as RECT rc
+    if PsListTree_GetColumnRect( hLV, WATCHCOL_DELETE, rc ) = false then return false
+    return (xClient >= rc.left) andalso (xClient < rc.right)
+end function
+
+' Removes the watch a row stands for and rebuilds. Rows past the last real watch -- the
+' trailing prompt -- have nothing to delete.
+private sub frmDebug_DeleteWatch( byval row as long )
+    if (row < 0) orelse (row >= gDbgWatchCount) then exit sub
+    for k as long = row to gDbgWatchCount - 2
+        gDbgWatch(k) = gDbgWatch(k + 1)
+    next
+    gDbgWatchCount -= 1
+    frmDebug_FillWatch()
+end sub
+
+' The X is hit-tested on the button-DOWN and acted on there, so no capture is taken: by the
+' time the row is gone there is no press to cancel. Returning TRUE swallows the click, which
+' matters -- otherwise the same click also opens the editor on a row about to be deleted.
+private function frmDebug_WatchMessage( byval m as PSLISTTREE_MESSAGEINFO ptr ) as boolean
+    if m = 0 then return false
+    if m->uMsg <> WM_LBUTTONDOWN then return false
+    if m->idx < 0 then return false
+    if m->idx >= gDbgWatchCount then return false          ' the prompt row has no X
+    if frmDebug_WatchDeleteHit( m->hList, GET_X_LPARAM(m->lParam) ) = false then return false
+    frmDebug_DeleteWatch( m->idx )
+    return true
+end function
+
+' Per-ROW, because that is all PsListTree offers -- so the column is resolved here rather
+' than being asked for. Silent everywhere except over the X, which is the point: a tip that
+' repeated the row's own text back at the user would be noise on every hover.
+private function frmDebug_WatchTooltip( byval hListControl as HWND, byval row as integer ) as DWSTRING
+    if (row < 0) orelse (row >= gDbgWatchCount) then return ""
+    dim as HWND hLV = HWND_FRMDEBUG_LVWATCH
+    dim as POINT pt
+    GetCursorPos( @pt )
+    ScreenToClient( hLV, @pt )
+    if frmDebug_WatchDeleteHit( hLV, pt.x ) = false then return ""
+    return L(628, "Delete Watch")
+end function
+
+' The prompt row is not an expression, so its caption is blanked before the editor opens --
+' otherwise "<click to add a watch>" is what the editor hands you to type over. The callback
+' cannot supply the text (it only vetoes), so the row itself is changed.
+private function frmDebug_BeginLabelEdit( byval hListControl as HWND, byval row as integer ) as boolean
+    if row >= gDbgWatchCount then PsListTree_SetText( hListControl, row, "" )
+    return true
+end function
 
 ' Committing an in-place edit. An empty result DELETES the watch, which is how a row is
 ' removed without a menu; anything else replaces or appends.
@@ -1040,14 +1110,35 @@ private sub frmDebug_SplitterMoved( byval hSplitter as HWND, byval newPos as int
     frmDebug_LayoutPanes()
 end sub
 
+' The GRAB AREA and the RULE are different sizes, deliberately.
+'
+' Filling the whole bar with the divider colour -- which is what this did -- draws a 6px slab
+' between every pair of panes, and three of those dominate the window. The bar keeps its full
+' width so it stays easy to grab, and paints the window background with a ONE-PIXEL rule down
+' its centre. Hovering thickens the rule rather than flooding the bar, so there is still
+' feedback that it can be dragged.
 private sub frmDebug_SplitterPaint( byval p as PSSPLITTER_PAINTINFO ptr )
     if p = 0 then exit sub
-    ' NOT the window background. Painting the bar in BackColorHot -- which is what this
-    ' window's own WM_PAINT fills with -- makes a correctly placed splitter invisible.
-    dim as COLORREF clr = ghOutput.Divider
-    if p->isHot orelse p->isDragging then clr = ghOutput.ForeColorScrollBar
-    p->b->SetBackColor( clr )
+
+    p->b->SetBackColor( ghOutput.BackColorHot )
     p->b->PaintRect( @p->rcClient )
+
+    dim as boolean bLive = (p->isHot orelse p->isDragging)
+    dim as long nThick = AfxScaleY(1)
+    if nThick < 1 then nThick = 1
+    if bLive then nThick *= 2
+
+    dim as RECT rc = p->rcClient
+    if (rc.right - rc.left) > (rc.bottom - rc.top) then
+        ' A horizontal bar: the rule runs across it, centred vertically.
+        dim as long mid_ = rc.top + ((rc.bottom - rc.top) - nThick) \ 2
+        rc.top = mid_ : rc.bottom = mid_ + nThick
+    else
+        dim as long mid_ = rc.left + ((rc.right - rc.left) - nThick) \ 2
+        rc.left = mid_ : rc.right = mid_ + nThick
+    end if
+    p->b->SetBackColor( iif( bLive, ghOutput.ForeColorScrollBar, ghOutput.Divider ) )
+    p->b->PaintRect( @rc )
 end sub
 
 ' ==========================================================================================
@@ -1081,18 +1172,29 @@ private sub frmDebug_PaintVarRowFor( byval hLV as HWND, byval p as PSLISTTREE_PA
     dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN)
     if pWindow = 0 then exit sub
 
-    dim as boolean bHot = (p->isSelected orelse p->isHot)
-    dim as COLORREF backclr = iif( bHot, ghOutput.ForeColorScrollBar, ghOutput.BackColor )
+    ' HOT TRACKING IS DELIBERATELY IGNORED on every tree in this window. isHot is still
+    ' reported -- the control cannot be told to stop tracking -- it is simply not painted.
+    ' A debugger pane is read while the mouse happens to be resting somewhere, and a row
+    ' lighting up under the cursor competes with the one thing here that IS meant to catch
+    ' the eye: a value that just changed.
+    dim as COLORREF backclr = iif( p->isSelected, ghOutput.ForeColorScrollBar, ghOutput.BackColor )
     p->b->SetForeColor( ghOutput.ForeColorHot )
     p->b->SetBackColor( backclr )
     p->b->PaintRect( @p->rc )
     p->b->SetFont( ghFont(GUIFONT_9) )
 
     ' A group row ("[100 .. 199]") is chrome, not data -- dimmed so the eye runs past it to
-    ' the elements.
+    ' the elements. The watch list's "<click to add>" prompt is dimmed by the same rule.
     dim as COLORREF foreNormal = ghOutput.ForeColorHot
     if p->isSelectable = false then foreNormal = ghOutput.ForeColor
+    dim as boolean bAddPrompt = (hLV = HWND_FRMDEBUG_LVWATCH) andalso (p->itemID = gDbgWatchAddRow)
+    if bAddPrompt then foreNormal = ghOutput.ForeColor
 
+    ' -1, not 0, is "this row has no descriptor". PsListTree_AddNode defaults itemData to
+    ' ZERO, so a row added without one silently claimed descriptor 0 and inherited its
+    ' changed flag -- which is why the "<click to add a watch>" row turned green whenever the
+    ' first global happened to change. Every row that has no descriptor now passes
+    ' FRMDEBUG_NOROW explicitly.
     dim as boolean bChanged = false
     dim as long k = cast(long, PsListTree_GetItemData( hLV, p->itemID ))
     if (k >= 0) andalso (k < gDbgRowCount) then bChanged = gDbgRow(k).bChanged
@@ -1106,14 +1208,61 @@ private sub frmDebug_PaintVarRowFor( byval hLV as HWND, byval p as PSLISTTREE_PA
     end if
 
     for i as integer = 0 to p->columnCount - 1
+        ' The watch list's delete column is a GLYPH, in the symbol font, and only on rows
+        ' that stand for a real watch -- the trailing prompt has nothing to delete.
+        if (hLV = HWND_FRMDEBUG_LVWATCH) andalso (i = WATCHCOL_DELETE) then
+            if bAddPrompt = false then
+                p->b->SetFont( ghFont(SYMBOLFONT_9) )
+                p->b->SetForeColor( ghOutput.ForeColor )
+                p->b->PaintText( wszIconClose, @p->cells[i].rc, DT_CENTER )
+                p->b->SetFont( ghFont(GUIFONT_9) )
+            end if
+            continue for
+        end if
+
         dim as RECT rcText = p->cells[i].rc
         rcText.left += pWindow->ScaleX(4)
         dim as COLORREF clr = foreNormal
-        if bChanged andalso (i = 1) then clr = ghGeneral.iconfail
+        if bChanged andalso (i = 1) then clr = ghGeneral.debugchanged
         p->b->SetForeColor( clr )
         p->b->PaintText( p->cells[i].wszText, @rcText, DT_LEFT or DT_END_ELLIPSIS )
     next
 end sub
+
+' The call stack gets its own painter for one reason: ListBox_LVPaintRow lights a row under
+' the cursor, and this window does not. It is shared by four other panes, so it is left alone.
+sub frmDebug_PaintStackRow( byval p as PSLISTTREE_PAINTINFO ptr )
+    dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN)
+    if pWindow = 0 then exit sub
+
+    dim as COLORREF backclr = iif( p->isSelected, ghOutput.ForeColorScrollBar, ghOutput.BackColor )
+    p->b->SetForeColor( ghOutput.ForeColorHot )
+    p->b->SetBackColor( backclr )
+    p->b->PaintRect( @p->rc )
+    p->b->SetFont( ghFont(GUIFONT_9) )
+
+    if p->columnCount <= 0 then
+        dim as RECT rcText = p->rc
+        rcText.left += pWindow->ScaleX(4)
+        p->b->PaintText( p->wszCaption, @rcText, DT_LEFT )
+        exit sub
+    end if
+
+    for i as integer = 0 to p->columnCount - 1
+        dim as RECT rcText = p->cells[i].rc
+        rcText.left += pWindow->ScaleX(4)
+        dim as long flags = DT_LEFT or DT_END_ELLIPSIS
+        if i = 3 then flags = DT_LEFT or DT_PATH_ELLIPSIS      ' the source file
+        p->b->PaintText( p->cells[i].wszText, @rcText, flags )
+    next
+end sub
+
+' Every header in this window suppresses its tooltip. Unset, PsColumnHeader shows the
+' column's own caption back at the user -- a tip that says "Value" over a column headed
+' "Value".
+private function frmDebug_NoHeaderTooltip( byval hHeader as HWND, byval idx as integer ) as DWSTRING
+    return ""
+end function
 
 sub frmDebug_PaintGlobalsRow( byval p as PSLISTTREE_PAINTINFO ptr )
     frmDebug_PaintVarRowFor( HWND_FRMDEBUG_LVGLOBALS, p )
@@ -1131,10 +1280,10 @@ sub frmDebug_PaintVarHeader( byval p as PSCOLUMNHEADER_PAINTINFO ptr )
     dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN)
     if pWindow = 0 then exit sub
 
-    dim as COLORREF backclr = ghOutput.BackColor
-    if p->isHot orelse p->isResizeHot then backclr = ghOutput.ForeColorScrollBar
+    ' isHot / isResizeHot deliberately unused -- the header does not light up under the
+    ' cursor, for the same reason the rows do not.
     p->b->SetForeColor( ghOutput.ForeColorHot )
-    p->b->SetBackColor( backclr )
+    p->b->SetBackColor( ghOutput.BackColor )
     p->b->PaintRect( @p->rc )
 
     dim as RECT rcText = p->rc
@@ -1554,8 +1703,8 @@ private function frmDebug_CreateListView( byval CtrlID as long ) as HWND
         PsListTree_AddColumn( hCtl, L(204, "File"),     pWindow->ScaleX(160) )
         PsListTree_SetFillColumn( hCtl, 3 )
         PsListTree_SetSelChangeCallback( hCtl, @frmDebug_StackSelChange )
-        PsListTree_SetPaintCallback( hCtl, @ListBox_LVPaintRow )
-        PsListTree_SetHeaderPaintCallback( hCtl, @ListBox_LVPaintHeader )
+        PsListTree_SetPaintCallback( hCtl, @frmDebug_PaintStackRow )
+        PsListTree_SetHeaderPaintCallback( hCtl, @frmDebug_PaintVarHeader )
     else
         PsListTree_AddColumn( hCtl, L(611, "Name"),  pWindow->ScaleX(180) )
         PsListTree_AddColumn( hCtl, L(286, "Value"), pWindow->ScaleX(180) )
@@ -1583,17 +1732,33 @@ private function frmDebug_CreateListView( byval CtrlID as long ) as HWND
                 ' PsListTree_FilterMessage mandatory in frmMain's pump -- see the header.
                 ' Not sortable: these rows are in the order the user entered them, which is
                 ' the only order that means anything here.
+                PsListTree_AddColumn( hCtl, "", pWindow->ScaleX(FRMDEBUG_DELCOLW) )
+                PsListTree_SetFillColumn( hCtl, 1 )
                 PsListTree_SetPaintCallback( hCtl, @frmDebug_PaintWatchRow )
-                PsListTree_SetHeaderPaintCallback( hCtl, @ListBox_LVPaintHeader )
+                PsListTree_SetHeaderPaintCallback( hCtl, @frmDebug_PaintVarHeader )
                 PsListTree_EnableLabelEdit( hCtl, true )
                 PsListTree_SetEditColumn( hCtl, 0 )
                 PsListTree_SetEnterEdits( hCtl, true )
+                ' A single click opens the editor, so the "<click to add a watch>" prompt
+                ' means what it says. Without this the row had to be selected and ENTER
+                ' pressed, which nothing on screen told the user.
+                PsListTree_SetClickToEdit( hCtl, true )
                 PsListTree_SetEndLabelEditCallback( hCtl, @frmDebug_EndLabelEdit )
+                PsListTree_SetBeginLabelEditCallback( hCtl, @frmDebug_BeginLabelEdit )
+                PsListTree_SetMessageCallback( hCtl, @frmDebug_WatchMessage )
+                ' The editor is created lazily and owned by the control, so a host cannot
+                ' reach the PsTextBox to colour it -- without this it opens black-on-white
+                ' in the middle of a dark list.
+                PsListTree_SetEditColors( hCtl, ghOutput.BackColor, ghOutput.ForeColorHot, _
+                                          ghOutput.Divider, ghOutput.ForeColorScrollBar )
+                PsListTree_SetEditTextInset( hCtl, pWindow->ScaleX(4) )
+                PsListTree_SetTooltipCallback( hCtl, @frmDebug_WatchTooltip )
         end select
     end if
 
     PsListTree_ShowHeader( hCtl, true )
     PsListTree_SetColumnAutoSizeCallback( hCtl, @ListBox_LVAutoSizeColumn )
+    PsListTree_SetHeaderTooltipCallback( hCtl, @frmDebug_NoHeaderTooltip )
     PsListTree_SetFont( hCtl, ghFont(GUIFONT_9) )
     PsListTree_SetBackColor( hCtl, ghOutput.BackColor )
     PsListTree_SetScrollBarColors( hCtl, ghOutput.BackColorScrollBar, _
@@ -1870,12 +2035,26 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as DWSTRING, 
     ShowWindow( HWND_FRMDEBUG_SPLITRIGHT,  SW_SHOW )
 
     ' --- seed the breakpoints the user set in the editor ---
+    '
+    ' Traced under TIKO_DEBUGWIN_TRACE because a failure here is SILENT and looks exactly
+    ' like "the debugger ignores my breakpoints": every step of it can fail for a different
+    ' reason (the document has no Scintilla yet, its filename does not match a compiled
+    ' source, the line generated no code) and none of them says anything.
+    dim as boolean bTrace = (environ("TIKO_DEBUGWIN_TRACE") = "1")
+    dim as string sSeed
+    if bTrace then print "--- TIKO_DEBUGWIN_TRACE: breakpoint seeding ---"
+
     debugparser_clear_breakpoints()
     dim pDoc as clsDocument ptr = gApp.pDocList
     do until pDoc = 0
         if pDoc->hWindow(0) then
             dim as wstring * 520 wszFile = pDoc->DiskFilename
             dim as long si = debugparser_source_index( @wszFile )
+            if bTrace then
+                sSeed = "  doc " & str(pDoc->DiskFilename) & "  srcIndex=" & str(si) & _
+                      "  markers=[" & str(pDoc->GetBreakPoints()) & "]"
+                print sSeed
+            end if
             if si >= 0 then
                 dim as DWSTRING wszBps = pDoc->GetBreakPoints()
                 dim as long n = AfxStrParseCount( wszBps, "," )
@@ -1897,11 +2076,26 @@ function frmDebug_Show( byval hWndParent as HWND, byval executable as DWSTRING, 
                             gDbgHaveBreakpoints = true
                         end if
                     end if
+                    if bTrace then
+                        sSeed = "    editor line " & str(ln - 1) & " -> engine line " & str(ln) & _
+                              " -> executable " & str(lnExec)
+                        if lnExec <= 0 then sSeed = sSeed & "   NO CODE ON OR AFTER THIS LINE"
+                        print sSeed
+                    end if
                 next
             end if
+        elseif bTrace then
+            sSeed = "  doc " & str(pDoc->DiskFilename) & "  HAS NO SCINTILLA -- skipped"
+            print sSeed
         end if
         pDoc = pDoc->pDocNext
     loop
+    if bTrace then
+        sSeed = "  seeded any breakpoint = " & str(gDbgHaveBreakpoints) & _
+              "   (false => the session stops at the program entry, by design)"
+        print sSeed
+        print "--- end ---"
+    end if
 
     ShowWindow( HWND_FRMDEBUG, SW_SHOW )
 

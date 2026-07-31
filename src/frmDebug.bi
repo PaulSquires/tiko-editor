@@ -125,10 +125,14 @@ const as long FRMDEBUG_MINPANEV    = 70
 ' pixels: the window is resizable and can reopen on a different monitor at a different DPI,
 ' where a stored pixel offset either strands the bar against one edge or lands outside the
 ' pane entirely.
+' The defaults are deliberately ASYMMETRIC and were chosen from a real session rather than by
+' halving: globals is a short list and locals is the one you read while stepping, so the left
+' column gives locals the larger share; the call stack is usually a handful of frames while
+' the watch list grows, so the right column splits low.
 const as long FRMDEBUG_PCTSCALE      = 10000
 const as long FRMDEBUG_DEFPCTMAIN    = 6000    ' vertical bar, 60% across
-const as long FRMDEBUG_DEFPCTLEFT    = 5000    ' globals / locals
-const as long FRMDEBUG_DEFPCTRIGHT   = 4000    ' call stack / watch
+const as long FRMDEBUG_DEFPCTLEFT    = 3200    ' globals over locals
+const as long FRMDEBUG_DEFPCTRIGHT   = 8300    ' call stack over watch
 
 declare function frmDebug_Show( byval hWndParent as HWND, byval executable as DWSTRING, byval cmdparams as DWSTRING ) as LRESULT
 declare sub      frmDebug_Command( byval id as long )
@@ -198,6 +202,13 @@ declare sub      frmDebug_DestroyDataTip()
 ' user typed -- and the engine only ever sees them one at a time, already resolved.
 const as long FRMDEBUG_MAXWATCH = 64
 
+' The watch list carries a fourth, narrow column holding an X per row -- clicking it deletes
+' that watch. It is a column rather than a context menu because a watch list is a thing you
+' prune constantly, and because there is nowhere else to put it: these rows are edited in
+' place, so a right-click menu would compete with the editor.
+#define WATCHCOL_DELETE  3
+const as long FRMDEBUG_DELCOLW = 28
+
 ' ------------------------------------------------------------------------------------------
 ' Row descriptors
 '
@@ -208,6 +219,11 @@ const as long FRMDEBUG_MAXWATCH = 64
 #define DBGROW_NODE         0   ' a variable, UDT field, pointer target or array element
 #define DBGROW_GROUP        1   ' an array index range: [lo .. hi]
 #define DBGROW_PLACEHOLDER  2   ' the one child that makes a twisty appear before expanding
+
+' "This row has no descriptor." It must not be 0: PsListTree_AddNode DEFAULTS itemData to
+' zero, so a row added without one would claim descriptor 0 and inherit whatever that row's
+' changed flag happens to be.
+#define FRMDEBUG_NOROW     (-1)
 
 type FRMDEBUG_ROW
     kind     as long
