@@ -57,6 +57,10 @@ declare sub ShowPanelActionContextMenu( byval rcButton as RECT )
 declare sub ShowTopTabCtlContextMenu( byval idx as long )
 declare sub ShowTopTabsListContextMenu( byval rcButton as RECT )
 
+' The split-editor button on the top tabs icon bar: the two split axes, L(67) and L(68).
+' Item ids are the real IDM_SPLITLEFTRIGHT / IDM_SPLITTOPBOTTOM commands.
+declare sub ShowEditorSplitContextMenu( byval rcButton as RECT )
+
 ' The Output panel's Compiler Results list. Copy (the selected rows, joined with CRLF) and
 ' Select All. Both act on HWND_FRMOUTPUT_LVRESULTS directly rather than posting a command:
 ' IDM_COPY / IDM_SELECTALL are the EDITOR's commands and would act on Scintilla.

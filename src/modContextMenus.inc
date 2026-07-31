@@ -63,6 +63,7 @@ dim shared as HWND ghPopupFunctionsAction
 dim shared as HWND ghPopupBookmarksAction
 dim shared as HWND ghPopupTopTabCtl
 dim shared as HWND ghPopupTopTabsList
+dim shared as HWND ghPopupEditorSplit
 dim shared as HWND ghPopupOutputResults
 
 ' The context chain currently (or last) shown. The pump filter needs a handle in the open
@@ -585,6 +586,32 @@ end sub
 
 
 ' ========================================================================================
+' The split-editor button on the top tabs icon bar.
+'
+' The button used to toggle a split directly, choosing the axis from whichever icon the
+' Alt-key watcher in modMsgPump happened to have left on it -- so the command depended on
+' a modifier held at click time and was undiscoverable. It now offers both axes as a menu.
+'
+' The item ids ARE the real commands (IDM_SPLITLEFTRIGHT / IDM_SPLITTOPBOTTOM), so this
+' popup rides the shared ContextMenu_PostCommand callback. They are distinct from the
+' opener's own id (IDM_EDITORSPLIT), which is what the id-collision trap in Learnings.md
+' is about.
+' ========================================================================================
+sub ShowEditorSplitContextMenu( byval rcButton as RECT )
+    ' getMenuAccelText returns the keystroke with a LEADING TAB (it is built for the
+    ' caption & chr(9) & accel shape the menubar uses); PsPopupMenu takes the accel as its
+    ' own parameter, so parse the text back out. Empty when the command has no shortcut.
+    dim as DWSTRING wszAccelLR = AfxStrParse( getMenuAccelText(IDM_SPLITLEFTRIGHT), 2, wchr(9) )
+    dim as DWSTRING wszAccelTB = AfxStrParse( getMenuAccelText(IDM_SPLITTOPBOTTOM), 2, wchr(9) )
+
+    PsPopupMenu_Clear( ghPopupEditorSplit )
+    PsPopupMenu_AddItem( ghPopupEditorSplit, IDM_SPLITLEFTRIGHT, L(67,"Split Editor Left/Right"), wszAccelLR )
+    PsPopupMenu_AddItem( ghPopupEditorSplit, IDM_SPLITTOPBOTTOM, L(68,"Split Editor Top/Bottom"), wszAccelTB )
+    ContextMenu_ShowAt( ghPopupEditorSplit, rcButton.right, rcButton.bottom, true )
+end sub
+
+
+' ========================================================================================
 ' The Output panel's Compiler Results list.
 '
 ' The list is in EXTENDED-select mode (Shift ranges, Ctrl toggles), so "Copy" can span
@@ -703,6 +730,7 @@ sub ContextMenus_Init()
     ghPopupBookmarksAction  = frmMenuBar_CreatePopup( true )
     ghPopupTopTabCtl        = frmMenuBar_CreatePopup( true )
     ghPopupTopTabsList      = frmMenuBar_CreatePopup( true )
+    ghPopupEditorSplit      = frmMenuBar_CreatePopup( true )
     ghPopupOutputResults    = frmMenuBar_CreatePopup( true )
 
     ' Menus whose ids are real command ids: straight through the WM_COMMAND dispatcher.
@@ -714,6 +742,7 @@ sub ContextMenus_Init()
     PsPopupMenu_SetSelectCallback( ghPopupFunctionsAction,  @ContextMenu_PostCommand )
     PsPopupMenu_SetSelectCallback( ghPopupBookmarksAction,  @ContextMenu_PostCommand )
     PsPopupMenu_SetSelectCallback( ghPopupTopTabCtl,        @ContextMenu_PostCommand )
+    PsPopupMenu_SetSelectCallback( ghPopupEditorSplit,      @ContextMenu_PostCommand )
 
     ' Menus whose ids are NOT safe as commands (see each callback's comment).
     PsPopupMenu_SetSelectCallback( ghPopupBuildConfig,  @BuildConfigContextMenu_OnSelect )

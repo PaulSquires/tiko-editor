@@ -51,21 +51,10 @@ function handleAltKeyMenuBar( byval uMsg as MSG ) as boolean
     ' the mouse button does work, but it still results in the menubar
     ' being selected/deselected.
 
-    ' Handle the Split editor window icon in the toptab control
-    if IsWindowVisible(HWND_FRMMAIN_TOPTABS) then
-        dim as DWSTRING wszNewSplitButton
-        ' Alt key is currently down
-        if (GetAsyncKeyState(VK_MENU) and &H8000) then
-            wszNewSplitButton = wszIconSplitTopBottom
-        else    
-            wszNewSplitButton = wszIconSplitLeftRight
-        end if    
-        if wszIconSplitEditor <> wszNewSplitButton then
-            wszIconSplitEditor = wszNewSplitButton
-            AfxRedrawWindow(HWND_FRMMAIN_TOPTABS)
-        end if    
-    end if
-    
+    ' (The Alt-key swap of the split-editor icon is gone: that button no longer picks an
+    '  axis from the icon it happens to be showing -- it opens a menu offering both.
+    '  See ShowEditorSplitContextMenu in modContextMenus.inc.)
+
 '   ' single ALT key pressed, activate the first top menubar button
 '    if (uMsg.message = WM_SYSKEYDOWN) and (uMsg.wParam = VK_MENU) then
 '      killPopupSubMenus()

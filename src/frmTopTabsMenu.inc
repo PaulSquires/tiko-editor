@@ -90,14 +90,16 @@ function frmTopTabsMenu_MessageCallback( byval m as PSSTATUSBAR_MESSAGEINFO ptr 
                     PostMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(idMessage, 0), 0 )
                     
                  case IDM_EDITORSPLIT
-                    ' Split editor view
-                    ' IDM_SPLITLEFTRIGHT, IDM_SPLITTOPBOTTOM
-                    if (wszIconSplitEditor = wszIconSplitTopBottom) then
-                        PostMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(IDM_SPLITTOPBOTTOM, 0), 0 )
-                    else    
-                        PostMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(IDM_SPLITLEFTRIGHT, 0), 0 )
-                    end if
-                                 
+                    ' Popup the two split axes under the button (right aligned), rather
+                    ' than toggling one of them from whichever icon the Alt-key watcher
+                    ' in modMsgPump last left on the button. The popup's item ids ARE
+                    ' IDM_SPLITLEFTRIGHT / IDM_SPLITTOPBOTTOM, so they route through
+                    ' ContextMenu_PostCommand to frmMain's WM_COMMAND as before.
+                    dim as RECT rcSplit = PsStatusBar_GetItemRect(m->hStatusBar, m->idx)
+                    MapWindowpoints( HWND_FRMMAIN_TOPTABSMENU, HWND_DESKTOP, cast(point ptr, @rcSplit), 2 )
+                    ShowEditorSplitContextMenu( rcSplit )
+                    Return true   ' prevent further processing that leads to WM_CONTEXTMENU
+
                  case IDM_TABSLIST
                     ' Popup the menu to the bottom of the Action Button (right aligned).
                     ' The tab is switched in the popup's own select callback

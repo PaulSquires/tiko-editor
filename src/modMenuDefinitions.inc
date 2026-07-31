@@ -122,14 +122,8 @@ Function getMenuText( byval idMenu as long ) As DWSTRING
         case IDM_GOTONEXTTAB: wszText = L(281, "Scroll Tabs Right")
         case IDM_TABSLIST: wszText = L(279, "Tab List")              
         case IDM_EDITORSPLIT
-            ' If CTRL is pressed then use the top/bottom split, otherwise
-            ' use the left/right split icon.
-            if (wszIconSplitEditor = wszIconSplitTopBottom) then
-                wszText = L(68,"Toggle Split Editor Top/Bottom")
-            else    
-                wszText = L(67,"Toggle Split Editor Left/Right") & _
-                              chr(13,10) & "[Alt]: " & L(69,"Split Top/Bottom")
-            end if
+            ' The button opens a menu offering both axes, so the tooltip names neither.
+            wszText = L(385,"Split Editor")
 
         case IDM_SEARCHSYMBOL: wszText = L(37,"Search Symbol") & "..."
         case IDM_FIND: wszText = L(43,"Find") & "..."

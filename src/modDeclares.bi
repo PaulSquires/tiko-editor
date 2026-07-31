@@ -423,7 +423,7 @@ dim shared as wstring * 10 _
     wszIconPreserveCase, wszIconReplace, wszIconReplaceAll, wszIconMoreActions, wszIconAddFileButton, _
     wszIconExplorer, wszIconFunctions, wszIconBookmarks, _
     wszIconCompile, wszIconBuildExecute, wszIconDebug, _
-    wszIconSplitEditor, wszIconSplitLeftRight, wszIconSplitTopBottom, wszIconThemes, _
+    wszIconSplitEditor, wszIconThemes, _
     wszIconSettings, wszIconCheckBoxEmpty, wszIconCheckBoxMarked, _
     wszIconContinue, wszIconStop, wszIconStepNext, wszIconStepOver, wszIconStepOut, wszIconRunToCursor, _
     wszIconPause, _
@@ -477,9 +477,9 @@ dim shared spinner(0 to 7) as DWSTRING => { _
     wszIconBookmarks         = !"\uE723"
     wszIconCompile           = !"\uE74C"
     wszIconBuildExecute      = !"\uE768"  
-    wszIconSplitLeftRight    = !"\uF57C"   
-    wszIconSplitTopBottom    = !"\uF16E"   
-    wszIconSplitEditor       = wszIconSplitLeftRight
+    ' One fixed glyph: the button opens a menu offering both axes, so it no longer
+    ' swaps between a left/right and a top/bottom icon depending on the Alt key.
+    wszIconSplitEditor       = !"\uF57C"
     wszIconSettings          = !"\uE713"   
     wszIconThemes            = !"\uE771"   
     wszIconCheckBoxEmpty     = !"\uE739"
