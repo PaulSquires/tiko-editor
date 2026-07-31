@@ -23,6 +23,16 @@
 ' both bodies is cheaper than making every path re-entrant.
 dim shared as boolean gOutFloatBusy = false
 
+' The frame's class background brush, owned here and deleted in WM_NCDESTROY.
+'
+' It exists to kill the WHITE FLASH on open. CWindow registers its per-instance class with
+' hbrBackground = COLOR_3DFACE+1 (CWindow.inc:378), so the very first erase -- which Windows
+' performs at ShowWindow time, before our WndProc sees anything at all -- paints the whole
+' client in the system 3D face colour. WM_ERASEBKGND returning TRUE cannot prevent that: it
+' is not our message yet. The only way to make that first erase the right colour is to make
+' the CLASS brush the right colour.
+dim shared as HBRUSH ghOutFloatBrush = 0
+
 
 ' ========================================================================================
 ' The single source of truth for the dock state. There is deliberately no boolean beside
@@ -53,6 +63,11 @@ sub frmOutputFloat_SetVisible( byval bVisible as boolean )
     dim as HWND hTarget = frmOutputFloat_VisibilityTarget()
     if IsWindow( hTarget ) = 0 then exit sub
     ShowWindow( hTarget, iif( bVisible, SW_SHOW, SW_HIDE ) )
+    ' Synchronously, for the same reason as in _Undock -- a show that only invalidates
+    ' leaves the window on screen unpainted until the pump next idles.
+    if bVisible then
+        RedrawWindow( hTarget, 0, 0, RDW_INVALIDATE or RDW_UPDATENOW or RDW_ALLCHILDREN )
+    end if
     if frmOutputFloat_IsFloating() then
         ' The docked layout does not change when a FLOATING window is shown or hidden --
         ' the panel already reserves nothing down there. Bringing it forward is the useful
@@ -86,6 +101,24 @@ sub frmOutputFloat_CaptureState()
         .OutputFloatBottom    = WinPla.rcNormalPosition.Bottom
         .OutputFloatMaximized = iif( WinPla.showCmd = SW_MAXIMIZE, true, false )
     end with
+end sub
+
+
+' ========================================================================================
+' Point the frame's class background brush at the current theme.
+'
+' Called at create time (before the window is ever shown) and again on a theme change, so
+' the system's own erase is always the colour WM_PAINT is about to draw. Same colour, so
+' there is nothing to flash between the two.
+' ========================================================================================
+sub frmOutputFloat_SyncBrush()
+    dim pWindow as CWindow ptr = AfxCWindowPtr( HWND_FRMOUTPUTFLOAT )
+    if pWindow = 0 then exit sub
+    dim as HBRUSH hOld = ghOutFloatBrush
+    ghOutFloatBrush = CreateSolidBrush( ghOutput.BackColorHot )
+    pWindow->Brush = ghOutFloatBrush
+    ' Freed only AFTER the class has stopped pointing at it.
+    if hOld then DeleteObject( hOld )
 end sub
 
 
@@ -151,6 +184,15 @@ private function frmOutputFloat_WndProc( byval hwnd   as HWND, _
             dim as CWindow ptr pWindow = AfxCWindowPtr(hwnd)
             if pWindow then delete(pWindow)
             HWND_FRMOUTPUTFLOAT = 0
+            ' The class brush is ours; the class dies with the instance.
+            ' REQUIRED, and measured rather than assumed: the system does NOT delete a class
+            ' background brush when the class is unregistered (CWindow's destructor does
+            ' unregister, at CWindow.inc:600). Dropping this line leaks exactly one brush per
+            ' undock -- 60 cycles grew the process's GDI objects by 59.
+            if ghOutFloatBrush then
+                DeleteObject( ghOutFloatBrush )
+                ghOutFloatBrush = 0
+            end if
             return 0
 
     end select
@@ -185,6 +227,10 @@ private function frmOutputFloat_CreateWindow() as boolean
 
     ' Reads the theme currently IN MEMORY, not gConfig -- see Theme_IsDark.
     Theme_ApplyDarkCaption( HWND_FRMOUTPUTFLOAT )
+
+    ' Set BEFORE the window is ever shown, which is the whole point -- the first erase
+    ' happens inside ShowWindow, ahead of any message we could answer.
+    frmOutputFloat_SyncBrush()
 
     ' A zero Right/Bottom is the "never floated before" sentinel. Heal it here rather than
     ' at load, so the default is computed at the real DPI.
@@ -280,6 +326,14 @@ sub frmOutputFloat_Undock()
         ' and leaves a valid multi-monitor position alone.
         AfxForceVisibleDisplay( HWND_FRMOUTPUTFLOAT )
         SetForegroundWindow( HWND_FRMOUTPUTFLOAT )
+        ' Paint NOW rather than whenever the pump next goes idle. ShowWindow only posts the
+        ' work: it invalidates and leaves a WM_PAINT to be picked up later, and undocking
+        ' runs from a click callback with frmMain_PositionWindows and a full panel re-layout
+        ' still to go -- so "later" is long enough to see. RDW_UPDATENOW dispatches it
+        ' synchronously, and RDW_ALLCHILDREN carries it into the panel and its controls,
+        ' which are the windows actually covering the client.
+        RedrawWindow( HWND_FRMOUTPUTFLOAT, 0, 0, _
+                      RDW_INVALIDATE or RDW_UPDATENOW or RDW_ALLCHILDREN )
     end if
 
     gOutFloatBusy = false
@@ -597,6 +651,52 @@ sub frmOutputFloat_RunSelfTest()
         str(PsListTree_GetCount(hResults0)) & " vs " & str(nResults0) )
     frmOutput_Check( "survive: the current tab is unchanged", _
         frmOutput_GetCurTab() = nTabAtStart, str(frmOutput_GetCurTab()) )
+
+    ' --- the class background brushes -----------------------------------------------------
+    ' The white flash on open was the SYSTEM's own erase, which happens inside ShowWindow
+    ' before the window procedure is reached -- so WM_ERASEBKGND returning TRUE could not
+    ' prevent it, and only the CLASS brush can. CWindow registers COLOR_3DFACE+1
+    ' (CWindow.inc:378); both windows now carry a brush of the colour their WM_PAINT draws.
+    ' Asserted as "not the default" as well as "not null", because the default is a system
+    ' colour INDEX rather than a handle and would otherwise read as a plausible brush.
+    frmOutput_Check( "flash: the panel's class brush is ours", _
+        (ghOutputPanelBrush <> 0) andalso _
+        (GetClassLongPtr( HWND_FRMOUTPUT, GCLP_HBRBACKGROUND ) = cast(ULONG_PTR, ghOutputPanelBrush)) )
+    frmOutput_Check( "flash: the panel's class brush is NOT the CWindow default", _
+        GetClassLongPtr( HWND_FRMOUTPUT, GCLP_HBRBACKGROUND ) <> cast(ULONG_PTR, COLOR_3DFACE + 1) )
+
+    frmOutputFloat_Undock()
+    frmOutput_Check( "flash: the frame's class brush is ours", _
+        (ghOutFloatBrush <> 0) andalso _
+        (GetClassLongPtr( HWND_FRMOUTPUTFLOAT, GCLP_HBRBACKGROUND ) = cast(ULONG_PTR, ghOutFloatBrush)) )
+    frmOutput_Check( "flash: the frame's class brush is NOT the CWindow default", _
+        GetClassLongPtr( HWND_FRMOUTPUTFLOAT, GCLP_HBRBACKGROUND ) <> cast(ULONG_PTR, COLOR_3DFACE + 1) )
+
+    ' A theme change must REPLACE it, not leave the old colour to flash on the next erase.
+    dim as HBRUSH hBrushBefore = ghOutFloatBrush
+    frmOutputFloat_SyncBrush()
+    frmOutput_Check( "flash: a theme sync rebuilds the frame brush", _
+        (ghOutFloatBrush <> 0) andalso (ghOutFloatBrush <> hBrushBefore) )
+    frmOutput_Check( "flash: and the class points at the NEW brush", _
+        GetClassLongPtr( HWND_FRMOUTPUTFLOAT, GCLP_HBRBACKGROUND ) = cast(ULONG_PTR, ghOutFloatBrush) )
+    frmOutputFloat_Dock()
+
+    ' --- the brushes do not leak ----------------------------------------------------------
+    ' Each undock now CREATES a brush and each dock destroys the window that owned it. A
+    ' missed DeleteObject would be invisible in every assertion above and would bleed GDI
+    ' handles for as long as the session lasts. Counted rather than reasoned about.
+    ' SIXTY cycles, not six, and the count is why. At six the leak is six objects, which sat
+    ' inside the noise of what the rest of the process churns while this runs -- the
+    ' assertion passed with the DeleteObject removed, i.e. it was worth nothing. At sixty the
+    ' signal is unmistakable: measured 179 -> 238 leaking, flat when correct.
+    dim as long nGdi0 = GetGuiResources( GetCurrentProcess(), 0 )
+    for i as long = 1 to 60
+        frmOutputFloat_Undock()
+        frmOutputFloat_Dock()
+    next
+    dim as long nGdi1 = GetGuiResources( GetCurrentProcess(), 0 )
+    frmOutput_Check( "flash: 60 undock/dock cycles do not leak GDI objects", _
+        (nGdi1 - nGdi0) < 30, str(nGdi0) & " -> " & str(nGdi1) )
 
     ' --- the MINIMIZED docked state survives the float ------------------------------------
     ' Driven explicitly over BOTH values rather than riding on whatever the app happened to

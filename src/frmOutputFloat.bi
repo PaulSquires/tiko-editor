@@ -66,4 +66,9 @@ declare sub frmOutputFloat_SetVisible( byval bVisible as boolean )
 ' the frame while floating, the panel itself while docked.
 declare function frmOutputFloat_VisibilityTarget() as HWND
 
+' Re-point the frame's class background brush at the current theme. Called from
+' frmOutput_SetControlColors, which is the theme hook -- the class brush is the one colour
+' in this window that is not read live at paint time, so it is the one that must be pushed.
+declare sub frmOutputFloat_SyncBrush()
+
 declare sub frmOutputFloat_RunSelfTest()

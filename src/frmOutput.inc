@@ -711,6 +711,9 @@ end function
 ' consuming one message: deliberately NOT a click-timer dance, since nothing is timed.
 dim shared as boolean gOutputSuppressRestore = false
 
+' The panel's class background brush -- see where it is created in frmOutput_Show.
+dim shared as HBRUSH ghOutputPanelBrush = 0
+
 
 ' ----------------------------------------------------------------------------------------
 ' Paint one tab. Reads the ghOutput theme colors LIVE, so a theme switch needs only a
@@ -892,6 +895,14 @@ function frmOutput_WndProc( _
         HWND_FRMOUTPUT_LVRESULTS = 0
         HWND_FRMOUTPUT_LVTODO    = 0
         HWND_FRMOUTPUT_VSCROLL   = 0
+        ' Ours to free: the system does NOT delete a class background brush at unregister --
+        ' measured on the floating frame, which creates and destroys one per undock and
+        ' leaked exactly one object per cycle without this. The panel is created once per
+        ' session, so this is tidiness rather than a live leak, but the rule is the same.
+        if ghOutputPanelBrush then
+            DeleteObject( ghOutputPanelBrush )
+            ghOutputPanelBrush = 0
+        end if
         return 0
 
 
@@ -922,6 +933,20 @@ end function
 ' user changes the theme (dark/light)
 ' ========================================================================================
 function frmOutput_SetControlColors() as long
+    ' The class background brush is the one colour here that is NOT read live at paint time,
+    ' so it is the one a theme change has to be pushed into. Left stale it would flash the
+    ' OLD theme's colour on the next system erase -- a reparent, or a show after the panel
+    ' had been closed. Rebuilt rather than tinted: a brush carries a fixed colour.
+    dim pPanel as CWindow ptr = AfxCWindowPtr( HWND_FRMOUTPUT )
+    if pPanel then
+        dim as HBRUSH hOld = ghOutputPanelBrush
+        ghOutputPanelBrush = CreateSolidBrush( ghOutput.BackColorHot )
+        pPanel->Brush = ghOutputPanelBrush
+        ' Freed only AFTER the class has stopped pointing at it.
+        if hOld then DeleteObject( hOld )
+    end if
+    if IsWindow( HWND_FRMOUTPUTFLOAT ) then frmOutputFloat_SyncBrush()
+
     dim as HWND hCtl
     hCtl = GetDlgItem( HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTLOGFILE )
     PsTextBox_SetForeColor( hCtl, ghOutput.ForeColorHot )
@@ -983,6 +1008,18 @@ function frmOutput_Show( byval hwndParent as HWND ) as LRESULT
         WS_CHILD or iif(gConfig.ShowOutputPanel, WS_VISIBLE, 0) or WS_CLIPSIBLINGS or WS_CLIPCHILDREN, _
         WS_EX_CONTROLPARENT or WS_EX_LEFT or WS_EX_LTRREADING or WS_EX_RIGHTSCROLLBAR)
     pWindow->ClassStyle = CS_DBLCLKS
+
+    ' The panel's class background brush, matched to what its own WM_PAINT draws.
+    '
+    ' CWindow registers with hbrBackground = COLOR_3DFACE+1, so every erase the SYSTEM
+    ' performs -- at ShowWindow time, and again when the panel is reparented into the
+    ' floating frame -- painted the client in the system 3D face colour first. WM_ERASEBKGND
+    ' returning TRUE does not help there: those erases happen before the window procedure is
+    ' reached. Undocking flashed white because of this and the frame's own brush together;
+    ' the panel is the one covering the whole client, so it is the one that showed.
+    ' The class is per-instance, so this affects nothing else. Freed in WM_NCDESTROY.
+    ghOutputPanelBrush = CreateSolidBrush( ghOutput.BackColorHot )
+    pWindow->Brush = ghOutputPanelBrush
 
     ' NOTE: gConfig.ShowOutputPanelHeight is deliberately NOT scaled here. It stays in
     ' unscaled units for the whole life of the process and is scaled only where it is used
