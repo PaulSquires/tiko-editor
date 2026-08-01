@@ -548,7 +548,15 @@ end function
 ''
 ''  LOAD CONFIGURATION FROM DISK FILE
 ''
+' A HOT RELOAD MUST NOT RESURRECT THE RESTORE SLOT. wszLastActiveProject is live workspace
+' state, not user-editable configuration: it is owned by ProjectSaveToFile and cleared by
+' Workspace_EstablishUntitled. ReloadConfigFileTest fires whenever settings.ini's timestamp
+' moves, and re-reading LastActiveProjectFile from disk put the CLOSED project's path back
+' into memory -- so Project > Close followed by exit wrote that path out again and the
+' project reopened on the next launch, exactly as if it had never been closed.
+' The geometry fields are already exempted from a hot reload for the same class of reason.
 function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as long
+    dim as DWSTRING wszLiveLastProject = this.wszLastActiveProject
     gApp.PreventConfigLoad = true
 
     dim as DWSTRING wst, wKey, wData
@@ -800,7 +808,11 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
         loop
         pStream.Close
     end if
-    
+
+    ' Put the LIVE restore slot back. See the note on this function's header: a hot reload
+    ' must not resurrect a project the user has closed.
+    if isHotReload then this.wszLastActiveProject = wszLiveLastProject
+
     ' Iterate the optional semi colon separated list of compiler include paths
     dim as DWSTRING allIncludes = rtrim(this.CompilerIncludes, ";")
     this.CompilerIncludes = ""

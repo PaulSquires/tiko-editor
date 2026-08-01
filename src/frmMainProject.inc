@@ -289,6 +289,22 @@ sub Workspace_RunSelfTest()
             Workspace_Check( "the released slot survives a settings.ini round trip", _
                 len(gConfig.wszLastActiveProject) = 0, _
                 "slot after reload=" & gConfig.wszLastActiveProject )
+
+            ' THE ONE THAT REPRODUCES THE REPORTED BUG. Put a project path on DISK while
+            ' memory holds the released (empty) slot, then hot-reload. ReloadConfigFileTest
+            ' does exactly this whenever settings.ini's timestamp moves, and re-reading
+            ' LastActiveProjectFile used to resurrect the closed project -- so exit wrote it
+            ' back out and the next launch reopened a project the user had closed.
+            gConfig.wszLastActiveProject = wszWas
+            gConfig.SaveConfigFile()                 ' disk now names the closed project
+            gConfig.wszLastActiveProject = ""        ' memory says: released
+            gConfig.LoadConfigFile( true )
+            Workspace_Check( "a hot reload does not resurrect a closed project", _
+                len(gConfig.wszLastActiveProject) = 0, _
+                "slot after hot reload=" & gConfig.wszLastActiveProject )
+
+            ' Leave the file consistent with memory rather than holding the stale path.
+            gConfig.SaveConfigFile()
         end if
     end if
 
@@ -448,6 +464,12 @@ function OnCommand_ProjectClose( byval hwnd As HWND ) As LRESULT
 
     ' There is always a workspace, so closing one means starting the next.
     Workspace_EstablishUntitled()
+
+    ' Persist the released restore slot NOW rather than leaving it to app exit. Until this
+    ' runs, settings.ini still names the project that was just closed, and anything that
+    ' reads the file back -- ReloadConfigFileTest, a second instance -- sees a closed
+    ' project as the one to reopen.
+    gConfig.SaveConfigFile()
 
     ' Show the (now untitled) workspace's notes.
     AfxSetWindowText(GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTNOTES), gApp.ProjectNotes)
