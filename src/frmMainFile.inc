@@ -580,49 +580,4 @@ function OnCommand_FileExplorerMessage( _
 end function
 
 
-' ========================================================================================
-' Load a previously saved session
-' ========================================================================================
-function OnCommand_FileLoadSession( byval hwnd as HWND ) as LRESULT
-    ' Display the Open File Dialog
-    dim pwszName as wstring ptr = AfxIFileOpenDialogW(hwnd, IDM_LOADSESSION)
-    if pwszName then 
-        if gApp.IsProjectActive then 
-            if OnCommand_ProjectClose(hwnd) = false then exit function
-        else   
-            if OnCommand_FileClose(hwnd, EFC_CLOSEALL) = false then exit function
-        end if
-        ' Clear any previous info from the Output windows
-        frmOutput_ResetAllControls()
-        gConfig.LoadSessionFile(*pwszName) 
-        CoTaskMemFree(pwszName)
-    end if
-    function = 0
-end function
-
-
-' ========================================================================================
-' Save a session
-' ========================================================================================
-function OnCommand_FileSaveSession( byval hwnd as HWND ) as LRESULT
-    dim wszFilename  as wstring * MAX_PATH = ""
-    dim wszExtension as wstring * MAX_PATH = "session"
-    dim pwszName as wstring ptr = AfxIFileSaveDialog(HWND_FRMMAIN, @wszFilename, @wszExtension, IDM_SAVESESSION)
-    if pwszName then
-        gConfig.SaveSessionFile(*pwszName)
-        CoTaskMemFree(pwszName)
-    end if
-    function = 0
-end function
-
-
-' ========================================================================================
-' Close a session
-' ========================================================================================
-function OnCommand_FileCloseSession( byval hwnd as HWND ) as LRESULT
-    gConfig.wszLastActiveProject = ""
-    gConfig.SaveConfigFile()
-    gConfig.CloseSessionFile(gApp.SessionFilename)
-    function = 0
-end function
         

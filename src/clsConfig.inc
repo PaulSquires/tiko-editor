@@ -38,7 +38,6 @@ constructor clsConfig
     ExtraKeywordsFilename     = exe_path & "settings\keywords\extra_keywords.txt" 
     FBKeywordsDefaultFilename = exe_path & "settings\keywords\freebasic_keywords_default.txt" 
     FBCodetipsFilename        = exe_path & "settings\keywords\codetips.ini"
-    DefaultSessionFilename    = exe_path & "settings\default.session"
     UntitledProjectFilename   = exe_path & "settings\default" & APPEXTENSION
 end constructor
 
@@ -453,13 +452,6 @@ function clsConfig.SaveConfigFile() as long
         pStream.WriteLine "MRUPROJECT_" & right("00" & str(i), 2) & "=" & this.MRUProject(i) 
     next         
 
-    pStream.WriteLine ""
-    pStream.WriteLine "[MRUSESSIONS]"  
-    for i as long = 0 To 9
-        this.MRUSession(i) = ProcessToCurdriveApp(this.MRUSession(i))
-        pStream.WriteLine "MRUSESSION_" & right("00" & str(i), 2) & "=" & this.MRUSession(i) 
-    next         
-    
     dim hCtl as hwnd = GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTNOTES)
     dim wszText as DWSTRING = wstr("NOTES-START") + vbcrlf + _
                             gApp.NonProjectNotes + vbcrlf + _
@@ -525,29 +517,6 @@ function clsConfig.WriteMRUProjects() as long
     function = 0
 end function
 
-
-' Save the MRU Sessions to the configuration file. Only write the MRU items
-' the ini file rather than overwriting the whole file. This enables
-' the editor to work better with external tools that manually modify the
-' settings.ini file.
-function clsConfig.WriteMRUSessions() as long 
-    dim as DWSTRING wszKeyName, wszValue
-    
-    ' Delete the section name
-    dim as DWSTRING wszSectionName = "MRUSESSIONS"
-    WritePrivateProfileString( wszSectionName, null, null, this.ConfigFilename )
-    
-    ' Write the new values.
-    for i as long = 0 To 9
-        this.MRUSession(i) = ProcessToCurdriveApp(this.MRUSession(i))
-        wszKeyName = "MRUSESSION_" & right("00" & str(i), 2) 
-        wszValue   = this.MRUSession(i) 
-        WritePrivateProfileString( wszSectionName, wszKeyName, wszValue, this.ConfigFilename )
-    next         
-    
-    function = 0
-end function
-    
 
 ''
 ''  Set default values for Explorer Categories should none exist
@@ -700,15 +669,10 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
                 end If
             end If
 
-            if left(wKey, 11) = "MRUSESSION_" then  ' is this an MRU Session entry
-            i = val(right(wKey,2))
-                if (i >= 0) And (i <= 9) then 
-                    this.MRUSession(i) = ProcessFromCurdriveApp(wData)
-                    continue do
-                end If
-            end If
+            ' MRUSESSION_ keys from an older settings.ini fall through to the select
+            ' below, match nothing, and are dropped -- the [MRUSESSIONS] section ages out
+            ' on the first save.
 
-            
             select case wKey
             case "SettingsVersion":          this.SettingsVersion       = wData
             case "AskExit":                  this.AskExit               = nData
@@ -1007,269 +971,6 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
     function = 0
 end function
 
-
-' ========================================================================================
-' Save current session (open files) to a diskfile
-' ========================================================================================
-function clsConfig.SaveSessionFile( byref wszSessionFile as wstring ) as boolean    
-    ' If the incoming file is a project then 
-    if gApp.IsProjectActive then
-        this.ProjectSaveToFile()
-        return true
-    end if
-
-    dim as DWSTRING wszText 
-    dim as long nCount 
-
-    dim pDoc as clsDocument ptr
-
-    dim pStream as CTextStream  ' (utf16)
-    if pStream.Create( wszSessionFile, true, true ) <> S_OK then return false
-    
-    pStream.WriteLine "' SESSION FILE"
-    
-    ' Save all of the loaded tabs
-    pStream.WriteLine "BuildConfig=" & this.CompilerBuild
-    ' Not GetCurSel: the loop below skips tabs, so the file's index space is denser than the
-    ' tab bar's. See clsTopTabCtl.SaveActiveTabIndex.
-    pStream.WriteLine "ActiveTab="   & gTTabCtl.SaveActiveTabIndex()
-    pStream.WriteLine "CommandLine=" & gApp.wszCommandLine
-
-    nCount = gTTabCtl.GetItemCount()
-
-    for i as long = 0 To nCount - 1
-        pDoc = gTTabCtl.GetpDoc(i)
-        if pDoc = 0 then continue for
-        
-        ' Only deal with files that are no longer "new"
-        if pDoc->IsNewFlag = false then 
-            wszText = ProcessToCurdriveApp(pDoc->DiskFilename)
-            pStream.WriteLine "File=" & wszText
-            pStream.WriteLine "FileType=" & pDoc->ProjectFileType
-            pStream.WriteLine "TabIndex=" & -1     ' use -1 rather than true
-            pStream.WriteLine "Bookmarks=" & pDoc->GetBookmarks()
-            pStream.WriteLine "BreakPoints=" & pDoc->GetBreakPoints()
-            pStream.WriteLine "FoldPoints=" & pDoc->GetFoldPoints()
-            pStream.WriteLine "FirstLine=" & SendMessage( pDoc->hWindow(0), SCI_GETFIRSTVISIBLELINE, 0, 0) 
-            pStream.WriteLine "Position=" & SendMessage( pDoc->hWindow(0), SCI_GETCURRENTPOS, 0, 0)  
-            pStream.WriteLine "FirstLine1=" & SendMessage( pDoc->hWindow(1), SCI_GETFIRSTVISIBLELINE, 0, 0) 
-            pStream.WriteLine "Position1=" & SendMessage( pDoc->hWindow(1), SCI_GETCURRENTPOS, 0, 0)  
-            pStream.WriteLine "SplitMode=" & wstr(pDoc->EditorSplitMode)
-            pStream.WriteLine "SplitPositionX=" & pDoc->SplitX
-            pStream.WriteLine "SplitPositionY=" & pDoc->SplitY
-            pStream.WriteLine "FocusEdit=" & iif(pDoc->hWndActiveScintilla = pDoc->hWindow(0), 0, 1)
-            pStream.WriteLine "FileEnd=[-]" 
-        end if
-    next
-            
-    pStream.Close
-
-    this.wszLastActiveProject = wszSessionFile
-
-    function = true   ' successful save
-end function
-
-
-' ========================================================================================
-' Close a  previously loaded session file
-' ========================================================================================
-function clsConfig.CloseSessionFile( byref wszSessionFile as wstring ) as boolean    
-    if this.SaveSessionFile( wszSessionFile) = false then exit function
-    if OnCommand_FileClose(HWND_FRMMAIN, EFC_CLOSEALL) = false then exit function
-    gApp.IsSessionActive = false
-    gApp.SessionFilename = ""
-    function = true  ' successful close
-end function
-
-
-' ========================================================================================
-' Load previously saved session file from a diskfile
-' ========================================================================================
-function clsConfig.LoadSessionFile( byref wszSessionFile as wstring ) as boolean    
-
-    ' If the previously saved session file was actually a project file
-    ' then open the project.
-    if lcase(AfxGetFileExt(wszSessionFile)) = APPEXTENSION then
-        if AfxFileExists(wszSessionFile) then 
-            frmMain_OpenProjectSafely( HWND_FRMMAIN, wszSessionFile ) 
-            return true
-        end if
-        return false
-    end if    
-
-    ' if a project is open then close any files that may be open in the editor. No need to
-    ' do this if a new project is being created/opened because that function has already
-    ' performed this operation. Doing so again will cause the Recent Files/Projects panel
-    ' to flash on the screen.
-    if gApp.IsProjectActive then 
-        if OnCommand_ProjectClose(HWND_FRMMAIN) = false then exit function
-    else   
-        if OnCommand_FileClose(HWND_FRMMAIN, EFC_CLOSEALL) = false then exit function
-    end if
-    ' Clear any previous info from the Output windows
-    frmOutput_ResetAllControls()
-    
-    ' Clear the navigation history. Its entries are filenames rather than document pointers
-    ' now, so they can no longer dangle -- but they describe the workspace being left.
-    NavHistory_Clear()
-
-    dim pDoc as clsDocument ptr
-    dim as DWSTRING wst, wKey, wData, wszFilename
-        
-    dim as string sBookmarks
-    dim as string sBreakPoints
-    dim as string sFoldPoints
-    dim as long nData, i, iTab, nFocusEdit
-    dim as long nFileIndex = -1
-    dim as long nFirstLine, nPosition, nFirstLine1, nPosition1
-    dim as long nSplitMode, nSplitPositionX, nSplitPositionY
-
-    ' Info saved for each File and used to create the file once Fileend is found
-    dim as long nTabIndex
-    dim as long nActiveTab = -1
-    dim as DWSTRING wszFileType
-    dim as boolean bLoadInTab
-    
-    dim pStream as CTextStream  ' (utf16)
-    if AfxFileExists(wszSessionFile) = 0 then exit function
-    if pStream.OpenUnicode( wszSessionFile ) <> S_OK then return false
-
-    gApp.SessionFilename = wszSessionFile
-    gApp.SessionName = AfxStrPathname( "NAMEX", gApp.SessionFilename )
-
-    dim as HCURSOR hCurSave = GetCursor()
-    SetCursor( LoadCursor(0, IDC_WAIT) )
-    
-    do until pStream.EOS
-        wst = pStream.ReadLine
-        
-        if len(wst) = 0 then continue do
-        if left(wst, 1) = "'" then continue do
-        if left(wst, 1) = "[" then continue do
-        
-        i = instr(wst, "=")
-        if i = 0 then continue do
-        
-        wKey  = left(wst, i-1)
-        wData = mid(wst, i+1)
-        
-        select case ucase(wData)
-            case "TRUE":   nData = true
-            case "FALSE":  nData = false
-            case Else:     nData = val(wData)
-        end select
-
-        wData = ProcessFromCurdriveApp(wData)
-
-        select case wKey
-            case "BuildConfig":         this.CompilerBuild = wData
-            case "CommandLine":         gApp.wszCommandLine = wData
-            case "ActiveTab":           nActiveTab = nData
-            
-            case "File":                wszFilename = wData
-            case "FileType":            wszFileType = wData
-            
-            case "TabIndex":            bLoadInTab  = nData
-            case "Bookmarks":           sBookmarks  = str(wData)
-            case "BreakPoints":         sBreakPoints = str(wData)
-            case "FoldPoints":          sFoldPoints = str(wData)
-            case "FirstLine":           nFirstLine  = nData
-            case "Position":            nPosition   = nData
-            case "FirstLine1":          nFirstLine1 = nData
-            case "Position1":           nPosition1  = nData
-            case "SplitMode":           nSplitMode  = nData
-            case "SplitPositionX":      nSplitPositionX = nData
-            case "SplitPositionY":      nSplitPositionY = nData
-            case "FocusEdit":           nFocusEdit  = nData
-            
-            case "FileEnd":
-            if AfxFileExists(wszFilename) then
-                pDoc = gApp.CreateEmptyDocument()
-                pDoc->LoadDiskFile( wszFilename )
-                pDoc->AssignTextBuffer()
-                pDoc->ProjectFileType = wszFileType
-                if pDoc->ProjectFileType = FILETYPE_UNDEFINED then
-                    pDoc->ProjectFileType = FILETYPE_NORMAL
-                end if    
-                iTab = gTTabCtl.AddTab( pDoc )  ' Add the new document to the top tabcontrol
-                
-                ' Set the saved positions
-                pDoc->EditorSplitMode = nSplitMode
-                pDoc->SplitY = nSplitPositionY
-                pDoc->SplitX = nSplitPositionX
-                SciExec( pDoc->hWindow(0), SCI_SETFIRSTVISIBLELINE, nFirstLine, 0) 
-                SciExec( pDoc->hWindow(0), SCI_GOTOPOS, nPosition, 0) 
-                SciExec( pDoc->hWindow(1), SCI_SETFIRSTVISIBLELINE, nFirstLine1, 0) 
-                SciExec( pDoc->hWindow(1), SCI_GOTOPOS, nPosition1, 0) 
-                pDoc->hWndActiveScintilla = pDoc->hWindow(nFocusEdit)
-                pDoc->SetBookmarks(sBookmarks)
-                pDoc->SetBreakPoints(sBreakPoints)
-                pDoc->SetFoldPoints(sFoldPoints)
-            end if
-        
-        end select
-    
-    loop                        
-    pStream.Close
-                        
-    ' Do a sanity check on the active tab to ensure that it is in bounds thereby
-    ' not throwing future array out of bounds gpf's.
-    if gTTabCtl.IsValidTab(nActiveTab) = false then nActiveTab = 0
-
-
-    ' Load all of the filenames into the Explorer listbox. Configure the node
-    ' array to allow all types of files to be shown in the listbox
-    for i as long = lbound(this.Cat) to ubound(this.Cat)
-        this.Cat(i).bShow = true
-    next
-    LoadExplorerFiles()
-    
-    ' Load all of the bookmarks into the Bookmarks listbox. 
-    LoadBookmarksFiles()
-
-    ' Load all of the functions into the Function List listbox. 
-    LoadFunctionsFiles()
-
-    ' Display the active editing window
-    if gTTabCtl.IsValidTab(nActiveTab) then
-        gTTabCtl.SetCurSel( nActiveTab )
-        gTTabCtl.DisplayScintilla( nActiveTab, true )
-    
-        ' Highlight the selected tab file in the Explorer listbox
-        dim as clsDocument ptr pDoc = gTTabCtl.GetpDoc(nActiveTab)
-        frmExplorer_SelectItemData( pDoc )
-    end if
-    
-    frmMain_SetStatusbar
-    SetCursor( hCurSave )
-
-    gApp.IsSessionActive = true
-
-    this.wszLastActiveProject = wszSessionFile
-    
-    frmMain_PositionWindows
-    frmMain_SetFocusToCurrentCodeWindow
-    
-    UpdateMRUSessionList(wszSessionFile)
-
-    function = true   ' successful open
-end function
-
-
-' ========================================================================================
-' Save the DEFAULT session (open files) to a diskfile
-' ========================================================================================
-function clsConfig.SaveDefaultSessionFile() as boolean    
-    return this.SaveSessionFile( this.DefaultSessionFilename )
-end function
-
-
-' ========================================================================================
-' Load the DEFAULT session (open files) to a diskfile
-' ========================================================================================
-function clsConfig.LoadDefaultSessionFile() as boolean    
-    return this.LoadSessionFile( this.DefaultSessionFilename )
-end function
 
 
 ' ========================================================================================

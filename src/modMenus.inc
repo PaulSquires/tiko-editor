@@ -65,8 +65,6 @@ function frmMain_FileTopMenuStates() as long
     EnableTopMenuItem( IDM_FILEOPEN, true )
     EnableTopMenuItem( IDM_FILEOPENASTEMPLATE, true )
     EnableTopMenuItem( IDM_MRU, true )
-    EnableTopMenuItem( IDM_LOADSESSION, true )
-    EnableTopMenuItem( IDM_MRUSESSION, true )
     EnableTopMenuItem( IDM_KEYBOARDSHORTCUTS, true )
     EnableTopMenuItem( IDM_USERTOOLS, true )
     EnableTopMenuItem( IDM_USERTOOLSDIALOG, true )
@@ -80,7 +78,12 @@ function frmMain_FileTopMenuStates() as long
     ' non-zero while there is no active document, which would light up Save / Save As /
     ' Rename / Duplicate over nothing.
     if gTTabCtl.GetDocumentTabCount() then
-        for idMenu as long = IDM_FILECLOSE to IDM_MRUSESSION
+        ' Re-anchored on IDM_MRUFILES when the session ids were deleted out of the middle
+        ' of this range. modDeclares.bi is one anonymous positional enum, so the old upper
+        ' bound did not just disappear -- it would have silently become whatever id landed
+        ' at that position next. The members this covers are unchanged: FILECLOSE through
+        ' FILEDUPLICATE, plus IDM_MRU/IDM_MRUFILES.
+        for idMenu as long = IDM_FILECLOSE to IDM_MRUFILES
             EnableTopMenuItem( idMenu, true )
         next
     end if
@@ -95,14 +98,6 @@ function frmMain_FileTopMenuStates() as long
         if FindProject_AnyDirty() then EnableTopMenuItem( IDM_FILESAVEALL, true )
     end if
 
-    if gApp.IsSessionActive = false then 
-        EnableTopMenuItem( IDM_CLOSESESSION, false )
-    end if
-
-    if gApp.IsProjectActive then 
-        EnableTopMenuItem( IDM_SAVESESSION, false )
-    end if
-            
     function = 0
 end function
 

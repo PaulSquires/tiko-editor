@@ -35,9 +35,8 @@
 declare sub frmMenuBar_DynamicInitPopup( byval hPopup as HWND )
 declare sub frmMenuBar_ApplyPopupTheme( byval hPopup as HWND, byval bForceCompact as boolean = false )
 
-' The four dynamic submenus (rebuilt per open in frmMenuBar_DynamicInitPopup).
+' The three dynamic submenus (rebuilt per open in frmMenuBar_DynamicInitPopup).
 dim shared as HWND ghMenuPopupMRU
-dim shared as HWND ghMenuPopupMRUSession
 dim shared as HWND ghMenuPopupMRUProject
 dim shared as HWND ghMenuPopupUserTools
 
@@ -216,26 +215,6 @@ private sub frmMenuBar_RebuildMRUFiles( byval hPopup as HWND )
     end if
 end sub
 
-private sub frmMenuBar_RebuildMRUSessions( byval hPopup as HWND )
-    PsPopupMenu_Clear( hPopup )
-    dim as boolean hasFiles = false
-    for i as long = 0 to 9
-        gConfig.MRUSESSION(i) = ProcessFromCurdriveApp( gConfig.MRUSESSION(i) )
-        if AfxFileExists( gConfig.MRUSESSION(i) ) = 0 then
-            gConfig.MRUSESSION(i) = ""
-        else
-            hasFiles = true
-            PsPopupMenu_AddItem( hPopup, IDM_MRUSESSIONBASE + i, gConfig.MRUSESSION(i) )
-        end if
-    next
-    if hasFiles = false then
-        PsPopupMenu_AddItem( hPopup, IDM_MRUSESSIONFILES, L(11,"(Empty)") )
-    else
-        PsPopupMenu_AddSeparator( hPopup )
-        PsPopupMenu_AddItem( hPopup, IDM_MRUSESSIONCLEAR, L(188,"Clear this list") )
-    end if
-end sub
-
 private sub frmMenuBar_RebuildMRUProjects( byval hPopup as HWND )
     PsPopupMenu_Clear( hPopup )
     dim as boolean hasFiles = false
@@ -275,12 +254,10 @@ private sub frmMenuBar_RebuildUserTools( byval hPopup as HWND )
     end if
 end sub
 
-' One InitPopup callback serves all four dynamic submenus.
+' One InitPopup callback serves all three dynamic submenus.
 private sub frmMenuBar_DynamicInitPopup( byval hPopup as HWND )
     if hPopup = ghMenuPopupMRU then
         frmMenuBar_RebuildMRUFiles( hPopup )
-    elseif hPopup = ghMenuPopupMRUSession then
-        frmMenuBar_RebuildMRUSessions( hPopup )
     elseif hPopup = ghMenuPopupMRUProject then
         frmMenuBar_RebuildMRUProjects( hPopup )
     elseif hPopup = ghMenuPopupUserTools then
@@ -314,11 +291,6 @@ private function frmMenuBar_BuildDropDown( byval nParentID as long ) as HWND
                     PsPopupMenu_SetMinWidth( hSub, AfxCWindowPtr(HWND_FRMMAIN)->ScaleX(262) )
                     PsPopupMenu_SetInitPopupCallback( hSub, @frmMenuBar_DynamicInitPopup )
                     ghMenuPopupMRU = hSub
-                case IDM_MRUSESSION
-                    hSub = frmMenuBar_CreatePopup()
-                    PsPopupMenu_SetMinWidth( hSub, AfxCWindowPtr(HWND_FRMMAIN)->ScaleX(262) )
-                    PsPopupMenu_SetInitPopupCallback( hSub, @frmMenuBar_DynamicInitPopup )
-                    ghMenuPopupMRUSession = hSub
                 case IDM_MRUPROJECT
                     hSub = frmMenuBar_CreatePopup()
                     PsPopupMenu_SetMinWidth( hSub, AfxCWindowPtr(HWND_FRMMAIN)->ScaleX(262) )
@@ -354,7 +326,7 @@ private sub frmMenuBar_RefreshCaptions( byval hDropDown as HWND, byval nParentID
         PsPopupMenu_SetItemText( hDropDown, gTopMenu(i).nID, wszCaption, wszAccel )
         if gTopMenu(i).nChildID <> 0 then
             select case gTopMenu(i).nID
-                case IDM_MRU, IDM_MRUSESSION, IDM_MRUPROJECT, IDM_USERTOOLS
+                case IDM_MRU, IDM_MRUPROJECT, IDM_USERTOOLS
                     ' dynamic: rebuilt when it opens
                 case else
                     frmMenuBar_RefreshCaptions( hDropDown, gTopMenu(i).nID )

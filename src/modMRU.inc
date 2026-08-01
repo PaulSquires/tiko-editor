@@ -61,10 +61,6 @@ function ClearMRUlist( byval wID as long ) as long
             for i as long = 0 To 9
                 gConfig.MRU(i) = ""
             next
-        Case IDM_MRUSESSIONCLEAR
-            for i as long = 0 To 9
-                gConfig.MRUSESSION(i) = ""
-            next
         Case IDM_MRUPROJECTCLEAR
             for i as long = 0 To 9
                 gConfig.MRUPROJECT(i) = ""
@@ -113,58 +109,6 @@ function UpdateMRUList( byref wzFilename as wstring ) as long
     ' the editor to work better with external tools that manually modify the
     ' settings.ini file.
     gConfig.WriteMRU
-
-    function = 0
-end function  
-
-
-
-''  SESSIONS  ''
-
-''
-''
-function OpenMRUSessionFile( _
-            byval hwnd as HWND, _
-            byval wID as long _
-            ) as long
-    dim wzFile as wstring * MAX_PATH
-    wzFile = gConfig.MRUSESSION(wID - IDM_MRUSESSIONBASE)
-    gConfig.LoadSessionFile( wzFile )
-    function = 0
-end function
-
-    
-''
-''
-function UpdateMRUSessionList( byval wszFilename as DWSTRING ) as long
-
-    dim idxExistsAt as long = -1   ' index of where filename already exists 
-    dim i           as long
-    
-    ' Search the 10 MRU items to see if the filename already exists and
-    ' also for an available entry to put the filename in.
-    for i = 0 To 9
-        gConfig.MRUSession(i) = ProcessFromCurdriveApp(gConfig.MRUSession(i))
-        if ucase(gConfig.MRUSession(i)) = ucase(wszFilename) then
-            idxExistsAt = i:  exit For
-        end if   
-    next
-    
-    ' if does not already exist then we simply need to move all entries
-    ' down and add at the beginning of the list. The original 10th entry
-    ' will now drop off the list.
-    if idxExistsAt = -1 then idxExistsAt = 9
-
-    for i = idxExistsAt to 1 step -1
-        gConfig.MRUSession(i) = gConfig.MRUSession(i-1)
-    next
-    gConfig.MRUSession(0) = wszFilename 
-
-    ' Save the MRU to the configuration file. Only write the MRU items
-    ' the ini file rather than overwriting the whole file. This enables
-    ' the editor to work better with external tools that manually modify the
-    ' settings.ini file.
-    gConfig.WriteMRUSessions
 
     function = 0
 end function  

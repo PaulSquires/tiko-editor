@@ -166,7 +166,7 @@ end function
 ' -- caret, scroll, bookmarks, breakpoints, folds -- is lost unless it is carried across by
 ' hand. That is survivable for the old explicit "Reload it? Yes" but not for a SILENT reload,
 ' where the file would appear to jump to the top on its own. The capture/restore below is the
-' same sequence, in the same order, that the session restore in clsConfig.inc performs.
+' same sequence, in the same order, that the workspace restore in clsConfig.inc performs.
 '
 ' Positions are clamped to the new length: the file is allowed to have got shorter.
 '

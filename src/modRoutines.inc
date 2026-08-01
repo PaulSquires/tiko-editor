@@ -1017,15 +1017,6 @@ function AfxIFileOpenDialogW( _
     dim rgFileTypes(1 To 5) as COMDLG_FILTERSPEC
 
     select case idButton
-        case IDM_LOADSESSION  
-            rgFileTypes(1).pszName = @wstr("Session files")
-            rgFileTypes(1).pszSpec = @wstr("*.session")
-            rgFileTypes(2).pszName = @L(77,"All files")
-            rgFileTypes(2).pszSpec = @wstr("*.*")
-            pofd->lpVtbl->SetFileTypes(pofd, 2, @rgFileTypes(1))
-            ' Set the title of the dialog
-            hr = pofd->lpVtbl->SetTitle(pofd, L(278,"Load Session"))
-
         case IDM_PROJECTOPEN
             rgFileTypes(1).pszName = @L(179,"Project files")
             rgFileTypes(1).pszSpec = @wstr("*" & APPEXTENSION)
@@ -1252,15 +1243,6 @@ function AfxIFileSaveDialog( _
 
     ' Set the file types
     select case id
-        case IDM_SAVESESSION
-            rgFileTypes(1).pszName = @wstr("Session files")
-            rgFileTypes(1).pszSpec = @wstr("*.session")
-            rgFileTypes(2).pszName = @L(77,"All files")
-            rgFileTypes(2).pszSpec = @wstr("*.*")
-            psfd->lpVtbl->SetFileTypes(psfd, 2, @rgFileTypes(1))
-            ' // Set the title of the dialog
-            hr = psfd->lpVtbl->SetTitle(psfd, L(277,"Save Session"))
-
         case IDM_FILERENAME
             rgFileTypes(1).pszName = @L(77,"All files")
             rgFileTypes(1).pszSpec = @wstr("*.*")

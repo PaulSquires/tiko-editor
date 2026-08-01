@@ -31,9 +31,6 @@ declare function OnCommand_FileSaveDeclares( byval hwnd as HWND ) as LRESULT
 declare function OnCommand_FileSaveAll( byval hwnd as HWND ) as boolean
 declare function OnCommand_FileClose( byval hwnd as HWND, byval veFileClose as eFileClose, byval nTabNum as long = -1 ) as LRESULT
 declare function OnCommand_FileExplorerMessage( byval id as long, byval pDoc as clsDocument ptr ) as LRESULT
-declare function OnCommand_FileLoadSession( byval hwnd as HWND ) as LRESULT
-declare function OnCommand_FileSaveSession( byval hwnd as HWND ) as LRESULT
-declare function OnCommand_FileCloseSession( byval hwnd as HWND ) as LRESULT
 
 declare function OnCommand_EditRedo( byval hEdit as HWND ) as LRESULT
 declare function OnCommand_EditUndo( byval hEdit as HWND ) as LRESULT

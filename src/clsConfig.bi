@@ -71,7 +71,6 @@ type clsConfig
         ExtraKeywordsFilename     as DWSTRING 
         FBKeywordsDefaultFilename as DWSTRING 
         FBCodetipsFilename        as DWSTRING
-        DefaultSessionFilename    as DWSTRING
         ' The untitled workspace's backing file. Derived from the exe path, never persisted,
         ' and deliberately per-install -- C:\dev\tiko and C:\dev\tiko_editor each get their
         ' own. Owned by Workspace_EstablishUntitled; IsProjectNamed compares against it.
@@ -213,23 +212,16 @@ type clsConfig
         DisableCompileBeep        as long = false
         MRU(9)                    as DWSTRING
         MRUProject(9)             as DWSTRING
-        MRUSession(9)             as DWSTRING
-                                
+
         declare constructor()
         declare function SetCategoryDefaults() as long
         declare function LoadKeywords() as long
         declare function SaveKeywords() as long
         declare function WriteMRU() as long
         declare function WriteMRUProjects() as long
-        declare function WriteMRUSessions() as long
         declare function SaveConfigFile() as long
         declare function LoadConfigFile( byval isHotReload as boolean = false ) as long
-        declare function CloseSessionFile( byref wszSessionFile as wstring ) as boolean    
-        declare function SaveSessionFile( byref wszSessionFile as wstring ) as boolean    
-        declare function LoadSessionFile( byref wszSessionFile as wstring ) as boolean   
-        declare function SaveDefaultSessionFile() as boolean    
-        declare function LoadDefaultSessionFile() as boolean    
-        declare function ProjectSaveToFile() as boolean    
+        declare function ProjectSaveToFile() as boolean
         declare function ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean    
         declare function LoadCodetipsFB() as boolean
         declare function LoadCodetips() as long

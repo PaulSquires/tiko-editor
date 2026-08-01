@@ -63,15 +63,15 @@ end function
 
 
 ''
-''  What "ActiveTab=" in a session or project file should hold.
+''  What "ActiveTab=" in a project file should hold.
 ''
-''  It is NOT the raw GetCurSel index. Both writers skip tabs on their way to disk -- a tab
+''  It is NOT the raw GetCurSel index. The writer skips tabs on its way to disk -- a tab
 ''  with no document (Find in Project) and a document that has never been saved (IsNewFlag) --
 ''  so the file's index space is denser than the live tab bar's, and every tab after a skipped
 ''  one shifts down by one. Writing the live index means reopening on the wrong document.
 ''
-''  LoadSessionFile sanity-checks the value it reads with IsValidTab, but that cannot detect an
-''  index which is in range and simply wrong, which is exactly what this produces.
+''  ProjectLoadFromFile sanity-checks the value it reads with IsValidTab, but that cannot
+''  detect an index which is in range and simply wrong, which is exactly what this produces.
 ''
 ''  The IsNewFlag half of this was already broken before the Find tab existed: any untitled
 ''  document sitting to the left of the active tab shifted it. Fixed here because the two skip

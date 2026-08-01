@@ -170,10 +170,6 @@ function frmMain_SetStatusbar() as long
     ' caption rather than a separate test. Testing a flag instead would render " - []".
     if len(gApp.ProjectName) > 0 then
         wszText = wszText & " - [" & gApp.ProjectName & "]"
-    else
-        if gApp.IsSessionActive = true then 
-            wszText = wszText & " - [" & gApp.SessionName & "]"
-        end if
     end if
     if pDoc then 
         wszText = wszText & " - [" & pDoc->DiskFilename & "]"

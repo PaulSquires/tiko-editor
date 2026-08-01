@@ -73,14 +73,6 @@ Function getMenuText( byval idMenu as long ) As DWSTRING
         case IDM_FILERENAME: wszText = L(21,"Rename") & "..."
         case IDM_FILEDUPLICATE: wszText = L(22,"Duplicate")
         case IDM_FILESAVEALL: wszText = L(9,"Save All")
-        case IDM_SAVESESSION: wszText = L(277,"Save Session") & "..."
-        case IDM_LOADSESSION: wszText = L(278,"Load Session") & "..."
-        case IDM_CLOSESESSION: wszText = L(284,"Close Session")
-        case IDM_MRUSESSION: wszText = L(181,"Recent Sessions")
-        case IDM_MRUSESSIONBASE to IDM_MRUSESSIONBASE + 9
-            return gConfig.MRUSESSION( idMenu - IDM_MRUSESSIONBASE )
-        case IDM_MRUSESSIONCLEAR: return L(188, "Clear this list")   
-        case IDM_MRUSESSIONFILES: return L(11,"(Empty)")
         case IDM_KEYBOARDSHORTCUTS: wszText = L(183,"Keyboard Shortcuts") & "..."
         case IDM_USERTOOLS: return L(229,"User Tools")
         case IDM_USERTOOLSDIALOG: wszText = L(229,"User Tools") & "..."
