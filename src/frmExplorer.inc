@@ -71,8 +71,7 @@ function frmExplorer_SelectItemData( byval pDoc as clsDocument ptr ) as boolean
 
     ' If pDoc is already selected in the listbox then simply exit
     dim as integer nCurSel = PsListTree_GetCurSel(hCtrl)
-    dim as integer nItemData = PsListTree_GetItemData( hCtrl, nCurSel )
-    dim as clsDocument ptr pDocSel = cast( clsDocument ptr, nItemData )
+    dim as clsDocument ptr pDocSel = frmExplorer_DocFromRow( hCtrl, nCurSel )
     if pDocSel = pDoc then return true
 
 
@@ -126,6 +125,25 @@ function frmExplorer_UnSelectListBox() as long
 '    frmExplorer_SelectItemData(pDoc)
 
     function = 0
+end function
+
+
+' ========================================================================================
+' The document a row refers to, or NULL if it refers to none.
+'
+' EVERY read of an Explorer row's itemData must go through this. The rows are a mix of
+' real clsDocument pointers and the EXPLORER_PROMOTE_ROW sentinel, and the sentinel is a
+' non-null value that is not a valid pointer -- so a caller that casts and then tests
+' "if pDoc then" passes the test and dereferences address 1. That is a GPF on hover, which
+' is exactly how it shipped: three readers were guarded by hand and the tooltip callback
+' was missed. Returning NULL here makes the sentinel undereferenceable by construction
+' rather than by everyone remembering.
+' ========================================================================================
+function frmExplorer_DocFromRow( byval hCtl as HWND, byval row as integer ) as clsDocument ptr
+    if row < 0 then return 0
+    dim as integer nItemData = PsListTree_GetItemData( hCtl, row )
+    if nItemData = EXPLORER_PROMOTE_ROW then return 0
+    return cast( clsDocument ptr, nItemData )
 end function
 
 
@@ -219,16 +237,14 @@ function frmExplorer_MessageCallback( byval m as PSLISTTREE_MESSAGEINFO ptr ) as
             ' Attempt to show the file
             dim as HWND hCtl = GetParent(m->hList)
             if PsListTree_IsHeader( hCtl, m->idx ) = false then
-                dim as integer nItemData = PsListTree_GetItemData( hCtl, m->idx )
-
-                ' The promotion row is an action, not a document. Test it BEFORE the cast:
-                ' the sentinel is not a valid pointer and must never be dereferenced.
-                if nItemData = EXPLORER_PROMOTE_ROW then
+                ' This is the ONE reader that cares which non-document row it is on, so it
+                ' reads the raw value -- and does so without ever casting it to a pointer.
+                if PsListTree_GetItemData( hCtl, m->idx ) = EXPLORER_PROMOTE_ROW then
                     OnCommand_ProjectSave( GetParent(hCtl), true )   ' Save As
                     return false
                 end if
 
-                dim as clsDocument ptr pDoc = cast(clsDocument ptr, nItemData)
+                dim as clsDocument ptr pDoc = frmExplorer_DocFromRow( hCtl, m->idx )
                 if pDoc then
                     ' if the file is already showing in the Top tabs then switch to that tab.
                     if gTTabCtl.SetTabIndexByDocumentPtr( pDoc ) = -1 then
@@ -249,11 +265,9 @@ function frmExplorer_MessageCallback( byval m as PSLISTTREE_MESSAGEINFO ptr ) as
             dim as HWND hCtl = GetParent(m->hList)
             if PsListTree_IsHeader( hCtl, m->idx ) then return false
 
-            dim as integer nRowData = PsListTree_GetItemData(hCtl, m->idx)
             ' No context menu on the promotion row -- every item on it is a file action.
-            if nRowData = EXPLORER_PROMOTE_ROW then return false
-
-            dim as clsDocument ptr pDoc = cast(clsDocument ptr, nRowData)
+            ' DocFromRow returns NULL for it, so the existing null test covers that too.
+            dim as clsDocument ptr pDoc = frmExplorer_DocFromRow( hCtl, m->idx )
             if pDoc = null then return false
             
             ' If only 1 line has been previously selected then unselect that line
@@ -284,8 +298,7 @@ end function
 ' ========================================================================================
 function frmExplorer_TooltipCallback( byval hCtl as HWND, byval row as integer, byval col as integer ) as DWSTRING
     dim as DWSTRING wszTooltip
-    dim as integer nItemData = PsListTree_GetItemData(hCtl, row)
-    dim as clsDocument ptr pDoc = cast(clsDocument ptr, nItemData)
+    dim as clsDocument ptr pDoc = frmExplorer_DocFromRow( hCtl, row )
     if pDoc then wszTooltip = pDoc->DiskFilename
     return wszTooltip
 end function

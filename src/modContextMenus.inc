@@ -410,11 +410,9 @@ private sub ExplorerContextMenu_OnSelect( byval hPopup as HWND, byval id as long
         if PsListTree_IsHeader(hCtl, i) then continue for
         if PsListTree_GetSel( hCtl, i ) = true then
             if nextIdx > ubound(pDocArray) then exit for
-            dim as integer nItemData = PsListTree_GetItemData( hCtl, i )
-            ' The Explorer's promotion row is not a document. Its sentinel is not a valid
-            ' pointer, so it must be filtered here rather than dereferenced below.
-            if nItemData = EXPLORER_PROMOTE_ROW then continue for
-            pDocArray(nextIdx) = cast(clsDocument ptr, nItemData)
+            ' DocFromRow returns NULL for the Explorer's promotion row, whose sentinel is
+            ' not a valid pointer. The loop below already skips nulls.
+            pDocArray(nextIdx) = frmExplorer_DocFromRow( hCtl, i )
             nextIdx = nextIdx + 1
         end if
     next

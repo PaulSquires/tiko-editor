@@ -183,6 +183,22 @@ sub Workspace_RunSelfTest()
     if PsListTree_GetCount( HWND_FRMEXPLORER ) > 0 then
         bPromoteAtTop = ( PsListTree_GetItemData( HWND_FRMEXPLORER, 0 ) = EXPLORER_PROMOTE_ROW )
     end if
+    ' EVERY Explorer row resolves to a real document or to nothing. This is the invariant
+    ' that a hand-written guard at each call site could not deliver: the promotion row's
+    ' sentinel is a NON-NULL value that is not a valid pointer, so a reader that casts and
+    ' then tests "if pDoc then" passes the test and dereferences address 1. That shipped --
+    ' three readers were guarded and the tooltip callback was missed, giving a GPF on hover.
+    ' Asserted over all rows rather than over the row that happens to be special today.
+    dim as long nBadRow = -1
+    for i as long = 0 to PsListTree_GetCount( HWND_FRMEXPLORER ) - 1
+        if PsListTree_IsHeader( HWND_FRMEXPLORER, i ) then continue for
+        dim as clsDocument ptr pRowDoc = frmExplorer_DocFromRow( HWND_FRMEXPLORER, i )
+        if pRowDoc = 0 then continue for
+        if gApp.IsValidDocumentPointer( pRowDoc ) = false then nBadRow = i: exit for
+    next
+    Workspace_Check( "every Explorer row resolves to a live document or to nothing", _
+        nBadRow = -1, iif( nBadRow = -1, "all rows clean", "row " & str(nBadRow) ) )
+
     Workspace_Check( "the promotion row is present iff the workspace is untitled", _
         bPromoteAtTop = ( gApp.IsProjectNamed() = false ), _
         iif( gApp.IsProjectNamed(), "named", "untitled" ) & _
