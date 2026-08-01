@@ -8,6 +8,13 @@
 ' AfxNova, and every host in this family says "using AfxNova" -- so ANY identifier named "ok"
 ' becomes a duplicate definition. The family convention is bOK.
 #include once "PsBufferPaint.bi"
+' An icon slot can hold a real image file (.ico/.png/.bmp/.jpg) instead of a Fluent glyph.
+' PsImage owns the decode; PsBufferPaint.PaintImage does the draw. See PsButton_SetImageLeft.
+#include once "PsImage.bi"
+' The tooltip backend switch. The control ships on the SYSTEM (comctl32) backend exactly as it
+' always has; a host opts this instance into PsTooltip with PsButton_SetTooltipMode. PsTipHost
+' holds both backends and is what keeps the hover time honoured across a switch.
+#include once "PsTipHost.bi"
 
 ' Polling timer that guarantees hot-tracking is cleared when the mouse leaves the control.
 ' WM_MOUSELEAVE (TME_LEAVE) is not reliably delivered on fast exits, so a periodic cursor
@@ -156,6 +163,12 @@ type PSBUTTON_PAINTINFO
     wszText       as DWSTRING
     wszGlyphLeft  as DWSTRING
     wszGlyphRight as DWSTRING
+    ' Resolved image handles for the two icon cells, or NULL. When set, the icon slot draws
+    ' this image (via p->b->PaintImage) INSTEAD OF the glyph -- a custom PaintCallback should
+    ' honour it the same way, image first. The PsBufferPaint owns nothing here; the control's
+    ' PsImage does.
+    pImageLeft    as CGpImage ptr
+    pImageRight   as CGpImage ptr
     nTextAlign    as long              ' BTN_ALIGN_*; map it to DT_LEFT / DT_CENTER / DT_RIGHT
 end type
 
@@ -223,7 +236,10 @@ type BTN_ClickCallbackSub as sub( byval hButton as HWND, byval id as long )
 
 type PSBUTTON
     hWin            as HWND
-    hToolTip        as HWND
+    ' The tooltip, whichever backend it is on. Replaces the old `hToolTip as HWND` +
+    ' `HoverTime as long` pair; PsButton_GetTooltipHandle still answers the comctl32 handle
+    ' for hosts that reach through it, and returns 0 while this instance is on PsTooltip.
+    tip             as PSTIPHOST
     ' Instance-lifetime buffer that TTN_GETDISPINFOW's lpszText is pointed at. It must NOT be
     ' the same field as wszTooltip below: that one is the host's authored text, and overwriting
     ' it with a callback's answer would silently promote a transient string into stored state.
@@ -231,11 +247,15 @@ type PSBUTTON
     idc_Button      as long = 0
     id              as long = 0        ' host command id, reported by ClickCallback
     itemData        as integer = 0     ' free-form host payload
-    HoverTime       as long = 250
     ' --- Content ---
     wszText         as DWSTRING        ' the caption. "" = no caption (and no icon gap spent)
     wszGlyphLeft    as DWSTRING        ' Segoe Fluent Icons codepoint(s), or ""
     wszGlyphRight   as DWSTRING        ' likewise
+    ' An icon slot holds EITHER a Fluent glyph OR an image, never both: the setters keep that
+    ' invariant (SetImageLeft clears wszGlyphLeft, SetGlyphLeft frees pImageLeft). The control
+    ' OWNS these PsImage objects and frees them in WM_DESTROY. NULL = no image on that side.
+    pImageLeft      as PsImage ptr
+    pImageRight     as PsImage ptr
     wszTooltip      as DWSTRING        ' "" = ask TooltipCallback, then show nothing
     ' --- State. All single-valued: there is exactly one of this control, so unlike the
     '     collection siblings there are no indices here to be left dangling, and none of their
@@ -244,6 +264,10 @@ type PSBUTTON
     isEnabled       as boolean = true
     isHot           as boolean = false  ' the mouse is over the client
     isFocused       as boolean = false
+    ' Set when a WM_KEYDOWN we consume will be followed by a WM_CHAR, so that character can be
+    ' swallowed too. Without it the character reaches DefWindowProc and the system BEEPS on
+    ' every Enter/Space -- the keystroke still works, so the beep is the only symptom.
+    bAteKeyDown   as boolean = false
     isPressed       as boolean = false  ' a live left press (see the capture note below)
     isDefault       as boolean = false  ' appearance only -- see PsButton_SetDefault
     hotTimerOn      as boolean = false  ' is the hot-tracking safety-net timer running?
@@ -326,12 +350,17 @@ function PSBUTTON.HasText() as boolean
     return (len( this.wszText ) > 0)
 end function
 
+' An icon cell is present when the side carries EITHER a glyph OR a valid image. Layout, painter
+' and ideal-size arithmetic all read these, so the image has to count here or its cell is never
+' reserved and PaintImage draws into an empty rect.
 function PSBUTTON.HasIconLeft() as boolean
-    return (len( this.wszGlyphLeft ) > 0)
+    if len( this.wszGlyphLeft ) > 0 then return true
+    return (this.pImageLeft <> 0) andalso (this.pImageLeft->IsValid() <> 0)
 end function
 
 function PSBUTTON.HasIconRight() as boolean
-    return (len( this.wszGlyphRight ) > 0)
+    if len( this.wszGlyphRight ) > 0 then return true
+    return (this.pImageRight <> 0) andalso (this.pImageRight->IsValid() <> 0)
 end function
 
 
@@ -603,11 +632,17 @@ end sub
 '   the host's job -- this control claims Enter only when it is itself focused. Nothing stops a
 '   host marking two buttons default; the control does not police it.
 '
-' ICONS ARE GLYPHS FROM A FONT
+' AN ICON CELL HOLDS A GLYPH OR AN IMAGE, NEVER BOTH
 '   wszGlyphLeft / wszGlyphRight are Segoe Fluent Icons codepoints (or any font's), drawn with
-'   the SEPARATE font handed to PsButton_SetGlyphFont. The cell is DECLARED by
-'   PsButton_SetIconSize and never measured, so a glyph font too large for the cell clips rather
-'   than resizing the button. There is no HICON path.
+'   the SEPARATE font handed to PsButton_SetGlyphFont. Alternatively a cell holds a real image
+'   file (.ico/.png/.bmp/.jpg) set with PsButton_SetImageLeft / SetImageRight, fitted into the
+'   cell with the aspect preserved. The setters keep the invariant: setting an image clears
+'   that side's glyph, and setting a glyph frees that side's image.
+'
+'   The cell is DECLARED by PsButton_SetIconSize and never measured either way, so an image
+'   costs no layout change and a glyph font too large for the cell clips rather than resizing
+'   the button. There is still no HICON path -- an image comes from a file path (or from
+'   PsImage's HBITMAP/HICON wrappers), not from an HICON handed to this control.
 '
 ' NO MNEMONICS
 '   "&Save" draws a literal ampersand -- PsBufferPaint.PaintText forces DT_NOPREFIX, so this is
@@ -657,7 +692,12 @@ declare function PsButton_Create( byval hWndParent as HWND, byval CtrlID as long
 '     doors. (No sibling does this; it is here because a button is the control most likely to
 '     meet generic dialog code.)
 '   SetGlyphLeft / SetGlyphRight take the codepoint(s) to draw, or "" to remove that icon --
-'     which also gives back its cell AND its gap, so it changes the ideal width.
+'     which also gives back its cell AND its gap, so it changes the ideal width. Setting a
+'     glyph FREES any image on that side (the slot is glyph OR image, never both).
+'   SetImageLeft / SetImageRight take a file path (.ico/.png/.bmp/.jpg) and draw the image in
+'     that icon cell INSTEAD OF a glyph -- "" removes it. Returns non-zero on a successful load.
+'     Setting an image clears that side's glyph. The image fits the SAME declared icon cell a
+'     glyph would use (nIconWidth/nIconHeight), aspect preserved.
 '   SetID sets the value handed to ClickCallback. It is a HOST PAYLOAD and is never used as a
 '     command id by this control, so it cannot collide with anything.
 ' ----------------------------------------------------------------------------------------
@@ -667,6 +707,8 @@ declare function PsButton_GetGlyphLeft( byval hButton as HWND ) as DWSTRING
 declare sub      PsButton_SetGlyphLeft( byval hButton as HWND, byval Glyph as DWSTRING )
 declare function PsButton_GetGlyphRight( byval hButton as HWND ) as DWSTRING
 declare sub      PsButton_SetGlyphRight( byval hButton as HWND, byval Glyph as DWSTRING )
+declare function PsButton_SetImageLeft( byval hButton as HWND, byval Path as DWSTRING ) as long
+declare function PsButton_SetImageRight( byval hButton as HWND, byval Path as DWSTRING ) as long
 declare function PsButton_GetID( byval hButton as HWND ) as long
 declare sub      PsButton_SetID( byval hButton as HWND, byval id as long )
 declare function PsButton_GetItemData( byval hButton as HWND ) as integer
@@ -781,7 +823,34 @@ declare sub      PsButton_SetGlyphFont( byval hButton as HWND, byval hGlyphFont 
 declare function PsButton_GetTooltipText( byval hButton as HWND ) as DWSTRING
 declare sub      PsButton_SetTooltipText( byval hButton as HWND, byval Text as DWSTRING )
 declare function PsButton_GetTooltipHandle( byval hButton as HWND ) as HWND
+'
+' WHICH TOOLTIP DRAWS. PSTIP_MODE_SYSTEM (the default) is the comctl32 tip this control has
+' always used; PSTIP_MODE_PS is PsTooltip -- owner-drawn, themeable, wrapping without a
+' hand-sent TTM_SETMAXTIPWIDTH, and not a subclass of the control it serves. Switching adds NO
+' pump obligation either way: PsTooltip has no FilterMessage.
+'
+' The default is deliberate rather than cautious. PsTooltip's colour defaults are DARK, so a
+' control that switched itself would put a dark tip on a light form. Theme every tip at once
+' with PsTooltip_SetDefaultColors/Fonts/Style/MaxWidth before creating any control, then opt in
+' here per instance.
+'
+' Text is unaffected by the mode: both backends resolve it through the same rule (this
+' control's own text first, then TooltipCallback, then nothing).
+declare function PsButton_SetTooltipMode( byval hButton as HWND, byval nMode as long ) as boolean
+declare function PsButton_GetTooltipMode( byval hButton as HWND ) as long
+' The PsTooltip window, or 0 while this instance is on the system backend. This is the door to
+' PsTooltip's own SetColors / SetFonts / SetStyle / SetMaxWidth / SetTitle / SetGlyph -- they
+' are NOT mirrored here, deliberately: mirroring twenty setters across the thirteen controls
+' that carry a tooltip is 260 wrappers to keep in step.
+declare function PsButton_GetPsTooltipHandle( byval hButton as HWND ) as HWND
+'
+' The three delays, all in milliseconds and all honoured by BOTH backends -- a host's hover
+' time must not depend on which tooltip it is looking at. A delay never set keeps the backend's
+' own derivation from the system double-click time, which is what makes a tip appear on the
+' same beat as every other tip on the machine.
 declare sub      PsButton_SetHoverTime( byval hButton as HWND, byval milliseconds as long )
+declare sub      PsButton_SetAutoPopTime( byval hButton as HWND, byval milliseconds as long )
+declare sub      PsButton_SetReshowTime( byval hButton as HWND, byval milliseconds as long )
 
 ' ----------------------------------------------------------------------------------------
 ' Callbacks.  See the type declarations above for each signature and contract.

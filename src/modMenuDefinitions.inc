@@ -195,7 +195,7 @@ Function getMenuText( byval idMenu as long ) As DWSTRING
             end if
         case IDM_DEBUG_STOPDEBUGGING: wszText = L(254,"Stop Debugging")
         case IDM_DEBUG_PAUSE: wszText = L(601,"Break")
-        case IDM_DEBUG_STEPINTO: wszText = L(247,"Step Into")
+        case IDM_DEBUG_STEPINTO: wszText = L(247,"Step")
         case IDM_DEBUG_STEPOVER: wszText = L(248,"Step Over")
         case IDM_DEBUG_STEPOUT: wszText = L(255,"Step Out")
         case IDM_DEBUG_RUNTOCURSOR: wszText = L(256,"Run to Cursor")

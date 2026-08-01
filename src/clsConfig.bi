@@ -179,6 +179,23 @@ type clsConfig
         OutputFloatRight          as long = 0
         OutputFloatBottom         as long = 0
         OutputFloatMaximized      as long = false
+        ' The debugger window. The five geometry fields are SCALED screen coordinates, the
+        ' Startup/HelpStartup convention; a zero Right/Bottom is the "never saved" sentinel
+        ' that leaves frmDebug_Show's centred default in place.
+        '
+        ' The three splitters are NOT pixels. They are a PERCENT x 100 of the span each bar
+        ' divides, because this window is resizable and can reopen at a different size, on a
+        ' different monitor, at a different DPI -- where a stored pixel offset either sits
+        ' against an edge or lands outside the pane entirely. ShowPanelWidth above is stored
+        ' in pixels and gets away with it only because its window is a fixed-width dock.
+        DebugLeft                 as long = 0
+        DebugTop                  as long = 0
+        DebugRight                as long = 0
+        DebugBottom               as long = 0
+        DebugMaximized            as long = false
+        DebugSplitMain            as long = FRMDEBUG_DEFPCTMAIN
+        DebugSplitLeft            as long = FRMDEBUG_DEFPCTLEFT
+        DebugSplitRight           as long = FRMDEBUG_DEFPCTRIGHT
         FBWINCompiler32           as DWSTRING
         FBWINCompiler64           as DWSTRING
         CompilerBuild             as DWSTRING     ' Build GUID

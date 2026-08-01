@@ -135,6 +135,11 @@ function frmOutput_CreateListView( byval CtrlID as long ) as HWND
     PsListTree_SetPaintCallback( hCtl, @ListBox_LVPaintRow )
     PsListTree_SetHeaderPaintCallback( hCtl, @frmOutput_LVPaintHeader )
     PsListTree_SetHeaderTooltipCallback( hCtl, @frmOutput_HeaderTooltip )
+    ' PsTooltip, matching the rest of the application. WHICH tips appear is unchanged: with
+    ' no row callback PsListTree still falls back to the row's own column-0 text, so the
+    ' compiler-result and TODO rows keep the tip they have always had -- this changes only
+    ' what draws it.
+    PsListTree_SetTooltipMode( hCtl, PSTIP_MODE_PS )
     PsListTree_SetColumnAutoSizeCallback( hCtl, @ListBox_LVAutoSizeColumn )
     PsListTree_SetMessageCallback( hCtl, @frmOutput_LVMessage )
 
@@ -323,21 +328,62 @@ function frmOutput_PositionWindows() as LRESULT
     nTabsHeight = pWindow->ScaleY(OUTPUT_TABS_HEIGHT)
     dim as long nCellWidth  = pWindow->ScaleX(OUTPUT_CLOSE_WIDTH)
     dim as long nStripWidth = rc.right - rc.left
-    ' The "X" hides while floating. Read its OWN WS_VISIBLE bit, never IsWindowVisible:
-    ' that walks the ancestor chain, so with the panel itself hidden -- which is simply the
-    ' Output panel being closed, an entirely ordinary state -- every child reads as
-    ' invisible and the strip would be laid out for a missing button that is really there.
-    dim as boolean bCloseShown = _
-        (GetWindowLongPtr( HWND_FRMOUTPUT_CLOSE, GWL_STYLE ) and WS_VISIBLE) <> 0
+    ' The "X" hides while floating -- a window that carries its own caption X has no use for
+    ' a second one. That is asked of the DOCK STATE directly rather than read back out of the
+    ' button's WS_VISIBLE bit, which is what it used to do: the bit is set by
+    ' frmOutput_UpdateDockIcon, and a layout pass can run between the dock state flipping and
+    ' that sub catching up -- measured, it does -- so the strip was laid out for a button
+    ' whose visibility was one pass stale.
+    '
+    ' (The old comment about reading GWL_STYLE rather than IsWindowVisible was right about
+    ' IsWindowVisible: it walks the ancestor chain, so with the panel simply closed every
+    ' child reads as invisible. Asking the dock state sidesteps both hazards.)
+    dim as boolean bCloseShown = (frmOutputFloat_IsFloating() = false)
     dim as long nIconsWidth = nCellWidth + iif( bCloseShown, nCellWidth, 0 )
-    dim as long nIconsLeft  = nLeft + nStripWidth - nIconsWidth
+
+    ' Laid out RIGHT TO LEFT. The "X" owns the rightmost cell whether or not it is currently
+    ' shown, and the undock icon takes the cell to its left, or that same cell when there is
+    ' no "X" beside it. Built the other way round -- an origin derived from how many icons
+    ' are visible, then filled left to right -- the hidden "X" landed at exactly the strip's
+    ' right edge and hung off the corner of the window, which is visible for as long as any
+    ' pass shows it before the hide catches up.
+    dim as long nCloseLeft  = nLeft + nStripWidth - nCellWidth
+    dim as long nUndockLeft = nCloseLeft - iif( bCloseShown, nCellWidth, 0 )
 
     SetWindowPos( HWND_FRMOUTPUT_SELECTBAR, 0, _
                   nLeft, nTop, nStripWidth - nIconsWidth, nTabsHeight, SWP_NOZORDER )
     SetWindowPos( HWND_FRMOUTPUT_UNDOCK, 0, _
-                  nIconsLeft, nTop, nCellWidth, nTabsHeight, SWP_NOZORDER )
+                  nUndockLeft, nTop, nCellWidth, nTabsHeight, SWP_NOZORDER )
     SetWindowPos( HWND_FRMOUTPUT_CLOSE, 0, _
-                  nIconsLeft + nCellWidth, nTop, nCellWidth, nTabsHeight, SWP_NOZORDER )
+                  nCloseLeft, nTop, nCellWidth, nTabsHeight, SWP_NOZORDER )
+
+    if environ("TIKO_OUTPUTICONS_TRACE") = "1" then
+        dim as string sT = "  ICONS floating=" & str(frmOutputFloat_IsFloating()) & _
+            "  strip=" & str(nLeft) & ".." & str(nLeft + nStripWidth) & _
+            "  cell=" & str(nCellWidth) & "  closeShown=" & str(bCloseShown) & _
+            "  undockX=" & str(nUndockLeft) & "  closeX=" & str(nCloseLeft)
+        print sT
+        ' Read BACK from the windows, and in the FRAME's coordinates -- the numbers above are
+        ' what was asked for, which is not evidence about where anything landed.
+        dim as HWND hFrame = GetParent( HWND_FRMOUTPUT )
+        if IsWindow(hFrame) then
+            dim as RECT rcF, rcP, rcU, rcC
+            GetClientRect( hFrame, @rcF )
+            GetWindowRect( HWND_FRMOUTPUT, @rcP )
+            GetWindowRect( HWND_FRMOUTPUT_UNDOCK, @rcU )
+            GetWindowRect( HWND_FRMOUTPUT_CLOSE, @rcC )
+            MapWindowPoints( HWND_DESKTOP, hFrame, cast(LPPOINT, @rcP), 2 )
+            MapWindowPoints( HWND_DESKTOP, hFrame, cast(LPPOINT, @rcU), 2 )
+            MapWindowPoints( HWND_DESKTOP, hFrame, cast(LPPOINT, @rcC), 2 )
+            sT = "    parent client 0.." & str(rcF.right) & _
+                 "   panel=" & str(rcP.left) & ".." & str(rcP.right) & _
+                 "   undock=" & str(rcU.left) & ".." & str(rcU.right) & _
+                 "   close=" & str(rcC.left) & ".." & str(rcC.right) & _
+                 iif( (GetWindowLongPtr(HWND_FRMOUTPUT_CLOSE, GWL_STYLE) and WS_VISIBLE) <> 0, _
+                      "  CLOSE-VISIBLE", "  close-hidden" )
+            print sT
+        end if
+    end if
 
     ' Re-push the captions so a language change is picked up, exactly as the old code did by
     ' rebuilding them here every time -- but only when one actually differs. SetText
@@ -1067,6 +1113,11 @@ function frmOutput_Show( byval hwndParent as HWND ) as LRESULT
     ' ShowWindow while the panel is floating. Both paint the same background and abut, so the
     ' seam is invisible; frmPanelMenu's left/right split established the pattern.
     HWND_FRMOUTPUT_UNDOCK = PsIconPanel_Create( HWND_FRMOUTPUT, IDC_FRMOUTPUT_BTNUNDOCK )
+    ' PsTooltip rather than the system tip, so this panel matches the seven forms migrated on
+    ' 2026-07-29 and picks up ghPopup's colours and the system tooltip FACE. Armed before any
+    ' SetTooltipText: PsTipHost builds the tool on first use and a tip inherits the defaults
+    ' current at that moment.
+    PsIconPanel_SetTooltipMode( HWND_FRMOUTPUT_UNDOCK, PSTIP_MODE_PS )
         PsIconPanel_SetFont( HWND_FRMOUTPUT_UNDOCK, ghFont(SYMBOLFONT_10) )
         PsIconPanel_SetJustify( HWND_FRMOUTPUT_UNDOCK, IP_JUSTIFY_CENTER )
         PsIconPanel_SetIconSize( HWND_FRMOUTPUT_UNDOCK, pWindow->ScaleX(20), pWindow->ScaleY(20) )
@@ -1081,6 +1132,7 @@ function frmOutput_Show( byval hwndParent as HWND ) as LRESULT
         PsIconPanel_SetColors( HWND_FRMOUTPUT_UNDOCK, @UndockColors )
 
     HWND_FRMOUTPUT_CLOSE = PsIconPanel_Create( HWND_FRMOUTPUT, IDC_FRMOUTPUT_BTNCLOSE )
+    PsIconPanel_SetTooltipMode( HWND_FRMOUTPUT_CLOSE, PSTIP_MODE_PS )
         PsIconPanel_SetFont( HWND_FRMOUTPUT_CLOSE, ghFont(SYMBOLFONT_10) )
         PsIconPanel_SetJustify( HWND_FRMOUTPUT_CLOSE, IP_JUSTIFY_CENTER )
         PsIconPanel_SetIconSize( HWND_FRMOUTPUT_CLOSE, pWindow->ScaleX(20), pWindow->ScaleY(20) )

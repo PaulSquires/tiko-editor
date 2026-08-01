@@ -333,6 +333,28 @@ sub Theme_ApplyHoverTips()
     Theme_ApplyTooltip( PsTabBar_GetPsTooltipHandle( HWND_FRMMAIN_TOPTABS ) )
     Theme_ApplyTooltip( PsStatusBar_GetPsTooltipHandle( HWND_FRMMAIN_STATUSBAR ) )
     Theme_ApplyTooltip( PsStatusBar_GetPsTooltipHandle( HWND_FRMMAIN_TOPTABSMENU ) )
+
+    ' The Output panel: two icons and two lists.
+    Theme_ApplyTooltip( PsIconPanel_GetPsTooltipHandle( HWND_FRMOUTPUT_UNDOCK ) )
+    Theme_ApplyTooltip( PsIconPanel_GetPsTooltipHandle( HWND_FRMOUTPUT_CLOSE ) )
+    Theme_ApplyTooltip( PsListTree_GetPsTooltipHandle( HWND_FRMOUTPUT_LVRESULTS ) )
+    Theme_ApplyTooltip( PsListTree_GetPsTooltipHandle( HWND_FRMOUTPUT_LVTODO ) )
+
+    ' The debugger's four panes.
+    Theme_ApplyTooltip( PsListTree_GetPsTooltipHandle( HWND_FRMDEBUG_LVGLOBALS ) )
+    Theme_ApplyTooltip( PsListTree_GetPsTooltipHandle( HWND_FRMDEBUG_LVLOCALS ) )
+    Theme_ApplyTooltip( PsListTree_GetPsTooltipHandle( HWND_FRMDEBUG_LVSTACK ) )
+    Theme_ApplyTooltip( PsListTree_GetPsTooltipHandle( HWND_FRMDEBUG_LVWATCH ) )
+
+    ' The debugger's nine buttons. Listed eagerly and unconditionally: the accessor answers 0
+    ' for a control on the system backend or a window that does not exist, and
+    ' Theme_ApplyTooltip ignores a non-window -- so this costs nothing while the debugger is
+    ' closed, which is the usual case.
+    for id as long = IDC_FRMDEBUG_CMDFIRST to IDC_FRMDEBUG_CMDLAST
+        Theme_ApplyTooltip( PsButton_GetPsTooltipHandle( frmDebug_GetButton(id) ) )
+    next
+    Theme_ApplyTooltip( PsButton_GetPsTooltipHandle( frmDebug_GetButton(IDC_FRMDEBUG_CMDADDWATCH) ) )
+    Theme_ApplyTooltip( PsButton_GetPsTooltipHandle( frmDebug_GetButton(IDC_FRMDEBUG_CMDDELWATCH) ) )
 end sub
 
 

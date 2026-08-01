@@ -245,8 +245,9 @@ declare function frmFindInProject_ActiveEdit( byref pDocOut as clsDocument ptr )
 dim shared as HWND HWND_FRMBUILDCONFIG, HWND_FRMUSERTOOLS, HWND_FRMABOUT
 dim shared as HWND HWND_FRMABOUT_TABS, HWND_FRMABOUT_CREDITS, HWND_FRMABOUT_LICENSE
 dim shared as HWND HWND_FRMKEYBOARD, HWND_FRMKEYBOARDEDIT
-dim shared as HWND HWND_FRMDEBUG, HWND_FRMDEBUG_LVVARS, HWND_FRMDEBUG_LVSTACK
-dim shared as HWND HWND_FRMDEBUG_SELECTBAR, HWND_FRMDEBUG_SPLITTER
+dim shared as HWND HWND_FRMDEBUG, HWND_FRMDEBUG_LVGLOBALS, HWND_FRMDEBUG_LVLOCALS
+dim shared as HWND HWND_FRMDEBUG_LVSTACK, HWND_FRMDEBUG_LVWATCH
+dim shared as HWND HWND_FRMDEBUG_SPLITMAIN, HWND_FRMDEBUG_SPLITLEFT, HWND_FRMDEBUG_SPLITRIGHT
 
 dim shared as HWND HWND_FRMMAIN_TOPTABS, HWND_FRMMAIN_TOPTABSMENU
 dim shared as HWND HWND_FRMMAIN_TOPTABSINFO, HWND_FRMMAIN_FIND, HWND_FRMMAIN_REPLACE
@@ -390,7 +391,10 @@ const OUTPUT_PANEL_MIN_HEIGHT = OUTPUT_TABS_HEIGHT * 2
 ' Width reserved at the right of the Output tab strip for the close "X" PsIconPanel. The
 ' glyph cell itself is smaller; the surplus is the breathing room the old hand-drawn rect
 ' got from its 10px right margin.
-const OUTPUT_CLOSE_WIDTH = 40
+' The cell each Output strip icon gets. The GLYPH is 20 unscaled and centred in it, so this
+' number IS the spacing: at 40 the two icons sat a full icon-width apart and read as two
+' unrelated controls rather than a pair.
+const OUTPUT_CLOSE_WIDTH = 30
 const PANEL_ICON_HEIGHT = 24
 
 ' Debounce timer on HWND_FRMMAIN: restarted on every editor modification;
@@ -435,7 +439,7 @@ dim shared as wstring * 10 _
     wszIconSplitEditor, wszIconThemes, _
     wszIconSettings, wszIconCheckBoxEmpty, wszIconCheckBoxMarked, _
     wszIconContinue, wszIconStop, wszIconStepNext, wszIconStepOver, wszIconStepOut, wszIconRunToCursor, _
-    wszIconPause, _
+    wszIconPause, wszIconSortAsc, wszIconSortDesc, wszIconTrash, _
     wszIconSave, wszIconFind, wszIconToggleReplace, _
     wszIconGotoMain, wszIconGotoHeader, wszIconGotoSource, _
     wszIconUndock, wszIconDock, _
@@ -521,6 +525,13 @@ dim shared spinner(0 to 7) as DWSTRING => { _
     wszIconStepOver          = !"\uEE35"     ' reply mirrored
     wszIconStepOut           = wszIconUpArrow
     wszIconRunToCursor       = !"\uE623"     ' next solid
+
+    ' Column sort indicators, drawn by the host because PsColumnHeader never sorts and
+    ' therefore never draws one. Escapes, NOT pasted characters -- a pasted U+E70E in a
+    ' BOM-less file is read as three Latin-1 bytes and renders as mojibake (PsToolbar).
+    wszIconSortAsc           = !"\uE70E"     ' chevron up
+    wszIconSortDesc          = !"\uE70D"     ' chevron down
+    wszIconTrash             = !"\uE74D"     ' trashcan - delete the selected watch
 
     ' Autocomplete popup kind markers. Plain geometric characters drawn in the regular
     ' GUI font, NOT Segoe Fluent Icons: the popup already switches colour per kind, and
