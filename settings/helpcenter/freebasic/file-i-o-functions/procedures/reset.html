@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reset — Help Center</title>
+<meta name="description" content="Closes all open files, or resets standard I/O handles.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/file-i-o-functions/procedures/reset.html">
+<meta property="og:title" content="Reset">
+<meta property="og:description" content="Closes all open files, or resets standard I/O handles.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/file-i-o-functions/procedures/reset.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/file-i-o-functions/procedures/reset.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>Reset<span class="h1kind">sub</span></h1>
+<p class="lede">Closes all open files, or resets standard I/O handles.</p>
+<div class="badges"><a class="badge" href="../index.html">File I/O Functions</a><span class="badge">sub</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>Declare Sub Reset ( )</code></pre>
+<pre class="code sig"><code>Declare Sub Reset ( ByVal streamno As Long )</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>streamno</code></td><td></td><td>The stream number to reset, <code>0</code> for stdin or <code>1</code> for stdout.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<br>
+<code><b>Reset</b></code>, when called with no arguments, closes all disk files.<br>
+<br>
+<code><b>Reset</b></code>, when called with the <code><i>streamno</i></code> argument, will reset the redirected or piped streams associated with stdin (<code>0</code>), or stdout (<code>1</code>).<br>
+<br>
+<b>Runtime errors:</b><br>
+<code><b>Reset(<i>streamno</i>)</b></code> can set one of the following <a href="../../language-documentation/other/error-handling.html">runtime errors</a>:<br>
+<br>
+<i>(<code>1</code>) Illegal function call</i><br>
+<ul><ul><li> <code><i>streamno</i></code> was neither <code>0</code> nor <code>1</code><br>
+<br>
+</li></ul></ul><i>(<code>3</code>) File I/O error</i><br>
+<ul><ul><li> Resetting of stdin or stdout failed<br>
+<br>
+</li></ul></ul>
+<h2>Remarks</h2>
+<h3>Usage</h3><code><br>
+<b>Reset</b><br>
+<i>or</i><br>
+<b>Reset</b>( <i>streamno</i> )<br>
+</code><br>
+
+<h3>Differences from QB</h3><br>
+<ul><li> None for <code><b>Reset</b>()</code>.<br>
+<li> The <code><b>Reset</b>(<i>streamno</i>)</code> usage is new to FreeBASIC.<br>
+<br>
+</li></li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="close.html">Close</a></code><br>
+<li> <code><a href="open.html">Open</a></code><br>
+<li> <code><a href="open-cons.html">Open Cons</a></code><br>
+<li> <code><a href="../../operating-system-functions/procedures/isredirected.html">IsRedirected</a></code><br>
+<br>
+</li></li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-kw">Open</span> <span>&quot;test.txt&quot;</span> <span class="tok-kw">For</span> <span class="tok-kw">Output</span> <span class="tok-kw">As</span> <span>#</span><span class="tok-nu">1</span>
+
+<span class="tok-kw">Print</span> <span>#</span><span class="tok-nu">1</span><span>,</span> <span>&quot;testing 123&quot;</span>
+
+<span class="tok-kw">Reset</span></pre></code><br>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span>x</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+
+
+<span class="tok-cm">'' Read from STDIN from piped input</span>
+
+<span class="tok-kw">Open</span> <span class="tok-kw">Cons</span> <span class="tok-kw">For</span> <span class="tok-kw">Input</span> <span class="tok-kw">As</span> <span>#</span><span class="tok-nu">1</span>
+
+<span class="tok-kw">While</span> <span class="tok-kw">EOF</span><span>(</span><span class="tok-nu">1</span><span>)</span> <span>=</span> <span class="tok-nu">0</span>
+
+  <span class="tok-kw">Input</span> <span>#</span><span class="tok-nu">1</span><span>,</span> <span>x</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;&quot;&quot;&quot;</span><span>;</span> <span>x</span><span>;</span> <span>&quot;&quot;&quot;&quot;</span>
+
+<span class="tok-kw">Wend</span>
+
+<span class="tok-kw">Close</span> <span>#</span><span class="tok-nu">1</span>
+
+
+
+<span class="tok-cm">'' Reset to read from the keyboard</span>
+
+<span class="tok-kw">Reset</span><span>(</span><span class="tok-nu">0</span><span>)</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;Enter some text:&quot;</span>
+
+<span class="tok-kw">Input</span> <span>x</span>
+
+
+
+<span class="tok-cm">'' Read from STDIN (now from keyboard)</span>
+
+<span class="tok-kw">Open</span> <span class="tok-kw">Cons</span> <span class="tok-kw">For</span> <span class="tok-kw">Input</span> <span class="tok-kw">As</span> <span>#</span><span class="tok-nu">1</span>
+
+<span class="tok-kw">While</span> <span class="tok-kw">EOF</span><span>(</span><span class="tok-nu">1</span><span>)</span> <span>=</span> <span class="tok-nu">0</span>
+
+  <span class="tok-kw">Input</span> <span>#</span><span class="tok-nu">1</span><span>,</span> <span>x</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;&quot;&quot;&quot;</span><span>;</span> <span>x</span><span>;</span> <span>&quot;&quot;&quot;&quot;</span>
+
+<span class="tok-kw">Wend</span>
+
+<span class="tok-kw">Close</span> <span>#</span><span class="tok-nu">1</span></pre></code><br>
+<div class="indent">Note: Under Windows, to specify to the program that data entry is completed (transfer EOF), you can press CTRL+Z then press ENTER.<br>
+<br>
+</div>
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgReset.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

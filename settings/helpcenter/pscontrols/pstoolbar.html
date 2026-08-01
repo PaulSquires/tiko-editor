@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PsToolbar — Help Center</title>
+<meta name="description" content="An owner-drawn command toolbar for FreeBASIC / Win32. A horizontal strip of buttons, each with an optional icon and an optional caption, plus separators, split buttons, dropdown buttons, and cells that hold a child window of your own. When the strip runs out of room the items that no longer fit move">
+<link rel="canonical" href="https://www.planetsquires.com/docs/pscontrols/pstoolbar.html">
+<meta property="og:title" content="PsToolbar">
+<meta property="og:description" content="An owner-drawn command toolbar for FreeBASIC / Win32. A horizontal strip of buttons, each with an optional icon and an optional caption, plus separators, split buttons, dropdown buttons, and cells that hold a child window of your own. When the strip runs out of room the items that no longer fit move">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/pscontrols/pstoolbar.html">
+<link rel="stylesheet" href="../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="pscontrols/pstoolbar.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../index.html">Help Center</a><span>›</span><a href="../index.html">PlanetSquires Controls</a></div>
+<h2 id="pstoolbar">PsToolbar</h2>
+<p>An owner-drawn command toolbar for FreeBASIC / Win32. A horizontal strip of buttons, each with an optional icon and an optional caption, plus separators, split buttons, dropdown buttons, and cells that hold a child window of your own. When the strip runs out of room the items that no longer fit move into an overflow menu behind a chevron.</p>
+<p>Items belong to one end of the bar or the other: left-gravity items pack forward from the left, right-gravity items pack against the right edge, so the "settings and help on the right" layout is expressed directly rather than by arithmetic. Toggle items can latch independently or form a mutually exclusive radio group.</p>
+<p>The control owns its own painting, its geometry, its dropdown menus and its tooltips. It does <strong>not</strong> own your commands or your child windows: a <code>TBR_KIND_CONTROL</code> cell positions a window you created and destroys nothing, and the contents of a split or dropdown button's menu are yours to fill. It is <strong>mouse-driven only</strong> — it takes no focus and no tab stop, so it never steals the caret from an editor, and it has no keyboard interface of its own.</p>
+<p>Repository: &lt;<a href="https://github.com/PaulSquires/PsToolbar&gt;" target="_blank" rel="noopener">https://github.com/PaulSquires/PsToolbar&gt;</a></p>
+<h3 id="what-it-looks-like">What it looks like</h3>
+<p><img src="PsToolbar.png" alt="PsToolbar"></p>
+<h3 id="requirements">Requirements</h3>
+<div class="table-wrap"><table><thead><tr><th>File</th><th>Purpose</th></tr></thead><tbody><tr><td><code>PsToolbar.bi</code> / <code>PsToolbar.inc</code></td><td>the control</td></tr><tr><td><code>PsPopupMenu.bi</code> / <code>PsPopupMenu.inc</code></td><td>dropdown and overflow menus</td></tr><tr><td><code>PsBufferPaint.bi</code> / <code>PsBufferPaint.inc</code></td><td>the flicker-free drawing surface</td></tr><tr><td><code>PsImage.bi</code> / <code>PsImage.inc</code></td><td>the image loader behind <code>PsToolbar_SetItemImage</code>. Required even if you only ever use glyphs: <code>PsToolbar.bi</code> includes it.</td></tr><tr><td><code>PsTipHost.bi</code> / <code>PsTipHost.inc</code></td><td>the tooltip backend switch — see <em>Tooltips: two backends</em></td></tr><tr><td><code>PsTooltip.bi</code> / <code>PsTooltip.inc</code></td><td>the owner-drawn tooltip. Required even if you never switch to it: <code>PsTipHost.inc</code> includes it.</td></tr><tr><td><code>SegoeFluentIcons.ttf</code></td><td>optional — only if you use Segoe Fluent Icons glyphs</td></tr></tbody></table></div>
+<p>Copy all twelve source files into your project. If you already vendor <code>PsPopupMenu</code>, <code>PsBufferPaint</code>, <code>PsImage</code>, <code>PsTipHost</code> or <code>PsTooltip</code>, you get one copy of each — <code>#include once</code> dedupes by resolved path.</p>
+<h4 id="include-order">Include order</h4>
+<p><code>PsToolbar.bi</code> names types from both siblings, so their implementations must be compiled in first:</p>
+<pre class="code" data-lang="freebasic"><code>#include once "PsBufferPaint.inc"
+#include once "PsPopupMenu.inc"
+#include once "PsToolbar.inc"</code></pre>
+<p><code>PsToolbar.inc</code> includes <code>PsImage.inc</code> and <code>PsTipHost.inc</code> (which in turn includes <code>PsTooltip.inc</code>) for you, so those three add no line to your host.</p>
+<h4 id="gdi-must-be-running">GDI+ must be running</h4>
+<p>All geometry is drawn through GDI+. Initialise it before the first repaint and shut it down after every window is destroyed:</p>
+<pre class="code" data-lang="freebasic"><code>dim as ULONG_PTR gdipToken = AfxGdipInit()
+    ' ... create windows, run the message loop ...
+AfxGdipShutdown( gdipToken )</code></pre>
+<p>Without this the control draws nothing at all.</p>
+<h4 id="never-name-an-identifier-ok">Never name an identifier <code>ok</code></h4>
+<p>GDI+ defines <code>Ok = 0</code> as a <code>Status</code> enum value in namespace <code>AfxNova</code>, and hosts say <code>using AfxNova</code>. FreeBASIC is case-insensitive, so any variable of yours called <code>ok</code> becomes a duplicate definition the moment you adopt this control. Use <code>bOK</code>.</p>
+<h4 id="the-message-pump--required">The message pump — required</h4>
+<p><code>PsToolbar_FilterMessage</code> is <strong>mandatory</strong>. Call it for every toolbar, before your accelerator and dispatch handling:</p>
+<pre class="code" data-lang="freebasic"><code>do while GetMessage( @uMsg, null, 0, 0 )
+    if PsToolbar_FilterMessage( hToolbar, @uMsg ) then continue do
+    TranslateMessage @uMsg
+    DispatchMessage  @uMsg
+loop</code></pre>
+<p>Without it a dropdown has no keyboard navigation, never closes when you click outside it, and cannot be closed by clicking the very chevron that opened it. The call returns immediately when none of that toolbar's menus are open, so calling it for several toolbars costs almost nothing.</p>
+<p>There is no <code>IsDialogMessage</code> obligation for the toolbar itself — it takes no tab stop. If you put a <code>TBR_KIND_CONTROL</code> child in it that should be reachable by Tab, your form needs <code>IsDialogMessage</code> as it would for any other child control.</p>
+<h3 id="quick-start">Quick start</h3>
+<pre class="code" data-lang="freebasic"><code>ghToolbar = PsToolbar_Create( hMain, IDC_TOOLBAR )
+
+PsToolbar_SetTextFont(  ghToolbar, ghFont(GUIFONT_10) )
+PsToolbar_SetGlyphFont( ghToolbar, ghFont(SYMBOLFONT_12) )
+PsToolbar_SetClickCallback( ghToolbar, @OnToolbarClick )
+
+PsToolbar_AddItem( ghToolbar, TBR_KIND_COMMAND, !"\uE7C3", "New",  IDM_NEW )
+PsToolbar_AddItem( ghToolbar, TBR_KIND_COMMAND, !"\uE8E5", "Open", IDM_OPEN )
+PsToolbar_AddSeparator( ghToolbar )
+
+' A split button: the left half runs, the chevron drops a menu.
+dim as long idxRun = PsToolbar_AddItem( ghToolbar, TBR_KIND_SPLIT, !"\uE768", "Run", IDM_RUN )
+
+' Pinned to the right-hand end.
+dim as long idxCfg = PsToolbar_AddItem( ghToolbar, TBR_KIND_COMMAND, !"\uE713", "", IDM_SETTINGS )
+PsToolbar_SetItemGravity(  ghToolbar, idxCfg, TBR_GRAVITY_RIGHT )
+PsToolbar_SetTooltipText(  ghToolbar, idxCfg, "Settings" )
+
+ShowWindow( ghToolbar, SW_SHOW )</code></pre>
+<p>Size and place it like any window — <code>PsToolbar_GetIdealSize</code> gives you the height it wants and the width it would need in order not to overflow:</p>
+<pre class="code" data-lang="freebasic"><code>dim as long nWant, nHeight
+PsToolbar_GetIdealSize( ghToolbar, nWant, nHeight )
+SetWindowPos( ghToolbar, 0, rc.left, rc.top, rc.right - rc.left, nHeight, SWP_NOZORDER )</code></pre>
+<p>Write icon glyphs as <code>!"\uXXXX"</code> escape sequences, never as literal characters pasted into the source. FreeBASIC reads a source file that has no UTF-8 BOM as raw bytes, so a pasted Segoe Fluent Icons character arrives as three unrelated Latin-1 characters and draws garbage. The escape form is converted by the compiler and works whatever the file encoding.</p>
+<p>The click callback:</p>
+<pre class="code" data-lang="freebasic"><code>sub OnToolbarClick( byval hToolbar as HWND, byval idx as long, byval id as long )
+    select case id
+    case IDM_NEW  : DoFileNew()
+    case IDM_OPEN : DoFileOpen()
+    end select
+end sub</code></pre>
+<h3 id="concepts">Concepts</h3>
+<h4 id="the-control-handle-is-a-real-hwnd">The control handle is a real HWND</h4>
+<p><code>PsToolbar_Create</code> returns an ordinary <code>HWND</code>. Move and size it with <code>SetWindowPos</code>, show it with <code>ShowWindow</code>. It is created zero-sized, so nothing appears until you place it.</p>
+<h4 id="item-kinds">Item kinds</h4>
+<div class="table-wrap"><table><thead><tr><th>Kind</th><th>Behaviour</th></tr></thead><tbody><tr><td><code>TBR_KIND_COMMAND</code></td><td>Momentary. Draws pressed while held, fires <code>ClickCallback</code> on a matched release.</td></tr><tr><td><code>TBR_KIND_TOGGLE</code></td><td>Latches. Fires <code>SelChangeCallback</code>. With a group id it becomes a radio button.</td></tr><tr><td><code>TBR_KIND_SEPARATOR</code></td><td>A vertical rule the control draws. Never hit-testable.</td></tr><tr><td><code>TBR_KIND_SPLIT</code></td><td>Two zones: an action zone that behaves like <code>COMMAND</code>, and a chevron zone that opens the item's menu.</td></tr><tr><td><code>TBR_KIND_DROPDOWN</code></td><td>The whole cell opens the item's menu. No action zone.</td></tr><tr><td><code>TBR_KIND_CONTROL</code></td><td>A cell of declared width holding a child window you created.</td></tr></tbody></table></div>
+<h4 id="geometry-is-derived-never-set">Geometry is derived, never set</h4>
+<p>You supply paddings, an icon size, a text gap and per-item overrides; the control computes every rectangle. Layout is lazy — a burst of <code>AddItem</code> calls costs one layout pass, and any geometry query forces a pending one, so results are always current.</p>
+<pre class="code"><code>cellWidth = padBefore + content + padAfter
+
+content   = iconWidth                                      icon only
+          = textWidth                                      caption only
+          = iconWidth + textGap + textWidth                 both
+          = separatorWidth                                  SEPARATOR
+          = controlWidth                                    CONTROL
+          + chevronGap + dividerThickness + chevronWidth     SPLIT
+          + chevronGap +                    chevronWidth     DROPDOWN
+
+idealHeight = padTop + max( textHeight, iconHeight ) + padBottom</code></pre>
+<p>A gap is charged <strong>only when there is something on both sides of it</strong>, so an icon-only item is legitimately narrower than a captioned neighbour, and icon-only, caption-only and icon+caption all come out of one formula.</p>
+<h4 id="gravity-and-where-the-overflow-chevron-sits">Gravity, and where the overflow chevron sits</h4>
+<p>Left-gravity items pack forward from the client's left edge in the order you added them. Right-gravity items pack against the right edge, also in the order you added them, so the <em>last</em> right-gravity item sits hard against the right edge. The overflow chevron appears immediately inboard of the right-hand run — at the trailing edge of the flowing area, where a user looks for it — so it never displaces a pinned right-hand item.</p>
+<p>When the run does not fit, items are moved into the overflow menu in this order:</p>
+<ol><li>from the <strong>tail of the left run</strong> (its last item first), then</li><li>from the <strong>front of the right run</strong> (its leftmost item first), so the outermost right-hand items survive longest.</li></ol>
+<p><code>TBR_KIND_CONTROL</code> cells are never moved into the menu — a window cannot live inside one. If a control cell cannot be placed at all it is hidden.</p>
+<h4 id="two-fonts">Two fonts</h4>
+<p>The <strong>text font</strong> is a layout input: changing it re-measures every caption and moves everything. The <strong>glyph font</strong> is a paint-time input only — the icon cell is a size you declare, never measured, so a glyph too large for its cell simply clips. Both fonts are borrowed; keep them alive and destroy them yourself.</p>
+<h4 id="an-icon-can-be-a-glyph-or-a-real-image">An icon can be a glyph or a real image</h4>
+<p>An item's icon slot holds <strong>either</strong> a Segoe Fluent Icons glyph <strong>or</strong> a picture loaded from a file — never both. The setters enforce that: <code>PsToolbar_SetItemImage</code> clears the glyph on a successful load, and <code>PsToolbar_SetGlyph</code> frees the image.</p>
+<p>The image is fitted into the <strong>same declared icon cell a glyph would charge</strong>, aspect preserved, so switching an item from a glyph to a picture costs no layout change and no re-sizing of the bar. An item with neither charges no icon cell at all.</p>
+<pre class="code" data-lang="freebasic"><code>PsToolbar_SetItemImage( ghToolbar, idxRun, AfxGetExePathName() &amp; "icons\run.png" )</code></pre>
+<p>The toolbar <strong>owns</strong> every image it loaded and frees it for you — on <code>PsToolbar_DeleteItem</code>, on <code>PsToolbar_Clear</code>, and when the control is destroyed. Chevrons and the overflow button are always glyphs; there is no image path for the bar's own chrome.</p>
+<h4 id="programmatic-setters-are-silent">Programmatic setters are silent</h4>
+<p><code>PsToolbar_SetSelected</code> changes state without firing <code>SelChangeCallback</code>, which is what makes it safe to call from inside your own handler. Only user interaction notifies. The two exceptions are named as actions rather than setters: <code>PsToolbar_Click</code> and <code>PsToolbar_Toggle</code> <strong>do</strong> fire, which is how an accelerator drives the toolbar.</p>
+<h4 id="radio-groups">Radio groups</h4>
+<p>Give two or more <code>TBR_KIND_TOGGLE</code> items the same non-zero group id and checking one unchecks the others. Both edges are reported, <strong>loser first</strong>, and both state writes land before either callback — so a handler that reads the whole group sees a coherent one rather than a moment with two members checked. Clicking the member that is already checked is a silent no-op, exactly as a radio button behaves. "Nothing checked" is a legal state you can set programmatically but the user cannot reach.</p>
+<h4 id="menus-are-themed-from-the-bar">Menus are themed from the bar</h4>
+<p><code>PSPOPUPMENU_COLORS</code> carries no defaults except its separator colour, so a popup menu that is never given colours renders black on black. Every menu this toolbar creates is therefore themed from <code>PSTOOLBAR_COLORS</code> at creation, and re-themed whenever you call <code>PsToolbar_SetColors</code> — so theming the bar themes its menus for free and you set one palette.</p>
+<p>If you want a different look for the menus, <code>PsToolbar_SetMenuColors</code> claims them permanently: from then on a bar re-theme leaves them alone, and menus created later still get your palette.</p>
+<h4 id="menus-are-owned-by-the-toolbar-filled-by-you">Menus are owned by the toolbar, filled by you</h4>
+<p><code>PsToolbar_GetItemMenu</code> creates the item's <code>PsPopupMenu</code> on first call and hands it to you. Fill it like any popup menu, and handle its commands with <strong><code>PsPopupMenu_SetSelectCallback</code></strong> — do not call <code>PsPopupMenu_SetNotifyWindow</code> on it, because the toolbar registers itself there to track the menu's open/closed state. The toolbar destroys every menu it created when it is destroyed.</p>
+<p>The <strong>overflow</strong> menu is different: its contents are rebuilt from scratch on every open, so rows you add to it will be gone next time. Its row ids are <code>item index + 1</code>, so your own command ids never enter its command stream. Picking a row activates that item exactly as clicking it on the strip would, through the same code path — your <code>ClickCallback</code> does not need to know which happened.</p>
+<h4 id="child-windows-in-a-control-cell">Child windows in a CONTROL cell</h4>
+<p>Parent the child to the <strong>toolbar</strong>, not to your form: the toolbar positions it with <code>SetWindowPos</code> in its own client coordinates. You create it, you own it, you destroy it. On <code>PsToolbar_DeleteItem</code> or <code>PsToolbar_Clear</code> the child is hidden and forgotten, never destroyed.</p>
+<p><strong>Reading it</strong> needs nothing from the toolbar — you created the window, so use it directly. <code>PsToolbar_GetItemChild</code> hands back the <code>HWND</code> if you did not keep it, and <code>PsToolbar_FindItemByChild</code> goes the other way.</p>
+<p><strong>Hearing from it</strong> does need something, because parenting the child here is what makes the cell work and is also what intercepts its notifications: <code>WM_COMMAND</code> (<code>EN_CHANGE</code>, <code>EN_SETFOCUS</code>, <code>CBN_SELCHANGE</code>, …), <code>WM_NOTIFY</code> and the <code>WM_CTLCOLOR*</code> family are all sent to "the parent", which is now the toolbar rather than your form. Two ways to get them back:</p>
+<ul><li><strong>Do nothing.</strong> Anything the toolbar is not asked to claim is <strong>forwarded to the toolbar's own parent</strong>, so a form that already handles these in its window procedure keeps working unchanged.</li><li><strong>Register <code>PsToolbar_SetControlNotifyCallback</code></strong> and see them first.</li></ul>
+<p>The toolbar does not interpret notification codes and cannot: <code>EN_SETFOCUS</code>, <code>CBN_SETFOCUS</code> and <code>BN_SETFOCUS</code> are different numbers, and a generic cell does not know its child's class. You get the raw message with the item resolved. Selecting the text when a search box gains focus:</p>
+<pre class="code" data-lang="freebasic"><code>function OnControlNotify( byval m as PSTOOLBAR_CONTROLNOTIFY ptr ) as boolean
+    if m-&gt;uMsg &lt;&gt; WM_COMMAND then return false
+    if m-&gt;hChild &lt;&gt; ghSearchBox then return false
+
+    select case hiword( m-&gt;wParam )
+    case EN_SETFOCUS
+        SendMessageW( m-&gt;hChild, EM_SETSEL, 0, -1 )      ' select all
+    case EN_KILLFOCUS
+        dim as string sText = AfxGetWindowText( m-&gt;hChild )
+        ApplyFilter( sText )
+    end select
+    return false          ' observed, not claimed -- let it reach the form too
+end function</code></pre>
+<p>Return TRUE to claim a message, and set <code>m-&gt;lResult</code> first if it needs a return value — <code>WM_CTLCOLOR*</code> is answered with an <code>HBRUSH</code>. The toolbar supplies no default for those: it positions your child and never themes it, so an unclaimed <code>WM_CTLCOLOR*</code> behaves exactly as it would have without the toolbar.</p>
+<h4 id="keyboard-in-a-control-cell">Keyboard in a CONTROL cell</h4>
+<p><strong>Keystrokes do not arrive through the notify callback</strong>, and cannot: a key goes to the <em>focused</em> window, so a message merely destined for your child never passes through the toolbar at all. Enter, Escape and Tab in an embedded edit are handled in your <strong>message pump</strong>, and where you put the test is the whole difficulty:</p>
+<pre class="code" data-lang="freebasic"><code>do while GetMessage( @uMsg, null, 0, 0 )
+    ' 1. The toolbar first, so that while a dropdown is open ENTER commits the highlighted
+    '    menu row instead of reaching your control.
+    if PsToolbar_FilterMessage( hToolbar, @uMsg ) then continue do
+
+    ' 2. Your child's keys next -- BEFORE IsDialogMessage.
+    if uMsg.message = WM_KEYDOWN andalso uMsg.hwnd = ghSearchBox then
+        select case uMsg.wParam
+        case VK_RETURN : RunSearch() : continue do
+        case VK_ESCAPE : SetWindowTextW( ghSearchBox, "" ) : continue do
+        end select
+    end if
+
+    ' 3. Everything else.
+    if IsDialogMessage( hMain, @uMsg ) = 0 then
+        TranslateMessage @uMsg
+        DispatchMessage  @uMsg
+    end if
+loop</code></pre>
+<p>Put step 2 <strong>after</strong> <code>IsDialogMessage</code> and the keys never arrive: that call turns <code>VK_RETURN</code> into an <code>IDOK</code> command for the form and <code>VK_ESCAPE</code> into <code>IDCANCEL</code>. Consuming the key with <code>continue do</code> also stops a single-line <code>EDIT</code> beeping at an unhandled return.</p>
+<h3 id="behaviour-and-limits">Behaviour and limits</h3>
+<ul><li><strong>Horizontal only.</strong> There is no vertical orientation.</li><li><strong>No focus, no tab stop, no keyboard.</strong> The toolbar is mouse-driven. Reach commands from the keyboard through your own accelerators and <code>PsToolbar_Click</code>.</li><li><strong>The overflow menu does not scroll.</strong> <code>PsPopupMenu</code> has no scrolling, so an overflow list taller than the work area is clipped. This is a control for a dozen or so items squeezed into a narrow bar, not for fifty.</li><li><strong>Only one menu chain is open at a time.</strong> Opening a second dropdown closes the first, and the first reports its closing edge.</li><li><strong>A <code>TBR_KIND_CONTROL</code> cell is never moved into the overflow menu.</strong> If it cannot be placed it is hidden.</li><li><strong>Trimmed separators do not reclaim their space.</strong> A separator that ends up leading or trailing the visible run is suppressed and costs nothing, but the width it frees is not given back to another item — the overflow split is not recomputed.</li><li><strong>An icon-only item with no tooltip has no readable name.</strong> If it overflows it appears in the menu as <code>#n</code>. Give any item that might overflow a caption or a tooltip.</li><li><strong>A split button's chevron zone owns the trailing padding</strong>, so clicks near the right edge of a split button open the menu rather than firing the action.</li><li><strong>A dropdown opens on the button-down</strong>, not the release.</li><li><strong>No double-click.</strong> <code>CS_DBLCLKS</code> is off, so every click of a rapid pair is delivered — a toggle clicked twice quickly toggles twice.</li></ul>
+<h3 id="api-reference">API reference</h3>
+<h4 id="creation">Creation</h4>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Behaviour</th></tr></thead><tbody><tr><td><code>PsToolbar_Create( hWndParent, CtrlID ) as HWND</code></td><td>Creates the control, zero-sized. <code>CtrlID</code> becomes <code>GWLP_ID</code>.</td></tr></tbody></table></div>
+<h4 id="building-the-bar">Building the bar</h4>
+<p>The item set is fully dynamic. The control fixes up its own internal indices across a mutation; if <em>you</em> hold an item index across one, fix up yours.</p>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Behaviour</th></tr></thead><tbody><tr><td><code>PsToolbar_AddItem( h, itemKind, Glyph, Text, id, itemData ) as long</code></td><td>Appends. Returns the new index, or −1.</td></tr><tr><td><code>PsToolbar_InsertItem( h, idx, itemKind, Glyph, Text, id, itemData ) as long</code></td><td>Inserts at <code>idx</code>; <code>idx = count</code> appends. Returns <code>idx</code>, or −1 if past the end.</td></tr><tr><td><code>PsToolbar_AddSeparator( h ) as long</code></td><td>Appends a separator.</td></tr><tr><td><code>PsToolbar_AddControl( h, hChild, nControlWidth, nControlHeight, id ) as long</code></td><td>Appends a cell holding your child window. <code>nControlHeight = 0</code> fills the cell height.</td></tr><tr><td><code>PsToolbar_DeleteItem( h, idx ) as boolean</code></td><td>Removes one item, compacting the rest down. Destroys that item's menu; hides but never destroys its child window.</td></tr><tr><td><code>PsToolbar_Clear( h )</code></td><td>Removes every item, destroys every menu, hides every child, resets all internal state.</td></tr><tr><td><code>PsToolbar_Refresh( h )</code></td><td>Marks the layout stale and requests a repaint.</td></tr></tbody></table></div>
+<h4 id="counts-and-lookup">Counts and lookup</h4>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Behaviour</th></tr></thead><tbody><tr><td><code>PsToolbar_GetCount( h ) as long</code></td><td>Number of items, visible or not.</td></tr><tr><td><code>PsToolbar_IsValidItem( h, idx ) as boolean</code></td><td>Is <code>idx</code> in range.</td></tr><tr><td><code>PsToolbar_FindItemByID( h, id ) as long</code></td><td>First item with that id, or −1.</td></tr><tr><td><code>PsToolbar_HitTest( h, x, y ) as long</code></td><td>Item at that client point, or −1. Separators, hidden and overflowed items are excluded; disabled items are not.</td></tr><tr><td><code>PsToolbar_HitTestEx( h, x, y, byref nZone ) as long</code></td><td>As above and reports <code>TBR_ZONE_*</code>. The only way to tell a split button's action zone from its chevron. Returns −1 with <code>nZone = TBR_ZONE_OVERFLOW</code> over the overflow chevron.</td></tr></tbody></table></div>
+<h4 id="item-content-and-state">Item content and state</h4>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Behaviour</th></tr></thead><tbody><tr><td><code>PsToolbar_GetItemKind( h, idx ) as long</code></td><td><code>TBR_KIND_*</code>, or −1 for an invalid index.</td></tr><tr><td><code>PsToolbar_GetGlyph( h, idx ) as DWSTRING</code></td><td>The item's icon glyph.</td></tr><tr><td><code>PsToolbar_SetGlyph( h, idx, Glyph ) as boolean</code></td><td>Sets it. Adding or removing a glyph changes whether the icon cell and text gap are charged, so this re-lays out.</td></tr><tr><td><code>PsToolbar_SetItemImage( h, idx, Path ) as boolean</code></td><td>Loads a real <code>.ico</code> / <code>.png</code> / <code>.bmp</code> / <code>.jpg</code> into the item's icon cell <strong>instead of</strong> a glyph, and clears the glyph on success. <code>""</code> removes the image. Returns TRUE when the item ends up as you asked — a successful load, or a successful removal — and FALSE only for a bad index or a file that would not decode. Re-lays out.</td></tr><tr><td><code>PsToolbar_GetText( h, idx ) as DWSTRING</code></td><td>The item's caption.</td></tr><tr><td><code>PsToolbar_SetText( h, idx, Text ) as boolean</code></td><td>Sets it and re-measures.</td></tr><tr><td><code>PsToolbar_GetItemID( h, idx ) as long</code></td><td>The command id.</td></tr><tr><td><code>PsToolbar_SetItemID( h, idx, id ) as boolean</code></td><td>Sets it. No layout change.</td></tr><tr><td><code>PsToolbar_GetItemData( h, idx ) as integer</code></td><td>Free-form payload.</td></tr><tr><td><code>PsToolbar_SetItemData( h, idx, itemData ) as boolean</code></td><td>Sets it.</td></tr><tr><td><code>PsToolbar_GetSelected( h, idx ) as boolean</code></td><td>Is this toggle latched.</td></tr><tr><td><code>PsToolbar_SetSelected( h, idx, isSelected ) as boolean</code></td><td><strong>Silent</strong>, but still enforces a radio group — it will uncheck the item's group siblings.</td></tr><tr><td><code>PsToolbar_GetEnabled( h, idx ) as boolean</code></td><td></td></tr><tr><td><code>PsToolbar_SetEnabled( h, idx, isEnabled ) as boolean</code></td><td>Disabling greys the item, stops it going hot and makes it swallow clicks. Disabling the item under a live press cancels the press.</td></tr><tr><td><code>PsToolbar_GetVisible( h, idx ) as boolean</code></td><td></td></tr><tr><td><code>PsToolbar_SetVisible( h, idx, isVisible ) as boolean</code></td><td>Hiding removes the item from layout, hit-testing and overflow entirely — it stops occupying width, it is not merely blank. Hides a control cell's child too.</td></tr><tr><td><code>PsToolbar_GetItemGroupID( h, idx ) as long</code></td><td>0 = independent.</td></tr><tr><td><code>PsToolbar_SetItemGroupID( h, idx, nGroupID ) as boolean</code></td><td>Joins a radio group. If the item is already checked the group is enforced immediately, silently.</td></tr><tr><td><code>PsToolbar_FindCheckedInGroup( h, nGroupID ) as long</code></td><td>The checked member, or −1. Returns −1 for group id 0.</td></tr><tr><td><code>PsToolbar_GetItemGravity( h, idx ) as long</code></td><td><code>TBR_GRAVITY_LEFT</code> / <code>TBR_GRAVITY_RIGHT</code>.</td></tr><tr><td><code>PsToolbar_SetItemGravity( h, idx, nGravity ) as boolean</code></td><td>Moves the item to the other end of the bar.</td></tr><tr><td><code>PsToolbar_GetItemChild( h, idx ) as HWND</code></td><td>The child window of a control cell, or 0.</td></tr><tr><td><code>PsToolbar_FindItemByChild( h, hChild ) as long</code></td><td>The control item holding that child, or −1. The reverse of the above.</td></tr><tr><td><code>PsToolbar_Click( h, idx ) as boolean</code></td><td>An <strong>action</strong>: activates the item and <strong>fires</strong> <code>ClickCallback</code> (or toggles, or opens a dropdown, by kind). Refuses invalid, disabled, separator and control items. The door for an accelerator.</td></tr><tr><td><code>PsToolbar_Toggle( h, idx ) as boolean</code></td><td>Flips a toggle as a user click would, enforcing its group, and <strong>fires</strong> <code>SelChangeCallback</code>. Refuses anything that is not an enabled <code>TBR_KIND_TOGGLE</code>.</td></tr></tbody></table></div>
+<h4 id="geometry-and-layout">Geometry and layout</h4>
+<p>Bar-level setters take <strong>raw pixels</strong> — you DPI-scale them. Only the Create-time defaults are scaled for you. Every geometry query forces a pending layout.</p>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Behaviour</th></tr></thead><tbody><tr><td><code>PsToolbar_GetIconSize( h, byref w, byref hgt )</code></td><td></td></tr><tr><td><code>PsToolbar_SetIconSize( h, nIconWidth, nIconHeight )</code></td><td>Ignores values ≤ 0.</td></tr><tr><td><code>PsToolbar_GetPadding( h, byref before, byref after, byref top, byref bottom )</code></td><td></td></tr><tr><td><code>PsToolbar_SetPadding( h, nPadBefore, nPadAfter, nPadTop, nPadBottom )</code></td><td>Ignores negative values, so you can set one and pass −1 for the rest.</td></tr><tr><td><code>PsToolbar_GetTextGap( h ) as long</code></td><td></td></tr><tr><td><code>PsToolbar_SetTextGap( h, nTextGap )</code></td><td>Space between icon and caption. Charged only when there is a caption.</td></tr><tr><td><code>PsToolbar_GetSeparatorWidth( h ) as long</code></td><td></td></tr><tr><td><code>PsToolbar_SetSeparatorWidth( h, nSepWidth )</code></td><td>Thickness of a separator's rule.</td></tr><tr><td><code>PsToolbar_GetSeparatorHeight( h ) as long</code></td><td></td></tr><tr><td><code>PsToolbar_SetSeparatorHeight( h, nSepHeight )</code></td><td>0 derives the rule's height from the content band.</td></tr><tr><td><code>PsToolbar_GetChevronSize( h, byref w, byref gap )</code></td><td></td></tr><tr><td><code>PsToolbar_SetChevronSize( h, nChevronWidth, nChevronGap )</code></td><td>Width of the chevron zone, and the gap charged before it — before the chevron on a dropdown, before the divider on a split button.</td></tr><tr><td><code>PsToolbar_GetDividerThickness( h ) as long</code></td><td></td></tr><tr><td><code>PsToolbar_SetDividerThickness( h, nThickness )</code></td><td>The hairline inside a split button. Not DPI-scaled — a hairline stays a hairline.</td></tr><tr><td><code>PsToolbar_GetCornerCurvature( h ) as long</code></td><td></td></tr><tr><td><code>PsToolbar_SetCornerCurvature( h, nCurvature )</code></td><td>Rounding of the hot/pressed/selected fill; 0 is square. Repaints without re-laying out.</td></tr><tr><td><code>PsToolbar_SetItemPadding( h, idx, nPadBefore, nPadAfter ) as boolean</code></td><td>Per-item override; −1 goes back to inheriting.</td></tr><tr><td><code>PsToolbar_SetItemIconSize( h, idx, nIconWidth, nIconHeight ) as boolean</code></td><td>Per-item override; 0 goes back to inheriting.</td></tr><tr><td><code>PsToolbar_SetItemControlSize( h, idx, nControlWidth, nControlHeight ) as boolean</code></td><td>Resizes a control cell. Ignores negative values.</td></tr><tr><td><code>PsToolbar_GetItemRect( h, idx, byref rc ) as boolean</code></td><td>The whole cell. Empty for a hidden, overflowed or trimmed item.</td></tr><tr><td><code>PsToolbar_GetItemIconRect( h, idx, byref rc ) as boolean</code></td><td>The icon box — or, for a separator, the rule.</td></tr><tr><td><code>PsToolbar_GetItemTextRect( h, idx, byref rc ) as boolean</code></td><td>The caption <strong>span</strong>, not the ink. Empty when there is no caption.</td></tr><tr><td><code>PsToolbar_GetItemChevronRect( h, idx, byref rc ) as boolean</code></td><td>The chevron glyph box. Empty except on split and dropdown items.</td></tr><tr><td><code>PsToolbar_GetOverflowRect( h, byref rc ) as boolean</code></td><td>The overflow button's cell. Returns FALSE and an empty rect when nothing overflows.</td></tr><tr><td><code>PsToolbar_GetIdealSize( h, byref nWidth, byref nHeight )</code></td><td>Width the whole run wants, and the height the tallest content needs. Valid <strong>before</strong> the control has ever been sized.</td></tr><tr><td><code>PsToolbar_GetIdealWidth( h ) as long</code></td><td>The width half of the above.</td></tr><tr><td><code>PsToolbar_IsItemOverflowed( h, idx ) as boolean</code></td><td>Is this item currently in the overflow menu.</td></tr><tr><td><code>PsToolbar_GetOverflowCount( h ) as long</code></td><td>How many items are, excluding trimmed separators.</td></tr></tbody></table></div>
+<h4 id="appearance">Appearance</h4>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Behaviour</th></tr></thead><tbody><tr><td><code>PsToolbar_GetColors( h, pColors )</code></td><td>Fills your struct — the read half of read-modify-write.</td></tr><tr><td><code>PsToolbar_SetColors( h, pColors )</code></td><td>Copies the whole struct and repaints.</td></tr><tr><td><code>PsToolbar_SetItemForeColor( h, idx, clr ) as boolean</code></td><td>Overrides one item's <strong>idle</strong> foreground. Hot, pressed, selected and disabled keep the bar's colours.</td></tr><tr><td><code>PsToolbar_ClearItemForeColor( h, idx ) as boolean</code></td><td>Back to the bar's foreground.</td></tr><tr><td><code>PsToolbar_GetTextFont( h ) as HFONT</code></td><td></td></tr><tr><td><code>PsToolbar_SetTextFont( h, hTextFont ) as boolean</code></td><td>A <strong>layout</strong> input: re-measures every caption. Also re-applies the fonts to any menus the toolbar owns.</td></tr><tr><td><code>PsToolbar_GetGlyphFont( h ) as HFONT</code></td><td></td></tr><tr><td><code>PsToolbar_SetGlyphFont( h, hGlyphFont ) as boolean</code></td><td>A <strong>paint-time</strong> input only: repaints, never re-lays out.</td></tr><tr><td><code>PsToolbar_GetGlyphs( h, byref wszChevron, byref wszOverflow )</code></td><td>The two chrome glyphs.</td></tr><tr><td><code>PsToolbar_SetGlyphs( h, wszChevron, wszOverflow )</code></td><td>The split/dropdown chevron and the overflow button glyph.</td></tr></tbody></table></div>
+<p>If no text font is set the control measures and paints with the stock GUI font; if no glyph font is set it uses the text font. Measuring and painting always use the same font.</p>
+<h4 id="menus">Menus</h4>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Behaviour</th></tr></thead><tbody><tr><td><code>PsToolbar_GetItemMenu( h, idx ) as HWND</code></td><td>Creates the item's menu on first call and returns it thereafter. The toolbar destroys it. Handle its commands with <code>PsPopupMenu_SetSelectCallback</code>.</td></tr><tr><td><code>PsToolbar_GetOverflowMenu( h ) as HWND</code></td><td>The overflow menu — for theming only. Its rows are rebuilt on every open.</td></tr><tr><td><code>PsToolbar_SetMenuColors( h, pColors )</code></td><td>Claims the palette of <strong>every</strong> menu this toolbar owns, present and future. After this, re-theming the bar no longer touches them.</td></tr><tr><td><code>PsToolbar_IsDroppedDown( h ) as boolean</code></td><td>Is any menu of this toolbar's open.</td></tr><tr><td><code>PsToolbar_GetDroppedItem( h ) as long</code></td><td>Which item's menu is open; −1 for the overflow menu <strong>or</strong> for nothing. Pair with <code>IsDroppedDown</code> to tell those apart.</td></tr><tr><td><code>PsToolbar_DropDown( h, idx ) as boolean</code></td><td>Opens a menu programmatically; <code>idx = -1</code> opens the overflow menu. Still fires <code>DropDownCallback</code>. Returns FALSE — and reports a balanced open/close pair — if the menu has no rows.</td></tr><tr><td><code>PsToolbar_CloseUp( h )</code></td><td>Closes whatever is open and fires the closing edge. A no-op when nothing is open.</td></tr></tbody></table></div>
+<h4 id="tooltips">Tooltips</h4>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Behaviour</th></tr></thead><tbody><tr><td><code>PsToolbar_GetTooltipText( h, idx ) as DWSTRING</code></td><td>The item's own tooltip text.</td></tr><tr><td><code>PsToolbar_SetTooltipText( h, idx, Text ) as boolean</code></td><td>Sets it. Per-item text wins over the callback.</td></tr><tr><td><code>PsToolbar_GetTooltipHandle( h ) as HWND</code></td><td>The <strong>comctl32</strong> tooltip window, for any <code>TTM_*</code> message you want to send it yourself. The toolbar owns it and destroys it. Returns <strong>0</strong> while this toolbar is on the PsTooltip backend — the honest answer, since a <code>TTM_*</code> sent to a PsTooltip window is silently ignored.</td></tr><tr><td><code>PsToolbar_GetPsTooltipHandle( h ) as HWND</code></td><td>The <strong>PsTooltip</strong> window, or 0 while on the system backend. The door to <code>PsTooltip_SetColors</code> / <code>SetFonts</code> / <code>SetStyle</code> / <code>SetMaxWidth</code> / <code>SetTitle</code> / <code>SetGlyph</code> — none of which is mirrored here.</td></tr><tr><td><code>PsToolbar_SetTooltipMode( h, nMode ) as boolean</code></td><td><code>PSTIP_MODE_SYSTEM</code> (default) or <code>PSTIP_MODE_PS</code>. See below.</td></tr><tr><td><code>PsToolbar_GetTooltipMode( h ) as long</code></td><td>Which backend is live.</td></tr><tr><td><code>PsToolbar_SetHoverTime( h, milliseconds )</code></td><td>Initial delay (<code>TTDT_INITIAL</code>) — how long the cursor must rest before a tip appears. Honoured by <strong>both</strong> backends. <strong>Double duty:</strong> the same value is <code>TrackMouseEvent</code>'s <code>dwHoverTime</code>, so it also decides when the control considers an item hot.</td></tr><tr><td><code>PsToolbar_SetAutoPopTime( h, milliseconds )</code></td><td>How long the tip stays up (<code>TTDT_AUTOPOP</code>).</td></tr><tr><td><code>PsToolbar_SetReshowTime( h, milliseconds )</code></td><td>The shorter delay after a tip was recently dismissed (<code>TTDT_RESHOW</code>).</td></tr></tbody></table></div>
+<p>An item with neither its own text nor a callback answer shows no tooltip. There is no automatic fallback to the caption.</p>
+<h5 id="tooltips-two-backends">Tooltips: two backends</h5>
+<p>The toolbar ships on the <strong>system</strong> (comctl32) tooltip. <code>PSTIP_MODE_PS</code> switches this instance to <strong>PsTooltip</strong>: owner-drawn, themeable, word-wrapping without a hand-sent <code>TTM_SETMAXTIPWIDTH</code>, and — the one that matters structurally — <strong>not a subclass of the control it serves</strong>, so it still works when the window under the cursor is a descendant rather than the toolbar itself.</p>
+<p>The default is deliberate, not caution. PsTooltip's colour defaults are <strong>dark</strong>, so a control that switched itself would put a dark tip on a light form. Theme every tip in the process with <code>PsTooltip_SetDefaultColors</code> and friends, then opt in per instance.</p>
+<p><strong>The mode changes how a tip is drawn, never what it says.</strong> Both backends resolve per-item text through the same rule — the item's own tooltip text first, then <code>TooltipCallback</code>, then nothing.</p>
+<p>All three delays are honoured by both backends and are <strong>stored as well as pushed</strong>, so a delay set before a mode switch is still in force after it. A delay you never set keeps the backend's own derivation from the system double-click time, which is what makes a tip appear on the same beat as every other tip on the machine.</p>
+<pre class="code" data-lang="freebasic"><code>PsTooltip_SetDefaultColors( @myTipColors )     ' once, at startup, for every tip in the process
+PsTooltip_SetDefaultFonts( ghFontUI )
+
+PsToolbar_SetTooltipMode( ghToolbar, PSTIP_MODE_PS )
+PsToolbar_SetHoverTime( ghToolbar, 400 )
+dim as HWND hTip = PsToolbar_GetPsTooltipHandle( ghToolbar )
+if hTip then PsTooltip_SetMaxWidth( hTip, 260 )   ' not reachable on the system backend</code></pre>
+<p>Neither backend adds a pump obligation — PsTooltip has no <code>FilterMessage</code>. <code>PsToolbar_FilterMessage</code> remains <strong>mandatory</strong> for an entirely separate reason: the dropdown and overflow menus are toolbar-owned <code>PsPopupMenu</code>s.</p>
+<h4 id="callback-registration">Callback registration</h4>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Behaviour</th></tr></thead><tbody><tr><td><code>PsToolbar_SetPaintItemCallback( h, usersub )</code></td><td>Replaces the built-in painter for <strong>every</strong> item.</td></tr><tr><td><code>PsToolbar_SetMessageCallback( h, userfunc )</code></td><td>Observe mouse messages.</td></tr><tr><td><code>PsToolbar_SetTooltipCallback( h, userfunc )</code></td><td>Supply tooltip text on demand.</td></tr><tr><td><code>PsToolbar_SetClickCallback( h, usersub )</code></td><td>Command and split-action clicks.</td></tr><tr><td><code>PsToolbar_SetSelChangeCallback( h, usersub )</code></td><td>Toggle latch/unlatch by the user.</td></tr><tr><td><code>PsToolbar_SetDropDownCallback( h, usersub )</code></td><td>Menu opened or closed.</td></tr><tr><td><code>PsToolbar_SetControlNotifyCallback( h, userfunc )</code></td><td>Messages a <code>TBR_KIND_CONTROL</code> child sent to its parent.</td></tr></tbody></table></div>
+<p>Pass <code>0</code> to any of these to remove the callback.</p>
+<h4 id="message-pump-and-probes">Message pump and probes</h4>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Behaviour</th></tr></thead><tbody><tr><td><code>PsToolbar_FilterMessage( h, pMsg ) as MSG ptr → boolean</code></td><td><strong>Required</strong> in your message loop. Returns TRUE when the message was consumed and must not be dispatched. Returns FALSE immediately when no menu is open.</td></tr><tr><td><code>PsToolbar_CountRenderedTones( h, nPart, idx ) as long</code></td><td>Renders the bar offscreen and counts distinct colours inside one <code>TBR_PART_*</code> rect.</td></tr><tr><td><code>PsToolbar_HashRenderedPart( h, nPart, idx ) as ulong</code></td><td>FNV-1a hash of the same rect.</td></tr></tbody></table></div>
+<p>The two probes are public so that a host writing its own paint callback can check it: a low tone count means the callback is flooding the control, and two equal hashes across a state change mean the change never reached the pixels. Measure your own healthy and broken values — a threshold that works for one part rect does not transfer to another.</p>
+<h4 id="pure-helpers">Pure helpers</h4>
+<p>These take no handle and touch no window, so you can use them to reason about layout before you build one.</p>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Behaviour</th></tr></thead><tbody><tr><td><code>PsToolbar_ComputeCellWidth( nKind, nIconWidth, nTextWidth, nTextGap, nSepWidth, nControlWidth, nChevronWidth, nChevronGap, nDividerThick, nPadBefore, nPadAfter ) as long</code></td><td>The cell-width formula from <em>Concepts</em>. A zero width means that part is absent.</td></tr><tr><td><code>PsToolbar_ComputeOverflowSplit( nCellW(), nGravity(), nKind(), nCount, nClientW, nOverflowCellW, bOverflow(), byref bNeedOverflow )</code></td><td>Decides which of the visible items leave the strip. Arrays are indexed over visible items only, in author order.</td></tr><tr><td><code>PsToolbar_ResolveMood( isEnabled, isPressed, isHot ) as long</code></td><td>The <code>TBR_MOOD_*</code> precedence, so your painter agrees with the control's.</td></tr></tbody></table></div>
+<h3 id="colors">Colors</h3>
+<p><code>PSTOOLBAR_COLORS</code>, copied on <code>SetColors</code>. Defaults are a dark theme; a light-theme host sets all nine.</p>
+<div class="table-wrap"><table><thead><tr><th>Field</th><th>Paints</th><th>When</th></tr></thead><tbody><tr><td><code>BackColor</code></td><td>The bar background, and every cell's base fill</td><td>Always — the state fill is drawn <em>over</em> it</td></tr><tr><td><code>ForeColor</code></td><td>Glyph and caption</td><td>Idle</td></tr><tr><td><code>BackColorHot</code></td><td>The cell fill</td><td>Pointer over the item</td></tr><tr><td><code>ForeColorHot</code></td><td>Glyph and caption</td><td>Pointer over the item</td></tr><tr><td><code>BackColorSelect</code></td><td>The cell fill</td><td>Latched toggle, <strong>and</strong> the pressed flash</td></tr><tr><td><code>ForeColorSelect</code></td><td>Glyph and caption</td><td>Latched toggle, and pressed</td></tr><tr><td><code>ForeColorDisabled</code></td><td>Glyph and caption</td><td>Disabled</td></tr><tr><td><code>SeparatorColor</code></td><td>A separator's rule</td><td>Always</td></tr><tr><td><code>SplitDividerColor</code></td><td>The hairline between a split button's two zones</td><td>Always, on split items</td></tr></tbody></table></div>
+<p>State precedence, resolved by <code>PsToolbar_ResolveMood</code> so every renderer agrees:</p>
+<pre class="code"><code>disabled &gt; pressed &gt; hot &gt; idle</code></pre>
+<p><code>isSelected</code> is deliberately not part of that ladder — a latched toggle can also be hot or pressed. The painter combines the two: a selected idle item takes the Select pair, and a selected disabled item keeps the Select background under the disabled foreground.</p>
+<p>Pressed reuses the Select pair rather than adding a tenth colour: on a command item it is the flash that makes the button feel pressed, and on a toggle it previews the latched look the release is about to produce. An open dropdown paints hot, so the button stays lit while its menu is up.</p>
+<p>The state fill is a rounded rect drawn <strong>over</strong> the base fill, so the bar background always shows in the gaps between cells and an item reads as a pill. On a split button a hover lights only the half the pointer is over.</p>
+<h3 id="callbacks">Callbacks</h3>
+<h4 id="paint">Paint</h4>
+<pre class="code" data-lang="freebasic"><code>type TBR_PaintItemCallbackSub as sub( byval p as PSTOOLBAR_PAINTINFO ptr )</code></pre>
+<p>Setting this replaces the built-in painter for <strong>every</strong> item, separators and the overflow button included. The overflow button arrives with <code>itemID = -1</code> and <code>itemKind = TBR_KIND_DROPDOWN</code>, so one renderer can serve both.</p>
+<p>Three rules:</p>
+<ul><li><strong>Fill <code>p-&gt;rc</code>, not <code>p-&gt;rcIcon</code>.</strong> <code>rc</code> includes the item's padding; leaving part of it unpainted shows the bar background through.</li><li><strong>Do not stroke a frame with <code>PaintBorderRect</code></strong> — it fills before it strokes and will erase everything beneath. Use <code>PaintRoundOutline</code>. <code>PsToolbar_CountRenderedTones</code> exists so you can check you have not.</li><li><strong>Draw the caption in the font you gave <code>PsToolbar_SetTextFont</code>.</strong> The control measured with it; painting a bolder variant makes the cell too small and the caption ellipsize. If you want bold, hand the bold font to <code>SetTextFont</code> so measuring and painting agree.</li></ul>
+<p><code>PSTOOLBAR_PAINTINFO</code>:</p>
+<div class="table-wrap"><table><thead><tr><th>Field</th><th>Meaning</th></tr></thead><tbody><tr><td><code>hToolbar</code></td><td>The control, so the callback can query it</td></tr><tr><td><code>itemID</code></td><td>Model index; −1 for the overflow button</td></tr><tr><td><code>b</code></td><td>The control's <code>PsBufferPaint</code> for this repaint — paint through this, never the screen DC</td></tr><tr><td><code>itemKind</code></td><td><code>TBR_KIND_*</code></td></tr><tr><td><code>rc</code></td><td>The whole cell: fill this</td></tr><tr><td><code>rcIcon</code></td><td>The icon box — or a separator's rule</td></tr><tr><td><code>rcText</code></td><td>The caption <strong>span</strong>, not the ink, so <code>DT_END_ELLIPSIS</code> has somewhere to ellipsize into</td></tr><tr><td><code>rcChevron</code></td><td>The chevron box; empty except on split and dropdown items</td></tr><tr><td><code>nMood</code></td><td><code>TBR_MOOD_*</code></td></tr><tr><td><code>isHot</code></td><td>The pointer is over this item</td></tr><tr><td><code>isSelected</code></td><td>A latched toggle</td></tr><tr><td><code>isPressed</code></td><td>A live press is on this item <strong>and</strong> the cursor is still over it</td></tr><tr><td><code>isEnabled</code></td><td></td></tr><tr><td><code>isChevronHot</code></td><td>The pointer is specifically over a split button's chevron zone; always FALSE for other kinds</td></tr><tr><td><code>isDropped</code></td><td>This item's menu is currently open</td></tr><tr><td><code>wszGlyph</code></td><td>The icon glyph</td></tr><tr><td><code>wszText</code></td><td>The caption</td></tr><tr><td><code>pImage</code></td><td>The resolved <code>CGpImage ptr</code> for this item's icon cell, or NULL. When it is set, draw it with <code>p-&gt;b-&gt;PaintImage</code> <strong>instead of</strong> the glyph — a custom painter should honour it, image first</td></tr></tbody></table></div>
+<h4 id="message">Message</h4>
+<pre class="code" data-lang="freebasic"><code>type TBR_MessageCallbackFunc as function( byval m as PSTOOLBAR_MESSAGEINFO ptr ) as boolean</code></pre>
+<p>Return TRUE to suppress the control's own handling of that message.</p>
+<p><strong>The result is ignored for <code>WM_LBUTTONUP</code>.</strong> The control holds mouse capture across a press on an action zone and the up-message is what releases it; a callback that suppressed it would strand the capture and route every later click to this control. Suppressing <code>WM_LBUTTONDOWN</code> suppresses the press, never the capture bookkeeping.</p>
+<div class="table-wrap"><table><thead><tr><th>Field</th><th>Meaning</th></tr></thead><tbody><tr><td><code>hToolbar</code></td><td></td></tr><tr><td><code>uMsg</code>, <code>wParam</code>, <code>lParam</code></td><td>The raw message</td></tr><tr><td><code>idx</code></td><td>Item under the mouse, or −1</td></tr><tr><td><code>nZone</code></td><td><code>TBR_ZONE_*</code></td></tr></tbody></table></div>
+<h4 id="tooltip">Tooltip</h4>
+<pre class="code" data-lang="freebasic"><code>type TBR_TooltipCallbackFunc as function( byval hToolbar as HWND, byval idx as long ) as DWSTRING</code></pre>
+<p>Consulted only when the item has no tooltip text of its own, and only when a tip is about to show. Return <code>""</code> for no tooltip.</p>
+<h4 id="click">Click</h4>
+<pre class="code" data-lang="freebasic"><code>type TBR_ClickCallbackSub as sub( byval hToolbar as HWND, byval idx as long, byval id as long )</code></pre>
+<p>A matched press and release on the same zone of a command item, or a split button's action zone. Nothing fires for a cancelled gesture — press, slide off, release. Toggles report through <code>SelChangeCallback</code> instead.</p>
+<p>It <strong>also</strong> fires for a pick from the overflow menu, so a handler never has to know whether the item was on the strip or behind the chevron.</p>
+<h4 id="selection-change">Selection change</h4>
+<pre class="code" data-lang="freebasic"><code>type TBR_SelChangeCallbackSub as sub( byval hToolbar as HWND, byval idx as long, byval isSelected as boolean )</code></pre>
+<p>A toggle latched or unlatched <strong>by the user</strong>. Fires after the state is updated, so <code>PsToolbar_GetSelected</code> already agrees. For a radio group both edges fire, loser first, with both state writes landing before either callback. <code>PsToolbar_SetSelected</code> does not fire it.</p>
+<h4 id="control-notify">Control notify</h4>
+<pre class="code" data-lang="freebasic"><code>type TBR_ControlNotifyFunc as function( byval m as PSTOOLBAR_CONTROLNOTIFY ptr ) as boolean</code></pre>
+<p>A <code>TBR_KIND_CONTROL</code> cell's child sent a message to its parent. Return TRUE to claim it, having set <code>m-&gt;lResult</code> if it needs a value; return FALSE and it is forwarded to the toolbar's own parent. See <em>Child windows in a CONTROL cell</em> for the worked example.</p>
+<p><code>PSTOOLBAR_CONTROLNOTIFY</code>:</p>
+<div class="table-wrap"><table><thead><tr><th>Field</th><th>Meaning</th></tr></thead><tbody><tr><td><code>hToolbar</code></td><td></td></tr><tr><td><code>idx</code></td><td>The control item that sent it, or −1 if the sender is not one of them</td></tr><tr><td><code>hChild</code></td><td>The sending child window, or 0 when it cannot be identified</td></tr><tr><td><code>uMsg</code>, <code>wParam</code>, <code>lParam</code></td><td>The raw message</td></tr><tr><td><code>lResult</code></td><td>The value to return when you claim the message</td></tr></tbody></table></div>
+<h4 id="drop-down">Drop down</h4>
+<pre class="code" data-lang="freebasic"><code>type TBR_DropDownCallbackSub as sub( byval hToolbar as HWND, byval idx as long, byval hMenu as HWND, byval isOpen as boolean )</code></pre>
+<p><code>idx</code> is −1 for the overflow menu. It reports a window-state transition, not a value change, so it fires for programmatic opens too.</p>
+<p>For a split or dropdown item the opening edge runs <strong>before a single row is built</strong> — that is the just-in-time hook for a menu whose contents change:</p>
+<pre class="code" data-lang="freebasic"><code>sub OnDropDown( byval hToolbar as HWND, byval idx as long, byval hMenu as HWND, byval isOpen as boolean )
+    if isOpen = false then exit sub
+    if idx = -1 then exit sub          ' the overflow menu builds itself
+    PsPopupMenu_Clear( hMenu )
+    PsPopupMenu_AddItem( hMenu, IDM_RUN_DEBUG,   "Run in Debugger", "F5" )
+    PsPopupMenu_AddItem( hMenu, IDM_RUN_RELEASE, "Run Release",     "Ctrl+F5" )
+end sub</code></pre>
+<p>The overflow menu is the exception: the control fills it from the items that did not fit, and its opening edge fires after it is built.</p>
+<h3 id="constants">Constants</h3>
+<h4 id="item-kinds--pstoolbar_itemkind">Item kinds — <code>PSTOOLBAR_ITEMKIND</code></h4>
+<div class="table-wrap"><table><thead><tr><th>Constant</th><th></th></tr></thead><tbody><tr><td><code>TBR_KIND_COMMAND</code></td><td>0</td></tr><tr><td><code>TBR_KIND_TOGGLE</code></td><td>1</td></tr><tr><td><code>TBR_KIND_SEPARATOR</code></td><td>2</td></tr><tr><td><code>TBR_KIND_SPLIT</code></td><td>3</td></tr><tr><td><code>TBR_KIND_DROPDOWN</code></td><td>4</td></tr><tr><td><code>TBR_KIND_CONTROL</code></td><td>5</td></tr></tbody></table></div>
+<h4 id="gravity--pstoolbar_gravity">Gravity — <code>PSTOOLBAR_GRAVITY</code></h4>
+<p><code>TBR_GRAVITY_LEFT</code> (0), <code>TBR_GRAVITY_RIGHT</code> (1)</p>
+<h4 id="hit-zones--pstoolbar_hitzone">Hit zones — <code>PSTOOLBAR_HITZONE</code></h4>
+<div class="table-wrap"><table><thead><tr><th>Constant</th><th>Meaning</th></tr></thead><tbody><tr><td><code>TBR_ZONE_NONE</code></td><td>Nothing there</td></tr><tr><td><code>TBR_ZONE_ACTION</code></td><td>The item's main body</td></tr><tr><td><code>TBR_ZONE_CHEVRON</code></td><td>A split button's dropdown zone</td></tr><tr><td><code>TBR_ZONE_OVERFLOW</code></td><td>The overflow chevron; the item index is −1</td></tr></tbody></table></div>
+<h4 id="parts--pstoolbar_part">Parts — <code>PSTOOLBAR_PART</code></h4>
+<p><code>TBR_PART_TOOLBAR</code>, <code>TBR_PART_ITEM</code>, <code>TBR_PART_ICON</code>, <code>TBR_PART_TEXT</code>, <code>TBR_PART_CHEVRON</code></p>
+<h4 id="moods--pstoolbar_mood">Moods — <code>PSTOOLBAR_MOOD</code></h4>
+<p><code>TBR_MOOD_IDLE</code>, <code>TBR_MOOD_HOT</code>, <code>TBR_MOOD_PRESSED</code>, <code>TBR_MOOD_DISABLED</code></p>
+<h4 id="defaults">Defaults</h4>
+<p>DPI-scaled at Create unless noted. Setters afterwards take raw pixels.</p>
+<div class="table-wrap"><table><thead><tr><th>Constant</th><th>Value</th></tr></thead><tbody><tr><td><code>PSTOOLBAR_DEFAULT_ICONWIDTH</code> / <code>_ICONHEIGHT</code></td><td>16 / 16</td></tr><tr><td><code>PSTOOLBAR_DEFAULT_PADBEFORE</code> / <code>_PADAFTER</code></td><td>6 / 6</td></tr><tr><td><code>PSTOOLBAR_DEFAULT_PADTOP</code> / <code>_PADBOTTOM</code></td><td>4 / 4</td></tr><tr><td><code>PSTOOLBAR_DEFAULT_TEXTGAP</code></td><td>6</td></tr><tr><td><code>PSTOOLBAR_DEFAULT_SEPWIDTH</code></td><td>1</td></tr><tr><td><code>PSTOOLBAR_DEFAULT_CHEVRONWIDTH</code></td><td>14</td></tr><tr><td><code>PSTOOLBAR_DEFAULT_CHEVRONGAP</code></td><td>4</td></tr><tr><td><code>PSTOOLBAR_DEFAULT_DIVIDERTHICK</code></td><td>1 — <strong>not</strong> DPI-scaled</td></tr><tr><td><code>PSTOOLBAR_DEFAULT_CURVATURE</code></td><td>4</td></tr><tr><td><code>PSTOOLBAR_HOTTRACK_MS</code></td><td>100</td></tr></tbody></table></div>
+<p>The default chevron glyphs are Segoe Fluent Icons <code>E70D</code> (ChevronDown) and <code>E712</code> (More); <code>PsToolbar_SetGlyphs</code> changes both.</p>
+<h3 id="related-controls">Related controls</h3>
+<p>PsToolbar creates a <strong>PsPopupMenu</strong> for each split or dropdown item and one for the overflow button. You fill those menus and handle their commands through PsPopupMenu's own API, so see its documentation for row building, submenus, theming and the check gutter.</p>
+<p>If you want a static icon-only strip with no captions, no overflow and no menus, <strong>PsIconPanel</strong> is the smaller control. For a single button, <strong>PsButton</strong>; for a row of text labels with one current, <strong>PsSelectBar</strong>.</p>
+    <footer class="foot">
+      <p>PlanetSquires owner-drawn controls for FreeBASIC / AfxNova. Copyright © Paul Squires, distributed under the MIT License. Documentation generated from each control&#x27;s own README. <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../index.html">Home</a> ·
+         <a href="../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../nav.js?v=70a6b70236"></script>
+<script src="../search-index.js"></script>
+<script src="../assets/app.js?v=456d079659"></script>
+<script src="../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

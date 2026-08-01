@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CXmlWriterLite.IsEmptyElement — Help Center</title>
+<meta name="description" content="Allows the client to determine the difference between elements that have a closing tag, but do not contain content, and elements that do not have a closing tag.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/file-management/cxmlwriterlite/cxmlwriterlite-isemptyelement.html">
+<meta property="og:title" content="CXmlWriterLite.IsEmptyElement">
+<meta property="og:description" content="Allows the client to determine the difference between elements that have a closing tag, but do not contain content, and elements that do not have a closing tag.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/file-management/cxmlwriterlite/cxmlwriterlite-isemptyelement.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/file-management/cxmlwriterlite/cxmlwriterlite-isemptyelement.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cxmllite-class.html">CXmlLite Class</a></div>
+<h1>CXmlWriterLite.IsEmptyElement<span class="h1kind">method</span></h1>
+<p class="lede">Allows the client to determine the difference between elements that have a closing tag, but do not contain content, and elements that do not have a closing tag.</p>
+<div class="badges"><a class="badge" href="../index.html">File Management</a><span class="badge">method</span><span class="badge badge--warn">doc-orphan</span></div>
+<div class="note note--warn"><strong>No implementation located.</strong> This member is documented, but the source scan found no matching declaration. It is likely declared in a header this scan does not resolve, or provided by a macro.</div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION IsEmptyElement () AS BOOLEAN</code></pre>
+<h2>Return value</h2>
+<p>Returns TRUE if the current element ends with /&gt;; otherwise, returns FALSE.</p>
+<h2>Description</h2>
+<p>This method allows the client to determine the difference between elements that have a closing tag, but do not contain content, and elements that do not have a closing tag.</p>
+<h2>Remarks</h2>
+<p><strong>IsEmptyElement</strong> returns FALSE for the following element: <strong>IsEmptyElement</strong> returns TRUE for the following element: Note that when writing elements, an <code>XmlNodeType_EndElement</code> node is not generated for empty element start tags.</p>
+<p>If the method is not applicable, it will return FALSE.</p>
+<p>You should save the value of <strong>IsEmptyElement</strong> before processing attributes, or call <strong>MoveToElement</strong> to make <strong>IsEmptyElement</strong> valid after processing attributes.</p>
+<p><strong>IsEmptyElement</strong> returns FALSE when <code>XmlReader</code> is positioned on an attribute node, even if attribute's parent element is empty.</p>
+<h2>Examples</h2>
+<p>&lt;element attribute="123"&gt;&lt;/element&gt;</p>
+<p>&lt;element attribute="123"/&gt;</p>
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">File Management/CXmlLite Class.md</span></li><li>Topic: <a href="../cxmllite-class.html">CXmlLite Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

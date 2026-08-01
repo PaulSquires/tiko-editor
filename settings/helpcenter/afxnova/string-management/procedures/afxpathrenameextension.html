@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AfxPathRenameExtension — Help Center</title>
+<meta name="description" content="Replaces the extension of a file name with a new extension. If the file name does not contain an extension, the extension will be attached to the end of the string.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/string-management/procedures/afxpathrenameextension.html">
+<meta property="og:title" content="AfxPathRenameExtension">
+<meta property="og:description" content="Replaces the extension of a file name with a new extension. If the file name does not contain an extension, the extension will be attached to the end of the string.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/string-management/procedures/afxpathrenameextension.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/string-management/procedures/afxpathrenameextension.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../path-and-url-procedures.html">Path and Url procedures</a></div>
+<h1>AfxPathRenameExtension<span class="h1kind">function</span></h1>
+<p class="lede">Replaces the extension of a file name with a new extension. If the file name does not contain an extension, the extension will be attached to the end of the string.</p>
+<div class="badges"><a class="badge" href="../index.html">String Management</a><span class="badge">function</span><span class="badge">AfxPath.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION AfxPathRenameExtension (BYREF wszPath AS CONST WSTRING, BYREF wszExt AS CONST WSTRING) AS DWSTRING</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>wszPath</code></td><td></td><td>A string that contains the path in which to replace the extension.</td></tr><tr><td><code>wszExt</code></td><td></td><td>A string that contains a '.' character followed by the new extension.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>The new path. If the new path and extension would exceed MAX_PATH characters, the path won't be changed.</p>
+<h2>Description</h2>
+<p>Replaces the extension of a file name with a new extension. If the file name does not contain an extension, the extension will be attached to the end of the string.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>AfxPath.inc</code></li><li>Defined in <span class="srcref">AfxNova/AfxPath.inc:140</span></li><li>Documented in <span class="srcref">String Management/Path and Url Procedures.md</span></li><li>Topic: <a href="../path-and-url-procedures.html">Path and Url procedures</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

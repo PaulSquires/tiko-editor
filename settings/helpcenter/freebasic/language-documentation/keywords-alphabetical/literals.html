@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Literals — Help Center</title>
+<meta name="description" content="Literals — 0 documented members. Language Documentation reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/language-documentation/keywords-alphabetical/literals.html">
+<meta property="og:title" content="Literals">
+<meta property="og:description" content="Literals — 0 documented members. Language Documentation reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/language-documentation/keywords-alphabetical/literals.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/language-documentation/keywords-alphabetical/literals.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Language Documentation</div>
+<h1>Literals</h1>
+<h2>Documentation</h2>
+
+	<div class="indent"></div>Non-variable compile-time string, numeric values and boolean values.<br>
+<br>
+Literals are numbers, strings of characters or boolean truths specified directly in the source code.  Literal values may be used by assigning them to a variable or constant, passing them to a procedure, or using them in an expression.<br>
+<br>
+Numeric literals come in two forms - integer and floating-point.  <br>
+<br>
+<div>Integer Literals</div><div><br>
+<br>
+<u>Decimal</u><br>
+Decimal digits ( <code>0 1 2 3 4 5 6 7 8 9</code> ).<br>
+<i>Note: to get negative values, a "<code>-</code>" sign (<code><a href="../../operators/arithmetic-operators/procedures/operator-negate.html">Operator - (Negate)</a></code>) can be placed before a numeric literal</i><br>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span>x</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">123456</span>
+
+<span class="tok-kw">Dim</span> <span>b</span> <span class="tok-kw">As</span> <span class="tok-kw">Byte</span> <span>=</span> <span>-</span><span class="tok-nu">128</span></pre></code><br>
+<br>
+<u>Hexadecimal</u><br>
+"<code>&H</code>", followed by hexadecimal digits ( <code>0 1 2 3 4 5 6 7 8 9 A B C D E F</code> ).<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span>x</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">&amp;h1E240</span>
+
+<span class="tok-kw">Dim</span> <span>b</span> <span class="tok-kw">As</span> <span class="tok-kw">Byte</span> <span>=</span> <span class="tok-nu">&amp;H80</span></pre></code><br>
+<u>Octal</u><br>
+"<code>&O</code>" (or "<code>&</code>"), followed by octal digits ( <code>0 1 2 3 4 5 6 7</code> )<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span>x</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">&amp;O361100</span>
+
+<span class="tok-kw">Dim</span> <span>b</span> <span class="tok-kw">As</span> <span class="tok-kw">Byte</span> <span>=</span> <span class="tok-nu">&amp;O200</span></pre></code><br>
+<br>
+<u>Binary</u><br>
+"<code>&B</code>", followed by binary digits ( <code>0 1</code> )<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span>x</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">&amp;B11110001001000000</span>
+
+<span class="tok-kw">Dim</span> <span>b</span> <span class="tok-kw">As</span> <span class="tok-kw">Byte</span> <span>=</span> <span class="tok-nu">&amp;B10000000</span></pre></code><br>
+<br>
+</div><div>Integer size suffixes</div><div><br>
+If an integer literal suffix is not given, the number field size required to hold the literal is automatically calculated.  Specifying a size suffix guarantees that the compiler will consider a number as a specific integer size.<br>
+<br>
+Integer literals ending with:<br>
+<ul><li> "<code>%</code>", are considered as signed 32/64 (depending on platform) bit integers. (<code><a href="../../standard-data-types/procedures/integer.html">Integer</a></code>)<br>
+<li> "<code>L</code>", "<code>&</code>", are considered as signed 32 bit long integers. (<code><a href="../../standard-data-types/procedures/long.html">Long</a></code>)<br>
+<li> "<code>U</code>", are considered as unsigned 32/64 (depending on platform) bit integers. (<code><a href="../../bit-manipulation/procedures/uinteger.html">UInteger</a></code>)<br>
+<li> "<code>UL</code>", are considered as unsigned 32 bit integers. (<code><a href="../../standard-data-types/procedures/ulong.html">ULong</a></code>)<br>
+<li> "<code>LL</code>", are considered as signed 64 bit integers. (<code><a href="../../standard-data-types/procedures/longint.html">LongInt</a></code>)<br>
+<li> "<code>ULL</code>", are considered as unsigned 64 bit integers. (<code><a href="../../standard-data-types/procedures/ulongint.html">ULongInt</a></code>)<br>
+<br>
+</li></li></li></li></li></li></ul>Negative (-) and positive (+) signs that prefix a numeric literal, are not part of the numeric literal.  expressions (like "<code>-1L</code>") are parsed as the negate operator applied to the value represented by the positive literal ("<code>1L</code>"), which may involve implicit type conversions.  Same behavior when an explicit "<code>+</code>" sign precedes the integer literal.<br>
+<br>
+The prefixes, suffixes, and hexadecimal letter digits are all case-insensitive.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span>a</span> <span class="tok-kw">As</span> <span class="tok-kw">Long</span> <span>=</span> <span class="tok-nu">123</span><span>L</span>
+
+<span class="tok-kw">Dim</span> <span>b</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span> <span>=</span> <span class="tok-nu">&amp;h1234u</span>
+
+<span class="tok-kw">Dim</span> <span>c</span> <span class="tok-kw">As</span> <span class="tok-kw">LongInt</span> <span>=</span> <span class="tok-nu">76543</span><span>LL</span>
+
+<span class="tok-kw">Dim</span> <span>d</span> <span class="tok-kw">As</span> <span class="tok-kw">ULongInt</span> <span>=</span> <span class="tok-nu">&amp;b1010101U</span><span>LL</span></pre></code><br>
+<br>
+</div><div>Floating Point Literals</div><div><br>
+Floating point numbers are specified in decimal digits, may be positive or negative, have a fractional portion, and optionally an exponent.  The format of a floating point literal is as follows (without space or parenthesis added):<br>
+<br>
+<code>number[.[fraction]][(D|E)[+|-][exponent]][suffix]</code><br>
+<i>or</i><br>
+<code>.fraction[(D|E)[+|-][exponent]][suffix]</code><br>
+<br>
+By default, floating point numbers that do not have either an exponent or a suffix are considered as a double precision floating point value, except in the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang qb</a></i> dialect, where numbers of 7 digits or fewer are considered to be single precision.<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span>a</span> <span class="tok-kw">As</span> <span class="tok-kw">Double</span> <span>=</span> <span class="tok-nu">123.456</span>
+
+<span class="tok-kw">Dim</span> <span>b</span> <span class="tok-kw">As</span> <span class="tok-kw">Double</span> <span>=</span> <span>-</span><span class="tok-nu">123.0</span></pre></code><br>
+<br>
+The letter "<code>D</code>" or "<code>E</code>", placed after the number/fraction part, allows the number to be given an exponent.  The exponent may be specified as either positive or negative with a plus ("<code>+</code>") or minus ("<code>-</code>") sign.  Exponents that do not have a sign are positive.<br>
+An exponent value is not required after the letter (or even after the sign), so the letter can be used on its own just to specify the type.  "<code>D</code>" specifies a double-precision floating-point number.  "<code>E</code>" specifies a floating-point number using the default precision. When the letter is used on its own in combination with a suffix (see below) the type denoted by the suffix overrules the type specified by the letter.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span>a</span> <span class="tok-kw">As</span> <span class="tok-kw">Double</span> <span>=</span> <span>-</span><span class="tok-nu">123.0</span><span>d</span>
+
+<span class="tok-kw">Dim</span> <span>b</span> <span class="tok-kw">As</span> <span class="tok-kw">Double</span> <span>=</span> <span>-</span><span class="tok-nu">123</span><span>e</span>
+
+<span class="tok-kw">Dim</span> <span>c</span> <span class="tok-kw">As</span> <span class="tok-kw">Double</span> <span>=</span> <span class="tok-nu">743.1e+13</span>
+
+<span class="tok-kw">Dim</span> <span>d</span> <span class="tok-kw">As</span> <span class="tok-kw">Double</span> <span>=</span> <span class="tok-nu">743.1D-13</span>
+
+<span class="tok-kw">Dim</span> <span>e</span> <span class="tok-kw">As</span> <span class="tok-kw">Double</span> <span>=</span> <span class="tok-nu">743.1E13</span>
+
+<span class="tok-kw">Dim</span> <span>f</span> <span class="tok-kw">As</span> <span class="tok-kw">Single</span> <span>=</span> <span class="tok-nu">743</span><span>D!</span></pre></code><br>
+<br>
+A suffix of "<code>!</code>" or "<code>F</code>" on a number specifies a single precision (32 bit total) floating point value.  A suffix of "<code>#</code>" or "<code>D</code>" specifies a double precision float.<br>
+Note that the letter suffixes and exponent specifiers are all case-insensitive.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span>a</span> <span class="tok-kw">As</span> <span class="tok-kw">Single</span> <span>=</span> <span class="tok-nu">3.1!</span>
+
+<span class="tok-kw">Dim</span> <span>b</span> <span class="tok-kw">As</span> <span class="tok-kw">Single</span> <span>=</span> <span>-</span><span class="tok-nu">123.456e-7</span><span>f</span>
+
+<span class="tok-kw">Dim</span> <span>c</span> <span class="tok-kw">As</span> <span class="tok-kw">Double</span> <span>=</span> <span class="tok-nu">0#</span>
+
+<span class="tok-kw">Dim</span> <span>d</span> <span class="tok-kw">As</span> <span class="tok-kw">Double</span> <span>=</span> <span class="tok-nu">3.141592653589e3#</span></pre></code><br>
+<br>
+</div><div>String Literals</div><div><br>
+String literals are a sequence of characters contained between two double quotes.  The sequence of characters escaped or non-escaped.<br>
+<br>
+Double quotes can be specified in the string literal by using two double quotes together.<br>
+<code><pre class="code"><span class="tok-kw">Print</span> <span>&quot;Hello World!&quot;</span>
+
+<span class="tok-kw">Print</span> <span>&quot;That's right!&quot;</span>
+
+<span class="tok-kw">Print</span> <span>&quot;See the &quot;&quot;word&quot;&quot; contained in double quotes.&quot;</span></pre></code><br>
+<br>
+String literals can contain escape sequences if the string literal is prefixed by the <code><a href="../../operators/preprocessor-operators/procedures/operator-escaped-string-literal.html">! Operator</a></code> (Escaped String Literal).  See <a href="../other/escape-sequences.html">Escape Sequences</a> for a list of accepted escape sequences.<br>
+<code><pre class="code"><span class="tok-kw">Print</span> <span>!</span><span>&quot;Hello\nWorld!&quot;</span></pre></code><br>
+<br>
+By default, string literals are non-escaped unless <code><a href="../../compiler-switches/procedures/option-escape.html">Option Escape</a></code> was used in the source in which case all string literals following are by default escaped.<br>
+<br>
+A string may be explicitly specified as non-escaped when prefixed by the <code><a href="../../operators/preprocessor-operators/procedures/operator-escaped-string-literal.html">$ Operator</a></code> (Non-Escaped String Literal).<br>
+<code><pre class="code"><span class="tok-kw">Print</span> <span>$&quot;C:\temp&quot;</span></pre></code><br>
+<br>
+Besides ASCII files with Unicode escape sequences (<code>\u</code>), FreeBASIC can parse UTF-8, UTF-16LE, UTF-16BE, UTF-32LE and UTF-32BE source files as long as they were saved with Byte Order Mark (BOM), allowing unicode characters directly in the string literal.<br>
+<b>Note:</b> The most reliable cross-platform code is obtained by encoding without BOM in ASCII/UTF-8 characters.<br>
+<br>
+String literals in an ASCII file are treated as <code><a href="../../standard-data-types/procedures/zstring.html">ZString</a></code>, while string literals in a Unicode file are treated as <code><a href="../../standard-data-types/procedures/wstring.html">WString</a></code> (regardless of the string literal's value).<br>
+<br>
+</div><div>Boolean Literals</div><div><br>
+The boolean type has two values, represented by literals <code><a href="../../intrinsic-defines/procedures/true.html">True</a></code> and <code><a href="../../intrinsic-defines/procedures/false.html">False</a></code>.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span>a</span> <span class="tok-kw">As</span> <span class="tok-kw">Boolean</span> <span>=</span> <span class="tok-kw">False</span>
+
+<span class="tok-kw">Dim</span> <span>b</span> <span class="tok-kw">As</span> <span class="tok-kw">Boolean</span> <span>=</span> <span class="tok-kw">True</span></pre></code><br>
+	<br>
+<br>
+</div><div>See also</div><div><br>
+<ul><li> <code><a href="../../miscellaneous-keywords/procedures/typeof.html">TypeOf</a></code><br>
+<li> <code><a href="../../preprocessor/procedures/define.html">#define</a></code><br>
+<li> <code><a href="../../variable-declarations/procedures/const.html">Const</a></code> <br>
+<li> <code><a href="../../standard-data-types/standard-data-types.html">Standard Data Types</a></code><br>
+<li> <code><a href="../variables-and-data-types/standard-data-type-limits.html">Table with variable types overview, limits and suffixes</a></code><br>
+<br>
+</li></li></li></li></li></ul></div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

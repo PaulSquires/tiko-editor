@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CMaskedEdit.Constructors — Help Center</title>
+<meta name="description" content="Creates an instance of the class and the control.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-gui/cmaskededit/cmaskededit-constructors.html">
+<meta property="og:title" content="CMaskedEdit.Constructors">
+<meta property="og:description" content="Creates an instance of the class and the control.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-gui/cmaskededit/cmaskededit-constructors.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-gui/cmaskededit/cmaskededit-constructors.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cmaskededit-class.html">CMaskedEdit Class</a></div>
+<h1>CMaskedEdit.Constructors<span class="h1kind">constructor</span></h1>
+<p class="lede">Creates an instance of the class and the control.</p>
+<div class="badges"><a class="badge" href="../../index.html">Windows</a><span class="badge">constructor</span><span class="badge">CMaskedEdit.inc</span><span class="badge badge--warn">doc-orphan</span></div>
+<div class="note note--warn"><strong>No implementation located.</strong> This member is documented, but the source scan found no matching declaration. It is likely declared in a header this scan does not resolve, or provided by a macro.</div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>CONSTRUCTOR CMaskedEdit</code></pre>
+<pre class="code sig"><code>CONSTRUCTOR CMaskedEdit (BYVAL pWindow AS CWindow PTR, BYVAL cID AS LONG_PTR, BYVAL x AS LONG = 0, BYVAL y AS LONG = 0, BYVAL nWidth AS LONG = 0, BYVAL nHeight AS LONG = 0, BYVAL dwStyle AS DWORD = -1, BYVAL dwExStyle AS DWORD = -1)</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>[Constructors](#constructors1)</code></td><td></td><td>Creates an instance of the class and the control.</td></tr><tr><td><code>[AfxCMaskedEditPtr](#afxcmaskededitptr)</code></td><td></td><td>Returns a pointer to the <strong>CMaskedEdit</strong> class.</td></tr><tr><td><code>[Create](#create)</code></td><td></td><td>Creates an instance of the control</td></tr><tr><td><code>[EnableMask](#enablemask)</code></td><td></td><td>Initializes the masked edit control.</td></tr><tr><td><code>[GetText](#gettext)</code></td><td></td><td>Retrieves validated text from the masked edit control.</td></tr><tr><td><code>[GetTextLength](#gettextlength)</code></td><td></td><td>Retrieves the length of the text.</td></tr><tr><td><code>[hWindow](#hWindow)</code></td><td></td><td>Gets the control window handle.</td></tr><tr><td><code>[SetPos](#setpos)</code></td><td></td><td>Sets the position of the cursor.</td></tr><tr><td><code>[SetValidChars](#setvalidchars)</code></td><td></td><td>Specifies a string of valid characters that the user can enter.</td></tr><tr><td><code>[SetText](#settext)</code></td><td></td><td>Displays a prompt in the masked edit control.</td></tr><tr><td><code>pWindow</code></td><td></td><td>Pointer to the parent <code>CWindow</code>class.</td></tr><tr><td><code>cID</code></td><td></td><td>The control identifier, an integer value used to notify its parent about events. The application determines the control identifier; it must be unique for all controls with the same parent window.</td></tr><tr><td><code>X</code></td><td></td><td>The x-coordinate of the upper-left corner of the window relative to the upper-left corner of the parent window's client area.</td></tr><tr><td><code>y</code></td><td></td><td>The initial y-coordinate of the upper-left corner of the window relative to the upper-left corner of the parent window's client area.</td></tr><tr><td><code>nWidth</code></td><td></td><td>The width of the control.</td></tr><tr><td><code>nHeight</code></td><td></td><td>The height of the control.</td></tr><tr><td><code>dwStyle</code></td><td></td><td>The window styles of the control being created.<br>Default styles: WS_VISIBLE OR WS_TABSTOP OR ES_LEFT OR ES_AUTOHSCROLL.</td></tr><tr><td><code>dwExStyle</code></td><td></td><td>The extended window styles of the control being created.<br> Default extended style: WS_EX_CLIENTEDGE</td></tr></tbody></table></div>
+<h2>Remarks</h2>
+<p>Perform the following steps to use the <code>CMaskedEdit</code> control in your application:</p>
+<ol><li>Embed a <code>CMaskedEdit</code> object into your window class.</li></ol>
+<ol><li>Call the <a href="cmaskededit-enablemask.html">EnableMask</a> method to specify the mask.</li></ol>
+<ol><li>Call the <a href="cmaskededit-setvalidchars.html">SetValidChars</a> method to specify the list of valid characters.</li></ol>
+<ol><li>Call the <a href="cmaskededit-settext.html">SetText</a> method to specify the default text for the masked edit control.</li></ol>
+<ol><li>Call the <a href="cmaskededit-gettext.html">GetText</a> method to retrieve the validated text.</li></ol>
+<h2>Examples</h2>
+<p>DIM pMaskedEdit AS CMaskedEdit = CMaskedEdit(@pWindow, IDC_MASKED, 10, 30, 280, 23) pMaskedEdit.EnableMask(" ddd  ddd dddd", "(___) ___-____", "_") pMaskedEdit.SetText("(123) 123-1212"), TRUE</p>
+<p>' ######################################################################################## ' Microsoft Windows ' Contents: CWindow - Masked Edit Control ' Compiler: FreeBasic 32 &amp; 64 bit ' Copyright (c) 2025 José Roca. Freeware. Use at your own risk. ' THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER ' EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF ' MERCHANTABILITY AND/OR FITNESS FOR A PARTICULAR PURPOSE. ' ########################################################################################</p>
+<p>#define UNICODE #INCLUDE ONCE "AfxNova/CWindow.inc" #INCLUDE ONCE "AfxNova/CMaskedEdit.inc" USING AfxNova</p>
+<p>DECLARE FUNCTION wWinMain (BYVAL hInstance AS HINSTANCE, _</p>
+<pre class="code"><code>BYVAL hPrevInstance AS HINSTANCE, _
+                       BYVAL pwszCmdLine AS WSTRING PTR, _
+                       BYVAL nCmdShow AS LONG) AS LONG</code></pre>
+<p>END wWinMain(GetModuleHandleW(NULL), NULL, WCOMMAND(), SW_NORMAL)</p>
+<p>' // Forward declaration DECLARE FUNCTION WndProc (BYVAL hwnd AS HWND, BYVAL uMsg AS UINT, BYVAL wParam AS WPARAM, BYVAL lParam AS LPARAM) AS LRESULT</p>
+<p>CONST IDC_MASKED = 1001</p>
+<p>' ======================================================================================== ' Main ' ======================================================================================== FUNCTION wWinMain (BYVAL hInstance AS HINSTANCE, _</p>
+<pre class="code"><code>BYVAL hPrevInstance AS HINSTANCE, _
+               BYVAL pwszCmdLine AS WSTRING PTR, _
+               BYVAL nCmdShow AS LONG) AS LONG</code></pre>
+<p>' // Set process DPI aware ' // The recommended way is to use a manifest file SetProcessDpiAwareness(PROCESS_SYSTEM_DPI_AWARE) ' // Enable visual styles without including a manifest file AfxEnableVisualStyles</p>
+<p>' // Creates the main window DIM pWindow AS CWindow ' -or- DIM pWindow AS CWindow = "MyClassName" (use the name that you wish) pWindow.Create(NULL, "Masked edit control", @WndProc) ' // Sizes it by setting the wanted width and height of its client area pWindow.SetClientSize(300, 150) ' // Centers the window pWindow.Center</p>
+<p>' // Add a masked edit control DIM pMaskedEdit AS CMaskedEdit = CMaskedEdit(@pWindow, IDC_MASKED, 50, 30, 200, 23) SetFocus pMaskedEdit.hWindow pMaskedEdit.EnableMask(" ddd  ddd dddd", "(___) ___-____", "_") pMaskedEdit.SetText("(123) 123-1212"), TRUE</p>
+<p>' // Adds a button pWindow.AddControl("Button", , IDCANCEL, "&amp;Close", 190, 100, 75, 23)</p>
+<p>' // Anchor controls pWindow.AnchorControl(IDC_MASKED, AFX_ANCHOR_WIDTH) pWindow.AnchorControl(IDCANCEL, AFX_ANCHOR_BOTTOM_RIGHT)</p>
+<p>' // Displays the window and dispatches the Windows messages FUNCTION = pWindow.DoEvents(nCmdShow)</p>
+<p>END FUNCTION ' ========================================================================================</p>
+<p>' ======================================================================================== ' Main window procedure ' ======================================================================================== FUNCTION WndProc (BYVAL hwnd AS HWND, BYVAL uMsg AS UINT, BYVAL wParam AS WPARAM, BYVAL lParam AS LPARAM) AS LRESULT</p>
+<p>SELECT CASE uMsg</p>
+<pre class="code"><code>CASE WM_CREATE
+     EXIT FUNCTION
+
+  CASE WM_COMMAND
+     SELECT CASE CBCTL(wParam, lParam)
+        CASE IDCANCEL
+           ' // If ESC key pressed, close the application by sending an WM_CLOSE message
+           IF GET_WM_COMMAND_CMD(wParam, lParam) = BN_CLICKED THEN
+              SendMessageW hwnd, WM_CLOSE, 0, 0
+              EXIT FUNCTION
+           END IF
+        CASE IDC_MASKED
+           IF CBCTLMSG(wPAram, lParam) = EN_CHANGE THEN
+              DIM hEdit AS HWND = GetDlgItem(hwnd, LOWORD(wParam))
+              DIM pMaskedEdit AS CMaskedEdit PTR = AfxCMaskedEditPtr(hEdit)
+              IF pMaskedEdit THEN
+                 DIM dwsText AS DWSTRING
+                 ' // Get the text including the mask
+                 dwsText = pMaskedEdit-&gt;GetText(FALSE)
+                 ' // Get the text excluding the mask
+                 dwsText = pMaskedEdit-&gt;GetText(TRUE)
+              END IF
+           END IF
+     END SELECT</code></pre>
+<p>CASE WM_DESTROY</p>
+<pre class="code"><code>' // Ends the application by sending a WM_QUIT message
+     PostQuitMessage(0)
+     EXIT FUNCTION</code></pre>
+<p>END SELECT</p>
+<p>' // Default processing of Windows messages FUNCTION = DefWindowProcW(hwnd, uMsg, wParam, lParam)</p>
+<p>END FUNCTION ' ========================================================================================</p>
+<p>The following example demonstrates how to set up a mask (for example a phone number) by using the <strong>EnableMask</strong> method to create the mask for the masked edit control, and <strong>SetText</strong>method to display a prompt in the masked edit control.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CMaskedEdit.inc</code></li><li>Documented in <span class="srcref">Windows/Windows GUI/CMaskedEdit Class.md</span></li><li>Topic: <a href="../cmaskededit-class.html">CMaskedEdit Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

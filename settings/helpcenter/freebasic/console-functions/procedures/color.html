@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Color — Help Center</title>
+<meta name="description" content="Sets the display foreground / background color that is used with console output and graphics output of text">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/console-functions/procedures/color.html">
+<meta property="og:title" content="Color">
+<meta property="og:description" content="Sets the display foreground / background color that is used with console output and graphics output of text">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/console-functions/procedures/color.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/console-functions/procedures/color.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>Color<span class="h1kind">function</span></h1>
+<p class="lede">Sets the display foreground / background color that is used with console output and graphics output of text</p>
+<div class="badges"><a class="badge" href="../index.html">Console Functions</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>Declare Function Color ( ByVal foreground As ULong , ByVal background As ULong ) As ULong</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>foreground</code></td><td></td><td>the foreground color to set</td></tr><tr><td><code>background</code></td><td></td><td>the background color to set</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<br>
+Returns a 32-bit value containing the current foreground color in the <code><a href="../../bit-manipulation/procedures/loword.html">Low Word</a></code> and the current background color in the <code><a href="../../bit-manipulation/procedures/hiword.html">High Word</a></code>.<br>
+In hi/truecolor modes, only the foreground color is returned, taking up the whole 32 bits. Instead, see <code><a href="../../screen-functions/procedures/screencontrol.html">ScreenControl</a></code> to return the current graphics mode color (foreground and background).<br>
+<br>
+The old color values can be retrieved at the same time as setting new ones.<br>
+<br>
+
+<h2>Description</h2>
+<br>
+The <code><b>Color</b></code> statement sets the current foreground and/or background colors. <code><a href="../../2d-drawing-functions/procedures/circle.html">Circle</a></code>, <code><a href="../../screen-functions/procedures/draw.html">Draw</a></code>, <code><a href="../../2d-drawing-functions/procedures/line-graphics.html">Line (Graphics)</a></code>, <code><a href="cls.html">Cls</a></code>, <code><a href="../../2d-drawing-functions/procedures/paint.html">Paint</a></code>, <code><a href="print.html">Print</a></code>, <code><a href="../../2d-drawing-functions/procedures/preset.html">PReset</a></code> and <code><a href="../../2d-drawing-functions/procedures/pset-statement.html">PSet</a></code> all use the last colors set by this function when you don't specify a color to them, where applicable. The color values that <code><b>Color</b></code> accepts depend on the current graphics mode.<br>
+<br>
+<div><table><tr><td>Mode</td><td>Meaning</td></tr><tr><td>1</td><td>foreground is screen color (ranging 0-15). background is the emulated CGA palette to be used: 0 (green, red, and brown), 1 (cyan, magenta and white), 2 (same as 0, but with bright colors) or 3 (same as 1, but with bright colors)</td></tr><tr><td>2, 11</td><td>foreground is a color index in current palette (ranging 0-1). background is a color index in current palette (ranging 0-1).</td></tr><tr><td>7, 8</td><td>foreground is a color index in current palette (ranging 0-15). background is screen color index in current palette (ranging 0-15).</td></tr><tr><td>9</td><td>foreground is a color index in current palette (ranging 0-63). background is screen color index in current palette (ranging 0-63).</td></tr><tr><td>12</td><td>foreground is a color index in current palette (ranging 0-15). background is a color index in current palette (ranging 0-15).</td></tr><tr><td>13 and up</td><td>foreground is a color index in current palette (ranging 0-255). background is a color index in current palette (ranging 0-255).</td></tr></table></div><br>
+<br>
+If you are using a color depth higher than 8bpp, foreground and background are direct <code><a href="../../2d-drawing-functions/procedures/rgb.html">RGB</a></code> color values in the form <code>&h<i>AARRGGBB</i></code>, where <code><i>AA</i></code>, <code><i>RR</i></code>, <code><i>GG</i></code> and <code><i>BB</i></code> are the alpha, red, green and blue components ranging <code>&h00</code>-<code>&hFF</code> (<code>0</code>-<code>255</code> in decimal notation). While in hi/truecolor modes, you can use the <code><a href="../../2d-drawing-functions/procedures/rgb.html">RGB</a></code> or <code><a href="../../2d-drawing-functions/procedures/rgba.html">RGBA</a></code> macro to obtain a valid color value.<br>
+A <code><a href="../../graphics-library-reference/default-palettes.html">Default Palette</a></code> is automatically set when entering a <code><a href="../../screen-functions/procedures/screen-graphics.html">Screen (Graphics)</a></code> mode. <br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Usage</h3><code><br>
+<b>Color</b> [<i>foreground</i>] [, <i>background</i>]<br>
+<i>result</i> = <b>Color</b> [( [<i>foreground</i>] [, <i>background</i>] )]<br>
+</code><br>
+
+<h3>Differences from QB</h3><br>
+<ul><li> Direct color modes were not supported in QB.<br>
+<li> There is no border argument.<br>
+<br>
+</li></li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="../../2d-drawing-functions/procedures/rgb.html">RGB</a></code><br>
+<li> <code><a href="../../2d-drawing-functions/procedures/rgba.html">RGBA</a></code><br>
+<li> <code><a href="../../bit-manipulation/procedures/loword.html">LoWord</a></code><br>
+<li> <code><a href="../../bit-manipulation/procedures/hiword.html">HiWord</a></code><br>
+<li> <code><a href="locate.html">Locate</a></code><br>
+<li> <code><a href="../../2d-drawing-functions/procedures/palette.html">Palette</a></code><br>
+<li> <code><a href="../../screen-functions/procedures/screen-graphics.html">Screen (Graphics)</a></code><br>
+<br>
+</li></li></li></li></li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-cm">' Sets 320x240 in 32bpp color depth</span>
+
+<span class="tok-kw">Screen</span> <span class="tok-nu">14</span><span>,</span> <span class="tok-nu">32</span>
+
+
+
+<span class="tok-cm">' Sets orange foreground and dark blue background color</span>
+
+<span class="tok-kw">Color</span> <span class="tok-kw">RGB</span><span>(</span><span class="tok-nu">255</span><span>,</span> <span class="tok-nu">128</span><span>,</span> <span class="tok-nu">0</span><span>),</span> <span class="tok-kw">RGB</span><span>(</span><span class="tok-nu">0</span><span>,</span> <span class="tok-nu">0</span><span>,</span> <span class="tok-nu">64</span><span>)</span>
+
+
+
+<span class="tok-cm">' Clears the screen to the background color</span>
+
+<span class="tok-kw">Cls</span>                     
+
+
+
+<span class="tok-cm">' Prints &quot;Hello World!&quot; in the middle of the screen</span>
+
+<span class="tok-kw">Locate</span> <span class="tok-nu">15</span><span>,</span> <span class="tok-nu">14</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Hello World!&quot;</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+<div><img src="../../images/color.png"></div><br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span>c</span> <span class="tok-kw">As</span> <span class="tok-kw">ULong</span>
+
+
+
+<span class="tok-cm">'retrieve current color values</span>
+
+<span>c</span> <span>=</span> <span class="tok-kw">Color</span><span>()</span>
+
+
+
+<span class="tok-cm">'extract color values from c using LOWORD and HIWORD</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Console colors:&quot;</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Foreground: &quot;</span> <span>&amp;</span> <span class="tok-kw">LoWord</span><span>(</span><span>c</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Background: &quot;</span> <span>&amp;</span> <span class="tok-kw">HiWord</span><span>(</span><span>c</span><span>)</span></pre></code><br>
+<br>
+<code><pre class="code"><span class="tok-cm">' In 32-bit color depth, Function Color() returns only the foreground color</span>
+
+
+
+<span>#include &quot;fbgfx.bi&quot;
+
+</span>
+
+<span class="tok-cm">'' screencontrol expects integer/uinteger</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Long</span> <span>fgcolor</span><span>,</span> <span>bkcolor</span>
+
+
+
+<span class="tok-kw">ScreenRes</span> <span class="tok-nu">500</span><span>,</span> <span class="tok-nu">500</span><span>,</span> <span class="tok-nu">32</span>
+
+<span class="tok-kw">Width</span> <span class="tok-nu">500</span><span>\</span><span class="tok-nu">8</span><span>,</span> <span class="tok-nu">500</span><span>\</span><span class="tok-nu">16</span>
+
+<span class="tok-kw">Color</span> <span class="tok-nu">&amp;HFFFF00</span><span>,</span> <span class="tok-nu">&amp;H0000FF</span>
+
+<span class="tok-kw">Cls</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;From Function Color():&quot;</span>
+
+<span class="tok-kw">Print</span> <span>&quot;  Foreground Color: &quot;</span><span>;</span> <span class="tok-kw">Hex</span><span>(</span><span class="tok-kw">Color</span><span>(),</span> <span class="tok-nu">8</span><span>)</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+<span class="tok-kw">ScreenControl</span> <span>FB.GET_COLOR</span><span>,</span> <span>fgcolor</span><span>,</span> <span>bkcolor</span>
+
+<span class="tok-kw">Print</span> <span>&quot;From Sub ScreenControl():&quot;</span>
+
+<span class="tok-kw">Print</span> <span>&quot;  Foreground Color: &quot;</span><span>;</span> <span class="tok-kw">Hex</span><span>(</span><span>fgcolor</span><span>,</span> <span class="tok-nu">8</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>&quot;  Background Color: &quot;</span><span>;</span> <span class="tok-kw">Hex</span><span>(</span><span>bkcolor</span><span>,</span> <span class="tok-nu">8</span><span>)</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgColor.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

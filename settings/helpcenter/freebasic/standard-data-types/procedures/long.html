@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Long — Help Center</title>
+<meta name="description" content="Standard data type: 32-bit signed integer">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/standard-data-types/procedures/long.html">
+<meta property="og:title" content="Long">
+<meta property="og:description" content="Standard data type: 32-bit signed integer">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/standard-data-types/procedures/long.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/standard-data-types/procedures/long.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>Long<span class="h1kind">keyword</span></h1>
+<p class="lede">Standard data type: 32-bit signed integer</p>
+<div class="badges"><a class="badge" href="../index.html">Standard Data Types</a><span class="badge">keyword</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>Dim variable As Long</code></pre>
+<h2>Description</h2>
+<br>
+32-bit signed whole-number data type. Can hold values from <code>-2147483648</code> to <code>2147483647</code>. Corresponds to a signed DWORD.<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>See also</h3><br>
+<ul><li> <code><a href="integer.html">Integer</a></code><br>
+<li> <code><a href="longint.html">LongInt</a></code><br>
+<li> <code><a href="ulong.html">ULong</a></code><br>
+<li> <code><a href="../../language-documentation/variables-and-data-types/standard-data-type-limits.html">Table with variable types overview, limits and suffixes</a></code><br>
+<br>
+</li></li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span>x</span> <span class="tok-kw">As</span> <span class="tok-kw">Long</span> <span>=</span> <span class="tok-nu">&amp;H80000000</span>
+
+  <span class="tok-kw">Dim</span> <span>y</span> <span class="tok-kw">As</span> <span class="tok-kw">Long</span> <span>=</span> <span class="tok-nu">&amp;H7FFFFFFF</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;Long Range = &quot;</span><span>;</span> <span>x</span><span>;</span> <span>&quot; to &quot;</span><span>;</span> <span>y</span></pre></code><br>
+<b>Output:</b><br>
+<pre class="code">Long Range = -2147483648 to  2147483647</pre><br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgLong.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

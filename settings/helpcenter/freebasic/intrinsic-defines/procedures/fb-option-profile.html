@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__FB_OPTION_PROFILE__ — Help Center</title>
+<meta name="description" content="Intrinsic define set by the compiler">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/intrinsic-defines/procedures/fb-option-profile.html">
+<meta property="og:title" content="__FB_OPTION_PROFILE__">
+<meta property="og:description" content="Intrinsic define set by the compiler">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/intrinsic-defines/procedures/fb-option-profile.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/intrinsic-defines/procedures/fb-option-profile.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>__FB_OPTION_PROFILE__<span class="h1kind">keyword</span></h1>
+<p class="lede">Intrinsic define set by the compiler</p>
+<div class="badges"><a class="badge" href="../index.html">Intrinsic Defines</a><span class="badge">keyword</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>__FB_OPTION_PROFILE__</code></pre>
+<h2>Description</h2>
+<br>
+Intrinsic define set to an integer to indicate that the profiling code is generated:<br>
+<div class="indent"><b><code>__FB_OPTION_PROFILE__</code></b> is set to non-zero when profiling code is generated<br>
+<b><code>__FB_OPTION_PROFILE__</code></b> is set to zero when profiling code is not generated<br>
+<br>
+</div><code><a href="../../preprocessor/procedures/pragma.html">#Pragma Profile</a></code> allows to control the generation of profiling code.<br>
+This allows optionally including or excluding sections of source code to be profiled:<br>
+<div class="indent">when <code>#pragma profile = true</code>, then profiling code is generated<br>
+when <code>#pragma profile = false</code>, then profiling code is not generated<br>
+<br>
+</div>
+<h2>Remarks</h2>
+<h3>Version</h3><br>
+<ul><li> Since fbc 1.20.0<br>
+<br>
+</li></ul>
+<h3>Differences from QB</h3><br>
+<ul><li> New to FreeBASIC<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-profgen.html">Compiler Option: -profgen</a><br>
+<li> <a href="../../tutorials/programmer-s-guide/profiling-for-gmon-gprof.html">Profiling for gmon/gprof</a><br>
+<li> <a href="../../tutorials/programmer-s-guide/profiling-with-fb-s-profiler.html">Profiling with fb's profiler</a><br>
+<li> <a href="../../preprocessor/procedures/pragma.html">#pragma</a><br>
+<br>
+</li></li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span>#cmdline &quot;-profgen fb&quot;
+
+</span><span class="tok-cm">' profiling code generated</span>
+
+<span class="tok-kw">Print</span> <span class="tok-kw">__FB_OPTION_PROFILE__</span>
+
+
+
+<span>#pragma profile = False
+
+</span><span class="tok-cm">' profiling code not generated</span>
+
+<span class="tok-kw">Print</span> <span class="tok-kw">__FB_OPTION_PROFILE__</span>
+
+
+
+<span>#pragma profile = True
+
+</span><span class="tok-cm">' profiling code generated</span>
+
+<span class="tok-kw">Print</span> <span class="tok-kw">__FB_OPTION_PROFILE__</span></pre></code><br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgDdfboptionprofile.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

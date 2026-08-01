@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CRichEdit.InsertTable — Help Center</title>
+<meta name="description" content="Inserts one or more identical table rows with empty cells.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/crichedit/crichedit-inserttable.html">
+<meta property="og:title" content="CRichEdit.InsertTable">
+<meta property="og:description" content="Inserts one or more identical table rows with empty cells.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/crichedit/crichedit-inserttable.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-controls/crichedit/crichedit-inserttable.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../crichedit-class.html">CRichEdit Class</a></div>
+<h1>CRichEdit.InsertTable<span class="h1kind">method</span></h1>
+<p class="lede">Inserts one or more identical table rows with empty cells.</p>
+<div class="badges"><a class="badge" href="../../index.html">Windows</a><span class="badge">method</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION InsertTable (BYVAL hRichEdit AS HWND, BYVAL lptp AS TABLEROWPARMS PTR, BYVAL lptcp AS TABLECELLPARMS PTR) AS DWORD</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>hRichEdit</code></td><td></td><td>The handle of the rich edit control.</td></tr><tr><td><code>lptp</code></td><td></td><td>A pointer to a <a href="https://learn.microsoft.com/en-us/windows/win32/api/richedit/ns-richedit-tablerowparms" target="_blank" rel="noopener">TABLEROWPARMS</a> structure.</td></tr><tr><td><code>lptcp</code></td><td></td><td>A pointer to a <a href="https://learn.microsoft.com/en-us/windows/win32/api/richedit/ns-richedit-tablecellparms" target="_blank" rel="noopener">TABLECELLPARMS</a> structure.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>Returns <strong>S_OK</strong> if the table is inserted, or an error code if not.</p>
+<h2>Description</h2>
+<p>Inserts one or more identical table rows with empty cells.</p>
+<h2>Remarks</h2>
+<p>If the <strong>cpStartRow</strong> member of the <strong>TABLEROWPARMS</strong> is –1, this message deletes the selected text (if any), and then inserts empty table rows with the row and cell parameters given by <em>lptp^</em> and <em>lptcp</em>. It leaves the selection pointing to the start of the first cell in the first row. The client can then populate the table cells by pointing the selection (or an <strong>ITextRange</strong>) to the various cell end marks and inserting and formatting the desired text. Such text can include nested table rows. Alternatively, if the <strong>cpStartRow</strong> member of the <strong>TABLEROWPARMS</strong> is 0 or greater, table rows are inserted at the character position given by <strong>cpStartRow</strong>. This only changes the current selection if the table is inserted inside the selected text.</p>
+<p>A Microsoft Rich Edit table consists of a sequence of table rows which, in turn, consist of sequences of paragraphs. A table row starts with the special two-character delimiter paragraph U+FFF9 U+000D and ends with the two-character delimiter paragraph U+FFFB U+000D. Each cell is terminated by the cell mark U+0007, which is treated as a hard end-of-paragraph mark just as U+000D (CR) is. The table row and cell parameters are treated as special paragraph formatting of the table-row delimiters. The formatting contains the information in the <strong>TABLEROWPARMS</strong> structure. The cell parameters given by the <strong>TABLECELLPARMS</strong> structure are stored in an expanded version of the tabs array. This format allows tables to be nested within other tables, up to fifteen levels deep.</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/CRichEdit.inc:806</span></li><li>Documented in <span class="srcref">Windows/WIndows Controls/CRichEdit Class.md</span></li><li>Topic: <a href="../crichedit-class.html">CRichEdit Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

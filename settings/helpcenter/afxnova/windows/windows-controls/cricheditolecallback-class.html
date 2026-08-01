@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CRichEditOleCallback Class — Help Center</title>
+<meta name="description" content="CRichEditOleCallback Class — 12 documented members. Windows reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/cricheditolecallback-class.html">
+<meta property="og:title" content="CRichEditOleCallback Class">
+<meta property="og:description" content="CRichEditOleCallback Class — 12 documented members. Windows reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/cricheditolecallback-class.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-controls/cricheditolecallback-class.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span>Windows</div>
+<h1>CRichEditOleCallback Class</h1>
+<h2>Members (12)</h2>
+<div class="memberlist"><a href="cricheditolecallback/cricheditolecallback-constructor.html"><span class="m-n">CONSTRUCTOR</span><span class="m-d">Called when a class variable is created.</span></a><a href="cricheditolecallback/cricheditolecallback-contextsensitivehelp.html"><span class="m-n">ContextSensitiveHelp</span><span class="m-d">Indicates if the application should transition into or out of context-sensitive help mode. This method should implement the functionality described for [IOleWindow.ContextSensitiveHelp](https://learn.microsoft.com/en-us/windows/win32/api/oleidl/nf-oleidl-iolewindow-contextsensitivehelp).</span></a><a href="cricheditolecallback/cricheditolecallback-deleteobject.html"><span class="m-n">DeleteObject</span><span class="m-d">Sends notification that an object is about to be deleted from a rich edit control. The object is not necessarily being released when this member is called.</span></a><a href="cricheditolecallback/cricheditolecallback-destructor.html"><span class="m-n">DESTRUCTOR</span><span class="m-d">Called automatically when a class variable goes out of scope or is destroyed.</span></a><a href="cricheditolecallback/cricheditolecallback-getclipboarddata.html"><span class="m-n">GetClipboardData</span><span class="m-d">Allows the client to supply its own clipboard object.</span></a><a href="cricheditolecallback/cricheditolecallback-getcontextmenu.html"><span class="m-n">GetContextMenu</span><span class="m-d">Queries the application for a context menu to use on a right-click event.</span></a><a href="cricheditolecallback/cricheditolecallback-getdragdropeffect.html"><span class="m-n">GetDragDropEffect</span><span class="m-d">Allows the client to specify the effects of a drop operation.</span></a><a href="cricheditolecallback/cricheditolecallback-getinplacecontext.html"><span class="m-n">GetInPlaceContext</span><span class="m-d">Provides the application and document-level interfaces and information required to support in-place activation.</span></a><a href="cricheditolecallback/cricheditolecallback-getnewstorage.html"><span class="m-n">GetNewStorage</span><span class="m-d">Provides storage for a new object pasted from the clipboard or read in from an Rich Text Format (RTF) stream.</span></a><a href="cricheditolecallback/cricheditolecallback-queryacceptdata.html"><span class="m-n">QueryAcceptData</span><span class="m-d">During a paste operation or a drag event, determines if the data that is pasted or dragged should be accepted.</span></a><a href="cricheditolecallback/cricheditolecallback-queryinsertobject.html"><span class="m-n">QueryInsertObject</span><span class="m-d">Queries the application as to whether an object should be inserted. The member is called when pasting and when reading Rich Text Format (RTF).</span></a><a href="cricheditolecallback/cricheditolecallback-showcontainerui.html"><span class="m-n">ShowContainerUI</span><span class="m-d">Indicates whether or not the application is to display its container UI. The rich edit control looks ahead for double-clicks and defers the call if appropriate. Applications may defer hiding adornments until an [IOleInPlaceUIWindow.SetBorderSpace](https://learn.microsoft.com/en-us/windows/win32/api/oleidl/nf-oleidl-ioleinplaceuiwindow-setborderspace) call is received.</span></a></div>
+<h2>Documentation</h2>
+<h2 id="cricheditolecallback-class">CRichEditOleCallback Class</h2>
+<p>Implements the <code>IRichEditOleCallback</code>interface.</p>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="cricheditolecallback/cricheditolecallback-constructor.html">CONSTRUCTOR</a></td><td>Called when a class variable is created.</td></tr><tr><td><a href="cricheditolecallback/cricheditolecallback-destructor.html">DESTRUCTOR</a></td><td>Called automatically when a class variable goes out of scope or is destroyed.</td></tr></tbody></table></div>
+<p>The <code>IRichEditOleCallback</code>interface is used by a rich text edit control to retrieve OLE-related information from its client. A rich edit control client is responsible for implementing this interface and assigning it to the control by using the <strong>EM_SETOLECALLBACK</strong> message.</p>
+<p>The <code>IRichEditOleCallback</code>interface inherits from the <strong>IUnknown</strong> interface. <code>IRichEditOleCallback</code>also has these types of methods:</p>
+<hr>
+<h2 id="cricheditolecallback-methods">CRichEditOleCAllback Methods</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="cricheditolecallback/cricheditolecallback-getnewstorage.html">GetNewStorage</a></td><td>Provides storage for a new object pasted from the clipboard or read in from an Rich Text Format (RTF) stream.</td></tr><tr><td><a href="cricheditolecallback/cricheditolecallback-getinplacecontext.html">GetInPlaceContext</a></td><td>Provides the application and document-level interfaces and information required to support in-place activation.</td></tr><tr><td><a href="cricheditolecallback/cricheditolecallback-showcontainerui.html">ShowContainerUI</a></td><td>Indicates whether or not the application is to display its container UI. The rich edit control looks ahead for double-clicks and defers the call if appropriate. Applications may defer hiding adornments until an <a href="https://learn.microsoft.com/en-us/windows/win32/api/oleidl/nf-oleidl-ioleinplaceuiwindow-setborderspace" target="_blank" rel="noopener">IOleInPlaceUIWindow.SetBorderSpace</a> call is received.</td></tr><tr><td><a href="cricheditolecallback/cricheditolecallback-queryinsertobject.html">QueryInsertObject</a></td><td>Queries the application as to whether an object should be inserted. The member is called when pasting and when reading Rich Text Format (RTF).</td></tr><tr><td><a href="cricheditolecallback/cricheditolecallback-deleteobject.html">DeleteObject</a></td><td>Sends notification that an object is about to be deleted from a rich edit control. The object is not necessarily being released when this member is called.</td></tr><tr><td><a href="cricheditolecallback/cricheditolecallback-queryacceptdata.html">QueryAcceptData</a></td><td>During a paste operation or a drag event, determines if the data that is pasted or dragged should be accepted.</td></tr><tr><td><a href="cricheditolecallback/cricheditolecallback-contextsensitivehelp.html">ContextSensitiveHelp</a></td><td>Indicates if the application should transition into or out of context-sensitive help mode. This method should implement the functionality described for <a href="https://learn.microsoft.com/en-us/windows/win32/api/oleidl/nf-oleidl-iolewindow-contextsensitivehelp" target="_blank" rel="noopener">IOleWindow.ContextSensitiveHelp</a>.</td></tr><tr><td><a href="cricheditolecallback/cricheditolecallback-getclipboarddata.html">GetClipboardData</a></td><td>Allows the client to supply its own clipboard object.</td></tr><tr><td><a href="cricheditolecallback/cricheditolecallback-getdragdropeffect.html">GetDragDropEffect</a></td><td>Allows the client to specify the effects of a drop operation.</td></tr><tr><td><a href="cricheditolecallback/cricheditolecallback-getcontextmenu.html">GetContextMenu</a></td><td>Queries the application for a context menu to use on a right-click event.</td></tr></tbody></table></div>
+<hr>
+<h3 id="constructor">CONSTRUCTOR</h3>
+<p>Creates an instance of the <code>CRichEditOleCallback</code>.</p>
+<pre class="code"><code>CONSTRUCTOR CRichEditOLeCallback</code></pre>
+<hr>
+<h3 id="destructor">DESTRUCTOR</h3>
+<p>Called automatically when a class variable goes out of scope or is destroyed.</p>
+<pre class="code"><code>DESTRUCTOR CRichEditOLeCallback</code></pre>
+<hr>
+<h3 id="getnewstorage">GetNewStorage</h3>
+<p>Provides storage for a new object pasted from the clipboard or read in from an Rich Text Format (RTF) stream.</p>
+<pre class="code"><code>FUNCTION GetNewStorage (BYVAL lplpstg AS LPSTORAGE PTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>lplpstg</em></td><td>The address of the <strong>IStorage</strong> interface created for the new object.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns <strong>S_OK</strong> on success. If the method fails, it can return one of the following values.</p>
+<div class="table-wrap"><table><thead><tr><th>Return code</th><th>Description</th></tr></thead><tbody><tr><td><strong>E_INVALIDARG</strong></td><td>There was an invalid argument.</td></tr><tr><td><strong>E_OUTOFMEMORY</strong></td><td>There was not enough memory to do the operation.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>This method must be implemented to allow cut, copy, paste, drag, and drop operations of Component Object Model (COM) objects.</p>
+<h5 id="implementation">Implementation</h5>
+<pre class="code"><code>FUNCTION CRichEditOleCallback.GetNewStorage (BYVAL lplpstg AS LPSTORAGE PTR) AS HRESULT
+   DIM hr AS HRESULT
+   DIM pILockBytes AS ILockBytes PTR
+   hr = CreateILockBytesOnHGlobal(NULL, TRUE, @pILockBytes)
+   IF FAILED(hr) THEN RETURN hr
+   hr = StgCreateDocfileOnILockBytes(pILockBytes, _
+        STGM_SHARE_EXCLUSIVE OR STGM_READWRITE OR STGM_CREATE, 0, lplpstg)
+   RETURN hr
+END FUNCTION</code></pre>
+<hr>
+<h3 id="getinplacecontext">GetInPlaceContext</h3>
+<p>Provides the application and document-level interfaces and information required to support in-place activation.</p>
+<pre class="code"><code>GetInPlaceContext (BYVAL lplpFrame AS LPOLEINPLACEFRAME PTR, BYVAL lplpDoc AS LPOLEINPLACEUIWINDOW PTR, _
+   BYVAL lpFrameInfo AS LPOLEINPLACEFRAMEINFO) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>lplpFrame</em></td><td>The address of the <a href="https://learn.microsoft.com/en-us/windows/win32/api/oleidl/nn-oleidl-ioleinplaceframe" target="_blank" rel="noopener">IOleInPlaceFrame</a> interface that represents the frame window of a rich edit control client. Use the <strong>AddRef</strong> method to increment the reference count. The rich edit control releases the interface when it is no longer needed.</td></tr><tr><td><em>lplpDoc</em></td><td>The address of the [IOleInPlaceUIWindow(https://learn.microsoft.com/en-us/windows/win32/api/oleidl/nn-oleidl-ioleinplaceuiwindow) interface that represents the document window of the rich edit control client. An interface need not be returned if the frame and document windows are the same. Use the <strong>AddRef</strong> method to increment the reference count. The rich edit control releases the interface when it is no longer needed.</td></tr><tr><td><em>lpFrameInfo</em></td><td>The accelerator information. <a href="https://learn.microsoft.com/en-us/windows/win32/api/oleidl/ns-oleidl-oleinplaceframeinfo" target="_blank" rel="noopener">OLEINPLACEFRAMEINFO</a></td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns <strong>S_OK</strong> on success. If the method fails, it can return the following value.</p>
+<div class="table-wrap"><table><thead><tr><th>Return code</th><th>Description</th></tr></thead><tbody><tr><td><strong>E_INVALIDARG</strong></td><td>There was an invalid argument.</td></tr></tbody></table></div>
+<hr>
+<h3 id="showcontainerui">ShowContainerUI</h3>
+<p>Indicates whether or not the application is to display its container UI. The rich edit control looks ahead for double-clicks and defers the call if appropriate. Applications may defer hiding adornments until an <a href="https://learn.microsoft.com/en-us/windows/win32/api/oleidl/nf-oleidl-ioleinplaceuiwindow-setborderspace" target="_blank" rel="noopener">IOleInPlaceUIWindow.SetBorderSpace</a> call is received.</p>
+<pre class="code"><code>FUNCTION ShowContainerUI (BYVAL fShow AS WINBOOL) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>fShow</em></td><td>Show container UI flag. The value is <strong>TRUE</strong> if the container UI is displayed, and <strong>FALSE</strong> if it is not.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns <strong>S_OK</strong> on success. If the method fails, it can return the following value.</p>
+<div class="table-wrap"><table><thead><tr><th>Return code</th><th>Description</th></tr></thead><tbody><tr><td><strong>E_INVALIDARG</strong></td><td>There was an invalid argument.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>The <strong>ShowContainerUI</strong> method is called by the <a href="https://learn.microsoft.com/en-us/windows/win32/api/oleidl/nf-oleidl-ioleinplacesite-onuiactivate" target="_blank" rel="noopener">IOleInPlaceSite.OnUIActivate</a> and <a href="https://learn.microsoft.com/en-us/windows/win32/api/oleidl/nf-oleidl-ioleinplacesite-onuideactivate" target="_blank" rel="noopener">IOleInPlaceSite.OnUIDeactivate</a> methods of the <a href="https://learn.microsoft.com/en-us/windows/win32/api/oleidl/nn-oleidl-ioleinplacesite" target="_blank" rel="noopener">IOleInPlaceSite</a> interface.</p>
+<hr>
+<h3 id="queryinsertobject">QueryInsertObject</h3>
+<p>Queries the application as to whether an object should be inserted. The member is called when pasting and when reading Rich Text Format (RTF).</p>
+<pre class="code"><code>FUNCTION QueryInsertObject (BYVAL lpclsid AS LPCLSID, BYVAL lpstg AS LPSTORAGE, BYVAL cp AS LONG) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>lpclsid</em></td><td>Class identifier of the object to be inserted.</td></tr><tr><td><em>lpstg</em></td><td>Storage containing the object.</td></tr><tr><td><em>cp</em></td><td>Character position, at which the object will be inserted.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns <strong>S_OK</strong> on success. If the return value is not S_OK, the object was not inserted. If the method fails, it can return the following value.</p>
+<div class="table-wrap"><table><thead><tr><th>Return code</th><th>Description</th></tr></thead><tbody><tr><td><strong>E_INVALIDARG</strong></td><td>There was an invalid argument.</td></tr></tbody></table></div>
+<hr>
+<h3 id="deleteobject">DeleteObject</h3>
+<p>Sends notification that an object is about to be deleted from a rich edit control. The object is not necessarily being released when this member is called.</p>
+<pre class="code"><code>FUNCTION DeleteObject (BYVAL lpoleobj AS LPOLEOBJECT) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>lpoleobj</em></td><td>The object that is being deleted.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns <strong>S_OK</strong>.</p>
+<hr>
+<h3 id="queryacceptdata">QueryAcceptData</h3>
+<p>During a paste operation or a drag event, determines if the data that is pasted or dragged should be accepted.</p>
+<p><strong>QueryAcceptData</strong> is called when the user attempts to drag or paste an object into the control. If your application can accept the data, your implementation of the method returns <strong>S_OK</strong>; otherwise, it returns an error code. The method might also take some other action, such as warning the user that files of that type cannot be placed in the control.</p>
+<pre class="code"><code>FUNCTION QueryAcceptData (BYVAL lpdataobj AS LPDATAOBJECT, BYVAL lpcfFormat AS CLIPFORMAT PTR, _
+   BYVAL reco AS DWORD, BYVAL fReally AS WINBOOL, BYVAL hMetaPict AS HGLOBAL) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>lpdataobj</em></td><td>The data object being pasted or dragged.</td></tr><tr><td><em>lpcfFormat</em></td><td>The clipboard format that will be used for the paste or drop operation. If the value pointed to by <em>lpcfFormat</em> is zero, the best available format will be used. If the callback changes the value pointed to by <em>lpcfFormat</em>, the rich edit control only uses that format and the operation will fail if the format is not available.</td></tr><tr><td><em>reco</em></td><td>A clipboard operation flag, which can be one of these values:<br><strong>RECO_DROP</strong>. Drop operation (drag-and-drop).<br><strong>RECO_PASTE</strong>. Paste from the clipboard.</td></tr><tr><td><em>fReally</em></td><td>Indicates whether the drag-drop is actually happening or if it is just a query. A nonzero value indicates the paste or drop is actually happening. A zero value indicates the operation is just a query, such as for <strong>EM_CANPASTE</strong>.</td></tr><tr><td><em>hMetaPict</em></td><td>Handle to a metafile containing the icon view of an object if <strong>DVASPECT_ICON</strong> is being imposed on an object by a paste special operation.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns <strong>S_OK</strong> on success. See <strong>Remarks</strong>.</p>
+<h5 id="remarks">Remarks</h5>
+<p>On failure, the rich edit control refuses the data and terminates the operation. Otherwise, the control checks the data itself for acceptable formats. A success code other than <strong>S_OK</strong> means that the callback either checked the data itself (if <em>fReally</em> is <strong>FALSE</strong>) or imported the data itself (if <em>fReally</em> is <strong>TRUE</strong>). If the application returns a success code other than <strong>S_OK</strong>, the control does not check the read-only state of the edit control.</p>
+<hr>
+<h3 id="contextsensitivehelp">ContextSensitiveHelp</h3>
+<p>Indicates if the application should transition into or out of context-sensitive help mode. This method should implement the functionality described for <a href="https://learn.microsoft.com/en-us/windows/win32/api/oleidl/nf-oleidl-iolewindow-contextsensitivehelp" target="_blank" rel="noopener">IOleWindow.ContextSensitiveHelp</a>.</p>
+<pre class="code"><code>FUNCTION ContextSensitiveHelp (BYVAL fEnterMode AS WINBOOL) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>fEnterMode</em></td><td>If <strong>TRUE</strong>, the application should enter context-sensitive help mode. If <strong>FALSE</strong>, the application should leave context-sensitive help mode.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns <strong>S_OK</strong> on success. If the method fails, it can return the following value.</p>
+<div class="table-wrap"><table><thead><tr><th>Return code</th><th>Description</th></tr></thead><tbody><tr><td><strong>E_INVALIDARG</strong></td><td>There was an invalid argument.</td></tr></tbody></table></div>
+<hr>
+<h3 id="getclipboarddata">GetClipboardData</h3>
+<p>Allows the client to supply its own clipboard object.</p>
+<pre class="code"><code>FUNCTION GetClipboardData (BYVAL lpchrg AS CHARRANGE PTR, BYVAL reco AS DWORD, _
+   BYVAL lplpdataobj AS LPDATAOBJECT PTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>lpchrg</em></td><td>The clipboard object range.</td></tr><tr><td><em>reco</em></td><td>The clipboard operation flag can be one of these values.<br><strong>ECO_COPY</strong>. Copy to the clipboard.<br><strong>RECO_CUT</strong>. Cut to the clipboard.</td></tr><tr><td><em>lplpdataobj</em></td><td>Pointer to the pointer variable that receives the address of the <a href="https://learn.microsoft.com/en-us/windows/win32/api/objidl/nn-objidl-idataobject" target="_blank" rel="noopener">IDataObject</a> implementation representing the range specified in the <em>lpchrg</em> parameter. The value of <strong>lplpdataobj</strong> is ignored if an error is returned.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns <strong>S_OK</strong> on success. If the return value is <strong>E_NOTIMPL</strong>, the rich edit control created its own clipboard object. If the return value is a failure other than <strong>E_NOTIMPL</strong>, the operation failed.</p>
+<hr>
+<h3 id="getdragdropeffect">GetDragDropEffect</h3>
+<p>Allows the client to specify the effects of a drop operation.</p>
+<pre class="code"><code>FUNCTION GetDragDropEffect (BYVAL fDrag AS WINBOOL, BYVAL grfKeyState AS DWORD, _
+   BYVAL pdwEffect AS LPDWORD) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>fDrag</em></td><td><strong>TRUE</strong> if the query is for a <a href="https://learn.microsoft.com/en-us/windows/win32/api/oleidl/nf-oleidl-idroptarget-dragenter" target="_blank" rel="noopener">IDropTarget.DragEnter</a> or <a href="https://learn.microsoft.com/en-us/windows/win32/api/oleidl/nf-oleidl-idroptarget-dragover" target="_blank" rel="noopener">IDropTarget.DragOver</a>. <strong>FALSE</strong> if the query is for <a href="https://learn.microsoft.com/en-us/windows/win32/api/oleidl/nf-oleidl-idroptarget-drop" target="_blank" rel="noopener">IDropTarget.Drop</a>.</td></tr><tr><td><em>grfKeyState</em></td><td>Key state as defined by OLE.</td></tr><tr><td><em>pdwEffect</em></td><td>The effect used by a rich edit control. When <em>fDrag</em> is <strong>TRUE</strong>, on return, its content is set to the effect allowable by the rich edit control. When <em>fDrag</em> is <strong>FALSE</strong>, on return, the variable is set to the effect to use.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>This method returns <strong>S_OK</strong>.</p>
+<hr>
+<h3 id="getcontextmenu">GetContextMenu</h3>
+<p>Queries the application for a context menu to use on a right-click event.</p>
+<pre class="code"><code>FUNCTION GetContextMenu (BYVAL seltype AS WORD, BYVAL lpoleobj AS LPOLEOBJECT, _
+   BYVAL lpchrg AS CHARRANGE PTR, BYVAL lphmenu AS HMENU PTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>seltype</em></td><td>Selection type. The value, which specifies the contents of the new selection, can be one or more of the following values.<br><strong>SEL_EMPTY</strong>. The selection is empty.<br><strong>SEL_TEXT</strong>. Text.<br><strong>SEL_OBJECT</strong>. At least one COM object.<br><strong>SEL_MULTICHAR</strong>. More than one character of text.<br><strong>SEL_MULTIOBJECT</strong>. More than one COM object.<br><strong>GCM_RIGHTMOUSEDROP</strong>. Indicates that a context menu for a right-mouse drag drop should be generated. The <em>lpoleobj</em> parameter is a pointer to the <a href="https://learn.microsoft.com/en-us/windows/win32/api/objidl/nn-objidl-idataobject" target="_blank" rel="noopener">IDataObject</a> interface for the object being dropped.</td></tr><tr><td><em>lpoleobj</em></td><td>Pointer to an interface. If the <em>seltype</em> parameter includes the <strong>SEL_OBJECT</strong> flag, <em>lpoleobj</em> is a pointer to the <a href="https://learn.microsoft.com/en-us/windows/win32/api/oleidl/nn-oleidl-ioleobject" target="_blank" rel="noopener">IOleObject</a> interface for the first selected COM object. If seltype includes the <strong>GCM_RIGHTMOUSEDROP</strong> flag, <em>lpoleobj</em> is a pointer to an <a href="https://learn.microsoft.com/en-us/windows/win32/api/objidl/nn-objidl-idataobject" target="_blank" rel="noopener">IDataObject</a> interface. Otherwise, <em>lpoleobj</em> is NULL. If you hold on to the interface pointer, you must call the <strong>AddRef</strong> method to increment the object's reference count.</td></tr><tr><td><em>lpchrg</em></td><td>Pointer to a <a href="https://learn.microsoft.com/en-us/windows/win32/api/richedit/ns-richedit-charrange" target="_blank" rel="noopener">CHARRANGE</a> structure containing the current selection.</td></tr><tr><td><em>lphmenu</em></td><td>The handle of a context menu to use. This parameter is ignored if an error is returned. A rich edit control destroys the menu when it is finished with it so the client should not.</td></tr></tbody></table></div>
+<p>Returns <strong>S_OK</strong> on success. If the method fails, it can return the following value.</p>
+<div class="table-wrap"><table><thead><tr><th>Return code</th><th>Description</th></tr></thead><tbody><tr><td><strong>E_INVALIDARG</strong></td><td>There was an invalid argument.</td></tr></tbody></table></div>
+<hr>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

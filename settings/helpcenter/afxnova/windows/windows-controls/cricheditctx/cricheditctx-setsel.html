@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CRichEditCtx.SetSel — Help Center</title>
+<meta name="description" content="Selects a range of characters in a rich edit control.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/cricheditctx/cricheditctx-setsel.html">
+<meta property="og:title" content="CRichEditCtx.SetSel">
+<meta property="og:description" content="Selects a range of characters in a rich edit control.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/cricheditctx/cricheditctx-setsel.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-controls/cricheditctx/cricheditctx-setsel.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cricheditctx-class.html">CRichEditCtx Class</a></div>
+<h1>CRichEditCtx.SetSel<span class="h1kind">method</span></h1>
+<p class="lede">Selects a range of characters in a rich edit control.</p>
+<div class="badges"><a class="badge" href="../../index.html">Windows</a><span class="badge">method</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>SUB SetSel OVERLOAD (BYVAL nStart AS LONG, BYVAL nEnd AS LONG)</code></pre>
+<pre class="code sig"><code>SUB SetSel OVERLOAD (BYREF pt AS POINTL)</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>nStart</code></td><td></td><td>The starting character position of the selection.</td></tr><tr><td><code>nEnd</code></td><td></td><td>The ending character position of the selection.</td></tr><tr><td><code>pt</code></td><td></td><td>A <a href="https://learn.microsoft.com/en-us/windows/win32/api/windef/ns-windef-pointl" target="_blank" rel="noopener">POINTL</a> structure with its <strong>x</strong> and <strong>y</strong> members set to the starting and ending characters positions of the selection.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Selects a range of characters in a rich edit control.</p>
+<h2>Remarks</h2>
+<p>The start value can be greater than the end value. The lower of the two values specifies the character position of the first character in the selection. The higher value specifies the position of the first character beyond the selection.</p>
+<p>The start value is the anchor point of the selection, and the end value is the active end. If the user uses the SHIFT key to adjust the size of the selection, the active end can move but the anchor point remains the same.</p>
+<p>If the start is 0 and the end is -1, all the text in the edit control is selected. If the start is -1, any current selection is deselected.</p>
+<p>If the edit control has the <strong>ES_NOHIDESEL</strong> style, the selected text is highlighted regardless of whether the control has focus. Without the <strong>ES_NOHIDESEL</strong> style, the selected text is highlighted only when the edit control has the focus.</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/CRichEditCtx.inc:2222</span></li><li>Documented in <span class="srcref">Windows/WIndows Controls/RichEdit/CRichEditCtx Class.md</span></li><li>Topic: <a href="../cricheditctx-class.html">CRichEditCtx Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CDialog Menu — Help Center</title>
+<meta name="description" content="Builds a menu using CDialog.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-gui/procedures/cdialog-menu.html">
+<meta property="og:title" content="CDialog Menu">
+<meta property="og:description" content="Builds a menu using CDialog.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-gui/procedures/cdialog-menu.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-gui/procedures/cdialog-menu.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../about-menus.html">About Menus</a></div>
+<h1>CDialog Menu<span class="h1kind">function</span></h1>
+<p class="lede">Builds a menu using CDialog.</p>
+<div class="badges"><a class="badge" href="../../index.html">Windows</a><span class="badge">function</span><span class="badge badge--warn">doc-orphan</span></div>
+<div class="note note--warn"><strong>No implementation located.</strong> This member is documented, but the source scan found no matching declaration. It is likely declared in a header this scan does not resolve, or provided by a macro.</div>
+<h2>Description</h2>
+<p>Builds a menu using <code>CDialog</code>and the DDT wrappers.</p>
+<h2>Example</h2>
+<p>#define UNICODE #define _WIN32_WINNT &amp;h0602 #include once "AfxNova/DDT.inc" USING AfxNova</p>
+<p>DECLARE FUNCTION wWinMain (BYVAL hInstance AS HINSTANCE, _</p>
+<pre class="code"><code>BYVAL hPrevInstance AS HINSTANCE, _
+                       BYVAL pwszCmdLine AS WSTRING PTR, _
+                       BYVAL nCmdShow AS LONG) AS LONG</code></pre>
+<p>END wWinMain(GetModuleHandleW(NULL), NULL, wCommand(), SW_NORMAL)</p>
+<p>DECLARE FUNCTION DlgProc (BYVAL hDlg AS HWND, BYVAL uMsg AS DWORD, BYVAL wParam AS DWORD, BYVAL lParam AS LPARAM) AS INT_PTR</p>
+<p>CONST ID_OPEN = 401 CONST ID_EXIT = 402 CONST ID_OPTION1 = 403 CONST ID_OPTION2 = 404 CONST ID_HELP = 405 CONST ID_ABOUT = 406</p>
+<p>' ======================================================================================== ' Build the menu ' ======================================================================================== FUNCTION BuildMenu (BYVAL hDlg AS HWND) AS HMENU DIM lResult AS LONG</p>
+<p>' ** First create a top-level menu: DIM hMenu AS HMENU = MenuNewBar</p>
+<p>' ** Add a top-level menu item with a popup menu: DIM hPopup1 AS HMENU = MenuNewPopup MenuAddPopup hMenu, "&amp;File", hPopup1, MF_ENABLED MenuAddString hPopup1, "&amp;Open", ID_OPEN, MF_ENABLED MenuAddString hPopup1, "&amp;Exit", ID_EXIT, MF_ENABLED MenuAddString hPopup1, "-", 0, 0</p>
+<p>' ** Now we can add another item to the menu that will bring up a sub-menu. ' First we obtain a new popup menu handle to distinguish it from the first ' popup menu: DIM hPopup2 AS HMENU = MenuNewPopup</p>
+<p>' ** Now add a new menu item to the first menu. ' This item will bring up the sub-menu when selected: MenuAddPopup hPopup1, "&amp;More Options", hPopup2, MF_ENABLED</p>
+<p>' ** Now we will define the sub menu: MenuAddString hPopup2, "Option &amp;1", ID_OPTION1, MF_ENABLED MenuAddString hPopup2, "Option &amp;2", ID_OPTION2, MF_ENABLED</p>
+<p>' ** Finally, we'll add a second top-level menu and popup. ' For this popup, we can reuse the first popup variable: hPopup1 = MenuNewPopup MenuAddPopup hMenu, "&amp;Help", hPopup1, MF_ENABLED MenuAddString hPopup1, "&amp;Help", ID_HELP, MF_ENABLED MenuAddString hPopup1, "-", 0, 0 MenuAddString hPopup1, "&amp;About", ID_ABOUT, MF_ENABLED</p>
+<p>' Attach the menu to the dialog MenuAttach hMenu, hDlg</p>
+<p>' // Bold the Exit menu item MenuBoldItem(hMenu, ID_EXIT) ' // Right justify the Help menu '   MenuRightJustifyItem(hMenu, 1)</p>
+<p>RETURN hMenu END FUNCTION ' ========================================================================================</p>
+<p>' ======================================================================================== ' Main ' ======================================================================================== FUNCTION wWinMain (BYVAL hInstance AS HINSTANCE, _</p>
+<pre class="code"><code>BYVAL hPrevInstance AS HINSTANCE, _
+               BYVAL pwszCmdLine AS WSTRING PTR, _
+               BYVAL nCmdShow AS LONG) AS LONG</code></pre>
+<p>' // Set process DPI aware SetProcessDpiAwareness(PROCESS_SYSTEM_DPI_AWARE) ' // Enable visual styles without including a manifest file AfxEnableVisualStyles</p>
+<p>' // Create a new dialog using dialog units DIM hDlg AS HWND = DialogNew(0, "DDT with FreeBasic - Menu Demo",50, 50, 175, 75, WS_OVERLAPPEDWINDOW OR DS_CENTER)</p>
+<p>' // Add controls to the dialog ControlAdd "GroupBox", hDlg, 101, "Just a simple question", 5, 5, 160, 55 ControlAdd "Label", hDlg, 102, "What's your name ?", 10, 20, 80, 10 ControlAdd "Edit", hDlg, 103, "", 90, 19, 70, 12 ControlAdd("Button", hDlg, 104, "&amp;Ok", 80, 40, 50, 12, BS_DEFPUSHBUTTON)</p>
+<p>' // Build and attach a menu DIM hMenu AS HMENU = BuildMenu(hDlg)</p>
+<p>' // Create a keyboard accelerator table AddAccelerator hDlg, FVIRTKEY OR FCONTROL, "O", ID_OPEN  ' // Ctrl+O - Open AddAccelerator hDlg, FVIRTKEY OR FCONTROL, "H", ID_HELP  ' // Ctrl+H - Help AddAccelerator hDlg, FVIRTKEY OR FCONTROL, "E", ID_EXIT  ' // Ctrl+E - Exit AddAccelerator hDlg, FVIRTKEY OR FCONTROL, "A", ID_ABOUT ' // Ctrl+A - About CreateAccelTable(hDlg)</p>
+<p>' // Display and activate the dialog as modal DialogShowModal(hDlg, @DlgProc)</p>
+<p>'   ' // Display and activate the dialog as modeless '   DialogShowModeless(@DlgProc)</p>
+<p>'   ' // Message handler loop '   DO '      pDlg.DialogDoEvents '   LOOP WHILE IsWindow(hDlg)</p>
+<p>RETURN DialogEndResult(hDlg)</p>
+<p>END FUNCTION ' ========================================================================================</p>
+<p>' ======================================================================================== ' Dialog callback procedure ' ======================================================================================== FUNCTION DlgProc (BYVAL hDlg AS HWND, BYVAL uMsg AS DWORD, BYVAL wParam AS DWORD, BYVAL lParam AS LPARAM) AS INT_PTR</p>
+<p>SELECT CASE uMsg</p>
+<pre class="code"><code>CASE WM_INITDIALOG
+     RETURN TRUE
+
+  CASE WM_COMMAND
+     SELECT CASE CBCTL(wParam, lParam)
+        CASE IDCANCEL
+           ' // If ESC key pressed, close the application by sending an WM_CLOSE message
+           IF CBCTLMSG(wParam, lParam) = BN_CLICKED THEN
+              SendMessageW hDlg, WM_CLOSE, 0, 0
+           END IF
+        CASE 104 'IDOK
+           DIM dws AS DWSTRING = AfxGetWindowText(GetDlgItem(hDlg, 103))
+           IF LEN(dws) THEN MsgBox("Your name is " &amp; dws, MB_ICONINFORMATION OR MB_TASKMODAL, "Answer")
+           IF LEN(dws) = 0 THEN MsgBox("Hmm ...", MB_ICONEXCLAMATION OR MB_TASKMODAL, "No answer")
+       CASE ID_OPEN TO ID_ABOUT
+           MsgBox("WM_COMMAND received from a menu item!", MB_TASKMODAL, "Test menu")
+     END SELECT
+
+  CASE WM_CLOSE
+     ' // End the application
+     DialogEnd(hDlg)</code></pre>
+<p>END SELECT</p>
+<p>RETURN FALSE</p>
+<p>END FUNCTION</p>
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">Windows/Windows GUI/Menu Procedures.md</span></li><li>Topic: <a href="../about-menus.html">About Menus</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

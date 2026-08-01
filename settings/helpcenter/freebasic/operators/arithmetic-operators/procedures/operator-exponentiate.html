@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Operator ^ (Exponentiate) — Help Center</title>
+<meta name="description" content="Raises a numeric expression to some power">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/operators/arithmetic-operators/procedures/operator-exponentiate.html">
+<meta property="og:title" content="Operator ^ (Exponentiate)">
+<meta property="og:description" content="Raises a numeric expression to some power">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/operators/arithmetic-operators/procedures/operator-exponentiate.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/operators/arithmetic-operators/procedures/operator-exponentiate.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>Operator ^ (Exponentiate)<span class="h1kind">operator</span></h1>
+<p class="lede">Raises a numeric expression to some power</p>
+<div class="badges"><a class="badge" href="../../index.html">Operators</a><span class="badge">operator</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>Declare Operator ^ ( ByRef lhs As Double, ByRef rhs As Double ) As Double</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>lhs</code></td><td></td><td>The left-hand side base expression.</td></tr><tr><td><code>rhs</code></td><td></td><td>The right-hand side exponent expression.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<br>
+Returns the exponentiation of a base expression raised to some exponent.<br>
+<br>
+
+<h2>Description</h2>
+<br>
+<b><code>Operator ^</code> (Exponentiate)</b> returns the result of a base expression (<code><i>lhs</i></code>) raised to some exponent expression (<code><i>rhs</i></code>). <code><b>^</b></code> works with double float numbers only, operands of other types will be converted into double before performing the exponentiation. Exponent of a fractional value (<code>1/<i>n</i></code>) is the same as taking <code><i>n</i></code>th root from the base, for example, <code>2 <b>^</b> (1/3)</code> is the cube root of 2.<br>
+<br>
+Neither of the operands are modified in any way.<br>
+<br>
+This operator can be overloaded for user-defined types.<br>
+<br>
+This operation is for <code><a href="../../../mathematical-functions/procedures/double.html">Double</a></code> precision data types only (53 significant bits), and suffers from some inaccuracies in the least significant bits of the number, especially when converting from other data types (e.g. 64-bit data types).  This inaccuracy is particularly noticeable when the result is expected to be an exact number, but then finding the result is out by a very small amount.  For this reason, never assume that an exponentiation expression will be exactly equal to the value expected, but rather close within some small amount of error.  Be wary of using rounding methods such as <code><a href="../../../mathematical-functions/procedures/int.html">Int</a></code> and <code><a href="../../../mathematical-functions/procedures/fix.html">Fix</a></code> on the result: if you expect the result to be an integer value, then there's a chance that it might be slightly lower, and will round down to a value that is one less than expected.<br>
+<br>
+This operator exists in C/C++ with a different meaning; in C/C++ it performs a Bitwise <code><a href="../../logical-operators/procedures/operator-xor-exclusive-disjunction.html">Xor</a></code>.<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Usage</h3><code><br>
+<i>result</i> = <i>lhs</i> <b>^</b> <i>rhs</i><br>
+</code><br>
+
+<h3>Dialect Differences</h3><br>
+<ul><li> In the <i><a href="../../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang qb</a></i> dialect, this operator cannot be overloaded.<br>
+<br>
+</li></ul>
+<h3>Differences from QB</h3><br>
+<ul><li> None<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <a href="../../../mathematical-functions/mathematical-functions.html">Mathematical Functions</a><br>
+<br>
+</li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Double</span> <span>n</span>
+
+<span class="tok-kw">Input</span> <span>&quot;Please enter a positive number: &quot;</span><span>,</span> <span>n</span>
+
+<span class="tok-kw">Print</span> 
+
+<span class="tok-kw">Print</span> <span>n</span><span>;</span><span>&quot; squared is &quot;</span><span>;</span> <span>n</span> <span>^</span> <span class="tok-nu">2</span>
+
+<span class="tok-kw">Print</span> <span>&quot;The fifth root of &quot;</span><span>;</span> <span>n</span><span>;</span><span>&quot; is &quot;</span><span>;</span> <span>n</span> <span>^</span> <span class="tok-nu">0.2</span>
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+Output:<br>
+<pre class="code">
+Please enter a positive number: 3.4
+
+ 3.4 squared is 11.56
+The fifth root of 3.4 is 1.27730844458754
+</pre><br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgOpExponentiate.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

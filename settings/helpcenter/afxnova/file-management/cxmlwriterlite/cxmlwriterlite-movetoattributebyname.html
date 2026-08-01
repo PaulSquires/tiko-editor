@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CXmlWriterLite.MoveToAttributeByName — Help Center</title>
+<meta name="description" content="Moves the reader to the attribute with the specified name.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/file-management/cxmlwriterlite/cxmlwriterlite-movetoattributebyname.html">
+<meta property="og:title" content="CXmlWriterLite.MoveToAttributeByName">
+<meta property="og:description" content="Moves the reader to the attribute with the specified name.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/file-management/cxmlwriterlite/cxmlwriterlite-movetoattributebyname.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/file-management/cxmlwriterlite/cxmlwriterlite-movetoattributebyname.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cxmllite-class.html">CXmlLite Class</a></div>
+<h1>CXmlWriterLite.MoveToAttributeByName<span class="h1kind">method</span></h1>
+<p class="lede">Moves the reader to the attribute with the specified name.</p>
+<div class="badges"><a class="badge" href="../index.html">File Management</a><span class="badge">method</span><span class="badge badge--warn">doc-orphan</span></div>
+<div class="note note--warn"><strong>No implementation located.</strong> This member is documented, but the source scan found no matching declaration. It is likely declared in a header this scan does not resolve, or provided by a macro.</div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION MoveToAttributeByName (BYVAL pwszLocalName AS LPCWSTR, BYVAL pwszNamespaceUri AS LPCWSTR) AS HRESULT</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>pwszLocalName</code></td><td></td><td>The local name of the attribute.</td></tr><tr><td><code>pwszNamespaceUri</code></td><td></td><td>The namespace of the attribute. If pwszNamespaceUri is NULL, the search will match only attributes with no namespaces.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>Returns <strong>S_OK</strong> if no error is generated. Returns <strong>E_PENDING</strong> if the data is unavailable, and the stream is paused. If the attribute is not found, this method returns <strong>S_FALSE</strong> and leaves the position of the reader unchanged.</p>
+<h2>Description</h2>
+<p>Moves the reader to the attribute with the specified name.</p>
+<h2>Remarks</h2>
+<p>This method is implemented as a convenience. You can use this method if you have to get the value of one or two attributes, and you are not very concerned about performance.</p>
+<p>Using this method frequently might decrease performance. The normal programming pattern is to iterate through all of the attributes on an element and save all values in a data construct that is under your own control. Calling this method does not allow the parser to return all attributes in the most efficient manner.</p>
+<p>After this method is called, the attributes collection on this element is still accessible. The application can then call other methods that move the reader within the attributes collection.</p>
+<p>If the attribute is temporarily unable to be read this method returns <strong>E_PENDING</strong>.</p>
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">File Management/CXmlLite Class.md</span></li><li>Topic: <a href="../cxmllite-class.html">CXmlLite Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

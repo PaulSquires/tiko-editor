@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AfxMakeTime64 — Help Center</title>
+<meta name="description" content="Converts the local time to a calendar value.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/datetime/procedures/afxmaketime64.html">
+<meta property="og:title" content="AfxMakeTime64">
+<meta property="og:description" content="Converts the local time to a calendar value.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/datetime/procedures/afxmaketime64.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/datetime/procedures/afxmaketime64.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../date-and-time-procedures.html">Date and Time Procedures</a></div>
+<h1>AfxMakeTime64<span class="h1kind">function</span></h1>
+<p class="lede">Converts the local time to a calendar value.</p>
+<div class="badges"><a class="badge" href="../index.html">DateTime</a><span class="badge">function</span><span class="badge">AfxTime.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION AfxMakeTime64 (BYREF _tm AS tm) AS LONGLONG</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>tm</code></td><td></td><td>A tm structure.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>The converted time.</p>
+<h2>Description</h2>
+<p>Converts the local time to a calendar value.</p>
+<p>The fields of the structure type tm store the following values, each of which is an int:</p>
+<p>tm_sec : Seconds after minute (0 – 59).<br> tm_min : Minutes after hour (0 – 59).<br> tm_hour : Hours after midnight (0 – 23).<br> tm_mday : Day of month (1 – 31).<br> tm_mon : Month (0 – 11; January = 0).<br> tm_year : Year (current year minus 1900).<br> tm_wday : Day of week (0 – 6; Sunday = 0).<br> tm_yday : Day of year (0 – 365; January 1 = 0).<br> tm_isdst : Positive value if daylight saving time is in effect; 0 if daylight saving time is not in effect; negative value if status of daylight saving time is unknown.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>AfxTime.inc</code></li><li>Defined in <span class="srcref">AfxNova/AfxTime.inc:1210</span></li><li>Documented in <span class="srcref">DateTime/DateTime Procedures.md</span></li><li>Topic: <a href="../date-and-time-procedures.html">Date and Time Procedures</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

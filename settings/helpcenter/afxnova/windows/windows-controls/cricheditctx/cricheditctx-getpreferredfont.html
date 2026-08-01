@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CRichEditCtx.GetPreferredFont — Help Center</title>
+<meta name="description" content="Retrieves the preferred font for a particular character repertoire and character position.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/cricheditctx/cricheditctx-getpreferredfont.html">
+<meta property="og:title" content="CRichEditCtx.GetPreferredFont">
+<meta property="og:description" content="Retrieves the preferred font for a particular character repertoire and character position.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/cricheditctx/cricheditctx-getpreferredfont.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-controls/cricheditctx/cricheditctx-getpreferredfont.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cricheditctx-class.html">CRichEditCtx Class</a></div>
+<h1>CRichEditCtx.GetPreferredFont<span class="h1kind">method</span></h1>
+<p class="lede">Retrieves the preferred font for a particular character repertoire and character position.</p>
+<div class="badges"><a class="badge" href="../../index.html">Windows</a><span class="badge">method</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>PRIVATE FUNCTION CRichEditCtx.GetPreferredFont (BYVAL cp AS LONG, BYVAL CharRep AS LONG, BYVAL nOptions AS LONG, BYVAL curCharRep AS LONG, BYVAL curFontSize AS LONG, BYREF dwsFontName AS DWSTRING, BYREF PitchAndFamily AS LONG, BYREF NewFontSize AS LONG) AS HRESULT</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>cp</code></td><td></td><td>The character position for the preferred font.</td></tr><tr><td><code>CharRep</code></td><td></td><td>The character repertoire index for the preferred font. It can be one of the following values.<br><strong>tomAboriginal</strong>, <strong>tomAnsi</strong>, <strong>tomArabic</strong>, <strong>tomArmenian</strong>, <strong>tomBaltic</strong>, <strong>tomBengali</strong>, <strong>tomBIG5</strong>, <strong>tomBraille</strong>, <strong>tomCherokee</strong>, <strong>tomCyrillic</strong>, <strong>tomDefaultCharRep</strong>, <strong>tomDevanagari</strong>, <strong>tomEastEurope</strong>, <strong>tomEmoji</strong>, <strong>tomEthiopic</strong>, <strong>tomGB2312</strong>, <strong>tomGeorgian</strong>, <strong>tomGreek</strong>, <strong>tomGujarati</strong>, <strong>tomGurmukhi</strong>, <strong>tomHangul</strong>, <strong>tomHebrew</strong>, <strong>tomJamo</strong>, <strong>tomKannada</strong>, <strong>tomKayahli</strong>, <strong>tomKharoshthi</strong>, <strong>tomKhmer</strong>, <strong>tomLao</strong>, <strong>tomLimbu</strong>, <strong>tomMac</strong>, <strong>tomMalayalam</strong>, <strong>tomMongolian</strong>, <strong>tomMyanmar</strong>, <strong>tomNewTaiLu</strong>, <strong>tomOEM</strong>, <strong>tomOgham</strong>, <strong>tomOriya</strong>, <strong>tomPC437</strong>, <strong>tomRunic</strong>, <strong>tomShiftJIS</strong>, <strong>tomSinhala</strong>, <strong>tomSylotinagr</strong>, <strong>tomSymbol</strong>, <strong>tomSyriac</strong>, <strong>tomTaiLe</strong>, <strong>tomTamil</strong>, <strong>tomTelugu</strong>, <strong>tomThaana</strong>, <strong>tomThai</strong>, <strong>tomTibetan</strong>, <strong>tomTurkish</strong>, <strong>tomUsymbol</strong>, <strong>tomVietnamese</strong>, <strong>tomYi</strong>.</td></tr><tr><td><code>nOptions</code></td><td></td><td>The preferred font options. The low-order word can be a combination of the following values: <strong>tomIgnoreCurrentFont</strong>, <strong>tomMatchCharRep</strong>, <strong>tomMatchFontSignature</strong>, <strong>tomMatchAscii</strong>, <strong>tomGetHeightOnly</strong>, <strong>tomMatchMathFont</strong>. If the high-order word of Options is <strong>tomUseTwips</strong>, the font heights are given in twips.</td></tr><tr><td><code>curCharRep</code></td><td></td><td>The index of the current character repertoire.</td></tr><tr><td><code>curFontSize</code></td><td></td><td>The current font size.</td></tr><tr><td><code>fontName</code></td><td></td><td>The name of the font.</td></tr><tr><td><code>PitchAndFamily</code></td><td></td><td>The font pitch and family.</td></tr><tr><td><code>NewFontSize</code></td><td></td><td>The new font size.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>If the method succeeds, it returns <strong>NOERROR</strong>. Otherwise, it returns an <strong>HRESULT</strong> error code.</p>
+<h2>Description</h2>
+<p>Retrieves the preferred font for a particular character repertoire and character position.</p>
+<h2>Example</h2>
+<p>PRIVATE FUNCTION GetPreferredFont (BYVAL cp AS LONG, BYVAL CharRep AS LONG, _ BYVAL nOptions AS LONG, BYVAL curCharRep AS LONG, BYVAL curFontSize AS LONG, _ BYVAL fontName AS AFX_BSTR PTR, BYREF PitchAndFamily AS LONG, BYREF NewFontSize AS LONG) AS HRESULT</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/CRichEditCtx.inc:4734</span></li><li>Documented in <span class="srcref">Windows/WIndows Controls/RichEdit/CRichEditCtx Class.md</span></li><li>Topic: <a href="../cricheditctx-class.html">CRichEditCtx Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

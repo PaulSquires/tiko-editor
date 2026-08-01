@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Line Continuation — Help Center</title>
+<meta name="description" content="Line Continuation — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/line-continuation.html">
+<meta property="og:title" content="Line Continuation">
+<meta property="og:description" content="Line Continuation — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/line-continuation.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/programmer-s-guide/line-continuation.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>Line Continuation</h1>
+<h2>Documentation</h2>
+
+	<b>Line Continuation</b> character(s) allow to spread out a single line of code into multiple lines.<br>
+<br>
+<div>Description</div><div><br>
+A single '_' (underscore) character at the end of a line of code tells the compiler that the line continues in the next line. This allows a single statement (line of code) to be spread across multiple lines in the input file, which can be a nice formatting help:<br>
+<div class="indent"><code><pre class="code"><span class="tok-cm">'' This Dim statement is spread across multiple lines, using the '_' character</span>
+
+<span class="tok-kw">Dim</span> <span>myvariable</span> <span>_</span>
+
+<span class="tok-kw">As</span> <span class="tok-kw">Integer</span></pre></code><br>
+</div>This is often used to make very long lines of code easier to read, for example procedure declarations with a lot of parameters:<br>
+<div class="indent"><code><pre class="code"><span class="tok-cm">'' Here's an example:</span>
+
+
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>drawRectangle</span><span>(</span> <span class="tok-kw">ByVal</span> <span>x</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span class="tok-kw">ByVal</span> <span>y</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span class="tok-kw">ByVal</span> <span>w</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span class="tok-kw">ByVal</span> <span>h</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>)</span>
+
+
+
+<span class="tok-cm">'' which can also be written as:</span>
+
+
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>drawRectangle</span><span>(</span> <span class="tok-kw">ByVal</span> <span>x</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span class="tok-kw">ByVal</span> <span>y</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span>_</span>
+
+                           <span class="tok-kw">ByVal</span> <span>w</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span class="tok-kw">ByVal</span> <span>h</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>)</span>
+
+
+
+<span class="tok-cm">'' or:</span>
+
+
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>drawRectangle</span> <span>_</span>
+
+    <span>(</span> <span>_</span>
+
+        <span class="tok-kw">ByVal</span> <span>x</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span>_</span>
+
+        <span class="tok-kw">ByVal</span> <span>y</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span>_</span>
+
+        <span class="tok-kw">ByVal</span> <span>w</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span>_</span>
+
+        <span class="tok-kw">ByVal</span> <span>h</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>_</span>
+
+    <span>)</span>
+
+
+
+<span class="tok-cm">'' (or any other formatting you like)</span></pre></code><br>
+</div>The '_' line continuation character can be inserted at pretty much any point in a line of code. It does not work inside comments though.<br>
+<br>
+Be careful when adding the '_' line continuation character right behind an identifier or keyword. It should be separated with at least one space character, otherwise it would be treated as part of the identifier or keyword:<br>
+<div class="indent"><code><pre class="code"><span class="tok-cm">'' Declare variable &quot;a_&quot;</span>
+
+<span class="tok-cm">'' (no line continuation happening, because the '_' character is part of</span>
+
+<span class="tok-cm">'' the &quot;a_&quot; identifier)</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>a_</span>
+
+
+
+<span class="tok-cm">'' Declare variable &quot;a&quot; and initialize to value 5</span>
+
+<span class="tok-cm">'' (line continuation happening, because the '_' character</span>
+
+<span class="tok-cm">'' was separated from the identifier &quot;a&quot; with a space character)</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>a</span> <span>_</span>
+
+<span>=</span> <span class="tok-nu">5</span></pre></code><br>
+</div><b>Warning:</b> When an erroneous code line is spread over a multiple lines block by using the '_' line continuation character, the error message refers only to the last line of the block.<br>
+<br>
+<b>Note</b> for fbc version &gt;= 1.08<b>:</b><br>
+<div class="indent">In macro/define's use '##_' to escape line continuation character '_' to allow multiple lines of macro expanded code to be combined into a single statement.<br>
+<br>
+</div></div><div>See also</div><div><br>
+<ul><li> <a href="line-separator.html">Line Separator</a><br>
+<br>
+</li></ul></div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

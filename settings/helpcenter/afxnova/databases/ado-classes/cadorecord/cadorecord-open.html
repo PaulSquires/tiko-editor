@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CAdoRecord.Open — Help Center</title>
+<meta name="description" content="Opens an existing `Record` object, or creates a new item represented by the `Record` (such as a file or directory).">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadorecord/cadorecord-open.html">
+<meta property="og:title" content="CAdoRecord.Open">
+<meta property="og:description" content="Opens an existing `Record` object, or creates a new item represented by the `Record` (such as a file or directory).">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadorecord/cadorecord-open.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/databases/ado-classes/cadorecord/cadorecord-open.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cadorecord-class.html">CAdoRecord Class</a></div>
+<h1>CAdoRecord.Open<span class="h1kind">method</span></h1>
+<p class="lede">Opens an existing `Record` object, or creates a new item represented by the `Record` (such as a file or directory).</p>
+<div class="badges"><a class="badge" href="../../index.html">Databases</a><span class="badge">method</span><span class="badge">CADORecord.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION Open (BYREF dvSource AS DVARIANT = TYPE&lt;VARIANT&gt;(VT_ERROR,0,0,0,DISP_E_PARAMNOTFOUND), BYREF dvActiveConnection AS DVARIANT = TYPE&lt;VARIANT&gt;(VT_ERROR,0,0,0,DISP_E_PARAMNOTFOUND), BYVAL nMode AS ConnectModeEnum = adModeUnknown, BYVAL CreateOptions AS RecordCreateOptionsEnum = adFailIfNotExists, BYVAL Options AS RecordOpenOptionsEnum = adOpenRecordUnspecified, BYREF wszUserName AS WSTRING = &quot;&quot;, BYREF wszPassword AS WSTRING = &quot;&quot;) AS HRESULT</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>dvSource</code></td><td></td><td>Optional. A Variant that may represent the URL of the entity to be represented by this <code>Record</code> object, a <strong>Command</strong>, an open <code>Recordset</code> or another <code>Record</code> object, a string containing a SQL SELECT statement or a table name.</td></tr><tr><td><code>dvActiveConnection</code></td><td></td><td>Optional. A Variant that represents the connect string or open <code>Connection</code> object.</td></tr><tr><td><code>nMode</code></td><td></td><td>Optional. A <strong>ConnectModeEnum</strong> value, whose default value is <strong>adModeUnknown</strong>, that specifies the access mode for the resultant <code>Record</code> object.</td></tr><tr><td><code>CreateOptions</code></td><td></td><td>Optional. A <strong>RecordCreateOptionsEnum</strong> value, whose default value is <strong>adFailIfNotExists</strong>, that specifies whether an existing file or directory should be opened, or a new file or directory should be created. If set to the default value, the access mode is obtained from the <strong>Mode</strong> property. This parameter is ignored when the <em>cbsSource</em> parameter doesn't contain a URL.</td></tr><tr><td><code>Options</code></td><td></td><td>Optional. Optional. A <strong>RecordOpenOptionsEnum</strong> value, whose default value is <em>adOpenRecordUnspecified</em>, that specifies options for opening the <code>Record</code>. These values may be combined.</td></tr><tr><td><code>wszUserName</code></td><td></td><td>Optional. A string value that contains the user ID that, if needed, authorizes access to <em>cbsSource</em>.</td></tr><tr><td><code>wszPassword</code></td><td></td><td>Optional. A string value that contains the password that, if needed, verifies <em>cbsUserName</em>.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>S_OK (0) or an HRESULT value.</p>
+<h2>Description</h2>
+<p>Opens an existing <code>Record</code> object, or creates a new item represented by the <code>Record</code> (such as a file or directory).</p>
+<h2>Remarks</h2>
+<p>Source may be:</p>
+<ul><li>A URL. If the protocol for the URL is http, then the Internet Provider will be invoked by default. If the URL points to a node that contains an executable script (such as an .ASP page), then a <code>Record</code> containing the source rather than the executed contents is opened by default. Use the <em>Options</em> argument to modify this behavior.</li></ul>
+<ul><li>A <code>Record</code> object. A <code>Record</code> object opened from another <code>Record</code> will clone the original <code>Record</code> object.</li></ul>
+<ul><li>A <strong>Command</strong> object. The opened <code>Record</code> object represents the single row returned by executing the <strong>Command</strong>. If the results contain more than a single row, the contents of the first row are placed in the record and an error may be added to the <strong>Errors</strong> collection.</li></ul>
+<ul><li>A SQL SELECT statement. The opened <code>Record</code> object represents the single row returned by executing the contents of the string. If the results contain more than a single row, the contents of the first row are placed in the record and an error may be added to the <strong>Errors</strong> collection.</li></ul>
+<ul><li>A table name.<br>If the <code>Record</code> object represents an entity that cannot be accessed with a URL (for example, a row of a <code>Recordset</code> derived from a database), then the values of both the <strong>ParentURL</strong> property and the field accessed with the <strong>adRecordURL</strong> constant are null.</li></ul>
+<p><strong>Note</strong>: URLs using the http scheme will automatically invoke the Microsoft OLE DB Provider for Internet Publishing.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CADORecord.inc</code></li><li>Defined in <span class="srcref">AfxNova/CAdoRecord.inc:333</span></li><li>Documented in <span class="srcref">Databases/ADO Classes/CAdoRecord Class.md</span></li><li>Topic: <a href="../cadorecord-class.html">CAdoRecord Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

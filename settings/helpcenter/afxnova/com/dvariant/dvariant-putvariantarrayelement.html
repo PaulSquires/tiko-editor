@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DVARIANT.PutVariantArrayElement — Help Center</title>
+<meta name="description" content="Initializes DVARIANT with a value stored in another VARIANT structure.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/com/dvariant/dvariant-putvariantarrayelement.html">
+<meta property="og:title" content="DVARIANT.PutVariantArrayElement">
+<meta property="og:description" content="Initializes DVARIANT with a value stored in another VARIANT structure.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/com/dvariant/dvariant-putvariantarrayelement.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/com/dvariant/dvariant-putvariantarrayelement.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../dvariant-class.html">DVARIANT Class</a></div>
+<h1>DVARIANT.PutVariantArrayElement<span class="h1kind">method</span></h1>
+<p class="lede">Initializes DVARIANT with a value stored in another VARIANT structure.</p>
+<div class="badges"><a class="badge" href="../index.html">COM</a><span class="badge">method</span><span class="badge">DVARIANT.INC</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION PutVariantArrayElement (BYVAL pvarIn AS VARIANT PTR, BYVAL iElem AS ULONG) AS HRESULT</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>pvarIn</code></td><td></td><td>Reference to the source VARIANT structure.</td></tr><tr><td><code>iElem</code></td><td></td><td>Index of one of the source VARIANT structure elements.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>If this function succeeds, it returns S_OK (0). Otherwise, it returns an HRESULT error code.</p>
+<h2>Description</h2>
+<p>Initializes DVARIANT with a value stored in another VARIANT structure.</p>
+<h2>Remarks</h2>
+<p>This helper function works for VARIANT structures of the following types:</p>
+<pre class="code"><code>VT_BSTR
+VT_BOOL
+VT_I2
+VT_I4
+VT_I8
+VT_U12
+VT_U14
+VT_U18
+VT_DATE
+VT_ARRAY | (any one of VT_BSTR, VT_BOOL, VT_I2, VT_I4, VT_I8, VT_U12, VT_U14, VT_U18, VT_DATE)</code></pre>
+<p>Additional types may be supported in the future.</p>
+<p>This function extracts a single value from the source VARIANT structure and uses that value to initialize the output VARIANT structure. The calling application must use VariantClear to free the VARIANT referred to by pvar when it is no longer needed.</p>
+<p>If the source VARIANT is an array, <em>iElem</em> must be less than the number of elements in the array.</p>
+<p>If the source VARIANT has a single value, <em>iElem</em> must be 0.</p>
+<p>If the source VARIANT is empty, this function always returns an error code.</p>
+<p>You can use <strong>GetElementCount</strong> to obtain the number of elements in the array or array.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>DVARIANT.INC</code></li><li>Defined in <span class="srcref">AfxNova/DVARIANT.inc:1581</span></li><li>Documented in <span class="srcref">COM/DVARIANT Class.md</span></li><li>Topic: <a href="../dvariant-class.html">DVARIANT Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Operator Placement New — Help Center</title>
+<meta name="description" content="Operator to construct an object at a specified memory address.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/operators/memory-operators/procedures/operator-placement-new.html">
+<meta property="og:title" content="Operator Placement New">
+<meta property="og:description" content="Operator to construct an object at a specified memory address.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/operators/memory-operators/procedures/operator-placement-new.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/operators/memory-operators/procedures/operator-placement-new.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>Operator Placement New<span class="h1kind">operator</span></h1>
+<p class="lede">Operator to construct an object at a specified memory address.</p>
+<div class="badges"><a class="badge" href="../../index.html">Operators</a><span class="badge">operator</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>result = New(address) datatype</code></pre>
+<pre class="code sig"><code>result = New(address) datatype ( initializers, ... )</code></pre>
+<pre class="code sig"><code>result = New(address) datatype[ count ]</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>address</code></td><td></td><td>the location in memory to construct. the parenthesis are <b>not</b> optional.</td></tr><tr><td><code>initializers</code></td><td></td><td>Initial value(s) for the variable.</td></tr><tr><td><code>datatype</code></td><td></td><td>name of the data type to construct.</td></tr><tr><td><code>count</code></td><td></td><td>Number of elements to construct.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<br>
+A pointer of type <code><a href="../../../reference/data-types.html">datatype</a></code> to the newly constructed data.<br>
+<br>
+
+<h2>Description</h2>
+<br>
+The <code><b>Placement New</b></code> operator constructs a specified data type at the specified memory location. <br>
+<br>
+For simple types, like integers, an initial value can be given. For types without <code><a href="../../../user-defined-types/procedures/constructor.html">Constructor</a></code>s, initial values can be specified for each field (either with default initializer at data-field declaration, or with initializer list as in <code><b>New</b> <i>datatype</i> (<b>initializers, ..</b>)</code> if all type data-fields are numeric primitives only and without any default initializers). For types with at least one constructor, the initialize list (if any) must match an existing constructor. If no initializers are given, the default values for those types will be set.<br>
+<br>
+Memory is <b>not</b> allocated when using the <code><b>Placement New</b></code> operator. Instead, the memory at the specified <code><i>address</i></code> is used (the provided memory size must be large enough to contain all the placement).<br>
+It is incorrect to call <code><a href="operator-delete-statement.html">Delete Statement</a></code> on the address. The proper way is to only call the destructor if one exists (implicitly or explicitly), with syntax as for a member method by using member access operator.<br>
+See examples below for proper <code><b>Placement New</b></code> operator usage.<br>
+<br>
+<code><b>Placement New[]</b></code> operator is the (one-dimensional) array-version of the <code><b>Placement New</b></code> operator and constructs the specified number of objects from the specified memory location. The default constructor for the type will be used to set the initial values for each item.<br>
+<br>
+Specifying an initial value of <code><a href="../../../procedures/procedures/any.html">Any</a></code>, as in <code><b>New</b>(<i>address</i>)<i>datatype</i> (<b>Any</b>)</code> or <code><b>New</b>(<i>address</i>)<i>datatype</i>[<i>count</i>] {<b>Any</b>}</code> will not initialize the data.  This is only valid on data types that do not have constructors (otherwise for data types with constructors, syntax of simple pointer conversion, like <i>Cptr(datatype Ptr, address)</i>, can be substituted to the invalid use of New...Any).<br>
+<br>
+Because it does not provide any dynamic memory allocation process, the <code><b>Placement New</b></code> operator (unlike the <code><a href="operator-new-expression.html">New Expression</a></code> operator) does not allow any overloading by a member operator for user-defined types.<br>
+<br>
+<b>Note:</b> Using <code><i>pointer</i> = <b>New</b>(<i>address</i>)<i>datatype</i>[<i>count</i>]</code> may be unsafe if <code><i>pointer</i></code> was declared with a type different from <code><i>datatype</i></code> (for sub-type polymorphism purpose for example), because the pointer arithmetic fails to access the elements if the pointer type size is different from the size of <code><i>datatype</i></code> (when using <code><a href="../../indexing-operators/procedures/operator-pointer-index.html">Operator [] (Pointer Index)</a></code> or adding an offset (element number) to the pointer).<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Dialect Differences</h3><br>
+<ul><li> Only available in the <i><a href="../../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang fb</a></i> dialect.<br>
+<br>
+</li></ul>
+<h3>Differences from QB</h3><br>
+<ul><li> New to FreeBASIC<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="../../../user-defined-types/procedures/destructor.html">Destructor</a></code><br>
+<li> <code><a href="operator-new-expression.html">New Expression</a></code><br>
+<br>
+</li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-cm">'' &quot;placement new&quot; example</span>
+
+
+
+<span class="tok-kw">Type</span> <span>Rational</span>
+
+    <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>    <span>numerator</span><span>,</span> <span>denominator</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>(</span> <span class="tok-kw">ByVal</span> <span>n</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span class="tok-kw">ByVal</span> <span>d</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>)</span>
+
+    <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>ratio</span> <span>=</span> <span>&quot;/&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>Rational</span> <span>(</span> <span class="tok-kw">ByVal</span> <span>n</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span class="tok-kw">ByVal</span> <span>d</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>)</span>
+
+    <span>This.numerator</span> <span>=</span> <span>n</span>
+
+    <span>This.denominator</span> <span>=</span> <span>d</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Scope</span>
+
+   
+
+    <span class="tok-cm">'' allocate some memory to construct as a Rational</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>ap</span> <span>=</span> <span class="tok-kw">CAllocate</span><span>(</span><span class="tok-kw">Len</span><span>(</span><span>Rational</span><span>))</span>
+
+   
+
+    <span class="tok-cm">'' make the placement new call</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>Rational</span> <span class="tok-kw">Ptr</span> <span>r</span> <span>=</span> <span class="tok-kw">New</span> <span>(</span><span>ap</span><span>)</span> <span>Rational</span><span>(</span> <span class="tok-nu">3</span><span>,</span> <span class="tok-nu">4</span> <span>)</span>
+
+   
+
+    <span class="tok-cm">'' you can see, the addresses are the same, just having different types in the compiler</span>
+
+    <span class="tok-kw">Print</span> <span>ap</span><span>,</span> <span>r</span>
+
+   
+
+    <span class="tok-cm">'' confirm all is okay</span>
+
+    <span class="tok-kw">Print</span> <span>r</span><span>-&gt;</span><span>numerator</span> <span>&amp;</span> <span>r</span><span>-&gt;</span><span>ratio</span> <span>&amp;</span> <span>r</span><span>-&gt;</span><span>denominator</span>
+
+    
+
+    <span class="tok-cm">'' delete must not be used with placement new</span>
+
+    <span class="tok-cm">'' destroying must be done explicitly if a destructor exists (implicitly or explicitly)</span>
+
+    <span class="tok-cm">''   (in this example, the var-string member induces an implicit destructor)</span>
+
+    <span>r</span><span>-&gt;</span><span class="tok-kw">Destructor</span><span>(</span> <span>)</span>
+
+    
+
+    <span class="tok-cm">'' we explicitly allocated, so we explicitly deallocate</span>
+
+    <span class="tok-kw">Deallocate</span><span>(</span> <span>ap</span> <span>)</span>
+
+    
+
+<span class="tok-kw">End</span> <span class="tok-kw">Scope</span></pre></code><br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgOpPlacementNew.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

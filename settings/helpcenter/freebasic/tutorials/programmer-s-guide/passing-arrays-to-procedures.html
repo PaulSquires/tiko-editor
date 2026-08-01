@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Passing Arrays to Procedures — Help Center</title>
+<meta name="description" content="Passing Arrays to Procedures — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/passing-arrays-to-procedures.html">
+<meta property="og:title" content="Passing Arrays to Procedures">
+<meta property="og:description" content="Passing Arrays to Procedures — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/passing-arrays-to-procedures.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/programmer-s-guide/passing-arrays-to-procedures.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>Passing Arrays to Procedures</h1>
+<h2>Documentation</h2>
+
+	Declaring/defining array parameters and passing array arguments to procedures<br>
+<br>
+<div>Syntax for array symbol name</div><div><br>
+As parameter in procedure declaration:<br>
+<div class="indent"><code><b>( [ <a href="../../procedures/procedures/any.html">Any</a> [, <a href="../../procedures/procedures/any.html">Any</a>...] ] )</b> <a href="../../miscellaneous-keywords/procedures/as.html">As</a> <a href="../../reference/data-types.html">datatype</a></code><br>
+<code><b>array_name( [ <a href="../../procedures/procedures/any.html">Any</a> [, <a href="../../procedures/procedures/any.html">Any</a>...] ] )</b> <a href="../../miscellaneous-keywords/procedures/as.html">As</a> <a href="../../reference/data-types.html">datatype</a></code><br>
+</div>As parameter in procedure definition:<br>
+<div class="indent"><code><b>array_name( [ <a href="../../procedures/procedures/any.html">Any</a> [, <a href="../../procedures/procedures/any.html">Any</a>...] ] )</b> <a href="../../miscellaneous-keywords/procedures/as.html">As</a> <a href="../../reference/data-types.html">datatype</a></code><br>
+</div>As argument in procedure call:<br>
+<div class="indent"><code><b>array_name()</b></code><br>
+<br>
+</div>Parentheses (even empty) are mandatory to specify that the parameter/argument is an array.<br>
+<br>
+</div><div>Usage of array symbol name</div><div><br>
+When declaring procedure with array parameter:<br>
+<div class="indent"><code><a href="../../procedures/procedures/declare.html">Declare</a> { <a href="../../procedures/procedures/sub.html">Sub</a> | <a href="../../procedures/procedures/function.html">Function</a> } <i>proc_name</i> ... ( <b>( [ <a href="../../procedures/procedures/any.html">Any</a> [, <a href="../../procedures/procedures/any.html">Any</a>...] ] )</b> <a href="../../miscellaneous-keywords/procedures/as.html">As</a> <a href="../../reference/data-types.html">datatype</a> , ... ) [ ... ]</code><br>
+<code><a href="../../procedures/procedures/declare.html">Declare</a> { <a href="../../procedures/procedures/sub.html">Sub</a> | <a href="../../procedures/procedures/function.html">Function</a> } <i>proc_name</i> ... ( <b>array_parameter_name( [ <a href="../../procedures/procedures/any.html">Any</a> [, <a href="../../procedures/procedures/any.html">Any</a>...] ] )</b> <a href="../../miscellaneous-keywords/procedures/as.html">As</a> <a href="../../reference/data-types.html">datatype</a> , ... ) [ ... ]</code><br>
+</div>When defining procedure with array parameter:<br>
+<div class="indent"><code>{ <a href="../../procedures/procedures/sub.html">Sub</a> | <a href="../../procedures/procedures/function.html">Function</a> } <i>proc_name</i> ... ( <b>array_parameter_name( [ <a href="../../procedures/procedures/any.html">Any</a> [, <a href="../../procedures/procedures/any.html">Any</a>...] ] )</b> <a href="../../miscellaneous-keywords/procedures/as.html">As</a> <a href="../../reference/data-types.html">datatype</a> , ... ) [ ... ]</code><br>
+</div>When passing array argument to procedure:<br>
+<div class="indent"><code><i>sub_name ( <b>array_argument_name()</b> , ... )</i></code><br>
+<code><i>sub_name <b>array_argument_name()</b> , ...</i></code><br>
+<code><i>funct_name ( <b>array_argument_name()</b> , ... )</i></code><br>
+<code><i>funct_name <b>array_argument_name()</b> , ...</i></code><br>
+<code><i>... funct_name ( <b>array_argument_name()</b> , ... ) [ ... ]</i></code><br>
+<br>
+<b>Note</b> (same rules as for any parameter/argument list)<b>:</b><br>
+<div class="indent">When declaring/defining a procedure, parentheses surrounding a non empty parameter list are required.<br>
+When calling a subroutine, parentheses surrounding an argument list (empty or non empty) are optional.<br>
+When calling a function as a subroutine (without using the return variable), the same rules as for subroutine apply.<br>
+When calling a function in an expression (which uses the return value), parentheses surrounding a non empty argument list are required.<br>
+But it is a common convention to always use parentheses (empty or non empty) after the procedure name, to signify a procedure call.<br>
+<br>
+</div></div></div><div>Description</div><div><br>
+Array parameter can not have a <code><a href="../../procedures/procedures/byval.html">ByVal</a></code> or <code><a href="../../procedures/procedures/byref-parameters.html">ByRef</a></code> keyword before them, because arrays don't get passed the same way as normal parameters. While variables get passed by value or by reference, arrays get passed by descriptor (see below). In fact when an array is passed to a procedure, it is a reference to its descriptor which is passed.<br>
+All the elements of a passed array can be modified, and those changes are reflected at the calling level. Perhaps <code><a href="../../procedures/procedures/byref-parameters.html">ByRef</a></code> should be allowed by similarity with variable-length string (which are also passed by descriptor).<br>
+<br>
+There is no direct possibility of passing an array by value. Declaring a passed array parameter <code><a href="../../miscellaneous-keywords/procedures/as.html">As</a> <a href="../../standard-data-types/procedures/const-qualifier.html">Constant</a></code> only forbids any modification in the procedure body. A workaround would be to pass a user copy of the array.<br>
+<br>
+<b>Note:</b><br>
+<div class="indent">A function return can not be an array type variable.<br>
+A fixed-length <code><a href="../../operators/preprocessor-operators/procedures/string.html">String</a></code> array can not be passed to a procedure.<br>
+A <code><a href="../../standard-data-types/procedures/zstring.html">ZString</a>/<a href="../../standard-data-types/procedures/wstring.html">WString</a></code> array can not be simply passed to a procedure because the zstring/wstring size is not passed (the <code><i>"as zstring/wstring * 1"</i></code> type is taken by default by compiler in procedure body). It is a bug at the moment because compiler just fails silently while it badly computes in the procedure body the address of each array element (except the first obviously).<br>
+<br>
+</div><b>Array descriptor</b> (for information purposes only)<b>:</b><br>
+<div class="indent">For a fixed-length array, the descriptor is only used for passing the array to a procedure (otherwise the compiler does not use it because knowing the fixed characteristics of the array).<br>
+For a variable-length array, the descriptor is always used (the array descriptor is the only defining the array characteristics).<br>
+<br>
+The array descriptor has the following structure (each item is coded on an 'Any Ptr' or an 'Uinteger', except on an 'Integer' for lbound and ubound):<br>
+<div class="indent"><b>-</b> pointer to the real or virtual element: @array(0, 0, ...)<br>
+<b>-</b> pointer to the first real element: @array(lbound1, lbound2, ...)<br>
+<b>-</b> "global" size in bytes: (ubound1 - lbound1 + 1) * (ubound2 - lbound2 + 1) * ... * (size of 1 element in bytes)<br>
+<b>-</b> size of one element in bytes<br>
+<b>-</b> number of dimensions<br>
+<b>-</b> flags<b><code>(*)</code></b>: array points to fixed-length memory (1-bit) / array has nb of dimensions defined at first declaration / nb of dimensions allocated in descriptor (4-bit)<br>
+then for each dimension:<br>
+<b>-</b> number of elements: (ubound - lbound + 1)<br>
+<b>-</b> lbound<br>
+<b>-</b> ubound<br>
+<br>
+<b><code>(*)</code></b>: Additional member field (an 'Uinteger') for fbc versions &gt;= 1.08<br>
+(see the include file <code>./inc/fbc-int/array.bi</code> for fbc versions &gt;= 1.07)<br>
+<br>
+</div>For more information, see <a href="../../array-functions/procedures/fbarray-array-descriptor-structure-and-access.html">Fbarray (Array Descriptor Structure And Access)</a>.<br>
+<br>
+</div></div><div>Example</div><div><br>
+<br>
+<code><pre class="code"><span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>splitString</span><span>(</span><span class="tok-kw">ByVal</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>,</span> <span>(</span><span class="tok-kw">Any</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>,</span> <span class="tok-kw">ByVal</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span> <span>=</span> <span class="tok-kw">Asc</span><span>(</span><span>&quot;,&quot;</span><span>))</span>
+
+
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>s</span> <span>=</span> <span>&quot;Programmer's Guide/Variables and Datatypes/Arrays/Passing Arrays to Procedures&quot;</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>array</span><span>(</span><span class="tok-kw">Any</span><span>)</span>
+
+
+
+<span>splitString</span><span>(</span><span>s</span><span>,</span> <span>array</span><span>(),</span> <span class="tok-kw">Asc</span><span>(</span><span>&quot;/&quot;</span><span>))</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;STRING TO SPLIT:&quot;</span>
+
+<span class="tok-kw">Print</span> <span>s</span>
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Print</span> <span>&quot;RESULT ARRAY FROM SPLITTING:&quot;</span>
+
+<span class="tok-kw">For</span> <span>i</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-kw">LBound</span><span>(</span><span>array</span><span>)</span> <span class="tok-kw">To</span> <span class="tok-kw">UBound</span><span>(</span><span>array</span><span>)</span>
+
+    <span class="tok-kw">Print</span> <span>i</span><span>,</span> <span>array</span><span>(</span><span>i</span><span>)</span>
+
+<span class="tok-kw">Next</span> <span>i</span>
+
+
+
+<span class="tok-kw">Sleep</span>
+
+
+
+
+
+<span class="tok-kw">Sub</span> <span>splitString</span><span>(</span><span class="tok-kw">ByVal</span> <span>source</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>,</span> <span>destination</span><span>(</span><span class="tok-kw">Any</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>,</span> <span class="tok-kw">ByVal</span> <span>delimitor</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span><span>)</span>
+
+    <span class="tok-kw">Do</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>position</span> <span>=</span> <span class="tok-kw">InStr</span><span>(</span><span class="tok-nu">1</span><span>,</span> <span>source</span><span>,</span> <span class="tok-kw">Chr</span><span>(</span><span>delimitor</span><span>))</span>
+
+        <span class="tok-kw">ReDim</span> <span class="tok-kw">Preserve</span> <span>destination</span><span>(</span><span class="tok-kw">UBound</span><span>(</span><span>destination</span><span>)</span> <span>+</span> <span class="tok-nu">1</span><span>)</span>
+
+        <span class="tok-kw">If</span> <span>position</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">Then</span>
+
+            <span>destination</span><span>(</span><span class="tok-kw">UBound</span><span>(</span><span>destination</span><span>))</span> <span>=</span> <span>source</span>
+
+            <span class="tok-kw">Exit</span> <span class="tok-kw">Do</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+        <span>destination</span><span>(</span><span class="tok-kw">UBound</span><span>(</span><span>destination</span><span>))</span> <span>=</span> <span class="tok-kw">Left</span><span>(</span><span>source</span><span>,</span> <span>position</span> <span>-</span> <span class="tok-nu">1</span><span>)</span>
+
+        <span>source</span> <span>=</span> <span class="tok-kw">Mid</span><span>(</span><span>source</span><span>,</span> <span>position</span> <span>+</span> <span class="tok-nu">1</span><span>)</span>
+
+    <span class="tok-kw">Loop</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span></pre></code><br>
+</div><div>See also</div><div><br>
+<ul><li> <a href="passing-arguments-to-procedures.html">Passing Arguments to Procedures</a><br>
+<li> <a href="calling-conventions.html">Calling Conventions</a><br>
+<li> <a href="returning-values.html">Returning Values</a><br>
+<br>
+</li></li></li></ul></div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

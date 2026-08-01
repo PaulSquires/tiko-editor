@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tools used by fbc — Help Center</title>
+<meta name="description" content="Tools used by fbc — 0 documented members. Using the FreeBASIC compiler reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/using-the-freebasic-compiler/tools-used-by-fbc.html">
+<meta property="og:title" content="Tools used by fbc">
+<meta property="og:description" content="Tools used by fbc — 0 documented members. Using the FreeBASIC compiler reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/using-the-freebasic-compiler/tools-used-by-fbc.html">
+<link rel="stylesheet" href="../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/using-the-freebasic-compiler/tools-used-by-fbc.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Using the FreeBASIC compiler</div>
+<h1>Tools used by fbc</h1>
+<h2>Documentation</h2>
+
+	External tools the FreeBASIC compiler (fbc) may invoke during the compilation process.<br>
+<br>
+<div>Description</div><div><br>
+<div class="indent">FreeBASIC uses several tools for compiling source code in addition to the <code>fbc</code> compiler.  The exact tools used by <code>fbc</code> and how they are invoked depends on how <code>fbc</code> was configured, the host platform (where fbc is running), the target platform (where the produced executable will be run), and other options (like environment variables and command line options).<br>
+<br>
+FreeBASIC (<code>fbc</code>) may have been configured in one of two ways: either as standalone or prefixed.  The standalone version searches directories relative to where the executable is located.  The prefixed version has a hardcoded path configured in to the compiler indicating where it expects to find additional tools and libraries.  For more information on configuring FreeBASIC, see the <code>INSTALL</code> text file located in the src/compiler directory of the FreeBASIC sources.<br>
+<br>
+You can check if your installed version of <code>fbc</code> is "standalone" or "prefixed" by invoking <code>fbc</code> with the <i><a href="command-line-options/compiler-option-version.html">-version</a></i> command line option.<br>
+<br>
+</div><b><u>Standalone</u></b><br>
+<div class="indent">If <code>fbc</code> was configured as "standalone", it will search for files relative to where the <code>fbc</code> executable is located.  <code>fbc</code> is at the "top" of the directory tree and searches sub-directories below it.  The "top" directory (which defaults to the location where <code>fbc</code> is located) can be overridden with the <i><a href="command-line-options/compiler-option-prefix.html">-prefix</a></i> command line option.  "topdir" shown in the directories below represents the directory where the <code>fbc</code> executable is located, or the directory specified with the <i><a href="command-line-options/compiler-option-prefix.html">-prefix</a></i> command line option (if it was given). "&lt;target&gt;" refers to the target platform having the same name as specified by the <i><a href="command-line-options/compiler-option-target.html">-target</a></i> option.<br>
+<br>
+If not cross compiling, <code>fbc</code> looks in these locations: <br>
+</div><ul><ul><li> <code>/topdir/inc</code><br>
+<li> <code>/topdir/lib/&lt;target&gt;</code><br>
+<li> <code>/topdir/bin/&lt;target&gt;</code><br>
+<li> gcc is queried for missing libraries (currently on linux/freebsd only) <br>
+</li></li></li></li></ul></ul><div class="indent">If cross compiling, <code>fbc</code> looks in the these locations: <br>
+</div><ul><ul><li> <code>/topdir/inc</code><br>
+<li> <code>/topdir/lib/&lt;target&gt;</code><br>
+<li> <code>/topdir/bin/&lt;target&gt;</code><br>
+<li> gcc is not queried (only target library directory is used)<br>
+<br>
+</li></li></li></li></ul></ul><b><u>Prefixed</u></b><br>
+<div class="indent">If <code>fbc</code> was configured as "prefixed", it will search for files relative to the configured prefix (hardcoded in the <code>fbc</code> executable).  "prefix" shown in the directories below represents the configured prefix, or the directory specified with the <i><a href="command-line-options/compiler-option-prefix.html">-prefix</a></i> command line option (if it was given).  "<code>&lt;target&gt;</code>" refers to the target platform having the same name as specified by the <i><a href="command-line-options/compiler-option-target.html">-target</a></i> option.<br>
+<br>
+If not cross compiling, <code>fbc</code> looks in these locations: <br>
+</div><ul><ul><li> <code>/prefix/include/freebasic</code><br>
+<li> <code>/prefix/lib/freebasic/&lt;target&gt;</code><br>
+<li> <code>/prefix/bin/freebasic/&lt;target&gt;</code><br>
+<li> gcc is queried for missing libraries (currently on linux/freebsd only) <br>
+</li></li></li></li></ul></ul><div class="indent">If cross compiling, <code>fbc</code> looks in the these locations: <br>
+</div><ul><ul><li> <code>/prefix/include/freebasic</code><br>
+<li> <code>/prefix/lib/freebasic/&lt;target&gt;</code><br>
+<li> <code>/prefix/bin/freebasic/&lt;target&gt;</code><br>
+<li> gcc is not queried (only target library directory is used)<br>
+<br>
+</li></li></li></li></ul></ul><b><u>GCC Queries</u></b><br>
+<div class="indent">If <code>fbc</code> is unable to locate a file, it may invoke <code>gcc -print-file-name=&lt;file&gt;</code> to query the location of the file.  The following are files that may be located using gcc:<br>
+</div><ul><ul><li> <code>crt1.o</code><br>
+<li> <code>crtbegin.o</code><br>
+<li> <code>crtend.o</code><br>
+<li> <code>crti.o</code><br>
+<li> <code>crtn.o</code><br>
+<li> <code>gcrt1.o</code><br>
+<li> <code>libgcc.a</code><br>
+<li> <code>libsupc++.a</code><br>
+<li> <code>libc.so (Linux only)</code><br>
+<br>
+</li></li></li></li></li></li></li></li></li></ul></ul><b><u>Finding Binaries</u></b><br>
+<div class="indent"><code>fbc</code> will invoke additional tools (binary executables) as part of the compiling and linking process.  The following is a list of tools (executables) that may be invoked by <code>fbc</code> depending on the host platform, target, or type of executable or library to be produced:<br>
+</div><ul><ul><li> <code>as</code><br>
+<li> <code>ar</code><br>
+<li> <code>ld</code><br>
+<li> <code>gcc</code><br>
+<li> <code>GoRC</code><br>
+<li> <code>dlltool</code><br>
+<li> <code>pexports</code><br>
+<li> <code>cxbe</code><br>
+</li></li></li></li></li></li></li></li></ul></ul><div class="indent"><code>fbc</code> will search for these tools in the following manner:<br>
+</div><ul><ul><li> If an environment variable (having same name as the tool without any extension, all in uppercase) has been set, it explicitly indicates the path and name of the executable to be invoked.<br>
+<li> If the file (or a symlink) exists in <code>prefix/bin/freebasic/&lt;target&gt;</code>, or <code>./bin/&lt;target&gt;</code> for the standalone version, then use it.<br>
+<li> On Linux, if the tool could not be found in <code>prefix/bin/freebasic/&lt;target&gt;</code>, or <code>./bin/&lt;target&gt;</code> for the standalone version, <code>fbc</code> tries to invoke it anyway as it may be installed on the system and located on the PATH.<br>
+</li></li></li></ul></ul><div class="indent">"<code>&lt;target&gt;</code>" refers to the target platform having the same name as specified by the <i><a href="command-line-options/compiler-option-target.html">-target</a></i> option.<br>
+<br>
+</div></div><div>See also</div><div><br>
+<ul><li> <a href="running.html">Running FreeBASIC</a><br>
+<li> <a href="fbc-command-line.html">Compiler Command Line Options</a><br>
+<li> <a href="../faqs/frequently-asked-questions.html">Compiler FAQ</a><br>
+<br>
+</li></li></li></ul></div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../index.html">Home</a> ·
+         <a href="../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../nav.js?v=70a6b70236"></script>
+<script src="../../search-index.js"></script>
+<script src="../../assets/app.js?v=456d079659"></script>
+<script src="../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GdipGetPathPoints — Help Center</title>
+<meta name="description" content="Gets this path&#x27;s array of points. The array contains the endpoints and control points of the lines and Bézier splines that are used to draw the path.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipgetpathpoints.html">
+<meta property="og:title" content="GdipGetPathPoints">
+<meta property="og:description" content="Gets this path&#x27;s array of points. The array contains the endpoints and control points of the lines and Bézier splines that are used to draw the path.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipgetpathpoints.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/procedures/gdipgetpathpoints.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../graphicspath-functions.html">GraphicsPath Functions</a></div>
+<h1>GdipGetPathPoints<span class="h1kind">function</span></h1>
+<p class="lede">Gets this path&#x27;s array of points. The array contains the endpoints and control points of the lines and Bézier splines that are used to draw the path.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GdipGetPathPoints (BYVAL path AS GpPath PTR, BYVAL points AS GpPointF PTR, BYVAL count AS INT_) AS GpStatus</code></pre>
+<div class="note">Also documented as <code>GdipGetPathPointsI</code> — one description covers them all.</div>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>path</code></td><td></td><td>[in] Pointer to the <strong>GraphicsPath</strong> object.</td></tr><tr><td><code>points</code></td><td></td><td>[out] Pointer to an array of <strong>GpPointF</strong> structures that receives the data points. You must allocate memory for this array. You can call the <strong>GdipGetPointCount</strong> function to determine the required size of the array. The size, in bytes, should be the return value of <strong>GdipGetPointCount</strong> multiplied by <em>sizeof(GpPointF)</em>.</td></tr><tr><td><code>count</code></td><td></td><td>[in] Long integer value that specifies the number of elements in the points array. Set this parameter equal to the return value of the <em>GdipGetPointCount</em> function.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Gets this path's array of points. The array contains the endpoints and control points of the lines and Bézier splines that are used to draw the path.</p>
+<h2>Example</h2>
+<p>' ======================================================================================== ' This example extracts the points from a GraphicsPath using GdipGetPathPoints. ' ======================================================================================== SUB Example_GetPathPoints (BYVAL hdc AS HDC)</p>
+<p>DIM hStatus AS LONG</p>
+<p>' // Create a graphics object from the device context DIM graphics AS GpGraphics PTR hStatus = GdipCreateFromHDC(hdc, @graphics)</p>
+<p>' // Get the DPI scaling ratios DIM dpiX AS SINGLE hStatus = GdipGetDpiX(graphics, @dpiX) DIM rxRatio AS SINGLE = dpiX / 96 DIM dpiY AS SINGLE hStatus = GdipGetDpiY(graphics, @dpiY) Dim ryRatio AS SINGLE = dpiY / 96 ' // Set the scale transform hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)</p>
+<p>' // Create GraphicsPath DIM path AS GpPath PTR hStatus = GdipCreatePath(FillModeAlternate, @path)</p>
+<p>' // Add a shape hStatus = GdipAddPathRectangle(path, 100, 80, 150, 100)</p>
+<p>' // Get number of points DIM count AS LONG hStatus = GdipGetPointCount(path, @count)</p>
+<p>' // Allocate array for points DIM pts(ANY) AS GpPointF REDIM pts(count - 1)</p>
+<p>' // Retrieve points hStatus = GdipGetPathPoints(path, @pts(0), count)</p>
+<p>' // Display points FOR i AS LONG = 0 TO count - 1</p>
+<pre class="code"><code>OutputDebugStringW("Point " &amp; WSTR(i) &amp; ": (" &amp; WSTR(pts(i).x) &amp; ", " &amp; WSTR(pts(i).y) &amp; ")")</code></pre>
+<p>NEXT</p>
+<p>' // Create pen DIM pen AS GpPen PTR hStatus = GdipCreatePen1(ARGB_ORANGE, 2, UnitWorld, @pen)</p>
+<p>' // Draw the path hStatus = GdipDrawPath(graphics, pen, path)</p>
+<p>' // Cleanup IF pen THEN GdipDeleteBrush(pen) IF path THEN GdipDeletePath(path) IF graphics THEN GdipDeleteGraphics(graphics)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/AfxGdiPlus.bi:1992</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Flat  Api/GdiPlusGraphicsPath.md</span></li><li>Topic: <a href="../graphicspath-functions.html">GraphicsPath Functions</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

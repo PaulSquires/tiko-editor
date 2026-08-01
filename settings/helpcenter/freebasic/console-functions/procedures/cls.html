@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cls — Help Center</title>
+<meta name="description" content="Clears the screen in both text modes and graphics modes">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/console-functions/procedures/cls.html">
+<meta property="og:title" content="Cls">
+<meta property="og:description" content="Clears the screen in both text modes and graphics modes">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/console-functions/procedures/cls.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/console-functions/procedures/cls.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>Cls<span class="h1kind">sub</span></h1>
+<p class="lede">Clears the screen in both text modes and graphics modes</p>
+<div class="badges"><a class="badge" href="../index.html">Console Functions</a><span class="badge">sub</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>Declare Sub Cls ( ByVal mode As Long = 1 )</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>mode</code></td><td></td><td>A optional numeric variable with a value from <code>0</code> to <code>2</code>.  If omitted, it defaults to <code>1</code>.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<br>
+An optional <code><i>mode</i></code> parameter may be given,<br>
+<br>
+<div class="indent">If omitted, <code><b>Cls</b></code> clears either the text or graphics viewport.  If a graphics viewport has been defined using the <code><a href="../../screen-functions/procedures/view-graphics.html">View (Graphics)</a></code> statement, the graphics viewport is cleared.  Otherwise, the text viewport, defined by <code><a href="view-print.html">View Print</a></code>, is cleared.  (If there is no explicit text viewport defined, the entire screen is cleared.)<br>
+<br>
+If <code>0</code>, clears the entire screen<br>
+<br>
+If <code>1</code>, clears the graphics viewport if defined.  Otherwise, clears the text viewport<br>
+<br>
+If <code>2</code>, clears the text viewport<br>
+<br>
+<br>
+</div>
+<h2>Remarks</h2>
+<h3>Usage</h3><code><br>
+<b>Cls</b> <i>mode</i><br>
+</code><br>
+
+<h3>Differences from QB</h3><br>
+<ul><li> None<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="color.html">Color</a></code><br>
+<li> <code><a href="locate.html">Locate</a></code><br>
+<li> <code><a href="print.html">Print</a></code><br>
+<li> <code><a href="print.html">?</a></code><br>
+<li> <code><a href="../../screen-functions/procedures/view-graphics.html">View (Graphics)</a></code><br>
+<br>
+</li></li></li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-cm">'' set the color to light grey text on a blue background</span>
+
+<span class="tok-kw">Color</span> <span class="tok-nu">7</span><span>,</span> <span class="tok-nu">1</span>
+
+
+
+<span class="tok-cm">'' clear the screen to the background color</span>
+
+<span class="tok-kw">Cls</span>
+
+
+
+<span class="tok-cm">'' print text in the center of the screen</span>
+
+<span class="tok-kw">Locate</span> <span class="tok-nu">12</span><span>,</span> <span class="tok-nu">33</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Hello Universe!&quot;</span></pre></code><br>
+<br>
+In graphics modes, if you want to clear the entire screen to color <code>0</code>, it can be faster using  <code><a href="../../memory-functions/procedures/clear.html">Clear</a></code> to write zeroes to the screen memory than calling <code><b>Cls</b></code>.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span>scrbuf</span> <span class="tok-kw">As</span> <span class="tok-kw">Byte</span> <span class="tok-kw">Ptr</span><span>,</span> <span>scrsize</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Long</span> <span>scrhei</span><span>,</span> <span>scrpitch</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>r</span> <span>=</span> <span class="tok-nu">0</span><span>,</span> <span>dr</span> <span>=</span> <span class="tok-nu">1</span>
+
+
+
+<span class="tok-kw">ScreenRes</span> <span class="tok-nu">640</span><span>,</span> <span class="tok-nu">480</span><span>,</span> <span class="tok-nu">8</span>
+
+
+
+<span>scrbuf</span> <span>=</span> <span class="tok-kw">ScreenPtr</span><span>:</span> <span class="tok-kw">Assert</span><span>(</span> <span>scrbuf</span> <span>&lt;&gt;</span> <span class="tok-nu">0</span> <span>)</span>
+
+<span class="tok-kw">ScreenInfo</span><span>(</span> <span>,</span> <span>scrhei</span><span>,</span> <span>,</span> <span>,</span> <span>scrpitch</span> <span>)</span>
+
+<span>scrsize</span> <span>=</span> <span>scrpitch</span> <span>*</span> <span>scrhei</span>
+
+
+
+<span class="tok-kw">Do</span>
+
+    
+
+    <span class="tok-cm">'' lock the screen (must do this while working directly on screenbuffer)</span>
+
+    <span class="tok-kw">ScreenLock</span>
+
+        
+
+        <span class="tok-cm">'' clear the screen (could use Cls here):</span>
+
+        <span class="tok-kw">Clear</span> <span>*</span><span>scrbuf</span><span>,</span> <span class="tok-nu">0</span><span>,</span> <span>scrsize</span>
+
+        
+
+        <span class="tok-cm">'' draw circle</span>
+
+        <span class="tok-kw">Circle</span> <span>(</span><span class="tok-nu">320</span><span>,</span> <span class="tok-nu">240</span><span>),</span> <span>r</span>
+
+        
+
+    <span class="tok-kw">ScreenUnlock</span>
+
+    
+
+    <span class="tok-cm">'' grow/shrink circle radius</span>
+
+    <span>r</span> <span>+=</span> <span>dr</span>
+
+    <span class="tok-kw">If</span> <span>r</span> <span>&lt;=</span> <span class="tok-nu">0</span> <span class="tok-kw">Then</span> <span>dr</span> <span>=</span> <span class="tok-nu">1</span> <span class="tok-kw">Else</span> <span class="tok-kw">If</span> <span>r</span> <span>&gt;=</span> <span class="tok-nu">100</span> <span class="tok-kw">Then</span> <span>dr</span> <span>=</span> <span>-</span><span class="tok-nu">1</span>
+
+    
+
+    <span class="tok-cm">'' short pause in each frame (prevents hogging the CPU)</span>
+
+    <span class="tok-kw">Sleep</span> <span class="tok-nu">1</span><span>,</span> <span class="tok-nu">1</span>
+
+    
+
+    <span class="tok-cm">'' run loop until user presses a key</span>
+
+<span class="tok-kw">Loop</span> <span class="tok-kw">Until</span> <span class="tok-kw">Len</span><span>(</span><span class="tok-kw">Inkey</span><span>)</span> <span>&gt;</span> <span class="tok-nu">0</span></pre></code><br>
+<br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgCls.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

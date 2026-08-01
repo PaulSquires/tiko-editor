@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mutual Exclusion — Help Center</title>
+<meta name="description" content="Mutual Exclusion — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/mutual-exclusion.html">
+<meta property="og:title" content="Mutual Exclusion">
+<meta property="og:description" content="Mutual Exclusion — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/mutual-exclusion.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/programmer-s-guide/mutual-exclusion.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>Mutual Exclusion</h1>
+<h2>Documentation</h2>
+
+	The built-in procedures that deal with mutexes for <b>Mutual Exclusion</b> (create, lock/unlock, and destroy the mutexes).<br>
+<br>
+<b>Preamble:</b><br>
+<br>
+Mutual exclusion is the method of serializing access to shared resources. If programmer do not want a thread to be accessing a shared resource that is already in the process of being accessed by another thread, he can use a mutex.<br>
+<br>
+Logically a mutex is a lock with only one key:<br>
+<div class="indent"><b>-</b> If a thread wishes to access a shared resource, the thread must first gain the lock.<br>
+<b>-</b> Once it has the lock it may do what it wants with the shared resource without concerns of other threads accessing the shared resource because other threads will have to wait.<br>
+<b>-</b> Once the thread finishes using the shared resource, it unlocks the mutex, which allows other threads to access the shared resource.<br>
+<br>
+</div>A mutex is a lock that guarantees three things:<br>
+<div class="indent"><b>-</b> Atomicity - Locking a mutex is an atomic operation, meaning that the operating system (or threads library) assures you that if you locked a mutex, no other thread succeeded in locking this mutex at the same time.<br>
+<b>-</b> Singularity - If a thread managed to lock a mutex, it is assured that no other thread will be able to lock the thread until the original thread releases the lock.<br>
+<b>-</b> Non-Busy Wait - If a thread attempts to lock a thread that was locked by a second thread, the first thread will be suspended (and will not consume any CPU resources) until the lock is freed by the second thread. At this time, the first thread will wake up and continue execution, having the mutex locked by it.<br>
+<br>
+</div>This is a protocol that serializes access to a shared resource.<br>
+Note that such a protocol must be enforced for resource a mutex is protecting across all threads that may touch the resource being protected (including the implicit main thread).<br>
+<br>
+Mutex capability can be fully used even with a detached thread (only its handler is no longer accessible by its identifier).<br>
+<br>
+<div>Creating / Destructing a mutex</div><div><br>
+<code><a href="../../threading-support-functions/procedures/mutexcreate.html">MutexCreate</a></code> creates a mutex, returning a handle identifier which is to be referred to when destroying the mutex.<br>
+Mutexes created with <code><a href="../../threading-support-functions/procedures/mutexcreate.html">MutexCreate</a></code> should be destroyed when no longer needed or before the end of the program with <code><a href="../../threading-support-functions/procedures/mutexdestroy.html">MutexDestroy</a></code>.<br>
+<br>
+<u>Create</u><br>
+<div class="indent"><b>-</b> Syntax:<br>
+<div class="indent"><code><a href="../../procedures/procedures/declare.html">Declare</a> <a href="../../procedures/procedures/function.html">Function</a> <a href="../../threading-support-functions/procedures/mutexcreate.html">MutexCreate</a> ( ) <a href="../../miscellaneous-keywords/procedures/as.html">As</a> <a href="../../procedures/procedures/any.html">Any</a> <a href="../../standard-data-types/procedures/pointer-ptr.html">Ptr</a></code><br>
+</div><b>-</b> Usage:<br>
+<div class="indent"><code><i>mutexid</i> = <a href="../../threading-support-functions/procedures/mutexcreate.html">MutexCreate</a></code><br>
+</div><b>-</b> Return value:<br>
+<div class="indent">The <code><a href="../../procedures/procedures/any.html">Any</a> <a href="../../standard-data-types/procedures/pointer-ptr.html">Ptr</a></code> handle <code><i>(mutexid)</i></code> to the mutex created, or the null pointer (<code>0</code>) on failure.<br>
+<br>
+</div></div><u>Destroy</u><br>
+<div class="indent"><b>-</b> Syntax:<br>
+<div class="indent"><code><a href="../../procedures/procedures/declare.html">Declare</a> <a href="../../procedures/procedures/sub.html">Sub</a> <a href="../../threading-support-functions/procedures/mutexdestroy.html">MutexDestroy</a> ( <a href="../../procedures/procedures/byval.html">ByVal</a> <i>mutexid</i> <a href="../../miscellaneous-keywords/procedures/as.html">As</a> <a href="../../procedures/procedures/any.html">Any</a> <a href="../../standard-data-types/procedures/pointer-ptr.html">Ptr</a> )</code><br>
+</div><b>-</b> Usage:<br>
+<div class="indent"><code><a href="../../threading-support-functions/procedures/mutexdestroy.html">MutexDestroy</a>( <i>mutexid</i> )</code><br>
+</div><b>-</b> Parameter:<br>
+<div class="indent"><code><i>mutexid</i></code><br>
+<div class="indent">The <code><a href="../../procedures/procedures/any.html">Any</a> <a href="../../standard-data-types/procedures/pointer-ptr.html">Ptr</a></code> handle of the mutex to be destroyed.<br>
+<br>
+</div></div></div><u>Description</u><br>
+<div class="indent">The call to <code><a href="../../threading-support-functions/procedures/mutexcreate.html">MutexCreate</a></code> must be executed before creating any thread using it (and before its use in the thread that creates it).<br>
+The call to <code><a href="../../threading-support-functions/procedures/mutexdestroy.html">MutexDestroy</a></code> must be executed after any threads using the mutex are no longer in use (and after its last use in the thread that destroys it).<br>
+<br>
+</div></div><div>Locking / Unlocking a mutex</div><div><br>
+<code><a href="../../threading-support-functions/procedures/mutexlock.html">MutexLock</a></code>/<code><a href="../../threading-support-functions/procedures/mutexunlock.html">MutexUnlock</a></code> allow to lock/unlock a mutex by referring to its handle identifier get at its creation.<br>
+<br>
+<u>Lock</u><br>
+<div class="indent"><b>-</b> Syntax:<br>
+<div class="indent"><code><a href="../../procedures/procedures/declare.html">Declare</a> <a href="../../procedures/procedures/sub.html">Sub</a> <a href="../../threading-support-functions/procedures/mutexlock.html">MutexLock</a> ( <a href="../../procedures/procedures/byval.html">ByVal</a> <i>mutexid</i> <a href="../../miscellaneous-keywords/procedures/as.html">As</a> <a href="../../procedures/procedures/any.html">Any</a> <a href="../../standard-data-types/procedures/pointer-ptr.html">Ptr</a> )</code><br>
+</div><b>-</b> Usage:<br>
+<div class="indent"><code><a href="../../threading-support-functions/procedures/mutexlock.html">MutexLock</a>( <i>mutexid</i> )</code><br>
+</div><b>-</b> Parameter:<br>
+<div class="indent"><code><i>mutexid</i></code><br>
+<div class="indent">The <code><a href="../../procedures/procedures/any.html">Any</a> <a href="../../standard-data-types/procedures/pointer-ptr.html">Ptr</a></code> handle of the mutex to be locked.<br>
+<br>
+</div></div></div><u>Unlock</u><br>
+<div class="indent"><b>-</b> Syntax:<br>
+<div class="indent"><code><a href="../../procedures/procedures/declare.html">Declare</a> <a href="../../procedures/procedures/sub.html">Sub</a> <a href="../../threading-support-functions/procedures/mutexunlock.html">MutexUnlock</a> ( <a href="../../procedures/procedures/byval.html">ByVal</a> <i>mutexid</i> <a href="../../miscellaneous-keywords/procedures/as.html">As</a> <a href="../../procedures/procedures/any.html">Any</a> <a href="../../standard-data-types/procedures/pointer-ptr.html">Ptr</a> )</code><br>
+</div><b>-</b> Usage:<br>
+<div class="indent"><code><a href="../../threading-support-functions/procedures/mutexunlock.html">MutexUnlock</a>( <i>mutexid</i> )</code><br>
+</div><b>-</b> Parameter:<br>
+<div class="indent"><code><i>mutexid</i></code><br>
+<div class="indent">The <code><a href="../../procedures/procedures/any.html">Any</a> <a href="../../standard-data-types/procedures/pointer-ptr.html">Ptr</a></code> handle of the mutex to be unlocked.<br>
+<br>
+</div></div></div><u>Description</u><br>
+<div class="indent">The code between the lock and unlock calls to the mutex, is referred to as a critical section.<br>
+Minimizing time spent in the critical section allows for greater concurrency because it potentially reduces the amount of time other threads must wait to gain the lock.<br>
+Therefore, it is important for a thread programmer to minimize critical sections if possible. <br>
+<br>
+</div></div><div>Pseudo-code section</div><div><br>
+By applying all proper above rules:<br>
+<div class="indent"><pre class="code">
+'  Principle of mutual exclusion between 2 threads
+'  (connecting lines join the sender(s) and receiver(s) impacted by each action occurring during the sequence)
+'
+'          Thread                                         Other Thread
+'      MUTEXLOCK(mutexID) <----------------.    .---> MUTEXLOCK(mutexID)
+'      Do_something_with_exclusion    .--- | ---'     Do_something_with_exclusion
+'      MUTEXUNLOCK(mutexID) ----------'    '--------- MUTEXUNLOCK(mutexID)
+		</pre></div></div><div>Example</div><div><br>
+The first example on the previous page (<code><a href="threads.html">Threads</a></code>) is modified so that each thread no longer displays a single character ("M" or "C") but now a sequence of three characters ("[M]" from the main thread, "(C)" for the child thread).<br>
+The tempo in each thread loop has been cut into three chunks to help interleave the display between threads.<br>
+<br>
+<ul><li> Using this example as is:<br>
+</li></ul><div class="indent"><code><pre class="code"><span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>thread</span> <span>(</span><span class="tok-kw">ByVal</span> <span>userdata</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span><span>)</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>threadID</span>  <span class="tok-cm">'' declaration of an 'Any Ptr' thread-ID of the child thread</span>
+
+
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;&quot;&quot;[M]&quot;&quot;: from 'Main' thread&quot;</span>
+
+<span class="tok-kw">Print</span> <span>&quot;&quot;&quot;(C)&quot;&quot;: from 'Child' thread&quot;</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+<span>threadID</span> <span>=</span> <span class="tok-kw">ThreadCreate</span><span>(@</span><span>thread</span><span>)</span>  <span class="tok-cm">'' creation of the child thread from the main thread</span>
+
+
+
+<span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">10</span>  <span class="tok-cm">'' 'For' loop of the main thread</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;[&quot;</span><span>;</span>
+
+    <span class="tok-kw">Sleep</span> <span class="tok-nu">50</span><span>,</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;M&quot;</span><span>;</span>
+
+    <span class="tok-kw">Sleep</span> <span class="tok-nu">50</span><span>,</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;]&quot;</span><span>;</span>
+
+    <span class="tok-kw">Sleep</span> <span class="tok-nu">50</span><span>,</span> <span class="tok-nu">1</span>
+
+<span class="tok-kw">Next</span> <span>I</span>
+
+
+
+<span class="tok-kw">ThreadWait</span><span>(</span><span>threadID</span><span>)</span>  <span class="tok-cm">'' waiting for the child thread termination</span>
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Print</span> <span>&quot;'Child' thread finished&quot;</span>
+
+
+
+<span class="tok-kw">Sleep</span>
+
+
+
+
+
+<span class="tok-kw">Sub</span> <span>thread</span> <span>(</span><span class="tok-kw">ByVal</span> <span>userdata</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span><span>)</span>  <span class="tok-cm">'' sub executed by the child thread</span>
+
+    <span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">10</span>          <span class="tok-cm">'' 'For' loop of the child thread</span>
+
+        <span class="tok-kw">Print</span> <span>&quot;(&quot;</span><span>;</span>
+
+        <span class="tok-kw">Sleep</span> <span class="tok-nu">50</span><span>,</span> <span class="tok-nu">1</span>
+
+        <span class="tok-kw">Print</span> <span>&quot;C&quot;</span><span>;</span>
+
+        <span class="tok-kw">Sleep</span> <span class="tok-nu">50</span><span>,</span> <span class="tok-nu">1</span>
+
+        <span class="tok-kw">Print</span> <span>&quot;)&quot;</span><span>;</span>
+
+        <span class="tok-kw">Sleep</span> <span class="tok-nu">250</span><span>,</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">Next</span> <span>I</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span></pre></code><br>
+Output example:<br>
+<div class="indent"><pre class="code">
+"[M]": from 'Main' thread
+"(C)": from 'Child' thread
+
+[(CM])[M][(MC])[M][(MC])[M][(MC])[M][M(]C)[M](C)(C)(C)(C)(C)
+'Child' thread finished
+			</pre>The display highlights an interlace in the sequence (of three characters) outputted from each thread.<br>
+In each thread, the code section displaying the three-character sequence should not be interrupted by the display of the other thread.<br>
+These two sections of code must therefore be considered as critical sections to be protected by a block <i>[Mutexlock ... Mutexunlock]</i>.<br>
+<br>
+</div></div><ul><li> Using mutual exclusion with a mutex:<br>
+</li></ul><div class="indent"><code><pre class="code"><span class="tok-cm">'  Principle of mutual exclusion</span>
+
+<span class="tok-cm">'      Main thread                      XOR            Child thread</span>
+
+<span class="tok-cm">'  .....                                           .....</span>
+
+<span class="tok-cm">'  MUTEXLOCK(mutID)                                MUTEXLOCK(mutID)</span>
+
+<span class="tok-cm">'      Do_something_with_exclusion                     Do_something_with_exclusion</span>
+
+<span class="tok-cm">'  MUTEXUNLOCK(mutID)                              MUTEXUNLOCK(mutID)</span>
+
+<span class="tok-cm">'  .....                                           .....</span>
+
+
+
+
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>thread</span> <span>(</span><span class="tok-kw">ByVal</span> <span>userdata</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span><span>)</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>threadID</span>      <span class="tok-cm">'' declaration of an 'Any Ptr' thread-ID of the child thread</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">Shared</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>mutID</span>  <span class="tok-cm">'' declaration of a global 'Any Ptr' mutex-ID</span>
+
+    <span>mutID</span> <span>=</span> <span class="tok-kw">MutexCreate</span>      <span class="tok-cm">'' creation of the mutex</span>
+
+
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;&quot;&quot;[M]&quot;&quot;: from 'Main' thread&quot;</span>
+
+<span class="tok-kw">Print</span> <span>&quot;&quot;&quot;(C)&quot;&quot;: from 'Child' thread&quot;</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+<span>threadID</span> <span>=</span> <span class="tok-kw">ThreadCreate</span><span>(@</span><span>thread</span><span>)</span>  <span class="tok-cm">'' creation of the child thread from the main thread</span>
+
+
+
+<span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">10</span>  <span class="tok-cm">'' 'For' loop of the main thread</span>
+
+    <span class="tok-kw">MutexLock</span><span>(</span><span>mutID</span><span>)</span>        <span class="tok-cm">'' set mutex locked at the beginning of the exclusive section</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;[&quot;</span><span>;</span>
+
+    <span class="tok-kw">Sleep</span> <span class="tok-nu">50</span><span>,</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;M&quot;</span><span>;</span>
+
+    <span class="tok-kw">Sleep</span> <span class="tok-nu">50</span><span>,</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;]&quot;</span><span>;</span>
+
+    <span class="tok-kw">MutexUnlock</span><span>(</span><span>mutID</span><span>)</span>      <span class="tok-cm">'' set mutex unlocked at the end of the exclusive section</span>
+
+    <span class="tok-kw">Sleep</span> <span class="tok-nu">50</span><span>,</span> <span class="tok-nu">1</span>
+
+<span class="tok-kw">Next</span> <span>I</span>
+
+
+
+<span class="tok-kw">ThreadWait</span><span>(</span><span>threadID</span><span>)</span>  <span class="tok-cm">'' waiting for the child thread termination</span>
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Print</span> <span>&quot;'Child' thread finished&quot;</span>
+
+
+
+<span class="tok-kw">MutexDestroy</span><span>(</span><span>mutID</span><span>)</span>  <span class="tok-cm">'' destruction of the mutex</span>
+
+
+
+<span class="tok-kw">Sleep</span>
+
+
+
+
+
+<span class="tok-kw">Sub</span> <span>thread</span> <span>(</span><span class="tok-kw">ByVal</span> <span>userdata</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span><span>)</span>  <span class="tok-cm">'' sub executed by the child thread</span>
+
+    <span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">10</span>          <span class="tok-cm">'' 'For' loop of the child thread</span>
+
+        <span class="tok-kw">MutexLock</span><span>(</span><span>mutID</span><span>)</span>                <span class="tok-cm">'' set mutex locked at the beginning of the exclusive section</span>
+
+        <span class="tok-kw">Print</span> <span>&quot;(&quot;</span><span>;</span>
+
+        <span class="tok-kw">Sleep</span> <span class="tok-nu">50</span><span>,</span> <span class="tok-nu">1</span>
+
+        <span class="tok-kw">Print</span> <span>&quot;C&quot;</span><span>;</span>
+
+        <span class="tok-kw">Sleep</span> <span class="tok-nu">50</span><span>,</span> <span class="tok-nu">1</span>
+
+        <span class="tok-kw">Print</span> <span>&quot;)&quot;</span><span>;</span>
+
+        <span class="tok-kw">MutexUnlock</span><span>(</span><span>mutID</span><span>)</span>              <span class="tok-cm">'' set mutex unlocked at the end of the exclusive section</span>
+
+        <span class="tok-kw">Sleep</span> <span class="tok-nu">250</span><span>,</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">Next</span> <span>I</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span></pre></code><br>
+Output example:<br>
+<div class="indent"><pre class="code">
+"[M]": from 'Main' thread
+"(C)": from 'Child' thread
+
+[M](C)[M][M](C)[M][M](C)[M][M](C)[M][M](C)[M](C)(C)(C)(C)(C)
+'Child' thread finished
+			</pre>So, display becomes coherent compared to each three-character sequence.<br>
+<br>
+</div></div></div><div>See also</div><div><br>
+<ul><li> <code><a href="../../threading-support-functions/procedures/mutexcreate.html">MutexCreate</a></code>, <code><a href="../../threading-support-functions/procedures/mutexdestroy.html">MutexDestroy</a></code><br>
+<li> <code><a href="../../threading-support-functions/procedures/mutexlock.html">MutexLock</a></code>, <code><a href="../../threading-support-functions/procedures/mutexunlock.html">MutexUnlock</a></code><br>
+<li> <a href="multi-threading.html">Multi-Threading Overview</a><br>
+<li> <a href="threads.html">Threads</a><br>
+<li> <a href="conditional-variables.html">Conditional Variables</a><br>
+<li> <a href="critical-sections.html">Critical Sections</a><br>
+<li> <a href="critical-sections-faq.html">Critical Sections FAQ</a><br>
+<br>
+</li></li></li></li></li></li></li></ul></div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

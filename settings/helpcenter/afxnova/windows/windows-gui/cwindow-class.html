@@ -1,0 +1,1578 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CWindow Class — Help Center</title>
+<meta name="description" content="CWindow Class — 82 documented members. Windows reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-gui/cwindow-class.html">
+<meta property="og:title" content="CWindow Class">
+<meta property="og:description" content="CWindow Class — 82 documented members. Windows reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-gui/cwindow-class.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-gui/cwindow-class.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span>Windows</div>
+<h1>CWindow Class</h1>
+<h2>Members (82)</h2>
+<div class="memberlist"><a href="procedures/afxcwindowownerptr.html"><span class="m-n">AfxCWindowOwnerPtr</span><span class="m-d">Returns a pointer to the **CWindow** class given the handle of the window created with it or the handle of any of it&#x27;s children windows or controls.</span></a><a href="procedures/afxcwindowptr.html"><span class="m-n">AfxCWindowPtr</span><span class="m-d">Returns a pointer to the **CWindow** class given the handle of the main window or the CREATESTRUCT structure associated with it.</span></a><a href="procedures/afxinputbox.html"><span class="m-n">AfxInputBox</span><span class="m-d">Input box dialog.</span></a><a href="cwindow/cwindow-accelhandle.html"><span class="m-n">AccelHandle</span><span class="m-d">Gets/sets the accelerator table handle.</span></a><a href="cwindow/cwindow-addaccelerator.html"><span class="m-n">AddAccelerator</span><span class="m-d">Adds an accelerator key to the table.</span></a><a href="cwindow/cwindow-addcontrol.html"><span class="m-n">AddControl</span><span class="m-d">Adds a control to the window.</span></a><a href="cwindow/cwindow-adding-controls.html"><span class="m-n">Adding controls</span><span class="m-d"></span></a><a href="cwindow/cwindow-anchorcontrol.html"><span class="m-n">AnchorControl</span><span class="m-d">Anchors a window or control to its parent window.</span></a><a href="cwindow/cwindow-bigicon.html"><span class="m-n">BigIcon</span><span class="m-d">Associates a new large icon with the main window.</span></a><a href="cwindow/cwindow-brush.html"><span class="m-n">Brush</span><span class="m-d">Gets/sets the background brush.</span></a><a href="cwindow/cwindow-center.html"><span class="m-n">Center</span><span class="m-d">Centers a window on the screen or over another window.</span></a><a href="cwindow/cwindow-classstyle.html"><span class="m-n">ClassStyle</span><span class="m-d">Gets/sets the style of the class.</span></a><a href="cwindow/cwindow-clientheight.html"><span class="m-n">ClientHeight</span><span class="m-d">Returns the unscaled client height of the main window.</span></a><a href="cwindow/cwindow-clientwidth.html"><span class="m-n">ClientWidth</span><span class="m-d">Returns the unscaled client width of the window.</span></a><a href="cwindow/cwindow-controladdexstyle.html"><span class="m-n">ControlAddExStyle</span><span class="m-d">Adds a new extended style to the specified control..</span></a><a href="cwindow/cwindow-controladdstyle.html"><span class="m-n">ControlAddStyle</span><span class="m-d">Adds a new style to the specified control.</span></a><a href="cwindow/cwindow-controlclientheight.html"><span class="m-n">ControlClientHeight</span><span class="m-d">Returns the unscaled client height of the specified window.</span></a><a href="cwindow/cwindow-controlclientwidth.html"><span class="m-n">ControlClientWidth</span><span class="m-d">Returns the unscaled client width of the specified window.</span></a><a href="cwindow/cwindow-controlgetexstyle.html"><span class="m-n">ControlGetExStyle</span><span class="m-d">Retrieves the extended window styles of the specified control.</span></a><a href="cwindow/cwindow-controlgetstyle.html"><span class="m-n">ControlGetStyle</span><span class="m-d">Retrieves the window styles of the specified control.</span></a><a href="cwindow/cwindow-controlgetuser.html"><span class="m-n">ControlGetUser</span><span class="m-d">Gets the control&#x27;s user data.</span></a><a href="cwindow/cwindow-controlhandle.html"><span class="m-n">ControlHandle</span><span class="m-d">Retrieves a handle to the child control specified by its identifier.</span></a><a href="cwindow/cwindow-controlheight.html"><span class="m-n">ControlHeight</span><span class="m-d">Returns the unscaled height of the specified window.</span></a><a href="cwindow/cwindow-controlremoveexstyle.html"><span class="m-n">ControlRemoveExStyle</span><span class="m-d">Removes an extended style from the specified control.</span></a><a href="cwindow/cwindow-controlremovestyle.html"><span class="m-n">ControlRemoveStyle</span><span class="m-d">Removes an style from the specified control.</span></a><a href="cwindow/cwindow-controlsetetyle.html"><span class="m-n">ControlSetEtyle</span><span class="m-d"></span></a><a href="cwindow/cwindow-controlsetexstyle.html"><span class="m-n">ControlSetExStyle</span><span class="m-d">Sets the window extended styles of the specified control.</span></a><a href="cwindow/cwindow-controlsetstyle.html"><span class="m-n">ControlSetStyle</span><span class="m-d">Sets the window styles of the specified control.</span></a><a href="cwindow/cwindow-controlsetuser.html"><span class="m-n">ControlSetUser</span><span class="m-d">Sets the control&#x27;s user data.</span></a><a href="cwindow/cwindow-controlwidth.html"><span class="m-n">ControlWidth</span><span class="m-d">Returns the unscaled width of the specified window.</span></a><a href="cwindow/cwindow-create.html"><span class="m-n">Create</span><span class="m-d">Creates a new window.</span></a><a href="cwindow/cwindow-createacceleratortable.html"><span class="m-n">CreateAcceleratorTable</span><span class="m-d">Creates the accelerator table.</span></a><a href="cwindow/cwindow-createfont.html"><span class="m-n">CreateFont</span><span class="m-d">Creates a DPI aware logical font.</span></a><a href="cwindow/cwindow-createoverlapped.html"><span class="m-n">CreateOverlapped</span><span class="m-d"></span></a><a href="cwindow/cwindow-creating-the-main-window.html"><span class="m-n">Creating the main window</span><span class="m-d"></span></a><a href="cwindow/cwindow-defaultfontsize.html"><span class="m-n">DefaultFontSize</span><span class="m-d">Gets/sets the point size of the default font.</span></a><a href="cwindow/cwindow-doevents.html"><span class="m-n">DoEvents</span><span class="m-d">Processes windows messages.</span></a><a href="cwindow/cwindow-dpi.html"><span class="m-n">DPI</span><span class="m-d">Gets/sets the DPI (dots per inch) to be used by the application.</span></a><a href="cwindow/cwindow-font.html"><span class="m-n">Font</span><span class="m-d">Gets/sets the font used as default.</span></a><a href="cwindow/cwindow-getbackcolor.html"><span class="m-n">GetBackColor</span><span class="m-d">Gets the background color of a control.</span></a><a href="cwindow/cwindow-getclientrect.html"><span class="m-n">GetClientRect</span><span class="m-d">Retrieves the unscaled coordinates of the main window client area.</span></a><a href="cwindow/cwindow-getcontrolclientrect.html"><span class="m-n">GetControlClientRect</span><span class="m-d">Retrieves the unscaled coordinates of a window&#x27;s client area.</span></a><a href="cwindow/cwindow-getcontrolwindowrect.html"><span class="m-n">GetControlWindowRect</span><span class="m-d">Retrieves the unscaled dimensions of the bounding rectangle of the specified window.</span></a><a href="cwindow/cwindow-getforecolor.html"><span class="m-n">GetForeColor</span><span class="m-d">Gets the foreground color of `CWindow`or control.</span></a><a href="cwindow/cwindow-getwindowrect.html"><span class="m-n">GetWindowRect</span><span class="m-d">Retrieves the unscaled dimensions of the bounding rectangle of the main window.</span></a><a href="cwindow/cwindow-getworkarea.html"><span class="m-n">GetWorkArea</span><span class="m-d">Retrieves the unscaled size of the work area on the primary display monitor.</span></a><a href="cwindow/cwindow-height.html"><span class="m-n">Height</span><span class="m-d">Returns the unscaled height of the main window.</span></a><a href="cwindow/cwindow-hwindow.html"><span class="m-n">hWindow</span><span class="m-d">Gets/sets the main window handle.</span></a><a href="cwindow/cwindow-instancehandle.html"><span class="m-n">InstanceHandle</span><span class="m-d">Gets/sets the instance handle.</span></a><a href="cwindow/cwindow-isnonstable.html"><span class="m-n">IsNonStable</span><span class="m-d">Returns true if the `CWindow` is stabilized; otherwise, false.</span></a><a href="cwindow/cwindow-isstabilized.html"><span class="m-n">IsStabilized</span><span class="m-d">Returns true if the `CWindow` is stabilized; otherwise, false.</span></a><a href="cwindow/cwindow-iswindowscrollable.html"><span class="m-n">IsWindowScrollable</span><span class="m-d">Returns true if the `CWindow` is scrollable; otherwise, false.</span></a><a href="cwindow/cwindow-keyboard-accelerators.html"><span class="m-n">Keyboard accelerators</span><span class="m-d"></span></a><a href="cwindow/cwindow-movewindow.html"><span class="m-n">MoveWindow</span><span class="m-d">Changes the position and dimensions of the specified window.</span></a><a href="cwindow/cwindow-nonstable.html"><span class="m-n">NonStable</span><span class="m-d">Makes a `CWindow` non stable (closeable).</span></a><a href="cwindow/cwindow-popup-windows.html"><span class="m-n">Popup windows</span><span class="m-d"></span></a><a href="cwindow/cwindow-resize.html"><span class="m-n">Resize</span><span class="m-d">Resizes the window sending a WM_SIZE message with the SIZE_RESTORED value.</span></a><a href="cwindow/cwindow-rxratio.html"><span class="m-n">rxRatio</span><span class="m-d">Returns the horizontal scaling ratio.</span></a><a href="cwindow/cwindow-ryratio.html"><span class="m-n">ryRatio</span><span class="m-d">Returns the vertical scaling ratio.</span></a><a href="cwindow/cwindow-scalex.html"><span class="m-n">ScaleX</span><span class="m-d">Scales an horizontal coordinate according the DPI setting.</span></a><a href="cwindow/cwindow-scaley.html"><span class="m-n">ScaleY</span><span class="m-d">Scales a vertical coordinate according the DPI setting.</span></a><a href="cwindow/cwindow-screenx.html"><span class="m-n">ScreenX</span><span class="m-d">Returns the x-coordinate of the window relative to the screen.</span></a><a href="cwindow/cwindow-screeny.html"><span class="m-n">ScreenY</span><span class="m-d">Returns the y-coordinate of the window relative to the screen.</span></a><a href="cwindow/cwindow-setbackcolor.html"><span class="m-n">SetBackColor</span><span class="m-d">Sets the background color of a `CWindow`.</span></a><a href="cwindow/cwindow-setclientsize.html"><span class="m-n">SetClientSize</span><span class="m-d">Adjusts the bounding rectangle of the window based on the desired size of the client area.</span></a><a href="cwindow/cwindow-setcontrolcallback.html"><span class="m-n">SetControlCallback</span><span class="m-d">Optional address of a callback function that receives all WM_COMMAND and WM_NOTIFY messages for the control.</span></a><a href="cwindow/cwindow-setcontrolsubclass.html"><span class="m-n">SetControlSubclass</span><span class="m-d">Installs or updates a control subclass callback.</span></a><a href="cwindow/cwindow-setctlcolors.html"><span class="m-n">SetCtlColors</span><span class="m-d">Sets the colors of a control</span></a><a href="cwindow/cwindow-setfont.html"><span class="m-n">SetFont</span><span class="m-d">Creates a DPI aware logical font and sets it as the default font.</span></a><a href="cwindow/cwindow-setviewport.html"><span class="m-n">SetViewPort</span><span class="m-d"></span></a><a href="cwindow/cwindow-setwindowpos.html"><span class="m-n">SetWindowPos</span><span class="m-d">Changes the size, position, and Z order of a child, pop-up, or top-level window.</span></a><a href="cwindow/cwindow-smallicon.html"><span class="m-n">SmallIcon</span><span class="m-d">Associates a new small icon with the main window.</span></a><a href="cwindow/cwindow-stabilize.html"><span class="m-n">Stabilize</span><span class="m-d">Makes the `CWindow` window stabilized (non-closeable).</span></a><a href="cwindow/cwindow-unscalex.html"><span class="m-n">UnScaleX</span><span class="m-d">Unscales an horizontal coordinate according the DPI setting.</span></a><a href="cwindow/cwindow-unscaley.html"><span class="m-n">UnScaleY</span><span class="m-d">Unscales a vertical coordinate according the DPI setting.</span></a><a href="cwindow/cwindow-userdata.html"><span class="m-n">UserData</span><span class="m-d">Gets/sets a value in the user data area of the window.</span></a><a href="cwindow/cwindow-using-png-icons-in-toolbars.html"><span class="m-n">Using PNG icons in toolbars</span><span class="m-d"></span></a><a href="cwindow/cwindow-visual-style-menus.html"><span class="m-n">Visual style menus</span><span class="m-d"></span></a><a href="cwindow/cwindow-width.html"><span class="m-n">Width</span><span class="m-d">Returns the unscaled width of the main window.</span></a><a href="cwindow/cwindow-windowexstyle.html"><span class="m-n">WindowExStyle</span><span class="m-d">Gets/sets the window extended styles.</span></a><a href="cwindow/cwindow-windowstyle.html"><span class="m-n">WindowStyle</span><span class="m-d">Gets/sets the window styles.</span></a><a href="cwindow/cwindow-windowstyleex.html"><span class="m-n">WindowStyleEx</span><span class="m-d">Gets/sets the window extended styles.</span></a></div>
+<h2>Documentation</h2>
+<h2 id="cwindow-class">CWindow Class</h2>
+<p><code>CWindow</code> is a powerful class to easily create Graphical User Interfaces (GUI) for Windows applications.</p>
+<h5 id="main-features">Main features</h5>
+<ul><li>Easy creation of Graphical User Interfaces (GUI).</li><li>100% compatible with the Windows API.</li><li>Optional default values for window styles and extended styles.</li><li>High DPI and Unicode support for windows and controls.</li><li>Support for alpha blended icons and images.</li></ul>
+<h5 id="remarks">Remarks</h5>
+<p>The default message pump (<strong>CWindow.DoEvents</strong>), should be enough for most applications, but you can replace it with your own.</p>
+<p><strong>Include file</strong>: AfxNova/CWindow.inc.</p>
+<h4 id="constructor">Constructor</h4>
+<p>Registers the class name and initializes the common controls library.</p>
+<pre class="code"><code>CONSTRUCTOR CWindow (BYREF wszClassName AS CONST WSTRING = "")</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszClassName</em></td><td>Optional. The name of the class name to register. If omitted, the class will use "FBWindowClass:" and a number as the class name.</td></tr></tbody></table></div>
+<h5 id="usage-examples">Usage examples</h5>
+<pre class="code"><code>DIM pWindow AS CWindow</code></pre>
+<pre class="code"><code>DIM pWindow AS CWindow = "MyClassName"</code></pre>
+<h4 id="tutorial">Tutorial</h4>
+<div class="table-wrap"><table><thead><tr><th>Topic</th></tr></thead><tbody><tr><td><a href="cwindow/cwindow-creating-the-main-window.html">Creating the main window</a></td></tr><tr><td><a href="#topic2">Getting a pointer to the CWindow class</a></td></tr><tr><td><a href="cwindow/cwindow-adding-controls.html">Adding controls</a></td></tr><tr><td><a href="cwindow/cwindow-popup-windows.html">Popup windows</a></td></tr><tr><td><a href="cwindow/cwindow-using-png-icons-in-toolbars.html">Using PNG icons in toolbars</a></td></tr><tr><td><a href="cwindow/cwindow-visual-style-menus.html">Visual style menus</a></td></tr><tr><td><a href="cwindow/cwindow-keyboard-accelerators.html">Keyboard accelerators</a></td></tr></tbody></table></div>
+<h4 id="methods-and-properties">Methods and Properties</h4>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="cwindow/cwindow-accelhandle.html">AccelHandle</a></td><td>Gets/sets the accelerator table handle.</td></tr><tr><td><a href="cwindow/cwindow-addaccelerator.html">AddAccelerator</a></td><td>Adds an accelerator key to the table.</td></tr><tr><td><a href="cwindow/cwindow-addcontrol.html">AddControl</a></td><td>Adds a control to the window.</td></tr><tr><td><a href="cwindow/cwindow-anchorcontrol.html">AnchorControl</a></td><td>Anchors a window or control to its parent window.</td></tr><tr><td><a href="cwindow/cwindow-bigicon.html">BigIcon</a></td><td>Associates a new large icon with the main window.</td></tr><tr><td><a href="cwindow/cwindow-brush.html">Brush</a></td><td>Gets/sets the background brush.</td></tr><tr><td><a href="cwindow/cwindow-center.html">Center</a></td><td>Centers a window on the screen or over another window.</td></tr><tr><td><a href="cwindow/cwindow-classstyle.html">ClassStyle</a></td><td>Gets/sets the style of the class.</td></tr><tr><td><a href="cwindow/cwindow-clientheight.html">ClientHeight</a></td><td>Returns the unscaled client height of the main window.</td></tr><tr><td><a href="cwindow/cwindow-clientwidth.html">ClientWidth</a></td><td>Returns the unscaled client width of the window.</td></tr><tr><td><a href="cwindow/cwindow-controladdexstyle.html">ControlAddExStyle</a></td><td>Adds a new extended style to the specified control..</td></tr><tr><td><a href="cwindow/cwindow-controladdstyle.html">ControlAddStyle</a></td><td>Adds a new style to the specified control.</td></tr><tr><td><a href="cwindow/cwindow-controlclientheight.html">ControlClientHeight</a></td><td>Returns the unscaled client height of the specified window.</td></tr><tr><td><a href="cwindow/cwindow-controlclientwidth.html">ControlClientWidth</a></td><td>Returns the unscaled client width of the specified window.</td></tr><tr><td><a href="cwindow/cwindow-controlgetexstyle.html">ControlGetExStyle</a></td><td>Retrieves the extended window styles of the specified control.</td></tr><tr><td><a href="cwindow/cwindow-controlgetstyle.html">ControlGetStyle</a></td><td>Retrieves the window styles of the specified control.</td></tr><tr><td><a href="cwindow/cwindow-controlgetuser.html">ControlGetUser</a></td><td>Gets the control's user data.</td></tr><tr><td><a href="cwindow/cwindow-controlhandle.html">ControlHandle</a></td><td>Retrieves a handle to the child control specified by its identifier.</td></tr><tr><td><a href="cwindow/cwindow-controlheight.html">ControlHeight</a></td><td>Returns the unscaled height of the specified window.</td></tr><tr><td><a href="cwindow/cwindow-controlremoveexstyle.html">ControlRemoveExStyle</a></td><td>Removes an extended style from the specified control.</td></tr><tr><td><a href="cwindow/cwindow-controlremovestyle.html">ControlRemoveStyle</a></td><td>Removes an style from the specified control.</td></tr><tr><td><a href="cwindow/cwindow-controlsetexstyle.html">ControlSetExStyle</a></td><td>Sets the window extended styles of the specified control.</td></tr><tr><td><a href="cwindow/cwindow-controlsetstyle.html">ControlSetStyle</a></td><td>Sets the window styles of the specified control.</td></tr><tr><td><a href="cwindow/cwindow-controlsetuser.html">ControlSetUser</a></td><td>Sets the control's user data.</td></tr><tr><td><a href="cwindow/cwindow-controlwidth.html">ControlWidth</a></td><td>Returns the unscaled width of the specified window.</td></tr><tr><td><a href="cwindow/cwindow-create.html">Create</a></td><td>Creates a new window.</td></tr><tr><td><a href="cwindow/cwindow-createacceleratortable.html">CreateAcceleratorTable</a></td><td>Creates the accelerator table.</td></tr><tr><td><a href="cwindow/cwindow-createfont.html">CreateFont</a></td><td>Creates a DPI aware logical font.</td></tr><tr><td><a href="cwindow/cwindow-defaultfontsize.html">DefaultFontSize</a></td><td>Gets/sets the point size of the default font.</td></tr><tr><td><a href="#destroyacceleratortable">DestroyAcceleratorTable</a></td><td>Destroys the accelerator table.</td></tr><tr><td><a href="cwindow/cwindow-doevents.html">DoEvents</a></td><td>Processes windows messages.</td></tr><tr><td><a href="cwindow/cwindow-dpi.html">DPI</a></td><td>Gets/sets the DPI (dots per inch) to be used by the application.</td></tr><tr><td><a href="cwindow/cwindow-font.html">Font</a></td><td>Gets/sets the font used as default.</td></tr><tr><td><a href="cwindow/cwindow-getbackcolor.html">GetBackColor</a></td><td>Gets the background color of a control.</td></tr><tr><td><a href="cwindow/cwindow-getclientrect.html">GetClientRect</a></td><td>Retrieves the unscaled coordinates of the main window client area.</td></tr><tr><td><a href="cwindow/cwindow-getcontrolclientrect.html">GetControlClientRect</a></td><td>Retrieves the unscaled coordinates of a window's client area.</td></tr><tr><td><a href="cwindow/cwindow-getcontrolwindowrect.html">GetControlWindowRect</a></td><td>Retrieves the unscaled dimensions of the bounding rectangle of the specified window.</td></tr><tr><td><a href="cwindow/cwindow-getforecolor.html">GetForeColor</a></td><td>Gets the foreground color of <code>CWindow</code>or control.</td></tr><tr><td><a href="cwindow/cwindow-getwindowrect.html">GetWindowRect</a></td><td>Retrieves the unscaled dimensions of the bounding rectangle of the main window.</td></tr><tr><td><a href="cwindow/cwindow-getworkarea.html">GetWorkArea</a></td><td>Retrieves the unscaled size of the work area on the primary display monitor.</td></tr><tr><td><a href="cwindow/cwindow-height.html">Height</a></td><td>Returns the unscaled height of the main window.</td></tr><tr><td><a href="cwindow/cwindow-hwindow.html">hWindow</a></td><td>Gets/sets the main window handle.</td></tr><tr><td><a href="cwindow/cwindow-instancehandle.html">InstanceHandle</a></td><td>Gets/sets the instance handle.</td></tr><tr><td><a href="cwindow/cwindow-isnonstable.html">IsNonStable</a></td><td>Returns true if the <code>CWindow</code> is stabilized; otherwise, false.</td></tr><tr><td><a href="cwindow/cwindow-isstabilized.html">IsStabilized</a></td><td>Returns true if the <code>CWindow</code> is stabilized; otherwise, false.</td></tr><tr><td><a href="cwindow/cwindow-iswindowscrollable.html">IsWindowScrollable</a></td><td>Returns true if the <code>CWindow</code> is scrollable; otherwise, false.</td></tr><tr><td><a href="cwindow/cwindow-movewindow.html">MoveWindow</a></td><td>Changes the position and dimensions of the specified window.</td></tr><tr><td><a href="cwindow/cwindow-nonstable.html">NonStable</a></td><td>Makes a <code>CWindow</code> non stable (closeable).</td></tr><tr><td><a href="cwindow/cwindow-resize.html">Resize</a></td><td>Resizes the window sending a WM_SIZE message with the  SIZE_RESTORED value.</td></tr><tr><td><a href="cwindow/cwindow-rxratio.html">rxRatio</a></td><td>Returns the horizontal scaling ratio.</td></tr><tr><td><a href="cwindow/cwindow-ryratio.html">ryRatio</a></td><td>Returns the vertical scaling ratio.</td></tr><tr><td><a href="cwindow/cwindow-scalex.html">ScaleX</a></td><td>Scales an horizontal coordinate according the DPI setting.</td></tr><tr><td><a href="cwindow/cwindow-scaley.html">ScaleY</a></td><td>Scales a vertical coordinate according the DPI setting.</td></tr><tr><td><a href="cwindow/cwindow-screenx.html">ScreenX</a></td><td>Returns the x-coordinate of the window relative to the screen.</td></tr><tr><td><a href="cwindow/cwindow-screeny.html">ScreenY</a></td><td>Returns the y-coordinate of the window relative to the screen.</td></tr><tr><td><a href="cwindow/cwindow-setbackcolor.html">SetBackColor</a></td><td>Sets the background color of a <code>CWindow</code>.</td></tr><tr><td><a href="cwindow/cwindow-setclientsize.html">SetClientSize</a></td><td>Adjusts the bounding rectangle of the window based on the desired size of the client area.</td></tr><tr><td><a href="cwindow/cwindow-setcontrolcallback.html">SetControlCallback</a></td><td>Optional address of a callback function that receives all WM_COMMAND and WM_NOTIFY messages for the control.</td></tr><tr><td><a href="cwindow/cwindow-setcontrolsubclass.html">SetControlSubclass</a></td><td>Installs or updates a control subclass callback.</td></tr><tr><td><a href="cwindow/cwindow-setctlcolors.html">SetCtlColors</a></td><td>Sets the colors of a control</td></tr><tr><td><a href="cwindow/cwindow-setfont.html">SetFont</a></td><td>Creates a DPI aware logical font and sets it as the default font.</td></tr><tr><td><a href="cwindow/cwindow-setwindowpos.html">SetWindowPos</a></td><td>Changes the size, position, and Z order of a child, pop-up, or top-level window.</td></tr><tr><td><a href="cwindow/cwindow-smallicon.html">SmallIcon</a></td><td>Associates a new small icon with the main window.</td></tr><tr><td><a href="cwindow/cwindow-stabilize.html">Stabilize</a></td><td>Makes the <code>CWindow</code> window stabilized (non-closeable).</td></tr><tr><td><a href="cwindow/cwindow-unscalex.html">UnScaleX</a></td><td>Unscales an horizontal coordinate according the DPI setting.</td></tr><tr><td><a href="cwindow/cwindow-unscaley.html">UnScaleY</a></td><td>Unscales a vertical coordinate according the DPI setting.</td></tr><tr><td><a href="cwindow/cwindow-userdata.html">UserData</a></td><td>Gets/sets a value in the user data area of the window.</td></tr><tr><td><a href="cwindow/cwindow-width.html">Width</a></td><td>Returns the unscaled width of the main window.</td></tr><tr><td><a href="cwindow/cwindow-windowexstyle.html">WindowExStyle</a></td><td>Gets/sets the window extended styles.</td></tr><tr><td><a href="cwindow/cwindow-windowstyle.html">WindowStyle</a></td><td>Gets/sets the window styles.</td></tr><tr><td><a href="cwindow/cwindow-windowexstyle.html">WindowStyleEx</a></td><td>Gets/sets the window extended styles.</td></tr></tbody></table></div>
+<h4 id="procedures">Procedures</h4>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="procedures/afxcwindowptr.html">AfxCWindowPtr</a></td><td>Returns a pointer to the <strong>CWindow</strong> class given the handle of the main window or the CREATESTRUCT structure associated with it.</td></tr><tr><td><a href="procedures/afxcwindowownerptr.html">AfxCWindowOwnerPtr</a></td><td>Returns a pointer to the <strong>CWindow</strong> class given the handle of the window created with it or the handle of any of it's children windows or controls.</td></tr></tbody></table></div>
+<h4 id="dialog">Dialog</h4>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="procedures/afxinputbox.html">AfxInputBox</a></td><td>Input box dialog.</td></tr></tbody></table></div>
+<h2 id="tutorial">Tutorial</h2>
+<h4 id="topic1">Creating the main window</h4>
+<p>To use <code>CWindow</code> you must first include "CWindow.inc" and allow all symbols of its namespace to be accessed adding <strong>USING AfxNova</strong>.</p>
+<pre class="code"><code>#INCLUDE ONCE "AfxNova/CWindow.inc"
+USING AfxNova</code></pre>
+<p>The first step is to create an instance of the class:</p>
+<pre class="code"><code>DIM pWindow AS CWindow</code></pre>
+<p>The <code>CWindow</code> constructor registers a class for the window with the name "FBWindowClass:xxx", where xxx is a counter number. Alternatively, you can force the use of your own class name by specifying it, e.g.</p>
+<pre class="code"><code>DIM pWindow AS CWindow = "MyClassName"</code></pre>
+<p>The constructor also checks if the application is DPI aware and calculates the scaling ratios and the default font name ("Segoe UI", 9 pt, for Windows 10 and above").</p>
+<p>You can override it by setting your own DPI and/or font before creating the window, e.g.</p>
+<pre class="code"><code>DIM pWindow AS CWindow
+pWindow. DPI = 96
+pWindow.SetFont("Times New Roman", 10, FW_NORMAL, , , , DEFAULT_CHARSET)</code></pre>
+<p>By default, <code>CWindow</code> uses a standard COLOR_3DFACE + 1 brush. You can override it calling the <strong>Brush</strong> property:</p>
+<pre class="code"><code>DIM pWindow AS CWindow
+pWindow.Brush = GetStockObject(WHITE_BRUSH)</code></pre>
+<p>This makes the background of the window white.</p>
+<p>The window class uses CS_HREDRAW OR CS_VREDRAW as default window styles. Without them, the background is not repainted and the controls leave garbage in it when resized. With them, windows with many controls can cause flicker. To avoid flicker, you can change the windows style using e.g. pWindow.ClassStyle = CS_DBLCLKS and take care yourself of repainting.</p>
+<p>The next step is to create the window.</p>
+<p>The <strong>Create</strong> method has many parameters, all of which are optional:</p>
+<pre class="code"><code>hParent     = Parent window handle
+wszTitle    = Window caption
+lpfnWndProc = Address of the callback function
+x           = Horizontal position
+y           = Vertical position
+nWidth      = Window width
+nHeight     = Window height
+dwStyle     = Window style
+dwExStyle   = Extended style</code></pre>
+<p>The most verbose way to call it is:</p>
+<pre class="code"><code>DIM hwndMain AS HWND = pWindow.Create(NULL, "CWindow Test", @WndProc, 0, 0, 525, 395, _
+   WS_OVERLAPPEDWINDOW OR WS_CLIPCHILDREN OR WS_CLIPSIBLINGS, WS_EX_CONTROLPARENT OR WS_EX_WINDOWEDGE)</code></pre>
+<p>But just using</p>
+<pre class="code"><code>pWindow.Create</code></pre>
+<p>a working window is created and sized using CW_USEDEFAULT.</p>
+<p>Unless the window has to use all the available desktop space, it may be preferible to use the <strong>SetClientSize</strong> method to size the window because Windows UI elements such the caption and borders have different sizes depending of the Windows version and/or the styles used. Therefore, to make sure that you have enough room for your controls, sizing the window according the client size seems more adequate.</p>
+<p>We may need to process Windows messages, so we need to provide a callback function, e.g.</p>
+<pre class="code"><code>' ========================================================================================
+' Window procedure
+' ========================================================================================
+FUNCTION WndProc (BYVAL hWnd AS HWND, BYVAL uMsg AS UINT, BYVAL wParam AS WPARAM, BYVAL lParam AS LPARAM) AS LRESULT
+
+   SELECT CASE uMsg
+
+      CASE WM_COMMAND
+         SELECT CASE LOWORD(wParam)
+            CASE IDCANCEL
+               ' // If ESC key pressed, close the application sending an WM_CLOSE message
+               IF HIWORD(wParam) = BN_CLICKED THEN
+                  SendMessageW hwnd, WM_CLOSE, 0, 0
+                  EXIT FUNCTION
+               END IF
+         END SELECT
+
+      CASE WM_DESTROY
+         PostQuitMessage(0)
+         EXIT FUNCTION
+
+   END SELECT
+
+   FUNCTION = DefWindowProcW(hWnd, uMsg, wParam, lParam)
+
+END FUNCTION
+' ========================================================================================</code></pre>
+<p>and we have to pass the address of that callback function:</p>
+<pre class="code"><code>pWindow.Create(NULL, "CWindow Test", @WndProc)
+pWindow.SetClientSize(500, 320)   ' The size may vary</code></pre>
+<p>Optionally, we can automatically center the window in the destop calling the <strong>Center</strong> method, e.g.</p>
+<pre class="code"><code>pWindow.Create(NULL, "CWindow Test", @WndProc)
+pWindow.SetClientSize(500, 320)   ' The size may vary
+pWindow.Center</code></pre>
+<p>To process Windows messages we need a message pump. <strong>CWindow</strong> provides a default one calling the <strong>DoEvents</strong> method:</p>
+<pre class="code"><code>FUNCTION = pWindow.DoEvents(nCmdShow)</code></pre>
+<p>This default message pump displays the window and processes the messages. It can be used with most applications, but, in case of need, you can replace it with your own, e.g.</p>
+<pre class="code"><code>' // Displays the window
+DIM hwndMain AS HWND = pWindow.hWindow
+ShowWindow(hwndMain, nCmdShow)
+UpdateWindow(hwndMain)
+
+' // Processes Windows messages
+DIM uMsg AS MSG
+WHILE (GetMessageW(@uMsg, NULL, 0, 0) &lt;&gt; FALSE)
+   IF IsDialogMessageW(hWndMain, @uMsg) = 0 THEN
+      TranslateMessage(@uMsg)
+      DispatchMessageW(@uMsg)
+   END IF
+WEND
+FUNCTION = uMsg.wParam</code></pre>
+<p>Each instance of the <code>CWindow</code> class has an user data area consisting in an array of 99 LONG_PTR values that you can use to store information that you find useful.</p>
+<p>These values are set and retrieved using the <strong>UserData</strong> property and an index from 0 to 99.</p>
+<hr>
+<h4 id="topic2">Getting a pointer to the CWindow class</h4>
+<p>At any time, you can get a pointer to the <strong>CWindow</strong> class by using:</p>
+<pre class="code"><code>DIM pWindow AS CWindow PTR = CAST(CWindow PTR, GetWindowLongPtrW(hwnd, 0))
+- or -
+DIM pWindow AS CWindow PTR = AfxCWindowPtr(hwnd)</code></pre>
+<p>where <em>hwnd</em> is the handle of its associated window handle.</p>
+<p>If the handle of the main window its not available, the function <strong>AfxCWindowOwnerPtr</strong> allows the use of the handle of any of it's child controls.</p>
+<p>An special case is the WM_CREATE message.</p>
+<p>At the time in which this message is processed in the window callback, <strong>CWindow</strong> has not yet been able to store the pointer in the extra bytes of the window class.</p>
+<p>To solve this problem, the <strong>Create</strong> method passes the pointer to the class in the <em>lParam</em> parameter when calling the API function <strong>CreateWindowEx</strong> to create the window.</p>
+<p>This pointer can be retrieved in WM_CREATE using:</p>
+<pre class="code"><code>CASE WM_CREATE
+   DIM pCreateStruct AS CREATESTRUCT PTR = CAST(CREATESTRUCT PTR, lParam)
+   DIM pWindow AS CWindow PTR = CAST(CWindow PTR, pCreateStruct-&gt;lpCreateParams)
+- or -
+CASE WM_CREATE
+   DIM pWindow AS CWindow PTR = AfxCWindowPtr(lParam)</code></pre>
+<hr>
+<h4 id="topic3">Adding controls</h4>
+<p>To add controls to the window you can use the <strong>AddControl</strong> method. Alternatively, you can use the API function <strong>CreateWindowEx</strong>, but then you will have to do scaling by yourself.</p>
+<p>Besides the registered class names for the controls, in many cases you can use easier to remember aliases. For example. you can use "STATUSBAR" instead of "MSCTLS_STATUSBAR32".</p>
+<p>The <strong>AddControl</strong> method also provides default styles for all the Windows controls. Therefore, you can save typing unless you need to use different styles.</p>
+<p>For example, to add a button you can use</p>
+<pre class="code"><code>pWindow.AddControl("Button", pWindow.hWindow, IDCANCEL, "&amp;Close", 350, 250, 75, 23)</code></pre>
+<p>instead of</p>
+<pre class="code"><code>pWindow.AddControl("Button", pWindow.hWindow, IDCANCEL, "&amp;Close", 350, 250, 75, 23, _
+   WS_CHILD OR WS_VISIBLE OR WS_TABSTOP OR BS_PUSHBUTTON OR BS_CENTER OR BS_VCENTER)</code></pre>
+<p>For a list of predefined class names and styles, see the <strong>AddControl</strong> method.</p>
+<p>If the application is DPI aware, controls created with the <strong>AddControl</strong> method are scaled according to the DPI setting.</p>
+<hr>
+<h4 id="topic4">Popup windows</h4>
+<p>To create a popup window you simply create a new instance of the <code>CWindow</code> class and, in the <strong>Create</strong> method, you make it child of the main window and use the <strong>WS_POPUPWINDOW</strong> style.</p>
+<pre class="code"><code>DIM pWindow AS CWindow
+pWindow.Create(hParent, "Popup window", @PopupWndProc, , , , , _
+   WS_VISIBLE OR WS_CAPTION OR WS_POPUPWINDOW OR WS_THICKFRAME, WS_EX_WINDOWEDGE)</code></pre>
+<p>The window created this way is modeless. To make it modal, we need to disable the parent window:</p>
+<pre class="code"><code>CASE WM_CREATE
+   EnableWindow GetParent(hwnd), FALSE</code></pre>
+<p>When the popup dialog is closed, we need to enable the parent window:</p>
+<pre class="code"><code>CASE WM_CLOSE
+   ' // Enables parent window keeping parent's zorder
+   EnableWindow GetParent(hwnd), CTRUE</code></pre>
+<h5 id="example">Example</h5>
+<pre class="code"><code>#INCLUDE ONCE "windows.bi"
+#INCLUDE ONCE "AfxNova/CWindow.inc"
+USING AfxNova
+
+CONST IDC_POPUP = 1001
+
+DECLARE FUNCTION wWinMain (BYVAL hInstance AS HINSTANCE, _
+                           BYVAL hPrevInstance AS HINSTANCE, _
+                           BYVAL pwszCmdLine AS WSTRING PTR, _
+                           BYVAL nCmdShow AS LONG) AS LONG
+
+   END wWinMain(GetModuleHandleW(NULL), NULL, WCOMMAND(), SW_NORMAL)
+
+DECLARE FUNCTION WndProc (BYVAL hWnd AS HWND, BYVAL uMsg AS UINT, BYVAL wParam AS WPARAM, BYVAL lParam AS LPARAM) AS LRESULT
+DECLARE FUNCTION PopupWindow (BYVAL hParent AS HWND) AS LONG
+DECLARE FUNCTION PopupWndProc (BYVAL hWnd AS HWND, BYVAL uMsg AS UINT, BYVAL wParam AS WPARAM, BYVAL lParam AS LPARAM) AS LRESULT
+
+' ========================================================================================
+' Main
+' ========================================================================================
+FUNCTION wWinMain (BYVAL hInstance AS HINSTANCE, _
+                   BYVAL hPrevInstance AS HINSTANCE, _
+                   BYVAL pwszCmdLine AS WSTRING PTR, _
+                   BYVAL nCmdShow AS LONG) AS LONG
+
+   ' // Set process DPI aware
+   SetProcessDpiAwareness(PROCESS_SYSTEM_DPI_AWARE)
+
+   DIM pWindow AS CWindow
+   pWindow.Create(NULL, "CWindow with a popup window", @WndProc)
+   pWindow.SetClientSize(500, 320)
+   pWindow.Center
+
+   ' // Add a button
+   pWindow.AddControl("Button", pWindow.hWindow, IDC_POPUP, "&amp;Popup", 350, 250, 75, 23)
+
+   FUNCTION = pWindow.DoEvents(nCmdShow)
+
+END FUNCTION
+' ========================================================================================
+
+' ========================================================================================
+' Window procedure
+' ========================================================================================
+FUNCTION WndProc (BYVAL hWnd AS HWND, BYVAL uMsg AS UINT, BYVAL wParam AS WPARAM, BYVAL lParam AS LPARAM) AS LRESULT
+
+   SELECT CASE uMsg
+
+      CASE WM_CREATE
+         EXIT FUNCTION
+
+      CASE WM_COMMAND
+         ' // If ESC key pressed, close the application sending an WM_CLOSE message
+         SELECT CASE LOWORD(wParam)
+            CASE IDCANCEL
+               IF HIWORD(wParam) = BN_CLICKED THEN
+                  SendMessageW hwnd, WM_CLOSE, 0, 0
+                  EXIT FUNCTION
+               END IF
+            CASE IDC_POPUP
+               IF HIWORD(wParam) = BN_CLICKED THEN
+                  PopupWindow(hwnd)
+                  EXIT FUNCTION
+               END IF
+         END SELECT
+
+    	CASE WM_DESTROY
+         PostQuitMessage(0)
+         EXIT FUNCTION
+
+   END SELECT
+
+   FUNCTION = DefWindowProcW(hWnd, uMsg, wParam, lParam)
+
+END FUNCTION
+' ========================================================================================
+
+' ========================================================================================
+' Popup window procedure
+' ========================================================================================
+FUNCTION PopupWindow (BYVAL hParent AS HWND) AS LONG
+
+   DIM pWindow AS CWindow
+   pWindow.Create(hParent, "Popup window", @PopupWndProc, , , , , _
+      WS_VISIBLE OR WS_CAPTION OR WS_POPUPWINDOW OR WS_THICKFRAME, WS_EX_WINDOWEDGE)
+   pWindow.Brush = GetStockObject(WHITE_BRUSH)
+   pWindow.SetClientSize(300, 200)
+   pWindow.Center(pWindow.hWindow, hParent)
+   ' / Process Windows messages
+   FUNCTION = pWindow.DoEvents
+
+END FUNCTION
+' ========================================================================================
+
+' ========================================================================================
+' Popup window procedure
+' ========================================================================================
+FUNCTION PopupWndProc (BYVAL hWnd AS HWND, BYVAL uMsg AS UINT, BYVAL wParam AS WPARAM, BYVAL lParam AS LPARAM) AS LRESULT
+
+   DIM hOldFont AS HFONT
+   STATIC hNewFont AS HFONT
+
+   SELECT CASE uMsg
+
+      CASE WM_CREATE
+         ' // Get a pointer to the CWindow class from the CREATESTRUCT structure
+         DIM pCreateStruct AS CREATESTRUCT PTR = CAST(CREATESTRUCT PTR, lParam)
+         DIM pWindow AS CWindow PTR = CAST(CWindow PTR, pCreateStruct-&gt;lpCreateParams)
+         ' // Create a new font scaled according the DPI ratio
+         IF pWindow-&gt;DPI &lt;&gt; 96 THEN hNewFont = pWindow-&gt;CreateFont("Tahoma", 9)
+         ' Disable parent window to make popup window modal
+         EnableWindow GetParent(hwnd), FALSE
+         EXIT FUNCTION
+
+      CASE WM_COMMAND
+         SELECT CASE LOWORD(wParam)
+            ' // If ESC key pressed, close the application sending an WM_CLOSE message
+            CASE IDCANCEL
+               IF HIWORD(wParam) = BN_CLICKED THEN
+                  SendMessageW hwnd, WM_CLOSE, 0, 0
+                  EXIT FUNCTION
+               END IF
+         END SELECT
+
+      CASE WM_PAINT
+    		DIM rc AS RECT, ps AS PAINTSTRUCT, hDC AS HANDLE
+         hDC = BeginPaint(hWnd, @ps)
+         IF hNewFont THEN hOldFont = CAST(HFONT, SelectObject(hDC, CAST(HGDIOBJ, hNewFont)))
+         GetClientRect(hWnd, @rc)
+         DrawTextW(hDC, "Hello, World!", -1, @rc, DT_SINGLELINE or DT_CENTER or DT_VCENTER)
+         IF hNewFont THEN SelectObject(hDC, CAST(HGDIOBJ, CAST(HFONT, hOldFont)))
+         EndPaint(hWnd, @ps)
+         EXIT FUNCTION
+
+      CASE WM_CLOSE
+         ' // Enables parent window keeping parent's zorder
+         EnableWindow GetParent(hwnd), CTRUE
+         ' // Don't exit; let DefWindowProcW perform the default action
+
+    	CASE WM_DESTROY
+         ' // Destroy the new font
+         IF hNewFont THEN DeleteObject(CAST(HGDIOBJ, hNewFont))
+         ' // End the application by sending an WM_QUIT message
+         PostQuitMessage(0)
+         EXIT FUNCTION
+
+   END SELECT
+
+   FUNCTION = DefWindowProcW(hWnd, uMsg, wParam, lParam)
+
+END FUNCTION
+' ========================================================================================</code></pre>
+<h5 id="modeless-popup-windows-and-custom-message-pump">Modeless Popup Windows and Custom Message Pump</h5>
+<p>In the above example, if you remove <strong>EnableWindow</strong> to keep the popup window modeless, you must replace the default message pump (<strong>CWindow.DoEvents</strong>) with a custom loop. Otherwise, the popup may not exit cleanly when the main window closes.</p>
+<p><strong>Problem</strong>: When the main window is destroyed, it sends <strong>WM_DESTROY</strong> to its children—including the modeless popup. The popup may call <strong>PostQuitMessage</strong>, but if it doesn't have focus, it won't receive <strong>WM_QUIT</strong>, and its message loop will continue running.</p>
+<p><strong>Solution</strong>: Use a custom message pump that checks if the popup window still exists. Once <code>IsWindow(hWnd)</code> returns FALSE, the loop exits cleanly.</p>
+<p>Therefore, replace</p>
+<pre class="code"><code>' / Process Windows messages
+FUNCTION = pWindow.DoEvents</code></pre>
+<p>with a custom message pump like this:</p>
+<pre class="code"><code>DIM hWndPopUp AS HWND = pWindow.hWindow
+DIM uMsg AS tagMsg
+DO
+   IF PeekMessageW(@uMsg, NULL, 0, 0, PM_REMOVE) THEN
+      IF IsDialogMessageW(hWndPopUp, @uMsg) = 0 THEN
+         TranslateMessage @uMsg
+         DispatchMessage @uMsg
+      END IF
+   END IF
+LOOP WHILE IsWindow(hWndPopUp)
+FUNCTION = uMsg.wParam</code></pre>
+<p>and remove <code>PostQuitMessage(0)</code> in <strong>WM_DESTROY</strong>.</p>
+<hr>
+<h4 id="topic5">Using PNG icons in toolbars</h4>
+<p><strong>AfxGdiplus.inc</strong> provides functions that allow to use alpha-blended PNG icons in toolbars.</p>
+<p><strong>AfxGdipAddIconFromFile</strong> loads the images from disk and <strong>AfxGdipAddIconFromRes</strong> from a resource file embedded in the application.</p>
+<p>We need to create an image list for the toolbar of the appropriate size. To calculate the size, I'm using the following formula: 16 * pWindow.DPI \ 96. Where 16 is the size of a normal icon (for toolbars it may be preferible to use 20 to make them a bit bigger), pWindow.DPI the DPI being used by the computer and 96 the DPI used by applications that are not DPI aware.</p>
+<pre class="code"><code>' // Create an image list for the toolbar
+DIM hImageList AS HIMAGELIST
+DIM cx AS LONG = 16 * pWindow.DPI \ 96
+hImageList = ImageList_Create(cx, cx, ILC_COLOR32 OR ILC_MASK, 4, 0)
+IF hImageList THEN
+   AfxGdipAddIconFromRes(hImageList, hInst, "IDI_ARROW_LEFT_48")
+   AfxGdipAddIconFromRes(hImageList, hInst, "IDI_ARROW_RIGHT_48")
+   AfxGdipAddIconFromRes(hImageList, hInst, "IDI_HOME_48")
+   AfxGdipAddIconFromRes(hImageList, hInst, "IDI_SAVE_48")
+END IF
+SendMessageW hToolBar, TB_SETIMAGELIST, 0, CAST(LPARAM, hImageList)</code></pre>
+<p>We are using 48 bit icons in this example, that usually resize well to adapt to different DPI settings. This way, we can use only a set of icons instead of several sets of icons of different sizes. However, for best quality, it is advisable to use the appropriate icon size.</p>
+<p><strong>AfxGdipAddIconFromFile</strong> and <strong>AfxGdipAddIconFromRes</strong> also provide two optional parameters, <em>dimPercent</em> and <em>bGrayScale</em>. With <em>dimPercent</em> you can indicate a percentage of dimming, and <em>bGrayScale</em> is a boolean value (TRUE or FALSE) that tells these functions to convert the icon colors to shades of gray. This allows to create an image list for disabled items with the same icon set. The following code creates a disabled image using the same color PNG icons, but dimming them a 60% and converting them to gray:</p>
+<pre class="code"><code>' // Create a disabled image list for the toolbar
+DIM hDisabledImageList AS HIMAGELIST
+DIM cx AS LONG = 16 * pWindow.DPI \ 96
+hDisabledImageList = ImageList_Create(cx, cx, ILC_COLOR32 OR ILC_MASK, 4, 0)
+IF hDisabledImageList THEN
+   AfxGdipAddIconFromRes(hDisabledImageList, hInst, "IDI_ARROW_LEFT_48", 60, TRUE))
+   AfxGdipAddIconFromRes(hDisabledImageList, hInst, "IDI_ARROW_RIGHT_48", 60, TRUE))
+   AfxGdipAddIconFromRes(hDisabledImageList, hInst, "IDI_HOME_48", 60, TRUE))
+   AfxGdipAddIconFromRes(hDisabledImageList, hInst, "IDI_SAVE_48", 60, TRUE))
+END IF
+SendMessageW hToolBar, TB_SETDISABLEDIMAGELIST, 0, CAST(LPARAM, hDisabledImageList)</code></pre>
+<p><strong>Resource file</strong>:</p>
+<pre class="code"><code>//=============================================================================
+// Manifest
+//=============================================================================
+
+1 24 ".\Resources\Manifest.xml"
+
+//=============================================================================
+// Toolbar icons
+//=============================================================================
+
+// Toolbar, normal
+IDI_ARROW_LEFT       RCDATA ".\Resources\arrow_left_48.png"
+IDI_ARROW_RIGHT      RCDATA ".\Resources\arrow_right_48.png"
+IDI_HOME             RCDATA ".\Resources\home_48.png"
+IDI_SAVE             RCDATA ".\Resources\save_48.png"</code></pre>
+<p><strong>Manifest</strong>:</p>
+<pre class="code"><code>&lt;?xml version="1.0" encoding="UTF-8" standalone="yes"?&gt;
+   &lt;assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0" xmlns:asmv3="urn:schemas-microsoft-com:asm.v3"&gt;
+
+      &lt;assemblyIdentity version="1.0.0.0"
+         processorArchitecture="*"
+         name="ApplicationName"
+         type="win32"/&gt;
+      &lt;description&gt;Optional description of your application&lt;/description&gt;
+
+      &lt;asmv3:application&gt;
+         &lt;asmv3:windowsSettings xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings"&gt;
+            &lt;dpiAware&gt;true&lt;/dpiAware&gt;
+         &lt;/asmv3:windowsSettings&gt;
+      &lt;/asmv3:application&gt;
+
+      &lt;!-- Compatibility section --&gt;
+      &lt;compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1"&gt;
+         &lt;application&gt;
+            &lt;!--The ID below indicates application support for Windows Vista --&gt;
+            &lt;supportedOS Id="{e2011457-1546-43c5-a5fe-008deee3d3f0}"/&gt;
+            &lt;!--The ID below indicates application support for Windows 7 --&gt;
+            &lt;supportedOS Id="{35138b9a-5d96-4fbd-8e2d-a2440225f93a}"/&gt;
+            &lt;!--This Id value indicates the application supports Windows 8 functionality--&gt;
+            &lt;supportedOS Id="{4a2f28e3-53b9-4441-ba9c-d69d4a4a6e38}"/&gt;
+            &lt;!--This Id value indicates the application supports Windows 8.1 functionality--&gt;
+            &lt;supportedOS Id="{1f676c76-80e1-4239-95bb-83d0f6d0da78}"/&gt;
+            &lt;!--This Id value indicates the application supports Windows 10 functionality--&gt;
+            &lt;supportedOS Id="{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"/&gt;
+         &lt;/application&gt;
+       &lt;/compatibility&gt;
+
+      &lt;!-- Trustinfo section --&gt;
+      &lt;trustInfo xmlns="urn:schemas-microsoft-com:asm.v2"&gt;
+         &lt;security&gt;
+            &lt;requestedPrivileges&gt;
+               &lt;requestedExecutionLevel
+                  level="asInvoker"
+                  uiAccess="false"/&gt;
+               &lt;/requestedPrivileges&gt;
+         &lt;/security&gt;
+      &lt;/trustInfo&gt;
+
+      &lt;dependency&gt;
+         &lt;dependentAssembly&gt;
+            &lt;assemblyIdentity
+               type="win32"
+               name="Microsoft.Windows.Common-Controls"
+               version="6.0.0.0"
+               processorArchitecture="*"
+               publicKeyToken="6595b64144ccf1df"
+               language="*" /&gt;
+         &lt;/dependentAssembly&gt;
+      &lt;/dependency&gt;
+
+   &lt;/assembly&gt;</code></pre>
+<h5 id="example">Example</h5>
+<pre class="code"><code>#define unicode
+#INCLUDE ONCE "windows.bi"
+#INCLUDE ONCE "AfxNova/CWindow.inc"
+#INCLUDE ONCE "AfxNova/AfxCtl.inc"
+#INCLUDE ONCE "AfxNova/AfxGdiplus.inc"
+USING AfxNova
+
+DECLARE FUNCTION wWinMain (BYVAL hInstance AS HINSTANCE, _
+                           BYVAL hPrevInstance AS HINSTANCE, _
+                           BYVAL pwszCmdLine AS wSTRING PTR, _
+                           BYVAL nCmdShow AS LONG) AS LONG
+
+   END wWinMain(GetModuleHandleW(NULL), NULL, WCOMMAND(), SW_NORMAL)
+
+CONST IDC_TOOLBAR = 1001
+enum
+   IDM_LEFTARROW = 28000
+   IDM_RIGHTARROW
+   IDM_HOME
+   IDM_SAVEFILE
+end enum
+
+' ========================================================================================
+' Window procedure
+' ========================================================================================
+FUNCTION WndProc (BYVAL hwnd AS HWND, BYVAL uMsg AS UINT, BYVAL wParam AS WPARAM, BYVAL lParam AS LPARAM) AS LRESULT
+
+   DIM pWindow AS CWindow PTR
+
+   SELECT CASE uMsg
+
+      CASE WM_CREATE
+         EXIT FUNCTION
+
+      CASE WM_COMMAND
+         SELECT CASE LOWORD(wParam)
+            CASE IDCANCEL
+               ' // If ESC key pressed, close the application sending an WM_CLOSE message
+               IF HIWORD(wParam) = BN_CLICKED THEN
+                  SendMessageW hwnd, WM_CLOSE, 0, 0
+                  EXIT FUNCTION
+               END IF
+'            CASE IDM_CUT   ' etc.
+'               MessageBoxW hwnd, "You have clicked the Cut button", "Toolbar", MB_OK
+'               EXIT FUNCTION
+         END SELECT
+
+      CASE WM_DESTROY
+         ' // Destroy the image list
+         ImageList_Destroy CAST(HIMAGELIST, SendMessageW(GetDlgItem(hwnd, IDC_TOOLBAR), TB_SETIMAGELIST, 0, 0))
+         PostQuitMessage(0)
+         EXIT FUNCTION
+
+   END SELECT
+
+   FUNCTION = DefWindowProcW(hWnd, uMsg, wParam, lParam)
+
+END FUNCTION
+' ========================================================================================
+
+' ========================================================================================
+' Main
+' ========================================================================================
+FUNCTION wWinMain (BYVAL hInstance AS HINSTANCE, _
+                   BYVAL hPrevInstance AS HINSTANCE, _
+                   BYVAL pwszCmdLine AS WSTRING PTR, _
+                   BYVAL nCmdShow AS LONG) AS LONG
+
+   DIM pWindow AS CWindow
+   pWindow.Create(NULL, "CWindow with a toolbar", @WndProc)
+   ' // Set the client size
+   pWindow.SetClientSize(600, 300)
+   ' // Center the window
+   pWindow.Center
+
+   ' // Add a button
+   pWindow.AddControl("Button", pWindow.hWindow, IDCANCEL, "&amp;Close")
+
+   ' // Add a tooolbar
+   DIM hToolBar AS HWND = pWindow.AddControl("Toolbar", pWindow.hWindow, IDC_TOOLBAR)
+   ' // Module instance handle
+   DIM hInst AS HINSTANCE = GetModuleHandle(NULL)
+   ' // Create an image list for the toolbar
+   DIM hImageList AS HIMAGELIST
+   DIM cx AS LONG = 16 * pWindow.DPI \ 96
+   hImageList = ImageList_Create(cx, cx, ILC_COLOR32 OR ILC_MASK, 4, 0)
+   IF hImageList THEN
+      AfxGdipAddIconFromRes(hImageList, hInst, "IDI_ARROW_LEFT_48")
+      AfxGdipAddIconFromRes(hImageList, hInst, "IDI_ARROW_RIGHT_48")
+      AfxGdipAddIconFromRes(hImageList, hInst, "IDI_HOME_48")
+      AfxGdipAddIconFromRes(hImageList, hInst, "IDI_SAVE_48")
+   END IF
+   SendMessageW hToolBar, TB_SETIMAGELIST, 0, CAST(LPARAM, hImageList)
+
+   ' // Add buttons to the toolbar
+   Toolbar_AddButton hToolBar, 0, IDM_LEFTARROW
+   Toolbar_AddButton hToolBar, 1, IDM_RIGHTARROW
+   Toolbar_AddButton hToolBar, 2, IDM_HOME
+   Toolbar_AddButton hToolBar, 3, IDM_SAVEFILE
+
+   ' // Size the toolbar
+   SendMessageW hToolBar, TB_AUTOSIZE, 0, 0
+
+   ' // Process event messages
+   FUNCTION = pWindow.DoEvents(nCmdShow)
+
+END FUNCTION
+' ========================================================================================</code></pre>
+<hr>
+<h4 id="topic6">Visual style menus</h4>
+<p>Windows Vista and posterior Windows versions provide menus that are part of the visual schema. These menus are rendered using visual styles, which can be added to existing applications. Adding code for new features to existing code must be done carefully to avoid breaking existing application behavior. Certain situations can cause visual styling to be disabled in an application. These situations include:</p>
+<ul><li>Customizing menus using owner-draw menu items (MFT_OWNERDRAW)</li><li>Using menu breaks (MFT_MENUBREAK or MFT_MENUBARBREAK)</li><li>Using HBMMENU_CALLBACK to defer bitmap rendering</li><li>Using a destroyed menu handle</li></ul>
+<p>These situations prevent visual style menus from being rendered. Owner-draw menus can be used in Windows Vista and posterior Windows versions, but the menus will not be visually styled. Windows Vista and posterior Windows versions provide alpha-blended bitmaps, which enables menu items to be shown without using owner-draw menu items.</p>
+<p><strong>Requirements</strong>:</p>
+<ul><li>The bitmap is a 32bpp DIB section.</li><li>The DIB section has BI_RGB compression.</li><li>The bitmap contains pre-multiplied alpha pixels.</li><li>The bitmap is stored in hbmpChecked, hbmpUnchecked, or hbmpItem fields.</li></ul>
+<p><strong>Note</strong>: MFT_BITMAP items do not support PARGB32 bitmaps.</p>
+<p>The <strong>AfxAddIconToMenuItem</strong> function included in <strong>AfxMenu.inc</strong> allows to use alpha-blended icons in visually styled menus.</p>
+<pre class="code"><code>DIM hSubMenu AS HMENU = GetSubMenu(hMenu, 1)
+DIM hIcon AS HICON
+hIcon = LoadImageW(NULL, "MyIcon.ico", IMAGE_ICON, 32, 32, LR_LOADFROMFILE)
+IF hIcon THEN AfxAddIconToMenuItem(hSubMenu, 0, TRUE, hIcon)</code></pre>
+<p>PNG icons can be used by converting them first to an icon with <strong>AfxGdipImageFromFile</strong>:</p>
+<pre class="code"><code>hIcon = AfxGdipImageFromFile("MyIcon.png")
+IF hIcon THEN AfxAddIconToMenuItem(hSubMenu, 0, TRUE, hIcon)</code></pre>
+<p>But, in general, we are more interested in loading the icons from a resource file embedded in the application. We can achieve it using the <strong>AfxGdipIconFromRes</strong> function.</p>
+<pre class="code"><code>DIM hSubMenu AS HMENU = GetSubMenu(hMenu, 0)
+AfxAddIconToMenuItem(hSubMenu, 0, TRUE, AfxGdipIconFromRes(hInst, "IDI_ARROW_LEFT_48"))</code></pre>
+<h5 id="remarks">Remarks</h5>
+<p>Unlike toolbars, which use image lists, menus do not copy the icons but store their handles directly. Therefore, the icons must remain valid for as long as the menu exists.</p>
+<p>The difference between <strong>AfxGdipIconFromFile</strong> / <strong>AfxGdipIconFromRes</strong> (used with menus) and <strong>AfxAddGdipIconFromFile</strong> / <strong>AfxAddGdipIconFromRes</strong> (used with image lists) is that the latter functions destroy the original icon after copying it into the image list.</p>
+<p>Since menu icons are not copied, they must be destroyed manually when the menu is no longer needed. To do this, call the <strong>AfxDestroyMenuBitmaps</strong> function before destroying the menu.</p>
+<h5 id="example">Example</h5>
+<p>The following code uses the same resource file that the one for the "Using PNG icons in toolbars example" to demonstrate that we can use just one set of icons for both toolbars and menus.</p>
+<pre class="code"><code>#define _WIN32_WINNT &amp;h0602
+#INCLUDE ONCE "windows.bi"
+#INCLUDE ONCE "win/uxtheme.bi"
+#INCLUDE ONCE "AfxNova/CWindow.inc"
+#INCLUDE ONCE "AfxNova/AfxGdiplus.inc"
+#INCLUDE ONCE "AfxNova/AfxMenu.inc"
+USING AfxNova
+
+' // Menu identifiers
+#define IDM_UNDO     1001   ' Undo
+#define IDM_REDO     1002   ' Redo
+#define IDM_HOME     1003   ' Home
+#define IDM_SAVE     1004   ' Save file
+#define IDM_EXIT     1005   ' Exit
+
+DECLARE FUNCTION wWinMain (BYVAL hInstance AS HINSTANCE, _
+                          BYVAL hPrevInstance AS HINSTANCE, _
+                          BYVAL pwszCmdLine AS WSTRING PTR, _
+                          BYVAL nCmdShow AS LONG) AS LONG
+
+   END wWinMain(GetModuleHandleW(NULL), NULL, WCOMMAND(), SW_NORMAL)
+
+' ========================================================================================
+' Build the menu
+' ========================================================================================
+FUNCTION BuildMenu () AS HMENU
+
+   DIM hMenu AS HMENU
+   DIM hPopUpMenu AS HMENU
+
+   hMenu = CreateMenu
+   hPopUpMenu = CreatePopUpMenu
+      AppendMenuW hMenu, MF_POPUP OR MF_ENABLED, CAST(UINT_PTR, hPopUpMenu), "&amp;File"
+         AppendMenuW hPopUpMenu, MF_ENABLED, IDM_UNDO, "&amp;Undo" &amp; CHR(9) &amp; "Ctrl+U"
+         AppendMenuW hPopUpMenu, MF_ENABLED, IDM_REDO, "&amp;Redo" &amp; CHR(9) &amp; "Ctrl+R"
+         AppendMenuW hPopUpMenu, MF_ENABLED, IDM_HOME, "&amp;Home" &amp; CHR(9) &amp; "Ctrl+H"
+         AppendMenuW hPopUpMenu, MF_ENABLED, IDM_SAVE, "&amp;Save" &amp; CHR(9) &amp; "Ctrl+S"
+         AppendMenuW hPopUpMenu, MF_ENABLED, IDM_EXIT, "E&amp;xit" &amp; CHR(9) &amp; "Alt+F4"
+   FUNCTION = hMenu
+
+END FUNCTION
+' ========================================================================================
+
+' ========================================================================================
+' Window procedure
+' ========================================================================================
+FUNCTION WndProc (BYVAL hWnd AS HWND, BYVAL uMsg AS UINT, BYVAL wParam AS WPARAM, BYVAL lParam AS LPARAM) AS LRESULT
+
+   SELECT CASE uMsg
+
+      CASE WM_CREATE
+         EXIT FUNCTION
+
+      CASE WM_COMMAND
+         SELECT CASE LOWORD(wParam)
+            CASE IDCANCEL
+               ' // If ESC key pressed, close the application sending an WM_CLOSE message
+               IF HIWORD(wParam) = BN_CLICKED THEN
+                  SendMessageW hwnd, WM_CLOSE, 0, 0
+                  EXIT FUNCTION
+               END IF
+            CASE IDM_UNDO
+               MessageBox hwnd, "Undo option clicked", "Menu", MB_OK
+               EXIT FUNCTION
+            CASE IDM_REDO
+               MessageBox hwnd, "Redo option clicked", "Menu", MB_OK
+               EXIT FUNCTION
+            CASE IDM_HOME
+               MessageBox hwnd, "Home option clicked", "Menu", MB_OK
+               EXIT FUNCTION
+            CASE IDM_SAVE
+               MessageBox hwnd, "Save option clicked", "Menu", MB_OK
+               EXIT FUNCTION
+         END SELECT
+
+      CASE WM_DESTROY
+         ' // Destroy the menu and the bitmaps
+         DIM hMenu AS HMENU = GetMenu(hwnd)
+         AfxDestroyMenuBitmaps(hMenu)
+         DestroyMenu(hMenu)              
+         ' // End the application by sending an WM_QUIT message
+         PostQuitMessage(0)
+         RETURN 0
+
+   END SELECT
+
+   FUNCTION = DefWindowProcW(hWnd, uMsg, wParam, lParam)
+
+END FUNCTION
+' ========================================================================================
+
+' ========================================================================================
+' Main
+' ========================================================================================
+FUNCTION wWinMain (BYVAL hInstance AS HINSTANCE, _
+                   BYVAL hPrevInstance AS HINSTANCE, _
+                   BYVAL pwszCmdLine AS WSTRING PTR, _
+                   BYVAL nCmdShow AS LONG) AS LONG
+
+   ' // Set process DPI aware
+   SetProcessDpiAwareness(PROCESS_SYSTEM_DPI_AWARE)
+
+   DIM pWindow AS CWindow
+   pWindow.Create(NULL, "CWindow with a menu", @WndProc)
+   pWindow.SetClientSize(400, 250)
+   pWindow.Center
+
+   ' // Add a button
+   pWindow.AddControl("Button", pWindow.hWindow, IDCANCEL, "&amp;Close", 280, 180, 75, 23)
+
+   ' // Module instance handle
+   DIM hInst AS HINSTANCE = GetModuleHandle(NULL)
+
+   ' // Create the menu
+   DIM hMenu AS HMENU = BuildMenu
+   SetMenu pWindow.hWindow, hMenu
+
+   ' // Add icons to the items of the File menu
+   DIM hSubMenu AS HMENU = GetSubMenu(hMenu, 0)
+   AfxAddIconToMenuItem(hSubMenu, 0, TRUE, AfxGdipIconFromRes(hInst, "IDI_ARROW_LEFT_48"))
+   AfxAddIconToMenuItem(hSubMenu, 1, TRUE, AfxGdipIconFromRes(hInst, "IDI_ARROW_RIGHT_48"))
+   AfxAddIconToMenuItem(hSubMenu, 2, TRUE, AfxGdipIconFromRes(hInst, "IDI_HOME_48"))
+   AfxAddIconToMenuItem(hSubMenu, 3, TRUE, AfxGdipIconFromRes(hInst, "IDI_SAVE_48"))
+
+   ' // Process Windows messages
+   FUNCTION = pWindow.DoEvents(nCmdShow)
+
+END FUNCTION
+' ========================================================================================</code></pre>
+<hr>
+<h4 id="topic7">Keyboard Accelerators</h4>
+<p>Accelerators are closely related to menus — both provide the user with access to an application's command set. Typically, users rely on an application's menus to learn the command set and then switch over to using accelerators as they become more proficient with the application. Accelerators provide faster, more direct access to commands than menus do. At a minimum, an application should provide accelerators for the more commonly used commands. Although accelerators typically generate commands that exist as menu items, they can also generate commands that have no equivalent menu items.</p>
+<p>Creating an accelerator table with <strong>CWindow</strong> is very simple. You only need to build the table with calls to the <strong>AddAccelerator</strong> method and then call the <strong>CreateAcceleratorTable</strong> method. The accelerator table will be destroyed automatically when the window is destroyed or the applications ends. If you need to change the accelerator table, you can first destroy it calling the <strong>DestroyAcceleratorTable</strong> method, build a new table with <strong>AddAccelerator</strong> and then call <strong>CreateAcceleratorTable</strong>.</p>
+<pre class="code"><code>' // Create a keyboard accelerator table
+pWindow.AddAccelerator FVIRTKEY OR FCONTROL, "U", IDM_UNDO ' // Ctrl+U - Undo
+pWindow.AddAccelerator FVIRTKEY OR FCONTROL, "R", IDM_REDO ' // Ctrl+R - Redo
+pWindow.AddAccelerator FVIRTKEY OR FCONTROL, "H", IDM_HOME ' // Ctrl+H - Home
+pWindow.AddAccelerator FVIRTKEY OR FCONTROL, "S", IDM_SAVE ' // Ctrl+S - Save
+pWindow.CreateAcceleratorTable</code></pre>
+<h5 id="example">Example</h5>
+<p>The following example creates a menu and an accelerator table.</p>
+<pre class="code"><code>#INCLUDE ONCE "windows.bi"
+#INCLUDE ONCE "AfxNova/CWindow.inc"
+#INCLUDE ONCE "AfxNova/AfxMenu.inc"
+USING AfxNova
+
+' // Menu identifiers
+#define IDM_UNDO     1001   ' Undo
+#define IDM_REDO     1002   ' Redo
+#define IDM_HOME     1003   ' Home
+#define IDM_SAVE     1004   ' Save file
+#define IDM_EXIT     1005   ' Exit
+
+DECLARE FUNCTION wWinMain (BYVAL hInstance AS HINSTANCE, _
+                           BYVAL hPrevInstance AS HINSTANCE, _
+                           BYVAL pwszCmdLine AS WSTRING PTR, _
+                           BYVAL nCmdShow AS LONG) AS LONG
+
+   END wWinMain(GetModuleHandleW(NULL), NULL, WCOMMAND(), SW_NORMAL)
+
+' ========================================================================================
+' Build the menu
+' ========================================================================================
+FUNCTION BuildMenu () AS HMENU
+
+   DIM hMenu AS HMENU
+   DIM hPopUpMenu AS HMENU
+
+   hMenu = CreateMenu
+   hPopUpMenu = CreatePopUpMenu
+      AppendMenuW hMenu, MF_POPUP OR MF_ENABLED, CAST(UINT_PTR, hPopUpMenu), "&amp;File"
+         AppendMenuW hPopUpMenu, MF_ENABLED, IDM_UNDO, "&amp;Undo" &amp; CHR(9) &amp; "Ctrl+U"
+         AppendMenuW hPopUpMenu, MF_ENABLED, IDM_REDO, "&amp;Redo" &amp; CHR(9) &amp; "Ctrl+R"
+         AppendMenuW hPopUpMenu, MF_ENABLED, IDM_HOME, "&amp;Home" &amp; CHR(9) &amp; "Ctrl+H"
+         AppendMenuW hPopUpMenu, MF_ENABLED, IDM_SAVE, "&amp;Save" &amp; CHR(9) &amp; "Ctrl+S"
+         AppendMenuW hPopUpMenu, MF_ENABLED, IDM_EXIT, "E&amp;xit" &amp; CHR(9) &amp; "Alt+F4"
+   FUNCTION = hMenu
+
+END FUNCTION
+' ========================================================================================
+
+' ========================================================================================
+' Window procedure
+' ========================================================================================
+FUNCTION WndProc (BYVAL hWnd AS HWND, BYVAL uMsg AS UINT, BYVAL wParam AS WPARAM, BYVAL lParam AS LPARAM) AS LRESULT
+
+   SELECT CASE uMsg
+
+      CASE WM_CREATE
+         EXIT FUNCTION
+
+      CASE WM_COMMAND
+         SELECT CASE LOWORD(wParam)
+            CASE IDCANCEL
+               ' // If ESC key pressed, close the application sending an WM_CLOSE message
+               IF HIWORD(wParam) = BN_CLICKED THEN
+                  SendMessageW hwnd, WM_CLOSE, 0, 0
+                  EXIT FUNCTION
+               END IF
+            CASE IDM_UNDO
+               MessageBox hwnd, "Undo option clicked", "Menu", MB_OK
+               EXIT FUNCTION
+            CASE IDM_REDO
+               MessageBox hwnd, "Redo option clicked", "Menu", MB_OK
+               EXIT FUNCTION
+            CASE IDM_HOME
+               MessageBox hwnd, "Home option clicked", "Menu", MB_OK
+               EXIT FUNCTION
+            CASE IDM_SAVE
+               MessageBox hwnd, "Save option clicked", "Menu", MB_OK
+               EXIT FUNCTION
+         END SELECT
+
+      CASE WM_DESTROY
+         PostQuitMessage(0)
+         EXIT FUNCTION
+
+   END SELECT
+
+   FUNCTION = DefWindowProcW(hWnd, uMsg, wParam, lParam)
+
+END FUNCTION
+' ========================================================================================
+
+' ========================================================================================
+' Main
+' ========================================================================================
+FUNCTION wWinMain (BYVAL hInstance AS HINSTANCE, _
+                   BYVAL hPrevInstance AS HINSTANCE, _
+                   BYVAL pwszCmdLine AS WSTRING PTR, _
+                   BYVAL nCmdShow AS LONG) AS LONG
+
+   ' // Set process DPI aware
+   SetProcessDpiAwareness(PROCESS_SYSTEM_DPI_AWARE)
+
+   DIM pWindow AS CWindow
+   pWindow.Create(NULL, "CWindow with a menu", @WndProc)
+   pWindow.SetClientSize(400, 250)
+   pWindow.Center
+
+   ' // Add a button
+   DIM hButton AS HWND = pWindow.AddControl("Button", pWindow.hWindow, IDCANCEL, "&amp;Close", 280, 180, 75, 23)
+   SetFocus hButton
+
+   ' // Module instance handle
+   DIM hInst AS HINSTANCE = GetModuleHandle(NULL)
+
+   ' // Create the menu
+   DIM hMenu AS HMENU = BuildMenu
+   SetMenu pWindow.hWindow, hMenu
+
+   ' // Create a keyboard accelerator table
+   pWindow.AddAccelerator FVIRTKEY OR FCONTROL, "U", IDM_UNDO ' // Ctrl+U - Undo
+   pWindow.AddAccelerator FVIRTKEY OR FCONTROL, "R", IDM_REDO ' // Ctrl+R - Redo
+   pWindow.AddAccelerator FVIRTKEY OR FCONTROL, "H", IDM_HOME ' // Ctrl+H - Home
+   pWindow.AddAccelerator FVIRTKEY OR FCONTROL, "S", IDM_SAVE ' // Ctrl+S - Save
+   pWindow.CreateAcceleratorTable
+
+   ' // Process Windows messages
+   FUNCTION = pWindow.DoEvents(nCmdShow)
+
+END FUNCTION
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="accelhandle">AccelHandle</h3>
+<p>Gets/sets the accelerator table handle.</p>
+<pre class="code"><code>PROPERTY AccelHandle () AS HACCEL
+PROPERTY AccelHandle (BYVAL hAccel AS HACCEL)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hAccel</em></td><td>The new accelerator table handle.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The current accelerator table handle.</p>
+<h5 id="remarks">Remarks</h5>
+<p>If a previous table was attached to the target dialog, the table is automatically destroyed when the new table is attached in its place. The accelerator table is also destroyed automatically when the class is destroyed.</p>
+<p>You can destroy the current accelerator table by setting the property with a null handle.</p>
+<h5 id="usage-example">Usage example</h5>
+<p>DIM hAccel AS HACCEL = pWindow.AccelHandle</p>
+<hr>
+<h3 id="addaccelerator">AddAccelerator</h3>
+<p>Adds an accelerator key to the table.</p>
+<pre class="code"><code>SUB AddAccelerator (BYVAL fvirt AS UBYTE, BYVAL wKey AS WORD, BYVAL cmd AS WORD)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>fvirt</em></td><td>The accelerator behavior. This member can be one or more of the following values:<br><strong>FALT (&amp;H10)</strong> : The ALT key must be held down when the accelerator key is pressed.<br><strong>FCONTROL (&amp;H08)</strong> : The CTRL key must be held down when the accelerator key is pressed.<br><strong>FNOINVERT (&amp;H02)</strong> : No top-level menu item is highlighted when the accelerator is used. If this flag is not specified, a top-level menu item will be highlighted, if possible, when the accelerator is used. This attribute is obsolete and retained only for backward compatibility with resource files designed for 16-bit Windows.<br><strong>FSHIFT (&amp;H04)</strong> : The SHIFT key must be held down when the accelerator key is pressed.<br><strong>FVIRTKEY (TRUE)</strong>: The key member specifies a virtual-key code. If this flag is not specified, key is assumed to specify a character code.</td></tr><tr><td><em>vKey</em></td><td>The accelerator key. This member can be either a virtual-key code or a character code.</td></tr><tr><td><em>cmd</em></td><td>The accelerator identifier. This value is placed in the low-order word of the wParam parameter of the WM_COMMAND or WM_SYSCOMMAND message when the accelerator is pressed.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>To create an accelerator table, first add all the keys using this method and then call the <strong>CreateAcceleratorTable</strong> method.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' // Create a keyboard accelerator table
+pWindow.AddAccelerator FVIRTKEY OR FCONTROL, "U", IDM_UNDO ' // Ctrl+U - Undo
+pWindow.AddAccelerator FVIRTKEY OR FCONTROL, "R", IDM_REDO ' // Ctrl+R - Redo
+pWindow.AddAccelerator FVIRTKEY OR FCONTROL, "H", IDM_HOME ' // Ctrl+H - Home
+pWindow.AddAccelerator FVIRTKEY OR FCONTROL, "S", IDM_SAVE ' // Ctrl+S - Save
+pWindow.CreateAcceleratorTable</code></pre>
+<hr>
+<h3 id="addcontrol">AddControl</h3>
+<p>Adds a control to the window.</p>
+<pre class="code"><code>FUNCTION AddControl (BYREF wszClassName AS WSTRING, BYVAL hParent AS HWND = NULL, _
+   BYVAL cID AS LONG_PTR = 0, BYREF wszTitle AS WSTRING = "", BYVAL x AS LONG = 0, _
+   BYVAL y AS LONG = 0, BYVAL nWidth AS LONG = 0, BYVAL nHeight AS LONG = 0, _
+   BYVAL dwStyle AS LONG = -1, BYVAL dwExStyle AS LONG = -1, _
+   BYVAL lpParam AS LONG_PTR = 0) AS HWND</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszClassName</em></td><td>The window class name. The class name can be any name registered with <strong>RegisterClass</strong> or <strong>RegisterClassEx</strong>, provided that the module that registers the class is also the module that creates the window. The class name can also be any of the predefined system class names.</td></tr><tr><td><em>hParent</em></td><td>A handle to the parent or owner window of the control being created. If this parameter is omitted, the handle of the main window beloging to the <strong>CWindow</strong> class is used.</td></tr><tr><td><em>cID</em></td><td>The control identifier, an integer value used to notify its parent about events. The application determines the control identifier; it must be unique for all controls with the same parent window.</td></tr><tr><td><em>wszTitle</em></td><td>The window name. If the window style specifies a title bar, the window title is displayed in the title bar. When creating controls, such as buttons, check boxes, and static controls, use wszTitle to specify the text of the control. When creating a static control with the SS_ICON style, use wszTitle to specify the icon name or identifier. To specify an identifier, use the syntax <em>"#num"</em>.</td></tr><tr><td><em>x</em></td><td>The x-coordinate of the upper-left corner of the window relative to the upper-left corner of the parent window's client area.</td></tr><tr><td><em>y</em></td><td>The initial y-coordinate of the upper-left corner of the window relative to the upper-left corner of the parent window's client area.</td></tr><tr><td><em>nWidth</em></td><td>The width of the control.</td></tr><tr><td><em>nHeight</em></td><td>The height of the control.</td></tr><tr><td><em>dwStyle</em></td><td>The window styles of the control being created.</td></tr><tr><td><em>dwExStyle</em></td><td>The extended window styles of the control being created.</td></tr><tr><td><em>lpParam</em></td><td>Optional. Pointer to a value to be passed to the window through the CREATESTRUCT structure (lpCreateParams member) pointed to by the lParam param of the WM_CREATE message. This message is sent to the created window by this function before it returns.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the method succeeds, the return value is a handle to the new control.</p>
+<p>If the method fails, the return value is NULL. To get extended error information, call <strong>GetLastError</strong>.</p>
+<p>This method typically fails for one of the following reasons:</p>
+<ul><li>An invalid parameter value</li><li>The system class was registered by a different module</li><li>The WH_CBT hook is installed and returns a failure code</li><li>If the control is not registered or its window window procedure fails WM_CREATE or WM_NCCREATE.</li></ul>
+<h5 id="predefined-class-names-and-styles">Predefined class names and styles</h5>
+<div class="table-wrap"><table><thead><tr><th>Class name</th><th>Styles</th></tr></thead><tbody><tr><td><strong>"BUTTON"</strong></td><td><strong>Default</strong>: WS_CHILD, WS_VISIBLE OR WS_TABSTOP OR BS_PUSHBUTTON OR BS_CENTER OR BS_VCENTER.<br><strong>BS_FLAT</strong>: WS_CHILD, WS_VISIBLE OR WS_TABSTOP OR BS_PUSHBUTTON OR BS_CENTER OR BS_VCENTER OR BS_FLAT.<br><strong>BS_DEFPUSHBUTTON</strong>: WS_CHILD, WS_VISIBLE OR WS_TABSTOP OR BS_CENTER OR BS_VCENTER OR BS_DEFPUSHBUTTON.<br><strong>BS_ICON</strong>: WS_CHILD OR WS_VISIBLE OR WS_TABSTOP OR BS_PUSHBUTTON OR BS_ICON.<br><strong>BS_BITMAP</strong>: WS_CHILD OR WS_VISIBLE OR WS_TABSTOP OR BS_PUSHBUTTON OR BS_BITMAP.<br><strong>BS_OWNERDRAW</strong>: WS_CHILD, WS_VISIBLE OR WS_TABSTOP OR BS_OWNERDRAW.<br><strong>BS_SPLITBUTTON</strong>: WS_CHILD, WS_VISIBLE OR WS_TABSTOP OR BS_CENTER OR BS_VCENTER OR BS_SPLITBUTTON&gt;.<br><strong>BS_DEFSPLITBUTTON</strong>: WS_CHILD, WS_VISIBLE OR WS_TABSTOP OR BS_CENTER OR BS_VCENTER OR BS_DEFSPLITBUTTON.<br><strong>BS_COMMANDLINK</strong>: WS_CHILD OR WS_VISIBLE OR WS_TABSTOP OR BS_COMMANDLINK.<br><strong>BS_DEFCOMMANDLINK</strong>: WS_CHILD OR WS_VISIBLE OR WS_TABSTOP OR BS_DEFCOMMANDLINK.</td></tr><tr><td><strong>"CUSTOMBUTTON"</strong>, <strong>"OWNERDRAWBUTTON"</strong></td><td><strong>Default</strong>: WS_CHILD, WS_VISIBLE OR WS_TABSTOP OR BS_OWNERDRAW.</td></tr><tr><td><strong>"RADIOBUTTON"</strong>, <strong>"OPTION"</strong></td><td><strong>Default</strong>: Default: WS_CHILD, WS_VISIBLE OR WS_TABSTOP OR BS_AUTORADIOBUTTON OR BS_LEFT OR BS_VCENTER-<br><strong>WS_GROUP</strong>: WS_VISIBLE OR WS_TABSTOP OR BS_AUTORADIOBUTTON OR BS_LEFT OR BS_VCENTER OR WS_GROUP.</td></tr><tr><td><strong>"CHECKBOX"</strong></td><td><strong>Default</strong>: WS_CHILD, WS_VISIBLE OR WS_TABSTOP OR BS_AUTOCHECKBOX OR BS_LEFT OR BS_VCENTER.</td></tr><tr><td><strong>"CHECK3STATE"</strong></td><td><strong>Default</strong>: WS_CHILD, WS_VISIBLE OR WS_TABSTOP OR BS_AUTO3STATE OR BS_LEFT OR BS_VCENTER.</td></tr><tr><td><strong>"LABEL"</strong></td><td><strong>Default</strong>: WS_CHILD, WS_VISIBLE OR SS_LEFT OR WS_GROUP OR SS_NOTIFY.</td></tr><tr><td><strong>"BITMAPLABEL"</strong></td><td><strong>Default</strong>: WS_CHILD, WS_VISIBLE OR WS_GROUP OR SS_BITMAP.<br><strong>Default extended style</strong>: WS_EX_TRANSPARENT.</td></tr><tr><td><strong>"ICONLABEL"</strong></td><td><strong>Default</strong>: WS_CHILD, WS_VISIBLE OR WS_GROUP OR SS_ICON.<br><strong>Default extended style</strong>: WS_EX_TRANSPARENT.</td></tr><tr><td><strong>"BITMAPBUTTON"</strong></td><td><strong>Default</strong>: WS_CHILD, WS_VISIBLE OR WS_TABSTOP OR BS_PUSHBUTTON OR BS_BITMAP.</td></tr><tr><td><strong>"ICONBUTTON"</strong></td><td><strong>Default</strong>: WS_CHILD, WS_VISIBLE OR WS_TABSTOP OR BS_PUSHBUTTON OR BS_ICON.</td></tr><tr><td><strong>"CUSTOMLABEL"</strong></td><td><strong>Default</strong>: WS_VISIBLE OR WS_GROUP OR SS_OWNERDRAW.</td></tr><tr><td><strong>"FRAME"</strong>. <strong>"FRAMEWINDOW</strong></td><td><strong>Default</strong>: WS_CHILD, WS_VISIBLE OR WS_CLIPSIBLINGS OR WS_GROUP OR SS_BLACKFRAME.<br><strong>Default extended style</strong>: WS_EX_TRANSPARENT.</td></tr><tr><td><strong>"GROUPBOX"</strong></td><td><strong>Default</strong>: WS_CHILD, WS_VISIBLE OR WS_CLIPSIBLINGS OR WS_GROUP OR BS_GROUPBOX.<br><strong>Default extended style</strong>: WS_EX_TRANSPARENT.</td></tr><tr><td><strong>"LINE"</strong></td><td><strong>Default</strong>: WS_CHILD, WS_VISIBLE OR SS_ETCHEDFRAME.<br><strong>Default extended style</strong>: WS_EX_TRANSPARENT.</td></tr><tr><td><strong>"EDIT"</strong>, <strong>"TEXTBOX"</strong></td><td><strong>Default</strong>: WS_CHILD, WS_VISIBLE OR WS_TABSTOP OR ES_LEFT OR ES_AUTOHSCROLL.<br><strong>Default extended style</strong>: WS_EX_CLIENTEDGE.</td></tr><tr><td><strong>"EDITMULTILINE"</strong>, <strong>"MULTILINETEXTBOX"</strong></td><td><strong>Default</strong>: WS_CHILD, WS_VISIBLE OR WS_TABSTOP OR ES_LEFT OR ES_AUTOHSCROLL OR ES_MULTILINE OR ES_NOHIDESEL OR ES_WANTRETURN.<br><strong>Default extended style</strong>: WS_EX_CLIENTEDGE.</td></tr><tr><td><strong>"COMBOBOX"</strong></td><td><strong>Default</strong>: WS_CHILD OR WS_VISIBLE OR WS_VSCROLL OR WS_BORDER OR WS_TABSTOP OR CBS_DROPDOWN OR CBS_HASSTRINGS OR CBS_SORT.<br><strong>Default extended style</strong>: WS_EX_CLIENTEDGE.</td></tr><tr><td><strong>"COMBOBOXEX"</strong>, <strong>"COMBOBOXEX32"</strong></td><td><strong>Default</strong>: WS_CHILD, WS_VISIBLE OR WS_BORDER OR WS_TABSTOP OR CBS_DROPDOWNLIST.</td></tr><tr><td><strong>"LISTBOX"</strong></td><td><strong>Default</strong>: WS_VISIBLE OR WS_HSCROLL OR WS_VSCROLL OR WS_BORDER OR WS_TABSTOP OR LBS_STANDARD OR LBS_HASSTRINGS OR LBS_SORT OR LBS_NOTIFY.<br><strong>Default extended style</strong>: WS_EX_CLIENTEDGE.</td></tr><tr><td><strong>"PROGRESSBAR"</strong>, <strong>"MSCTLS_PROGRESS32"</strong></td><td><strong>Default</strong>: WS_CHILD, WS_VISIBLE.</td></tr><tr><td><strong>"HEADER"</strong>, <strong>"SYSHEADER32"</strong></td><td><strong>Default</strong>: WS_CHILD, WS_VISIBLE OR CCS_TOP OR HDS_HORZ OR HDS_BUTTONS.</td></tr><tr><td><strong>"TREEVIEW"</strong>, <strong>"SYSTREEVIEW32"</strong></td><td><strong>Default</strong>: WS_CHILD, WS_VISIBLE OR WS_BORDER OR WS_TABSTOP OR TVS_HASBUTTONS OR TVS_HASLINES OR TVS_LINESATROOT OR TVS_SHOWSELALWAYS.<br><strong>Default extended style</strong>: WS_EX_CLIENTEDGE.</td></tr><tr><td><strong>"LISTVIEW"</strong>, <strong>"SYSLISTVIEW32"</strong></td><td><strong>Default</strong>: WS_CHILD, WS_VISIBLE OR WS_CLIPCHILDREN OR WS_TABSTOP OR LVS_REPORT OR LVS_SHOWSELALWAYS OR LVS_SHAREIMAGELISTS OR LVS_AUTOARRANGE OR LVS_EDITLABELS OR LVS_ALIGNTOP.<br><strong>Default extended style</strong>: WS_EX_CLIENTEDGE.</td></tr><tr><td><strong>"TOOLBAR"</strong>, <strong>"TOOLBARWINDOW32"</strong></td><td><strong>Default</strong>: WS_CHILD, WS_VISIBLE OR WS_CLIPCHILDREN OR WS_CLIPSIBLINGS OR CCS_TOP OR WS_BORDER OR TBSTYLE_FLAT OR TBSTYLE_TOOLTIPS.</td></tr><tr><td><strong>"REBAR"</strong>, <strong>"REBARWINDOW32"</strong></td><td><strong>Default</strong>: WS_CHILD, WS_VISIBLE OR WS_BORDER OR WS_CLIPCHILDREN OR WS_CLIPSIBLINGS OR CCS_NODIVIDER OR RBS_VARHEIGHT OR RBS_BANDBORDERS.</td></tr><tr><td><strong>"DATETIMEPICKER"</strong>, <strong>"SYSDATETIMEPICK32"</strong></td><td><strong>Default</strong>: WS_CHILD, WS_VISIBLE OR WS_TABSTOP OR DTS_SHORTDATEFORMAT.</td></tr><tr><td><strong>"MONTHCALENDAR"</strong>, <strong>"MONTHCAL"</strong>, <strong>"SYSMONTHCAL32"</strong></td><td><strong>Default</strong>: WS_CHILD, WS_VISIBLE OR WS_TABSTOP.<br><strong>Default extended style</strong>: WS_EX_CLIENTEDGE.</td></tr><tr><td><strong>"IPADDRESS"</strong>, <strong>"SYSIPADDRESS32"</strong></td><td><strong>Default</strong>: WS_CHILD, WS_VISIBLE OR WS_TABSTOP.<br><strong>Default extended style</strong>: WS_EX_CLIENTEDGE.</td></tr><tr><td><strong>"HOTKEY"</strong>, <strong>"MSCTLS_HOTKEY32"</strong></td><td><strong>Default</strong>: WS_CHILD, WS_VISIBLE OR WS_TABSTOP.<br><strong>Default extended style</strong>: WS_EX_CLIENTEDGE.</td></tr><tr><td><strong>"ANIMATE"</strong>, <strong>"ANIMATION"</strong>, <strong>"SYSANIMATE32"</strong></td><td><strong>Default</strong>: WS_CHILD, WS_VISIBLE OR ACS_TRANSPARENT.</td></tr><tr><td><strong>"SYSLINK"</strong></td><td><strong>Default</strong>: WS_CHILD, WS_VISIBLE OR WS_TABSTOP.</td></tr><tr><td><strong>"PAGER"</strong>, <strong>"SYSPAGER"</strong></td><td><strong>Default</strong>: WS_CHILD, WS_VISIBLE OR WS_TABSTOP  OR PGS_HORZ.</td></tr><tr><td><strong>"TAB"</strong>, <strong>"TABCONTROL"</strong>, <strong>"SYSTABCONTROL32"</strong></td><td><strong>Default</strong>: WS_CHILD, WS_VISIBLE OR WS_GROUP OR WS_TABSTOP OR WS_CLIPCHILDREN OR WS_CLIPSIBLINGS OR TCS_TABS OR TCS_SINGLELINE OR TCS_RAGGEDRIGHT.<br><strong>Default extended style</strong>: WS_EX_CONTROLPARENT.</td></tr><tr><td><strong>"STATUSBAR"</strong>, <strong>"MSCTLS_STATUSBAR32"</strong></td><td><strong>Default</strong>: WS_CHILD, WS_VISIBLE OR WS_CLIPCHILDREN OR WS_CLIPSIBLINGS OR CCS_BOTTOM OR SBARS_SIZEGRIP.</td></tr><tr><td><strong>"SIZEBAR"</strong>, <strong>"SIZEBOX"</strong>, <strong>"SIZEGRIP"</strong></td><td><strong>Default</strong>: WS_CHILD, WS_VISIBLE OR SBS_SIZEGRIP OR SBS_SIZEBOXBOTTOMRIGHTALIGN.</td></tr><tr><td><strong>"HSCROLLBAR"</strong></td><td><strong>Default</strong>: WS_CHILD, WS_VISIBLE OR WS_TABSTOP OR SBS_HORZ.</td></tr><tr><td><strong>"VSCROLLBAR"</strong></td><td><strong>Default</strong>: WS_CHILD, WS_VISIBLE OR WS_TABSTOP OR SBS_VERT.</td></tr><tr><td><strong>"TRACKBAR"</strong>, <strong>"MSCTLS_TRACKBAR32"</strong>, <strong>"SLIDER"</strong></td><td><strong>Default</strong>: WS_CHILD, WS_VISIBLE OR WS_TABSTOP OR TBS_AUTOTICKS OR TBS_HORZ OR TBS_BOTTOM.</td></tr><tr><td><strong>"UPDOWN"</strong>, <strong>"MSCTLS_UPDOWN32"</strong></td><td><strong>Default</strong>: WS_VISIBLE OR UDS_WRAP OR UDS_ARROWKEYS OR UDS_ALIGNRIGHT OR UDS_SETBUDDYINT.</td></tr><tr><td><strong>"RICHEDIT"</strong>, <strong>"RichEdit50W"</strong></td><td><strong>Default</strong>: WS_CHILD, WS_VISIBLE OR WS_TABSTOP OR ES_LEFT OR WS_HSCROLL OR WS_VSCROLL OR ES_AUTOHSCROLL OR ES_AUTOVSCROLL OR ES_MULTILINE OR ES_WANTRETURN OR ES_NOHIDESEL OR ES_SAVESEL.<br><strong>Default extended style</strong>: WS_EX_CLIENTEDGE.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>For the "BITMAPBUTTON", "BITMAPLABEL", "ICONBUTTON" and "ICONLABEL" controls you must pass in the <em>wszTitle</em> parameter the name of the bitmap in the resource file (.RES). If the image resource uses an integral identifier, the name should begin with a number symbol (#) followed by the identifier in an ASCII format, e.g., "#998". Otherwise, use the text identifier name for the image.</p>
+<hr>
+<h3 id="anchorcontrol">AnchorControl</h3>
+<p>Anchors a window or control to its parent window.</p>
+<pre class="code"><code>FUNCTION AnchorControl (BYVAL hwndCtl AS HWND, BYVAL nAnchorMode AS LONG) AS BOOLEAN</code></pre>
+<pre class="code"><code>FUNCTION AnchorControl (BYVAL cID AS LONG, BYVAL nAnchorMode AS LONG) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hwndCtl</em></td><td>Handle to the child window or control.</td></tr><tr><td><em>cID</em></td><td>Identifier of the child window or control.</td></tr><tr><td><em>nAnchorMode</em></td><td>One of the following constants.</td></tr></tbody></table></div>
+<h5 id="constants">Constants</h5>
+<pre class="code"><code>ENUM AFX_ANCHORPOINT
+   AFX_ANCHOR_NONE =  0
+   AFX_ANCHOR_WIDTH
+   AFX_ANCHOR_RIGHT
+   AFX_ANCHOR_CENTER_HORZ
+   AFX_ANCHOR_HEIGHT
+   AFX_ANCHOR_HEIGHT_WIDTH
+   AFX_ANCHOR_HEIGHT_RIGHT
+   AFX_ANCHOR_BOTTOM
+   AFX_ANCHOR_BOTTOM_WIDTH
+   AFX_ANCHOR_BOTTOM_RIGHT
+   AFX_ANCHOR_CENTER_HORZ_BOTTOM
+   AFX_ANCHOR_CENTER_VERT
+   AFX_ANCHOR_CENTER_VERT_RIGHT
+   AFX_ANCHOR_CENTER
+END ENUM</code></pre>
+<h5 id="example">Example</h5>
+<pre class="code"><code>pWindow.AnchorControl(IDCANCEL, AFX_ANCHOR_BOTTOM_RIGHT)
+pWindow.AnchorControl(IDC_GROUPBOX, AFX_ANCHOR_HEIGHT_RIGHT)
+pWindow.AnchorControl(IDC_COMBOBOX, AFX_ANCHOR_RIGHT)</code></pre>
+<hr>
+<h3 id="bigicon">BigIcon</h3>
+<p>Associates a new large icon with the main window. The system displays the large icon in the ALT+TAB dialog box.</p>
+<pre class="code"><code>PROPERTY BigIcon (BYVAL hIcon AS HICON)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hIcon</em></td><td>The icon handle. If this parameter is NULL, the icon is removed.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<pre class="code"><code>pWindow.BigIcon = LoadImage(hInstance, MAKEINTRESOURCE(101), IMAGE_ICON, 48, 48, LR_SHARED)</code></pre>
+<hr>
+<h3 id="smallicon">SmallIcon</h3>
+<p>Associates a new small icon with the main window. The system displays the small icon in the in the window caption.</p>
+<pre class="code"><code>PROPERTY SmallIcon (BYVAL hIcon AS HICON)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hIcon</em></td><td>The icon handle. If this parameter is NULL, the icon is removed.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<pre class="code"><code>pWindow.SmallIcon = LoadImage(hInstance, MAKEINTRESOURCE(100), IMAGE_ICON, 32, 32, LR_SHARED)</code></pre>
+<hr>
+<h3 id="brush">Brush</h3>
+<p>Gets/sets the background brush.</p>
+<pre class="code"><code>PROPERTY Brush () AS HBRUSH
+PROPERTY Brush (BYVAL hbrBackground AS HBRUSH)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hbrBackground</em></td><td>A handle to the class background brush. This member can be a handle to the physical brush to be used for painting the background, or it can be a color value. A color value must be one of the following standard system colors (the value 1 must be added to the chosen color), e.g. COLOR_WINDOW + 1.</td></tr></tbody></table></div>
+<h5 id="usage-examples">Usage examples</h5>
+<pre class="code"><code>pWindow.Brush = CAST(HBRUSH, COLOR_WINDOW + 1)</code></pre>
+<pre class="code"><code>' // Make the background of the window white
+pWindow.Brush = GetStockObject(WHITE_BRUSH)</code></pre>
+<pre class="code"><code>' // Make the background of the window blue
+pWindow.Brush = CreateSolidBrush(BGR(0, 0, 255))</code></pre>
+<hr>
+<h3 id="center">Center</h3>
+<p>Centers a window on the screen or over another window. It also ensures that the placement is done within the work area.</p>
+<pre class="code"><code>SUB Center (BYVAL hwnd AS HWND = NULL, BYVAL hwndParent AS HWND = NULL)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hwnd</em></td><td>Optional. Handle to the window. If NULL, the handle of the main window is used.</td></tr><tr><td><em>hwndParent</em></td><td>Optional. Handle to the parent window. If NULL, the coordinates of the work area of the desktop window are used for the calculations.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' // Creates the main window
+DIM pWindow AS CWindow
+pWindow.Create(NULL, "CWindow test", @WndProc)
+' // Sizes it by setting the wanted width and height of its client area
+pWindow.SetClientSize(500, 320)
+' // Centers the window
+pWindow.Center</code></pre>
+<hr>
+<h3 id="classstyle">ClassStyle</h3>
+<p>Gets/sets the style of the class.</p>
+<pre class="code"><code>PROPERTY ClassStyle () AS ULONG_PTR
+PROPERTY ClassStyle (BYVAL dwStyle AS ULONG_PTR)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>dwStyle</em></td><td>The class style. Can be a combination of the following constants:</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>Constant</th><th>Description</th></tr></thead><tbody><tr><td><strong>CS_BYTEALIGNCLIENT</strong></td><td>Aligns the window's client area on a byte boundary (in the x direction). This style affects the width of the window and its horizontal placement on the display.</td></tr><tr><td><strong>CS_BYTEALIGNWINDOW</strong></td><td>Aligns the window on a byte boundary (in the x direction). This style affects the width of the window and its horizontal placement on the display.</td></tr><tr><td><strong>CS_CLASSDC</strong></td><td>Allocates one device context to be shared by all windows in the class. Because window classes are process specific, it is possible for multiple threads of an application to create a window of the same class. It is also possible for the threads to attempt to use the device context simultaneously. When this happens, the system allows only one thread to successfully finish its drawing operation.</td></tr><tr><td><strong>CS_DBLCLKS</strong></td><td>Sends a double-click message to the window procedure when the user double-clicks the mouse while the cursor is within a window belonging to the class.</td></tr><tr><td><strong>CS_DROPSHADOW</strong></td><td>Enables the drop shadow effect on a window. The effect is turned on and off through <strong>SPI_SETDROPSHADOW</strong>. Typically, this is enabled for small, short-lived windows such as menus to emphasize their Z order relationship to other windows.</td></tr><tr><td><strong>CS_GLOBALCLASS</strong></td><td>Indicates that the window class is an application global class.</td></tr><tr><td><strong>CS_HREDRAW</strong></td><td>Redraws the entire window if a movement or size adjustment changes the width of the client area.</td></tr><tr><td><strong>CS_NOCLOSE</strong></td><td>Disables <strong>Close</strong> on the window menu.</td></tr><tr><td><strong>CS_OWNDC</strong></td><td>Allocates a unique device context for each window in the class.</td></tr><tr><td><strong>CS_PARENTDC</strong></td><td>Sets the clipping rectangle of the child window to that of the parent window so that the child can draw on the parent. A window with the <strong>CS_PARENTDC</strong> style bit receives a regular device context from the system's cache of device contexts. It does not give the child the parent's device context or device context settings. Specifying <strong>CS_PARENTDC</strong> enhances an application's performance.</td></tr><tr><td><strong>CS_SAVEBITS</strong></td><td>Saves, as a bitmap, the portion of the screen image obscured by a window of this class. When the window is removed, the system uses the saved bitmap to restore the screen image, including other windows that were obscured. Therefore, the system does not send <strong>WM_PAINT</strong> messages to windows that were obscured if the memory used by the bitmap has not been discarded and if other screen actions have not invalidated the stored image.<br>This style is useful for small windows (for example, menus or dialog boxes) that are displayed briefly and then removed before other screen activity takes place. This style increases the time required to display the window, because the system must first allocate memory to store the bitmap.</td></tr><tr><td><strong>CS_VREDRAW</strong></td><td>Redraws the entire window if a movement or size adjustment changes the height of the client area.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' // Creates the main window
+DIM pWindow AS CWindow
+pWindow.Create(NULL, "CWindow test", @WndProc)
+' // Change the class style
+pWindow.ClassStyle = CS_DBLCLKS</code></pre>
+<hr>
+<h3 id="clientheight">ClientHeight</h3>
+<p>Returns the unscaled client height of the main window.</p>
+<pre class="code"><code>PROPERTY ClientHeight () AS LONG</code></pre>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM nHeight AS LONG = pWindow.ClientHeight</code></pre>
+<hr>
+<h3 id="clientwidth">ClientWidth</h3>
+<p>Returns the unscaled client width of the main window.</p>
+<pre class="code"><code>PROPERTY ClientWidth () AS LONG</code></pre>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM nWidth AS LONG = pWindow.ClientWidth</code></pre>
+<hr>
+<h3 id="controlclientheight">ControlClientHeight</h3>
+<p>Returns the unscaled client height of the specified window or control.</p>
+<pre class="code"><code>PROPERTY ControlClientHeight (BYVAL hwnd AS HWND) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hwnd</em></td><td>Handle to the window or control.</td></tr></tbody></table></div>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM nHeight AS LONG = pWindow.ControlClientHeight(hwnd)</code></pre>
+<hr>
+<h3 id="controlclientwidth">ControlClientWidth</h3>
+<p>Returns the unscaled client width of the specified window or control.</p>
+<pre class="code"><code>PROPERTY ControlClientWidth (BYVAL hwnd AS HWND) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hwnd</em></td><td>Handle to the window or control.</td></tr></tbody></table></div>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM nHeight AS LONG = pWindow.ControlClientWidth(hwnd)</code></pre>
+<hr>
+<h3 id="controlgetuser">ControlGetUser</h3>
+<p>Gets the control's user data.</p>
+<pre class="code"><code>FUNCTION ControlGetUser (BYVAL hCtl AS LONG, BYVAL index AS LONG) AS LONG_PTR
+FUNCTION ControlGetUser (BYVAL cID AS LONG, BYVAL index AS LONG) AS LONG_PTR</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hCtl</em></td><td>The handle of the control.</td></tr><tr><td><em>cID</em></td><td>The control identifier.</td></tr><tr><td><em>index</em></td><td>The index number of the user data value to retrieve, in the range 0 to 9 inclusive.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>Each control has a user data area consisting of ten LONG_PTR values which may be used at the programmer's discretion to save relevant data. <strong>ControlGetUser</strong> allows one of the values to be retrieved, based upon the index parameter value (0 through 9).</p>
+<h5 id="return-value">Return value</h5>
+<p>Returns the LONG_PTR data value stored in the nominated user data index.</p>
+<hr>
+<h3 id="controlsetuser">ControlSetUser</h3>
+<p>Sets the control's user data.</p>
+<pre class="code"><code>FUNCTION ControlSetUser (BYVAL hCtl AS LONG, BYVAL index AS LONG, BYVAL userValue AS LONG_PTR) AS BOOLEAN
+FUNCTION ControlSetUser (BYVAL cID AS LONG, BYVAL index AS LONG, BYVAL userValue AS LONG_PTR) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hCtl</em></td><td>The handle of the control.</td></tr><tr><td><em>cID</em></td><td>The control identifier.</td></tr><tr><td><em>index</em></td><td>The index number of the user data value to set, in the range 0 to 9 inclusive.</td></tr><tr><td><em>userValue</em></td><td>The LONG_PTR data value to store in the user data area.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>Each control has a user data area consisting of ten LONG_PTR values which may be used at the programmer's discretion to save relevant data. <strong>ControlSetUser</strong> allows one of the values to be set, based upon the index parameter value (0 through 9).</p>
+<hr>
+<h3 id="controlhandle">ControlHandle</h3>
+<p>Retrieves a handle to the child control specified by its identifier.</p>
+<pre class="code"><code>FUNCTION ControlHandle (BYVAL cID AS LONG) AS HWND</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>cID</em></td><td>The child control identifier.</td></tr></tbody></table></div>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM hCtl AS HWND = pWindow.ControlHandle(cID)</code></pre>
+<hr>
+<h3 id="controladdexstyle">ControlAddExStyle</h3>
+<p>Adds a new extended style to the specified control.</p>
+<pre class="code"><code>FUNCTION ControlAddExStyle (BYVAL hWnd AS HWND, BYVAL dwExStyle AS LONG_PTR) AS LONG_PTR</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hwnd</em></td><td>The handle of the control.</td></tr></tbody></table></div>
+<hr>
+<h3 id="controladdstyle">ControlAddStyle</h3>
+<p>Adds a new style to the specified control.</p>
+<pre class="code"><code>FUNCTION ControlAddStyle (BYVAL hWnd AS HWND, BYVAL dwStyle AS LONG_PTR) AS LONG_PTR</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hwnd</em></td><td>The handle of the control.</td></tr></tbody></table></div>
+<hr>
+<h3 id="controlgetexstyle">ControlGetExStyle</h3>
+<p>Retrieves the extended window styles of the specified control</p>
+<pre class="code"><code>FUNCTION ControlGetExStyle (BYVAL hWnd AS HWND) AS LONG_PTR</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hwnd</em></td><td>The handle of the control.</td></tr></tbody></table></div>
+<hr>
+<h3 id="controlgetstyle">ControlGetStyle</h3>
+<p>Retrieves the window styles of the specified control</p>
+<pre class="code"><code>FUNCTION ControlGetStyle (BYVAL hWnd AS HWND) AS LONG_PTR</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hwnd</em></td><td>The handle of the control.</td></tr></tbody></table></div>
+<hr>
+<h3 id="controlsetexstyle">ControlSetExStyle</h3>
+<p>Sets the window extended styles of the specified control</p>
+<pre class="code"><code>FUNCTION ControlSetExStyle (BYVAL hWnd AS HWND, BYVAL dwExStyle AS LONG_PTR) AS LONG_PTR</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hwnd</em></td><td>The handle of the control.</td></tr></tbody></table></div>
+<hr>
+<h3 id="controlremoveexstyle">ControlRemoveExStyle</h3>
+<p>Removes an extended style from the specified control.</p>
+<pre class="code"><code>FUNCTION ControlRemoveExStyle (BYVAL hWnd AS HWND, BYVAL dwExStyle AS DWORD) AS LONG_PTR</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hwnd</em></td><td>The handle of the control.</td></tr></tbody></table></div>
+<hr>
+<h3 id="controlremovestyle">ControlRemoveStyle</h3>
+<p>Removes an style from the specified control.</p>
+<pre class="code"><code>FUNCTION ControlRemoveStyle (BYVAL hWnd AS HWND, BYVAL dwStyle AS LONG_PTR) AS LONG_PTR</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hwnd</em></td><td>The handle of the control.</td></tr></tbody></table></div>
+<hr>
+<h3 id="controlsetstyle">ControlSetStyle</h3>
+<p>Sets the window styles of the specified control</p>
+<pre class="code"><code>FUNCTION ControlSetEtyle (BYVAL hWnd AS HWND) AS LONG_PTR</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hwnd</em></td><td>The handle of the control.</td></tr></tbody></table></div>
+<hr>
+<h3 id="controlheight">ControlHeight</h3>
+<p>Returns the unscaled height of the specified window.</p>
+<pre class="code"><code>FUNCTION ControlHeight (BYVAL hwnd AS HWND) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hwnd</em></td><td>Handle to the window or control.</td></tr></tbody></table></div>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM nHeight AS LONG = pWindow.ControlHeight(hwnd)</code></pre>
+<hr>
+<h3 id="controlwidth">ControlWidth</h3>
+<p>Returns the unscaled width of the specified window.</p>
+<pre class="code"><code>FUNCTION ControlWidth (BYVAL hwnd AS HWND) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hwnd</em></td><td>Handle to the window or control.</td></tr></tbody></table></div>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM nWidth AS LONG = pWindow.ControlWidth(hwnd)</code></pre>
+<hr>
+<h3 id="create">Create</h3>
+<p><strong>Create</strong> creates a new window. If you don't specify the window styles, it creates an overlaped window with the styles WS_OVERLAPPEDWINDOW OR WS_CLIPCHILDREN OR WS_CLIPSIBLINGS and the extended styles WS_EX_CONTROLPARENT OR WS_EX_WINDOWEDGE.</p>
+<p><strong>CreateOverlapped</strong> creates an overlapped window. An overlapped window has a title bar and a border and uses these styles: WS_OVERLAPPED OR WS_CAPTION OR WS_SYSMENU.</p>
+<pre class="code"><code>FUNCTION Create (BYVAL hParent AS HWND = NULL, BYREF wszTitle AS WSTRING = "", _
+   BYVAL lpfnWndProc AS WNDPROC = NULL, BYVAL x AS LONG = CW_USEDEFAULT, _
+   BYVAL y AS LONG = CW_USEDEFAULT, BYVAL nWidth AS LONG = CW_USEDEFAULT, _
+   BYVAL nHeight AS LONG = CW_USEDEFAULT, 
+   BYVAL dwStyle AS UINT = WS_OVERLAPPEDWINDOW OR WS_CLIPCHILDREN OR WS_CLIPSIBLINGS, _
+   BYVAL dwExStyle AS UINT = WS_EX_CONTROLPARENT OR WS_EX_WINDOWEDGE) AS HWND</code></pre>
+<pre class="code"><code>FUNCTION CreateOverlapped (BYVAL hParent AS HWND = NULL, BYREF wszTitle AS WSTRING = "", _
+   BYVAL lpfnWndProc AS WNDPROC = NULL, BYVAL x AS LONG = CW_USEDEFAULT, _
+   BYVAL y AS LONG = CW_USEDEFAULT, BYVAL nWidth AS LONG = CW_USEDEFAULT, _
+   BYVAL nHeight AS LONG = CW_USEDEFAULT, _
+   BYVAL dwExStyle AS UINT = WS_EX_CONTROLPARENT OR WS_EX_WINDOWEDGE) AS HWND</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hParent</em></td><td>A handle to the parent or owner window of the control being created.</td></tr><tr><td><em>wszTitle</em></td><td>The window caption.</td></tr><tr><td><em>lpfnWndProc</em></td><td>Address of the window callback procedure.</td></tr><tr><td><em>x</em></td><td>The x-coordinate of the upper-left corner of the window relative to the upper-left corner of the parent window's client area.</td></tr><tr><td><em>y</em></td><td>The initial y-coordinate of the upper-left corner of the window relative to the upper-left corner of the parent window's client area.</td></tr><tr><td><em>nWidth</em></td><td>The width of the window.</td></tr><tr><td><em>nHeight</em></td><td>The height of the window.</td></tr><tr><td><em>dwStyle</em></td><td>The style of the window being created.</td></tr><tr><td><em>dwExStyle</em></td><td>The extended window style of the control being created.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the function succeeds, the return value is a handle to the new window.</p>
+<p>If the function fails, the return value is NULL. To get extended error information, call <strong>GetLastError</strong>.</p>
+<h5 id="window-styles">Window Styles</h5>
+<p>The following are the window styles. After the window has been created, these styles cannot be modified, except as noted.</p>
+<div class="table-wrap"><table><thead><tr><th>Constant</th><th>Description</th></tr></thead><tbody><tr><td>WS_BORDER</td><td>The window has a thin-line border.</td></tr><tr><td>WS_CAPTION</td><td>The window has a title bar (includes the WS_BORDER style).</td></tr><tr><td>WS_CHILD</td><td>The window is a child window. A window with this style cannot have a menu bar. This style cannot be used with the WS_POPUP style.</td></tr><tr><td>WS_CHILDWINDOW</td><td>Same as the WS_CHILD style.</td></tr><tr><td>WS_CLIPCHILDREN</td><td>Excludes the area occupied by child windows when drawing occurs within the parent window. This style is used when creating the parent window.</td></tr><tr><td>WS_CLIPSIBLINGS</td><td>Clips child windows relative to each other; that is, when a particular child window receives a WM_PAINT message, the WS_CLIPSIBLINGS style clips all other overlapping child windows out of the region of the child window to be updated. If WS_CLIPSIBLINGS is not specified and child windows overlap, it is possible, when drawing within the client area of a child window, to draw within the client area of a neighboring child window.</td></tr><tr><td>WS_DISABLED</td><td>The window is initially disabled. A disabled window cannot receive input from the user. To change this after a window has been created, use the <strong>EnableWindow</strong> function.</td></tr><tr><td>WS_DLGFRAME</td><td>The window has a border of a style typically used with dialog boxes. A window with this style cannot have a title bar.</td></tr><tr><td>WS_GROUP</td><td>The window is the first control of a group of controls. The group consists of this first control and all controls defined after it, up to the next control with the WS_GROUP style. The first control in each group usually has the WS_TABSTOP style so that the user can move from group to group. The user can subsequently change the keyboard focus from one control in the group to the next control in the group by using the direction keys.</td></tr><tr><td>WS_GROUP</td><td>The window is the first control of a group of controls. The group consists of this first control and all controls defined after it, up to the next control with the WS_GROUP style. The first control in each group usually has the WS_TABSTOP style so that the user can move from group to group. The user can subsequently change the keyboard focus from one control in the group to the next control in the group by using the direction keys.<br>You can turn this style on and off to change dialog box navigation. To change this style after a window has been created, use the <strong>SetWindowLongPtrW</strong> function.</td></tr><tr><td>WS_HSCROLL</td><td>The window has a horizontal scroll bar.</td></tr><tr><td>WS_ICONIC</td><td>The window is initially minimized. Same as the WS_MINIMIZE style.</td></tr><tr><td>WS_MAXIMIZE</td><td>The window is initially maximized.</td></tr><tr><td>WS_MAXIMIZEBOX</td><td>The window has a maximize button. Cannot be combined with the WS_EX_CONTEXTHELP style. The WS_SYSMENU style must also be specified.</td></tr><tr><td>WS_MINIMIZE</td><td>The window is initially minimized. Same as the WS_ICONIC style.</td></tr><tr><td>WS_MINIMIZEBOX</td><td>The window has a minimize button. Cannot be combined with the WS_EX_CONTEXTHELP style. The WS_SYSMENU style must also be specified.</td></tr><tr><td>WS_OVERLAPPED</td><td>The window is an overlapped window. An overlapped window has a title bar and a border. Same as the WS_TILED style.</td></tr><tr><td>WS_OVERLAPPEDWINDOW</td><td>(WS_OVERLAPPED OR WS_CAPTION OR WS_SYSMENU OR WS_THICKFRAME OR WS_MINIMIZEBOX OR WS_MAXIMIZEBOX). The window is an overlapped window. Same as the WS_TILEDWINDOW style.</td></tr><tr><td>WS_POPUP</td><td>The windows is a pop-up window. This style cannot be used with the WS_CHILD style.</td></tr><tr><td>WS_POPUPWINDOW</td><td>(WS_POPUP OR WS_BORDER OR WS_SYSMENU). The window is a pop-up window. The WS_CAPTION and WS_POPUPWINDOW styles must be combined to make the window menu visible.</td></tr><tr><td>WS_SIZEBOX</td><td>The window has a sizing border. Same as the WS_THICKFRAME style.</td></tr><tr><td>WS_SYSMENU</td><td>The window has a window menu on its title bar. The WS_CAPTION style must also be specified.</td></tr><tr><td>WS_TABSTOP</td><td>The window is a control that can receive the keyboard focus when the user presses the TAB key. Pressing the TAB key changes the keyboard focus to the next control with the WS_TABSTOP style.<br>You can turn this style on and off to change dialog box navigation. To change this style after a window has been created, use the <strong>SetWindowLongPtrW</strong> function. For user-created windows and modeless dialogs to work with tab stops, alter the message loop to call the <strong>IsDialogMessage</strong> function.</td></tr><tr><td>WS_THICKFRAME</td><td>The window has a sizing border. Same as the WS_SIZEBOX style.</td></tr><tr><td>WS_TILED</td><td>The window is an overlapped window. An overlapped window has a title bar and a border. Same as the WS_OVERLAPPED style.</td></tr><tr><td>WS_TILEDWINDOW</td><td>(WS_OVERLAPPED OR WS_CAPTION OR WS_SYSMENU OR WS_THICKFRAME OR WS_MINIMIZEBOX OR WS_MAXIMIZEBOX). The window is an overlapped window. Same as the WS_OVERLAPPEDWINDOW style.</td></tr><tr><td>WS_VISIBLE</td><td>The window is initially visible. This style can be turned on and off by using the <strong>ShowWindow</strong> or <strong>SetWindowPos</strong> function.</td></tr><tr><td>WS_VSCROLL</td><td>The window has a vertical scroll bar.</td></tr></tbody></table></div>
+<h5 id="extended-window-styles">Extended Window Styles</h5>
+<div class="table-wrap"><table><thead><tr><th>Constant</th><th>Description</th></tr></thead><tbody><tr><td>WS_EX_ACCEPTFILES</td><td>The window accepts drag-drop files.</td></tr><tr><td>WS_EX_APPWINDOW</td><td>Forces a top-level window onto the taskbar when the window is visible.</td></tr><tr><td>WS_EX_CLIENTEDGE</td><td>The window has a border with a sunken edge.</td></tr><tr><td>WS_EX_COMPOSITED</td><td>Paints all descendants of a window in bottom-to-top painting order using double-buffering. This cannot be used if the window has a class style of either CS_OWNDC or CS_CLASSDC.</td></tr><tr><td>WS_EX_CONTEXTHELP</td><td>The title bar of the window includes a question mark. When the user clicks the question mark, the cursor changes to a question mark with a pointer. If the user then clicks a child window, the child receives a WM_HELP message. The child window should pass the message to the parent window procedure, which should call the WinHelp function using the HELP_WM_HELP command. The Help application displays a pop-up window that typically contains help for the child window. WS_EX_CONTEXTHELP cannot be used with the WS_MAXIMIZEBOX or WS_MINIMIZEBOX styles.</td></tr><tr><td>WS_EX_CONTROLPARENT</td><td>The window itself contains child windows that should take part in dialog box navigation. If this style is specified, the dialog manager recurses into children of this window when performing navigation operations such as handling the TAB key, an arrow key, or a keyboard mnemonic.</td></tr><tr><td>WS_EX_DLGMODALFRAME</td><td>The window has a double border; the window can, optionally, be created with a title bar by specifying the WS_CAPTION style in the <em>dwStyle</em> parameter.</td></tr><tr><td>WS_EX_LAYERED</td><td>The window is a layered window. Note that this cannot be used for child windows. Also, this cannot be used if the window has a class style of either CS_OWNDC or CS_CLASSDC.</td></tr><tr><td>WS_EX_LAYOUTRTL</td><td>If the shell language is Hebrew, Arabic, or another language that supports reading order alignment, the horizontal origin of the window is on the right edge. Increasing horizontal values advance to the left.</td></tr><tr><td>WS_EX_LEFT</td><td>The window has generic left-aligned properties. This is the default.</td></tr><tr><td>WS_EX_LEFTSCROLLBAR</td><td>If the shell language is Hebrew, Arabic, or another language that supports reading order alignment, the vertical scroll bar (if present) is to the left of the client area. For other languages, the style is ignored.</td></tr><tr><td>WS_EX_LTRREADING</td><td>The window text is displayed using left-to-right reading-order properties. This is the default.</td></tr><tr><td>WS_EX_MDICHILD</td><td>The window is a MDI child window.</td></tr><tr><td>WS_EX_NOACTIVATE</td><td>A top-level window created with this style does not become the foreground window when the user clicks it. The system does not bring this window to the foreground when the user minimizes or closes the foreground window. To activate the window, use the <strong>SetActiveWindow</strong> or <strong>SetForegroundWindow</strong> function. The window does not appear on the taskbar by default. To force the window to appear on the taskbar, use the WS_EX_APPWINDOW style.</td></tr><tr><td>WS_EX_NOINHERITLAYOUT</td><td>The window does not pass its window layout to its child windows.</td></tr><tr><td>WS_EX_NOPARENTNOTIFY</td><td>The child window created with this style does not send the WM_PARENTNOTIFY message to its parent window when it is created or destroyed.</td></tr><tr><td>WS_EX_OVERLAPPEDWINDOW</td><td>(WS_EX_WINDOWEDGE OR WS_EX_CLIENTEDGE). The window is an overlapped window.</td></tr><tr><td>WS_EX_PALETTEWINDOW</td><td>(WS_EX_WINDOWEDGE OR WS_EX_TOOLWINDOW OR WS_EX_TOPMOST). The window is palette window, which is a modeless dialog box that presents an array of commands.</td></tr><tr><td>WS_EX_RIGHT</td><td>The window has generic "right-aligned" properties. This depends on the window class. This style has an effect only if the shell language is Hebrew, Arabic, or another language that supports reading-order alignment; otherwise, the style is ignored. Using the WS_EX_RIGHT style for static or edit controls has the same effect as using the SS_RIGHT or ES_RIGHT style, respectively. Using this style with button controls has the same effect as using BS_RIGHT and BS_RIGHTBUTTON styles.</td></tr><tr><td>WS_EX_RIGHTSCROLLBAR</td><td>The vertical scroll bar (if present) is to the right of the client area. This is the default.</td></tr><tr><td>WS_EX_RTLREADING</td><td>If the shell language is Hebrew, Arabic, or another language that supports reading-order alignment, the window text is displayed using right-to-left reading-order properties. For other languages, the style is ignored.</td></tr><tr><td>WS_EX_STATICEDGE</td><td>The window has a three-dimensional border style intended to be used for items that do not accept user input.</td></tr><tr><td>WS_EX_TOOLWINDOW</td><td>The window is intended to be used as a floating toolbar. A tool window has a title bar that is shorter than a normal title bar, and the window title is drawn using a smaller font. A tool window does not appear in the taskbar or in the dialog that appears when the user presses ALT+TAB. If a tool window has a system menu, its icon is not displayed on the title bar. However, you can display the system menu by right-clicking or by typing ALT+SPACE.</td></tr><tr><td>WS_EX_TOPMOST</td><td>The window should be placed above all non-topmost windows and should stay above them, even when the window is deactivated. To add or remove this style, use the <strong>SetWindowPos</strong> function.</td></tr><tr><td>WS_EX_TRANSPARENT</td><td>The window should not be painted until siblings beneath the window (that were created by the same thread) have been painted. The window appears transparent because the bits of underlying sibling windows have already been painted. To achieve transparency without these restrictions, use the <strong>SetWindowRgn</strong> function.</td></tr><tr><td>WS_EX_WINDOWEDGE</td><td>The window has a border with a raised edge.</td></tr></tbody></table></div>
+<h5 id="usage-examples">Usage examples</h5>
+<pre class="code"><code>DIM hwndMain AS HWND = pWindow.Create</code></pre>
+<pre class="code"><code>DIM hwndMain AS HWND = pWindow.Create(NULL, "CWindow Test", @WndProc)</code></pre>
+<pre class="code"><code>DIM hwndMain AS HWND = pWindow.Create(NULL, "CWindow Test", @WndProc), 0, 0, 525, 395)</code></pre>
+<pre class="code"><code>DIM hwndMain AS HWND = pWindow.Create(NULL, "CWindow Test", @WndProc, 0, 0, 525, 395, _
+   WS_OVERLAPPEDWINDOW OR WS_CLIPCHILDREN OR WS_CLIPSIBLINGS, WS_EX_CONTROLPARENT OR WS_EX_WINDOWEDGE)</code></pre>
+<hr>
+<h3 id="createacceleratortable">CreateAcceleratorTable</h3>
+<p>Creates the accelerator table.</p>
+<pre class="code"><code>FUNCTION CreateAcceleratorTable () AS HACCEL</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>The handle of the new accelerator table.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' // Create a keyboard accelerator table
+pWindow.AddAccelerator FVIRTKEY OR FCONTROL, "U", IDM_UNDO ' // Ctrl+U - Undo
+pWindow.AddAccelerator FVIRTKEY OR FCONTROL, "R", IDM_REDO ' // Ctrl+R - Redo
+pWindow.AddAccelerator FVIRTKEY OR FCONTROL, "H", IDM_HOME ' // Ctrl+H - Home
+pWindow.AddAccelerator FVIRTKEY OR FCONTROL, "S", IDM_SAVE ' // Ctrl+S - Save
+DIM hAccel AS HACCEL = pWindow.CreateAcceleratorTable</code></pre>
+<hr>
+<h3 id="createfont">CreateFont</h3>
+<p>Creates a DPI aware logical font.</p>
+<pre class="code"><code>FUNCTION CreateFont (BYREF wszFaceName AS WSTRING, BYVAL lPointSize AS LONG, _
+   BYVAL lWeight AS LONG = FW_NORMAL, BYVAL bItalic AS UBYTE = FALSE, _
+   BYVAL bUnderline AS UBYTE = FALSE, BYVAL bStrikeOut AS UBYTE = FALSE, _
+   BYVAL bCharSet AS UBYTE = DEFAULT_CHARSET) AS HFONT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszFaceName</em></td><td>A string that specifies the typeface name of the font. The length of this string must not exceed 31 characters. The <strong>EnumFontFamilies</strong> function can be used to enumerate the typeface names of all currently available fonts. If <em>wszFaceName</em> is an empty string, GDI uses the first font that matches the other specified attributes.</td></tr><tr><td><em>lPointSize</em></td><td>Specifies the height, in logical units, of the font's character cell or character.</td></tr><tr><td><em>lWeight</em></td><td>Specifies the weight of the font in the range 0 through 1000. If this value is zero, a default weight is used.</td></tr><tr><td><em>bItalic</em></td><td>Specifies an italic font if set to CTRUE.</td></tr><tr><td><em>bUnderline</em></td><td>Specifies an underlined font if set to CTRUE.</td></tr><tr><td><em>bStrikeOut</em></td><td>Specifies a strikeout font if set to CTRUE.</td></tr><tr><td><em>bCharSet</em></td><td>Specifies the character set. The following values are predefined:<br>ANSI_CHARSET, BALTIC_CHARSET, CHINESEBIG5_CHARSET, DEFAULT_CHARSET, EASTEUROPE_CHARSET, GB2312_CHARSET, GREEK_CHARSET, HANGUL_CHARSET, MAC_CHARSET, OEM_CHARSET, RUSSIAN_CHARSET, SHIFTJIS_CHARSET, SYMBOL_CHARSET, TURKISH_CHARSET.<br>Korean Windows: JOHAB_CHARSET.<br>Middle-Eastern Windows: HEBREW_CHARSET, ARABIC_CHARSET.<br>Thai Windows: THAI_CHARSET.<br>The OEM_CHARSET value specifies a character set that is operating-system dependent. DEFAULT_CHARSET is set to a value based on the current system locale. For example, when the system locale is English (United States), it is set as ANSI_CHARSET. Fonts with other character sets may exist in the operating system. If an application uses a font with an unknown character set, it should not attempt to translate or interpret strings that are rendered with that font. This parameter is important in the font mapping process. To ensure consistent results, specify a specific character set. If you specify a typeface name in the <em>wszFaceName</em> parameter, make sure that the <em>bCharSet</em> value matches the character set of the typeface specified in <em>wszFaceName</em>.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>A handle to a logical font indicates success. NULL indicates failure. To get extended error information, call <strong>GetLastError</strong>.</p>
+<h5 id="examples">Examples</h5>
+<pre class="code"><code>hFont = CWindow.CreateFont("MS Sans Serif", 8, FW_NORMAL, , , , DEFAULT_CHARSET)
+hFont = CWindow.CreateFont("Courier New", 10, FW_BOLD, , , , DEFAULT_CHARSET)
+hFont = CWindow.CreateFont("Marlett", 8, FW_NORMAL, , , , SYMBOL_CHARSET)</code></pre>
+<hr>
+<h3 id="defaultfontsize">DefaultFontSize</h3>
+<p>Gets/sets the point size of the default font.</p>
+<pre class="code"><code>PROPERTY DefaultFontSize () AS LONG
+PROPERTY DefaultFontSize (BYVAL nPointSize AS LONG)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>nPointSize</em></td><td>The point size of the font</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The point size of the font.</p>
+<h5 id="usage-examples">Usage examples</h5>
+<pre class="code"><code>DIM nSize AS LONG = pWindow.DefaultFontSize</code></pre>
+<pre class="code"><code>pWindow.DefaultFontSize = 12</code></pre>
+<hr>
+<h3 id="doevents">DoEvents</h3>
+<p>Processes windows messages.</p>
+<pre class="code"><code>FUNCTION DoEvents (BYVAL nCmdShow AS LONG = 0) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>nCmdShow</em></td><td>Optional. Specifies how the window is to be shown. If <strong>DoEvents</strong> is called in the main window, the value should be the value obtained by the wWinMain function in its <em>nCmdShow</em> parameter.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The application exit code. This is the value sent when calling the <strong>PostQuitMessage</strong> API function.</p>
+<h5 id="remarks">Remarks</h5>
+<p>This is the default message pump and should be enough for most applications, but you can replace it with your own.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>FUNCTION = pWindow.DoEvents(nCmdShow)</code></pre>
+<hr>
+<h3 id="dpi">DPI</h3>
+<p>Gets/sets the <strong>DPI</strong> (dots per inch) to be used by the application. The main window, controls and fonts will be scaled according this value. Don't change the DPI value once the main window has been created.</p>
+<p>By default, <strong>CWindow</strong> retrieves the <strong>DPI</strong> setting used by the computer and calculates the scaling ratios, but you can use this property to alter this behavior. For example, passing a DPI of 96 disables scaling; any other value, changes the scaling ratios.</p>
+<pre class="code"><code>PROPERTY DPI () AS SINGLE
+PROPERTY DPI (BYVAL nDPI AS SINGLE)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>nDPI</em></td><td>The number of dots per inch. Pass -1 to use the value returned by the <strong>GetDeviceCaps</strong> API function.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>To make the application DPI aware with Windows 10 or superior it's needed a call to the API function <strong>SetProcessDpiAwareness</strong> or set it through the application manifest.</p>
+<p>DLLs should accept the dpi setting of the host process rather than call <strong>SetProcessDpiAwareness</strong> themselves. To be set properly, <em>dpiAware</em> should be specified as part of the application (.exe) manifest. (<em>dpiAware</em> defined in an embedded DLL manifest has no affect.) The following markup shows how to set <em>dpiAware</em> as part of an application (.exe) manifest.</p>
+<pre class="code"><code>&lt;assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0" xmlns:asmv3="urn:schemas-microsoft-com:asm.v3" &gt;
+ ...
+  &lt;asmv3:application&gt;
+    &lt;asmv3:windowsSettings xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings"&gt;
+      &lt;dpiAware&gt;true&lt;/dpiAware&gt;
+    &lt;/asmv3:windowsSettings&gt;
+  &lt;/asmv3:application&gt;
+ ...
+&lt;/assembly&gt;</code></pre>
+<h5 id="usage-examples">Usage examples</h5>
+<pre class="code"><code>DIM dpi AS LONG = pWindow.DPI</code></pre>
+<pre class="code"><code>pWindow.DPI = 96</code></pre>
+<hr>
+<h3 id="font">Font</h3>
+<p>Gets/sets the font used as default.</p>
+<pre class="code"><code>PROPERTY Font () AS HFONT
+PROPERTY Font (BYVAL hFont AS HFONT)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hFont</em></td><td>A handle to the font.</td></tr></tbody></table></div>
+<h5 id="usage-examples">Usage examples</h5>
+<pre class="code"><code>DIM hFont AS HFONT = pWindow.Font</code></pre>
+<pre class="code"><code>pWindow.Font = hFont</code></pre>
+<p>The Set property can only be used before calling the <strong>Create</strong> method. If the windows has already been created, calling this property is ignored.</p>
+<hr>
+<h3 id="getclientrect">GetClientRect</h3>
+<p>Retrieves the unscaled coordinates of the main window client area. The client coordinates specify the upper-left and lower-right corners of the client area. Because client coordinates are relative to the upper-left corner of a window's client area, the coordinates of the upper-left corner are (0,0).</p>
+<pre class="code"><code>SUB GetClientRect (BYVAL lpRect AS LPRECT)
+FUNCTION GetClientRect () AS RECT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>lpRect</em></td><td>Pointer to a <strong>RECT</strong> structure that receives the client coordinates. The left and top members are zero. The right and bottom members contain the width and height of the window.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>In conformance with conventions for the <strong>RECT</strong> structure, the bottom-right coordinates of the returned rectangle are exclusive. In other words, the pixel at (right, bottom) lies immediately outside the rectangle.</p>
+<h5 id="usage-examples">Usage examples</h5>
+<pre class="code"><code>DIM rc AS RECT
+pWindow.GetClientRect(@rc)</code></pre>
+<pre class="code"><code>DIM rc AS RECT = pWindow.GetClientRect</code></pre>
+<hr>
+<h3 id="getcontrolclientrect">GetControlClientRect</h3>
+<p>Retrieves the unscaled coordinates of a window's client area. The client coordinates specify the upper-left and lower-right corners of the client area. Because client coordinates are relative to the upper-left corner of a window's client area, the coordinates of the upper-left corner are (0,0).</p>
+<pre class="code"><code>SUB GetControlClientRect (BYVAL hwnd AS HWND, BYVAL lpRect AS LPRECT)</code></pre>
+<pre class="code"><code>FUNCTION GetControlClientRect (BYVAL hwnd AS HWND) AS RECT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hwnd</em></td><td>Handle to the window or control.</td></tr><tr><td><em>lpRect</em></td><td>Pointer to a <strong>RECT</strong> structure that receives the client coordinates. The left and top members are zero. The right and bottom members contain the width and height of the window.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>In conformance with conventions for the <strong>RECT</strong> structure, the bottom-right coordinates of the returned rectangle are exclusive. In other words, the pixel at (right, bottom) lies immediately outside the rectangle.</p>
+<h5 id="usage-examples">Usage examples</h5>
+<pre class="code"><code>DIM rc AS RECT
+pWindow.GetControlClientRect(hCtl, @rc)</code></pre>
+<pre class="code"><code>DIM rc AS RECT = pWindow.GetControlClientRect(hCtl)</code></pre>
+<hr>
+<h3 id="getcontrolwindowrect">GetControlWindowRect</h3>
+<p>Retrieves the unscaled dimensions of the bounding rectangle of the specified window. The dimensions are given in screen coordinates that are relative to the upper-left corner of the screen.</p>
+<pre class="code"><code>SUB GetControlWindowRect (BYVAL hwnd AS HWND, BYVAL lpRect AS LPRECT)</code></pre>
+<pre class="code"><code>FUNCTION GetControlWindowRect (BYVAL hwnd AS HWND) AS RECT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hwnd</em></td><td>Handle to the window or control.</td></tr><tr><td><em>lpRect</em></td><td>Pointer to a <strong>RECT</strong> structure that receives the client coordinates. The left and top members are zero. The right and bottom members contain the width and height of the window.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>In conformance with conventions for the <strong>RECT</strong> structure, the bottom-right coordinates of the returned rectangle are exclusive. In other words, the pixel at (right, bottom) lies immediately outside the rectangle.</p>
+<h5 id="usage-examples">Usage examples</h5>
+<pre class="code"><code>DIM rc AS RECT
+pWindow.GetControlWindowRect(hCtl, @rc)</code></pre>
+<pre class="code"><code>DIM rc AS RECT = pWindow.GetControlWindowRect(hCtl)</code></pre>
+<hr>
+<h3 id="getwindowrect">GetWindowRect</h3>
+<p>Retrieves the unscaled dimensions of the bounding rectangle of the main window. The dimensions are given in screen coordinates that are relative to the upper-left corner of the screen.</p>
+<pre class="code"><code>SUB GetWindowRect (BYVAL hwnd AS HWND, BYVAL lpRect AS LPRECT)</code></pre>
+<pre class="code"><code>FUNCTION GetWindowRect (BYVAL hwnd AS HWND) AS RECT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hwnd</em></td><td>Handle to the window or control.</td></tr><tr><td><em>lpRect</em></td><td>Pointer to a <strong>RECT</strong> structure that receives the client coordinates. The left and top members are zero. The right and bottom members contain the width and height of the window.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>In conformance with conventions for the <strong>RECT</strong> structure, the bottom-right coordinates of the returned rectangle are exclusive. In other words, the pixel at (right, bottom) lies immediately outside the rectangle.</p>
+<h5 id="usage-examples">Usage examples</h5>
+<pre class="code"><code>DIM rc AS RECT
+pWindow.GetWindowRect(@rc)</code></pre>
+<pre class="code"><code>DIM rc AS RECT = pWindow.GetWindowRect</code></pre>
+<hr>
+<h3 id="getworkarea">GetWorkArea</h3>
+<p>Retrieves the unscaled size of the work area on the primary display monitor. The work area is the portion of the screen not obscured by the system taskbar or by application desktop toolbars.</p>
+<pre class="code"><code>SUB GetWorkArea (BYVAL lpRect AS LPRECT)</code></pre>
+<pre class="code"><code>FUNCTION GetWorkArea () AS RECT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hwnd</em></td><td>Handle to the window or control.</td></tr><tr><td><em>lpRect</em></td><td>Pointer to a <strong>RECT</strong> structure that receives the client coordinates. The left and top members are zero. The right and bottom members contain the width and height of the window.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>In conformance with conventions for the <strong>RECT</strong> structure, the bottom-right coordinates of the returned rectangle are exclusive. In other words, the pixel at (right, bottom) lies immediately outside the rectangle.</p>
+<h5 id="usage-examples">Usage examples</h5>
+<pre class="code"><code>DIM rc AS RECT
+pWindow.GetWorkArea(@rc)</code></pre>
+<pre class="code"><code>DIM rc AS RECT = pWindow.GetWorkArea</code></pre>
+<hr>
+<h3 id="height">Height</h3>
+<p>Returns the unscaled height of the main window.</p>
+<pre class="code"><code>PROPERTY Height () AS LONG</code></pre>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM nHeight AS LONG = pWindow.Height</code></pre>
+<hr>
+<h3 id="width">Width</h3>
+<p>Returns the unscaled width of the main window.</p>
+<pre class="code"><code>PROPERTY Width () AS LONG</code></pre>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM nWidth AS LONG = pWindow.Width</code></pre>
+<hr>
+<h3 id="screenx">ScreenX</h3>
+<p>Returns the unscaled x-coordinate of the window relative to the screen.</p>
+<pre class="code"><code>PROPERTY ScreenX () AS LONG</code></pre>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM nLeft AS LONG = pWindow.ScreenX</code></pre>
+<hr>
+<h3 id="screeny">ScreenY</h3>
+<p>Returns the unscaled y-coordinate of the window relative to the screen.</p>
+<pre class="code"><code>PROPERTY ScreenY () AS LONG</code></pre>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM nTop AS LONG = pWindow.ScreenY</code></pre>
+<hr>
+<h3 id="hwindow">hWindow</h3>
+<p>Gets/sets the main window handle.</p>
+<pre class="code"><code>PROPERTY hWindow () AS HWND
+PROPERTY hWindow (BYVAL hwnd AS HWND)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hwnd</em></td><td>Handle to the window.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The window handle.</p>
+<h5 id="usage-examples">Usage examples</h5>
+<pre class="code"><code>DIM hwnd AS HWND = pWindow.hWindow</code></pre>
+<pre class="code"><code>pWindow.hWindow = hwnd</code></pre>
+<hr>
+<h3 id="instancehandle">InstanceHandle</h3>
+<p>Gets/sets the instance handle.</p>
+<pre class="code"><code>PROPERTY InstanceHandle () AS HINSTANCE
+PROPERTY InstanceHandle (BYVAL hInst AS HINSTANCE)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hInst</em></td><td>The instance handle.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The instance handle.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM hInstance = pWindow.InstanceHandle</code></pre>
+<pre class="code"><code>pWindow.InstanceHandle = pInstance</code></pre>
+<hr>
+<h3 id="isnonstable">IsNonStable</h3>
+<p>Returns true if the <code>CWindow</code> is non stable; otherwise, false.</p>
+<pre class="code"><code>FUNCTION IsNonStable () AS BOOLEAN</code></pre>
+<hr>
+<h3 id="isstabilized">IsStabilized</h3>
+<p>Returns true if the <code>CWindow</code> is stabilized; otherwise, false.</p>
+<pre class="code"><code>FUNCTION IsStabilized () AS BOOLEAN</code></pre>
+<hr>
+<h3 id="iswindowscrollable">IsWindowScrollable</h3>
+<p>Returns true if the <code>CWindow</code> is scrollable; otherwise, false.</p>
+<pre class="code"><code>FUNCTION IsWindowScrollable () AS BOOLEAN</code></pre>
+<hr>
+<h3 id="movewindow">MoveWindow</h3>
+<p>Changes the position and dimensions of the specified window. For a top-level window, the position and dimensions are relative to the upper-left corner of the screen. For a child window, they are relative to the upper-left corner of the parent window's client area. This method scales the window by multiplying the size and coordinates according the DPI setting; therefore, you must pass unscaled values to it.</p>
+<pre class="code"><code>FUNCTION MoveWindow (BYVAL hwnd AS HWND, BYVAL x AS LONG, BYVAL y AS LONG, _
+   BYVAL nWidth AS LONG, BYVAL nHeight AS LONG, BYVAL bRepaint AS WINBOOL) AS WINBOOL</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hwnd</em></td><td>Handle to the window.</td></tr><tr><td><em>x</em></td><td>The new position of the left side of the window.</td></tr><tr><td><em>y</em></td><td>The new position of the top of the window.</td></tr><tr><td><em>nWidth</em></td><td>The new width of the window.</td></tr><tr><td><em>nHeight</em></td><td>The new height of the window.</td></tr><tr><td><em>bRepaint</em></td><td>Indicates whether the window is to be repainted. If this parameter is CTRUE, the window receives a message. If the parameter is FALSE, no repainting of any kind occurs. This applies to the client area, the nonclient area (including the title bar and scroll bars), and any part of the parent window uncovered as a result of moving a child window.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the function succeeds, the return value is nonzero.</p>
+<p>If the function fails, the return value is zero. To get extended error information, call <strong>GetLastError</strong>.</p>
+<h5 id="remarks">Remarks</h5>
+<p>If the <em>bRepaint</em> parameter is CTRUE, the system sends the WM_PAINT message to the window procedure immediately after moving the window (that is, the <strong>MoveWindow</strong> method calls the UpdateWindow function). If <em>bRepaint</em> is FALSE, the application must explicitly invalidate or redraw any parts of the window and parent window that need redrawing.</p>
+<p><strong>MoveWindow</strong> sends the WM_WINDOWPOSCHANGING, WM_WINDOWPOSCHANGED, WM_MOVE, WM_SIZE, and WM_NCCALCSIZE messages to the window.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>pWindow.MoveWindow GetDlgItem(hwnd, IDCANCEL), pWindow.ClientWidth, _
+   pWindow-ClientHeight, 75, 23, CTRUE</code></pre>
+<hr>
+<h3 id="nonstable">NonStable</h3>
+<p>Makes a <code>CWindow</code> non stable (closeable).</p>
+<pre class="code"><code>FUNCTION NonStable () AS BOOLEAN</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>If the function succeeds, the function returns true; otherwise, false.</p>
+<h5 id="remarks">Remarks</h5>
+<p>The window is made non-stable, meaning that it can be closed by the user. If there is a system menu, the close option and the close box are enabled. The ALT-F4 close key is also enabled. This is the default mode of operation.</p>
+<hr>
+<h3 id="resize">Resize</h3>
+<p>Resizes the window sending a WM_SIZE message with the  SIZE_RESTORED value.</p>
+<pre class="code"><code>SUB Resize</code></pre>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>pWindow.Resize</code></pre>
+<hr>
+<h3 id="rxratio">rxRatio</h3>
+<p>Returns the horizontal scaling ratio.</p>
+<pre class="code"><code>PROPERTY rxRatio () AS SINGLE</code></pre>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM rx AS LONG = pWindow.rxRatio</code></pre>
+<hr>
+<h3 id="ryratio">ryRatio</h3>
+<p>Returns the vertical scaling ratio.</p>
+<pre class="code"><code>PROPERTY ryRatio () AS SINGLE</code></pre>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM ry AS LONG = pWindow.ryRatio</code></pre>
+<hr>
+<h3 id="scalex">ScaleX</h3>
+<p>Scales an horizontal coordinate according the DPI setting.</p>
+<pre class="code"><code>PROPERTY ScaleX (BYVAL cx AS SINGLE) AS SINGLE</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>cx</em></td><td>The value of the horizontal coordinate, in pixels.</td></tr></tbody></table></div>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>pWindow.ScaleX(cx)</code></pre>
+<h5 id="remarks">Remarks</h5>
+<p>A SINGLE datatype is used instead of a long to avoid rounding errors in the calculation.</p>
+<hr>
+<h3 id="scaley">ScaleY</h3>
+<p>Scales an vertical coordinate according the DPI setting.</p>
+<pre class="code"><code>PROPERTY ScaleY (BYVAL cy AS SINGLE) AS SINGLE</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>cy</em></td><td>The value of the vertical coordinate, in pixels.</td></tr></tbody></table></div>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>pWindow.ScaleY(cy)</code></pre>
+<h5 id="remarks">Remarks</h5>
+<p>A SINGLE datatype is used instead of a long to avoid rounding errors in the calculation.</p>
+<hr>
+<h3 id="setbackcolor">SetBackColor</h3>
+<p>Sets the background color of a <code>CWindow</code>.</p>
+<pre class="code"><code>FUNCTION SetBackColor (BYVAL backColor AS COLORREF) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>backColor</em></td><td>An RGB color value.</td></tr></tbody></table></div>
+<hr>
+<h3 id="setclientsize">SetClientSize</h3>
+<p>Adjusts the bounding rectangle of the window based on the desired size of the client area. The sizes are scaled according the DPI seeting.</p>
+<pre class="code"><code>SUB SetClientSize (BYVAL nWidth AS LONG, BYVAL nHeight AS LONG)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>nWidth</em></td><td>The new width of the client area of the window.</td></tr><tr><td><em>nHeight</em></td><td>The new height of the client area of the window.</td></tr></tbody></table></div>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>pWindow.SetClientSize(400, 250)</code></pre>
+<hr>
+<h3 id="setcontrolsubclass">SetControlSubclass</h3>
+<p>Installs or updates a control subclass callback.</p>
+<pre class="code"><code>FUNCTION SetControlSubclass (BYVAL hCtl AS HWND, BYVAL pfnSubclass AS ANY PTR, _
+   BYVAL uIdSubclass AS UINT_PTR, BYVAL dwRefData AS ANY PTR) AS BOOLEAN
+FUNCTION SetControlSubclass (BYVAL hCtl AS HWND, BYVAL pfnSubclass AS ANY PTR, _
+   BYVAL uIdSubclass AS UINT_PTR, BYVAL dwRefData AS DWORD_PTR) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hCtl</em></td><td>The handle of the control being subclassed.</td></tr><tr><td><em>pfnSubclass</em></td><td>A pointer to a window procedure. This pointer and the subclass ID uniquely identify this subclass callback.</td></tr><tr><td><em>uIdSubclass</em></td><td>The subclass ID. This ID together with the subclass procedure uniquely identify a subclass. To remove a subclass, pass the subclass procedure and this value to the <strong>RemoveWindowSubclass</strong> function. This value is passed to the subclass procedure in the <em>uIdSubclass</em> parameter.</td></tr><tr><td><em>dwRefData</em></td><td>DWORD_PTR to reference data. The meaning of this value is determined by the calling application. This value is passed to the subclass procedure in the <em>dwRefData</em> parameter. A different <em>dwRefData</em> is associated with each combination of window handle, subclass procedure and <em>uIdSubclass</em>.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>TRUE if the subclass callback was successfully installed; otherwise, FALSE.</p>
+<h5 id="remarks">Remarks</h5>
+<p>Subclass callbacks are identified by the combination of the callback address and the caller-defined subclass ID. If the callback address and ID pair have not yet been installed, then this function installs the subclass. If the pair has already been installed, then this function just updates the reference data.</p>
+<p>Each callback can store a single DWORD_PTR of reference data, which is passed to the callback function when it is called to filter messages. No reference counting is performed for the callback; it may repeatedly call <strong>SetControlSubclass</strong> to alter the value of its reference data element.</p>
+<p><strong>Warning</strong>: You cannot use the subclassing helper functions to subclass a window across threads.</p>
+<hr>
+<h3 id="setcontrolcallback">SetControlCallback</h3>
+<p>Optional address of a callback function that receives all <strong>WM_COMMAND</strong> and <strong>WM_NOTIFY</strong> messages for the control.</p>
+<pre class="code"><code>FUNCTION SetControlCallback (BYVAL hCtl AS HWND, BYVAL pCallback AS ANY PTR) AS BOOLEAN
+FUNCTION SetControlCallback (BYVAL cID AS LONG, BYVAL pCallback AS ANY PTR) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hCtl</em></td><td>The handle of the control.</td></tr><tr><td><em>pCallback</em></td><td>A pointer to a window procedure. You can use <strong>PROCPTR</strong> to get the pointer, e.g. PROCPTR (MyCallbackProc).</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>TRUE if the subclass callback was successfully installed; otherwise, FALSE.</p>
+<hr>
+<h3 id="setctlcolors">SetCtlColors</h3>
+<p>Sets the colors of a and edit, listbox or static control.</p>
+<pre class="code"><code>FUNCTION SetCtlColors (BYVAL hCtl AS HWND, BYVAL foreColor AS COLORREF, _
+   BYVAL backColor AS COLORREF) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hCtl</em></td><td>The handle of the control.</td></tr><tr><td><em>foreColor</em></td><td>The foreground color of the control.</td></tr><tr><td><em>backColor</em></td><td>The background color of the control.</td></tr></tbody></table></div>
+<hr>
+<h3 id="getbackcolor">GetBackColor</h3>
+<p>Gets the background color of a <code>CWindow</code>or control.</p>
+<pre class="code"><code>FUNCTION GetBackColor (BYVAL hCtl AS HWND) AS COLORREF</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hCtl</em></td><td>The handle of the <code>CWindow</code>or control.</td></tr></tbody></table></div>
+<hr>
+<h3 id="getforecolor">GetForeColor</h3>
+<p>Gets the foreground color of a control.</p>
+<pre class="code"><code>FUNCTION GetForeColor (BYVAL hCtl AS HWND) AS COLORREF</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hCtl</em></td><td>The handle of the control.</td></tr></tbody></table></div>
+<hr>
+<h3 id="setfont">SetFont</h3>
+<p>Creates a DPI aware logical font and sets it as the default font.</p>
+<pre class="code"><code>FUNCTION SetFont (BYREF wszFaceName AS WSTRING, BYVAL lPointSize AS LONG, _
+   BYVAL lWeight AS LONG = FW_NORMAL, BYVAL bItalic AS UBYTE = FALSE, _
+   BYVAL bUnderline AS UBYTE = FALSE, BYVAL bStrikeOut AS UBYTE = FALSE, _
+   BYVAL bCharSet AS UBYTE = DEFAULT_CHARSET) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszFaceName</em></td><td>A string that specifies the typeface name of the font. The length of this string must not exceed 31 characters. The <strong>EnumFontFamilies</strong> function can be used to enumerate the typeface names of all currently available fonts. If <em>wszFaceName</em> is an empty string, GDI uses the first font that matches the other specified attributes.</td></tr><tr><td><em>lPointSize</em></td><td>Specifies the height, in logical units, of the font's character cell or character.</td></tr><tr><td><em>lWeight</em></td><td>Specifies the weight of the font in the range 0 through 1000. If this value is zero, a default weight is used.</td></tr><tr><td><em>bItalic</em></td><td>Specifies an italic font if set to CTRUE.</td></tr><tr><td><em>bUnderline</em></td><td>Specifies an underlined font if set to CTRUE.</td></tr><tr><td><em>bStrikeOut</em></td><td>Specifies a strikeout font if set to CTRUE.</td></tr><tr><td><em>bCharSet</em></td><td>Specifies the character set. The following values are predefined:<br>ANSI_CHARSET, BALTIC_CHARSET, CHINESEBIG5_CHARSET, DEFAULT_CHARSET, EASTEUROPE_CHARSET, GB2312_CHARSET, GREEK_CHARSET, HANGUL_CHARSET, MAC_CHARSET, OEM_CHARSET, RUSSIAN_CHARSET, SHIFTJIS_CHARSET, SYMBOL_CHARSET, TURKISH_CHARSET.<br>Korean Windows: JOHAB_CHARSET.<br>Middle-Eastern Windows: HEBREW_CHARSET, ARABIC_CHARSET.<br>Thai Windows: THAI_CHARSET.<br>The OEM_CHARSET value specifies a character set that is operating-system dependent. DEFAULT_CHARSET is set to a value based on the current system locale. For example, when the system locale is English (United States), it is set as ANSI_CHARSET. Fonts with other character sets may exist in the operating system. If an application uses a font with an unknown character set, it should not attempt to translate or interpret strings that are rendered with that font. This parameter is important in the font mapping process. To ensure consistent results, specify a specific character set. If you specify a typeface name in the <em>wszFaceName</em> parameter, make sure that the <em>bCharSet</em> value matches the character set of the typeface specified in <em>wszFaceName</em>.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>CTRUE or FALSE.</p>
+<h5 id="usage-examples">Usage examples</h5>
+<pre class="code"><code>pWindow.SetFont("MS Sans Serif", 8, FW_NORMAL, , , , DEFAULT_CHARSET)
+pWindow.SetFont("Courier New", 10, FW_BOLD, , , , DEFAULT_CHARSET)
+pWindow.SetFont("Marlett", 8, FW_NORMAL, , , , SYMBOL_CHARSET)</code></pre>
+<hr>
+<h3 id="setviewport">SetViewPort</h3>
+<p>Makes a <code>CWindow</code> scrollable by shrinking its client area size.</p>
+<pre class="code"><code>FUNCTION SetViewPort (BYVAL nWidth AS LONG, BYVAL nHeight AS LONG) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>nWidth</em></td><td>The new width of the client area of the control.</td></tr><tr><td><em>nHeight</em></td><td>The new height of the client area of the control.</td></tr></tbody></table></div>
+<hr>
+<h3 id="setwindowpos">SetWindowPos</h3>
+<p>Changes the size, position, and Z order of a child, pop-up, or top-level window. These windows are ordered according to their appearance on the screen. The topmost window receives the highest rank and is the first window in the Z order. The sizes and coordinates are scaled according the DPI setting.</p>
+<pre class="code"><code>FUNCTION SetWindowPos (BYVAL hwnd AS HWND, BYVAL hwndInsertAfter AS HWND, _
+   BYVAL x AS LONG, BYVAL y AS LONG, BYVAL cx AS LONG, BYVAL cy AS LONG, _
+   BYVAL uFlags AS UINT) AS WINBOOL</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hwnd</em></td><td>Handle to the window.</td></tr><tr><td><em>hwndInsertAfter</em></td><td>A handle to the window to precede the positioned window in the Z order. This parameter must be a window handle or one of the following values.<br><strong>HWND_BOTTOM</strong>: Places the window at the bottom of the Z order. If the <em>hWnd</em> parameter identifies a topmost window, the window loses its topmost status and is placed at the bottom of all other windows.<br><strong>HWND_NOTOPMOST</strong>: Places the window above all non-topmost windows (that is, behind all topmost windows). This flag has no effect if the window is already a non-topmost window.<br><strong>HWND_TOP</strong>: Places the window at the top of the Z order.<br><strong>HWND_TOPMOST</strong>: Places the window above all non-topmost windows. The window maintains its topmost position even when it is deactivated.<br>For more information about how this parameter is used, see the <strong>Remarks</strong> section.</td></tr><tr><td><em>x</em></td><td>The new position of the left side of the window, in client coordinates.</td></tr><tr><td><em>y</em></td><td>The new position of the top of the window, in client coordinates.</td></tr><tr><td><em>cx</em></td><td>The new width of the window, in pixels.</td></tr><tr><td><em>cy</em></td><td>The new height of the window, in pixels.</td></tr><tr><td><em>uFlags</em></td><td>The window sizing and positioning flags. This parameter can be a combination of the following values.</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>Value</th><th>Meaning</th></tr></thead><tbody><tr><td>SWP_ASYNCWINDOWPOS</td><td>If the calling thread and the thread that owns the window are attached to different input queues, the system posts the request to the thread that owns the window. This prevents the calling thread from blocking its execution while other threads process the request.</td></tr><tr><td>SWP_DEFERERASE</td><td>Prevents generation of the <strong>WM_SYNCPAINT</strong> message.</td></tr><tr><td>SWP_DRAWFRAME</td><td>Draws a frame (defined in the window's class description) around the window.</td></tr><tr><td>SWP_FRAMECHANGED</td><td>Applies new frame styles set using the <strong>SetWindowLongPtrW</strong> function. Sends a <strong>WM_NCCALCSIZE</strong> message to the window, even if the window's size is not being changed. If this flag is not specified, <strong>WM_NCCALCSIZE</strong> is sent only when the window's size is being changed.</td></tr><tr><td>SWP_HIDEWINDOW</td><td>Hides the window.</td></tr><tr><td>SWP_NOACTIVATE</td><td>Does not activate the window. If this flag is not set, the window is activated and moved to the top of either the topmost or non-topmost group (depending on the setting of the <em>hWndInsertAfter</em> parameter).</td></tr><tr><td>SWP_NOCOPYBITS</td><td>Discards the entire contents of the client area. If this flag is not specified, the valid contents of the client area are saved and copied back into the client area after the window is sized or repositioned.</td></tr><tr><td>SWP_NOMOVE</td><td>Retains the current position (ignores X and Y parameters).</td></tr><tr><td>SWP_NOOWNERZORDER</td><td>Does not change the owner window's position in the Z order.</td></tr><tr><td>SWP_NOREDRAW</td><td>Does not redraw changes. If this flag is set, no repainting of any kind occurs. This applies to the client area, the nonclient area (including the title bar and scroll bars), and any part of the parent window uncovered as a result of the window being moved. When this flag is set, the application must explicitly invalidate or redraw any parts of the window and parent window that need redrawing.</td></tr><tr><td>SWP_NOREPOSITION</td><td>Same as the SWP_NOOWNERZORDER flag.</td></tr><tr><td>SWP_NOSENDCHANGING</td><td>Prevents the window from receiving the <strong>WM_WINDOWPOSCHANGING</strong> message.</td></tr><tr><td>SWP_NOSIZE</td><td>Retains the current size (ignores the <em>cx</em> and <em>cy</em> parameters).</td></tr><tr><td>SWP_NOZORDER</td><td>Retains the current Z order (ignores the <em>hWndInsertAfter</em> parameter).</td></tr><tr><td>SWP_SHOWWINDOW</td><td>Displays the window.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the function succeeds, the return value is nonzero.</p>
+<p>If the function fails, the return value is zero. To get extended error information, call <strong>GetLastError</strong>.</p>
+<h5 id="remarks">Remarks</h5>
+<p>As part of the Vista re-architecture, all services were moved off the interactive desktop into Session 0. <em>hwnd</em> and window manager operations are only effective inside a session and cross-session attempts to manipulate the hwnd will fail.</p>
+<p>If you have changed certain window data using <strong>SetWindowLongPtrW</strong>, you must call <strong>SetWindowPos</strong> for the changes to take effect. Use the following combination for uFlags: SWP_NOMOVE OR SWP_NOSIZE OR SWP_NOZORDER OR SWP_FRAMECHANGED.</p>
+<p>A window can be made a topmost window either by setting the <em>hwndInsertAfter</em> parameter to HWND_TOPMOST and ensuring that the SWP_NOZORDER flag is not set, or by setting a window's position in the Z order so that it is above any existing topmost windows. When a non-topmost window is made topmost, its owned windows are also made topmost. Its owners, however, are not changed.</p>
+<p>If neither the SWP_NOACTIVATE nor SWP_NOZORDER flag is specified (that is, when the application requests that a window be simultaneously activated and its position in the Z order changed), the value specified in <em>hwndInsertAfter</em> is used only in the following circumstances.</p>
+<ul><li>Neither the HWND_TOPMOST nor HWND_NOTOPMOST flag is specified in <em>hwndInsertAfter</em>.</li><li>The window identified by <em>hwnd</em> is not the active window.</li></ul>
+<p>An application cannot activate an inactive window without also bringing it to the top of the Z order. Applications can change an activated window's position in the Z order without restrictions, or it can activate a window and then move it to the top of the topmost or non-topmost windows.</p>
+<p>If a topmost window is repositioned to the bottom (HWND_BOTTOM) of the Z order or after any non-topmost window, it is no longer topmost. When a topmost window is made non-topmost, its owners and its owned windows are also made non-topmost windows.</p>
+<p>A non-topmost window can own a topmost window, but the reverse cannot occur. Any window (for example, a dialog box) owned by a topmost window is itself made a topmost window, to ensure that all owned windows stay above their owner.</p>
+<p>If an application is not in the foreground, and should be in the foreground, it must call the <strong>SetForegroundWindow</strong> function.</p>
+<p>To use <strong>SetWindowPos</strong> to bring a window to the top, the process that owns the window must have <strong>SetForegroundWindow</strong> permission.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>SetWindowPos(hwnd, NULL, 0, 0, cx, cy, _
+   SWP_NOZORDER OR SWP_NOMOVE OR SWP_NOACTIVATE)</code></pre>
+<hr>
+<h3 id="stabilize">Stabilize</h3>
+<p>Makes the<code>CWindow</code> stabilized (non-closeable by the user).</p>
+<pre class="code"><code>FUNCTION Stabilize () AS BOOLEAN</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>If the function succeeds, the function returns true; otherwise, false.</p>
+<h5 id="remarks">Remarks</h5>
+<p>If there is a system menu, the close option and the close box are grayed. The ALT-F4 close key is disabled.  This allows you to be certain that your operations on can be completed. When a <code>CWindow</code> is stabilized, only program termination will close it.</p>
+<hr>
+<h3 id="unscalex">UnScaleX</h3>
+<p>Unscales an horizontal coordinate according the DPI setting.</p>
+<pre class="code"><code>PROPERTY UnScaleX (BYVAL cx AS SINGLE) AS SINGLE</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>cx</em></td><td>The value of the horizontal coordinate, in pixels.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>A SINGLE datatype is used instead of a long to avoid rounding errors in the calculation.</p>
+<h5 id="usage-example">Usage example</h5>
+<p>DIM cx AS SINGLE = pWindow.UnScaleX(250)</p>
+<hr>
+<h3 id="unscaley">UnScaleY</h3>
+<p>Unscales a vertical coordinate according the DPI setting.</p>
+<pre class="code"><code>PROPERTY UnScaleY (BYVAL cy AS SINGLE) AS SINGLE</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>cy</em></td><td>The value of the vertical coordinate, in pixels.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>A SINGLE datatype is used instead of a long to avoid rounding errors in the calculation.</p>
+<h5 id="usage-example">Usage example</h5>
+<p>DIM cy AS SINGLE = pWindow.UnScaleY(250)</p>
+<hr>
+<h3 id="userdata">UserData</h3>
+<p>Gets/sets a value in the user data area of the window.</p>
+<pre class="code"><code>PROPERTY UserData (BYVAL idx AS LONG) AS LONG_PTR
+PROPERTY UserData (BYVAL idx AS LONG, BYVAL newValue AS LONG_PTR)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>idx</em></td><td>The index number of the user data value to retrieve, in the range 0 to 99 inclusive.</td></tr><tr><td><em>newValue</em></td><td>The value to set.</td></tr></tbody></table></div>
+<h5 id="usage-examples">Usage examples</h5>
+<pre class="code"><code>pWindow.UserData(1) = value</code></pre>
+<pre class="code"><code>DIM value AS LONG_PTR = pWindow.UserData(1)</code></pre>
+<hr>
+<h3 id="windowexstyle">WindowExStyle</h3>
+<p>Gets/sets the window extended styles. Alias: <strong>WindowStyleEx</strong>.</p>
+<pre class="code"><code>PROPERTY WindowExStyle () AS LONG_PTR
+PROPERTY WindowExStyle (BYVAL dwExStyle AS LONG_PTR)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>dwExStyle</em></td><td>The extended style(s) to set.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The extended style(s) used by the window.</p>
+<h5 id="usage-examples">Usage examples</h5>
+<pre class="code"><code>DIM dwExStyle AS ULONG_PTR = pWindow.WindowExStyle</code></pre>
+<pre class="code"><code>pWindow.WindowExStyle = WS_EX_CLIENTEDGE</code></pre>
+<hr>
+<h3 id="windowstyle">WindowStyle</h3>
+<p>Gets/sets the window styles.</p>
+<pre class="code"><code>PROPERTY WindowStyle () AS LONG_PTR
+PROPERTY WindowStyle (BYVAL dwStyle AS LONG_PTR)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>dwStyle</em></td><td>The style(s) to set.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The style(s) used by the window.</p>
+<h5 id="usage-examples">Usage examples</h5>
+<pre class="code"><code>DIM dwStyle AS LONG_PTR = pWindow.WindowStyle</code></pre>
+<pre class="code"><code>pWindow.WindowStyle = WS_POPUPWINDOW OR WS_CAPTION   ' // Creates a popup window</code></pre>
+<hr>
+<h3 id="afxcwindowptr">AfxCWindowPtr</h3>
+<p>Returns a pointer to the <strong>CWindow</strong> class given the handle of the main window or the <strong>CREATESTRUCT</strong> structure associated with it. To retrieve it from the handle of any of its child windows or controls, use <strong>AfxCWindowOwnerPtr</strong>.</p>
+<pre class="code"><code>FUNCTION AfxCWindowPtr (BYVAL hwnd AS HWND) AS CWindow PTR
+FUNCTION AfxCWindowPtr (BYVAL lParam AS LPARAM) AS CWindow PTR
+FUNCTION AfxCWindowPtr (BYVAL pCreateStruct AS CREATESTRUCT PTR) AS CWindow PTR</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hwnd</em></td><td>Handle of the main window created with the <strong>Create</strong> method of the <strong>CWindow</strong> class.</td></tr><tr><td><em>lParam</em></td><td>Value passed by Windows to the <strong>WM_CREATE</strong> message.</td></tr><tr><td><em>pCreateStruct</em></td><td>Pointer to the <strong>CREATESTRUCT</strong> structure used by Windows during the window creation and passed to the window procedure as the <em>lParam</em> parameter of the <strong>WM_CREATE</strong> message.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>A pointer to the <strong>CWindow</strong> class or NULL.</p>
+<h5 id="usage-examples">Usage examples</h5>
+<pre class="code"><code>DIM pWindow AS CWindow PTR = AfxCWindowPtr(hwnd)</code></pre>
+<pre class="code"><code>DIM pWindow AS CWindow PTR = AfxCWindowPtr(lParam)</code></pre>
+<hr>
+<h3 id="afxcwindowownerptr">AfxCWindowOwnerPtr</h3>
+<p>Returns a pointer to the <strong>CWindow</strong> class given the handle of the window created with it or the handle of any of it's children windows or controls.</p>
+<pre class="code"><code>FUNCTION AfxCWindowOwnerPtr (BYVAL hwnd AS HWND) AS CWindow PTR</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hwnd</em></td><td>Handle of the window created with it or the handle of any of it's children windows or controls.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>A pointer to the <strong>CWindow</strong> class or NULL.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM pWindow AS CWindow PTR = AfxCWindowOwnerPtr(hwnd)</code></pre>
+<hr>
+<h3 id="afxinputbox">AfxInputBox</h3>
+<p>Input box dialog.</p>
+<pre class="code"><code>FUNCTION AfxInputBox (BYVAL hParent AS HWND = NULL, BYVAL x AS LONG = 0, _
+   BYVAL y AS LONG = 0, BYREF dwsCaption AS DWSTRING = "", BYREF dwsPrompt AS DWSTRING = "", _
+   BYREF dwsText AS DWSTRING = "", BYVAL nLen AS LONG = 260, _
+   BYVAL bPassword AS BOOLEAN = FALSE) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hParent</em></td><td>Optional. The handle of the parent main window.</td></tr><tr><td><em>x, y</em></td><td>Optional. The location of the dialog. If both are 0, the dialog is centered.</td></tr><tr><td><em>dwsCaption</em></td><td>Optional. The caption of the dialog.</td></tr><tr><td><em>dwsPrompt</em></td><td>Optional. The prompt displayed in the dialog.</td></tr><tr><td><em>dwsText</em></td><td>Optional. The text to edit.</td></tr><tr><td><em>nLen</em></td><td>Optional. Maximum length of the string to edit.<br>The default length is 260 characters.<br>The maximum length is 2048 characters.</td></tr><tr><td><em>bPassword</em></td><td>Optional. TRUE or FALSE. Displays all characters as an asterisk (\*) as they are typed into the edit control.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The edited string.</p>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM dws AS DWSTRING = AfxInputBox(hwnd, 0, 0, "InputBox test", "What's your name?", "My name is José")</code></pre>
+<hr>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

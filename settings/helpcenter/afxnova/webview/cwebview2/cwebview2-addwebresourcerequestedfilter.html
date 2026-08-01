@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CWebView2.AddWebResourceRequestedFilter — Help Center</title>
+<meta name="description" content="This method is deprecated and does not behave as expected for iframes.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/webview/cwebview2/cwebview2-addwebresourcerequestedfilter.html">
+<meta property="og:title" content="CWebView2.AddWebResourceRequestedFilter">
+<meta property="og:description" content="This method is deprecated and does not behave as expected for iframes.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/webview/cwebview2/cwebview2-addwebresourcerequestedfilter.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/webview/cwebview2/cwebview2-addwebresourcerequestedfilter.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cwebview2-class.html">CWebView2 Class</a></div>
+<h1>CWebView2.AddWebResourceRequestedFilter<span class="h1kind">method</span></h1>
+<p class="lede">This method is deprecated and does not behave as expected for iframes.</p>
+<div class="badges"><a class="badge" href="../index.html">WebView</a><span class="badge">method</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION AddWebResourceRequestedFilter (BYVAL uri AS LPCWSTR, BYVAL ResourceContext AS COREWEBVIEW2_WEB_RESOURCE_CONTEXT) AS HRESULT</code></pre>
+<div class="note">Also documented as <code>RemoveWebResourceRequestedFilter</code> — one description covers them all.</div>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>uri</code></td><td></td><td>The URI to add.</td></tr><tr><td><code>ResourceContext</code></td><td></td><td>The resource context filter.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p><strong>Warning</strong>: This method is deprecated and does not behave as expected for iframes.</p>
+<p>It will cause the <strong>WebResourceRequested</strong> event to fire only for the main frame and its same-origin iframes. Please use <strong>AddWebResourceRequestedFilterWithRequestSourceKinds</strong> instead, which will let the event to fire for all iframes on the document.</p>
+<p>Adds a URI and resource context filter for the <strong>WebResourceRequested</strong> event. A web resource request with a resource context that matches this filter's resource context and a URI that matches this filter's URI wildcard string will be raised via the <strong>WebResourceRequested</strong> event.</p>
+<h2>Remarks</h2>
+<p>The uri parameter value is a wildcard string matched against the URI of the web resource request. This is a glob style wildcard string in which a * matches zero or more characters and a ? matches exactly one character. These wildcard characters can be escaped using a backslash just before the wildcard character in order to represent the literal * or ?.</p>
+<p>The matching occurs over the URI as a whole string and not limiting wildcard matches to particular parts of the URI. The wildcard filter is compared to the URI after the URI has been normalized, any URI fragment has been removed, and non-ASCII hostnames have been converted to punycode.</p>
+<p>Specifying a NULL for the uri is equivalent to an empty string which matches no URIs.</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/CWebView2.inc:1615</span></li><li>Documented in <span class="srcref">WebView/CWebWiew2 Class.md</span></li><li>Topic: <a href="../cwebview2-class.html">CWebView2 Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

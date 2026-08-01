@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Object — Help Center</title>
+<meta name="description" content="Built-in type providing run-time type information">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/standard-data-types/procedures/object.html">
+<meta property="og:title" content="Object">
+<meta property="og:description" content="Built-in type providing run-time type information">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/standard-data-types/procedures/object.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/standard-data-types/procedures/object.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>Object<span class="h1kind">type</span></h1>
+<p class="lede">Built-in type providing run-time type information</p>
+<div class="badges"><a class="badge" href="../index.html">Standard Data Types</a><span class="badge">type</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>Type Object</code></pre>
+<pre class="code sig"><code>As fb_BaseVT Ptr vtable_ptr</code></pre>
+<pre class="code sig"><code>Declare Constructor()</code></pre>
+<pre class="code sig"><code>End Type</code></pre>
+<h2>Description</h2>
+<br>
+<b>Object</b> is a built-in type which provides Run-Time Type Information (RTTI) for all types derived from it using <code><a href="../../user-defined-types/procedures/extends.html">Extends</a></code>, allowing them to be used with <code><a href="../../operators/type-or-class-operators/procedures/operator-is-run-time-type-information.html">Operator Is</a></code>, and to support <code><a href="../../user-defined-types/procedures/virtual.html">Virtual</a></code> and <code><a href="../../user-defined-types/procedures/abstract.html">Abstract</a></code> methods.<br>
+<br>
+Extending the built-in <b>Object</b> type allows to add an extra hidden vtable pointer field at the top of the <code><a href="../../operators/operators/procedures/type-udt.html">Type</a></code>. The vtable is used to dispatch <code><a href="../../user-defined-types/procedures/virtual.html">Virtual</a></code>  and <code><a href="../../user-defined-types/procedures/abstract.html">Abstract</a></code> methods and to access information for run-time type identification used by <code><a href="../../operators/type-or-class-operators/procedures/operator-is-run-time-type-information.html">Operator Is</a></code>.<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Usage</h3><code><br>
+<a href="../../operators/operators/procedures/type-udt.html">Type</a> <i>typename</i> <a href="../../user-defined-types/procedures/extends.html">Extends</a> <b>Object</b><br>
+<a href="../../miscellaneous-keywords/procedures/end-statement.html">End</a> <a href="../../operators/operators/procedures/type-udt.html">Type</a><br>
+<br>
+<a href="../../variable-declarations/procedures/dim.html">Dim</a> <i>variable</i> <a href="../../miscellaneous-keywords/procedures/as.html">As</a> <b>Object</b><br>
+</code><br>
+
+<h3>Dialect Differences</h3><br>
+<ul><li> Not available in the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang qb</a></i> dialect unless referenced with the alias <code><b>__Object</b></code>.<br>
+<br>
+</li></ul>
+<h3>Differences from QB</h3><br>
+<ul><li> New to FreeBASIC<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="../../user-defined-types/procedures/extends.html">Extends</a></code><br>
+<li> <code><a href="../../user-defined-types/procedures/extends-zstring.html">Extends Zstring</a></code><br>
+<li> <code><a href="../../user-defined-types/procedures/extends-wstring.html">Extends Wstring</a></code><br>
+<li> <code><a href="../../operators/type-or-class-operators/procedures/operator-is-run-time-type-information.html">Operator Is</a></code><br>
+<li> <code><a href="../../user-defined-types/procedures/virtual.html">Virtual</a></code><br>
+<li> <code><a href="../../user-defined-types/procedures/abstract.html">Abstract</a></code><br>
+<br>
+</li></li></li></li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+See the <code><a href="../../operators/type-or-class-operators/procedures/operator-is-run-time-type-information.html">Operator Is</a></code> page, the <code><a href="../../user-defined-types/procedures/virtual.html">Virtual</a></code> and <code><a href="../../user-defined-types/procedures/abstract.html">Abstract</a></code> pages.<br>
+<br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgObject.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alias (Name) — Help Center</title>
+<meta name="description" content="Clause of the Sub and Function statements that provides an alternate internal name.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/procedures/procedures/alias-name.html">
+<meta property="og:title" content="Alias (Name)">
+<meta property="og:description" content="Clause of the Sub and Function statements that provides an alternate internal name.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/procedures/procedures/alias-name.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/procedures/procedures/alias-name.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>Alias (Name)<span class="h1kind">keyword</span></h1>
+<p class="lede">Clause of the Sub and Function statements that provides an alternate internal name.</p>
+<div class="badges"><a class="badge" href="../index.html">Procedures</a><span class="badge">keyword</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>[Declare] { Sub | Function } usablename Alias &quot;alternatename&quot; (...)</code></pre>
+<h2>Description</h2>
+<br>
+<code>Alias</code> gives an alternate name to a procedure.  This alternate name cannot be used within the program to call the procedure, but it is visible (if the function is not private) to the linker when linking with code written in other languages.<br>
+<br>
+<code>Alias</code> is commonly used for procedures in libraries written in other languages when such procedure names are valid in the other language but invalid in BASIC.  When using <code>Alias</code> with <code><a href="declare.html">Declare</a></code>, only the alternate name is used by the linker.<br>
+<br>
+Differently from normal procedure names, <code>Alias</code> does not change the case of the alternate name, so it is useful when external code requires an exported function with a particular name or with a particular case.<br>
+<br>
+<code>Alias</code> can be used to specify an alternate name for <code><a href="../../operators/operators/procedures/type-udt.html">Type</a></code> definitions.<br>
+<br>
+<code>Alias</code> can be used as a modifier that specifies an alternate name mangling for procedure parameters.  See <code><a href="../../standard-data-types/procedures/alias-modifier.html">Alias (Modifier)</a></code><br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Usage</h3><code><br>
+declare sub <i>usablename</i> Alias "<i>alternatename</i>" ( ... )<br>
+<div class="indent"></div></code><i>or</i><code><br>
+declare function <i>usablename</i> Alias "<i>alternatename</i>" ( ... )<br>
+<div class="indent"></div></code><i>or</i><code><br>
+sub <i>usablename</i> Alias "<i>alternatename</i>" ( ... )<br>
+<div class="indent">...<br>
+</div>end sub<br>
+<div class="indent"></div></code><i>or</i><code><br>
+function <i>usablename</i> Alias "<i>alternatename</i>" ( ... )<br>
+<div class="indent">...<br>
+</div>end function<br>
+<div class="indent"></div></code><i>or</i><code><br>
+type <i>typename</i> Alias "<i>alternatename</i>" ( ... )<br>
+<div class="indent">...<br>
+</div>end type<br>
+</code><br>
+
+<h3>Differences from QB</h3><br>
+<ul><li> In QB, <code>Alias</code> only worked with <code><a href="declare.html">Declare</a></code>.<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="declare.html">Declare</a></code><br>
+<li> <code><a href="../../modularizing/procedures/export.html">Export</a></code><br>
+<li> <code><a href="../../user-defined-types/procedures/type-alias.html">Type (Alias)</a></code><br>
+<li> <code><a href="../../standard-data-types/procedures/alias-modifier.html">Alias (Modifier)</a></code><br>
+<br>
+</li></li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<br>
+If there is a sub (without parameter) called <code>xClearScreen</code> in an external library and you want to reference it with the name <code>ClearVideoScreen</code>, here is sample code to do so:<br>
+<code><pre class="code"><span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>ClearVideoScreen</span> <span class="tok-kw">Alias</span> <span>&quot;xClearScreen&quot;</span> <span>()</span></pre></code><br>
+<br>
+If there is a function (with parameters and return value) called <code>MyFunctioninLib</code> in an external library and you want to reference it with the name <code>myfunction</code>, here is sample code to do so:<br>
+<code><pre class="code"><span class="tok-kw">Declare</span> <span class="tok-kw">Function</span> <span>myfunction</span> <span class="tok-kw">Alias</span> <span>&quot;MyFunctioninLib&quot;</span> <span>(</span><span class="tok-kw">ByVal</span> <span class="tok-kw">As</span> <span class="tok-kw">Long</span><span>,</span> <span class="tok-kw">ByVal</span> <span class="tok-kw">As</span> <span class="tok-kw">Long</span><span>,</span> <span class="tok-kw">ByVal</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span class="tok-kw">Ptr</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span></pre></code><br>
+<br>
+A procedure meant to be used by external C code, exported as <code>MyExportedProc</code>:<br>
+<code><pre class="code"><span class="tok-kw">Function</span> <span>MultiplyByFive</span> <span class="tok-kw">cdecl</span> <span class="tok-kw">Alias</span> <span>&quot;MyExportedProc&quot;</span> <span>(</span><span class="tok-kw">ByVal</span> <span>Parameter</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span class="tok-kw">Export</span>
+
+  <span class="tok-kw">Return</span> <span>Parameter</span> <span>*</span> <span class="tok-nu">5</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span></pre></code><br>
+<br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgAlias.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

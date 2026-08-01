@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Return (From Gosub) — Help Center</title>
+<meta name="description" content="Control flow statement to return from a procedure or GoSub.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/control-flow-statements/procedures/return-from-gosub.html">
+<meta property="og:title" content="Return (From Gosub)">
+<meta property="og:description" content="Control flow statement to return from a procedure or GoSub.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/control-flow-statements/procedures/return-from-gosub.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/control-flow-statements/procedures/return-from-gosub.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>Return (From Gosub)<span class="h1kind">keyword</span></h1>
+<p class="lede">Control flow statement to return from a procedure or GoSub.</p>
+<div class="badges"><a class="badge" href="../index.html">Control Flow Statements</a><span class="badge">keyword</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>Return [ label ]</code></pre>
+<h2>Description</h2>
+<br>
+<code><b>Return</b></code> is used to return from a gosub <code><a href="gosub.html">GoSub</a></code>.<br>
+<br>
+Because <code>Return</code> could mean return-from-gosub or return-from-procedure, <code><a href="../../compiler-switches/procedures/option-gosub.html">Option Gosub</a></code> and <code><a href="../../compiler-switches/procedures/option-nogosub.html">Option Nogosub</a></code> can be used to enable and disable <code><a href="gosub.html">GoSub</a></code> support.  When <code><a href="gosub.html">GoSub</a></code> support is disabled, <code><a href="return-from-procedure.html">Return</a></code> is then recognized as return-from-procedure.  When <code><a href="gosub.html">GoSub</a></code> support is enabled, <code><a href="return-from-gosub.html">Return</a></code> is then recognized as return-from-gosub.<br>
+<br>
+<code><b>Return</b></code> (from gosub) is used to return control back to the statement immediately following a previous <code><a href="gosub.html">GoSub</a></code> call. When used in combination with <code><a href="gosub.html">GoSub</a></code>, no return value can be specified.  If the optional <code><i>label</i></code> is specified, execution continues at the specified label.  If no <code><a href="gosub.html">GoSub</a></code> was made, a runtime error is generated, and execution continues immediately after <code><b>Return</b></code>.<br>
+<br>
+A <code><a href="gosub.html">GoSub</a></code> should always have a matching <code><b>Return</b></code> statement.  However, if <code><b>Return</b></code> (from gosub) is used where no <code><a href="gosub.html">GoSub</a></code> was made, a run-time error is generated.<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Dialect Differences</h3><br>
+<ul><li> In the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang fb</a></i> dialect <code><b>Return</b></code> always means return-from-procedure.<br>
+<li> In the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang qb</a></i> dialect, <code><b>Return</b></code> means return-from-gosub by default unless changed with <code><a href="../../compiler-switches/procedures/option-nogosub.html">Option Nogosub</a></code>, in which case the compiler will recognize <code><b>Return</b></code> as return-from-procedure.<br>
+<li> In the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang fblite</a></i> dialect, <code><b>Return</b></code> means return-from-procedure by default unless changed with <code><a href="../../compiler-switches/procedures/option-gosub.html">Option Gosub</a></code>, in which case the compiler will recognize <code><b>Return</b></code> as return-from-gosub.<br>
+<br>
+</li></li></li></ul>
+<h3>Differences from QB</h3><br>
+<ul><li> None when using the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang qb</a></i> dialect.<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="../../procedures/procedures/sub.html">Sub</a></code><br>
+<li> <code><a href="../../procedures/procedures/function.html">Function</a></code><br>
+<li> <code><a href="gosub.html">GoSub</a></code><br>
+<li> <code><a href="../../compiler-switches/procedures/option-gosub.html">Option Gosub</a></code><br>
+<li> <code><a href="../../compiler-switches/procedures/option-nogosub.html">Option Nogosub</a></code><br>
+<li> <code><a href="../../tutorials/programmer-s-guide/labels.html">Labels</a></code><br>
+<li> <code><a href="return-from-procedure.html">Return (From Procedure)</a></code><br>
+<br>
+</li></li></li></li></li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-cm">'' GOSUB &amp; RETURN example, compile with &quot;-lang qb&quot; or use &quot;$lang&quot; as below</span>
+
+
+
+<span class="tok-cm">'$lang: &quot;qb&quot;</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;Let's Gosub!&quot;</span>
+
+<span class="tok-kw">GoSub</span> <span>MyGosub</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Back from Gosub!&quot;</span>
+
+<span class="tok-kw">Sleep</span>
+
+<span class="tok-kw">End</span>
+
+
+
+<span>MyGosub</span><span>:</span>
+
+<span class="tok-kw">Print</span> <span>&quot;In Gosub!&quot;</span>
+
+<span class="tok-kw">Return</span></pre></code><br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgReturnGosub.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

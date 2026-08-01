@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CADORecordset.Clone — Help Center</title>
+<meta name="description" content="Creates a duplicate `Recordset` object from an existing `Recordset` object. Optionally, specifies that the clone be read-only.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadorecordset/cadorecordset-clone.html">
+<meta property="og:title" content="CADORecordset.Clone">
+<meta property="og:description" content="Creates a duplicate `Recordset` object from an existing `Recordset` object. Optionally, specifies that the clone be read-only.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadorecordset/cadorecordset-clone.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/databases/ado-classes/cadorecordset/cadorecordset-clone.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cadorecordset-class.html">CADORecordset Class</a></div>
+<h1>CADORecordset.Clone<span class="h1kind">method</span></h1>
+<p class="lede">Creates a duplicate `Recordset` object from an existing `Recordset` object. Optionally, specifies that the clone be read-only.</p>
+<div class="badges"><a class="badge" href="../../index.html">Databases</a><span class="badge">method</span><span class="badge">CADORecordset.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION Clone (BYVAL nLockType AS LockTypeEnum = adLockUnspecified) AS Afx_AdoRecordset PTR</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>nLockType</code></td><td></td><td>Optional. A <strong>LockTypeEnum</strong> value that specifies either the lock type of the original <code>Recordset</code>, or a read-only Recordset. Valid values are <strong>adLockUnspecified</strong> or <strong>adLockReadOnly</strong>.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>An <strong>Afx_ADORecordset</strong> object reference.</p>
+<h2>Description</h2>
+<p>Creates a duplicate <code>Recordset</code> object from an existing <strong>Recordset object</strong>. Optionally, specifies that the clone be read-only.</p>
+<h2>Remarks</h2>
+<p>Use the <strong>Clone</strong> method to create multiple, duplicate <code>Recordset</code> objects, particularly if you want to maintain more than one current record in a given set of records. Using the <strong>Clone</strong> method is more efficient than creating and opening a new <code>Recordset</code> object with the same definition as the original.</p>
+<p>The <strong>Filter</strong> property of the original <code>Recordset</code>, if any, will not be applied to the clone. Set the <strong>Filter</strong> property of the new <code>Recordset</code> in order to filter the results. The simplest way to copy any existing <strong>Filter</strong> value is to assign it directly, like this:</p>
+<p>The current record of a newly created clone is set to the first record.</p>
+<p>Changes you make to one <code>Recordset</code> object are visible in all of its clones regardless of cursor type. However, after you execute <strong>Requery</strong> on the original <code>Recordset</code>, the clones will no longer be synchronized to the original.</p>
+<p>Closing the original <code>Recordset</code> does not close its copies, nor does closing a copy close the original or any of the other copies.</p>
+<p>You can only clone a <code>Recordset</code> object that supports bookmarks. Bookmark values are interchangeable; that is, a bookmark reference from one <code>Recordset</code> object refers to the same record in any of its clones.</p>
+<p>Some <code>Recordset</code> events that are triggered will also fire in all <code>Recordset</code> clones. However, because the current record can differ between cloned <strong>Recordsets</strong>, the events may not be valid for the clone. For example, if you change a value of a field, a <strong>WillChangeField</strong> event will occur in the changed <code>Recordset</code> and in all clones. The <code>Fields</code> parameter of the <strong>WillChangeField</strong> event of a cloned <code>Recordset</code> (where the change was not made) will simply refer to the fields of the current record of the clone, which may be a different record than the current record of the original <code>Recordset</code> where the change occurred.</p>
+<p>The following table provided a full listing of all <code>Recordset</code> events and indicates whether they are valid and triggered for any recordset clones generated using the <strong>Clone</strong> method.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CADORecordset.inc</code></li><li>Defined in <span class="srcref">AfxNova/CAdoRecordset.inc:962</span></li><li>Documented in <span class="srcref">Databases/ADO Classes/CAdoRecordset Class.md</span></li><li>Topic: <a href="../cadorecordset-class.html">CADORecordset Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

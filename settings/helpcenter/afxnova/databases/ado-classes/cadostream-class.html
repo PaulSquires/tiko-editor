@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CAdoStream Class — Help Center</title>
+<meta name="description" content="CAdoStream Class — 22 documented members. Databases reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadostream-class.html">
+<meta property="og:title" content="CAdoStream Class">
+<meta property="og:description" content="CAdoStream Class — 22 documented members. Databases reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadostream-class.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/databases/ado-classes/cadostream-class.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span>Databases</div>
+<h1>CAdoStream Class</h1>
+<h2>Members (22)</h2>
+<div class="memberlist"><a href="cadostream/cadostream-attach.html"><span class="m-n">Attach</span><span class="m-d">Attaches an ADO `Stream` to the class.</span></a><a href="cadostream/cadostream-cancel.html"><span class="m-n">Cancel</span><span class="m-d">Cancels execution of a pending, asynchronous method call.</span></a><a href="cadostream/cadostream-charset.html"><span class="m-n">Charset</span><span class="m-d">Indicates the character set into which the contents of a text `Stream` should be translated for storage in the `Stream` object&#x27;s internal buffer.</span></a><a href="cadostream/cadostream-close.html"><span class="m-n">Close</span><span class="m-d">Closes a `Stream` object and any dependent objects.</span></a><a href="cadostream/cadostream-copyto.html"><span class="m-n">CopyTo</span><span class="m-d">Copies the specified number of characters or bytes (depending on **Type_**) in the `Stream` to another `Stream` object.</span></a><a href="cadostream/cadostream-eos.html"><span class="m-n">EOS</span><span class="m-d">Indicates whether the current position is at the end of the stream.</span></a><a href="cadostream/cadostream-flush.html"><span class="m-n">Flush</span><span class="m-d">Forces the contents of the `Stream` remaining in the ADO buffer to the underlying object with which the `Stream` is associated.</span></a><a href="cadostream/cadostream-lineseparator.html"><span class="m-n">LineSeparator</span><span class="m-d">Indicates the binary character to be used as the line separator in text `Stream` objects.</span></a><a href="cadostream/cadostream-loadfromfile.html"><span class="m-n">LoadFromFile</span><span class="m-d">Loads the contents of an existing file into a `Stream`.</span></a><a href="cadostream/cadostream-mode.html"><span class="m-n">Mode</span><span class="m-d">Indicates the available permissions for modifying data in a `Stream` object.</span></a><a href="cadostream/cadostream-open.html"><span class="m-n">Open</span><span class="m-d">Opens a connection to a data source.</span></a><a href="cadostream/cadostream-position.html"><span class="m-n">Position</span><span class="m-d">Indicates the current position within a `Stream` object.</span></a><a href="cadostream/cadostream-read.html"><span class="m-n">Read</span><span class="m-d">Reads a specified number of bytes from a binary Stream object.</span></a><a href="cadostream/cadostream-readtext.html"><span class="m-n">ReadText</span><span class="m-d">Reads a specified number of characters, an entire line, or the entire stream from a `Stream` object and returns the resulting string.</span></a><a href="cadostream/cadostream-savetofile.html"><span class="m-n">SaveToFile</span><span class="m-d">Saves the binary contents of a `Stream` to a file.</span></a><a href="cadostream/cadostream-seteos.html"><span class="m-n">SetEOS</span><span class="m-d">Sets the position that is the end of the stream.</span></a><a href="cadostream/cadostream-size.html"><span class="m-n">Size</span><span class="m-d">Indicates the size of the stream in number of bytes.</span></a><a href="cadostream/cadostream-skipline.html"><span class="m-n">SkipLine</span><span class="m-d">Skips one entire line when reading a text stream.</span></a><a href="cadostream/cadostream-state.html"><span class="m-n">State</span><span class="m-d">Indicates for whether the state of the `Stream` object is open or closed.</span></a><a href="cadostream/cadostream-type.html"><span class="m-n">Type_</span><span class="m-d">Indicates the type of data contained in the `Stream` (binary or text).</span></a><a href="cadostream/cadostream-write.html"><span class="m-n">Write</span><span class="m-d">Writes binary data to a `Stream` object.</span></a><a href="cadostream/cadostream-writetext.html"><span class="m-n">WriteText</span><span class="m-d">Writes a string to a `Stream` object.</span></a></div>
+<h2>Documentation</h2>
+<h2 id="cadostream-class">CAdoStream Class</h2>
+<p>Represents a stream of binary data or text.</p>
+<p><strong>Include file</strong>: CAdoStream.inc (include CADODB.inc)</p>
+<h5 id="remarks">Remarks</h5>
+<p>In tree-structured hierarchies such as a file system or an e-mail system, a <code>Record</code> may have a default binary stream of bits associated with it that contains the contents of the file or the e-mail. A <code>Stream</code> object can be used to manipulate fields or records containing these streams of data. A <code>Stream</code> object can be obtained in these ways:</p>
+<p>From a URL pointing to an object (typically a file) containing binary or text data. This object can be a simple document, a <code>Record</code> object representing a structured document, or a folder. By opening the default <code>Stream</code> object associated with a <code>Record</code> object. You can obtain the default stream associated with a <code>Record</code> object when the <code>Record</code> is opened, to eliminate a round-trip just to open the stream. By instantiating a <code>Stream</code> object. These <code>Stream</code> objects can be used to store data for the purposes of your application. Unlike a <code>Stream</code> associated with a URL, or the default <code>Stream</code> of a <code>Record</code>, an instantiated <code>Stream</code> has no association with an underlying source by default.</p>
+<p>With the methods and properties of a <code>Stream</code> object, you can do the following:</p>
+<ul><li>Open a <code>Stream</code> object from a <code>Record</code> or URL with the <strong>Open</strong> method.</li><li>Close a <code>Stream</code> with the <strong>Close</strong> method.</li><li>Input bytes or text to a <code>Stream</code> with the <strong>Write</strong> and <strong>WriteText</strong> methods.</li><li>Read bytes from the <code>Stream</code> with the <strong>Read</strong> and <strong>ReadText</strong> methods.</li><li>Write any <code>Stream</code> data still in the ADO buffer to the underlying object with the <strong>Flush</strong> method.</li><li>Copy the contents of a <code>Stream</code> to another <code>Stream</code> with the <strong>CopyTo</strong> method.</li><li>Control how lines are read from the source file with the <strong>SkipLine</strong> method and the <strong>LineSeparator</strong> property.</li><li>Determine the end of stream position with the <strong>EOS</strong> property and <strong>SetEOS</strong> method.</li><li>Save and restore data in files with the <strong>SaveToFile</strong> and <strong>LoadFromFile</strong> methods.</li><li>Specify the character set used for storing the <code>Stream</code> with the <strong>Charset</strong> property.</li><li>Halt an asynchronous <code>Stream</code> operation with the <strong>Cancel</strong> method.</li><li>Determine the number of bytes in a <code>Stream</code> with the <strong>Size</strong> property.</li><li>Control the current position within a <code>Stream</code> with the <strong>Position</strong> property.</li><li>Determine the type of data in a <code>Stream</code> with the <strong>Type_</strong> property.</li><li>Determine the current state of the <code>Stream</code> (closed, open, or executing) with the <strong>State</strong> property.</li><li>Specify the access mode for the <code>Stream</code> with the <strong>Mode</strong> property.</li></ul>
+<p><strong>Note</strong>: URLs using the http scheme will automatically invoke the Microsoft OLE DB Provider for Internet Publishing. For more information, see <a href="https://msdn.microsoft.com/en-us/library/office/jj249501.aspx" target="_blank" rel="noopener">Absolute and Relative URLs</a>.</p>
+<hr>
+<h2 id="constructors">Constructors</h2>
+<p>Creates an instance of the ADO <code>Stream</code> interface.</p>
+<pre class="code"><code>CONSTRUCTOR CAdoStream</code></pre>
+<p>Attaches an existing instance of the ADO <code>Stream</code> interface to the class.</p>
+<pre class="code"><code>CONSTRUCTOR CAdoStream (BYVAL pStream AS Afx_ADOStream PTR, BYVAL fAddRef AS BOOLEAN = FALSE)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pStream</em></td><td>A pointer to an ADO <code>Stream</code> interface.</td></tr><tr><td><em>fAddRef</em></td><td>TRUE = increase the reference count; FALSE = don't increase the reference count.</td></tr></tbody></table></div>
+<hr>
+<h5 id="methods-and-properties">Methods and Properties</h5>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="cadostream/cadostream-attach.html">Attach</a></td><td>Attaches an ADO <code>Stream</code> to the class.</td></tr><tr><td><a href="cadostream/cadostream-cancel.html">Cancel</a></td><td>Cancels execution of a pending, asynchronous method call.</td></tr><tr><td><a href="cadostream/cadostream-charset.html">Charset</a></td><td>Indicates the character set into which the contents of a text <code>Stream</code> should be translated for storage in the <code>Stream</code> object's internal buffer.</td></tr><tr><td><a href="cadostream/cadostream-close.html">Close</a></td><td>Closes a <code>Stream</code> object and any dependent objects.</td></tr><tr><td><a href="cadostream/cadostream-copyto.html">CopyTo</a></td><td>Copies the specified number of characters or bytes (depending on <strong>Type_</strong>) in the <code>Stream</code> to another <code>Stream</code> object.</td></tr><tr><td><a href="cadostream/cadostream-eos.html">EOS</a></td><td>Indicates whether the current position is at the end of the stream.</td></tr><tr><td><a href="cadostream/cadostream-flush.html">Flush</a></td><td>Forces the contents of the <code>Stream</code> remaining in the ADO buffer to the underlying object with which the <code>Stream</code> is associated.</td></tr><tr><td><a href="cadostream/cadostream-lineseparator.html">LineSeparator</a></td><td>Indicates the binary character to be used as the line separator in text <code>Stream</code> objects.</td></tr><tr><td><a href="cadostream/cadostream-loadfromfile.html">LoadFromFile</a></td><td>Loads the contents of an existing file into a <code>Stream</code>.</td></tr><tr><td><a href="cadostream/cadostream-mode.html">Mode</a></td><td>Indicates the available permissions for modifying data in a <code>Stream</code> object.</td></tr><tr><td><a href="cadostream/cadostream-open.html">Open</a></td><td>Opens a connection to a data source.</td></tr><tr><td><a href="cadostream/cadostream-position.html">Position</a></td><td>Indicates the current position within a <code>Stream</code> object.</td></tr><tr><td><a href="cadostream/cadostream-read.html">Read</a></td><td>Reads a specified number of bytes from a binary Stream object.</td></tr><tr><td><a href="cadostream/cadostream-readtext.html">ReadText</a></td><td>Reads a specified number of characters, an entire line, or the entire stream from a <code>Stream</code> object and returns the resulting string.</td></tr><tr><td><a href="cadostream/cadostream-savetofile.html">SaveToFile</a></td><td>Saves the binary contents of a <code>Stream</code> to a file.</td></tr><tr><td><a href="cadostream/cadostream-seteos.html">SetEOS</a></td><td>Sets the position that is the end of the stream.</td></tr><tr><td><a href="cadostream/cadostream-size.html">Size</a></td><td>Indicates the size of the stream in number of bytes.</td></tr><tr><td><a href="cadostream/cadostream-skipline.html">SkipLine</a></td><td>Skips one entire line when reading a text stream.</td></tr><tr><td><a href="cadostream/cadostream-state.html">State</a></td><td>Indicates for whether the state of the <code>Stream</code> object is open or closed.</td></tr><tr><td><a href="cadostream/cadostream-type.html">Type_</a></td><td>Indicates the type of data contained in the <code>Stream</code> (binary or text).</td></tr><tr><td><a href="cadostream/cadostream-write.html">Write</a></td><td>Writes binary data to a <code>Stream</code> object.</td></tr><tr><td><a href="cadostream/cadostream-writetext.html">WriteText</a></td><td>Writes a string to a <code>Stream</code> object.</td></tr></tbody></table></div>
+<hr>
+<h4 id="attach">Attach</h4>
+<p>Attaches a reference to an ADO <code>Stream</code> object to the class, allowing to call the methods and properties of its interface.</p>
+<pre class="code"><code>SUB Attach (BYVAL pStream AS Afx_ADOStream PTR, BYVAL fAddRef AS BOOLEAN = FALSE)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pStream</em></td><td>A pointer to an ADO <code>Stream</code> interface.</td></tr><tr><td><em>fAddRef</em></td><td>TRUE = increase the reference count; FALSE = don't increase the reference count.</td></tr></tbody></table></div>
+<hr>
+<h4 id="cancel">Cancel</h4>
+<p>Cancels execution of a pending, asynchronous method call.</p>
+<pre class="code"><code>FUNCTION Cancel () AS HRESULT</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>S_OK (0) or an HRESULT code.</p>
+<h5 id="remarks">Remarks</h5>
+<p>Use the <strong>Cancel</strong> method to terminate execution of an asynchronous method call (that is, a method invoked with the <strong>adAsyncConnect</strong>, <strong>adAsyncExecute</strong>, or <strong>adAsyncFetch</strong> option).</p>
+<p>For a <code>Stream</code> object, the last asynchronous call to the <strong>Open</strong> method is terminated.</p>
+<hr>
+<h4 id="charset">Charset</h4>
+<p>Indicates the character set into which the contents of a text <code>Stream</code> should be translated for storage in the <code>Stream</code> object's internal buffer.</p>
+<pre class="code"><code>PROPERTY Charset () AS DWSTRING
+PROPERTY Charset (BYREF wszCharset AS WSTRING)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszcharset</em></td><td>A value that specifies the character set into which the contents of the <code>Stream</code> will be translated. The default value is "Unicode". Allowed values are typical strings passed over the interface as Internet character set strings (for example, "iso-8859-1", "Windows-1252", etc.). For a list of the character set strings that is known by a system, see the subkeys of HKEY_CLASSES_ROOT\MIME\Database\Charset in the Windows Registry.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>DWSTRING. The character set.</p>
+<h5 id="remarks">Remarks</h5>
+<p>In a text <code>Stream</code> object, text data is stored in the character set specified by the <strong>Charset</strong> property. The default is Unicode. The <strong>Charset</strong> property is used for converting data going into the <code>Stream</code> or coming out of the <code>Stream</code>. For example, if the <code>Stream</code> contains ISO-8859-1 data and that data is copied to a <strong>BSTR</strong>, the <code>Stream</code> object will convert the data to Unicode. The reverse is also true.</p>
+<p>For an open <code>Stream</code>, the current <strong>Position</strong> must be at the beginning of the <code>Stream</code> (0) to be able to set <strong>Charset</strong>.</p>
+<p><strong>Charset</strong> is used only with text <code>Stream</code> objects (<strong>Type_</strong> is <strong>adTypeText</strong>). This property is ignored if <strong>Type_</strong> is <strong>adTypeBinary</strong>.</p>
+<hr>
+<h4 id="close">Close</h4>
+<p>Closes a <code>Stream</code> object and any dependent objects.</p>
+<pre class="code"><code>FUNCTION Close () AS HRESULT</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>S_OK (0) or an HRESULT code.</p>
+<hr>
+<h4 id="copyto">CopyTo</h4>
+<p>Copies the specified number of characters or bytes (depending on <strong>Type_</strong>) in the <code>Stream</code> to another <code>Stream</code> object.</p>
+<pre class="code"><code>FUNCTION CopyTo (BYVAL pDestStream AS ADOStream PTR, BYVAL CharNumber AS LONG = adReadAll) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pDestStream</em></td><td>An object variable value that contains a reference to an open <code>Stream</code> object. The current <code>Stream</code> is copied to the destination <code>Stream</code> specified by <em>pDestStream</em>. The destination Stream must already be open. If not, a run-time error occurs. <strong>Note</strong>: The <em>pDestStream</em> parameter may not be a proxy of <code>Stream</code> object because this requires access to a private interface on the <code>Stream</code> object that cannot be remoted to the client.</td></tr><tr><td><em>CharNumber</em></td><td>Optional. An integer value that specifies the number of bytes or characters to be copied from the current position in the source <code>Stream</code> to the destination <code>Stream</code>. The default value is <em>adReadAll</em> (-1), which specifies that all characters or bytes are copied from the current position to <strong>EOS</strong>.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>This method copies the specified number of characters or bytes, starting from the current position specified by the <strong>Position</strong> property. If the specified number is more than the available number of bytes until <strong>EOS</strong>, then only characters or bytes from the current position to <strong>EOS</strong> are copied. If the value of <em>NumChars</em> is –1, or omitted, all characters or bytes starting from the current position are copied.</p>
+<p>If there are existing characters or bytes in the destination stream, all contents beyond the point where the copy ends remain, and are not truncated. Position becomes the byte immediately following the last byte copied. If you want to truncate these bytes, call <strong>SetEOS</strong>.</p>
+<p><strong>CopyTo</strong> should be used to copy data to a destination <code>Stream</code> of the same type as the source <code>Stream</code> (their <strong>Type_</strong> property settings are both <strong>adTypeText</strong> or both <strong>adTypeBinary</strong>). For text <code>Stream</code> objects, you can change the <strong>Charset</strong> property setting of the destination <code>Stream</code> to translate from one character set to another. Also, text <code>Stream</code> objects can be successfully copied into binary <strong>Stream objects</strong>, but binary <code>Stream</code> objects cannot be copied into text <code>Stream</code> objects.</p>
+<hr>
+<h4 id="eos">EOS</h4>
+<p>Indicates whether the current position is at the end of the stream.</p>
+<pre class="code"><code>FUNCTION EOS () AS BOOLEAN</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>A Boolean value that indicates whether the current position is at the end of the stream. <strong>EOS</strong> returns True if there are no more bytes in the stream; it returns False if there are more bytes following the current position.</p>
+<p>To set the end of stream position, use the <strong>SetEOS</strong> method. To determine the current position, use the <strong>Position</strong> property.</p>
+<hr>
+<h4 id="flush">Flush</h4>
+<p>Forces the contents of the <code>Stream</code> remaining in the ADO buffer to the underlying object with which the <code>Stream</code> is associated.</p>
+<pre class="code"><code>FUNCTION Flush () AS HRESULT</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>S_OK (0) or an HRESULT code.</p>
+<h5 id="remarks">Remarks</h5>
+<p>This method may be used to send the contents of the stream buffer to the underlying object (for example, the node or file represented by the URL that is the source of the <code>Stream</code> object). This method should be called when you want to ensure that all changes made to the contents of a <code>Stream</code> have been written. However, with ADO it is not usually necessary to call <strong>Flush</strong>, as ADO continuously flushes its buffer as much as possible in the background. Changes to the content of a <code>Stream</code> are made automatically, not cached until <strong>Flush</strong> is called.</p>
+<p>Closing a <code>Stream</code> with the <strong>Close</strong> method flushes the contents of a <code>Stream</code> automatically; there is no need to explicitly call <strong>Flush</strong> immediately before <strong>Close</strong>.</p>
+<hr>
+<h4 id="lineseparator">LineSeparator</h4>
+<p>Indicates the binary character to be used as the line separator in text <code>Stream</code> objects.</p>
+<pre class="code"><code>PROPERTY LineSeparator () AS LineSeparatorEnum
+PROPERTY LineSeparator (BYVAL LS AS LineSeparatorEnum)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>LS</em></td><td>A <strong>LineSeparatorEnum</strong> value that indicates the line separator character used in the <code>Stream</code>. The default value is <em>adCRLF</em>.</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>Constant</th><th>Value</th><th>Description</th></tr></thead><tbody><tr><td><strong>adCR</strong></td><td>13</td><td>Indicates carriage return.</td></tr><tr><td><strong>adCRLF</strong></td><td>-1</td><td>Default. Indicates carriage return line feed.</td></tr><tr><td><strong>adLF</strong></td><td>10</td><td>Indicates line feed.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>LONG. A <strong>LineSeparatorEnum</strong> value.</p>
+<h5 id="remarks">Remarks</h5>
+<p><strong>LineSeparator</strong> is used to interpret lines when reading the content of a text <code>Stream</code>. Lines can be skipped with the <strong>SkipLine</strong> method.</p>
+<p><strong>LineSeparator</strong> is used only with text <code>Stream</code> objects (<strong>Type_</strong> is <strong>adTypeText</strong>). This property is ignored if <strong>Type_</strong> is <strong>adTypeBinary</strong>.</p>
+<hr>
+<h4 id="loadfromfile">LoadFromFile</h4>
+<p>Loads the contents of an existing file into a <code>Stream</code>.</p>
+<pre class="code"><code>FUNCTION LoadFromFile (BYREF wszFileName AS WSTRING) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszFileName</em></td><td>A string value that contains the name of a file to be loaded into the <code>Stream</code>. <em>wszFileName</em> can contain any valid path and name in UNC format. If the specified file does not exist, a run-time error occurs.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>This method may be used to load the contents of a local file into a <code>Stream</code> object. This may be used to upload the contents of a local file to a server.</p>
+<p>The <code>Stream</code> object must be already open before calling LoadFromFile. This method does not change the binding of the <code>Stream</code> object; it will still be bound to the object specified by the URL or <code>Record</code> with which the Stream was originally opened.</p>
+<p><strong>LoadFromFile</strong> overwrites the current contents of the <code>Stream</code> object with data read from the file. Any existing bytes in the <code>Stream</code> are overwritten by the contents of the file. Any previously existing and remaining bytes following the <strong>EOS</strong> created by <strong>LoadFromFile</strong>, are truncated.</p>
+<p>After a call to <strong>LoadFromFile</strong>, the current position is set to the beginning of the <code>Stream</code> (Position is 0).</p>
+<p>Because 2 bytes may be added to the beginning of the stream for encoding, the size of the stream may not exactly match the size of the file from which it was loaded.</p>
+<h5 id="examples">Examples</h5>
+<pre class="code"><code>#include once "AfxNova/CADODB.inc"
+USING AfxNova
+
+' // Open a stream in memory
+DIM pStream AS CAdoStream
+pStream.Charset = "_autodetect"
+pStream.Open
+' // Load a file in the stream
+DIM hr AS HRESULT = pStream.LoadFromFile(ExePath &amp; "\Test1.bas")
+' // Read all the text
+PRINT pStream.ReadText
+' // Close the stream
+pStream.Close</code></pre>
+<pre class="code"><code>#include once "AfxNova/CADODB.inc"
+USING AfxNova
+
+' // Open a stream in memory
+DIM pStream AS CAdoStream
+pStream.Charset = "_autodetect"
+pStream.Open
+' // Load a file in the stream
+DIM hr AS HRESULT = pStream.LoadFromFile(ExePath &amp; "\Test1.bas")
+' // Read the text line by line
+DO WHILE NOT pStream.EOS
+   PRINT pStream.ReadText(adReadLine)
+LOOP
+' // Close the stream
+pStream.Close</code></pre>
+<hr>
+<h4 id="mode">Mode</h4>
+<p>Indicates the available permissions for modifying data in a <code>Stream</code> object.</p>
+<pre class="code"><code>PROPERTY GET Mode () AS ConnectModeEnum
+PROPERTY SET Mode (BYVAL nMode AS ConnectModeEnum)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>nMode</em></td><td>LONG. A <strong>ConnectModeEnum</strong> value. The default value for a <code>Stream</code> associated with an underlying source (opened with a URL as the source, or as the default <code>Stream</code> of a <code>Record</code>) is <strong>adModeRead</strong>. The default value for a <code>Stream</code> not associated with an underlying source (instantiated in memory) is <strong>adModeUnknown</strong>.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>LONG. A <strong>ConnectionModeEnum</strong> value.</p>
+<h5 id="remarks">Remarks</h5>
+<p>Use the <strong>Mode</strong> property to set or return the access permissions in use by the provider on the current connection. You can set the Mode property only when the <strong>Connection</strong> object is closed.</p>
+<p>For a <code>Stream</code> object, if the access mode is not specified, it is inherited from the source used to open the <code>Stream</code> object. For example, if a <code>Stream</code> is opened from a <code>Record</code> object, by default it is opened in the same mode as the <code>Record</code>.</p>
+<p>This property is read/write while the object is closed and read-only while the object is open.</p>
+<h5 id="remote-data-service-usage">Remote Data Service Usage</h5>
+<p>When used on a client-side <strong>Connection</strong> object, the <strong>Mode</strong> property can only be set to <strong>adModeUnknown</strong>.</p>
+<hr>
+<h4 id="open">Open</h4>
+<p>Opens a connection to a data source.</p>
+<pre class="code"><code>FUNCTION Open (BYREF dvSource AS DVARIANT = TYPE&lt;VARIANT&gt;(VT_ERROR,0,0,0,DISP_E_PARAMNOTFOUND), _
+   BYVAL nMode AS ConnectModeEnum = adModeUnknown, _
+   BYVAL Options AS StreamOpenOptionsEnum = adOpenStreamUnspecified, _
+   BYREF wszUserName AS WSTRING = "", BYREF wszPassword AS WSTRING = "") AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>dvSource</em></td><td>Optional. A <strong>Variant</strong> value that specifies the source of data for the <code>Stream</code>. <em>dvSource</em> may contain an absolute URL string that points to an existing node in a well-known tree structure, like an e-mail or file system. A URL should be specified using the URL keyword ("URL=scheme://server/folder"). Alternately, <em>dvSource</em> may contain a reference to an already open <code>Record</code> object, which opens the default stream associated with the <code>Record</code>. If <em>dvSource</em> is not specified, a <code>Stream</code> is instantiated and opened, associated with no underlying source by default.</td></tr><tr><td><em>nMode</em></td><td>Optional. A <strong>ConnectModeEnum</strong> value that specifies the access mode for the resultant <code>Stream</code> (for example, read/write or read-only). Default value is <strong>adModeUnknown</strong>. See the <strong>Mode</strong> property for more information about access modes. If <strong>Mode</strong> is not specified, it is inherited by the source object. For example, if the source <code>Record</code> is opened in read-only mode, the <code>Stream</code> will also be opened in read-only mode by default.</td></tr><tr><td><em>Options</em></td><td>Optional. A <strong>StreamOpenOptionsEnum</strong> value. Default value is <strong>adOpenStreamUnspecified</strong>.</td></tr><tr><td><em>wszUserName</em></td><td>Optional. A string value that contains the user identification that, if needed, accesses the <code>Stream</code> object.</td></tr><tr><td><em>wszPassword</em></td><td>Optional. A sring value that contains the password that, if needed, accesses the <code>Stream</code> object.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>S_OK (0) or an HRESULT code.</p>
+<h5 id="remarks">Remarks</h5>
+<p>When a <code>Record</code> object is passed in as the source parameter, the <em>UserID</em> and <em>Password</em> parameters are not used because access to the <code>Record</code> object is already available. Similarly, the <strong>Mode</strong> of the <code>Record</code> object is transferred to the <code>Stream</code> object. When <strong>dvSource</strong> is not specified, the <code>Stream</code> opened contains no data and has a <strong>Size</strong> of zero (0). To avoid losing any data that is written to this <code>Stream</code> when the <code>Stream</code> is closed, save the <code>Stream</code> with the <strong>CopyTo</strong> or <strong>SaveToFile</strong> methods, or save it to another memory location.</p>
+<p>An <strong>Open</strong> <strong>Options</strong> value of <strong>adOpenStreamFromRecord</strong> identifies the contents of the <strong>Source</strong> parameter to be an already open <code>Record</code> object. The default behavior is to treat <strong>Source</strong> as a URL that points directly to a node in a tree structure, such as a file. The default stream associated with that node is opened.</p>
+<p>While the <code>Stream</code> is not open, it is possible to read all the read-only properties of the <code>Stream</code>. If a <code>Stream</code> is opened asynchronously, all subsequent operations (other than checking the <strong>State</strong> and other read-only properties) are blocked until the <strong>Open</strong> operation is completed.</p>
+<p>In addition to the options discussed above, by not specifying <strong>Source</strong>, you can simply instantiate a <code>Stream</code> object in memory without associating it with an underlying source. You can dynamically add data to the stream simply by writing binary or text data to the <code>Stream</code> with <strong>Write</strong> or <strong>WriteText</strong>, or by loading data from a file with <strong>LoadFromFile</strong>.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>#include once "AfxNova/CADODB.inc"
+USING AfxNova
+
+' // Open a stream in memory
+DIM pStream AS CAdoStream
+pStream.Type_ = adTypeText
+pStream.LineSeparator = adCRLF
+pStream.Open
+
+' // Write some text to it
+pStream.WriteText "This is a test string", adWriteLine
+pStream.WriteText "This is another test string", adWriteLine
+
+' // Set the position at the beginning of the file
+pStream.Position = 0
+' // Read the lines
+DIM dwsText AS DWSTRING = pStream.ReadText(adReadLine)
+print dwsText
+dwsText = pStream.ReadText(adReadLine)
+print dwsText
+
+' // Save the contents to a file
+pStream.SaveToFile "TestStream.txt", adSaveCreateOverWrite
+pStream.Close</code></pre>
+<hr>
+<h4 id="position">Position</h4>
+<p>Indicates the current position within a <code>Stream</code> object.</p>
+<pre class="code"><code>PROPERTY Position () AS LONG
+PROPERTY Position (BYVAL nPos AS LONG)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>nPos</em></td><td>LONG. A value that specifies the offset, in number of bytes, of the current position from the beginning of the stream. A value of 0 represents the first byte in the stream.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>LONG. The offset, in number of bytes, of the current position from the beginning of the stream.</p>
+<h5 id="remarks">Remarks</h5>
+<p>The current position can be moved to a point after the end of the stream. If you specify the current position beyond the end of the stream, the <strong>Size</strong> of the <code>Stream</code> object will be increased accordingly. Any new bytes added in this way will be null.</p>
+<p><strong>Notes</strong>: <strong>Position</strong> always measures bytes. For text streams using multibyte character sets, multiply the position by the character size to determine the character number. For example, for a two-byte character set, the first character is at position 0, the second character at position 2, the third character at position 4, and so on.</p>
+<p>Negative values cannot be used to change the current position in a <code>Stream</code>. Only positive numbers can be used for <strong>Position</strong>.</p>
+<p>For read-only <code>Stream</code> objects, ADO will not return an error if <strong>Position</strong> is set to a value greater than the <strong>Size</strong> of the <code>Stream</code>. This does not change the size of the <code>Stream</code>, or alter the <code>Stream</code> contents in any way. However, doing this should be avoided because it results in a meaningless <strong>Position</strong> value.</p>
+<hr>
+<h4 id="read">Read</h4>
+<p>Reads a specified number of bytes from a binary <code>Stream</code> object.</p>
+<pre class="code"><code>FUNCTION Read (BYVAL NumBytes AS LONG = adReadAll) AS DVARIANT
+FUNCTION Read (BYVAL NumBytes AS LONG = adReadAll, BYREF dvValue AS DVARIANT) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>NumBytes</em></td><td>Optional. A Long value that specifies the number of bytes to read from the file or the <strong>StreamReadEnum</strong> value <strong>adReadAll</strong>, which is the default.</td></tr><tr><td><em>dvValue</em></td><td>Reference to a <strong>DVARIANT</strong> variable that will receive the bytes read.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>DVARIANT. The bytes read.</p>
+<h5 id="remarks">Remarks</h5>
+<p>If <em>NumBytes</em> is more than the number of bytes left in the <code>Stream</code>, only the bytes remaining are returned. The data read is not padded to match the length specified by <em>NumBytes</em>. If there are no bytes left to read, a variant with a null value is returned. Read cannot be used to read backwards.</p>
+<p><strong>Note</strong>: <em>NumBytes</em> always measures bytes. For text <code>Stream</code> objects (<strong>Type_</strong> is <strong>adTypeText</strong>), use <strong>ReadText</strong>.</p>
+<hr>
+<h4 id="readtext">ReadText</h4>
+<p>Reads a specified number of characters, an entire line, or the entire stream from a <code>Stream</code> object and returns the resulting string.</p>
+<pre class="code"><code>FUNCTION ReadText (BYVAL NumChars AS LONG = adReadAll) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>NumChars</em></td><td>Optional. A Long value that specifies the number of characters to read from the file, or a <strong>StreamReadEnum* value. The default value is **adReadAll</strong>.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>DWSTRING. The characters read.</p>
+<h5 id="remarks">Remarks</h5>
+<p>If <em>NumChars</em> is more than the number of characters left in the stream, only the characters remaining are returned. The string read is not padded to match the length specified by <em>NumChars</em>. If there are no characters left to read, a variant whose value is null is returned. <strong>ReadText</strong> cannot be used to read backwards.</p>
+<p><strong>Note</strong>: The <strong>ReadText</strong> method is used with text streams (<strong>Type_</strong> is <strong>adTypeText</strong>). For binary streams (<strong>Type_</strong> is <strong>adTypeBinary</strong>), use <strong>Read</strong>.</p>
+<hr>
+<h4 id="savetofile">SaveToFile</h4>
+<p>Saves the binary contents of a <code>Stream</code> to a file.</p>
+<pre class="code"><code>FUNCTION SaveToFile (BYREF wszFileName AS WSTRING, BYVAL Options AS LONG = adSaveCreateNotExist) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszFileName</em></td><td>A string value that contains the fully-qualified name of the file to which the contents of the <code>Stream</code> will be saved. You can save to any valid local location, or any location you have access to via a UNC value.</td></tr><tr><td><em>Options</em></td><td>Optional. A <strong>SaveOptionsEnum</strong> value that specifies whether a new file should be created by <strong>SaveToFile</strong>, if it does not already exist. Default value is <strong>adSaveCreateNotExists</strong>. With these options you can specify that an error occurs if the specified file does not exist. You can also specify that <strong>SaveToFile</strong> overwrites the current contents of an existing file. <strong>Note</strong>: If you overwrite an existing file (when <strong>adSaveCreateOverwrite</strong> is set), <strong>SaveToFile</strong> truncates any bytes from the original existing file that follow the new <strong>EOS</strong>.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>S_OK (0) or an HRESULT code.</p>
+<h5 id="remarks">Remarks</h5>
+<p><strong>SaveToFile</strong> may be used to copy the contents of a <code>Stream</code> object to a local file. There is no change in the contents or properties of the <strong>Stream object</strong>. The <code>Stream</code> object must be open before calling <strong>SaveToFile</strong>.</p>
+<p>This method does not change the association of the <code>Stream</code> object to its underlying source. The <code>Stream</code> object will still be associated with the original URL or <code>Record</code> that was its source when opened.</p>
+<p>After a <strong>SaveToFile</strong> operation, the current position (<strong>Position</strong>) in the stream is set to the beginning of the stream (0).</p>
+<hr>
+<h4 id="seteos">SetEOS</h4>
+<p>Sets the position that is the end of the stream.</p>
+<pre class="code"><code>FUNCTION SetEOS () AS HRESULT</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>S_OK (0) or an HRESULT code.</p>
+<h5 id="remarks">Remarks</h5>
+<p><strong>SetEOS</strong> updates the value of the <strong>EOS</strong> property, by making the current <strong>Position</strong> the end of the stream. Any bytes or characters following the current position are truncated.</p>
+<p>Since <strong>Write</strong>, <strong>WriteText</strong>, and <strong>CopyTo</strong> do not truncate any extra values in existing <code>Stream</code> objects, you can truncate these bytes or characters by setting the new end-of-stream position with <strong>SetEOS</strong>.</p>
+<p><strong>Caution</strong>: If you set <strong>EOS</strong> to a position before the actual end of the stream, you will lose all data after the new <strong>EOS</strong> position.</p>
+<hr>
+<h4 id="size">Size</h4>
+<p>Indicates the size of the stream in number of bytes.</p>
+<pre class="code"><code>PROPERTY Size () AS LONG</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>LONG. The size of the stream in number of bytes.</p>
+<hr>
+<h4 id="skipline">SkipLine</h4>
+<p>Skips one entire line when reading a text stream.</p>
+<pre class="code"><code>FUNCTION SkipLine () AS HRESULT</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>S_OK (0) or an HRESULT code.</p>
+<h5 id="remarks">Remarks</h5>
+<p>All characters up to, and including the next line separator, are skipped. By default, the <strong>LineSeparator</strong> is <strong>adCRLF</strong>. If you attempt to skip past <strong>EOS</strong>, the current position will simply remain at <strong>EOS</strong>.</p>
+<p>The <strong>SkipLine</strong> method is used with text streams (<strong>Type_</strong> is <strong>adTypeText</strong>).</p>
+<hr>
+<h4 id="state">State</h4>
+<p>Indicates for whether the state of the <code>Stream</code> object is open or closed.</p>
+<pre class="code"><code>PROPERTY State () AS ObjectStateEnum</code></pre>
+<h5 id="return-value">Return value</h5>
+<p>LONG. The current <code>Stream</code> state.</p>
+<hr>
+<h4 id="type_">Type_</h4>
+<p>Indicates the type of data contained in the <code>Stream</code> (binary or text).</p>
+<pre class="code"><code>PROPERTY Type_ () AS StreamTypeEnum
+PROPERTY Type_ (BYVAL nType AS StreamTypeEnum)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>nType</em></td><td>LONG. A <strong>StreamTypeEnum</strong> value that specifies the type of data contained in the <code>Stream</code> object. The default value is <strong>adTypeText</strong>. However, if binary data is initially written to a new, empty stream, the <strong>Type_</strong> will be changed to <strong>adTypeBinary</strong>.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>LONG. A <strong>StreamTypeEnum</strong> value.</p>
+<h5 id="remarks">Remarks</h5>
+<p>The <strong>Type_</strong> property is read/write only when the current position is at the beginning of the <code>Stream</code> (<strong>Position</strong> is 0), and read-only at any other position.</p>
+<p>The <strong>Type_</strong> property determines which methods should be used for reading and writing the <code>Stream</code>. For text streams, use <strong>ReadText</strong> and <strong>WriteText</strong>. For binary streams, use <strong>Read</strong> and <strong>Write</strong>.</p>
+<hr>
+<h4 id="write">Write</h4>
+<p>Writes binary data to a <code>Stream</code> object.</p>
+<pre class="code"><code>FUNCTION Write (BYREF dvBuffer AS DVARIANT) AS HRESULT
+FUNCTION Write (BYVAL vBuffer AS VARIANT) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>dvBuffer</em></td><td>A <strong>DVARIANT</strong> that contains an array of bytes to be written.</td></tr><tr><td><em>vBuffer</em></td><td>A <strong>VARIANT</strong> that contains an array of bytes to be written.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>S_OK (0) or an HRESULT code.</p>
+<h5 id="remarks">Remarks</h5>
+<p>If there is data in the <code>Stream</code> object and the current position is <strong>EOS</strong>, the new data will be appended beyond the existing data. If the current position is not <strong>EOS</strong>, the existing data will be overwritten.</p>
+<p>If you write past <strong>EOS</strong>, the size of the <code>Stream</code> will increase. <strong>EOS</strong> will be set to the last byte in the <code>Stream</code>. If you don't write past <strong>EOS</strong>, the current position will be set to the next byte after the newly added data. Previously existing data will not be truncated. Call the <strong>SetEOS</strong> method to truncate.</p>
+<p>To fill the variant with binary data use the <strong>AfxVariantFromBuffer</strong> function.</p>
+<hr>
+<h4 id="writetext">WriteText</h4>
+<p>Writes a string to a <code>Stream</code> object.</p>
+<pre class="code"><code>FUNCTION WriteText (BYREF wszData AS WsTRING, BYVAL Options AS StreamWriteEnum = adWriteChar) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszData</em></td><td>An string value that contains the text in characters to be written.</td></tr><tr><td><em>Options</em></td><td>Optional. A <strong>StreamWriteEnum</strong> value that specifies whether a line separator character must be written at the end of the specified string.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Specified strings are written to the <code>Stream</code> object without any intervening spaces or characters between each string.</p>
+<p>The current <strong>Position</strong> is set to the character following the written data. The <strong>WriteText</strong> method does not truncate the rest of the data in a stream. If you want to truncate these characters, call <strong>SetEOS</strong>.</p>
+<p>If you write past the current <strong>EOS</strong> position, the <strong>Size</strong> of the <code>Stream</code> will be increased to contain any new characters, and <strong>EOS</strong> will move to the new last byte in the <code>Stream</code>.</p>
+<p><strong>Note</strong>: The <strong>WriteText</strong> method is used with text streams (<strong>Type_</strong> is <strong>adTypeText</strong>). For binary streams (<strong>Type_</strong> is <strong>adTypeBinary</strong>), use <strong>Write</strong>.</p>
+<hr>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

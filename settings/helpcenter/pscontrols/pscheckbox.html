@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PsCheckBox — Help Center</title>
+<meta name="description" content="An owner-drawn checkbox for FreeBASIC + Win32, built on AfxNova and PsBufferPaint. It draws a box glyph from a font — Segoe Fluent Icons by default — and an optional caption, with a focus ring around the pair. The box can sit on either side of the caption. You supply the colours and the fonts; the c">
+<link rel="canonical" href="https://www.planetsquires.com/docs/pscontrols/pscheckbox.html">
+<meta property="og:title" content="PsCheckBox">
+<meta property="og:description" content="An owner-drawn checkbox for FreeBASIC + Win32, built on AfxNova and PsBufferPaint. It draws a box glyph from a font — Segoe Fluent Icons by default — and an optional caption, with a focus ring around the pair. The box can sit on either side of the caption. You supply the colours and the fonts; the c">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/pscontrols/pscheckbox.html">
+<link rel="stylesheet" href="../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="pscontrols/pscheckbox.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../index.html">Help Center</a><span>›</span><a href="../index.html">PlanetSquires Controls</a></div>
+<h2 id="pscheckbox">PsCheckBox</h2>
+<p>An owner-drawn checkbox for FreeBASIC + Win32, built on AfxNova and <code>PsBufferPaint</code>. It draws a box glyph from a font — Segoe Fluent Icons by default — and an optional caption, with a focus ring around the pair. The box can sit on either side of the caption. You supply the colours and the fonts; the control owns the geometry and the state.</p>
+<p>It is a real <code>HWND</code>, so you place and size it with <code>SetWindowPos</code> like any other control. It takes focus, tracks hover and press, greys itself when disabled through <code>EnableWindow</code>, and tells you when the user changed its state. It has two states — checked and unchecked. There is no indeterminate state.</p>
+<p>The box is <strong>one composite glyph per state</strong>: <code>U+E739</code>, an empty outlined square, for unchecked, and <code>U+E73A</code>, the same square with a tick in it, for checked. Both are settable. That single decision shapes the rest of the control: the outline and the tick are one piece of ink in one colour, so an accent-filled box with a contrasting white tick is not reachable without a paint callback — but everything about the box's appearance is swappable by changing a font or a codepoint.</p>
+<h3 id="what-it-looks-like">What it looks like</h3>
+<p><img src="PsCheckBox.png" alt="PsCheckBox"></p>
+<h3 id="requirements">Requirements</h3>
+<p>Copy these files into your project:</p>
+<div class="table-wrap"><table><thead><tr><th>File</th><th>Purpose</th></tr></thead><tbody><tr><td><code>PsCheckBox.bi</code></td><td>Public surface: types, colours, constants, declarations</td></tr><tr><td><code>PsCheckBox.inc</code></td><td>Implementation</td></tr><tr><td><code>PsBufferPaint.bi</code></td><td>The double-buffered drawing surface the control paints through</td></tr><tr><td><code>PsBufferPaint.inc</code></td><td></td></tr><tr><td><code>PsTipHost.bi</code> / <code>PsTipHost.inc</code></td><td>The tooltip backend switch — see <em>Tooltips: two backends</em></td></tr><tr><td><code>PsTooltip.bi</code> / <code>PsTooltip.inc</code></td><td>The owner-drawn tooltip. Required even if you never switch to it: <code>PsTipHost.inc</code> includes it.</td></tr></tbody></table></div>
+<p>You also need AfxNova on the include path (<code>-i "C:\dev"</code> if your tree matches this one), and a font supplying the box glyph — <code>SegoeFluentIcons.ttf</code> ships with this repo.</p>
+<h4 id="include-order">Include order</h4>
+<p><code>PsCheckBox.inc</code> includes <code>PsCheckBox.bi</code>, which includes <code>PsBufferPaint.bi</code> and <code>PsTipHost.bi</code>; <code>PsCheckBox.inc</code> also includes <code>PsTipHost.inc</code>, which in turn includes <code>PsTooltip.inc</code>. So the tooltip files need no include line of your own. The <strong>implementation</strong> of <code>PsBufferPaint</code> is the one thing not pulled in for you, so include it yourself, first:</p>
+<pre class="code" data-lang="freebasic"><code>#include once "windows.bi"
+#include once "AfxNova\CWindow.inc"
+#include once "AfxNova\AfxStr.inc"
+#include once "AfxNova\AfxGdiplus.inc"
+using AfxNova
+
+#include once "PsBufferPaint.inc"
+#include once "PsCheckBox.inc"</code></pre>
+<p>Beyond that there is no ordering trap: <code>PsCheckBox.bi</code> names no type it does not itself include, so it compiles at any site that has already loaded <code>PsBufferPaint</code>.</p>
+<h4 id="gdi-must-be-running">GDI+ must be running</h4>
+<p><code>PsBufferPaint</code> renders all geometry through GDI+. Initialize it before the first repaint and shut it down after every window is destroyed:</p>
+<pre class="code" data-lang="freebasic"><code>dim as ULONG_PTR gdipToken = AfxGdipInit()
+function = frmMain_Show( 0 )
+AfxGdipShutdown( gdipToken )</code></pre>
+<p>Without the bracket the control draws nothing.</p>
+<h4 id="do-not-name-anything-ok">Do not name anything <code>ok</code></h4>
+<p>GDI+ defines <code>Ok = 0</code> as a <code>Status</code> enum value in namespace <code>AfxNova</code>, and your host almost certainly says <code>using AfxNova</code>. Any identifier of your own called <code>ok</code> becomes a duplicate definition the moment you adopt this control. Use <code>bOK</code>.</p>
+<h4 id="message-pump">Message pump</h4>
+<p><strong>There is no <code>PsCheckBox_FilterMessage</code>.</strong> This control owns no popup and no second top-level window, so it adds no pump obligation — unlike <code>PsComboBox</code>, <code>PsNumericUpDown</code> and <code>PsTextBox</code>, which all do. If you arrived from one of those, there is nothing to look for here.</p>
+<p>Two things your pump <em>does</em> need, because the control is focusable. First, <code>IsDialogMessage</code>:</p>
+<pre class="code" data-lang="freebasic"><code>do while GetMessage(@uMsg, null, 0, 0)
+    if uMsg.message = WM_QUIT then exit do
+    ' IsDialogMessage is what makes Tab move between controls.
+    if IsDialogMessage(pWindow-&gt;hWindow, @uMsg) = 0 then
+        TranslateMessage @uMsg
+        DispatchMessage @uMsg
+    end if
+loop</code></pre>
+<p>Second, once at startup, focus on one of your controls:</p>
+<pre class="code" data-lang="freebasic"><code>SetFocus( hCheck )</code></pre>
+<p><code>IsDialogMessage</code> only acts when the focused window is already a descendant of the window you pass it. Without that <code>SetFocus</code>, Tab does nothing until the user clicks something — a symptom that reads as broken tabstops. A dialog does this for you in <code>WM_INITDIALOG</code>; an ordinary <code>CWindow</code> host must do it itself.</p>
+<p>Without <code>IsDialogMessage</code> the control still works fully with the mouse, and with Space and Enter once it has focus. Only Tab <em>navigation</em> is lost.</p>
+<h3 id="quick-start">Quick start</h3>
+<pre class="code" data-lang="freebasic"><code>dim as HWND hCheck = PsCheckBox_Create( hWndParent, IDC_MYCHECK )
+
+PsCheckBox_SetFont( hCheck, ghFont(GUIFONT_10) )          ' caption font, and the MEASURING font
+PsCheckBox_SetGlyphFont( hCheck, ghFont(SYMBOLFONT_12) )  ' Segoe Fluent Icons
+PsCheckBox_SetText( hCheck, "Enable dark mode" )
+PsCheckBox_SetChecked( hCheck, true )                     ' silent: fires no callback
+PsCheckBox_SetCheckChangedCallback( hCheck, @OnDarkModeChanged )
+
+' Size it to what it actually needs, then place it.
+dim as long iw, ih
+PsCheckBox_GetIdealSize( hCheck, iw, ih )
+SetWindowPos( hCheck, 0, 20, 20, iw, ih, SWP_NOZORDER )
+ShowWindow( hCheck, SW_SHOW )</code></pre>
+<pre class="code" data-lang="freebasic"><code>sub OnDarkModeChanged( byval hCheckBox as HWND, byval isChecked as boolean )
+    dim as string s = "dark mode = " &amp; str(isChecked)
+    print s
+end sub</code></pre>
+<p>That callback fires for a completed click, for Space or Enter, and for <code>PsCheckBox_Toggle</code>. It does <strong>not</strong> fire for <code>PsCheckBox_SetChecked</code>.</p>
+<h3 id="concepts">Concepts</h3>
+<h4 id="the-handle-is-a-real-window">The handle is a real window</h4>
+<p><code>PsCheckBox_Create</code> returns an <code>HWND</code>, not an opaque type, because you legitimately need to treat the control as a window — <code>SetWindowPos</code>, <code>ShowWindow</code>, <code>EnableWindow</code>, <code>GetDlgItem</code>. The <code>CtrlID</code> you pass becomes the window's <code>GWLP_ID</code> and the initial <code>SetID</code> value.</p>
+<p>The control frees itself when its window is destroyed, and destroys its tooltip with it. The two fonts you hand it stay yours to delete.</p>
+<h4 id="geometry-is-derived-never-set">Geometry is derived, never set</h4>
+<p>You never assign a rectangle. You set inputs — padding, box size, gap, focus ring — and the control derives four rectangles from them, lazily: a setter marks the layout stale, and the next paint or rect query does a single measuring pass. A burst of setters costs one measurement, not one each.</p>
+<pre class="code"><code>ringPad    = nFocusGap + nFocusThick          reserved ALWAYS, focused or not
+textW      = measured caption width           0 when there is no caption
+textH      = GetTextMetrics.tmHeight          one height for the control
+textBlock  = hasText ? nBoxGap + textW : 0
+contentH   = max( hasText ? textH : 0 , nBoxHeight )
+
+nIdealW    = 2*ringPad + nPadLeft + nBoxWidth + textBlock + nPadRight
+nIdealH    = 2*ringPad + nPadTop  + contentH + nPadBottom
+
+rcContent  = rcClient deflated by ringPad on all four sides
+rcVisual   = rcContent inflated by ringPad    ( = rcClient when sized ideally )
+
+BOXALIGN_LEFT    rcBox  at rcContent.left + nPadLeft,  nBoxWidth x nBoxHeight, v-centred
+                 rcText = ( rcBox.right + nBoxGap , rcContent.right - nPadRight )
+BOXALIGN_RIGHT   rcBox  at rcContent.right - nPadRight - nBoxWidth, same, v-centred
+                 rcText = ( rcContent.left + nPadLeft , rcBox.left - nBoxGap )</code></pre>
+<p><code>PsCheckBox_GetIdealSize</code> is valid <strong>before</strong> the control has ever been sized — the measuring pass runs ahead of the check for a client area, precisely so you can call it to decide how big to make the control in the first place. It is also unaffected by starving the control's client area, so a host that always sizes with it can never see an ellipsis.</p>
+<h4 id="the-box-is-pinned-the-caption-gets-the-leftover">The box is pinned; the caption gets the leftover</h4>
+<p>The box cell is pinned to the padding on whichever side you put it, and the caption takes the whole span left over. One model, two looks, decided entirely by the width you give the control:</p>
+<pre class="code"><code>sized to GetIdealSize     [x] Enable dark mode              packed
+sized to a row width      Enable dark mode            [x]   settings row</code></pre>
+<p>So a column of <code>CHK_BOXALIGN_RIGHT</code> checkboxes all given the same width will line their boxes up for free. Flipping the side does <strong>not</strong> change the ideal size — the box cell, the gap and both paddings are all still charged, they have only swapped ends.</p>
+<p><code>PsCheckBox_SetTextAlign</code> places the caption inside that <strong>span</strong>, not inside the control. With the box on the left and <code>CHK_TEXTALIGN_RIGHT</code>, the caption goes to the right-hand end of the span, not to the right-hand edge of the window. Sized to its ideal width the span <em>is</em> the caption, so all three alignments render identically — alignment only becomes visible once the control has slack.</p>
+<h4 id="the-box-cell-is-declared-not-measured">The box cell is declared, not measured</h4>
+<p><code>PsCheckBox_SetBoxSize</code> states how much room the glyph gets. The control never measures the glyph font, so a glyph too large for its cell clips rather than resizing the control. This is why <code>PsCheckBox_SetGlyphFont</code> repaints but never re-lays-out, and why swapping either glyph string can never change the ideal width.</p>
+<h4 id="setters-are-silent-user-interaction-notifies">Setters are silent; user interaction notifies</h4>
+<p><code>PsCheckBox_SetChecked</code> changes the state and fires nothing — Win32's <code>BM_SETCHECK</code> / <code>BN_CLICKED</code> split. That is what makes it safe to call from inside your own change handler without recursing.</p>
+<p>The one deliberate exception is <code>PsCheckBox_Toggle</code>, which flips the state <strong>and</strong> fires the callback. It is an action, not a setter — the equivalent of <code>BM_CLICK</code>, and the door your accelerator uses, since this control parses no mnemonics.</p>
+<h4 id="focus-and-keyboard">Focus and keyboard</h4>
+<p>The control is a <code>WS_TABSTOP</code> with real focus tracking and a painted focus ring. Space <strong>and</strong> Enter both toggle it while it is focused.</p>
+<p>Enter is a departure from a system checkbox, which ignores it and lets it reach the dialog's default button. If that matters to your dialog, intercept <code>WM_KEYDOWN</code> through the message callback and return TRUE for <code>VK_RETURN</code>.</p>
+<p>The focus ring's band is reserved whether or not the control has focus, so nothing moves when focus arrives — which also means the ring settings contribute to the ideal size.</p>
+<h4 id="mouse-capture-and-the-cancelled-gesture">Mouse capture and the cancelled gesture</h4>
+<p>The control takes mouse capture on a press, because press → slide off → release must <strong>not</strong> toggle. Only a matched press and release with the cursor still inside counts as a click. While the press is live the hover state keeps tracking, so sliding off visibly un-flashes the control before the release decides that nothing happened.</p>
+<h3 id="behaviour-and-limits">Behaviour and limits</h3>
+<ul><li><strong>Two states only.</strong> <code>isChecked</code> is a <code>boolean</code> everywhere, including in the change callback. There is no indeterminate / tri-state.</li><li><strong>One colour per box.</strong> The composite glyph is a single piece of ink, so the box outline and the tick inside it always share a colour. A two-colour box needs a paint callback.</li><li><strong>No mnemonics.</strong> <code>"&amp;Enable"</code> draws a literal ampersand. <code>PsBufferPaint.PaintText</code> forces <code>DT_NOPREFIX</code>, so this is enforced by the renderer rather than merely intended. Wire an accelerator to <code>PsCheckBox_Toggle</code> instead.</li><li><strong>No multiline.</strong> One line, ellipsized into the caption span. Wrapping would make the ideal height depend on the assigned width, which would cost <code>GetIdealSize</code> its "valid before sizing" guarantee.</li><li><strong>No <code>HICON</code> path.</strong> The box comes from a font, or from your paint callback.</li><li><strong>No <code>WM_COMMAND</code> / <code>BN_CLICKED</code> to the parent.</strong> State changes reach you through the callback only.</li><li><strong>No <code>CS_DBLCLKS</code>.</strong> A rapid second click is a legitimate second toggle; enabling double-clicks would turn it into a <code>WM_LBUTTONDBLCLK</code> the control would drop.</li><li><strong>No hit test.</strong> The whole client is the hit area — clicking the caption toggles, exactly as a system checkbox does — so a hit test could only ever be <code>PtInRect(client)</code>.</li><li><strong>Overflow is honest, not squeezed.</strong> Too narrow, and the box keeps its declared size and its padding while the caption span collapses to zero width and the caption ellipsizes. Too short, and the content clips rather than deforming.</li><li><strong>Removing the caption drops the content height to the box alone.</strong> A caption-less checkbox is therefore never taller than a captioned one, and is shorter whenever the box is smaller than a line of text — which it is at the defaults. If you are laying out a column of mixed rows, take the max of the ideal heights yourself.</li><li><strong><code>SetGlyphFont</code> is worth setting.</strong> Unset, the glyph falls back to the caption font, which will draw the Fluent codepoint as a missing-glyph box.</li></ul>
+<h3 id="api-reference">API reference</h3>
+<h4 id="creation">Creation</h4>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Behaviour</th></tr></thead><tbody><tr><td><code>PsCheckBox_Create( hWndParent, CtrlID ) as HWND</code></td><td>Creates the control, zero-sized and hidden. <code>CtrlID</code> becomes <code>GWLP_ID</code> and the initial <code>SetID</code> value. Size it with <code>GetIdealSize</code> and place it with <code>SetWindowPos</code>, or turn on <code>SetAutoSize</code>.</td></tr></tbody></table></div>
+<h4 id="content">Content</h4>
+<p>All silent — they change what is drawn, never what was clicked.</p>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Behaviour</th></tr></thead><tbody><tr><td><code>PsCheckBox_GetText( hCheckBox ) as DWSTRING</code></td><td>The caption.</td></tr><tr><td><code>PsCheckBox_SetText( hCheckBox, Text )</code></td><td>Sets the caption and re-measures. <code>""</code> removes it, which also gives back the box gap and drops the content height to the box alone. Also reachable as the window text — see below.</td></tr><tr><td><code>PsCheckBox_GetGlyphUnchecked( hCheckBox ) as DWSTRING</code></td><td>The codepoint(s) drawn when unchecked.</td></tr><tr><td><code>PsCheckBox_SetGlyphUnchecked( hCheckBox, Glyph )</code></td><td>Replaces it. Repaints only — the cell is declared, so this can never change the ideal size. <code>""</code> draws nothing while still charging the cell and the gap.</td></tr><tr><td><code>PsCheckBox_GetGlyphChecked( hCheckBox ) as DWSTRING</code></td><td>The codepoint(s) drawn when checked.</td></tr><tr><td><code>PsCheckBox_SetGlyphChecked( hCheckBox, Glyph )</code></td><td>As above, for the checked state.</td></tr><tr><td><code>PsCheckBox_GetID( hCheckBox ) as long</code></td><td>The stored host id.</td></tr><tr><td><code>PsCheckBox_SetID( hCheckBox, id )</code></td><td>A host payload only. The control never uses it as a command id, so it cannot collide with anything.</td></tr><tr><td><code>PsCheckBox_GetItemData( hCheckBox ) as integer</code></td><td>Free-form host payload.</td></tr><tr><td><code>PsCheckBox_SetItemData( hCheckBox, itemData )</code></td><td>Stores it. The control never reads it.</td></tr></tbody></table></div>
+<p>The caption has one store reached through two doors: the control handles <code>WM_SETTEXT</code>, <code>WM_GETTEXT</code> and <code>WM_GETTEXTLENGTH</code> against the same field, so <code>SetWindowText</code> and <code>GetWindowText</code> work and generic code that walks children and reads their text sees a real caption. <code>SetWindowText</code> re-measures exactly as <code>SetText</code> does.</p>
+<h4 id="state">State</h4>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Behaviour</th></tr></thead><tbody><tr><td><code>PsCheckBox_GetChecked( hCheckBox ) as boolean</code></td><td>The current state.</td></tr><tr><td><code>PsCheckBox_SetChecked( hCheckBox, isChecked )</code></td><td><strong>Silent</strong> — fires no callback. Repaints only; never re-measures, since both glyphs share one declared cell. Does nothing if the state already matches.</td></tr><tr><td><code>PsCheckBox_GetEnabled( hCheckBox ) as boolean</code></td><td></td></tr><tr><td><code>PsCheckBox_SetEnabled( hCheckBox, isEnabled )</code></td><td>Goes through <code>EnableWindow</code>, so the disable is enforced by the system: the control gets no mouse input and Tab skips it. Clears hover and any live press at once. Does <strong>not</strong> change the checked state.</td></tr><tr><td><code>PsCheckBox_GetFocused( hCheckBox ) as boolean</code></td><td>Answers for this window directly — there is no inner child holding focus.</td></tr><tr><td><code>PsCheckBox_Refresh( hCheckBox )</code></td><td>Marks the layout stale and invalidates with a background erase.</td></tr></tbody></table></div>
+<p>Reaching for <code>EnableWindow</code> yourself instead of <code>SetEnabled</code> also works: the control handles <code>WM_ENABLE</code> and syncs its own flag, so it still renders greyed rather than looking live while eating input.</p>
+<h4 id="action">Action</h4>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Behaviour</th></tr></thead><tbody><tr><td><code>PsCheckBox_Toggle( hCheckBox )</code></td><td>Flips the state <strong>and fires</strong> <code>CheckChangedCallback</code> — an action, not a setter. Refused outright on a disabled control. Does not paint a press flash.</td></tr></tbody></table></div>
+<h4 id="geometry-and-layout">Geometry and layout</h4>
+<p>Every setter takes <strong>raw pixels</strong>; you do the DPI scaling. Only the Create-time defaults are scaled for you, and <code>nFocusThick</code> is never scaled at all — a hairline should stay a hairline.</p>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Behaviour</th></tr></thead><tbody><tr><td><code>PsCheckBox_GetBoxAlign( hCheckBox ) as long</code></td><td><code>CHK_BOXALIGN_LEFT</code> or <code>CHK_BOXALIGN_RIGHT</code>.</td></tr><tr><td><code>PsCheckBox_SetBoxAlign( hCheckBox, nBoxAlign )</code></td><td>Puts the box on that side, pinned to that side's padding. Values outside the enum are <strong>ignored</strong>. Does not change the ideal size, so it never triggers auto-size.</td></tr><tr><td><code>PsCheckBox_GetTextAlign( hCheckBox ) as long</code></td><td><code>CHK_TEXTALIGN_*</code>.</td></tr><tr><td><code>PsCheckBox_SetTextAlign( hCheckBox, nTextAlign )</code></td><td>Places the caption within its <strong>span</strong>, not within the control. Values outside the enum are <strong>ignored</strong>. Repaints only — the span does not move, just the ink inside it.</td></tr><tr><td><code>PsCheckBox_GetPadding( hCheckBox, nLeft, nTop, nRight, nBottom )</code></td><td>All four, by reference.</td></tr><tr><td><code>PsCheckBox_SetPadding( hCheckBox, nLeft, nTop, nRight, nBottom )</code></td><td>Negative values are <strong>clamped to 0</strong>. Changes the ideal size.</td></tr><tr><td><code>PsCheckBox_GetBoxGap( hCheckBox ) as long</code></td><td></td></tr><tr><td><code>PsCheckBox_SetBoxGap( hCheckBox, nBoxGap )</code></td><td>Space between the box cell and the caption. Charged <strong>only when there is a caption</strong>. Negative clamps to 0.</td></tr><tr><td><code>PsCheckBox_GetBoxSize( hCheckBox, nBoxWidth, nBoxHeight )</code></td><td></td></tr><tr><td><code>PsCheckBox_SetBoxSize( hCheckBox, nBoxWidth, nBoxHeight )</code></td><td>The declared cell for the glyph. Nothing is measured, so this is the only thing deciding how much room the glyph gets. Negative clamps to 0.</td></tr><tr><td><code>PsCheckBox_GetFocusRing( hCheckBox, nGap, nThickness )</code></td><td></td></tr><tr><td><code>PsCheckBox_SetFocusRing( hCheckBox, nGap, nThickness )</code></td><td>Gap from the content to the ring, and the ring's own thickness. Both are reserved unconditionally, so <strong>changing either changes the ideal size</strong>. Negative clamps to 0; thickness 0 disables the ring.</td></tr><tr><td><code>PsCheckBox_GetFocusCurvature( hCheckBox ) as long</code></td><td></td></tr><tr><td><code>PsCheckBox_SetFocusCurvature( hCheckBox, nCurvature )</code></td><td>An ellipse <strong>diameter</strong>, not a radius: 8 draws a 4px radius. 0 gives square corners. Repaints only — the band's width is the gap plus the thickness, not the curvature. Negative clamps to 0.</td></tr><tr><td><code>PsCheckBox_GetAutoSize( hCheckBox ) as boolean</code></td><td></td></tr><tr><td><code>PsCheckBox_SetAutoSize( hCheckBox, bAutoSize )</code></td><td>When true the control <code>SetWindowPos</code>es <strong>itself</strong> to its ideal size, keeping its top-left, and applies it immediately. Default false.</td></tr><tr><td><code>PsCheckBox_GetIdealSize( hCheckBox, nWidth, nHeight )</code></td><td>Forces any pending layout and returns the measured size. <strong>Valid before the control has ever been sized</strong>, and unaffected by starving the control's client area.</td></tr><tr><td><code>PsCheckBox_GetContentRect( hCheckBox, rc ) as boolean</code></td><td>The client deflated by the focus-ring band. Returns FALSE if the control has no geometry yet.</td></tr><tr><td><code>PsCheckBox_GetBoxRect( hCheckBox, rc ) as boolean</code></td><td>The box cell. Never empty.</td></tr><tr><td><code>PsCheckBox_GetTextRect( hCheckBox, rc ) as boolean</code></td><td>The caption <strong>span</strong>. Empty when there is no caption; degenerate (left = right) when the client is too narrow. Returns TRUE either way — empty is the honest answer.</td></tr><tr><td><code>PsCheckBox_GetVisualRect( hCheckBox, rc ) as boolean</code></td><td>The content inflated by the ring band; equals the client when the control is sized ideally.</td></tr></tbody></table></div>
+<p>All four rect queries force a pending layout first, so results are always current.</p>
+<p>With auto-size on, the setters that re-apply it are exactly the ones that can move the ideal size: <code>SetText</code> (and <code>WM_SETTEXT</code>), <code>SetFont</code>, <code>SetPadding</code>, <code>SetBoxGap</code>, <code>SetBoxSize</code>, <code>SetFocusRing</code>, and <code>SetAutoSize</code> itself.</p>
+<h4 id="appearance">Appearance</h4>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Behaviour</th></tr></thead><tbody><tr><td><code>PsCheckBox_GetColors( hCheckBox, pColors )</code></td><td>Fills your struct. The read-modify-write idiom is Get, assign one field, Set. Does nothing if <code>pColors</code> is null.</td></tr><tr><td><code>PsCheckBox_SetColors( hCheckBox, pColors )</code></td><td>Copies the whole struct and repaints. Does nothing if <code>pColors</code> is null.</td></tr><tr><td><code>PsCheckBox_GetFont( hCheckBox ) as HFONT</code></td><td></td></tr><tr><td><code>PsCheckBox_SetFont( hCheckBox, hTextFont )</code></td><td>The caption font, and the <strong>measuring</strong> font. Changing it re-measures and can change the ideal size. Borrowed, never owned. Unset, the control measures and paints with the stock GUI font.</td></tr><tr><td><code>PsCheckBox_GetGlyphFont( hCheckBox ) as HFONT</code></td><td></td></tr><tr><td><code>PsCheckBox_SetGlyphFont( hCheckBox, hGlyphFont )</code></td><td>The box font. A paint-time input only: repaints, never re-lays-out, never resizes. Unset, it falls back to the caption font. Borrowed, never owned.</td></tr></tbody></table></div>
+<h4 id="colour-resolution">Colour resolution</h4>
+<p>Both are pure functions — no control handle, no globals — so you can call them from your own paint callback to get exactly the colours the built-in painter would have used.</p>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Behaviour</th></tr></thead><tbody><tr><td><code>PsCheckBox_ResolveMood( isEnabled, isPressed, isHot ) as long</code></td><td>Returns a <code>CHK_MOOD_*</code> value. Precedence is <code>disabled &gt; pressed &gt; hot &gt; idle</code>.</td></tr><tr><td><code>PsCheckBox_ResolveColors( pColors, nMood, isChecked, clrBack, clrFore, clrBox )</code></td><td>Fills the three output colours by reference. <code>isChecked</code> selects between the two box colour sets <strong>within</strong> the mood and affects nothing else. Does nothing if <code>pColors</code> is null.</td></tr></tbody></table></div>
+<h4 id="tooltips">Tooltips</h4>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Behaviour</th></tr></thead><tbody><tr><td><code>PsCheckBox_GetTooltipText( hCheckBox ) as DWSTRING</code></td><td></td></tr><tr><td><code>PsCheckBox_SetTooltipText( hCheckBox, Text )</code></td><td>The control's own tip text. When non-empty it wins over the callback. Stores only — the tip is pulled on demand, so there is nothing to repaint.</td></tr><tr><td><code>PsCheckBox_GetTooltipHandle( hCheckBox ) as HWND</code></td><td>The <strong>comctl32</strong> tooltip window, for any <code>TTM_*</code> message you want to send it yourself. The control owns it and destroys it. Returns <strong>0</strong> while this control is on the PsTooltip backend — the honest answer, since a <code>TTM_*</code> sent to a PsTooltip window is silently ignored.</td></tr><tr><td><code>PsCheckBox_GetPsTooltipHandle( hCheckBox ) as HWND</code></td><td>The <strong>PsTooltip</strong> window, or 0 while on the system backend. The door to <code>PsTooltip_SetColors</code> / <code>SetFonts</code> / <code>SetStyle</code> / <code>SetMaxWidth</code> / <code>SetTitle</code> / <code>SetGlyph</code> — none of which is mirrored here.</td></tr><tr><td><code>PsCheckBox_SetTooltipMode( hCheckBox, nMode ) as boolean</code></td><td><code>PSTIP_MODE_SYSTEM</code> (default) or <code>PSTIP_MODE_PS</code>. See below.</td></tr><tr><td><code>PsCheckBox_GetTooltipMode( hCheckBox ) as long</code></td><td>Which backend is live.</td></tr><tr><td><code>PsCheckBox_SetHoverTime( hCheckBox, milliseconds )</code></td><td>Initial delay (<code>TTDT_INITIAL</code>) — how long the cursor must rest. Honoured by <strong>both</strong> backends.</td></tr><tr><td><code>PsCheckBox_SetAutoPopTime( hCheckBox, milliseconds )</code></td><td>How long the tip stays up (<code>TTDT_AUTOPOP</code>).</td></tr><tr><td><code>PsCheckBox_SetReshowTime( hCheckBox, milliseconds )</code></td><td>The shorter delay after a tip was recently dismissed (<code>TTDT_RESHOW</code>).</td></tr></tbody></table></div>
+<p>Resolution order: the control's own text, then <code>TooltipCallback</code>, then nothing. <strong>There is no caption fallback</strong> — a checkbox whose caption is already on screen would otherwise pop a tip that just repeats it.</p>
+<h5 id="tooltips-two-backends">Tooltips: two backends</h5>
+<p>The control ships on the <strong>system</strong> (comctl32) tooltip it has always used. <code>PSTIP_MODE_PS</code> switches this instance to <strong>PsTooltip</strong>: owner-drawn, themeable, word-wrapping without a hand-sent <code>TTM_SETMAXTIPWIDTH</code>, and — the one that matters structurally — <strong>not a subclass of the control it serves</strong>, so it still works when the window under the cursor is a descendant rather than the control itself. Either way the control adds <strong>no pump obligation</strong>: PsTooltip has no <code>FilterMessage</code>.</p>
+<p>The default is deliberate, not caution. PsTooltip's colour defaults are <strong>dark</strong>, so a control that switched itself would put a dark tip on a light form. Theme every tip in the process with <code>PsTooltip_SetDefaultColors</code> and friends, then opt in per instance.</p>
+<p><strong>The mode changes how a tip is drawn, never what it says.</strong> Both backends resolve text through the same rule — this control's own text first, then <code>TooltipCallback</code>, then nothing.</p>
+<p>A delay you set is <strong>stored as well as pushed</strong>, so it survives a switch in either direction. A delay you never set keeps the backend's own derivation from the system double-click time, which is what makes a tip appear on the same beat as every other tip on the machine.</p>
+<pre class="code" data-lang="freebasic"><code>PsTooltip_SetDefaultColors( @myTipColors )     ' once, at startup, for every tip in the process
+PsTooltip_SetDefaultFonts( ghFontUI )
+
+PsCheckBox_SetTooltipMode( hCheck, PSTIP_MODE_PS )
+PsCheckBox_SetHoverTime( hCheck, 400 )
+dim as HWND hTip = PsCheckBox_GetPsTooltipHandle( hCheck )
+if hTip then PsTooltip_SetTitle( hTip, "Dark mode" )   ' not reachable on the system backend</code></pre>
+<h4 id="callback-registration">Callback registration</h4>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Behaviour</th></tr></thead><tbody><tr><td><code>PsCheckBox_SetPaintCallback( hCheckBox, usersub )</code></td><td>Replaces the built-in painter wholesale, and repaints.</td></tr><tr><td><code>PsCheckBox_SetMessageCallback( hCheckBox, userfunc )</code></td><td>Observe mouse, focus and key messages.</td></tr><tr><td><code>PsCheckBox_SetTooltipCallback( hCheckBox, userfunc )</code></td><td>Supply tip text on demand.</td></tr><tr><td><code>PsCheckBox_SetCheckChangedCallback( hCheckBox, usersub )</code></td><td>User-driven state changes.</td></tr></tbody></table></div>
+<p>Pass <code>0</code> to any of them to remove the callback.</p>
+<h4 id="render-probes">Render probes</h4>
+<p>Neither is called by the control. They exist so a host writing its own paint callback can <strong>assert</strong> two specific defects rather than eyeball them. Both render the control offscreen with its current painter and with focus forced on, so the focus-ring step — the one the flood defect lives on — is actually exercised.</p>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Behaviour</th></tr></thead><tbody><tr><td><code>PsCheckBox_CountRenderedTones( hCheckBox, nPart ) as long</code></td><td>How many distinct colours land inside one <code>CHK_PART_*</code> rect, capped at 64. Returns 0 if the control has no geometry or the part rect is empty. A part wiped by an unintended fill is literally <strong>one</strong> tone, so the useful assertion is <code>&gt; 1</code>.</td></tr><tr><td><code>PsCheckBox_HashRenderedPart( hCheckBox, nPart ) as ulong</code></td><td>An FNV-1a hash of the pixels in one <code>CHK_PART_*</code> rect. Compare two states to prove a change actually reached the surface. Returns 0 on failure.</td></tr></tbody></table></div>
+<p><code>HashRenderedPart</code> can only ever prove <strong>difference</strong>, never correctness — and only for what you isolate. Comparing checked against unchecked proves "the state reached the pixels", but not that the <em>glyph</em> did, because the box colour changes too. To isolate one variable, flatten the other first: set all eight box colours to the same value and the only thing left that can move a pixel is the glyph.</p>
+<h3 id="colors">Colors</h3>
+<p><code>PSCHECKBOX_COLORS</code> is a flat struct of <code>COLORREF</code> fields, all with defaults. Copy semantics: <code>Set</code> takes a copy, <code>Get</code> fills one out.</p>
+<div class="table-wrap"><table><thead><tr><th>Field</th><th>Paints</th><th>When</th></tr></thead><tbody><tr><td><code>BackColor</code></td><td>The whole client</td><td>Idle</td></tr><tr><td><code>BackColorHot</code></td><td>The whole client</td><td>Cursor over the control</td></tr><tr><td><code>BackColorPressed</code></td><td>The whole client</td><td>Live left press, cursor still inside</td></tr><tr><td><code>BackColorDisabled</code></td><td>The whole client</td><td>Disabled</td></tr><tr><td><code>ForeColor</code></td><td>The caption</td><td>Idle</td></tr><tr><td><code>ForeColorHot</code></td><td>The caption</td><td>Hot</td></tr><tr><td><code>ForeColorPressed</code></td><td>The caption</td><td>Pressed</td></tr><tr><td><code>ForeColorDisabled</code></td><td>The caption</td><td>Disabled</td></tr><tr><td><code>BoxColor</code></td><td>The box glyph</td><td>Unchecked, idle</td></tr><tr><td><code>BoxColorHot</code></td><td>The box glyph</td><td>Unchecked, hot</td></tr><tr><td><code>BoxColorPressed</code></td><td>The box glyph</td><td>Unchecked, pressed</td></tr><tr><td><code>BoxColorDisabled</code></td><td>The box glyph</td><td>Unchecked, disabled</td></tr><tr><td><code>BoxColorChecked</code></td><td>The box glyph</td><td>Checked, idle</td></tr><tr><td><code>BoxColorCheckedHot</code></td><td>The box glyph</td><td>Checked, hot</td></tr><tr><td><code>BoxColorCheckedPressed</code></td><td>The box glyph</td><td>Checked, pressed</td></tr><tr><td><code>BoxColorCheckedDisabled</code></td><td>The box glyph</td><td>Checked, disabled</td></tr><tr><td><code>FocusRingColor</code></td><td>The focus ring</td><td>Whenever the control has focus</td></tr></tbody></table></div>
+<p><strong>Precedence:</strong> <code>disabled &gt; pressed &gt; hot &gt; idle</code>. The checked flag is not a mood — it selects between the two box colour sets <em>inside</em> whichever mood resolved, and touches nothing else. That is also why a disabled ticked box still reads as ticked: it has its own colour.</p>
+<p><strong>The control reads completely flat out of the box.</strong> <code>BackColorHot</code>, <code>BackColorPressed</code> and <code>BackColorDisabled</code> all default <strong>equal to</strong> <code>BackColor</code>, so hovering changes only the box and the caption. That is usually what you want in a settings pane. To get a menu-style highlight across the whole row, set one field:</p>
+<pre class="code" data-lang="freebasic"><code>dim as PSCHECKBOX_COLORS c
+PsCheckBox_GetColors( hCheck, @c )
+c.BackColorHot = BGR( 44, 49, 58)
+PsCheckBox_SetColors( hCheck, @c )</code></pre>
+<h3 id="callbacks">Callbacks</h3>
+<h4 id="chk_checkchangedcallbacksub">CHK_CheckChangedCallbackSub</h4>
+<pre class="code" data-lang="freebasic"><code>type CHK_CheckChangedCallbackSub as sub( byval hCheckBox as HWND, byval isChecked as boolean )</code></pre>
+<p>The state changed through <strong>user interaction</strong> — a completed click, Space, or Enter — or through <code>PsCheckBox_Toggle</code>. Fired after the state is updated, so <code>PsCheckBox_GetChecked()</code> already agrees with the <code>isChecked</code> you are handed.</p>
+<p><code>PsCheckBox_SetChecked</code> does <strong>not</strong> fire it, which is what makes it safe to call <code>SetChecked</code> from inside this handler.</p>
+<p>Nothing fires for a cancelled gesture: press the control, slide off it, release, and the state does not change.</p>
+<h4 id="chk_paintcallbacksub">CHK_PaintCallbackSub</h4>
+<pre class="code" data-lang="freebasic"><code>type CHK_PaintCallbackSub as sub( byval p as PSCHECKBOX_PAINTINFO ptr )</code></pre>
+<p>Draws the whole control <strong>instead of</strong> the built-in painter. Paint through <code>p-&gt;b</code> — the control's double buffer for this repaint. Do not touch the screen DC.</p>
+<p>The control has already filled the client with the resolved mood's <code>BackColor</code> before calling you, so a callback that only adds a foreground does not have to repaint the background. The focus ring is the built-in painter's job too, so a callback that wants one must draw it.</p>
+<p>Two rules worth honouring:</p>
+<ul><li>Draw the caption with the <strong>same font</strong> you handed to <code>PsCheckBox_SetFont</code>. The ideal width was measured with it; a wider font here makes that measurement a lie and the caption clips.</li><li><strong>Do not use <code>PaintBorderRect</code> to draw a frame or a ring.</strong> It fills before it strokes, so used as an outline it erases everything beneath it and the control renders as one solid block. Use <code>PaintRoundOutline</code>, which strokes without filling, or <code>PaintRectFactory</code> when you do want the fill. <code>PsCheckBox_CountRenderedTones</code> exists so you can assert you have not made this mistake.</li></ul>
+<p>More generally: a callback that fills a rectangle covering the whole control erases everything already drawn. Draw your additions, not a background.</p>
+<h4 id="chk_messagecallbackfunc">CHK_MessageCallbackFunc</h4>
+<pre class="code" data-lang="freebasic"><code>type CHK_MessageCallbackFunc as function( byval m as PSCHECKBOX_MESSAGEINFO ptr ) as boolean</code></pre>
+<p>Observe messages. Return TRUE to suppress the control's default handling, FALSE to let it proceed.</p>
+<p>You see the mouse messages (<code>WM_MOUSEMOVE</code>, <code>WM_MOUSELEAVE</code>, <code>WM_LBUTTONDOWN</code>, <code>WM_LBUTTONUP</code>, <code>WM_RBUTTONDOWN</code>, <code>WM_RBUTTONUP</code>), both focus messages, and <code>WM_KEYDOWN</code>. The right-button messages are reported and never acted on — a context menu is your business — and because no capture is taken for the right button, an up can arrive without a down.</p>
+<p><strong>The result is ignored for three messages:</strong></p>
+<div class="table-wrap"><table><thead><tr><th>Message</th><th>Why</th></tr></thead><tbody><tr><td><code>WM_LBUTTONUP</code></td><td>The control holds mouse capture across a press and this message releases it. A callback that suppressed it would strand the capture and route every later click to this control. Suppressing <code>WM_LBUTTONDOWN</code> suppresses the press itself, which is the supported way to veto a click.</td></tr><tr><td><code>WM_SETFOCUS</code></td><td>Focus is a fact the system reports, not an action to veto. The state is already updated by the time you are called. A host that does not want the control focusable must not make it a tabstop.</td></tr><tr><td><code>WM_KILLFOCUS</code></td><td>As above.</td></tr></tbody></table></div>
+<h4 id="chk_tooltipcallbackfunc">CHK_TooltipCallbackFunc</h4>
+<pre class="code" data-lang="freebasic"><code>type CHK_TooltipCallbackFunc as function( byval hCheckBox as HWND ) as DWSTRING</code></pre>
+<p>Called only when a tip is about to show, and only when the control has no tooltip text of its own. Return <code>""</code> for no tooltip.</p>
+<h4 id="pscheckbox_paintinfo">PSCHECKBOX_PAINTINFO</h4>
+<div class="table-wrap"><table><thead><tr><th>Field</th><th>Meaning</th></tr></thead><tbody><tr><td><code>hCheckBox</code></td><td>The control, so the callback can query it</td></tr><tr><td><code>b</code></td><td>The control's <code>PsBufferPaint</code> for this repaint — paint through this</td></tr><tr><td><code>rcClient</code></td><td>The whole client area</td></tr><tr><td><code>rcContent</code></td><td><code>rcClient</code> deflated by the focus-ring band</td></tr><tr><td><code>rcBox</code></td><td>The box cell. Never empty</td></tr><tr><td><code>rcText</code></td><td>The caption <strong>span</strong>, not the ink. Empty when there is no caption; degenerate when the client is too narrow</td></tr><tr><td><code>rcVisual</code></td><td><code>rcContent</code> inflated by the ring band — where the focus ring goes</td></tr><tr><td><code>isChecked</code></td><td></td></tr><tr><td><code>isHot</code></td><td>The mouse is over the control</td></tr><tr><td><code>isPressed</code></td><td>A live left press <strong>and</strong> the cursor is still inside. Slide off and this goes false without ending the gesture</td></tr><tr><td><code>isEnabled</code></td><td></td></tr><tr><td><code>isFocused</code></td><td>Draw a focus ring when true</td></tr><tr><td><code>wszText</code></td><td>The caption</td></tr><tr><td><code>wszGlyph</code></td><td>The glyph <strong>already resolved</strong> for <code>isChecked</code>, so you do not repeat the choice and cannot disagree with the control about which glyph belongs to which state</td></tr><tr><td><code>nBoxAlign</code></td><td><code>CHK_BOXALIGN_*</code></td></tr><tr><td><code>nTextAlign</code></td><td><code>CHK_TEXTALIGN_*</code> — map to <code>DT_LEFT</code> / <code>DT_CENTER</code> / <code>DT_RIGHT</code></td></tr></tbody></table></div>
+<p><code>rcText</code> is the span, not a tight box around the glyphs. That is what <code>DT_END_ELLIPSIS</code> needs; handed a tight box the ellipsis would have nowhere to happen. It also means filling <code>rcText</code> fills the whole span, not just behind the words.</p>
+<p>Test presence on the <strong>rects</strong>, not on the strings: an absent caption leaves <code>rcText</code> empty, so <code>IsRectEmpty</code> is the single source of truth — and a degenerate span on a too-narrow control drops out of the same test.</p>
+<h4 id="pscheckbox_messageinfo">PSCHECKBOX_MESSAGEINFO</h4>
+<div class="table-wrap"><table><thead><tr><th>Field</th><th>Meaning</th></tr></thead><tbody><tr><td><code>hCheckBox</code></td><td>The control</td></tr><tr><td><code>uMsg</code></td><td></td></tr><tr><td><code>wParam</code></td><td></td></tr><tr><td><code>lParam</code></td><td></td></tr></tbody></table></div>
+<h3 id="constants">Constants</h3>
+<h4 id="box-side">Box side</h4>
+<div class="table-wrap"><table><thead><tr><th>Value</th><th>Meaning</th></tr></thead><tbody><tr><td><code>CHK_BOXALIGN_LEFT</code></td><td>Box pinned to the left padding, caption takes the span to its right (default)</td></tr><tr><td><code>CHK_BOXALIGN_RIGHT</code></td><td>Box pinned to the right padding, caption takes the span to its left</td></tr></tbody></table></div>
+<h4 id="caption-alignment-within-the-span">Caption alignment within the span</h4>
+<div class="table-wrap"><table><thead><tr><th>Value</th><th>Meaning</th></tr></thead><tbody><tr><td><code>CHK_TEXTALIGN_LEFT</code></td><td>Default</td></tr><tr><td><code>CHK_TEXTALIGN_CENTER</code></td><td></td></tr><tr><td><code>CHK_TEXTALIGN_RIGHT</code></td><td></td></tr></tbody></table></div>
+<h4 id="moods">Moods</h4>
+<div class="table-wrap"><table><thead><tr><th>Value</th><th>Meaning</th></tr></thead><tbody><tr><td><code>CHK_MOOD_IDLE</code></td><td>Nothing is happening</td></tr><tr><td><code>CHK_MOOD_HOT</code></td><td>The cursor is over the control</td></tr><tr><td><code>CHK_MOOD_PRESSED</code></td><td>A live left press, cursor still inside</td></tr><tr><td><code>CHK_MOOD_DISABLED</code></td><td>Beats all three</td></tr></tbody></table></div>
+<h4 id="probe-parts">Probe parts</h4>
+<div class="table-wrap"><table><thead><tr><th>Value</th><th>Rect measured</th></tr></thead><tbody><tr><td><code>CHK_PART_CONTROL</code></td><td><code>rcContent</code></td></tr><tr><td><code>CHK_PART_BOX</code></td><td><code>rcBox</code></td></tr><tr><td><code>CHK_PART_TEXT</code></td><td><code>rcText</code></td></tr></tbody></table></div>
+<h4 id="default-glyphs">Default glyphs</h4>
+<div class="table-wrap"><table><thead><tr><th>Constant</th><th>Codepoint</th><th>Segoe Fluent Icons name</th></tr></thead><tbody><tr><td><code>PSCHECKBOX_GLYPH_UNCHECKED</code></td><td><code>U+E739</code></td><td>Checkbox — an empty outlined square</td></tr><tr><td><code>PSCHECKBOX_GLYPH_CHECKED</code></td><td><code>U+E73A</code></td><td>CheckboxComposite — the square with a tick</td></tr></tbody></table></div>
+<p>Both are written in the header as <code>\u</code> escapes rather than as literal characters, because a BOM-less source file is read as bytes and a pasted <code>U+E739</code> would arrive as its three UTF-8 bytes. Do the same if you replace them from source.</p>
+<h4 id="default-geometry">Default geometry</h4>
+<p>All are DPI-scaled once at <code>Create</code> except <code>PSCHECKBOX_DEFAULT_FOCUSTHICK</code>, which is never scaled.</p>
+<div class="table-wrap"><table><thead><tr><th>Constant</th><th>Value</th><th></th></tr></thead><tbody><tr><td><code>PSCHECKBOX_DEFAULT_PADLEFT</code></td><td>4</td><td></td></tr><tr><td><code>PSCHECKBOX_DEFAULT_PADTOP</code></td><td>2</td><td></td></tr><tr><td><code>PSCHECKBOX_DEFAULT_PADRIGHT</code></td><td>4</td><td></td></tr><tr><td><code>PSCHECKBOX_DEFAULT_PADBOTTOM</code></td><td>2</td><td></td></tr><tr><td><code>PSCHECKBOX_DEFAULT_BOXGAP</code></td><td>8</td><td>Charged only when there is a caption</td></tr><tr><td><code>PSCHECKBOX_DEFAULT_BOXWIDTH</code></td><td>16</td><td>Declared, never measured</td></tr><tr><td><code>PSCHECKBOX_DEFAULT_BOXHEIGHT</code></td><td>16</td><td></td></tr><tr><td><code>PSCHECKBOX_DEFAULT_FOCUSGAP</code></td><td>2</td><td></td></tr><tr><td><code>PSCHECKBOX_DEFAULT_FOCUSCURV</code></td><td>4</td><td>Ellipse diameter</td></tr><tr><td><code>PSCHECKBOX_DEFAULT_FOCUSTHICK</code></td><td>1</td><td>Not DPI-scaled</td></tr></tbody></table></div>
+<h4 id="hover-tracking">Hover tracking</h4>
+<p><code>WM_MOUSELEAVE</code> is not reliably delivered on fast exits, so the control also polls the cursor while it is hot. The poll is suppressed while a press is live, because the press legitimately lets the cursor wander off and come back.</p>
+<div class="table-wrap"><table><thead><tr><th>Constant</th><th>Value</th><th></th></tr></thead><tbody><tr><td><code>IDT_CCHECKBOX_HOTTRACK</code></td><td><code>&amp;hCBA0</code></td><td>Timer id, per-window so every instance can share it</td></tr><tr><td><code>PSCHECKBOX_HOTTRACK_MS</code></td><td>100</td><td>Poll interval</td></tr></tbody></table></div>
+    <footer class="foot">
+      <p>PlanetSquires owner-drawn controls for FreeBASIC / AfxNova. Copyright © Paul Squires, distributed under the MIT License. Documentation generated from each control&#x27;s own README. <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../index.html">Home</a> ·
+         <a href="../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../nav.js?v=70a6b70236"></script>
+<script src="../search-index.js"></script>
+<script src="../assets/app.js?v=456d079659"></script>
+<script src="../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

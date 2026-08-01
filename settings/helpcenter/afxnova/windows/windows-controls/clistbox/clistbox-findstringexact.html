@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CListBox.FindStringExact — Help Center</title>
+<meta name="description" content="Finds the first list box string that exactly matches the specified string, except that the search is not case sensitive.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/clistbox/clistbox-findstringexact.html">
+<meta property="og:title" content="CListBox.FindStringExact">
+<meta property="og:description" content="Finds the first list box string that exactly matches the specified string, except that the search is not case sensitive.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/clistbox/clistbox-findstringexact.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-controls/clistbox/clistbox-findstringexact.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../clistbox-class.html">CListBox Class</a></div>
+<h1>CListBox.FindStringExact<span class="h1kind">method</span></h1>
+<p class="lede">Finds the first list box string that exactly matches the specified string, except that the search is not case sensitive.</p>
+<div class="badges"><a class="badge" href="../../index.html">Windows</a><span class="badge">method</span><span class="badge">CListBox.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION FindStringExact (BYVAL hListBox AS HWND, BYVAL indexStart AS LONG, BYVAL pwszSearchString AS WSTRING PTR) AS LONG</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>hListBox</code></td><td></td><td>The handle of the listbox control.</td></tr><tr><td><code>indexStart</code></td><td></td><td>The zero-based index of the item before the first item to be searched. When the search reaches the bottom of the list box, it continues searching from the top of the list box back to the item specified by the <em>indexStart</em> parameter. If <em>indexStart</em> is -1, the entire list box is searched from the beginning.</td></tr><tr><td><code>pwszString</code></td><td></td><td>A pointer to the null-terminated string that contains the string for which to search. The search is case independent, so this string can contain any combination of uppercase and lowercase letters.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>The return value is the index of the matching item, or LB_ERR if the search was unsuccessful.</p>
+<h2>Description</h2>
+<p>Finds the first list box string that exactly matches the specified string, except that the search is not case sensitive.</p>
+<h2>Remarks</h2>
+<p>This function is only successful if the specified string and a list box item have the same length (except for the null at the end of the specified string) and have exactly the same characters.</p>
+<p>If the list box has the owner-drawn style but not the LBS_HASSTRINGS style, the action taken by LB_FINDSTRING depends on whether the LBS_SORT style is used. If LBS_SORT is used, the system sends WM_COMPAREITEM messages to the list box owner to determine which item matches the specified string.</p>
+<h2>Example</h2>
+<p>CListBox.FindStringExact(hListBox, 4, "strig to find")</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CListBox.inc</code></li><li>Defined in <span class="srcref">AfxNova/CListBox.inc:188</span></li><li>Documented in <span class="srcref">Windows/WIndows Controls/CListBox Class.md</span></li><li>Topic: <a href="../clistbox-class.html">CListBox Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

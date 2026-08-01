@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CADOFields.Append — Help Center</title>
+<meta name="description" content="Appends an object to a collection.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadofields/cadofields-append.html">
+<meta property="og:title" content="CADOFields.Append">
+<meta property="og:description" content="Appends an object to a collection.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadofields/cadofields-append.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/databases/ado-classes/cadofields/cadofields-append.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cadofields-class.html">CAdoFields Class</a></div>
+<h1>CADOFields.Append<span class="h1kind">method</span></h1>
+<p class="lede">Appends an object to a collection.</p>
+<div class="badges"><a class="badge" href="../../index.html">Databases</a><span class="badge">method</span><span class="badge">CADOFields.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION Append (BYREF wszName AS WSTRING, BYVAL nType AS DataTypeEnum, BYVAL DefinedSize AS ADO_LONGPTR = 0, BYVAL Attrib AS FieldAttributeEnum = 0, BYREF dvFieldValue AS DVARIANT = TYPE&lt;VARIANT&gt;(VT_ERROR,0,0,0,DISP_E_PARAMNOTFOUND)) AS HRESULT</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>wszName</code></td><td></td><td>A string value that contains the name of the new <code>Field</code> object, and must not be the same name as any other object in fields.</td></tr><tr><td><code>nType</code></td><td></td><td>A <strong>DataTypeEnum</strong> value, whose default value is <strong>adEmpty</strong>, that specifies the data type of the new field. The following data types are not supported by ADO, and should not be used when appending new fields to a Recordset: <strong>adIDispatch</strong>, <strong>adIUnknown</strong>, <strong>adVariant</strong>.</td></tr><tr><td><code>DefinedSize</code></td><td></td><td>Optional. An ADO_LONGPTR value that represents the defined size, in characters or bytes, of the new field. The default value for this parameter is derived from <em>nType</em>. Fields with a <strong>DefinedSize</strong> greater than 255 bytes, and treated as variable length columns. (The default <strong>DefinedSize</strong> is unspecified.)</td></tr><tr><td><code>Attrib</code></td><td></td><td>Optional. A <strong>FieldAttributeEnum</strong> value, whose default value is <strong>adFldDefault</strong>, that specifies attributes for the new field. If this value is not specified, the field will contain attributes derived from <em>nType</em>.</td></tr><tr><td><code>dvFieldValue</code></td><td></td><td>Optional. A Variant that represents the value for the new field. If not specified, then the field is appended with a null value.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>S_OK (0) or an HRESULT code.</p>
+<h2>Description</h2>
+<p>Appends an object to a collection. A new <code>Field</code> object may be created before it is appended to the collection.</p>
+<h2>Remarks</h2>
+<p>The <strong>FieldValue</strong> parameter is only valid when adding a <code>Field</code> object to a <code>Record</code> object, not to a <code>Recordset</code> object. With a <code>Record</code> object, you may append fields and provide values at the same time. With a <code>Recordset</code> object, you must create fields while the <code>Recordset</code> is closed, then open the <code>Recordset</code> and assign values to the fields.</p>
+<p><strong>Notes</strong>: For new <code>Field</code> objects that have been appended to the <code>Fields</code> collection of a <code>Record</code> object, the <strong>Value*+ property must be set before any other <code>Field</code> properties can be specified. First, a specific value for the **Value</strong> property must have been assigned and <strong>Update</strong> on the <code>Fields</code> collection called. Then, other properties such as Type or <strong>Attributes</strong> can be accessed.</p>
+<p><code>Field</code> objects of the following data types (<strong>DataTypeEnum</strong>) cannot be appended to the <code>Fields</code> collection and will cause an error to occur: <strong>adArray</strong>, <strong>adChapter</strong>, <strong>adEmpty</strong>, <strong>adPropVariant</strong>, and <strong>adUserDefined</strong>. Also, the following data types are not supported by ADO: <strong>adIDispatch</strong>, <strong>adIUnknown</strong>, and <strong>adIVariant</strong>. For these types, no error will occur when appended, but usage can produce unpredictable results including memory leaks.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CADOFields.inc</code></li><li>Defined in <span class="srcref">AfxNova/CAdoFields.inc:505</span></li><li>Documented in <span class="srcref">Databases/ADO Classes/CAdoFields Class.md</span></li><li>Topic: <a href="../cadofields-class.html">CAdoFields Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

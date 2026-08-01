@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CTrackbar Class — Help Center</title>
+<meta name="description" content="CTrackbar Class — 33 documented members. Windows reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/ctrackbar-class.html">
+<meta property="og:title" content="CTrackbar Class">
+<meta property="og:description" content="CTrackbar Class — 33 documented members. Windows reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/ctrackbar-class.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-controls/ctrackbar-class.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span>Windows</div>
+<h1>CTrackbar Class</h1>
+<h2>Members (33)</h2>
+<div class="memberlist"><a href="ctrackbar/ctrackbar-clearsel.html"><span class="m-n">ClearSel</span><span class="m-d">Clears the current selection range in a trackbar.</span></a><a href="ctrackbar/ctrackbar-cleartics.html"><span class="m-n">ClearTics</span><span class="m-d">Removes the current tick marks from a trackbar. This message does not remove the first and last tick marks, which are created automatically by the trackbar.</span></a><a href="ctrackbar/ctrackbar-getbuddy.html"><span class="m-n">GetBuddy</span><span class="m-d">Retrieves the handle to a trackbar control buddy window at a given location.</span></a><a href="ctrackbar/ctrackbar-getchannelrect.html"><span class="m-n">GetChannelRect</span><span class="m-d">Retrieves the size and position of the bounding rectangle for a trackbar&#x27;s channel.</span></a><a href="ctrackbar/ctrackbar-getlinesize.html"><span class="m-n">GetLineSize</span><span class="m-d">Retrieves the number of logical positions the trackbar&#x27;s slider moves in response to keyboard input from the arrow keys, such as the or keys.</span></a><a href="ctrackbar/ctrackbar-getnumtics.html"><span class="m-n">GetNumTics</span><span class="m-d">Retrieves the number of tick marks in a trackbar.</span></a><a href="ctrackbar/ctrackbar-getpagesize.html"><span class="m-n">GetPageSize</span><span class="m-d">Retrieves the number of logical positions the trackbar&#x27;s slider moves in response to keyboard.</span></a><a href="ctrackbar/ctrackbar-getpos.html"><span class="m-n">GetPos</span><span class="m-d">Retrieves the current logical position of the slider in a trackbar.</span></a><a href="ctrackbar/ctrackbar-getptics.html"><span class="m-n">GetPTics</span><span class="m-d">Retrieves the address of an array that contains the positions of the tick marks for a trackbar.</span></a><a href="ctrackbar/ctrackbar-getrangemax.html"><span class="m-n">GetRangeMax</span><span class="m-d">Retrieves the maximum position for the slider in a trackbar.</span></a><a href="ctrackbar/ctrackbar-getrangemin.html"><span class="m-n">GetRangeMin</span><span class="m-d">Retrieves the minimum position for the slider in a trackbar.</span></a><a href="ctrackbar/ctrackbar-getselend.html"><span class="m-n">GetSelEnd</span><span class="m-d">Retrieves the ending position of the current selection range in a trackbar.</span></a><a href="ctrackbar/ctrackbar-getselstart.html"><span class="m-n">GetSelStart</span><span class="m-d">Retrieves the starting position of the current selection range in a trackbar.</span></a><a href="ctrackbar/ctrackbar-getthumblength.html"><span class="m-n">GetThumbLength</span><span class="m-d">Retrieves the length of the slider in a trackbar.</span></a><a href="ctrackbar/ctrackbar-getthumbrect.html"><span class="m-n">GetThumbRect</span><span class="m-d">Retrieves the length of the slider in a trackbar.</span></a><a href="ctrackbar/ctrackbar-gettic.html"><span class="m-n">GetTic</span><span class="m-d">Retrieves the length of the slider in a trackbar.</span></a><a href="ctrackbar/ctrackbar-getticpos.html"><span class="m-n">GetTicPos</span><span class="m-d">Retrieves the length of the slider in a trackbar.</span></a><a href="ctrackbar/ctrackbar-gettooltips.html"><span class="m-n">GetTooltips</span><span class="m-d">Retrieves the handle to the ToolTip control assigned to the trackbar, if any.</span></a><a href="ctrackbar/ctrackbar-setbuddy.html"><span class="m-n">SetBuddy</span><span class="m-d">Assigns a window as the buddy window for a trackbar control.</span></a><a href="ctrackbar/ctrackbar-setlinesize.html"><span class="m-n">SetLineSize</span><span class="m-d">Sets the number of logical positions the trackbar&#x27;s slider moves in response to keyboard input from the arrow keys, such as the or keys.</span></a><a href="ctrackbar/ctrackbar-setpagesize.html"><span class="m-n">SetPageSize</span><span class="m-d">Sets the number of logical positions the trackbar&#x27;s slider moves in response to keyboard input.</span></a><a href="ctrackbar/ctrackbar-setpos.html"><span class="m-n">SetPos</span><span class="m-d">Sets the current logical position of the slider in a trackbar.</span></a><a href="ctrackbar/ctrackbar-setrange.html"><span class="m-n">SetRange</span><span class="m-d">Sets the range of minimum and maximum logical positions for the slider in a trackbar.</span></a><a href="ctrackbar/ctrackbar-setrangemax.html"><span class="m-n">SetRangeMax</span><span class="m-d">Sets the maximum logical position for the slider in a trackbar.</span></a><a href="ctrackbar/ctrackbar-setrangemin.html"><span class="m-n">SetRangeMin</span><span class="m-d">Sets the minimum logical position for the slider in a trackbar.</span></a><a href="ctrackbar/ctrackbar-setsel.html"><span class="m-n">SetSel</span><span class="m-d">Sets the starting and ending positions for the available selection range in a trackbar.</span></a><a href="ctrackbar/ctrackbar-setselend.html"><span class="m-n">SetSelEnd</span><span class="m-d">Sets the ending logical position of the current selection range in a trackbar.</span></a><a href="ctrackbar/ctrackbar-setselstart.html"><span class="m-n">SetSelStart</span><span class="m-d">Sets the starting logical position of the current selection range in a trackbar.</span></a><a href="ctrackbar/ctrackbar-setthumblength.html"><span class="m-n">SetThumbLength</span><span class="m-d">Sets the length of the slider in a trackbar.</span></a><a href="ctrackbar/ctrackbar-settic.html"><span class="m-n">SetTic</span><span class="m-d">Sets a tick mark in a trackbar at the specified logical position.</span></a><a href="ctrackbar/ctrackbar-setticfreq.html"><span class="m-n">SetTicFreq</span><span class="m-d">Sets the interval frequency for tick marks in a trackbar.</span></a><a href="ctrackbar/ctrackbar-settipside.html"><span class="m-n">SetTipSide</span><span class="m-d">Positions a ToolTip control used by a trackbar control.</span></a><a href="ctrackbar/ctrackbar-settooltips.html"><span class="m-n">SetToolTips</span><span class="m-d">Assigns a ToolTip control to a trackbar control.</span></a></div>
+<h2>Documentation</h2>
+<h2 id="ctrackbar-class">CTrackbar Class</h2>
+<p>A trackbar is a window that contains a slider (sometimes called a thumb) in a channel, and optional tick marks. When the user moves the slider, using either the mouse or the direction keys, the trackbar sends notification messages to indicate the change.</p>
+<p>See: <a href="https://learn.microsoft.com/en-us/windows/win32/controls/trackbar-controls" target="_blank" rel="noopener">About Trackbar Controls</a></p>
+<p><strong>Include file</strong>: CTrackbar.inc</p>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="ctrackbar/ctrackbar-clearsel.html">ClearSel</a></td><td>Clears the current selection range in a trackbar.</td></tr><tr><td><a href="#clearticks">ClearTics</a></td><td>Removes the current tick marks from a trackbar. This message does not remove the first and last tick marks, which are created automatically by the trackbar.</td></tr><tr><td><a href="ctrackbar/ctrackbar-getbuddy.html">GetBuddy</a></td><td>Retrieves the handle to a trackbar control buddy window at a given location.</td></tr><tr><td><a href="ctrackbar/ctrackbar-getchannelrect.html">GetChannelRect</a></td><td>Retrieves the size and position of the bounding rectangle for a trackbar's channel.</td></tr><tr><td><a href="ctrackbar/ctrackbar-getlinesize.html">GetLineSize</a></td><td>Retrieves the number of logical positions the trackbar's slider moves in response to keyboard input from the arrow keys, such as the or keys.</td></tr><tr><td><a href="ctrackbar/ctrackbar-getnumtics.html">GetNumTics</a></td><td>Retrieves the number of tick marks in a trackbar.</td></tr><tr><td><a href="ctrackbar/ctrackbar-getpagesize.html">GetPageSize</a></td><td>Retrieves the number of logical positions the trackbar's slider moves in response to keyboard.</td></tr><tr><td><a href="ctrackbar/ctrackbar-getpos.html">GetPos</a></td><td>Retrieves the current logical position of the slider in a trackbar.</td></tr><tr><td><a href="ctrackbar/ctrackbar-getptics.html">GetPTics</a></td><td>Retrieves the address of an array that contains the positions of the tick marks for a trackbar.</td></tr><tr><td><a href="ctrackbar/ctrackbar-getrangemax.html">GetRangeMax</a></td><td>Retrieves the maximum position for the slider in a trackbar.</td></tr><tr><td><a href="ctrackbar/ctrackbar-getrangemin.html">GetRangeMin</a></td><td>Retrieves the minimum position for the slider in a trackbar.</td></tr><tr><td><a href="ctrackbar/ctrackbar-getselend.html">GetSelEnd</a></td><td>Retrieves the ending position of the current selection range in a trackbar.</td></tr><tr><td><a href="ctrackbar/ctrackbar-getselstart.html">GetSelStart</a></td><td>Retrieves the starting position of the current selection range in a trackbar.</td></tr><tr><td><a href="ctrackbar/ctrackbar-getthumblength.html">GetThumbLength</a></td><td>Retrieves the length of the slider in a trackbar.</td></tr><tr><td><a href="ctrackbar/ctrackbar-getthumbrect.html">GetThumbRect</a></td><td>Retrieves the length of the slider in a trackbar.</td></tr><tr><td><a href="ctrackbar/ctrackbar-gettic.html">GetTic</a></td><td>Retrieves the length of the slider in a trackbar.</td></tr><tr><td><a href="ctrackbar/ctrackbar-getticpos.html">GetTicPos</a></td><td>Retrieves the length of the slider in a trackbar.</td></tr><tr><td><a href="ctrackbar/ctrackbar-gettooltips.html">GetTooltips</a></td><td>Retrieves the handle to the ToolTip control assigned to the trackbar, if any.</td></tr><tr><td><a href="ctrackbar/ctrackbar-setbuddy.html">SetBuddy</a></td><td>Assigns a window as the buddy window for a trackbar control.</td></tr><tr><td><a href="ctrackbar/ctrackbar-setlinesize.html">SetLineSize</a></td><td>Sets the number of logical positions the trackbar's slider moves in response to keyboard input from the arrow keys, such as the or keys.</td></tr><tr><td><a href="ctrackbar/ctrackbar-setpagesize.html">SetPageSize</a></td><td>Sets the number of logical positions the trackbar's slider moves in response to keyboard input.</td></tr><tr><td><a href="ctrackbar/ctrackbar-setpos.html">SetPos</a></td><td>Sets the current logical position of the slider in a trackbar.</td></tr><tr><td><a href="ctrackbar/ctrackbar-setrange.html">SetRange</a></td><td>Sets the range of minimum and maximum logical positions for the slider in a trackbar.</td></tr><tr><td><a href="ctrackbar/ctrackbar-setrangemax.html">SetRangeMax</a></td><td>Sets the maximum logical position for the slider in a trackbar.</td></tr><tr><td><a href="ctrackbar/ctrackbar-setrangemin.html">SetRangeMin</a></td><td>Sets the minimum logical position for the slider in a trackbar.</td></tr><tr><td><a href="ctrackbar/ctrackbar-setsel.html">SetSel</a></td><td>Sets the starting and ending positions for the available selection range in a trackbar.</td></tr><tr><td><a href="ctrackbar/ctrackbar-setselend.html">SetSelEnd</a></td><td>Sets the ending logical position of the current selection range in a trackbar.</td></tr><tr><td><a href="ctrackbar/ctrackbar-setselstart.html">SetSelStart</a></td><td>Sets the starting logical position of the current selection range in a trackbar.</td></tr><tr><td><a href="ctrackbar/ctrackbar-setthumblength.html">SetThumbLength</a></td><td>Sets the length of the slider in a trackbar.</td></tr><tr><td><a href="ctrackbar/ctrackbar-settic.html">SetTic</a></td><td>Sets a tick mark in a trackbar at the specified logical position.</td></tr><tr><td><a href="ctrackbar/ctrackbar-setticfreq.html">SetTicFreq</a></td><td>Sets the interval frequency for tick marks in a trackbar.</td></tr><tr><td><a href="ctrackbar/ctrackbar-settipside.html">SetTipSide</a></td><td>Positions a ToolTip control used by a trackbar control.</td></tr><tr><td><a href="ctrackbar/ctrackbar-settooltips.html">SetToolTips</a></td><td>Assigns a ToolTip control to a trackbar control.</td></tr></tbody></table></div>
+<hr>
+<h4 id="clearsel">ClearSel</h4>
+<p>Clears the current selection range in a trackbar.</p>
+<pre class="code"><code>SUB ClearSel (BYVAL hTrackbar AS HWND, BYVAL fRedraw AS BOOLEAN = FALSE)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hTrackbar</em></td><td>Handle to the trackbar control.</td></tr><tr><td><em>fRedraw</em></td><td>Redraw flag. If this parameter is TRUE, the trackbar is redrawn after the selection is cleared.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>A trackbar can have a selection range only if you specified the <strong>TBS_ENABLESELRANGE</strong> style when you created it.</p>
+<hr>
+<h4 id="cleartics">ClearTics</h4>
+<p>Removes the current tick marks from a trackbar. This message does not remove the first and last tick marks, which are created automatically by the trackbar.</p>
+<pre class="code"><code>SUB ClearTics (BYVAL hTrackbar AS HWND, BYVAL fRedraw AS BOOLEAN = FALSE)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hTrackbar</em></td><td>Handle to the trackbar control.</td></tr><tr><td><em>fRedraw</em></td><td>Redraw flag. If this parameter is TRUE, the trackbar is redrawn after the tick marks are cleared. If this parameter is FALSE, the message clears the tick marks but does not redraw the trackbar.</td></tr></tbody></table></div>
+<hr>
+<h4 id="getbuddy">GetBuddy</h4>
+<p>Retrieves the handle to a trackbar control buddy window at a given location. The specified location is relative to the control's orientation (horizontal or vertical).</p>
+<pre class="code"><code>FUNCTION GetBuddy (BYVAL hTrackbar AS HWND, BYVAL fLocation AS BOOLEAN) AS HWND</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hTrackbar</em></td><td>Handle to the trackbar control.</td></tr><tr><td><em>fLocation</em></td><td>Value indicating which buddy window handle will be retrieved, by relative location. This value can be one of the following:</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>Value</th><th>Meaning</th></tr></thead><tbody><tr><td><strong>TRUE</strong></td><td>Retrieves the handle to the buddy to the left of the trackbar. If the trackbar control uses the TBS_VERT style, the message will retrieve the buddy above the trackbar.</td></tr><tr><td><strong>FALSE</strong></td><td>Retrieves the handle to the buddy to the right of the trackbar. If the trackbar control uses the TBS_VERT style, the message will retrieve the buddy below the trackbar.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns the handle to the buddy window at the location specified by <em>fLocation</em>, or NULL if no buddy window exists at that location.</p>
+<hr>
+<h4 id="getchannelrect">GetChannelRect</h4>
+<p>Retrieves the size and position of the bounding rectangle for a trackbar's channel. (The channel is the area over which the slider moves. It contains the highlight when a range is selected.)</p>
+<pre class="code"><code>SUB GetChannelRect (BYVAL hTrackbar AS HWND, BYVAL prc AS RECT PTR)
+SUB GetChannelRect (BYVAL hTrackbar AS HWND, BYREF rc AS RECT)
+FUNCTION GetChannelRect (BYVAL hTrackbar AS HWND) AS RECT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hTrackbar</em></td><td>Handle to the trackbar control.</td></tr><tr><td><em>prc</em></td><td>Pointer to a <strong>RECT</strong> structure. The message fills this structure with the channel's bounding rectangle, in client coordinates of the trackbar's window.</td></tr></tbody></table></div>
+<hr>
+<h4 id="getlinesize">GetLineSize</h4>
+<p>Retrieves the number of logical positions the trackbar's slider moves in response to keyboard input from the arrow keys, such as the or keys. The logical positions are the integer increments in the trackbar's range of minimum to maximum slider positions.</p>
+<pre class="code"><code>FUNCTION GetLineSize (BYVAL hTrackbar AS HWND) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hTrackbar</em></td><td>Handle to the trackbar control.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns a 32-bit value that specifies the line size for the trackbar.</p>
+<h5 id="remarks">Remarks</h5>
+<p>The default setting for the line size is 1.</p>
+<p>The trackbar also sends a <strong>WM_HSCROLL</strong> or <strong>WM_VSCROLL</strong> message with the <strong>TB_LINEUP</strong> and <strong>TB_LINEDOWN</strong> notification codes to its parent window when the user presses the arrow keys.</p>
+<hr>
+<h4 id="getnumtics">GetNumTics</h4>
+<p>Retrieves the number of tick marks in a trackbar.</p>
+<pre class="code"><code>FUNCTION GetNumTics (BYVAL hTrackbar AS HWND) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hTrackbar</em></td><td>Handle to the trackbar control.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If no tick flag is set, it returns 2 for the beginning and ending ticks. If <strong>TBS_NOTICKS</strong> is set, it returns zero. Otherwise, it takes the difference between the range minimum and maximum, divides by the tick frequency, and adds 2.</p>
+<h5 id="remarks">Remarks</h5>
+<p>The <strong>TBM_GETNUMTICS</strong> message counts all of the tick marks, including the first and last tick marks created by the trackbar.</p>
+<hr>
+<h4 id="getpagesize">GetPageSize</h4>
+<p>Retrieves the number of logical positions the trackbar's slider moves in response to keyboard input, such as the or keys, or mouse input, such as clicks in the trackbar's channel. The logical positions are the integer increments in the trackbar's range of minimum to maximum slider positions.</p>
+<pre class="code"><code>FUNCTION GetPageSize (BYVAL hTrackbar AS HWND) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hTrackbar</em></td><td>Handle to the trackbar control.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns a 32-bit value that specifies the page size for the trackbar.</p>
+<h5 id="remarks">Remarks</h5>
+<p>The trackbar also sends a <strong>WM_HSCROLL</strong> or <strong>WM_VSCROLL</strong> message with the <strong>TB_PAGEUP</strong> and <strong>TB_PAGEDOWN</strong> notification codes to its parent window when it receives keyboard or mouse input that scrolls the page.</p>
+<hr>
+<h4 id="getpos">GetPos</h4>
+<p>Retrieves the current logical position of the slider in a trackbar. The logical positions are the integer values in the trackbar's range of minimum to maximum slider positions.</p>
+<pre class="code"><code>FUNCTION GetPos (BYVAL hTrackbar AS HWND) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hTrackbar</em></td><td>Handle to the trackbar control.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns a 32-bit value that specifies the current logical position of the trackbar's slider.</p>
+<hr>
+<h4 id="getptics">GetPTics</h4>
+<p>Retrieves the address of an array that contains the positions of the tick marks for a trackbar.</p>
+<pre class="code"><code>FUNCTION GetPTics (BYVAL hTrackbar AS HWND) AS DWORD</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hTrackbar</em></td><td>Handle to the trackbar control.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns the address of an array of DWORD values. The elements of the array specify the logical positions of the trackbar's tick marks, not including the first and last tick marks created by the trackbar. The logical positions can be any of the integer values in the trackbar's range of minimum to maximum slider positions.</p>
+<h5 id="remarks">Remarks</h5>
+<p>The number of elements in the array is two less than the tick count returned by the <strong>TBM_GETNUMTICS</strong> message. Note that the values in the array may include duplicate positions and may not be in sequential order. The returned pointer is valid until you change the trackbar's tick marks.</p>
+<hr>
+<h4 id="getrangemax">GetRangeMax</h4>
+<p>Retrieves the maximum position for the slider in a trackbar.</p>
+<pre class="code"><code>FUNCTION GetRangeMax (BYVAL hTrackbar AS HWND) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hTrackbar</em></td><td>Handle to the trackbar control.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns a 32-bit value that specifies the maximum position in the trackbar's range of minimum to maximum slider positions.</p>
+<hr>
+<h4 id="getrangemin">GetRangeMin</h4>
+<p>Retrieves the minimum position for the slider in a trackbar.</p>
+<pre class="code"><code>FUNCTION GetRangeMin (BYVAL hTrackbar AS HWND) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hTrackbar</em></td><td>Handle to the trackbar control.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns a 32-bit value that specifies the minimum position in the trackbar's range of minimum to maximum slider positions.</p>
+<hr>
+<h4 id="getselend">GetSelEnd</h4>
+<p>Retrieves the ending position of the current selection range in a trackbar.</p>
+<pre class="code"><code>FUNCTION GetSelEnd (BYVAL hTrackbar AS HWND) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hTrackbar</em></td><td>Handle to the trackbar control.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns a 32-bit value that specifies the ending position of the current selection range.</p>
+<h5 id="remarks">Remarks</h5>
+<p>A trackbar can have a selection range only if you specified the <strong>TBS_ENABLESELRANGE</strong> style when you created it.</p>
+<hr>
+<h4 id="getselstart">GetSelStart</h4>
+<p>Retrieves the starting position of the current selection range in a trackbar.</p>
+<pre class="code"><code>FUNCTION GetSelStart (BYVAL hTrackbar AS HWND) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hTrackbar</em></td><td>Handle to the trackbar control.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns a 32-bit value that specifies the starting position of the current selection range.</p>
+<h5 id="remarks">Remarks</h5>
+<p>A trackbar can have a selection range only if you specified the <strong>TBS_ENABLESELRANGE</strong> style when you created it.</p>
+<hr>
+<h4 id="getthumblength">GetThumbLength</h4>
+<p>Retrieves the length of the slider in a trackbar.</p>
+<pre class="code"><code>FUNCTION GetThumbLength (BYVAL hTrackbar AS HWND) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hTrackbar</em></td><td>Handle to the trackbar control.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns the length, in pixels, of the slider.</p>
+<hr>
+<h4 id="getthumbrect">GetThumbRect</h4>
+<p>Retrieves the size and position of the bounding rectangle for the slider in a trackbar.</p>
+<pre class="code"><code>SUB GetThumbRect (BYVAL hTrackbar AS HWND, BYVAL prc AS RECT PTR)
+SUB GetThumbRect (BYVAL hTrackbar AS HWND, BYREF rc AS RECT)
+FUNCTION GetThumbRect (BYVAL hTrackbar AS HWND) AS RECT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hTrackbar</em></td><td>Handle to the trackbar control.</td></tr><tr><td><em>prc</em></td><td>Pointer to a <strong>RECT</strong> structure. The message fills this structure with the bounding rectangle of the trackbar's slider in client coordinates of the trackbar's window.</td></tr></tbody></table></div>
+<hr>
+<h4 id="gettic">GetTic</h4>
+<p>Retrieves the logical position of a tick mark in a trackbar. The logical position can be any of the integer values in the trackbar's range of minimum to maximum slider positions.</p>
+<pre class="code"><code>FUNCTION GetTic (BYVAL hTrackbar AS HWND, BYVAL iTic AS DWORD) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hTrackbar</em></td><td>Handle to the trackbar control.</td></tr><tr><td><em>iTic</em></td><td>Zero-based index identifying a tick mark. Valid indexes are in the range from zero to two less than the tick count returned by the <strong>TBM_GETNUMTICS</strong> message.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns the logical position of the specified tick mark, or -1 if <em>iTic</em> does not specify a valid index.</p>
+<hr>
+<h4 id="getticpos">GetTicPos</h4>
+<p>Retrieves the current physical position of a tick mark in a trackbar.</p>
+<pre class="code"><code>FUNCTION GetTicPos (BYVAL hTrackbar AS HWND, BYVAL iTic AS DWORD) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hTrackbar</em></td><td>Handle to the trackbar control.</td></tr><tr><td><em>iTic</em></td><td>Zero-based index identifying a tick mark. The positions of the first and last tick marks are not directly available via this message.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns the distance, in client coordinates, from the left or top of the trackbar's client area to the specified tick mark. The return value is the x-coordinate of the tick mark for a horizontal trackbar or the y-coordinate for a vertical trackbar. If <em>iTic</em> is not a valid index, the return value is -1.</p>
+<p>Remarks Because the first and last tick marks are not available through this message, valid indexes are offset from their tick position on the trackbar. If the difference between <strong>TBM_GETRANGEMIN</strong> and <strong>TBM_GETRANGEMAX</strong> is less than two, then there is no valid index and this message will fail.</p>
+<p>The following illustrates the relation between the ticks on a trackbar, the ticks available through this message, and their zero-based indexes.</p>
+<pre class="code"><code>0 1 2 3 4 5 6 7 8 9    // Tick positions seen on the trackbar.
+  1 2 3 4 5 6 7 8      // Tick positions whose position can be identified.
+  0 1 2 3 4 5 6 7      // Index numbers for the identifiable positions.</code></pre>
+<hr>
+<h4 id="gettooltips">GetTooltips</h4>
+<p>Retrieves the handle to the tooltip control assigned to the trackbar, if any.</p>
+<pre class="code"><code>FUNCTION GetTooltips (BYVAL hTrackbar AS HWND) AS HWND</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hTrackbar</em></td><td>Handle to the trackbar control.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns the handle to the tooltip control assigned to the trackbar, or NULL if tooltips are not in use. If the trackbar control does not use the <strong>TBS_TOOLTIPS</strong> style, the return value is NULL.</p>
+<hr>
+<h4 id="setbuddy">SetBuddy</h4>
+<p>Assigns a window as the buddy window for a trackbar control. Trackbar buddy windows are automatically displayed in a location relative to the control's orientation (horizontal or vertical).</p>
+<pre class="code"><code>FUNCTION SetBuddy (BYVAL hTrackbar AS HWND, BYVAL fLocation AS BOOLEAN, BYVAL hwndBuddy AS HWND) AS HWND</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hTrackbar</em></td><td>Handle to the trackbar control.</td></tr><tr><td><em>fLocation</em></td><td>Value specifying the location at which to display the buddy window. This value can be one of the following:<br><strong>TRUE</strong>: The buddy will appear to the left of the trackbar if the trackbar control uses the TBS_HORZ style. If the trackbar uses the TBS_VERT style, the buddy appears above the trackbar control.<br><strong>FALSE</strong>: The buddy will appear to the right of the trackbar if the trackbar control uses the TBS_HORZ style. If the trackbar uses the TBS_VERT style, the buddy appears below the trackbar control.</td></tr><tr><td><em>hTrackbar</em></td><td>Handle to the window that will be set as the trackbar control's buddy.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns the handle to the window that was previously assigned to the control at that location.</p>
+<h5 id="note">Note</h5>
+<p>Trackbar controls support up to two buddy windows. This can be useful when you must display text or images at each end of the control.</p>
+<hr>
+<h4 id="setlinesize">SetLineSize</h4>
+<p>Sets the number of logical positions the trackbar's slider moves in response to keyboard input from the arrow keys, such as the or keys. The logical positions are the integer increments in the trackbar's range of minimum to maximum slider positions.</p>
+<pre class="code"><code>FUNCTION SetLineSize (BYVAL hTrackbar AS HWND, BYVAL lLineSize AS LONG) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hTrackbar</em></td><td>Handle to the trackbar control.</td></tr><tr><td><em>lLineSize</em></td><td>New line size.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>The default setting for the line size is 1.</p>
+<p>The trackbar also sends a <strong>WM_HSCROLL</strong> or <strong>WM_VSCROLL</strong> message with the <strong>TB_LINEUP</strong> and <strong>TB_LINEDOWN</strong> notification codes to its parent window when the user presses the arrow keys.</p>
+<hr>
+<h4 id="setpagesize">SetPageSize</h4>
+<p>Sets the number of logical positions the trackbar's slider moves in response to keyboard input, such as the or keys, or mouse input, such as clicks in the trackbar's channel. The logical positions are the integer increments in the trackbar's range of minimum to maximum slider positions.</p>
+<pre class="code"><code>FUNCTION SetPageSize (BYVAL hTrackbar AS HWND, BYVAL lPageSize AS LONG) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hTrackbar</em></td><td>Handle to the trackbar control.</td></tr><tr><td><em>lPageSize</em></td><td>New page size.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns a 32-bit value that specifies the previous page size.</p>
+<h5 id="remarks">Remarks</h5>
+<p>The trackbar also sends a WM_HSCROLL or WM_VSCROLL message with the TB_PAGEUP and TB_PAGEDOWN notification codes to its parent window when it receives keyboard or mouse input that scrolls the page.</p>
+<hr>
+<h4 id="setpos">SetPos</h4>
+<p>Sets the current logical position of the slider in a trackbar.</p>
+<pre class="code"><code>SUB SetPos (BYVAL hTrackbar AS HWND, BYVAL fPosition AS BOOLEAN, BYVAL lPosition AS LONG)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hTrackbar</em></td><td>Handle to the trackbar control.</td></tr><tr><td><em>fPosition</em></td><td>Redraw flag. If this parameter is <strong>TRUE</strong>, the message redraws the control with the slider at the position given by <em>lPosition</em>. If this parameter is <strong>FALSE</strong>, the message does not redraw the slider at the new position. Note that the message sets the value of the slider position (as returned by the <strong>TBM_GETPOS</strong> message) regardless of the <em>fPosition</em> parameter.</td></tr><tr><td><em>lPosition</em></td><td>New logical position of the slider. Valid logical positions are the integer values in the trackbar's range of minimum to maximum slider positions. If this value is outside the control's maximum and minimum range, the position is set to the maximum or minimum value.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns a 32-bit value that specifies the previous page size.</p>
+<h5 id="remarks">Remarks</h5>
+<p>The trackbar also sends a WM_HSCROLL or WM_VSCROLL message with the TB_PAGEUP and TB_PAGEDOWN notification codes to its parent window when it receives keyboard or mouse input that scrolls the page.</p>
+<hr>
+<h4 id="setrange">SetRange</h4>
+<p>Sets the range of minimum and maximum logical positions for the slider in a trackbar.</p>
+<pre class="code"><code>SUB SetRange (BYVAL hTrackbar AS HWND, BYVAL lMinimum AS LONG, BYVAL lMaximum AS LONG, _
+   BYVAL fRedraw AS BOOLEAN = FALSE)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hTrackbar</em></td><td>Handle to the trackbar control.</td></tr><tr><td><em>lMinimum</em></td><td>Redraw flag. If this parameter is <strong>TRUE</strong>, the trackbar is redrawn after the range is set. If this parameter is <strong>FALSE</strong>, the message sets the range but does not redraw the trackbar.</td></tr><tr><td><em>fRedraw</em></td><td>The LOWORD specifies the minimum position for the slider, and the HIWORD specifies the maximum position.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>If the current slider position is outside the new range, the <strong>TBM_SETRANGE</strong> message sets the slider position to the new maximum or minimum value.</p>
+<p>Because this message takes two 16-bit unsigned integer values, the maximum range that this message can specify is from 0 to 65,535. To specify larger range values, use the <strong>TBM_SETRANGEMIN</strong> and <strong>TBM_SETRANGEMAX</strong> messages.</p>
+<hr>
+<h4 id="setrangemax">SetRangeMax</h4>
+<p>Sets the maximum logical position for the slider in a trackbar.</p>
+<pre class="code"><code>SUB SetRangeMax (BYVAL hTrackbar AS HWND, BYVAL lMaximum AS LONG, BYVAL fRedraw AS BOOLEAN = FALSE)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hTrackbar</em></td><td>Handle to the trackbar control.</td></tr><tr><td><em>lMaximum</em></td><td>Maximum position for the slider.</td></tr><tr><td><em>fRedraw</em></td><td>Redraw flag. If this parameter is <strong>TRUE</strong>, the trackbar is redrawn after the range is set. If this parameter is <strong>FALSE</strong>, the message sets the range but does not redraw the trackbar.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>If the current slider position is greater than the new maximum, the <strong>TBM_SETRANGEMAX</strong> message sets the slider position to the new maximum value.</p>
+<hr>
+<h4 id="setrangemin">SetRangeMin</h4>
+<p>Sets the minimum logical position for the slider in a trackbar.</p>
+<pre class="code"><code>SUB SetRangeMin (BYVAL hTrackbar AS HWND, BYVAL lMinimum AS LONG, BYVAL fRedraw AS BOOLEAN = FALSE)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hTrackbar</em></td><td>Handle to the trackbar control.</td></tr><tr><td><em>lMinimum</em></td><td>Minimum position for the slider.</td></tr><tr><td><em>fRedraw</em></td><td>Redraw flag. If this parameter is <strong>TRUE</strong>, the trackbar is redrawn after the range is set. If this parameter is <strong>FALSE</strong>, the message sets the range but does not redraw the trackbar.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>If the current slider position is greater than the new maximum, the <strong>TBM_SETRANGEMAX</strong> message sets the slider position to the new maximum value.</p>
+<hr>
+<h4 id="setsel">SetSel</h4>
+<p>Sets the starting and ending positions for the available selection range in a trackbar.</p>
+<pre class="code"><code>SUB SetSel (BYVAL hTrackbar AS HWND, BYVAL iStart AS SHORT, BYVAL iEnd AS SHORT, _
+   BYVAL fRedraw AS BOOLEAN = FALSE)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hTrackbar</em></td><td>Handle to the trackbar control.</td></tr><tr><td><em>iStart</em></td><td>The starting logical position for the selection range.</td></tr><tr><td><em>iEnd</em></td><td>The ending logical position for the selection range.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>This message is ignored if the trackbar does not have the <strong>TBS_ENABLESELRANGE</strong> style.</p>
+<p><strong>TBM_SETSEL</strong> allows you to restrict the pointer to only a portion of the range available to the progress bar.</p>
+<hr>
+<h4 id="setselend">SetSelEnd</h4>
+<p>Sets the ending logical position of the current selection range in a trackbar. This message is ignored if the trackbar does not have the <strong>TBS_ENABLESELRANGE</strong> style.</p>
+<pre class="code"><code>SUB SetSelEnd (BYVAL hTrackbar AS HWND, BYVAL lEnd AS LONG, BYVAL fRedraw AS BOOLEAN = FALSE)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hTrackbar</em></td><td>Handle to the trackbar control.</td></tr><tr><td><em>lEnd</em></td><td>Ending logical position of the selection range.</td></tr><tr><td><em>fRedraw</em></td><td>Redraw flag. If this parameter is <strong>TRUE</strong>, the message redraws the trackbar after the selection range is set. If this parameter is <strong>FALSE</strong>, the message sets the selection range but does not redraw the trackbar.</td></tr></tbody></table></div>
+<hr>
+<h4 id="setselstart">SetSelStart</h4>
+<p>Sets the starting logical position of the current selection range in a trackbar. This message is ignored if the trackbar does not have the <strong>TBS_ENABLESELRANGE</strong> style.</p>
+<pre class="code"><code>SUB SetSelStart (BYVAL hTrackbar AS HWND, BYVAL lStart AS LONG, BYVAL fRedraw AS BOOLEAN = FALSE)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hTrackbar</em></td><td>Handle to the trackbar control.</td></tr><tr><td><em>lStart</em></td><td>Starting logical position of the selection range.</td></tr><tr><td><em>fRedraw</em></td><td>Redraw flag. If this parameter is <strong>TRUE</strong>, the message redraws the trackbar after the selection range is set. If this parameter is <strong>FALSE</strong>, the message sets the selection range but does not redraw the trackbar.</td></tr></tbody></table></div>
+<hr>
+<h4 id="setthumblength">SetThumbLength</h4>
+<p>Sets the length of the slider in a trackbar. This message is ignored if the trackbar does not have the <strong>TBS_FIXEDLENGTH</strong> style.</p>
+<pre class="code"><code>SUB SetThumbLength (BYVAL hTrackbar AS HWND, BYVAL iLength AS LONG)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hTrackbar</em></td><td>Handle to the trackbar control.</td></tr><tr><td><em>iLength</em></td><td>Length, in pixels, of the slider.</td></tr></tbody></table></div>
+<hr>
+<h4 id="settic">SetTic</h4>
+<p>Sets a tick mark in a trackbar at the specified logical position.</p>
+<pre class="code"><code>FUNCTION SetTic (BYVAL hTrackbar AS HWND, BYVAL lPosition AS LONG) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hTrackbar</em></td><td>Handle to the trackbar control.</td></tr><tr><td><em>lPosition</em></td><td>Position of the tick mark. This parameter can be any of the integer values in the trackbar's range of minimum to maximum slider positions.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns TRUE if the tick mark is set, or FALSE otherwise.</p>
+<h5 id="remarks">Remarks</h5>
+<p>A trackbar creates its own first and last tick marks. Do not use this message to set the first and last tick marks.</p>
+<hr>
+<h4 id="setticfreq">SetTicFreq</h4>
+<p>Sets the interval frequency for tick marks in a trackbar. For example, if the frequency is set to two, a tick mark is displayed for every other increment in the trackbar's range. The default setting for the frequency is one; that is, every increment in the range is associated with a tick mark.</p>
+<pre class="code"><code>SUB SetTicFreq (BYVAL hTrackbar AS HWND, BYVAL wFreq AS WORD)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hTrackbar</em></td><td>Handle to the trackbar control.</td></tr><tr><td><em>wFreq</em></td><td>Frequency of the tick marks.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>The trackbar must have the <strong>TBS_AUTOTICKS</strong> style to use this message.</p>
+<hr>
+<h4 id="settipside">SetTipSide</h4>
+<p>Positions a tooltip control used by a trackbar control. Trackbar controls that use the <strong>TBS_TOOLTIPS</strong> style display tooltips.</p>
+<pre class="code"><code>FUNCTION SetTipSide (BYVAL hTrackbar AS HWND, BYVAL fLocation AS LONG) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hTrackbar</em></td><td>Handle to the trackbar control.</td></tr><tr><td><em>fLocation</em></td><td>Value representing the location at which to display the tooltip control. This value can be one of the following:</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>Value</th><th>Meaning</th></tr></thead><tbody><tr><td><strong>TBTS_TOP</strong></td><td>The tooltip control will be positioned above the trackbar. This flag is for use with horizontal trackbars.</td></tr><tr><td><strong>TBTS_LEFT</strong></td><td>The tooltip control will be positioned to the left of the trackbar. This flag is for use with vertical trackbars.</td></tr><tr><td><strong>TBTS_BOTTOM</strong></td><td>The tooltip control will be positioned below the trackbar. This flag is for use with horizontal trackbars.</td></tr><tr><td><strong>TBTS_RIGHT</strong></td><td>The tooltip control will be positioned to the right of the trackbar. This flag is for use with vertical trackbars.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns a value that represents the tooltip control's previous location. The return value equals one of the possible values for <em>fLocation</em>.</p>
+<hr>
+<h4 id="settooltips">SetToolTips</h4>
+<p>Assigns a tooltip control to a trackbar control.</p>
+<pre class="code"><code>FUNCTION SetToolTips (BYVAL hTrackbar AS HWND, BYVAL hwndTT AS HWND)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hTrackbar</em></td><td>Handle to the trackbar control.</td></tr><tr><td><em>hwndTT</em></td><td>Handle to an existing tooltip control.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The return value for this message is not used.</p>
+<h5 id="remarks">Remarks</h5>
+<p>When a trackbar control is created with the <strong>TBS_TOOLTIPS</strong> style, it creates a default tooltip control that appears next to the slider, displaying the slider's current position.</p>
+<hr>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CAdoEvents Class — Help Center</title>
+<meta name="description" content="CAdoEvents Class — 20 documented members. Databases reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadoevents-class.html">
+<meta property="og:title" content="CAdoEvents Class">
+<meta property="og:description" content="CAdoEvents Class — 20 documented members. Databases reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadoevents-class.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/databases/ado-classes/cadoevents-class.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span>Databases</div>
+<h1>CAdoEvents Class</h1>
+<h2>Members (20)</h2>
+<div class="memberlist"><a href="cadoevents/cadoevents-begintranscomplete.html"><span class="m-n">BeginTransComplete</span><span class="m-d">Called after the **BeginTrans** operation.</span></a><a href="cadoevents/cadoevents-committranscomplete.html"><span class="m-n">CommitTransComplete</span><span class="m-d">Called after the **CommitTrans** operation.</span></a><a href="cadoevents/cadoevents-connectcomplete.html"><span class="m-n">ConnectComplete</span><span class="m-d">Called after a connection starts.</span></a><a href="cadoevents/cadoevents-disconnect.html"><span class="m-n">DisConnect</span><span class="m-d">Called after a connection ends.</span></a><a href="cadoevents/cadoevents-endofrecordset.html"><span class="m-n">EndOfRecordset</span><span class="m-d">Called when there is an attempt to move to a row past the end of the **Recordset**.</span></a><a href="cadoevents/cadoevents-executecomplete.html"><span class="m-n">ExecuteComplete</span><span class="m-d">Called after a command has finished executing.</span></a><a href="cadoevents/cadoevents-fetchcomplete.html"><span class="m-n">FetchComplete</span><span class="m-d">Called after all the records in a lengthy asynchronous operation have been retrieved into the **Recordset**.</span></a><a href="cadoevents/cadoevents-fetchprogress.html"><span class="m-n">FetchProgress</span><span class="m-d">Called periodically during a lengthy asynchronous operation to report how many rows have currently been retrieved into the **Recordset**.</span></a><a href="cadoevents/cadoevents-fieldchangecomplete.html"><span class="m-n">FieldChangeComplete</span><span class="m-d">Called after the value of one or more Field objects has changed.</span></a><a href="cadoevents/cadoevents-infomessage.html"><span class="m-n">InfoMessage</span><span class="m-d">Called whenever a warning occurs during a **ConnectionEvent** operation.</span></a><a href="cadoevents/cadoevents-movecomplete.html"><span class="m-n">MoveComplete</span><span class="m-d">Called after the current position in the **Recordset** changes.</span></a><a href="cadoevents/cadoevents-recordchangecomplete.html"><span class="m-n">RecordChangeComplete</span><span class="m-d">Called after one or more records change.</span></a><a href="cadoevents/cadoevents-recordsetchangecomplete.html"><span class="m-n">RecordsetChangeComplete</span><span class="m-d"></span></a><a href="cadoevents/cadoevents-rollbacktranscomplete.html"><span class="m-n">RollbackTransComplete</span><span class="m-d">Called after the **RollbackTrans** operation.</span></a><a href="cadoevents/cadoevents-willchangefield.html"><span class="m-n">WillChangeField</span><span class="m-d">Called before a pending operation changes the value of one or more **Field** objects in the **Recordset**.</span></a><a href="cadoevents/cadoevents-willchangerecord.html"><span class="m-n">WillChangeRecord</span><span class="m-d">Called before one or more records (rows) in the **Recordset** change.</span></a><a href="cadoevents/cadoevents-willchangerecordset.html"><span class="m-n">WillChangeRecordset</span><span class="m-d">Called before a pending operation changes the **Recordset**.</span></a><a href="cadoevents/cadoevents-willconnect.html"><span class="m-n">WillConnect</span><span class="m-d">Called before a connection starts.</span></a><a href="cadoevents/cadoevents-willexecute.html"><span class="m-n">WillExecute</span><span class="m-d">Called just before a pending command executes on this connection and affords the user an opportunity to examine and modify the pending execution parameters.</span></a><a href="cadoevents/cadoevents-willmove.html"><span class="m-n">WillMove</span><span class="m-d">The **WillMove** event is called before a pending operation changes the current position in the **Recordset**.</span></a></div>
+<h2>Documentation</h2>
+<h2 id="cadoevents-class">CAdoEvents Class</h2>
+<p>The <code>CAdoEvents</code> class serves as a comprehensive event-handling interface for ActiveX Data Objects (ADO) within the <code>AfxNova</code> framework. It is designed to intercept and respond to a wide range of <code>ADO</code> operations, offering developers fine-grained control over database interactions at runtime.</p>
+<p>This class encapsulates both <strong>Connection</strong> events and <strong>Recordset</strong> events, enabling developers to monitor and manipulate the behavior of <code>ADO</code> objects during critical operations such as connecting to a data source, executing commands, navigating records, and modifying data. Each event method provides access to relevant parameters and status flags, allowing for custom logic to be injected before or after the underlying <code>ADO</code> operation.</p>
+<p>For example, the <strong>WillMove</strong> event is triggered just before the current position in a <strong>Recordset</strong> changes, giving developers a chance to validate or cancel the move operation based on business rules or application state.</p>
+<p>Whether you're building robust data-driven applications or need to enforce strict transactional workflows, <code>CAdoEvents</code> offers the hooks necessary to make your <code>ADO</code> interactions both intelligent and responsive.</p>
+<p>####Usage example</p>
+<pre class="code"><code>#include once "AfxNova/CADODB.inc"
+USING AfxNova
+
+' ########################################################################################
+' // Custom implementation of ADO Connection events
+' ########################################################################################
+TYPE CAdoConnectionEventsImpl EXTENDS CAdoConnectionEvents
+   DECLARE FUNCTION WillConnect (BYVAL ConnectionString AS Afx_BSTR PTR, BYVAL UserID AS Afx_BSTR PTR, BYVAL Password AS Afx_BSTR PTR, BYVAL Options AS LONG PTR, BYVAL adStatus AS EventStatusEnum PTR, BYVAL pConnection AS Afx_ADOConnection PTR) AS HRESULT
+   DECLARE FUNCTION ConnectComplete (BYVAL pError AS Afx_ADOError PTR, BYVAL adStatus AS EventStatusEnum PTR, BYVAL pConnection AS Afx_ADOConnection PTR) AS HRESULT
+   DECLARE FUNCTION Disconnect (BYVAL adStatus AS EventStatusEnum PTR, BYVAL pConnection AS Afx_ADOConnection PTR) AS HRESULT
+   ' Override any additional method that you wish
+END TYPE
+
+FUNCTION CAdoConnectionEventsImpl.WillConnect (BYVAL ConnectionString AS Afx_BSTR PTR, BYVAL UserID AS Afx_BSTR PTR, BYVAL Password AS Afx_BSTR PTR, BYVAL Options AS LONG PTR, BYVAL adStatus AS EventStatusEnum PTR, BYVAL pConnection AS Afx_ADOConnection PTR) AS HRESULT
+   CADODB_DP("- Connection string: " &amp; **ConnectionString)
+   RETURN S_OK   ' change it if needed
+END FUNCTION
+FUNCTION CAdoConnectionEventsImpl.ConnectComplete (BYVAL pError AS Afx_ADOError PTR, BYVAL adStatus AS EventStatusEnum PTR, BYVAL pConnection AS Afx_ADOConnection PTR) AS HRESULT
+   CADODB_DP("- adStatus: " &amp; WSTR(*adStatus))
+   IF *adStatus = adStatusOK THEN
+      CADODB_DP("Connection succeeded")
+   ELSE
+      CADODB_DP("Connection failed")
+   END IF
+   RETURN S_OK   ' change it if needed
+END FUNCTION
+FUNCTION CAdoConnectionEventsImpl.Disconnect (BYVAL adStatus AS EventStatusEnum PTR, BYVAL pConnection AS Afx_ADOConnection PTR) AS HRESULT
+   CADODB_DP("")
+   RETURN S_OK   ' change it if needed
+END FUNCTION
+' ########################################################################################
+
+' ########################################################################################
+' // Custom implementation of ADO Recordset events
+' ########################################################################################
+TYPE CAdoRecordsetEventsImpl EXTENDS CAdoRecordsetEvents
+   DECLARE FUNCTION WillMove (BYVAL adReason AS EventReasonEnum, BYVAL adStatus AS EventStatusEnum PTR, BYVAL pRecordset AS Afx_ADORecordset PTR) AS HRESULT
+   DECLARE FUNCTION MoveComplete (BYVAL adReason AS EventReasonEnum, BYVAL pError AS Afx_ADOError PTR, BYVAL adStatus AS EventStatusEnum PTR, BYVAL pRecordset AS Afx_ADORecordset PTR) AS HRESULT
+   DECLARE FUNCTION EndOfRecordset (BYVAL fMoreData AS VARIANT_BOOL PTR, BYVAL adStatus AS EventStatusEnum PTR, BYVAL pRecordset AS Afx_ADORecordset PTR) AS HRESULT
+   ' Override any additional method that you wish
+END TYPE
+
+FUNCTION CAdoRecordsetEventsImpl.WillMove (BYVAL adReason AS EventReasonEnum, BYVAL adStatus AS EventStatusEnum PTR, BYVAL pRecordset AS Afx_ADORecordset PTR) AS HRESULT
+   CADODB_DP("")
+   RETURN S_OK   ' change it if needed
+END FUNCTION
+FUNCTION CAdoRecordsetEventsImpl.MoveComplete (BYVAL adReason AS EventReasonEnum, BYVAL pError AS Afx_ADOError PTR, BYVAL adStatus AS EventStatusEnum PTR, BYVAL pRecordset AS Afx_ADORecordset PTR) AS HRESULT
+   CADODB_DP("")
+   RETURN S_OK   ' change it if needed
+END FUNCTION
+FUNCTION CAdoRecordsetEventsImpl.EndOfRecordset (BYVAL fMoreData AS VARIANT_BOOL PTR, BYVAL adStatus AS EventStatusEnum PTR, BYVAL pRecordset AS Afx_ADORecordset PTR) AS HRESULT
+   CADODB_DP("")
+   RETURN S_OK   ' change it if needed
+END FUNCTION
+' ########################################################################################
+
+' // === Create an instance of the Connection object
+DIM pConnection AS CAdoConnection
+' // === Connect events
+DIM pEvtSink AS ANY PTR = NEW CAdoConnectionEventsImpl
+pConnection.SetEvents pEvtSink
+' // === Open the connection
+pConnection.Open("Provider=Microsoft.Jet.OLEDB.4.0;Data Source=biblio.mdb")
+
+' // === Create a Recordset object
+DIM pRecordset AS CAdoRecordset
+' // === Connect events
+pEvtSink = NEW CAdoRecordsetEventsImpl
+pRecordset.SetEvents pEvtSink
+' // === Open the recordset
+pRecordset.Open("SELECT * FROM Authors", pConnection, adOpenKeyset, adLockOptimistic, adCmdText)
+
+' // === Parse the recordset
+' // While not at the end of the recordset...
+DO WHILE NOT pRecordset.EOF
+   ' // Get the content of the "Author" column
+   PRINT pRecordset.Collect("Author")
+   ' // Fetch the next row
+   IF pRecordset.MoveNext &lt;&gt; S_OK THEN EXIT DO
+LOOP
+
+' // === Close the recordset and the connection
+' // If you don't close them, they will be closed when the application ends
+pRecordset.Close
+pConnection.Close</code></pre>
+<h2 id="connection-events">Connection events</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="cadoevents/cadoevents-begintranscomplete.html">BeginTransComplete</a></td><td>Called after the <strong>BeginTrans</strong> operation.</td></tr><tr><td><a href="cadoevents/cadoevents-committranscomplete.html">CommitTransComplete</a></td><td>Called after the <strong>CommitTrans</strong> operation.</td></tr><tr><td><a href="cadoevents/cadoevents-connectcomplete.html">ConnectComplete</a></td><td>Called after a connection starts.</td></tr><tr><td><a href="cadoevents/cadoevents-disconnect.html">DisConnect</a></td><td>Called after a connection ends.</td></tr><tr><td><a href="cadoevents/cadoevents-executecomplete.html">ExecuteComplete</a></td><td>Called after a command has finished executing.</td></tr><tr><td><a href="cadoevents/cadoevents-infomessage.html">InfoMessage</a></td><td>Called whenever a warning occurs during a <strong>ConnectionEvent</strong> operation.</td></tr><tr><td><a href="#rollabcktranscomplete">RollbackTransComplete</a></td><td>Called after the <strong>RollbackTrans</strong> operation.</td></tr><tr><td><a href="cadoevents/cadoevents-willconnect.html">WillConnect</a></td><td>Called before a connection starts.</td></tr><tr><td><a href="cadoevents/cadoevents-willexecute.html">WillExecute</a></td><td>Called just before a pending command executes on this connection and affords the user an opportunity to examine and modify the pending execution parameters.</td></tr></tbody></table></div>
+<hr>
+<h2 id="recordset-events">Recordset events</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="cadoevents/cadoevents-endofrecordset.html">EndOfRecordset</a></td><td>Called when there is an attempt to move to a row past the end of the <strong>Recordset</strong>.</td></tr><tr><td><a href="cadoevents/cadoevents-fetchcomplete.html">FetchComplete</a></td><td>Called after all the records in a lengthy asynchronous operation have been retrieved into the <strong>Recordset</strong>.</td></tr><tr><td><a href="cadoevents/cadoevents-fetchprogress.html">FetchProgress</a></td><td>Called periodically during a lengthy asynchronous operation to report how many rows have currently been retrieved into the <strong>Recordset</strong>.</td></tr><tr><td><a href="cadoevents/cadoevents-fieldchangecomplete.html">FieldChangeComplete</a></td><td>Called after the value of one or more Field objects has changed.</td></tr><tr><td><a href="cadoevents/cadoevents-movecomplete.html">MoveComplete</a></td><td>Called after the current position in the <strong>Recordset</strong> changes.</td></tr><tr><td><a href="cadoevents/cadoevents-recordchangecomplete.html">RecordChangeComplete</a></td><td>Called after one or more records change.</td></tr><tr><td><a href="cadoevents/cadoevents-recordsetchangecomplete.html">RecordsetChangeComplete</a></td><td>Called after the <strong>Recordset</strong> has changed.</td></tr><tr><td><a href="cadoevents/cadoevents-willchangefield.html">WillChangeField</a></td><td>Called before a pending operation changes the value of one or more <strong>Field</strong> objects in the <strong>Recordset</strong>.</td></tr><tr><td><a href="cadoevents/cadoevents-willchangerecord.html">WillChangeRecord</a></td><td>Called before one or more records (rows) in the <strong>Recordset</strong> change.</td></tr><tr><td><a href="cadoevents/cadoevents-willchangerecordset.html">WillChangeRecordset</a></td><td>Called before a pending operation changes the <strong>Recordset</strong>.</td></tr><tr><td><a href="cadoevents/cadoevents-willmove.html">WillMove</a></td><td>The <strong>WillMove</strong> event is called before a pending operation changes the current position in the <strong>Recordset</strong>.</td></tr></tbody></table></div>
+<hr>
+<h4 id="willconnect">WillConnect</h4>
+<p>Called before a connection starts.</p>
+<pre class="code"><code>FUNCTION WillConnect (BYVAL ConnectionString AS Afx_BSTR PTR, BYVAL UserID AS Afx_BSTR PTR, _
+   BYVAL Password AS Afx_BSTR PTR, BYVAL Options AS LONG PTR, BYVAL adStatus AS EventStatusEnum PTR, _
+   BYVAL pConnection AS Afx_ADOConnection PTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>ConnectionString</em></td><td>A BSTR that contains connection information for the pending connection.</td></tr><tr><td><em>UserID</em></td><td>A BSTR that contains a user name for the pending connection.</td></tr><tr><td><em>Password</em></td><td>A BSTR that contains a password for the pending connection.</td></tr><tr><td><em>Options</em></td><td>A Long value that indicates how the provider should evaluate the <em>ConnectionString</em>. Your only option is <em>adAsyncOpen</em>.</td></tr><tr><td><em>adStatus</em></td><td><em>EventStatusEnum</em>. When this event is called, this parameter is set to <em>adStatusOK</em> by default. It is set to <em>adStatusCantDeny</em> if the event cannot request cancellation of the pending operation.Before this event returns, set this parameter to <em>adStatusUnwantedEvent</em> to prevent subsequent notifications. Set this parameter to <em>adStatusCancel</em> to request the connection operation that caused cancellation of this notification.</td></tr><tr><td><em>pConnection</em></td><td>The <strong>Connection</strong> object for which this event notification applies. Changes to the parameters of the <strong>Connection</strong> by the <strong>WillConnect</strong> event handler will have no effect on the <strong>Connection</strong>.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>When <strong>WillConnect</strong> is called, the <em>ConnectionString</em>, <em>UserID</em>, <em>Password</em>, and <em>Options</em> parameters are set to the values established by the operation that caused this event (the pending connection), and can be changed before the event returns. WillConnect may return a request that the pending connection be canceled.</p>
+<p>When this event is canceled, <strong>ConnectComplete</strong> will be called with its <em>adStatus</em> parameter set to <em>adStatusErrorsOccurred</em>.</p>
+<hr>
+<h4 id="connectcomplete">ConnectComplete</h4>
+<p>The <strong>ConnectComplete</strong> event is called after a connection starts.</p>
+<pre class="code"><code>FUNCTION ConnectComplete (BYVAL pError AS Afx_ADOError PTR, BYVAL adStatus AS EventStatusEnum PTR, _
+   BYVAL pConnection AS Afx_ADOConnection PTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pError</em></td><td>An <strong>Error</strong> object. It describes the error that occurred if the value of <em>EventStatusEnum</em> is <em>adStatusErrorsOccurred</em>; otherwise, it is not set.</td></tr><tr><td><em>adStatus</em></td><td><em>EventStatusEnum</em>. When <strong>ConnectComplete</strong> is called, this parameter is set to <em>adStatusCancel</em> if a <strong>WillConnect</strong> event has requested cancellation of the pending connection. Before either event returns, set this parameter to <em>adStatusUnwantedEvent</em> to prevent subsequent notifications. However, closing and reopening the <strong>Connection</strong> causes these events to occur again.</td></tr><tr><td><em>pConnection</em></td><td>The <strong>Connection</strong> object that fired the event.</td></tr></tbody></table></div>
+<hr>
+<h4 id="disconnect">Disconnect</h4>
+<p>Called after a connection ends.</p>
+<pre class="code"><code>FUNCTION Disconnect (BYVAL adStatus AS EventStatusEnum PTR, BYVAL pConnection AS Afx_ADOConnection PTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>adStatus</em></td><td>An <em>EventStatusEnum</em> value indicating the success or failure of the operation that triggered the event.</td></tr><tr><td><em>pConnection</em></td><td>The <strong>Connection</strong> object that fired the event.</td></tr></tbody></table></div>
+<hr>
+<h4 id="willexecute">WillExecute</h4>
+<p>Called ust before a pending command executes on a connection.</p>
+<pre class="code"><code>FUNCTION WillExecute (BYVAL Source AS Afx_BSTR PTR, BYVAL CursorType AS CursorTypeEnum PTR, _
+   BYVAL LockType AS LockTypeEnum PTR, BYVAL Options AS LONG PTR, BYVAL adStatus AS EventStatusEnum PTR, _
+   BYVAL pCommand AS Afx_ADOCommand PTR, BYVAL pRecordset AS Afx_ADORecordset PTR, _
+   BYVAL pConnection AS Afx_ADOConnection PTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>Source</em></td><td>A BSTR that contains an SQL command or a stored procedure name.</td></tr><tr><td><em>CursorType</em></td><td>A <em>CursorTypeEnum</em> that contains the type of cursor for the <strong>Recordset</strong> that will be opened. With this parameter, you can change the cursor to any type during a <strong>Recordset</strong> Open operation. <em>CursorType</em> will be ignored for any other operation.</td></tr><tr><td><em>LockType</em></td><td>A <em>LockTypeEnum</em> that contains the lock type for the <strong>Recordset</strong> that will be opened. With this parameter, you can change the lock to any type during a <strong>Recordset</strong> Open operation. LockType will be ignored for any other operation.</td></tr><tr><td><em>Options</em></td><td>A Long value that indicates options that can be used to execute the command or open the <strong>Recordset</strong>.</td></tr><tr><td><em>adStatus</em></td><td><em>EventStatusEnum</em>. Before this event returns, set this parameter to <em>adStatusUnwantedEvent</em> to prevent subsequent notifications, or <em>adStatusCancel</em> to request cancellation of the operation that caused this event.</td></tr><tr><td><em>pCommand</em></td><td>The <strong>Command</strong> object for which this event notification applies.</td></tr><tr><td><em>pRecordset</em></td><td>The <strong>Recordset</strong> object for which this event notification applies.</td></tr><tr><td><em>pConnection</em></td><td>The <strong>Connection</strong> object for which this event notification applies.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>A <strong>WillExecute</strong> event may occur due to a <strong>Connection.Execute</strong>, <strong>Command.Execute</strong>, or <strong>Recordset.Open</strong> method The <em>pConnection</em> parameter should always contain a valid reference to a <strong>Connection</strong> object. If the event is due to <strong>Connection.Execute</strong>, the <em>pRecordset</em> and <em>pCommand</em> parameters are set to Nothing. If the event is due to Recordset.Open, the pRecordset parameter will reference the Recordset object and the pCommand parameter is set to NULL. If the event is due to <strong>Command.Execute</strong>, the <em>pCommand</em> parameter will reference the <strong>Command</strong> object and the <em>pRecordset</em> parameter is set to NULL.</p>
+<p><strong>WillExecute</strong> allows you to examine and modify the pending execution parameters. This event may return a request that the pending command be canceled.</p>
+<hr>
+<h4 id="executecomplete">ExecuteComplete</h4>
+<p>Called after a command has finished executing.</p>
+<pre class="code"><code>FUNCTION ExecuteComplete (BYVAL RecordsAffected AS LONG, BYVAL pError AS Afx_ADOError PTR, _
+   BYVAL adStatus AS EventStatusEnum PTR, BYVAL pCommand AS Afx_ADOCommand PTR, _
+   BYVAL pRecordset AS Afx_ADORecordset PTR, BYVAL pConnection AS Afx_ADOConnection PTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>RecordsAffected</em></td><td>A Long value indicating the number of records affected by the command.</td></tr><tr><td><em>pError</em></td><td>An <strong>Error</strong> object. It describes the error that occurred if the value of <em>adStatus</em> is <em>adStatusErrorsOccurred</em>; otherwise it is not set.</td></tr><tr><td><em>adStatus</em></td><td><em>EventStatusEnum</em>. Before this event returns, set this parameter to <em>adStatusUnwantedEvent</em> to prevent subsequent notifications.</td></tr><tr><td><em>pCommand</em></td><td>The <strong>Command</strong> object that was executed. Contains a <strong>Command</strong> object even when calling <strong>Connection.Execute</strong> or <strong>Recordset.Open</strong> without explicitly creating a <strong>Command</strong>, in which cases the <strong>Command</strong> object is created internally by ADO.</td></tr><tr><td><em>pRecordset</em></td><td>A <strong>Recordset</strong> object that is the result of the executed command. This <strong>Recordset</strong> may be empty. You should never destroy this <strong>Recordset</strong> object from within this event handler. Doing so will result in an Access Violation when ADO tries to access an object that no longer exists.</td></tr><tr><td><em>pConnection</em></td><td>A <strong>Connection</strong> object. The connection over which the operation was executed.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>An <strong>ExecuteComplete</strong> event may occur due to the <strong>Connection.Execute</strong>, <strong>Command.Execute</strong>, <strong>Recordset.Open</strong>, <strong>Recordset.Requery</strong>, or <strong>Recordset.NextRecordset</strong> methods.</p>
+<hr>
+<h4 id="infomessage">InfoMessage</h4>
+<p>Called whenever a warning occurs during a ConnectionEvent operation.</p>
+<pre class="code"><code>FUNCTION InfoMessage (BYVAL pError AS Afx_ADOError PTR, BYVAL adStatus AS EventStatusEnum PTR, _
+   BYVAL pConnection AS Afx_ADOConnection PTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pError</em></td><td>An <strong>Error</strong> object. This parameter contains any errors that are returned. If multiple errors are returned, enumerate the <strong>Errors</strong> collection to find them.</td></tr><tr><td><em>adStatus</em></td><td><em>EventStatusEnum</em>. Before this event returns, set this parameter to <em>adStatusUnwantedEvent</em> to prevent subsequent notifications.</td></tr><tr><td><em>pConnection</em></td><td>A <strong>Connection</strong> object. The connection for which the warning occurred. For example, warnings can occur when opening a <strong>Connection</strong> object or executing a <strong>Command</strong> on a <strong>Connection</strong>.</td></tr></tbody></table></div>
+<hr>
+<h4 id="begintranscomplete">BeginTransComplete</h4>
+<p>Called after the <strong>BeginTrans</strong> operation.</p>
+<pre class="code"><code>FUNCTION BeginTransComplete (BYVAL TransactionLevel AS LONG, BYVAL pError AS Afx_ADOError PTR, _
+   BYVAL adStatus AS EventStatusEnum PTR, BYVAL pConnection AS Afx_ADOConnection PTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>TransactionLevel</em></td><td>A Long value that contains the new transaction level of the <strong>BeginTrans</strong> that caused this event.</td></tr><tr><td><em>pError</em></td><td>An <strong>Error</strong> object. It describes the error that occurred if the value of <em>EventStatusEnum</em> is <em>adStatusErrorsOccurred</em>; otherwise, it is not set.</td></tr><tr><td><em>adStatus</em></td><td><em>EventStatusEnum</em>. Subsequent notifications can be prevented by setting this parameter to <em>adStatusUnwantedEvent</em> before the event returns.</td></tr><tr><td><em>pConnection</em></td><td>The <strong>Connection</strong> object for which this event occurred.</td></tr></tbody></table></div>
+<hr>
+<h4 id="committranscomplete">CommitTransComplete</h4>
+<p>Called after the <strong>CommitTrans</strong> operation.</p>
+<pre class="code"><code>FUNCTION CommitTransComplete (BYVAL pError AS Afx_ADOError PTR, BYVAL adStatus AS EventStatusEnum PTR, _
+   BYVAL pConnection AS Afx_ADOConnection PTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pError</em></td><td>An <strong>Error</strong> object. It describes the error that occurred if the value of <em>EventStatusEnum</em> is <em>adStatusErrorsOccurred</em>; otherwise, it is not set.</td></tr><tr><td><em>adStatus</em></td><td><em>EventStatusEnum</em>. Subsequent notifications can be prevented by setting this parameter to <em>adStatusUnwantedEvent</em> before the event returns.</td></tr><tr><td><em>pConnection</em></td><td>The <strong>Connection</strong> object for which this event occurred.</td></tr></tbody></table></div>
+<hr>
+<h4 id="rollbacktranscomplete">RollbackTransComplete</h4>
+<p>Called after the <strong>RollbackTrans</strong> operation.</p>
+<pre class="code"><code>FUNCTION RollbackTransComplete (BYVAL pError AS Afx_ADOError PTR, BYVAL adStatus AS EventStatusEnum PTR, _
+   BYVAL pConnection AS Afx_ADOConnection PTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pError</em></td><td>An <strong>Error</strong> object. It describes the error that occurred if the value of <em>EventStatusEnum</em> is <em>adStatusErrorsOccurred</em>; otherwise, it is not set.</td></tr><tr><td><em>adStatus</em></td><td><em>EventStatusEnum</em>. Subsequent notifications can be prevented by setting this parameter to <em>adStatusUnwantedEvent</em> before the event returns.</td></tr><tr><td><em>pConnection</em></td><td>The <strong>Connection</strong> object for which this event occurred.</td></tr></tbody></table></div>
+<hr>
+<h4 id="willchangefield">WillChangeField</h4>
+<p>Called before a pending operation changes the value of one or more <strong>Field</strong> objects in the <strong>Recordset</strong>.</p>
+<pre class="code"><code>FUNCTION WillChangeField (BYVAL cFields AS LONG, BYVAL Fields AS VARIANT, _
+   BYVAL adStatus AS EventStatusEnum PTR, BYVAL pRecordset AS Afx_ADORecordset PTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>cFields</em></td><td>A Long that indicates the number of <strong>Field</strong> objects in <strong>Fields</strong>.</td></tr><tr><td><em>Fields</em></td><td>For <strong>WillChangeField</strong>, the <strong>Fields</strong> parameter is an array of Variants that contains <strong>Field</strong> objects with the original values.</td></tr><tr><td><em>adStatus</em></td><td><em>EventStatusEnum</em>. When <strong>WillChangeField</strong> is called, this parameter is set to <em>adStatusOK</em> if the operation that caused the event was successful. It is set to <em>adStatusCantDeny</em> if this event cannot request cancellation of the pending operation. Before <strong>WillChangeField</strong> returns, set this parameter to <em>adStatusCancel</em> to request cancellation of the pending operation.</td></tr><tr><td><em>pRecordset</em></td><td>A <strong>Recordset</strong> object. The <strong>Recordset</strong> for which this event occurred.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>A <strong>WillChangeField</strong> or <strong>FieldChangeComplete</strong> event may occur when setting the Value property and calling the <strong>Update</strong> method with field and value array parameters.</p>
+<hr>
+<h4 id="fieldchangecomplete">FieldChangeComplete</h4>
+<p>Called after the value of one or more <strong>Field</strong> objects has changed.</p>
+<pre class="code"><code>FUNCTION FieldChangeComplete (BYVAL cFields AS LONG, BYVAL Fields AS VARIANT, _
+   BYVAL pError AS Afx_ADOError PTR, BYVAL adStatus AS EventStatusEnum PTR, _
+   BYVAL pRecordset AS Afx_ADORecordset PTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>cFields</em></td><td>A Long that indicates the number of <strong>Field</strong> objects in <strong>Fields</strong>.</td></tr><tr><td><em>Fields</em></td><td>For <strong>FieldChangeComplete</strong>, the <strong>Fields</strong> parameter is an array of Variants that contains <strong>Field</strong> objects with the changed values.</td></tr><tr><td><em>pError</em></td><td>An <strong>Error</strong> object. It describes the error that occurred if the value of <em>adStatus</em> is <em>adStatusErrorsOccurred</em>; otherwise it is not set.</td></tr><tr><td><em>adStatus</em></td><td><em>EventStatusEnum</em>. When <strong>FieldChangeComplete</strong> is called, this parameter is set to <em>adStatusOK</em> if the operation that caused the event was successful, or to <em>adStatusErrorsOccurred</em> if the operation failed. Before <strong>FieldChangeComplete</strong> returns, set this parameter to <em>adStatusUnwantedEvent</em> to prevent subsequent notifications.</td></tr><tr><td><em>pRecordset</em></td><td>A <strong>Recordset</strong> object. The <strong>Recordset</strong> for which this event occurred.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>A <strong>WillChangeField</strong> or <strong>FieldChangeComplete</strong> event may occur when setting the Value property and calling the <strong>Update</strong> method with field and value array parameters.</p>
+<hr>
+<h4 id="willchangerecord">WillChangeRecord</h4>
+<p>Called before one or more records (rows) in the <strong>Recordset</strong> change.</p>
+<pre class="code"><code>FUNCTION WillChangeRecord (BYVAL adReason AS EventReasonEnum, BYVAL cRecords AS LONG, _
+   BYVAL adStatus AS EventStatusEnum PTR, BYVAL pRecordset AS Afx_ADORecordset PTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>adReason</em></td><td>An <em>EventReasonEnum</em> value that specifies the reason for this event. Its value can be <em>adRsnAddNew</em>, <em>adRsnDelete</em>, <em>adRsnUpdate</em>, <em>adRsnUndoUpdate</em>, <em>adRsnUndoAddNew</em>, <em>adRsnUndoDelete</em>, or <em>adRsnFirstChange</em>.</td></tr><tr><td><em>cRecords</em></td><td>A Long value that indicates the number of records changing (affected).</td></tr><tr><td><em>adStatus</em></td><td><em>EventStatusEnum</em>. When <strong>WillChangeRecord</strong> is called, this parameter is set to <em>adStatusOK</em> if the operation that caused the event was successful. It is set to <em>adStatusCantDeny</em> if this event cannot request cancellation of the pending operation. Before <strong>WillChangeRecord</strong> returns, set this parameter to <em>adStatusCancel</em> to request cancellation of the operation that caused this event or set this parameter to <em>adStatusUnwantedEvent</em> to prevent subsequent notications.</td></tr><tr><td><em>pRecordset</em></td><td>A <strong>Recordset</strong> object. The <strong>Recordset</strong> for which this event occurred.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>A <strong>WillChangeRecord</strong> or <strong>RecordChangeComplete</strong> event may occur for the first changed field in a row due to the following <strong>Recordset</strong> operations: <strong>Update</strong>, <strong>Delete</strong>, <strong>CancelUpdate</strong>, <strong>AddNew</strong>, <strong>UpdateBatch</strong>, and <strong>CancelBatch</strong>. The value of the <strong>Recordset</strong> <em>CursorType</em> determines which operations cause the events to occur.</p>
+<p>During the <strong>WillChangeRecord</strong> event, the <strong>Recordset</strong> <strong>Filter</strong> property is set to <em>adFilterAffectedRecords</em>. You cannot change this property while processing the event.</p>
+<p>You must set the <em>adStatus</em> parameter to <em>adStatusUnwantedEvent</em> for each possible <em>adReason</em> value in order to completely stop event noticiation for any event that includes an <em>adReason</em> parameter.</p>
+<hr>
+<h4 id="recordchangecomplete">RecordChangeComplete</h4>
+<p>Called after one or more records change.</p>
+<pre class="code"><code>FUNCTION RecordChangeComplete (BYVAL adReason AS EventReasonEnum, BYVAL cRecords AS LONG, _
+   BYVAL pError AS Afx_ADOError PTR, BYVAL adStatus AS EventStatusEnum PTR, _
+   BYVAL pRecordset AS Afx_ADORecordset PTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>adReason</em></td><td>An <em>EventReasonEnum</em> value that specifies the reason for this event. Its value can be <em>adRsnAddNew</em>, <em>adRsnDelete</em>, <em>adRsnUpdate</em>, <em>adRsnUndoUpdate</em>, <em>adRsnUndoAddNew</em>, <em>adRsnUndoDelete</em>, or <em>adRsnFirstChange</em>.</td></tr><tr><td><em>cRecords</em></td><td>A Long value that indicates the number of records changing (affected).</td></tr><tr><td><em>pError</em></td><td>An <strong>Error</strong> object. It describes the error that occurred if the value of <em>adStatus</em> is <em>adStatusErrorsOccurred</em>; otherwise it is not set.</td></tr><tr><td><em>adStatus</em></td><td><em>EventStatusEnum</em>. When <strong>RecordChangeComplete</strong> is called, this parameter is set to <em>adStatusOK</em> if the operation that caused the event was successful, or to <em>adStatusErrorsOccurred</em> if the operation failed. Before <strong>RecordChangeComplete</strong> returns, set this parameter to <em>adStatusUnwantedEvent</em> to prevent subsequent notifications.</td></tr><tr><td><em>pRecordset</em></td><td>A <strong>Recordset</strong> object. The <strong>Recordset</strong> for which this event occurred.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>A <strong>WillChangeRecord</strong> or <strong>RecordChangeComplete</strong> event may occur for the first changed field in a row due to the following <strong>Recordset</strong> operations: <strong>Update</strong>, <strong>Delete</strong>, <strong>CancelUpdate</strong>, <strong>AddNew</strong>, <strong>UpdateBatch</strong>, and <strong>CancelBatch</strong>. The value of the <strong>Recordset</strong> <em>CursorType</em> determines which operations cause the events to occur.</p>
+<p>During the <strong>WillChangeRecord</strong> event, the <strong>Recordset</strong> <strong>Filter</strong> property is set to <em>adFilterAffectedRecords</em>. You cannot change this property while processing the event.</p>
+<p>You must set the <em>adStatus</em> parameter to <em>adStatusUnwantedEvent</em> for each possible <em>adReason</em> value in order to completely stop event noticiation for any event that includes an <em>adReason</em> parameter.</p>
+<hr>
+<h4 id="willchangerecordset">WillChangeRecordset</h4>
+<p>Called before a pending operation changes the <strong>Recordset</strong>.</p>
+<pre class="code"><code>FUNCTION WillChangeRecordset (BYVAL adReason AS EventReasonEnum, _
+   BYVAL adStatus AS EventStatusEnum PTR, BYVAL pRecordset AS Afx_ADORecordset PTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>adReason</em></td><td>An <em>EventReasonEnum</em> value that specifies the reason for this event. Its value can be <em>adRsnRequery</em>, <em>adRsnResynch</em>, <em>adRsnClose</em>, <em>adRsnOpen</em>.</td></tr><tr><td><em>adStatus</em></td><td><em>EventStatusEnum</em>. When <strong>WillChangeRecordset</strong> is called, this parameter is set to <em>adStatusOK</em> if the operation that caused the event was successful. It is set to <em>adStatusCantDeny</em> if this event cannot request cancellation of the pending operation. Before <strong>WillChangeRecordset</strong> returns, set this parameter to <em>adStatusCancel</em> to request cancellation of the pending operation or set this parameter to <em>adStatusUnwantedEvent</em> to prevent subsequent notifications.</td></tr><tr><td><em>pRecordset</em></td><td>A <strong>Recordset</strong> object. The <strong>Recordset</strong> for which this event occurred.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>A <strong>WillChangeRecordset</strong> or <strong>RecordsetChangeComplete</strong> event may occur due to the <strong>Recordset</strong> <strong>Requery</strong> or <strong>Open</strong> methods.</p>
+<p>If the provider does not support bookmarks, a <strong>RecordsetChange</strong> event notification occurs each time new rows are retrieved from the provider. The frequency of this event depends on the <strong>RecordsetCacheSize</strong> property.</p>
+<p>You must set the <em>adStatus</em> parameter to <em>adStatusUnwantedEvent</em> for each possible <em>adReason</em> value in order to completely stop event notification for any event that includes an <em>adReason</em> parameter.</p>
+<hr>
+<h4 id="rcordsetchangecomplete">RcordsetChangeComplete</h4>
+<p>Called after the <strong>Recordset</strong> has changed.</p>
+<pre class="code"><code>FUNCTION RecordsetChangeComplete (BYVAL adReason AS EventReasonEnum, BYVAL pError AS Afx_ADOError PTR, _
+   BYVAL adStatus AS EventStatusEnum PTR, BYVAL pRecordset AS Afx_ADORecordset PTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>adReason</em></td><td>An <em>EventReasonEnum</em> value that specifies the reason for this event. Its value can be <em>adRsnRequery</em>, <em>adRsnResynch</em>, <em>adRsnClose</em>, <em>adRsnOpen</em>.</td></tr><tr><td><em>pError</em></td><td>An <strong>Error</strong> object. It describes the error that occurred if the value of <em>adStatus</em> is <em>adStatusErrorsOccurred</em>; otherwise it is not set.</td></tr><tr><td><em>adStatus</em></td><td><em>EventStatusEnum</em>. When <strong>RecordsetChangeComplete</strong> is called, this parameter is set to <em>adStatusOK</em> if the operation that caused the event was successful, <em>adStatusErrorsOccurred</em> if the operation failed, or <em>adStatusCancel</em> if the operation associated with the previously accepted <strong>WillChangeRecordset</strong> event has been canceled. Before <strong>WillChangeRecordset</strong> or <strong>RecordsetChangeComplete</strong> returns, set this parameter to <em>adStatusUnwantedEvent</em> to prevent subsequent notifications.</td></tr><tr><td><em>pRecordset</em></td><td>A <strong>Recordset</strong> object. The <strong>Recordset</strong> for which this event occurred.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>A <strong>WillChangeRecordset</strong> or <strong>RecordsetChangeComplete</strong> event may occur due to the <strong>Recordset</strong> <strong>Requery</strong> or <strong>Open</strong> methods.</p>
+<p>If the provider does not support bookmarks, a <strong>RecordsetChange</strong> event notification occurs each time new rows are retrieved from the provider. The frequency of this event depends on the <strong>RecordsetCacheSize</strong> property.</p>
+<p>You must set the <em>adStatus</em> parameter to <em>adStatusUnwantedEvent</em> for each possible <em>adReason</em> value in order to completely stop event notification for any event that includes an <em>adReason</em> parameter.</p>
+<hr>
+<h4 id="willmove">WillMove</h4>
+<p>Called before a pending operation changes the current position in the <strong>Recordset</strong>.</p>
+<pre class="code"><code>FUNCTION WillMove (BYVAL adReason AS EventReasonEnum, BYVAL adStatus AS EventStatusEnum PTR, _
+   BYVAL pRecordset AS Afx_ADORecordset PTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>adReason</em></td><td>An <em>EventReasonEnum</em> value that specifies the reason for this event. Its value can be <em>adRsnMoveFirst</em>, <em>adRsnMoveLast</em>, <em>adRsnMoveNext</em>, <em>adRsnMovePrevious</em>, <em>adRsnMove</em>, or <em>adRsnRequery</em>.</td></tr><tr><td><em>adStatus</em></td><td><em>EventStatusEnum</em>. When <strong>WillMove</strong> is called, this parameter is set to <em>adStatusOK</em> if the operation that caused the event was successful. It is set to <em>adStatusCantDeny</em> if this event cannot request cancellation of the pending operation. Before <strong>WillMove</strong> returns, set this parameter to <em>adStatusCancel</em> to request cancellation of the pending operation or set this parameter to <em>adStatusUnwantedEvent</em> to prevent subsequent notications.</td></tr><tr><td><em>pRecordset</em></td><td>A <strong>Recordset</strong> object. The <strong>Recordset</strong> for which this event occurred.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>A <strong>WillMove</strong> or <strong>MoveComplete</strong> event may occur due to the following Recordset operations:</p>
+<ul><li>Open</li><li>Move</li><li>MoveFirst</li><li>MoveLast</li><li>MoveNext</li><li>MovePrevious</li><li>AddNew</li><li>Requery</li></ul>
+<p>These events may occur because of the following properties:</p>
+<ul><li>Filter</li><li>Index</li><li>Bookmark</li><li>AbsolutePage</li><li>AbsolutePosition</li></ul>
+<p>These events also occur if a child Recordset has <strong>Recordset</strong> events connected and the parent <strong>Recordset</strong> is moved.</p>
+<p>You must set the <em>adStatus</em> parameter to <em>adStatusUnwantedEvent</em> for each possible <em>adReason</em> value in order to completely stop event notification for any event that includes an <em>adReason</em> parameter.</p>
+<hr>
+<h4 id="movecomplete">MoveComplete</h4>
+<p>Called after the current position in the <strong>Recordset</strong> changes.</p>
+<pre class="code"><code>FUNCTION MoveComplete (BYVAL adReason AS EventReasonEnum, BYVAL pError AS Afx_ADOError PTR, _
+   BYVAL adStatus AS EventStatusEnum PTR, BYVAL pRecordset AS Afx_ADORecordset PTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>adReason</em></td><td>An <em>EventReasonEnum</em> value that specifies the reason for this event. Its value can be <em>adRsnMoveFirst</em>, <em>adRsnMoveLast</em>, <em>adRsnMoveNext</em>, <em>adRsnMovePrevious</em>, <em>adRsnMove</em>, or <em>adRsnRequery</em>.</td></tr><tr><td><em>pError</em></td><td>An <strong>Error</strong> object. It describes the error that occurred if the value of <em>adStatus</em> is <em>adStatusErrorsOccurred</em>; otherwise it is not set.</td></tr><tr><td><em>adStatus</em></td><td><em>EventStatusEnum</em>. When <strong>MoveComplete</strong> is called, this parameter is set to <em>adStatusOK</em> if the operation that caused the event was successful, or to <em>adStatusErrorsOccurred</em> if the operation failed. Before <strong>MoveComplete</strong> returns, set this parameter to <em>adStatusUnwantedEvent</em> to prevent subsequent notifications.</td></tr><tr><td><em>pRecordset</em></td><td>A <strong>Recordset</strong> object. The <strong>Recordset</strong> for which this event occurred.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>A <strong>WillMove</strong> or <strong>MoveComplete</strong> event may occur due to the following Recordset operations:</p>
+<ul><li>Open</li><li>Move</li><li>MoveFirst</li><li>MoveLast</li><li>MoveNext</li><li>MovePrevious</li><li>AddNew</li><li>Requery</li></ul>
+<p>These events may occur because of the following properties:</p>
+<ul><li>Filter</li><li>Index</li><li>Bookmark</li><li>AbsolutePage</li><li>AbsolutePosition</li></ul>
+<p>These events also occur if a child Recordset has <strong>Recordset</strong> events connected and the parent <strong>Recordset</strong> is moved.</p>
+<p>You must set the <em>adStatus</em> parameter to <em>adStatusUnwantedEvent</em> for each possible <em>adReason</em> value in order to completely stop event notification for any event that includes an <em>adReason</em> parameter.</p>
+<hr>
+<h4 id="endofrecordset">EndOfRecordset</h4>
+<p>Called when there is an attempt to move to a row past the end of the <strong>Recordset</strong>.</p>
+<pre class="code"><code>FUNCTION EndOfRecordset (BYVAL fMoreData AS VARIANT_BOOL PTR, _
+   BYVAL adStatus AS EventStatusEnum PTR, BYVAL pRecordset AS Afx_ADORecordset PTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>fMoreData</em></td><td>A VARIANT_BOOL value that, if set to VARIANT_TRUE, indicates more rows have been added to the <strong>Recordset</strong>.</td></tr><tr><td><em>adStatus</em></td><td><em>EventStatusEnum</em>. When <strong>EndOfRecordset</strong> is called, this parameter is set to <em>adStatusOK</em> if the operation that caused the event was successful. It is set to <em>adStatusCantDeny</em> if this event cannot request cancellation of the operation that caused this event. Before <strong>EndOfRecordset</strong> returns, set this parameter to <em>adStatusUnwantedEvent</em> to prevent subsequent notifications.</td></tr><tr><td><em>pRecordset</em></td><td>A <strong>Recordset</strong> object. The <strong>Recordset</strong> for which this event occurred.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>An <strong>EndOfRecordset</strong> event may occur if the <strong>MoveNext</strong> operation fails.</p>
+<p>This event handler is called when an attempt is made to move past the end of the <strong>Recordset</strong> object, perhaps as a result of calling <strong>MoveNext</strong>. However, while in this event, you could retrieve more records from a database and append them to the end of the <strong>Recordset</strong>. In that case, set <em>fMoreData</em> to VARIANT_TRUE, and return from <strong>EndOfRecordset</strong>. Then call <strong>MoveNext</strong> again to access the newly retrieved records.</p>
+<hr>
+<h4 id="fetchprogress">FetchProgress</h4>
+<p>Called periodically during a lengthy asynchronous operation to report how many more rows have currently been retrieved into the <strong>Recordset</strong>.</p>
+<pre class="code"><code>FUNCTION FetchProgress (BYVAL Progress AS LONG, BYVAL MaxProgress AS LONG, _
+   BYVAL adStatus AS EventStatusEnum PTR, BYVAL pRecordset AS Afx_ADORecordset PTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>Progress</em></td><td>A Long value indicating the number of records that have currently been retrieved by the fetch operation.</td></tr><tr><td><em>MaxProgress</em></td><td>A Long value indicating the maximum number of records expected to be retrieved.</td></tr><tr><td><em>adStatus</em></td><td>An <em>EventStatusEnum</em> status value.</td></tr><tr><td><em>pRecordset</em></td><td>A <strong>Recordset</strong> object that is the object for which the records are being retrieved.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>When using <strong>FetchProgress</strong> with a child <strong>Recordset</strong>, be aware that the Progress and <em>MaxProgress</em> parameter values are derived from the underlying Cursor Service rowset. The values returned represent the total number of records in the underlying rowset, not just the number of records in the current chapter.</p>
+<hr>
+<h4 id="fetchcomplete">FetchComplete</h4>
+<p>Called after all the records in a lengthy asynchronous operation have been retrieved into the <strong>Recordset</strong>.</p>
+<pre class="code"><code>FUNCTION FetchComplete (BYVAL pError AS Afx_ADOError PTR, _
+   BYVAL adStatus AS EventStatusEnum PTR, BYVAL pRecordset AS Afx_ADORecordset PTR) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pError</em></td><td>An <strong>Error</strong> object. It describes the error that occurred if the value of <em>adStatus</em> is <em>adStatusErrorsOccurred</em>; otherwise it is not set.</td></tr><tr><td><em>adStatus</em></td><td><em>EventStatusEnum</em>. Before this event returns, set this parameter to <em>adStatusUnwantedEvent</em> to prevent subsequent notifications.</td></tr><tr><td><em>pRecordset</em></td><td>A <strong>Recordset</strong> object. The object for which the records were retrieved.</td></tr></tbody></table></div>
+<hr>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

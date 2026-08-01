@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>User Defined Types — Help Center</title>
+<meta name="description" content="User Defined Types — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/user-defined-types.html">
+<meta property="og:title" content="User Defined Types">
+<meta property="og:description" content="User Defined Types — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/user-defined-types.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/programmer-s-guide/user-defined-types.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>User Defined Types</h1>
+<h2>Documentation</h2>
+
+	Custom types.<br>
+<br>
+<div>Overview</div><div><br>
+<i>User-Defined Types</i> are special kinds of <a href="variables.html">variables</a> which can be created by the programmer.  A User-Defined Type (UDT) is really just a container that contains a bunch of other variables, like an <a href="arrays.html">array</a>, but unlike arrays, UDTs can hold <i>different</i> variable types (whereas arrays always hold many variables of the <i>same</i> type).  In fact, UDTs can even have <a href="procedures-overview.html">procedures</a> inside of them!<br>
+<br>
+</div><div>Members</div><div><br>
+The different variables and/or procedures stored inside a UDT are called "members", or more generally, items.  Members can be variables of just about any type, including numerical types, strings, <a href="pointers.html">pointers</a>, <a href="../../user-defined-types/procedures/enum.html">Enums</a>, and even arrays.  Variables are created in UDTs much the same way variables are created 	normally, except that the Dim keyword is optional.  UDT members are accessed via the <a href="../../operators/type-or-class-operators/procedures/operator-member-access.html">. Operator</a>, so for example if you created a variable called someVar in a UDT you would access it with the name of the UDT variable followed by ".someVar".  Here is an example:<br>
+<br>
+<code><pre class="code"><span class="tok-cm">'Define a UDT called myType, with an Integer member named someVar</span>
+
+<span class="tok-kw">Type</span> <span>myType</span>
+
+  <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>someVar</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-cm">'Create a variable of that type</span>
+
+<span class="tok-kw">Dim</span> <span>myUDT</span> <span class="tok-kw">As</span> <span>myType</span>
+
+
+
+<span class="tok-cm">'Set the member someVar to 23, then display its contents on the screen</span>
+
+<span>myUDT.someVar</span> <span>=</span> <span class="tok-nu">23</span>
+
+<span class="tok-kw">Print</span> <span>myUDT.someVar</span></pre></code><br>
+<br>
+Notice that the <a href="../../operators/operators/procedures/type-udt.html">Type...End Type</a> does not actually create a variable of that type, it only defines what variables of that type contain.  You must create a variable of that type to actually use it!<br>
+<br>
+</div><div>UDT Pointers</div><div><br>
+UDT Pointers are, as the name implies, pointers to UDTs.  They are created like regular pointers, but there is a special way to use them.  To access the member of a UDT pointed to by a pointer, you use the <a href="../../operators/type-or-class-operators/procedures/operator-pointer-to-member-access.html">-&gt; Operator</a>.  For example, if myUDTPtr is a pointer to a UDT which has a member someVar, you would access the member as myUDTPtr-&gt;someVar, which is a much cleaner shorthand for the equally valid (*myUDTPtr).someVar.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span>rect</span>
+
+    <span>x</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+    <span>y</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Dim</span> <span>r</span> <span class="tok-kw">As</span> <span>rect</span>
+
+<span class="tok-kw">Dim</span> <span>rp</span> <span class="tok-kw">As</span> <span>rect</span> <span class="tok-kw">Pointer</span> <span>=</span> <span>@</span><span>r</span>
+
+
+
+<span>rp</span><span>-&gt;</span><span>x</span> <span>=</span> <span class="tok-nu">4</span>
+
+<span>rp</span><span>-&gt;</span><span>y</span> <span>=</span> <span class="tok-nu">2</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;x = &quot;</span> <span>&amp;</span> <span>rp</span><span>-&gt;</span><span>x</span> <span>&amp;</span> <span>&quot;, y = &quot;</span> <span>&amp;</span> <span>rp</span><span>-&gt;</span><span>y</span>
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+</div><div>UDT Instantiation</div><div><br>
+When creating an object of a UDT:<br>
+<div class="indent"><b>-</b> only non-static data members induce a specific memory allocation to each object instance,<br>
+<b>-</b> static data members are allocated only once for the UDT and are therefore common to all object instances,<br>
+<b>-</b> procedure members are also defined only once for the UDT and their code is not duplicated for each object instance (and this, even for the non-static procedure members).<br>
+<br>
+</div>That is why a static variable declared inside any procedure member is allocated only once for the UDT.<br>
+Therefore this static variable is indeed permanent but shared by all UDT instances executing the code (it is not an instance-specific variable).<br>
+<br>
+</div><div>See also</div><div><br>
+<ul><li> <a href="type-aliases.html">Type Aliases</a><br>
+<li> <a href="../../programmer-s-guide/procedures/type-temporary.html">Temporary Types</a><br>
+<li> <a href="constructors-and-destructors-basics.html">Constructors and Destructors (basics)</a><br>
+<li> <a href="member-procedures.html">Member Procedures</a><br>
+<li> <a href="member-access-rights-and-encapsulation.html">Member Access Rights and Encapsulation</a><br>
+<li> <a href="operator-overloading.html">Operator Overloading</a><br>
+<br>
+<br>
+</li></li></li></li></li></li></ul></div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

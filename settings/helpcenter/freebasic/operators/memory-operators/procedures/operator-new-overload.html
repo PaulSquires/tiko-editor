@@ -1,0 +1,614 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Operator New Overload — Help Center</title>
+<meta name="description" content="Member operator to overload dynamic memory allocation process part provided by Operator New Expression when applying to a UDT (User Defined Type).">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/operators/memory-operators/procedures/operator-new-overload.html">
+<meta property="og:title" content="Operator New Overload">
+<meta property="og:description" content="Member operator to overload dynamic memory allocation process part provided by Operator New Expression when applying to a UDT (User Defined Type).">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/operators/memory-operators/procedures/operator-new-overload.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/operators/memory-operators/procedures/operator-new-overload.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>Operator New Overload<span class="h1kind">operator</span></h1>
+<p class="lede">Member operator to overload dynamic memory allocation process part provided by Operator New Expression when applying to a UDT (User Defined Type).</p>
+<div class="badges"><a class="badge" href="../../index.html">Operators</a><span class="badge">operator</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>Declare Operator New ( size As UInteger ) As Any Ptr</code></pre>
+<pre class="code sig"><code>Declare Operator new[] ( size As UInteger ) As Any Ptr</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>size</code></td><td></td><td>Number of bytes to allocate.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<br>
+A pointer of type <a href="../../../procedures/procedures/any.html">Any</a> <a href="../../../standard-data-types/procedures/pointer-ptr.html">Ptr</a> to the start of the newly allocated memory.<br>
+<br>
+
+<h2>Description</h2>
+<br>
+The member operator <code><b>New Overload</b></code> overloads the dynamic memory allocation process part provided by the <code><a href="operator-new-expression.html">New Expression</a></code> operator when applying to a UDT (User Defined Type). So the user can define its own dynamic memory allocation process part.<br>
+But after that, the UDT instance construction process part provided by the <code><a href="operator-new-expression.html">New Expression</a></code> operator is not modified.<br>
+<br>
+<code><b>New[] Overload</b></code> operator is the (one-dimensional) array-version of the <code><b>New Overload</b></code> operator and overloads the dynamic memory allocation process provided by the  <code><b>New[] Expression</b></code> operator when applying to a UDT (User Defined Type).<br>
+<br>
+Memory allocated with <code><b>New Overload</b></code> operator must be freed by also defining a <code><a href="operator-delete-overload.html">Delete Overload</a></code> operator. Memory allocated with <code><b>New[] Overload</b></code> operator must be freed by also defining a <code><b>Delete[] Overload</b></code> operator, the array-version of <code><a href="operator-delete-overload.html">Delete Overload</a></code> operator. You cannot mix and match the different versions of the operators.<br>
+<br>
+Member operators <code><b>New Overload</b></code>, and <code><b>New[] Overload</b></code> are always static, even if not explicitly declared (<code><a href="../../../user-defined-types/procedures/static-member.html">Static</a></code> keyword is unnecessary but allowed). Thus, they do not have an implicit <code><a href="../../../user-defined-types/procedures/this.html">This</a></code> instance argument passed to them (because instance not yet been constructed).<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Dialect Differences</h3><br>
+<ul><li> Only available in the <i><a href="../../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang fb</a></i> dialect.<br>
+<br>
+</li></ul>
+<h3>Differences from QB</h3><br>
+<ul><li> New to FreeBASIC<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="operator-new-expression.html">New Expression</a></code><br>
+<li> <code><a href="operator-delete-overload.html">Delete Overload</a></code><br>
+<li> <code><a href="../../../memory-functions/procedures/allocate.html">Allocate</a></code><br>
+<br>
+</li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+Dynamic allocation displayer for UDT, by using the member operators "New([]) Overload" and "Delete([]) Overload" (very simple example, only for syntax usage):<br>
+<ul><ul><li> displaying of memory allocations: addresses, sizes,<br>
+<li> displaying of memory deallocations: addresses.<br>
+</li></li></ul></ul><br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span>UDTdisplayer</span>
+
+  <span class="tok-cm">'' user UDT fields:</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Byte</span> <span>b</span><span>(</span><span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">1024</span><span>*</span><span class="tok-nu">1024</span><span>)</span>
+
+  <span class="tok-cm">'' display fields:</span>
+
+    <span class="tok-kw">Public</span><span>:</span>
+
+      <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">New</span> <span>(</span><span class="tok-kw">ByVal</span> <span>size</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span>
+
+      <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Delete</span> <span>(</span><span class="tok-kw">ByVal</span> <span>buf</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span><span>)</span>
+
+      <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">New</span><span>[]</span> <span>(</span><span class="tok-kw">ByVal</span> <span>size</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span>
+
+      <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Delete</span><span>[]</span> <span>(</span><span class="tok-kw">ByVal</span> <span>buf</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span><span>)</span>
+
+    <span class="tok-kw">Private</span><span>:</span>
+
+      <span class="tok-kw">Declare</span> <span class="tok-kw">Static</span> <span class="tok-kw">Function</span> <span>allocation</span> <span>(</span><span class="tok-kw">ByRef</span> <span>N</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>,</span> <span class="tok-kw">ByVal</span> <span>size</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span>
+
+      <span class="tok-kw">Declare</span> <span class="tok-kw">Static</span> <span class="tok-kw">Sub</span> <span>deallocation</span> <span>(</span><span class="tok-kw">ByRef</span> <span>D</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>,</span> <span class="tok-kw">ByVal</span> <span>p</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>UDTdisplayer.New</span> <span>(</span><span class="tok-kw">ByVal</span> <span>size</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span>
+
+  <span class="tok-kw">Return</span> <span>UDTdisplayer.allocation</span><span>(</span><span>&quot;New&quot;</span><span>,</span> <span>size</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>UDTdisplayer.Delete</span> <span>(</span><span class="tok-kw">ByVal</span> <span>buf</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span><span>)</span>
+
+  <span>UDTdisplayer.deallocation</span><span>(</span><span>&quot;Delete&quot;</span><span>,</span> <span>buf</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>UDTdisplayer.New</span><span>[]</span> <span>(</span><span class="tok-kw">ByVal</span> <span>size</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span>
+
+  <span class="tok-kw">Return</span> <span>UDTdisplayer.allocation</span><span>(</span><span>&quot;New[]&quot;</span><span>,</span> <span>size</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>UDTdisplayer.Delete</span><span>[]</span> <span>(</span><span class="tok-kw">ByVal</span> <span>buf</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span><span>)</span>
+
+  <span>UDTdisplayer.deallocation</span><span>(</span><span>&quot;Delete[]&quot;</span><span>,</span> <span>buf</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Function</span> <span>UDTdisplayer.allocation</span> <span>(</span><span class="tok-kw">ByRef</span> <span>N</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>,</span> <span class="tok-kw">ByVal</span> <span>size</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span>
+
+  <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>p</span> <span>=</span> <span class="tok-kw">Allocate</span><span>(</span><span>size</span><span>)</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;memory allocation for &quot;</span> <span>&amp;</span> <span>size</span> <span>&amp;</span> <span>&quot; bytes from '&quot;</span> <span>&amp;</span> <span>N</span> <span>&amp;</span> <span>&quot;' at address: &quot;</span> <span>&amp;</span> <span>p</span>
+
+  <span class="tok-kw">Return</span> <span>p</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>UDTdisplayer.deallocation</span> <span>(</span><span class="tok-kw">ByRef</span> <span>D</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>,</span> <span class="tok-kw">ByVal</span> <span>p</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span><span>)</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;memory deallocation from '&quot;</span> <span>&amp;</span> <span>D</span> <span>&amp;</span> <span>&quot;' at address &quot;</span> <span>&amp;</span> <span>p</span>
+
+  <span class="tok-kw">Deallocate</span> <span>p</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDTdisplayer</span> <span class="tok-kw">Ptr</span> <span>pu1</span> <span>=</span> <span class="tok-kw">New</span> <span>UDTdisplayer</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDTdisplayer</span> <span class="tok-kw">Ptr</span> <span>pu2</span> <span>=</span> <span class="tok-kw">New</span> <span>UDTdisplayer</span><span>[</span><span class="tok-nu">3</span><span>]</span>
+
+<span class="tok-kw">Delete</span> <span>pu1</span>
+
+<span class="tok-kw">Delete</span><span>[]</span> <span>pu2</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+<br>
+<div class="indent">Output example:<br>
+<pre class="code">
+memory allocation for 1048576 bytes from 'New' at address: 32677920
+memory allocation for 3145728 bytes from 'New[]' at address: 33775648
+memory deallocation from 'Delete' at address 32677920
+memory deallocation from 'Delete[]' at address 33775648
+</pre><br>
+</div>Aligned memory allocator:<br>
+<ul><ul><li> by using the member operators "New Overload" and "Delete Overload", any created User object is aligned to a multiple of "ALIGN" bytes (256 bytes in this example),<br>
+<li> the real pointer of the allocated memory is saved just above the User pointer, in the padding block.<br>
+</li></li></ul></ul><br>
+<code><pre class="code"><span class="tok-kw">Const</span> <span>ALIGN</span> <span>=</span> <span class="tok-nu">256</span>
+
+
+
+<span class="tok-kw">Type</span> <span>UDT</span>
+
+  <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Byte</span> <span>a</span><span>(</span><span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">10</span> <span>*</span> <span class="tok-nu">1024</span> <span>*</span> <span class="tok-nu">1024</span> <span>-</span> <span class="tok-nu">1</span><span>)</span> <span class="tok-cm">'' 10 megabyte fixed array</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">New</span> <span>(</span><span class="tok-kw">ByVal</span> <span>size</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Delete</span> <span>(</span><span class="tok-kw">ByVal</span> <span>buffer</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span><span>)</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>()</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Destructor</span> <span>()</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>UDT.New</span> <span>(</span><span class="tok-kw">ByVal</span> <span>size</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;  Overloaded New operator, with parameter size = &amp;h&quot;</span> <span>&amp;</span> <span class="tok-kw">Hex</span><span>(</span><span>size</span><span>)</span>
+
+  <span class="tok-kw">Dim</span> <span>pOrig</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>=</span> <span class="tok-kw">CAllocate</span><span>(</span><span>ALIGN</span><span>-</span><span class="tok-nu">1</span> <span>+</span> <span class="tok-kw">SizeOf</span><span>(</span><span>UDT</span> <span class="tok-kw">Ptr</span><span>)</span> <span>+</span> <span>size</span><span>)</span>
+
+  <span class="tok-kw">Dim</span> <span>pMin</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>=</span> <span>pOrig</span> <span>+</span> <span class="tok-kw">SizeOf</span><span>(</span><span>UDT</span> <span class="tok-kw">Ptr</span><span>)</span> 
+
+  <span class="tok-kw">Dim</span> <span>p</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>=</span> <span>pMin</span> <span>+</span> <span>ALIGN</span><span>-</span><span class="tok-nu">1</span> <span>-</span> <span>(</span><span class="tok-kw">CUInt</span><span>(</span><span>pMin</span> <span>+</span> <span>ALIGN</span><span>-</span><span class="tok-nu">1</span><span>)</span> <span class="tok-kw">Mod</span> <span>ALIGN</span><span>)</span>
+
+  <span class="tok-kw">Cast</span><span>(</span><span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span class="tok-kw">Ptr</span><span>,</span> <span>p</span><span>)[-</span><span class="tok-nu">1</span><span>]</span> <span>=</span> <span>pOrig</span>
+
+  <span class="tok-kw">Operator</span> <span>=</span> <span>p</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;  real pointer = &amp;h&quot;</span> <span>&amp;</span> <span class="tok-kw">Hex</span><span>(</span><span>pOrig</span><span>),</span> <span>&quot;return pointer = &amp;h&quot;</span> <span>&amp;</span> <span class="tok-kw">Hex</span><span>(</span><span>p</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>UDT.Delete</span> <span>(</span><span class="tok-kw">ByVal</span> <span>buffer</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span><span>)</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;  Overloaded Delete operator, with parameter buffer = &amp;h&quot;</span> <span>&amp;</span> <span class="tok-kw">Hex</span><span>(</span><span>buffer</span><span>)</span>
+
+  <span class="tok-kw">Dim</span> <span>pOrig</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>=</span> <span class="tok-kw">Cast</span><span>(</span><span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span class="tok-kw">Ptr</span><span>,</span> <span>buffer</span><span>)[-</span><span class="tok-nu">1</span><span>]</span>
+
+  <span class="tok-kw">Deallocate</span><span>(</span><span>pOrig</span><span>)</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;  real pointer = &amp;h&quot;</span> <span>&amp;</span> <span class="tok-kw">Hex</span><span>(</span><span>pOrig</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>UDT</span> <span>()</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;  Constructor, @This = &amp;h&quot;</span> <span>&amp;</span> <span class="tok-kw">Hex</span><span>(@</span><span class="tok-kw">This</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Destructor</span> <span>UDT</span> <span>()</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;  Destructor, @This = &amp;h&quot;</span> <span>&amp;</span> <span class="tok-kw">Hex</span><span>(@</span><span class="tok-kw">This</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Destructor</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;'Dim As UDT Ptr p = New UDT'&quot;</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT</span> <span class="tok-kw">Ptr</span> <span>p</span> <span>=</span> <span class="tok-kw">New</span> <span>UDT</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;  p = &amp;h&quot;</span> <span>&amp;</span> <span class="tok-kw">Hex</span><span>(</span><span>p</span><span>)</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;'Delete p'&quot;</span>
+
+<span class="tok-kw">Delete</span> <span>p</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+<br>
+<div class="indent">Output example:<br>
+<pre class="code">
+'Dim As UDT Ptr p = New UDT'
+  Overloaded New operator, with parameter size = &hA00000
+  real pointer = &h420020   return pointer = &h420100
+  Constructor, @This = &h420100
+  p = &h420100
+'Delete p'
+  Destructor, @This = &h420100
+  Overloaded Delete operator, with parameter buffer = &h420100
+  real pointer = &h420020
+</pre><br>
+</div>Dynamic allocation manager for UDT, by using the member operators "New[] Overload" and "Delete[] Overload":<br>
+<ul><ul><li> monitoring of memory allocations/deallocations: addresses, sizes and total memory used,<br>
+<li> detection of abnormal deallocation requests,<br>
+<li> detection of a failed allocation (Allocate() returning null pointer),<br>
+<li> detection of total allocated memory size exceeding a threshold,<br>
+<li> the last two detection cases induces an automatic memory freeing before forcing the program to end.<br>
+</li></li></li></li></li></ul></ul>The principle is to manage a dynamic list of successful allocations, but not yet freed, containing the allocated addresses with their requested sizes:<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span>UDTmanager</span>
+
+  <span class="tok-cm">'' user UDT fields:</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Byte</span> <span>b</span><span>(</span><span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">1024</span><span>*</span><span class="tok-nu">1024</span><span>)</span>
+
+  <span class="tok-cm">'' manager fields:</span>
+
+    <span class="tok-kw">Public</span><span>:</span>
+
+      <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">New</span><span>[]</span> <span>(</span><span class="tok-kw">ByVal</span> <span>size</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span>
+
+      <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Delete</span><span>[]</span> <span>(</span><span class="tok-kw">ByVal</span> <span>buf</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span><span>)</span>
+
+      <span class="tok-kw">Static</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span> <span>maxmemory</span>
+
+    <span class="tok-kw">Private</span><span>:</span>
+
+      <span class="tok-kw">Static</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>address</span><span>()</span>
+
+      <span class="tok-kw">Static</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span> <span>bytes</span><span>()</span>
+
+      <span class="tok-kw">Static</span> <span>upbound</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span>
+
+      <span class="tok-kw">Declare</span> <span class="tok-kw">Static</span> <span class="tok-kw">Function</span> <span>printLine</span> <span>(</span><span class="tok-kw">ByRef</span> <span>text</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>,</span> <span class="tok-kw">ByVal</span> <span>index</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span><span>,</span> <span class="tok-kw">ByVal</span> <span>sign</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span>
+
+      <span class="tok-kw">Declare</span> <span class="tok-kw">Static</span> <span class="tok-kw">Sub</span> <span>endProgram</span> <span>()</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span> <span>UDTmanager.maxmemory</span> <span>=</span> <span class="tok-nu">3</span> <span>*</span> <span class="tok-nu">1024</span> <span>*</span> <span class="tok-nu">1024</span> <span>*</span> <span class="tok-nu">1024</span>
+
+<span class="tok-kw">ReDim</span> <span>UDTmanager.address</span><span>(</span><span class="tok-nu">0</span><span>)</span>
+
+<span class="tok-kw">ReDim</span> <span>UDTmanager.bytes</span><span>(</span><span class="tok-nu">0</span><span>)</span>
+
+<span class="tok-kw">Dim</span> <span>UDTmanager.upbound</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span> <span>=</span> <span class="tok-nu">0</span>
+
+
+
+<span class="tok-kw">Function</span> <span>UDTmanager.printLine</span> <span>(</span><span class="tok-kw">ByRef</span> <span>text</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>,</span> <span class="tok-kw">ByVal</span> <span>index</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span><span>,</span> <span class="tok-kw">ByVal</span> <span>sign</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span>
+
+  <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span> <span>total</span> <span>=</span> <span class="tok-nu">0</span>
+
+  <span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span> <span>=</span> <span class="tok-nu">1</span> <span class="tok-kw">To</span> <span>UDTmanager.upbound</span>
+
+    <span class="tok-kw">If</span> <span>I</span> <span>&lt;&gt;</span> <span>index</span> <span class="tok-kw">OrElse</span> <span class="tok-kw">Sgn</span><span>(</span><span>sign</span><span>)</span> <span>&gt;</span> <span class="tok-nu">0</span> <span class="tok-kw">Then</span>
+
+      <span>total</span> <span>+=</span> <span>UDTmanager.bytes</span><span>(</span><span>I</span><span>)</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+  <span class="tok-kw">Next</span> <span>I</span>
+
+  <span class="tok-kw">Print</span> <span>text</span><span>,</span> <span>&quot;&amp;h&quot;</span> <span>&amp;</span> <span class="tok-kw">Hex</span><span>(</span><span>UDTmanager.address</span><span>(</span><span>index</span><span>),</span> <span class="tok-kw">SizeOf</span><span>(</span><span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span><span>)</span> <span>*</span> <span class="tok-nu">2</span><span>),</span>
+
+  <span class="tok-kw">If</span> <span>sign</span> <span>&lt;&gt;</span> <span class="tok-nu">0</span> <span class="tok-kw">Then</span>
+
+    <span class="tok-kw">Print</span> <span class="tok-kw">Using</span> <span>&quot; +####.## MB&quot;</span><span>;</span> <span class="tok-kw">Sgn</span><span>(</span><span>sign</span><span>)</span> <span>*</span> <span class="tok-kw">Cast</span><span>(</span><span class="tok-kw">Integer</span><span>,</span> <span>UDTmanager.bytes</span><span>(</span><span>index</span><span>)</span> <span>/</span> <span class="tok-nu">1024</span><span>)</span> <span>/</span> <span class="tok-nu">1024</span><span>;</span>
+
+  <span class="tok-kw">Else</span>
+
+    <span class="tok-kw">Print</span> <span class="tok-kw">Using</span> <span>&quot;( ####.## MB)&quot;</span><span>;</span> <span>UDTmanager.bytes</span><span>(</span><span>index</span><span>)</span> <span>/</span> <span class="tok-nu">1024</span> <span>/</span> <span class="tok-nu">1024</span><span>;</span>
+
+  <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+  <span class="tok-kw">Print</span><span>,</span>
+
+  <span class="tok-kw">Print</span> <span class="tok-kw">Using</span> <span>&quot;###.## GB&quot;</span><span>;</span> <span>total</span> <span>/</span> <span class="tok-nu">1024</span> <span>/</span> <span class="tok-nu">1024</span> <span>/</span> <span class="tok-nu">1024</span>
+
+  <span class="tok-kw">Return</span> <span>total</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>UDTmanager.endProgram</span> <span>()</span>
+
+  <span class="tok-kw">Do</span> <span class="tok-kw">While</span> <span>UDTmanager.upbound</span> <span>&gt;</span> <span class="tok-nu">0</span>
+
+    <span class="tok-kw">Deallocate</span> <span>UDTmanager.address</span><span>(</span><span>UDTmanager.upbound</span><span>)</span>
+
+    <span>UDTmanager.printLine</span><span>(</span><span>&quot;memory deallocation forced&quot;</span><span>,</span> <span>UDTmanager.upbound</span><span>,</span> <span>-</span><span class="tok-nu">1</span><span>)</span>
+
+    <span>UDTmanager.upbound</span> <span>-=</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">ReDim</span> <span class="tok-kw">Preserve</span> <span>UDTmanager.address</span><span>(</span><span>UDTmanager.upbound</span><span>)</span>
+
+    <span class="tok-kw">ReDim</span> <span class="tok-kw">Preserve</span> <span>UDTmanager.bytes</span><span>(</span><span>UDTmanager.upbound</span><span>)</span>
+
+  <span class="tok-kw">Loop</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;end program forced&quot;</span>
+
+  <span class="tok-kw">Print</span>
+
+  <span class="tok-kw">Sleep</span>
+
+  <span class="tok-kw">End</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>UDTmanager.New</span><span>[]</span> <span>(</span><span class="tok-kw">ByVal</span> <span>size</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span>
+
+  <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>p</span> <span>=</span> <span class="tok-kw">Allocate</span><span>(</span><span>size</span><span>)</span>
+
+  <span class="tok-kw">If</span> <span>p</span> <span>&gt;</span> <span class="tok-nu">0</span> <span class="tok-kw">Then</span>
+
+    <span>UDTmanager.upbound</span> <span>+=</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">ReDim</span> <span class="tok-kw">Preserve</span> <span>UDTmanager.address</span><span>(</span><span>UDTmanager.upbound</span><span>)</span>
+
+    <span class="tok-kw">ReDim</span> <span class="tok-kw">Preserve</span> <span>UDTmanager.bytes</span><span>(</span><span>UDTmanager.upbound</span><span>)</span>
+
+    <span>UDTmanager.address</span><span>(</span><span>UDTmanager.upbound</span><span>)</span> <span>=</span> <span>p</span>
+
+    <span>UDTmanager.bytes</span><span>(</span><span>UDTmanager.upbound</span><span>)</span> <span>=</span> <span>size</span>
+
+    <span class="tok-kw">If</span> <span>UDTmanager.printLine</span><span>(</span><span>&quot;memory allocation&quot;</span><span>,</span> <span>UDTmanager.upbound</span><span>,</span> <span>+</span><span class="tok-nu">1</span><span>)</span> <span>&gt;</span> <span>UDTmanager.maxmemory</span> <span class="tok-kw">Then</span>
+
+      <span>UDTmanager.address</span><span>(</span><span class="tok-nu">0</span><span>)</span> <span>=</span> <span>p</span>
+
+      <span>UDTmanager.bytes</span><span>(</span><span class="tok-nu">0</span><span>)</span> <span>=</span> <span>size</span>
+
+      <span class="tok-kw">Print</span>
+
+      <span>UDTmanager.printLine</span><span>(</span><span>&quot;memory allocation exceeded&quot;</span><span>,</span> <span class="tok-nu">0</span><span>,</span> <span class="tok-nu">0</span><span>)</span>
+
+      <span>UDTmanager.endProgram</span><span>()</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+    <span class="tok-kw">Return</span> <span>p</span>
+
+  <span class="tok-kw">Else</span>
+
+    <span>UDTmanager.address</span><span>(</span><span class="tok-nu">0</span><span>)</span> <span>=</span> <span>p</span>
+
+    <span>UDTmanager.bytes</span><span>(</span><span class="tok-nu">0</span><span>)</span> <span>=</span> <span>size</span>
+
+    <span class="tok-kw">Print</span>
+
+    <span>UDTmanager.printLine</span><span>(</span><span>&quot;memory allocation failed&quot;</span><span>,</span> <span class="tok-nu">0</span><span>,</span> <span class="tok-nu">0</span><span>)</span>
+
+    <span>UDTmanager.endProgram</span><span>()</span>
+
+  <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>UDTmanager.Delete</span><span>[]</span> <span>(</span><span class="tok-kw">ByVal</span> <span>buf</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span><span>)</span>
+
+  <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span> <span>found</span> <span>=</span> <span class="tok-nu">0</span>
+
+  <span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span> <span>=</span> <span class="tok-nu">1</span> <span class="tok-kw">To</span> <span>UDTmanager.upbound</span>
+
+    <span class="tok-kw">If</span> <span>UDTmanager.address</span><span>(</span><span>I</span><span>)</span> <span>=</span> <span>buf</span> <span class="tok-kw">Then</span>
+
+      <span class="tok-kw">Deallocate</span> <span>buf</span>
+
+      <span>UDTmanager.printLine</span><span>(</span><span>&quot;memory deallocation&quot;</span><span>,</span> <span>I</span><span>,</span> <span>-</span><span class="tok-nu">1</span><span>)</span>
+
+      <span class="tok-kw">For</span> <span>J</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span> <span>=</span> <span>I</span> <span>+</span> <span class="tok-nu">1</span> <span class="tok-kw">To</span> <span>UDTmanager.upbound</span>
+
+        <span>UDTmanager.address</span><span>(</span><span>J</span> <span>-</span> <span class="tok-nu">1</span><span>)</span> <span>=</span> <span>UDTmanager.address</span><span>(</span><span>J</span><span>)</span>
+
+        <span>UDTmanager.bytes</span><span>(</span><span>J</span> <span>-</span> <span class="tok-nu">1</span><span>)</span> <span>=</span> <span>UDTmanager.bytes</span><span>(</span><span>J</span><span>)</span>
+
+      <span class="tok-kw">Next</span> <span>J</span>
+
+      <span>UDTmanager.upbound</span> <span>-=</span> <span class="tok-nu">1</span>
+
+      <span class="tok-kw">ReDim</span> <span class="tok-kw">Preserve</span> <span>UDTmanager.address</span><span>(</span><span>UDTmanager.upbound</span><span>)</span>
+
+      <span class="tok-kw">ReDim</span> <span class="tok-kw">Preserve</span> <span>UDTmanager.bytes</span><span>(</span><span>UDTmanager.upbound</span><span>)</span>
+
+      <span>found</span> <span>=</span> <span class="tok-nu">1</span>
+
+      <span class="tok-kw">Exit</span> <span class="tok-kw">For</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+  <span class="tok-kw">Next</span> <span>I</span>
+
+  <span class="tok-kw">If</span> <span>found</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">Then</span>
+
+    <span>UDTmanager.address</span><span>(</span><span class="tok-nu">0</span><span>)</span> <span>=</span> <span>buf</span>
+
+    <span>UDTmanager.bytes</span><span>(</span><span class="tok-nu">0</span><span>)</span> <span>=</span> <span class="tok-nu">0</span>
+
+    <span>UDTmanager.printLine</span><span>(</span><span>&quot;deallocation not matching&quot;</span><span>,</span> <span class="tok-nu">0</span><span>,</span> <span class="tok-nu">0</span><span>)</span>
+
+  <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;Message&quot;</span><span>,,</span> <span>&quot;Address&quot;</span> <span>&amp;</span> <span class="tok-kw">Space</span><span>(</span><span class="tok-kw">SizeOf</span><span>(</span><span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span><span>)),</span> <span>&quot;Size&quot;</span><span>,</span> <span>&quot;Total&quot;</span>
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Randomize</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDTmanager</span> <span class="tok-kw">Ptr</span> <span>pu1</span> <span>=</span> <span class="tok-kw">New</span> <span>UDTmanager</span><span>[</span><span class="tok-kw">CUInt</span><span>(</span><span class="tok-kw">Rnd</span><span>()</span> <span>*</span> <span class="tok-nu">256</span> <span>+</span> <span class="tok-nu">1</span><span>)]</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDTmanager</span> <span class="tok-kw">Ptr</span> <span>pu2</span> <span>=</span> <span class="tok-kw">New</span> <span>UDTmanager</span><span>[</span><span class="tok-kw">CUInt</span><span>(</span><span class="tok-kw">Rnd</span><span>()</span> <span>*</span> <span class="tok-nu">256</span> <span>+</span> <span class="tok-nu">1</span><span>)]</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDTmanager</span> <span class="tok-kw">Ptr</span> <span>pu3</span> <span>=</span> <span class="tok-kw">Cast</span><span>(</span><span>UDTmanager</span> <span class="tok-kw">Ptr</span><span>,</span> <span class="tok-nu">1</span><span>)</span>
+
+<span class="tok-kw">Delete</span><span>[]</span> <span>pu2</span>
+
+<span class="tok-kw">Delete</span><span>[]</span> <span>pu3</span>
+
+<span class="tok-kw">Delete</span><span>[]</span> <span>pu2</span>
+
+<span class="tok-kw">Delete</span><span>[]</span> <span>pu1</span>
+
+<span class="tok-kw">Do</span>
+
+  <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDTmanager</span> <span class="tok-kw">Ptr</span> <span>pu</span> <span>=</span> <span class="tok-kw">New</span> <span>UDTmanager</span><span>[</span><span class="tok-kw">CUInt</span><span>(</span><span class="tok-kw">Rnd</span><span>()</span> <span>*</span> <span class="tok-nu">512</span> <span>+</span> <span class="tok-nu">1</span><span>)]</span>
+
+<span class="tok-kw">Loop</span></pre></code><br>
+<br>
+<div class="indent">Output for fbc 32-bit (maximum dynamic data &lt; 2 GB).<br>
+Here, program is stopped because of memory allocation failed:<br>
+<pre class="code">
+Message                     Address       Size          Total
+
+memory allocation           &h020E0020       +99.00 MB    0.10 GB
+memory allocation           &h083F3020        +3.00 MB    0.10 GB
+memory deallocation         &h083F3020        -3.00 MB    0.10 GB
+deallocation not matching   &h00000001    (    0.00 MB)   0.10 GB
+deallocation not matching   &h083F3020    (    0.00 MB)   0.10 GB
+memory deallocation         &h020E0020       -99.00 MB    0.00 GB
+memory allocation           &h020ED020      +103.00 MB    0.10 GB
+memory allocation           &h087F2020      +106.00 MB    0.20 GB
+memory allocation           &h0F20D020      +230.00 MB    0.43 GB
+memory allocation           &h1D812020      +137.00 MB    0.56 GB
+memory allocation           &h2612C020      +377.00 MB    0.93 GB
+memory allocation           &h3DA30020      +275.00 MB    1.20 GB
+memory allocation           &h4ED40020      +220.00 MB    1.41 GB
+memory allocation           &h5C958020      +229.00 MB    1.64 GB
+
+memory allocation failed    &h00000000    (  142.00 MB)   1.64 GB
+memory deallocation forced  &h5C958020      -229.00 MB    1.41 GB
+memory deallocation forced  &h4ED40020      -220.00 MB    1.20 GB
+memory deallocation forced  &h3DA30020      -275.00 MB    0.93 GB
+memory deallocation forced  &h2612C020      -377.00 MB    0.56 GB
+memory deallocation forced  &h1D812020      -137.00 MB    0.43 GB
+memory deallocation forced  &h0F20D020      -230.00 MB    0.20 GB
+memory deallocation forced  &h087F2020      -106.00 MB    0.10 GB
+memory deallocation forced  &h020ED020      -103.00 MB    0.00 GB
+end program forced
+</pre>Output for fbc 64-bit (maximum dynamic data &lt; virtual memory).<br>
+Here, program is stopped because of total allocated memory size &gt; 3 GB (adjustable threshold):<br>
+<pre class="code">
+Message                     Address                     Size          Total
+
+memory allocation           &h0000000001EA5040            +105.00 MB    0.10 GB
+memory allocation           &h00000000087BC040             +93.00 MB    0.19 GB
+memory deallocation         &h00000000087BC040             -93.00 MB    0.10 GB
+deallocation not matching   &h0000000000000001          (    0.00 MB)   0.10 GB
+deallocation not matching   &h00000000087BC040          (    0.00 MB)   0.10 GB
+memory deallocation         &h0000000001EA5040            -105.00 MB    0.00 GB
+memory allocation           &h0000000001EA1040            +155.00 MB    0.15 GB
+memory allocation           &h000000000B9BF040            +165.00 MB    0.31 GB
+memory allocation           &h0000000015ED8040            +382.00 MB    0.69 GB
+memory allocation           &h000000002DCE7040            +458.00 MB    1.13 GB
+memory allocation           &h000000004A6FB040            +255.00 MB    1.38 GB
+memory allocation           &h000000005A607040             +96.00 MB    1.48 GB
+memory allocation           &h000000006061B040            +426.00 MB    1.89 GB
+memory allocation           &h000000007FFF9040            +221.00 MB    2.11 GB
+memory allocation           &h000000008DD03040            +119.00 MB    2.22 GB
+memory allocation           &h0000000095413040            +147.00 MB    2.37 GB
+memory allocation           &h000000009E727040            +217.00 MB    2.58 GB
+memory allocation           &h00000000AC03C040            +334.00 MB    2.91 GB
+memory allocation           &h00000000C0E4B040            +280.00 MB    3.18 GB
+
+memory allocation exceeded  &h00000000C0E4B040          (  280.00 MB)   3.18 GB
+memory deallocation forced  &h00000000C0E4B040            -280.00 MB    2.91 GB
+memory deallocation forced  &h00000000AC03C040            -334.00 MB    2.58 GB
+memory deallocation forced  &h000000009E727040            -217.00 MB    2.37 GB
+memory deallocation forced  &h0000000095413040            -147.00 MB    2.22 GB
+memory deallocation forced  &h000000008DD03040            -119.00 MB    2.11 GB
+memory deallocation forced  &h000000007FFF9040            -221.00 MB    1.89 GB
+memory deallocation forced  &h000000006061B040            -426.00 MB    1.48 GB
+memory deallocation forced  &h000000005A607040             -96.00 MB    1.38 GB
+memory deallocation forced  &h000000004A6FB040            -255.00 MB    1.13 GB
+memory deallocation forced  &h000000002DCE7040            -458.00 MB    0.69 GB
+memory deallocation forced  &h0000000015ED8040            -382.00 MB    0.31 GB
+memory deallocation forced  &h000000000B9BF040            -165.00 MB    0.15 GB
+memory deallocation forced  &h0000000001EA1040            -155.00 MB    0.00 GB
+end program forced
+</pre></div>
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgOpNewOverload.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

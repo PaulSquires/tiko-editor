@@ -1,0 +1,2350 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bitmap Functions — Help Center</title>
+<meta name="description" content="Bitmap Functions — 35 documented members. Graphics reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/bitmap-functions.html">
+<meta property="og:title" content="Bitmap Functions">
+<meta property="og:description" content="Bitmap Functions — 35 documented members. Graphics reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/bitmap-functions.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/bitmap-functions.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span>Graphics</div>
+<h1>Bitmap Functions</h1>
+<h2>Members (35)</h2>
+<div class="memberlist"><a href="procedures/gdipbitmapapplyeffect.html"><span class="m-n">GdipBitmapApplyEffect</span><span class="m-d">Alters a **Bitmap** object by applying a specified effect.</span></a><a href="procedures/gdipbitmapconvertformat.html"><span class="m-n">GdipBitmapConvertFormat</span><span class="m-d">Converts a bitmap to a specified pixel format. The original pixel data in the bitmap is replaced by the new pixel data.</span></a><a href="procedures/gdipbitmapcreateapplyeffect.html"><span class="m-n">GdipBitmapCreateApplyEffect</span><span class="m-d">Creates a new **Bitmap** object by applying a specified effect to an existing **Bitmap** object.</span></a><a href="procedures/gdipbitmapgethistogram.html"><span class="m-n">GdipBitmapGetHistogram</span><span class="m-d">Returns one or more histograms for specified color channels of the specified **Bitmap** object.</span></a><a href="procedures/gdipbitmapgethistogramsize.html"><span class="m-n">GdipBitmapGetHistogramSize</span><span class="m-d">Returns the number of elements (in an array of **DWORD**s) that you must allocate before you call the **GdipBitmapGetHistogram** function.</span></a><a href="procedures/gdipbitmapgetpixel.html"><span class="m-n">GdipBitmapGetPixel</span><span class="m-d">Gets the color of a specified pixel in this bitmap.</span></a><a href="procedures/gdipbitmaplockbits.html"><span class="m-n">GdipBitmapLockBits</span><span class="m-d">Locks a rectangular portion of this bitmap and provides a temporary buffer that you can use to read or write pixel data in a specified format.</span></a><a href="procedures/gdipbitmapsetpixel.html"><span class="m-n">GdipBitmapSetPixel</span><span class="m-d">Sets the color of a specified pixel in this bitmap.</span></a><a href="procedures/gdipbitmapsetresolution.html"><span class="m-n">GdipBitmapSetResolution</span><span class="m-d">Sets the resolution of this **Bitmap** object.</span></a><a href="procedures/gdipbitmapunlockbits.html"><span class="m-n">GdipBitmapUnlockBits</span><span class="m-d">Unlocks a portion of this bitmap that was previously locked by a call to **GdipBitmapLockBits**.</span></a><a href="procedures/gdipclonebitmaparea.html"><span class="m-n">GdipCloneBitmapArea</span><span class="m-d">Creates a new **Bitmap** object by copying a portion of this bitmap.</span></a><a href="procedures/gdipclonebitmapareai.html"><span class="m-n">GdipCloneBitmapAreaI</span><span class="m-d">Creates a new **Bitmap** object by copying a portion of this bitmap.</span></a><a href="procedures/gdipcreatebitmapfromdirectdrawsurface.html"><span class="m-n">GdipCreateBitmapFromDirectDrawSurface</span><span class="m-d">Creates a **Bitmap** object based on a **DirectDraw** surface.</span></a><a href="procedures/gdipcreatebitmapfromfile.html"><span class="m-n">GdipCreateBitmapFromFile</span><span class="m-d">Creates a **Bitmap** object based on an image file.</span></a><a href="procedures/gdipcreatebitmapfromfileicm.html"><span class="m-n">GdipCreateBitmapFromFileICM</span><span class="m-d">Creates a **Bitmap** object based on an image file. This function uses ICM.</span></a><a href="procedures/gdipcreatebitmapfromgdidib.html"><span class="m-n">GdipCreateBitmapFromGdiDib</span><span class="m-d">Creates a **Bitmap** object based on a **BITMAPINFO** structure and an array of pixel data.</span></a><a href="procedures/gdipcreatebitmapfromgraphics.html"><span class="m-n">GdipCreateBitmapFromGraphics</span><span class="m-d">Creates a **Bitmap** object based on a **Graphics** object, a width, and a height.</span></a><a href="procedures/gdipcreatebitmapfromhbitmap.html"><span class="m-n">GdipCreateBitmapFromHBITMAP</span><span class="m-d">Creates a **Bitmap** object based on a handle to a Windows Microsoft® Windows® Graphics Device Interface (GDI) bitmap and a handle to a GDI palette.</span></a><a href="procedures/gdipcreatebitmapfromhicon.html"><span class="m-n">GdipCreateBitmapFromHICON</span><span class="m-d">Creates a **Bitmap** object based on an icon.</span></a><a href="procedures/gdipcreatebitmapfromresource.html"><span class="m-n">GdipCreateBitmapFromResource</span><span class="m-d">Creates a **Bitmap** object based on an application or dynamic-link library (DLL) instance handle and the name of a bitmap resource.</span></a><a href="procedures/gdipcreatebitmapfromscan0.html"><span class="m-n">GdipCreateBitmapFromScan0</span><span class="m-d">Creates a **Bitmap** object based on an array of bytes along with size and format information.</span></a><a href="procedures/gdipcreatebitmapfromstream.html"><span class="m-n">GdipCreateBitmapFromStream</span><span class="m-d">Creates a **Bitmap** object based on a stream.</span></a><a href="procedures/gdipcreatebitmapfromstreamicm.html"><span class="m-n">GdipCreateBitmapFromStreamICM</span><span class="m-d">Creates a **Bitmap** object based on a stream. This function uses ICM.</span></a><a href="procedures/gdipcreatecachedbitmap.html"><span class="m-n">GdipCreateCachedBitmap</span><span class="m-d">Creates a **CachedBitmap** object based on a **Bitmap** object and a **Graphics** object.</span></a><a href="procedures/gdipcreateeffect.html"><span class="m-n">GdipCreateEffect</span><span class="m-d">Creates an **Effect** object of the type specified by the guid parameter.</span></a><a href="procedures/gdipcreatehbitmapfrombitmap.html"><span class="m-n">GdipCreateHBITMAPFromBitmap</span><span class="m-d">Creates a Microsoft Windows Graphics Device Interface (GDI) bitmap from a **Bitmap** object.</span></a><a href="procedures/gdipcreatehiconfrombitmap.html"><span class="m-n">GdipCreateHICONFromBitmap</span><span class="m-d">Creates an icon from a **Bitmap** object.</span></a><a href="procedures/gdipdeletecachedbitmap.html"><span class="m-n">GdipDeleteCachedBitmap</span><span class="m-d">Deletes a **CachedBitmap** object.</span></a><a href="procedures/gdipdeleteeffect.html"><span class="m-n">GdipDeleteEffect</span><span class="m-d">Deletes the specified **Effect** object.</span></a><a href="procedures/gdipdrawcachedbitmap.html"><span class="m-n">GdipDrawCachedBitmap</span><span class="m-d">Draws the image stored in a **CachedBitmap** object.</span></a><a href="procedures/gdipgeteffectparameters.html"><span class="m-n">GdipGetEffectParameters</span><span class="m-d">Returns the parameters for the specified **Effect** object.</span></a><a href="procedures/gdipgeteffectparametersize.html"><span class="m-n">GdipGetEffectParameterSize</span><span class="m-d">Gets the total size, in bytes, of the parameters currently set for the specified effect.</span></a><a href="procedures/gdipinitializepalette.html"><span class="m-n">GdipInitializePalette</span><span class="m-d">Initializes a standard, optimal, or custom color palette.</span></a><a href="procedures/gdipseteffectparameters.html"><span class="m-n">GdipSetEffectParameters</span><span class="m-d">Sets the parameters for the specified **Effect** object.</span></a><a href="procedures/gdiptestcontrol.html"><span class="m-n">GdipTestControl</span><span class="m-d">Used for internal testing of Microsoft® Windows® GDI+.</span></a></div>
+<h2>Documentation</h2>
+<h2 id="bitmap-functions">Bitmap Functions</h2>
+<p>The <strong>Bitmap</strong> functions expands on the capabilities of the Image functions by providing additional methods for creating and manipulating raster images.</p>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="procedures/gdipbitmapapplyeffect.html">GdipBitmapApplyEffect</a></td><td>Alters a <strong>Bitmap</strong> object by applying a specified effect.</td></tr><tr><td><a href="procedures/gdipbitmapconvertformat.html">GdipBitmapConvertFormat</a></td><td>Converts a bitmap to a specified pixel format. The original pixel data in the bitmap is replaced by the new pixel data.</td></tr><tr><td><a href="procedures/gdipbitmapcreateapplyeffect.html">GdipBitmapCreateApplyEffect</a></td><td>Creates a new <strong>Bitmap</strong> object by applying a specified effect to an existing <strong>Bitmap</strong> object.</td></tr><tr><td><a href="procedures/gdipbitmapgethistogram.html">GdipBitmapGetHistogram</a></td><td>Returns one or more histograms for specified color channels of the specified <strong>Bitmap</strong> object.</td></tr><tr><td><a href="procedures/gdipbitmapgethistogramsize.html">GdipBitmapGetHistogramSize</a></td><td>Returns the number of elements (in an array of <strong>DWORD</strong>s) that you must allocate before you call the <strong>GdipBitmapGetHistogram</strong> function.</td></tr><tr><td><a href="procedures/gdipbitmapgetpixel.html">GdipBitmapGetPixel</a></td><td>Gets the color of a specified pixel in this bitmap.</td></tr><tr><td><a href="procedures/gdipbitmaplockbits.html">GdipBitmapLockBits</a></td><td>Locks a rectangular portion of this bitmap and provides a temporary buffer that you can use to read or write pixel data in a specified format.</td></tr><tr><td><a href="procedures/gdipbitmapsetpixel.html">GdipBitmapSetPixel</a></td><td>Sets the color of a specified pixel in this bitmap.</td></tr><tr><td><a href="procedures/gdipbitmapsetresolution.html">GdipBitmapSetResolution</a></td><td>Sets the resolution of this <strong>Bitmap</strong> object.</td></tr><tr><td><a href="procedures/gdipbitmapunlockbits.html">GdipBitmapUnlockBits</a></td><td>Unlocks a portion of this bitmap that was previously locked by a call to <strong>GdipBitmapLockBits</strong>.</td></tr><tr><td><a href="procedures/gdipclonebitmaparea.html">GdipCloneBitmapArea</a></td><td>Creates a new <strong>Bitmap</strong> object by copying a portion of this bitmap.</td></tr><tr><td><a href="procedures/gdipclonebitmaparea.html">GdipCloneBitmapAreaI</a></td><td>Creates a new <strong>Bitmap</strong> object by copying a portion of this bitmap.</td></tr><tr><td><a href="procedures/gdipcreatebitmapfromdirectdrawsurface.html">GdipCreateBitmapFromDirectDrawSurface</a></td><td>Creates a <strong>Bitmap</strong> object based on a <strong>DirectDraw</strong> surface.</td></tr><tr><td><a href="procedures/gdipcreatebitmapfromfile.html">GdipCreateBitmapFromFile</a></td><td>Creates a <strong>Bitmap</strong> object based on an image file.</td></tr><tr><td><a href="procedures/gdipcreatebitmapfromfileicm.html">GdipCreateBitmapFromFileICM</a></td><td>Creates a <strong>Bitmap</strong> object based on an image file. This function uses ICM.</td></tr><tr><td><a href="procedures/gdipcreatebitmapfromgdidib.html">GdipCreateBitmapFromGdiDib</a></td><td>Creates a <strong>Bitmap</strong> object based on a <strong>BITMAPINFO</strong> structure and an array of pixel data.</td></tr><tr><td><a href="procedures/gdipcreatebitmapfromgraphics.html">GdipCreateBitmapFromGraphics</a></td><td>Creates a <strong>Bitmap</strong> object based on a <strong>Graphics</strong> object, a width, and a height.</td></tr><tr><td><a href="procedures/gdipcreatebitmapfromhbitmap.html">GdipCreateBitmapFromHBITMAP</a></td><td>Creates a <strong>Bitmap</strong> object based on a handle to a Windows Microsoft® Windows® Graphics Device Interface (GDI) bitmap and a handle to a GDI palette.</td></tr><tr><td><a href="procedures/gdipcreatebitmapfromhicon.html">GdipCreateBitmapFromHICON</a></td><td>Creates a <strong>Bitmap</strong> object based on an icon.</td></tr><tr><td><a href="procedures/gdipcreatebitmapfromresource.html">GdipCreateBitmapFromResource</a></td><td>Creates a <strong>Bitmap</strong> object based on an application or dynamic-link library (DLL) instance handle and the name of a bitmap resource.</td></tr><tr><td><a href="procedures/gdipcreatebitmapfromscan0.html">GdipCreateBitmapFromScan0</a></td><td>Creates a <strong>Bitmap</strong> object based on an array of bytes along with size and format information.</td></tr><tr><td><a href="procedures/gdipcreatebitmapfromstream.html">GdipCreateBitmapFromStream</a></td><td>Creates a <strong>Bitmap</strong> object based on a stream.</td></tr><tr><td><a href="procedures/gdipcreatebitmapfromstreamicm.html">GdipCreateBitmapFromStreamICM</a></td><td>Creates a <strong>Bitmap</strong> object based on a stream. This function uses ICM.</td></tr><tr><td><a href="procedures/gdipcreateeffect.html">GdipCreateEffect</a></td><td>Creates an <strong>Effect</strong> object of the type specified by the guid parameter.</td></tr><tr><td><a href="procedures/gdipcreatehbitmapfrombitmap.html">GdipCreateHBITMAPFromBitmap</a></td><td>Creates a Microsoft Windows Graphics Device Interface (GDI) bitmap from a <strong>Bitmap</strong> object.</td></tr><tr><td><a href="procedures/gdipcreatehiconfrombitmap.html">GdipCreateHICONFromBitmap</a></td><td>Creates an icon from a <strong>Bitmap</strong> object.</td></tr><tr><td><a href="procedures/gdipdeleteeffect.html">GdipDeleteEffect</a></td><td>Deletes the specified <strong>Effect</strong> object.</td></tr><tr><td><a href="procedures/gdipgeteffectparameters.html">GdipGetEffectParameters</a></td><td>Returns the parameters for the specified <strong>Effect</strong> object.</td></tr><tr><td><a href="procedures/gdipgeteffectparametersize.html">GdipGetEffectParameterSize</a></td><td>Gets the total size, in bytes, of the parameters currently set for the specified effect.</td></tr><tr><td><a href="procedures/gdipinitializepalette.html">GdipInitializePalette</a></td><td>Initializes a standard, optimal, or custom color palette.</td></tr><tr><td><a href="procedures/gdipseteffectparameters.html">GdipSetEffectParameters</a></td><td>Sets the parameters for the specified <strong>Effect</strong> object.</td></tr><tr><td><a href="procedures/gdiptestcontrol.html">GdipTestControl</a></td><td>Used for internal testing of Microsoft® Windows® GDI+.</td></tr></tbody></table></div>
+<hr>
+<h2 id="cachedbitmap-functions">CachedBitmap Functions</h2>
+<p>A <strong>CachedBitmap</strong> object stores a bitmap in a format that is optimized for display on a particular device. To display a cached bitmap, call the <strong>GdipDrawCachedBitmap</strong> function.</p>
+<p><strong>CachedBitmap</strong> is optimized for repeated rendering on a specific display device. It does not support scaling, rotation, or DPI-aware rendering. Use only when performance is critical and the image remains static and untransformed.</p>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="procedures/gdipcreatecachedbitmap.html">GdipCreateCachedBitmap</a></td><td>Creates a <strong>CachedBitmap</strong> object based on a <strong>Bitmap</strong> object and a <strong>Graphics</strong> object.</td></tr><tr><td><a href="procedures/gdipdeletecachedbitmap.html">GdipDeleteCachedBitmap</a></td><td>Deletes a <strong>CachedBitmap</strong> object.</td></tr><tr><td><a href="procedures/gdipdrawcachedbitmap.html">GdipDrawCachedBitmap</a></td><td>Draws the image stored in a <strong>CachedBitmap</strong> object.</td></tr></tbody></table></div>
+<hr>
+<h3 id="gdipbitmapapplyeffect">GdipBitmapApplyEffect</h3>
+<p>Alters a <strong>Bitmap</strong> object by applying a specified effect.</p>
+<pre class="code"><code>FUNCTION GdipBitmapApplyEffect (BYVAL bmp AS GpBitmap PTR, BYVAL effect AS GpEffect PTR, _
+   BYVAL roi AS RECT PTR, BYVAL useAuxData AS BOOL, BYVAL auxData AS VOID PTR PTR, _
+   BYVAL auxDataSize AS INT_ PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>bmp</em></td><td>[in] Address of a pointer to a <strong>Bitmap</strong> object to which the effect is applied.</td></tr><tr><td><em>effect</em></td><td>[in] The effect to be applied.</td></tr><tr><td><em>roi</em></td><td>in] Pointer to a <strong>RECT</strong> structure that specifies the portion of the input bitmap to which the effect is applied. Pass <strong>NULL</strong> to specify that the effect applies to the entire input bitmap.</td></tr><tr><td><em>useAuxData</em></td><td>[in] Flag that specifies whether the function should return a pointer to the auxiliary data that it creates.</td></tr><tr><td><em>auxData</em></td><td>[out] Pointer to a set of lookup tables.</td></tr><tr><td><em>auxDataSize</em></td><td>[out] Size, in bytes, of the auxiliary data.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' This example loads an image from disk and applies a brightness and contrast effect using GDI+ 1.1.
+' Adjusts the image’s brightness and contrast.
+' ========================================================================================
+SUB Example_BrightnessEffect (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Create a bitmap object from a .jpg file
+   DIM bmp AS GpBitmap PTR
+   hStatus = GdipCreateBitmapFromFile("climber.jpg", @bmp)
+   ' // Set the resolution of this Bitmap object to the user's DPI settings
+   hStatus = GdipBitmapSetResolution(bmp, dpiX, dpiY)
+
+   ' // Create a brightness and contrast effect
+   DIM effect AS GpEffect PTR
+   hStatus = GdipCreateEffect(BrightnessContrastEffectGuid, @effect)
+
+   ' // Set parameters: Brightness = 50, contrast = 50
+   DIM bcParams AS BrightnessContrastParams
+   bcParams.brightnessLevel = 50
+   bcParams.contrastLevel = 20
+   hStatus = GdipSetEffectParameters(effect, @bcParams, SIZEOF(BrightnessContrastParams))
+
+   ' // Apply effects to the whole image
+   hStatus = GdipBitmapApplyEffect(bmp, effect, NULL, FALSE, NULL, NULL)
+
+   ' // Draw the image
+   hStatus = GdipDrawImage(graphics, CAST(GpImage PTR, bmp), 0, 0)
+
+   ' // Cleanup
+   IF effect THEN hStatus = GdipDeleteEffect(effect)
+   IF bmp THEN hStatus = GdipDisposeImage(CAST(GpImage PTR, bmp))
+   IF graphics THEN hStatus = GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdipbitmapconvertformat">GdipBitmapConvertFormat</h3>
+<p>Converts a bitmap to a specified pixel format. The original pixel data in the bitmap is replaced by the new pixel data.</p>
+<pre class="code"><code>FUNCTION GdipBitmapConvertFormat (BYVAL bmp AS GpBitmap PTR, BYVAL pixelformat AS PixelFormat, _
+   BYVAL dithertype AS DitherType, BYVAL palettetype AS PaletteType, BYVAL palette AS ColorPalette PTR, _
+   BYVAL alphaThresholdPercent AS REAL) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>bmp</em></td><td>[in] Pointer to the <strong>Bitmap</strong> object to be converted.</td></tr><tr><td><em>pixelformat</em></td><td>[in] Pixel format constant that specifies the new pixel format.</td></tr><tr><td><em>dithertype</em></td><td>[in] Element of the <em>DitherType</em> enumeration that specifies the dithering algorithm. In cases where the conversion does not reduce the bit depth of the pixel data, pass <em>DitherTypeNone</em>.</td></tr><tr><td><em>palettetype</em></td><td>[in] Element of the <em>PaletteType</em> enumeration that specifies a standard palette to be used for dithering. If you are converting to a non-indexed format, this parameter is ignored. In that case, pass any element of the <em>PaletteType</em> enumeration, say <em>PaletteTypeCustom</em>.</td></tr><tr><td><em>palette</em></td><td>[in] Pointer to a <strong>ColorPalette</strong> structure that specifies the palette whose indexes are stored in the pixel data of the converted bitmap. This palette (called the actual palette) does not have to have the type specified by the <em>palettetype</em> parameter. The <em>palettetype</em> parameter specifies a standard palette that can be used by any of the ordered or spiral dithering algorithms. If the actual palette has a type other than that specified by the <em>palettetype</em> parameter, then the <strong>GdipBitmapCpnvert</strong> function performs a nearest-color conversion from the standard palette to the actual palette.</td></tr><tr><td><em>alphaThresholdPercent</em></td><td>[in] Real number in the range 0 through 100 that specifies which pixels in the source bitmap will map to the transparent color in the converted bitmap. A value of 0 specifies that none of the source pixels map to the transparent color. A value of 100 specifies that any pixel that is not fully opaque will map to the transparent color. A value of t specifies that any source pixel less than t percent of fully opaque will map to the transparent color. Note that for the alpha threshold to be effective, the palette must have a transparent color. If the palette does not have a transparent color, pixels with alpha values below the threshold will map to color that most closely matches (0, 0, 0, 0), usually black.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' GdipBitmapConvertFormat is a GDI+ 1.1 function that converts the pixel format of an existing
+' bitmap to another format—such as from 32bpp ARGB to 8bpp indexed. It replaces the original
+' pixel data with new data that matches the target format.
+' ========================================================================================
+SUB Example_ConvertBitmapFormat (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' Create original bitmap from buffer
+   DIM nWidth AS LONG = 100
+   DIM nHeight AS LONG = 100
+   DIM bytesPerPixel AS LONG = 4
+   DIM stride AS LONG = nWidth * bytesPerPixel
+   DIM buffer(stride * nHeight - 1) AS UBYTE
+
+   FOR y AS LONG = 0 TO nHeight - 1
+      FOR x AS LONG = 0 TO nWidth - 1
+         DIM offset_ AS LONGINT = y * stride + x * bytesPerPixel
+         buffer(offset_ + 0) = x * 255 \ nWidth    ' Blue
+         buffer(offset_ + 1) = y * 255 \ nHeight   ' Green
+         buffer(offset_ + 2) = 128                 ' Red
+         buffer(offset_ + 3) = 255                 ' Alpha
+      NEXT
+   NEXT
+
+   DIM bmp AS GpBitmap PTR
+   hStatus = GdipCreateBitmapFromScan0(nWidth, nHeight, stride, PixelFormat32bppARGB, @buffer(0), @bmp)
+
+   ' Convert to 8bpp indexed format
+   hStatus = GdipBitmapConvertFormat(bmp, PixelFormat8bppIndexed, DitherTypeNone, PaletteTypeFixedHalftone216, NULL, 0)
+
+   ' Draw converted bitmap
+   hStatus = GdipDrawImage(graphics, CAST(GpImage PTR, bmp), 0, 0)
+
+   ' // Cleanup
+   IF bmp THEN hStatus = GdipDisposeImage(CAST(GpImage PTR, bmp))
+   IF graphics THEN hStatus = GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdipbitmapcreateapplyeffect">GdipBitmapCreateApplyEffect</h3>
+<p>Creates a new <strong>Bitmap</strong> object by applying a specified effect to an existing <strong>Bitmap</strong> object.</p>
+<pre class="code"><code>FUNCTION GdipBitmapCreateApplyEffect (BYVAL inputBitmaps AS GpBitmap PTR PTR, BYVAL numInputs AS INT_, _
+   BYVAL effect AS GpEffect PTR, BYVAL roi AS RECT PTR, BYVAL outputRect AS RECT P=TR, _
+   BYVAL outputBitmap AS GpBitmap PTR PTR, BYVAL useAuxData AS BOOL, BYVAL auxData AS VOID PTR PTR, _
+   BYVAL auxDataSize AS INT_ PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>inputBitmaps</em></td><td>[in] Address of a pointer to a <strong>Bitmap</strong> object to which the effect is applied.</td></tr><tr><td><em>numInputs</em></td><td>[in] Integer that specifies the number of input bitmaps. This parameter must be set to 1.</td></tr><tr><td><em>effect</em></td><td>[in] The effect to be applied.</td></tr><tr><td><em>roi</em></td><td>[in] Pointer to a <strong>RECT</strong> structure that specifies the portion of the input bitmap that is used.</td></tr><tr><td><em>outputRect</em></td><td>[out] Pointer to a <strong>RECT</strong> structure that receives the portion of the input bitmap that was used. If the rectangle specified by ROI lies entirely within the input bitmap, the rectangle returned in outputRect is the same as roi. If part of rectangle specified by roi lies outside the input bitmap, then the rectangle returned in outputRect is the portion of roi that lies within the input bitmap. Pass <strong>NULL</strong> if you do not want to receive the output rectangle.</td></tr><tr><td><em>outputBitmap</em></td><td>[out] Address of a variable that receives a pointer to the new <strong>Bitmap</strong> object.</td></tr><tr><td><em>useAuxData</em></td><td>[in] Flag that specifies whether the function should return a pointer to the auxiliary data that it creates.</td></tr><tr><td><em>auxData</em></td><td>[out] Pointer to a set of loo kup tables.</td></tr><tr><td><em>auxDataSize</em></td><td>[out] Size, in bytes, of the auxiliary data.</td></tr></tbody></table></div>
+<p>Example:</p>
+<pre class="code"><code>' ========================================================================================
+' Creates a new Bitmap object by applying a specified effect to an existing Bitmap object.
+' Demonstrates GdipBitmapCreateApplyEffect to generate a new image from an existing one.
+' ========================================================================================
+SUB Example_CreateBitmapWithApplyEffect (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Load the original bitmap
+   DIM srcBitmap AS GpBitmap PTR
+   hStatus = GdipCreateBitmapFromFile("climber.jpg", @srcBitmap)
+   hStatus = GdipBitmapSetResolution(srcBitmap, dpiX, dpiY)
+
+   ' // Create the tint effect
+   DIM effect AS GpEffect PTR
+   hStatus = GdipCreateEffect(TintEffectGuid, @effect)
+
+   ' // Set parameters: Hue = 120 (green), Amount = 60
+   DIM tintParams AS TintParams
+   tintParams.hue = 120
+   tintParams.amount = 60
+   hStatus = GdipSetEffectParameters(effect, @tintParams, SIZEOF(TintParams))
+
+   ' // Prepare input array
+   DIM inputBitmaps(0 TO 0) AS GpBitmap PTR
+   inputBitmaps(0) = srcBitmap
+
+   ' // Create output bitmap
+   DIM outputBitmap AS GpBitmap PTR
+   hStatus = GdipBitmapCreateApplyEffect(@inputBitmaps(0), 1, effect, NULL, NULL, @outputBitmap, FALSE, NULL, NULL)
+
+   ' // Draw the new bitmap
+   hStatus = GdipDrawImage(graphics, CAST(GpImage PTR, outputBitmap), 0, 0)
+
+   ' // Cleanup
+   IF effect THEN hStatus = GdipDeleteEffect(effect)
+   IF srcBitmap THEN hStatus = GdipDisposeImage(CAST(GpImage PTR, srcBitmap))
+   IF outputBitmap THEN hStatus = GdipDisposeImage(CAST(GpImage PTR, outputBitmap))
+   IF graphics THEN hStatus = GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdipbitmapgethistogram">GdipBitmapGetHistogram</h3>
+<p>Returns one or more histograms for specified color channels of the specified <strong>Bitmap</strong> object.</p>
+<pre class="code"><code>FUNCTION GdipBitmapGetHistogram (BYVAL bmp AS GpBitmap PTR, BYVAL fmt AS HistogramFormat, _
+   BYVAL NumberOfEntries AS UINT, BYVAL channel0 AS UINT PTR, BYVAL channel1 AS UINT PTR, _
+   BYVAL channel2 AS UINT PTR, BYVAL channel3 AS UINT PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>bmp</em></td><td>[in] Pointer to the <strong>Bitmap</strong> object.</td></tr><tr><td><em>fmt</em></td><td>[in] Element of the <strong>HistogramFormat</strong> enumeration that specifies the channels for which histograms will be created.</td></tr><tr><td><em>NumberOfEntries</em></td><td>[in] Integer that specifies the number of elements (of type UINT) in each of the arrays pointed to by <em>channel0</em>, <em>channel1</em>, <em>channel2</em>, and <em>channel3</em>. You must allocate memory for those arrays before you call <strong>GdipBitmapGetHistogram</strong>. To determine the required number of elements, call <strong>GdipBitmapGetHistogramSize</strong>.</td></tr><tr><td><em>channel0</em></td><td>[out] Pointer to an array of UINTs that receives the first histogram.</td></tr><tr><td><em>channel1</em></td><td>[out] Pointer to an array of UINTs that receives the second histogram if there is a second histogram. Pass <strong>NULL</strong> if there is no second histogram.</td></tr><tr><td><em>channel2</em></td><td>[out] Pointer to an array of UINTs that receives the third histogram if there is a third histogram. Pass <strong>NULL</strong> if there is no third histogram.</td></tr><tr><td><em>channel3</em></td><td>[out] Pointer to an array of UINTs that receives the fourth histogram if there is a fourth histogram. Pass <strong>NULL</strong> if there is no fourth histogram.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' This example loads an image from disk and gets the histogram.
+' ========================================================================================
+SUB Example_GetHistogram (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Create a bitmap object from a .jpg file
+   DIM bmp AS GpBitmap PTR
+   hStatus = GdipCreateBitmapFromFile("climber.jpg", @bmp)
+   ' // Set the resolution of this Bitmap object to the user's DPI settings
+   hStatus = GdipBitmapSetResolution(bmp, dpiX, dpiY)
+
+   ' Get histogram size
+   DIM entries AS UINT
+   GdipBitmapGetHistogramSize(HistogramFormatARGB, @entries)
+
+   ' Allocate histogram arrays
+   DIM red(entries - 1) AS UINT
+   DIM green(entries - 1) AS UINT
+   DIM blue(entries - 1) AS UINT
+   DIM alpha(entries - 1) AS UINT
+
+   ' Extract histograms
+   GdipBitmapGetHistogram(bmp, HistogramFormatARGB, entries, @red(0), @green(0), @blue(0), @alpha(0))
+
+   ' Example: print peak red value
+   DIM maxRed AS UINT = 0
+   FOR i AS UINT = 0 TO entries - 1
+      IF red(i) &gt; maxRed THEN maxRed = red(i)
+   NEXT
+   AfxMsg ("Max red intensity count: " &amp; WSTR(maxRed))
+
+   ' // Draw the image
+   hStatus = GdipDrawImage(graphics, CAST(GpImage PTR, bmp), 0, 0)
+
+   ' // Cleanup
+   IF bmp THEN hStatus = GdipDisposeImage(CAST(GpImage PTR, bmp))
+   IF graphics THEN hStatus = GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdipbitmapgethistogramsize">GdipBitmapGetHistogramSize</h3>
+<p>Returns the number of elements (in an array of UINTs) that you must allocate before you call the <strong>GdipBitmapGetHistogram</strong> function.</p>
+<pre class="code"><code>FUNCTION GdipBitmapGetHistogramSize (BYVAL fmt AS HistogramFormat, BYVAL NumberOfEntries AS UINT PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>fmt</em></td><td>[in] Element of the <em>HistogramFormat</em> enumeration that specifies the pixel format of the bitmap.</td></tr><tr><td><em>NumberOfEntries</em></td><td>[out] Pointer to a UINT variable that receives the number of entries.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' This example loads an image from disk and gets the histogram size.
+' ========================================================================================
+SUB Example_GetHistogramSize (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Create a bitmap object from a .jpg file
+   DIM bmp AS GpBitmap PTR
+   hStatus = GdipCreateBitmapFromFile("climber.jpg", @bmp)
+   ' // Set the resolution of this Bitmap object to the user's DPI settings
+   hStatus = GdipBitmapSetResolution(bmp, dpiX, dpiY)
+
+   ' Get histogram size
+   DIM entries AS UINT
+   GdipBitmapGetHistogramSize(HistogramFormatARGB, @entries)
+   AfxMsg ("Histogram size - entries: " &amp; WSTR(entries))
+
+   ' // Draw the image
+   hStatus = GdipDrawImage(graphics, CAST(GpImage PTR, bmp), 0, 0)
+
+   ' // Cleanup
+   IF bmp THEN hStatus = GdipDisposeImage(CAST(GpImage PTR, bmp))
+   IF graphics THEN hStatus = GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdipbitmapgetpixel">GdipBitmapGetPixel</h3>
+<p>Gets the color of a specified pixel in this bitmap.</p>
+<pre class="code"><code>FUNCTION GdipBitmapGetPixel (BYVAL bmp AS GpBitmap PTR, BYVAL x AS INT_, BYVAL y aS INT_, _
+   BYVAL clr AS ARGB PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>bmp</em></td><td>[in] Pointer to the <strong>Bitmap</strong> object.</td></tr><tr><td><em>x</em></td><td>[in] Long value that specifies the x-coordinate (column) of the pixel.</td></tr><tr><td><em>y</em></td><td>[in] Long value that specifies the y-coordinate (row) of the pixel.</td></tr><tr><td><em>clr</em></td><td>[out] Pointer to a ARGB variable that receives the color of the specified pixel.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>Depending on the format of the bitmap, <strong>GdipBitmapGetPixel</strong> might not return the same value as was set by <strong>GdipBitmapSetPixel</strong>. For example, if you call <strong>GdipBitmapSetPixel</strong> on a <strong>Bitmap</strong> object whose pixel format is 32bppPARGB, the pixel's RGB components are premultiplied. A subsequent call to <strong>GdipBitmapGetPixel</strong> might return a different value because of rounding. Also, if you call <strong>GdipBitmapSetPixel</strong> on a <strong>Bitmap</strong> object whose color depth is 16 bits per pixel, information could be lost during the conversion from 32 to 16 bits, and a subsequent call to <strong>GdipBitmapGetPixel</strong> might return a different value.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a Bitmap from an image file, gets the color of the
+' specified pixel, creates a brush with this color and uses it to fill a rectangle.
+' ========================================================================================
+SUB Example_CloneArea (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   Dim ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   DIM myBitmap AS GpBitmap PTR
+   hStatus = GdipCreateBitmapFromFile("climber.jpg", @myBitmap)
+
+   ' // Get the value of a pixel from myBitmap.
+   DIM pixelColor AS ARGB
+   hStatus = GdipBitmapGetPixel(myBitmap, 50, 50, @pixelColor)
+
+   ' // Fill a rectangle with the pixel color.
+   DIM pSolidBrush AS GpBrush PTR
+   hStatus = GdipCreateSolidFill(pixelColor, @pSolidBrush)
+   hStatus = GdipFillRectangle(graphics, pSolidBrush, 10, 10, 100, 100)
+
+   ' // Cleanup
+   IF myBitmap THEN hStatus = GdipDisposeImage(cast(GpImage PTR, myBitmap))
+   IF graphics THEN hStatus = GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdipbitmaplockbits">GdipBitmapLockBits</h3>
+<p>Locks a rectangular portion of this bitmap and provides a temporary buffer that you can use to read or write pixel data in a specified format. Any pixel data that you write to the buffer is copied to the <strong>Bitmap</strong> object when you call <strong>GdipBitmapUnlockBits</strong>.</p>
+<pre class="code"><code>FUNCTION GdipBitmapLockBits (BYVAL bmp AS GpBitmap PTR, BYVAL prc AS GpRect PTR, _
+   BYVAL flags AS UINT, BYVAL fmt AS PixelFormat, BYVAL lockedBitmapData AS BitmapData PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>bmp</em></td><td>[in] Pointer to the <strong>Bitmap</strong> object.</td></tr><tr><td><em>prc</em></td><td>[in] Pointer to a rectangle that specifies the portion of the bitmap to be locked.</td></tr><tr><td><em>flags</em></td><td>[in] Set of flags that specify whether the locked portion of the bitmap is available for reading or for writing and whether the caller has already allocated a buffer. Individual flags are defined in the <em>ImageLockMode</em> enumeration.</td></tr><tr><td><em>fmt</em></td><td>[in] Long integer value that specifies the format of the pixel data in the temporary buffer. The pixel format of the temporary buffer does not have to be the same as the pixel format of this <strong>Bitmap</strong> object. Microsoft® Windows® GDI+ version 1.0 does not support processing of 16-bits-per-channel images, so you should not set this parameter equal to <em>PixelFormat48bppRGB</em>, <em>PixelFormat64bppARGB</em>, or <em>PixelFormat64bppPARGB</em>.</td></tr><tr><td><em>lockedBitmapData</em></td><td>[in, out] Pointer to a <strong>BitmapData</strong> object. If the <em>ImageLockModeUserInputBuf</em> flag of the flags parameter is cleared, then <em>lockedBitmapData</em> serves only as an output parameter. In that case, the <em>Scan0</em> data member of the <strong>BitmapData</strong> object receives a pointer to a temporary buffer, which is filled with the values of the requested pixels. The other data members of the <strong>BitmapData</strong> object receive attributes (width, height, format, and stride) of the pixel data in the temporary buffer. If the pixel data is stored bottom-up, the <em>Stride</em> data member is negative. If the pixel data is stored top-down, the <em>Stride</em> data member is positive. If the <em>ImageLockModeUserInputBuf</em> flag of the flags parameter is set, then <em>lockedBitmapData</em> serves as an input parameter (and possibly as an output parameter). In that case, the caller must allocate a buffer for the pixel data that will be read or written. The caller also must create a <strong>BitmapData</strong> object, set the <em>Scan0</em> data member of that <strong>BitmapData</strong> object to the address of the buffer, and set the other data members of the <strong>BitmapData</strong> object to specify the attributes (width, height, format, and stride) of the buffer.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p><strong>GdipBitmapLockBits</strong> and <strong>GdipBitmapUnlockBits</strong> must be used as a pair. A call to <strong>GdipBitmapLockBits</strong> establishes a temporary buffer that you can use to read or write pixel data in a specified format. After you write to the temporary buffer, a call to <strong>GdipBitmapUnlockBits</strong> copies the pixel data in the buffer to the <strong>Bitmap</strong> object. If the pixel format of the temporary buffer is different from the pixel format of the <strong>Bitmap</strong> object, the pixel data is converted appropriately.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' Demonstrates the use of GdipBitmapLockBits/GdipBitmapUnlockBits.
+' This example inverts the colors of a Bitmap.
+' ========================================================================================
+SUB Example_LockBits (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Load bitmap
+   DIM bmp AS GpBitmap PTR
+   hStatus = GdipCreateBitmapFromFile("climber.jpg", @bmp)
+   hStatus = GdipBitmapSetResolution(bmp, dpiX, dpiY)
+
+   ' // Get image dimensions
+   DIM nWidth AS UINT, nHeight AS UINT
+   hStatus = GdipGetImageWidth(bmp, @nWidth)
+   hStatus = GdipGetImageHeight(bmp, @nHeight)
+
+   ' // Define lock rectangle
+   DIM rect AS GpRect = (0, 0, nWidth, nHeight)
+
+   ' // Lock bitmap bits
+   DIM bmpData AS BitmapData
+   hStatus = GdipBitmapLockBits(bmp, @rect, ImageLockModeRead OR ImageLockModeWrite, PixelFormat32bppARGB, @bmpData)
+
+   ' // Invert colors
+   DIM pPixels AS UBYTE PTR = bmpData.Scan0
+   FOR y AS LONG = 0 TO nHeight - 1
+      FOR x AS LONG = 0 TO nWidth - 1
+         DIM offset AS LONG = y * bmpData.Stride + x * 4
+         pPixels[offset + 0] = 255 - pPixels[offset + 0] ' Blue
+         pPixels[offset + 1] = 255 - pPixels[offset + 1] ' Green
+         pPixels[offset + 2] = 255 - pPixels[offset + 2] ' Red
+         ' Alpha remains unchanged
+      NEXT
+   NEXT
+
+   ' // Unlock bitmap bits
+   hStatus = GdipBitmapUnlockBits(bmp, @bmpData)
+
+   ' // Draw the modified bitmap
+   hStatus = GdipDrawImage(graphics, CAST(GpImage PTR, bmp), 0, 0)
+
+   ' // Cleanup
+   IF bmp THEN hStatus = GdipDisposeImage(CAST(GpImage PTR, bmp))
+   IF graphics THEN hStatus = GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdipbitmapsetpixel">GdipBitmapSetPixel</h3>
+<p>Sets the color of a specified pixel in this bitmap.</p>
+<pre class="code"><code>FUNCTION GdipBitmapSetPixel (BYVAL bmp AS GpBitmap PTR, BYVAL x AS INT_, BYVAL y AS INT_, _
+   BYVAL clr AS ARGB) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>bmp</em></td><td>[in] Pointer to the <strong>Bitmap</strong> object.</td></tr><tr><td><em>x</em></td><td>[in] Long integer value that specifies the x-coordinate (column) of the pixel.</td></tr><tr><td><em>y</em></td><td>[in] Long integer value that specifies the y-coordinate (row) of the pixel.</td></tr><tr><td><em>clr</em></td><td>[in] ARGB color value that specifies the color to set.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>Depending on the format of the bitmap, <strong>GdipBitmapGetPixel</strong> might not return the same value as was set by <strong>GdipBitmapSetPixel</strong>. For example, if you call <strong>GdipBitmapSetPixel</strong> on a <strong>Bitmap</strong> object whose pixel format is 32bppPARGB, the pixel's RGB components are premultiplied. A subsequent call to <strong>GdipBitmapGetPixel</strong> might return a different value because of rounding. Also, if you call <strong>GdipBitmapSetPixel</strong> on a <strong>Bitmap</strong> object whose color depth is 16 bits per pixel, information could be lost during the conversion from 32 to 16 bits, and a subsequent call to <strong>GdipBitmapGetPixel</strong> might return a different value.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a Bitmap object based on a JPEG file. The code draws the
+' bitmap once unaltered. Then the code calls the SetPixel method to create a
+' checkered pattern of black pixels in the bitmap and draws the altered bitmap.
+' ========================================================================================
+SUB Example_SetPixel (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Create a Bitmap object from a JPEG file.
+   DIM myBitmap AS GpBitmap PTR
+   hStatus = GdipCreateBitmapFromFile("climber.jpg", @myBitmap)
+   ' // Set the resolution of this Bitmap object to the user's DPI settings
+   hStatus = GdipBitmapSetResolution(myBitmap, dpiX, dpiY)
+
+   ' // Draw the bitmap.
+   hStatus = GdipDrawImage(graphics, cast(GpImage PTR, myBitmap), 0, 0)
+
+   ' // Get the width and height of the bitmap
+   DIM AS UINT nWidth, nHeight
+   hStatus = GdipGetImageWidth(myBitmap, @nWidth)
+   hStatus = GdipGetImageHeight(myBitmap, @nHeight)
+
+   ' // Make an ARGB color
+   DIM pixelColor AS ARGB = ARGB_Black 'GDIP_ARGB(255, 0, 0, 0)
+
+   ' // Create a checkered pattern with black pixels.
+   DIM AS LONG row, col
+   FOR row = 0 TO nWidth - 1 STEP 2
+      FOR col = 0 TO nHeight STEP 2
+         hStatus = GdipBitmapSetPixel(myBitmap, row, col, pixelColor)
+      NEXT
+   NEXT
+
+  ' // Draw the altered bitmap.
+   hStatus = GdipDrawImage(graphics, myBitmap, 200, 0)
+
+   ' // Cleanup
+   IF myBitmap THEN hStatus = GdipDisposeImage(cast(GpImage PTR, myBitmap))
+   IF graphics THEN hStatus = GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdipbitmapsetresolution">GdipBitmapSetResolution</h3>
+<p>Sets the resolution of a <strong>Bitmap</strong> object.</p>
+<pre class="code"><code>FUNCTION GdipBitmapSetResolution (BYVAL bmp AS GpBitmap PTR, BYVAL xdpi AS REAL, BYVAL ydpi AS REAL) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>bmp</em></td><td>[in] Pointer to the <strong>Bitmap</strong> object.</td></tr><tr><td><em>xdpi</em></td><td>[in] Single precision value that specifies the horizontal resolution in dots per inch.</td></tr><tr><td><em>ydpi</em></td><td>[in] Single precision value that specifies the vertical resolution in dots per inch.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>Use this function to set the desired resolution on a newly created bitmap. Changing the resolution of the image does not change its physical size.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' This example loads a .jpg image from file and sets the resolution to the DPI used by the;
+' computer. Otherwise, as each image can use a different internal DPI, an image with a
+' DPI of 72 will be rendered bigger and an image with a DPI of 300 will be rendered smaller.
+' ========================================================================================
+SUB Example_SetResolution (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Create a bitmap object from a .jpg file
+   DIM bmp AS GpBitmap PTR
+   hStatus = GdipCreateBitmapFromFile("climber.jpg", @bmp)
+   ' // Set the resolution of this Bitmap object to the user's DPI settings
+   hStatus = GdipBitmapSetResolution(bmp, dpiX, dpiY)
+
+   ' // Draw image
+   hStatus = GdipDrawImage(graphics, CAST(GpImage PTR, bmp), 0, 0)
+
+   ' // Cleanup
+   IF bmp THEN hStatus = GdipDisposeImage(CAST(GpImage PTR, bmp))
+   IF graphics THEN hStatus = GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdipbitmapunlockbits">GdipBitmapUnlockBits</h3>
+<p>Unlocks a portion of this bitmap that was previously locked by a call to <strong>GdipBitmapLockBits</strong>.</p>
+<pre class="code"><code>FUNCTION GdipBitmapUnlockBits (BYVAL bmp AS GpBitmap PTR, BYVAL lockedBitmapData AS BitmapData PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>bmp</em></td><td>[in] Pointer to the <strong>Bitmap</strong> object.</td></tr><tr><td><em>lockedBitmapData</em></td><td>[in] Pointer to a <strong>BitmapData</strong> structure that was previously passed to <strong>GdipBitmapLockBits</strong>.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p><strong>GdipBitmapLockBits</strong> and <strong>GdipBitmapUnlockBits</strong> must be used as a pair. A call to <strong>GdipBitmapLockBits</strong> establishes a temporary buffer that you can use to read or write pixel data in a specified format. After you write to the temporary buffer, a call to <strong>GdipBitmapUnlockBits</strong> copies the pixel data in the buffer to the <strong>Bitmap</strong> object. If the pixel format of the temporary buffer is different from the pixel format of the <strong>Bitmap</strong> object, the pixel data is converted appropriately.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' Demonstrates the use of GdipBitmapLockBits/GdipBitmapUnlockBits.
+' This example inverts the colors of a Bitmap.
+' ========================================================================================
+SUB Example_LockBits (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Load bitmap
+   DIM bmp AS GpBitmap PTR
+   hStatus = GdipCreateBitmapFromFile("climber.jpg", @bmp)
+   hStatus = GdipBitmapSetResolution(bmp, dpiX, dpiY)
+
+   ' // Get image dimensions
+   DIM nWidth AS UINT, nHeight AS UINT
+   hStatus = GdipGetImageWidth(bmp, @nWidth)
+   hStatus = GdipGetImageHeight(bmp, @nHeight)
+
+   ' // Define lock rectangle
+   DIM rect AS GpRect = (0, 0, nWidth, nHeight)
+
+   ' // Lock bitmap bits
+   DIM bmpData AS BitmapData
+   hStatus = GdipBitmapLockBits(bmp, @rect, ImageLockModeRead OR ImageLockModeWrite, PixelFormat32bppARGB, @bmpData)
+
+   ' // Invert colors
+   DIM pPixels AS UBYTE PTR = bmpData.Scan0
+   FOR y AS LONG = 0 TO nHeight - 1
+      FOR x AS LONG = 0 TO nWidth - 1
+         DIM offset AS LONG = y * bmpData.Stride + x * 4
+         pPixels[offset + 0] = 255 - pPixels[offset + 0] ' Blue
+         pPixels[offset + 1] = 255 - pPixels[offset + 1] ' Green
+         pPixels[offset + 2] = 255 - pPixels[offset + 2] ' Red
+         ' Alpha remains unchanged
+      NEXT
+   NEXT
+
+   ' // Unlock bitmap bits
+   hStatus = GdipBitmapUnlockBits(bmp, @bmpData)
+
+   ' // Draw the modified bitmap
+   hStatus = GdipDrawImage(graphics, CAST(GpImage PTR, bmp), 0, 0)
+
+   ' // Cleanup
+   IF bmp THEN hStatus = GdipDisposeImage(CAST(GpImage PTR, bmp))
+   IF graphics THEN hStatus = GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdipclonebitmaparea">GdipCloneBitmapArea</h3>
+<p>Creates a new <strong>Bitmap</strong> object by copying a portion of this bitmap.</p>
+<pre class="code"><code>FUNCTION GdipCloneBitmapArea (BYVAL x AS REAL, BYVAL y AS REAL, BYVAL width AS REAL, _
+   BYVAL height AS REAL, BYVAL fmt AS PixelFormat, BYVAL srcBitmap AS GpBitmap PTR, _
+   BYVAL dstBitmap AS GpBitmap PTR PTR) AS GpStatus</code></pre>
+<pre class="code"><code>FUNCTION GdipCloneBitmapAreaI (BYVAL x AS INT_, BYVAL y AS INT_, BYVAL width AS INT_, _
+   BYVAL height AS INT_, BYVAL fmt AS PixelFormat, BYVAL srcBitmap AS GpBitmap PTR, _
+   BYVAL dstBitmap AS GpBitmap PTR PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>bmp</em></td><td>[in] Pointer to the <strong>Bitmap</strong> object.</td></tr><tr><td><em>x</em></td><td>[in] A value that specifies the x-coordinate of the upper-left corner of the rectangle that specifies the portion of this bitmap to copy.</td></tr><tr><td><em>y</em></td><td>[in] A value that specifies the y-coordinate of the upper-left corner of the rectangle that specifies the portion of this bitmap to copy.</td></tr><tr><td><em>width</em></td><td>[in] A value that specifies the width of the rectangle that specifies the portion of this bitmap to copy.</td></tr><tr><td><em>height</em></td><td>[in] A value that specifies the height of the rectangle that specifies the portion of this image to copy.</td></tr><tr><td><em>fmt</em></td><td>[in] Long integer value that specifies the pixel format of the new bitmap.</td></tr><tr><td><em>srcBitmap</em></td><td>[in] Pointer to the source <strong>Bitmap</strong> object.</td></tr><tr><td><em>destBitmap</em></td><td>[out] Pointer to a <strong>Bitmap</strong> object that receives a pointer to the cloned <strong>Bitmap</strong> object.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a Bitmap from an image file, clones the upper-left
+' portion of the image, and then draws the cloned image.
+' ========================================================================================
+SUB Example_CloneArea (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   DIM myBitmap AS GpBitmap PTR
+   hStatus = GdipCreateBitmapFromFile("climber.jpg", @myBitmap)
+   ' // Set the resolution of this Bitmap object to the user's DPI settings
+   hStatus = GdipBitmapSetResolution(myBitmap, dpiX, dpiY)
+
+   ' // Clone a portion of the bitmap.
+   DIM cloneBitmap AS GpBitmap PTR
+   hstatus = GdipCloneBitmapArea(0, 0, 100, 100, PixelFormatDontCare, myBitmap, @cloneBitmap)
+
+   ' // Draw the clone.
+   hStatus = GdipDrawImage(graphics, cast(GpImage PTR, cloneBitmap), 0, 0)
+
+   ' // Cleanup
+   IF myBitmap THEN hStatus = GdipDisposeImage(cast(GpImage PTR, myBitmap))
+   IF cloneBitmap THEN hStatus = GdipDisposeImage(cast(GpImage PTR, cloneBitmap))
+   IF graphics THEN hStatus = GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdipcreatebitmapfromdirectdrawsurface">GdipCreateBitmapFromDirectDrawSurface</h3>
+<p>Creates a <strong>Bitmap</strong> object based on a <strong>DirectDraw</strong> surface. The <strong>Bitmap</strong> object maintains a reference to the <strong>DirectDraw</strong> surface until the <strong>Bitmap</strong> object is deleted or goes out of scope.</p>
+<pre class="code"><code>FUNCTION GdipCreateBitmapFromDirectDrawSurface (BYVAL surface AS IDirectDrawSurface7 PTR, _
+   BYVAL bmp AS GpBitmap PTR PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>surface</em></td><td>[in] Pointer to an <strong>IDrectDrawSurface7</strong> interface.</td></tr><tr><td><em>bmp</em></td><td>[out] Pointer to a <strong>Bitmap</strong> object that receives a pointer to a <strong>Bitmap</strong> object.</td></tr></tbody></table></div>
+<hr>
+<h3 id="gdipcreatebitmapfromfile">GdipCreateBitmapFromFile</h3>
+<p>Creates a <strong>Bitmap</strong> object based on an image file.</p>
+<pre class="code"><code>FUNCTION GdipCreateBitmapFromFile (BYVAL filename AS CONST WSTRING PTR, BYVAL bmp AS GpBitmap PTR PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>filename</em></td><td>[in] Pointer to a null-terminated unicode string that specifies the path name of the image file. The graphics file formats supported by GDI+ are BMP, GIF, JPEG, PNG, TIFF, Exif, WMF, and EMF.</td></tr><tr><td><em>bmp</em></td><td>[out] Pointer to a <strong>Bitmap</strong> object that receives a pointer to a <strong>Bitmap</strong> object.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a Bitmap object based on a JPEG file and draws it.
+' ========================================================================================
+SUB Example_CreateBitmap (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Create a Bitmap object from a JPEG file.
+   DIM myBitmap AS GpBitmap PTR
+   hStatus = GdipCreateBitmapFromFile("climber.jpg", @myBitmap)
+   ' // Set the resolution of this Bitmap object to the user's DPI settings
+   hStatus = GdipBitmapSetResolution(myBitmap, dpiX, dpiY)
+
+   ' // Draw the bitmap.
+   hStatus = GdipDrawImage(graphics, cast(GpImage PTR, myBitmap), 0, 0)
+
+   ' // Cleanup
+   IF myBitmap THEN hStatus = GdipDisposeImage(cast(GpImage PTR, myBitmap))
+   IF graphics THEN hStatus = GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdipcreatebitmapfromfileicm">GdipCreateBitmapFromFileICM</h3>
+<p>Creates a <strong>Bitmap</strong> object based on an image file. This function uses ICM.</p>
+<pre class="code"><code>FUNCTION GdipCreateBitmapFromFileICM (BYVAL filename AS CONST WSTRING PTR, BYVAL bmp AS GpBitmap PTR PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>filename</em></td><td>[in] Pointer to a null-terminated unicode string that specifies the path name of the image file. The graphics file formats supported by GDI+ are BMP, GIF, JPEG, PNG, TIFF, Exif, WMF, and EMF.</td></tr><tr><td><em>bmp</em></td><td>[out] Pointer to a <strong>Bitmap</strong> object that receives a pointer to a <strong>Bitmap</strong> object.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates a Bitmap object based on a JPEG file and draws it.
+' This excample uses ICM.
+' ========================================================================================
+SUB Example_CreateBitmapFromFileICM (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Create a Bitmap object from a JPEG file.
+   DIM myBitmap AS GpBitmap PTR
+   hStatus = GdipCreateBitmapFromFileICM("climber.jpg", @myBitmap)
+   ' // Set the resolution of this Bitmap object to the user's DPI settings
+   hStatus = GdipBitmapSetResolution(myBitmap, dpiX, dpiY)
+
+   ' // Draw the bitmap.
+   hStatus = GdipDrawImage(graphics, cast(GpImage PTR, myBitmap), 0, 0)
+
+   ' // Cleanup
+   IF myBitmap THEN hStatus = GdipDisposeImage(cast(GpImage PTR, myBitmap))
+   IF graphics THEN hStatus = GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdipcreatebitmapfromgdidib">GdipCreateBitmapFromGdiDib</h3>
+<p>Creates a <strong>Bitmap</strong> object based on a <strong>BITMAPINFO</strong> structure and an array of pixel data.</p>
+<pre class="code"><code>FUNCTION GdipCreateBitmapFromGdiDib (BYVAL gdiBitmapInfo AS BITMAPINFO PTR, _
+   BYVAL gdiBitmapData AS VOID PTR, BYVAL bmp AS GpBitmap PTR PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>gdiBitmapInfo</em></td><td>[in] Pointer to a Microsoft® Windows® Graphics Device Interface (GDI)<strong>BITMAPINFO</strong> structure.</td></tr><tr><td><em>gdiBitmapData</em></td><td>[in] Pointer to an array of bytes that contains the pixel data.</td></tr><tr><td><em>bmp</em></td><td>[out] Pointer to a <strong>Bitmap</strong> object that receives a pointer to a <strong>Bitmap</strong> object.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<p>This example creates a GpBitmap from a manually constructed BITMAPINFO and pixel buffer.</p>
+<pre class="code"><code>' ========================================================================================
+SUB Example_CreateBitmapFromGdiDib (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create graphics object
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get DPI scaling
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+
+   ' // Apply DPI scaling
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Define bitmap dimensions
+   DIM nWidth AS LONG = 100
+   DIM nHeight AS LONG = 100
+   DIM bytesPerPixel AS LONG = 4
+   DIM stride AS LONG = nWidth * bytesPerPixel
+
+   ' // Allocate pixel buffer
+   DIM buffer(stride * nHeight - 1) AS UBYTE
+
+   ' // Fill buffer with gradient
+   FOR y AS LONG = 0 TO nHeight - 1
+      FOR x AS LONG = 0 TO nWidth - 1
+         DIM offset AS LONG = y * stride + x * bytesPerPixel
+         buffer(offset + 0) = x * 255 \ nWidth   ' Blue
+         buffer(offset + 1) = y * 255 \ nHeight  ' Green
+         buffer(offset + 2) = 128                ' Red
+         buffer(offset + 3) = 255                ' Alpha
+      NEXT
+   NEXT
+
+   ' // Define BITMAPINFO header
+   DIM bmi AS BITMAPINFO
+   WITH bmi.bmiHeader
+      .biSize = SIZEOF(BITMAPINFOHEADER)
+      .biWidth = nWidth
+      .biHeight = -nHeight ' Top-down DIB
+      .biPlanes = 1
+      .biBitCount = 32
+      .biCompression = BI_RGB
+      .biSizeImage = stride * nHeight
+      .biXPelsPerMeter = dpiX * 39.3701
+      .biYPelsPerMeter = dpiY * 39.3701
+   END WITH
+
+   ' // Create bitmap from DIB
+   DIM bmp AS GpBitmap PTR
+   hStatus = GdipCreateBitmapFromGdiDib(@bmi, @buffer(0), @bmp)
+
+   ' // Draw bitmap
+   hStatus = GdipDrawImage(graphics, CAST(GpImage PTR, bmp), 0, 0)
+
+   ' // Cleanup
+   IF bmp THEN hStatus = GdipDisposeImage(CAST(GpImage PTR, bmp))
+   IF graphics THEN hStatus = GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdipcreatebitmapfromgraphics">GdipCreateBitmapFromGraphics</h3>
+<p>Creates a <strong>Bitmap</strong> object based on a <strong>Graphics</strong> object, a width, and a height.</p>
+<pre class="code"><code>FUNCTION GdipCreateBitmapFromGraphics (BYVAL width AS INT_, BYVAL height AS INT_, _
+   BYVAL target AS GpGraphics PTR, BYVAL bmp AS GpBitmap PTR PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>width</em></td><td>[in] Long integer value that specifies the width, in pixels, of the bitmap.</td></tr><tr><td><em>height</em></td><td>[in] Long integer value that specifies the height, in pixels, of the bitmap.</td></tr><tr><td><em>target</em></td><td>[in] Pointer to a <strong>Graphics</strong> object that contains information used to initialize certain properties (for example, dots per inch) of the new <strong>Bitmap</strong> object.</td></tr><tr><td><em>bmp</em></td><td>[out] Pointer to a <strong>Bitmap</strong> object that receives a pointer to a <strong>Bitmap</strong> object.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<p>This example creates a GpBitmap from a graphics object, inheriting DPI and rendering settings.</p>
+<pre class="code"><code>' ========================================================================================
+SUB Example_CreateBitmapFromGraphics (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create graphics object
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get DPI scaling
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+   ' // Apply DPI scaling
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Define bitmap dimensions
+   DIM nWidth AS LONG = 200
+   DIM nHeight AS LONG = 100
+
+   ' // Create bitmap from graphics context
+   DIM bmp AS GpBitmap PTR
+   hStatus = GdipCreateBitmapFromGraphics(nWidth, nHeight, graphics, @bmp)
+
+   ' // Create graphics object from bitmap
+   DIM bmpGraphics AS GpGraphics PTR
+   hStatus = GdipGetImageGraphicsContext(CAST(GpImage PTR, bmp), @bmpGraphics)
+
+   ' // Fill bitmap with color
+   hStatus = GdipGraphicsClear(bmpGraphics, ARGB_Red)
+
+   ' // Draw bitmap to screen
+   hStatus = GdipDrawImage(graphics, CAST(GpImage PTR, bmp), 0, 0)
+
+   ' // Cleanup
+   IF bmpGraphics THEN hStatus = GdipDeleteGraphics(bmpGraphics)
+   IF bmp THEN hStatus = GdipDisposeImage(CAST(GpImage PTR, bmp))
+   IF graphics THEN hStatus = GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdipcreatebitmapfromhbitmap">GdipCreateBitmapFromHBITMAP</h3>
+<p>Creates a <strong>Bitmap</strong> object based on a handle to a Windows Microsoft® Windows® Graphics Device Interface (GDI) bitmap and a handle to a GDI palette.</p>
+<pre class="code"><code>FUNCTION GdipCreateBitmapFromHBITMAP (BYVAL hbm AS HBITMAP, BYVAL hpal AS HPALETTE, _
+   BYVAL bmp AS GpBitmap PTR PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hbm</em></td><td>[in] Handle to a GDI bitmap.</td></tr><tr><td><em>hpal</em></td><td>[in] Handle to a GDI palette used to define the bitmap colors if hbm is not a device-independent bitmap (DIB).</td></tr><tr><td><em>bmp</em></td><td>[out] Pointer to a <strong>Bitmap</strong> object that receives a pointer to a <strong>Bitmap</strong> object.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>You are responsible for deleting the GDI bitmap and the GDI palette.</p>
+<p>Do not pass to the <strong>GdipCreateBitmapFromHBITMAP</strong> function a GDI bitmap or a GDI palette that is currently (or was previously) selected into a device context.</p>
+<h5 id="example">Example</h5>
+<p>This example creates a GpBitmap from a legacy HBITMAP and renders it using GDI+.</p>
+<pre class="code"><code>' ========================================================================================
+SUB Example_CreateBitmapFromHBITMAP (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create graphics object
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get DPI scaling
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+
+   ' // Apply DPI scaling
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Create a legacy HBITMAP using GDI
+   DIM hbm AS HBITMAP
+   DIM memDC AS HDC = CreateCompatibleDC(hdc)
+   DIM bmpInfo AS BITMAPINFOHEADER
+   bmpInfo.biSize = SIZEOF(BITMAPINFOHEADER)
+   bmpInfo.biWidth = 100
+   bmpInfo.biHeight = -100 ' Top-down
+   bmpInfo.biPlanes = 1
+   bmpInfo.biBitCount = 32
+   bmpInfo.biCompression = BI_RGB
+   bmpInfo.biSizeImage = 0
+
+   DIM pBits AS ANY PTR
+   hbm = CreateDIBSection(memDC, CAST(BITMAPINFO PTR, @bmpInfo), DIB_RGB_COLORS, @pBits, NULL, 0)
+
+   ' // Fill with red pixels
+   FOR i AS LONG = 0 TO 100 * 100 - 1
+      CAST(ULONG PTR, pBits)[i] = &amp;HFFFF0000 ' ARGB Red
+   NEXT
+
+   ' // Create GDI+ Bitmap from HBITMAP
+   DIM bmp AS GpBitmap PTR
+   hStatus = GdipCreateBitmapFromHBITMAP(hbm, NULL, @bmp)
+
+   ' // Set resolution
+   hStatus = GdipBitmapSetResolution(bmp, dpiX, dpiY)
+
+   ' // Draw the bitmap
+   hStatus = GdipDrawImage(graphics, CAST(GpImage PTR, bmp), 0, 0)
+
+   ' // Cleanup
+   IF bmp THEN hStatus = GdipDisposeImage(CAST(GpImage PTR, bmp))
+   IF graphics THEN hStatus = GdipDeleteGraphics(graphics)
+   IF hbm THEN DeleteObject(hbm)
+   IF memDC THEN DeleteDC(memDC)
+
+END SUB
+' ========================================================================================</code></pre>
+<h5 id="helper-function">Helper function</h5>
+<pre class="code"><code>' ========================================================================================
+' Prints a Windows bitmap in the default printer.
+' Parameters:
+' - hbmp = Handle to the bitmap.
+' - bStretch = Stretch the image.
+' - nStretchMode = Stretching mode. Default value = InterpolationModeHighQualityBicubic.
+'   InterpolationModeLowQuality = 1
+'   InterpolationModeHighQuality = 2
+'   InterpolationModeBilinear = 3
+'   InterpolationModeBicubic = 4
+'   InterpolationModeNearestNeighbor = 5
+'   InterpolationModeHighQualityBilinear = 6
+'   InterpolationModeHighQualityBicubic = 7
+' Return value: Returns TRUE if the bitmap has been printed successfully, or FALSE otherwise.
+' ========================================================================================
+PRIVATE FUNCTION AfxGdipPrintHBITMAP (BYVAL hbmp AS HBITMAP, BYVAL bStretch AS BOOLEAN = FALSE, BYVAL nStretchMode AS LONG = InterpolationModeHighQualityBicubic) AS BOOLEAN
+
+   ' // Initialize Gdiplus
+   DIM token AS ULONG_PTR = AfxGdipInit
+   IF token = NULL THEN EXIT FUNCTION
+   DIM hPrinter AS HANDLE
+   DIM pbufferDoc AS UBYTE PTR
+   DIM pBitmap AS GpBitmap PTR
+   DIM pGraphics AS GpGraphics PTR
+
+   ' // Note: Using a DO... LOOP, with an EXIT DO before LOOP, to avoid the use of GOTO.
+   DO
+      ' // Get the name of the default printer
+      DIM wszPrinterName AS WSTRING * MAX_PATH
+      GetProfileStringW("WINDOWS", "DEVICE", "", wszPrinterName, SIZEOF(wszPrinterName))
+      DIM nPos AS LONG = INSTR(wszPrinterName, ",")
+      IF nPos THEN wszPrinterName = LEFT(wszPrinterName, nPos - 1)
+      IF wszPrinterName = "" THEN EXIT DO
+      ' // Open the printer
+      IF OpenPrinterW(wszPrinterName, @hPrinter, NULL) = 0 THEN EXIT DO
+      ' // Allocate a buffer of the correct size
+      DIM dwNeeded AS DWORD = DocumentPropertiesW(NULL, hPrinter, wszPrinterName, NULL, NULL, 0)
+      pbufferDoc = CAllocate(1, dwNeeded)
+      ' // Retrieve the printer configuration data
+      DIM nRet AS LONG = DocumentPropertiesW(NULL, hPrinter, wszPrinterName, CAST(PDEVMODEW, pbufferDoc), NULL, DM_OUT_BUFFER)
+      IF nRet &lt;&gt; IDOK THEN EXIT DO
+      ' // Cast it to a DEVMODEW structure
+      DIM pDevMode AS DEVMODEW PTR = CAST(DEVMODEW PTR, pbufferDoc)
+      ' // Create a device context for the printer
+      DIM hDC AS .HDC = CreateDCW(wszPrinterName, wszPrinterName, NULL, pDevMode)
+      IF hDC = NULL THEN EXIT DO
+      ' // Create a graphics object from the printer DC
+      GdipCreateFromHDC(hDC, @pGraphics)
+      IF pGraphics = NULL THEN EXIT DO
+      ' // Create a Bitmap object from an HBITMAP
+      GdipCreateBitmapFromHBITMAP(hbmp, NULL, @pBitmap)
+      IF pBitmap = NULL THEN EXIT DO
+      ' // Stretching
+      DIM cx AS SINGLE, cy AS SINGLE
+      IF bStretch THEN GdipSetInterpolationMode(pGraphics, nStretchMode)
+      ' // Get the DPIs of the printer
+      DIM dpiX AS SINGLE, dpiY AS SINGLE
+      GdipGetDpiX(pGraphics, @dpiX)
+      GdipGetDpiY(pGraphics, @dpiY)
+      ' // Calculate the width and height according to the DPIs of the printer
+      cx = GetDeviceCaps(hdc, HORZRES) / (dpiX / 100)
+      cy = GetDeviceCaps(hdc, VERTRES) / (dpiY / 100)
+      ' // Print the bitmap
+      DIM di AS DOCINFOW
+      DIM wszDocName AS WSTRING * 260 = "Printing bitmap"
+      di.cbSize = SIZEOF(DOCINFOW)
+      di.lpszDocName = @wszDocName
+      DIM hr AS LONG = StartDocW(hDC, @di)
+      IF hr &lt;= 0 THEN EXIT DO
+      DIM i AS LONG
+      FOR i = 1 TO pDevMode-&gt;dmCopies
+         IF StartPage(hDC) THEN
+            ' // Draw the image
+            IF bStretch THEN
+               GdipDrawImageRect(pGraphics, CAST(GpImage PTR, pBitmap), 0, 0, cx, cy)
+            ELSE
+               GdipDrawImage(pGraphics, CAST(GpImage PTR, pBitmap), 0, 0)
+            END IF
+            EndPage(hDC)
+         END IF
+      NEXT
+      EndDoc(hDC)
+      FUNCTION = TRUE
+      EXIT DO
+   LOOP
+
+   IF pBitmap THEN GdipDisposeImage(cast(GpImage PTR, pBitmap))
+   IF pGraphics THEN GdipDeleteGraphics(pGraphics)
+   ' // Finished with the printer
+   IF hPrinter THEN ClosePrinter(hPrinter)
+   ' // Cleanup
+   IF pbufferDoc THEN Delete(pbufferDoc)
+   ' // Shutdown Gdiplus
+   GdiplusShutdown token
+
+END FUNCTION
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdipcreatebitmapfromhicon">GdipCreateBitmapFromHICON</h3>
+<p>Creates a <strong>Bitmap</strong> object based on an icon.</p>
+<pre class="code"><code>FUNCTION GdipCreateBitmapFromHICON (BYVAL hicon AS HICON, BYVAL bmp AS GpBitmap PTR PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hIcon</em></td><td>[in] Handle to a Microsoft® Windows® Graphics Device Interface (GDI) icon.</td></tr><tr><td><em>bmp</em></td><td>[out] Pointer to a <strong>Bitmap</strong> object that receives a pointer to a <strong>Bitmap</strong> object.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+SUB Example_CreateBitmapFromHICON  (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create graphics object
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get DPI scaling
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+   ' // Apply DPI scaling
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Load a system icon (e.g., information icon)
+   DIM hIcon AS HICON = LoadIcon(NULL, IDI_INFORMATION)
+
+   ' // Create a GDI+ Bitmap from the HICON
+   DIM bmp AS GpBitmap PTR
+   hStatus = GdipCreateBitmapFromHICON(hIcon, @bmp)
+
+   ' // Draw the bitmap
+   hStatus = GdipDrawImage(graphics, CAST(GpImage PTR, bmp), 10, 10)
+
+   ' // Cleanup
+   IF bmp THEN hStatus = GdipDisposeImage(CAST(GpImage PTR, bmp))
+   IF graphics THEN hStatus = GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdipcreatebitmapfromresource">GdipCreateBitmapFromResource</h3>
+<p>Creates a <strong>Bitmap</strong> object based on an application or dynamic-link library (DLL) instance handle and the name of a bitmap resource.</p>
+<pre class="code"><code>FUNCTION GdipCreateBitmapFromResource (BYVAL hInst AS HINSTANCE, BYVAL lpBitmapName AS WSTRING PTR, _
+   BYVAL bmp AS GpBitmap PTR PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hInst</em></td><td>[in] Handle to an instance of a module whose executable file contains a bitmap resource.</td></tr><tr><td><em>lpBitmapName</em></td><td>[in] Pointer to a null-terminated unicode string that specifies the path name of the bitmap resource to be loaded. Alternatively, this parameter can consist of the resource identifier in the low-order word and zero in the high-order word.</td></tr><tr><td><em>bmp</em></td><td>[out] Pointer to a <strong>Bitmap</strong> object that receives a pointer to a <strong>Bitmap</strong> object.</td></tr></tbody></table></div>
+<h5 id="helper-functions">Helper functions</h5>
+<pre class="code"><code>' ========================================================================================
+' Loads an image from a resource, converts it to an icon or bitmap and returns the handle.
+' Parameters:
+' - hInstance     = [in] A handle to the module whose portable executable file or an accompanying
+'                   MUI file contains the resource. If this parameter is NULL, the function searches
+'                   the module used to create the current process.
+' - wszImageName  = [in] Name of the image in the resource file (.RES). If the image resource uses
+'                   an integral identifier, wszImage should begin with a number symbol (#)
+'                   followed by the identifier in an ASCII format, e.g., "#998". Otherwise,
+'                   use the text identifier name for the image. Only images embedded as raw data
+'                   (type RCDATA) are valid. These must be icons in format .png, .jpg, .gif, .tiff.
+' - dimPercent    = Percent of dimming (1-99)
+' - bGrayScale    = TRUE or FALSE. Convert to gray scale.
+' - imageType     = IMAGE_ICON or IMAGE_BITMAP.
+' - clrBackground = [in] The background color. This parameter is ignored if the image type
+'                   is IMAGE_ICON or the bitmap is totally opaque.
+' Return Value:
+'   If the function succeeds, the return value is the handle of the created icon or bitmap.
+'   If the function fails, the return value is NULL.
+' ========================================================================================
+PRIVATE FUNCTION AfxGdipImageFromRes (BYVAL hInstance AS HINSTANCE, BYREF wszImageName AS WSTRING, _
+   BYVAL dimPercent AS LONG = 0, BYVAL bGrayScale AS LONG = FALSE, _
+   BYVAL imageType AS LONG = IMAGE_ICON, BYVAL clrBackground AS ARGB = 0) AS HANDLE
+
+   DIM pImage AS GpImage PTR, hImage AS HANDLE
+   DIM hRes AS HRSRC, pResData AS HRSRC, wID AS WORD, dwID AS DWORD, imageSize AS DWORD
+   DIM pImageStream AS IStream PTR, hGlobal AS HGLOBAL, pGlobalBuffer AS LPVOID
+   DIM ImageWidth AS LONG, ImageHeight AS LONG, x AS LONG, y AS LONG
+   DIM pixColor AS GDIP_BGRA, iColor AS LONG, rFactor AS SINGLE
+
+   ' // Initialize Gdiplus
+   DIM token AS ULONG_PTR = AfxGdipInit
+   IF token = NULL THEN EXIT FUNCTION
+
+   ' // Find the resource
+   IF LEFT(wszImageName, 1) = "#" THEN
+      wID = VAL(MID(wszImageName, 2))
+      dwID = MAKELONG(wID, 0)
+      hRes = FindResourceW(hInstance, MAKEINTRESOURCEW(dwID), CAST(LPCWSTR, RT_RCDATA))
+   ELSE
+      hRes = FindResourceW(hInstance, wszImageName, CAST(LPCWSTR, RT_RCDATA))
+   END IF
+   IF hRes THEN
+      ' // Retrieve the size of the image
+      imageSize = SizeofResource(hInstance, hRes)
+      IF imageSize THEN
+         ' // Load the resource and get a pointer to the resource data.
+         ' // Note: LockResource does not actually lock memory; it is just used
+         ' // to obtain a pointer to the memory containing the resource data.
+         pResData = LockResource(LoadResource(hInstance, hRes))
+         IF pResData THEN
+            ' // Allocate memory to hold the image
+            hGlobal = GlobalAlloc(GMEM_MOVEABLE, imageSize)
+            IF hGlobal THEN
+               ' // Lock the memory
+               pGlobalBuffer = GlobalLock(hGlobal)
+               IF pGlobalBuffer THEN
+                  ' // Copy the image from the binary string file to global memory
+                  CopyMemory(pGlobalBuffer, pResData, imageSize)
+                  ' // Create an stream in global memory
+                  IF CreateStreamOnHGlobal(hGlobal, FALSE, @pImageStream) = S_OK THEN
+                     IF pImageStream THEN
+                        ' // Create a bitmap from the data contained in the stream
+                        GdipCreateBitmapFromStream(pImageStream, CAST(GpBitmap PTR PTR, @pImage))
+                        ' // Get the image width and height
+                        GdipGetImageWidth(pImage, @ImageWidth)
+                        GdipGetImageHeight(pImage, @ImageHeight)
+                        ' // Dim or/and gray the image
+                        IF dimPercent &gt; 0 AND dimPercent &lt; 100 THEN rFactor = dimPercent / 100
+                        IF rFactor &lt;&gt; 0 OR bGrayScale &lt;&gt; 0 THEN
+                           FOR y = 0 TO ImageHeight - 1
+                              FOR x = 0 TO ImageWidth - 1
+                                 ' // Get the pixel color
+                                 GdipBitmapGetPixel(CAST(GpBitmap PTR, pImage), x, y, @pixColor.color)
+                                 IF dimPercent &gt; 0 THEN
+                                    pixColor.red   = (255 - pixColor.red) * rFactor + pixColor.red
+                                    pixColor.green = (255 - pixColor.green) * rFactor + pixColor.green
+                                    pixColor.blue  = (255 - pixColor.blue) * rFactor + pixColor.blue
+                                 END IF
+                                 IF bGrayScale THEN
+                                    ' Note: The sum of the percentages for the three colors should add tp up 1
+                                    iColor = 0.299 * pixColor.red + 0.587 * pixColor.green + 0.114 * pixColor.blue
+                                    pixColor.Color = GDIP_BGRA (iColor, iColor, iColor, pixColor.alpha)
+                                 ELSE
+                                    pixColor.color = GDIP_ARGB(pixColor.alpha, pixColor.red, pixColor.green, pixColor.Blue)
+                                 END IF
+                                 ' // Set the modified pixel color
+                                 GdipBitmapSetPixel(CAST(GpBitmap PTR, pImage), x, y, pixColor.color)
+                              NEXT
+                           NEXT
+                        END IF
+                        ' // Create icon from image
+                        IF imageType = IMAGE_ICON THEN
+                           GdipCreateHICONFromBitmap(CAST(GpBitmap PTR, pImage), @hImage)
+                        ELSE
+                           GdipCreateHBITMAPFromBitmap(CAST(GpBitmap PTR, pImage), @hImage, clrBackground)
+                        END IF
+                        ' // Free the image
+                        IF pImage THEN GdipDisposeImage pImage
+                        pImageStream-&gt;lpVtbl-&gt;Release(pImageStream)
+                     END IF
+                  END IF
+                  ' // Unlock the memory
+                  GlobalUnlock pGlobalBuffer
+               END IF
+               ' // Free the memory
+               GlobalFree hGlobal
+            END IF
+         END IF
+      END IF
+   END IF
+
+   ' // Shutdown Gdiplus
+   GdiplusShutdown token
+   ' // Return the handle of the icon
+   FUNCTION = hImage
+
+END FUNCTION
+' ========================================================================================
+' ========================================================================================
+' Loads an image from a resource file, converts it to an icon and returns the handle.
+' ========================================================================================
+PRIVATE FUNCTION AfxGdipIconFromRes (BYVAL hInstance AS HINSTANCE, BYREF wszImageName AS WSTRING, _
+   BYVAL dimPercent AS LONG = 0, BYVAL bGrayScale AS LONG = FALSE) AS HANDLE
+   FUNCTION = AfxGdipImageFromRes(hInstance, wszImageName, dimPercent, bGrayScale, IMAGE_ICON, 0)
+END FUNCTION
+' ========================================================================================
+' ========================================================================================
+' Loads an image from a resource file, converts it to a bitmap and returns the handle.
+' ========================================================================================
+PRIVATE FUNCTION AfxGdipBitmapFromRes (BYVAL hInstance AS HINSTANCE, BYREF wszImageName AS WSTRING, _
+   BYVAL dimPercent AS LONG = 0, BYVAL bGrayScale AS LONG = FALSE, BYVAL clrBackground AS ARGB = 0) AS HANDLE
+   FUNCTION = AfxGdipImageFromRes(hInstance, wszImageName, dimPercent, bGrayScale, IMAGE_BITMAP, clrBackground)
+END FUNCTION
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdipcreatebitmapfromscan0">GdipCreateBitmapFromScan0</h3>
+<p>Creates a <strong>Bitmap</strong> object based on an array of bytes along with size and format information.</p>
+<pre class="code"><code>FUNCTION GdipCreateBitmapFromScan0 (BYVAL width AS INT_, BYVAL height AS INT_, BYVAL stride AS INT_, _
+   BYV AL fmt AS PixelFormat, BYV AL scan0 AS BYTE PTR, BYVAL bmp AS GpBitmap PTR PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>width</em></td><td>[in] Long integer value that specifies the width, in pixels, of the bitmap.</td></tr><tr><td><em>height</em></td><td>[in] Long integer value that specifies the height, in pixels, of the bitmap.</td></tr><tr><td><em>stride</em></td><td>[in] Long integer value that specifies the byte offset between the beginning of one scan line and the next. This is usually (but not necessarily) the number of bytes in the pixel format (for example, 2 for 16 bits per pixel) multiplied by the width of the bitmap. The value passed to this parameter must be a multiple of four.</td></tr><tr><td><em>fmt</em></td><td>[in] Long integer value that specifies the pixel format of the bitmap.</td></tr><tr><td><em>scan0</em></td><td>[in] Pointer to an array of bytes that contains the pixel data. The caller is responsible for allocating and freeing the block of memory pointed to by this parameter.</td></tr><tr><td><em>bmp</em></td><td>[out] Pointer to a <strong>Bitmap</strong> object that receives a pointer to a <strong>Bitmap</strong> object.</td></tr></tbody></table></div>
+<p>Example:</p>
+<pre class="code"><code>' ========================================================================================
+' This example demonstrates how to create a GpBitmap object from a manually filled pixel
+' buffer using GdipCreateBitmapFromScan0. It generates a 100×100 pixel image with a vertical
+' gradient and renders it to the screen using GDI+.
+' The example is DPI-aware thanks to GdipScaleWorldTransform, which scales the graphics
+' context according to the user's display DPI. This ensures consistent rendering across
+' different screen resolutions.
+' ========================================================================================
+SUB Example_CreateBitmapFromScan0 (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Define dimensions and pixel format
+   DIM nWidth AS LONG = 100
+   DIM nHeight AS LONG = 100
+   DIM bytesPerPixel AS LONG = 4
+   DIM stride AS LONG = nWidth * bytesPerPixel
+
+   ' // Allocate pixel buffer
+   DIM buffer(stride * nHeight - 1) AS UBYTE
+   ' // Fill buffer with a gradient
+   FOR y AS LONG = 0 TO nHeight - 1
+      FOR x AS LONG = 0 TO nWidth - 1
+         DIM _offset AS LONGINT = y * stride + x * bytesPerPixel
+         buffer(_offset + 0) = x * 255 \ nWidth    ' Blue
+         buffer(_offset + 1) = y * 255 \ nHeight   ' Green
+         buffer(_offset + 2) = 128                 ' Red
+         buffer(_offset + 3) = 255                 ' Alpha
+      NEXT
+   NEXT
+
+   ' // Create bitmap from buffer
+   DIM bmp AS GpBitmap PTR
+   hStatus = GdipCreateBitmapFromScan0(nWidth, nHeight, stride, PixelFormat32bppARGB, @buffer(0), @bmp)
+
+   ' // Draw the bitmap
+   hStatus = GdipDrawImage(graphics, CAST(GpImage PTR, bmp), 0, 0)
+
+   ' // Cleanup
+   IF bmp THEN hStatus = GdipDisposeImage(CAST(GpImage PTR, bmp))
+   IF graphics THEN hStatus = GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdipcreatebitmapfromstream">GdipCreateBitmapFromStream</h3>
+<p>Creates a <strong>Bitmap</strong> object based on a stream.</p>
+<pre class="code"><code>FUNCTION GdipCreateBitmapFromStream (BYVAL stream AS IStream PTR, BYVAL bmp AS GpBitmap PTR PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>stream</em></td><td>[in] Pointer to an <strong>IStream</strong> interface.</td></tr><tr><td><em>bmp</em></td><td>[out] Pointer to a <strong>Bitmap</strong> object that receives a pointer to a <strong>Bitmap</strong> object.</td></tr></tbody></table></div>
+<h5 id="helper-function">Helper function</h5>
+<pre class="code"><code>' ========================================================================================
+' Converts an image stored in a buffer into an icon or bitmap and returns the handle.
+' Parameters:
+' - pBuffer       = [in] Pointer to the buffer
+' - bufferSize    = Size of the buffer
+' - dimPercent    = Percent of dimming (1-99)
+' - bGrayScale    = TRUE or FALSE. Convert to gray scale.
+' - imageType     = IMAGE_ICON or IMAGE_BITMAP.
+' - clrBackground = [in] The background color. This parameter is ignored if the image type
+'                   is IMAGE_ICON or the bitmap is totally opaque.
+' Return Value:
+'   If the function succeeds, the return value is the handle of the created icon or bitmap.
+'   If the function fails, the return value is NULL.
+' Usage example:
+'   DIM wszFileName AS WSTRING * MAX_PATH
+'   wszFileName = ExePath &amp; "\arrow_left_256.png"
+'   DIM bufferSize AS SIZE_T_
+'   DIM nFile AS LONG
+'   nFile = FREEFILE
+'   OPEN wszFileName FOR BINARY AS nFile
+'   IF ERR THEN EXIT FUNCTION
+'   bufferSize = LOF(nFile)
+'   DIM pBuffer AS UBYTE PTR
+'   pBuffer = CAllocate(1, bufferSize)
+'   GET #nFile, , *pBuffer, bufferSize
+'   CLOSE nFile
+'   IF pBuffer THEN
+'      ImageList_ReplaceIcon(hImageList, -1, AfxGdipIconFromBuffer(pBuffer, ImageSize))
+'      DeAllocate(pBuffer)
+'   END IF
+' ========================================================================================
+PRIVATE FUNCTION AfxGdipImageFromBuffer (BYVAL pBuffer AS ANY PTR, BYVAL bufferSize AS SIZE_T_, _
+   BYVAL dimPercent AS LONG = 0, BYVAL bGrayScale AS LONG = FALSE, _
+   BYVAL imageType AS LONG = IMAGE_ICON, BYVAL clrBackground AS ARGB = 0) AS HANDLE
+
+   DIM pImage AS GpImage PTR, hImage AS HANDLE
+   DIM pImageStream AS IStream PTR, hGlobal AS HGLOBAL, pGlobalBuffer AS LPVOID
+   DIM ImageWidth AS LONG, ImageHeight AS LONG, x AS LONG, y AS LONG
+   DIM pixColor AS GDIP_BGRA, iColor AS LONG, rFactor AS SINGLE
+
+   ' // Initialize Gdiplus
+   DIM token AS ULONG_PTR = AfxGdipInit
+   IF token = NULL THEN EXIT FUNCTION
+   ' // Allocate memory to hold the image
+   hGlobal = GlobalAlloc(GMEM_MOVEABLE, bufferSize)
+   IF hGlobal THEN
+      ' // Lock the memory
+      pGlobalBuffer = GlobalLock(hGlobal)
+      IF pGlobalBuffer THEN
+         ' // Copy the image from the binary string file to global memory
+         CopyMemory(pGlobalBuffer, pBuffer, bufferSize)
+         ' // Create an stream in global memory
+         IF CreateStreamOnHGlobal(hGlobal, FALSE, @pImageStream) = S_OK THEN
+            IF pImageStream THEN
+               ' // Create a bitmap from the data contained in the stream
+               GdipCreateBitmapFromStream(pImageStream, CAST(GpBitmap PTR PTR, @pImage))
+               ' // Get the image width and height
+               GdipGetImageWidth(pImage, @ImageWidth)
+               GdipGetImageHeight(pImage, @ImageHeight)
+               ' // Dim or/and gray the image
+               IF dimPercent &gt; 0 AND dimPercent &lt; 100 THEN rFactor = dimPercent / 100
+               IF rFactor &lt;&gt; 0 OR bGrayScale &lt;&gt; 0 THEN
+                  FOR y = 0 TO ImageHeight - 1
+                     FOR x = 0 TO ImageWidth - 1
+                        ' // Get the pixel color
+                        GdipBitmapGetPixel(CAST(GpBitmap PTR, pImage), x, y, @pixColor.color)
+                        IF dimPercent &gt; 0 THEN
+                           pixColor.red   = (255 - pixColor.red) * rFactor + pixColor.red
+                           pixColor.green = (255 - pixColor.green) * rFactor + pixColor.green
+                           pixColor.blue  = (255 - pixColor.blue) * rFactor + pixColor.blue
+                        END IF
+                        IF bGrayScale THEN
+                           ' Note: The sum of the percentages for the three colors should add to up 1
+                           iColor = 0.299 * pixColor.red + 0.587 * pixColor.green + 0.114 * pixColor.blue
+                           pixColor.Color = GDIP_BGRA (iColor, iColor, iColor, pixColor.alpha)
+                        ELSE
+                           pixColor.color = GDIP_ARGB(pixColor.alpha, pixColor.red, pixColor.green, pixColor.Blue)
+                        END IF
+                        ' // Set the modified pixel color
+                        GdipBitmapSetPixel(CAST(GpBitmap PTR, pImage), x, y, pixColor.color)
+                     NEXT
+                  NEXT
+               END IF
+               ' // Create icon from image
+               IF imageType = IMAGE_ICON THEN
+                  GdipCreateHICONFromBitmap(CAST(GpBitmap PTR, pImage), @hImage)
+               ELSE
+                  GdipCreateHBITMAPFromBitmap(CAST(GpBitmap PTR, pImage), @hImage, clrBackground)
+               END IF
+               ' // Free the image
+               IF pImage THEN GdipDisposeImage pImage
+               pImageStream-&gt;lpVtbl-&gt;Release(pImageStream)
+            END IF
+         END IF
+         ' // Unlock the memory
+         GlobalUnlock pGlobalBuffer
+      END IF
+      ' // Free the memory
+      GlobalFree hGlobal
+   END IF
+
+   ' // Shutdown Gdiplus
+   GdiplusShutdown token
+   ' // Return the handle of the icon
+   FUNCTION = hImage
+
+END FUNCTION
+' ========================================================================================
+' ========================================================================================
+PRIVATE FUNCTION AfxGdipIconFromBuffer (BYVAL pBuffer AS ANY PTR, BYVAL bufferSize AS SIZE_T_, _
+   BYVAL dimPercent AS LONG = 0, BYVAL bGrayScale AS LONG = FALSE) AS HANDLE
+   FUNCTION = AfxGdipImageFromBuffer(pBuffer, bufferSize, dimPercent, bGrayScale, IMAGE_ICON, 0)
+END FUNCTION
+' ========================================================================================
+' ========================================================================================
+PRIVATE FUNCTION AfxGdipBitmapFromBuffer (BYVAL pBuffer AS ANY PTR, BYVAL bufferSize AS SIZE_T_, _
+   BYVAL dimPercent AS LONG = 0, BYVAL bGrayScale AS LONG = FALSE, BYVAL clrBackground AS ARGB = 0) AS HANDLE
+   FUNCTION = AfxGdipImageFromBuffer(pBuffer, bufferSize, dimPercent, bGrayScale, IMAGE_BITMAP, clrBackground)
+END FUNCTION
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdipcreatebitmapfromstreamicm">GdipCreateBitmapFromStreamICM</h3>
+<p>Creates a <strong>Bitmap</strong> object based on a stream. This function uses ICM.</p>
+<pre class="code"><code>FUNCTION GdipCreateBitmapFromStreamICM (BYVAL stream AS IStream PTR, BYVAL bmp AS GpBitmap PTR PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>stream</em></td><td>[in] Pointer to an <strong>IStream</strong> interface.</td></tr><tr><td><em>bmp</em></td><td>[out] Pointer to a <strong>Bitmap</strong> object that receives a pointer to a <strong>Bitmap</strong> object.</td></tr></tbody></table></div>
+<hr>
+<h3 id="gdipcreateeffect">GdipCreateEffect</h3>
+<p>Creates an <strong>Effect</strong> object of the type specified by the guid parameter.</p>
+<pre class="code"><code>FUNCTION GdipCreateEffect (BYVAL gd AS GUID, BYVAL effect AS GpEffect PTR PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>gd</em></td><td>[in] Guid that specifies the kind of effect to create.</td></tr><tr><td><em>effect</em></td><td>[out] Pointer to a <strong>Effect</strong> object that receives a pointer to a <strong>Effect</strong> object.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' This example loads an image from disk and applies a blur effect using GDI+ 1.1.
+' ========================================================================================
+SUB Example_BlurEffect (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Create a bitmap object from a .jpg file
+   DIM bmp AS GpBitmap PTR
+   hStatus = GdipCreateBitmapFromFile("climber.jpg", @bmp)
+   ' // Set the resolution of this Bitmap object to the user's DPI settings
+   hStatus = GdipBitmapSetResolution(bmp, dpiX, dpiY)
+
+   ' // Create a blur effect
+   DIM effect AS GpEffect PTR
+   hStatus = GdipCreateEffect(BlurEffectGuid, @effect)
+
+   ' // Set parameters: radius = 6.0, expandEdge = FALSE
+   DIM blurParams(0 TO 1) AS SINGLE = {6.0, FALSE}
+   DIM array_size AS GpUnit = (UBOUND(blurParams) - LBOUND(blurParams) + 1) * SIZEOF(SINGLE)
+   hStatus = GdipSetEffectParameters(effect, @blurParams(0), array_size)
+
+   ' // Apply effects to the whole image
+   hStatus = GdipBitmapApplyEffect(bmp, effect, NULL, FALSE, NULL, NULL)
+
+   ' // Draw the image
+   hStatus = GdipDrawImage(graphics, CAST(GpImage PTR, bmp), 0, 0)
+
+   ' // Cleanup
+   IF effect THEN hStatus = GdipDeleteEffect(effect)
+   IF bmp THEN hStatus = GdipDisposeImage(CAST(GpImage PTR, bmp))
+   IF graphics THEN hStatus = GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<p>This example converts the image to grayscale by averaging RGB channels.</p>
+<pre class="code"><code>SUB Example_GrayScale (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Create a bitmap object from a .jpg file
+   DIM bmp AS GpBitmap PTR
+   hStatus = GdipCreateBitmapFromFile("climber.jpg", @bmp)
+   ' // Set the resolution of this Bitmap object to the user's DPI settings
+   hStatus = GdipBitmapSetResolution(bmp, dpiX, dpiY)
+
+   ' // Create grayscale matrix
+   DIM grayMatrix(0 TO 4, 0 TO 4) AS SINGLE = {{0.3, 0.3, 0.3, 0.0, 0.0}, _
+      {0.59, 0.59, 0.59, 0.0, 0.0}, {0.11, 0.11, 0.11, 0.0, 0.0}, _
+      {0.0, 0.0, 0.0, 1.0, 0.0}, {0.0, 0.0, 0.0, 0.0, 1.0}}
+   DIM array_size AS UINT = (UBOUND(grayMatrix, 1) - LBOUND(grayMatrix, 1) + 1) * _
+                            (UBOUND(grayMatrix, 2) - LBOUND(grayMatrix, 2) + 1) * SIZEOF(SINGLE)
+
+   ' // Create effect
+   DIM effect AS GpEffect PTR
+   hStatus = GdipCreateEffect(ColorMatrixEffectGuid, @effect)
+   ' // Set parameters
+   hStatus = GdipSetEffectParameters(effect, @grayMatrix(0, 0), array_size)
+   ' // Apply effect to the whole image
+   GdipBitmapApplyEffect(bmp, effect, NULL, FALSE, NULL, NULL)
+   ' // Draw the image
+   hStatus = GdipDrawImage(graphics, CAST(GpImage PTR, bmp), 0, 0)
+
+   ' // Cleanup
+   IF effect THEN hStatus = GdipDeleteEffect(effect)
+   IF bmp THEN hStatus = GdipDisposeImage(CAST(GpImage PTR, bmp))
+   IF graphics THEN hStatus = GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<h5 id="example">Example</h5>
+<p>The HueSaturationLightness effecty enables you to change the hue, saturation, and lightness of a bitmap. To specify the magnitudes of the changes in hue, saturation, and lightness, pass a HueSaturationLightnessParams structure to the GdipSetEffectParameters function.</p>
+<pre class="code"><code>' ========================================================================================
+SUB Example_GdipBitmapHueSaturationLightnessEffect (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Create a bitmap object from a .jpg file
+   DIM bmp AS GpBitmap PTR
+   hStatus = GdipCreateBitmapFromFile("climber.jpg", @bmp)
+   ' // Set the resolution of this Bitmap object to the user's DPI settings
+   hStatus = GdipBitmapSetResolution(bmp, dpiX, dpiY)
+
+   ' // Create ColorLUT effect
+   DIM effect AS GpEffect PTR
+   hStatus = GdipCreateEffect(HueSaturationLightnessEffectGuid, @effect)
+
+   ' // Set the parameters
+   DIM hslParams AS HueSaturationLightnessParams
+   hslParams.hueLevel = 45            ' Rotate hue slightly
+   hslParams.saturationLevel = 30     ' Boost saturation
+   hslParams.lightnessLevel = -10     ' Slightly darken
+   hStatus = GdipSetEffectParameters(effect, @hslParams, SIZEOF(hslParams))
+
+   ' // Apply effect
+   hStatus = GdipBitmapApplyEffect(bmp, effect, NULL, FALSE, NULL, NULL)
+
+   ' // Draw image
+   hStatus = GdipDrawImage(graphics, CAST(GpImage PTR, bmp), 0, 0)
+
+   ' // Cleanup
+   IF effect THEN hStatus = GdipDeleteEffect(effect)
+   IF bmp THEN hStatus = GdipDisposeImage(CAST(GpImage PTR, bmp))
+   IF graphics THEN hStatus = GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<h5 id="example">Example</h5>
+<p>The RedEyeCorrection effect enables you to correct the red eyes that sometimes occur in flash photographs. To specify areas of the bitmap that have red eyes, pass a RedEyeCorrectionParams structure to the GdipSetEffectParameters function.</p>
+<pre class="code"><code>' ========================================================================================
+SUB Example_Gdip_RedEyeCorrectionEffect (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Create a bitmap object from a .jpg file
+   DIM bmp AS GpBitmap PTR
+   hStatus = GdipCreateBitmapFromFile("RedEyes.jpg", @bmp)
+   ' // Set the resolution of this Bitmap object to the user's DPI settings
+   hStatus = GdipBitmapSetResolution(bmp, dpiX, dpiY)
+
+   ' // Create a levels effect
+   DIM effect AS GpEffect PTR
+   hStatus = GdipCreateEffect(RedEyeCorrectionEffectGuid, @effect)
+
+   ' // We need to specify one or more rectangles that enclose the red-eye areas.
+   ' // These are passed as an array of RECT structures.
+
+   ' // Define two rectangles around the eyes
+   ' // Change the values according the coordinates of your image
+   DIM eyeRects(0 TO 1) AS RECT
+   eyeRects(0).left   = 1 : eyeRects(0).top    = 1
+   eyeRects(0).right  = 400 : eyeRects(0).bottom = 250
+   eyeRects(1).left   = 1 : eyeRects(1).top    = 1
+   eyeRects(1).right  = 400 : eyeRects(1).bottom = 250
+
+   ' // Fill a RedEyeCorrectionParams structure
+   DIM redeyeParams AS RedEyeCorrectionParams
+   redeyeParams.numberOfAreas = 2
+   redeyeParams.areas = @eyeRects(0)
+   ' // Calculate the size of the paameters
+   DIM paramsSize AS UINT = SIZEOF(RedEyeCorrectionParams) + redeyeParams.numberOfAreas * SIZEOF(RECT)
+   ' // Set the parameters
+   hStatus = GdipSetEffectParameters(effect, @redeyeParams, paramsSize)
+
+   ' // Apply effect
+   hStatus = GdipBitmapApplyEffect(bmp, effect, NULL, FALSE, NULL, NULL)
+
+   ' // Draw the image
+   hStatus = GdipDrawImage(graphics, CAST(GpImage PTR, bmp), 0, 0)
+
+   ' // Cleanup
+   IF effect THEN hStatus = GdipDeleteEffect(effect)
+   IF bmp THEN hStatus = GdipDisposeImage(CAST(GpImage PTR, bmp))
+   IF graphics THEN hStatus = GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<h5 id="example">Example</h5>
+<p>The Tint effect enables you to apply a tint to a bitmap. To specify the nature of the tint, pass the address of a TintParams structure to the GdipSetEffectParameters function.</p>
+<pre class="code"><code>' ========================================================================================
+' The Tint effect enables you to apply a tint to a bitmap. To specify the nature of the tint,
+' pass the address of a TintParams structure to the GdipSetEffectParameters function.
+' ========================================================================================
+SUB Example_TintEffect (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Create a bitmap object from a .jpg file
+   DIM bmp AS GpBitmap PTR
+   hStatus = GdipCreateBitmapFromFile("climber.jpg", @bmp)
+   hStatus = GdipBitmapSetResolution(bmp, dpiX, dpiY)
+
+   ' // Create a tint effect
+   DIM effect AS GpEffect PTR
+   hStatus = GdipCreateEffect(TintEffectGuid, @effect)
+
+   ' // Set parameters: Hue = +120 (green), Amount = 60 (moderate tint)
+   DIM tintPrms AS TintParams
+   tintPrms.hue = 120
+   tintPrms.amount = 60
+   hStatus = GdipSetEffectParameters(effect, @tintPrms, SIZEOF(TintParams))
+
+   ' // Apply effect to the whole image
+   hStatus = GdipBitmapApplyEffect(bmp, effect, NULL, FALSE, NULL, NULL)
+
+   ' // Draw the image
+   hStatus = GdipDrawImage(graphics, CAST(GpImage PTR, bmp), 0, 0)
+
+   ' // Cleanup
+   IF effect THEN hStatus = GdipDeleteEffect(effect)
+   IF bmp THEN hStatus = GdipDisposeImage(CAST(GpImage PTR, bmp))
+   IF graphics THEN hStatus = GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdipcreatehbitmapfrombitmap">GdipCreateHBITMAPFromBitmap</h3>
+<p>Creates a Microsoft Windows Graphics Device Interface (GDI) bitmap from a Bitmap object.</p>
+<pre class="code"><code>FUNCTION GdipCreateHBITMAPFromBitmap (BYVAL bmp AS GpBitmap PTR, BYVAL hbmReturn AS HBITMAP PTR, _
+   BYVAL background AS ARGB) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>bmp</em></td><td>[in] Pointer to the <strong>Bitmap</strong> object.</td></tr><tr><td><em>hbmReturn</em></td><td>[out] Pointer to an <strong>HBITMAP</strong> that receives a handle to the GDI bitmap.</td></tr><tr><td><em>background</em></td><td>[in] ARGB color that specifies the background color. This parameter is ignored if the bitmap is totally opaque.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<p>This example converts a GDI+ Bitmap into a legacy HBITMAP and draws it using GDI.</p>
+<pre class="code"><code>' ========================================================================================
+SUB Example_CreateHBITMAPFromBitmap  (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create graphics object
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get DPI scaling
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+   ' // Apply DPI scaling
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Create a GDI+ Bitmap from file
+   DIM bmp AS GpBitmap PTR
+   hStatus = GdipCreateBitmapFromFile("climber.jpg", @bmp)
+   hStatus = GdipBitmapSetResolution(bmp, dpiX, dpiY)
+
+   ' // Convert to HBITMAP
+   DIM hbm AS HBITMAP
+   hStatus = GdipCreateHBITMAPFromBitmap(bmp, @hbm, ARGB_White)
+
+   ' // Draw using classic GDI
+   DIM memDC AS HDC = CreateCompatibleDC(hdc)
+   DIM oldBmp AS HBITMAP = SelectObject(memDC, hbm)
+   ' // Retrieve bitmap dimensions from HBITMAP
+   DIM bmpInfo AS BITMAP
+   GetObject(hbm, SIZEOF(BITMAP), @bmpInfo)
+   ' // Apply DPI scaling
+   DIM scaledWidth AS LONG = bmpInfo.bmWidth * rxRatio
+   DIM scaledHeight AS LONG = bmpInfo.bmHeight * ryRatio
+   StretchBlt(hdc, 0, 0, scaledWidth, scaledHeight, memDC, 0, 0, bmpInfo.bmWidth, bmpInfo.bmHeight, SRCCOPY)
+
+   ' // Cleanup
+   IF oldBmp THEN SelectObject(memDC, oldBmp)
+   IF memDC THEN DeleteDC(memDC)
+   IF hbm THEN DeleteObject(hbm)
+   IF bmp THEN hStatus = GdipDisposeImage(CAST(GpImage PTR, bmp))
+   IF graphics THEN hStatus = GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdipcreatehiconfrombitmap">GdipCreateHICONFromBitmap</h3>
+<p>Creates an icon from a <strong>Bitmap</strong> object.</p>
+<pre class="code"><code>FUNCTION GdipCreateHICONFromBitmap (BYVAL bmp AS GpBitmap PTR, BYVAL hbmReturn AS HICON PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>bmp</em></td><td>[in] Pointer to the <strong>Bitmap</strong> object.</td></tr><tr><td><em>hbmReturn</em></td><td>[out] Pointer to an <strong>HICON</strong> that receives a handle to the GDI icon.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<p>This example converts a GDI+ Bitmap into a Windows HICON and displays it.</p>
+<pre class="code"><code>SUB Example_CreateHICONFromBitmap (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create graphics object
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get DPI scaling
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+   ' // Apply DPI scaling
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Create a GDI+ Bitmap from file
+   DIM bmp AS GpBitmap PTR
+   hStatus = GdipCreateBitmapFromFile("climber.jpg", @bmp)
+   hStatus = GdipBitmapSetResolution(bmp, dpiX, dpiY)
+
+   ' // Convert to HICON
+   DIM hIcon AS HICON
+   hStatus = GdipCreateHICONFromBitmap(bmp, @hIcon)
+
+   ' // Get width and heig ht of the icon
+   DIM iconInfo AS ICONINFO
+   DIM iconWidth AS LONG
+   DIM iconHeight AS LONG
+   IF GetIconInfo(hIcon, @iconInfo) THEN
+      DIM bmp AS BITMAP
+      IF iconInfo.hbmColor THEN
+         ' Icon has a color bitmap
+         GetObject(iconInfo.hbmColor, SIZEOF(BITMAP), @bmp)
+         iconWidth = bmp.bmWidth
+         iconHeight = bmp.bmHeight
+         DeleteObject(iconInfo.hbmColor)
+      ELSEIF iconInfo.hbmMask THEN
+         ' Monochrome icon: height is double, so divide by 2
+         GetObject(iconInfo.hbmMask, SIZEOF(BITMAP), @bmp)
+         iconWidth = bmp.bmWidth
+         iconHeight = bmp.bmHeight \ 2
+      END IF
+      IF iconInfo.hbmMask THEN DeleteObject(iconInfo.hbmMask)
+   END IF
+
+   ' // Scale it according to the DPI settings
+   DIM scaledWidth AS LONG = iconWidth * rxRatio
+   DIM scaledHeight AS LONG = iconHeight * ryRatio
+
+   ' // Draw the icon
+   DrawIconEx(hdc, 0, 0, hIcon, scaledWidth, scaledHeight, 0, NULL, DI_NORMAL)
+
+   ' // Cleanup
+   IF hIcon THEN DestroyIcon(hIcon)
+   IF bmp THEN hStatus = GdipDisposeImage(CAST(GpImage PTR, bmp))
+   IF graphics THEN hStatus = GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdipdeleteeffect">GdipDeleteEffect</h3>
+<p>Deletes the specified <strong>Effect</strong> object.</p>
+<pre class="code"><code>FUNCTION GdipDeleteEffect (BYVAL effect AS GpEffect PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>effect</em></td><td>[in] Pointer to the <strong>Effect</strong> object created with <strong>GdipCreateEffect</strong>.</td></tr></tbody></table></div>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>IF effect THEN GdipDeleteEffect(effect)</code></pre>
+<hr>
+<h3 id="gdipgeteffectparameters">GdipGetEffectParameters</h3>
+<p>Returns the parameters for the specified <strong>Effect</strong> object.</p>
+<pre class="code"><code>FUNCTION GdipGetEffectParameters (BYVAL effect AS GpEffect PTR, BYVAL size AS UINT PTR, _
+   BYVAL params AS VOID PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>effect</em></td><td>[in] Pointer to the <strong>Effect</strong> object created with <strong>GdipCreateEffect</strong>.</td></tr><tr><td><em>size</em></td><td>[in/out] Pointer to a UINT variable containing the total size, in bytes, of the parameters currently set for this <strong>Effect</strong>.</td></tr><tr><td><em>params</em></td><td>[in] Variable that receives a pointer to the parameters.</td></tr></tbody></table></div>
+<pre class="code"><code>' ========================================================================================
+SUB Example_GetEffectParameters (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Create a bitmap object from a .jpg file
+   DIM bmp AS GpBitmap PTR
+   hStatus = GdipCreateBitmapFromFile("climber.jpg", @bmp)
+   hStatus = GdipBitmapSetResolution(bmp, dpiX, dpiY)
+
+   ' // Create a tint effect
+   DIM effect AS GpEffect PTR
+   hStatus = GdipCreateEffect(TintEffectGuid, @effect)
+
+   ' // Set parameters: Hue = +120 (green), Amount = 60 (moderate tint)
+   DIM tintPrms AS TintParams
+   tintPrms.hue = 120
+   tintPrms.amount = 60
+   hStatus = GdipSetEffectParameters(effect, @tintPrms, SIZEOF(TintParams))
+
+   ' // Retrieve parameters size
+   DIM paramsSize AS UINT
+   hStatus = GdipGetEffectParameterSize(effect, @paramsSize)
+   AfxMsg WSTR("Parameters size: " &amp; WSTR(paramsSize))
+   ' // Allocate buffer and retrieve parameters
+   DIM buffer AS TintParams
+   hStatus = GdipGetEffectParameters(effect, @paramsSize, @buffer)
+   ' // Display retrieved values
+   AfxMsg("Tint hue: " &amp; WSTR(buffer.hue) &amp; ", amount: " &amp; WSTR(buffer.amount))
+
+   ' // Apply effect to the whole image
+   hStatus = GdipBitmapApplyEffect(bmp, effect, NULL, FALSE, NULL, NULL)
+
+   ' // Draw the image
+   hStatus = GdipDrawImage(graphics, CAST(GpImage PTR, bmp), 0, 0)
+
+   ' // Cleanup
+   IF effect THEN hStatus = GdipDeleteEffect(effect)
+   IF bmp THEN hStatus = GdipDisposeImage(CAST(GpImage PTR, bmp))
+   IF graphics THEN hStatus = GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdipgeteffectparametersize">GdipGetEffectParameterSize</h3>
+<p>Gets the total size, in bytes, of the parameters currently set for the specified effect.</p>
+<pre class="code"><code>FUNCTION GdipGetEffectParameterSize (BYVAL effect AS GpEffect PTR, BYVAL size AS UINT PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>effect</em></td><td>[in] Pointer to the <strong>Effect</strong> object created with <strong>GdipCreateEffect</strong>.</td></tr><tr><td><em>size</em></td><td>[out] Pointer to a UINT variable that receives the total size, in bytes, of the parameters.</td></tr></tbody></table></div>
+<pre class="code"><code>' ========================================================================================
+SUB Example_GetEffectParameters (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Create a bitmap object from a .jpg file
+   DIM bmp AS GpBitmap PTR
+   hStatus = GdipCreateBitmapFromFile("climber.jpg", @bmp)
+   hStatus = GdipBitmapSetResolution(bmp, dpiX, dpiY)
+
+   ' // Create a tint effect
+   DIM effect AS GpEffect PTR
+   hStatus = GdipCreateEffect(TintEffectGuid, @effect)
+
+   ' // Set parameters: Hue = +120 (green), Amount = 60 (moderate tint)
+   DIM tintPrms AS TintParams
+   tintPrms.hue = 120
+   tintPrms.amount = 60
+   hStatus = GdipSetEffectParameters(effect, @tintPrms, SIZEOF(TintParams))
+
+   ' // Retrieve parameters size
+   DIM paramsSize AS UINT
+   hStatus = GdipGetEffectParameterSize(effect, @paramsSize)
+   AfxMsg WSTR("Parameters size: " &amp; WSTR(paramsSize))
+   ' // Allocate buffer and retrieve parameters
+   DIM buffer AS TintParams
+   hStatus = GdipGetEffectParameters(effect, @paramsSize, @buffer)
+   ' // Display retrieved values
+   AfxMsg("Tint hue: " &amp; WSTR(buffer.hue) &amp; ", amount: " &amp; WSTR(buffer.amount))
+
+   ' // Apply effect to the whole image
+   hStatus = GdipBitmapApplyEffect(bmp, effect, NULL, FALSE, NULL, NULL)
+
+   ' // Draw the image
+   hStatus = GdipDrawImage(graphics, CAST(GpImage PTR, bmp), 0, 0)
+
+   ' // Cleanup
+   IF effect THEN hStatus = GdipDeleteEffect(effect)
+   IF bmp THEN hStatus = GdipDisposeImage(CAST(GpImage PTR, bmp))
+   IF graphics THEN hStatus = GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdipinitializepalette">GdipInitializePalette</h3>
+<p>Initializes a standard, optimal, or custom color palette.</p>
+<pre class="code"><code>FUNCTION GdipInitializePalette (BYVAL palette AS ColorPalette PTR, BYVAL palettetype AS PaletteType, _
+   BYVAL optimalColors AS INT_, BYVAL useTransparentColor AS BOOL, BYVAL bmp AS GpBitmap PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>palette</em></td><td>[out] Pointer to a buffer that contains a <strong>ColorPalette</strong> structure followed by an array of ARGB values. The <strong>Entries</strong> member of a <strong>ColorPalette</strong> structure is an array of one ARGB value. You must allocate memory for the <strong>ColorPalette</strong> structure and for the additional <em>ARGB</em> values in the palette.</td></tr><tr><td><em>palettetype</em></td><td>[in] Element of the <em>PaletteType</em> enumeration that specifies the palette type. The palette can have one of several standard types, or it can be a custom palette that you define. Also, the <strong>GdipInitializePalette</strong> method can create an optimal palette based on a specified bitmap.</td></tr><tr><td><em>optimalColors</em></td><td>[in] Integer that specifies the number of colors you want to have in an optimal palette based on a specified bitmap. If this parameter is greater than 0, the <em>palettetype</em> parameter must be set to <em>PaletteTypeOptimal</em>, and the bitmap parameter must point to a <strong>Bitmap</strong> object. If you are creating a standard or custom palette rather than an optimal palette, set this parameter to 0.</td></tr><tr><td><em>useTransparentColor</em></td><td>[in] Boolean value that specifies whether to include the transparent color in the palette. Set to TRUE to include the transparent color; otherwise FALSE.</td></tr><tr><td><em>bmp</em></td><td>[in] Pointer to a <strong>Bitmap</strong> object for which an optimal palette will be created. If <em>palettetype</em> is set to <em>PaletteTypeOptimal</em> and <em>optimalColors</em> is set to a positive integer, set this parameter to the address of a <strong>Bitmap</strong> object. Otherwise, set this parameter to <strong>NULL</strong>.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<p>This example demonstrates how to initialize an optimal palette based on a bitmap. Uses GdipInitializePalette to fill a ColorPalette structure with the best-fit colors. It fails in my computer with hStatus = 1 (Generic error)</p>
+<pre class="code"><code>SUB Example_InitializeOptimalPalette (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create graphics object
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get DPI scaling
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+   ' // Apply DPI scaling
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Define dimensions and pixel format
+   DIM nWidth AS LONG = 100
+   DIM nHeight AS LONG = 100
+   DIM bytesPerPixel AS LONG = 4
+   DIM stride AS LONG = nWidth * bytesPerPixel
+
+   ' // Allocate pixel buffer
+   DIM buffer(stride * nHeight - 1) AS UBYTE
+   ' // Fill buffer with a gradient
+   FOR y AS LONG = 0 TO nHeight - 1
+      FOR x AS LONG = 0 TO nWidth - 1
+         DIM _offset AS LONGINT = y * stride + x * bytesPerPixel
+         buffer(_offset + 0) = x * 255 \ nWidth    ' Blue
+         buffer(_offset + 1) = y * 255 \ nHeight   ' Green
+         buffer(_offset + 2) = 128                 ' Red
+         buffer(_offset + 3) = 255                 ' Alpha
+      NEXT
+   NEXT
+
+   ' // Create bitmap from buffer
+   DIM bmp AS GpBitmap PTR
+   hStatus = GdipCreateBitmapFromScan0(nWidth, nHeight, stride, PixelFormat32bppARGB, @buffer(0), @bmp)
+
+   ' // Allocate ColorPalette buffer
+   CONST maxColors AS LONG = 256
+   DIM paletteSize AS LONG = SIZEOF(ColorPalette) + (maxColors - 1) * SIZEOF(ARGB)
+   DIM paletteBuffer AS UBYTE PTR = CALLocate(paletteSize)
+   DIM paletteptr AS ColorPalette PTR = CAST(ColorPalette PTR, paletteBuffer)
+
+   ' // Initialize optimal palette
+   hStatus = GdipInitializePalette(paletteptr, PaletteTypeOptimal, maxColors, FALSE, bmp)
+
+   ' // Example: print first color
+   IF paletteptr-&gt;Count &gt; 0 THEN
+      DIM clr AS ARGB = paletteptr-&gt;Entries(0)
+      AfxMsg("First palette color: ARGB = " &amp; HEX(clr))
+   END IF
+
+   ' // Draw the image
+   hStatus = GdipDrawImage(graphics, CAST(GpImage PTR, bmp), 0, 0)
+
+   ' // Cleanup
+   IF bmp THEN hStatus = GdipDisposeImage(CAST(GpImage PTR, bmp))
+   IF graphics THEN hStatus = GdipDeleteGraphics(graphics)
+   IF paletteBuffer THEN DEALLOCATE paletteBuffer
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdipseteffectparameters">GdipSetEffectParameters</h3>
+<p>Sets the parameters for the specified <strong>Effect</strong> object.</p>
+<pre class="code"><code>FUNCTION GdipSetEffectParameters (BYVAL effect AS Gpeffect PTR, BYVAL params AS VOID PTR, _
+   BYVAL size AS UINT) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>effect</em></td><td>[in] Pointer to the <strong>Effect</strong> object created with <strong>GdipCreateEffect</strong>.</td></tr><tr><td><em>params</em></td><td>[in] The parameters.</td></tr><tr><td><em>size</em></td><td>[in] The total size, in bytes, of the parameters currently set for this <strong>Effect</strong>.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' This example loads an image from disk and applies a sharpen effect using GDI+ 1.1.
+' Enhances edges and fine details by increasing contrast around transitions.
+' Useful for restoring clarity in slightly blurred images.
+' ========================================================================================
+SUB Example_BlurEffect (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Create a bitmap object from a .jpg file
+   DIM bmp AS GpBitmap PTR
+   hStatus = GdipCreateBitmapFromFile("climber.jpg", @bmp)
+   ' // Set the resolution of this Bitmap object to the user's DPI settings
+   hStatus = GdipBitmapSetResolution(bmp, dpiX, dpiY)
+
+   ' // Create a sharpen effect
+   DIM sharpenEffect AS GpEffect PTR
+   hStatus = GdipCreateEffect(SharpenEffectGuid, @sharpenEffect)
+
+   ' // Set parameters: radius = 3.0, expandEdge = FALSE
+   DIM sharpenParams(0 TO 1) AS SINGLE = {3.0, FALSE}
+   DIM array_size AS GpUnit = (UBOUND(sharpenParams) - LBOUND(sharpenParams) + 1) * SIZEOF(SINGLE)
+   hStatus = GdipSetEffectParameters(sharpenEffect, @sharpenParams(0), array_size)
+
+   ' // Apply effects to the whole image
+   hStatus = GdipBitmapApplyEffect(bmp, sharpenEffect, NULL, FALSE, NULL, NULL)
+
+   ' // Draw the image
+   hStatus = GdipDrawImage(graphics, CAST(GpImage PTR, bmp), 0, 0)
+
+   ' // Cleanup
+   IF sharpenEffect THEN hStatus = GdipDeleteEffect(sharpenEffect)
+   IF bmp THEN hStatus = GdipDisposeImage(CAST(GpImage PTR, bmp))
+   IF graphics THEN hStatus = GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<h5 id="example">Example</h5>
+<p>This example applies the color LUT effect to the whole image.</p>
+<pre class="code"><code>' ========================================================================================
+' The ColorLUT effect lets you define lookup tables for each channel—Alpha, Red, Green,
+' and Blue—with 256 entries each. For every pixel in the image:
+' The channel value (0–255) is used as an index.
+' The corresponding value in the LUT replaces the original.
+' This means you can:
+' Invert colors
+' Apply posterization
+' Simulate film-like grading
+' Create custom stylizations
+' ========================================================================================
+SUB Example_ColorLUTEffect (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Create a bitmap object from a .jpg file
+   DIM bmp AS GpBitmap PTR
+   hStatus = GdipCreateBitmapFromFile("climber.jpg", @bmp)
+   ' // Set the resolution of this Bitmap object to the user's DPI settings
+   hStatus = GdipBitmapSetResolution(bmp, dpiX, dpiY)
+
+   ' // Create ColorBalance effect
+   DIM effect AS GpEffect PTR
+   hStatus = GdipCreateEffect(ColorLUTEffectGuid, @effect)
+
+   ' // Create LUTs: identity (no change)
+   DIM lut AS ColorLUTParams
+   FOR i AS LONG = 0 TO 255
+       lut.lutB(i) = i
+       lut.lutG(i)   = i
+       lut.lutR(i) = i
+       lut.lutA(i)  = i
+   NEXT
+
+   ' // Example: invert red channel
+   FOR i AS LONG = 0 TO 255
+       lut.lutR(i) = 255 - i
+   NEXT
+
+   ' // Set parameters
+   hStatus = GdipSetEffectParameters(effect, @lut, SIZEOF(lut))
+
+   ' // Apply effect
+   hStatus = GdipBitmapApplyEffect(bmp, effect, NULL, FALSE, NULL, NULL)
+
+   ' // Draw image
+   hStatus = GdipDrawImage(graphics, CAST(GpImage PTR, bmp), 0, 0)
+
+   ' // Cleanup
+   IF effect THEN hStatus = GdipDeleteEffect(effect)
+   IF bmp THEN hStatus = GdipDisposeImage(CAST(GpImage PTR, bmp))
+   IF graphics THEN hStatus = GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<h5 id="example">Example</h5>
+<p>This example applies the effect to the specified region only.</p>
+<pre class="code"><code>' ========================================================================================
+SUB Example_ColorLUTEffectRegion (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Create a bitmap object from a .jpg file
+   DIM bmp AS GpBitmap PTR
+   hStatus = GdipCreateBitmapFromFile("climber.jpg", @bmp)
+   ' // Set the resolution of this Bitmap object to the user's DPI settings
+   hStatus = GdipBitmapSetResolution(bmp, dpiX, dpiY)
+
+   ' // Create ColorLUT effect
+   DIM effect AS GpEffect PTR
+   hStatus = GdipCreateEffect(ColorLUTEffectGuid, @effect)
+
+   ' // Create LUTs: identity (no change)
+   DIM lut AS ColorLUTParams
+   FOR i AS LONG = 0 TO 255
+       lut.lutB(i) = 255 - i   ' Invert red
+       lut.lutG(i)   = i       ' Identity
+       lut.lutR(i) = i         ' Identity
+       lut.lutA(i)  = i        ' Identity
+   NEXT
+
+   ' // Example: invert red channel
+   FOR i AS LONG = 0 TO 255
+       lut.lutR(i) = 255 - i
+   NEXT
+
+   ' // Set parameters
+   hStatus = GdipSetEffectParameters(effect, @lut, SIZEOF(lut))
+
+   ' // Define the region of interest (ROI)
+   DIM roi AS RECT
+   roi.left   = 20
+   roi.top    = 20
+   roi.right  = 150
+   roi.bottom = 100
+
+   ' // Apply effect to the specified region only
+   hStatus = GdipBitmapApplyEffect(bmp, effect, @roi, FALSE, NULL, NULL)
+
+   ' // Draw image
+   hStatus = GdipDrawImage(graphics, CAST(GpImage PTR, bmp), 0, 0)
+
+   ' // Cleanup
+   IF effect THEN hStatus = GdipDeleteEffect(effect)
+   IF bmp THEN hStatus = GdipDisposeImage(CAST(GpImage PTR, bmp))
+   IF graphics THEN hStatus = GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdiptestcontrol">GdipTestControl</h3>
+<pre class="code"><code>FUNCTION GdipTestControl (BYVAL control AS GpTestControlEnum, BYVAL param AS VOID PTR) AS GpStatus</code></pre>
+<h5 id="remarks">Remarks</h5>
+<p>Used for internal testing of Microsoft® Windows® GDI+. Specifies changes in image-processing behavior. The meaning of the param parameter varies depending on the value passed in the control parameter.</p>
+<p>If the control parameter is set to <em>TestControlForceBilinear</em>, <em>param</em> points to a boolean value. If that value is TRUE and the current interpolation mode is anything other than <em>InterpolationModeNearestNeighbor</em>, then the <em>InerpolationModeBilinear</em> algorithm is used. If the value pointed to by param is FALSE or if the current interpolation mode is <em>InterpolationModeNearestNeighbor</em>, then the behavior of GDI+ is unchanged.</p>
+<p>If the control parameter is set to <em>TestControlNoICM</em>, param points to a boolean value. If that value is TRUE, then ICM profiles are ignored when images are loaded into memory. If the value pointed to by param is FALSE, then the behavior of GDI+ is unchanged.</p>
+<p>If the control parameter is set to <em>TestControlGetBuildNumber</em>, param is an output parameter that points to a 32-bit integer variable. That variable receives the GDI+ build number.</p>
+<p><strong>GdipTestControl</strong> is not thread-safe; it assumes that there is only one thread using GDI+. If you call <strong>GdipTestControl</strong> in a multithreaded environment, the results are unpredictable.</p>
+<p>The <em>GpTestControlEnum</em> enumeration has three elements: TestControlForceBilinear = 0, TestControlNoICM = 1, and TestControlGetBuildNumber = 2.</p>
+<h5 id="example">Example</h5>
+<p>Retrieves the internal build number of GDI+.</p>
+<pre class="code"><code>DIM buildNumber AS LONG
+GdipTestControl(TestControlGetBuildNumber, @buildNumber)
+print buildNumber</code></pre>
+<hr>
+<h3 id="gdipcreatecachedbitmap">GdipCreateCachedBitmap</h3>
+<p>Creates a <strong>CachedBitmap</strong> object based on a <strong>Bitmap</strong> object and a <strong>Graphics</strong> object. The cached bitmap takes the pixel data from the <strong>Bitmap</strong> object and stores it in a format that is optimized for the display device associated with the <strong>Graphics</strong> object.</p>
+<pre class="code"><code>FUNCTION GdipCreateCachedBitmap (BYVAL bmp AS GpBitmap PTR, BYVAL graphics AS GpGraphics PTR, _
+   BYVAL cachedBitmap AS GpCachedBitmap PTR PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>bmp</em></td><td>[in] Pointer to a <strong>Bitmap</strong> object that contains the pixel data to be optimized.</td></tr><tr><td><em>graphics</em></td><td>[in] Pointer to a <strong>Graphics</strong> object that is associated with a display device for which the image will be optimized.</td></tr><tr><td><em>cachedBitmap</em></td><td>[out] Pointer to a <strong>CachedBitmap</strong> variable that receives a pointer to the new created <strong>CachedBitmap</strong> object.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>You can display a cached bitmap by passing the address of a <strong>CachedBitmap</strong> object to the <strong>GdipDrawCachedBitmap</strong> function.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' This example loads a bitmap, creates a CachedBitmap from it, and draws it twice.
+' ========================================================================================
+SUB Example_CachedBitmap (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Load the original image from file
+   DIM image AS GpImage PTR
+   hStatus = GdipLoadImageFromFile("climber.jpg", @image)
+
+   ' // Create CachedBitmap optimized for this graphics device
+   DIM cachedBmp AS GpCachedBitmap PTR
+   hStatus = GdipCreateCachedBitmap(image, graphics, @cachedBmp)
+
+   ' // Draw the cached bitmap twice
+   hStatus = GdipDrawCachedBitmap(graphics, cachedBmp, 50, 50)
+   hStatus = GdipDrawCachedBitmap(graphics, cachedBmp, 300, 50)
+
+   ' // Cleanup
+   IF cachedBmp THEN GdipDeleteCachedBitmap(cachedBmp)
+   IF image THEN GdipDisposeImage(image)
+   IF graphics THEN GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdipdeletecachedbitmap">GdipDeleteCachedBitmap</h3>
+<p>Deletes a <strong>CachedBitmap</strong> object.</p>
+<pre class="code"><code>FUNCTION GdipDeleteCachedBitmap (BYVAL cachedBitmap AS GpCachedBitmap PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>cachedBitmap</em></td><td>[in] Pointer to a <strong>CachedBitmap</strong> object.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<p>See example for <strong>GdipCreateCachedBitmap</strong>.</p>
+<hr>
+<h3 id="gdipdrawcachedbitmap">GdipDrawCachedBitmap</h3>
+<p>Draws the image stored in a <strong>CachedBitmap</strong> object.</p>
+<pre class="code"><code>FUNCTION GdipDrawCachedBitmap (BYVAL graphics AS GpGraphics PTR, BYVAL cachedBitmap AS GpCachedBitmap PTR, _
+   BYVAL x AS INT_, BYVAL y AS INT_) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>graphics</em></td><td>[in] Pointer to a <strong>Graphics</strong> object.</td></tr><tr><td><em>cachedBitmap</em></td><td>[in] Pointer to a <strong>CachedBitmap</strong> object that contains the image to be drawn.</td></tr><tr><td><em>x</em></td><td>[in] Long integer value that specifies the x-coordinate of the upper-left corner of the image.</td></tr><tr><td><em>y</em></td><td>[in] Long integer value that specifies the y-coordinate of the upper-left corner of the image.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>A <strong>CachedBitmap</strong> object stores an image in a format that is optimized for a particular display screen. You cannot draw a cached bitmap to a printer or to a metafile.</p>
+<p>Cached bitmaps will not work with any transformations other than translation.</p>
+<p>When you construct a <strong>CachedBitmap</strong> object, you must pass the address of a <strong>Graphics</strong> object to the <strong>GdipCreateCachedBitmap</strong> function. If the screen associated with that Graphics object has its bit depth changed after the cached bitmap is constructed, then the <strong>GdipDrawCachedBitmap</strong> function will fail, and you should reconstruct the cached bitmap. Alternatively, you can hook the display change notification message and reconstruct the cached bitmap at that time.</p>
+<h5 id="example">Example</h5>
+<p>See example for <strong>GdipCreateCachedBitmap</strong>.</p>
+<hr>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

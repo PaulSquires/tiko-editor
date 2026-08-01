@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Differences between Expressions and Statements — Help Center</title>
+<meta name="description" content="Differences between Expressions and Statements — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/differences-between-expressions-and-statements.html">
+<meta property="og:title" content="Differences between Expressions and Statements">
+<meta property="og:description" content="Differences between Expressions and Statements — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/differences-between-expressions-and-statements.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/programmer-s-guide/differences-between-expressions-and-statements.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>Differences between Expressions and Statements</h1>
+<h2>Documentation</h2>
+
+	To introduce the <b>expressions and statements</b> (syntactic entities) in FreeBASIC.<br>
+<br>
+<b>Preamble:</b><br>
+<br>
+Simply put, an expression represents a value and a statement represents an operation.<br>
+However, in fact, some special expressions may be composed and represent multiple values, and some statements may be composed of several sub operations/statements.<br>
+By context, some statements can also be considered expressions.<br>
+<br>
+Statements can contain other constructs such as expressions, keywords, operators, and other elements.<br>
+Expressions are parts of statements that return values. Thus, expressions can be used whenever a value is expected.<br>
+<br>
+The following description does not make very precise definitions for expressions and statements. It is difficult to achieve this.<br>
+Not all types of expressions and statements are covered here, but only simple examples are highlighted.<br>
+<br>
+<div>Expressions</div><div><br>
+An expression is a collection of one or more terms that can perform a mathematical or logical operation. To be precise, an expression must have at least one operand but may not have any operator.<br>
+The terms are usually either literals or variables or functions that are combined with operators to evaluate for example to a string or numeric result or boolean or user defined type.<br>
+A value in itself is a simple expression, just like a variable. Evaluating a variable gives the value to which the variable refers.<br>
+<br>
+Expressions can be used to perform calculations, manipulate variables, or concatenate strings.<br>
+Expressions are evaluated according to precedence order. Use parentheses to override the default precedence order.<br>
+<br>
+</div><div>Statements</div><div><br>
+A statement is a basic unit of execution of a program. A statement is a complete instruction in FreeBASIC programs.<br>
+It may contain keywords, operators, variables, literal values, constants and expressions.<br>
+<br>
+Statements could be categorized as:<br>
+<div class="indent"><b>-</b> Declaration statements: these are the statements where the user names a variable, constant, or procedure, and can also initialize it.<br>
+<b>-</b> Executable statements: these are the statements which initiate actions. These statements can call a procedure, loop or branch through blocks of code or assign values or expression to a variable or constant. In the last case, it is called an expression statement. The most common expression statements are assignments and function calls.<br>
+<br>
+</div>A statements normally takes up one line with no terminator character, but:<br>
+<div class="indent"><b>-</b> several statements can also be stacked on a same line by using the separator character, a colon (:) to delimit them,<br>
+<b>-</b> or a statement may also be continued to the next line using the continuation character, an underscore (_) to extend the statement from one line to the next.<br>
+<br>
+</div></div><div>Basic examples of expressions / statements</div><div><br>
+Some basic examples just to illustrate the definitions above.<br>
+<br>
+<u>Basic examples of expressions</u><br>
+<div class="indent"><b>-</b> Arithmetic expression:<br>
+<div class="indent"><code>10</code><br>
+<div class="indent">this is an expression that is evaluated to the numeric value 10.<br>
+</div><code>10 + 13</code><br>
+<div class="indent">this is another expression that is evaluated to produce the numeric value 23.<br>
+<br>
+</div></div><b>-</b> String expression:<br>
+<div class="indent"><code>"hello"</code><br>
+<div class="indent">evaluates to the string "hello".<br>
+</div><code>"hello" & " " & "world"</code><br>
+<div class="indent">evaluates to the string "hello world".<br>
+<br>
+</div></div><b>-</b> Combined expression:<br>
+<div class="indent"><code>Len("hello" & " " & "world")</code><br>
+<div class="indent">Len function evaluating the length of the string expression.<br>
+<br>
+</div></div><b>-</b> Logical expression:<br>
+<div class="indent"><code>10 &gt; 9</code><br>
+<div class="indent">evaluates to boolean value true (more precisely produces the integer value -1 here).<br>
+</div><code>10 &lt; 20</code><br>
+<div class="indent">evaluates to boolean value false (more precisely produces the integer value 0 here).<br>
+</div><code>true</code><br>
+<div class="indent">evaluates to boolean value true.<br>
+</div><code>a=20 And b=30</code><br>
+<div class="indent">evaluates to true (-1) or false (0) based on the values of a and b.<br>
+<br>
+</div></div></div><u>Basic examples of statements</u><br>
+<div class="indent"><b>-</b> Statement:<br>
+<div class="indent"><code>Print 10 + 13<br>
+Print "hello" & " " & "world"</code><br>
+<div class="indent">where the arguments of the two Print statements are expressions listed above.<br>
+<br>
+</div></div><b>-</b> Assignment statement:<br>
+<div class="indent"><code>average = 55 + 33</code><br>
+<div class="indent">where the right-hand-side is an expression.<br>
+<br>
+</div></div><b>-</b> Declaration statement with initializer:<br>
+<div class="indent"><code>Dim As Integer I = J + 3</code><br>
+<div class="indent">where the right-hand-side of the initializer is an expression.<br>
+<br>
+</div></div><b>-</b> Conditional statement:<br>
+<div class="indent"><code>If (expression) Then<br>
+<div class="indent">statement 1<br>
+</div>Else<br>
+<div class="indent">statement 2<br>
+</div>End If</code><br>
+<div class="indent">if the expression following the If statement evaluates to a truth value, statement 1 is executed else statement 2 is executed.<br>
+<br>
+</div></div></div></div><div>See also</div><div><br>
+<ul><li> <a href="constant-expressions.html">Constant Expressions</a><br>
+<li> <a href="assignments.html">Assignments</a><br>
+<li> <a href="../../operators/operators/operators.html">Operator list</a><br>
+<li> <a href="../../language-documentation/operators/operator-precedence.html">Operator Precedence</a><br>
+<li> <a href="control-flow-statements.html">Control Flow Statements</a><br>
+<br>
+</li></li></li></li></li></ul></div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

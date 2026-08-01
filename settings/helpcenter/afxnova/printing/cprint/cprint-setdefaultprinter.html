@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CPrint.SetDefaultPrinter — Help Center</title>
+<meta name="description" content="Sets the default printer.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/printing/cprint/cprint-setdefaultprinter.html">
+<meta property="og:title" content="CPrint.SetDefaultPrinter">
+<meta property="og:description" content="Sets the default printer.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/printing/cprint/cprint-setdefaultprinter.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/printing/cprint/cprint-setdefaultprinter.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cprint-class.html">CPrint Class</a></div>
+<h1>CPrint.SetDefaultPrinter<span class="h1kind">method</span></h1>
+<p class="lede">Sets the default printer.</p>
+<div class="badges"><a class="badge" href="../index.html">Printing</a><span class="badge">method</span><span class="badge">CPrint.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION SetDefaultPrinter (BYREF wszPrinterName AS WSTRING) AS BOOLEAN</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>wszPrinterName</code></td><td></td><td>A pointer to a null-terminated string containing the default printer name. For a remote printer connection, the name format is \<strong>\\server\\</strong>printername. For a local printer, the name format is printername. If this parameter is <strong>NULL</strong> or an empty string, that is, "", <strong>SetDefaultPrinter</strong> will select a default printer from one of the installed printers. If a default printer already exists, calling <strong>SetDefaultPrinter</strong> with a <strong>NULL</strong> or an empty string in this parameter might change the default printer.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>BOOLEAN. True or false.</p>
+<h2>Description</h2>
+<p>Sets the printer name of the default printer for the current user on the local computer.</p>
+<h2>Remarks</h2>
+<p>When using this method, you must specify a valid printer, driver, and port. If they are invalid, the APIs do not fail but the result is not defined. This could cause other programs to set the printer back to the previous valid printer. You can use <strong>EnumPrinters</strong> to retrieve the printer name, driver name, and port name of all available printers.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CPrint.inc</code></li><li>Defined in <span class="srcref">AfxNova/CPrint.inc:138</span></li><li>Documented in <span class="srcref">Printing/CPrint Class.md</span></li><li>Topic: <a href="../cprint-class.html">CPrint Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

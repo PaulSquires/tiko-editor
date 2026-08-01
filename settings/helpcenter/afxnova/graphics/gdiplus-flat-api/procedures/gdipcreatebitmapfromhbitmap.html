@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GdipCreateBitmapFromHBITMAP — Help Center</title>
+<meta name="description" content="Creates a **Bitmap** object based on a handle to a Windows Microsoft® Windows® Graphics Device Interface (GDI) bitmap and a handle to a GDI palette.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipcreatebitmapfromhbitmap.html">
+<meta property="og:title" content="GdipCreateBitmapFromHBITMAP">
+<meta property="og:description" content="Creates a **Bitmap** object based on a handle to a Windows Microsoft® Windows® Graphics Device Interface (GDI) bitmap and a handle to a GDI palette.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipcreatebitmapfromhbitmap.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/procedures/gdipcreatebitmapfromhbitmap.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../bitmap-functions.html">Bitmap Functions</a></div>
+<h1>GdipCreateBitmapFromHBITMAP<span class="h1kind">function</span></h1>
+<p class="lede">Creates a **Bitmap** object based on a handle to a Windows Microsoft® Windows® Graphics Device Interface (GDI) bitmap and a handle to a GDI palette.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GdipCreateBitmapFromHBITMAP (BYVAL hbm AS HBITMAP, BYVAL hpal AS HPALETTE, BYVAL bmp AS GpBitmap PTR PTR) AS GpStatus</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>hbm</code></td><td></td><td>[in] Handle to a GDI bitmap.</td></tr><tr><td><code>hpal</code></td><td></td><td>[in] Handle to a GDI palette used to define the bitmap colors if hbm is not a device-independent bitmap (DIB).</td></tr><tr><td><code>bmp</code></td><td></td><td>[out] Pointer to a <strong>Bitmap</strong> object that receives a pointer to a <strong>Bitmap</strong> object.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Creates a <strong>Bitmap</strong> object based on a handle to a Windows Microsoft® Windows® Graphics Device Interface (GDI) bitmap and a handle to a GDI palette.</p>
+<h2>Remarks</h2>
+<p>You are responsible for deleting the GDI bitmap and the GDI palette.</p>
+<p>Do not pass to the <strong>GdipCreateBitmapFromHBITMAP</strong> function a GDI bitmap or a GDI palette that is currently (or was previously) selected into a device context.</p>
+<h2>Examples</h2>
+<p>' ======================================================================================== SUB Example_CreateBitmapFromHBITMAP (BYVAL hdc AS HDC)</p>
+<p>DIM hStatus AS LONG</p>
+<p>' // Create graphics object DIM graphics AS GpGraphics PTR hStatus = GdipCreateFromHDC(hdc, @graphics)</p>
+<p>' // Get DPI scaling DIM dpiX AS SINGLE hStatus = GdipGetDpiX(graphics, @dpiX) DIM rxRatio AS SINGLE = dpiX / 96 DIM dpiY AS SINGLE hStatus = GdipGetDpiY(graphics, @dpiY) DIM ryRatio AS SINGLE = dpiY / 96</p>
+<p>' // Apply DPI scaling hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)</p>
+<p>' // Create a legacy HBITMAP using GDI DIM hbm AS HBITMAP DIM memDC AS HDC = CreateCompatibleDC(hdc) DIM bmpInfo AS BITMAPINFOHEADER bmpInfo.biSize = SIZEOF(BITMAPINFOHEADER) bmpInfo.biWidth = 100 bmpInfo.biHeight = -100 ' Top-down bmpInfo.biPlanes = 1 bmpInfo.biBitCount = 32 bmpInfo.biCompression = BI_RGB bmpInfo.biSizeImage = 0</p>
+<p>DIM pBits AS ANY PTR hbm = CreateDIBSection(memDC, CAST(BITMAPINFO PTR, @bmpInfo), DIB_RGB_COLORS, @pBits, NULL, 0)</p>
+<p>' // Fill with red pixels FOR i AS LONG = 0 TO 100 * 100 - 1</p>
+<pre class="code"><code>CAST(ULONG PTR, pBits)[i] = &amp;HFFFF0000 ' ARGB Red</code></pre>
+<p>NEXT</p>
+<p>' // Create GDI+ Bitmap from HBITMAP DIM bmp AS GpBitmap PTR hStatus = GdipCreateBitmapFromHBITMAP(hbm, NULL, @bmp)</p>
+<p>' // Set resolution hStatus = GdipBitmapSetResolution(bmp, dpiX, dpiY)</p>
+<p>' // Draw the bitmap hStatus = GdipDrawImage(graphics, CAST(GpImage PTR, bmp), 0, 0)</p>
+<p>' // Cleanup IF bmp THEN hStatus = GdipDisposeImage(CAST(GpImage PTR, bmp)) IF graphics THEN hStatus = GdipDeleteGraphics(graphics) IF hbm THEN DeleteObject(hbm) IF memDC THEN DeleteDC(memDC)</p>
+<p>END SUB ' ========================================================================================</p>
+<p>' ======================================================================================== ' Prints a Windows bitmap in the default printer. ' Parameters: ' - hbmp = Handle to the bitmap. ' - bStretch = Stretch the image. ' - nStretchMode = Stretching mode. Default value = InterpolationModeHighQualityBicubic. '   InterpolationModeLowQuality = 1 '   InterpolationModeHighQuality = 2 '   InterpolationModeBilinear = 3 '   InterpolationModeBicubic = 4 '   InterpolationModeNearestNeighbor = 5 '   InterpolationModeHighQualityBilinear = 6 '   InterpolationModeHighQualityBicubic = 7 ' Return value: Returns TRUE if the bitmap has been printed successfully, or FALSE otherwise. ' ======================================================================================== PRIVATE FUNCTION AfxGdipPrintHBITMAP (BYVAL hbmp AS HBITMAP, BYVAL bStretch AS BOOLEAN = FALSE, BYVAL nStretchMode AS LONG = InterpolationModeHighQualityBicubic) AS BOOLEAN</p>
+<p>' // Initialize Gdiplus DIM token AS ULONG_PTR = AfxGdipInit IF token = NULL THEN EXIT FUNCTION DIM hPrinter AS HANDLE DIM pbufferDoc AS UBYTE PTR DIM pBitmap AS GpBitmap PTR DIM pGraphics AS GpGraphics PTR</p>
+<p>' // Note: Using a DO... LOOP, with an EXIT DO before LOOP, to avoid the use of GOTO. DO</p>
+<pre class="code"><code>' // Get the name of the default printer
+  DIM wszPrinterName AS WSTRING * MAX_PATH
+  GetProfileStringW("WINDOWS", "DEVICE", "", wszPrinterName, SIZEOF(wszPrinterName))
+  DIM nPos AS LONG = INSTR(wszPrinterName, ",")
+  IF nPos THEN wszPrinterName = LEFT(wszPrinterName, nPos - 1)
+  IF wszPrinterName = "" THEN EXIT DO
+  ' // Open the printer
+  IF OpenPrinterW(wszPrinterName, @hPrinter, NULL) = 0 THEN EXIT DO
+  ' // Allocate a buffer of the correct size
+  DIM dwNeeded AS DWORD = DocumentPropertiesW(NULL, hPrinter, wszPrinterName, NULL, NULL, 0)
+  pbufferDoc = CAllocate(1, dwNeeded)
+  ' // Retrieve the printer configuration data
+  DIM nRet AS LONG = DocumentPropertiesW(NULL, hPrinter, wszPrinterName, CAST(PDEVMODEW, pbufferDoc), NULL, DM_OUT_BUFFER)
+  IF nRet &lt;&gt; IDOK THEN EXIT DO
+  ' // Cast it to a DEVMODEW structure
+  DIM pDevMode AS DEVMODEW PTR = CAST(DEVMODEW PTR, pbufferDoc)
+  ' // Create a device context for the printer
+  DIM hDC AS .HDC = CreateDCW(wszPrinterName, wszPrinterName, NULL, pDevMode)
+  IF hDC = NULL THEN EXIT DO
+  ' // Create a graphics object from the printer DC
+  GdipCreateFromHDC(hDC, @pGraphics)
+  IF pGraphics = NULL THEN EXIT DO
+  ' // Create a Bitmap object from an HBITMAP
+  GdipCreateBitmapFromHBITMAP(hbmp, NULL, @pBitmap)
+  IF pBitmap = NULL THEN EXIT DO
+  ' // Stretching
+  DIM cx AS SINGLE, cy AS SINGLE
+  IF bStretch THEN GdipSetInterpolationMode(pGraphics, nStretchMode)
+  ' // Get the DPIs of the printer
+  DIM dpiX AS SINGLE, dpiY AS SINGLE
+  GdipGetDpiX(pGraphics, @dpiX)
+  GdipGetDpiY(pGraphics, @dpiY)
+  ' // Calculate the width and height according to the DPIs of the printer
+  cx = GetDeviceCaps(hdc, HORZRES) / (dpiX / 100)
+  cy = GetDeviceCaps(hdc, VERTRES) / (dpiY / 100)
+  ' // Print the bitmap
+  DIM di AS DOCINFOW
+  DIM wszDocName AS WSTRING * 260 = "Printing bitmap"
+  di.cbSize = SIZEOF(DOCINFOW)
+  di.lpszDocName = @wszDocName
+  DIM hr AS LONG = StartDocW(hDC, @di)
+  IF hr &lt;= 0 THEN EXIT DO
+  DIM i AS LONG
+  FOR i = 1 TO pDevMode-&gt;dmCopies
+     IF StartPage(hDC) THEN
+        ' // Draw the image
+        IF bStretch THEN
+           GdipDrawImageRect(pGraphics, CAST(GpImage PTR, pBitmap), 0, 0, cx, cy)
+        ELSE
+           GdipDrawImage(pGraphics, CAST(GpImage PTR, pBitmap), 0, 0)
+        END IF
+        EndPage(hDC)
+     END IF
+  NEXT
+  EndDoc(hDC)
+  FUNCTION = TRUE
+  EXIT DO</code></pre>
+<p>LOOP</p>
+<p>IF pBitmap THEN GdipDisposeImage(cast(GpImage PTR, pBitmap)) IF pGraphics THEN GdipDeleteGraphics(pGraphics) ' // Finished with the printer IF hPrinter THEN ClosePrinter(hPrinter) ' // Cleanup IF pbufferDoc THEN Delete(pbufferDoc) ' // Shutdown Gdiplus GdiplusShutdown token</p>
+<p>END FUNCTION ' ========================================================================================</p>
+<p>This example creates a GpBitmap from a legacy HBITMAP and renders it using GDI+.</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/AfxGdiPlus.bi:1624</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Flat  Api/GdiPlusBitmap.md</span></li><li>Topic: <a href="../bitmap-functions.html">Bitmap Functions</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PsOptionButton — Help Center</title>
+<meta name="description" content="An owner-drawn option button (radio button) for FreeBASIC + Win32, built on AfxNova and PsBufferPaint.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/pscontrols/psoptionbutton.html">
+<meta property="og:title" content="PsOptionButton">
+<meta property="og:description" content="An owner-drawn option button (radio button) for FreeBASIC + Win32, built on AfxNova and PsBufferPaint.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/pscontrols/psoptionbutton.html">
+<link rel="stylesheet" href="../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="pscontrols/psoptionbutton.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../index.html">Help Center</a><span>›</span><a href="../index.html">PlanetSquires Controls</a></div>
+<h2 id="psoptionbutton">PsOptionButton</h2>
+<p>An owner-drawn option button (radio button) for FreeBASIC + Win32, built on <a href="https://github.com/PaulSquires/AfxNova" target="_blank" rel="noopener">AfxNova</a> and <a href="https://github.com/PaulSquires/PsBufferPaint" target="_blank" rel="noopener">PsBufferPaint</a>.</p>
+<p>A circle and an optional caption, side by side, with a focus ring around the pair. Unchecked draws a thin outlined ring; checked draws an accent-filled disc with a contrasting dot on it. No chrome, no animation, no group box.</p>
+<p><strong>The control owns mutual exclusion.</strong> Option buttons that share a parent window and a group id form a group, and checking one unchecks the rest. You do not write that logic, and you do not call anything after a click to keep the group consistent.</p>
+<p>It also implements the keyboard behaviour a Windows radio group actually has, which is the part most hand-rolled radio buttons get wrong: <strong>the whole group is a single tab stop</strong>, and the arrow keys move the selection within it. Tab moves past the group, not through it.</p>
+<p>Repository: &lt;<a href="https://github.com/PaulSquires/PsOptionButton&gt;" target="_blank" rel="noopener">https://github.com/PaulSquires/PsOptionButton&gt;</a></p>
+<hr>
+<h3 id="what-it-looks-like">What it looks like</h3>
+<p><img src="PsOptionButton.png" alt="PsOptionButton"></p>
+<hr>
+<h3 id="requirements">Requirements</h3>
+<p>Copy these files into your project:</p>
+<div class="table-wrap"><table><thead><tr><th>File</th><th>Purpose</th></tr></thead><tbody><tr><td><code>PsOptionButton.bi</code></td><td>public surface — types, enums, callbacks, declarations</td></tr><tr><td><code>PsOptionButton.inc</code></td><td>implementation</td></tr><tr><td><code>PsBufferPaint.bi</code></td><td>flicker-free drawing surface</td></tr><tr><td><code>PsBufferPaint.inc</code></td><td></td></tr><tr><td><code>PsTipHost.bi</code> / <code>PsTipHost.inc</code></td><td>the tooltip backend switch — see <em>Tooltips: two backends</em></td></tr><tr><td><code>PsTooltip.bi</code> / <code>PsTooltip.inc</code></td><td>the owner-drawn tooltip. Required even if you never switch to it: <code>PsTipHost.inc</code> includes it.</td></tr></tbody></table></div>
+<p>There is no icon font to ship. The circle is drawn as geometry through GDI+, so nothing here depends on Segoe Fluent Icons being installed.</p>
+<p>You also need AfxNova on the include path (<code>-i "C:\dev"</code> if your tree matches this one).</p>
+<h4 id="include-order">Include order</h4>
+<p><code>PsBufferPaint.inc</code> must be included <strong>before</strong> <code>PsOptionButton.inc</code>, and both after AfxNova:</p>
+<pre class="code" data-lang="freebasic"><code>#include once "windows.bi"
+#include once "AfxNova\CWindow.inc"
+#include once "AfxNova\AfxStr.inc"
+#include once "AfxNova\AfxGdiplus.inc"
+using AfxNova
+
+#include once "PsBufferPaint.inc"
+#include once "PsOptionButton.inc"</code></pre>
+<p>Those two lines are the whole of it. <code>PsOptionButton.inc</code> includes <code>PsTipHost.inc</code> itself, and <code>PsTipHost.inc</code> includes <code>PsTooltip.inc</code>, so the tooltip backend adds no include line to the host — only the four files to the table above.</p>
+<p><code>PsOptionButton.bi</code> includes <code>PsBufferPaint.bi</code> itself, so the header is self-sufficient. It does <strong>not</strong> include <code>windows.bi</code> or AfxNova — the host must already have done so, and must already have said <code>using AfxNova</code>.</p>
+<h4 id="gdi-must-be-running">GDI+ must be running</h4>
+<p>Every repaint draws through GDI+. Initialise it before the first paint and shut it down after every window is destroyed:</p>
+<pre class="code" data-lang="freebasic"><code>CoInitialize( null )
+dim as ULONG_PTR gdipToken = AfxGdipInit()
+
+' ... create windows, run the message loop ...
+
+AfxGdipShutdown( gdipToken )
+CoUninitialize</code></pre>
+<p>Without the bracket the control draws nothing at all — no error, just an empty rectangle.</p>
+<h4 id="do-not-name-anything-ok">Do not name anything <code>ok</code></h4>
+<p>GDI+ defines <code>Ok = 0</code> as a <code>Status</code> enum value in namespace <code>AfxNova</code>. Every host says <code>using AfxNova</code>, so any host identifier called <code>ok</code> becomes a duplicate definition the moment you adopt this file. Use <code>bOK</code>.</p>
+<h4 id="message-pump">Message pump</h4>
+<p><strong>This control adds no pump obligation.</strong> There is no <code>PsOptionButton_FilterMessage</code> and none is needed. If you are coming from a control that has one, there is nothing to look for here.</p>
+<p>It is focusable, though, so the two ordinary rules for a focusable control in a plain <code>CWindow</code> host both apply:</p>
+<pre class="code" data-lang="freebasic"><code>do while GetMessage( @uMsg, null, 0, 0 )
+    if uMsg.message = WM_QUIT then exit do
+    ' IsDialogMessage is what makes Tab work at all.
+    if IsDialogMessage( pWindow-&gt;hWindow, @uMsg ) = 0 then
+        TranslateMessage @uMsg
+        DispatchMessage @uMsg
+    end if
+loop</code></pre>
+<p>and, before the loop starts:</p>
+<pre class="code" data-lang="freebasic"><code>SetFocus( hFirstControl )</code></pre>
+<p>Without <code>IsDialogMessage</code>, Tab does nothing and the arrow keys still work. Without the startup <code>SetFocus</code>, the <strong>first</strong> Tab does nothing: <code>IsDialogMessage</code> only acts when the focused window is a descendant of the window passed to it, and at startup focus is on the form itself — a window is not its own child.</p>
+<hr>
+<h3 id="quick-start">Quick start</h3>
+<pre class="code" data-lang="freebasic"><code>' Three options in one group. The group id is the third Create argument.
+dim as HWND hHigh = PsOptionButton_Create( hParent, 1001, 1 )
+dim as HWND hMed  = PsOptionButton_Create( hParent, 1002, 1 )
+dim as HWND hLow  = PsOptionButton_Create( hParent, 1003, 1 )
+
+dim as HWND opts(0 to 2) = { hHigh, hMed, hLow }
+dim as DWSTRING caps(0 to 2) = { "Highest", "Balanced", "Smallest file" }
+
+for i as long = 0 to 2
+    PsOptionButton_SetFont( opts(i), hFont )
+    PsOptionButton_SetText( opts(i), caps(i) )
+    PsOptionButton_SetCheckChangedCallback( opts(i), @OnQualityChanged )
+
+    ' The control is created 0x0 and hidden. Ask it how big it wants to be.
+    dim as long iw, ih
+    PsOptionButton_GetIdealSize( opts(i), iw, ih )
+    SetWindowPos( opts(i), 0, 20, 20 + (i * 30), iw, ih, SWP_NOZORDER or SWP_NOACTIVATE )
+    ShowWindow( opts(i), SW_SHOW )
+next
+
+' Silent: no callback fires. This also moves the group's tab stop here.
+PsOptionButton_SetChecked( hMed, true )</code></pre>
+<p>The callback it references:</p>
+<pre class="code" data-lang="freebasic"><code>sub OnQualityChanged( byval hOpt as HWND, byval isChecked as boolean )
+    ' BOTH edges arrive here. The option being vacated fires first with isChecked = false,
+    ' then the one being taken fires with true.
+    if isChecked then
+        print "quality is now id " &amp; str( PsOptionButton_GetID( hOpt ) )
+    end if
+end sub</code></pre>
+<p>Reading the answer back later, without holding any of the handles:</p>
+<pre class="code" data-lang="freebasic"><code>dim as long nQuality = PsOptionButton_FindCheckedID( hParent, 1 )   ' -1 = unanswered</code></pre>
+<hr>
+<h3 id="concepts">Concepts</h3>
+<h4 id="the-handle-is-a-real-window">The handle is a real window</h4>
+<p><code>PsOptionButton_Create</code> returns an ordinary <code>HWND</code>. Move it with <code>SetWindowPos</code>, show it with <code>ShowWindow</code>, disable it with <code>EnableWindow</code> — all of that works, and the control keeps its own state in step when you do. There is no opaque handle type.</p>
+<h4 id="a-group-is-a-parent-plus-a-group-id">A group is a parent plus a group id</h4>
+<p>A group is the pair <em>(parent window, group id)</em>. Every option button with the same parent and the same group id is in the same group, and exactly one of them can be checked.</p>
+<p>The group id is a <code>Create</code> parameter rather than only a setter, because a forgotten grouping call does not fail — it silently merges two groups into one, and the form looks right until somebody clicks. It defaults to <code>0</code>, so a window with a single logical group needs no grouping calls at all.</p>
+<pre class="code" data-lang="freebasic"><code>hOpt1 = PsOptionButton_Create( hParent, 1001, 1 )   ' group 1
+hOpt2 = PsOptionButton_Create( hParent, 1002, 1 )   ' group 1
+hOpt3 = PsOptionButton_Create( hParent, 1003, 2 )   ' a different group, same parent</code></pre>
+<p>Two groups on one parent never interfere. <code>PsOptionButton_SetGroupID</code> moves a button between groups later.</p>
+<h4 id="exactly-one-member-of-a-group-carries-ws_tabstop">Exactly one member of a group carries <code>WS_TABSTOP</code></h4>
+<p>The checked member, or the first enabled member when nothing is checked. It moves automatically when the check moves, when a member is disabled, and when a member is destroyed.</p>
+<p>That is what makes the <strong>group</strong> a single tab stop, which is how a Windows radio group behaves: Tab enters the group at the checked option and the next Tab leaves the group entirely. Within the group you navigate with the arrows.</p>
+<p>You do not manage this bit, and you should not set <code>WS_TABSTOP</code> on these controls yourself.</p>
+<h4 id="arrow-order-is-creation-order">Arrow order is creation order</h4>
+<p>The arrow keys walk the group in the order the buttons were <strong>created</strong>, not in z-order and not by screen position. If you create a group out of visual order, the arrows will follow the order you created them in.</p>
+<h4 id="geometry-is-derived-never-set">Geometry is derived, never set</h4>
+<p>The control owns its rects. You set inputs — padding, the box cell size, the gap, the ring band — and the layout produces the rects from them. You can read them, but you cannot assign them.</p>
+<pre class="code"><code>ringPad    = nFocusGap + nFocusThick        reserved ALWAYS, focused or not
+textBlock  = hasText ? nBoxGap + textW : 0
+contentH   = max( hasText ? textH : 0 , nBoxHeight )
+
+idealW     = 2*ringPad + padLeft + boxWidth + textBlock + padRight
+idealH     = 2*ringPad + padTop  + contentH + padBottom
+
+rcContent  = client deflated by ringPad
+rcVisual   = rcContent inflated by ringPad</code></pre>
+<p><code>PsOptionButton_GetIdealSize</code> is valid <strong>before</strong> the control has ever been sized, which is what lets you use it to decide how big to make the control in the first place.</p>
+<p>The focus-ring band is reserved whether or not the control has focus, so nothing moves when focus arrives.</p>
+<h4 id="the-box-cell-is-pinned-the-caption-gets-the-leftover">The box cell is pinned; the caption gets the leftover</h4>
+<p>The box cell sits against the padding on whichever side <code>OPT_BOXALIGN_*</code> puts it, and the caption takes the whole span that is left over. One model gives both looks, decided only by how wide you make the control:</p>
+<pre class="code"><code>sized to GetIdealSize     (o) Highest quality          packed
+sized to a full row width  Highest quality        (o)  settings row</code></pre>
+<p>A column of <code>OPT_BOXALIGN_RIGHT</code> buttons all sized to the same width line their circles up for free.</p>
+<p><code>rcText</code> is the <strong>span</strong>, not the ink. It runs from the box cell to the far padding so <code>DT_END_ELLIPSIS</code> has somewhere to ellipsize into. Drawing a background behind "the text" using that rect fills the whole span.</p>
+<h4 id="the-circle-is-inscribed-in-the-cell-not-equal-to-it">The circle is inscribed in the cell, not equal to it</h4>
+<p><code>rcBox</code> is the declared cell the layout charges for. <code>rcCircle</code> is the largest centred <strong>square</strong> inside it — which is what actually gets drawn. They are identical for the default 16×16 cell and differ the moment you set a non-square one, at which point stroking <code>rcBox</code> would produce a stadium rather than a circle.</p>
+<p>If you write a paint callback and want a round button, use <code>rcCircle</code>.</p>
+<h4 id="the-dot-scales-with-the-circle-by-default">The dot scales with the circle by default</h4>
+<p><code>nDotSize</code> is <code>0</code> by default, which means <em>derive the dot as a percentage of the circle diameter</em>. Set the box cell to 32px and the dot grows with it. A declared non-zero <code>nDotSize</code> overrides that and stays fixed — useful, but it decouples: scale the cell up afterwards and the dot will look wrong with nothing to warn you.</p>
+<h4 id="setters-are-silent-user-interaction-notifies">Setters are silent; user interaction notifies</h4>
+<p><code>PsOptionButton_SetChecked</code>, <code>SetGroupID</code> and <code>ClearGroup</code> change state without firing any callback. Only a completed click, Space, an arrow-key move, or the explicit <code>PsOptionButton_Click</code> notifies.</p>
+<p>That split is what makes it safe to call a setter from inside your own change callback — the recursive call cannot notify.</p>
+<h4 id="both-edges-notify-and-the-loser-fires-first">Both edges notify, and the loser fires first</h4>
+<p>When the user checks B while A was checked, two callbacks fire, in this order:</p>
+<pre class="code"><code>OnChanged( hA, false )      ' first
+OnChanged( hB, true  )      ' second</code></pre>
+<p>Both state writes land <strong>before</strong> either callback runs, so reading <code>PsOptionButton_FindChecked()</code> from inside either one gives a coherent answer — the group is never observably double-checked or momentarily empty.</p>
+<p>If you only care about the winner, test <code>isChecked</code> and ignore the other call.</p>
+<h4 id="mouse-capture-and-the-cancelled-gesture">Mouse capture and the cancelled gesture</h4>
+<p>Pressing an option button takes mouse capture. Press it, slide the cursor off, release — and nothing gets checked. The control paints the press state only while the cursor is inside, so the gesture visibly cancels before the release confirms it.</p>
+<hr>
+<h3 id="behaviour-and-limits">Behaviour and limits</h3>
+<ul><li><strong>A group with nothing checked is legal</strong>, and it is the state a group starts in. <code>PsOptionButton_FindCheckedID</code> returns <code>-1</code> for it. <strong>The user can never reach it</strong> — clicking the checked member is a silent no-op and no gesture unchecks. Only the host can empty a group, via <code>SetChecked(h, false)</code> or <code>ClearGroup</code>.</li><li><strong>Enter is not claimed.</strong> A focused option button lets Enter through to the dialog's default button, which is what a Win32 radio button does. Space is the activation key.</li><li><strong>Groups cannot span parents.</strong> A group is <em>(parent, id)</em>; two buttons with different parents are never in the same group even with the same id.</li><li><strong>Arrow keys clamp to the group</strong> and wrap at both ends. They never move focus out of it.</li><li><strong>Disabled members are stepped over</strong> by the arrows and refuse clicks, but <code>PsOptionButton_SetChecked</code> still works on them — a host restoring saved settings onto a conditionally-greyed form has to be able to say which option is selected.</li><li><strong>Destroying the checked member leaves the group with nothing checked.</strong> The check is not reassigned to a survivor. The tab stop <em>is</em> handed on, so the group stays reachable by Tab.</li><li><strong><code>SetGroupID</code> makes an arriving checked button lose</strong> if the destination group already has a checked member. Re-grouping is a layout operation, not a user answering a question.</li><li><strong>The box cell is declared, never measured.</strong> Set it larger and the control gets wider; the control never sizes the cell to fit anything.</li><li><strong>A caption-less option button is shorter</strong> than a captioned one, because the content height ignores the font when there is no text. A host laying out a mixed column takes the max itself.</li><li><strong>No mnemonics.</strong> The renderer forces <code>DT_NOPREFIX</code>, so <code>&amp;Highest</code> draws a literal ampersand. <code>PsOptionButton_Click</code> is the door for a host accelerator.</li><li><strong>No tri-state</strong>, no multiline captions, no <code>HICON</code>, no <code>WM_COMMAND</code> sent to the parent, no hit-testing API. The whole client is the hit area, caption included.</li><li><strong><code>CS_DBLCLKS</code> is not set.</strong> A rapid second click arrives as an ordinary <code>WM_LBUTTONDOWN</code>.</li><li>Not thread-safe. Create and drive these from the UI thread only.</li></ul>
+<hr>
+<h3 id="api-reference">API reference</h3>
+<h4 id="creation">Creation</h4>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Behaviour</th></tr></thead><tbody><tr><td><code>PsOptionButton_Create( hWndParent, CtrlID, nGroupID = 0 ) as HWND</code></td><td>Creates the control as a hidden 0×0 child. <code>nGroupID</code> places it in a group; buttons sharing <code>hWndParent</code> and <code>nGroupID</code> are mutually exclusive. Returns the control's <code>HWND</code>.</td></tr></tbody></table></div>
+<h4 id="group">Group</h4>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Behaviour</th></tr></thead><tbody><tr><td><code>PsOptionButton_GetGroupID( hOpt ) as long</code></td><td>The button's group id.</td></tr><tr><td><code>PsOptionButton_SetGroupID( hOpt, nGroupID )</code></td><td>Moves the button to another group. <strong>Silent.</strong> Re-establishes the tab-stop rule in both the old and the new group. If the button was checked and the destination already has a checked member, the arriving button is <strong>unchecked</strong>. If it was the checked member of the group it left, that group is left with nothing checked.</td></tr><tr><td><code>PsOptionButton_GetGroupCount( hOpt ) as long</code></td><td>How many live members the button's group has, including itself.</td></tr><tr><td><code>PsOptionButton_GetGroupMember( hOpt, idx ) as HWND</code></td><td>The <code>idx</code>'th member of the group in <strong>creation</strong> order. <code>0</code> if <code>idx</code> is out of range.</td></tr><tr><td><code>PsOptionButton_GetGroupChecked( hOpt ) as HWND</code></td><td>The checked member of the button's group, or <code>0</code> when nothing is checked.</td></tr><tr><td><code>PsOptionButton_FindChecked( hWndParent, nGroupID ) as HWND</code></td><td>Same question asked without holding a member handle. <code>0</code> when nothing is checked.</td></tr><tr><td><code>PsOptionButton_FindCheckedID( hWndParent, nGroupID ) as long</code></td><td>The control id of the checked member, or <strong><code>-1</code></strong> when nothing is checked. <code>-1</code> means unanswered, not failed.</td></tr><tr><td><code>PsOptionButton_ClearGroup( hOpt )</code></td><td>Unchecks every member of the button's group. <strong>Silent.</strong> The group keeps its tab stop.</td></tr></tbody></table></div>
+<h4 id="content">Content</h4>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Behaviour</th></tr></thead><tbody><tr><td><code>PsOptionButton_GetText( hOpt ) as DWSTRING</code></td><td>The caption.</td></tr><tr><td><code>PsOptionButton_SetText( hOpt, Text )</code></td><td>Sets the caption and re-measures. <code>""</code> removes it, and the box gap is then not charged. Re-applies auto-size.</td></tr><tr><td><code>PsOptionButton_GetID( hOpt ) as long</code></td><td>The host command id. Defaults to the <code>CtrlID</code> passed to <code>Create</code>.</td></tr><tr><td><code>PsOptionButton_SetID( hOpt, id )</code></td><td>Sets the id reported by <code>FindCheckedID</code>. Does not change the window's <code>GWLP_ID</code>.</td></tr><tr><td><code>PsOptionButton_GetItemData( hOpt ) as integer</code></td><td>Free-form host payload.</td></tr><tr><td><code>PsOptionButton_SetItemData( hOpt, itemData )</code></td><td>Stores a host payload. The control never reads it.</td></tr></tbody></table></div>
+<p><code>WM_SETTEXT</code>, <code>WM_GETTEXT</code> and <code>WM_GETTEXTLENGTH</code> all alias the caption, so <code>SetWindowTextW</code> and <code>GetWindowTextW</code> work on these controls and agree with <code>Get/SetText</code>.</p>
+<h4 id="state">State</h4>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Behaviour</th></tr></thead><tbody><tr><td><code>PsOptionButton_GetChecked( hOpt ) as boolean</code></td><td>Whether this button is the checked member.</td></tr><tr><td><code>PsOptionButton_SetChecked( hOpt, isChecked )</code></td><td><strong>Silent.</strong> Checking unchecks every peer and moves the group's tab stop here. Unchecking is allowed and leaves the group with nothing checked. Works on a disabled button. A no-op if the state is already what you asked for.</td></tr><tr><td><code>PsOptionButton_GetEnabled( hOpt ) as boolean</code></td><td>Whether the control is enabled.</td></tr><tr><td><code>PsOptionButton_SetEnabled( hOpt, isEnabled )</code></td><td>Goes through <code>EnableWindow</code>, so the system enforces it. Clears any hover state. Disabling the member holding the group's tab stop hands it to another enabled member.</td></tr><tr><td><code>PsOptionButton_GetFocused( hOpt ) as boolean</code></td><td>Whether the control currently has keyboard focus.</td></tr><tr><td><code>PsOptionButton_Refresh( hOpt )</code></td><td>Marks the layout stale and requests a repaint. Rarely needed — every setter does it.</td></tr></tbody></table></div>
+<h4 id="action">Action</h4>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Behaviour</th></tr></thead><tbody><tr><td><code>PsOptionButton_Click( hOpt )</code></td><td>Checks the button <strong>as if the user had clicked it</strong> — it FIRES the change callbacks, both edges, loser first. A silent no-op when the button is already checked or is disabled. With no mnemonics, this is the only door a host accelerator has.</td></tr></tbody></table></div>
+<h4 id="geometry-and-layout">Geometry and layout</h4>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Behaviour</th></tr></thead><tbody><tr><td><code>PsOptionButton_GetBoxAlign( hOpt ) as long</code></td><td><code>OPT_BOXALIGN_LEFT</code> or <code>OPT_BOXALIGN_RIGHT</code>.</td></tr><tr><td><code>PsOptionButton_SetBoxAlign( hOpt, nBoxAlign )</code></td><td>Which side the circle sits on. Does <strong>not</strong> change the ideal size — the mirror is exact.</td></tr><tr><td><code>PsOptionButton_GetTextAlign( hOpt ) as long</code></td><td><code>OPT_TEXTALIGN_LEFT</code> / <code>CENTER</code> / <code>RIGHT</code>.</td></tr><tr><td><code>PsOptionButton_SetTextAlign( hOpt, nTextAlign )</code></td><td>Where the caption sits <strong>within its span</strong>, which is the leftover after the box cell and padding — not within the control.</td></tr><tr><td><code>PsOptionButton_GetPadding( hOpt, nLeft, nTop, nRight, nBottom )</code></td><td>Reads the four paddings.</td></tr><tr><td><code>PsOptionButton_SetPadding( hOpt, nLeft, nTop, nRight, nBottom )</code></td><td>Raw pixels — you scale for DPI. Re-measures and re-applies auto-size.</td></tr><tr><td><code>PsOptionButton_GetBoxGap( hOpt ) as long</code></td><td>Gap between the box cell and the caption.</td></tr><tr><td><code>PsOptionButton_SetBoxGap( hOpt, nBoxGap )</code></td><td>Charged <strong>only</strong> when there is a caption. Re-measures.</td></tr><tr><td><code>PsOptionButton_GetBoxSize( hOpt, nBoxWidth, nBoxHeight )</code></td><td>Reads the declared box cell.</td></tr><tr><td><code>PsOptionButton_SetBoxSize( hOpt, nBoxWidth, nBoxHeight )</code></td><td>Sets the declared cell. Clamped to <code>&gt;= 0</code>. The drawn circle is the largest centred square inside it. Re-measures.</td></tr><tr><td><code>PsOptionButton_GetRingThickness( hOpt ) as long</code></td><td>The unchecked ring's pen width, in raw pixels.</td></tr><tr><td><code>PsOptionButton_SetRingThickness( hOpt, nThickness )</code></td><td><strong>Raw pixels — do not pre-scale for DPI.</strong> The painter scales the pen itself; pre-scaling doubles it. Clamped to <code>&gt;= 0</code> (<code>0</code> draws no ring). Repaints without re-measuring.</td></tr><tr><td><code>PsOptionButton_GetDotSize( hOpt ) as long</code></td><td>The declared dot diameter, or <code>0</code> for derived.</td></tr><tr><td><code>PsOptionButton_SetDotSize( hOpt, nDotSize )</code></td><td><code>0</code> derives the dot from the circle diameter (the default, and what keeps them in proportion). Non-zero is a fixed diameter. Clamped to <code>&gt;= 0</code>, and at paint time to at least 2px and at most the circle. Re-derives the layout.</td></tr><tr><td><code>PsOptionButton_GetFocusRing( hOpt, nGap, nThickness )</code></td><td>Reads the focus band.</td></tr><tr><td><code>PsOptionButton_SetFocusRing( hOpt, nGap, nThickness )</code></td><td>The band is reserved unconditionally, so both values <strong>contribute to the ideal size</strong> and this re-measures. <code>nThickness</code> is raw pixels — the painter scales it.</td></tr><tr><td><code>PsOptionButton_GetFocusCurvature( hOpt ) as long</code></td><td>Corner ellipse <strong>diameter</strong> of the focus ring.</td></tr><tr><td><code>PsOptionButton_SetFocusCurvature( hOpt, nCurvature )</code></td><td>Clamped to <code>&gt;= 0</code>. <code>0</code> gives square corners. Repaints only.</td></tr><tr><td><code>PsOptionButton_GetAutoSize( hOpt ) as boolean</code></td><td>Whether the control resizes itself.</td></tr><tr><td><code>PsOptionButton_SetAutoSize( hOpt, bAutoSize )</code></td><td>Opt-in. When on, the control <code>SetWindowPos</code>es <strong>itself</strong> to its ideal size after any change that could alter it, preserving the top-left. Off by default: normally the host measures and places.</td></tr><tr><td><code>PsOptionButton_GetIdealSize( hOpt, nWidth, nHeight )</code></td><td>The size the control wants. <strong>Valid before the control has ever been sized.</strong></td></tr><tr><td><code>PsOptionButton_GetContentRect( hOpt, rc ) as boolean</code></td><td>Client deflated by the focus band.</td></tr><tr><td><code>PsOptionButton_GetBoxRect( hOpt, rc ) as boolean</code></td><td>The declared box <strong>cell</strong>. Never empty.</td></tr><tr><td><code>PsOptionButton_GetCircleRect( hOpt, rc ) as boolean</code></td><td>The inscribed circle actually drawn. Never empty.</td></tr><tr><td><code>PsOptionButton_GetDotRect( hOpt, rc ) as boolean</code></td><td>The dot, centred in the circle. Computed whether or not the button is checked.</td></tr><tr><td><code>PsOptionButton_GetTextRect( hOpt, rc ) as boolean</code></td><td>The caption <strong>span</strong>. Returns FALSE and an empty rect when there is no caption.</td></tr><tr><td><code>PsOptionButton_GetVisualRect( hOpt, rc ) as boolean</code></td><td>Content inflated by the focus band — the outer visual bounds.</td></tr></tbody></table></div>
+<p>All six rect getters force any pending layout first, so they never hand back a stale value. They return FALSE when the control has no geometry yet or the rect is legitimately empty.</p>
+<h4 id="appearance">Appearance</h4>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Behaviour</th></tr></thead><tbody><tr><td><code>PsOptionButton_GetColors( hOpt, pColors )</code></td><td>Copies the colour struct out.</td></tr><tr><td><code>PsOptionButton_SetColors( hOpt, pColors )</code></td><td>Copies the struct in and repaints. Read-modify-write it; do not build one from scratch unless you intend to set all 21 fields.</td></tr><tr><td><code>PsOptionButton_GetFont( hOpt ) as HFONT</code></td><td>The caption font. The caller owns it.</td></tr><tr><td><code>PsOptionButton_SetFont( hOpt, hTextFont )</code></td><td>The <strong>measuring</strong> font: it drives the ideal width, so this re-measures and re-applies auto-size. The control never deletes it.</td></tr></tbody></table></div>
+<h4 id="colour-resolution">Colour resolution</h4>
+<p>Both are pure functions — they take no control handle and touch no global, so you can call them from a paint callback to get exactly the colours the built-in painter would use.</p>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Behaviour</th></tr></thead><tbody><tr><td><code>PsOptionButton_ResolveMood( isEnabled, isPressed, isHot ) as long</code></td><td>Returns one of <code>OPT_MOOD_*</code>. Precedence: disabled &gt; pressed &gt; hot &gt; idle.</td></tr><tr><td><code>PsOptionButton_ResolveColors( pColors, nMood, isChecked, clrBack, clrFore, clrRing, clrDot )</code></td><td>Fills the four output colours for a mood. <code>isChecked</code> selects between the ring and ring-checked sets <strong>inside</strong> each mood. <code>clrDot</code> is resolved even when unchecked.</td></tr></tbody></table></div>
+<h4 id="tooltips">Tooltips</h4>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Behaviour</th></tr></thead><tbody><tr><td><code>PsOptionButton_GetTooltipText( hOpt ) as DWSTRING</code></td><td>The control's own tooltip text.</td></tr><tr><td><code>PsOptionButton_SetTooltipText( hOpt, Text )</code></td><td>Sets it. When non-empty it wins over the tooltip callback.</td></tr><tr><td><code>PsOptionButton_GetTooltipHandle( hOpt ) as HWND</code></td><td>The <strong>comctl32</strong> tooltip window, for any <code>TTM_*</code> message you want to send it yourself. The control owns it and destroys it. Returns <strong>0</strong> while this button is on the PsTooltip backend — the honest answer, since a <code>TTM_*</code> sent to a PsTooltip window is silently ignored.</td></tr><tr><td><code>PsOptionButton_GetPsTooltipHandle( hOpt ) as HWND</code></td><td>The <strong>PsTooltip</strong> window, or 0 while on the system backend. The door to <code>PsTooltip_SetColors</code> / <code>SetFonts</code> / <code>SetStyle</code> / <code>SetMaxWidth</code> / <code>SetTitle</code> / <code>SetGlyph</code> — none of which is mirrored here.</td></tr><tr><td><code>PsOptionButton_SetTooltipMode( hOpt, nMode ) as boolean</code></td><td><code>PSTIP_MODE_SYSTEM</code> (default) or <code>PSTIP_MODE_PS</code>. Returns TRUE when the requested mode is live on return. See below.</td></tr><tr><td><code>PsOptionButton_GetTooltipMode( hOpt ) as long</code></td><td>Which backend is live.</td></tr><tr><td><code>PsOptionButton_SetHoverTime( hOpt, milliseconds )</code></td><td>Initial delay (<code>TTDT_INITIAL</code>) — how long the cursor must rest before a tip appears. Honoured by <strong>both</strong> backends.</td></tr><tr><td><code>PsOptionButton_SetAutoPopTime( hOpt, milliseconds )</code></td><td>How long the tip stays up (<code>TTDT_AUTOPOP</code>).</td></tr><tr><td><code>PsOptionButton_SetReshowTime( hOpt, milliseconds )</code></td><td>The shorter delay after a tip was recently dismissed (<code>TTDT_RESHOW</code>).</td></tr></tbody></table></div>
+<p>There is <strong>no caption fallback</strong>: a control with neither its own tooltip text nor a callback answer shows nothing, rather than popping a tip that repeats the caption already on screen.</p>
+<h5 id="tooltips-two-backends">Tooltips: two backends</h5>
+<p>The control ships on the <strong>system</strong> (comctl32) tooltip it has always used. <code>PSTIP_MODE_PS</code> switches this instance to <strong>PsTooltip</strong>: owner-drawn, themeable, word-wrapping without a hand-sent <code>TTM_SETMAXTIPWIDTH</code>, and — the one that matters structurally — <strong>not a subclass of the control it serves</strong>, so it still works when the window under the cursor is a descendant rather than the control itself. Either way the control adds <strong>no pump obligation</strong>: PsTooltip has no <code>FilterMessage</code>, so switching changes nothing about your message loop.</p>
+<p>The default is deliberate, not caution. PsTooltip's colour defaults are <strong>dark</strong>, so a control that switched itself would put a dark tip on a light form. Theme every tip in the process with <code>PsTooltip_SetDefaultColors</code> and friends, then opt in per instance.</p>
+<p><strong>The mode changes how a tip is drawn, never what it says.</strong> Both backends resolve text through the same rule — this control's own text first, then <code>OPT_TooltipCallbackFunc</code>, then nothing.</p>
+<p>All three delays are <strong>stored as well as pushed</strong>, so one set before a mode switch is still in force after it, in either direction. A delay you never set keeps the backend's own derivation from the system double-click time, which is what makes a tip appear on the same beat as every other tip on the machine.</p>
+<pre class="code" data-lang="freebasic"><code>PsTooltip_SetDefaultColors( @myTipColors )     ' once, at startup, for every tip in the process
+PsTooltip_SetDefaultFonts( ghFontUI )
+
+PsOptionButton_SetTooltipMode( hOpt, PSTIP_MODE_PS )
+PsOptionButton_SetHoverTime( hOpt, 400 )
+dim as HWND hTip = PsOptionButton_GetPsTooltipHandle( hOpt )
+if hTip then PsTooltip_SetTitle( hTip, "Render quality" )   ' not reachable on the system backend</code></pre>
+<h4 id="callback-registration">Callback registration</h4>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Behaviour</th></tr></thead><tbody><tr><td><code>PsOptionButton_SetPaintCallback( hOpt, usersub )</code></td><td>Replaces the built-in painter entirely.</td></tr><tr><td><code>PsOptionButton_SetMessageCallback( hOpt, userfunc )</code></td><td>Observes messages; can suppress most default handling.</td></tr><tr><td><code>PsOptionButton_SetTooltipCallback( hOpt, userfunc )</code></td><td>Supplies tooltip text on demand.</td></tr><tr><td><code>PsOptionButton_SetCheckChangedCallback( hOpt, usersub )</code></td><td>Reports user-driven check changes.</td></tr></tbody></table></div>
+<h4 id="render-probes">Render probes</h4>
+<p>Public so that a host supplying its own paint callback can assert it has not destroyed the control. Both render the control offscreen with its current painter.</p>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Behaviour</th></tr></thead><tbody><tr><td><code>PsOptionButton_CountRenderedTones( hOpt, nPart ) as long</code></td><td>Number of distinct colours in one part, capped at 64. <code>0</code> if the control has no geometry. A part filled by a single rectangle reports 1 or 2 — calibrate any threshold against a deliberately broken render rather than assuming a low number means "not flooded".</td></tr><tr><td><code>PsOptionButton_HashRenderedPart( hOpt, nPart ) as ulong</code></td><td>FNV-1a over the same render. Two different states must hash differently; the same state twice must hash identically. It can prove a difference, never correctness. <code>0</code> is also the failure return.</td></tr></tbody></table></div>
+<p><code>nPart</code> is one of the <code>OPT_PART_*</code> constants. Both force <code>isFocused</code> true internally so the focus ring is included, and restore it afterwards.</p>
+<hr>
+<h3 id="colors">Colors</h3>
+<p><code>PSOPTIONBUTTON_COLORS</code>, copied on <code>SetColors</code>. Twenty-one fields.</p>
+<div class="table-wrap"><table><thead><tr><th>Field</th><th>Paints</th><th>When</th></tr></thead><tbody><tr><td><code>BackColor</code></td><td>the control's background</td><td>idle</td></tr><tr><td><code>BackColorHot</code></td><td>"</td><td>cursor over the control</td></tr><tr><td><code>BackColorPressed</code></td><td>"</td><td>left button down, cursor inside</td></tr><tr><td><code>BackColorDisabled</code></td><td>"</td><td>disabled</td></tr><tr><td><code>ForeColor</code></td><td>the caption</td><td>idle</td></tr><tr><td><code>ForeColorHot</code></td><td>"</td><td>hot</td></tr><tr><td><code>ForeColorPressed</code></td><td>"</td><td>pressed</td></tr><tr><td><code>ForeColorDisabled</code></td><td>"</td><td>disabled</td></tr><tr><td><code>RingColor</code></td><td>the <strong>unchecked</strong> circle — a stroked outline, no fill</td><td>idle</td></tr><tr><td><code>RingColorHot</code></td><td>"</td><td>hot</td></tr><tr><td><code>RingColorPressed</code></td><td>"</td><td>pressed</td></tr><tr><td><code>RingColorDisabled</code></td><td>"</td><td>disabled</td></tr><tr><td><code>RingColorChecked</code></td><td>the <strong>checked</strong> circle — a solid accent <strong>fill</strong></td><td>idle</td></tr><tr><td><code>RingColorCheckedHot</code></td><td>"</td><td>hot</td></tr><tr><td><code>RingColorCheckedPressed</code></td><td>"</td><td>pressed</td></tr><tr><td><code>RingColorCheckedDisabled</code></td><td>"</td><td>disabled</td></tr><tr><td><code>DotColor</code></td><td>the dot drawn on top of the checked fill</td><td>idle</td></tr><tr><td><code>DotColorHot</code></td><td>"</td><td>hot</td></tr><tr><td><code>DotColorPressed</code></td><td>"</td><td>pressed</td></tr><tr><td><code>DotColorDisabled</code></td><td>"</td><td>disabled</td></tr><tr><td><code>FocusRingColor</code></td><td>the focus ring around the whole control</td><td>whenever focused</td></tr></tbody></table></div>
+<p><strong>Precedence:</strong> <code>disabled &gt; pressed &gt; hot &gt; idle</code>. <code>isChecked</code> is not a mood — it selects between the <code>RingColor*</code> and <code>RingColorChecked*</code> sets <em>inside</em> whichever mood resolved, so it works in all four without doubling the table.</p>
+<p><strong>The control reads completely flat by default</strong>, because <code>BackColorHot</code>, <code>BackColorPressed</code> and <code>BackColorDisabled</code> all default <strong>equal</strong> to <code>BackColor</code>. Hovering therefore changes only the circle and the caption. If you want a menu-style highlight across the whole row, set one field:</p>
+<pre class="code" data-lang="freebasic"><code>dim as PSOPTIONBUTTON_COLORS c
+PsOptionButton_GetColors( hOpt, @c )
+c.BackColorHot     = BGR( 44, 49, 58 )
+c.BackColorPressed = BGR( 44, 49, 58 )
+PsOptionButton_SetColors( hOpt, @c )</code></pre>
+<p><code>DotColor</code> defaults to white rather than to <code>ForeColor</code>, because it sits on the accent fill rather than on the control background. <code>DotColorDisabled</code> defaults to the background colour, so a disabled checked button reads as a hollow ring.</p>
+<hr>
+<h3 id="callbacks">Callbacks</h3>
+<h4 id="opt_checkchangedcallbacksub">OPT_CheckChangedCallbackSub</h4>
+<pre class="code" data-lang="freebasic"><code>type OPT_CheckChangedCallbackSub as sub( byval hOptionButton as HWND, byval isChecked as boolean )</code></pre>
+<p>Fires when the checked state changes through <strong>user interaction</strong> — a completed click, Space, an arrow-key move within the group, or the explicit <code>PsOptionButton_Click</code>.</p>
+<p><strong>Both edges fire, and the loser fires first.</strong> Checking B while A was checked produces <code>OnChanged(hA, false)</code> then <code>OnChanged(hB, true)</code>. Both state writes land before either call, so <code>PsOptionButton_FindChecked()</code> is coherent from inside either one.</p>
+<p>Fired <strong>after</strong> the state is updated, so <code>PsOptionButton_GetChecked()</code> agrees with <code>isChecked</code>.</p>
+<p><code>SetChecked</code>, <code>SetGroupID</code> and <code>ClearGroup</code> do <strong>not</strong> fire it — which is what makes it safe to call them from inside this handler.</p>
+<h4 id="opt_paintcallbacksub">OPT_PaintCallbackSub</h4>
+<pre class="code" data-lang="freebasic"><code>type OPT_PaintCallbackSub as sub( byval p as PSOPTIONBUTTON_PAINTINFO ptr )</code></pre>
+<p>Draws the whole control <strong>instead of</strong> the built-in painter. Paint through <code>p-&gt;b</code>, the control's double buffer for this repaint — do not touch the screen DC.</p>
+<p>The control has already filled the client with the resolved mood's <code>BackColor</code> before calling you, so a callback that only adds a foreground does not have to repaint the background.</p>
+<p>Two contracts worth honouring:</p>
+<ul><li>Draw the caption with the <strong>same font</strong> you handed to <code>PsOptionButton_SetFont</code>. The ideal width was measured with it; a different font means the width lies.</li><li><strong>Do not use <code>PaintBorderRect</code> to draw an outline.</strong> It fills unconditionally before it strokes, so used as a frame or a focus ring it erases everything beneath it. <code>PaintRoundOutline</code> strokes without filling. <code>PaintEllipse</code> <strong>always</strong> fills regardless of its pen argument. <code>PsOptionButton_CountRenderedTones</code> exists so you can assert you have not done this.</li></ul>
+<p>More generally: a callback that fills a rectangle covering the whole control erases everything the control already drew. Draw your additions, not a background.</p>
+<h4 id="opt_messagecallbackfunc">OPT_MessageCallbackFunc</h4>
+<pre class="code" data-lang="freebasic"><code>type OPT_MessageCallbackFunc as function( byval m as PSOPTIONBUTTON_MESSAGEINFO ptr ) as boolean</code></pre>
+<p>Observes messages. Return TRUE to suppress the control's default handling, FALSE to let it proceed. Focus and keyboard messages are handed over as well as mouse ones. Arrow keys reach you <strong>before</strong> they move the group selection, so you can veto navigation.</p>
+<p><strong>The result is ignored for three messages:</strong></p>
+<div class="table-wrap"><table><thead><tr><th>Message</th><th>Why</th></tr></thead><tbody><tr><td><code>WM_LBUTTONUP</code></td><td>The control holds mouse capture across a press and this message releases it. A callback that suppressed it would strand capture and route every later click to this control. Suppressing <code>WM_LBUTTONDOWN</code> suppresses the press without touching the capture bookkeeping.</td></tr><tr><td><code>WM_SETFOCUS</code></td><td>Focus is a fact the system reports, not an action to veto. The state is already updated by the time you are called.</td></tr><tr><td><code>WM_KILLFOCUS</code></td><td>"</td></tr></tbody></table></div>
+<p>A host that does not want the control focusable must not make it a tab stop.</p>
+<h4 id="opt_tooltipcallbackfunc">OPT_TooltipCallbackFunc</h4>
+<pre class="code" data-lang="freebasic"><code>type OPT_TooltipCallbackFunc as function( byval hOptionButton as HWND ) as DWSTRING</code></pre>
+<p>Supplies tooltip text on demand, only when a tip is about to show, and only when the control has no tooltip text of its own. Return <code>""</code> for no tooltip.</p>
+<h4 id="psoptionbutton_paintinfo">PSOPTIONBUTTON_PAINTINFO</h4>
+<div class="table-wrap"><table><thead><tr><th>Field</th><th>Meaning</th></tr></thead><tbody><tr><td><code>hOptionButton</code></td><td>the control, so the callback can query it</td></tr><tr><td><code>b</code></td><td>the control's <code>PsBufferPaint</code> for this repaint (not a copy)</td></tr><tr><td><code>rcClient</code></td><td>the whole client area</td></tr><tr><td><code>rcContent</code></td><td><code>rcClient</code> deflated by the focus-ring band</td></tr><tr><td><code>rcBox</code></td><td>the declared box <strong>cell</strong>. Never empty</td></tr><tr><td><code>rcCircle</code></td><td>the inscribed circle — the largest centred square in <code>rcBox</code>. Use this for a round button</td></tr><tr><td><code>rcDot</code></td><td>the dot, centred in <code>rcCircle</code>. Computed whether or not the button is checked</td></tr><tr><td><code>rcText</code></td><td>the caption <strong>span</strong>, not the ink. Empty when there is no caption; degenerate when the client is too narrow</td></tr><tr><td><code>rcVisual</code></td><td><code>rcContent</code> inflated by the focus-ring band</td></tr><tr><td><code>isChecked</code></td><td>this button is the group's checked member</td></tr><tr><td><code>isHot</code></td><td>the mouse is over the control</td></tr><tr><td><code>isPressed</code></td><td>a live left press <strong>and</strong> the cursor is still inside</td></tr><tr><td><code>isEnabled</code></td><td></td></tr><tr><td><code>isFocused</code></td><td>draw a focus ring when true</td></tr><tr><td><code>wszText</code></td><td>the caption</td></tr><tr><td><code>nRingThick</code></td><td>ring pen width in <strong>raw</strong> pixels — <code>PaintRoundOutline</code> scales it for you</td></tr><tr><td><code>nBoxAlign</code></td><td><code>OPT_BOXALIGN_*</code></td></tr><tr><td><code>nTextAlign</code></td><td><code>OPT_TEXTALIGN_*</code>; map to <code>DT_LEFT</code> / <code>DT_CENTER</code> / <code>DT_RIGHT</code></td></tr></tbody></table></div>
+<h4 id="psoptionbutton_messageinfo">PSOPTIONBUTTON_MESSAGEINFO</h4>
+<div class="table-wrap"><table><thead><tr><th>Field</th><th>Meaning</th></tr></thead><tbody><tr><td><code>hOptionButton</code></td><td>the control</td></tr><tr><td><code>uMsg</code></td><td>the message</td></tr><tr><td><code>wParam</code></td><td></td></tr><tr><td><code>lParam</code></td><td></td></tr></tbody></table></div>
+<hr>
+<h3 id="constants">Constants</h3>
+<h4 id="box-side">Box side</h4>
+<div class="table-wrap"><table><thead><tr><th>Constant</th><th>Meaning</th></tr></thead><tbody><tr><td><code>OPT_BOXALIGN_LEFT</code></td><td>circle pinned to the left padding (default)</td></tr><tr><td><code>OPT_BOXALIGN_RIGHT</code></td><td>circle pinned to the right padding</td></tr></tbody></table></div>
+<h4 id="caption-alignment-within-the-span">Caption alignment within the span</h4>
+<div class="table-wrap"><table><thead><tr><th>Constant</th><th>Meaning</th></tr></thead><tbody><tr><td><code>OPT_TEXTALIGN_LEFT</code></td><td>default</td></tr><tr><td><code>OPT_TEXTALIGN_CENTER</code></td><td></td></tr><tr><td><code>OPT_TEXTALIGN_RIGHT</code></td><td></td></tr></tbody></table></div>
+<h4 id="moods">Moods</h4>
+<div class="table-wrap"><table><thead><tr><th>Constant</th><th></th></tr></thead><tbody><tr><td><code>OPT_MOOD_IDLE</code></td><td></td></tr><tr><td><code>OPT_MOOD_HOT</code></td><td></td></tr><tr><td><code>OPT_MOOD_PRESSED</code></td><td></td></tr><tr><td><code>OPT_MOOD_DISABLED</code></td><td></td></tr></tbody></table></div>
+<h4 id="probe-parts">Probe parts</h4>
+<div class="table-wrap"><table><thead><tr><th>Constant</th><th>Rect measured</th></tr></thead><tbody><tr><td><code>OPT_PART_CONTROL</code></td><td><code>rcContent</code></td></tr><tr><td><code>OPT_PART_BOX</code></td><td><code>rcBox</code>, the declared cell</td></tr><tr><td><code>OPT_PART_TEXT</code></td><td><code>rcText</code>, the caption span</td></tr></tbody></table></div>
+<h4 id="default-geometry">Default geometry</h4>
+<p>DPI-scaled once at <code>Create</code>, except where noted. Every setter afterwards takes raw pixels.</p>
+<div class="table-wrap"><table><thead><tr><th>Constant</th><th>Value</th><th></th></tr></thead><tbody><tr><td><code>PSOPTIONBUTTON_DEFAULT_PADLEFT</code></td><td>4</td><td></td></tr><tr><td><code>PSOPTIONBUTTON_DEFAULT_PADTOP</code></td><td>2</td><td></td></tr><tr><td><code>PSOPTIONBUTTON_DEFAULT_PADRIGHT</code></td><td>4</td><td></td></tr><tr><td><code>PSOPTIONBUTTON_DEFAULT_PADBOTTOM</code></td><td>2</td><td></td></tr><tr><td><code>PSOPTIONBUTTON_DEFAULT_BOXGAP</code></td><td>8</td><td>charged only when there is a caption</td></tr><tr><td><code>PSOPTIONBUTTON_DEFAULT_BOXWIDTH</code></td><td>16</td><td>the declared cell</td></tr><tr><td><code>PSOPTIONBUTTON_DEFAULT_BOXHEIGHT</code></td><td>16</td><td></td></tr><tr><td><code>PSOPTIONBUTTON_DEFAULT_RINGTHICK</code></td><td>1</td><td><strong>not</strong> scaled at Create — the painter scales the pen</td></tr><tr><td><code>PSOPTIONBUTTON_DEFAULT_FOCUSTHICK</code></td><td>1</td><td><strong>not</strong> scaled at Create — same reason</td></tr><tr><td><code>PSOPTIONBUTTON_DEFAULT_DOTSIZE</code></td><td>0</td><td>0 = derive from the circle diameter</td></tr><tr><td><code>PSOPTIONBUTTON_DOTRATIO_PCT</code></td><td>40</td><td>the derived dot, as a percentage of the circle</td></tr><tr><td><code>PSOPTIONBUTTON_DEFAULT_FOCUSGAP</code></td><td>2</td><td></td></tr><tr><td><code>PSOPTIONBUTTON_DEFAULT_FOCUSCURV</code></td><td>4</td><td>ellipse <strong>diameter</strong>, not a radius</td></tr><tr><td><code>PSOPTIONBUTTON_DEFAULT_GROUPID</code></td><td>0</td><td></td></tr></tbody></table></div>
+<p>The two pen widths are the exception worth remembering: <code>PaintRoundOutline</code> DPI-scales the pen it is handed, so scaling them at creation as well would double them at any scale above 100%. They are DPI-aware — the painter is simply the thing that does it.</p>
+<h4 id="hover-tracking">Hover tracking</h4>
+<div class="table-wrap"><table><thead><tr><th>Constant</th><th>Value</th><th></th></tr></thead><tbody><tr><td><code>PSOPTIONBUTTON_HOTTRACK_MS</code></td><td>100</td><td>poll interval for the hover safety net, since <code>WM_MOUSELEAVE</code> is not guaranteed on a fast exit</td></tr></tbody></table></div>
+    <footer class="foot">
+      <p>PlanetSquires owner-drawn controls for FreeBASIC / AfxNova. Copyright © Paul Squires, distributed under the MIT License. Documentation generated from each control&#x27;s own README. <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../index.html">Home</a> ·
+         <a href="../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../nav.js?v=70a6b70236"></script>
+<script src="../search-index.js"></script>
+<script src="../assets/app.js?v=456d079659"></script>
+<script src="../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

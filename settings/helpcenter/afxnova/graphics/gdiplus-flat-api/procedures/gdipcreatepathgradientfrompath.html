@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GdipCreatePathGradientFromPath — Help Center</title>
+<meta name="description" content="Creates a **PathGradientBrush** object based on a **GraphicsPath** object.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipcreatepathgradientfrompath.html">
+<meta property="og:title" content="GdipCreatePathGradientFromPath">
+<meta property="og:description" content="Creates a **PathGradientBrush** object based on a **GraphicsPath** object.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipcreatepathgradientfrompath.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/procedures/gdipcreatepathgradientfrompath.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../gdipluspathgradientbrush.html">GdiPlusPathGradientBrush</a></div>
+<h1>GdipCreatePathGradientFromPath<span class="h1kind">function</span></h1>
+<p class="lede">Creates a **PathGradientBrush** object based on a **GraphicsPath** object.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GdipCreatePathGradientFromPath (BYVAL path AS CONST GpPath PTR, BYVAL polyGradient AS GpPathGradient PTR PTR) AS GpStatus</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>path</code></td><td></td><td>[in] Pointer to a <strong>GraphicsPath</strong> object that specifies the boundary path of the path gradient brush.</td></tr><tr><td><code>polyGradient</code></td><td></td><td>[out] Pointer to a variable that receives a pointer to the new <strong>PathGradientBrush</strong> object.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Creates a <strong>PathGradientBrush</strong> object based on a <strong>GraphicsPath</strong> object.</p>
+<h2>Example</h2>
+<p>' ======================================================================================== ' The following example draws a star-shaped GraphicsPath. ' Creates a star-shaped GraphicsPath and fills it using a PathGradientBrush constructed ' from that path. The gradient transitions from a red center to a set of surround colors ' defined at each vertex of the star. DPI scaling is applied globally to ensure consistent ' rendering across high-resolution displays. ' ======================================================================================== SUB Example_CreatePathGradientFromPath (BYVAL hdc AS HDC)</p>
+<p>DIM hStatus AS LONG</p>
+<p>' // Create a graphics object from the device context DIM graphics AS GpGraphics PTR hStatus = GdipCreateFromHDC(hdc, @graphics)</p>
+<p>' // Get the DPI scaling ratios DIM dpiX AS SINGLE hStatus = GdipGetDpiX(graphics, @dpiX) DIM rxRatio AS SINGLE = dpiX / 96 DIM dpiY AS SINGLE hStatus = GdipGetDpiY(graphics, @dpiY) Dim ryRatio AS SINGLE = dpiY / 96 ' // Set the scale transform hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)</p>
+<p>' // Create a GraphicsPath object and initializes the fill mode. DIM path AS GpPath PTR hStatus = GdipCreatePath(FillModeAlternate, @path)</p>
+<p>' // Fill the array of points. DIM pts(0 TO 9) AS GpPointF pts(0).x = 75  : pts(0).y = 0 pts(1).x = 100 : pts(1).y = 50 pts(2).x = 150 : pts(2).y = 50 pts(3).x = 112 : pts(3).y = 75 pts(4).x = 150 : pts(4).y = 150 pts(5).x = 75  : pts(5).y = 100 pts(6).x = 0   : pts(6).y = 150 pts(7).x = 37  : pts(7).y = 75 pts(8).x = 0   : pts(8).y = 50 pts(9).x = 50  : pts(9).y = 50</p>
+<p>' // Construct the path with the array of points. hStatus = GdipAddPathLine2(path, @pts(0), 10)</p>
+<p>' // Use the path to construct a path gradient brush. DIM brush AS GpPathGradient PTR hStatus = GdipCreatePathGradientFromPath(path, @brush)</p>
+<p>' // Set the color at the center of the path to red. hStatus = GdipSetPathGradientCenterColor(brush, ARGB_RED)</p>
+<p>' // Set the colors of the points in the array. DIM Colors(9) AS ARGB Colors(0) = ARGB_BLACK Colors(1) = ARGB_LIGHTGREEN Colors(2) = ARGB_BLUE Colors(3) = ARGB_WHITE Colors(4) = ARGB_BLACK Colors(5) = ARGB_LIGHTGREEN Colors(6) = ARGB_BLUE Colors(7) = ARGB_WHITE Colors(8) = ARGB_BLACK Colors(9) = ARGB_LIGHTGREEN DIM count AS LONG = 10 hStatus = GdipSetPathGradientSurroundColorsWithCount(brush, @Colors(0), @count)</p>
+<p>' // Fill the path with the path gradient brush. hStatus = GdipFillPath(graphics, brush, path)</p>
+<p>' // Cleanup IF path THEN GdipDeletePath(path) IF brush THEN GdipDeleteBrush(brush) IF graphics THEN GdipDeleteGraphics(graphics)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/AfxGdiPlus.bi:2238</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Flat  Api/GdiPlusPathGradientBrush.md</span></li><li>Topic: <a href="../gdipluspathgradientbrush.html">GdiPlusPathGradientBrush</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

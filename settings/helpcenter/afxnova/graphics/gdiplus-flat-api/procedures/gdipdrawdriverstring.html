@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GdipDrawDriverString — Help Center</title>
+<meta name="description" content="Draws characters at the specified positions. The function gives the client complete control over the appearance of text. The function assumes that the client has already set up the format and layout to be applied.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipdrawdriverstring.html">
+<meta property="og:title" content="GdipDrawDriverString">
+<meta property="og:description" content="Draws characters at the specified positions. The function gives the client complete control over the appearance of text. The function assumes that the client has already set up the format and layout to be applied.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipdrawdriverstring.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/procedures/gdipdrawdriverstring.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../graphics-functions.html">Graphics Functions</a></div>
+<h1>GdipDrawDriverString<span class="h1kind">function</span></h1>
+<p class="lede">Draws characters at the specified positions. The function gives the client complete control over the appearance of text. The function assumes that the client has already set up the format and layout to be applied.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GdipDrawDriverString (BYVAL graphics AS GpGraphics PTR, BYVAL text AS CONST UINT16 PTR, BYVAL length AS INT_, BYVAL font AS CONST GpFont PTR, BYVAL brush AS CONST GpBrush PTR, BYVAL positions AS CONST GpPointF PTR, BYVAL flags AS INT_, BYVAL matrix AS CONST GpMatrix PTR) AS GpStatus</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>graphics</code></td><td></td><td>[in] Pointer to the <strong>Graphics</strong> object.</td></tr><tr><td><code>text</code></td><td></td><td>[in] Pointer to an array of 16-bit values. If the <em>DriverStringOptionsCmapLookup</em> flag is set, each value specifies a Unicode character to be displayed. Otherwise, each value specifies an index to a font glyph that defines a character to be displayed.</td></tr><tr><td><code>length</code></td><td></td><td>[in] Long integer value that specifies the number of values in the text array. The length parameter can be set to 1 if the string is null terminated.</td></tr><tr><td><code>font</code></td><td></td><td>[in] Pointer to a <strong>Font</strong> object that specifies the family name, size, and style of the font that is to be applied to the string.</td></tr><tr><td><code>brush</code></td><td></td><td>[in] Pointer to a <strong>Brush</strong> object that is used to fill the string.</td></tr><tr><td><code>positions</code></td><td></td><td>[in] If the <em>DriverStringOptionsRealizedAdvance</em> flag is set, positions is a pointer to a <strong>GpPointF</strong> structure that specifies the position of the first glyph. Otherwise, positions is an array of <strong>GpPointF</strong> structures, each of which specifies the origin of an individual glyph.</td></tr><tr><td><code>flags</code></td><td></td><td>[in] Long integer value  that specifies the options for the appearance of the string. This value must be an element of the <em>DriverStringOptions</em> enumeration or the result of a bitwise <strong>OR</strong> applied to two or more of these elements.</td></tr><tr><td><code>matrix</code></td><td></td><td>[in] Pointer to a <strong>Matrix</strong> object that specifies the transformation matrix to apply to each value in the text array.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Draws characters at the specified positions. The method gives the client complete control over the appearance of text. The method assumes that the client has already set up the format and layout to be applied.</p>
+<h2>Example</h2>
+<p>' ======================================================================================== ' GdipDrawDriverString is a GDI+ function that draws individual characters at precise ' positions, giving you full control over glyph placement and rendering. Unlike GdipDrawString, ' which handles layout automatically, this method lets you: ' - Specify each character as a Unicode value or glyph index. ' - Define exact coordinates for each glyph. ' - Apply custom transformations via a matrix. ' - Use flags to control layout behavior (e.g. advance spacing or cmap lookup). ' It’s ideal for advanced text rendering scenarios like custom typesetting, vertical text, ' or non-standard scripts where layout precision is critical. ' ======================================================================================== SUB Example_DrawDriverString (BYVAL hdc AS HDC)</p>
+<p>DIM hStatus AS LONG</p>
+<p>' // Create a graphics object from the device context DIM graphics AS GpGraphics PTR hStatus = GdipCreateFromHDC(hdc, @graphics)</p>
+<p>' // Get the DPI scaling ratios DIM dpiX AS SINGLE hStatus = GdipGetDpiX(graphics, @dpiX) DIM rxRatio AS SINGLE = dpiX / 96 DIM dpiY AS SINGLE hStatus = GdipGetDpiY(graphics, @dpiY) Dim ryRatio AS SINGLE = dpiY / 96 ' // Set the scale transform hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)</p>
+<p>' // Create a font DIM fontFamily AS GpFontFamily PTR DIM font AS GpFont PTR GdipCreateFontFamilyFromName("Arial", NULL, @fontFamily) GdipCreateFont(fontFamily, AfxGdipPointsToPixels(16, TRUE), FontStyleRegular, UnitPixel, @font)</p>
+<p>' // Create a solid brush DIM brush AS GpBrush PTR GdipCreateSolidFill(ARGB_RED, @brush)</p>
+<p>' // Define the text as an array of UINT16 (Unicode characters) DIM text(4) AS UINT16 = {ASC("H"), ASC("e"), ASC("l"), ASC("l"), ASC("o")}</p>
+<p>' // Define positions for each glyph DIM positions(4) AS GpPointF FOR i AS LONG = 0 TO 4</p>
+<pre class="code"><code>positions(i).x = 50.0 + i * 20.0
+  positions(i).y = 100.0</code></pre>
+<p>NEXT</p>
+<p>' // Draw the driver string GdipDrawDriverString(graphics, @text(0), 5, font, brush, @positions(0), DriverStringOptionsCmapLookup, NULL)</p>
+<p>' // Cleanup IF brush THEN GdipDeleteBrush(brush) IF font THEN GdipDeleteFont(font) IF fontFamily THEN GdipDeleteFontFamily(fontFamily) IF graphics THEN GdipDeleteGraphics(graphics)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/AfxGdiPlus.bi:2428</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Flat  Api/GdiPlusGraphics.md</span></li><li>Topic: <a href="../graphics-functions.html">Graphics Functions</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Type (Udt) — Help Center</title>
+<meta name="description" content="Declares a user-defined type.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/operators/operators/procedures/type-udt.html">
+<meta property="og:title" content="Type (Udt)">
+<meta property="og:description" content="Declares a user-defined type.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/operators/operators/procedures/type-udt.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/operators/operators/procedures/type-udt.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>Type (Udt)<span class="h1kind">sub</span></h1>
+<p class="lede">Declares a user-defined type.</p>
+<div class="badges"><a class="badge" href="../../index.html">Operators</a><span class="badge">sub</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>Type typename</code></pre>
+<pre class="code sig"><code>fieldname1 As DataType</code></pre>
+<pre class="code sig"><code>fieldname2 As DataType</code></pre>
+<pre class="code sig"><code>As DataType fieldname3, fieldname4</code></pre>
+<pre class="code sig"><code>...</code></pre>
+<pre class="code sig"><code>End Type</code></pre>
+<pre class="code sig"><code>Type typename [Alias &quot;alternatename&quot;] [Extends base_typename] [Field = alignment]</code></pre>
+<pre class="code sig"><code>[Private:|Public:|Protected:]</code></pre>
+<h2>Description</h2>
+<br>
+<code><b>Type</b></code> is used to declare custom data types containing one or more data fields, including integer types, floating point types, fixed-size or variable-length (dynamic) arrays, fixed-size or variable-length strings, bitfields, or other user-defined types.<br>
+<br>
+Types support various functionality related to object-oriented programming:<br>
+<ul><ul><li> Inheritance through the use of the <a href="../../../user-defined-types/procedures/extends.html">Extends</a> keyword.<br>
+<li> Member procedures such as <a href="../../../user-defined-types/procedures/sub-member.html">Subs</a> or <a href="../../../user-defined-types/procedures/function-member.html">Functions</a>, including <code><a href="../../../user-defined-types/procedures/abstract.html">Abstract</a></code> or <code><a href="../../../user-defined-types/procedures/virtual.html">Virtual</a></code> ones.<br>
+<li> Member procedures with special semantic meaning such as <a href="../../../user-defined-types/procedures/constructor.html">Constructors</a> or a <a href="../../../user-defined-types/procedures/destructor.html">Destructor</a>.<br>
+<li> <code><a href="../../../variable-declarations/procedures/static.html">Static</a></code> member variables.<br>
+<li> Member visibility specifiers: <code><a href="../../../user-defined-types/procedures/public-access-control.html">Public:</a></code>, <code><a href="../../../user-defined-types/procedures/private-access-control.html">Private:</a></code>, <code><a href="../../../user-defined-types/procedures/protected-access-control.html">Protected:</a></code>.<br>
+<br>
+</li></li></li></li></li></ul></ul>A <code><b>Type</b></code> can also contain nested Types or Unions, of different kinds:<br>
+<ul><ul><li> Nested Anonymous Type/Union:<br>
+</li></ul></ul><div class="indent"><div class="indent"><div class="indent"><b>-</b> Nested Anonymous Type/Union allows data members to be grouped as desired.<br>
+<b>-</b> Anonymous Type or Anonymous Union can be nested on condition of alternating their nesting.<br>
+<b>-</b> Nested Anonymous Type/Union can not have procedure members or static data members (same restriction than for a local scope named Type/Union).<br>
+</div></div></div><ul><ul><li> Nested Named Type/Union:<br>
+</li></ul></ul><div class="indent"><div class="indent"><div class="indent"><b>-</b> Nested Named Type/Union allows declaration of an inner structure inside a (named) Type/Union namespace and according to the access right of the place<br>
+<b>-</b> Mostly everything it can be done in a Named Type/Union can also be done in a Nested Named Type/Union.<br>
+<b>-</b> When there are circular dependencies between Types/Unions, Nested Named Type/Union usage can avoid using type aliases and forward referencing.<br>
+</div></div></div><ul><ul><li> Nested Type-Def:<br>
+</li></ul></ul><div class="indent"><div class="indent"><div class="indent"><b>-</b> Nested Type-Def allows declaration of an inner Type (Alias) inside a Type/Union and according to the access right of the place.<br>
+</div></div></div>The main structure (Type/Union) must be always named, the other (nested) structures can be anonymous or named.<br>
+<br>
+<code><a href="../../../procedures/procedures/alias-name.html">Alias</a> "alternatename"</code> specifies that if <code><i>typename</i></code> must be encoded (mangled) in to a public symbol (as in an object module or library), then specifically use <code><i>alternate</i></code> name instead of the usual encoding (mangling) of <code><i>typename</i></code>.<br>
+<br>
+<i>Memory layout</i><br>
+Types lay out their fields consecutively in memory, following the native alignment and padding rules (described on the <code><a href="../../../user-defined-types/procedures/field.html">Field</a></code> page). Special care must be taken when using Types for file I/O or interacting with other programs or programming languages, in case the alignment and padding rules are different. The optional <code><a href="../../../user-defined-types/procedures/field.html">Field</a> = <i>number</i></code> specifier can be used to change the behavior on the FreeBASIC side.<br>
+<br>
+<i>Variable-length data</i><br>
+In FreeBASIC, Type data structures must ultimately be fixed-size, such that the compiler knows how much memory to allocate for objects of that Type. Nevertheless, Types may contain variable-length (dynamic) string or array data members. However, the string's/array's data will not be embedded in the Type directly. Instead, the Type will only contain a <code><a href="../../preprocessor-operators/procedures/string.html">String</a></code>/array descriptor structure, which FreeBASIC uses behind the scenes to manage the variable-length string/array data. For sizing the structure of the array descriptor in the Type, a variable-length (dynamic) array data member must be always declared by using <code><a href="../../../procedures/procedures/any.html">Any(S)</a></code> in place of the array bounds, in order to fix the amount of dimensions based on the number of Anys specified. A variable-length (dynamic) array data member can also be pre-sized in its declaration by using syntax with <code><a href="../../../array-functions/procedures/redim.html">ReDim</a></code>.<br>
+Variable-length array fields are considered as pseudo-objects when they are declared in a <code><b>Type</b></code>, just like variable-length strings (the implicit copy constructor and the implicit let operator themselves support [re]sizing and copying such arrays, or their erasing).<br>
+<br>
+Because of that, saving such a Type into a file will write out the descriptor, not the actual string/array data. In order to embed strings/arrays into Types directly, fixed-length strings/arrays must be used.<br>
+<br>
+Similarly, when maintaining dynamic data manually through the use of pointers within a Type, it does usually not make sense to save the Type to a file, because the address stored in the pointer field will be written to file, not the actual memory it points to. Addresses are meaningful to a specific process only though, and cannot be shared that way.<br>
+<br>
+<i>Special note on fixed-length strings</i><br>
+Since fbc version 1.20.0, fixed-length string fields of <code><a href="../../preprocessor-operators/procedures/string.html">String</a> * <i>N</i></code> type no longer have extra null terminator at their end, making them compatible with QB strings inside Types, because they actually use just <code>N</code> bytes.<br>
+Before fbc version 1.20.0, fixed-length string fields of <code><a href="../../preprocessor-operators/procedures/string.html">String</a> * <i>N</i></code> type had an extra null terminator at their end, for compatibility with C strings, making them incompatible with QB strings inside Types, because they actually used up <code><i>N</i>+1</code> bytes, instead of just <code>N</code> bytes. A possible work-around was to declare the field <code>As <a href="../../preprocessor-operators/procedures/string.html">String</a> * (<i>N</i>-1)</code>, though this will not work in future releases if the null terminator is removed.  Another alternative was to use a <code><a href="../../../standard-data-types/procedures/byte.html">Byte</a></code> or <code><a href="../../../standard-data-types/procedures/ubyte.html">UByte</a></code> array with the proper size.<br>
+<br>
+<i>Note on bitfields ( <code></code></i>fieldname<i> : </i>bits<i> )</i><br>
+Bitfields can only be declared inside a type or a union, and allow to specify some very small objects of a given number of bits in length. Each field is accessed and manipulated as if it were an ordinary member of the structure.<br>
+Only integer data-types (up to 32-bit for 32-bit development or 64-bit for 64-bit development) are valid. The sizes of the declared data-types, large enough to contain the bit patterns, affect how the bitfields are placed in memory.<br>
+Bitfield members in a type are packed together, unless the next member is a non-bitfield (nested union is considered a non-bitfield).<br>
+A bitfield does not have any address (one cannot get a pointer to it and its offset inside the structure).<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Version</h3><br>
+<ul><li> Since fbc 1.10.0: Nested Named Type/Union capability added.<br>
+<br>
+</li></ul>
+<h3>Platform Differences</h3><br>
+<ul><li> The default <code><b>Field</b></code> alignment parameter is 4 bytes for DOS and Linux targets.<br>
+<li> The default <code><b>Field</b></code> alignment parameter is 8 bytes for Windows targets (this difference with regard to 4 bytes applies only to Longint and Double members).<br>
+<br>
+</li></li></ul>
+<h3>Dialect Differences</h3><br>
+<ul><li> Object-related features such as functions declared inside <code><b>Type</b></code> blocks are supported only with the <i><a href="../../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang fb</a></i> dialect since version 0.17b<br>
+<li> In the <i><a href="../../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang fb</a></i> and <i><a href="../../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang fblite</a></i> dialects, the default <code><b>Field</b></code> alignment parameter depends on the target platform.<br>
+<li> With the <i><a href="../../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang qb</a></i> dialect the fields are aligned to byte boundaries by default, unless otherwise specified.<br>
+<li> To force byte alignment use <code>FIELD=1</code>.<br>
+<br>
+</li></li></li></li></ul>
+<h3>Differences from QB</h3><br>
+<ul><li> Since fbc version 1.20.0, fixed-length strings of STRING*N type have no extra, redundant character on the end, which means they take same number of bytes than they do in QB.<br>
+<li> Before fbc version 1.20.0, all fixed-length strings have an extra, redundant character on the end, which means they take up one more byte than they do in QB. For this reason, UDTs that use them are not compatible with QB when used for file I/O.<br>
+<br>
+</li></li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="../../../user-defined-types/procedures/type-alias.html">Type (Alias)</a></code><br>
+<li> <code><a href="../../../programmer-s-guide/procedures/type-temporary.html">Type (Temporary)</a></code><br>
+<li> <code><a href="../../../user-defined-types/procedures/union.html">Union</a></code><br>
+<li> <code><a href="../../../user-defined-types/procedures/enum.html">Enum</a></code><br>
+<li> <code><a href="../../../miscellaneous-keywords/procedures/typeof.html">TypeOf</a></code><br>
+<li> <code><a href="../../../miscellaneous-keywords/procedures/offsetof.html">OffsetOf</a></code><br>
+<li> <code><a href="../../../procedures/procedures/alias-name.html">Alias (Name)</a></code><br>
+<li> <code><a href="../../../user-defined-types/procedures/field.html">Field</a></code><br>
+<li> <code><a href="../../../user-defined-types/procedures/extends.html">Extends</a></code><br>
+<li> <code><a href="../../../user-defined-types/procedures/extends-zstring.html">Extends Zstring</a></code><br>
+<li> <code><a href="../../../user-defined-types/procedures/extends-wstring.html">Extends Wstring</a></code><br>
+<li> <code><a href="../../../user-defined-types/procedures/with.html">With</a></code><br>
+<li> <code><a href="../../../language-documentation/variables-and-data-types/standard-data-type-limits.html">Standard Data Type Limits</a></code><br>
+<li> <a href="../../../tutorials/programmer-s-guide/coercion-and-conversion.html">Coercion and Conversion</a><br>
+<br>
+</li></li></li></li></li></li></li></li></li></li></li></li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+This is an example of a QB-style type, not including procedure definitions<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Type</span> <span>clr</span>
+
+    <span>red</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span>
+
+    <span>green</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span>
+
+    <span>blue</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Dim</span> <span>c</span> <span class="tok-kw">As</span> <span>clr</span>
+
+<span>c.red</span> <span>=</span> <span class="tok-nu">255</span>
+
+<span>c.green</span> <span>=</span> <span class="tok-nu">128</span>
+
+<span>c.blue</span> <span>=</span> <span class="tok-nu">64</span>
+
+
+
+<span class="tok-cm">/'</span>
+
+<span class="tok-cm">Alternatively (See 'Type (Temporary)' page) we could use</span>
+
+<span class="tok-cm">Dim c As clr</span>
+
+<span class="tok-cm">c = Type &lt;clr&gt; (255, 128, 64)</span>
+
+<span class="tok-cm">or</span>
+
+<span class="tok-cm">c = Type(255, 128, 64)  '' implicit typename</span>
+
+<span class="tok-cm">'/</span></pre></code><br>
+</div>And this is an example of a type working as an object:<br>
+<div class="indent"><code><pre class="code"><span class="tok-cm">'' Example showing the problems with fixed length string fields in UDTs and fbc version &lt; 1.20.0</span>
+
+<span class="tok-cm">'' Suppose we have read a GIF header from a file</span>
+
+<span class="tok-cm">''                        signature         width        height</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span><span>*(</span><span class="tok-nu">10</span><span>+</span><span class="tok-nu">1</span><span>)</span> <span>z</span> <span>=&gt;</span> <span>&quot;GIF89a&quot;</span> <span>+</span> <span class="tok-kw">MKShort</span><span>(</span><span class="tok-nu">10</span><span>)</span> <span>+</span> <span class="tok-kw">MKShort</span><span>(</span><span class="tok-nu">11</span><span>)</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;Using fixed-length string&quot;</span>
+
+
+
+<span class="tok-kw">Type</span> <span>hdr1</span> <span class="tok-kw">Field</span> <span>=</span> <span class="tok-nu">1</span>
+
+   <span>#if __FB_VERSION__ &lt; &quot;1.20.0&quot;
+
+</span>      <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>*(</span><span class="tok-nu">6</span><span>-</span><span class="tok-nu">1</span><span>)</span> <span>sig</span> <span class="tok-cm">/' We have to dimension the string with 1 char</span>
+
+<span class="tok-cm">         '  less to avoid misalignments '/</span>
+
+   <span>#else
+
+</span>      <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>*(</span><span class="tok-nu">6</span><span>)</span> <span>sig</span>
+
+   <span>#endif
+
+</span>   <span class="tok-kw">As</span> <span class="tok-kw">UShort</span> <span>wid</span><span>,</span> <span>hei</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>hdr1</span> <span class="tok-kw">Ptr</span> <span>h1</span> <span>=</span> <span class="tok-kw">CPtr</span><span>(</span><span>hdr1</span> <span class="tok-kw">Ptr</span><span>,</span> <span>@</span><span>z</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>h1</span><span>-&gt;</span><span>sig</span><span>,</span> <span>h1</span><span>-&gt;</span><span>wid</span><span>,</span> <span>h1</span><span>-&gt;</span><span>hei</span> <span class="tok-cm">'' Prints GIF89 (misses a char!)  10  11</span>
+
+
+
+<span class="tok-cm">'' We can do comparisons only with the 5 visible chars and creating a temporary string with LEFT</span>
+
+
+
+<span class="tok-kw">If</span> <span class="tok-kw">Left</span><span>(</span><span>h1</span><span>-&gt;</span><span>sig</span><span>,</span> <span class="tok-nu">5</span><span>)</span> <span>=</span> <span>&quot;GIF89&quot;</span> <span class="tok-kw">Then</span> <span class="tok-kw">Print</span> <span>&quot;ok&quot;</span> <span class="tok-kw">Else</span> <span class="tok-kw">Print</span> <span>&quot;error&quot;</span>
+
+
+
+
+
+<span class="tok-cm">'' Using a ubyte array, we need an auxiliary function to convert it to a string</span>
+
+<span class="tok-kw">Function</span> <span>ub2str</span><span>(</span> <span>ub</span><span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span> <span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>res</span> <span>=</span> <span class="tok-kw">Space</span><span>(</span><span class="tok-kw">UBound</span><span>(</span><span>ub</span><span>)</span> <span>-</span> <span class="tok-kw">LBound</span><span>(</span><span>ub</span><span>)</span> <span>+</span> <span class="tok-nu">1</span><span>)</span>
+
+    <span class="tok-kw">For</span> <span>i</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-kw">LBound</span><span>(</span><span>ub</span><span>)</span> <span class="tok-kw">To</span> <span class="tok-kw">UBound</span><span>(</span><span>ub</span><span>)</span>
+
+        <span>res</span><span>[</span><span>i</span> <span>-</span> <span class="tok-kw">LBound</span><span>(</span><span>ub</span><span>)]</span> <span>=</span> <span>ub</span><span>(</span><span>i</span><span>)</span>
+
+    <span class="tok-kw">Next</span>
+
+    <span class="tok-kw">Function</span> <span>=</span> <span>res</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Using an array of ubytes&quot;</span>
+
+
+
+<span class="tok-kw">Type</span> <span>hdr2</span> <span class="tok-kw">Field</span> <span>=</span> <span class="tok-nu">1</span>
+
+   <span>sig</span><span>(</span><span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">6</span><span>-</span><span class="tok-nu">1</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span> <span class="tok-cm">'' Dimension 6</span>
+
+   <span class="tok-kw">As</span> <span class="tok-kw">UShort</span> <span>wid</span><span>,</span> <span>hei</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>hdr2</span> <span class="tok-kw">Ptr</span> <span>h2</span> <span>=</span> <span class="tok-kw">CPtr</span><span>(</span><span>hdr2</span> <span class="tok-kw">Ptr</span><span>,</span> <span>@</span><span>z</span><span>)</span>
+
+<span class="tok-cm">'' Viewing and comparing is correct but a conversion to string is required</span>
+
+
+
+<span class="tok-kw">Print</span> <span>ub2str</span><span>(</span><span>h2</span><span>-&gt;</span><span>sig</span><span>()),</span> <span>h2</span><span>-&gt;</span><span>wid</span><span>,</span> <span>h2</span><span>-&gt;</span><span>hei</span> <span class="tok-cm">'' Prints GIF89a  10  11 (ok)</span>
+
+<span class="tok-kw">If</span> <span>ub2str</span><span>(</span><span>h2</span><span>-&gt;</span><span>sig</span><span>())</span> <span>=</span> <span>&quot;GIF89a&quot;</span> <span class="tok-kw">Then</span> <span class="tok-kw">Print</span> <span>&quot;ok&quot;</span> <span class="tok-kw">Else</span> <span class="tok-kw">Print</span> <span>&quot;error&quot;</span> <span class="tok-cm">'' Prints ok</span></pre></code><br>
+</div>This is an example of conversion from an Ubyte to a digit string in base 8 (octal string), by using bitfields in a local UDT (conversion equivalent to 'Oct(x, 3)'):<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Function</span> <span>UbyteToOctalString</span> <span>(</span><span class="tok-kw">ByVal</span> <span>b</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+ 
+
+    <span class="tok-kw">Union</span> <span>UbyteOctal</span>
+
+        <span>number</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span>
+
+        <span class="tok-kw">Type</span>
+
+            <span>d0</span> <span>:</span> <span class="tok-nu">3</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span>
+
+            <span>d1</span> <span>:</span> <span class="tok-nu">3</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span>
+
+            <span>d2</span> <span>:</span> <span class="tok-nu">2</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Union</span>
+
+ 
+
+    <span class="tok-kw">Dim</span> <span>uo</span> <span class="tok-kw">As</span> <span>UbyteOctal</span>
+
+    <span>uo.number</span> <span>=</span> <span>b</span>
+
+    <span class="tok-kw">Return</span> <span>uo.d2</span> <span>&amp;</span> <span>uo.d1</span> <span>&amp;</span> <span>uo.d0</span>
+
+ 
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+
+
+<span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">255</span>
+
+    <span class="tok-kw">Print</span> <span class="tok-kw">Using</span> <span>&quot;###: &quot;</span><span>;</span> <span>I</span><span>;</span>
+
+<span class="tok-cm">''    Print Oct(I, 3),</span>
+
+    <span class="tok-kw">Print</span> <span>UbyteToOctalString</span><span>(</span><span>I</span><span>),</span>  <span class="tok-cm">'' this line is thus equivalent to the previous one</span>
+
+<span class="tok-kw">Next</span> <span>I</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+</div>This is an example with Nested Named Type:<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Type</span> <span>Parent</span>
+
+    <span class="tok-kw">Private</span><span>:</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>nameParent</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span><span>()</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span><span>(</span><span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>Parent</span><span>)</span>
+
+        <span class="tok-kw">Type</span> <span>Child</span>
+
+            <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>nameChild</span>
+
+            <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>Parent</span> <span class="tok-kw">Ptr</span> <span>ptrParent</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>kinship</span><span>()</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>Child</span> <span>listChild</span><span>(</span><span class="tok-kw">Any</span><span>)</span>
+
+    <span class="tok-kw">Public</span><span>:</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span><span>(</span><span class="tok-kw">ByRef</span> <span>_nameParent</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>)</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>addChild</span><span>(</span><span class="tok-kw">ByRef</span> <span>_nameChild</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>)</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>kinship</span><span>()</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>Parent</span><span>(</span><span class="tok-kw">ByRef</span> <span>_nameParent</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>)</span>
+
+    <span>This.nameParent</span> <span>=</span> <span>_nameParent</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>Parent.addChild</span><span>(</span><span class="tok-kw">ByRef</span> <span>_nameChild</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span><span>)</span>
+
+    <span class="tok-kw">ReDim</span> <span class="tok-kw">Preserve</span> <span>This.listChild</span><span>(</span><span class="tok-kw">UBound</span><span>(</span><span>This.listChild</span><span>)</span> <span>+</span> <span class="tok-nu">1</span><span>)</span>
+
+    <span>This.listChild</span><span>(</span><span class="tok-kw">UBound</span><span>(</span><span>This.listChild</span><span>)).</span><span>nameChild</span> <span>=</span> <span>_nameChild</span>
+
+    <span>This.listChild</span><span>(</span><span class="tok-kw">UBound</span><span>(</span><span>This.listChild</span><span>)).</span><span>ptrParent</span> <span>=</span> <span>@</span><span class="tok-kw">This</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>Parent.Child.kinship</span><span>()</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;'&quot;</span> <span>&amp;</span> <span>This.nameChild</span> <span>&amp;</span> <span>&quot;'&quot;</span> <span>&amp;</span> <span>&quot; is child of &quot;</span> <span>&amp;</span> <span>&quot;'&quot;</span> <span>&amp;</span> <span>This.ptrParent</span><span>-&gt;</span><span>nameParent</span> <span>&amp;</span> <span>&quot;'&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>Parent.kinship</span><span>()</span>
+
+    <span class="tok-kw">For</span> <span>i</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-kw">UBound</span><span>(</span><span>This.listChild</span><span>)</span>
+
+        <span>This.listChild</span><span>(</span><span>i</span><span>).</span><span>kinship</span><span>()</span>
+
+    <span class="tok-kw">Next</span> <span>i</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>Parent</span> <span>p</span> <span>=</span> <span>Parent</span><span>(</span><span>&quot;Kennedy&quot;</span><span>)</span>
+
+<span>p.addChild</span><span>(</span><span>&quot;John Jr.&quot;</span><span>)</span>
+
+<span>p.addChild</span><span>(</span><span>&quot;Caroline&quot;</span><span>)</span>
+
+<span>p.addChild</span><span>(</span><span>&quot;Patrick&quot;</span><span>)</span>
+
+<span>p.kinship</span><span>()</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+</div>
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgType.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

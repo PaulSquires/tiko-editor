@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ScreenControl — Help Center</title>
+<meta name="description" content="Sets or gets internal graphics library settings">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/screen-functions/procedures/screencontrol.html">
+<meta property="og:title" content="ScreenControl">
+<meta property="og:description" content="Sets or gets internal graphics library settings">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/screen-functions/procedures/screencontrol.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/screen-functions/procedures/screencontrol.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>ScreenControl<span class="h1kind">sub</span></h1>
+<p class="lede">Sets or gets internal graphics library settings</p>
+<div class="badges"><a class="badge" href="../index.html">Screen Functions</a><span class="badge">sub</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>Declare Sub ScreenControl ( ByVal what As Const Long, ByRef param1 As Long = &amp;h80000000, ByRef param2 As Long = &amp;h80000000, ByRef param3 As Long = &amp;h80000000, ByRef param4 As Long = &amp;h80000000 )</code></pre>
+<pre class="code sig"><code>Declare Sub ScreenControl ( ByVal what As Const Long, ByRef param1 As LongInt, ByRef param2 As LongInt = &amp;h80000000, ByRef param3 As LongInt = &amp;h80000000, ByRef param4 As LongInt = &amp;h80000000 )</code></pre>
+<pre class="code sig"><code>Declare Sub ScreenControl ( ByVal what As Const Long, ByRef param As String)</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>what</code></td><td></td><td>specifies the function to perform</td></tr><tr><td><code>param1</code></td><td></td><td>first integer parameter, contains value to be set on entry or value got on exit</td></tr><tr><td><code>param2</code></td><td></td><td>second integer parameter, contains value to be set on entry or value got on exit</td></tr><tr><td><code>param3</code></td><td></td><td>third integer parameter, contains value to be set on entry or value got on exit</td></tr><tr><td><code>param4</code></td><td></td><td>fourth integer parameter, contains value to be set on entry or value got on exit</td></tr><tr><td><code>param</code></td><td></td><td>string parameter, contains text to be set on entry or text got on exit</td></tr></tbody></table></div>
+<h2>Description</h2>
+<br>
+This function can be used to set or get internal GfxLib states. The <code><i>what</i></code> parameter specifies which operation to perform. On operations that set states, the <code><i>param*</i></code> parameters must contain the values to be set. On operations that get states, <code><i>param*</i></code> will hold the values returned by GfxLib when the function returns.<br>
+The meaning of the <code><i>param*</i></code> parameters depend on the <code><i>what</i></code> parameter, whose possible values are defined as constants in <code>fbgfx.bi</code>.  In <i><a href="../../freebasic-dialects-and-qbasic/freebasic-dialects.html">lang fb</a></i>, they are set to be stored in the <code>FB</code> <code><a href="../../modularizing/procedures/namespace.html">Namespace</a></code>.<br>
+Below is a list of the supported <code><i>what</i></code> constants - and their values as defined at time of writing - along with the parameters associated with them.<br>
+<br>
+<u>Supported operations</u><br>
+<div class="indent">Note:<br>
+<div class="indent">(*) denotes operations that are allowed while a graphics mode has not yet been set via <a href="screen-graphics.html">Screen (Graphics)</a> or <a href="screenres.html">ScreenRes</a>,<br>
+(**) denotes the operations that must be performed before the graphics mode is set via <a href="screen-graphics.html">Screen (Graphics)</a> or <a href="screenres.html">ScreenRes</a>,<br>
+for all other operations, return values are zero (<code>0</code>) or the empty string (<code>"</code><code>"</code>) and the operation has no effect if a graphics mode is not available at call time.<br>
+<br>
+</div><b>Get operations</b><br>
+</div><ul><li> <code>GET_WINDOW_POS</code> Returns the current window position, in desktop coordinates.<br>
+</li></ul><div class="indent">[OUT] <code><i>param1</i></code> x<br>
+[OUT] <code><i>param2</i></code> y<br>
+</div><ul><li> (*) <code>GET_WINDOW_TITLE</code> Returns the title of the program window.<br>
+</li></ul><div class="indent">[OUT] <code><i>param</i></code> title<br>
+</div><ul><li> <code>GET_WINDOW_HANDLE</code> Returns a handle to the program window.<br>
+</li></ul><div class="indent">[OUT] <code><i>param1</i></code> handle; this is a <code>HWND</code> in Windows, a "Window" XID in X11<br>
+[OUT] <code><i>param2</i></code> display ptr in X11<br>
+</div><ul><li> (*) <code>GET_DESKTOP_SIZE</code> Returns the desktop size, in pixels.<br>
+</li></ul><div class="indent">[OUT] <code><i>param1</i></code> width<br>
+[OUT] <code><i>param2</i></code> height<br>
+</div><ul><li> <code>GET_SCREEN_SIZE</code> Returns the current screen size in pixels.<br>
+</li></ul><div class="indent">[OUT] <code><i>param1</i></code> width<br>
+[OUT] <code><i>param2</i></code> height<br>
+</div><ul><li> <code>GET_SCREEN_DEPTH</code> Returns current graphics mode screen depth.<br>
+</li></ul><div class="indent">[OUT] <code><i>param1</i></code> bits per pixel<br>
+</div><ul><li> <code>GET_SCREEN_BPP</code> Returns current graphics mode BPP.<br>
+</li></ul><div class="indent">[OUT] <code><i>param1</i></code> bytes per pixel<br>
+</div><ul><li> <code>GET_SCREEN_PITCH</code> Returns the current graphics mode framebuffer pitch, in bytes.<br>
+</li></ul><div class="indent">[OUT] <code><i>param1</i></code> pitch<br>
+</div><ul><li> <code>GET_SCREEN_REFRESH</code> Returns the current graphics mode refresh rate, in hertz.<br>
+</li></ul><div class="indent">[OUT] <code><i>param1</i></code> rate<br>
+</div><ul><li> <code>GET_DRIVER_NAME</code> Returns the current graphics mode driver name.<br>
+</li></ul><div class="indent">[OUT] <code><i>param</i></code> name<br>
+</div><ul><li> <code>GET_TRANSPARENT_COLOR</code> Returns the transparent color value for the current graphics mode depth.<br>
+</li></ul><div class="indent">[OUT] <code><i>param1</i></code> value<br>
+</div><ul><li> <code>GET_VIEWPORT</code> Returns the current viewport as set by the <a href="view-graphics.html">View (Graphics)</a> statement, in screen coordinates.<br>
+</li></ul><div class="indent">[OUT] <code><i>param1</i></code> x1<br>
+[OUT] <code><i>param2</i></code> y1<br>
+[OUT] <code><i>param3</i></code> x2<br>
+[OUT] <code><i>param4</i></code> y2<br>
+</div><ul><li> <code>GET_PEN_POS</code> Returns the last graphical pen position, in screen coordinates. This position is used in graphics functions supporting relative coordinates using the <code><a href="../../miscellaneous-keywords/procedures/step.html">Step</a></code> keyword.<br>
+</li></ul><div class="indent">[OUT] <code><i>param1</i></code> x<br>
+[OUT] <code><i>param2</i></code> y<br>
+</div><ul><li> <code>GET_COLOR</code> Returns the current graphics mode color.<br>
+</li></ul><div class="indent">[OUT] <code><i>param1</i></code> foreground<br>
+[OUT] <code><i>param2</i></code> background<br>
+</div><ul><li> <code>GET_ALPHA_PRIMITIVES</code> Returns if primitives drawing support for alpha channel is enabled.<br>
+</li></ul><div class="indent">[OUT] <code><i>param1</i></code> <code>TRUE</code> (<code>-1</code>) if alpha primitives is enabled, <code>FALSE</code> (<code>0</code>) otherwise<br>
+</div><ul><li> <code>GET_GL_EXTENSIONS</code> Returns a string holding all supported GL extensions, or the empty string if not in OpenGL mode.<br>
+</li></ul><div class="indent">[OUT] <code><i>param</i></code> supported GL extensions<br>
+</div><ul><li> <code>GET_HIGH_PRIORITY</code> Returns if <code>GFX_HIGH_PRIORITY</code> was specified in the flags passed to <code><a href="screen-graphics.html">Screen (Graphics)</a></code> or <code><a href="screenres.html">ScreenRes</a></code>.<br>
+</li></ul><div class="indent">[OUT] <code><i>param1</i></code> higher priority graphics processing enabled<br>
+</div><ul><li> <code>GET_SCANLINE_SIZE</code> Returns how currently many scan lines each row of fbgfx video memory should occupy on the screen<br>
+</li></ul><div class="indent">[OUT] <code><i>param1</i></code> scan line size multiplier<br>
+</div><ul><li> (*) <code>GET_X86_MMX_ENABLED</code> Returns if MMX specific blitters are enabled on X86.  fbgfx will select MMX blitters if MMX is enabled and available.<br>
+</li></ul><div class="indent">[OUT] <code><i>param1</i></code> <code>TRUE</code> (<code>-1</code>) if MMX is enabled, <code>FALSE</code> (<code>0</code>) otherwise<br>
+</div><ul><li> <code>GET_GL_COLOR_BITS</code> Returns the current number of bits dedicated to the OpenGL color buffer<br>
+</li></ul><div class="indent">[OUT] <code><i>param1</i></code> bits<br>
+</div><ul><li> <code>GET_GL_COLOR_RED_BITS</code> Returns the current number of bits dedicated to the red component of the OpenGL color buffer<br>
+</li></ul><div class="indent">[OUT] <code><i>param1</i></code> bits<br>
+</div><ul><li> <code>GET_GL_COLOR_GREEN_BITS</code> Returns the current number of bits dedicated to the green component of the OpenGL color buffer<br>
+</li></ul><div class="indent">[OUT] <code><i>param1</i></code> bits<br>
+</div><ul><li> <code>GET_GL_COLOR_BLUE_BITS</code> Returns the current number of bits dedicated to the blue component of the OpenGL color buffer<br>
+</li></ul><div class="indent">[OUT] <code><i>param1</i></code> bits<br>
+</div><ul><li> <code>GET_GL_COLOR_ALPHA_BITS</code> Returns the current number of bits dedicated to the alpha component of the OpenGL color buffer<br>
+</li></ul><div class="indent">[OUT] <code><i>param1</i></code> bits<br>
+</div><ul><li> <code>GET_GL_DEPTH_BITS</code> Returns the current number of bits dedicated to the OpenGL depth buffer<br>
+</li></ul><div class="indent">[OUT] <code><i>param1</i></code> bits<br>
+</div><ul><li> <code>GET_GL_STENCIL_BITS</code> Returns the current number of bits dedicated to the OpenGL stencil buffer<br>
+</li></ul><div class="indent">[OUT] <code><i>param1</i></code> bits<br>
+</div><ul><li> <code>GET_GL_ACCUM_BITS</code> Returns the current number of bits dedicated to the OpenGL accumulation buffer<br>
+</li></ul><div class="indent">[OUT] <code><i>param1</i></code> bits<br>
+</div><ul><li> <code>GET_GL_ACCUM_RED_BITS</code> Returns the current number of bits dedicated to the red component of the OpenGL accumulation buffer<br>
+</li></ul><div class="indent">[OUT] <code><i>param1</i></code> bits<br>
+</div><ul><li> <code>GET_GL_ACCUM_GREEN_BITS</code> Returns the current number of bits dedicated to the green component of the OpenGL accumulation buffer<br>
+</li></ul><div class="indent">[OUT] <code><i>param1</i></code> bits<br>
+</div><ul><li> <code>GET_GL_ACCUM_BLUE_BITS</code> Returns the current number of bits dedicated to the blue component of the OpenGL accumulation buffer<br>
+</li></ul><div class="indent">[OUT] <code><i>param1</i></code> bits<br>
+</div><ul><li> <code>GET_GL_ACCUM_ALPHA_BITS</code> Returns the current number of bits dedicated to the alpha component of the OpenGL accumulation buffer<br>
+</li></ul><div class="indent">[OUT] <code><i>param1</i></code> bits<br>
+</div><ul><li> <code>GET_GL_NUM_SAMPLES</code> Returns the current number of samples to be used for OpenGL multisampling<br>
+</li></ul><div class="indent">[OUT] <code><i>param1</i></code> samples<br>
+</div><ul><li> <code>GET_GL_2D_MODE</code> Returns the current OpenGL 2D render<br>
+</li></ul><div class="indent">[OUT] <code><i>param1</i></code>:<br>
+<div class="indent"><code>OGL_2D_NONE</code> No rendering<br>
+<code>OGL_2D_MANUAL_SYNC</code> Manual rendering (when <code><a href="flip.html">Flip</a></code> is called)<br>
+<code>OGL_2D_AUTO_SYNC</code> Automatic rendering<br>
+</div></div><ul><li> <code>GET_GL_SCALE</code> Returns the current zoom factor on OpenGL 2D render (only allowed if OpenGL 2D render mode has yet been activated via <code>SET_GL_2D_MODE</code>)<br>
+</li></ul><div class="indent">[OUT] <code><i>param1</i></code> zoom factor (0: no rendering)<br>
+<br>
+<b>Set operations</b><br>
+</div><ul><li> <code>SET_WINDOW_POS</code> Sets the current program window position, in desktop coordinates.<br>
+</li></ul><div class="indent">[IN] <code><i>param1</i></code> x<br>
+[IN] <code><i>param2</i></code> y<br>
+</div><ul><li> (*) <code>SET_WINDOW_TITLE</code> Sets the current program window title. This is equivalent to calling <code><a href="windowtitle.html">WindowTitle</a>( <i>param</i> )</code>.<br>
+</li></ul><div class="indent">[IN] <code><i>param</i></code> title<br>
+</div><ul><li> <code>SET_PEN_POS</code> Sets the current graphical pen position, in screen coordinates. This position is used in graphics functions supporting relative coordinates using the <code><a href="../../miscellaneous-keywords/procedures/step.html">Step</a></code> keyword.<br>
+</li></ul><div class="indent">[IN] <code><i>param1</i></code> x<br>
+[IN] <code><i>param2</i></code> y<br>
+</div><ul><li> (*) <code>SET_DRIVER_NAME</code> Sets the name of the internal graphics driver to be used in subsequent calls to <code><a href="screen-graphics.html">Screen (Graphics)</a></code> or <code><a href="screenres.html">ScreenRes</a></code>.<br>
+</li></ul><div class="indent">[IN] <code><i>param</i></code> driver name<br>
+</div><ul><li> <code>SET_ALPHA_PRIMITIVES</code> Sets if primitives drawing should honor alpha channel.<br>
+</li></ul><div class="indent">[IN] <code><i>param1</i></code> enabled<br>
+</div><ul><li> (*) <code>SET_GL_COLOR_BITS</code> Sets the number of bits dedicated to the OpenGL color buffer<br>
+</li></ul><div class="indent">[IN] <code><i>param1</i></code> bits<br>
+</div><ul><li> (*) <code>SET_GL_COLOR_RED_BITS</code> Sets the number of bits dedicated to the red component of the OpenGL color buffer<br>
+</li></ul><div class="indent">[IN] <code><i>param1</i></code> bits<br>
+</div><ul><li> (*) <code>SET_GL_COLOR_GREEN_BITS</code> Sets the number of bits dedicated to the green component of the OpenGL color buffer<br>
+</li></ul><div class="indent">[IN] <code><i>param1</i></code> bits<br>
+</div><ul><li> (*) <code>SET_GL_COLOR_BLUE_BITS</code> Sets the number of bits dedicated to the blue component of the OpenGL color buffer<br>
+</li></ul><div class="indent">[IN] <code><i>param1</i></code> bits<br>
+</div><ul><li> (*) <code>SET_GL_COLOR_ALPHA_BITS</code> Sets the number of bits dedicated to the alpha component of the OpenGL color buffer<br>
+</li></ul><div class="indent">[IN] <code><i>param1</i></code> bits<br>
+</div><ul><li> (*) <code>SET_GL_DEPTH_BITS</code> Sets the number of bits dedicated to the OpenGL depth buffer<br>
+</li></ul><div class="indent">[IN] <code><i>param1</i></code> bits<br>
+</div><ul><li> (*) <code>SET_GL_STENCIL_BITS</code> Sets the number of bits dedicated to the OpenGL stencil buffer<br>
+</li></ul><div class="indent">[IN] <code><i>param1</i></code> bits<br>
+</div><ul><li> (*) <code>SET_GL_ACCUM_BITS</code> Sets the number of bits dedicated to the OpenGL accumulation buffer<br>
+</li></ul><div class="indent">[IN] <code><i>param1</i></code> bits<br>
+</div><ul><li> (*) <code>SET_GL_ACCUM_RED_BITS</code> Sets the number of bits dedicated to the red component of the OpenGL accumulation buffer<br>
+</li></ul><div class="indent">[IN] <code><i>param1</i></code> bits<br>
+</div><ul><li> (*) <code>SET_GL_ACCUM_GREEN_BITS</code> Sets the number of bits dedicated to the green component of the OpenGL accumulation buffer<br>
+</li></ul><div class="indent">[IN] <code><i>param1</i></code> bits<br>
+</div><ul><li> (*) <code>SET_GL_ACCUM_BLUE_BITS</code> Sets the number of bits dedicated to the blue component of the OpenGL accumulation buffer<br>
+</li></ul><div class="indent">[IN] <code><i>param1</i></code> bits<br>
+</div><ul><li> (*) <code>SET_GL_ACCUM_ALPHA_BITS</code> Sets the number of bits dedicated to the alpha component of the OpenGL accumulation buffer<br>
+</li></ul><div class="indent">[IN] <code><i>param1</i></code> bits<br>
+</div><ul><li> (*) <code>SET_GL_NUM_SAMPLES</code> Sets the number of samples to be used for OpenGL multisampling<br>
+</li></ul><div class="indent">[IN] <code><i>param1</i></code> samples<br>
+</div><ul><li> (*) <code>SET_X86_MMX_ENABLED</code> Sets if MMX blitters should be used on X86<br>
+</li></ul><div class="indent">[IN] <code><i>param1</i></code> enabled<br>
+</div><ul><li> (**) <code>SET_GL_2D_MODE</code> Sets OpenGL 2D render<br>
+</li></ul><div class="indent">[IN] <code><i>param1</i></code>:<br>
+<div class="indent"><code>OGL_2D_NONE</code> No rendering<br>
+<code>OGL_2D_MANUAL_SYNC</code> Manual rendering (when <code><a href="flip.html">Flip</a></code> is called)<br>
+<code>OGL_2D_AUTO_SYNC</code> Automatic rendering<br>
+</div></div><ul><li> (**) <code>SET_GL_SCALE</code> Apply a zoom factor on OpenGL 2D render (only allowed if OpenGL 2D render mode has yet been activated via <code>SET_GL_2D_MODE</code>)<br>
+</li></ul><div class="indent">[IN] <code><i>param1</i></code> zoom factor (0: no rendering)<br>
+<br>
+<b>Other operations</b><br>
+</div><ul><li> <code>POLL_EVENTS</code> Cause the library to poll all events, ie to check the system event queue, specifically used for retrieving keyboard and mouse events.  This is most useful for OpenGL code where <code><a href="flip.html">Flip</a></code> is not used, as normally <code><a href="flip.html">Flip</a></code> will cause these events to be polled.<br>
+<br>
+</li></ul>
+<h2>Remarks</h2>
+<h3>Usage</h3><code><br>
+in the LONG (or INTEGER&lt;32&gt;) version of the sub:<br>
+<div class="indent"><b>ScreenControl</b>( <i>what</i> [, [ <i>param1</i> ] [, [ <i>param2</i> ] [, [ <i>param3</i> ] [, <i>param4</i> ]]]] )<br>
+<div class="indent">or,<br>
+</div><b>ScreenControl</b>( <i>what</i> , <i>param</i> )<br>
+</div>in the LONGINT (or INTEGER&lt;64&gt;) version of the sub:<br>
+<div class="indent"><b>ScreenControl</b>( <i>what</i> , <i>param1</i> [, [ <i>param2</i> ] [, [ <i>param3</i> ] [, <i>param4</i> ]]] )<br>
+<div class="indent">or,<br>
+</div><b>ScreenControl</b>( <i>what</i> , <i>param</i> )<br>
+</div></code><br>
+
+<h3>Version</h3><br>
+<ul><li> Since fbc 1.20.0: <code>GET_X86_MMX_ENABLED</code>, <code>SET_X86_MMX_ENABLED</code><br>
+<li> Since fbc 1.10.0: 16 getters from <code>GET_SCANLINE_SIZE</code> to <code>GET_GL_SCALE</code> added.<br>
+<li> Before fbc 1.08.0:<br>
+</li></li></li></ul><div class="indent"><div class="indent">Syntax:<br>
+<div class="indent"><code><a href="../../procedures/procedures/declare.html">Declare</a> <a href="../../procedures/procedures/sub.html">Sub</a> <b>ScreenControl</b> ( <a href="../../procedures/procedures/byval.html">ByVal</a> what <a href="../../miscellaneous-keywords/procedures/as.html">As</a> <a href="../../standard-data-types/procedures/long.html">Long</a>, <a href="../../procedures/procedures/byref-parameters.html">ByRef</a> param1 <a href="../../miscellaneous-keywords/procedures/as.html">As</a> <a href="../../standard-data-types/procedures/integer.html">Integer</a> = 0, <a href="../../procedures/procedures/byref-parameters.html">ByRef</a> param2 <a href="../../miscellaneous-keywords/procedures/as.html">As</a> <a href="../../standard-data-types/procedures/integer.html">Integer</a> = 0, <a href="../../procedures/procedures/byref-parameters.html">ByRef</a> param3 <a href="../../miscellaneous-keywords/procedures/as.html">As</a> <a href="../../standard-data-types/procedures/integer.html">Integer</a> = 0, <a href="../../procedures/procedures/byref-parameters.html">ByRef</a> param4 <a href="../../miscellaneous-keywords/procedures/as.html">As</a> <a href="../../standard-data-types/procedures/integer.html">Integer</a> = 0 )<br>
+<a href="../../procedures/procedures/declare.html">Declare</a> <a href="../../procedures/procedures/sub.html">Sub</a> <b>ScreenControl</b> ( <a href="../../procedures/procedures/byval.html">ByVal</a> what <a href="../../miscellaneous-keywords/procedures/as.html">As</a> <a href="../../standard-data-types/procedures/long.html">Long</a>, <a href="../../procedures/procedures/byref-parameters.html">ByRef</a> param <a href="../../miscellaneous-keywords/procedures/as.html">As</a> <a href="../../operators/preprocessor-operators/procedures/string.html">String</a> = </code>"<code></code>"<code> )</code><br>
+</div>Usage:<br>
+<div class="indent"><code><b>ScreenControl</b>( <i>what</i> [, [ <i>param1</i> ] [, [ <i>param2</i> ] [, [ <i>param3</i> ] [, [ <i>param4</i> ]]]]] )<br>
+<div class="indent">or,<br>
+</div><b>ScreenControl</b>( <i>what</i> [, <i>param</i> ] )</code><br>
+<br>
+</div></div></div>
+<h3>Dialect Differences</h3><br>
+<ul><li> Not available in the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang qb</a></i> dialect unless referenced with the alias <code><b>__Screencontrol</b></code>.<br>
+<br>
+</li></ul>
+<h3>Differences from QB</h3><br>
+<ul><li> New to FreeBASIC<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="screen-graphics.html">Screen (Graphics)</a></code><br>
+<li> <code><a href="screenevent.html">ScreenEvent</a></code><br>
+<li> <code><a href="screeninfo.html">ScreenInfo</a></code><br>
+<li> <code><a href="windowtitle.html">WindowTitle</a></code><br>
+<li> <code><a href="view-graphics.html">View (Graphics)</a></code><br>
+<br>
+</li></li></li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-cm">'' include fbgfx.bi for some useful definitions</span>
+
+<span>#include &quot;fbgfx.bi&quot;
+
+</span>
+
+<span class="tok-cm">'' use FB namespace for easy access to types/constants</span>
+
+<span class="tok-kw">Using</span> <span>FB</span>
+
+
+
+<span class="tok-kw">Dim</span> <span>e</span> <span class="tok-kw">As</span> <span class="tok-kw">Event</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Long</span> <span>x0</span><span>,</span> <span>y0</span><span>,</span> <span>x</span><span>,</span> <span>y</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>shakes</span> <span>=</span> <span class="tok-nu">0</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>img</span>
+
+
+
+<span class="tok-kw">ScreenRes</span> <span class="tok-nu">320</span><span>,</span> <span class="tok-nu">200</span><span>,</span> <span class="tok-nu">32</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Click to shake window&quot;</span>
+
+
+
+<span class="tok-cm">'' find window coordinates</span>
+
+<span class="tok-kw">ScreenControl</span> <span>GET_WINDOW_POS</span><span>,</span> <span>x0</span><span>,</span> <span>y0</span>
+
+
+
+<span class="tok-kw">Do</span>
+
+
+
+    <span class="tok-kw">If</span> <span>(</span><span>shakes</span> <span>&gt;</span> <span class="tok-nu">0</span><span>)</span> <span class="tok-kw">Then</span>
+
+        
+
+        <span class="tok-cm">'' do a shake of the window</span>
+
+
+
+        <span class="tok-kw">If</span> <span>(</span><span>shakes</span> <span>&gt;</span> <span class="tok-nu">1</span><span>)</span> <span class="tok-kw">Then</span>
+
+
+
+            <span class="tok-cm">'' move window to a random position near its original coordinates</span>
+
+            <span>x</span> <span>=</span> <span>x0</span> <span>+</span> <span class="tok-kw">Int</span><span>(</span><span class="tok-nu">32</span> <span>*</span> <span>(</span><span class="tok-kw">Rnd</span><span>()</span> <span>-</span> <span class="tok-nu">0.5</span><span>))</span>
+
+            <span>y</span> <span>=</span> <span>y0</span> <span>+</span> <span class="tok-kw">Int</span><span>(</span><span class="tok-nu">32</span> <span>*</span> <span>(</span><span class="tok-kw">Rnd</span><span>()</span> <span>-</span> <span class="tok-nu">0.5</span><span>))</span>
+
+            <span class="tok-kw">ScreenControl</span> <span>SET_WINDOW_POS</span><span>,</span> <span>x</span><span>,</span> <span>y</span>
+
+
+
+        <span class="tok-kw">Else</span>
+
+
+
+            <span class="tok-cm">'' move window back to its original coordinates</span>
+
+            <span class="tok-kw">ScreenControl</span> <span>SET_WINDOW_POS</span><span>,</span> <span>x0</span><span>,</span> <span>y0</span>
+
+
+
+        <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+
+
+        <span>shakes</span> <span>-=</span> <span class="tok-nu">1</span>
+
+
+
+    <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+
+
+    <span class="tok-kw">If</span> <span>(</span><span class="tok-kw">ScreenEvent</span><span>(@</span><span>e</span><span>))</span> <span class="tok-kw">Then</span>
+
+        <span class="tok-kw">Select</span> <span class="tok-kw">Case</span> <span>e.type</span>
+
+        
+
+        <span class="tok-cm">'' user pressed the mouse button</span>
+
+        <span class="tok-kw">Case</span> <span>EVENT_MOUSE_BUTTON_PRESS</span>
+
+
+
+            <span class="tok-kw">If</span> <span>(</span><span>shakes</span> <span>=</span> <span class="tok-nu">0</span><span>)</span> <span class="tok-kw">Then</span>
+
+                <span class="tok-cm">'' set to do 20 shakes</span>
+
+                <span>shakes</span> <span>=</span> <span class="tok-nu">20</span>
+
+
+
+                <span class="tok-cm">'' find current window coordinates to shake around</span>
+
+                <span class="tok-kw">ScreenControl</span> <span>GET_WINDOW_POS</span><span>,</span> <span>x0</span><span>,</span> <span>y0</span>
+
+            <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+
+
+        <span class="tok-cm">'' user closed the window or pressed a key</span>
+
+        <span class="tok-kw">Case</span> <span>EVENT_WINDOW_CLOSE</span><span>,</span> <span>EVENT_KEY_PRESS</span>
+
+            <span class="tok-cm">'' exit to end of program</span>
+
+            <span class="tok-kw">Exit</span> <span class="tok-kw">Do</span>
+
+
+
+        <span class="tok-kw">End</span> <span class="tok-kw">Select</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+
+
+    <span class="tok-cm">'' free up CPU for other programs</span>
+
+    <span class="tok-kw">Sleep</span> <span class="tok-nu">5</span>
+
+
+
+<span class="tok-kw">Loop</span></pre></code><br>
+<br>
+<code><pre class="code"><span class="tok-cm">'' include fbgfx.bi for some useful definitions</span>
+
+<span>#include &quot;fbgfx.bi&quot;
+
+</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>driver</span>
+
+
+
+<span>#ifdef __FB_WIN32__
+
+</span><span class="tok-cm">'' set graphics driver to GDI (Windows only), before calling ScreenRes</span>
+
+<span class="tok-kw">ScreenControl</span> <span>FB.SET_DRIVER_NAME</span><span>,</span> <span>&quot;GDI&quot;</span>
+
+<span>#endif
+
+</span>
+
+<span class="tok-kw">ScreenRes</span> <span class="tok-nu">640</span><span>,</span> <span class="tok-nu">480</span>
+
+
+
+<span class="tok-cm">'' fetch graphics driver name and display it to user</span>
+
+<span class="tok-kw">ScreenControl</span> <span>FB.GET_DRIVER_NAME</span><span>,</span> <span>driver</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Graphics driver name: &quot;</span> <span>&amp;</span> <span>driver</span>
+
+
+
+<span class="tok-cm">'' wait for a keypress before closing the window</span>
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgScreencontrol.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

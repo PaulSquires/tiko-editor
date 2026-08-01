@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ReDim — Help Center</title>
+<meta name="description" content="Defines or resizes a variable-length array">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/array-functions/procedures/redim.html">
+<meta property="og:title" content="ReDim">
+<meta property="og:description" content="Defines or resizes a variable-length array">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/array-functions/procedures/redim.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/array-functions/procedures/redim.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>ReDim<span class="h1kind">keyword</span></h1>
+<p class="lede">Defines or resizes a variable-length array</p>
+<div class="badges"><a class="badge" href="../index.html">Array Functions</a><span class="badge">keyword</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>Declaring a Dynamic Array:</code></pre>
+<pre class="code sig"><code>ReDim [ Shared ] symbolname([subscript [, ...]]) As datatype [, ...]</code></pre>
+<pre class="code sig"><code>ReDim [ Shared ] As datatype symbolname([subscript [, ...]]) [, ...]</code></pre>
+<pre class="code sig"><code>Resizing a Dynamic Array:</code></pre>
+<pre class="code sig"><code>ReDim [ Preserve ] symbolname([subscript [, ...]]) [, ...]</code></pre>
+<pre class="code sig"><code>or:</code></pre>
+<pre class="code sig"><code>ReDim [ Preserve ] [ ( ] expression [ ) ] ([subscript [, ...]]) [, ...]</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>symbolname</code></td><td></td><td>A new or existing array identifier.</td></tr><tr><td><code>expression</code></td><td></td><td>or</td></tr><tr><td><code>(expression)</code></td><td></td><td>An expression referring to an existing array. This can be used to resize arrays which are members of user-defined types. In some cases, it is necessary to specify parentheses around the expression (especially if the array expression itself contains parentheses) - see the examples below.</td></tr><tr><td><code>subscript</code></td><td></td><td>: [</td></tr><tr><td><code>lowerbound To ] upperbound</code></td><td></td><td>The lower and upper bound range for a dimension of the array. Lower bound defaults to zero (<code>0</code>), or the default <code><a href="../../compiler-switches/procedures/option-base.html">Base</a></code>, if not specified.<br>
+<code><a href="../../reference/data-types.html">datatype</a></code><br>
+The type of elements contained in the array.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<br>
+<code><b>ReDim</b></code> can be used to define new variable-length arrays, or resize existing variable-length arrays while keeping the same number of dimensions. <code><b>ReDim</b></code> always produces variable-length arrays, so, unlike <code><a href="../../variable-declarations/procedures/dim.html">Dim</a></code>, variable-length arrays can be defined with constant subscripts.<br>
+<br>
+When defining a new variable-length array, its elements are default constructed. For simple data types like <code><a href="../../standard-data-types/procedures/integer.html">Integer</a></code> or <code><a href="../../mathematical-functions/procedures/double.html">Double</a></code>, the elements are initialized to zero (<code>0</code>). For user-defined types with a default constructor, that will be called.<br>
+<br>
+When used with in a user-defined type, <code><b>ReDim</b></code> creates variable-length arrays while being able to pre-size them with constant subscripts.<br>
+<br>
+<b>NOTES</b>: <br>
+<ul><ul><li> <code><b>ReDim</b> <a href="preserve.html">Preserve</a></code> may not work as expected in all cases:<br>
+<ul><li> <code><a href="preserve.html">Preserve</a></code>'s current behavior is to keep the original data contiguous in memory, and only expand or truncate the size of the memory (if resizing is not possible, the whole original data block is first shifted to another memory location).<br>
+<li> Its behavior (with a single dimension) is well-defined only when the upper bound is changed.  If the lower bound is changed, the current result is that the data is in effect shifted to start at the new lower bound.<br>
+<li> With multiple dimensions, only the upper bound of only the first dimension may be safely increased.  If the first dimension is reduced, the existing mappable data may be lost. If lower-order dimensions are resized at all, the effects can be hard to predict (because multidimensional arrays are stored in row-major order : values differing only in the last index are contiguous).<br>
+</li></li></li></ul><li> <code><b>ReDim</b></code> cannot be used on fixed-size arrays - i.e. arrays with constant bounds made with <code><a href="../../variable-declarations/procedures/dim.html">Dim</a></code>:<br>
+<ul><li> This includes the fixed-size arrays contained in UDTs (user-defined <code><a href="../../operators/operators/procedures/type-udt.html">Type</a></code>s).<br>
+<li> This also includes fixed-length arrays passed as parameters in a procedure: FreeBASIC cannot prevent you trying this at compile-time, but generates an error at run-time.<br>
+</li></li></ul><li> <code><b>ReDim</b></code> cannot be used inside a member procedure if the array contains as element the instance itself of the object, because that could cause horrible crashes:<br>
+<ul><li> If the array data are moved into memory by <code><b>ReDim</b></code>, the passed <code><a href="../../user-defined-types/procedures/this.html">This</a></code> reference becomes inconsistent, in the same way as a dangling pointer.<br>
+<li> In that case, all subsequent accesses to any non-static member field from this member procedure will be erroneous, except if the passed <code><a href="../../user-defined-types/procedures/this.html">This</a></code> reference would be readjusted (by means of <code>@This = @array(...)</code>) immediately after executing <code><b>ReDim</b></code> in the body of this member procedure.<br>
+<br>
+</li></li></ul></li></li></li></ul></ul>
+<h2>Remarks</h2>
+<h3>Differences from QB</h3><br>
+<ul><li> <code><a href="preserve.html">Preserve</a></code> was in Visual Basic, but not in QBASIC.<br>
+<li> Multi-dimensional arrays in FreeBASIC are in row-major order, rather than column-major order.<br>
+<br>
+</li></li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="../../modularizing/procedures/common.html">Common</a></code><br>
+<li> <code><a href="../../variable-declarations/procedures/dim.html">Dim</a></code><br>
+<li> <code><a href="erase.html">Erase</a></code><br>
+<li> <code><a href="../../modularizing/procedures/extern.html">Extern</a></code><br>
+<li> <code><a href="lbound.html">LBound</a></code><br>
+<li> <code><a href="preserve.html">Preserve</a></code><br>
+<li> <code><a href="../../variable-declarations/procedures/shared.html">Shared</a></code><br>
+<li> <code><a href="../../variable-declarations/procedures/static.html">Static</a></code><br>
+<li> <code><a href="ubound.html">UBound</a></code><br>
+<li> <code><a href="../../variable-declarations/procedures/var.html">Var</a></code><br>
+<br>
+</li></li></li></li></li></li></li></li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-cm">'' Define a variable-length array with 5 elements</span>
+
+<span class="tok-kw">ReDim</span> <span>array</span><span>(</span><span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">4</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+
+
+<span class="tok-kw">For</span> <span>index</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-kw">LBound</span><span>(</span><span>array</span><span>)</span> <span class="tok-kw">To</span> <span class="tok-kw">UBound</span><span>(</span><span>array</span><span>)</span>
+
+    <span>array</span><span>(</span><span>index</span><span>)</span> <span>=</span> <span>index</span>
+
+<span class="tok-kw">Next</span>
+
+
+
+<span class="tok-cm">'' Resize a variable-length array with 10 elements </span>
+
+<span class="tok-cm">'' (the lower bound should be kept the same)</span>
+
+<span class="tok-kw">ReDim</span> <span class="tok-kw">Preserve</span> <span>array</span><span>(</span><span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">9</span><span>)</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;index&quot;</span><span>,</span> <span>&quot;value&quot;</span>
+
+<span class="tok-kw">For</span> <span>index</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-kw">LBound</span><span>(</span><span>array</span><span>)</span> <span class="tok-kw">To</span> <span class="tok-kw">UBound</span><span>(</span><span>array</span><span>)</span>
+
+    <span class="tok-kw">Print</span> <span>index</span><span>,</span> <span>array</span><span>(</span><span>index</span><span>)</span>
+
+<span class="tok-kw">Next</span></pre></code><br>
+This program will produce the following output:<br>
+<br>
+<pre class="code">index         value
+ 0             0
+ 1             1
+ 2             2
+ 3             3
+ 4             4
+ 5             0
+ 6             0
+ 7             0
+ 8             0
+ 9             0
+</pre><br>
+<code><pre class="code"><span class="tok-cm">'' Define a variable-length array</span>
+
+<span class="tok-kw">Dim</span> <span>array</span><span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+
+
+<span class="tok-cm">'' ReDim array to have 3*4 elements</span>
+
+<span class="tok-kw">ReDim</span> <span>array</span><span>(</span><span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">3</span><span>,</span> <span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">4</span><span>)</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>n</span> <span>=</span> <span class="tok-nu">1</span><span>,</span> <span>i</span><span>,</span> <span>j</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;3 * 4:&quot;</span>
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">For</span> <span>i</span> <span>=</span> <span class="tok-kw">LBound</span><span>(</span><span>array</span><span>,</span> <span class="tok-nu">1</span><span>)</span> <span class="tok-kw">To</span> <span class="tok-kw">UBound</span><span>(</span><span>array</span><span>,</span> <span class="tok-nu">1</span><span>)</span>
+
+    <span class="tok-kw">For</span> <span>j</span> <span>=</span> <span class="tok-kw">LBound</span><span>(</span><span>array</span><span>,</span> <span class="tok-nu">2</span><span>)</span> <span class="tok-kw">To</span> <span class="tok-kw">UBound</span><span>(</span><span>array</span><span>,</span> <span class="tok-nu">2</span><span>)</span>
+
+        <span>array</span><span>(</span><span>i</span><span>,</span> <span>j</span><span>)</span> <span>=</span> <span>n</span>
+
+        <span class="tok-kw">Print</span> <span class="tok-kw">Using</span> <span>&quot;##  &quot;</span><span>;</span> <span>array</span><span>(</span><span>i</span><span>,</span> <span>j</span><span>);</span>
+
+        <span>n</span> <span>+=</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">Next</span>
+
+    <span class="tok-kw">Print</span>
+
+<span class="tok-kw">Next</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+
+
+<span class="tok-cm">'' ReDim Preserve array to have 4*4 elements, preserving the contents</span>
+
+<span class="tok-cm">'' (only the first upper bound should be changed)</span>
+
+<span class="tok-kw">ReDim</span> <span class="tok-kw">Preserve</span> <span>array</span><span>(</span><span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">4</span><span>,</span> <span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">4</span><span>)</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;4 * 4:&quot;</span>
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">For</span> <span>i</span> <span>=</span> <span class="tok-kw">LBound</span><span>(</span><span>array</span><span>,</span> <span class="tok-nu">1</span><span>)</span> <span class="tok-kw">To</span> <span class="tok-kw">UBound</span><span>(</span><span>array</span><span>,</span> <span class="tok-nu">1</span><span>)</span>
+
+    <span class="tok-kw">For</span> <span>j</span> <span>=</span> <span class="tok-kw">LBound</span><span>(</span><span>array</span><span>,</span> <span class="tok-nu">2</span><span>)</span> <span class="tok-kw">To</span> <span class="tok-kw">UBound</span><span>(</span><span>array</span><span>,</span> <span class="tok-nu">2</span><span>)</span>
+
+        <span class="tok-kw">Print</span> <span class="tok-kw">Using</span> <span>&quot;##  &quot;</span><span>;</span> <span>array</span><span>(</span><span>i</span><span>,</span> <span>j</span><span>);</span>
+
+    <span class="tok-kw">Next</span>
+
+    <span class="tok-kw">Print</span>
+
+<span class="tok-kw">Next</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+
+
+<span class="tok-cm">'' ReDim Preserve array to have 2*4 elements, preserving but trancating the contents</span>
+
+<span class="tok-cm">'' (only the first upper bound should be changed)</span>
+
+<span class="tok-kw">ReDim</span> <span class="tok-kw">Preserve</span> <span>array</span><span>(</span><span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">2</span><span>,</span> <span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">4</span><span>)</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;2 * 4:&quot;</span>
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">For</span> <span>i</span> <span>=</span> <span class="tok-kw">LBound</span><span>(</span><span>array</span><span>,</span> <span class="tok-nu">1</span><span>)</span> <span class="tok-kw">To</span> <span class="tok-kw">UBound</span><span>(</span><span>array</span><span>,</span> <span class="tok-nu">1</span><span>)</span>
+
+    <span class="tok-kw">For</span> <span>j</span> <span>=</span> <span class="tok-kw">LBound</span><span>(</span><span>array</span><span>,</span> <span class="tok-nu">2</span><span>)</span> <span class="tok-kw">To</span> <span class="tok-kw">UBound</span><span>(</span><span>array</span><span>,</span> <span class="tok-nu">2</span><span>)</span>
+
+        <span class="tok-kw">Print</span> <span class="tok-kw">Using</span> <span>&quot;##  &quot;</span><span>;</span> <span>array</span><span>(</span><span>i</span><span>,</span> <span>j</span><span>);</span>
+
+    <span class="tok-kw">Next</span>
+
+    <span class="tok-kw">Print</span>
+
+<span class="tok-kw">Next</span>
+
+<span class="tok-kw">Print</span></pre></code><br>
+This program will produce the following output:<br>
+<br>
+<pre class="code">3 * 4:
+
+ 1   2   3   4
+ 5   6   7   8
+ 9  10  11  12
+
+4 * 4:
+
+ 1   2   3   4
+ 5   6   7   8
+ 9  10  11  12
+ 0   0   0   0
+
+2 * 4:
+
+ 1   2   3   4
+ 5   6   7   8
+
+</pre><br>
+<code><pre class="code"><span class="tok-cm">'' Define a variable-length array as UDT field</span>
+
+<span class="tok-kw">Type</span> <span>UDT</span>
+
+   <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>array</span><span>(</span><span class="tok-kw">Any</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT</span> <span>u</span><span>(</span><span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">3</span><span>)</span>
+
+
+
+<span class="tok-cm">'' For use of Redim with a complex array expression</span>
+
+<span class="tok-cm">'' (especially if the array expression itself contains parentheses),</span>
+
+<span class="tok-cm">'' the array expression must be enclosed in parentheses</span>
+
+<span class="tok-cm">'' in order to solve the parsing ambiguity:</span>
+
+<span class="tok-cm">''    Redim u(0).array(0 To 9)</span>
+
+<span class="tok-cm">''    induces error 4: Duplicated definition, u in 'Redim u(0).array(0 To 9)'</span>
+
+<span class="tok-kw">ReDim</span> <span>(</span><span>u</span><span>(</span><span class="tok-nu">0</span><span>).</span><span>array</span><span>)(</span><span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">9</span><span>)</span></pre></code><br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgRedim.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CGpStringFormat.SetFormatFlags — Help Center</title>
+<meta name="description" content="Sets the format flags for this **StringFormat** object.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpstringformat/cgpstringformat-setformatflags.html">
+<meta property="og:title" content="CGpStringFormat.SetFormatFlags">
+<meta property="og:description" content="Sets the format flags for this **StringFormat** object.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpstringformat/cgpstringformat-setformatflags.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-classes/cgpstringformat/cgpstringformat-setformatflags.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cgpstringformat-class.html">CGpStringFormat Class</a></div>
+<h1>CGpStringFormat.SetFormatFlags<span class="h1kind">method</span></h1>
+<p class="lede">Sets the format flags for this **StringFormat** object.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">method</span><span class="badge">CGpStringFormat.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION SetFormatFlags (BYVAL flags AS INT_) AS GpStatus</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>flags</code></td><td></td><td>Thirty-two bit value that specifies the format flags that control most of the characteristics of the <strong>StringFormat</strong> object. The flags are set by applying a bitwise OR to elements of the <strong>StringFormatFlags</strong> enumeration.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>If the function succeeds, it returns <strong>Ok</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h2>Description</h2>
+<p>Sets the format flags for this <strong>StringFormat</strong> object. The format flags determine most of the characteristics of a <strong>StringFormat</strong> object.</p>
+<h2>Example</h2>
+<p>' ======================================================================================== ' The following example creates a StringFormat object, sets the format flags, and draws ' the formatted string. The code also draws the string's layout rectangle. ' ======================================================================================== SUB Example_SetFormatFlags (BYVAL hdc AS HDC)</p>
+<p>' // Create a graphics object from the window device context DIM graphics AS CGpGraphics = hdc ' // Set the scale transform graphics.ScaleTransformForDpi</p>
+<p>' // Create a red solid brush DIM solidBrush AS CGpSolidBrush = ARGB_RED ' // Create a font family from name DIM fontFamily AS CGpFontFamily = "Times New Roman" ' // Create a font from the font family DIM pFont AS CGpFont = CGpFont(@fontFamily, AfxGdipPointsToPixels(16, TRUE), FontStyleRegular, UnitPixel)</p>
+<p>' // Create a string format object and set its format flags DIM stringFormat AS CGpStringFormat stringFormat.SetFormatFlags(StringFormatFlagsDirectionVertical OR StringFormatFlagsNoFitBlackBox)</p>
+<p>' // Use the StringFormat object in a call to DrawString DIM wszText AS WSTRING * 260 = "This text is vertical because of a format flag." graphics.DrawString(@wszText, LEN(wszText), @pFont, 30, 30, 150, 200, @stringFormat, @solidBrush)</p>
+<p>' // Draw the rectangle that encloses the text DIM pen AS CGpPen = ARGB_RED graphics.DrawRectangle(@pen, 30, 30, 150, 200)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CGpStringFormat.inc</code></li><li>Defined in <span class="srcref">AfxNova/CGpStringFormat.inc:76</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Classes/CGpStringFormat Class.md</span></li><li>Topic: <a href="../cgpstringformat-class.html">CGpStringFormat Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Macros — Help Center</title>
+<meta name="description" content="Macros — 0 documented members. Compiler Internals reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/compiler-internals/macros.html">
+<meta property="og:title" content="Macros">
+<meta property="og:description" content="Macros — 0 documented members. Compiler Internals reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/compiler-internals/macros.html">
+<link rel="stylesheet" href="../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/compiler-internals/macros.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Compiler Internals</div>
+<h1>Macros</h1>
+<h2>Documentation</h2>
+
+	<br>
+Some terms used in the source code (Note the double meanings):<br>
+<ul><li> <code>macro</code>: The #defined/#macroed object that will be expanded to its replacement text<br>
+<li> <code>macro</code>: a function-like macro, e.g. <code>#define m(a, b)</code><br>
+<li> <code>define</code>: an object-like macro, e.g. <code>#define simple</code><br>
+<li> <code>argless define</code> (should be called parameter-less): a function-like macro without parameters, e.g. <code>#define f()</code><br>
+<br>
+</li></li></li></li></ul><b><u>How macros are stored</u></b><br>
+<div class="indent">Macros are basically stored as raw text, not as token runs (as in GCC's libcpp for example). The body of simple #defines without parameters is stored as one string. Macros with parameters are stored as sequence of "macro tokens". There are three types of macro tokens:<br>
+</div><ul><ul><li> <code>text("&lt;text&gt;")</code><br>
+</li></ul></ul><div class="indent"><div class="indent"><div class="indent"><div class="indent">Raw text, but spaces and empty lines trimmed (like in a #define without parameters)<br>
+</div></div></div></div><ul><ul><li> <code>textw("&lt;wstring text&gt;")</code><br>
+</li></ul></ul><div class="indent"><div class="indent"><div class="indent"><div class="indent">Same as above, just for Unicode input.<br>
+</div></div></div></div><ul><ul><li> <code>parameter(index)</code><br>
+</li></ul></ul><div class="indent"><div class="indent"><div class="indent"><div class="indent">A macro parameter was used here in the declaration. The index specifies which one. During expansion, the text of argument(index) is inserted where the parameter was in the declaration.<br>
+</div></div></div></div><ul><ul><li> <code>stringify_parameter(index)</code><br>
+</li></ul></ul><div class="indent"><div class="indent"><div class="indent"><div class="indent">Same as above, except the argument will be stringified during expansion.<br>
+</div></div></div>Note: macro tokens are actually <span><code>symb.bi:FB_DEFTOK</code></span> structures, and they contain an id field holding on of the <span><code>FB_DEFTOK_TYPE_*</code></span> values to tell what they contain.<br>
+<br>
+<div class="indent"><pre class="code">For example:
+
+	#define add(x, y) x + y
+
+becomes:
+
+	parameter(0), text(" + "), parameter(1)
+
+And the expansion text will be:
+
+	argument(0) + " + " + argument(1)
+</pre></div>Storing macros as text is a fairly easy implementation, but it requires to re-parse the macro body over and over again. For example, since GCC works with preprocessing tokens and tokenruns, macros are stored as tokens, making expansion very fast, because there is no need to tokenize the macro body again 	and again. fbc's implementation is not as flexible and maybe not as efficient, but is less complex (regarding code and memory management) and has an upside too: Implementation of <code>##</code> (PP token merge) is trivial. <code>##</code> simply is omitted while recording the macro's body, where as in token runs the tokens need to be merged explicitly.<br>
+<br>
+</div><b><u>When are macros expanded?</u></b><br>
+<div class="indent">Because of token look ahead, macros must be expanded during tokenization, otherwise the wrong tokens might be loaded into the token queue. Afterall the parser should only get to see the final tokens, even during look ahead.<br>
+<br>
+In <span><code>lexNextToken()</code></span>, each alphanumeric identifier is looked up in the symb module to check whether it is a keyword or a macro. Macros and keywords are kept in the same hash table. Note that macros cannot have the name of keywords; "#define integer" causes an error. If a macro is detected, it is immediately expanded, a process also called "loading" the macro (<span><code>pp-define.bas:ppDefineLoad()</code></span>).<br>
+<br>
+</div><b><u>Macro call parsing</u></b><br>
+<div class="indent">If the macro takes arguments, the macro "call" must be parsed, much like a function call, syntax-wise. Since macro expansion already happens in <span><code>lexNextToken()</code></span>, the source of tokens, the parsing here is a little tricky. Forward movement is only possible by replacing (and losing) the current token. The token queue and token look ahead cannot be relied upon. Instead it can only replace the current token to move forward while parsing the macro's arguments.<br>
+<br>
+Since <span><code>lexNextToken()</code></span> is used to parse the arguments, macros in the arguments themselves are recursively macro-expanded while the arguments are being parsed and recorded in text form. The argument texts are stored for use during the expansion.<br>
+<br>
+So, a macro's arguments are expanded before that macro itself is expanded, which could be seen as both good and bad feature:<br>
+<br>
+<div class="indent"><pre class="code">#define stringify(s) #s
+stringify(__LINE__)</pre></div>results in <code>2</code> in FB, but <code>__LINE__</code> in C, because in C, macro parameters are not expanded when used with <code></code># or <code>##</code>. In C, two macros have to be used to get the <code>2</code>:<br>
+<br>
+<div class="indent"><pre class="code">#define stringize(s) #s
+#define stringify(s) stringize(s)
+stringify(__LINE__)</pre><br>
+</div></div><b><u>Putting together the macro expansion text</u></b><br>
+<div class="indent">The expansion text is a string build up from the macro's body tokens. For macro parameters, the argument text is retrieved from the argument array created by the macro call parser, using the indices stored in the parameter tokens. Parameter stringification is done here.<br>
+<br>
+There is a specialty for the builtin defines (<code>__LINE__</code>, <code>__FUNCTION__</code>, <code>__FB_DEBUG__</code>, etc.):<br>
+A callback is used to retrieve their "value". For example: <code>__LINE__</code>'s callback simply returns a string containing the lexer's current line number.<br>
+<br>
+</div><b><u>Expansion</u></b><br>
+<div class="indent">The macro expansion text (<code>deftext</code>) is stored by the lexer, and now it will read characters from there for a while, instead of reading from the file input buffer. Skipping chars in the macro text is like skipping chars in the file input: Once skipped it's lost, there is no going back. So, there never is "old" (parsed) macro text, only the current char and to-be-parsed text. New macro text is prepended to the front of existing macro text. That way macros inside macros are expanded. <br>
+<br>
+This implementation does not (easily) allow to detect macro recursion. It would be hard to keep track of which characters in the macro text buffer belong to which macro, but that would be needed to be able to push and pop macros properly. It could be done more easily with a token run implementation as seen in GCC's libcpp. However C doesn't allow recursive macros in the first place: In C, a macro's identifier is undefined (does not trigger expansion) inside that macro's body. That is not the case in fbc, because (again) a way to detect when a macro body ends is not implemented.<br>
+<br>
+Currently fbc only keeps track of the first (toplevel) macro expanded, because it's easy to detect when that specific macro's end is reached: as soon as there is no more macro text.<br>
+<br>
+That's why the recursion is detected here:<br>
+<br>
+<div class="indent"><pre class="code">#define a a
+a</pre></div>and here too:<br>
+<br>
+<div class="indent"><pre class="code">#define a b
+#define b a
+a</pre></div>but not here: (Note that fbc will run an infinite loop)<br>
+<br>
+<div class="indent"><pre class="code">#define a a
+#define m a
+m</pre><br>
+</div></div><br>
+
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../index.html">Home</a> ·
+         <a href="../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../nav.js?v=70a6b70236"></script>
+<script src="../../search-index.js"></script>
+<script src="../../assets/app.js?v=456d079659"></script>
+<script src="../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

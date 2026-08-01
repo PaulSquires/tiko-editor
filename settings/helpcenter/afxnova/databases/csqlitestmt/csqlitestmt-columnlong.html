@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CSQLiteStmt.ColumnLong — Help Center</title>
+<meta name="description" content="Returns the column value as a long.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/databases/csqlitestmt/csqlitestmt-columnlong.html">
+<meta property="og:title" content="CSQLiteStmt.ColumnLong">
+<meta property="og:description" content="Returns the column value as a long.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/databases/csqlitestmt/csqlitestmt-columnlong.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/databases/csqlitestmt/csqlitestmt-columnlong.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../csqlite-class.html">CSQLite Class</a></div>
+<h1>CSQLiteStmt.ColumnLong<span class="h1kind">method</span></h1>
+<p class="lede">Returns the column value as a long.</p>
+<div class="badges"><a class="badge" href="../index.html">Databases</a><span class="badge">method</span><span class="badge">CSQLite.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION ColumnLong (BYVAL nCol AS LONG) AS LONG</code></pre>
+<pre class="code sig"><code>FUNCTION ColumnLong (BYREF wszColName AS WSTRING) AS LONG</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>nCol / wszColName</code></td><td></td><td>The index or name of the column for which information should be returned. The leftmost column of the result set has the index 0. The number of columns in the result can be determined using <strong>ColumnCount</strong>.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>The column value as a long.</p>
+<h2>Description</h2>
+<p>Returns the column value as a long.</p>
+<h2>Remarks</h2>
+<p>If the SQL statement does not currently point to a valid row, or if the column index is out of range, the result is undefined. <strong>ColumnLong</strong> may only be called when the most recent call to <strong>Step_</strong> has returned SQLITE_ROW and neither <strong>Reset</strong> nor <strong>Finalize</strong> have been called subsequently. If any of these functions are called after <strong>Reset</strong> or <strong>Finalize</strong> or after <strong>Step_</strong> has returned something other than SQLITE_ROW, the results are undefined. If <strong>Step_</strong> or <strong>Reset</strong> or <strong>Finalize</strong> are called from a different thread while ColumnBytes is pending, then the result is undefined.</p>
+<p><strong>ColumnLong</strong> attempts to convert the value where appropriate. The following table details the conversions that are applied:</p>
+<p>The table above makes reference to standard C library function <strong>atoi</strong>(). SQLite does not really use these functions. It has its own equivalent internal functions. The <strong>atoi</strong>() name are used in the table for brevity and because they are familiar to most C programmers.</p>
+<p>If a memory allocation error occurs during the evaluation of any of these functions, a default value is returned. The default value is the floating point number 0.0. Subsequent calls to <strong>ErrCode</strong> will return SQLITE_NOMEM.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CSQLite.inc</code></li><li>Defined in <span class="srcref">AfxNova/CSQLite3.inc:2139</span></li><li>Documented in <span class="srcref">Databases/CSQLite Class.md</span></li><li>Topic: <a href="../csqlite-class.html">CSQLite Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

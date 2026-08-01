@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CAdoRecord.DeleteRecord — Help Center</title>
+<meta name="description" content="Deletes the entity represented by a `Record`.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadorecord/cadorecord-deleterecord.html">
+<meta property="og:title" content="CAdoRecord.DeleteRecord">
+<meta property="og:description" content="Deletes the entity represented by a `Record`.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadorecord/cadorecord-deleterecord.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/databases/ado-classes/cadorecord/cadorecord-deleterecord.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cadorecord-class.html">CAdoRecord Class</a></div>
+<h1>CAdoRecord.DeleteRecord<span class="h1kind">method</span></h1>
+<p class="lede">Deletes the entity represented by a `Record`.</p>
+<div class="badges"><a class="badge" href="../../index.html">Databases</a><span class="badge">method</span><span class="badge">CADORecord.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION DeleteRecord (BYREF wszSource WSTRING = &quot;&quot;, BYVAL Async BOOLEAN = FALSE) AS HRESULT</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>wszSource</code></td><td></td><td>Optional. A string value that contains a URL identifying the entity (for example, the file or directory) to be deleted. If Source is omitted or specifies an empty string, the entity represented by the current <code>Record</code> is deleted. If the <code>Record</code> is a collection record (<strong>RecordType</strong> of <strong>adCollectionRecord</strong>, such as a directory) all children (for example, subdirectories) will also be deleted.</td></tr><tr><td><code>Async</code></td><td></td><td>Optional. A Boolean value that, when True, specifies that the delete operation is asynchronous.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>S_OK (0) or an HRESULT code.</p>
+<h2>Description</h2>
+<p>Deletes the entity represented by a <code>Record</code>.</p>
+<h2>Remarks</h2>
+<p>Operations on the object represented by this <code>Record</code> may fail after this method completes. After calling <strong>DeleteRecord</strong>, the <code>Record</code> should be closed because the behavior of the <code>Record</code> may become unpredictable depending upon when the provider updates the <code>Record</code> with the data source.</p>
+<p>If this <code>Record</code> was obtained from a <code>Recordset</code>, then the results of this operation will not be reflected immediately in the <code>Recordset</code>. Refresh the <code>Recordset</code> by closing and re-opening it, or by executing the <code>Recordset</code> <strong>Requery</strong>, or <strong>Update</strong> and <strong>Resync</strong> methods.</p>
+<p><strong>Note</strong>: URLs using the http scheme will automatically invoke the Microsoft OLE DB Provider for Internet Publishing.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CADORecord.inc</code></li><li>Defined in <span class="srcref">AfxNova/CAdoRecord.inc:388</span></li><li>Documented in <span class="srcref">Databases/ADO Classes/CAdoRecord Class.md</span></li><li>Topic: <a href="../cadorecord-class.html">CAdoRecord Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

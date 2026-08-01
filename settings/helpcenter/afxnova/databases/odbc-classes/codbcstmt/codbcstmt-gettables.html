@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CODBCStmt.GetTables — Help Center</title>
+<meta name="description" content="Returns the list of table, catalog, or schema names, and table types, stored in a specific data source.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/databases/odbc-classes/codbcstmt/codbcstmt-gettables.html">
+<meta property="og:title" content="CODBCStmt.GetTables">
+<meta property="og:description" content="Returns the list of table, catalog, or schema names, and table types, stored in a specific data source.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/databases/odbc-classes/codbcstmt/codbcstmt-gettables.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/databases/odbc-classes/codbcstmt/codbcstmt-gettables.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../codbcstmt-class.html">CODBCStmt Class</a></div>
+<h1>CODBCStmt.GetTables<span class="h1kind">method</span></h1>
+<p class="lede">Returns the list of table, catalog, or schema names, and table types, stored in a specific data source.</p>
+<div class="badges"><a class="badge" href="../../index.html">Databases</a><span class="badge">method</span><span class="badge">CODBCStmt.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GetTables (BYREF wszCatalogName AS WSTRING, BYVAL CatalogNameLength AS SQLSMALLINT, BYREF wszSchemaName AS WSTRING, BYVAL SchemaNameLength AS SQLSMALLINT, BYREF wszTableName AS WSTRING, BYVAL TableNameLength AS SQLSMALLINT, BYREF wszTableType AS WSTRING, BYVAL TableTypeLength AS SQLSMALLINT) AS SQLRETURN</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>wszCatalogName</code></td><td></td><td>Catalog name. The <em>wszCatalogName</em> argument accepts search patterns if the SQL_ODBC_VERSION environment attribute is SQL_OV_ODBC3; it does not accept search patterns if SQL_OV_ODBC2 is set. If a driver supports catalogs for some tables but not for others, such as when a driver retrieves data from different DBMSs, an empty string ("") indicates those tables that do not have catalogs.</td></tr><tr><td><code>CatalogNameLength</code></td><td></td><td>Length of <em>wszCatalogName</em>.</td></tr><tr><td><code>wszSchemaName</code></td><td></td><td>String search pattern for schema names. If a driver supports schemas for some tables but not for others, such as when the driver retrieves data from different DBMSs, an empty string ("") indicates those tables that do not have schemas.</td></tr><tr><td><code>SchemaNameLength</code></td><td></td><td>Length of <em>wszSchemaName</em>.</td></tr><tr><td><code>wszTableName</code></td><td></td><td>String search pattern for table names.</td></tr><tr><td><code>TableNameLength</code></td><td></td><td>Length of <em>wszTableName</em>.</td></tr><tr><td><code>wszTableType</code></td><td></td><td>List of table types to match. Table type names: 'TABLE', 'VIEW', 'SYSTEM TABLE', 'GLOBAL TEMPORARY', 'LOCAL TEMPORARY', 'ALIAS', 'SYNONIM', or a data source-specific type name. The meaning od 'ALIAS' and 'SYNONIM' are driver specific. Pass an empty string ("") to retrieve all table types.<br>If <em>wszTableTypes</em> is not an empty string, it must contain a list of comma-separated values for the types of interest; each value may be enclosed in single quotation marks (') or unquoted — for example, 'TABLE', 'VIEW' or TABLE, VIEW. An application should always specify the table type in uppercase; the driver should convert the table type to whatever case is needed by the data source. If the data source does not support a specified table type, Tables does not return any results for that type.<br>Note that the SQL_ATTR_METADATA_ID statement attribute has no effect upon the <em>wszTableTypes</em> argument. <em>wszTableTypes</em> is a value list argument, no matter what the setting of SQL_ATTR_METADATA_ID.</td></tr><tr><td><code>TableTypeLength</code></td><td></td><td>Length of <em>wszTableType</em>.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>SQL_SUCCESS, SQL_SUCCESS_WITH_INFO, SQL_STILL_EXECUTING, SQL_ERROR, or SQL_INVALID_HANDLE.</p>
+<h2>Description</h2>
+<p>Returns the list of table, catalog, or schema names, and table types, stored in a specific data source.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CODBCStmt.inc</code></li><li>Defined in <span class="srcref">AfxNova/COdbcStmt.inc:1989</span></li><li>Documented in <span class="srcref">Databases/ODBC Classes/CODBCStmt Class.md</span></li><li>Topic: <a href="../codbcstmt-class.html">CODBCStmt Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

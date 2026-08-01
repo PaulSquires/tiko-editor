@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GdipWidenPath — Help Center</title>
+<meta name="description" content="Replaces this path with curves that enclose the area that is filled when this path is drawn by a specified pen. This function also flattens the path.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipwidenpath.html">
+<meta property="og:title" content="GdipWidenPath">
+<meta property="og:description" content="Replaces this path with curves that enclose the area that is filled when this path is drawn by a specified pen. This function also flattens the path.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipwidenpath.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/procedures/gdipwidenpath.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../graphicspath-functions.html">GraphicsPath Functions</a></div>
+<h1>GdipWidenPath<span class="h1kind">function</span></h1>
+<p class="lede">Replaces this path with curves that enclose the area that is filled when this path is drawn by a specified pen. This function also flattens the path.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GdipWidenPath (BYVAL path AS GpPath PTR, BYVAL pen AS GpPen PTR, BYVAL matrix AS GpMatrix PTR, BYVAL flatness AS REAL) AS GpStatus</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>path</code></td><td></td><td>[in] Pointer to the <strong>GraphicsPath</strong> object.</td></tr><tr><td><code>pen</code></td><td></td><td>[in] Pointer to a <strong>Pen</strong> object. The path is made as wide as it would be when drawn by this pen.</td></tr><tr><td><code>matrix</code></td><td></td><td>[in] Pointer to a <strong>Matrix</strong> object that specifies a transformation to be applied along with the widening. If this parameter is NULL, no transformation is applied. The default value is NULL.</td></tr><tr><td><code>flatness</code></td><td></td><td>[in] Simple precision value that specifies the maximum error between the path and its flattened approximation. Reducing the flatness increases the number of line segments in the approximation. The default value is <em>FlatnessDefault</em>.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Replaces this path with curves that enclose the area that is filled when this path is drawn by a specified pen. The Widen method also flattens the path.</p>
+<h2>Example</h2>
+<p>' ======================================================================================== ' The following example creates a GraphicsPath object and adds a closed curve to the path. ' The code creates a green pen that has a width of 10, changes its style to DashStyleDash, ' and passes the address of that pen to the GdipWidenPath function. Then the code draws the ' path with a blue pen of width 1. ' ======================================================================================== SUB Example_WidenPath (BYVAL hdc AS HDC)</p>
+<p>DIM hStatus AS LONG</p>
+<p>' // Create a graphics object from the device context DIM graphics AS GpGraphics PTR hStatus = GdipCreateFromHDC(hdc, @graphics)</p>
+<p>' // Get the DPI scaling ratios DIM dpiX AS SINGLE hStatus = GdipGetDpiX(graphics, @dpiX) DIM rxRatio AS SINGLE = dpiX / 96 DIM dpiY AS SINGLE hStatus = GdipGetDpiY(graphics, @dpiY) Dim ryRatio AS SINGLE = dpiY / 96 ' // Set the scale transform hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)</p>
+<p>' // Create a path DIM path AS GpPath PTR hStatus = GdipCreatePath(FillModeAlternate, @path)</p>
+<p>' // Create the pens. DIM bluePen AS GpPen PTR hStatus = GdipCreatePen1(ARGB_RED, 1, UnitWorld, @bluePen) DIM greenPen AS GpPen PTR hStatus = GdipCreatePen1(ARGB_LIGHTGREEN, 10, UnitWorld, @greenPen)</p>
+<p>' // Add a closed curve. DIM pts(3) AS GpPointF pts(0).x = 20  : pts(0).y = 20 pts(1).x = 160 : pts(1).y = 100 pts(2).x = 140 : pts(2).y = 60 pts(3).x = 60  : pts(3).y = 100 hStatus = GdipAddPathClosedCurve(path, @pts(0), 4)</p>
+<p>' // The GdipWidenPath function respects the dash style of the specified pen ' // (the green pen in this case). The following instruction changes it. hStatus = GdipSetPenDashStyle(greenPen, DashStyleDash)</p>
+<p>' // Widen the path. hStatus = GdipWidenPath(path, greenPen, NULL, FlatnessDefault)</p>
+<p>' // Draw the path. hStatus = GdipDrawPath(graphics, bluePen, path)</p>
+<p>' // Cleanup IF bluePen THEN GdipDeletePen(bluePen) IF greenPen THEN GdipDeletePen(greenPen) IF path THEN GdipDeletePath(path) IF graphics THEN GdipDeleteGraphics(graphics)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/AfxGdiPlus.bi:2051</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Flat  Api/GdiPlusGraphicsPath.md</span></li><li>Topic: <a href="../graphicspath-functions.html">GraphicsPath Functions</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

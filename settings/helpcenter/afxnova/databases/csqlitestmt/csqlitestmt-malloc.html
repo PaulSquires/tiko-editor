@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CSQLiteStmt.Malloc — Help Center</title>
+<meta name="description" content="Returns a pointer to a block of memory at least N bytes in length, where N is the parameter.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/databases/csqlitestmt/csqlitestmt-malloc.html">
+<meta property="og:title" content="CSQLiteStmt.Malloc">
+<meta property="og:description" content="Returns a pointer to a block of memory at least N bytes in length, where N is the parameter.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/databases/csqlitestmt/csqlitestmt-malloc.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/databases/csqlitestmt/csqlitestmt-malloc.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../csqlite-class.html">CSQLite Class</a></div>
+<h1>CSQLiteStmt.Malloc<span class="h1kind">method</span></h1>
+<p class="lede">Returns a pointer to a block of memory at least N bytes in length, where N is the parameter.</p>
+<div class="badges"><a class="badge" href="../index.html">Databases</a><span class="badge">method</span><span class="badge">CSQLite.inc</span><span class="badge badge--warn">doc-orphan</span></div>
+<div class="note note--warn"><strong>No implementation located.</strong> This member is documented, but the source scan found no matching declaration. It is likely declared in a header this scan does not resolve, or provided by a macro.</div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION Malloc (BYVAL nBytes AS LONG) AS ANY PTR</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>nBytes</code></td><td></td><td>The number of bytes to allocate.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>Pointer to the allocated memory.</p>
+<h2>Description</h2>
+<p>Returns a pointer to a block of memory at least N bytes in length, where N is the parameter. If Malloc is unable to obtain sufficient free memory, it returns a NULL pointer. If the parameter <em>nBytes</em> to Malloc is zero or negative then returns a NULL pointer.</p>
+<h2>Remarks</h2>
+<p>The memory returned by <strong>Malloc</strong> and <strong>Realloc</strong> is always aligned to at least an 8 byte boundary, or to a 4 byte boundary if the SQLITE_4_BYTE_ALIGNED_MALLOC compile-time option is used.</p>
+<p>In SQLite version 3.5.0 and 3.5.1, it was possible to define the SQLITE_OMIT_MEMORY_ALLOCATION which would cause the built-in implementation of these functions to be omitted. That capability is no longer provided. Only built-in memory allocators can be used.</p>
+<p>Prior to SQLite version 3.7.10, the Windows OS interface layer called the system <strong>malloc</strong> and <strong>free</strong> directly when converting filenames between the UTF-8 encoding used by SQLite and whatever filename encoding is used by the particular Windows installation. Memory allocation errors were detected, but they were reported back as SQLITE_CANTOPEN or SQLITE_IOERR rather than SQLITE_NOMEM.</p>
+<p>The pointer arguments to <strong>Free</strong> and <strong>Realloc</strong> must be either NULL or else pointers obtained from a prior invocation of Malloc or <strong>Realloc</strong> that have not yet been released.</p>
+<p>The application must not read or write any part of a block of memory after it has been released using <strong>Free</strong> or <strong>Realloc</strong>.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CSQLite.inc</code></li><li>Documented in <span class="srcref">Databases/CSQLite Class.md</span></li><li>Topic: <a href="../csqlite-class.html">CSQLite Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

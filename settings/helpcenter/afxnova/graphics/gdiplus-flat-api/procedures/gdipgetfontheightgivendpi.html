@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GdipGetFontHeightGivenDPI — Help Center</title>
+<meta name="description" content="Gets the line spacing, in pixels, of the font.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipgetfontheightgivendpi.html">
+<meta property="og:title" content="GdipGetFontHeightGivenDPI">
+<meta property="og:description" content="Gets the line spacing, in pixels, of the font.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipgetfontheightgivendpi.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/procedures/gdipgetfontheightgivendpi.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../font-functions.html">Font Functions</a></div>
+<h1>GdipGetFontHeightGivenDPI<span class="h1kind">function</span></h1>
+<p class="lede">Gets the line spacing, in pixels, of the font.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GdipGetFontHeightGivenDPI (BYVAL font AS GpFont PTR, BYVAL dpi AS REAL, BYVAL height AS REAL PTR) AS GpStatus</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>font</code></td><td></td><td>[in] Pointer to the <strong>Font</strong> object.</td></tr><tr><td><code>dpi</code></td><td></td><td>[iin] Single precision value that specifies the vertical resolution, in dots per inch, of the device that displays the font.</td></tr><tr><td><code>height</code></td><td></td><td>[out] Pointer to a single variable that receives the line spacing of the font in pixels.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Gets the line spacing, in pixels, of the font. The line spacing is the vertical distance between the base lines of two consecutive lines of text. Thus, the line spacing includes the blank space between lines along with the height of the character itself.</p>
+<h2>Remarks</h2>
+<p>If the font unit is set to anything other than <em>UnitPixel</em>, the height, in pixels, is calculated using the specified vertical resolution. For example, suppose the font unit is inches and the font size is 0.3. Also suppose that for the corresponding font family, the em height is 2048 and the line spacing is 2355. If the specified vertical resolution is 96 dots per inch, the height is calculated as follows:</p>
+<p>2355<em>(0.3/2048)</em>96 = 33.1171875</p>
+<h2>Example</h2>
+<p>' ======================================================================================== ' The following example creates a Font object, retrieves the height of the Font object, and ' uses the height to position two lines of text, with the second line directly below the first. ' ======================================================================================== SUB Example_GetFontHeightGivenDpi (BYVAL hdc AS HDC)</p>
+<p>DIM hStatus AS LONG</p>
+<p>' // Create a graphics object from the device context DIM graphics AS GpGraphics PTR hStatus = GdipCreateFromHDC(hdc, @graphics)</p>
+<p>' // Get the DPI scaling ratios DIM dpiX AS SINGLE hStatus = GdipGetDpiX(graphics, @dpiX) DIM rxRatio AS SINGLE = dpiX / 96 DIM dpiY AS SINGLE hStatus = GdipGetDpiY(graphics, @dpiY) DIM ryRatio AS SINGLE = dpiY / 96 ' // Set the scale transform hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)</p>
+<p>' // Create a font family DIM fontFamily AS GpFontFamily PTR hStatus = GdipCreateFontFamilyFromName("Arial", NULL, @fontFamily)</p>
+<p>' // Create a font from the font family DIM font AS GpFont PTR hStatus = GdipCreateFont(fontFamily, AfxGdipPointsToPixels(18, TRUE), FontStyleRegular, UnitPixel, @font)</p>
+<p>' // Create a black solid brush DIM brush1 AS GpSolidFill PTR hStatus = GdipCreateSolidFill(ARGB_BLACK, @brush1)</p>
+<p>' // Draw first line of text DIM text1 AS WSTRING * 64 = "The first line of text" DIM rcf1 AS GpRectF = (0, 0, 300, 100) hStatus = GdipDrawString(graphics, text1, LEN(text1), font, @rcf1, NULL, brush1)</p>
+<p>' // Get the font height DIM height AS SINGLE hStatus = GdipGetFontHeightGivenDpi(font, dpiY, @height)</p>
+<p>' // Create second brush (red) DIM brush2 AS GpSolidFill PTR hStatus = GdipCreateSolidFill(ARGB_RED, @brush2)</p>
+<p>' // Draw second line of text below the first DIM text2 AS WSTRING * 64 = "The second line of text" DIM rcf2 AS GpRectF = (0, height, 300, 100) hStatus = GdipDrawString(graphics, text2, LEN(text2), font, @rcf2, NULL, brush2)</p>
+<p>' // Cleanup IF brush1 THEN GdipDeleteBrush(brush1) IF brush2 THEN GdipDeleteBrush(brush2) IF font THEN GdipDeleteFont(font) IF graphics THEN GdipDeleteGraphics(graphics)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/AfxGdiPlus.bi:1713</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Flat  Api/GdiPlusFont.md</span></li><li>Topic: <a href="../font-functions.html">Font Functions</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

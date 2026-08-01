@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CGpImage.GetAllPropertyItems — Help Center</title>
+<meta name="description" content="Gets all the property items (metadata) stored in the Image object.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpimage/cgpimage-getallpropertyitems.html">
+<meta property="og:title" content="CGpImage.GetAllPropertyItems">
+<meta property="og:description" content="Gets all the property items (metadata) stored in the Image object.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpimage/cgpimage-getallpropertyitems.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-classes/cgpimage/cgpimage-getallpropertyitems.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cgpimage-class.html">CGpImage Class</a></div>
+<h1>CGpImage.GetAllPropertyItems<span class="h1kind">method</span></h1>
+<p class="lede">Gets all the property items (metadata) stored in the Image object.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">method</span><span class="badge">CGpBitmap.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GetAllPropertyItems (BYVAL totalBufferSize AS UINT, BYVAL numProperties AS UINT, BYVAL allItems AS PropertyItem PTR) AS GpStatus</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>totalBufferSize</code></td><td></td><td>Integer that specifies the size, in bytes, of the allItems buffer. Call the <strong>GetPropertySize</strong> method to obtain the required size.</td></tr><tr><td><code>numProperties</code></td><td></td><td>Integer that specifies the number of properties in the image. Call the <strong>GetPropertySize</strong> method to obtain this number.</td></tr><tr><td><code>allItems</code></td><td></td><td>Pointer to an array of <strong>PropertyItem</strong> structures that receives the property items.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>If the function succeeds, it returns <strong>StatusOk</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h2>Description</h2>
+<p>Gets all the property items (metadata) stored in an <strong>Image</strong> object.</p>
+<h2>Remarks</h2>
+<p>Some image files contain metadata that you can read to determine features of the image. For example, a digital photograph might contain metadata that you can read to determine the make and model of the camera used to capture the image.</p>
+<p>GDI+ stores an individual piece of metadata in a PropertyItem object. The <strong>GetAllPropertyItems</strong> method returns an array of PropertyItem objects. Before you call <strong>GetAllPropertyItems</strong>, you must allocate a buffer large enough to receive that array. You can call the <strong>GetPropertySize</strong> method of an <strong>Image</strong> object to get the size, in bytes, of the required buffer. The <strong>GetPropertySize</strong> method also gives you the number of properties (pieces of metadata) in the image.</p>
+<p>Several enumerations and constants related to image metadata are defined in Gdiplusimaging.inc.</p>
+<h2>Example</h2>
+<p>'#CONSOLE ON #define _WIN32_WINNT &amp;h0602 #INCLUDE ONCE "AfxNova/CGdiPlus.inc" USING AfxNova</p>
+<p>' ======================================================================================== ' The following example creates an Image object based on a JPEG file. The code calls the ' GdipGetAllPropertyItems function to obtain its property items (metadata). ' ========================================================================================</p>
+<p>DIM hStatus AS LONG</p>
+<p>' // Create a Bitmap object from a JPEG file. DIM image AS CGpImage = "climber.jpg"</p>
+<p>' // Get total buffer size and number of properties DIM totalSize AS UINT, numProps AS UINT, buffer AS UBYTE PTR hStatus = image.GetPropertySize(@totalSize, @numProps) IF hStatus = 0 THEN ' // Allocate buffer and retrieve all property items buffer = Allocate(totalSize) hStatus = image.GetAllPropertyItems(totalSize, numProps, cast(PropertyItem PTR, buffer)) IF hStatus = 0 THEN</p>
+<pre class="code"><code>DIM propItem AS PropertyItem PTR
+  FOR i AS LONG = 0 TO numProps - 1
+     propItem = cast(PropertyItem PTR, buffer + i * SIZEOF(PropertyItem))
+     PRINT "Property ID: &amp;h"; HEX(propItem-&gt;id)
+     PRINT "Type: "; propItem-&gt;type; " Length: "; propItem-&gt;length
+     SELECT CASE propItem-&gt;type
+        CASE PropertyTagTypeASCII
+           PRINT "Value: "; *cast(ZSTRING PTR, propItem-&gt;value)
+        CASE PropertyTagTypeByte
+           DIM b AS UBYTE PTR = Cast(UBYTE PTR, propItem-&gt;value)
+           FOR j AS LONG = 0 TO propItem-&gt;length - 1
+              PRINT b[j]; " ";
+           NEXT
+           PRINT
+        CASE PropertyTagTypeShort
+           DIM s AS USHORT PTR = cast(USHORT PTR, propItem-&gt;value)
+              FOR j AS LONG = 0 TO propItem-&gt;length \ 2 - 1
+                 PRINT s[j]; " ";
+              NEXT
+              PRINT
+        CASE PropertyTagTypeLong
+           DIM l AS ULONG PTR = cast(ULONG PTR, propItem-&gt;value)
+           FOR j AS LONG = 0 TO propItem-&gt;length \ 4 - 1
+              PRINT l[j]; " ";
+           NEXT
+           PRINT
+        CASE ELSE
+           PRINT "Unsupported type"
+     END SELECT
+     PRINT "---------------------------"
+  NEXT</code></pre>
+<p>ELSE</p>
+<pre class="code"><code>PRINT "Failed to retrieve property items"</code></pre>
+<p>END IF END IF</p>
+<p>' // Cleanup IF buffer THEN Deallocate(buffer)</p>
+<p>PRINT PRINT "Press any key" SLEEP</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CGpBitmap.inc</code></li><li>Defined in <span class="srcref">AfxNova/CGpBitmap.inc:354</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Classes/CGpImage Classes.md</span></li><li>Topic: <a href="../cgpimage-class.html">CGpImage Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

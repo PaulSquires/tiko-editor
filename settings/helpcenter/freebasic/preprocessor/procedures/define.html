@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#define — Help Center</title>
+<meta name="description" content="Preprocessor directive to define a macro">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/preprocessor/procedures/define.html">
+<meta property="og:title" content="#define">
+<meta property="og:description" content="Preprocessor directive to define a macro">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/preprocessor/procedures/define.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/preprocessor/procedures/define.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>#define<span class="h1kind">keyword</span></h1>
+<p class="lede">Preprocessor directive to define a macro</p>
+<div class="badges"><a class="badge" href="../index.html">Preprocessor</a><span class="badge">keyword</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>#define identifier body</code></pre>
+<pre class="code sig"><code>#define identifier( [ parameters ] ) body</code></pre>
+<pre class="code sig"><code>#define identifier( [ parameters, ] Variadic_Parameter... ) body</code></pre>
+<h2>Description</h2>
+<br>
+<code><b>#define</b></code> allows to declare text-based preprocessor macros. Once the compiler has seen a <code><b>#define</b></code>, it will start replacing further occurrences of <code><i>identifier</i></code> with <code><i>body</i></code>. <code><i>body</i></code> may be empty. The expansion is done recursively, until there is nothing more to expand and the compiler can continue analyzing the resulting code. <code><a href="undef.html">#undef</a></code> can be used to make the compiler forget about a <code><b>#define</b></code>.<br>
+<br>
+<code><i>Parameters</i></code> turn a define into a function-like macro, allowing text arguments to be passed to the macro. Any occurrences of the parameter names in the <code><i>body</i></code> will be replaced by the given argument text during expansion.<br>
+If a literal is passed to a macro, the name of the corresponding parameter in the macro body can not be used as a local variable as in a procedure body. To emulate the same functioning as for a procedure, the user must then explicitly declare a local variable (with another name) in the body of the macro and initialize it with the passed parameter name (replaced at preprocessing by the literal passed).<br>
+<br>
+The <code><a href="../../operators/preprocessor-operators/procedures/operator-preprocessor-stringize.html"># Stringize</a></code> operator can be used on macro parameters to turn them into string literals, and the <code><a href="../../operators/preprocessor-operators/procedures/operator-preprocessor-concatenate.html">## Concatenate</a></code> operator can be used to merge tokens together.<br>
+<br>
+Note: In the function-like <code><b>#define</b></code> declaration, the <code><i>identifier</i></code> should be followed by the opening parentheses (<code>(</code>) immediately without any white-space in between, otherwise the compiler will treat it as part of the <code><i>body</i></code>.<br>
+<br>
+Defines are <i>scoped</i>; they are only visible in the scope they were defined in. If defined at module level, the define is visible throughout the module. If the <code><i>identifier</i></code> is defined inside a compound statement having scope (<code><a href="../../procedures/procedures/sub.html">Sub</a></code>, <code><a href="../../operators/iterating-operators/procedures/for-next.html">For..Next</a></code>, <code><a href="../../control-flow-statements/procedures/while-wend-or-while-end-while.html">While..Wend</a></code>, <code><a href="../../control-flow-statements/procedures/do-loop.html">Do..Loop</a></code>, <code><a href="../../variable-declarations/procedures/scope-end-scope.html">Scope..End Scope</a></code>, etc), the <code><i>identifier</i></code> define is only visible within that scope. Namespaces on the other hand do not have any effect on the visibility of a define.<br>
+<br>
+<code><i>Identifier</i></code>s can be checked for with <code><a href="ifdef.html">#ifdef</a></code> and others, which can be used to hide parts of code from the compiler (conditional compiling).<br>
+<br>
+The result of macro expansion can be checked by using the <a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-pp.html">-pp</a> compiler option.<br>
+<br>
+<code><b>#define</b></code>s are often used to declare constants. The <code><a href="../../variable-declarations/procedures/const.html">Const</a></code> statement is a type-safe alternative.<br>
+<br>
+WARNING: When the define body contains an expression with one operator at least, it may be mandatory to have to surround some terms (parameters, whole body) by parentheses in order to not undergo an unwanted precedence change of operators (if passing as argument an expression with also operators, or if using the define in a main expression with also operators).<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Differences from QB</h3><br>
+<ul><li> New to FreeBASIC<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="macro-endmacro.html">#macro</a></code><br>
+<li> <code><a href="../../operators/preprocessor-operators/procedures/operator-preprocessor-stringize.html"># Preprocessor Stringize</a></code><br>
+<li> <code><a href="../../operators/preprocessor-operators/procedures/operator-preprocessor-concatenate.html">## Preprocessor Concatenate</a></code><br>
+<li> <code><a href="ifdef.html">#ifdef</a></code><br>
+<li> <code><a href="undef.html">#undef</a></code><br>
+<li> <code><a href="../../variable-declarations/procedures/const.html">Const</a></code><br>
+<li> <code><a href="../../procedures/procedures/ellipsis.html">...</a></code><br>
+<br>
+</li></li></li></li></li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-cm">'' Definition and check</span>
+
+<span>#define DEBUGGING
+
+#ifdef DEBUGGING
+
+</span>  <span class="tok-cm">' ... statements</span>
+
+<span>#endif
+
+</span>
+
+<span class="tok-cm">'' Simple definition/text replacement</span>
+
+<span>#define False 0
+
+#define True (Not False)
+
+</span>
+
+<span class="tok-cm">'' Function-like definition</span>
+
+<span>#define MyRGB(R,G,B) (((R)Shl 16)  Or ((G)Shl 8) Or (B)) 
+
+</span><span class="tok-kw">Print</span> <span class="tok-kw">Hex</span><span>(</span> <span>MyRGB</span><span>(</span><span class="tok-nu">&amp;hff</span><span>,</span> <span class="tok-nu">&amp;h00</span><span>,</span> <span class="tok-nu">&amp;hff</span><span>)</span> <span>)</span>
+
+
+
+<span class="tok-cm">'' Line continuation and statements in a definition</span>
+
+<span>#define printval(bar) _
+
+</span>    <span class="tok-kw">Print</span> <span>#</span><span>bar</span><span>;</span> <span>&quot; =&quot;</span><span>;</span> <span>bar</span>
+
+
+
+<span class="tok-cm">'' #defines are visible only in the scope where they are defined</span>
+
+<span class="tok-kw">Scope</span>
+
+    <span>#define LOCALDEF 1
+
+</span><span class="tok-kw">End</span> <span class="tok-kw">Scope</span>
+
+
+
+<span>#ifndef LOCALDEF
+
+#    Print LOCALDEF Is Not defined
+
+#endif
+
+</span>
+
+<span class="tok-cm">'' namespaces have no effect on the visibility of a define</span>
+
+<span class="tok-kw">Namespace</span> <span>foo</span>
+
+<span>#    define NSDEF
+
+</span><span class="tok-kw">End</span> <span class="tok-kw">Namespace</span>
+
+
+
+<span>#ifdef NSDEF
+
+#    Print NSDEF Is defined
+
+#endif
+
+</span></pre></code><br>
+<br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgPpdefine.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

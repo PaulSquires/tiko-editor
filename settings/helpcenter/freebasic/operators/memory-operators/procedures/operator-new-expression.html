@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Operator New Expression — Help Center</title>
+<meta name="description" content="Operator to dynamically allocate memory and construct data of a specified type.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/operators/memory-operators/procedures/operator-new-expression.html">
+<meta property="og:title" content="Operator New Expression">
+<meta property="og:description" content="Operator to dynamically allocate memory and construct data of a specified type.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/operators/memory-operators/procedures/operator-new-expression.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/operators/memory-operators/procedures/operator-new-expression.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>Operator New Expression<span class="h1kind">operator</span></h1>
+<p class="lede">Operator to dynamically allocate memory and construct data of a specified type.</p>
+<div class="badges"><a class="badge" href="../../index.html">Operators</a><span class="badge">operator</span><span class="badge badge--ok">documented</span></div>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>datatype</code></td><td></td><td>Name of the data type to create.</td></tr><tr><td><code>initializers</code></td><td></td><td>Initial value(s) for the variable.</td></tr><tr><td><code>count</code></td><td></td><td>Exact number of elements to allocate.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<br>
+A pointer of type <a href="../../../reference/data-types.html">datatype</a> to the newly allocated data, or null pointer if the memory allocation failed.<br>
+<br>
+
+<h2>Description</h2>
+<br>
+The <code><b>New Expression</b></code> operator dynamically allocates memory and constructs a specified data type.<br>
+<br>
+For simple types, like integers, an initial value can be given. For types without constructors, initial values can be specified for each field (either with default initializer at data-field declaration, or with initializer list as in <code><b>New</b> <i>datatype</i> (<b>initializers, ..</b>)</code> if all type data-fields are numeric primitives only and without any default initializers). For types with at least one constructor, the initialize list (if any) must match an existing constructor. If no initializers are given, the default values for those types will be set.<br>
+<br>
+<code><b>New[] Expression</b></code> operator is the (one-dimensional) array-version of the <code><b>New Expression</b></code> operator and allocates enough memory for the specified number of objects. The default constructor for the type will be used to set the initial values for each item.<br>
+<br>
+Objects created with <code><b>New Expression</b></code> operator must be freed with <code><a href="operator-delete-statement.html">Delete Statement</a></code> operator. Object array created with <code><b>New[] Expression</b></code> operator must be freed with <code><b>Delete[] Statement</b></code> operator, the array-version of <code><a href="operator-delete-statement.html">Delete Statement</a></code> operator. You cannot mix and match the different versions of the operators.<br>
+<br>
+Specifying an initial value of <code><a href="../../../procedures/procedures/any.html">Any</a></code>, as in <code><b>New</b> <i>datatype</i> (<b>Any</b>)</code> will allocate memory for the type, but not initialize the data.  This is only valid on data types that do not have constructors (otherwise for data types with constructors, syntax of simple memory allocation with pointer conversion, like <i>Cptr(datatype Ptr, Allocate(Sizeof(datatype)))</i>, can be substituted to the invalid use of New...Any).<br>
+<br>
+Specifying an initial value of <code><a href="../../../procedures/procedures/any.html">Any</a></code>, as in <code><b>New</b> <i>datatype</i>[<i>count</i>] {<b>Any</b>}</code> will allocate memory for the array, but not initialize the data.  This is only valid on data types that do not have constructors (otherwise for data types with constructors, syntax of simple memory allocation with pointer conversion, like <i>Cptr(datatype Ptr, Allocate(count * Sizeof(datatype)))</i>, can be substituted to the invalid use of New...Any).<br>
+<br>
+The total memory, in bytes, to be allocated with <code><b>New</b> <i>datatype</i>[<i>count</i>]</code> expression is calculated as <code><i>sizeof(datatype) * count</i></code>, plus <code><i>sizeof(uinteger)</i></code> if there is an implicit or explicit <code><a href="../../../user-defined-types/procedures/destructor.html">Destructor</a></code>.  The total memory requested in bytes to be allocated must not overflow the value that can be held by a <code><a href="../../../bit-manipulation/procedures/uinteger.html">UInteger</a></code>.  The extra <code><i>uinteger</i></code>, if allocated, stores the number of elements as part of the allocation, so that <code><a href="operator-delete-statement.html">Delete Statement</a></code> can determine the count of destructors to call.<br>
+<br>
+If the memory allocation fails, a null pointer is returned and no constructors are called.<br>
+<br>
+The dynamic memory allocation process part provided by the <code><b>New Expression</b></code> operator can be overloaded for user-defined types as a member operator <code><a href="operator-new-overload.html">New Overload</a></code>. The following process part for data construction can never be modified.<br>
+<br>
+<b>Note:</b> Using <code><i>pointer</i> = <b>New</b> <i>datatype</i>[<i>count</i>]</code> may be unsafe if <code><i>pointer</i></code> was declared with a type different from <code><i>datatype</i></code> (for sub-type polymorphism purpose for example), because the pointer arithmetic fails to access the elements if the pointer type size is different from the size of <code><i>datatype</i></code> (when using <code><a href="../../indexing-operators/procedures/operator-pointer-index.html">Operator [] (Pointer Index)</a></code> or adding an offset (element number) to the pointer, or even when <code><b>Delete[] Statement</b></code> itself (the array-version of <code><a href="operator-delete-statement.html">Delete Statement</a></code>) must destroy the elements).<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Usage</h3><code><br>
+<i>result</i> = <b>New</b> <i><a href="../../../reference/data-types.html">datatype</a></i><br>
+<div class="indent"><i>or</i><br>
+</div><i>result</i> = <b>New</b> <i><a href="../../../reference/data-types.html">datatype</a></i> ( <i>initializers</i>, ... )<br>
+<div class="indent"><i>or</i><br>
+</div><i>result</i> = <b>New</b> <i><a href="../../../reference/data-types.html">datatype</a></i><b>[</b> <i>count</i> <b>]</b><br>
+</code><br>
+
+<h3>Dialect Differences</h3><br>
+<ul><li> Only available in the <i><a href="../../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang fb</a></i> dialect.<br>
+<br>
+</li></ul>
+<h3>Differences from QB</h3><br>
+<ul><li> New to FreeBASIC<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="operator-delete-statement.html">Delete Statement</a></code><br>
+<li> <code><a href="operator-placement-new.html">Placement New</a></code><br>
+<li> <code><a href="operator-new-overload.html">New Overload</a></code><br>
+<br>
+</li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span>Rational</span>
+
+    <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>numerator</span><span>,</span> <span>denominator</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-cm">' Create and initialize a &quot;rational&quot; and store its address.</span>
+
+<span class="tok-kw">Dim</span> <span>p</span> <span class="tok-kw">As</span> <span>Rational</span> <span class="tok-kw">Ptr</span> <span>=</span> <span class="tok-kw">New</span> <span>Rational</span><span>(</span><span class="tok-nu">3</span><span>,</span> <span class="tok-nu">4</span><span>)</span>
+
+
+
+<span class="tok-cm">' Test if null return pointer</span>
+
+<span class="tok-kw">If</span> <span>(</span><span>p</span> <span>=</span> <span class="tok-nu">0</span><span>)</span> <span class="tok-kw">Then</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;Error: unable to allocate memory&quot;</span>
+
+<span class="tok-kw">Else</span>
+
+    <span class="tok-kw">Print</span> <span>p</span><span>-&gt;</span><span>numerator</span> <span>&amp;</span> <span>&quot;/&quot;</span> <span>&amp;</span> <span>p</span><span>-&gt;</span><span>denominator</span>
+
+    <span class="tok-cm">' Destroy the rational and give its memory back to the system.</span>
+
+    <span class="tok-kw">Delete</span> <span>p</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+<code><pre class="code"><span class="tok-cm">' Allocate memory for 100 integers and store the address of the first one.</span>
+
+<span class="tok-kw">Dim</span> <span>p</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span class="tok-kw">Ptr</span> <span>=</span> <span class="tok-kw">New</span> <span class="tok-kw">Integer</span><span>[</span><span class="tok-nu">100</span><span>]</span>
+
+
+
+<span class="tok-cm">' Test if null return pointer</span>
+
+<span class="tok-kw">If</span> <span>(</span><span>p</span> <span>=</span> <span class="tok-nu">0</span><span>)</span> <span class="tok-kw">Then</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;Error: unable to allocate memory&quot;</span>
+
+<span class="tok-kw">Else</span>
+
+    <span class="tok-cm">' Assign some values to the integers in the array.</span>
+
+    <span class="tok-kw">For</span> <span>i</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">99</span>
+
+        <span>p</span><span>[</span><span>i</span><span>]</span> <span>=</span> <span>i</span>
+
+    <span class="tok-kw">Next</span>
+
+    <span class="tok-cm">' Free the entire integer array.</span>
+
+    <span class="tok-kw">Delete</span><span>[]</span> <span>p</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+
+
+<span class="tok-kw">Print</span> <span>&quot;Done.&quot;</span>
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+<code><pre class="code"><span class="tok-cm">'' Example of nested New [] to get a 2-dimentional object array (4*3)</span>
+
+
+
+<span class="tok-kw">Type</span> <span>UDT</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>N</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>()</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Destructor</span> <span>()</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>UDT</span> <span>()</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;Constructor&quot;</span><span>,</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Destructor</span> <span>UDT</span> <span>()</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;Destructor&quot;</span><span>,</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Destructor</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT</span> <span class="tok-kw">Ptr</span> <span class="tok-kw">Ptr</span> <span>p</span> <span>=</span> <span class="tok-kw">New</span> <span>UDT</span> <span class="tok-kw">Ptr</span> <span>[</span><span class="tok-nu">4</span><span>]</span>  <span class="tok-cm">'' New [] allocation for the first dimension:</span>
+
+                                        <span class="tok-cm">''   no internal allocation of extra uinteger because</span>
+
+                                        <span class="tok-cm">''   allocation of array of pointers (to UDT objects with destructor)</span>
+
+<span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">3</span>
+
+    <span>p</span><span>[</span><span>I</span><span>]</span> <span>=</span> <span class="tok-kw">New</span> <span>UDT</span> <span>[</span><span class="tok-nu">5</span><span>]</span>                  <span class="tok-cm">'' New [] allocations for the last dimension:</span>
+
+                                        <span class="tok-cm">''   internal allocation of an extra uinteger for each New [],</span>
+
+                                        <span class="tok-cm">''   because allocation of an array of UDT objects with destructor</span>
+
+    <span class="tok-kw">Print</span>
+
+<span class="tok-kw">Next</span> <span>I</span>
+
+
+
+<span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">3</span>
+
+    <span class="tok-kw">For</span> <span>J</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">4</span>
+
+        <span>p</span><span>[</span><span>I</span><span>][</span><span>J</span><span>].</span><span>N</span> <span>=</span> <span>I</span> <span>*</span> <span class="tok-nu">10</span> <span>+</span> <span>J</span>  <span class="tok-cm">'' assignment of each object array element</span>
+
+    <span class="tok-kw">Next</span> <span>J</span>
+
+<span class="tok-kw">Next</span> <span>I</span>
+
+
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">3</span>
+
+    <span class="tok-kw">For</span> <span>J</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">4</span>
+
+        <span class="tok-kw">Print</span> <span>p</span><span>[</span><span>I</span><span>][</span><span>J</span><span>].</span><span>N</span><span>,</span>        <span class="tok-cm">'' display of each object array element</span>
+
+    <span class="tok-kw">Next</span> <span>J</span>
+
+    <span class="tok-kw">Print</span>
+
+<span class="tok-kw">Next</span> <span>I</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+<span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">3</span>
+
+    <span class="tok-kw">Delete</span> <span>[]</span> <span>p</span><span>[</span><span>I</span><span>]</span>  <span class="tok-cm">'' Delete [] deallocations for the last dimension</span>
+
+    <span class="tok-kw">Print</span>
+
+<span class="tok-kw">Next</span> <span>I</span>
+
+<span class="tok-kw">Delete</span> <span>[]</span> <span>p</span>         <span class="tok-cm">'' Delete [] deallocation for the first dimension)</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+<br>
+<div class="indent">Output example:<br>
+<pre class="code">
+Constructor   Constructor   Constructor   Constructor   Constructor
+Constructor   Constructor   Constructor   Constructor   Constructor
+Constructor   Constructor   Constructor   Constructor   Constructor
+Constructor   Constructor   Constructor   Constructor   Constructor
+
+ 0             1             2             3             4
+ 10            11            12            13            14
+ 20            21            22            23            24
+ 30            31            32            33            34
+
+Destructor    Destructor    Destructor    Destructor    Destructor
+Destructor    Destructor    Destructor    Destructor    Destructor
+Destructor    Destructor    Destructor    Destructor    Destructor
+Destructor    Destructor    Destructor    Destructor    Destructor</pre></div>
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgOpNew.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

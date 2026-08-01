@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>C Header Style Guide — Help Center</title>
+<meta name="description" content="C Header Style Guide — 0 documented members. Compiler Internals reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/compiler-internals/c-header-style-guide.html">
+<meta property="og:title" content="C Header Style Guide">
+<meta property="og:description" content="C Header Style Guide — 0 documented members. Compiler Internals reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/compiler-internals/c-header-style-guide.html">
+<link rel="stylesheet" href="../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/compiler-internals/c-header-style-guide.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Compiler Internals</div>
+<h1>C Header Style Guide</h1>
+<h2>Documentation</h2>
+
+	<br>
+<div>About This Guide</div><br>
+This guide is not a <a href="http://www.cprogramming.com/tutorial.html#ctutorial">C tutorial</a> or a <a href="c-header-translation-tutorial.html">step by step guide</a> for converting headers. This is a style guide which represents the <code>ideal</code> header we would like to maintain. Currently not all of the headers under our control conform to this guide 100%, but work is in progress to do this and all new contributions should attempt to use these standards. <br>
+<br>
+<div>General</div><br>
+<ul><li> Translations should be very close to the original, so they look familiar and can be updated easily.<br>
+<li> Identifiers (including any #defines) should not be changed unless absolutely necessary.<br>
+<li> Smaller files may be combined into one bigger header, if they would be #included anyways and all belong to the same library.<br>
+<li> Original license should be retained. <br>
+<br>
+</li></li></li></li></ul><div>Coding style</div><br>
+<ul><li> Headers need to work with the latest FreeBASIC version.<br>
+<li> Naming conflicts between multiple identifiers (due to FreeBASIC's case insensitivity) or an identifier and a FreeBASIC keyword should be resolved by appending an underscore to one identifier.<br>
+<li> extern "c" blocks should be used instead of cdecl alias "..." for function declarations or function pointer types.<br>
+<li> Preprocessor directives (including #defines) should be preserved. Exception: Remove if they serve only to select options for different C compilers, i.e. extern differences, then these can be removed unless they provide support for further code. When choosing compilers the choice should favor GNU C. <br>
+<li> FreeBASIC keywords should be lower-case. <br>
+<br>
+</li></li></li></li></li></ul><div>Dealing with constructs not supported by FreeBASIC</div><br>
+<ul><li> Inline functions should be converted to a macro if appropriate.<br>
+<li> Preprocessor directives inside structure declarations, function bodies, or similar may need to be moved outside because in FreeBASIC they'd be scoped.<br>
+<li> Declarations spread across multiple lines with preprocessor directives in between them (for example function declarations, or array initializers) will need to be manually rewritten<br>
+<br>
+</li></li></li></ul><br>
+
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../index.html">Home</a> ·
+         <a href="../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../nav.js?v=70a6b70236"></script>
+<script src="../../search-index.js"></script>
+<script src="../../assets/app.js?v=456d079659"></script>
+<script src="../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

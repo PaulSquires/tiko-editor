@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dynamic memory management with FreeBASIC — Help Center</title>
+<meta name="description" content="Dynamic memory management with FreeBASIC — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/dynamic-memory-management-with-freebasic.html">
+<meta property="og:title" content="Dynamic memory management with FreeBASIC">
+<meta property="og:description" content="Dynamic memory management with FreeBASIC — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/dynamic-memory-management-with-freebasic.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/programmer-s-guide/dynamic-memory-management-with-freebasic.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>Dynamic memory management with FreeBASIC</h1>
+<h2>Documentation</h2>
+
+	Managing <b>Dynamic Memory</b> (Allocation / Deallocation) with <b>FreeBASIC</b><br>
+<br>
+<b>Preamble:</b><br>
+<br>
+FreeBASIC supports three basic types of memory allocation:<br>
+<div class="indent"><b>-</b> Static allocation occurs for static and global variables: Memory is allocated once when the program runs and persists throughout the life of the program.<br>
+<b>-</b> Stack allocation occurs for procedure parameters and local variables: Memory is allocated when the corresponding block is entered, and released when the block is left, as many times as necessary.<br>
+<b>-</b> Dynamic allocation is the subject of this page.<br>
+<br>
+</div>Static allocation and stack allocation have two things in common:<br>
+<div class="indent"><b>-</b> The size of the variable must be known at compile time.<br>
+<b>-</b> Memory allocation and deallocation occur automatically (when the variable is instantiated then destroyed). The user can not anticipate the destruction of such a variable.<br>
+<br>
+</div>Most of the time, that is fine. However, there are situations where one or other of these constraints cause problems (when the memory needed depends on user input, the sizing can only be determined during run-time).<br>
+<br>
+If the size of everything must be declared at compile time, the best is try to estimate the maximum size of the variables needed and hope this will be enough.<br>
+This is a bad solution for at least third reasons:<br>
+<div class="indent"><b>-</b> First, it leads to wasting memory if it is not fully used.<br>
+<b>-</b> Second, most normal variables are allocated in a part of the memory called the stack. The amount of stack memory for a program is usually quite low (1 MB or 2 MB by default). If exceeding this number, the stack overflow will occur, and the program will abort.<br>
+<b>-</b> Third, and most importantly, this can lead to artificial limitations and / or overflows. What happens if the required memory becomes greater than the reserved memory (stopping the program, emitting message to user, ...).<br>
+<br>
+</div>Fortunately, these problems are easily solved through the dynamic allocation of memory. Dynamic memory allocation is a way of running programs to request memory from the operating system when needed. This memory does not come from the program's limited stack memory, but it is rather allocated from a much larger memory pool managed by the operating system called heap. On modern machines, the heap can have a size of several gigabytes.<br>
+<br>
+<div>Keywords for dynamic memory allocation</div><div><br>
+There are two sets of keyword for dynamic allocation / deallocation:<br>
+<div class="indent"><b>-</b> <code><a href="../../memory-functions/procedures/allocate.html">Allocate</a></code> / <code><a href="../../memory-functions/procedures/callocate.html">CAllocate</a></code> / <code><a href="../../memory-functions/procedures/reallocate.html">Reallocate</a></code> / <code><a href="../../memory-functions/procedures/deallocate.html">Deallocate</a></code>: for raw memory allocation then deallocation, for simple pre-defined types or buffers (as numeric pre-defined types, user buffer, ...).<br>
+<b>-</b> <code><a href="../../operators/memory-operators/procedures/operator-new-expression.html">New</a></code> / <code><a href="../../operators/memory-operators/procedures/operator-delete-statement.html">Delete</a></code>: for memory allocation + construction then destruction + deallocation, for object type (as var-len strings, UDTs, ...).<br>
+<br>
+</div>Mixing keywords between these two sets is very strongly discouraged when managing a same memory block.<br>
+<br>
+</div><div>Dynamic memory allocation management by using Allocate / Callocate / Reallocate / Deallocate</div><div><br>
+For each keyword, see the detailed syntax, precise description and examples in the individual documentation pages.<br>
+<br>
+Additional functionalities and tips for use:<br>
+<div class="indent"><b>-</b> <code><b>Allocate</b></code> / <code><b>CAllocate</b></code> / <code><b>Reallocate</b></code> allows to know if memory allocation is successful (otherwise a null pointer is returned).<br>
+<b>-</b> Even if the allocated memory size is requested for 0 Byte, a non null pointer is returned and its value should be used to then release the allocation (except for <code><b>Reallocate(pointer, 0)</b></code> which behaves similar to <code><b>Deallocate</b></code>).<br>
+<b>-</b> For memory deallocation, <code><b>Deallocate</b></code> can be called on any type of pointer (with the right value anyway).<br>
+<b>-</b> If the user absolutely wants to use this type of allocation for an object (for example to be able to do reallocation), it's up to him to manually call if necessary the constructor and the destructor (by using member access operator) at the right way.<br>
+<b>-</b> After deallocation, the pointer value becomes invalid (pointing to an invalid memory address), and its reuse (for dereferencing or calling <code><b>Deallocate</b></code> again) will result in undefined behavior.<br>
+<br>
+</div></div><div>Dynamic memory allocation management by using New / Delete</div><div><br>
+For each keyword, see the detailed syntax, precise description and examples in the individual documentation pages.<br>
+<br>
+Additional functionalities and tips for use:<br>
+<div class="indent"><b>-</b> Before, <code><b>New</b></code> did not signal if memory allocation was successful (program hangs). Problem solved from fbc rev 1.06, by returning a null pointer if <code><b>New</b></code> fails.<br>
+<b>-</b> Even if the allocated memory size is requested for 0 Byte (<code><b>New predefined_datatype[0]</b></code>), a non null pointer is returned and its value should be used to then release the allocation.<br>
+<b>-</b> For object destruction and memory deallocation, <code><b>Delete</b></code> must be called on a proper typed pointer (otherwise the object destructor will not be called or miscalled, and that may result in a memory leak or even a crash with <code><b>Delete[]</b></code>).<br>
+<b>-</b> The user can also use this type of allocation for a simple pre-defined types (except for the fix-len strings), but this does not functionally add anything, except a simpler usage syntax for allocation.<br>
+<b>-</b> After destruction + deallocation, the pointer value becomes invalid (pointing to an invalid memory address), and its reuse (for dereferencing or calling <code><b>Delete</b></code> again) will result in undefined behavior.<br>
+<b>-</b> If used, the special <code><b>Placement New</b></code> (using memory already allocated) induces only object construction, so use <code><b>Delete</b></code> is forbidden (to avoid double request of deallocation). If necessary, the only destruction of the object must be manually do by user (calling the destructor by using member access operator).<br>
+<br>
+</div></div><div>Variant by using Redim / Erase</div><div><br>
+FreeBASIC also supports dynamic arrays (variable-length arrays).<br>
+The memory used by a dynamic array to store its elements is allocated at run-time in the heap. Dynamic arrays can contain simple types as well as complex objects.<br>
+By using <code><a href="../../array-functions/procedures/redim.html">ReDim</a></code>, the user does not need to call the constructor / destructor because <code><b>ReDim</b></code> does this automatically when adding / removing element. <code><a href="../../array-functions/procedures/erase.html">Erase</a></code> then destroys all the remaining elements to completely free the memory allocated to them.<br>
+<br>
+</div><div>Use cases by comparing 4 methods</div><div><br>
+Usage example on a set of objects, by comparing 4 methods:<br>
+<div class="indent"><b>-</b> 3 then 4 objects: <code><b>CAllocate</b></code>, <code><b>Reallocate</b></code>, <code><b>Deallocate</b></code>, (+ .constructor + .destructor).<br>
+<b>-</b> 3 objects: <code><b>New</b></code>, <code><b>Delete</b></code>.<br>
+<b>-</b> 3 objects: <code><b>Placement New</b></code>, (+ .destructor).<br>
+<b>-</b> 3 then 4 objects: <code><b>ReDim</b></code>, <code><b>Erase</b></code>.<br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span>UDT</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>S</span> <span>=</span> <span>&quot;FreeBASIC&quot;</span>              <span class="tok-cm">'' induce an implicit constructor and destructor</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-cm">' 3 then 4 objects: Callocate, Reallocate, Deallocate, (+ .constructor + .destructor)</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT</span> <span class="tok-kw">Ptr</span> <span>p1</span> <span>=</span> <span class="tok-kw">CAllocate</span><span>(</span><span class="tok-nu">3</span><span>,</span> <span class="tok-kw">SizeOf</span><span>(</span><span>UDT</span><span>))</span>  <span class="tok-cm">'' allocate cleared memory for 3 elements (string descriptors cleared,</span>
+
+                                               <span class="tok-cm">''     but maybe useless because of the constructor's call right behind)</span>
+
+<span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">2</span>
+
+    <span>p1</span><span>[</span><span>I</span><span>].</span><span class="tok-kw">Constructor</span><span>()</span>                        <span class="tok-cm">'' call the constructor on each element</span>
+
+<span class="tok-kw">Next</span> <span>I</span>
+
+<span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">2</span>
+
+    <span>p1</span><span>[</span><span>I</span><span>].</span><span>S</span> <span>&amp;=</span> <span class="tok-kw">Str</span><span>(</span><span>I</span><span>)</span>                          <span class="tok-cm">'' add the element number to the string of each element</span>
+
+<span class="tok-kw">Next</span> <span>I</span>
+
+<span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">2</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;'&quot;</span> <span>&amp;</span> <span>p1</span><span>[</span><span>I</span><span>].</span><span>S</span> <span>&amp;</span> <span>&quot;'&quot;</span><span>,</span>                 <span class="tok-cm">'' print each element string</span>
+
+<span class="tok-kw">Next</span> <span>I</span>
+
+<span class="tok-kw">Print</span>
+
+<span>p1</span> <span>=</span> <span class="tok-kw">Reallocate</span><span>(</span><span>p1</span><span>,</span> <span class="tok-nu">4</span> <span>*</span> <span class="tok-kw">SizeOf</span><span>(</span><span>UDT</span><span>))</span>           <span class="tok-cm">'' reallocate memory for one additional element</span>
+
+<span class="tok-kw">Clear</span> <span>p1</span><span>[</span><span class="tok-nu">3</span><span>],</span> <span class="tok-nu">0</span><span>,</span> <span class="tok-nu">3</span> <span>*</span> <span class="tok-kw">SizeOf</span><span>(</span><span class="tok-kw">Integer</span><span>)</span>            <span class="tok-cm">'' clear the descriptor of the additional element,</span>
+
+                                               <span class="tok-cm">''     but maybe useless because of the constructor's call right behind</span>
+
+<span>p1</span><span>[</span><span class="tok-nu">3</span><span>].</span><span class="tok-kw">Constructor</span><span>()</span>                            <span class="tok-cm">'' call the constructor on the additional element</span>
+
+<span>p1</span><span>[</span><span class="tok-nu">3</span><span>].</span><span>S</span> <span>&amp;=</span> <span class="tok-kw">Str</span><span>(</span><span class="tok-nu">3</span><span>)</span>                              <span class="tok-cm">'' add the element number to the string of the additional element</span>
+
+<span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">3</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;'&quot;</span> <span>&amp;</span> <span>p1</span><span>[</span><span>I</span><span>].</span><span>S</span> <span>&amp;</span> <span>&quot;'&quot;</span><span>,</span>                 <span class="tok-cm">'' print each element string</span>
+
+<span class="tok-kw">Next</span> <span>I</span>
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">3</span>
+
+    <span>p1</span><span>[</span><span>I</span><span>].</span><span class="tok-kw">Destructor</span><span>()</span>                         <span class="tok-cm">'' call the destructor on each element</span>
+
+<span class="tok-kw">Next</span> <span>I</span>
+
+<span class="tok-kw">Deallocate</span><span>(</span><span>p1</span><span>)</span>                                 <span class="tok-cm">'' deallocate the memory</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+<span class="tok-cm">' 3 objects: New, Delete</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT</span> <span class="tok-kw">Ptr</span> <span>p2</span> <span>=</span> <span class="tok-kw">New</span> <span>UDT</span><span>[</span><span class="tok-nu">3</span><span>]</span>                 <span class="tok-cm">'' allocate memory and construct 3 elements</span>
+
+<span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">2</span>
+
+    <span>p2</span><span>[</span><span>I</span><span>].</span><span>S</span> <span>&amp;=</span> <span class="tok-kw">Str</span><span>(</span><span>I</span><span>)</span>                          <span class="tok-cm">'' add the element number to the string of each element</span>
+
+<span class="tok-kw">Next</span> <span>I</span>
+
+<span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">2</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;'&quot;</span> <span>&amp;</span> <span>p2</span><span>[</span><span>I</span><span>].</span><span>S</span> <span>&amp;</span> <span>&quot;'&quot;</span><span>,</span>                 <span class="tok-cm">'' print each element string</span>
+
+<span class="tok-kw">Next</span> <span>I</span>
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Delete</span> <span>[]</span> <span>p2</span>                                   <span class="tok-cm">'' destroy the 3 element and deallocate the memory</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+<span class="tok-cm">' 3 objects: Placement New, (+ .destructor)</span>
+
+<span class="tok-kw">ReDim</span> <span class="tok-kw">As</span> <span class="tok-kw">Byte</span> <span>array</span><span>(</span><span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">3</span> <span>*</span> <span class="tok-kw">SizeOf</span><span>(</span><span>UDT</span><span>)</span> <span>-</span> <span class="tok-nu">1</span><span>)</span>  <span class="tok-cm">'' allocate buffer for 3 elements</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Any</span> <span class="tok-kw">Ptr</span> <span>p</span> <span>=</span> <span>@</span><span>array</span><span>(</span><span class="tok-nu">0</span><span>)</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT</span> <span class="tok-kw">Ptr</span> <span>p3</span> <span>=</span> <span class="tok-kw">New</span><span>(</span><span>p</span><span>)</span> <span>UDT</span><span>[</span><span class="tok-nu">3</span><span>]</span>              <span class="tok-cm">'' only construct the 3 elements in the buffer (placement New)</span>
+
+<span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">2</span>
+
+    <span>p3</span><span>[</span><span>I</span><span>].</span><span>S</span> <span>&amp;=</span> <span class="tok-kw">Str</span><span>(</span><span>I</span><span>)</span>                          <span class="tok-cm">'' add the element number to the string of each element</span>
+
+<span class="tok-kw">Next</span> <span>I</span>
+
+<span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">2</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;'&quot;</span> <span>&amp;</span> <span>p3</span><span>[</span><span>I</span><span>].</span><span>S</span> <span>&amp;</span> <span>&quot;'&quot;</span><span>,</span>                 <span class="tok-cm">'' print each element string</span>
+
+<span class="tok-kw">Next</span> <span>I</span>
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">2</span>
+
+    <span>p3</span><span>[</span><span>I</span><span>].</span><span class="tok-kw">Destructor</span><span>()</span>                         <span class="tok-cm">'' call the destructor on each element</span>
+
+<span class="tok-kw">Next</span> <span>I</span>
+
+<span class="tok-kw">Erase</span> <span>array</span>                                    <span class="tok-cm">'' deallocate the buffer</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+<span class="tok-cm">' 3 then 4 objects: Redim, Erase</span>
+
+<span class="tok-kw">ReDim</span> <span class="tok-kw">As</span> <span>UDT</span> <span>p4</span><span>(</span><span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">2</span><span>)</span>                        <span class="tok-cm">'' define a dynamic array of 3 elements</span>
+
+<span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">2</span>
+
+    <span>p4</span><span>(</span><span>I</span><span>).</span><span>S</span> <span>&amp;=</span> <span class="tok-kw">Str</span><span>(</span><span>I</span><span>)</span>                          <span class="tok-cm">'' add the element number to the string of each element</span>
+
+<span class="tok-kw">Next</span> <span>I</span>
+
+<span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">2</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;'&quot;</span> <span>&amp;</span> <span>p4</span><span>(</span><span>I</span><span>).</span><span>S</span> <span>&amp;</span> <span>&quot;'&quot;</span><span>,</span>                 <span class="tok-cm">'' print each element string</span>
+
+<span class="tok-kw">Next</span> <span>I</span>
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">ReDim</span> <span class="tok-kw">Preserve</span> <span>p4</span><span>(</span><span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">3</span><span>)</span>                      <span class="tok-cm">'' resize the dynamic array for one additional element</span>
+
+<span>p4</span><span>(</span><span class="tok-nu">3</span><span>).</span><span>S</span> <span>&amp;=</span> <span class="tok-kw">Str</span><span>(</span><span class="tok-nu">3</span><span>)</span>                              <span class="tok-cm">'' add the element number to the string of the additional element</span>
+
+<span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">3</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;'&quot;</span> <span>&amp;</span> <span>p4</span><span>(</span><span>I</span><span>).</span><span>S</span> <span>&amp;</span> <span>&quot;'&quot;</span><span>,</span>                 <span class="tok-cm">'' print each element string</span>
+
+<span class="tok-kw">Next</span> <span>I</span>
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Erase</span> <span>p4</span>                                       <span class="tok-cm">'' erase the dynamic array</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+ Output:<br>
+<div class="indent"><pre class="code">
+'FreeBASIC0'  'FreeBASIC1'  'FreeBASIC2'
+'FreeBASIC0'  'FreeBASIC1'  'FreeBASIC2'  'FreeBASIC3'
+
+'FreeBASIC0'  'FreeBASIC1'  'FreeBASIC2'
+
+'FreeBASIC0'  'FreeBASIC1'  'FreeBASIC2'
+
+'FreeBASIC0'  'FreeBASIC1'  'FreeBASIC2'
+'FreeBASIC0'  'FreeBASIC1'  'FreeBASIC2'  'FreeBASIC3'
+			</pre></div></div></div><div>Specific dynamic image buffer allocation by using Imagecreate / Imagedestroy</div><div><br>
+<code><a href="../../2d-drawing-functions/procedures/imagecreate.html">ImageCreate</a></code> allocates and initializes storage for an image.<br>
+The resulting image buffer can be used in drawing procedures while in any screen mode, and across mode changes,  as long as the color depth of the image buffer matches that of the graphics screen.<br>
+<code><a href="../../2d-drawing-functions/procedures/imagedestroy.html">ImageDestroy</a></code> destroys and deallocates storage for an image.<br>
+<br>
+</div><div>See also</div><div><br>
+<ul><li> <a href="new-and-delete.html">New and Delete</a><br>
+<li> <a href="variable-length-arrays.html">Variable-length Arrays</a><br>
+<li> <a href="dynamic-object-and-data-lifetime.html">Dynamic Object and Data Lifetime</a><br>
+<br>
+</li></li></li></ul></div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CEdit.CharFromPos — Help Center</title>
+<meta name="description" content="Gets information about the character closest to a specified point in the client area of an edit control.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/cedit/cedit-charfrompos.html">
+<meta property="og:title" content="CEdit.CharFromPos">
+<meta property="og:description" content="Gets information about the character closest to a specified point in the client area of an edit control.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/cedit/cedit-charfrompos.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-controls/cedit/cedit-charfrompos.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cedit-class.html">CEdit Class</a></div>
+<h1>CEdit.CharFromPos<span class="h1kind">method</span></h1>
+<p class="lede">Gets information about the character closest to a specified point in the client area of an edit control.</p>
+<div class="badges"><a class="badge" href="../../index.html">Windows</a><span class="badge">method</span><span class="badge">CEdit.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION CharFromPos (BYVAL hEdit AS HWND, BYVAL x AS SHORT, BYVAL y AS SHORT) AS DWORD</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>x</code></td><td></td><td>The x-coordinate of a point in the control's client area.</td></tr><tr><td><code>y</code></td><td></td><td>The y-coordinate of a point in the control's client area.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>The <strong>LOWORD</strong> specifies the zero-based index of the character nearest the specified point. This index is relative to the beginning of the control, not the beginning of the line. If the specified point is beyond the last character in the edit control, the return value indicates the last character in the control. The <strong>HIWORD</strong> specifies the zero-based index of the line that contains the character. For single-line edit controls, this value is zero. The index indicates the line delimiter if the specified point is beyond the last visible character in a line.</p>
+<h2>Description</h2>
+<p>Gets information about the character closest to a specified point in the client area of an edit control.</p>
+<h2>Remarks</h2>
+<p>The coordinates are in screen units and are relative to the upper-left corner of the control's client area.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CEdit.inc</code></li><li>Defined in <span class="srcref">AfxNova/CEdit.inc:165</span></li><li>Documented in <span class="srcref">Windows/WIndows Controls/CEdit Class.md</span></li><li>Topic: <a href="../cedit-class.html">CEdit Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sub — Help Center</title>
+<meta name="description" content="Defines a procedure">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/procedures/procedures/sub.html">
+<meta property="og:title" content="Sub">
+<meta property="og:description" content="Defines a procedure">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/procedures/procedures/sub.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/procedures/procedures/sub.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>Sub<span class="h1kind">keyword</span></h1>
+<p class="lede">Defines a procedure</p>
+<div class="badges"><a class="badge" href="../index.html">Procedures</a><span class="badge">keyword</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>[Public|Private] Sub identifier [cdecl|pascal|stdcall] [Overload] [Alias external_identifier] [( [parameter_list] )] [Static] [Export]</code></pre>
+<pre class="code sig"><code>statements</code></pre>
+<pre class="code sig"><code>...</code></pre>
+<pre class="code sig"><code>[Return]</code></pre>
+<pre class="code sig"><code>...</code></pre>
+<pre class="code sig"><code>End Sub</code></pre>
+<pre class="code sig"><code>[Public] Sub identifier [cdecl|pascal|stdcall] [Overload] [Alias external_identifier] [()] [Constructor|Destructor] [Static]</code></pre>
+<pre class="code sig"><code>statements</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>identifier</code></td><td></td><td>: the name of the subroutine</td></tr><tr><td><code>external_identifier</code></td><td></td><td>: externally visible (to the linker) name enclosed in quotes</td></tr><tr><td><code>parameter_list</code></td><td></td><td>: parameter[, parameter[, ...]]</td></tr><tr><td><code>parameter</code></td><td></td><td>: <code>[<a href="byref-parameters.html">ByRef</a>|<a href="byval.html">ByVal</a>] <i>identifier</i> [<a href="../../miscellaneous-keywords/procedures/as.html">As</a> <i>type</i>] [= <i>default_value</i>]</code></td></tr><tr><td><code>identifier</code></td><td></td><td>: the name of the variable referenced in the subroutine. If the argument is an array then the identifier must be followed by an empty parenthesis.</td></tr><tr><td><code>type</code></td><td></td><td>: the type of variable</td></tr><tr><td><code>default_value</code></td><td></td><td>: the value of the argument if none is specified in the call (</td></tr><tr><td><code>default_value</code></td><td></td><td>can be a literal, or a constant, or a shared variable)</td></tr><tr><td><code>statements</code></td><td></td><td>: one or more statements that make up the subroutine body</td></tr></tbody></table></div>
+<h2>Description</h2>
+<br>
+A subroutine is a block of code which may be called at any time from a program. This code may need to be executed multiple times, and subroutines provide an invaluable means to simplify code by replacing these blocks of code with a single subroutine call. A subroutine also serves to allow a user to extend the FreeBASIC language to provide custom commands. Many of the functions built into FreeBASIC are merely subroutines part of a "runtime library" linked to by default.<br>
+<br>
+The <code><b>Sub</b></code> keyword marks the beginning of a subroutine, and its end is marked by <code><b>End Sub</b></code>. The "name" parameter is the name by which this subroutine is called. For instance, if the declaration is "<code><b>Sub</b>...<b>End Sub</b></code>", the user can execute the code in between "<code><b>Sub</b> foo</code>" and "<code><b>End Sub</b></code>" by using "<code>foo</code>" as a statement. This code is executed separate from the code which calls the subroutine, so any variable names, unless they are shared, are not available to the subroutine. Values can, however, be passed using parameters.<br>
+<br>
+Parameters are the arguments passed to any statement. For instance, if a user executes a statement as "<code><a href="../../console-functions/procedures/print.html">Print</a> 4</code>", the value "4" is passed to the function "<code><a href="../../console-functions/procedures/print.html">Print</a></code>". Parameters that need to be passed to a subroutine are supplied by one or more parameter arguments in the "<code><b>Sub</b></code>" keyword. Creating a subroutine with "<code><b>Sub</b> mysub(foo, bar)...<b>End Sub</b></code>", allows the code in between "<code><b>Sub</b></code>" and "<code><b>End Sub</b></code>" to refer to the first passed argument as "foo" and the second passed argument as "bar". If a parameter is given a default value, that parameter is optional.<br>
+Array parameters are specified by following an identifier with an empty parenthesis. Note that array parameters are always <code><a href="byref-parameters.html">ByRef</a></code> and the <code><a href="byref-parameters.html">ByRef</a></code> keyword is neither required nor allowed for array parameters. When calling a subroutine with an array argument the parenthesis must be supplied there too.<br>
+<br>
+In the default dialect <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang fb</a></i>, parameters must also have a supplied type, in the form "<code><i>parameter</i> as <i>type</i></code>". Type suffixes are not allowed.<br>
+<br>
+In the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang qb</a></i> and <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang fblite</a></i> dialects only, it will be given a default type if the type is not explicitly given either by name or by type suffix. The default type is <code><a href="../../standard-data-types/procedures/single.html">Single</a></code> in the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang qb</a></i> dialect and <code><a href="../../standard-data-types/procedures/integer.html">Integer</a></code> in the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang fblite</a></i> dialect.<br>
+<br>
+A subroutine can also specify how parameters are passed, either as "<code><a href="byref-parameters.html">ByRef</a></code>" or "<code><a href="byval.html">ByVal</a></code>", as shown in the syntax definition. If a parameter is "<code><a href="byref-parameters.html">ByRef</a></code>", the parameter name literally becomes a reference to the original variable passed to the subroutine. Any changes made to that variable will be reflected outside of the subroutine. If a parameter is passed "<code><a href="byval.html">ByVal</a></code>", however, the value of any passed variable is copied into a new variable, and any changes made to it will not affect the original.<br>
+<br>
+The <code><a href="../../variable-declarations/procedures/static.html">Static</a></code> specifier indicates that the values of all local variables defined in the sub should be preserved between calls. To specify individual local variables as static see the <code><a href="../../variable-declarations/procedures/static.html">Static</a></code> keyword.<br>
+To access duplicated symbols defined as global outside the subroutine body, add one or preferably two dot(s) as prefix: <code>.SomeSymbol</code> or preferably <code>..SomeSymbol</code> (or only <code>..SomeSymbol</code> if inside a <a href="../../user-defined-types/procedures/with.html">With..End With</a> block).<br>
+<br>
+Sub is the same as <code><a href="function.html">Function</a></code>, except it does not allow a value to be returned.<br>
+<br>
+When calling a subroutine, parentheses after the subroutine name (surrounding the argument list if any) are optional.<br>
+<br>
+The second syntax defines either a constructor or destructor using the <code><a href="constructor-module.html">Constructor</a></code> and <code><a href="destructor-module.html">Destructor</a></code> keywords, respectively. Constructor subroutines are executed before the first line of code in the module, while destructors execute on module exit. Note the public access specifier and empty parameter list for both constructors and destructors.<br>
+<br>
+<b>Warning for 64-bit compiler only:</b> See the <a href="../../tutorials/programmer-s-guide/identifier-rules.html">Identifier Rules</a> page for the choice of user procedure identifier names (and specially the 'Platform Differences' paragraph).<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Dialect Differences</h3><br>
+<ul><li> The <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang qb</a></i> and <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang fblite</a></i> dialects keep the QB convention: parameters are <code><a href="byref-parameters.html">ByRef</a></code> by default.<br>
+<li> In the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang fb</a></i> dialect, numeric parameters are passed <code><a href="byval.html">ByVal</a></code> by default.  <code><a href="../../operators/preprocessor-operators/procedures/string.html">String</a></code>s and UDTs are passed <code><a href="byref-parameters.html">ByRef</a></code> by default.<br>
+<br>
+</li></li></ul>
+<h3>Differences from QB</h3><br>
+<ul><li> Public and Private access specifiers are new to FreeBASIC.<br>
+<li> Constructor subroutines are new to FreeBASIC.<br>
+<br>
+</li></li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="declare.html">Declare</a></code><br>
+<li> <code><a href="function.html">Function</a></code><br>
+<li> <code><a href="../../control-flow-statements/procedures/exit.html">Exit</a></code><br>
+<li> <code><a href="../../modularizing/procedures/public.html">Public</a></code><br>
+<li> <code><a href="../../modularizing/procedures/private.html">Private</a></code><br>
+<li> <code><a href="../../variable-declarations/procedures/static.html">Static</a></code><br>
+<br>
+</li></li></li></li></li></li></ul><br>
+   <br>
+
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-cm">'' Example of writing colored text using a sub:</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>PrintColoredText</span><span>(</span> <span class="tok-kw">ByVal</span> <span>colour</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>,</span> <span class="tok-kw">ByRef</span> <span>text</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>)</span>
+
+   <span class="tok-kw">Color</span> <span>colour</span>
+
+   <span class="tok-kw">Print</span> <span>text</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+   <span>PrintColoredText</span><span>(</span> <span class="tok-nu">1</span><span>,</span> <span>&quot;blue&quot;</span> <span>)</span>        <span class="tok-cm">'' a few colors</span>
+
+   <span>PrintColoredText</span><span>(</span> <span class="tok-nu">2</span><span>,</span> <span>&quot;green&quot;</span> <span>)</span>
+
+   <span>PrintColoredText</span><span>(</span> <span class="tok-nu">4</span><span>,</span> <span>&quot;red&quot;</span> <span>)</span>
+
+   <span class="tok-kw">Print</span>
+
+   
+
+   <span class="tok-kw">Dim</span> <span>i</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+   <span class="tok-kw">For</span> <span>i</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">15</span>                        <span class="tok-cm">'' all 16 colors</span>
+
+      <span>PrintColoredText</span><span>(</span> <span>i</span><span>,</span> <span>(</span><span>&quot;color &quot;</span> <span>&amp;</span> <span>i</span><span>)</span> <span>)</span>
+
+   <span class="tok-kw">Next</span> <span>i</span></pre></code><br>
+<code><pre class="code"><span class="tok-cm">' The following demonstrates optional parameters.</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>TestSub</span><span>(</span><span>P</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>=</span> <span>&quot;Default&quot;</span><span>)</span>
+
+    <span class="tok-kw">Print</span> <span>P</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span>TestSub</span> <span>&quot;Testing:&quot;</span>
+
+<span>TestSub</span></pre></code><br>
+<br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgSub.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

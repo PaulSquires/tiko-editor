@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>File I/O Functions — Help Center</title>
+<meta name="description" content="File I/O Functions — 0 documented members. File I/O Functions reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/file-i-o-functions/file-i-o-functions.html">
+<meta property="og:title" content="File I/O Functions">
+<meta property="og:description" content="File I/O Functions — 0 documented members. File I/O Functions reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/file-i-o-functions/file-i-o-functions.html">
+<link rel="stylesheet" href="../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/file-i-o-functions/file-i-o-functions.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>File I/O Functions</div>
+<h1>File I/O Functions</h1>
+<h2>Documentation</h2>
+
+	Statements and procedures for working with files and devices.<br>
+<br>
+<div>Description</div><div><br>
+<div class="indent">These statements and procedures provide file and device i/o capabilities. So called <i>file numbers</i> can be bound to files or devices, which can be read or written to using formatted (text mode) or unformatted (binary mode) data. In binary mode, files and devices can be read from or written to in arbitrary locations. For multithreaded applications, files and devices can also be locked.<br>
+<br>
+</div><b><a href="#FILEOPS">Opening Files or Devices</a></b><br>
+<div class="indent">Procedures and other keywords that provide read or write access to a file or device.<br>
+</div><b><a href="#FILEIO">Reading from and Writing to Files or Devices</a></b><br>
+<div class="indent">Procedures that read and write data to an opened file or device.<br>
+</div><b><a href="#FILEPOS">File Position and other Info</a></b><br>
+<div class="indent">Procedures that determine where reading and writing will take place within an opened file.<br>
+<br>
+</div><table><tr><td><a></a><b><u>Opening Files or Devices</u></b><br>
+<div class="indent"><b><a href="procedures/freefile.html">FreeFile</a></b><br>
+<div class="indent">Gets an available file number that can be used to read or write from files or devices.<br>
+</div><b><a href="procedures/open.html">Open</a></b><br>
+<div class="indent">Binds a file number to a physical file to provide reading and writing capabilities.<br>
+</div><b><a href="procedures/open-com.html">Open Com</a></b><br>
+<div class="indent">Binds a file number to a communications port.<br>
+</div><b><a href="procedures/open-cons.html">Open Cons</a></b><br>
+<div class="indent">Binds a file number to the standard input and output streams.<br>
+</div><b><a href="procedures/open-err.html">Open Err</a></b><br>
+<div class="indent">Binds a file number to the standard input and error streams.<br>
+</div><b><a href="procedures/open-lpt.html">Open Lpt</a></b><br>
+<div class="indent">Binds a file number to a printer device.<br>
+</div><b><a href="procedures/open-pipe.html">Open Pipe</a></b><br>
+<div class="indent">Binds a file number to the input and output streams of a process.<br>
+</div><b><a href="procedures/open-scrn.html">Open Scrn</a></b><br>
+<div class="indent">Binds a file number directly to the console.<br>
+</div><b><a href="procedures/close.html">Close</a></b><br>
+<div class="indent">Unbinds a file number from a file or device.<br>
+</div><b><a href="procedures/reset.html">Reset</a></b><br>
+<div class="indent">Unbinds all active file numbers.<br>
+<br>
+</div><b>File I/O modes</b><br>
+<div class="indent"><b><a href="procedures/input-file-mode.html">Input (File Mode)</a></b><br>
+<div class="indent">Text data can be read from the file.<br>
+</div><b><a href="procedures/output.html">Output</a></b><br>
+<div class="indent">Text data can be written to the file.<br>
+</div><b><a href="procedures/append.html">Append</a></b><br>
+<div class="indent">Text data is added to the end of a file when output.<br>
+</div><b><a href="procedures/binary.html">Binary</a></b><br>
+<div class="indent">Arbitrary data can be read from or written to the file.<br>
+</div><b><a href="procedures/random.html">Random</a></b><br>
+<div class="indent">Blocks of data of certain size can be read from and written to the file.<br>
+<br>
+</div></div><b>File access privileges</b><br>
+<div class="indent"><b><a href="procedures/access.html">Access</a></b><br>
+<div class="indent">An overview of file access privileges.<br>
+</div><b><a href="procedures/read-file-access.html">Read (File Access)</a></b><br>
+<div class="indent">Binary data can only be read from the file.<br>
+</div><b><a href="procedures/write-file-access.html">Write (File Access)</a></b><br>
+<div class="indent">Binary data can only be written to the file.<br>
+</div><b><a href="procedures/read-write-file-access.html">Read Write(File Access)</a></b><br>
+<div class="indent">Binary data can be read from and written to the file.<br>
+<br>
+</div></div><b>Character encoding</b><br>
+<div class="indent"><b><a href="procedures/encoding.html">Encoding</a></b><br>
+<div class="indent">Specifies the character encoding of a file.<br>
+</div></div></div></td><td><a></a><b><u>Reading from and Writing to Files or Devices</u></b><br>
+<div class="indent"><b><a href="procedures/input.html">Input #</a></b><br>
+<div class="indent">Reads a list of values from a file or device.<br>
+</div><b><a href="procedures/write.html">Write #</a></b><br>
+<div class="indent">Writes a list of values to a file or device.<br>
+</div><b><a href="../user-input-runtime-library/procedures/input-2.html">Input()</a></b><br>
+<div class="indent">Reads a number of characters from a file or device.<br>
+</div><b><a href="../user-input-runtime-library/procedures/winput.html">Winput()</a></b><br>
+<div class="indent">Reads a number of wide characters from a file or device.<br>
+</div><b><a href="procedures/line-input.html">Line Input #</a></b><br>
+<div class="indent">Reads a line of text from a file or device.<br>
+</div><b><a href="procedures/print.html">Print #</a></b><br>
+<b><a href="procedures/print.html">? # (Shortcut For 'Print #')</a></b><br>
+<div class="indent">Writes text data to a file or device.<br>
+</div><b><a href="procedures/put-file-i-o.html">Put #</a></b><br>
+<div class="indent">Writes arbitrary data to a file or device.<br>
+</div><b><a href="procedures/get-file-i-o.html">Get #</a></b><br>
+<div class="indent">Reads arbitrary data from a file or device.<br>
+<br>
+</div></div><a></a><b><u>File Position and other Info</u></b><br>
+<div class="indent"><b><a href="procedures/lof.html">LOF</a></b><br>
+<div class="indent">Gets the length (in bytes) of a file.<br>
+</div><b><a href="procedures/loc.html">LOC</a></b><br>
+<div class="indent">Gets the file position of the last read or write operation.<br>
+</div><b><a href="procedures/eof.html">EOF</a></b><br>
+<div class="indent">Returns true if all of the data has been read from a file.<br>
+</div><b><a href="procedures/seek-statement.html">Seek (Statement)</a></b><br>
+<div class="indent">Sets the file position of the next read or write operation.<br>
+</div><b><a href="procedures/seek-function.html">Seek (Function)</a></b><br>
+<div class="indent">Gets the file position of the next read or write operation.<br>
+</div><b><a href="procedures/lock.html">Lock</a></b><br>
+<div class="indent">Restricts read or write access to a file or portion of a file.<br>
+</div><b><a href="procedures/unlock.html">Unlock</a></b><br>
+<div class="indent">Remove read or write restrictions from a previous <a href="procedures/lock.html">Lock</a> command.<br>
+</div></div></td></tr></table><div>&nbsp;</div><br>
+</div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../index.html">Home</a> ·
+         <a href="../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../nav.js?v=70a6b70236"></script>
+<script src="../../search-index.js"></script>
+<script src="../../assets/app.js?v=456d079659"></script>
+<script src="../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

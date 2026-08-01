@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mid (Function) — Help Center</title>
+<meta name="description" content="Returns a substring of a string">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/string-functions/procedures/mid-function.html">
+<meta property="og:title" content="Mid (Function)">
+<meta property="og:description" content="Returns a substring of a string">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/string-functions/procedures/mid-function.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/string-functions/procedures/mid-function.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>Mid (Function)<span class="h1kind">function</span></h1>
+<p class="lede">Returns a substring of a string</p>
+<div class="badges"><a class="badge" href="../index.html">String Functions</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>Declare Function Mid ( ByRef str as Const String, ByVal start as integer ) as String</code></pre>
+<pre class="code sig"><code>Declare Function Mid ( ByVal str as Const WString Ptr, ByVal start as integer ) as WString</code></pre>
+<pre class="code sig"><code>Declare Function Mid ( ByRef str as Const String, ByVal start as integer, ByVal n as integer ) as String</code></pre>
+<pre class="code sig"><code>Declare Function Mid ( ByVal str as Const WString Ptr, ByVal start as integer, ByVal n as integer ) as WString</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>str</code></td><td></td><td>The source string.</td></tr><tr><td><code>start</code></td><td></td><td>The start position in</td></tr><tr><td><code>str</code></td><td></td><td>of the substring. The first character starts at position 1.</td></tr><tr><td><code>n</code></td><td></td><td>The substring length, in characters.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<br>
+Returns a substring starting from <code><i>start</i></code> in <code><i>str</i></code>. If <code><i>str</i></code> is empty then the null string (<code>"</code><code>"</code>) is returned. If <code><i>start</i> &lt;= 0</code> or <code><i>start</i> &gt; len(<i>str</i>)</code> then the null string (<code>"</code><code>"</code>) is returned.<br>
+<br>
+In the first form of <code><b>Mid</b></code>, all of the remaining characters are returned. In the second form, if <code><i>n</i> &lt; 0</code> or <code><i>n</i> &gt; len(<i>str</i>) - <i>start</i></code> then all of the remaining characters are returned.<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Usage</h3><code><br>
+<i>result</i> = <b>Mid</b>[$]( <i>str</i>, <i>start</i> [, <i>n</i> ] )<br>
+</code><br>
+
+<h3>Platform Differences</h3><br>
+<ul><li> DOS does not support the wide-character string versions of <b><code>Mid</code></b>.<br>
+<br>
+</li></ul>
+<h3>Dialect Differences</h3><br>
+<ul><li> The string type suffix "$" is required in the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang qb</a></i> dialect.<br>
+<li> The string type suffix "$" is optional in the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang fblite</a></i> dialect.<br>
+<li> The string type suffix "$" is ignored in the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang fb</a></i> dialect, warn only with the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-w.html">-w suffix</a></i> compile option (or <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-w.html">-w pedantic</a></i> compile option).<br>
+<br>
+</li></li></li></ul>
+<h3>Differences from QB</h3><br>
+<ul><li> QB does not support Unicode.<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="instr.html">InStr</a></code><br>
+<li> <code><a href="mid-statement.html">Mid (Statement)</a></code><br>
+<li> <code><a href="left.html">Left</a></code><br>
+<li> <code><a href="right.html">Right</a></code><br>
+<li> <code><a href="asc.html">Asc</a></code><br>
+<br>
+</li></li></li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-kw">Print</span> <span class="tok-kw">Mid</span><span>(</span><span>&quot;abcdefg&quot;</span><span>,</span> <span class="tok-nu">3</span><span>,</span> <span class="tok-nu">2</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span class="tok-kw">Mid</span><span>(</span><span>&quot;abcdefg&quot;</span><span>,</span> <span class="tok-nu">3</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span class="tok-kw">Mid</span><span>(</span><span>&quot;abcdefg&quot;</span><span>,</span> <span class="tok-nu">2</span><span>,</span> <span class="tok-nu">1</span><span>)</span></pre></code><br>
+will produce the output:<br>
+<pre class="code">cd
+cdefg
+b
+</pre>A Unicode example:<br>
+Wiki: code rendered this way to allow display of the Unicode characters.<br>
+<br>
+<table><tr><td>dim text as wstring * 20<br>
+text = "&#1055;&#1088;&#1080;&#1074;&#1077;&#1090;, &#1084;&#1080;&#1088;!"<br>
+print mid(text, 6, 4) ' displays "&#1090;, &#1084;"</td><div>&nbsp;</div><br>
+</tr></table>
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgMidfunction.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

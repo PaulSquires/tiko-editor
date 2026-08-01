@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shared — Help Center</title>
+<meta name="description" content="Variable declaration modifier specifying visibility throughout a module">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/variable-declarations/procedures/shared.html">
+<meta property="og:title" content="Shared">
+<meta property="og:description" content="Variable declaration modifier specifying visibility throughout a module">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/variable-declarations/procedures/shared.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/variable-declarations/procedures/shared.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>Shared<span class="h1kind">keyword</span></h1>
+<p class="lede">Variable declaration modifier specifying visibility throughout a module</p>
+<div class="badges"><a class="badge" href="../index.html">Variable Declarations</a><span class="badge">keyword</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>Dim Shared ...</code></pre>
+<pre class="code sig"><code>ReDim Shared ...</code></pre>
+<pre class="code sig"><code>Common Shared ...</code></pre>
+<pre class="code sig"><code>Static Shared ...</code></pre>
+<pre class="code sig"><code>[Static] Var Shared ...</code></pre>
+<h2>Description</h2>
+<br>
+<code><b>Shared</b></code> makes module-level variables visible inside <code><a href="../../procedures/procedures/sub.html">Sub</a></code>s and <code><a href="../../procedures/procedures/function.html">Function</a></code>s.<br>
+If <code><b>Shared</b></code> is not used on a module-level variable's declaration, the variable is only visible to the module-level code in that file (furthermore, only a variable declared with <code>Dim</code> without <code>Shared</code> modifier, and not inside a Namespace block, is stored on the stack).<br>
+<br>
+NOTES (for <code><b>Shared</b></code> variables excluding <code><a href="../../modularizing/procedures/common.html">Common</a></code> variables):<br>
+<ul><ul><li> Generally a <code><b>Shared</b></code> variable may only be initialized with a constant value (its starting value is set at the start of the program in the .data section before any code is run, and so it cannot depend on any variables or functions in it).<br>
+<li> A first exception is a <code><b>Shared</b></code> variable of var-len string type, that never can be initialized, even with a constant string (because of its structure with a descriptor in the .data section, but to point to a dynamic memory block).<br>
+<li> A second exception is a <code><b>Shared</b></code> variable of user-defined type having a constructor even implicit, that can be initialized with a non-constant value (because it's the constructor code, called when the program starts, which writes the "initial" values into the .data section).<br>
+<br>
+<br>
+</li></li></li></ul></ul>To access from a local scope block to duplicated symbols of <code><b>Shared</b></code> variables defined in the global namespace, add one or preferably two dot(s) as prefix: <code>.SomeSymbol</code> or preferably <code>..SomeSymbol</code> (or only <code>..SomeSymbol</code> if inside a <a href="../../user-defined-types/procedures/with.html">With..End With</a> block).<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Differences from QB</h3><br>
+<ul><li> The <code><b>Shared</b></code> statement inside scope blocks -- functions, subs, if/thens, and loops -- is not supported. Use <code>Dim</code>|<code>Redim</code>|<code>Common</code>|<code>Static <b>Shared</b></code> in the main program instead.  Or if you're inside a scope block and <code>Redim</code>ming a variable or array previously set up with <code><b>Shared</b></code>, just do a <code>Redim</code> without <code><b>Shared</b></code>; it will work fine and won't ruin anything.<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="../../modularizing/procedures/common.html">Common</a></code><br>
+<li> <code><a href="dim.html">Dim</a></code><br>
+<li> <code><a href="../../array-functions/procedures/erase.html">Erase</a></code><br>
+<li> <code><a href="../../modularizing/procedures/extern.html">Extern</a></code><br>
+<li> <code><a href="../../array-functions/procedures/lbound.html">LBound</a></code><br>
+<li> <code><a href="../../array-functions/procedures/redim.html">ReDim</a></code><br>
+<li> <code><a href="../../array-functions/procedures/preserve.html">Preserve</a></code><br>
+<li> <code><a href="static.html">Static</a></code><br>
+<li> <code><a href="../../array-functions/procedures/ubound.html">UBound</a></code><br>
+<li> <code><a href="var.html">Var</a></code><br>
+<li> <code><a href="byref-variables.html">Byref (Variables)</a></code><br>
+<br>
+</li></li></li></li></li></li></li></li></li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-cm">'' Compile with -lang qb or fblite</span>
+
+
+
+<span class="tok-cm">'$lang: &quot;qb&quot;</span>
+
+
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>MySub</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">Shared</span> <span>x</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+<span class="tok-kw">Dim</span> <span>y</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+
+
+<span>x</span> <span>=</span> <span class="tok-nu">10</span>
+
+<span>y</span> <span>=</span> <span class="tok-nu">5</span>
+
+
+
+<span>MySub</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>MySub</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;x is &quot;</span><span>;</span> <span>x</span> <span class="tok-cm">'this will report 10 as it is shared</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;y is &quot;</span><span>;</span> <span>y</span> <span class="tok-cm">'this will not report 5 because it is not shared</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span></pre></code><br>
+<br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgShared.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

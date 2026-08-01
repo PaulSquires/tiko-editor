@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PsSplitter — Help Center</title>
+<meta name="description" content="An owner-drawn splitter bar for FreeBASIC Win32 applications: a draggable divider that sits between two panes, shows a resize cursor when the mouse is over it, and tells you where the user dragged it to.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/pscontrols/pssplitter.html">
+<meta property="og:title" content="PsSplitter">
+<meta property="og:description" content="An owner-drawn splitter bar for FreeBASIC Win32 applications: a draggable divider that sits between two panes, shows a resize cursor when the mouse is over it, and tells you where the user dragged it to.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/pscontrols/pssplitter.html">
+<link rel="stylesheet" href="../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="pscontrols/pssplitter.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../index.html">Help Center</a><span>›</span><a href="../index.html">PlanetSquires Controls</a></div>
+<h2 id="pssplitter">PsSplitter</h2>
+<p>An owner-drawn splitter bar for FreeBASIC Win32 applications: a draggable divider that sits between two panes, shows a resize cursor when the mouse is over it, and tells you where the user dragged it to.</p>
+<p><strong>It does not own, create, size or even know about the panes on either side of it.</strong> The control maintains exactly one number — the bar's position — moves itself while the user drags, and calls you back. Laying out whatever is to the left and right (or above and below) is entirely yours, and so is deciding what the limits are. That is the trade: you get correct drag mechanics, cursor handling, capture discipline and hot-tracking for free, and you still write your own layout pass.</p>
+<p>It draws itself entirely — there is no system control underneath, and nothing about its appearance depends on the visual style the user happens to be running. Both colours it paints are ones you can set, and a paint callback replaces the built-in painter outright.</p>
+<hr>
+<h3 id="what-it-looks-like">What it looks like</h3>
+<p><img src="PsSplitter.png" alt="The PsSplitter demo"></p>
+<p>One vertical bar and one horizontal bar dividing three panes. The <strong>bars are the thin lines</strong>; the panes are the host's own windows. The control does not own, create or know about them — it moves itself and reports its new position, and the host resizes whatever sits either side.</p>
+<hr>
+<h3 id="requirements">Requirements</h3>
+<p><strong>Files to copy into your project:</strong></p>
+<div class="table-wrap"><table><thead><tr><th>File</th><th>Purpose</th></tr></thead><tbody><tr><td><code>PsSplitter.bi</code></td><td>Declarations — types, callbacks, constants, function prototypes</td></tr><tr><td><code>PsSplitter.inc</code></td><td>Implementation</td></tr><tr><td><code>PsBufferPaint.bi</code></td><td>The flicker-free drawing surface the control paints through</td></tr><tr><td><code>PsBufferPaint.inc</code></td><td>Its implementation</td></tr></tbody></table></div>
+<p><strong>AfxNova is required.</strong> The control is built on <code>CWindow</code>, and <code>PsBufferPaint</code> draws through <code>AfxNova\CGdiPlus.inc</code>. Sources include AfxNova relative to the workspace root (<code>#include once "AfxNova\CWindow.inc"</code>), so builds need the workspace root on the include path:</p>
+<pre class="code" data-lang="bash"><code>fbc64.exe -i "C:\dev" main.bas</code></pre>
+<p><strong>Include order.</strong> <code>PsSplitter.inc</code> pulls in its own <code>.bi</code>, which pulls in <code>PsBufferPaint.bi</code>. The two implementation files are included in this order, after the AfxNova headers:</p>
+<pre class="code" data-lang="freebasic"><code>#include once "windows.bi"
+#include once "AfxNova\CWindow.inc"
+#include once "AfxNova\AfxStr.inc"
+#include once "AfxNova\AfxGdiplus.inc"
+
+using AfxNova
+
+#include once "PsBufferPaint.inc"
+#include once "PsSplitter.inc"</code></pre>
+<p><strong>GDI+ must be running before the first repaint and must outlive the last one.</strong> The control renders through GDI+, so bracket your message loop:</p>
+<pre class="code" data-lang="freebasic"><code>dim as ULONG_PTR gdipToken = AfxGdipInit()
+' ... create windows, run the message loop ...
+AfxGdipShutdown( gdipToken )</code></pre>
+<p><code>AfxGdipShutdown</code> must come after every window is destroyed, because each repaint builds and tears down a <code>PsBufferPaint</code>.</p>
+<p><strong>Never name an identifier <code>ok</code>.</strong> GDI+ defines <code>Ok = 0</code> as a <code>Status</code> enum value in namespace <code>AfxNova</code>, and hosts customarily say <code>using AfxNova</code>. An existing variable, parameter or function called <code>ok</code> becomes a duplicate definition the moment you adopt these files. Use <code>bOK</code> instead.</p>
+<p><strong>There is no pump obligation.</strong> The control needs no message filter, no <code>IsDialogMessage</code> and no accelerator cooperation. It never takes focus and handles no keys, so an ordinary <code>GetMessage</code> / <code>TranslateMessage</code> / <code>DispatchMessage</code> loop is enough.</p>
+<hr>
+<h3 id="quick-start">Quick start</h3>
+<p>A vertical bar between a left and a right pane. The panes here are two child windows the host already owns; the control never sees them.</p>
+<pre class="code" data-lang="freebasic"><code>dim shared as HWND hSplit
+dim shared as long gBarW          ' the bar's thickness, DPI-scaled once in the layout pass
+
+' Create it. The control is created zero-sized and hidden.
+hSplit = PsSplitter_Create( hWndParent, IDC_MYFORM_SPLITTER, PSSPLITTER_VERTICAL )
+
+' Colours for the built-in painter: idle, and hot/dragging.
+PsSplitter_SetColors( hSplit, BGR(53,59,69), BGR(90,98,112) )
+
+' Be told when the user drags it.
+PsSplitter_SetPosChangedCallback( hSplit, @MySplit_PosChanged )
+
+' Initial position: the bar's x, in the parent's client coordinates. Silent.
+PsSplitter_SetPos( hSplit, 240 )</code></pre>
+<p>Your layout pass owns the bar's size, its cross-axis geometry, and the limits:</p>
+<pre class="code" data-lang="freebasic"><code>sub MyForm_Layout( byval hwnd as HWND )
+    dim pWindow as CWindow ptr = AfxCWindowPtr(hwnd)
+    if pWindow = 0 then exit sub
+
+    dim as RECT rc : GetClientRect( hwnd, @rc )
+    gBarW = pWindow-&gt;ScaleX( 6 )                    ' bar thickness = the grab area
+    dim as long minPaneW = pWindow-&gt;ScaleX( 80 )
+
+    ' The control never derives its own limits -- push them in from here.
+    PsSplitter_SetRange( hSplit, minPaneW, rc.right - minPaneW - gBarW )
+
+    SetWindowPos( hSplit, 0, _
+        PsSplitter_GetPos( hSplit ), rc.top, gBarW, rc.bottom - rc.top, _
+        SWP_NOZORDER or SWP_SHOWWINDOW )
+
+    MyForm_LayoutPanes( PsSplitter_GetPos( hSplit ) )
+end sub</code></pre>
+<p>And the callback, which is where the two panes are resized:</p>
+<pre class="code" data-lang="freebasic"><code>sub MyForm_LayoutPanes( byval nPos as integer )
+    dim as RECT rc : GetClientRect( HWND_FRMMAIN, @rc )
+    dim as long xRight = nPos + gBarW               ' the bar's TRAILING edge
+
+    SetWindowPos( hLeftPane,  0, rc.left, rc.top, nPos - rc.left,   rc.bottom - rc.top, _
+                  SWP_NOZORDER )
+    SetWindowPos( hRightPane, 0, xRight,  rc.top, rc.right - xRight, rc.bottom - rc.top, _
+                  SWP_NOZORDER )
+end sub
+
+sub MySplit_PosChanged( byval hSplitter as HWND, byval newPos as integer, _
+                        byval nPhase as integer )
+    ' The control has already moved ITSELF. Lay out only what it does not own.
+    MyForm_LayoutPanes( newPos )
+
+    ' BEGIN and END bracket the drag -- use them for work too expensive to do per pixel.
+    select case nPhase
+        case PSSPLITTER_PHASE_BEGIN : MyPanes_SuspendReflow()
+        case PSSPLITTER_PHASE_END   : MyPanes_ResumeReflow() : gConfig.SplitPos = newPos
+    end select
+end sub</code></pre>
+<p>That is the whole minimum. Everything below is refinement.</p>
+<hr>
+<h3 id="concepts">Concepts</h3>
+<h4 id="the-orientation-is-named-for-the-bars-own-axis">The orientation is named for the BAR's own axis</h4>
+<p>This is the first thing to get right, because it is easy to get backwards:</p>
+<div class="table-wrap"><table><thead><tr><th>Orientation</th><th>The bar is</th><th>It separates</th><th>It drags</th><th>Cursor</th><th><code>nPos</code> is</th></tr></thead><tbody><tr><td><code>PSSPLITTER_VERTICAL</code></td><td>a vertical line</td><td>a <strong>left</strong> and a <strong>right</strong> pane</td><td>horizontally</td><td><code>IDC_SIZEWE</code></td><td>the bar's <strong>x</strong></td></tr><tr><td><code>PSSPLITTER_HORIZONTAL</code></td><td>a horizontal line</td><td>a <strong>top</strong> and a <strong>bottom</strong> pane</td><td>vertically</td><td><code>IDC_SIZENS</code></td><td>the bar's <strong>y</strong></td></tr></tbody></table></div>
+<p>A vertical splitter does <em>not</em> split a window vertically into a top and a bottom — it <em>is</em> a vertical bar, and it splits left from right.</p>
+<p>The orientation is fixed for the control's lifetime. A host that switches split modes destroys the control and creates the other one; there is no setter, because an <code>nPos</code> whose meaning changed axis underneath a stale range is worse than a rebuild.</p>
+<h4 id="the-position-is-the-bars-leading-edge-in-the-parents-client-coordinates">The position is the bar's leading edge, in the PARENT's client coordinates</h4>
+<p>Exactly one number, and it means exactly one thing:</p>
+<pre class="code"><code>  PSSPLITTER_VERTICAL     nPos = the x of the bar's LEFT edge, in parent client coords
+  PSSPLITTER_HORIZONTAL   nPos = the y of the bar's TOP  edge, in parent client coords</code></pre>
+<p>It is the <em>leading</em> edge, not the centre and not the trailing edge — so the right pane of a vertical split starts at <code>nPos + barWidth</code>, not at <code>nPos</code>. The parent whose client space this is, is the <code>hWndParent</code> you passed to <code>PsSplitter_Create</code>; the control captures it once and never changes it. <code>nMin</code> and <code>nMax</code> live in the same space, and so does the <code>newPos</code> your callback receives.</p>
+<h4 id="the-width-you-give-the-bar-is-the-grab-area">The width you give the bar IS the grab area</h4>
+<p>There is no separate hit margin. The whole client rectangle is the bar, and any mouse move that reaches the control means the cursor is on it. If you want a thin visual line inside a comfortable grab area, size the control comfortably and paint a thin line inside it with a paint callback.</p>
+<h4 id="the-three-drag-phases">The three drag phases</h4>
+<p>A user drag produces one <code>BEGIN</code>, zero or more <code>MOVE</code>s, and one <code>END</code>, in that order, all through the single <code>SPL_PosChangedCallback</code>:</p>
+<div class="table-wrap"><table><thead><tr><th>Phase</th><th>When</th><th><code>newPos</code></th><th>What a host typically does</th></tr></thead><tbody><tr><td><code>PSSPLITTER_PHASE_BEGIN</code></td><td>The user just grabbed the bar. Fired from the button-down, before the bar has moved at all.</td><td>The <strong>current</strong>, unchanged position</td><td>Start the gesture: hide anything expensive (scrollbars), suspend a reflow, snapshot state</td></tr><tr><td><code>PSSPLITTER_PHASE_MOVE</code></td><td>The position actually changed. Never fired when the clamped position works out the same as before.</td><td>The new position, already applied</td><td>Lay out the two panes. This is the per-pixel work, so keep it cheap</td></tr><tr><td><code>PSSPLITTER_PHASE_END</code></td><td>The drag ended: the button came up, or the capture was lost.</td><td>The final position</td><td>Commit: resume the reflow, persist the position to config</td></tr></tbody></table></div>
+<p><code>END</code> always arrives, including when another window steals the capture mid-drag — a stolen capture is treated as an implicit button-up, keeping the position the user dragged to, because every intermediate position has already been applied and there is nothing to undo. By the time <code>END</code> runs the state is consistent: <code>PsSplitter_IsDragging</code> already returns FALSE.</p>
+<p><strong>By the time any of the three fires, the control has already moved itself.</strong> Do not move the bar from inside the callback; lay out the panes and stop. Re-placing the bar from your own layout pass is harmless — it is a no-op — but it is not something the callback needs to do.</p>
+<h4 id="who-owns-what">Who owns what</h4>
+<div class="table-wrap"><table><thead><tr><th>Owned by the control</th><th>Owned by you</th></tr></thead><tbody><tr><td>The bar's position along its drag axis</td><td>The bar's thickness, its cross-axis position and its extent</td></tr><tr><td>Clamping to the range</td><td>Computing the range and pushing it in with <code>SetRange</code></td></tr><tr><td>Cursor, hover, capture, the drag arithmetic</td><td>Everything on both sides of the bar</td></tr><tr><td>Its own repaint</td><td>Repainting your panes</td></tr><tr><td>—</td><td>Collapse / restore, if you want it</td></tr></tbody></table></div>
+<p>The control never derives the range from the parent's client rect. It cannot: it has no idea what else lives in that space — a toolbar, another splitter, a scrollbar parked between the pane and the bar. Recompute the limits in your own <code>WM_SIZE</code> and call <code>PsSplitter_SetRange</code>.</p>
+<h4 id="programmatic-changes-are-silent">Programmatic changes are silent</h4>
+<p><code>PsSplitter_SetPos</code> and <code>PsSplitter_SetRange</code> clamp, move the bar and repaint, and fire <strong>nothing</strong>. They are the host telling the control where it put the splitter, not the user moving it — Win32's own setter/notification split. It means you can call either from inside the position callback without re-entering yourself, and it means a programmatic move must be followed by your own pane layout and repaint, because no callback will come back to do it.</p>
+<h4 id="the-control-re-syncs-when-you-move-it">The control re-syncs when you move it</h4>
+<p>If you move the bar yourself — a parent resize, a pane collapse, a plain <code>SetWindowPos</code> in a layout pass — the control notices through <code>WM_WINDOWPOSCHANGED</code> and records the new leading edge as its position. So <code>PsSplitter_GetPos</code> always agrees with where the bar actually is, and a host that repositions the splitter during a layout pass cannot desync it.</p>
+<p>That re-sync is an <em>observation</em>, not a change: nothing is clamped and nothing is notified. If you <code>SetWindowPos</code> the bar outside its own range, <code>GetPos</code> reports the out-of-range value honestly; the next drag or <code>SetPos</code> pulls it back in.</p>
+<p>The re-sync is skipped while a drag is in progress, where the control is the one doing the moving.</p>
+<h4 id="hover-and-how-it-is-cleared">Hover, and how it is cleared</h4>
+<p>The bar paints brighter while the mouse is over it. <code>WM_MOUSELEAVE</code> is requested, but it is not reliably delivered when the cursor leaves fast, so the control also runs a 100 ms polling timer while it is hot, as a safety net. Whip the mouse off the bar at any speed and the highlight clears.</p>
+<p>While a drag is live the hover state is <strong>pinned true</strong>, because under capture the cursor legitimately roams far outside the bar's own rectangle and the bar should not go cold in the middle of the gesture. When the drag ends, hover is re-derived from where the cursor actually finished.</p>
+<p>Hiding the control — collapsing a pane, say — ends any drag and clears hover, so the highlight cannot reappear stale the next time you show it.</p>
+<h4 id="mouse-capture">Mouse capture</h4>
+<p>The control takes the capture on the button-down and releases it on the button-up, because a drag needs the down/up pairing guaranteed. Capture is taken <strong>before</strong> your message callback runs, so a callback that claims the down-message still gets a clean, matched release — that is what makes double-click collapse work.</p>
+<p>The consequence to know about: your message callback's return value is <strong>ignored for <code>WM_LBUTTONUP</code></strong>. A host allowed to suppress that message would strand the capture, and every subsequent click anywhere in the application would be routed to the splitter.</p>
+<h4 id="double-click">Double-click</h4>
+<p>The control's window class carries <code>CS_DBLCLKS</code>, so a rapid second click arrives as <code>WM_LBUTTONDBLCLK</code>. The control itself does nothing special with it — it runs the same capture-and-begin-drag bookkeeping as an ordinary down, which it must, or the trailing up would release a capture that was never taken.</p>
+<p>Collapse/restore is therefore <strong>yours to implement</strong>, and claiming <code>WM_LBUTTONDBLCLK</code> from the message callback is the supported way: return TRUE, no drag starts, and the trailing <code>WM_LBUTTONUP</code> is harmless. Inside that handler, <code>PsSplitter_SetPos</code> moves the bar silently, so repaint your panes yourself.</p>
+<p>Note the sequence is <code>down, up, dblclk, up</code> — the first click of a double-click is a real click, and it will have begun and ended a zero-length drag (one <code>BEGIN</code>, one <code>END</code>) before the double-click arrives.</p>
+<h4 id="everything-is-raw-pixels">Everything is raw pixels</h4>
+<p>Nothing in this control is DPI-scaled for you. Positions, limits, the bar's thickness — all of it is pixels in the parent's client space, and you scale them yourself, typically with <code>pWindow-&gt;ScaleX(...)</code> / <code>ScaleY(...)</code>. There is nothing to scale internally: the control measures no text and owns no font.</p>
+<h4 id="lifetime">Lifetime</h4>
+<p>The control frees itself when its window is destroyed, killing its hover timer and releasing any capture it still holds. It loads no resource that needs freeing — the resize cursors are shared system cursors, and you must never <code>DestroyCursor</code> them. Destroy the parent and you are done.</p>
+<hr>
+<h3 id="behaviour-and-limits">Behaviour and limits</h3>
+<p>Firm properties of the control, not settings:</p>
+<ul><li><strong>It does not create, size, or know about the panes.</strong> No pane handle is stored and no pane is ever moved. Your callback does that work.</li><li><strong>It does not compute its own limits.</strong> Until <code>PsSplitter_SetRange</code> is called the range is <code>0 .. &amp;h7FFFFFFF</code>, i.e. effectively unbounded. Recompute and re-set the limits from your own <code>WM_SIZE</code>.</li><li><strong>The orientation is fixed at creation.</strong> There is no setter. Destroy and recreate to switch.</li><li><strong>The bar's thickness is the grab area.</strong> No separate hit margin exists.</li><li><strong>Limits are absolute, not proportional.</strong> <code>SetRange</code> takes two coordinates in the parent's client space. Nothing is expressed as a fraction or a percentage, and nothing rescales when the parent resizes — which is exactly why you must re-push the range on every resize.</li><li><strong>An inverted range (<code>nMax &lt; nMin</code>) pins the bar at <code>nMin</code></strong> rather than rejecting the call. A host recomputing limits on <code>WM_SIZE</code> legitimately produces one when the window is too small to hold both panes, and pinning is the sane result.</li><li><strong>Programmatic setters are silent.</strong> <code>PsSplitter_SetPos</code> and <code>PsSplitter_SetRange</code> never fire the position callback.</li><li><strong>The control moves only along its drag axis.</strong> Cross-axis position and size are read back from the window and preserved, never invented. If the bar also has to move sideways — a horizontal bar living inside the right pane of a vertical split, for instance — that is your <code>SetWindowPos</code>.</li><li><strong>No keyboard support at all.</strong> The control is not a tabstop, never takes focus, and handles no keys. Keyboard resizing is the host's, through <code>PsSplitter_SetPos</code>.</li><li><strong>No visible chrome beyond a flat fill.</strong> The built-in painter fills the whole bar with one colour. Grip dots, a centred hairline or an etched edge are a paint callback's job.</li><li><strong>No collapse, no restore, no snap, no double-click behaviour of its own.</strong> The control holds one number and no memory of a previous one.</li><li><strong>No enabled/disabled state.</strong> There is no <code>SetEnabled</code>. Hide the control, or stop laying it out, when a split is not available.</li><li><strong>No tooltip support.</strong> There is no tooltip callback and no tooltip window is created. Add your own tool over the control's <code>HWND</code> if you want one.</li><li><strong>The message callback's result is ignored for <code>WM_LBUTTONUP</code></strong>, so a host cannot strand the capture.</li><li><strong>The message callback is not a general message hook.</strong> It sees only <code>WM_SETCURSOR</code>, <code>WM_LBUTTONDOWN</code>, <code>WM_LBUTTONDBLCLK</code>, <code>WM_MOUSEMOVE</code> and <code>WM_LBUTTONUP</code>. It is never called for <code>WM_PAINT</code>, <code>WM_MOUSELEAVE</code>, <code>WM_TIMER</code>, <code>WM_SIZE</code> or <code>WM_WINDOWPOSCHANGED</code>.</li><li><strong><code>WM_SETCURSOR</code> reaches the callback only when the hit-test code is <code>HTCLIENT</code>, or a drag is in progress.</strong> Mid-drag the control claims the cursor unconditionally, because under capture the hit-test code can be anything at all — the cursor is over the panes, or off the window.</li><li><strong>Nothing is DPI-scaled for you.</strong></li></ul>
+<hr>
+<h3 id="api-reference">API reference</h3>
+<h4 id="creation">Creation</h4>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody><tr><td><code>PsSplitter_Create( hWndParent, CtrlID [, nOrientation] ) as HWND</code></td><td>Creates the control as a child of <code>hWndParent</code> and returns its window handle. <code>CtrlID</code> becomes the window's <code>GWLP_ID</code>, so <code>GetDlgItem</code> finds it. <code>nOrientation</code> is <code>PSSPLITTER_VERTICAL</code> (the default) or <code>PSSPLITTER_HORIZONTAL</code>, and is <strong>fixed for the control's lifetime</strong>; any value other than <code>PSSPLITTER_HORIZONTAL</code> is taken as <code>PSSPLITTER_VERTICAL</code>. <code>hWndParent</code> is captured as the coordinate space every position is measured in. Created with <code>WS_CHILD or WS_CLIPSIBLINGS or WS_CLIPCHILDREN</code> — <strong>zero-sized and not visible</strong> — so place, size and show it with <code>SetWindowPos</code>. The size you give it along the drag axis is the grab area.</td></tr></tbody></table></div>
+<h4 id="position-and-range">Position and range</h4>
+<p>All values are the bar's <strong>leading edge in the parent's client coordinates</strong> — x for a vertical bar, y for a horizontal one.</p>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody><tr><td><code>PsSplitter_GetPos( hSplit ) as integer</code></td><td>The current position. Always agrees with where the bar actually is: the control re-syncs from its own window rect whenever the host moves it. Returns 0 for an invalid handle.</td></tr><tr><td><code>PsSplitter_SetPos( hSplit, nPosition )</code></td><td>Clamps into the current range, moves the bar and repaints. <strong>Silent</strong> — fires no notification, so lay out and repaint your panes yourself. No-op when the clamped value already matches the current position.</td></tr><tr><td><code>PsSplitter_SetRange( hSplit, nMin, nMax )</code></td><td>Sets the limits a drag clamps to. Also clamps the <strong>current</strong> position into the new range, moving and repainting the bar if it has to — <strong>silently</strong>, because you set the range and already know. An inverted range (<code>nMax &lt; nMin</code>) pins the bar at <code>nMin</code> rather than failing. The control never derives these limits itself; recompute and re-set them from your own <code>WM_SIZE</code>.</td></tr><tr><td><code>PsSplitter_GetMin( hSplit ) as integer</code></td><td>The lower limit. Defaults to 0. Returns 0 for an invalid handle.</td></tr><tr><td><code>PsSplitter_GetMax( hSplit ) as integer</code></td><td>The upper limit. Defaults to <code>&amp;h7FFFFFFF</code> — effectively unbounded until <code>PsSplitter_SetRange</code> is called. Returns 0 for an invalid handle, which is <strong>not</strong> the default value, so treat a 0 here as a bad handle rather than as a range.</td></tr></tbody></table></div>
+<h4 id="geometry-and-layout">Geometry and layout</h4>
+<p>There are no geometry setters, because the control owns no geometry beyond its position along the drag axis. Size and place it with <code>SetWindowPos</code> like any other window; the control reads its cross-axis position and its size back from the window and preserves them, and records any move you make as its new position.</p>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody><tr><td><code>PsSplitter_GetOrientation( hSplit ) as integer</code></td><td><code>PSSPLITTER_VERTICAL</code> or <code>PSSPLITTER_HORIZONTAL</code> — whichever was fixed at creation. Returns <code>PSSPLITTER_VERTICAL</code> for an invalid handle.</td></tr><tr><td><code>PsSplitter_IsHot( hSplit ) as boolean</code></td><td>TRUE while the mouse is over the bar. <strong>Pinned TRUE for the whole of a drag</strong>, even while the cursor is far outside the bar, and re-derived from the cursor's real position when the drag ends.</td></tr><tr><td><code>PsSplitter_IsDragging( hSplit ) as boolean</code></td><td>TRUE between the button-down and the button-up (or a lost capture). Already FALSE by the time your <code>PSSPLITTER_PHASE_END</code> callback runs.</td></tr></tbody></table></div>
+<h4 id="appearance">Appearance</h4>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody><tr><td><code>PsSplitter_GetBackColor( hSplit ) as COLORREF</code></td><td>The idle fill colour. Returns 0 for an invalid handle. There is no matching getter for the hot colour.</td></tr><tr><td><code>PsSplitter_SetColors( hSplit, backclr, hotclr )</code></td><td>Sets both colours at once and repaints. <code>backclr</code> is the idle fill, <code>hotclr</code> the fill used while the bar is hot or being dragged. Used by the built-in painter only — a paint callback ignores them both.</td></tr></tbody></table></div>
+<h4 id="callback-registration">Callback registration</h4>
+<div class="table-wrap"><table><thead><tr><th>Function</th><th>Description</th></tr></thead><tbody><tr><td><code>PsSplitter_SetPaintCallback( hSplit, usersub )</code></td><td>Installs a renderer that draws the whole bar <strong>instead of</strong> the built-in painter. Repaints.</td></tr><tr><td><code>PsSplitter_SetMessageCallback( hSplit, userfunc )</code></td><td>Installs an observer for the control's mouse and cursor messages.</td></tr><tr><td><code>PsSplitter_SetPosChangedCallback( hSplit, usersub )</code></td><td>Installs the handler told when the <strong>user</strong> moves the splitter.</td></tr></tbody></table></div>
+<p>All three are optional and independent. Passing a null pointer to any of them clears that callback; clearing the paint callback restores the built-in painter.</p>
+<hr>
+<h3 id="colors">Colors</h3>
+<p><strong>There is no colours struct.</strong> The control paints one thing — a flat bar — so its whole colour surface is two <code>COLORREF</code> values, set together by <code>PsSplitter_SetColors</code>:</p>
+<div class="table-wrap"><table><thead><tr><th>Colour</th><th>Default</th><th>Paints</th></tr></thead><tbody><tr><td><code>BackColor</code></td><td><code>BGR(53,59,69)</code></td><td>The whole bar, idle</td></tr><tr><td><code>HotColor</code></td><td><code>BGR(90,98,112)</code></td><td>The whole bar, while the mouse is over it <strong>or</strong> a drag is in progress</td></tr></tbody></table></div>
+<p>Both ship with a usable dark-theme default, so a control you never call <code>PsSplitter_SetColors</code> on still looks right. Only <code>BackColor</code> has a getter.</p>
+<h4 id="which-colour-wins">Which colour wins</h4>
+<p>The built-in painter picks one of the two per repaint:</p>
+<pre class="code"><code>hot OR dragging   &gt;   idle</code></pre>
+<p>There is no third, distinct dragging colour: a live drag renders as hot, which reads correctly for a bar that is being held. The two states are still handed to a paint callback separately (<code>isHot</code> and <code>isDragging</code>), so a custom renderer can draw a distinct dragging look if it wants one.</p>
+<p>There is no disabled colour, because there is no disabled state.</p>
+<h4 id="what-the-painter-draws">What the painter draws</h4>
+<p>The built-in painter fills the entire client rectangle with the chosen colour, through <code>PsBufferPaint</code>. That is all of it. A grip, a hairline, an etched border or a gradient is a paint callback's job.</p>
+<hr>
+<h3 id="callbacks">Callbacks</h3>
+<h4 id="position-changed">Position changed</h4>
+<pre class="code" data-lang="freebasic"><code>type SPL_PosChangedCallbackSub as sub( byval hSplitter as HWND, byval newPos as integer, _
+                                       byval nPhase as integer )</code></pre>
+<p>The <strong>user</strong> moved the splitter. <code>newPos</code> is the bar's new leading edge in the parent's client coordinates; <code>nPhase</code> is one of <code>PSSPLITTER_PHASE_BEGIN</code>, <code>PSSPLITTER_PHASE_MOVE</code> or <code>PSSPLITTER_PHASE_END</code>. See <em>The three drag phases</em> above for what each one means and what a host does with it.</p>
+<p>The control has already clamped the position and moved itself by the time you are called. Lay out the two panes and nothing else.</p>
+<p>It does <strong>not</strong> fire for <code>PsSplitter_SetPos</code> or <code>PsSplitter_SetRange</code>. Programmatic setters are silent, which is what makes it safe to call either one from inside this very callback.</p>
+<p>A <code>MOVE</code> is never fired for a position that works out the same as the previous one, so a drag held against a limit goes quiet rather than repeating.</p>
+<p>The same callback can serve any number of splitters — <code>hSplitter</code> says which one, and <code>PsSplitter_GetOrientation</code> says which axis it moved on.</p>
+<h4 id="paint">Paint</h4>
+<pre class="code" data-lang="freebasic"><code>type SPL_PaintCallbackSub as sub( byval p as PSSPLITTER_PAINTINFO ptr )</code></pre>
+<p>Draws the whole bar <strong>instead of</strong> the built-in painter — setting a callback replaces that default entirely, and the two colours stop being used. Paint through <code>p-&gt;b</code>, the control's double buffer for this repaint, using <code>p-&gt;rcClient</code> — do not touch the screen DC.</p>
+<p>Nothing is drawn for you before the callback runs: the callback is responsible for every pixel of the bar, background included.</p>
+<p><code>PSSPLITTER_PAINTINFO</code> carries:</p>
+<div class="table-wrap"><table><thead><tr><th>Field</th><th>Meaning</th></tr></thead><tbody><tr><td><code>hSplitter</code></td><td>The control, so the callback can query it</td></tr><tr><td><code>b</code></td><td>The control's <code>PsBufferPaint</code> for this repaint (borrowed, not owned)</td></tr><tr><td><code>rcClient</code></td><td>The whole bar, in client coordinates</td></tr><tr><td><code>nOrientation</code></td><td><code>PSSPLITTER_VERTICAL</code> or <code>PSSPLITTER_HORIZONTAL</code> — one callback can serve both kinds of bar</td></tr><tr><td><code>isHot</code></td><td>The mouse is over the bar. <strong>Stays TRUE for the whole of a drag</strong></td></tr><tr><td><code>isDragging</code></td><td>A drag is in progress</td></tr></tbody></table></div>
+<blockquote><p><strong>A paint callback that fills a rectangle covering the whole control erases everything under it.</strong> For a splitter that is exactly what you want from the <em>first</em> call — fill the bar, then add your line or grip on top. The trap is a helper that fills as a side effect: a "draw a border" primitive that fills unconditionally will wipe out everything drawn before it, and the result still compiles, still runs, and still renders a plausible-looking bar.</p></blockquote>
+<h4 id="message">Message</h4>
+<pre class="code" data-lang="freebasic"><code>type SPL_MessageCallbackFunc as function( byval m as PSSPLITTER_MESSAGEINFO ptr ) as boolean</code></pre>
+<p>Observes the control's mouse and cursor messages as they arrive. Return TRUE to suppress the control's own handling of that message, FALSE to let it proceed.</p>
+<p><code>PSSPLITTER_MESSAGEINFO</code> carries:</p>
+<div class="table-wrap"><table><thead><tr><th>Field</th><th>Meaning</th></tr></thead><tbody><tr><td><code>hSplitter</code></td><td>The control the message arrived at</td></tr><tr><td><code>uMsg</code></td><td>The message</td></tr><tr><td><code>wParam</code></td><td>Its <code>wParam</code></td></tr><tr><td><code>lParam</code></td><td>Its <code>lParam</code></td></tr></tbody></table></div>
+<p>The callback is invoked for exactly these messages, and no others:</p>
+<div class="table-wrap"><table><thead><tr><th>Message</th><th>Effect of returning TRUE</th></tr></thead><tbody><tr><td><code>WM_SETCURSOR</code></td><td>The control does not set its resize cursor, so you own the cursor for this message. Only delivered when the hit-test code is <code>HTCLIENT</code>, or a drag is in progress.</td></tr><tr><td><code>WM_LBUTTONDOWN</code></td><td><strong>No drag starts</strong> — no <code>BEGIN</code> is notified. The capture has already been taken and is released normally on the trailing up.</td></tr><tr><td><code>WM_LBUTTONDBLCLK</code></td><td>As above. This is the supported way to implement collapse/restore.</td></tr><tr><td><code>WM_MOUSEMOVE</code></td><td>Neither the drag update nor the hover update runs for this move.</td></tr><tr><td><code>WM_LBUTTONUP</code></td><td><strong>Your return value is ignored.</strong> The control holds the mouse capture for the duration of a drag and this up-message is the capture's exit; a callback allowed to suppress it would strand the capture and route every subsequent click in the application here.</td></tr></tbody></table></div>
+<hr>
+<h3 id="constants">Constants</h3>
+<pre class="code" data-lang="freebasic"><code>' Named for the BAR's own axis.
+enum PSSPLITTER_ORIENTATION
+    PSSPLITTER_VERTICAL   = 0     ' vertical bar,   left/right panes -&gt; IDC_SIZEWE, nPos = x
+    PSSPLITTER_HORIZONTAL = 1     ' horizontal bar, top/bottom panes -&gt; IDC_SIZENS, nPos = y
+end enum
+
+enum PSSPLITTER_PHASE
+    PSSPLITTER_PHASE_BEGIN = 0    ' the user just grabbed the bar; newPos = current position
+    PSSPLITTER_PHASE_MOVE  = 1    ' the position actually changed
+    PSSPLITTER_PHASE_END   = 2    ' the drag ended (button up, or capture lost); final position
+end enum</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Constant</th><th>Value</th><th>Meaning</th></tr></thead><tbody><tr><td><code>IDT_CSPLITTER_HOTTRACK</code></td><td><code>&amp;hCB20</code></td><td>Timer id for the hover poll. Timer ids are per-window, so every instance can share this one — but do not reuse it for a timer of your own on a splitter's <code>HWND</code>.</td></tr><tr><td><code>PSSPLITTER_HOTTRACK_MS</code></td><td><code>100</code></td><td>Hover poll interval, in milliseconds. The safety net that clears the highlight when <code>WM_MOUSELEAVE</code> is not delivered.</td></tr></tbody></table></div>
+    <footer class="foot">
+      <p>PlanetSquires owner-drawn controls for FreeBASIC / AfxNova. Copyright © Paul Squires, distributed under the MIT License. Documentation generated from each control&#x27;s own README. <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../index.html">Home</a> ·
+         <a href="../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../nav.js?v=70a6b70236"></script>
+<script src="../search-index.js"></script>
+<script src="../assets/app.js?v=456d079659"></script>
+<script src="../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

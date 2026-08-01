@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ScreenEvent — Help Center</title>
+<meta name="description" content="Queries for and retrieves system events.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/screen-functions/procedures/screenevent.html">
+<meta property="og:title" content="ScreenEvent">
+<meta property="og:description" content="Queries for and retrieves system events.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/screen-functions/procedures/screenevent.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/screen-functions/procedures/screenevent.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>ScreenEvent<span class="h1kind">function</span></h1>
+<p class="lede">Queries for and retrieves system events.</p>
+<div class="badges"><a class="badge" href="../index.html">Screen Functions</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>Declare Function ScreenEvent ( ByVal event As Any Ptr = 0 ) As Long</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>event</code></td><td></td><td>Specifies the buffer where the function should store the event data.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<br>
+Returns <code>-1</code> if there are pending events to be retrieved, <code>0</code> otherwise.<br>
+<br>
+
+<h2>Description</h2>
+<br>
+This function returns the latest available system event from the internal GfxLib events queue. By "event" we mean any mouse or keyboard activity, for example.<br>
+<br>
+The event data (if available) will be copied into the buffer pointed that should be declared as an <code><a href="event-message-data-from-screenevent.html">Event</a></code>.<br>
+On the <code><a href="event-message-data-from-screenevent.html">Event</a></code> page, see the list of event types and how to use their associated fields (see also the example below).<br>
+<br>
+<u>Querying for events</u><br>
+<div class="indent">The function returns <code>-1</code> if there are pending events to be retrieved, <code>0</code> otherwise. If the <code><i>event</i></code> parameter is set to <code>0</code> (the default if omitted) <code><a href="screenevent.html">ScreenEvent</a></code> will not be able to copy the event data and it will not dequeue it from the internal events queue. Calling the function this way can be useful to check if there are pending events without actually fetching them.<br>
+<br>
+</div><u>Note</u><br>
+<div class="indent">If you receive a KEY_PRESS, KEY_RELEASE or KEY_REPEAT event, it does not clear the keyboard buffer.  If you need the buffer to be clear after you receive the event, you will need to clear it manually.  See <code><a href="../../user-input-runtime-library/procedures/inkey.html">Inkey</a></code>.<br>
+<br>
+</div>
+<h2>Remarks</h2>
+<h3>Usage</h3><code><br>
+<i>result</i> = <b>ScreenEvent</b>( [ <i>event</i> ] )<br>
+</code><br>
+
+<h3>Platform Differences</h3><br>
+<ul><li> <code><b>ScreenEvent</b></code> does not return window related events in the DOS version, but does return input events.<br>
+<br>
+</li></ul>
+<h3>Dialect Differences</h3><br>
+<ul><li> Not available in the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang qb</a></i> dialect.<br>
+<br>
+</li></ul>
+<h3>Differences from QB</h3><br>
+<ul><li> New to FreeBASIC<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="event-message-data-from-screenevent.html">Event</a></code><br>
+<li> <code><a href="screen-graphics.html">Screen (Graphics)</a></code><br>
+<li> <code><a href="../../user-input-runtime-library/procedures/inkey.html">Inkey</a></code><br>
+<li> <code><a href="../../user-input-functions-graphics-library/procedures/multikey.html">MultiKey</a></code><br>
+<li> <code><a href="../../user-input-functions-graphics-library/procedures/getmouse.html">GetMouse</a></code><br>
+<li> <a href="../../tutorials/programmer-s-guide/event-handling.html">Event Handling</a><br>
+<li> <a href="../../graphics-library-reference/dos-keyboard-scancodes.html">Keyboard scancodes</a><br>
+<li> <a href="../../compiler-internals/keyboard-input.html">Keyboard Input</a><br>
+<br>
+</li></li></li></li></li></li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-cm">'' include fbgfx.bi for some useful definitions</span>
+
+<span>#include &quot;fbgfx.bi&quot;
+
+#if __FB_LANG__ = &quot;fb&quot;
+
+</span><span class="tok-kw">Using</span> <span>fb</span> <span class="tok-cm">'' constants and structures are stored in the FB namespace in lang fb</span>
+
+<span>#endif
+
+</span>
+
+<span class="tok-kw">Dim</span> <span>e</span> <span class="tok-kw">As</span> <span class="tok-kw">Event</span>
+
+
+
+<span class="tok-kw">ScreenRes</span> <span class="tok-nu">640</span><span>,</span> <span class="tok-nu">480</span>
+
+<span class="tok-kw">Do</span>
+
+    <span class="tok-kw">If</span> <span>(</span><span class="tok-kw">ScreenEvent</span><span>(@</span><span>e</span><span>))</span> <span class="tok-kw">Then</span>
+
+        <span class="tok-kw">Select</span> <span class="tok-kw">Case</span> <span>e.type</span>
+
+        <span class="tok-kw">Case</span> <span>EVENT_KEY_PRESS</span>
+
+            <span class="tok-kw">If</span> <span>(</span><span>e.scancode</span> <span>=</span> <span>SC_ESCAPE</span><span>)</span> <span class="tok-kw">Then</span>
+
+                <span class="tok-kw">End</span>
+
+            <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+            <span class="tok-kw">If</span> <span>(</span><span>e.ascii</span> <span>&gt;</span> <span class="tok-nu">0</span><span>)</span> <span class="tok-kw">Then</span>
+
+                <span class="tok-kw">Print</span> <span>&quot;'&quot;</span> <span>&amp;</span> <span>e.ascii</span> <span>&amp;</span> <span>&quot;'&quot;</span><span>;</span>
+
+            <span class="tok-kw">Else</span>
+
+                <span class="tok-kw">Print</span> <span>&quot;unknown key&quot;</span><span>;</span>
+
+            <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+            <span class="tok-kw">Print</span> <span>&quot; was pressed (scancode &quot;</span> <span>&amp;</span> <span>e.scancode</span> <span>&amp;</span> <span>&quot;)&quot;</span>
+
+        <span class="tok-kw">Case</span> <span>EVENT_KEY_RELEASE</span>
+
+            <span class="tok-kw">If</span> <span>(</span><span>e.ascii</span> <span>&gt;</span> <span class="tok-nu">0</span><span>)</span> <span class="tok-kw">Then</span>
+
+                <span class="tok-kw">Print</span> <span>&quot;'&quot;</span> <span>&amp;</span> <span>e.ascii</span> <span>&amp;</span> <span>&quot;'&quot;</span><span>;</span>
+
+            <span class="tok-kw">Else</span>
+
+                <span class="tok-kw">Print</span> <span>&quot;unknown key&quot;</span><span>;</span>
+
+            <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+            <span class="tok-kw">Print</span> <span>&quot; was released (scancode &quot;</span> <span>&amp;</span> <span>e.scancode</span> <span>&amp;</span> <span>&quot;)&quot;</span>
+
+        <span class="tok-kw">Case</span> <span>EVENT_KEY_REPEAT</span>
+
+            <span class="tok-kw">If</span> <span>(</span><span>e.ascii</span> <span>&gt;</span> <span class="tok-nu">0</span><span>)</span> <span class="tok-kw">Then</span>
+
+                <span class="tok-kw">Print</span> <span>&quot;'&quot;</span> <span>&amp;</span> <span>e.ascii</span> <span>&amp;</span> <span>&quot;'&quot;</span><span>;</span>
+
+            <span class="tok-kw">Else</span>
+
+                <span class="tok-kw">Print</span> <span>&quot;unknown key&quot;</span><span>;</span>
+
+            <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+            <span class="tok-kw">Print</span> <span>&quot; is being repeated (scancode &quot;</span> <span>&amp;</span> <span>e.scancode</span> <span>&amp;</span> <span>&quot;)&quot;</span>
+
+        <span class="tok-kw">Case</span> <span>EVENT_MOUSE_MOVE</span>
+
+            <span class="tok-kw">Print</span> <span>&quot;mouse moved to &quot;</span> <span>&amp;</span> <span>e.x</span> <span>&amp;</span> <span>&quot;,&quot;</span> <span>&amp;</span> <span>e.y</span> <span>&amp;</span> <span>&quot; (delta &quot;</span> <span>&amp;</span> <span>e.dx</span> <span>&amp;</span> <span>&quot;,&quot;</span> <span>&amp;</span> <span>e.dy</span> <span>&amp;</span> <span>&quot;)&quot;</span>
+
+        <span class="tok-kw">Case</span> <span>EVENT_MOUSE_BUTTON_PRESS</span>
+
+            <span class="tok-kw">If</span> <span>(</span><span>e.button</span> <span>=</span> <span>BUTTON_LEFT</span><span>)</span> <span class="tok-kw">Then</span>
+
+                <span class="tok-kw">Print</span> <span>&quot;left&quot;</span><span>;</span>
+
+            <span class="tok-kw">ElseIf</span> <span>(</span><span>e.button</span> <span>=</span> <span>BUTTON_RIGHT</span><span>)</span> <span class="tok-kw">Then</span>
+
+                <span class="tok-kw">Print</span> <span>&quot;right&quot;</span><span>;</span>
+
+            <span class="tok-kw">Else</span>
+
+                <span class="tok-kw">Print</span> <span>&quot;middle&quot;</span><span>;</span>
+
+            <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+            <span class="tok-kw">Print</span> <span>&quot; button pressed&quot;</span>
+
+        <span class="tok-kw">Case</span> <span>EVENT_MOUSE_BUTTON_RELEASE</span>
+
+            <span class="tok-kw">If</span> <span>(</span><span>e.button</span> <span>=</span> <span>BUTTON_LEFT</span><span>)</span> <span class="tok-kw">Then</span>
+
+                <span class="tok-kw">Print</span> <span>&quot;left&quot;</span><span>;</span>
+
+            <span class="tok-kw">ElseIf</span> <span>(</span><span>e.button</span> <span>=</span> <span>BUTTON_RIGHT</span><span>)</span> <span class="tok-kw">Then</span>
+
+                <span class="tok-kw">Print</span> <span>&quot;right&quot;</span><span>;</span>
+
+            <span class="tok-kw">Else</span>
+
+                <span class="tok-kw">Print</span> <span>&quot;middle&quot;</span><span>;</span>
+
+            <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+            <span class="tok-kw">Print</span> <span>&quot; button released&quot;</span>
+
+        <span class="tok-kw">Case</span> <span>EVENT_MOUSE_DOUBLE_CLICK</span>
+
+            <span class="tok-kw">If</span> <span>(</span><span>e.button</span> <span>=</span> <span>BUTTON_LEFT</span><span>)</span> <span class="tok-kw">Then</span>
+
+                <span class="tok-kw">Print</span> <span>&quot;left&quot;</span><span>;</span>
+
+            <span class="tok-kw">ElseIf</span> <span>(</span><span>e.button</span> <span>=</span> <span>BUTTON_RIGHT</span><span>)</span> <span class="tok-kw">Then</span>
+
+                <span class="tok-kw">Print</span> <span>&quot;right&quot;</span><span>;</span>
+
+            <span class="tok-kw">Else</span>
+
+                <span class="tok-kw">Print</span> <span>&quot;middle&quot;</span><span>;</span>
+
+            <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+            <span class="tok-kw">Print</span> <span>&quot; button double clicked&quot;</span>
+
+        <span class="tok-kw">Case</span> <span>EVENT_MOUSE_WHEEL</span>
+
+            <span class="tok-kw">Print</span> <span>&quot;mouse wheel moved to position &quot;</span> <span>&amp;</span> <span>e.z</span>
+
+        <span class="tok-kw">Case</span> <span>EVENT_MOUSE_ENTER</span>
+
+            <span class="tok-kw">Print</span> <span>&quot;mouse moved into program window&quot;</span>
+
+        <span class="tok-kw">Case</span> <span>EVENT_MOUSE_EXIT</span>
+
+            <span class="tok-kw">Print</span> <span>&quot;mouse moved out of program window&quot;</span>
+
+        <span class="tok-kw">Case</span> <span>EVENT_WINDOW_GOT_FOCUS</span>
+
+            <span class="tok-kw">Print</span> <span>&quot;program window got focus&quot;</span>
+
+        <span class="tok-kw">Case</span> <span>EVENT_WINDOW_LOST_FOCUS</span>
+
+            <span class="tok-kw">Print</span> <span>&quot;program window lost focus&quot;</span>
+
+        <span class="tok-kw">Case</span> <span>EVENT_WINDOW_CLOSE</span>
+
+            <span class="tok-kw">End</span>
+
+        <span class="tok-kw">Case</span> <span>EVENT_MOUSE_HWHEEL</span>
+
+            <span class="tok-kw">Print</span> <span>&quot;horizontal mouse wheel moved to position &quot;</span> <span>&amp;</span> <span>e.w</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">Select</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+
+
+    <span class="tok-kw">Sleep</span> <span class="tok-nu">1</span>
+
+<span class="tok-kw">Loop</span></pre></code><br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgScreenevent.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

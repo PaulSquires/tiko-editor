@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Introduction to the Type Def — Help Center</title>
+<meta name="description" content="Introduction to the Type Def — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/introduction-to-the-type-def.html">
+<meta property="og:title" content="Introduction to the Type Def">
+<meta property="og:description" content="Introduction to the Type Def — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/introduction-to-the-type-def.html">
+<link rel="stylesheet" href="../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/introduction-to-the-type-def.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>Introduction to the Type Def</h1>
+<h2>Documentation</h2>
+
+	<i>Written by <a href="../reference/rdc.html">rdc</a></i><br>
+<br>
+There are times when creating a program that you may want to define an aggregate structure such as a personnel record, or an enemy in a game. While you can do this using individual data types, it is hard to manage within  a program. Composite data types allow you to group together related data items into a single structure that can be manipulated as a single entity. FreeBASIC offers two composite data types, the <code>Type</code> and <code>Union</code>.<br>
+<br>
+<div> Types </div><br>
+<br>
+FreeBASIC allows you to group several data types into a unified structure called a Type definition which you can use to describe these aggregate data structures.<br>
+<br>
+The basic structure of a type definition is:<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span>typename</span>
+
+    <span class="tok-kw">Var</span> <span>definition</span>
+
+    <span class="tok-kw">Var</span> <span>definition</span>
+
+    <span>...</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span></pre></code><br>
+<br>
+The <code>Type</code>-<code>End Type</code> block defines the scope of the definition. You define the elements of the type structure in the same manner as using the <code>Dim</code> keyword, without using <code>Dim</code>. The following code snippet shows how to build an employee type.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span>EmployeeType</span>
+
+    <span>fname</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>*</span> <span class="tok-nu">10</span>
+
+    <span>lname</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>*</span> <span class="tok-nu">10</span>
+
+    <span>empid</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+    <span>dept</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span></pre></code><br>
+<br>
+You can use any of the supported data types as data elements, including pointers and other type definitions. When you create the type definition, such as in the example above, you are just creating a template for the compiler. In order to use the type definition, you need to create a variable of the type, as the following code snippet illustrates.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span>Employee</span> <span class="tok-kw">As</span> <span>EmployeeType</span></pre></code><br>
+<br>
+Once you have created a variable of the type, you can access each element within the type using the dot notation <code><i>var_name.field_name</i></code>.  <br>
+<br>
+Using the above example, to access the fname field you would use: <br>
+<br>
+<code><pre class="code"><span>Employee.fname</span> <span>=</span> <span>&quot;Susan&quot;</span></pre></code><br>
+<br>
+<div> Using With </div><br>
+<br>
+To access multiple fields at a time, you can use the <code>With</code>-<code>End With</code> block. The following code snippet shows how to use the <code>With</code> block with the above example.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">With</span> <span>Employee</span>
+
+    <span>.</span><span>fname</span> <span>=</span> <span>&quot;Susan&quot;</span>
+
+    <span>.</span><span>lname</span> <span>=</span> <span>&quot;Jones&quot;</span>
+
+    <span>.</span><span>empid</span> <span>=</span> <span class="tok-nu">1001</span>
+
+        <span>.</span><span>dept</span> <span>=</span> <span class="tok-nu">24</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">With</span></pre></code><br>
+<br>
+The compiler will automatically bind the variable <code><i>Employee</i></code> to the individual data elements within the <code>With</code> block. Not only does mean that you don't have as much typing, but the structure is optimized and is a bit faster than using the full dot notation.<br>
+<br>
+<div> Passing Types to Subroutines and Functions </div><br>
+<br>
+One advantage to using types in your program is that you can pass the structure to a subroutine or function and operate on the structure as a whole. The following code fragment shows a partial subroutine definition.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Sub</span> <span>UpdateEmployeeDept</span><span>(</span><span class="tok-kw">ByRef</span> <span>Emp</span> <span class="tok-kw">As</span> <span>EmployeeType</span><span>)</span>
+
+    <span>.</span>
+
+    <span>.</span>
+
+    <span>.</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span></pre></code><br>
+<br>
+Notice that the parameter is qualified with <code>Byref</code>. This is important since you want to update the type within the subroutine. There are two parameter passing modes in FreeBASIC: <code>Byref</code> and <code>Byval</code>.<br>
+<br>
+<b> <code>ByRef</code> and <code>ByVal</code>: A Quick Introduction </b><br>
+<br>
+<code>Byref</code> and <code>Byval</code> tell the compiler how to pass a reference to the subroutine or function. When you use <code>Byref</code>, or <i>By Reference</i>, you are passing a pointer reference to the parameter, and any changes you make to the parameter inside the sub or func will be reflected in the actual variable that was passed. In other words, the <code>Byref</code> parameter points to the actual variable in memory.<br>
+<br>
+<code>Byval</code>, or <i>By Value</i>, on the other hand makes a copy of the parameter, and any changes you make inside the sub or func are local and will not be reflected in the actual variable that was passed. The <code>Byval</code> parameter points to a copy of the variable not the actual variable itself.<br>
+<br>
+The default for FreeBASIC .17 is to pass parameters using <code>Byval</code>. In order to change a passed parameter, you need to specify the <code>Byref</code> qualifier. In this example, the subroutine updates the the department id of the employee type, so the parameter is qualified as <code>Byref</code> so that the subroutine can update the dept field of the type variable.<br>
+(Editors Note: Byval remains the default in the current version of FreeBASIC)<br>
+<br>
+On the other hand you may not need to update the type as in the following code fragment.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Sub</span> <span>PrintEmployeeRecord</span><span>(</span><span>Emp</span> <span class="tok-kw">As</span> <span>EmployeeType</span><span>)</span>
+
+    <span>.</span>
+
+    <span>.</span>
+
+    <span>.</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span></pre></code><br>
+<br>
+In this sub you are just printing the employee record to the screen or a printer and do not need to change anything in the type variable. Here the default <code>Byval</code> is used which passes a copy  of the employee record to the sub rather than a reference to the variable. By using <code>Byval</code> in this case, you won't accidentally change something in the type variable that you didn't intend to change.<br>
+<br>
+You should only use <code>Byref</code> if you intend to change the parameter data. It is much safer to use <code>Byval</code> in cases where you need to have the parameter data, but want to prevent accidental changes to the data. These accidental changes generate hard-to-find bugs in your program.<br>
+<br>
+<div> Types Within Types </div><br>
+<br>
+In addition to the intrinsic data types, type fields can also be based on a type definition. Why would you want to do this? One reason is data abstraction. The more general your data structures, the more you can reuse the code in other parts of your program. The less code you have to write, the less chance of errors finding their way into your program. <br>
+<br>
+Using the <code><i>Employee</i></code> example, suppose for a moment that you needed to track more dept information than just the department id. You might need to keep track of the department manager, the location of the department, such as the floor or the building, or the main telephone number of the department. By putting this information into a separate type definition, you could use this information by itself, or as part of another type definition such as the Employee type. By generalizing your data structures, your program will be smaller, and much more robust.<br>
+<br>
+Using a type within a type is the same as using one of the intrinsic data types. The following code snippets illustrates an expanded department type and an updated employee type.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span>DepartmentType</span>
+
+    <span>id</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+    <span>managerid</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+    <span>floor</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>        
+
+
+
+<span class="tok-kw">Type</span> <span>EmployeeType</span>
+
+    <span>fname</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>*</span> <span class="tok-nu">10</span>
+
+       <span>lname</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>*</span> <span class="tok-nu">10</span>
+
+        <span>empid</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+        <span>dept</span> <span class="tok-kw">As</span> <span>DepartmentType</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Dim</span> <span>Employee</span> <span class="tok-kw">As</span> <span>EmployeeType</span></pre></code><br>
+<br>
+Notice that in the Employee definition the dept field is defined as <code><i>DepartmentType</i></code> rather than as one of the intrinsic data types. To access the department information within the <code><i>Employee</i></code> type, you use the compound dot notation to access the dept fields.<br>
+<br>
+<code><pre class="code"><span>Employee.dept.id</span> <span>=</span> <span class="tok-nu">24</span>
+
+<span>Employee.dept.managerid</span> <span>=</span> <span class="tok-nu">1012</span>
+
+<span>Employee.dept.floor</span> <span>=</span> <span class="tok-nu">13</span></pre></code><br>
+<br>
+The top level of the type definition is <code><i>Employee</i></code>, so that reference comes first. Since dept is now a type definition as well, you need to use the dept  identifier to access the individual fields within the <code><i>DepartmentType</i></code>. <code><i>Employee</i></code> refers to the <code><i>employee</i></code> type, <code><i>dept</i></code> refers to the department type and <code><i>id</i></code>, <code><i>managerid</i></code> and <code><i>floor</i></code> are fields within the <code><i>department</i></code> type.<br>
+<br>
+You can even carry this further, by including a type within a type within a type. You would simply use the dot notation of the additional type level as needed. While there is no limit on the levels of nested type definitions, it gets to be a bit unwieldy when used with several levels.<br>
+<br>
+<div> With and Nested Types </div><br>
+<br>
+You can also use the <code>With</code>-<code>End With</code> block with nested types, by nesting the <code>With</code> block, as illustrated in the following code snippet.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">With</span> <span>Employee</span>
+
+       <span>.</span><span>fname</span> <span>=</span> <span>&quot;Susan&quot;</span>
+
+        <span>.</span><span>lname</span> <span>=</span> <span>&quot;Jones&quot;</span>
+
+        <span>.</span><span>empid</span> <span>=</span> <span class="tok-nu">1001</span>
+
+        <span class="tok-kw">With</span> <span>.</span><span>dept</span>
+
+            <span>.</span><span>id</span> <span>=</span> <span class="tok-nu">24</span>
+
+            <span>.</span><span>managerid</span> <span>=</span> <span class="tok-nu">1012</span>
+
+            <span>.</span><span>floor</span> <span>=</span> <span class="tok-nu">13</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">With</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">With</span></pre></code><br>
+<br>
+Notice that the second <code>With</code> uses the dot notation, <code>.<i>dept</i></code>, to specify the next level of type definitions. When using nested <code>With</code> blocks, be sure that you match all the <code>End With</code> statements with their correct <code>With</code> statements to avoid a compile error.<br>
+<br>
+<div> Type Assignments </div><br>
+<br>
+Extending the idea of data abstraction further, it would be nice to be able to separate the initialization of the department type from the initialization of the employee type. By separating the two functions, you can easily add additional department information as needed. This is where you can use type assignments.<br>
+<br>
+Just as you can assign one intrinsic data type to another, you can assign one type variable to another type variable, providing they share the same type definition.<br>
+<br>
+The following code snippet abstracts the department initialization function and assigns the result to the department type within the <code><i>Employee</i></code> type.<br>
+<br>
+<code><pre class="code"><span class="tok-cm">'This function will init the dept type and return it to caller</span>
+
+<span class="tok-kw">Function</span> <span>InitDept</span><span>(</span><span>deptid</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span> <span class="tok-kw">As</span> <span>DepartmentType</span>
+
+    <span class="tok-kw">Dim</span> <span>tmpDpt</span> <span class="tok-kw">As</span> <span>DepartmentType</span>
+
+
+
+    <span class="tok-kw">Select</span> <span class="tok-kw">Case</span> <span>deptid</span>
+
+        <span class="tok-kw">Case</span> <span class="tok-nu">24</span> <span class="tok-cm">'dept 24</span>
+
+        <span class="tok-kw">With</span> <span>tmpDpt</span>
+
+                    <span>.</span><span>id</span> <span>=</span> <span>deptid</span>
+
+                    <span>.</span><span>managerid</span> <span>=</span> <span class="tok-nu">1012</span>
+
+                    <span>.</span><span>floor</span> <span>=</span> <span class="tok-nu">13</span>
+
+            <span class="tok-kw">End</span> <span class="tok-kw">With</span>
+
+        <span class="tok-kw">Case</span> <span class="tok-nu">48</span> <span class="tok-cm">'dept 48</span>
+
+             <span class="tok-kw">With</span> <span>tmpDpt</span>
+
+                    <span>.</span><span>id</span> <span>=</span> <span>deptid</span>
+
+                    <span>.</span><span>managerid</span> <span>=</span> <span class="tok-nu">1024</span>
+
+                    <span>.</span><span>floor</span>  <span>=</span> <span class="tok-nu">12</span>
+
+                <span class="tok-kw">End</span> <span class="tok-kw">With</span>
+
+        <span class="tok-kw">Case</span> <span class="tok-kw">Else</span> <span class="tok-cm">'In case a bad department id was passed</span>
+
+                <span class="tok-kw">With</span> <span>tmpDpt</span>
+
+                    <span>.</span><span>id</span> <span>=</span> <span class="tok-nu">0</span>
+
+                    <span>.</span><span>managerid</span>  <span>=</span> <span class="tok-nu">0</span>
+
+                    <span>.</span><span>floor</span>  <span>=</span> <span class="tok-nu">0</span>
+
+                <span class="tok-kw">End</span> <span class="tok-kw">With</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Select</span>
+
+
+
+    <span class="tok-cm">'Return the dept info</span>
+
+    <span class="tok-kw">Return</span> <span>tmpDpt</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-cm">'Create an instance of the type</span>
+
+<span class="tok-kw">Dim</span> <span>Employee</span> <span class="tok-kw">As</span> <span>EmployeeType</span>
+
+
+
+<span class="tok-cm">'Initialize the Employee type</span>
+
+<span class="tok-kw">With</span> <span>Employee</span>
+
+    <span>.</span><span>fname</span> <span>=</span> <span>&quot;Susan&quot;</span>
+
+    <span>.</span><span>lname</span> <span>=</span> <span>&quot;Jones&quot;</span>
+
+    <span>.</span><span>empid</span> <span>=</span> <span class="tok-nu">1001</span>
+
+    <span>.</span><span>dept</span> <span>=</span> <span>InitDept</span><span>(</span><span class="tok-nu">24</span><span>)</span> <span class="tok-cm">'get dept info</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">With</span></pre></code><br>
+<br>
+As you can see in the snippet, the dept field of the <code><i>employee</i></code> type is initialized with a function call. The <code><i>InitDept</i></code> function returns a <code><i>DepartmentType</i></code> and the compiler will assign that type to the dept field of the <code><i>Employee</i></code> record.<br>
+<br>
+By just adding a simple function to the program, you have made the program easier to maintain. If a new department is created, you can simply update the <code><i>InitDept</i></code> function with the new department information, recompile and the program is ready to go.<br>
+<br>
+<div> Bit Fields </div><br>
+<br>
+There is yet another data type that can be used in type definitions, the bit field. Bit fields are defined as <code><i>variable_name</i>: bits As <i>DataType</i></code>. The variable name must be followed with a colon, the number of bits, followed by the data type. Only integer types (all numeric types excluding the two floating-point types 'single' and 'double', and excluding also the 64-bit types for 32-bit development) are allowed within a bit field. Bit fields are useful when you need to keep track of boolean type information. A bit can be either <code>0</code> or <code>1</code>, which may represent Yes or No, On or Off or even Black and White.<br>
+<br>
+The following code snippet illustrates a bit field definition.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span>BitType</span>
+
+    <span>b1</span><span>:</span> <span class="tok-nu">1</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+    <span>b2</span><span>:</span> <span class="tok-nu">4</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span></pre></code><br>
+<br>
+<code><i>b1</i></code> is defined as a single bit, and <code><i>b2</i></code> is defined as four bits. You initialize the bitfields by passing the individual bits to the type fields.<br>
+<br>
+<code><pre class="code"><span>myBitType.b1</span> <span>=</span> <span class="tok-nu">1</span>
+
+<span>myBitType.b2</span> <span>=</span> <span class="tok-nu">1101</span></pre></code><br>
+<br>
+The data type of the bit field determines how many bits you can declare in a bit field. Since an <code>integer</code> is 32/64 bits long (on 32/64bit systems), you could declare up to 32/64 bits in the field. However, in most cases you would declare a single bit for each field, and use a number of fields to define the bit masking that you wish to use. Using a single bit simplifies the coding you need to do to determine if a bit is set or cleared and allows you to easily identify what a bit means within the type definition.<br>
+<br>
+<div> The Field Property </div><br>
+<br>
+When you create a variable of a type definition, the type is padded in memory. The padding allows for faster access of the type members since the type fields are aligned on a 4 byte or Word boundary. However, this can cause problems when trying to read a type record from a file that is not padded. You can use the use <code>field</code> property to change the padding of a type definition.<br>
+<br>
+The <code>field</code> keyword is used right after the type name and can have the values <code>1</code>, for 1 byte alignment (no padding), <code>2</code> for 2 byte alignment and <code>4</code> for 4 byte alignment. To define a type with no padding you would use the following syntax.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span>myType</span> <span class="tok-kw">Field</span> <span>=</span> <span class="tok-nu">1</span>
+
+     <span>v1</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+    <span>v2</span> <span class="tok-kw">As</span> <span class="tok-kw">Byte</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span></pre></code><br>
+<br>
+For 2 byte alignment you would use <code>field = 2</code>. If no <code>field = <i>property</i></code> is assigned, then the padding will be <code>4</code> bytes. If you are reading a type definition created by FreeBASIC using the default alignment, then you do not need to use the <code>field</code> property.<br>
+<br>
+If you are reading a "Quick Basic" type record, then you will need to use <code>field = 1</code>, as QB used byte alignment by default.<br>
+<br>
+<div> Type Initialization </div><br>
+<br>
+You can initialize a type definition when you dimension the type just as you can any of the intrinsic variables. The following code snippet illustrates the syntax.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span>aType</span>
+
+        <span>a</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+        <span>b</span> <span class="tok-kw">As</span> <span class="tok-kw">Byte</span>
+
+        <span>c</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>*</span> <span class="tok-nu">10</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Dim</span> <span>myType</span> <span class="tok-kw">As</span> <span>aType</span> <span>=&gt;</span> <span>(</span><span class="tok-nu">12345</span><span>,</span> <span class="tok-nu">12</span><span>,</span> <span>&quot;Hello&quot;</span><span>)</span></pre></code><br>
+<br>
+In the <code>Dim</code> statement, the arrow operator <code>=&gt;</code> is used to tell the compiler that you are initializing the type variable. The type element values must be enclosed in parenthesis, and separated by commas. The order of the value list corresponds to the order of the type elements, where <code><i>a</i></code> will be set to <code>12345</code>, <code><i>b</i></code> to <code>12</code> and <code><i>c</i></code> to <code>"Hello"</code>.<br>
+<br>
+<div><table><tr><td> You cannot initialize a dynamic string within a type definition using this method. The string must be fixed length.</td></tr></table></div><br>
+<br>
+Initializing a type definition in a <code>Dim</code> statement is useful when you need to have a set of initial values for a type, or values that will not change during program execution. Since the values are known at compile time, the compiler can doesn't have to spend cycles loading the values during runtime.<br>
+<br>
+<div> Unions </div><br>
+<br>
+Unions look similar to Types in their definition.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Union</span> <span>aUnion</span>
+
+    <span>b</span> <span class="tok-kw">As</span> <span class="tok-kw">Byte</span>
+
+    <span>s</span> <span class="tok-kw">As</span> <span class="tok-kw">Short</span>
+
+    <span>i</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Union</span></pre></code><br>
+<br>
+If this were a <code>Type</code>, you could access each field within the definition. For a <code>Union</code> however, you can only access one field at any given time; all the fields within a <code>Union</code> occupy the same memory segment, and the size of the <code>Union</code> is the size of the largest member.<br>
+<br>
+In this case, the <code>Union</code> would occupy four/eight bytes (on 32/64bit systems), the size of an <code>Integer</code>, with the <code><i>b</i></code> field occupying 1 byte, the <code><i>s</i></code> field occupying 2 bytes, and the <code><i>i</i></code> occupying the full 4/8 bytes (on 32/64bit systems). Each field starts at the first byte, so the <code><i>s</i></code> field would include the <code><i>b</i></code> field, and the <code><i>i</i></code> field would include both the <code><i>b</i></code> and <code><i>s</i></code> fields.<br>
+<br>
+<div> Types in Unions </div><br>
+<br>
+A good example of using a type definition in a union is the <code><i>Large_Integer</i></code> definition found in <code>winnt.bi</code>. The <code><i>Large_Integer</i></code> data type is used in a number of Windows functions within the C Runtime Library. The following code snippet shows the <code><i>Large_Integer</i></code> definition.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Union</span> <span>LARGE_INTEGER</span>
+
+    <span class="tok-kw">Type</span>
+
+        <span>LowPart</span> <span class="tok-kw">As</span> <span>DWORD</span>
+
+        <span>HighPart</span> <span class="tok-kw">As</span> <span class="tok-kw">Long</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+    <span>QuadPart</span> <span class="tok-kw">As</span> <span>LONGLONG</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Union</span></pre></code><br>
+<br>
+The <code><i>Dword</i></code> data type is defined in <code>windef.bi</code> as a FreeBASIC <code>Ulong</code>, and the <code><i>Longlong</i></code> type is defined as a <code><i>Longint</i></code>. A Long is a fixed 32-bit integer type. Remember that a type occupies contiguous memory locations, so the <code><i>HighPart</i></code> field follows the <code><i>LowPart</i></code> part field in memory. Since this is a union, the type occupies the same memory segment as the <code><i>QuadPart</i></code> field.<br>
+<br>
+When you set <code><i>QuardPart</i></code> to a large integer value, you are also setting the values of the type fields, which you can then extract as the <code><i>LowPart</i></code>and <code><i>HighPart</i></code>. You can also do the reverse; that is by setting the <code><i>LowPart</i></code> and <code><i>HighPart</i></code> of the type, you are setting the value of the <code><i>QuadPart</i></code> field.<br>
+<br>
+As you can see, using a type within a union is an easy way to set or retrieve individual values of a component data type without resorting to a lot of conversion code. The layout of the memory segments does the conversion for you, providing that the memory segments make sense within the context of the component type.<br>
+<br>
+In the <code><i>Large_Integer case</i></code>, the <code><i>LowPart</i></code> and <code><i>HighPart</i></code> have been defined to return the appropriate component values. Using values other than <code><i>Dword</i></code> and <code><i>Long</i></code> would not return correct values for <code><i>LowPart</i></code> and <code><i>HighPart</i></code>. You need to make sure when defining a type within a union, you are segmenting the union memory segment correctly within the type definition.<br>
+<br>
+<div> Unions in Types </div><br>
+<br>
+A union within a type definition is an efficient way to manage data when one field within a type can only one of several values. The most common example of this is the Variant data type found in other programing languages.<br>
+<br>
+<div><table><tr><td> FreeBASIC does not have a native Variant data type at this time. However, by using the extended Type syntax, you could create a Variant data type for use in your program.</td></tr></table></div><br>
+<br>
+When using a <code>Union</code> within a type it is common practice to create an <code><i>id</i></code> field within the type that indicates what the union contains at any given moment. The following code snippet illustrates this concept.<br>
+<br>
+<code><pre class="code"><span class="tok-cm">'Union field ids</span>
+
+<span>#define vInteger 0
+
+#define vDouble 1
+
+</span>
+
+<span class="tok-cm">'Define type def with variable data fields</span>
+
+<span class="tok-kw">Type</span> <span>vType</span>
+
+    <span>vt_id</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+    <span class="tok-kw">Union</span>
+
+        <span>d</span> <span class="tok-kw">As</span> <span class="tok-kw">Double</span>
+
+        <span>i</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Union</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span></pre></code><br>
+<br>
+The union definition here is called an anonymous union since it isn't defined with a name. The <code><i>vt_id</i></code> field of the type definition indicates the value of the union. To initialize the type you would use code like the following.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span>myVarianti</span> <span class="tok-kw">As</span> <span>vType</span>
+
+<span class="tok-kw">Dim</span> <span>myVariantd</span> <span class="tok-kw">As</span> <span>vType</span>
+
+
+
+<span>myVarianti.vt_id</span> <span>=</span> <span>vInteger</span>
+
+<span>myVarianti.i</span> <span>=</span> <span class="tok-nu">300</span>
+
+
+
+<span>myVariantd.vt_id</span> <span>=</span> <span>vDouble</span>
+
+<span>myVariantd.d</span> <span>=</span> <span class="tok-nu">356.56</span></pre></code><br>
+<br>
+<code><i>myVarianti</i></code> contains an <code>integer</code> value so the <code><i>id</i></code> is set to <code><i>vInteger</i></code>. <code><i>myVariantd</i></code> contains a <code>double</code> so the id is set to <code><i>vDouble</i></code>. If you were to create a subroutine that had a <code><i>vType</i></code> parameter, you could examine the <code><i>vt_type</i></code> field to determine whether an <code><i>integer</i></code> or <code><i>double</i></code> had been passed to the subroutine.<br>
+<br>
+<div><table><tr><td> You cannot use dynamic strings within a union.</td></tr></table></div><br>
+<br>
+Using a combination of <code><i>unions</i></code> and <code><i>type</i></code>s within a program allows you to design custom data types that have a lot of flexibility, but care must be taken to ensure that you are using the data constructs correctly. Improper use of these data types can lead to hard-to-find bugs. The benefits however, out-weigh the risks and once mastered, are a powerful programming tool.<br>
+<br>
+<i>Last Reviewed by Sancho3 on February 06, 2018</i>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../index.html">Home</a> ·
+         <a href="../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../nav.js?v=70a6b70236"></script>
+<script src="../../search-index.js"></script>
+<script src="../../assets/app.js?v=456d079659"></script>
+<script src="../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

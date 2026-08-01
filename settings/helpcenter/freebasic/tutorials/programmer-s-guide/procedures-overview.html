@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Procedures Overview — Help Center</title>
+<meta name="description" content="Procedures Overview — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/procedures-overview.html">
+<meta property="og:title" content="Procedures Overview">
+<meta property="og:description" content="Procedures Overview — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/procedures-overview.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/programmer-s-guide/procedures-overview.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>Procedures Overview</h1>
+<h2>Documentation</h2>
+
+	Overview of the different FB procedure types.<br>
+<br>
+Procedures are blocks of code that can be executed, or called, from anywhere in a program, any number of times. The code that is executed is called the procedure body. There are two types of procedures in FreeBASIC: procedures that don't return a value and procedures that do.<br>
+<br>
+<div>Subs</div><div><br>
+<i>Subs</i> are procedures that don't return values. They are declared using the <code><a href="../../procedures/procedures/declare.html">Declare</a></code> keyword, and defined using the <code><a href="../../procedures/procedures/sub.html">Sub</a></code> keyword. Declaring a procedure introduces its name so that it can be called, and a procedure definition lists the statements of code that will be executed when called. A <i>sub</i> is called simply by using its name somewhere in the program.<br>
+<br>
+<code><pre class="code"><span class="tok-cm">' introduces the sub 'MyProcedure'</span>
+
+<span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>MyProcedure</span>
+
+
+
+<span class="tok-cm">' calls the procedure 'MyProcedure'</span>
+
+<span>MyProcedure</span>
+
+
+
+<span class="tok-cm">' defines the procedure body for 'MyProcedure'</span>
+
+<span class="tok-kw">Sub</span> <span>MyProcedure</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;the body of MyProcedure&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span></pre></code><br>
+will produce the output:<br>
+<br>
+<pre class="code">
+the body of MyProcedure
+</pre><br>
+Notice that only the declaration is needed to call the procedure. The procedure can be defined later in code, or even in a different source file altogether.<br>
+<br>
+</div><div>Functions</div><div><br>
+<i>Functions</i> are procedures that return a value back to the point in code in which they are called. You can think of a <i>function</i> call as evaluating to some expression, just like a variable or object. They are declared using the <code><a href="../../procedures/procedures/declare.html">Declare</a></code> keyword, and defined using the <code><a href="../../procedures/procedures/function.html">Function</a></code> keyword. The type of value that <i>functions</i> return is specified at the end of the declaration.<br>
+<br>
+<code><pre class="code"><span class="tok-cm">' introduces and defines a procedure that returns an integer value</span>
+
+<span class="tok-kw">Function</span> <span>MyProcedure</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+    <span class="tok-kw">Return</span> <span class="tok-nu">10</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-cm">' calls the procedure, and stores its return value in a variable</span>
+
+<span class="tok-kw">Dim</span> <span>i</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span>MyProcedure</span>
+
+<span class="tok-kw">Print</span> <span>i</span></pre></code><br>
+will produce the output:<br>
+<br>
+<pre class="code">
+10
+</pre>Since a definition is a declaration, a procedure can be called after it has been defined, as well.<br>
+<br>
+It is a common convention when calling a procedure to place parenthesis <code>'()'</code> after the procedure name, to signify a procedure call. FreeBASIC does not require this, however.<br>
+<br>
+</div><div>See also</div><div><br>
+<ul><li> <a href="passing-arguments-to-procedures.html">Passing Arguments to Procedures</a><br>
+<li> <a href="returning-values.html">Returning Values</a><br>
+<li> <code><a href="../../procedures/procedures/declare.html">Declare</a></code><br>
+<li> <code><a href="../../procedures/procedures/sub.html">Sub</a></code><br>
+<li> <code><a href="../../procedures/procedures/function.html">Function</a></code><br>
+<br>
+</li></li></li></li></li></ul></div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

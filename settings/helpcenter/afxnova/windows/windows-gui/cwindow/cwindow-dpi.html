@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CWindow.DPI — Help Center</title>
+<meta name="description" content="Gets/sets the DPI (dots per inch) to be used by the application.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-gui/cwindow/cwindow-dpi.html">
+<meta property="og:title" content="CWindow.DPI">
+<meta property="og:description" content="Gets/sets the DPI (dots per inch) to be used by the application.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-gui/cwindow/cwindow-dpi.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-gui/cwindow/cwindow-dpi.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cwindow-class.html">CWindow Class</a></div>
+<h1>CWindow.DPI<span class="h1kind">property</span></h1>
+<p class="lede">Gets/sets the DPI (dots per inch) to be used by the application.</p>
+<div class="badges"><a class="badge" href="../../index.html">Windows</a><span class="badge">property</span><span class="badge">CWindow.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>PROPERTY DPI () AS SINGLE</code></pre>
+<pre class="code sig"><code>PROPERTY DPI (BYVAL nDPI AS SINGLE)</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>nDPI</code></td><td></td><td>The number of dots per inch. Pass -1 to use the value returned by the <strong>GetDeviceCaps</strong> API function.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Gets/sets the <strong>DPI</strong> (dots per inch) to be used by the application. The main window, controls and fonts will be scaled according this value. Don't change the DPI value once the main window has been created.</p>
+<p>By default, <strong>CWindow</strong> retrieves the <strong>DPI</strong> setting used by the computer and calculates the scaling ratios, but you can use this property to alter this behavior. For example, passing a DPI of 96 disables scaling; any other value, changes the scaling ratios.</p>
+<h2>Remarks</h2>
+<p>To make the application DPI aware with Windows 10 or superior it's needed a call to the API function <strong>SetProcessDpiAwareness</strong> or set it through the application manifest.</p>
+<p>DLLs should accept the dpi setting of the host process rather than call <strong>SetProcessDpiAwareness</strong> themselves. To be set properly, <em>dpiAware</em> should be specified as part of the application (.exe) manifest. (<em>dpiAware</em> defined in an embedded DLL manifest has no affect.) The following markup shows how to set <em>dpiAware</em> as part of an application (.exe) manifest.</p>
+<h2>Examples</h2>
+<p>&lt;assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0" xmlns:asmv3="urn:schemas-microsoft-com:asm.v3" &gt; ... &lt;asmv3:application&gt;</p>
+<pre class="code"><code>&lt;asmv3:windowsSettings xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings"&gt;
+  &lt;dpiAware&gt;true&lt;/dpiAware&gt;
+&lt;/asmv3:windowsSettings&gt;</code></pre>
+<p>&lt;/asmv3:application&gt; ... &lt;/assembly&gt;</p>
+<p>DIM dpi AS LONG = pWindow.DPI</p>
+<p>pWindow.DPI = 96</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CWindow.inc</code></li><li>Defined in <span class="srcref">AfxNova/CWindow.inc:609</span></li><li>Documented in <span class="srcref">Windows/Windows GUI/CWindow Class.md</span></li><li>Topic: <a href="../cwindow-class.html">CWindow Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

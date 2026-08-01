@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GdipDrawImagePointsRect — Help Center</title>
+<meta name="description" content="Draws an image at a specified location.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipdrawimagepointsrect.html">
+<meta property="og:title" content="GdipDrawImagePointsRect">
+<meta property="og:description" content="Draws an image at a specified location.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipdrawimagepointsrect.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/procedures/gdipdrawimagepointsrect.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../graphics-functions.html">Graphics Functions</a></div>
+<h1>GdipDrawImagePointsRect<span class="h1kind">function</span></h1>
+<p class="lede">Draws an image at a specified location.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GdipDrawImagePointsRect (BYVAL graphics AS GpGraphics PTR, BYVAL image AS GpImage PTR, BYVAL points AS GpPointF PTR, BYVAL count AS INT_, BYVAL srcx AS REAL, BYVAL srcy AS REAL, BYVAL srcwidth AS REAL, BYVAL srcheight AS REAL, BYVAL srcUnit AS GpUnit, BYVAL imageAttributes AS GpImageAttributes PTR, BYVAL callback AS DrawImageAbort, BYVAL callbackData AS VOID PTR) AS GpStatus</code></pre>
+<div class="note">Also documented as <code>GdipDrawImagePointsRectI</code> — one description covers them all.</div>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>graphics</code></td><td></td><td>[in] Pointer to the <strong>Graphics</strong> object.</td></tr><tr><td><code>image</code></td><td></td><td>[in] Pointer to an Image object that specifies the image to be drawn.</td></tr><tr><td><code>points</code></td><td></td><td>[in] Pointer to an array of <strong>GpPoint</strong> structures that specify the area, in a parallelogram, in which to draw the image.</td></tr><tr><td><code>count</code></td><td></td><td>[in] Long integer value that specifies the number of elements in the <em>Points</em> array.</td></tr><tr><td><code>srcx</code></td><td></td><td>[in] The x-coordinate of the upper-left corner of the portion of the source image to be drawn.</td></tr><tr><td><code>srcy</code></td><td></td><td>[in] The y-coordinate of the upper-left corner of the portion of the source image to be drawn.</td></tr><tr><td><code>srcwidth</code></td><td></td><td>[in] The width of the portion of the source image to be drawn.</td></tr><tr><td><code>srcheight</code></td><td></td><td>[in] The height of the portion of the source image to be drawn.</td></tr><tr><td><code>srcUnit</code></td><td></td><td>[in] Element of the <strong>GpUnit</strong> enumeration that specifies the unit of measure for the image. The default value is <em>UnitPixel</em>.</td></tr><tr><td><code>imageAttributes</code></td><td></td><td>[in] Pointer to an <strong>GpImageAttributes</strong> structure that specifies the color and size attributes of the image to be drawn. The default value is NULL.</td></tr><tr><td><code>callback</code></td><td></td><td>[in] Callback method used to cancel the drawing in progress. The default value is NULL.</td></tr><tr><td><code>callbackData</code></td><td></td><td>[in] Pointer to additional data used by the method specified by the callback parameter. The default value is NULL.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Draws an image at a specified location.</p>
+<h2>Remarks</h2>
+<p>The value of the <em>count</em> parameter must equal 3 to specify the coordinates of the upper-left corner, upper-right corner, and lower-left corner of the parallelogram. The coordinate of the lower-right corner is calculated using the three given coordinates, the width, and the height of the image. The portion of the source image to be drawn is scaled to fit the parallelogram.</p>
+<h2>Example</h2>
+<p>' ======================================================================================== ' The following example draws the original source image and then draws a portion of the ' image in a specified parallelogram. ' ======================================================================================== SUB Example_DrawImagePointsRect (BYVAL hdc AS HDC)</p>
+<p>DIM hStatus AS LONG</p>
+<p>' // Create a graphics object from the device context DIM graphics AS GpGraphics PTR hStatus = GdipCreateFromHDC(hdc, @graphics)</p>
+<p>' // Get the DPI scaling ratios DIM dpiX AS SINGLE hStatus = GdipGetDpiX(graphics, @dpiX) DIM rxRatio AS SINGLE = dpiX / 96 DIM dpiY AS SINGLE hStatus = GdipGetDpiY(graphics, @dpiY) Dim ryRatio AS SINGLE = dpiY / 96 ' // Set the scale transform hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)</p>
+<p>' // Create the Image object DIM image AS GpImage PTR DIM wszFileName AS WSTRING * 260 = "pattern.png" hStatus = GdipLoadImageFromFile(wszFileName, @image) hStatus = GdipBitmapSetResolution(image, dpiX, dpiY)</p>
+<p>' // Draw the original image hStatus = GdipDrawImage(graphics, image, 10, 10)</p>
+<p>' // Define the portion of the image to draw. DIM srcX AS SINGLE = 70.0 DIM srcY AS SINGLE = 20.0 DIM srcwidth AS SINGLE = 100.0 DIM srcheight AS SINGLE = 100.0</p>
+<p>' // Create an array of GpPointF structures that specify the destination of the cropped image. DIM destPoints(2) AS GpPointF destPoints(0).x = 230.0 : destPoints(0).y = 30.0 destPoints(1).x = 350.0 : destPoints(1).y = 50.0 destPoints(2).x = 275.0 : destPoints(2).y = 120.0</p>
+<p>' // Create an ImageAttributes object that specifies a recoloring from red to blue. DIM remapAttributes AS GpImageAttributes PTR hStatus = GdipCreateImageAttributes(@remapAttributes) DIM redToBlue AS GpColorMap redToBlue.oldColor = ARGB_RED redToBlue.newColor = ARGB_BLUE hStatus = GdipSetImageAttributesRemapTable(remapAttributes, ColorAdjustTypeDefault, TRUE, 1, @redToBlue)</p>
+<p>' // Draw the cropped image hStatus = GdipDrawImagePointsRect(graphics, image, @destPoints(0), 3, srcx, srcy, _</p>
+<pre class="code"><code>srcwidth, srcheight, UnitPixel, remapAttributes, NULL, NULL)</code></pre>
+<p>' // Cleanup IF remapAttributes THEN GdipDisposeImageAttributes(remapAttributes) IF image THEN GdipDisposeImage(image) IF graphics THEN GdipDeleteGraphics(graphics)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/AfxGdiPlus.bi:1869</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Flat  Api/GdiPlusGraphics.md</span></li><li>Topic: <a href="../graphics-functions.html">Graphics Functions</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

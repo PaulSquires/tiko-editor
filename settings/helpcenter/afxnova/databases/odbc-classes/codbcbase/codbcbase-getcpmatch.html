@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CODBCBase.GetCPMatch — Help Center</title>
+<meta name="description" content="Returns a 32-bit SQLUINTEGER value that determines how a connection is chosen from a connection pool.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/databases/odbc-classes/codbcbase/codbcbase-getcpmatch.html">
+<meta property="og:title" content="CODBCBase.GetCPMatch">
+<meta property="og:description" content="Returns a 32-bit SQLUINTEGER value that determines how a connection is chosen from a connection pool.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/databases/odbc-classes/codbcbase/codbcbase-getcpmatch.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/databases/odbc-classes/codbcbase/codbcbase-getcpmatch.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../odbc-classes.html">ODBC Classes</a></div>
+<h1>CODBCBase.GetCPMatch<span class="h1kind">method</span></h1>
+<p class="lede">Returns a 32-bit SQLUINTEGER value that determines how a connection is chosen from a connection pool.</p>
+<div class="badges"><a class="badge" href="../../index.html">Databases</a><span class="badge">method</span><span class="badge">CODBC.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GetCPMatch () AS SQLUINTEGER</code></pre>
+<h2>Return value</h2>
+<p>The current value of the attribute.</p>
+<h2>Description</h2>
+<p>Returns a 32-bit SQLUINTEGER value that determines how a connection is chosen from a connection pool.</p>
+<h2>Remarks</h2>
+<p>The Driver Manager determines which connection is reused from the pool and attempts to match the connection options in the call and the connection attributes set by the application to the keywords and connection attributes of the connections in the pool. The value of this attribute determines the level of precision of the matching criteria. The following values are used to set the value of this attribute:</p>
+<p><strong>SQL_CP_STRICT_MATCH</strong></p>
+<p>Only connections that exactly match the connection options in the call and the connection attributes set by the application are reused. This is the default.</p>
+<p><strong>SQL_CP_RELAXED_MATCH</strong></p>
+<p>Connections with matching connection string keywords can be used. Keywords must match, but not all connection attributes must  match.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CODBC.inc</code></li><li>Defined in <span class="srcref">AfxNova/COdbc.inc:198</span></li><li>Documented in <span class="srcref">Databases/ODBC Classes/CODBC Class.md</span></li><li>Topic: <a href="../odbc-classes.html">ODBC Classes</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Procedure Scopes — Help Center</title>
+<meta name="description" content="Procedure Scopes — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/procedure-scopes.html">
+<meta property="og:title" content="Procedure Scopes">
+<meta property="og:description" content="Procedure Scopes — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/procedure-scopes.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/programmer-s-guide/procedure-scopes.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>Procedure Scopes</h1>
+<h2>Documentation</h2>
+
+	The <b>Scope</b> (visibility) of a <b>Procedure</b> through the different modules of a program.<br>
+<br>
+<b>Preamble:</b><br>
+<br>
+A procedure is a "subroutine" (sub) or a "function" that can be called by code outside the procedure (or internal code in the case of a recursion).<br>
+A procedure consists of a sequence of instructions that form the body of the procedure.<br>
+It is possible to pass values or variables to a procedure, and a function may return a value or a reference.<br>
+<br>
+<div>Description</div><div><br>
+Scopes of procedures in modules follows simple rules:<br>
+<ul><ul><li> <b>Private</b> scope:<br>
+</li></ul></ul><div class="indent"><div class="indent"><div class="indent">procedure visible only in its own module (where it is defined).<br>
+</div></div></div><ul><ul><li> <b>Public</b> scope:<br>
+</li></ul></ul><div class="indent"><div class="indent"><div class="indent">procedure visible from all modules constituting a compiled program (including static libraries).<br>
+</div></div></div><ul><ul><li> <b>Export</b> scope:<br>
+</li></ul></ul><div class="indent"><div class="indent"><div class="indent">when defined in a DLL (dynamically linked library), procedure visible from an external program that has loaded it (statically or dynamically).<br>
+<br>
+</div></div></div></div><div>Syntax</div><div><br>
+<div class="indent"><code>[ <a href="../../modularizing/procedures/public.html">Public</a> | <a href="../../modularizing/procedures/private.html">Private</a> ] { <a href="../../procedures/procedures/sub.html">Sub</a> | <a href="../../procedures/procedures/function.html">Function</a> } <i>proc_name</i> ( <i>argumentlist</i> ) [ [ <a href="../../procedures/procedures/byref-function-results.html">ByRef</a> ] <a href="../../miscellaneous-keywords/procedures/as.html">As</a> <a href="../../reference/data-types.html">datatype</a> ] Export</code><br>
+</div>or<br>
+<div class="indent"><code>[ <a href="../../modularizing/procedures/public.html">Public</a> ] { <a href="../../procedures/procedures/sub.html">Sub</a> | <a href="../../procedures/procedures/function.html">Function</a> } <i>proc_name</i> ( <i>argumentlist</i> ) [ [ <a href="../../procedures/procedures/byref-function-results.html">ByRef</a> ] <a href="../../miscellaneous-keywords/procedures/as.html">As</a> <a href="../../reference/data-types.html">datatype</a> ] <a href="../../modularizing/procedures/export.html">Export</a></code><br>
+<br>
+</div></div><div>Usage</div><div><br>
+Private, Public and Export access controls are used in procedure definitions only (forbidden at declaration line level).<br>
+<br>
+By default, a procedure is Public except if the <code><a href="../../compiler-switches/procedures/option-private.html">Option Private</a></code> statement (in the module) modifies the default state.<br>
+That is why both Private and Public access controls are useful, depending on the default state.<br>
+Export access control is incompatible with Private procedures (implicitly or explicitly defined like this).<br>
+<br>
+Among the compiled modules, two procedures with the same identifier, but defined inside different modules, may exist if both are Private.<br>
+<br>
+The compiler removes the Private procedures that are not called, but this does not currently work for Private procedures that are only called by other Private procedures that are not called themselves, because the first one appears as being called.<br>
+<br>
+</div><div>See also</div><div><br>
+<ul><li> <a href="../../modularizing/modularizing.html">Modularizing</a><br>
+<li> <a href="../../procedures/procedures.html">Procedures</a><br>
+<li> <a href="variable-and-procedure-linkage.html">Variable and Procedure Linkage</a><br>
+<br>
+</li></li></li></ul></div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

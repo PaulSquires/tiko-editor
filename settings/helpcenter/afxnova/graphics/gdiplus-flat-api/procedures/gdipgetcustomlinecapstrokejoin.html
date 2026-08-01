@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GdipGetCustomLineCapStrokeJoin — Help Center</title>
+<meta name="description" content="Returns the style of **LineJoin** used to join multiple lines in the same **GraphicsPath** object.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipgetcustomlinecapstrokejoin.html">
+<meta property="og:title" content="GdipGetCustomLineCapStrokeJoin">
+<meta property="og:description" content="Returns the style of **LineJoin** used to join multiple lines in the same **GraphicsPath** object.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipgetcustomlinecapstrokejoin.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/procedures/gdipgetcustomlinecapstrokejoin.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../customlinecap-functions.html">CustomLineCap Functions</a></div>
+<h1>GdipGetCustomLineCapStrokeJoin<span class="h1kind">function</span></h1>
+<p class="lede">Returns the style of **LineJoin** used to join multiple lines in the same **GraphicsPath** object.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GdipGetCustomLineCapStrokeJoin (BYVAL customCap AS GpCustomLineCap PTR, BYVAL lineJoin AS GpLineJoin PTR) AS GpStatus</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>customCap</code></td><td></td><td>[in] Pointer to a <strong>CustomLineCap</strong> object.</td></tr><tr><td><code>lineJoin</code></td><td></td><td>[out] The style of line join.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Returns the style of <strong>LineJoin</strong> used to join multiple lines in the same <strong>GraphicsPath</strong> object.</p>
+<h2>Remarks</h2>
+<p>The <strong>CustomLineCap</strong> object uses a path and a stroke to define the end cap. The stroke is contained in a <strong>GraphicsPath</strong> object, which can contain more than one figure. If there is more than one figure in the <strong>GraphicsPath</strong> object, the stroke join determines how their joint is graphically displayed.</p>
+<h2>Examples</h2>
+<p>' ======================================================================================== SUB Example_GetStrokeJoin (BYVAL hdc AS HDC)</p>
+<p>DIM hStatus AS LONG</p>
+<p>' // Create a graphics object from the device context DIM graphics AS GpGraphics PTR hStatus = GdipCreateFromHDC(hdc, @graphics)</p>
+<p>' // Get the DPI scaling ratios DIM dpiX AS SINGLE hStatus = GdipGetDpiX(graphics, @dpiX) DIM rxRatio AS SINGLE = dpiX / 96 DIM dpiY AS SINGLE hStatus = GdipGetDpiY(graphics, @dpiY) DIM ryRatio AS SINGLE = dpiY / 96 ' // Set the scale transform hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)</p>
+<p>' // Create a path and add two lines to it DIM capPath AS GpPath PTR hStatus = GdipCreatePath(FillModeAlternate, @capPath) DIM pts(0 TO 2) AS GpPointF = {(-15, -15), (0, 0), (15, -15)} hStatus = GdipAddPathLine2(capPath, @pts(0), 3)</p>
+<p>' // Create a CustomLineCap object DIM custCap AS GpCustomLineCap PTR hStatus = GdipCreateCustomLineCap(NULL, capPath, LineCapRound, 0, @custCap)</p>
+<p>' // Set the stroke join style hStatus = GdipSetCustomLineCapStrokeJoin(custCap, LineJoinBevel)</p>
+<p>' // Get the stroke join from custCap DIM strokeJoin AS LineJoin hStatus = GdipGetCustomLineCapStrokeJoin(custCap, @strokeJoin)</p>
+<p>' // Create a red Pen with width 15.1 DIM strokeJoinPen AS GpPen PTR hStatus = GdipCreatePen1(ARGB_RED, 15.1, UnitWorld, @strokeJoinPen)</p>
+<p>' // Set the line join style on the pen hStatus = GdipSetPenLineJoin(strokeJoinPen, strokeJoin)</p>
+<p>' // Create a path with two joined lines DIM joinPath AS GpPath PTR hStatus = GdipCreatePath(FillModeAlternate, @joinPath) hStatus = GdipAddPathLine(joinPath, 10, 10, 10, 200) hStatus = GdipAddPathLine(joinPath, 10, 200, 200, 200)</p>
+<p>' // Draw the path using the pen hStatus = GdipDrawPath(graphics, strokeJoinPen, joinPath)</p>
+<p>' // Clean up resources IF strokeJoinPen THEN GdipDeletePen(strokeJoinPen) IF custCap THEN GdipDeleteCustomLineCap(custCap) IF capPath THEN GdipDeletePath(capPath) IF joinPath THEN GdipDeletePath(joinPath) IF graphics THEN GdipDeleteGraphics(graphics)</p>
+<p>END SUB ' ========================================================================================</p>
+<p>The following example creates a CustomLineCap object with a stroke join. It then gets the stroke join and assigns it as the line join of a Pen object that it then uses to draw a line.</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/AfxGdiPlus.bi:1685</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Flat  Api/GdiPlusCustomLineCap.md</span></li><li>Topic: <a href="../customlinecap-functions.html">CustomLineCap Functions</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

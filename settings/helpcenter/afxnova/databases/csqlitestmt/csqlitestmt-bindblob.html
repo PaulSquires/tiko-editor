@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CSQLiteStmt.BindBlob — Help Center</title>
+<meta name="description" content="Binds a blob with the statement.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/databases/csqlitestmt/csqlitestmt-bindblob.html">
+<meta property="og:title" content="CSQLiteStmt.BindBlob">
+<meta property="og:description" content="Binds a blob with the statement.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/databases/csqlitestmt/csqlitestmt-bindblob.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/databases/csqlitestmt/csqlitestmt-bindblob.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../csqlite-class.html">CSQLite Class</a></div>
+<h1>CSQLiteStmt.BindBlob<span class="h1kind">method</span></h1>
+<p class="lede">Binds a blob with the statement.</p>
+<div class="badges"><a class="badge" href="../index.html">Databases</a><span class="badge">method</span><span class="badge">CSQLite.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION BindBlob (BYVAL idx AS LONG, BYVAL pValue AS ANY PTR, BYVAL numBytes AS LONG, BYVAL pDestructor AS ANY PTR = NULL) AS LONG</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>idx</code></td><td></td><td>Index of the SQL parameter to be set. The leftmost SQL parameter has an index of 1. When the same named SQL parameter is used more than once, second and subsequent occurrences have the same index as the first occurrence. The index for named parameters can be looked up using the <strong>BindParameterIndex</strong> method if desired. The index for "?NNN" parameters is the value of NNN. The NNN value must be between 1 and the <strong>Limit</strong> parameter SQLITE_LIMIT_VARIABLE_NUMBER (default value: 999).</td></tr><tr><td><code>pValue</code></td><td></td><td>The value to bind to the parameter.</td></tr><tr><td><code>numBytes</code></td><td></td><td>The number of bytes in the parameter. To be clear: the value is the number of bytes in the value, not the number of characters.</td></tr><tr><td><code>pDestructor</code></td><td></td><td>A destructor used to dispose of the BLOB after SQLite has finished with it. The destructor is called to dispose of the BLOB even if the call to <strong>BindBlob</strong> fails. If this argument is the special value <strong>SQLITE_STATIC</strong>, then SQLite assumes that the information is in static, unmanaged space and does not need to be freed. If this argument has the value <strong>SQLITE_TRANSIENT</strong>, then SQLite makes its own private copy of the data immediately, before the <strong>BindBlob</strong> function returns.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>SQLITE_OK on success or an error code if anything goes wrong. SQLITE_RANGE is returned if the parameter index is out of range. SQLITE_NOMEM is returned if malloc fails.</p>
+<h2>Description</h2>
+<p>Binds a blob with the statement.</p>
+<h2>Remarks</h2>
+<p>If <strong>BindBlob</strong> is called with a NULL pointer for the prepared statement or with a prepared statement for which <strong>Step_</strong> has been called more recently than <strong>Reset</strong>, then the call will return SQLITE_MISUSE. If <strong>BindBlob</strong> is passed a prepared statement that has been finalized, the result is undefined and probably harmful.</p>
+<p>Bindings are not cleared by the <strong>Reset</strong> function. Unbound parameters are interpreted as NULL.</p>
+<h2>Example</h2>
+<p>' Blob '#CONSOLE ON #define UNICODE #INCLUDE ONCE "AfxNova/AfxWin.inc" #INCLUDE ONCE "AfxNova/CSQLite3.inc" USING AfxNova</p>
+<p>' // Optional: Specify the DLL path and/or name ' // This allows to use a DLL with a different name that sqlite3.dll, ' // located anywhere, avoiding the need to have multiple copies of the same dll. DIM pSql AS CSQLite = "sqlite3_642.dll" IF pSql.m_hLib = NULL THEN END</p>
+<p>' // Create a new database ' // I'm deleting and recreating the database for testing purposes DIM dwsDbName AS DWSTRING = AfxGetExePathName &amp; "TestBlob.sdb" IF AfxFileExists(dwsDbName) THEN AfxDeleteFile(dwsDbName) DIM pDbc AS CSQLiteDb = dwsDbName</p>
+<p>' // Create a table IF pDbc.Exec("CREATE TABLE t (xyz blob)") &lt;&gt; SQLITE_DONE THEN AfxMsg "Unable to create the table" END END IF</p>
+<p>' // Prepare the statement DIM sql AS DWSTRING = "INSERT INTO t (xyz) VALUES (?)" DIM pStmt AS CSqliteStmt = pDbc.Prepare(sql) ' // Bind the blob DIM fakeBlob AS STRING fakeBlob = STRING(500, "A") pStmt.BindBlob(1, STRPTR(fakeBlob), 500, SQLITE_TRANSIENT) ' // Execute the prepared statement pStmt.Step_ PRINT "Row id was", pDbc.LastInsertRowId</p>
+<p>' // Open the blob DIM pBlob AS CSQLiteBlob = pDbc.OpenBlob("main", "t", "xyz", 1) DIM nBlobBytes AS LONG = pBlob.Bytes PRINT "Blob bytes: ", nBlobBytes ' // Read the blob DIM strBlob AS STRING strBlob = STRING(nBlobBytes, CHR(0)) pBlob.Read(STRPTR(strBlob), nBlobBytes) PRINT strBlob</p>
+<p>PRINT PRINT "Press any key..." SLEEP</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CSQLite.inc</code></li><li>Defined in <span class="srcref">AfxNova/CSQLite3.inc:1748</span></li><li>Documented in <span class="srcref">Databases/CSQLite Class.md</span></li><li>Topic: <a href="../csqlite-class.html">CSQLite Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

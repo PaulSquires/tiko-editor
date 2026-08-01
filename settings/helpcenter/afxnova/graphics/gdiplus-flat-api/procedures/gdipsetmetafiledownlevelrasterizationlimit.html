@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GdipSetMetafileDownLevelRasterizationLimit — Help Center</title>
+<meta name="description" content="Sets the resolution for certain brush bitmaps that are stored in this metafile.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipsetmetafiledownlevelrasterizationlimit.html">
+<meta property="og:title" content="GdipSetMetafileDownLevelRasterizationLimit">
+<meta property="og:description" content="Sets the resolution for certain brush bitmaps that are stored in this metafile.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipsetmetafiledownlevelrasterizationlimit.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/procedures/gdipsetmetafiledownlevelrasterizationlimit.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../graphics-functions.html">Graphics Functions</a></div>
+<h1>GdipSetMetafileDownLevelRasterizationLimit<span class="h1kind">function</span></h1>
+<p class="lede">Sets the resolution for certain brush bitmaps that are stored in this metafile.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GdipSetMetafileDownLevelRasterizationLimit (BYVAL metafile AS GpMetafile PTR, BYVAL metafileRasterizationLimitDpi AS UINT) AS GpStatus</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>metafile</code></td><td></td><td>[in] Pointer to the <strong>Metafile</strong> object.</td></tr><tr><td><code>metafileRasterizationLimitDpi</code></td><td></td><td>[in] Non-negative long integer value that specifies the resolution in dots per inch (dpi). If you set this parameter equal to 0, the resolution is set to match the resolution of the device context handle that was passed to the Metafile constructor. If you set this parameter to a value greater than 0 but less than 10, the resolution is left unchanged.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Sets the resolution for certain brush bitmaps that are stored in this metafile.</p>
+<h2>Remarks</h2>
+<p>The purpose of this method is to prevent metafiles from becoming too large as a result of texture and gradient brushes being stored at high resolution. Suppose you construct a <strong>Metafile</strong> object (for recording an <em>EmfTypeEmfOnly</em> metafile) based on the device context of a printer that has a resolution of 600 dpi. Also suppose you create a path gradient brush or a texture brush based on a <strong>Bitmap</strong> object that has a resolution of 96 dpi. If the bitmap that represents that brush is stored in the metafile with a resolution of 96 dpi, it will require much less space than if it is stored with a resolution of 600 dpi.</p>
+<p>The default rasterization limit for metafiles is 96 dpi. So if you do not call this method at all, path gradient brush and texture brush bitmaps are stored with a resolution of 96 dpi.</p>
+<p>The rasterization limit has an effect on metafiles of type <em>EmfTypeEmfOnly</em> and <em>EmfTypeEmfPlusDual</em>, but it has no effect on metafiles of type <em>EmfTypeEmfPlusOnly</em>.</p>
+<h2>Example</h2>
+<p>' ======================================================================================== ' Record Metafile and Set/Get Rasterization Limit ' Metafile is recorded, not loaded—required for setting the rasterization limit. ' Limit is set before drawing, which ensures it affects rasterization. ' Saved using GdipGetHemfFromMetafile, not GdipSaveImageToFile. ' ======================================================================================== SUB Example_MetafileDownLevelRasterizationLimit (BYVAL hdc AS HDC)</p>
+<p>DIM hStatus AS LONG</p>
+<p>' // Define the frame rectangle DIM rcfFrame AS GpRectF = (0.0, 0.0, 300.0, 200.0) DIM description AS WSTRING * 64 = "Rasterization limit test"</p>
+<p>' // Record a new EMF+ metafile DIM metafile AS GpMetafile PTR hStatus = GdipRecordMetafile(hdc, EmfTypeEmfPlusDual, @rcfFrame, MetafileFrameUnitPixel, @description, @metafile) IF hStatus &lt;&gt; 0 OR metafile = NULL THEN</p>
+<pre class="code"><code>AfxMsg "Failed to record metafile: " &amp; STR(hStatus)
+  EXIT SUB</code></pre>
+<p>END IF</p>
+<p>' // Set rasterization limit (must be done before drawing) DIM dpiLimit AS UINT = 150 hStatus = GdipSetMetafileDownLevelRasterizationLimit(metafile, dpiLimit) IF hStatus &lt;&gt; 0 THEN</p>
+<pre class="code"><code>AfxMsg "Failed to set rasterization limit: " &amp; STR(hStatus)</code></pre>
+<p>END IF</p>
+<p>' // Draw into the metafile DIM graphics AS GpGraphics PTR hStatus = GdipGetImageGraphicsContext(metafile, @graphics) DIM pen AS GpPen PTR hStatus = GdipCreatePen1(ARGB_BLUE, 2.0, UnitPixel, @pen) hStatus = GdipDrawRectangle(graphics, pen, 50.0, 50.0, 200.0, 100.0)</p>
+<p>' // Flush graphics hStatus = GdipFlush(graphics, FlushIntentionFlush)</p>
+<p>' // Retrieve rasterization limit DIM currentLimit AS UINT hStatus = GdipGetMetafileDownLevelRasterizationLimit(metafile, @currentLimit) IF hStatus = 0 THEN</p>
+<pre class="code"><code>AfxMsg "Current rasterization limit: " &amp; STR(currentLimit) &amp; " DPI"</code></pre>
+<p>ELSE</p>
+<pre class="code"><code>AfxMsg "Failed to get rasterization limit: " &amp; STR(hStatus)</code></pre>
+<p>END IF</p>
+<p>' // Save metafile to disk DIM hEmf AS HENHMETAFILE hStatus = GdipGetHemfFromMetafile(metafile, @hEmf) IF hEmf THEN</p>
+<pre class="code"><code>DIM saved AS HENHMETAFILE = CopyEnhMetaFile(hEmf, "RasterizedOutput.emf")
+  IF saved THEN DeleteEnhMetaFile(saved)
+  DeleteEnhMetaFile(hEmf)</code></pre>
+<p>END IF</p>
+<p>' // Cleanup IF pen THEN GdipDeletePen(pen) IF graphics THEN GdipDeleteGraphics(graphics) IF metafile THEN GdipDisposeImage(metafile)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/AfxGdiPlus.bi:1973</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Flat  Api/GdiPlusGraphics.md</span></li><li>Topic: <a href="../graphics-functions.html">Graphics Functions</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

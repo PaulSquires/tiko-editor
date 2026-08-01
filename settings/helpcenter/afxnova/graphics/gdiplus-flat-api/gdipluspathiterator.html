@@ -1,0 +1,1177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GdiPlusPathIterator — Help Center</title>
+<meta name="description" content="GdiPlusPathIterator — 14 documented members. Graphics reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/gdipluspathiterator.html">
+<meta property="og:title" content="GdiPlusPathIterator">
+<meta property="og:description" content="GdiPlusPathIterator — 14 documented members. Graphics reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/gdipluspathiterator.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/gdipluspathiterator.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span>Graphics</div>
+<h1>GdiPlusPathIterator</h1>
+<h2>Members (14)</h2>
+<div class="memberlist"><a href="procedures/gdipcreatepathiter.html"><span class="m-n">GdipCreatePathIter</span><span class="m-d">Creates a new **GraphicsPathIterator** object and associates it with a **GraphicsPath** object.</span></a><a href="procedures/gdipdeletepathiter.html"><span class="m-n">GdipDeletePathIter</span><span class="m-d">Deletes the specified **GraphicsPathIterator** object.</span></a><a href="procedures/gdippathitercopydata.html"><span class="m-n">GdipPathIterCopyData</span><span class="m-d">Copies a subset of the path&#x27;s data points to a **PointF** array and copies a subset of the path&#x27;s point types to a **BYTE** array.</span></a><a href="procedures/gdippathiterenumerate.html"><span class="m-n">GdipPathIterEnumerate</span><span class="m-d">Copies the path&#x27;s data points to a **PointF** array and copies the path&#x27;s point types to a **BYTE** array.</span></a><a href="procedures/gdippathitergetcount.html"><span class="m-n">GdipPathIterGetCount</span><span class="m-d">Returns the number of data points in the path.</span></a><a href="procedures/gdippathitergetsubpathcount.html"><span class="m-n">GdipPathIterGetSubpathCount</span><span class="m-d">Returns the number of subpaths (also called figures) in the path.</span></a><a href="procedures/gdippathiterhascurve.html"><span class="m-n">GdipPathIterHasCurve</span><span class="m-d">Determines whether the path has any curves.</span></a><a href="procedures/gdippathiterisvalid.html"><span class="m-n">GdipPathIterIsValid</span><span class="m-d">Checks whether a **GraphicsPathIterator** is valid.</span></a><a href="procedures/gdippathiternextmarker.html"><span class="m-n">GdipPathIterNextMarker</span><span class="m-d">Gets the starting index and the ending index of the next marker-delimited section in this iterator&#x27;s associated path.</span></a><a href="procedures/gdippathiternextmarkerpath.html"><span class="m-n">GdipPathIterNextMarkerPath</span><span class="m-d">Gets the next marker-delimited section of this iterator&#x27;s associated path.</span></a><a href="procedures/gdippathiternextpathtype.html"><span class="m-n">GdipPathIterNextPathType</span><span class="m-d">Gets the starting index and the ending index of the next group of data points that all have the same type.</span></a><a href="procedures/gdippathiternextsubpath.html"><span class="m-n">GdipPathIterNextSubpath</span><span class="m-d">Gets the starting index and the ending index of the next subpath (figure) in this iterator&#x27;s associated path.</span></a><a href="procedures/gdippathiternextsubpathpath.html"><span class="m-n">GdipPathIterNextSubpathPath</span><span class="m-d">Gets the the next figure (subpath) from this iterator&#x27;s associated path.</span></a><a href="procedures/gdippathiterrewind.html"><span class="m-n">GdipPathIterRewind</span><span class="m-d">Rewinds this iterator to the beginning of its associated path.</span></a></div>
+<h2>Documentation</h2>
+<h3 id="pathiterator-functions">PathIterator Functions</h3>
+<p>The <strong>PathIterator</strong> functions allow to isolate selected subsets of the path stored in a <strong>GraphicsPath</strong> object. A path consists of one or more figures. You can use a <strong>GraphicsPathIterator</strong> to isolate one or more of those figures. A path can also have markers that divide the path into sections. You can use a <strong>GraphicsPathIterator</strong> object to isolate one or more of those sections.</p>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="procedures/gdipcreatepathiter.html">GdipCreatePathIter</a></td><td>Creates a new <strong>GraphicsPathIterator</strong> object and associates it with a <strong>GraphicsPath</strong> object.</td></tr><tr><td><a href="procedures/gdipdeletepathiter.html">GdipDeletePathIter</a></td><td>Deletes the specified <strong>GraphicsPathIterator</strong> object.</td></tr><tr><td><a href="procedures/gdippathitercopydata.html">GdipPathIterCopyData</a></td><td>Copies a subset of the path's data points to a <strong>PointF</strong> array and copies a subset of the path's point types to a <strong>BYTE</strong> array.</td></tr><tr><td><a href="procedures/gdippathiterenumerate.html">GdipPathIterEnumerate</a></td><td>Copies the path's data points to a <strong>PointF</strong> array and copies the path's point types to a <strong>BYTE</strong> array.</td></tr><tr><td><a href="procedures/gdippathitergetcount.html">GdipPathIterGetCount</a></td><td>Returns the number of data points in the path.</td></tr><tr><td><a href="procedures/gdippathitergetsubpathcount.html">GdipPathIterGetSubpathCount</a></td><td>Returns the number of subpaths (also called figures) in the path.</td></tr><tr><td><a href="procedures/gdippathiterhascurve.html">GdipPathIterHasCurve</a></td><td>Determines whether the path has any curves.</td></tr><tr><td><a href="procedures/gdippathiterisvalid.html">GdipPathIterIsValid</a></td><td>Checks whether a <strong>GraphicsPathIterator</strong> is valid.</td></tr><tr><td><a href="procedures/gdippathiternextmarker.html">GdipPathIterNextMarker</a></td><td>Gets the starting index and the ending index of the next marker-delimited section in this iterator's associated path.</td></tr><tr><td><a href="procedures/gdippathiternextmarkerpath.html">GdipPathIterNextMarkerPath</a></td><td>Gets the next marker-delimited section of this iterator's associated path.</td></tr><tr><td><a href="procedures/gdippathiternextpathtype.html">GdipPathIterNextPathType</a></td><td>Gets the starting index and the ending index of the next group of data points that all have the same type.</td></tr><tr><td><a href="procedures/gdippathiternextsubpath.html">GdipPathIterNextSubpath</a></td><td>Gets the starting index and the ending index of the next subpath (figure) in this iterator's associated path.</td></tr><tr><td><a href="procedures/gdippathiternextsubpathpath.html">GdipPathIterNextSubpathPath</a></td><td>Gets the the next figure (subpath) from this iterator's associated path.</td></tr><tr><td><a href="procedures/gdippathiterrewind.html">GdipPathIterRewind</a></td><td>Rewinds this iterator to the beginning of its associated path.</td></tr></tbody></table></div>
+<hr>
+<h3 id="gdipcreatepathiter">GdipCreatePathIter</h3>
+<p>Creates a new <strong>GraphicsPathIterator</strong> object and associates it with a <strong>GraphicsPath</strong> object.</p>
+<pre class="code"><code>FUNCTION GdipCreatePathIter (BYVAL iterator AS GpPathIterator PTR PTR, BYVAL path AS GpPath PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>iterator</em></td><td>[out] Pointer to the new <strong>GraphicsPathIterator</strong> object.</td></tr><tr><td><em>path</em></td><td>[in] Pointer to a <strong>GraphicsPath</strong> object that will be associated with this <strong>GraphicsPathIterator</strong> object.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' This example demonstrates
+' How to build a path with multiple figures.
+' How to use PathIterator to inspect each figure’s bounds and closure status.
+' ========================================================================================
+SUB Example_CreatePathIter (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   Dim ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' Create a GraphicsPath with two figures
+   DIM path AS GpPath PTR
+   hStatus = GdipCreatePath(FillModeAlternate, @path)
+
+   ' First figure: triangle (closed)
+   hStatus = GdipAddPathLine(path, 10, 10, 100, 10)
+   hStatus = GdipAddPathLine(path, 100, 10, 55, 80)
+   hStatus = GdipClosePathFigure(path)
+
+   ' Second figure: open zigzag
+   hStatus = GdipStartPathFigure(path)
+   hStatus = GdipAddPathLine(path, 120, 10, 180, 50)
+   hStatus = GdipAddPathLine(path, 180, 50, 120, 90)
+
+   ' Create PathIterator
+   DIM iterator AS GpPathIterator PTR
+   hStatus = GdipCreatePathIter(@iterator, path)
+
+   ' Get subpath count
+   DIM subpathCount AS LONG
+   hStatus = GdipPathIterGetSubpathCount(iterator, @subpathCount)
+
+   ' Create font and brush for drawing text
+   DIM fontFamily AS GpFontFamily PTR
+   DIM font AS GpFont PTR
+   DIM brush AS GpSolidFill PTR
+   hStatus = GdipCreateFontFamilyFromName("Arial", NULL, @fontFamily)
+   hStatus = GdipCreateFont(fontFamily, AfxGdipPointsToPixels(12, TRUE), FontStyleRegular, UnitPixel, @font)
+   hStatus = GdipCreateSolidFill(ARGB_BLACK, @brush)
+
+   ' Iterate through subpaths and draw info
+   DIM resultCount AS LONG, startIdx AS LONG, endIdx AS LONG
+   DIM isClosed AS BOOL
+   DIM yOffset AS SINGLE = 10.0
+
+   FOR i AS LONG = 1 TO subpathCount
+      hStatus = GdipPathIterNextSubpath(iterator, @resultCount, @startIdx, @endIdx, @isClosed)
+
+      DIM info AS STRING
+      info = "Subpath " &amp; i &amp; ": Start=" &amp; startIdx &amp; ", End=" &amp; endIdx &amp; ", Closed=" &amp; IIF(isClosed, "True", "False")
+
+      DIM layout AS GpRectF = (10 * rxRatio, yOffset * rxRatio, 300 * rxRatio, 20 * rxRatio)
+      hStatus = GdipDrawString(graphics, info, -1, font, @layout, NULL, brush)
+
+      yOffset += 20.0
+   NEXT
+
+   ' Cleanup
+   IF brush THEN GdipDeleteBrush(brush)
+   IF font THEN GdipDeleteFont(font)
+   IF fontFamily THEN GdipDeleteFontFamily(fontFamily)
+   IF iterator THEN GdipDeletePathIter(iterator)
+   IF path THEN GdipDeletePath(path)
+   IF graphics THEN GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdipdeletepathiter">GdipDeletePathIter</h3>
+<p>Deletes the specified <strong>GraphicsPathIterator</strong> object.</p>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>iterator</em></td><td>[in] Pointer to the <strong>GraphicsPathIterator</strong> object.</td></tr></tbody></table></div>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>IF iterator THEN GdipDeletePathIter(iterator)</code></pre>
+<hr>
+<h3 id="gdippathitercopydata">GdipPathIterCopyData</h3>
+<p>Copies a subset of the path's data points to a <strong>GpPointF</strong> array and copies a subset of the path's point types to a <strong>BYTE</strong> array.</p>
+<pre class="code"><code>FUNCTION GdipPathIterCopyData (BYVAL iterator AS GpPathIterator PTR, _
+   BYVAL resultCount AS INT_ PTR, BYVAL points AS GpPointF PTR, BYVAL types AS BYTE PTR, _
+   BYVAL startIndex AS INT_, BYVAL endIndex AS INT_) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>iterator</em></td><td>[in] Pointer to the <strong>GraphicsPathIterator</strong> object.</td></tr><tr><td><em>resultCount</em></td><td>[out] Number of points copied. This is the same as the number of types copied.</td></tr><tr><td><em>points</em></td><td>[out] Pointer to an array that receives a subset of the path's data points.</td></tr><tr><td><em>types</em></td><td>[out] Pointer to an array that receives a subset of the path's point types.</td></tr><tr><td><em>startIndex</em></td><td>[in] Long integer value that specifies the starting index of the points and types to be copied.</td></tr><tr><td><em>endIndex</em></td><td>[in] Long integer value that specifies the ending index of the points and types to be copied.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' Creates a path with two figures.
+' Uses GdipPathIterCopyData to extract the first three points and their types.
+' Draws the extracted segment and displays point info in the window.
+' ========================================================================================
+SUB Example_PathIterCopyData (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   Dim ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' Create a GraphicsPath with multiple segments
+   DIM path AS GpPath PTR
+   hStatus = GdipCreatePath(FillModeAlternate, @path)
+
+   ' Add a triangle
+   hStatus = GdipAddPathLine(path, 20, 20, 120, 20)
+   hStatus = GdipAddPathLine(path, 120, 20, 70, 100)
+   hStatus = GdipClosePathFigure(path)
+
+   ' Add a zigzag line
+   hStatus = GdipStartPathFigure(path)
+   hStatus = GdipAddPathLine(path, 150, 30, 200, 80)
+   hStatus = GdipAddPathLine(path, 200, 80, 150, 130)
+
+   ' Create PathIterator
+   DIM iterator AS GpPathIterator PTR
+   hStatus = GdipCreatePathIter(@iterator, path)
+
+   ' Copy a subset of the path (e.g., indices 0 to 2)
+   DIM resultCount AS LONG
+   DIM points(0 TO 2) AS GpPointF
+   DIM types(0 TO 2) AS BYTE
+   hStatus = GdipPathIterCopyData(iterator, @resultCount, @points(0), @types(0), 0, 2)
+
+   ' Draw the copied segment using a pen
+   DIM pen AS GpPen PTR
+   hStatus = GdipCreatePen1(ARGB_BLUE, 2.0, UnitPixel, @pen)
+   hStatus = GdipDrawLines(graphics, pen, @points(0), resultCount)
+
+   ' Display info about copied points
+   DIM fontFamily AS GpFontFamily PTR
+   DIM font AS GpFont PTR
+   DIM brush AS GpSolidFill PTR
+   hStatus = GdipCreateFontFamilyFromName("Arial", NULL, @fontFamily)
+   hStatus = GdipCreateFont(fontFamily, AfxGdipPointsToPixels(12, TRUE), FontStyleRegular, UnitPixel, @font)
+   hStatus = GdipCreateSolidFill(ARGB_BLACK, @brush)
+
+   DIM yOffset AS SINGLE = 140
+   FOR i AS LONG = 0 TO resultCount - 1
+      DIM info AS STRING
+      info = "Point " &amp; i &amp; ": (" &amp; points(i).x &amp; ", " &amp; points(i).y &amp; ") Type=" &amp; types(i)
+      DIM layout AS GpRectF = (10.0, yOffset, 300.0, 20.0)
+      hStatus = GdipDrawString(graphics, info, -1, font, @layout, NULL, brush)
+      yOffset += 20.0
+   NEXT
+
+   ' Cleanup
+   IF brush THEN GdipDeleteBrush(brush)
+   IF font THEN GdipDeleteFont(font)
+   IF fontFamily THEN GdipDeleteFontFamily(fontFamily)
+   IF pen THEN GdipDeletePen(pen)
+   IF iterator THEN GdipDeletePathIter(iterator)
+   IF path THEN GdipDeletePath(path)
+   IF graphics THEN GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdippathiterenumerate">GdipPathIterEnumerate</h3>
+<p>Copies the path's data points to a <strong>GpPointF</strong> array and copies the path's point types to a <strong>BYTE</strong> array.</p>
+<pre class="code"><code>FUNCTION GdipPathIterEnumerate (BYVAL iterator AS GpPathIterator PTR,_
+   BYVAL resultCount AS INT_ PTR, BYVAL points AS GpPointF PTR, _
+   BYVAL types AS BYTE PTR, BYVAL count AS INT_) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>iterator</em></td><td>[in] Pointer to the <strong>GraphicsPathIterator</strong> object.</td></tr><tr><td><em>resultCount</em></td><td>[out] Number of points copied. This is the same as the number of types copied.</td></tr><tr><td><em>points</em></td><td>[out] Pointer to an array that receives the path's data points.</td></tr><tr><td><em>types</em></td><td>[out] Pointer to an array that receives the path's point types.</td></tr><tr><td><em>count</em></td><td>[in] Long integer value that specifies the number of elements in the points array. This is the same as the number of elements in the types array.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' Using GdipPathIterEnumerate to Extract All Path Data.
+' Builds a path with two figures.
+' Uses GdipPathIterEnumerate to extract all points and types.
+' Draws the path and overlays each point’s coordinates and type.
+' ========================================================================================
+SUB Example_PathIterEnumerate (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   Dim ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' Create a GraphicsPath with mixed figures
+   DIM path AS GpPath PTR
+   hStatus = GdipCreatePath(FillModeAlternate, @path)
+
+   ' Add a triangle
+   hStatus = GdipAddPathLine(path, 20, 20, 120, 20)
+   hStatus = GdipAddPathLine(path, 120, 20, 70, 100)
+   hStatus = GdipClosePathFigure(path)
+
+   ' Add a zigzag line
+   hStatus = GdipStartPathFigure(path)
+   hStatus = GdipAddPathLine(path, 150, 30, 200, 80)
+   hStatus = GdipAddPathLine(path, 200, 80, 150, 130)
+
+   ' Create PathIterator
+   DIM iterator AS GpPathIterator PTR
+   hStatus = GdipCreatePathIter(@iterator, path)
+
+   ' Get total point count
+   DIM totalCount AS LONG
+   hStatus = GdipPathIterGetCount(iterator, @totalCount)
+
+   ' Allocate arrays
+   DIM points(0 TO totalCount - 1) AS GpPointF
+   DIM types(0 TO totalCount - 1) AS BYTE
+
+   ' Enumerate all path data
+   DIM resultCount AS LONG
+   hStatus = GdipPathIterEnumerate(iterator, @resultCount, @points(0), @types(0), totalCount)
+
+   ' Draw the path
+   DIM pen AS GpPen PTR
+   hStatus = GdipCreatePen1(ARGB_BLUE, 2.0, UnitPixel, @pen)
+   hStatus = GdipDrawPath(graphics, pen, path)
+
+   ' Display point info
+   DIM fontFamily AS GpFontFamily PTR
+   DIM font AS GpFont PTR
+   DIM brush AS GpSolidFill PTR
+   hStatus = GdipCreateFontFamilyFromName("Arial", NULL, @fontFamily)
+   hStatus = GdipCreateFont(fontFamily, AfxGdipPointsToPixels(9, TRUE), FontStyleRegular, UnitPixel, @font)
+   hStatus = GdipCreateSolidFill(ARGB_BLACK, @brush)
+
+   DIM yOffset AS SINGLE = 150
+   FOR i AS LONG = 0 TO resultCount - 1
+      DIM info AS STRING
+      info = "Point " &amp; i &amp; ": (" &amp; points(i).x &amp; ", " &amp; points(i).y &amp; ") Type=" &amp; types(i)
+      DIM layout AS GpRectF = (10.0, yOffset, 300.0, 20.0)
+      hStatus = GdipDrawString(graphics, info, -1, font, @layout, NULL, brush)
+      yOffset += 20.0
+   NEXT
+
+   ' Cleanup
+   IF brush THEN GdipDeleteBrush(brush)
+   IF font THEN GdipDeleteFont(font)
+   IF fontFamily THEN GdipDeleteFontFamily(fontFamily)
+   IF pen THEN GdipDeletePen(pen)
+   IF iterator THEN GdipDeletePathIter(iterator)
+   IF path THEN GdipDeletePath(path)
+   IF graphics THEN GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdippathitergetcount">GdipPathIterGetCount</h3>
+<p>Returns the number of data points in the path.</p>
+<pre class="code"><code>FUNCTION GdipPathIterGetCount (BYVAL iterator AS GpPathIterator PTR, BYVAL count AS INT_ PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>iterator</em></td><td>[in] Pointer to the <strong>GraphicsPathIterator</strong> object.</td></tr><tr><td><em>ount</em></td><td>[out] Pointer to a variable that receives the number of data points in the path.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>The <strong>GraphicsPathIterator</strong> object is associated with a <strong>GraphicsPath object</strong>. That <strong>GraphicsPath</strong> object has an array of points and an array of types. Each element in the array of types is a byte that specifies the point type and a set of flags for the corresponding element in the array of points. Possible point types and flags are listed in the <strong>PathPointType</strong> enumeration.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' Using GdipPathIterGetCount to Inspect Point Count.
+' It reflects the total number of points across all figures in the path.
+' ========================================================================================
+SUB Example_PathIterGetCount (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   Dim ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' Create a GraphicsPath with multiple segments
+   DIM path AS GpPath PTR
+   hStatus = GdipCreatePath(FillModeAlternate, @path)
+
+   ' Add a triangle
+   hStatus = GdipAddPathLine(path, 20, 20, 120, 20)
+   hStatus = GdipAddPathLine(path, 120, 20, 70, 100)
+   hStatus = GdipClosePathFigure(path)
+
+   ' Add a zigzag line
+   hStatus = GdipStartPathFigure(path)
+   hStatus = GdipAddPathLine(path, 150, 30, 200, 80)
+   hStatus = GdipAddPathLine(path, 200, 80, 150, 130)
+
+   ' Create PathIterator
+   DIM iterator AS GpPathIterator PTR
+   hStatus = GdipCreatePathIter(@iterator, path)
+
+   ' Get total point count
+   DIM totalCount AS LONG
+   hStatus = GdipPathIterGetCount(iterator, @totalCount)
+
+   ' Display the count in the window
+   DIM fontFamily AS GpFontFamily PTR
+   DIM font AS GpFont PTR
+   DIM brush AS GpSolidFill PTR
+   hStatus = GdipCreateFontFamilyFromName("Arial", NULL, @fontFamily)
+   hStatus = GdipCreateFont(fontFamily, AfxGdipPointsToPixels(12, TRUE), FontStyleRegular, UnitPixel, @font)
+   hStatus = GdipCreateSolidFill(ARGB_BLACK, @brush)
+
+   DIM info AS STRING = "Total path points: " &amp; totalCount
+   DIM layout AS GpRectF = (10.0, 10.0, 300.0, 20.0)
+   hStatus = GdipDrawString(graphics, info, -1, font, @layout, NULL, brush)
+
+   ' Cleanup
+   IF brush THEN GdipDeleteBrush(brush)
+   IF font THEN GdipDeleteFont(font)
+   IF fontFamily THEN GdipDeleteFontFamily(fontFamily)
+   IF iterator THEN GdipDeletePathIter(iterator)
+   IF path THEN GdipDeletePath(path)
+   IF graphics THEN GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdippathitergetsubpathcount">GdipPathIterGetSubpathCount</h3>
+<p>Returns the number of subpaths (also called figures) in the path.</p>
+<pre class="code"><code>FUNCTION GdipPathIterGetSubpathCount (BYVAL iterator AS GpPathIterator PTR, BYVAL count AS INT_ PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>iterator</em></td><td>[in] Pointer to the <strong>GraphicsPathIterator</strong> object.</td></tr><tr><td><em>ount</em></td><td>[out] Pointer to a variable that receives the number of subpaths (also called figures) in the path.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' Using GdipPathIterGetSubpathCount to Count Figures.
+' Each figure in a path can be open or closed, and may represent a distinct shape.
+' Knowing the count lets you iterate with GdipPathIterNextSubpath or extract each figure
+' with GdipPathIterNextSubpathPath.Each figure in a path can be open or closed, and may
+' represent a distinct shape.
+' ========================================================================================
+SUB Example_PathIterGetSubpathCount (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   Dim ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' Create a GraphicsPath with two figures
+   DIM path AS GpPath PTR
+   hStatus = GdipCreatePath(FillModeAlternate, @path)
+
+   ' First figure: triangle
+   hStatus = GdipAddPathLine(path, 30, 30, 130, 30)
+   hStatus = GdipAddPathLine(path, 130, 30, 80, 100)
+   hStatus = GdipClosePathFigure(path)
+
+   ' Second figure: open zigzag
+   hStatus = GdipStartPathFigure(path)
+   hStatus = GdipAddPathLine(path, 160, 40, 210, 90)
+   hStatus = GdipAddPathLine(path, 210, 90, 160, 140)
+
+   ' Create PathIterator
+   DIM iterator AS GpPathIterator PTR
+   hStatus = GdipCreatePathIter(@iterator, path)
+
+   ' Get subpath count
+   DIM subpathCount AS LONG
+   hStatus = GdipPathIterGetSubpathCount(iterator, @subpathCount)
+
+   ' Display the count in the window
+   DIM fontFamily AS GpFontFamily PTR
+   DIM font AS GpFont PTR
+   DIM brush AS GpSolidFill PTR
+   hStatus = GdipCreateFontFamilyFromName("Arial", NULL, @fontFamily)
+   hStatus = GdipCreateFont(fontFamily, AfxGdipPointsToPixels(12, TRUE), FontStyleRegular, UnitPixel, @font)
+   hStatus = GdipCreateSolidFill(ARGB_BLACK, @brush)
+
+   DIM info AS STRING = "Subpath (figure) count: " &amp; subpathCount
+   DIM layout AS GpRectF = (10.0, 10.0, 300.0, 20.0)
+   hStatus = GdipDrawString(graphics, info, -1, font, @layout, NULL, brush)
+
+   ' Cleanup
+   IF brush THEN GdipDeleteBrush(brush)
+   IF font THEN GdipDeleteFont(font)
+   IF fontFamily THEN GdipDeleteFontFamily(fontFamily)
+   IF iterator THEN GdipDeletePathIter(iterator)
+   IF path THEN GdipDeletePath(path)
+   IF graphics THEN GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdippathiterhascurve">GdipPathIterHasCurve</h3>
+<p>Determines whether the path has any curves.</p>
+<pre class="code"><code>FUNCTION GdipPathIterHasCurve (BYVAL iterator AS GpPathIterator PTR, BYVAL hasCurve AS BOOL PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>iterator</em></td><td>[in] Pointer to the <strong>GraphicsPathIterator</strong> object.</td></tr><tr><td><em>hasCurve</em></td><td>[out] Pointer to a variable that receives the number of data points in the path.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>All curves in a path are stored as sequences of Bézier splines. For example, when you add an ellipse to a path, you specify the upper-left corner, the width, and the height of the ellipse's bounding rectangle. Those numbers (upper-left corner, width, and height) are not stored in the path; instead; the ellipse is converted to a sequence of four Bzier splines. The path stores the endpoints and control points of those Bézier splines.</p>
+<p>A path stores an array of data points, each of which belongs to a line or a Bézier spline. If some of the points in the array belong to Bézier splines, then <strong>GdipPathHasCurve returns</strong> TRUE. If all points in the array belong to lines, then  <strong>GdipPathHasCurve</strong> returns FALSE.</p>
+<p>Certain methods flatten a path, which means that all the curves in the path are converted to sequences of lines. After a path has been flattened, <strong>GdipPathHasCurve</strong> will always return FALSE. Flattening happens when you call the <strong>GdipFlattenPath</strong>, <strong>GdipWidenPath</strong>, or <strong>GdipWarpPath</strong> functions.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' Example: Using GdipPathIterHasCurve to Detect Bézier Segments.
+' Paths with curves are stored as Bézier splines.
+' Some operations (like flattening or widening) convert curves to straight lines.
+' This check helps you decide whether to preserve or simplify the path.
+' ========================================================================================
+SUB Example_PathIterHasCurve (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   Dim ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' Create a GraphicsPath
+   DIM path AS GpPath PTR
+   hStatus = GdipCreatePath(FillModeAlternate, @path)
+
+   ' Add a line segment
+   hStatus = GdipAddPathLine(path, 20, 20, 120, 20)
+
+   ' Add a Bézier curve
+   hStatus = GdipAddPathBezier(path, 130, 30, 160, 10, 190, 50, 220, 30)
+
+   ' Create PathIterator
+   DIM iterator AS GpPathIterator PTR
+   hStatus = GdipCreatePathIter(@iterator, path)
+
+   ' Check for curves
+   DIM hasCurve AS BOOL
+   hStatus = GdipPathIterHasCurve(iterator, @hasCurve)
+
+   ' Display result in window
+   DIM fontFamily AS GpFontFamily PTR
+   DIM font AS GpFont PTR
+   DIM brush AS GpSolidFill PTR
+   hStatus = GdipCreateFontFamilyFromName("Arial", NULL, @fontFamily)
+   hStatus = GdipCreateFont(fontFamily, AfxGdipPointsToPixels(12, TRUE), FontStyleRegular, UnitPixel, @font)
+   hStatus = GdipCreateSolidFill(ARGB_BLACK, @brush)
+
+   DIM info AS STRING = "Path contains curves: " &amp; IIF(hasCurve, "True", "False")
+   DIM layout AS GpRectF = (10.0, 10.0, 300.0, 20.0)
+   hStatus = GdipDrawString(graphics, info, -1, font, @layout, NULL, brush)
+
+   ' Cleanup
+   IF brush THEN GdipDeleteBrush(brush)
+   IF font THEN GdipDeleteFont(font)
+   IF fontFamily THEN GdipDeleteFontFamily(fontFamily)
+   IF iterator THEN GdipDeletePathIter(iterator)
+   IF path THEN GdipDeletePath(path)
+   IF graphics THEN GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdippathiterisvalid">GdipPathIterIsValid</h3>
+<p>Checks whether a <strong>GraphicsPathIterator</strong> is valid, meaning it’s properly associated with a <strong>GraphicsPath</strong> and ready for use.</p>
+<pre class="code"><code>FUNCTION GdipPathIterIsValid (BYVAL iterator AS GpPathIterator PTR, BYVAL valid AS BOOL PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>iterator</em></td><td>[in] Pointer to the <strong>GraphicsPathIterator</strong> object.</td></tr><tr><td><em>valid</em></td><td>[out] Pointer to a variable that receives a boolean value that indicates whether the path iterator specified by the iterator parameter is valid.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' Example: Using GdipPathIterIsValid to Verify Iterator State.
+' Checks whether a GraphicsPathIterator is valid, meaning it’s properly associated with a
+' GraphicsPath and ready for use
+' ========================================================================================
+SUB Example_PathIterIsValid (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   Dim ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' Create a GraphicsPath
+   DIM path AS GpPath PTR
+   hStatus = GdipCreatePath(FillModeAlternate, @path)
+
+   ' Add a simple figure
+   hStatus = GdipAddPathLine(path, 50, 50, 150, 50)
+   hStatus = GdipAddPathLine(path, 150, 50, 100, 120)
+   hStatus = GdipClosePathFigure(path)
+
+   ' Create PathIterator
+   DIM iterator AS GpPathIterator PTR
+   hStatus = GdipCreatePathIter(@iterator, path)
+
+   ' Check if iterator is valid
+   DIM isValid AS BOOL
+   hStatus = GdipPathIterIsValid(iterator, @isValid)
+
+   ' Display result in window
+   DIM fontFamily AS GpFontFamily PTR
+   DIM font AS GpFont PTR
+   DIM brush AS GpSolidFill PTR
+   hStatus = GdipCreateFontFamilyFromName("Arial", NULL, @fontFamily)
+   hStatus = GdipCreateFont(fontFamily, AfxGdipPointsToPixels(12, TRUE), FontStyleRegular, UnitPixel, @font)
+   hStatus = GdipCreateSolidFill(ARGB_BLACK, @brush)
+
+   DIM info AS STRING = "PathIterator is valid: " &amp; IIF(isValid, "True", "False")
+   DIM layout AS GpRectF = (10.0, 10.0, 300.0, 20.0)
+   hStatus = GdipDrawString(graphics, info, -1, font, @layout, NULL, brush)
+
+   ' Cleanup
+   IF brush THEN GdipDeleteBrush(brush)
+   IF font THEN GdipDeleteFont(font)
+   IF fontFamily THEN GdipDeleteFontFamily(fontFamily)
+   IF iterator THEN GdipDeletePathIter(iterator)
+   IF path THEN GdipDeletePath(path)
+   IF graphics THEN GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdippathiternextmarker">GdipPathIterNextMarker</h3>
+<p>Gets the starting index and the ending index of the next marker-delimited section in this iterator's associated path.</p>
+<pre class="code"><code>FUNCTION GdipPathIterNextMarker (BYVAL iterator AS GpPathIterator PTR, BYVAL resultCount AS INT_ PTR, _
+   BYVAL startIndex AS INT_ PTR, BYVAL endIndex AS INT_ PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>iterator</em></td><td>[in] Pointer to the <strong>GraphicsPathIterator</strong> object.</td></tr><tr><td><em>resultCount</em></td><td>[out] Number of data points in the retrieved section. If there are no more marker-delimited sections to retrieve, this method returns 0.</td></tr><tr><td><em>startIndex</em></td><td>[out] Pointer to an LONG that receives the starting index.</td></tr><tr><td><em>endIndex</em></td><td>[out] Pointer to an LONG that receives the ending index.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' Using GdipPathIterNextMarker to Identify Marker Sections.
+' Markers let you segment a path into meaningful chunks.
+' GdipPathIterNextMarker helps you identify and isolate those chunks for rendering or analysis.
+' ========================================================================================
+SUB Example_PathIterNextMarker (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   Dim ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' Create a GraphicsPath with two marker sections
+   DIM path AS GpPath PTR
+   hStatus = GdipCreatePath(FillModeAlternate, @path)
+
+   ' First section: triangle
+   hStatus = GdipAddPathLine(path, 30, 30, 130, 30)
+   hStatus = GdipAddPathLine(path, 130, 30, 80, 100)
+   hStatus = GdipClosePathFigure(path)
+   hStatus = GdipSetPathMarker(path)  ' Set marker after first figure
+
+   ' Second section: zigzag
+   hStatus = GdipStartPathFigure(path)
+   hStatus = GdipAddPathLine(path, 160, 40, 210, 90)
+   hStatus = GdipAddPathLine(path, 210, 90, 160, 140)
+   hStatus = GdipSetPathMarker(path)  ' Set marker after second figure
+
+   ' Create PathIterator
+   DIM iterator AS GpPathIterator PTR
+   hStatus = GdipCreatePathIter(@iterator, path)
+
+   ' Create font and brush for drawing text
+   DIM fontFamily AS GpFontFamily PTR
+   DIM font AS GpFont PTR
+   DIM brush AS GpSolidFill PTR
+   hStatus = GdipCreateFontFamilyFromName("Arial", NULL, @fontFamily)
+   hStatus = GdipCreateFont(fontFamily, AfxGdipPointsToPixels(12, TRUE), FontStyleRegular, UnitPixel, @font)
+   hStatus = GdipCreateSolidFill(ARGB_BLACK, @brush)
+
+   ' Iterate through markers
+   DIM resultCount AS LONG, startIdx AS LONG, endIdx AS LONG
+   DIM yOffset AS SINGLE = 10.0
+   DIM markerIndex AS LONG = 1
+
+   DO
+      hStatus = GdipPathIterNextMarker(iterator, @resultCount, @startIdx, @endIdx)
+      IF resultCount = 0 THEN EXIT DO
+
+      DIM info AS STRING
+      info = "Marker " &amp; markerIndex &amp; ": Start=" &amp; startIdx &amp; ", End=" &amp; endIdx
+      DIM layout AS GpRectF = (10.0, yOffset, 300.0, 20.0)
+      hStatus = GdipDrawString(graphics, info, -1, font, @layout, NULL, brush)
+
+      yOffset += 20.0
+      markerIndex += 1
+   LOOP
+
+   ' Cleanup
+   IF brush THEN GdipDeleteBrush(brush)
+   IF font THEN GdipDeleteFont(font)
+   IF fontFamily THEN GdipDeleteFontFamily(fontFamily)
+   IF iterator THEN GdipDeletePathIter(iterator)
+   IF path THEN GdipDeletePath(path)
+   IF graphics THEN GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdippathiternextmarkerpath">GdipPathIterNextMarkerPath</h3>
+<p>Gets the next marker-delimited section of this iterator's associated path.</p>
+<pre class="code"><code>FUNCTION GdipPathIterNextMarkerPath (BYVAL iterator AS GpPathIterator PTR, _
+   BYVAL resultCount AS INT_ PTR, BYVAL path AS GpPath PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>iterator</em></td><td>[in] Pointer to the <strong>GraphicsPathIterator</strong> object.</td></tr><tr><td><em>resultCount</em></td><td>[out] Number of data points in the retrieved section. If there are no more marker-delimited sections to retrieve, this method returns 0.</td></tr><tr><td><em>path</em></td><td>[out] Pointer to a <strong>GraphicsPath</strong> object. This method sets the data points of this <strong>GraphicsPath</strong> object to match the data points of the retrieved section.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' Example: Using GdipPathIterNextMarkerPath to Extract and Draw Marker Sections.
+' Lets you isolate and render each marker-defined section independently.
+' Useful for animations, selective editing, or exporting segments.
+' ========================================================================================
+SUB Example_PathIterNextMarkerPath (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   Dim ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' Create a GraphicsPath with two marker sections
+   DIM path AS GpPath PTR
+   hStatus = GdipCreatePath(FillModeAlternate, @path)
+
+   ' First section: triangle
+   hStatus = GdipAddPathLine(path, 30, 30, 130, 30)
+   hStatus = GdipAddPathLine(path, 130, 30, 80, 100)
+   hStatus = GdipClosePathFigure(path)
+   hStatus = GdipSetPathMarker(path)
+
+   ' Second section: zigzag
+   hStatus = GdipStartPathFigure(path)
+   hStatus = GdipAddPathLine(path, 160, 40, 210, 90)
+   hStatus = GdipAddPathLine(path, 210, 90, 160, 140)
+   hStatus = GdipSetPathMarker(path)
+
+   ' Create PathIterator
+   DIM iterator AS GpPathIterator PTR
+   hStatus = GdipCreatePathIter(@iterator, path)
+
+   ' Create pen for drawing
+   DIM pen AS GpPen PTR
+   hStatus = GdipCreatePen1(ARGB_BLUE, 2.0, UnitPixel, @pen)
+
+   ' Create font and brush for text
+   DIM fontFamily AS GpFontFamily PTR
+   DIM font AS GpFont PTR
+   DIM brush AS GpSolidFill PTR
+   hStatus = GdipCreateFontFamilyFromName("Arial", NULL, @fontFamily)
+   hStatus = GdipCreateFont(fontFamily, AfxGdipPointsToPixels(12, TRUE), FontStyleRegular, UnitPixel, @font)
+   hStatus = GdipCreateSolidFill(ARGB_BLACK, @brush)
+
+   ' Extract and draw each marker section
+   DIM resultCount AS LONG
+   DIM markerPath AS GpPath PTR
+   DIM yOffset AS SINGLE = 170
+   DIM markerIndex AS LONG = 1
+
+   DO
+      hStatus = GdipCreatePath(FillModeAlternate, @markerPath)
+      hStatus = GdipPathIterNextMarkerPath(iterator, @resultCount, markerPath)
+      IF resultCount = 0 THEN EXIT DO
+
+      ' Draw the marker path
+      hStatus = GdipDrawPath(graphics, pen, markerPath)
+
+      ' Display marker info
+      DIM info AS STRING = "Marker " &amp; markerIndex &amp; ": Points=" &amp; resultCount
+      DIM layout AS GpRectF = (10.0, yOffset, 300.0, 20.0)
+      hStatus = GdipDrawString(graphics, info, -1, font, @layout, NULL, brush)
+
+      yOffset += 20.0
+      markerIndex += 1
+
+      IF markerPath THEN GdipDeletePath(markerPath)
+   LOOP
+
+   ' Cleanup
+   IF brush THEN GdipDeleteBrush(brush)
+   IF font THEN GdipDeleteFont(font)
+   IF fontFamily THEN GdipDeleteFontFamily(fontFamily)
+   IF pen THEN GdipDeletePen(pen)
+   IF iterator THEN GdipDeletePathIter(iterator)
+   IF path THEN GdipDeletePath(path)
+   IF graphics THEN GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdippathiternextpathtype">GdipPathIterNextPathType</h3>
+<p>Gets the starting index and the ending index of the next group of data points that all have the same type.</p>
+<p><strong>Note</strong>: Apparently is not implemented and <em>resultCount</em> always returns 0.</p>
+<pre class="code"><code>FUNCTION GdipPathIterNextPathType (BYVAL iterator AS GpPathIterator PTR, BYVAL resultCount AS INT_ PTR, _
+   BYVAL pathType AS BYTE PTR, BYVAL startIndex AS INT_ PTR, BYVAL endIndex AS INT_ PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>iterator</em></td><td>[in] Pointer to the <strong>GraphicsPathIterator</strong> object.</td></tr><tr><td><em>resultCount</em></td><td>[out] Number of data points in the retrieved section. If there are no more marker-delimited sections to retrieve, this method returns 0.</td></tr><tr><td><em>pathType</em></td><td>[out] Pointer to a BYTE that receives the point type shared by all points in the group. Possible values are <em>PathPointTypeLine</em> and <em>PathPointTypeBezier</em>, which are elements of the <strong>PathPointType</strong> enumeration.</td></tr><tr><td><em>startIndex</em></td><td>[out] Pointer to an LONG that receives the starting index of the group of points.</td></tr><tr><td><em>endIndex</em></td><td>[out] Pointer to an LONG that receives the ending index of the group of points.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' Example: Using GdipPathIterNextPathType to Group Points by Type.
+' Helps you understand how a path is constructed—lines vs. curves.
+' Enables selective rendering, editing, or flattening based on segment type.
+' ========================================================================================
+SUB Example_PathIterNextPathType (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   Dim ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' Create a GraphicsPath with grouped types
+   DIM path AS GpPath PTR
+   hStatus = GdipCreatePath(FillModeAlternate, @path)
+
+   ' Add 3 lines (same type group)
+   hStatus = GdipAddPathLine(path, 20, 20, 120, 20)
+   hStatus = GdipAddPathLine(path, 120, 20, 70, 100)
+   hStatus = GdipAddPathLine(path, 70, 100, 20, 20)
+
+   ' Add Bézier curve (new type group)
+   hStatus = GdipAddPathBezier(path, 150, 30, 180, 10, 210, 50, 240, 30)
+
+   ' Create PathIterator
+   DIM iterator AS GpPathIterator PTR
+   hStatus = GdipCreatePathIter(@iterator, path)
+
+   ' Create font and brush
+   DIM fontFamily AS GpFontFamily PTR
+   DIM font AS GpFont PTR
+   DIM brush AS GpSolidFill PTR
+   hStatus = GdipCreateFontFamilyFromName("Arial", NULL, @fontFamily)
+   hStatus = GdipCreateFont(fontFamily, AfxGdipPointsToPixels(12, TRUE), FontStyleRegular, UnitPixel, @font)
+   hStatus = GdipCreateSolidFill(ARGB_BLACK, @brush)
+
+   ' Iterate through path types
+   DIM resultCount AS LONG, pathType AS BYTE
+   DIM startIdx AS LONG, endIdx AS LONG
+   DIM yOffset AS SINGLE = 10.0
+   DIM segmentIndex AS LONG = 1
+
+   DO
+      hStatus = GdipPathIterNextPathType(iterator, @resultCount, @pathType, @startIdx, @endIdx)
+      IF resultCount = 0 THEN EXIT DO
+
+      DIM typeName AS STRING
+      SELECT CASE pathType AND &amp;H07
+         CASE PathPointTypeStart
+            typeName = "Start"
+         CASE PathPointTypeLine
+            typeName = "Line"
+         CASE PathPointTypeBezier
+            typeName = "Bezier"
+         CASE ELSE
+            typeName = "Unknown"
+      END SELECT
+
+      DIM info AS STRING
+      info = "Segment " &amp; segmentIndex &amp; ": Type=" &amp; typeName &amp; ", Start=" &amp; startIdx &amp; ", End=" &amp; endIdx
+      DIM layout AS GpRectF = (10.0, yOffset, 400.0, 20.0)
+      hStatus = GdipDrawString(graphics, info, -1, font, @layout, NULL, brush)
+
+      yOffset += 20.0
+      segmentIndex += 1
+   LOOP
+
+   ' Cleanup
+   IF brush THEN GdipDeleteBrush(brush)
+   IF font THEN GdipDeleteFont(font)
+   IF fontFamily THEN GdipDeleteFontFamily(fontFamily)
+   IF iterator THEN GdipDeletePathIter(iterator)
+   IF path THEN GdipDeletePath(path)
+   IF graphics THEN GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdippathiternextsubpath">GdipPathIterNextSubpath</h3>
+<p>Gets the starting index and the ending index of the next subpath (figure) in this iterator's associated path.</p>
+<pre class="code"><code>FUNCTION GdipPathIterNextSubpath (BYVAL iterator AS GpPathIterator PTR, BYVAL resultCount AS INT_ PTR, _
+   BYVAL statIndex AS INT_ PTR, BYVAL endIndex AS INT_ PTR, BYVAL isClosed AS BOOL PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>iterator</em></td><td>[in] Pointer to the <strong>GraphicsPathIterator</strong> object.</td></tr><tr><td><em>resultCount</em></td><td>[out] Number of data points in the next figure. If there are no more figures in the path, this method returns 0.</td></tr><tr><td><em>statIndex</em></td><td>[out] Pointer to an LONG that receives the starting index.</td></tr><tr><td><em>endIndex</em></td><td>[out] Pointer to an LONG that receives the ending index.</td></tr><tr><td><em>isClosed</em></td><td>[out] Pointer to a Boolean that receives a value that indicates whether the obtained figure is closed. If the figure is closed, the received value is TRUE; otherwise, the received value is FALSE.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' Example: Using GdipPathIterNextSubpath to Inspect Figures.
+' Lets you inspect each figure in a path individually.
+' Tells you whether each figure is closed (e.g., polygon) or open (e.g., polyline).
+' ========================================================================================
+SUB Example_PathIterNextSubpath (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   Dim ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' Create a GraphicsPath with two figures
+   DIM path AS GpPath PTR
+   hStatus = GdipCreatePath(FillModeAlternate, @path)
+
+   ' First figure: triangle (closed)
+   hStatus = GdipAddPathLine(path, 30, 30, 130, 30)
+   hStatus = GdipAddPathLine(path, 130, 30, 80, 100)
+   hStatus = GdipClosePathFigure(path)
+
+   ' Second figure: zigzag (open)
+   hStatus = GdipStartPathFigure(path)
+   hStatus = GdipAddPathLine(path, 160, 40, 210, 90)
+   hStatus = GdipAddPathLine(path, 210, 90, 160, 140)
+
+   ' Create PathIterator
+   DIM iterator AS GpPathIterator PTR
+   hStatus = GdipCreatePathIter(@iterator, path)
+
+   ' Create font and brush for drawing text
+   DIM fontFamily AS GpFontFamily PTR
+   DIM font AS GpFont PTR
+   DIM brush AS GpSolidFill PTR
+   hStatus = GdipCreateFontFamilyFromName("Arial", NULL, @fontFamily)
+   hStatus = GdipCreateFont(fontFamily, AfxGdipPointsToPixels(12, TRUE), FontStyleRegular, UnitPixel, @font)
+   hStatus = GdipCreateSolidFill(ARGB_BLACK, @brush)
+
+   ' Iterate through subpaths
+   DIM resultCount AS LONG, startIdx AS LONG, endIdx AS LONG
+   DIM isClosed AS BOOL
+   DIM yOffset AS SINGLE = 10.0
+   DIM subpathIndex AS LONG = 1
+
+   DO
+      hStatus = GdipPathIterNextSubpath(iterator, @resultCount, @startIdx, @endIdx, @isClosed)
+      IF resultCount = 0 THEN EXIT DO
+
+      DIM info AS STRING
+      info = "Subpath " &amp; subpathIndex &amp; ": Start=" &amp; startIdx &amp; ", End=" &amp; endIdx &amp; ", Closed=" &amp; IIF(isClosed, "True", "False")
+      DIM layout AS GpRectF = (10.0, yOffset, 400.0, 20.0)
+      hStatus = GdipDrawString(graphics, info, -1, font, @layout, NULL, brush)
+
+      yOffset += 20.0
+      subpathIndex += 1
+   LOOP
+
+   ' Cleanup
+   IF brush THEN GdipDeleteBrush(brush)
+   IF font THEN GdipDeleteFont(font)
+   IF fontFamily THEN GdipDeleteFontFamily(fontFamily)
+   IF iterator THEN GdipDeletePathIter(iterator)
+   IF path THEN GdipDeletePath(path)
+   IF graphics THEN GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdippathiternextsubpathpath">GdipPathIterNextSubpathPath</h3>
+<p>Gets the the next figure (subpath) from this iterator's associated path.</p>
+<pre class="code"><code>FUNCTION GdipPathIterNextSubpathPath (BYVAL iteratir AS GpPathIterator PTR, BYVAL resultCount AS INT_ PTR, _
+   BYVAL path AS GpPath PTR, BYVAL isClosed AS BOOL PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>iterator</em></td><td>[in] Pointer to the <strong>GraphicsPathIterator</strong> object.</td></tr><tr><td><em>resultCount</em></td><td>[out] Number of data points in the retrieved figure. If there are no more figures to retrieve, this method returns 0.</td></tr><tr><td><em>path</em></td><td>[out] Pointer to a <strong>GraphicsPath</strong> object. This method sets the data points of this <strong>GraphicsPath</strong> object to match the data points of the retrieved figure.</td></tr><tr><td><em>isClosed</em></td><td>[out] Pointer to a Boolean that receives a value that indicates whether the obtained figure is closed. If the figure is closed, the received value is TRUE; otherwise, the received value is FALSE.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' Example: Using GdipPathIterNextSubpathPath to Extract and Draw Figures.
+' Lets you isolate and render each figure independently.
+' Tells you whether each figure is closed, which is useful for fill operations or hit testing.
+' ========================================================================================
+SUB Example_PathIterNextSubpathPath (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   Dim ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' Create a GraphicsPath with two figures
+   DIM path AS GpPath PTR
+   hStatus = GdipCreatePath(FillModeAlternate, @path)
+
+   ' First figure: triangle (closed)
+   hStatus = GdipAddPathLine(path, 30, 30, 130, 30)
+   hStatus = GdipAddPathLine(path, 130, 30, 80, 100)
+   hStatus = GdipClosePathFigure(path)
+
+   ' Second figure: zigzag (open)
+   hStatus = GdipStartPathFigure(path)
+   hStatus = GdipAddPathLine(path, 160, 40, 210, 90)
+   hStatus = GdipAddPathLine(path, 210, 90, 160, 140)
+
+   ' Create PathIterator
+   DIM iterator AS GpPathIterator PTR
+   hStatus = GdipCreatePathIter(@iterator, path)
+
+   ' Create pen for drawing
+   DIM pen AS GpPen PTR
+   hStatus = GdipCreatePen1(ARGB_BLUE, 2.0, UnitPixel, @pen)
+
+   ' Create font and brush for text
+   DIM fontFamily AS GpFontFamily PTR
+   DIM font AS GpFont PTR
+   DIM brush AS GpSolidFill PTR
+   hStatus = GdipCreateFontFamilyFromName("Arial", NULL, @fontFamily)
+   hStatus = GdipCreateFont(fontFamily, AfxGdipPointsToPixels(12, TRUE), FontStyleRegular, UnitPixel, @font)
+   hStatus = GdipCreateSolidFill(ARGB_BLACK, @brush)
+
+   ' Extract and draw each subpath
+   DIM resultCount AS LONG
+   DIM subpath AS GpPath PTR
+   DIM isClosed AS BOOL
+   DIM yOffset AS SINGLE = 170
+   DIM subpathIndex AS LONG = 1
+
+   DO
+      hStatus = GdipCreatePath(FillModeAlternate, @subpath)
+      hStatus = GdipPathIterNextSubpathPath(iterator, @resultCount, subpath, @isClosed)
+      IF resultCount = 0 THEN EXIT DO
+
+      ' Draw the subpath
+      hStatus = GdipDrawPath(graphics, pen, subpath)
+
+      ' Display subpath info
+      DIM info AS STRING = "Subpath " &amp; subpathIndex &amp; ": Points=" &amp; resultCount &amp; ", Closed=" &amp; IIF(isClosed, "True", "False")
+      DIM layout AS GpRectF = (10.0, yOffset, 400.0, 20.0)
+      hStatus = GdipDrawString(graphics, info, -1, font, @layout, NULL, brush)
+
+      yOffset += 20.0
+      subpathIndex += 1
+
+      IF subpath THEN GdipDeletePath(subpath)
+   LOOP
+
+   ' Cleanup
+   IF brush THEN GdipDeleteBrush(brush)
+   IF font THEN GdipDeleteFont(font)
+   IF fontFamily THEN GdipDeleteFontFamily(fontFamily)
+   IF pen THEN GdipDeletePen(pen)
+   IF iterator THEN GdipDeletePathIter(iterator)
+   IF path THEN GdipDeletePath(path)
+   IF graphics THEN GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdippathiterrewind">GdipPathIterRewind</h3>
+<p>Rewinds this iterator to the beginning of its associated path.</p>
+<pre class="code"><code>FUNCTION GdipPathIterRewind (BYVAL iterator AS GpPathIterator PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>iterator</em></td><td>[in] Pointer to the <strong>GraphicsPathIterator</strong> object.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' Example: Using GdipPathIterRewind to Restart Iteration.
+' Lets you reuse the same iterator for multiple passes.
+' Essential when combining different iterator functions (e.g., markers first, then subpaths).
+' Saves memory and avoids recreating the iterator object.
+' ========================================================================================
+SUB Example_PathIterRewind (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   Dim ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' Create a GraphicsPath with two figures
+   DIM path AS GpPath PTR
+   hStatus = GdipCreatePath(FillModeAlternate, @path)
+
+   ' First figure: triangle
+   hStatus = GdipAddPathLine(path, 30, 30, 130, 30)
+   hStatus = GdipAddPathLine(path, 130, 30, 80, 100)
+   hStatus = GdipClosePathFigure(path)
+
+   ' Second figure: zigzag
+   hStatus = GdipStartPathFigure(path)
+   hStatus = GdipAddPathLine(path, 160, 40, 210, 90)
+   hStatus = GdipAddPathLine(path, 210, 90, 160, 140)
+
+   ' Create PathIterator
+   DIM iterator AS GpPathIterator PTR
+   hStatus = GdipCreatePathIter(@iterator, path)
+
+   ' First pass: count subpaths
+   DIM subpathCount AS LONG
+   hStatus = GdipPathIterGetSubpathCount(iterator, @subpathCount)
+
+   ' Display count
+   DIM fontFamily AS GpFontFamily PTR
+   DIM font AS GpFont PTR
+   DIM brush AS GpSolidFill PTR
+   hStatus = GdipCreateFontFamilyFromName("Arial", NULL, @fontFamily)
+   hStatus = GdipCreateFont(fontFamily, AfxGdipPointsToPixels(12, TRUE), FontStyleRegular, UnitPixel, @font)
+   hStatus = GdipCreateSolidFill(ARGB_BLACK, @brush)
+
+   DIM info AS STRING = "Subpath count (first pass): " &amp; subpathCount
+   DIM layout AS GpRectF = (10.0, 10.0, 300.0, 20.0)
+   hStatus = GdipDrawString(graphics, info, -1, font, @layout, NULL, brush)
+
+   ' Rewind iterator
+   hStatus = GdipPathIterRewind(iterator)
+
+   ' Second pass: iterate and display each subpath
+   DIM resultCount AS LONG, startIdx AS LONG, endIdx AS LONG
+   DIM isClosed AS BOOL
+   DIM yOffset AS SINGLE = 40.0
+   DIM subpathIndex AS LONG = 1
+
+   DO
+      hStatus = GdipPathIterNextSubpath(iterator, @resultCount, @startIdx, @endIdx, @isClosed)
+      IF resultCount = 0 THEN EXIT DO
+
+      DIM lin AS STRING
+      lin = "Subpath " &amp; subpathIndex &amp; ": Start=" &amp; startIdx &amp; ", End=" &amp; endIdx &amp; ", Closed=" &amp; IIF(isClosed, "True", "False")
+      DIM layout AS GpRectF = (10.0, yOffset, 400.0, 20.0)
+      hStatus = GdipDrawString(graphics, lin, -1, font, @layout, NULL, brush)
+
+      yOffset += 20.0
+      subpathIndex += 1
+   LOOP
+
+   ' Cleanup
+   IF brush THEN GdipDeleteBrush(brush)
+   IF font THEN GdipDeleteFont(font)
+   IF fontFamily THEN GdipDeleteFontFamily(fontFamily)
+   IF iterator THEN GdipDeletePathIter(iterator)
+   IF path THEN GdipDeletePath(path)
+   IF graphics THEN GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

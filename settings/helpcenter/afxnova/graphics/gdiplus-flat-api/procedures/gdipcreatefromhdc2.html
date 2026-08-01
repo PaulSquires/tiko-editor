@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GdipCreateFromHDC2 — Help Center</title>
+<meta name="description" content="Creates a **Graphics** object that is associated with a specified device context and a specified device handle.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipcreatefromhdc2.html">
+<meta property="og:title" content="GdipCreateFromHDC2">
+<meta property="og:description" content="Creates a **Graphics** object that is associated with a specified device context and a specified device handle.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipcreatefromhdc2.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/procedures/gdipcreatefromhdc2.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../graphics-functions.html">Graphics Functions</a></div>
+<h1>GdipCreateFromHDC2<span class="h1kind">function</span></h1>
+<p class="lede">Creates a **Graphics** object that is associated with a specified device context and a specified device handle.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GdipCreateFromHDC2 (BYVAL hdc AS HDC, BYVAL hDevice AS HANDLE, BYVAL graphics AS GpGraphics PTR PTR) AS GpStatus</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>hdc</code></td><td></td><td>[in] Handle to a device context that will be associated with the new <strong>Graphics</strong> object.</td></tr><tr><td><code>hdevice</code></td><td></td><td>[in] Handle to a device that will be associated with the new Graphics object (e.g., printer or display surface).</td></tr><tr><td><code>graphics</code></td><td></td><td>[out] Pointer to a <strong>GpGraphics</strong> object variable that receives a pointer to the new created <strong>Graphics</strong> object.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Creates a <strong>Graphics</strong> object that is associated with a specified device context and a specified device handle.</p>
+<h2>Remarks</h2>
+<p>When you use this function to create a <strong>Graphics</strong> object, make sure that the <strong>Graphics</strong> object is deleted before the device context is released.</p>
+<h2>Example</h2>
+<p>' ======================================================================================== ' This example demonstrates how to use GdipCreateFromHDC2 with a device handle, ' and how to create a bitmap from a graphics object for off-screen rendering. ' ======================================================================================== SUB Example_CreateFromHDC2 (BYVAL hdc AS HDC)</p>
+<p>DIM hStatus AS LONG DIM graphics AS GpGraphics PTR</p>
+<p>DIM hPrinter AS HANDLE DIM printerName AS WSTRING * 128 = "Microsoft Print to PDF" IF OpenPrinter(printerName, @hPrinter, NULL) = FALSE THEN EXIT SUB</p>
+<p>' // Create graphics object using HDC and device handle hStatus = GdipCreateFromHDC2(hdc, hPrinter, @graphics)</p>
+<p>' // Get the DPI scaling ratios DIM dpiX AS SINGLE hStatus = GdipGetDpiX(graphics, @dpiX) DIM rxRatio AS SINGLE = dpiX / 96 DIM dpiY AS SINGLE hStatus = GdipGetDpiY(graphics, @dpiY) Dim ryRatio AS SINGLE = dpiY / 96 ' // Set the scale transform hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)</p>
+<p>' // Create a bitmap from the graphics object DIM bitmap AS GpBitmap PTR hStatus = GdipCreateBitmapFromGraphics(300, 200, graphics, @bitmap)</p>
+<p>' // Create a graphics object from the bitmap DIM bmpGraphics AS GpGraphics PTR hStatus = GdipGetImageGraphicsContext(bitmap, @bmpGraphics)</p>
+<p>' // Draw something on the bitmap DIM brush AS GpBrush PTR hStatus = GdipCreateSolidFill(ARGB_GREEN, @brush) hStatus = GdipFillRectangle(bmpGraphics, brush, 50, 50, 200, 100)</p>
+<p>' // Save the bitmap as a .png DIM clsid AS CLSID = AfxGdipGetEncoderClsid("image/png")  ' Helper function to get PNG encoder GdipSaveImageToFile(bitmap, "output.png", @clsid, NULL)</p>
+<p>' // Close the printer object IF hPrinter THEN ClosePrinter(hPrinter)</p>
+<p>' // Draw message on the window DIM fontFamily AS GpFontFamily PTR, font AS GpFont PTR hStatus = GdipCreateFontFamilyFromName("Arial", NULL, @fontFamily) IF hStatus = StatusOk THEN</p>
+<pre class="code"><code>hStatus = GdipCreateFont(fontFamily, AfxGdipPointsToPixels(12, TRUE), FontStyleRegular, UnitPoint, @font)
+  GdipDeleteFontFamily(fontFamily)</code></pre>
+<p>END IF</p>
+<p>DIM textBrush AS GpBrush PTR hStatus = GdipCreateSolidFill(ARGB_BLACK, @textBrush)</p>
+<p>DIM rcf AS GpRectF rcf.x = 50 : rcf.y = 80 : rcf.Width = 350 : rcf.Height = 90 DIM wszText AS WSTRING * 128 = "Image saved to output.png" hStatus = GdipDrawString(graphics, wszText, LEN(wszText), font, @rcf, NULL, textBrush)</p>
+<p>' // Cleanup IF brush THEN GdipDeleteBrush(brush) IF bmpGraphics THEN GdipDeleteGraphics(bmpGraphics) IF bitmap THEN GdipDisposeImage(bitmap) IF graphics THEN GdipDeleteGraphics(graphics)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/AfxGdiPlus.bi:1745</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Flat  Api/GdiPlusGraphics.md</span></li><li>Topic: <a href="../graphics-functions.html">Graphics Functions</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GdipGetMetafileDownLevelRasterizationLimit — Help Center</title>
+<meta name="description" content="Gets the rasterization limit currently set for this metafile.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipgetmetafiledownlevelrasterizationlimit.html">
+<meta property="og:title" content="GdipGetMetafileDownLevelRasterizationLimit">
+<meta property="og:description" content="Gets the rasterization limit currently set for this metafile.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipgetmetafiledownlevelrasterizationlimit.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/procedures/gdipgetmetafiledownlevelrasterizationlimit.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../graphics-functions.html">Graphics Functions</a></div>
+<h1>GdipGetMetafileDownLevelRasterizationLimit<span class="h1kind">function</span></h1>
+<p class="lede">Gets the rasterization limit currently set for this metafile.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GdipGetMetafileDownLevelRasterizationLimit (BYVAL metafile AS GpMetafile PTR, BYVAL metafileRasterizationLimitDpi AS UINT PTR) AS GpStatus</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>metafile</code></td><td></td><td>[in] Pointer to the <strong>Metafile</strong> object.</td></tr><tr><td><code>metafileRasterizationLimitDpi</code></td><td></td><td>[out] Pointer to a variable that receives the rasterization limit in dots per inch (dpi).</td></tr><tr><td><code>hEmf</code></td><td></td><td>[in] Windows handle to a metafile.</td></tr><tr><td><code>header</code></td><td></td><td>[out] Pointer to a variable that receives the header, which contains the attributes of the metafile.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Gets the rasterization limit currently set for this metafile. The rasterization limit is the resolution used for certain brush bitmaps that are stored in the metafile. For a detailed explanation of the rasterization limit, see <strong>GdipGetMetafileHeaderFromEmf</strong>.</p>
+<h2>Examples</h2>
+<p>' ======================================================================================== ' Record Metafile and Set/Get Rasterization Limit ' Metafile is recorded, not loaded—required for setting the rasterization limit. ' Limit is set before drawing, which ensures it affects rasterization. ' Saved using GdipGetHemfFromMetafile, not GdipSaveImageToFile. ' ======================================================================================== SUB Example_MetafileDownLevelRasterizationLimit (BYVAL hdc AS HDC)</p>
+<p>DIM hStatus AS LONG</p>
+<p>' // Define the frame rectangle DIM rcfFrame AS GpRectF = (0.0, 0.0, 300.0, 200.0) DIM description AS WSTRING * 64 = "Rasterization limit test"</p>
+<p>' // Record a new EMF+ metafile DIM metafile AS GpMetafile PTR hStatus = GdipRecordMetafile(hdc, EmfTypeEmfPlusDual, @rcfFrame, MetafileFrameUnitPixel, @description, @metafile) IF hStatus &lt;&gt; 0 OR metafile = NULL THEN</p>
+<pre class="code"><code>AfxMsg "Failed to record metafile: " &amp; STR(hStatus)
+  EXIT SUB</code></pre>
+<p>END IF</p>
+<p>' // Set rasterization limit (must be done before drawing) DIM dpiLimit AS UINT = 150 hStatus = GdipSetMetafileDownLevelRasterizationLimit(metafile, dpiLimit) IF hStatus &lt;&gt; 0 THEN</p>
+<pre class="code"><code>AfxMsg "Failed to set rasterization limit: " &amp; STR(hStatus)</code></pre>
+<p>END IF</p>
+<p>' // Draw into the metafile DIM graphics AS GpGraphics PTR hStatus = GdipGetImageGraphicsContext(metafile, @graphics) DIM pen AS GpPen PTR hStatus = GdipCreatePen1(ARGB_BLUE, 2.0, UnitPixel, @pen) hStatus = GdipDrawRectangle(graphics, pen, 50.0, 50.0, 200.0, 100.0)</p>
+<p>' // Flush graphics hStatus = GdipFlush(graphics, FlushIntentionFlush)</p>
+<p>' // Retrieve rasterization limit DIM currentLimit AS UINT hStatus = GdipGetMetafileDownLevelRasterizationLimit(metafile, @currentLimit) IF hStatus = 0 THEN</p>
+<pre class="code"><code>AfxMsg "Current rasterization limit: " &amp; STR(currentLimit) &amp; " DPI"</code></pre>
+<p>ELSE</p>
+<pre class="code"><code>AfxMsg "Failed to get rasterization limit: " &amp; STR(hStatus)</code></pre>
+<p>END IF</p>
+<p>' // Save metafile to disk DIM hEmf AS HENHMETAFILE hStatus = GdipGetHemfFromMetafile(metafile, @hEmf) IF hEmf THEN</p>
+<pre class="code"><code>DIM saved AS HENHMETAFILE = CopyEnhMetaFile(hEmf, "RasterizedOutput.emf")
+  IF saved THEN DeleteEnhMetaFile(saved)
+  DeleteEnhMetaFile(hEmf)</code></pre>
+<p>END IF</p>
+<p>' // Cleanup IF pen THEN GdipDeletePen(pen) IF graphics THEN GdipDeleteGraphics(graphics) IF metafile THEN GdipDisposeImage(metafile)</p>
+<p>END SUB ' ========================================================================================</p>
+<p>' ======================================================================================== ' Compare Low vs High DPI Rasterization. ' Low DPI version will look pixelated or blurry, especially with gradients or textures. ' High DPI version will appear crisp and smooth, but may result in larger file size. ' ======================================================================================== SUB Example_SetMetafileDownLevelRasterizationLimit (BYVAL hdc AS HDC)</p>
+<p>DIM hStatus AS LONG</p>
+<p>DIM rcfFrame AS GpRectF = (0.0, 0.0, 300.0, 200.0) DIM description AS WSTRING * 64 = "Rasterization test"</p>
+<p>' --- Low DPI Metafile --- DIM metafileLow AS GpMetafile PTR hStatus = GdipRecordMetafile(hdc, EmfTypeEmfPlusDual, @rcfFrame, MetafileFrameUnitPixel, @description, @metafileLow) GdipSetMetafileDownLevelRasterizationLimit(metafileLow, 72)  ' Low quality</p>
+<p>DIM graphicsLow AS GpGraphics PTR GdipGetImageGraphicsContext(metafileLow, @graphicsLow) DIM brush AS GpBrush PTR GdipCreateSolidFill(ARGB_GREEN, @brush) GdipFillRectangle(graphicsLow, brush, 50.0, 50.0, 200.0, 100.0) GdipFlush(graphicsLow, FlushIntentionFlush) GdipDeleteGraphics(graphicsLow)</p>
+<p>' --- High DPI Metafile --- DIM metafileHigh AS GpMetafile PTR hStatus = GdipRecordMetafile(hdc, EmfTypeEmfPlusDual, @rcfFrame, MetafileFrameUnitPixel, @description, @metafileHigh) GdipSetMetafileDownLevelRasterizationLimit(metafileHigh, 300)  ' High quality</p>
+<p>DIM graphicsHigh AS GpGraphics PTR GdipGetImageGraphicsContext(metafileHigh, @graphicsHigh) GdipFillRectangle(graphicsHigh, brush, 50.0, 50.0, 200.0, 100.0) GdipFlush(graphicsHigh, FlushIntentionFlush) GdipDeleteGraphics(graphicsHigh)</p>
+<p>' --- Playback --- DIM playback AS GpGraphics PTR GdipCreateFromHDC(hdc, @playback)</p>
+<p>' Label and draw low DPI version DIM rcf AS GpRectF = (10, 10, 100, 20) GdipDrawString(playback, "Low DPI", -1, NULL, @rcf, NULL, brush) GdipDrawImage(playback, metafileLow, 10.0, 30.0)</p>
+<p>' Label and draw high DPI version DIM rcf2 AS GpRectF = (320, 10, 100, 20) GdipDrawString(playback, "High DPI", -1, NULL, @rcf2, NULL, brush) GdipDrawImage(playback, metafileHigh, 320.0, 30.0)</p>
+<p>' Cleanup IF brush THEN GdipDeleteBrush(brush) IF playback THEN GdipDeleteGraphics(playback) IF metafileLow THEN GdipDisposeImage(metafileLow) IF metafileHigh THEN GdipDisposeImage(metafileHigh)</p>
+<p>END SUB ' ========================================================================================</p>
+<p>'#CONSOLE ON #define _WIN32_WINNT &amp;h0602 #INCLUDE ONCE "AfxNova/AfxGdiPlus.inc"</p>
+<p>' ======================================================================================== ' Inspecting EMF Metadata with GdipGetMetafileHeaderFromEmf. ' Type: Tells you if it’s EMF, EMF+, or EMF+ Dual. ' DpiX / DpiY: Resolution of the metafile. ' Size: Total size in bytes. ' Bounds: Logical drawing bounds. ' EmfPlusFlags: Indicates if GDI+ records are present. ' This is especially useful for validating metafiles before playback or conversion. ' ========================================================================================</p>
+<p>' // Initialize GDI+ DIM token AS ULONG_PTR = AfxGdipInit</p>
+<p>DIM hStatus AS LONG</p>
+<p>' // Load an EMF file using GDI DIM hEmf AS HENHMETAFILE hEmf = GetEnhMetaFile("SampleMetafile.emf") IF hEmf = 0 THEN PRINT "Failed to load EMF file." END END IF</p>
+<p>' // Retrieve the metafile header DIM header AS MetafileHeader hStatus = GdipGetMetafileHeaderFromEmf(hEmf, @header) IF hStatus &lt;&gt; 0 THEN PRINT "Failed to get metafile header: " &amp; STR(hStatus) DeleteEnhMetaFile(hEmf) END END IF</p>
+<p>' // Display some header info PRINT "Type: " &amp; STR(header.Type) PRINT "Version: " &amp; HEX(header.Version) PRINT "Size: " &amp; STR(header.Size) &amp; " bytes" PRINT "DPI: " &amp; STR(header.DpiX) &amp; " x " &amp; STR(header.DpiY)</p>
+<p>' // Cleanup DeleteEnhMetaFile(hEmf)</p>
+<p>' // Shutdown GDI+ AfxGdipShutdown token</p>
+<p>PRINT PRINT "Press any key" SLEEP</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/AfxGdiPlus.bi:1974</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Flat  Api/GdiPlusGraphics.md</span></li><li>Topic: <a href="../graphics-functions.html">Graphics Functions</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

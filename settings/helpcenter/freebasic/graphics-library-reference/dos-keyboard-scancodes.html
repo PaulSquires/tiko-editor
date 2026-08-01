@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DOS Keyboard Scancodes — Help Center</title>
+<meta name="description" content="DOS Keyboard Scancodes — 0 documented members. Graphics Library Reference reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/graphics-library-reference/dos-keyboard-scancodes.html">
+<meta property="og:title" content="DOS Keyboard Scancodes">
+<meta property="og:description" content="DOS Keyboard Scancodes — 0 documented members. Graphics Library Reference reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/graphics-library-reference/dos-keyboard-scancodes.html">
+<link rel="stylesheet" href="../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/graphics-library-reference/dos-keyboard-scancodes.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Graphics Library Reference</div>
+<h1>DOS Keyboard Scancodes</h1>
+<h2>Documentation</h2>
+
+	Listing of keyboard scancodes.<br>
+<br>
+<div>Description</div><div><br>
+Here follows a list of hardware keyboard scancodes accepted by the <code><a href="../user-input-functions-graphics-library/procedures/multikey.html">MultiKey</a></code> function. These are equal to DOS scancodes, and are guaranteed to be always recognized on all platforms.<br>
+<br>
+These constants are also defined in the <code>fbgfx.bi</code> include file you can use in your programs. If you are using the <i><a href="../freebasic-dialects-and-qbasic/freebasic-dialects.html">lang fb</a></i> dialect then everything inside <code>fbgfx.bi</code> is enclosed in the <code>FB</code> <code><a href="../modularizing/procedures/namespace.html">Namespace</a></code>. To use these constants in <i><a href="../freebasic-dialects-and-qbasic/freebasic-dialects.html">lang fb</a></i>, either prepend "<code>FB.</code>" to the constant name, or put "<code><a href="../modularizing/procedures/using-namespaces.html">Using</a> FB</code>" after the <code><a href="../preprocessor/procedures/include.html">#include</a></code> line.<br>
+The hexadecimal code is not required and provided only for reference.<br>
+<br>
+<code><pre class="code"><span>SC_ESCAPE</span>       <span class="tok-nu">&amp;h01</span>
+
+<span>SC_1</span>            <span class="tok-nu">&amp;h02</span>
+
+<span>SC_2</span>            <span class="tok-nu">&amp;h03</span>
+
+<span>SC_3</span>            <span class="tok-nu">&amp;h04</span>
+
+<span>SC_4</span>            <span class="tok-nu">&amp;h05</span>
+
+<span>SC_5</span>            <span class="tok-nu">&amp;h06</span>
+
+<span>SC_6</span>            <span class="tok-nu">&amp;h07</span>
+
+<span>SC_7</span>            <span class="tok-nu">&amp;h08</span>
+
+<span>SC_8</span>            <span class="tok-nu">&amp;h09</span>
+
+<span>SC_9</span>            <span class="tok-nu">&amp;h0A</span>
+
+<span>SC_0</span>            <span class="tok-nu">&amp;h0B</span>
+
+<span>SC_MINUS</span>        <span class="tok-nu">&amp;h0C</span>
+
+<span>SC_EQUALS</span>       <span class="tok-nu">&amp;h0D</span>
+
+<span>SC_BACKSPACE</span>    <span class="tok-nu">&amp;h0E</span>
+
+<span>SC_TAB</span>          <span class="tok-nu">&amp;h0F</span>
+
+<span>SC_Q</span>            <span class="tok-nu">&amp;h10</span>
+
+<span>SC_W</span>            <span class="tok-nu">&amp;h11</span>
+
+<span>SC_E</span>            <span class="tok-nu">&amp;h12</span>
+
+<span>SC_R</span>            <span class="tok-nu">&amp;h13</span>
+
+<span>SC_T</span>            <span class="tok-nu">&amp;h14</span>
+
+<span>SC_Y</span>            <span class="tok-nu">&amp;h15</span>
+
+<span>SC_U</span>            <span class="tok-nu">&amp;h16</span>
+
+<span>SC_I</span>            <span class="tok-nu">&amp;h17</span>
+
+<span>SC_O</span>            <span class="tok-nu">&amp;h18</span>
+
+<span>SC_P</span>            <span class="tok-nu">&amp;h19</span>
+
+<span>SC_LEFTBRACKET</span>  <span class="tok-nu">&amp;h1A</span>
+
+<span>SC_RIGHTBRACKET</span> <span class="tok-nu">&amp;h1B</span>
+
+<span>SC_ENTER</span>        <span class="tok-nu">&amp;h1C</span>
+
+<span>SC_CONTROL</span>      <span class="tok-nu">&amp;h1D</span>
+
+<span>SC_A</span>            <span class="tok-nu">&amp;h1E</span>
+
+<span>SC_S</span>            <span class="tok-nu">&amp;h1F</span>
+
+<span>SC_D</span>            <span class="tok-nu">&amp;h20</span>
+
+<span>SC_F</span>            <span class="tok-nu">&amp;h21</span>
+
+<span>SC_G</span>            <span class="tok-nu">&amp;h22</span>
+
+<span>SC_H</span>            <span class="tok-nu">&amp;h23</span>
+
+<span>SC_J</span>            <span class="tok-nu">&amp;h24</span>
+
+<span>SC_K</span>            <span class="tok-nu">&amp;h25</span>
+
+<span>SC_L</span>            <span class="tok-nu">&amp;h26</span>
+
+<span>SC_SEMICOLON</span>    <span class="tok-nu">&amp;h27</span>
+
+<span>SC_QUOTE</span>        <span class="tok-nu">&amp;h28</span>
+
+<span>SC_TILDE</span>        <span class="tok-nu">&amp;h29</span>
+
+<span>SC_LSHIFT</span>       <span class="tok-nu">&amp;h2A</span>
+
+<span>SC_BACKSLASH</span>    <span class="tok-nu">&amp;h2B</span>
+
+<span>SC_Z</span>            <span class="tok-nu">&amp;h2C</span>
+
+<span>SC_X</span>            <span class="tok-nu">&amp;h2D</span>
+
+<span>SC_C</span>            <span class="tok-nu">&amp;h2E</span>
+
+<span>SC_V</span>            <span class="tok-nu">&amp;h2F</span>
+
+<span>SC_B</span>            <span class="tok-nu">&amp;h30</span>
+
+<span>SC_N</span>            <span class="tok-nu">&amp;h31</span>
+
+<span>SC_M</span>            <span class="tok-nu">&amp;h32</span>
+
+<span>SC_COMMA</span>        <span class="tok-nu">&amp;h33</span>
+
+<span>SC_PERIOD</span>       <span class="tok-nu">&amp;h34</span>
+
+<span>SC_SLASH</span>        <span class="tok-nu">&amp;h35</span>
+
+<span>SC_RSHIFT</span>       <span class="tok-nu">&amp;h36</span>
+
+<span>SC_MULTIPLY</span>     <span class="tok-nu">&amp;h37</span>
+
+<span>SC_ALT</span>          <span class="tok-nu">&amp;h38</span>
+
+<span>SC_SPACE</span>        <span class="tok-nu">&amp;h39</span>
+
+<span>SC_CAPSLOCK</span>     <span class="tok-nu">&amp;h3A</span>
+
+<span>SC_F1</span>           <span class="tok-nu">&amp;h3B</span>
+
+<span>SC_F2</span>           <span class="tok-nu">&amp;h3C</span>
+
+<span>SC_F3</span>           <span class="tok-nu">&amp;h3D</span>
+
+<span>SC_F4</span>           <span class="tok-nu">&amp;h3E</span>
+
+<span>SC_F5</span>           <span class="tok-nu">&amp;h3F</span>
+
+<span>SC_F6</span>           <span class="tok-nu">&amp;h40</span>
+
+<span>SC_F7</span>           <span class="tok-nu">&amp;h41</span>
+
+<span>SC_F8</span>           <span class="tok-nu">&amp;h42</span>
+
+<span>SC_F9</span>           <span class="tok-nu">&amp;h43</span>
+
+<span>SC_F10</span>          <span class="tok-nu">&amp;h44</span>
+
+<span>SC_NUMLOCK</span>      <span class="tok-nu">&amp;h45</span>
+
+<span>SC_SCROLLLOCK</span>   <span class="tok-nu">&amp;h46</span>
+
+<span>SC_HOME</span>         <span class="tok-nu">&amp;h47</span>
+
+<span>SC_UP</span>           <span class="tok-nu">&amp;h48</span>
+
+<span>SC_PAGEUP</span>       <span class="tok-nu">&amp;h49</span>
+
+<span>SC_LEFT</span>         <span class="tok-nu">&amp;h4B</span>
+
+<span>SC_CLEAR</span>        <span class="tok-nu">&amp;h4C</span>
+
+<span>SC_CENTER</span>       <span class="tok-nu">&amp;h4C</span>
+
+<span>SC_RIGHT</span>        <span class="tok-nu">&amp;h4D</span>
+
+<span>SC_PLUS</span>         <span class="tok-nu">&amp;h4E</span>
+
+<span>SC_END</span>          <span class="tok-nu">&amp;h4F</span>
+
+<span>SC_DOWN</span>         <span class="tok-nu">&amp;h50</span>
+
+<span>SC_PAGEDOWN</span>     <span class="tok-nu">&amp;h51</span>
+
+<span>SC_INSERT</span>       <span class="tok-nu">&amp;h52</span>
+
+<span>SC_DELETE</span>       <span class="tok-nu">&amp;h53</span>
+
+<span>SC_F11</span>          <span class="tok-nu">&amp;h57</span>
+
+<span>SC_F12</span>          <span class="tok-nu">&amp;h58</span>
+
+<span class="tok-cm">'' Extra scancodes not compatible with DOS scancodes</span>
+
+<span>SC_LWIN</span>         <span class="tok-nu">&amp;h5B</span>
+
+<span>SC_RWIN</span>         <span class="tok-nu">&amp;h5C</span>
+
+<span>SC_MENU</span>         <span class="tok-nu">&amp;h5D</span></pre></code><br>
+<br>
+</div><div>See also</div><div><br>
+<ul><li> <code><a href="../user-input-functions-graphics-library/procedures/multikey.html">MultiKey</a></code><br>
+<br>
+</li></ul><br>
+   <br>
+</div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../index.html">Home</a> ·
+         <a href="../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../nav.js?v=70a6b70236"></script>
+<script src="../../search-index.js"></script>
+<script src="../../assets/app.js?v=456d079659"></script>
+<script src="../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

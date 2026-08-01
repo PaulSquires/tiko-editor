@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GdipCreateTexture — Help Center</title>
+<meta name="description" content="Creates a **TextureBrush** object based on an image and a wrap mode. The size of the brush defaults to the size of the image, so the entire image is used by the brush.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipcreatetexture.html">
+<meta property="og:title" content="GdipCreateTexture">
+<meta property="og:description" content="Creates a **TextureBrush** object based on an image and a wrap mode. The size of the brush defaults to the size of the image, so the entire image is used by the brush.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipcreatetexture.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/procedures/gdipcreatetexture.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../gdiplustexturebrush.html">GdiPlusTextureBrush</a></div>
+<h1>GdipCreateTexture<span class="h1kind">function</span></h1>
+<p class="lede">Creates a **TextureBrush** object based on an image and a wrap mode. The size of the brush defaults to the size of the image, so the entire image is used by the brush.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GdipCreateTexture (BYVAL image AS GpImage PTR, BYVAL wrapMode AS GpWrapMode, BYVAL texture AS GpTexture PTR PTR) AS GpStatus</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>image</code></td><td></td><td>[in] Pointer to the <strong>Image</strong> object.</td></tr><tr><td><code>wrapMode</code></td><td></td><td>[in] Element of the <strong>WrapMode</strong> enumeration that specifies how repeated copies of an image are used to tile an area when it is painted with this texture brush. The default value is <em>WrapModeTile</em>.</td></tr><tr><td><code>texture</code></td><td></td><td>[out] Pointer to a variable that receives a pointer to the new created <strong>TextureBrush</strong> object.</td></tr><tr><td><code>WrapModeTile</code></td><td></td><td>0</td></tr><tr><td><code>WrapModeTileFlipX</code></td><td></td><td>1</td></tr><tr><td><code>WrapModeTileFlipY</code></td><td></td><td>2</td></tr><tr><td><code>WrapModeTileFlipXY</code></td><td></td><td>3</td></tr><tr><td><code>WrapModeClamp</code></td><td></td><td>4</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Creates a <strong>TextureBrush</strong> object based on an image and a wrap mode. The size of the brush defaults to the size of the image, so the entire image is used by the brush.</p>
+<p>The <strong>WrapMode</strong> enumeration specifies how repeated copies of an image are used to tile an area.</p>
+<h2>Remarks</h2>
+<p>An area that extends beyond the boundaries of the brush is tiled with repeated copies of the brush. A texture brush may have alternate tiles flipped in a certain direction, as specified by the wrap mode. Flipping has the effect of reversing the brush's image. For example, if the wrap mode is specified as <em>WrapModeTileFlipX</em>, the brush is flipped about a line that is parallel to the y-axis.</p>
+<p>The texture brush is always oriented at (0, 0). If the wrap mode is specified as <em>WrapModeClamp</em>, no area outside of the brush is tiled. For example, suppose you create a texture brush, specifying <em>WrapModeClamp</em> as the wrap mode: Then, you paint an area with the brush. If the size of the brush has a height of 50 and the painted area is a rectangle with its upper-left corner at (0, 50), you will see no repeated copies of the brush (no tiling).</p>
+<p>The default wrap mode for a texture brush is <em>WrapModeTile</em>, which specifies no flipping of the tile and no clamping.</p>
+<h2>Examples</h2>
+<p>hStatus = GdipCreateTextureBrush(someImage, WrapModeClamp, @texture)</p>
+<p>' ======================================================================================== ' The following example creates a texture brush fills a rectangle. ' ======================================================================================== SUB Example_CreateTexture (BYVAL hdc AS HDC)</p>
+<p>DIM hStatus AS LONG</p>
+<p>' // Create a graphics object from the device context DIM graphics AS GpGraphics PTR hStatus = GdipCreateFromHDC(hdc, @graphics)</p>
+<p>' // Get the DPI scaling ratios DIM dpiX AS SINGLE hStatus = GdipGetDpiX(graphics, @dpiX) DIM rxRatio AS SINGLE = dpiX / 96 DIM dpiY AS SINGLE hStatus = GdipGetDpiY(graphics, @dpiY) Dim ryRatio AS SINGLE = dpiY / 96 ' // Set the scale transform hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)</p>
+<p>' // Load the image and set the dpi resolution DIM image AS GpImage PTR hStatus = GdipLoadImageFromFile("HouseAndTree.gif", @Image) hStatus = GdipBitmapSetResolution(image, dpiX, dpiY)</p>
+<p>' // Create a texture brush, and set its wrap mode. DIM textureBrush AS GpTexture PTR hStatus = GdipCreateTexture(image, WrapModeTile, @textureBrush) ' // Fill a rectangle with the texture brush hStatus = GdipFillRectangle(graphics, textureBrush, 20, 20, 360, 210)</p>
+<p>' // Cleanup IF image THEN GdipDisposeImage(image) IF textureBrush THEN GdipDeleteBrush(textureBrush) IF graphics THEN GdipDeleteGraphics(graphics)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/AfxGdiPlus.bi:2437</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Flat  Api/GdiPlusTextureBrush.md</span></li><li>Topic: <a href="../gdiplustexturebrush.html">GdiPlusTextureBrush</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

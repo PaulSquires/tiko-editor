@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dynamic Arrays — Help Center</title>
+<meta name="description" content="Dynamic Arrays — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/dynamic-arrays.html">
+<meta property="og:title" content="Dynamic Arrays">
+<meta property="og:description" content="Dynamic Arrays — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/dynamic-arrays.html">
+<link rel="stylesheet" href="../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/dynamic-arrays.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>Dynamic Arrays</h1>
+<h2>Documentation</h2>
+
+	<br>
+Hello, this page explains the proper use of dynamic arrays in FreeBASIC. While it isn't a very long tutorial, many people have had some troubles with this and I felt it was worth putting into the "Getting Started" tutorial page.<br>
+<br>
+Arrays are neat; they can be used and resized throughout a program, with little difficulties. Firstly, we should discuss both ways a dynamic array can be created. In the same code, I will explain how to redimension a Dynamic Shared Array within a sub or function. Read the comments within the code to understand it better.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Declare</span> <span class="tok-kw">Sub</span> <span>mySub</span> <span>()</span>
+
+
+
+<span class="tok-cm">' as of 0.17, OPTION DYNAMIC and '$DYNAMIC are unecessary. you must define an array to be dynamic each time</span>
+
+<span class="tok-cm">' as you can see, both following ways are successful at creating a dynamic array</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">Shared</span> <span>myArray1</span><span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span>
+
+<span class="tok-kw">ReDim</span> <span class="tok-kw">Shared</span> <span>myArray2</span><span>(</span><span class="tok-nu">0</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span>
+
+
+
+<span>mySub</span>
+
+
+
+<span class="tok-cm">' because we shared the arrays, they are accessable from anywhere within the module</span>
+
+<span class="tok-kw">Print</span> <span>myArray1</span><span>(</span><span class="tok-nu">5</span><span>)</span> <span class="tok-cm">' will print 2</span>
+
+<span class="tok-kw">Print</span> <span>myArray2</span><span>(</span><span class="tok-nu">6</span><span>)</span> <span class="tok-cm">' will print 3</span>
+
+
+
+<span class="tok-kw">Sub</span> <span>mySub</span> <span>()</span>
+
+    <span class="tok-cm">' do NOT use &quot;redim shared&quot; within a sub or function! even if it is shared, you must omit the word &quot;shared&quot; for it to work</span>
+
+    <span class="tok-kw">ReDim</span> <span>myArray1</span><span>(</span><span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">9</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span>
+
+    <span class="tok-kw">ReDim</span> <span>myArray2</span><span>(</span><span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">9</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span>
+
+    <span>myArray1</span><span>(</span><span class="tok-nu">5</span><span>)</span> <span>=</span> <span class="tok-nu">2</span>
+
+    <span>myArray2</span><span>(</span><span class="tok-nu">6</span><span>)</span> <span>=</span> <span class="tok-nu">3</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span></pre></code><br>
+<br>
+Now, you may be wondering how you can redimension an array while using the PRESERVE keyword. Normally, you simply add PRESERVE as the syntax for REDIM will state. Yet in fact, this only works if the first array dimension is the only one changing! For example, the following program would not work properly:<br>
+<br>
+<code><pre class="code"><span class="tok-cm">' declare the dynamic array the cleaner way</span>
+
+<span class="tok-kw">ReDim</span> <span class="tok-kw">Shared</span> <span>myArray</span><span>(</span><span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">9</span><span>,</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">9</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span> <span>x</span><span>,</span> <span>y</span><span>,</span> <span>i</span>
+
+
+
+<span class="tok-cm">' fill the array with values</span>
+
+<span class="tok-kw">For</span> <span>y</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">9</span>
+
+    <span class="tok-kw">For</span> <span>x</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">9</span>
+
+        <span>i</span> <span>+=</span> <span class="tok-nu">1</span>
+
+        <span>myArray</span><span>(</span><span>x</span><span>,</span> <span>y</span><span>)</span> <span>=</span> <span>i</span>
+
+    <span class="tok-kw">Next</span> <span>x</span>
+
+<span class="tok-kw">Next</span> <span>y</span>
+
+
+
+<span class="tok-cm">' proves the values are good originally:</span>
+
+<span class="tok-kw">For</span> <span>y</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">9</span>
+
+    <span class="tok-kw">For</span> <span>x</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">9</span>
+
+        <span class="tok-kw">Print</span> <span class="tok-kw">Using</span> <span>&quot;##,&quot;</span><span>;</span> <span>myArray</span><span>(</span><span>x</span><span>,</span> <span>y</span><span>);</span>
+
+    <span class="tok-kw">Next</span> <span>x</span>
+
+    <span class="tok-kw">Print</span>
+
+<span class="tok-kw">Next</span> <span>y</span>
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Print</span> <span>&quot;Press a key...&quot;</span>
+
+<span class="tok-kw">Sleep</span>
+
+<span class="tok-kw">Cls</span>
+
+
+
+<span class="tok-cm">' redimension the arrays</span>
+
+<span class="tok-kw">ReDim</span> <span class="tok-kw">Preserve</span> <span>myArray</span><span>(</span><span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">18</span><span>,</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">12</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">UByte</span>
+
+
+
+<span class="tok-cm">' the values have not been preserved properly!</span>
+
+<span class="tok-kw">For</span> <span>y</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">9</span>
+
+    <span class="tok-kw">For</span> <span>x</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">9</span>
+
+        <span class="tok-kw">Print</span> <span class="tok-kw">Using</span> <span>&quot;##,&quot;</span><span>;</span> <span>myArray</span><span>(</span><span>x</span><span>,</span> <span>y</span><span>);</span>
+
+    <span class="tok-kw">Next</span> <span>x</span>
+
+    <span class="tok-kw">Print</span>
+
+<span class="tok-kw">Next</span> <span>y</span>
+
+
+
+<span class="tok-kw">Sleep</span>
+
+<span class="tok-kw">End</span></pre></code><br>
+<br>
+Try it out! You can see that it does not work properly. This is because only the first dimension in an array may change sizes, while the rest remain the same size, in order for PRESERVE to work properly.<br>
+<br>
+There is a workaround, which I will post later, after I edit it in order to make sense to any program, not just mine, and make some revisions so it does not go out of bounds. For the moment, get creative ;)<br>
+<br>
+<i>Last Reviewed by Sancho3 on February 06, 2018</i>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../index.html">Home</a> ·
+         <a href="../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../nav.js?v=70a6b70236"></script>
+<script src="../../search-index.js"></script>
+<script src="../../assets/app.js?v=456d079659"></script>
+<script src="../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

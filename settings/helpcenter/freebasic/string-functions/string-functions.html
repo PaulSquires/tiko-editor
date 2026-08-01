@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>String Functions — Help Center</title>
+<meta name="description" content="String Functions — 0 documented members. String Functions reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/string-functions/string-functions.html">
+<meta property="og:title" content="String Functions">
+<meta property="og:description" content="String Functions — 0 documented members. String Functions reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/string-functions/string-functions.html">
+<link rel="stylesheet" href="../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/string-functions/string-functions.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>String Functions</div>
+<h1>String Functions</h1>
+<h2>Documentation</h2>
+
+	Statements and Procedures that work with strings.<br>
+<br>
+<div>Description</div><div><br>
+<div class="indent">These statements and procedures provide many ways to create and manipulate strings and substrings. Numbers can be converted to strings and vice-versa. Procedures are also provided to aid in serialization of numeric data, perhaps for persistent storage.<br>
+<br>
+</div><b><a href="#CREATESTR">Creating Strings</a></b><br>
+<div class="indent">String data types and procedures that create new strings.<br>
+</div><b><a href="#CHRCONVERT">Character Conversions</a></b><br>
+<div class="indent">Procedures that convert from character codes to strings and back.<br>
+</div><b><a href="#NUMSTRCONV">Numeric/Boolean to String Conversions</a></b><br>
+<div class="indent">Procedures that convert numeric values to strings.<br>
+</div><b><a href="#STRNUMCONV">String to Numeric Conversions</a></b><br>
+<div class="indent">Procedures that convert strings to numeric values.<br>
+</div><b><a href="#NUMSERIAL">Numeric Serializations</a></b><br>
+<div class="indent">Procedures that convert raw numeric data to and from strings suitable for storage.<br>
+</div><b><a href="#SUBSTRING">Working with Substrings</a></b><br>
+<div class="indent">Procedures that return subsets of strings, or that modify subsets of strings.<br>
+<br>
+</div><table><tr><td><a></a><b><u>Creating Strings</u></b><br>
+<div class="indent"><b><a href="../operators/preprocessor-operators/procedures/string.html">String</a></b><br>
+<div class="indent">Standard data type: 8 bit character string.<br>
+</div><b><a href="procedures/string-function.html">String (Function)</a></b><br>
+<div class="indent">Returns a <a href="../operators/preprocessor-operators/procedures/string.html">String</a> of multiple characters.<br>
+</div><b><a href="../standard-data-types/procedures/zstring.html">ZString</a></b><br>
+<div class="indent">Standard data type: null terminated 8 bit character string.<br>
+</div><b><a href="../standard-data-types/procedures/wstring.html">WString</a></b><br>
+<div class="indent">Standard data type: wide character string.<br>
+</div><b><a href="procedures/wstring-function.html">Wstring (Function)</a></b><br>
+<div class="indent">Returns a <a href="../standard-data-types/procedures/wstring.html">WString</a> of multiple characters.<br>
+</div><b><a href="procedures/space.html">Space</a></b><br>
+<div class="indent">Returns a <a href="../operators/preprocessor-operators/procedures/string.html">String</a> consisting of spaces.<br>
+</div><b><a href="procedures/wspace.html">WSpace</a></b><br>
+<div class="indent">Returns a <a href="../standard-data-types/procedures/wstring.html">WString</a> consisting of spaces.<br>
+</div><b><a href="procedures/len.html">Len</a></b><br>
+<div class="indent">Returns the length of a string in characters.<br>
+<br>
+</div></div><a></a><b><u>Character Conversion</u></b><br>
+<div class="indent"><b><a href="procedures/asc.html">Asc</a></b><br>
+<div class="indent">Returns an <a href="../standard-data-types/procedures/integer.html">Integer</a> representation of an character.<br>
+</div><b><a href="procedures/chr.html">Chr</a></b><br>
+<div class="indent">Returns a string of one or more characters from their ASCII <a href="../standard-data-types/procedures/integer.html">Integer</a> representation.<br>
+</div><b><a href="procedures/wchr.html">WChr</a></b><br>
+<div class="indent">Returns a <a href="../standard-data-types/procedures/wstring.html">WString</a> of one or more characters from their Unicode <a href="../standard-data-types/procedures/integer.html">Integer</a> representation.<br>
+<br>
+</div></div><a></a><b><u>Numeric/Boolean to String Conversions</u></b><br>
+<div class="indent"><b><a href="procedures/bin.html">Bin</a></b><br>
+<div class="indent">Returns a binary <a href="../operators/preprocessor-operators/procedures/string.html">String</a> representation of an integral value.<br>
+</div><b><a href="procedures/wbin.html">WBin</a></b><br>
+<div class="indent">Returns a binary <a href="../standard-data-types/procedures/wstring.html">WString</a> representation of an integral value.<br>
+</div><b><a href="procedures/hex.html">Hex</a></b><br>
+<div class="indent">Returns a hexadecimal <a href="../operators/preprocessor-operators/procedures/string.html">String</a> representation of an integral value.<br>
+</div><b><a href="procedures/whex.html">WHex</a></b><br>
+<div class="indent">Returns a hexadecimal <a href="../standard-data-types/procedures/wstring.html">WString</a> representation of an integral value.<br>
+</div><b><a href="procedures/oct.html">Oct</a></b><br>
+<div class="indent">Returns an octal <a href="../operators/preprocessor-operators/procedures/string.html">String</a> representation of an integral value.<br>
+</div><b><a href="procedures/woct.html">WOct</a></b><br>
+<div class="indent">Returns an octal <a href="../standard-data-types/procedures/wstring.html">WString</a> representation of an integral value.<br>
+</div><b><a href="../converting-data-types/procedures/str.html">Str</a></b><br>
+<div class="indent">Returns the <a href="../operators/preprocessor-operators/procedures/string.html">String</a> representation of numeric value or boolean.<br>
+</div><b><a href="../converting-data-types/procedures/wstr.html">WStr</a></b><br>
+<div class="indent">Returns the <a href="../standard-data-types/procedures/wstring.html">WString</a> representation of numeric value.<br>
+</div><b><a href="procedures/format.html">Format</a></b><br>
+<div class="indent">Returns a formatted <a href="../operators/preprocessor-operators/procedures/string.html">String</a> representation of a <a href="../mathematical-functions/procedures/double.html">Double</a>.<br>
+<br>
+</div></div><a></a><b><u>String to Numeric Conversions</u></b><br>
+<div class="indent"><b><a href="../converting-data-types/procedures/val.html">Val</a></b><br>
+<div class="indent">Returns the <a href="../mathematical-functions/procedures/double.html">Double</a> conversion of a numeric string.<br>
+</div><b><a href="../converting-data-types/procedures/valint.html">ValInt</a></b><br>
+<div class="indent">Returns the <a href="../standard-data-types/procedures/integer.html">Integer</a> conversion of a numeric string.<br>
+</div><b><a href="../converting-data-types/procedures/vallng.html">ValLng</a></b><br>
+<div class="indent">Returns the <a href="../standard-data-types/procedures/long.html">Long</a> conversion of a numeric string.<br>
+</div><b><a href="../converting-data-types/procedures/valuint.html">ValUInt</a></b><br>
+<div class="indent">Returns the <a href="../bit-manipulation/procedures/uinteger.html">UInteger</a> conversion of a numeric string.<br>
+</div><b><a href="../converting-data-types/procedures/valulng.html">ValULng</a></b><br>
+<div class="indent">Returns the <a href="../standard-data-types/procedures/ulong.html">ULong</a> conversion of a numeric string.<br>
+</div></div></td><td><a></a><b><u>Numeric Serialization</u></b><br>
+<div class="indent"><b><a href="procedures/mkd.html">MKD</a></b><br>
+<div class="indent">Returns an eight character <a href="../operators/preprocessor-operators/procedures/string.html">String</a> representation of a <a href="../mathematical-functions/procedures/double.html">Double</a>.<br>
+</div><b><a href="procedures/mki.html">MKI</a></b><br>
+<div class="indent">Returns a four character <a href="../operators/preprocessor-operators/procedures/string.html">String</a> representation of a <a href="../standard-data-types/procedures/integer.html">Integer</a>.<br>
+</div><b><a href="procedures/mkl.html">MKL</a></b><br>
+<div class="indent">Returns a four character <a href="../operators/preprocessor-operators/procedures/string.html">String</a> representation of a <a href="../standard-data-types/procedures/long.html">Long</a>.<br>
+</div><b><a href="procedures/mklongint.html">MKLongInt</a></b><br>
+<div class="indent">Returns an eight character <a href="../operators/preprocessor-operators/procedures/string.html">String</a> representation of a <a href="../standard-data-types/procedures/longint.html">LongInt</a>.<br>
+</div><b><a href="procedures/mks.html">MKS</a></b><br>
+<div class="indent">Returns a four character <a href="../operators/preprocessor-operators/procedures/string.html">String</a> representation of a <a href="../standard-data-types/procedures/single.html">Single</a>.<br>
+</div><b><a href="procedures/mkshort.html">MKShort</a></b><br>
+<div class="indent">Returns a two character <a href="../operators/preprocessor-operators/procedures/string.html">String</a> representation of a <a href="../standard-data-types/procedures/short.html">Short</a>.<br>
+</div><b><a href="procedures/cvd.html">CVD</a></b><br>
+<div class="indent">Returns a <a href="../mathematical-functions/procedures/double.html">Double</a> representation of an eight character <a href="../operators/preprocessor-operators/procedures/string.html">String</a>.<br>
+</div><b><a href="procedures/cvi.html">CVI</a></b><br>
+<div class="indent">Returns an <a href="../standard-data-types/procedures/integer.html">Integer</a> representation of a four character <a href="../operators/preprocessor-operators/procedures/string.html">String</a>.<br>
+</div><b><a href="procedures/cvl.html">CVL</a></b><br>
+<div class="indent">Returns a <a href="../standard-data-types/procedures/long.html">Long</a> representation of a four character <a href="../operators/preprocessor-operators/procedures/string.html">String</a>.<br>
+</div><b><a href="procedures/cvlongint.html">CVLongInt</a></b><br>
+<div class="indent">Returns a <a href="../standard-data-types/procedures/longint.html">LongInt</a> representation of an eight character <a href="../operators/preprocessor-operators/procedures/string.html">String</a>.<br>
+</div><b><a href="procedures/cvs.html">CVS</a></b><br>
+<div class="indent">Returns a <a href="../standard-data-types/procedures/single.html">Single</a> representation of a four character <a href="../operators/preprocessor-operators/procedures/string.html">String</a>.<br>
+</div><b><a href="procedures/cvshort.html">CVShort</a></b><br>
+<div class="indent">Returns a <a href="../standard-data-types/procedures/short.html">Short</a> representation of a two character <a href="../operators/preprocessor-operators/procedures/string.html">String</a>.<br>
+<br>
+</div></div><a></a><b><u>Working with Substrings</u></b><br>
+<div class="indent"><b><a href="procedures/left.html">Left</a></b><br>
+<div class="indent">Returns a substring of the leftmost characters in a string.<br>
+</div><b><a href="procedures/mid-function.html">Mid (Function)</a></b><br>
+<div class="indent">Returns a substring of a string.<br>
+</div><b><a href="procedures/right.html">Right</a></b><br>
+<div class="indent">Returns a substring of the rightmost characters in a string.<br>
+</div><b><a href="procedures/lcase.html">LCase</a></b><br>
+<div class="indent">Returns a copy of a string converted to lowercase alpha characters.<br>
+</div><b><a href="procedures/ucase.html">UCase</a></b><br>
+<div class="indent">Returns a copy of a string converted to uppercase alpha characters.<br>
+</div><b><a href="procedures/ltrim.html">LTrim</a></b><br>
+<div class="indent">Removes surrounding substrings or characters on the left side of a string.<br>
+</div><b><a href="procedures/rtrim.html">RTrim</a></b><br>
+<div class="indent">Removes surrounding substrings or characters on the right side of a string.<br>
+</div><b><a href="procedures/trim.html">Trim</a></b><br>
+<div class="indent">Removes surrounding substrings or characters on the left and right side of a string.<br>
+</div><b><a href="procedures/instr.html">InStr</a></b><br>
+<div class="indent">Returns the first occurrence of a substring or character within a string.<br>
+</div><b><a href="procedures/instrrev.html">InStrRev</a></b><br>
+<div class="indent">Returns the last occurrence of a substring or character within a string.<br>
+</div><b><a href="procedures/mid-statement.html">Mid (Statement)</a></b><br>
+<div class="indent">Copies a substring to a substring of a string.<br>
+</div><b><a href="procedures/lset.html">LSet</a></b><br>
+<div class="indent">Left-justifies a string.<br>
+</div><b><a href="procedures/rset.html">RSet</a></b><br>
+<div class="indent">Right-justifies a string.<br>
+</div></div></td></tr></table><div>&nbsp;</div></div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../index.html">Home</a> ·
+         <a href="../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../nav.js?v=70a6b70236"></script>
+<script src="../../search-index.js"></script>
+<script src="../../assets/app.js?v=456d079659"></script>
+<script src="../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

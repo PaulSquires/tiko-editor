@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CComboEx.HasEditChanged — Help Center</title>
+<meta name="description" content="Determines whether or not the user has changed the text of a ComboBoxEx edit control.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/ccomboex/ccomboex-haseditchanged.html">
+<meta property="og:title" content="CComboEx.HasEditChanged">
+<meta property="og:description" content="Determines whether or not the user has changed the text of a ComboBoxEx edit control.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/ccomboex/ccomboex-haseditchanged.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-controls/ccomboex/ccomboex-haseditchanged.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../ccombo-class.html">CCombo Class</a></div>
+<h1>CComboEx.HasEditChanged<span class="h1kind">method</span></h1>
+<p class="lede">Determines whether or not the user has changed the text of a ComboBoxEx edit control.</p>
+<div class="badges"><a class="badge" href="../../index.html">Windows</a><span class="badge">method</span><span class="badge">CCombo.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION HasEditChanged (BYVAL hComboEx AS HWND) AS BOOLEAN</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>hComboEx</code></td><td></td><td>The handle of the ComboBoxEx control.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>Returns TRUE if the text in the control's edit box has been changed, or FALSE otherwise.</p>
+<h2>Description</h2>
+<p>Determines whether the user has changed the text of a ComboBoxEx edit control.</p>
+<h2>Remarks</h2>
+<p>A ComboBoxEx control uses an edit box control when it is set to the CBS_DROPDOWN style. You can retrieve the edit box control's window handle by sending a CBEM_GETEDITCONTROL message.</p>
+<p>When the user begins editing, you will receive a CBEN_BEGINEDIT notification. When editing is complete, or the focus changes, you will receive a CBEN_ENDEDIT notification. The CBEM_HASEDITCHANGED message is only useful for determining whether the text has been changed if it is sent before the CBEN_ENDEDIT notification. If the message is sent afterward, it will return FALSE. For example, suppose the user starts to edit the text in the edit box but changes focus, generating a CBEN_ENDEDIT notification. If you then send a CBEM_HASEDITCHANGED message, it will return FALSE, even though the text has been changed.</p>
+<p>The CBS_SIMPLE style does not work correctly with CBEM_HASEDITCHANGED.</p>
+<h2>Example</h2>
+<p>DIM bChanged AS BOOLEAN = CComboEx.HasEditChanged(hComboEx)</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CCombo.inc</code></li><li>Defined in <span class="srcref">AfxNova/CCombo.inc:795</span></li><li>Documented in <span class="srcref">Windows/WIndows Controls/CCombo Class.md</span></li><li>Topic: <a href="../ccombo-class.html">CCombo Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

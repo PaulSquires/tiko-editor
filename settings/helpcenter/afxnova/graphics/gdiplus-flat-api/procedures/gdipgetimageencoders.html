@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GdipGetImageEncoders — Help Center</title>
+<meta name="description" content="The **GdipGetImageEncoders** function gets an array of **ImageCodecInfo** structures that contain information about the available image encoders.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipgetimageencoders.html">
+<meta property="og:title" content="GdipGetImageEncoders">
+<meta property="og:description" content="The **GdipGetImageEncoders** function gets an array of **ImageCodecInfo** structures that contain information about the available image encoders.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipgetimageencoders.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/procedures/gdipgetimageencoders.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../graphics-functions.html">Graphics Functions</a></div>
+<h1>GdipGetImageEncoders<span class="h1kind">function</span></h1>
+<p class="lede">The **GdipGetImageEncoders** function gets an array of **ImageCodecInfo** structures that contain information about the available image encoders.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GetImageEncoders (BYVAL numEncoders AS UINT, BYVAL size AS UINT, BYVAL encoders AS ImageCodecInfo PTR) AS GpStatus</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>numEncoders</code></td><td></td><td>[in] Long ingteger value that specifies the number of available image encoders. Call <strong>GdipGetImageEncodersSize</strong> to determine this number.</td></tr><tr><td><code>size</code></td><td></td><td>[in] Long ingteger value that specifies the size, in bytes, of the array of <strong>ImageCodecInfo</strong> structures. Call <strong>GdipGetImageEncodersSize</strong> to determine this number.</td></tr><tr><td><code>encoders</code></td><td></td><td>[out] Pointer to a buffer that receives the array of <strong>ImageCodecInfo</strong> structures. You must allocate memory for this buffer. Call <strong>GdipGetImageEncodersSize</strong> to determine the size of the required buffer.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>The <strong>GdipGetImageEncoders</strong> function gets an array of <strong>ImageCodecInfo</strong> structures that contain information about the available image encoders.</p>
+<h2>Examples</h2>
+<p>'#CONSOLE ON #define _WIN32_WINNT &amp;h0602 #INCLUDE ONCE "AfxNova/AfxGdiPlus.inc"</p>
+<p>' Lists Available Image Encoders</p>
+<p>' // Initialize GDI+ DIM token AS ULONG_PTR = AfxGdipInit</p>
+<p>DIM hStatus AS LONG DIM numEncoders AS UINT DIM size AS UINT</p>
+<p>' // Get size and count of decoders hStatus = GdipGetImageEncodersSize(@numEncoders, @size) IF hStatus &lt;&gt; 0 OR size = 0 THEN PRINT "Failed to get decoder size: "; hStatus END END IF</p>
+<p>' // Allocate memory for encoder array DIM encoders AS ImageCodecInfo PTR encoders = CAllocate(size)</p>
+<p>' // Get encoder info hStatus = GdipGetImageEncoders(numEncoders, size, encoders) IF hStatus &lt;&gt; 0 THEN PRINT "Failed to get image encoders: "; hStatus Deallocate(encoders) END END IF</p>
+<p>' // Print encoder details FOR i AS LONG = 0 TO numEncoders - 1 DIM codec AS ImageCodecInfo PTR = encoders + i PRINT "Format: "; *codec-&gt;FormatDescription PRINT "MimeType: "; *codec-&gt;MimeType PRINT "DLL: "; *codec-&gt;DllName PRINT "Filename Extension: "; *codec-&gt;FilenameExtension PRINT "--------------------------------" NEXT</p>
+<p>' // Cleanup Deallocate((encoders))</p>
+<p>' // Shutdown GDI+ AfxGdipShutdown token</p>
+<p>PRINT PRINT "Press any key" SLEEP</p>
+<p>' ======================================================================================== ' Helper function to retrieve the encoder's clsid ' Parameter: ' - wszMimeType = Mime type. ' Return value: '   The encoder clsid. ' ======================================================================================== PRIVATE FUNCTION AfxGdipGetEncoderClsid (BYREF wszMimeType AS WSTRING) AS GUID ' // Initialize Gdiplus DIM token AS ULONG_PTR = AfxGdipInit IF token = 0 THEN EXIT FUNCTION ' // The GdipGetImageEncodersSize function gets the number of available image encoders ' // and the total size of the array of ImageCodecInfo structures DIM numEncoders AS DWORD, nSize AS DWORD GdipGetImageEncodersSize(@numEncoders, @nSize) DIM pImageCodecInfo AS ImageCodecInfo PTR pImageCodecInfo = CAllocate(nSize, 1) ' // Gets an array of ImageCodecInfo structures that contain information about the ' // available image encoders. DIM hr AS LONG = GdipGetImageEncoders(numEncoders, nSize, pImageCodecInfo) IF hr = 0 THEN</p>
+<pre class="code"><code>DIM i AS LONG
+  FOR i = 0 TO numEncoders - 1
+     IF UCASE(*CAST(WSTRING PTR, pImageCodecInfo[i].MimeType)) = UCASE(wszMimeType) THEN
+        FUNCTION = pImageCodecInfo[i].Clsid
+        EXIT FOR
+     END IF
+  NEXT</code></pre>
+<p>END IF Deallocate(pImageCodecInfo) ' // Shutdown Gdiplus GdiplusShutdown token END FUNCTION ' ========================================================================================</p>
+<p>' // Get the CLSID for the .jog mime type DIM clsidEncoder AS GUID = AfxGdipGetEncoderClsid("image/png")</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/AfxGdiPlus.bi:1978</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Flat  Api/GdiPlusGraphics.md</span></li><li>Topic: <a href="../graphics-functions.html">Graphics Functions</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

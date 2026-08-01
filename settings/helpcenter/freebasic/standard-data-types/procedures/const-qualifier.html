@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Const (Qualifier) — Help Center</title>
+<meta name="description" content="Specifies that a data type or pointer data type is read only.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/standard-data-types/procedures/const-qualifier.html">
+<meta property="og:title" content="Const (Qualifier)">
+<meta property="og:description" content="Specifies that a data type or pointer data type is read only.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/standard-data-types/procedures/const-qualifier.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/standard-data-types/procedures/const-qualifier.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>Const (Qualifier)<span class="h1kind">keyword</span></h1>
+<p class="lede">Specifies that a data type or pointer data type is read only.</p>
+<div class="badges"><a class="badge" href="../index.html">Standard Data Types</a><span class="badge">keyword</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>... As [Const] datatype [ [Const] Ptr ... ]</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>datatype</code></td><td></td><td>Name of a standard or user defined data type.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<br>
+Specifies that the <code><i>datatype</i></code> or <code><a href="pointer-ptr.html">Ptr</a></code> immediately to the right of the <code><b>Const</b></code> qualifier is to be considered as read only.  Read-only (<code><b>Const</b></code>) declarations are a measure of type safety that can be read as 'promises not to change.'  The compiler uses the const declarations to check operations on variables and parameters and generate an error at compile time if their data could potentially change.  There is no runtime overhead for using <code><b>Const</b></code> qualifiers since all of the checks are made at compile time.<br>
+<br>
+<code><b>Const</b></code> can be used anywhere data type declarations are made.  This includes variables, parameters, function return results, user defined type fields, type aliases, and casting.  The <code><i>datatype</i></code> can be any built-in standard data type or user defined type.<br>
+<br>
+Read-only variables must have an initializer since modifying a read-only variable through an assignment will generate a compiler error.  The initializer may appear after the declaration of the variable.<br>
+<br>
+Both non-const and const variables may be passed to a procedure expecting a const parameter.  However, a const variable may not be passed to a procedure taking a non-const parameter, and will generate a compile error.<br>
+<br>
+Procedures can be overloaded based on the const-ness of parameters.  For example a procedure can be overloaded where one version of the procedure takes a <code>'byref foo as bar'</code> parameter and another version of the procedure takes a <code>'byref foo as const bar'</code> parameter.<br>
+<br>
+With pointer declarations, <code><b>Const</b></code> can be used to indicate which part of the pointer declaration is read-only (all other parts are by default read-write).  The read-only portion of the pointer data type could be the pointer itself (the address), what the pointer points to (the data), or both.  In a declaration with more than one level of <code><a href="pointer-ptr.html">Ptr</a></code> indirection, the right most <code><a href="pointer-ptr.html">Ptr</a></code> indicates the highest order level of indirection and is therefore dereferenced first.<br>
+<br>
+The compiler has an internal hard-limit of eight (8) levels of pointer indirection with respect to const qualifiers and the behavior of using <code><b>Const</b></code> with <code><a href="pointer-ptr.html">Ptr</a></code> data types having greater than eight (8) levels of indirection is undefined.<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Differences from QB</h3><br>
+<ul><li> New to FreeBASIC<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="../../variable-declarations/procedures/const.html">Const</a></code><br>
+<li> <code><a href="../../user-defined-types/procedures/const-member.html">Const (Member)</a></code><br>
+<li> <code><a href="../../variable-declarations/procedures/dim.html">Dim</a></code><br>
+<li> <code><a href="../../operators/operators/procedures/type-udt.html">Type</a></code><br>
+<br>
+</li></li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-cm">'' Const Variables</span>
+
+
+
+<span class="tok-cm">'' procedure taking a const parameter</span>
+
+<span class="tok-kw">Sub</span> <span>proc1</span><span>(</span> <span class="tok-kw">ByRef</span> <span>x</span> <span class="tok-kw">As</span> <span class="tok-kw">Const</span> <span class="tok-kw">Integer</span> <span>)</span>
+
+
+
+  <span class="tok-cm">'' can't change x because it is const</span>
+
+  <span class="tok-cm">'' x = 10 '' compile error</span>
+
+
+
+  <span class="tok-cm">'' but we can use it in expressions and</span>
+
+  <span class="tok-cm">'' assign it to other variables</span>
+
+  <span class="tok-kw">Dim</span> <span>y</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+  <span>y</span> <span>=</span> <span>x</span>
+
+  <span>y</span> <span>=</span> <span>y</span> <span>*</span> <span>x</span> <span>+</span> <span>x</span>
+
+
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-cm">'' procedure taking a non-const parameter</span>
+
+<span class="tok-kw">Sub</span> <span>proc2</span><span>(</span> <span class="tok-kw">ByRef</span> <span>x</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>)</span>
+
+  <span class="tok-cm">'' we can change the value</span>
+
+  <span>x</span> <span>=</span> <span class="tok-nu">10</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-cm">'' declare a non-const and const variable</span>
+
+<span class="tok-kw">Dim</span> <span>a</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+<span class="tok-kw">Dim</span> <span>b</span> <span class="tok-kw">As</span> <span class="tok-kw">Const</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">5</span>
+
+
+
+<span class="tok-cm">'' proc1() will accept a non-const or const</span>
+
+<span class="tok-cm">'' argument because proc1() promises not to</span>
+
+<span class="tok-cm">'' change the variable passed to it.</span>
+
+<span>proc1</span><span>(</span> <span>a</span> <span>)</span>
+
+<span>proc1</span><span>(</span> <span>b</span> <span>)</span>
+
+
+
+<span class="tok-cm">'' proc2() will accept a non-const argument</span>
+
+<span>proc2</span><span>(</span> <span>a</span> <span>)</span>
+
+
+
+<span class="tok-cm">'' but not a const argument because proc2()</span>
+
+<span class="tok-cm">'' might change the variable's data and we</span>
+
+<span class="tok-cm">'' promised that 'b' would not change.</span>
+
+<span class="tok-cm">'' proc2( b ) '' compile error</span></pre></code><br>
+<br>
+<code><pre class="code"><span class="tok-cm">'' Const Pointers</span>
+
+
+
+<span class="tok-cm">'' an integer</span>
+
+<span class="tok-kw">Dim</span> <span>x</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">1</span>
+
+<span class="tok-kw">Dim</span> <span>y</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">2</span>
+
+<span class="tok-kw">Dim</span> <span>z</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">3</span>
+
+
+
+<span class="tok-cm">'' To check that the compiler generates errors</span>
+
+<span class="tok-cm">'' when attempting to reassign const variables,</span>
+
+<span class="tok-cm">'' uncomment the assignments below.</span>
+
+
+
+<span class="tok-cm">''</span>
+
+<span class="tok-kw">Scope</span>
+
+  <span class="tok-cm">'' a pointer to an integer</span>
+
+  <span class="tok-kw">Dim</span> <span>p</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span class="tok-kw">Ptr</span> <span>=</span> <span>@</span><span>x</span>
+
+
+
+  <span>p</span> <span>=</span> <span>@</span><span>y</span>       <span class="tok-cm">/' OK - pointer can be changed '/</span>
+
+  <span>*</span><span>p</span> <span>=</span> <span>z</span>       <span class="tok-cm">/' OK - data can be changed '/</span>
+
+
+
+<span class="tok-kw">End</span> <span class="tok-kw">Scope</span>
+
+
+
+<span class="tok-cm">''</span>
+
+<span class="tok-kw">Scope</span>
+
+  <span class="tok-cm">'' a pointer to a constant integer</span>
+
+  <span class="tok-kw">Dim</span> <span>p</span> <span class="tok-kw">As</span> <span class="tok-kw">Const</span> <span class="tok-kw">Integer</span> <span class="tok-kw">Ptr</span> <span>=</span> <span>@</span><span>x</span>
+
+
+
+  <span>p</span> <span>=</span> <span>@</span><span>y</span>       <span class="tok-cm">/' OK - pointer can be changed '/</span>
+
+  <span class="tok-cm">'' *p = z    /' Error - data is const '/</span>
+
+
+
+<span class="tok-kw">End</span> <span class="tok-kw">Scope</span>
+
+
+
+<span class="tok-cm">''</span>
+
+<span class="tok-kw">Scope</span>
+
+  <span class="tok-cm">'' a constant pointer to an integer</span>
+
+  <span class="tok-kw">Dim</span> <span>p</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span class="tok-kw">Const</span> <span class="tok-kw">Ptr</span> <span>=</span> <span>@</span><span>x</span>
+
+
+
+  <span class="tok-cm">'' p = @y    /' Error - pointer is const '/</span>
+
+  <span>*</span><span>p</span> <span>=</span> <span>z</span>       <span class="tok-cm">/' OK - data can be changed '/</span>
+
+
+
+<span class="tok-kw">End</span> <span class="tok-kw">Scope</span>
+
+
+
+<span class="tok-cm">''</span>
+
+<span class="tok-kw">Scope</span>
+
+  <span class="tok-cm">'' a constant pointer to a constant integer</span>
+
+  <span class="tok-kw">Dim</span> <span>p</span> <span class="tok-kw">As</span> <span class="tok-kw">Const</span> <span class="tok-kw">Integer</span> <span class="tok-kw">Const</span> <span class="tok-kw">Ptr</span> <span>=</span> <span>@</span><span>x</span>
+
+
+
+  <span class="tok-cm">'' p = @y    /' Error - pointer is const '/</span>
+
+  <span class="tok-cm">'' *p = z    /' Error - data is const '/</span>
+
+
+
+<span class="tok-kw">End</span> <span class="tok-kw">Scope</span></pre></code><br>
+<br>
+<code><pre class="code"><span class="tok-cm">'' Const Parameters in an Overloaded Procedure</span>
+
+
+
+<span class="tok-cm">'' procedure with non-const parameter</span>
+
+<span class="tok-kw">Sub</span> <span>foo</span> <span class="tok-kw">Overload</span><span>(</span> <span class="tok-kw">ByRef</span> <span>n</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>)</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;called 'foo( byref n as integer )'&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-cm">'' procedure with const parameter</span>
+
+<span class="tok-kw">Sub</span> <span>foo</span> <span class="tok-kw">Overload</span><span>(</span> <span class="tok-kw">ByRef</span> <span>n</span> <span class="tok-kw">As</span> <span class="tok-kw">Const</span> <span class="tok-kw">Integer</span> <span>)</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;called 'foo( byref n as const integer )'&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-kw">Dim</span> <span>x</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">1</span>
+
+<span class="tok-kw">Dim</span> <span>y</span> <span class="tok-kw">As</span> <span class="tok-kw">Const</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">2</span>
+
+
+
+<span>foo</span><span>(</span> <span>x</span> <span>)</span>
+
+<span>foo</span><span>(</span> <span>y</span> <span>)</span>
+
+
+
+<span class="tok-cm">'' OUTPUT:</span>
+
+<span class="tok-cm">'' called 'foo( byref n as integer )'</span>
+
+<span class="tok-cm">'' called 'foo( byref n as const integer )'</span></pre></code><br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgConstQualifier.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

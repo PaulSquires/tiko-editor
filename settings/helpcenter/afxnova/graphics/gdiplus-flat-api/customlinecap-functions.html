@@ -1,0 +1,843 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CustomLineCap Functions — Help Center</title>
+<meta name="description" content="CustomLineCap Functions — 14 documented members. Graphics reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/customlinecap-functions.html">
+<meta property="og:title" content="CustomLineCap Functions">
+<meta property="og:description" content="CustomLineCap Functions — 14 documented members. Graphics reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/customlinecap-functions.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/customlinecap-functions.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span>Graphics</div>
+<h1>CustomLineCap Functions</h1>
+<h2>Members (14)</h2>
+<div class="memberlist"><a href="procedures/gdipclonecustomlinecap.html"><span class="m-n">GdipCloneCustomLineCap</span><span class="m-d">Copies the contents of the existing object into a new **CustomLineCap** object.</span></a><a href="procedures/gdipcreatecustomlinecap.html"><span class="m-n">GdipCreateCustomLineCap</span><span class="m-d">Creates a **CustomLineCap** object.</span></a><a href="procedures/gdipdeletecustomlinecap.html"><span class="m-n">GdipDeleteCustomLineCap</span><span class="m-d">Deletes a **CustomLineCap** object.</span></a><a href="procedures/gdipgetcustomlinecapbasecap.html"><span class="m-n">GdipGetCustomLineCapBaseCap</span><span class="m-d">Gets the style of the base cap. The base cap is a **LineCap** object used as a cap at the end of a line along with this **CustomLineCap** object.</span></a><a href="procedures/gdipgetcustomlinecapbaseinset.html"><span class="m-n">GdipGetCustomLineCapBaseInset</span><span class="m-d">Gets the base inset value of this custom line cap. This is the distance between the end of a line and the base cap.</span></a><a href="procedures/gdipgetcustomlinecapstrokecaps.html"><span class="m-n">GdipGetCustomLineCapStrokeCaps</span><span class="m-d">Gets the end cap styles for both the start line cap and the end line cap. Line caps are **LineCap** objects that end the individual lines within a path.</span></a><a href="procedures/gdipgetcustomlinecapstrokejoin.html"><span class="m-n">GdipGetCustomLineCapStrokeJoin</span><span class="m-d">Returns the style of **LineJoin** used to join multiple lines in the same **GraphicsPath** object.</span></a><a href="procedures/gdipgetcustomlinecaptype.html"><span class="m-n">GdipGetCustomLineCapType</span><span class="m-d">Gets the type of the **CustomLineCap** specified by *customCap*.</span></a><a href="procedures/gdipgetcustomlinecapwidthscale.html"><span class="m-n">GdipGetCustomLineCapWidthScale</span><span class="m-d">Gets the value of the scale width.</span></a><a href="procedures/gdipsetcustomlinecapbasecap.html"><span class="m-n">GdipSetCustomLineCapBaseCap</span><span class="m-d">Sets the **LineCap** that appears as part of this **CustomLineCap** at the end of a line.</span></a><a href="procedures/gdipsetcustomlinecapbaseinset.html"><span class="m-n">GdipSetCustomLineCapBaseInset</span><span class="m-d">Sets the base inset value of this custom line cap. This is the distance between the end of a line and the base cap.</span></a><a href="procedures/gdipsetcustomlinecapstrokecaps.html"><span class="m-n">GdipSetCustomLineCapStrokeCaps</span><span class="m-d">Sets the **LineCap** objects used to start and end lines within the **GraphicsPath** object that defines this **CustomLineCap** object.</span></a><a href="procedures/gdipsetcustomlinecapstrokejoin.html"><span class="m-n">GdipSetCustomLineCapStrokeJoin</span><span class="m-d">Sets the style of line join for the stroke.</span></a><a href="procedures/gdipsetcustomlinecapwidthscale.html"><span class="m-n">GdipSetCustomLineCapWidthScale</span><span class="m-d">Sets the value of the scale width.</span></a></div>
+<h2>Documentation</h2>
+<h2 id="customlinecap-functions">CustomLineCap Functions</h2>
+<p>A line cap defines the style of graphic used to draw the ends of a line. It can be various shapes, such as a square, circle, or diamond. A custom line cap is defined by the path that draws it. The path is drawn by using a <strong>Pen</strong> object to draw the outline of a shape or by using a <strong>Brush</strong> object to fill the interior. The cap can be used on either or both ends of the line. Spacing can be adjusted between the end caps and the line.</p>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="procedures/gdipclonecustomlinecap.html">GdipCloneCustomLineCap</a></td><td>Copies the contents of the existing object into a new <strong>CustomLineCap</strong> object.</td></tr><tr><td><a href="procedures/gdipcreatecustomlinecap.html">GdipCreateCustomLineCap</a></td><td>Creates a <strong>CustomLineCap</strong> object.</td></tr><tr><td><a href="procedures/gdipdeletecustomlinecap.html">GdipDeleteCustomLineCap</a></td><td>Deletes a <strong>CustomLineCap</strong> object.</td></tr><tr><td><a href="procedures/gdipgetcustomlinecapbasecap.html">GdipGetCustomLineCapBaseCap</a></td><td>Gets the style of the base cap. The base cap is a <strong>LineCap</strong> object used as a cap at the end of a line along with this <strong>CustomLineCap</strong> object.</td></tr><tr><td><a href="procedures/gdipgetcustomlinecapbaseinset.html">GdipGetCustomLineCapBaseInset</a></td><td>Gets the base inset value of this custom line cap. This is the distance between the end of a line and the base cap.</td></tr><tr><td><a href="procedures/gdipgetcustomlinecapstrokecaps.html">GdipGetCustomLineCapStrokeCaps</a></td><td>Gets the end cap styles for both the start line cap and the end line cap. Line caps are <strong>LineCap</strong> objects that end the individual lines within a path.</td></tr><tr><td><a href="procedures/gdipgetcustomlinecapstrokejoin.html">GdipGetCustomLineCapStrokeJoin</a></td><td>Returns the style of <strong>LineJoin</strong> used to join multiple lines in the same <strong>GraphicsPath</strong> object.</td></tr><tr><td><a href="procedures/gdipgetcustomlinecaptype.html">GdipGetCustomLineCapType</a></td><td>Gets the type of the <strong>CustomLineCap</strong> specified by <em>customCap</em>.</td></tr><tr><td><a href="procedures/gdipgetcustomlinecapwidthscale.html">GdipGetCustomLineCapWidthScale</a></td><td>Gets the value of the scale width.</td></tr><tr><td><a href="procedures/gdipsetcustomlinecapbasecap.html">GdipSetCustomLineCapBaseCap</a></td><td>Sets the <strong>LineCap</strong> that appears as part of this <strong>CustomLineCap</strong> at the end of a line.</td></tr><tr><td><a href="procedures/gdipsetcustomlinecapbaseinset.html">GdipSetCustomLineCapBaseInset</a></td><td>Sets the base inset value of this custom line cap. This is the distance between the end of a line and the base cap.</td></tr><tr><td><a href="procedures/gdipsetcustomlinecapstrokecaps.html">GdipSetCustomLineCapStrokeCaps</a></td><td>Sets the <strong>LineCap</strong> objects used to start and end lines within the <strong>GraphicsPath</strong> object that defines this <strong>CustomLineCap</strong> object.</td></tr><tr><td><a href="procedures/gdipsetcustomlinecapstrokejoin.html">GdipSetCustomLineCapStrokeJoin</a></td><td>Sets the style of line join for the stroke.</td></tr><tr><td><a href="procedures/gdipsetcustomlinecapwidthscale.html">GdipSetCustomLineCapWidthScale</a></td><td>Sets the value of the scale width.</td></tr></tbody></table></div>
+<hr>
+<h3 id="gdipclonecustomlinecap">GdipCloneCustomLineCap</h3>
+<p>Copies the contents of the existing object into a new <strong>CustomLineCap</strong> object.</p>
+<pre class="code"><code>FUNCTION GdipCloneCustomLineCap (BYVAL customCap AS GpCustomLineCap PTR, _
+   BYVAL clonedCap AS GpCustomLineCap PTR PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>customCap</em></td><td>[in] Pointer to a <strong>CustomLineCap</strong> object.</td></tr><tr><td><em>clonedCap</em></td><td>[out] Pointer to a <strong>CustomLineCap</strong> object variable that receives a pointer to the new <strong>CustomLineCap</strong> object.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<p>The following example creates a CustomLineCap object with a stroke path, creates a second CustomLineCap object by cloning the first, and then assigns the cloned cap to a Pen object. It then draws a line by using the Pen object.</p>
+<pre class="code"><code>' ========================================================================================
+SUB Example_Clone (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the window device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE, dpiY AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM ryRatio AS SINGLE = dpiY / 96
+
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Create a path and add two lines to it
+   DIM capPath AS GpPath PTR
+   hStatus = GdipCreatePath(FillModeAlternate, @capPath)
+   DIM pts(0 TO 2) AS GpPointF = {(-15, -15), (0, 0), (15, -15)}
+   hStatus = GdipAddPathLine2(capPath, @pts(0), 3)
+
+   ' // Create the first CustomLineCap object
+   DIM firstCap AS GpCustomLineCap PTR
+   hStatus = GdipCreateCustomLineCap(NULL, capPath, LineCapFlat, 0, @firstCap)
+
+   ' // Clone the first CustomLineCap into secondCap
+   DIM secondCap AS GpCustomLineCap PTR
+   hStatus = GdipCloneCustomLineCap(firstCap, @secondCap)
+
+   ' // Create a violet Pen with width 1
+   DIM pen AS GpPen PTR
+   hStatus = GdipCreatePen1(ARGB_VIOLET, 1, UnitWorld, @pen)
+
+   ' // Assign the cloned cap as the end cap of the pen
+   hStatus = GdipSetPenCustomEndCap(pen, secondCap)
+
+   ' // Draw a line using the pen
+   hStatus = GdipDrawLine(graphics, pen, 0, 0, 100, 100)
+
+   ' // Clean up resources
+   IF pen THEN GdipDeletePen(pen)
+   IF secondCap THEN GdipDeleteCustomLineCap(secondCap)
+   IF firstCap THEN GdipDeleteCustomLineCap(firstCap)
+   IF capPath THEN GdipDeletePath(capPath)
+   IF graphics THEN GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdipcreatecustomlinecap">GdipCreateCustomLineCap</h3>
+<p>Creates a <strong>CustomLineCap</strong> object.</p>
+<pre class="code"><code>FUNCTION GdipCreateCustomLineCap (BYVAL fillPath AS GpPath PTR, BYVAL strokePath AS GpPath PTR, _
+   BYVAL baseCap AS GpLineCap, BYVAL baseInset AS REAL, BYVAL customCap AS GpCustomLineCap PTR PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>fillPath</em></td><td>[in] Pointer to a <strong>Path</strong> object.</td></tr><tr><td><em>strokePath</em></td><td>[in] Pointer to a <strong>Path</strong> object.</td></tr><tr><td><em>baseCap</em></td><td>[in] Element of the <em>LineCap</em> enumeration that specifies the line cap that will be used. The default value is <em>LineCapFlat</em>.</td></tr><tr><td><em>baseInset</em></td><td>[in] The default value is 0.</td></tr><tr><td><em>customCap</em></td><td>[out] Pointer to a variable that receives a pointer to the new <strong>CustomLineCap</strong> object.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>The <em>fillPath</em> and <em>strokePath</em> parameters cannot be used at the same time. You should pass <strong>NULL</strong> to one of those two parameters. If you pass nonnull values to both parameters, then <em>fillPath</em> is ignored.</p>
+<pre class="code"><code>' ========================================================================================
+SUB Example_CreateCustomLineCap (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Create an empty Path object for the custom cap
+   DIM capPath AS GpPath PTR
+   GdipCreatePath(FillModeAlternate, @capPath)
+
+   ' // Create a CustomLineCap using the empty path
+   DIM customCap AS GpCustomLineCap PTR
+   GdipCreateCustomLineCap(NULL, capPath, LineCapFlat, 0, @customCap)
+
+   ' // Create a green Pen with width 10
+   DIM pen AS GpPen PTR
+   GdipCreatePen1(ARGB_RED, 10, UnitWorld, @pen)
+
+   ' // Assign the custom cap as the end cap of the pen
+   GdipSetPenCustomEndCap(pen, customCap)
+
+   ' // Draw a line using the pen and graphics object
+   GdipDrawLine(graphics, pen, 0, 0, 100, 100)
+
+   ' // Clean up resources
+   IF pen THEN GdipDeletePen(pen)
+   IF customCap THEN GdipDeleteCustomLineCap(customCap)
+   IF capPath THEN GdipDeletePath(capPath)
+   IF graphics THEN GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdipdeletecustomlinecap">GdipDeleteCustomLineCap</h3>
+<p>Deletes a <strong>CustomLineCap</strong> object.</p>
+<pre class="code"><code>FUNCTION GdipDeleteCustomLineCap (BYVAL customCap AS GpCustomLineCap PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>customCap</em></td><td>[in] Pointer to a <strong>CustomLineCap</strong> object.</td></tr></tbody></table></div>
+<hr>
+<h3 id="gdipgetcustomlinecapbasecap">GdipGetCustomLineCapBaseCap</h3>
+<p>Gets the style of the base cap. The base cap is a <strong>LineCap</strong> object used as a cap at the end of a line along with this <strong>CustomLineCap</strong> object.</p>
+<pre class="code"><code>FUNCTION GdipGetCustomLineCapBaseCap (BYVAL customCap AS GpCustomLineCap PTR, _
+   BYVAL baseCap AS GpLineCap PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>customCap</em></td><td>[in] Pointer to a <strong>CustomLineCap</strong> object.</td></tr><tr><td><em>baseCap</em></td><td>[out] Pointer to a <em>GpLineCap</em> variable that receives the value of the line cap used at the base of the line.</td></tr></tbody></table></div>
+<p>The following example creates a CustomLineCap object, sets its base cap, and then gets the base cap and assigns it to a Pen object. It then uses the Pen object to draw a line.</p>
+<pre class="code"><code>' ========================================================================================
+SUB Example_GetBaseCap (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Create an empty Path object for the custom cap
+   DIM capPath AS GpPath PTR
+   GdipCreatePath(FillModeAlternate, @capPath)
+
+   ' // Create a CustomLineCap using the empty path
+   DIM customCap AS GpCustomLineCap PTR
+   GdipCreateCustomLineCap(NULL, capPath, LineCapFlat, 0, @customCap)
+
+   ' // Set the base cap style to LineCapRound
+   GdipSetCustomLineCapBaseCap(customCap, LineCapRound)
+
+   ' // Get the base cap of custCap
+   DIM baseCap AS LineCap
+   GdipGetCustomLineCapBaseCap(customCap, @baseCap)
+
+   ' // Create a green Pen with width 10
+   DIM pen AS GpPen PTR
+   GdipCreatePen1(ARGB_LIGHTGREEN, 10, UnitWorld, @pen)
+
+   ' // Assign the custom cap as the end cap of the pen
+   GdipSetPenCustomEndCap(pen, customCap)
+   GdipSetPenEndCap(pen, baseCap)
+
+   ' // Draw a line using the pen and graphics object
+   GdipDrawLine(graphics, pen, 0, 0, 100, 100)
+
+   ' // Clean up resources
+   IF pen THEN GdipDeletePen(pen)
+   IF customCap THEN GdipDeleteCustomLineCap(customCap)
+   IF capPath THEN GdipDeletePath(capPath)
+   IF graphics THEN GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdipgetcustomlinecapbaseinset">GdipGetCustomLineCapBaseInset</h3>
+<p>Gets the base inset value of this custom line cap. This is the distance between the end of a line and the base cap.</p>
+<pre class="code"><code>FUNCTION GdipGetCustomLineCapBaseInset (BYVAL customCap AS GpCustomLineCap PTR, BYVAL inset AS REAL PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>customCap</em></td><td>[in] Pointer to a <strong>CustomLineCap</strong> object.</td></tr><tr><td><em>inset</em></td><td>[in] Single precision value that specifies the distance, in units, from the base cap to the start of the line.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<p>The following example creates a CustomLineCap object, gets the base inset of the cap, and then creates a second CustomLineCap object that uses the same base inset.</p>
+<pre class="code"><code>' ========================================================================================
+SUB Example_GetBaseInset (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Create a path and add two lines to it
+   DIM capPath AS GpPath PTR
+   hStatus = GdipCreatePath(FillModeAlternate, @capPath)
+   DIM pts(0 TO 2) AS GpPointF = {(-15, -15), (0, 0), (15, -15)}
+   hStatus = GdipAddPathLine2(capPath, @pts(0), 3)
+
+   ' // Create a CustomLineCap with a base cap set to LineCapRound and baseInset = 5
+   DIM custCap AS GpCustomLineCap PTR
+   hStatus = GdipCreateCustomLineCap(NULL, capPath, LineCapRound, 5, @custCap)
+
+   ' // Get the base inset from custCap
+   DIM baseInset AS SINGLE
+   hStatus = GdipGetCustomLineCapBaseInset(custCap, @baseInset)
+
+   ' // Create a second CustomLineCap using the same baseInset
+   DIM insetCap AS GpCustomLineCap PTR
+   hStatus = GdipCreateCustomLineCap(NULL, capPath, LineCapRound, baseInset, @insetCap)
+
+   ' // Create a blue Pen with width 5
+   DIM pen AS GpPen PTR
+   hStatus = GdipCreatePen1(ARGB_BLUE, 5, UnitWorld, @pen)
+
+   ' // Assign insetCap as the custom end cap
+   hStatus = GdipSetPenCustomEndCap(pen, insetCap)
+
+   ' // Draw a line using the pen
+   hStatus = GdipDrawLine(graphics, pen, 10, 10, 200, 200)
+
+   ' // Clean up resources
+   IF pen THEN GdipDeletePen(pen)
+   IF insetCap THEN GdipDeleteCustomLineCap(insetCap)
+   IF custCap THEN GdipDeleteCustomLineCap(custCap)
+   IF capPath THEN GdipDeletePath(capPath)
+   IF graphics THEN GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdipgetcustomlinecapstrokecaps">GdipGetCustomLineCapStrokeCaps</h3>
+<p>Gets the end cap styles for both the start line cap and the end line cap. Line caps are <strong>LineCap</strong> objects that end the individual lines within a path.</p>
+<pre class="code"><code>FUNCTION GdipGetCustomLineCapStrokeCaps (BYVAL customCap AS GpCustomLineCap PTR, _
+   BYVAL startCap AS GpLineCap PTR, BYVAL endCap AS GpLineCap PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>customCap</em></td><td>[in] Pointer to a <strong>CustomLineCap</strong> object.</td></tr><tr><td><em>startCap</em></td><td>[out] Pointer to a variable that receives an element of the <strong>LineCap</strong> enumeration that indicates the line cap used at the start of the line to be drawn.</td></tr><tr><td><em>endCap</em></td><td>[out] Pointer to a variable that receives an element of the <strong>LineCap</strong> enumeration that indicates the line cap used at the end of the line to be drawn.</td></tr></tbody></table></div>
+<hr>
+<h3 id="gdipgetcustomlinecapstrokejoin">GdipGetCustomLineCapStrokeJoin</h3>
+<p>Returns the style of <strong>LineJoin</strong> used to join multiple lines in the same <strong>GraphicsPath</strong> object.</p>
+<pre class="code"><code>FUNCTION GdipGetCustomLineCapStrokeJoin (BYVAL customCap AS GpCustomLineCap PTR, _
+   BYVAL lineJoin AS GpLineJoin PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>customCap</em></td><td>[in] Pointer to a <strong>CustomLineCap</strong> object.</td></tr><tr><td><em>lineJoin</em></td><td>[out] The style of line join.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>The <strong>CustomLineCap</strong> object uses a path and a stroke to define the end cap. The stroke is contained in a <strong>GraphicsPath</strong> object, which can contain more than one figure. If there is more than one figure in the <strong>GraphicsPath</strong> object, the stroke join determines how their joint is graphically displayed.</p>
+<h5 id="example">Example</h5>
+<p>The following example creates a CustomLineCap object with a stroke join. It then gets the stroke join and assigns it as the line join of a Pen object that it then uses to draw a line.</p>
+<pre class="code"><code>' ========================================================================================
+SUB Example_GetStrokeJoin (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Create a path and add two lines to it
+   DIM capPath AS GpPath PTR
+   hStatus = GdipCreatePath(FillModeAlternate, @capPath)
+   DIM pts(0 TO 2) AS GpPointF = {(-15, -15), (0, 0), (15, -15)}
+   hStatus = GdipAddPathLine2(capPath, @pts(0), 3)
+
+   ' // Create a CustomLineCap object
+   DIM custCap AS GpCustomLineCap PTR
+   hStatus = GdipCreateCustomLineCap(NULL, capPath, LineCapRound, 0, @custCap)
+
+   ' // Set the stroke join style
+   hStatus = GdipSetCustomLineCapStrokeJoin(custCap, LineJoinBevel)
+
+   ' // Get the stroke join from custCap
+   DIM strokeJoin AS LineJoin
+   hStatus = GdipGetCustomLineCapStrokeJoin(custCap, @strokeJoin)
+
+   ' // Create a red Pen with width 15.1
+   DIM strokeJoinPen AS GpPen PTR
+   hStatus = GdipCreatePen1(ARGB_RED, 15.1, UnitWorld, @strokeJoinPen)
+
+   ' // Set the line join style on the pen
+   hStatus = GdipSetPenLineJoin(strokeJoinPen, strokeJoin)
+
+   ' // Create a path with two joined lines
+   DIM joinPath AS GpPath PTR
+   hStatus = GdipCreatePath(FillModeAlternate, @joinPath)
+   hStatus = GdipAddPathLine(joinPath, 10, 10, 10, 200)
+   hStatus = GdipAddPathLine(joinPath, 10, 200, 200, 200)
+
+   ' // Draw the path using the pen
+   hStatus = GdipDrawPath(graphics, strokeJoinPen, joinPath)
+
+   ' // Clean up resources
+   IF strokeJoinPen THEN GdipDeletePen(strokeJoinPen)
+   IF custCap THEN GdipDeleteCustomLineCap(custCap)
+   IF capPath THEN GdipDeletePath(capPath)
+   IF joinPath THEN GdipDeletePath(joinPath)
+   IF graphics THEN GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdipgetcustomlinecaptype">GdipGetCustomLineCapType</h3>
+<p>Gets the type of the CustomLineCap specified by <em>customCap</em>.</p>
+<pre class="code"><code>FUNCTION GdipGetCustomLineCapType (BYVAL customCap AS GpCustomLineCap PTR, _
+   BYVAL capType AS CustomLineCapType PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>customCap</em></td><td>[in] Pointer to a <strong>CustomLineCap</strong> object.</td></tr><tr><td><em>capType</em></td><td>[out] Pointer to a variable that receives the type of the <strong>CustomLineCap</strong> specified by <em>customCap</em>.<br> The <em>CustomLineCapType</em> enumeration has two elements: CustomLineCapTypeDefault = 0 and CustomLineCapTypeAdjustableArrow = 1.</td></tr></tbody></table></div>
+<pre class="code"><code>' ========================================================================================
+' The following example creates two AdjustableArrowCap objects, arrowCapStart and
+' arrowCapEnd, and sets the fill mode to TRUE. The code then creates a Pen object and
+' assigns arrowCapStart as the starting line cap for this Pen object and arrowCapEnd as
+' the ending line cap. Next, draws a line.
+' ========================================================================================
+SUB Example_LineCapType (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Create an AdjustableArrowCap that is filled.
+   DIM arrowCapStart AS GpAdjustableArrowCap PTR
+   hStatus = GdipCreateAdjustableArrowCap(10, 10, TRUE, @arrowCapStart)
+   ' // Adjust to DPI by setting the scale width
+   hStatus = GdipSetCustomLineCapWidthScale(arrowCapStart, rxRatio)
+
+   ' // Get the type of CustomLineCap
+   ' // It will return 1 (CustomLineCapTypeAdjustableArrow)
+   DIM nType AS CustomLineCapType
+   hStatus = GdipGetCustomLineCapType(arrowCapStart, @nType)
+   AfxMsg "arrowCapStart type = " &amp; WSTR(nType)
+
+   ' // Create an AdjustableArrowCap that is not filled.
+   DIM arrowCapEnd AS GpAdjustableArrowCap PTR
+   hStatus = GdipCreateAdjustableArrowCap(15, 15, FALSE, @arrowCapEnd)
+   ' // Adjust to DPI by setting the scale width
+   hStatus = GdipSetCustomLineCapWidthScale(arrowCapEnd, rxRatio)
+
+   ' // Get the type of CustomLineCap
+   ' // It will return 1 (CustomLineCapTypeAdjustableArrow)
+   hStatus = GdipGetCustomLineCapType(arrowCapEnd, @nType)
+   AfxMsg "arrowCapEnd type = " &amp; WSTR(nType)
+
+   ' // Create a Pen
+   DIM arrowPen AS GpPen PTR
+   hStatus = GdipCreatePen1(ARGB_Violet, 1, UnitWorld, @arrowPen)
+
+   ' Assign arrowCapStart as the start cap.
+   hStatus = GdipSetPenCustomStartCap(arrowPen, arrowCapStart)
+   ' Assign arrowCapEnd as the end cap.
+   hStatus = GdipSetPenCustomEndCap(arrowPen, arrowCapEnd)
+
+   ' // Draw a line using arrowPen.
+   hStatus = GdipDrawLine(graphics, arrowPen, 0, 0, 100, 100)
+
+   ' // Cleanup
+   IF arrowCapStart THEN GdipDeleteCustomLineCap(arrowCapStart)
+   IF arrowCapEnd THEN GdipDeleteCustomLineCap(arrowCapEnd)
+   IF arrowPen THEN GdipDeletePen(arrowPen)
+   IF graphics THEN GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdipgetcustomlinecapwidthscale">GdipGetCustomLineCapWidthScale</h3>
+<p>Gets the value of the scale width. This is the amount to scale the custom line cap relative to the width of the <strong>Pen</strong> object used to draw a line. The default value of 1.0 does not scale the line cap.</p>
+<pre class="code"><code>FUNCTION GdipGetCustomLineCapWidthScale (BYVAL customCap AS GpCustomLineCap PTR, _
+   BYVAL widthScale AS REAL PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>customCap</em></td><td>[in] Pointer to a <strong>CustomLineCap</strong> object.</td></tr><tr><td><em>widthScale</em></td><td>[in] Pointer to a variable that receives the value of the width-scaling factor.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<p>The following example creates a CustomLineCap object and sets the width scale. It then gets the width scale, assigns the custom cap to a Pen object, and draws a line.</p>
+<pre class="code"><code>' ========================================================================================
+SUB Example_GetWidthScale (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Create a path and add two lines to it
+   DIM capPath AS GpPath PTR
+   hStatus = GdipCreatePath(FillModeAlternate, @capPath)
+   DIM pts(0 TO 2) AS GpPointF = {(-15, -15), (0, 0), (15, -15)}
+   hStatus = GdipAddPathLine2(capPath, @pts(0), 3)
+
+  ' // Create a CustomLineCap
+   DIM custCap AS GpCustomLineCap PTR
+   hStatus = GdipCreateCustomLineCap(NULL, capPath, LineCapRound, 0, @custCap)
+
+   ' // // Set the width scale for custCap.
+   hStatus = GdipSetCustomLineCapWidthScale(custCap, 3)
+
+   ' // Get the width scale from custCap
+   DIM widthScale AS SINGLE
+   hStatus = GdipGetCustomLineCapWidthScale(custCap, @widthScale)
+
+   ' // If the width scale is 3, assign custCap as the end cap of a Pen object and draw a line
+   IF widthScale = 3.0 THEN
+      DIM widthScalePen AS GpPen PTR
+      hStatus = GdipCreatePen1(ARGB_LIGHTGREEN, 1, UnitWorld, @widthScalePen)
+      hStatus = GdipSetPenCustomEndCap(widthScalePen, custCap)
+      hStatus = GdipDrawLine(graphics, widthScalePen, 0, 0, 200, 200)
+      IF widthScalePen THEN GdipDeletePen(widthScalePen)
+   END IF
+
+   ' // Clean up resources
+   IF custCap THEN GdipDeleteCustomLineCap(custCap)
+   IF capPath THEN GdipDeletePath(capPath)
+   IF graphics THEN GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdipsetcustomlinecapbasecap">GdipSetCustomLineCapBaseCap</h3>
+<p>Sets the <strong>LineCap</strong> that appears as part of this <strong>CustomLineCap</strong> at the end of a line.</p>
+<pre class="code"><code>FUNCTION GdipSetCustomLineCapBaseCap (BYVAL customCap AS GpCustomLineCap PTR, _
+   BYVAL baseCap AS GpLineCap) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>customCap</em></td><td>[in] Pointer to a <strong>CustomLineCap</strong> object.</td></tr><tr><td><em>baseCap</em></td><td>[in] Element of the <strong>LineCap</strong> enumeration that specifies the line cap used on the ends of the line to be drawn.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<p>The following example creates a CustomLineCap object and sets its base cap. It then assigns the custom cap as the end cap of a Pen object and draws a line.</p>
+<pre class="code"><code>' ========================================================================================
+SUB Example_SetBaseCap (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Create a path and add two lines to it
+   DIM capPath AS GpPath PTR
+   hStatus = GdipCreatePath(FillModeAlternate, @capPath)
+
+   DIM pts(0 TO 2) AS GpPointF = {(-15, -15), (0, 0), (15, -15)}
+   hStatus = GdipAddPathLine2(capPath, @pts(0), 3)
+
+   ' // Create a CustomLineCap object
+   DIM custCap AS GpCustomLineCap PTR
+   hStatus = GdipCreateCustomLineCap(NULL, capPath, LineCapFlat, 0, @custCap)
+
+   ' // Set the base cap style to LineCapRound
+   hStatus = GdipSetCustomLineCapBaseCap(custCap, LineCapRound)
+
+   ' // Create a blue Pen with width 5.3
+   DIM pen AS GpPen PTR
+   hStatus = GdipCreatePen1(ARGB_BLUE, 5.3, UnitWorld, @pen)
+
+   ' // Assign the custom cap as the end cap of the pen
+   hStatus = GdipSetPenCustomEndCap(pen, custCap)
+
+   ' // Draw a line using the pen
+   hStatus = GdipDrawLine(graphics, pen, 10, 10, 200, 200)
+
+   ' // Clean up resources
+   IF pen THEN GdipDeletePen(pen)
+   IF custCap THEN GdipDeleteCustomLineCap(custCap)
+   IF capPath THEN GdipDeletePath(capPath)
+   IF graphics THEN GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdipsetcustomlinecapbaseinset">GdipSetCustomLineCapBaseInset</h3>
+<p>Sets the base inset value of this custom line cap. This is the distance between the end of a line and the base cap.</p>
+<pre class="code"><code>FUNCTION GdipSetCustomLineCapBaseInset (BYVAL customCap AS GpCustomLineCap PTR, _
+   BYVAL inset AS REAL) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>customCap</em></td><td>[in] Pointer to a <strong>CustomLineCap</strong> object.</td></tr><tr><td><em>inset</em></td><td>[in] Single precision value that specifies the distance, in units, from the base cap to the start of the line. If this value is greater than the length of the line, the behavior of this method is undefined.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<p>The following example creates a CustomLineCap object and sets the base inset of the cap. It then assigns the custom cap to a Pen object and draws a line.</p>
+<pre class="code"><code>' ========================================================================================
+SUB Example_SetBaseInset (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Create a path and add two lines to it
+   DIM capPath AS GpPath PTR
+   hStatus = GdipCreatePath(FillModeAlternate, @capPath)
+   DIM pts(0 TO 2) AS GpPointF = {(-15, -15), (0, 0), (15, -15)}
+   hStatus = GdipAddPathLine2(capPath, @pts(0), 3)
+
+   ' // Create a CustomLineCap object with base cap LineCapRound
+   DIM custCap AS GpCustomLineCap PTR
+   hStatus = GdipCreateCustomLineCap(NULL, capPath, LineCapRound, 0.0, @custCap)
+
+   ' // Set the base inset value
+   hStatus = GdipSetCustomLineCapBaseInset(custCap, 5.0)
+
+   ' // Create a black Pen with width 5.1
+   DIM pen AS GpPen PTR
+   hStatus = GdipCreatePen1(ARGB_BLACK, 5.1, UnitWorld, @pen)
+
+   ' // Assign the custom cap as the end cap of the pen
+   hStatus = GdipSetPenCustomEndCap(pen, custCap)
+
+   ' // Draw a line using the pen
+   hStatus = GdipDrawLine(graphics, pen, 10, 10, 200, 200)
+
+   ' // Clean up resources
+   IF pen THEN GdipDeletePen(pen)
+   IF custCap THEN GdipDeleteCustomLineCap(custCap)
+   IF capPath THEN GdipDeletePath(capPath)
+   IF graphics THEN GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdipsetcustomlinecapstrokecaps">GdipSetCustomLineCapStrokeCaps</h3>
+<p>Sets the <strong>LineCap</strong> objects used to start and end lines within the <strong>GraphicsPath</strong> object that defines this <strong>CustomLineCap</strong> object.</p>
+<pre class="code"><code>FUNCTION GdipSetCustomLineCapStrokeCaps (BYVAL customCap AS GpCustomLineCap PTR, _
+   BYVAL startCap AS GpLineCap, BYVAL endCap AS GpLineCap) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>customCap</em></td><td>[in] Pointer to a <strong>CustomLineCap</strong> object.</td></tr><tr><td><em>startCap</em></td><td>[in] Element of the <strong>LineCap</strong> enumeration that specifies the line cap that will be used for the start of the line to be drawn.</td></tr><tr><td><em>endCap</em></td><td>[[in] Element of the <strong>LineCap</strong> enumeration that specifies the line cap that will be used for the end of the line to be drawn.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<p>The following example creates a CustomLineCap object and sets its start and end stroke caps. It then assigns the custom cap to a Pen object and draws a line.</p>
+<pre class="code"><code>' ========================================================================================
+SUB Example_SetStrokeCaps (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Create a path and add two lines to it
+   DIM capPath AS GpPath PTR
+   hStatus = GdipCreatePath(FillModeAlternate, @capPath)
+   DIM pts(0 TO 2) AS GpPointF = {(-15, -15), (0, 0), (15, -15)}
+   hStatus = GdipAddPathLine2(capPath, @pts(0), 3)
+
+   ' // Create a CustomLineCap object
+   DIM custCap AS GpCustomLineCap PTR
+   hStatus = GdipCreateCustomLineCap(NULL, capPath, LineCapRound, 0.0, @custCap)
+
+   ' // Set the start and end stroke caps
+   hStatus = GdipSetCustomLineCapStrokeCaps(custCap, LineCapTriangle, LineCapRound)
+
+   ' // Create a magenta Pen with width 5.0
+   DIM strokeCapPen AS GpPen PTR
+   hStatus = GdipCreatePen1(GDIP_ARGB(255, 255, 0, 255), 5.0, UnitWorld, @strokeCapPen)
+
+   ' // Assign the custom cap as the end cap of the pen
+   hStatus = GdipSetPenCustomEndCap(strokeCapPen, custCap)
+
+   ' // Draw a line using the pen
+   hStatus = GdipDrawLine(graphics, strokeCapPen, 100, 100, 300, 100)
+
+   ' // Clean up resources
+   IF strokeCapPen THEN GdipDeletePen(strokeCapPen)
+   IF custCap THEN GdipDeleteCustomLineCap(custCap)
+   IF capPath THEN GdipDeletePath(capPath)
+   IF graphics THEN GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdipsetcustomlinecapstrokejoin">GdipSetCustomLineCapStrokeJoin</h3>
+<p>Sets the style of line join for the stroke. The line join specifies how two lines that intersect within the <strong>GraphicsPath</strong> object that makes up the custom line cap are joined.</p>
+<pre class="code"><code>FUNCTION GdipSetCustomLineCapStrokeJoin (BYVAL customCap AS GpCustomLineCap PTR, _
+   BYVAL lineJoin AS GpLineJoin) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>customCap</em></td><td>[in] Pointer to a <strong>CustomLineCap</strong> object.</td></tr><tr><td><em>lineJoin</em></td><td>[in] Element of the <em>LineJoin</em> enumeration that specifies the line join that will be used for two lines that are drawn by the same pen and that have overlapping ends.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<p>The following example creates a CustomLineCap object with a stroke join. It then gets the stroke join and assigns it as the line join of a Pen object that it then uses to draw a line.</p>
+<pre class="code"><code>' ========================================================================================
+SUB Example_SetStrokeJoin (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Create a path and add two lines to it
+   DIM capPath AS GpPath PTR
+   hStatus = GdipCreatePath(FillModeAlternate, @capPath)
+   DIM pts(0 TO 2) AS GpPointF = {(-15, -15), (0, 0), (15, -15)}
+   hStatus = GdipAddPathLine2(capPath, @pts(0), 3)
+
+   ' // Create a CustomLineCap object with base cap LineCapRound
+   DIM custCap AS GpCustomLineCap PTR
+   hStatus = GdipCreateCustomLineCap(NULL, capPath, LineCapRound, 0.0, @custCap)
+
+   ' // Set the stroke join style to LineJoinBevel
+   hStatus = GdipSetCustomLineCapStrokeJoin(custCap, LineJoinBevel)
+
+   ' // Create a red Pen with width 15.1
+   DIM strokeJoinPen AS GpPen PTR
+   hStatus = GdipCreatePen1(ARGB_RED, 15.1, UnitWorld, @strokeJoinPen)
+
+   ' // Assign the custom cap as the end cap of the pen
+   hStatus = GdipSetPenCustomEndCap(strokeJoinPen, custCap)
+
+   ' // Draw a line using the pen
+   hStatus = GdipDrawLine(graphics, strokeJoinPen, 0, 0, 200, 200)
+
+   ' // Clean up resources
+   IF strokeJoinPen THEN GdipDeletePen(strokeJoinPen)
+   IF custCap THEN GdipDeleteCustomLineCap(custCap)
+   IF capPath THEN GdipDeletePath(capPath)
+   IF graphics THEN GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<h5 id="example">Example</h5>
+<p>The following example creates a CustomLineCap object with a stroke join. It then sets the stroke join and assigns the custom cap to a Pen object, which is then used to draw a line.</p>
+<pre class="code"><code>' ========================================================================================
+SUB Example_SetStrokeJoin (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Create a path and add two lines to it
+   DIM capPath AS GpPath PTR
+   hStatus = GdipCreatePath(FillModeAlternate, @capPath)
+   DIM pts(0 TO 2) AS GpPointF = {(-15, -15), (0, 0), (15, -15)}
+   hStatus = GdipAddPathLine2(capPath, @pts(0), 3)
+
+   ' // Create a CustomLineCap object with base cap LineCapRound
+   DIM custCap AS GpCustomLineCap PTR
+   hStatus = GdipCreateCustomLineCap(NULL, capPath, LineCapRound, 0.0, @custCap)
+
+   ' // Set the stroke join style to LineJoinBevel
+   hStatus = GdipSetCustomLineCapStrokeJoin(custCap, LineJoinBevel)
+
+   ' // Create an orange Pen with width 5.0
+   DIM strokeJoinPen AS GpPen PTR
+   hStatus = GdipCreatePen1(GDIP_ARGB(255, 200, 150, 0), 5.0, UnitWorld, @strokeJoinPen)
+
+   ' // Assign the custom cap as the end cap of the pen
+   hStatus = GdipSetPenCustomEndCap(strokeJoinPen, custCap)
+
+   ' // Draw a line using the pen
+   hStatus = GdipDrawLine(graphics, strokeJoinPen, 0, 0, 200, 200)
+
+   ' // Clean up resources
+   IF strokeJoinPen THEN GdipDeletePen(strokeJoinPen)
+   IF custCap THEN GdipDeleteCustomLineCap(custCap)
+   IF capPath THEN GdipDeletePath(capPath)
+   IF graphics THEN GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdipsetcustomlinecapwidthscale">GdipSetCustomLineCapWidthScale</h3>
+<p>Sets the value of the scale width. This is the amount to scale the custom line cap relative to the width of the <strong>Pen</strong> used to draw lines. The default value of 1.0 does not scale the line cap.</p>
+<pre class="code"><code>FUNCTION GdipSetCustomLineCapWidthScale (BYVAL customCap AS GpCustomLineCap PTR, _
+   BYVAL widthScale AS REAL) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>customCap</em></td><td>[in] Pointer to a <strong>CustomLineCap</strong> object.</td></tr><tr><td><em>widthScale</em></td><td>[in] Single precision value that specifies the scaling factor that will be used to scale the line width.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<p>The following example creates a CustomLineCap and sets the width scale. It then assigns the custom cap to a Pen, and draws a line.</p>
+<pre class="code"><code>' ========================================================================================
+SUB Example_SetWidthScale (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Create a path and add two lines to it.
+   DIM capPath AS GpPath PTR
+   DIM pointsf(2) AS GpPointF = {(-15, -15), (0, 0), (15, -15)}
+   hStatus = GdipCreatePath(FillModeAlternate, @capPath)
+   hStatus = GdipAddPathLine2(capPath, @PointsF(0), 3)
+
+  ' // Create a CustomLineCap
+   DIM custCap AS GpCustomLineCap PTR
+   hStatus = GdipCreateCustomLineCap(NULL, capPath, LineCapFlat, 0, @custCap)
+
+   ' // // Set the width scale for custCap.
+   hStatus = GdipSetCustomLineCapWidthScale(custCap, 3)
+
+   ' // Assign custCap to a Pen object and draw a line.
+   DIM widthScalePen AS GpPen PTR
+   hStatus = GdipCreatePen1(ARGB_VIOLET, 1.7, UnitWorld, @widthScalePen)
+   hStatus = GdipSetPenCustomEndCap(widthScalePen, custCap)
+   hStatus = GdipDrawLine(graphics, widthScalePen, 0, 0, 200, 200)
+
+   ' // Cleanup
+   IF widthScalePen THEN GdipDeletePen(widthScalePen)
+   IF custCap THEN GdipDeleteCustomLineCap(custCap)
+   IF capPath THEN GdipDeletePath(capPath)
+   IF graphics THEN GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

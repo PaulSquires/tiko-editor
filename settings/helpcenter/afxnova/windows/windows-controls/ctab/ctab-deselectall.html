@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CTab.DeselectAll — Help Center</title>
+<meta name="description" content="Resets items in a tab control, clearing any that were set to the TCIS_BUTTONPRESSED state.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/ctab/ctab-deselectall.html">
+<meta property="og:title" content="CTab.DeselectAll">
+<meta property="og:description" content="Resets items in a tab control, clearing any that were set to the TCIS_BUTTONPRESSED state.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/ctab/ctab-deselectall.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-controls/ctab/ctab-deselectall.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../ctab-class.html">CTab Class</a></div>
+<h1>CTab.DeselectAll<span class="h1kind">method</span></h1>
+<p class="lede">Resets items in a tab control, clearing any that were set to the TCIS_BUTTONPRESSED state.</p>
+<div class="badges"><a class="badge" href="../../index.html">Windows</a><span class="badge">method</span><span class="badge">CTab.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>SUB DeselectAll (BYVAL hTab AS HWND, BYVAL fExcludeFocus AS BOOLEAN)</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>hTab</code></td><td></td><td>Handle to the tab control.</td></tr><tr><td><code>fExcludeFocus</code></td><td></td><td>Flag value that specifies the scope of the item deselection. If this parameter is set to FALSE, all tab items will be reset. If it is set to TRUE, all but the currently selected tab item will be reset.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Resets items in a tab control, clearing any that were set to the TCIS_BUTTONPRESSED state.</p>
+<h2>Example</h2>
+<p>CTab.DeselectAll(hTab, TRUE)</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CTab.inc</code></li><li>Defined in <span class="srcref">AfxNova/CTab.inc:136</span></li><li>Documented in <span class="srcref">Windows/WIndows Controls/CTab Class.md</span></li><li>Topic: <a href="../ctab-class.html">CTab Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

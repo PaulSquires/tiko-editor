@@ -1,0 +1,920 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Operator Overloading — Help Center</title>
+<meta name="description" content="Operator Overloading — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/operator-overloading.html">
+<meta property="og:title" content="Operator Overloading">
+<meta property="og:description" content="Operator Overloading — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/operator-overloading.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/programmer-s-guide/operator-overloading.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>Operator Overloading</h1>
+<h2>Documentation</h2>
+
+	Changing the way user defined types work with built-in operators.<br>
+<br>
+<a href="#OVERVIEW">Overview</a><br>
+<a href="#GLOBAL">Global Operators</a><br>
+<a href="#MEMBER">Member Operators</a><br>
+<a href="#SPECIAL">Special Cases of Operators: '.' (Member access), '@' (Address of), '-&gt;' (Pointer to member access), and '*' (Value of)</a><br>
+<br>
+<a></a><div>Overview</div><div><br>
+Simply, operators are procedures, and their arguments are called <i>operands</i>. Operators that take one operand (<code><a href="../../operators/logical-operators/procedures/operator-not-complement.html">Operator Not</a></code>) are called <i>unary operators</i>, operators that take two operands (<code><a href="../../operators/operators/procedures/operator-addition.html">Operator +</a></code>) are called <i>binary operators</i> and operators taking three operands (<code><a href="../../miscellaneous-keywords/procedures/iif.html">Operator Iif</a></code>) are called <i>ternary operators</i>.<br>
+<br>
+Most operators are not called like procedures. Instead, their operator symbol is placed next to their operands. For unary operators, their sole operand is placed to the right of the symbol. For binary operators, their operands - referred to as the left and right-hand side operands - are placed to the left and right of the operator symbol. FreeBASIC has one ternary operator, <code><a href="../../miscellaneous-keywords/procedures/iif.html">Operator Iif</a></code>, and it is called like a procedure, with its operands comma-separated surrounded by parenthesis.<br>
+For example, the following code calls <code><a href="../../miscellaneous-keywords/procedures/iif.html">Operator Iif</a></code> to determine if a pointer is valid. If it is, <code><a href="../../operators/pointer-operators/procedures/operator-value-of.html">Operator * (Value Of)</a></code> is called to dereference the pointer, and if not, <code><a href="../../operators/arithmetic-operators/procedures/operator-divide.html">Operator / (Divide)</a></code> is called to find the value of twenty divided by four:<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Dim</span> <span>i</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">420</span>
+
+<span class="tok-kw">Dim</span> <span>p</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span class="tok-kw">Ptr</span> <span>=</span> <span>@</span><span>i</span>
+
+
+
+<span class="tok-kw">Dim</span> <span>result</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-kw">IIf</span><span>(</span> <span>p</span><span>,</span> <span>*</span><span>p</span><span>,</span> <span class="tok-kw">CInt</span><span>(</span> <span class="tok-nu">20</span> <span>/</span> <span class="tok-nu">4</span> <span>)</span> <span>)</span></pre></code><br>
+Notice the call to <code><a href="../../miscellaneous-keywords/procedures/iif.html">Operator Iif</a></code> is similar to a procedure call, while the calls to <code><a href="../../operators/pointer-operators/procedures/operator-value-of.html">Operator * (Value Of)</a></code> and <code><a href="../../operators/arithmetic-operators/procedures/operator-divide.html">Operator / (Divide)</a></code> are not. In the example, <code><i>p</i></code> is the operand to <code><a href="../../operators/pointer-operators/procedures/operator-value-of.html">Operator * (Value Of)</a></code>, and <code><i>20</i></code> and <code><i>4</i></code> are the left and right-hand side operands of <code><a href="../../operators/arithmetic-operators/procedures/operator-divide.html">Operator / (Divide)</a></code>, respectively.<br>
+<br>
+</div>All operators in FreeBASIC are predefined to take operands of standard data types, like <code><a href="../../standard-data-types/procedures/integer.html">Integer</a></code> and <code><a href="../../standard-data-types/procedures/single.html">Single</a></code>, but they may also be overloaded for user-defined types; that is, they can be defined to accept operands that are objects as well. There are two types of operators that can be overloaded, <i>global operators</i> and <i>member operators</i>.<br>
+<br>
+<a></a></div><div>Global Operators</div><div><br>
+Global operators are those that are declared in module-level scope (globally). These are the operators <code><a href="../../operators/arithmetic-operators/procedures/operator-negate.html">- (Negate)</a></code>, <code><a href="../../operators/logical-operators/procedures/operator-not-complement.html">Not (Bitwise Not)</a></code>, <code><a href="../../operators/type-or-class-operators/procedures/operator-pointer-to-member-access.html">-&gt; (Pointer To Member Access)</a></code>, <code><a href="../../operators/pointer-operators/procedures/operator-value-of.html">* (Value Of)</a></code>, <code><a href="../../operators/operators/procedures/operator-addition.html">+ (Add)</a></code>, <code><a href="../../operators/arithmetic-operators/procedures/operator-subtract.html">- (Subtract)</a></code>, <code><a href="../../operators/arithmetic-operators/procedures/operator-multiply.html">* (Multiply)</a></code>, <code><a href="../../operators/arithmetic-operators/procedures/operator-divide.html">/ (Divide)</a></code>, <code><a href="../../operators/arithmetic-operators/procedures/operator-integer-divide.html">\ (Integer Divide)</a></code>, <code><a href="../../operators/string-operators/procedures/operator-string-concatenation-with-conversion.html">&amp; (Concatenate)</a></code>, <code><a href="../../operators/arithmetic-operators/procedures/operator-mod-modulus.html">Mod (Modulus)</a></code>, <code><a href="../../operators/arithmetic-operators/procedures/operator-shl-shift-left.html">Shl (Shift Left)</a></code>, <code><a href="../../operators/arithmetic-operators/procedures/operator-shr-shift-right.html">Shr (Shift Right)</a></code>, <code><a href="../../operators/logical-operators/procedures/operator-and-conjunction.html">And (Bitwise And)</a></code>, <code><a href="../../operators/logical-operators/procedures/operator-or-inclusive-disjunction.html">Or (Bitwise Or)</a></code>, <code><a href="../../operators/logical-operators/procedures/operator-xor-exclusive-disjunction.html">Xor (Bitwise Xor)</a></code>, <code><a href="../../operators/logical-operators/procedures/operator-imp-implication.html">Imp (Bitwise Imp)</a></code>, <code><a href="../../operators/logical-operators/procedures/operator-eqv-equivalence.html">Eqv (Bitwise Eqv)</a></code>, <code><a href="../../operators/arithmetic-operators/procedures/operator-exponentiate.html">^ (Exponentiate)</a></code>, <code><a href="../../operators/relational-operators/procedures/operator-equal.html">= (Equal)</a></code>, <code><a href="../../operators/relational-operators/procedures/operator-not-equal.html">&lt;&gt; (Not Equal)</a></code>, <code><a href="../../operators/relational-operators/procedures/operator-less-than.html">&lt; (Less Than)</a></code>, <code><a href="../../operators/relational-operators/procedures/operator-greater-than.html">&gt; (Greater Than)</a></code>, <code><a href="../../operators/relational-operators/procedures/operator-less-than-or-equal.html">&lt;= (Less Than Or Equal)</a></code>, <code><a href="../../operators/relational-operators/procedures/operator-greater-than-or-equal.html">&gt;= (Greater Than Or Equal)</a></code>, <code><a href="../../mathematical-functions/procedures/abs.html">Abs</a></code>, <code><a href="../../mathematical-functions/procedures/sgn.html">Sgn</a></code>, <code><a href="../../mathematical-functions/procedures/fix.html">Fix</a></code>, <code><a href="../../mathematical-functions/procedures/frac.html">Frac</a></code>, <code><a href="../../mathematical-functions/procedures/int.html">Int</a></code>, <code><a href="../../mathematical-functions/procedures/exp.html">Exp</a></code>, <code><a href="../../mathematical-functions/procedures/log.html">Log</a></code>, <code><a href="../../mathematical-functions/procedures/sin.html">Sin</a></code>, <code><a href="../../mathematical-functions/procedures/asin.html">Asin</a></code>, <code><a href="../../mathematical-functions/procedures/cos.html">Cos</a></code>, <code><a href="../../mathematical-functions/procedures/acos.html">Acos</a></code>, <code><a href="../../mathematical-functions/procedures/tan.html">Tan</a></code>, <code><a href="../../mathematical-functions/procedures/atn.html">Atan</a></code>, <code><a href="../../string-functions/procedures/len.html">Len</a></code>, and <code><a href="../../mathematical-functions/procedures/sqr.html">Sqr</a></code>.<br>
+<br>
+Declaring a custom global operator is similar to declaring a procedure. The <code><a href="../../procedures/procedures/declare.html">Declare</a></code> keyword is used with the <code><a href="../../user-defined-types/procedures/operator.html">Operator</a></code> keyword. The operator symbol is placed next followed by the comma-separated list of parameters surrounded in parenthesis that will represent the operands passed to the operator. Unlike procedures, operators can be overloaded by default, so the <code><a href="../../procedures/procedures/overload.html">Overload</a></code> keyword is not necessary when declaring custom operators. At least one of the operator's parameters must be of user-defined type (after all, operators with built-in type parameters are already defined).<br>
+<br>
+The following example declares the global operators <code><a href="../../operators/arithmetic-operators/procedures/operator-negate.html">- (Negate)</a></code> and <code><a href="../../operators/arithmetic-operators/procedures/operator-multiply.html">+ (Multiply)</a></code> to accept operands of a user-defined type:<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Type</span> <span>Rational</span>
+
+    <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>numerator</span><span>,</span> <span>denominator</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>-</span> <span>(</span><span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>Rational</span><span>)</span> <span class="tok-kw">As</span> <span>Rational</span>
+
+    <span class="tok-kw">Return</span> <span class="tok-kw">Type</span><span>(-</span><span>rhs.numerator</span><span>,</span> <span>rhs.denominator</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>*</span> <span>(</span><span class="tok-kw">ByRef</span> <span>lhs</span> <span class="tok-kw">As</span> <span>Rational</span><span>,</span> <span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>Rational</span><span>)</span> <span class="tok-kw">As</span> <span>Rational</span>
+
+    <span class="tok-kw">Return</span> <span class="tok-kw">Type</span><span>(</span><span>lhs.numerator</span> <span>*</span> <span>rhs.numerator</span><span>,</span> <span>_</span>
+
+        <span>lhs.denominator</span> <span>*</span> <span>rhs.denominator</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>Rational</span> <span>r1</span> <span>=</span> <span>(</span><span class="tok-nu">2</span><span>,</span> <span class="tok-nu">3</span><span>),</span> <span>r2</span> <span>=</span> <span>(</span><span class="tok-nu">3</span><span>,</span> <span class="tok-nu">4</span><span>)</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>Rational</span> <span>r3</span> <span>=</span> <span>-(</span><span>r1</span> <span>*</span> <span>r2</span><span>)</span>
+
+<span class="tok-kw">Print</span> <span>r3.numerator</span> <span>&amp;</span> <span>&quot;/&quot;</span> <span>&amp;</span> <span>r3.denominator</span></pre></code><br>
+Here the global operators are defined for type <code><i>Rational</i></code>, and are used in the initialization expression for <code><i>r3</i></code>. The output is <code><i>-6/12</i></code>.<br>
+<br>
+</div><a></a></div><div>Member Operators</div><div><br>
+Member operators are declared inside a <code><a href="../../operators/operators/procedures/type-udt.html">Type</a></code> or <code><a href="../../operators/operators/procedures/class.html">Class</a></code> definition, like member procedures, and they are the cast and assignment operators <code><a href="../../operators/operator-list/procedures/operator-cast.html">Operator Cast (Cast)</a></code>, <code><a href="../../operators/pointer-operators/procedures/operator-address-of.html">Operator @ (Address Of)</a></code>,  <code><a href="../../operators/indexing-operators/procedures/operator-pointer-index.html">Operator [] (Pointer Index)</a></code>, <code><a href="../../operators/memory-operators/procedures/operator-new-overload.html">Operator New Overload</a></code>, <code><a href="../../operators/memory-operators/procedures/operator-delete-overload.html">Operator Delete Overload</a></code>, <code><a href="../../operators/iterating-operators/procedures/operator-for-iteration.html">Operator For (Iteration)</a></code>, <code><a href="../../operators/iterating-operators/procedures/operator-step-iteration.html">Operator Step (Iteration)</a></code>, <code><a href="../../operators/iterating-operators/procedures/operator-next-iteration.html">Operator Next (Iteration)</a></code>, <code><a href="../../operators/operators/procedures/operator-assign.html">Let (Assign)</a></code>, <code><a href="../../operators/assignment-operators/procedures/operator-add-and-assign.html">+= (Add And Assign)</a></code>, <code><a href="../../operators/assignment-operators/procedures/operator-subtract-and-assign.html">-= (Subtract And Assign)</a></code>, <code><a href="../../operators/assignment-operators/procedures/operator-multiply-and-assign.html">*= (Multiply And Assign)</a></code>, <code><a href="../../operators/assignment-operators/procedures/operator-divide-and-assign.html">/= (Divide And Assign)</a></code>, <code><a href="../../operators/assignment-operators/procedures/operator-integer-divide-and-assign.html">\= (Integer Divide And Assign)</a></code>, <code><a href="../../operators/assignment-operators/procedures/operator-exponentiate-and-assign.html">^= (Exponentiate And Assign)</a></code>, <code><a href="../../operators/assignment-operators/procedures/operator-concatenate-and-assign.html">&amp;= (Concat And Assign)</a></code>, <code><a href="../../operators/assignment-operators/procedures/operator-mod-modulus-and-assign.html">Mod= (Modulus And Assign)</a></code>, <code><a href="../../operators/assignment-operators/procedures/operator-shl-shift-left-and-assign.html">Shl= (Shift Left And Assign)</a></code>, <code><a href="../../operators/assignment-operators/procedures/operator-shr-shift-right-and-assign.html">Shr= (Shift Right And Assign)</a></code>, <code><a href="../../operators/assignment-operators/procedures/operator-and-conjunction-and-assign.html">And= (Conjunction And Assign)</a></code>, <code><a href="../../operators/assignment-operators/procedures/operator-or-inclusive-disjunction-and-assign.html">Or= (Inclusive Disjunction And Assign)</a></code>, <code><a href="../../operators/assignment-operators/procedures/operator-xor-exclusive-disjunction-and-assign.html">Xor= (Exclusive Disjunction And Assign)</a></code>, <code><a href="../../operators/assignment-operators/procedures/operator-imp-implication-and-assign.html">Imp= (Implication And Assign)</a></code> and <code><a href="../../operators/assignment-operators/procedures/operator-eqv-equivalence-and-assign.html">Eqv= (Equivalence And Assign)</a></code>.<br>
+<br>
+When declaring member operators, the <code><a href="../../procedures/procedures/declare.html">Declare</a></code> and <code><a href="../../user-defined-types/procedures/operator.html">Operator</a></code> keywords are used followed by the operator symbol and its parameter list. Like member procedures, member operators are defined outside the <code><a href="../../operators/operators/procedures/type-udt.html">Type</a></code> or <code><a href="../../operators/operators/procedures/class.html">Class</a></code> definition, and the symbol name is prefixed with the name of the <code><a href="../../operators/operators/procedures/type-udt.html">Type</a></code> or <code><a href="../../operators/operators/procedures/class.html">Class</a></code> name.<br>
+<br>
+The following example overloads the member operators <code><a href="../../operators/operator-list/procedures/operator-cast.html">Operator Cast (Cast)</a></code> and <code><a href="../../operators/assignment-operators/procedures/operator-multiply-and-assign.html">*= (Multiply And Assign)</a></code> for objects of a user-defined type:<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Type</span> <span>Rational</span>
+
+    <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>numerator</span><span>,</span> <span>denominator</span>
+
+    
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Cast</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">Double</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Cast</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span>*=</span> <span>(</span><span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>Rational</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>Rational.cast</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">Double</span>
+
+    <span class="tok-kw">Return</span> <span>numerator</span> <span>/</span> <span>denominator</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>Rational.cast</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+    <span class="tok-kw">Return</span> <span>numerator</span> <span>&amp;</span> <span>&quot;/&quot;</span> <span>&amp;</span> <span>denominator</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>Rational.</span><span>*=</span> <span>(</span><span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>Rational</span><span>)</span>
+
+    <span>numerator</span> <span>*=</span> <span>rhs.numerator</span>
+
+    <span>denominator</span> <span>*=</span> <span>rhs.denominator</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>Rational</span> <span>r1</span> <span>=</span> <span>(</span><span class="tok-nu">2</span><span>,</span> <span class="tok-nu">3</span><span>),</span> <span>r2</span> <span>=</span> <span>(</span><span class="tok-nu">3</span><span>,</span> <span class="tok-nu">4</span><span>)</span>
+
+<span>r1</span> <span>*=</span> <span>r2</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Double</span> <span>d</span> <span>=</span> <span>r1</span>
+
+<span class="tok-kw">Print</span> <span>r1</span><span>,</span> <span>d</span></pre></code><br>
+Notice that the member operator <code><a href="../../converting-data-types/procedures/cast.html">Cast (Cast)</a></code> is declared twice, once for the conversion to <code><a href="../../mathematical-functions/procedures/double.html">Double</a></code> and once for the conversion to <code><a href="../../operators/preprocessor-operators/procedures/string.html">String</a></code>. This is the only operator (or procedure) that can be declared multiple times when only the return type differs. The compiler decides which cast overload to call based on how the object is used (in the initialization of the <code><a href="../../mathematical-functions/procedures/double.html">Double</a></code> <code><i>d</i></code>, <code><i>Rational.Cast as double</i></code> is called, and in the <code><a href="../../console-functions/procedures/print.html">Print</a></code> statement, <code><i>Rational.Cast as string</i></code> is used instead).<br>
+<br>
+</div><a></a></div><div>Special Cases of Operators: '.' (Member access), '@' (Address of), '->' (Pointer to member access), and '*' (Value of)</div><div><br>
+<b>-</b> Overloading <code>Operator . (Member access)</code><br>
+<div class="indent">The <code>operator '.' (member access)</code> cannot be overloaded.<br>
+<br>
+</div><b>-</b> Overloading <code>Operator @ (Address of)</code><br>
+<div class="indent">The <code>operator @ (Adress of)</code> is used to access the address of a variable.<br>
+There is no many interest to overload this operator for an object, and moreover if we did, we could no longer access its address.<br>
+<br>
+</div><b>-</b> Overloading <code>Operator -&gt; (Pointer to member access)</code> and <code>Operator * (Value of)</code><br>
+<div class="indent">The <code>operator -&gt; (Pointer to member access)</code> is used to access any member of an object (instance) via a pointer to this instance.<br>
+The <code>operator * (Value of)</code> is used to access to variable via a pointer to this variable.<br>
+Under normal circumstances, the operand of these operators must be a pointer:<br>
+<div class="indent"><code>Declare Operator -&gt; ( ByRef lhs As T Ptr ) ByRef As U<br>
+Declare Operator * ( ByRef rhs As T Ptr ) ByRef As T</code><br>
+<br>
+</div>Overloading of these operators allows you to create a pointer wrapper class and let it behave like the pointer itself:<br>
+<div class="indent"><code>Declare Operator -&gt; ( ByRef lhs As wrapperClass ) ByRef As U<br>
+Declare Operator * ( ByRef rhs As wrapperClass ) ByRef As U</code><br>
+<br>
+</div>The wrapper can be then used (to access a member) like:<br>
+<div class="indent"><code>wrapper-&gt;member</code><br>
+instead of:<br>
+<code>wrapper.realPointer-&gt;member</code><br>
+and:<br>
+<code>(*wrapper).member</code><br>
+instead of:<br>
+<code>(*wrapper.realPointer).member</code><br>
+<br>
+</div>Clarifying the particular case of overloading the <code>operator -&gt; (pointer to member access)</code>:<br>
+<div class="indent"><div class="indent">The <code>operator -&gt; (pointer to member access)</code> exhibits a different behavior from the other operators with respect to overloading:<br>
+<div class="indent">- It doesn't return only the user datatype as indicated in the overloaded procedure header,<br>
+- but it returns this user datatype implicitly followed by the <code>operator . (member access)</code>.<br>
+<br>
+</div></div></div>The <code>operator -&gt; (pointer to member access)</code> is mainly used often in conjunction with the <code>operator * (Value of)</code> to implement "smart pointers".<br>
+<br>
+</div><b>-</b> Using smart pointer<br>
+<div class="indent">The use of smart pointers allows automatic management of dynamic references created by <code>New</code> (each reference is destroyed automatically when its smart pointer goes out of scope), without even making any copy of these references.<br>
+<br>
+Reminder of what a smart pointer:<br>
+<div class="indent">- A smart pointer is an object which behaves like a pointer but does more than a pointer.<br>
+- This object is flexible as a pointer and has the advantage of being an object (like constructor and destructor called automatically).<br>
+- Therefore, the destructor of the smart pointer will be automatically called when this object goes out of scope, and it will delete the user pointer.<br>
+<br>
+</div>As the smart pointer must behave like a pointer, it must support the same interface as a pointer does.<br>
+So it must support the following operations:<br>
+<div class="indent">- Dereferencing (<code>operator * (Value of)</code>)<br>
+- Indirection (<code>operator -&gt; (pointer to member access)</code>)<br>
+<br>
+</div>The <code>operator * (Value of)</code> and the <code>operator -&gt; (pointer to member access)</code> must return references (by means of using <code>Byref As .....</code> in the declaration of there return type).<br>
+<br>
+Example of a smart pointer (to UDT) with an interface:<br>
+<div class="indent">- public default-constructor<br>
+- public copy-constructor<br>
+- public destructor<br>
+- private UDT pointer and public <code>operator cast (Cast)</code> to access it in read only mode<br>
+- private operator <code>let</code> to disallow assignment not implemented here (to avoid copying the pointers values only)<br>
+- <code>operator * (Value of)</code> and <code>operator -&gt; (pointer to member access)</code><br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span>UDT</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>()</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Destructor</span> <span>()</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>s</span> <span>=</span> <span>&quot;object #0&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>UDT</span> <span>()</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;  UDT construction &quot;</span><span>;</span> <span>@</span><span class="tok-kw">This</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Destructor</span> <span>UDT</span> <span>()</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;  UDT destruction &quot;</span><span>;</span> <span>@</span><span class="tok-kw">This</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Destructor</span>
+
+
+
+<span class="tok-kw">Type</span> <span>SmartPointer</span>
+
+    <span class="tok-kw">Public</span><span>:</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>()</span>                            <span class="tok-cm">'' to construct smart pointer (and UDT object)</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>(</span><span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>SmartPointer</span><span>)</span>   <span class="tok-cm">'' to copy construct smart pointer</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Cast</span> <span>()</span> <span class="tok-kw">As</span> <span>UDT</span> <span class="tok-kw">Ptr</span>               <span class="tok-cm">'' to cast private UDT pointer (for read only)</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Destructor</span> <span>()</span>                             <span class="tok-cm">'' to destroy smart pointer (and UDT object)</span>
+
+    <span class="tok-kw">Private</span><span>:</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT</span> <span class="tok-kw">Ptr</span> <span>p</span>                                  <span class="tok-cm">'' private UDT pointer</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Let</span> <span>(</span><span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>SmartPointer</span><span>)</span>  <span class="tok-cm">'' to disallow assignment (to avoid copy of real pointers)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>SmartPointer</span> <span>()</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;SmartPointer construction &quot;</span><span>;</span> <span>@</span><span class="tok-kw">This</span>
+
+    <span>This.p</span> <span>=</span> <span class="tok-kw">New</span> <span>UDT</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>SmartPointer</span> <span>(</span><span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>SmartPointer</span><span>)</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;SmartPointer copy-construction &quot;</span><span>;</span> <span>@</span><span class="tok-kw">This</span><span>;</span> <span>&quot; from &quot;</span><span>;</span> <span>@</span><span>rhs</span>
+
+    <span>This.p</span> <span>=</span> <span class="tok-kw">New</span> <span>UDT</span>
+
+    <span>*</span><span>This.p</span> <span>=</span> <span>*</span><span>rhs.p</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>SmartPointer.Cast</span> <span>()</span> <span class="tok-kw">As</span> <span>UDT</span> <span class="tok-kw">Ptr</span>
+
+    <span class="tok-kw">Return</span> <span>This.p</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Destructor</span> <span>SmartPointer</span> <span>()</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;SmartPointer destruction &quot;</span><span>;</span> <span>@</span><span class="tok-kw">This</span>
+
+    <span class="tok-kw">Delete</span> <span>This.p</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Destructor</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>*</span> <span>(</span><span class="tok-kw">ByRef</span> <span>sp</span> <span class="tok-kw">As</span> <span>SmartPointer</span><span>)</span> <span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>UDT</span>   <span class="tok-cm">'' overloaded operator '*'</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;SmartPointer operator '*'&quot;</span>
+
+    <span class="tok-kw">Return</span> <span>*</span><span class="tok-kw">Cast</span><span>(</span><span>UDT</span> <span class="tok-kw">Ptr</span><span>,</span> <span>sp</span><span>)</span>                        <span class="tok-cm">''    (returning byref)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>                                         <span class="tok-cm">''    to behave as pointer</span>
+
+ 
+
+<span class="tok-kw">Operator</span> <span>-&gt;</span> <span>(</span><span class="tok-kw">ByRef</span> <span>sp</span> <span class="tok-kw">As</span> <span>SmartPointer</span><span>)</span> <span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>UDT</span>  <span class="tok-cm">'' overloaded operator '-&gt;'</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;SmartPointer operator '-&gt;'&quot;</span>
+
+    <span class="tok-kw">Return</span> <span>*</span><span class="tok-kw">Cast</span><span>(</span><span>UDT</span> <span class="tok-kw">Ptr</span><span>,</span> <span>sp</span><span>)</span>                        <span class="tok-cm">''    (returning byref)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>                                         <span class="tok-cm">''    to behave as pointer</span>
+
+ 
+
+
+
+<span class="tok-kw">Scope</span>
+
+    <span class="tok-kw">Dim</span> <span>sp1</span> <span class="tok-kw">As</span> <span>SmartPointer</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;'&quot;</span> <span>&amp;</span> <span>sp1</span><span>-&gt;</span><span>s</span> <span>&amp;</span> <span>&quot;'&quot;</span>
+
+    <span>sp1</span><span>-&gt;</span><span>s</span> <span>=</span> <span>&quot;object #1&quot;</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;'&quot;</span> <span>&amp;</span> <span>sp1</span><span>-&gt;</span><span>s</span> <span>&amp;</span> <span>&quot;'&quot;</span>
+
+    <span class="tok-kw">Print</span>
+
+ 
+
+    <span class="tok-kw">Dim</span> <span>sp2</span> <span class="tok-kw">As</span> <span>SmartPointer</span> <span>=</span> <span>sp1</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;'&quot;</span> <span>&amp;</span> <span>(*</span><span>sp2</span><span>).</span><span>s</span> <span>&amp;</span> <span>&quot;'&quot;</span>
+
+    <span>(*</span><span>sp2</span><span>).</span><span>s</span> <span>=</span> <span>&quot;object #2&quot;</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;'&quot;</span> <span>&amp;</span> <span>(*</span><span>sp2</span><span>).</span><span>s</span> <span>&amp;</span> <span>&quot;'&quot;</span>
+
+    <span class="tok-kw">Print</span>
+
+ 
+
+    <span class="tok-kw">Dim</span> <span>sp3</span> <span class="tok-kw">As</span> <span>SmartPointer</span> <span>=</span> <span>sp1</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;'&quot;</span> <span>&amp;</span> <span>sp3</span><span>-&gt;</span><span>s</span> <span>&amp;</span> <span>&quot;'&quot;</span>
+
+    <span>*</span><span>sp3</span> <span>=</span> <span>*</span><span>sp2</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;'&quot;</span> <span>&amp;</span> <span>sp3</span><span>-&gt;</span><span>s</span> <span>&amp;</span> <span>&quot;'&quot;</span>
+
+    <span>sp3</span><span>-&gt;</span><span>s</span> <span>=</span> <span>&quot;object #3&quot;</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;'&quot;</span> <span>&amp;</span> <span>sp3</span><span>-&gt;</span><span>s</span> <span>&amp;</span> <span>&quot;'&quot;</span>
+
+    <span class="tok-kw">Print</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Scope</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+Example of output:<br>
+<div class="indent"><pre class="code">
+SmartPointer construction 1703576
+  UDT construction 10693312
+SmartPointer operator '->'
+'object #0'
+SmartPointer operator '->'
+SmartPointer operator '->'
+'object #1'
+
+SmartPointer copy-construction 1703524 from 1703576
+  UDT construction 10693384
+SmartPointer operator '*'
+'object #1'
+SmartPointer operator '*'
+SmartPointer operator '*'
+'object #2'
+
+SmartPointer copy-construction 1703472 from 1703576
+  UDT construction 10693456
+SmartPointer operator '->'
+'object #1'
+SmartPointer operator '*'
+SmartPointer operator '*'
+SmartPointer operator '->'
+'object #2'
+SmartPointer operator '->'
+SmartPointer operator '->'
+'object #3'
+
+SmartPointer destruction 1703472
+  UDT destruction 10693456
+SmartPointer destruction 1703524
+  UDT destruction 10693384
+SmartPointer destruction 1703576
+  UDT destruction 10693312
+				</pre></div></div>Example of an extended smart pointer type macro for any UDT (or any predefined type), with an extended interface:<br>
+<div class="indent">- public constructor<br>
+- public reference counter in read only mode<br>
+- public destructor<br>
+- private UDT pointer and 2 public operators <code>cast</code> to access it in read only mode (numeric value and string value)<br>
+- private default-constructor to disallow self construction<br>
+- private copy-constructor to disallow cloning<br>
+- private operator <code>let</code> to disallow assignment<br>
+- <code>operator * (Value of)</code> and <code>operator -&gt; (pointer to member access)</code><br>
+<code><pre class="code"><span>#macro Define_SmartPointer (_UDTname_)
+
+</span>
+
+    <span class="tok-kw">Type</span> <span>SmartPointer_#</span><span>#</span><span>_UDTname_</span>
+
+        <span class="tok-kw">Public</span><span>:</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>(</span><span class="tok-kw">ByVal</span> <span>rhs</span> <span class="tok-kw">As</span> <span>_UDTname_</span> <span class="tok-kw">Ptr</span><span>)</span>              <span class="tok-cm">'' to construct smart pointer</span>
+
+            <span class="tok-cm">'                                                                '' from _UDTname_ pointer,</span>
+
+            <span class="tok-cm">'                                                                '' with reference counter increment</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Static</span> <span class="tok-kw">Function</span> <span>returnCount</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>             <span class="tok-cm">'' to return reference counter value</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Cast</span> <span>()</span> <span class="tok-kw">As</span> <span>_UDTname_</span> <span class="tok-kw">Ptr</span>                     <span class="tok-cm">'' to cast private _UDTname_ pointer</span>
+
+            <span class="tok-cm">'                                                                '' to _UDTname_ pointer (read only)</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Cast</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>                            <span class="tok-cm">'' to cast private _UDTname_ pointer</span>
+
+            <span class="tok-cm">'                                                                '' to string (read only)</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Destructor</span> <span>()</span>                                         <span class="tok-cm">'' to destroy smart pointer</span>
+
+            <span class="tok-cm">'                                                                '' and _UDTname_ object</span>
+
+            <span class="tok-cm">'                                                                '' with reference counter decrement</span>
+
+        <span class="tok-kw">Private</span><span>:</span>
+
+            <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>_UDTname_</span> <span class="tok-kw">Ptr</span> <span>p</span>                                        <span class="tok-cm">'' private _UDTname_ pointer</span>
+
+            <span class="tok-kw">Static</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>Count</span>                                       <span class="tok-cm">'' private reference counter</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>()</span>                                        <span class="tok-cm">'' to disallow default-construction</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>(</span><span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>SmartPointer_#</span><span>#</span><span>_UDTname_</span><span>)</span>   <span class="tok-cm">'' to disallow copy-construction</span>
+
+            <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Let</span> <span>(</span><span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>SmartPointer_#</span><span>#</span><span>_UDTname_</span><span>)</span>  <span class="tok-cm">'' to disallow copy-assignment</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>SmartPointer_#</span><span>#</span><span>_UDTname_.Count</span> <span>=</span> <span class="tok-nu">0</span>
+
+
+
+    <span class="tok-kw">Constructor</span> <span>SmartPointer_#</span><span>#</span><span>_UDTname_</span> <span>(</span><span class="tok-kw">ByVal</span> <span>rhs</span> <span class="tok-kw">As</span> <span>_UDTname_</span> <span class="tok-kw">Ptr</span><span>)</span>
+
+        <span class="tok-kw">If</span> <span>rhs</span> <span>&lt;&gt;</span> <span class="tok-nu">0</span> <span class="tok-kw">Then</span>
+
+            <span>This.p</span> <span>=</span> <span>rhs</span>
+
+            <span>SmartPointer_#</span><span>#</span><span>_UDTname_.count</span> <span>+=</span> <span class="tok-nu">1</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+    <span class="tok-kw">Static</span> <span class="tok-kw">Function</span> <span>SmartPointer_#</span><span>#</span><span>_UDTname_.returnCount</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+        <span class="tok-kw">Return</span> <span>SmartPointer_#</span><span>#</span><span>_UDTname_.count</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+    <span class="tok-kw">Operator</span> <span>SmartPointer_#</span><span>#</span><span>_UDTname_.Cast</span> <span>()</span> <span class="tok-kw">As</span> <span>_UDTname_</span> <span class="tok-kw">Ptr</span>
+
+        <span class="tok-kw">Return</span> <span>This.p</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+    <span class="tok-kw">Operator</span> <span>SmartPointer_#</span><span>#</span><span>_UDTname_.Cast</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+        <span class="tok-kw">Return</span> <span class="tok-kw">Str</span><span>(</span><span>This.p</span><span>)</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+    <span class="tok-kw">Destructor</span> <span>SmartPointer_#</span><span>#</span><span>_UDTname_</span> <span>()</span>
+
+        <span class="tok-kw">If</span> <span>This.p</span> <span>&lt;&gt;</span> <span class="tok-nu">0</span> <span class="tok-kw">Then</span>
+
+            <span class="tok-kw">Delete</span> <span>This.p</span>
+
+            <span>SmartPointer_#</span><span>#</span><span>_UDTname_.count</span> <span>-=</span> <span class="tok-nu">1</span>
+
+            <span>This.p</span> <span>=</span> <span class="tok-nu">0</span>
+
+        <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Destructor</span>
+
+
+
+    <span class="tok-kw">Operator</span> <span>*</span> <span>(</span><span class="tok-kw">ByRef</span> <span>sp</span> <span class="tok-kw">As</span> <span>SmartPointer_#</span><span>#</span><span>_UDTname_</span><span>)</span> <span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>_UDTname_</span>  <span class="tok-cm">'' operator '*' (return byref)</span>
+
+        <span class="tok-cm">'                                                                    '' to behave as pointer</span>
+
+        <span class="tok-kw">Return</span> <span class="tok-kw">ByVal</span> <span>sp</span>                                                   <span class="tok-cm">'' 'Return *sp' would induce an infinite loop</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+    <span class="tok-kw">Operator</span> <span>-&gt;</span> <span>(</span><span class="tok-kw">ByRef</span> <span>sp</span> <span class="tok-kw">As</span> <span>SmartPointer_#</span><span>#</span><span>_UDTname_</span><span>)</span> <span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span>_UDTname_</span>  <span class="tok-cm">'' operator '-&gt;' (return byref)</span>
+
+        <span class="tok-cm">'                                                                     '' to behave as pointer</span>
+
+        <span class="tok-kw">Return</span> <span class="tok-kw">ByVal</span> <span>sp</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span>#endmacro
+
+</span>
+
+<span class="tok-cm">'--------------------------------------------------------------------------------------------------------</span>
+
+
+
+<span class="tok-cm">' Example using all eight keywords of inheritance:</span>
+
+<span class="tok-cm">'   'Extends', 'Base.', 'Base()', 'Object', 'Is' operator, 'Virtual', 'Abstract', 'Override'</span>
+
+
+
+<span class="tok-kw">Type</span> <span>root</span> <span class="tok-kw">Extends</span> <span class="tok-kw">Object</span> <span class="tok-cm">' 'Extends' to activate RTTI by inheritance of predefined Object type</span>
+
+    <span class="tok-kw">Public</span><span>:</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Function</span> <span>ObjectHierarchy</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Function</span> <span>ObjectName</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Abstract</span> <span class="tok-kw">Function</span> <span>ObjectRealType</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>  <span class="tok-cm">'' 'Abstract' declares function without local body</span>
+
+        <span class="tok-cm">'                                                         '' which must be overridden</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Virtual</span> <span class="tok-kw">Destructor</span> <span>()</span>                          <span class="tok-cm">'' 'Virtual' declares destructor</span>
+
+    <span class="tok-kw">Protected</span><span>:</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>()</span>                                 <span class="tok-cm">'' to avoid default-construction from outside Types</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>(</span><span class="tok-kw">ByRef</span> <span>_name</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>=</span> <span>&quot;&quot;</span><span>)</span>       <span class="tok-cm">'' to avoid construction from outside Types</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>(</span><span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>root</span><span>)</span>                <span class="tok-cm">'' to avoid copy-construction from outside Types</span>
+
+        <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Let</span> <span>(</span><span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>root</span><span>)</span>               <span class="tok-cm">'' to avoid copy-assignment from outside Types</span>
+
+    <span class="tok-kw">Private</span><span>:</span>
+
+        <span class="tok-kw">Dim</span> <span class="tok-kw">Name</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>                                                   <span class="tok-cm">'' derived type may be member data empty</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>root</span> <span>()</span>  <span class="tok-cm">'' only to avoid compile error (due to inheritance)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>root</span> <span>(</span><span class="tok-kw">ByRef</span> <span>_name</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>=</span> <span>&quot;&quot;</span><span>)</span>              <span class="tok-cm">'' only to avoid compile error (due to inheritance)</span>
+
+    <span>This.name</span> <span>=</span> <span>_name</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;root constructor:&quot;</span><span>,</span> <span>This.name</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Function</span> <span>root.ObjectHierarchy</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+    <span class="tok-kw">Return</span> <span>&quot;Object(forRTTI) &lt;- root&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Function</span> <span>root.ObjectName</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+    <span class="tok-kw">Return</span> <span>This.name</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Virtual</span> <span class="tok-kw">Destructor</span> <span>root</span> <span>()</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;root destructor:&quot;</span><span>,</span> <span>This.name</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Destructor</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>root.Let</span> <span>(</span><span class="tok-kw">ByRef</span> <span>rhs</span> <span class="tok-kw">As</span> <span>root</span><span>)</span>                      <span class="tok-cm">'' only to avoid compile error (due to onheritance)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+
+
+<span class="tok-kw">Type</span> <span>animal</span> <span class="tok-kw">Extends</span> <span>root</span>                                           <span class="tok-cm">'' 'Extends' to inherit of root</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>(</span><span class="tok-kw">ByRef</span> <span>_name</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>=</span> <span>&quot;&quot;</span><span>)</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Function</span> <span>ObjectHierarchy</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Virtual</span> <span class="tok-kw">Function</span> <span>ObjectRealType</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span class="tok-kw">Override</span>  <span class="tok-cm">'' 'Virtual' declares function with local</span>
+
+    <span class="tok-cm">'                                                              ''    body which can be overridden</span>
+
+    <span class="tok-cm">'                                                              '' 'Override' to check if the function is</span>
+
+    <span class="tok-cm">'                                                              ''    well an override</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Virtual</span> <span class="tok-kw">Destructor</span> <span>()</span> <span class="tok-kw">Override</span>                         <span class="tok-cm">'' 'Virtual' declares destructor with local body</span>
+
+    <span class="tok-cm">'                                                              '' 'Override' to check if the destructor is well an override</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>animal</span> <span>(</span><span class="tok-kw">ByRef</span> <span>_name</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>=</span> <span>&quot;&quot;</span><span>)</span>
+
+    <span class="tok-kw">Base</span><span>(</span><span>_name</span><span>)</span>                                                    <span class="tok-cm">'' 'Base()' allows to call parent constructor</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;  animal constructor:&quot;</span><span>,</span> <span>This.ObjectName</span><span>()</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Function</span> <span>animal.ObjectHierarchy</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+    <span class="tok-kw">Return</span> <span>Base.ObjectHierarchy</span> <span>&amp;</span> <span>&quot; &lt;- animal&quot;</span>                     <span class="tok-cm">'' 'Base.' allows to access to parent member function</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Virtual</span> <span class="tok-kw">Function</span> <span>animal.ObjectRealType</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+    <span class="tok-kw">Return</span> <span>&quot;animal&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Virtual</span> <span class="tok-kw">Destructor</span> <span>animal</span> <span>()</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;  animal destructor:&quot;</span><span>,</span> <span>This.ObjectName</span><span>()</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Destructor</span>
+
+
+
+
+
+<span class="tok-kw">Type</span> <span>dog</span> <span class="tok-kw">Extends</span> <span>animal</span>                                    <span class="tok-cm">'' 'Extends' to inherit of animal</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>(</span><span class="tok-kw">ByRef</span> <span>_name</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>=</span> <span>&quot;&quot;</span><span>)</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Function</span> <span>ObjectHierarchy</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Function</span> <span>ObjectRealType</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span class="tok-kw">Override</span>  <span class="tok-cm">'' 'Override' to check if the function is well an</span>
+
+    <span class="tok-cm">'                                                      ''    override</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Destructor</span> <span>()</span> <span class="tok-kw">Override</span>                         <span class="tok-cm">'' 'Override' to check if the destructor is well an override</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>                                                   <span class="tok-cm">'' derived type may be member data empty</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>dog</span> <span>(</span><span class="tok-kw">ByRef</span> <span>_name</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>=</span> <span>&quot;&quot;</span><span>)</span>
+
+    <span class="tok-kw">Base</span><span>(</span><span>_name</span><span>)</span>                                            <span class="tok-cm">'' 'Base()' allows to call parent constructor</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;    dog constructor:&quot;</span><span>,</span> <span>This.ObjectName</span><span>()</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Function</span> <span>dog.ObjectHierarchy</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+    <span class="tok-kw">Return</span> <span>Base.ObjectHierarchy</span> <span>&amp;</span> <span>&quot; &lt;- dog&quot;</span>                <span class="tok-cm">'' 'Base.' allows to access to parent member function</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Function</span> <span>dog.ObjectRealType</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+    <span class="tok-kw">Return</span> <span>&quot;dog&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Destructor</span> <span>dog</span> <span>()</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;    dog destructor:&quot;</span><span>,</span> <span>This.ObjectName</span><span>()</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Destructor</span>
+
+
+
+
+
+<span class="tok-kw">Type</span> <span>cat</span> <span class="tok-kw">Extends</span> <span>animal</span>                                  <span class="tok-cm">'' 'Extends' to inherit of animal</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>(</span><span class="tok-kw">ByRef</span> <span>_name</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>=</span> <span>&quot;&quot;</span><span>)</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Function</span> <span>ObjectHierarchy</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Function</span> <span>ObjectRealType</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span class="tok-kw">Override</span>  <span class="tok-cm">'' 'Override' to check if the function is well an</span>
+
+    <span class="tok-cm">'                                                      ''    override</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Destructor</span> <span>()</span> <span class="tok-kw">Override</span>                         <span class="tok-cm">'' 'Override' to check if the destructor is well an override</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>                                                   <span class="tok-cm">'' derived type may be member data empty</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>cat</span> <span>(</span><span class="tok-kw">ByRef</span> <span>_name</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>=</span> <span>&quot;&quot;</span><span>)</span>
+
+    <span class="tok-kw">Base</span><span>(</span><span>_name</span><span>)</span>                                            <span class="tok-cm">'' 'Base()' allows to call parent constructor</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;    cat constructor:&quot;</span><span>,</span> <span>This.ObjectName</span><span>()</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Function</span> <span>cat.ObjectHierarchy</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+    <span class="tok-kw">Return</span> <span>Base.ObjectHierarchy</span> <span>&amp;</span> <span>&quot; &lt;- cat&quot;</span>                <span class="tok-cm">'' 'Base.' allows to access to parent member function</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Function</span> <span>cat.ObjectRealType</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+    <span class="tok-kw">Return</span> <span>&quot;cat&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Destructor</span> <span>cat</span> <span>()</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;    cat destructor:&quot;</span><span>,</span> <span>This.ObjectName</span><span>()</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Destructor</span>
+
+
+
+
+
+<span class="tok-kw">Sub</span> <span>PrintInfo</span> <span>(</span><span class="tok-kw">ByVal</span> <span>p</span> <span class="tok-kw">As</span> <span>root</span> <span class="tok-kw">Ptr</span><span>)</span>                                       <span class="tok-cm">'' parameter is a 'root Ptr' or compatible (smart pointer)</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;  &quot;</span> <span>&amp;</span> <span>p</span><span>-&gt;</span><span>ObjectName</span><span>,</span> <span>&quot;  &quot;</span> <span>&amp;</span> <span>p</span><span>-&gt;</span><span>ObjectRealType</span><span>,</span> <span>&quot;           &quot;</span><span>;</span>
+
+    <span class="tok-kw">If</span> <span>*</span><span>p</span> <span class="tok-kw">Is</span> <span>dog</span> <span class="tok-kw">Then</span>                                                     <span class="tok-cm">'' 'Is' allows to check compatibility with type symbol</span>
+
+        <span class="tok-kw">Print</span>  <span class="tok-kw">Cast</span><span>(</span><span>dog</span> <span class="tok-kw">Ptr</span><span>,</span> <span>p</span><span>)-&gt;</span><span>ObjectHierarchy</span>
+
+    <span class="tok-kw">ElseIf</span> <span>*</span><span>p</span> <span class="tok-kw">Is</span> <span>cat</span> <span class="tok-kw">Then</span>                                                 <span class="tok-cm">'' 'Is' allows to check compatibility with type symbol</span>
+
+        <span class="tok-kw">Print</span> <span class="tok-kw">Cast</span><span>(</span><span>cat</span> <span class="tok-kw">Ptr</span><span>,</span> <span>p</span><span>)-&gt;</span><span>ObjectHierarchy</span>
+
+    <span class="tok-kw">ElseIf</span> <span>*</span><span>p</span> <span class="tok-kw">Is</span> <span>animal</span> <span class="tok-kw">Then</span>                                              <span class="tok-cm">'' 'Is' allows to check compatibility with type symbol</span>
+
+        <span class="tok-kw">Print</span> <span class="tok-kw">Cast</span><span>(</span><span>animal</span> <span class="tok-kw">Ptr</span><span>,</span> <span>p</span><span>)-&gt;</span><span>ObjectHierarchy</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+
+
+<span>Define_SmartPointer</span><span>(</span><span>root</span><span>)</span>  <span class="tok-cm">'' smart pointer definition</span>
+
+
+
+<span class="tok-kw">Scope</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;reference counter value:&quot;</span><span>;</span> <span>SmartPointer_root.returnCount</span><span>()</span>
+
+    <span class="tok-kw">Print</span>
+
+    <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>SmartPointer_root</span> <span>sp</span><span>(</span><span class="tok-nu">2</span><span>)</span> <span>=</span> <span>{</span><span class="tok-kw">New</span> <span>animal</span><span>(</span><span>&quot;Mouse&quot;</span><span>),</span> <span class="tok-kw">New</span> <span>dog</span><span>(</span><span>&quot;Buddy&quot;</span><span>),</span> <span class="tok-kw">New</span> <span>cat</span><span>(</span><span>&quot;Tiger&quot;</span><span>)}</span>
+
+    <span class="tok-kw">Print</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;reference counter value:&quot;</span><span>;</span> <span>SmartPointer_root.returnCount</span><span>()</span>
+
+    <span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">2</span>
+
+        <span class="tok-kw">Print</span> <span>&quot;  &quot;</span> <span>&amp;</span> <span>sp</span><span>(</span><span>I</span><span>),</span> <span>sp</span><span>(</span><span>I</span><span>)-&gt;</span><span>ObjectName</span><span>()</span>
+
+    <span class="tok-kw">Next</span> <span>I</span>
+
+    <span class="tok-kw">Print</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;Name:&quot;</span><span>,</span> <span>&quot;Object (real):         Hierarchy:&quot;</span>
+
+    <span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">0</span> <span class="tok-kw">To</span> <span class="tok-nu">2</span>
+
+        <span>#if __FB_VERSION__ = &quot;1.10.0&quot; Or __FB_VERSION__ = &quot;1.10.1&quot;
+
+</span>            <span>PrintInfo</span><span>(</span><span class="tok-kw">Cast</span><span>(</span><span>root</span> <span class="tok-kw">Ptr</span><span>,</span> <span>sp</span><span>(</span><span>I</span><span>)))</span>  <span class="tok-cm">'' bug workaround</span>
+
+        <span>#else
+
+</span>            <span>PrintInfo</span><span>(</span><span>sp</span><span>(</span><span>I</span><span>))</span>
+
+        <span>#endif
+
+</span>    <span class="tok-kw">Next</span> <span>I</span>
+
+    <span class="tok-kw">Print</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Scope</span>
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Print</span> <span>&quot;reference counter value:&quot;</span><span>;</span> <span>SmartPointer_root.returnCount</span><span>()</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+Example of output:<br>
+<div class="indent"><pre class="code">
+reference counter value: 0
+
+root constructor:           Mouse
+  animal constructor:       Mouse
+root constructor:           Buddy
+  animal constructor:       Buddy
+	dog constructor:        Buddy
+root constructor:           Tiger
+  animal constructor:       Tiger
+	cat constructor:        Tiger
+
+reference counter value: 3
+  11145960    Mouse
+  11151496    Buddy
+  11151616    Tiger
+
+Name:         Object (real):         Hierarchy:
+  Mouse         animal                 Object(forRTTI) <- root <- animal
+  Buddy         dog                    Object(forRTTI) <- root <- animal <- dog
+  Tiger         cat                    Object(forRTTI) <- root <- animal <- cat
+
+	cat destructor:         Tiger
+  animal destructor:        Tiger
+root destructor:            Tiger
+	dog destructor:         Buddy
+  animal destructor:        Buddy
+root destructor:            Buddy
+  animal destructor:        Mouse
+root destructor:            Mouse
+
+reference counter value: 0
+				</pre><br>
+</div></div></div></div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

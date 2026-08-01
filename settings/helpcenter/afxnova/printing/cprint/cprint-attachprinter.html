@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CPrint.AttachPrinter — Help Center</title>
+<meta name="description" content="Attaches the specified printer to the class.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/printing/cprint/cprint-attachprinter.html">
+<meta property="og:title" content="CPrint.AttachPrinter">
+<meta property="og:description" content="Attaches the specified printer to the class.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/printing/cprint/cprint-attachprinter.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/printing/cprint/cprint-attachprinter.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cprint-class.html">CPrint Class</a></div>
+<h1>CPrint.AttachPrinter<span class="h1kind">method</span></h1>
+<p class="lede">Attaches the specified printer to the class.</p>
+<div class="badges"><a class="badge" href="../index.html">Printing</a><span class="badge">method</span><span class="badge">CPrint.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION AttachPrinter (BYREF wszPrinterName AS WSTRING) AS BOOLEAN</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>wszPrinterName</code></td><td></td><td>The name of the printer to attach (as shown in the Devices and Printers applet of the Control Panel).</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>BOOLEAN. True or false.</p>
+<h2>Description</h2>
+<p>Creates a device context (DC) for the specified printer and attaches it to the class.</p>
+<h2>Examples</h2>
+<p>'#CONSOLE ON #define UNICODE #INCLUDE ONCE "AfxNova/CPrint.inc" #INCLUDE ONCE "AfxNova/CGdiplus.inc" USING AfxNova</p>
+<p>DIM pPrint AS CPrint pPrint.AttachPrinter("Microsoft Print to PDF") DIM hdcPrint AS HDC = pPrint.GetDC DIM docInfo AS DOCINFOW docInfo.cbSize = SIZEOF(DOCINFOW) DIM wszDocName AS WSTRING * 260 = "GdiplusPrint" docInfo.lpszDocName = VARPTR(wszDocName) StartDocW(hdcPrint, @docInfo) StartPage(hdcPrint) SCOPE DIM graphics AS CGpGraphics = hdcPrint DIM pen AS CGpPen = GDIP_ARGB(255, 0, 0, 0) graphics.DrawLine(@pen, 50, 50, 350, 550) graphics.DrawRectangle(@pen, 50, 50, 300, 500) graphics.DrawEllipse(@pen, 50, 50, 300, 500) END SCOPE EndPage(hdcPrint) EndDoc(hdcPrint)</p>
+<p>PRINT "Press any key to end..." SLEEP</p>
+<p>The following console example creates an instance of the <code>CPrint</code> class to attach the "Microsoft Print to PDF" driver, retrieves a handle to its device context and uses the WinFBX GDI+ classes to draw the contents of the page.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CPrint.inc</code></li><li>Defined in <span class="srcref">AfxNova/CPrint.inc:229</span></li><li>Documented in <span class="srcref">Printing/CPrint Class.md</span></li><li>Topic: <a href="../cprint-class.html">CPrint Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

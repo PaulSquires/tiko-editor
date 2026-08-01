@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Date and Time Functions — Help Center</title>
+<meta name="description" content="Date and Time Functions — 0 documented members. Date and Time Functions reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/date-and-time-functions/date-and-time-functions.html">
+<meta property="og:title" content="Date and Time Functions">
+<meta property="og:description" content="Date and Time Functions — 0 documented members. Date and Time Functions reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/date-and-time-functions/date-and-time-functions.html">
+<link rel="stylesheet" href="../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/date-and-time-functions/date-and-time-functions.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Date and Time Functions</div>
+<h1>Date and Time Functions</h1>
+<h2>Documentation</h2>
+
+	Procedures that work with dates and time.<br>
+<br>
+<div>Description</div><div><br>
+<div class="indent">These procedures provide ways to deal with date and time intervals in a consistent way. Additional procedures are provided to set and get the current system date and time, and to retrieve a time stamp for sensitive timing algorithms.<br>
+<br>
+</div><b><a href="#VBCOMPAT">VisualBasic compatible procedures</a></b><br>
+<div class="indent">Procedures for working with so-called <a href="../tutorials/programmer-s-guide/date-serials.html">date serials</a>, similar to those used in Visual Basic(r).<br>
+</div><b><a href="#DATETIME">Date and time procedures</a></b><br>
+<div class="indent">Procedures for working with the system date and time.<br>
+<br>
+</div><table><tr><td><a></a><b><u>VisualBasic compatible procedures</u></b><br>
+<div class="indent"><b><a href="procedures/now.html">Now</a></b><br>
+<div class="indent">Gets a <a href="../tutorials/programmer-s-guide/date-serials.html">date serial</a> of the current date and time.<br>
+<br>
+</div><b>Creating Date serials</b><br>
+<div class="indent"><b><a href="procedures/dateserial.html">DateSerial</a></b><br>
+<div class="indent">Gets the <a href="../tutorials/programmer-s-guide/date-serials.html">date serial</a> representation of a date.<br>
+</div><b><a href="procedures/timeserial.html">TimeSerial</a></b><br>
+<div class="indent">Gets the <a href="../tutorials/programmer-s-guide/date-serials.html">date serial</a> representation of a time.<br>
+</div><b><a href="procedures/datevalue.html">DateValue</a></b><br>
+<div class="indent">Gets the <a href="../tutorials/programmer-s-guide/date-serials.html">date serial</a> representation of a date expressed as a <code><a href="../operators/preprocessor-operators/procedures/string.html">String</a></code>.<br>
+</div><b><a href="procedures/timevalue.html">TimeValue</a></b><br>
+<div class="indent">Gets the <a href="../tutorials/programmer-s-guide/date-serials.html">date serial</a> representation of a time expressed as a <code><a href="../operators/preprocessor-operators/procedures/string.html">String</a></code>.<br>
+<br>
+</div></div><b>Extracting information from Date serials</b><br>
+<div class="indent"><b><a href="procedures/second.html">Second</a></b><br>
+<div class="indent">Gets the seconds of the hour from a <a href="../tutorials/programmer-s-guide/date-serials.html">date serial</a>.<br>
+</div><b><a href="procedures/minute.html">Minute</a></b><br>
+<div class="indent">Gets the minutes of the hour from a <a href="../tutorials/programmer-s-guide/date-serials.html">date serial</a>.<br>
+</div><b><a href="procedures/hour.html">Hour</a></b><br>
+<div class="indent">Gets the hour of the day from a <a href="../tutorials/programmer-s-guide/date-serials.html">date serial</a>.<br>
+</div><b><a href="procedures/day.html">Day</a></b><br>
+<div class="indent">Gets the day of the month from a <a href="../tutorials/programmer-s-guide/date-serials.html">date serial</a>.<br>
+</div><b><a href="procedures/weekday.html">Weekday</a></b><br>
+<div class="indent">Gets the day of the week from a <a href="../tutorials/programmer-s-guide/date-serials.html">date serial</a>.<br>
+</div><b><a href="procedures/month.html">Month</a></b><br>
+<div class="indent">Gets the month of the year from a <a href="../tutorials/programmer-s-guide/date-serials.html">date serial</a>.<br>
+</div><b><a href="procedures/year.html">Year</a></b><br>
+<div class="indent">Gets the year from a <a href="../tutorials/programmer-s-guide/date-serials.html">date serial</a>.<br>
+</div><b><a href="procedures/datepart.html">DatePart</a></b><br>
+<div class="indent">Gets a time interval from a <a href="../tutorials/programmer-s-guide/date-serials.html">date serial</a>.<br>
+<br>
+</div></div><b>Extracting information from Date serials</b><br>
+<div class="indent"><b><a href="procedures/dateadd.html">DateAdd</a></b><br>
+<div class="indent">Gets the result of a time interval added to a <a href="../tutorials/programmer-s-guide/date-serials.html">date serial</a>.<br>
+</div><b><a href="procedures/datediff.html">DateDiff</a></b><br>
+<div class="indent">Gets a time interval between two <a href="../tutorials/programmer-s-guide/date-serials.html">date serial</a>s.<br>
+<br>
+</div></div><b>Miscellaneous</b><br>
+<div class="indent"><b><a href="procedures/isdate.html">IsDate</a></b><br>
+<div class="indent">Tests if a <code><a href="../operators/preprocessor-operators/procedures/string.html">String</a></code> can be converted to a <a href="../tutorials/programmer-s-guide/date-serials.html">date serial</a>.<br>
+</div><b><a href="procedures/monthname.html">MonthName</a></b><br>
+<div class="indent">Gets the month name of its integer representation.<br>
+</div><b><a href="procedures/weekdayname.html">WeekdayName</a></b><br>
+<div class="indent">Gets the weekday name of its integer representation.<br>
+</div></div></div></td><td><a></a><b><u>Date and time procedures</u></b><br>
+<div class="indent"><b><a href="procedures/date.html">Date</a></b><br>
+<div class="indent">Gets the <code><a href="../operators/preprocessor-operators/procedures/string.html">String</a></code> representation of the current system date.<br>
+</div><b><a href="procedures/time.html">Time</a></b><br>
+<div class="indent">Gets the <code><a href="../operators/preprocessor-operators/procedures/string.html">String</a></code> representation of the current system time.<br>
+</div><b><a href="procedures/setdate.html">SetDate</a></b><br>
+<div class="indent">Sets the current system date.<br>
+</div><b><a href="procedures/settime.html">SetTime</a></b><br>
+<div class="indent">Sets the current system time.<br>
+</div><b><a href="procedures/timer.html">Timer</a></b><br>
+<div class="indent">Gets a counter expressed in seconds.<br>
+</div></div></td></tr></table><div>&nbsp;</div><br>
+</div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../index.html">Home</a> ·
+         <a href="../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../nav.js?v=70a6b70236"></script>
+<script src="../../search-index.js"></script>
+<script src="../../assets/app.js?v=456d079659"></script>
+<script src="../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

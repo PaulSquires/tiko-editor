@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AfxFolderExists — Help Center</title>
+<meta name="description" content="Searches a directory for a file or subdirectory with a name that matches a specific name (or partial name if wildcards are used).">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/procedures/afxfolderexists.html">
+<meta property="og:title" content="AfxFolderExists">
+<meta property="og:description" content="Searches a directory for a file or subdirectory with a name that matches a specific name (or partial name if wildcards are used).">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/procedures/afxfolderexists.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/procedures/afxfolderexists.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../windows-procedures.html">Windows Procedures</a></div>
+<h1>AfxFolderExists<span class="h1kind">function</span></h1>
+<p class="lede">Searches a directory for a file or subdirectory with a name that matches a specific name (or partial name if wildcards are used).</p>
+<div class="badges"><a class="badge" href="../index.html">Windows</a><span class="badge">function</span><span class="badge">AfxWin.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION AfxFolderExists (BYVAL pwszFileSpec AS WSTRING PTR) AS BOOLEAN</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>pwszFileSpec</code></td><td></td><td>The directory or path, and the file name, which can include wildcard characters, for example, an asterisk (\*) or a question mark (?). This parameter should not be NULL, an invalid string (for example, an empty string or a string that is missing the terminating null character), or end in a trailing backslash (\\). If the string ends with a wildcard, period (.), or directory name, the user must have access permissions to the root and all subdirectories on the path. To extend the limit of MAX_PATH wide characters to 32,767 wide characters, prepend "\\\\?\\" to the path.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>Boolean. TRUE if the specified file exist or FALSE otherwise.</p>
+<h2>Description</h2>
+<p>Searches a directory for a file or subdirectory with a name that matches a specific name (or partial name if wildcards are used).</p>
+<h2>Remarks</h2>
+<p>Prepending the string "\\\\?\\" does not allow access to the root directory.</p>
+<p>On network shares, you can use an <em>pwszFileSpec</em> in the form of the following: "\\\\server\service\\\*". However, you cannot use an pwszFileSpec that points to the share itself; for example, "\\\\server\service" is not valid.</p>
+<p>To examine a directory that is not a root directory, use the path to that directory, without a trailing backslash. For example, an argument of "C:\Windows" returns information about the directory "C:\Windows", not about a directory or file in "C:\Windows". To examine the files and directories in "C:\Windows", use an pwszFileSpec of "C:\Windows\\\*".</p>
+<p>Be aware that some other thread or process could create or delete a file with this name between the time you query for the result and the time you act on the information. If this is a potential concern for your application, one possible solution is to use the <strong>CreateFile</strong> function with CREATE_NEW (which fails if the file exists) or OPEN_EXISTING (which fails if the file does not exist).</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>AfxWin.inc</code></li><li>Defined in <span class="srcref">AfxNova/AfxWin.inc:4120</span></li><li>Documented in <span class="srcref">Windows/Windows Procedures.md</span></li><li>Topic: <a href="../windows-procedures.html">Windows Procedures</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

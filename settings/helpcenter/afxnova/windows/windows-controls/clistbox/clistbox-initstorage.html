@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CListBox.InitStorage — Help Center</title>
+<meta name="description" content="Allocates memory for storing list box items.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/clistbox/clistbox-initstorage.html">
+<meta property="og:title" content="CListBox.InitStorage">
+<meta property="og:description" content="Allocates memory for storing list box items.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/clistbox/clistbox-initstorage.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-controls/clistbox/clistbox-initstorage.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../clistbox-class.html">CListBox Class</a></div>
+<h1>CListBox.InitStorage<span class="h1kind">method</span></h1>
+<p class="lede">Allocates memory for storing list box items.</p>
+<div class="badges"><a class="badge" href="../../index.html">Windows</a><span class="badge">method</span><span class="badge">CListBox.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION InitStorage (BYVAL hListBox AS HWND, BYVAL nItems AS DWORD, BYVAL nBytes AS DWORD) AS LONG</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>hListBox</code></td><td></td><td>The handle of the listbox control.</td></tr><tr><td><code>nItems</code></td><td></td><td>The number of items for which to reserve space.</td></tr><tr><td><code>nBytes</code></td><td></td><td>The amount of additional memory, in bytes, to allocate for item strings.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>If the message is successful, the return value is the total number of items that the list box can store before a memory reallocation is needed.</p>
+<p>If the message fails, the return value is LB_ERRSPACE.</p>
+<h2>Description</h2>
+<p>Allocates memory for storing list box items. This message can be used before an application adds a large number of items to a list box.</p>
+<h2>Remarks</h2>
+<p>The LB_INITSTORAGE message helps speed up the initialization of list boxes that have a large number of items (more than 100). It reserves the specified amount of memory so that subsequent LB_ADDSTRING, LB_INSERTSTRING, LB_DIR, and LB_ADDFILE messages are more efficient. You can use estimates for the <em>nItems</em> and <em>nBytes</em> parameters. If you overestimate, the extra memory remains allocated; if you underestimate, the list box will allocate additional memory as necessary.</p>
+<p>The memory required to store a string includes the null terminator. Therefore, if you plan to add 100 strings, each with a length of 10 characters, you would pass a <em>nItems</em> of 100 and an <em>nBytes</em> of 100 × (10 + 1) × sizeof(TCHAR).</p>
+<h2>Example</h2>
+<p>DIM items AS LONG = CListBox.InitStorage(hListBox, nItems, nBytes)</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CListBox.inc</code></li><li>Defined in <span class="srcref">AfxNova/CListBox.inc:377</span></li><li>Documented in <span class="srcref">Windows/WIndows Controls/CListBox Class.md</span></li><li>Topic: <a href="../clistbox-class.html">CListBox Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

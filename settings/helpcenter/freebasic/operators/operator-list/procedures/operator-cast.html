@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Operator Cast — Help Center</title>
+<meta name="description" content="Operator to convert a UDT (User Defined Type) variable into a specified data type">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/operators/operator-list/procedures/operator-cast.html">
+<meta property="og:title" content="Operator Cast">
+<meta property="og:description" content="Operator to convert a UDT (User Defined Type) variable into a specified data type">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/operators/operator-list/procedures/operator-cast.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/operators/operator-list/procedures/operator-cast.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>Operator Cast<span class="h1kind">operator</span></h1>
+<p class="lede">Operator to convert a UDT (User Defined Type) variable into a specified data type</p>
+<div class="badges"><a class="badge" href="../../index.html">Operators</a><span class="badge">operator</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>{ Type | Class | Union } typename</code></pre>
+<pre class="code sig"><code>Declare Operator Cast () [ ByRef ] As datatype</code></pre>
+<pre class="code sig"><code>...</code></pre>
+<pre class="code sig"><code>End { Type | Class | Union }</code></pre>
+<pre class="code sig"><code>Operator typename.Cast () [ ByRef ] As datatype [ Export ]</code></pre>
+<pre class="code sig"><code>...</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>typename</code></td><td></td><td>The name of the <code><a href="../../operators/procedures/type-udt.html">Type</a></code>, <code><a href="../../operators/procedures/class.html">Class</a></code>, or <code><a href="../../../user-defined-types/procedures/union.html">Union</a></code></td></tr><tr><td><code>datatype</code></td><td></td><td>The name of the type for conversion into it, a built-in data type (standard data type) or a UDT different from</td></tr><tr><td><code>typename</code></td><td></td><td></td></tr><tr><td><code>expression</code></td><td></td><td>The expression to convert, an instance of</td></tr><tr><td><code>typename</code></td><td></td><td></td></tr></tbody></table></div>
+<h2>Description</h2>
+<br>
+Converts an <code><i>expression</i></code> (a <code><i>typename</i></code> variable) into a different <code><a href="../../../reference/data-types.html">datatype</a></code>.<br>
+<br>
+<code><b>Cast</b></code> <code><a href="../../../user-defined-types/procedures/operator.html">Operator</a></code> must be declared inside the <code><a href="../../operators/procedures/type-udt.html">Type</a></code>, <code><a href="../../operators/procedures/class.html">Class</a></code>, or <code><a href="../../../user-defined-types/procedures/union.html">Union</a></code>.<br>
+As all non-static member procedures, it has passed a hidden <code><a href="../../../user-defined-types/procedures/this.html">This</a></code> parameter.<br>
+<br>
+The <code><b>Cast</b></code> <code><a href="../../../user-defined-types/procedures/operator.html">Operator</a></code> is the only operator (or function) that can be declared multiple times when only the return type differs, but not the same as the <code><a href="../../operators/procedures/type-udt.html">Type</a></code>, <code><a href="../../operators/procedures/class.html">Class</a></code>, or <code><a href="../../../user-defined-types/procedures/union.html">Union</a></code> they are declared in.<br>
+<br>
+The <code><b>Cast</b></code> <code><a href="../../../user-defined-types/procedures/operator.html">Operator</a></code> allows conversions that can also be used on the right-hand side of expressions of construction (with initializer) and assignment (see example 1 below).<br>
+In addition to its explicit form usage <code>Cast( <a href="../../../reference/data-types.html">datatype</a>, <i>expression</i> )</code>, the <code><b>Cast</b></code> <code><a href="../../../user-defined-types/procedures/operator.html">Operator</a></code> allows also implicit conversion into <code><a href="../../../reference/data-types.html">datatype</a></code> (see same example 1 below). For this not explicit usage, the compiler may decide which cast overload to call based on how the object is used (for example on the Print keyword, the compiler calls the <code>Cast() As String</code> operator if defined).<br>
+<br>
+<b>Note:</b> The overloaded <code><b>Cast</b></code> <code><a href="../../../user-defined-types/procedures/operator.html">Operator</a></code> can convert only a UDT instance (not a built-in type variable) because it can be overloaded only as a member <code><a href="../../../user-defined-types/procedures/operator.html">Operator</a></code> (not as a global operator).<br>
+To convert a built-in type variable into a UDT (not working syntax: <code>Cast( <i>UDT</i>, <i>built_in_type_variable</i> )</code>), the best way into the UDT is to define a constructor or/and a Let operator, otherwise to use a <code><b>Cast</b></code> <code><a href="../../../user-defined-types/procedures/operator.html">Operator</a></code> but with return by reference (by an assignment: <code>Cast( <i>built_in_datatype</i>, <i>UDT_instance</i> ) = <i>built_in_type_variable</i></code>).<br>
+(see example 2 below)<br>
+<br>
+For implicit conversion from one UDT into another UDT, a <code><b>Cast</b></code> <code><a href="../../../user-defined-types/procedures/operator.html">Operator</a></code> in the first UDT can replace (in second priority) a constructor and a Let operator in the second UDT (see examples 3 and 4 below).<br>
+<br>
+<b>Warning:</b> For a <code><b>Cast</b></code> operator that returns by value (no byref), do not use generally an exit code like <code>Return <i>expression</i></code> (or <code>Operator = <i>expression</i></code>) if <code><i>expression</i></code> is an instance of <code><i>typename</i></code>.<br>
+Such a <code><b>Cast</b></code> operator code will induce an infinite loop when called, unless an implicit conversion from <code><i>typename</i></code> to <code><i>datatype</i></code> already exists through a matched constructor (or a let operator) for <code><i>datatype</i></code>, so with a higher priority (see example 5 below).<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Usage</h3><code><br>
+Cast( <a href="../../../reference/data-types.html">datatype</a>, <i>expression</i> )<br>
+</code><br>
+
+<h3>Dialect Differences</h3><br>
+<ul><li> Only available in the <i><a href="../../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang fb</a></i> dialect.<br>
+<br>
+</li></ul>
+<h3>Differences from QB</h3><br>
+<ul><li> New to FreeBASIC.<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="../../../converting-data-types/procedures/cast.html">Cast</a></code><br>
+<li> <code><a href="../../../converting-data-types/procedures/cptr.html">CPtr</a></code><br>
+<li> <code><a href="../../../converting-data-types/procedures/cint.html">CInt</a></code><br>
+<li> <code><a href="../../../miscellaneous-keywords/procedures/typeof.html">TypeOf</a></code><br>
+<li> <a href="../../../tutorials/programmer-s-guide/coercion-and-conversion.html">Coercion and Conversion</a><br>
+</li></li></li></li></li></ul> <br>
+
+
+ 
+
+<h2>Example</h2>
+<br>
+Very simple syntaxic example highlighting the conversion capabilities (explicit and implicit) by using Cast operators:<br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span>UDT</span>
+
+  <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>I</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Cast</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Cast</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>UDT.Cast</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;UDT.Cast() As Integer&quot;</span><span>,</span>
+
+  <span class="tok-kw">Return</span> <span>This.I</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>UDT.Cast</span> <span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;UDT.Cast() As String&quot;</span><span>,</span>
+
+  <span class="tok-kw">Return</span> <span class="tok-kw">Str</span><span>(</span><span>This.I</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT</span> <span>u</span>
+
+
+
+<span>u.I</span> <span>=</span> <span class="tok-nu">12</span>
+
+<span class="tok-kw">Print</span> <span class="tok-kw">Cast</span><span>(</span><span class="tok-kw">Integer</span><span>,</span> <span>u</span><span>)</span>               <span class="tok-cm">'' explicit conversion using the defined &quot;Cast() As Integer&quot; operator</span>
+
+<span class="tok-kw">Print</span> <span class="tok-kw">Cast</span><span>(</span><span class="tok-kw">String</span><span>,</span> <span>u</span><span>)</span>                <span class="tok-cm">'' explicit conversion using the defined &quot;Cast() As String&quot; operator</span>
+
+<span class="tok-kw">Print</span> <span>u</span>                              <span class="tok-cm">'' implicit conversion by compiler using the defined &quot;Cast() As String&quot; operator</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+<span>u.I</span> <span>=</span> <span class="tok-nu">34</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>J</span> <span>=</span> <span class="tok-kw">Cast</span><span>(</span><span class="tok-kw">Integer</span><span>,</span> <span>u</span><span>)</span>  <span class="tok-cm">'' construction with explicit initialization using the defined &quot;Cast() As Integer&quot; operator</span>
+
+<span class="tok-kw">Print</span> <span>J</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>K</span> <span>=</span> <span>u</span>                 <span class="tok-cm">'' construction with implicit initialization by compiler using the defined &quot;Cast() As Integer&quot; operator</span>
+
+<span class="tok-kw">Print</span> <span>K</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+<span>u.I</span> <span>=</span> <span class="tok-nu">56</span>
+
+<span>J</span> <span>=</span> <span class="tok-kw">Cast</span><span>(</span><span class="tok-kw">Integer</span><span>,</span> <span>u</span><span>)</span>                 <span class="tok-cm">'' explicit assignment using the defined &quot;Cast() As Integer&quot; operator</span>
+
+<span class="tok-kw">Print</span> <span>J</span>
+
+<span>K</span> <span>=</span> <span>u</span>                                <span class="tok-cm">'' implicit assignment by compiler using the defined &quot;Cast() As Integer&quot; operator</span>
+
+<span class="tok-kw">Print</span> <span>K</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+<span>u.I</span> <span>=</span> <span class="tok-nu">78</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>S</span> <span>=</span> <span class="tok-kw">Cast</span><span>(</span><span class="tok-kw">String</span><span>,</span> <span>u</span><span>)</span>    <span class="tok-cm">'' construction with explicit initialization using the defined &quot;Cast() As String&quot; operator</span>
+
+<span class="tok-kw">Print</span> <span>S</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>G</span> <span>=</span> <span>u</span>                  <span class="tok-cm">'' construction with implicit initialization by compiler using the defined &quot;Cast() As String&quot; operator</span>
+
+<span class="tok-kw">Print</span> <span>G</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+<span>u.I</span> <span>=</span> <span class="tok-nu">90</span>
+
+<span>S</span> <span>=</span> <span class="tok-kw">Cast</span><span>(</span><span class="tok-kw">String</span><span>,</span> <span>u</span><span>)</span>                  <span class="tok-cm">'' explicit assignment using the defined &quot;Cast() As String&quot; operator</span>
+
+<span class="tok-kw">Print</span> <span>S</span>
+
+<span>G</span> <span>=</span> <span>u</span>                                <span class="tok-cm">'' implicit assignment by compiler using the defined &quot;Cast() As String&quot; operator</span>
+
+<span class="tok-kw">Print</span> <span>G</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+Workarounds for the not working syntax: <code><i>UDT_instance</i> = Cast( <i>UDT</i>, <i>built_in_type_variable</i> )</code>:<br>
+(using constructor, Let operator, and a Cast operator which returns by reference)<br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span>UDT</span>
+
+  <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>I</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>()</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>(</span><span class="tok-kw">ByVal</span> <span>I0</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Let</span> <span>(</span><span class="tok-kw">ByVal</span> <span>I0</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Cast</span> <span>()</span> <span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>UDT</span> <span>()</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>UDT</span> <span>(</span><span class="tok-kw">ByVal</span> <span>I0</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;UDT.Constructor(Byval As Integer)&quot;</span><span>,</span>
+
+  <span>This.I</span> <span>=</span> <span>I0</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>UDT.Let</span> <span>(</span><span class="tok-kw">ByVal</span> <span>I0</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;UDT.Let(Byval As Integer)&quot;</span><span>,,</span>
+
+  <span>This.I</span> <span>=</span> <span>I0</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>UDT.Cast</span> <span>()</span> <span class="tok-kw">ByRef</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;UDT.Cast() Byref As Integer&quot;</span><span>,,</span>
+
+  <span class="tok-kw">Return</span> <span>This.I</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT</span> <span>u</span>
+
+
+
+<span class="tok-cm">'u = Cast(UDT, 12)     '' unsupported - error 20: Type mismatch</span>
+
+<span>u</span> <span>=</span> <span>UDT</span><span>(</span><span class="tok-nu">34</span><span>)</span>            <span class="tok-cm">'' explicit conversion using the defined &quot;Constructor(Byval As Integer)&quot;</span>
+
+<span class="tok-kw">Print</span> <span>u.I</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+<span>u</span> <span>=</span> <span class="tok-nu">56</span>                 <span class="tok-cm">'' implicit conversion by compiler using the defined &quot;Let(Byval As Integer)&quot; operator</span>
+
+<span class="tok-kw">Print</span> <span>u.I</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+<span class="tok-kw">Cast</span><span>(</span><span class="tok-kw">Integer</span><span>,</span> <span>u</span><span>)</span> <span>=</span> <span class="tok-nu">78</span>  <span class="tok-cm">'' explicit conversion using the defined &quot;Cast() Byref As Integer&quot; operator with byref return</span>
+
+<span class="tok-kw">Print</span> <span>u.I</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+Conversion from UDT1 into UDT2, by using a constructor and a Let operator in UDT2:<br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span>_UDT1</span> <span class="tok-kw">As</span> <span>UDT1</span>
+
+
+
+<span class="tok-kw">Type</span> <span>UDT2</span>
+
+  <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>I2</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>()</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>(</span><span class="tok-kw">ByRef</span> <span>u</span> <span class="tok-kw">As</span> <span>_UDT1</span><span>)</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Let</span> <span>(</span><span class="tok-kw">ByRef</span> <span>u</span> <span class="tok-kw">As</span> <span>_UDT1</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>UDT2</span> <span>()</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Type</span> <span>UDT1</span>
+
+  <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>I1</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Constructor</span> <span>UDT2</span> <span>(</span><span class="tok-kw">ByRef</span> <span>u</span> <span class="tok-kw">As</span> <span>UDT1</span><span>)</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;UDT2.Constructor(Byref As UDT1)&quot;</span><span>,</span>
+
+  <span>This.I2</span> <span>=</span> <span>u.I1</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>UDT2.Let</span> <span>(</span><span class="tok-kw">ByRef</span> <span>u</span> <span class="tok-kw">As</span> <span>UDT1</span><span>)</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;UDT2.Let(Byref As UDT1)&quot;</span><span>,,</span>
+
+  <span>This.I2</span> <span>=</span> <span>u.I1</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT1</span> <span>u1</span>
+
+
+
+<span>u1.I1</span> <span>=</span> <span class="tok-nu">123</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT2</span> <span>u2</span> <span>=</span> <span>u1</span>  <span class="tok-cm">'' implicit conversion by compiler using the defined &quot;UDT2.Constructor(Byref As UDT1)&quot;</span>
+
+<span class="tok-kw">Print</span> <span>u2.I2</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+<span>u1.I1</span> <span>=</span> <span class="tok-nu">456</span>
+
+<span>u2</span> <span>=</span> <span>u1</span>              <span class="tok-cm">'' implicit conversion by compiler using the defined &quot;UDT2.Let(Byref As UDT1)&quot; operator</span>
+
+<span class="tok-kw">Print</span> <span>u2.I2</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+Conversion from UDT1 into UDT2, by using a Cast operator in UDT1:<br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span>UDT2</span>
+
+  <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>I2</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Type</span> <span>UDT1</span>
+
+  <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>I1</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Cast</span> <span>()</span> <span class="tok-kw">As</span> <span>UDT2</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>UDT1.Cast</span> <span>()</span> <span class="tok-kw">As</span> <span>UDT2</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;UDT1.Cast() As UDT2&quot;</span><span>,,</span>
+
+  <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT2</span> <span>u</span>
+
+  <span>u.I2</span> <span>=</span> <span>This.I1</span>
+
+  <span class="tok-kw">Return</span> <span>u</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT1</span> <span>u1</span>
+
+
+
+<span>u1.I1</span> <span>=</span> <span class="tok-nu">123</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT2</span> <span>u2</span> <span>=</span> <span>u1</span>  <span class="tok-cm">'' implicit conversion by compiler using the defined &quot;UDT1.Cast() As UDT2&quot; operator</span>
+
+<span class="tok-kw">Print</span> <span>u2.I2</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+<span>u1.I1</span> <span>=</span> <span class="tok-nu">456</span>
+
+<span>u2</span> <span>=</span> <span>u1</span>              <span class="tok-cm">'' implicit conversion by compiler using the defined &quot;UDT1.Cast() As UDT2&quot; operator</span>
+
+<span class="tok-kw">Print</span> <span>u2.I2</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+Conversion from UDT1 into UDT2, by using in UDT1 a Cast operator exiting by <code><i>Return This</i></code>, but without infinite loop thanks to a matched Let operator in UDT2:<br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span>_UDT1</span> <span class="tok-kw">As</span> <span>UDT1</span>
+
+
+
+<span class="tok-kw">Type</span> <span>UDT2</span>
+
+  <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>I2</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Let</span> <span>(</span><span class="tok-kw">ByRef</span> <span>u</span> <span class="tok-kw">As</span> <span>_UDT1</span><span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Type</span> <span>UDT1</span>
+
+  <span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>I1</span>
+
+  <span class="tok-kw">Declare</span> <span class="tok-kw">Operator</span> <span class="tok-kw">Cast</span> <span>()</span> <span class="tok-kw">As</span> <span>UDT2</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>UDT1.Cast</span> <span>()</span> <span class="tok-kw">As</span> <span>UDT2</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;UDT1.Cast() As UDT2&quot;</span>
+
+  <span class="tok-kw">Return</span> <span class="tok-kw">This</span>                       <span class="tok-cm">'' implicit conversion by compiler using the defined &quot;UDT2.Let(Byref As UDT1)&quot; operator</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+<span class="tok-kw">Operator</span> <span>UDT2.Let</span> <span>(</span><span class="tok-kw">ByRef</span> <span>u</span> <span class="tok-kw">As</span> <span>UDT1</span><span>)</span>
+
+  <span class="tok-kw">Print</span> <span>&quot;UDT2.Let(Byref As UDT1)&quot;</span>
+
+  <span>This.I2</span> <span>=</span> <span>u.I1</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Operator</span>
+
+
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>UDT1</span> <span>u1</span>
+
+<span>u1.I1</span> <span>=</span> <span class="tok-nu">123</span>
+
+
+
+<span class="tok-kw">Print</span> <span class="tok-kw">Cast</span><span>(</span><span>UDT2</span><span>,</span> <span>u1</span><span>).</span><span>I2</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgOpCast.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

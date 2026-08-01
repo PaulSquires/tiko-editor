@@ -1,0 +1,603 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AdjustableArrowCap Functions — Help Center</title>
+<meta name="description" content="AdjustableArrowCap Functions — 9 documented members. Graphics reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/adjustablearrowcap-functions.html">
+<meta property="og:title" content="AdjustableArrowCap Functions">
+<meta property="og:description" content="AdjustableArrowCap Functions — 9 documented members. Graphics reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/adjustablearrowcap-functions.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/adjustablearrowcap-functions.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span>Graphics</div>
+<h1>AdjustableArrowCap Functions</h1>
+<h2>Members (9)</h2>
+<div class="memberlist"><a href="procedures/gdipcreateadjustablearrowcap.html"><span class="m-n">GdipCreateAdjustableArrowCap</span><span class="m-d">Creates an adjustable arrow line cap with the specified height and width.</span></a><a href="procedures/gdipgetadjustablearrowcapfillstate.html"><span class="m-n">GdipGetAdjustableArrowCapFillState</span><span class="m-d">Determines whether the arrow cap is filled.</span></a><a href="procedures/gdipgetadjustablearrowcapheight.html"><span class="m-n">GdipGetAdjustableArrowCapHeight</span><span class="m-d">Gets the height of the arrow cap. The height is the distance from the base of the arrow to its vertex.</span></a><a href="procedures/gdipgetadjustablearrowcapmiddleinset.html"><span class="m-n">GdipGetAdjustableArrowCapMiddleInset</span><span class="m-d">Gets the value of the inset. The middle inset is the number of units that the midpoint of the base shifts towards the vertex.</span></a><a href="procedures/gdipgetadjustablearrowcapwidth.html"><span class="m-n">GdipGetAdjustableArrowCapWidth</span><span class="m-d">Gets the width of the arrow cap. The width is the distance between the endpoints of the base of the arrow.</span></a><a href="procedures/gdipsetadjustablearrowcapfillstate.html"><span class="m-n">GdipSetAdjustableArrowCapFillState</span><span class="m-d">Sets the fill state of the arrow cap. If the arrow cap is not filled, only the outline is drawn.</span></a><a href="procedures/gdipsetadjustablearrowcapheight.html"><span class="m-n">GdipSetAdjustableArrowCapHeight</span><span class="m-d">Sets the height of the arrow cap. This is the distance from the base of the arrow to its vertex.</span></a><a href="procedures/gdipsetadjustablearrowcapmiddleinset.html"><span class="m-n">GdipSetAdjustableArrowCapMiddleInset</span><span class="m-d">Sets the number of units that the midpoint of the base shifts towards the vertex.</span></a><a href="procedures/gdipsetadjustablearrowcapwidth.html"><span class="m-n">GdipSetAdjustableArrowCapWidth</span><span class="m-d">Sets the width of the arrow cap. The width is the distance between the endpoints of the base of the arrow.</span></a></div>
+<h2>Documentation</h2>
+<h2 id="adjustablearrowcap-functions">AdjustableArrowCap Functions</h2>
+<p>The <strong>AdjustableArrowCap</strong> functions build a line cap that looks like an arrow.</p>
+<p>The middle inset is the number of units that the midpoint of the base shifts towards the vertex. A middle inset of zero results in no shift —the base is a straight line, giving the arrow a triangular shape. A positive (greater than zero) middle inset results in a shift the specified number of units toward the vertex — the base is an arrow shape that points toward the vertex, giving the arrow cap a V-shape. A negative (less than zero) middle inset results in a shift the specified number of units away from the vertex — the base becomes an arrow shape that points away from the vertex, giving the arrow either a diamond shape (if the absolute value of the middle inset is equal to the height) or distorted diamond shape. If the middle inset is equal to or greater than the height of the arrow cap, the cap does not appear at all. The value of the middle inset affects the arrow cap only if the arrow cap is filled.</p>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="procedures/gdipcreateadjustablearrowcap.html">GdipCreateAdjustableArrowCap</a></td><td>Creates an adjustable arrow line cap with the specified height and width.</td></tr><tr><td><a href="procedures/gdipgetadjustablearrowcapfillstate.html">GdipGetAdjustableArrowCapFillState</a></td><td>Determines whether the arrow cap is filled.</td></tr><tr><td><a href="procedures/gdipgetadjustablearrowcapheight.html">GdipGetAdjustableArrowCapHeight</a></td><td>Gets the height of the arrow cap. The height is the distance from the base of the arrow to its vertex.</td></tr><tr><td><a href="procedures/gdipgetadjustablearrowcapmiddleinset.html">GdipGetAdjustableArrowCapMiddleInset</a></td><td>Gets the value of the inset. The middle inset is the number of units that the midpoint of the base shifts towards the vertex.</td></tr><tr><td><a href="procedures/gdipgetadjustablearrowcapwidth.html">GdipGetAdjustableArrowCapWidth</a></td><td>Gets the width of the arrow cap. The width is the distance between the endpoints of the base of the arrow.</td></tr><tr><td><a href="procedures/gdipsetadjustablearrowcapfillstate.html">GdipSetAdjustableArrowCapFillState</a></td><td>Sets the fill state of the arrow cap. If the arrow cap is not filled, only the outline is drawn.</td></tr><tr><td><a href="procedures/gdipsetadjustablearrowcapheight.html">GdipSetAdjustableArrowCapHeight</a></td><td>Sets the height of the arrow cap. This is the distance from the base of the arrow to its vertex.</td></tr><tr><td><a href="procedures/gdipsetadjustablearrowcapmiddleinset.html">GdipSetAdjustableArrowCapMiddleInset</a></td><td>Sets the number of units that the midpoint of the base shifts towards the vertex.</td></tr><tr><td><a href="procedures/gdipsetadjustablearrowcapwidth.html">GdipSetAdjustableArrowCapWidth</a></td><td>Sets the width of the arrow cap. The width is the distance between the endpoints of the base of the arrow.</td></tr></tbody></table></div>
+<hr>
+<h3 id="gdipcreateadjustablearrowcap">GdipCreateAdjustableArrowCap</h3>
+<p>Creates an adjustable arrow line cap with the specified height and width. The arrow line cap can be filled or nonfilled. The middle inset defaults to zero.</p>
+<pre class="code"><code>FUNCTION GdipCreateAdjustableArrowCap (BYVAL height AS REAL, BYVAL width AS REAL, _
+   BYVAL isFilled AS BOOL, BYVAL cap AS GpAdjustableArrowCap PTR PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>height</em></td><td>[in] Single precision number that specifies the length, in units, of the arrow from its base to its point.</td></tr><tr><td><em>width</em></td><td>[in] Single precision number that specifies the distance, in units, between the corners of the base of the arrow.</td></tr><tr><td><em>isFilled</em></td><td>[in] Boolean value (TRUE or FALSE) that specifies whether the arrow is filled.</td></tr><tr><td><em>cap</em></td><td>[out] Pointer to a variable that receives a pointer to the new created adjustable arrow line cap.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>If the function succeeds, it returns <strong>Ok</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates two AdjustableArrowCap objects, arrowCapStart and
+' arrowCapEnd, and sets the fill mode to TRUE. The code then creates a Pen object and
+' assigns arrowCapStart as the starting line cap for this Pen object and arrowCapEnd as
+' the ending line cap. Next, draws a line.
+' ========================================================================================
+SUB Example_CreateAdjustableArrowCap (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Create an AdjustableArrowCap that is filled.
+   DIM arrowCapStart AS GpAdjustableArrowCap PTR
+   hStatus = GdipCreateAdjustableArrowCap(10, 10, TRUE, @arrowCapStart)
+   ' // Adjust to DPI by setting the scale width
+   hStatus = GdipSetCustomLineCapWidthScale(arrowCapStart, rxRatio)
+
+   ' // Create an AdjustableArrowCap that is not filled.
+   DIM arrowCapEnd AS GpAdjustableArrowCap PTR
+   hStatus = GdipCreateAdjustableArrowCap(15, 15, FALSE, @arrowCapEnd)
+   ' // Adjust to DPI by setting the scale width
+   hStatus = GdipSetCustomLineCapWidthScale(arrowCapEnd, rxRatio)
+
+   ' // Create a Pen
+   DIM arrowPen AS GpPen PTR
+   hStatus = GdipCreatePen1(ARGB_Violet, 1, UnitWorld, @arrowPen)
+
+   ' Assign arrowCapStart as the start cap.
+   hStatus = GdipSetPenCustomStartCap(arrowPen, arrowCapStart)
+   ' Assign arrowCapEnd as the end cap.
+   hStatus = GdipSetPenCustomEndCap(arrowPen, arrowCapEnd)
+
+   ' // Draw a line using arrowPen.
+   hStatus = GdipDrawLine(graphics, arrowPen, 0, 0, 100, 100)
+
+   ' // Cleanup
+   IF arrowCapStart THEN GdipDeleteCustomLineCap(arrowCapStart)
+   IF arrowCapEnd THEN GdipDeleteCustomLineCap(arrowCapEnd)
+   IF arrowPen THEN GdipDeletePen(arrowPen)
+   IF graphics THEN GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<h5 id="remarks">Remarks</h5>
+<p>The middle inset is the number of units that the midpoint of the base shifts towards the vertex. A middle inset of zero results in no shift — the base is a straight line, giving the arrow a triangular shape. A positive (greater than zero) middle inset results in a shift the specified number of units toward the vertex — the base is an arrow shape that points toward the vertex, giving the arrow cap a V-shape. A negative (less than zero) middle inset results in a shift the specified number of units away from the vertex — the base becomes an arrow shape that points away from the vertex, giving the arrow either a diamond shape (if the absolute value of the middle inset is equal to the height) or distorted diamond shape. If the middle inset is equal to or greater than the height of the arrow cap, the cap does not appear at all. The value of the middle inset affects the arrow cap only if the arrow cap is filled. The middle inset defaults to zero when an <strong>AdjustableArrowCap</strong> object is constructed.</p>
+<hr>
+<h3 id="gdipgetadjustablearrowcapfillstate">GdipGetAdjustableArrowCapFillState</h3>
+<p>Determines whether the arrow cap is filled.</p>
+<pre class="code"><code>FUNCTION GdipGetAdjustableArrowCapFillState (BYVAL cap AS GpAdjustableArrowCap PTR, _
+   BYVAL fillstate AS BOOL PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>cap</em></td><td>[in] Pointer to the arrow cap.</td></tr><tr><td><em>fillstate</em></td><td>[out] Pointer to a variable that receives a boolean value that indicates if the arrow cap is filled (TRUE) or not (FALSE).</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates an AdjustableArrowCap object, myArrow, and sets the fill
+' mode to TRUE. The code then creates a Pen object and assigns myArrow as the ending line
+' cap for this Pen object. Next, the code tests whether myArrow is filled and, if it is,
+' draws a line.
+' ========================================================================================
+SUB Example_IsFilled (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Create an AdjustableArrowCap that is filled.
+   DIM myArrow AS GpAdjustableArrowCap PTR
+   hStatus = GdipCreateAdjustableArrowCap(10, 10, TRUE, @myArrow)
+   ' // Adjust to DPI by setting the scale width
+   hStatus = GdipSetCustomLineCapWidthScale(myArrow, rxRatio)
+
+   ' // Create a Pen, and assign myArrow as the end cap.
+   DIM arrowPen AS GpPen PTR
+   hStatus = GdipCreatePen1(ARGB_Violet, 1, UnitWorld, @arrowPen)
+   ' // Assign myArrow as the start cap.
+   hStatus = GdipSetPenCustomEndCap(arrowPen, myArrow)
+
+   ' // If the cap is filled, draw a line using arrowPen.
+   DIM isFilled AS BOOL
+   hStatus = GdipGetAdjustableArrowCapFillState(myArrow, @isFilled)
+   IF isFilled THEN hStatus = GdipDrawLine(graphics, arrowPen, 0, 0, 100, 100)
+
+   ' // Cleanup
+   IF myArrow THEN GdipDeleteCustomLineCap(myArrow)
+   IF arrowPen THEN GdipDeletePen(arrowPen)
+   IF graphics THEN GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<h3 id="gdipgetadjustablearrowcapheight">GdipGetAdjustableArrowCapHeight</h3>
+<p>Gets the height of the arrow cap. The height is the distance from the base of the arrow to its vertex.</p>
+<pre class="code"><code>FUNCTION GdipGetAdjustableArrowCapHeight (BYVAL cap AS GpAdjustableArrowCap PTR, _
+   BYVAL height AS REAL PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>cap</em></td><td>[in] Pointer to the arrow cap.</td></tr><tr><td><em>height</em></td><td>[out] Pointer to a single precision variable that receives a value that indicates the height, in units, of the arrow cap.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates an AdjustableArrowCap, myArrow, and sets the height of the
+' cap. The code then creates a Pen, assigns myArrow as the ending line cap for the Pen,
+' and draws a capped line. Next, the code gets the height of the arrow cap, creates a new
+' arrow cap with height equal to the height of myArrow, assigns the new arrow cap as the
+' ending line cap for the Pen, and draws another capped line.
+' ========================================================================================
+SUB Example_GetHeight (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Create an AdjustableArrowCap with a height of 10 pixels.
+   DIM myArrow AS GpAdjustableArrowCap PTR
+   hStatus = GdipCreateAdjustableArrowCap(10, 10, TRUE, @myArrow)
+   ' // Adjust to DPI by setting the scale width
+   hStatus = GdipSetCustomLineCapWidthScale(myArrow, rxRatio)
+
+   ' // Create a Pen, and assign myArrow as the end cap.
+   DIM arrowPen AS GpPen PTR
+   hStatus = GdipCreatePen1(ARGB_Violet, 1, UnitWorld, @arrowPen)
+   hStatus = GdipSetPenCustomEndCap(arrowPen, myArrow)
+
+'   // Draw a line using arrowPen.
+   hStatus = GdipDrawLine(graphics, arrowPen, 0, 20, 100, 20)
+
+'   // Create a second arrow cap using the height of the first one.
+   DIM otherArrow AS GpAdjustableArrowCap PTR
+   DIM nHeight AS SINGLE
+   hStatus = GdipGetAdjustableArrowCapHeight(myArrow, @nHeight)
+   hStatus = GdipCreateAdjustableArrowCap(nHeight, 20, TRUE, @otherArrow)
+   ' // Adjust to DPI by setting the scale width
+   hStatus = GdipSetCustomLineCapWidthScale(otherArrow, rxRatio)
+
+   ' // Assign the new arrow cap as the end cap for arrowPen.
+   hStatus = GdipSetPenCustomEndCap(arrowPen, otherArrow)
+
+   ' // Draw a line using arrowPen.
+   hStatus = GdipDrawLine(graphics, arrowPen, 0, 55, 100, 55)
+
+   ' // Cleanup
+   IF otherArrow THEN GdipDeleteCustomLineCap(otherArrow)
+   IF myArrow THEN GdipDeleteCustomLineCap(myArrow)
+   IF arrowPen THEN GdipDeletePen(arrowPen)
+   IF graphics THEN GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdipgetadjustablearrowcapmiddleinset">GdipGetAdjustableArrowCapMiddleInset</h3>
+<p>Gets the value of the inset. The middle inset is the number of units that the midpoint of the base shifts towards the vertex.</p>
+<pre class="code"><code>FUNCTION GdipGetAdjustableArrowCapMiddleInset (BYVAL cap AS GpAdjustableArrowCap PTR, _
+   BYVAL middleInset AS REAL PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>cap</em></td><td>[in] Pointer to the arrow cap.</td></tr><tr><td><em>middleInset</em></td><td>[out] Pointer to a single precision variable that receives a value that specifies the number of units that the midpoint of the base shifts towards the vertex.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>The middle inset is the number of units that the midpoint of the base shifts towards the vertex. A middle inset of zero results in no shift — the base is a straight line, giving the arrow a triangular shape. A positive (greater than zero) middle inset results in a shift the specified number of units toward the vertex — the base is an arrow shape that points toward the vertex, giving the arrow cap a V-shape. A negative (less than zero) middle inset results in a shift the specified number of units away from the vertex — the base becomes an arrow shape that points away from the vertex, giving the arrow either a diamond shape (if the absolute value of the middle inset is equal to the height) or distorted diamond shape. If the middle inset is equal to or greater than the height of the arrow cap, the cap does not appear at all. The value of the middle inset affects the arrow cap only if the arrow cap is filled. The middle inset defaults to zero when an <strong>AdjustableArrowCap</strong> object is constructed.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates an AdjustableArrowCap object, myArrow, with middle
+' inset set to zero (default value). The code then creates a Pen object, assigns
+' myArrow as the ending line cap for this Pen object, and draws a capped line. Next,
+' the code gets the middle inset, increments it, and draws another capped line.
+' ========================================================================================
+SUB Example_GetMiddleInset (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Create an AdjustableArrowCap with width and height set to 10.
+   ' // Middle inset defaults to 0 pixels.
+   DIM myArrow AS GpAdjustableArrowCap PTR
+   hStatus = GdipCreateAdjustableArrowCap(10, 10, TRUE, @myArrow)
+   ' // Adjust to DPI by setting the scale width
+   hStatus = GdipSetCustomLineCapWidthScale(myArrow, rxRatio)
+
+   ' // Create a Pen, and assign myArrow as the end cap.
+   DIM arrowPen AS GpPen PTR
+   hStatus = GdipCreatePen1(ARGB_Violet, 1, UnitWorld, @arrowPen)
+   hStatus = GdipSetPenCustomEndCap(arrowPen, myArrow)
+
+   ' // Draw a line using arrowPen.
+   hStatus = GdipDrawLineI(graphics, arrowPen, 0, 20, 100, 20)
+
+   ' // Get the inset of the arrow.
+   DIM inset AS SINGLE
+   hStatus = GdipGetAdjustableArrowCapMiddleInset(myArrow, @inset)
+
+   ' // Increase inset by 5 pixels and draw another line.
+   hStatus = GdipSetAdjustableArrowCapMiddleInset(myArrow, inset + 5)
+   hStatus = GdipSetPenCustomEndCap(arrowPen, myArrow)
+   hStatus = GdipDrawLine(graphics, arrowPen, 0, 50, 100, 50)
+
+   ' // Cleanup
+   IF myArrow THEN GdipDeleteCustomLineCap(myArrow)
+   IF arrowPen THEN GdipDeletePen(arrowPen)
+   IF graphics THEN GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdipgetadjustablearrowcapwidth">GdipGetAdjustableArrowCapWidth</h3>
+<p>Gets the width of the arrow cap. The width is the distance between the endpoints of the base of the arrow.</p>
+<pre class="code"><code>FUNCTION GdipGetAdjustableArrowCapWidth (BYVAL cap AS GpAdjustableArrowCap PTR, _
+   BYVAL width AS REAL PTR) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>cap</em></td><td>[in] Pointer to the arrow cap.</td></tr><tr><td><em>width</em></td><td>[out] Pointer to a single precision variable that receives a value that specifies the distance, in units, between the two corners of the base of the arrow.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates an AdjustableArrowCap object, myArrow, and sets the width
+' of the cap to 5 pixels. Next, the code creates a Pen object, assigns myArrow as the
+' ending line cap for this Pen object, and draws a capped line. The code obtains the width
+' using GdipGetAdjustableArrowCapWidth and sets the height equal to the width. The code then
+' draws another capped line with the new cap.
+' ========================================================================================
+SUB Example_GetWidth (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Create an AdjustableArrowCap with a width of 5 pixels.
+   DIM myArrow AS GpAdjustableArrowCap PTR
+   hStatus = GdipCreateAdjustableArrowCap(10, 5, TRUE, @myArrow)
+   ' // Adjust to DPI by setting the scale width
+   hStatus = GdipSetCustomLineCapWidthScale(myArrow, rxRatio)
+
+   ' // Create a Pen, and assign myArrow as the end cap.
+   DIM arrowPen AS GpPen PTR
+   hStatus = GdipCreatePen1(ARGB_Violet, 1, UnitWorld, @arrowPen)
+   hStatus = GdipSetPenCustomEndCap(arrowPen, myArrow)
+
+   ' // Draw a line using arrowPen.
+   hStatus = GdipDrawLine(graphics, arrowPen, 0, 0, 100, 100)
+
+   ' // Get the width of the arrow.
+   DIM nWidth AS SINGLE
+   hStatus = GdipGetAdjustableArrowCapWidth(myArrow, @nWidth)
+
+   ' // Set height equal to width and draw another line.
+   hStatus = GdipSetAdjustableArrowCapHeight(myArrow, nWidth)
+   hStatus = GdipSetPenCustomEndCap(arrowPen, myArrow)
+   GdipDrawLine(graphics, arrowPen, 0, 40, 100, 140)
+
+   ' // Cleanup
+   IF myArrow THEN GdipDeleteCustomLineCap(myArrow)
+   IF arrowPen THEN GdipDeletePen(arrowPen)
+   IF graphics THEN GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdipsetadjustablearrowcapfillstate">GdipSetAdjustableArrowCapFillState</h3>
+<p>Sets the fill state of the arrow cap. If the arrow cap is not filled, only the outline is drawn.</p>
+<pre class="code"><code>FUNCTION GdipSetAdjustableArrowCapFillState (BYVAL cap AS GpAdjustableArrowCap PTR, _
+   BYVAL fillstate AS BOOL) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>cap</em></td><td>[in] Pointer to the arrow cap.</td></tr><tr><td><em>fillstate</em></td><td>[in] Boolean (TRUE or FALSE) value that specifies whether the arrow cap is filled.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates an AdjustableArrowCap object, myArrow, and sets the fill
+' mode to FALSE. The code then creates a Pen object and assigns myArrow as the ending
+' line cap for this Pen object. Next, the code draws a line.
+' ========================================================================================
+SUB Example_SetFillState (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Create an AdjustableArrowCap. Fill state defaults to TRUE when arrow cap is constructed.
+   DIM myArrow AS GpAdjustableArrowCap PTR
+   hStatus = GdipCreateAdjustableArrowCap(10, 10, TRUE, @myArrow)
+   ' // Adjust to DPI by setting the scale width
+   hStatus = GdipSetCustomLineCapWidthScale(myArrow, rxRatio)
+
+   ' // Set fill state to FALSE.
+   GdipSetAdjustableArrowCapFillState(myArrow, FALSE)
+
+   ' // Create a Pen, and assign myArrow as the end cap.
+   DIM arrowPen AS GpPen PTR
+   hStatus = GdipCreatePen1(ARGB_Violet, 1, UnitWorld, @arrowPen)
+   ' // Assign myArrow as the start cap.
+   hStatus = GdipSetPenCustomEndCap(arrowPen, myArrow)
+
+   ' // Draw a line using arrowPen.
+   GdipDrawLine(graphics, arrowPen, 0, 0, 100, 100)
+
+   ' // Cleanup
+   IF myArrow THEN GdipDeleteCustomLineCap(myArrow)
+   IF arrowPen THEN GdipDeletePen(arrowPen)
+   IF graphics THEN GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdipsetadjustablearrowcapheight">GdipSetAdjustableArrowCapHeight</h3>
+<p>Sets the height of the arrow cap. This is the distance from the base of the arrow to its vertex.</p>
+<pre class="code"><code>FUNCTION GdipSetAdjustableArrowCapHeight (BYVAL cap AS GpAdjustableArrowCap PTR, _
+   BYVAL height AS REAL) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>cap</em></td><td>[in] Pointer to the arrow cap.</td></tr><tr><td><em>height</em></td><td>[in] Single precision value that specifies the height, in units, for the arrow cap.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates an AdjustableArrowCap, pMyArrowCap, and sets the height of the
+' cap to 15 pixels. The code then creates a Pen and assigns pMyArrowCap as the ending line cap
+' for this Pen. Next, the code draws a capped line.
+' ========================================================================================
+SUB Example_SetHeight (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Create an AdjustableArrowCap with a width of 5 pixels.
+   DIM myArrow AS GpAdjustableArrowCap PTR
+   hStatus = GdipCreateAdjustableArrowCap(10, 5, TRUE, @myArrow)
+   ' // Adjust to DPI by setting the scale width
+   hStatus = GdipSetCustomLineCapWidthScale(myArrow, rxRatio)
+
+   ' // Create a Pen, and assign myArrow as the end cap.
+   DIM arrowPen AS GpPen PTR
+   hStatus = GdipCreatePen1(ARGB_Violet, 1, UnitWorld, @arrowPen)
+   hStatus = GdipSetPenCustomEndCap(arrowPen, myArrow)
+
+   ' // Draw a line using arrowPen.
+   hStatus = GdipDrawLine(graphics, arrowPen, 0, 0, 100, 100)
+
+   ' // Get the width of the arrow.
+   DIM nWidth AS SINGLE
+   hStatus = GdipGetAdjustableArrowCapWidth(myArrow, @nWidth)
+
+   ' // Set height equal to width and draw another line.
+   hStatus = GdipSetAdjustableArrowCapHeight(myArrow, nWidth)
+   hStatus = GdipSetPenCustomEndCap(arrowPen, myArrow)
+   hStatus = GdipDrawLine(graphics, arrowPen, 0, 40, 100, 140)
+
+   ' // Cleanup
+   IF myArrow THEN GdipDeleteCustomLineCap(myArrow)
+   IF arrowPen THEN GdipDeletePen(arrowPen)
+   IF graphics THEN GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdipsetadjustablearrowcapmiddleinset">GdipSetAdjustableArrowCapMiddleInset</h3>
+<p>Sets the number of units that the midpoint of the base shifts towards the vertex.</p>
+<pre class="code"><code>FUNCTION GdipSetAdjustableArrowCapMiddleInset (BYVAL cap AS GpAdjustableArrowCap PTR, _
+   BYVAL middleInset AS REAL) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>cap</em></td><td>[in] Pointer to the arrow cap.</td></tr><tr><td><em>middleInset</em></td><td>[in] Single precision value that specifies the number of units that the midpoint of the base shifts towards the vertex.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>The middle inset is the number of units that the midpoint of the base shifts towards the vertex. A middle inset of zero results in no shift — the base is a straight line, giving the arrow a triangular shape. A positive (greater than zero) middle inset results in a shift the specified number of units toward the vertex — the base is an arrow shape that points toward the vertex, giving the arrow cap a V-shape. A negative (less than zero) middle inset results in a shift the specified number of units away from the vertex — the base becomes an arrow shape that points away from the vertex, giving the arrow either a diamond shape (if the absolute value of the middle inset is equal to the height) or distorted diamond shape. If the middle inset is equal to or greater than the height of the arrow cap, the cap does not appear at all. The value of the middle inset affects the arrow cap only if the arrow cap is filled. The middle inset defaults to zero when an <strong>AdjustableArrowCap</strong> object is constructed.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates an AdjustableArrowCap object, myArrow, and sets the middle
+' inset of the cap to 5 pixels. The code then creates a Pen object and assigns myArrow as
+' the ending line cap for this Pen object. Next, the code draws a capped line.
+' ========================================================================================
+SUB Example_SetMiddleInset (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Create an AdjustableArrowCap
+   DIM myArrow AS GpAdjustableArrowCap PTR
+   hStatus = GdipCreateAdjustableArrowCap(10, 10, TRUE, @myArrow)
+   ' // Adjust to DPI by setting the scale width
+   hStatus = GdipSetCustomLineCapWidthScale(myArrow, rxRatio)
+   ' // Set the middle inmset to 5
+   hStatus = GdipSetAdjustableArrowCapMiddleInset(myArrow, 5)
+
+   ' // Create a Pen, and assign myArrow as the end cap.
+   DIM arrowPen AS GpPen PTR
+   hStatus = GdipCreatePen1(ARGB_Violet, 1, UnitWorld, @arrowPen)
+   hStatus = GdipSetPenCustomEndCap(arrowPen, myArrow)
+
+   ' // Draw a line using arrowPen.
+   hStatus = GdipDrawLineI(graphics, arrowPen, 0, 0, 100, 100)
+
+   ' // Cleanup
+   IF myArrow THEN GdipDeleteCustomLineCap(myArrow)
+   IF arrowPen THEN GdipDeletePen(arrowPen)
+   IF graphics THEN GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+<h3 id="gdipsetadjustablearrowcapwidth">GdipSetAdjustableArrowCapWidth</h3>
+<p>Sets the width of the arrow cap. The width is the distance between the endpoints of the base of the arrow.</p>
+<pre class="code"><code>FUNCTION GdipSetAdjustableArrowCapWidth (BYVAL cap AS GpAdjustableArrowCap PTR, _
+   BYVAL width AS REAL) AS GpStatus</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>cap</em></td><td>[in] Pointer to the arrow cap.</td></tr><tr><td><em>width</em></td><td>[in] Single precision value that specifies the distance, in units, between the two corners of the base of the arrow.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' ========================================================================================
+' The following example creates an AdjustableArrowCap, myArrow, and sets the width of
+' the cap to 10 pixels. The code then creates a Pen, assigns myArrow as the ending
+' line cap for this Pen, and draws a capped line. Next, the code sets the width to 15
+' pixels, reassigns the arrow cap to the pen, and draws a new capped line.
+' ========================================================================================
+SUB Example_SetWidth (BYVAL hdc AS HDC)
+
+   DIM hStatus AS LONG
+
+   ' // Create a graphics object from the device context
+   DIM graphics AS GpGraphics PTR
+   hStatus = GdipCreateFromHDC(hdc, @graphics)
+
+   ' // Get the DPI scaling ratios
+   DIM dpiX AS SINGLE
+   hStatus = GdipGetDpiX(graphics, @dpiX)
+   DIM rxRatio AS SINGLE = dpiX / 96
+   DIM dpiY AS SINGLE
+   hStatus = GdipGetDpiY(graphics, @dpiY)
+   DIM ryRatio AS SINGLE = dpiY / 96
+   ' // Set the scale transform
+   hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)
+
+   ' // Create an AdjustableArrowCap with a width of 10 pixels.
+   DIM myArrow AS GpAdjustableArrowCap PTR
+   hStatus = GdipCreateAdjustableArrowCap(10, 10, TRUE, @myArrow)
+   ' // Adjust to DPI by setting the scale width
+   hStatus = GdipSetCustomLineCapWidthScale(myArrow, rxRatio)
+
+   ' // Create a Pen, and assign myArrow as the end cap.
+   DIM arrowPen AS GpPen PTR
+   hStatus = GdipCreatePen1(ARGB_Violet, 1, UnitWorld, @arrowPen)
+   hStatus = GdipSetPenCustomEndCap(arrowPen, myArrow)
+
+   ' // Draw a line using arrowPen.
+   hStatus = GdipDrawLine(graphics, arrowPen, 0, 0, 100, 100)
+
+   ' // Get the width of the arrow.
+   DIM nWidth AS SINGLE
+   GdipGetAdjustableArrowCapWidth(myArrow, @nWidth)
+
+   ' // Set the cap to the new width, and reassign the arrow cap to the pen object.
+   hStatus = GdipSetAdjustableArrowCapWidth(myArrow, 15.7)
+   hStatus = GdipSetPenCustomEndCap(arrowPen, myArrow)
+
+   ' // Draw a line with new cap
+   hStatus = GdipDrawLine(graphics, arrowPen, 0, 40, 100, 140)
+
+   ' // Cleanup
+   IF myArrow THEN GdipDeleteCustomLineCap(myArrow)
+   IF arrowPen THEN GdipDeletePen(arrowPen)
+   IF graphics THEN GdipDeleteGraphics(graphics)
+
+END SUB
+' ========================================================================================</code></pre>
+<hr>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CAdoConnection.OpenSchema — Help Center</title>
+<meta name="description" content="Obtains database schema information from the provider.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadoconnection/cadoconnection-openschema.html">
+<meta property="og:title" content="CAdoConnection.OpenSchema">
+<meta property="og:description" content="Obtains database schema information from the provider.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadoconnection/cadoconnection-openschema.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/databases/ado-classes/cadoconnection/cadoconnection-openschema.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cadoconnection-class.html">CAdoConnection Class</a></div>
+<h1>CAdoConnection.OpenSchema<span class="h1kind">method</span></h1>
+<p class="lede">Obtains database schema information from the provider.</p>
+<div class="badges"><a class="badge" href="../../index.html">Databases</a><span class="badge">method</span><span class="badge">CAdoConnection.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION OpenSchema (BYVAL Schema AS SchemaEnum, BYVAL Restrictions AS VARIANT = TYPE(VT_ERROR,0,0,0,DISP_E_PARAMNOTFOUND), BYVAL SchemaID AS VARIANT = TYPE(VT_ERROR,0,0,0,DISP_E_PARAMNOTFOUND)) AS Afx_ADORecordset PTR</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>Schema</code></td><td></td><td>Any <strong>SchemaEnum</strong> value that represents the type of schema query to run.</td></tr><tr><td><code>Restrictions</code></td><td></td><td>Optional. An array of query constraints for each <em>QueryType</em> option, as listed in <strong>SchemaEnum</strong>.</td></tr><tr><td><code>SchemaID</code></td><td></td><td>Optional. The GUID for a provider-schema query not defined by the OLE DB specification. This parameter is required if <em>QueryType</em> is set to <strong>adSchemaProviderSpecific</strong>; otherwise, it is not used.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>An ADO <code>Recordset</code> object reference.</p>
+<h2>Description</h2>
+<p>Obtains database schema information from the provider.</p>
+<h2>Remarks</h2>
+<p>The <strong>OpenSchema</strong> method returns self-descriptive information about the data source, such as what tables are in the data source, the columns in the tables, and the data types supported.</p>
+<p>The <em>QueryType</em> argument is a GUID that indicates the columns (schemas) returned. The OLE DB specification has a full list of schemas.</p>
+<p>The <strong>Criteria</strong> argument limits the results of a schema query. <strong>Criteria</strong> specifies an array of values that must occur in a corresponding subset of columns, called constraint columns, in the resulting <code>Recordset</code>.</p>
+<p>The constant <strong>adSchemaProviderSpecific</strong> is used for the <em>QueryType</em> argument if the provider defines its own nonstandard schema queries outside those listed above. When this constant is used, the <strong>SchemaID</strong> argument is required to pass the GUID of the schema query to execute. If <em>QueryType</em> is set to <strong>adSchemaProviderSpecific</strong> but <em>SchemaID</em> is not provided, an error will result.</p>
+<p>Providers are not required to support all of the OLE DB standard schema queries. Specifically, only <strong>adSchemaTables</strong>, <strong>adSchemaColumns</strong>, and <strong>adSchemaProviderTypes</strong> are required by the OLE DB specification. However, the provider is not required to support the <strong>Criteria</strong> constraints listed above for those schema queries.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CAdoConnection.inc</code></li><li>Defined in <span class="srcref">AfxNova/CAdoConnection.inc:468</span></li><li>Documented in <span class="srcref">Databases/ADO Classes/CAdoConnection Class.md</span></li><li>Topic: <a href="../cadoconnection-class.html">CAdoConnection Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

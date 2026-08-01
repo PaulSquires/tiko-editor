@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Compiler Option: -target — Help Center</title>
+<meta name="description" content="Compiler Option: -target — 0 documented members. Using the FreeBASIC compiler reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/using-the-freebasic-compiler/command-line-options/compiler-option-target.html">
+<meta property="og:title" content="Compiler Option: -target">
+<meta property="og:description" content="Compiler Option: -target — 0 documented members. Using the FreeBASIC compiler reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/using-the-freebasic-compiler/command-line-options/compiler-option-target.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/using-the-freebasic-compiler/command-line-options/compiler-option-target.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Using the FreeBASIC compiler</div>
+<h1>Compiler Option: -target</h1>
+<h2>Documentation</h2>
+
+	Set the target platform for cross compilation<br>
+<br>
+<div>Syntax</div><div><code><br>
+<div class="indent"><b>-target</b> &lt; <i>platform</i> &gt;<br>
+</div></code><br>
+</div><div>Parameters</div><div><br>
+<div class="indent"><code><i>platform</i></code><br>
+<div class="indent">The target platform. Recognized values:<br>
+</div></div><ul><ul><ul><li> <code>android</code><br>
+<li> <code>dos</code><br>
+<li> <code>win32</code><br>
+<li> <code>win64</code><br>
+<li> <code>xbox</code><br>
+<li> <code>&lt;os&gt;-&lt;arch&gt;</code><br>
+</li></li></li></li></li></li></ul></ul></ul><div class="indent"><div class="indent"><div class="indent"><div class="indent"><code>&lt;os&gt;</code> can be one of:<br>
+</div></div></div></div><ul><ul><ul><ul><ul><li> <code>android</code><br>
+<li> <code>linux</code><br>
+<li> <code>cygwin</code><br>
+<li> <code>darwin</code><br>
+<li> <code>freebsd</code><br>
+<li> <code>netbsd</code><br>
+<li> <code>openbsd</code><br>
+</li></li></li></li></li></li></li></ul></ul></ul></ul></ul><div class="indent"><div class="indent"><div class="indent"><div class="indent"><code>&lt;arch&gt;</code> can be one of:<br>
+</div></div></div></div><ul><ul><ul><ul><ul><li> <code>arm</code><br>
+<li> <code>aarch64</code><br>
+<li> <code>powerpc</code> or <code>ppc</code><br>
+<li> <code>powerpc64</code> or <code>ppc64</code><br>
+<li> <code>powerpc64le</code> or <code>ppc64le</code><br>
+<li> <code>x86</code><br>
+<li> <code>x86_64</code><br>
+</li></li></li></li></li></li></li></ul></ul></ul></ul></ul><div class="indent"><div class="indent"><div class="indent"><div class="indent">Examples:<br>
+</div></div></div></div><ul><ul><ul><ul><ul><li> <code>android-arm</code><br>
+<li> <code>android-x86</code><br>
+<li> <code>freebsd-x86</code><br>
+<li> <code>freebsd-x86_64</code><br>
+<li> <code>linux-arm</code><br>
+<li> <code>linux-aarch64</code><br>
+<li> <code>linux-x86</code><br>
+<li> <code>linux-x86_64</code><br>
+<li> <code>...</code><br>
+</li></li></li></li></li></li></li></li></li></ul></ul><li> For backwards compatibility, the following values are recognized. They will select the corresponding operating system, together with the compiler's default architecture (same as the host), because these values do not specify an architecture explicitly.<br>
+<ul><li> <code>linux</code><br>
+<li> <code>cygwin</code><br>
+<li> <code>darwin</code><br>
+<li> <code>freebsd</code><br>
+<li> <code>netbsd</code><br>
+<li> <code>openbsd</code><br>
+</li></li></li></li></li></li></ul><li> fbc (e.g. FB-linux release) additionally recognizes GNU triplets, for example:<br>
+<ul><li> <code>i686-w64-mingw32</code><br>
+<li> <code>x86_64-w64-mingw32</code><br>
+<li> <code>i686-pc-linux-gnu</code><br>
+<li> <code>arm-linux-gnueabihf</code><br>
+<li> <code>i386-pc-msdosdjgpp</code><br>
+<li> <code>arm-linux-android</code><br>
+<li> <code>armv7a-linux-android</code><br>
+<li> <code>armv7a-linux-androideabi</code><br>
+<li> <code>armv5te-linux-android</code><br>
+<li> <code>i686-linux-android</code><br>
+<li> <code>x86_64-linux-android</code><br>
+<li> <code>...</code><br>
+<br>
+</li></li></li></li></li></li></li></li></li></li></li></li></ul></li></li></ul></ul></ul></div><div>Description</div><div><br>
+<div class="indent">The <code>-target</code> compiler option can be used to create an executable for a platform which is different from the host on which the source code is being compiled and linked. Appropriate libraries and cross compilation tools (assembler, linker) must be installed for cross compilation to work (also see <a href="../../compiler-internals/fb-and-cross-compiling.html">FB and cross-compiling</a>). <br>
+<br>
+If <code>-target &lt;platform&gt;</code> is given, the compiler will compile programs more or less as if they were compiled on the given platform. This affects which <code>__FB_*__</code> operating-system-specific symbol will be pre-defined, the default calling convention, the object and executable file format (e.g. ELF/COFF), the available runtime libraries and functions, etc.<br>
+<br>
+With a standalone FB setup such as the FB-dos or FB-win32 releases:<br>
+</div><ul><ul><li> Specifying <code>-target &lt;platform&gt;</code> causes the compiler to use the compiler tools in the <code>bin/&lt;platform&gt;/</code> directory, and target-specific libraries in the <code>lib/&lt;platform&gt;/</code> directory. For example, <code>-target win32</code> causes the compiler to compile for Win32 and use tools from <code>bin/win32/</code> and libraries from <code>lib/win32/</code>.<br>
+<li> It is unnecessary (but safe) to specify a <code>-target</code> option that matches the host (for example <code>-target win32</code> on <code>win32</code>). It does not make a difference to the compilation process.<br>
+<li> If <code>-target</code> is not specified, the compiler defaults to compiling for the native system. It will then use the compiler tools and libraries from the <code>bin/</code> and <code>lib/</code> directories corresponding to the native system.<br>
+<li> <code>-target</code> may be specified as a gnu triplet as an alternate method for specifying the platform target and architecture.  For example, <code>-target i586-pc-mdosdjgpp</code> will identify as <code>-arch 586 -target dos</code> and will look for binaries in bin/dos/ and libraries in lib/dos/.  The platform string is not prefixed to names of binary tools.<br>
+<br>
+</li></li></li></li></ul></ul><div class="indent">With a normal FB setup such as the FB-linux release:<br>
+</div><ul><ul><li> Specifying <code>-target &lt;platform&gt;</code> causes the compiler to prefix the <code>&lt;platform&gt;-</code> string to the executable names of binutils and gcc. For example, specifying <code>-target i686-w64-mingw32</code> causes the compiler to invoke <code>i686-w64-mingw32-ld</code> instead of <code>ld</code> (same for other tools besides the linker). This allows fbc to integrate with binutils/gcc cross-compiler toolchains and matches how cross-compiling tools are typically installed on Linux distributions.<br>
+<li> Note that specifying something like <code>-target win32</code> does not usually make sense here. It causes the compiler to try to use <code>win32-ld</code> which usually does not exist, because binutils/gcc toolchains for cross-compilation to Windows typically have names such as <code>i686-pc-mingw32</code>, not just <code>win32</code>. Thus, it is necessary to specify something like <code>-target i686-pc-mingw32</code> instead of <code>-target win32</code>.<br>
+<li> For backwards compatibility, if the given <i>platform</i> string describes the host and is an FB target name (the values accepted by the <code>-target</code> option with a standalone FB setup) instead of a GNU triplet, then the <code>-target</code> option will be ignored, and the <code>&lt;platform&gt;-</code> string will not be prefixed to compiler tools. For example, this allows <code>-target linux</code> to work with the FB-linux release. It will be ignored instead of causing the compiler to try to use <code>linux-ld</code> instead of <code>ld</code>.<br>
+<li> If <code>-target</code> is not specified, the compiler defaults to compiling for the native system, and it will invoke binutils/gcc without a target-specific prefix. This allows fbc to integrate with usual Linux (and similar) systems where binutils/gcc for native compilation are installed without any target-specific prefix.<br>
+<li> Libraries besides FB's own runtime libraries are located by running <code>gcc -print-file-name=...</code> (or <code>&lt;platform&gt;-gcc -print-file-name=...</code>). This allows fbc to use the system and gcc libraries installed on Linux and similar systems without knowing the exact installation directories.<br>
+<br>
+</li></li></li></li></li></ul></ul><div class="indent">When using triplets they generally have the form os <code>&lt;arch&gt;-&lt;vendor&gt;-&lt;os&gt;</code> but can vary a lot between build systems or over time between different versions of a build system or toolchain.  <code>fbc</code> also accepts the form <code>&lt;arch&gt;-&lt;os&gt;</code> and is fairly permissive in what will be accepted and typically will not throw an error if at least part of the gnu triplet is recognized<br>
+<br>
+For more details, see on page <code><a href="compiler-option-buildprefix.html">-buildprefix</a></code>, the paragraph: "Detailed behavior if using <code>-buildprefix</code>, <code>-prefix</code>, <code>-target</code> command line options".<br>
+<br>
+</div></div><div>Version</div><div><br>
+<ul><li> Before fbc 1.20.0, <code>android</code> was not recognized as a target<br>
+<li> Before fbc 1.10.0, gnu triplets were not allowed in standalone builds, and '-target i386-pc-msdosdjgpp' and similar were not allowed.<br>
+<br>
+</li></li></ul></div><div>See also</div><div><br>
+<ul><li> <a href="compiler-option-arch.html">-arch</a><br>
+<li> <a href="compiler-option-buildprefix.html">-buildprefix</a><br>
+<li> <a href="compiler-option-prefix.html">-prefix</a><br>
+<li> <a href="../fbc-command-line.html">Using the Command Line</a><br>
+<li> <a href="../../compiler-internals/fb-and-cross-compiling.html">FB and cross-compiling</a><br>
+<br>
+</li></li></li></li></li></ul></div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

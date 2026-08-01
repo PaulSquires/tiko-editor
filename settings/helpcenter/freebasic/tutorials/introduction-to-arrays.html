@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Introduction To Arrays — Help Center</title>
+<meta name="description" content="Introduction To Arrays — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/introduction-to-arrays.html">
+<meta property="og:title" content="Introduction To Arrays">
+<meta property="og:description" content="Introduction To Arrays — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/introduction-to-arrays.html">
+<link rel="stylesheet" href="../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/introduction-to-arrays.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>Introduction To Arrays</h1>
+<h2>Documentation</h2>
+
+	<i>Written by <a href="../reference/rdc.html">rdc</a></i><br>
+<br>
+Arrays are probably the single most useful programming construct  that is available to you in FreeBASIC. Many problems that you will try to solve with a programming solution involve data arranged in tabular format, and arrays are perfect for managing this type of data. Understanding arrays is a crucial skill in becoming a competent programmer.<br>
+<br>
+Arrays are contiguous memory segments of a single or composite data type. You can think of an array as a table, with rows and columns of data. An array can have one or more rows, and each row can have one or more columns. The number of rows and columns define the dimensions of the array. FreeBASIC uses the row-major scheme for arrays, which means that the first dimension references the row in an array that has more than one dimension. FreeBASIC supports up to eight dimensions in an array.<br>
+<br>
+<div> One-Dimensional Arrays </div><br>
+<br>
+An array with a single row is called a one-dimensional array. If an array is a single-dimensional array, then the row is not defined in the declaration, only the number of columns in the row. Since an array requires a minimum of one row, the row is understood to exist in this case. The following code snippets create a single-dimension integer array using the different array definition schemes available in FreeBASIC.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span>myArray</span><span>(</span><span class="tok-nu">10</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+
+
+<span class="tok-kw">Dim</span> <span>myArray</span><span>(</span><span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">10</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span></pre></code><br>
+<br>
+The first method will define an array with a single row and 11 columns, with column indexes (numbers) ranging from 0 to 10. The second method defines the lower and upper bounds using the <code>To</code> keyword. Here the indexes will range from 1 to 10.<br>
+<br>
+<div> One-Dimensional Array Indexes </div><br>
+<br>
+You access each element of an array using an index value. In the case of a single-dimension array, the index would refer to a column number in the default row. The format is to use the array variable, with the index surrounded by parenthesis.<br>
+<br>
+<code><pre class="code"><span>myArray</span><span>(</span><span class="tok-nu">5</span><span>)</span> <span>=</span> <span class="tok-nu">7</span></pre></code><br>
+<br>
+This would set column 5 in the array to 7.<br>
+<br>
+<code><pre class="code"><span>myInt</span> <span>=</span> <span>myArray</span><span>(</span><span class="tok-nu">5</span><span>)</span></pre></code><br>
+<br>
+This will set the value of <code>myInt</code> to the current value of column 5 in <code>myArray</code>.<br>
+<br>
+<div> Two-Dimensional Arrays </div><br>
+<br>
+A two-dimensional array is an array that has more than one row, along with the defined columns. A two-dimensional array is like a table, with a defined number of rows, where each row has a defined number of columns. The following code snippet defines an array using the default method.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span>myArray</span><span>(</span><span class="tok-nu">2</span><span>,</span> <span class="tok-nu">10</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span></pre></code><br>
+<br>
+The first dimension defines the number of rows in the array, while the second dimension defines the number of columns in each row. In this example, the array has 3 rows, numbered 0 to 2, and each row has 11 columns, numbered 0 to 10.<br>
+<br>
+You can also define the lower and upper bounds of the array.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span>myArray</span><span>(</span><span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">2</span><span>,</span> <span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">10</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span></pre></code><br>
+<br>
+This definition would set the number of rows to 2, numbered 1 to 2 and the number of columns to 10, numbered 1 to 10.<br>
+<br>
+<div> Two-Dimensional Array Indexes </div><br>
+<br>
+To access the array elements of a two-dimensional array, you would use two indexes. The first index selects the row, and the second index selects a column within that row.<br>
+<br>
+<code><pre class="code"><span>myArray</span><span>(</span><span class="tok-nu">1</span><span>,</span> <span class="tok-nu">5</span><span>)</span> <span>=</span> <span class="tok-nu">7</span></pre></code><br>
+<br>
+This code would set column 5 in row 1 to 7.<br>
+<br>
+<code><pre class="code"><span>myInt</span> <span>=</span> <span>myArray</span><span>(</span><span class="tok-nu">1</span><span>,</span> <span class="tok-nu">5</span><span>)</span></pre></code><br>
+<br>
+This code would set myInt to the current value contained within column 5 of row 1 of the array.<br>
+<br>
+<div> Multi-Dimensional Arrays </div><br>
+<br>
+For arrays of three or more dimensions, you would use the same format as listed above, taking into account the progression of the array dimensions. For a three-dimensional array, the first dimension would be the row, the second the column, the third would be the z-order, or depth, of each column. <br>
+<br>
+For example, to define a cube in space, you would use the y,x,z format, where y defines the vertical axis, x defines the horizontal axis and z defines the depth axis. To create an array in this format you could define the array as: <br>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span>myCube</span><span>(</span><span>y</span><span>,</span> <span>x</span><span>,</span> <span>z</span><span>)</span> <span class="tok-kw">As</span> <span>Integer.</span></pre></code><br>
+<br>
+<code>MyCube(10, 10, 10)</code> would create a cube with 11 vertical units, 0 to 10, 11 horizontal units, 0 to 10 and 10 depth units, 0 to 10. To access the center of the cube, you would use <code>iCenter = myCube(5, 5, 5)</code>. <br>
+<br>
+You will probably never need to use arrays of more than three dimensions, unless you are doing some advanced mathematical calculations. However, if you need to use higher-dimensional arrays, the same principles apply.<br>
+<br>
+<div> Dynamic Arrays </div><br>
+<br>
+The arrays described above are static arrays; the array size cannot change during program execution. You can also create dynamic arrays that can change size during execution. Dynamic arrays are useful for creating data structures such as stacks or queues.<br>
+<br>
+Data for dynamic arrays are allocated from the computer's pool of memory called heap. The compiler dynamically allocates memory for array data based on the requested dimensions of the array.<br>
+<br>
+You specify a dynamic array by using the <code>ReDim</code> keyword.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">ReDim</span> <span>myArray</span><span>(</span><span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">5</span><span>,</span> <span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">5</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span></pre></code><br>
+<br>
+If you don't know the needed array bounds at the start of the program execution, you can define an array with empty indexes.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span>myArray</span><span>()</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span></pre></code><br>
+<br>
+In this case the compiler sets a default value of 0 for the array size. You can then use the <code>ReDim</code> at some point in the program to set the array bounds.<br>
+<br>
+<div> ReDim and ReDim Preserve </div><br>
+<br>
+Dynamic arrays can change sizes during execution. <code>ReDim</code> will clear the contents of the array to the default data type values, while <code>ReDim Preserve</code> will keep intact the existing contents, unless the array size is smaller than the previous size.<br>
+<br>
+<div> Array Functions </div><br>
+<br>
+There are a number of <a href="../array-functions/array-functions.html">functions</a> that you can use with arrays.<br>
+<br>
+<div> Arrays of Composite Types </div><br>
+<br>
+Type definitions allow you to group related data into a single entity, and often you will need more than one instance of a type to fully express the data. Arrays of types allow you create multiple instances of a type definition that can be easily managed using the arrays functions. An example of this usage may be an inventory system for your RPG, a series of document descriptions within an editor, and a set of employee records from a random access database.<br>
+<br>
+You create arrays of types just as you would with any of the intrinsic data types. The following code snippet  illustrates the syntax.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span>myPoint</span>
+
+    <span>row</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+    <span>col</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Type</span> <span>myLine</span>
+
+    <span>p1</span> <span class="tok-kw">As</span> <span>myPoint</span>
+
+    <span>p2</span> <span class="tok-kw">As</span> <span>myPoint</span>
+
+    <span>char</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>*</span> <span class="tok-nu">1</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Dim</span> <span>myLineSet</span> <span>(</span><span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">3</span><span>)</span> <span class="tok-kw">As</span> <span>myLine</span></pre></code><br>
+<br>
+The code defines a set of 3 lines, with endpoints <code>p1</code> and <code>p2</code>, where each endpoint is located at row and col. You access the array elements by using a combination of array index and dot operator.<br>
+<br>
+<code><pre class="code"><span>myLineSet</span><span>(</span><span class="tok-nu">1</span><span>).</span><span>p1.row</span> <span>=</span> <span class="tok-nu">1</span>
+
+<span>myLineSet</span><span>(</span><span class="tok-nu">1</span><span>).</span><span>p1.col</span> <span>=</span> <span class="tok-nu">1</span>
+
+<span>myLineSet</span><span>(</span><span class="tok-nu">1</span><span>).</span><span>p2.row</span> <span>=</span> <span class="tok-nu">10</span>
+
+<span>myLineSet</span><span>(</span><span class="tok-nu">1</span><span>).</span><span>p2.col</span> <span>=</span> <span class="tok-nu">10</span>
+
+<span>myLineSet</span><span>(</span><span class="tok-nu">1</span><span>).</span><span>char</span> <span>=</span> <span class="tok-kw">Chr</span><span>(</span><span class="tok-nu">219</span><span>)</span></pre></code><br>
+<br>
+<div> Arrays in Types </div><br>
+<br>
+Not only can you create an array of a composite type, you can have an array as a field in a composite type. The above example can be written more efficiently by replacing <code>p1</code> and <code>p2</code> with an array.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span>myPoint</span>
+
+    <span>row</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+    <span>col</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Type</span> <span>myLine</span>
+
+    <span>pts</span><span>(</span><span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">2</span><span>)</span> <span class="tok-kw">As</span> <span>myPoint</span>
+
+    <span>char</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>*</span> <span class="tok-nu">1</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Dim</span> <span>myLineSet</span> <span>(</span><span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">3</span><span>)</span> <span class="tok-kw">As</span> <span>myLine</span></pre></code><br>
+<br>
+Here <code>pts</code> is an array of <code>myPoint</code>. To access this structure you would use a combination of indexes and dot operators.<br>
+<br>
+<code><pre class="code"><span>myLineSet</span><span>(</span><span class="tok-nu">1</span><span>).</span><span>pts</span><span>(</span><span class="tok-nu">1</span><span>).</span><span>row</span> <span>=</span> <span class="tok-nu">1</span>
+
+<span>myLineSet</span><span>(</span><span class="tok-nu">1</span><span>).</span><span>pts</span><span>(</span><span class="tok-nu">1</span><span>).</span><span>col</span> <span>=</span> <span class="tok-nu">1</span>
+
+<span>myLineSet</span><span>(</span><span class="tok-nu">1</span><span>).</span><span>pts</span><span>(</span><span class="tok-nu">2</span><span>).</span><span>row</span> <span>=</span> <span class="tok-nu">10</span>
+
+<span>myLineSet</span><span>(</span><span class="tok-nu">1</span><span>).</span><span>pts</span><span>(</span><span class="tok-nu">2</span><span>).</span><span>col</span> <span>=</span> <span class="tok-nu">10</span>
+
+<span>myLineSet</span><span>(</span><span class="tok-nu">1</span><span>).</span><span>char</span> <span>=</span> <span class="tok-kw">Chr</span><span>(</span><span class="tok-nu">219</span><span>)</span></pre></code><br>
+<br>
+<code>myLineSet</code> is an array, so you use an index value. <code>pts</code> is an element of the type, so you need to qualify it with the dot operator. However, <code>pts</code> is also an array, so you use an index to select each <code>pts</code> array element. <code>Row</code> and <code>col</code> are elements of the <code>myPoint</code> type and are accessed with the dot operator.<br>
+<br>
+Using an array for the endpoints enables you to easily extend the line definition to support not only lines, but triangles and squares. The following code snippet shows one possible definition.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span>myObj</span>
+
+    <span>objid</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+    <span class="tok-kw">Union</span>
+
+            <span>myLine</span><span>(</span><span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">2</span><span>)</span> <span class="tok-kw">As</span> <span>myPoint</span>
+
+        <span>myTriangle</span><span>(</span><span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">3</span><span>)</span> <span class="tok-kw">As</span> <span>myPoint</span>
+
+        <span>mySquare</span><span>(</span><span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">4</span><span>)</span> <span class="tok-kw">As</span> <span>myPoint</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Union</span>
+
+    <span>char</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>*</span> <span class="tok-nu">1</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span></pre></code><br>
+<br>
+The <code>objid</code> field would indicate which type of object is contained within the union definition. That is, a 1 may indicate a line, a 2 may indicate a triangle and a 3 may indicate a square. Since the definition defines a single object, a <code>Union</code> is used to enclose the endpoint arrays to maximize memory usage. <br>
+<br>
+To print the object to the screen, you would examine the objid and then use the Lbound and Ubound on the appropriate endpoint array definition, printing the number of lines that correspond to the type of object. <br>
+<br>
+One further enhancement you can make to this program is to add a function pointer to the type definition, and then write print routines that correspond to the type of object being printed. Using this technique will enable you to further extend the usefulness of the code by simplifying the process of adding new objects to the type definition. <br>
+<br>
+For example, if you needed to be able to describe a cube, you would simply add an new array to the union, add a cube print function, and the type definition would be able to print a cube by simply adding a few lines of code, while keeping the original functionality intact.<br>
+<br>
+<div> Array Initialization </div><br>
+<br>
+You can initialize an array with values when using the <code>Dim</code> statement in a manner similar to initializing any of the other intrinsic data types, and type definitions. The following code snippet illustrates the syntax using a one dimensional array.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span>aArray</span><span>(</span><span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">5</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=&gt;</span> <span>{</span><span class="tok-nu">1</span><span>,</span> <span class="tok-nu">2</span><span>,</span> <span class="tok-nu">3</span><span>,</span> <span class="tok-nu">4</span><span>,</span> <span class="tok-nu">5</span><span>}</span></pre></code><br>
+<br>
+This code snippet dimensions an integer array with 5 elements, then sets the elements to the list contained within the curly brackets. The arrow operator, =&gt; tells the compiler that the list following the <code>Dim</code> statement should be used to initialize the array. <br>
+<br>
+You can also dimension multidimensional arrays in the same manner, by specifying blocks of data enclosed within curly braces as the following code snippet illustrates.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span>bArray</span><span>(</span><span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">2</span><span>,</span> <span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">5</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=&gt;</span> <span>{{</span><span class="tok-nu">1</span><span>,</span> <span class="tok-nu">2</span><span>,</span> <span class="tok-nu">3</span><span>,</span> <span class="tok-nu">4</span><span>,</span> <span class="tok-nu">5</span><span>},{</span><span class="tok-nu">6</span><span>,</span> <span class="tok-nu">7</span><span>,</span> <span class="tok-nu">8</span><span>,</span> <span class="tok-nu">9</span><span>,</span> <span class="tok-nu">10</span><span>}}</span></pre></code><br>
+<br>
+In this example, the first block, <code>{1, 2, 3, 4, 5}</code>, corresponds to row 1, and the second block, <code>{6, 7, 8, 9, 10}</code>, corresponds to row 2. Remember that FreeBASIC arrays are row-major, so the row is specified before the column. When you initialize an array in this manner, you must be sure that the number of elements defined will fit into the array.<br>
+<br>
+<div> Type Array Initialization </div><br>
+<br>
+Not only can you initialize an array of simple data types, you can also initialize an array with composite types. The following code snippet illustrates a type array that contains an array as an element of the type.<br>
+<br>
+<code><pre class="code"><span class="tok-kw">Type</span> <span>aType</span>
+
+    <span>a</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+    <span>b</span> <span class="tok-kw">As</span> <span class="tok-kw">Byte</span>
+
+    <span>c</span><span>(</span><span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">2</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>*</span> <span class="tok-nu">10</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span>aType</span> <span>myType</span><span>(</span><span class="tok-nu">1</span> <span class="tok-kw">To</span> <span class="tok-nu">2</span><span>)</span> <span>=&gt;</span> <span>{</span> <span>(</span><span class="tok-nu">1234</span><span>,</span> <span class="tok-nu">12</span><span>,</span> <span>{</span><span>&quot;Hello&quot;</span><span>,</span> <span>&quot;World&quot;</span><span>}),</span> <span>(</span><span class="tok-nu">5678</span><span>,</span> <span class="tok-nu">24</span><span>,</span> <span>{</span><span>&quot;From&quot;</span><span>,</span> <span>&quot;Freebasic&quot;</span><span>})}</span></pre></code><br>
+<br>
+The curly brackets signify that this is an array initialization, while the parenthesis indicate the type initialization. Since the type has an embedded array, you use the curly brackets to load the data into the embedded array, just as you would a stand-alone array. If the embedded array was a multidimensional array, then you would need to wrap each row in { and } just as you would a stand-alone array. <br>
+<br>
+<div> Using the -exx Compiler Switch </div><br>
+<br>
+The -exx compiler switch will enable error and bounds checking within your program. If you go outside the bounds of an array within your program, the compiler will generate an "out of bounds" error while the program is running. <br>
+<br>
+This is a great help in debugging your program, and finding problems associated with arrays. -exx will also  inform of you of Null pointer assignments, so it is quite useful when working with pointers as well. <br>
+<br>
+Using -exx does add quite of bit of additional code to your program, so once your program is functioning correctly, you will want to compile the program without the -exx switch.<br>
+<br>
+<i>Last Reviewed by Sancho3 on February 06, 2018</i>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../index.html">Home</a> ·
+         <a href="../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../nav.js?v=70a6b70236"></script>
+<script src="../../search-index.js"></script>
+<script src="../../assets/app.js?v=456d079659"></script>
+<script src="../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

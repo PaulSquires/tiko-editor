@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CGpGraphicsPathIterator.CopyData — Help Center</title>
+<meta name="description" content="Copies a subset of the path&#x27;s data points to a **GpPointF** array and copies a subset of the path&#x27;s point types to a byte array.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpgraphicspathiterator/cgpgraphicspathiterator-copydata.html">
+<meta property="og:title" content="CGpGraphicsPathIterator.CopyData">
+<meta property="og:description" content="Copies a subset of the path&#x27;s data points to a **GpPointF** array and copies a subset of the path&#x27;s point types to a byte array.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpgraphicspathiterator/cgpgraphicspathiterator-copydata.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-classes/cgpgraphicspathiterator/cgpgraphicspathiterator-copydata.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cgpgraphics-class.html">CGpGraphics Class</a></div>
+<h1>CGpGraphicsPathIterator.CopyData<span class="h1kind">method</span></h1>
+<p class="lede">Copies a subset of the path&#x27;s data points to a **GpPointF** array and copies a subset of the path&#x27;s point types to a byte array.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">method</span><span class="badge">CGpGraphics.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION CopyData (BYVAL pts AS GpPointF PTR, BYVAL types AS BYTE PTR, BYVAL startIndex AS INT_, BYVAL endIndex AS INT_) AS INT</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>pts</code></td><td></td><td>Pointer to an array that receives a subset of the path's data points.</td></tr><tr><td><code>types</code></td><td></td><td>Pointer to an array that receives a subset of the path's point types.</td></tr><tr><td><code>startIndex</code></td><td></td><td>Integer that specifies the starting index of the points and types to be copied.</td></tr><tr><td><code>endIndex</code></td><td></td><td>Integer that specifies the ending index of the points and types to be copied.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>This method returns the number of points copied. This is the same as the number of types copied.</p>
+<h2>Description</h2>
+<p>Copies a subset of the path's data points to a <strong>GpPointF</strong> array and copies a subset of the path's point types to a byte array.</p>
+<h2>Example</h2>
+<p>' ======================================================================================== ' Creates a path with two figures. ' Uses GdipPathIterCopyData to extract the first three points and their types. ' Draws the extracted segment and displays point info in the window. ' ======================================================================================== SUB Example_PathIterCopyData (BYVAL hdc AS HDC)</p>
+<p>' // Create a graphics object from the window device context DIM graphics AS CGpGraphics = hdc ' // Set the scale transform graphics.ScaleTransformForDpi</p>
+<p>' // Create path with two figures DIM path AS CGpGraphicsPath path.AddLine(20, 20, 120, 20) path.AddLine(120, 20, 70, 100) path.CloseFigure()</p>
+<p>path.StartFigure() path.AddLine(150, 30, 200, 80) path.AddLine(200, 80, 150, 130)</p>
+<p>' // Create iterator and copy subset (indices 0 to 2) DIM iterator AS CGpGraphicsPathIterator = CGpGraphicsPathIterator(@path) DIM points(0 TO 2) AS GpPointF DIM types(0 TO 2) AS BYTE DIM resultCount AS LONG resultCount = iterator.CopyData(@points(0), @types(0), 0, 2)</p>
+<p>' // Draw copied segment DIM pen AS CGpPen = CGpPen(ARGB_BLUE, 2.0, UnitPixel) graphics.DrawLines(@pen, @points(0), resultCount)</p>
+<p>' // Display point info DIM font AS CGpFont = CGpFont("Arial", AfxGdipPointsToPixels(12, TRUE), FontStyleRegular, UnitPixel) DIM brush AS CGpSolidBrush = ARGB_BLACK</p>
+<p>DIM yOffset AS SINGLE = 140 FOR i AS LONG = 0 TO resultCount - 1</p>
+<pre class="code"><code>DIM info AS WSTRING * 128
+  info = "Point " &amp; i &amp; ": (" &amp; points(i).x &amp; ", " &amp; points(i).y &amp; ") Type=" &amp; types(i)
+  DIM layout AS GpRectF = (10.0, yOffset, 300.0, 20.0)
+  graphics.DrawString(info, -1, @font, @layout, @brush)
+  yOffset += 20.0</code></pre>
+<p>NEXT</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CGpGraphics.inc</code></li><li>Defined in <span class="srcref">AfxNova/CGpPath.inc:755</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Classes/CGpGraphics Classes.md</span></li><li>Topic: <a href="../cgpgraphics-class.html">CGpGraphics Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

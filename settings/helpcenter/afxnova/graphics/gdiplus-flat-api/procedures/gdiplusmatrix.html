@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GdiPlusMatrix — Help Center</title>
+<meta name="description" content="GpMatrix">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdiplusmatrix.html">
+<meta property="og:title" content="GdiPlusMatrix">
+<meta property="og:description" content="GpMatrix">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdiplusmatrix.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/procedures/gdiplusmatrix.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../gdiplus-objects.html">GdiPlus Objects</a></div>
+<h1>GdiPlusMatrix<span class="h1kind">operator</span></h1>
+<p class="lede">GpMatrix</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">operator</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>PRIVATE OPERATOR GdiPlusMatrix.@ () AS GpMatrix PTR PTR</code></pre>
+<h2>Description</h2>
+<p>A Matrix object represents a 3 ×3 matrix that, in turn, represents an affine transformation. A Matrix object stores only six of the 9 numbers in a 3 ×3 matrix because all 3 ×3 matrices that represent affine transformations have the same third column (0, 0, 1).</p>
+<h2>Examples</h2>
+<p>' ======================================================================================== TYPE GdiPlusMatrix Public: m_Matrix AS GpMatrix PTR DECLARE CONSTRUCTOR (BYVAL matrix AS GpMatrix PTR = NULL) DECLARE CONSTRUCTOR (BYVAL m11 AS SINGLE, BYVAL m12 AS SINGLE, BYVAL m21 AS SINGLE, BYVAL m22 AS SINGLE, BYVAL dx AS SINGLE, BYVAL dy AS SINGLE) DECLARE CONSTRUCTOR (BYVAL rcf AS GpRectF PTR, BYVAL dstplg AS GpPointF PTR) DECLARE CONSTRUCTOR (BYVAL rc AS GpRect PTR, BYVAL dstplg AS GpPoint PTR) DECLARE DESTRUCTOR DECLARE OPERATOR CAST () AS GpMatrix PTR DECLARE OPERATOR @ () AS GpMatrix PTR PTR END TYPE ' ========================================================================================</p>
+<p>' ======================================================================================== ' Constructors ' ======================================================================================== ' ======================================================================================== ' Creates and initializes a Matrix object from another Matrix object ' ======================================================================================== PRIVATE CONSTRUCTOR GdiPlusMatrix (BYVAL matrix AS GpMatrix PTR = NULL) IF matrix THEN</p>
+<pre class="code"><code>SetLastError(GdipCloneMatrix(matrix, @m_Matrix))</code></pre>
+<p>ELSE</p>
+<pre class="code"><code>SetLastError(GdipCreateMatrix(@m_Matrix))</code></pre>
+<p>END IF END CONSTRUCTOR ' ======================================================================================== ' ======================================================================================== ' Creates and initializes a Matrix object based on six numbers that define an affine transformation. ' ======================================================================================== PRIVATE CONSTRUCTOR GdiPlusMatrix (BYVAL m11 AS SINGLE, BYVAL m12 AS SINGLE, BYVAL m21 AS SINGLE, BYVAL m22 AS SINGLE, BYVAL dx AS SINGLE, BYVAL dy AS SINGLE) SetLastError(GdipCreateMatrix2(m11, m12, m21, m22, dx, dy, @m_Matrix)) END CONSTRUCTOR ' ======================================================================================== ' ===================================================================================== ' Creates a Matrix object based on a rectangle and a point. ' ===================================================================================== PRIVATE CONSTRUCTOR GdiPlusMatrix (BYVAL rcf AS GpRectF PTR, BYVAL dstplg AS GpPointF PTR) SetLastError(GdipCreateMatrix3(rcf, dstplg, @m_Matrix)) END CONSTRUCTOR ' ===================================================================================== ' ===================================================================================== ' Creates a Matrix object based on a rectangle and a point. ' ===================================================================================== PRIVATE CONSTRUCTOR GdiPlusMatrix (BYVAL rc AS GpRect PTR, BYVAL dstplg AS GpPoint PTR) SetLastError(GdipCreateMatrix3I(rc, dstplg, @m_Matrix)) END CONSTRUCTOR ' ===================================================================================== ' ======================================================================================== ' * Cleanup ' ======================================================================================== PRIVATE DESTRUCTOR GdiPlusMatrix IF m_Matrix THEN GdipDeleteMatrix(m_Matrix) END DESTRUCTOR ' ======================================================================================== ' ======================================================================================== ' Returns a pointer to the GpMatrix object ' ======================================================================================== PRIVATE OPERATOR * (BYREF matrix AS GdiPlusMatrix) AS GpMatrix PTR RETURN matrix.m_Matrix END OPERATOR ' ======================================================================================== ' ======================================================================================== PRIVATE OPERATOR GdiPlusMatrix.CAST () AS GpMatrix PTR RETURN m_Matrix END OPERATOR ' ======================================================================================== ' ======================================================================================== ' Returns the address of a pointer to the GpMatrix object ' ======================================================================================== PRIVATE OPERATOR GdiPlusMatrix.@ () AS GpMatrix PTR PTR RETURN @m_Matrix END OPERATOR ' ========================================================================================</p>
+<p>' ======================================================================================== ' Creates a transformation matrix based on a source rectangle and a destination parallelogram. ' This is especially useful for mapping one shape onto another—like skewing, rotating, or ' stretching a rectangle into a custom shape. ' ======================================================================================== SUB Example_CreateMatrix3 (BYVAL hdc AS HDC)</p>
+<p>' // Create a graphics object from the device context DIM graphics AS GdiPlusGraphics = hdc ' // Set the scale transform graphics.ScaleTransform</p>
+<p>' // Define source rectangle DIM srcRect AS GpRectF = (0, 0, 100, 60)</p>
+<p>' // Define destination parallelogram points DIM destPoints(0 TO 2) AS GpPointF destPoints(0).x = 50  : destPoints(0).y = 50      ' Top-left destPoints(1).x = 160 : destPoints(1).y = 40      ' Top-right destPoints(2).x = 60  : destPoints(2).y = 120     ' Bottom-left</p>
+<p>' // Create matrix to map srcRect to dstPoints DIM matrix AS GdiPlusMatrix = GdiPlusMatrix(@srcRect, @destPoints(0))</p>
+<p>' // Apply matrix to graphics GdipSetWorldTransform(graphics, matrix)</p>
+<p>' // Create pen DIM pen AS GdiPlusPen = GdiPlusPen(ARGB_RED, 2 * graphics.dpiRatio, UnitPixel)</p>
+<p>' // Draw transformed rectangle GdipScaleWorldTransform(graphics, graphics.dpiRatioX, graphics.dpiRatioY, MatrixOrderPrepend) GdipDrawRectangle(graphics, pen, 0, 0, 100, 60)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/AfxGdipObjects.inc:1640</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Flat  Api/GdiPlus Objects.md</span></li><li>Topic: <a href="../gdiplus-objects.html">GdiPlus Objects</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

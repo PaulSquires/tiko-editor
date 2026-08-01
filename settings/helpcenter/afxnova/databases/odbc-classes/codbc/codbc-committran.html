@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CODBC.CommitTran — Help Center</title>
+<meta name="description" content="Requests a commit operation for all active operations on all statements associated with an environment.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/databases/odbc-classes/codbc/codbc-committran.html">
+<meta property="og:title" content="CODBC.CommitTran">
+<meta property="og:description" content="Requests a commit operation for all active operations on all statements associated with an environment.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/databases/odbc-classes/codbc/codbc-committran.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/databases/odbc-classes/codbc/codbc-committran.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../odbc-classes.html">ODBC Classes</a></div>
+<h1>CODBC.CommitTran<span class="h1kind">method</span></h1>
+<p class="lede">Requests a commit operation for all active operations on all statements associated with an environment.</p>
+<div class="badges"><a class="badge" href="../../index.html">Databases</a><span class="badge">method</span><span class="badge">CODBCDbc.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION CommitTran () AS SQLRETURN</code></pre>
+<h2>Return value</h2>
+<p>SQL_SUCCESS, SQL_SUCCESS_WITH_INFO, SQL_ERROR, or SQL_INVALID_HANDLE.</p>
+<h2>Description</h2>
+<p>Requests a commit operation for all active operations on all statements associated with an environment.</p>
+<h2>Example</h2>
+<p>#include once "AfxNova/COdbc.inc" USING AfxNova</p>
+<p>' // Create a connection object and connect with the database DIM wszConStr AS WSTRING * 260 = "DRIVER={Microsoft Access Driver (*.mdb)};DBQ=biblio.mdb" DIM pDbc AS CODBC = wszConStr IF pDbc.Handle = NULL THEN PRINT "Unable to create the connection handle" : SLEEP : END</p>
+<p>' // Allocate an statement object DIM pStmt AS COdbcStmt = @pDbc IF pStmt.Handle = NULL THEN PRINT "Unable to create the statement handle" : SLEEP : END</p>
+<p>' // Cursor type pStmt.SetMultiuserKeysetCursor ' // Bind the columns DIM AS LONG lAuId, cbAuId pStmt.BindCol(1, @lAuId, @cbAuId) DIM wszAuthor AS WSTRING * 260, cbAuthor AS LONG pStmt.BindCol(2, @wszAuthor, SIZEOF(wszAuthor), @cbAuthor) DIM iYearBorn AS SHORT, cbYearBorn AS LONG pStmt.BindCol(3, @iYearBorn, @cbYearBorn)</p>
+<p>' // Generate a result set pStmt.ExecDirect ("SELECT * FROM Authors ORDER BY Author")</p>
+<p>' // Fill the values of the bounded application variables and its sizes lAuId     = 998               : cbAuID     = SIZEOF(lAuId) wszAuthor = "Edgar Allan Poe" : cbAuthor   = LEN(wszAuthor) iYearBorn = 1809              : cbYearBorn = SIZEOF(iYearBorn) ' // Add the record pStmt.AddRecord IF pStmt.Error = FALSE THEN PRINT "Record added" ELSE PRINT pStmt.GetErrorInfo</p>
+<p>' // Commit the transaction ' pDbc.CommitTran ' IF pDbc.Error = FALSE THEN PRINT "Commit succeeded" ' or Rollbacks it because this is a test pDbc.RollbackTran IF pDbc.Error = FALSE THEN PRINT "Rollback succeeded" ELSE PRINT pDbc.GetErrorInfo</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CODBCDbc.inc</code></li><li>Defined in <span class="srcref">AfxNova/COdbcDbc.inc:187</span></li><li>Documented in <span class="srcref">Databases/ODBC Classes/CODBC Class.md</span></li><li>Topic: <a href="../odbc-classes.html">ODBC Classes</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

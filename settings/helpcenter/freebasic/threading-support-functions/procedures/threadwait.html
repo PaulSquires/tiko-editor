@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ThreadWait — Help Center</title>
+<meta name="description" content="Waits for a thread to finish execution and releases the thread handle">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/threading-support-functions/procedures/threadwait.html">
+<meta property="og:title" content="ThreadWait">
+<meta property="og:description" content="Waits for a thread to finish execution and releases the thread handle">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/threading-support-functions/procedures/threadwait.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/threading-support-functions/procedures/threadwait.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>ThreadWait<span class="h1kind">sub</span></h1>
+<p class="lede">Waits for a thread to finish execution and releases the thread handle</p>
+<div class="badges"><a class="badge" href="../index.html">Threading Support Functions</a><span class="badge">sub</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>Declare Sub ThreadWait ( ByVal id As Any Ptr )</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>id</code></td><td></td><td><code><a href="../../procedures/procedures/any.html">Any</a> <a href="../../standard-data-types/procedures/pointer-ptr.html">Ptr</a></code> handle of a thread created by <code><a href="threadcreate.html">ThreadCreate</a></code> or <code><a href="threadcall.html">ThreadCall</a></code></td></tr></tbody></table></div>
+<h2>Description</h2>
+<br>
+<b>ThreadWait</b> waits for a thread created by <code><a href="threadcreate.html">ThreadCreate</a></code> or <code><a href="threadcall.html">ThreadCall</a></code> to finish execution, and then releases the resources associated with the thread handle. <b>ThreadWait</b> does not return until the thread designated by <code><i>id</i></code> ends.<br>
+During the wait, no CPU time is consumed by the caller.<br>
+<br>
+In order to release a thread handle without waiting for the thread to finish, use <code><a href="threaddetach.html">ThreadDetach</a></code>.<br>
+<br>
+<b>ThreadWait</b> does not force the thread to end; if a thread requires a signal to force its end, a mechanism such as shared variables and mutexes must be used.<br>
+<br>
+In order to avoid memory leaks, the safe way to end a thread is to always signal to it that it must end, and then call <b>ThreadWait</b> on that thread except if <code><a href="threaddetach.html">ThreadDetach</a></code> has previously been called.<br>
+<br>
+The intrinsic macro <code><a href="../../intrinsic-defines/procedures/fb-mt.html">__FB_MT__</a></code> is only automatically set from the point of usage of <b>ThreadWait</b> onward.<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Usage</h3><code><br>
+<b>ThreadWait</b>( <i>id</i> )<br>
+</code><br>
+
+<h3>Dialect Differences</h3><br>
+<ul><li> Threading is not allowed in the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang qb</a></i> dialect.<br>
+<br>
+</li></ul>
+<h3>Platform Differences</h3><br>
+<ul><li> <b>ThreadWait</b> is not available with the DOS version of FreeBASIC, because multithreading is not supported by DOS kernel nor the used extender.<br>
+<br>
+</li></ul>
+<h3>Differences from QB</h3><br>
+<ul><li> New to FreeBASIC<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="threadcreate.html">ThreadCreate</a></code><br>
+<li> <code><a href="threaddetach.html">ThreadDetach</a></code><br>
+<br>
+</li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+See the <code><a href="threadcreate.html">ThreadCreate</a></code> examples.<br>
+<br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgThreadWait.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

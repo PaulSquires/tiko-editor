@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CGpBitmap.ConvertFormat — Help Center</title>
+<meta name="description" content="Converts a bitmap to a specified pixel format.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpbitmap/cgpbitmap-convertformat.html">
+<meta property="og:title" content="CGpBitmap.ConvertFormat">
+<meta property="og:description" content="Converts a bitmap to a specified pixel format.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpbitmap/cgpbitmap-convertformat.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-classes/cgpbitmap/cgpbitmap-convertformat.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cgpimage-class.html">CGpImage Class</a></div>
+<h1>CGpBitmap.ConvertFormat<span class="h1kind">method</span></h1>
+<p class="lede">Converts a bitmap to a specified pixel format.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">method</span><span class="badge">CGpBitmap.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION ConvertFormat (BYVAL pxFormat AS PixelFormat, BYVAL nDitherType AS DitherType, BYVAL nPaletteType AS PaletteType, BYVAL colourPalette AS ColorPalette PTR, BYVAL alphaThresholdPercent AS SINGLE) AS GpStatus</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>pxFormat</code></td><td></td><td>Pixel format constant that specifies the new pixel format.</td></tr><tr><td><code>dithertype</code></td><td></td><td>Element of the <strong>DitherType</strong> enumeration that specifies the dithering algorithm. In cases where the conversion does not reduce the bit depth of the pixel data, pass <strong>DitherTypeNone</strong>.</td></tr><tr><td><code>nPaletteType</code></td><td></td><td>Element of the <strong>PaletteType</strong> enumeration that specifies a standard palette to be used for dithering. If you are converting to a non-indexed format, this parameter is ignored. In that case, pass any element of the <strong>PaletteType</strong> enumeration, say <strong>PaletteTypeCustom</strong>.</td></tr><tr><td><code>colourPalette</code></td><td></td><td>Pointer to a ColorPalette structure that specifies the palette whose indexes are stored in the pixel data of the converted bitmap. This palette (called the actual palette) does not have to have the type specified by the <em>palettetype</em> parameter. The <em>palettetype</em> parameter specifies a standard palette that can be used by any of the ordered or spiral dithering algorithms. If the actual palette has a type other than that specified by the palettetype parameter, then the <strong>ConvertFormat</strong> method performs a nearest-color conversion from the standard palette to the actual palette.</td></tr><tr><td><code>alphaThresholdPercent</code></td><td></td><td>Single precision number in the range 0 through 100 that specifies which pixels in the source bitmap will map to the transparent color in the converted bitmap. A value of 0 specifies that none of the source pixels map to the transparent color. A value of 100 specifies that any pixel that is not fully opaque will map to the transparent color. A value of t specifies that any source pixel less than t percent of fully opaque will map to the transparent color. Note that for the alpha threshold to be effective, the palette must have a transparent color. If the palette does not have a transparent color, pixels with alpha values below the threshold will map to color that most closely matches (0, 0, 0, 0), usually black.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>If the function succeeds, it returns <strong>StatusOk</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<p>Flat API function: <strong>GdipBitmapConvertFormat</strong></p>
+<h2>Description</h2>
+<p>Converts a bitmap to a specified pixel format. The original pixel data in the bitmap is replaced by the new pixel data.</p>
+<h2>Example</h2>
+<p>' ======================================================================================== ' The CGpBitmap ConvertFormat method wraps the GdipBitmapConvertFormat, which is a GDI+ 1.1 ' function that converts the pixel format of an existing bitmap to another format—such as ' from 32bpp ARGB to 8bpp indexed. It replaces the original pixel data with new data that ' matches the target format. ' ======================================================================================== SUB Example_ConvertFormat (BYVAL hdc AS HDC)</p>
+<p>' // Create a graphics object from the window device context DIM graphics AS CGpGraphics = hdc ' // Set the scaling factors using the DPI ratios graphics.ScaleTransformForDpi</p>
+<p>' // Create original bitmap from buffer DIM nWidth AS LONG = 100 DIM nHeight AS LONG = 100 DIM bytesPerPixel AS LONG = 4 DIM stride AS LONG = nWidth * bytesPerPixel DIM buffer(stride * nHeight - 1) AS UBYTE</p>
+<p>FOR y AS LONG = 0 TO nHeight - 1</p>
+<pre class="code"><code>FOR x AS LONG = 0 TO nWidth - 1
+     DIM offset AS LONGINT = y * stride + x * bytesPerPixel
+     buffer(offset + 0) = x * 255 \ nWidth    ' Blue
+     buffer(offset + 1) = y * 255 \ nHeight   ' Green
+     buffer(offset + 2) = 128                 ' Red
+     buffer(offset + 3) = 255                 ' Alpha
+  NEXT</code></pre>
+<p>NEXT</p>
+<p>DIM bmp AS CGpBitmap = CGpBitmap(nWidth, nHeight, stride, PixelFormat32bppARGB, @buffer(0))</p>
+<p>' // Convert to 8bpp indexed format bmp.ConvertFormat(PixelFormat8bppIndexed, DitherTypeNone, PaletteTypeFixedHalftone216, NULL, 0)</p>
+<p>' // Draw the converted bitmap. graphics.DrawImage(@bmp, 10, 10)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CGpBitmap.inc</code></li><li>Defined in <span class="srcref">AfxNova/CGpBitmap.inc:704</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Classes/CGpImage Classes.md</span></li><li>Topic: <a href="../cgpimage-class.html">CGpImage Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

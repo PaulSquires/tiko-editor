@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JSON Reader and Writer classes — Help Center</title>
+<meta name="description" content="JSON Reader and Writer classes — 20 documented members. WebView reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/webview/json-reader-and-writer-classes.html">
+<meta property="og:title" content="JSON Reader and Writer classes">
+<meta property="og:description" content="JSON Reader and Writer classes — 20 documented members. WebView reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/webview/json-reader-and-writer-classes.html">
+<link rel="stylesheet" href="../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/webview/json-reader-and-writer-classes.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span>WebView</div>
+<h1>JSON Reader and Writer classes</h1>
+<h2>Members (20)</h2>
+<div class="memberlist"><a href="jsonreader/jsonreader-constructor.html"><span class="m-n">Constructor</span><span class="m-d">Creates a new **JsonReader** object initialized to the specified value.</span></a><a href="jsonwriter/jsonwriter-beginarray.html"><span class="m-n">BeginArray</span><span class="m-d">Emits “[”, increases depth, pushes a “first item” flag, and inserts newline+indent.</span></a><a href="jsonwriter/jsonwriter-beginobject.html"><span class="m-n">BeginObject</span><span class="m-d">Structures control with inline suppression.</span></a><a href="jsonwriter/jsonwriter-clear.html"><span class="m-n">Clear</span><span class="m-d">Resets the buffer, depth, and firstItemStack to an empty state.</span></a><a href="jsonwriter/jsonwriter-endarray.html"><span class="m-n">EndArray</span><span class="m-d">Closes the array with proper dedent and “]”, then pops the stack.</span></a><a href="jsonwriter/jsonwriter-endobject.html"><span class="m-n">EndObject</span><span class="m-d">Closes the object with proper dedent and “}”.</span></a><a href="jsonwriter/jsonwriter-name.html"><span class="m-n">Name</span><span class="m-d">Writes a JSON object key with correct escaping, colon, and spacing.</span></a><a href="jsonwriter/jsonwriter-readnext.html"><span class="m-n">ReadNext</span><span class="m-d">Reads the next token.</span></a><a href="jsonwriter/jsonwriter-readnumber.html"><span class="m-n">ReadNumber</span><span class="m-d">Parses a JSON number.</span></a><a href="jsonwriter/jsonwriter-readstring.html"><span class="m-n">ReadString</span><span class="m-d">Reads a string by slicing the raw JSON string and unquoting via **JSonUnquoteW**.</span></a><a href="jsonwriter/jsonwriter-setindentsize.html"><span class="m-n">SetIndentSize</span><span class="m-d">Control spaces per indent level.</span></a><a href="jsonwriter/jsonwriter-setinlinethreshold.html"><span class="m-n">SetInlineThreshold</span><span class="m-d">Control spaces per indent level.</span></a><a href="jsonwriter/jsonwriter-skipwhitespace.html"><span class="m-n">SkipWhitespace</span><span class="m-d">Advances the position past spaces, tabs, CR and LF.</span></a><a href="jsonwriter/jsonwriter-tobstring.html"><span class="m-n">ToBString</span><span class="m-d">Returns the current buffer as BSTRING (UTF-16).</span></a><a href="jsonwriter/jsonwriter-toutf8.html"><span class="m-n">ToUtf8</span><span class="m-d">Returns the current buffer as a utf-8 string.</span></a><a href="jsonwriter/jsonwriter-value.html"><span class="m-n">Value</span><span class="m-d">Emits a JSON string with escaping for quotes, backslashes, control chars, and nonprintables via \uXXXX.</span></a><a href="jsonwriter/jsonwriter-valuebool.html"><span class="m-n">ValueBool</span><span class="m-d">Emits a boolean true or false value.</span></a><a href="jsonwriter/jsonwriter-valuenull.html"><span class="m-n">ValueNull</span><span class="m-d">Emits a literal null, respecting comma/indent rules.</span></a><a href="jsonwriter/jsonwriter-valuesafearray.html"><span class="m-n">ValueSafeArray</span><span class="m-d">Serializes a 1‑D SAFEARRAY as JSON array with smart inline vs pretty layout.</span></a><a href="jsonwriter/jsonwriter-valuevariant.html"><span class="m-n">ValueVariant</span><span class="m-d">Serializes a `DVARIANT` using JSON‑compatible mapping.</span></a></div>
+<h2>Documentation</h2>
+<h2 id="json-reader-and-writer-classes">JSON Reader and Writer classes</h2>
+<p>UTF‑16–native <code>JSON</code> reader/writer plus a string unquoter, designed to interop cleanly with BSTR/DWSTRING, DVARIANT, and DSafeArray.</p>
+<p>Zero dependencies, COM‑friendly types, predictable pretty‑printing, and safe handling of escapes/control chars.</p>
+<h3 id="jsonunquotew-function">JsonUnquoteW function</h3>
+<p>Decodes a <code>JSON</code> string literal into a <code>DWSTRING</code>, resolving escape sequences and control codes.</p>
+<pre class="code"><code>FUNCTION JSonUnquoteW (BYREF wszJson AS WSTRING) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszJson</em></td><td>A JSON‑encoded string surrounded by quotes.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Input/contract: Expects a JSON‑encoded string surrounded by quotes. Returns empty if the input isn’t a quoted JSON string.</p>
+<p>Decoding rules: Handles \" \\ \/ \b \f \n \r \t and \uXXXX (one UTF‑16 code unit per escape). Surrogate pairs pass through correctly when present as consecutive \uXXXX sequences.</p>
+<p>Typical use: Consume <code>WebView2</code> <strong>ExecuteScript</strong> string results (which arrive as JSON strings) and recover the plain text.</p>
+<hr>
+<h2 id="jsonreader-class">JsonReader class</h2>
+<p>Tokenizes a UTF‑16 JSON text into a stream of <strong>JsonToken</strong> entries without allocating a DOM.</p>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="#constructor1">Constructor</a></td><td>Creates a new <strong>JsonReader</strong> object initialized to the specified value.</td></tr><tr><td><a href="#readxext">ReadNext</a></td><td>Reads the next token.</td></tr><tr><td><a href="#readumber">ReadNumber</a></td><td>Parses a JSON number.</td></tr><tr><td><a href="jsonwriter/jsonwriter-readstring.html">ReadString</a></td><td>Reads a string by slicing the raw JSON string and unquoting via <strong>JSonUnquoteW</strong>.</td></tr><tr><td><a href="jsonwriter/jsonwriter-skipwhitespace.html">SkipWhitespace</a></td><td>Advances the position past spaces, tabs, CR and LF.</td></tr></tbody></table></div>
+<hr>
+<h2 id="jsonwriter-class">JsonWriter class</h2>
+<p>Builds JSON text into an internal <code>BSTRING</code> buffer with optional pretty‑printing and smart inline formatting.</p>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="jsonwriter/jsonwriter-beginarray.html">BeginArray</a></td><td>Emits “[”, increases depth, pushes a “first item” flag, and inserts newline+indent.</td></tr><tr><td><a href="jsonwriter/jsonwriter-beginobject.html">BeginObject</a></td><td>Structures control with inline suppression.</td></tr><tr><td><a href="jsonwriter/jsonwriter-clear.html">Clear</a></td><td>Resets the buffer, depth, and firstItemStack to an empty state.</td></tr><tr><td><a href="jsonwriter/jsonwriter-endarray.html">EndArray</a></td><td>Closes the array with proper dedent and “]”, then pops the stack.</td></tr><tr><td><a href="jsonwriter/jsonwriter-endobject.html">EndObject</a></td><td>Closes the object with proper dedent and “}”.</td></tr><tr><td><a href="jsonwriter/jsonwriter-name.html">Name</a></td><td>Writes a JSON object key with correct escaping, colon, and spacing.</td></tr><tr><td><a href="jsonwriter/jsonwriter-setindentsize.html">SetIndentSize</a></td><td>Control spaces per indent level.</td></tr><tr><td><a href="jsonwriter/jsonwriter-setinlinethreshold.html">SetInlineThreshold</a></td><td>Control spaces per indent level.</td></tr><tr><td><a href="jsonwriter/jsonwriter-tobstring.html">ToBString</a></td><td>Returns the current buffer as BSTRING (UTF-16).</td></tr><tr><td><a href="jsonwriter/jsonwriter-toutf8.html">ToUtf8</a></td><td>Returns the current buffer as a utf-8 string.</td></tr><tr><td><a href="jsonwriter/jsonwriter-value.html">Value</a></td><td>Emits a JSON string with escaping for quotes, backslashes, control chars, and nonprintables via \uXXXX.</td></tr><tr><td><a href="jsonwriter/jsonwriter-valuebool.html">ValueBool</a></td><td>Emits a boolean true or false value.</td></tr><tr><td><a href="jsonwriter/jsonwriter-valuenull.html">ValueNull</a></td><td>Emits a literal null, respecting comma/indent rules.</td></tr><tr><td><a href="jsonwriter/jsonwriter-valuesafearray.html">ValueSafeArray</a></td><td>Serializes a 1‑D SAFEARRAY as JSON array with smart inline vs pretty layout.</td></tr><tr><td><a href="jsonwriter/jsonwriter-valuevariant.html">ValueVariant</a></td><td>Serializes a <code>DVARIANT</code> using JSON‑compatible mapping.</td></tr></tbody></table></div>
+<hr>
+<h5 id="json-token-structure">JSON token structure</h5>
+<pre class="code"><code>TYPE JsonToken
+   kind  AS JsonTokenType
+   value AS DWSTRING  ' only for string/number/bool/null
+END TYPE</code></pre>
+<h5 id="json-token-type-enumeration">JSON token type enumeration</h5>
+<pre class="code"><code>ENUM JsonTokenType
+   JSON_NONE = 0
+   JSON_OBJECT_START
+   JSON_OBJECT_END
+   JSON_ARRAY_START
+   JSON_ARRAY_END
+   JSON_STRING
+   JSON_NUMBER
+   JSON_BOOL
+   JSON_NULL
+   JSON_COLON
+   JSON_COMMA
+END ENUM</code></pre>
+<h3 id="constructors1">Constructor (JsonReader)</h3>
+<p>Creates a new <strong>JsonReader</strong> object initialized to the specified value.</p>
+<pre class="code"><code>CONSTRUCTOR JsonReader (BYREF source AS WSTRING)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>source</em></td><td>A JSON‑encoded string surrounded by quotes.</td></tr></tbody></table></div>
+<hr>
+<h5 id="example">Example</h5>
+<pre class="code"><code>' Craft some JSON with tricky bits:
+' - Unicode \u00E9 (é) and surrogate pair \uD83D\uDE03 (??)
+' - Quotes, backslashes, slash, control codes
+' - Numbers with exponents, booleans, null
+DIM sample AS DWSTRING = _
+    "{""name"":""Jos" &amp; WCHR(&amp;h00E9) &amp; " " &amp; WCHR(&amp;hD83D) &amp; WCHR(&amp;hDE03) &amp; """, " &amp; _
+    """quote"":""He said """"Hello/World""""!"", " &amp; _
+    """newline"":""Line1" &amp; WCHR(10) &amp; "Line2"", " &amp; _
+    """pi"":3.14159, ""exp"":-2.5e+3, " &amp; _
+    """ok"":true, ""missing"":null}"
+
+DIM rdr AS JsonReader = JsonReader(sample)
+DIM tok AS JsonToken
+DIM idx AS LONG
+
+WHILE rdr.ReadNext(tok)
+   idx += 1
+   PRINT idx; ". "; 
+   SELECT CASE tok.kind
+      CASE JSON_STRING
+         PRINT "STRING: "; tok.value
+      CASE JSON_NUMBER
+         PRINT "NUMBER: "; tok.value
+      CASE JSON_BOOL
+         PRINT "BOOL: "; tok.value
+      CASE JSON_NULL
+         PRINT "NULL"
+      CASE JSON_OBJECT_START
+         PRINT "{"
+      CASE JSON_OBJECT_END
+         PRINT "}"
+      CASE JSON_ARRAY_START
+         PRINT "["
+      CASE JSON_ARRAY_END
+         PRINT "]"
+      CASE JSON_COLON
+         PRINT ":"
+      CASE JSON_COMMA
+         PRINT ","
+      CASE ELSE
+         PRINT "UNKNOWN"
+   END SELECT
+WEND</code></pre>
+<p>Output:</p>
+<pre class="code"><code> 1. {
+ 2. STRING: name
+ 3. :
+ 4. STRING: José 😃
+ 5. ,
+ 6. STRING: quote
+ 7. :
+ 8. STRING: He said
+ 9. STRING: Hello/World
+ 10. STRING: !
+ 11. ,
+ 12. STRING: newline
+ 13. :
+ 14. STRING: Line1
+Line2
+ 15. ,
+ 16. STRING: pi
+ 17. :
+ 18. NUMBER: 3.14159
+ 19. ,
+ 20. STRING: exp
+ 21. :
+ 22. NUMBER: -2.5e+3
+ 23. ,
+ 24. STRING: ok
+ 25. :
+ 26. BOOL: true
+ 27. ,
+ 28. STRING: missing
+ 29. :
+ 30. NULL
+ 31. }</code></pre>
+<h3 id="skipwhitespace">SkipWhitespace</h3>
+<p>Advances the position past spaces, tabs, CR, and LF.</p>
+<pre class="code"><code>SUB JsonReader.SkipWhitespace</code></pre>
+<hr>
+<h3 id="readstring">ReadString</h3>
+<p>Reads a JSON string literal starting at the opening quote and returns its decoded text.</p>
+<pre class="code"><code>FUNCTION ReadString () AS DWSTRING</code></pre>
+<p>Walks raw characters, skips over escapes (including \uXXXX), slices the raw quoted segment, then calls <strong>JsonUnquoteW</strong> to decode.</p>
+<hr>
+<h3 id="readnumber">ReadNumber</h3>
+<p>Parses a JSON number checking for optional sign, integer, optional fraction and optional exponent.</p>
+<pre class="code"><code>FUNCTION ReadNumber () AS DWSTRING</code></pre>
+<p>Returns the exact textual representation captured.</p>
+<p>If no digits are consumed, resets to start and returns empty. If an exponent marker lacks digits, truncates back to pre‑exponent.</p>
+<hr>
+<h3 id="readnext">ReadNext</h3>
+<p>Produces the next token and advances the position.</p>
+<pre class="code"><code>FUNCTION ReadNext (BYREF tok AS JsonToken) AS BOOLEAN</code></pre>
+<p>Tokenization:</p>
+<p>Structural: { } [ ] : , mapped to JSON_OBJECT_START/END, JSON_ARRAY_START/END, JSON_COLON, JSON_COMMA.</p>
+<p>Values: JSON_STRING via ReadString, JSON_NUMBER via ReadNumber, JSON_BOOL (“true”/“false”), JSON_NULL (“null”).</p>
+<p>End/invalid handling: Returns FALSE at end of buffer. On unrecognized input, sets JSON_NONE and fast‑forwards to avoid infinite loops.</p>
+<hr>
+<h3 id="setindentsize">SetIndentSize</h3>
+<p>Sets the maximum character length used to decide if arrays/objects may be emitted inline.</p>
+<pre class="code"><code>SUB SetIndentSize(BYVAL n As LONG)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>n</em></td><td>The number of spaces to indent.</td></tr></tbody></table></div>
+<hr>
+<h3 id="setinlinethreshold">SetInlineThreshold</h3>
+<p>Sets the maximum character length used to decide if arrays/objects may be emitted inline.</p>
+<pre class="code"><code>SUB SetInlineThreshold(BYVAL n As LONG)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>n</em></td><td>The maximum character length.</td></tr></tbody></table></div>
+<hr>
+<h3 id="beginobject">BeginObject</h3>
+<p>Structures control with inline suppression.</p>
+<pre class="code"><code>SUB BeginObject</code></pre>
+<p>Purpose: Emits “{”, increases depth, pushes a “first item” flag, and inserts newline+indent.</p>
+<h5 id="examples">Examples</h5>
+<p>Primitives + string escaping</p>
+<pre class="code"><code>#include once "AfxNova/AfxJson.inc"
+USING AfxNova
+
+DIM esc AS DWSTRING = "Quote: """ &amp; " Newline: " &amp; WCHR(10) &amp; "Tab: " &amp; WCHR(9) &amp; "End"
+DIM jw AS JsonWriter
+jw.SetIndentSize(2)
+jw.BeginObject()
+  jw.Name("s")    : jw.Value(esc)
+  jw.Name("i64")  : jw.Value(9223372036854775807)  ' max signed 64
+  jw.Name("pi")   : jw.Value(3.141592653589793)
+  jw.Name("ok")   : jw.ValueVariant(DVARIANT(TRUE, "BOOLEAN"))   ' VT_BOOL -&gt; true
+  jw.Name("none") : jw.ValueVariant(DVARIANT())                  ' VT_EMPTY -&gt; null
+jw.EndObject()
+print jw.ToUtf8</code></pre>
+<p>Nested objects</p>
+<pre class="code"><code>#include once "AfxNova/AfxJson.inc"
+USING AfxNova
+
+Dim jw As JsonWriter
+jw.SetIndentSize(2)
+jw.BeginObject()
+  jw.Name("app") : jw.Value("AfxNova")
+  jw.Name("version") : jw.Value(1)
+  jw.Name("author")
+  jw.BeginObject()
+    jw.Name("name")  : jw.Value("José Roca")
+    jw.Name("site")  : jw.Value("https://github.com/JoseRoca/AfxNova")
+    jw.Name("active"): jw.ValueVariant(DVARIANT(TRUE, "BOOLEAN"))
+  jw.EndObject()
+  jw.Name("notes") : jw.Value("All UTF-16 internally")
+jw.EndObject()
+print jw.ToBString</code></pre>
+<hr>
+<h3 id="endobject">EndObject</h3>
+<p>Closes the object with proper dedent and “}”, then pops the "first item" stack.</p>
+<pre class="code"><code>SUB EndObject</code></pre>
+<hr>
+<h3 id="beginarray">BeginArray</h3>
+<p>Emits “[”, increases depth, pushes a “first item” flag, and inserts newline+indent.</p>
+<pre class="code"><code>SUB BeginArray</code></pre>
+<hr>
+<h3 id="endarray">EndArray</h3>
+<p>Closes the array with proper dedent and “]”, then pops the stack.</p>
+<pre class="code"><code>SUB EndArray</code></pre>
+<hr>
+<h3 id="name">Name</h3>
+<p>Writes a JSON object key with correct escaping, colon, and spacing.</p>
+<pre class="code"><code>SUB Name (BYREF s AS WSTRING)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>s</em></td><td>The JSON string.</td></tr></tbody></table></div>
+<p>Resets the current level’s "first item" flag so the next value decides comma/newline.</p>
+<hr>
+<h3 id="value">Value</h3>
+<p>Emits a JSON string with escaping for quotes, backslashes, control chars, and nonprintables via \uXXXX.</p>
+<pre class="code"><code>SUB Value (BYREF s AS WSTRING)
+SUB Value (BYVAL n AS LONGINT)
+SUB Value (BYVAL n AS DOUBLE)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>s</em></td><td>The string to emit.</td></tr><tr><td><em>n</em></td><td>The number to emit.</td></tr></tbody></table></div>
+<p>The numbers are converted to string with <strong>WSTR</strong>.</p>
+<h5 id="examples">Examples</h5>
+<p>Unicode text (BMP): accents, em dash, Greek</p>
+<pre class="code"><code>#include once "AfxNova/AfxJson.inc"
+USING AfxNova
+
+DIM uni AS DWSTRING = "España — café — ?x"
+DIM jw AS JsonWriter
+jw.SetIndentSize(2)
+jw.BeginObject()
+  jw.Name("title") : jw.Value("Unicode test")
+  jw.Name("text")  : jw.Value(uni)
+jw.EndObject()
+AfxMsg jw.ToBString</code></pre>
+<h3 id="valuenull">ValueNull</h3>
+<p>Emits a literal null, respecting comma/indent rules.</p>
+<pre class="code"><code>SUB ValueNull</code></pre>
+<hr>
+<h3 id="valuebool">ValueBool</h3>
+<p>Emits a boolean true or false value.</p>
+<pre class="code"><code>SUB ValueBool (BYVAL b AS BOOLEAN)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>b</em></td><td>A boolean true(-1) or false(0) value.</td></tr></tbody></table></div>
+<hr>
+<h3 id="valuevariant">ValueVariant</h3>
+<p>Serializes a <code>DVARIANT</code> using JSON‑compatible mapping.</p>
+<pre class="code"><code>SUB ValueVariant (BYREF dv AS DVARIANT)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td>*dv</td><td>A variant value.</td></tr></tbody></table></div>
+<p><strong>Mapping</strong> :</p>
+<ul><li>Empty/Null: null</li><li>Boolean: true/false</li><li>BSTR: string (escaped)</li><li>R4/R8: number (double)</li><li>Integral types (signed/unsigned): number (integer)</li><li>Arrays (common VT_ARRAY types): delegates to ValueSafeArray</li><li>Other: dv.ToStr() as string fallback</li></ul>
+<h5 id="example">Example</h5>
+<pre class="code"><code>#include once "AfxNova/AfxJson.inc"
+USING AfxNova
+
+DIM jw AS JsonWriter
+jw.SetIndentSize(0) ' 0 = no pretty-print
+jw.BeginObject()
+  jw.Name("k")  : jw.Value("v")
+  jw.Name("n")  : jw.Value(123)
+  jw.Name("b")  : jw.ValueVariant(DVARIANT(FALSE, "BOOLEAN"))
+  jw.Name("nil"): jw.ValueVariant(DVARIANT())
+jw.EndObject()
+print jw.ToBString</code></pre>
+<hr>
+<h3 id="valuesafearray">ValueSafeArray</h3>
+<p>Serializes a 1‑D SAFEARRAY as JSON array with smart inline vs pretty layout.</p>
+<pre class="code"><code>SUB ValueSafeArray (BYREF sa AS DSafeArray)</code></pre>
+<p>Escapes VT_BSTR directly; otherwise serializes each element with <strong>ValueVariant</strong>.</p>
+<h5 id="example">Example</h5>
+<p>SAFEARRAY serialization with inline suppression.</p>
+<pre class="code"><code>#include once "AfxNova/AfxJson.inc"
+USING AfxNova
+
+DIM dvArr AS DSafeArray
+dvArr.Create(VT_VARIANT, 3, 0)
+dvArr.PutVar(0, DVARIANT("first ??"))
+dvArr.PutVar(1, DVARIANT(42))
+dvArr.PutVar(2, DVARIANT(3.14159))
+DIM jw AS JsonWriter
+jw.SetIndentSize(2) ' 2-space indent
+jw.BeginObject()
+  jw.Name("title") : jw.Value("Test")
+  jw.Name("data")  : jw.ValueSafeArray(dvArr)
+jw.EndObject()
+PRINT jw.ToBString()
+
+' Outout:
+{
+  "title": "Test",
+  "data": [
+    "first",
+    42,
+    3.14159
+  ]
+}</code></pre>
+<pre class="code"><code>#include once "AfxNova/AfxJson.inc"
+USING AfxNova
+
+DIM tiny AS DSafeArray
+tiny.Create(VT_VARIANT, 3, 0)
+tiny.PutVar(0, DVARIANT(1))
+tiny.PutVar(1, DVARIANT(2))
+tiny.PutVar(2, DVARIANT(3))
+DIM jw As JsonWriter
+jw.SetIndentSize(2)
+jw.SetInlineThreshold(20)  ' tighten threshold
+jw.BeginObject()
+   jw.Name("a") : jw.ValueSafeArray(tiny)
+   jw.Name("b") : jw.Value("longer text here will break inline")
+jw.EndObject()
+
+Output:
+{
+ "a": [
+   1,
+   2,
+   3
+ ],
+ "b": "longer text here will break inline"
+}</code></pre>
+<hr>
+<h3 id="tobstring">ToBString</h3>
+<p>Returns the current buffer as a BSTRING (UTF‑16).</p>
+<pre class="code"><code>FUNCTION ToBString () AS BSTRING</code></pre>
+<hr>
+<h3 id="toutf8">ToUtf8</h3>
+<p>Returns the current buffer as a UTF-8 string.</p>
+<pre class="code"><code>FUNCTION ToUtf8 () AS STRING</code></pre>
+<hr>
+<h3 id="clear">Clear</h3>
+<p>Resets the buffer, depth, and m_firstItemStack to an empty state.</p>
+<pre class="code"><code>SUB Clear</code></pre>
+<hr>
+<h5 id="notes-and-tips">Notes and tips</h5>
+<p><code>WebView2</code> bridge: Use <strong>ToBString</strong> with <strong>PostWebMessageAsJson</strong> for nativeJSON, and <strong>JSonUnquoteW</strong> for <strong>ExecuteScript</strong> string returns.</p>
+<p>Pretty vs compact: <strong>SetIndentSize(0)</strong> for compact output; rely on <em>m_inlineThreshold</em> to keep small arrays inline even with pretty‑print enabled.</p>
+<p>Robust reading: <strong>JsonReader</strong> is a tokenizer, not a full validator. Guard your consumer against JSON_NONE to handle malformed input.</p>
+<p>Unicode fidelity: Writer escapes control characters and preserves BMP (Basic Multilingual Plane) characters directly; astral plane characters in input strings are emitted as UTF‑16 code units and will be round‑tripped correctly by modern JS engines.</p>
+<p>They’re built first and foremost to make life easier when shuttling data in and out of <code>WebView2</code>, but because they stick to clean JSON in/out and COM‑friendly types, they’re essentially drop‑in utilities anywhere you need structured text parsing or emission.</p>
+<p>That means you could:</p>
+<p>Feed them API responses from a local service or a remote REST endpoint</p>
+<p>Serialize/deserialize data between FreeBASIC apps without pulling in heavier libraries</p>
+<p>Store application state in a readable format for logs or config files</p>
+<p>Transform Excel/Access/other COM‑capable app data into JSON for reporting or exchange</p>
+<hr>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../index.html">Home</a> ·
+         <a href="../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../nav.js?v=70a6b70236"></script>
+<script src="../../search-index.js"></script>
+<script src="../../assets/app.js?v=456d079659"></script>
+<script src="../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

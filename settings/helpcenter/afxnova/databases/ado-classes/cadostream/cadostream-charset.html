@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CAdoStream.Charset — Help Center</title>
+<meta name="description" content="Indicates the character set into which the contents of a text `Stream` should be translated for storage in the `Stream` object&#x27;s internal buffer.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadostream/cadostream-charset.html">
+<meta property="og:title" content="CAdoStream.Charset">
+<meta property="og:description" content="Indicates the character set into which the contents of a text `Stream` should be translated for storage in the `Stream` object&#x27;s internal buffer.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadostream/cadostream-charset.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/databases/ado-classes/cadostream/cadostream-charset.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cadostream-class.html">CAdoStream Class</a></div>
+<h1>CAdoStream.Charset<span class="h1kind">property</span></h1>
+<p class="lede">Indicates the character set into which the contents of a text `Stream` should be translated for storage in the `Stream` object&#x27;s internal buffer.</p>
+<div class="badges"><a class="badge" href="../../index.html">Databases</a><span class="badge">property</span><span class="badge">CAdoStream.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>PROPERTY Charset () AS DWSTRING</code></pre>
+<pre class="code sig"><code>PROPERTY Charset (BYREF wszCharset AS WSTRING)</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>wszcharset</code></td><td></td><td>A value that specifies the character set into which the contents of the <code>Stream</code> will be translated. The default value is "Unicode". Allowed values are typical strings passed over the interface as Internet character set strings (for example, "iso-8859-1", "Windows-1252", etc.). For a list of the character set strings that is known by a system, see the subkeys of HKEY_CLASSES_ROOT\MIME\Database\Charset in the Windows Registry.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>DWSTRING. The character set.</p>
+<h2>Description</h2>
+<p>Indicates the character set into which the contents of a text <code>Stream</code> should be translated for storage in the <code>Stream</code> object's internal buffer.</p>
+<h2>Remarks</h2>
+<p>In a text <code>Stream</code> object, text data is stored in the character set specified by the <strong>Charset</strong> property. The default is Unicode. The <strong>Charset</strong> property is used for converting data going into the <code>Stream</code> or coming out of the <code>Stream</code>. For example, if the <code>Stream</code> contains ISO-8859-1 data and that data is copied to a <strong>BSTR</strong>, the <code>Stream</code> object will convert the data to Unicode. The reverse is also true.</p>
+<p>For an open <code>Stream</code>, the current <strong>Position</strong> must be at the beginning of the <code>Stream</code> (0) to be able to set <strong>Charset</strong>.</p>
+<p><strong>Charset</strong> is used only with text <code>Stream</code> objects (<strong>Type_</strong> is <strong>adTypeText</strong>). This property is ignored if <strong>Type_</strong> is <strong>adTypeBinary</strong>.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CAdoStream.inc</code></li><li>Defined in <span class="srcref">AfxNova/CAdoStream.inc:315</span></li><li>Documented in <span class="srcref">Databases/ADO Classes/CAdoStream Class.md</span></li><li>Topic: <a href="../cadostream-class.html">CAdoStream Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CHeader.SetHotDivider — Help Center</title>
+<meta name="description" content="Changes the color of a divider between header items to indicate the destination of an external drag-and-drop operation.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/cheader/cheader-sethotdivider.html">
+<meta property="og:title" content="CHeader.SetHotDivider">
+<meta property="og:description" content="Changes the color of a divider between header items to indicate the destination of an external drag-and-drop operation.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/cheader/cheader-sethotdivider.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-controls/cheader/cheader-sethotdivider.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cheader-class.html">CHeader Class</a></div>
+<h1>CHeader.SetHotDivider<span class="h1kind">method</span></h1>
+<p class="lede">Changes the color of a divider between header items to indicate the destination of an external drag-and-drop operation.</p>
+<div class="badges"><a class="badge" href="../../index.html">Windows</a><span class="badge">method</span><span class="badge">CHeader.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION SetHotDivider (BYVAL hHeader AS HWND, BYVAL fPos AS BOOLEAN, BYVAL dwInputValue AS LONG) AS LONG</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>hHeader</code></td><td></td><td>The handle of the header control.</td></tr><tr><td><code>fPos</code></td><td></td><td>A value specifying how dw is to be interpreted. The value in this field can be one of the following:<br><strong>TRUE</strong>: Indicates that dw holds client coordinates of the pointer.<br><strong>FALSE</strong>: Indicates that dw holds a divider index value.</td></tr><tr><td><code>dwInputValue</code></td><td></td><td>The value held here is interpreted depending on the value of <em>fPos</em>. If <em>fPos</em> is TRUE, dw represents the x- and y- client coordinates of the pointer. The x-coordinate is in the low word, and the y-coordinate is in the high word. Upon receiving the message, the header control highlights the appropriate divider based on the dw coordinates. If <em>fPos</em> is <strong>FALSE</strong>, <em>dwInputValue</em> represents the integer index of the divider that will be highlighted.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>Returns the index of the divider that the control highlighted.</p>
+<h2>Description</h2>
+<p>Changes the color of a divider between header items to indicate the destination of an external drag-and-drop operation.</p>
+<h2>Remarks</h2>
+<p>A header control set to the <strong>HDS_DRAGDROP</strong> style produces this effect automatically. This message is intended to be used when the owner of the control handles drag-and-drop operations manually.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CHeader.inc</code></li><li>Defined in <span class="srcref">AfxNova/CHeader.inc:472</span></li><li>Documented in <span class="srcref">Windows/WIndows Controls/CHeader Class.md</span></li><li>Topic: <a href="../cheader-class.html">CHeader Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Extern...End Extern — Help Center</title>
+<meta name="description" content="Statement block to allow calling of functions compiled for specific languages or platforms.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/modularizing/procedures/extern-end-extern.html">
+<meta property="og:title" content="Extern...End Extern">
+<meta property="og:description" content="Statement block to allow calling of functions compiled for specific languages or platforms.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/modularizing/procedures/extern-end-extern.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/modularizing/procedures/extern-end-extern.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>Extern...End Extern<span class="h1kind">keyword</span></h1>
+<p class="lede">Statement block to allow calling of functions compiled for specific languages or platforms.</p>
+<div class="badges"><a class="badge" href="../index.html">Modularizing</a><span class="badge">keyword</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>Extern { &quot;C&quot; | &quot;C++&quot; | &quot;Windows&quot; | &quot;Windows-MS&quot; | &quot;rtlib&quot; } [ Lib &quot;libname&quot; ]</code></pre>
+<pre class="code sig"><code>declarative statements</code></pre>
+<pre class="code sig"><code>End Extern</code></pre>
+<h2>Description</h2>
+<br>
+<code><b>Extern</b></code> blocks provide default calling conventions for procedures and mandate a certain name decoration.<br>
+<br>
+<code><b>Extern "C"</b></code> blocks provide a default <code><a href="../../procedures/procedures/cdecl.html">cdecl</a></code> calling convention to procedures, and also preserve the case of all names declared within them. The same effect can be achieved without the EXTERN block by using <code><a href="../../procedures/procedures/cdecl.html">cdecl</a></code> together with an <code><a href="../../procedures/procedures/alias-name.html">Alias</a></code> string containing the exact procedure name.<br>
+<br>
+<code><b>Extern "C++"</b></code> blocks are exactly like <code><b>Extern "C"</b></code> blocks but they also mangle the names declared within them in a way compatible to that of <i>g++-4.x</i>.<br>
+<br>
+<code><b>Extern "Windows"</b></code> blocks provide a default <code><a href="../../procedures/procedures/stdcall.html">stdcall</a></code> calling convention to procedures, preserve the case of all names declared within them, and on the Windows platform, append an <code>"@<i>N</i>"</code> suffix to procedure names, where <code><i>N</i></code> is the total size in bytes of any procedure parameters. Similar to the <code><b>Extern "C"</b></code> block, the same effect can be achieved by using <code><a href="../../procedures/procedures/stdcall.html">stdcall</a></code> and <code><a href="../../procedures/procedures/alias-name.html">Alias</a></code>.<br>
+<br>
+<code><b>Extern "Windows-MS"</b></code> blocks are exactly like <code><b>Extern "Windows"</b></code> blocks but do not append the <code>"@<i>N</i>"</code> suffix to procedure names on Windows.<br>
+<br>
+<code><b>Extern "rtlib"</b></code> blocks combine the name decoration of <code><b>Extern "c"</b></code> and the default calling convention of fbc.  When used in a namespace, the symbol respects the scope of the namespace, however, the name decoration (name mangling) links the symbol to a regular C library.  This behaviour may be desired when declaring procedures that exist in the fb run-time library; where calling convention is based on the target, but we would like to have the compile time name respect the namespace.<br>
+<br>
+<code><a href="../../procedures/procedures/lib.html">Lib</a> "<i>libname</i>"</code> can be used to specify a library which will be linked in as if <code><a href="../../preprocessor/procedures/inclib.html">#Inclib &quot;Libname&quot;</a></code> or <code><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-l.html">-l libname</a></code> had been used. Additionally, all procedure declarations inside the <b>Extern</b> block will use the specified <code><a href="../../procedures/procedures/lib.html">Lib</a> "<i>libname</i>"</code> as if it was specified as part of their declarations (but it can still be overridden with an explicit <code><a href="../../procedures/procedures/lib.html">Lib</a> "<i>libname</i>"</code>).<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Dialect Differences</h3><br>
+<ul><li> <code><b>Extern</b></code> blocks are only available in the <i><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-lang.html">-lang fb</a></i> dialect.<br>
+<br>
+</li></ul>
+<h3>Differences from QB</h3><br>
+<ul><li> New to FreeBASIC<br>
+<br>
+</li></ul>
+<h3>Platform Differences</h3><br>
+<ul><li> On Linux, *BSD and DOS platforms, <code><b>Extern "Windows"</b></code> blocks never append a <code>"@<i>N</i>"</code> suffix to procedure names, and thus are equal to <code><b>Extern "Windows-MS"</b></code>.<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <code><a href="../../procedures/procedures/cdecl.html">cdecl</a></code><br>
+<li> <code><a href="../../procedures/procedures/stdcall.html">stdcall</a></code><br>
+<li> <code><a href="extern.html">Extern</a></code><br>
+<br>
+</li></li></li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-cm">'' This procedure uses the default calling convention for the system, which is</span>
+
+<span class="tok-cm">'' STDCALL on Win32 and CDECL on Linux/DOS/*BSD, and is seen externally as</span>
+
+<span class="tok-cm">'' &quot;MYTEST1@4&quot; on Win32 and &quot;MYTEST1&quot; on Linux/DOS/*BSD (following FB's default</span>
+
+<span class="tok-cm">'' ALL-UPPER-CASE name mangling).</span>
+
+<span class="tok-kw">Sub</span> <span>MyTest1</span> <span>(</span> <span class="tok-kw">ByVal</span> <span>i</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>)</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-kw">Extern</span> <span>&quot;C&quot;</span>
+
+    <span class="tok-cm">'' This procedure uses the CDECL convention and is seen externally</span>
+
+    <span class="tok-cm">'' as &quot;MyTest2&quot;.</span>
+
+    <span class="tok-kw">Sub</span> <span>MyTest2</span> <span>(</span> <span class="tok-kw">ByVal</span> <span>i</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>)</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Extern</span>
+
+
+
+<span class="tok-kw">Extern</span> <span>&quot;C++&quot;</span>
+
+    <span class="tok-cm">'' This procedure uses the CDECL convention and its name is mangled</span>
+
+    <span class="tok-cm">'' compatible to g++-4.x, specifically: &quot;_Z7MyTest3i&quot;</span>
+
+    <span class="tok-kw">Sub</span> <span>MyTest3</span> <span>(</span> <span class="tok-kw">ByVal</span> <span>i</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>)</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Extern</span>
+
+
+
+<span class="tok-kw">Extern</span> <span>&quot;Windows&quot;</span>
+
+    <span class="tok-cm">'' This procedure uses the STDCALL convention and is seen externally</span>
+
+    <span class="tok-cm">'' as &quot;MyTest4@4&quot; on Windows, and &quot;MyTest4&quot; on Linux, *BSD and DOS.</span>
+
+    <span class="tok-kw">Sub</span> <span>MyTest4</span> <span>(</span> <span class="tok-kw">ByVal</span> <span>i</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>)</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Extern</span>
+
+
+
+<span class="tok-kw">Extern</span> <span>&quot;Windows-MS&quot;</span>
+
+    <span class="tok-cm">'' This procedure uses the STDCALL convention and is seen externally</span>
+
+    <span class="tok-cm">'' as &quot;MyTest5&quot;.</span>
+
+    <span class="tok-kw">Sub</span> <span>MyTest5</span> <span>(</span> <span class="tok-kw">ByVal</span> <span>i</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>)</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Extern</span>
+
+
+
+<span>MyTest1</span><span>(</span> <span class="tok-nu">0</span> <span>)</span>
+
+<span>MyTest2</span><span>(</span> <span class="tok-nu">0</span> <span>)</span>
+
+<span>MyTest3</span><span>(</span> <span class="tok-nu">0</span> <span>)</span>
+
+<span>MyTest4</span><span>(</span> <span class="tok-nu">0</span> <span>)</span></pre></code><br>
+<br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgExternBlock.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

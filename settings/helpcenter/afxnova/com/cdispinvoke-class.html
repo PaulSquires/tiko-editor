@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CDispInvoke Class — Help Center</title>
+<meta name="description" content="CDispInvoke Class — 26 documented members. COM reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/com/cdispinvoke-class.html">
+<meta property="og:title" content="CDispInvoke Class">
+<meta property="og:description" content="CDispInvoke Class — 26 documented members. COM reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/com/cdispinvoke-class.html">
+<link rel="stylesheet" href="../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/com/cdispinvoke-class.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span>COM</div>
+<h1>CDispInvoke Class</h1>
+<h2>Members (26)</h2>
+<div class="memberlist"><a href="cdispinvoke/cdispinvoke-attach.html"><span class="m-n">Attach</span><span class="m-d">Attaches a Dispatch pointer.</span></a><a href="cdispinvoke/cdispinvoke-constructor.html"><span class="m-n">Constructor</span><span class="m-d">Creates a single uninitialized object of the class associated with a specified ProgID or CLSID.</span></a><a href="cdispinvoke/cdispinvoke-constructor.html"><span class="m-n">Constructor</span><span class="m-d">Creates a single uninitialized object of the class associated with a specified ProgID or CLSID.</span></a><a href="cdispinvoke/cdispinvoke-constructor.html"><span class="m-n">Constructor</span><span class="m-d">Creates a single uninitialized object of the class associated with a specified ProgID or CLSID.</span></a><a href="cdispinvoke/cdispinvoke-constructor.html"><span class="m-n">Constructor</span><span class="m-d">Creates a single uninitialized object of the class associated with a specified ProgID or CLSID.</span></a><a href="cdispinvoke/cdispinvoke-constructor.html"><span class="m-n">Constructor</span><span class="m-d">Creates a single uninitialized object of the class associated with a specified ProgID or CLSID.</span></a><a href="cdispinvoke/cdispinvoke-detach.html"><span class="m-n">Detach</span><span class="m-d">Detaches a Dispatch pointer.</span></a><a href="cdispinvoke/cdispinvoke-dispinvoke.html"><span class="m-n">DispInvoke</span><span class="m-d">Calls a method or a get property.</span></a><a href="cdispinvoke/cdispinvoke-dispobj.html"><span class="m-n">DispObj</span><span class="m-d">Returns a counted reference of the underlying dispatch pointer.</span></a><a href="cdispinvoke/cdispinvoke-dispptr.html"><span class="m-n">DispPtr</span><span class="m-d">Returns a pointer to the dispatch interface.</span></a><a href="cdispinvoke/cdispinvoke-get.html"><span class="m-n">Get</span><span class="m-d">Calls the specified property of an interface and gets the value returned.</span></a><a href="cdispinvoke/cdispinvoke-getargerr.html"><span class="m-n">GetArgErr</span><span class="m-d">Returns the index within rgvarg of the first argument that has an error.</span></a><a href="cdispinvoke/cdispinvoke-geterrorinfo.html"><span class="m-n">GetErrorInfo</span><span class="m-d">Returns a description of the specified error code.</span></a><a href="cdispinvoke/cdispinvoke-getlastresult.html"><span class="m-n">GetLastResult</span><span class="m-d">Returns the last result code.</span></a><a href="cdispinvoke/cdispinvoke-getlcid.html"><span class="m-n">GetLcid</span><span class="m-d">Retrieves the locale identifier used by the class.</span></a><a href="cdispinvoke/cdispinvoke-getvarresult.html"><span class="m-n">GetVarResult</span><span class="m-d">Returns the last result code returned by a call to the Invoke method.</span></a><a href="cdispinvoke/cdispinvoke-invoke.html"><span class="m-n">Invoke</span><span class="m-d">Calls a method or a get property.</span></a><a href="cdispinvoke/cdispinvoke-operator.html"><span class="m-n">Operator *</span><span class="m-d">Returns the underlying IDispatch pointer.</span></a><a href="cdispinvoke/cdispinvoke-operator-let.html"><span class="m-n">Operator LET</span><span class="m-d">Assigns an IDispatch pointer and increases the reference count.</span></a><a href="cdispinvoke/cdispinvoke-put.html"><span class="m-n">Put</span><span class="m-d">Calls the specified property of an interface and sets the passed value.</span></a><a href="cdispinvoke/cdispinvoke-putref.html"><span class="m-n">PutRef</span><span class="m-d">Assigns a value to an interface member property that contains a reference to an object.</span></a><a href="cdispinvoke/cdispinvoke-set.html"><span class="m-n">Set</span><span class="m-d">Calls the specified property of an interface and sets the passed value.</span></a><a href="cdispinvoke/cdispinvoke-setlcid.html"><span class="m-n">SetLcid</span><span class="m-d">Sets the locale identifier used by the class.</span></a><a href="cdispinvoke/cdispinvoke-setref.html"><span class="m-n">SetRef</span><span class="m-d">Assigns a value to an interface member property that contains a reference to an object.</span></a><a href="cdispinvoke/cdispinvoke-setresult.html"><span class="m-n">SetResult</span><span class="m-d">Sets the last result code.</span></a><a href="cdispinvoke/cdispinvoke-vptr.html"><span class="m-n">vptr</span><span class="m-d">Clears the contents of the class and returns the address of the underlying IDispatch pointer.</span></a></div>
+<h2>Documentation</h2>
+<h2 id="cdispinvoke-class">CDispInvoke Class</h2>
+<p><code>CDispInvoke</code> allows calling COM methods and properties with Free Basic.</p>
+<p><strong>Include file</strong>: AfxNova/CDispInvoke.inc</p>
+<h2 id="constructors">Constructors</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="cdispinvoke/cdispinvoke-constructor.html">Constructor(PROGID)</a></td><td>Creates a single uninitialized object of the class associated with a specified ProgID or CLSID.</td></tr><tr><td><a href="#constructor2">Constructor(CLSID)</a></td><td>Creates a single uninitialized object of the class associated with a specified CLSID.</td></tr><tr><td><a href="#constructor3">Constructor(IDispatch)</a></td><td>Creates a single uninitialized object of the class associated with a pointer to a Dispatch interface.</td></tr><tr><td><a href="#constructor4">Constructor(VARIANT)</a></td><td>Creates a single uninitialized object of the class associated with a variant of the type VT_DISPATCH.</td></tr><tr><td><a href="#constructor5">Constructor(LibName)</a></td><td>Loads the specified library from file and creates an instance of an object.</td></tr></tbody></table></div>
+<hr>
+<h2 id="operators">Operators</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="cdispinvoke/cdispinvoke-operator.html">Operator \*</a></td><td>Returns the underlying IDispatch pointer.</td></tr><tr><td><a href="cdispinvoke/cdispinvoke-operator-let.html">Operator LET</a></td><td>Assigns an IDispatch pointer and increases the reference count.</td></tr><tr><td><a href="cdispinvoke/cdispinvoke-vptr.html">vptr</a></td><td>Clears the contents of the class and returns the address of the underlying IDispatch pointer.</td></tr></tbody></table></div>
+<hr>
+<h2 id="methods-and-properties">Methods and Properties</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="cdispinvoke/cdispinvoke-attach.html">Attach</a></td><td>Attaches a Dispatch pointer.</td></tr><tr><td><a href="cdispinvoke/cdispinvoke-detach.html">Detach</a></td><td>Detaches a Dispatch pointer.</td></tr><tr><td><a href="cdispinvoke/cdispinvoke-dispinvoke.html">DispInvoke</a></td><td>Calls a method or a get property.</td></tr><tr><td><a href="cdispinvoke/cdispinvoke-dispobj.html">DispObj</a></td><td>Returns a counted reference of the underlying dispatch pointer.</td></tr><tr><td><a href="cdispinvoke/cdispinvoke-dispptr.html">DispPtr</a></td><td>Returns a pointer to the dispatch interface.</td></tr><tr><td><a href="cdispinvoke/cdispinvoke-get.html">Get</a></td><td>Calls the specified property of an interface and gets the value returned.</td></tr><tr><td><a href="cdispinvoke/cdispinvoke-getargerr.html">GetArgErr</a></td><td>Returns the index within rgvarg of the first argument that has an error.</td></tr><tr><td><a href="cdispinvoke/cdispinvoke-getvarresult.html">GetVarResult</a></td><td>Returns the last result code returned by a call to the Invoke method.</td></tr><tr><td><a href="cdispinvoke/cdispinvoke-getlcid.html">GetLcid</a></td><td>Retrieves the locale identifier used by the class.</td></tr><tr><td><a href="cdispinvoke/cdispinvoke-invoke.html">Invoke</a></td><td>Calls a method or a get property.</td></tr><tr><td><a href="cdispinvoke/cdispinvoke-setlcid.html">SetLcid</a></td><td>Sets the locale identifier used by the class.</td></tr><tr><td><a href="cdispinvoke/cdispinvoke-put.html">Put</a></td><td>Calls the specified property of an interface and sets the passed value.</td></tr><tr><td><a href="cdispinvoke/cdispinvoke-putref.html">PutRef</a></td><td>Assigns a value to an interface member property that contains a reference to an object.</td></tr><tr><td><a href="cdispinvoke/cdispinvoke-set.html">Set</a></td><td>Calls the specified property of an interface and sets the passed value.</td></tr><tr><td><a href="cdispinvoke/cdispinvoke-setref.html">SetRef</a></td><td>Assigns a value to an interface member property that contains a reference to an object.</td></tr></tbody></table></div>
+<hr>
+<h3 id="error-and-result-codes">Error and result codes</h3>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="cdispinvoke/cdispinvoke-geterrorinfo.html">GetErrorInfo</a></td><td>Returns a description of the specified error code.</td></tr><tr><td><a href="cdispinvoke/cdispinvoke-getlastresult.html">GetLastResult</a></td><td>Returns the last result code.</td></tr><tr><td><a href="cdispinvoke/cdispinvoke-setresult.html">SetResult</a></td><td>Sets the last result code.</td></tr></tbody></table></div>
+<hr>
+<h3 id="Constructor1">Constructor(ProgID)</h3>
+<p>Creates a single uninitialized object of the class associated with a specified ProgID or CLSID.</p>
+<pre class="code"><code>CONSTRUCTOR CDispInvoke (BYREF wszProgID AS CONST WSTRING, BYREF wszLicKey AS WSTRING = "")</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszProgID</em></td><td>The ProgID or the CLSID of the object to create.<br>A ProgID such as "MSCAL.Calendar.7"<br>A CLSID such as "{8E27C92B-1264-101C-8A2F-040224009C02}"</td></tr><tr><td><em>wszLicKey</em></td><td>Optional. The license key as a unicode string.</td></tr></tbody></table></div>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM pDispInvoke AS CDispInvoke = "Scripting.Dictionary"
+' -or-
+pDispInvoke = CDispInvoke(CLSID_Dictionary)
+' where CLSID_Dictionary has been declared as
+'    CONST CLSID_Dictionary = "{EE09B103-97E0-11CF-978F-00A02463E06F}"</code></pre>
+<h5 id="example">Example</h5>
+<p>The following example demonstrates how to use it to create an instance of the VBScript RegExp object and execute a search.</p>
+<pre class="code"><code>#include once "AfxNova/CDispInvoke.inc"
+USING AfxNova
+
+' // Create an instance of the RegExp object
+DIM pDisp AS CDispInvoke = "VBScript.RegExp"
+' // To check for success, see if the value returned by the DispPtr method is not null
+IF pDisp.DispPtr = NULL THEN END
+
+' // Set some properties
+' // Use VARIANT_TRUE or CTRUE, not TRUE, because Free Basic TRUE is a BOOLEAN data type, not a LONG
+pDisp.Put("Pattern") = ".is"
+pDisp.Put("IgnoreCase") = VARIANT_TRUE
+pDisp.Put("Global") = VARIANT_TRUE
+
+' // Execute a search
+DIM pMatches AS CDispInvoke = pDisp.Invoke("Execute", "IS1 is2 IS3 is4")
+' // Parse the collection of matches
+IF pMatches.DispPtr THEN
+   ' // Get the number of matches
+   DIM nCount AS LONG = VAL(pMatches.Get("Count"))
+   ' // This is equivalent to:
+   ' DIM dvRes AS DVARIANT = pMatches.Get("Count")
+   ' DIM nCount AS LONG = (VAL(dvRes)
+   FOR i AS LONG = 0 TO nCount -1
+      ' // Get a pointer to the Match object
+      ' // When using COM Automation, it's not always necessary to make sure that the
+      ' // passed variant with a numeric value is of the exact type, since the standard
+      ' // implementation of DispInvoke tries to coerce parameters. However, it is always
+      ' // safer to use a syntax like DVARIANT(i, "LONG")) than DVARIANT(i)
+'      DIM pMatch AS CDIspInvoke = pMatches.Get("Item", DVARIANT(i, "LONG"))
+      DIM pMatch AS CDIspInvoke = pMatches.Get("Item", i)
+      IF pMatch.DispPtr THEN
+         ' // Get the value of the match and convert it to a string
+         print pMatch.Get("Value")
+      END IF
+   NEXT
+END IF
+
+PRINT
+PRINT "Press any key..."
+SLEEP</code></pre>
+<hr>
+<h2 id="Constructor2">Constructor(CLSID)</h2>
+<p>Creates a single uninitialized object of the class associated with a specified CLSID.</p>
+<pre class="code"><code>CONSTRUCTOR CDispInvoke (BYREF classID AS CONST CLSID)
+CONSTRUCTOR CDispInvoke (BYREF wszClsID AS CONST WSTRING, BYREF wszIID AS CONST WSTRING)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>classID</em></td><td>The CLSID (class identifier) associated with the data and code that will be used to create the object.</td></tr><tr><td><em>wszClsID</em></td><td>A CLSID in string format.</td></tr><tr><td><em>wszIID</em></td><td>The identifier of the interface to be used to communicate with the object.</td></tr></tbody></table></div>
+<h5 id="usage-examples">Usage examples</h5>
+<pre class="code"><code>DIM pDispInvoke AS CDispInvoke = CDispInvoke(CLSID_Dictionary)
+' where CLSID_Dictionary has been declared as
+'   DIM CLSID_Dictionary AS CLSID = (&amp;hEE09B103, &amp;h97E0, &amp;h11CF, {&amp;h97, &amp;h8F, &amp;h00, &amp;hA0, &amp;h24, &amp;h63, &amp;hE0, &amp;h6F})</code></pre>
+<pre class="code"><code>DIM pDispInvoke AS CDispInvoke = (CLSID_Dictionary, IID_IDictionary)
+' where CLSID_Dictionary has been declared as
+'    CONST CLSID_Dictionary = "{EE09B103-97E0-11CF-978F-00A02463E06F}"
+' and IID_IDictionary as
+'    CONST IID_IDictionary = "{42C642C1-97E1-11CF-978F-00A02463E06F}"</code></pre>
+<h3 id="Constructor3">Constructor(IDispatch)</h3>
+<p>Creates a single uninitialized object of the class associated with a pointer to a Dispatch interface.</p>
+<pre class="code"><code>CONSTRUCTOR CDispInvoke (BYVAL pdisp AS IDispatch PTR, BYVAL fAddRef AS BOOLEAN = FALSE)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pdisp</em></td><td>Pointer to a Dispatch interface.</td></tr><tr><td><em>fAddRef</em></td><td>If it is false, the object takes ownership of the interface pointer without calling AddRef. This is the usual case when we assign directly an already AddRefed pointer returned by a COM method. If it is true, then <strong>AddRef is called</strong>. This is needed when we pass a raw pointer.</td></tr></tbody></table></div>
+<h5 id="example">Example</h5>
+<p>The following example combines CDispInvoke and CWmiDisp to set the specified printer as the default one.</p>
+<pre class="code"><code>#include once "AfxNova/CDispInvoke.inc"
+#include once "AfxNova/CWmiDisp.inc"
+USING AfxNova
+
+' // Connect with WMI in the local computer and get the properties of the specified printer
+DIM pDisp AS CDispInvoke = CWmiServices( _
+   $"winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2:" &amp; _
+   "Win32_Printer.DeviceID='OKI B410'").ServicesObj
+
+' // Set the printer as the default printer
+pDisp.Invoke("SetDefaultPrinter")
+
+PRINT
+PRINT "Press any key..."
+SLEEP</code></pre>
+<hr>
+<h3 id="Constructor4">Constructor(VARIANT)</h3>
+<p>Creates a single uninitialized object of the class associated with a variant of the type VT_DISPATCH.</p>
+<pre class="code"><code>CONSTRUCTOR CDispInvoke (BYVAL vDisp AS VARIANT PTR, BYVAL fAddRef AS BOOLEAN = TRUE)
+CONSTRUCTOR CDispInvoke (BYVAL vDisp AS VARIANT, BYVAL fAddRef AS BOOLEAN = TRUE)
+CONSTRUCTOR CDispInvoke (BYREF cvDisp AS DVARIANT)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>vDisp</em></td><td>A VT_DISPATCH variant.</td></tr><tr><td><em>fAddRef</em></td><td>If it is false, the object takes ownership of the interface pointer without calling AddRef. This is the usual case when we assign directly an already AddRefed pointer returned by a COM method. If it is true, then <strong>AddRef</strong> is called. This is needed when we pass a raw pointer.</td></tr><tr><td><em>cvDisp</em></td><td>A VT_DISPATCH DVARIANT.</td></tr></tbody></table></div>
+<hr>
+<h3 id="Constructor5">Constructor(LibName)</h3>
+<p>Loads the specified library from file and creates an instance of an object.</p>
+<pre class="code"><code>CONSTRUCTOR CDispInvoke (BYREF wszLibName AS CONST WSTRING, BYREF rclsid AS CONST CLSID, _
+   BYREF riid AS CONST IID, BYREF wszLicKey AS WSTRING = "")</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wszLibName</em></td><td>Full path where the library is located.</td></tr><tr><td><em>rclsid</em></td><td>The CLSID (class identifier) associated with the data and code that will be used to create the object.</td></tr><tr><td><em>riid</em></td><td>The identifier of the interface to be used to communicate with the object.</td></tr><tr><td><em>wszLicKey</em></td><td>Optional. The license key.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>Not every component is a suitable candidate for use under this overloaded method.</p>
+<ul><li>Only in-process servers (DLLs) are supported.</li><li>Components that are system components or part of the operating system, such as XML, Data Access, Internet Explorer, or DirectX, aren't supported</li><li>Components that are part of an application, such Microsoft Office, aren't supported.</li><li>Components intended for use as an add-in or a snap-in, such as an Office add-in or a control in a Web browser, aren't supported.</li><li>Components that manage a shared physical or virtual system resource aren't supported.</li><li>Visual ActiveX controls aren't supported because they need to be initialized and activated by the OLE container.</li></ul>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>DIM pDispInvoke AS CDispInvoke = (CLSID_Dictionary, IID_IDictionary)
+' where CLSID_Dictionary has been declared as
+'    CONST CLSID_Dictionary = "{EE09B103-97E0-11CF-978F-00A02463E06F}"
+' and IID_IDictionary as
+'    CONST IID_IDictionary = "{42C642C1-97E1-11CF-978F-00A02463E06F}"</code></pre>
+<hr>
+<h3 id="Operator1">Operator *</h3>
+<p>Returns the underlying IDispatch pointer.</p>
+<pre class="code"><code>OPERATOR * (BYREF cdi AS CDispInvoke) AS IDispatch PTR</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>cdi</em></td><td>An instance of the CDispInvoke class.</td></tr></tbody></table></div>
+<hr>
+<h3 id="Operator2">Operator LET (=)</h3>
+<p>Assigns an IDispatch pointer and increases the reference count.</p>
+<pre class="code"><code>OPERATOR Let (BYVAL pdisp AS IDispatch PTR)
+OPERATOR Let (BYVAL vDisp AS VARIANT PTR)
+OPERATOR Let (BYVAL vDisp AS VARIANT)
+OPERATOR Let (BYREF cvDisp AS DVARIANT)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pdisp</em></td><td>An IDispatch pointer.</td></tr><tr><td><em>vDisp</em></td><td>A VT_DISPATCH variant.</td></tr><tr><td><em>cvDisp</em></td><td>A VT_DISPATCH DVARIANT.</td></tr></tbody></table></div>
+<hr>
+<h3 id="vptr">vptr</h3>
+<p>Clears the contents of the class and returns the address of the underlying IDispatch pointer.</p>
+<pre class="code"><code>FUNCTION vptr () AS IDispatch PTR PTR</code></pre>
+<h5 id="remarks">Remarks</h5>
+<p>To pass the class to an OUT BYVAL IDispatch PTR parameter.</p>
+<p>If we pass a <strong>CDispInvoke</strong> variable to a function with an OUT IDispatch parameter without first clearing the contents of the class, we may have a memory leak.</p>
+<hr>
+<h3 id="attach">Attach</h3>
+<p>Attaches a Dispatch pointer to the class.</p>
+<pre class="code"><code>FUNCTION Attach (BYVAL pdisp AS IDispatch PTR, BYVAL fAddRef AS BOOLEAN = FALSE) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>pdisp</em></td><td>Pointer to a Dispatch interface,</td></tr><tr><td><em>fAddRef</em></td><td>If it is false, the object takes ownership of the interface pointer without calling <strong>AddRef</strong>.<br>If it is true, then <strong>AddRef</strong> is called. This is needed when we pass a raw pointer.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<div class="table-wrap"><table><thead><tr><th>HRESULT</th><th>Description</th></tr></thead><tbody><tr><td>S_OK</td><td>Success.</td></tr><tr><td>E_INVALIDARG</td><td>The passed pointer is null.</td></tr></tbody></table></div>
+<hr>
+<h3 id="detach">Detach</h3>
+<p>Detaches the Dispatch pointer from the class.</p>
+<pre class="code"><code>FUNCTION Detach () AS IDispatch PTR</code></pre>
+<h5 id="return-value">Return value</h5>
+<div class="table-wrap"><table><thead><tr><th>HRESULT</th><th>Description</th></tr></thead><tbody><tr><td>S_OK</td><td>Success.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>Extracts and returns the encapsulated interface pointer, and then clears the encapsulated pointer storage to NULL. This removes the interface pointer from encapsulation. It is up  to the caller to call <strong>Release</strong> on the returned interface pointer.</p>
+<hr>
+<h3 id="dispinvoke">DispInvoke</h3>
+<p>Calls a method or a get property.</p>
+<pre class="code"><code>FUNCTION DispInvoke (BYVAL wFlags AS WORD, BYVAL dispIdMember AS DISPID, BYVAL prgArgs AS VARIANT PTR = NULL, _
+   BYVAL cArgs AS UINT = 0, BYVAL lcid AS LCID = LOCALE_USER_DEFAULT) AS HRESULT
+FUNCTION DispInvoke (BYVAL wFlags AS WORD, BYVAL pwszName AS WSTRING PTR, BYVAL prgArgs AS VARIANT PTR = NULL, _
+   BYVAL cArgs AS UINT = 0, BYVAL lcid AS LCID = LOCALE_USER_DEFAULT) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>wFlags</em></td><td>Flags describing the context of the Invoke call.</td></tr><tr><td><em>dispID</em></td><td>Identifies the member. Use <strong>GetIDsOfNames</strong> or the object's documentation to obtain the dispatch identifier.</td></tr><tr><td><em>pwszName</em></td><td>The name of the method or property to call.</td></tr><tr><td><em>prgArgs</em></td><td>Array of variant parameters in reversed order.</td></tr><tr><td><em>cArgs</em></td><td>The number of arguments in the <em>prgArgs</em> array.</td></tr><tr><td><em>lcid</em></td><td>The locale context in which to interpret arguments. The lcid is used by the <strong>GetIDsOfNames</strong> function, and is also passed to Invoke to allow the object to interpret its arguments specific to a locale. Applications that do not support multiple national languages can ignore this parameter.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<div class="table-wrap"><table><thead><tr><th>HRESULT</th><th>Description</th></tr></thead><tbody><tr><td>S_OK</td><td>Success.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>Extracts and returns the encapsulated interface pointer, and then clears the encapsulated pointer storage to NULL. This removes the interface pointer from encapsulation. It is up  to the caller to call <strong>Release</strong> on the returned interface pointer.</p>
+<div class="table-wrap"><table><thead><tr><th>HRESULT</th><th>Description</th></tr></thead><tbody><tr><td>S_OK</td><td>Success.</td></tr><tr><td>DISP_E_BADPARAMCOUNT</td><td>The number of elements provided to <strong>DISPPARAMS</strong> is different from the number of arguments accepted by the method or property.</td></tr><tr><td>DISP_E_BADVARTYPE</td><td>One of the arguments in <strong>DISPPARAMS</strong> is not a valid variant type.</td></tr><tr><td>DISP_E_EXCEPTION</td><td>The application needs to raise an exception.</td></tr><tr><td>DISP_E_MEMBERNOTFOUND</td><td>The requested member does not exist.</td></tr><tr><td>DISP_E_NONAMEDARGS</td><td>This implementation of IDispatch does not support named arguments.</td></tr><tr><td>DISP_E_OVERFLOW</td><td>One of the arguments in <strong>DISPPARAMS</strong> could not be coerced to the specified type.</td></tr><tr><td>DISP_E_PARAMNOTFOUND</td><td>One of the parameter IDs does not correspond to a parameter on the method. In this case, puArgErr is set to the first argument that contains the error.</td></tr><tr><td>DISP_E_TYPEMISMATCH</td><td>One or more of the arguments could not be coerced. The index of the first parameter with the incorrect type within rgvarg is returned in <em>puArgErr</em>.</td></tr><tr><td>DISP_E_UNKNOWNINTERFACE</td><td>The interface identifier passed in riid is not IID_NULL.</td></tr><tr><td>DISP_E_UNKNOWNLCID</td><td>The member being invoked interprets string arguments according to the LCID, and the LCID is not recognized. If the LCID is not needed to interpret arguments, this error should not be returned.</td></tr><tr><td>DISP_E_PARAMNOTOPTIONAL</td><td>A required parameter was omitted.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>This method is called internally by the <strong>Get</strong>, <strong>Put</strong>, <strong>PutRef</strong> and <strong>Invoke</strong> methods of the <strong>CDispInvoke class</strong>. You don't need to call it directly.</p>
+<hr>
+<h3 id="dispobj">DispObj</h3>
+<p>Returns a counted reference of the underlying dispatch pointer. You must release it, e.g. calling call <strong>IUnknown_Release</strong> or the function <strong>AfxSafeRelease</strong> when no longer need it.</p>
+<pre class="code"><code>FUNCTION DispObj () AS IDispatch PTR</code></pre>
+<hr>
+<h3 id="dispptr">DispPtr</h3>
+<p>Returns a pointer to the dispatch interface. Don't call <strong>IUnknown_Release</strong> on it.</p>
+<pre class="code"><code>FUNCTION DispPtr () AS IDispatch PTR</code></pre>
+<hr>
+<h3 id="get">Get</h3>
+<p>Calls the specified property of an interface and gets the value returned. The overloaded methods allow to use the <strong>Get</strong> method passing one argument, two arguments or none.</p>
+<pre class="code"><code>FUNCTION Get (BYVAL dispID AS DISPID) AS DVARIANT
+FUNCTION Get (BYVAL dispID AS DISPID, BYREF dvArg AS DVARIANT) AS DVARIANT
+FUNCTION Get (BYVAL dispID AS DISPID, BYREF dvArg1 AS DVARIANT, BYREF dvArg2 AS DVARIANT) AS DVARIANT
+FUNCTION Get (BYVAL pwszName AS WSTRING PTR) AS DVARIANT
+FUNCTION Get (BYVAL pwszName AS WSTRING PTR, BYREF dvArg AS DVARIANT) AS DVARIANT
+FUNCTION Get (BYVAL pwszName AS WSTRING PTR, BYREF dvArg1 AS DVARIANT, BYREF dvArg2 AS DVARIANT) AS DVARIANT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>dispID</em></td><td>Identifies the member. Use <strong>GetIDsOfNames</strong> or the object's documentation to obtain the dispatch identifier.</td></tr><tr><td><em>pwszName</em></td><td>The name of the property to call.</td></tr><tr><td><em>dvArg1</em></td><td>DVARIANT. First argument.</td></tr><tr><td><em>dvArg2</em></td><td>DVARIANT. Second argument.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>The property value.</p>
+<h5 id="example">Example</h5>
+<pre class="code"><code>#include "windows.bi"
+#include "AfxNova/CWmiDisp.inc"
+USING AfxNova
+
+' // Connect to WMI using a moniker
+' // Note: $ is used to avoid the pedantic warning of the compiler about escape characters
+DIM pServices AS CWmiServices = $"winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2"
+IF pServices.ServicesPtr = NULL THEN END
+' // Execute a query
+DIM hr AS HRESULT = pServices.ExecQuery("SELECT Caption, SerialNumber FROM Win32_BIOS")
+IF hr &lt;&gt; S_OK THEN PRINT AfxWmiGetErrorCodeText(hr) : SLEEP : END
+' // Get the number of objects retrieved
+DIM nCount AS LONG = pServices.ObjectsCount
+print "Count: ", nCount
+IF nCount = 0 THEN PRINT "No objects found" : SLEEP : END
+' // Enumerate the objects using the standard IEnumVARIANT enumerator (NextObject method)
+' // and retrieve the properties using the CDispInvoke class.
+DIM pDispServ AS CDispInvoke = pServices.NextObject
+IF pDispServ.DispPtr THEN
+   PRINT "Caption: "; pDispServ.Get("Caption")
+   PRINT "Serial number: "; pDispServ.Get("SerialNumber")
+END IF
+PRINT
+PRINT "Press any key..."
+SLEEP</code></pre>
+<hr>
+<h3 id="getargerr">GetArgErr</h3>
+<p>Returns the index within rgvarg of the first argument that has an error. Arguments are stored in pDispParams-&gt;rgvarg in reverse order, so the first argument is the one with the highest index in the array. This parameter is returned only when the resulting return value is DISP_E_TYPEMISMATCH or DISP_E_PARAMNOTFOUND.</p>
+<pre class="code"><code>FUNCTION GetArgErr () AS UINT</code></pre>
+<hr>
+<h3 id="getlastresult">GetLastResult</h3>
+<p>Returns the result code returned by the last executed method..</p>
+<pre class="code"><code>FUNCTION GetLastResult () AS HRESULT</code></pre>
+<hr>
+<h3 id="setresult">SetResult</h3>
+<p>Sets the result code.</p>
+<pre class="code"><code>FUNCTION SetResult (BYVAL Result AS HRESULT) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>Result</em></td><td>The error code returned by the methods.</td></tr></tbody></table></div>
+<hr>
+<h4 id="geterrorinfo">GetErrorInfo</h4>
+<p>Returns a description of the last error code.</p>
+<pre class="code"><code>PRIVATE GetErrorInfo (BYVAL nError AS LONG = -1) AS DWSTRING</code></pre>
+<hr>
+<h3 id="getvarresult">GetVarResult</h3>
+<p>The result of a call to the Invoke method. Not usually needed because Invoke already returns it as the result of the function.</p>
+<pre class="code"><code>FUNCTION GetVarResult () AS DVARIANT</code></pre>
+<hr>
+<h3 id="getlcid">GetLcid</h3>
+<p>Returns the locale identifier used by the class.</p>
+<pre class="code"><code>FUNCTION GetLcid () AS LCID</code></pre>
+<hr>
+<h3 id="invoke">Invoke</h3>
+<p>Calls a method or a get property.</p>
+<pre class="code"><code>FUNCTION Invoke (BYVAL dispID AS DISPID) AS DVARIANT
+FUNCTION Invoke (BYVAL dispID AS DISPID, dvArg1...dvArg16) AS DVARIANT
+FUNCTION Invoke (BYVAL pwszName AS WSTRING PTR) AS DVARIANT
+FUNCTION Invoke (BYVAL pwszName AS WSTRING PTR, dvArg1...dvArg16) AS DVARIANT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>dispID</em></td><td>Identifies the member. Use <strong>GetIDsOfNames</strong> or the object's documentation to obtain the dispatch identifier.</td></tr><tr><td><em>pwszName</em></td><td>The name of the method or property to call.</td></tr><tr><td><em>dvArg1...dvArg16</em></td><td>DVARIANT. Parameters that will be passed to <strong>IDIspatch.Invoke</strong> as an array of variants in reversed order.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns a variant with the result of the call when the <strong>Invoke</strong> method is used instead of <strong>Get</strong> to retrieve the value of a property. If it is not a get property, it returns a null variant.</p>
+<h5 id="remarks">Remarks</h5>
+<p>For optional parameters, we must use a VT_ERROR VARIANT with a value of DISP_E_PARAMNOTFOUND. You can use the function <strong>AfxDVarOptPrm</strong> or the macro <strong>DVAR_OPTPRM</strong> for this purpose.</p>
+<p>To check for success or failure, call the <strong>GetLastResult</strong> method. It will return S_OK (0) on success or an HRESULT code on failure.</p>
+<div class="table-wrap"><table><thead><tr><th>HRESULT</th><th>Description</th></tr></thead><tbody><tr><td>S_OK</td><td>Success.</td></tr><tr><td>DISP_E_BADPARAMCOUNT</td><td>The number of elements provided to <strong>DISPPARAMS</strong> is different from the number of arguments accepted by the method or property.</td></tr><tr><td>DISP_E_BADVARTYPE</td><td>One of the arguments in <strong>DISPPARAMS</strong> is not a valid variant type.</td></tr><tr><td>DISP_E_EXCEPTION</td><td>The application needs to raise an exception.</td></tr><tr><td>DISP_E_MEMBERNOTFOUND</td><td>The requested member does not exist.</td></tr><tr><td>DISP_E_NONAMEDARGS</td><td>This implementation of IDispatch does not support named arguments.</td></tr><tr><td>DISP_E_OVERFLOW</td><td>One of the arguments in <strong>DISPPARAMS</strong>* could not be coerced to the specified type.</td></tr><tr><td>DISP_E_PARAMNOTFOUND</td><td>One of the parameter IDs does not correspond to a parameter on the method. In this case, <em>puArgErr</em> is set to the first argument that contains the error.</td></tr><tr><td>DISP_E_TYPEMISMATCH</td><td>One or more of the arguments could not be coerced. The index of the first parameter with the incorrect type within <em>rgvarg</em> is returned in <em>puArgErr</em>.</td></tr><tr><td>DISP_E_UNKNOWNINTERFACE</td><td>The interface identifier passed in <em>riid</em> is not IID_NULL.</td></tr><tr><td>DISP_E_UNKNOWNLCID</td><td>The member being invoked interprets string arguments according to the LCID, and the LCID is not recognized. If the LCID is not needed to interpret arguments, this error should not be returned.</td></tr><tr><td>DISP_E_PARAMNOTOPTIONAL</td><td>A required parameter was omitted.</td></tr></tbody></table></div>
+<h5 id="usage-example">Usage example</h5>
+<pre class="code"><code>#include once "AfxNova/CDIspInvoke.inc"
+USING AfxNova
+
+' // Create an instance of the Msxml2 object
+DIM pDisp AS CDispInvoke = "Msxml2.XMLHTTP.6.0"
+pDisp.Invoke("open", "GET", "https://sourceforge.net/", FALSE)
+pDisp.Invoke("Send")
+DIM dwsResponse AS DWSTRING = pDisp.Get("ResponseText")
+print dwsResponse</code></pre>
+<hr>
+<h3 id="setlcid">SetLcid</h3>
+<p>Sets de locale identifier used by the class.</p>
+<pre class="code"><code>FUNCTION SetLcid (BYVAL lcid AS LCID)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>lcid</em></td><td>The locale context in which to interpret arguments. The <em>lcid</em> is used by the <strong>GetIDsOfNames</strong> function, and is also passed to <strong>Invoke</strong> to allow the object to interpret its arguments specific to a locale. Applications that do not support multiple national languages can ignore this parameter.</td></tr></tbody></table></div>
+<hr>
+<h3 id="put">Put</h3>
+<p>Calls the specified property of an interface and sets the passed value.</p>
+<pre class="code"><code>PROPERTY Put (BYVAL dispID AS DISPID, BYREF dvArg AS DVARIANT)
+PROPERTY Put (BYVAL pwszName AS WSTRING PTR, BYREF dvArg AS DVARIANT)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>dispID</em></td><td>Identifies the member. Use <strong>GetIDsOfNames</strong> or the object's documentation to obtain the dispatch identifier.</td></tr><tr><td><em>pwszName</em></td><td>The name of the property to call.</td></tr><tr><td><em>dvArg</em></td><td>DVARIANT. The value to set.</td></tr></tbody></table></div>
+<hr>
+<h3 id="putref">PutRef</h3>
+<p>Assigns a value to an interface member property that contains a reference to an object. For example, a reference to another interface.</p>
+<pre class="code"><code>PROPERTY PutRef (BYVAL dispID AS DISPID, BYREF dvArg AS DVARIANT)
+PROPERTY PutRef (BYVAL pwszName AS WSTRING PTR, BYREF dvArg AS DVARIANT)
+PROPERTY PutRef (BYVAL dispID AS DISPID, BYVAL pv AS ANY PTR)
+PROPERTY PutRef (BYVAL pwszName AS WSTRING PTR, BYVAL pv AS ANY PTR)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>dispID</em></td><td>Identifies the member. Use <strong>GetIDsOfNames</strong> or the object's documentation to obtain the dispatch identifier.</td></tr><tr><td><em>pwszName</em></td><td>The name of the property to call.</td></tr><tr><td><em>dvArg</em></td><td>DVARIANT. The value to set.</td></tr><tr><td><em>pv</em></td><td>Pointer to an interface.</td></tr></tbody></table></div>
+<hr>
+<h3 id="set">Set</h3>
+<p>Calls the specified property of an interface and sets the passed value.</p>
+<pre class="code"><code>FUNCTION Set (BYVAL dispID AS DISPID, BYREF dvArg AS DVARIANT) AS HRESULT
+FUNCTION Set (BYVAL dispID AS DISPID, BYREF dvArg1 ... dvArg2 AS DVARIANT) AS HRESULT
+FUNCTION Set (BYVAL dispID AS DISPID, BYREF dvArg1 ... dvArg3 AS DVARIANT) AS HRESULT
+FUNCTION Set (BYVAL pwszName AS WSTRING PTR, BYREF dvArg AS DVARIANT) AS HRESULT
+FUNCTION Set (BYVAL pwszName AS WSTRING PTR, BYREF dvArg1 ... dvArg2 AS DVARIANT) AS HRESULT
+FUNCTION Set (BYVAL pwszName AS WSTRING PTR, BYREF dvArg1 ... dvArg3 AS DVARIANT) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>dispID</em></td><td>Identifies the member. Use <strong>GetIDsOfNames</strong> or the object's documentation to obtain the dispatch identifier.</td></tr><tr><td><em>pwszName</em></td><td>The name of the property to call.</td></tr><tr><td><em>dvArg</em></td><td>DVARIANT. The value to set.</td></tr><tr><td><em>dvArg1...dvArg3</em></td><td>DVARIANT. The last parameter is the value to set. dvArg1 and dvArg2 are the index values.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>S_OK (0) on success or an HRESULT code.</p>
+<hr>
+<h3 id="setref">SetRef</h3>
+<p>Assigns a value to an interface member property that contains a reference to an object. For example, a reference to another interface.</p>
+<pre class="code"><code>FUNCTION SetRef (BYVAL dispID AS DISPID, BYREF dvArg AS DVARIANT) AS HRESULT
+FUNCTION SetRef (BYVAL dispID AS DISPID, BYREF dvArg1 ... dvArg2 AS DVARIANT) AS HRESULT
+FUNCTION SetRef (BYVAL dispID AS DISPID, BYREF dvArg1 ... dvArg3 AS DVARIANT) AS HRESULT
+FUNCTION SetRef (BYVAL pwszName AS WSTRING PTR, BYREF dvArg AS DVARIANT) AS HRESULT
+FUNCTION SetRef (BYVAL pwszName AS WSTRING PTR, BYREF dvArg1 ... dvArg2 AS DVARIANT) AS HRESULT
+FUNCTION SetRef (BYVAL pwszName AS WSTRING PTR, BYREF dvArg1 ... dvArg3 AS DVARIANT) AS HRESULT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>dispID</em></td><td>Identifies the member. Use <strong>GetIDsOfNames</strong> or the object's documentation to obtain the dispatch identifier.</td></tr><tr><td><em>pwszName</em></td><td>The name of the property to call.</td></tr><tr><td><em>dvArg1...dvArg3</em></td><td>DVARIANT. The last parameter is the value to set. dvArg1 and dvArg2 are the index values.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>S_OK (0) on success or an HRESULT code.</p>
+<hr>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../index.html">Home</a> ·
+         <a href="../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../nav.js?v=70a6b70236"></script>
+<script src="../../search-index.js"></script>
+<script src="../../assets/app.js?v=456d079659"></script>
+<script src="../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

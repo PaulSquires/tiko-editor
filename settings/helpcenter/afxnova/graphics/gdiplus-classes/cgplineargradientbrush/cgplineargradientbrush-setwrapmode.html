@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CGpLinearGradientBrush.SetWrapMode — Help Center</title>
+<meta name="description" content="Sets the wrap mode.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgplineargradientbrush/cgplineargradientbrush-setwrapmode.html">
+<meta property="og:title" content="CGpLinearGradientBrush.SetWrapMode">
+<meta property="og:description" content="Sets the wrap mode.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgplineargradientbrush/cgplineargradientbrush-setwrapmode.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-classes/cgplineargradientbrush/cgplineargradientbrush-setwrapmode.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cgpbrush-class.html">CGpBrush Class</a></div>
+<h1>CGpLinearGradientBrush.SetWrapMode<span class="h1kind">method</span></h1>
+<p class="lede">Sets the wrap mode.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">method</span><span class="badge">CGpBrush.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION SetWrapMode (BYVAL wrapMode AS WrapMode) AS GpStatus</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>wrapMode</code></td><td></td><td>Element of the <strong>WrapMode</strong> enumeration that specifies how areas painted with this linear gradient brush will be tiled. The value of this parameter must be one of the following elements: <strong>WrapModeTile</strong>, <strong>WrapModeTileFlipX</strong>, <strong>WrapModeTileFlipY</strong>, <strong>WrapModeTileFlipXY</strong>.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>If the function succeeds, it returns <strong>Ok</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h2>Description</h2>
+<p>Sets the wrap mode of this linear gradient brush.</p>
+<h2>Remarks</h2>
+<p>The boundary lines of a linear gradient brush form a tile. When you paint an area with a linear gradient brush, the tile repeats. A linear gradient brush may have alternate tiles flipped in a certain direction, as specified by the wrap mode. Flipping has the effect of reversing the order of the colors.</p>
+<p>The wrap mode defaults to <strong>WrapModeTile</strong> when a <strong>LinearGradientBrush</strong> object is constructed.</p>
+<h2>Example</h2>
+<p>' ======================================================================================== ' The following example creates a linear gradient brush and uses it to fill a rectangle. ' Next, the code modifies the brush's wrap mode and uses the modified brush to fill another ' rectangle. ' ======================================================================================== SUB Example_SetWrapMode (BYVAL hdc AS HDC)</p>
+<p>' // Create a graphics object from the window device context DIM graphics AS CGpGraphics = hdc ' // Set the scale transform graphics.ScaleTransformForDpi</p>
+<p>' // Create a linear gradient brush. DIM rc AS GpRect = (0, 0, 100, 50) DIM linGrBrush AS CGpLinearGradientBrush = CGpLinearGradientBrush(@rc, _</p>
+<pre class="code"><code>ARGB_RED, ARGB_BLUE, LinearGradientModeHorizontal)</code></pre>
+<p>' // Fill a large area using the gradient brush with the default wrap mode. graphics.FillRectangle(@linGrBrush, 0, 0, 800, 50)</p>
+<p>linGrBrush.SetWrapMode(WrapModeTileFlipX)</p>
+<p>' // Fill a large area using the gradient brush with the new wrap mode. graphics.FillRectangle(@linGrBrush, 0, 75, 800, 50)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CGpBrush.inc</code></li><li>Defined in <span class="srcref">AfxNova/CGpBrush.inc:513</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Classes/CGpBrush Classes.md</span></li><li>Topic: <a href="../cgpbrush-class.html">CGpBrush Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

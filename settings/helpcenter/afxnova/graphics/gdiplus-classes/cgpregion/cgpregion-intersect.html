@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CGpRegion.Intersect — Help Center</title>
+<meta name="description" content="Updates this region to the portion of itself that intersects the specified rectangle&#x27;s interior.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpregion/cgpregion-intersect.html">
+<meta property="og:title" content="CGpRegion.Intersect">
+<meta property="og:description" content="Updates this region to the portion of itself that intersects the specified rectangle&#x27;s interior.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpregion/cgpregion-intersect.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-classes/cgpregion/cgpregion-intersect.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cgpregion-class.html">CGpRegion Class</a></div>
+<h1>CGpRegion.Intersect<span class="h1kind">method</span></h1>
+<p class="lede">Updates this region to the portion of itself that intersects the specified rectangle&#x27;s interior.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">method</span><span class="badge">CGpRegion.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION Intersect (BYVAL rc AS GpRectF PTR) AS GpStatus</code></pre>
+<pre class="code sig"><code>FUNCTION Intersect (BYVAL rc AS GpRect PTR) AS GpStatus</code></pre>
+<pre class="code sig"><code>FUNCTION Intersect (BYVAL pPath AS CGpGraphicsPath PTR) AS GpStatus</code></pre>
+<pre class="code sig"><code>FUNCTION Intersect (BYVAL pRegion AS CGpRegion PTR) AS GpStatus</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>rc</code></td><td></td><td>Reference to a rectangle to use to update this **Region* object.</td></tr><tr><td><code>pPath</code></td><td></td><td>Pointer to a <strong>GraphicsPath</strong> object that specifies the path to use to update this <strong>Region</strong> object.</td></tr><tr><td><code>pRegion</code></td><td></td><td>Pointer to a <strong>Region</strong> object to use to update this <strong>Region</strong> object.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>If the function succeeds, it returns <strong>Ok</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h2>Description</h2>
+<p>Updates this region to the portion of itself that intersects the specified rectangle's interior.</p>
+<p>Updates this region to the portion of itself that intersects the specified path's interior.</p>
+<p>Updates this region to the portion of itself that intersects another region.</p>
+<h2>Examples</h2>
+<p>' ======================================================================================== ' The following example creates a region from a path and then uses a rectangle to update the region. ' ======================================================================================== SUB Example_IntersectRegion (BYVAL hdc AS HDC)</p>
+<p>' // Create a graphics object from the window device context DIM graphics AS CGpGraphics = hdc ' // Get the DPI scaling ratios DIM rxRatio AS SINGLE = graphics.GetDpiX / 96 DIM ryRatio AS SINGLE = graphics.GetDpiY / 96 ' // Set the scale transform graphics.ScaleTransform(rxRatio, ryRatio)</p>
+<p>DIM solidBrush AS CGpSolidBrush = ARGB_RED</p>
+<p>DIM pts(0 TO 5) AS GpPoint = {(110, 20), (120, 30), (100, 60), (120, 70), (150, 60), (140, 10)} DIM pPath AS CGpGraphicsPath pPath.AddClosedCurve(@pts(0), 6)</p>
+<p>' // Create a region from a path DIM pRegion AS CGpRegion = @pPath</p>
+<p>' // Update the region to the portion that intersects with the rectangle DIM rcf AS GpRectF = (65.2, 15.0, 70.9, 45.0) pRegion.Intersect(@rcf) graphics.FillRegion(@solidBrush, @pRegion)</p>
+<p>END SUB ' ========================================================================================</p>
+<p>' ======================================================================================== ' The following example creates a region from a rectangle and then uses a path to update the region. ' ======================================================================================== SUB Example_IntersectRegion (BYVAL hdc AS HDC)</p>
+<p>' // Create a graphics object from the window device context DIM graphics AS CGpGraphics = hdc ' // Get the DPI scaling ratios DIM rxRatio AS SINGLE = graphics.GetDpiX / 96 DIM ryRatio AS SINGLE = graphics.GetDpiY / 96 ' // Set the scale transform graphics.ScaleTransform(rxRatio, ryRatio)</p>
+<p>DIM solidBrush AS CGpSolidBrush = ARGB_RED</p>
+<p>DIM pts(0 TO 5) AS GpPoint = {(110, 20), (120, 30), (100, 60), (120, 70), (150, 60), (140, 10)} DIM pPath AS CGpGraphicsPath pPath.AddClosedCurve(@pts(0), 6)</p>
+<p>' // Create a region from a rectangle DIM rcf AS GpRectF = (65.2, 15.0, 70.9, 45.0) DIM pRegion AS CGpRegion = @rcf</p>
+<p>' // Update the region to the portion that intersects with the rectangle pRegion.Intersect(@pPath) graphics.FillRegion(@solidBrush, @pRegion)</p>
+<p>END SUB ' ========================================================================================</p>
+<p>' ======================================================================================== ' The following example creates two regions, one from a path and the other from a rectangle. ' The code then uses the rectangular region to update the path region. ' ======================================================================================== SUB Example_IntersectRegion (BYVAL hdc AS HDC)</p>
+<p>' // Create a graphics object from the window device context DIM graphics AS CGpGraphics = hdc ' // Get the DPI scaling ratios DIM rxRatio AS SINGLE = graphics.GetDpiX / 96 DIM ryRatio AS SINGLE = graphics.GetDpiY / 96 ' // Set the scale transform graphics.ScaleTransform(rxRatio, ryRatio)</p>
+<p>DIM solidBrush AS CGpSolidBrush = ARGB_RED DIM pts(0 TO 5) AS GpPoint = {(110, 20), (120, 30), (100, 60), (120, 70), (150, 60), (140, 10)} DIM pPath AS CGpGraphicsPath pPath.AddClosedCurve(@pts(0), 6)</p>
+<p>' // Create a region from a rectangle DIM rcf AS GpRectF = (65.2, 15.0, 70.9, 45.0) DIM rectRegion AS CGpRegion = @rcf</p>
+<p>' // Create a region from a path DIM pathRegion AS CGpRegion = @pPath</p>
+<p>' // Update the region to the portion that intersects with another region pathRegion.Intersect(@rectRegion) graphics.FillRegion(@solidBrush, @pathRegion)</p>
+<p>END SUB ' ========================================================================================</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CGpRegion.inc</code></li><li>Defined in <span class="srcref">AfxNova/CGpRegion.inc:108</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Classes/CGpRegion Class.md</span></li><li>Topic: <a href="../cgpregion-class.html">CGpRegion Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

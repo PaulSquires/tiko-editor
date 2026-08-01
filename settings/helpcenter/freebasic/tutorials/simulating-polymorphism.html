@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulating Polymorphism — Help Center</title>
+<meta name="description" content="Simulating Polymorphism — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/simulating-polymorphism.html">
+<meta property="og:title" content="Simulating Polymorphism">
+<meta property="og:description" content="Simulating Polymorphism — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/simulating-polymorphism.html">
+<link rel="stylesheet" href="../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/simulating-polymorphism.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>Simulating Polymorphism</h1>
+<h2>Documentation</h2>
+
+	<i>Written by <a href="../reference/rdc.html">rdc</a></i><br>
+<br>
+<div> Introduction</div><br>
+<br>
+Polymorphism is a powerful tool in object-oriented program. A polymorphic method (Sub or Function) behaves differently depending on the definition of the object. For example, an animal object may have a speak method that will issue a bark for a dog and a meow for a cat. FreeBASIC did not support true polymorphism before. However, you could simulate polymorphic methods using method pointers.<br>
+<br>
+<div> Polymorphism</div><br>
+<br>
+Polymorphic methods are subroutines or functions that have the same type and parameter list, but behave differently when bound to different objects. An animal object may have a Speak method that will issue a bark for a dog and a meow for a cat. Since FreeBASIC doesn't yet have classes, you cannot implement true polymorphic methods, but you can simulate the behavior by using method pointers.<br>
+<br>
+The following listing shows a couple of defines and an extended type declaration:<br>
+<code><pre class="code"><span>#define isdog 1
+
+#define iscat 2
+
+</span>
+
+<span class="tok-kw">Type</span> <span>animal</span>
+
+    <span class="tok-kw">Public</span><span>:</span>
+
+    <span>speak</span> <span class="tok-kw">As</span> <span class="tok-kw">Sub</span><span>()</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>(</span><span>anid</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>    
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span></pre></code><br>
+The #defines are passed to the Constructor to signal what type of object is being created. The speak As Sub() definition defines the method pointer. As you will see, the address of two different subroutines will be passed to the speak method pointer. The following listing shows the different speak subroutines and the Constructor method:<br>
+<code><pre class="code"><span class="tok-cm">'Speak method for dog object</span>
+
+<span class="tok-kw">Sub</span> <span>Bark</span><span>()</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;Woof!&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-cm">'Speak method for cat object</span>
+
+<span class="tok-kw">Sub</span> <span>Meow</span><span>()</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;Meow!&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-cm">'Set the proper method pointer based on animal id</span>
+
+<span class="tok-kw">Constructor</span> <span>animal</span><span>(</span><span>anid</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+    <span class="tok-kw">If</span> <span>anid</span> <span>=</span> <span>isdog</span> <span class="tok-kw">Then</span>
+
+        <span>this.speak</span> <span>=</span> <span>@</span><span>Bark</span>
+
+    <span class="tok-kw">ElseIf</span> <span>anid</span> <span>=</span> <span>iscat</span> <span class="tok-kw">Then</span>
+
+        <span>this.speak</span> <span>=</span> <span>@</span><span>Meow</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span></pre></code><br>
+The Bark subroutine will be called if the object is a dog and the Meow subroutine will be called if the object is a cat. You may be wondering why you can't just overload the method? For overloaded methods, the type and parameter list must be unique, where in a polymorphic method, the type and parameter list must be the same. Since Bark and Meow have the same parameter list, that is no parameters, you cannot overload the method.<br>
+<br>
+The Constructor code is where the program decides what method call to use. If anid is equal to isdog, then the Speak method pointer will be set to the address of the Bark subroutine. If anid is equal to iscat then Speak will be set to the address of the Meow subroutine. The addressof operator @ is used to pass the address of Bark and Meow to the Speak pointer. <br>
+<br>
+The <i>this</i> object reference is a hidden parameter that is passed to the Constructor that references the type, which in this case is animal. You can use this to reference the internal variables within the type.<br>
+<br>
+The only thing left to do is to create and initialize the object:<br>
+<code><pre class="code"><span class="tok-cm">'Create a dog and cat object</span>
+
+<span class="tok-kw">Dim</span> <span>myDog</span> <span class="tok-kw">As</span> <span>animal</span> <span>=</span> <span>isdog</span>
+
+<span class="tok-kw">Dim</span> <span>mycat</span> <span class="tok-kw">As</span> <span>animal</span> <span>=</span> <span>iscat</span></pre></code><br>
+Here myDog and myCat are created with the appropriate flags passed to the Constructor so that the proper references can be set up. Once the object are created you can call the speak method of each object.<br>
+<code><pre class="code"><span class="tok-cm">'Have the animals speak</span>
+
+<span class="tok-kw">Print</span> <span>&quot;My dog says &quot;</span><span>;</span>
+
+<span>myDog.speak</span><span>()</span>
+
+<span class="tok-kw">Print</span> <span>&quot;My cat says &quot;</span><span>;</span>
+
+<span>myCat.speak</span><span>()</span></pre></code><br>
+Notice that you are calling the same speak method, yet the output is different:<br>
+<code><pre class="code"><span>My</span> <span>dog</span> <span>says</span> <span>Woof!</span>
+
+<span>My</span> <span>cat</span> <span>says</span> <span>Meow!</span></pre></code><br>
+This is the essence of polymorphic methods. <br>
+<br>
+Here is the complete program listing:<br>
+<code><pre class="code"><span class="tok-cm">'Simulated Polymorphism Using Method Pointers</span>
+
+<span class="tok-cm">'Richard D. Clark</span>
+
+<span class="tok-cm">'Requires the CVS version of FreeBASIC</span>
+
+<span class="tok-cm">'**********************************************</span>
+
+
+
+<span>#define isdog 1
+
+#define iscat 2
+
+</span>
+
+
+
+<span class="tok-kw">Type</span> <span>animal</span>
+
+    <span class="tok-kw">Public</span><span>:</span>
+
+    <span>speak</span> <span class="tok-kw">As</span> <span class="tok-kw">Sub</span><span>()</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Constructor</span> <span>(</span><span>anid</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>    
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-cm">'Speak method for dog object</span>
+
+<span class="tok-kw">Sub</span> <span>Bark</span><span>()</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;Woof!&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-cm">'Speak mehod for cat object</span>
+
+<span class="tok-kw">Sub</span> <span>Meow</span><span>()</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;Meow!&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-cm">'Set the proper method pointer based on animal id</span>
+
+<span class="tok-kw">Constructor</span> <span>animal</span><span>(</span><span>anid</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span>
+
+    <span class="tok-kw">If</span> <span>anid</span> <span>=</span> <span>isdog</span> <span class="tok-kw">Then</span>
+
+        <span>this.speak</span> <span>=</span> <span>@</span><span>Bark</span>
+
+    <span class="tok-kw">ElseIf</span> <span>anid</span> <span>=</span> <span>iscat</span> <span class="tok-kw">Then</span>
+
+        <span>this.speak</span> <span>=</span> <span>@</span><span>Meow</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Constructor</span>
+
+
+
+<span class="tok-cm">'Create a dog and cat object</span>
+
+<span class="tok-kw">Dim</span> <span>myDog</span> <span class="tok-kw">As</span> <span>animal</span> <span>=</span> <span>isdog</span>
+
+<span class="tok-kw">Dim</span> <span>mycat</span> <span class="tok-kw">As</span> <span>animal</span> <span>=</span> <span>iscat</span>
+
+
+
+<span class="tok-cm">'Have the animals speak</span>
+
+<span class="tok-kw">Print</span> <span>&quot;My dog says &quot;</span><span>;</span>
+
+<span>myDog.speak</span><span>()</span>
+
+<span class="tok-kw">Print</span> <span>&quot;My cat says &quot;</span><span>;</span>
+
+<span>myCat.speak</span><span>()</span>
+
+
+
+<span class="tok-kw">Sleep</span>
+
+<span class="tok-kw">End</span></pre></code><br>
+<br>
+<br>
+<br>
+<div> Polymorphism through inheritance and virtuality is now supported </div><br>
+<br>
+Previous example now transposed, by using polymorphism through inheritance with abstract/virtual methods (feature now supported):<br>
+<code><pre class="code"><span class="tok-cm">'Base-type animal</span>
+
+<span class="tok-kw">Type</span> <span>animal</span> <span class="tok-kw">Extends</span> <span class="tok-kw">Object</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Abstract</span> <span class="tok-kw">Sub</span> <span>speak</span> <span>()</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-cm">'Derived-type dog</span>
+
+<span class="tok-kw">Type</span> <span>dog</span> <span class="tok-kw">Extends</span> <span>animal</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Virtual</span> <span class="tok-kw">Sub</span> <span>speak</span> <span>()</span> <span class="tok-kw">Override</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-cm">'Speak method for dog object</span>
+
+<span class="tok-kw">Virtual</span> <span class="tok-kw">Sub</span> <span>dog.speak</span> <span>()</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;Woof!&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-cm">'Derived-type cat</span>
+
+<span class="tok-kw">Type</span> <span>cat</span> <span class="tok-kw">Extends</span> <span>animal</span>
+
+    <span class="tok-kw">Declare</span> <span class="tok-kw">Virtual</span> <span class="tok-kw">Sub</span> <span>speak</span> <span>()</span> <span class="tok-kw">Override</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+
+
+<span class="tok-cm">'Speak mehod for cat object</span>
+
+<span class="tok-kw">Virtual</span> <span class="tok-kw">Sub</span> <span>cat.speak</span> <span>()</span>
+
+    <span class="tok-kw">Print</span> <span>&quot;Meow!&quot;</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Sub</span>
+
+
+
+<span class="tok-cm">'Create a dog and cat as dynamic object through animal pointer</span>
+
+<span class="tok-kw">Dim</span> <span>myDog</span> <span class="tok-kw">As</span> <span>animal</span> <span class="tok-kw">Ptr</span> <span>=</span> <span class="tok-kw">New</span> <span>dog</span>
+
+<span class="tok-kw">Dim</span> <span>mycat</span> <span class="tok-kw">As</span> <span>animal</span> <span class="tok-kw">Ptr</span> <span>=</span> <span class="tok-kw">New</span> <span>cat</span>
+
+
+
+<span class="tok-cm">'Have the animals speak</span>
+
+<span class="tok-kw">Print</span> <span>&quot;My dog says &quot;</span><span>;</span>
+
+<span>myDog</span><span>-&gt;</span><span>speak</span><span>()</span>
+
+<span class="tok-kw">Print</span> <span>&quot;My cat says &quot;</span><span>;</span>
+
+<span>myCat</span><span>-&gt;</span><span>speak</span><span>()</span>
+
+
+
+<span class="tok-kw">Sleep</span>
+
+
+
+<span class="tok-cm">'Delete the dynamic objects</span>
+
+<span class="tok-kw">Delete</span> <span>myDog</span>
+
+<span class="tok-kw">Delete</span> <span>myCat</span></pre></code>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../index.html">Home</a> ·
+         <a href="../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../nav.js?v=70a6b70236"></script>
+<script src="../../search-index.js"></script>
+<script src="../../assets/app.js?v=456d079659"></script>
+<script src="../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

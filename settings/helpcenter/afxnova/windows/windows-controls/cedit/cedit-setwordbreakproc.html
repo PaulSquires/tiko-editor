@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CEdit.SetWordBreakProc — Help Center</title>
+<meta name="description" content="&#x27; Replaces an edit control&#x27;s default Wordwrap function with an application-defined Wordwrap function.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/cedit/cedit-setwordbreakproc.html">
+<meta property="og:title" content="CEdit.SetWordBreakProc">
+<meta property="og:description" content="&#x27; Replaces an edit control&#x27;s default Wordwrap function with an application-defined Wordwrap function.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/cedit/cedit-setwordbreakproc.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-controls/cedit/cedit-setwordbreakproc.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cedit-class.html">CEdit Class</a></div>
+<h1>CEdit.SetWordBreakProc<span class="h1kind">method</span></h1>
+<p class="lede">&#x27; Replaces an edit control&#x27;s default Wordwrap function with an application-defined Wordwrap function.</p>
+<div class="badges"><a class="badge" href="../../index.html">Windows</a><span class="badge">method</span><span class="badge">CEdit.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>SUB SetWordBreakProc (BYAL hEdit AS HWND, BYVAL pfn AS LONG_PTR)</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>hEdit</code></td><td></td><td>The handle of the edit control.</td></tr><tr><td><code>pfn</code></td><td></td><td>The address of the application-defined Wordwrap function. For more information about breaking lines, see the description of the <a href="https://learn.microsoft.com/en-us/windows/win32/api/winuser/nc-winuser-editwordbreakprocw" target="_blank" rel="noopener">EditWordBreakProc</a> callback function.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Replaces an edit control's default Wordwrap function with an application-defined Wordwrap function. You can send this message to either an edit control or a rich edit control.</p>
+<h2>Remarks</h2>
+<p>A Wordwrap function scans a text buffer that contains text to be sent to the screen, looking for the first word that does not fit on the current screen line. The Wordwrap function places this word at the beginning of the next line on the screen.</p>
+<p>A Wordwrap function defines the point at which the system should break a line of text for multiline edit controls, usually at a space character that separates two words. Either a multiline or a single-line edit control might call this function when the user presses arrow keys in combination with the CTRL key to move the caret to the next word or previous word. The default Wordwrap function breaks a line of text at a space character. The application-defined function may define the Wordwrap to occur at a hyphen or a character other than the space character.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CEdit.inc</code></li><li>Defined in <span class="srcref">AfxNova/CEdit.inc:718</span></li><li>Documented in <span class="srcref">Windows/WIndows Controls/CEdit Class.md</span></li><li>Topic: <a href="../cedit-class.html">CEdit Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

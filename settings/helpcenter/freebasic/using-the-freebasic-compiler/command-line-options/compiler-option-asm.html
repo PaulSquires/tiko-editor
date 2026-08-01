@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Compiler Option: -asm — Help Center</title>
+<meta name="description" content="Compiler Option: -asm — 0 documented members. Using the FreeBASIC compiler reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/using-the-freebasic-compiler/command-line-options/compiler-option-asm.html">
+<meta property="og:title" content="Compiler Option: -asm">
+<meta property="og:description" content="Compiler Option: -asm — 0 documented members. Using the FreeBASIC compiler reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/using-the-freebasic-compiler/command-line-options/compiler-option-asm.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/using-the-freebasic-compiler/command-line-options/compiler-option-asm.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Using the FreeBASIC compiler</div>
+<h1>Compiler Option: -asm</h1>
+<h2>Documentation</h2>
+
+	Set assembler format for inline assembly under -gen gcc<br>
+<br>
+<div>Syntax</div><div><code><br>
+<div class="indent"><b>-asm</b> &lt; <i>format</i> &gt;<br>
+</div></code><br>
+</div><div>Parameters</div><div><br>
+<div class="indent"><code><i>format</i></code><br>
+<div class="indent">The assembler format: <i>intel</i> or <i>att</i><br>
+<br>
+</div></div></div><div>Description</div><div><br>
+<div class="indent">The <code>-asm</code> compiler option sets the assembler format for inline <code><a href="../../programmer-s-guide/procedures/asm.html">Asm</a></code> blocks when using <a href="compiler-option-gen.html">-gen gcc</a>.<br>
+<br>
+</div><ul><ul><li> <code>-gen gcc -asm intel</code>: FB inline assembly blocks must use FB's usual Intel syntax format. Under -gen gcc, fbc will try to translate it to gcc's format automatically. For example:<br>
+</li></ul></ul><div class="indent"><div class="indent"><div class="indent"><code><pre class="code"><span class="tok-kw">Dim</span> <span>a</span> <span class="tok-kw">As</span> <span class="tok-kw">Long</span> <span>=</span> <span class="tok-nu">1</span>
+
+<span class="tok-kw">Print</span> <span>a</span>
+
+<span class="tok-kw">Asm</span>
+
+    <span>inc</span> <span>dword</span> <span class="tok-kw">Ptr</span> <span>[</span><span>a</span><span>]</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Asm</span>
+
+<span class="tok-kw">Print</span> <span>a</span></pre></code><br>
+<br>
+</div></div></div><ul><ul><li> <code>-gen gcc -asm att</code>: FB inline assembly blocks must use <a href="https://gcc.gnu.org/onlinedocs/gcc/Using-Assembly-Language-with-C.html">gcc's format</a>. For example:<br>
+</li></ul></ul><div class="indent"><div class="indent"><div class="indent"><code><pre class="code"><span class="tok-kw">Dim</span> <span>a</span> <span class="tok-kw">As</span> <span class="tok-kw">Long</span> <span>=</span> <span class="tok-nu">1</span>
+
+<span class="tok-kw">Print</span> <span>a</span>
+
+<span class="tok-kw">Asm</span>
+
+    <span>&quot;incl %0\n&quot;</span> <span>:</span> <span>&quot;+m&quot;</span> <span>(</span><span>a</span><span>)</span> <span>:</span> <span>:</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Asm</span>
+
+<span class="tok-kw">Print</span> <span>a</span></pre></code><br>
+</div></div>The x86 ASM backend (<a href="compiler-option-gen.html">-gen gas</a>) currently only supports <code>-asm intel</code> and using <code>-asm att</code> results in an error.<br>
+<br>
+</div></div><div>See also</div><div><br>
+<ul><li> <a href="../../intrinsic-defines/procedures/fb-asm.html">__FB_ASM__</a><br>
+<li> <a href="../fbc-command-line.html">Using the Command Line</a><br>
+<br>
+</li></li></ul></div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

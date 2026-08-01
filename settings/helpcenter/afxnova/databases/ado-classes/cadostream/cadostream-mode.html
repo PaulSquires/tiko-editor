@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CAdoStream.Mode — Help Center</title>
+<meta name="description" content="Indicates the available permissions for modifying data in a `Stream` object.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadostream/cadostream-mode.html">
+<meta property="og:title" content="CAdoStream.Mode">
+<meta property="og:description" content="Indicates the available permissions for modifying data in a `Stream` object.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadostream/cadostream-mode.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/databases/ado-classes/cadostream/cadostream-mode.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cadostream-class.html">CAdoStream Class</a></div>
+<h1>CAdoStream.Mode<span class="h1kind">property</span></h1>
+<p class="lede">Indicates the available permissions for modifying data in a `Stream` object.</p>
+<div class="badges"><a class="badge" href="../../index.html">Databases</a><span class="badge">property</span><span class="badge">CAdoStream.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>PROPERTY GET Mode () AS ConnectModeEnum</code></pre>
+<pre class="code sig"><code>PROPERTY SET Mode (BYVAL nMode AS ConnectModeEnum)</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>nMode</code></td><td></td><td>LONG. A <strong>ConnectModeEnum</strong> value. The default value for a <code>Stream</code> associated with an underlying source (opened with a URL as the source, or as the default <code>Stream</code> of a <code>Record</code>) is <strong>adModeRead</strong>. The default value for a <code>Stream</code> not associated with an underlying source (instantiated in memory) is <strong>adModeUnknown</strong>.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>LONG. A <strong>ConnectionModeEnum</strong> value.</p>
+<h2>Description</h2>
+<p>Indicates the available permissions for modifying data in a <code>Stream</code> object.</p>
+<h2>Remarks</h2>
+<p>Use the <strong>Mode</strong> property to set or return the access permissions in use by the provider on the current connection. You can set the Mode property only when the <strong>Connection</strong> object is closed.</p>
+<p>For a <code>Stream</code> object, if the access mode is not specified, it is inherited from the source used to open the <code>Stream</code> object. For example, if a <code>Stream</code> is opened from a <code>Record</code> object, by default it is opened in the same mode as the <code>Record</code>.</p>
+<p>This property is read/write while the object is closed and read-only while the object is open.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CAdoStream.inc</code></li><li>Defined in <span class="srcref">AfxNova/CAdoStream.inc:300</span></li><li>Documented in <span class="srcref">Databases/ADO Classes/CAdoStream Class.md</span></li><li>Topic: <a href="../cadostream-class.html">CAdoStream Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Preprocessor — Help Center</title>
+<meta name="description" content="Preprocessor — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/preprocessor.html">
+<meta property="og:title" content="Preprocessor">
+<meta property="og:description" content="Preprocessor — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/preprocessor.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/programmer-s-guide/preprocessor.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>Preprocessor</h1>
+<h2>Documentation</h2>
+
+	The <b>Preprocessor</b> performs some processing on source code before the next step of compilation.<br>
+<br>
+The preprocessor is a program that parses a text file and makes it submit to certain transformations.<br>
+These transformations can be the inclusion of a file, the deletion of a text block or the replacement of a text block.<br>
+<br>
+The preprocessor performs these operations through specific commands that it reads in the file being scanned.<br>
+<br>
+It is automatically called by the compiler, before compilation, to process the files to compile.<br>
+<br>
+<div>Preprocessor commands</div><div><br>
+All preprocessor commands begin at the beginning of the line with the pound sign ("#").<br>
+See '<a href="../../preprocessor/preprocessor.html">Preprocessor commands</a>' to get all commands that control the preprocessor.<br>
+<br>
+The main types of commands are the followings:<br>
+<ul><ul><li> File inclusion:<br>
+</li></ul></ul><div class="indent"><div class="indent"><div class="indent">Text file inclusion allows you to factorize text that is common to many other files (for example, type, constant, function, etc.).<br>
+The common text is usually put in a file with the extension ".bi".<br>
+Syntax:<br>
+<div class="indent"><code><a href="../../preprocessor/procedures/include.html">#include</a> [once] <i>"file"</i></code><br>
+<div class="indent"><code><i>file</i></code> is the name of the file to include.<br>
+</div></div>The included file is also processed by the preprocessor.<br>
+<br>
+File inclusion also allows to include a library in the linking process.<br>
+Syntax:<br>
+<div class="indent"><code><a href="../../preprocessor/procedures/inclib.html">#inclib</a> <i>"libname"</i></code><br>
+<div class="indent"><code><i>libname</i></code> is the name of the library file to include in the linking process.<br>
+<br>
+</div></div></div></div></div><ul><ul><li> Text replacement:<br>
+</li></ul></ul><div class="indent"><div class="indent"><div class="indent">The preprocessor makes it possible to define identifiers which, used in the program, will be replaced textually by their value.<br>
+Syntax:<br>
+<div class="indent"><code><a href="../../preprocessor/procedures/define.html">#define</a> <i>identifier</i> <i>body</i></code><br>
+<div class="indent">where <code><i>identifier</i></code> is the identifier that will be used in the rest of the program, and <code><i>body</i></code> will be the replacement text that the preprocessor will use.<br>
+</div></div>Whenever the identifier <code><i>identifier</i></code> is encountered by the preprocessor, it will be replaced by the text <code><i>body</i></code> throughout the rest of the program (<code><a href="../../preprocessor/procedures/undef.html">#undef</a> <i>identifier</i></code> to undefine an <code><i>identifier</i></code> previously defined).<br>
+<br>
+Defines are <i>scoped</i> (they are only visible in the scope they were defined in).<br>
+Namespaces on the other hand do not have any effect on the visibility of the defines.<br>
+<br>
+</div></div></div><ul><ul><li> Compilation constants and conditional compilation:<br>
+</li></ul></ul><div class="indent"><div class="indent"><div class="indent">See the next '<a href="conditional-compilation.html">Conditional Compilation</a>' page of this section.<br>
+<br>
+</div></div></div><ul><ul><li> Macros:<br>
+</li></ul></ul><div class="indent"><div class="indent"><div class="indent">See the last page '<a href="macros.html">Macros</a>' of this section.<br>
+<br>
+</div></div></div><ul><ul><li> Other commands:<br>
+</li></ul></ul><div class="indent"><div class="indent"><div class="indent">The preprocessor is able to perform other actions than those mentioned above.<br>
+The directives for performing these actions are listed below:<br>
+<div class="indent"><b>-</b> <code><a href="../../preprocessor/procedures/assert.html">#assert</a> <i>condition</i> (conditional directive for debugging)</code><br>
+<b>-</b> <code><a href="../../preprocessor/procedures/error.html">#error</a> <i>error_text</i> (directive for displaying error message)</code><br>
+<b>-</b> <code><a href="../../preprocessor/procedures/lang.html">#lang</a> <i>"lang"</i> (directive to set compiler dialect)</code><br>
+<b>-</b> <code><a href="../../preprocessor/procedures/libpath.html">#libpath</a> <i>"path"</i> (directive to add search path for libraries)</code><br>
+<b>-</b> <code><a href="../../preprocessor/procedures/line.html">#line</a> <i>number</i> [<i>"name"</i>](directive to set current line number [and file name])</code><br>
+<b>-</b> <code><a href="../../preprocessor/procedures/pragma.html">#pragma</a> / <a href="../../compiler-options/procedures/cmdline.html">#Cmdline</a> (directive to set compiler options)</code><br>
+<b>-</b> <code><a href="../../preprocessor/procedures/pragma-reserve.html">#Pragma Reserve</a> (directive to reserve symbol name)</code><br>
+<b>-</b> <code><a href="../../preprocessor/procedures/print.html">#print</a> <i>text</i> (directive to print text)</code><br>
+<br>
+</div></div></div></div></div><div>Example</div><div><br>
+Example with <code><a href="../../preprocessor/procedures/include.html">#include</a></code> and <code><a href="../../preprocessor/procedures/define.html">#define</a></code>:<br>
+<div class="indent"><code><pre class="code"><span>#include &quot;vbcompat.bi&quot;
+
+#define TEMPLATE &quot;hh:mm:ss yyyy/mm/dd&quot;
+
+</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>*</span> <span class="tok-kw">Len</span><span>(</span><span>TEMPLATE</span><span>)</span> <span>hour_date</span>
+
+
+
+<span>hour_date</span> <span>=</span> <span class="tok-kw">Format</span><span>(</span><span class="tok-kw">Now</span><span>,</span> <span>TEMPLATE</span><span>)</span>
+
+
+
+<span class="tok-kw">Print</span> <span>hour_date</span><span>,</span> <span>&quot;(&quot;</span> <span>&amp;</span> <span>TEMPLATE</span> <span>&amp;</span> <span>&quot;)&quot;</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+</div></div><div>See also</div><div><br>
+<ul><li> <a href="conditional-compilation.html">Conditional Compilation</a><br>
+<li> <a href="macros.html">Macros</a><br>
+<br>
+</li></li></ul></div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

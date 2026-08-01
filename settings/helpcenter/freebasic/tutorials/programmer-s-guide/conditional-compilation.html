@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conditional Compilation — Help Center</title>
+<meta name="description" content="Conditional Compilation — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/conditional-compilation.html">
+<meta property="og:title" content="Conditional Compilation">
+<meta property="og:description" content="Conditional Compilation — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/conditional-compilation.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/programmer-s-guide/conditional-compilation.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>Conditional Compilation</h1>
+<h2>Documentation</h2>
+
+	<b>Conditional Compilation</b> allows to change the way code is generated using '<a href="../../preprocessor/preprocessor.html">Preprocessor commands</a>'.<br>
+<br>
+The '<code><a href="../../preprocessor/procedures/define.html">#define</a></code>' command allows to define compilation constants, that is constants that describe the parameters of the platform for which the program is compiled.<br>
+These constants make it possible to carry out conditional compilations, that is to say to modify the behavior of the program according to parameters defined during its compilation.<br>
+<br>
+The '<code><a href="../../preprocessor/procedures/define.html">#define</a></code>' command is also used to replace identifiers of the program with other identifiers, for example to test several versions of the same function without modifying the entire program.<br>
+<br>
+<div>Compilation constants</div><div><br>
+A clear distinction will be made between compilation constants defined with the '<code><a href="../../preprocessor/procedures/define.html">#define</a></code>' directive of the preprocessor and the constants defined with the '<code><a href="../../variable-declarations/procedures/const.html">Const</a></code>' keyword.<br>
+Indeed, the literal constants do not reserve memory. These are immediate values, defined by the compiler.<br>
+On the other hand, the '<code><a href="../../variable-declarations/procedures/const.html">Const</a></code>' can still have a reserved memory space. This is for example the case when manipulating string literals.<br>
+<br>
+A literal constant declared with the '<code><a href="../../preprocessor/procedures/define.html">#define</a></code>' directive of the preprocessor will always retain its value (provided that it is not redefined). These literal constants have no type, which can be very annoying and error-prone in code.<br>
+Their use will be reserved for compilation constants only, and the '<code><a href="../../variable-declarations/procedures/const.html">Const</a></code>' keyword will be preferred for all other constants of the program.<br>
+<br>
+The preprocessor sets a number of built-in constants automatically.<br>
+These are the '<a href="../../intrinsic-defines/intrinsic-defines.html">Intrinsic Defines</a>' (see their list).<br>
+<br>
+</div><div>Conditional compilation</div><div><br>
+The definition of identifiers and compilation constants is widely used to perform so-called conditional compilation.<br>
+Conditional compilation consists of replacing certain portions of source code with others, depending on the presence or value of compilation constants.<br>
+This is achievable using conditional compilation directives.<br>
+<br>
+The most common of which are probably:<br>
+<div class="indent"><code><a href="../../preprocessor/procedures/ifdef.html">#ifdef</a> <i>symbol</i></code><br>
+<div class="indent"><code>' Conditionally included statements</code><br>
+</div><code><a href="../../preprocessor/procedures/endif.html">#endif</a></code><br>
+<div class="indent">the text between the <code><a href="../../preprocessor/procedures/ifdef.html">#ifdef</a></code> (ie, "if defined") and the <code><a href="../../preprocessor/procedures/endif.html">#endif</a></code> is left as it is if the identifier <code><i>symbol</i></code> is known to the preprocessor. Otherwise, it is deleted (the identifier can be declared using just the <code><a href="../../preprocessor/procedures/define.html">#define</a></code> command seen previously).<br>
+<br>
+</div></div>There are other conditional compilation directives like:<br>
+<div class="indent"><b>-</b> <code><a href="../../preprocessor/procedures/ifndef.html">#ifndef</a> (if not defined ...)</code><br>
+<b>-</b> <code><a href="../../preprocessor/procedures/else.html">#else</a></code> / <code><a href="../../preprocessor/procedures/elseif.html">#elseif</a> (otherwise ... / otherwise, if ...)</code><br>
+<b>-</b> <code><a href="../../preprocessor/procedures/if.html">#if</a> (if ...)</code><br>
+<div class="indent">the <code><a href="../../preprocessor/procedures/if.html">#if</a></code> directive expects a constant expression as parameter (the text that follows is included in the file if and only if this expression is true).<br>
+<br>
+</div></div>Another common application of compilation directives is the protection of header files against multiple inclusions:<br>
+<div class="indent"><code><a href="../../preprocessor/procedures/ifndef.html">#ifndef</a> <i>AlreadyThere</i></code><br>
+<div class="indent"><code><a href="../../preprocessor/procedures/define.html">#define</a> <i>AlreadyThere</i></code><br>
+<code>' Text to include only once at most.</code><br>
+</div><code><a href="../../preprocessor/procedures/endif.html">#endif</a></code><br>
+</div>This prevents the text from being included multiple times, as a result of multiple <code><a href="../../preprocessor/procedures/include.html">#include</a></code> calls.<br>
+Indeed, at the first call, <code><i>AlreadyThere</i></code> is not known to the preprocessor. It is therefore declared and the text is included.<br>
+On any subsequent call, <code><i>AlreadyThere</i></code> exists, and the text is not included.<br>
+This kind of writing is found in header files, for which in general we do not want a multiple inclusion to take place.<br>
+<br>
+</div><div>Example</div><div><br>
+Example of conditional compilation using the Intrinsic define <code><a href="../../compiler-options/procedures/fb-debug.html">__FB_DEBUG__</a></code> to debug a recursive function:<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Function</span> <span>recursiveFactorial</span> <span>(</span><span class="tok-kw">ByVal</span> <span>n</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span><span>)</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span>
+
+    <span class="tok-kw">If</span> <span>(</span><span>n</span> <span>=</span> <span class="tok-nu">0</span><span>)</span> <span class="tok-kw">Then</span>                         <span class="tok-cm">'' end condition</span>
+
+        <span>#if __FB_DEBUG__ &lt;&gt; 0
+
+</span>            <span class="tok-kw">Print</span> <span>&quot;end of recursion and result:&quot;</span><span>;</span>
+
+        <span>#endif
+
+</span>        <span class="tok-kw">Return</span> <span class="tok-nu">1</span>
+
+    <span class="tok-kw">Else</span>                                    <span class="tok-cm">'' recursion loop</span>
+
+        <span>#if __FB_DEBUG__ &lt;&gt; 0
+
+</span>            <span class="tok-kw">Print</span> <span>&quot;multiply by: &quot;</span> <span>&amp;</span> <span>n</span>
+
+        <span>#endif
+
+</span>      <span class="tok-kw">Return</span> <span>n</span> <span>*</span> <span>recursiveFactorial</span><span>(</span><span>n</span> <span>-</span> <span class="tok-nu">1</span><span>)</span>  <span class="tok-cm">'' recursive call</span>
+
+    <span class="tok-kw">End</span> <span class="tok-kw">If</span>
+
+<span class="tok-kw">End</span> <span class="tok-kw">Function</span>
+
+
+
+<span class="tok-kw">Print</span> <span>recursiveFactorial</span><span>(</span><span class="tok-nu">5</span><span>)</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+Output after compiling without <code><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-g.html">-g</a></code> option:<br>
+<pre class="code">
+ 120		</pre>Output after compiling with <code><a href="../../using-the-freebasic-compiler/command-line-options/compiler-option-g.html">-g</a></code> option:<br>
+<pre class="code">
+multiply by: 5
+multiply by: 4
+multiply by: 3
+multiply by: 2
+multiply by: 1
+end of recursion and result: 120
+		</pre></div></div><div>See also</div><div><br>
+<ul><li> <a href="preprocessor.html">Preprocessor Overview</a><br>
+<li> <a href="macros.html">Macros</a><br>
+<br>
+</li></li></ul></div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

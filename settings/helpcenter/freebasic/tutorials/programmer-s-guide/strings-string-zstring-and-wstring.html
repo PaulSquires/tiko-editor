@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Strings (string, zstring, and wstring) — Help Center</title>
+<meta name="description" content="Strings (string, zstring, and wstring) — 0 documented members. Tutorials reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/strings-string-zstring-and-wstring.html">
+<meta property="og:title" content="Strings (string, zstring, and wstring)">
+<meta property="og:description" content="Strings (string, zstring, and wstring) — 0 documented members. Tutorials reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/tutorials/programmer-s-guide/strings-string-zstring-and-wstring.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/tutorials/programmer-s-guide/strings-string-zstring-and-wstring.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC<span>›</span>Tutorials</div>
+<h1>Strings (string, zstring, and wstring)</h1>
+<h2>Documentation</h2>
+
+	Of all built-in data-types, <b>Strings</b> types are those dedicated to the representation of character chains.<br>
+<br>
+FreeBASIC supplies several strings data types for handling characters chains in various representations.<br>
+The fixed-length strings types (string, zstring and wstring) represent fixed-length chains of characters, while the variable-length string type represents a variable-length chain of characters.<br>
+<br>
+<div>Fixed-length strings</div><div><br>
+There are 3 types of fixed-length strings:<br>
+<ul><ul><li> Fixed-length string type for 8 bit character (QB-style fixed-length string):<br>
+</li></ul></ul><div class="indent"><div class="indent"><div class="indent"><b>-</b> <code><a href="../../operators/preprocessor-operators/procedures/string.html">String</a> * <i>size</i></code><br>
+<div class="indent"><div class="indent">since fbc version 1.20.0, total length of the string: '<i>size</i>' characters = '<i>size</i>' bytes <code>('<i>size</i>' useful characters)</code><br>
+before fbc version 1.20.0, total length of the string: '<i>size</i>+1' characters = '<i>size</i>+1' bytes <code>('<i>size</i>' useful characters + '1' final null character)</code><br>
+</div></div></div></div></div><ul><ul><li> Fixed-length zstring type for 8 bit character:<br>
+</li></ul></ul><div class="indent"><div class="indent"><div class="indent"><b>-</b> <code><a href="../../standard-data-types/procedures/zstring.html">ZString</a> * <i>size</i></code><br>
+<div class="indent"><div class="indent">total length of the zstring: '<i>size</i>' characters = '<i>size</i>' bytes <code>('<i>size-1</i>' useful characters + '1' final null character)</code><br>
+</div><code>or</code><br>
+</div><b>-</b> <code><a href="../../standard-data-types/procedures/zstring.html">ZString</a> <a href="../../standard-data-types/procedures/pointer-ptr.html">Ptr</a></code><br>
+<div class="indent"><div class="indent">total length of the pointed zstring: depends on the character chain referenced by the <code>pointer</code> (up to and including the final null character)<br>
+</div></div></div></div></div><ul><ul><li> Fixed-length wstring type for  wide character:<br>
+</li></ul></ul><div class="indent"><div class="indent"><div class="indent"><b>-</b> <code><a href="../../standard-data-types/procedures/wstring.html">WString</a> * <i>size</i></code><br>
+<div class="indent"><div class="indent">total length of the wstring: '<i>size</i>' characters = '<i>size</i>' x k<code>(*)</code> bytes <code>('<i>size-1</i>' useful characters + '1' final null character)</code><br>
+</div><code>or</code><br>
+</div><b>-</b> <code><a href="../../standard-data-types/procedures/wstring.html">WString</a> <a href="../../standard-data-types/procedures/pointer-ptr.html">Ptr</a></code><br>
+<div class="indent"><div class="indent">total length of the pointed wstring: depends on the character chain referenced by the <code>pointer</code> (up to and including the final null character)<br>
+<br>
+</div></div><code>(*)</code> The number of bytes 'k' used by a <code>WSTRING</code> character depends on the platform.<br>
+<br>
+</div></div></div></div><div>Variable-length string</div><div><br>
+There is only one type of variable-length string:<br>
+<ul><ul><li> Variable-length string type for 8 bit character:<br>
+</li></ul></ul><div class="indent"><div class="indent"><div class="indent"><b>-</b> <code><a href="../../operators/preprocessor-operators/procedures/string.html">String</a></code><br>
+<div class="indent"><div class="indent">total length of the string: dynamic length depending on the assigned data characters<br>
+<div class="indent">(string referenced by an internal descriptor of 1 <code>pointer</code> + 2 <code>uinteger</code> length)<br>
+<br>
+</div></div></div></div></div></div></div><div>Example</div><div><br>
+Size (in bytes) of different strings from all types above:<br>
+<div class="indent"><code><pre class="code"><span class="tok-cm">'  Result depending on fbc version (before/since 1.20.0)</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>*</span> <span class="tok-nu">20</span> <span>s20</span> <span>=</span> <span>&quot;FreeBASIC manual&quot;</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span>*</span> <span class="tok-nu">20</span> <span>z20</span> <span>=</span> <span>&quot;FreeBASIC manual&quot;</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span class="tok-kw">Ptr</span> <span>pz</span> <span>=</span> <span>@</span><span>&quot;FreeBASIC manual&quot;</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">WString</span> <span>*</span> <span class="tok-nu">20</span> <span>w20</span> <span>=</span> <span>&quot;FreeBASIC manual&quot;</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">WString</span> <span class="tok-kw">Ptr</span> <span>pw</span> <span>=</span> <span>@</span><span class="tok-kw">WStr</span><span>(</span><span>&quot;FreeBASIC manual&quot;</span><span>)</span>
+
+
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span> <span>s</span> <span>=</span> <span>&quot;FreeBASIC manual&quot;</span>
+
+
+
+<span class="tok-kw">Print</span> <span class="tok-kw">Using</span> <span>&quot;'FIXED-LENGTH STRING * 20': ## bytes in total, ## useful characters available&quot;</span><span>;</span> <span class="tok-kw">SizeOf</span><span>(</span><span>s20</span><span>);</span> <span class="tok-kw">Len</span><span>(</span><span>s20</span><span>)</span>
+
+<span>#if __FB_VERSION__ &lt; &quot;1.20.0&quot;
+
+</span><span class="tok-kw">Print</span> <span class="tok-kw">Using</span> <span>&quot;    containing ## user characters of # byte(s) each&quot;</span><span>;</span> <span class="tok-kw">IIf</span><span>(</span><span class="tok-kw">InStr</span><span>(</span><span>s20</span><span>,</span> <span class="tok-kw">Chr</span><span>(</span><span class="tok-nu">0</span><span>))</span> <span>&gt;</span> <span class="tok-nu">0</span><span>,</span> <span class="tok-kw">InStr</span><span>(</span><span>s20</span><span>,</span> <span class="tok-kw">Chr</span><span>(</span><span class="tok-nu">0</span><span>))</span> <span>-</span> <span class="tok-nu">1</span><span>,</span> <span class="tok-kw">Len</span><span>(</span><span>s20</span><span>));</span> <span class="tok-kw">SizeOf</span><span>(</span><span>s20</span><span>[</span><span class="tok-nu">0</span><span>])</span>
+
+<span>#endif
+
+</span><span class="tok-kw">Print</span>
+
+<span class="tok-kw">Print</span> <span class="tok-kw">Using</span> <span>&quot;'FIXED-LENGTH ZSTRING * 20': ## bytes in total, ## useful characters available&quot;</span><span>;</span> <span class="tok-kw">SizeOf</span><span>(</span><span>z20</span><span>);</span> <span class="tok-kw">SizeOf</span><span>(</span><span>z20</span><span>)</span> <span>\</span> <span class="tok-kw">SizeOf</span><span>(</span><span>z20</span><span>[</span><span class="tok-nu">0</span><span>])</span> <span>-</span> <span class="tok-nu">1</span>
+
+<span class="tok-kw">Print</span> <span class="tok-kw">Using</span> <span>&quot;    containing ## user characters of # byte(s) each&quot;</span><span>;</span> <span class="tok-kw">Len</span><span>(</span><span>z20</span><span>);</span> <span class="tok-kw">SizeOf</span><span>(</span><span>Z20</span><span>[</span><span class="tok-nu">0</span><span>])</span>
+
+<span class="tok-kw">Print</span> <span>&quot;'ZSTRING PTR': dereferencing pointer -&gt; &quot;</span><span>;</span> <span>&quot;&quot;&quot;&quot;</span> <span>&amp;</span> <span>*</span><span>pz</span> <span>&amp;</span> <span>&quot;&quot;&quot;&quot;</span>
+
+<span class="tok-kw">Print</span> <span class="tok-kw">Using</span> <span>&quot;    containing ## user characters of # byte(s) each&quot;</span><span>;</span> <span class="tok-kw">Len</span><span>(*</span><span>pz</span><span>);</span> <span class="tok-kw">SizeOf</span><span>((*</span><span>pz</span><span>)[</span><span class="tok-nu">0</span><span>])</span>
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Print</span> <span class="tok-kw">Using</span> <span>&quot;'FIXED-LENGTH WSTRING * 20': ## bytes in total, ## useful characters available&quot;</span><span>;</span> <span class="tok-kw">SizeOf</span><span>(</span><span>w20</span><span>);</span> <span class="tok-kw">SizeOf</span><span>(</span><span>w20</span><span>)</span> <span>\</span> <span class="tok-kw">SizeOf</span><span>(</span><span>w20</span><span>[</span><span class="tok-nu">0</span><span>])</span> <span>-</span> <span class="tok-nu">1</span>
+
+<span class="tok-kw">Print</span> <span class="tok-kw">Using</span> <span>&quot;    containing ## user characters of # byte(s) each&quot;</span><span>;</span> <span class="tok-kw">Len</span><span>(</span><span>w20</span><span>);</span> <span class="tok-kw">SizeOf</span><span>(</span><span>w20</span><span>[</span><span class="tok-nu">0</span><span>])</span>
+
+<span class="tok-kw">Print</span> <span>&quot;'WSTRING PTR': dereferencing pointer -&gt; &quot;</span><span>;</span> <span>&quot;&quot;&quot;&quot;</span> <span>&amp;</span> <span>*</span><span>pw</span> <span>&amp;</span> <span>&quot;&quot;&quot;&quot;</span>
+
+<span class="tok-kw">Print</span> <span class="tok-kw">Using</span> <span>&quot;    containing ## user characters of # byte(s) each&quot;</span><span>;</span> <span class="tok-kw">Len</span><span>(*</span><span>pw</span><span>);</span> <span class="tok-kw">SizeOf</span><span>((*</span><span>pw</span><span>)[</span><span class="tok-nu">0</span><span>])</span>
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">Type</span> <span>descriptor</span> <span>:</span> <span>Addr</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span class="tok-kw">Ptr</span> <span>:</span> <span>UC</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span> <span>:</span> <span>AC</span> <span class="tok-kw">As</span> <span class="tok-kw">UInteger</span> <span>:</span> <span class="tok-kw">End</span> <span class="tok-kw">Type</span>
+
+<span class="tok-kw">Print</span> <span class="tok-kw">Using</span> <span>&quot;'STRING': ## bytes in descriptor, memory allocated for ## characters right now&quot;</span><span>;</span> <span class="tok-kw">SizeOf</span><span>(</span><span>s</span><span>);</span> <span class="tok-kw">Cast</span><span>(</span><span>descriptor</span> <span class="tok-kw">Ptr</span><span>,</span> <span>@</span><span>s</span><span>)-&gt;</span><span>AC</span>
+
+<span class="tok-kw">Print</span> <span class="tok-kw">Using</span> <span>&quot;    containing ## user characters of # byte(s) each&quot;</span><span>;</span> <span class="tok-kw">Len</span><span>(</span><span>s</span><span>);</span> <span class="tok-kw">SizeOf</span><span>(</span><span>s</span><span>[</span><span class="tok-nu">0</span><span>])</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+Note: For the fixed-length string type only (QB-style fixed-length string), the 'Len()' keyword always returns the declared constant number of characters, regardless of the number of characters assigned to it by user.<br>
+(hence the formula only for fixed-length string type before fbc version 1.20.0: <code>'user_characters_length = IIf(InStr(s, Chr(0)) > 0, InStr(s, Chr(0)) - 1, Len(s))'</code>)<br>
+<br>
+Output example before fbc version 1.20.0 and for win64 (a wstring character uses 2 bytes):<br>
+<div class="indent"><pre class="code">
+'FIXED-LENGTH STRING * 20': 21 bytes in total, 20 useful characters available
+	containing 16 user characters of 1 byte(s) each
+
+'FIXED-LENGTH ZSTRING * 20': 20 bytes in total, 19 useful characters available
+	containing 16 user characters of 1 byte(s) each
+'ZSTRING PTR': dereferencing pointer -> "FreeBASIC manual"
+	containing 16 user characters of 1 byte(s) each
+
+'FIXED-LENGTH WSTRING * 20': 40 bytes in total, 19 useful characters available
+	containing 16 user characters of 2 byte(s) each
+'WSTRING PTR': dereferencing pointer -> "FreeBASIC manual"
+	containing 16 user characters of 2 byte(s) each
+
+'STRING': 24 bytes in descriptor, memory allocated for 32 characters right now
+	containing 16 user characters of 1 byte(s) each
+				</pre></div></div></div><div>Implicit conversion from Zstring to Ubyte</div><div><br>
+When any operand of a binary operator (as assignment, equal, +, *, ...) consists in dereferencing a '<code>Zstring Ptr</code>' pointer ('<code>pz</code>'), this can give a '<code>Zstring</code>' string or a '<code>Ubyte</code>' variable, depending on the other operand:<br>
+<div class="indent"><b>-</b> If the other operand is numeric, so the dereferenced '<code>Zstring Ptr</code>' pointer ('<code>*pz</code>') will be treated as a '<code>Ubyte</code>' reference to the one character pointed.<br>
+<b>-</b> If in this case a '<code>Zstring</code>' pointer indexing '<code>[]</code>' operator is used as dereferencing syntax ('<code>pz[n]</code>'), it is basically a short-cut version of the '<code>String</code>' indexing '<code>[]</code>' operator ('<code>(*pz)[n]</code>').<br>
+<br>
+</div>Since '<code>(*pz)[i]</code>' and '<code>pz[i][k]</code>' are always numeric (each an '<code>Ubyte</code>'), such equalities are true:<br>
+<div class="indent"><code>pz[i] = (*pz)[i]</code><br>
+<code>(*pz)[i] = pz[i]</code><br>
+and even:<br>
+<code>pz[i+k] = pz[i][k]</code><br>
+<code>pz[i][k] = pz[i+k]</code><br>
+<br>
+</div>Simple code example with a dereferenced '<code>Zstring Ptr</code>' converted to an '<code>Ubyte</code>' reference (as operand of an 'assignment' operator and a '+' operator):<br>
+<div class="indent"><code><pre class="code"><span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span>*</span> <span>(</span><span class="tok-nu">14</span><span>+</span><span class="tok-nu">1</span><span>)</span> <span>z</span> <span>=</span> <span>&quot;FreeBASIC     &quot;</span>
+
+<span class="tok-kw">Dim</span> <span class="tok-kw">As</span> <span class="tok-kw">ZString</span> <span class="tok-kw">Ptr</span> <span>pz</span> <span>=</span> <span>@</span><span>z</span>
+
+
+
+<span class="tok-kw">Print</span> <span>z</span>
+
+<span>z</span><span>[</span><span class="tok-nu">10</span><span>]</span> <span>=</span> <span class="tok-kw">Asc</span><span>(</span><span>&quot;2&quot;</span><span>)</span>
+
+<span>*(</span><span>pz</span> <span>+</span> <span class="tok-nu">11</span><span>)</span> <span>=</span> <span class="tok-kw">Asc</span><span>(</span><span>&quot;0&quot;</span><span>)</span>                <span class="tok-cm">'' *(pz + 11) is converted to an Ubyte reference</span>
+
+<span>(*</span><span>pz</span><span>)[</span><span class="tok-nu">12</span><span>]</span> <span>=</span> <span class="tok-kw">Asc</span><span>(</span><span>&quot;1&quot;</span><span>)</span>
+
+<span>pz</span><span>[</span><span class="tok-nu">13</span><span>]</span> <span>=</span> <span class="tok-kw">Asc</span><span>(</span><span>&quot;8&quot;</span><span>)</span>                    <span class="tok-cm">'' pz[13] is converted to an Ubyte reference</span>
+
+<span class="tok-kw">Print</span> <span>z</span>
+
+
+
+<span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">10</span> <span class="tok-kw">To</span> <span class="tok-nu">13</span>
+
+    <span class="tok-kw">Print</span> <span class="tok-kw">Str</span><span>(</span><span>z</span><span>[</span><span>I</span><span>]</span> <span>-</span> <span class="tok-kw">Asc</span><span>(</span><span>&quot;0&quot;</span><span>));</span>
+
+<span class="tok-kw">Next</span> <span>I</span>
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">10</span> <span class="tok-kw">To</span> <span class="tok-nu">13</span>
+
+    <span class="tok-kw">Print</span> <span class="tok-kw">Str</span><span>((*</span><span>pz</span><span>)[</span><span>I</span><span>]</span> <span>-</span> <span class="tok-kw">Asc</span><span>(</span><span>&quot;0&quot;</span><span>));</span>
+
+<span class="tok-kw">Next</span> <span>I</span>
+
+<span class="tok-kw">Print</span>
+
+<span class="tok-kw">For</span> <span>I</span> <span class="tok-kw">As</span> <span class="tok-kw">Integer</span> <span>=</span> <span class="tok-nu">10</span> <span class="tok-kw">To</span> <span class="tok-nu">13</span>
+
+    <span class="tok-kw">Print</span> <span class="tok-kw">Str</span><span>(</span><span>pz</span><span>[</span><span>I</span><span>]</span> <span>-</span> <span class="tok-kw">Asc</span><span>(</span><span>&quot;0&quot;</span><span>));</span>     <span class="tok-cm">'' pz[I] is converted to an Ubyte reference</span>
+
+<span class="tok-kw">Next</span> <span>I</span>
+
+<span class="tok-kw">Print</span>
+
+
+
+<span class="tok-kw">Sleep</span></pre></code><br>
+Output:<br>
+<div class="indent"><pre class="code">
+FreeBASIC
+FreeBASIC 2018
+2018
+2018
+2018
+			</pre></div></div></div><div>See also</div><div><br>
+<ul><li> <code><a href="../../string-functions/string-functions.html">String Functions</a></code><br>
+<li> <code><a href="../../language-documentation/variables-and-data-types/standard-data-type-limits.html">Standard Data Type Limits</a></code><br>
+<br>
+</li></li></ul></div>
+
+ 
+ 
+
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

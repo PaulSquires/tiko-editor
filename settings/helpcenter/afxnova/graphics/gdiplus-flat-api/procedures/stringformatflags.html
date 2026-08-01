@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>StringFormatFlags — Help Center</title>
+<meta name="description" content="Specifies text layout information (such as orientation and clipping) and display manipulations (such as ellipsis insertion, digit substitution, and representation of characters that are not supported by a font).">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/stringformatflags.html">
+<meta property="og:title" content="StringFormatFlags">
+<meta property="og:description" content="Specifies text layout information (such as orientation and clipping) and display manipulations (such as ellipsis insertion, digit substitution, and representation of characters that are not supported by a font).">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/stringformatflags.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/procedures/stringformatflags.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../gdiplus-enumerations.html">GdiPlus Enumerations</a></div>
+<h1>StringFormatFlags<span class="h1kind">function</span></h1>
+<p class="lede">Specifies text layout information (such as orientation and clipping) and display manipulations (such as ellipsis insertion, digit substitution, and representation of characters that are not supported by a font).</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">function</span><span class="badge badge--warn">doc-orphan</span></div>
+<div class="note note--warn"><strong>No implementation located.</strong> This member is documented, but the source scan found no matching declaration. It is likely declared in a header this scan does not resolve, or provided by a macro.</div>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>StringFormatFlagsDirectionRightToLeft</code></td><td></td><td>&amp;h00000001</td></tr><tr><td><code>StringFormatFlagsDirectionVertical</code></td><td></td><td>&amp;h00000002</td></tr><tr><td><code>StringFormatFlagsNoFitBlackBox</code></td><td></td><td>&amp;h00000004</td></tr><tr><td><code>StringFormatFlagsDisplayFormatControl</code></td><td></td><td>&amp;h00000020</td></tr><tr><td><code>StringFormatFlagsNoFontFallback</code></td><td></td><td>&amp;h00000400</td></tr><tr><td><code>StringFormatFlagsMeasureTrailingSpaces</code></td><td></td><td>&amp;h00000800</td></tr><tr><td><code>StringFormatFlagsNoWrap</code></td><td></td><td>&amp;h00001000</td></tr><tr><td><code>StringFormatFlagsLineLimit</code></td><td></td><td>&amp;h00002000</td></tr><tr><td><code>StringFormatFlagsNoClip</code></td><td></td><td>&amp;h00004000</td></tr><tr><td><code>StringFormatFlagsBypassGDI</code></td><td></td><td>&amp;h80000000</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>The <strong>StringFormatFlags</strong> enumeration specifies text layout information (such as orientation and clipping) and display manipulations (such as ellipsis insertion, digit substitution, and representation of characters that are not supported by a font).</p>
+<h2>Remarks</h2>
+<p>Multiple flags set can produce combined effects:</p>
+<ul><li>When both <strong>StringFormatFlagsDirectionVertical</strong> and <strong>StringFormatFlagsDirectionRightToLeft</strong> are set, individual lines of text are drawn vertically. The first line starts at the right edge of the layout rectangle; the second line of text is to the left of the first line, and so on.</li><li>When <strong>StringFormatFlagsDirectionVertical</strong> is set and <strong>StringFormatFlagsDirectionRightToLeft</strong> is not set, individual lines of text are drawn vertically. The first line starts at the left edge of the layout rectangle; the second line of text is to the right of the first line.</li><li>When <strong>StringFormatFlagsDirectionRightToLeft</strong> is set and <strong>StringFormatFlagsDirectionVertical</strong> is not set, the individual lines of text are horizontal and the reading order is from right to left. This setting does not change the order in which characters are displayed, it simply specifies the order in which characters can be read.</li></ul>
+<p>The <strong>StringFormatFlagsDirectionVertical</strong> and <strong>StringFormatFlagsDirectionRightToLeft</strong> flags can affect string alignment.</p>
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">Graphics/GdiPlus Flat  Api/GdiPlus Enumerations.md</span></li><li>Topic: <a href="../gdiplus-enumerations.html">GdiPlus Enumerations</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

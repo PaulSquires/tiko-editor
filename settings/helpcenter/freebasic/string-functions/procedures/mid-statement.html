@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mid (Statement) — Help Center</title>
+<meta name="description" content="Overwrites a substring of a string with another">
+<link rel="canonical" href="https://www.planetsquires.com/docs/freebasic/string-functions/procedures/mid-statement.html">
+<meta property="og:title" content="Mid (Statement)">
+<meta property="og:description" content="Overwrites a substring of a string with another">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/freebasic/string-functions/procedures/mid-statement.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="freebasic/string-functions/procedures/mid-statement.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>FreeBASIC</div>
+<h1>Mid (Statement)<span class="h1kind">statement</span></h1>
+<p class="lede">Overwrites a substring of a string with another</p>
+<div class="badges"><a class="badge" href="../index.html">String Functions</a><span class="badge">statement</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>Declare Sub Mid ( ByRef text As String, ByVal start As Integer, ByVal length As Integer, ByRef expression As Const String )</code></pre>
+<pre class="code sig"><code>Declare Sub Mid ( ByVal text As WString Ptr, ByVal start As Integer, ByVal length As Integer, ByVal expression As Const WString Ptr )</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>text</code></td><td></td><td>The string to work with.</td></tr><tr><td><code>start</code></td><td></td><td>The start position in</td></tr><tr><td><code>text</code></td><td></td><td>of the substring to overwrite. The first character starts at position 1.</td></tr><tr><td><code>length</code></td><td></td><td>The number of characters to overwrite.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<br>
+Copies a maximum of <code><i>length</i></code> characters of <code><i>expression</i></code> into <code><i>text</i></code>, starting at <code><i>start</i></code>.<br>
+<br>
+If <code><i>length</i></code> is not specified, all of <code><i>expression</i></code> is copied. The size of the string <code><i>text</i></code> is unchanged; if <code><i>expression</i></code> is too big, as much of it is copied up to the end of <code><i>text</i></code>.<br>
+<br>
+<code><b>Mid</b></code> can also be used as a function to return part of another string.  See <a href="mid-function.html">Mid (Function)</a>.<br>
+<br>
+
+<h2>Remarks</h2>
+<h3>Usage</h3><code><br>
+<b>Mid</b>( <i>text</i>, <i>start</i> ) = <i>expression</i><br>
+<div class="indent"><b><i>Or</i></b><br>
+</div><b>Mid</b>( <i>text</i>, <i>start</i>, <i>length</i> ) = <i>expression</i><br>
+</code><br>
+
+<h3>Differences from QB</h3><br>
+<ul><li> None<br>
+<br>
+</li></ul>
+<h3>See also</h3><br>
+<ul><li> <a href="mid-function.html">Mid (Function)</a><br>
+<br>
+</li></ul>
+
+ 
+
+<h2>Example</h2>
+<br>
+<code><pre class="code"><span class="tok-kw">Dim</span> <span>text</span> <span class="tok-kw">As</span> <span class="tok-kw">String</span>
+
+
+
+<span>text</span> <span>=</span> <span>&quot;abc 123&quot;</span>
+
+<span class="tok-kw">Print</span> <span>text</span> <span class="tok-cm">'displays &quot;abc 123&quot;</span>
+
+
+
+<span class="tok-cm">' replace part of text with another string</span>
+
+<span class="tok-kw">Mid</span><span>(</span><span>text</span><span>,</span> <span class="tok-nu">5</span><span>,</span> <span class="tok-nu">3</span><span>)</span> <span>=</span> <span>&quot;456&quot;</span> 
+
+<span class="tok-kw">Print</span> <span>text</span> <span class="tok-cm">'displays &quot;abc 456&quot;</span></pre></code><br>
+<br>
+
+<h2>Reference</h2>
+<ul><li>Documented in <span class="srcref">KeyPgMidstatement.html</span></li></ul>
+    <footer class="foot">
+      <p>Reproduced from the FreeBASIC Wiki Manual under the GNU Free Documentation License, Version 1.3, with no Invariant Sections, no Front-Cover Texts and no Back-Cover Texts. <a href="https://www.gnu.org/licenses/fdl-1.3.html" target="_blank" rel="noopener">GNU Free Documentation License 1.3</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

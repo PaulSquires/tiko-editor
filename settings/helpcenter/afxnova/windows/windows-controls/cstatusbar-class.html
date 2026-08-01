@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CStatusBar Class — Help Center</title>
+<meta name="description" content="CStatusBar Class — 19 documented members. Windows reference for AfxNova.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/cstatusbar-class.html">
+<meta property="og:title" content="CStatusBar Class">
+<meta property="og:description" content="CStatusBar Class — 19 documented members. Windows reference for AfxNova.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/cstatusbar-class.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-controls/cstatusbar-class.html"></nav>
+  <main><div class="wrap wrap--wide">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span>Windows</div>
+<h1>CStatusBar Class</h1>
+<h2>Members (19)</h2>
+<div class="memberlist"><a href="cstatusbar/cstatusbar-getborders.html"><span class="m-n">GetBorders</span><span class="m-d">Retrieves the current widths of the horizontal, and vertical borders of a status window, and the width of the border between rectangles.</span></a><a href="cstatusbar/cstatusbar-getheight.html"><span class="m-n">GetHeight</span><span class="m-d">Returns the height of the status bar.</span></a><a href="cstatusbar/cstatusbar-geticon.html"><span class="m-n">GetIcon</span><span class="m-d">Retrieves the icon for a part in a status bar.</span></a><a href="cstatusbar/cstatusbar-getparts.html"><span class="m-n">GetParts</span><span class="m-d">Retrieves a count of the parts in a status window and the coordinate of the right edge of the specified number of parts.</span></a><a href="cstatusbar/cstatusbar-getpartscount.html"><span class="m-n">GetPartsCount</span><span class="m-d">Retrieves a count of the parts in a status window.</span></a><a href="cstatusbar/cstatusbar-getrect.html"><span class="m-n">GetRect</span><span class="m-d">Retrieves the bounding rectangle of a part in a status window.</span></a><a href="cstatusbar/cstatusbar-gettext.html"><span class="m-n">GetText</span><span class="m-d">Retrieves the text from the specified part of a status window.</span></a><a href="cstatusbar/cstatusbar-gettextdrawingmode.html"><span class="m-n">GetTextDrawingMode</span><span class="m-d">Retrieves the type of operation used to draw the text.</span></a><a href="cstatusbar/cstatusbar-gettextlength.html"><span class="m-n">GetTextLength</span><span class="m-d">Retrieves the length, in characters, of the text from the specified part of a status window.</span></a><a href="cstatusbar/cstatusbar-gettiptext.html"><span class="m-n">GetTipText</span><span class="m-d">Retrieves the tooltip text for a part in a status bar.</span></a><a href="cstatusbar/cstatusbar-issimple.html"><span class="m-n">IsSimple</span><span class="m-d">Checks a status bar control to determine if it is in simple mode.</span></a><a href="cstatusbar/cstatusbar-setbkcolor.html"><span class="m-n">SetBkColor</span><span class="m-d">Sets the background color in a status bar.</span></a><a href="cstatusbar/cstatusbar-setfont.html"><span class="m-n">SetFont</span><span class="m-d">Sets the font that the status bar is to use when drawing text.</span></a><a href="cstatusbar/cstatusbar-seticon.html"><span class="m-n">SetIcon</span><span class="m-d">Sets the icon for a part in a status bar.</span></a><a href="cstatusbar/cstatusbar-setminheight.html"><span class="m-n">SetMinHeight</span><span class="m-d">Sets the minimum length, in pixels, of a status window&#x27;s drawing area.</span></a><a href="cstatusbar/cstatusbar-setparts.html"><span class="m-n">SetParts</span><span class="m-d">Sets the number of parts in a status window and the coordinate of the right edge of each part.</span></a><a href="cstatusbar/cstatusbar-settext.html"><span class="m-n">SetText</span><span class="m-d">Sets the text in the specified part of a status window.</span></a><a href="cstatusbar/cstatusbar-settiptext.html"><span class="m-n">SetTipText</span><span class="m-d">Sets the tooltip text for a part in a status bar.</span></a><a href="cstatusbar/cstatusbar-simple.html"><span class="m-n">Simple</span><span class="m-d">Specifies whether a status window displays simple text or displays all window parts set by a previous SB_SETPARTS message.</span></a></div>
+<h2>Documentation</h2>
+<h2 id="cstatusbar-class">CStatusBar Class</h2>
+<p>A <em>status bar</em> is a horizontal window at the bottom of a parent window in which an application can display various kinds of status information. The status bar can be divided into parts to display more than one type of information.</p>
+<p>See: <a href="https://learn.microsoft.com/en-us/windows/win32/controls/status-bars" target="_blank" rel="noopener">Status Bars</a></p>
+<p><strong>Include file</strong>: CStatusBar.inc</p>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody><tr><td><a href="cstatusbar/cstatusbar-getborders.html">GetBorders</a></td><td>Retrieves the current widths of the horizontal, and vertical borders of a status window, and the width of the border between rectangles.</td></tr><tr><td><a href="cstatusbar/cstatusbar-getheight.html">GetHeight</a></td><td>Returns the height of the status bar.</td></tr><tr><td><a href="cstatusbar/cstatusbar-geticon.html">GetIcon</a></td><td>Retrieves the icon for a part in a status bar.</td></tr><tr><td><a href="cstatusbar/cstatusbar-getparts.html">GetParts</a></td><td>Retrieves a count of the parts in a status window and the coordinate of the right edge of the specified number of parts.</td></tr><tr><td><a href="cstatusbar/cstatusbar-getpartscount.html">GetPartsCount</a></td><td>Retrieves a count of the parts in a status window.</td></tr><tr><td><a href="cstatusbar/cstatusbar-getrect.html">GetRect</a></td><td>Retrieves the bounding rectangle of a part in a status window.</td></tr><tr><td><a href="cstatusbar/cstatusbar-gettext.html">GetText</a></td><td>Retrieves the text from the specified part of a status window.</td></tr><tr><td><a href="cstatusbar/cstatusbar-gettextdrawingmode.html">GetTextDrawingMode</a></td><td>Retrieves the type of operation used to draw the text.</td></tr><tr><td><a href="cstatusbar/cstatusbar-gettextlength.html">GetTextLength</a></td><td>Retrieves the length, in characters, of the text from the specified part of a status window.</td></tr><tr><td><a href="cstatusbar/cstatusbar-gettiptext.html">GetTipText</a></td><td>Retrieves the tooltip text for a part in a status bar.</td></tr><tr><td><a href="cstatusbar/cstatusbar-issimple.html">IsSimple</a></td><td>Checks a status bar control to determine if it is in simple mode.</td></tr><tr><td><a href="cstatusbar/cstatusbar-setbkcolor.html">SetBkColor</a></td><td>Sets the background color in a status bar.</td></tr><tr><td><a href="cstatusbar/cstatusbar-setfont.html">SetFont</a></td><td>Sets the font that the status bar is to use when drawing text.</td></tr><tr><td><a href="cstatusbar/cstatusbar-seticon.html">SetIcon</a></td><td>Sets the icon for a part in a status bar.</td></tr><tr><td><a href="cstatusbar/cstatusbar-setminheight.html">SetMinHeight</a></td><td>Sets the minimum length, in pixels, of a status window's drawing area.</td></tr><tr><td><a href="cstatusbar/cstatusbar-setparts.html">SetParts</a></td><td>Sets the number of parts in a status window and the coordinate of the right edge of each part.</td></tr><tr><td><a href="cstatusbar/cstatusbar-settext.html">SetText</a></td><td>Sets the text in the specified part of a status window.</td></tr><tr><td><a href="cstatusbar/cstatusbar-settiptext.html">SetTipText</a></td><td>Sets the tooltip text for a part in a status bar.</td></tr><tr><td><a href="cstatusbar/cstatusbar-simple.html">Simple</a></td><td>Specifies whether a status window displays simple text or displays all window parts set by a previous SB_SETPARTS message.</td></tr></tbody></table></div>
+<hr>
+<h4 id="getborders">GetBorders</h4>
+<p>Retrieves the current widths of the horizontal, and vertical borders of a status window, and the width of the border between rectangles.</p>
+<pre class="code"><code>FUNCTION GetBorders (BYVAL hStatusBar AS HWND, BYVAL rgBorders AS LONG PTR) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hStatusBar</em></td><td>The handle of the status bar control.</td></tr><tr><td><em>rgBorders</em></td><td>Pointer to an integer array that has three elements. The first element receives the width of the horizontal border, the second receives the width of the vertical border, and the third receives the width of the border between rectangles.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns TRUE if successful, or FALSE otherwise.</p>
+<h5 id="remarks">Remarks</h5>
+<p>The borders determine the spacing between the outside edge of the window and the rectangles within the window that contain text. The borders also determine the spacing between rectangles.</p>
+<hr>
+<h4 id="getheight">GetHeight</h4>
+<p>Returns the height of the status bar.</p>
+<pre class="code"><code>FUNCTION GetHeight (BYVAL hStatusBar AS HWND) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hStatusBar</em></td><td>The handle of the status bar control.</td></tr></tbody></table></div>
+<hr>
+<h4 id="geticon">GetIcon</h4>
+<p>Retrieves the icon for a part in a status bar.</p>
+<pre class="code"><code>FUNCTION GetIcon (BYVAL hStatusBar AS HWND, BYVAL nPart AS DWORD) AS HICON</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hStatusBar</em></td><td>The handle of the status bar control.</td></tr><tr><td><em>nPart</em></td><td>Zero-based index of the part that contains the icon to be retrieved. If this parameter is -1, the status bar is assumed to be a Simple Mode status bar.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns the handle to the icon if successful, or NULL otherwise.</p>
+<hr>
+<h4 id="getparts">GetParts</h4>
+<p>Retrieves a count of the parts in a status window. The message also retrieves the coordinate of the right edge of the specified number of parts.</p>
+<pre class="code"><code>FUNCTION GetParts (BYVAL hStatusBar AS HWND, BYVAL nParts AS DWORD, BYVAL rgRightCoords AS LONG PTR) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hStatusBar</em></td><td>The handle of the status bar control.</td></tr><tr><td><em>nParts</em></td><td>Number of parts for which to retrieve coordinates. If this parameter is greater than the number of parts in the window, the message retrieves coordinates for existing parts only.</td></tr><tr><td><em>rgRightCoords</em></td><td>Pointer to an integer array that has the same number of elements as parts specified by wParam. Each element in the array receives the client coordinate of the right edge of the corresponding part. If an element is set to -1, the position of the right edge for that part extends to the right edge of the window. To retrieve the current number of parts, set this parameter to zero.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns the number of parts in the status bar..</p>
+<hr>
+<h4 id="getpartscount">GetPartsCount</h4>
+<p>Retrieves a count of the parts in a status window.</p>
+<pre class="code"><code>FUNCTION GetPartsCount (BYVAL hStatusBar AS HWND) AS DWORD</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hStatusBar</em></td><td>The handle of the status bar control.</td></tr></tbody></table></div>
+<hr>
+<h4 id="getrect">GetRect</h4>
+<p>Retrieves the bounding rectangle of a part in a status window.</p>
+<pre class="code"><code>FUNCTION GetRect (BYVAL hStatusBar AS HWND, BYVAL nPart AS DWORD, BYVAL lprc AS RECT PTR) AS LONG
+FUNCTION GetRect (BYVAL hStatusBar AS HWND, BYVAL nPart AS DWORD, BYREF rc AS RECT) AS LONG
+FUNCTION GetRect (BYVAL hStatusBar AS HWND, BYVAL nPart AS DWORD) AS RECT</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hStatusBar</em></td><td>The handle of the status bar control.</td></tr><tr><td><em>nPart</em></td><td>Zero-based index of the part whose bounding rectangle is to be retrieved.</td></tr><tr><td><em>lprc</em></td><td>Pointer to a <strong>RECT</strong> structure that receives the bounding rectangle.</td></tr><tr><td><em>rc</em></td><td>A <strong>RECT</strong> structure that receives the bounding rectangle.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns TRUE if successful, or FALSE otherwise.</p>
+<hr>
+<h4 id="gettext">GetText</h4>
+<p>Retrieves the text from the specified part of a status window.</p>
+<pre class="code"><code>FUNCTION GetText (BYVAL hStatusBar AS HWND, BYVAL nPart AS DWORD, BYVAL pwszText AS WSTRING PTR) AS DWORD
+FUNCTION GetText (BYVAL hStatusBar AS HWND, BYVAL nPart AS DWORD) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hStatusBar</em></td><td>The handle of the status bar control.</td></tr><tr><td><em>nPart</em></td><td>Zero-based index of the part from which to retrieve text.</td></tr><tr><td><em>pwszText</em></td><td>Pointer to the buffer that receives the text as a null-terminated string. Use the SB_GETTEXTLENGTH message to determine the required size of the buffer.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p><strong>First overloaded method</strong>: Returns a 32-bit value that consists of two 16-bit values. The low word specifies the length, in characters, of the text. The high word specifies the type of operation used to draw the text. The type can be one of the following values.</p>
+<div class="table-wrap"><table><thead><tr><th>Return code</th><th>Description</th></tr></thead><tbody><tr><td><strong>0</strong></td><td>The text is drawn with a border to appear lower than the plane of the window.</td></tr><tr><td><strong>SBT_NOBORDERS</strong></td><td>The text is drawn without borders.</td></tr><tr><td><strong>SBT_POPOUT</strong></td><td>The text is drawn with a border to appear higher than the plane of the window.</td></tr><tr><td><strong>SBT_RTLREADING</strong></td><td>The text displays in the opposite direction of the text in the parent window.</td></tr></tbody></table></div>
+<p>This message returns a maximum of 65,535 characters. If the text string is longer than that, it is truncated. If the text has the <strong>SBT_OWNERDRAW</strong> drawing type, this message returns the 32-bit value associated with the text instead of the length and operation type. Normal windows display text left-to-right (LTR). Windows can be <em>mirrored</em> to display languages such as Hebrew or Arabic that read right-to-left (RTL). If <strong>SBT_RTLREADING</strong> is set, the <em>pwszText</em> string reads in the opposite direction from the text in the parent window.</p>
+<p><strong>Second overloaded method</strong>: Returns the text of the specified part.</p>
+<hr>
+<h4 id="gettextdrawingmode">GetTextDrawingMode</h4>
+<p>Retrieves the type of operation used to draw the text.</p>
+<pre class="code"><code>FUNCTION GetTextDrawingMode (BYVAL hStatusBar AS HWND, BYVAL nPart AS DWORD) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hStatusBar</em></td><td>The handle of the status bar control.</td></tr><tr><td><em>nPart</em></td><td>Zero-based index of the part from which to retrieve text.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>he type can be one of the following values.</p>
+<div class="table-wrap"><table><thead><tr><th>Return code</th><th>Description</th></tr></thead><tbody><tr><td><strong>0</strong></td><td>The text is drawn with a border to appear lower than the plane of the window.</td></tr><tr><td><strong>SBT_NOBORDERS</strong></td><td>The text is drawn without borders.</td></tr><tr><td><strong>SBT_POPOUT</strong></td><td>The text is drawn with a border to appear higher than the plane of the window.</td></tr><tr><td><strong>SBT_RTLREADING</strong></td><td>The text displays in the opposite direction of the text in the parent window.</td></tr></tbody></table></div>
+<hr>
+<h4 id="gettextlength">GetTextLength</h4>
+<p>Retrieves the length, in characters, of the text from the specified part of a status window.</p>
+<pre class="code"><code>FUNCTION GetTextLength (BYVAL hStatusBar AS HWND, BYVAL nPart AS DWORD) AS LONG</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hStatusBar</em></td><td>The handle of the status bar control.</td></tr><tr><td><em>nPart</em></td><td>Zero-based index of the part from which to retrieve text.</td></tr></tbody></table></div>
+<hr>
+<h4 id="gettiptext">GetTipText</h4>
+<p>Retrieves the tooltip text for a part in a status bar. The status bar must be created with the <strong>SBT_TOOLTIPS</strong> style to enable tooltips.</p>
+<pre class="code"><code>FUNCTION GetTipText (BYVAL hStatusBar AS HWND, BYVAL nPart AS WORD, BYVAL pwszText AS WSTRING PTR, BYVAL wLen AS WORD)
+FUNCTION GetTipText (BYVAL hStatusBar AS HWND, BYVAL nPart AS WORD) AS DWSTRING</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hStatusBar</em></td><td>The handle of the status bar control.</td></tr><tr><td><em>nPart</em></td><td>Zero-based index of the part that receives the tooltip text.</td></tr><tr><td><em>pwszText</em></td><td>Pointer to a character buffer that receives the tooltip text.</td></tr><tr><td><em>wLen</em></td><td>The size of the buffer at <em>pwszText</em>, in characters.</td></tr></tbody></table></div>
+<p>Using this message incorrectly can cause problems for your application. For example, if the text is too large for the <em>pwszText</em> buffer, it could cause a buffer overflow.</p>
+<p>The second overloaded method uses a buffer of 65,535 characters, which is the maximum length that <strong>SB_GETTIPTEXTW</strong> can return, avoiding a possible buffer overrun.</p>
+<hr>
+<h4 id="issimple">IsSimple</h4>
+<p>Checks a status bar control to determine if it is in simple mode.</p>
+<pre class="code"><code>FUNCTION IsSimple (BYVAL hStatusBar AS HWND) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hStatusBar</em></td><td>The handle of the status bar control.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns TRUE if the status bar control is in simple mode, or FALSE otherwise.</p>
+<hr>
+<h4 id="setbkcolor">SetBkColor</h4>
+<p>Sets the background color in a status bar.</p>
+<pre class="code"><code>FUNCTION SetBkColor (BYVAL hStatusBar AS HWND, BYVAL clrBk AS COLORREF) AS COLORREF</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hStatusBar</em></td><td>The handle of the status bar control.</td></tr><tr><td><em>clrBk</em></td><td><strong>COLORREF</strong> value that specifies the new background color. Specify the CLR_DEFAULT value to cause the status bar to use its default background color.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns the previous background color, or CLR_DEFAULT if the background color is the default color.</p>
+<hr>
+<h4 id="setfont">SetFont</h4>
+<p>Sets the font that the status bar is to use when drawing text.</p>
+<pre class="code"><code>SUB SetFont (BYVAL hStatusBar AS HWND, BYVAL hFont AS HFONT, BYVAL fRedraw AS LONG = FALSE)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hStatusBar</em></td><td>The handle of the status bar control.</td></tr><tr><td><em>hFont</em></td><td>Sets the font that the status bar is to use when drawing text.</td></tr><tr><td><em>fRedraw</em></td><td>Specifies whether the control should be redrawn immediately upon setting the font. If this parameter is TRUE, the control redraws itself.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns the previous background color, or CLR_DEFAULT if the background color is the default color.</p>
+<hr>
+<h4 id="seticon">SetIcon</h4>
+<p>Sets the icon for a part in a status bar.</p>
+<pre class="code"><code>FUNCTION SetIcon (BYVAL hStatusBar AS HWND, BYVAL nPart AS LONG, BYVAL hIcon AS HICON) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hStatusBar</em></td><td>The handle of the status bar control.</td></tr><tr><td><em>nPart</em></td><td>Zero-based index of the part that will receive the icon. If this parameter is -1, the status bar is assumed to be a simple status bar.</td></tr><tr><td><em>hIcon</em></td><td>Handle to the icon to be set. If this value is NULL, the icon is removed from the part.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns TRUE if successful, or FALSE otherwise.</p>
+<h5 id="remarks">Remarks</h5>
+<p>The status bar will not destroy the icon. It is the calling application's responsibility to keep track of and destroy any icons.</p>
+<hr>
+<h4 id="setminheight">SetMinHeight</h4>
+<p>Sets the minimum height of a status window's drawing area.</p>
+<pre class="code"><code>SUB SetMinHeight (BYVAL hStatusBar AS HWND, BYVAL minHeight AS DWORD)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hStatusBar</em></td><td>The handle of the status bar control.</td></tr><tr><td><em>minHeight</em></td><td>Minimum height, in pixels, of the window.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>The minimum height is the sum of wParam and twice the width, in pixels, of the vertical border of the status window. An application must send the <strong>WM_SIZE</strong> message to the status window to redraw the window. The <em>wParam</em> and <em>lParam</em> parameters of the <strong>WM_SIZE</strong> message should be set to zero.</p>
+<hr>
+<h4 id="setparts">SetParts</h4>
+<p>Sets the number of parts in a status window and the coordinate of the right edge of each part.</p>
+<pre class="code"><code>FUNCTION SetParts (BYVAL hStatusBar AS HWND, BYVAL dwParts AS DWORD, BYVAL rgWidths AS LONG PTR) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hStatusBar</em></td><td>The handle of the status bar control.</td></tr><tr><td><em>dwParts</em></td><td>Number of parts to set (cannot be greater than 256).</td></tr><tr><td><em>rgWidths</em></td><td>Pointer to an integer array. The number of elements is specified in <em>dwParts</em>. Each element specifies the position, in client coordinates, of the right edge of the corresponding part. If an element is -1, the right edge of the corresponding part extends to the border of the window.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns TRUE if successful, or FALSE otherwise.</p>
+<hr>
+<h4 id="settext">SetText</h4>
+<p>Sets the text in the specified part of a status window.</p>
+<pre class="code"><code>FUNCTION SetText (BYVAL hStatusBar AS HWND, BYVAL nPart AS LONG, BYVAL pwszText AS WSTRING PTR, _
+   BYVAL uType AS DWORD = 0) AS BOOLEAN</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hStatusBar</em></td><td>The handle of the status bar control.</td></tr><tr><td><em>nPart</em></td><td>The zero-based index of the part to set. If it is set to <strong>SB_SIMPLEID</strong>, the status window is assumed to be a simple mode status bar; that is, a status bar with only one part.</td></tr><tr><td><em>pwszText</em></td><td>Pointer to a null-terminated string that specifies the text to set. If <em>nPart</em> is <strong>SBT_OWNERDRAW</strong>, this parameter represents 32 bits of data. The parent window must interpret the data and draw the text when it receives the <strong>WM_DRAWITEM</strong> message.</td></tr><tr><td><em>uType</em></td><td>The  type of the drawing operation. This parameter can be one of the following values.</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>Return code</th><th>Description</th></tr></thead><tbody><tr><td><strong>0</strong></td><td>The text is drawn with a border to appear lower than the plane of the window.</td></tr><tr><td><strong>SBT_NOBORDERS</strong></td><td>The text is drawn without borders.</td></tr><tr><td><strong>SBT_OWNERDRAW</strong></td><td>The text is drawn by the parent window. A simple mode status bar does not support owner drawing.</td></tr><tr><td><strong>SBT_POPOUT</strong></td><td>The text is drawn with a border to appear higher than the plane of the window.</td></tr><tr><td><strong>SBT_RTLREADING</strong></td><td>The text displays in the opposite direction of the text in the parent window.</td></tr><tr><td><strong>SBT_NOTABPARSING</strong></td><td>Tab characters are ignored.</td></tr></tbody></table></div>
+<h5 id="return-value">Return value</h5>
+<p>Returns TRUE if successful, or FALSE otherwise.</p>
+<h5 id="remarks">Remarks</h5>
+<p>The message invalidates the portion of the window that has changed, causing it to display the new text when the window next receives the WM_PAINT message.</p>
+<p>Normal windows display text left-to-right (LTR). Windows can be mirrored to display languages such as Hebrew or Arabic that read right-to-left (RTL). If <strong>SBT_RTLREADING</strong> is set, the <em>pwszText</em> string will read in the opposite direction from the text in the parent window.</p>
+<hr>
+<h4 id="settiptext">SetTipText</h4>
+<p>Sets the tooltip text for a part in a status bar. The status bar must have been created with the <strong>SBT_TOOLTIPS</strong> style to enable tooltips.</p>
+<pre class="code"><code>SUB SetTipText (BYVAL hStatusBar AS HWND, BYVAL nPart AS LONG, BYVAL pwszTipText AS WSTRING PTR)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hStatusBar</em></td><td>The handle of the status bar control.</td></tr><tr><td><em>nPart</em></td><td>Zero-based index of the part that will receive the tooltip text.</td></tr><tr><td><em>pwszTipText</em></td><td>Pointer to a character buffer that contains the new tooltip text.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>This tooltip text is displayed in two situations:</p>
+<ul><li>When the corresponding pane in the status bar contains only an icon.</li><li>When the corresponding pane in the status bar contains text that is truncated due to the size of the pane.</li></ul>
+<hr>
+<h4 id="simple">Simple</h4>
+<p>Specifies whether a status window displays simple text or displays all window parts set by a previous <strong>SB_SETPARTS</strong> message.</p>
+<pre class="code"><code>SUB Simple (BYVAL hStatusBar AS HWND, BYVAL fSimple AS BOOLEAN)</code></pre>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td><em>hStatusBar</em></td><td>The handle of the status bar control.</td></tr><tr><td><em>fSimple</em></td><td>Display type flag. If this parameter is TRUE, the window displays simple text. If it is FALSE, it displays multiple parts.</td></tr></tbody></table></div>
+<h5 id="remarks">Remarks</h5>
+<p>If the status window is being changed from nonsimple to simple, or vice versa, the window is immediately redrawn.</p>
+<hr>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

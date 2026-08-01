@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CRichEditCtx.Rect — Help Center</title>
+<meta name="description" content="Gets/sets the formatting rectangle of a rich edit control.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/cricheditctx/cricheditctx-rect.html">
+<meta property="og:title" content="CRichEditCtx.Rect">
+<meta property="og:description" content="Gets/sets the formatting rectangle of a rich edit control.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/windows/windows-controls/cricheditctx/cricheditctx-rect.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/windows/windows-controls/cricheditctx/cricheditctx-rect.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cricheditctx-class.html">CRichEditCtx Class</a></div>
+<h1>CRichEditCtx.Rect<span class="h1kind">method</span></h1>
+<p class="lede">Gets/sets the formatting rectangle of a rich edit control.</p>
+<div class="badges"><a class="badge" href="../../index.html">Windows</a><span class="badge">method</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>PRIVATE PROPERTY CRichEditCtx.Rect () AS .RECT</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>fCoord</code></td><td></td><td>(SET) <strong>Rich Edit 2.0 and later</strong>: Indicates whether <em>rc</em> specifies absolute or relative coordinates. A value of zero indicates absolute coordinates. A value of 1 indicates offsets relative to the current formatting rectangle. (The offsets can be positive or negative.)<br><strong>Edit controls and Rich Edit 1.0</strong>: This parameter is not used and must be zero.</td></tr><tr><td><code>rc</code></td><td></td><td>(SET) A <a href="https://learn.microsoft.com/en-us/windows/win32/api/windef/ns-windef-rect" target="_blank" rel="noopener">RECT</a> structure that specifies the new dimensions of the rectangle. If this parameter is <strong>NULL</strong>, the formatting rectangle is set to its default values.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>(GET) A <strong>RECT</strong> structure with the formatting rectangle.</p>
+<p>(SET) The set property does not return a value.</p>
+<h2>Description</h2>
+<p>Gets/sets the formatting rectangle of a rich edit control.</p>
+<h2>Remarks</h2>
+<p>Setting <em>rc</em> to <strong>NULL</strong> has no effect if a touch device is installed, or if the message is sent from a thread that has a hook installed (see <a href="https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwindowshookexw" target="_blank" rel="noopener">SetWindowsHookEx</a>). In these cases, <em>rc</em> should contain a valid pointer to a <a href="https://learn.microsoft.com/en-us/windows/win32/api/windef/ns-windef-rect" target="_blank" rel="noopener">RECT</a> structure.</p>
+<p>The (SET) <strong>Rect</strong> property causes the text of the rich edit control to be redrawn. To change the size of the formatting rectangle without redrawing the text, use the <strong>RectNP</strong> property.</p>
+<p>When a rich edit control is first created, the formatting rectangle is set to a default size. You can use the (SET) <strong>Rect</strong> message to make the formatting rectangle larger or smaller than the rich edit control window.</p>
+<p>If the rich edit control does not have a horizontal scroll bar, and the formatting rectangle is set to be larger than the rich edit control window, lines of text exceeding the width of the rich edit control window (but smaller than the width of the formatting rectangle) are clipped instead of wrapped.</p>
+<p>If the rich edit control contains a border, the formatting rectangle is reduced by the size of the border. If you are adjusting the rectangle returned by the (GET) <strong>Rect</strong> property, you must remove the size of the border before using the rectangle with the (SET) <strong>Rect</strong> property.</p>
+<p>The formatting rectangle does not include the selection bar, which is an unmarked area to the left of each paragraph. When the user clicks in the selection bar, the corresponding line is selected.</p>
+<h2>Example</h2>
+<p>(GET) PROPERTY Rect () AS .RECT (SET) PROPERTY Rect (BYVAL fCoord AS LONG, BYREF rc AS .RECT)</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/CRichEditCtx.inc:1616</span></li><li>Documented in <span class="srcref">Windows/WIndows Controls/RichEdit/CRichEditCtx Class.md</span></li><li>Topic: <a href="../cricheditctx-class.html">CRichEditCtx Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

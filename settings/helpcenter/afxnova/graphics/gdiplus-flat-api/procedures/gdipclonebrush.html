@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GdipCloneBrush — Help Center</title>
+<meta name="description" content="Creates a new **Brush** object based on this brush.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipclonebrush.html">
+<meta property="og:title" content="GdipCloneBrush">
+<meta property="og:description" content="Creates a new **Brush** object based on this brush.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-flat-api/procedures/gdipclonebrush.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-flat-api/procedures/gdipclonebrush.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../brush-functions.html">Brush Functions</a></div>
+<h1>GdipCloneBrush<span class="h1kind">function</span></h1>
+<p class="lede">Creates a new **Brush** object based on this brush.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">function</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION GdipCloneBrush (BYVAL brush AS GpBrush PTR, BYVAL cloneBrush AS GpBrush PTR PTR) AS GpStatus</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>brush</code></td><td></td><td>[in] Pointer to the <strong>Brush</strong> object created with <strong>GdipCreateSolidFil</strong>, <strong>GdipCreateHatchBrush</strong>, <strong>GdipCloneBrush</strong> or similar function.</td></tr><tr><td><code>cloneBrush</code></td><td></td><td>[out] Pointer to a <strong>Brush</strong> object variable that recives a pointer to the new <strong>Brush</strong> object.</td></tr></tbody></table></div>
+<h2>Description</h2>
+<p>Creates a new <strong>Brush</strong> object based on this brush. The cloned brush is a deep copy—you can modify it without affecting the original.</p>
+<h2>Examples</h2>
+<p>' ======================================================================================== SUB Example_CloneBrush (BYVAL hdc AS HDC)</p>
+<p>DIM hStatus AS LONG</p>
+<p>' // Create a graphics object from the device context DIM graphics AS GpGraphics PTR hStatus = GdipCreateFromHDC(hdc, @graphics)</p>
+<p>' // Get the DPI scaling ratios DIM dpiX AS SINGLE hStatus = GdipGetDpiX(graphics, @dpiX) DIM rxRatio AS SINGLE = dpiX / 96 DIM dpiY AS SINGLE hStatus = GdipGetDpiY(graphics, @dpiY) Dim ryRatio AS SINGLE = dpiY / 96 ' // Set the scale transform hStatus = GdipScaleWorldTransform(graphics, rxRatio, ryRatio, MatrixOrderPrepend)</p>
+<p>' // Create an ARGB color DIM pixelColor AS ARGB pixelColor = GDIP_ARGB(255, 255, 0, 0)</p>
+<p>' // Create a SolidBrush DIM brush AS GpBrush PTR hStatus = GdipCreateSolidFill(pixelColor, @brush)</p>
+<p>' // Create a clone of the SolidBrush DIM cloneBrush AS GpBrush PTR hStatus = GdipCloneBrush(brush, @cloneBrush)</p>
+<p>' // Use the clone brush to fill a rectagle hStatus = GdipFillRectangleI(graphics, cloneBrush, 0, 0, 100, 100)</p>
+<p>' // Cleanup IF cloneBrush THEN GdipDeleteBrush(cloneBrush) IF brush THEN GdipDeleteBrush(brush) IF graphics THEN GdipDeleteGraphics(graphics)</p>
+<p>END SUB ' ========================================================================================</p>
+<p>The following example creates a SolidBrush object, clones it, and then uses the clone to fill a rectangle.</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/AfxGdiPlus.bi:1666</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Flat  Api/GdiPlusBrushes.md</span></li><li>Topic: <a href="../brush-functions.html">Brush Functions</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

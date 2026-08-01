@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CAdoConnection.CommandTimeout — Help Center</title>
+<meta name="description" content="Sets or returns a Long value that indicates, in seconds, how long to wait for a command to execute. Default is 30.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadoconnection/cadoconnection-commandtimeout.html">
+<meta property="og:title" content="CAdoConnection.CommandTimeout">
+<meta property="og:description" content="Sets or returns a Long value that indicates, in seconds, how long to wait for a command to execute. Default is 30.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/databases/ado-classes/cadoconnection/cadoconnection-commandtimeout.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/databases/ado-classes/cadoconnection/cadoconnection-commandtimeout.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cadoconnection-class.html">CAdoConnection Class</a></div>
+<h1>CAdoConnection.CommandTimeout<span class="h1kind">property</span></h1>
+<p class="lede">Sets or returns a Long value that indicates, in seconds, how long to wait for a command to execute. Default is 30.</p>
+<div class="badges"><a class="badge" href="../../index.html">Databases</a><span class="badge">property</span><span class="badge">CAdoConnection.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>PROPERTY CommandTimeout () AS LONG</code></pre>
+<pre class="code sig"><code>PROPERTY CommandTimeout (BYVAL lTimeout AS LONG)</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>lTimeout</code></td><td></td><td>Time to wait for a command to execute.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>The timeout value.</p>
+<h2>Description</h2>
+<p>Sets or returns a Long value that indicates, in seconds, how long to wait for a command to execute. Default is 30.</p>
+<h2>Remarks</h2>
+<p>Use the <strong>CommandTimeout</strong> property on a <code>Connection</code> object to allow the cancellation of an <strong>Execute</strong> method call, due to delays from network traffic or heavy server use. If the interval set in the <strong>CommandTimeout</strong> property elapses before the command completes execution, an error occurs and ADO cancels the command. If you set the property to zero, ADO will wait indefinitely until the execution is complete. Make sure the provider and data source to which you are writing code support the <strong>CommandTimeout</strong> functionality.</p>
+<p>The <strong>CommandTimeout</strong> setting on a <code>Connection</code> object has no effect on the <strong>CommandTimeout</strong> setting on a <code>Command</code> object on the same <code>Connection</code>; that is, the <code>Command</code> object's <strong>CommandTimeout</strong> property does not inherit the value of the <code>Connection</code> object's <strong>CommandTimeout</strong> value.</p>
+<p>On a <code>Connection</code> object, the <strong>CommandTimeout</strong> property remains read/write after the <code>Connection</code> is opened.</p>
+<h2>Examples</h2>
+<p>' // Sets the timeout to 35 seconds pConnection.CommandTimeout = 35</p>
+<p>' // Gets the timeout value DIM lTimeout AS LONG = pConnection.CommandTimeout</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CAdoConnection.inc</code></li><li>Defined in <span class="srcref">AfxNova/CAdoConnection.inc:272</span></li><li>Documented in <span class="srcref">Databases/ADO Classes/CAdoConnection Class.md</span></li><li>Topic: <a href="../cadoconnection-class.html">CAdoConnection Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

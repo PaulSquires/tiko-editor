@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CMoney.FormatCurrency — Help Center</title>
+<meta name="description" content="Formats a currency into a string form.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/numeric-datatypes/cmoney/cmoney-formatcurrency.html">
+<meta property="og:title" content="CMoney.FormatCurrency">
+<meta property="og:description" content="Formats a currency into a string form.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/numeric-datatypes/cmoney/cmoney-formatcurrency.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/numeric-datatypes/cmoney/cmoney-formatcurrency.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cmoney-class.html">CMoney Class</a></div>
+<h1>CMoney.FormatCurrency<span class="h1kind">method</span></h1>
+<p class="lede">Formats a currency into a string form.</p>
+<div class="badges"><a class="badge" href="../index.html">Numeric Datatypes</a><span class="badge">method</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION FormatCurrency (BYVAL iNumDig AS LONG = -1, BYVAL ilncLead AS LONG = -2, BYVAL iUseParens AS LONG = -2, BYVAL iGroup AS LONG = -2, BYVAL dwFlags AS DWORD = 0) AS DWSTRING</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>iNumDig</code></td><td></td><td>The number of digits to pad to after the decimal point. Specify -1 to use the system default value.</td></tr><tr><td><code>ilncLead</code></td><td></td><td>Specifies whether to include the leading digit on numbers.<br>-2 : Use the system default.<br>-1 : Include the leading digit.<br> 0 : Do not include the leading digit.</td></tr><tr><td><code>iUseParens</code></td><td></td><td>Specifies whether negative numbers should use parentheses.<br>-2 : Use the system default.<br>-1 : Use parentheses.<br> 0 : Do not use parentheses.</td></tr><tr><td><code>iGroup</code></td><td></td><td>Specifies whether thousands should be grouped. For example 10,000 versus 10000.<br>-2 : Use the system default.<br>-1 : Group thousands.<br> 0 : Do not group thousands.</td></tr><tr><td><code>dwFlags</code></td><td></td><td>VAR_CALENDAR_HIJRI is the only flag that can be set.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>A string containing the formatted value.</p>
+<h2>Description</h2>
+<p>Formats a currency into a string form.</p>
+<h2>Remarks</h2>
+<p>Same as <strong>FormatNumber</strong> but adding the currency symbol.</p>
+<h2>Example</h2>
+<p>DIM cur AS CMoney = 12345.1234 PRINT cur.FormatCurrency   --&gt; 12.345,12 € (Spain)</p>
+<h2>Reference</h2>
+<ul><li>Defined in <span class="srcref">AfxNova/CMoney.inc:439</span></li><li>Documented in <span class="srcref">Numeric Datatypes/CMoney Class.md</span></li><li>Topic: <a href="../cmoney-class.html">CMoney Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CDOMessage.From — Help Center</title>
+<meta name="description" content="The messaging address of the principal author of the message.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/com/cdomessage/cdomessage-from.html">
+<meta property="og:title" content="CDOMessage.From">
+<meta property="og:description" content="The messaging address of the principal author of the message.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/com/cdomessage/cdomessage-from.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/com/cdomessage/cdomessage-from.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cdomessage-class.html">CDOMessage Class</a></div>
+<h1>CDOMessage.From<span class="h1kind">method</span></h1>
+<p class="lede">The messaging address of the principal author of the message.</p>
+<div class="badges"><a class="badge" href="../index.html">COM</a><span class="badge">method</span><span class="badge">CDOMessage.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION From (BYREF wszFrom AS WSTRING) AS HRESULT</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>wszFrom</code></td><td></td><td>The string in the From method represents the full messaging addresses of the message author or authors, as shown in the following example: "Jane Doe" <code>&lt;example@example.com&gt;</code>, <code>&lt;example@example.com&gt;</code>, <code>example2@example.com&lt;</code>br&gt;<br>Commas serve as address separators; however, commas are not parsed as separators when they appear in an address that is enclosed in double quotes, such as the following: "John Jones, Jr." <code>&lt;example@example.com&gt;</code>, "Jane Doe" <code>&lt;example@example.com&gt;</code><br><br>If you do not set the <strong>From</strong> property before calling the <strong>Send</strong> method, Microsoft Collaboration Data Objects (CDO) uses the <strong>Sender</strong> property if it is present. If neither the <strong>From</strong> and <strong>Sender</strong> properties are set before calling the <strong>Send</strong> method, an exception is raised.<br><br>The <strong>Sender</strong> property is not used with Network News Transfer Protocol (NTTP).<br><br>The difference between the <strong>From</strong> and <strong>Sender</strong> properties is that the <strong>Sender</strong> property represents the messaging user that actually submits the message, while the <strong>From</strong> property designates its principal author or authors. If the author and the sender are the same, it is only necessary to set the <strong>From</strong> property, and it is recommended to leave the <strong>Sender</strong> property unset in this case.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>S_OK (0) or an HRESULT code.</p>
+<h2>Description</h2>
+<p>The messaging address of the principal author of the message.</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CDOMessage.inc</code></li><li>Defined in <span class="srcref">AfxNova/CDOMessage.inc:203</span></li><li>Documented in <span class="srcref">COM/CDOMessage Class.md</span></li><li>Topic: <a href="../cdomessage-class.html">CDOMessage Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

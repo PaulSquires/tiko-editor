@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CGpGraphics.DrawLines — Help Center</title>
+<meta name="description" content="Draws a sequence of connected lines.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpgraphics/cgpgraphics-drawlines.html">
+<meta property="og:title" content="CGpGraphics.DrawLines">
+<meta property="og:description" content="Draws a sequence of connected lines.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/graphics/gdiplus-classes/cgpgraphics/cgpgraphics-drawlines.html">
+<link rel="stylesheet" href="../../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/graphics/gdiplus-classes/cgpgraphics/cgpgraphics-drawlines.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../cgpgraphics-class.html">CGpGraphics Class</a></div>
+<h1>CGpGraphics.DrawLines<span class="h1kind">method</span></h1>
+<p class="lede">Draws a sequence of connected lines.</p>
+<div class="badges"><a class="badge" href="../../index.html">Graphics</a><span class="badge">method</span><span class="badge">CGpGraphics.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION DrawLines (BYVAL pPen AS CGpPen PTR, BYVAL pts AS GpPointF PTR, BYVAL count AS LONG) AS GpStatus</code></pre>
+<pre class="code sig"><code>FUNCTION DrawLines (BYVAL pPen AS CGpPen PTR, BYVAL pts AS GpPoint PTR, BYVAL count AS LONG) AS GpStatus</code></pre>
+<h2>Parameters</h2>
+<div class="table-wrap"><table><thead><tr><th>Name</th><th></th><th>Description</th></tr></thead><tbody><tr><td><code>pPen</code></td><td></td><td>Pointer to a pen that is used to draw the lines.</td></tr><tr><td><code>pts</code></td><td></td><td>Pointer to an array of <strong>GpPointF</strong> structures that specify the starting and ending points of the lines.</td></tr><tr><td><code>nCount</code></td><td></td><td>Integer that specifies the number of elements in the points array.</td></tr></tbody></table></div>
+<h2>Return value</h2>
+<p>If the function succeeds, it returns <strong>StatusOk</strong>, which is an element of the <strong>GpStatus</strong> enumeration.</p>
+<p>If the function fails, it returns one of the other elements of the <strong>GpStatus</strong> enumeration.</p>
+<h2>Description</h2>
+<p>Draws a sequence of connected lines.</p>
+<h2>Example</h2>
+<p>' ======================================================================================== ' The following example draws a sequence of connected lines. ' ======================================================================================== SUB Example_DrawLines (BYVAL hdc AS HDC)</p>
+<p>' // Create a graphics object from the window device context DIM graphics AS CGpGraphics = hdc ' // Set the scale transform graphics.ScaleTransformForDpi</p>
+<p>' // Create a Pen object DIM blackPen AS CGpPen = CGpPen(ARGB_BLACK, 3)</p>
+<p>' // Create an array of PointF objects that define the lines to draw DIM point1 AS GpPointF = (10, 10) DIM point2 AS GpPointF = (10, 100) DIM point3 AS GpPointF = (200, 50) DIM point4 AS GpPointF = (250, 300) DIM pts(0 TO 3) AS GpPointF = {point1, point2, point3, point4}</p>
+<p>' // Draw the lines graphics.DrawLines(@blackPen, @pts(0), 4)</p>
+<p>END SUB</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CGpGraphics.inc</code></li><li>Defined in <span class="srcref">AfxNova/CGpGraphics.inc:459</span></li><li>Documented in <span class="srcref">Graphics/GdiPlus Classes/CGpGraphics Classes.md</span></li><li>Topic: <a href="../cgpgraphics-class.html">CGpGraphics Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../../index.html">Home</a> ·
+         <a href="../../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../../nav.js?v=70a6b70236"></script>
+<script src="../../../../search-index.js"></script>
+<script src="../../../../assets/app.js?v=456d079659"></script>
+<script src="../../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CTime64.Format — Help Center</title>
+<meta name="description" content="Converts a **CTime64** object to a string.">
+<link rel="canonical" href="https://www.planetsquires.com/docs/afxnova/datetime/ctime64/ctime64-format.html">
+<meta property="og:title" content="CTime64.Format">
+<meta property="og:description" content="Converts a **CTime64** object to a string.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://www.planetsquires.com/docs/afxnova/datetime/ctime64/ctime64-format.html">
+<link rel="stylesheet" href="../../../assets/app.css?v=590f30d9b6">
+<script>window.HV_ROOT='../../../';</script>
+</head>
+<body>
+<header class="hdr">
+  <button class="iconbtn side__toggle" id="sidetoggle" title="Menu" aria-label="Menu">&#9776;</button>
+  <a class="hdr__brand" href="../../../index.html">Help Center</a>
+  <div class="search">
+    <input class="search__input" id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search functions, methods, properties…" aria-label="Search">
+    <span class="search__hint">/</span>
+    <div class="results" id="results" hidden></div>
+  </div>
+  <div class="hdr__spacer"></div>
+  <button class="iconbtn" id="theme" title="Toggle light / dark" aria-label="Toggle theme">&#9681;</button>
+</header>
+<div class="shell">
+  <nav class="side" id="side" data-current="afxnova/datetime/ctime64/ctime64-format.html"></nav>
+  <main><div class="wrap">
+<div class="crumbs"><a href="../../../index.html">Help Center</a><span>›</span>AfxNova<span>›</span><a href="../ctime64-class.html">CTime64 Class</a></div>
+<h1>CTime64.Format<span class="h1kind">method</span></h1>
+<p class="lede">Converts a **CTime64** object to a string.</p>
+<div class="badges"><a class="badge" href="../index.html">DateTime</a><span class="badge">method</span><span class="badge">CTime64.inc</span><span class="badge badge--ok">documented</span></div>
+<h2>Syntax</h2>
+<pre class="code sig"><code>FUNCTION Format (BYREF wszFmt AS WSTRING) AS DWSTRING</code></pre>
+<div class="note">Also documented as <code>FormatGmt</code> — one description covers them all.</div>
+<h2>Description</h2>
+<p>Converts a <strong>CTime64</strong> object to a string.</p>
+<p>Formatting codes:</p>
+<p>The # flag may prefix any formatting code. In that case, the meaning of the format code is changed as follows.</p>
+<ul><li>%#a, %#A, %#b, %#B, %#p, %#X, %#z, %#Z, %#%: # flag is ignored.</li><li>%#c: Long date and time representation, appropriate for current locale. For example: "Tuesday, March 14, 1995, 12:41:29".</li><li>%#x* Long date representation, appropriate to current locale. For example: "Tuesday, March 14, 1995".</li><li>%#d, %#H, %#I, %#j, %#m, %#M, %#S, %#U, %#w, %#W, %#y, %#Y: Remove leading zeros (if any).</li></ul>
+<h2>Remarks</h2>
+<p>Formats the value by using the format string which contains special formatting codes that are preceded by a percent sign (%).</p>
+<p><strong>Format</strong> uses the local time and <strong>FormatGmt</strong> the <strong>Gmt</strong> time.</p>
+<h2>Example</h2>
+<p>print ct.Format("%A, %B %d, %Y %H:%M:%S") print ct.FormatGmt("%A, %B %d, %Y %H:%M:%S")</p>
+<h2>Reference</h2>
+<ul><li>Include file <code>CTime64.inc</code></li><li>Defined in <span class="srcref">AfxNova/CTime64.inc:630</span></li><li>Documented in <span class="srcref">DateTime/CTime64 Class.md</span></li><li>Topic: <a href="../ctime64-class.html">CTime64 Class</a></li></ul>
+    <footer class="foot">
+      <p>AfxNova is Copyright © José Roca, distributed under the MIT License. Documentation reproduced from the project&#x27;s own docs. <a href="https://github.com/JoseRoca/AfxNova/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</p>
+      <p><a href="../../../index.html">Home</a> ·
+         <a href="../../../licenses.html">Licences &amp; attribution</a></p>
+    </footer>
+  </div></main>
+</div>
+<script src="../../../nav.js?v=70a6b70236"></script>
+<script src="../../../search-index.js"></script>
+<script src="../../../assets/app.js?v=456d079659"></script>
+<script src="../../../assets/fbhl.js?v=83ee66c16e"></script>
+</body>
+</html>
