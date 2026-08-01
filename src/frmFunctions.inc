@@ -322,6 +322,45 @@ end function
 
 
 ' ========================================================================================
+' frmFunctions_BuildFileList
+' Fill gFuncPanelFiles() with the files this panel lists, sorted by display name, and
+' return the count.
+'
+' The symbol database knows every user file it has parsed -- including include files that
+' have never been opened in the editor -- so it is NOT the panel's file list. The panel
+' mirrors the Explorer: a file the user cannot see in the workspace tree should not
+' contribute functions here. frmExplorer_IsFileDisplayed is the single statement of that
+' rule, so the two panels cannot disagree about which files exist.
+'
+' Scan filenames are UPPERCASED - normalize to on-disk casing for display and
+' click-through before testing, since the Explorer's documents carry real casing.
+' ========================================================================================
+function frmFunctions_BuildFileList() as long
+    erase gFuncPanelFiles
+    dim as long nFiles = gSymDb.EnumUserFiles( gFuncPanelFiles() )
+
+    dim as long nKeep = 0
+    for i as long = 0 to nFiles - 1
+        dim as DWSTRING wszFile = FilenameOriginalCase( gFuncPanelFiles(i) )
+        if frmExplorer_IsFileDisplayed( wszFile ) = false then continue for
+        gFuncPanelFiles(nKeep) = wszFile
+        nKeep += 1
+    next
+
+    ' Drop the tail rather than leaving stale entries above the kept run: the array's
+    ' ubound is used as a range check when a clicked row is resolved back to a file.
+    if nKeep > 0 then
+        redim preserve gFuncPanelFiles(nKeep - 1)
+        QuickSortFilenames( gFuncPanelFiles(), 0, nKeep - 1 )
+    else
+        erase gFuncPanelFiles
+    end if
+
+    function = nKeep
+end function
+
+
+' ========================================================================================
 ' ClearFunctions
 ' ========================================================================================
 function ClearFunctions() as long
@@ -348,16 +387,8 @@ function LoadFilesAndFunctions() as long
 
     dim as DWSTRING wszText
 
-    ' All user files known to the symbol database (project + buffer scans; the
-    ' toolchain include folder is excluded). This now includes include files
-    ' that have never been opened in the editor. Scan filenames are UPPERCASED -
-    ' normalize to on-disk casing for display and click-through.
-    erase gFuncPanelFiles
-    dim as long nFiles = gSymDb.EnumUserFiles( gFuncPanelFiles() )
-    for i as long = 0 to nFiles - 1
-        gFuncPanelFiles(i) = FilenameOriginalCase( gFuncPanelFiles(i) )
-    next
-    if nFiles > 0 then QuickSortFilenames( gFuncPanelFiles(), 0, nFiles - 1 )
+    ' The files shown in the Explorer, in display order.
+    dim as long nFiles = frmFunctions_BuildFileList()
 
     ' Get the functions (and sort them) for each file
     redim arrFuncs(any) as FUNCTION_NODE_TYPE
@@ -428,15 +459,9 @@ function LoadFunctionsOnly() as long
 
     dim as DWSTRING wszText
 
-    ' All user files known to the symbol database, then every implementation
-    ' in each of them, flattened into one name-sorted list. Scan filenames are
-    ' UPPERCASED - normalize to on-disk casing for display and click-through.
-    erase gFuncPanelFiles
-    dim as long nFiles = gSymDb.EnumUserFiles( gFuncPanelFiles() )
-    for i as long = 0 to nFiles - 1
-        gFuncPanelFiles(i) = FilenameOriginalCase( gFuncPanelFiles(i) )
-    next
-    if nFiles > 0 then QuickSortFilenames( gFuncPanelFiles(), 0, nFiles - 1 )
+    ' The files shown in the Explorer, then every implementation in each of them,
+    ' flattened into one name-sorted list.
+    dim as long nFiles = frmFunctions_BuildFileList()
 
     redim arrFuncs(any) as FUNCTION_NODE_TYPE
     dim rs() as SYMBOLREF

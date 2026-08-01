@@ -505,6 +505,9 @@ function OnCommand_FileClose( _
             if pDoc->IsNewFlag = true then
                 gApp.RemoveDocument( pDoc )
                 LoadExplorerFiles()
+                ' The Functions panel lists the Explorer's files, so a document leaving the
+                ' workspace has to drop out of both.
+                LoadFunctionsFiles()
             else
                 ' Still in the workspace, but no longer in a tab: refresh the Explorer so
                 ' the row repaints without its open-document styling.

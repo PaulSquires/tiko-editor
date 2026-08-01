@@ -43,4 +43,5 @@ declare function LoadFunctionsFiles() as long
 declare function frmFunctions_ViewAsTree() as long
 declare function frmFunctions_ViewAsList() as long
 declare function QuickSortFilenames( arrFiles() as DWSTRING, lo as long, hi as long ) as long
+declare function frmFunctions_BuildFileList() as long
 

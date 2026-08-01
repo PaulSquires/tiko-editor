@@ -26,6 +26,7 @@
 ' The document a row refers to, or NULL for a non-document row. EVERY read of an Explorer
 ' row's itemData must go through this -- see the note on its definition.
 declare function frmExplorer_DocFromRow( byval hCtl as HWND, byval row as integer ) as clsDocument ptr
+declare function frmExplorer_IsFileDisplayed( byval wszFilename as DWSTRING ) as boolean
 declare function frmExplorer_UnSelectListBox() as long
 declare function frmExplorer_SelectItemData( byval pDoc as clsDocument ptr ) as boolean
 declare function LoadExplorerFiles() as long

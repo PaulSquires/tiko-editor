@@ -110,6 +110,28 @@ end function
 
             
 ' ========================================================================================
+' Does this file appear in the Explorer?
+'
+' The one place the Explorer's display rule is stated, so a panel that wants to mirror it
+' (the Functions list does) cannot drift from what LoadExplorerFiles actually renders. Two
+' conditions, both of which that loop imposes: the file must be a document in the workspace
+' at all, and its ProjectFiletype must name one of the categories the loop walks --
+' CATINDEX_FILES is deliberately outside that range, so a document under it is displayed
+' nowhere and belongs in no mirror either.
+' ========================================================================================
+function frmExplorer_IsFileDisplayed( byval wszFilename as DWSTRING ) as boolean
+    dim as clsDocument ptr pDoc = gApp.GetDocumentPtrByFilename( wszFilename )
+    if pDoc = 0 then return false
+
+    dim as DWSTRING wszFileType = pDoc->ProjectFiletype
+    for ii as long = CATINDEX_MAIN to ubound(gConfig.Cat)
+        if wszFileType = gConfig.Cat(ii).idFileType then return true
+    next
+    return false
+end function
+
+
+' ========================================================================================
 ' Unselect all items in the multiselect listbox and reset it to the currently
 ' active top tab (if any)
 ' ========================================================================================

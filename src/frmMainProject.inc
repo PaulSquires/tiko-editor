@@ -610,6 +610,9 @@ function OnCommand_ProjectRemove( _
     if gApp.IsValidDocumentPointer(pDoc) then
         gApp.RemoveDocument( pDoc )
         LoadExplorerFiles()
+        ' The Functions panel lists the Explorer's files, so a document leaving the
+        ' workspace has to drop out of both.
+        LoadFunctionsFiles()
     end if
     
     if gTTabCtl.IsValidTab( gTTabCtl.GetCurSel() ) then
