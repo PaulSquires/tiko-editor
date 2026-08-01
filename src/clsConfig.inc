@@ -971,9 +971,7 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
     ' do some checks to see if the editor font exists. It is possible that the
     ' user could be accessing the editor from a different computer of using it under
     ' Wine where the previously selected font no longer exists.
-    if doFontSanityCheck() = false then
-'      print "Defined font was not found. Now using this font: ", gConfig.EditorFontname
-    end if
+    doFontSanityCheck()
 
     ' Save the last write time so that it can be checked in the message loop
     ' in order to detect external changes to it.
