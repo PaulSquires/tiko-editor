@@ -49,7 +49,6 @@ end type
 type TYPE_CATEGORIES
     idFileType       as DWSTRING    ' GUID or special node value (FILETYPE_*)
     wszDescription   as DWSTRING
-    bShow            as boolean = true
 end type
 
 ' NOTE: These node types are different values than the FileType defines from

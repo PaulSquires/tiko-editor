@@ -305,9 +305,11 @@ end function
 
 ' ========================================================================================
 ' LoadExplorerFiles
-' This will clear the current list of files in the Explorer and repopulate it
-' with the latest list of filenames that are stored in the hidden FunctionList treeview.
-' Files are excluded from being added based on the state of the global array gConfig.Cat()
+' Clears the Explorer and repopulates it from gApp.pDocList, grouped under one header per
+' gConfig.Cat() entry from CATINDEX_MAIN up. NOTHING IS EXCLUDED -- every document in the
+' workspace appears exactly once, under the category its ProjectFileType names. (This used
+' to claim files were filtered by a Cat().bShow flag; that flag was written in two places,
+' read in none, and has been deleted.)
 ' ========================================================================================
 function LoadExplorerFiles() as long
     dim as HWND hCtrl = HWND_FRMEXPLORER

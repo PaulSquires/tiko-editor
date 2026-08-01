@@ -607,7 +607,11 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
             i = val(right(wKey,2))
             if i > ubound(this.Cat) then
                 redim preserve this.Cat(i) 
-                this.Cat(i).idFileType     = AfxStrParse(wData, 1, "|-|")
+                ' trim() is not cosmetic. idFileType is compared against the FILETYPE_*
+                ' string digits to decide which Explorer header a document belongs under,
+                ' so one stray space in a hand-edited "CATEGORY_01= 1|-|Main" makes that
+                ' category match nothing and silently empties it.
+                this.Cat(i).idFileType     = trim(AfxStrParse(wData, 1, "|-|"))
                 this.Cat(i).wszDescription = AfxStrParse(wData, 2, "|-|")
                 continue do
             end if
@@ -1268,12 +1272,7 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
     gApp.hIconPanel = 0
     gApp.wszLastOpenFolder = ""
     
-    ' Load all of the filenames into the Explorer listbox. Configure the node
-    ' array to allow all types of files to be shown in the listbox
-    for i as long = lbound(this.Cat) to ubound(this.Cat)
-        this.Cat(i).bShow = true
-    next
-
+    ' Load all of the filenames into the Explorer listbox.
     LoadExplorerFiles()
 
     ' Load all of the bookmarks into the Bookmarks listbox. 
