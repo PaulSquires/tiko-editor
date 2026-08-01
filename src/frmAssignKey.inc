@@ -589,7 +589,7 @@ end sub
 
 ' No tooltips on the picker: with no callback PsListTree falls back to the row's own text,
 ' which here would pop "F5" over a row already reading "F5".
-private function frmAssignKey_KeyListTooltip( byval hList as HWND, byval row as integer ) as DWSTRING
+private function frmAssignKey_KeyListTooltip( byval hList as HWND, byval row as integer, byval col as integer ) as DWSTRING
     return ""
 end function
 

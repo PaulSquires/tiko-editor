@@ -717,7 +717,7 @@ end sub
 ' how a host says "none"; there is no separate disable switch. Both signatures are needed
 ' because the header is a different control with its own callback type.
 ' ========================================================================================
-private function frmOptionsLocal_NoTooltip( byval hList as HWND, byval row as integer ) as DWSTRING
+private function frmOptionsLocal_NoTooltip( byval hList as HWND, byval row as integer, byval col as integer ) as DWSTRING
     return ""
 end function
 

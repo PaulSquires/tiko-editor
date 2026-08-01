@@ -165,7 +165,7 @@ end sub
 ' empty string is how a host says "no tip for this row"; the completion list wants that
 ' for all of them, since the row IS the text and the detail column carries the rest.
 ' ========================================================================================
-private function frmAutoComplete_TooltipCallback( byval hCtl as HWND, byval row as integer ) as DWSTRING
+private function frmAutoComplete_TooltipCallback( byval hCtl as HWND, byval row as integer, byval col as integer ) as DWSTRING
     return ""
 end function
 

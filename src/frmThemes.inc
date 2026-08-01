@@ -262,7 +262,7 @@ end sub
 ' ========================================================================================
 ' List painters and callbacks.
 ' ========================================================================================
-private function frmThemes_NoTooltip( byval hList as HWND, byval row as integer ) as DWSTRING
+private function frmThemes_NoTooltip( byval hList as HWND, byval row as integer, byval col as integer ) as DWSTRING
     return ""
 end function
 

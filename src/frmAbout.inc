@@ -178,7 +178,7 @@ end sub
 ' fallback would pop a tip repeating what is already under the pointer. These are TWO
 ' SEPARATE opt-outs -- suppressing the rows does nothing for the header band.
 ' ========================================================================================
-private function frmAbout_CreditsTooltip( byval hList as HWND, byval row as integer ) as DWSTRING
+private function frmAbout_CreditsTooltip( byval hList as HWND, byval row as integer, byval col as integer ) as DWSTRING
     return ""
 end function
 
