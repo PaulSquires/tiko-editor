@@ -175,6 +175,30 @@ sub Workspace_RunSelfTest()
     Workspace_Check( "at most one Main document", nMain <= 1, str(nMain) )
     Workspace_Check( "at most one Resource document", nResource <= 1, str(nResource) )
 
+    ' --- the extension -> category rule (pure, so assertable both ways) --------------------
+    Workspace_Check( "a .bas becomes Main when the workspace has none", _
+        Workspace_DeriveFileType( ".bas", false ) = FILETYPE_MAIN )
+    Workspace_Check( "a .bas is Normal once a Main exists", _
+        Workspace_DeriveFileType( ".bas", true ) = FILETYPE_NORMAL )
+    ' The promotion is restricted to .bas. Nothing else may ever become Main by accident --
+    ' a header or an include is not a program entry point and an .rc has its own category.
+    Workspace_Check( "a .bi is a Header, Main or not", _
+        ( Workspace_DeriveFileType( ".bi", false ) = FILETYPE_HEADER ) andalso _
+        ( Workspace_DeriveFileType( ".bi", true )  = FILETYPE_HEADER ) )
+    Workspace_Check( "an .inc is Normal, Main or not", _
+        ( Workspace_DeriveFileType( ".inc", false ) = FILETYPE_NORMAL ) andalso _
+        ( Workspace_DeriveFileType( ".inc", true )  = FILETYPE_NORMAL ) )
+    Workspace_Check( "an .rc is a Resource, Main or not", _
+        ( Workspace_DeriveFileType( ".rc", false ) = FILETYPE_RESOURCE ) andalso _
+        ( Workspace_DeriveFileType( ".rc", true )  = FILETYPE_RESOURCE ) )
+    Workspace_Check( "an unknown extension is Normal, Main or not", _
+        ( Workspace_DeriveFileType( ".txt", false ) = FILETYPE_NORMAL ) andalso _
+        ( Workspace_DeriveFileType( ".txt", true )  = FILETYPE_NORMAL ) )
+    ' Extensions arrive from AfxStrPathname in whatever case the file has.
+    Workspace_Check( "the rule is case-insensitive", _
+        ( Workspace_DeriveFileType( ".BAS", false ) = FILETYPE_MAIN ) andalso _
+        ( Workspace_DeriveFileType( ".Bi", true )   = FILETYPE_HEADER ) )
+
     ' --- the category table bridges the two numbering schemes -----------------------------
     ' Cat() is indexed by CATINDEX_* (display order) but its .idFileType holds a FILETYPE_*
     ' STRING. That bridge is the only thing tying a document to a header, it is loaded from

@@ -69,6 +69,7 @@ declare function OnCommand_ViewRestoreMain() as LRESULT
 declare function OnCommand_ViewExplorerPosition() as LRESULT
 
 declare function OnCommand_ProjectSave( byval HWnd as HWnd, byval bSaveAs as BOOLEAN = False ) as LRESULT
+declare function Workspace_DeriveFileType( byref wszExt as wstring, byval bHasMain as boolean ) as DWSTRING
 declare function Workspace_EstablishUntitled() as boolean
 declare sub Workspace_RunSelfTest()
 declare function Workspace_SaveAndCloseAll( byval hwnd as HWND ) as boolean

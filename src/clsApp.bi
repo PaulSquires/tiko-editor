@@ -84,5 +84,6 @@ type clsApp
         declare function GetProjectCompiler() as long
         declare function IsProjectNamed() as boolean
 
+
 end type
 

@@ -326,6 +326,30 @@ end function
         
 
 ''
+''  Which category a file entering the workspace should get, from its extension alone.
+''
+''  PURE, and deliberately so: the caller walks pDocList to answer bHasMain, but the RULE
+''  itself takes no globals and touches no document, which is the only way it can be
+''  asserted headlessly.
+''
+''  The .bas-becomes-Main rule is what makes "open a loose .bas and press build" work with
+''  no ceremony. It fires ONLY when the workspace has no Main at all, so it can promote at
+''  most one file and never displaces a choice the user made. Restricted to .bas on
+''  purpose -- a .bi or .inc is never a program entry point, and an .rc has its own
+''  category.
+''
+function Workspace_DeriveFileType( byref wszExt as wstring, byval bHasMain as boolean ) as DWSTRING
+    select case ucase(wszExt)
+    case ".BAS":  return iif( bHasMain, FILETYPE_NORMAL, FILETYPE_MAIN )
+    case ".RC":   return FILETYPE_RESOURCE
+    case ".BI":   return FILETYPE_HEADER
+    case ".INC":  return FILETYPE_NORMAL
+    case else:    return FILETYPE_NORMAL
+    end select
+end function
+
+
+''
 ''
 function clsApp.ProjectSetFileType( _
             byval pDoc as clsDocument ptr, _
@@ -351,13 +375,9 @@ function clsApp.ProjectSetFileType( _
     loop
     if bFound = false then
         if pDoc->ProjectFileType = FILETYPE_UNDEFINED then
-            select case ucase(wzFileExt)
-            case ".BAS":  wszFileType = FILETYPE_NORMAL
-            case ".RC":   wszFileType = FILETYPE_RESOURCE
-            case ".BI":   wszFileType = FILETYPE_HEADER
-            case ".INC":  wszFileType = FILETYPE_NORMAL
-            case else:    wszFileType = FILETYPE_NORMAL
-            end select   
+            ' GetMainDocumentPtr is asked BEFORE the type is assigned below, so a workspace
+            ' whose only .bas is this one still reports "no Main" and this file gets it.
+            wszFileType = Workspace_DeriveFileType( wzFileExt, gApp.GetMainDocumentPtr() <> 0 )
         end if
     end if
     
