@@ -343,17 +343,13 @@ function frmBuildConfig_getActiveBuildIndex() as long
         end if
     next
 
-    ' determine if a project or previous config selection overrides the default
+    ' determine if the workspace's own selection overrides the default.
+    ' gConfig.CompilerBuild is consulted only as the SEED when a new workspace is
+    ' established (Workspace_EstablishUntitled), never here.
     dim as long idx = -1
     for i as long = lbound(gConfig.Builds) to ubound(gConfig.Builds)
-        if gApp.IsProjectActive then
-            if gConfig.Builds(i).id = gApp.ProjectBuild then
-                idx = i: exit for
-            end if
-        else
-            if gConfig.CompilerBuild = gConfig.Builds(i).id then
-                idx = i: exit for
-            end if
+        if gConfig.Builds(i).id = gApp.ProjectBuild then
+            idx = i: exit for
         end if
     next
 
@@ -607,13 +603,7 @@ private sub frmBuildConfig_CommitWork()
     ' Point the active project or document at the highlighted build, exactly as the dialog
     ' this replaces did -- this is the only writer of gApp.ProjectBuild on this path.
     if (gBCCurrent >= 0) andalso (gBCCurrent <= ubound(gConfig.Builds)) then
-        if gApp.IsProjectActive then
-            gApp.ProjectBuild = gConfig.Builds(gBCCurrent).Id
-        else
-            dim pDocMain as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
-            if pDocMain then pDocMain->DocumentBuild = gConfig.Builds(gBCCurrent).Id
-            gConfig.CompilerBuild = gConfig.Builds(gBCCurrent).Id
-        end if
+        gApp.ProjectBuild = gConfig.Builds(gBCCurrent).Id
         frmMain_SetStatusbar
     end if
 

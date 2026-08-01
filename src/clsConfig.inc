@@ -1084,15 +1084,13 @@ function clsConfig.ProjectSaveToFile() as boolean
         pDoc = pDoc->pDocnext
     loop
 
-    ' if project is active then save NOTES to config file.
-    if gApp.IsProjectActive then
-        dim wszText as DWSTRING = wstr("NOTES-START") + vbcrlf + _
-                                gApp.ProjectNotes + vbcrlf + _
-                                wstr("NOTES-END") + vbcrlf
-        pStream.WriteLine ""
-        pStream.WriteLine "[Notes]"
-        pStream.WriteLine wszText                       
-    end IF
+    ' Notes belong to the workspace, so they are always written.
+    dim wszNotes as DWSTRING = wstr("NOTES-START") + vbcrlf + _
+                            gApp.ProjectNotes + vbcrlf + _
+                            wstr("NOTES-END") + vbcrlf
+    pStream.WriteLine ""
+    pStream.WriteLine "[Notes]"
+    pStream.WriteLine wszNotes
 
     pStream.Close
 
@@ -1267,7 +1265,6 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
     next
 
     gApp.IsProjectLoading = false
-    gApp.IsProjectActive = true
     gApp.hIconPanel = 0
     gApp.wszLastOpenFolder = ""
     

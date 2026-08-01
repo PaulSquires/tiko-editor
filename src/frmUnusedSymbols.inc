@@ -115,11 +115,10 @@ end sub
 ' ------------------------------------------------------------------------------------------
 private function frmUnusedSymbols_RootFile() as DWSTRING
     dim pDoc as clsDocument ptr
-    if gApp.IsProjectActive then
-        pDoc = gApp.GetMainDocumentPtr()
-    else
-        pDoc = gTTabCtl.GetActiveDocumentPtr()
-    end if
+    ' Main if there is one, otherwise the active document -- taking only the project arm
+    ' would return "" for any workspace with no designated Main.
+    pDoc = gApp.GetMainDocumentPtr()
+    if pDoc = 0 then pDoc = gTTabCtl.GetActiveDocumentPtr()
     if pDoc = 0 then return ""
 
     ' The project tier scans from DISK, so the root has to be a real file. Test for the
@@ -451,7 +450,11 @@ function frmUnusedSymbols_Show( byval hWndParent as HWND ) as LRESULT
         ' again is the behaviour this replaces.
         ' The override is passed only when there is no project: with one open it would
         ' replace the project's own scan with a single file's.
-        if gApp.IsProjectActive then
+        ' Root the scan at the workspace's Main when there is one. With no Main there is
+        ' nothing to walk includes from, so scan just this file -- which also keeps an
+        ' untitled workspace holding a pile of unrelated loose files from triggering a
+        ' whole-workspace scan the user did not ask for.
+        if gApp.GetMainDocumentPtr() then
             gScanMgr.RequestProjectScan()
         else
             gScanMgr.RequestProjectScan( wszRoot )

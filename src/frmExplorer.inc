@@ -330,14 +330,12 @@ function LoadExplorerFiles() as long
     dim as long nStart, nEnd
     dim wszText as wstring * MAX_PATH
 
-    if gApp.IsProjectActive then
-        nStart = CATINDEX_MAIN
-        nEnd = ubound(gConfig.Cat)
-    else   
-        ' no project active so just "files"
-        nStart = CATINDEX_FILES
-        nEnd = CATINDEX_FILES
-    end if
+    ' Every workspace groups by category now, so the range is fixed. CATINDEX_FILES (the
+    ' old single "File" header) is skipped: it stays in the Cat() array -- two menu paths
+    ' index that array by an offset from a command id, and the table is persisted in
+    ' settings.ini besides -- but nothing is ever displayed under it.
+    nStart = CATINDEX_MAIN
+    nEnd = ubound(gConfig.Cat)
 
 
     redim pDocs(any) as clsDocument ptr
@@ -353,8 +351,6 @@ function LoadExplorerFiles() as long
         dim pDoc as clsDocument ptr = gApp.pDocList
         do until pDoc = 0
             dim as DWSTRING wszFileType = pDoc->ProjectFiletype
-            ' If project not active then ensure file displays under the "File" header.
-            if gApp.IsProjectActive = false then wszFileType = CATINDEX_FILES
             if wszFileType = gConfig.Cat(ii).idFileType then
                 dim as long ub = ubound(pDocs) + 1
                 redim preserve pDocs(ub)

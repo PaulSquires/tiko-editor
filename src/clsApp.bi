@@ -53,7 +53,6 @@ type clsApp
         IsDebuggerActive           as boolean
         DebugTimerID               as long = 102
         
-        IsProjectActive            as boolean
         ProjectBuild               as string            ' default build configuration for the project (GUID)
         ProjectName                as DWSTRING
         ProjectFilename            as DWSTRING

@@ -113,26 +113,22 @@ end function
 
 ' ========================================================================================
 ' Set Main file to be compiled. 
-' Projects need to specifically set a Main file.
-' Non-Projects will attempt to compile the current active document. The user can
-' also set a Main file for non-projects.
+' A designated Main file always wins. With none, fall back to the active document -- which
+' is what a workspace of loose files has always done, and is now the rule everywhere. Only
+' when there is no Main AND no active document is there nothing to build.
 ' ========================================================================================
 function code_SetMainFile( byval pCompile as COMPILE_TYPE ptr ) as boolean
-    dim pDoc as clsDocument ptr 
-    if gApp.IsProjectActive then
-        pDoc = gApp.GetMainDocumentPtr()
-        if pDoc = null then
-            TikoMsgBox( HWND_FRMMAIN, L(171,"No Main file specified for the project."), L(164,"Error"), _
-                            TMB_ICON_INFO, TMB_OK )
-        end if
-    else
-        pDoc = gApp.GetMainDocumentPtr()
-        if pDoc = null then
-            pDoc = gTTabCtl.GetActiveDocumentPtr()
-        end if    
+    dim pDoc as clsDocument ptr
+    pDoc = gApp.GetMainDocumentPtr()
+    if pDoc = null then
+        pDoc = gTTabCtl.GetActiveDocumentPtr()
     end if
 
-    if pDoc = null then return false
+    if pDoc = null then
+        TikoMsgBox( HWND_FRMMAIN, L(171,"No Main file specified for the project."), L(164,"Error"), _
+                        TMB_ICON_INFO, TMB_OK )
+        return false
+    end if
     pCompile->pDocMain = pDoc
 
     ' if this is a QuickRun then we need to copy the current source code to a temporary bas file
@@ -297,10 +293,25 @@ end function
 ' if this is a project then we need to compile all of the modules first
 ' in order to create the necessary *.o object files
 ' ========================================================================================
+' Does the workspace contain anything that compiles to its own object file? Used to decide
+' whether the .tiko\ object folder is worth creating -- without this, building a single
+' loose .bas would leave an empty .tiko\ directory sitting beside the user's file.
+private function code_HasModuleDocument() as boolean
+    dim pDoc as clsDocument ptr = gApp.pDocList
+    do until pDoc = 0
+        if pDoc->ProjectFileType = FILETYPE_MODULE then return true
+        pDoc = pDoc->pDocNext
+    loop
+    return false
+end function
+
+
 function code_CompileModules( byval pCompile as COMPILE_TYPE ptr ) as boolean
 
-    if gApp.IsProjectActive = false then return true
-    
+    ' No modules, nothing to pre-compile. The walk below would find nothing anyway; this
+    ' just skips the debug/release object-invalidation bookkeeping with it.
+    if code_HasModuleDocument() = false then return true
+
     dim as DWSTRING wDQ = wchr(34)
     
     ' Determine if we are switching from Release builds to Debug builds. This means
@@ -538,28 +549,28 @@ function code_Compile( byval wID as long ) as boolean
     ' Continue to generate info about specific paths related to the compile depending on whether
     ' a project is active. Resource file and Object path.
     ' Continue to build the CompileFlags that will be passed to the compiler.
-    if gApp.IsProjectActive then
-        dim pDocResource as clsDocument ptr = gApp.GetResourceDocumentPtr()
-        if pDocResource then pCompile->ResourceFile = pDocResource->DiskFilename
+    dim pDocResource as clsDocument ptr = gApp.GetResourceDocumentPtr()
+    if pDocResource then pCompile->ResourceFile = pDocResource->DiskFilename
 
-        pCompile->ObjFolder = pCompile->MainFolder & APPEXTENSION & "\"
-        pCompile->ObjFolderShort = ".\" & APPEXTENSION & "\"
+    pCompile->ObjFolder = pCompile->MainFolder & APPEXTENSION & "\"
+    pCompile->ObjFolderShort = ".\" & APPEXTENSION & "\"
 
-        if pCompile->bCompile32 then 
-            pCompile->ObjID = "32.o"
-            pCompile->CompileFlags += " " + gApp.ProjectOther32 + " " + pCompile->CompileIncludes          
-        elseif pCompile->bCompile64 then 
-            pCompile->ObjID = "64.o"
-            pCompile->CompileFlags += " " + gApp.ProjectOther64 + " " + pCompile->CompileIncludes          
-        end if   
-        
-        ' Make sure the folder exists for any generated Module object files
+    ' The workspace's own switches. gConfig.CompilerSwitches is only the SEED for a new
+    ' workspace now, applied in Workspace_EstablishUntitled, not a second store read here.
+    if pCompile->bCompile32 then
+        pCompile->ObjID = "32.o"
+        pCompile->CompileFlags += " " + gApp.ProjectOther32 + " " + pCompile->CompileIncludes
+    elseif pCompile->bCompile64 then
+        pCompile->ObjID = "64.o"
+        pCompile->CompileFlags += " " + gApp.ProjectOther64 + " " + pCompile->CompileIncludes
+    end if
+
+    ' Only create the object folder if something will actually be put in it. Gating this on
+    ' "is a project open" used to serve that purpose; with every workspace a project, the
+    ' honest test is whether there are module documents -- otherwise compiling one loose
+    ' .bas creates an empty .tiko\ directory next to the user's file.
+    if code_HasModuleDocument() then
         SHCreateDirectory( 0, pCompile->ObjFolder )
-
-    else
-        ' No active project. We will add any generic compiler switches that the user may have
-        ' specified in "Options / Compiler Setup".
-        pCompile->CompileFlags += " " + gConfig.CompilerSwitches + " " + pCompile->CompileIncludes  
     end if
 
 
@@ -633,18 +644,17 @@ function code_Compile( byval wID as long ) as boolean
     ' Ensure verbose compiler message output
     wszParams += " -v " + pCompile->CompileFlags 
 
-    ' Add any .o module object files should they exist from an active project.    
-    if gApp.IsProjectActive then
-        dim as clsDocument ptr pDoc = gApp.pDocList
-        do until pDoc = 0
-            if pDoc->ProjectFileType = FILETYPE_MODULE then
-                ' Get the base name of the file for constructing the object filename
-                wszParams += _
-                    " " + pCompile->ObjFolderShort + AfxStrPathname("NAME", pDoc->DiskFilename) + pCompile->ObjID
-            end if
-            pDoc = pDoc->pDocNext
-        loop
-    end if
+    ' Add any .o module object files should they exist in the workspace. A workspace with
+    ' no module documents appends nothing, so this needs no outer guard.
+    dim as clsDocument ptr pDocMod = gApp.pDocList
+    do until pDocMod = 0
+        if pDocMod->ProjectFileType = FILETYPE_MODULE then
+            ' Get the base name of the file for constructing the object filename
+            wszParams += _
+                " " + pCompile->ObjFolderShort + AfxStrPathname("NAME", pDocMod->DiskFilename) + pCompile->ObjID
+        end if
+        pDocMod = pDocMod->pDocNext
+    loop
     
 
     ' Attempt to delete any existing output file so it will not exist should the compile fail.
@@ -703,7 +713,7 @@ function code_Compile( byval wID as long ) as boolean
            frmDebug_Show( _
                 HWND_FRMMAIN, _
                 pCompile->OutputFilename, _
-                iif( gApp.IsProjectActive, gApp.ProjectCommandLine, gApp.wszCommandLine ) _
+                gApp.ProjectCommandLine _
                 )
         end if
         
@@ -711,7 +721,7 @@ function code_Compile( byval wID as long ) as boolean
             RunEXE( _
                 pCompile->pDocMain, _
                 pCompile->OutputFilename,    _
-                iif( gApp.IsProjectActive, gApp.ProjectCommandLine, gApp.wszCommandLine ) _
+                gApp.ProjectCommandLine _
                 )
         end if
     

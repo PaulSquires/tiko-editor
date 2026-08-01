@@ -1591,21 +1591,24 @@ function GetRunExecutableFilename() as DWSTRING
     dim as long idxBuild = frmBuildConfig_getActiveBuildIndex()
     dim as boolean bInstring = false
     
-    pDocMain = iif( gApp.IsProjectActive, gApp.GetMainDocumentPtr, gTTabCtl.GetActiveDocumentPtr)
+    ' Main if there is one, otherwise the active document. Collapsing this to the project
+    ' arm would silently return null for any workspace with no designated Main, which is
+    ' every workspace of loose files. Same rule as code_SetMainFile.
+    pDocMain = gApp.GetMainDocumentPtr()
+    if pDocMain = 0 then pDocMain = gTTabCtl.GetActiveDocumentPtr()
     if pDocMain = 0 then return ""
     
     if idxBuild > -1 then 
         wszOptions = gConfig.Builds(idxBuild).wszOptions 
 
-        if gApp.IsProjectActive then
-            if gConfig.Builds(idxBuild).Is32bit then
-                wszOptions = wszOptions + " " + gApp.ProjectOther32
-            end if   
-            if gConfig.Builds(idxBuild).Is64bit then
-                wszOptions = wszOptions + " " + gApp.ProjectOther64
-            end if   
-        else
-            wszOptions = wszOptions + " " + gConfig.CompilerSwitches
+        ' The workspace's own switches. gConfig.CompilerSwitches is only the SEED for a
+        ' new workspace now (applied in Workspace_EstablishUntitled), not a second store
+        ' consulted at build time.
+        if gConfig.Builds(idxBuild).Is32bit then
+            wszOptions = wszOptions + " " + gApp.ProjectOther32
+        end if
+        if gConfig.Builds(idxBuild).Is64bit then
+            wszOptions = wszOptions + " " + gApp.ProjectOther64
         end if
         wszOptions = " " + ucase(wszOptions) + " "
         

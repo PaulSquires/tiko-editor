@@ -55,8 +55,6 @@ function frmMain_OpenProjectSafely( _
         ' Update the most recently used project list 
         UpdateMRUProjectList(wszProjectFileName)
     end if
-    gApp.IsProjectActive = true
-    
     ' Position all of the controls into place
     frmPanel_PositionWindows
     frmMain_PositionWindows

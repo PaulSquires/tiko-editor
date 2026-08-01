@@ -194,7 +194,7 @@ function clsApp.GetHeaderDocumentPtr( byval pDocIn as clsDocument ptr ) as clsDo
                     AfxStrPathname( "NAME", pDocIn->Diskfilename ) & ".bi"
     pDoc = this.GetDocumentPtrByFilename( wszFilename )
     
-    if ( pDoc <> 0 ) andalso ( this.IsProjectActive = true ) then
+    if pDoc <> 0 then
         if pDoc->ProjectFileType <> FILETYPE_HEADER then 
             pDoc = 0
         end if
@@ -224,7 +224,7 @@ function clsApp.GetSourceDocumentPtr( byval pDocIn as clsDocument ptr ) as clsDo
         pDoc = this.GetDocumentPtrByFilename( wszFilename )
     end if
     
-    if ( pDoc <> 0 ) andalso ( this.IsProjectActive = true ) then
+    if pDoc <> 0 then
         select case pDoc->ProjectFileType 
             case FILETYPE_MAIN, FILETYPE_MODULE, FILETYPE_NORMAL
             case else

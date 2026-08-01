@@ -240,15 +240,8 @@ function frmMain_OnCommand( _
             ' Make sure that the incoming Tool Number is valid
             dim as long nBuildNum = id - IDM_BUILDCONFIGBASE
             if (nBuildNum < lbound(gConfig.Builds)) orelse (nBuildNum > ubound(gConfig.Builds)) then exit function
-            ' Set the active project or the active document to the selected build
-            If gApp.IsProjectActive then
-                gApp.ProjectBuild = gConfig.Builds(nBuildNum).Id
-            else
-                dim pDocMain as clsDocument Ptr 
-                pDocMain = gTTabCtl.GetActiveDocumentPtr()
-                if pDocMain then pDocMain->DocumentBuild = gConfig.Builds(nBuildNum).Id
-                gConfig.CompilerBuild = gConfig.Builds(nBuildNum).Id
-            end if
+            ' The build belongs to the workspace; gConfig.CompilerBuild only seeds a new one.
+            gApp.ProjectBuild = gConfig.Builds(nBuildNum).Id
             frmMain_SetStatusbar
             gConfig.SaveConfigFile
 

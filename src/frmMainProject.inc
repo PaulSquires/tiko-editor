@@ -160,6 +160,18 @@ sub Workspace_RunSelfTest()
 
     Workspace_Check( "no live document is left uncategorized", _
         nUndefined = 0, str(nUndefined) & " of " & str(nDocs) & " undefined" )
+
+    ' --- the Explorer shows every document, under a fixed set of headers -------------------
+    ' The category range is unconditional now, so the row count is exactly the five headers
+    ' plus one row per document. This is what catches a document that is in the workspace
+    ' but falls through every header -- it would still be counted above if its type merely
+    ' failed to MATCH a Cat() row rather than being FILETYPE_UNDEFINED.
+    dim as long nHeaders = ( ubound(gConfig.Cat) - CATINDEX_MAIN ) + 1
+    dim as long nRows = PsListTree_GetCount( HWND_FRMEXPLORER )
+    Workspace_Check( "the Explorer lists every document under a header", _
+        nRows = nHeaders + nDocs, _
+        "rows=" & str(nRows) & " expected=" & str(nHeaders + nDocs) & _
+        " (" & str(nHeaders) & " headers + " & str(nDocs) & " docs)" )
     Workspace_Check( "at most one Main document", nMain <= 1, str(nMain) )
     Workspace_Check( "at most one Resource document", nResource <= 1, str(nResource) )
 
@@ -233,7 +245,6 @@ function Workspace_EstablishUntitled() as boolean
         gApp.ProjectNotes       = gApp.NonProjectNotes
     end if
 
-    gApp.IsProjectActive         = true
     gConfig.wszLastActiveProject = gApp.ProjectFilename
 
     function = true

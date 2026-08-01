@@ -334,15 +334,16 @@ function frmTopTabsInfo_WndProc( _
 
             ' Determine if it is in a subfolder and if it is, then display the relative file name.
             dim as DWSTRING wszFilename = gTTabCtl.GetTabText(i)
-            if gApp.IsProjectActive then
-                pDoc = gApp.GetMainDocumentPtr()
-                if pDoc then
-                    ' GetpDoc returns null when no tab is selected (i = -1)
-                    dim as clsDocument ptr pDocTab = gTTabCtl.GetpDoc(i)
-                    if pDocTab then
-                        dim as DWSTRING wszMainFolder = AfxStrPathname("PATH", pDoc->DiskFilename)
-                        wszFilename = AfxStrRemove( pDocTab->DiskFilename, wszMainFolder )
-                    end if
+            ' Only a designated Main gives a folder worth making paths relative to. With
+            ' none, show the full name rather than relativizing against the active tab,
+            ' which would be relative to itself.
+            pDoc = gApp.GetMainDocumentPtr()
+            if pDoc then
+                ' GetpDoc returns null when no tab is selected (i = -1)
+                dim as clsDocument ptr pDocTab = gTTabCtl.GetpDoc(i)
+                if pDocTab then
+                    dim as DWSTRING wszMainFolder = AfxStrPathname("PATH", pDoc->DiskFilename)
+                    wszFilename = AfxStrRemove( pDocTab->DiskFilename, wszMainFolder )
                 end if
             end if
             ' The strip's field color is BackColorHot, so a hovered button
