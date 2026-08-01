@@ -13,6 +13,13 @@
 
 #pragma once
 
+' itemData sentinel for the "Save as Project..." row shown while the workspace is untitled.
+' Every other row carries a real clsDocument ptr, so this must be a value no allocation can
+' produce -- 1 is never a valid pointer (clsTopTabCtl's TAB_FINDINPROJECT uses the same
+' trick for the same reason). NOT zero: zero is what an itemData-less row already gets, so
+' a zero sentinel would be claimed by any row added without one.
+#define EXPLORER_PROMOTE_ROW   1
+
 
 #define IDC_FRMEXPLORER_LISTBOX       1000
 

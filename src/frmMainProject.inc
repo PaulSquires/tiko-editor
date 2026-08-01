@@ -167,11 +167,26 @@ sub Workspace_RunSelfTest()
     ' but falls through every header -- it would still be counted above if its type merely
     ' failed to MATCH a Cat() row rather than being FILETYPE_UNDEFINED.
     dim as long nHeaders = ( ubound(gConfig.Cat) - CATINDEX_MAIN ) + 1
+    dim as long nPromote = iif( gApp.IsProjectNamed(), 0, 1 )
     dim as long nRows = PsListTree_GetCount( HWND_FRMEXPLORER )
     Workspace_Check( "the Explorer lists every document under a header", _
-        nRows = nHeaders + nDocs, _
-        "rows=" & str(nRows) & " expected=" & str(nHeaders + nDocs) & _
-        " (" & str(nHeaders) & " headers + " & str(nDocs) & " docs)" )
+        nRows = nHeaders + nDocs + nPromote, _
+        "rows=" & str(nRows) & " expected=" & str(nHeaders + nDocs + nPromote) & _
+        " (" & str(nHeaders) & " headers + " & str(nDocs) & " docs + " & _
+        str(nPromote) & " promote)" )
+
+    ' The promotion row exists exactly when the workspace is untitled, and it is pinned at
+    ' index 0. Both halves matter: offering it on a named project would be nonsense, and a
+    ' row that is present but buried below the headers is not the affordance it claims to
+    ' be. Checked by ITEMDATA, not by caption -- the caption is localized.
+    dim as boolean bPromoteAtTop = false
+    if PsListTree_GetCount( HWND_FRMEXPLORER ) > 0 then
+        bPromoteAtTop = ( PsListTree_GetItemData( HWND_FRMEXPLORER, 0 ) = EXPLORER_PROMOTE_ROW )
+    end if
+    Workspace_Check( "the promotion row is present iff the workspace is untitled", _
+        bPromoteAtTop = ( gApp.IsProjectNamed() = false ), _
+        iif( gApp.IsProjectNamed(), "named", "untitled" ) & _
+        ", row0 is promote = " & str(bPromoteAtTop) )
     Workspace_Check( "at most one Main document", nMain <= 1, str(nMain) )
     Workspace_Check( "at most one Resource document", nResource <= 1, str(nResource) )
 
@@ -372,40 +387,19 @@ end function
 
 
 ' ========================================================================================
-' Create a new project
+' Start a new, empty workspace.
+'
+' No dialog, and no file on disk. A project used to have to be NAMED before it could
+' exist, so this opened Project Options and made the user pick a path before they had
+' anything to put in it. An untitled workspace needs neither -- add files, then
+' "Save as Project..." when it is worth keeping. That is the same path a user who never
+' asked for a project takes, which is the point of there being one model.
 ' ========================================================================================
 function OnCommand_ProjectNew( byval hwnd As HWND ) As LRESULT
-    
-    ' Ensure that the Project Manager window has been created (show it now as well)
-    frmProjectOptions_Show( hwnd, true ) 
-    
-    if gApp.IsNewProjectFlag then 
-        ' Need to remove resource file (if created) from the document list otherwise it
-        ' will be loaded again and it will display twice in the Explorer.
-        gApp.RemoveAllDocuments()
-        
-        ' Open the new project so it displays in the Explorer treeview. Pass the 
-        ' variable wText because passing gApp.ProjectFilename will cause that variable
-        ' to get reset because the parameter is byref and eventually that variable
-        ' gets assigned a null.
-        dim as DWSTRING wszText = gApp.ProjectFilename
-        frmMain_OpenProjectSafely(HWND_FRMMAIN, wszText) 
-    end if
-        
-    gApp.IsNewProjectFlag = false
-    gApp.IsProjectLoading = false
 
-    frmMain_PositionWindows
-    
-    ' Refresh the Project Explorer file name list
-    LoadExplorerFiles()
-    LoadFunctionsFiles()
-    LoadBookmarksFiles()
-
-    ' This will update the main window to show the project name in the window caption
-    frmMain_SetFocusToCurrentCodeWindow
-    
-    function = 0
+    ' Identical to closing the current workspace: save it, close it, establish a fresh
+    ' untitled one. Cancelling a save prompt aborts the whole thing.
+    function = OnCommand_ProjectClose( hwnd )
 end function
 
 

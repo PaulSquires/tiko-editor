@@ -173,10 +173,20 @@ sub frmExplorer_PaintCallback( byval p as PSLISTTREE_PAINTINFO ptr )
         p->b->SetFont( ghFont(GUIFONT_10) )
         rcText.left = rcIcon.right
         p->b->PaintText( wszCaption, @rcText, DT_LEFT )
+    ' PSLISTTREE_PAINTINFO carries the model row but no itemData and no control handle, so
+    ' the row descriptor is fetched by index. Safe here only because this painter serves
+    ' exactly one control; a shared painter would need a per-tree wrapper naming its HWND.
+    elseif PsListTree_GetItemData( HWND_FRMEXPLORER, p->itemID ) = EXPLORER_PROMOTE_ROW then
+        ' The promotion row reads as an action, not a file: accent-coloured, no document
+        ' glyph, and indented to the header's text column rather than the file column.
+        p->b->SetForeColor( ghEditor.ForeColorKeyword )
+        p->b->SetFont( ghFont(GUIFONT_10) )
+        rcText.left = rcText.left + nIconWidth
+        p->b->PaintText( wszCaption, @rcText, DT_LEFT )
     else
         ' This would be a regular file.
         rcIcon.left = rcText.left + nIconWidth
-        rcIcon.right = rcIcon.left + nIconWidth 
+        rcIcon.right = rcIcon.left + nIconWidth
 
         p->b->SetFont( ghFont(GUIFONT_10) )  ' use GUI rather than SYMBOL b/c of dot icon
         p->b->PaintText( wszIconDocument, @rcIcon, DT_CENTER )
@@ -210,8 +220,16 @@ function frmExplorer_MessageCallback( byval m as PSLISTTREE_MESSAGEINFO ptr ) as
             dim as HWND hCtl = GetParent(m->hList)
             if PsListTree_IsHeader( hCtl, m->idx ) = false then
                 dim as integer nItemData = PsListTree_GetItemData( hCtl, m->idx )
+
+                ' The promotion row is an action, not a document. Test it BEFORE the cast:
+                ' the sentinel is not a valid pointer and must never be dereferenced.
+                if nItemData = EXPLORER_PROMOTE_ROW then
+                    OnCommand_ProjectSave( GetParent(hCtl), true )   ' Save As
+                    return false
+                end if
+
                 dim as clsDocument ptr pDoc = cast(clsDocument ptr, nItemData)
-                if pDoc then 
+                if pDoc then
                     ' if the file is already showing in the Top tabs then switch to that tab.
                     if gTTabCtl.SetTabIndexByDocumentPtr( pDoc ) = -1 then
                         OpenSelectedDocument( pDoc->DiskFilename )
@@ -231,7 +249,11 @@ function frmExplorer_MessageCallback( byval m as PSLISTTREE_MESSAGEINFO ptr ) as
             dim as HWND hCtl = GetParent(m->hList)
             if PsListTree_IsHeader( hCtl, m->idx ) then return false
 
-            dim as clsDocument ptr pDoc = cast(clsDocument ptr, PsListTree_GetItemData(hCtl, m->idx))
+            dim as integer nRowData = PsListTree_GetItemData(hCtl, m->idx)
+            ' No context menu on the promotion row -- every item on it is a file action.
+            if nRowData = EXPLORER_PROMOTE_ROW then return false
+
+            dim as clsDocument ptr pDoc = cast(clsDocument ptr, nRowData)
             if pDoc = null then return false
             
             ' If only 1 line has been previously selected then unselect that line
@@ -339,6 +361,13 @@ function LoadExplorerFiles() as long
     nStart = CATINDEX_MAIN
     nEnd = ubound(gConfig.Cat)
 
+
+    ' While the workspace is untitled, offer to make it a real project. Pinned at index 0,
+    ' above every header, and present only until the user names it -- IsProjectNamed is the
+    ' whole condition, so it disappears the moment Save As succeeds.
+    if gApp.IsProjectNamed() = false then
+        PsListTree_AddString( hCtrl, L(550,"Save as Project..."), EXPLORER_PROMOTE_ROW, 0 )
+    end if
 
     redim pDocs(any) as clsDocument ptr
 

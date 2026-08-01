@@ -290,7 +290,15 @@ function frmMain_ProcessCommandLine( byval hwnd as HWND ) as long
     if len(AfxCommand(1)) = 0 then
         ' No files named on the command line, so the user may be wanting the previous
         ' project restored over the workspace just established.
+        '
+        ' This used to "exit function" here, which skipped the panel refresh at the bottom.
+        ' That was survivable while the only interesting outcome was a project, because
+        ' ProjectLoadFromFile calls LoadExplorerFiles itself -- but an untitled workspace
+        ' loads no file and so refreshed nothing, leaving the Explorer COMPLETELY EMPTY,
+        ' without even its category headers. Fall through to the shared refresh instead.
         frmMain_RestoreWorkspace( wszLastProject )
+        LoadExplorerFiles()
+        LoadFunctionsFiles()
         exit function
     end if
 

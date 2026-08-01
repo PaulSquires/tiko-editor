@@ -411,6 +411,9 @@ private sub ExplorerContextMenu_OnSelect( byval hPopup as HWND, byval id as long
         if PsListTree_GetSel( hCtl, i ) = true then
             if nextIdx > ubound(pDocArray) then exit for
             dim as integer nItemData = PsListTree_GetItemData( hCtl, i )
+            ' The Explorer's promotion row is not a document. Its sentinel is not a valid
+            ' pointer, so it must be filtered here rather than dereferenced below.
+            if nItemData = EXPLORER_PROMOTE_ROW then continue for
             pDocArray(nextIdx) = cast(clsDocument ptr, nItemData)
             nextIdx = nextIdx + 1
         end if
