@@ -1039,7 +1039,7 @@ end function
 ' Close a  previously loaded session file
 ' ========================================================================================
 function clsConfig.CloseSessionFile( byref wszSessionFile as wstring ) as boolean    
-    if gConfig.SaveSessionFile( wszSessionFile) = false then exit function
+    if this.SaveSessionFile( wszSessionFile) = false then exit function
     if OnCommand_FileClose(HWND_FRMMAIN, EFC_CLOSEALL) = false then exit function
     gApp.IsSessionActive = false
     gApp.SessionFilename = ""
@@ -1184,8 +1184,8 @@ function clsConfig.LoadSessionFile( byref wszSessionFile as wstring ) as boolean
 
     ' Load all of the filenames into the Explorer listbox. Configure the node
     ' array to allow all types of files to be shown in the listbox
-    for i as long = lbound(gConfig.Cat) to ubound(gConfig.Cat)
-        gConfig.Cat(i).bShow = true
+    for i as long = lbound(this.Cat) to ubound(this.Cat)
+        this.Cat(i).bShow = true
     next
     LoadExplorerFiles()
     
@@ -1504,8 +1504,8 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
     
     ' Load all of the filenames into the Explorer listbox. Configure the node
     ' array to allow all types of files to be shown in the listbox
-    for i as long = lbound(gConfig.Cat) to ubound(gConfig.Cat)
-        gConfig.Cat(i).bShow = true
+    for i as long = lbound(this.Cat) to ubound(this.Cat)
+        this.Cat(i).bShow = true
     next
 
     LoadExplorerFiles()
@@ -1563,7 +1563,7 @@ function clsConfig.ReloadConfigFileTest() as boolean
     ' Compare the disk file date time to the value currently stored in static variable.
     ft = AfxGetFileLastWriteTime(this.ConfigFilename)
     if AfxFileTimeToVariantTime(ft) <> AfxFileTimeToVariantTime(this.DateFileTime) then
-        gConfig.LoadConfigFile(true)  ' this function also updates the _DateFileTime value
+        this.LoadConfigFile(true)  ' this function also updates the _DateFileTime value
         ' Apply the newly saved options to all open Scintilla windows
         dim pDoc as clsDocument ptr = gApp.pDocList
         do until pDoc = 0
