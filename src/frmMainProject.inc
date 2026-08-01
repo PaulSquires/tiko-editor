@@ -262,6 +262,36 @@ sub Workspace_RunSelfTest()
             gConfig.Cat(CATINDEX_NORMAL).idFileType = FILETYPE_NORMAL )
     end if
 
+    ' --- the CLOSE transition -------------------------------------------------------------
+    ' TIKO_WORKSPACE_TESTCLOSE=1, and only from a NAMED project, because it really does
+    ' close the live one. Same reasoning as the promotion block below: closing is a
+    ' transition, and both sides of it are self-consistent, so nothing checked at startup
+    ' can tell whether the restore slot was actually released.
+    if environ("TIKO_WORKSPACE_TESTCLOSE") = "1" then
+        if gApp.IsProjectNamed() = false then
+            print "NOTE  close test skipped: the workspace is not a named project"
+        else
+            dim as DWSTRING wszWas = gApp.ProjectFilename
+            OnCommand_ProjectClose( HWND_FRMMAIN )
+
+            Workspace_Check( "closing a project leaves an untitled workspace", _
+                gApp.IsProjectNamed() = false, "now=" & gApp.ProjectFilename )
+            ' THE ONE THAT MATTERS: a closed project must not reopen on the next launch.
+            Workspace_Check( "closing a project releases the restore slot", _
+                len(gConfig.wszLastActiveProject) = 0, _
+                "was=" & wszWas & " slot=" & gConfig.wszLastActiveProject )
+
+            ' AND IT HAS TO SURVIVE THE ROUND TRIP TO DISK. The in-memory check above is
+            ' not the user-visible claim -- the next launch reads settings.ini, so what
+            ' matters is what SaveConfigFile actually wrote. Persist and read it back.
+            gConfig.SaveConfigFile()
+            gConfig.LoadConfigFile( true )   ' true = hot reload; leaves geometry alone
+            Workspace_Check( "the released slot survives a settings.ini round trip", _
+                len(gConfig.wszLastActiveProject) = 0, _
+                "slot after reload=" & gConfig.wszLastActiveProject )
+        end if
+    end if
+
     ' --- the PROMOTION transition ---------------------------------------------------------
     ' Only reachable with TIKO_WORKSPACE_TESTPROMOTE=1, and only from an untitled workspace,
     ' because it really does promote the live one. It exists because promotion is a

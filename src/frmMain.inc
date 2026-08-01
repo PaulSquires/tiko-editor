@@ -1268,10 +1268,12 @@ function frmMain_OnClose( byval hwnd as HWND ) as LRESULT
     ' Save and close the workspace, named or untitled. This is the ONLY write of the
     ' untitled workspace's file on a normal exit, which is why a cancelled save prompt
     ' has to abort the close rather than fall through.
+    ' This saves the workspace AND closes every document, prompting for dirty ones. The
+    ' explicit OnCommand_FileClose( EFC_CLOSEALL ) that used to follow was left behind when
+    ' the old project/session/loose trichotomy collapsed into this call -- it re-ran the
+    ' whole close loop over a list that was already empty. Harmless only because
+    ' OnCommand_FileClose returns TRUE when there is nothing to close.
     if Workspace_SaveAndCloseAll(hwnd) = false then return 0
-
-    ' Close any open files asking to save any that are dirty
-    if OnCommand_FileClose(HWnd, EFC_CLOSEALL) = 0 then return 0
 
     ' no more config changed checks while shutting down
     gApp.PreventConfigLoad = true   
