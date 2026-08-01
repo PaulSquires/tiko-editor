@@ -1504,6 +1504,15 @@ function frmMain_WndProc( _
             ' normal launch -- so the bottom of that function is unreachable for it.
             frmFindInProject_RunSelfTest()
 
+            ' TIKO_UNUSED_AUTOOPEN=1: the only way to reach the Unused Symbols layout
+            ' self-test without a human driving the menu. HERE, not on scan completion:
+            ' with no project open nothing ever requests a project scan, so a
+            ' completion-driven hook could never reach the loose-file path -- which is
+            ' exactly the one worth testing. _Show requests the scan itself now.
+            if environ("TIKO_UNUSED_AUTOOPEN") = "1" then
+                frmUnusedSymbols_Show( hwnd )
+            end if
+
         case MSG_USER_PROCESS_STARTUPUSERTOOLS
             ' process any User Tools that must display immediately after the main editor
             ' user interface is created and displayed.
@@ -1558,11 +1567,19 @@ function frmMain_WndProc( _
                 ' document that is no longer the active one.
                 dim as boolean bStale = false
                 if nTier = ScanTierProject then
-                    dim as clsDocument ptr pMainDoc = gApp.GetMainDocumentPtr()
-                    if pMainDoc = 0 then
+                    ' "Project main file, else the ACTIVE DOCUMENT" - the same rule
+                    ' clsScanMgr.RequestProjectScan and frmUnusedSymbols_RootFile use to
+                    ' choose a root. Without the second half, a project-tier scan rooted at
+                    ' a loose file (which is what the Unused Symbols report asks for when no
+                    ' project is open) was ALWAYS discarded here, so its window sat on
+                    ' "Scanning..." forever. Comparing roots still discards a closed
+                    ' project's late-arriving scan, which is what this test is for.
+                    dim as clsDocument ptr pRootDoc = gApp.GetMainDocumentPtr()
+                    if pRootDoc = 0 then pRootDoc = gTTabCtl.GetActiveDocumentPtr()
+                    if pRootDoc = 0 then
                         bStale = true
                     else
-                        bStale = ( SymDb_FileNameEq( pRSet->wszRootFile, pMainDoc->DiskFilename ) = false )
+                        bStale = ( SymDb_FileNameEq( pRSet->wszRootFile, pRootDoc->DiskFilename ) = false )
                     end if
                 else
                     dim as clsDocument ptr pActiveDoc = gTTabCtl.GetActiveDocumentPtr()
@@ -1590,6 +1607,15 @@ function frmMain_WndProc( _
                     ' active file's text; project scans sweep every user file on
                     ' disk) - refresh the panel either way.
                     frmOutput_UpdateToDoListview()
+
+                    ' A completed project scan refreshes an open Unused Symbols report.
+                    ' This is how both its Refresh button and its initial fill land: the
+                    ' window only REQUESTS a scan, because acting on the report changes both
+                    ' the line numbers and the reference counts, so re-reading the old scan
+                    ' would be stale.
+                    if (nTier = ScanTierProject) andalso frmUnusedSymbols_IsOpen() then
+                        frmUnusedSymbols_Rebuild()
+                    end if
                 end if
             end if
 
@@ -1688,6 +1714,9 @@ function frmMain_Show( byval hWndParent as HWND ) as LRESULT
     ' walk and the localized strings. It launches nothing -- see the suite's own header
     ' for what that means it cannot reach.
     frmDebug_RunSelfTest()
+    ' Unused Symbols: the model only (comparator + filter). Pure, so it needs no scan and
+    ' no window -- which is also everything it cannot reach; see the suite's header.
+    UnusedSymbols_RunSelfTest()
     ' Set the small and large icon for the main window (must be set after main window is created)
     pWindow->BigIcon   = LoadImage( pWindow->InstanceHandle, "IMAGE_AAA_MAINICON", IMAGE_ICON, 32, 32, LR_SHARED)
     pWindow->SmallIcon = LoadImage( pWindow->InstanceHandle, "IMAGE_AAA_MAINICON", IMAGE_ICON, 16, 16, LR_SHARED)

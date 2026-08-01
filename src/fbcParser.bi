@@ -21,11 +21,40 @@
 ''  - Symbol names (and UDT/enum names inside the type text) are returned in
 ''    their ORIGINAL source casing. Filenames are uppercased (fbc interns
 ''    them ucased for include-once bookkeeping; Windows is case-insensitive).
+''
+'' Reference counts (readCount/writeCount/refFileIndex/refLine) answer "is this
+'' symbol used?". They count identifiers that literally appear in the SOURCE
+'' TEXT: the counters are driven from the parser, at the point an identifier
+'' resolves to a symbol, so nothing the compiler synthesizes is counted.
+'' (fbc's own FB_SYMBSTATS_ACCESSED is deliberately NOT used - it is a codegen
+'' liveness bit, and a local's own declaration sets it. See collector.bi.)
+''
+'' A count is only meaningful when FBCP_SYMBFLAG_REFTRACKED is set. Without it
+'' the counts are UNKNOWN, not zero-meaning-unused.
+''
+'' Counting caveats (each is a MISS, i.e. a real use that is not counted, so
+'' the risk is calling something unused when it is not):
+''  - Counts are per SCAN. A proc called only from another module that this
+''    scan never reached reads as unreferenced. A whole-project verdict needs
+''    the host to combine every scan that saw the symbol.
+''  - A reference inside a macro body is counted, but refLine reports the
+''    macro's INVOCATION site (same limitation as colNum above).
+''  - `#ifdef X` / `#ifndef X` do NOT count - the preprocessor resolves those
+''    without going through the parser's identifier paths. `#if X > 0` DOES
+''    count, since it parses a real constant expression.
+''  - Inline-ASM operands are counted, but always as READS: an asm write is
+''    not distinguishable, and calling it a read is the safe direction.
+''  - LET() multi-assignment targets count as reads, not writes.
+''  - Labels, GOTO/RESTORE/DATA targets and namespace qualifier segments are
+''    not counted at all (those kinds are never reported either).
 
 #ifndef __FBCPARSER_BI__
 #define __FBCPARSER_BI__
 
-const FBCP_VERSION = 1
+'' 2: FBCP_SYMBOL grew the four reference fields. The record size changed, so a
+''    host built against version 1 strides symbols[] wrong - always rebuild the
+''    host against this header, do not mix.
+const FBCP_VERSION = 2
 
 enum FBCP_KIND
 	FBCP_KIND_SUB = 1
@@ -53,6 +82,18 @@ const FBCP_SYMBFLAG_LOCAL    = &h0020   '' declared inside a proc body
 const FBCP_SYMBFLAG_INSTANCE = &h0040   '' implicit THIS param
 const FBCP_SYMBFLAG_OPTIONAL = &h0080   '' param with a default value
 const FBCP_SYMBFLAG_ARRAY    = &h0100   '' array variable/field, or BYDESC param
+const FBCP_SYMBFLAG_REFTRACKED = &h0200 '' readCount/writeCount are MEANINGFUL for
+                                        ''   this symbol. When clear they are
+                                        ''   UNKNOWN - do not read 0 as "unused".
+                                        ''   Set for VAR/PARAM/SUB/FUNCTION/FIELD/
+                                        ''   CONST/ENUMVAL; never for DEFINE or
+                                        ''   NAMESPACE; cleared on every member of
+                                        ''   an overloaded proc set (a call
+                                        ''   resolves to the overload HEAD, so the
+                                        ''   siblings cannot be told apart).
+const FBCP_SYMBFLAG_EXPORT   = &h0400   '' EXPORTed proc - callable from outside
+                                        ''   anything this scan can see, so a zero
+                                        ''   count says nothing about it
 
 type FBCP_SYMBOL
 	kind        as long                 '' FBCP_KIND
@@ -69,6 +110,13 @@ type FBCP_SYMBOL
 	colNum      as long
 	bodyLine    as long                 '' procs with a body: implementation range
 	bodyEndLine as long                 ''   (0 if declare-only)
+	readCount   as long                 '' source-text references that READ it
+	writeCount  as long                 '' source-text references that WRITE it
+	                                    ''   (assignment targets). A symbol with
+	                                    ''   writeCount > 0 and readCount = 0 is
+	                                    ''   assigned but never read.
+	refFileIndex as long                '' FIRST reference, in PARSE order (not
+	refLine      as long                ''   lexical order): -1 / 0 if none
 end type
 
 type FBCP_DIAG

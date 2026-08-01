@@ -328,6 +328,9 @@ function clsConfig.SaveConfigFile() as long
     ' Written from this.ShowOutputPanelIndex, which frmMain refreshes from the tab bar
     ' (PsSelectBar_GetCurSel) just before the config is saved.
     pStream.WriteLine "ShowOutputPanelIndex="     & this.ShowOutputPanelIndex
+    pStream.WriteLine "UnusedKindMask="           & this.UnusedKindMask
+    pStream.WriteLine "UnusedSortCol="            & this.UnusedSortCol
+    pStream.WriteLine "UnusedSortDesc="           & this.UnusedSortDesc
     ' Note: the floating Output window's positions are in scaled screen coordinates (the
     ' Startup/HelpStartup convention above, NOT the unscaled one the two lines above use).
     pStream.WriteLine "OutputFloating="           & this.OutputFloating
@@ -794,6 +797,9 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
                     ' Search Results tab) to Compiler Results, and frmOutput_CaptureState
                     ' writes the healed value back on the next save.
                     case "ShowOutputPanelIndex":     this.ShowOutputPanelIndex  = nData
+                    case "UnusedKindMask":           this.UnusedKindMask        = nData
+                    case "UnusedSortCol":            this.UnusedSortCol         = nData
+                    case "UnusedSortDesc":           this.UnusedSortDesc        = cbool(nData)
                     ' The floating Output window. These live inside the isHotReload guard for
                     ' the same reason every other geometry key does, and for one extra: a hot
                     ' reload firing while the panel is undocked would otherwise teleport a live
@@ -1062,7 +1068,7 @@ end function
 ' Close a  previously loaded session file
 ' ========================================================================================
 function clsConfig.CloseSessionFile( byref wszSessionFile as wstring ) as boolean    
-    if gConfig.SaveSessionFile( wszSessionFile) = false then exit function
+    if this.SaveSessionFile( wszSessionFile) = false then exit function
     if OnCommand_FileClose(HWND_FRMMAIN, EFC_CLOSEALL) = false then exit function
     gApp.IsSessionActive = false
     gApp.SessionFilename = ""
@@ -1207,8 +1213,8 @@ function clsConfig.LoadSessionFile( byref wszSessionFile as wstring ) as boolean
 
     ' Load all of the filenames into the Explorer listbox. Configure the node
     ' array to allow all types of files to be shown in the listbox
-    for i as long = lbound(gConfig.Cat) to ubound(gConfig.Cat)
-        gConfig.Cat(i).bShow = true
+    for i as long = lbound(this.Cat) to ubound(this.Cat)
+        this.Cat(i).bShow = true
     next
     LoadExplorerFiles()
     
@@ -1527,8 +1533,8 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
     
     ' Load all of the filenames into the Explorer listbox. Configure the node
     ' array to allow all types of files to be shown in the listbox
-    for i as long = lbound(gConfig.Cat) to ubound(gConfig.Cat)
-        gConfig.Cat(i).bShow = true
+    for i as long = lbound(this.Cat) to ubound(this.Cat)
+        this.Cat(i).bShow = true
     next
 
     LoadExplorerFiles()
@@ -1586,7 +1592,7 @@ function clsConfig.ReloadConfigFileTest() as boolean
     ' Compare the disk file date time to the value currently stored in static variable.
     ft = AfxGetFileLastWriteTime(this.ConfigFilename)
     if AfxFileTimeToVariantTime(ft) <> AfxFileTimeToVariantTime(this.DateFileTime) then
-        gConfig.LoadConfigFile(true)  ' this function also updates the _DateFileTime value
+        this.LoadConfigFile(true)  ' this function also updates the _DateFileTime value
         ' Apply the newly saved options to all open Scintilla windows
         dim pDoc as clsDocument ptr = gApp.pDocList
         do until pDoc = 0

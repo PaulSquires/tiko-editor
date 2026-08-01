@@ -201,6 +201,7 @@ Function getMenuText( byval idMenu as long ) As DWSTRING
         case IDM_DEBUG_RUNTOCURSOR: wszText = L(256,"Run to Cursor")
         case IDM_DEBUG_TOGGLEBREAKPOINT: wszText = L(249,"Toggle Breakpoint")
         case IDM_DEBUG_DELETEALLBREAKPOINTS: wszText = L(250,"Delete All Breakpoints")
+        case IDM_DEBUG_UNUSEDSYMBOLS: wszText = L(586,"Unused Symbols...")
 
         case IDM_HELP_CENTER: wszText = L(87,"Help Center")
         case IDM_ABOUT: wszText = L(72,"About")
@@ -365,6 +366,8 @@ function buildTopMenuDefinitions() as long
     setTopMenuItem( IDC_MENUBAR_DEBUG, 0, 0, false, true )
     setTopMenuItem( IDC_MENUBAR_DEBUG, IDM_DEBUG_TOGGLEBREAKPOINT, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_DEBUG, IDM_DEBUG_DELETEALLBREAKPOINTS, 0, false, false )
+    setTopMenuItem( IDC_MENUBAR_DEBUG, 0, 0, false, true )
+    setTopMenuItem( IDC_MENUBAR_DEBUG, IDM_DEBUG_UNUSEDSYMBOLS, 0, false, false )
 
     setTopMenuItem( IDC_MENUBAR_HELP, IDM_HELP_CENTER, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_HELP, 0, 0, false, true )
