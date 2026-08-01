@@ -452,15 +452,12 @@ function clsConfig.SaveConfigFile() as long
         pStream.WriteLine "MRUPROJECT_" & right("00" & str(i), 2) & "=" & this.MRUProject(i) 
     next         
 
-    dim hCtl as hwnd = GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTNOTES)
-    dim wszText as DWSTRING = wstr("NOTES-START") + vbcrlf + _
-                            gApp.NonProjectNotes + vbcrlf + _
-                            wstr("NOTES-END") + vbcrlf
-    pStream.WriteLine ""
-    pStream.WriteLine "[Notes]"
-    pStream.WriteLine wszText
+    ' The [Notes] block is no longer WRITTEN. Notes belong to the workspace and are stored
+    ' in its own .tiko file; the reader below survives only to migrate an existing
+    ' settings.ini's notes into the untitled workspace once, so the section ages out of
+    ' settings.ini on the first save after that.
 
-    pStream.Close 
+    pStream.Close
 
     ' Save the last write time so that it can be checked in the message loop
     ' in order to detect external changes to it.

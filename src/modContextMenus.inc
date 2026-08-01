@@ -217,7 +217,8 @@ private sub BuildConfigContextMenu_OnSelect( byval hPopup as HWND, byval idMenu 
         if gConfig.Builds(i).idMenu <> idMenu then continue for
         ' Set the active project or the active document to the selected build
         ' The build belongs to the workspace. gConfig.CompilerBuild is the seed for a NEW
-        ' workspace only, and clsDocument.DocumentBuild was write-only even before this.
+        ' workspace only. (clsDocument.DocumentBuild was write-only even before this and
+        ' has been deleted.)
         gApp.ProjectBuild = gConfig.Builds(i).Id
         frmMain_SetStatusbar
         gConfig.SaveConfigFile

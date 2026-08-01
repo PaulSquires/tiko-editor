@@ -71,7 +71,6 @@ function clsApp.CreateEmptyDocument( byval IsNewFile as boolean = false ) as cls
     else
         pDoc->ProjectFileType = FILETYPE_UNDEFINED
     end if
-    pDoc->SetDocumentBuild()
     function = pDoc
 end function
 

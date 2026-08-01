@@ -30,7 +30,12 @@ type clsApp
         ' strip is PsTabBar -- so bDragActive, bDragTabActive and ptDragTabPrev went, along
         ' with hWndPanel and the single/double-click timer fields before them.
         IncludeFilename            as DWSTRING
-        NonProjectNotes            as DWSTRING             ' Save/load from config file
+        ' MIGRATION ONLY. Loaded from settings.ini's [Notes] block, which is no longer
+        ' written, and read in exactly one place: Workspace_EstablishUntitled hands it to
+        ' ProjectNotes the first time an untitled workspace is created with no file on
+        ' disk. Nothing else may read or write it. Removable once no settings.ini in the
+        ' wild still carries the section.
+        NonProjectNotes            as DWSTRING
 '        wszPanelText               as DWSTRING             ' Current file loading or being compiled (for statusbar updating)
  '       FileLoadingCount           as long              ' Track count of files loading for statusbar display
         hIconPanel                 as long              ' Success/failure of most previous compile (for Statusbar updating)
@@ -39,7 +44,6 @@ type clsApp
         IsFileLoading              as boolean           ' File loading. Disable some screen updating.
         IsCompiling                as boolean           ' File/Project currently being compiled (spinning mouse cursor).
         IsShutDown                 as boolean           ' App is currently closing
-        wszCommandLine             as DWSTRING             ' non-project commandline (not saved to file)
         wszLastOpenFolder          as DWSTRING             ' remembers the last opened folder for the Open Dialog
         wszQuickRunFilename        as DWSTRING
         IsQuickRun                 as boolean           ' Set in modCompile and used in SetDocumentErrorPosition()

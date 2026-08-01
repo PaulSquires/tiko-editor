@@ -81,21 +81,6 @@ property clsDocument.hWndActiveScintilla(byval hWindow as HWND)
 end property
 
 
-' ========================================================================================
-' Set the Build configuration to use for this document. 
-' ========================================================================================
-function clsDocument.SetDocumentBuild() as long
-    ' Set the default build configuration for this document. If no IsDefault option
-    ' has been checked then we simply use whatever the current selected build is.
-    if this.DocumentBuild = "" then 
-        this.DocumentBuild = frmBuildConfig_GetDefaultBuildGUID()
-        if this.DocumentBuild = "" then 
-            this.DocumentBuild = frmBuildConfig_GetSelectedBuildGUID()
-        end if
-    end if      
-    function = 0
-end function
-
 
 ' ========================================================================================
 ' Set the Project Filetype for this document depending on file extension.
