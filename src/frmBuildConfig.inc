@@ -687,7 +687,7 @@ end sub
 ' NO TOOLTIPS, on the rows OR the header. With no callback PsListTree falls back to the row's
 ' own text and PsColumnHeader to the column's own caption, so hovering "Shortcut" would pop a
 ' tip reading "Shortcut". TWO SEPARATE OPT-OUTS -- it is easy to fix one and leave the other.
-private function frmBuildConfig_ListTooltip( byval hList as HWND, byval row as integer ) as DWSTRING
+private function frmBuildConfig_ListTooltip( byval hList as HWND, byval row as integer, byval col as integer ) as DWSTRING
     return ""
 end function
 

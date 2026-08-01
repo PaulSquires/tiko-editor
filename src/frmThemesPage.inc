@@ -260,7 +260,7 @@ end function
 ' so both channels are reported at once rather than asking the user to hover a 30px square
 ' precisely -- which is easier to read anyway when comparing a pair.
 ' ========================================================================================
-private function frmThemes_ListTooltip( byval hList as HWND, byval row as integer ) as DWSTRING
+private function frmThemes_ListTooltip( byval hList as HWND, byval row as integer, byval col as integer ) as DWSTRING
     ' Disable tooltips on the this listtree
     return ""
 end function

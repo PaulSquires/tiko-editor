@@ -153,8 +153,10 @@ type PaintCallbackSub as sub( byval p as PSLISTTREE_PAINTINFO ptr )
 type MessageCallbackFunc as function( byval m as PSLISTTREE_MESSAGEINFO ptr ) as boolean
 
 ' Supply the tooltip text for a MODEL row, on demand (only when a tip is about to show).
-' Return "" for no tooltip. If unset, the row's own Text is used.
-type TooltipCallbackFunc as function( byval hListControl as HWND, byval row as integer ) as DWSTRING
+' col is the column the mouse was last over (0-based). A list with no header columns is one
+' implicit column, so it reports 0; with columns defined, -1 means the cursor was past the
+' last column. Return "" for no tooltip. If unset, the row's own Text is used.
+type TooltipCallbackFunc as function( byval hListControl as HWND, byval row as integer, byval col as integer ) as DWSTRING
 
 ' The USER changed the selection -- by clicking a row, or by moving the focus with the
 ' keyboard (arrows, PageUp/Down, Home/End, Space in checklist mode). row is the MODEL index
@@ -246,6 +248,7 @@ type PSLISTTREE
     accumDelta      as integer = 0        ' mousewheel
     HoverTime       as integer = 250
     nLastHotIdx     as integer = -1       ' last VISIBLE row the mouse was over (hover tracking)
+    nLastHotCol     as integer = -1       ' last column the mouse was over (0-based; -1 = none)
     hotTimerOn      as boolean = false    ' is the hot-tracking safety-net timer running?
     focusRow        as integer = -1       ' MODEL row with the keyboard focus/caret (-1 = none)
     ' Last row handed to SelChangeCallback -- the host's idea of "current". Programmatic
@@ -1153,7 +1156,9 @@ declare sub      PsListTree_SetHeaderFont( byval hListControl as HWND, byval hFo
 '   PaintCallback   - draw one row. Required if you want to see anything.
 '   MessageCallback - observe mouse messages; return TRUE to suppress default handling.
 '                     NOTE: the result is ignored for WM_LBUTTONUP (see PsListTree.inc).
-'   TooltipCallback - supply per-row tooltip text on demand; "" for none.
+'   TooltipCallback - supply per-row tooltip text on demand; "" for none. Also receives the
+'                     column the mouse was last over (0-based; a headerless list reports 0,
+'                     -1 = past the last defined column).
 '   SelChangeCallback - the USER selected a different row (mouse OR keyboard). Silent for
 '                     the programmatic setters. This is the only way to see keyboard
 '                     navigation: the control consumes WM_KEYDOWN itself.

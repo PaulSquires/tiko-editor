@@ -221,7 +221,7 @@ end function
 ' ========================================================================================
 ' frmFunctions_TooltipCallback  -- per-row tooltip text, resolved on demand
 ' ========================================================================================
-function frmFunctions_TooltipCallback( byval hCtl as HWND, byval row as integer ) as DWSTRING
+function frmFunctions_TooltipCallback( byval hCtl as HWND, byval row as integer, byval col as integer ) as DWSTRING
     dim as DWSTRING wszTooltip
     dim as PSLISTTREE ptr pList = GetListTreePointer(hCtl)
     if pList then

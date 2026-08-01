@@ -260,7 +260,7 @@ end function
 ' ========================================================================================
 ' frmExplorer_TooltipCallback  -- per-row tooltip text, resolved on demand
 ' ========================================================================================
-function frmExplorer_TooltipCallback( byval hCtl as HWND, byval row as integer ) as DWSTRING
+function frmExplorer_TooltipCallback( byval hCtl as HWND, byval row as integer, byval col as integer ) as DWSTRING
     dim as DWSTRING wszTooltip
     dim as integer nItemData = PsListTree_GetItemData(hCtl, row)
     dim as clsDocument ptr pDoc = cast(clsDocument ptr, nItemData)

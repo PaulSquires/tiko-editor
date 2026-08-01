@@ -863,7 +863,7 @@ end sub
 ' own text and PsColumnHeader to the column's own caption, so hovering "Shortcut" would pop a
 ' tip reading "Shortcut". These are TWO SEPARATE OPT-OUTS and it is easy to fix one and leave
 ' the other.
-private function frmUserTools_ListTooltip( byval hList as HWND, byval row as integer ) as DWSTRING
+private function frmUserTools_ListTooltip( byval hList as HWND, byval row as integer, byval col as integer ) as DWSTRING
     return ""
 end function
 

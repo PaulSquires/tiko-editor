@@ -184,6 +184,29 @@ private function PsListTree_VisIndexFromPoint( _
 end function
 
 
+' Resolve a surface-client X to a 0-based column index. A list with no header columns is
+' the classic single-column contract (PSLISTTREE_PAINTINFO's columnCount = 0), one implicit
+' column, so it always reports 0. With columns defined, returns the one whose rect contains x,
+' or -1 when the cursor sits past the last column. Column rects come from the embedded header,
+' the same coordinate space the paint code and the mouse messages use.
+private function PsListTree_ColFromX( _
+            byval pList as PSLISTTREE ptr, _
+            byval x as integer _
+            ) as integer
+    if pList = 0 then return -1
+    dim as integer nCols = 0
+    if pList->hHeader then nCols = PsColumnHeader_GetCount( pList->hHeader )
+    if nCols <= 0 then return 0    ' classic single implicit column
+    dim as RECT rcCol
+    for c as integer = 0 to nCols - 1
+        if PsColumnHeader_GetColumnRect( pList->hHeader, c, rcCol ) then
+            if (x >= rcCol.left) andalso (x < rcCol.right) then return c
+        end if
+    next
+    return -1
+end function
+
+
 ' Resolve a drag cursor point to a drop target. Fills:
 '   insertBefore -- the MODEL index the dragged block would land before (0..rowCount)
 '   onHeader     -- TRUE when the point is over a header row (drop as its first children)
@@ -850,9 +873,10 @@ end sub
 
 
 ' Resolve the tooltip text for a model row: host callback if set, else row Text.
-function PsListTree_ResolveTooltipText( byval pList as PSLISTTREE ptr, byval modelRow as integer ) as DWSTRING
+' col is the column the mouse was last over (0-based; -1 = none), handed to the callback.
+function PsListTree_ResolveTooltipText( byval pList as PSLISTTREE ptr, byval modelRow as integer, byval col as integer ) as DWSTRING
     if (pList = null) orelse (pList->IsValidRow(modelRow) = false) then return ""
-    if pList->TooltipCallback then return pList->TooltipCallback( pList->hWin, modelRow )
+    if pList->TooltipCallback then return pList->TooltipCallback( pList->hWin, modelRow, col )
     return pList->rows(modelRow).Text
 end function
 
@@ -2270,7 +2294,7 @@ function PsListTree_WndProc( _
                 dim as NMTTDISPINFOW ptr pdi = cast(NMTTDISPINFOW ptr, lParam)
                 dim as integer modelRow = pList->VisibleToModel( pList->nLastHotIdx )
                 ' store in an instance-lifetime buffer and point lpszText at it
-                pList->wszTooltip = PsListTree_ResolveTooltipText( pList, modelRow )
+                pList->wszTooltip = PsListTree_ResolveTooltipText( pList, modelRow, pList->nLastHotCol )
                 pdi->lpszText = cast( LPWSTR, pList->wszTooltip.vptr )
                 pdi->hinst    = NULL
             end if
@@ -2405,6 +2429,7 @@ sub PsListTree_ClearHotTracking( byval pList as PSLISTTREE ptr, byval hList as H
         pList->nLastHotIdx = -1
         AfxRedrawWindow( hList )
     end if
+    pList->nLastHotCol = -1
 end sub
 
 
@@ -3087,6 +3112,20 @@ function PsListTreeSurface_WndProc ( _
     end select
    
     select case uMsg
+        case WM_NOTIFY
+            ' The system-backend tooltip is a TTF_SUBCLASS tool whose TOOLINFO.hwnd is THIS
+            ' surface -- it has to be, because the mouse messages the subclass relays arrive
+            ' here, not at the container (see PsTipHost_Ensure in Create). So comctl32 sends
+            ' TTN_GETDISPINFOW here, but the handler that fills the text lives in the CONTAINER
+            ' WndProc. Forward it up so there is one implementation. Without this the system
+            ' backend (the DEFAULT) shows no tip text and the tooltip callback never fires; the
+            ' PsTooltip backend was unaffected because it pulls its text through a direct
+            ' callback rather than through WM_NOTIFY.
+            dim as NMHDR ptr pnmh = cast(NMHDR ptr, _lParam)
+            if pnmh andalso (pnmh->code = TTN_GETDISPINFOW) then
+                return SendMessageW( GetParent(hWin), WM_NOTIFY, _wParam, _lParam )
+            end if
+
         case WM_PAINT
             ' ONE repaint of the visible rows, in a single pass over the whole client.
             ' This used to hand off to DefSubclassProc, which fanned out into one
@@ -3327,6 +3366,10 @@ function PsListTreeSurface_WndProc ( _
             ' a full-client repaint per mouse move.
             dim as RECT rc
             dim as long idx = PsListTree_VisIndexFromPoint( pList, GET_X_LPARAM(_lParam), GET_Y_LPARAM(_lParam) )
+            ' Track the column under the cursor alongside the hot row, so the tooltip callback
+            ' can report which cell the tip is for. Updated every move (the column can change
+            ' while the row does not); read by PsListTree_ResolveTooltipText.
+            if pList <> 0 then pList->nLastHotCol = PsListTree_ColFromX( pList, GET_X_LPARAM(_lParam) )
             if (pList <> 0) andalso (idx >= 0) then
                 if idx <> pList->nLastHotIdx then
                     ' Repaint the newly-hot row and the previously-hot row. FALSE =
@@ -3590,7 +3633,9 @@ private function PsListTree_TipTextCallback( byval hTooltip as HWND, byval hAtta
     ' costs nothing visible at build time and every tooltip at run time.
     dim as PSLISTTREE ptr pL = GetListTreePointer( GetParent(hAttached) )
     if pL = 0 then pL = GetListTreePointer( hAttached )
-    dim as DWSTRING wszOut = PsListTree_ResolveTooltipText( pL, cast(integer, idx) )
+    dim as integer col = -1
+    if pL then col = pL->nLastHotCol
+    dim as DWSTRING wszOut = PsListTree_ResolveTooltipText( pL, cast(integer, idx), col )
     return wszOut
 end function
 

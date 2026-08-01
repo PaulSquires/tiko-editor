@@ -556,7 +556,7 @@ end sub
 ' showing the row's OWN TEXT. Every row here is fully visible in its column already, so the
 ' fallback would pop a tip repeating what the cursor is sitting on. Returning "" is the
 ' documented way to suppress them (the same thing tiko's autocomplete popup does).
-private function frmKeyboard_ListTooltip( byval hList as HWND, byval row as integer ) as DWSTRING
+private function frmKeyboard_ListTooltip( byval hList as HWND, byval row as integer, byval col as integer ) as DWSTRING
     return ""
 end function
 
