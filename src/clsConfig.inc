@@ -38,7 +38,8 @@ constructor clsConfig
     ExtraKeywordsFilename     = exe_path & "settings\keywords\extra_keywords.txt" 
     FBKeywordsDefaultFilename = exe_path & "settings\keywords\freebasic_keywords_default.txt" 
     FBCodetipsFilename        = exe_path & "settings\keywords\codetips.ini"
-    DefaultSessionFilename    = exe_path & "settings\default.session" 
+    DefaultSessionFilename    = exe_path & "settings\default.session"
+    UntitledProjectFilename   = exe_path & "settings\default" & APPEXTENSION
 end constructor
 
 ''
@@ -1332,7 +1333,14 @@ function clsConfig.ProjectSaveToFile() as boolean
             if gTTabCtl.GetTabIndexByDocumentPtr(pDoc) = -1 then
                 wszText = pDoc->DiskFilename
                 cwzRelative = AfxPathRelativePathTo( gApp.ProjectFilename, FILE_ATTRIBUTE_NORMAL, wszText, FILE_ATTRIBUTE_NORMAL)
-                if AfxPathIsRelative(cwzRelative) then wszText = cwzRelative
+                ' The len() test is NOT optional. AfxPathRelativePathTo returns "" when
+                ' PathRelativePathToW fails -- a file on another volume, most obviously --
+                ' and AfxPathIsRelative("") is TRUE. Without the guard wszText becomes ""
+                ' and the document is written as "File=", i.e. SILENTLY DROPPED from the
+                ' project. The tabbed loop above has always had this guard; this one did not.
+                if len(cwzRelative) then
+                    if AfxPathIsRelative(cwzRelative) then wszText = cwzRelative
+                end if
                 wszText = ProcessToCurdriveProject(wszText)
                 pStream.WriteLine "File=" & wszText
                 pStream.WriteLine "FileType=" & pDoc->ProjectFileType

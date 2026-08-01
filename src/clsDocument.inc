@@ -335,8 +335,8 @@ function clsDocument.CreateCodeWindow( _
     this.AssignTextBuffer()
 
     ' Update the most recently used file list (only for non-IsNewFlag files)
-    ' Only add file to MRU list if it is not part of an active Project.
-    if gApp.IsProjectActive = false then 
+    ' Only add file to MRU list if it is not part of a named Project.
+    if gApp.IsProjectNamed() = false then
         UpdateMRUList(wszFile)
     end if
 
@@ -459,8 +459,8 @@ function clsDocument.SaveFile( byval bSaveAs as boolean = false ) as boolean
     this.DateFileTime = AfxGetFileLastWriteTime( wszFilename )
     
     ' if this was a new document then it needs to be saved to Recent File list.
-    if this.IsNewFlag then 
-        if gApp.IsProjectActive = false then 
+    if this.IsNewFlag then
+        if gApp.IsProjectNamed() = false then
             UpdateMRUList(wszFilename)
         end if
     end if

@@ -83,6 +83,7 @@ type clsApp
         declare function SaveProject( byval bSaveas as boolean = False ) as boolean
         declare function ProjectSetFileType( byval pDoc as clsDocument ptr, byval wszFiletype as DWSTRING ) as LRESULT
         declare function GetProjectCompiler() as long
-        
+        declare function IsProjectNamed() as boolean
+
 end type
 

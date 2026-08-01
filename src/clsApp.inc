@@ -242,6 +242,26 @@ end function
 
 
 ''
+''  Does the workspace have a project file the USER chose a name for?
+''
+''  This is deliberately weaker than "is a project open". Once the untitled workspace
+''  lands, every workspace is a project and ProjectFilename is never empty -- so the only
+''  question left worth asking is whether the user has named it. Three things need that
+''  answer and nothing else does: the window caption, the Save-As dialog's default folder,
+''  and whether a file open counts toward the Recent Files list.
+''
+''  Filenames are compared case-insensitively because Windows paths are.
+''
+function clsApp.IsProjectNamed() as boolean
+    dim as boolean bHasFile  = ( len(this.ProjectFilename) > 0 )
+    dim as boolean bUntitled = ( ucase(this.ProjectFilename) = ucase(gConfig.UntitledProjectFilename) )
+    if bHasFile = false then return false
+    if bUntitled then return false
+    return true
+end function
+
+
+''
 ''
 function clsApp.SaveProject( byval bSaveAs as boolean = false ) as boolean
 
@@ -249,10 +269,16 @@ function clsApp.SaveProject( byval bSaveAs as boolean = false ) as boolean
     dim wText     as wstring * MAX_PATH  
     
     wFilename = this.ProjectFilename
-    
+
     if bSaveAs then
+        ' Offer the dialog only a name the user chose. The untitled workspace's path is an
+        ' internal detail under settings\ and must never be presented as a starting point.
+        ' Note this clears the LOCAL only -- wFilename still carries ProjectFilename on the
+        ' plain-Save path below, which writes it straight back to this.ProjectFilename.
+        if this.IsProjectNamed() = false then wFilename = ""
         ' Display the Save File Dialog
-        dim pwszName as wstring ptr = AfxIFileSaveDialog(HWND_FRMMAIN, @wFilename, @wstr("gfbe"), IDM_PROJECTSAVE)
+        ' Default extension is ours, not WinFBE's. Matches frmProjectOptions_SaveProjectOptions.
+        dim pwszName as wstring ptr = AfxIFileSaveDialog(HWND_FRMMAIN, @wFilename, @wstr(APPEXTENSION), IDM_PROJECTSAVE)
         if pwszName then
             wFilename = *pwszName
             CoTaskMemFree(pwszName)
@@ -261,8 +287,10 @@ function clsApp.SaveProject( byval bSaveAs as boolean = false ) as boolean
         end if
     end if
 
-    ' delete any existing file
-    if AfxFileExists(wFilename) then AfxDeleteFile(wFilename)
+    ' Do NOT delete the existing file first. ProjectSaveToFile opens the stream with
+    ' CTextStream.Create( name, bOverwrite := true, ... ), which truncates on its own, so
+    ' the delete bought nothing -- and if the subsequent Create failed it had already
+    ' destroyed the user's project with no way back.
     this.ProjectFilename = wFilename
     this.ProjectName = AfxStrPathname( "NAMEX", wFilename )
     gConfig.ProjectSaveToFile()

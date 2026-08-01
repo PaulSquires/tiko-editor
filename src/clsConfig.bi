@@ -71,8 +71,12 @@ type clsConfig
         ExtraKeywordsFilename     as DWSTRING 
         FBKeywordsDefaultFilename as DWSTRING 
         FBCodetipsFilename        as DWSTRING
-        DefaultSessionFilename    as DWSTRING 
-         
+        DefaultSessionFilename    as DWSTRING
+        ' The untitled workspace's backing file. Derived from the exe path, never persisted,
+        ' and deliberately per-install -- C:\dev\tiko and C:\dev\tiko_editor each get their
+        ' own. Nothing but clsApp.IsProjectNamed reads it until the workspace refactor lands.
+        UntitledProjectFilename   as DWSTRING
+
         DateFileTime              as FILETIME
         
         SettingsVersion           as DWSTRING

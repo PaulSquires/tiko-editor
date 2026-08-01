@@ -82,7 +82,11 @@ function UpdateMRUList( byref wzFilename as wstring ) as long
     dim wzFile      as wstring * MAX_PATH
     
     if gApp.IsProjectLoading then exit function
-    if gApp.IsProjectActive then exit function
+    ' A NAMED project tracks its own files, so they do not belong in Recent Files.
+    ' An untitled workspace is just loose files and must keep feeding this list --
+    ' testing "is a project open" here would kill Recent Files outright once every
+    ' workspace is a project.
+    if gApp.IsProjectNamed() then exit function
      
     ' Search the 10 MRU items to see if the filename already exists and
     ' also for an available entry to put the filename in.

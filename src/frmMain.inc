@@ -172,7 +172,12 @@ function frmMain_SetStatusbar() as long
 
     ' MAIN WINDOW CAPTION 
     wszText = iif( gApp.GetDocumentCount, APPNAMESHORT, APPNAME )
-    if (gApp.IsProjectActive = true) orelse (gApp.IsProjectLoading = true) then 
+    ' Gate on the NAME, not on a project flag. ProjectName is populated by
+    ' ProjectLoadFromFile before it opens the stream, so this still covers the
+    ' mid-load case the IsProjectLoading test used to catch -- and once the untitled
+    ' workspace exists it leaves ProjectName empty, which is what suppresses the
+    ' caption rather than a separate test. Testing a flag instead would render " - []".
+    if len(gApp.ProjectName) > 0 then
         wszText = wszText & " - [" & gApp.ProjectName & "]"
     else
         if gApp.IsSessionActive = true then 
