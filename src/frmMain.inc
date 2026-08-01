@@ -1504,6 +1504,15 @@ function frmMain_WndProc( _
             ' normal launch -- so the bottom of that function is unreachable for it.
             frmFindInProject_RunSelfTest()
 
+            ' TIKO_UNUSED_AUTOOPEN=1: the only way to reach the Unused Symbols layout
+            ' self-test without a human driving the menu. HERE, not on scan completion:
+            ' with no project open nothing ever requests a project scan, so a
+            ' completion-driven hook could never reach the loose-file path -- which is
+            ' exactly the one worth testing. _Show requests the scan itself now.
+            if environ("TIKO_UNUSED_AUTOOPEN") = "1" then
+                frmUnusedSymbols_Show( hwnd )
+            end if
+
         case MSG_USER_PROCESS_STARTUPUSERTOOLS
             ' process any User Tools that must display immediately after the main editor
             ' user interface is created and displayed.
@@ -1558,11 +1567,19 @@ function frmMain_WndProc( _
                 ' document that is no longer the active one.
                 dim as boolean bStale = false
                 if nTier = ScanTierProject then
-                    dim as clsDocument ptr pMainDoc = gApp.GetMainDocumentPtr()
-                    if pMainDoc = 0 then
+                    ' "Project main file, else the ACTIVE DOCUMENT" - the same rule
+                    ' clsScanMgr.RequestProjectScan and frmUnusedSymbols_RootFile use to
+                    ' choose a root. Without the second half, a project-tier scan rooted at
+                    ' a loose file (which is what the Unused Symbols report asks for when no
+                    ' project is open) was ALWAYS discarded here, so its window sat on
+                    ' "Scanning..." forever. Comparing roots still discards a closed
+                    ' project's late-arriving scan, which is what this test is for.
+                    dim as clsDocument ptr pRootDoc = gApp.GetMainDocumentPtr()
+                    if pRootDoc = 0 then pRootDoc = gTTabCtl.GetActiveDocumentPtr()
+                    if pRootDoc = 0 then
                         bStale = true
                     else
-                        bStale = ( SymDb_FileNameEq( pRSet->wszRootFile, pMainDoc->DiskFilename ) = false )
+                        bStale = ( SymDb_FileNameEq( pRSet->wszRootFile, pRootDoc->DiskFilename ) = false )
                     end if
                 else
                     dim as clsDocument ptr pActiveDoc = gTTabCtl.GetActiveDocumentPtr()
@@ -1591,23 +1608,14 @@ function frmMain_WndProc( _
                     ' disk) - refresh the panel either way.
                     frmOutput_UpdateToDoListview()
 
-                    ' TIKO_UNUSED_AUTOOPEN=1: open the Unused Symbols report as soon as a
-                    ' project scan lands, which is the only way to reach its LAYOUT
-                    ' self-test without a human driving the menu -- the report needs a
-                    ' completed project scan before it has anything to show.
                     ' A completed project scan refreshes an open Unused Symbols report.
-                    ' This is how its Refresh button lands: the button only REQUESTS a scan,
-                    ' because acting on the report changes both the line numbers and the
-                    ' reference counts, so re-reading the old scan would be stale.
+                    ' This is how both its Refresh button and its initial fill land: the
+                    ' window only REQUESTS a scan, because acting on the report changes both
+                    ' the line numbers and the reference counts, so re-reading the old scan
+                    ' would be stale.
                     if (nTier = ScanTierProject) andalso frmUnusedSymbols_IsOpen() then
                         frmUnusedSymbols_Rebuild()
                     end if
-
-                    dim as boolean bAutoOpenUnused = cbool( nTier = ScanTierProject )
-                    bAutoOpenUnused = bAutoOpenUnused andalso _
-                                      cbool( environ("TIKO_UNUSED_AUTOOPEN") = "1" )
-                    bAutoOpenUnused = bAutoOpenUnused andalso (frmUnusedSymbols_IsOpen() = false)
-                    if bAutoOpenUnused then frmUnusedSymbols_Show( HWND_FRMMAIN )
                 end if
             end if
 

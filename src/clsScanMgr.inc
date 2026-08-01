@@ -293,13 +293,16 @@ end sub
 
 ''
 ''
-sub clsScanMgr.RequestProjectScan()
+sub clsScanMgr.RequestProjectScan( byref wszRootOverride as const wstring = "" )
     if m_bStarted = false then exit sub
     if m_bShutdown then exit sub
 
-    dim as clsDocument ptr pDoc = gApp.GetMainDocumentPtr()
-    if pDoc = 0 then exit sub
-    dim as DWSTRING wszFile = pDoc->DiskFilename
+    dim as DWSTRING wszFile = wszRootOverride
+    if len( wszFile ) = 0 then
+        dim as clsDocument ptr pDoc = gApp.GetMainDocumentPtr()
+        if pDoc = 0 then exit sub
+        wszFile = pDoc->DiskFilename
+    end if
     if instr( wszFile, "\" ) = 0 then exit sub    ' never saved - nothing on disk to scan
 
     this.EnqueueRequest( this.BuildRequest( ScanTierProject, wszFile ) )

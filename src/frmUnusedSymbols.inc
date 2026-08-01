@@ -23,6 +23,7 @@ dim shared gUnusedVisCount  as long
 dim shared gUnusedToggle(IDC_FRMUNUSED_TOGGLEFIRST to IDC_FRMUNUSED_TOGGLELAST) as HWND
 dim shared gUnusedRefreshBtn  as HWND
 dim shared gUnusedScannedText as DWSTRING
+dim shared gUnusedPending     as boolean   ' a scan was requested; rows arrive later
 dim shared gUnusedDirtyText   as DWSTRING
 
 declare sub frmUnusedSymbols_PositionWindows()
@@ -107,11 +108,46 @@ end sub
 
 
 ' ------------------------------------------------------------------------------------------
+' Which file roots the report's scan?
+'
+' With a project open that is its main file. WITHOUT one it is the ACTIVE DOCUMENT, which is
+' what makes the report usable on loose files at all -- fbcParser follows #includes from
+' whatever root it is given, so a lone .bas still yields a real compilation unit. Same
+' "project main file, else active document" rule modRoutines.inc:1612 already uses.
+'
+' Returns "" when there is nothing scannable: no document, or one never saved to disk (the
+' project tier reads from disk, so an unsaved buffer has no root).
+' ------------------------------------------------------------------------------------------
+private function frmUnusedSymbols_RootFile() as DWSTRING
+    dim pDoc as clsDocument ptr
+    if gApp.IsProjectActive then
+        pDoc = gApp.GetMainDocumentPtr()
+    else
+        pDoc = gTTabCtl.GetActiveDocumentPtr()
+    end if
+    if pDoc = 0 then return ""
+
+    ' The project tier scans from DISK, so the root has to be a real file. Test for the
+    ' file itself rather than for a backslash: a document opened from the command line as
+    ' a relative or forward-slashed path is on disk and has no backslash, and a
+    ' path-shaped test would reject it.
+    dim as DWSTRING wszFile = pDoc->DiskFilename
+    if len( wszFile ) = 0 then return ""
+    if pDoc->IsNewFlag then return ""             ' never saved
+    if AfxFileExists( wszFile ) = false then return ""
+    return wszFile
+end function
+
+
+' ------------------------------------------------------------------------------------------
 ' Rebuild the whole report from the current project scan. Called on open, and again from
 ' frmMain when a scan completes while the window is up - which is how Refresh lands.
 ' ------------------------------------------------------------------------------------------
 sub frmUnusedSymbols_Rebuild()
     if IsWindow(HWND_FRMUNUSED) = 0 then exit sub
+
+    ' reached only from a completed scan, so whatever we were waiting for has arrived
+    gUnusedPending = false
 
     gUnusedRowCount = UnusedSymbols_Build( ScanTierProject, gUnusedRows(), gUnusedDirtyText )
 
@@ -123,6 +159,14 @@ sub frmUnusedSymbols_Rebuild()
     ' the warning band appears and disappears with the dirty-file list, so the bands move
     frmUnusedSymbols_PositionWindows()
     frmUnusedSymbols_Populate()
+
+    ' The asynchronous fill is unreachable from the layout suite, which runs at _Show time
+    ' while the scan is still pending. Report it so an unattended run can show the rows
+    ' actually arrived rather than only that the window opened.
+    if environ("TIKO_UNUSED_SELFTEST") = "1" then
+        dim as string sR = "  rebuild: " & gUnusedRowCount & " rows from " & gUnusedScannedText
+        print sR
+    end if
 end sub
 
 
@@ -134,7 +178,14 @@ private sub frmUnusedSymbols_RefreshClicked( byval hButton as HWND, byval id as 
     '
     ' The scan is asynchronous (clsScanMgr's worker), so the rebuild lands later, in
     ' frmMain's MSG_USER_PARSE_COMPLETE handler.
-    gScanMgr.RequestProjectScan()
+    gUnusedPending = true
+    ' the override goes only to the no-project case, same rule as _Show
+    if gApp.IsProjectActive then
+        gScanMgr.RequestProjectScan()
+    else
+        gScanMgr.RequestProjectScan( frmUnusedSymbols_RootFile() )
+    end if
+    if IsWindow(HWND_FRMUNUSED) then AfxRedrawWindow( HWND_FRMUNUSED )
 end sub
 
 
@@ -339,7 +390,10 @@ private sub frmUnusedSymbols_OnPaint( byval hwnd as HWND )
     rcS.left += nPad
     rcS.right -= nPad
     dim as DWSTRING wszStatus
-    if gUnusedRowCount = 0 then
+    if gUnusedPending then
+        ' an empty list while a scan is running must NOT read as "nothing found"
+        wszStatus = L(590, "Scanning...")
+    elseif gUnusedRowCount = 0 then
         wszStatus = L(585, "No unused symbols found")
     else
         wszStatus = wstr(gUnusedVisCount) & " / " & wstr(gUnusedRowCount) & " " & L(587, "shown")
@@ -426,12 +480,35 @@ function frmUnusedSymbols_Show( byval hWndParent as HWND ) as LRESULT
         return 0
     end if
 
-    ' There must be a project scan to read. Saying so is better than an empty list that
-    ' then has to explain itself.
-    if gSymDb.ProjectSet() = 0 then
-        TikoMsgBox( hWndParent, L(588, "Run a project scan first"), L(218, "Confirm"), _
+    ' What should this report cover? With no project open that is the active document, so
+    ' the window works on loose files instead of refusing.
+    dim as DWSTRING wszRoot = frmUnusedSymbols_RootFile()
+    if len( wszRoot ) = 0 then
+        ' nothing scannable at all: no document open, or the only one has never been saved
+        TikoMsgBox( hWndParent, L(588, "Open or save a source file first"), L(218, "Confirm"), _
                     TMB_ICON_INFO, TMB_OK )
         return 0
+    end if
+
+    ' Is the scan we already hold the right one? A scan rooted at some other file answers a
+    ' different question, so compare roots rather than merely testing for presence.
+    gUnusedPending = true
+    dim as PARSERESULTSET ptr pExisting = gSymDb.ProjectSet()
+    if pExisting then
+        if lstrcmpiW( @pExisting->wszRootFile, wszRoot ) = 0 then gUnusedPending = false
+    end if
+
+    if gUnusedPending then
+        ' Request it and open ANYWAY, showing "Scanning...". The rebuild lands in frmMain's
+        ' MSG_USER_PARSE_COMPLETE handler. Refusing here and making the user find the menu
+        ' again is the behaviour this replaces.
+        ' The override is passed only when there is no project: with one open it would
+        ' replace the project's own scan with a single file's.
+        if gApp.IsProjectActive then
+            gScanMgr.RequestProjectScan()
+        else
+            gScanMgr.RequestProjectScan( wszRoot )
+        end if
     end if
 
     dim pWindow as CWindow ptr = new CWindow
@@ -516,8 +593,17 @@ function frmUnusedSymbols_Show( byval hWndParent as HWND ) as LRESULT
     ShowWindow( HWND_FRMUNUSED_FILTER, SW_SHOW )
     ShowWindow( HWND_FRMUNUSED_LIST, SW_SHOW )
 
-    ' builds the model, positions the bands and fills the list
-    frmUnusedSymbols_Rebuild()
+    ' Builds the model, positions the bands and fills the list. Skipped while a scan is
+    ' still pending - Rebuild() clears the pending flag, so calling it now would report
+    ' "No unused symbols found" over a scan that has not run.
+    if gUnusedPending then
+        gUnusedScannedText = FilenameOriginalCase( wszRoot )
+        gUnusedRowCount = 0
+        gUnusedVisCount = 0
+        frmUnusedSymbols_PositionWindows()
+    else
+        frmUnusedSymbols_Rebuild()
+    end if
 
     ShowWindow( HWND_FRMUNUSED, SW_SHOW )
     UpdateWindow( HWND_FRMUNUSED )
