@@ -61,8 +61,16 @@ function clsApp.CreateEmptyDocument( byval IsNewFile as boolean = false ) as cls
         ' overwrites the field, so a template keeps the encoding it is stored in.
         pDoc->FileEncoding = gConfig.NewFileEncoding
     end if
-    pDoc->ProjectFileType = FILETYPE_UNDEFINED
-    pDoc->SetDocumentBuild()
+    ' A NEW buffer gets a real category immediately. clsDocument.SetProjectFileType is a
+    ' no-op while IsNewFlag is true, so an untitled buffer would otherwise keep
+    ' FILETYPE_UNDEFINED -- and once the Explorer groups strictly by category it would
+    ' match no header and VANISH from the list while keeping its tab. Files loaded from
+    ' disk or from a project file are assigned their real type straight after this.
+    if IsNewFile then
+        pDoc->ProjectFileType = FILETYPE_NORMAL
+    else
+        pDoc->ProjectFileType = FILETYPE_UNDEFINED
+    end if
     function = pDoc
 end function
 
@@ -185,7 +193,7 @@ function clsApp.GetHeaderDocumentPtr( byval pDocIn as clsDocument ptr ) as clsDo
                     AfxStrPathname( "NAME", pDocIn->Diskfilename ) & ".bi"
     pDoc = this.GetDocumentPtrByFilename( wszFilename )
     
-    if ( pDoc <> 0 ) andalso ( this.IsProjectActive = true ) then
+    if pDoc <> 0 then
         if pDoc->ProjectFileType <> FILETYPE_HEADER then 
             pDoc = 0
         end if
@@ -215,7 +223,7 @@ function clsApp.GetSourceDocumentPtr( byval pDocIn as clsDocument ptr ) as clsDo
         pDoc = this.GetDocumentPtrByFilename( wszFilename )
     end if
     
-    if ( pDoc <> 0 ) andalso ( this.IsProjectActive = true ) then
+    if pDoc <> 0 then
         select case pDoc->ProjectFileType 
             case FILETYPE_MAIN, FILETYPE_MODULE, FILETYPE_NORMAL
             case else
@@ -242,39 +250,139 @@ end function
 
 
 ''
+''  Does the workspace have a project file the USER chose a name for?
 ''
-function clsApp.SaveProject( byval bSaveAs as boolean = false ) as boolean
+''  This is deliberately weaker than "is a project open". Once the untitled workspace
+''  lands, every workspace is a project and ProjectFilename is never empty -- so the only
+''  question left worth asking is whether the user has named it. Three things need that
+''  answer and nothing else does: the window caption, the Save-As dialog's default folder,
+''  and whether a file open counts toward the Recent Files list.
+''
+''  Filenames are compared case-insensitively because Windows paths are.
+''
+function clsApp.IsProjectNamed() as boolean
+    dim as boolean bHasFile  = ( len(this.ProjectFilename) > 0 )
+    dim as boolean bUntitled = ( ucase(this.ProjectFilename) = ucase(gConfig.UntitledProjectFilename) )
+    if bHasFile = false then return false
+    if bUntitled then return false
+    return true
+end function
+
+
+''
+''
+function clsApp.SaveProject( byval bSaveAs as boolean = false, byref wszForcedName as wstring = "" ) as boolean
 
     dim wFilename as wstring * MAX_PATH
     dim wText     as wstring * MAX_PATH  
     
     wFilename = this.ProjectFilename
-    
+
     if bSaveAs then
-        ' Display the Save File Dialog
-        dim pwszName as wstring ptr = AfxIFileSaveDialog(HWND_FRMMAIN, @wFilename, @wstr("gfbe"), IDM_PROJECTSAVE)
-        if pwszName then
-            wFilename = *pwszName
-            CoTaskMemFree(pwszName)
+        if len(wszForcedName) > 0 then
+            ' A caller that already has the name skips the dialog. This exists so the
+            ' PROMOTION can be driven by the self-test: promotion is a state TRANSITION,
+            ' and the state is self-consistent on both sides of it, so no startup assertion
+            ' can see whether the transition did its job. Two bugs escaped that way.
+            wFilename = wszForcedName
         else
-            return false
+            ' Offer the dialog only a name the user chose. The untitled workspace's path is
+            ' an internal detail under settings\ and must never be presented as a starting
+            ' point. Note this clears the LOCAL only -- wFilename still carries
+            ' ProjectFilename on the plain-Save path below.
+            if this.IsProjectNamed() = false then wFilename = ""
+            ' Display the Save File Dialog
+            ' Default extension is ours, not WinFBE's. Matches frmProjectOptions_SaveProjectOptions.
+            dim pwszName as wstring ptr = AfxIFileSaveDialog(HWND_FRMMAIN, @wFilename, @wstr(APPEXTENSION), IDM_PROJECTSAVE)
+            if pwszName then
+                wFilename = *pwszName
+                CoTaskMemFree(pwszName)
+            else
+                return false
+            end if
         end if
     end if
 
-    ' delete any existing file
-    if AfxFileExists(wFilename) then AfxDeleteFile(wFilename)
+    ' Remember what we were before the repoint. If this was the untitled workspace and it
+    ' is about to become a named project, that is a PROMOTION and has consequences below.
+    dim as boolean bWasUntitled = ( this.IsProjectNamed() = false )
+
+    ' Do NOT delete the existing file first. ProjectSaveToFile opens the stream with
+    ' CTextStream.Create( name, bOverwrite := true, ... ), which truncates on its own, so
+    ' the delete bought nothing -- and if the subsequent Create failed it had already
+    ' destroyed the user's project with no way back.
     this.ProjectFilename = wFilename
     this.ProjectName = AfxStrPathname( "NAMEX", wFilename )
-    gConfig.ProjectSaveToFile()
-    
-    ' Also need to add this new project name to the MRU list.
-    UpdateMRUProjectList(wFilename)
-    
+    if len(wFilename) = 0 then return false
+
+    ' Do not create the untitled workspace's file until it actually holds something. An
+    ' install launched once and closed empty should leave nothing behind -- and the restore
+    ' path reaches here with an empty untitled workspace on EVERY launch, because it
+    ' establishes one and then immediately replaces it with the named project it came for.
+    ' A named project is always written: an emptied project is a real state to persist.
+    if this.IsProjectNamed() = false then
+        if this.GetDocumentCount() = 0 then return true
+    end if
+
+    ' Check the result. Everything below acts on the assumption that the file now exists --
+    ' updating the restore slot, retiring the untitled workspace, adding to Recent Projects
+    ' -- and every one of those is wrong if the write failed.
+    if gConfig.ProjectSaveToFile() = false then return false
+
+    dim as boolean bIsNamed = this.IsProjectNamed()
+
+    ' The restore slot is NOT set here: ProjectSaveToFile above owns it, and it is the
+    ' single writer for both the named and untitled cases.
+
+    if bIsNamed then
+        ' Add to Recent Projects. The untitled workspace's path is an internal file under
+        ' settings\ and must never appear there.
+        UpdateMRUProjectList(wFilename)
+
+        ' A promoted workspace retires its untitled backing file. Leaving it means the next
+        ' Project > Close re-establishes the OLD loose-file set, and -- worse -- that stale
+        ' file is what a restore would find if the slot above were ever missed again.
+        if bWasUntitled then
+            if AfxFileExists( gConfig.UntitledProjectFilename ) then
+                AfxDeleteFile( gConfig.UntitledProjectFilename )
+            end if
+        end if
+    end if
+
+    ' The Explorer's "Save as Project..." row is present only while the workspace is
+    ' untitled, so a promotion has to repaint the list or the row lingers on a project
+    ' that now has a name.
+    if bWasUntitled andalso bIsNamed then LoadExplorerFiles()
+
     frmMain_PositionWindows
 
     function = true
 end function
         
+
+''
+''  Which category a file entering the workspace should get, from its extension alone.
+''
+''  PURE, and deliberately so: the caller walks pDocList to answer bHasMain, but the RULE
+''  itself takes no globals and touches no document, which is the only way it can be
+''  asserted headlessly.
+''
+''  The .bas-becomes-Main rule is what makes "open a loose .bas and press build" work with
+''  no ceremony. It fires ONLY when the workspace has no Main at all, so it can promote at
+''  most one file and never displaces a choice the user made. Restricted to .bas on
+''  purpose -- a .bi or .inc is never a program entry point, and an .rc has its own
+''  category.
+''
+function Workspace_DeriveFileType( byref wszExt as wstring, byval bHasMain as boolean ) as DWSTRING
+    select case ucase(wszExt)
+    case ".BAS":  return iif( bHasMain, FILETYPE_NORMAL, FILETYPE_MAIN )
+    case ".RC":   return FILETYPE_RESOURCE
+    case ".BI":   return FILETYPE_HEADER
+    case ".INC":  return FILETYPE_NORMAL
+    case else:    return FILETYPE_NORMAL
+    end select
+end function
+
 
 ''
 ''
@@ -302,13 +410,9 @@ function clsApp.ProjectSetFileType( _
     loop
     if bFound = false then
         if pDoc->ProjectFileType = FILETYPE_UNDEFINED then
-            select case ucase(wzFileExt)
-            case ".BAS":  wszFileType = FILETYPE_NORMAL
-            case ".RC":   wszFileType = FILETYPE_RESOURCE
-            case ".BI":   wszFileType = FILETYPE_HEADER
-            case ".INC":  wszFileType = FILETYPE_NORMAL
-            case else:    wszFileType = FILETYPE_NORMAL
-            end select   
+            ' GetMainDocumentPtr is asked BEFORE the type is assigned below, so a workspace
+            ' whose only .bas is this one still reports "no Main" and this file gets it.
+            wszFileType = Workspace_DeriveFileType( wzFileExt, gApp.GetMainDocumentPtr() <> 0 )
         end if
     end if
     

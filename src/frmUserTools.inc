@@ -105,12 +105,14 @@ function frmUserTools_ExecuteUserTool( byval pCompile as COMPILE_TYPE ptr, byval
         pDocCurrent = gTTabCtl.GetActiveDocumentPtr()
 
         ' Do the substitutions for the command line parameters
-        if gApp.IsProjectActive then
+        ' <P> is the project's own name, so it stays empty for an untitled workspace --
+        ' there is no name to substitute. <M> falls back to the active document when no
+        ' Main is designated, matching every other main-doc consumer.
+        if gApp.IsProjectNamed() then
             wszProjectName = AfxStrPathname("NAMEX", gApp.ProjectFilename)
-            pDocMain = gApp.GetMainDocumentPtr()
-        else
-            pDocMain = pDocCurrent
         end if
+        pDocMain = gApp.GetMainDocumentPtr()
+        if pDocMain = 0 then pDocMain = pDocCurrent
 
         if pDocMain then wszMainSource = chr(34) + pDocMain->DiskFilename + chr(34)
 

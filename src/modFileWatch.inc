@@ -166,7 +166,7 @@ end function
 ' -- caret, scroll, bookmarks, breakpoints, folds -- is lost unless it is carried across by
 ' hand. That is survivable for the old explicit "Reload it? Yes" but not for a SILENT reload,
 ' where the file would appear to jump to the top on its own. The capture/restore below is the
-' same sequence, in the same order, that the session restore in clsConfig.inc performs.
+' same sequence, in the same order, that the workspace restore in clsConfig.inc performs.
 '
 ' Positions are clamped to the new length: the file is allowed to have got shorter.
 '
@@ -348,13 +348,9 @@ function FileWatch_ScanMissing() as long
             FileWatch_ReportMissing( pDoc )
 
             ' Close the file or remove from project.
-            if gApp.IsProjectActive then
-                OnCommand_ProjectRemove( 0, pDoc )  ' the first param (id) is not used.
-            else
-                ' This can not be an IsNew file so we don't have to worry about the pDoc
-                ' becoming invalid during the FileClose.
-                OnCommand_FileClose( HWND_FRMMAIN, EFC_CLOSECURRENT )
-            end if
+            ' The file is gone from disk, so it leaves the workspace entirely -- closing
+            ' its tab would now leave a row in the Explorer pointing at nothing.
+            OnCommand_ProjectRemove( 0, pDoc )  ' the first param (id) is not used.
         end if
 
         pDoc = pDocNext

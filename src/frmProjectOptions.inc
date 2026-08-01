@@ -161,7 +161,6 @@ end sub
 ' ========================================================================================
 private sub frmProjectOptions_CommitWork()
 
-    gApp.IsProjectActive = true
     gApp.ProjectFilename = gPOWork.ProjectPath
     gApp.ProjectName     = AfxStrPathname( "NAMEX", gApp.ProjectFilename )
 
@@ -200,13 +199,9 @@ function frmProjectOptions_SaveProjectOptions( byval hwnd as HWND ) as BOOLEAN
     end if
 
     if gApp.IsNewProjectFlag then
-        ' Need to close any open files or project at this point before loading
-        ' and displaying the new project.
-        if gApp.IsProjectActive then
-            if OnCommand_ProjectClose(hwnd) = false then exit function
-        else
-            if OnCommand_FileClose(hwnd, EFC_CLOSEALL) = false then exit function
-        end if
+        ' Need to close the current workspace at this point before loading and
+        ' displaying the new project.
+        if Workspace_SaveAndCloseAll(hwnd) = false then exit function
     end if
 
     ' Load the new or modified data into the Project variables
@@ -640,7 +635,6 @@ sub frmProjectOptions_RunSelfTest( byval bLayoutHalf as boolean )
             dim as DWSTRING sNotes = gApp.ProjectNotes
             dim as DWSTRING sName = gApp.ProjectName
             dim as string   sBuild = gApp.ProjectBuild
-            dim as boolean  bActive = gApp.IsProjectActive
 
             gApp.ProjectFilename    = "C:\dev\selftest\x.tiko"
             gApp.ProjectCommandLine = "--run-args"
@@ -692,9 +686,8 @@ sub frmProjectOptions_RunSelfTest( byval bLayoutHalf as boolean )
             ' reads "Project Options - tiko.tiko" rather than "- tiko".
             CHECK( gApp.ProjectName = "y.tiko",             "the commit derives the project name" )
 
-            ' EVERY field CommitWork writes is restored, IsProjectActive included -- it sets
-            ' that unconditionally, and leaving it true would hand the rest of the session a
-            ' project that does not exist.
+            ' EVERY field CommitWork writes is restored. Leaving any of them set would hand
+            ' the rest of the session a project that does not exist.
             gApp.ProjectFilename    = sPath
             gApp.ProjectCommandLine = sCmd
             gApp.ProjectOther32     = s32
@@ -703,7 +696,6 @@ sub frmProjectOptions_RunSelfTest( byval bLayoutHalf as boolean )
             gApp.ProjectNotes       = sNotes
             gApp.ProjectName        = sName
             gApp.ProjectBuild       = sBuild
-            gApp.IsProjectActive    = bActive
         end scope
 
         dim as string sHdr = "  headless: " & str(nPass) & " passed, " & str(nFail) & " failed"

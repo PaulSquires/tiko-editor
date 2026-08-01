@@ -168,12 +168,13 @@ private sub AddProjectFileTypesToPopup( _
     msg = iif( fExplorerTreeview, IDM_SETFILEHEADER_EXPLORERTREEVIEW, IDM_SETFILEHEADER )
     PsPopupMenu_AddItem( hPopup, msg, L(146,"Header file"), "", false, (msg = nFileType) )
 
-    if gApp.IsProjectActive then
-        msg = iif( fExplorerTreeview, IDM_SETFILEMODULE_EXPLORERTREEVIEW, IDM_SETFILEMODULE )
-        PsPopupMenu_AddItem( hPopup, msg, L(168,"Module file"), "", false, (msg = nFileType) )
-        msg = iif( fExplorerTreeview, IDM_SETFILERESOURCE_EXPLORERTREEVIEW, IDM_SETFILERESOURCE )
-        PsPopupMenu_AddItem( hPopup, msg, L(172,"Resource file"), "", false, (msg = nFileType) )
-    end if
+    ' Every category is offered in every workspace. Module and Resource used to be
+    ' project-only; with one workspace model there is no second kind of workspace to
+    ' withhold them from, and the Explorer shows their headers unconditionally.
+    msg = iif( fExplorerTreeview, IDM_SETFILEMODULE_EXPLORERTREEVIEW, IDM_SETFILEMODULE )
+    PsPopupMenu_AddItem( hPopup, msg, L(168,"Module file"), "", false, (msg = nFileType) )
+    msg = iif( fExplorerTreeview, IDM_SETFILERESOURCE_EXPLORERTREEVIEW, IDM_SETFILERESOURCE )
+    PsPopupMenu_AddItem( hPopup, msg, L(172,"Resource file"), "", false, (msg = nFileType) )
 
     msg = iif( fExplorerTreeview, IDM_SETFILENORMAL_EXPLORERTREEVIEW, IDM_SETFILENORMAL )
     PsPopupMenu_AddItem( hPopup, msg, L(167,"Normal file"), "", false, (msg = nFileType) )
@@ -215,13 +216,10 @@ private sub BuildConfigContextMenu_OnSelect( byval hPopup as HWND, byval idMenu 
     for i as long = lbound(gConfig.Builds) to ubound(gConfig.Builds)
         if gConfig.Builds(i).idMenu <> idMenu then continue for
         ' Set the active project or the active document to the selected build
-        if gApp.IsProjectActive then
-            gApp.ProjectBuild = gConfig.Builds(i).Id
-        else
-            dim pDocMain as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
-            if pDocMain then pDocMain->DocumentBuild = gConfig.Builds(i).Id
-            gConfig.CompilerBuild = gConfig.Builds(i).Id
-        end if
+        ' The build belongs to the workspace. gConfig.CompilerBuild is the seed for a NEW
+        ' workspace only. (clsDocument.DocumentBuild was write-only even before this and
+        ' has been deleted.)
+        gApp.ProjectBuild = gConfig.Builds(i).Id
         frmMain_SetStatusbar
         gConfig.SaveConfigFile
         exit for
@@ -412,8 +410,9 @@ private sub ExplorerContextMenu_OnSelect( byval hPopup as HWND, byval id as long
         if PsListTree_IsHeader(hCtl, i) then continue for
         if PsListTree_GetSel( hCtl, i ) = true then
             if nextIdx > ubound(pDocArray) then exit for
-            dim as integer nItemData = PsListTree_GetItemData( hCtl, i )
-            pDocArray(nextIdx) = cast(clsDocument ptr, nItemData)
+            ' DocFromRow returns NULL for the Explorer's promotion row, whose sentinel is
+            ' not a valid pointer. The loop below already skips nulls.
+            pDocArray(nextIdx) = frmExplorer_DocFromRow( hCtl, i )
             nextIdx = nextIdx + 1
         end if
     next
@@ -453,32 +452,25 @@ sub ShowExplorerContextMenu( byval pDoc as clsDocument ptr )
 
     PsPopupMenu_Clear( ghPopupExplorer )
 
-    if gApp.IsProjectActive then
-        PsPopupMenu_AddItem( ghPopupExplorer, IDM_FILEOPEN_EXPLORERLISTBOX, L(73,"Open") )
-        PsPopupMenu_AddSeparator( ghPopupExplorer )
-        if (gTTabCtl.GetTabIndexByDocumentPtr( pDoc ) <> -1) orelse (nSelCount > 1) then
-            PsPopupMenu_AddItem( ghPopupExplorer, IDM_FILECLOSE_EXPLORERLISTBOX, L(5,"Close") )
-            PsPopupMenu_AddSeparator( ghPopupExplorer )
-        end if
-        if nSelCount = 1 then
-            PsPopupMenu_AddItem( ghPopupExplorer, IDM_FILESAVE_EXPLORERLISTBOX,      L(7,"Save") )
-            PsPopupMenu_AddItem( ghPopupExplorer, IDM_FILESAVEAS_EXPLORERLISTBOX,    L(8,"Save As") )
-            PsPopupMenu_AddItem( ghPopupExplorer, IDM_FILERENAME_EXPLORERLISTBOX,    L(21,"Rename") )
-            PsPopupMenu_AddItem( ghPopupExplorer, IDM_FILEDUPLICATE_EXPLORERLISTBOX, L(22,"Duplicate") )
-            PsPopupMenu_AddSeparator( ghPopupExplorer )
-        end if
-        PsPopupMenu_AddItem( ghPopupExplorer, IDM_REMOVEFILEFROMPROJECT_EXPLORERLISTBOX, _
-                            L(153,"Remove from project") )
-    else
+    ' One menu for every workspace. The old non-project variant offered no Open (a listed
+    ' file was always already open) and no Remove (closing removed it). Both assumptions
+    ' are gone: a file stays listed after its tab closes, so it can be reopened, and Remove
+    ' is now the only way it leaves the workspace.
+    PsPopupMenu_AddItem( ghPopupExplorer, IDM_FILEOPEN_EXPLORERLISTBOX, L(73,"Open") )
+    PsPopupMenu_AddSeparator( ghPopupExplorer )
+    if (gTTabCtl.GetTabIndexByDocumentPtr( pDoc ) <> -1) orelse (nSelCount > 1) then
         PsPopupMenu_AddItem( ghPopupExplorer, IDM_FILECLOSE_EXPLORERLISTBOX, L(5,"Close") )
-        if nSelCount = 1 then
-            PsPopupMenu_AddSeparator( ghPopupExplorer )
-            PsPopupMenu_AddItem( ghPopupExplorer, IDM_FILESAVE_EXPLORERLISTBOX,      L(7,"Save") )
-            PsPopupMenu_AddItem( ghPopupExplorer, IDM_FILESAVEAS_EXPLORERLISTBOX,    L(8,"Save As") )
-            PsPopupMenu_AddItem( ghPopupExplorer, IDM_FILERENAME_EXPLORERLISTBOX,    L(21,"Rename") )
-            PsPopupMenu_AddItem( ghPopupExplorer, IDM_FILEDUPLICATE_EXPLORERLISTBOX, L(22,"Duplicate") )
-        end if
+        PsPopupMenu_AddSeparator( ghPopupExplorer )
     end if
+    if nSelCount = 1 then
+        PsPopupMenu_AddItem( ghPopupExplorer, IDM_FILESAVE_EXPLORERLISTBOX,      L(7,"Save") )
+        PsPopupMenu_AddItem( ghPopupExplorer, IDM_FILESAVEAS_EXPLORERLISTBOX,    L(8,"Save As") )
+        PsPopupMenu_AddItem( ghPopupExplorer, IDM_FILERENAME_EXPLORERLISTBOX,    L(21,"Rename") )
+        PsPopupMenu_AddItem( ghPopupExplorer, IDM_FILEDUPLICATE_EXPLORERLISTBOX, L(22,"Duplicate") )
+        PsPopupMenu_AddSeparator( ghPopupExplorer )
+    end if
+    PsPopupMenu_AddItem( ghPopupExplorer, IDM_REMOVEFILEFROMPROJECT_EXPLORERLISTBOX, _
+                        L(153,"Remove from project") )
 
     AddProjectFileTypesToPopup( ghPopupExplorer, pDoc, true, true )
 
@@ -553,10 +545,10 @@ sub ShowTopTabCtlContextMenu( byval idx as long )
 
     dim pDoc as clsDocument ptr = gTTabCtl.GetDocumentPtr(idx)
     if pDoc then
-        if gApp.IsProjectActive then
-            PsPopupMenu_AddSeparator( ghPopupTopTabCtl )
-            PsPopupMenu_AddItem( ghPopupTopTabCtl, IDM_REMOVEFILEFROMPROJECT, L(153,"Remove from project") )
-        end if
+        ' Removing a file from the workspace is meaningful everywhere now -- a closed tab
+        ' no longer removes anything, so this is the only way a file leaves.
+        PsPopupMenu_AddSeparator( ghPopupTopTabCtl )
+        PsPopupMenu_AddItem( ghPopupTopTabCtl, IDM_REMOVEFILEFROMPROJECT, L(153,"Remove from project") )
         AddProjectFileTypesToPopup( ghPopupTopTabCtl, pDoc, true, false )
     end if
 

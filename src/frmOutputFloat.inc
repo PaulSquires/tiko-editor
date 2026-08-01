@@ -663,8 +663,12 @@ sub frmOutputFloat_RunSelfTest()
     ' The Notes box, by contrast, is re-seeded from the global on every layout pass -- so
     ' this asserts the RE-SEED, which is what correct behaviour looks like here, and records
     ' why the survival probe above is not pointed at it.
+    ' This used to read "... = gApp.NonProjectNotes orelse gApp.IsProjectActive", which was
+    ' VACUOUSLY TRUE whenever a project happened to be open -- and every workspace is a
+    ' project now, so it could never have failed. There is one notes store to compare
+    ' against, so compare against it and nothing else.
     frmOutput_Check( "survive: the Notes box agrees with gApp's stored notes (it is re-seeded)", _
-        PsTextBox_GetText( hNotes0 ) = gApp.NonProjectNotes orelse gApp.IsProjectActive )
+        PsTextBox_GetText( hNotes0 ) = gApp.ProjectNotes )
     frmOutput_Check( "survive: the results row count is unchanged", _
         PsListTree_GetCount( hResults0 ) = nResults0, _
         str(PsListTree_GetCount(hResults0)) & " vs " & str(nResults0) )

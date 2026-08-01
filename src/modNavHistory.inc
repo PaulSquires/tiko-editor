@@ -20,8 +20,8 @@
 
 
 ' ========================================================================================
-' Empty the history. Called from the two session/project load paths in clsConfig, which
-' close every open document underneath us -- the entries would still be *valid* (they are
+' Empty the history. Called from the project load path in clsConfig, which
+' closes every open document underneath us -- the entries would still be *valid* (they are
 ' filenames now, not pointers) but they would point into the workspace the user just left.
 ' ========================================================================================
 sub NavHistory_Clear()

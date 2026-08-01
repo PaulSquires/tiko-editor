@@ -13,9 +13,19 @@
 
 #pragma once
 
+' itemData sentinel for the "Save as Project..." row shown while the workspace is untitled.
+' Every other row carries a real clsDocument ptr, so this must be a value no allocation can
+' produce -- 1 is never a valid pointer (clsTopTabCtl's TAB_FINDINPROJECT uses the same
+' trick for the same reason). NOT zero: zero is what an itemData-less row already gets, so
+' a zero sentinel would be claimed by any row added without one.
+#define EXPLORER_PROMOTE_ROW   1
+
 
 #define IDC_FRMEXPLORER_LISTBOX       1000
 
+' The document a row refers to, or NULL for a non-document row. EVERY read of an Explorer
+' row's itemData must go through this -- see the note on its definition.
+declare function frmExplorer_DocFromRow( byval hCtl as HWND, byval row as integer ) as clsDocument ptr
 declare function frmExplorer_UnSelectListBox() as long
 declare function frmExplorer_SelectItemData( byval pDoc as clsDocument ptr ) as boolean
 declare function LoadExplorerFiles() as long

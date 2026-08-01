@@ -31,9 +31,6 @@ declare function OnCommand_FileSaveDeclares( byval hwnd as HWND ) as LRESULT
 declare function OnCommand_FileSaveAll( byval hwnd as HWND ) as boolean
 declare function OnCommand_FileClose( byval hwnd as HWND, byval veFileClose as eFileClose, byval nTabNum as long = -1 ) as LRESULT
 declare function OnCommand_FileExplorerMessage( byval id as long, byval pDoc as clsDocument ptr ) as LRESULT
-declare function OnCommand_FileLoadSession( byval hwnd as HWND ) as LRESULT
-declare function OnCommand_FileSaveSession( byval hwnd as HWND ) as LRESULT
-declare function OnCommand_FileCloseSession( byval hwnd as HWND ) as LRESULT
 
 declare function OnCommand_EditRedo( byval hEdit as HWND ) as LRESULT
 declare function OnCommand_EditUndo( byval hEdit as HWND ) as LRESULT
@@ -72,6 +69,10 @@ declare function OnCommand_ViewRestoreMain() as LRESULT
 declare function OnCommand_ViewExplorerPosition() as LRESULT
 
 declare function OnCommand_ProjectSave( byval HWnd as HWnd, byval bSaveAs as BOOLEAN = False ) as LRESULT
+declare function Workspace_DeriveFileType( byref wszExt as wstring, byval bHasMain as boolean ) as DWSTRING
+declare function Workspace_EstablishUntitled() as boolean
+declare sub Workspace_RunSelfTest()
+declare function Workspace_SaveAndCloseAll( byval hwnd as HWND ) as boolean
 declare function OnCommand_ProjectClose( byval hwnd as HWND ) as LRESULT
 declare function OnCommand_ProjectNew( byval hwnd as HWND ) as LRESULT
 declare function OnCommand_ProjectOpen( byval hwnd as HWND ) as LRESULT

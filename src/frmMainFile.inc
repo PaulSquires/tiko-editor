@@ -220,9 +220,7 @@ function OnCommand_FileSave( _
                 ' changed. for example from Untitled to *.bas
                 if pDoc->DiskFilename <> wszFilename then
                     bReloadExplorer = true
-                    if gApp.IsProjectActive then
-                        gApp.ProjectSetFileType( pDoc, pDoc->ProjectFileType )    
-                    end if
+                    gApp.ProjectSetFileType( pDoc, pDoc->ProjectFileType )
                 end if
             else
                 'return true   
@@ -269,9 +267,7 @@ function OnCommand_FileRename( _
         ' Apply document properties to this file because the file extension may have
         ' changed. for example from Untitled to *.bas
         if pDoc->DiskFilename <> wszFilename then
-            if gApp.IsProjectActive then
-                gApp.ProjectSetFileType( pDoc, pDoc->ProjectFileType )    
-            end if
+            gApp.ProjectSetFileType( pDoc, pDoc->ProjectFileType )
         end if
         ' If we are trying to rename and overwrite an existing file (we would have already gotten
         ' the popup message warning to replace the file), then we need to delete that file first 
@@ -385,10 +381,9 @@ function OnCommand_FileClose( _
     ' if a Project is not active then we need to save the current non-project notes
     ' when this file is closed. It is possible that this file is being closed and
     ' a project is being opened.
-    if gApp.IsProjectActive = false then
-        gApp.NonProjectNotes = AfxGetWindowText(GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTNOTES))
-    end if
-    
+    ' No notes capture here. frmOutput_NotesChanged writes gApp.ProjectNotes on every
+    ' keystroke and ProjectSaveToFile persists it, so there is nothing to flush.
+
     ' Build a list of files to check
     dim as long nCurSel 
     ' if the incoming nTabNum is -1 then we want to close the current
@@ -493,31 +488,29 @@ function OnCommand_FileClose( _
         ' remove tab from PsTabBar
         gTTabCtl.RemoveElement(i)
             
-        ' Only remove this document from the global collection if it is not
-        ' part of any active Project or if it is new/unsaved file. Files that are part of a project are
-        ' all closed (tabs/nodes) automatically in one shot rather than individually.
-        if pDoc then 
-            dim as boolean bRemoveFile 
-            if pDoc->IsNewFlag = true then 
-                bRemoveFile = true
-            else
-                bRemoveFile = iif( gApp.IsProjectActive, false, true )
-                ' If the file was added to the tab control via a right-click include open then it
-                ' is not technically part of the project. We need to remove it from the gApp doc
-                ' list because if we try to later do an "Add files to Project" then the load will
-                ' fail because the document is already in the gApp doc list.
-                if (gApp.IsProjectActive = true) andalso (pDoc->ProjectFileType = FILETYPE_UNDEFINED) then
-                    bRemoveFile = true
-                end if
-            end if
+        ' CLOSING A TAB DOES NOT REMOVE THE DOCUMENT FROM THE WORKSPACE. It stays listed in
+        ' the Explorer under its category until the user explicitly removes it -- that is
+        ' the whole point of there being one workspace model instead of two.
+        '
+        ' The single exception is a never-saved buffer: it has no disk file to go back to,
+        ' so closing its tab is the only way it can end, and keeping it would leave a row
+        ' pointing at nothing.
+        if pDoc then
+            ' ALWAYS capture caret/scroll/bookmarks first. The document is about to lose its
+            ' Scintilla, and the project writer's untabbed branch persists docData without
+            ' refreshing it -- so skipping this here would silently write a stale caret for
+            ' every file the user closed during the session.
+            pDoc->SetDocInfo()
 
-            if bRemoveFile then
-                ' Save positioning information to be saved to project file
-                pDoc->SetDocInfo()
+            if pDoc->IsNewFlag = true then
                 gApp.RemoveDocument( pDoc )
                 LoadExplorerFiles()
+            else
+                ' Still in the workspace, but no longer in a tab: refresh the Explorer so
+                ' the row repaints without its open-document styling.
+                LoadExplorerFiles()
             end if
-        end if    
+        end if
     next
      
     ' Set the active tab to the closest tab to the one just removed if it was the
@@ -580,49 +573,4 @@ function OnCommand_FileExplorerMessage( _
 end function
 
 
-' ========================================================================================
-' Load a previously saved session
-' ========================================================================================
-function OnCommand_FileLoadSession( byval hwnd as HWND ) as LRESULT
-    ' Display the Open File Dialog
-    dim pwszName as wstring ptr = AfxIFileOpenDialogW(hwnd, IDM_LOADSESSION)
-    if pwszName then 
-        if gApp.IsProjectActive then 
-            if OnCommand_ProjectClose(hwnd) = false then exit function
-        else   
-            if OnCommand_FileClose(hwnd, EFC_CLOSEALL) = false then exit function
-        end if
-        ' Clear any previous info from the Output windows
-        frmOutput_ResetAllControls()
-        gConfig.LoadSessionFile(*pwszName) 
-        CoTaskMemFree(pwszName)
-    end if
-    function = 0
-end function
-
-
-' ========================================================================================
-' Save a session
-' ========================================================================================
-function OnCommand_FileSaveSession( byval hwnd as HWND ) as LRESULT
-    dim wszFilename  as wstring * MAX_PATH = ""
-    dim wszExtension as wstring * MAX_PATH = "session"
-    dim pwszName as wstring ptr = AfxIFileSaveDialog(HWND_FRMMAIN, @wszFilename, @wszExtension, IDM_SAVESESSION)
-    if pwszName then
-        gConfig.SaveSessionFile(*pwszName)
-        CoTaskMemFree(pwszName)
-    end if
-    function = 0
-end function
-
-
-' ========================================================================================
-' Close a session
-' ========================================================================================
-function OnCommand_FileCloseSession( byval hwnd as HWND ) as LRESULT
-    gConfig.wszLastActiveSession = ""
-    gConfig.SaveConfigFile()
-    gConfig.CloseSessionFile(gApp.SessionFilename)
-    function = 0
-end function
         

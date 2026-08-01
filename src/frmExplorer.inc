@@ -71,8 +71,7 @@ function frmExplorer_SelectItemData( byval pDoc as clsDocument ptr ) as boolean
 
     ' If pDoc is already selected in the listbox then simply exit
     dim as integer nCurSel = PsListTree_GetCurSel(hCtrl)
-    dim as integer nItemData = PsListTree_GetItemData( hCtrl, nCurSel )
-    dim as clsDocument ptr pDocSel = cast( clsDocument ptr, nItemData )
+    dim as clsDocument ptr pDocSel = frmExplorer_DocFromRow( hCtrl, nCurSel )
     if pDocSel = pDoc then return true
 
 
@@ -130,6 +129,25 @@ end function
 
 
 ' ========================================================================================
+' The document a row refers to, or NULL if it refers to none.
+'
+' EVERY read of an Explorer row's itemData must go through this. The rows are a mix of
+' real clsDocument pointers and the EXPLORER_PROMOTE_ROW sentinel, and the sentinel is a
+' non-null value that is not a valid pointer -- so a caller that casts and then tests
+' "if pDoc then" passes the test and dereferences address 1. That is a GPF on hover, which
+' is exactly how it shipped: three readers were guarded by hand and the tooltip callback
+' was missed. Returning NULL here makes the sentinel undereferenceable by construction
+' rather than by everyone remembering.
+' ========================================================================================
+function frmExplorer_DocFromRow( byval hCtl as HWND, byval row as integer ) as clsDocument ptr
+    if row < 0 then return 0
+    dim as integer nItemData = PsListTree_GetItemData( hCtl, row )
+    if nItemData = EXPLORER_PROMOTE_ROW then return 0
+    return cast( clsDocument ptr, nItemData )
+end function
+
+
+' ========================================================================================
 ' frmExplorer_PaintCallback
 ' ========================================================================================
 sub frmExplorer_PaintCallback( byval p as PSLISTTREE_PAINTINFO ptr )
@@ -173,10 +191,20 @@ sub frmExplorer_PaintCallback( byval p as PSLISTTREE_PAINTINFO ptr )
         p->b->SetFont( ghFont(GUIFONT_10) )
         rcText.left = rcIcon.right
         p->b->PaintText( wszCaption, @rcText, DT_LEFT )
+    ' PSLISTTREE_PAINTINFO carries the model row but no itemData and no control handle, so
+    ' the row descriptor is fetched by index. Safe here only because this painter serves
+    ' exactly one control; a shared painter would need a per-tree wrapper naming its HWND.
+    elseif PsListTree_GetItemData( HWND_FRMEXPLORER, p->itemID ) = EXPLORER_PROMOTE_ROW then
+        ' The promotion row reads as an action, not a file: accent-coloured, no document
+        ' glyph, and indented to the header's text column rather than the file column.
+        p->b->SetForeColor( ghEditor.ForeColorKeyword )
+        p->b->SetFont( ghFont(GUIFONT_10) )
+        rcText.left = rcText.left + nIconWidth
+        p->b->PaintText( wszCaption, @rcText, DT_LEFT )
     else
         ' This would be a regular file.
         rcIcon.left = rcText.left + nIconWidth
-        rcIcon.right = rcIcon.left + nIconWidth 
+        rcIcon.right = rcIcon.left + nIconWidth
 
         p->b->SetFont( ghFont(GUIFONT_10) )  ' use GUI rather than SYMBOL b/c of dot icon
         p->b->PaintText( wszIconDocument, @rcIcon, DT_CENTER )
@@ -209,9 +237,15 @@ function frmExplorer_MessageCallback( byval m as PSLISTTREE_MESSAGEINFO ptr ) as
             ' Attempt to show the file
             dim as HWND hCtl = GetParent(m->hList)
             if PsListTree_IsHeader( hCtl, m->idx ) = false then
-                dim as integer nItemData = PsListTree_GetItemData( hCtl, m->idx )
-                dim as clsDocument ptr pDoc = cast(clsDocument ptr, nItemData)
-                if pDoc then 
+                ' This is the ONE reader that cares which non-document row it is on, so it
+                ' reads the raw value -- and does so without ever casting it to a pointer.
+                if PsListTree_GetItemData( hCtl, m->idx ) = EXPLORER_PROMOTE_ROW then
+                    OnCommand_ProjectSave( GetParent(hCtl), true )   ' Save As
+                    return false
+                end if
+
+                dim as clsDocument ptr pDoc = frmExplorer_DocFromRow( hCtl, m->idx )
+                if pDoc then
                     ' if the file is already showing in the Top tabs then switch to that tab.
                     if gTTabCtl.SetTabIndexByDocumentPtr( pDoc ) = -1 then
                         OpenSelectedDocument( pDoc->DiskFilename )
@@ -231,7 +265,9 @@ function frmExplorer_MessageCallback( byval m as PSLISTTREE_MESSAGEINFO ptr ) as
             dim as HWND hCtl = GetParent(m->hList)
             if PsListTree_IsHeader( hCtl, m->idx ) then return false
 
-            dim as clsDocument ptr pDoc = cast(clsDocument ptr, PsListTree_GetItemData(hCtl, m->idx))
+            ' No context menu on the promotion row -- every item on it is a file action.
+            ' DocFromRow returns NULL for it, so the existing null test covers that too.
+            dim as clsDocument ptr pDoc = frmExplorer_DocFromRow( hCtl, m->idx )
             if pDoc = null then return false
             
             ' If only 1 line has been previously selected then unselect that line
@@ -262,8 +298,7 @@ end function
 ' ========================================================================================
 function frmExplorer_TooltipCallback( byval hCtl as HWND, byval row as integer, byval col as integer ) as DWSTRING
     dim as DWSTRING wszTooltip
-    dim as integer nItemData = PsListTree_GetItemData(hCtl, row)
-    dim as clsDocument ptr pDoc = cast(clsDocument ptr, nItemData)
+    dim as clsDocument ptr pDoc = frmExplorer_DocFromRow( hCtl, row )
     if pDoc then wszTooltip = pDoc->DiskFilename
     return wszTooltip
 end function
@@ -305,9 +340,11 @@ end function
 
 ' ========================================================================================
 ' LoadExplorerFiles
-' This will clear the current list of files in the Explorer and repopulate it
-' with the latest list of filenames that are stored in the hidden FunctionList treeview.
-' Files are excluded from being added based on the state of the global array gConfig.Cat()
+' Clears the Explorer and repopulates it from gApp.pDocList, grouped under one header per
+' gConfig.Cat() entry from CATINDEX_MAIN up. NOTHING IS EXCLUDED -- every document in the
+' workspace appears exactly once, under the category its ProjectFileType names. (This used
+' to claim files were filtered by a Cat().bShow flag; that flag was written in two places,
+' read in none, and has been deleted.)
 ' ========================================================================================
 function LoadExplorerFiles() as long
     dim as HWND hCtrl = HWND_FRMEXPLORER
@@ -330,15 +367,20 @@ function LoadExplorerFiles() as long
     dim as long nStart, nEnd
     dim wszText as wstring * MAX_PATH
 
-    if gApp.IsProjectActive then
-        nStart = CATINDEX_MAIN
-        nEnd = ubound(gConfig.Cat)
-    else   
-        ' no project active so just "files"
-        nStart = CATINDEX_FILES
-        nEnd = CATINDEX_FILES
-    end if
+    ' Every workspace groups by category now, so the range is fixed. CATINDEX_FILES (the
+    ' old single "File" header) is skipped: it stays in the Cat() array -- two menu paths
+    ' index that array by an offset from a command id, and the table is persisted in
+    ' settings.ini besides -- but nothing is ever displayed under it.
+    nStart = CATINDEX_MAIN
+    nEnd = ubound(gConfig.Cat)
 
+
+    ' While the workspace is untitled, offer to make it a real project. Pinned at index 0,
+    ' above every header, and present only until the user names it -- IsProjectNamed is the
+    ' whole condition, so it disappears the moment Save As succeeds.
+    if gApp.IsProjectNamed() = false then
+        PsListTree_AddString( hCtrl, L(550,"Save as Project..."), EXPLORER_PROMOTE_ROW, 0 )
+    end if
 
     redim pDocs(any) as clsDocument ptr
 
@@ -353,8 +395,6 @@ function LoadExplorerFiles() as long
         dim pDoc as clsDocument ptr = gApp.pDocList
         do until pDoc = 0
             dim as DWSTRING wszFileType = pDoc->ProjectFiletype
-            ' If project not active then ensure file displays under the "File" header.
-            if gApp.IsProjectActive = false then wszFileType = CATINDEX_FILES
             if wszFileType = gConfig.Cat(ii).idFileType then
                 dim as long ub = ubound(pDocs) + 1
                 redim preserve pDocs(ub)

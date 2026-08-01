@@ -179,11 +179,7 @@ function frmOutput_ShowNotes() as long
 
     dim hCtl as HWND = GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTNOTES)
 
-    if gApp.IsProjectActive then
-        AfxSetWindowText(hCtl, gApp.ProjectNotes)
-    else   
-        AfxSetWindowText(hCtl, gApp.NonProjectNotes)
-    end if
+    AfxSetWindowText(hCtl, gApp.ProjectNotes)
 
     function = 0
 end function
@@ -426,11 +422,7 @@ end function
 ' during those switches is silent, so this can never echo a switch back into the
 ' wrong project's notes.)
 sub frmOutput_NotesChanged( byval hTextBox as HWND )
-    if gApp.IsProjectActive then
-        gApp.ProjectNotes = PsTextBox_GetText( hTextBox )
-    else
-        gApp.NonProjectNotes = PsTextBox_GetText( hTextBox )
-    end if
+    gApp.ProjectNotes = PsTextBox_GetText( hTextBox )
 end sub
 
 ' Vertical scroll state changed (typing, programmatic SetText, wheel) -- push the fresh

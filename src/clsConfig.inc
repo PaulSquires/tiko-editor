@@ -38,7 +38,7 @@ constructor clsConfig
     ExtraKeywordsFilename     = exe_path & "settings\keywords\extra_keywords.txt" 
     FBKeywordsDefaultFilename = exe_path & "settings\keywords\freebasic_keywords_default.txt" 
     FBCodetipsFilename        = exe_path & "settings\keywords\codetips.ini"
-    DefaultSessionFilename    = exe_path & "settings\default.session" 
+    UntitledProjectFilename   = exe_path & "settings\default" & APPEXTENSION
 end constructor
 
 ''
@@ -268,8 +268,8 @@ function clsConfig.SaveConfigFile() as long
     pStream.WriteLine "AutoSaveFiles="         & this.AutoSaveFiles
     pStream.WriteLine "AutoSaveInterval="      & this.AutoSaveInterval
     pStream.WriteLine "RestoreSession="        & this.RestoreSession
-    if this.RestoreSession = 0 then this.wszLastActiveSession = ""
-    pStream.WriteLine "LastActiveSessionFile=" & ProcessToCurdriveApp(this.wszLastActiveSession)
+    if this.RestoreSession = 0 then this.wszLastActiveProject = ""
+    pStream.WriteLine "LastActiveProjectFile=" & ProcessToCurdriveApp(this.wszLastActiveProject)
     pStream.WriteLine "CompactMenus="          & this.CompactMenus
     pStream.WriteLine "MultipleInstances="     & this.MultipleInstances    
     pStream.WriteLine "CompileAutosave="       & this.CompileAutosave      
@@ -452,22 +452,12 @@ function clsConfig.SaveConfigFile() as long
         pStream.WriteLine "MRUPROJECT_" & right("00" & str(i), 2) & "=" & this.MRUProject(i) 
     next         
 
-    pStream.WriteLine ""
-    pStream.WriteLine "[MRUSESSIONS]"  
-    for i as long = 0 To 9
-        this.MRUSession(i) = ProcessToCurdriveApp(this.MRUSession(i))
-        pStream.WriteLine "MRUSESSION_" & right("00" & str(i), 2) & "=" & this.MRUSession(i) 
-    next         
-    
-    dim hCtl as hwnd = GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTNOTES)
-    dim wszText as DWSTRING = wstr("NOTES-START") + vbcrlf + _
-                            gApp.NonProjectNotes + vbcrlf + _
-                            wstr("NOTES-END") + vbcrlf
-    pStream.WriteLine ""
-    pStream.WriteLine "[Notes]"
-    pStream.WriteLine wszText
+    ' The [Notes] block is no longer WRITTEN. Notes belong to the workspace and are stored
+    ' in its own .tiko file; the reader below survives only to migrate an existing
+    ' settings.ini's notes into the untitled workspace once, so the section ages out of
+    ' settings.ini on the first save after that.
 
-    pStream.Close 
+    pStream.Close
 
     ' Save the last write time so that it can be checked in the message loop
     ' in order to detect external changes to it.
@@ -525,29 +515,6 @@ function clsConfig.WriteMRUProjects() as long
 end function
 
 
-' Save the MRU Sessions to the configuration file. Only write the MRU items
-' the ini file rather than overwriting the whole file. This enables
-' the editor to work better with external tools that manually modify the
-' settings.ini file.
-function clsConfig.WriteMRUSessions() as long 
-    dim as DWSTRING wszKeyName, wszValue
-    
-    ' Delete the section name
-    dim as DWSTRING wszSectionName = "MRUSESSIONS"
-    WritePrivateProfileString( wszSectionName, null, null, this.ConfigFilename )
-    
-    ' Write the new values.
-    for i as long = 0 To 9
-        this.MRUSession(i) = ProcessToCurdriveApp(this.MRUSession(i))
-        wszKeyName = "MRUSESSION_" & right("00" & str(i), 2) 
-        wszValue   = this.MRUSession(i) 
-        WritePrivateProfileString( wszSectionName, wszKeyName, wszValue, this.ConfigFilename )
-    next         
-    
-    function = 0
-end function
-    
-
 ''
 ''  Set default values for Explorer Categories should none exist
 ''
@@ -581,7 +548,15 @@ end function
 ''
 ''  LOAD CONFIGURATION FROM DISK FILE
 ''
+' A HOT RELOAD MUST NOT RESURRECT THE RESTORE SLOT. wszLastActiveProject is live workspace
+' state, not user-editable configuration: it is owned by ProjectSaveToFile and cleared by
+' Workspace_EstablishUntitled. ReloadConfigFileTest fires whenever settings.ini's timestamp
+' moves, and re-reading LastActiveProjectFile from disk put the CLOSED project's path back
+' into memory -- so Project > Close followed by exit wrote that path out again and the
+' project reopened on the next launch, exactly as if it had never been closed.
+' The geometry fields are already exempted from a hot reload for the same class of reason.
 function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as long
+    dim as DWSTRING wszLiveLastProject = this.wszLastActiveProject
     gApp.PreventConfigLoad = true
 
     dim as DWSTRING wst, wKey, wData
@@ -637,7 +612,11 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
             i = val(right(wKey,2))
             if i > ubound(this.Cat) then
                 redim preserve this.Cat(i) 
-                this.Cat(i).idFileType     = AfxStrParse(wData, 1, "|-|")
+                ' trim() is not cosmetic. idFileType is compared against the FILETYPE_*
+                ' string digits to decide which Explorer header a document belongs under,
+                ' so one stray space in a hand-edited "CATEGORY_01= 1|-|Main" makes that
+                ' category match nothing and silently empties it.
+                this.Cat(i).idFileType     = trim(AfxStrParse(wData, 1, "|-|"))
                 this.Cat(i).wszDescription = AfxStrParse(wData, 2, "|-|")
                 continue do
             end if
@@ -699,20 +678,20 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
                 end If
             end If
 
-            if left(wKey, 11) = "MRUSESSION_" then  ' is this an MRU Session entry
-            i = val(right(wKey,2))
-                if (i >= 0) And (i <= 9) then 
-                    this.MRUSession(i) = ProcessFromCurdriveApp(wData)
-                    continue do
-                end If
-            end If
+            ' MRUSESSION_ keys from an older settings.ini fall through to the select
+            ' below, match nothing, and are dropped -- the [MRUSESSIONS] section ages out
+            ' on the first save.
 
-            
             select case wKey
             case "SettingsVersion":          this.SettingsVersion       = wData
             case "AskExit":                  this.AskExit               = nData
             case "RestoreSession":           this.RestoreSession        = nData
-            case "LastActiveSessionFile":    this.wszLastActiveSession  = ProcessFromCurdriveApp(wData)
+            ' The old key is still accepted on read. It always doubled as the last-project
+            ' slot, so honouring it means an existing settings.ini reopens the project the
+            ' user had open rather than silently coming up empty once. Write-side is the
+            ' new key only, so the old one ages out on the first save.
+            case "LastActiveProjectFile":    this.wszLastActiveProject  = ProcessFromCurdriveApp(wData)
+            case "LastActiveSessionFile":    this.wszLastActiveProject  = ProcessFromCurdriveApp(wData)
             case "CompactMenus":             this.CompactMenus          = nData
             case "MultipleInstances":        this.MultipleInstances     = nData
             case "CompileAutosave":          this.CompileAutosave       = nData
@@ -829,7 +808,11 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
         loop
         pStream.Close
     end if
-    
+
+    ' Put the LIVE restore slot back. See the note on this function's header: a hot reload
+    ' must not resurrect a project the user has closed.
+    if isHotReload then this.wszLastActiveProject = wszLiveLastProject
+
     ' Iterate the optional semi colon separated list of compiler include paths
     dim as DWSTRING allIncludes = rtrim(this.CompilerIncludes, ";")
     this.CompilerIncludes = ""
@@ -1002,269 +985,6 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
 end function
 
 
-' ========================================================================================
-' Save current session (open files) to a diskfile
-' ========================================================================================
-function clsConfig.SaveSessionFile( byref wszSessionFile as wstring ) as boolean    
-    ' If the incoming file is a project then 
-    if gApp.IsProjectActive then
-        this.ProjectSaveToFile()
-        return true
-    end if
-
-    dim as DWSTRING wszText 
-    dim as long nCount 
-
-    dim pDoc as clsDocument ptr
-
-    dim pStream as CTextStream  ' (utf16)
-    if pStream.Create( wszSessionFile, true, true ) <> S_OK then return false
-    
-    pStream.WriteLine "' SESSION FILE"
-    
-    ' Save all of the loaded tabs
-    pStream.WriteLine "BuildConfig=" & this.CompilerBuild
-    ' Not GetCurSel: the loop below skips tabs, so the file's index space is denser than the
-    ' tab bar's. See clsTopTabCtl.SaveActiveTabIndex.
-    pStream.WriteLine "ActiveTab="   & gTTabCtl.SaveActiveTabIndex()
-    pStream.WriteLine "CommandLine=" & gApp.wszCommandLine
-
-    nCount = gTTabCtl.GetItemCount()
-
-    for i as long = 0 To nCount - 1
-        pDoc = gTTabCtl.GetpDoc(i)
-        if pDoc = 0 then continue for
-        
-        ' Only deal with files that are no longer "new"
-        if pDoc->IsNewFlag = false then 
-            wszText = ProcessToCurdriveApp(pDoc->DiskFilename)
-            pStream.WriteLine "File=" & wszText
-            pStream.WriteLine "FileType=" & pDoc->ProjectFileType
-            pStream.WriteLine "TabIndex=" & -1     ' use -1 rather than true
-            pStream.WriteLine "Bookmarks=" & pDoc->GetBookmarks()
-            pStream.WriteLine "BreakPoints=" & pDoc->GetBreakPoints()
-            pStream.WriteLine "FoldPoints=" & pDoc->GetFoldPoints()
-            pStream.WriteLine "FirstLine=" & SendMessage( pDoc->hWindow(0), SCI_GETFIRSTVISIBLELINE, 0, 0) 
-            pStream.WriteLine "Position=" & SendMessage( pDoc->hWindow(0), SCI_GETCURRENTPOS, 0, 0)  
-            pStream.WriteLine "FirstLine1=" & SendMessage( pDoc->hWindow(1), SCI_GETFIRSTVISIBLELINE, 0, 0) 
-            pStream.WriteLine "Position1=" & SendMessage( pDoc->hWindow(1), SCI_GETCURRENTPOS, 0, 0)  
-            pStream.WriteLine "SplitMode=" & wstr(pDoc->EditorSplitMode)
-            pStream.WriteLine "SplitPositionX=" & pDoc->SplitX
-            pStream.WriteLine "SplitPositionY=" & pDoc->SplitY
-            pStream.WriteLine "FocusEdit=" & iif(pDoc->hWndActiveScintilla = pDoc->hWindow(0), 0, 1)
-            pStream.WriteLine "FileEnd=[-]" 
-        end if
-    next
-            
-    pStream.Close
-
-    this.wszLastActiveSession = wszSessionFile
-
-    function = true   ' successful save
-end function
-
-
-' ========================================================================================
-' Close a  previously loaded session file
-' ========================================================================================
-function clsConfig.CloseSessionFile( byref wszSessionFile as wstring ) as boolean    
-    if this.SaveSessionFile( wszSessionFile) = false then exit function
-    if OnCommand_FileClose(HWND_FRMMAIN, EFC_CLOSEALL) = false then exit function
-    gApp.IsSessionActive = false
-    gApp.SessionFilename = ""
-    function = true  ' successful close
-end function
-
-
-' ========================================================================================
-' Load previously saved session file from a diskfile
-' ========================================================================================
-function clsConfig.LoadSessionFile( byref wszSessionFile as wstring ) as boolean    
-
-    ' If the previously saved session file was actually a project file
-    ' then open the project.
-    if lcase(AfxGetFileExt(wszSessionFile)) = APPEXTENSION then
-        if AfxFileExists(wszSessionFile) then 
-            frmMain_OpenProjectSafely( HWND_FRMMAIN, wszSessionFile ) 
-            return true
-        end if
-        return false
-    end if    
-
-    ' if a project is open then close any files that may be open in the editor. No need to
-    ' do this if a new project is being created/opened because that function has already
-    ' performed this operation. Doing so again will cause the Recent Files/Projects panel
-    ' to flash on the screen.
-    if gApp.IsProjectActive then 
-        if OnCommand_ProjectClose(HWND_FRMMAIN) = false then exit function
-    else   
-        if OnCommand_FileClose(HWND_FRMMAIN, EFC_CLOSEALL) = false then exit function
-    end if
-    ' Clear any previous info from the Output windows
-    frmOutput_ResetAllControls()
-    
-    ' Clear the navigation history. Its entries are filenames rather than document pointers
-    ' now, so they can no longer dangle -- but they describe the workspace being left.
-    NavHistory_Clear()
-
-    dim pDoc as clsDocument ptr
-    dim as DWSTRING wst, wKey, wData, wszFilename
-        
-    dim as string sBookmarks
-    dim as string sBreakPoints
-    dim as string sFoldPoints
-    dim as long nData, i, iTab, nFocusEdit
-    dim as long nFileIndex = -1
-    dim as long nFirstLine, nPosition, nFirstLine1, nPosition1
-    dim as long nSplitMode, nSplitPositionX, nSplitPositionY
-
-    ' Info saved for each File and used to create the file once Fileend is found
-    dim as long nTabIndex
-    dim as long nActiveTab = -1
-    dim as DWSTRING wszFileType
-    dim as boolean bLoadInTab
-    
-    dim pStream as CTextStream  ' (utf16)
-    if AfxFileExists(wszSessionFile) = 0 then exit function
-    if pStream.OpenUnicode( wszSessionFile ) <> S_OK then return false
-
-    gApp.SessionFilename = wszSessionFile
-    gApp.SessionName = AfxStrPathname( "NAMEX", gApp.SessionFilename )
-
-    dim as HCURSOR hCurSave = GetCursor()
-    SetCursor( LoadCursor(0, IDC_WAIT) )
-    
-    do until pStream.EOS
-        wst = pStream.ReadLine
-        
-        if len(wst) = 0 then continue do
-        if left(wst, 1) = "'" then continue do
-        if left(wst, 1) = "[" then continue do
-        
-        i = instr(wst, "=")
-        if i = 0 then continue do
-        
-        wKey  = left(wst, i-1)
-        wData = mid(wst, i+1)
-        
-        select case ucase(wData)
-            case "TRUE":   nData = true
-            case "FALSE":  nData = false
-            case Else:     nData = val(wData)
-        end select
-
-        wData = ProcessFromCurdriveApp(wData)
-
-        select case wKey
-            case "BuildConfig":         this.CompilerBuild = wData
-            case "CommandLine":         gApp.wszCommandLine = wData
-            case "ActiveTab":           nActiveTab = nData
-            
-            case "File":                wszFilename = wData
-            case "FileType":            wszFileType = wData
-            
-            case "TabIndex":            bLoadInTab  = nData
-            case "Bookmarks":           sBookmarks  = str(wData)
-            case "BreakPoints":         sBreakPoints = str(wData)
-            case "FoldPoints":          sFoldPoints = str(wData)
-            case "FirstLine":           nFirstLine  = nData
-            case "Position":            nPosition   = nData
-            case "FirstLine1":          nFirstLine1 = nData
-            case "Position1":           nPosition1  = nData
-            case "SplitMode":           nSplitMode  = nData
-            case "SplitPositionX":      nSplitPositionX = nData
-            case "SplitPositionY":      nSplitPositionY = nData
-            case "FocusEdit":           nFocusEdit  = nData
-            
-            case "FileEnd":
-            if AfxFileExists(wszFilename) then
-                pDoc = gApp.CreateEmptyDocument()
-                pDoc->LoadDiskFile( wszFilename )
-                pDoc->AssignTextBuffer()
-                pDoc->ProjectFileType = wszFileType
-                if pDoc->ProjectFileType = FILETYPE_UNDEFINED then
-                    pDoc->ProjectFileType = FILETYPE_NORMAL
-                end if    
-                iTab = gTTabCtl.AddTab( pDoc )  ' Add the new document to the top tabcontrol
-                
-                ' Set the saved positions
-                pDoc->EditorSplitMode = nSplitMode
-                pDoc->SplitY = nSplitPositionY
-                pDoc->SplitX = nSplitPositionX
-                SciExec( pDoc->hWindow(0), SCI_SETFIRSTVISIBLELINE, nFirstLine, 0) 
-                SciExec( pDoc->hWindow(0), SCI_GOTOPOS, nPosition, 0) 
-                SciExec( pDoc->hWindow(1), SCI_SETFIRSTVISIBLELINE, nFirstLine1, 0) 
-                SciExec( pDoc->hWindow(1), SCI_GOTOPOS, nPosition1, 0) 
-                pDoc->hWndActiveScintilla = pDoc->hWindow(nFocusEdit)
-                pDoc->SetBookmarks(sBookmarks)
-                pDoc->SetBreakPoints(sBreakPoints)
-                pDoc->SetFoldPoints(sFoldPoints)
-            end if
-        
-        end select
-    
-    loop                        
-    pStream.Close
-                        
-    ' Do a sanity check on the active tab to ensure that it is in bounds thereby
-    ' not throwing future array out of bounds gpf's.
-    if gTTabCtl.IsValidTab(nActiveTab) = false then nActiveTab = 0
-
-
-    ' Load all of the filenames into the Explorer listbox. Configure the node
-    ' array to allow all types of files to be shown in the listbox
-    for i as long = lbound(this.Cat) to ubound(this.Cat)
-        this.Cat(i).bShow = true
-    next
-    LoadExplorerFiles()
-    
-    ' Load all of the bookmarks into the Bookmarks listbox. 
-    LoadBookmarksFiles()
-
-    ' Load all of the functions into the Function List listbox. 
-    LoadFunctionsFiles()
-
-    ' Display the active editing window
-    if gTTabCtl.IsValidTab(nActiveTab) then
-        gTTabCtl.SetCurSel( nActiveTab )
-        gTTabCtl.DisplayScintilla( nActiveTab, true )
-    
-        ' Highlight the selected tab file in the Explorer listbox
-        dim as clsDocument ptr pDoc = gTTabCtl.GetpDoc(nActiveTab)
-        frmExplorer_SelectItemData( pDoc )
-    end if
-    
-    frmMain_SetStatusbar
-    SetCursor( hCurSave )
-
-    gApp.IsSessionActive = true
-
-    this.wszLastActiveSession = wszSessionFile
-    
-    frmMain_PositionWindows
-    frmMain_SetFocusToCurrentCodeWindow
-    
-    UpdateMRUSessionList(wszSessionFile)
-
-    function = true   ' successful open
-end function
-
-
-' ========================================================================================
-' Save the DEFAULT session (open files) to a diskfile
-' ========================================================================================
-function clsConfig.SaveDefaultSessionFile() as boolean    
-    return this.SaveSessionFile( this.DefaultSessionFilename )
-end function
-
-
-' ========================================================================================
-' Load the DEFAULT session (open files) to a diskfile
-' ========================================================================================
-function clsConfig.LoadDefaultSessionFile() as boolean    
-    return this.LoadSessionFile( this.DefaultSessionFilename )
-end function
-
 
 ' ========================================================================================
 ' Save all options for the Project to a diskfile
@@ -1277,9 +997,21 @@ function clsConfig.ProjectSaveToFile() as boolean
 
     dim pDoc as clsDocument ptr
 
+    ' Paths are stored RELATIVE to the project file, but only for a project the user named
+    ' and placed. The untitled workspace lives in settings\ under the exe, while its files
+    ' live wherever the user works -- relativizing against it would turn every entry into a
+    ' "..\..\" chain, and any file on another volume cannot be relativized at all. So the
+    ' untitled workspace stores absolute paths, which is exactly what the session file it
+    ' replaces did.
+    '
+    ' The {CURDRIVE} encoding below is NOT conditional and does not need to be:
+    ' ProcessToCurdriveProject keys off ProjectFilename's drive, and the untitled project
+    ' sits in the exe's own directory, so it already resolves to the App variant's answer.
+    dim as boolean bRelativize = gApp.IsProjectNamed()
+
     dim pStream as CTextStream  ' (utf16)
     if pStream.Create(gApp.ProjectFilename, true, true) <> S_OK then return false
-    
+
     pStream.WriteLine "' PROJECT FILE"
     pStream.WriteLine "ProjectBuild="       & gApp.ProjectBuild
     pStream.WriteLine "ProjectOther32="     & gApp.ProjectOther32
@@ -1300,9 +1032,11 @@ function clsConfig.ProjectSaveToFile() as boolean
         if pDoc->IsNewFlag = false then 
             pDoc->SetDocInfo()   
             wszText = pDoc->DiskFilename
-            cwzRelative = AfxPathRelativePathTo( gApp.ProjectFilename, FILE_ATTRIBUTE_NORMAL, wszText, FILE_ATTRIBUTE_NORMAL)
-            if len(cwzRelative) then
-                if AfxPathIsRelative(cwzRelative) then wszText = cwzRelative
+            if bRelativize then
+                cwzRelative = AfxPathRelativePathTo( gApp.ProjectFilename, FILE_ATTRIBUTE_NORMAL, wszText, FILE_ATTRIBUTE_NORMAL)
+                if len(cwzRelative) then
+                    if AfxPathIsRelative(cwzRelative) then wszText = cwzRelative
+                end if
             end if
             wszText = ProcessToCurdriveProject(wszText)
             pStream.WriteLine "File=" & wszText
@@ -1331,8 +1065,17 @@ function clsConfig.ProjectSaveToFile() as boolean
         if pDoc->IsNewFlag = false then 
             if gTTabCtl.GetTabIndexByDocumentPtr(pDoc) = -1 then
                 wszText = pDoc->DiskFilename
-                cwzRelative = AfxPathRelativePathTo( gApp.ProjectFilename, FILE_ATTRIBUTE_NORMAL, wszText, FILE_ATTRIBUTE_NORMAL)
-                if AfxPathIsRelative(cwzRelative) then wszText = cwzRelative
+                if bRelativize then
+                    cwzRelative = AfxPathRelativePathTo( gApp.ProjectFilename, FILE_ATTRIBUTE_NORMAL, wszText, FILE_ATTRIBUTE_NORMAL)
+                    ' The len() test is NOT optional. AfxPathRelativePathTo returns "" when
+                    ' PathRelativePathToW fails -- a file on another volume, most obviously --
+                    ' and AfxPathIsRelative("") is TRUE. Without the guard wszText becomes ""
+                    ' and the document is written as "File=", i.e. SILENTLY DROPPED from the
+                    ' project. The tabbed loop above has always had this guard; this one did not.
+                    if len(cwzRelative) then
+                        if AfxPathIsRelative(cwzRelative) then wszText = cwzRelative
+                    end if
+                end if
                 wszText = ProcessToCurdriveProject(wszText)
                 pStream.WriteLine "File=" & wszText
                 pStream.WriteLine "FileType=" & pDoc->ProjectFileType
@@ -1354,19 +1097,27 @@ function clsConfig.ProjectSaveToFile() as boolean
         pDoc = pDoc->pDocnext
     loop
 
-    ' if project is active then save NOTES to config file.
-    if gApp.IsProjectActive then
-        dim wszText as DWSTRING = wstr("NOTES-START") + vbcrlf + _
-                                gApp.ProjectNotes + vbcrlf + _
-                                wstr("NOTES-END") + vbcrlf
-        pStream.WriteLine ""
-        pStream.WriteLine "[Notes]"
-        pStream.WriteLine wszText                       
-    end IF
+    ' Notes belong to the workspace, so they are always written.
+    dim wszNotes as DWSTRING = wstr("NOTES-START") + vbcrlf + _
+                            gApp.ProjectNotes + vbcrlf + _
+                            wstr("NOTES-END") + vbcrlf
+    pStream.WriteLine ""
+    pStream.WriteLine "[Notes]"
+    pStream.WriteLine wszNotes
 
     pStream.Close
 
-    this.wszLastActiveSession = gApp.ProjectFilename
+    ' The restore slot names the NAMED project to reopen, and only that. Writing the
+    ' untitled workspace's own path here makes the slot permanently name settings\
+    ' default.tiko, after which no project is ever restored again -- the next launch sees
+    ' the untitled path, treats it as "nothing named to reopen", and comes up untitled
+    ' forever. An untitled workspace clears the slot instead: there is no named project to
+    ' go back to, which is exactly what an empty slot means.
+    if gApp.IsProjectNamed() then
+        this.wszLastActiveProject = gApp.ProjectFilename
+    else
+        this.wszLastActiveProject = ""
+    end if
 
     function = true   ' successful save
 end function
@@ -1518,7 +1269,17 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
         
         pDoc = gApp.CreateEmptyDocument()
         pDoc->LoadDiskFile( docData(i).wszFilename )
-        pDoc->ProjectFiletype = docData(i).wszFileType
+        ' Never let a loaded document stay uncategorized. The Explorer groups strictly by
+        ' category, so a FILETYPE_UNDEFINED document matches no header and DISAPPEARS from
+        ' the list while still being in the workspace. Existing project files really do
+        ' carry FileType=0 entries -- tiko.tiko has one -- so this is repairing data on
+        ' disk, not guarding against a case that cannot happen. The session loader has
+        ' always applied this same fallback; the project loader never did.
+        if docData(i).wszFileType = FILETYPE_UNDEFINED then
+            pDoc->ProjectFiletype = FILETYPE_NORMAL
+        else
+            pDoc->ProjectFiletype = docData(i).wszFileType
+        end if
         pDoc->docData = docData(i)
         if docData(i).bLoadInTab then
             pDoc->AssignTextBuffer()
@@ -1527,16 +1288,10 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
     next
 
     gApp.IsProjectLoading = false
-    gApp.IsProjectActive = true
     gApp.hIconPanel = 0
     gApp.wszLastOpenFolder = ""
     
-    ' Load all of the filenames into the Explorer listbox. Configure the node
-    ' array to allow all types of files to be shown in the listbox
-    for i as long = lbound(this.Cat) to ubound(this.Cat)
-        this.Cat(i).bShow = true
-    next
-
+    ' Load all of the filenames into the Explorer listbox.
     LoadExplorerFiles()
 
     ' Load all of the bookmarks into the Bookmarks listbox. 
@@ -1566,7 +1321,7 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
     frmOutput_ShowNotes()
     frmOutput_UpdateToDoListview()
 
-    this.wszLastActiveSession = gApp.ProjectFilename
+    this.wszLastActiveProject = gApp.ProjectFilename
 
     ' Clear the navigation history. Its entries are filenames rather than document pointers
     ' now, so they can no longer dangle -- but they describe the workspace being left.

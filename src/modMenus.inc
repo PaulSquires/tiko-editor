@@ -65,8 +65,6 @@ function frmMain_FileTopMenuStates() as long
     EnableTopMenuItem( IDM_FILEOPEN, true )
     EnableTopMenuItem( IDM_FILEOPENASTEMPLATE, true )
     EnableTopMenuItem( IDM_MRU, true )
-    EnableTopMenuItem( IDM_LOADSESSION, true )
-    EnableTopMenuItem( IDM_MRUSESSION, true )
     EnableTopMenuItem( IDM_KEYBOARDSHORTCUTS, true )
     EnableTopMenuItem( IDM_USERTOOLS, true )
     EnableTopMenuItem( IDM_USERTOOLSDIALOG, true )
@@ -80,7 +78,12 @@ function frmMain_FileTopMenuStates() as long
     ' non-zero while there is no active document, which would light up Save / Save As /
     ' Rename / Duplicate over nothing.
     if gTTabCtl.GetDocumentTabCount() then
-        for idMenu as long = IDM_FILECLOSE to IDM_MRUSESSION
+        ' Re-anchored on IDM_MRUFILES when the session ids were deleted out of the middle
+        ' of this range. modDeclares.bi is one anonymous positional enum, so the old upper
+        ' bound did not just disappear -- it would have silently become whatever id landed
+        ' at that position next. The members this covers are unchanged: FILECLOSE through
+        ' FILEDUPLICATE, plus IDM_MRU/IDM_MRUFILES.
+        for idMenu as long = IDM_FILECLOSE to IDM_MRUFILES
             EnableTopMenuItem( idMenu, true )
         next
     end if
@@ -95,14 +98,6 @@ function frmMain_FileTopMenuStates() as long
         if FindProject_AnyDirty() then EnableTopMenuItem( IDM_FILESAVEALL, true )
     end if
 
-    if gApp.IsSessionActive = false then 
-        EnableTopMenuItem( IDM_CLOSESESSION, false )
-    end if
-
-    if gApp.IsProjectActive then 
-        EnableTopMenuItem( IDM_SAVESESSION, false )
-    end if
-            
     function = 0
 end function
 
@@ -243,8 +238,11 @@ function frmMain_ProjectTopMenuStates() as long
     EnableTopMenuItem( IDM_PROJECTOPEN, true )
     EnableTopMenuItem( IDM_MRUPROJECT, true )
 
-    ' Check if a Project is open and active
-    dim as long fEnabled = Iif( gApp.IsProjectActive, true, false )
+    ' There is always a workspace, so every one of these is always meaningful: Close
+    ' starts a fresh untitled one, Save writes the current one, Save As promotes an
+    ' untitled workspace into a named project, Add Files and Options act on whichever
+    ' workspace is live.
+    dim as long fEnabled = true
     EnableTopMenuItem( IDM_PROJECTCLOSE, fEnabled )
     EnableTopMenuItem( IDM_PROJECTSAVEAS, fEnabled )
     EnableTopMenuItem( IDM_PROJECTSAVE, fEnabled )
@@ -266,24 +264,28 @@ function frmMain_CompileTopMenuStates() as long
     next
 
     ' Document tabs, not all tabs -- see the note in the File menu states above.
-    dim as boolean fEnabled = iif( gApp.IsProjectActive orelse cbool(gTTabCtl.GetDocumentTabCount), true, false )
+    ' NOT just the tab count. A workspace whose files are all closed is still buildable --
+    ' that is the case the old "IsProjectActive orelse tabs" disjunction existed for, and
+    ' collapsing it to the tab count alone would have quietly removed it.
+    dim as boolean fEnabled = cbool( gApp.GetDocumentCount() ) orelse cbool( gTTabCtl.GetDocumentTabCount() )
     EnableTopMenuItem( IDM_BUILDEXECUTE, fEnabled )
     EnableTopMenuItem( IDM_COMPILE, fEnabled )
     EnableTopMenuItem( IDM_REBUILDALL, fEnabled )
     EnableTopMenuItem( IDM_COMMANDLINE, fEnabled )
 
-    if gApp.IsProjectActive then
-        ' Enable the "Compile Module" menu item only if the current active file is a Module
-        dim as clsDocument ptr pDoc = gTTabCtl.GetActiveDocumentPtr()
-        if (pDoc <> null) andalso (pDoc->ProjectFileType = FILETYPE_MODULE) then
-            EnableTopMenuItem( IDM_COMPILEMODULE, fEnabled )
-        end if
+    ' Enable the "Compile Module" menu item only if the current active file is a Module
+    dim as clsDocument ptr pDocModule = gTTabCtl.GetActiveDocumentPtr()
+    if (pDocModule <> null) andalso (pDocModule->ProjectFileType = FILETYPE_MODULE) then
+        EnableTopMenuItem( IDM_COMPILEMODULE, fEnabled )
     end if
 
-    ' QuickRun should be enabled for non-Projects
-    if gApp.IsProjectActive = false then 
-        if gTTabCtl.GetDocumentTabCount then EnableTopMenuItem( IDM_QUICKRUN, true )
-    end if
+    ' QuickRun is enabled whenever there is a document to run, workspace or not. It is
+    ' orthogonal to the workspace: it copies the ACTIVE BUFFER to a temporary .bas,
+    ' compiles that, and deletes both the temp source and the temp exe afterwards -- so
+    ' it is the only way to run a file that has never been saved to disk, and gating it
+    ' on "no project open" would have removed that outright once every workspace is a
+    ' project.
+    if gTTabCtl.GetDocumentTabCount then EnableTopMenuItem( IDM_QUICKRUN, true )
     
     ' Determine if an executable exists based on the current active file or project
     dim as DWSTRING wszRunFile = GetRunExecutableFilename()
@@ -304,7 +306,10 @@ function frmMain_DebugTopMenuStates() as long
     next
 
     ' Document tabs, not all tabs -- see the note in the File menu states above.
-    dim as boolean fEnabled = iif( gApp.IsProjectActive orelse cbool(gTTabCtl.GetDocumentTabCount), true, false )
+    ' NOT just the tab count. A workspace whose files are all closed is still buildable --
+    ' that is the case the old "IsProjectActive orelse tabs" disjunction existed for, and
+    ' collapsing it to the tab count alone would have quietly removed it.
+    dim as boolean fEnabled = cbool( gApp.GetDocumentCount() ) orelse cbool( gTTabCtl.GetDocumentTabCount() )
     EnableTopMenuItem( IDM_DEBUG_STARTDEBUGGING, fEnabled )
     
     EnableTopMenuItem( IDM_DEBUG_STOPDEBUGGING, gApp.IsDebuggerActive )

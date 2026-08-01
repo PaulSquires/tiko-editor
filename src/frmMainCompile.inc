@@ -26,7 +26,7 @@ function OnCommand_CompileCommon( byval id as long ) as LRESULT
         case IDM_RUNEXE
             RunExe( 0, _
                 GetRunExecutableFilename, _
-                iif( gApp.IsProjectActive, gApp.ProjectCommandLine, gApp.wszCommandLine ) _
+                gApp.ProjectCommandLine _
                 )
         
         case IDM_COMMANDLINE
@@ -34,15 +34,11 @@ function OnCommand_CompileCommon( byval id as long ) as LRESULT
             ' the active command line, and write the result back only on OK -- Cancel returns
             ' the (possibly edited) text too, but the IDCANCEL says to disregard it.
             dim as DWSTRING wszText
-            wszText = iif( gApp.IsProjectActive, gApp.ProjectCommandLine, gApp.wszCommandLine )
+            wszText = gApp.ProjectCommandLine
             if frmInputBox_Show( HWND_FRMMAIN, _
                         L(143,"Command Line"), L(144,"Enter command line arguments:"), _
                         wszText ) = IDOK then
-                if gApp.IsProjectActive then
-                    gApp.ProjectCommandLine = wszText
-                else
-                    gApp.wszCommandLine = wszText
-                end if
+                gApp.ProjectCommandLine = wszText
             end if
     end select
     

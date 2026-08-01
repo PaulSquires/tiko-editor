@@ -54,8 +54,7 @@ enum
     IDM_FILERENAME, IDM_FILERENAME_EXPLORERLISTBOX
     IDM_FILESAVEALL
     IDM_FILEDUPLICATE, IDM_FILEDUPLICATE_EXPLORERLISTBOX
-    IDM_LOADSESSION, IDM_SAVESESSION, IDM_CLOSESESSION
-    IDM_MRU, IDM_MRUFILES, IDM_MRUSESSION, IDM_MRUSESSIONFILES
+    IDM_MRU, IDM_MRUFILES
     IDM_OPENINCLUDE, IDM_KEYBOARDSHORTCUTS 
     IDM_SETTINGS, IDM_OPTIONSDIALOG, IDM_BUILDCONFIG, IDM_BUILDCONFIG_POPUP, IDM_THEMES
     IDM_USERTOOLS, IDM_USERTOOLSDIALOG
@@ -177,7 +176,7 @@ enum
     IDM_CLOSEPANEL
     IDM_COPYDATA_COMMANDLINE     ' IPC message sending commandline between instances of the editor
         
-    IDM_MRUCLEAR, IDM_MRUSESSIONCLEAR, IDM_MRUPROJECTCLEAR
+    IDM_MRUCLEAR, IDM_MRUPROJECTCLEAR
     IDM_CONSOLE, IDM_GUI, IDM_RESOURCE, IDM_LINKMODULES   ' used for compiler directives in code
     IDM_32BIT, IDM_64BIT   ' mainly used for identifying compiler associated with a project
 end enum
@@ -186,7 +185,6 @@ end enum
 #define IDM_USERTOOLSBASE    4001
 #define IDM_MRUBASE          5000  ' Windows id of MRU items 1 to 10 (located under File menu)
 #define IDM_MRUPROJECTBASE   6000  ' Windows id of MRUPROJECT items 1 to 10 (located under Project menu)
-#define IDM_MRUSESSIONBASE   7000  ' Windows id of MRUSESSION items 1 to 10 (located under File menu)
 #define IDM_BUILDCONFIGBASE  8000
 ' The AfxIFileSaveDialog selector for cloning a theme -- picks the *.theme filter and the
 ' settings\themes\ folder in modRoutines. Defined HERE (loaded before modRoutines.inc) rather
