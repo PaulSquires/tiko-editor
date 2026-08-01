@@ -197,8 +197,12 @@ end Function
 ' ========================================================================================
 function frmMain_RestoreWorkspace( byref wszLastProject as const wstring ) as long
 
-    ' Files already opened from the command line own the workspace; do not displace them.
-    if gTTabCtl.GetItemCount <> 0 then return 0
+    ' NO tab-count guard here. It used to read "files already opened from the command line
+    ' own the workspace", but both call sites already establish that nothing was opened --
+    ' the no-arguments branch processes no files at all, and the other calls this only when
+    ' numProcessed = 0. What the guard actually saw was the UNTITLED workspace's own
+    ' restored documents, so as soon as settings\default.tiko had any content in it the
+    ' guard fired and the user's named project silently never reopened.
 
     ' The target is passed IN, not read from gConfig, and that is load-bearing:
     ' Workspace_EstablishUntitled has already run by this point and it sets

@@ -271,7 +271,7 @@ end function
 
 ''
 ''
-function clsApp.SaveProject( byval bSaveAs as boolean = false ) as boolean
+function clsApp.SaveProject( byval bSaveAs as boolean = false, byref wszForcedName as wstring = "" ) as boolean
 
     dim wFilename as wstring * MAX_PATH
     dim wText     as wstring * MAX_PATH  
@@ -279,21 +279,33 @@ function clsApp.SaveProject( byval bSaveAs as boolean = false ) as boolean
     wFilename = this.ProjectFilename
 
     if bSaveAs then
-        ' Offer the dialog only a name the user chose. The untitled workspace's path is an
-        ' internal detail under settings\ and must never be presented as a starting point.
-        ' Note this clears the LOCAL only -- wFilename still carries ProjectFilename on the
-        ' plain-Save path below, which writes it straight back to this.ProjectFilename.
-        if this.IsProjectNamed() = false then wFilename = ""
-        ' Display the Save File Dialog
-        ' Default extension is ours, not WinFBE's. Matches frmProjectOptions_SaveProjectOptions.
-        dim pwszName as wstring ptr = AfxIFileSaveDialog(HWND_FRMMAIN, @wFilename, @wstr(APPEXTENSION), IDM_PROJECTSAVE)
-        if pwszName then
-            wFilename = *pwszName
-            CoTaskMemFree(pwszName)
+        if len(wszForcedName) > 0 then
+            ' A caller that already has the name skips the dialog. This exists so the
+            ' PROMOTION can be driven by the self-test: promotion is a state TRANSITION,
+            ' and the state is self-consistent on both sides of it, so no startup assertion
+            ' can see whether the transition did its job. Two bugs escaped that way.
+            wFilename = wszForcedName
         else
-            return false
+            ' Offer the dialog only a name the user chose. The untitled workspace's path is
+            ' an internal detail under settings\ and must never be presented as a starting
+            ' point. Note this clears the LOCAL only -- wFilename still carries
+            ' ProjectFilename on the plain-Save path below.
+            if this.IsProjectNamed() = false then wFilename = ""
+            ' Display the Save File Dialog
+            ' Default extension is ours, not WinFBE's. Matches frmProjectOptions_SaveProjectOptions.
+            dim pwszName as wstring ptr = AfxIFileSaveDialog(HWND_FRMMAIN, @wFilename, @wstr(APPEXTENSION), IDM_PROJECTSAVE)
+            if pwszName then
+                wFilename = *pwszName
+                CoTaskMemFree(pwszName)
+            else
+                return false
+            end if
         end if
     end if
+
+    ' Remember what we were before the repoint. If this was the untitled workspace and it
+    ' is about to become a named project, that is a PROMOTION and has consequences below.
+    dim as boolean bWasUntitled = ( this.IsProjectNamed() = false )
 
     ' Do NOT delete the existing file first. ProjectSaveToFile opens the stream with
     ' CTextStream.Create( name, bOverwrite := true, ... ), which truncates on its own, so
@@ -312,12 +324,35 @@ function clsApp.SaveProject( byval bSaveAs as boolean = false ) as boolean
         if this.GetDocumentCount() = 0 then return true
     end if
 
-    gConfig.ProjectSaveToFile()
+    ' Check the result. Everything below acts on the assumption that the file now exists --
+    ' updating the restore slot, retiring the untitled workspace, adding to Recent Projects
+    ' -- and every one of those is wrong if the write failed.
+    if gConfig.ProjectSaveToFile() = false then return false
 
-    ' Also need to add this new project name to the MRU list -- but only for a project the
-    ' user named. The untitled workspace's path is an internal file under settings\ and
-    ' must never appear in Recent Projects.
-    if this.IsProjectNamed() then UpdateMRUProjectList(wFilename)
+    dim as boolean bIsNamed = this.IsProjectNamed()
+
+    ' The restore slot is NOT set here: ProjectSaveToFile above owns it, and it is the
+    ' single writer for both the named and untitled cases.
+
+    if bIsNamed then
+        ' Add to Recent Projects. The untitled workspace's path is an internal file under
+        ' settings\ and must never appear there.
+        UpdateMRUProjectList(wFilename)
+
+        ' A promoted workspace retires its untitled backing file. Leaving it means the next
+        ' Project > Close re-establishes the OLD loose-file set, and -- worse -- that stale
+        ' file is what a restore would find if the slot above were ever missed again.
+        if bWasUntitled then
+            if AfxFileExists( gConfig.UntitledProjectFilename ) then
+                AfxDeleteFile( gConfig.UntitledProjectFilename )
+            end if
+        end if
+    end if
+
+    ' The Explorer's "Save as Project..." row is present only while the workspace is
+    ' untitled, so a promotion has to repaint the list or the row lingers on a project
+    ' that now has a name.
+    if bWasUntitled andalso bIsNamed then LoadExplorerFiles()
 
     frmMain_PositionWindows
 

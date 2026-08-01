@@ -1095,7 +1095,17 @@ function clsConfig.ProjectSaveToFile() as boolean
 
     pStream.Close
 
-    this.wszLastActiveProject = gApp.ProjectFilename
+    ' The restore slot names the NAMED project to reopen, and only that. Writing the
+    ' untitled workspace's own path here makes the slot permanently name settings\
+    ' default.tiko, after which no project is ever restored again -- the next launch sees
+    ' the untitled path, treats it as "nothing named to reopen", and comes up untitled
+    ' forever. An untitled workspace clears the slot instead: there is no named project to
+    ' go back to, which is exactly what an empty slot means.
+    if gApp.IsProjectNamed() then
+        this.wszLastActiveProject = gApp.ProjectFilename
+    else
+        this.wszLastActiveProject = ""
+    end if
 
     function = true   ' successful save
 end function

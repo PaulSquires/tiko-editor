@@ -102,8 +102,21 @@ sub Workspace_RunSelfTest()
     Workspace_Check( "a workspace is always established", _
         len(gApp.ProjectFilename) > 0, "ProjectFilename=" & gApp.ProjectFilename )
 
-    Workspace_Check( "the last-active slot names the live workspace", _
-        ucase(gConfig.wszLastActiveProject) = ucase(gApp.ProjectFilename) )
+    ' The slot names a NAMED project or nothing. It must never name the untitled
+    ' workspace: settings.ini persists it, so one such write makes every later launch come
+    ' up untitled forever, with the user's project unreachable except through Recent
+    ' Projects. This assertion is the one that pins that down.
+    if gApp.IsProjectNamed() then
+        Workspace_Check( "the slot names the live named project", _
+            ucase(gConfig.wszLastActiveProject) = ucase(gApp.ProjectFilename), _
+            "slot=" & gConfig.wszLastActiveProject )
+    else
+        Workspace_Check( "an untitled workspace leaves the slot empty", _
+            len(gConfig.wszLastActiveProject) = 0, _
+            "slot=" & gConfig.wszLastActiveProject )
+    end if
+    Workspace_Check( "the slot never names the untitled workspace", _
+        ucase(gConfig.wszLastActiveProject) <> ucase(gConfig.UntitledProjectFilename) )
 
     ' --- named vs untitled agree with the path -------------------------------------------
     dim as boolean bIsUntitled = ( ucase(gApp.ProjectFilename) = ucase(gConfig.UntitledProjectFilename) )
@@ -249,6 +262,40 @@ sub Workspace_RunSelfTest()
             gConfig.Cat(CATINDEX_NORMAL).idFileType = FILETYPE_NORMAL )
     end if
 
+    ' --- the PROMOTION transition ---------------------------------------------------------
+    ' Only reachable with TIKO_WORKSPACE_TESTPROMOTE=1, and only from an untitled workspace,
+    ' because it really does promote the live one. It exists because promotion is a
+    ' TRANSITION and the state is self-consistent on BOTH sides of it -- every assertion
+    ' above passes before and after -- so two defects escaped: the restore slot was never
+    ' repointed (the new project silently did not reopen on the next launch) and the
+    ' Explorer was never refreshed (the "Save as Project..." row lingered on a named
+    ' project). Neither is visible from a steady-state check.
+    if environ("TIKO_WORKSPACE_TESTPROMOTE") = "1" then
+        if gApp.IsProjectNamed() then
+            print "NOTE  promotion test skipped: the workspace is already named"
+        else
+            dim as DWSTRING wszScratch = AfxGetExePathName & "_workspace_selftest.tiko"
+            if AfxFileExists( wszScratch ) then AfxDeleteFile( wszScratch )
+
+            dim as boolean bPromoted = gApp.SaveProject( true, wszScratch )
+
+            Workspace_Check( "promotion reports success", bPromoted )
+            Workspace_Check( "promotion writes the named file", _
+                AfxFileExists( wszScratch ) <> 0 )
+            Workspace_Check( "promotion makes the workspace named", _
+                gApp.IsProjectNamed() )
+            Workspace_Check( "promotion repoints the restore slot to the new project", _
+                ucase(gConfig.wszLastActiveProject) = ucase(wszScratch), _
+                "slot=" & gConfig.wszLastActiveProject )
+            Workspace_Check( "promotion retires the untitled workspace file", _
+                AfxFileExists( gConfig.UntitledProjectFilename ) = 0 )
+            Workspace_Check( "promotion removes the Explorer's promote row", _
+                PsListTree_GetItemData( HWND_FRMEXPLORER, 0 ) <> EXPLORER_PROMOTE_ROW )
+
+            AfxDeleteFile( wszScratch )
+        end if
+    end if
+
     print "--- TIKO_WORKSPACE_SELFTEST: " & str(gWorkspaceTestPass) & " passed, " & _
           str(gWorkspaceTestFail) & " failed ---"
 end sub
@@ -300,7 +347,12 @@ function Workspace_EstablishUntitled() as boolean
         gApp.ProjectNotes       = gApp.NonProjectNotes
     end if
 
-    gConfig.wszLastActiveProject = gApp.ProjectFilename
+    ' Do NOT put this workspace's path in the restore slot. The slot names the NAMED
+    ' project to reopen; the untitled workspace is the fallback when there is none, so it
+    ' clears the slot rather than claiming it. Claiming it was sticky: once settings.ini
+    ' recorded settings\default.tiko as the last project, every later launch read that
+    ' back, saw a path that is not a named project, and came up untitled forever.
+    gConfig.wszLastActiveProject = ""
 
     function = true
 end function
