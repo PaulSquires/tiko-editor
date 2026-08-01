@@ -130,7 +130,6 @@ function frmMain_OnCommand( _
     ' Kill any currently displayed topmenu whenever a popup dialog is about to be activated
     select case id
         case IDM_FILEOPEN, IDM_FILEOPENASTEMPLATE, IDM_FILESAVEAS, IDM_FILERENAME, _
-            IDM_SAVESESSION, IDM_LOADSESSION,  _
             IDM_KEYBOARDSHORTCUTS, IDM_USERTOOLSDIALOG, IDM_OPTIONSDIALOG, IDM_BUILDCONFIG, _
             IDM_FIND, IDM_FINDINPROJECT, IDM_SEARCHSYMBOL, _
             IDM_PROJECTOPEN, IDM_PROJECTSAVEAS, _
@@ -221,9 +220,6 @@ function frmMain_OnCommand( _
         case IDM_FILEDUPLICATE:      OnCommand_FileDuplicate( hwnd, pDoc )
         case IDM_FILECLOSE:          OnCommand_FileClose( hwnd, EFC_CLOSECURRENT )
         case IDM_FILESAVEALL:        OnCommand_FileSaveAll( hwnd ) 
-        case IDM_LOADSESSION:        OnCommand_FileLoadSession( hwnd )   
-        case IDM_SAVESESSION:        OnCommand_FileSaveSession( hwnd )   
-        case IDM_CLOSESESSION:       OnCommand_FileCloseSession( hwnd )   
         case IDM_FILECLOSEALL:       OnCommand_FileClose( hwnd, EFC_CLOSEALL )
         case IDM_FILECLOSEALLOTHERS: OnCommand_FileClose( hwnd, EFC_CLOSEALLOTHERS )
         case IDM_CLOSEALLFORWARD:    OnCommand_FileClose( hwnd, EFC_CLOSEALLFORWARD )
@@ -233,13 +229,9 @@ function frmMain_OnCommand( _
         case IDM_OPTIONSDIALOG:      frmOptions_Show( hwnd )
         case IDM_BUILDCONFIG:        frmBuildConfig_Show( hwnd ) 
         case IDM_MRUCLEAR:           ClearMRUlist( id )
-        case IDM_MRUSESSIONCLEAR:    ClearMRUlist( id )
 
         case IDM_MRUBASE to (IDM_MRUBASE + 10)
             OpenMRUFile( hwnd, id )
-
-        case IDM_MRUSESSIONBASE to (IDM_MRUSESSIONBASE + 10)
-            OpenMRUSessionFile( hwnd, id )
 
         case IDM_USERTOOLSBASE to (IDM_USERTOOLSBASE + ubound(gConfig.Tools))
             frmUserTools_ExecuteUserTool( null, id - IDM_USERTOOLSBASE )

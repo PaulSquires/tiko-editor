@@ -258,12 +258,8 @@ function buildTopMenuDefinitions() as long
     setTopMenuItem( IDC_MENUBAR_FILE, IDM_FILESAVEAS, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_FILE, IDM_FILERENAME, 0, false, false )
     setTopMenuItem( IDC_MENUBAR_FILE, IDM_FILEDUPLICATE, 0, false, false )
-    setTopMenuItem( IDC_MENUBAR_FILE, 0, 0, false, true )
-    setTopMenuItem( IDC_MENUBAR_FILE, IDM_LOADSESSION, 0, false, false )
-    setTopMenuItem( IDC_MENUBAR_FILE, IDM_SAVESESSION, 0, false, false )
-    setTopMenuItem( IDC_MENUBAR_FILE, IDM_CLOSESESSION, 0, false, false )
-    setTopMenuItem( IDC_MENUBAR_FILE, IDM_MRUSESSION, IDM_MRUSESSIONFILES, false, false )
-    setTopMenuItem( IDC_MENUBAR_FILE, 0, 0, false, true )
+    ' Sessions are gone -- Load/Save/Close Session and Recent Sessions lived here. Every
+    ' workspace is a project now, so the last one always reopens with no menu verb at all.
     setTopMenuItem( IDC_MENUBAR_FILE, IDM_USERTOOLS, IDM_USERTOOLSLIST, false, false )
     setTopMenuItem( IDC_MENUBAR_FILE, IDM_SETTINGS, IDM_OPTIONSDIALOG, false, false )
     setTopMenuItem( IDM_SETTINGS, IDM_OPTIONSDIALOG, 0, false, false )

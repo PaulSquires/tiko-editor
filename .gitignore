@@ -6,6 +6,10 @@
 # (codetips.ini and friends), so a bare *.ini rule would wrongly catch those too.
 /settings/keybindings.ini
 /settings/settings.ini
+# The untitled workspace: whatever loose files the user last had open. Rewritten on every
+# exit, so it is runtime state exactly like the two above. (settings/default.session, which
+# it replaces, was tracked -- which is why a pull could hand you someone else's open files.)
+/settings/default.tiko
 
 # Internal design / planning notes. NEVER published: this repo is public on GitHub
 # and clients can browse it.

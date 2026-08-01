@@ -121,8 +121,6 @@ function frmKeyboard_CreateDefaultKeyBindings() as long
     frmKeyBoard_AddKeyBinding( "File", IDM_FILESAVEALL, "IDM_FILESAVEALL", "Save all files", "Ctrl+Shift+S" )
     frmKeyBoard_AddKeyBinding( "File", IDM_FILERENAME, "IDM_FILERENAME", "Rename file", "" )
     frmKeyBoard_AddKeyBinding( "File", IDM_FILEDUPLICATE, "IDM_FILEDUPLICATE", "Duplicate file", "" )
-    frmKeyBoard_AddKeyBinding( "File", IDM_LOADSESSION, "IDM_LOADSESSION", "Load session", "" )
-    frmKeyBoard_AddKeyBinding( "File", IDM_SAVESESSION, "IDM_SAVESESSION", "Save session", "" )
     ' "Comma", not ",". The vocabulary's canonical name for VK_OEM_COMMA is the word (gKeyNames
     ' offers no "," entry at all), and the canonical-spelling assertion below compares the
     ' defaults table against exactly that. AccelKeyToValue accepts both spellings, so the

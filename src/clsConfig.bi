@@ -74,7 +74,7 @@ type clsConfig
         DefaultSessionFilename    as DWSTRING
         ' The untitled workspace's backing file. Derived from the exe path, never persisted,
         ' and deliberately per-install -- C:\dev\tiko and C:\dev\tiko_editor each get their
-        ' own. Nothing but clsApp.IsProjectNamed reads it until the workspace refactor lands.
+        ' own. Owned by Workspace_EstablishUntitled; IsProjectNamed compares against it.
         UntitledProjectFilename   as DWSTRING
 
         DateFileTime              as FILETIME
@@ -93,7 +93,7 @@ type clsConfig
         AutoSaveInterval          as long = 10            ' seconds between autosave checks
         idAutoSaveTimer           as long = 999           ' id of Autosave timer
         RestoreSession            as long = true
-        wszLastActiveSession      as DWSTRING
+        wszLastActiveProject      as DWSTRING
         CompactMenus              as long = false
         CheckUpdates              as long = true
         ShowPanel                 as long = true

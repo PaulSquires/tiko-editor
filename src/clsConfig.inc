@@ -269,8 +269,8 @@ function clsConfig.SaveConfigFile() as long
     pStream.WriteLine "AutoSaveFiles="         & this.AutoSaveFiles
     pStream.WriteLine "AutoSaveInterval="      & this.AutoSaveInterval
     pStream.WriteLine "RestoreSession="        & this.RestoreSession
-    if this.RestoreSession = 0 then this.wszLastActiveSession = ""
-    pStream.WriteLine "LastActiveSessionFile=" & ProcessToCurdriveApp(this.wszLastActiveSession)
+    if this.RestoreSession = 0 then this.wszLastActiveProject = ""
+    pStream.WriteLine "LastActiveProjectFile=" & ProcessToCurdriveApp(this.wszLastActiveProject)
     pStream.WriteLine "CompactMenus="          & this.CompactMenus
     pStream.WriteLine "MultipleInstances="     & this.MultipleInstances    
     pStream.WriteLine "CompileAutosave="       & this.CompileAutosave      
@@ -713,7 +713,12 @@ function clsConfig.LoadConfigFile( byval isHotReload as boolean = false ) as lon
             case "SettingsVersion":          this.SettingsVersion       = wData
             case "AskExit":                  this.AskExit               = nData
             case "RestoreSession":           this.RestoreSession        = nData
-            case "LastActiveSessionFile":    this.wszLastActiveSession  = ProcessFromCurdriveApp(wData)
+            ' The old key is still accepted on read. It always doubled as the last-project
+            ' slot, so honouring it means an existing settings.ini reopens the project the
+            ' user had open rather than silently coming up empty once. Write-side is the
+            ' new key only, so the old one ages out on the first save.
+            case "LastActiveProjectFile":    this.wszLastActiveProject  = ProcessFromCurdriveApp(wData)
+            case "LastActiveSessionFile":    this.wszLastActiveProject  = ProcessFromCurdriveApp(wData)
             case "CompactMenus":             this.CompactMenus          = nData
             case "MultipleInstances":        this.MultipleInstances     = nData
             case "CompileAutosave":          this.CompileAutosave       = nData
@@ -1059,7 +1064,7 @@ function clsConfig.SaveSessionFile( byref wszSessionFile as wstring ) as boolean
             
     pStream.Close
 
-    this.wszLastActiveSession = wszSessionFile
+    this.wszLastActiveProject = wszSessionFile
 
     function = true   ' successful save
 end function
@@ -1240,7 +1245,7 @@ function clsConfig.LoadSessionFile( byref wszSessionFile as wstring ) as boolean
 
     gApp.IsSessionActive = true
 
-    this.wszLastActiveSession = wszSessionFile
+    this.wszLastActiveProject = wszSessionFile
     
     frmMain_PositionWindows
     frmMain_SetFocusToCurrentCodeWindow
@@ -1278,9 +1283,21 @@ function clsConfig.ProjectSaveToFile() as boolean
 
     dim pDoc as clsDocument ptr
 
+    ' Paths are stored RELATIVE to the project file, but only for a project the user named
+    ' and placed. The untitled workspace lives in settings\ under the exe, while its files
+    ' live wherever the user works -- relativizing against it would turn every entry into a
+    ' "..\..\" chain, and any file on another volume cannot be relativized at all. So the
+    ' untitled workspace stores absolute paths, which is exactly what the session file it
+    ' replaces did.
+    '
+    ' The {CURDRIVE} encoding below is NOT conditional and does not need to be:
+    ' ProcessToCurdriveProject keys off ProjectFilename's drive, and the untitled project
+    ' sits in the exe's own directory, so it already resolves to the App variant's answer.
+    dim as boolean bRelativize = gApp.IsProjectNamed()
+
     dim pStream as CTextStream  ' (utf16)
     if pStream.Create(gApp.ProjectFilename, true, true) <> S_OK then return false
-    
+
     pStream.WriteLine "' PROJECT FILE"
     pStream.WriteLine "ProjectBuild="       & gApp.ProjectBuild
     pStream.WriteLine "ProjectOther32="     & gApp.ProjectOther32
@@ -1301,9 +1318,11 @@ function clsConfig.ProjectSaveToFile() as boolean
         if pDoc->IsNewFlag = false then 
             pDoc->SetDocInfo()   
             wszText = pDoc->DiskFilename
-            cwzRelative = AfxPathRelativePathTo( gApp.ProjectFilename, FILE_ATTRIBUTE_NORMAL, wszText, FILE_ATTRIBUTE_NORMAL)
-            if len(cwzRelative) then
-                if AfxPathIsRelative(cwzRelative) then wszText = cwzRelative
+            if bRelativize then
+                cwzRelative = AfxPathRelativePathTo( gApp.ProjectFilename, FILE_ATTRIBUTE_NORMAL, wszText, FILE_ATTRIBUTE_NORMAL)
+                if len(cwzRelative) then
+                    if AfxPathIsRelative(cwzRelative) then wszText = cwzRelative
+                end if
             end if
             wszText = ProcessToCurdriveProject(wszText)
             pStream.WriteLine "File=" & wszText
@@ -1332,14 +1351,16 @@ function clsConfig.ProjectSaveToFile() as boolean
         if pDoc->IsNewFlag = false then 
             if gTTabCtl.GetTabIndexByDocumentPtr(pDoc) = -1 then
                 wszText = pDoc->DiskFilename
-                cwzRelative = AfxPathRelativePathTo( gApp.ProjectFilename, FILE_ATTRIBUTE_NORMAL, wszText, FILE_ATTRIBUTE_NORMAL)
-                ' The len() test is NOT optional. AfxPathRelativePathTo returns "" when
-                ' PathRelativePathToW fails -- a file on another volume, most obviously --
-                ' and AfxPathIsRelative("") is TRUE. Without the guard wszText becomes ""
-                ' and the document is written as "File=", i.e. SILENTLY DROPPED from the
-                ' project. The tabbed loop above has always had this guard; this one did not.
-                if len(cwzRelative) then
-                    if AfxPathIsRelative(cwzRelative) then wszText = cwzRelative
+                if bRelativize then
+                    cwzRelative = AfxPathRelativePathTo( gApp.ProjectFilename, FILE_ATTRIBUTE_NORMAL, wszText, FILE_ATTRIBUTE_NORMAL)
+                    ' The len() test is NOT optional. AfxPathRelativePathTo returns "" when
+                    ' PathRelativePathToW fails -- a file on another volume, most obviously --
+                    ' and AfxPathIsRelative("") is TRUE. Without the guard wszText becomes ""
+                    ' and the document is written as "File=", i.e. SILENTLY DROPPED from the
+                    ' project. The tabbed loop above has always had this guard; this one did not.
+                    if len(cwzRelative) then
+                        if AfxPathIsRelative(cwzRelative) then wszText = cwzRelative
+                    end if
                 end if
                 wszText = ProcessToCurdriveProject(wszText)
                 pStream.WriteLine "File=" & wszText
@@ -1374,7 +1395,7 @@ function clsConfig.ProjectSaveToFile() as boolean
 
     pStream.Close
 
-    this.wszLastActiveSession = gApp.ProjectFilename
+    this.wszLastActiveProject = gApp.ProjectFilename
 
     function = true   ' successful save
 end function
@@ -1526,7 +1547,17 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
         
         pDoc = gApp.CreateEmptyDocument()
         pDoc->LoadDiskFile( docData(i).wszFilename )
-        pDoc->ProjectFiletype = docData(i).wszFileType
+        ' Never let a loaded document stay uncategorized. The Explorer groups strictly by
+        ' category, so a FILETYPE_UNDEFINED document matches no header and DISAPPEARS from
+        ' the list while still being in the workspace. Existing project files really do
+        ' carry FileType=0 entries -- tiko.tiko has one -- so this is repairing data on
+        ' disk, not guarding against a case that cannot happen. The session loader has
+        ' always applied this same fallback; the project loader never did.
+        if docData(i).wszFileType = FILETYPE_UNDEFINED then
+            pDoc->ProjectFiletype = FILETYPE_NORMAL
+        else
+            pDoc->ProjectFiletype = docData(i).wszFileType
+        end if
         pDoc->docData = docData(i)
         if docData(i).bLoadInTab then
             pDoc->AssignTextBuffer()
@@ -1574,7 +1605,7 @@ function clsConfig.ProjectLoadFromFile( byval wszFile as DWSTRING ) as boolean
     frmOutput_ShowNotes()
     frmOutput_UpdateToDoListview()
 
-    this.wszLastActiveSession = gApp.ProjectFilename
+    this.wszLastActiveProject = gApp.ProjectFilename
 
     ' Clear the navigation history. Its entries are filenames rather than document pointers
     ' now, so they can no longer dangle -- but they describe the workspace being left.

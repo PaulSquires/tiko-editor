@@ -280,10 +280,13 @@ function frmMain_CompileTopMenuStates() as long
         end if
     end if
 
-    ' QuickRun should be enabled for non-Projects
-    if gApp.IsProjectActive = false then 
-        if gTTabCtl.GetDocumentTabCount then EnableTopMenuItem( IDM_QUICKRUN, true )
-    end if
+    ' QuickRun is enabled whenever there is a document to run, workspace or not. It is
+    ' orthogonal to the workspace: it copies the ACTIVE BUFFER to a temporary .bas,
+    ' compiles that, and deletes both the temp source and the temp exe afterwards -- so
+    ' it is the only way to run a file that has never been saved to disk, and gating it
+    ' on "no project open" would have removed that outright once every workspace is a
+    ' project.
+    if gTTabCtl.GetDocumentTabCount then EnableTopMenuItem( IDM_QUICKRUN, true )
     
     ' Determine if an executable exists based on the current active file or project
     dim as DWSTRING wszRunFile = GetRunExecutableFilename()

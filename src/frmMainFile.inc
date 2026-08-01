@@ -620,7 +620,7 @@ end function
 ' Close a session
 ' ========================================================================================
 function OnCommand_FileCloseSession( byval hwnd as HWND ) as LRESULT
-    gConfig.wszLastActiveSession = ""
+    gConfig.wszLastActiveProject = ""
     gConfig.SaveConfigFile()
     gConfig.CloseSessionFile(gApp.SessionFilename)
     function = 0

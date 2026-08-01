@@ -33,28 +33,19 @@ function frmMain_OpenProjectSafely( _
             byref wszProjectFileName as const wstring _
             ) as boolean
 
-    ' if a Project is not active then we need to save the current non-project notes
-    ' when this file is closed. It is possible that this file is being closed and
-    ' a project is being opened.
-    if gApp.IsProjectActive = false then
-        gApp.NonProjectNotes = AfxGetWindowText(GetDlgItem(HWND_FRMOUTPUT, IDC_FRMOUTPUT_TXTNOTES))
-        gConfig.SaveConfigFile
-    end if
+    ' The outgoing workspace's notes need no explicit capture here. frmOutput_NotesChanged
+    ' writes gApp.ProjectNotes on every keystroke and ProjectSaveToFile persists it, so the
+    ' save inside Workspace_SaveAndCloseAll below already carries them. (This used to flush
+    ' NonProjectNotes into settings.ini, which was necessary only because loose files had
+    ' nowhere else to store notes.)
 
     FindReplaceControls_Hide()
 
-    ' if a project is open then close any files that may be open in the editor. No need to
-    ' do this if a new project is being created/opened because that function has already
-    ' performed this operation. Doing so again will cause the Recent Files/Projects panel
-    ' to flash on the screen.
+    ' Save and close the outgoing workspace. No need to do this if a new project is being
+    ' created/opened because that function has already performed this operation. Doing so
+    ' again will cause the Recent Files/Projects panel to flash on the screen.
     if gApp.IsNewProjectFlag = false then
-        if gApp.IsProjectActive then 
-            if OnCommand_ProjectClose(hwnd) = false then exit function
-        elseif gApp.IsSessionActive then
-            if gConfig.CloseSessionFile( gApp.SessionFilename) = false then exit function
-        else   
-            if OnCommand_FileClose(HWnd, EFC_CLOSEALL) = false then exit function
-        end if
+        if Workspace_SaveAndCloseAll(hwnd) = false then exit function
         ' Clear any previous info from the Output windows
         frmOutput_ResetAllControls()
     end if
@@ -204,23 +195,33 @@ end Function
 
 
 ' ========================================================================================
-' Open any Session or Project on editor startup
+' Establish the startup workspace.
+'
+' Always leaves a workspace in place. If the user turned restore off, or the last project
+' is gone, or nothing was ever saved, that workspace is a fresh untitled one -- there is
+' no "nothing open" state to fall through to any more.
 ' ========================================================================================
-function frmMain_RestoreSessionOrProject() as long
-    ' Only restore session if that option is active. The session file may contain
-    ' a reference to a project if the last session was a project.
-    ' Only restore the session if no files were already opened via the command line.
-    if gTTabCtl.GetItemCount = 0 then
-        if gConfig.RestoreSession then 
-            if AfxFileExists( gConfig.wszLastActiveSession ) then
-                gConfig.LoadSessionFile( gConfig.wszLastActiveSession )
-            else
-                gConfig.LoadDefaultSessionFile()
-            end if   
-        end if
-    end if
-    
-    function = 0 
+function frmMain_RestoreWorkspace( byref wszLastProject as const wstring ) as long
+
+    ' Files already opened from the command line own the workspace; do not displace them.
+    if gTTabCtl.GetItemCount <> 0 then return 0
+
+    ' The target is passed IN, not read from gConfig, and that is load-bearing:
+    ' Workspace_EstablishUntitled has already run by this point and it sets
+    ' wszLastActiveProject to the workspace it established. Reading the field here would
+    ' therefore always see the untitled path and never restore anything -- which is
+    ' exactly what happened, and no assertion about the established workspace could catch
+    ' it, because an untitled workspace is perfectly self-consistent.
+    if gConfig.RestoreSession = 0 then return 0
+
+    dim as boolean bIsNamed = ( ucase(wszLastProject) <> ucase(gConfig.UntitledProjectFilename) )
+    if bIsNamed = false then return 0
+    if len(wszLastProject) = 0 then return 0
+    if AfxFileExists( wszLastProject ) = 0 then return 0
+
+    frmMain_OpenProjectSafely( HWND_FRMMAIN, wszLastProject )
+
+    function = 0
 end function
 
 
@@ -250,10 +251,6 @@ function frmMain_ProcessFilesArray( _
             ' Pass the info to our generic project open function to handle everything.
             frmMain_OpenProjectSafely(HWND_FRMMAIN, wszArg) 
 
-        case ".session"      ' session file
-            numProcessed += 1
-            gConfig.LoadSessionFile(wszArg)
-            
         case else   ' .bas, .bi, .rc, etc...
             ' Test to see if the file is already loaded in the editor. if it is, then
             ' bypass loading it again thereby creating multiple ghost instances.
@@ -286,13 +283,23 @@ function frmMain_ProcessCommandLine( byval hwnd as HWND ) as long
     ' Uuse AfxCommand which is a unicode aware replacement for FB's
     ' built in COMMAND function (that is not unicode compliant).
     
-    if len(AfxCommand(1)) = 0 then 
-        ' no command line files/project specified by the user may be wanting
-        ' to restore a previous session/project.
-        frmMain_RestoreSessionOrProject()
+    ' Snapshot the restore target BEFORE establishing, because establishing overwrites it.
+    dim as DWSTRING wszLastProject = gConfig.wszLastActiveProject
+    gWorkspaceRestoreTarget = wszLastProject
+
+    ' Establish a workspace BEFORE either branch below. There is no "no project open"
+    ' state any more, and the files-on-the-command-line path never reached the restore
+    ' call -- so without this a launch with arguments would run with no workspace at all
+    ' and ProjectFilename empty, which silently defeats every save path.
+    Workspace_EstablishUntitled()
+
+    if len(AfxCommand(1)) = 0 then
+        ' No files named on the command line, so the user may be wanting the previous
+        ' project restored over the workspace just established.
+        frmMain_RestoreWorkspace( wszLastProject )
         exit function
     end if
-    
+
     dim wszPath as wstring * MAX_PATH
     dim wszArg  as wstring * MAX_PATH
     dim as integer numProcessed
@@ -333,11 +340,11 @@ function frmMain_ProcessCommandLine( byval hwnd as HWND ) as long
 
     numProcessed = frmMain_ProcessFilesArray(hwnd, wszFiles())
     
-    ' If no files or project was loaded from the command line then check if the user 
-    ' had session/project restore option.
+    ' If no files or project was loaded from the command line then check if the user
+    ' had the project restore option set.
     if numProcessed = 0 then
-        frmMain_RestoreSessionOrProject()
-    end if    
+        frmMain_RestoreWorkspace( wszLastProject )
+    end if
 
     LoadExplorerFiles()
     LoadFunctionsFiles()
@@ -1252,18 +1259,11 @@ function frmMain_OnClose( byval hwnd as HWND ) as LRESULT
     ' (a cancelled project close, session save, default session save, or file close). Cancel
     ' the exit and the live height had been divided by the DPI factor.
 
-    ' if a project is already open then save/close it.
-    if gApp.IsProjectActive then 
-        if OnCommand_ProjectClose(hwnd) = false then return 0
-    elseif gApp.IsSessionActive then 
-        ' if a session is already open then save/close it.
-        if gConfig.SaveSessionFile(gApp.SessionFilename) = false then return 0
-    else
-        ' Save a default session file that will open if Settings option checked to load
-        ' last project/session but no last used project or session exits.
-        if gConfig.SaveDefaultSessionFile() = 0 then return 0
-    end if
-    
+    ' Save and close the workspace, named or untitled. This is the ONLY write of the
+    ' untitled workspace's file on a normal exit, which is why a cancelled save prompt
+    ' has to abort the close rather than fall through.
+    if Workspace_SaveAndCloseAll(hwnd) = false then return 0
+
     ' Close any open files asking to save any that are dirty
     if OnCommand_FileClose(HWnd, EFC_CLOSEALL) = 0 then return 0
 
@@ -1508,6 +1508,10 @@ function frmMain_WndProc( _
             ' ProcessCommandLine takes an early exit on the no-arguments path -- which is the
             ' normal launch -- so the bottom of that function is unreachable for it.
             frmFindInProject_RunSelfTest()
+
+            ' Same reasoning, and for the same reason it cannot live anywhere earlier:
+            ' the workspace is not established until ProcessCommandLine returns.
+            Workspace_RunSelfTest()
 
             ' TIKO_UNUSED_AUTOOPEN=1: the only way to reach the Unused Symbols layout
             ' self-test without a human driving the menu. HERE, not on scan completion:

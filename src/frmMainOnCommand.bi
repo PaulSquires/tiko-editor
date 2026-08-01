@@ -72,6 +72,9 @@ declare function OnCommand_ViewRestoreMain() as LRESULT
 declare function OnCommand_ViewExplorerPosition() as LRESULT
 
 declare function OnCommand_ProjectSave( byval HWnd as HWnd, byval bSaveAs as BOOLEAN = False ) as LRESULT
+declare function Workspace_EstablishUntitled() as boolean
+declare sub Workspace_RunSelfTest()
+declare function Workspace_SaveAndCloseAll( byval hwnd as HWND ) as boolean
 declare function OnCommand_ProjectClose( byval hwnd as HWND ) as LRESULT
 declare function OnCommand_ProjectNew( byval hwnd as HWND ) as LRESULT
 declare function OnCommand_ProjectOpen( byval hwnd as HWND ) as LRESULT

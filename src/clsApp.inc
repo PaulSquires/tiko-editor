@@ -61,7 +61,16 @@ function clsApp.CreateEmptyDocument( byval IsNewFile as boolean = false ) as cls
         ' overwrites the field, so a template keeps the encoding it is stored in.
         pDoc->FileEncoding = gConfig.NewFileEncoding
     end if
-    pDoc->ProjectFileType = FILETYPE_UNDEFINED
+    ' A NEW buffer gets a real category immediately. clsDocument.SetProjectFileType is a
+    ' no-op while IsNewFlag is true, so an untitled buffer would otherwise keep
+    ' FILETYPE_UNDEFINED -- and once the Explorer groups strictly by category it would
+    ' match no header and VANISH from the list while keeping its tab. Files loaded from
+    ' disk or from a project file are assigned their real type straight after this.
+    if IsNewFile then
+        pDoc->ProjectFileType = FILETYPE_NORMAL
+    else
+        pDoc->ProjectFileType = FILETYPE_UNDEFINED
+    end if
     pDoc->SetDocumentBuild()
     function = pDoc
 end function
@@ -293,11 +302,24 @@ function clsApp.SaveProject( byval bSaveAs as boolean = false ) as boolean
     ' destroyed the user's project with no way back.
     this.ProjectFilename = wFilename
     this.ProjectName = AfxStrPathname( "NAMEX", wFilename )
+    if len(wFilename) = 0 then return false
+
+    ' Do not create the untitled workspace's file until it actually holds something. An
+    ' install launched once and closed empty should leave nothing behind -- and the restore
+    ' path reaches here with an empty untitled workspace on EVERY launch, because it
+    ' establishes one and then immediately replaces it with the named project it came for.
+    ' A named project is always written: an emptied project is a real state to persist.
+    if this.IsProjectNamed() = false then
+        if this.GetDocumentCount() = 0 then return true
+    end if
+
     gConfig.ProjectSaveToFile()
-    
-    ' Also need to add this new project name to the MRU list.
-    UpdateMRUProjectList(wFilename)
-    
+
+    ' Also need to add this new project name to the MRU list -- but only for a project the
+    ' user named. The untitled workspace's path is an internal file under settings\ and
+    ' must never appear in Recent Projects.
+    if this.IsProjectNamed() then UpdateMRUProjectList(wFilename)
+
     frmMain_PositionWindows
 
     function = true

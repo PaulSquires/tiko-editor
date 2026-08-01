@@ -200,13 +200,9 @@ function frmProjectOptions_SaveProjectOptions( byval hwnd as HWND ) as BOOLEAN
     end if
 
     if gApp.IsNewProjectFlag then
-        ' Need to close any open files or project at this point before loading
-        ' and displaying the new project.
-        if gApp.IsProjectActive then
-            if OnCommand_ProjectClose(hwnd) = false then exit function
-        else
-            if OnCommand_FileClose(hwnd, EFC_CLOSEALL) = false then exit function
-        end if
+        ' Need to close the current workspace at this point before loading and
+        ' displaying the new project.
+        if Workspace_SaveAndCloseAll(hwnd) = false then exit function
     end if
 
     ' Load the new or modified data into the Project variables
