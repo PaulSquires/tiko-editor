@@ -149,22 +149,12 @@ end sub
 ' ----------------------------------------------------------------------------------------
 ' Filter test. PURE.
 ' ----------------------------------------------------------------------------------------
-function UnusedSymbols_Passes( byref r as UNUSEDROW, byval nKindMask as long, _
-                               byref wszFilter as const wstring ) as boolean
+function UnusedSymbols_Passes( byref r as UNUSEDROW, byval nKindMask as long ) as boolean
     if (nKindMask and (1 shl r.nKind)) = 0 then return false
-    if len( wszFilter ) = 0 then return true
-
-    dim as DWSTRING wszNeedle = ucase( wszFilter )
-
-    ' matched against every column the user can SEE, so a search for "Never read" or for
-    ' a line number behaves the way the list looks
-    if instr( ucase( r.wszFile ), wszNeedle ) > 0 then return true
-    if instr( ucase( r.wszName ), wszNeedle ) > 0 then return true
-    if instr( wstr( r.nLine ), wszNeedle ) > 0 then return true
-    if instr( ucase( UnusedSymbols_KindText( r.nKind ) ), wszNeedle ) > 0 then return true
-    if instr( ucase( UnusedSymbols_StatusText( r ) ), wszNeedle ) > 0 then return true
-
-    function = false
+    ' The kind mask is the only test left now that the text filter is gone. This must be
+    ' TRUE: a fall-through of FALSE rejects every row, and an empty list reads as "no
+    ' unused symbols found" rather than as a broken filter.
+    return true
 end function
 
 ' ----------------------------------------------------------------------------------------
@@ -426,32 +416,10 @@ sub UnusedSymbols_RunSelfTest()
     dim as long maskVar = (1 shl UnusedKindVariable)
     dim as long maskAll = (1 shl UNUSED_KIND_COUNT) - 1
 
-    hUAssert( UnusedSymbols_Passes( rv, maskVar, "" ), "variable passes a variables-only mask", nPass, nFail )
-    hUAssert( UnusedSymbols_Passes( rp, maskVar, "" ) = false, "procedure fails a variables-only mask", nPass, nFail )
-    hUAssert( UnusedSymbols_Passes( rp, maskAll, "" ), "procedure passes an all-kinds mask", nPass, nFail )
-    hUAssert( UnusedSymbols_Passes( rv, 0, "" ) = false, "an empty mask passes nothing", nPass, nFail )
-
-    ' ---- filter: the text needle -----------------------------------------------------
-    dim as UNUSEDROW rf = hMakeRow( "C:\proj\frmMain.inc", 42, UnusedKindVariable, _
-                                    "gWidgetCount", UnusedStatusWriteOnly, 3 )
-    hUAssert( UnusedSymbols_Passes( rf, maskAll, "" ), "an empty needle matches everything", nPass, nFail )
-    hUAssert( UnusedSymbols_Passes( rf, maskAll, "widget" ), "needle matches the NAME, case-insensitively", nPass, nFail )
-    hUAssert( UnusedSymbols_Passes( rf, maskAll, "frmmain" ), "needle matches the FILE", nPass, nFail )
-    hUAssert( UnusedSymbols_Passes( rf, maskAll, "42" ), "needle matches the LINE as text", nPass, nFail )
-    hUAssert( UnusedSymbols_Passes( rf, maskAll, "variable" ), "needle matches the CLASS column", nPass, nFail )
-    hUAssert( UnusedSymbols_Passes( rf, maskAll, ucase( L(567, "Never read") ) ), _
-              "needle matches the STATUS column - the one only visible as rendered text", nPass, nFail )
-    hUAssert( UnusedSymbols_Passes( rf, maskAll, "zzzz" ) = false, "a non-matching needle rejects", nPass, nFail )
-
-    ' the mask wins over the needle: matching text must not resurrect a filtered-out kind
-    hUAssert( UnusedSymbols_Passes( rf, (1 shl UnusedKindProcedure), "widget" ) = false, _
-              "the kind mask is applied even when the text matches", nPass, nFail )
-
-    ' ---- status text -----------------------------------------------------------------
-    hUAssert( len( UnusedSymbols_StatusText( rf ) ) > 0, "write-only status has localized text", nPass, nFail )
-    hUAssert( instr( UnusedSymbols_StatusText( rf ), "3" ) > 0, _
-              "write-only status shows the write COUNT as its evidence", nPass, nFail )
-    hUAssert( len( UnusedSymbols_StatusText( rv ) ) > 0, "dead status has localized text", nPass, nFail )
+    hUAssert( UnusedSymbols_Passes( rv, maskVar ), "variable passes a variables-only mask", nPass, nFail )
+    hUAssert( UnusedSymbols_Passes( rp, maskVar ) = false, "procedure fails a variables-only mask", nPass, nFail )
+    hUAssert( UnusedSymbols_Passes( rp, maskAll ), "procedure passes an all-kinds mask", nPass, nFail )
+    hUAssert( UnusedSymbols_Passes( rv, 0 ) = false, "an empty mask passes nothing", nPass, nFail )
 
     ' ---- localization: every id this module owns must resolve -------------------------
     ' L() DISCARDS its default, so a missing .lang entry renders BLANK with nothing in the

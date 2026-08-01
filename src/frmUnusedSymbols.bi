@@ -20,8 +20,7 @@
 '
 '   Scanned: <root file>                                          (painted)
 '   Unsaved changes (line numbers may be stale): a.bas, b.inc      (painted, hidden if none)
-'   [Refresh] [x] Variables [x] Procedures [x] Parameters [x] Types [x] Fields [x] Constants
-'   [PsTextBox] filter
+'   [x] Variables [x] Procedures [x] Parameters [x] Types [x] Fields [x] Constants
 '   [PsListTree]  File | Line | Class | Name | Status
 '   1183 / 1183 shown                                             (painted)
 '
@@ -32,10 +31,8 @@
 ' NO PUMP OBLIGATION IS ADDED.
 '
 ' The list does not enable label editing, so PsListTree_FilterMessage is not required for it
-' -- and frmMain's pump already calls it anyway for the debugger's watch list. The filter box
-' is a PsTextBox, which DOES carry a pump obligation, and frmMain already calls
-' PsTextBox_FilterMessage. Nothing new is needed here; do not add a
-' frmUnusedSymbols_FilterMessage.
+' -- and frmMain's pump already calls it anyway for the debugger's watch list. Nothing this
+' window creates carries a pump obligation; do not add a frmUnusedSymbols_FilterMessage.
 '
 ' ------------------------------------------------------------------------------------------
 ' SORTING IS THIS FILE'S JOB, NOT THE CONTROL'S.
@@ -53,26 +50,18 @@
 #pragma once
 
 #define IDC_FRMUNUSED_LIST         1001
-#define IDC_FRMUNUSED_FILTER       1002
-#define IDC_FRMUNUSED_REFRESH      1003
 #define IDC_FRMUNUSED_TOGGLEFIRST  1010
 #define IDC_FRMUNUSED_TOGGLELAST   1015
 
 ' Segoe Fluent glyphs, defined ONCE and here, in the ESCAPE form.
 ' Never paste the character itself: these files are BOM-less, so fbc reads a pasted glyph as
 ' its three UTF-8 bytes in Latin-1 and draws garbage from a perfectly clean build.
-#define GLYPH_REFRESH       !"\uE72C"
 #define GLYPH_CHEVRONUP     !"\uE70E"
 #define GLYPH_CHEVRONDOWN   !"\uE70D"
 
 ' unscaled; SetClientSize applies the DPI factor itself
 const as long FRMUNUSED_DEFWIDTH  = 1000
 const as long FRMUNUSED_DEFHEIGHT = 640
-
-const as long FRMUNUSED_FILTERTIMER = 1
-' A full-project report is ~1200 rows and rebuilding the list on every keystroke is visibly
-' slow, so the filter is debounced rather than applied straight from WM_COMMAND.
-const as long FRMUNUSED_FILTERDELAY = 200
 
 type UnusedWindowPosition
     bInitialized as boolean = false
@@ -99,13 +88,12 @@ declare sub      frmUnusedSymbols_RunLayoutSelfTest()
 ' so it can be asserted without a window.
 type FRMUNUSED_LAYOUT
     rcHeader  as RECT       ' "Scanned:" line + the dirty-buffer warning
-    rcToggles as RECT       ' Refresh + the six kind filters
-    rcFilter  as RECT
+    rcToggles as RECT       ' the six kind filters
     rcList    as RECT
     rcStatus  as RECT
 end type
 
 declare sub frmUnusedSymbols_ComputeLayout( byval cx as long, byval cy as long, _
                                             byval nHeader as long, byval nToggles as long, _
-                                            byval nFilter as long, byval nStatus as long, _
+                                            byval nStatus as long, _
                                             byref lo as FRMUNUSED_LAYOUT )

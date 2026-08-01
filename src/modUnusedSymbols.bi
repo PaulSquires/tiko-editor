@@ -74,8 +74,7 @@ declare sub UnusedSymbols_Sort( rows() as UNUSEDROW, byval nCount as long, _
 
 ' Pure. nKindMask is a bitmask of (1 shl UNUSED_KIND); wszFilter matches
 ' case-insensitively against any displayed column.
-declare function UnusedSymbols_Passes( byref r as UNUSEDROW, byval nKindMask as long, _
-                                       byref wszFilter as const wstring ) as boolean
+declare function UnusedSymbols_Passes( byref r as UNUSEDROW, byval nKindMask as long ) as boolean
 
 ' Pure. Display text for a row's class and status columns (localized).
 declare function UnusedSymbols_KindText( byval nKind as long ) as DWSTRING

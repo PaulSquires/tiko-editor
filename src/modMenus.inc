@@ -319,19 +319,19 @@ function frmMain_DebugTopMenuStates() as long
     EnableTopMenuItem( IDM_DEBUG_TOGGLEBREAKPOINT, fEnabled )
     EnableTopMenuItem( IDM_DEBUG_DELETEALLBREAKPOINTS, fEnabled )
 
-    dim pDoc as clsDocument ptr 
-    if gApp.IsProjectActive then
-        pDoc = gApp.GetMainDocumentPtr()
-    else
-        pDoc = gApp.GetMainDocumentPtr()
-        if pDoc = null then
-            pDoc = gTTabCtl.GetActiveDocumentPtr()
-        end if    
-    end if
-    ' Enable the "Unused Symbols Report" menu item only if a valid pDoc
-    if (pDoc <> null) then
+'    dim pDoc as clsDocument ptr 
+'    if gApp.IsProjectActive then
+'        pDoc = gApp.GetMainDocumentPtr()
+'    else
+'        pDoc = gApp.GetMainDocumentPtr()
+'        if pDoc = null then
+'            pDoc = gTTabCtl.GetActiveDocumentPtr()
+'        end if    
+'    end if
+'    ' Enable the "Unused Symbols Report" menu item only if a valid pDoc
+'    if (pDoc <> null) then
         EnableTopMenuItem( IDM_DEBUG_UNUSEDSYMBOLS, true )
-    end if
+'    end if
 
 
     function = 0

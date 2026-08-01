@@ -21,7 +21,6 @@ dim shared gUnusedRowCount  as long
 dim shared gUnusedVisible(any) as long       ' model indices currently in the list
 dim shared gUnusedVisCount  as long
 dim shared gUnusedToggle(IDC_FRMUNUSED_TOGGLEFIRST to IDC_FRMUNUSED_TOGGLELAST) as HWND
-dim shared gUnusedRefreshBtn  as HWND
 dim shared gUnusedScannedText as DWSTRING
 dim shared gUnusedPending     as boolean   ' a scan was requested; rows arrive later
 dim shared gUnusedDirtyText   as DWSTRING
@@ -39,13 +38,12 @@ end function
 ' ------------------------------------------------------------------------------------------
 sub frmUnusedSymbols_ComputeLayout( byval cx as long, byval cy as long, _
                                     byval nHeader as long, byval nToggles as long, _
-                                    byval nFilter as long, byval nStatus as long, _
+                                    byval nStatus as long, _
                                     byref lo as FRMUNUSED_LAYOUT )
     dim as long y = 0
 
     SetRect( @lo.rcHeader, 0, y, cx, y + nHeader ) : y += nHeader
     SetRect( @lo.rcToggles, 0, y, cx, y + nToggles ) : y += nToggles
-    SetRect( @lo.rcFilter, 0, y, cx, y + nFilter ) : y += nFilter
 
     dim as long nListBottom = cy - nStatus
     ' A window dragged very short must not give the list a negative height - SetWindowPos
@@ -62,9 +60,6 @@ end sub
 private sub frmUnusedSymbols_Populate()
     dim as HWND hLV = HWND_FRMUNUSED_LIST
     if IsWindow(hLV) = 0 then exit sub
-
-    dim as DWSTRING wszFilter
-    if IsWindow(HWND_FRMUNUSED_FILTER) then wszFilter = PsTextBox_GetText( HWND_FRMUNUSED_FILTER )
 
     ' the mask is read back from the controls, so they are the single source of truth and
     ' gConfig is only their persisted copy
@@ -84,7 +79,7 @@ private sub frmUnusedSymbols_Populate()
     gUnusedVisCount = 0
 
     for i as long = 0 to gUnusedRowCount - 1
-        if UnusedSymbols_Passes( gUnusedRows(i), nMask, wszFilter ) = false then continue for
+        if UnusedSymbols_Passes( gUnusedRows(i), nMask ) = false then continue for
 
         dim as DWSTRING wszRow = gUnusedRows(i).wszFile & chr(9) & _
                                  wstr(gUnusedRows(i).nLine) & chr(9) & _
@@ -164,28 +159,13 @@ sub frmUnusedSymbols_Rebuild()
     ' while the scan is still pending. Report it so an unattended run can show the rows
     ' actually arrived rather than only that the window opened.
     if environ("TIKO_UNUSED_SELFTEST") = "1" then
-        dim as string sR = "  rebuild: " & gUnusedRowCount & " rows from " & gUnusedScannedText
+        ' BOTH counts: gUnusedRowCount is the model, gUnusedVisCount is what actually
+        ' reached the control. They differ by the kind filter, and a visible count of 0
+        ' against a non-zero model is exactly the "no results" failure.
+        dim as string sR = "  rebuild: " & gUnusedVisCount & " of " & gUnusedRowCount & _
+                           " rows visible, from " & gUnusedScannedText
         print sR
     end if
-end sub
-
-
-private sub frmUnusedSymbols_RefreshClicked( byval hButton as HWND, byval id as long )
-    ' Re-run the whole PROJECT SCAN rather than re-reading the current one. Acting on this
-    ' report is exactly what invalidates it: deleting an unused symbol shifts every line
-    ' number below it in that file, and it changes the reference counts of everything that
-    ' mentioned it. Re-sorting the existing scan would only re-order stale data.
-    '
-    ' The scan is asynchronous (clsScanMgr's worker), so the rebuild lands later, in
-    ' frmMain's MSG_USER_PARSE_COMPLETE handler.
-    gUnusedPending = true
-    ' the override goes only to the no-project case, same rule as _Show
-    if gApp.IsProjectActive then
-        gScanMgr.RequestProjectScan()
-    else
-        gScanMgr.RequestProjectScan( frmUnusedSymbols_RootFile() )
-    end if
-    if IsWindow(HWND_FRMUNUSED) then AfxRedrawWindow( HWND_FRMUNUSED )
 end sub
 
 
@@ -273,17 +253,17 @@ end sub
 sub frmUnusedSymbols_ApplyTheme()
     if IsWindow(HWND_FRMUNUSED) = 0 then exit sub
 
+    ' The caption is drawn by Windows, not by us, so it follows the theme only if we ask.
+    ' Every other top-level window here does this from its own ApplyTheme (frmDebug.inc:612,
+    ' frmAbout.inc:607, ...); this one did not, so its title bar stayed light under a dark
+    ' theme.
+    Theme_ApplyDarkCaption( HWND_FRMUNUSED )
+
     dim as HWND hLV = HWND_FRMUNUSED_LIST
     if IsWindow(hLV) then
         PsListTree_SetBackColor( hLV, ghOutput.BackColor )
         PsListTree_SetScrollBarColors( hLV, ghOutput.BackColorScrollBar, _
                                        ghOutput.ForeColorScrollBar, ghOutput.ForeColorScrollBar )
-    end if
-
-    if IsWindow(HWND_FRMUNUSED_FILTER) then
-        PsTextBox_SetBackColor( HWND_FRMUNUSED_FILTER, ghOutput.BackColor )
-        PsTextBox_SetForeColor( HWND_FRMUNUSED_FILTER, ghOutput.ForeColor )
-        PsTextBox_SetCueBannerColor( HWND_FRMUNUSED_FILTER, ghOutput.ForeColorScrollBar )
     end if
 
     AfxRedrawWindow( HWND_FRMUNUSED )
@@ -300,25 +280,16 @@ sub frmUnusedSymbols_PositionWindows()
 
     dim as long nHeader  = pWindow->ScaleY( iif( len(gUnusedDirtyText) > 0, 46, 26 ) )
     dim as long nToggles = pWindow->ScaleY(38)
-    dim as long nFilter  = pWindow->ScaleY(36)
     dim as long nStatus  = pWindow->ScaleY(24)
 
     dim as FRMUNUSED_LAYOUT lo
-    frmUnusedSymbols_ComputeLayout( rc.right, rc.bottom, nHeader, nToggles, nFilter, nStatus, lo )
+    frmUnusedSymbols_ComputeLayout( rc.right, rc.bottom, nHeader, nToggles, nStatus, lo )
 
     dim as long nPad = pWindow->ScaleX(8)
 
     ' Refresh first, then the kind filters. Every control measures itself, so nothing here
     ' has to know how wide a caption renders.
     dim as long x = nPad
-    if IsWindow(gUnusedRefreshBtn) then
-        dim as long bw, bh
-        PsButton_GetIdealSize( gUnusedRefreshBtn, bw, bh )
-        dim as long by = lo.rcToggles.top + (lo.rcToggles.bottom - lo.rcToggles.top - bh) \ 2
-        SetWindowPos( gUnusedRefreshBtn, 0, x, by, bw, bh, SWP_NOZORDER )
-        x += bw + pWindow->ScaleX(16)
-    end if
-
     for id as long = IDC_FRMUNUSED_TOGGLEFIRST to IDC_FRMUNUSED_TOGGLELAST
         if IsWindow(gUnusedToggle(id)) = 0 then continue for
         dim as long tw, th
@@ -327,12 +298,6 @@ sub frmUnusedSymbols_PositionWindows()
         SetWindowPos( gUnusedToggle(id), 0, x, ty, tw, th, SWP_NOZORDER )
         x += tw + pWindow->ScaleX(12)
     next
-
-    if IsWindow(HWND_FRMUNUSED_FILTER) then
-        SetWindowPos( HWND_FRMUNUSED_FILTER, 0, nPad, lo.rcFilter.top + pWindow->ScaleY(4), _
-                      rc.right - nPad * 2, lo.rcFilter.bottom - lo.rcFilter.top - pWindow->ScaleY(8), _
-                      SWP_NOZORDER )
-    end if
 
     if IsWindow(HWND_FRMUNUSED_LIST) then
         SetWindowPos( HWND_FRMUNUSED_LIST, 0, nPad, lo.rcList.top, _
@@ -356,10 +321,9 @@ private sub frmUnusedSymbols_OnPaint( byval hwnd as HWND )
 
     dim as long nHeader  = pWindow->ScaleY( iif( len(gUnusedDirtyText) > 0, 46, 26 ) )
     dim as long nToggles = pWindow->ScaleY(38)
-    dim as long nFilter  = pWindow->ScaleY(36)
     dim as long nStatus  = pWindow->ScaleY(24)
     dim as FRMUNUSED_LAYOUT lo
-    frmUnusedSymbols_ComputeLayout( rc.right, rc.bottom, nHeader, nToggles, nFilter, nStatus, lo )
+    frmUnusedSymbols_ComputeLayout( rc.right, rc.bottom, nHeader, nToggles, nStatus, lo )
 
     dim as long nPad = pWindow->ScaleX(8)
 
@@ -408,20 +372,6 @@ end sub
 private function frmUnusedSymbols_WndProc( byval hwnd as HWND, byval uMsg as UINT, _
                                            byval wParam as WPARAM, byval lParam as LPARAM ) as LRESULT
     select case uMsg
-        case WM_COMMAND
-            ' the filter box: debounce rather than rebuilding ~1200 rows per keystroke
-            if hiword(wParam) = EN_CHANGE then
-                SetTimer( hwnd, FRMUNUSED_FILTERTIMER, FRMUNUSED_FILTERDELAY, 0 )
-                return 0
-            end if
-
-        case WM_TIMER
-            if wParam = FRMUNUSED_FILTERTIMER then
-                KillTimer( hwnd, FRMUNUSED_FILTERTIMER )
-                frmUnusedSymbols_Populate()
-                return 0
-            end if
-
         case WM_SIZE
             frmUnusedSymbols_PositionWindows()
             AfxRedrawWindow( hwnd )
@@ -450,11 +400,8 @@ private function frmUnusedSymbols_WndProc( byval hwnd as HWND, byval uMsg as UIN
             return 0
 
         case WM_DESTROY
-            KillTimer( hwnd, FRMUNUSED_FILTERTIMER )
             HWND_FRMUNUSED = 0
             HWND_FRMUNUSED_LIST = 0
-            HWND_FRMUNUSED_FILTER = 0
-            gUnusedRefreshBtn = 0
             for id as long = IDC_FRMUNUSED_TOGGLEFIRST to IDC_FRMUNUSED_TOGGLELAST
                 gUnusedToggle(id) = 0
             next
@@ -536,14 +483,6 @@ function frmUnusedSymbols_Show( byval hWndParent as HWND ) as LRESULT
     pWindow->BigIcon   = LoadImage( pWindow->InstanceHandle, "IMAGE_AAA_MAINICON", IMAGE_ICON, 32, 32, LR_SHARED)
     pWindow->SmallIcon = LoadImage( pWindow->InstanceHandle, "IMAGE_AAA_MAINICON", IMAGE_ICON, 16, 16, LR_SHARED)
 
-    ' --- Refresh, at the head of the filter row ---
-    gUnusedRefreshBtn = PsButton_Create( HWND_FRMUNUSED, IDC_FRMUNUSED_REFRESH )
-    PsButton_SetText( gUnusedRefreshBtn, L(589, "Refresh") )
-    PsButton_SetFont( gUnusedRefreshBtn, ghFont(GUIFONT_9) )
-    PsButton_SetGlyphFont( gUnusedRefreshBtn, ghFont(SYMBOLFONT_10) )
-    PsButton_SetGlyphLeft( gUnusedRefreshBtn, GLYPH_REFRESH )
-    PsButton_SetClickCallback( gUnusedRefreshBtn, @frmUnusedSymbols_RefreshClicked )
-
     ' --- kind filters ---
     ' PsCheckBox, not PsToggle: these are filters rather than settings, and a checkbox
     ' carries its own caption. With toggles this window had to paint six captions itself
@@ -557,12 +496,6 @@ function frmUnusedSymbols_Show( byval hWndParent as HWND ) as LRESULT
         PsCheckBox_SetChecked( h, (gConfig.UnusedKindMask and (1 shl (id - IDC_FRMUNUSED_TOGGLEFIRST))) <> 0 )
         PsCheckBox_SetCheckChangedCallback( h, @frmUnusedSymbols_ToggleChanged )
     next
-
-    ' --- filter ---
-    HWND_FRMUNUSED_FILTER = PsTextBox_Create( HWND_FRMUNUSED, IDC_FRMUNUSED_FILTER )
-    PsTextBox_SetFont( HWND_FRMUNUSED_FILTER, ghFont(GUIFONT_9) )
-    PsTextBox_SetCueBannerText( HWND_FRMUNUSED_FILTER, L(582, "Filter") )
-    PsTextBox_SetCueBannerFont( HWND_FRMUNUSED_FILTER, ghFont(GUIFONT_9) )
 
     ' --- list ---
     dim as HWND hLV = PsListTree_Create( HWND_FRMUNUSED, IDC_FRMUNUSED_LIST )
@@ -586,11 +519,9 @@ function frmUnusedSymbols_Show( byval hWndParent as HWND ) as LRESULT
 
     ' Every Ps* control is created WS_CHILD but NOT WS_VISIBLE - the family leaves showing
     ' them to the host, which has to position them first.
-    if IsWindow(gUnusedRefreshBtn) then ShowWindow( gUnusedRefreshBtn, SW_SHOW )
     for id as long = IDC_FRMUNUSED_TOGGLEFIRST to IDC_FRMUNUSED_TOGGLELAST
         if IsWindow(gUnusedToggle(id)) then ShowWindow( gUnusedToggle(id), SW_SHOW )
     next
-    ShowWindow( HWND_FRMUNUSED_FILTER, SW_SHOW )
     ShowWindow( HWND_FRMUNUSED_LIST, SW_SHOW )
 
     ' Builds the model, positions the bands and fills the list. Skipped while a scan is
@@ -630,20 +561,15 @@ sub frmUnusedSymbols_RunLayoutSelfTest()
     ' ---- band tiling, pure ----------------------------------------------------------
     dim as FRMUNUSED_LAYOUT lo
     dim as long cx = 1000, cy = 640
-    frmUnusedSymbols_ComputeLayout( cx, cy, 26, 38, 36, 24, lo )
+    frmUnusedSymbols_ComputeLayout( cx, cy, 26, 38, 24, lo )
 
     if lo.rcToggles.top <> lo.rcHeader.bottom then
         nFail += 1 : print "  FAIL the filter row does not start where the header ends"
     else
         nPass += 1
     end if
-    if lo.rcFilter.top <> lo.rcToggles.bottom then
-        nFail += 1 : print "  FAIL the filter box does not start where the filter row ends"
-    else
-        nPass += 1
-    end if
-    if lo.rcList.top <> lo.rcFilter.bottom then
-        nFail += 1 : print "  FAIL the list does not start where the filter box ends"
+    if lo.rcList.top <> lo.rcToggles.bottom then
+        nFail += 1 : print "  FAIL the list does not start where the filter row ends"
     else
         nPass += 1
     end if
@@ -658,8 +584,17 @@ sub frmUnusedSymbols_RunLayoutSelfTest()
         nPass += 1
     end if
 
+    ' The list must occupy real space. This is the assertion that would have caught a
+    ' band-arithmetic slip leaving it zero-height, which looks exactly like "no results".
+    if (lo.rcList.bottom - lo.rcList.top) > 100 then
+        nPass += 1
+    else
+        nFail += 1 : print "  FAIL the list band has no usable height: " & _
+                           str(lo.rcList.bottom - lo.rcList.top)
+    end if
+
     ' a window dragged very short must not give the list a negative height
-    frmUnusedSymbols_ComputeLayout( cx, 40, 26, 38, 36, 24, lo )
+    frmUnusedSymbols_ComputeLayout( cx, 40, 26, 38, 24, lo )
     if lo.rcList.bottom < lo.rcList.top then
         nFail += 1 : print "  FAIL a too-short window gives the list a negative height"
     else
@@ -689,19 +624,6 @@ sub frmUnusedSymbols_RunLayoutSelfTest()
             ' window that paints its background and nothing else
             nFail += 1 : print "  FAIL the list is not visible"
         end if
-    end if
-
-    ' the Refresh button must exist, be visible and have a real size
-    dim as boolean bBtnOK = false
-    if IsWindow(gUnusedRefreshBtn) then
-        dim as RECT rcB
-        GetWindowRect( gUnusedRefreshBtn, @rcB )
-        bBtnOK = IsWindowVisible( gUnusedRefreshBtn ) andalso (rcB.right > rcB.left)
-    end if
-    if bBtnOK then
-        nPass += 1
-    else
-        nFail += 1 : print "  FAIL the Refresh button is missing, hidden or zero-sized"
     end if
 
     ' every kind filter must exist, be visible, and have a non-zero size. A PsCheckBox sizes
