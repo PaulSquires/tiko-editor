@@ -151,21 +151,31 @@ end function
 
 
 ' ========================================================================================
+' The kind of an Explorer row (see the enum's note in frmExplorer.bi).
+'
+' Invalid rows read EXPKIND_NONE, which is also what an un-tagged row reads, so a caller
+' never has to range-check the row first.
+' ========================================================================================
+function frmExplorer_KindFromRow( byval hCtl as HWND, byval row as integer ) as EXPLORER_ROWKIND
+    if row < 0 then return EXPKIND_NONE
+    return cast( EXPLORER_ROWKIND, PsListTree_GetItemDataExtra( hCtl, row ) )
+end function
+
+
+' ========================================================================================
 ' The document a row refers to, or NULL if it refers to none.
 '
-' EVERY read of an Explorer row's itemData must go through this. The rows are a mix of
-' real clsDocument pointers and the EXPLORER_PROMOTE_ROW sentinel, and the sentinel is a
-' non-null value that is not a valid pointer -- so a caller that casts and then tests
-' "if pDoc then" passes the test and dereferences address 1. That is a GPF on hover, which
-' is exactly how it shipped: three readers were guarded by hand and the tooltip callback
-' was missed. Returning NULL here makes the sentinel undereferenceable by construction
-' rather than by everyone remembering.
+' EVERY read of an Explorer row's itemData as a document must go through this. A row's
+' itemData means whatever its KIND says it means -- a category index, a folder index, a
+' document pointer -- so casting it without consulting the kind is reading one type as
+' another. Testing the kind here rather than at each call site is what makes that safe by
+' construction: the previous scheme (a bare sentinel value in itemData) relied on every
+' reader remembering to exclude it, and shipped a GPF on hover when the tooltip callback
+' was the one that did not.
 ' ========================================================================================
 function frmExplorer_DocFromRow( byval hCtl as HWND, byval row as integer ) as clsDocument ptr
-    if row < 0 then return 0
-    dim as integer nItemData = PsListTree_GetItemData( hCtl, row )
-    if nItemData = EXPLORER_PROMOTE_ROW then return 0
-    return cast( clsDocument ptr, nItemData )
+    if frmExplorer_KindFromRow( hCtl, row ) <> EXPKIND_FILE then return 0
+    return cast( clsDocument ptr, PsListTree_GetItemData( hCtl, row ) )
 end function
 
 
@@ -216,7 +226,7 @@ sub frmExplorer_PaintCallback( byval p as PSLISTTREE_PAINTINFO ptr )
     ' PSLISTTREE_PAINTINFO carries the model row but no itemData and no control handle, so
     ' the row descriptor is fetched by index. Safe here only because this painter serves
     ' exactly one control; a shared painter would need a per-tree wrapper naming its HWND.
-    elseif PsListTree_GetItemData( HWND_FRMEXPLORER, p->itemID ) = EXPLORER_PROMOTE_ROW then
+    elseif frmExplorer_KindFromRow( HWND_FRMEXPLORER, p->itemID ) = EXPKIND_PROMOTE then
         ' The promotion row reads as an action, not a file: accent-coloured, no document
         ' glyph, and indented to the header's text column rather than the file column.
         p->b->SetForeColor( ghEditor.ForeColorKeyword )
@@ -259,9 +269,9 @@ function frmExplorer_MessageCallback( byval m as PSLISTTREE_MESSAGEINFO ptr ) as
             ' Attempt to show the file
             dim as HWND hCtl = GetParent(m->hList)
             if PsListTree_IsHeader( hCtl, m->idx ) = false then
-                ' This is the ONE reader that cares which non-document row it is on, so it
-                ' reads the raw value -- and does so without ever casting it to a pointer.
-                if PsListTree_GetItemData( hCtl, m->idx ) = EXPLORER_PROMOTE_ROW then
+                ' The one reader that cares WHICH non-document row it is on. It asks for the
+                ' kind and never touches itemData, so there is nothing here to mis-cast.
+                if frmExplorer_KindFromRow( hCtl, m->idx ) = EXPKIND_PROMOTE then
                     OnCommand_ProjectSave( GetParent(hCtl), true )   ' Save As
                     return false
                 end if
@@ -401,14 +411,14 @@ function LoadExplorerFiles() as long
     ' above every header, and present only until the user names it -- IsProjectNamed is the
     ' whole condition, so it disappears the moment Save As succeeds.
     if gApp.IsProjectNamed() = false then
-        PsListTree_AddString( hCtrl, L(550,"Save as Project..."), EXPLORER_PROMOTE_ROW, 0 )
+        PsListTree_AddString( hCtrl, L(550,"Save as Project..."), 0, EXPKIND_PROMOTE )
     end if
 
     redim pDocs(any) as clsDocument ptr
 
     for ii as long = nStart to nEnd
         wszText = gConfig.Cat(ii).wszDescription
-        PsListTree_AddHeader( hCtrl, wszText )
+        PsListTree_AddHeader( hCtrl, wszText, ii, EXPKIND_ROOT )
 
         ' Iterate all pDoc in the project/files list. Create an array and then
         ' sort it alphabetically.
@@ -429,7 +439,7 @@ function LoadExplorerFiles() as long
     
         for i as long = lbound(pDocs) to ubound(pDocs)
             dim as DWSTRING wszText = AfxStrPathName( "NAMEX", pDocs(i)->DiskFilename )
-            PsListTree_AddString( hCtrl, wszText, cast(integer, pDocs(i)), 0 )
+            PsListTree_AddString( hCtrl, wszText, cast(integer, pDocs(i)), EXPKIND_FILE )
         next   
         
     next

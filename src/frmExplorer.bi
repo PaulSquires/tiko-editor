@@ -13,16 +13,39 @@
 
 #pragma once
 
-' itemData sentinel for the "Save as Project..." row shown while the workspace is untitled.
-' Every other row carries a real clsDocument ptr, so this must be a value no allocation can
-' produce -- 1 is never a valid pointer (clsTopTabCtl's TAB_FINDINPROJECT uses the same
-' trick for the same reason). NOT zero: zero is what an itemData-less row already gets, so
-' a zero sentinel would be claimed by any row added without one.
-#define EXPLORER_PROMOTE_ROW   1
+' What KIND of thing a row is, carried in the row's itemDataExtra. This replaces the old
+' EXPLORER_PROMOTE_ROW itemData sentinel (a bare 1), which worked only while there was exactly
+' one non-document row: itemData was "a clsDocument ptr, unless it happens to be 1", so a
+' reader that cast and then tested "if pDoc then" passed the test and dereferenced address 1.
+' That shipped as a GPF on hover. With more non-document row kinds arriving (root groups and
+' user folders) the sentinel scheme does not extend at all -- a folder index and a document
+' pointer are not distinguishable by value.
+'
+' So the kind is now declared per row and itemData is read ONLY through the accessor for that
+' kind. What itemData means is a function of the kind and nothing else:
+'
+'   EXPKIND_ROOT     itemData = index into gConfig.Cat()
+'   EXPKIND_FOLDER   itemData = index into the folder table
+'   EXPKIND_FILE     itemData = clsDocument ptr
+'   EXPKIND_PROMOTE  itemData = 0
+'
+' EXPKIND_NONE IS ZERO DELIBERATELY. itemDataExtra defaults to zero for any row added without
+' one, so whatever sits at zero is what an un-tagged row silently claims -- and the safe thing
+' to claim is "not a document". Putting EXPKIND_FILE at zero would restore the original bug in
+' a new costume: an un-tagged row would present its itemData as a pointer.
+enum EXPLORER_ROWKIND
+    EXPKIND_NONE    = 0
+    EXPKIND_ROOT    = 1
+    EXPKIND_FOLDER  = 2
+    EXPKIND_FILE    = 3
+    EXPKIND_PROMOTE = 4
+end enum
 
 
 #define IDC_FRMEXPLORER_LISTBOX       1000
 
+' The kind of an Explorer row. Invalid rows read EXPKIND_NONE.
+declare function frmExplorer_KindFromRow( byval hCtl as HWND, byval row as integer ) as EXPLORER_ROWKIND
 ' The document a row refers to, or NULL for a non-document row. EVERY read of an Explorer
 ' row's itemData must go through this -- see the note on its definition.
 declare function frmExplorer_DocFromRow( byval hCtl as HWND, byval row as integer ) as clsDocument ptr

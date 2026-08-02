@@ -191,20 +191,24 @@ sub Workspace_RunSelfTest()
     ' The promotion row exists exactly when the workspace is untitled, and it is pinned at
     ' index 0. Both halves matter: offering it on a named project would be nonsense, and a
     ' row that is present but buried below the headers is not the affordance it claims to
-    ' be. Checked by ITEMDATA, not by caption -- the caption is localized.
+    ' be. Checked by ROW KIND, not by caption -- the caption is localized.
     dim as boolean bPromoteAtTop = false
     if PsListTree_GetCount( HWND_FRMEXPLORER ) > 0 then
-        bPromoteAtTop = ( PsListTree_GetItemData( HWND_FRMEXPLORER, 0 ) = EXPLORER_PROMOTE_ROW )
+        bPromoteAtTop = ( frmExplorer_KindFromRow( HWND_FRMEXPLORER, 0 ) = EXPKIND_PROMOTE )
     end if
     ' EVERY Explorer row resolves to a real document or to nothing. This is the invariant
-    ' that a hand-written guard at each call site could not deliver: the promotion row's
-    ' sentinel is a NON-NULL value that is not a valid pointer, so a reader that casts and
-    ' then tests "if pDoc then" passes the test and dereferences address 1. That shipped --
-    ' three readers were guarded and the tooltip callback was missed, giving a GPF on hover.
+    ' that a hand-written guard at each call site could not deliver: a row's itemData means
+    ' whatever its kind says it means, so a reader that casts it to a pointer without
+    ' consulting the kind is reading one type as another. Under the previous scheme -- a bare
+    ' sentinel value living in itemData -- that dereferenced address 1: three readers were
+    ' guarded by hand and the tooltip callback was missed, giving a GPF on hover.
     ' Asserted over all rows rather than over the row that happens to be special today.
     dim as long nBadRow = -1
     for i as long = 0 to PsListTree_GetCount( HWND_FRMEXPLORER ) - 1
-        if PsListTree_IsHeader( HWND_FRMEXPLORER, i ) then continue for
+        ' Deliberately NOT skipping group rows first. Excluding them by IsHeader before
+        ' asking would leave DocFromRow's whole job -- refusing to resolve a non-file row --
+        ' untested in a named workspace, where every non-file row IS a group row. Offering
+        ' it every row is what makes this assertion sensitive to the kind mechanism.
         dim as clsDocument ptr pRowDoc = frmExplorer_DocFromRow( HWND_FRMEXPLORER, i )
         if pRowDoc = 0 then continue for
         if gApp.IsValidDocumentPointer( pRowDoc ) = false then nBadRow = i: exit for
@@ -336,7 +340,7 @@ sub Workspace_RunSelfTest()
             Workspace_Check( "promotion retires the untitled workspace file", _
                 AfxFileExists( gConfig.UntitledProjectFilename ) = 0 )
             Workspace_Check( "promotion removes the Explorer's promote row", _
-                PsListTree_GetItemData( HWND_FRMEXPLORER, 0 ) <> EXPLORER_PROMOTE_ROW )
+                frmExplorer_KindFromRow( HWND_FRMEXPLORER, 0 ) <> EXPKIND_PROMOTE )
 
             AfxDeleteFile( wszScratch )
         end if
