@@ -1186,6 +1186,57 @@ sub Theme_RunSelfTest()
     THASSERT( instr( LL(672), "ANSI" ) = 0, _
               "672 is not the default marker -- it reads: " & LL(672) )
     THASSERT( len( LL(673) ) > 0, "673 (Choose Color) is empty in this language file" )
+    THASSERT( len( LL(674) ) > 0, "674 (Use palette color) is empty in this language file" )
+
+    ' -- 22n. A KEY CAN BE HANDED BACK TO ITS ROLE. --------------------------------------
+    '    The half of the palette that was missing. Every edit DETACHES a key, so without a
+    '    way back a theme decays into literals one key at a time and the palette stops
+    '    reaching anything -- which is exactly what CLAUDE.md says the picker's old Assign
+    '    button was for. Reported by the author as "no way to assign a palette colour".
+    '
+    '    Round trip: inherited -> overridden -> inherited, checking the FLAG each time, not
+    '    just the colour. A key overridden with its role's own value would look identical by
+    '    colour while being written to the file as a literal and no longer following the role.
+    scope
+        Theme_Snapshot()
+
+        ' editor.edge, NOT a syntax key: the shipped themes name every syntax colour
+        ' explicitly, so editor.keyword2 is authored and was never inheriting. editor.edge is
+        ' one of the keys added with the role layer and appears in no theme file, so it is
+        ' inheriting in every shipped theme -- which is what this needs to start from.
+        dim as long n = Theme_FindEntry( "editor.edge" )
+        if n >= 0 then
+            THASSERT( gTheme(n).foreFromRole, "editor.edge is not inheriting to begin with" )
+
+            ' Override it with the role's OWN colour -- the case a colour comparison cannot see.
+            dim as COLORREF clrRole = theme.role.clr(THROLE_BORDER)
+            Theme_SetColor( "editor.edge", THEMECH_FORE, clrRole )
+            dim as long n2 = Theme_FindEntry( "editor.edge" )
+            THASSERT( gTheme(n2).foreFromRole = false, "an edit did not detach the key" )
+            THASSERT( Theme_ChannelIsOverridden( "editor.edge", THEMECH_FORE ), _
+                      "an overridden channel does not report itself overridden" )
+
+            ' ...and back.
+            dim as ulong nMask = Theme_InheritChannel( "editor.edge", THEMECH_FORE )
+            THASSERT( nMask <> THSUB_NONE, "inherit returned no subsystems to repaint" )
+            dim as long n3 = Theme_FindEntry( "editor.edge" )
+            THASSERT( gTheme(n3).foreFromRole, "the key did not go back to inheriting" )
+            THASSERT( gTheme(n3).foreground = theme.role.clr(THROLE_BORDER), _
+                      "the key did not take the role's colour" )
+            THASSERT( Theme_ChannelIsOverridden( "editor.edge", THEMECH_FORE ) = false, _
+                      "an inherited channel still reports itself overridden" )
+
+            ' A channel with NO role has nothing to go back to and must be refused rather
+            ' than cleared -- clearing would leave the key black.
+            THASSERT( Theme_InheritChannel( "general.description", THEMECH_FORE ) = THSUB_NONE, _
+                      "inherit accepted a key with no role" )
+        end if
+
+        Theme_Restore()
+        Theme_DiscardSnapshot()
+        Theme_ResolveFallbacks()
+        Theme_FillGlobals()
+    end scope
 
     ' -- 22j. EDITING A ROLE MOVES THE KEYS THAT INHERIT IT. -----------------------------
     '    The palette page's entire promise, and a silent no-op without Theme_ReapplyRoles:

@@ -1052,6 +1052,76 @@ end sub
 
 
 ''
+''  HAND A CHANNEL BACK TO ITS ROLE                        (the other half of "override")
+''
+''  Without this a palette can only DECAY: every edit detaches a key permanently, so a theme
+''  drifts one key at a time into literals and the palette stops reaching anything. CLAUDE.md
+''  states that outright as the reason PsColorPicker's Assign button mattered -- and this is
+''  the same capability, moved out of the picker (which only knows about colours) and onto the
+''  page (which knows about roles).
+''
+''  Clears the channel and lets the resolver refill it, so the key ends up holding its role's
+''  current colour AND marked as inherited -- which is what makes it follow later palette
+''  edits and stops the writer emitting it.
+''
+function Theme_InheritChannel( byval lookupKey as string, byval nChannel as long ) as ulong
+
+    dim as long n = Theme_FindEntry( lookupKey )
+    if n < 0 then return THSUB_NONE
+
+    dim as long k = Theme_KeyIndex( lookupKey )
+    if k < 0 then return THSUB_NONE
+
+    ' A channel with no declared role has nothing to inherit FROM; refusing is better than
+    ' clearing it and leaving the key black.
+    if nChannel = THEMECH_FORE then
+        if gThemeKeys(k).nRoleFore = THROLE_NONE then return THSUB_NONE
+        gTheme(n).hasFore      = false
+        gTheme(n).foreFromRole = false
+        gTheme(n).foreMacro    = ""
+    else
+        if gThemeKeys(k).nRoleBack = THROLE_NONE then return THSUB_NONE
+        gTheme(n).hasBack      = false
+        gTheme(n).backFromRole = false
+        gTheme(n).backMacro    = ""
+    end if
+
+    Theme_ResolveKeyRoles()
+    ' Read the mask straight off the row rather than calling Theme_SubsystemsForKey, which is
+    ' defined further down this file -- fbc is single-pass and k is already the row index.
+    return gThemeKeys(k).nSubsys
+
+end function
+
+
+''
+''  IS THIS CHANNEL CURRENTLY OVERRIDDEN, i.e. would "inherit" change anything?
+''
+''  The UI asks this to enable its control. Two conditions, and both matter: the key must HAVE
+''  a role to go back to, and it must not already be following it.
+''
+function Theme_ChannelIsOverridden( byval lookupKey as string, byval nChannel as long ) as boolean
+
+    dim as long n = Theme_FindEntry( lookupKey )
+    if n < 0 then return false
+    dim as long k = Theme_KeyIndex( lookupKey )
+    if k < 0 then return false
+
+    if nChannel = THEMECH_FORE then
+        if gThemeKeys(k).nRoleFore = THROLE_NONE then return false
+        if gThemeKeys(k).ofsFore < 0 then return false
+        return (gTheme(n).foreFromRole = false)
+    end if
+
+    if gThemeKeys(k).nRoleBack = THROLE_NONE then return false
+    if gThemeKeys(k).ofsBack < 0 then return false
+    return (gTheme(n).backFromRole = false)
+
+end function
+
+
+
+''
 ''  WHICH SUBSYSTEMS DOES THIS KEY FEED?
 ''
 function Theme_SubsystemsForKey( byval lookupKey as string ) as ulong
@@ -1342,14 +1412,21 @@ function Theme_ResetChannel( byval lookupKey as string, byval nChannel as long )
 
     for i as long = lbound(gThemeBaseEntries) to ubound(gThemeBaseEntries)
         if gThemeBaseEntries(i).keyValue <> lookupKey then continue for
+        ' THE PROVENANCE FLAG IS PART OF THE BASELINE. Restoring the colour alone left a key
+        ' that had been INHERITED, then edited, then reset sitting at the right colour but
+        ' marked authored -- so the writer would start emitting it as a literal and it would
+        ' stop following its role. Reset means "as the file had it", and the file had it
+        ' inherited.
         if nChannel = THEMECH_FORE then
             gTheme(n).foreground      = gThemeBaseEntries(i).foreground
             gTheme(n).foregroundAlpha = gThemeBaseEntries(i).foregroundAlpha
             gTheme(n).hasForeAlpha    = gThemeBaseEntries(i).hasForeAlpha
+            gTheme(n).foreFromRole    = gThemeBaseEntries(i).foreFromRole
         else
             gTheme(n).background      = gThemeBaseEntries(i).background
             gTheme(n).backgroundAlpha = gThemeBaseEntries(i).backgroundAlpha
             gTheme(n).hasBackAlpha    = gThemeBaseEntries(i).hasBackAlpha
+            gTheme(n).backFromRole    = gThemeBaseEntries(i).backFromRole
         end if
         return Theme_SubsystemsForKey( lookupKey )
     next

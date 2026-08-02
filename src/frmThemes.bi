@@ -134,6 +134,10 @@
 #Define IDC_FRMTHEMES_TXTR        9511
 #Define IDC_FRMTHEMES_TXTG        9512
 #Define IDC_FRMTHEMES_TXTB        9513
+' "Use the palette colour" -- hands a channel back to its role. The other half of override:
+' without it every edit detaches a key permanently and the palette decays one key at a time.
+#Define IDC_FRMTHEMES_CMDINHF     9517
+#Define IDC_FRMTHEMES_CMDINHB     9518
 #Define IDC_FRMTHEMES_TXTR2       9514
 #Define IDC_FRMTHEMES_TXTG2       9515
 #Define IDC_FRMTHEMES_TXTB2       9516

@@ -88,9 +88,22 @@ editor.keyword1        keyword  [FG][BG]  background
 A channel with no role shown has been given a colour of its own. That is the whole two-layer model
 on one line: grey word = inherited, no word = overridden.
 
-Select a row to edit it. **Foreground…** and **Background…** open the colour picker; each has its
-own **R/G/B** row beneath it, and its own **↺** button to discard the override and go back to
-inheriting the role.
+Select a row to edit it. **Foreground…** and **Background…** open the colour picker, and each has
+its own **R/G/B** row beneath it.
+
+Two small buttons sit beside each channel:
+
+| | |
+|---|---|
+| **palette icon** | *Use palette color* — hand this channel back to its role, so it follows the palette again. Enabled only when the channel is currently overridden. |
+| **↺** | Reset — put the channel back to whatever the file had when you opened it. |
+
+Those are different actions. *Use palette color* makes the key **inherit**, so later palette edits
+move it and the key is no longer written to the file. *Reset* restores the value the file held,
+whether that was an override or an inherited colour.
+
+Without *Use palette color* a theme could only ever drift: every edit detaches a key permanently,
+and the palette would slowly stop reaching anything.
 
 Syntax keys also have **Bold / Italic / Underline** toggles and, where it applies, **Opacity**.
 

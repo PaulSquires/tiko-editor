@@ -31,6 +31,8 @@ dim shared ghThemeBold      as HWND      ' PsToggle
 dim shared ghThemeItalic    as HWND      ' PsToggle
 dim shared ghThemeUnder     as HWND      ' PsToggle
 dim shared ghThemeAlpha     as HWND      ' PsNumericUpDown -- the alpha/opacity (channel-correct)
+dim shared ghThemeInhF      as HWND      ' use the palette colour (foreground)
+dim shared ghThemeInhB      as HWND      ' use the palette colour (background)
 dim shared ghThemeResetF    as HWND      ' PsButton -- undo this key's foreground
 dim shared ghThemeResetB    as HWND      ' PsButton -- undo this key's background
 ' R/G/B numeric entry for the CURRENT channel's colour. The large colour chooser now lives in a
@@ -509,6 +511,16 @@ private sub frmThemes_SyncEditControls()
         if ghThemeR2 then PsTextBox_SetText( ghThemeR2, str(GetRValue(clrB)) )
         if ghThemeG2 then PsTextBox_SetText( ghThemeG2, str(GetGValue(clrB)) )
         if ghThemeB2 then PsTextBox_SetText( ghThemeB2, str(GetBValue(clrB)) )
+        ' Enabled only when it would DO something: the channel must have a role and must not
+        ' already be following it. A permanently live button that is usually a no-op teaches
+        ' the user to ignore it.
+        if ghThemeInhF then
+            EnableWindow( ghThemeInhF, Theme_ChannelIsOverridden( gThemeKeys(nb).keyValue, THEMECH_FORE ) )
+        end if
+        if ghThemeInhB then
+            EnableWindow( ghThemeInhB, Theme_ChannelIsOverridden( gThemeKeys(nb).keyValue, THEMECH_BACK ) )
+        end if
+
         if ghThemeR then EnableWindow( ghThemeR, bHasFore )
         if ghThemeG then EnableWindow( ghThemeG, bHasFore )
         if ghThemeB then EnableWindow( ghThemeB, bHasFore )
@@ -679,6 +691,8 @@ end sub
 ' Forward -- defined later in this file (FB is single-pass).
 declare sub frmThemes_ApplyPickedColor( byval nChannel as long, byval clr as COLORREF )
 declare sub frmThemes_OpenRolePopup( byval idxRole as long, byval hOpener as HWND )
+declare sub frmThemes_InheritForeClick( byval hButton as HWND, byval id as long )
+declare sub frmThemes_InheritBackClick( byval hButton as HWND, byval id as long )
 
 
 ' Ask for a colour for one channel of the selected key, anchored under hOpener.
@@ -803,6 +817,31 @@ function frmThemes_SwatchClick( byval x as long, byval y as long ) as boolean
     frmThemes_OpenColorPopup( nChan, hAnchor )
     return true
 end function
+
+
+' Hand a channel back to its role. The palette's other direction: without this every edit
+' detaches a key for good and the theme decays into literals one key at a time.
+private sub frmThemes_InheritChannel( byval nChannel as long )
+    dim as long nb = frmThemes_SelectedBind()
+    if nb < 0 then exit sub
+    if frmThemes_EnsureForked() = false then exit sub
+
+    dim as ulong nMask = Theme_InheritChannel( gThemeKeys(nb).keyValue, nChannel )
+    if nMask = THSUB_NONE then exit sub
+
+    gThemeEdited = true
+    Theme_FillGlobals()
+    Theme_RequestApply( nMask )
+    frmThemes_SyncEditControls()
+end sub
+
+private sub frmThemes_InheritForeClick( byval hButton as HWND, byval id as long )
+    frmThemes_InheritChannel( THEMECH_FORE )
+end sub
+
+private sub frmThemes_InheritBackClick( byval hButton as HWND, byval id as long )
+    frmThemes_InheritChannel( THEMECH_BACK )
+end sub
 
 
 private sub frmThemes_ForeClick( byval hButton as HWND, byval id as long )
@@ -1302,6 +1341,18 @@ sub frmThemes_Build( byval nPage as long, byval hPage as HWND )
     PsButton_SetTooltipText( ghThemeResetF, L(323, "Reset") )
     PsButton_SetClickCallback( ghThemeResetF, @frmThemes_ResetForeClick )
 
+    ' USE THE PALETTE COLOUR. Segoe Fluent E790 is the colour/palette glyph; the caption is a
+    ' tooltip because the row already carries a button, a swatch and a reset in 300px.
+    ghThemeInhF = PsButton_Create( hPage, IDC_FRMTHEMES_CMDINHF )
+    PsButton_SetGlyphLeft( ghThemeInhF, !"\uE790" )
+    PsButton_SetTooltipText( ghThemeInhF, L(674, "Use palette color") )
+    PsButton_SetClickCallback( ghThemeInhF, @frmThemes_InheritForeClick )
+
+    ghThemeInhB = PsButton_Create( hPage, IDC_FRMTHEMES_CMDINHB )
+    PsButton_SetGlyphLeft( ghThemeInhB, !"\uE790" )
+    PsButton_SetTooltipText( ghThemeInhB, L(674, "Use palette color") )
+    PsButton_SetClickCallback( ghThemeInhB, @frmThemes_InheritBackClick )
+
     ghThemeResetB = PsButton_Create( hPage, IDC_FRMTHEMES_CMDRESETB )
     PsButton_SetTooltipText( ghThemeResetB, L(323, "Reset") )
     PsButton_SetGlyphLeft( ghThemeResetB, wchr(&hE7A7) )
@@ -1389,8 +1440,14 @@ sub frmThemes_Build( byval nPage as long, byval hPage as HWND )
     ' Foreground/Reset, Background/Reset, R/G/B, Bold/Italic/Underline, Opacity. Each control is
     ' placed immediately AFTER the previous one, so GetNextDlgTabItem walks them in this order.
     ' (The hidden picker is skipped by the tab walker, so it does not need a slot here.)
-    dim tabOrder(0 to 11) as HWND = { ghThemeKeys, ghThemeFore, ghThemeResetF, _
-                                      ghThemeBack, ghThemeResetB, ghThemeR, ghThemeG, ghThemeB, _
+    ' IN VISUAL ORDER, which is now block-per-channel: button, use-palette, reset, then that
+    ' channel's R/G/B. The second R/G/B row was missing from this list entirely when it was
+    ' added -- Tab skipped straight past three live fields.
+    dim tabOrder(0 to 16) as HWND = { ghThemeKeys, _
+                                      ghThemeFore, ghThemeInhF, ghThemeResetF, _
+                                      ghThemeR, ghThemeG, ghThemeB, _
+                                      ghThemeBack, ghThemeInhB, ghThemeResetB, _
+                                      ghThemeR2, ghThemeG2, ghThemeB2, _
                                       ghThemeBold, ghThemeItalic, ghThemeUnder, ghThemeAlpha }
     for i as long = 1 to ubound(tabOrder)
         if tabOrder(i) andalso tabOrder(i-1) then
@@ -1428,6 +1485,14 @@ sub frmThemes_ApplyTheme()
     PsButton_SetFont( ghThemeResetB, OptionsFont_Base() )
     PsButton_SetGlyphFont( ghThemeResetF, ghFont(SYMBOLFONT_10) )
     PsButton_SetGlyphFont( ghThemeResetB, ghFont(SYMBOLFONT_10) )
+    ' The use-palette buttons, dressed the same way. The GLYPH font is a separate paint-time
+    ' input from the caption font -- SetFont does not reach it.
+    PsButton_SetColors( ghThemeInhF, @bc )   : PsButton_Refresh( ghThemeInhF )
+    PsButton_SetColors( ghThemeInhB, @bc )   : PsButton_Refresh( ghThemeInhB )
+    PsButton_SetFont( ghThemeInhF, OptionsFont_Base() )
+    PsButton_SetFont( ghThemeInhB, OptionsFont_Base() )
+    PsButton_SetGlyphFont( ghThemeInhF, ghFont(SYMBOLFONT_10) )
+    PsButton_SetGlyphFont( ghThemeInhB, ghFont(SYMBOLFONT_10) )
 
     dim as PSTOGGLE_COLORS tc : OptionsTheme_FillToggle( @tc )
     PsToggle_SetColors( ghThemeBold, @tc )   : PsToggle_Refresh( ghThemeBold )
@@ -1496,6 +1561,9 @@ sub frmThemes_ShowPage( byval nPage as long, byval bShow as boolean )
     ShowWindow( ghThemeBack, nKeyOnly )
     ShowWindow( ghThemeResetF, nKeyOnly )
     ShowWindow( ghThemeResetB, nKeyOnly )
+    ' Inheriting is a KEY concept: a role has nothing above it to inherit from.
+    ShowWindow( ghThemeInhF, nKeyOnly )
+    ShowWindow( ghThemeInhB, nKeyOnly )
     ShowWindow( ghThemeBold, nStyle )
     ShowWindow( ghThemeItalic, nStyle )
     ShowWindow( ghThemeUnder, nStyle )
@@ -1575,9 +1643,11 @@ function frmThemes_Layout( byval nPage as long, byval hPage as HWND, byval cxPan
     ' them, on its first run. Putting each row under the button that names it removes the
     ' captions AND the ambiguity, which is what the captions were there for.
     dim as long resetW  = AfxScaleX(34)
+    dim as long inhW    = AfxScaleX(34)
     dim as long swatchW = AfxScaleX(THEME_SWATCHW)
-    dim as long chanW   = editW - resetW - swatchW - (2 * AfxScaleX(6))
+    dim as long chanW   = editW - resetW - inhW - swatchW - (3 * AfxScaleX(6))
     dim as long swatchX = xEdit + chanW + AfxScaleX(6)
+    dim as long inhX    = xEdit + editW - resetW - AfxScaleX(6) - inhW
 
     dim as long fldH  = ctlH
     dim as long labW  = AfxScaleX(16)
@@ -1591,6 +1661,7 @@ function frmThemes_Layout( byval nPage as long, byval hPage as HWND, byval cxPan
     ' ---- foreground block ----
     SetWindowPos( ghThemeFore, 0, xEdit, yEdit, chanW, ctlH, SWP_NOZORDER or SWP_NOACTIVATE )
     SetRect( @gThemeSwatchRc(0), swatchX, yEdit, swatchX + swatchW, yEdit + ctlH )
+    SetWindowPos( ghThemeInhF, 0, inhX, yEdit, inhW, ctlH, SWP_NOZORDER or SWP_NOACTIVATE )
     SetWindowPos( ghThemeResetF, 0, xEdit + editW - resetW, yEdit, resetW, ctlH, _
                   SWP_NOZORDER or SWP_NOACTIVATE )
     yEdit += ctlH + AfxScaleY(4)
@@ -1607,6 +1678,7 @@ function frmThemes_Layout( byval nPage as long, byval hPage as HWND, byval cxPan
     if gThemeCurPage <> THEMEPAGE_PALETTE then
         SetWindowPos( ghThemeBack, 0, xEdit, yEdit, chanW, ctlH, SWP_NOZORDER or SWP_NOACTIVATE )
         SetRect( @gThemeSwatchRc(1), swatchX, yEdit, swatchX + swatchW, yEdit + ctlH )
+        SetWindowPos( ghThemeInhB, 0, inhX, yEdit, inhW, ctlH, SWP_NOZORDER or SWP_NOACTIVATE )
         SetWindowPos( ghThemeResetB, 0, xEdit + editW - resetW, yEdit, resetW, ctlH, _
                       SWP_NOZORDER or SWP_NOACTIVATE )
         yEdit += ctlH + AfxScaleY(4)
@@ -1785,6 +1857,7 @@ sub frmThemes_Reset()
     ghThemeAlpha  = 0
     ghThemeResetF = 0
     ghThemeResetB = 0
+    ghThemeInhF   = 0 : ghThemeInhB = 0
     ghThemeR      = 0
     ghThemeR2     = 0 : ghThemeG2 = 0 : ghThemeB2 = 0
     ghThemeG      = 0
