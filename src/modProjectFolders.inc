@@ -263,3 +263,99 @@ function ProjectFolders_RemoveAt( byval idx as long ) as boolean
     end if
     return true
 end function
+
+
+' ========================================================================================
+' Map one path through a rename or a dissolve, leaving unrelated paths alone.
+'
+'   P = old              -> new          (the folder itself)
+'   P below old          -> new + P's tail beneath old
+'   anything else        -> unchanged
+'
+' An empty wszNew DISSOLVES: "a/b" with old="a/b" new="" yields "", and "a/b/c" yields "c".
+' That is what makes delete and rename one implementation rather than two -- deleting "a/b"
+' is exactly rebasing it onto its own parent, and the record that maps onto the parent is
+' then a duplicate and is dropped.
+'
+' Pure. The table is not consulted, so the rule can be asserted on its own.
+' ========================================================================================
+function ProjectFolders_RebasePath( byval wszPath as DWSTRING, byval wszOld as DWSTRING, _
+                                    byval wszNew as DWSTRING ) as DWSTRING
+    wszPath = ProjectFolders_Normalize( wszPath )
+    wszOld  = ProjectFolders_Normalize( wszOld )
+    wszNew  = ProjectFolders_Normalize( wszNew )
+
+    if len(wszOld) = 0 then return wszPath
+    if ucase(wszPath) = ucase(wszOld) then return wszNew
+    if ProjectFolders_IsDescendantOf( wszPath, wszOld ) then
+        ' +2 skips the ancestor and the separator that follows it. IsDescendantOf has
+        ' already guaranteed that separator is really there.
+        return ProjectFolders_Combine( wszNew, mid( wszPath, len(wszOld) + 2 ) )
+    end if
+    return wszPath
+end function
+
+
+' ========================================================================================
+' Rename a folder, or dissolve it into its parent when wszNewPath is empty.
+'
+' Rewrites the folder's own record, EVERY DESCENDANT FOLDER, and every document sitting in
+' any of them. Missing any of those three leaves the workspace inconsistent in a way that
+' only shows up later: an orphaned subfolder renders nowhere, and a document left pointing
+' at the old path is silently pulled back to its group's top level by the Explorer's
+' normalization pass.
+'
+' Paths can COLLIDE as a result -- dissolving "a/b" turns "a/b/c" into "a/c", which may
+' already exist -- and the two folders then MERGE, which is the only sensible reading of the
+' gesture. The merge is done by dropping the duplicate record; the documents in both already
+' name the same path by then, so nothing else has to move.
+' ========================================================================================
+function ProjectFolders_Rebase( byval catIndex as long, byval wszOldPath as DWSTRING, _
+                                byval wszNewPath as DWSTRING ) as boolean
+    wszOldPath = ProjectFolders_Normalize( wszOldPath )
+    wszNewPath = ProjectFolders_Normalize( wszNewPath )
+    if len(wszOldPath) = 0 then return false
+    if ProjectFolders_Find( catIndex, wszOldPath ) < 0 then return false
+
+    ' Documents first, while the old paths are still in the table to be recognised.
+    dim pDoc as clsDocument ptr = gApp.pDocList
+    do until pDoc = 0
+        if pDoc->ProjectFiletype = gConfig.Cat(catIndex).idFileType then
+            if len(pDoc->docData.wszFolder) then
+                pDoc->docData.wszFolder = _
+                    ProjectFolders_RebasePath( pDoc->docData.wszFolder, wszOldPath, wszNewPath )
+            end if
+        end if
+        pDoc = pDoc->pDocNext
+    loop
+
+    ' The folder and its descendants, in place -- rewriting rather than removing and
+    ' re-adding keeps the table's insertion order, which is what keeps an ancestor ahead of
+    ' its descendants.
+    for i as long = lbound(gProjectFolders) to ubound(gProjectFolders)
+        if gProjectFolders(i).catIndex <> catIndex then continue for
+        gProjectFolders(i).wszPath = _
+            ProjectFolders_RebasePath( gProjectFolders(i).wszPath, wszOldPath, wszNewPath )
+    next
+
+    ' Sweep out anything the rewrite emptied (the dissolved folder itself) or duplicated
+    ' (a descendant that landed on an existing path). Backwards, so removal's compaction
+    ' cannot skip an entry.
+    for i as long = ubound(gProjectFolders) to lbound(gProjectFolders) step -1
+        if gProjectFolders(i).catIndex <> catIndex then continue for
+        dim as boolean bDrop = false
+        if len(gProjectFolders(i).wszPath) = 0 then bDrop = true
+        if bDrop = false then
+            for j as long = lbound(gProjectFolders) to i - 1
+                if gProjectFolders(j).catIndex <> catIndex then continue for
+                if ucase(gProjectFolders(j).wszPath) = ucase(gProjectFolders(i).wszPath) then
+                    bDrop = true
+                    exit for
+                end if
+            next
+        end if
+        if bDrop then ProjectFolders_RemoveAt( i )
+    next
+
+    return true
+end function

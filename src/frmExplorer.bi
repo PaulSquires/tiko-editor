@@ -62,3 +62,21 @@ declare function frmExplorer_SelectItemData( byval pDoc as clsDocument ptr ) as 
 declare function LoadExplorerFiles() as long
 declare function frmExplorer_Show( byval hWndParent as HWND ) as LRESULT
 declare sub frmExplorer_RunSelfTest()
+
+' Which action icons a row offers, and where they sit. ONE implementation, called by both
+' the painter and the hit test -- see its definition.
+enum EXPLORER_ICONHIT
+    EXPICON_NONE   = 0
+    EXPICON_ADD    = 1
+    EXPICON_DELETE = 2
+end enum
+
+declare sub frmExplorer_IconRects( byval hCtl as HWND, byval row as integer, byref rcRow as RECT, _
+                                   byref rcAdd as RECT, byref rcDel as RECT )
+declare function frmExplorer_IconHitTest( byval hCtl as HWND, byval row as integer, byval x as long ) as EXPLORER_ICONHIT
+declare function frmExplorer_FolderPathFromRow( byval hCtl as HWND, byval row as integer, byref catIndex as long ) as DWSTRING
+declare sub frmExplorer_TwistyRect( byval hCtl as HWND, byval row as integer, byref rcRow as RECT, byref rcOut as RECT )
+declare function frmExplorer_BeginLabelEditCallback( byval hCtl as HWND, byval row as integer ) as boolean
+declare function frmExplorer_EndLabelEditCallback( byval hCtl as HWND, byval row as integer, byval newText as DWSTRING ) as boolean
+declare sub frmExplorer_NewFolder( byval hCtl as HWND, byval row as integer )
+declare sub frmExplorer_DeleteFolder( byval hCtl as HWND, byval row as integer )

@@ -180,6 +180,139 @@ end function
 
 
 ' ========================================================================================
+' Where a row's action icons sit, and therefore which ones it has.
+'
+' THE ONE IMPLEMENTATION. The painter draws from these rects and the hit test reads them; a
+' second copy of the arithmetic in either place is a guarantee that a click will eventually
+' land somewhere other than where the icon was drawn. An empty rect means "this row has no
+' such icon", so which icons a row offers is expressed by the same call that places them and
+' the two cannot disagree either.
+'
+' Rules: a root group offers Add only if its category takes folders at all (Main and
+' Resource hold one file each, so a folder under them could contain nothing useful). A user
+' folder offers both. Everything else -- files, the promotion row -- offers neither.
+'
+' Icons are right-aligned, Delete outermost. The rects span the row's full height, so the
+' hit test only ever has to compare x.
+' ========================================================================================
+' ========================================================================================
+' The chevron column for a row: one icon width, offset by the row's depth.
+'
+' Shared by the painter and the hit test for the same reason the action icons' rects are --
+' the chevron is drawn here and clicked here, and two copies of "level * width" would
+' eventually disagree. The control's own twisty is deliberately not used
+' (PsListTree_ShowTwisty stays off): it would draw a second glyph beside this one and own a
+' hit rect the host could not see, so the two toggles would fight.
+' ========================================================================================
+sub frmExplorer_TwistyRect( byval hCtl as HWND, byval row as integer, byref rcRow as RECT, byref rcOut as RECT )
+    SetRectEmpty( @rcOut )
+    dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN)
+    if pWindow = 0 then exit sub
+    dim as long nIconWidth = pWindow->ScaleX(20)
+    rcOut.left   = rcRow.left + ( PsListTree_GetLevel( hCtl, row ) * nIconWidth )
+    rcOut.right  = rcOut.left + nIconWidth
+    rcOut.top    = rcRow.top
+    rcOut.bottom = rcRow.bottom
+end sub
+
+
+sub frmExplorer_IconRects( byval hCtl as HWND, byval row as integer, byref rcRow as RECT, _
+                           byref rcAdd as RECT, byref rcDel as RECT )
+    SetRectEmpty( @rcAdd )
+    SetRectEmpty( @rcDel )
+
+    dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN)
+    if pWindow = 0 then exit sub
+
+    dim as boolean bWantAdd = false, bWantDel = false
+    select case frmExplorer_KindFromRow( hCtl, row )
+        case EXPKIND_ROOT
+            bWantAdd = ProjectFolders_CatAllowsFolders( PsListTree_GetItemData( hCtl, row ) )
+        case EXPKIND_FOLDER
+            bWantAdd = true
+            bWantDel = true
+    end select
+    if (bWantAdd = false) andalso (bWantDel = false) then exit sub
+
+    dim as long nIcon = pWindow->ScaleX(22)
+    dim as long nPad  = pWindow->ScaleX(2)
+    dim as long xRight = rcRow.right - nPad
+
+    if bWantDel then
+        rcDel.right  = xRight
+        rcDel.left   = xRight - nIcon
+        rcDel.top    = rcRow.top
+        rcDel.bottom = rcRow.bottom
+        xRight = rcDel.left
+    end if
+    if bWantAdd then
+        rcAdd.right  = xRight
+        rcAdd.left   = xRight - nIcon
+        rcAdd.top    = rcRow.top
+        rcAdd.bottom = rcRow.bottom
+    end if
+end sub
+
+
+' ========================================================================================
+' Which icon, if any, sits under x on this row.
+'
+' The row rect is rebuilt from the SURFACE's client rect, which is the same window and the
+' same GetClientRect the control's own paint loop and hit test both read (PsListTree.inc) --
+' so the x span here is the x span the icons were drawn into, by construction rather than by
+' the two happening to agree. Only x is compared: the icons span the row's full height, so
+' being on the row at all is already established by the caller having a row index.
+' ========================================================================================
+function frmExplorer_IconHitTest( byval hCtl as HWND, byval row as integer, byval x as long ) as EXPLORER_ICONHIT
+    dim as HWND hSurf = GetDlgItem( hCtl, IDC_FRMEXPLORER_LISTBOX )
+    if hSurf = 0 then return EXPICON_NONE
+
+    dim as RECT rcRow
+    GetClientRect( hSurf, @rcRow )
+    rcRow.top = 0
+    rcRow.bottom = PsListTree_GetRowHeight( hCtl )
+
+    dim as RECT rcAdd, rcDel
+    frmExplorer_IconRects( hCtl, row, rcRow, rcAdd, rcDel )
+
+    if IsRectEmpty( @rcDel ) = 0 then
+        if (x >= rcDel.left) andalso (x < rcDel.right) then return EXPICON_DELETE
+    end if
+    if IsRectEmpty( @rcAdd ) = 0 then
+        if (x >= rcAdd.left) andalso (x < rcAdd.right) then return EXPICON_ADD
+    end if
+    return EXPICON_NONE
+end function
+
+
+' ========================================================================================
+' The folder path a row denotes, and the category it belongs to.
+'
+' A ROOT row denotes its group's top level -- an empty path, which is not a folder but IS a
+' legal container to create one in. A FOLDER row denotes its own path. Anything else answers
+' with catIndex -1, which every caller treats as "not a place a folder can go".
+'
+' Resolving through the table by index rather than by parsing the caption is what lets a
+' folder's row show only its leaf name while still knowing its full path.
+' ========================================================================================
+function frmExplorer_FolderPathFromRow( byval hCtl as HWND, byval row as integer, byref catIndex as long ) as DWSTRING
+    catIndex = -1
+    select case frmExplorer_KindFromRow( hCtl, row )
+        case EXPKIND_ROOT
+            catIndex = PsListTree_GetItemData( hCtl, row )
+            return ""
+        case EXPKIND_FOLDER
+            dim as long idx = PsListTree_GetItemData( hCtl, row )
+            if idx < lbound(gProjectFolders) then return ""
+            if idx > ubound(gProjectFolders) then return ""
+            catIndex = gProjectFolders(idx).catIndex
+            return gProjectFolders(idx).wszPath
+    end select
+    return ""
+end function
+
+
+' ========================================================================================
 ' frmExplorer_PaintCallback
 ' ========================================================================================
 sub frmExplorer_PaintCallback( byval p as PSLISTTREE_PAINTINFO ptr )
@@ -218,47 +351,198 @@ sub frmExplorer_PaintCallback( byval p as PSLISTTREE_PAINTINFO ptr )
     ' exactly one control; a shared painter would need a per-tree wrapper naming its HWND.
     dim as EXPLORER_ROWKIND kind = frmExplorer_KindFromRow( HWND_FRMEXPLORER, p->itemID )
 
-    ' indent the text based on its type
-    if kind = EXPKIND_ROOT then
+    ' Action icons, on the hot row only -- a column of them down every group would compete
+    ' with the filenames for attention and read as chrome rather than as a control. Placed
+    ' BEFORE the caption is drawn so the caption can be clipped short of them: a long folder
+    ' name would otherwise run underneath, and DrawText ellipsizes without reporting it.
+    dim as RECT rcAdd, rcDel
+    if p->isHot then
+        frmExplorer_IconRects( HWND_FRMEXPLORER, p->itemID, p->rc, rcAdd, rcDel )
+    end if
+    dim as long xIconsLeft = p->rc.right
+    if IsRectEmpty( @rcAdd ) = 0 then xIconsLeft = MIN( xIconsLeft, rcAdd.left )
+    if IsRectEmpty( @rcDel ) = 0 then xIconsLeft = MIN( xIconsLeft, rcDel.left )
+    rcText.right = xIconsLeft
+
+    ' Depth indent, derived from the row's level rather than from the control (SetTreeIndent
+    ' is deliberately left off). One icon column per level reproduces the pre-folders layout
+    ' exactly at the only two depths that existed then -- a group at level 0 starts at the
+    ' left edge, a file at level 1 starts one column in, which is where its dot already was --
+    ' and generalizes it to any depth for free.
+    dim as long nIndent = p->level * nIconWidth
+    rcIcon.left  = p->rc.left + nIndent
+    rcIcon.right = rcIcon.left + nIconWidth
+    rcText.left  = rcIcon.right
+
+    if (kind = EXPKIND_ROOT) orelse (kind = EXPKIND_FOLDER) then
         ' Keyed on the row KIND, not on p->isHeader -- a root group is a plain tree parent
-        ' now, so isHeader is never true here (see LoadExplorerFiles).
-        rcIcon.right = rcIcon.left + nIconWidth
-        ' The chevron is painted only when there is actually a subtree to fold. An empty
-        ' group offering a control that does nothing is the wart the header row had; it is
+        ' now, so isHeader is never true here (see LoadExplorerFiles). Groups and folders
+        ' paint identically apart from their indent; a folder IS a group one level in.
+        '
+        ' The chevron is painted only when there is actually a subtree to fold. A container
+        ' offering a control that does nothing is the wart the header row had, and it is
         ' also what PsListTree_CanCollapse already believes -- it refuses a childless node,
         ' so under ExpandAll/CollapseAll an empty group's chevron would sit at odds with
-        ' every other group's. The caption's x is unchanged either way, so the captions of
-        ' populated and empty groups still line up.
+        ' every other one's. The caption's x is unchanged either way, so populated and empty
+        ' containers still line their captions up.
         if p->hasChildren then
             p->b->SetFont( ghFont(SYMBOLFONT_10) )
             dim as DWSTRING wszIcon = iif(p->isCollapsed, wszIconChevronRight, wszIconChevronDown)
             p->b->PaintText( wszIcon, @rcIcon, DT_CENTER )
         end if
-
         p->b->SetFont( ghFont(GUIFONT_10) )
-        rcText.left = rcIcon.right
         p->b->PaintText( wszCaption, @rcText, DT_LEFT )
     elseif kind = EXPKIND_PROMOTE then
         ' The promotion row reads as an action, not a file: accent-coloured, no document
-        ' glyph, and indented to the header's text column rather than the file column.
+        ' glyph, and indented to the group's text column rather than the file column.
         p->b->SetForeColor( ghEditor.ForeColorKeyword )
         p->b->SetFont( ghFont(GUIFONT_10) )
-        rcText.left = rcText.left + nIconWidth
+        rcText.left = p->rc.left + nIconWidth
         p->b->PaintText( wszCaption, @rcText, DT_LEFT )
     else
         ' This would be a regular file.
-        rcIcon.left = rcText.left + nIconWidth
-        rcIcon.right = rcIcon.left + nIconWidth
-
         p->b->SetFont( ghFont(GUIFONT_10) )  ' use GUI rather than SYMBOL b/c of dot icon
         p->b->PaintText( wszIconDocument, @rcIcon, DT_CENTER )
-
-        p->b->SetFont( ghFont(GUIFONT_10) )
-        rcText.left = rcIcon.right
         p->b->PaintText( wszCaption, @rcText, DT_LEFT )
     end if
 
+    ' The action icons last, so nothing the branches above drew can overlap them. Painted in
+    ' the row's own foreground colour, which is already the hot colour -- they only appear on
+    ' the hot row, so there is no idle appearance for them to have.
+    if IsRectEmpty( @rcAdd ) = 0 then
+        p->b->SetFont( ghFont(SYMBOLFONT_10) )
+        p->b->SetForeColor( foreclr )
+        p->b->PaintText( wszIconAddFileButton, @rcAdd, DT_CENTER )
+    end if
+    if IsRectEmpty( @rcDel ) = 0 then
+        p->b->SetFont( ghFont(SYMBOLFONT_10) )
+        p->b->SetForeColor( foreclr )
+        p->b->PaintText( wszIconTrash, @rcDel, DT_CENTER )
+    end if
+
 end sub
+
+
+' ========================================================================================
+' Create a folder inside the container this row denotes, and open its editor.
+'
+' The name is provisional: the folder is created with a default caption and the in-place
+' editor is opened on it immediately, so typing over it is the naming gesture rather than a
+' separate dialog. A user who presses Escape keeps the default name -- the folder is already
+' real by then, which is deliberate: the alternative is a folder that appears and then
+' silently vanishes, and Delete is one click away on the same row.
+'
+' The default name is made UNIQUE among its siblings first, because ProjectFolders_Add is
+' idempotent: a second "New Folder" in the same place would otherwise return the existing
+' one's index and appear to do nothing at all.
+' ========================================================================================
+sub frmExplorer_NewFolder( byval hCtl as HWND, byval row as integer )
+    dim as long catIndex
+    dim as DWSTRING wszParent = frmExplorer_FolderPathFromRow( hCtl, row, catIndex )
+    if catIndex < 0 then exit sub
+    if ProjectFolders_CatAllowsFolders( catIndex ) = false then exit sub
+
+    dim as DWSTRING wszBase = L(630, "New Folder")
+    dim as DWSTRING wszName = wszBase
+    dim as long nTry = 2
+    do while ProjectFolders_Exists( catIndex, ProjectFolders_Combine( wszParent, wszName ) )
+        wszName = wszBase & " (" & str(nTry) & ")"
+        nTry += 1
+    loop
+
+    dim as DWSTRING wszNew = ProjectFolders_Combine( wszParent, wszName )
+    if ProjectFolders_Add( catIndex, wszNew ) < 0 then exit sub
+
+    ' The container has to be open or the new row is created inside a collapsed subtree and
+    ' the editor opens on something the user cannot see.
+    if PsListTree_IsCollapsed( hCtl, row ) then PsListTree_ExpandRow( hCtl, row )
+
+    LoadExplorerFiles()
+
+    ' Rebuilding invalidated every row index, so the new row is found by what it IS rather
+    ' than by remembering where it was going to be.
+    dim as long nIdx = ProjectFolders_Find( catIndex, wszNew )
+    for i as long = 0 to PsListTree_GetCount( hCtl ) - 1
+        if frmExplorer_KindFromRow( hCtl, i ) <> EXPKIND_FOLDER then continue for
+        if PsListTree_GetItemData( hCtl, i ) = nIdx then
+            PsListTree_SetCurSel( hCtl, i )
+            PsListTree_BeginEdit( hCtl, i, 0 )
+            exit for
+        end if
+    next
+end sub
+
+
+' ========================================================================================
+' Delete the folder this row denotes. Its contents move up one level.
+'
+' Nothing is destroyed: child files AND child folders re-attach to the deleted folder's
+' parent, which is a dissolve rather than a delete and is why no confirmation is asked for.
+' Root groups are unreachable from here -- they carry no delete icon -- which is what keeps
+' the five categories permanent.
+'
+' The path is resolved BEFORE the table is touched. ProjectFolders_RemoveAt compacts, so a
+' row's stored folder index is stale the instant anything is removed.
+' ========================================================================================
+sub frmExplorer_DeleteFolder( byval hCtl as HWND, byval row as integer )
+    if frmExplorer_KindFromRow( hCtl, row ) <> EXPKIND_FOLDER then exit sub
+
+    dim as long catIndex
+    dim as DWSTRING wszPath = frmExplorer_FolderPathFromRow( hCtl, row, catIndex )
+    if catIndex < 0 then exit sub
+    if len(wszPath) = 0 then exit sub
+
+    ' Dissolving IS rebasing onto the parent: descendants lose one level, documents follow,
+    ' and the folder's own record maps onto its parent and is dropped as a duplicate. One
+    ' implementation shared with rename rather than a second path walk that could disagree.
+    ProjectFolders_Rebase( catIndex, wszPath, ProjectFolders_ParentPath( wszPath ) )
+
+    LoadExplorerFiles()
+end sub
+
+
+' ========================================================================================
+' frmExplorer_BeginLabelEditCallback -- may this row's caption be edited?
+'
+' Folders only. THE ROOT GROUPS MUST REFUSE: their captions come from gConfig.Cat(), are
+' localized, and are what every file's ProjectFileType is matched against -- renaming one in
+' place would either be silently discarded on the next load or, worse, appear to work.
+' ========================================================================================
+function frmExplorer_BeginLabelEditCallback( byval hCtl as HWND, byval row as integer ) as boolean
+    return ( frmExplorer_KindFromRow( hCtl, row ) = EXPKIND_FOLDER )
+end function
+
+
+' ========================================================================================
+' frmExplorer_EndLabelEditCallback -- accept or refuse a renamed folder.
+'
+' Refuses silently rather than complaining: an empty name, a name carrying a path separator,
+' and a name already taken by a sibling. Returning FALSE leaves the caption as it was, which
+' for a folder just created means it keeps its default name -- a legal outcome, not a
+' failure.
+' ========================================================================================
+function frmExplorer_EndLabelEditCallback( byval hCtl as HWND, byval row as integer, byval newText as DWSTRING ) as boolean
+    dim as long catIndex
+    dim as DWSTRING wszOld = frmExplorer_FolderPathFromRow( hCtl, row, catIndex )
+    if catIndex < 0 then return false
+    if len(wszOld) = 0 then return false
+
+    dim as DWSTRING wszName = trim(newText)
+    if ProjectFolders_IsValidName( wszName ) = false then return false
+
+    ' Unchanged apart from case is not a rename, and must not be refused as a self-collision.
+    if ucase(wszName) = ucase( ProjectFolders_LeafName( wszOld ) ) then return true
+
+    dim as DWSTRING wszNew = ProjectFolders_Combine( ProjectFolders_ParentPath( wszOld ), wszName )
+    if ProjectFolders_Exists( catIndex, wszNew ) then return false
+
+    ProjectFolders_Rebase( catIndex, wszOld, wszNew )
+
+    ' The control would write the new caption into the row it has, but every row index is
+    ' about to be rebuilt from the table anyway -- and the table is now the truth.
+    LoadExplorerFiles()
+    return true
+end function
 
 
 ' ========================================================================================
@@ -278,20 +562,47 @@ function frmExplorer_MessageCallback( byval m as PSLISTTREE_MESSAGEINFO ptr ) as
             return true
             
         case WM_LBUTTONDOWN
-            ' Whole-row collapse/expand for a group, implemented HERE because the control no
-            ' longer does it. A root group used to be an AddHeader row, which the control
-            ' toggles on a click anywhere in it -- but it does that before the callback runs
-            ' and so cannot be vetoed, which is unusable once the row carries an icon. As a
-            ' plain parent it toggles only via a twisty (not shown here), so the gesture is
-            ' reinstated by hand and the icon zone can be carved out of it later.
+            dim as HWND hCtlDn = GetParent(m->hList)
+            dim as EXPLORER_ROWKIND kindDn = frmExplorer_KindFromRow( hCtlDn, m->idx )
+            dim as long xDn = GET_X_LPARAM( m->lParam )
+
+            ' The action icons come FIRST, before any gesture that would otherwise claim the
+            ' click. Consuming the down is not enough on its own -- see the WM_LBUTTONUP arm,
+            ' which has to be kept off these rows too, or the click that created a folder
+            ' would also be delivered as a click on the row it landed on.
+            select case frmExplorer_IconHitTest( hCtlDn, m->idx, xDn )
+                case EXPICON_ADD:    frmExplorer_NewFolder( hCtlDn, m->idx ):    return true
+                case EXPICON_DELETE: frmExplorer_DeleteFolder( hCtlDn, m->idx ): return true
+            end select
+
+            ' Collapse/expand, implemented HERE because the control no longer does it. A root
+            ' group used to be an AddHeader row, which the control toggles on a click anywhere
+            ' in it -- but it does that before the callback runs and so cannot be vetoed,
+            ' which is unusable once the row carries icons.
             '
             ' Guarded on hasChildren to agree with the painter: no chevron is drawn on an
-            ' empty group, so clicking one must not silently flip a state nothing displays.
-            dim as HWND hCtlDn = GetParent(m->hList)
-            if frmExplorer_KindFromRow( hCtlDn, m->idx ) = EXPKIND_ROOT then
-                if PsListTree_HasChildren( hCtlDn, m->idx ) then
+            ' empty container, so clicking one must not silently flip a state nothing shows.
+            dim as boolean bContainer = false
+            if (kindDn = EXPKIND_ROOT) orelse (kindDn = EXPKIND_FOLDER) then bContainer = true
+
+            if bContainer andalso PsListTree_HasChildren( hCtlDn, m->idx ) then
+                dim as RECT rcRowDn, rcTwisty
+                GetClientRect( m->hList, @rcRowDn )
+                rcRowDn.top = 0
+                rcRowDn.bottom = PsListTree_GetRowHeight( hCtlDn )
+                frmExplorer_TwistyRect( hCtlDn, m->idx, rcRowDn, rcTwisty )
+                if (xDn >= rcTwisty.left) andalso (xDn < rcTwisty.right) then
                     PsListTree_ToggleRow( hCtlDn, m->idx )
+                    return true
                 end if
+            end if
+
+            ' A ROOT row has no other use for a click -- it cannot be selected, renamed or
+            ' dragged -- so it keeps the old whole-row fold gesture. A FOLDER row does: it
+            ' selects, renames in place and (next) drags, so it folds from its chevron only,
+            ' which is what every other tree on this platform does.
+            if kindDn = EXPKIND_ROOT then
+                if PsListTree_HasChildren( hCtlDn, m->idx ) then PsListTree_ToggleRow( hCtlDn, m->idx )
                 return true
             end if
             return false
@@ -299,7 +610,11 @@ function frmExplorer_MessageCallback( byval m as PSLISTTREE_MESSAGEINFO ptr ) as
         case WM_LBUTTONUP
             ' Attempt to show the file
             dim as HWND hCtl = GetParent(m->hList)
-            if frmExplorer_KindFromRow( hCtl, m->idx ) <> EXPKIND_ROOT then
+            dim as EXPLORER_ROWKIND kindUp = frmExplorer_KindFromRow( hCtl, m->idx )
+            ' Containers take no action on the up. Letting a FOLDER row through would fall
+            ' past the null document test and still call SetFocusToCurrentCodeWindow, so
+            ' clicking a folder -- or its Add icon -- would throw focus into the editor.
+            if (kindUp <> EXPKIND_ROOT) andalso (kindUp <> EXPKIND_FOLDER) then
                 ' The one reader that cares WHICH non-document row it is on. It asks for the
                 ' kind and never touches itemData, so there is nothing here to mis-cast.
                 if frmExplorer_KindFromRow( hCtl, m->idx ) = EXPKIND_PROMOTE then
@@ -385,6 +700,19 @@ function frmExplorer_Show( byval hWndParent as HWND ) as LRESULT
     PsListTree_SetBackColor( hCtrl, ghPanel.BackColor )
     PsListTree_SetFont( hCtrl, ghFont(GUIFONT_10) )
     PsListTree_SetExtendedSelect( hCtrl, true )   ' Shift/Ctrl range selection
+
+    ' In-place folder rename. F2 opens it; the Begin callback refuses every row that is not a
+    ' folder, so the root groups cannot be renamed. Click-to-edit is deliberately NOT enabled:
+    ' a single click on the current row would open an editor on a folder the user is about to
+    ' drag, and dragging is the more common gesture by far.
+    '
+    ' The editor is themed explicitly -- the control creates it lazily and owns it, so without
+    ' this it opens black-on-white inside a dark panel.
+    PsListTree_EnableLabelEdit( hCtrl, true )
+    PsListTree_SetBeginLabelEditCallback( hCtrl, @frmExplorer_BeginLabelEditCallback )
+    PsListTree_SetEndLabelEditCallback( hCtrl, @frmExplorer_EndLabelEditCallback )
+    PsListTree_SetEditColors( hCtrl, ghPanel.BackColor, ghPanel.ForeColor, _
+                                     ghPanel.ForeColor, ghPanel.ForeColor )
     ' The scrollbar is created/positioned/auto-hidden by the control; we only theme it.
     ' (PsListTree_SetScrollBarPaintCallback is available for full custom drawing.)
     PsListTree_SetScrollBarWidth( hCtrl, SCROLLBAR_WIDTH_PANEL )

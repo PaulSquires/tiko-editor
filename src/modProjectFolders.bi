@@ -70,3 +70,11 @@ declare function ProjectFolders_Find( byval catIndex as long, byval wszPath as D
 declare function ProjectFolders_Add( byval catIndex as long, byval wszPath as DWSTRING ) as long
 declare function ProjectFolders_RemoveAt( byval idx as long ) as boolean
 declare function ProjectFolders_Exists( byval catIndex as long, byval wszPath as DWSTRING ) as boolean
+
+' Map one path under a rename/dissolve. Pure, so the rule is assertable without a table.
+declare function ProjectFolders_RebasePath( byval wszPath as DWSTRING, byval wszOld as DWSTRING, _
+                                            byval wszNew as DWSTRING ) as DWSTRING
+' Rename a folder, or -- with an empty wszNewPath -- dissolve it into its parent. Rewrites
+' every descendant folder AND every affected document. See its definition.
+declare function ProjectFolders_Rebase( byval catIndex as long, byval wszOldPath as DWSTRING, _
+                                        byval wszNewPath as DWSTRING ) as boolean

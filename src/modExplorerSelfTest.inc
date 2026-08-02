@@ -243,6 +243,131 @@ sub frmExplorer_RunSelfTest()
             print "  NOTE  folder normalization not exercised: the workspace has no documents"
         end if
 
+        ' --- the icon rects ------------------------------------------------------------------
+        ' Which icons a row offers is expressed by the SAME call that places them, so these
+        ' assertions cover the offer rule and the geometry at once. rcRow is a synthetic
+        ' full-width row; only x matters, which is all the hit test compares.
+        '
+        ' rcRow is built from the SURFACE'S OWN client rect, not from a made-up width. It has
+        ' to be: IconHitTest derives its row rect that way, so a synthetic rect here would
+        ' place the icons somewhere the hit test never looks and the agreement assertions
+        ' below would compare two different geometries. (They did, first time round, and
+        ' failed -- which is the assertion doing its job on the test rather than the code.)
+        ' The remaining link, that the painter's p->rc spans the same x, holds because
+        ' PsListTree's paint loop and its own hit test both read GetClientRect on this same
+        ' surface -- that one is verified by reading the control, not from here.
+        dim as RECT rcRowT, rcAddT, rcDelT
+        dim as HWND hSurfT = GetDlgItem( HWND_FRMEXPLORER, IDC_FRMEXPLORER_LISTBOX )
+        GetClientRect( hSurfT, @rcRowT )
+        rcRowT.top = 0
+        rcRowT.bottom = PsListTree_GetRowHeight( HWND_FRMEXPLORER )
+        ' Precondition, so nothing below passes vacuously on a zero-width surface: two icons
+        ' in a 0px row would sit at negative coordinates and still "agree" with each other.
+        Exp_Check( "the Explorer surface has a measurable width", rcRowT.right > 60, _
+            "width=" & str(rcRowT.right) )
+
+        frmExplorer_IconRects( HWND_FRMEXPLORER, nRootNormal, rcRowT, rcAddT, rcDelT )
+        Exp_Check( "a foldering group offers Add", IsRectEmpty( @rcAddT ) = 0 )
+        Exp_Check( "a group offers no Delete", IsRectEmpty( @rcDelT ) <> 0 )
+
+        frmExplorer_IconRects( HWND_FRMEXPLORER, nRowAlpha, rcRowT, rcAddT, rcDelT )
+        Exp_Check( "a folder offers both icons", _
+            (IsRectEmpty( @rcAddT ) = 0) andalso (IsRectEmpty( @rcDelT ) = 0) )
+        Exp_Check( "Delete sits outboard of Add", rcAddT.right <= rcDelT.left, _
+            "add.right=" & str(rcAddT.right) & " del.left=" & str(rcDelT.left) )
+        Exp_Check( "both icons stay inside the row", rcDelT.right <= rcRowT.right )
+        ' The hit test must answer with what was drawn, AT THE DRAWN EDGES.
+        '
+        ' Probing each icon's centre is not enough and was measured not to be: an A/B that
+        ' gave the hit test its own inlined copy of the arithmetic, 2px adrift, left every
+        ' centre probe still inside its icon and the suite fully green. A centre probe
+        ' tolerates drift up to half an icon width, so it cannot detect the very thing these
+        ' assertions are named for. Both outer edges, and the pixel just past each, are what
+        ' make any drift at all fail.
+        Exp_Check( "Delete answers at its left edge", _
+            frmExplorer_IconHitTest( HWND_FRMEXPLORER, nRowAlpha, rcDelT.left ) = EXPICON_DELETE )
+        Exp_Check( "Delete answers at its right edge", _
+            frmExplorer_IconHitTest( HWND_FRMEXPLORER, nRowAlpha, rcDelT.right - 1 ) = EXPICON_DELETE )
+        Exp_Check( "nothing answers past Delete's right edge", _
+            frmExplorer_IconHitTest( HWND_FRMEXPLORER, nRowAlpha, rcDelT.right ) = EXPICON_NONE )
+        Exp_Check( "Add answers at its left edge", _
+            frmExplorer_IconHitTest( HWND_FRMEXPLORER, nRowAlpha, rcAddT.left ) = EXPICON_ADD )
+        Exp_Check( "Add answers at its right edge", _
+            frmExplorer_IconHitTest( HWND_FRMEXPLORER, nRowAlpha, rcAddT.right - 1 ) = EXPICON_ADD )
+        Exp_Check( "nothing answers just left of Add", _
+            frmExplorer_IconHitTest( HWND_FRMEXPLORER, nRowAlpha, rcAddT.left - 1 ) = EXPICON_NONE )
+        Exp_Check( "the caption area hits no icon", _
+            frmExplorer_IconHitTest( HWND_FRMEXPLORER, nRowAlpha, 0 ) = EXPICON_NONE )
+
+        ' A group that takes no folders must offer nothing at all, or Main would sprout an
+        ' Add icon that creates a folder the model refuses.
+        dim as long nRootMain = -1
+        for i as long = 0 to PsListTree_GetCount( HWND_FRMEXPLORER ) - 1
+            if frmExplorer_KindFromRow( HWND_FRMEXPLORER, i ) <> EXPKIND_ROOT then continue for
+            if PsListTree_GetItemData( HWND_FRMEXPLORER, i ) = CATINDEX_MAIN then nRootMain = i
+        next
+        if nRootMain >= 0 then
+            frmExplorer_IconRects( HWND_FRMEXPLORER, nRootMain, rcRowT, rcAddT, rcDelT )
+            Exp_Check( "a non-foldering group offers no icons", _
+                (IsRectEmpty( @rcAddT ) <> 0) andalso (IsRectEmpty( @rcDelT ) <> 0) )
+        end if
+
+        ' --- rebase: the rule shared by rename and delete -------------------------------------
+        Exp_Check( "rebasing maps the folder itself", _
+            ProjectFolders_RebasePath("a/b", "a/b", "a/x") = "a/x" )
+        Exp_Check( "rebasing carries descendants", _
+            ProjectFolders_RebasePath("a/b/c", "a/b", "a/x") = "a/x/c" )
+        Exp_Check( "rebasing leaves unrelated paths alone", _
+            ProjectFolders_RebasePath("a/z", "a/b", "a/x") = "a/z" )
+        ' The same trap as descent: a plain prefix would rewrite "a/bb" when renaming "a/b".
+        Exp_Check( "rebasing does not touch a shared name prefix", _
+            ProjectFolders_RebasePath("a/bb", "a/b", "a/x") = "a/bb", _
+            ProjectFolders_RebasePath("a/bb", "a/b", "a/x") )
+        ' Dissolving is rebasing onto the parent -- which is what makes delete and rename one
+        ' implementation instead of two path walks that could disagree.
+        Exp_Check( "dissolving empties the folder path", _
+            ProjectFolders_RebasePath("a/b", "a/b", "a") = "a" )
+        Exp_Check( "dissolving lifts descendants one level", _
+            ProjectFolders_RebasePath("a/b/c", "a/b", "a") = "a/c" )
+        Exp_Check( "dissolving a top-level folder empties its own path", _
+            ProjectFolders_RebasePath("b", "b", "") = "" )
+        Exp_Check( "dissolving a top-level folder lifts its children to the top", _
+            ProjectFolders_RebasePath("b/c", "b", "") = "c" )
+
+        ' --- rename and delete against the real table -----------------------------------------
+        ProjectFolders_Clear()
+        ProjectFolders_Add( catTest, "one/two/three" )
+        ProjectFolders_Rebase( catTest, "one/two", "one/deux" )
+        Exp_Check( "renaming a folder renames it", _
+            ProjectFolders_Exists( catTest, "one/deux" ) andalso _
+            ( ProjectFolders_Exists( catTest, "one/two" ) = false ) )
+        Exp_Check( "renaming a folder carries its subtree", _
+            ProjectFolders_Exists( catTest, "one/deux/three" ), "count=" & str(ProjectFolders_Count()) )
+
+        ' Deleting re-parents rather than destroying: "three" must survive one level up.
+        ProjectFolders_Rebase( catTest, "one/deux", ProjectFolders_ParentPath("one/deux") )
+        Exp_Check( "deleting a folder removes it", ProjectFolders_Exists( catTest, "one/deux" ) = false )
+        Exp_Check( "deleting a folder re-parents its children", _
+            ProjectFolders_Exists( catTest, "one/three" ), "count=" & str(ProjectFolders_Count()) )
+        Exp_Check( "deleting leaves the surviving ancestor alone", ProjectFolders_Exists( catTest, "one" ) )
+
+        ' A re-parented child landing on an existing name MERGES, which is the only sensible
+        ' reading -- and must not leave two records claiming one path.
+        ProjectFolders_Clear()
+        ProjectFolders_Add( catTest, "p/dup" )
+        ProjectFolders_Add( catTest, "dup" )
+        ProjectFolders_Rebase( catTest, "p", "" )
+        Exp_Check( "a collision on re-parent merges to one record", _
+            ProjectFolders_Count() = 1, "count=" & str(ProjectFolders_Count()) )
+        Exp_Check( "the merged record is the surviving path", ProjectFolders_Exists( catTest, "dup" ) )
+
+        ' --- the localized strings --------------------------------------------------------------
+        ' Printed, not merely length-checked: LoadLocalizationFile fills a blank key with the
+        ' English text, so len() > 0 passes under every language even when that language has
+        ' the slot empty. The value is what distinguishes a translation from the fallback.
+        Exp_Check( "the New Folder caption resolves", len(L(630,"New Folder")) > 0, L(630,"") )
+        Exp_Check( "the Delete Folder caption resolves", len(L(631,"Delete Folder")) > 0, L(631,"") )
+
         ' Leave the workspace exactly as it was found.
         ProjectFolders_Clear()
         LoadExplorerFiles()
