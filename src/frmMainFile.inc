@@ -492,9 +492,11 @@ function OnCommand_FileClose( _
         ' the Explorer under its category until the user explicitly removes it -- that is
         ' the whole point of there being one workspace model instead of two.
         '
-        ' The single exception is a never-saved buffer: it has no disk file to go back to,
-        ' so closing its tab is the only way it can end, and keeping it would leave a row
-        ' pointing at nothing.
+        ' TWO exceptions. A never-saved buffer has no disk file to go back to, so closing
+        ' its tab is the only way it can end and keeping it would leave a row pointing at
+        ' nothing. And an UNTITLED workspace has no project for a file to be removed from --
+        ' "Remove from project" is withheld from both context menus there, so closing has to
+        ' be what takes the row out of the Explorer or the file could never leave at all.
         if pDoc then
             ' ALWAYS capture caret/scroll/bookmarks first. The document is about to lose its
             ' Scintilla, and the project writer's untabbed branch persists docData without
@@ -502,7 +504,10 @@ function OnCommand_FileClose( _
             ' every file the user closed during the session.
             pDoc->SetDocInfo()
 
-            if pDoc->IsNewFlag = true then
+            dim as boolean bRemoveOnClose = _
+                ( pDoc->IsNewFlag = true ) orelse ( gApp.IsProjectNamed() = false )
+
+            if bRemoveOnClose then
                 gApp.RemoveDocument( pDoc )
                 LoadExplorerFiles()
                 ' The Functions panel lists the Explorer's files, so a document leaving the
