@@ -1151,7 +1151,12 @@ private sub frmThemes_ListPaint( byval p as PSLISTTREE_PAINTINFO ptr )
     ' Lay the right-hand furniture out from the right edge inwards. Each colour channel gets
     ' its OWN role label, in its own column, immediately left of its own swatch:
     '
-    '     [ key name ....... ][ fore role ][FG][ back role ][BG][ B I U ]
+    '     [ key name ....... ][ fore role ][FG][BG][ back role ]
+    '
+    ' MIRRORED: the two swatches sit together so fore and back can be compared at a glance,
+    ' and each role name sits on the OUTSIDE of its own swatch. It read
+    ' [fore role][FG][back role][BG] first, which put a word between the two colours and made
+    ' them awkward to compare.
     '
     ' It showed ONE label before, right-aligned before both swatches, chosen as the fore
     ' role if the foreground was inherited and otherwise the back role. So a key inheriting
@@ -1160,9 +1165,9 @@ private sub frmThemes_ListPaint( byval p as PSLISTTREE_PAINTINFO ptr )
     ' channel it belonged to. A label that can mean either channel means neither.
     dim as long roleW = AfxScaleX(THEME_ROLECOLW)
     dim as long xRight = p->rc.right - AfxScaleX(THEME_ROWPADR)
-    dim as long xBack     = xRight - sw
-    dim as long xBackRole = xBack - gap - roleW
-    dim as long xFore     = xBackRole - gap - sw
+    dim as long xBackRole = xRight - roleW
+    dim as long xBack     = xBackRole - gap - sw
+    dim as long xFore     = xBack - gap - sw
     dim as long xForeRole = xFore - gap - roleW
     dim as long yMid  = p->rc.top + ((p->rc.bottom - p->rc.top) - sh) \ 2
 
@@ -1171,7 +1176,7 @@ private sub frmThemes_ListPaint( byval p as PSLISTTREE_PAINTINFO ptr )
 
     ' The role a channel INHERITS, or nothing when it has been given a colour of its own.
     ' That is the whole two-layer model on one row.
-    #macro PAINTROLE( _has_, _from_, _rid_, _x_ )
+    #macro PAINTROLE( _has_, _from_, _rid_, _x_, _align_ )
         scope
             dim as boolean bShow = (_has_)
             bShow = (bShow andalso (_from_))
@@ -1187,7 +1192,11 @@ private sub frmThemes_ListPaint( byval p as PSLISTTREE_PAINTINFO ptr )
                 if len(sRole) > 0 then
                     dim as RECT rcR = ( (_x_), p->rc.top, (_x_) + roleW, p->rc.bottom )
                     p->b->SetForeColor( theme.role.clr(THROLE_FOREGROUNDDIM) )
-                    p->b->PaintText( sRole, @rcR, DT_RIGHT or DT_END_ELLIPSIS )
+                    ' Each name hugs its own swatch: the fore name is right-aligned (its
+                    ' swatch is to its right), the back name left-aligned (its swatch is to
+                    ' its left). Aligning both the same way would leave one of them floating
+                    ' a column away from the colour it describes.
+                    p->b->PaintText( sRole, @rcR, (_align_) or DT_END_ELLIPSIS )
                     p->b->SetForeColor( foreclr )
                 end if
             end if
@@ -1195,9 +1204,9 @@ private sub frmThemes_ListPaint( byval p as PSLISTTREE_PAINTINFO ptr )
     #endmacro
 
     PAINTROLE( gThemeKeys(nb).ofsFore >= 0, gTheme(n).foreFromRole, _
-               gThemeKeys(nb).nRoleFore, xForeRole )
+               gThemeKeys(nb).nRoleFore, xForeRole, DT_RIGHT )
     PAINTROLE( gThemeKeys(nb).ofsBack >= 0, gTheme(n).backFromRole, _
-               gThemeKeys(nb).nRoleBack, xBackRole )
+               gThemeKeys(nb).nRoleBack, xBackRole, DT_LEFT )
     #undef PAINTROLE
 
     ' Swatches. Outlined in the divider colour so a swatch the same shade as the row behind
@@ -1476,7 +1485,12 @@ function frmThemes_Layout( byval nPage as long, byval hPage as HWND, byval cxPan
     dim as long rowFurniture = AfxScaleX( THEME_ROWPADR + THEME_SWATCHW + THEME_ROWGAP + _
                                           THEME_ROLECOLW + THEME_ROWGAP + THEME_SWATCHW + _
                                           THEME_ROWGAP + THEME_ROLECOLW )
-    dim as long listW = rowFurniture + AfxScaleX(THEME_KEYNAMEMINW) + SCROLLBAR_WIDTH_PANEL
+    ' ONE truncated value, used by the derivation AND by the assertion below. Deriving with
+    ' the float and checking against clng() of it fails forever by one: the derivation
+    ' TRUNCATES (297.5 -> 804 total) and clng ROUNDS (297.5 -> 298). Truncating one side was
+    ' not enough -- both have to come from the same long.
+    dim as long nameFloor = int( AfxScaleX(THEME_KEYNAMEMINW) )
+    dim as long listW = rowFurniture + nameFloor + SCROLLBAR_WIDTH_PANEL
     if listW < AfxScaleX(THEME_LISTMINW) then listW = AfxScaleX(THEME_LISTMINW)
 
     ' ...but the edit column still has to fit beside it. Shrinking the list is the right
@@ -1565,17 +1579,42 @@ function frmThemes_Layout( byval nPage as long, byval hPage as HWND, byval cxPan
         ? sP & "theme page: the key list keeps its minimum width   [listW=" & str(listW) & _
             " floor=" & str(AfxScaleX(THEME_LISTMINW)) & "]"
 
-        ' THE NAME COLUMN, which is what the two role columns ate. A row whose right-hand
-        ' furniture fits perfectly and leaves the key name 78px is not a row that fits.
-        ' BOTH SIDES TRUNCATED. AfxScaleX returns a FLOAT: at 175% the floor is 297.5 while
-        ' nameW, a long, is 297 -- so this reported FAIL over half a pixel, which is the
-        ' trap CLAUDE.md records verbatim ("the same expression at two precisions is not the
-        ' same number"). It is also why the failure was real-looking and meaningless.
-        dim as long nameW     = listW - rowFurniture - SCROLLBAR_WIDTH_PANEL
-        dim as long nameFloor = clng( AfxScaleX(THEME_KEYNAMEMINW) )
-        if nameW >= nameFloor then sP = "PASS  " else sP = "FAIL  "
+        ' THE NAME COLUMN, MEASURED AGAINST THE LONGEST KEY THERE ACTUALLY IS.
+        '
+        ' Comparing it to THEME_KEYNAMEMINW would be a TAUTOLOGY: listW is derived as
+        ' furniture + that floor + scrollbar, so nameW comes back as exactly the floor every
+        ' time and the check would compare a derived value with its own input. It would fire
+        ' only when the listMax clamp bit, and would say nothing whatever about the actual
+        ' question -- whether 170 unscaled is enough for "output.scrollbardivider".
+        '
+        ' So the longest key is MEASURED, in the font the row paints with. Measuring belongs
+        ' in a layout; it is the paint CALLBACK that has no business taking a DC.
+        dim as long nameW = listW - rowFurniture - SCROLLBAR_WIDTH_PANEL
+        dim as long widest
+        dim as string sWidest
+        scope
+            dim as HDC hdc = GetDC( hPage )
+            if hdc then
+                dim as HFONT hOld = cast( HFONT, SelectObject( hdc, OptionsFont_Base() ) )
+                dim as SIZE sz
+                for i as long = lbound(gThemeKeys) to ubound(gThemeKeys)
+                    dim as wstring * 64 wsz = gThemeKeys(i).keyValue
+                    if GetTextExtentPoint32W( hdc, @wsz, len(wsz), @sz ) then
+                        if sz.cx > widest then
+                            widest  = sz.cx
+                            sWidest = gThemeKeys(i).keyValue
+                        end if
+                    end if
+                next
+                SelectObject( hdc, hOld )
+                ReleaseDC( hPage, hdc )
+            end if
+        end scope
+        dim as boolean bFits = (widest > 0)
+        bFits = (bFits andalso (nameW >= widest))
+        if bFits then sP = "PASS  " else sP = "FAIL  "
         ? sP & "theme page: key names keep room beside the role columns   [nameW=" & _
-            str(nameW) & " floor=" & str(nameFloor) & _
+            str(nameW) & " widest=" & str(widest) & " (" & sWidest & ")" & _
             "  furniture=" & str(rowFurniture) & "]"
     end if
 
