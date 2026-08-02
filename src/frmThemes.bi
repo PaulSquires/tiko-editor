@@ -121,26 +121,9 @@
 #Define IDC_FRMTHEMES_TXTG        9512
 #Define IDC_FRMTHEMES_TXTB        9513
 
-' Group-header categories for the key list. Stable ids, deliberately NOT localized strings --
-' grouping is structure, and must not change meaning with the UI language. THEMECAT_OTHER is
-' the unclassified bucket the self-test asserts stays empty.
-enum
-    THEMECAT_OTHER = 0
-    THEMECAT_MAIN
-    THEMECAT_PANEL
-    THEMECAT_TOPTABS
-    THEMECAT_MENUBAR
-    THEMECAT_POPUP
-    THEMECAT_STATUSBAR
-    THEMECAT_OUTPUT
-    THEMECAT_COMPILE
-    THEMECAT_SHARED
-    THEMECAT_SYNTAX
-    THEMECAT_CURSOR
-    THEMECAT_MARGINS
-    THEMECAT_MARKERS
-    THEMECAT_EDCHROME
-end enum
+' The THEMECAT_* group-header ids have MOVED to modThemeTypes.bi. They are engine vocabulary
+' now: the key table carries each key's category, so the ids have to exist long before this
+' dialog is loaded. Nothing else about them changed.
 
 dim shared HWND_FRMTHEMES       as HWND
 dim shared HWND_FRMTHEMES_PAGE  as HWND

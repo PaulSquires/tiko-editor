@@ -11,6 +11,11 @@
 '    MERCHANTABILITY or FITNESS for A PARTICULAR PURPOSE.  See the
 '    GNU General Public License for more details.
 
+' The resolved theme as ONE structure -- theme.editor.keyword1.forecolor and friends. Loaded
+' first because the generated key table below names its members.
+#include once "modThemeTypes.bi"
+
+
 type THEME_TYPE
     keyValue as DWSTRING
     keyData as DWSTRING
@@ -835,6 +840,276 @@ end sub
 
 
 ''
+''  ============================ THE GENERATED KEY TABLE ============================
+''
+''  The replacement for Theme_BuildBindTable above, generated from modThemeKeys.bi rather
+''  than hand-written. Both exist at once for now: the hand-written table still fills the
+''  legacy gh* globals, this one fills the new "theme" root, and the self-test asserts the
+''  two agree key for key. Once the 1,266 read sites have moved, the hand-written table and
+''  the gh* globals go and this is all that is left.
+''
+''  OFFSETS, NOT POINTERS, and that is the whole reason for a second table rather than an
+''  extra column on the first. A pointer can only ever address the ONE live instance; an
+''  offset addresses whichever THEMEROOT_TYPE it is handed, so the identical code fills the
+''  live theme, the Cancel snapshot, the Reset baseline and the built-in defaults.
+''
+''  SENTINEL IS -1, NEVER 0. Offset 0 is a real member (general.description). The legacy
+''  table's null-pointer-means-absent test does not survive the translation.
+''
+type THEMEKEY_TYPE
+    keyValue     as zstring * 40
+    ofsText      as long          ' a DWSTRING payload rather than a colour
+    ofsFore      as long
+    ofsBack      as long
+    ofsBold      as long
+    ofsItalic    as long
+    ofsUnder     as long
+    ofsForeAlpha as long
+    ofsBackAlpha as long
+    nCat         as long          ' the theme editor's group header
+    nSubsys      as ulong
+end type
+dim shared gThemeKeys(any) as THEMEKEY_TYPE
+
+
+''
+''  BUILD IT
+''
+''  modThemeKeys.bi is included WITHOUT "once" -- see the warning in its header. It is
+''  expanded again elsewhere under different row-macro bodies, and a "once" at any single
+''  site breaks every later expansion silently, with a clean build and no warning.
+''
+private sub Theme_BuildKeyTable()
+
+    static as boolean bBuilt
+    if bBuilt then exit sub
+    bBuilt = true
+
+    erase gThemeKeys
+
+    ' Every row runs this first: grow the array and fill the fields common to all shapes,
+    ' defaulting every channel to "absent". Each row macro then claims only its own channels.
+    #macro THKEY_BEGIN( k, cat, sub_ )
+        scope
+            dim as long n = ubound(gThemeKeys) + 1
+            redim preserve gThemeKeys(n) as THEMEKEY_TYPE
+            with gThemeKeys(n)
+                .keyValue     = k
+                .ofsText      = -1
+                .ofsFore      = -1
+                .ofsBack      = -1
+                .ofsBold      = -1
+                .ofsItalic    = -1
+                .ofsUnder     = -1
+                .ofsForeAlpha = -1
+                .ofsBackAlpha = -1
+                .nCat         = cat
+                ' Zero means "derive from the namespace", exactly as the legacy table does.
+                '
+                ' The parentheses around sub_ are LOAD-BEARING. A macro argument is pasted in
+                ' as raw tokens, and the two multi-subsystem keys pass an expression:
+                '   THSUB_SCINTILLA or THSUB_EDITORCHROME or THSUB_AUTOCOMPLETE or THSUB_OPTIONSDLG
+                ' In FreeBASIC "=" binds TIGHTER than "or", so an unparenthesised sub_ = 0
+                ' parses as "A or B or C or (D = 0)" -- a mask silently missing three of its
+                ' four bits, which means a live edit of editor.text would repaint Scintilla
+                ' and nothing else. Caught by assertion 22c, not by the compiler.
+                .nSubsys      = iif( (sub_) = 0, Theme_SubsysForNamespace( k ), (sub_) )
+    #endmacro
+
+    #macro THKEY_END()
+            end with
+        end scope
+    #endmacro
+
+    #macro THTEXTKEY( k, path, cat, sub_ )
+        THKEY_BEGIN( k, cat, sub_ )
+            .ofsText = offsetof( THEMEROOT_TYPE, path )
+        THKEY_END()
+    #endmacro
+
+    #macro THSTYLEKEY( k, path, cat, sub_ )
+        THKEY_BEGIN( k, cat, sub_ )
+            .ofsFore   = offsetof( THEMEROOT_TYPE, path.forecolor )
+            .ofsBack   = offsetof( THEMEROOT_TYPE, path.backcolor )
+            .ofsBold   = offsetof( THEMEROOT_TYPE, path.bold )
+            .ofsItalic = offsetof( THEMEROOT_TYPE, path.italic )
+            .ofsUnder  = offsetof( THEMEROOT_TYPE, path.underline )
+        THKEY_END()
+    #endmacro
+
+    #macro THPAIRKEY( k, path, cat, sub_ )
+        THKEY_BEGIN( k, cat, sub_ )
+            .ofsFore = offsetof( THEMEROOT_TYPE, path.forecolor )
+            .ofsBack = offsetof( THEMEROOT_TYPE, path.backcolor )
+        THKEY_END()
+    #endmacro
+
+    #macro THPAIRAKEY( k, path, apath, cat, sub_ )
+        THKEY_BEGIN( k, cat, sub_ )
+            .ofsFore      = offsetof( THEMEROOT_TYPE, path.forecolor )
+            .ofsBack      = offsetof( THEMEROOT_TYPE, path.backcolor )
+            .ofsBackAlpha = offsetof( THEMEROOT_TYPE, apath )
+        THKEY_END()
+    #endmacro
+
+    #macro THFOREKEY( k, path, cat, sub_ )
+        THKEY_BEGIN( k, cat, sub_ )
+            .ofsFore = offsetof( THEMEROOT_TYPE, path )
+        THKEY_END()
+    #endmacro
+
+    #macro THFOREAKEY( k, path, apath, cat, sub_ )
+        THKEY_BEGIN( k, cat, sub_ )
+            .ofsFore      = offsetof( THEMEROOT_TYPE, path )
+            .ofsForeAlpha = offsetof( THEMEROOT_TYPE, apath )
+        THKEY_END()
+    #endmacro
+
+    #macro THBACKKEY( k, path, cat, sub_ )
+        THKEY_BEGIN( k, cat, sub_ )
+            .ofsBack = offsetof( THEMEROOT_TYPE, path )
+        THKEY_END()
+    #endmacro
+
+    #include "modThemeKeys.bi"
+
+    #undef THTEXTKEY
+    #undef THSTYLEKEY
+    #undef THPAIRKEY
+    #undef THPAIRAKEY
+    #undef THFOREKEY
+    #undef THFOREAKEY
+    #undef THBACKKEY
+    #undef THKEY_BEGIN
+    #undef THKEY_END
+
+end sub
+
+
+''
+''  WRITE ONE CHANNEL THROUGH AN OFFSET
+''
+''  A negative offset means the key has no such channel and the write is skipped -- the
+''  translation of the legacy table's null-pointer test.
+''
+private sub ThemeRoot_PokeColor( byval pRoot as THEMEROOT_TYPE ptr, byval ofs as long, _
+                                 byval v as COLORREF )
+    if ofs < 0 then exit sub
+    *cast( COLORREF ptr, cast( any ptr, pRoot ) + ofs ) = v
+end sub
+
+private sub ThemeRoot_PokeBool( byval pRoot as THEMEROOT_TYPE ptr, byval ofs as long, _
+                                byval v as boolean )
+    if ofs < 0 then exit sub
+    *cast( boolean ptr, cast( any ptr, pRoot ) + ofs ) = v
+end sub
+
+private sub ThemeRoot_PokeLong( byval pRoot as THEMEROOT_TYPE ptr, byval ofs as long, _
+                                byval v as long )
+    if ofs < 0 then exit sub
+    *cast( long ptr, cast( any ptr, pRoot ) + ofs ) = v
+end sub
+
+' byval, and never "byref as const" -- AfxNova's DWSTRING copy constructor is not
+' const-correct and a const reference that is then copied corrupts the heap. See Learnings.md.
+private sub ThemeRoot_PokeText( byval pRoot as THEMEROOT_TYPE ptr, byval ofs as long, _
+                                byval v as DWSTRING )
+    if ofs < 0 then exit sub
+    *cast( DWSTRING ptr, cast( any ptr, pRoot ) + ofs ) = v
+end sub
+
+
+''
+''  READ ONE CHANNEL BACK THROUGH AN OFFSET
+''
+''  Public because the self-test's whole job in this phase is to compare what the generated
+''  offsets address against what the hand-written pointer table addresses. There is no other
+''  way to reach a member the caller knows only by offset.
+''
+function ThemeRoot_PeekColor( byval pRoot as THEMEROOT_TYPE ptr, byval ofs as long ) as COLORREF
+    if pRoot = 0 orelse ofs < 0 then return 0
+    return *cast( COLORREF ptr, cast( any ptr, pRoot ) + ofs )
+end function
+
+function ThemeRoot_PeekBool( byval pRoot as THEMEROOT_TYPE ptr, byval ofs as long ) as boolean
+    if pRoot = 0 orelse ofs < 0 then return false
+    return *cast( boolean ptr, cast( any ptr, pRoot ) + ofs )
+end function
+
+function ThemeRoot_PeekLong( byval pRoot as THEMEROOT_TYPE ptr, byval ofs as long ) as long
+    if pRoot = 0 orelse ofs < 0 then return 0
+    return *cast( long ptr, cast( any ptr, pRoot ) + ofs )
+end function
+
+function ThemeRoot_PeekText( byval pRoot as THEMEROOT_TYPE ptr, byval ofs as long ) as DWSTRING
+    if pRoot = 0 orelse ofs < 0 then return ""
+    return *cast( DWSTRING ptr, cast( any ptr, pRoot ) + ofs )
+end function
+
+
+''
+''  FIND A KEY'S ROW IN THE GENERATED TABLE, or -1.
+''
+function Theme_KeyIndex( byval lookupKey as string ) as long
+    Theme_BuildKeyTable()
+    for i as long = lbound(gThemeKeys) to ubound(gThemeKeys)
+        if gThemeKeys(i).keyValue = lookupKey then return i
+    next
+    return -1
+end function
+
+
+''
+''  HOW MANY ROWS DID THE TABLE ACTUALLY GENERATE?
+''
+''  Exists so the self-test can catch the "#include once" trap, which is otherwise completely
+''  silent: the build stays clean and the table simply comes out empty.
+''
+function Theme_KeyCount() as long
+    Theme_BuildKeyTable()
+    return ubound(gThemeKeys) - lbound(gThemeKeys) + 1
+end function
+
+
+''
+''  POUR THE PARSED THEME INTO A ROOT STRUCTURE
+''
+''  Takes the destination rather than assuming the live one, which is the point of holding
+''  offsets: the same call fills the snapshot, the baseline or the defaults.
+''
+sub Theme_FillRoot( byval pRoot as THEMEROOT_TYPE ptr )
+
+    if pRoot = 0 then exit sub
+    Theme_BuildKeyTable()
+
+    for i as long = lbound(gThemeKeys) to ubound(gThemeKeys)
+        dim as THEMEKEY_TYPE ptr pk = @gThemeKeys(i)
+        dim as THEME_TYPE ptr pTheme = getThemePtr( pk->keyValue )
+
+        ThemeRoot_PokeText ( pRoot, pk->ofsText,   pTheme->keyData )
+        ThemeRoot_PokeColor( pRoot, pk->ofsFore,   pTheme->foreground )
+        ThemeRoot_PokeColor( pRoot, pk->ofsBack,   pTheme->background )
+        ThemeRoot_PokeBool ( pRoot, pk->ofsBold,   (pTheme->bold <> 0) )
+        ThemeRoot_PokeBool ( pRoot, pk->ofsItalic, (pTheme->italic <> 0) )
+        ThemeRoot_PokeBool ( pRoot, pk->ofsUnder,  (pTheme->underline <> 0) )
+
+        ' Alpha only lands when the theme actually asked for one. Without the has* test a
+        ' plain "r,g,b" would drive the destination to the 255 default and silently take
+        ' over from whatever constant the consumer uses today. Same rule as Theme_FillGlobals.
+        if pk->ofsForeAlpha >= 0 then
+            ThemeRoot_PokeLong( pRoot, pk->ofsForeAlpha, _
+                iif( pTheme->hasForeAlpha, clng(pTheme->foregroundAlpha), -1 ) )
+        end if
+        if pk->ofsBackAlpha >= 0 then
+            ThemeRoot_PokeLong( pRoot, pk->ofsBackAlpha, _
+                iif( pTheme->hasBackAlpha, clng(pTheme->backgroundAlpha), -1 ) )
+        end if
+    next
+
+end sub
+
+
+''
 ''  WHICH SUBSYSTEMS DOES THIS KEY FEED?
 ''
 function Theme_SubsystemsForKey( byval lookupKey as string ) as ulong
@@ -1150,6 +1425,13 @@ end function
 sub Theme_FillGlobals()
 
     Theme_BuildBindTable()
+
+    ' DUAL-WRITE, and it is temporary. The new root is filled from the generated key table;
+    ' the gh* globals below are filled from the hand-written bind table. Every read site in
+    ' the app still reads gh*, so nothing here can change a pixel -- the root is written and,
+    ' for now, only the self-test reads it, asserting the two agree key for key. When the
+    ' read sites have moved, the gh* half goes and this call is all that remains.
+    Theme_FillRoot( @theme )
 
     dim as THEME_TYPE ptr pTheme
 

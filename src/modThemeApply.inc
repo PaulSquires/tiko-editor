@@ -936,6 +936,135 @@ sub Theme_RunSelfTest()
         end if
     end scope
 
+    ' -- 22. THE GENERATED KEY TABLE AGREES WITH THE HAND-WRITTEN BIND TABLE. -------------
+    '    The whole of Phase 1's claim, in its only testable form. The new "theme" root is
+    '    filled from generated offsets; the gh* globals are filled from hand-written
+    '    pointers; every read site in the app still reads gh*. So the root is only correct
+    '    if it holds, key for key and channel for channel, exactly what the legacy table
+    '    put in the globals.
+    '
+    '    These assertions are DELETED in Phase 3, when the gh* side they compare against
+    '    stops existing. That is the stated reason, not a quiet drop.
+    scope
+        ' 22a. The table generated any rows at all.
+        '      This is the "#include once" trap's only symptom: it is otherwise completely
+        '      silent -- clean build, no warning, and an empty table means every colour in
+        '      the app reads as black the moment the gh* globals are retired.
+        dim as long nKeys = Theme_KeyCount()
+        THASSERT( nKeys > 0, "the generated key table is EMPTY (#include once on modThemeKeys.bi?)" )
+
+        ' 22b. It covers every bind row, plus exactly the two DWSTRING payload keys the
+        '      legacy table could not carry.
+        dim as long nBind = ubound(gThemeBind) - lbound(gThemeBind) + 1
+        THASSERT( nKeys = nBind + 2, _
+                  "key table has " & nKeys & " rows, expected " & (nBind + 2) & _
+                  " (= " & nBind & " bind rows + general.description + general.version)" )
+        THASSERT( Theme_KeyIndex( "general.description" ) >= 0, _
+                  "general.description is not in the key table" )
+        THASSERT( Theme_KeyIndex( "general.version" ) >= 0, _
+                  "general.version is not in the key table" )
+
+        ' 22c. Every channel of every bind row lands on a member holding the same value.
+        for i as long = lbound(gThemeBind) to ubound(gThemeBind)
+            dim as string sKey = gThemeBind(i).keyValue
+            dim as long k = Theme_KeyIndex( sKey )
+            THASSERT( k >= 0, "bind key missing from the generated table: " & sKey )
+            if k < 0 then continue for
+            dim as THEMEBIND_TYPE ptr pB = @gThemeBind(i)
+            dim as THEMEKEY_TYPE ptr pK = @gThemeKeys(k)
+
+            ' A channel the legacy row claims must be claimed by the generated row too --
+            ' and vice versa, or the root would silently carry a stale zero.
+            THASSERT( (pB->pFore <> 0) = (pK->ofsFore >= 0), "foreground channel disagrees: " & sKey )
+            THASSERT( (pB->pBack <> 0) = (pK->ofsBack >= 0), "background channel disagrees: " & sKey )
+            THASSERT( (pB->pBold <> 0) = (pK->ofsBold >= 0), "bold channel disagrees: " & sKey )
+
+            if (pB->pFore <> 0) andalso (pK->ofsFore >= 0) then
+                THASSERT( ThemeRoot_PeekColor( @theme, pK->ofsFore ) = *pB->pFore, _
+                          "foreground differs: " & sKey )
+            end if
+            if (pB->pBack <> 0) andalso (pK->ofsBack >= 0) then
+                THASSERT( ThemeRoot_PeekColor( @theme, pK->ofsBack ) = *pB->pBack, _
+                          "background differs: " & sKey )
+            end if
+            if (pB->pBold <> 0) andalso (pK->ofsBold >= 0) then
+                THASSERT( ThemeRoot_PeekBool( @theme, pK->ofsBold ) = *pB->pBold, _
+                          "bold differs: " & sKey )
+                THASSERT( ThemeRoot_PeekBool( @theme, pK->ofsItalic ) = *pB->pItalic, _
+                          "italic differs: " & sKey )
+                THASSERT( ThemeRoot_PeekBool( @theme, pK->ofsUnder ) = *pB->pUnder, _
+                          "underline differs: " & sKey )
+            end if
+            ' The two alpha-bearing keys, including the -1 "theme did not ask" sentinel.
+            if (pB->pForeAlpha <> 0) andalso (pK->ofsForeAlpha >= 0) then
+                THASSERT( ThemeRoot_PeekLong( @theme, pK->ofsForeAlpha ) = *pB->pForeAlpha, _
+                          "foreground alpha differs: " & sKey )
+            end if
+            if (pB->pBackAlpha <> 0) andalso (pK->ofsBackAlpha >= 0) then
+                THASSERT( ThemeRoot_PeekLong( @theme, pK->ofsBackAlpha ) = *pB->pBackAlpha, _
+                          "background alpha differs: " & sKey )
+            end if
+
+            ' The subsystem mask is generated now too, so it has to survive the move.
+            THASSERT( pK->nSubsys = pB->nSubsys, "subsystem mask differs: " & sKey )
+        next
+
+        ' 22d. The two DWSTRING payloads reached the root -- the rows the legacy table could
+        '      not hold at all, and which were hand-copied in Theme_FillGlobals.
+        THASSERT( theme.general.description = ghGeneral.description, _
+                  "general.description did not reach the root" )
+        THASSERT( theme.general.version = ghGeneral.version, _
+                  "general.version did not reach the root" )
+
+        ' 22e. Every offset is inside the struct, and no two rows claim the SAME offset on
+        '      the same channel -- which is what a duplicated member path in the table would
+        '      look like, and it would silently make one key overwrite another.
+        for i as long = lbound(gThemeKeys) to ubound(gThemeKeys)
+            THASSERT( gThemeKeys(i).ofsFore < sizeof(THEMEROOT_TYPE), _
+                      "foreground offset outside the struct: " & gThemeKeys(i).keyValue )
+            THASSERT( gThemeKeys(i).ofsBack < sizeof(THEMEROOT_TYPE), _
+                      "background offset outside the struct: " & gThemeKeys(i).keyValue )
+            for j as long = i + 1 to ubound(gThemeKeys)
+                if (gThemeKeys(i).ofsFore >= 0) andalso _
+                   (gThemeKeys(i).ofsFore = gThemeKeys(j).ofsFore) then
+                    THASSERT( false, "two keys share one foreground member: " & _
+                              gThemeKeys(i).keyValue & " and " & gThemeKeys(j).keyValue )
+                end if
+                if (gThemeKeys(i).ofsBack >= 0) andalso _
+                   (gThemeKeys(i).ofsBack = gThemeKeys(j).ofsBack) then
+                    THASSERT( false, "two keys share one background member: " & _
+                              gThemeKeys(i).keyValue & " and " & gThemeKeys(j).keyValue )
+                end if
+            next
+        next
+
+        ' 22f. Every key carries a real category. The theme editor derives its group headers
+        '      from the table now, so an unclassified key would silently land in "Other".
+        for i as long = lbound(gThemeKeys) to ubound(gThemeKeys)
+            if left( gThemeKeys(i).keyValue, 8 ) = "general." then continue for
+            THASSERT( gThemeKeys(i).nCat <> THEMECAT_OTHER, _
+                      "key has no category: " & gThemeKeys(i).keyValue )
+        next
+
+        ' 22g. Filling a SECOND root gives the same answer -- which is the property that
+        '      makes offsets worth having over pointers, since the snapshot, the baseline
+        '      and the defaults are all just another destination.
+        scope
+            dim as THEMEROOT_TYPE other
+            Theme_FillRoot( @other )
+            THASSERT( other.editor.keyword1.forecolor = theme.editor.keyword1.forecolor, _
+                      "filling a second root gave a different colour" )
+            THASSERT( other.general.description = theme.general.description, _
+                      "filling a second root gave a different description" )
+            ' And a whole-struct assignment deep-copies it, including the DWSTRINGs.
+            dim as THEMEROOT_TYPE copy
+            copy = other
+            other.general.description = "mutated"
+            THASSERT( copy.general.description = theme.general.description, _
+                      "assignment did not deep-copy the description" )
+        end scope
+    end scope
+
     sLine = "--- theme self-test: " & str(nPass) & " passed, " & str(nFail) & " failed ---"
     ? sLine
 
