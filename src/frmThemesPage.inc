@@ -36,9 +36,12 @@ dim shared ghThemeResetB    as HWND      ' PsButton -- undo this key's backgroun
 ' R/G/B numeric entry for the CURRENT channel's colour. The large colour chooser now lives in a
 ' popup (frmThemes_OpenColorPopup); these stay on the dialog. ghThemePicker is kept but HIDDEN --
 ' it is the current-colour model the popup seeds from and these fields read.
-dim shared ghThemeR         as HWND      ' PsTextBox
-dim shared ghThemeG         as HWND      ' PsTextBox
-dim shared ghThemeB         as HWND      ' PsTextBox
+dim shared ghThemeR         as HWND      ' PsTextBox -- FOREGROUND row
+dim shared ghThemeR2        as HWND      ' PsTextBox -- BACKGROUND row
+dim shared ghThemeG         as HWND
+dim shared ghThemeG2        as HWND      ' PsTextBox
+dim shared ghThemeB         as HWND
+dim shared ghThemeB2        as HWND      ' PsTextBox
 dim shared ghThemePicker    as HWND      ' PsColorPicker -- hidden colour model (popup does the UI)
 
 dim shared gThemeBuilt      as boolean
@@ -491,13 +494,27 @@ private sub frmThemes_SyncEditControls()
 
         EnableWindow( ghThemePicker, bCanEdit )
 
-        ' Mirror the current colour into the R/G/B fields. SetText is silent, so no recursion.
-        if ghThemeR then PsTextBox_SetText( ghThemeR, str(GetRValue(clrEdit)) )
-        if ghThemeG then PsTextBox_SetText( ghThemeG, str(GetGValue(clrEdit)) )
-        if ghThemeB then PsTextBox_SetText( ghThemeB, str(GetBValue(clrEdit)) )
-        if ghThemeR then EnableWindow( ghThemeR, bCanEdit )
-        if ghThemeG then EnableWindow( ghThemeG, bCanEdit )
-        if ghThemeB then EnableWindow( ghThemeB, bCanEdit )
+        ' Each row mirrors ITS OWN channel -- neither follows a selection. SetText is
+        ' silent, so no recursion. A row whose channel the key does not have is disabled
+        ' rather than blanked: an empty enabled box invites typing into nothing.
+        dim as COLORREF clrF, clrB
+        dim as long nrc = Theme_FindEntry( gThemeKeys(nb).keyValue )
+        if nrc >= 0 then
+            clrF = gTheme(nrc).foreground
+            clrB = gTheme(nrc).background
+        end if
+        if ghThemeR then PsTextBox_SetText( ghThemeR, str(GetRValue(clrF)) )
+        if ghThemeG then PsTextBox_SetText( ghThemeG, str(GetGValue(clrF)) )
+        if ghThemeB then PsTextBox_SetText( ghThemeB, str(GetBValue(clrF)) )
+        if ghThemeR2 then PsTextBox_SetText( ghThemeR2, str(GetRValue(clrB)) )
+        if ghThemeG2 then PsTextBox_SetText( ghThemeG2, str(GetGValue(clrB)) )
+        if ghThemeB2 then PsTextBox_SetText( ghThemeB2, str(GetBValue(clrB)) )
+        if ghThemeR then EnableWindow( ghThemeR, bHasFore )
+        if ghThemeG then EnableWindow( ghThemeG, bHasFore )
+        if ghThemeB then EnableWindow( ghThemeB, bHasFore )
+        if ghThemeR2 then EnableWindow( ghThemeR2, bHasBack )
+        if ghThemeG2 then EnableWindow( ghThemeG2, bHasBack )
+        if ghThemeB2 then EnableWindow( ghThemeB2, bHasBack )
     end if
 
     ' Swatches live in the list rows AND beside the Fore/Back buttons (painted on the page), so a
@@ -1044,18 +1061,28 @@ private sub frmThemes_RGBChanged( byval hTextBox as HWND )
         exit sub
     end if
 
-    dim as boolean bHasChan = iif( gThemeChannel = THEMECH_FORE, _
-                                   (gThemeKeys(nb).ofsFore >= 0), (gThemeKeys(nb).ofsBack >= 0) )
+    ' WHICH ROW WAS TYPED IN DECIDES THE CHANNEL. It used to be gThemeChannel -- hidden
+    ' state, and the reason there was only ever one row.
+    dim as boolean bIsBack = (hTextBox = ghThemeR2)
+    bIsBack = (bIsBack orelse (hTextBox = ghThemeG2))
+    bIsBack = (bIsBack orelse (hTextBox = ghThemeB2))
+    dim as long nChan = iif( bIsBack, THEMECH_BACK, THEMECH_FORE )
+
+    dim as boolean bHasChan = iif( bIsBack, _
+                                   (gThemeKeys(nb).ofsBack >= 0), (gThemeKeys(nb).ofsFore >= 0) )
     if bHasChan = false then exit sub
 
-    dim as long r = frmThemes_ClampByte( val( PsTextBox_GetText( ghThemeR ) ) )
-    dim as long g = frmThemes_ClampByte( val( PsTextBox_GetText( ghThemeG ) ) )
-    dim as long b = frmThemes_ClampByte( val( PsTextBox_GetText( ghThemeB ) ) )
+    dim as HWND hR = iif( bIsBack, ghThemeR2, ghThemeR )
+    dim as HWND hG = iif( bIsBack, ghThemeG2, ghThemeG )
+    dim as HWND hB = iif( bIsBack, ghThemeB2, ghThemeB )
+    dim as long r = frmThemes_ClampByte( val( PsTextBox_GetText( hR ) ) )
+    dim as long g = frmThemes_ClampByte( val( PsTextBox_GetText( hG ) ) )
+    dim as long b = frmThemes_ClampByte( val( PsTextBox_GetText( hB ) ) )
     dim as COLORREF clr = RGB( r, g, b )
 
     if frmThemes_EnsureForked() = false then exit sub     ' defaults are blocked from Edit -> a no-op
 
-    dim as ulong nMask = Theme_SetColor( gThemeKeys(nb).keyValue, gThemeChannel, clr, -1 )
+    dim as ulong nMask = Theme_SetColor( gThemeKeys(nb).keyValue, nChan, clr, -1 )
     gThemeEdited = true
     Theme_RequestApply( nMask )
 
@@ -1300,6 +1327,14 @@ sub frmThemes_Build( byval nPage as long, byval hPage as HWND )
     ghThemeB = PsTextBox_Create( hPage, IDC_FRMTHEMES_TXTB )
     PsTextBox_SetChangeCallback( ghThemeB, @frmThemes_RGBChanged )
 
+    ' The BACKGROUND row. Same callback -- it tells the rows apart by hwnd.
+    ghThemeR2 = PsTextBox_Create( hPage, IDC_FRMTHEMES_TXTR2 )
+    PsTextBox_SetChangeCallback( ghThemeR2, @frmThemes_RGBChanged )
+    ghThemeG2 = PsTextBox_Create( hPage, IDC_FRMTHEMES_TXTG2 )
+    PsTextBox_SetChangeCallback( ghThemeG2, @frmThemes_RGBChanged )
+    ghThemeB2 = PsTextBox_Create( hPage, IDC_FRMTHEMES_TXTB2 )
+    PsTextBox_SetChangeCallback( ghThemeB2, @frmThemes_RGBChanged )
+
     ' THE EMBEDDED PICKER. It adds NOTHING to frmOptions' message pump -- there is no
     ' PsColorPicker_FilterMessage, unlike the PsComboBox and PsTextBox calls already in there.
     ' That absence is the reason it is a panel rather than a dropdown.
@@ -1384,7 +1419,8 @@ sub frmThemes_ApplyTheme()
     PsNumericUpDown_Refresh( ghThemeAlpha )
 
     ' The R/G/B fields as editor-coloured text boxes.
-    dim hRGB(0 to 2) as HWND = { ghThemeR, ghThemeG, ghThemeB }
+    dim hRGB(0 to 5) as HWND = { ghThemeR, ghThemeG, ghThemeB, _
+                                 ghThemeR2, ghThemeG2, ghThemeB2 }
     for i as long = 0 to 2
         if hRGB(i) then
             PsTextBox_SetFont( hRGB(i), OptionsFont_Base() )
@@ -1444,6 +1480,10 @@ sub frmThemes_ShowPage( byval nPage as long, byval bShow as boolean )
     ShowWindow( ghThemeUnder, nStyle )
     ShowWindow( ghThemeAlpha, nStyle )
     ShowWindow( ghThemeR, nCmd )
+    ' The background row exists only where there IS a background channel to type into.
+    ShowWindow( ghThemeR2, nKeyOnly )
+    ShowWindow( ghThemeG2, nKeyOnly )
+    ShowWindow( ghThemeB2, nKeyOnly )
     ShowWindow( ghThemeG, nCmd )
     ShowWindow( ghThemeB, nCmd )
     ' The embedded picker is the HIDDEN colour model now -- the popup does the choosing.
@@ -1529,13 +1569,39 @@ function frmThemes_Layout( byval nPage as long, byval hPage as HWND, byval cxPan
     dim as long boxW  = cellW - labW
     dim as long xc    = xEdit
     dim rgbBoxes(0 to 2) as HWND = { ghThemeR, ghThemeG, ghThemeB }
+    ' TWO ROWS, ONE PER CHANNEL, each captioned with the channel it edits. One row that
+    ' followed an "active channel" meant a key could offer two colours to pick and one to
+    ' type, with the mode signalled only by the default border on a button. On the Palette
+    ' page a role has one colour, so the second row is hidden and the first is uncaptioned.
     dim rgbLabels(0 to 2) as string = { "R", "G", "B" }
+    dim rgbBoxes2(0 to 2) as HWND = { ghThemeR2, ghThemeG2, ghThemeB2 }
+    dim as boolean bTwoRows = (gThemeCurPage <> THEMEPAGE_PALETTE)
+
+    if bTwoRows then
+        frmThemes_AddLabel( L(300, "Foreground"), xEdit, yEdit, xEdit + editW, yEdit + textH )
+        yEdit += textH + AfxScaleY(2)
+    end if
+    xc = xEdit
     for i as long = 0 to 2
         frmThemes_AddLabel( rgbLabels(i), xc, yEdit + AfxScaleY(5), xc + labW, yEdit + fldH )
         SetWindowPos( rgbBoxes(i), 0, xc + labW, yEdit, boxW, fldH, SWP_NOZORDER or SWP_NOACTIVATE )
         xc += cellW + AfxScaleX(10)
     next
-    yEdit += fldH + rowGap + rowGap
+    yEdit += fldH + rowGap
+
+    if bTwoRows then
+        frmThemes_AddLabel( L(301, "Background"), xEdit, yEdit, xEdit + editW, yEdit + textH )
+        yEdit += textH + AfxScaleY(2)
+        xc = xEdit
+        for i as long = 0 to 2
+            frmThemes_AddLabel( rgbLabels(i), xc, yEdit + AfxScaleY(5), xc + labW, yEdit + fldH )
+            SetWindowPos( rgbBoxes2(i), 0, xc + labW, yEdit, boxW, fldH, _
+                          SWP_NOZORDER or SWP_NOACTIVATE )
+            xc += cellW + AfxScaleX(10)
+        next
+        yEdit += fldH + rowGap
+    end if
+    yEdit += rowGap
 
     ' STYLE SECTION -- syntax page only. Bold/Italic/Underline/Opacity are meaningless for
     ' interface colours (fore/back only), so ShowPage keeps the controls hidden and the layout
@@ -1568,6 +1634,19 @@ function frmThemes_Layout( byval nPage as long, byval hPage as HWND, byval cxPan
     ' The page is as tall as its tallest column.
     dim as long yBottom = yTop + listH
     if yEdit > yBottom then yBottom = yEdit
+
+    ' HEIGHT, which nothing here was checking. Every assertion below is about WIDTH, so the
+    ' second R/G/B row could have pushed the edit column off the bottom of a fixed-height
+    ' dialog and reported three PASSes on the way down. A layout suite is blind to whatever
+    ' it does not measure, and this one had a whole axis missing.
+    if environ("TIKO_OPTIONS_SELFTEST") = "1" then
+        dim as string sH
+        dim as long avail = AfxScaleY(THEME_LISTHEIGHT)
+        dim as long usedEdit = yEdit - yTop
+        if usedEdit <= avail then sH = "PASS  " else sH = "FAIL  "
+        ? sH & "theme page: the edit column fits beside the list   [edit=" & str(usedEdit) & _
+            " list=" & str(avail) & " page=" & str(yBottom - yTop) & "]"
+    end if
 
     if environ("TIKO_OPTIONS_SELFTEST") = "1" then
         dim as string sP
@@ -1686,6 +1765,7 @@ sub frmThemes_Reset()
     ghThemeResetF = 0
     ghThemeResetB = 0
     ghThemeR      = 0
+    ghThemeR2     = 0 : ghThemeG2 = 0 : ghThemeB2 = 0
     ghThemeG      = 0
     ghThemeB      = 0
     gThemeBuilt   = false

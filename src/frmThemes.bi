@@ -127,9 +127,16 @@
 #Define IDC_FRMTHEMES_CMDRESETB   9508
 #Define IDC_FRMTHEMES_PICKER      9509
 #Define IDC_FRMTHEMES_PICKER2     9510   ' the selection-only picker inside the colour popup
+' Two R/G/B rows, one per CHANNEL. The page used to carry one row that edited whichever
+' channel was "active" -- state signalled only by the default border on the Foreground
+' button -- so a key could offer two colours to pick and one to type. Two rows delete the
+' mode rather than labelling it.
 #Define IDC_FRMTHEMES_TXTR        9511
 #Define IDC_FRMTHEMES_TXTG        9512
 #Define IDC_FRMTHEMES_TXTB        9513
+#Define IDC_FRMTHEMES_TXTR2       9514
+#Define IDC_FRMTHEMES_TXTG2       9515
+#Define IDC_FRMTHEMES_TXTB2       9516
 
 ' The THEMECAT_* group-header ids have MOVED to modThemeTypes.bi. They are engine vocabulary
 ' now: the key table carries each key's category, so the ids have to exist long before this
