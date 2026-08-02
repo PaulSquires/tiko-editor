@@ -1132,6 +1132,21 @@ sub Theme_RunSelfTest()
         #undef LUMA
     end scope
 
+    ' -- 22k. THE PALETTE PAGE'S OWN STRINGS RESOLVE, AND TO THE RIGHT THING. ------------
+    '    L(id, "default") DISCARDS the default -- an id with no entry renders EMPTY, and an
+    '    id belonging to something else renders THAT. Both were live here: 327 and 328 were
+    '    the first free-looking pair and are in fact the encoding-warning messages, so the
+    '    Palette tab would have been captioned "This document contains characters...".
+    '
+    '    Checked by VALUE, not by len() > 0. A wrong-but-present id passes a non-empty test
+    '    perfectly, which is exactly how the bug would have shipped.
+    THASSERT( len( LL(671) ) > 0, "671 (Palette) is empty in this language file" )
+    THASSERT( len( LL(672) ) > 0, "672 (default) is empty in this language file" )
+    THASSERT( instr( LL(671), "document" ) = 0, _
+              "671 is not the Palette caption -- it reads: " & LL(671) )
+    THASSERT( instr( LL(672), "ANSI" ) = 0, _
+              "672 is not the default marker -- it reads: " & LL(672) )
+
     ' -- 22j. EDITING A ROLE MOVES THE KEYS THAT INHERIT IT. -----------------------------
     '    The palette page's entire promise, and a silent no-op without Theme_ReapplyRoles:
     '    role resolution only fills a channel whose has* flag is FALSE, so once a key has

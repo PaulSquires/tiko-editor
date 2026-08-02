@@ -262,6 +262,23 @@ private sub frmThemes_PopulateList()
     dim as long nRow = -1
     dim as long nFirstSelectable = -1
 
+    ' THE PALETTE PAGE FILLS THE SAME LIST WITH ROLES. Reusing the list, its painter, its
+    ' selection handling and the swatch click path rather than building a second control:
+    ' a role row IS a key row with one channel instead of two, and gThemeRowBind carries the
+    ' role index in place of the key index. frmThemes_OnPalettePage() is the only thing that
+    ' has to know which, and everything that branches on it says so out loud.
+    if gThemeCurPage = THEMEPAGE_PALETTE then
+        for i as long = 0 to Theme_RoleCount() - 1
+            nRow += 1
+            redim preserve gThemeRowBind(nRow) as long
+            gThemeRowBind(nRow) = i
+            PsListTree_AddString( ghThemeKeys, Theme_RoleName(i), i )
+            if nFirstSelectable < 0 then nFirstSelectable = nRow
+        next
+        if nFirstSelectable >= 0 then PsListTree_SetCurSel( ghThemeKeys, nFirstSelectable )
+        exit sub
+    end if
+
     for i as long = lbound(gThemeKeys) to ubound(gThemeKeys)
 
         dim as string sKey = gThemeKeys(i).keyValue
@@ -564,6 +581,7 @@ end sub
 
 ' Forward -- defined later in this file (FB is single-pass).
 declare sub frmThemes_ApplyPickedColor( byval nChannel as long, byval clr as COLORREF )
+declare sub frmThemes_OpenRolePopup( byval idxRole as long, byval hOpener as HWND )
 
 
 ' Ask for a colour for one channel of the selected key, anchored under hOpener.
@@ -593,6 +611,38 @@ private sub frmThemes_OpenColorPopup( byval nChannel as long, byval hOpener as H
 
     if PsColorPicker_DoModalForRect( HWND_FRMTHEMES, rcAnchor, clr, nAlpha ) then
         frmThemes_ApplyPickedColor( nChannel, clr )
+    end if
+
+end sub
+
+
+' Ask for a colour for one ROLE, anchored under hOpener.
+'
+' Separate from frmThemes_OpenColorPopup because the commit is different in a way that
+' matters: Theme_SetRole re-resolves every key inheriting the role, and returns THSUB_ALL
+' because a role feeds keys across every namespace by design.
+private sub frmThemes_OpenRolePopup( byval idxRole as long, byval hOpener as HWND )
+
+    if (idxRole < 0) orelse (idxRole >= Theme_RoleCount()) then exit sub
+    if frmThemes_EnsureForked() = false then exit sub
+
+    dim as COLORREF clr = Theme_RoleColor( idxRole )
+    dim as ubyte nAlpha = 255
+
+    dim as RECT rcAnchor
+    if hOpener then
+        GetWindowRect( hOpener, @rcAnchor )
+    else
+        GetWindowRect( HWND_FRMTHEMES, @rcAnchor )
+    end if
+
+    if PsColorPicker_DoModalForRect( HWND_FRMTHEMES, rcAnchor, clr, nAlpha ) then
+        dim as ulong nMask = Theme_SetRole( idxRole, clr )
+        gThemeEdited = true
+        Theme_FillGlobals()
+        Theme_RequestApply( nMask )
+        frmThemes_PopulateList()      ' the swatch, and any "default" marker, just moved
+        frmThemes_SyncEditControls()
     end if
 
 end sub
@@ -628,10 +678,22 @@ end sub
 ' open the popup for that channel -- anchored to the matching button so it lands in the same
 ' place a button click would. Returns TRUE if it was a swatch.
 function frmThemes_SwatchClick( byval x as long, byval y as long ) as boolean
+    dim as POINT pt : pt.x = x : pt.y = y
+
+    ' PALETTE PAGE: one swatch, and it edits a ROLE rather than a key. Routed here rather
+    ' than through the key path because Theme_SetRole has to re-resolve every key that
+    ' inherits the role -- Theme_SetColor would set the role's own entry and reach nothing.
+    if gThemeCurPage = THEMEPAGE_PALETTE then
+        dim as long nr = frmThemes_SelectedBind()
+        if nr < 0 then return false
+        if PtInRect( @gThemeSwatchRc(0), pt ) = 0 then return false
+        frmThemes_OpenRolePopup( nr, ghThemeFore )
+        return true
+    end if
+
     dim as long nb = frmThemes_SelectedBind()
     if nb < 0 then return false
 
-    dim as POINT pt : pt.x = x : pt.y = y
     dim as long  nChan   = -1
     dim as HWND  hAnchor = 0
     if (gThemeKeys(nb).ofsFore >= 0) andalso (PtInRect( @gThemeSwatchRc(0), pt ) <> 0) then
@@ -647,6 +709,12 @@ end function
 
 
 private sub frmThemes_ForeClick( byval hButton as HWND, byval id as long )
+    ' On the palette page this button edits the selected ROLE -- there is only one channel,
+    ' so Background is hidden and this is simply "the colour".
+    if gThemeCurPage = THEMEPAGE_PALETTE then
+        frmThemes_OpenRolePopup( frmThemes_SelectedBind(), hButton )
+        exit sub
+    end if
     frmThemes_OpenColorPopup( THEMECH_FORE, hButton )
 end sub
 
@@ -938,6 +1006,38 @@ private sub frmThemes_ListPaint( byval p as PSLISTTREE_PAINTINFO ptr )
         exit sub
     end if
 
+    ' A ROLE ROW: the name, one swatch, and whether this theme actually chose it. A role
+    ' left at its built-in default is marked so the user can see which of the twenty-one
+    ' this file speaks for -- otherwise every theme looks equally opinionated.
+    if gThemeCurPage = THEMEPAGE_PALETTE then
+        dim as long swr = AfxScaleX(THEME_SWATCHW)
+        dim as long shH = AfxScaleY(THEME_SWATCHH)   ' NOT shr -- that is the shift-right operator
+        dim as long xR  = p->rc.right - AfxScaleX(8)
+        dim as long yR  = p->rc.top + ((p->rc.bottom - p->rc.top) - shH) \ 2
+        dim as RECT rcSw = ( xR - swr, yR, xR, yR + shH )
+
+        dim as RECT rcNm = ( p->rc.left + AfxScaleX(6), p->rc.top, rcSw.left - AfxScaleX(60), p->rc.bottom )
+        ' The "role." prefix is on every row and carries no information; drop it.
+        dim as string sRole = Theme_RoleName(nb)
+        if left(sRole,5) = "role." then sRole = mid(sRole, 6)
+        p->b->PaintText( sRole, @rcNm, DT_LEFT or DT_END_ELLIPSIS )
+
+        if Theme_RoleIsExplicit(nb) = false then
+            dim as RECT rcDf = ( rcSw.left - AfxScaleX(58), p->rc.top, rcSw.left - AfxScaleX(6), p->rc.bottom )
+            p->b->SetForeColor( theme.role.clr(THROLE_FOREGROUNDDIM) )
+            p->b->PaintText( L(672, "default"), @rcDf, DT_RIGHT or DT_END_ELLIPSIS )
+        end if
+
+        p->b->SetBackColor( theme.ui.divider )
+        p->b->PaintRect( @rcSw )
+        dim as RECT rcIn = ( rcSw.left + 1, rcSw.top + 1, rcSw.right - 1, rcSw.bottom - 1 )
+        p->b->SetBackColor( Theme_RoleColor(nb) )
+        p->b->PaintRect( @rcIn )
+        gThemeSwatchRc(0) = rcSw
+        gThemeSwatchRc(1) = type<RECT>( 0, 0, 0, 0 )
+        exit sub
+    end if
+
     dim as long n = Theme_FindEntry( gThemeKeys(nb).keyValue )
     if n < 0 then exit sub
 
@@ -953,9 +1053,42 @@ private sub frmThemes_ListPaint( byval p as PSLISTTREE_PAINTINFO ptr )
     dim as long xFore = xBack - gap - sw
     dim as long yMid  = p->rc.top + ((p->rc.bottom - p->rc.top) - sh) \ 2
 
-    ' Key name.
+    ' Key name, and -- when this key is still taking its colour from the palette rather than
+    ' naming one -- the role it inherits. That is the whole story of the two-layer model on
+    ' one row: a key with no role shown has been given a colour of its own.
     dim as RECT rcText = ( p->rc.left + AfxScaleX(6), p->rc.top, xFore - gap, p->rc.bottom )
     p->b->PaintText( gThemeKeys(nb).keyValue, @rcText, DT_LEFT or DT_END_ELLIPSIS )
+
+    scope
+        dim as long rid = -1
+        if gTheme(n).foreFromRole then
+            rid = gThemeKeys(nb).nRoleFore
+        elseif gTheme(n).backFromRole then
+            rid = gThemeKeys(nb).nRoleBack
+        end if
+        if rid > THROLE_NONE then
+            ' Find the palette row for that role id so the name matches the Palette page.
+            dim as string sRole
+            for i as long = 0 to Theme_RoleCount() - 1
+                if gThemeRoleDef(i).nRole = rid then
+                    sRole = Theme_RoleName(i)
+                    if left(sRole,5) = "role." then sRole = mid(sRole, 6)
+                    exit for
+                end if
+            next
+            if len(sRole) > 0 then
+                ' RIGHT-ALIGNED in the gap before the swatches, not placed after the key
+                ' name: PsBufferPaint has no text-measure method (the family measures on a
+                ' DC in LayoutItems, which a paint callback has no business doing), and
+                ' right-aligning lines the role names into a column, which is easier to scan
+                ' down than a ragged one anyway.
+                dim as RECT rcRole = ( rcText.left, p->rc.top, xFore - gap, p->rc.bottom )
+                p->b->SetForeColor( theme.role.clr(THROLE_FOREGROUNDDIM) )
+                p->b->PaintText( sRole, @rcRole, DT_RIGHT or DT_END_ELLIPSIS )
+                p->b->SetForeColor( foreclr )
+            end if
+        end if
+    end scope
 
     ' Swatches. Outlined in the divider colour so a swatch the same shade as the row behind
     ' it is still visibly a swatch rather than a hole.
@@ -1176,11 +1309,17 @@ sub frmThemes_ShowPage( byval nPage as long, byval bShow as boolean )
     dim as long nCmd = iif( bShow, SW_SHOW, SW_HIDE )
     ' The style controls exist only for syntax colours -- hidden on the interface page.
     dim as long nStyle = iif( bShow andalso (nPage = THEMEPAGE_SYNTAX), SW_SHOW, SW_HIDE )
+    ' A role carries ONE colour: no background channel, no bold/italic/underline, no alpha.
+    ' Hiding rather than disabling -- a permanently dead control on a page it can never apply
+    ' to reads as broken, and this page is the first thing the dialog shows.
+    dim as boolean bKeyPage = (nPage <> THEMEPAGE_PALETTE)
+    dim as long nKeyOnly = iif( bShow andalso bKeyPage, SW_SHOW, SW_HIDE )
+    if bShow andalso (bKeyPage = false) then nStyle = SW_HIDE
     ShowWindow( ghThemeKeys, nCmd )
     ShowWindow( ghThemeFore, nCmd )
-    ShowWindow( ghThemeBack, nCmd )
-    ShowWindow( ghThemeResetF, nCmd )
-    ShowWindow( ghThemeResetB, nCmd )
+    ShowWindow( ghThemeBack, nKeyOnly )
+    ShowWindow( ghThemeResetF, nKeyOnly )
+    ShowWindow( ghThemeResetB, nKeyOnly )
     ShowWindow( ghThemeBold, nStyle )
     ShowWindow( ghThemeItalic, nStyle )
     ShowWindow( ghThemeUnder, nStyle )

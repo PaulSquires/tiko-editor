@@ -57,7 +57,10 @@
 #Define THEMEPAGE_NONE       -1
 #Define THEMEPAGE_SYNTAX      0
 #Define THEMEPAGE_INTERFACE   1
-#Define THEMEPAGE_COUNT       2
+' The role palette. APPENDED rather than slotted in front, so the two existing ids keep their
+' values; the bar shows it FIRST regardless, because display order is add order.
+#Define THEMEPAGE_PALETTE     2
+#Define THEMEPAGE_COUNT       3
 
 ' Shell metrics, UNSCALED -- run through AfxScaleX/AfxScaleY at use. FIXED SIZE, like
 ' frmOptions: the colour page's three columns have to fit one known width, and a resizable

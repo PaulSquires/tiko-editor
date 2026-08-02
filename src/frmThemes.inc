@@ -641,8 +641,8 @@ private sub frmThemes_EditClick( byval hButton as HWND, byval id as long )
 
     gThemesShowEdit = true
     if gThemesCurPage = THEMEPAGE_NONE then
-        PsSelectBar_SetCurSel( ghThemesBar, THEMEPAGE_SYNTAX )
-        frmThemes_SelectPage( THEMEPAGE_SYNTAX )
+        PsSelectBar_SetCurSel( ghThemesBar, THEMEPAGE_PALETTE )
+        frmThemes_SelectPage( THEMEPAGE_PALETTE )
     end if
     frmThemes_ApplyTheme()          ' refresh the page's swatches/picker for the previewed theme
 
@@ -1056,6 +1056,9 @@ function frmThemes_Show( byval hWndParent as HWND ) as LRESULT
 
     ' ---- EDIT-view children -------------------------------------------------------------
     ghThemesBar = PsSelectBar_Create( HWND_FRMTHEMES, IDC_FRMTHEMES_SELECTBAR )
+    ' PALETTE FIRST: editing the twenty-one roles is how a theme is actually retuned, and
+    ' the two key lists behind it are for departing from that palette one key at a time.
+    PsSelectBar_AddPanel( ghThemesBar, L(671,"Palette"), THEMEPAGE_PALETTE )
     PsSelectBar_AddPanel( ghThemesBar, L(306,"Syntax Colors"), THEMEPAGE_SYNTAX )
     PsSelectBar_AddPanel( ghThemesBar, L(307,"Interface Colors"), THEMEPAGE_INTERFACE )
     ' Zero the FIRST tab's left padding so its text starts at the bar's left edge (aligned with
