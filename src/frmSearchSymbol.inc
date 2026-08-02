@@ -275,7 +275,7 @@ function frmSearchSymbol_WndProc( _
 
         ' Lastly, border the entire form.
         dim as RECT rc = b.rcClient
-        b.SetPenColor( theme.editor.divider )
+        b.SetPenColor( theme.ui.divider )
         b.PaintBorderRect( @rc )
         
         b.EndDoubleBuffer()

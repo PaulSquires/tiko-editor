@@ -669,7 +669,7 @@ private sub frmBuildConfig_ListPaintHeader( byval p as PSCOLUMNHEADER_PAINTINFO 
 
     dim as RECT rcEdge = p->rc
     rcEdge.left = rcEdge.right - AfxScaleX(1)
-    p->b->SetBackColor( theme.editor.divider )
+    p->b->SetBackColor( theme.ui.divider )
     p->b->PaintRect( @rcEdge )
 end sub
 
@@ -714,7 +714,7 @@ private sub frmBuildConfig_SwitchPaintRow( byval p as PSLISTTREE_PAINTINFO ptr )
         if gBuildOptions(idx).groupid <> gBuildOptions(idx - 1).groupid then
             dim as RECT rcRule = p->rc
             rcRule.bottom = rcRule.top + AfxScaleY(1)
-            p->b->SetBackColor( theme.editor.divider )
+            p->b->SetBackColor( theme.ui.divider )
             p->b->PaintRect( @rcRule )
             p->b->SetBackColor( iif( bActive, theme.panel.texthot.backcolor, theme.panel.text.backcolor ) )
         end if
@@ -1206,9 +1206,9 @@ private function frmBuildConfig_OnPaint( byval hwnd as HWND ) as LRESULT
         ' colour from SetForeColor; PaintRoundBorderRect would fill the interior back over --
         ' the mistake this family has made four separate times.
         dim as RECT rcPrev = gBCPreviewRect
-        buffer.SetBackColor( iif( gBCPreviewHot, theme.panel.texthot.backcolor, theme.editor.text.backcolor ) )
+        buffer.SetBackColor( iif( gBCPreviewHot, theme.panel.texthot.backcolor, theme.ui.field.backcolor ) )
         buffer.PaintRoundRect( @rcPrev, AfxScaleY(6) )
-        buffer.SetForeColor( theme.editor.divider )
+        buffer.SetForeColor( theme.ui.divider )
         buffer.PaintRoundOutline( @rcPrev, AfxScaleY(6), 1 )
 
         dim as RECT rcTxt = rcPrev
@@ -1228,7 +1228,7 @@ private function frmBuildConfig_OnPaint( byval hwnd as HWND ) as LRESULT
             buffer.PaintText( L(354,"(none)"), @rcTxt, DT_LEFT or DT_VCENTER or DT_SINGLELINE )
         else
             buffer.SetFont( ghBCFontFixed )
-            buffer.SetForeColor( theme.editor.text.forecolor )
+            buffer.SetForeColor( theme.ui.field.forecolor )
             buffer.PaintTextEx( wszOpts, @rcTxt, DT_LEFT or DT_TOP or DT_WORDBREAK or DT_END_ELLIPSIS )
         end if
 

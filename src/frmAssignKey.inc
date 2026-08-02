@@ -497,7 +497,7 @@ private function frmAssignKey_CaptureProc( _
             dim buffer as PsBufferPaint
             buffer.BeginDoubleBuffer( hwnd, hdc, rc )
 
-            buffer.SetBackColor( theme.editor.text.backcolor )
+            buffer.SetBackColor( theme.ui.field.backcolor )
             buffer.PaintRect( @rc )
 
             ' The frame. PaintRoundOutline STROKES; a fill-then-stroke primitive here would
@@ -506,7 +506,7 @@ private function frmAssignKey_CaptureProc( _
             ' Three states, and the refusal flash outranks focus: for its 200 ms the frame is
             ' carrying news, and the focus it would otherwise report has not changed anyway.
             dim as long curve = AfxScaleY(6)
-            dim as COLORREF penclr = theme.editor.divider
+            dim as COLORREF penclr = theme.ui.divider
             dim as long     penw   = 1
             if gTKFlashOn then
                 penclr = theme.compile.iconfail : penw = 2
@@ -517,7 +517,7 @@ private function frmAssignKey_CaptureProc( _
             buffer.PaintRoundOutline( @rc, curve, penw )
 
             dim as DWSTRING wszShow = frmAssignKey_Compose()
-            dim as COLORREF clr = theme.editor.text.forecolor
+            dim as COLORREF clr = theme.ui.field.forecolor
             dim as boolean bWaiting = (len(wszShow) = 0)
             if bWaiting then
                 wszShow = L(343,"Press the new shortcut")
@@ -525,7 +525,7 @@ private function frmAssignKey_CaptureProc( _
             end if
 
             buffer.SetForeColor( clr )
-            buffer.SetBackColor( theme.editor.text.backcolor )
+            buffer.SetBackColor( theme.ui.field.backcolor )
             buffer.SetFont( ghFont(GUIFONTBOLD_11) )
 
             if bWaiting = false then
@@ -557,7 +557,7 @@ private function frmAssignKey_CaptureProc( _
                     rcCaret.bottom = rcCaret.top + barH
                     buffer.SetBackColor( theme.ui.accent )
                     buffer.PaintRect( @rcCaret )
-                    buffer.SetBackColor( theme.editor.text.backcolor )
+                    buffer.SetBackColor( theme.ui.field.backcolor )
                 end if
             end if
 
@@ -596,11 +596,11 @@ end function
 private sub frmAssignKey_KeyListPaint( byval p as PSLISTTREE_PAINTINFO ptr )
     if p = 0 then exit sub
     dim as boolean bActive = (p->isSelected orelse p->isHot)
-    p->b->SetBackColor( iif( bActive, theme.panel.texthot.backcolor, theme.editor.text.backcolor ) )
+    p->b->SetBackColor( iif( bActive, theme.panel.texthot.backcolor, theme.ui.field.backcolor ) )
     p->b->PaintRect( @p->rc )
     dim as RECT rcText = p->rc
     rcText.left += AfxScaleX(8)
-    p->b->SetForeColor( iif( bActive, theme.panel.texthot.forecolor, theme.editor.text.forecolor ) )
+    p->b->SetForeColor( iif( bActive, theme.panel.texthot.forecolor, theme.ui.field.forecolor ) )
     p->b->SetFont( ghFont(GUIFONT_11) )
     p->b->PaintText( p->wszCaption, @rcText, DT_LEFT or DT_END_ELLIPSIS )
 end sub
@@ -784,7 +784,7 @@ private sub frmAssignKey_ApplyTheme( byval hwnd as HWND )
     PsToggle_SetColors( ghTKTogAlt,   @tc )
     PsToggle_SetColors( ghTKTogShift, @tc )
 
-    PsListTree_SetBackColor( ghTKKeyList, theme.editor.text.backcolor )
+    PsListTree_SetBackColor( ghTKKeyList, theme.ui.field.backcolor )
     PsListTree_SetScrollBarColors( ghTKKeyList, theme.panel.scrollbar.backcolor, _
                                    theme.panel.scrollbar.forecolor, theme.panel.scrollbar.forecolor )
     OptionsTheme_ApplyListBorder( ghTKKeyList )

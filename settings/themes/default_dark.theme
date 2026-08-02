@@ -47,7 +47,6 @@ output.valuechanged.foreground: 240,178,102  # soft orange - a debugger value th
 
 main.panel.background: %LIGHT_BLACK
 
-editor.window.background: %LIGHT_BLACK
 editor.caret.foreground: %LIGHT_GRAY
 editor.currentline.background: 44,49,60
 editor.text.foreground: %LIGHT_GRAY
@@ -122,7 +121,6 @@ editor.debugline.foreground: 151,217,247       # yellow
 editor.debugline.background: 151,217,247       # yellow
 
 # panel holds Explorer, FunctionList, Bookmarks
-panel.panel.background: %EVENING_BLACK
 panel.text.foreground: %LIGHT_WHITE
 panel.text.background: %EVENING_BLACK
 panel.texthot.foreground: %LIGHT_GRAY
@@ -142,7 +140,6 @@ panel.typeicon.background: 62,60,71
 panel.textsearch.foreground: 199,203,207
 panel.textsearchhot.foreground: %LIGHT_WHITE   # highlighted individual letters in fuzzy text match
 
-toptabs.panel.background: %EVENING_BLACK
 toptabs.text.foreground: 124,127,133
 toptabs.text.background: %EVENING_BLACK
 toptabs.texthot.foreground: %LIGHT_WHITE
@@ -151,7 +148,6 @@ toptabs.divider.foreground: 24,26,31
 toptabs.closehot.background: 64,67,73
 toptabs.iconselected.background: 49,73,123      # blue
 
-menubar.panel.background: %EVENING_BLACK
 menubar.text.foreground: %GRAY
 menubar.text.background: %EVENING_BLACK
 menubar.texthot.foreground: %GRAY
@@ -165,13 +161,11 @@ topmenu.texthot.background: 44,49,58
 topmenu.textdisabled.foreground: %GRAY
 topmenu.textdisabled.background: 53,59,69
 
-statusbar.panel.background: %EVENING_BLACK
 statusbar.text.foreground: %GRAY
 statusbar.text.background: %EVENING_BLACK
 statusbar.texthot.foreground: %GRAY
 statusbar.texthot.background: 44,49,58
 
-output.panel.background: %LIGHT_BLACK
 output.text.foreground: 124,127,133
 output.text.background: %LIGHT_BLACK
 output.texthot.foreground: %LIGHT_WHITE
@@ -181,4 +175,3 @@ output.closehot.background: 56,59,65
 output.scrollbar.foreground: 75,83,97
 output.scrollbar.background: %LIGHT_BLACK
 output.scrollbardivider.foreground: 64,67,73
-

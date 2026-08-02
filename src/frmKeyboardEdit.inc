@@ -442,7 +442,7 @@ private function frmKeyboardEdit_CaptureProc( _
             dim buffer as PsBufferPaint
             buffer.BeginDoubleBuffer( hwnd, hdc, rc )
 
-            buffer.SetBackColor( theme.editor.text.backcolor )
+            buffer.SetBackColor( theme.ui.field.backcolor )
             buffer.PaintRect( @rc )
 
             ' The frame. PaintRoundOutline STROKES; a fill-then-stroke primitive here would
@@ -451,7 +451,7 @@ private function frmKeyboardEdit_CaptureProc( _
             ' Three states, and the refusal flash outranks focus: for its 200ms the frame is
             ' carrying news, and the focus it would otherwise report has not changed anyway.
             dim as long curve = AfxScaleY(6)
-            dim as COLORREF penclr = theme.editor.divider
+            dim as COLORREF penclr = theme.ui.divider
             dim as long     penw   = 1
             if gEditFlashOn then
                 penclr = theme.compile.iconfail : penw = 2
@@ -462,7 +462,7 @@ private function frmKeyboardEdit_CaptureProc( _
             buffer.PaintRoundOutline( @rc, curve, penw )
 
             dim as DWSTRING wszShow = gEditKeys
-            dim as COLORREF clr = theme.editor.text.forecolor
+            dim as COLORREF clr = theme.ui.field.forecolor
             dim as boolean bWaiting = (len(wszShow) = 0)
             if bWaiting then
                 wszShow = L(343,"Press the new shortcut")
@@ -470,7 +470,7 @@ private function frmKeyboardEdit_CaptureProc( _
             end if
 
             buffer.SetForeColor( clr )
-            buffer.SetBackColor( theme.editor.text.backcolor )
+            buffer.SetBackColor( theme.ui.field.backcolor )
             buffer.SetFont( ghFont(GUIFONTBOLD_11) )
 
             if bWaiting = false then
@@ -503,7 +503,7 @@ private function frmKeyboardEdit_CaptureProc( _
                     rcCaret.bottom = rcCaret.top + barH
                     buffer.SetBackColor( theme.ui.accent )
                     buffer.PaintRect( @rcCaret )
-                    buffer.SetBackColor( theme.editor.text.backcolor )
+                    buffer.SetBackColor( theme.ui.field.backcolor )
                 end if
             end if
 
@@ -545,11 +545,11 @@ end function
 private sub frmKeyboardEdit_KeyListPaint( byval p as PSLISTTREE_PAINTINFO ptr )
     if p = 0 then exit sub
     dim as boolean bActive = (p->isSelected orelse p->isHot)
-    p->b->SetBackColor( iif( bActive, theme.panel.texthot.backcolor, theme.editor.text.backcolor ) )
+    p->b->SetBackColor( iif( bActive, theme.panel.texthot.backcolor, theme.ui.field.backcolor ) )
     p->b->PaintRect( @p->rc )
     dim as RECT rcText = p->rc
     rcText.left += AfxScaleX(8)
-    p->b->SetForeColor( iif( bActive, theme.panel.texthot.forecolor, theme.editor.text.forecolor ) )
+    p->b->SetForeColor( iif( bActive, theme.panel.texthot.forecolor, theme.ui.field.forecolor ) )
     p->b->SetFont( ghFont(GUIFONT_11) )
     p->b->PaintText( p->wszCaption, @rcText, DT_LEFT or DT_END_ELLIPSIS )
 end sub
@@ -776,28 +776,28 @@ private sub frmKeyboardEdit_ApplyTheme( byval hwnd as HWND )
     tc.TrackColorOff               = theme.panel.text.backcolor
     tc.TrackColorOffHot            = theme.panel.texthot.backcolor
     tc.TrackColorOffDisabled       = theme.panel.text.backcolor
-    tc.TrackBorderColorOff         = theme.editor.divider
+    tc.TrackBorderColorOff         = theme.ui.divider
     tc.TrackBorderColorOffHot      = theme.panel.texthot.forecolor
-    tc.TrackBorderColorOffDisabled = theme.editor.divider
+    tc.TrackBorderColorOffDisabled = theme.ui.divider
     tc.KnobColorOff                = theme.panel.scrollbar.forecolor
     tc.KnobColorOffHot             = theme.panel.text.forecolor
-    tc.KnobColorOffDisabled        = theme.editor.divider
+    tc.KnobColorOffDisabled        = theme.ui.divider
 
     PsToggle_SetColors( ghEditTogCtrl,    @tc )
     PsToggle_SetColors( ghEditTogAlt,     @tc )
     PsToggle_SetColors( ghEditTogShift,   @tc )
     PsToggle_SetColors( ghEditTogDisable, @tc )
 
-    PsListTree_SetBackColor( ghEditKeyList, theme.editor.text.backcolor )
+    PsListTree_SetBackColor( ghEditKeyList, theme.ui.field.backcolor )
     PsListTree_SetScrollBarColors( ghEditKeyList, theme.panel.scrollbar.backcolor, _
                                    theme.panel.scrollbar.forecolor, theme.panel.scrollbar.forecolor )
-    PsListTree_SetBorderColor( ghEditKeyList, theme.editor.divider )
+    PsListTree_SetBorderColor( ghEditKeyList, theme.ui.divider )
     PsListTree_SetBorderWidth( ghEditKeyList, 1 )
 
     dim as PSBUTTON_COLORS bc
     bc.BackColor           = theme.panel.button.backcolor
     bc.ForeColor           = theme.panel.button.forecolor
-    bc.BorderColor         = theme.editor.divider
+    bc.BorderColor         = theme.ui.divider
     bc.IconColor           = theme.panel.button.forecolor
     bc.BackColorHot        = theme.panel.buttonhot.backcolor
     bc.ForeColorHot        = theme.panel.buttonhot.forecolor
@@ -808,9 +808,9 @@ private sub frmKeyboardEdit_ApplyTheme( byval hwnd as HWND )
     bc.BorderColorPressed  = theme.panel.buttonhot.backcolor
     bc.IconColorPressed    = theme.panel.buttonhot.forecolor
     bc.BackColorDisabled   = theme.panel.text.backcolor
-    bc.ForeColorDisabled   = theme.editor.divider
-    bc.BorderColorDisabled = theme.editor.divider
-    bc.IconColorDisabled   = theme.editor.divider
+    bc.ForeColorDisabled   = theme.ui.divider
+    bc.BorderColorDisabled = theme.ui.divider
+    bc.IconColorDisabled   = theme.ui.divider
     PsButton_SetColors( ghEditReset, @bc )
     PsButton_SetColors( ghEditOK, @bc )
     PsButton_SetColors( ghEditCancel, @bc )

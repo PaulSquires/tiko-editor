@@ -776,7 +776,7 @@ private sub frmOptionsLocal_HeaderPaint( byval p as PSCOLUMNHEADER_PAINTINFO ptr
 
     dim as RECT rcDiv = p->rc
     rcDiv.left = rcDiv.right - AfxScaleX(1)
-    p->b->SetBackColor( theme.editor.divider )
+    p->b->SetBackColor( theme.ui.divider )
     p->b->PaintRect( @rcDiv )
 end sub
 
@@ -919,8 +919,8 @@ sub frmOptionsLocal_ApplyTheme()
     ' through the list rather than directly -- same four colours OptionsTheme_ApplyTextBox
     ' gives every other text field on the page, so the editor matches them. Applied here in
     ' ApplyTheme, not at build, so a theme change reaches it too.
-    PsListTree_SetEditColors( ghLocalList, theme.editor.text.backcolor, theme.editor.text.forecolor, _
-                              theme.editor.divider, theme.panel.texthot.forecolor )
+    PsListTree_SetEditColors( ghLocalList, theme.ui.field.backcolor, theme.ui.field.forecolor, _
+                              theme.ui.divider, theme.panel.texthot.forecolor )
 end sub
 
 

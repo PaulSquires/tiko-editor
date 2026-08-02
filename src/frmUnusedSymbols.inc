@@ -498,6 +498,36 @@ function frmUnusedSymbols_Show( byval hWndParent as HWND ) as LRESULT
         PsCheckBox_SetGlyphFont( h, ghFont(SYMBOLFONT_10) )
         PsCheckBox_SetChecked( h, (gConfig.UnusedKindMask and (1 shl (id - IDC_FRMUNUSED_TOGGLEFIRST))) <> 0 )
         PsCheckBox_SetCheckChangedCallback( h, @frmUnusedSymbols_ToggleChanged )
+
+        ' THESE WERE NEVER THEMED. Every other setter above was called and this one was
+        ' not, so the five filters rendered in PsCheckBox's library defaults -- a fixed
+        ' dark palette that happens to sit near this pane's colours in the dark theme and
+        ' is simply wrong in the light one. tiko has no other PsCheckBox host, which is
+        ' why nothing else had to notice.
+        '
+        ' The Output palette, because that is the surface these sit on. The box takes the
+        ' theme accent when checked; unchecked it is a muted outline off the dim role.
+        scope
+            dim as PSCHECKBOX_COLORS cc
+            cc.BackColor               = theme.output.text.backcolor
+            cc.BackColorHot            = theme.output.text.backcolor
+            cc.BackColorPressed        = theme.output.text.backcolor
+            cc.BackColorDisabled       = theme.output.text.backcolor
+            cc.ForeColor               = theme.output.text.forecolor
+            cc.ForeColorHot            = theme.output.texthot.forecolor
+            cc.ForeColorPressed        = theme.output.texthot.forecolor
+            cc.ForeColorDisabled       = theme.role.clr(THROLE_FOREGROUNDDIM)
+            cc.BoxColor                = theme.role.clr(THROLE_FOREGROUNDDIM)
+            cc.BoxColorHot             = theme.output.texthot.forecolor
+            cc.BoxColorPressed         = theme.output.texthot.forecolor
+            cc.BoxColorDisabled        = theme.role.clr(THROLE_FOREGROUNDDIM)
+            cc.BoxColorChecked         = theme.ui.accent
+            cc.BoxColorCheckedHot      = theme.ui.accent
+            cc.BoxColorCheckedPressed  = theme.ui.accent
+            cc.BoxColorCheckedDisabled = theme.role.clr(THROLE_FOREGROUNDDIM)
+            cc.FocusRingColor          = theme.ui.accent
+            PsCheckBox_SetColors( h, @cc )
+        end scope
     next
 
     ' --- list ---

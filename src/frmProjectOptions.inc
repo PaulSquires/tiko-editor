@@ -457,7 +457,7 @@ private function frmProjectOptions_OnPaint( byval hwnd as HWND ) as LRESULT
         buffer.PaintText( _text_, @rcT, DT_LEFT or DT_VCENTER or DT_SINGLELINE or DT_END_ELLIPSIS )
         rcT.top    = rcT.bottom + AfxScaleY(2)
         rcT.bottom = rcT.top + AfxScaleY(1)
-        buffer.SetBackColor( theme.editor.divider )
+        buffer.SetBackColor( theme.ui.divider )
         buffer.PaintRect( @rcT )
         buffer.SetBackColor( theme.panel.text.backcolor )
     #endmacro
@@ -509,7 +509,7 @@ private function frmProjectOptions_OnPaint( byval hwnd as HWND ) as LRESULT
     rcT.right  = gPOLayout.xRight
     rcT.top    = gPOLayout.yFooter
     rcT.bottom = rcT.top + AfxScaleY(1)
-    buffer.SetBackColor( theme.editor.divider )
+    buffer.SetBackColor( theme.ui.divider )
     buffer.PaintRect( @rcT )
 
     buffer.EndDoubleBuffer()

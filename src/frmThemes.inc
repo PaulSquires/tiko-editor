@@ -324,7 +324,7 @@ private sub frmThemes_HeaderPaint( byval p as PSCOLUMNHEADER_PAINTINFO ptr )
 
     dim as RECT rcDiv = p->rc
     rcDiv.left = rcDiv.right - AfxScaleX(1)
-    p->b->SetBackColor( theme.editor.divider )
+    p->b->SetBackColor( theme.ui.divider )
     p->b->PaintRect( @rcDiv )
 end sub
 
@@ -919,7 +919,7 @@ function frmThemes_WndProc( _
         dim as RECT rcDiv
         SetRect( @rcDiv, 0, rc.bottom - AfxScaleY(FRMTHEMES_FOOTER_H), _
                  rc.right, rc.bottom - AfxScaleY(FRMTHEMES_FOOTER_H) + AfxScaleY(1) )
-        b.SetBackColor( theme.editor.divider )
+        b.SetBackColor( theme.ui.divider )
         b.PaintRect( @rcDiv )
 
         ' Unsaved-changes indicator, footer left, EDIT view only.
@@ -1031,7 +1031,7 @@ function frmThemes_Show( byval hWndParent as HWND ) as LRESULT
     ' Rows 50% taller than the control's 22-unit default (UNSCALED -- the control scales it).
     PsListTree_SetRowHeight( ghThemesList, 33 )
     PsListTree_SetBorderWidth( ghThemesList, 1 )
-    PsListTree_SetBorderColor( ghThemesList, theme.editor.divider )
+    PsListTree_SetBorderColor( ghThemesList, theme.ui.divider )
 
     ghThemesEdit = PsButton_Create( HWND_FRMTHEMES, IDC_FRMTHEMES_CMDEDIT )
     PsButton_SetText( ghThemesEdit, L(14,"Edit") )

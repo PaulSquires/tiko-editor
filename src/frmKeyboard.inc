@@ -420,7 +420,7 @@ private sub frmKeyboard_ListPaintHeader( byval p as PSCOLUMNHEADER_PAINTINFO ptr
     ' Hairline on the trailing edge so columns read as separated.
     dim as RECT rcDiv = p->rc
     rcDiv.left = rcDiv.right - AfxScaleX(1)
-    p->b->SetBackColor( theme.editor.divider )
+    p->b->SetBackColor( theme.ui.divider )
     p->b->PaintRect( @rcDiv )
 end sub
 
@@ -609,7 +609,7 @@ private function frmKeyboard_OnPaint( byval hwnd as HWND ) as LRESULT
     rcFrame.right  = mx + AfxScaleX(FRMKEYBOARD_FILTER_W)
     rcFrame.bottom = filterY + filterH
 
-    buffer.SetBackColor( theme.editor.text.backcolor )
+    buffer.SetBackColor( theme.ui.field.backcolor )
     buffer.PaintRoundRect( @rcFrame, curve )
 
     dim as RECT rcGlyph
@@ -618,11 +618,11 @@ private function frmKeyboard_OnPaint( byval hwnd as HWND ) as LRESULT
     rcGlyph.right  = mx + AfxScaleX(FRMKEYBOARD_FILTER_GLYPHW)
     rcGlyph.bottom = filterY + filterH
     buffer.SetForeColor( theme.panel.text.forecolor )
-    buffer.SetBackColor( theme.editor.text.backcolor )
+    buffer.SetBackColor( theme.ui.field.backcolor )
     buffer.SetFont( ghFont(SYMBOLFONT_10) )
     buffer.PaintText( wchr(&hE721), @rcGlyph, DT_CENTER or DT_VCENTER or DT_SINGLELINE )
 
-    buffer.SetPenColor( theme.editor.divider )
+    buffer.SetPenColor( theme.ui.divider )
     buffer.PaintRoundOutline( @rcFrame, curve, 1 )
 
     ' NOTHING ELSE IS DRAWN IN THIS BAND. It briefly carried the page title, which was just
@@ -698,12 +698,12 @@ private sub frmKeyboard_ApplyTheme( byval hwnd as HWND )
                                    theme.panel.scrollbar.forecolor, theme.panel.scrollbar.forecolor )
     ' The frame's colour lives here, not beside SetBorderWidth at creation, so it follows a
     ' theme change. Same key the search box's drawn frame uses.
-    PsListTree_SetBorderColor( HWND_FRMKEYBOARD_LIST, theme.editor.divider )
+    PsListTree_SetBorderColor( HWND_FRMKEYBOARD_LIST, theme.ui.divider )
 
     if HWND_FRMKEYBOARD_FILTER then
-        PsTextBox_SetBackColor( HWND_FRMKEYBOARD_FILTER, theme.editor.text.backcolor )
-        PsTextBox_SetOuterBackColor( HWND_FRMKEYBOARD_FILTER, theme.editor.text.backcolor )
-        PsTextBox_SetForeColor( HWND_FRMKEYBOARD_FILTER, theme.editor.text.forecolor )
+        PsTextBox_SetBackColor( HWND_FRMKEYBOARD_FILTER, theme.ui.field.backcolor )
+        PsTextBox_SetOuterBackColor( HWND_FRMKEYBOARD_FILTER, theme.ui.field.backcolor )
+        PsTextBox_SetForeColor( HWND_FRMKEYBOARD_FILTER, theme.ui.field.forecolor )
         PsTextBox_SetCueBannerColor( HWND_FRMKEYBOARD_FILTER, theme.panel.text.forecolor )
     end if
 
@@ -714,7 +714,7 @@ private sub frmKeyboard_ApplyTheme( byval hwnd as HWND )
     dim as PSBUTTON_COLORS bc
     bc.BackColor           = theme.panel.button.backcolor
     bc.ForeColor           = theme.panel.button.forecolor
-    bc.BorderColor         = theme.editor.divider
+    bc.BorderColor         = theme.ui.divider
     bc.IconColor           = theme.panel.button.forecolor
     bc.BackColorHot        = theme.panel.buttonhot.backcolor
     bc.ForeColorHot        = theme.panel.buttonhot.forecolor
@@ -725,9 +725,9 @@ private sub frmKeyboard_ApplyTheme( byval hwnd as HWND )
     bc.BorderColorPressed  = theme.panel.buttonhot.backcolor
     bc.IconColorPressed    = theme.panel.buttonhot.forecolor
     bc.BackColorDisabled   = theme.panel.text.backcolor
-    bc.ForeColorDisabled   = theme.editor.divider
-    bc.BorderColorDisabled = theme.editor.divider
-    bc.IconColorDisabled   = theme.editor.divider
+    bc.ForeColorDisabled   = theme.ui.divider
+    bc.BorderColorDisabled = theme.ui.divider
+    bc.IconColorDisabled   = theme.ui.divider
 
     dim as HWND hBtn(3) = { GetDlgItem(hwnd, IDC_FRMKEYBOARD_CMDMODIFY), _
                             GetDlgItem(hwnd, IDC_FRMKEYBOARD_CMDCLEAR), _
