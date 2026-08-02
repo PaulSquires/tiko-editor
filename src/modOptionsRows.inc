@@ -460,21 +460,21 @@ sub OptionsTheme_FillToggle( byval tc as PSTOGGLE_COLORS ptr )
     tc->TrackColorOff               = theme.panel.text.backcolor
     tc->TrackColorOffHot            = theme.panel.texthot.backcolor
     tc->TrackColorOffDisabled       = theme.panel.text.backcolor
-    tc->TrackBorderColorOff         = ghEditor.Divider
+    tc->TrackBorderColorOff         = theme.editor.divider
     tc->TrackBorderColorOffHot      = theme.panel.texthot.forecolor
-    tc->TrackBorderColorOffDisabled = ghEditor.Divider
+    tc->TrackBorderColorOffDisabled = theme.editor.divider
     ' ...and a SUBDUED knob when OFF. This was theme.panel.text.forecolor -- the brightest colour on
     ' the page -- which is what made an OFF switch shout louder than an ON one.
     tc->KnobColorOff                = theme.panel.scrollbar.forecolor
     tc->KnobColorOffHot             = theme.panel.text.forecolor
-    tc->KnobColorOffDisabled        = ghEditor.Divider
+    tc->KnobColorOffDisabled        = theme.editor.divider
 end sub
 
 sub OptionsTheme_FillButton( byval bc as PSBUTTON_COLORS ptr )
     if bc = 0 then exit sub
     bc->BackColor           = theme.panel.button.backcolor
     bc->ForeColor           = theme.panel.button.forecolor
-    bc->BorderColor         = ghEditor.Divider
+    bc->BorderColor         = theme.editor.divider
     bc->IconColor           = theme.panel.button.forecolor
     bc->BackColorHot        = theme.panel.buttonhot.backcolor
     bc->ForeColorHot        = theme.panel.buttonhot.forecolor
@@ -485,17 +485,17 @@ sub OptionsTheme_FillButton( byval bc as PSBUTTON_COLORS ptr )
     bc->BorderColorPressed  = theme.panel.buttonhot.backcolor
     bc->IconColorPressed    = theme.panel.buttonhot.forecolor
     bc->BackColorDisabled   = theme.panel.text.backcolor
-    bc->ForeColorDisabled   = ghEditor.Divider
-    bc->BorderColorDisabled = ghEditor.Divider
-    bc->IconColorDisabled   = ghEditor.Divider
+    bc->ForeColorDisabled   = theme.editor.divider
+    bc->BorderColorDisabled = theme.editor.divider
+    bc->IconColorDisabled   = theme.editor.divider
 end sub
 
 sub OptionsTheme_ApplyTextBox( byval hTextBox as HWND )
     if hTextBox = 0 then exit sub
     PsTextBox_SetFont( hTextBox, OptionsFont_Base() )
-    PsTextBox_SetForeColor( hTextBox, ghEditor.ForeColorText )
-    PsTextBox_SetBackColor( hTextBox, ghEditor.BackColorText )
-    PsTextBox_SetBorderColor( hTextBox, ghEditor.Divider )
+    PsTextBox_SetForeColor( hTextBox, theme.editor.text.forecolor )
+    PsTextBox_SetBackColor( hTextBox, theme.editor.text.backcolor )
+    PsTextBox_SetBorderColor( hTextBox, theme.editor.divider )
     PsTextBox_SetFocusBorderColor( hTextBox, theme.panel.texthot.forecolor )
     ' The control's own Cut/Copy/Paste popup follows tiko's theme through the same registry
     ' the topmenu dropdowns use.
@@ -508,22 +508,22 @@ end sub
 ' caret, and a list has no caret to signal.
 sub OptionsTheme_ApplyListBorder( byval hList as HWND )
     if hList = 0 then exit sub
-    PsListTree_SetBorderColor( hList, ghEditor.Divider )
+    PsListTree_SetBorderColor( hList, theme.editor.divider )
     PsListTree_SetBorderWidth( hList, 1 )
 end sub
 
 sub OptionsTheme_FillNumeric( byval nc as PSNUMERICUPDOWN_COLORS ptr )
     if nc = 0 then exit sub
     nc->BackColor               = theme.panel.text.backcolor
-    nc->BorderColor             = ghEditor.Divider
+    nc->BorderColor             = theme.editor.divider
     nc->FocusBorderColor        = theme.panel.texthot.forecolor
-    nc->BorderColorDisabled     = ghEditor.Divider
-    nc->DividerColor            = ghEditor.Divider
-    nc->DividerColorDisabled    = ghEditor.Divider
-    nc->ValueBackColor          = ghEditor.BackColorText
-    nc->ValueForeColor          = ghEditor.ForeColorText
+    nc->BorderColorDisabled     = theme.editor.divider
+    nc->DividerColor            = theme.editor.divider
+    nc->DividerColorDisabled    = theme.editor.divider
+    nc->ValueBackColor          = theme.editor.text.backcolor
+    nc->ValueForeColor          = theme.editor.text.forecolor
     nc->ValueBackColorDisabled  = theme.panel.text.backcolor
-    nc->ValueForeColorDisabled  = ghEditor.Divider
+    nc->ValueForeColorDisabled  = theme.editor.divider
     nc->ButtonBackColor         = theme.panel.button.backcolor
     nc->ButtonBackColorHot      = theme.panel.buttonhot.backcolor
     nc->ButtonBackColorPressed  = theme.panel.buttonhot.backcolor
@@ -531,14 +531,14 @@ sub OptionsTheme_FillNumeric( byval nc as PSNUMERICUPDOWN_COLORS ptr )
     nc->GlyphColor              = theme.panel.button.forecolor
     nc->GlyphColorHot           = theme.panel.buttonhot.forecolor
     nc->GlyphColorPressed       = theme.panel.buttonhot.forecolor
-    nc->GlyphColorDisabled      = ghEditor.Divider
+    nc->GlyphColorDisabled      = theme.editor.divider
 end sub
 
 sub OptionsTheme_FillCombo( byval cc as PSCOMBOBOX_COLORS ptr, byval pc as PSPOPUPMENU_COLORS ptr )
     if cc <> 0 then
         cc->BackColor            = theme.panel.button.backcolor
         cc->ForeColor            = theme.panel.button.forecolor
-        cc->BorderColor          = ghEditor.Divider
+        cc->BorderColor          = theme.editor.divider
         cc->ChevronColor         = theme.panel.button.forecolor
         cc->BackColorHot         = theme.panel.buttonhot.backcolor
         cc->ForeColorHot         = theme.panel.buttonhot.forecolor
@@ -549,10 +549,10 @@ sub OptionsTheme_FillCombo( byval cc as PSCOMBOBOX_COLORS ptr, byval pc as PSPOP
         cc->BorderColorOpen      = theme.panel.buttonhot.backcolor
         cc->ChevronColorOpen     = theme.panel.buttonhot.forecolor
         cc->BackColorDisabled    = theme.panel.text.backcolor
-        cc->ForeColorDisabled    = ghEditor.Divider
-        cc->BorderColorDisabled  = ghEditor.Divider
-        cc->ChevronColorDisabled = ghEditor.Divider
-        cc->ForeColorPlaceholder = ghEditor.Divider
+        cc->ForeColorDisabled    = theme.editor.divider
+        cc->BorderColorDisabled  = theme.editor.divider
+        cc->ChevronColorDisabled = theme.editor.divider
+        cc->ForeColorPlaceholder = theme.editor.divider
         cc->FocusRingColor       = theme.panel.texthot.forecolor
     end if
     if pc <> 0 then
@@ -562,7 +562,7 @@ sub OptionsTheme_FillCombo( byval cc as PSCOMBOBOX_COLORS ptr, byval pc as PSPOP
         pc->ForeColorHot      = theme.topmenu.texthot.forecolor
         pc->ForeColorDisabled = theme.topmenu.textdisabled.forecolor
         pc->BorderColor       = theme.topmenu.panel
-        pc->SeparatorColor    = ghEditor.Divider
+        pc->SeparatorColor    = theme.editor.divider
     end if
 end sub
 
@@ -774,7 +774,7 @@ sub OptionsRows_PaintPage( byval nPage as long, byval p as SCP_PAINTINFO ptr )
         if gOptRows(i).hCtrl = 0 then continue for
 
         dim as boolean bEnabled = OptionsRows_IsRowEnabled(i)
-        p->b->SetForeColor( iif( bEnabled, theme.panel.text.forecolor, ghEditor.Divider ) )
+        p->b->SetForeColor( iif( bEnabled, theme.panel.text.forecolor, theme.editor.divider ) )
 
         dim as DWSTRING wszCaption = LL(gOptRows(i).nLabelID)
         dim as RECT rcText = gOptRows(i).rcLabel

@@ -388,7 +388,7 @@ function frmMain_HighlightWord( _
 
     '// Update indicator appearance
     SciMsg( pSci, SCI_INDICSETSTYLE, NUM, INDIC_STRAIGHTBOX )
-    SciMsg( pSci, SCI_INDICSETFORE, NUM, ghEditor.ForeColorOccurrence ) 
+    SciMsg( pSci, SCI_INDICSETFORE, NUM, theme.editor.occurrence ) 
     SciMsg( pSci, SCI_INDICSETALPHA, NUM, 80 )   
 
     '// Search the document
@@ -466,7 +466,7 @@ sub frmMain_SplitterPaint( byval p as PSSPLITTER_PAINTINFO ptr )
         rc.top += nInset : rc.bottom -= nInset
     end if
 
-    b->SetBackColor( ghEditor.Divider )
+    b->SetBackColor( theme.editor.divider )
     b->PaintRect( @rc )
 end sub
 
@@ -570,7 +570,7 @@ function frmMain_OnPaint( byval hwnd as HWND ) as LRESULT
         dim as RECT rcRule = rcMenu
         rcRule.top    = rcMenu.bottom - (nPenW \ 2)
         rcRule.bottom = rcMenu.bottom
-        b.SetBackColor( ghEditor.Divider )
+        b.SetBackColor( theme.editor.divider )
         b.PaintRect( @rcRule )
     end if
     

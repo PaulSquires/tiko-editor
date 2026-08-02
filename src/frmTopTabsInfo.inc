@@ -322,7 +322,7 @@ function frmTopTabsInfo_WndProc( _
         b.PaintClientRect()
 
         ' Only paint bottom line if Find is not active.
-        b.SetPenColor( ghEditor.Divider )
+        b.SetPenColor( theme.editor.divider )
         if gFind.bShowFindPanel = false then
             b.PaintLine( 1, b.rcClient.left, b.rcClient.bottom, b.rcClient.right, b.rcClient.bottom )
         end if

@@ -106,7 +106,7 @@ private sub frmMenuBar_ApplyPopupTheme( byval hPopup as HWND, byval bForceCompac
     ' Separators use the editor's divider color, not the muted text color the control
     ' drew them in before it grew this field -- it is the same rule tiko draws between
     ' every other pane, so menus now match the splitters and the panel dividers.
-    c.SeparatorColor    = ghEditor.Divider
+    c.SeparatorColor    = theme.editor.divider
     PsPopupMenu_SetColors( hPopup, @c )
     PsPopupMenu_SetFonts( hPopup, ghFont(GUIFONT_10), ghFont(SYMBOLFONT_10) )
     PsPopupMenu_SetGlyphs( hPopup, wszIconCheckmark, wszIconChevronRight )

@@ -66,15 +66,15 @@ end function
 private function AutoC_KindColor( byval nKind as long ) as COLORREF
     select case nKind
         case FBCP_KIND_SUB, FBCP_KIND_FUNCTION
-            return ghEditor.ForeColorKeyword2
+            return theme.editor.keyword2.forecolor
         case FBCP_KIND_TYPE, FBCP_KIND_UNION, FBCP_KIND_TYPEDEF
-            return ghEditor.ForeColorKeyword3
+            return theme.editor.keyword3.forecolor
         case FBCP_KIND_ENUM, FBCP_KIND_ENUMVAL
-            return ghEditor.ForeColorNumbers
+            return theme.editor.numbers.forecolor
         case AUTOC_KIND_KEYWORD, AUTOC_KIND_STDTYPE, FBCP_KIND_DEFINE
-            return ghEditor.ForeColorKeyword
+            return theme.editor.keyword1.forecolor
         case else
-            return ghEditor.ForeColorText
+            return theme.editor.text.forecolor
     end select
 end function
 
@@ -99,19 +99,19 @@ private sub frmAutoComplete_PaintCallback( byval p as PSLISTTREE_PAINTINFO ptr )
     ' State priority for the row: selected > hot > normal.
     dim as COLORREF backclr, foreclr, detailclr, glyphclr
     if p->isSelected then
-        backclr   = ghEditor.BackColorSelection
-        foreclr   = ghEditor.ForeColorSelection
-        detailclr = ghEditor.ForeColorSelection
-        glyphclr  = ghEditor.ForeColorSelection
+        backclr   = theme.editor.selection.backcolor
+        foreclr   = theme.editor.selection.forecolor
+        detailclr = theme.editor.selection.forecolor
+        glyphclr  = theme.editor.selection.forecolor
     elseif p->isHot then
-        backclr   = ghEditor.BackColorCurrentLine
-        foreclr   = ghEditor.ForeColorText
-        detailclr = ghEditor.ForeColorComments
+        backclr   = theme.editor.currentline
+        foreclr   = theme.editor.text.forecolor
+        detailclr = theme.editor.comments.forecolor
         glyphclr  = AutoC_KindColor( gAutoCItems(nItem).nKind )
     else
-        backclr   = ghEditor.BackColorText
-        foreclr   = ghEditor.ForeColorText
-        detailclr = ghEditor.ForeColorComments
+        backclr   = theme.editor.text.backcolor
+        foreclr   = theme.editor.text.forecolor
+        detailclr = theme.editor.comments.forecolor
         glyphclr  = AutoC_KindColor( gAutoCItems(nItem).nKind )
     end if
 
@@ -685,9 +685,9 @@ end function
 ' ========================================================================================
 sub frmAutoComplete_SyncTheme()
     if ghAutoCList = 0 then exit sub
-    PsListTree_SetBackColor( ghAutoCList, ghEditor.BackColorText )
-    PsListTree_SetScrollBarColors( ghAutoCList, ghEditor.BackColorScrollBar, _
-                                 ghEditor.ForeColorScrollBar, ghEditor.ForeColorScrollBar )
+    PsListTree_SetBackColor( ghAutoCList, theme.editor.text.backcolor )
+    PsListTree_SetScrollBarColors( ghAutoCList, theme.editor.scrollbar.backcolor, _
+                                 theme.editor.scrollbar.forecolor, theme.editor.scrollbar.forecolor )
     AfxRedrawWindow( HWND_FRMAUTOCOMPLETE )
 end sub
 
@@ -719,7 +719,7 @@ private function frmAutoComplete_WndProc( _
         dim as HDC hDC = BeginPaint( hwnd, @ps )
         dim as RECT rc
         GetClientRect( hwnd, @rc )
-        dim as HBRUSH hBrush = CreateSolidBrush( ghEditor.Divider )
+        dim as HBRUSH hBrush = CreateSolidBrush( theme.editor.divider )
         if hBrush then
             FrameRect( hDC, @rc, hBrush )
             DeleteObject( hBrush )

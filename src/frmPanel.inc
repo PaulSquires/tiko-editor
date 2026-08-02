@@ -252,7 +252,7 @@ sub frmPanel_SplitterPaint( byval p as PSSPLITTER_PAINTINFO ptr )
 
     ' Constant color -- deliberately no isHot/isDragging highlight. The cursor change
     ' from the control is the only hover feedback this bar gets.
-    b->SetBackColor( ghEditor.Divider )
+    b->SetBackColor( theme.editor.divider )
     b->PaintRect( @rc )
 end sub
 

@@ -139,7 +139,7 @@ private sub frmAbout_CreditsPaintRow( byval p as PSLISTTREE_PAINTINFO ptr )
 
         ' Column 0 -- the contributor -- takes the editor's keyword colour. That one detail is
         ' what makes the box read as belonging to a code editor.
-        dim as COLORREF clr = iif( i = 0, ghEditor.ForeColorKeyword, ghEditor.ForeColorText )
+        dim as COLORREF clr = iif( i = 0, theme.editor.keyword1.forecolor, theme.editor.text.forecolor )
 
         p->b->SetForeColor( clr )
         p->b->PaintText( p->cells[i].wszText, @rcText, DT_LEFT or DT_END_ELLIPSIS )
@@ -302,7 +302,7 @@ private sub frmAbout_PaintHero( byval pb as PsBufferPaint ptr, byval rcHero as R
     dim as RECT rcPlate
     frmAbout_GetPlateRect( rcHero, rcPlate )
 
-    pb->SetBackColor( ghEditor.BackColorText )
+    pb->SetBackColor( theme.editor.text.backcolor )
     pb->PaintRoundRect( @rcPlate, AfxScaleX(FRMABOUT_PLATE_CURVE) )
     ' The ring is a DIVIDER, not the accent: an accent hairline is invisible against the pale
     ' accent of the light theme.
@@ -313,7 +313,7 @@ private sub frmAbout_PaintHero( byval pb as PsBufferPaint ptr, byval rcHero as R
     ' already centre the ink, and insetting first would only shrink the box the same two
     ' letters get centred in.
     pb->SetFont( ghFont(FIXEDFONT_26) )
-    pb->SetForeColor( ghEditor.ForeColorKeyword )
+    pb->SetForeColor( theme.editor.keyword1.forecolor )
     pb->PaintText( FRMABOUT_WORDMARK, @rcPlate, DT_CENTER or DT_VCENTER or DT_SINGLELINE )
 
     ' ---- the text column -------------------------------------------------------------
@@ -345,7 +345,7 @@ private sub frmAbout_PaintHero( byval pb as PsBufferPaint ptr, byval rcHero as R
 
     r.top = y : r.bottom = y + nameH
     pb->SetFont( ghFont(GUIFONT_26) )
-    pb->SetForeColor( ghEditor.ForeColorText )
+    pb->SetForeColor( theme.editor.text.forecolor )
     pb->PaintText( APPNAME, @r, DT_LEFT or DT_VCENTER or DT_SINGLELINE )
 
     y += nameH + gap1
@@ -426,12 +426,12 @@ private sub frmAbout_PaintAboutPage( byval pb as PsBufferPaint ptr, byval rcBody
         rcRow.right  = mx + keyW
         rcRow.bottom = y + rowH
 
-        pb->SetForeColor( ghEditor.ForeColorKeyword )
+        pb->SetForeColor( theme.editor.keyword1.forecolor )
         pb->PaintText( wszKey(i), @rcRow, DT_LEFT or DT_VCENTER or DT_SINGLELINE )
 
         rcRow.left  = mx + keyW
         rcRow.right = rcBody->right - mx
-        pb->SetForeColor( ghEditor.ForeColorText )
+        pb->SetForeColor( theme.editor.text.forecolor )
         pb->PaintText( wszVal(i), @rcRow, DT_LEFT or DT_VCENTER or DT_SINGLELINE or DT_END_ELLIPSIS )
 
         y += rowH
@@ -551,7 +551,7 @@ private sub frmAbout_ApplyTheme( byval hwnd as HWND )
     sc.BackColorHot      = theme.panel.text.backcolor
     sc.ForeColorHot      = theme.panel.texthot.forecolor
     sc.BackColorSelect   = theme.panel.text.backcolor
-    sc.ForeColorSelect   = ghEditor.ForeColorText
+    sc.ForeColorSelect   = theme.editor.text.forecolor
     sc.ForeColorDisabled = theme.topmenu.textdisabled.forecolor
     sc.IndicatorColor    = theme.ui.accent
     PsSelectBar_SetColors( HWND_FRMABOUT_TABS, @sc )
@@ -563,9 +563,9 @@ private sub frmAbout_ApplyTheme( byval hwnd as HWND )
     PsListTree_SetBorderColor( HWND_FRMABOUT_CREDITS, theme.ui.divider )
 
     ' ---- the License field ------------------------------------------------------------
-    PsTextBox_SetBackColor( HWND_FRMABOUT_LICENSE, ghEditor.BackColorText )
+    PsTextBox_SetBackColor( HWND_FRMABOUT_LICENSE, theme.editor.text.backcolor )
     PsTextBox_SetOuterBackColor( HWND_FRMABOUT_LICENSE, theme.panel.text.backcolor )
-    PsTextBox_SetForeColor( HWND_FRMABOUT_LICENSE, ghEditor.ForeColorText )
+    PsTextBox_SetForeColor( HWND_FRMABOUT_LICENSE, theme.editor.text.forecolor )
     PsTextBox_SetBorderColor( HWND_FRMABOUT_LICENSE, theme.ui.divider )
     ' EQUAL to the plain border on purpose. A read-only field that brightens its frame when
     ' focused is advertising an edit that cannot happen.

@@ -218,7 +218,7 @@ function frmTopTabs_Show( byval hwndParent as HWND ) as LRESULT
     PsTabBar_SetFont( hCtrl, ghFont(GUIFONT_10) )
 
     ' The (bottom line + active tab border) is the CONTROL's one color.
-    PsTabBar_SetBorderColor( hCtrl, ghEditor.Divider )
+    PsTabBar_SetBorderColor( hCtrl, theme.editor.divider )
 
     HWND_FRMMAIN_TOPTABS = hCtrl
     gTTabCtl.hWindow = hCtrl

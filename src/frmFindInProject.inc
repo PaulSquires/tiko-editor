@@ -390,12 +390,12 @@ private sub FipPool_Bind( byval i as long, byval nRow as long, byref rcView as R
         ' semantics turn out to be, which is why the colour is set rather than relying on the
         ' flag. Do not drop either line.
         SciExec( gFipPool(i).hWnd, SCI_SETCARETLINEVISIBLE, 0, 0 )
-        SciExec( gFipPool(i).hWnd, SCI_SETCARETLINEBACK, ghEditor.BackColorText, 0 )
+        SciExec( gFipPool(i).hWnd, SCI_SETCARETLINEBACK, theme.editor.text.backcolor, 0 )
         ' The match highlight. The RANGES live on the document (filled once per file by
         ' FindProject_ApplyIndicators), but the indicator's appearance is PER-VIEW, so it has
         ' to be described again on every view that should show it.
         SciExec( gFipPool(i).hWnd, SCI_INDICSETSTYLE, FINDPROJ_INDICATOR, INDIC_STRAIGHTBOX )
-        SciExec( gFipPool(i).hWnd, SCI_INDICSETFORE, FINDPROJ_INDICATOR, ghEditor.ForeColorOccurrence )
+        SciExec( gFipPool(i).hWnd, SCI_INDICSETFORE, FINDPROJ_INDICATOR, theme.editor.occurrence )
         SciExec( gFipPool(i).hWnd, SCI_INDICSETALPHA, FINDPROJ_INDICATOR, 90 )
     end if
 
@@ -491,14 +491,14 @@ sub frmFindInProject_ApplyTheme()
         ' path was missing it, which would have brought the white band back on a theme change
         ' even once the bind path was fixed.
         SciExec( gFipPool(i).hWnd, SCI_SETCARETLINEVISIBLE, 0, 0 )
-        SciExec( gFipPool(i).hWnd, SCI_SETCARETLINEBACK, ghEditor.BackColorText, 0 )
+        SciExec( gFipPool(i).hWnd, SCI_SETCARETLINEBACK, theme.editor.text.backcolor, 0 )
         ' Re-styling can change the line height, so the pin has to be re-asserted.
         dim as long b = gFipRows( gFipPool(i).nRow ).nBlock
         SciExec( gFipPool(i).hWnd, SCI_SETFIRSTVISIBLELINE, gFip.blocks(b).nFirstLine, 0 )
     next
 
-    PsVScrollBar_SetColors( HWND_FRMFINDINPROJECT_VSCROLL, ghEditor.BackColorScrollBar, _
-                            ghEditor.ForeColorScrollBar, ghEditor.ForeColorScrollBar )
+    PsVScrollBar_SetColors( HWND_FRMFINDINPROJECT_VSCROLL, theme.editor.scrollbar.backcolor, _
+                            theme.editor.scrollbar.forecolor, theme.editor.scrollbar.forecolor )
 
     ' A font or size change moves the line height, which moves every block height and the
     ' whole canvas with it -- so this is a full re-measure, not just a repaint.
@@ -913,7 +913,7 @@ private sub FipSurface_PaintHeader( byval b as PsBufferPaint ptr, byref r as FIP
     ' structure of this list, and a card reads as one object holding a filename rather than
     ' as a line drawn across the client area.
     dim as RECT rcCard = rc
-    b->SetPenColor( ghEditor.Divider )
+    b->SetPenColor( theme.editor.divider )
 '    b->PaintRoundOutline( @rcCard )
     b->PaintRect( @rcCard )
 
@@ -925,7 +925,7 @@ private sub FipSurface_PaintHeader( byval b as PsBufferPaint ptr, byref r as FIP
     rcGlyph.left  = frmFindInProject_TwistyColumnX() - AfxScaleX(8)
     rcGlyph.right = rcGlyph.left + AfxScaleX(16)
     b->SetFont( ghFont(SYMBOLFONT_9) )
-    b->SetForeColor( ghEditor.ForeColorText )
+    b->SetForeColor( theme.editor.text.forecolor )
     b->PaintText( iif( gFip.groups(r.nGroup).bCollapsed, wszIconChevronRight, wszIconChevronDown ), _
                   @rcGlyph, DT_CENTER )
 
@@ -940,14 +940,14 @@ private sub FipSurface_PaintHeader( byval b as PsBufferPaint ptr, byref r as FIP
 
 '    b->SetFont( ghFont(GUIFONTBOLD_10) )
     b->SetFont( ghFont(GUIFONT_10) )
-    b->SetForeColor( ghEditor.ForeColorText )
+    b->SetForeColor( theme.editor.text.forecolor )
     dim as long nNameW = FipSurface_TextW( b, wszName ) + nPad
     b->PaintText( wszName, @rcText, DT_LEFT )
 
     dim as RECT rcCount = rc
     rcCount.left = rcText.left + nNameW
     b->SetFont( ghFont(GUIFONT_9) )
-    b->SetForeColor( ghEditor.ForeColorLinenumbers )
+    b->SetForeColor( theme.editor.linenumbers.forecolor )
     dim as long nCountW = FipSurface_TextW( b, wszCount ) + nPad
     b->PaintText( wszCount, @rcCount, DT_LEFT )
 
@@ -978,19 +978,19 @@ private sub FipSurface_PaintHeader( byval b as PsBufferPaint ptr, byref r as FIP
         rcOpen.right = rcCard.right - nPad
         rcOpen.top    += AfxScaleY(2)
         rcOpen.bottom -= AfxScaleY(2)
-        b->SetBackColor( ghEditor.BackColorText )
+        b->SetBackColor( theme.editor.text.backcolor )
         b->PaintRoundRect( @rcOpen )
 
         dim as RECT rcLbl = rcOpen
         rcLbl.left += nPad
-        b->SetForeColor( ghEditor.ForeColorText )
-        b->SetBackColor( ghEditor.BackColorText )
+        b->SetForeColor( theme.editor.text.forecolor )
+        b->SetBackColor( theme.editor.text.backcolor )
         b->PaintText( wszOpen, @rcLbl, DT_LEFT )
 
         if len(wszKey) then
             dim as RECT rcKey = rcOpen
             rcKey.right -= nPad
-            b->SetForeColor( ghEditor.ForeColorLinenumbers )
+            b->SetForeColor( theme.editor.linenumbers.forecolor )
             b->PaintText( wszKey, @rcKey, DT_RIGHT )
         end if
 
@@ -1005,8 +1005,8 @@ private sub FipSurface_PaintHeader( byval b as PsBufferPaint ptr, byref r as FIP
         ' Stop the path before the Open File affordance rather than letting it run under it.
         rcDir.right = nOpenLeft - nPad
         if rcDir.left < rcDir.right then
-            b->SetForeColor( ghEditor.ForeColorLinenumbers )
-            b->SetBackColor( ghEditor.BackColorCurrentLine )
+            b->SetForeColor( theme.editor.linenumbers.forecolor )
+            b->SetBackColor( theme.editor.currentline )
             b->PaintTextEx( wszDir, @rcDir, DT_LEFT or DT_SINGLELINE or DT_VCENTER or DT_END_ELLIPSIS )
         end if
     end if
@@ -1037,7 +1037,7 @@ end sub
 ' PROBE CAN DRIVE THE EXACT PATH WM_PAINT USES -- PsDatePicker's lesson: a probe that renders
 ' through some other route can report a healthy number while the real window draws nothing.
 private sub FipSurface_Render( byval b as PsBufferPaint ptr, byref rc as RECT )
-    b->SetBackColor( ghEditor.BackColorText )
+    b->SetBackColor( theme.editor.text.backcolor )
     b->PaintRect( @rc )
 
     dim as long nFirst = FipRows_FirstVisible( gFipRows(), gFipRowCount, gFipScrollTop )
@@ -1088,7 +1088,7 @@ private sub FipSurface_Render( byval b as PsBufferPaint ptr, byref rc as RECT )
                     rcRule.right  = rc.right
                     rcRule.top    = yTop + gFipRows(i).nHeight + (gFipMetrics.nBlockGap \ 2)
                     rcRule.bottom = rcRule.top + AfxScaleY(1)
-                    b->SetBackColor( ghEditor.Divider )
+                    b->SetBackColor( theme.editor.divider )
                     b->PaintRect( @rcRule )
                 end if
             end if
@@ -1347,7 +1347,7 @@ private function frmFindInProject_WndProc( _
             ' the scrollbar vacates when it hides is left, so a plain fill is enough.
             dim as PsBufferPaint b
             b.BeginDoubleBuffer( hwnd )
-            b.SetBackColor( ghEditor.BackColorText )
+            b.SetBackColor( theme.editor.text.backcolor )
             b.PaintClientRect()
             b.EndDoubleBuffer()
             return 0
@@ -1428,8 +1428,8 @@ function frmFindInProject_CreateWindow() as HWND
     HWND_FRMFINDINPROJECT_VSCROLL = PsVScrollBar_Create( HWND_FRMFINDINPROJECT, _
                                                          IDC_FRMFINDINPROJECT_VSCROLL )
     PsVScrollBar_SetScrollCallback( HWND_FRMFINDINPROJECT_VSCROLL, @FipSurface_ScrollCallback )
-    PsVScrollBar_SetColors( HWND_FRMFINDINPROJECT_VSCROLL, ghEditor.BackColorScrollBar, _
-                            ghEditor.ForeColorScrollBar, ghEditor.ForeColorScrollBar )
+    PsVScrollBar_SetColors( HWND_FRMFINDINPROJECT_VSCROLL, theme.editor.scrollbar.backcolor, _
+                            theme.editor.scrollbar.forecolor, theme.editor.scrollbar.forecolor )
 
     ' Hand the model its two callbacks. It is included long before this file and cannot name
     ' anything in it, so this is how it reaches the surface at all -- to say "I changed" and,

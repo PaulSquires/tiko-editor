@@ -118,16 +118,16 @@ end sub
 '
 ' The EDITOR palette, not the popup one -- this tip and the autocomplete list appear in
 ' the same place, alternating, so they must match each other rather than the menus.
-' frmAutoComplete_SyncTheme uses ghEditor.BackColorText for exactly this reason.
+' frmAutoComplete_SyncTheme uses theme.editor.text.backcolor for exactly this reason.
 ' ========================================================================================
 sub Codetip_SyncTheme()
     if ghCodetip = 0 then exit sub
     dim as PSTOOLTIP_COLORS tipc
-    tipc.BackColor   = ghEditor.BackColorText
-    tipc.BorderColor = ghEditor.Divider
-    tipc.ForeColor   = ghEditor.ForeColorText
-    tipc.TitleColor  = ghEditor.ForeColorText
-    tipc.GlyphColor  = ghEditor.ForeColorText
+    tipc.BackColor   = theme.editor.text.backcolor
+    tipc.BorderColor = theme.editor.divider
+    tipc.ForeColor   = theme.editor.text.forecolor
+    tipc.TitleColor  = theme.editor.text.forecolor
+    tipc.GlyphColor  = theme.editor.text.forecolor
     PsTooltip_SetColors( ghCodetip, @tipc )
 end sub
 

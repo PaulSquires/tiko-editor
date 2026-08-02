@@ -113,21 +113,11 @@ end enum
 ''  instead of silently refusing to update during a live edit.
 ''
 ''  theme.general.description / .version are the two exceptions -- they carry DWSTRING payloads
-''  rather than colours and are filled by hand in Theme_FillGlobals.
+''  rather than colours; the key table carries them through its ofsText channel.
 ''
-type THEMEBIND_TYPE
-    keyValue      as zstring * 40
-    pFore         as COLORREF ptr    ' 0 when the key has no such channel
-    pBack         as COLORREF ptr
-    pBold         as boolean ptr
-    pItalic       as boolean ptr
-    pUnder        as boolean ptr
-    pForeAlpha    as long ptr        ' 0 unless alpha has somewhere real to land
-    pBackAlpha    as long ptr
-    nSubsys       as ulong
-    bAlphaCapable as boolean         ' can alpha on this key actually reach a pixel?
-end type
-dim shared gThemeBind(any) as THEMEBIND_TYPE
+' THEMEBIND_TYPE and gThemeBind are GONE. The hand-written bind table's only job was
+' filling the ten gh* globals; with every read site migrated to the theme root, the
+' generated key table (modThemeKeys.bi) is the single answer to what is in a theme.
 
 ' ghGeneral is GONE. Its five fields moved to where their KEYS always said they belonged,
 ' which the single struct made obvious and the old flat one hid:
@@ -147,86 +137,7 @@ dim shared gThemeBind(any) as THEMEBIND_TYPE
 ' the checklist: a read site left behind becomes "error 41: Variable not declared" rather
 ' than quietly carrying on against a struct nothing fills any more.
 
-type EDITOR_HANDLES_TYPE
-    ForeColorCaret as COLORREF
-    BackColorCurrentLine as COLORREF
-    ForeColorText as COLORREF
-    BackColorText as COLORREF
-    TextBold as boolean
-    TextItalic as boolean
-    TextUnderline as boolean
-    ForeColorNumbers as COLORREF
-    BackColorNumbers as COLORREF
-    NumbersBold as boolean
-    NumbersItalic as boolean
-    NumbersUnderLine as boolean
-    ForeColorComments as COLORREF
-    BackColorComments as COLORREF
-    CommentsBold as boolean
-    CommentsItalic as boolean
-    CommentsUnderline as boolean
-    ForeColorKeyword as COLORREF
-    BackColorKeyword as COLORREF
-    KeywordBold as boolean
-    KeywordItalic as boolean
-    KeywordUnderline as boolean
-    ForeColorKeyword2 as COLORREF
-    BackColorKeyword2 as COLORREF
-    KeywordBold2 as boolean
-    KeywordItalic2 as boolean
-    KeywordUnderline2 as boolean
-    ForeColorKeyword3 as COLORREF
-    BackColorKeyword3 as COLORREF
-    KeywordBold3 as boolean
-    KeywordItalic3 as boolean
-    KeywordUnderline3 as boolean
-    ForeColorFoldmargin as COLORREF
-    ForeColorFoldsymbol as COLORREF
-    BackColorFoldsymbol as COLORREF
-    ForeColorLinenumbers as COLORREF
-    BackColorLinenumbers as COLORREF
-    LinenumbersBold as boolean
-    LinenumbersItalic as boolean
-    LinenumbersUnderline as boolean
-    ForeColorOperators as COLORREF
-    BackColorOperators as COLORREF
-    OperatorsBold as boolean
-    OperatorsItalic as boolean
-    OperatorsUnderline as boolean
-    ForeColorIndentguides as COLORREF
-    BackColorIndentguides as COLORREF
-    ForeColorPreprocessor as COLORREF
-    BackColorPreprocessor as COLORREF
-    PreprocessorBold as boolean
-    PreprocessorItalic as boolean
-    PreprocessorUnderline as boolean
-    ForeColorSelection as COLORREF
-    BackColorSelection as COLORREF
-    ' -1 means "the theme did not ask for an alpha", and every consumer then keeps doing
-    ' exactly what it does today -- Scintilla's own default for the selection, and the
-    ' hardcoded 80/90 for the two occurrence indicators. That sentinel is what lets alpha
-    ' land in Phase 1 without changing a single pixel until a theme opts in.
-    AlphaSelection as long = -1
-    ForeColorStrings as COLORREF
-    BackColorStrings as COLORREF
-    StringsBold as boolean
-    StringsItalic as boolean
-    StringsUnderline as boolean
-    ForeColorBracegood as COLORREF
-    ForeColorBracebad as COLORREF
-    ForeColorOccurrence as COLORREF
-    AlphaOccurrence as long = -1     ' see AlphaSelection
-    BackColorScrollBar as COLORREF
-    ForeColorScrollBar as COLORREF
-    Divider as COLORREF
-    ForeColorBookmark as COLORREF
-    BackColorBookmark as COLORREF
-    ForeColorBreakpoint as COLORREF
-    BackColorBreakpoint as COLORREF
-    ForeColorDebugLine as COLORREF
-    BackColorDebugLine as COLORREF
-end type
-dim shared ghEditor as EDITOR_HANDLES_TYPE
+' ghEditor is GONE -- migrated to theme.editor.*, the last of the ten.
 
 ' ghPanel is GONE -- migrated to theme.panel.*
 
@@ -594,145 +505,8 @@ end function
 ''
 ''  ADD ONE BIND ROW
 ''
-private sub ThemeBind_Add( _
-        byval k as zstring ptr, _
-        byval pF as COLORREF ptr = 0, _
-        byval pB as COLORREF ptr = 0, _
-        byval pBo as boolean ptr = 0, _
-        byval pIt as boolean ptr = 0, _
-        byval pUn as boolean ptr = 0, _
-        byval nSub as ulong = 0, _
-        byval pFA as long ptr = 0, _
-        byval pBA as long ptr = 0 )
-
-    dim as long n = ubound(gThemeBind) + 1
-    redim preserve gThemeBind(n) as THEMEBIND_TYPE
-
-    gThemeBind(n).keyValue   = *k
-    gThemeBind(n).pFore      = pF
-    gThemeBind(n).pBack      = pB
-    gThemeBind(n).pBold      = pBo
-    gThemeBind(n).pItalic    = pIt
-    gThemeBind(n).pUnder     = pUn
-    gThemeBind(n).pForeAlpha = pFA
-    gThemeBind(n).pBackAlpha = pBA
-
-    ' Zero means "derive from the namespace".
-    if nSub = 0 then nSub = Theme_SubsysForNamespace( *k )
-    gThemeBind(n).nSubsys = nSub
-
-    ' Alpha is claimed only where a consumer exists TODAY. Scintilla styles and GDI text are
-    ' opaque by construction, and PsBufferPaint's SetXxxColorA overloads are called by no
-    ' control yet -- so an alpha slider on any other key would move a number that reaches no
-    ' pixel. Having an alpha destination IS the definition of being alpha-capable.
-    dim as boolean bHasFA = (pFA <> 0)
-    dim as boolean bHasBA = (pBA <> 0)
-    gThemeBind(n).bAlphaCapable = (bHasFA orelse bHasBA)
-
-end sub
-
-
-''
-''  BUILD THE KEY -> DESTINATION TABLE
-''
-''  Transcribed from the hand-written copy block this replaced. A key with no row here never
-''  loads at all, which is deliberate: the failure is visible on the first run rather than
-''  only during a live edit.
-''
-''  Deliberately ABSENT, and asserted absent by the self-test's dead-key list: panel.panel,
-''  menubar.panel, toptabs.panel, statusbar.panel, output.panel and editor.window. All six
-''  are present in the shipped theme files and all six had no destination in the original
-''  code either -- four were looked up into a pointer that the next line overwrote before
-''  reading, one was commented out, and editor.window was never referenced at all.
-''
-private sub Theme_BuildBindTable()
-
-    static as boolean bBuilt
-    if bBuilt then exit sub
-    bBuilt = true
-
-    erase gThemeBind
-
-    ' ---- general / compile / main ----------------------------------------------------
-    ' compile.iconsuccess / compile.iconfail / output.valuechanged have no rows here any
-    ' more: their consumers read theme.compile.* and theme.output.valuechanged.
-    ' main.panel has no row here any more: its consumers read theme.main.panel, which the
-    ' generated key table fills. The bind table is a shrinking bridge from here on.
-
-    ' ---- editor: syntax styles (fore + back + bold/italic/underline) ------------------
-    ' editor.text also dresses the autocomplete popup, the Options textboxes and the help
-    ' Options textboxes, so it reaches beyond Scintilla. It no longer reaches the help
-    ' window: that is a WebView2 pane and the site brings its own CSS.
-    ThemeBind_Add( "editor.text", @ghEditor.ForeColorText, @ghEditor.BackColorText, _
-                   @ghEditor.TextBold, @ghEditor.TextItalic, @ghEditor.TextUnderline, _
-                   THSUB_SCINTILLA or THSUB_EDITORCHROME or THSUB_AUTOCOMPLETE or _
-                   THSUB_OPTIONSDLG )
-    ThemeBind_Add( "editor.comments", @ghEditor.ForeColorComments, @ghEditor.BackColorComments, _
-                   @ghEditor.CommentsBold, @ghEditor.CommentsItalic, @ghEditor.CommentsUnderline )
-    ThemeBind_Add( "editor.keyword", @ghEditor.ForeColorKeyword, @ghEditor.BackColorKeyword, _
-                   @ghEditor.KeywordBold, @ghEditor.KeywordItalic, @ghEditor.KeywordUnderline )
-    ThemeBind_Add( "editor.keyword2", @ghEditor.ForeColorKeyword2, @ghEditor.BackColorKeyword2, _
-                   @ghEditor.KeywordBold2, @ghEditor.KeywordItalic2, @ghEditor.KeywordUnderline2 )
-    ThemeBind_Add( "editor.keyword3", @ghEditor.ForeColorKeyword3, @ghEditor.BackColorKeyword3, _
-                   @ghEditor.KeywordBold3, @ghEditor.KeywordItalic3, @ghEditor.KeywordUnderline3 )
-    ThemeBind_Add( "editor.numbers", @ghEditor.ForeColorNumbers, @ghEditor.BackColorNumbers, _
-                   @ghEditor.NumbersBold, @ghEditor.NumbersItalic, @ghEditor.NumbersUnderLine )
-    ThemeBind_Add( "editor.operators", @ghEditor.ForeColorOperators, @ghEditor.BackColorOperators, _
-                   @ghEditor.OperatorsBold, @ghEditor.OperatorsItalic, @ghEditor.OperatorsUnderline )
-    ThemeBind_Add( "editor.preprocessor", @ghEditor.ForeColorPreprocessor, @ghEditor.BackColorPreprocessor, _
-                   @ghEditor.PreprocessorBold, @ghEditor.PreprocessorItalic, @ghEditor.PreprocessorUnderline )
-    ThemeBind_Add( "editor.strings", @ghEditor.ForeColorStrings, @ghEditor.BackColorStrings, _
-                   @ghEditor.StringsBold, @ghEditor.StringsItalic, @ghEditor.StringsUnderline )
-    ThemeBind_Add( "editor.linenumbers", @ghEditor.ForeColorLinenumbers, @ghEditor.BackColorLinenumbers, _
-                   @ghEditor.LinenumbersBold, @ghEditor.LinenumbersItalic, @ghEditor.LinenumbersUnderline )
-
-    ' ---- editor: surface, margins, markers --------------------------------------------
-    ThemeBind_Add( "editor.caret",        @ghEditor.ForeColorCaret )
-    ThemeBind_Add( "editor.currentline",  0, @ghEditor.BackColorCurrentLine )
-    ThemeBind_Add( "editor.foldmargin",   @ghEditor.ForeColorFoldmargin )
-    ThemeBind_Add( "editor.foldsymbol",   @ghEditor.ForeColorFoldsymbol, @ghEditor.BackColorFoldsymbol )
-    ThemeBind_Add( "editor.indentguides", @ghEditor.ForeColorIndentguides, @ghEditor.BackColorIndentguides )
-    ThemeBind_Add( "editor.bracegood",    @ghEditor.ForeColorBracegood )
-    ThemeBind_Add( "editor.bracebad",     @ghEditor.ForeColorBracebad )
-    ThemeBind_Add( "editor.bookmark",     @ghEditor.ForeColorBookmark, @ghEditor.BackColorBookmark )
-    ThemeBind_Add( "editor.breakpoint",   @ghEditor.ForeColorBreakpoint, @ghEditor.BackColorBreakpoint )
-    ThemeBind_Add( "editor.debugline",    @ghEditor.ForeColorDebugLine, @ghEditor.BackColorDebugLine )
-
-    ' The two alpha-bearing keys. SCI_SETSELALPHA takes the selection's background alpha and
-    ' SCI_INDICSETALPHA the occurrence indicator's -- the only two places in the editor where
-    ' an alpha reaches a pixel at all.
-    ThemeBind_Add( "editor.selection", @ghEditor.ForeColorSelection, @ghEditor.BackColorSelection, _
-                   0, 0, 0, 0, 0, @ghEditor.AlphaSelection )
-    ThemeBind_Add( "editor.occurrence", @ghEditor.ForeColorOccurrence, 0, _
-                   0, 0, 0, 0, @ghEditor.AlphaOccurrence )
-
-    ' editor.scrollbar dresses the Options scroll panels and the autocomplete list too.
-    ThemeBind_Add( "editor.scrollbar", @ghEditor.ForeColorScrollBar, @ghEditor.BackColorScrollBar, _
-                   0, 0, 0, _
-                   THSUB_SCINTILLA or THSUB_EDITORCHROME or THSUB_AUTOCOMPLETE or THSUB_OPTIONSDLG )
-
-    ' editor.divider is THE app-wide hairline: menu separators, tab-bar border, every Ps*
-    ' control border built by OptionsTheme_Fill*, message-box frames, the autocomplete frame.
-    ' Read in 20 files, so it feeds everything.
-    ThemeBind_Add( "editor.divider", @ghEditor.Divider, 0, 0, 0, 0, THSUB_ALL )
-
-    ' ---- ui: chrome split out of the editor namespace ----------------------------------
-    ' Filled by Theme_ResolveFallbacks when a theme does not define them. All three are
-    ' app-wide, hence THSUB_ALL.
-
-    ' ---- panel ------------------------------------------------------------------------
-
-    ' ---- topmenu (feeds ghPopup, not ghMenuBar) ----------------------------------------
-
-    ' ---- menubar -----------------------------------------------------------------------
-
-    ' ---- toptabs -----------------------------------------------------------------------
-
-    ' ---- statusbar ---------------------------------------------------------------------
-
-    ' ---- output ------------------------------------------------------------------------
-
-end sub
+' ThemeBind_Add and Theme_BuildBindTable are GONE -- see Theme_BuildKeyTable below,
+' which generates the same information from modThemeKeys.bi and cannot drift from it.
 
 
 ''
@@ -1325,54 +1099,13 @@ end function
 ''
 sub Theme_FillGlobals()
 
-    Theme_BuildBindTable()
-
-    ' DUAL-WRITE, and it is temporary. The new root is filled from the generated key table;
-    ' the gh* globals below are filled from the hand-written bind table. Every read site in
-    ' the app still reads gh*, so nothing here can change a pixel -- the root is written and,
-    ' for now, only the self-test reads it, asserting the two agree key for key. When the
-    ' read sites have moved, the gh* half goes and this call is all that remains.
+    ' A thin wrapper over Theme_FillRoot now. The name is kept because three call sites use
+    ' it and it still says what it does: make the parsed theme visible to the app.
+    '
+    ' What it used to do -- walk the hand-written bind table writing ten gh* globals, plus
+    ' hand-copy the two DWSTRING payloads the table could not hold -- is all gone. The key
+    ' table carries the payloads through its ofsText channel and Theme_FillRoot does the rest.
     Theme_FillRoot( @theme )
-
-    dim as THEME_TYPE ptr pTheme
-
-    ' The two hand-written DWSTRING rows are GONE. The bind table could not hold them
-    ' because it addresses COLORREF pointers; the generated key table has an ofsText channel
-    ' and carries them like any other key, so Theme_FillRoot above has already done this.
-
-    for i as long = lbound(gThemeBind) to ubound(gThemeBind)
-        dim as THEMEBIND_TYPE ptr pBind = @gThemeBind(i)
-        pTheme = getThemePtr( pBind->keyValue )
-
-        if pBind->pFore   <> 0 then *pBind->pFore   = pTheme->foreground
-        if pBind->pBack   <> 0 then *pBind->pBack   = pTheme->background
-        if pBind->pBold   <> 0 then *pBind->pBold   = (pTheme->bold <> 0)
-        if pBind->pItalic <> 0 then *pBind->pItalic = (pTheme->italic <> 0)
-        if pBind->pUnder  <> 0 then *pBind->pUnder  = (pTheme->underline <> 0)
-
-        ' Alpha only lands when the theme actually asked for one. Without the has* test a
-        ' plain "r,g,b" would drive the destination to the 255 default and silently take
-        ' over from whatever constant the consumer uses today.
-        if pBind->pForeAlpha <> 0 then
-            if pTheme->hasForeAlpha then
-                *pBind->pForeAlpha = clng(pTheme->foregroundAlpha)
-            else
-                *pBind->pForeAlpha = -1
-            end if
-        end if
-        if pBind->pBackAlpha <> 0 then
-            if pTheme->hasBackAlpha then
-                *pBind->pBackAlpha = clng(pTheme->backgroundAlpha)
-            else
-                *pBind->pBackAlpha = -1
-            end if
-        end if
-    next
-
-
-
-        
-    
 
 end sub
 
@@ -1598,7 +1331,7 @@ end function
 function Theme_WriteFile( byval wszFullPath as DWSTRING, _
                           byval wszDescription as DWSTRING ) as boolean
 
-    Theme_BuildBindTable()
+    Theme_BuildKeyTable()
 
     dim as long f = freefile
     if open( wszFullPath for output as #f ) <> 0 then return true
@@ -1752,77 +1485,77 @@ sub Theme_DumpGlobals( byval wszOutPath as DWSTRING )
 
     DUMPCLR( "main.panel",                 theme.main.panel )
 
-    DUMPCLR( "editor.ForeColorCaret",         ghEditor.ForeColorCaret )
-    DUMPCLR( "editor.BackColorCurrentLine",   ghEditor.BackColorCurrentLine )
-    DUMPCLR( "editor.ForeColorText",          ghEditor.ForeColorText )
-    DUMPCLR( "editor.BackColorText",          ghEditor.BackColorText )
-    DUMPFLG( "editor.TextBold",               ghEditor.TextBold )
-    DUMPFLG( "editor.TextItalic",             ghEditor.TextItalic )
-    DUMPFLG( "editor.TextUnderline",          ghEditor.TextUnderline )
-    DUMPCLR( "editor.ForeColorNumbers",       ghEditor.ForeColorNumbers )
-    DUMPCLR( "editor.BackColorNumbers",       ghEditor.BackColorNumbers )
-    DUMPFLG( "editor.NumbersBold",            ghEditor.NumbersBold )
-    DUMPFLG( "editor.NumbersItalic",          ghEditor.NumbersItalic )
-    DUMPFLG( "editor.NumbersUnderLine",       ghEditor.NumbersUnderLine )
-    DUMPCLR( "editor.ForeColorComments",      ghEditor.ForeColorComments )
-    DUMPCLR( "editor.BackColorComments",      ghEditor.BackColorComments )
-    DUMPFLG( "editor.CommentsBold",           ghEditor.CommentsBold )
-    DUMPFLG( "editor.CommentsItalic",         ghEditor.CommentsItalic )
-    DUMPFLG( "editor.CommentsUnderline",      ghEditor.CommentsUnderline )
-    DUMPCLR( "editor.ForeColorKeyword",       ghEditor.ForeColorKeyword )
-    DUMPCLR( "editor.BackColorKeyword",       ghEditor.BackColorKeyword )
-    DUMPFLG( "editor.KeywordBold",            ghEditor.KeywordBold )
-    DUMPFLG( "editor.KeywordItalic",          ghEditor.KeywordItalic )
-    DUMPFLG( "editor.KeywordUnderline",       ghEditor.KeywordUnderline )
-    DUMPCLR( "editor.ForeColorKeyword2",      ghEditor.ForeColorKeyword2 )
-    DUMPCLR( "editor.BackColorKeyword2",      ghEditor.BackColorKeyword2 )
-    DUMPFLG( "editor.KeywordBold2",           ghEditor.KeywordBold2 )
-    DUMPFLG( "editor.KeywordItalic2",         ghEditor.KeywordItalic2 )
-    DUMPFLG( "editor.KeywordUnderline2",      ghEditor.KeywordUnderline2 )
-    DUMPCLR( "editor.ForeColorKeyword3",      ghEditor.ForeColorKeyword3 )
-    DUMPCLR( "editor.BackColorKeyword3",      ghEditor.BackColorKeyword3 )
-    DUMPFLG( "editor.KeywordBold3",           ghEditor.KeywordBold3 )
-    DUMPFLG( "editor.KeywordItalic3",         ghEditor.KeywordItalic3 )
-    DUMPFLG( "editor.KeywordUnderline3",      ghEditor.KeywordUnderline3 )
-    DUMPCLR( "editor.ForeColorFoldmargin",    ghEditor.ForeColorFoldmargin )
-    DUMPCLR( "editor.ForeColorFoldsymbol",    ghEditor.ForeColorFoldsymbol )
-    DUMPCLR( "editor.BackColorFoldsymbol",    ghEditor.BackColorFoldsymbol )
-    DUMPCLR( "editor.ForeColorLinenumbers",   ghEditor.ForeColorLinenumbers )
-    DUMPCLR( "editor.BackColorLinenumbers",   ghEditor.BackColorLinenumbers )
-    DUMPFLG( "editor.LinenumbersBold",        ghEditor.LinenumbersBold )
-    DUMPFLG( "editor.LinenumbersItalic",      ghEditor.LinenumbersItalic )
-    DUMPFLG( "editor.LinenumbersUnderline",   ghEditor.LinenumbersUnderline )
-    DUMPCLR( "editor.ForeColorOperators",     ghEditor.ForeColorOperators )
-    DUMPCLR( "editor.BackColorOperators",     ghEditor.BackColorOperators )
-    DUMPFLG( "editor.OperatorsBold",          ghEditor.OperatorsBold )
-    DUMPFLG( "editor.OperatorsItalic",        ghEditor.OperatorsItalic )
-    DUMPFLG( "editor.OperatorsUnderline",     ghEditor.OperatorsUnderline )
-    DUMPCLR( "editor.ForeColorIndentguides",  ghEditor.ForeColorIndentguides )
-    DUMPCLR( "editor.BackColorIndentguides",  ghEditor.BackColorIndentguides )
-    DUMPCLR( "editor.ForeColorPreprocessor",  ghEditor.ForeColorPreprocessor )
-    DUMPCLR( "editor.BackColorPreprocessor",  ghEditor.BackColorPreprocessor )
-    DUMPFLG( "editor.PreprocessorBold",       ghEditor.PreprocessorBold )
-    DUMPFLG( "editor.PreprocessorItalic",     ghEditor.PreprocessorItalic )
-    DUMPFLG( "editor.PreprocessorUnderline",  ghEditor.PreprocessorUnderline )
-    DUMPCLR( "editor.ForeColorSelection",     ghEditor.ForeColorSelection )
-    DUMPCLR( "editor.BackColorSelection",     ghEditor.BackColorSelection )
-    DUMPCLR( "editor.ForeColorStrings",       ghEditor.ForeColorStrings )
-    DUMPCLR( "editor.BackColorStrings",       ghEditor.BackColorStrings )
-    DUMPFLG( "editor.StringsBold",            ghEditor.StringsBold )
-    DUMPFLG( "editor.StringsItalic",          ghEditor.StringsItalic )
-    DUMPFLG( "editor.StringsUnderline",       ghEditor.StringsUnderline )
-    DUMPCLR( "editor.ForeColorBracegood",     ghEditor.ForeColorBracegood )
-    DUMPCLR( "editor.ForeColorBracebad",      ghEditor.ForeColorBracebad )
-    DUMPCLR( "editor.ForeColorOccurrence",    ghEditor.ForeColorOccurrence )
-    DUMPCLR( "editor.BackColorScrollBar",     ghEditor.BackColorScrollBar )
-    DUMPCLR( "editor.ForeColorScrollBar",     ghEditor.ForeColorScrollBar )
-    DUMPCLR( "editor.Divider",                ghEditor.Divider )
-    DUMPCLR( "editor.ForeColorBookmark",      ghEditor.ForeColorBookmark )
-    DUMPCLR( "editor.BackColorBookmark",      ghEditor.BackColorBookmark )
-    DUMPCLR( "editor.ForeColorBreakpoint",    ghEditor.ForeColorBreakpoint )
-    DUMPCLR( "editor.BackColorBreakpoint",    ghEditor.BackColorBreakpoint )
-    DUMPCLR( "editor.ForeColorDebugLine",     ghEditor.ForeColorDebugLine )
-    DUMPCLR( "editor.BackColorDebugLine",     ghEditor.BackColorDebugLine )
+    DUMPCLR( "editor.ForeColorCaret",         theme.editor.caret )
+    DUMPCLR( "editor.BackColorCurrentLine",   theme.editor.currentline )
+    DUMPCLR( "editor.ForeColorText",          theme.editor.text.forecolor )
+    DUMPCLR( "editor.BackColorText",          theme.editor.text.backcolor )
+    DUMPFLG( "editor.TextBold",               theme.editor.text.bold )
+    DUMPFLG( "editor.TextItalic",             theme.editor.text.italic )
+    DUMPFLG( "editor.TextUnderline",          theme.editor.text.underline )
+    DUMPCLR( "editor.ForeColorNumbers",       theme.editor.numbers.forecolor )
+    DUMPCLR( "editor.BackColorNumbers",       theme.editor.numbers.backcolor )
+    DUMPFLG( "editor.NumbersBold",            theme.editor.numbers.bold )
+    DUMPFLG( "editor.NumbersItalic",          theme.editor.numbers.italic )
+    DUMPFLG( "editor.NumbersUnderLine",       theme.editor.numbers.underline )
+    DUMPCLR( "editor.ForeColorComments",      theme.editor.comments.forecolor )
+    DUMPCLR( "editor.BackColorComments",      theme.editor.comments.backcolor )
+    DUMPFLG( "editor.CommentsBold",           theme.editor.comments.bold )
+    DUMPFLG( "editor.CommentsItalic",         theme.editor.comments.italic )
+    DUMPFLG( "editor.CommentsUnderline",      theme.editor.comments.underline )
+    DUMPCLR( "editor.ForeColorKeyword",       theme.editor.keyword1.forecolor )
+    DUMPCLR( "editor.BackColorKeyword",       theme.editor.keyword1.backcolor )
+    DUMPFLG( "editor.KeywordBold",            theme.editor.keyword1.bold )
+    DUMPFLG( "editor.KeywordItalic",          theme.editor.keyword1.italic )
+    DUMPFLG( "editor.KeywordUnderline",       theme.editor.keyword1.underline )
+    DUMPCLR( "editor.ForeColorKeyword2",      theme.editor.keyword2.forecolor )
+    DUMPCLR( "editor.BackColorKeyword2",      theme.editor.keyword2.backcolor )
+    DUMPFLG( "editor.KeywordBold2",           theme.editor.keyword2.bold )
+    DUMPFLG( "editor.KeywordItalic2",         theme.editor.keyword2.italic )
+    DUMPFLG( "editor.KeywordUnderline2",      theme.editor.keyword2.underline )
+    DUMPCLR( "editor.ForeColorKeyword3",      theme.editor.keyword3.forecolor )
+    DUMPCLR( "editor.BackColorKeyword3",      theme.editor.keyword3.backcolor )
+    DUMPFLG( "editor.KeywordBold3",           theme.editor.keyword3.bold )
+    DUMPFLG( "editor.KeywordItalic3",         theme.editor.keyword3.italic )
+    DUMPFLG( "editor.KeywordUnderline3",      theme.editor.keyword3.underline )
+    DUMPCLR( "editor.ForeColorFoldmargin",    theme.editor.foldmargin )
+    DUMPCLR( "editor.ForeColorFoldsymbol",    theme.editor.foldsymbol.forecolor )
+    DUMPCLR( "editor.BackColorFoldsymbol",    theme.editor.foldsymbol.backcolor )
+    DUMPCLR( "editor.ForeColorLinenumbers",   theme.editor.linenumbers.forecolor )
+    DUMPCLR( "editor.BackColorLinenumbers",   theme.editor.linenumbers.backcolor )
+    DUMPFLG( "editor.LinenumbersBold",        theme.editor.linenumbers.bold )
+    DUMPFLG( "editor.LinenumbersItalic",      theme.editor.linenumbers.italic )
+    DUMPFLG( "editor.LinenumbersUnderline",   theme.editor.linenumbers.underline )
+    DUMPCLR( "editor.ForeColorOperators",     theme.editor.operators.forecolor )
+    DUMPCLR( "editor.BackColorOperators",     theme.editor.operators.backcolor )
+    DUMPFLG( "editor.OperatorsBold",          theme.editor.operators.bold )
+    DUMPFLG( "editor.OperatorsItalic",        theme.editor.operators.italic )
+    DUMPFLG( "editor.OperatorsUnderline",     theme.editor.operators.underline )
+    DUMPCLR( "editor.ForeColorIndentguides",  theme.editor.indentguides.forecolor )
+    DUMPCLR( "editor.BackColorIndentguides",  theme.editor.indentguides.backcolor )
+    DUMPCLR( "editor.ForeColorPreprocessor",  theme.editor.preprocessor.forecolor )
+    DUMPCLR( "editor.BackColorPreprocessor",  theme.editor.preprocessor.backcolor )
+    DUMPFLG( "editor.PreprocessorBold",       theme.editor.preprocessor.bold )
+    DUMPFLG( "editor.PreprocessorItalic",     theme.editor.preprocessor.italic )
+    DUMPFLG( "editor.PreprocessorUnderline",  theme.editor.preprocessor.underline )
+    DUMPCLR( "editor.ForeColorSelection",     theme.editor.selection.forecolor )
+    DUMPCLR( "editor.BackColorSelection",     theme.editor.selection.backcolor )
+    DUMPCLR( "editor.ForeColorStrings",       theme.editor.strings.forecolor )
+    DUMPCLR( "editor.BackColorStrings",       theme.editor.strings.backcolor )
+    DUMPFLG( "editor.StringsBold",            theme.editor.strings.bold )
+    DUMPFLG( "editor.StringsItalic",          theme.editor.strings.italic )
+    DUMPFLG( "editor.StringsUnderline",       theme.editor.strings.underline )
+    DUMPCLR( "editor.ForeColorBracegood",     theme.editor.bracegood )
+    DUMPCLR( "editor.ForeColorBracebad",      theme.editor.bracebad )
+    DUMPCLR( "editor.ForeColorOccurrence",    theme.editor.occurrence )
+    DUMPCLR( "editor.BackColorScrollBar",     theme.editor.scrollbar.backcolor )
+    DUMPCLR( "editor.ForeColorScrollBar",     theme.editor.scrollbar.forecolor )
+    DUMPCLR( "editor.Divider",                theme.editor.divider )
+    DUMPCLR( "editor.ForeColorBookmark",      theme.editor.bookmark.forecolor )
+    DUMPCLR( "editor.BackColorBookmark",      theme.editor.bookmark.backcolor )
+    DUMPCLR( "editor.ForeColorBreakpoint",    theme.editor.breakpoint.forecolor )
+    DUMPCLR( "editor.BackColorBreakpoint",    theme.editor.breakpoint.backcolor )
+    DUMPCLR( "editor.ForeColorDebugLine",     theme.editor.debugline.forecolor )
+    DUMPCLR( "editor.BackColorDebugLine",     theme.editor.debugline.backcolor )
 
     DUMPCLR( "panel.BackColorScrollBar",      theme.panel.scrollbar.backcolor )
     DUMPCLR( "panel.ForeColorScrollBar",      theme.panel.scrollbar.forecolor )
@@ -1888,8 +1621,8 @@ sub Theme_DumpGlobals( byval wszOutPath as DWSTRING )
 
     ' The two alpha sentinels. -1 means the theme asked for no alpha and the consumer keeps
     ' whatever constant it uses today.
-    DUMPFLG( "editor.AlphaSelection_isSet",   (ghEditor.AlphaSelection >= 0) )
-    DUMPFLG( "editor.AlphaOccurrence_isSet",  (ghEditor.AlphaOccurrence >= 0) )
+    DUMPFLG( "editor.AlphaSelection_isSet",   (theme.editor.selectionalpha >= 0) )
+    DUMPFLG( "editor.AlphaOccurrence_isSet",  (theme.editor.occurrencealpha >= 0) )
 
     ' Anything the parser accepted but could not act on.
     for i as long = lbound(gThemeParseWarnings) to ubound(gThemeParseWarnings)

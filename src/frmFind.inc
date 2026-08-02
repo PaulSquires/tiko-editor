@@ -164,7 +164,7 @@ private sub frmFind_IconPaint( byval p as PSICONPANEL_PAINTINFO ptr )
         dim pWindow as CWindow ptr = AfxCWindowPtr( p->hIconPanel )
         dim as long nInset = iif( pWindow, pWindow->ScaleY(4), 4 )
         dim as long x = (p->rc.left + p->rc.right) \ 2
-        p->b->SetPenColor( ghEditor.Divider )
+        p->b->SetPenColor( theme.editor.divider )
         p->b->PaintLine( 1, x, p->rc.top + nInset, x, p->rc.bottom - nInset )
         exit sub
     end if
@@ -548,13 +548,13 @@ function frmFind_WndProc( _
         b.PaintClientRect()
 
         ' Only paint the bottom line if Replace is not active.
-        b.SetPenColor( ghEditor.Divider )
+        b.SetPenColor( theme.editor.divider )
         if gFind.bShowReplacePanel = false then
             b.PaintLine( 1, b.rcClient.left, b.rcClient.bottom, b.rcClient.right, b.rcClient.bottom )
         end if
 
         ' Draw the Find controls.
-        b.SetPenColor( ghEditor.Divider )
+        b.SetPenColor( theme.editor.divider )
 
         b.PaintRoundBorderRect( @gTTabCtl.rcFindTextRect )
 

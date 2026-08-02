@@ -584,7 +584,7 @@ private function frmOptions_OnPaint( byval hwnd as HWND ) as LRESULT
     rcFrame.right  = navW - mxG
     rcFrame.bottom = searchYG + searchHG
 
-    buffer.SetBackColor( ghEditor.BackColorText )
+    buffer.SetBackColor( theme.editor.text.backcolor )
     buffer.PaintRoundRect( @rcFrame, curveG )
 
     dim as RECT rcGlyph
@@ -593,11 +593,11 @@ private function frmOptions_OnPaint( byval hwnd as HWND ) as LRESULT
     rcGlyph.right  = mxG + AfxScaleX(FRMOPTIONS_SEARCH_GLYPHW)
     rcGlyph.bottom = searchYG + searchHG
     buffer.SetForeColor( theme.panel.text.forecolor )
-    buffer.SetBackColor( ghEditor.BackColorText )
+    buffer.SetBackColor( theme.editor.text.backcolor )
     buffer.SetFont( ghFont(SYMBOLFONT_10) )
     buffer.PaintText( wchr(&hE721), @rcGlyph, DT_CENTER or DT_VCENTER or DT_SINGLELINE )
 
-    buffer.SetPenColor( ghEditor.Divider )
+    buffer.SetPenColor( theme.editor.divider )
     buffer.PaintRoundOutline( @rcFrame, curveG, 1 )
 
     ' There is NO vertical rule between the nav list and the page any more -- the nav panel's
@@ -1025,9 +1025,9 @@ private sub frmOptions_ApplyTheme( byval hwnd as HWND )
         ' A field-coloured box: editor background, dimmed cue, divider border, accent on focus.
         ' Its background matches the frame the dialog fills behind it, so the two read as one
         ' surface. The frame (fill + border) is drawn in frmOptions_OnPaint.
-        PsTextBox_SetBackColor( HWND_FRMOPTIONS_SEARCH, ghEditor.BackColorText )
-        PsTextBox_SetOuterBackColor( HWND_FRMOPTIONS_SEARCH, ghEditor.BackColorText )
-        PsTextBox_SetForeColor( HWND_FRMOPTIONS_SEARCH, ghEditor.ForeColorText )
+        PsTextBox_SetBackColor( HWND_FRMOPTIONS_SEARCH, theme.editor.text.backcolor )
+        PsTextBox_SetOuterBackColor( HWND_FRMOPTIONS_SEARCH, theme.editor.text.backcolor )
+        PsTextBox_SetForeColor( HWND_FRMOPTIONS_SEARCH, theme.editor.text.forecolor )
         PsTextBox_SetCueBannerColor( HWND_FRMOPTIONS_SEARCH, theme.panel.text.forecolor )
     end if
 

@@ -324,7 +324,7 @@ private sub frmThemes_HeaderPaint( byval p as PSCOLUMNHEADER_PAINTINFO ptr )
 
     dim as RECT rcDiv = p->rc
     rcDiv.left = rcDiv.right - AfxScaleX(1)
-    p->b->SetBackColor( ghEditor.Divider )
+    p->b->SetBackColor( theme.editor.divider )
     p->b->PaintRect( @rcDiv )
 end sub
 
@@ -564,7 +564,7 @@ private sub frmThemes_ThemeDescTip()
     if ghThemesDescTip = 0 then exit sub
     dim as PSTOOLTIP_COLORS tipc
     tipc.BackColor   = theme.topmenu.text.backcolor
-    tipc.BorderColor = ghEditor.Divider
+    tipc.BorderColor = theme.editor.divider
     tipc.ForeColor   = theme.topmenu.text.forecolor
     tipc.TitleColor  = theme.panel.texthot.forecolor
     tipc.GlyphColor  = theme.ui.accent
@@ -923,7 +923,7 @@ function frmThemes_WndProc( _
         dim as RECT rcDiv
         SetRect( @rcDiv, 0, rc.bottom - AfxScaleY(FRMTHEMES_FOOTER_H), _
                  rc.right, rc.bottom - AfxScaleY(FRMTHEMES_FOOTER_H) + AfxScaleY(1) )
-        b.SetBackColor( ghEditor.Divider )
+        b.SetBackColor( theme.editor.divider )
         b.PaintRect( @rcDiv )
 
         ' Unsaved-changes indicator, footer left, EDIT view only.
@@ -1035,7 +1035,7 @@ function frmThemes_Show( byval hWndParent as HWND ) as LRESULT
     ' Rows 50% taller than the control's 22-unit default (UNSCALED -- the control scales it).
     PsListTree_SetRowHeight( ghThemesList, 33 )
     PsListTree_SetBorderWidth( ghThemesList, 1 )
-    PsListTree_SetBorderColor( ghThemesList, ghEditor.Divider )
+    PsListTree_SetBorderColor( ghThemesList, theme.editor.divider )
 
     ghThemesEdit = PsButton_Create( HWND_FRMTHEMES, IDC_FRMTHEMES_CMDEDIT )
     PsButton_SetText( ghThemesEdit, L(14,"Edit") )

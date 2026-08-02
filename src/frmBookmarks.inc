@@ -170,8 +170,9 @@ function frmBookmarks_Show( byval hWndParent as HWND ) as LRESULT
     PsListTree_SetScrollBarWidth( hCtrl, SCROLLBAR_WIDTH_PANEL )
     PsListTree_SetScrollBarColors( hCtrl, theme.panel.scrollbar.backcolor, _
                                  theme.panel.scrollbar.forecolor, theme.panel.scrollbar.forecolor )
-'    PsListTree_SetScrollBarColors( hCtrl, ghEditor.BackColorScrollBar, _
-'                                 ghEditor.ForeColorScrollBar, ghEditor.ForeColorScrollBarHot )
+'    PsListTree_SetScrollBarColors( hCtrl, theme.editor.scrollbar.backcolor, _
+'   (was a commented-out call naming ghEditor.ForeColorScrollBarHot, a field that
+'    never existed in that struct.)
 
     HWND_FRMBOOKMARKS = hCtrl
     

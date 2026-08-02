@@ -270,7 +270,7 @@ private sub frmThemes_PopulateList()
 
     if ghThemeKeys = 0 then exit sub
 
-    Theme_BuildBindTable()
+    Theme_BuildKeyTable()
 
     PsListTree_Clear( ghThemeKeys )
     erase gThemeRowBind
@@ -566,14 +566,14 @@ private sub frmThemes_FillPickerColors( byval pc as PSCOLORPICKER_COLORS ptr )
     if pc = 0 then exit sub
     pc->BackColor           = theme.panel.text.backcolor
     pc->ForeColor           = theme.panel.text.forecolor
-    pc->BorderColor         = ghEditor.Divider
+    pc->BorderColor         = theme.editor.divider
     pc->TabBackColor        = theme.panel.text.backcolor
     pc->TabBackColorSel     = theme.panel.texthot.backcolor
     pc->TabForeColor        = theme.panel.text.forecolor
     pc->TabForeColorSel     = theme.panel.texthot.forecolor
-    pc->FieldBackColor      = ghEditor.BackColorText
-    pc->FieldForeColor      = ghEditor.ForeColorText
-    pc->FieldBorderColor    = ghEditor.Divider
+    pc->FieldBackColor      = theme.editor.text.backcolor
+    pc->FieldForeColor      = theme.editor.text.forecolor
+    pc->FieldBorderColor    = theme.editor.divider
     pc->FieldBorderColorSel = theme.ui.accent
     pc->SelRingColor        = theme.ui.accent
     pc->FocusRingColor      = theme.ui.accent
@@ -604,7 +604,7 @@ private function frmThemes_ColorPopupWndProc( byval hwnd as HWND, byval uMsg as 
         dim as PsBufferPaint b
         b.BeginDoubleBuffer( hwnd )
         dim as RECT rc : GetClientRect( hwnd, @rc )
-        b.SetBackColor( ghEditor.Divider )
+        b.SetBackColor( theme.editor.divider )
         b.PaintRect( @rc )
         b.EndDoubleBuffer()
         return 0
@@ -1229,7 +1229,7 @@ sub frmThemes_ApplyTheme()
                                   theme.panel.scrollbar.forecolor, theme.panel.scrollbar.forecolor )
     PsListTree_SetFont( ghThemeKeys, OptionsFont_Base() )
     PsListTree_SetBorderWidth( ghThemeKeys, 1 )
-    PsListTree_SetBorderColor( ghThemeKeys, ghEditor.Divider )
+    PsListTree_SetBorderColor( ghThemeKeys, theme.editor.divider )
 
     dim as PSBUTTON_COLORS bc : OptionsTheme_FillButton( @bc )
     PsButton_SetColors( ghThemeFore, @bc )   : PsButton_Refresh( ghThemeFore )
@@ -1258,10 +1258,10 @@ sub frmThemes_ApplyTheme()
     for i as long = 0 to 2
         if hRGB(i) then
             PsTextBox_SetFont( hRGB(i), OptionsFont_Base() )
-            PsTextBox_SetForeColor( hRGB(i), ghEditor.ForeColorText )
-            PsTextBox_SetBackColor( hRGB(i), ghEditor.BackColorText )
+            PsTextBox_SetForeColor( hRGB(i), theme.editor.text.forecolor )
+            PsTextBox_SetBackColor( hRGB(i), theme.editor.text.backcolor )
             PsTextBox_SetOuterBackColor( hRGB(i), theme.panel.text.backcolor )
-            PsTextBox_SetBorderColor( hRGB(i), ghEditor.Divider )
+            PsTextBox_SetBorderColor( hRGB(i), theme.editor.divider )
             PsTextBox_SetTextAlign( hRGB(i), TXT_ALIGN_CENTER )
         end if
     next
@@ -1453,13 +1453,13 @@ sub frmThemes_Paint( byval nPage as long, byval p as SCP_PAINTINFO ptr )
             if (gThemeKeys(nb).ofsFore >= 0) andalso (IsRectEmpty( @gThemeSwatchRc(0) ) = 0) then
                 p->b->SetBackColor( gTheme(n).foreground )
                 p->b->PaintRect( @gThemeSwatchRc(0) )
-                p->b->SetPenColor( ghEditor.Divider )
+                p->b->SetPenColor( theme.editor.divider )
                 p->b->PaintRoundOutline( @gThemeSwatchRc(0), 0, 1 )
             end if
             if (gThemeKeys(nb).ofsBack >= 0) andalso (IsRectEmpty( @gThemeSwatchRc(1) ) = 0) then
                 p->b->SetBackColor( gTheme(n).background )
                 p->b->PaintRect( @gThemeSwatchRc(1) )
-                p->b->SetPenColor( ghEditor.Divider )
+                p->b->SetPenColor( theme.editor.divider )
                 p->b->PaintRoundOutline( @gThemeSwatchRc(1), 0, 1 )
             end if
         end if

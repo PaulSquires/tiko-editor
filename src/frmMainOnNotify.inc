@@ -164,11 +164,11 @@ end function
 function SetBraceHighlights( byval hwnd as HWND, byval startpos as integer, byval endpos as integer ) as long
     if endpos >= 0 then
         ' highlight matching braces (even if on different lines)
-        SciExec( hwnd, SCI_INDICSETFORE, 9, ghEditor.ForeColorBracegood )
+        SciExec( hwnd, SCI_INDICSETFORE, 9, theme.editor.bracegood )
         SciExec( hwnd, SCI_BRACEHIGHLIGHT, startpos, endpos )
     else
         ' highlight unmatched brace
-        SciExec( hwnd, SCI_INDICSETFORE, 9, ghEditor.ForeColorBracebad ) 
+        SciExec( hwnd, SCI_INDICSETFORE, 9, theme.editor.bracebad ) 
         SciExec( hwnd, SCI_BRACEBADLIGHT, startpos, 0 )
     end if
 

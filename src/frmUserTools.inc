@@ -487,7 +487,7 @@ private sub frmUserTools_ListPaintHeader( byval p as PSCOLUMNHEADER_PAINTINFO pt
     ' Hairline on the trailing edge so columns read as separated.
     dim as RECT rcDiv = p->rc
     rcDiv.left = rcDiv.right - AfxScaleX(1)
-    p->b->SetBackColor( ghEditor.Divider )
+    p->b->SetBackColor( theme.editor.divider )
     p->b->PaintRect( @rcDiv )
 end sub
 
@@ -961,7 +961,7 @@ private function frmUserTools_OnPaint( byval hwnd as HWND ) as LRESULT
     buffer.PaintText( L(349,"Shortcut"), @rcT, DT_LEFT or DT_VCENTER or DT_SINGLELINE or DT_END_ELLIPSIS )
 
     dim as DWSTRING wszShortcut = frmUserTools_ShortcutText( gUTCurrent )
-    dim as COLORREF clrShortcut = ghEditor.ForeColorText
+    dim as COLORREF clrShortcut = theme.editor.text.forecolor
     if len(wszShortcut) = 0 then
         wszShortcut = L(354,"(none)")
         clrShortcut = theme.topmenu.textdisabled.forecolor
@@ -996,7 +996,7 @@ private function frmUserTools_OnPaint( byval hwnd as HWND ) as LRESULT
     rcDiv.right  = xRight
     rcDiv.top    = y
     rcDiv.bottom = y + AfxScaleY(1)
-    buffer.SetBackColor( ghEditor.Divider )
+    buffer.SetBackColor( theme.editor.divider )
     buffer.PaintRect( @rcDiv )
     buffer.SetBackColor( theme.panel.text.backcolor )
     y += AfxScaleY(FRMUSERTOOLS_GAP) + AfxScaleY(2)
@@ -1759,7 +1759,7 @@ function frmUserTools_Show( byval hWndParent as HWND ) as LRESULT
     scope
         dim as PSTOOLTIP_COLORS tipc
         tipc.BackColor   = theme.topmenu.text.backcolor
-        tipc.BorderColor = ghEditor.Divider
+        tipc.BorderColor = theme.editor.divider
         tipc.ForeColor   = theme.topmenu.text.forecolor
         tipc.TitleColor  = theme.panel.texthot.forecolor
         tipc.GlyphColor  = theme.ui.accent

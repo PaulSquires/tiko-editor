@@ -222,7 +222,7 @@ private sub Theme_PushStripIcons( byval hPanel as HWND )
     c.ForeColorHot      = theme.toptabs.texthot.forecolor
     c.BackColorSelect   = theme.toptabs.text.backcolor
     c.ForeColorSelect   = theme.toptabs.texthot.forecolor
-    c.SeparatorColor    = ghEditor.Divider
+    c.SeparatorColor    = theme.editor.divider
     PsIconPanel_SetColors( hPanel, @c )
 end sub
 
@@ -249,7 +249,7 @@ end sub
 ' PsTooltip.bi at 148, so a declaration naming PSTOOLTIP_COLORS cannot live in the header.
 private sub Theme_FillTooltipColors( byref tipc as PSTOOLTIP_COLORS )
     tipc.BackColor   = theme.topmenu.text.backcolor
-    tipc.BorderColor = ghEditor.Divider
+    tipc.BorderColor = theme.editor.divider
     tipc.ForeColor   = theme.topmenu.text.forecolor
     tipc.TitleColor  = theme.panel.texthot.forecolor
     tipc.GlyphColor  = theme.ui.accent
@@ -421,7 +421,7 @@ sub Theme_ApplySubsystems( byval nMask as ulong )
     if (nMask and THSUB_TOPTABS) <> 0 then
         if IsWindow(HWND_FRMMAIN_TOPTABS) then
             PsTabBar_SetBackColor( HWND_FRMMAIN_TOPTABS, theme.toptabs.text.backcolor )
-            PsTabBar_SetBorderColor( HWND_FRMMAIN_TOPTABS, ghEditor.Divider )
+            PsTabBar_SetBorderColor( HWND_FRMMAIN_TOPTABS, theme.editor.divider )
         end if
         if IsWindow(HWND_FRMMAIN_TOPTABSMENU) then _
             PsStatusBar_SetBackColor( HWND_FRMMAIN_TOPTABSMENU, theme.toptabs.text.backcolor )
@@ -601,7 +601,7 @@ sub Theme_RunSelfTest()
 
     ? "--- TIKO_THEME_SELFTEST ---"
 
-    Theme_BuildBindTable()
+    Theme_BuildKeyTable()
 
     ' Groups 1-3 READ THE GENERATED KEY TABLE, not the hand-written bind table, and that
     ' changed when the first gh* group was migrated. These three assert properties of THE
@@ -994,50 +994,20 @@ sub Theme_RunSelfTest()
         THASSERT( Theme_KeyIndex( "general.version" ) >= 0, _
                   "general.version is not in the key table" )
 
-        ' 22c. Every channel of every bind row lands on a member holding the same value.
-        for i as long = lbound(gThemeBind) to ubound(gThemeBind)
-            dim as string sKey = gThemeBind(i).keyValue
-            dim as long k = Theme_KeyIndex( sKey )
-            THASSERT( k >= 0, "bind key missing from the generated table: " & sKey )
-            if k < 0 then continue for
-            dim as THEMEBIND_TYPE ptr pB = @gThemeBind(i)
-            dim as THEMEKEY_TYPE ptr pK = @gThemeKeys(k)
-
-            ' A channel the legacy row claims must be claimed by the generated row too --
-            ' and vice versa, or the root would silently carry a stale zero.
-            THASSERT( (pB->pFore <> 0) = (pK->ofsFore >= 0), "foreground channel disagrees: " & sKey )
-            THASSERT( (pB->pBack <> 0) = (pK->ofsBack >= 0), "background channel disagrees: " & sKey )
-            THASSERT( (pB->pBold <> 0) = (pK->ofsBold >= 0), "bold channel disagrees: " & sKey )
-
-            if (pB->pFore <> 0) andalso (pK->ofsFore >= 0) then
-                THASSERT( ThemeRoot_PeekColor( @theme, pK->ofsFore ) = *pB->pFore, _
-                          "foreground differs: " & sKey )
-            end if
-            if (pB->pBack <> 0) andalso (pK->ofsBack >= 0) then
-                THASSERT( ThemeRoot_PeekColor( @theme, pK->ofsBack ) = *pB->pBack, _
-                          "background differs: " & sKey )
-            end if
-            if (pB->pBold <> 0) andalso (pK->ofsBold >= 0) then
-                THASSERT( ThemeRoot_PeekBool( @theme, pK->ofsBold ) = *pB->pBold, _
-                          "bold differs: " & sKey )
-                THASSERT( ThemeRoot_PeekBool( @theme, pK->ofsItalic ) = *pB->pItalic, _
-                          "italic differs: " & sKey )
-                THASSERT( ThemeRoot_PeekBool( @theme, pK->ofsUnder ) = *pB->pUnder, _
-                          "underline differs: " & sKey )
-            end if
-            ' The two alpha-bearing keys, including the -1 "theme did not ask" sentinel.
-            if (pB->pForeAlpha <> 0) andalso (pK->ofsForeAlpha >= 0) then
-                THASSERT( ThemeRoot_PeekLong( @theme, pK->ofsForeAlpha ) = *pB->pForeAlpha, _
-                          "foreground alpha differs: " & sKey )
-            end if
-            if (pB->pBackAlpha <> 0) andalso (pK->ofsBackAlpha >= 0) then
-                THASSERT( ThemeRoot_PeekLong( @theme, pK->ofsBackAlpha ) = *pB->pBackAlpha, _
-                          "background alpha differs: " & sKey )
-            end if
-
-            ' The subsystem mask is generated now too, so it has to survive the move.
-            THASSERT( pK->nSubsys = pB->nSubsys, "subsystem mask differs: " & sKey )
-        next
+        ' 22c. RETIRED. It compared every channel of every bind row against the member the
+        '      generated offset addressed -- which was the whole of Phase 1's claim, and is
+        '      now unassertable because the legacy side no longer exists. The bind table, the
+        '      ten gh* globals and ThemeBind_Add are all deleted.
+        '
+        '      Deleted rather than left to pass: with an empty bind table the loop compared
+        '      NOTHING and reported success for it, which is the exact failure mode the rest
+        '      of this suite exists to catch.
+        '
+        '      What still covers the same ground: group 1 (every key resolves to a real entry
+        '      and to the channels it claims), 22e (no two keys share a member), and the fact
+        '      that every consumer in the app now reads the root directly, so a wrong offset
+        '      is a wrong colour on screen rather than a silent disagreement between two
+        '      tables.
 
         ' 22d. The two DWSTRING payloads reached the root -- the rows the legacy bind table
         '      could not hold at all, and which used to be hand-copied in Theme_FillGlobals.

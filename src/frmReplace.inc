@@ -331,13 +331,13 @@ function frmReplace_WndProc( _
         b.PaintClientRect()
 
         ' Paint the bottom line that separates from the code editing window.
-        b.SetPenColor( ghEditor.Divider )
+        b.SetPenColor( theme.editor.divider )
         b.PaintLine( 1, b.rcClient.left, b.rcClient.bottom, b.rcClient.right, b.rcClient.bottom )
 
         ' Draw the Replace controls. The strip's field color is BackColorHot, so
         ' a hovered (unselected) button inverts to the tab area's normal BackColor.
         b.SetColors( theme.toptabs.texthot.forecolor, theme.toptabs.texthot.backcolor )
-        b.SetPenColor( ghEditor.Divider )
+        b.SetPenColor( theme.editor.divider )
 
         b.PaintRoundBorderRect( @gTTabCtl.rcReplaceTextRect )
 

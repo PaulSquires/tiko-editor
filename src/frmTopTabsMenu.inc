@@ -67,7 +67,7 @@ sub frmTopTabsMenu_PaintCallback( byval p as PSSTATUSBAR_PAINTINFO ptr )
 
     ' Paint a full line under the control so that continues the line
     ' of the TopTabs control.
-    p->b->SetPenColor( ghEditor.Divider )
+    p->b->SetPenColor( theme.editor.divider )
     p->b->PaintLine( 2, p->b->rcClient.left, p->b->rcClient.bottom, p->b->rcClient.right, p->b->rcClient.bottom )
 
 end sub

@@ -152,7 +152,7 @@ function TikoMsgBox( byval hParent      as HWND, _
     dim as PSBUTTON_COLORS bc
 
     if MsgBox_ThemeIsUsable() then
-        mc.BorderColor      = ghEditor.Divider
+        mc.BorderColor      = theme.editor.divider
         mc.CaptionBackColor = theme.panel.text.backcolor
         mc.CaptionForeColor = theme.panel.texthot.forecolor
         mc.CloseBackColor   = theme.panel.text.backcolor
@@ -160,7 +160,7 @@ function TikoMsgBox( byval hParent      as HWND, _
         mc.BackColor        = theme.panel.text.backcolor
         mc.ForeColor        = theme.panel.text.forecolor
         mc.FooterBackColor  = theme.panel.text.backcolor
-        mc.DividerColor     = ghEditor.Divider
+        mc.DividerColor     = theme.editor.divider
         OptionsTheme_FillButton( @bc )
     else
         ' Startup, before any theme exists. GetSysColor rather than a hardcoded dark set, so

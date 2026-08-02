@@ -431,7 +431,7 @@ sub frmExplorer_PaintCallback( byval p as PSLISTTREE_PAINTINFO ptr )
     elseif kind = EXPKIND_PROMOTE then
         ' The promotion row reads as an action, not a file: accent-coloured, no document
         ' glyph, and indented to the group's text column rather than the file column.
-        p->b->SetForeColor( ghEditor.ForeColorKeyword )
+        p->b->SetForeColor( theme.editor.keyword1.forecolor )
         p->b->SetFont( ghFont(GUIFONT_10) )
         rcText.left = p->rc.left + nIconWidth
         p->b->PaintText( wszCaption, @rcText, DT_LEFT )
@@ -1086,8 +1086,9 @@ function frmExplorer_Show( byval hWndParent as HWND ) as LRESULT
     PsListTree_SetScrollBarWidth( hCtrl, SCROLLBAR_WIDTH_PANEL )
     PsListTree_SetScrollBarColors( hCtrl, theme.panel.scrollbar.backcolor, _
                                  theme.panel.scrollbar.forecolor, theme.panel.scrollbar.forecolor )
-'    PsListTree_SetScrollBarColors( hCtrl, ghEditor.BackColorScrollBar, _
-'                                 ghEditor.ForeColorScrollBar, ghEditor.ForeColorScrollBarHot )
+'    PsListTree_SetScrollBarColors( hCtrl, theme.editor.scrollbar.backcolor, _
+'   (was a commented-out call naming ghEditor.ForeColorScrollBarHot, a field that
+'    never existed in that struct.)
 
     HWND_FRMEXPLORER = hCtrl
     if environ("TIKO_EXPLORER_TIPTRACE") = "1" then gExpTipTrace = true
