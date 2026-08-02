@@ -181,8 +181,48 @@ end function
 ' Search action Find in Project
 ' ========================================================================================
 function OnCommand_SearchFindInProject() as LRESULT
+    ' SEED THE FIND FIELD FROM THE SELECTION BEFORE THE TAB SWITCH, not after.
+    ' FindControls_Show already does this for Ctrl+F, and SetFocusTab calls it on the way
+    ' into the Find in Project tab -- but by then PsTabBar_SetCurSel has already moved the
+    ' current tab, so GetActiveDocumentPtr() returns null there (the Find tab holds a
+    ' sentinel, not a document) and the whole seeding block is skipped. The selection has
+    ' to be read here, while the document tab is still the current one.
+    dim as boolean bSeeded = false
+    dim pDoc as clsDocument ptr = gTTabCtl.GetActiveDocumentPtr()
+    if pDoc then
+        dim as string sFindText = pDoc->GetSelText
+        ' A MULTI-LINE SELECTION IS NOT A SEARCH PHRASE. Ctrl+F treats one as "search
+        ' within this selection" and deliberately clears the field; a project search has no
+        ' such mode, so it simply keeps whatever term is already there. Tested on the text
+        ' rather than on CurrentSelection, which is only refreshed on the document paths.
+        if instr( sFindText, chr(10) ) then sFindText = ""
+        ' An empty selection is not a search term either: writing "" would silently wipe
+        ' the phrase the user last searched for.
+        if len(sFindText) then
+            gFind.txtFind = sFindText
+            dim as HWND hCtl = GetDlgItem( HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND )
+            if IsWindow(hCtl) then
+                if sFindText <> AfxGetWindowText(hCtl) then
+                    AfxSetWindowText( hCtl, sFindText )
+                end if
+                dim as long nLen = len(sFindText)
+                Edit_SetSel( hCtl, nLen, nLen )
+            end if
+            bSeeded = true
+        end if
+    end if
+
     frmFindInProject_Show()
     frmMain_PositionWindows()
+
+    ' A seeded phrase runs immediately -- opening the tab with the term already in the box
+    ' and an empty results list would just be a second keystroke asking for what was already
+    ' asked for. ONLY when we seeded: without a selection the box holds the previous term
+    ' and its results are still on screen, and a project-wide search is not free.
+    ' AFTER PositionWindows, because RunSearch ends by revealing the current match and the
+    ' surface has to have its real size for that to land anywhere.
+    if bSeeded then frmFindInProject_RerunSearch()
+
     function = 0
 end function
         

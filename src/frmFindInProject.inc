@@ -715,6 +715,33 @@ function frmFindInProject_SaveTarget( byref pDocOut as clsDocument ptr ) as bool
 end function
 
 
+' ========================================================================================
+' The topmost excerpt view currently on screen -- the Tab target past the Find/Replace bars
+' while this tab is up, standing in for the document Scintilla a normal tab would offer.
+'
+' ROW ORDER, NOT POOL ORDER. The slot pool is a recycling ring: FipPool_Sync parks and
+' rebinds slots as the surface scrolls, so gFipPool(0) is whichever slot happened to be free
+' when the first visible row was bound, not the first result. Tabbing into the middle of the
+' list would look like the focus went nowhere.
+' ========================================================================================
+function frmFindInProject_FirstExcerptWindow() as HWND
+    if frmFindInProject_IsActive() = false then return 0
+
+    dim as long nBestRow = &h7FFFFFFF
+    dim as HWND hBest
+    for i as long = 0 to gFipPoolCount - 1
+        if gFipPool(i).nRow = -1 then continue for      ' parked: showing nothing
+        if IsWindow( gFipPool(i).hWnd ) = 0 then continue for
+        if gFipPool(i).nRow < nBestRow then
+            nBestRow = gFipPool(i).nRow
+            hBest = gFipPool(i).hWnd
+        end if
+    next
+
+    function = hBest
+end function
+
+
 function frmFindInProject_RestoreFocus() as boolean
     if gFipLastEditBlock < 0 then return false
     if gFipLastEditBlock >= gFip.nBlockCount then return false

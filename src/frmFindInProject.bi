@@ -114,6 +114,10 @@ declare function frmFindInProject_BarAction( byval id as long ) as boolean
 ' The document Ctrl+S saves while this tab is up: the focused excerpt's, or the one that
 ' last held the caret. See the function header -- it is NOT the same test as ActiveEdit.
 declare function frmFindInProject_SaveTarget( byref pDocOut as clsDocument ptr ) as boolean
+' The topmost excerpt view on screen, in ROW order. This tab has no document Scintilla, so
+' this is what the message pump tabs to past the Find/Replace bars. 0 when the tab is not
+' active or the results list is empty.
+declare function frmFindInProject_FirstExcerptWindow() as HWND
 ' (frmFindInProject_RestoreFocus is declared in frmTopTabs.bi -- clsTopTabCtl.inc calls it
 '  and is compiled long before this file.)
 ' There is deliberately NO frmFindInProject_Close. Closing this tab goes through the ordinary

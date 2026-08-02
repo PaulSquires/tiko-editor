@@ -134,8 +134,12 @@ function handleKeysFindReplace( byval uMsg as MSG ) as boolean
     dim as HWND hFocus   = GetFocus()
     dim as HWND hFind    = PsTextBox_GetRichEditHandle( GetDlgItem( HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND ) )
     dim as HWND hReplace = PsTextBox_GetRichEditHandle( GetDlgItem( HWND_FRMMAIN_REPLACE, IDC_FRMREPLACE_TXTREPLACE ) )
-    dim as HWND hEdit    
+    dim as HWND hEdit
     if pDoc then hEdit = pDoc->hWndActiveScintilla
+
+    ' The Find in Project tab holds no document, so hEdit would be 0 and Tab past the bars
+    ' had nowhere to go. Its stand-in is the first excerpt view in the results list.
+    if hEdit = 0 then hEdit = frmFindInProject_FirstExcerptWindow()
 
     if (hFocus <> hFind) andalso (hFocus <> hReplace) then return false
     
@@ -163,17 +167,35 @@ function handleKeysFindReplace( byval uMsg as MSG ) as boolean
         end if   
 
     elseif (uMsg.message = WM_KEYDOWN) andalso (uMsg.wParam = VK_TAB) then
-        ' Move between the Find Replace textboxes and the Edit window.
+        ' Move between the Find/Replace textboxes and the code window:
+        '   Find -> Replace (only when the Replace bar is open) -> Scintilla, and back.
+        '
+        ' The Replace test is on the CONTROL's visibility, walking up to the bar window
+        ' that frmMain_PositionWindows shows and hides -- when Replace is closed, Tab from
+        ' Find goes straight to the editor.
+        dim as boolean bShift     = cbool( (GetAsyncKeyState(VK_SHIFT) and &H8000) <> 0 )
+        dim as boolean bReplaceOn = cbool( IsWindow(hReplace) <> 0 )
+        if bReplaceOn then bReplaceOn = cbool( IsWindowVisible(hReplace) <> 0 )
         dim as HWND hNewFocus
-        if (GetAsyncKeyState(VK_SHIFT) and &H8000) then 
-            if (hFocus = hFind)    then hNewFocus = hEdit
-            if (hFocus = hReplace) then hNewFocus = hFind
-        else    
-            if (hFocus = hFind)    then hNewFocus = hReplace
-            if IsWindowVisible(hReplace) = 0 then hNewFocus = hEdit
-            if (hFocus = hReplace) then hNewFocus = hEdit
+
+        if bShift then
+            if hFocus = hFind then
+                hNewFocus = hEdit
+            elseif hFocus = hReplace then
+                hNewFocus = hFind
+            end if
+        else
+            if hFocus = hFind then
+                if bReplaceOn then hNewFocus = hReplace else hNewFocus = hEdit
+            elseif hFocus = hReplace then
+                hNewFocus = hEdit
+            end if
         end if
-        SetFocus( hNewFocus )
+
+        ' hEdit is 0 on the Find in Project tab -- that tab holds no document. SetFocus(0)
+        ' would take the focus off EVERY window, so the keystroke reads as "Tab did
+        ' nothing" and the caret is gone as well. Consume the key and stay put instead.
+        if IsWindow(hNewFocus) then SetFocus( hNewFocus )
         return true
     end if
     
