@@ -459,9 +459,15 @@ function clsDocument.SaveFile( byval bSaveAs as boolean = false ) as boolean
     this.IsNewFlag = false
     
     ' Set the current state of the document to unmodified
-    this.UserModified = false   
+    this.UserModified = false
     SciMsg( pSci, SCI_SETSAVEPOINT, 0, 0)
-    
+
+    ' Re-baseline any Find in Project results on this file, so their dirty stripes clear.
+    ' HERE rather than in OnCommand_FileSave: this is the single point every save route
+    ' converges on -- Save, Save As, Save All, the close prompt, and FindProject's own
+    ' SaveAllDirty, which never goes through the command handler at all.
+    FindProject_OnDocumentSaved( @this )
+
     function = false
 end function
 

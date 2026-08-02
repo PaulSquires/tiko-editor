@@ -214,14 +214,28 @@ private sub frmFind_IconClick( byval hIconPanel as HWND, byval idx as long, byva
         case FINDTIP_TOGGLE
             PostMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(IDM_REPLACE, 0), 0 )
 
+        ' BOTH OF THESE NEED THE PROJECT BRANCH, and it is not an extra: on the Find in
+        ' Project tab FindReplace_HighlightSearches does NOTHING AT ALL. Its first act is
+        ' GetActiveDocumentPtr, which that tab answers null to by design, so it returns
+        ' before touching anything -- and the results list went on showing the matches for
+        ' the OLD flags with the icon lit for the new ones. The project search is a whole
+        ' re-run, not a re-highlight, so it cannot share that call.
         case FINDTIP_MATCHCASE
             gFind.nMatchCase = not gFind.nMatchCase
-            FindReplace_HighlightSearches()
+            if frmFindInProject_IsActive() then
+                frmFindInProject_RerunSearch()
+            else
+                FindReplace_HighlightSearches()
+            end if
             AfxRedrawWindow( hIconPanel )
 
         case FINDTIP_WHOLEWORD
             gFind.nWholeWord = not gFind.nWholeWord
-            FindReplace_HighlightSearches()
+            if frmFindInProject_IsActive() then
+                frmFindInProject_RerunSearch()
+            else
+                FindReplace_HighlightSearches()
+            end if
             AfxRedrawWindow( hIconPanel )
 
         case FINDTIP_FOLDALL

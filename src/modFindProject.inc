@@ -647,6 +647,70 @@ function FindProject_IsLineDirty( byval nBlock as long, byval nLineInBlock as lo
 end function
 
 
+' ========================================================================================
+' A result file has just been written to disk. Re-take its line snapshots.
+'
+' THE STRIPE MEANS "UNSAVED", AND THIS IS WHAT MAKES THAT TRUE. It is derived by comparing
+' each displayed line against a captured baseline (FindProject_IsLineDirty), and until this
+' existed the baseline was captured once, when the search ran, and never again -- so the
+' yellow bar stayed lit after a save, for the rest of the result set's life. Saving a file
+' and being told it is still modified is indistinguishable from the save not happening,
+' which is exactly how it was reported.
+'
+' Re-baselining rather than clearing a flag KEEPS the undo property the comparison was
+' chosen for: undo a change made after a save and the line stops being dirty again, because
+' it once more matches what is on disk.
+'
+' New lines are APPENDED to origLines and the block re-pointed at them, rather than written
+' over the old slots: a block whose line count grew since the search has nowhere to put the
+' extra ones. The vacated slots are left where they are -- origLines only ever grows within
+' one search, and it is thrown away wholesale by FindProject_Clear.
+' ========================================================================================
+sub FindProject_OnDocumentSaved( byval pDocSaved as clsDocument ptr )
+    if gFip.bValid = false then exit sub
+    if pDocSaved = 0 then exit sub
+    if IsWindow( pDocSaved->hWindow(0) ) = 0 then exit sub
+
+    dim as boolean bTouched = false
+
+    for g as long = 0 to gFip.nGroupCount - 1
+        if gFip.groups(g).pDoc <> pDocSaved then continue for
+
+        dim as long b0 = gFip.groups(g).nBlockFirst
+        for b as long = b0 to b0 + gFip.groups(g).nBlockCount - 1
+            dim as long nLines = gFip.blocks(b).nLineCount
+            if nLines < 1 then continue for
+
+            if (gFip.nOrigCount + nLines) > (ubound(gFip.origLines) + 1) then
+                dim as long nCap = ubound(gFip.origLines) + 1
+                if nCap < 256 then nCap = 256
+                do while nCap < (gFip.nOrigCount + nLines)
+                    nCap *= 2
+                loop
+                redim preserve gFip.origLines(0 to nCap - 1)
+            end if
+
+            gFip.blocks(b).nOrigFirst = gFip.nOrigCount
+            for ln as long = 0 to nLines - 1
+                gFip.origLines( gFip.nOrigCount ) = _
+                    pDocSaved->GetLine( gFip.blocks(b).nFirstLine + ln )
+                gFip.nOrigCount += 1
+            next
+            gFip.blocks(b).nOrigCount = nLines
+        next
+        bTouched = true
+    next
+
+    ' A REPAINT, NOT A REBUILD -- the same rule the modify hook follows. Rebuilding hides and
+    ' re-binds every pooled view, which destroys the focus of whichever excerpt the caret is
+    ' in, and a save made from inside an excerpt is the common case here.
+    if bTouched then
+        if gFipRepaint <> 0 then gFipRepaint()
+        if IsWindow( gTTabCtl.hWindow ) then AfxRedrawWindow( gTTabCtl.hWindow )
+    end if
+end sub
+
+
 ' Save every result file with unsaved changes. FALSE if the user cancelled one of them, which
 ' the caller takes as "abandon the close".
 function FindProject_SaveAllDirty() as boolean

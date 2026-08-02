@@ -209,9 +209,11 @@ function frmMain_OnCommand( _
             ' On the Find in Project tab there is no active document, but the focused excerpt
             ' is a view onto a real one -- and it is the file the user has just been editing,
             ' so Ctrl+S has to save THAT.
+            ' SaveTarget, not ActiveEdit: the latter answers only while an excerpt actually
+            ' holds the caret, so Ctrl+S was a silent no-op everywhere else on this tab.
             if pDoc = 0 then
                 dim as clsDocument ptr pFipSave
-                if frmFindInProject_ActiveEdit( pFipSave ) then pDoc = pFipSave
+                if frmFindInProject_SaveTarget( pFipSave ) then pDoc = pFipSave
             end if
             if pDoc = 0 then exit function
             OnCommand_FileSave( hwnd, pDoc, pDoc->IsNewFlag, false )

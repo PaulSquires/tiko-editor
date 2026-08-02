@@ -687,6 +687,34 @@ function frmFindInProject_ActiveEdit( byref pDocOut as clsDocument ptr ) as HWND
 end function
 
 
+' ========================================================================================
+' The document Ctrl+S should save while this tab is up.
+'
+' ActiveEdit alone is not enough, and that gap IS the reported bug: it answers only while an
+' excerpt holds the caret, so clicking the surface, the scrollbar or the find field -- or a
+' Replace All, which rebinds every pooled view -- left Ctrl+S a SILENT no-op while
+' Ctrl+Shift+S went on saving everything. The fallback is the excerpt that last had the
+' caret, which is the file the user was editing and the only defensible answer.
+'
+' Deliberately NOT folded into ActiveEdit: that one routes the EDIT MENU, where "no excerpt
+' focused" has to keep meaning "no edit window" or Ctrl+Z starts acting on a window the user
+' cannot see.
+' ========================================================================================
+function frmFindInProject_SaveTarget( byref pDocOut as clsDocument ptr ) as boolean
+    pDocOut = 0
+    if frmFindInProject_IsActive() = false then return false
+    if frmFindInProject_ActiveEdit( pDocOut ) then return true
+
+    if gFipLastEditBlock < 0 then return false
+    if gFipLastEditBlock >= gFip.nBlockCount then return false
+    dim as long g = gFip.blocks(gFipLastEditBlock).nGroup
+    if (g < 0) orelse (g >= gFip.nGroupCount) then return false
+    if gFip.groups(g).pDoc = 0 then return false
+    pDocOut = gFip.groups(g).pDoc
+    return true
+end function
+
+
 function frmFindInProject_RestoreFocus() as boolean
     if gFipLastEditBlock < 0 then return false
     if gFipLastEditBlock >= gFip.nBlockCount then return false
@@ -2549,6 +2577,22 @@ private sub FipBar_RunSearch()
 end sub
 
 
+' ========================================================================================
+' Re-run the search for whatever is in the find field, with the flags as they stand now.
+'
+' This is what the Match Case and Whole Word icons call. It is a full re-run rather than a
+' re-highlight because the project results ARE the search: the flags decide which matches
+' exist, not merely how they are drawn.
+' ========================================================================================
+sub frmFindInProject_RerunSearch()
+    if frmFindInProject_IsActive() = false then exit sub
+    if IsWindow( GetDlgItem( HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND ) ) = 0 then exit sub
+    ' RunSearch unconditionally re-runs and re-stamps gFipLastQuery itself, so the "same
+    ' phrase means navigate" shortcut in BarAction is left pointing at the new result set.
+    FipBar_RunSearch()
+end sub
+
+
 function frmFindInProject_BarAction( byval id as long ) as boolean
     if frmFindInProject_IsActive() = false then return false
 
@@ -2732,3 +2776,494 @@ function frmFindInProject_Show() as LRESULT
 
     function = 0
 end function
+
+
+' ========================================================================================
+' Env-gated harness: TIKO_FINDPROJ_REPLACETEST=1
+'
+' Replace, Replace All, the Match Case / Whole Word toggles, and Ctrl+S -- driven through
+' the REAL entry points (the icon panel's own mouse messages, frmFindInProject_BarAction,
+' WM_COMMAND to frmMain), not by calling the model directly.
+'
+' IT WRITES ITS OWN TEMPORARY FILE and searches for a token that cannot occur anywhere
+' else ("Qzalpha"). Two reasons, and the second is not optional: the expected counts have
+' to be KNOWN CONSTANTS rather than whatever happens to be open, and a Replace All is
+' PROJECT-WIDE -- a phrase that also matched the user's own open documents would rewrite
+' their buffers as a side effect of running the test.
+'
+' The four expected counts are all DIFFERENT (7 / 3 / 5 / 2), so no assertion here can pass
+' by a flag being ignored in a way that happens to give the same answer.
+' ========================================================================================
+private function FipRT_Count( byval sHay as string, byval sNeedle as string ) as long
+    dim as long n = 0, p = instr( sHay, sNeedle )
+    do while p > 0
+        n += 1
+        p = instr( p + 1, sHay, sNeedle )
+    loop
+    function = n
+end function
+
+private function FipRT_GroupOf( byval pDoc as clsDocument ptr ) as long
+    for g as long = 0 to gFip.nGroupCount - 1
+        if gFip.groups(g).pDoc = pDoc then return g
+    next
+    function = -1
+end function
+
+' Live matches in ONE group. The project-wide gFip.nLiveMatches counts the user's other
+' documents too, and this harness must not depend on what those contain.
+private function FipRT_GroupLive( byval pDoc as clsDocument ptr ) as long
+    dim as long g = FipRT_GroupOf( pDoc )
+    if g = -1 then return 0
+    dim as long n = 0
+    for i as long = gFip.groups(g).nMatchFirst to _
+                    gFip.groups(g).nMatchFirst + gFip.groups(g).nMatchCount - 1
+        if gFip.matches(i).bDead = false then n += 1
+    next
+    function = n
+end function
+
+' A REAL press+release on one of the Find bar's icon buttons. PsIconPanel items are
+' IP_KIND_COMMAND here, so the click callback fires on the UP of a matched pair -- which is
+' why both messages are sent rather than one.
+'
+' THE CURSOR REALLY HAS TO MOVE. PsIconPanel resolves which item was hit through
+' GetHotIconPanelItem, which reads GetCursorPos -- not the message's lParam. A synthetic
+' click at a coordinate the mouse is not actually over presses nothing, silently: the first
+' version of this harness sent both messages with the cursor elsewhere and reported that
+' the toggle handler had never run, which would have been read as a bug in the handler.
+private function FipRT_ClickIcon( byval hPanel as HWND, byval id as long ) as boolean
+    if IsWindow( hPanel ) = 0 then return false
+    dim as long idx = PsIconPanel_FindItemByID( hPanel, id )
+    if idx = -1 then return false
+    dim as RECT rc
+    if PsIconPanel_GetItemRect( hPanel, idx, rc ) = false then return false
+    dim as POINT pt
+    pt.x = (rc.left + rc.right) \ 2
+    pt.y = (rc.top + rc.bottom) \ 2
+    dim as LPARAM lp = cast( LPARAM, ((pt.y and &hFFFF) shl 16) or (pt.x and &hFFFF) )
+    ClientToScreen( hPanel, @pt )
+    dim as POINT ptSave
+    GetCursorPos( @ptSave )
+    SetCursorPos( pt.x, pt.y )
+    ' The hot item is tracked from WM_MOUSEMOVE (and a poll timer); give it the move first
+    ' or the press lands with no hot item and does nothing.
+    SendMessage( hPanel, WM_MOUSEMOVE, 0, lp )
+    SendMessage( hPanel, WM_LBUTTONDOWN, 0, lp )
+    SendMessage( hPanel, WM_LBUTTONUP,   0, lp )
+    SetCursorPos( ptSave.x, ptSave.y )
+    FipRepro_Pump()
+    return true
+end function
+
+
+' A pump that also runs the ACCELERATOR step, which FipRepro_Pump deliberately does not.
+'
+' CAVEAT, and it bounds what the Ctrl+S assertions below can claim: frmMain's real loop
+' runs eight FilterMessage calls AHEAD of TranslateAccelerator. They are not reproduced
+' here, so this proves the accelerator table maps the keystroke and the command reaches the
+' handler -- it cannot prove that no filter upstream is eating it first.
+dim shared as long gFipRTKeysSeen, gFipRTKeysEaten
+
+private sub FipRT_PumpWithAccel()
+    dim as CWindow ptr pW = AfxCWindowPtr( HWND_FRMMAIN )
+    dim as MSG m
+    dim as long n = 0
+    do while PeekMessage( @m, null, 0, 0, PM_REMOVE )
+        dim as boolean bEaten = false
+        dim as boolean bIsS = cbool( (m.message = WM_KEYDOWN) andalso (m.wParam = asc("S")) )
+        if bIsS then gFipRTKeysSeen += 1
+        if pW <> 0 then
+            if pW->AccelHandle <> 0 then
+                bEaten = cbool( TranslateAccelerator( pW->hWindow, pW->AccelHandle, @m ) <> 0 )
+            end if
+        end if
+        if bIsS andalso bEaten then gFipRTKeysEaten += 1
+        if bEaten = false then
+            TranslateMessage( @m )
+            DispatchMessage( @m )
+        end if
+        n += 1
+        if n > 2000 then exit do
+    loop
+end sub
+
+' A REAL Ctrl+S, synthesised at the keyboard driver, so it goes to whatever has the focus
+' exactly as the user's own keystroke would.
+' keybd_event is ASYNCHRONOUS -- it hands the events to the system, which posts them to the
+' focus queue some time later. Pumping immediately drains a queue the keystroke has not
+' reached yet, and the assertion then reports that Ctrl+S did nothing. That produced a
+' result that flipped between runs with no code change, which is worse than no test: sleep
+' and re-pump until the queue is genuinely empty of it.
+' FALSE when the keystroke never arrived, which is an ENVIRONMENT failure and not a tiko
+' one: injected input goes to the FOREGROUND window's queue, and this harness runs at
+' startup, where another application can still own the foreground. Reported as a skip rather
+' than as a failed assertion -- run unattended it produced a FAIL that flipped between runs
+' with no code change, which is the most misleading result a suite can give.
+private function FipRT_SendCtrlS() as boolean
+    ' Drain first, so a stray keystroke left over from an earlier attempt cannot be counted
+    ' as this one's.
+    FipRT_PumpWithAccel()
+    gFipRTKeysSeen = 0
+    gFipRTKeysEaten = 0
+
+    if GetForegroundWindow() <> HWND_FRMMAIN then
+        print "  NOTE: frmMain is not the foreground window -- Ctrl+S keystroke SKIPPED."
+        return false
+    end if
+
+    keybd_event( VK_CONTROL, 0, 0, 0 )
+    keybd_event( asc("S"),   0, 0, 0 )
+    keybd_event( asc("S"),   0, KEYEVENTF_KEYUP, 0 )
+    keybd_event( VK_CONTROL, 0, KEYEVENTF_KEYUP, 0 )
+    for i as long = 1 to 10
+        sleep 30, 1
+        FipRT_PumpWithAccel()
+    next
+
+    if gFipRTKeysSeen = 0 then
+        print "  NOTE: the injected Ctrl+S never reached the queue -- SKIPPED."
+        return false
+    end if
+    print "  KEY: 'S' keydowns pumped = " & str(gFipRTKeysSeen) & _
+          ", claimed by an accelerator = " & str(gFipRTKeysEaten)
+    return true
+end function
+
+' Make a buffer dirty the way a keystroke would -- through the document, not the model.
+private sub FipRT_DirtyBuffer( byval hSci as HWND )
+    dim sDirty as string = chr(13) & chr(10) & "x"
+    SciExec( hSci, SCI_APPENDTEXT, len(sDirty), strptr(sDirty) )
+end sub
+
+
+sub frmFindInProject_RunReplaceTest()
+    if environ("TIKO_FINDPROJ_REPLACETEST") <> "1" then exit sub
+
+    gFipTestPass = 0
+    gFipTestFail = 0
+    print "--- TIKO_FINDPROJ_REPLACETEST ---"
+
+    ' ---- the temporary file -------------------------------------------------------------
+    dim as DWSTRING wszTemp = environ("TEMP")
+    if len(wszTemp) = 0 then wszTemp = "C:\"
+    if right(wszTemp, 1) <> "\" then wszTemp = wszTemp & "\"
+    dim as DWSTRING wszFile = wszTemp & "tiko_fip_replacetest.bas"
+
+    ' A DOCUMENT ALREADY OPEN ON THIS PATH WINS OVER THE BYTES ON DISK, so it has to go
+    ' first. Killing a previous run mid-test leaves the temp file in the restored session,
+    ' and OpenSelectedDocument then hands back that stale buffer -- which reported 0 matches
+    ' and 7 already-replaced tokens, i.e. every assertion failing for a reason that had
+    ' nothing to do with the code under test.
+    dim pStale as clsDocument ptr = gApp.pDocList
+    do until pStale = 0
+        dim pNextStale as clsDocument ptr = pStale->pDocNext
+        if ucase(str(pStale->DiskFilename)) = ucase(str(wszFile)) then
+            ' Silence the save prompt: this buffer is about to be overwritten anyway.
+            if IsWindow( pStale->hWindow(0) ) then
+                SciExec( pStale->hWindow(0), SCI_SETSAVEPOINT, 0, 0 )
+            end if
+            pStale->UserModified = false
+            dim as long idxStale = gTTabCtl.GetTabIndexByDocumentPtr( pStale )
+            if idxStale <> -1 then gTTabCtl.CloseTab( idxStale )
+        end if
+        pStale = pNextStale
+    loop
+    FipRepro_Pump()
+
+    dim as long f = freefile
+    if open( str(wszFile) for output as #f ) <> 0 then
+        print "  FAIL: could not create " & str(wszFile)
+        exit sub
+    end if
+    print #f, "' Qzalpha qzalpha QZALPHA QzalphaBeta qzalpha2"
+    print #f, "dim Qzalpha as long"
+    print #f, "print ""qzalpha"""
+    close #f
+
+    dim as wstring * MAX_PATH wszOpen = wszFile
+    dim as clsDocument ptr pT = OpenSelectedDocument( wszOpen )
+    if pT = 0 then
+        print "  FAIL: could not open the temporary file"
+        exit sub
+    end if
+    FipRepro_Pump()
+
+    dim as string sOrig = pT->GetText()
+    frmFindInProject_Check( "setup: the file loaded with 7 occurrences of the token", _
+        FipRT_Count( ucase(sOrig), "QZALPHA" ) = 7, str(FipRT_Count( ucase(sOrig), "QZALPHA" )) )
+
+    ' ---- the four flag combinations, at the model level ---------------------------------
+    ' Directly, so the toggle assertions below are comparing the click's answer against a
+    ' number this harness has already established independently.
+    FindProject_Search( "Qzalpha", false, false )
+    dim as long nCI = FipRT_GroupLive( pT )
+    FindProject_Search( "Qzalpha", true, false )
+    dim as long nCS = FipRT_GroupLive( pT )
+    FindProject_Search( "Qzalpha", false, true )
+    dim as long nWW = FipRT_GroupLive( pT )
+    FindProject_Search( "Qzalpha", true, true )
+    dim as long nCSWW = FipRT_GroupLive( pT )
+
+    frmFindInProject_Check( "flags: case-insensitive, any part of a word = 7", nCI = 7, str(nCI) )
+    frmFindInProject_Check( "flags: match case = 3", nCS = 3, str(nCS) )
+    frmFindInProject_Check( "flags: whole word = 5", nWW = 5, str(nWW) )
+    frmFindInProject_Check( "flags: match case AND whole word = 2", nCSWW = 2, str(nCSWW) )
+
+    ' ---- open the tab and search through the BAR ----------------------------------------
+    gFind.nMatchCase = false
+    gFind.nWholeWord = false
+    frmFindInProject_Show()
+    FipRepro_Pump()
+
+    dim as HWND hFind = GetDlgItem( HWND_FRMMAIN_FIND, IDC_FRMFIND_TXTFIND )
+    if IsWindow( hFind ) = 0 then
+        print "  FAIL: the Find bar has no find field"
+    else
+        AfxSetWindowText( hFind, "Qzalpha" )
+        FipBar_RunSearch()
+        FipRepro_Pump()
+        frmFindInProject_Check( "bar: a search through the bar finds all 7", _
+            FipRT_GroupLive( pT ) = 7, str(FipRT_GroupLive( pT )) )
+
+        ' ---- THE TOGGLES ----------------------------------------------------------------
+        ' The reported question: when Match Case or Whole Word changes, do the results in the
+        ' buffer change with it? Driven by a real click on the icon, not by writing gFind.
+        if FipRT_ClickIcon( ghFindIconsField, FINDTIP_MATCHCASE ) = false then
+            print "  FAIL: no Match Case icon to click"
+        else
+            frmFindInProject_Check( "toggle: clicking Match Case sets the flag", _
+                cbool(gFind.nMatchCase <> 0) = true )
+            frmFindInProject_Check( "toggle: the MODEL was re-searched with Match Case on", _
+                gFip.bMatchCase = true )
+            frmFindInProject_Check( "toggle: Match Case narrows the results to 3", _
+                FipRT_GroupLive( pT ) = 3, str(FipRT_GroupLive( pT )) )
+
+            FipRT_ClickIcon( ghFindIconsField, FINDTIP_MATCHCASE )
+            frmFindInProject_Check( "toggle: clicking it again widens them back to 7", _
+                FipRT_GroupLive( pT ) = 7, str(FipRT_GroupLive( pT )) )
+        end if
+
+        if FipRT_ClickIcon( ghFindIconsField, FINDTIP_WHOLEWORD ) = false then
+            print "  FAIL: no Whole Word icon to click"
+        else
+            frmFindInProject_Check( "toggle: clicking Whole Word sets the flag", _
+                cbool(gFind.nWholeWord <> 0) = true )
+            frmFindInProject_Check( "toggle: the MODEL was re-searched with Whole Word on", _
+                gFip.bWholeWord = true )
+            frmFindInProject_Check( "toggle: Whole Word narrows the results to 5", _
+                FipRT_GroupLive( pT ) = 5, str(FipRT_GroupLive( pT )) )
+
+            FipRT_ClickIcon( ghFindIconsField, FINDTIP_WHOLEWORD )
+            frmFindInProject_Check( "toggle: clicking it again widens them back to 7", _
+                FipRT_GroupLive( pT ) = 7, str(FipRT_GroupLive( pT )) )
+        end if
+
+        ' ---- REPLACE (one) --------------------------------------------------------------
+        ReplaceControls_Show()
+        FipRepro_Pump()
+        dim as HWND hRep = GetDlgItem( HWND_FRMMAIN_REPLACE, IDC_FRMREPLACE_TXTREPLACE )
+        if IsWindow( hRep ) = 0 then
+            print "  FAIL: the Replace bar has no replace field"
+        else
+            AfxSetWindowText( hRep, "Wbeta" )
+
+            ' Re-run so gFipCurrent lands on the first match of a known result set.
+            AfxSetWindowText( hFind, "Qzalpha" )
+            FipBar_RunSearch()
+            FipRepro_Pump()
+            dim as long nBefore = FipRT_GroupLive( pT )
+
+            frmFindInProject_BarAction( IDM_REPLACENEXT )
+            FipRepro_Pump()
+
+            dim as string sAfter1 = pT->GetText()
+            frmFindInProject_Check( "replace one: exactly one Wbeta is in the buffer", _
+                FipRT_Count( sAfter1, "Wbeta" ) = 1, str(FipRT_Count( sAfter1, "Wbeta" )) )
+            frmFindInProject_Check( "replace one: the live count dropped by exactly one", _
+                FipRT_GroupLive( pT ) = nBefore - 1, _
+                str(FipRT_GroupLive( pT )) & " vs " & str(nBefore - 1) )
+            frmFindInProject_Check( "replace one: the document is DIRTY, not written to disk", _
+                SciExec( pT->hWindow(0), SCI_GETMODIFY, 0, 0 ) <> 0 )
+
+            ' ---- REPLACE ALL ------------------------------------------------------------
+            dim as long nLeft = FipRT_GroupLive( pT )
+            frmFindInProject_BarAction( IDM_REPLACEALL )
+            FipRepro_Pump()
+
+            dim as string sAfter2 = pT->GetText()
+            frmFindInProject_Check( "replace all: no live match is left in the group", _
+                FipRT_GroupLive( pT ) = 0, str(FipRT_GroupLive( pT )) )
+            frmFindInProject_Check( "replace all: every remaining match became Wbeta", _
+                FipRT_Count( sAfter2, "Wbeta" ) = nLeft + 1, _
+                str(FipRT_Count( sAfter2, "Wbeta" )) & " vs " & str(nLeft + 1) )
+            ' THE ONE THAT CATCHES A CASE-BLIND REPLACE. Replace All ran with both flags OFF,
+            ' so all 7 spellings had to go -- including the ones inside QzalphaBeta and
+            ' qzalpha2, which are matches only because Whole Word is off.
+            frmFindInProject_Check( "replace all: not one spelling of the token survives", _
+                FipRT_Count( ucase(sAfter2), "QZALPHA" ) = 0, _
+                str(FipRT_Count( ucase(sAfter2), "QZALPHA" )) & " left" )
+
+            ' ---- CTRL+S -----------------------------------------------------------------
+            ' Two separate questions, and they fail differently.
+            '
+            ' (1) Is Ctrl+S in the accelerator table at all? Read back from the table Windows
+            '     actually holds, not from gKeys -- a binding can be stored, displayed and
+            '     saved while never reaching CreateAcceleratorTable.
+            dim as CWindow ptr pW = AfxCWindowPtr( HWND_FRMMAIN )
+            if pW = 0 then
+                print "  FAIL: no CWindow for frmMain"
+            else
+                dim as long nEntries = CopyAcceleratorTable( pW->AccelHandle, 0, 0 )
+                dim as boolean bFoundSave = false
+                if nEntries > 0 then
+                    redim acc( 0 to nEntries - 1 ) as ACCEL
+                    CopyAcceleratorTable( pW->AccelHandle, @acc(0), nEntries )
+                    for i as long = 0 to nEntries - 1
+                        if acc(i).cmd <> IDM_FILESAVE then continue for
+                        if acc(i).key <> asc("S") then continue for
+                        if (acc(i).fVirt and FCONTROL) = 0 then continue for
+                        if (acc(i).fVirt and FSHIFT) <> 0 then continue for
+                        if (acc(i).fVirt and FALT) <> 0 then continue for
+                        bFoundSave = true
+                    next
+                end if
+                frmFindInProject_Check( "ctrl+s: Ctrl+S maps to IDM_FILESAVE in the real table", _
+                    bFoundSave, str(nEntries) & " accelerators" )
+            end if
+
+            ' (2) Does the command actually save? Sent with the FOCUS INSIDE AN EXCERPT, which
+            '     is the state the report describes -- on this tab GetActiveDocumentPtr is
+            '     null, so IDM_FILESAVE has to resolve the document from the focused view.
+            dim as HWND hExcerpt = 0
+            for i as long = 0 to gFipPoolCount - 1
+                if gFipPool(i).nRow < 0 then continue for
+                if gFip.groups( gFipRows( gFipPool(i).nRow ).nGroup ).pDoc = pT then
+                    hExcerpt = gFipPool(i).hWnd: exit for
+                end if
+            next
+            frmFindInProject_Check( "ctrl+s: an excerpt view onto the test file is on screen", _
+                hExcerpt <> 0 )
+
+            if hExcerpt <> 0 then
+                SetFocus( hExcerpt )
+                FipRepro_Pump()
+                dim as clsDocument ptr pFocused
+                frmFindInProject_Check( "ctrl+s: the focused excerpt resolves to the test file", _
+                    (frmFindInProject_ActiveEdit( pFocused ) = hExcerpt) andalso (pFocused = pT) )
+
+                SendMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(IDM_FILESAVE, 0), 0 )
+                FipRepro_Pump()
+
+                frmFindInProject_Check( "ctrl+s: the buffer is no longer modified", _
+                    SciExec( pT->hWindow(0), SCI_GETMODIFY, 0, 0 ) = 0, _
+                    str(SciExec( pT->hWindow(0), SCI_GETMODIFY, 0, 0 )) )
+
+                ' The only proof that matters: the bytes on disk.
+                dim as long f2 = freefile
+                dim as string sDisk
+                if open( str(wszFile) for input as #f2 ) = 0 then
+                    sDisk = space( lof(f2) )
+                    if len(sDisk) then get #f2, , sDisk
+                    close #f2
+                end if
+                frmFindInProject_Check( "ctrl+s: the replacement reached the file on disk", _
+                    FipRT_Count( sDisk, "Wbeta" ) > 0, str(FipRT_Count( sDisk, "Wbeta" )) )
+                frmFindInProject_Check( "ctrl+s: the old token is gone from the file on disk", _
+                    FipRT_Count( ucase(sDisk), "QZALPHA" ) = 0, _
+                    str(FipRT_Count( ucase(sDisk), "QZALPHA" )) & " left" )
+
+                ' THE YELLOW BAR. It is the dirty-line stripe, and it is computed against the
+                ' text captured WHEN THE SEARCH RAN -- not against the save point. Asserted
+                ' rather than assumed, because "Save clears the stripe" is what was reported
+                ' as the expected behaviour and this is where the two definitions meet.
+                dim as long nStriped = 0
+                for b as long = 0 to gFip.nBlockCount - 1
+                    if gFip.blocks(b).nGroup <> FipRT_GroupOf( pT ) then continue for
+                    for ln as long = 0 to gFip.blocks(b).nLineCount - 1
+                        if FindProject_IsLineDirty( b, ln ) then nStriped += 1
+                    next
+                next
+                print "  STRIPE: " & str(nStriped) & " lines still striped after saving"
+                frmFindInProject_Check( "ctrl+s: saving clears the dirty stripe", _
+                    nStriped = 0, str(nStriped) & " lines still striped" )
+
+                ' (3) And the KEYSTROKE, not the command. Everything above went in as a
+                '     WM_COMMAND, which skips the whole question the report is about.
+                SetForegroundWindow( HWND_FRMMAIN )
+                SetFocus( hExcerpt )
+                FipRT_PumpWithAccel()
+                FipRT_DirtyBuffer( pT->hWindow(0) )
+                FipRT_PumpWithAccel()
+                frmFindInProject_Check( "ctrl+s key: the buffer is dirty before the keystroke", _
+                    SciExec( pT->hWindow(0), SCI_GETMODIFY, 0, 0 ) <> 0 )
+                frmFindInProject_Check( "ctrl+s key: the excerpt still has the focus", _
+                    GetFocus() = hExcerpt )
+                if FipRT_SendCtrlS() then
+                    frmFindInProject_Check( "ctrl+s key: Ctrl+S in an EXCERPT saved the file", _
+                        SciExec( pT->hWindow(0), SCI_GETMODIFY, 0, 0 ) = 0, _
+                        str(SciExec( pT->hWindow(0), SCI_GETMODIFY, 0, 0 )) )
+                end if
+
+                ' (4) THE SAME KEYSTROKE WITH THE FOCUS ONE WINDOW OUT. On this tab
+                '     IDM_FILESAVE resolves its document from the FOCUSED EXCERPT and from
+                '     nothing else, so anywhere else on the tab -- the surface, the scrollbar,
+                '     the find field -- Ctrl+S is a silent no-op while Ctrl+Shift+S still
+                '     saves everything. That asymmetry is the reported symptom, so it is
+                '     measured here rather than reasoned about.
+                FipRT_DirtyBuffer( pT->hWindow(0) )
+                FipRT_PumpWithAccel()
+                SetFocus( HWND_FRMFINDINPROJECT_SURFACE )
+                FipRT_PumpWithAccel()
+                if FipRT_SendCtrlS() then
+                    frmFindInProject_Check( "ctrl+s key: Ctrl+S saves from the SURFACE too", _
+                        SciExec( pT->hWindow(0), SCI_GETMODIFY, 0, 0 ) = 0, _
+                        str(SciExec( pT->hWindow(0), SCI_GETMODIFY, 0, 0 )) )
+                end if
+
+                ' ...and Save All, from the same focus, does save it.
+                SendMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(IDM_FILESAVEALL, 0), 0 )
+                FipRT_PumpWithAccel()
+                frmFindInProject_Check( "save all: Save All saves from anywhere on the tab", _
+                    SciExec( pT->hWindow(0), SCI_GETMODIFY, 0, 0 ) = 0, _
+                    str(SciExec( pT->hWindow(0), SCI_GETMODIFY, 0, 0 )) )
+            end if
+        end if
+    end if
+
+    ' ---- Ctrl+S in an ORDINARY editor window --------------------------------------------
+    ' The other half of the report. Done with the Find tab CLOSED, so the document's own tab
+    ' is current and this is the plain editor path with nothing special about it.
+    FindProject_Clear()
+    dim as long idxFip = gTTabCtl.FindTabIndex()
+    if idxFip <> -1 then gTTabCtl.CloseTab( idxFip )
+    FipRepro_Pump()
+
+    dim as long idxDoc = gTTabCtl.GetTabIndexByDocumentPtr( pT )
+    if idxDoc <> -1 then
+        gTTabCtl.SetFocusTab( idxDoc )
+        SetForegroundWindow( HWND_FRMMAIN )
+        SetFocus( pT->hWndActiveScintilla )
+        FipRT_PumpWithAccel()
+        FipRT_DirtyBuffer( pT->hWndActiveScintilla )
+        FipRT_PumpWithAccel()
+        frmFindInProject_Check( "ctrl+s key: the editor buffer is dirty before the keystroke", _
+            SciExec( pT->hWindow(0), SCI_GETMODIFY, 0, 0 ) <> 0 )
+        frmFindInProject_Check( "ctrl+s key: the editor window has the focus", _
+            GetFocus() = pT->hWndActiveScintilla, hex(cast(integer, GetFocus())) )
+        if FipRT_SendCtrlS() then
+            frmFindInProject_Check( "ctrl+s key: Ctrl+S in a plain EDITOR window saved the file", _
+                SciExec( pT->hWindow(0), SCI_GETMODIFY, 0, 0 ) = 0, _
+                str(SciExec( pT->hWindow(0), SCI_GETMODIFY, 0, 0 )) )
+        end if
+    end if
+
+    ' ---- clean up -----------------------------------------------------------------------
+    idxDoc = gTTabCtl.GetTabIndexByDocumentPtr( pT )
+    if idxDoc <> -1 then gTTabCtl.CloseTab( idxDoc )
+    FipRepro_Pump()
+    kill( str(wszFile) )
+
+    print "--- TIKO_FINDPROJ_REPLACETEST: " & str(gFipTestPass) & " passed, " & _
+          str(gFipTestFail) & " failed ---"
+end sub

@@ -47,6 +47,10 @@ declare function ReplaceControls_Show() as long
 declare function frmFindInProject_AllCollapsed() as boolean
 declare sub      frmFindInProject_SetAllCollapsed( byval bCollapsed as boolean )
 declare function frmFindInProject_IsActive() as boolean
+' Re-run the project search for whatever is in the find field, with the CURRENT Match Case
+' and Whole Word flags. Declared here for the same include-order reason: frmFind.inc owns
+' the two option icons and is compiled long before frmFindInProject.inc.
+declare sub      frmFindInProject_RerunSearch()
 ' X of the group-header twisty column, in surface client coords. The Find bar's fold icon
 ' lines up with it -- one function so the two cannot drift apart.
 declare function frmFindInProject_TwistyColumnX() as long
