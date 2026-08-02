@@ -527,11 +527,16 @@ function frmUnusedSymbols_Show( byval hWndParent as HWND ) as LRESULT
             cc.BoxColorHot             = theme.panel.texthot.forecolor
             cc.BoxColorPressed         = theme.panel.texthot.forecolor
             cc.BoxColorDisabled        = theme.role.clr(THROLE_FOREGROUNDDIM)
-            cc.BoxColorChecked         = theme.ui.accent
-            cc.BoxColorCheckedHot      = theme.ui.accent
-            cc.BoxColorCheckedPressed  = theme.ui.accent
+            ' ACCENTFORE, not ui.accent. The box glyph is INK, and ui.accent resolves to
+            ' toptabs.iconselected -- a colour picked to sit behind an icon, which reads
+            ' too dark as a stroke on this background. That is the rule CLAUDE.md states
+            ' (the accent is a fill, never a foreground) and this is what breaking it
+            ' looks like.
+            cc.BoxColorChecked         = theme.role.clr(THROLE_ACCENTFORE)
+            cc.BoxColorCheckedHot      = theme.role.clr(THROLE_ACCENTFORE)
+            cc.BoxColorCheckedPressed  = theme.role.clr(THROLE_ACCENTFORE)
             cc.BoxColorCheckedDisabled = theme.role.clr(THROLE_FOREGROUNDDIM)
-            cc.FocusRingColor          = theme.ui.accent
+            cc.FocusRingColor          = theme.role.clr(THROLE_ACCENTFORE)
             PsCheckBox_SetColors( h, @cc )
         end scope
     next

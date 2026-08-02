@@ -1100,6 +1100,37 @@ sub Theme_RunSelfTest()
         end if
     end scope
 
+    ' -- 22i. THE STROKE ACCENT OUT-CONTRASTS THE FILL ACCENT. ---------------------------
+    '    role.accent is a FILL -- it resolves to toptabs.iconselected, a colour chosen to
+    '    sit BEHIND an icon: dark navy in default_dark, a pale tint in default_light. Used
+    '    as ink it is too dark to read on one theme and invisible on the other. That is the
+    '    rule CLAUDE.md states, and it was broken once already (the Unused Symbols check
+    '    glyph, reported as "a little too dark" on sight).
+    '
+    '    So role.accentfore exists, and the property that makes it worth having is that it
+    '    reads against the page. Asserted as CONTRAST rather than raw brightness: on a light
+    '    theme the readable accent is DARKER than the fill, so "brighter" would be exactly
+    '    backwards and would pass on dark while failing on light.
+    scope
+        #macro LUMA( c )
+            ( (  30 * clng( (c) and &hFF ) _
+               + 59 * clng( ((c) shr 8) and &hFF ) _
+               + 11 * clng( ((c) shr 16) and &hFF ) ) \ 100 )
+        #endmacro
+        dim as long lumBg   = LUMA( theme.role.clr(THROLE_BACKGROUND) )
+        dim as long lumFill = LUMA( theme.role.clr(THROLE_ACCENT) )
+        dim as long lumInk  = LUMA( theme.role.clr(THROLE_ACCENTFORE) )
+        dim as long conFill = abs( lumFill - lumBg )
+        dim as long conInk  = abs( lumInk  - lumBg )
+        THASSERT( conInk > conFill, _
+                  "role.accentfore reads no better than the fill accent (ink=" & conInk & _
+                  " fill=" & conFill & ") -- it is ink, it has to be legible" )
+        ' And it is genuinely a separate colour, not the fill copied into a second key.
+        THASSERT( theme.role.clr(THROLE_ACCENTFORE) <> theme.role.clr(THROLE_ACCENT), _
+                  "role.accentfore is the same colour as role.accent" )
+        #undef LUMA
+    end scope
+
     ' -- 23. A THEME THAT DEFINES NOTHING IS STILL COMPLETE. -----------------------------
     '    This is the role layer's entire promise, in its only testable form: every colour
     '    key resolves, from the built-in defaults alone, with no file involved. It is what

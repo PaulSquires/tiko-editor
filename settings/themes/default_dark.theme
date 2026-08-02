@@ -27,6 +27,8 @@ role.foreground: %LIGHT_GRAY
 role.foregrounddim: %GRAY
 role.border: 64,67,73
 role.accent: 49,73,123
+# The accent as readable INK (glyphs, ticks, focus rings) rather than as a fill.
+role.accentfore: 148,202,240
 role.hot: 44,49,58
 role.selection: 38,79,120
 role.error: 255,0,0

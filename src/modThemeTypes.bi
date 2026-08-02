@@ -102,7 +102,16 @@ enum THEME_ROLE
     THROLE_FOREGROUND           ' primary text
     THROLE_FOREGROUNDDIM        ' secondary, disabled, line numbers
     THROLE_BORDER               ' hairlines and dividers
-    THROLE_ACCENT               ' active / selected / focused fill
+    THROLE_ACCENT               ' active / selected / focused FILL
+    ' The accent as a readable STROKE: a glyph, a tick, a focus ring, a hairline.
+    '
+    ' Separate from THROLE_ACCENT because CLAUDE.md states the rule outright -- the accent
+    ' is a fill, never a foreground -- and the reason is measurable: ui.accent resolves to
+    ' toptabs.iconselected, which is a dark navy in default_dark and a PALE TINT in
+    ' default_light. A colour chosen to sit behind an icon is too dark to read as ink on one
+    ' theme and invisible as ink on the other. Reached for exactly once already, for the
+    ' Unused Symbols check glyph, and it came out too dark on sight.
+    THROLE_ACCENTFORE
     THROLE_HOT                  ' hover fill
     THROLE_SELECTION            ' selection fill
 
