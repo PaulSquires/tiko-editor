@@ -320,8 +320,18 @@ function clsApp.SaveProject( byval bSaveAs as boolean = false, byref wszForcedNa
     ' path reaches here with an empty untitled workspace on EVERY launch, because it
     ' establishes one and then immediately replaces it with the named project it came for.
     ' A named project is always written: an emptied project is a real state to persist.
+    '
+    ' BUT AN EMPTY UNTITLED WORKSPACE MUST DELETE ITS BACKING FILE, not merely decline to
+    ' write one. File > Close All Files empties the workspace (see OnCommand_FileClose), and
+    ' returning here left the PREVIOUS session's default.tiko on disk untouched -- so the
+    ' next launch faithfully restored every file the user had just closed.
     if this.IsProjectNamed() = false then
-        if this.GetDocumentCount() = 0 then return true
+        if this.GetDocumentCount() = 0 then
+            if AfxFileExists( gConfig.UntitledProjectFilename ) then
+                AfxDeleteFile( gConfig.UntitledProjectFilename )
+            end if
+            return true
+        end if
     end if
 
     ' Check the result. Everything below acts on the assumption that the file now exists --

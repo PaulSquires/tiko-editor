@@ -223,7 +223,22 @@ function frmMain_OnCommand( _
         case IDM_FILEDUPLICATE:      OnCommand_FileDuplicate( hwnd, pDoc )
         case IDM_FILECLOSE:          OnCommand_FileClose( hwnd, EFC_CLOSECURRENT )
         case IDM_FILESAVEALL:        OnCommand_FileSaveAll( hwnd ) 
-        case IDM_FILECLOSEALL:       OnCommand_FileClose( hwnd, EFC_CLOSEALL )
+        case IDM_FILECLOSEALL
+            ' CLOSE ALL EMPTIES AN UNTITLED WORKSPACE, and that needs saying here rather than
+            ' being left to OnCommand_FileClose's per-document rule. That loop walks TABS, so
+            ' a workspace document with no tab -- which is every file restored from a project
+            ' with TabIndex=-1 -- is never visited and would survive "Close All Files",
+            ' reappearing in the Explorer on the next launch.
+            '
+            ' A NAMED project is untouched: closing tabs must never silently drop project
+            ' members. Removal there is "Remove from project".
+            if OnCommand_FileClose( hwnd, EFC_CLOSEALL ) then
+                if gApp.IsProjectNamed() = false then
+                    gApp.RemoveAllDocuments()
+                    LoadExplorerFiles()
+                    LoadFunctionsFiles()
+                end if
+            end if
         case IDM_FILECLOSEALLOTHERS: OnCommand_FileClose( hwnd, EFC_CLOSEALLOTHERS )
         case IDM_CLOSEALLFORWARD:    OnCommand_FileClose( hwnd, EFC_CLOSEALLFORWARD )
         case IDM_CLOSEALLBACKWARD:   OnCommand_FileClose( hwnd, EFC_CLOSEALLBACKWARD )
@@ -334,14 +349,22 @@ function frmMain_OnCommand( _
 
         
         ''  PROJECT MENU
+        ''
+        ''  THE FIVE PROJECT-ONLY COMMANDS ARE GUARDED HERE AS WELL AS GREYED IN THE MENU
+        ''  (frmMain_ProjectTopMenuStates). A greyed PsMenuBar row is drawn state, not a
+        ''  gate: an accelerator goes straight to WM_COMMAND and never passes the menu at
+        ''  all, so without this Ctrl+F11 would add files to a workspace whose "Add Files
+        ''  to Project..." row was sitting there disabled. Every one of the five is
+        ''  user-bindable in the Keyboard dialog -- four merely ship with no default -- so
+        ''  the guard is the set, not just the one that has a key today.
         case IDM_PROJECTNEW:            OnCommand_ProjectNew( hwnd )
-        case IDM_PROJECTSAVE:           OnCommand_ProjectSave( hwnd, False )
-        case IDM_PROJECTSAVEAS:         OnCommand_ProjectSave( hwnd, True )
         case IDM_PROJECTOPEN:           OnCommand_ProjectOpen( hwnd )
-        case IDM_PROJECTFILESADD:       OnCommand_ProjectFilesAdd( hwnd )
-        case IDM_PROJECTCLOSE:          OnCommand_ProjectClose( hwnd )
+        case IDM_PROJECTSAVE:           if gApp.IsProjectNamed() then OnCommand_ProjectSave( hwnd, False )
+        case IDM_PROJECTSAVEAS:         if gApp.IsProjectNamed() then OnCommand_ProjectSave( hwnd, True )
+        case IDM_PROJECTFILESADD:       if gApp.IsProjectNamed() then OnCommand_ProjectFilesAdd( hwnd )
+        case IDM_PROJECTCLOSE:          if gApp.IsProjectNamed() then OnCommand_ProjectClose( hwnd )
 
-        case IDM_PROJECTOPTIONS:        frmProjectOptions_Show( hwnd, false ) 
+        case IDM_PROJECTOPTIONS:        if gApp.IsProjectNamed() then frmProjectOptions_Show( hwnd, false )
         case IDM_MRUPROJECTCLEAR:       ClearMRUlist( id )
         case IDM_REMOVEFILEFROMPROJECT: OnCommand_ProjectRemove( id, pDoc )
                 

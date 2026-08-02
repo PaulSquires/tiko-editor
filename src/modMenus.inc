@@ -256,11 +256,17 @@ function frmMain_ProjectTopMenuStates() as long
     EnableTopMenuItem( IDM_PROJECTOPEN, true )
     EnableTopMenuItem( IDM_MRUPROJECT, true )
 
-    ' There is always a workspace, so every one of these is always meaningful: Close
-    ' starts a fresh untitled one, Save writes the current one, Save As promotes an
-    ' untitled workspace into a named project, Add Files and Options act on whichever
-    ' workspace is live.
-    dim as long fEnabled = true
+    ' THESE FIVE ARE PROJECT COMMANDS AND READ AS DEAD WITHOUT ONE. There is always a
+    ' workspace, so each is technically meaningful on an untitled one -- but a menu that
+    ' says "Close Project" and "Project Options..." while no project is open is offering
+    ' operations on something the user cannot see, and Close in particular did nothing
+    ' visible at all from an already-empty untitled workspace.
+    '
+    ' Gate on the NAME, which is what "a project is open" means under the one-workspace
+    ' model. Promoting an untitled workspace is still reachable, deliberately by the two
+    ' routes that say so in words: the Explorer's "Save as Project..." row, and
+    ' Project > New.
+    dim as long fEnabled = iif( gApp.IsProjectNamed(), true, false )
     EnableTopMenuItem( IDM_PROJECTCLOSE, fEnabled )
     EnableTopMenuItem( IDM_PROJECTSAVEAS, fEnabled )
     EnableTopMenuItem( IDM_PROJECTSAVE, fEnabled )
@@ -342,7 +348,11 @@ function frmMain_DebugTopMenuStates() as long
     EnableTopMenuItem( IDM_DEBUG_TOGGLEBREAKPOINT, fEnabled )
     EnableTopMenuItem( IDM_DEBUG_DELETEALLBREAKPOINTS, fEnabled )
 
-    EnableTopMenuItem( IDM_DEBUG_UNUSEDSYMBOLS, true )
+    ' The report is built from the workspace's symbols, so with nothing in the Explorer
+    ' there is nothing to report on and it would open empty. Gated on the DOCUMENT COUNT
+    ' alone, not the count-or-tabs disjunction above: a tab always has a document behind
+    ' it, and what this command reads is the workspace, not what happens to be open.
+    EnableTopMenuItem( IDM_DEBUG_UNUSEDSYMBOLS, iif( cbool( gApp.GetDocumentCount() ), true, false ) )
 
     function = 0
 end function

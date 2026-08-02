@@ -554,19 +554,38 @@ end function
 
 
 ' ========================================================================================
-' Start a new, empty workspace.
+' Start a new, NAMED project.
 '
-' No dialog, and no file on disk. A project used to have to be NAMED before it could
-' exist, so this opened Project Options and made the user pick a path before they had
-' anything to put in it. An untitled workspace needs neither -- add files, then
-' "Save as Project..." when it is worth keeping. That is the same path a user who never
-' asked for a project takes, which is the point of there being one model.
+' Close the current workspace, then ask for a name straight away. This is deliberately
+' NOT the old pre-rewrite dialog: nothing here collects compiler switches or build
+' settings, only a path, and the workspace it names is a perfectly ordinary one that the
+' user could equally have reached by adding files and choosing "Save as Project...".
+'
+' It used to stop after the close, leaving a fresh untitled workspace -- correct under
+' the one-workspace model, and indistinguishable from a dead menu item when the workspace
+' being replaced was ALREADY untitled and empty. "New Project..." now earns its ellipsis.
+'
+' CANCELLING THE NAME DIALOG LEAVES THE UNTITLED WORKSPACE STANDING, not the workspace
+' that was just closed -- the close has already happened by then and is not undone. That
+' is the same outcome the command had before, so nothing is lost that the user had not
+' already agreed to close.
 ' ========================================================================================
 function OnCommand_ProjectNew( byval hwnd As HWND ) As LRESULT
 
-    ' Identical to closing the current workspace: save it, close it, establish a fresh
-    ' untitled one. Cancelling a save prompt aborts the whole thing.
-    function = OnCommand_ProjectClose( hwnd )
+    ' Save the current workspace, close it, establish a fresh untitled one. Cancelling a
+    ' save prompt in there aborts the whole thing -- ProjectClose returns 0 and no name is
+    ' asked for.
+    if OnCommand_ProjectClose( hwnd ) = 0 then exit function
+
+    ' Promote the empty workspace to a named project. SaveProject owns the dialog, the
+    ' MRU entry, the retirement of the untitled backing file and the Explorer refresh;
+    ' a cancelled dialog returns false having changed nothing.
+    gApp.SaveProject( true )
+
+    frmMain_SetStatusbar
+    frmMain_SetFocusToCurrentCodeWindow
+
+    function = 0
 end function
 
 
