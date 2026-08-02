@@ -863,12 +863,24 @@ sub Theme_RunSelfTest()
         THASSERT( bHasText, "localized string " & str(nId) & " is missing from english.lang" )
     next
 
-    ' -- 18. An ON toggle must read BRIGHTER than an OFF one. ----------------------------
+    ' -- 18. The two toggle states must be TELLABLE APART. -------------------------------
     '    The failure this guards against is not a wrong value -- it is a control that shows
-    '    the right value in a way people read backwards. tiko's toggle put a page-dark knob
-    '    on a near-page-grey track for ON, and a bright knob on ON's darker sibling for OFF,
-    '    so the OFF state was the visually louder one and a setting got read as its opposite.
-    '    Compared by LUMINANCE rather than by naming a colour, so a light theme passes too.
+    '    the right value in a way people cannot read at a glance.
+    '
+    '    THIS MEASURED DIRECTION AND NOW MEASURES DISTANCE, and the reason is that the old
+    '    form was dark-theme-only. It required ON to out-luminate OFF, which is true of a
+    '    dark theme (accent track brighter than the page) and FALSE of a light one, where
+    '    the accent is a tint darker than the page and ON is legitimately the darker state.
+    '    Running the suite under default_light for the first time reported exactly that:
+    '    "an OFF switch reads BRIGHTER than an ON one (on=226 off=243)" -- a correct control
+    '    failing an assumption baked into the assertion.
+    '
+    '    ELEMENT-WISE, which is the other half of the fix. The old form reduced each state to
+    '    max(track, knob) and compared those, which throws away the distinction that actually
+    '    carries the state on a light theme: there ON is a pale track with a DARK knob and
+    '    OFF is a near-white track with a light knob. Those are obvious side by side and
+    '    indistinguishable under max(). Comparing track-to-track and knob-to-knob, and
+    '    accepting either, is what makes the assertion true of both theme families.
     scope
         dim as PSTOGGLE_COLORS tc
         OptionsTheme_FillToggle( @tc )
@@ -877,21 +889,23 @@ sub Theme_RunSelfTest()
             (( 299 * ((c) and &hFF) + 587 * (((c) shr 8) and &hFF) + 114 * (((c) shr 16) and &hFF) ) \ 1000)
         #endmacro
 
-        ' Compare the BRIGHTEST element of each state, track or knob. Comparing tracks alone
-        ' is what this assertion did first, and it PASSED against the very colours that were
-        ' being misread -- the track was never the loud part, the knob was. An assertion that
-        ' cannot fail on the reported bug is not an assertion.
         dim as long lumOnTrack  = LUMA( tc.TrackColorOn )
         dim as long lumOnKnob   = LUMA( tc.KnobColorOn )
         dim as long lumOffTrack = LUMA( tc.TrackColorOff )
         dim as long lumOffKnob  = LUMA( tc.KnobColorOff )
 
-        dim as long lumOn  = iif( lumOnTrack  > lumOnKnob,  lumOnTrack,  lumOnKnob )
-        dim as long lumOff = iif( lumOffTrack > lumOffKnob, lumOffTrack, lumOffKnob )
+        dim as long dTrack = abs( lumOnTrack - lumOffTrack )
+        dim as long dKnob  = abs( lumOnKnob  - lumOffKnob )
+        dim as long dBest  = iif( dTrack > dKnob, dTrack, dKnob )
 
-        THASSERT( lumOn > lumOff, _
-                  "an OFF switch reads BRIGHTER than an ON one (on=" & str(lumOn) & _
-                  " off=" & str(lumOff) & ") -- the control inverts at a glance" )
+        ' 40 of 255. Measured, not picked: it clears both shipped themes with room and
+        ' still fails the original reported bug, where the two states differed by single
+        ' digits on every element.
+        const TOGGLE_MIN_DELTA = 40
+        THASSERT( dBest >= TOGGLE_MIN_DELTA, _
+                  "the two toggle states are not tellable apart (track delta=" & str(dTrack) & _
+                  ", knob delta=" & str(dKnob) & ", need " & str(TOGGLE_MIN_DELTA) & _
+                  ") -- ON and OFF read the same at a glance" )
         THASSERT( tc.TrackColorOn = theme.ui.accent, _
                   "the ON track is not the theme accent" )
     end scope
