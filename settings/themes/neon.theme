@@ -1,0 +1,35 @@
+general.description: Neon
+general.version: 1.0.0
+general.appearance: dark
+
+# Neon -- palette after Monokai by Wimer Hazenberg
+# Re-implemented for tiko from published colour values; no files from the
+# original project are included or derived.
+#
+# A ROLES-ONLY THEME. Every widget key inherits from the palette below, so a
+# key added to tiko later is themed here for free instead of coming up in
+# some other palette's colours. To depart from the palette, name the key
+# itself -- an explicit value always beats its role.
+
+role.background: 39,40,34
+role.backgroundalt: 49,50,44
+role.backgroundraised: 49,50,44
+role.foreground: 248,248,242
+role.foregrounddim: 140,136,115
+role.border: 73,72,62
+role.accent: 73,72,62
+role.accentfore: 102,217,239
+role.hot: 62,61,50
+role.selection: 73,72,62
+role.error: 249,38,114
+role.warning: 230,219,116
+role.success: 166,226,46
+role.keyword: 249,38,114
+role.apikeyword: 102,217,239
+role.userkeyword: 166,226,46
+role.comment: 140,136,115
+role.string: 230,219,116
+role.number: 174,129,255
+role.operator: 249,38,114
+role.preprocessor: 174,129,255
+

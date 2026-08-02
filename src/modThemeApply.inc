@@ -1254,6 +1254,128 @@ sub Theme_RunSelfTest()
         Theme_FillGlobals()
     end scope
 
+    ' -- 24. EVERY SHIPPED THEME IS LEGIBLE. ---------------------------------------------
+    '    Twelve themes were about to be authored by someone who cannot see them. This is
+    '    what makes that responsible: it loads every .theme file on disk and puts each one
+    '    through the same battery, so "the comment colour vanished into the page" fails a
+    '    build instead of waiting to be noticed.
+    '
+    '    It asserts LEGIBILITY, not taste. Whether a palette is pleasant is the author's
+    '    call and no assertion's business; whether its text can be read on its own
+    '    background is arithmetic.
+    '
+    '    Destructive -- it parses other files over the live theme -- so it runs last, inside
+    '    its own snapshot, and puts the real theme back afterwards.
+    scope
+        #macro LUM( c )
+            (( 299 * ((c) and &hFF) + 587 * (((c) shr 8) and &hFF) + 114 * (((c) shr 16) and &hFF) ) \ 1000)
+        #endmacro
+
+        Theme_Snapshot()
+
+        dim as DWSTRING wszFolder = frmThemes_ThemesFolder()
+        dim as WIN32_FIND_DATAW WFD
+        dim as HANDLE hSearch = FindFirstFile( wszFolder & "*.theme", @WFD )
+        dim as long nThemes
+
+        if hSearch <> INVALID_HANDLE_VALUE then
+            do
+                dim as DWSTRING wszName = WFD.cFileName
+                if (wszName <> ".") andalso (wszName <> "..") then
+                    nThemes += 1
+                    dim as string sT = " [" & wszName & "]"
+
+                    erase gTheme
+                    dim as boolean bErr = Theme_ParseFile( wszFolder & wszName )
+                    THASSERT( bErr = false, "theme failed to parse" & sT )
+                    THASSERT( ubound(gThemeParseWarnings) < lbound(gThemeParseWarnings), _
+                              "theme produced parse warnings" & sT )
+                    Theme_ResolveFallbacks()
+                    Theme_FillRoot( @theme )
+
+                    ' Every colour key resolved -- the roles-only promise, per theme.
+                    dim as long nUnres
+                    for i as long = lbound(gThemeKeys) to ubound(gThemeKeys)
+                        if gThemeKeys(i).ofsText >= 0 then continue for
+                        dim as long n = Theme_FindEntry( gThemeKeys(i).keyValue )
+                        dim as boolean bF = (gThemeKeys(i).ofsFore >= 0)
+                        dim as boolean bB = (gThemeKeys(i).ofsBack >= 0)
+                        dim as boolean bOkF = true
+                        dim as boolean bOkB = true
+                        if n < 0 then
+                            bOkF = (bF = false) : bOkB = (bB = false)
+                        else
+                            if bF then bOkF = gTheme(n).hasFore
+                            if bB then bOkB = gTheme(n).hasBack
+                        end if
+                        if (bOkF = false) orelse (bOkB = false) then nUnres += 1
+                    next
+                    THASSERT( nUnres = 0, "unresolved colour keys: " & nUnres & sT )
+
+                    THASSERT( len(theme.general.description) > 0, "no description" & sT )
+
+                    ' CODE MUST BE READABLE ON ITS OWN PAGE. The single most important
+                    ' number in a theme, and the one a blind author gets wrong.
+                    dim as long lumBg = LUM( theme.editor.text.backcolor )
+                    dim as long dText = abs( LUM( theme.editor.text.forecolor ) - lumBg )
+                    THASSERT( dText >= 90, "body text contrast is only " & dText & sT )
+
+                    ' NO TOKEN CLASS DISAPPEARS INTO THE PAGE. A comment or a string the
+                    ' same luminance as the background is invisible, and it is exactly the
+                    ' mistake a hand-ported palette makes on one class out of eight.
+                    #macro TOKCHK( style, nm )
+                        scope
+                            dim as long d = abs( LUM( theme.editor.style.forecolor ) - lumBg )
+                            THASSERT( d >= 25, nm & " is invisible on the page (" & d & ")" & sT )
+                        end scope
+                    #endmacro
+                    TOKCHK( keyword1,     "keyword" )
+                    TOKCHK( keyword2,     "api keyword" )
+                    TOKCHK( keyword3,     "user keyword" )
+                    TOKCHK( comments,     "comment" )
+                    TOKCHK( strings,      "string" )
+                    TOKCHK( numbers,      "number" )
+                    TOKCHK( operators,    "operator" )
+                    TOKCHK( preprocessor, "preprocessor" )
+                    #undef TOKCHK
+
+                    ' Selected text stays readable against its own highlight.
+                    dim as long dSel = abs( LUM( theme.editor.selection.forecolor ) - _
+                                            LUM( theme.editor.selection.backcolor ) )
+                    THASSERT( dSel >= 40, "selected text contrast is only " & dSel & sT )
+
+                    ' The stroke accent is legible (22i, per theme).
+                    dim as long lumPg = LUM( theme.role.clr(THROLE_BACKGROUND) )
+                    THASSERT( abs( LUM(theme.role.clr(THROLE_ACCENTFORE)) - lumPg ) > _
+                              abs( LUM(theme.role.clr(THROLE_ACCENT)) - lumPg ), _
+                              "role.accentfore reads no better than role.accent" & sT )
+
+                    ' And the toggle states are tellable apart under THIS palette.
+                    scope
+                        dim as PSTOGGLE_COLORS tc
+                        OptionsTheme_FillToggle( @tc )
+                        dim as long dTr = abs( LUM(tc.TrackColorOn) - LUM(tc.TrackColorOff) )
+                        dim as long dKn = abs( LUM(tc.KnobColorOn)  - LUM(tc.KnobColorOff) )
+                        THASSERT( iif(dTr > dKn, dTr, dKn) >= 40, _
+                                  "toggle states not tellable apart (track " & dTr & _
+                                  ", knob " & dKn & ")" & sT )
+                    end scope
+                end if
+            loop while FindNextFile( hSearch, @WFD )
+            FindClose( hSearch )
+        end if
+
+        THASSERT( nThemes >= 2, "found only " & nThemes & " theme files" )
+        sLine = "    (battery ran over " & nThemes & " theme files)"
+        ? sLine
+
+        Theme_Restore()
+        Theme_DiscardSnapshot()
+        Theme_ResolveFallbacks()
+        Theme_FillGlobals()
+        #undef LUM
+    end scope
+
     sLine = "--- theme self-test: " & str(nPass) & " passed, " & str(nFail) & " failed ---"
     ? sLine
 

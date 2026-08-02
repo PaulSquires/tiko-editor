@@ -1,0 +1,35 @@
+general.description: Arctic
+general.version: 1.0.0
+general.appearance: dark
+
+# Arctic -- palette after Nord by Arctic Ice Studio (MIT)
+# Re-implemented for tiko from published colour values; no files from the
+# original project are included or derived.
+#
+# A ROLES-ONLY THEME. Every widget key inherits from the palette below, so a
+# key added to tiko later is themed here for free instead of coming up in
+# some other palette's colours. To depart from the palette, name the key
+# itself -- an explicit value always beats its role.
+
+role.background: 46,52,64
+role.backgroundalt: 59,66,82
+role.backgroundraised: 59,66,82
+role.foreground: 216,222,233
+role.foregrounddim: 128,139,158
+role.border: 67,76,94
+role.accent: 67,76,94
+role.accentfore: 136,192,208
+role.hot: 76,86,106
+role.selection: 67,76,94
+role.error: 191,97,106
+role.warning: 235,203,139
+role.success: 163,190,140
+role.keyword: 129,161,193
+role.apikeyword: 143,188,187
+role.userkeyword: 235,203,139
+role.comment: 128,139,158
+role.string: 163,190,140
+role.number: 180,142,173
+role.operator: 129,161,193
+role.preprocessor: 180,142,173
+

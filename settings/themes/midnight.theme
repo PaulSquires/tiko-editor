@@ -1,0 +1,35 @@
+general.description: Midnight
+general.version: 1.0.0
+general.appearance: dark
+
+# Midnight -- palette after Tokyo Night by enkia (MIT)
+# Re-implemented for tiko from published colour values; no files from the
+# original project are included or derived.
+#
+# A ROLES-ONLY THEME. Every widget key inherits from the palette below, so a
+# key added to tiko later is themed here for free instead of coming up in
+# some other palette's colours. To depart from the palette, name the key
+# itself -- an explicit value always beats its role.
+
+role.background: 26,27,38
+role.backgroundalt: 22,22,30
+role.backgroundraised: 22,22,30
+role.foreground: 169,177,214
+role.foregrounddim: 105,114,155
+role.border: 41,46,66
+role.accent: 41,46,66
+role.accentfore: 122,162,247
+role.hot: 51,57,79
+role.selection: 41,46,66
+role.error: 247,118,142
+role.warning: 224,175,104
+role.success: 158,206,106
+role.keyword: 187,154,247
+role.apikeyword: 125,207,255
+role.userkeyword: 224,175,104
+role.comment: 105,114,155
+role.string: 158,206,106
+role.number: 255,158,100
+role.operator: 137,221,255
+role.preprocessor: 187,154,247
+

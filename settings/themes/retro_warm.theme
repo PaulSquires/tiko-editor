@@ -1,0 +1,35 @@
+general.description: Retro Warm
+general.version: 1.0.0
+general.appearance: dark
+
+# Retro Warm -- palette after Gruvbox Dark by Pavel Pertsev (MIT)
+# Re-implemented for tiko from published colour values; no files from the
+# original project are included or derived.
+#
+# A ROLES-ONLY THEME. Every widget key inherits from the palette below, so a
+# key added to tiko later is themed here for free instead of coming up in
+# some other palette's colours. To depart from the palette, name the key
+# itself -- an explicit value always beats its role.
+
+role.background: 40,40,40
+role.backgroundalt: 60,56,54
+role.backgroundraised: 60,56,54
+role.foreground: 235,219,178
+role.foregrounddim: 168,153,132
+role.border: 80,73,69
+role.accent: 80,73,69
+role.accentfore: 250,189,47
+role.hot: 102,92,84
+role.selection: 80,73,69
+role.error: 251,73,52
+role.warning: 250,189,47
+role.success: 184,187,38
+role.keyword: 251,73,52
+role.apikeyword: 142,192,124
+role.userkeyword: 250,189,47
+role.comment: 146,131,116
+role.string: 184,187,38
+role.number: 211,134,155
+role.operator: 254,128,25
+role.preprocessor: 211,134,155
+

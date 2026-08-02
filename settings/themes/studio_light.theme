@@ -1,0 +1,35 @@
+general.description: Studio Light
+general.version: 1.0.0
+general.appearance: light
+
+# Studio Light -- palette after VS Code Light+ by Microsoft (MIT)
+# Re-implemented for tiko from published colour values; no files from the
+# original project are included or derived.
+#
+# A ROLES-ONLY THEME. Every widget key inherits from the palette below, so a
+# key added to tiko later is themed here for free instead of coming up in
+# some other palette's colours. To depart from the palette, name the key
+# itself -- an explicit value always beats its role.
+
+role.background: 255,255,255
+role.backgroundalt: 243,243,243
+role.backgroundraised: 255,255,255
+role.foreground: 0,0,0
+role.foregrounddim: 108,108,108
+role.border: 225,225,225
+role.accent: 201,222,245
+role.accentfore: 0,90,158
+role.hot: 232,232,232
+role.selection: 173,214,255
+role.error: 205,49,49
+role.warning: 191,145,0
+role.success: 0,128,0
+role.keyword: 0,0,255
+role.apikeyword: 38,127,153
+role.userkeyword: 121,94,38
+role.comment: 0,128,0
+role.string: 163,21,21
+role.number: 9,134,88
+role.operator: 0,0,0
+role.preprocessor: 175,0,219
+

@@ -1,0 +1,35 @@
+general.description: Sepia Light
+general.version: 1.0.0
+general.appearance: light
+
+# Sepia Light -- palette after Solarized Light by Ethan Schoonover (MIT)
+# Re-implemented for tiko from published colour values; no files from the
+# original project are included or derived.
+#
+# A ROLES-ONLY THEME. Every widget key inherits from the palette below, so a
+# key added to tiko later is themed here for free instead of coming up in
+# some other palette's colours. To depart from the palette, name the key
+# itself -- an explicit value always beats its role.
+
+role.background: 253,246,227
+role.backgroundalt: 238,232,213
+role.backgroundraised: 238,232,213
+role.foreground: 101,123,131
+role.foregrounddim: 147,161,161
+role.border: 238,232,213
+role.accent: 147,161,161
+role.accentfore: 38,139,210
+role.hot: 238,232,213
+role.selection: 219,214,196
+role.error: 220,50,47
+role.warning: 181,137,0
+role.success: 133,153,0
+role.keyword: 133,153,0
+role.apikeyword: 42,161,152
+role.userkeyword: 181,137,0
+role.comment: 147,161,161
+role.string: 42,161,152
+role.number: 211,54,130
+role.operator: 88,110,117
+role.preprocessor: 203,75,22
+

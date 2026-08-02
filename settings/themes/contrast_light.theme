@@ -1,0 +1,35 @@
+general.description: High Contrast Light
+general.version: 1.0.0
+general.appearance: light
+
+# High Contrast Light -- palette after a high-contrast palette for tiko
+# Re-implemented for tiko from published colour values; no files from the
+# original project are included or derived.
+#
+# A ROLES-ONLY THEME. Every widget key inherits from the palette below, so a
+# key added to tiko later is themed here for free instead of coming up in
+# some other palette's colours. To depart from the palette, name the key
+# itself -- an explicit value always beats its role.
+
+role.background: 255,255,255
+role.backgroundalt: 240,240,240
+role.backgroundraised: 255,255,255
+role.foreground: 0,0,0
+role.foregrounddim: 70,70,70
+role.border: 90,90,90
+role.accent: 190,215,245
+role.accentfore: 0,70,160
+role.hot: 225,225,225
+role.selection: 160,200,255
+role.error: 170,0,0
+role.warning: 120,80,0
+role.success: 0,100,0
+role.keyword: 0,0,190
+role.apikeyword: 0,90,110
+role.userkeyword: 110,60,0
+role.comment: 0,100,0
+role.string: 150,0,0
+role.number: 0,90,60
+role.operator: 0,0,0
+role.preprocessor: 130,0,150
+
