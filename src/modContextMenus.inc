@@ -196,8 +196,19 @@ private sub BuildConfigContextMenu_Rebuild()
 
     dim as DWSTRING wszCurrentBuild = frmBuildConfig_GetSelectedBuildDescription()
 
+    ' Opens the Build Configurations dialog. Handled explicitly in the select callback --
+    ' this id is NOT in the IDM_BUILDCONFIG_POPUP+i range the loop below uses.
+    PsPopupMenu_AddItem( ghPopupBuildConfig, IDM_BUILDCONFIG, _
+                        L(219,"Build Configurations") & "...", "", false, false )
+
+    dim as boolean fSeparatorAdded = false
+
     for i as long = lbound(gConfig.Builds) to ubound(gConfig.Builds)
         if gConfig.Builds(i).ExcludeInPopup then continue for
+        if fSeparatorAdded = false then
+            PsPopupMenu_AddSeparator( ghPopupBuildConfig )
+            fSeparatorAdded = true
+        end if
         dim as long idMenu = IDM_BUILDCONFIG_POPUP + i
         dim as DWSTRING wszCaption = gConfig.Builds(i).wszDescription
         gConfig.Builds(i).idMenu = idMenu
@@ -214,6 +225,11 @@ private sub BuildConfigContextMenu_Rebuild()
 end sub
 
 private sub BuildConfigContextMenu_OnSelect( byval hPopup as HWND, byval idMenu as long )
+    ' Posted, not called, so the dialog never opens inside the popup's own message handling.
+    if idMenu = IDM_BUILDCONFIG then
+        PostMessage( HWND_FRMMAIN, WM_COMMAND, MAKEWPARAM(IDM_BUILDCONFIG, 0), 0 )
+        exit sub
+    end if
     for i as long = lbound(gConfig.Builds) to ubound(gConfig.Builds)
         if gConfig.Builds(i).idMenu <> idMenu then continue for
         ' Set the active project or the active document to the selected build
@@ -527,10 +543,19 @@ sub ShowExplorerContextMenu( byval pDoc as clsDocument ptr )
         PsPopupMenu_AddItem( ghPopupExplorer, IDM_FILEDUPLICATE_EXPLORERLISTBOX, L(22,"Duplicate") )
         PsPopupMenu_AddSeparator( ghPopupExplorer )
     end if
-    PsPopupMenu_AddItem( ghPopupExplorer, IDM_REMOVEFILEFROMPROJECT_EXPLORERLISTBOX, _
-                        L(153,"Remove from project") )
+    ' "Remove from project" is offered only while the workspace is NAMED. An untitled
+    ' workspace has no project for a file to be removed FROM, and the wording reads as a
+    ' contradiction there -- so closing is what takes the file out of the Explorer instead
+    ' (see the removal rule in OnCommand_FileClose).
+    dim as boolean bIsNamed = gApp.IsProjectNamed()
+    if bIsNamed then
+        PsPopupMenu_AddItem( ghPopupExplorer, IDM_REMOVEFILEFROMPROJECT_EXPLORERLISTBOX, _
+                            L(153,"Remove from project") )
+    end if
 
-    AddProjectFileTypesToPopup( ghPopupExplorer, pDoc, true, true )
+    ' Only charge a separator when Remove was actually added -- the blocks above always
+    ' end with one, so charging it unconditionally gives two in a row on the untitled path.
+    AddProjectFileTypesToPopup( ghPopupExplorer, pDoc, bIsNamed, true )
 
     ContextMenu_ShowAtCursor( ghPopupExplorer )
 end sub
@@ -603,10 +628,13 @@ sub ShowTopTabCtlContextMenu( byval idx as long )
 
     dim pDoc as clsDocument ptr = gTTabCtl.GetDocumentPtr(idx)
     if pDoc then
-        ' Removing a file from the workspace is meaningful everywhere now -- a closed tab
-        ' no longer removes anything, so this is the only way a file leaves.
+        ' Removing a file from the workspace is only meaningful while the workspace is
+        ' NAMED. Untitled, there is no project to remove it from and closing the tab is
+        ' what drops it from the Explorer (see OnCommand_FileClose).
         PsPopupMenu_AddSeparator( ghPopupTopTabCtl )
-        PsPopupMenu_AddItem( ghPopupTopTabCtl, IDM_REMOVEFILEFROMPROJECT, L(153,"Remove from project") )
+        if gApp.IsProjectNamed() then
+            PsPopupMenu_AddItem( ghPopupTopTabCtl, IDM_REMOVEFILEFROMPROJECT, L(153,"Remove from project") )
+        end if
         AddProjectFileTypesToPopup( ghPopupTopTabCtl, pDoc, true, false )
     end if
 
