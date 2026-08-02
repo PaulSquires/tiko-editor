@@ -397,6 +397,35 @@ sub frmExplorer_RunSelfTest()
             PsListTree_GetLevel( HWND_FRMEXPLORER, nRowDeep ) > _
             PsListTree_GetLevel( HWND_FRMEXPLORER, nRowAlpha ) )
 
+        ' --- the tooltip backend is reachable ----------------------------------------------------
+        ' The per-icon tips are re-resolved by calling PsTooltip_SetToolIndex on the PsTooltip
+        ' window when the cursor crosses from one icon to the next. If that handle is zero the
+        ' call is silently skipped and the ONLY remaining re-resolve is the control's own, which
+        ' fires on a ROW change -- exactly the "leave the row and come back" symptom.
+        Exp_Check( "the Explorer is on the PsTooltip backend", _
+            PsListTree_GetTooltipMode( HWND_FRMEXPLORER ) = PSTIP_MODE_PS, _
+            "mode=" & str(PsListTree_GetTooltipMode( HWND_FRMEXPLORER )) )
+        Exp_Check( "the PsTooltip window exists to be re-indexed", _
+            PsListTree_GetPsTooltipHandle( HWND_FRMEXPLORER ) <> 0 )
+
+        ' The re-offer toggles the index through -1 and back, because SetToolIndex opens with
+        ' "if nToolIndex = idx then exit sub" and crossing between two icons never changes the
+        ' row. What CANNOT be allowed to change is where the index ends up: PsListTree resolves
+        ' its tip text by casting that index straight to a row, so a toggle that stopped at -1
+        ' would make every row tip resolve against row -1. Not a test of the early return --
+        ' that needs the tip's own 100 ms clock -- but it does pin the invariant a future
+        ' "simplify this to one call" edit would break.
+        dim as HWND hTipT = PsListTree_GetPsTooltipHandle( HWND_FRMEXPLORER )
+        if hTipT then
+            PsTooltip_SetToolIndex( hTipT, 7 )
+            PsTooltip_SetToolIndex( hTipT, -1 )
+            PsTooltip_SetToolIndex( hTipT, 7 )
+            Exp_Check( "re-offering a tool leaves the index on that tool", _
+                PsTooltip_GetToolIndex( hTipT ) = 7, _
+                "idx=" & str(PsTooltip_GetToolIndex( hTipT )) )
+            PsTooltip_SetToolIndex( hTipT, -1 )
+        end if
+
         ' --- the icons' tooltips ---------------------------------------------------------------
         ' The tip is resolved from the tracked zone, not from the row alone, because the
         ' callback is handed no x and this list defines no columns for col to distinguish.

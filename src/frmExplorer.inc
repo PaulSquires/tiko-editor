@@ -33,6 +33,12 @@ dim shared as long gExpTipRow = -1
 ' so the row has to be captured when the menu is raised rather than looked up afterwards.
 dim shared as long gExpMenuRow = -1
 
+' TIKO_EXPLORER_TIPTRACE=1 -- every icon-zone transition the mouse move detects. The tip's
+' own behaviour is driven by a 100 ms clock in another module, so "the tip did not change"
+' has two completely different causes -- the zone was never detected, or it was detected and
+' the re-resolve did not take -- and only a trace at this seam tells them apart.
+dim shared as boolean gExpTipTrace = false
+
 
 
 
@@ -661,10 +667,31 @@ function frmExplorer_MessageCallback( byval m as PSLISTTREE_MESSAGEINFO ptr ) as
             dim as EXPLORER_ICONHIT nIcon = _
                 frmExplorer_IconHitTest( hCtlMv, m->idx, GET_X_LPARAM( m->lParam ) )
             if (nIcon <> gExpTipIcon) orelse (m->idx <> gExpTipRow) then
+                dim as HWND hTip = PsListTree_GetPsTooltipHandle( hCtlMv )
+                if gExpTipTrace then
+                    dim as string sT = "TIPTRACE zone " & str(gExpTipIcon) & "->" & str(nIcon) & _
+                                       "  row " & str(gExpTipRow) & "->" & str(m->idx) & _
+                                       "  x=" & str(GET_X_LPARAM( m->lParam )) & _
+                                       "  hTip=" & str(cast(integer, hTip))
+                    print sT
+                end if
                 gExpTipIcon = nIcon
                 gExpTipRow  = m->idx
-                dim as HWND hTip = PsListTree_GetPsTooltipHandle( hCtlMv )
-                if hTip then PsTooltip_SetToolIndex( hTip, m->idx )
+                ' THE INDEX IS TOGGLED THROUGH -1, and that is not a flourish.
+                ' PsTooltip_SetToolIndex opens with "if nToolIndex = idx then exit sub", so
+                ' handing it the row it already holds does NOTHING -- and crossing from one
+                ' icon to the next never changes the row. That is precisely why the tip
+                ' refused to change within a row while leaving the row and coming back worked:
+                ' the latter is PsListTree calling this with a genuinely different index.
+                ' Setting -1 first makes both calls real, and the pair leaves the index where
+                ' it started, which matters because PsListTree resolves its tip text by
+                ' casting that index straight to a row.
+                ' Nothing observes the intermediate value: the tip's clock runs on this same
+                ' thread, so no tick can land between the two calls.
+                if hTip then
+                    PsTooltip_SetToolIndex( hTip, -1 )
+                    PsTooltip_SetToolIndex( hTip, m->idx )
+                end if
             end if
             ' FALSE: the control's own hot tracking and repaint still have to happen. This
             ' arm only observes.
@@ -866,6 +893,7 @@ function frmExplorer_Show( byval hWndParent as HWND ) as LRESULT
 '                                 ghEditor.ForeColorScrollBar, ghEditor.ForeColorScrollBarHot )
 
     HWND_FRMEXPLORER = hCtrl
+    if environ("TIKO_EXPLORER_TIPTRACE") = "1" then gExpTipTrace = true
 
     function = 0
     
