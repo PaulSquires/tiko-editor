@@ -298,13 +298,39 @@ end sub
 
 
 ' ========================================================================================
-' The bind row behind the currently selected list row, or -1.
+' THE SELECTED ROW MEANS TWO DIFFERENT THINGS AND THE COMPILER CANNOT TELL THEM APART.
+'
+' One list serves three pages. On Syntax and Interface a row maps to a KEY-TABLE index; on
+' Palette it maps to a ROLE index. gThemeRowBind carries whichever is current, and both are
+' plain longs, so handing one to code expecting the other is silent and wrong -- it reads an
+' unrelated key and shows or edits its colour.
+'
+' That shipped three times: the R/G/B fields showed 0,0,0 for some roles, typing into them
+' would have edited an unrelated key, and the page painter drew the wrong swatch. Each was
+' found by the author looking at the screen, and none was visible to 900+ assertions.
+'
+' So the raw accessor is PRIVATE and the two public ones REFUSE the page they do not belong
+' to. A consumer that forgets to branch now gets -1 -- which renders nothing and edits
+' nothing -- instead of quietly operating on the wrong object.
 ' ========================================================================================
-private function frmThemes_SelectedBind() as long
+private function frmThemes_SelectedRow() as long
     if ghThemeKeys = 0 then return -1
     dim as long row = PsListTree_GetCurSel( ghThemeKeys )
     if (row < lbound(gThemeRowBind)) orelse (row > ubound(gThemeRowBind)) then return -1
     return gThemeRowBind(row)
+end function
+
+' The KEY-TABLE index behind the selected row, or -1 -- including on the Palette page, where
+' there is no key.
+private function frmThemes_SelectedBind() as long
+    if gThemeCurPage = THEMEPAGE_PALETTE then return -1
+    return frmThemes_SelectedRow()
+end function
+
+' The ROLE index behind the selected row, or -1 on any page but Palette.
+private function frmThemes_SelectedRole() as long
+    if gThemeCurPage <> THEMEPAGE_PALETTE then return -1
+    return frmThemes_SelectedRow()
 end function
 
 
@@ -323,8 +349,9 @@ private sub frmThemes_SyncEditControls()
     ' swatch, because the key that happens to sit at the accent role's index has no value on
     ' the channel it was asked for.
     if gThemeCurPage = THEMEPAGE_PALETTE then
-        dim as boolean bOK = (nb >= 0)
-        dim as COLORREF clrRole = iif( bOK, Theme_RoleColor( nb ), 0 )
+        dim as long nr = frmThemes_SelectedRole()
+        dim as boolean bOK = (nr >= 0)
+        dim as COLORREF clrRole = iif( bOK, Theme_RoleColor( nr ), 0 )
         if ghThemeR then PsTextBox_SetText( ghThemeR, str(GetRValue(clrRole)) )
         if ghThemeG then PsTextBox_SetText( ghThemeG, str(GetGValue(clrRole)) )
         if ghThemeB then PsTextBox_SetText( ghThemeB, str(GetBValue(clrRole)) )
@@ -709,7 +736,7 @@ function frmThemes_SwatchClick( byval x as long, byval y as long ) as boolean
     ' than through the key path because Theme_SetRole has to re-resolve every key that
     ' inherits the role -- Theme_SetColor would set the role's own entry and reach nothing.
     if gThemeCurPage = THEMEPAGE_PALETTE then
-        dim as long nr = frmThemes_SelectedBind()
+        dim as long nr = frmThemes_SelectedRole()
         if nr < 0 then return false
         if PtInRect( @gThemeSwatchRc(0), pt ) = 0 then return false
         frmThemes_OpenRolePopup( nr, ghThemeFore )
@@ -737,7 +764,7 @@ private sub frmThemes_ForeClick( byval hButton as HWND, byval id as long )
     ' On the palette page this button edits the selected ROLE -- there is only one channel,
     ' so Background is hidden and this is simply "the colour".
     if gThemeCurPage = THEMEPAGE_PALETTE then
-        frmThemes_OpenRolePopup( frmThemes_SelectedBind(), hButton )
+        frmThemes_OpenRolePopup( frmThemes_SelectedRole(), hButton )
         exit sub
     end if
     frmThemes_OpenColorPopup( THEMECH_FORE, hButton )
@@ -972,11 +999,13 @@ private sub frmThemes_RGBChanged( byval hTextBox as HWND )
     ' PALETTE PAGE: edit the ROLE. Theme_SetRole re-resolves every key inheriting it, which
     ' Theme_SetColor on the role's own entry would not do.
     if gThemeCurPage = THEMEPAGE_PALETTE then
+        dim as long nr = frmThemes_SelectedRole()
+        if nr < 0 then exit sub
         dim as long rr = frmThemes_ClampByte( val( PsTextBox_GetText( ghThemeR ) ) )
         dim as long rg = frmThemes_ClampByte( val( PsTextBox_GetText( ghThemeG ) ) )
         dim as long rb = frmThemes_ClampByte( val( PsTextBox_GetText( ghThemeB ) ) )
         if frmThemes_EnsureForked() = false then exit sub
-        dim as ulong nMaskR = Theme_SetRole( nb, RGB( rr, rg, rb ) )
+        dim as ulong nMaskR = Theme_SetRole( nr, RGB( rr, rg, rb ) )
         gThemeEdited = true
         Theme_FillGlobals()
         Theme_RequestApply( nMaskR )
@@ -1076,8 +1105,11 @@ private sub frmThemes_ListPaint( byval p as PSLISTTREE_PAINTINFO ptr )
         dim as RECT rcIn = ( rcSw.left + 1, rcSw.top + 1, rcSw.right - 1, rcSw.bottom - 1 )
         p->b->SetBackColor( Theme_RoleColor(nb) )
         p->b->PaintRect( @rcIn )
-        gThemeSwatchRc(0) = rcSw
-        gThemeSwatchRc(1) = type<RECT>( 0, 0, 0, 0 )
+        ' DELIBERATELY DOES NOT TOUCH gThemeSwatchRc. That pair is PAGE-LAYOUT state: set by
+        ' frmThemes_Layout in page coordinates and consumed by the page painter and the page
+        ' hit test. Writing a LIST-ROW rect into it made the page draw its swatch wherever
+        ' the last row happened to be painted -- which is why the artifact appeared below the
+        ' list and moved while scrolling, since scrolling repaints rows.
         exit sub
     end if
 
@@ -1503,8 +1535,23 @@ sub frmThemes_Paint( byval nPage as long, byval p as SCP_PAINTINFO ptr )
         p->b->PaintText( gThemeLabels(i).caption, @rc, DT_LEFT or DT_END_ELLIPSIS )
     next
 
-    ' The Foreground / Background current-colour swatches beside their buttons.
+    ' The current-colour swatch(es) beside the buttons.
     dim as long nb = frmThemes_SelectedBind()
+
+    ' PALETTE PAGE: one swatch, and nb is a ROLE index -- gThemeKeys(nb) would be an
+    ' unrelated key. Third place this index-space split has had to be spelled out; the
+    ' selection is shared by both pages and every consumer has to say which it means.
+    if gThemeCurPage = THEMEPAGE_PALETTE then
+        dim as long nr = frmThemes_SelectedRole()
+        if (nr >= 0) andalso (IsRectEmpty( @gThemeSwatchRc(0) ) = 0) then
+            p->b->SetBackColor( Theme_RoleColor( nr ) )
+            p->b->PaintRect( @gThemeSwatchRc(0) )
+            p->b->SetPenColor( theme.ui.divider )
+            p->b->PaintRoundOutline( @gThemeSwatchRc(0), 0, 1 )
+        end if
+        exit sub
+    end if
+
     if nb >= 0 then
         dim as long n = Theme_FindEntry( gThemeKeys(nb).keyValue )
         if n >= 0 then
