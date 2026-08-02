@@ -317,6 +317,31 @@ private sub frmThemes_SyncEditControls()
 
     dim as long nb = frmThemes_SelectedBind()
 
+    ' PALETTE PAGE: the selection is a ROLE index, not a key-table index, so everything below
+    ' would read gThemeKeys(nb) -- a different key entirely -- and mirror ITS colour into the
+    ' R/G/B fields. That is what shipped: selecting "accent" showed 0,0,0 beside a blue
+    ' swatch, because the key that happens to sit at the accent role's index has no value on
+    ' the channel it was asked for.
+    if gThemeCurPage = THEMEPAGE_PALETTE then
+        dim as boolean bOK = (nb >= 0)
+        dim as COLORREF clrRole = iif( bOK, Theme_RoleColor( nb ), 0 )
+        if ghThemeR then PsTextBox_SetText( ghThemeR, str(GetRValue(clrRole)) )
+        if ghThemeG then PsTextBox_SetText( ghThemeG, str(GetGValue(clrRole)) )
+        if ghThemeB then PsTextBox_SetText( ghThemeB, str(GetBValue(clrRole)) )
+        if ghThemeR then EnableWindow( ghThemeR, bOK )
+        if ghThemeG then EnableWindow( ghThemeG, bOK )
+        if ghThemeB then EnableWindow( ghThemeB, bOK )
+        if ghThemeFore then
+            EnableWindow( ghThemeFore, bOK )
+            ' One channel, so the button is simply "the colour" rather than Foreground.
+            PsButton_SetText( ghThemeFore, L(300, "Foreground") & "..." )
+            PsButton_SetDefault( ghThemeFore, true )
+        end if
+        AfxRedrawWindow( ghThemeKeys )
+        if HWND_FRMTHEMES_PAGE then AfxRedrawWindow( HWND_FRMTHEMES_PAGE )
+        exit sub
+    end if
+
     dim as boolean bHasFore, bHasBack, bHasFlags, bHasAlpha
     dim as long nAlpha = 255
 
@@ -943,6 +968,24 @@ end function
 private sub frmThemes_RGBChanged( byval hTextBox as HWND )
     dim as long nb = frmThemes_SelectedBind()
     if nb < 0 then exit sub
+
+    ' PALETTE PAGE: edit the ROLE. Theme_SetRole re-resolves every key inheriting it, which
+    ' Theme_SetColor on the role's own entry would not do.
+    if gThemeCurPage = THEMEPAGE_PALETTE then
+        dim as long rr = frmThemes_ClampByte( val( PsTextBox_GetText( ghThemeR ) ) )
+        dim as long rg = frmThemes_ClampByte( val( PsTextBox_GetText( ghThemeG ) ) )
+        dim as long rb = frmThemes_ClampByte( val( PsTextBox_GetText( ghThemeB ) ) )
+        if frmThemes_EnsureForked() = false then exit sub
+        dim as ulong nMaskR = Theme_SetRole( nb, RGB( rr, rg, rb ) )
+        gThemeEdited = true
+        Theme_FillGlobals()
+        Theme_RequestApply( nMaskR )
+        ' The row swatch and any "default" marker just moved -- but NOT the fields, which the
+        ' user is typing into.
+        AfxRedrawWindow( ghThemeKeys )
+        if HWND_FRMTHEMES_PAGE then AfxRedrawWindow( HWND_FRMTHEMES_PAGE )
+        exit sub
+    end if
 
     dim as boolean bHasChan = iif( gThemeChannel = THEMECH_FORE, _
                                    (gThemeKeys(nb).ofsFore >= 0), (gThemeKeys(nb).ofsBack >= 0) )

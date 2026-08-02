@@ -1132,6 +1132,28 @@ sub Theme_RunSelfTest()
         #undef LUMA
     end scope
 
+    ' -- 22m. THE ROLE ACCESSORS ARE CORRECT AT EVERY INDEX. -----------------------------
+    '    Theme_RoleColor(i) is what the Palette page paints in a row and mirrors into the
+    '    R/G/B fields, so an off-by-one or a wrong lookup there is a page that shows one
+    '    colour and edits another. Checked across the WHOLE table, not at index 0: the bug
+    '    this guards against showed the right thing for some rows and 0,0,0 for others.
+    '
+    '    Also asserts the two index spaces are distinct sizes, which is the mistake itself --
+    '    the page briefly fed a ROLE index to gThemeKeys() and read a different key entirely.
+    scope
+        dim as long nBad
+        for i as long = 0 to Theme_RoleCount() - 1
+            if Theme_RoleColor(i) <> theme.role.clr( gThemeRoleDef(i).nRole ) then nBad += 1
+            if len( Theme_RoleName(i) ) = 0 then nBad += 1
+        next
+        THASSERT( nBad = 0, "role accessors disagree with the palette at " & nBad & " index(es)" )
+        THASSERT( Theme_RoleCount() = THROLE_COUNT - 1, _
+                  "the role table does not cover the enum (" & Theme_RoleCount() & _
+                  " rows for " & (THROLE_COUNT - 1) & " roles)" )
+        THASSERT( Theme_RoleCount() <> Theme_KeyCount(), _
+                  "role and key index spaces are the same size -- a mix-up would not show" )
+    end scope
+
     ' -- 22l. PAGE ID == SELECT-BAR PANEL INDEX. -----------------------------------------
     '    frmThemes_BarSelChange receives the panel INDEX from PsSelectBar and hands it to
     '    frmThemes_SelectPage as a page ID; PsSelectBar_SetCurSel takes an index too. So the
