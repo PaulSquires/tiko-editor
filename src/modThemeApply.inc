@@ -1085,6 +1085,69 @@ sub Theme_RunSelfTest()
         end scope
     end scope
 
+    ' -- 23. A THEME THAT DEFINES NOTHING IS STILL COMPLETE. -----------------------------
+    '    This is the role layer's entire promise, in its only testable form: every colour
+    '    key resolves, from the built-in defaults alone, with no file involved. It is what
+    '    makes a roles-only theme legal and what removes the app's dependence on
+    '    default_dark.theme existing on disk.
+    '
+    '    Destructive, so it runs inside a snapshot/restore pair and LAST -- everything above
+    '    reads the real loaded theme.
+    scope
+        Theme_Snapshot()
+
+        erase gTheme                        ' the emptiest possible theme
+        Theme_ResolveFallbacks()            ' roles -> ui.* table -> key roles
+
+        dim as long nMissing, nFilled
+        dim as string sFirstMissing
+        for i as long = lbound(gThemeKeys) to ubound(gThemeKeys)
+            if gThemeKeys(i).ofsText >= 0 then continue for      ' text payloads, not colours
+            dim as long n = Theme_FindEntry( gThemeKeys(i).keyValue )
+            dim as boolean bWantF = (gThemeKeys(i).ofsFore >= 0)
+            dim as boolean bWantB = (gThemeKeys(i).ofsBack >= 0)
+            dim as boolean bGotF  = false
+            dim as boolean bGotB  = false
+            if n >= 0 then
+                bGotF = gTheme(n).hasFore
+                bGotB = gTheme(n).hasBack
+            end if
+            if (bWantF andalso (bGotF = false)) orelse (bWantB andalso (bGotB = false)) then
+                nMissing += 1
+                if len(sFirstMissing) = 0 then sFirstMissing = gThemeKeys(i).keyValue
+            else
+                nFilled += 1
+            end if
+        next
+        THASSERT( nMissing = 0, _
+                  "an empty theme left " & nMissing & " key(s) unresolved, first: " & sFirstMissing )
+        THASSERT( nFilled > 50, "only " & nFilled & " keys resolved from defaults" )
+
+        ' The palette itself came from the built-in defaults, not from zero. A role resolving
+        ' to black would satisfy the completeness count above while rendering nothing.
+        THASSERT( theme.role.clr(THROLE_BACKGROUND) <> 0, "role.background defaulted to black" )
+        THASSERT( theme.role.clr(THROLE_FOREGROUND) <> theme.role.clr(THROLE_BACKGROUND), _
+                  "foreground and background defaulted to the same colour" )
+        THASSERT( theme.role.clr(THROLE_KEYWORD) <> theme.role.clr(THROLE_COMMENT), _
+                  "keyword and comment defaulted to the same colour" )
+
+        ' A role NAMED IN THE FILE must beat the built-in default -- the other half of the
+        ' rule, and the half a defaults-only test cannot see.
+        scope
+            dim as long n = Theme_EnsureEntry( "role.accent" )
+            gTheme(n).foreground = BGR( 1, 2, 3 )
+            gTheme(n).hasFore    = true
+            Theme_ResolveRoles()
+            THASSERT( theme.role.clr(THROLE_ACCENT) = BGR(1,2,3), _
+                      "a role named in the file did not beat the built-in default" )
+        end scope
+
+        Theme_Restore()
+        Theme_DiscardSnapshot()
+        Theme_ResolveFallbacks()
+        Theme_FillGlobals()
+    end scope
+
     sLine = "--- theme self-test: " & str(nPass) & " passed, " & str(nFail) & " failed ---"
     ? sLine
 

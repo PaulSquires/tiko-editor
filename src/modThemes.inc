@@ -256,7 +256,98 @@ dim shared as THEMEFALLBACK_TYPE gThemeFallback(0 to 5) = { _
 ''  edit -- an explicitly-supplied value is never overwritten, which is exactly what the
 ''  has* presence flags are for (a value of 0,0,0 is legitimate black, not "absent").
 ''
+''
+''  THE ROLE PALETTE: NAME, ENUM AND BUILT-IN DEFAULT
+''
+''  Filled at RUNTIME, never as a static initialiser. CLAUDE.md records gas64 silently
+''  corrupting static wstring array initialisers, and a table of role names is exactly the
+''  shape that bug takes.
+''
+''  The defaults are the dark palette, chosen so a theme file that defines NOTHING still
+''  renders a coherent editor rather than a black rectangle. That is what makes a roles-only
+''  theme legal, and it is also what finally removes the app's dependency on
+''  default_dark.theme existing on disk.
+''
+type THEMEROLEDEF_TYPE
+    name    as zstring * 32      ' the on-disk key, e.g. "role.background"
+    nRole   as long
+    clrDflt as COLORREF
+end type
+dim shared gThemeRoleDef(any) as THEMEROLEDEF_TYPE
+
+private sub ThemeRole_Add( byval k as zstring ptr, byval r as long, byval c as COLORREF )
+    dim as long n = ubound(gThemeRoleDef) + 1
+    redim preserve gThemeRoleDef(n) as THEMEROLEDEF_TYPE
+    gThemeRoleDef(n).name    = *k
+    gThemeRoleDef(n).nRole   = r
+    gThemeRoleDef(n).clrDflt = c
+end sub
+
+sub Theme_BuildRoleTable()
+
+    static as boolean bBuilt
+    if bBuilt then exit sub
+    bBuilt = true
+    erase gThemeRoleDef
+
+    '                name                      role                     default (r,g,b)
+    ThemeRole_Add( "role.background",       THROLE_BACKGROUND,       BGR( 40, 44, 52) )
+    ThemeRole_Add( "role.backgroundalt",    THROLE_BACKGROUNDALT,    BGR( 33, 37, 43) )
+    ThemeRole_Add( "role.backgroundraised", THROLE_BACKGROUNDRAISED, BGR( 33, 37, 43) )
+    ThemeRole_Add( "role.foreground",       THROLE_FOREGROUND,       BGR(215,218,224) )
+    ThemeRole_Add( "role.foregrounddim",    THROLE_FOREGROUNDDIM,    BGR(157,165,180) )
+    ThemeRole_Add( "role.border",           THROLE_BORDER,           BGR( 62, 68, 81) )
+    ThemeRole_Add( "role.accent",           THROLE_ACCENT,           BGR( 97,175,239) )
+    ThemeRole_Add( "role.hot",              THROLE_HOT,              BGR( 62, 68, 81) )
+    ThemeRole_Add( "role.selection",        THROLE_SELECTION,        BGR( 62, 68, 81) )
+    ThemeRole_Add( "role.error",            THROLE_ERROR,            BGR(224,108,117) )
+    ThemeRole_Add( "role.warning",          THROLE_WARNING,          BGR(229,192,123) )
+    ThemeRole_Add( "role.success",          THROLE_SUCCESS,          BGR(152,195,121) )
+    ThemeRole_Add( "role.keyword",          THROLE_KEYWORD,          BGR(198,120,221) )
+    ThemeRole_Add( "role.apikeyword",       THROLE_APIKEYWORD,       BGR( 86,182,194) )
+    ThemeRole_Add( "role.userkeyword",      THROLE_USERKEYWORD,      BGR(229,192,123) )
+    ThemeRole_Add( "role.comment",          THROLE_COMMENT,          BGR( 92, 99,112) )
+    ThemeRole_Add( "role.string",           THROLE_STRING,           BGR(152,195,121) )
+    ThemeRole_Add( "role.number",           THROLE_NUMBER,           BGR(209,154,102) )
+    ThemeRole_Add( "role.operator",         THROLE_OPERATOR,         BGR(171,178,191) )
+    ThemeRole_Add( "role.preprocessor",     THROLE_PREPROCESSOR,     BGR(198,120,221) )
+
+end sub
+
+
+''
+''  RESOLVE THE PALETTE
+''
+''  A role named in the file wins; otherwise the built-in default. Writes straight into the
+''  root's role array, which is what every widget fallback below then reads.
+''
+sub Theme_ResolveRoles()
+
+    Theme_BuildRoleTable()
+
+    for i as long = lbound(gThemeRoleDef) to ubound(gThemeRoleDef)
+        dim as long r = gThemeRoleDef(i).nRole
+        dim as long n = Theme_FindEntry( gThemeRoleDef(i).name )
+        ' A role carries ONE colour and the file states it as a foreground.
+        if (n >= 0) andalso gTheme(n).hasFore then
+            theme.role.clr(r) = gTheme(n).foreground
+        else
+            theme.role.clr(r) = gThemeRoleDef(i).clrDflt
+        end if
+    next
+
+end sub
+
+
+' Theme_ResolveKeyRoles is defined further down, after the key table it walks.
+declare sub Theme_ResolveKeyRoles()
+
+
+
 sub Theme_ResolveFallbacks()
+
+    ' The palette first: everything below can inherit from it.
+    Theme_ResolveRoles()
 
     for i as long = lbound(gThemeFallback) to ubound(gThemeFallback)
 
@@ -284,6 +375,9 @@ sub Theme_ResolveFallbacks()
         end if
 
     next
+
+    ' ...and finally the general net: anything still absent takes its declared role.
+    Theme_ResolveKeyRoles()
 
 end sub
 
@@ -536,6 +630,9 @@ type THEMEKEY_TYPE
     ofsUnder     as long
     ofsForeAlpha as long
     ofsBackAlpha as long
+    ' The role each channel falls back to when the file does not name this key.
+    nRoleFore    as long
+    nRoleBack    as long
     nCat         as long          ' the theme editor's group header
     nSubsys      as ulong
     ' Can an alpha on this key actually reach a pixel? Having an alpha destination IS the
@@ -563,7 +660,7 @@ private sub Theme_BuildKeyTable()
 
     ' Every row runs this first: grow the array and fill the fields common to all shapes,
     ' defaulting every channel to "absent". Each row macro then claims only its own channels.
-    #macro THKEY_BEGIN( k, cat, sub_ )
+    #macro THKEY_BEGIN( k, cat, sub_, rF, rB )
         scope
             dim as long n = ubound(gThemeKeys) + 1
             redim preserve gThemeKeys(n) as THEMEKEY_TYPE
@@ -577,6 +674,8 @@ private sub Theme_BuildKeyTable()
                 .ofsUnder     = -1
                 .ofsForeAlpha = -1
                 .ofsBackAlpha = -1
+                .nRoleFore    = rF
+                .nRoleBack    = rB
                 .nCat         = cat
                 ' Zero means "derive from the namespace", exactly as the legacy table does.
                 '
@@ -596,14 +695,14 @@ private sub Theme_BuildKeyTable()
         end scope
     #endmacro
 
-    #macro THTEXTKEY( k, path, cat, sub_ )
-        THKEY_BEGIN( k, cat, sub_ )
+    #macro THTEXTKEY( k, path, cat, sub_, rF, rB )
+        THKEY_BEGIN( k, cat, sub_, rF, rB )
             .ofsText = offsetof( THEMEROOT_TYPE, path )
         THKEY_END()
     #endmacro
 
-    #macro THSTYLEKEY( k, path, cat, sub_ )
-        THKEY_BEGIN( k, cat, sub_ )
+    #macro THSTYLEKEY( k, path, cat, sub_, rF, rB )
+        THKEY_BEGIN( k, cat, sub_, rF, rB )
             .ofsFore   = offsetof( THEMEROOT_TYPE, path.forecolor )
             .ofsBack   = offsetof( THEMEROOT_TYPE, path.backcolor )
             .ofsBold   = offsetof( THEMEROOT_TYPE, path.bold )
@@ -612,36 +711,36 @@ private sub Theme_BuildKeyTable()
         THKEY_END()
     #endmacro
 
-    #macro THPAIRKEY( k, path, cat, sub_ )
-        THKEY_BEGIN( k, cat, sub_ )
+    #macro THPAIRKEY( k, path, cat, sub_, rF, rB )
+        THKEY_BEGIN( k, cat, sub_, rF, rB )
             .ofsFore = offsetof( THEMEROOT_TYPE, path.forecolor )
             .ofsBack = offsetof( THEMEROOT_TYPE, path.backcolor )
         THKEY_END()
     #endmacro
 
-    #macro THPAIRAKEY( k, path, apath, cat, sub_ )
-        THKEY_BEGIN( k, cat, sub_ )
+    #macro THPAIRAKEY( k, path, apath, cat, sub_, rF, rB )
+        THKEY_BEGIN( k, cat, sub_, rF, rB )
             .ofsFore      = offsetof( THEMEROOT_TYPE, path.forecolor )
             .ofsBack      = offsetof( THEMEROOT_TYPE, path.backcolor )
             .ofsBackAlpha = offsetof( THEMEROOT_TYPE, apath )
         THKEY_END()
     #endmacro
 
-    #macro THFOREKEY( k, path, cat, sub_ )
-        THKEY_BEGIN( k, cat, sub_ )
+    #macro THFOREKEY( k, path, cat, sub_, rF, rB )
+        THKEY_BEGIN( k, cat, sub_, rF, rB )
             .ofsFore = offsetof( THEMEROOT_TYPE, path )
         THKEY_END()
     #endmacro
 
-    #macro THFOREAKEY( k, path, apath, cat, sub_ )
-        THKEY_BEGIN( k, cat, sub_ )
+    #macro THFOREAKEY( k, path, apath, cat, sub_, rF, rB )
+        THKEY_BEGIN( k, cat, sub_, rF, rB )
             .ofsFore      = offsetof( THEMEROOT_TYPE, path )
             .ofsForeAlpha = offsetof( THEMEROOT_TYPE, apath )
         THKEY_END()
     #endmacro
 
-    #macro THBACKKEY( k, path, cat, sub_ )
-        THKEY_BEGIN( k, cat, sub_ )
+    #macro THBACKKEY( k, path, cat, sub_, rF, rB )
+        THKEY_BEGIN( k, cat, sub_, rF, rB )
             .ofsBack = offsetof( THEMEROOT_TYPE, path )
         THKEY_END()
     #endmacro
@@ -779,6 +878,57 @@ sub Theme_FillRoot( byval pRoot as THEMEROOT_TYPE ptr )
             ThemeRoot_PokeLong( pRoot, pk->ofsBackAlpha, _
                 iif( pTheme->hasBackAlpha, clng(pTheme->backgroundAlpha), -1 ) )
         end if
+    next
+
+end sub
+
+
+''
+''  MATERIALISE ANY KEY THE THEME DID NOT SUPPLY, FROM ITS ROLE
+''
+''  Runs after the legacy ui.* table below and fills only what is STILL absent, so the order
+''  is explicit-value -> ui.* inheritance -> role -> built-in default. That is a defined
+''  precedence rather than a race: each step writes only where has* is false.
+''
+''  Keeping the ui.* table underneath the roles rather than deleting it is deliberate and is
+''  a departure from the original plan. The shipped themes define no ui.* keys, so ui.divider
+''  and ui.accent are materialised today by inheritance from editor.divider and
+''  toptabs.iconselected. Replacing that with role.border / role.accent would change both --
+''  33 consumers between them -- and this step is supposed to move no pixels at all.
+''
+sub Theme_ResolveKeyRoles()
+
+    Theme_BuildKeyTable()
+
+    for i as long = lbound(gThemeKeys) to ubound(gThemeKeys)
+
+        ' Text payloads have no colour to inherit.
+        if gThemeKeys(i).ofsText >= 0 then continue for
+
+        dim as long rF = gThemeKeys(i).nRoleFore
+        dim as long rB = gThemeKeys(i).nRoleBack
+        dim as boolean bNoRoles = ((rF = THROLE_NONE) andalso (rB = THROLE_NONE))
+        if bNoRoles then continue for
+
+        dim as long n = Theme_EnsureEntry( gThemeKeys(i).keyValue )
+
+        ' Only a channel the key actually HAS may be filled -- otherwise a role would
+        ' invent a background for a hairline and the writer would start emitting it.
+        dim as boolean bWantF = (rF <> THROLE_NONE)
+        dim as boolean bHasF   = (gThemeKeys(i).ofsFore >= 0)
+        dim as boolean bFreeF  = (gTheme(n).hasFore = false)
+        if bWantF andalso bHasF andalso bFreeF then
+            gTheme(n).foreground = theme.role.clr(rF)
+            gTheme(n).hasFore    = true
+        end if
+        dim as boolean bWantB = (rB <> THROLE_NONE)
+        dim as boolean bHasB   = (gThemeKeys(i).ofsBack >= 0)
+        dim as boolean bFreeB  = (gTheme(n).hasBack = false)
+        if bWantB andalso bHasB andalso bFreeB then
+            gTheme(n).background = theme.role.clr(rB)
+            gTheme(n).hasBack    = true
+        end if
+
     next
 
 end sub

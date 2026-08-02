@@ -71,6 +71,66 @@ enum
 end enum
 
 
+''
+''  THE ROLE PALETTE
+''
+''  A small set of SEMANTIC colours every widget key falls back to. Two layers:
+''
+''      explicit key in the file  ->  the key's declared role  ->  built-in default
+''
+''  What it buys: a theme file that defines only the roles is COMPLETE and valid, so a new
+''  theme is ~20 lines instead of 140; and a widget key added later is themed for free in
+''  every existing theme rather than reading as black until each file is edited.
+''
+''  This generalizes Theme_ResolveFallbacks, which did the same thing for exactly four ui.*
+''  keys via a six-row hand-written table. That table is GONE -- the two must not both claim
+''  a key or they race and last-writer-wins.
+''
+''  THE THREE SYNTAX KEYWORD ROLES ARE NAMED FOR WHAT THEY ACTUALLY ARE, not for what the
+''  equivalent slot is called in a VS Code or Base16 palette. tiko feeds Scintilla three
+''  keyword lists (clsDocument.inc): list 0 is the FreeBASIC language, list 1 is the Win32
+''  API, list 2 is the user's own extra words. Calling list 1 "type" and list 2 "function"
+''  would be a guess dressed as a mapping, and every theme author after us would inherit it.
+''
+enum THEME_ROLE
+    THROLE_NONE = 0             ' this channel has no role; absent means absent
+
+    ' --- surfaces and text ---
+    THROLE_BACKGROUND           ' the editor / app base surface
+    THROLE_BACKGROUNDALT        ' secondary surface: panels, status bar, output
+    THROLE_BACKGROUNDRAISED     ' floats above the app: menus, popups, tooltips
+    THROLE_FOREGROUND           ' primary text
+    THROLE_FOREGROUNDDIM        ' secondary, disabled, line numbers
+    THROLE_BORDER               ' hairlines and dividers
+    THROLE_ACCENT               ' active / selected / focused fill
+    THROLE_HOT                  ' hover fill
+    THROLE_SELECTION            ' selection fill
+
+    ' --- signal ---
+    THROLE_ERROR
+    THROLE_WARNING
+    THROLE_SUCCESS
+
+    ' --- syntax ---
+    THROLE_KEYWORD              ' -> editor.keyword   (FreeBASIC language keywords)
+    THROLE_APIKEYWORD           ' -> editor.keyword2  (Win32 API names)
+    THROLE_USERKEYWORD          ' -> editor.keyword3  (the user's extra keyword list)
+    THROLE_COMMENT
+    THROLE_STRING
+    THROLE_NUMBER
+    THROLE_OPERATOR
+    THROLE_PREPROCESSOR
+
+    THROLE_COUNT
+end enum
+
+
+' The resolved palette. One COLORREF per role, in enum order, so a role id indexes it.
+type THEME_ROLES
+    clr( 0 to THROLE_COUNT - 1 ) as COLORREF
+end type
+
+
 ' A syntax style: colour plus the three attribute flags.
 type THSTYLE
     forecolor as COLORREF
@@ -273,6 +333,8 @@ end type
 ' record in modThemes.inc, which is a different thing entirely (one file line, with its
 ' presence flags and macro names). This is the resolved result those entries are poured into.
 type THEMEROOT_TYPE
+    ' The palette every other member falls back to. Resolved first.
+    role      as THEME_ROLES
     general   as THEME_GENERAL
     compile   as THEME_COMPILE
     main      as THEME_MAIN

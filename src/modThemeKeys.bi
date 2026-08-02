@@ -58,105 +58,105 @@
 
 
 ' ---- general: text payloads, on neither editor page --------------------------------------
-THTEXTKEY ( "general.description", general.description, THEMECAT_OTHER, THSUB_NONE )
-THTEXTKEY ( "general.version",     general.version,     THEMECAT_OTHER, THSUB_NONE )
+THTEXTKEY("general.description", general.description, THEMECAT_OTHER, THSUB_NONE, THROLE_NONE, THROLE_NONE )
+THTEXTKEY("general.version",     general.version,     THEMECAT_OTHER, THSUB_NONE, THROLE_NONE, THROLE_NONE )
 
 ' ---- compile / main ----------------------------------------------------------------------
-THFOREKEY ( "compile.iconsuccess", compile.iconsuccess, THEMECAT_COMPILE, 0 )
-THFOREKEY ( "compile.iconfail",    compile.iconfail,    THEMECAT_COMPILE, 0 )
-THBACKKEY ( "main.panel",          main.panel,          THEMECAT_MAIN,    0 )
+THFOREKEY("compile.iconsuccess", compile.iconsuccess, THEMECAT_COMPILE, 0, THROLE_SUCCESS, THROLE_NONE )
+THFOREKEY("compile.iconfail",    compile.iconfail,    THEMECAT_COMPILE, 0, THROLE_ERROR, THROLE_NONE )
+THBACKKEY("main.panel",          main.panel,          THEMECAT_MAIN,    0, THROLE_NONE, THROLE_BACKGROUND )
 
 ' ---- editor: the ten syntax styles --------------------------------------------------------
 ' editor.text also dresses the autocomplete popup and the Options textboxes, so it reaches
 ' well beyond Scintilla and cannot take the namespace default.
-THSTYLEKEY( "editor.text",         editor.text,         THEMECAT_SYNTAX, _
-            THSUB_SCINTILLA or THSUB_EDITORCHROME or THSUB_AUTOCOMPLETE or THSUB_OPTIONSDLG )
-THSTYLEKEY( "editor.comments",     editor.comments,     THEMECAT_SYNTAX, 0 )
-THSTYLEKEY( "editor.keyword",      editor.keyword1,     THEMECAT_SYNTAX, 0 )
-THSTYLEKEY( "editor.keyword2",     editor.keyword2,     THEMECAT_SYNTAX, 0 )
-THSTYLEKEY( "editor.keyword3",     editor.keyword3,     THEMECAT_SYNTAX, 0 )
-THSTYLEKEY( "editor.numbers",      editor.numbers,      THEMECAT_SYNTAX, 0 )
-THSTYLEKEY( "editor.operators",    editor.operators,    THEMECAT_SYNTAX, 0 )
-THSTYLEKEY( "editor.preprocessor", editor.preprocessor, THEMECAT_SYNTAX, 0 )
-THSTYLEKEY( "editor.strings",      editor.strings,      THEMECAT_SYNTAX, 0 )
-THSTYLEKEY( "editor.linenumbers",  editor.linenumbers,  THEMECAT_MARGINS, 0 )
+THSTYLEKEY("editor.text",         editor.text,         THEMECAT_SYNTAX, _
+            THSUB_SCINTILLA or THSUB_EDITORCHROME or THSUB_AUTOCOMPLETE or THSUB_OPTIONSDLG, THROLE_FOREGROUND, THROLE_BACKGROUND )
+THSTYLEKEY("editor.comments",     editor.comments,     THEMECAT_SYNTAX, 0, THROLE_COMMENT, THROLE_BACKGROUND )
+THSTYLEKEY("editor.keyword",      editor.keyword1,     THEMECAT_SYNTAX, 0, THROLE_KEYWORD, THROLE_BACKGROUND )
+THSTYLEKEY("editor.keyword2",     editor.keyword2,     THEMECAT_SYNTAX, 0, THROLE_APIKEYWORD, THROLE_BACKGROUND )
+THSTYLEKEY("editor.keyword3",     editor.keyword3,     THEMECAT_SYNTAX, 0, THROLE_USERKEYWORD, THROLE_BACKGROUND )
+THSTYLEKEY("editor.numbers",      editor.numbers,      THEMECAT_SYNTAX, 0, THROLE_NUMBER, THROLE_BACKGROUND )
+THSTYLEKEY("editor.operators",    editor.operators,    THEMECAT_SYNTAX, 0, THROLE_OPERATOR, THROLE_BACKGROUND )
+THSTYLEKEY("editor.preprocessor", editor.preprocessor, THEMECAT_SYNTAX, 0, THROLE_PREPROCESSOR, THROLE_BACKGROUND )
+THSTYLEKEY("editor.strings",      editor.strings,      THEMECAT_SYNTAX, 0, THROLE_STRING, THROLE_BACKGROUND )
+THSTYLEKEY("editor.linenumbers",  editor.linenumbers,  THEMECAT_MARGINS, 0, THROLE_FOREGROUNDDIM, THROLE_BACKGROUND )
 
 ' ---- editor: cursor and selection ---------------------------------------------------------
-THFOREKEY ( "editor.caret",        editor.caret,        THEMECAT_CURSOR, 0 )
-THBACKKEY ( "editor.currentline",  editor.currentline,  THEMECAT_CURSOR, 0 )
-THPAIRKEY ( "editor.indentguides", editor.indentguides, THEMECAT_CURSOR, 0 )
+THFOREKEY("editor.caret",        editor.caret,        THEMECAT_CURSOR, 0, THROLE_FOREGROUND, THROLE_NONE )
+THBACKKEY("editor.currentline",  editor.currentline,  THEMECAT_CURSOR, 0, THROLE_NONE, THROLE_BACKGROUNDALT )
+THPAIRKEY("editor.indentguides", editor.indentguides, THEMECAT_CURSOR, 0, THROLE_BORDER, THROLE_BACKGROUND )
 ' The two alpha-bearing keys. SCI_SETSELALPHA takes the selection's BACKGROUND alpha and
 ' SCI_INDICSETALPHA the occurrence indicator's FOREGROUND alpha -- the only two places in the
 ' editor where an alpha reaches a pixel at all.
-THPAIRAKEY( "editor.selection",    editor.selection,    editor.selectionalpha, _
-            THEMECAT_CURSOR, 0 )
-THFOREAKEY( "editor.occurrence",   editor.occurrence,   editor.occurrencealpha, _
-            THEMECAT_MARKERS, 0 )
+THPAIRAKEY("editor.selection",    editor.selection,    editor.selectionalpha, _
+            THEMECAT_CURSOR, 0, THROLE_FOREGROUND, THROLE_SELECTION )
+THFOREAKEY("editor.occurrence",   editor.occurrence,   editor.occurrencealpha, _
+            THEMECAT_MARKERS, 0, THROLE_ACCENT, THROLE_NONE )
 
 ' ---- editor: margins and folding ----------------------------------------------------------
-THFOREKEY ( "editor.foldmargin",   editor.foldmargin,   THEMECAT_MARGINS, 0 )
-THPAIRKEY ( "editor.foldsymbol",   editor.foldsymbol,   THEMECAT_MARGINS, 0 )
+THFOREKEY("editor.foldmargin",   editor.foldmargin,   THEMECAT_MARGINS, 0, THROLE_BACKGROUNDALT, THROLE_NONE )
+THPAIRKEY("editor.foldsymbol",   editor.foldsymbol,   THEMECAT_MARGINS, 0, THROLE_FOREGROUNDDIM, THROLE_BACKGROUNDALT )
 
 ' ---- editor: markers and highlights -------------------------------------------------------
-THFOREKEY ( "editor.bracegood",    editor.bracegood,    THEMECAT_MARKERS, 0 )
-THFOREKEY ( "editor.bracebad",     editor.bracebad,     THEMECAT_MARKERS, 0 )
-THPAIRKEY ( "editor.bookmark",     editor.bookmark,     THEMECAT_MARKERS, 0 )
-THPAIRKEY ( "editor.breakpoint",   editor.breakpoint,   THEMECAT_MARKERS, 0 )
-THPAIRKEY ( "editor.debugline",    editor.debugline,    THEMECAT_MARKERS, 0 )
+THFOREKEY("editor.bracegood",    editor.bracegood,    THEMECAT_MARKERS, 0, THROLE_SUCCESS, THROLE_NONE )
+THFOREKEY("editor.bracebad",     editor.bracebad,     THEMECAT_MARKERS, 0, THROLE_ERROR, THROLE_NONE )
+THPAIRKEY("editor.bookmark",     editor.bookmark,     THEMECAT_MARKERS, 0, THROLE_ACCENT, THROLE_BACKGROUNDALT )
+THPAIRKEY("editor.breakpoint",   editor.breakpoint,   THEMECAT_MARKERS, 0, THROLE_ERROR, THROLE_BACKGROUNDALT )
+THPAIRKEY("editor.debugline",    editor.debugline,    THEMECAT_MARKERS, 0, THROLE_FOREGROUND, THROLE_WARNING )
 
 ' ---- editor: chrome -----------------------------------------------------------------------
 ' editor.scrollbar dresses the Options scroll panels and the autocomplete list too.
-THPAIRKEY ( "editor.scrollbar",    editor.scrollbar,    THEMECAT_EDCHROME, _
-            THSUB_SCINTILLA or THSUB_EDITORCHROME or THSUB_AUTOCOMPLETE or THSUB_OPTIONSDLG )
+THPAIRKEY("editor.scrollbar",    editor.scrollbar,    THEMECAT_EDCHROME, _
+            THSUB_SCINTILLA or THSUB_EDITORCHROME or THSUB_AUTOCOMPLETE or THSUB_OPTIONSDLG, THROLE_FOREGROUNDDIM, THROLE_BACKGROUND )
 ' editor.divider is THE app-wide hairline: menu separators, the tab-bar border, every Ps*
 ' control border, message-box frames, the autocomplete frame. Read in 20 files.
-THFOREKEY ( "editor.divider",      editor.divider,      THEMECAT_EDCHROME, THSUB_ALL )
+THFOREKEY("editor.divider",      editor.divider,      THEMECAT_EDCHROME, THSUB_ALL, THROLE_BORDER, THROLE_NONE )
 
 ' ---- ui: chrome split out of the editor namespace, all app-wide ---------------------------
-THFOREKEY ( "ui.divider",          ui.divider,          THEMECAT_SHARED, THSUB_ALL )
-THPAIRKEY ( "ui.field",            ui.field,            THEMECAT_SHARED, THSUB_ALL )
-THPAIRKEY ( "ui.scrollbar",        ui.scrollbar,        THEMECAT_SHARED, THSUB_ALL )
+THFOREKEY("ui.divider",          ui.divider,          THEMECAT_SHARED, THSUB_ALL, THROLE_BORDER, THROLE_NONE )
+THPAIRKEY("ui.field",            ui.field,            THEMECAT_SHARED, THSUB_ALL, THROLE_FOREGROUND, THROLE_BACKGROUND )
+THPAIRKEY("ui.scrollbar",        ui.scrollbar,        THEMECAT_SHARED, THSUB_ALL, THROLE_FOREGROUNDDIM, THROLE_BACKGROUNDALT )
 ' Bound to the BACKGROUND channel: the accent is a fill, never a foreground.
-THBACKKEY ( "ui.accent",           ui.accent,           THEMECAT_SHARED, THSUB_ALL )
+THBACKKEY("ui.accent",           ui.accent,           THEMECAT_SHARED, THSUB_ALL, THROLE_NONE, THROLE_ACCENT )
 
 ' ---- panel --------------------------------------------------------------------------------
-THPAIRKEY ( "panel.text",          panel.text,          THEMECAT_PANEL, 0 )
-THPAIRKEY ( "panel.texthot",       panel.texthot,       THEMECAT_PANEL, 0 )
-THPAIRKEY ( "panel.scrollbar",     panel.scrollbar,     THEMECAT_PANEL, 0 )
-THPAIRKEY ( "panel.button",        panel.button,        THEMECAT_PANEL, 0 )
-THPAIRKEY ( "panel.buttonhot",     panel.buttonhot,     THEMECAT_PANEL, 0 )
-THPAIRKEY ( "panel.filenameicon",  panel.filenameicon,  THEMECAT_PANEL, 0 )
-THPAIRKEY ( "panel.functionicon",  panel.functionicon,  THEMECAT_PANEL, 0 )
-THPAIRKEY ( "panel.typeicon",      panel.typeicon,      THEMECAT_PANEL, 0 )
-THFOREKEY ( "panel.textsearch",    panel.textsearch,    THEMECAT_PANEL, 0 )
-THFOREKEY ( "panel.textsearchhot", panel.textsearchhot, THEMECAT_PANEL, 0 )
+THPAIRKEY("panel.text",          panel.text,          THEMECAT_PANEL, 0, THROLE_FOREGROUND, THROLE_BACKGROUNDALT )
+THPAIRKEY("panel.texthot",       panel.texthot,       THEMECAT_PANEL, 0, THROLE_FOREGROUND, THROLE_HOT )
+THPAIRKEY("panel.scrollbar",     panel.scrollbar,     THEMECAT_PANEL, 0, THROLE_FOREGROUNDDIM, THROLE_BACKGROUNDALT )
+THPAIRKEY("panel.button",        panel.button,        THEMECAT_PANEL, 0, THROLE_FOREGROUND, THROLE_BACKGROUNDALT )
+THPAIRKEY("panel.buttonhot",     panel.buttonhot,     THEMECAT_PANEL, 0, THROLE_FOREGROUND, THROLE_HOT )
+THPAIRKEY("panel.filenameicon",  panel.filenameicon,  THEMECAT_PANEL, 0, THROLE_ACCENT, THROLE_BACKGROUNDALT )
+THPAIRKEY("panel.functionicon",  panel.functionicon,  THEMECAT_PANEL, 0, THROLE_ACCENT, THROLE_BACKGROUNDALT )
+THPAIRKEY("panel.typeicon",      panel.typeicon,      THEMECAT_PANEL, 0, THROLE_ACCENT, THROLE_BACKGROUNDALT )
+THFOREKEY("panel.textsearch",    panel.textsearch,    THEMECAT_PANEL, 0, THROLE_ACCENT, THROLE_NONE )
+THFOREKEY("panel.textsearchhot", panel.textsearchhot, THEMECAT_PANEL, 0, THROLE_ACCENT, THROLE_NONE )
 
 ' ---- topmenu: feeds the POPUP menus, not the bar -------------------------------------------
-THBACKKEY ( "topmenu.panel",        topmenu.panel,        THEMECAT_POPUP, 0 )
-THPAIRKEY ( "topmenu.text",         topmenu.text,         THEMECAT_POPUP, 0 )
-THPAIRKEY ( "topmenu.texthot",      topmenu.texthot,      THEMECAT_POPUP, 0 )
-THPAIRKEY ( "topmenu.textdisabled", topmenu.textdisabled, THEMECAT_POPUP, 0 )
+THBACKKEY("topmenu.panel",        topmenu.panel,        THEMECAT_POPUP, 0, THROLE_NONE, THROLE_BACKGROUNDRAISED )
+THPAIRKEY("topmenu.text",         topmenu.text,         THEMECAT_POPUP, 0, THROLE_FOREGROUND, THROLE_BACKGROUNDRAISED )
+THPAIRKEY("topmenu.texthot",      topmenu.texthot,      THEMECAT_POPUP, 0, THROLE_FOREGROUND, THROLE_HOT )
+THPAIRKEY("topmenu.textdisabled", topmenu.textdisabled, THEMECAT_POPUP, 0, THROLE_FOREGROUNDDIM, THROLE_BACKGROUNDRAISED )
 
 ' ---- menubar -------------------------------------------------------------------------------
-THPAIRKEY ( "menubar.text",        menubar.text,        THEMECAT_MENUBAR, 0 )
-THPAIRKEY ( "menubar.texthot",     menubar.texthot,     THEMECAT_MENUBAR, 0 )
+THPAIRKEY("menubar.text",        menubar.text,        THEMECAT_MENUBAR, 0, THROLE_FOREGROUND, THROLE_BACKGROUNDALT )
+THPAIRKEY("menubar.texthot",     menubar.texthot,     THEMECAT_MENUBAR, 0, THROLE_FOREGROUND, THROLE_HOT )
 
 ' ---- toptabs -------------------------------------------------------------------------------
-THPAIRKEY ( "toptabs.text",        toptabs.text,        THEMECAT_TOPTABS, 0 )
-THPAIRKEY ( "toptabs.texthot",     toptabs.texthot,     THEMECAT_TOPTABS, 0 )
-THFOREKEY ( "toptabs.divider",     toptabs.divider,     THEMECAT_TOPTABS, 0 )
-THBACKKEY ( "toptabs.closehot",    toptabs.closehot,    THEMECAT_TOPTABS, 0 )
-THBACKKEY ( "toptabs.iconselected", toptabs.iconselected, THEMECAT_TOPTABS, 0 )
+THPAIRKEY("toptabs.text",        toptabs.text,        THEMECAT_TOPTABS, 0, THROLE_FOREGROUNDDIM, THROLE_BACKGROUNDALT )
+THPAIRKEY("toptabs.texthot",     toptabs.texthot,     THEMECAT_TOPTABS, 0, THROLE_FOREGROUND, THROLE_BACKGROUND )
+THFOREKEY("toptabs.divider",     toptabs.divider,     THEMECAT_TOPTABS, 0, THROLE_BORDER, THROLE_NONE )
+THBACKKEY("toptabs.closehot",    toptabs.closehot,    THEMECAT_TOPTABS, 0, THROLE_NONE, THROLE_HOT )
+THBACKKEY("toptabs.iconselected", toptabs.iconselected, THEMECAT_TOPTABS, 0, THROLE_NONE, THROLE_ACCENT )
 
 ' ---- statusbar -----------------------------------------------------------------------------
-THPAIRKEY ( "statusbar.text",      statusbar.text,      THEMECAT_STATUSBAR, 0 )
-THPAIRKEY ( "statusbar.texthot",   statusbar.texthot,   THEMECAT_STATUSBAR, 0 )
+THPAIRKEY("statusbar.text",      statusbar.text,      THEMECAT_STATUSBAR, 0, THROLE_FOREGROUND, THROLE_BACKGROUNDALT )
+THPAIRKEY("statusbar.texthot",   statusbar.texthot,   THEMECAT_STATUSBAR, 0, THROLE_FOREGROUND, THROLE_HOT )
 
 ' ---- output ---------------------------------------------------------------------------------
-THPAIRKEY ( "output.text",             output.text,             THEMECAT_OUTPUT, 0 )
-THPAIRKEY ( "output.texthot",          output.texthot,          THEMECAT_OUTPUT, 0 )
-THFOREKEY ( "output.divider",          output.divider,          THEMECAT_OUTPUT, 0 )
-THBACKKEY ( "output.closehot",         output.closehot,         THEMECAT_OUTPUT, 0 )
-THPAIRKEY ( "output.scrollbar",        output.scrollbar,        THEMECAT_OUTPUT, 0 )
-THFOREKEY ( "output.scrollbardivider", output.scrollbardivider, THEMECAT_OUTPUT, 0 )
-THFOREKEY ( "output.valuechanged",     output.valuechanged,     THEMECAT_OUTPUT, 0 )
+THPAIRKEY("output.text",             output.text,             THEMECAT_OUTPUT, 0, THROLE_FOREGROUND, THROLE_BACKGROUNDALT )
+THPAIRKEY("output.texthot",          output.texthot,          THEMECAT_OUTPUT, 0, THROLE_FOREGROUND, THROLE_HOT )
+THFOREKEY("output.divider",          output.divider,          THEMECAT_OUTPUT, 0, THROLE_BORDER, THROLE_NONE )
+THBACKKEY("output.closehot",         output.closehot,         THEMECAT_OUTPUT, 0, THROLE_NONE, THROLE_HOT )
+THPAIRKEY("output.scrollbar",        output.scrollbar,        THEMECAT_OUTPUT, 0, THROLE_FOREGROUNDDIM, THROLE_BACKGROUNDALT )
+THFOREKEY("output.scrollbardivider", output.scrollbardivider, THEMECAT_OUTPUT, 0, THROLE_BORDER, THROLE_NONE )
+THFOREKEY("output.valuechanged",     output.valuechanged,     THEMECAT_OUTPUT, 0, THROLE_WARNING, THROLE_NONE )
