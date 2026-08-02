@@ -360,9 +360,13 @@ private sub frmThemes_SyncEditControls()
         if ghThemeB then EnableWindow( ghThemeB, bOK )
         if ghThemeFore then
             EnableWindow( ghThemeFore, bOK )
-            ' One channel, so the button is simply "the colour" rather than Foreground.
-            PsButton_SetText( ghThemeFore, L(300, "Foreground") & "..." )
+            ' A ROLE HAS ONE COLOUR, so the button says so. Captioning it "Foreground..."
+            ' was left over from the key pages, where the pair of buttons picks a CHANNEL;
+            ' here there is no channel to pick and the row may well be named "background",
+            ' which made the button read as its own opposite.
+            PsButton_SetText( ghThemeFore, L(673, "Choose Color") & "..." )
             PsButton_SetDefault( ghThemeFore, true )
+            PsButton_Refresh( ghThemeFore )
         end if
         AfxRedrawWindow( ghThemeKeys )
         if HWND_FRMTHEMES_PAGE then AfxRedrawWindow( HWND_FRMTHEMES_PAGE )
@@ -430,6 +434,11 @@ private sub frmThemes_SyncEditControls()
         elseif bOnBack andalso (bHasBack = false) andalso bHasFore then
             gThemeChannel = THEMECH_FORE
         end if
+
+        ' Back to the channel caption. The Palette page renames this button, and without
+        ' restoring it here the rename would survive the page switch -- the control is shared,
+        ' so whichever page touched it last wins.
+        if ghThemeFore then PsButton_SetText( ghThemeFore, L(300, "Foreground") & "..." )
 
         ' The DEFAULT border marks the active channel. It is appearance-only and survives all
         ' four moods, so it says "this is the one you are editing" without a second colour or a

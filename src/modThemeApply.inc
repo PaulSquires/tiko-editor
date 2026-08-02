@@ -1185,6 +1185,7 @@ sub Theme_RunSelfTest()
               "671 is not the Palette caption -- it reads: " & LL(671) )
     THASSERT( instr( LL(672), "ANSI" ) = 0, _
               "672 is not the default marker -- it reads: " & LL(672) )
+    THASSERT( len( LL(673) ) > 0, "673 (Choose Color) is empty in this language file" )
 
     ' -- 22j. EDITING A ROLE MOVES THE KEYS THAT INHERIT IT. -----------------------------
     '    The palette page's entire promise, and a silent no-op without Theme_ReapplyRoles:
