@@ -401,6 +401,132 @@ end function
 
 
 ' ========================================================================================
+' The gConfig.Cat() index a document is displayed under, or -1 for none.
+'
+' The same lookup LoadExplorerFiles performs by walking the categories, extracted so that
+' the folder code can answer "which group is this file in" without a loop of its own --
+' folder identity is (category, path), so nothing about a file's folder means anything until
+' its category is known.
+' ========================================================================================
+function frmExplorer_CatIndexForDoc( byval pDoc as clsDocument ptr ) as long
+    if pDoc = 0 then return -1
+    dim as DWSTRING wszFileType = pDoc->ProjectFiletype
+    for ii as long = CATINDEX_MAIN to ubound(gConfig.Cat)
+        if wszFileType = gConfig.Cat(ii).idFileType then return ii
+    next
+    return -1
+end function
+
+
+' ========================================================================================
+' Forget any document folder that does not name a folder that actually exists.
+'
+' A FILE WHOSE FOLDER CANNOT BE RESOLVED WOULD OTHERWISE RENDER NOWHERE. The tree is built
+' by walking folders and asking which files sit in each, so a file naming a folder that is
+' not in the table is never asked for by anybody -- it disappears from the Explorer while
+' remaining in the workspace, which is the same failure mode the FileType=0 repair in
+' clsConfig exists to prevent.
+'
+' Three ways to arrive here, none of them exotic: a hand-edited or older .tiko, a folder the
+' user deleted while a file still pointed at it, and -- the routine one -- a file whose
+' category changed, since a folder under Module is not a folder under Normal. Clearing on
+' the last of those is the wanted behaviour rather than a repair: the file lands at its new
+' group's top level.
+'
+' Run from LoadExplorerFiles rather than from the project loader, so that every path which
+' can invalidate a folder is covered without each having to remember to call it.
+' ========================================================================================
+sub frmExplorer_NormalizeDocFolders()
+    dim pDoc as clsDocument ptr = gApp.pDocList
+    do until pDoc = 0
+        if len(pDoc->docData.wszFolder) then
+            dim as long catIndex = frmExplorer_CatIndexForDoc( pDoc )
+            if ProjectFolders_Exists( catIndex, pDoc->docData.wszFolder ) = false then
+                pDoc->docData.wszFolder = ""
+            end if
+        end if
+        pDoc = pDoc->pDocNext
+    loop
+end sub
+
+
+' ========================================================================================
+' Emit one level of a group's tree beneath nParentRow: the folders directly inside
+' wszParentPath, each recursed into, and then the files that sit at this level.
+'
+' FOLDERS BEFORE FILES, each half alphabetical. Ordering is derived on every load rather
+' than persisted -- drag/drop chooses which folder a file lands in, never where it sits
+' among its siblings, so there is no manual order to remember.
+'
+' Recursion depth is the folder depth the user created, which is unbounded by design.
+' AddNode appends as the parent's LAST child, so recursing into a folder before adding the
+' next sibling still lays the siblings out in order.
+' ========================================================================================
+sub frmExplorer_AddFolderLevel( byval hCtrl as HWND, byval catIndex as long, _
+                                byval wszParentPath as DWSTRING, byval nParentRow as integer )
+    ' --- the folders directly inside this level -------------------------------------------
+    ' Collected as table indices, then insertion-sorted by leaf name. A folder tree is small
+    ' enough that the sort's cost is irrelevant and its simplicity is not.
+    redim nFolders(any) as long
+    for i as long = lbound(gProjectFolders) to ubound(gProjectFolders)
+        if gProjectFolders(i).catIndex <> catIndex then continue for
+        if ucase( ProjectFolders_ParentPath( gProjectFolders(i).wszPath ) ) <> ucase( wszParentPath ) then continue for
+        dim as long ub = ubound(nFolders) + 1
+        redim preserve nFolders(ub)
+        nFolders(ub) = i
+    next
+
+    for i as long = lbound(nFolders) + 1 to ubound(nFolders)
+        dim as long nHold = nFolders(i)
+        dim as DWSTRING wszHold = ucase( ProjectFolders_LeafName( gProjectFolders(nHold).wszPath ) )
+        dim as long j = i - 1
+        do while j >= lbound(nFolders)
+            if ucase( ProjectFolders_LeafName( gProjectFolders(nFolders(j)).wszPath ) ) <= wszHold then exit do
+            nFolders(j + 1) = nFolders(j)
+            j -= 1
+        loop
+        nFolders(j + 1) = nHold
+    next
+
+    for i as long = lbound(nFolders) to ubound(nFolders)
+        dim as long nIdx = nFolders(i)
+        ' The row shows the LEAF name; the full path is recovered from the table via the
+        ' itemData index, so nothing has to parse the caption back into a path.
+        dim as integer nRow = PsListTree_AddNode( hCtrl, nParentRow, _
+                                  ProjectFolders_LeafName( gProjectFolders(nIdx).wszPath ), _
+                                  nIdx, EXPKIND_FOLDER )
+        frmExplorer_AddFolderLevel( hCtrl, catIndex, gProjectFolders(nIdx).wszPath, nRow )
+    next
+
+    ' --- the files at this level ----------------------------------------------------------
+    redim pDocs(any) as clsDocument ptr
+    dim pDoc as clsDocument ptr = gApp.pDocList
+    do until pDoc = 0
+        if pDoc->ProjectFiletype = gConfig.Cat(catIndex).idFileType then
+            if ucase( pDoc->docData.wszFolder ) = ucase( wszParentPath ) then
+                dim as long ub = ubound(pDocs) + 1
+                redim preserve pDocs(ub)
+                pDocs(ub) = pDoc
+            end if
+        end if
+        pDoc = pDoc->pDocNext
+    loop
+
+    QuickSortpDocs( pDocs(), lbound(pDocs), ubound(pDocs) )
+
+    for i as long = lbound(pDocs) to ubound(pDocs)
+        ' AddNode, not AddString: AddString derives its level from the PRECEDING row and
+        ' only ever produces level 1 when that row is a header or is itself level 1. With
+        ' the group now a plain parent, AddString would put every file at level 0 -- a flat
+        ' list with no subtree to collapse -- and could not express a nested folder at all.
+        PsListTree_AddNode( hCtrl, nParentRow, _
+                            AfxStrPathName( "NAMEX", pDocs(i)->DiskFilename ), _
+                            cast(integer, pDocs(i)), EXPKIND_FILE )
+    next
+end sub
+
+
+' ========================================================================================
 ' LoadExplorerFiles
 ' Clears the Explorer and repopulates it from gApp.pDocList, grouped under one header per
 ' gConfig.Cat() entry from CATINDEX_MAIN up. NOTHING IS EXCLUDED -- every document in the
@@ -444,7 +570,10 @@ function LoadExplorerFiles() as long
         PsListTree_AddString( hCtrl, L(550,"Save as Project..."), 0, EXPKIND_PROMOTE )
     end if
 
-    redim pDocs(any) as clsDocument ptr
+    ' Before any row is emitted: a file whose folder cannot be resolved must be pulled back
+    ' to its group's top level, or the walk below will simply never ask for it and it will
+    ' vanish from the list while staying in the workspace.
+    frmExplorer_NormalizeDocFolders()
 
     for ii as long = nStart to nEnd
         ' A root group is an AddNode PARENT, not an AddHeader row. The control toggles a
@@ -463,33 +592,10 @@ function LoadExplorerFiles() as long
         dim as integer nRootRow = PsListTree_AddNode( hCtrl, -1, wszText, ii, EXPKIND_ROOT )
         PsListTree_SetRowSelectable( hCtrl, nRootRow, false )
 
-        ' Iterate all pDoc in the project/files list. Create an array and then
-        ' sort it alphabetically.
-        erase pDocs
-        
-        dim pDoc as clsDocument ptr = gApp.pDocList
-        do until pDoc = 0
-            dim as DWSTRING wszFileType = pDoc->ProjectFiletype
-            if wszFileType = gConfig.Cat(ii).idFileType then
-                dim as long ub = ubound(pDocs) + 1
-                redim preserve pDocs(ub)
-                pDocs(ub) = pDoc
-            end if
-            pDoc = pDoc->pDocNext
-        loop
-
-        QuickSortpDocs( pDocs(), lbound(pDocs), ubound(pDocs) )
-    
-        for i as long = lbound(pDocs) to ubound(pDocs)
-            ' AddNode, not AddString: AddString derives its level from the PRECEDING row and
-            ' only ever produces level 1 when that row is a header or is itself level 1.
-            ' With the group now a plain parent, AddString would put every file at level 0 --
-            ' a flat list with no subtree to collapse. Each file is appended as the group's
-            ' last child, so the sorted order above is preserved.
-            dim as DWSTRING wszText = AfxStrPathName( "NAMEX", pDocs(i)->DiskFilename )
-            PsListTree_AddNode( hCtrl, nRootRow, wszText, cast(integer, pDocs(i)), EXPKIND_FILE )
-        next   
-        
+        ' The group's whole subtree, starting at its top level (""). A group that allows no
+        ' folders simply has none in the table, so this needs no special case for Main and
+        ' Resource -- it emits their files and recurses into nothing.
+        frmExplorer_AddFolderLevel( hCtrl, ii, "", nRootRow )
     next
 
     PsListTree_EndUpdate( hCtrl )

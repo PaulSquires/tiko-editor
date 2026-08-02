@@ -50,7 +50,15 @@ declare function frmExplorer_KindFromRow( byval hCtl as HWND, byval row as integ
 ' row's itemData must go through this -- see the note on its definition.
 declare function frmExplorer_DocFromRow( byval hCtl as HWND, byval row as integer ) as clsDocument ptr
 declare function frmExplorer_IsFileDisplayed( byval wszFilename as DWSTRING ) as boolean
+' The gConfig.Cat() index a document is displayed under, or -1 if it is displayed nowhere.
+declare function frmExplorer_CatIndexForDoc( byval pDoc as clsDocument ptr ) as long
+' Drop any document folder that no longer names a real folder. See its definition.
+declare sub frmExplorer_NormalizeDocFolders()
+' Recursively emit one folder level (subfolders first, then files) beneath a tree row.
+declare sub frmExplorer_AddFolderLevel( byval hCtrl as HWND, byval catIndex as long, _
+                                        byval wszParentPath as DWSTRING, byval nParentRow as integer )
 declare function frmExplorer_UnSelectListBox() as long
 declare function frmExplorer_SelectItemData( byval pDoc as clsDocument ptr ) as boolean
 declare function LoadExplorerFiles() as long
 declare function frmExplorer_Show( byval hWndParent as HWND ) as LRESULT
+declare sub frmExplorer_RunSelfTest()

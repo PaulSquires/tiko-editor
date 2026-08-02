@@ -1521,6 +1521,10 @@ function frmMain_WndProc( _
             ' the workspace is not established until ProcessCommandLine returns.
             Workspace_RunSelfTest()
 
+            ' Same reasoning: it drives LoadExplorerFiles against the live workspace, so
+            ' the workspace has to exist first.
+            frmExplorer_RunSelfTest()
+
             ' TIKO_UNUSED_AUTOOPEN=1: the only way to reach the Unused Symbols layout
             ' self-test without a human driving the menu. HERE, not on scan completion:
             ' with no project open nothing ever requests a project scan, so a
