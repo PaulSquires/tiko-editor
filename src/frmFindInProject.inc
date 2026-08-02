@@ -906,7 +906,7 @@ private sub FipSurface_PaintHeader( byval b as PsBufferPaint ptr, byref r as FIP
     ' The band BEHIND the card is the panel background, so a header row reads as chrome
     ' rather than as a gap in the code. The card itself keeps the editor's current-line
     ' colour -- two different jobs, two different palettes.
-    b->SetBackColor( ghPanel.BackColor )
+    b->SetBackColor( theme.panel.text.backcolor )
     b->PaintRect( @rc )
 
     ' A ROUNDED CARD, not a full-width band with a rule under it. The headers are the

@@ -43,16 +43,17 @@ sub frmBookmarks_PaintCallback( byval p as PSLISTTREE_PAINTINFO ptr )
     ' State priority for the row background/foreground: selected > hot > normal
     dim as COLORREF backclr, foreclr
     if p->isSelected then
-'        backclr = ghPanel.BackColorSelect
-'        foreclr = ghPanel.ForeColorSelect
-        backclr = ghPanel.BackColorHot
-        foreclr = ghPanel.ForeColorHot
+    ' NOTE: selected deliberately reuses the HOT pair -- there is no dedicated
+    ' select colour in the panel namespace. (This was two commented-out lines naming
+    ' ghPanel.Back/ForeColorSelect, fields that never existed in that struct.)
+        backclr = theme.panel.texthot.backcolor
+        foreclr = theme.panel.texthot.forecolor
     elseif p->isHot then
-        backclr = ghPanel.BackColorHot
-        foreclr = ghPanel.ForeColorHot
+        backclr = theme.panel.texthot.backcolor
+        foreclr = theme.panel.texthot.forecolor
     else
-        backclr = ghPanel.BackColor
-        foreclr = ghPanel.ForeColor
+        backclr = theme.panel.text.backcolor
+        foreclr = theme.panel.text.forecolor
     end if
     p->b->SetForeColor( foreclr )
     p->b->SetBackColor( backclr )
@@ -161,14 +162,14 @@ function frmBookmarks_Show( byval hWndParent as HWND ) as LRESULT
     ' The WM_LBUTTONUP callback opens the clicked function; a double-click would
     ' deliver a second up and open it twice, so suppress double-click delivery.
     PsListTree_PreventDoubleClick( hCtrl )
-    PsListTree_SetBackColor( hCtrl, ghPanel.BackColor )
+    PsListTree_SetBackColor( hCtrl, theme.panel.text.backcolor )
     PsListTree_SetFont( hCtrl, ghFont(GUIFONT_10) )
     'PsListTree_SetExtendedSelect( hCtrl, true )   ' Shift/Ctrl range selection
     ' The scrollbar is created/positioned/auto-hidden by the control; we only theme it.
     ' (PsListTree_SetScrollBarPaintCallback is available for full custom drawing.)
     PsListTree_SetScrollBarWidth( hCtrl, SCROLLBAR_WIDTH_PANEL )
-    PsListTree_SetScrollBarColors( hCtrl, ghPanel.BackColorScrollBar, _
-                                 ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
+    PsListTree_SetScrollBarColors( hCtrl, theme.panel.scrollbar.backcolor, _
+                                 theme.panel.scrollbar.forecolor, theme.panel.scrollbar.forecolor )
 '    PsListTree_SetScrollBarColors( hCtrl, ghEditor.BackColorScrollBar, _
 '                                 ghEditor.ForeColorScrollBar, ghEditor.ForeColorScrollBarHot )
 

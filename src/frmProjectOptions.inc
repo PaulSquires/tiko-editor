@@ -417,7 +417,7 @@ end sub
 ' Everything that is not a control: the three section headers and their rules, the hint, the
 ' five row labels, and the footer rule.
 '
-' SECTION HEADERS ARE PLAIN ghPanel.ForeColor, NOT THE ACCENT. ui.accent falls back to
+' SECTION HEADERS ARE PLAIN theme.panel.text.forecolor, NOT THE ACCENT. ui.accent falls back to
 ' toptabs.iconselected, which is a dark navy in default_dark and a PALE TINT (204,233,252) in
 ' default_light -- opposite ends of the scale. The workspace rule is that the accent is a
 ' FILL and never a foreground, and an accent-coloured header would be legible in one theme
@@ -434,7 +434,7 @@ private function frmProjectOptions_OnPaint( byval hwnd as HWND ) as LRESULT
     dim buffer as PsBufferPaint
     buffer.BeginDoubleBuffer( hwnd, hdc, rc )
 
-    buffer.SetBackColor( ghPanel.BackColor )
+    buffer.SetBackColor( theme.panel.text.backcolor )
     buffer.PaintRect( @rc )
 
     if gPOLayout.bValid = false then
@@ -453,13 +453,13 @@ private function frmProjectOptions_OnPaint( byval hwnd as HWND ) as LRESULT
         rcT.top    = gPOLayout.yHdr(_idx_)
         rcT.bottom = rcT.top + hdrH
         buffer.SetFont( ghFont(GUIFONTBOLD_11) )
-        buffer.SetForeColor( ghPanel.ForeColor )
+        buffer.SetForeColor( theme.panel.text.forecolor )
         buffer.PaintText( _text_, @rcT, DT_LEFT or DT_VCENTER or DT_SINGLELINE or DT_END_ELLIPSIS )
         rcT.top    = rcT.bottom + AfxScaleY(2)
         rcT.bottom = rcT.top + AfxScaleY(1)
         buffer.SetBackColor( ghEditor.Divider )
         buffer.PaintRect( @rcT )
-        buffer.SetBackColor( ghPanel.BackColor )
+        buffer.SetBackColor( theme.panel.text.backcolor )
     #endmacro
 
     SECTIONHDR( PO_HDR_PROJECT,  L(27,"Project") )
@@ -472,12 +472,12 @@ private function frmProjectOptions_OnPaint( byval hwnd as HWND ) as LRESULT
     rcT.top    = gPOLayout.yHint
     rcT.bottom = rcT.top + AfxScaleY(FRMPROJECTOPTIONS_HINT_H)
     buffer.SetFont( ghFont(GUIFONT_11) )
-    buffer.SetForeColor( ghPanel.ForeColorHot )
+    buffer.SetForeColor( theme.panel.texthot.forecolor )
     buffer.PaintText( L(39,"Added to the switches from the selected build configuration."), _
                       @rcT, DT_LEFT or DT_VCENTER or DT_SINGLELINE or DT_END_ELLIPSIS )
 
     ' ---- the row labels ----------------------------------------------------------------
-    buffer.SetForeColor( ghPanel.ForeColor )
+    buffer.SetForeColor( theme.panel.text.forecolor )
 
     ' The four field labels run from the margin to the field, less a gap. The MANIFEST label
     ' is the exception and spans the whole row up to the toggle -- "Create resource file and

@@ -46,7 +46,7 @@ sub frmTopTabsMenu_PaintCallback( byval p as PSSTATUSBAR_PAINTINFO ptr )
     ' If this is the Spring panel then we don't want any highlighting because it is
     ' just a placeholder that forces the icons right justified.
     if PsStatusBar_GetItemData(p->hStatusBar, p->itemID) = 0 then
-        p->b->SetColors(ghPanel.BackColor, ghPanel.BackColor)
+        p->b->SetColors(theme.panel.text.backcolor, theme.panel.text.backcolor)
     end if
 
     ' Don't paint the background because we will reduce the size of the drawing

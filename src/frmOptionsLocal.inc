@@ -733,11 +733,11 @@ private sub frmOptionsLocal_ListPaint( byval p as PSLISTTREE_PAINTINFO ptr )
     if p = 0 then exit sub
     dim as COLORREF backclr, foreclr
     if p->isSelected orelse p->isHot then
-        backclr = ghPanel.BackColorHot
-        foreclr = ghPanel.ForeColorHot
+        backclr = theme.panel.texthot.backcolor
+        foreclr = theme.panel.texthot.forecolor
     else
-        backclr = ghPanel.BackColor
-        foreclr = ghPanel.ForeColor
+        backclr = theme.panel.text.backcolor
+        foreclr = theme.panel.text.forecolor
     end if
     p->b->SetBackColor( backclr )
     p->b->SetForeColor( foreclr )
@@ -764,10 +764,10 @@ end sub
 ' ========================================================================================
 private sub frmOptionsLocal_HeaderPaint( byval p as PSCOLUMNHEADER_PAINTINFO ptr )
     if p = 0 then exit sub
-    dim as COLORREF backclr = ghPanel.BackColor
-    if p->isHot orelse p->isResizeHot then backclr = ghPanel.BackColorHot
+    dim as COLORREF backclr = theme.panel.text.backcolor
+    if p->isHot orelse p->isResizeHot then backclr = theme.panel.texthot.backcolor
     p->b->SetBackColor( backclr )
-    p->b->SetForeColor( ghPanel.ForeColorHot )
+    p->b->SetForeColor( theme.panel.texthot.forecolor )
     p->b->PaintRect( @p->rc )
     p->b->SetFont( OptionsFont_Base() )
     dim as RECT rcText = p->rc
@@ -906,21 +906,21 @@ sub frmOptionsLocal_ApplyTheme()
     PsButton_SetColors( ghLocalDelete, @bc ) : PsButton_Refresh( ghLocalDelete )
     PsButton_SetColors( ghLocalClose, @bc )  : PsButton_Refresh( ghLocalClose )
 
-    PsListTree_SetBackColor( ghLocalLanguages, ghPanel.BackColor )
-    PsListTree_SetScrollBarColors( ghLocalLanguages, ghPanel.BackColorScrollBar, _
-                                 ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
+    PsListTree_SetBackColor( ghLocalLanguages, theme.panel.text.backcolor )
+    PsListTree_SetScrollBarColors( ghLocalLanguages, theme.panel.scrollbar.backcolor, _
+                                 theme.panel.scrollbar.forecolor, theme.panel.scrollbar.forecolor )
     OptionsTheme_ApplyListBorder( ghLocalLanguages )
 
-    PsListTree_SetBackColor( ghLocalList, ghPanel.BackColor )
-    PsListTree_SetScrollBarColors( ghLocalList, ghPanel.BackColorScrollBar, _
-                                 ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
+    PsListTree_SetBackColor( ghLocalList, theme.panel.text.backcolor )
+    PsListTree_SetScrollBarColors( ghLocalList, theme.panel.scrollbar.backcolor, _
+                                 theme.panel.scrollbar.forecolor, theme.panel.scrollbar.forecolor )
     OptionsTheme_ApplyListBorder( ghLocalList )
     ' The in-place editor lives inside the control and is created lazily, so it is themed
     ' through the list rather than directly -- same four colours OptionsTheme_ApplyTextBox
     ' gives every other text field on the page, so the editor matches them. Applied here in
     ' ApplyTheme, not at build, so a theme change reaches it too.
     PsListTree_SetEditColors( ghLocalList, ghEditor.BackColorText, ghEditor.ForeColorText, _
-                              ghEditor.Divider, ghPanel.ForeColorHot )
+                              ghEditor.Divider, theme.panel.texthot.forecolor )
 end sub
 
 
@@ -1078,8 +1078,8 @@ sub frmOptionsLocal_Paint( byval p as SCP_PAINTINFO ptr )
     if p = 0 then exit sub
     if gLocalBuilt = false then exit sub
     p->b->SetFont( OptionsFont_Base() )
-    p->b->SetBackColor( ghPanel.BackColor )
-    p->b->SetForeColor( ghPanel.ForeColor )
+    p->b->SetBackColor( theme.panel.text.backcolor )
+    p->b->SetForeColor( theme.panel.text.forecolor )
     for i as long = lbound(gLocalLabels) to ubound(gLocalLabels)
         dim as RECT rc = gLocalLabels(i).rc
         p->b->PaintText( gLocalLabels(i).caption, @rc, DT_LEFT or DT_END_ELLIPSIS )

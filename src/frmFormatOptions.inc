@@ -351,10 +351,10 @@ end sub
 private sub frmFormatOptions_NavPaintRow( byval p as PSLISTTREE_PAINTINFO ptr )
     if p = 0 then exit sub
     dim as long clrBack = theme.toptabs.texthot.backcolor
-    dim as long clrText = ghPanel.ForeColor
+    dim as long clrText = theme.panel.text.forecolor
     if p->isSelected then
-        clrBack = ghPanel.BackColor
-        clrText = ghPanel.ForeColor
+        clrBack = theme.panel.text.backcolor
+        clrText = theme.panel.text.forecolor
     end if
     p->b->SetForeColor( clrText )
     p->b->SetBackColor( clrBack )
@@ -536,7 +536,7 @@ private sub frmFormatOptions_OnPaint( byval hwnd as HWND )
     dim pb as PsBufferPaint
     pb.BeginDoubleBuffer( hwnd, hdc, rcClient )
 
-    pb.SetBackColor( ghPanel.BackColor )
+    pb.SetBackColor( theme.panel.text.backcolor )
     pb.PaintRect( @rcClient )
 
     dim as long nTitleH = AfxScaleY(FRMFORMATOPTIONS_TITLE_H)
@@ -545,7 +545,7 @@ private sub frmFormatOptions_OnPaint( byval hwnd as HWND )
 
     ' -- title band -----------------------------------------------------------------------
     dim as RECT rcTitle = type( 0, 0, rcClient.right, nTitleH )
-    pb.SetBackColor( ghPanel.BackColor )
+    pb.SetBackColor( theme.panel.text.backcolor )
     pb.PaintRect( @rcTitle )
     dim as RECT rcTitleText = rcTitle
     rcTitleText.left += nMargin
@@ -553,7 +553,7 @@ private sub frmFormatOptions_OnPaint( byval hwnd as HWND )
     ' Plain foreground, never the accent. ui.accent falls back to toptabs.iconselected, a
     ' dark navy in default_dark and a PALE tint in default_light -- a heading painted in it
     ' is legible in one theme and invisible in the other. The hairline does the separating.
-    pb.SetForeColor( ghPanel.ForeColor )
+    pb.SetForeColor( theme.panel.text.forecolor )
     pb.PaintText( L(638,"Format Options"), @rcTitleText, DT_LEFT )
 
     dim as RECT rcRule = type( 0, nTitleH - AfxScaleY(1), rcClient.right, nTitleH )
@@ -567,8 +567,8 @@ private sub frmFormatOptions_OnPaint( byval hwnd as HWND )
 
     ' -- rule labels for the visible page ---------------------------------------------------
     pb.SetFont( ghFont(GUIFONT_11) )
-    pb.SetForeColor( ghPanel.ForeColor )
-    pb.SetBackColor( ghPanel.BackColor )
+    pb.SetForeColor( theme.panel.text.forecolor )
+    pb.SetBackColor( theme.panel.text.backcolor )
     for i as long = 0 to gFmtRowCount - 1
         if gFmtRows(i).nPage <> gFmtPage then continue for
         pb.PaintText( L(gFmtRows(i).nLabelID, ""), @gFmtRows(i).rcLabel, _
@@ -603,8 +603,8 @@ private sub frmFormatOptions_ApplyTheme( byval hwnd as HWND )
 
     if HWND_FRMFORMATOPTIONS_NAV then
         PsListTree_SetBackColor( HWND_FRMFORMATOPTIONS_NAV, theme.toptabs.texthot.backcolor )
-        PsListTree_SetScrollBarColors( HWND_FRMFORMATOPTIONS_NAV, ghPanel.BackColorScrollBar, _
-                                       ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
+        PsListTree_SetScrollBarColors( HWND_FRMFORMATOPTIONS_NAV, theme.panel.scrollbar.backcolor, _
+                                       theme.panel.scrollbar.forecolor, theme.panel.scrollbar.forecolor )
     end if
 
     for i as long = 0 to gFmtRowCount - 1

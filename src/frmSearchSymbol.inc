@@ -267,8 +267,8 @@ function frmSearchSymbol_WndProc( _
         b.BeginDoubleBuffer(hwnd)
 
         ' Paint the tab info area 
-        b.SetForeColor( ghPanel.ForeColor )
-        b.SetBackColor( ghPanel.BackColor )
+        b.SetForeColor( theme.panel.text.forecolor )
+        b.SetBackColor( theme.panel.text.backcolor )
 
         ' Clear the entire back client area
         b.PaintClientRect()
@@ -298,8 +298,8 @@ sub frmSearchSymbol_PaintCallback( byval p as PSLISTTREE_PAINTINFO ptr )
 
     ' We don't do Hot tracking in this listbox because it can be visually
     ' confusing for the user. We only highlight the current selection.
-    dim as COLORREF backclr = iif( p->IsSelected, ghPanel.BackColorHot,  ghPanel.BackColor)
-    dim as COLORREF foreclr = iif( p->IsSelected, ghPanel.ForeColor,  ghPanel.ForeColor)
+    dim as COLORREF backclr = iif( p->IsSelected, theme.panel.texthot.backcolor,  theme.panel.text.backcolor)
+    dim as COLORREF foreclr = iif( p->IsSelected, theme.panel.text.forecolor,  theme.panel.text.forecolor)
     p->b->SetColors( foreclr, backclr )
 
     ' Create our rect that works with the entire line. This is the ROW rect in the
@@ -325,18 +325,18 @@ sub frmSearchSymbol_PaintCallback( byval p as PSLISTTREE_PAINTINFO ptr )
 
         select case gSymbols(p->ItemID).id
             case SearchSymbol.file_symbol
-                icon_foreclr = ghPanel.ForeColorFilenameIcon
-                icon_backclr = iif( p->IsSelected, ghPanel.BackColorHot, ghPanel.BackColorFilenameIcon)
+                icon_foreclr = theme.panel.filenameicon.forecolor
+                icon_backclr = iif( p->IsSelected, theme.panel.texthot.backcolor, theme.panel.filenameicon.backcolor)
                 wszIcon = wszSearchFile
 
             case SearchSymbol.function_symbol
-                icon_foreclr = ghPanel.ForeColorFunctionIcon
-                icon_backclr = iif( p->IsSelected, ghPanel.BackColorHot, ghPanel.BackColorFunctionIcon)
+                icon_foreclr = theme.panel.functionicon.forecolor
+                icon_backclr = iif( p->IsSelected, theme.panel.texthot.backcolor, theme.panel.functionicon.backcolor)
                 wszIcon = wszSearchFunction
 
             case SearchSymbol.type_symbol
-                icon_foreclr = ghPanel.ForeColorTypeIcon
-                icon_backclr = iif( p->IsSelected, ghPanel.BackColorHot, ghPanel.BackColorTypeIcon)
+                icon_foreclr = theme.panel.typeicon.forecolor
+                icon_backclr = iif( p->IsSelected, theme.panel.texthot.backcolor, theme.panel.typeicon.backcolor)
                 wszIcon = iif( gSymbols(p->ItemID).isEnum, wszSearchEnum, wszSearchType )
         end select
 
@@ -353,12 +353,12 @@ sub frmSearchSymbol_PaintCallback( byval p as PSLISTTREE_PAINTINFO ptr )
         
         for i as integer = 0 to nLen - 1
             ' Default to normal forecolor and font
-            clrChar = ghPanel.ForeColorTextSearch
+            clrChar = theme.panel.textsearch
             idFont  = GUIFONT_10
             
             ' Test mask to see if "1" indicating highlight the letter.
             if gSymbols(p->ItemID).clrMask[i] = 49 then   ' "1"
-                clrChar = ghPanel.ForeColorTextSearchHot
+                clrChar = theme.panel.textsearchhot
                 idFont  = GUIFONTBOLD_10
             end if
 
@@ -426,11 +426,11 @@ function frmSearchSymbol_Show( byval hwndParent as HWND ) as LRESULT
     dim as RECT rc
     dim as HWND hCtlFind = PsTextBox_Create( HWND_FRMSEARCHSYMBOL, IDC_FRMSEARCHSYMBOL_TXTFIND )
     PsTextBox_SetFont( hCtlFind, ghFont(GUIFONT_10) )
-    PsTextBox_SetForeColor( hCtlFind, ghPanel.ForeColorHot )
-    PsTextBox_SetBackColor( hCtlFind, ghPanel.BackColorHot )
+    PsTextBox_SetForeColor( hCtlFind, theme.panel.texthot.forecolor )
+    PsTextBox_SetBackColor( hCtlFind, theme.panel.texthot.backcolor )
     PsTextBox_SetBorderWidth( hCtlFind, 0 )                       ' flat, as before
     PsTextBox_SetCueBannerText( hCtlFind, L(37,"Search Symbol") & "..." )
-    PsTextBox_SetCueBannerColor( hCtlFind, ghPanel.ForeColor )
+    PsTextBox_SetCueBannerColor( hCtlFind, theme.panel.text.forecolor )
     PsTextBox_SetChangeCallback( hCtlFind, @frmSearchSymbol_TextBoxChange )
     PsTextBox_SetFocusCallback( hCtlFind, @frmSearchSymbol_TextBoxFocus )
     PsTextBox_SetMessageCallback( hCtlFind, @frmSearchSymbol_TextBoxMessage )
@@ -441,14 +441,14 @@ function frmSearchSymbol_Show( byval hwndParent as HWND ) as LRESULT
     PsListTree_SetPaintCallback( hCtrlList, @frmSearchSymbol_PaintCallback )
     PsListTree_SetMessageCallback( hCtrlList, @frmSearchSymbol_MessageCallback )
     PsListTree_PreventDoubleClick( hCtrlList )
-    PsListTree_SetBackColor( hCtrlList, ghPanel.BackColor )
+    PsListTree_SetBackColor( hCtrlList, theme.panel.text.backcolor )
     ' Unscaled units -- PsListTree_SetRowHeight DPI-scales what it is handed.
     PsListTree_SetRowHeight( hCtrlList, 22 )
     PsListTree_SetFont( hCtrlList, ghFont(GUIFONT_10) )
     ' The scrollbar is created/positioned/auto-hidden by the control; we only theme it.
     PsListTree_SetScrollBarWidth( hCtrlList, SCROLLBAR_WIDTH_PANEL )
-    PsListTree_SetScrollBarColors( hCtrlList, ghPanel.BackColorScrollBar, _
-                                 ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
+    PsListTree_SetScrollBarColors( hCtrlList, theme.panel.scrollbar.backcolor, _
+                                 theme.panel.scrollbar.forecolor, theme.panel.scrollbar.forecolor )
 
 
     ' Get the client area of the main window and subtract width of any visible side panel. We

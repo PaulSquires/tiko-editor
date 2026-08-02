@@ -158,9 +158,9 @@ end sub
 ''
 private sub Theme_PushPanelList( byval hList as HWND )
     if IsWindow(hList) = 0 then exit sub
-    PsListTree_SetBackColor( hList, ghPanel.BackColor )
-    PsListTree_SetScrollBarColors( hList, ghPanel.BackColorScrollBar, _
-                                  ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
+    PsListTree_SetBackColor( hList, theme.panel.text.backcolor )
+    PsListTree_SetScrollBarColors( hList, theme.panel.scrollbar.backcolor, _
+                                  theme.panel.scrollbar.forecolor, theme.panel.scrollbar.forecolor )
 end sub
 
 
@@ -251,7 +251,7 @@ private sub Theme_FillTooltipColors( byref tipc as PSTOOLTIP_COLORS )
     tipc.BackColor   = theme.topmenu.text.backcolor
     tipc.BorderColor = ghEditor.Divider
     tipc.ForeColor   = theme.topmenu.text.forecolor
-    tipc.TitleColor  = ghPanel.ForeColorHot
+    tipc.TitleColor  = theme.panel.texthot.forecolor
     tipc.GlyphColor  = theme.ui.accent
 end sub
 
@@ -732,25 +732,39 @@ sub Theme_RunSelfTest()
         kill( wszTmp )
     end if
 
-    ' -- 11. The two colour pages PARTITION the bind table. ------------------------------
+    ' -- 11. The two colour pages PARTITION the COLOUR keys. -----------------------------
     '    Every colour key on exactly one page, nothing listed twice, nothing orphaned. The
     '    pages are generated from this same predicate, so a key added to the engine cannot
     '    quietly fail to appear in the UI.
-    dim as long nSyntax, nInterface, nNeither
-    for i as long = lbound(gThemeBind) to ubound(gThemeBind)
-        select case frmThemes_PageForKey( gThemeBind(i).keyValue )
+    '
+    '    This walked the bind table until the migration emptied it, and its premise went with
+    '    it: "general.* have no bind row, so nothing lands in neither" was true of that table
+    '    and is false of the key table, which carries the two text payloads like any other
+    '    key. Rather than exempt them by count, the check is now STRONGER -- a key is allowed
+    '    off both pages only if it is a text key, which is asserted rather than assumed.
+    dim as long nSyntax, nInterface, nNeither, nNeitherText
+    for i as long = lbound(gThemeKeys) to ubound(gThemeKeys)
+        select case frmThemes_PageForKey( gThemeKeys(i).keyValue )
             case THEMEPAGE_SYNTAX:    nSyntax += 1
             case THEMEPAGE_INTERFACE: nInterface += 1
-            case else:              nNeither += 1
+            case else
+                nNeither += 1
+                ' ofsText >= 0 IS the definition of a text payload rather than a colour.
+                if gThemeKeys(i).ofsText >= 0 then
+                    nNeitherText += 1
+                else
+                    THASSERT( false, "a COLOUR key belongs to no page: " & gThemeKeys(i).keyValue )
+                end if
         end select
     next
-    THASSERT( nSyntax + nInterface + nNeither = (ubound(gThemeBind) - lbound(gThemeBind) + 1), _
+    THASSERT( nSyntax + nInterface + nNeither = (ubound(gThemeKeys) - lbound(gThemeKeys) + 1), _
               "page partition lost a key" )
     THASSERT( nSyntax > 0, "syntax page is empty" )
     THASSERT( nInterface > 0, "interface page is empty" )
-    '    general.description / general.version have no bind row at all, so nothing should land
-    '    in "neither" -- if it does, a colour key is invisible in both pages.
-    THASSERT( nNeither = 0, "a bound colour key belongs to no page" )
+    '    ...and conversely, every text key IS off both pages. Without this the arm above
+    '    would be satisfied by a theme with no text keys at all.
+    THASSERT( nNeither = nNeitherText, "a colour key escaped both pages" )
+    THASSERT( nNeitherText = 2, "expected exactly 2 text keys off-page, got " & nNeitherText )
     THASSERT( frmThemes_PageForKey( "editor.keyword" ) = THEMEPAGE_SYNTAX, "editor.* -> syntax" )
     THASSERT( frmThemes_PageForKey( "panel.text" ) = THEMEPAGE_INTERFACE, "panel.* -> interface" )
     THASSERT( frmThemes_PageForKey( "ui.divider" ) = THEMEPAGE_INTERFACE, "ui.* -> interface" )
@@ -812,10 +826,10 @@ sub Theme_RunSelfTest()
     '    Compares category IDS, never their localized titles -- two categories that happen to
     '    translate alike are still two categories, and a missing string id would make every
     '    title compare equal (which is exactly how this went wrong the first time).
-    for i as long = lbound(gThemeBind) to ubound(gThemeBind)
-        if frmThemes_PageForKey( gThemeBind(i).keyValue ) = OPTPAGE_NONE then continue for
-        THASSERT( frmThemes_CategoryIdForKey( gThemeBind(i).keyValue ) <> THEMECAT_OTHER, _
-                  "key has no category: " & gThemeBind(i).keyValue )
+    for i as long = lbound(gThemeKeys) to ubound(gThemeKeys)
+        if frmThemes_PageForKey( gThemeKeys(i).keyValue ) = OPTPAGE_NONE then continue for
+        THASSERT( frmThemes_CategoryIdForKey( gThemeKeys(i).keyValue ) <> THEMECAT_OTHER, _
+                  "key has no category: " & gThemeKeys(i).keyValue )
     next
 
     ' -- 16. Reset puts a channel back, and reports honestly whether it needs to. ---------
@@ -889,7 +903,7 @@ sub Theme_RunSelfTest()
 
     ' -- 19. The accent key exists and actually carries a colour. -------------------------
     THASSERT( Theme_FindEntry( "ui.accent" ) >= 0, "ui.accent was not materialised by the fallback" )
-    THASSERT( theme.ui.accent <> ghPanel.BackColor, "the accent is the same as the page background" )
+    THASSERT( theme.ui.accent <> theme.panel.text.backcolor, "the accent is the same as the page background" )
 
     ' -- 20. %MACRO survives a write/read round trip. ------------------------------------
     '    The writer used to expand every macro to literal r,g,b, so the first save of a

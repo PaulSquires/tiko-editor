@@ -281,9 +281,9 @@ private sub frmThemes_PopulateList()
     dim as long nRow = -1
     dim as long nFirstSelectable = -1
 
-    for i as long = lbound(gThemeBind) to ubound(gThemeBind)
+    for i as long = lbound(gThemeKeys) to ubound(gThemeKeys)
 
-        dim as string sKey = gThemeBind(i).keyValue
+        dim as string sKey = gThemeKeys(i).keyValue
         if frmThemes_PageForKey( sKey ) <> gThemeCurPage then continue for
 
         nRow += 1
@@ -323,12 +323,12 @@ private sub frmThemes_SyncEditControls()
     dim as long nAlpha = 255
 
     if nb >= 0 then
-        bHasFore  = (gThemeBind(nb).pFore <> 0)
-        bHasBack  = (gThemeBind(nb).pBack <> 0)
-        bHasFlags = (gThemeBind(nb).pBold <> 0)
-        bHasAlpha = gThemeBind(nb).bAlphaCapable
+        bHasFore  = (gThemeKeys(nb).ofsFore >= 0)
+        bHasBack  = (gThemeKeys(nb).ofsBack >= 0)
+        bHasFlags = (gThemeKeys(nb).ofsBold >= 0)
+        bHasAlpha = gThemeKeys(nb).bAlphaCapable
 
-        dim as long n = Theme_FindEntry( gThemeBind(nb).keyValue )
+        dim as long n = Theme_FindEntry( gThemeKeys(nb).keyValue )
         if n >= 0 then
             if ghThemeBold then PsToggle_SetChecked( ghThemeBold, (gTheme(n).bold <> 0) )
             if ghThemeItalic then PsToggle_SetChecked( ghThemeItalic, (gTheme(n).italic <> 0) )
@@ -350,8 +350,8 @@ private sub frmThemes_SyncEditControls()
     ' doubles as an indicator of which channels the user has actually touched.
     dim as boolean bResetF, bResetB
     if nb >= 0 then
-        bResetF = bHasFore andalso Theme_IsChannelModified( gThemeBind(nb).keyValue, THEMECH_FORE )
-        bResetB = bHasBack andalso Theme_IsChannelModified( gThemeBind(nb).keyValue, THEMECH_BACK )
+        bResetF = bHasFore andalso Theme_IsChannelModified( gThemeKeys(nb).keyValue, THEMECH_FORE )
+        bResetB = bHasBack andalso Theme_IsChannelModified( gThemeKeys(nb).keyValue, THEMECH_BACK )
     end if
     if ghThemeResetF then EnableWindow( ghThemeResetF, bResetF )
     if ghThemeResetB then EnableWindow( ghThemeResetB, bResetB )
@@ -390,7 +390,7 @@ private sub frmThemes_SyncEditControls()
         dim as COLORREF clrEdit = 0
         dim as boolean bCanEdit = false
         if nb >= 0 then
-            dim as long n2 = Theme_FindEntry( gThemeBind(nb).keyValue )
+            dim as long n2 = Theme_FindEntry( gThemeKeys(nb).keyValue )
             if n2 >= 0 then
                 if gThemeChannel = THEMECH_FORE then
                     clrEdit  = gTheme(n2).foreground
@@ -564,13 +564,13 @@ declare sub      frmThemes_OpenColorPopup( byval nChannel as long, byval hOpener
 ' the popup picker so their chrome cannot drift.
 private sub frmThemes_FillPickerColors( byval pc as PSCOLORPICKER_COLORS ptr )
     if pc = 0 then exit sub
-    pc->BackColor           = ghPanel.BackColor
-    pc->ForeColor           = ghPanel.ForeColor
+    pc->BackColor           = theme.panel.text.backcolor
+    pc->ForeColor           = theme.panel.text.forecolor
     pc->BorderColor         = ghEditor.Divider
-    pc->TabBackColor        = ghPanel.BackColor
-    pc->TabBackColorSel     = ghPanel.BackColorHot
-    pc->TabForeColor        = ghPanel.ForeColor
-    pc->TabForeColorSel     = ghPanel.ForeColorHot
+    pc->TabBackColor        = theme.panel.text.backcolor
+    pc->TabBackColorSel     = theme.panel.texthot.backcolor
+    pc->TabForeColor        = theme.panel.text.forecolor
+    pc->TabForeColorSel     = theme.panel.texthot.forecolor
     pc->FieldBackColor      = ghEditor.BackColorText
     pc->FieldForeColor      = ghEditor.ForeColorText
     pc->FieldBorderColor    = ghEditor.Divider
@@ -751,9 +751,9 @@ function frmThemes_SwatchClick( byval x as long, byval y as long ) as boolean
     dim as POINT pt : pt.x = x : pt.y = y
     dim as long  nChan   = -1
     dim as HWND  hAnchor = 0
-    if (gThemeBind(nb).pFore <> 0) andalso (PtInRect( @gThemeSwatchRc(0), pt ) <> 0) then
+    if (gThemeKeys(nb).ofsFore >= 0) andalso (PtInRect( @gThemeSwatchRc(0), pt ) <> 0) then
         nChan = THEMECH_FORE : hAnchor = ghThemeFore
-    elseif (gThemeBind(nb).pBack <> 0) andalso (PtInRect( @gThemeSwatchRc(1), pt ) <> 0) then
+    elseif (gThemeKeys(nb).ofsBack >= 0) andalso (PtInRect( @gThemeSwatchRc(1), pt ) <> 0) then
         nChan = THEMECH_BACK : hAnchor = ghThemeBack
     end if
     if nChan < 0 then return false
@@ -804,14 +804,14 @@ private sub frmThemes_PickerChanged( byval hCtrl as HWND, _
     dim as long nb = frmThemes_SelectedBind()
     if nb < 0 then exit sub
 
-    dim as string sKey = gThemeBind(nb).keyValue
+    dim as string sKey = gThemeKeys(nb).keyValue
 
     ' The channel must exist on this key. The picker is disabled when it does not, but a stale
     ' notification arriving as the selection moves would otherwise write to a null binding.
     if gThemeChannel = THEMECH_FORE then
-        if gThemeBind(nb).pFore = 0 then exit sub
+        if gThemeKeys(nb).ofsFore < 0 then exit sub
     else
-        if gThemeBind(nb).pBack = 0 then exit sub
+        if gThemeKeys(nb).ofsBack < 0 then exit sub
     end if
 
     if nPhase = CLR_PHASE_BEGIN then
@@ -836,7 +836,7 @@ private sub frmThemes_PickerChanged( byval hCtrl as HWND, _
     ' palette-relative. It is only passed on for a key that has somewhere to put it; everything
     ' else gets -1, which is Theme_SetColor's "leave the alpha alone" sentinel.
     dim as long nA = -1
-    if gThemeBind(nb).bAlphaCapable then nA = clng( nAlpha )
+    if gThemeKeys(nb).bAlphaCapable then nA = clng( nAlpha )
 
     dim as ulong nMask = Theme_SetColor( sKey, gThemeChannel, clr, nA )
     gThemeEdited = true
@@ -890,7 +890,7 @@ private sub frmThemes_PaletteAssign( byval hCtrl as HWND, byval idx as long )
 
     if frmThemes_EnsureForked() = false then exit sub
 
-    dim as ulong nMask = Theme_AssignMacro( gThemeBind(nb).keyValue, gThemeChannel, wszName )
+    dim as ulong nMask = Theme_AssignMacro( gThemeKeys(nb).keyValue, gThemeChannel, wszName )
     if nMask = THSUB_NONE then exit sub
 
     gThemeEdited = true
@@ -914,7 +914,7 @@ private sub frmThemes_ResetChannel( byval nChannel as long )
     dim as long nb = frmThemes_SelectedBind()
     if nb < 0 then exit sub
 
-    dim as ulong nMask = Theme_ResetChannel( gThemeBind(nb).keyValue, nChannel )
+    dim as ulong nMask = Theme_ResetChannel( gThemeKeys(nb).keyValue, nChannel )
     if nMask = THSUB_NONE then exit sub
 
     Theme_RequestApply( nMask )
@@ -950,7 +950,7 @@ private sub frmThemes_FlagChanged( byval hToggle as HWND, byval bChecked as bool
         exit sub
     end if
 
-    dim as ulong nMask = Theme_SetFlag( gThemeBind(nb).keyValue, nChannel, iif(bChecked, 1, 0) )
+    dim as ulong nMask = Theme_SetFlag( gThemeKeys(nb).keyValue, nChannel, iif(bChecked, 1, 0) )
     gThemeEdited = true
     Theme_RequestApply( nMask )
 
@@ -964,16 +964,16 @@ private sub frmThemes_AlphaChanged( byval hCtrl as HWND, byval dblValue as doubl
 
     dim as long nb = frmThemes_SelectedBind()
     if nb < 0 then exit sub
-    if gThemeBind(nb).bAlphaCapable = false then exit sub
+    if gThemeKeys(nb).bAlphaCapable = false then exit sub
 
-    dim as string sKey = gThemeBind(nb).keyValue
+    dim as string sKey = gThemeKeys(nb).keyValue
     dim as long n = Theme_FindEntry( sKey )
     if n < 0 then exit sub
 
     if frmThemes_EnsureForked() = false then exit sub
 
     ' Apply the alpha to whichever channel this key actually carries it on.
-    dim as long nChannel = iif( gThemeBind(nb).pBack <> 0, THEMECH_BACK, THEMECH_FORE )
+    dim as long nChannel = iif( gThemeKeys(nb).ofsBack >= 0, THEMECH_BACK, THEMECH_FORE )
     dim as COLORREF clr = iif( nChannel = THEMECH_FORE, gTheme(n).foreground, gTheme(n).background )
 
     dim as ulong nMask = Theme_SetColor( sKey, nChannel, clr, clng(dblValue) )
@@ -998,7 +998,7 @@ private sub frmThemes_RGBChanged( byval hTextBox as HWND )
     if nb < 0 then exit sub
 
     dim as boolean bHasChan = iif( gThemeChannel = THEMECH_FORE, _
-                                   (gThemeBind(nb).pFore <> 0), (gThemeBind(nb).pBack <> 0) )
+                                   (gThemeKeys(nb).ofsFore >= 0), (gThemeKeys(nb).ofsBack >= 0) )
     if bHasChan = false then exit sub
 
     dim as long r = frmThemes_ClampByte( val( PsTextBox_GetText( ghThemeR ) ) )
@@ -1008,7 +1008,7 @@ private sub frmThemes_RGBChanged( byval hTextBox as HWND )
 
     if frmThemes_EnsureForked() = false then exit sub     ' defaults are blocked from Edit -> a no-op
 
-    dim as ulong nMask = Theme_SetColor( gThemeBind(nb).keyValue, gThemeChannel, clr, -1 )
+    dim as ulong nMask = Theme_SetColor( gThemeKeys(nb).keyValue, gThemeChannel, clr, -1 )
     gThemeEdited = true
     Theme_RequestApply( nMask )
 
@@ -1034,11 +1034,11 @@ private sub frmThemes_ListPaint( byval p as PSLISTTREE_PAINTINFO ptr )
 
     dim as COLORREF backclr, foreclr
     if p->isSelected orelse p->isHot then
-        backclr = ghPanel.BackColorHot
-        foreclr = ghPanel.ForeColorHot
+        backclr = theme.panel.texthot.backcolor
+        foreclr = theme.panel.texthot.forecolor
     else
-        backclr = ghPanel.BackColor
-        foreclr = ghPanel.ForeColor
+        backclr = theme.panel.text.backcolor
+        foreclr = theme.panel.text.forecolor
     end if
     p->b->SetBackColor( backclr )
     p->b->SetForeColor( foreclr )
@@ -1054,12 +1054,12 @@ private sub frmThemes_ListPaint( byval p as PSLISTTREE_PAINTINFO ptr )
     if (nb < 0) orelse p->isHeader then
         dim as RECT rcHdr = p->rc
         rcHdr.left += AfxScaleX(6)
-        p->b->SetForeColor( ghPanel.ForeColorHot )
+        p->b->SetForeColor( theme.panel.texthot.forecolor )
         p->b->PaintText( p->wszCaption, @rcHdr, DT_LEFT or DT_END_ELLIPSIS )
         exit sub
     end if
 
-    dim as long n = Theme_FindEntry( gThemeBind(nb).keyValue )
+    dim as long n = Theme_FindEntry( gThemeKeys(nb).keyValue )
     if n < 0 then exit sub
 
     dim as long sw = AfxScaleX(THEME_SWATCHW)
@@ -1076,18 +1076,18 @@ private sub frmThemes_ListPaint( byval p as PSLISTTREE_PAINTINFO ptr )
 
     ' Key name.
     dim as RECT rcText = ( p->rc.left + AfxScaleX(6), p->rc.top, xFore - gap, p->rc.bottom )
-    p->b->PaintText( gThemeBind(nb).keyValue, @rcText, DT_LEFT or DT_END_ELLIPSIS )
+    p->b->PaintText( gThemeKeys(nb).keyValue, @rcText, DT_LEFT or DT_END_ELLIPSIS )
 
     ' Swatches. Outlined in the divider colour so a swatch the same shade as the row behind
     ' it is still visibly a swatch rather than a hole.
-    if gThemeBind(nb).pFore <> 0 then
+    if gThemeKeys(nb).ofsFore >= 0 then
         dim as RECT rcF = ( xFore, yMid, xFore + sw, yMid + sh )
         p->b->SetBackColor( gTheme(n).foreground )
         p->b->PaintRect( @rcF )
         p->b->SetPenColor( theme.ui.divider )
         p->b->PaintRoundOutline( @rcF, 0, 1 )
     end if
-    if gThemeBind(nb).pBack <> 0 then
+    if gThemeKeys(nb).ofsBack >= 0 then
         dim as RECT rcB = ( xBack, yMid, xBack + sw, yMid + sh )
         p->b->SetBackColor( gTheme(n).background )
         p->b->PaintRect( @rcB )
@@ -1224,9 +1224,9 @@ sub frmThemes_ApplyTheme()
 
     if gThemeBuilt = false then exit sub
 
-    PsListTree_SetBackColor( ghThemeKeys, ghPanel.BackColor )
-    PsListTree_SetScrollBarColors( ghThemeKeys, ghPanel.BackColorScrollBar, _
-                                  ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
+    PsListTree_SetBackColor( ghThemeKeys, theme.panel.text.backcolor )
+    PsListTree_SetScrollBarColors( ghThemeKeys, theme.panel.scrollbar.backcolor, _
+                                  theme.panel.scrollbar.forecolor, theme.panel.scrollbar.forecolor )
     PsListTree_SetFont( ghThemeKeys, OptionsFont_Base() )
     PsListTree_SetBorderWidth( ghThemeKeys, 1 )
     PsListTree_SetBorderColor( ghThemeKeys, ghEditor.Divider )
@@ -1260,7 +1260,7 @@ sub frmThemes_ApplyTheme()
             PsTextBox_SetFont( hRGB(i), OptionsFont_Base() )
             PsTextBox_SetForeColor( hRGB(i), ghEditor.ForeColorText )
             PsTextBox_SetBackColor( hRGB(i), ghEditor.BackColorText )
-            PsTextBox_SetOuterBackColor( hRGB(i), ghPanel.BackColor )
+            PsTextBox_SetOuterBackColor( hRGB(i), theme.panel.text.backcolor )
             PsTextBox_SetBorderColor( hRGB(i), ghEditor.Divider )
             PsTextBox_SetTextAlign( hRGB(i), TXT_ALIGN_CENTER )
         end if
@@ -1438,8 +1438,8 @@ end function
 sub frmThemes_Paint( byval nPage as long, byval p as SCP_PAINTINFO ptr )
     if p = 0 then exit sub
     p->b->SetFont( OptionsFont_Base() )
-    p->b->SetBackColor( ghPanel.BackColor )
-    p->b->SetForeColor( ghPanel.ForeColor )
+    p->b->SetBackColor( theme.panel.text.backcolor )
+    p->b->SetForeColor( theme.panel.text.forecolor )
     for i as long = lbound(gThemeLabels) to ubound(gThemeLabels)
         dim as RECT rc = gThemeLabels(i).rc
         p->b->PaintText( gThemeLabels(i).caption, @rc, DT_LEFT or DT_END_ELLIPSIS )
@@ -1448,15 +1448,15 @@ sub frmThemes_Paint( byval nPage as long, byval p as SCP_PAINTINFO ptr )
     ' The Foreground / Background current-colour swatches beside their buttons.
     dim as long nb = frmThemes_SelectedBind()
     if nb >= 0 then
-        dim as long n = Theme_FindEntry( gThemeBind(nb).keyValue )
+        dim as long n = Theme_FindEntry( gThemeKeys(nb).keyValue )
         if n >= 0 then
-            if (gThemeBind(nb).pFore <> 0) andalso (IsRectEmpty( @gThemeSwatchRc(0) ) = 0) then
+            if (gThemeKeys(nb).ofsFore >= 0) andalso (IsRectEmpty( @gThemeSwatchRc(0) ) = 0) then
                 p->b->SetBackColor( gTheme(n).foreground )
                 p->b->PaintRect( @gThemeSwatchRc(0) )
                 p->b->SetPenColor( ghEditor.Divider )
                 p->b->PaintRoundOutline( @gThemeSwatchRc(0), 0, 1 )
             end if
-            if (gThemeBind(nb).pBack <> 0) andalso (IsRectEmpty( @gThemeSwatchRc(1) ) = 0) then
+            if (gThemeKeys(nb).ofsBack >= 0) andalso (IsRectEmpty( @gThemeSwatchRc(1) ) = 0) then
                 p->b->SetBackColor( gTheme(n).background )
                 p->b->PaintRect( @gThemeSwatchRc(1) )
                 p->b->SetPenColor( ghEditor.Divider )

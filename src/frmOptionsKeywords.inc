@@ -124,7 +124,7 @@ private sub frmOptionsKeywords_ThemeText( byval hTb as HWND )
     PsTextBox_SetForeColor( hTb, ghEditor.ForeColorText )
     PsTextBox_SetBackColor( hTb, ghEditor.BackColorText )
     PsTextBox_SetBorderColor( hTb, ghEditor.Divider )
-    PsTextBox_SetFocusBorderColor( hTb, ghPanel.ForeColorHot )
+    PsTextBox_SetFocusBorderColor( hTb, theme.panel.texthot.forecolor )
     ThemeTextBoxContextMenu( hTb )
 end sub
 
@@ -168,8 +168,8 @@ sub frmOptionsKeywords_ApplyTheme()
         frmOptionsKeywords_ThemeText( ghKwText(i) )
     next
     if ghKwScroll then
-        PsVScrollBar_SetColors( ghKwScroll, ghPanel.BackColorScrollBar, _
-                               ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
+        PsVScrollBar_SetColors( ghKwScroll, theme.panel.scrollbar.backcolor, _
+                               theme.panel.scrollbar.forecolor, theme.panel.scrollbar.forecolor )
     end if
 end sub
 

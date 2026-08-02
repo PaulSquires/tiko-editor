@@ -127,7 +127,7 @@ private sub frmAbout_CreditsPaintRow( byval p as PSLISTTREE_PAINTINFO ptr )
     ' Marking the rows non-selectable (frmAbout_BuildCredits) stops selection; it does NOT
     ' stop the control reporting isHot for the row under the cursor, so the highlight has to
     ' be refused here as well. Reading either flag is what would put it back.
-    p->b->SetBackColor( ghPanel.BackColor )
+    p->b->SetBackColor( theme.panel.text.backcolor )
     p->b->PaintRect( @p->rc )
     p->b->SetFont( ghFont(GUIFONT_11) )
 
@@ -154,12 +154,12 @@ end sub
 private sub frmAbout_CreditsPaintHeader( byval p as PSCOLUMNHEADER_PAINTINFO ptr )
     if p = 0 then exit sub
 
-    p->b->SetBackColor( ghPanel.BackColor )
+    p->b->SetBackColor( theme.panel.text.backcolor )
     p->b->PaintRect( @p->rc )
 
     dim as RECT rcText = p->rc
     rcText.left += AfxScaleX(10)
-    p->b->SetForeColor( ghPanel.ForeColor )
+    p->b->SetForeColor( theme.panel.text.forecolor )
     p->b->SetFont( ghFont(GUIFONT_11) )
     p->b->PaintText( p->wszCaption, @rcText, DT_LEFT or DT_END_ELLIPSIS )
 
@@ -278,7 +278,7 @@ private sub frmAbout_PaintPill( _
         pb->PaintRoundOutline( rc, curve, 1 )
     end if
 
-    pb->SetForeColor( ghPanel.ForeColor )
+    pb->SetForeColor( theme.panel.text.forecolor )
     pb->PaintText( wszText, rc, DT_CENTER or DT_VCENTER or DT_SINGLELINE )
 
 end sub
@@ -294,7 +294,7 @@ private sub frmAbout_PaintHero( byval pb as PsBufferPaint ptr, byval rcHero as R
     ' keeps it a TINT of the page rather than a block of colour -- which is what makes it
     ' survive an accent that is nearly white (default_light) as well as one that is nearly
     ' black (default_dark).
-    pb->PaintGradientRect( rcHero, theme.ui.accent, ghPanel.BackColor, LinearGradientModeHorizontal )
+    pb->PaintGradientRect( rcHero, theme.ui.accent, theme.panel.text.backcolor, LinearGradientModeHorizontal )
 
     dim as long mx = AfxScaleX(FRMABOUT_MARGIN)
 
@@ -351,7 +351,7 @@ private sub frmAbout_PaintHero( byval pb as PsBufferPaint ptr, byval rcHero as R
     y += nameH + gap1
     r.top = y : r.bottom = y + lineH
     pb->SetFont( ghFont(GUIFONT_11) )
-    pb->SetForeColor( ghPanel.ForeColor )
+    pb->SetForeColor( theme.panel.text.forecolor )
     pb->PaintText( L(370,"Programmer's code editor for the FreeBASIC compiler"), _
                    @r, DT_LEFT or DT_VCENTER or DT_SINGLELINE )
 
@@ -406,7 +406,7 @@ private sub frmAbout_PaintAboutPage( byval pb as PsBufferPaint ptr, byval rcBody
     dim as long descH = rcCalc.bottom - rcCalc.top
 
     rcText.bottom = rcText.top + descH
-    pb->SetForeColor( ghPanel.ForeColor )
+    pb->SetForeColor( theme.panel.text.forecolor )
     pb->PaintTextEx( wszDesc, @rcText, DT_LEFT or DT_WORDBREAK )
 
     ' ---- the key / value rows --------------------------------------------------------
@@ -455,7 +455,7 @@ private function frmAbout_OnPaint( byval hwnd as HWND ) as LRESULT
     buffer.BeginDoubleBuffer( hwnd, hdc, rc )
 
     ' The whole client in the page colour first. The hero paints over its own band.
-    buffer.SetBackColor( ghPanel.BackColor )
+    buffer.SetBackColor( theme.panel.text.backcolor )
     buffer.PaintRect( @rc )
 
     dim as RECT rcHero, rcTabs, rcBody, rcFoot
@@ -546,25 +546,25 @@ private sub frmAbout_ApplyTheme( byval hwnd as HWND )
     ' tab. That is PsSelectBar's own default shape, restated here because the theme's values
     ' would otherwise not be flat.
     dim as PSSELECTBAR_COLORS sc
-    sc.BackColor         = ghPanel.BackColor
-    sc.ForeColor         = ghPanel.ForeColor
-    sc.BackColorHot      = ghPanel.BackColor
-    sc.ForeColorHot      = ghPanel.ForeColorHot
-    sc.BackColorSelect   = ghPanel.BackColor
+    sc.BackColor         = theme.panel.text.backcolor
+    sc.ForeColor         = theme.panel.text.forecolor
+    sc.BackColorHot      = theme.panel.text.backcolor
+    sc.ForeColorHot      = theme.panel.texthot.forecolor
+    sc.BackColorSelect   = theme.panel.text.backcolor
     sc.ForeColorSelect   = ghEditor.ForeColorText
     sc.ForeColorDisabled = theme.topmenu.textdisabled.forecolor
     sc.IndicatorColor    = theme.ui.accent
     PsSelectBar_SetColors( HWND_FRMABOUT_TABS, @sc )
 
     ' ---- the Credits list -------------------------------------------------------------
-    PsListTree_SetBackColor( HWND_FRMABOUT_CREDITS, ghPanel.BackColor )
-    PsListTree_SetScrollBarColors( HWND_FRMABOUT_CREDITS, ghPanel.BackColorScrollBar, _
-                                   ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
+    PsListTree_SetBackColor( HWND_FRMABOUT_CREDITS, theme.panel.text.backcolor )
+    PsListTree_SetScrollBarColors( HWND_FRMABOUT_CREDITS, theme.panel.scrollbar.backcolor, _
+                                   theme.panel.scrollbar.forecolor, theme.panel.scrollbar.forecolor )
     PsListTree_SetBorderColor( HWND_FRMABOUT_CREDITS, theme.ui.divider )
 
     ' ---- the License field ------------------------------------------------------------
     PsTextBox_SetBackColor( HWND_FRMABOUT_LICENSE, ghEditor.BackColorText )
-    PsTextBox_SetOuterBackColor( HWND_FRMABOUT_LICENSE, ghPanel.BackColor )
+    PsTextBox_SetOuterBackColor( HWND_FRMABOUT_LICENSE, theme.panel.text.backcolor )
     PsTextBox_SetForeColor( HWND_FRMABOUT_LICENSE, ghEditor.ForeColorText )
     PsTextBox_SetBorderColor( HWND_FRMABOUT_LICENSE, theme.ui.divider )
     ' EQUAL to the plain border on purpose. A read-only field that brightens its frame when
@@ -576,19 +576,19 @@ private sub frmAbout_ApplyTheme( byval hwnd as HWND )
     ' rather than shared: those live in files the unity build includes in an order that does
     ' not reach here. Keep the three in step by eye.
     dim as PSBUTTON_COLORS bc
-    bc.BackColor           = ghPanel.BackColorButton
-    bc.ForeColor           = ghPanel.ForeColorButton
+    bc.BackColor           = theme.panel.button.backcolor
+    bc.ForeColor           = theme.panel.button.forecolor
     bc.BorderColor         = theme.ui.divider
-    bc.IconColor           = ghPanel.ForeColorButton
-    bc.BackColorHot        = ghPanel.BackColorButtonHot
-    bc.ForeColorHot        = ghPanel.ForeColorButtonHot
-    bc.BorderColorHot      = ghPanel.BackColorButtonHot
-    bc.IconColorHot        = ghPanel.ForeColorButtonHot
-    bc.BackColorPressed    = ghPanel.BackColorButtonHot
-    bc.ForeColorPressed    = ghPanel.ForeColorButtonHot
-    bc.BorderColorPressed  = ghPanel.BackColorButtonHot
-    bc.IconColorPressed    = ghPanel.ForeColorButtonHot
-    bc.BackColorDisabled   = ghPanel.BackColor
+    bc.IconColor           = theme.panel.button.forecolor
+    bc.BackColorHot        = theme.panel.buttonhot.backcolor
+    bc.ForeColorHot        = theme.panel.buttonhot.forecolor
+    bc.BorderColorHot      = theme.panel.buttonhot.backcolor
+    bc.IconColorHot        = theme.panel.buttonhot.forecolor
+    bc.BackColorPressed    = theme.panel.buttonhot.backcolor
+    bc.ForeColorPressed    = theme.panel.buttonhot.forecolor
+    bc.BorderColorPressed  = theme.panel.buttonhot.backcolor
+    bc.IconColorPressed    = theme.panel.buttonhot.forecolor
+    bc.BackColorDisabled   = theme.panel.text.backcolor
     bc.ForeColorDisabled   = theme.ui.divider
     bc.BorderColorDisabled = theme.ui.divider
     ' The default button's accent border. PsButton applies this LAST and with no mood test, so

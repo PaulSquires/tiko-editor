@@ -112,7 +112,7 @@ end function
 
 
 ' Blend c1 toward c2 by weight pct (weight of c1, 0..100). Used to dim the header's secondary
-' text a notch below ghPanel.ForeColor without inventing a new theme key.
+' text a notch below theme.panel.text.forecolor without inventing a new theme key.
 private function frmThemes_Blend( byval c1 as COLORREF, byval c2 as COLORREF, byval pct as long ) as COLORREF
     dim as long r = (GetRValue(c1) * pct + GetRValue(c2) * (100 - pct)) \ 100
     dim as long g = (GetGValue(c1) * pct + GetGValue(c2) * (100 - pct)) \ 100
@@ -279,11 +279,11 @@ private sub frmThemes_ThemeListPaint( byval p as PSLISTTREE_PAINTINFO ptr )
     ' as noise. (isHot is deliberately ignored.)
     dim as COLORREF backclr, foreclr
     if p->isSelected then
-        backclr = ghPanel.BackColorHot
-        foreclr = ghPanel.ForeColorHot
+        backclr = theme.panel.texthot.backcolor
+        foreclr = theme.panel.texthot.forecolor
     else
-        backclr = ghPanel.BackColor
-        foreclr = ghPanel.ForeColor
+        backclr = theme.panel.text.backcolor
+        foreclr = theme.panel.text.forecolor
     end if
     p->b->SetBackColor( backclr )
     p->b->SetForeColor( foreclr )
@@ -310,12 +310,12 @@ end sub
 
 private sub frmThemes_HeaderPaint( byval p as PSCOLUMNHEADER_PAINTINFO ptr )
     if p = 0 then exit sub
-    ' A DISTINCT DARK header band: darker than the list rows (which paint ghPanel.BackColor), with
-    ' the lighter ghPanel.ForeColor text on top so the column titles read clearly.
-    dim as COLORREF backclr = frmThemes_Blend( ghPanel.BackColor, RGB(0,0,0), 72 )
-    if p->isHot orelse p->isResizeHot then backclr = ghPanel.BackColor
+    ' A DISTINCT DARK header band: darker than the list rows (which paint theme.panel.text.backcolor), with
+    ' the lighter theme.panel.text.forecolor text on top so the column titles read clearly.
+    dim as COLORREF backclr = frmThemes_Blend( theme.panel.text.backcolor, RGB(0,0,0), 72 )
+    if p->isHot orelse p->isResizeHot then backclr = theme.panel.text.backcolor
     p->b->SetBackColor( backclr )
-    p->b->SetForeColor( ghPanel.ForeColor )
+    p->b->SetForeColor( theme.panel.text.forecolor )
     p->b->PaintRect( @p->rc )
     p->b->SetFont( OptionsFont_Base() )
     dim as RECT rcText = p->rc
@@ -382,7 +382,7 @@ private function frmThemes_PageWndProc( _
         GetClientRect( hwnd, @p.rcClient )
         p.nPos         = 0
 
-        b.SetBackColor( ghPanel.BackColor )
+        b.SetBackColor( theme.panel.text.backcolor )
         b.PaintRect( @p.rcClient )
         if gThemesCurPage <> THEMEPAGE_NONE then frmThemes_Paint( gThemesCurPage, @p )
 
@@ -390,9 +390,9 @@ private function frmThemes_PageWndProc( _
         return 0
 
     case WM_CTLCOLORSTATIC, WM_CTLCOLORBTN, WM_CTLCOLOREDIT, WM_CTLCOLORLISTBOX
-        SetBkColor( cast(HDC, wParam), ghPanel.BackColor )
-        SetTextColor( cast(HDC, wParam), ghPanel.ForeColor )
-        if ghThemesPageBrush = 0 then ghThemesPageBrush = CreateSolidBrush( ghPanel.BackColor )
+        SetBkColor( cast(HDC, wParam), theme.panel.text.backcolor )
+        SetTextColor( cast(HDC, wParam), theme.panel.text.forecolor )
+        if ghThemesPageBrush = 0 then ghThemesPageBrush = CreateSolidBrush( theme.panel.text.backcolor )
         return cast( LRESULT, ghThemesPageBrush )
 
     case WM_COMMAND, WM_NOTIFY, WM_HSCROLL, WM_VSCROLL
@@ -566,7 +566,7 @@ private sub frmThemes_ThemeDescTip()
     tipc.BackColor   = theme.topmenu.text.backcolor
     tipc.BorderColor = ghEditor.Divider
     tipc.ForeColor   = theme.topmenu.text.forecolor
-    tipc.TitleColor  = ghPanel.ForeColorHot
+    tipc.TitleColor  = theme.panel.texthot.forecolor
     tipc.GlyphColor  = theme.ui.accent
     PsTooltip_SetColors( ghThemesDescTip, @tipc )
 end sub
@@ -579,21 +579,21 @@ private sub frmThemes_ApplyShellTheme()
     if HWND_FRMTHEMES then Theme_ApplyDarkCaption( HWND_FRMTHEMES )
 
     if ghThemesPageBrush then DeleteObject( ghThemesPageBrush )
-    ghThemesPageBrush = CreateSolidBrush( ghPanel.BackColor )
+    ghThemesPageBrush = CreateSolidBrush( theme.panel.text.backcolor )
 
     if ghThemesList then
-        PsListTree_SetBackColor( ghThemesList, ghPanel.BackColor )
+        PsListTree_SetBackColor( ghThemesList, theme.panel.text.backcolor )
         PsListTree_SetFont( ghThemesList, OptionsFont_Base() )
     end if
 
     if ghThemesBar then
         dim as PSSELECTBAR_COLORS sc
-        sc.BackColor        = ghPanel.BackColor
-        sc.BackColorHot     = ghPanel.BackColor
-        sc.BackColorSelect  = ghPanel.BackColor
-        sc.ForeColor        = ghPanel.ForeColor
-        sc.ForeColorHot     = ghPanel.ForeColorHot
-        sc.ForeColorSelect  = ghPanel.ForeColorHot
+        sc.BackColor        = theme.panel.text.backcolor
+        sc.BackColorHot     = theme.panel.text.backcolor
+        sc.BackColorSelect  = theme.panel.text.backcolor
+        sc.ForeColor        = theme.panel.text.forecolor
+        sc.ForeColorHot     = theme.panel.texthot.forecolor
+        sc.ForeColorSelect  = theme.panel.texthot.forecolor
         sc.IndicatorColor   = theme.ui.accent
         PsSelectBar_SetColors( ghThemesBar, @sc )
         PsSelectBar_SetFont( ghThemesBar, OptionsFont_Base() )
@@ -868,7 +868,7 @@ function frmThemes_WndProc( _
         b.BeginDoubleBuffer( hwnd )
         dim as RECT rc
         GetClientRect( hwnd, @rc )
-        b.SetBackColor( ghPanel.BackColor )
+        b.SetBackColor( theme.panel.text.backcolor )
         b.PaintRect( @rc )
 
         ' SELECT view header band: a bold "Themes" on the first line, and the active theme named
@@ -888,7 +888,7 @@ function frmThemes_WndProc( _
             dim as DWSTRING s1 = L(329,"Themes")
             dim as RECT r1 : SetRect( @r1, hx, yTop, rc.right - mx, yTop + lineH )
             b.SetFont( hHead )
-            b.SetForeColor( ghPanel.ForeColorHot )
+            b.SetForeColor( theme.panel.texthot.forecolor )
             b.PaintText( s1, @r1, DT_LEFT )
 
             ' Line 2, directly under it: the current active theme.
@@ -896,7 +896,7 @@ function frmThemes_WndProc( _
                                  GetThemeDescription( frmThemes_ThemesFolder() & gConfig.ThemeShortFilename )
             dim as RECT r2 : SetRect( @r2, hx, yTop + lineH, rc.right - mx, yTop + lineH + AfxScaleY(22) )
             b.SetFont( ghFont(GUIFONT_11) )
-            b.SetForeColor( ghPanel.ForeColor )
+            b.SetForeColor( theme.panel.text.forecolor )
             b.PaintText( s2, @r2, DT_LEFT or DT_END_ELLIPSIS )
         else
             ' EDIT view header, left-aligned to the element list below it: bold "Edit theme",
@@ -910,12 +910,12 @@ function frmThemes_WndProc( _
             dim as DWSTRING sT = L(391,"Edit theme")
             dim as RECT rT : SetRect( @rT, listLeftX, AfxScaleY(8), rRight, AfxScaleY(34) )
             b.SetFont( hHead )
-            b.SetForeColor( ghPanel.ForeColorHot )
+            b.SetForeColor( theme.panel.texthot.forecolor )
             b.PaintText( sT, @rT, DT_LEFT )
 
             dim as RECT rD : SetRect( @rD, listLeftX, AfxScaleY(40), rRight, AfxScaleY(62) )
             b.SetFont( ghFont(GUIFONT_11) )
-            b.SetForeColor( ghPanel.ForeColor )
+            b.SetForeColor( theme.panel.text.forecolor )
             b.PaintText( theme.general.description, @rD, DT_LEFT or DT_END_ELLIPSIS )
         end if
 

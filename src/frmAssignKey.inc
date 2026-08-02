@@ -521,7 +521,7 @@ private function frmAssignKey_CaptureProc( _
             dim as boolean bWaiting = (len(wszShow) = 0)
             if bWaiting then
                 wszShow = L(343,"Press the new shortcut")
-                clr = ghPanel.ForeColor
+                clr = theme.panel.text.forecolor
             end if
 
             buffer.SetForeColor( clr )
@@ -596,11 +596,11 @@ end function
 private sub frmAssignKey_KeyListPaint( byval p as PSLISTTREE_PAINTINFO ptr )
     if p = 0 then exit sub
     dim as boolean bActive = (p->isSelected orelse p->isHot)
-    p->b->SetBackColor( iif( bActive, ghPanel.BackColorHot, ghEditor.BackColorText ) )
+    p->b->SetBackColor( iif( bActive, theme.panel.texthot.backcolor, ghEditor.BackColorText ) )
     p->b->PaintRect( @p->rc )
     dim as RECT rcText = p->rc
     rcText.left += AfxScaleX(8)
-    p->b->SetForeColor( iif( bActive, ghPanel.ForeColorHot, ghEditor.ForeColorText ) )
+    p->b->SetForeColor( iif( bActive, theme.panel.texthot.forecolor, ghEditor.ForeColorText ) )
     p->b->SetFont( ghFont(GUIFONT_11) )
     p->b->PaintText( p->wszCaption, @rcText, DT_LEFT or DT_END_ELLIPSIS )
 end sub
@@ -651,7 +651,7 @@ private function frmAssignKey_OnPaint( byval hwnd as HWND ) as LRESULT
     dim buffer as PsBufferPaint
     buffer.BeginDoubleBuffer( hwnd, hdc, rc )
 
-    buffer.SetBackColor( ghPanel.BackColor )
+    buffer.SetBackColor( theme.panel.text.backcolor )
     buffer.PaintRect( @rc )
 
     dim as long mx   = AfxScaleX(FRMASSIGNKEY_MARGIN)
@@ -664,7 +664,7 @@ private function frmAssignKey_OnPaint( byval hwnd as HWND ) as LRESULT
     ' The tool being edited, bold. WITHOUT THIS the dialog is a shortcut editor with no
     ' indication of what it is a shortcut FOR -- and it can be reached from any of six rows.
     rcT.top = y : rcT.bottom = y + rowH
-    buffer.SetForeColor( ghPanel.ForeColorHot )
+    buffer.SetForeColor( theme.panel.texthot.forecolor )
     buffer.SetFont( ghFont(GUIFONTBOLD_11) )
     dim as DWSTRING wszWho = gAssignKeyCaption
     if len(wszWho) = 0 then wszWho = L(353,"(untitled)")
@@ -681,7 +681,7 @@ private function frmAssignKey_OnPaint( byval hwnd as HWND ) as LRESULT
     dim as long togW = AfxScaleX(FRMASSIGNKEY_TOGW)
     dim as long capW = AfxScaleX(FRMASSIGNKEY_CAPW)
     dim as long x    = mx
-    buffer.SetForeColor( ghPanel.ForeColor )
+    buffer.SetForeColor( theme.panel.text.forecolor )
     buffer.SetFont( ghFont(GUIFONT_11) )
 
     #macro TKCAPTION( _text_ )
@@ -785,8 +785,8 @@ private sub frmAssignKey_ApplyTheme( byval hwnd as HWND )
     PsToggle_SetColors( ghTKTogShift, @tc )
 
     PsListTree_SetBackColor( ghTKKeyList, ghEditor.BackColorText )
-    PsListTree_SetScrollBarColors( ghTKKeyList, ghPanel.BackColorScrollBar, _
-                                   ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
+    PsListTree_SetScrollBarColors( ghTKKeyList, theme.panel.scrollbar.backcolor, _
+                                   theme.panel.scrollbar.forecolor, theme.panel.scrollbar.forecolor )
     OptionsTheme_ApplyListBorder( ghTKKeyList )
 
     dim as PSBUTTON_COLORS bc

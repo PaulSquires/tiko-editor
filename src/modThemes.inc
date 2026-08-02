@@ -228,27 +228,7 @@ type EDITOR_HANDLES_TYPE
 end type
 dim shared ghEditor as EDITOR_HANDLES_TYPE
 
-type PANEL_HANDLES_TYPE
-    BackColorScrollBar as COLORREF
-    ForeColorScrollBar as COLORREF
-    BackColor as COLORREF
-    ForeColor as COLORREF
-    BackColorHot as COLORREF
-    ForeColorHot as COLORREF
-    BackColorButton as COLORREF
-    ForeColorButton as COLORREF
-    BackColorButtonHot as COLORREF
-    ForeColorButtonHot as COLORREF
-    BackColorFilenameIcon as COLORREF
-    ForeColorFilenameIcon as COLORREF
-    BackColorFunctionIcon as COLORREF
-    ForeColorFunctionIcon as COLORREF
-    BackColorTypeIcon as COLORREF
-    ForeColorTypeIcon as COLORREF
-    ForeColorTextSearch as COLORREF
-    ForeColorTextSearchHot as COLORREF
-end type
-dim shared ghPanel as PANEL_HANDLES_TYPE
+' ghPanel is GONE -- migrated to theme.panel.*
 
 ' ghMenuBar is GONE -- migrated to theme.menubar.text.* / .texthot.*
 ' ghPopup is GONE -- migrated to theme.topmenu.*. Note the namespace: these keys have
@@ -593,7 +573,7 @@ private function Theme_SubsysForNamespace( byval k as string ) as ulong
         ' frmAutoComplete derives its row colours from the editor styles (keyword2, keyword3,
         ' numbers, comments, selection, currentline), so the whole namespace feeds it.
         case "editor"    : return THSUB_SCINTILLA or THSUB_EDITORCHROME or THSUB_AUTOCOMPLETE
-        ' ghPanel dresses the Options dialog and the symbol search popup as well as the panels.
+        ' the panel namespace dresses the Options dialog and the symbol search popup as well as the panels.
         case "panel"     : return THSUB_PANEL or THSUB_OPTIONSDLG or THSUB_SEARCHSYMBOL
         case "toptabs"   : return THSUB_TOPTABS
         case "menubar"   : return THSUB_MENUBAR
@@ -741,16 +721,6 @@ private sub Theme_BuildBindTable()
     ' app-wide, hence THSUB_ALL.
 
     ' ---- panel ------------------------------------------------------------------------
-    ThemeBind_Add( "panel.text",           @ghPanel.ForeColor, @ghPanel.BackColor )
-    ThemeBind_Add( "panel.texthot",        @ghPanel.ForeColorHot, @ghPanel.BackColorHot )
-    ThemeBind_Add( "panel.scrollbar",      @ghPanel.ForeColorScrollBar, @ghPanel.BackColorScrollBar )
-    ThemeBind_Add( "panel.button",         @ghPanel.ForeColorButton, @ghPanel.BackColorButton )
-    ThemeBind_Add( "panel.buttonhot",      @ghPanel.ForeColorButtonHot, @ghPanel.BackColorButtonHot )
-    ThemeBind_Add( "panel.filenameicon",   @ghPanel.ForeColorFilenameIcon, @ghPanel.BackColorFilenameIcon )
-    ThemeBind_Add( "panel.functionicon",   @ghPanel.ForeColorFunctionIcon, @ghPanel.BackColorFunctionIcon )
-    ThemeBind_Add( "panel.typeicon",       @ghPanel.ForeColorTypeIcon, @ghPanel.BackColorTypeIcon )
-    ThemeBind_Add( "panel.textsearch",     @ghPanel.ForeColorTextSearch )
-    ThemeBind_Add( "panel.textsearchhot",  @ghPanel.ForeColorTextSearchHot )
 
     ' ---- topmenu (feeds ghPopup, not ghMenuBar) ----------------------------------------
 
@@ -794,6 +764,10 @@ type THEMEKEY_TYPE
     ofsBackAlpha as long
     nCat         as long          ' the theme editor's group header
     nSubsys      as ulong
+    ' Can an alpha on this key actually reach a pixel? Having an alpha destination IS the
+    ' definition, so it is derived rather than declared -- the colour picker asks this to
+    ' decide whether to offer an alpha slider at all.
+    bAlphaCapable as boolean
 end type
 dim shared gThemeKeys(any) as THEMEKEY_TYPE
 
@@ -843,6 +817,7 @@ private sub Theme_BuildKeyTable()
     #endmacro
 
     #macro THKEY_END()
+                .bAlphaCapable = ((.ofsForeAlpha >= 0) orelse (.ofsBackAlpha >= 0))
             end with
         end scope
     #endmacro
@@ -1039,9 +1014,9 @@ end sub
 ''  WHICH SUBSYSTEMS DOES THIS KEY FEED?
 ''
 function Theme_SubsystemsForKey( byval lookupKey as string ) as ulong
-    Theme_BuildBindTable()
-    for i as long = lbound(gThemeBind) to ubound(gThemeBind)
-        if gThemeBind(i).keyValue = lookupKey then return gThemeBind(i).nSubsys
+    Theme_BuildKeyTable()
+    for i as long = lbound(gThemeKeys) to ubound(gThemeKeys)
+        if gThemeKeys(i).keyValue = lookupKey then return gThemeKeys(i).nSubsys
     next
     return THSUB_NONE
 end function
@@ -1054,9 +1029,9 @@ end function
 ''  for every Scintilla style and every GDI-drawn caption, which are opaque by construction.
 ''
 function Theme_IsAlphaCapable( byval lookupKey as string ) as boolean
-    Theme_BuildBindTable()
-    for i as long = lbound(gThemeBind) to ubound(gThemeBind)
-        if gThemeBind(i).keyValue = lookupKey then return gThemeBind(i).bAlphaCapable
+    Theme_BuildKeyTable()
+    for i as long = lbound(gThemeKeys) to ubound(gThemeKeys)
+        if gThemeKeys(i).keyValue = lookupKey then return gThemeKeys(i).bAlphaCapable
     next
     return false
 end function
@@ -1680,18 +1655,29 @@ function Theme_WriteFile( byval wszFullPath as DWSTRING, _
 
     dim as string sLastNamespace
 
-    for i as long = lbound(gThemeBind) to ubound(gThemeBind)
+    ' Driven by the GENERATED KEY TABLE, not the bind table.
+    '
+    ' This was the bind table until the migration emptied it, and the consequence was data
+    ' loss rather than a cosmetic gap: the writer emits exactly the keys it is asked to walk,
+    ' so every namespace whose bind rows had gone silently stopped being written to the file
+    ' at all. Saving a theme would have dropped panel.*, output.*, toptabs.* and the rest --
+    ' with a clean build and a working editor. Caught by the write/read round-trip assertion.
+    Theme_BuildKeyTable()
 
-        dim as string sKey = gThemeBind(i).keyValue
+    for i as long = lbound(gThemeKeys) to ubound(gThemeKeys)
+
+        dim as string sKey = gThemeKeys(i).keyValue
         dim as long n = Theme_FindEntry( sKey )
         if n < 0 then continue for
+        ' general.* carries its payload in keyData and is emitted by hand above.
+        if gThemeKeys(i).ofsText >= 0 then continue for
 
         ' Blank line between namespaces, purely so the file stays readable by hand.
         dim as string sNamespace = AfxStrParse( sKey, 1, "." )
         if (len(sLastNamespace) > 0) andalso (sNamespace <> sLastNamespace) then print #f, ""
         sLastNamespace = sNamespace
 
-        if (gThemeBind(i).pFore <> 0) andalso gTheme(n).hasFore then
+        if (gThemeKeys(i).ofsFore >= 0) andalso gTheme(n).hasFore then
             dim as long nA = -1
             if gTheme(n).hasForeAlpha then nA = clng(gTheme(n).foregroundAlpha)
             sLine = sKey & ".foreground: " & _
@@ -1699,7 +1685,7 @@ function Theme_WriteFile( byval wszFullPath as DWSTRING, _
             print #f, sLine
         end if
 
-        if (gThemeBind(i).pBack <> 0) andalso gTheme(n).hasBack then
+        if (gThemeKeys(i).ofsBack >= 0) andalso gTheme(n).hasBack then
             dim as long nA = -1
             if gTheme(n).hasBackAlpha then nA = clng(gTheme(n).backgroundAlpha)
             sLine = sKey & ".background: " & _
@@ -1709,7 +1695,7 @@ function Theme_WriteFile( byval wszFullPath as DWSTRING, _
 
         ' Flags are written for every key that HAS them bound, present or not, so a syntax
         ' style always shows its full triplet rather than a partial one.
-        if gThemeBind(i).pBold <> 0 then
+        if gThemeKeys(i).ofsBold >= 0 then
             sLine = sKey & ".bold: "      & iif( gTheme(n).bold      <> 0, "true", "false" )
             print #f, sLine
             sLine = sKey & ".italic: "    & iif( gTheme(n).italic    <> 0, "true", "false" )
@@ -1838,24 +1824,24 @@ sub Theme_DumpGlobals( byval wszOutPath as DWSTRING )
     DUMPCLR( "editor.ForeColorDebugLine",     ghEditor.ForeColorDebugLine )
     DUMPCLR( "editor.BackColorDebugLine",     ghEditor.BackColorDebugLine )
 
-    DUMPCLR( "panel.BackColorScrollBar",      ghPanel.BackColorScrollBar )
-    DUMPCLR( "panel.ForeColorScrollBar",      ghPanel.ForeColorScrollBar )
-    DUMPCLR( "panel.BackColor",               ghPanel.BackColor )
-    DUMPCLR( "panel.ForeColor",               ghPanel.ForeColor )
-    DUMPCLR( "panel.BackColorHot",            ghPanel.BackColorHot )
-    DUMPCLR( "panel.ForeColorHot",            ghPanel.ForeColorHot )
-    DUMPCLR( "panel.BackColorButton",         ghPanel.BackColorButton )
-    DUMPCLR( "panel.ForeColorButton",         ghPanel.ForeColorButton )
-    DUMPCLR( "panel.BackColorButtonHot",      ghPanel.BackColorButtonHot )
-    DUMPCLR( "panel.ForeColorButtonHot",      ghPanel.ForeColorButtonHot )
-    DUMPCLR( "panel.BackColorFilenameIcon",   ghPanel.BackColorFilenameIcon )
-    DUMPCLR( "panel.ForeColorFilenameIcon",   ghPanel.ForeColorFilenameIcon )
-    DUMPCLR( "panel.BackColorFunctionIcon",   ghPanel.BackColorFunctionIcon )
-    DUMPCLR( "panel.ForeColorFunctionIcon",   ghPanel.ForeColorFunctionIcon )
-    DUMPCLR( "panel.BackColorTypeIcon",       ghPanel.BackColorTypeIcon )
-    DUMPCLR( "panel.ForeColorTypeIcon",       ghPanel.ForeColorTypeIcon )
-    DUMPCLR( "panel.ForeColorTextSearch",     ghPanel.ForeColorTextSearch )
-    DUMPCLR( "panel.ForeColorTextSearchHot",  ghPanel.ForeColorTextSearchHot )
+    DUMPCLR( "panel.BackColorScrollBar",      theme.panel.scrollbar.backcolor )
+    DUMPCLR( "panel.ForeColorScrollBar",      theme.panel.scrollbar.forecolor )
+    DUMPCLR( "panel.BackColor",               theme.panel.text.backcolor )
+    DUMPCLR( "panel.ForeColor",               theme.panel.text.forecolor )
+    DUMPCLR( "panel.BackColorHot",            theme.panel.texthot.backcolor )
+    DUMPCLR( "panel.ForeColorHot",            theme.panel.texthot.forecolor )
+    DUMPCLR( "panel.BackColorButton",         theme.panel.button.backcolor )
+    DUMPCLR( "panel.ForeColorButton",         theme.panel.button.forecolor )
+    DUMPCLR( "panel.BackColorButtonHot",      theme.panel.buttonhot.backcolor )
+    DUMPCLR( "panel.ForeColorButtonHot",      theme.panel.buttonhot.forecolor )
+    DUMPCLR( "panel.BackColorFilenameIcon",   theme.panel.filenameicon.backcolor )
+    DUMPCLR( "panel.ForeColorFilenameIcon",   theme.panel.filenameicon.forecolor )
+    DUMPCLR( "panel.BackColorFunctionIcon",   theme.panel.functionicon.backcolor )
+    DUMPCLR( "panel.ForeColorFunctionIcon",   theme.panel.functionicon.forecolor )
+    DUMPCLR( "panel.BackColorTypeIcon",       theme.panel.typeicon.backcolor )
+    DUMPCLR( "panel.ForeColorTypeIcon",       theme.panel.typeicon.forecolor )
+    DUMPCLR( "panel.ForeColorTextSearch",     theme.panel.textsearch )
+    DUMPCLR( "panel.ForeColorTextSearchHot",  theme.panel.textsearchhot )
 
     DUMPCLR( "menubar.BackColor",             theme.menubar.text.backcolor )
     DUMPCLR( "menubar.BackColorHot",          theme.menubar.texthot.backcolor )

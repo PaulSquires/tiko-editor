@@ -139,7 +139,7 @@ private function frmInputBox_OnPaint( byval hwnd as HWND ) as LRESULT
     dim buffer as PsBufferPaint
     buffer.BeginDoubleBuffer( hwnd, hdc, rc )
 
-    buffer.SetBackColor( ghPanel.BackColor )
+    buffer.SetBackColor( theme.panel.text.backcolor )
     buffer.PaintRect( @rc )
 
     dim as FRMINPUTBOX_LAYOUT lay
@@ -148,7 +148,7 @@ private function frmInputBox_OnPaint( byval hwnd as HWND ) as LRESULT
     ' The same font the field is dressed with (OptionsTheme_ApplyTextBox forces it), so the
     ' prompt and the text under it cannot end up at different sizes. An empty prompt draws
     ' nothing -- the field just sits under a blank band -- which is the caller's call to make.
-    buffer.SetForeColor( ghPanel.ForeColor )
+    buffer.SetForeColor( theme.panel.text.forecolor )
     buffer.SetFont( OptionsFont_Base() )
     buffer.PaintText( gwszIBPrompt, @lay.rcLabel, _
                       DT_LEFT or DT_VCENTER or DT_SINGLELINE or DT_END_ELLIPSIS )
@@ -196,7 +196,7 @@ private sub frmInputBox_ApplyTheme( byval hwnd as HWND )
 
     ' THE FOCUS BORDER IS A LITERAL BLUE, NOT A THEME KEY, AND THAT IS DELIBERATE.
     '
-    ' OptionsTheme_ApplyTextBox leaves it at ghPanel.ForeColorHot, which is panel.texthot --
+    ' OptionsTheme_ApplyTextBox leaves it at theme.panel.texthot.forecolor, which is panel.texthot --
     ' %LIGHT_GRAY in default_dark and 97,97,97 in default_light. Grey in both, so a focused
     ' field was not highlighted so much as very slightly relit.
     '

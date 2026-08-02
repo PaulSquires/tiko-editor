@@ -314,7 +314,7 @@ private sub frmUnusedSymbols_OnPaint( byval hwnd as HWND )
 
     dim as PsBufferPaint b
     b.BeginDoubleBuffer( hwnd )
-    b.SetBackColor( ghPanel.BackColor )
+    b.SetBackColor( theme.panel.text.backcolor )
     b.PaintRect( @rc )
     b.SetFont( ghFont(GUIFONT_9) )
 
@@ -331,7 +331,7 @@ private sub frmUnusedSymbols_OnPaint( byval hwnd as HWND )
     rcT.left += nPad
     rcT.right -= nPad
     rcT.bottom = rcT.top + pWindow->ScaleY(22)
-    b.SetForeColor( ghPanel.ForeColor )
+    b.SetForeColor( theme.panel.text.forecolor )
     b.PaintText( L(583, "Scanned:") & " " & gUnusedScannedText, @rcT, DT_LEFT )
 
     if len(gUnusedDirtyText) > 0 then
@@ -343,7 +343,7 @@ private sub frmUnusedSymbols_OnPaint( byval hwnd as HWND )
         b.SetForeColor( theme.compile.iconfail )
         b.PaintText( L(584, "Unsaved changes (line numbers may be stale):") & " " & gUnusedDirtyText, _
                      @rcW, DT_LEFT )
-        b.SetForeColor( ghPanel.ForeColor )
+        b.SetForeColor( theme.panel.text.forecolor )
     end if
 
     ' (the kind filters are PsCheckBoxes and paint their own captions)

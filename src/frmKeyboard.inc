@@ -349,8 +349,8 @@ private sub frmKeyboard_ListPaintRow( byval p as PSLISTTREE_PAINTINFO ptr )
     if p = 0 then exit sub
 
     dim as boolean bActive = (p->isSelected orelse p->isHot)
-    dim as COLORREF backclr = iif( bActive, ghPanel.BackColorHot, ghPanel.BackColor )
-    dim as COLORREF foreclr = iif( bActive, ghPanel.ForeColorHot, ghPanel.ForeColor )
+    dim as COLORREF backclr = iif( bActive, theme.panel.texthot.backcolor, theme.panel.text.backcolor )
+    dim as COLORREF foreclr = iif( bActive, theme.panel.texthot.forecolor, theme.panel.text.forecolor )
 
     p->b->SetBackColor( backclr )
     p->b->PaintRect( @p->rc )
@@ -405,15 +405,15 @@ end sub
 private sub frmKeyboard_ListPaintHeader( byval p as PSCOLUMNHEADER_PAINTINFO ptr )
     if p = 0 then exit sub
 
-    dim as COLORREF backclr = ghPanel.BackColor
-    if p->isHot orelse p->isResizeHot then backclr = ghPanel.BackColorHot
+    dim as COLORREF backclr = theme.panel.text.backcolor
+    if p->isHot orelse p->isResizeHot then backclr = theme.panel.texthot.backcolor
 
     p->b->SetBackColor( backclr )
     p->b->PaintRect( @p->rc )
 
     dim as RECT rcText = p->rc
     rcText.left += AfxScaleX(6)
-    p->b->SetForeColor( ghPanel.ForeColorHot )
+    p->b->SetForeColor( theme.panel.texthot.forecolor )
     p->b->SetFont( ghFont(GUIFONT_11) )
     p->b->PaintText( p->wszCaption, @rcText, DT_LEFT or DT_END_ELLIPSIS )
 
@@ -589,7 +589,7 @@ private function frmKeyboard_OnPaint( byval hwnd as HWND ) as LRESULT
     dim buffer as PsBufferPaint
     buffer.BeginDoubleBuffer( hwnd, hdc, rc )
 
-    buffer.SetBackColor( ghPanel.BackColor )
+    buffer.SetBackColor( theme.panel.text.backcolor )
     buffer.PaintRect( @rc )
 
     dim as long titleH = AfxScaleY(FRMKEYBOARD_TITLE_H)
@@ -617,7 +617,7 @@ private function frmKeyboard_OnPaint( byval hwnd as HWND ) as LRESULT
     rcGlyph.top    = filterY
     rcGlyph.right  = mx + AfxScaleX(FRMKEYBOARD_FILTER_GLYPHW)
     rcGlyph.bottom = filterY + filterH
-    buffer.SetForeColor( ghPanel.ForeColor )
+    buffer.SetForeColor( theme.panel.text.forecolor )
     buffer.SetBackColor( ghEditor.BackColorText )
     buffer.SetFont( ghFont(SYMBOLFONT_10) )
     buffer.PaintText( wchr(&hE721), @rcGlyph, DT_CENTER or DT_VCENTER or DT_SINGLELINE )
@@ -693,9 +693,9 @@ end sub
 ' ========================================================================================
 private sub frmKeyboard_ApplyTheme( byval hwnd as HWND )
 
-    PsListTree_SetBackColor( HWND_FRMKEYBOARD_LIST, ghPanel.BackColor )
-    PsListTree_SetScrollBarColors( HWND_FRMKEYBOARD_LIST, ghPanel.BackColorScrollBar, _
-                                   ghPanel.ForeColorScrollBar, ghPanel.ForeColorScrollBar )
+    PsListTree_SetBackColor( HWND_FRMKEYBOARD_LIST, theme.panel.text.backcolor )
+    PsListTree_SetScrollBarColors( HWND_FRMKEYBOARD_LIST, theme.panel.scrollbar.backcolor, _
+                                   theme.panel.scrollbar.forecolor, theme.panel.scrollbar.forecolor )
     ' The frame's colour lives here, not beside SetBorderWidth at creation, so it follows a
     ' theme change. Same key the search box's drawn frame uses.
     PsListTree_SetBorderColor( HWND_FRMKEYBOARD_LIST, ghEditor.Divider )
@@ -704,7 +704,7 @@ private sub frmKeyboard_ApplyTheme( byval hwnd as HWND )
         PsTextBox_SetBackColor( HWND_FRMKEYBOARD_FILTER, ghEditor.BackColorText )
         PsTextBox_SetOuterBackColor( HWND_FRMKEYBOARD_FILTER, ghEditor.BackColorText )
         PsTextBox_SetForeColor( HWND_FRMKEYBOARD_FILTER, ghEditor.ForeColorText )
-        PsTextBox_SetCueBannerColor( HWND_FRMKEYBOARD_FILTER, ghPanel.ForeColor )
+        PsTextBox_SetCueBannerColor( HWND_FRMKEYBOARD_FILTER, theme.panel.text.forecolor )
     end if
 
     ' Same recipe as the Options dialog's OptionsTheme_FillButton, spelled out here rather
@@ -712,19 +712,19 @@ private sub frmKeyboard_ApplyTheme( byval hwnd as HWND )
     ' AFTER this file. Keep the two in step by eye -- a shared helper would have to move to
     ' a module both can see, and that is a bigger change than this dialog should make.
     dim as PSBUTTON_COLORS bc
-    bc.BackColor           = ghPanel.BackColorButton
-    bc.ForeColor           = ghPanel.ForeColorButton
+    bc.BackColor           = theme.panel.button.backcolor
+    bc.ForeColor           = theme.panel.button.forecolor
     bc.BorderColor         = ghEditor.Divider
-    bc.IconColor           = ghPanel.ForeColorButton
-    bc.BackColorHot        = ghPanel.BackColorButtonHot
-    bc.ForeColorHot        = ghPanel.ForeColorButtonHot
-    bc.BorderColorHot      = ghPanel.BackColorButtonHot
-    bc.IconColorHot        = ghPanel.ForeColorButtonHot
-    bc.BackColorPressed    = ghPanel.BackColorButtonHot
-    bc.ForeColorPressed    = ghPanel.ForeColorButtonHot
-    bc.BorderColorPressed  = ghPanel.BackColorButtonHot
-    bc.IconColorPressed    = ghPanel.ForeColorButtonHot
-    bc.BackColorDisabled   = ghPanel.BackColor
+    bc.IconColor           = theme.panel.button.forecolor
+    bc.BackColorHot        = theme.panel.buttonhot.backcolor
+    bc.ForeColorHot        = theme.panel.buttonhot.forecolor
+    bc.BorderColorHot      = theme.panel.buttonhot.backcolor
+    bc.IconColorHot        = theme.panel.buttonhot.forecolor
+    bc.BackColorPressed    = theme.panel.buttonhot.backcolor
+    bc.ForeColorPressed    = theme.panel.buttonhot.forecolor
+    bc.BorderColorPressed  = theme.panel.buttonhot.backcolor
+    bc.IconColorPressed    = theme.panel.buttonhot.forecolor
+    bc.BackColorDisabled   = theme.panel.text.backcolor
     bc.ForeColorDisabled   = ghEditor.Divider
     bc.BorderColorDisabled = ghEditor.Divider
     bc.IconColorDisabled   = ghEditor.Divider
