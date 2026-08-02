@@ -1,4 +1,4 @@
-'    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
+﻿'    tiko editor - Programmer's Code Editor for the FreeBASIC Compiler
 '    Copyright (C) 2016-2026 Paul Squires, PlanetSquires Software
 '
 '    This program is free software: you can redistribute it and/or modify
@@ -16,6 +16,19 @@
 ''   
 
 #include once "frmExplorer.bi"
+
+
+' Which action icon the cursor is currently over, and on which row.
+'
+' The tooltip callback is handed (row, col) and no x, so it cannot tell the two icons of one
+' row apart by itself -- and col is no help either, since this list defines no columns and
+' PsListTree_ColFromX therefore answers 0 for the whole width. The zone is tracked here on
+' the mouse move instead and consulted when the tip is resolved. The row is stored alongside
+' it so a stale zone can never be applied to a different row.
+dim shared as EXPLORER_ICONHIT gExpTipIcon = EXPICON_NONE
+dim shared as long gExpTipRow = -1
+
+
 
 
 ' ========================================================================================
@@ -560,6 +573,27 @@ function frmExplorer_MessageCallback( byval m as PSLISTTREE_MESSAGEINFO ptr ) as
             'print "WM_MOUSEHOVER on idx: "; m->idx
             ' Tooltips are now on-demand via the tooltip callback; nothing to push.
             return true
+
+        case WM_MOUSEMOVE
+            ' Track which action icon the cursor is over, so the tooltip callback can name it.
+            '
+            ' AND FORCE A RE-RESOLVE WHEN THE ZONE CHANGES. The control only re-queries a tip
+            ' when the hot ROW changes (PsListTree.inc updates its tool index inside the
+            ' "idx <> nLastHotIdx" guard), so sliding from Add to Delete within one row would
+            ' otherwise keep showing whichever tip resolved first. Hiding the tip is enough:
+            ' PsTooltip resolves its text afresh on every show, so the next dwell asks again.
+            dim as HWND hCtlMv = GetParent(m->hList)
+            dim as EXPLORER_ICONHIT nIcon = _
+                frmExplorer_IconHitTest( hCtlMv, m->idx, GET_X_LPARAM( m->lParam ) )
+            if (nIcon <> gExpTipIcon) orelse (m->idx <> gExpTipRow) then
+                gExpTipIcon = nIcon
+                gExpTipRow  = m->idx
+                dim as HWND hTip = PsListTree_GetPsTooltipHandle( hCtlMv )
+                if hTip then PsTooltip_Hide( hTip )
+            end if
+            ' FALSE: the control's own hot tracking and repaint still have to happen. This
+            ' arm only observes.
+            return false
             
         case WM_LBUTTONDOWN
             dim as HWND hCtlDn = GetParent(m->hList)
@@ -674,6 +708,15 @@ end function
 ' frmExplorer_TooltipCallback  -- per-row tooltip text, resolved on demand
 ' ========================================================================================
 function frmExplorer_TooltipCallback( byval hCtl as HWND, byval row as integer, byval col as integer ) as DWSTRING
+    ' An action icon names itself, and takes precedence over whatever the row would say.
+    ' In practice there is nothing to take precedence over -- icons only appear on group and
+    ' folder rows, and those resolve to no document and so to no tip -- but the guard keeps
+    ' that from being load-bearing if a file row ever grows an icon.
+    if (row = gExpTipRow) andalso (gExpTipIcon <> EXPICON_NONE) then
+        if gExpTipIcon = EXPICON_ADD then return L(630, "New Folder")
+        return L(631, "Delete Folder")
+    end if
+
     dim as DWSTRING wszTooltip
     dim as clsDocument ptr pDoc = frmExplorer_DocFromRow( hCtl, row )
     if pDoc then wszTooltip = pDoc->DiskFilename

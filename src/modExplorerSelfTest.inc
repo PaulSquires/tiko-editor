@@ -342,6 +342,34 @@ sub frmExplorer_RunSelfTest()
                 (IsRectEmpty( @rcAddT ) <> 0) andalso (IsRectEmpty( @rcDelT ) <> 0) )
         end if
 
+        ' --- the icons' tooltips ---------------------------------------------------------------
+        ' The tip is resolved from the tracked zone, not from the row alone, because the
+        ' callback is handed no x and this list defines no columns for col to distinguish.
+        ' Driven here by setting the zone the way the mouse-move arm does.
+        gExpTipRow = nRowAlpha
+        gExpTipIcon = EXPICON_ADD
+        Exp_Check( "the Add icon names itself", _
+            frmExplorer_TooltipCallback( HWND_FRMEXPLORER, nRowAlpha, 0 ) = L(630,"New Folder"), _
+            frmExplorer_TooltipCallback( HWND_FRMEXPLORER, nRowAlpha, 0 ) )
+        gExpTipIcon = EXPICON_DELETE
+        Exp_Check( "the Delete icon names itself", _
+            frmExplorer_TooltipCallback( HWND_FRMEXPLORER, nRowAlpha, 0 ) = L(631,"Delete Folder"), _
+            frmExplorer_TooltipCallback( HWND_FRMEXPLORER, nRowAlpha, 0 ) )
+        ' The two tips must actually DIFFER. Both resolving to the same string would satisfy
+        ' each assertion above on its own if the ids ever collided or one went blank.
+        dim as DWSTRING wszTipDel = frmExplorer_TooltipCallback( HWND_FRMEXPLORER, nRowAlpha, 0 )
+        gExpTipIcon = EXPICON_ADD
+        Exp_Check( "the two icon tips are different text", _
+            frmExplorer_TooltipCallback( HWND_FRMEXPLORER, nRowAlpha, 0 ) <> wszTipDel )
+        ' A stale zone must never leak onto another row -- the row is stored with it for
+        ' exactly this reason.
+        Exp_Check( "an icon tip does not leak onto another row", _
+            frmExplorer_TooltipCallback( HWND_FRMEXPLORER, nRootNormal, 0 ) <> L(630,"New Folder") )
+        gExpTipIcon = EXPICON_NONE
+        gExpTipRow = -1
+        Exp_Check( "with no icon under the cursor a folder row has no tip", _
+            len( frmExplorer_TooltipCallback( HWND_FRMEXPLORER, nRowAlpha, 0 ) ) = 0 )
+
         ' --- rebase: the rule shared by rename and delete -------------------------------------
         Exp_Check( "rebasing maps the folder itself", _
             ProjectFolders_RebasePath("a/b", "a/b", "a/x") = "a/x" )
