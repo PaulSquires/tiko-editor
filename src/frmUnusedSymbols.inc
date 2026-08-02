@@ -501,25 +501,31 @@ function frmUnusedSymbols_Show( byval hWndParent as HWND ) as LRESULT
 
         ' THESE WERE NEVER THEMED. Every other setter above was called and this one was
         ' not, so the five filters rendered in PsCheckBox's library defaults -- a fixed
-        ' dark palette that happens to sit near this pane's colours in the dark theme and
-        ' is simply wrong in the light one. tiko has no other PsCheckBox host, which is
-        ' why nothing else had to notice.
+        ' dark palette matching nothing in this window. tiko has no other PsCheckBox host,
+        ' which is why nothing else had to notice.
         '
-        ' The Output palette, because that is the surface these sit on. The box takes the
-        ' theme accent when checked; unchecked it is a muted outline off the dim role.
+        ' THE PANEL PALETTE, because that is what frmUnusedSymbols_OnPaint fills its own
+        ' client rect with. Getting this wrong is VISIBLE rather than subtle: a checkbox
+        ' whose BackColor differs from the surface behind it paints its whole control rect
+        ' in that colour, so the five filters read as five raised tiles on the pane instead
+        ' of as text on it. The library default and the Output palette are both wrong here
+        ' for the same reason -- neither is what this window paints.
         scope
             dim as PSCHECKBOX_COLORS cc
-            cc.BackColor               = theme.output.text.backcolor
-            cc.BackColorHot            = theme.output.text.backcolor
-            cc.BackColorPressed        = theme.output.text.backcolor
-            cc.BackColorDisabled       = theme.output.text.backcolor
-            cc.ForeColor               = theme.output.text.forecolor
-            cc.ForeColorHot            = theme.output.texthot.forecolor
-            cc.ForeColorPressed        = theme.output.texthot.forecolor
+            cc.BackColor               = theme.panel.text.backcolor
+            cc.BackColorHot            = theme.panel.text.backcolor
+            cc.BackColorPressed        = theme.panel.text.backcolor
+            cc.BackColorDisabled       = theme.panel.text.backcolor
+            cc.ForeColor               = theme.panel.text.forecolor
+            cc.ForeColorHot            = theme.panel.texthot.forecolor
+            cc.ForeColorPressed        = theme.panel.texthot.forecolor
             cc.ForeColorDisabled       = theme.role.clr(THROLE_FOREGROUNDDIM)
+            ' The box is ONE COMPOSITE GLYPH -- outline and tick are a single piece of ink
+            ' in a single colour -- so unchecked wants a muted outline and checked wants
+            ' the accent. There is no fill/tick split to reach for.
             cc.BoxColor                = theme.role.clr(THROLE_FOREGROUNDDIM)
-            cc.BoxColorHot             = theme.output.texthot.forecolor
-            cc.BoxColorPressed         = theme.output.texthot.forecolor
+            cc.BoxColorHot             = theme.panel.texthot.forecolor
+            cc.BoxColorPressed         = theme.panel.texthot.forecolor
             cc.BoxColorDisabled        = theme.role.clr(THROLE_FOREGROUNDDIM)
             cc.BoxColorChecked         = theme.ui.accent
             cc.BoxColorCheckedHot      = theme.ui.accent
