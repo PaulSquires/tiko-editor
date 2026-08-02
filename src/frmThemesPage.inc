@@ -106,6 +106,23 @@ const THEME_LISTHEIGHT   = 372
 ' EXACTLY by construction, because the list is computed as what is left.
 const THEME_LISTMINW     = 165      ' below this the key names stop being readable
 const THEME_LISTW        = 440      ' the key list width (2-column layout)
+
+' ROW FURNITURE, shared by the layout and the row painter so they cannot disagree about how
+' much of the list a name has left. All UNSCALED; run through AfxScaleX at use.
+'
+'     [ key name ....... ][ fore role ][FG][ back role ][BG][ B I U ]
+'
+' The two role columns were added after the fact and pushed the name column down to about
+' 78px inside a 440px list -- enough for "main.panel" and not remotely enough for
+' "output.scrollbardivider", which is the trap CLAUDE.md states outright: DrawText clips with
+' DT_END_ELLIPSIS and reports nothing, so a positive span is not the same claim as the label
+' fitting. The list width is DERIVED from these now instead of being a constant that happened
+' to work, and the floor is asserted.
+const THEME_ROLECOLW     = 100      ' one role-name column
+const THEME_BIUW         =  50      ' the bold/italic/underline cell
+const THEME_ROWGAP       =   6
+const THEME_ROWPADR      =   8
+const THEME_KEYNAMEMINW  = 170      ' the longest key is output.scrollbardivider
 const THEME_CTLCOLW      = 148      ' buttons, toggles and Opacity -- the narrow third column
 const THEME_SWATCHW      = 30
 const THEME_SWATCHH      = 14
@@ -1127,52 +1144,61 @@ private sub frmThemes_ListPaint( byval p as PSLISTTREE_PAINTINFO ptr )
 
     dim as long sw = AfxScaleX(THEME_SWATCHW)
     dim as long sh = AfxScaleY(THEME_SWATCHH)
-    dim as long gap = AfxScaleX(6)
-    dim as long biuW = AfxScaleX(50)
+    dim as long gap = AfxScaleX(THEME_ROWGAP)
+    dim as long biuW = AfxScaleX(THEME_BIUW)
 
-    ' Lay the right-hand furniture out from the right edge inwards.
-    dim as long xRight = p->rc.right - AfxScaleX(8)
+    ' Lay the right-hand furniture out from the right edge inwards. Each colour channel gets
+    ' its OWN role label, in its own column, immediately left of its own swatch:
+    '
+    '     [ key name ....... ][ fore role ][FG][ back role ][BG][ B I U ]
+    '
+    ' It showed ONE label before, right-aligned before both swatches, chosen as the fore
+    ' role if the foreground was inherited and otherwise the back role. So a key inheriting
+    ' both -- ui.field takes foreground AND background from the palette -- named only one of
+    ' them, and a key inheriting only its background showed a label with nothing to say which
+    ' channel it belonged to. A label that can mean either channel means neither.
+    dim as long roleW = AfxScaleX(THEME_ROLECOLW)
+    dim as long xRight = p->rc.right - AfxScaleX(THEME_ROWPADR)
     dim as RECT rcBiu = ( xRight - biuW, p->rc.top, xRight, p->rc.bottom )
-    dim as long xBack = rcBiu.left - gap - sw
-    dim as long xFore = xBack - gap - sw
+    dim as long xBack     = rcBiu.left - gap - sw
+    dim as long xBackRole = xBack - gap - roleW
+    dim as long xFore     = xBackRole - gap - sw
+    dim as long xForeRole = xFore - gap - roleW
     dim as long yMid  = p->rc.top + ((p->rc.bottom - p->rc.top) - sh) \ 2
 
-    ' Key name, and -- when this key is still taking its colour from the palette rather than
-    ' naming one -- the role it inherits. That is the whole story of the two-layer model on
-    ' one row: a key with no role shown has been given a colour of its own.
-    dim as RECT rcText = ( p->rc.left + AfxScaleX(6), p->rc.top, xFore - gap, p->rc.bottom )
+    dim as RECT rcText = ( p->rc.left + AfxScaleX(6), p->rc.top, xForeRole - gap, p->rc.bottom )
     p->b->PaintText( gThemeKeys(nb).keyValue, @rcText, DT_LEFT or DT_END_ELLIPSIS )
 
-    scope
-        dim as long rid = -1
-        if gTheme(n).foreFromRole then
-            rid = gThemeKeys(nb).nRoleFore
-        elseif gTheme(n).backFromRole then
-            rid = gThemeKeys(nb).nRoleBack
-        end if
-        if rid > THROLE_NONE then
-            ' Find the palette row for that role id so the name matches the Palette page.
-            dim as string sRole
-            for i as long = 0 to Theme_RoleCount() - 1
-                if gThemeRoleDef(i).nRole = rid then
-                    sRole = Theme_RoleName(i)
-                    if left(sRole,5) = "role." then sRole = mid(sRole, 6)
-                    exit for
+    ' The role a channel INHERITS, or nothing when it has been given a colour of its own.
+    ' That is the whole two-layer model on one row.
+    #macro PAINTROLE( _has_, _from_, _rid_, _x_ )
+        scope
+            dim as boolean bShow = (_has_)
+            bShow = (bShow andalso (_from_))
+            if bShow andalso (_rid_ > THROLE_NONE) then
+                dim as string sRole
+                for i as long = 0 to Theme_RoleCount() - 1
+                    if gThemeRoleDef(i).nRole = (_rid_) then
+                        sRole = Theme_RoleName(i)
+                        if left(sRole,5) = "role." then sRole = mid(sRole, 6)
+                        exit for
+                    end if
+                next
+                if len(sRole) > 0 then
+                    dim as RECT rcR = ( (_x_), p->rc.top, (_x_) + roleW, p->rc.bottom )
+                    p->b->SetForeColor( theme.role.clr(THROLE_FOREGROUNDDIM) )
+                    p->b->PaintText( sRole, @rcR, DT_RIGHT or DT_END_ELLIPSIS )
+                    p->b->SetForeColor( foreclr )
                 end if
-            next
-            if len(sRole) > 0 then
-                ' RIGHT-ALIGNED in the gap before the swatches, not placed after the key
-                ' name: PsBufferPaint has no text-measure method (the family measures on a
-                ' DC in LayoutItems, which a paint callback has no business doing), and
-                ' right-aligning lines the role names into a column, which is easier to scan
-                ' down than a ragged one anyway.
-                dim as RECT rcRole = ( rcText.left, p->rc.top, xFore - gap, p->rc.bottom )
-                p->b->SetForeColor( theme.role.clr(THROLE_FOREGROUNDDIM) )
-                p->b->PaintText( sRole, @rcRole, DT_RIGHT or DT_END_ELLIPSIS )
-                p->b->SetForeColor( foreclr )
             end if
-        end if
-    end scope
+        end scope
+    #endmacro
+
+    PAINTROLE( gThemeKeys(nb).ofsFore >= 0, gTheme(n).foreFromRole, _
+               gThemeKeys(nb).nRoleFore, xForeRole )
+    PAINTROLE( gThemeKeys(nb).ofsBack >= 0, gTheme(n).backFromRole, _
+               gThemeKeys(nb).nRoleBack, xBackRole )
+    #undef PAINTROLE
 
     ' Swatches. Outlined in the divider colour so a swatch the same shade as the row behind
     ' it is still visibly a swatch rather than a hole.
@@ -1444,8 +1470,20 @@ function frmThemes_Layout( byval nPage as long, byval hPage as HWND, byval cxPan
 
     ' A key list on the left (the names are short) and the controls beside it.
     dim as long editW = AfxScaleX(300)
-    dim as long listW = AfxScaleX(THEME_LISTW)
+    ' DERIVED from the row furniture, not a constant that happened to fit. Everything to the
+    ' right of the key name is fixed width, so what the name gets is whatever is left -- and
+    ' that is the number worth controlling.
+    dim as long rowFurniture = AfxScaleX( THEME_ROWPADR + THEME_BIUW + THEME_ROWGAP + _
+                                          THEME_SWATCHW + THEME_ROWGAP + THEME_ROLECOLW + _
+                                          THEME_ROWGAP + THEME_SWATCHW + THEME_ROWGAP + _
+                                          THEME_ROLECOLW )
+    dim as long listW = rowFurniture + AfxScaleX(THEME_KEYNAMEMINW) + SCROLLBAR_WIDTH_PANEL
     if listW < AfxScaleX(THEME_LISTMINW) then listW = AfxScaleX(THEME_LISTMINW)
+
+    ' ...but the edit column still has to fit beside it. Shrinking the list is the right
+    ' give: the assertion below reports when that has eaten the name column.
+    dim as long listMax = contentR - padLeft - gapX - editW
+    if listW > listMax then listW = listMax
 
     dim as long yTop = y
     SetWindowPos( ghThemeKeys, 0, padLeft, yTop, listW, listH, SWP_NOZORDER or SWP_NOACTIVATE )
@@ -1527,6 +1565,14 @@ function frmThemes_Layout( byval nPage as long, byval hPage as HWND, byval cxPan
         if listW >= AfxScaleX(THEME_LISTMINW) then sP = "PASS  " else sP = "FAIL  "
         ? sP & "theme page: the key list keeps its minimum width   [listW=" & str(listW) & _
             " floor=" & str(AfxScaleX(THEME_LISTMINW)) & "]"
+
+        ' THE NAME COLUMN, which is what the two role columns ate. A row whose right-hand
+        ' furniture fits perfectly and leaves the key name 78px is not a row that fits.
+        dim as long nameW = listW - rowFurniture - SCROLLBAR_WIDTH_PANEL
+        if nameW >= AfxScaleX(THEME_KEYNAMEMINW) then sP = "PASS  " else sP = "FAIL  "
+        ? sP & "theme page: key names keep room beside the role columns   [nameW=" & _
+            str(nameW) & " floor=" & str(AfxScaleX(THEME_KEYNAMEMINW)) & _
+            "  furniture=" & str(rowFurniture) & "]"
     end if
 
     return yBottom + AfxScaleY(OPTROW_PADBOTTOM)
