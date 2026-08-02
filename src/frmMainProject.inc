@@ -181,12 +181,17 @@ sub Workspace_RunSelfTest()
     ' failed to MATCH a Cat() row rather than being FILETYPE_UNDEFINED.
     dim as long nHeaders = ( ubound(gConfig.Cat) - CATINDEX_MAIN ) + 1
     dim as long nPromote = iif( gApp.IsProjectNamed(), 0, 1 )
+    ' User subfolders each take a row too. Every folder in the table is displayed --
+    ' ProjectFolders_Add refuses a category that takes none -- so the count needs no filter.
+    ' This term is not optional: without it the assertion passes only on a workspace that has
+    ' no folders, which is every workspace until the first one is created and none after.
+    dim as long nFolders = ProjectFolders_Count()
     dim as long nRows = PsListTree_GetCount( HWND_FRMEXPLORER )
-    Workspace_Check( "the Explorer lists every document under a header", _
-        nRows = nHeaders + nDocs + nPromote, _
-        "rows=" & str(nRows) & " expected=" & str(nHeaders + nDocs + nPromote) & _
-        " (" & str(nHeaders) & " headers + " & str(nDocs) & " docs + " & _
-        str(nPromote) & " promote)" )
+    Workspace_Check( "the Explorer lists every document and folder under a group", _
+        nRows = nHeaders + nDocs + nPromote + nFolders, _
+        "rows=" & str(nRows) & " expected=" & str(nHeaders + nDocs + nPromote + nFolders) & _
+        " (" & str(nHeaders) & " groups + " & str(nDocs) & " docs + " & _
+        str(nPromote) & " promote + " & str(nFolders) & " folders)" )
 
     ' The promotion row exists exactly when the workspace is untitled, and it is pinned at
     ' index 0. Both halves matter: offering it on a named project would be nonsense, and a

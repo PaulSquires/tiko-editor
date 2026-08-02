@@ -44,6 +44,16 @@ end enum
 
 #define IDC_FRMEXPLORER_LISTBOX       1000
 
+' The width of one indent column, in UNSCALED units.
+'
+' Every depth level costs one of these, and so does the chevron/document-glyph column that
+' follows it. ONE constant because three places need the same number and they must not drift:
+' the painter's own indent arithmetic, the twisty rect the click test reads, and -- less
+' obviously -- PsListTree_SetIndentWidth, which is what positions the in-place EDITOR. The
+' control computes the editor's x from its own tree indent, so a list that indents its rows
+' by hand and never tells the control opens every rename hard against the left margin.
+#define EXPLORER_INDENT_UNITS         20
+
 ' The kind of an Explorer row. Invalid rows read EXPKIND_NONE.
 declare function frmExplorer_KindFromRow( byval hCtl as HWND, byval row as integer ) as EXPLORER_ROWKIND
 ' The document a row refers to, or NULL for a non-document row. EVERY read of an Explorer

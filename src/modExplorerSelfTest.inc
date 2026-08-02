@@ -109,12 +109,40 @@ sub frmExplorer_RunSelfTest()
     Exp_Check( "Resource takes no folders", ProjectFolders_CatAllowsFolders(CATINDEX_RESOURCE) = false )
 
     ' --- the table ---------------------------------------------------------------------------
-    ' Only safe to drive when the workspace has no folders of its own to destroy. Nothing
-    ' creates them yet, so this guard is belt and braces -- but it stops the suite quietly
-    ' eating the user's data the moment folder creation lands.
-    if ProjectFolders_Count() <> 0 then
-        print "  NOTE  table and tree tests skipped: the workspace already has folders"
-    else
+    ' The workspace's own folders are SAVED AND RESTORED around everything below, rather than
+    ' the suite refusing to run when it finds any.
+    '
+    ' Refusing was the first design, and it quietly turned itself off the moment the feature
+    ' was actually used: a real project has folders, so 58 of these assertions simply stopped
+    ' running and said so in a NOTE nobody would read twice. A suite that disables itself once
+    ' the code it covers is in use is worse than no suite.
+    '
+    ' Restored VERBATIM, not through ProjectFolders_Add: Add normalizes and synthesizes
+    ' ancestors, so round-tripping through it could hand back a table subtly unlike the one
+    ' the project loaded. The documents' folders are saved too -- Rebase rewrites those as
+    ' well, and a document left pointing at a test folder would be pulled to its group's top
+    ' level by the next normalization pass and the user's file would silently move.
+    redim savedFolders(any) as PROJECT_FOLDER
+    for i as long = lbound(gProjectFolders) to ubound(gProjectFolders)
+        redim preserve savedFolders(i)
+        savedFolders(i) = gProjectFolders(i)
+    next
+    dim as long nSavedFolders = ProjectFolders_Count()
+
+    redim savedDocs(any) as clsDocument ptr
+    redim savedDocFolders(any) as DWSTRING
+    dim pSaveDoc as clsDocument ptr = gApp.pDocList
+    do until pSaveDoc = 0
+        dim as long ub = ubound(savedDocs) + 1
+        redim preserve savedDocs(ub)
+        redim preserve savedDocFolders(ub)
+        savedDocs(ub) = pSaveDoc
+        savedDocFolders(ub) = pSaveDoc->docData.wszFolder
+        pSaveDoc = pSaveDoc->pDocNext
+    loop
+
+    ProjectFolders_Clear()
+    if true then
         dim as long idxA = ProjectFolders_Add( CATINDEX_NORMAL, "alpha" )
         Exp_Check( "adding a folder returns its index", idxA >= 0 )
         Exp_Check( "adding the same folder twice is idempotent", _
@@ -342,6 +370,24 @@ sub frmExplorer_RunSelfTest()
                 (IsRectEmpty( @rcAddT ) <> 0) andalso (IsRectEmpty( @rcDelT ) <> 0) )
         end if
 
+        ' --- the editor lands where the caption will render --------------------------------------
+        ' The painter indents rows by hand; the CONTROL positions the in-place editor from its
+        ' own tree indent, which returns 0 flat while bTreeIndent is off. Both must be on and
+        ' both must use the same unit, or a rename opens against the left margin -- which is
+        ' how it shipped. Asserted against the control rather than against the constant, since
+        ' the constant agreeing with itself proves nothing.
+        Exp_Check( "the control's tree indent is enabled for the editor", _
+            PsListTree_GetTreeIndent( HWND_FRMEXPLORER ) )
+        Exp_Check( "the control indents by the same unit the painter does", _
+            PsListTree_GetIndentWidth( HWND_FRMEXPLORER ) = EXPLORER_INDENT_UNITS, _
+            "control=" & str(PsListTree_GetIndentWidth( HWND_FRMEXPLORER )) & _
+            " painter=" & str(EXPLORER_INDENT_UNITS) )
+        ' A nested folder's editor must start further right than a top-level one's, which is
+        ' the property the whole arrangement exists for and is not implied by the two above.
+        Exp_Check( "a deeper folder indents further than a shallower one", _
+            PsListTree_GetLevel( HWND_FRMEXPLORER, nRowDeep ) > _
+            PsListTree_GetLevel( HWND_FRMEXPLORER, nRowAlpha ) )
+
         ' --- the icons' tooltips ---------------------------------------------------------------
         ' The tip is resolved from the tracked zone, not from the row alone, because the
         ' callback is handed no x and this list defines no columns for col to distinguish.
@@ -426,11 +472,37 @@ sub frmExplorer_RunSelfTest()
         Exp_Check( "the New Folder caption resolves", len(L(630,"New Folder")) > 0, L(630,"") )
         Exp_Check( "the Delete Folder caption resolves", len(L(631,"Delete Folder")) > 0, L(631,"") )
 
-        ' Leave the workspace exactly as it was found.
-        ProjectFolders_Clear()
-        LoadExplorerFiles()
-        Exp_Check( "the suite leaves no folders behind", ProjectFolders_Count() = 0 )
     end if
+
+    ' --- put the workspace back exactly as it was found -------------------------------------
+    ProjectFolders_Clear()
+    for i as long = lbound(savedFolders) to ubound(savedFolders)
+        if nSavedFolders = 0 then exit for
+        redim preserve gProjectFolders(i)
+        gProjectFolders(i) = savedFolders(i)
+    next
+    for i as long = lbound(savedDocs) to ubound(savedDocs)
+        if savedDocs(i) then savedDocs(i)->docData.wszFolder = savedDocFolders(i)
+    next
+    LoadExplorerFiles()
+
+    Exp_Check( "the suite restores the workspace's own folders", _
+        ProjectFolders_Count() = nSavedFolders, _
+        "restored=" & str(ProjectFolders_Count()) & " saved=" & str(nSavedFolders) )
+    ' Count alone would be satisfied by the right NUMBER of wrong folders, so the paths are
+    ' checked too -- the suite renames and dissolves folders, and a restore that put back
+    ' three records with rebased paths would look correct by count.
+    dim as boolean bPathsOK = true
+    for i as long = 0 to nSavedFolders - 1
+        if ProjectFolders_Exists( savedFolders(i).catIndex, savedFolders(i).wszPath ) = false then bPathsOK = false
+    next
+    Exp_Check( "the restored folders have their original paths", bPathsOK )
+    dim as boolean bDocsOK = true
+    for i as long = lbound(savedDocs) to ubound(savedDocs)
+        if savedDocs(i) = 0 then continue for
+        if savedDocs(i)->docData.wszFolder <> savedDocFolders(i) then bDocsOK = false
+    next
+    Exp_Check( "the restored documents keep their own folders", bDocsOK )
 
     print "--- TIKO_EXPLORER_SELFTEST: " & str(gExpTestPass) & " passed, " & _
           str(gExpTestFail) & " failed ---"

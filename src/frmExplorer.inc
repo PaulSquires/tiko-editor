@@ -221,7 +221,7 @@ sub frmExplorer_TwistyRect( byval hCtl as HWND, byval row as integer, byref rcRo
     SetRectEmpty( @rcOut )
     dim pWindow as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN)
     if pWindow = 0 then exit sub
-    dim as long nIconWidth = pWindow->ScaleX(20)
+    dim as long nIconWidth = pWindow->ScaleX(EXPLORER_INDENT_UNITS)
     rcOut.left   = rcRow.left + ( PsListTree_GetLevel( hCtl, row ) * nIconWidth )
     rcOut.right  = rcOut.left + nIconWidth
     rcOut.top    = rcRow.top
@@ -355,7 +355,7 @@ sub frmExplorer_PaintCallback( byval p as PSLISTTREE_PAINTINFO ptr )
     dim as RECT rcText = p->rc 
     dim as RECT rcIcon = p->rc 
 
-    dim as long nIconWidth = pWindow->ScaleX(20)
+    dim as long nIconWidth = pWindow->ScaleX(EXPLORER_INDENT_UNITS)
     
     dim as DWSTRING wszCaption = p->wszCaption
 
@@ -580,8 +580,17 @@ function frmExplorer_MessageCallback( byval m as PSLISTTREE_MESSAGEINFO ptr ) as
             ' AND FORCE A RE-RESOLVE WHEN THE ZONE CHANGES. The control only re-queries a tip
             ' when the hot ROW changes (PsListTree.inc updates its tool index inside the
             ' "idx <> nLastHotIdx" guard), so sliding from Add to Delete within one row would
-            ' otherwise keep showing whichever tip resolved first. Hiding the tip is enough:
-            ' PsTooltip resolves its text afresh on every show, so the next dwell asks again.
+            ' otherwise keep showing whichever tip resolved first.
+            '
+            ' SetToolIndex, NOT Hide -- and that distinction is the whole reason no icon tip
+            ' ever appeared. Hovering a folder row's caption resolves to no text, which is a
+            ' REFUSED show, and PsTooltip suppresses further attempts until the cursor leaves
+            ' the tool entirely (PsTooltip.inc, bSuppressed). Hide does not clear that flag,
+            ' so sliding from the caption onto an icon stayed silent forever. SetToolIndex is
+            ' the call that means "a new offer": it clears the suppression, invalidates the
+            ' cached text and restarts the dwell, and it hides a visible tip without a fade
+            ' on the way. The index handed back is the SAME row the control set, because
+            ' PsListTree resolves its tip text by casting that index straight to a row.
             dim as HWND hCtlMv = GetParent(m->hList)
             dim as EXPLORER_ICONHIT nIcon = _
                 frmExplorer_IconHitTest( hCtlMv, m->idx, GET_X_LPARAM( m->lParam ) )
@@ -589,7 +598,7 @@ function frmExplorer_MessageCallback( byval m as PSLISTTREE_MESSAGEINFO ptr ) as
                 gExpTipIcon = nIcon
                 gExpTipRow  = m->idx
                 dim as HWND hTip = PsListTree_GetPsTooltipHandle( hCtlMv )
-                if hTip then PsTooltip_Hide( hTip )
+                if hTip then PsTooltip_SetToolIndex( hTip, m->idx )
             end if
             ' FALSE: the control's own hot tracking and repaint still have to happen. This
             ' arm only observes.
@@ -751,6 +760,22 @@ function frmExplorer_Show( byval hWndParent as HWND ) as LRESULT
     '
     ' The editor is themed explicitly -- the control creates it lazily and owns it, so without
     ' this it opens black-on-white inside a dark panel.
+    ' The control's tree indent is enabled ONLY so the in-place editor lands in the right
+    ' place. The painter still computes its own indent and ignores PAINTINFO.indent, and the
+    ' twisty stays off, so nothing about the rows' appearance changes -- with no columns
+    ' defined the control applies its indent to nothing else. What it does drive is
+    ' PsListTree_RowLevelIndentPx, which returns 0 outright while bTreeIndent is false and is
+    ' what positions the editor: without this a rename opens hard against the left margin
+    ' whatever depth the folder sits at.
+    PsListTree_SetTreeIndent( hCtrl, true )
+    PsListTree_SetIndentWidth( hCtrl, EXPLORER_INDENT_UNITS )
+    ' That places the editor at the row's INDENT; the caption starts one further column in,
+    ' past the chevron. SetEditTextInset is in already-scaled pixels and is a constant, which
+    ' is exactly right here -- the per-level part comes from the indent above, and only the
+    ' fixed glyph column is left to add.
+    dim pWin as CWindow ptr = AfxCWindowPtr(HWND_FRMMAIN)
+    if pWin then PsListTree_SetEditTextInset( hCtrl, pWin->ScaleX(EXPLORER_INDENT_UNITS) )
+
     PsListTree_EnableLabelEdit( hCtrl, true )
     PsListTree_SetBeginLabelEditCallback( hCtrl, @frmExplorer_BeginLabelEditCallback )
     PsListTree_SetEndLabelEditCallback( hCtrl, @frmExplorer_EndLabelEditCallback )
